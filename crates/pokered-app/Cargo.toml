@@ -11,11 +11,11 @@ debug-server = ["pokered-debug-server"]
 [dependencies]
 pokered-core = { path = "../pokered-core" }
 pokered-data = { path = "../pokered-data" }
-jrpg-engine = { git = "file:///Users/liuyanghe02/develop/pokered-worktree-2", tag = "v0.1.0" }
-jrpg-engine-dsl = { git = "file:///Users/liuyanghe02/develop/pokered-worktree-2", tag = "v0.1.0" }
+jrpg-engine = { git = "ssh://git@github.com/liuyanghejerry/dotzuki.git", tag = "v0.1.0" }
+jrpg-engine-dsl = { git = "ssh://git@github.com/liuyanghejerry/dotzuki.git", tag = "v0.1.0" }
 pokered-renderer = { path = "../pokered-renderer" }
-jrpg-renderer = { git = "file:///Users/liuyanghe02/develop/pokered-worktree-2", tag = "v0.1.0" }
-jrpg-app = { git = "file:///Users/liuyanghe02/develop/pokered-worktree-2", tag = "v0.1.0" }
+jrpg-renderer = { git = "ssh://git@github.com/liuyanghejerry/dotzuki.git", tag = "v0.1.0" }
+jrpg-app = { git = "ssh://git@github.com/liuyanghejerry/dotzuki.git", tag = "v0.1.0" }
 pokered-ui = { path = "../pokered-ui" }
 pokered-audio = { path = "../pokered-audio" }
 pokered-debug-server = { path = "../pokered-debug-server", optional = true }

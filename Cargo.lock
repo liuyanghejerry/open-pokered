@@ -2010,7 +2010,7 @@ dependencies = [
 [[package]]
 name = "jrpg-app"
 version = "0.1.0"
-source = "git+file:///Users/liuyanghe02/develop/pokered-worktree-2?tag=v0.1.0#ca37b8969e69a872aa9469410b4a5edc7d9b202d"
+source = "git+ssh://git@github.com/liuyanghejerry/dotzuki.git?tag=v0.1.0#a0973dc85c49ec7f364881292c9da947de374cd4"
 dependencies = [
  "jrpg-renderer",
  "notify",
@@ -2019,7 +2019,7 @@ dependencies = [
 [[package]]
 name = "jrpg-audio"
 version = "0.1.0"
-source = "git+file:///Users/liuyanghe02/develop/pokered-worktree-2?tag=v0.1.0#ca37b8969e69a872aa9469410b4a5edc7d9b202d"
+source = "git+ssh://git@github.com/liuyanghejerry/dotzuki.git?tag=v0.1.0#a0973dc85c49ec7f364881292c9da947de374cd4"
 dependencies = [
  "bitflags 2.13.1",
  "serde",
@@ -2029,7 +2029,7 @@ dependencies = [
 [[package]]
 name = "jrpg-engine"
 version = "0.1.0"
-source = "git+file:///Users/liuyanghe02/develop/pokered-worktree-2?tag=v0.1.0#ca37b8969e69a872aa9469410b4a5edc7d9b202d"
+source = "git+ssh://git@github.com/liuyanghejerry/dotzuki.git?tag=v0.1.0#a0973dc85c49ec7f364881292c9da947de374cd4"
 dependencies = [
  "image",
  "serde",
@@ -2039,7 +2039,7 @@ dependencies = [
 [[package]]
 name = "jrpg-engine-dsl"
 version = "0.1.0"
-source = "git+file:///Users/liuyanghe02/develop/pokered-worktree-2?tag=v0.1.0#ca37b8969e69a872aa9469410b4a5edc7d9b202d"
+source = "git+ssh://git@github.com/liuyanghejerry/dotzuki.git?tag=v0.1.0#a0973dc85c49ec7f364881292c9da947de374cd4"
 dependencies = [
  "jrpg-engine-script",
  "miette",
@@ -2052,7 +2052,7 @@ dependencies = [
 [[package]]
 name = "jrpg-engine-script"
 version = "0.1.0"
-source = "git+file:///Users/liuyanghe02/develop/pokered-worktree-2?tag=v0.1.0#ca37b8969e69a872aa9469410b4a5edc7d9b202d"
+source = "git+ssh://git@github.com/liuyanghejerry/dotzuki.git?tag=v0.1.0#a0973dc85c49ec7f364881292c9da947de374cd4"
 dependencies = [
  "boa_engine",
  "log",
@@ -2064,7 +2064,7 @@ dependencies = [
 [[package]]
 name = "jrpg-renderer"
 version = "0.1.0"
-source = "git+file:///Users/liuyanghe02/develop/pokered-worktree-2?tag=v0.1.0#ca37b8969e69a872aa9469410b4a5edc7d9b202d"
+source = "git+ssh://git@github.com/liuyanghejerry/dotzuki.git?tag=v0.1.0#a0973dc85c49ec7f364881292c9da947de374cd4"
 dependencies = [
  "error-iter",
  "getrandom 0.2.17",
@@ -2082,7 +2082,7 @@ dependencies = [
 [[package]]
 name = "jrpg-rules"
 version = "0.1.0"
-source = "git+file:///Users/liuyanghe02/develop/pokered-worktree-2?tag=v0.1.0#ca37b8969e69a872aa9469410b4a5edc7d9b202d"
+source = "git+ssh://git@github.com/liuyanghejerry/dotzuki.git?tag=v0.1.0#a0973dc85c49ec7f364881292c9da947de374cd4"
 dependencies = [
  "jrpg-engine",
  "notify",
@@ -2094,7 +2094,7 @@ dependencies = [
 [[package]]
 name = "jrpg-tui"
 version = "0.1.0"
-source = "git+file:///Users/liuyanghe02/develop/pokered-worktree-2?tag=v0.1.0#ca37b8969e69a872aa9469410b4a5edc7d9b202d"
+source = "git+ssh://git@github.com/liuyanghejerry/dotzuki.git?tag=v0.1.0#a0973dc85c49ec7f364881292c9da947de374cd4"
 dependencies = [
  "crossterm",
  "jrpg-renderer",
@@ -2104,7 +2104,7 @@ dependencies = [
 [[package]]
 name = "jrpg-ui"
 version = "0.1.0"
-source = "git+file:///Users/liuyanghe02/develop/pokered-worktree-2?tag=v0.1.0#ca37b8969e69a872aa9469410b4a5edc7d9b202d"
+source = "git+ssh://git@github.com/liuyanghejerry/dotzuki.git?tag=v0.1.0#a0973dc85c49ec7f364881292c9da947de374cd4"
 dependencies = [
  "jrpg-engine",
  "jrpg-renderer",

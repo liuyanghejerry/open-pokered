@@ -15,9 +15,7 @@ cargo run --release --bin pokered-app
 cargo test
 ```
 
-The engine is resolved via a local git dependency. When the engine's real hosting
-is decided, replace the `git = "file:///..."` URLs in every `Cargo.toml` with the
-new repository URL and run `cargo update` (one scripted sed; keep the `tag`).
+The engine is consumed as a Cargo git dependency: `ssh://git@github.com/liuyanghejerry/dotzuki.git`, pinned to tag `v0.1.0` (see the `Cargo.toml` of each crate). After pulling a new engine tag, bump the `tag` and run `cargo update`.
 
 ## What this repo contains
 

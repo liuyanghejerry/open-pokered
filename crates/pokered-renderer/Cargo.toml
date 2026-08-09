@@ -11,8 +11,8 @@ gpu = ["dep:pixels", "dep:winit", "dep:winit_input_helper", "dep:image", "dep:er
 [dependencies]
 pokered-data = { path = "../pokered-data" }
 pokered-core = { path = "../pokered-core" }
-jrpg-engine = { git = "file:///Users/liuyanghe02/develop/pokered-worktree-2", tag = "v0.1.0" }
-jrpg-renderer = { git = "file:///Users/liuyanghe02/develop/pokered-worktree-2", tag = "v0.1.0" }
+jrpg-engine = { git = "ssh://git@github.com/liuyanghejerry/dotzuki.git", tag = "v0.1.0" }
+jrpg-renderer = { git = "ssh://git@github.com/liuyanghejerry/dotzuki.git", tag = "v0.1.0" }
 log = "0.4"
 thiserror = { workspace = true }
 pixels = { version = "=0.15.0", optional = true }

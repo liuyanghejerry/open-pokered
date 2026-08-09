@@ -14,15 +14,15 @@ embedded-map-data = ["pokered-data/embedded-map-data"]
 hot-reload = ["jrpg-rules/hot-reload"]
 
 [dependencies]
-jrpg-engine = { git = "file:///Users/liuyanghe02/develop/pokered-worktree-2", tag = "v0.1.0" }
+jrpg-engine = { git = "ssh://git@github.com/liuyanghejerry/dotzuki.git", tag = "v0.1.0" }
 pokered-data = { path = "../pokered-data" }
-jrpg-engine-script = { git = "file:///Users/liuyanghe02/develop/pokered-worktree-2", tag = "v0.1.0" }
+jrpg-engine-script = { git = "ssh://git@github.com/liuyanghejerry/dotzuki.git", tag = "v0.1.0" }
 # P1 battle migration: the game-agnostic no-code RON loader + dual-mode sourcing.
 # pokered-core authors a rules.ron for the bucket-A moves and a game binding; the
 # loader stays engine-only (no pokered types leak into it). Used by the additive
 # PokeredRules provider + the differential parity harness ONLY — the legacy
 # `apply_move_effect` dispatcher stays the production oracle (P1 is additive).
-jrpg-rules = { git = "file:///Users/liuyanghe02/develop/pokered-worktree-2", tag = "v0.1.0" }
+jrpg-rules = { git = "ssh://git@github.com/liuyanghejerry/dotzuki.git", tag = "v0.1.0" }
 serde = { workspace = true }
 thiserror = { workspace = true }
 rand = { workspace = true }
