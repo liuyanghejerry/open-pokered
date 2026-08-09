@@ -790,7 +790,7 @@ export function setProjectRoot(root: string): ProjectContext {
 
 /**
  * The shared ProjectContext for the dev server's current project. Defaults to
- * JRPG_PROJECT_ROOT / the workspace root, matching the default in
+ * DOTZUKI_PROJECT_ROOT / the workspace root, matching the default in
  * server/api/projectConfig.ts (pokered-editor: `import.meta.url` is this
  * module's real file URL — server/context — so the workspace root is four
  * levels up; import.meta.url rather than `__dirname` because the bundled
@@ -798,6 +798,6 @@ export function setProjectRoot(root: string): ProjectContext {
  * switch.
  */
 export function getProjectContext(): ProjectContext {
-  if (!_current) _current = new ProjectContext(process.env.JRPG_PROJECT_ROOT || path.resolve(moduleDir, '../../../..'))
+  if (!_current) _current = new ProjectContext(process.env.DOTZUKI_PROJECT_ROOT || path.resolve(moduleDir, '../../../..'))
   return _current
 }

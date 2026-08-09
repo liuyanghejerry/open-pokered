@@ -7,11 +7,11 @@ import { setProjectRoot } from '../context/projectContext'
 // project's .dotzuki-editor.json lives) instead of process.cwd(). Under Vite 8
 // (rolldown) and vitest, `import.meta.url` is each module's real file URL — for
 // this file that is pokered-editor/server/api — so the workspace root is four
-// levels up. JRPG_PROJECT_ROOT still overrides. (import.meta.url rather than
+// levels up. DOTZUKI_PROJECT_ROOT still overrides. (import.meta.url rather than
 // `__dirname` because the esbuild-bundled Electron api-server is pure ESM,
 // where a bare `__dirname` is undefined.)
 const moduleDir = path.dirname(fileURLToPath(import.meta.url))
-let projectRoot = process.env.JRPG_PROJECT_ROOT || path.resolve(moduleDir, '../../../..')
+let projectRoot = process.env.DOTZUKI_PROJECT_ROOT || path.resolve(moduleDir, '../../../..')
 
 export interface ProjectConfig {
   name: string

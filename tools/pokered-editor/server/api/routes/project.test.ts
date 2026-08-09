@@ -2,7 +2,7 @@
 // Project create/scaffold tests — drive the real route handlers through a
 // minimal mock of the connect `server.middlewares.use` surface, with the
 // project root pinned to a fresh temp dir per test (setProjectRootDir, not
-// JRPG_PROJECT_ROOT, which projectConfig reads only once at module load).
+// DOTZUKI_PROJECT_ROOT, which projectConfig reads only once at module load).
 // ───────────────────────────────────────────────────────────────────────────
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import fs from 'fs'

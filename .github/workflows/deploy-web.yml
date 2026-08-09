@@ -94,7 +94,7 @@ jobs:
       # NOTE: the Layout-editor preview wasm (`dotzuki-web`, engine crate) is
       # NOT built here anymore — dotzuki-web ships from the dotzuki-engine repo.
       # Drop its pkg into `tools/pokered-editor/src/wasm/dotzuki-web/` (or point
-      # JRPG_WASM_ROOT at a checkout) before deploying to keep the Layout
+      # DOTZUKI_WASM_ROOT at a checkout) before deploying to keep the Layout
       # preview alive; the Playtest bridge (pokered-runner-web, below) is
       # built from this repo.
       - name: Build editor wasm (pokered-runner-web)

@@ -37,16 +37,16 @@ function roots() {
     mapsRoot: path.join(dataRoot, 'maps'),
     dataRoot,
     uiLayoutsRoot: path.join(dataRoot, 'ui_layouts'),
-    // WASM layout-preview pkg. JRPG_WASM_ROOT overrides (a packaged Electron
+    // WASM layout-preview pkg. DOTZUKI_WASM_ROOT overrides (a packaged Electron
     // app ships the pkg as an extraResource outside any repo checkout).
-    wasmRoot: process.env.JRPG_WASM_ROOT
-      ? path.resolve(process.env.JRPG_WASM_ROOT)
+    wasmRoot: process.env.DOTZUKI_WASM_ROOT
+      ? path.resolve(process.env.DOTZUKI_WASM_ROOT)
       : path.resolve(projectRoot, 'crates/pokered-layout-preview/pkg'),
     // WYSIWYG game-preview pkg (pokered-runner-web). In a packaged app the
-    // two pkgs are merged into JRPG_WASM_ROOT, so the fallback collapses to
+    // two pkgs are merged into DOTZUKI_WASM_ROOT, so the fallback collapses to
     // the same directory.
-    wasmPokeredRoot: process.env.JRPG_WASM_ROOT
-      ? path.resolve(process.env.JRPG_WASM_ROOT)
+    wasmPokeredRoot: process.env.DOTZUKI_WASM_ROOT
+      ? path.resolve(process.env.DOTZUKI_WASM_ROOT)
       : path.resolve(projectRoot, 'crates/pokered-runner-web/pkg'),
   }
 }
@@ -265,7 +265,7 @@ export function registerPokeredRoutes(server: { middlewares: any }) {
   // ── /wasm static — was the `serve-wasm` plugin ──
   // Primary root is the pokered-layout-preview pkg; files not found there
   // fall back to the pokered-runner-web pkg (the WYSIWYG game preview). A
-  // packaged Electron app overrides both via JRPG_WASM_ROOT (extraResource
+  // packaged Electron app overrides both via DOTZUKI_WASM_ROOT (extraResource
   // dir holding the merged pkgs — see electron/stage-resources.mjs).
   server.middlewares.use('/wasm', (req: IncomingMessage, res: ServerResponse, next: Next) => {
     const { wasmRoot, wasmPokeredRoot } = roots()

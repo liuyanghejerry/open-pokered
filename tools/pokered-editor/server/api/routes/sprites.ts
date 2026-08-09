@@ -345,9 +345,9 @@ export function registerSprites(server: any) {
         // GEMINI_KEY) uses the key set in Settings instead of a separate env var. The
         // key travels via env, never the command string (so it isn't logged).
         const cmdEnv: Record<string, any> = { ...process.env }
-        if (apiKey) { cmdEnv.GEMINI_KEY = String(apiKey); cmdEnv.GOOGLE_API_KEY = String(apiKey); cmdEnv.JRPG_AI_KEY = String(apiKey) }
-        if (model) { cmdEnv.GEMINI_MODEL = String(model); cmdEnv.JRPG_AI_MODEL = String(model) }
-        if (proxyUrl) { cmdEnv.HTTPS_PROXY = String(proxyUrl); cmdEnv.https_proxy = String(proxyUrl); cmdEnv.GEMINI_PROXY = String(proxyUrl); cmdEnv.JRPG_AI_PROXY = String(proxyUrl) }
+        if (apiKey) { cmdEnv.GEMINI_KEY = String(apiKey); cmdEnv.GOOGLE_API_KEY = String(apiKey); cmdEnv.DOTZUKI_AI_KEY = String(apiKey) }
+        if (model) { cmdEnv.GEMINI_MODEL = String(model); cmdEnv.DOTZUKI_AI_MODEL = String(model) }
+        if (proxyUrl) { cmdEnv.HTTPS_PROXY = String(proxyUrl); cmdEnv.https_proxy = String(proxyUrl); cmdEnv.GEMINI_PROXY = String(proxyUrl); cmdEnv.DOTZUKI_AI_PROXY = String(proxyUrl) }
         let result: any
         try {
           const out = execSync(finalCmd, { cwd: getProjectRoot(), env: cmdEnv, encoding: 'utf-8', stdio: ['ignore', 'pipe', 'pipe'], timeout: 600000 })

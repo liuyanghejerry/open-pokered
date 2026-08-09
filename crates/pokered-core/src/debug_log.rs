@@ -91,6 +91,11 @@ impl GameLogger {
                 return true;
             }
         }
+        // Engine-side script engine logs under the engine crate's own target
+        // (dotzuki-engine-script); capture it with the overworld module.
+        if flags & (LogModule::Overworld as u64) != 0 && target.starts_with("dotzuki::overworld") {
+            return true;
+        }
         false
     }
 }
