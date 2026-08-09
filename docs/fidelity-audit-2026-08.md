@@ -9,7 +9,7 @@ FIDELITY_GAPS.md 时效性 / 非战斗系统),基线 master @ 6c773ebfe。
 验收原则:每项修正附带测试;`cargo test -p <crate>` 按 crate 验证(工作区级 cargo test
 会因 feature 统一误报,见 AGENTS.md);涉及 DSL/场景的改动跑 roundtrip。
 
-路径缩写:**CORE** = `workspace/examples/pokered/crates/pokered-core/src` ·
+路径缩写:**CORE** = `crates/pokered-core/src` ·
 **DATA** = `.../pokered-data/src` · **APP** = `.../pokered-app/src` ·
 **RENDER** = `workspace/crates/jrpg-renderer/src`。
 

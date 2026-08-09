@@ -812,7 +812,7 @@ fn find_maps_directory() -> Option<std::path::PathBuf> {
     //    directory happens to sit near the cwd (e.g. `cargo run` from the
     //    workspace root, or a packaged build that ships `maps/` alongside).
     let candidates = [
-        std::path::PathBuf::from("examples/pokered/crates/pokered-data/maps"),
+        std::path::PathBuf::from("crates/pokered-data/maps"),
         std::path::PathBuf::from("crates/pokered-data/maps"),
         std::path::PathBuf::from("../pokered-data/maps"),
         std::path::PathBuf::from("pokered-data/maps"),

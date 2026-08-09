@@ -2,7 +2,7 @@
 """Verify the Rust MoveSoundTable transcription against the pokered disassembly.
 
 Compares, row by row, the table transcribed into
-  workspace/examples/pokered/crates/pokered-data/src/move_sfx.rs  (MOVE_SFX_TABLE)
+  crates/pokered-data/src/move_sfx.rs  (MOVE_SFX_TABLE)
 against the original assembly source:
   data/moves/sfx.asm                            -> (sfx name, pitch mod, tempo mod)
 
@@ -30,7 +30,7 @@ from pathlib import Path
 
 DEFAULT_ASM_REPO = "/Users/liuyanghe02/develop/pokered-worktree"
 RUST_MOVE_SFX_RS = Path(__file__).resolve().parent.parent / \
-    "examples/pokered/crates/pokered-data/src/move_sfx.rs"
+    "crates/pokered-data/src/move_sfx.rs"
 
 SFX_HEADER_FILES = [
     "audio/headers/sfxheaders1.asm",

@@ -2,7 +2,7 @@
 """Verify pokered-data's cry table against the pret/pokered disassembly.
 
 Compares `CRY_DATA` in
-  workspace/examples/pokered/crates/pokered-data/src/cries.rs
+  crates/pokered-data/src/cries.rs
 against `data/pokemon/cries.asm` (`mon_cry BASE, PITCH, LENGTH ; Name`) in a
 local pret/pokered checkout. The Rust table stores the base cry as a raw u8
 in `SfxId` id space (pokered-audio/src/sfx_data.rs: `Cry00 = N`, consecutive
@@ -18,8 +18,8 @@ import sys
 from pathlib import Path
 
 WORKSPACE = Path(__file__).resolve().parent.parent
-RUST_CRIES = WORKSPACE / "examples/pokered/crates/pokered-data/src/cries.rs"
-RUST_SFX_ENUM = WORKSPACE / "examples/pokered/crates/pokered-audio/src/sfx_data.rs"
+RUST_CRIES = WORKSPACE / "crates/pokered-data/src/cries.rs"
+RUST_SFX_ENUM = WORKSPACE / "crates/pokered-audio/src/sfx_data.rs"
 DEFAULT_ASM_REPO = "/Users/liuyanghe02/develop/pokered-worktree"
 
 # asm display name -> Rust Species variant (only the irregular ones).

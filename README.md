@@ -21,8 +21,7 @@ new repository URL and run `cargo update` (one scripted sed; keep the `tag`).
 
 ## What this repo contains
 
-- `examples/pokered/crates/` — the game: `pokered-data` (248 maps, species/move/item tables), `pokered-core` (pure logic), `pokered-renderer`, `pokered-ui`, `pokered-audio` (GB APU emulation), `pokered-app` (native binary + debug CLI), `pokered-tui`, `pokered-ui-preview`
-- `crates/` — platform shells: `pokered-web` (WASM), `pokered-runner-web` (editor Play bridge), `pokered-debug-server`, `pokered-android`, `pokered-ios`, plus `scene_apply` (story-translation helper bin)
+- `crates/` — the game itself (`pokered-data` (248 maps, species/move/item tables), `pokered-core` (pure logic), `pokered-renderer`, `pokered-ui`, `pokered-audio` (GB APU emulation), `pokered-app` (native binary + debug CLI), `pokered-tui`, `pokered-ui-preview`) plus platform shells: `pokered-web` (WASM), `pokered-runner-web` (editor Play bridge), `pokered-layout-preview` (editor layout-preview WASM: per-menu mock data, `custom:hp_bar`, DSL compile bridge), `pokered-debug-server`, `pokered-android`, `pokered-ios`, plus `scene_apply` (story-translation helper bin)
 - `tools/pokered-editor/` — the Vue/Vite editor suite (maps, saves, data, UI layouts, AI assistant) + Electron shell
 - `android/` / `ios/` — mobile build projects
 - `scripts/` — Python data-extraction/verification helpers

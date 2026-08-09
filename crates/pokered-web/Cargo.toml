@@ -13,11 +13,11 @@ embedded-map-data = ["pokered-core/embedded-map-data"]
 default = ["optimize", "embedded-scripts", "embedded-map-data"]
 
 [dependencies]
-pokered-core = { path = "../../examples/pokered/crates/pokered-core" }
-pokered-data = { path = "../../examples/pokered/crates/pokered-data" }
-pokered-renderer = { path = "../../examples/pokered/crates/pokered-renderer" }
-pokered-audio = { path = "../../examples/pokered/crates/pokered-audio" }
-pokered-app = { path = "../../examples/pokered/crates/pokered-app" }
+pokered-core = { path = "../pokered-core" }
+pokered-data = { path = "../pokered-data" }
+pokered-renderer = { path = "../pokered-renderer" }
+pokered-audio = { path = "../pokered-audio" }
+pokered-app = { path = "../pokered-app" }
 error-iter = "0.4"
 log = "0.4"
 pixels = "=0.15.0"

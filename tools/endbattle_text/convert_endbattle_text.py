@@ -10,7 +10,7 @@ Resolution: scripts/<Map>.asm `trainer` macro (4th arg = TextEndBattle label)
 import json, os, re, sys, glob
 
 BASE = "/Users/liuyanghe02/develop/pokered-worktree"
-MAPS = "/Users/liuyanghe02/develop/pokered/workspace/examples/pokered/crates/pokered-data/maps"
+MAPS = "/Users/liuyanghe02/develop/pokered/crates/pokered-data/maps"
 WRITE = "--write" in sys.argv
 
 # ── 1. Build a global text-label -> string table from all text/*.asm ────────

@@ -1,7 +1,7 @@
 # endbattle_text converter
 
 `convert_endbattle_text.py` populates each map's trainer-NPC `endBattleText`
-field in `examples/pokered/crates/pokered-data/maps/*/map.json`, converting the
+field in `crates/pokered-data/maps/*/map.json`, converting the
 one-shot victory quips from the original [`pret/pokered`](https://github.com/pret/pokered)
 disassembly.
 

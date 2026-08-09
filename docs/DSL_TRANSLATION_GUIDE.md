@@ -6,8 +6,8 @@ in our Game DSL, using ONLY the real API surface below. Then self-verify.
 ## Sources to read
 - Original event logic: `<original-disassembly>/scripts/<Map>.asm`
 - Original dialogue: `<original-disassembly>/text/<Map>.asm` (and `<Map>_2.asm` if present; some texts are in shared files — grep `text/` for a `_<Map>...Text::` label if missing)
-- Map objects (npc/sign ids, trainers, coords): `examples/pokered/crates/pokered-data/maps/<Map>/map.json`
-- Current (usually BROKEN) port to replace: `examples/pokered/crates/pokered-data/maps/<Map>/script.scene`
+- Map objects (npc/sign ids, trainers, coords): `crates/pokered-data/maps/<Map>/map.json`
+- Current (usually BROKEN) port to replace: `crates/pokered-data/maps/<Map>/script.scene`
 
 The original uses a `w<Map>CurScript` script-pointer state machine + `CheckEvent`/
 `SetEvent` flags + `*_TextPointers` (npc dialogue) + trainer headers (sight battles).

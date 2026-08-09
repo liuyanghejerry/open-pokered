@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 #
 # fetch-gfx.sh — populate the pokered example's `gfx/` asset directory
-# (examples/pokered/gfx/) from upstream pret/pokered instead of
+# (gfx/) from upstream pret/pokered instead of
 # vendoring the ~2.7 MB of PNG/blockset assets in this repository.
 #
 # The graphics this project consumes are a byte-for-byte copy of pret/pokered's
@@ -31,7 +31,7 @@ PRET_PIN="1e96034092686d006e863cace09e87273051a3d8"  # master @ 2026-07-02
 # --- Paths -----------------------------------------------------------------
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(dirname "$SCRIPT_DIR")"
-GFX_DIR="$REPO_ROOT/examples/pokered/gfx"
+GFX_DIR="$REPO_ROOT/gfx"
 
 FORCE=0
 for arg in "$@"; do

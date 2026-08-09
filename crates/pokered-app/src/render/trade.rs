@@ -257,7 +257,7 @@ mod tests {
         count
     }
 
-    /// gfx/ lives at examples/pokered/gfx; skip asset-backed checks when it
+    /// gfx/ lives at gfx; skip asset-backed checks when it
     /// has not been fetched (`scripts/fetch-gfx.sh`).
     fn test_resources() -> Option<ResourceManager> {
         let candidate = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../gfx");

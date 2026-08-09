@@ -11,10 +11,10 @@ license.workspace = true
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
-pokered-app = { path = "../../examples/pokered/crates/pokered-app" }
-pokered-core = { path = "../../examples/pokered/crates/pokered-core" }
-pokered-data = { path = "../../examples/pokered/crates/pokered-data" }
-pokered-renderer = { path = "../../examples/pokered/crates/pokered-renderer" }
+pokered-app = { path = "../pokered-app" }
+pokered-core = { path = "../pokered-core" }
+pokered-data = { path = "../pokered-data" }
+pokered-renderer = { path = "../pokered-renderer" }
 wasm-bindgen = "0.2"
 serde = { workspace = true }
 serde_json = { workspace = true }

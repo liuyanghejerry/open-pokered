@@ -483,7 +483,7 @@ impl AssetRoot {
     }
 
     /// Try to auto-detect the asset root. Resolution order: the
-    /// `POKERED_GFX_DIR` override, the example's `gfx/` dir baked relative to
+    /// `POKERED_GFX_DIR` override, the repo-root `gfx/` dir baked relative to
     /// this crate's manifest, then a `gfx/` in (or above) the current directory,
     /// then next to the executable.
     pub fn auto_detect() -> Result<Self> {
@@ -500,9 +500,9 @@ impl AssetRoot {
             );
         }
 
-        // Compile-time fallback: the pokered example's gfx/ dir, resolved
-        // relative to this crate's manifest (examples/pokered/crates/pokered-renderer
-        // → examples/pokered/gfx). This makes `cargo run`/tests and a locally
+        // Compile-time fallback: the repo-root gfx/ dir, resolved
+        // relative to this crate's manifest (crates/pokered-renderer
+        // → gfx). This makes `cargo run`/tests and a locally
         // built binary work from any working directory. A relocated/packaged
         // binary's baked path won't exist, so we fall through to the search below.
         {

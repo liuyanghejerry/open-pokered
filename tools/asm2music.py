@@ -562,7 +562,7 @@ def main():
     # line is only the data source).
     out_path = (
         Path(__file__).resolve().parent.parent
-        / "examples/pokered/crates/pokered-audio/src/music_data.rs"
+        / "crates/pokered-audio/src/music_data.rs"
     )
     with open(out_path, "w") as f:
         f.write(rust_code)

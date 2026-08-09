@@ -1,6 +1,6 @@
 # `gfx/` — Original-Game Graphics Assets (fetched from upstream)
 
-The pokered example's `gfx/` directory (`workspace/examples/pokered/gfx/`,
+The pokered example's `gfx/` directory (`gfx/`,
 a sibling of its `crates/`) holds the Pokémon Red/Blue graphics assets the Rust
 project consumes (PNG sources plus a handful of `.bst`/`.tilemap`/`.rle` data
 files). **These files are not committed to this repository.** They are a

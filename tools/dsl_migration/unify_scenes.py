@@ -28,7 +28,7 @@ import re
 import sys
 from pathlib import Path
 
-MAPS_DIR = Path(__file__).resolve().parents[2] / "examples/pokered/crates/pokered-data/maps"
+MAPS_DIR = Path(__file__).resolve().parents[2] / "crates/pokered-data/maps"
 
 STORYLINE_RE = re.compile(r'^\s*@storyline\(\s*"([^"]+)"\s*\)')
 TRIGGER_RE = re.compile(r'^(\s*)@trigger\(')
