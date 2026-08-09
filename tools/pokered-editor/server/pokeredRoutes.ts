@@ -27,13 +27,13 @@ import { validateNewRecordName, pokemonTemplate, moveTemplate, itemTemplate, for
 // projectConfig.
 function roots() {
   const projectRoot = getProjectRoot()
-  const dataRoot = path.join(projectRoot, 'examples/pokered/crates/pokered-data')
+  const dataRoot = path.join(projectRoot, 'crates/pokered-data')
   return {
-    // Game assets: <workspace>/examples/pokered/gfx (populated by
+    // Game assets: <workspace>/gfx (populated by
     // scripts/fetch-gfx.sh; gitignored). The pre-extraction vite.config.ts
     // pointed this at <repo-root>/gfx, which never existed — fixed here so
     // /gfx serving, blockset reads and PUT writes hit the real asset tree.
-    gfxRoot: path.join(projectRoot, 'examples/pokered/gfx'),
+    gfxRoot: path.join(projectRoot, 'gfx'),
     mapsRoot: path.join(dataRoot, 'maps'),
     dataRoot,
     uiLayoutsRoot: path.join(dataRoot, 'ui_layouts'),
@@ -41,7 +41,7 @@ function roots() {
     // app ships the pkg as an extraResource outside any repo checkout).
     wasmRoot: process.env.JRPG_WASM_ROOT
       ? path.resolve(process.env.JRPG_WASM_ROOT)
-      : path.resolve(projectRoot, 'crates/jrpg-web/pkg'),
+      : path.resolve(projectRoot, 'crates/pokered-layout-preview/pkg'),
     // WYSIWYG game-preview pkg (pokered-runner-web). In a packaged app the
     // two pkgs are merged into JRPG_WASM_ROOT, so the fallback collapses to
     // the same directory.
@@ -263,7 +263,7 @@ export function registerPokeredRoutes(server: { middlewares: any }) {
   })
 
   // ── /wasm static — was the `serve-wasm` plugin ──
-  // Primary root is the jrpg-web layout-preview pkg; files not found there
+  // Primary root is the pokered-layout-preview pkg; files not found there
   // fall back to the pokered-runner-web pkg (the WYSIWYG game preview). A
   // packaged Electron app overrides both via JRPG_WASM_ROOT (extraResource
   // dir holding the merged pkgs — see electron/stage-resources.mjs).

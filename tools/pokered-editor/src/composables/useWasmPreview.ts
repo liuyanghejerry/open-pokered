@@ -20,7 +20,7 @@ let wasmModule: WasmModule | null = null
 let initPromise: Promise<WasmModule> | null = null
 
 /**
- * Load + init the jrpg-web layout-preview WASM module (cached singleton;
+ * Load + init the pokered layout-preview WASM module (cached singleton;
  * failures are retryable). The `.wasm` is fetched ourselves with byte-level
  * progress (mirroring the pokered runner) so the boot loading screen can
  * cover it; wasm-bindgen's `default()` accepts the raw bytes.
@@ -38,10 +38,10 @@ export function loadLayoutPreviewModule(
       // BASE_URL keeps the path correct under sub-path Pages hosting
       // (e.g. /pokered/editor/wasm/…).
       const base = import.meta.env.BASE_URL
-      const wasmJsUrl = new URL(`${base}wasm/jrpg_web.js`, window.location.origin).href
+      const wasmJsUrl = new URL(`${base}wasm/pokered_layout_preview.js`, window.location.origin).href
       const mod = (await import(/* @vite-ignore */ wasmJsUrl)) as unknown as WasmModule
       const wasmBytes = await fetchWithProgress(
-        new URL(`${base}wasm/jrpg_web_bg.wasm`, window.location.origin).href,
+        new URL(`${base}wasm/pokered_layout_preview_bg.wasm`, window.location.origin).href,
         onProgress,
       )
       await mod.default(wasmBytes)
