@@ -1,0 +1,67 @@
+// Refactored from CeladonPokecenter/script.js to jrpg-engine-dsl.
+//
+// This is a representative manual refactor of a Pokecenter map. The
+// auto-converter correctly handles the surrounding structure
+// (NPC talk handlers, route table) but cannot safely rewrite the
+// imperative `var choice = await game.showChoice([...])` + `if
+// (choice == N) { ... }` pattern into the declarative
+// `@choice { @option(...) { ... } }` form. The refactor below shows
+// the target shape — every Pokecenter map should follow this template.
+
+game_scene CeladonPokecenter {
+  @storyline("talkNurse") {
+    @trigger(map = "CeladonPokecenter", npc = 1)
+    @speaker("") {
+      @t("Welcome to the POKEMON\nCENTER!\n\nWe heal your POKEMON back to\nperfect health!\n\nShall we heal your POKEMON?", "欢迎光临宝可梦中心！\n\n我们会把你的宝可梦恢复到最佳\n状态！\n\n要为你治疗宝可梦吗？")
+    }
+    @choice {
+      @option(@t("Yes", "是")) {
+        @speaker("") {
+          @t("OK, we will need your\nPOKEMON.", "OK，请把你的宝可梦交给我。")
+        }
+        faceNpc("1", "right")
+        delay(8)
+        heal()
+        animateHealingMachine()
+        faceNpc("1", "down")
+        delay(8)
+        @speaker("") {
+          @t("Thank you for waiting.\n\nYour POKEMON are fully\nhealed!", "感谢您的耐心等待。\n\n你的宝可梦已完全治愈！")
+        }
+      }
+      @option(@t("No", "否")) {
+      }
+    }
+    @speaker("") {
+      @t("We hope to see you again!", "欢迎下次再来！")
+    }
+  }
+
+  @storyline("talkLinkReceptionist") {
+    @trigger(map = "CeladonPokecenter", npc = 4)
+    @speaker("") {
+      @t("Welcome to the CABLE CLUB!", "欢迎来到联机俱乐部！")
+    }
+  }
+
+  @storyline("talkGentleman") {
+    @trigger(map = "CeladonPokecenter", npc = 2)
+    @speaker("") {
+      @t("POKE FLUTE awakens POKEMON\nwith a sound that only they\ncan hear!", "宝可梦之笛的笛声能让宝可梦苏\n醒，那声音只有它们能听见！")
+    }
+  }
+
+  @storyline("talkBeauty") {
+    @trigger(map = "CeladonPokecenter", npc = 3)
+    @speaker("") {
+      @t("I rode uphill on CYCLING\nROAD from FUCHSIA!", "我骑着自行车从浅红市一路骑上\n坡！")
+    }
+  }
+
+  // ── Pokémon Center PC (sign 1 at 13,3) ───────────────────────────────
+  // engine/menus/pc.asm ActivatePC: BILL's PC / item PC / PROF.OAK's PC.
+  @storyline("pcStorage") {
+    @trigger(map = "CeladonPokecenter", sign = 1)
+    openPC()
+  }
+}

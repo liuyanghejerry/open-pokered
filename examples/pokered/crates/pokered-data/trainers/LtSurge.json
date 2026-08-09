@@ -1,0 +1,23 @@
+{
+  "$schema": "../schemas/trainer.schema.json",
+  "class": "LtSurge",
+  "constName": "LT_SURGE",
+  "parties": [
+    {
+      "pokemon": [
+        {
+          "level": 21,
+          "species": "Voltorb"
+        },
+        {
+          "level": 18,
+          "species": "Pikachu"
+        },
+        {
+          "level": 24,
+          "species": "Raichu"
+        }
+      ]
+    }
+  ]
+}

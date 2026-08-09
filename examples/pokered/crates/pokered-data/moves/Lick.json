@@ -1,0 +1,9 @@
+{
+  "$schema": "../schemas/move.schema.json",
+  "id": "Lick",
+  "effect": "ParalyzeSideEffect2",
+  "power": 20,
+  "type": "Ghost",
+  "accuracy": 100,
+  "pp": 30
+}

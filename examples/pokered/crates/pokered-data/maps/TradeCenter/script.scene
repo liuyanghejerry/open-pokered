@@ -1,0 +1,37 @@
+// TradeCenter — translated from the original disassembly (scripts/TradeCenter.asm,
+// data/text/text_3.asm _TradeCenterOpponentText) to the real Game DSL API surface.
+// This is the Cable Club Trade Center: a link map. The original on-enter script only
+// positions the link opponent's sprite (Sprite01) to face the player based on the
+// serial-connection internal/external clock; the opponent's only text is "!".
+// Link/cable-club has no API here, so this stays a local placeholder with the
+// faithful "!" dialogue (no live trading).
+
+game_scene TradeCenter {
+  // ── Link opponent (npc 1) — the other player's avatar ───────────────────
+  // Original: TradeCenterOpponentText = "!". Trading itself is driven by the link
+  // cable / serial connection, for which there is no engine API yet.
+  @storyline("talkOpponent") {
+    @trigger(map = "TradeCenter", npc = 1)
+    @speaker("") { @t("!", "！") }
+  }
+
+  // The original on-enter script sets the opponent sprite's facing/position from the
+  // serial connection status (USING_INTERNAL_CLOCK). That is pure link sprite setup
+  // with no game-visible side effects offline, so there is nothing to reproduce here.
+  // Live link trading is not reproduced (no link API); this map is a local
+  // placeholder showing the opponent's "!" dialogue.
+
+  // ── Gameboy on the table (signs 2 & 3 at 4,4 / 5,4) ────────────────────
+  // Original: `hidden_event 5,4 CableClubRightGameboy` + `4,4
+  // CableClubLeftGameboy` (data/events/hidden_events.asm:127-133) — pressing
+  // A on the table's gameboy sets LINK_STATE_START_TRADE and runs the
+  // "Just a moment." → PLEASE WAIT! → trade-selection flow (engine/pokemon/
+  // bills_pc.asm:513-533, engine/link/cable_club.asm:4-23). The app drains
+  // `game.linkStart()` and drives the request/accept/select/confirm flow;
+  // offline it shows "Just a moment." and nothing happens.
+  @storyline("useGameboy") {
+    @trigger(map = "TradeCenter", sign = 2)
+    @trigger(map = "TradeCenter", sign = 3)
+    linkStart()
+  }
+}

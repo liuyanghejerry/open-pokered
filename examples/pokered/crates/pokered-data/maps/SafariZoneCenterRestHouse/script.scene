@@ -1,0 +1,23 @@
+// SafariZoneCenterRestHouse — translated from the original disassembly
+// (scripts/SafariZoneCenterRestHouse.asm, text/SafariZoneCenterRestHouse.asm).
+// The map only has two dialogue-only NPCs (a girl and a scientist); the
+// original script merely enables auto text-box drawing, so there is no
+// on-enter logic, no flags, and no battles.
+
+game_scene SafariZoneCenterRestHouse {
+  // ── SARA, the girl (npc 1) ─────────────────────────────────────────────
+  @storyline("talkGirl") {
+    @trigger(map = "SafariZoneCenterRestHouse", npc = 1)
+    @speaker("") {
+      @t("SARA: Where did my boy\nfriend, ERIK, go?", "莎拉：我的男朋友艾里克去哪里\n了？")
+    }
+  }
+
+  // ── Scientist (npc 2) ──────────────────────────────────────────────────
+  @storyline("talkScientist") {
+    @trigger(map = "SafariZoneCenterRestHouse", npc = 2)
+    @speaker("") {
+      @t("I'm catching POKeMON to take\nhome as gifts!", "我抓宝可梦是为了带回家当礼物\n的！")
+    }
+  }
+}

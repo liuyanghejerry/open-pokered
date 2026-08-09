@@ -1,0 +1,9 @@
+{
+  "$schema": "../schemas/move.schema.json",
+  "id": "Twineedle",
+  "effect": "TwineedleEffect",
+  "power": 25,
+  "type": "Bug",
+  "accuracy": 100,
+  "pp": 20
+}

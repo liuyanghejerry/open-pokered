@@ -1,0 +1,49 @@
+// PokemonTower3F — translated from the original disassembly
+// (scripts/PokemonTower3F.asm, text/PokemonTower3F.asm) to the real Game DSL
+// API surface. This map is three sight-engaged Channeler trainers (the runtime
+// drives the battles, so map.json keeps isTrainer:true and the .scene handlers
+// are dialogue only, branching on the EVENT_BEAT_POKEMONTOWER_3_TRAINER_n
+// flags) plus one ground item (a PokeBall holding an ESCAPE_ROPE).
+
+game_scene PokemonTower3F {
+  // ── Channeler 1 (npc 1) — sight-engaged; dialogue only ──────────────────
+  @storyline("talkChanneler") {
+    @trigger(map = "PokemonTower3F", npc = 1)
+    @if (getFlag("EVENT_BEAT_POKEMONTOWER_3_TRAINER_0")) {
+      @speaker("") { @t("The GHOSTs can be identified\nby the SILPH SCOPE.", "幽灵可以用西尔佛透视镜来识\n破！") }
+    } @else {
+      @speaker("") { @t("Urrg...Awaa... Huhu...graa..", "呜呜……啊啊……呼呼……呜\n呜……") }
+    }
+  }
+
+  // ── Channeler 2 (npc 2) — sight-engaged; dialogue only ──────────────────
+  @storyline("talkChanneler1") {
+    @trigger(map = "PokemonTower3F", npc = 2)
+    @if (getFlag("EVENT_BEAT_POKEMONTOWER_3_TRAINER_1")) {
+      @speaker("") { @t("Sorry! I was possessed!", "对不起！我被附身了！") }
+    } @else {
+      @speaker("") { @t("Kekeke.... Kwaaah!", "嘻嘻嘻……啊啊啊！") }
+    }
+  }
+
+  // ── Channeler 3 (npc 3) — sight-engaged; dialogue only ──────────────────
+  @storyline("talkChanneler2") {
+    @trigger(map = "PokemonTower3F", npc = 3)
+    @if (getFlag("EVENT_BEAT_POKEMONTOWER_3_TRAINER_2")) {
+      @speaker("") { @t("My friends were possessed\ntoo!", "我的朋友也被附身了！") }
+    } @else {
+      @speaker("") { @t("Be gone! Evil spirit!", "退散吧！邪恶的幽灵！") }
+    }
+  }
+
+  // ── Ground item (npc 4) — PokeBall holding an ESCAPE_ROPE ───────────────
+  @storyline("talkPokeBall") {
+    @trigger(map = "PokemonTower3F", npc = 4, toggle = "POKEMON_TOWER_3F_OBJ_4")
+    @if (!getFlag("EVENT_GOT_POKEMON_TOWER_3F_ESCAPE_ROPE")) {
+      giveItem("ESCAPE_ROPE", 1)
+      setFlag("EVENT_GOT_POKEMON_TOWER_3F_ESCAPE_ROPE")
+      hideObjectByName("POKEMON_TOWER_3F_OBJ_4")
+      @speaker("") { @t("<PLAYER> found ESCAPE ROPE!", "<PLAYER>找到了逃脱绳！") }
+    }
+  }
+}

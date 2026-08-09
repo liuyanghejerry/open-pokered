@@ -1,0 +1,78 @@
+{
+  "$schema": "../schemas/pokemon.schema.json",
+  "species": "Bellsprout",
+  "baseStats": {
+    "hp": 50,
+    "attack": 75,
+    "defense": 35,
+    "speed": 40,
+    "special": 70
+  },
+  "type1": "Grass",
+  "type2": "Poison",
+  "catchRate": 255,
+  "baseExp": 84,
+  "growthRate": "MediumSlow",
+  "initialMoves": [
+    "VineWhip",
+    "Growth",
+    "None",
+    "None"
+  ],
+  "tmHmFlags": [
+    36,
+    3,
+    56,
+    192,
+    3,
+    8,
+    6
+  ],
+  "pokedex": {
+    "category": "FLOWER",
+    "heightFeet": 2,
+    "heightInches": 4,
+    "weightDecipounds": 90,
+    "flavorTextPages": [
+      "A carnivorous\n#MON that traps\nand eats bugs.",
+      "It uses its root\nfeet to soak up\nneeded moisture"
+    ]
+  },
+  "evolutions": [
+    {
+      "method": "level",
+      "species": "Weepinbell",
+      "level": 21
+    }
+  ],
+  "learnset": [
+    {
+      "level": 13,
+      "moveId": "Wrap"
+    },
+    {
+      "level": 15,
+      "moveId": "Poisonpowder"
+    },
+    {
+      "level": 18,
+      "moveId": "SleepPowder"
+    },
+    {
+      "level": 21,
+      "moveId": "StunSpore"
+    },
+    {
+      "level": 26,
+      "moveId": "Acid"
+    },
+    {
+      "level": 33,
+      "moveId": "RazorLeaf"
+    },
+    {
+      "level": 42,
+      "moveId": "Slam"
+    }
+  ]
+}

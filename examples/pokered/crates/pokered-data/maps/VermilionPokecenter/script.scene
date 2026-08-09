@@ -1,0 +1,55 @@
+// Refactored from VermilionPokecenter/script.js to jrpg-engine-dsl.
+// Follows the CeladonPokecenter pattern (Pokecenter nurse dialog
+// with @choice + @option). See docs/MIGRATION_NOTES.md §A.
+
+game_scene VermilionPokecenter {
+  @storyline("talkNurse") {
+    @trigger(map = "VermilionPokecenter", npc = 1)
+    @speaker("") {
+      @t("Welcome to the POKEMON\nCENTER!\n\nWe heal your POKEMON back to\nperfect health!\n\nShall we heal your POKEMON?", "欢迎来到宝可梦中心！\n\n我们会让你的宝可梦恢复最佳状\n态！\n\n要为你治疗宝可梦吗？")
+    }
+    @choice {
+      @option(@t("Yes", "是")) {
+        @speaker("") {
+          @t("OK, we will need your\nPOKEMON.", "好的，请把宝可梦交给我。")
+        }
+        faceNpc("1", "right")
+        delay(8)
+        heal()
+        animateHealingMachine()
+        faceNpc("1", "down")
+        delay(8)
+        @speaker("") {
+          @t("Thank you for waiting.\n\nYour POKEMON are fully\nhealed!", "谢谢你的等待。\n\n你的宝可梦已完全恢复了！")
+        }
+      }
+      @option(@t("No", "否")) {
+      }
+    }
+    @speaker("") {
+      @t("We hope to see you again!", "期待你再次光临！")
+    }
+  }
+
+  @storyline("talkFishingGuru") {
+    @trigger(map = "VermilionPokecenter", npc = 2)
+    @speaker("") { @t("Even if they are the same\nlevel, POKEMON can have very\ndifferent abilities.\n\nA POKEMON raised by a\ntrainer is stronger than one\nin the wild.", "即使是相同等级，宝可梦的能力\n也可能大不相同。培育方法不\n同。\n\n由训练家培育的宝可梦比野生的\n要更强。") }
+  }
+
+  @storyline("talkSailor") {
+    @trigger(map = "VermilionPokecenter", npc = 3)
+    @speaker("") { @t("My POKEMON was poisoned! It\nfainted while we were\nwalking!", "我的宝可梦中毒了！走着走着就\n晕倒了！") }
+  }
+
+  @storyline("talkLinkReceptionist") {
+    @trigger(map = "VermilionPokecenter", npc = 4)
+    @speaker("") { @t("Welcome to the CABLE CLUB!", "欢迎来到通信俱乐部！") }
+  }
+
+  // ── Pokémon Center PC (sign 1 at 13,3) ───────────────────────────────
+  // engine/menus/pc.asm ActivatePC: BILL's PC / item PC / PROF.OAK's PC.
+  @storyline("pcStorage") {
+    @trigger(map = "VermilionPokecenter", sign = 1)
+    openPC()
+  }
+}

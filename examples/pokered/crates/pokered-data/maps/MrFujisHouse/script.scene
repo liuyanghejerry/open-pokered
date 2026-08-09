@@ -1,0 +1,80 @@
+// MrFujisHouse — translated from the original disassembly (scripts/MrFujisHouse.asm,
+// text/MrFujisHouse.asm) to the real Game DSL API surface. Pure NPC-dialogue map:
+// two villagers branch on EVENT_RESCUED_MR_FUJI, two pet POKeMON play cries, Mr.Fuji
+// is a key-item gate for the POKe FLUTE, and the Pokedex is a flavor "sign" NPC.
+
+game_scene MrFujisHouse {
+  // ── SuperNerd (npc 1) ──────────────────────────────────────────────────
+  @storyline("talkSuperNerd") {
+    @trigger(map = "MrFujisHouse", npc = 1)
+    @if (getFlag("EVENT_RESCUED_MR_FUJI")) {
+      @speaker("") {
+        @t("MR.FUJI had been praying\nalone for CUBONE's mother.", "富士老人一直独自为卡拉卡拉的\n妈妈祈祷。")
+      }
+    } @else {
+      @speaker("") {
+        @t("That's odd, MR.FUJI isn't\nhere. Where'd he go?", "真奇怪，富士老人不在这里。他\n去哪儿了？")
+      }
+    }
+  }
+
+  // ── Little Girl (npc 2) ─────────────────────────────────────────────────
+  @storyline("talkLittleGirl") {
+    @trigger(map = "MrFujisHouse", npc = 2)
+    @if (getFlag("EVENT_RESCUED_MR_FUJI")) {
+      @speaker("") {
+        @t("It's so warm! POKeMON are so\nnice to hug!", "好温暖！宝可梦抱起来真舒服！")
+      }
+    } @else {
+      @speaker("") {
+        @t("This is really MR.FUJI's\nhouse.\n\nHe's really kind!\n\nHe looks after abandoned and\norphaned POKeMON!", "这里真的是富士老人的家。\n\n他非常善良！\n\n他照顾被遗弃和无家可归的宝可\n梦！")
+      }
+    }
+  }
+
+  // ── PSYDUCK (npc 3) ─────────────────────────────────────────────────────
+  @storyline("talkPsyduck") {
+    @trigger(map = "MrFujisHouse", npc = 3)
+    @speaker("") { @t("PSYDUCK: Gwappa!", "可达鸭：呱呱！") }
+    playCry("PSYDUCK")
+  }
+
+  // ── NIDORINO (npc 4) ────────────────────────────────────────────────────
+  @storyline("talkNidorino") {
+    @trigger(map = "MrFujisHouse", npc = 4)
+    @speaker("") { @t("NIDORINO: Gaoo!", "尼多力诺：嘎噢！") }
+    playCry("NIDORINO")
+  }
+
+  // ── MR.FUJI (npc 5) — gives the POKe FLUTE the first time ────────────────
+  @storyline("talkMrFuji") {
+    @trigger(map = "MrFujisHouse", npc = 5)
+    @if (getFlag("EVENT_GOT_POKE_FLUTE")) {
+      @speaker("") {
+        @t("MR.FUJI: Has my FLUTE helped\nyou?", "富士老人：我的宝可梦之笛帮到\n你了吗？")
+      }
+    } @else {
+      @speaker("") {
+        @t("MR.FUJI: <PLAYER>.\n\nYour POKeDEX quest may fail\nwithout love for your\nPOKeMON.\n\nI think this may help your\nquest.", "富士老人：<PLAYER>。\n\n你的图鉴之旅缺少了对宝可梦的\n爱可能会失败。\n\n我想这个也许能帮到你。")
+      }
+      given = giveItem("POKE_FLUTE", 1)
+      @if (given) {
+        setFlag("EVENT_GOT_POKE_FLUTE")
+        @speaker("") { @t("<PLAYER> received a POKe\nFLUTE!", "<PLAYER>获得了宝可梦之笛！") }
+        @speaker("") {
+          @t("Upon hearing POKe FLUTE,\nsleeping POKeMON will spring\nawake.\n\nIt works on all sleeping\nPOKeMON.", "听到宝可梦之笛，睡着的宝可梦\n会立刻苏醒。\n\n它对所有睡着的宝可梦都有效。")
+        }
+      } @else {
+        @speaker("") { @t("You must make room for this!", "你必须腾出空间来放它！") }
+      }
+    }
+  }
+
+  // ── Pokedex display (npc 6) ─────────────────────────────────────────────
+  @storyline("talkPokedex") {
+    @trigger(map = "MrFujisHouse", npc = 6)
+    @speaker("") {
+      @t("POKeMON Monthly Grand Prize\nDrawing!\n\nThe application form is...\n\nGone! It's been clipped out!", "宝可梦月刊大奖抽奖活动！\n\n申请表已经……\n\n不见了！被人剪走了！")
+    }
+  }
+}

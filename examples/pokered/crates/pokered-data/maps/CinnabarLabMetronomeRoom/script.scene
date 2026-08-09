@@ -1,0 +1,54 @@
+// CinnabarLabMetronomeRoom — translated from the original disassembly
+// (scripts/CinnabarLabMetronomeRoom.asm, text/CinnabarLabMetronomeRoom.asm) to the
+// real Game DSL API surface. Plain NPC-dialogue + sign room: Scientist 1 is a one-
+// time TM35 (METRONOME) gift gated on EVENT_GOT_TM35; everything else is dialogue.
+
+game_scene CinnabarLabMetronomeRoom {
+  // ── Scientist 1 (npc 1) — gives TM35 (METRONOME) once ──────────────────
+  @storyline("talkScientist1") {
+    @trigger(map = "CinnabarLabMetronomeRoom", npc = 1)
+    @if (getFlag("EVENT_GOT_TM35")) {
+      @speaker("") {
+        @t("Tch-tch-tch! That's the\nsound of a METRONOME!\n\nIt tweaks your POKeMON's\nbrain into using moves it\ndoesn't know!", "嗒-嗒-嗒！这就是挥指的声音！\n\n它能让你的宝可梦的大脑使出不\n知道的招式！")
+      }
+    } @else {
+      @speaker("") {
+        @t("Tch-tch-tch! I made a cool\nTM!\n\nIt can cause all kinds of\nfun!", "嗒-嗒-嗒！我做了个超棒的TM！\n\n它可以带来各种乐趣！")
+      }
+      giveItem("TM_35", 1)
+      setFlag("EVENT_GOT_TM35")
+      @speaker("") { @t("<PLAYER> received TM35!", "<PLAYER>得到了 TM35！") }
+    }
+  }
+
+  // ── Scientist 2 (npc 2) — EEVEE flavor dialogue ────────────────────────
+  @storyline("talkScientist2") {
+    @trigger(map = "CinnabarLabMetronomeRoom", npc = 2)
+    @speaker("") {
+      @t("EEVEE can evolve into 1 of 3\nkinds of POKeMON.", "伊布可以进化成 3种宝可梦中的\n1种。")
+    }
+  }
+
+  // ── Signs 1 & 2 — PC keyboard / PC monitor (both show the e-mail) ───────
+  @storyline("sign1") {
+    @trigger(map = "CinnabarLabMetronomeRoom", sign = 1)
+    @speaker("") {
+      @t("There's an e-mail message!\n\n...\n\nThe 3 legendary bird POKeMON\nare ARTICUNO, ZAPDOS and\nMOLTRES.\n\nTheir whereabouts are\nunknown.\n\nWe plan to explore the\ncavern close to CERULEAN.\n\nFrom: POKeMON RESEARCH TEAM\n\n...", "有一封电子邮件信息！\n\n……\n\n三只传说中的鸟类宝可梦是急冻\n鸟、闪电鸟和火焰鸟。\n\n它们下落不明。\n\n我们计划探索华蓝市附近的洞\n窟。\n\n发件人：宝可梦研究团队\n\n……")
+    }
+  }
+
+  @storyline("sign2") {
+    @trigger(map = "CinnabarLabMetronomeRoom", sign = 2)
+    @speaker("") {
+      @t("There's an e-mail message!\n\n...\n\nThe 3 legendary bird POKeMON\nare ARTICUNO, ZAPDOS and\nMOLTRES.\n\nTheir whereabouts are\nunknown.\n\nWe plan to explore the\ncavern close to CERULEAN.\n\nFrom: POKeMON RESEARCH TEAM\n\n...", "有一封电子邮件信息！\n\n……\n\n三只传说中的鸟类宝可梦是急冻\n鸟、闪电鸟和火焰鸟。\n\n它们下落不明。\n\n我们计划探索华蓝市附近的洞\n窟。\n\n发件人：宝可梦研究团队\n\n……")
+    }
+  }
+
+  // ── Sign 3 — the amber pipe ────────────────────────────────────────────
+  @storyline("sign3") {
+    @trigger(map = "CinnabarLabMetronomeRoom", sign = 3)
+    @speaker("") {
+      @t("An amber pipe!", "一根琥珀色的管子！")
+    }
+  }
+}

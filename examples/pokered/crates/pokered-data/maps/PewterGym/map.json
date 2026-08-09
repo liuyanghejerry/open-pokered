@@ -1,0 +1,347 @@
+{
+  "$schema": "../../schemas/map.schema.json",
+  "id": 54,
+  "name": "PewterGym",
+  "header": {
+    "tileset": "Gym",
+    "music": "Gym",
+    "connectionFlags": 0,
+    "width": 5,
+    "height": 7,
+    "borderBlock": 3
+  },
+  "connections": {},
+  "warps": [
+    {
+      "x": 4,
+      "y": 13,
+      "destWarpId": 2
+    },
+    {
+      "x": 5,
+      "y": 13,
+      "destWarpId": 2
+    }
+  ],
+  "npcs": [
+    {
+      "spriteId": 12,
+      "spriteName": "SuperNerd",
+      "x": 4,
+      "y": 1,
+      "movement": "Stationary",
+      "facing": "Down",
+      "range": 0,
+      "textId": 1,
+      "isTrainer": false,
+      "trainerClass": "Brock",
+      "trainerSet": 1
+    },
+    {
+      "spriteId": 7,
+      "spriteName": "CooltrainerM",
+      "x": 3,
+      "y": 6,
+      "movement": "Stationary",
+      "facing": "Right",
+      "range": 0,
+      "textId": 2,
+      "isTrainer": true,
+      "trainerClass": "JrTrainerM",
+      "trainerSet": 1,
+      "endBattleText": "Darn!\n\nLight years isn't\ntime! It measures\ndistance!"
+    },
+    {
+      "spriteId": 36,
+      "spriteName": "GymGuide",
+      "x": 7,
+      "y": 10,
+      "movement": "Stationary",
+      "facing": "Down",
+      "range": 0,
+      "textId": 3,
+      "isTrainer": false
+    }
+  ],
+  "signs": [],
+  "text": {
+    "npc": {
+      "1": [
+        {
+          "line1": "I'm BROCK!",
+          "line2": "I'm PEWTER's GYM"
+        },
+        {
+          "line1": "LEADER!",
+          "line2": ""
+        },
+        {
+          "line1": "I believe in rock",
+          "line2": "hard defense and"
+        },
+        {
+          "line1": "determination!",
+          "line2": ""
+        },
+        {
+          "line1": "That's why my",
+          "line2": "#MON are all"
+        },
+        {
+          "line1": "the rock-type!",
+          "line2": ""
+        },
+        {
+          "line1": "Do you still want",
+          "line2": "to challenge me?"
+        },
+        {
+          "line1": "Fine then! Show",
+          "line2": "me your best!"
+        }
+      ],
+      "1_AfterBeat": [
+        {
+          "line1": "There are all",
+          "line2": "kinds of trainers"
+        },
+        {
+          "line1": "in the world!",
+          "line2": ""
+        },
+        {
+          "line1": "You appear to be",
+          "line2": "very gifted as a"
+        },
+        {
+          "line1": "#MON trainer!",
+          "line2": ""
+        },
+        {
+          "line1": "Go to the GYM in",
+          "line2": "CERULEAN and test"
+        },
+        {
+          "line1": "your abilities!",
+          "line2": ""
+        }
+      ],
+      "2": [
+        {
+          "line1": "Stop right there,",
+          "line2": "kid!"
+        },
+        {
+          "line1": "You're still light",
+          "line2": "years from facing"
+        },
+        {
+          "line1": "BROCK!",
+          "line2": ""
+        }
+      ],
+      "2_Defeated": [
+        {
+          "line1": "Darn!",
+          "line2": ""
+        },
+        {
+          "line1": "Light years isn't",
+          "line2": "time! It measures"
+        },
+        {
+          "line1": "distance!",
+          "line2": ""
+        }
+      ],
+      "2_AfterBattle": [
+        {
+          "line1": "You're pretty hot,",
+          "line2": "but not as hot"
+        },
+        {
+          "line1": "as BROCK!",
+          "line2": ""
+        }
+      ],
+      "3": [
+        {
+          "line1": "Hiya! I can tell",
+          "line2": "you have what it"
+        },
+        {
+          "line1": "takes to become a",
+          "line2": "#MON champ!"
+        },
+        {
+          "line1": "I'm no trainer,",
+          "line2": "but I can tell"
+        },
+        {
+          "line1": "you how to win!",
+          "line2": ""
+        },
+        {
+          "line1": "Let me take you",
+          "line2": "to the top!"
+        }
+      ],
+      "3_Yes": [
+        {
+          "line1": "All right! Let's",
+          "line2": "get happening!"
+        },
+        {
+          "line1": "The 1st #MON",
+          "line2": "out in a match is"
+        },
+        {
+          "line1": "at the top of the",
+          "line2": "#MON LIST!"
+        },
+        {
+          "line1": "By changing the",
+          "line2": "order of #MON,"
+        },
+        {
+          "line1": "matches could be",
+          "line2": "made easier!"
+        }
+      ],
+      "3_No": [
+        {
+          "line1": "It's a free",
+          "line2": "service! Let's"
+        },
+        {
+          "line1": "get happening!",
+          "line2": ""
+        },
+        {
+          "line1": "The 1st #MON",
+          "line2": "out in a match is"
+        },
+        {
+          "line1": "at the top of the",
+          "line2": "#MON LIST!"
+        },
+        {
+          "line1": "By changing the",
+          "line2": "order of #MON,"
+        },
+        {
+          "line1": "matches could be",
+          "line2": "made easier!"
+        }
+      ],
+      "3_AfterBeat": [
+        {
+          "line1": "Just as I thought!",
+          "line2": "You're #MON"
+        },
+        {
+          "line1": "champ material!",
+          "line2": ""
+        }
+      ],
+      "script_BrockWaitTakeThis": [
+        {
+          "line1": "Wait! Take this",
+          "line2": "with you!"
+        }
+      ],
+      "script_ReceivedTM34": [
+        {
+          "line1": "<PLAYER> received",
+          "line2": "TM34!"
+        }
+      ],
+      "script_TM34Explanation": [
+        {
+          "line1": "A TM contains a",
+          "line2": "technique that"
+        },
+        {
+          "line1": "can be taught to",
+          "line2": "#MON!"
+        },
+        {
+          "line1": "A TM is good only",
+          "line2": "once! So when you"
+        },
+        {
+          "line1": "use one to teach",
+          "line2": "a new technique,"
+        },
+        {
+          "line1": "pick the #MON",
+          "line2": "carefully!"
+        },
+        {
+          "line1": "TM34 contains",
+          "line2": "BIDE!"
+        },
+        {
+          "line1": "Your #MON will",
+          "line2": "absorb damage in"
+        },
+        {
+          "line1": "battle then pay",
+          "line2": "it back double!"
+        }
+      ],
+      "script_TM34NoRoom": [
+        {
+          "line1": "You don't have",
+          "line2": "room for this!"
+        }
+      ],
+      "script_ReceivedBoulderBadge": [
+        {
+          "line1": "I took",
+          "line2": "you for granted."
+        },
+        {
+          "line1": "As proof of your",
+          "line2": "victory, here's"
+        },
+        {
+          "line1": "the BOULDERBADGE!",
+          "line2": ""
+        },
+        {
+          "line1": "<PLAYER> received",
+          "line2": "the BOULDERBADGE!"
+        }
+      ],
+      "script_BoulderBadgeInfo": [
+        {
+          "line1": "That's an official",
+          "line2": "#MON LEAGUE"
+        },
+        {
+          "line1": "BADGE!",
+          "line2": ""
+        },
+        {
+          "line1": "Its bearer's",
+          "line2": "#MON become"
+        },
+        {
+          "line1": "more powerful!",
+          "line2": ""
+        },
+        {
+          "line1": "The technique",
+          "line2": "FLASH can now be"
+        },
+        {
+          "line1": "used any time!",
+          "line2": ""
+        }
+      ]
+    },
+    "sign": {}
+  },
+  "wild": null
+}

@@ -1,0 +1,63 @@
+{
+  "$schema": "../schemas/trainer.schema.json",
+  "class": "PsychicTr",
+  "constName": "PSYCHIC",
+  "parties": [
+    {
+      "pokemon": [
+        {
+          "level": 31,
+          "species": "Kadabra"
+        },
+        {
+          "level": 31,
+          "species": "Slowpoke"
+        },
+        {
+          "level": 31,
+          "species": "MrMime"
+        },
+        {
+          "level": 31,
+          "species": "Kadabra"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 34,
+          "species": "MrMime"
+        },
+        {
+          "level": 34,
+          "species": "Kadabra"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 33,
+          "species": "Slowpoke"
+        },
+        {
+          "level": 33,
+          "species": "Slowpoke"
+        },
+        {
+          "level": 33,
+          "species": "Slowbro"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 38,
+          "species": "Slowbro"
+        }
+      ]
+    }
+  ]
+}

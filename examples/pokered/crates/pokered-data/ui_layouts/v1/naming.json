@@ -1,0 +1,32 @@
+{
+  "$schema": "/schemas/layout.schema.json",
+  "schema_version": 1,
+  "screen": "naming",
+  "variants": {
+    "default": {
+      "children": [
+        {
+          "id": "box_0",
+          "rect": {
+            "tx": 0,
+            "ty": 5,
+            "tw": 20,
+            "th": 13
+          },
+          "color": "Black"
+        },
+        {
+          "id": "region_0",
+          "rect": {
+            "tx": 0,
+            "ty": 0,
+            "tw": 20,
+            "th": 18
+          },
+          "border": false,
+          "color": "Black"
+        }
+      ]
+    }
+  }
+}

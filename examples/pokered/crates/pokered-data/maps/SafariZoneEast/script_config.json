@@ -1,0 +1,40 @@
+{
+  "$schema": "../../schemas/script_config.schema.json",
+  "coordEvents": [],
+  "npcs": [
+    {
+      "id": 1,
+      "talk": "talkPokeBall",
+      "toggleId": "SAFARI_ZONE_EAST_OBJ_1"
+    },
+    {
+      "id": 2,
+      "talk": "talkPokeBall1",
+      "toggleId": "SAFARI_ZONE_EAST_OBJ_2"
+    },
+    {
+      "id": 3,
+      "talk": "talkPokeBall2",
+      "toggleId": "SAFARI_ZONE_EAST_OBJ_3"
+    },
+    {
+      "id": 4,
+      "talk": "talkPokeBall3",
+      "toggleId": "SAFARI_ZONE_EAST_OBJ_4"
+    }
+  ],
+  "signs": [
+    {
+      "id": 1,
+      "talk": "sign1"
+    },
+    {
+      "id": 2,
+      "talk": "sign2"
+    },
+    {
+      "id": 3,
+      "talk": "sign3"
+    }
+  ]
+}

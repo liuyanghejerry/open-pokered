@@ -1,0 +1,9 @@
+{
+  "$schema": "../schemas/move.schema.json",
+  "id": "RazorLeaf",
+  "effect": "NoAdditionalEffect",
+  "power": 55,
+  "type": "Grass",
+  "accuracy": 95,
+  "pp": 25
+}

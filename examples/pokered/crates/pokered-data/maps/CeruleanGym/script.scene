@@ -1,0 +1,94 @@
+// CeruleanGym — translated from the original disassembly (scripts/CeruleanGym.asm,
+// text/CeruleanGym.asm) to the real Game DSL API surface. Gym template: leader
+// Misty is talk-driven (map.json isTrainer = false) so the script owns the
+// battle->badge->TM reward; the two gym trainers (CooltrainerF / Swimmer) are
+// sight-engaged by the runtime, so their .scene handlers are dialogue only.
+
+game_scene CeruleanGym {
+  // ── Misty, the Gym Leader (npc 1) ───────────────────────────────────────
+  @storyline("talkMisty") {
+    @trigger(map = "CeruleanGym", npc = 1)
+    @if (getFlag("EVENT_BEAT_MISTY")) {
+      @if (!getFlag("EVENT_GOT_TM11")) {
+        // Beat Misty previously but had no room for the TM — try again.
+        @speaker("") { @t("You better make room for\nthis!", "你最好腾出地方来！") }
+        giveItem("TM11", 1)
+        setFlag("EVENT_GOT_TM11")
+        @speaker("") { @t("<PLAYER> received TM11!", "<PLAYER>得到了 TM11！") }
+        @speaker("") {
+          @t("TM11 teaches BUBBLEBEAM!\n\nUse it on an aquatic\nPOKeMON!", "TM11能学会泡沫光线！\n\n把它用在水系宝可梦身上！")
+        }
+      } @else {
+        @speaker("") {
+          @t("TM11 teaches BUBBLEBEAM!\n\nUse it on an aquatic\nPOKeMON!", "TM11能学会泡沫光线！\n\n把它用在水系宝可梦身上！")
+        }
+      }
+    } @else {
+      @speaker("") {
+        @t("Hi, you're a new face!\n\nTrainers who want to turn\npro have to have a policy\nabout POKeMON!\n\nWhat is your approach when\nyou catch POKeMON?\n\nMy policy is an all-out\noffensive with water-type\nPOKeMON!", "嗨，你是新面孔！\n\n想成为职业训练家的人要有自己\n的宝可梦理念！\n\n你抓到宝可梦时有什么想法？\n\n我的理念是用水系宝可梦全力进\n攻！")
+      }
+      result = startBattle("OPP_MISTY1")
+      @if (result == "win") {
+        @speaker("") {
+          @t("Wow! You're too much!\n\nAll right!\n\nYou can have the\nCASCADEBADGE to show you\nbeat me!", "哇！你真厉害！\n\n好吧！\n\n我把蓝色徽章给你，证明你打败\n了我！")
+        }
+        giveBadge("CASCADEBADGE")
+        setFlag("EVENT_BEAT_MISTY")
+        @speaker("") {
+          @t("The CASCADEBADGE makes all\nPOKeMON up to L30 obey!\n\nThat includes even\noutsiders!\n\nThere's more, you can now\nuse CUT any time!\n\nYou can CUT down small\nbushes to open new paths!\n\nYou can also have my\nfavorite TM!", "蓝色徽章能让所有宝可梦到L30\n都听话！\n\n就算不是自己人也可以！\n\n还有，你现在可以随时使用居合\n斩！\n\n你能用居合斩砍倒小树丛开辟新\n路！\n\n你还可以拿到我最爱的TM！")
+        }
+        giveItem("TM11", 1)
+        setFlag("EVENT_GOT_TM11")
+        @speaker("") { @t("<PLAYER> received TM11!", "<PLAYER>得到了 TM11！") }
+        @speaker("") {
+          @t("TM11 teaches BUBBLEBEAM!\n\nUse it on an aquatic\nPOKeMON!", "TM11能学会泡沫光线！\n\n把它用在水系宝可梦身上！")
+        }
+        // Deactivate the gym trainers (original sets these in Misty's post-battle).
+        setFlag("EVENT_BEAT_CERULEAN_GYM_TRAINER_0")
+        setFlag("EVENT_BEAT_CERULEAN_GYM_TRAINER_1")
+      }
+    }
+  }
+
+  // ── Cooltrainer (JrTrainerF, npc 2) — sight-engaged; dialogue only ───────
+  @storyline("talkCooltrainerF") {
+    @trigger(map = "CeruleanGym", npc = 2)
+    @if (getFlag("EVENT_BEAT_CERULEAN_GYM_TRAINER_0")) {
+      @speaker("") {
+        @t("You have to face other\ntrainers to find out how\ngood you really are.", "你必须面对其他训练家才能了解\n自己的实力。")
+      }
+    } @else {
+      @speaker("") {
+        @t("I'm more than good enough\nfor you!\n\nMISTY can wait!", "我比你强多了！\n\n小霞就等着吧！")
+      }
+    }
+  }
+
+  // ── Swimmer (npc 3) — sight-engaged; dialogue only ──────────────────────
+  @storyline("talkSwimmer") {
+    @trigger(map = "CeruleanGym", npc = 3)
+    @if (getFlag("EVENT_BEAT_CERULEAN_GYM_TRAINER_1")) {
+      @speaker("") {
+        @t("MISTY is going to keep\nimproving!\n\nShe won't lose to someone\nlike you!", "小霞会不断变强的！\n\n她不会输给你这样的人！")
+      }
+    } @else {
+      @speaker("") {
+        @t("Splash!\n\nI'm first up! Let's do it!", "哗啦！\n\n我先来！开打吧！")
+      }
+    }
+  }
+
+  // ── Gym guide (npc 4) ───────────────────────────────────────────────────
+  @storyline("talkGymGuide") {
+    @trigger(map = "CeruleanGym", npc = 4)
+    @if (getFlag("EVENT_BEAT_MISTY")) {
+      @speaker("") {
+        @t("You beat MISTY! What'd I\ntell ya?\n\nYou and me kid, we make a\npretty darn good team!", "你打败小霞了！我说的没错吧？\n\n你和我小子，我们配合得真不\n错！")
+      }
+    } @else {
+      @speaker("") {
+        @t("Yo! Champ in making!\n\nHere's my advice!\n\nThe LEADER, MISTY, is a pro\nwho uses water POKeMON!\n\nYou can drain all their\nwater with plant POKeMON!\n\nOr, zap them with\nelectricity!", "哟！未来的冠军！\n\n这是我的建议！\n\n馆主小霞是用水系宝可梦的高\n手！\n\n你可以用草系宝可梦抽干她的\n水！\n\n或者，用电系来电她！")
+      }
+    }
+  }
+}

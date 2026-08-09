@@ -1,0 +1,70 @@
+{
+  "$schema": "../schemas/pokemon.schema.json",
+  "species": "Krabby",
+  "baseStats": {
+    "hp": 30,
+    "attack": 105,
+    "defense": 90,
+    "speed": 50,
+    "special": 25
+  },
+  "type1": "Water",
+  "type2": "Water",
+  "catchRate": 225,
+  "baseExp": 115,
+  "growthRate": "MediumFast",
+  "initialMoves": [
+    "Bubble",
+    "Leer",
+    "None",
+    "None"
+  ],
+  "tmHmFlags": [
+    164,
+    63,
+    8,
+    192,
+    2,
+    8,
+    54
+  ],
+  "pokedex": {
+    "category": "RIVER CRAB",
+    "heightFeet": 1,
+    "heightInches": 4,
+    "weightDecipounds": 140,
+    "flavorTextPages": [
+      "Its pincers are\nnot only powerful\nweapons, they are",
+      "used for balance\nwhen walking\nsideways"
+    ]
+  },
+  "evolutions": [
+    {
+      "method": "level",
+      "species": "Kingler",
+      "level": 28
+    }
+  ],
+  "learnset": [
+    {
+      "level": 20,
+      "moveId": "Vicegrip"
+    },
+    {
+      "level": 25,
+      "moveId": "Guillotine"
+    },
+    {
+      "level": 30,
+      "moveId": "Stomp"
+    },
+    {
+      "level": 35,
+      "moveId": "Crabhammer"
+    },
+    {
+      "level": 40,
+      "moveId": "Harden"
+    }
+  ]
+}

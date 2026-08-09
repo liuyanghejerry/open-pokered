@@ -1,0 +1,1 @@
+{"id":"Antidote","name":"ANTIDOTE","price":100,"category":"Medicine","effect":{"type":"CurePoison","params":{}},"held_effect":null,"berry":null,"use_outside_battle":true,"use_in_battle":true,"consume":true,"key_item":false,"sellable":true,"description":"","tags":["healing","status","cure","poison"]}

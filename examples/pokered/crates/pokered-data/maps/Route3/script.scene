@@ -1,0 +1,135 @@
+// Route3 — translated from the original disassembly (scripts/Route3.asm,
+// text/Route3.asm) to the real Game DSL API surface. Route3 is a trainer route:
+// one talk-only SuperNerd (npc 1) and eight sight-engaged trainers (npcs 2-9)
+// whose battles the runtime drives, so their .scene handlers are dialogue only
+// (pre-battle taunt vs. after-battle line, branched on the beaten event flag).
+
+game_scene Route3 {
+  // ── SuperNerd (npc 1) — talk-only NPC, no battle ───────────────────────
+  @storyline("talkSuperNerd") {
+    @trigger(map = "Route3", npc = 1)
+    @speaker("") {
+      @t("Whew... I better take a\nrest... Groan...\n\nThat tunnel from CERULEAN\ntakes a lot out of you!", "呼……我得休息一下……唉……\n\n从华蓝市穿过那条隧道真够累人\n的！")
+    }
+  }
+
+  // ── Youngster 1 (npc 2) — sight-engaged trainer 0; dialogue only ───────
+  @storyline("talkYoungster1") {
+    @trigger(map = "Route3", npc = 2)
+    @if (getFlag("EVENT_BEAT_ROUTE_3_TRAINER_0")) {
+      @speaker("") {
+        @t("There are other kinds of\nPOKeMON than those found in\nthe forest!", "除了森林里的宝可梦，还有其他\n种类的宝可梦！")
+      }
+    } @else {
+      @speaker("") {
+        @t("Hey! I met you in VIRIDIAN\nFOREST!", "嘿！我们在常青森林见过！")
+      }
+    }
+  }
+
+  // ── Youngster 2 (npc 3) — sight-engaged trainer 1; dialogue only ───────
+  @storyline("talkYoungster2") {
+    @trigger(map = "Route3", npc = 3)
+    @if (getFlag("EVENT_BEAT_ROUTE_3_TRAINER_1")) {
+      @speaker("") {
+        @t("Are you storing your POKeMON\non PC? Each BOX can hold 20\nPOKeMON!", "你会在电脑上存放宝可梦吗？每\n个盒子可以存放20只宝可梦！")
+      }
+    } @else {
+      @speaker("") {
+        @t("Hi! I like shorts! They're\ncomfy and easy to wear!", "嗨！我喜欢短裤！穿起来舒适又\n方便！")
+      }
+    }
+  }
+
+  // ── CooltrainerF 1 (npc 4) — sight-engaged trainer 2; dialogue only ────
+  @storyline("talkCooltrainerF1") {
+    @trigger(map = "Route3", npc = 4)
+    @if (getFlag("EVENT_BEAT_ROUTE_3_TRAINER_2")) {
+      @speaker("") {
+        @t("Quit staring if you don't\nwant to fight!", "不想战斗的话就别一直盯着看！")
+      }
+    } @else {
+      @speaker("") {
+        @t("You looked at me, didn't\nyou?", "你刚才看了我吧？")
+      }
+    }
+  }
+
+  // ── Youngster 3 (npc 5) — sight-engaged trainer 3; dialogue only ───────
+  @storyline("talkYoungster3") {
+    @trigger(map = "Route3", npc = 5)
+    @if (getFlag("EVENT_BEAT_ROUTE_3_TRAINER_3")) {
+      @speaker("") {
+        @t("If a POKeMON BOX on the PC\ngets full, just switch to\nanother BOX!", "电脑里的宝可梦盒子装满后，换\n一个盒子就行了！")
+      }
+    } @else {
+      @speaker("") {
+        @t("Are you a trainer? Let's\nfight!", "你是训练家吧？来对战吧！")
+      }
+    }
+  }
+
+  // ── CooltrainerF 2 (npc 6) — sight-engaged trainer 4; dialogue only ────
+  @storyline("talkCooltrainerF2") {
+    @trigger(map = "Route3", npc = 6)
+    @if (getFlag("EVENT_BEAT_ROUTE_3_TRAINER_4")) {
+      @speaker("") {
+        @t("Avoid fights by not letting\npeople see you!", "只要不让别人看到你就能避开战\n斗！")
+      }
+    } @else {
+      @speaker("") {
+        @t("That look you gave me, it's\nso intriguing!", "你刚才那个眼神，真是迷人呢！")
+      }
+    }
+  }
+
+  // ── Youngster 4 (npc 7) — sight-engaged trainer 5; dialogue only ───────
+  @storyline("talkYoungster4") {
+    @trigger(map = "Route3", npc = 7)
+    @if (getFlag("EVENT_BEAT_ROUTE_3_TRAINER_5")) {
+      @speaker("") {
+        @t("I always wear shorts, even\nin winter!", "我一年四季都穿短裤，冬天也一\n样！")
+      }
+    } @else {
+      @speaker("") {
+        @t("Hey! You're not wearing\nshorts!", "喂！你居然没穿短裤！")
+      }
+    }
+  }
+
+  // ── Youngster 5 (npc 8) — sight-engaged trainer 6; dialogue only ───────
+  @storyline("talkYoungster5") {
+    @trigger(map = "Route3", npc = 8)
+    @if (getFlag("EVENT_BEAT_ROUTE_3_TRAINER_6")) {
+      @speaker("") {
+        @t("Trained POKeMON are stronger\nthan the wild ones!", "经过训练的宝可梦比野生的更\n强！")
+      }
+    } @else {
+      @speaker("") {
+        @t("You can fight my new\nPOKeMON!", "来跟我的新宝可梦对战吧！")
+      }
+    }
+  }
+
+  // ── CooltrainerF 3 (npc 9) — sight-engaged trainer 7; dialogue only ────
+  @storyline("talkCooltrainerF3") {
+    @trigger(map = "Route3", npc = 9)
+    @if (getFlag("EVENT_BEAT_ROUTE_3_TRAINER_7")) {
+      @speaker("") {
+        @t("ROUTE 4 is at the foot of\nMT.MOON.", "月见山脚下就是4号道路。")
+      }
+    } @else {
+      @speaker("") {
+        @t("Eek! Did you touch me?", "呀！你刚才碰我了吗？")
+      }
+    }
+  }
+
+  // ── Route sign (sign 1) ────────────────────────────────────────────────
+  @storyline("sign1") {
+    @trigger(map = "Route3", sign = 1)
+    @speaker("") {
+      @t("ROUTE 3 MT.MOON AHEAD", "3号道路前方是月见山")
+    }
+  }
+}

@@ -1,0 +1,110 @@
+{
+  "$schema": "../../schemas/map.schema.json",
+  "id": 130,
+  "name": "CeladonMansion3F",
+  "header": {
+    "tileset": "Mansion",
+    "music": "Celadon",
+    "connectionFlags": 0,
+    "width": 4,
+    "height": 6,
+    "borderBlock": 15
+  },
+  "connections": {},
+  "warps": [
+    {
+      "x": 6,
+      "y": 1,
+      "destMap": "CeladonMansion2F",
+      "destWarpId": 0
+    },
+    {
+      "x": 7,
+      "y": 1,
+      "destMap": "CeladonMansionRoof",
+      "destWarpId": 0
+    },
+    {
+      "x": 2,
+      "y": 1,
+      "destMap": "CeladonMansionRoof",
+      "destWarpId": 1
+    },
+    {
+      "x": 4,
+      "y": 1,
+      "destMap": "CeladonMansion2F",
+      "destWarpId": 3
+    }
+  ],
+  "npcs": [
+    {
+      "spriteId": 21,
+      "spriteName": "BikeShopClerk",
+      "x": 0,
+      "y": 4,
+      "movement": "Stationary",
+      "facing": "Up",
+      "range": 0,
+      "textId": 1,
+      "isTrainer": false
+    },
+    {
+      "spriteId": 38,
+      "spriteName": "Clerk",
+      "x": 3,
+      "y": 4,
+      "movement": "Stationary",
+      "facing": "Up",
+      "range": 0,
+      "textId": 2,
+      "isTrainer": false
+    },
+    {
+      "spriteId": 12,
+      "spriteName": "SuperNerd",
+      "x": 0,
+      "y": 7,
+      "movement": "Stationary",
+      "facing": "Up",
+      "range": 0,
+      "textId": 3,
+      "isTrainer": false
+    },
+    {
+      "spriteId": 44,
+      "spriteName": "SilphWorkerM",
+      "x": 2,
+      "y": 3,
+      "movement": "Stationary",
+      "facing": "Down",
+      "range": 0,
+      "textId": 4,
+      "isTrainer": false
+    }
+  ],
+  "signs": [
+    {
+      "x": 1,
+      "y": 3,
+      "textId": 1
+    },
+    {
+      "x": 4,
+      "y": 3,
+      "textId": 2
+    },
+    {
+      "x": 1,
+      "y": 6,
+      "textId": 3
+    },
+    {
+      "x": 4,
+      "y": 9,
+      "textId": 4
+    }
+  ],
+  "text": {},
+  "wild": null
+}

@@ -1,0 +1,1 @@
+{"id":"MasterBall","name":"MASTER BALL","price":0,"category":"Poké Balls","effect":{"type":"None","params":{}},"held_effect":null,"berry":null,"use_outside_battle":false,"use_in_battle":true,"consume":true,"key_item":false,"sellable":false,"description":"","tags":["ball","master"]}

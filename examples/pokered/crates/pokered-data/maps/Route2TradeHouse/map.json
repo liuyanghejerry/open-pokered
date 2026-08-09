@@ -1,0 +1,73 @@
+{
+  "$schema": "../../schemas/map.schema.json",
+  "id": 48,
+  "name": "Route2TradeHouse",
+  "header": {
+    "tileset": "House",
+    "music": "Cities1",
+    "connectionFlags": 0,
+    "width": 4,
+    "height": 4,
+    "borderBlock": 10
+  },
+  "connections": {},
+  "warps": [
+    {
+      "x": 2,
+      "y": 7,
+      "destWarpId": 2
+    },
+    {
+      "x": 3,
+      "y": 7,
+      "destWarpId": 2
+    }
+  ],
+  "npcs": [
+    {
+      "spriteId": 32,
+      "spriteName": "Scientist",
+      "x": 2,
+      "y": 4,
+      "movement": "Stationary",
+      "facing": "Right",
+      "range": 0,
+      "textId": 1,
+      "isTrainer": false
+    },
+    {
+      "spriteId": 55,
+      "spriteName": "GameboyKid",
+      "x": 4,
+      "y": 1,
+      "movement": "Stationary",
+      "facing": "Down",
+      "range": 0,
+      "textId": 2,
+      "isTrainer": false
+    }
+  ],
+  "signs": [],
+  "text": {
+    "npc": {
+      "1": [
+        {
+          "line1": "A fainted #MON",
+          "line2": "can't fight. But,"
+        },
+        {
+          "line1": "it can still use",
+          "line2": "moves like CUT!"
+        }
+      ],
+      "2": [
+        {
+          "line1": "[In-game trade script]",
+          "line2": ""
+        }
+      ]
+    },
+    "sign": {}
+  },
+  "wild": null
+}

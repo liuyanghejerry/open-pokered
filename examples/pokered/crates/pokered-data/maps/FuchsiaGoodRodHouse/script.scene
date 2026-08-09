@@ -1,0 +1,50 @@
+// FuchsiaGoodRodHouse — translated from the original disassembly
+// (scripts/FuchsiaGoodRodHouse.asm, text/FuchsiaGoodRodHouse.asm) to the real
+// Game DSL API surface. Single-NPC item-gate house: the FISHING GURU's older
+// brother gives the GOOD ROD once (gated on EVENT_GOT_GOOD_ROD) after a YES/NO
+// prompt, then greets the player on later visits.
+//
+
+game_scene FuchsiaGoodRodHouse {
+  // ── FISHING GURU's older brother (npc 1) — gives the GOOD ROD ───────────
+  @storyline("talkFishingGuru") {
+    @trigger(map = "FuchsiaGoodRodHouse", npc = 1)
+    @if (getFlag("EVENT_GOT_GOOD_ROD")) {
+      // Already gave the rod (.HowAreTheFishText).
+      @speaker("") {
+        @t("Hello there, <PLAYER>!\n\nHow are the fish biting?", "你好呀， <PLAYER>！\n\n鱼钓得怎么样？")
+      }
+    } @else {
+      // .Text → YesNoChoice.
+      @speaker("") {
+        @t("I'm the FISHING GURU's older\nbrother!\n\nI simply Looove fishing!\n\nDo you like to fish?", "我啊，是那个垂钓大师的哥哥！\n\n我超喜欢钓鱼！\n\n你喜欢钓鱼吗？")
+      }
+      @choice {
+        @option(@t("YES", "是")) {
+          // .ReceivedGoodRodText + GiveItem GOOD_ROD.
+          @speaker("") {
+            @t("Grand! I like your style!\n\nTake this and fish, young\none!", "很好！我喜欢你的风格！\n\n拿上这个，去钓鱼吧，少年！")
+          }
+          given = giveItem("GOOD_ROD", 1)
+          @if (given) {
+            playSound("SFX_GET_ITEM_1")
+            setFlag("EVENT_GOT_GOOD_ROD")
+            @speaker("") {
+              @t("<PLAYER> received a GOOD\nROD!", "<PLAYER>得到了一根好钓竿！")
+            }
+          } @else {
+            @speaker("") {
+              @t("Oh no!\n\nYou have no room for my\ngift!", "哎呀！\n\n你没有地方放我的礼物！")
+            }
+          }
+        }
+        @option(@t("NO", "否")) {
+          // .ThatsSoDisappointingText.
+          @speaker("") {
+            @t("Oh... That's so\ndisappointing...", "哦……真让人失望……")
+          }
+        }
+      }
+    }
+  }
+}

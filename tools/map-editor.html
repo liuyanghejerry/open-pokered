@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pokered Map Editor</title>
+    <style>
+        * { box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; margin: 0; padding: 10px; background: #1a1a2e; color: #eee; }
+        .container { display: flex; gap: 15px; }
+        .sidebar { width: 320px; background: #16213e; padding: 15px; border-radius: 8px; overflow-y: auto; max-height: calc(100vh - 40px); }
+        .sidebar h2 { margin: 0 0 15px; color: #4ecca3; font-size: 16px; }
+        .sidebar label { display: block; margin: 10px 0 5px; font-size: 12px; }
+        .sidebar select, .sidebar input[type="text"] { width: 100%; padding: 6px; border-radius: 4px; border: 1px solid #4ecca3; background: #1a1a2e; color: #eee; font-size: 12px; }
+        .sidebar input[type="file"] { font-size: 11px; }
+        .btn-group { display: flex; gap: 5px; flex-wrap: wrap; margin-top: 10px; }
+        .btn { padding: 6px 12px; background: #4ecca3; color: #1a1a2e; border: none; border-radius: 4px; cursor: pointer; font-size: 11px; font-weight: bold; }
+        .btn:hover { background: #3ba88a; }
+        .btn.secondary { background: #333; color: #eee; }
+        .checkbox-group label { display: flex; align-items: center; gap: 6px; cursor: pointer; font-size: 12px; margin: 3px 0; }
+        .checkbox-group input { width: auto; }
+        .info-box { background: #0f0f23; padding: 10px; border-radius: 6px; margin-top: 15px; font-size: 11px; font-family: monospace; }
+        .info-box h3 { margin: 0 0 8px; color: #4ecca3; font-size: 13px; }
+        .info-box p { margin: 3px 0; }
+        .info-box code { color: #4ecca3; }
+        .legend { margin-top: 15px; padding: 10px; background: #0f0f23; border-radius: 6px; }
+        .legend h3 { margin: 0 0 8px; color: #4ecca3; font-size: 13px; }
+        .legend-item { display: flex; align-items: center; gap: 8px; font-size: 11px; margin: 3px 0; }
+        .legend-color { width: 14px; height: 14px; border-radius: 2px; }
+        .main-area { flex: 1; }
+        .canvas-container { position: relative; }
+        #mapCanvas { border: 2px solid #4ecca3; border-radius: 4px; image-rendering: pixelated; cursor: crosshair; }
+        #tilesetCanvas { border: 2px solid #4ecca3; border-radius: 4px; image-rendering: pixelated; margin-top: 10px; cursor: pointer; }
+        .toolbar { display: flex; gap: 10px; margin-bottom: 10px; align-items: center; }
+        .tool-btn { padding: 8px 16px; background: #333; color: #eee; border: 2px solid transparent; border-radius: 4px; cursor: pointer; font-size: 12px; }
+        .tool-btn.active { border-color: #4ecca3; background: #2a4a3e; }
+        .tool-btn:hover { background: #444; }
+        .zoom-controls { display: flex; gap: 5px; align-items: center; }
+        .zoom-controls span { font-size: 12px; min-width: 50px; text-align: center; }
+        .tooltip { position: fixed; background: rgba(22, 33, 62, 0.95); padding: 8px; border-radius: 4px; border: 1px solid #4ecca3; font-size: 11px; pointer-events: none; display: none; z-index: 100; font-family: monospace; }
+        .status-bar { margin-top: 10px; font-size: 11px; color: #888; }
+        .edit-indicator { color: #f1c40f; font-weight: bold; }
+        .passable-editor { margin-top: 15px; padding: 10px; background: #0f0f23; border-radius: 6px; }
+        .passable-editor h3 { margin: 0 0 8px; color: #4ecca3; font-size: 13px; }
+        .tile-list { max-height: 150px; overflow-y: auto; font-family: monospace; font-size: 10px; }
+        .tile-item { display: flex; align-items: center; gap: 5px; padding: 2px; cursor: pointer; }
+        .tile-item:hover { background: #1a1a2e; }
+        .tile-item input { width: auto; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="sidebar">
+            <h2>Map Editor</h2>
+            
+            <label>Data File:</label>
+            <input type="file" id="fileInput" accept=".json">
+            
+            <label>Map:</label>
+            <select id="mapSelect"></select>
+            
+            <label>Search:</label>
+            <input type="text" id="searchBox" placeholder="Filter maps...">
+            
+            <div class="checkbox-group">
+                <label><input type="checkbox" id="showTiles" checked> Show Tiles</label>
+                <label><input type="checkbox" id="showCollision" checked> Show Collision</label>
+                <label><input type="checkbox" id="showWarps" checked> Show Warps</label>
+                <label><input type="checkbox" id="showGrid"> Show Grid</label>
+            </div>
+            
+            <div class="btn-group">
+                <button class="btn" id="exportBtn">Export JSON</button>
+                <button class="btn secondary" id="prevBtn">◀</button>
+                <button class="btn secondary" id="nextBtn">▶</button>
+            </div>
+            
+            <div class="passable-editor">
+                <h3>Passable Tiles</h3>
+                <p style="font-size: 10px; color: #888; margin: 5px 0;">Click tiles on map to toggle passable</p>
+                <div class="tile-list" id="passableList"></div>
+            </div>
+            
+            <div class="info-box">
+                <h3>Map Info</h3>
+                <div id="mapInfo">Load data file to begin</div>
+            </div>
+            
+            <div class="legend">
+                <h3>Legend</h3>
+                <div class="legend-item"><div class="legend-color" style="background: rgba(78, 204, 163, 0.5);"></div> Passable</div>
+                <div class="legend-item"><div class="legend-color" style="background: rgba(231, 76, 60, 0.5);"></div> Blocked</div>
+                <div class="legend-item"><div class="legend-color" style="background: rgba(52, 152, 219, 0.8);"></div> Warp</div>
+            </div>
+        </div>
+        
+        <div class="main-area">
+            <div class="toolbar">
+                <button class="tool-btn active" id="toolView">View</button>
+                <button class="tool-btn" id="toolEdit">Edit Collision</button>
+                <div class="zoom-controls">
+                    <button class="btn secondary" id="zoomOut">-</button>
+                    <span id="zoomLevel">2x</span>
+                    <button class="btn secondary" id="zoomIn">+</button>
+                </div>
+            </div>
+            <div class="canvas-container">
+                <canvas id="mapCanvas"></canvas>
+            </div>
+            <div class="status-bar" id="statusBar">Ready</div>
+        </div>
+    </div>
+    
+    <div id="tooltip" class="tooltip"></div>
+
+    <script>
+        const TILE_SIZE = 8;
+        const BLOCK_TILES = 4;
+        let exportData = null;
+        let mapsData = [];
+        let blocksets = [];
+        let currentMapIndex = 0;
+        let zoom = 2;
+        let currentTool = 'view';
+        let tilesetCanvases = {};
+        let hasUnsavedChanges = false;
+        
+        // Tileset to PNG mapping
+        const TILESET_FILES = {
+            'Overworld': 'overworld.png',
+            'RedsHouse1': 'reds_house.png',
+            'Mart': 'pokecenter.png',
+            'Forest': 'forest.png',
+            'RedsHouse2': 'reds_house.png',
+            'Dojo': 'gym.png',
+            'Pokecenter': 'pokecenter.png',
+            'Gym': 'gym.png',
+            'House': 'house.png',
+            'ForestGate': 'gate.png',
+            'Museum': 'gate.png',
+            'Underground': 'underground.png',
+            'Gate': 'gate.png',
+            'Ship': 'ship.png',
+            'ShipPort': 'ship_port.png',
+            'Cemetery': 'cemetery.png',
+            'Interior': 'interior.png',
+            'Cavern': 'cavern.png',
+            'Lobby': 'lobby.png',
+            'Mansion': 'mansion.png',
+            'Lab': 'lab.png',
+            'Club': 'club.png',
+            'Facility': 'facility.png',
+            'Plateau': 'plateau.png'
+        };
+        
+        document.getElementById('fileInput').addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            try {
+                const text = await file.text();
+                exportData = JSON.parse(text);
+                mapsData = exportData.maps || [];
+                blocksets = exportData.blocksets || [];
+                populateMapSelector();
+                await loadTilesets();
+                renderMap(0);
+                updateStatus('Loaded ' + mapsData.length + ' maps');
+            } catch (err) {
+                updateStatus('Error: ' + err.message);
+            }
+        });
+        
+        async function loadTilesets() {
+            const basePath = '../../gfx/tilesets/';
+            for (const [name, file] of Object.entries(TILESET_FILES)) {
+                try {
+                    const img = new Image();
+                    img.src = basePath + file;
+                    await img.decode();
+                    tilesetCanvases[name] = img;
+                } catch (e) {
+                    console.warn('Could not load tileset:', name);
+                }
+            }
+        }
+        
+        function populateMapSelector(filter = '') {
+            const select = document.getElementById('mapSelect');
+            select.innerHTML = '';
+            mapsData.forEach((map, i) => {
+                if (filter && !map.name.toLowerCase().includes(filter.toLowerCase())) return;
+                const opt = document.createElement('option');
+                opt.value = i;
+                opt.textContent = map.name;
+                select.appendChild(opt);
+            });
+            select.value = currentMapIndex;
+        }
+        
+        function getBlockset(tilesetName) {
+            return blocksets.find(b => b.tileset_name === tilesetName);
+        }
+        
+        function getTileFromTileset(tilesetImg, tileId) {
+            if (!tilesetImg) return null;
+            const tilesPerRow = Math.floor(tilesetImg.width / TILE_SIZE);
+            const tx = (tileId % tilesPerRow) * TILE_SIZE;
+            const ty = Math.floor(tileId / tilesPerRow) * TILE_SIZE;
+            return { tx, ty, img: tilesetImg };
+        }
+        
+        function renderMap(index) {
+            if (index < 0 || index >= mapsData.length) return;
+            currentMapIndex = index;
+            const map = mapsData[index];
+            
+            const canvas = document.getElementById('mapCanvas');
+            const ctx = canvas.getContext('2d');
+            
+            const pw = map.width * BLOCK_TILES * TILE_SIZE;
+            const ph = map.height * BLOCK_TILES * TILE_SIZE;
+            canvas.width = pw * zoom;
+            canvas.height = ph * zoom;
+            canvas.style.width = (pw * zoom) + 'px';
+            canvas.style.height = (ph * zoom) + 'px';
+            
+            ctx.imageSmoothingEnabled = false;
+            ctx.scale(zoom, zoom);
+            ctx.fillStyle = '#000';
+            ctx.fillRect(0, 0, pw, ph);
+            
+            const showTiles = document.getElementById('showTiles').checked;
+            const showCollision = document.getElementById('showCollision').checked;
+            const showGrid = document.getElementById('showGrid').checked;
+            const showWarps = document.getElementById('showWarps').checked;
+            
+            const blockset = getBlockset(map.tileset_name);
+            const tilesetImg = tilesetCanvases[map.tileset_name];
+            
+            // Render blocks
+            for (let by = 0; by < map.height; by++) {
+                for (let bx = 0; bx < map.width; bx++) {
+                    const blockIdx = by * map.width + bx;
+                    const blockId = map.blocks[blockIdx];
+                    const px = bx * BLOCK_TILES * TILE_SIZE;
+                    const py = by * BLOCK_TILES * TILE_SIZE;
+                    
+                    // Draw tiles from blockset
+                    if (showTiles && blockset && tilesetImg) {
+                        const blockTiles = blockset.blocks[blockId];
+                        if (blockTiles) {
+                            for (let ty = 0; ty < 4; ty++) {
+                                for (let tx = 0; tx < 4; tx++) {
+                                    const tileId = blockTiles[ty * 4 + tx];
+                                    const tile = getTileFromTileset(tilesetImg, tileId);
+                                    if (tile) {
+                                        ctx.drawImage(
+                                            tile.img,
+                                            tile.tx, tile.ty, TILE_SIZE, TILE_SIZE,
+                                            px + tx * TILE_SIZE, py + ty * TILE_SIZE, TILE_SIZE, TILE_SIZE
+                                        );
+                                    }
+                                }
+                            }
+                        }
+                    } else {
+                        // Fallback: color blocks
+                        ctx.fillStyle = `hsl(${blockId * 7}, 50%, 40%)`;
+                        ctx.fillRect(px, py, BLOCK_TILES * TILE_SIZE, BLOCK_TILES * TILE_SIZE);
+                    }
+                    
+                    // Collision overlay - check each TILE in the block, not the block ID
+                    if (showCollision && blockset && blockset.blocks[blockId]) {
+                        const blockTiles = blockset.blocks[blockId];
+                        for (let ty = 0; ty < 4; ty++) {
+                            for (let tx = 0; tx < 4; tx++) {
+                                const tileId = blockTiles[ty * 4 + tx];
+                                const passable = map.passable_tiles.includes(tileId);
+                                ctx.fillStyle = passable 
+                                    ? 'rgba(78, 204, 163, 0.25)' 
+                                    : 'rgba(231, 76, 60, 0.35)';
+                                ctx.fillRect(
+                                    px + tx * TILE_SIZE, 
+                                    py + ty * TILE_SIZE, 
+                                    TILE_SIZE, 
+                                    TILE_SIZE
+                                );
+                            }
+                        }
+                    }
+                }
+            }
+            
+            // Grid
+            if (showGrid) {
+                ctx.strokeStyle = 'rgba(255, 255, 0, 0.3)';
+                ctx.lineWidth = 0.5;
+                for (let x = 0; x <= pw; x += BLOCK_TILES * TILE_SIZE) {
+                    ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, ph); ctx.stroke();
+                }
+                for (let y = 0; y <= ph; y += BLOCK_TILES * TILE_SIZE) {
+                    ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(pw, y); ctx.stroke();
+                }
+            }
+            
+            // Warps - coordinates are in 2x2 meta-tile units
+            // So actual tile position = warp.x * 2, warp.y * 2
+            if (showWarps && map.warps) {
+                map.warps.forEach(warp => {
+                    // Convert from 2x2 meta-tile coords to tile coords
+                    const tileX = warp.x * 2;
+                    const tileY = warp.y * 2;
+                    const px = tileX * TILE_SIZE;
+                    const py = tileY * TILE_SIZE;
+                    ctx.fillStyle = 'rgba(52, 152, 219, 0.8)';
+                    ctx.fillRect(px, py, TILE_SIZE * 2, TILE_SIZE * 2);
+                    ctx.strokeStyle = '#3498db';
+                    ctx.lineWidth = 2;
+                    ctx.strokeRect(px, py, TILE_SIZE * 2, TILE_SIZE * 2);
+                });
+            }
+            
+            updateMapInfo(map);
+            updatePassableList(map);
+        }
+        
+        function updateMapInfo(map) {
+            let warpInfo = '';
+            if (map.warps && map.warps.length > 0) {
+                warpInfo = '<p><b>Warps:</b></p>';
+                map.warps.forEach((warp, i) => {
+                    const tileX = warp.x * 2;
+                    const tileY = warp.y * 2;
+                    warpInfo += `<p style="margin-left:10px">Warp ${i}: tiles (${tileX}-${tileX+1}, ${tileY}-${tileY+1})`;
+                    if (warp.dest_map_name) {
+                        warpInfo += ` → ${warp.dest_map_name}`;
+                    }
+                    warpInfo += '</p>';
+                });
+            }
+            document.getElementById('mapInfo').innerHTML = `
+                <p><b>${map.name}</b></p>
+                <p>ID: <code>0x${map.id.toString(16).padStart(2, '0')}</code></p>
+                <p>Size: ${map.width}x${map.height} blocks</p>
+                <p>Tiles: ${map.width * 4}x${map.height * 4}</p>
+                <p>Tileset: ${map.tileset_name}</p>
+                ${warpInfo}
+                <p>Passable tiles: ${map.passable_tiles.length}</p>
+            `;
+        }
+        
+        function updatePassableList(map) {
+            const list = document.getElementById('passableList');
+            list.innerHTML = '';
+            map.passable_tiles.forEach(tileId => {
+                const div = document.createElement('div');
+                div.className = 'tile-item';
+                div.innerHTML = `<span style="width:30px">0x${tileId.toString(16).padStart(2, '0')}</span> <span style="color:#4ecca3">Passable</span>`;
+                list.appendChild(div);
+            });
+        }
+        
+        function updateStatus(msg) {
+            const indicator = hasUnsavedChanges ? '<span class="edit-indicator">*Unsaved*</span> ' : '';
+            document.getElementById('statusBar').innerHTML = indicator + msg;
+        }
+        
+        // Tool selection
+        document.getElementById('toolView').addEventListener('click', () => {
+            currentTool = 'view';
+            document.getElementById('toolView').classList.add('active');
+            document.getElementById('toolEdit').classList.remove('active');
+        });
+        document.getElementById('toolEdit').addEventListener('click', () => {
+            currentTool = 'edit';
+            document.getElementById('toolEdit').classList.add('active');
+            document.getElementById('toolView').classList.remove('active');
+        });
+        
+        // Canvas click for editing - edit TILE collision, not block
+        document.getElementById('mapCanvas').addEventListener('click', (e) => {
+            if (currentTool !== 'edit' || !mapsData[currentMapIndex]) return;
+            const map = mapsData[currentMapIndex];
+            const blockset = getBlockset(map.tileset_name);
+            if (!blockset) return;
+            
+            const rect = e.target.getBoundingClientRect();
+            const x = Math.floor((e.clientX - rect.left) / (TILE_SIZE * zoom));
+            const y = Math.floor((e.clientY - rect.top) / (TILE_SIZE * zoom));
+            const blockX = Math.floor(x / BLOCK_TILES);
+            const blockY = Math.floor(y / BLOCK_TILES);
+            const subX = x % BLOCK_TILES;
+            const subY = y % BLOCK_TILES;
+            const blockIdx = blockY * map.width + blockX;
+            const blockId = map.blocks[blockIdx];
+            
+            const blockTiles = blockset.blocks[blockId];
+            if (!blockTiles) return;
+            
+            const tileId = blockTiles[subY * 4 + subX];
+            
+            const idx = map.passable_tiles.indexOf(tileId);
+            if (idx >= 0) {
+                map.passable_tiles.splice(idx, 1);
+                updateStatus(`Tile 0x${tileId.toString(16).padStart(2, '0')} marked as IMPASSABLE`);
+            } else {
+                map.passable_tiles.push(tileId);
+                updateStatus(`Tile 0x${tileId.toString(16).padStart(2, '0')} marked as PASSABLE`);
+            }
+            hasUnsavedChanges = true;
+            renderMap(currentMapIndex);
+        });
+        
+        // Hover tooltip - show TILE info, not just block
+        document.getElementById('mapCanvas').addEventListener('mousemove', (e) => {
+            if (!mapsData[currentMapIndex]) return;
+            const map = mapsData[currentMapIndex];
+            const blockset = getBlockset(map.tileset_name);
+            
+            const rect = e.target.getBoundingClientRect();
+            const x = Math.floor((e.clientX - rect.left) / (TILE_SIZE * zoom));
+            const y = Math.floor((e.clientY - rect.top) / (TILE_SIZE * zoom));
+            const blockX = Math.floor(x / BLOCK_TILES);
+            const blockY = Math.floor(y / BLOCK_TILES);
+            const subX = x % BLOCK_TILES;
+            const subY = y % BLOCK_TILES;
+            const blockIdx = blockY * map.width + blockX;
+            const blockId = map.blocks ? map.blocks[blockIdx] : 0;
+            
+            let tileId = 0;
+            let passable = false;
+            if (blockset && blockset.blocks[blockId]) {
+                tileId = blockset.blocks[blockId][subY * 4 + subX];
+                passable = map.passable_tiles.includes(tileId);
+            }
+            
+            const tooltip = document.getElementById('tooltip');
+            tooltip.style.display = 'block';
+            tooltip.style.left = (e.clientX + 15) + 'px';
+            tooltip.style.top = (e.clientY + 15) + 'px';
+            tooltip.innerHTML = `
+                Tile: (${x}, ${y})<br>
+                Block: (${blockX}, ${blockY}) #${blockIdx}<br>
+                BlockID: 0x${blockId.toString(16).padStart(2, '0')}<br>
+                TileID: 0x${tileId.toString(16).padStart(2, '0')}<br>
+                <b style="color:${passable ? '#4ecca3' : '#e74c3c'}">${passable ? 'PASSABLE' : 'BLOCKED'}</b>
+            `;
+        });
+        document.getElementById('mapCanvas').addEventListener('mouseleave', () => {
+            document.getElementById('tooltip').style.display = 'none';
+        });
+        
+        // Navigation
+        document.getElementById('mapSelect').addEventListener('change', e => renderMap(parseInt(e.target.value)));
+        document.getElementById('searchBox').addEventListener('input', e => populateMapSelector(e.target.value));
+        document.getElementById('prevBtn').addEventListener('click', () => { if (currentMapIndex > 0) renderMap(currentMapIndex - 1); });
+        document.getElementById('nextBtn').addEventListener('click', () => { if (currentMapIndex < mapsData.length - 1) renderMap(currentMapIndex + 1); });
+        
+        // Zoom
+        document.getElementById('zoomIn').addEventListener('click', () => { zoom = Math.min(4, zoom + 1); document.getElementById('zoomLevel').textContent = zoom + 'x'; renderMap(currentMapIndex); });
+        document.getElementById('zoomOut').addEventListener('click', () => { zoom = Math.max(1, zoom - 1); document.getElementById('zoomLevel').textContent = zoom + 'x'; renderMap(currentMapIndex); });
+        
+        // Export
+        document.getElementById('exportBtn').addEventListener('click', () => {
+            if (!exportData) return;
+            const json = JSON.stringify(exportData, null, 2);
+            const blob = new Blob([json], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'map_data_edited.json';
+            a.click();
+            URL.revokeObjectURL(url);
+            hasUnsavedChanges = false;
+            updateStatus('Exported to map_data_edited.json');
+        });
+        
+        // Toggles
+        ['showTiles', 'showCollision', 'showWarps', 'showGrid'].forEach(id => {
+            document.getElementById(id).addEventListener('change', () => renderMap(currentMapIndex));
+        });
+        
+        // Keyboard
+        document.addEventListener('keydown', (e) => {
+            if (e.target.tagName === 'INPUT') return;
+            if (e.key === 'ArrowLeft' && currentMapIndex > 0) renderMap(currentMapIndex - 1);
+            if (e.key === 'ArrowRight' && currentMapIndex < mapsData.length - 1) renderMap(currentMapIndex + 1);
+            if (e.key === 'v') document.getElementById('toolView').click();
+            if (e.key === 'e') document.getElementById('toolEdit').click();
+        });
+    </script>
+</body>
+</html>

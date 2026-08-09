@@ -1,0 +1,119 @@
+{
+  "$schema": "../schemas/trainer.schema.json",
+  "class": "JrTrainerM",
+  "constName": "JR_TRAINER_M",
+  "parties": [
+    {
+      "pokemon": [
+        {
+          "level": 11,
+          "species": "Diglett"
+        },
+        {
+          "level": 11,
+          "species": "Sandshrew"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 14,
+          "species": "Rattata"
+        },
+        {
+          "level": 14,
+          "species": "Ekans"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 18,
+          "species": "Mankey"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 20,
+          "species": "Squirtle"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 16,
+          "species": "Spearow"
+        },
+        {
+          "level": 16,
+          "species": "Raticate"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 18,
+          "species": "Diglett"
+        },
+        {
+          "level": 18,
+          "species": "Diglett"
+        },
+        {
+          "level": 18,
+          "species": "Sandshrew"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 21,
+          "species": "Growlithe"
+        },
+        {
+          "level": 21,
+          "species": "Charmander"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 19,
+          "species": "Rattata"
+        },
+        {
+          "level": 19,
+          "species": "Diglett"
+        },
+        {
+          "level": 19,
+          "species": "Ekans"
+        },
+        {
+          "level": 19,
+          "species": "Sandshrew"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 29,
+          "species": "NidoranM"
+        },
+        {
+          "level": 29,
+          "species": "Nidorino"
+        }
+      ]
+    }
+  ]
+}

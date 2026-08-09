@@ -1,0 +1,117 @@
+// PokemonFanClub — translated from the original disassembly
+// (scripts/PokemonFanClub.asm, text/PokemonFanClub.asm) to the real Game DSL
+// API surface. NPC talk handlers only: two fans whose boast text toggles via
+// EVENT_*_FAN_BOAST flags, two pet POKeMON that play their cry, the Chairman who
+// gives the BIKE_VOUCHER after his story, a receptionist, and two signs.
+
+game_scene PokemonFanClub {
+  // ── Fisher / PIKACHU fan (npc 1) ────────────────────────────────────────
+  // If PIKACHU_FAN_BOAST is set the SEEL fan already bragged, so this fan brags
+  // back (BetterText) and clears the flag; otherwise normal text, and the SEEL
+  // fan is primed to brag back (SEEL_FAN_BOAST).
+  @storyline("talkPikachuFan") {
+    @trigger(map = "PokemonFanClub", npc = 1)
+    @if (getFlag("EVENT_PIKACHU_FAN_BOAST")) {
+      @speaker("") {
+        @t("Humph! My PIKACHU is twice\nas cute as that one!", "哼！我的皮卡丘比那只可爱两\n倍！")
+      }
+      resetFlag("EVENT_PIKACHU_FAN_BOAST")
+    } @else {
+      @speaker("") {
+        @t("Won't you admire my\nPIKACHU's adorable tail?", "你不欣赏一下我的皮卡丘可爱的\n尾巴吗？")
+      }
+      setFlag("EVENT_SEEL_FAN_BOAST")
+    }
+  }
+
+  // ── Girl / SEEL fan (npc 2) ─────────────────────────────────────────────
+  @storyline("talkSeelFan") {
+    @trigger(map = "PokemonFanClub", npc = 2)
+    @if (getFlag("EVENT_SEEL_FAN_BOAST")) {
+      @speaker("") {
+        @t("Oh dear!\n\nMy SEEL is far more\nattractive!", "哎呀！\n\n我的小海狮可爱多了！")
+      }
+      resetFlag("EVENT_SEEL_FAN_BOAST")
+    } @else {
+      @speaker("") {
+        @t("I just love my SEEL!\n\nIt squeals when I hug it!", "我就是爱我的小海狮！\n\n我一抱它它就吱吱叫！")
+      }
+      setFlag("EVENT_PIKACHU_FAN_BOAST")
+    }
+  }
+
+  // ── Pet PIKACHU (npc 3) ─────────────────────────────────────────────────
+  @storyline("talkPikachu") {
+    @trigger(map = "PokemonFanClub", npc = 3)
+    @speaker("") {
+      @t("PIKACHU: Chu! Pikachu!", "皮卡丘：啾！皮卡丘！")
+    }
+    playCry("PIKACHU")
+  }
+
+  // ── Pet SEEL (npc 4) ────────────────────────────────────────────────────
+  @storyline("talkSeel") {
+    @trigger(map = "PokemonFanClub", npc = 4)
+    @speaker("") {
+      @t("SEEL: Kyuoo!", "小海狮：啾呜！")
+    }
+    playCry("SEEL")
+  }
+
+  // ── Chairman / Gentleman (npc 5) ────────────────────────────────────────
+  // Original PokemonFanClub_CheckBikeInBag: skip to the "final" greeting if the
+  // player already has the voucher, a BICYCLE, or the BIKE_VOUCHER in the bag.
+  // Otherwise offer to tell the story; after the story give the BIKE_VOUCHER.
+  @storyline("talkChairman") {
+    @trigger(map = "PokemonFanClub", npc = 5)
+    @if (getFlag("EVENT_GOT_BIKE_VOUCHER") || hasItem("BICYCLE") || hasItem("BIKE_VOUCHER")) {
+      @speaker("") {
+        @t("Hello, <PLAYER>!\n\nDid you come see me about my\nPOKeMON again?\n\nNo? Too bad!", "你好，<PLAYER>！\n\n你又是来看我聊宝可梦的吗？\n\n不是？真遗憾！")
+      }
+    } @else {
+      @speaker("") {
+        @t("I chair the POKeMON Fan\nClub!\n\nI have collected over 100\nPOKeMON!\n\nI'm very fussy when it comes\nto POKeMON!\n\nSo...\n\nDid you come visit to hear\nabout my POKeMON?", "我是宝可梦粉丝俱乐部的会长！\n\n我收集了 100多只宝可梦！\n\n我挑宝可梦非常讲究！\n\n那么……\n\n你是来听我讲宝可梦故事的吗？")
+      }
+      @choice {
+        @option(@t("YES", "是")) {
+          @speaker("") {
+            @t("Good! Then listen up!\n\nMy favorite RAPIDASH...\n\nIt...cute...\nlovely...smart...\nplus...amazing... you think\nso?... oh yes...it...\nstunning... kindly... love\nit!\n\nHug it...when...\nsleeping...warm and\ncuddly... spectacular...\nravishing... ...Oops! Look\nat the time! I kept you too\nlong!\n\nThanks for hearing me out! I\nwant you to have this!", "好！那你听好了！\n\n我最喜欢的烈焰马……\n\n它……可爱……伶俐……聪\n明……外加……惊人……你也这\n么觉得吧？……哦对……它……\n迷人……温柔……让人爱不释\n手！\n\n抱着它……睡觉时……又暖又舒\n服……华丽……惊艳…………哎\n呀！看时间！我耽误你太久了！\n\n谢谢你听我说完！我想把这个给\n你！")
+          }
+          giveItem("BIKE_VOUCHER", 1)
+          setFlag("EVENT_GOT_BIKE_VOUCHER")
+          @speaker("") {
+            @t("<PLAYER> received a BIKE\nVOUCHER!\n\nExchange that for a BICYCLE!\n\nDon't worry, my FEAROW will\nFLY me anywhere!\n\nSo, I don't need a BICYCLE!\n\nI hope you like cycling!", "<PLAYER>得到了自行车兑换券！\n\n用它去换自行车吧！\n\n别担心，我的大嘴雀会带我飞往\n任何地方！\n\n所以，我不需要自行车！\n\n希望你喜欢骑自行车！")
+          }
+        }
+        @option(@t("NO", "否")) {
+          @speaker("") {
+            @t("Oh. Come back when you want\nto hear my story!", "哦。想听我讲故事的时候再来\n吧！")
+          }
+        }
+      }
+    }
+  }
+
+  // ── Receptionist / LinkReceptionist (npc 6) ─────────────────────────────
+  @storyline("talkReceptionist") {
+    @trigger(map = "PokemonFanClub", npc = 6)
+    @speaker("") {
+      @t("Our Chairman is very vocal\nabout POKeMON.", "我们的会长聊起宝可梦总是很起\n劲。")
+    }
+  }
+
+  // ── Signs ───────────────────────────────────────────────────────────────
+  @storyline("sign1") {
+    @trigger(map = "PokemonFanClub", sign = 1)
+    @speaker("") {
+      @t("Let's all listen politely to\nother trainers!", "让我们都认真倾听其他训练家的\n话！")
+    }
+  }
+
+  @storyline("sign2") {
+    @trigger(map = "PokemonFanClub", sign = 2)
+    @speaker("") {
+      @t("If someone brags, brag right\nback!", "如果有人炫耀，就炫耀回去！")
+    }
+  }
+}

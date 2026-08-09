@@ -1,0 +1,115 @@
+{
+  "$schema": "../../schemas/map.schema.json",
+  "id": 76,
+  "name": "Route7Gate",
+  "header": {
+    "tileset": "Gate",
+    "music": "Cities1",
+    "connectionFlags": 0,
+    "width": 3,
+    "height": 4,
+    "borderBlock": 10
+  },
+  "connections": {},
+  "warps": [
+    {
+      "x": 0,
+      "y": 3,
+      "destWarpId": 3
+    },
+    {
+      "x": 0,
+      "y": 4,
+      "destWarpId": 3
+    },
+    {
+      "x": 5,
+      "y": 3,
+      "destWarpId": 0
+    },
+    {
+      "x": 5,
+      "y": 4,
+      "destWarpId": 1
+    }
+  ],
+  "npcs": [
+    {
+      "spriteId": 49,
+      "spriteName": "Guard",
+      "x": 3,
+      "y": 1,
+      "movement": "Stationary",
+      "facing": "Down",
+      "range": 0,
+      "textId": 1,
+      "isTrainer": false
+    }
+  ],
+  "signs": [],
+  "text": {
+    "npc": {
+      "1": [
+        {
+          "line1": "Hi, thanks for",
+          "line2": "the cool drinks!"
+        }
+      ],
+      "1_Thirsty": [
+        {
+          "line1": "I'm on guard duty.",
+          "line2": "Gee, I'm thirsty,"
+        },
+        {
+          "line1": "though!",
+          "line2": ""
+        },
+        {
+          "line1": "Oh wait there,",
+          "line2": "the road's closed."
+        }
+      ],
+      "1_Parched": [
+        {
+          "line1": "Whoa, boy!",
+          "line2": "I'm parched!"
+        },
+        {
+          "line1": "...",
+          "line2": "Huh? I can have"
+        },
+        {
+          "line1": "this drink?",
+          "line2": "Gee, thanks!"
+        }
+      ],
+      "1_ThroughGate": [
+        {
+          "line1": "...",
+          "line2": "Glug glug..."
+        },
+        {
+          "line1": "...",
+          "line2": "Gulp..."
+        },
+        {
+          "line1": "If you want to go",
+          "line2": "to SAFFRON CITY..."
+        },
+        {
+          "line1": "...",
+          "line2": "You can go on"
+        },
+        {
+          "line1": "through. I'll",
+          "line2": "share this with"
+        },
+        {
+          "line1": "the other guards!",
+          "line2": ""
+        }
+      ]
+    }
+  },
+  "wild": null
+}

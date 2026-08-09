@@ -1,0 +1,199 @@
+{
+  "$schema": "../schemas/trainer.schema.json",
+  "class": "Scientist",
+  "constName": "SCIENTIST",
+  "parties": [
+    {
+      "pokemon": [
+        {
+          "level": 34,
+          "species": "Koffing"
+        },
+        {
+          "level": 34,
+          "species": "Voltorb"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 26,
+          "species": "Grimer"
+        },
+        {
+          "level": 26,
+          "species": "Weezing"
+        },
+        {
+          "level": 26,
+          "species": "Koffing"
+        },
+        {
+          "level": 26,
+          "species": "Weezing"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 28,
+          "species": "Magnemite"
+        },
+        {
+          "level": 28,
+          "species": "Voltorb"
+        },
+        {
+          "level": 28,
+          "species": "Magneton"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 29,
+          "species": "Electrode"
+        },
+        {
+          "level": 29,
+          "species": "Weezing"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 33,
+          "species": "Electrode"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 26,
+          "species": "Magneton"
+        },
+        {
+          "level": 26,
+          "species": "Koffing"
+        },
+        {
+          "level": 26,
+          "species": "Weezing"
+        },
+        {
+          "level": 26,
+          "species": "Magnemite"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 25,
+          "species": "Voltorb"
+        },
+        {
+          "level": 25,
+          "species": "Koffing"
+        },
+        {
+          "level": 25,
+          "species": "Magneton"
+        },
+        {
+          "level": 25,
+          "species": "Magnemite"
+        },
+        {
+          "level": 25,
+          "species": "Koffing"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 29,
+          "species": "Electrode"
+        },
+        {
+          "level": 29,
+          "species": "Muk"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 29,
+          "species": "Grimer"
+        },
+        {
+          "level": 29,
+          "species": "Electrode"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 28,
+          "species": "Voltorb"
+        },
+        {
+          "level": 28,
+          "species": "Koffing"
+        },
+        {
+          "level": 28,
+          "species": "Magneton"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 29,
+          "species": "Magnemite"
+        },
+        {
+          "level": 29,
+          "species": "Koffing"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 33,
+          "species": "Magnemite"
+        },
+        {
+          "level": 33,
+          "species": "Magneton"
+        },
+        {
+          "level": 33,
+          "species": "Voltorb"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 34,
+          "species": "Magnemite"
+        },
+        {
+          "level": 34,
+          "species": "Electrode"
+        }
+      ]
+    }
+  ]
+}

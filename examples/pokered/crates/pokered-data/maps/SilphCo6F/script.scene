@@ -1,0 +1,156 @@
+// SilphCo6F — translated from the original disassembly (scripts/SilphCo6F.asm,
+// text/SilphCo6F.asm) to the real Game DSL API surface.
+//
+// Content: the five Silph workers (npcs 1-5) each have two lines, branching on
+// EVENT_BEAT_SILPH_CO_GIOVANNI (panic while Rocket holds the building vs. relief
+// once they've fled). NPCs 6/7/8 are sight-engaged Rocket/Scientist/Rocket
+// trainers (map.json keeps isTrainer:true), so their handlers are dialogue only.
+// NPCs 9/10 are ground items (HP_UP, X_ACCURACY). The map's on-enter gate logic
+// is the Silph Card-Key door-tile swap, now wired via replaceTileBlock:
+//   SilphCo6F_GateCallbackScript: CheckEvent EVENT_SILPH_CO_6_UNLOCKED_DOOR →
+//   open block $5f (=95); lb bc, 6, 2 → Y=6, X=2 → replaceTileBlock(2, 6, 95).
+//   The door only ever opens (no CLOSED id / no re-close), so we re-apply the
+//   OPEN block from the flag on entry and open it when the Card Key is used.
+//   NOTE: the original solve is the shared Silph card-key door interaction
+//   (hUnlockedSilphCoDoors / wCardKeyDoorY matched against this floor's door
+//   coordinate, set when the player steps on the card-key door tile with the
+//   CARD_KEY). That tile-step item check has no DSL primitive, so it is
+//   approximated faithfully: a coords trigger on the card-key door tiles
+//   (block (2,6)) gated by hasItem("CARD_KEY") sets EVENT_SILPH_CO_6_UNLOCKED_DOOR
+//   and opens the door immediately.
+
+game_scene SilphCo6F {
+  // ── On-enter gate callback (SilphCo6F_GateCallbackScript) ───────────────
+  // Re-apply the OPEN door block at (2,6) once the card-key door is unlocked,
+  // so a solved door stays open on re-entry. open block $5f = 95 decimal;
+  // asm lb bc, 6, 2 → Y=6, X=2 → replaceTileBlock(2, 6, 95).
+  @load {
+    @if (getFlag("EVENT_SILPH_CO_6_UNLOCKED_DOOR")) {
+      replaceTileBlock(2, 6, 95)
+    }
+  }
+
+  // ── Card-Key door (SilphCo6F card-key door tile, block (2,6)) ────────────
+  // Original: walking onto the card-key door tile with the CARD_KEY sets
+  // hUnlockedSilphCoDoors; the matching floor's gate callback then sets
+  // EVENT_SILPH_CO_6_UNLOCKED_DOOR and swaps the block. The tile-step CARD_KEY
+  // check has no DSL primitive, so it is approximated: standing on the door
+  // tiles with the Card Key opens it. Door tiles = block (2,6) → tiles
+  // x∈{4,5}, y∈{12,13}.
+  @storyline("cardKeyDoor") {
+    @trigger(map = "SilphCo6F", name = "cardKeyDoor1")
+    @if (!getFlag("EVENT_SILPH_CO_6_UNLOCKED_DOOR")) {
+      @if (hasItem("CARD_KEY")) {
+        @speaker("") { @t("Bingo!", "中了！") }
+        @speaker("") { @t("The CARD KEY opened the\ndoor!", "磁卡钥匙打开了门！") }
+        setFlag("EVENT_SILPH_CO_6_UNLOCKED_DOOR")
+        replaceTileBlock(2, 6, 95)
+        playSound("SFX_GO_INSIDE")
+      } @else {
+        @speaker("") { @t("Darn! It needs a CARD KEY!", "可恶！需要磁卡钥匙！") }
+      }
+    }
+  }
+
+  // ── SilphWorkerM (npc 1) ────────────────────────────────────────────────
+  @storyline("talkSilphWorkerM1") {
+    @trigger(map = "SilphCo6F", npc = 1)
+    @if (getFlag("EVENT_BEAT_SILPH_CO_GIOVANNI")) {
+      @speaker("") { @t("Well, better get back to\nwork!", "好了，得回去工作了！") }
+    } @else {
+      @speaker("") { @t("The ROCKETs came and took\nover the building!", "火箭队闯进来占领了这座大楼！") }
+    }
+  }
+
+  // ── SilphWorkerM (npc 2) ────────────────────────────────────────────────
+  @storyline("talkSilphWorkerM2") {
+    @trigger(map = "SilphCo6F", npc = 2)
+    @if (getFlag("EVENT_BEAT_SILPH_CO_GIOVANNI")) {
+      @speaker("") { @t("We got engaged! Heheh!", "我们订婚了！嘿嘿！") }
+    } @else {
+      @speaker("") { @t("Oh dear, oh dear. Help me\nplease!", "哎呀，哎呀。请帮帮我！") }
+    }
+  }
+
+  // ── SilphWorkerF (npc 3) ────────────────────────────────────────────────
+  @storyline("talkSilphWorkerF1") {
+    @trigger(map = "SilphCo6F", npc = 3)
+    @if (getFlag("EVENT_BEAT_SILPH_CO_GIOVANNI")) {
+      @speaker("") { @t("I feel so sorry for him, I\nhave to marry him!", "我太同情他了所以我只好嫁给他\n了！") }
+    } @else {
+      @speaker("") { @t("Look at him! He's such a\ncoward!", "看看他！他真是个懦夫！") }
+    }
+  }
+
+  // ── SilphWorkerF (npc 4) ────────────────────────────────────────────────
+  @storyline("talkSilphWorkerF2") {
+    @trigger(map = "SilphCo6F", npc = 4)
+    @if (getFlag("EVENT_BEAT_SILPH_CO_GIOVANNI")) {
+      @speaker("") { @t("TEAM ROCKET ran because of\nyou!", "火箭队因为你逃跑了！") }
+    } @else {
+      @speaker("") { @t("TEAM ROCKET is trying to\nconquer the world with\nPOKeMON!", "火箭队想要用宝可梦来征服世\n界！") }
+    }
+  }
+
+  // ── SilphWorkerM (npc 5) ────────────────────────────────────────────────
+  @storyline("talkSilphWorkerM3") {
+    @trigger(map = "SilphCo6F", npc = 5)
+    @if (getFlag("EVENT_BEAT_SILPH_CO_GIOVANNI")) {
+      @speaker("") { @t("Come work for SILPH when you\nget older!", "等你长大后来西尔佛公司工作\n吧！") }
+    } @else {
+      @speaker("") { @t("They must have targeted\nSILPH for our POKeMON\nproducts.", "他们一定是冲着西尔佛公司的宝\n可梦产品来的。") }
+    }
+  }
+
+  // ── Rocket (npc 6) — sight-engaged trainer; dialogue only ───────────────
+  @storyline("talkRocket1") {
+    @trigger(map = "SilphCo6F", npc = 6)
+    @if (getFlag("EVENT_BEAT_SILPH_CO_6F_TRAINER_0")) {
+      @speaker("") { @t("No matter! My brothers will\navenge me!", "没关系！我的兄弟们会为我报\n仇！") }
+    } @else {
+      @speaker("") { @t("I am one of the 4 ROCKET\nBROTHERS!", "我是火箭队四兄弟中的一员！") }
+    }
+  }
+
+  // ── Scientist (npc 7) — sight-engaged trainer; dialogue only ────────────
+  @storyline("talkScientist") {
+    @trigger(map = "SilphCo6F", npc = 7)
+    @if (getFlag("EVENT_BEAT_SILPH_CO_6F_TRAINER_1")) {
+      @speaker("") { @t("TIKSI BRANCH? It's in\nRussian no man's land!", "提克西分部？它在俄罗斯的不毛\n之地！") }
+    } @else {
+      @speaker("") { @t("That rotten PRESIDENT!\n\nHe shouldn't have sent me to\nthe TIKSI BRANCH!", "那个可恶的社长！\n\n他不该把我派到提克西分部！") }
+    }
+  }
+
+  // ── Rocket (npc 8) — sight-engaged trainer; dialogue only ───────────────
+  @storyline("talkRocket2") {
+    @trigger(map = "SilphCo6F", npc = 8)
+    @if (getFlag("EVENT_BEAT_SILPH_CO_6F_TRAINER_2")) {
+      @speaker("") { @t("If you stand for justice,\nyou betray evil!", "如果你维护正义，就会背叛邪\n恶！") }
+    } @else {
+      @speaker("") { @t("You dare betray TEAM ROCKET?", "你敢背叛火箭队？") }
+    }
+  }
+
+  // ── Ground item: HP_UP (npc 9) ──────────────────────────────────────────
+  @storyline("itemHpUp") {
+    @trigger(map = "SilphCo6F", npc = 9)
+    @if (!getFlag("EVENT_GOT_SILPH_CO_6F_HP_UP")) {
+      giveItem("HP_UP", 1)
+      setFlag("EVENT_GOT_SILPH_CO_6F_HP_UP")
+      hideObject(9)
+      @speaker("") { @t("<PLAYER> found HP UP!", "<PLAYER>找到了体力增强剂！") }
+    }
+  }
+
+  // ── Ground item: X_ACCURACY (npc 10) ────────────────────────────────────
+  @storyline("itemXAccuracy") {
+    @trigger(map = "SilphCo6F", npc = 10)
+    @if (!getFlag("EVENT_GOT_SILPH_CO_6F_X_ACCURACY")) {
+      giveItem("X_ACCURACY", 1)
+      setFlag("EVENT_GOT_SILPH_CO_6F_X_ACCURACY")
+      hideObject(10)
+      @speaker("") { @t("<PLAYER> found X ACCURACY!", "<PLAYER>找到了特攻强化！") }
+    }
+  }
+}

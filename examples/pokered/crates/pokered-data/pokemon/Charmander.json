@@ -1,0 +1,74 @@
+{
+  "$schema": "../schemas/pokemon.schema.json",
+  "species": "Charmander",
+  "baseStats": {
+    "hp": 39,
+    "attack": 52,
+    "defense": 43,
+    "speed": 65,
+    "special": 50
+  },
+  "type1": "Fire",
+  "type2": "Fire",
+  "catchRate": 45,
+  "baseExp": 65,
+  "growthRate": "MediumSlow",
+  "initialMoves": [
+    "Scratch",
+    "Growl",
+    "None",
+    "None"
+  ],
+  "tmHmFlags": [
+    181,
+    3,
+    79,
+    200,
+    227,
+    8,
+    38
+  ],
+  "pokedex": {
+    "category": "LIZARD",
+    "heightFeet": 2,
+    "heightInches": 0,
+    "weightDecipounds": 190,
+    "flavorTextPages": [
+      "Obviously prefers\nhot places. When\nit rains, steam",
+      "is said to spout\nfrom the tip of\nits tail"
+    ]
+  },
+  "evolutions": [
+    {
+      "method": "level",
+      "species": "Charmeleon",
+      "level": 16
+    }
+  ],
+  "learnset": [
+    {
+      "level": 9,
+      "moveId": "Ember"
+    },
+    {
+      "level": 15,
+      "moveId": "Leer"
+    },
+    {
+      "level": 22,
+      "moveId": "Rage"
+    },
+    {
+      "level": 30,
+      "moveId": "Slash"
+    },
+    {
+      "level": 38,
+      "moveId": "Flamethrower"
+    },
+    {
+      "level": 46,
+      "moveId": "FireSpin"
+    }
+  ]
+}

@@ -1,0 +1,34 @@
+{
+  "$schema": "/schemas/layout.schema.json",
+  "schema_version": 1,
+  "screen": "dialog",
+  "variants": {
+    "default": {
+      "cursor": {
+        "tx": 17,
+        "base_ty": 3,
+        "row_step": 0,
+        "glyph": "\u25bc",
+        "color": "Black"
+      },
+      "children": [
+        {
+          "id": "box_0",
+          "rect": {
+            "tx": 0,
+            "ty": 12,
+            "tw": 20,
+            "th": 6
+          },
+          "color": "Black",
+          "text_start_tx": 1,
+          "text_start_ty": 1,
+          "line_height": 2,
+          "max_lines": 2,
+          "line_width": 18,
+          "line_width_zh": 13
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,38 @@
+{
+  "$schema": "../../schemas/script_config.schema.json",
+  "coordEvents": [],
+  "npcs": [
+    {
+      "id": 1,
+      "talk": "talkRocket1"
+    },
+    {
+      "id": 2,
+      "talk": "talkRocket2"
+    },
+    {
+      "id": 3,
+      "talk": "talkRocket3"
+    },
+    {
+      "id": 4,
+      "talk": "talkRocket4"
+    },
+    {
+      "id": 5,
+      "talk": "talkRocket5"
+    },
+    {
+      "id": 6,
+      "talk": "itemEscapeRope",
+      "toggleId": "ROCKET_HIDEOUT_B1F_OBJ_6"
+    },
+    {
+      "id": 7,
+      "talk": "itemHyperPotion",
+      "toggleId": "ROCKET_HIDEOUT_B1F_OBJ_7"
+    }
+  ],
+  "onLoad": "RocketHideoutB1FOnLoad",
+  "signs": []
+}

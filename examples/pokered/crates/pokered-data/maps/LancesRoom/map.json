@@ -1,0 +1,52 @@
+{
+  "$schema": "../../schemas/map.schema.json",
+  "id": 113,
+  "name": "LancesRoom",
+  "header": {
+    "tileset": "Dojo",
+    "music": "IndigoPlateau",
+    "connectionFlags": 0,
+    "width": 13,
+    "height": 13,
+    "borderBlock": 3
+  },
+  "connections": {},
+  "warps": [
+    {
+      "x": 24,
+      "y": 16,
+      "destMap": "AgathasRoom",
+      "destWarpId": 2
+    },
+    {
+      "x": 5,
+      "y": 0,
+      "destMap": "ChampionsRoom",
+      "destWarpId": 0
+    },
+    {
+      "x": 6,
+      "y": 0,
+      "destMap": "ChampionsRoom",
+      "destWarpId": 0
+    }
+  ],
+  "npcs": [
+    {
+      "spriteId": 30,
+      "spriteName": "Lance",
+      "x": 6,
+      "y": 1,
+      "movement": "Stationary",
+      "facing": "Down",
+      "range": 0,
+      "textId": 1,
+      "isTrainer": false,
+      "trainerClass": "Lance",
+      "trainerSet": 1
+    }
+  ],
+  "signs": [],
+  "text": {},
+  "wild": null
+}

@@ -1,0 +1,157 @@
+// Route12 — translated from the original disassembly (scripts/Route12.asm,
+// text/Route12.asm) to the real Game DSL API surface.
+//
+// Content type: a route-trainer map with a story Snorlax blocker and two ground
+// items. NPCs 2-8 are sight-engaged trainers (map.json isTrainer = true), so the
+// runtime owns each battle and the .scene handler is DIALOGUE ONLY (before- vs
+// after-battle text, branched on EVENT_BEAT_ROUTE_12_TRAINER_n). NPC 1 is the
+// blocking SNORLAX; npcs 9/10 are ground-item Poke Balls (TM16 PAY DAY, IRON).
+//
+// The Snorlax is the same case as PowerPlant Zapdos / CeruleanCaveB1F Mewtwo: a
+// static catchable wild battle woken by the POKe FLUTE, run through
+// startWildBattle.
+
+game_scene Route12 {
+  // ── SNORLAX (npc 1) — blocks the way until woken by the POKe FLUTE ────────
+  @storyline("talkSnorlax") {
+    @trigger(map = "Route12", npc = 1, toggle = "ROUTE_12_OBJ_1")
+    @if (getFlag("EVENT_BEAT_ROUTE12_SNORLAX")) {
+      // Already dealt with — Snorlax has returned to the mountains.
+      hideObjectByName("ROUTE_12_OBJ_1")
+    } @else @if (hasItem("POKE_FLUTE") || getFlag("EVENT_FIGHT_ROUTE12_SNORLAX")) {
+      // No overworld bag/use-item screen exists yet, so the POKe FLUTE is "used"
+      // by talking to the sleeping SNORLAX while carrying it — approximating the
+      // original ItemUsePokeFlute path that sets EVENT_FIGHT_ROUTE12_SNORLAX.
+      @if (!getFlag("EVENT_FIGHT_ROUTE12_SNORLAX")) {
+        @speaker("") { @t("<PLAYER> played the POKe\nFLUTE!", "<PLAYER>吹响了宝可梦之笛！") }
+        // PlayedFluteHadEffectText (engine/items/item_effects.asm:1801-1806)
+        playSound("SFX_POKEFLUTE")
+        setFlag("EVENT_FIGHT_ROUTE12_SNORLAX")
+      }
+      playCry("SNORLAX")
+      @speaker("") { @t("SNORLAX woke up!\n\nIt attacked in a grumpy\nrage!", "卡比兽醒来了！\n\n它怒气冲冲地发起了攻击！") }
+      // Static wild Lv30 SNORLAX battle (catchable). On win/catch it is cleared;
+      // on flee/lose it stays woken (EVENT_FIGHT set) and re-fights on next talk.
+      result = startWildBattle("SNORLAX", 30)
+      @if (result == "win" || result == "caught") {
+        @speaker("") { @t("SNORLAX calmed down! With a\nbig yawn, it returned to the\nmountains!", "卡比兽安静下来了！它打了个大\n哈欠，然后回到了山里！") }
+        setFlag("EVENT_BEAT_ROUTE12_SNORLAX")
+        hideObjectByName("ROUTE_12_OBJ_1")
+      }
+    } @else {
+      @speaker("") { @t("A sleeping POKeMON blocks\nthe way!", "一只睡着的宝可梦挡住了去路！") }
+    }
+  }
+
+  // ── Fisher (npc 2) — Route12TrainerHeader0 ───────────────────────────────
+  @storyline("talkFisher1") {
+    @trigger(map = "Route12", npc = 2)
+    @if (getFlag("EVENT_BEAT_ROUTE_12_TRAINER_0")) {
+      @speaker("") { @t("Hang on! My line's snagged!", "等等！我的鱼线被缠住了！") }
+    } @else {
+      @speaker("") { @t("Yeah! I got a bite, here!", "哈哈！这里有鱼上钩了！") }
+    }
+  }
+
+  // ── Fisher (npc 3) — Route12TrainerHeader1 ───────────────────────────────
+  @storyline("talkFisher2") {
+    @trigger(map = "Route12", npc = 3)
+    @if (getFlag("EVENT_BEAT_ROUTE_12_TRAINER_1")) {
+      @speaker("") { @t("With a better ROD, I could\ncatch better POKeMON!", "如果有更好的钓竿，我就能钓到\n更好的宝可梦！") }
+    } @else {
+      @speaker("") { @t("Be patient! Fishing is a\nwaiting game!", "耐心点！钓鱼是等待的游戏！") }
+    }
+  }
+
+  // ── CooltrainerM / JrTrainerM (npc 4) — Route12TrainerHeader2 ────────────
+  @storyline("talkCooltrainerM") {
+    @trigger(map = "Route12", npc = 4)
+    @if (getFlag("EVENT_BEAT_ROUTE_12_TRAINER_2")) {
+      @speaker("") { @t("I could have made my POKeMON\nevolve with MOON STONE!", "我本来可以用月之石让我的宝可\n梦进化的！") }
+    } @else {
+      @speaker("") { @t("Have you found a MOON STONE?", "你找到过月之石吗？") }
+    }
+  }
+
+  // ── SuperNerd / Rocker (npc 5) — Route12TrainerHeader3 ───────────────────
+  @storyline("talkSuperNerd") {
+    @trigger(map = "Route12", npc = 5)
+    @if (getFlag("EVENT_BEAT_ROUTE_12_TRAINER_3")) {
+      @speaker("") { @t("Water conducts electricity,\nso you should zap sea\nPOKeMON!", "水能导电，所以你应该用电击海\n里的宝可梦！") }
+    } @else {
+      @speaker("") { @t("Electricity is my specialty!", "电可是我的拿手好戏！") }
+    }
+  }
+
+  // ── Fisher (npc 6) — Route12TrainerHeader4 ───────────────────────────────
+  @storyline("talkFisher3") {
+    @trigger(map = "Route12", npc = 6)
+    @if (getFlag("EVENT_BEAT_ROUTE_12_TRAINER_4")) {
+      @speaker("") { @t("You beat me at POKeMON, but\nI'm good at fishing!", "玩宝可梦你赢了，但是钓鱼我可\n是高手！") }
+    } @else {
+      @speaker("") { @t("The FISHING FOOL vs. POKeMON\nKID!", "钓鱼笨蛋对战宝可梦小子！") }
+    }
+  }
+
+  // ── Fisher (npc 7) — Route12TrainerHeader5 ───────────────────────────────
+  @storyline("talkFisher4") {
+    @trigger(map = "Route12", npc = 7)
+    @if (getFlag("EVENT_BEAT_ROUTE_12_TRAINER_5")) {
+      @speaker("") { @t("It's all right. Losing\ndoesn't bug me any more.", "没关系。输赢已经不再困扰我\n了。") }
+    } @else {
+      @speaker("") { @t("I'd rather be working!", "我宁愿去工作！") }
+    }
+  }
+
+  // ── Fisher (npc 8) — Route12TrainerHeader6 ───────────────────────────────
+  @storyline("talkFisher5") {
+    @trigger(map = "Route12", npc = 8)
+    @if (getFlag("EVENT_BEAT_ROUTE_12_TRAINER_6")) {
+      @speaker("") { @t("I catch MAGIKARP all the\ntime, but they're so weak!", "我老是钓到鲤鱼王，它们太弱\n了！") }
+    } @else {
+      @speaker("") { @t("You never know what you\ncould catch!", "你永远不知道自己能钓到什么！") }
+    }
+  }
+
+  // ── Poke Ball ground item (npc 9) — TM16 PAY DAY ─────────────────────────
+  @storyline("itemTmPayDay") {
+    @trigger(map = "Route12", npc = 9, toggle = "ROUTE_12_OBJ_9")
+    @if (!getFlag("EVENT_GOT_ROUTE_12_TM_PAY_DAY")) {
+      given = giveItem("TM16", 1)
+      @if (given) {
+        setFlag("EVENT_GOT_ROUTE_12_TM_PAY_DAY")
+        hideObjectByName("ROUTE_12_OBJ_9")
+        @speaker("") { @t("<PLAYER> found TM16!", "<PLAYER>找到了 TM16！") }
+      } @else {
+        @speaker("") { @t("You have too much stuff\nalready!", "你身上的东西太多了！") }
+      }
+    }
+  }
+
+  // ── Poke Ball ground item (npc 10) — IRON ────────────────────────────────
+  @storyline("itemIron") {
+    @trigger(map = "Route12", npc = 10, toggle = "ROUTE_12_OBJ_10")
+    @if (!getFlag("EVENT_GOT_ROUTE_12_IRON")) {
+      given = giveItem("IRON", 1)
+      @if (given) {
+        setFlag("EVENT_GOT_ROUTE_12_IRON")
+        hideObjectByName("ROUTE_12_OBJ_10")
+        @speaker("") { @t("<PLAYER> found IRON!", "<PLAYER>找到了防御增强剂！") }
+      } @else {
+        @speaker("") { @t("You have too much stuff\nalready!", "你身上的东西太多了！") }
+      }
+    }
+  }
+
+  // ── Sign 1: ROUTE 12, north to LAVENDER ──────────────────────────────────
+  @storyline("sign1") {
+    @trigger(map = "Route12", sign = 1)
+    @speaker("") { @t("ROUTE 12 North to LAVENDER", "12号道路北连紫苑镇") }
+  }
+
+  // ── Sign 2: SPORT FISHING AREA ───────────────────────────────────────────
+  @storyline("sign2") {
+    @trigger(map = "Route12", sign = 2)
+    @speaker("") { @t("SPORT FISHING AREA", "钓鱼区") }
+  }
+}

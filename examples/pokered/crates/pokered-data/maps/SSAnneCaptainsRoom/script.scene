@@ -1,0 +1,78 @@
+// SSAnneCaptainsRoom — translated from the original disassembly
+// (scripts/SSAnneCaptainsRoom.asm, text/SSAnneCaptainsRoom.asm) to the real
+// Game DSL API surface. The seasick CAPTAIN gives HM01 (CUT) after the player
+// rubs his back; two signs (trash can, seasickness book) round out the room.
+//
+// Faithful-approximation notes:
+//  - The original toggles wStatusFlags3 BIT_NO_NPC_FACE_PLAYER so the CAPTAIN
+//    keeps facing away (seasick) until his back is rubbed. faceNpc/setNpcFrame
+//    can approximate the face-away / face-back turn (purely cosmetic); the flag
+//    itself has no DSL equivalent.
+//  - The back-rub plays the "Pokemon healed" jingle (MUSIC_PKMN_HEALED) as a
+//    sound gag — it does NOT heal the party — so we use playMusic() rather than
+//    heal() to avoid the unintended HP restore.
+
+game_scene SSAnneCaptainsRoom {
+  // ── CAPTAIN (npc 1) ────────────────────────────────────────────────────
+  @storyline("talkCaptain") {
+    @trigger(map = "SSAnneCaptainsRoom", npc = 1)
+    @if (getFlag("EVENT_GOT_HM01")) {
+      // Already received HM01 — the CAPTAIN is over his seasickness.
+      @speaker("") {
+        @t("CAPTAIN: Whew!\n\nNow that I'm not sick any\nmore, I guess it's time.", "船长：呼！\n\n我现在不晕船了，我想是时候出\n发了。")
+      }
+    } @else {
+      // Rub the CAPTAIN's back. The original plays MUSIC_PKMN_HEALED here as a
+      // sound gag and sets EVENT_RUBBED_CAPTAINS_BACK.
+      @speaker("") {
+        @t("CAPTAIN: Ooargh... I feel\nhideous... Urrp! Seasick...", "船长：呕……我难受极了……\n呃！晕船……")
+      }
+      @speaker("") {
+        @t("<PLAYER> rubbed the\nCAPTAIN's back!", "<PLAYER>给船长揉了揉背！")
+      }
+      playMusic("MUSIC_PKMN_HEALED")
+      @speaker("") {
+        @t("Rub-rub... Rub-rub...", "揉一揉……揉一揉……")
+      }
+      setFlag("EVENT_RUBBED_CAPTAINS_BACK")
+      // Original also clears wStatusFlags3 BIT_NO_NPC_FACE_PLAYER so the
+      // CAPTAIN turns to face the player again; faceNpc/setNpcFrame can
+      // approximate the face turn (purely cosmetic, so left out).
+
+      @speaker("") {
+        @t("CAPTAIN: Whew! Thank you! I\nfeel much better!\n\nYou want to see my CUT\ntechnique?\n\nI could show you if I wasn't\nill...\n\nI know! You can have this!\n\nTeach it to your POKeMON and\nyou can see it CUT any time!", "船长：呼！谢谢你！我感觉好多\n了！\n\n你想看看我的居合斩吗？\n\n要是没生病，我就表演给你看\n了……\n\n对了！这个给你！\n\n教给你的宝可梦，就能随时看到\n它使出居合斩！")
+      }
+      given = giveItem("HM01", 1)
+      @if (given) {
+        playSound("SFX_GET_KEY_ITEM")
+        @speaker("") {
+          @t("<PLAYER> got HM01!", "<PLAYER>得到了 HM01！")
+        }
+        setFlag("EVENT_GOT_HM01")
+      } @else {
+        @speaker("") {
+          @t("Oh no! You have no room for\nthis!", "哎呀！你身上没有空位了！")
+        }
+        // Original sets wStatusFlags3 BIT_NO_NPC_FACE_PLAYER when the bag is
+        // full so the CAPTAIN stays seasick until you come back; setNpcFrame
+        // could approximate the face-away (purely cosmetic, so left out).
+      }
+    }
+  }
+
+  // ── Sign 1: trash can ──────────────────────────────────────────────────
+  @storyline("signTrash") {
+    @trigger(map = "SSAnneCaptainsRoom", sign = 1)
+    @speaker("") {
+      @t("Yuck! Shouldn't have looked!", "哎呀！不该看的！")
+    }
+  }
+
+  // ── Sign 2: seasickness book ───────────────────────────────────────────
+  @storyline("signSeasickBook") {
+    @trigger(map = "SSAnneCaptainsRoom", sign = 2)
+    @speaker("") {
+      @t("How to Conquer\nSeasickness... The CAPTAIN's\nreading this!", "《战胜晕船法》……船长正在读\n这本书！")
+    }
+  }
+}

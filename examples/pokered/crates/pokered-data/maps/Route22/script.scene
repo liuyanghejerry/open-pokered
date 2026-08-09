@@ -1,0 +1,210 @@
+// Route22 — translated from the original disassembly (scripts/Route22.asm,
+// text/Route22.asm) to the real Game DSL API surface.
+//
+// Route22 is a SCRIPTED RIVAL map. The original drives two rival encounters via
+// a w*CurScript state machine gated by EVENT_ROUTE22_RIVAL_WANTS_BATTLE: when
+// that flag is set (by Route22Gate on entry) and the player steps onto the
+// battle coords, the rival walks up (emotion bubble + MeetRival music), talks,
+// battles, talks again, then walks off and the trigger flags are reset.
+//   - 1st encounter (EVENT_1ST_ROUTE22_RIVAL_BATTLE): early game, no badges.
+//   - 2nd encounter (EVENT_2ND_ROUTE22_RIVAL_BATTLE): pre-Elite-Four warm-up.
+// The rival NPCs are script/coord-driven (not line-of-sight), so map.json sets
+// their isTrainer = false and the coord trigger owns the startBattle.
+//
+// Rival party-by-starter: the original picks wTrainerNo from wRivalStarter via a
+// StarterTable (Squirtle->RIVAL4/10, Bulbasaur->RIVAL5/11, Charmander->RIVAL6/12
+// for the 1st/2nd battle). The engine's startBattle already applies the rival
+// starter type-advantage when given the rival class, so we branch on
+// getRivalStarter() for fidelity to the original control flow and pass the
+// rival class id (OPP_RIVAL1 / OPP_RIVAL2). See notes for the engine limitation
+// on the higher-tier rival parties.
+
+game_scene Route22 {
+  // ── Scripted rival encounter at the battle coords (orig dbmapcoord 29,4/29,5) ──
+  @storyline("coordRivalBattle") {
+    @trigger(map = "Route22", name = "rivalBattle1")
+
+    // ---- 1st rival battle ----
+    @if (getFlag("EVENT_ROUTE22_RIVAL_WANTS_BATTLE") && getFlag("EVENT_1ST_ROUTE22_RIVAL_BATTLE") && !getFlag("EVENT_BEAT_ROUTE22_RIVAL_1ST_BATTLE")) {
+      facePlayer("left")
+      setJoyIgnore(0xF0)
+      showEmotionBubble("ROUTE_22_RIVAL_1", 0)
+      playSound("SFX_STOP_ALL_MUSIC")
+      playMusic("MUSIC_MEET_RIVAL")
+      // Rival closes the gap from his spawn (25,5). Orig
+      // Route22MoveRivalRightScript: RIGHT x4 when the player is on the
+      // upper tile (29,4) -> rival ends at (29,5) below the player;
+      // RIGHT x3 (first byte skipped) on (29,5) -> (28,5), face-to-face.
+      @if (getPlayerY() == 4) {
+        moveNpc("ROUTE_22_RIVAL_1", [[26, 5], [27, 5], [28, 5], [29, 5]])
+        facePlayer("down")
+        faceNpc("ROUTE_22_RIVAL_1", "up")
+      } @else {
+        moveNpc("ROUTE_22_RIVAL_1", [[26, 5], [27, 5], [28, 5]])
+        faceNpc("ROUTE_22_RIVAL_1", "right")
+      }
+      clearJoyIgnore()
+
+      @say("") {
+        @t("<RIVAL>: Hey! <PLAYER>!\n\nYou're going to POKeMON\nLEAGUE?\n\nForget it! You probably\ndon't have any BADGEs!\n\nThe guard won't let you\nthrough!\n\nBy the way, did your POKeMON\nget any stronger?", "劲敌：嘿！ <PLAYER>！\n\n你要去宝可梦联盟吗？\n\n算了吧！你可能连一个徽章都没\n有！\n\n守卫不会让你通过的！\n\n对了，你的宝可梦变强了吗？")
+      }
+
+      // Rival party-by-starter (orig StarterTable: Squirtle->4, Bulbasaur->5,
+      // Charmander->6). The engine resolves the starter-advantage party from
+      // the rival class, so we keep one valid class id per branch.
+      s = getRivalStarter()
+      @if (s == 0) {
+        result = startBattle("OPP_RIVAL1")
+      } @else {
+        @if (s == 1) {
+          result = startBattle("OPP_RIVAL1")
+        } @else {
+          result = startBattle("OPP_RIVAL1")
+        }
+      }
+
+      @if (result == "win") {
+        @say("") {
+          @t("Awww! You just lucked out!", "唉！你只是运气好罢了！")
+        }
+      } @else {
+        @say("") {
+          @t("<RIVAL>: What? Why do I have\n2 POKeMON?\n\nYou should catch some more\ntoo!", "劲敌：什么？为什么我只有 2只\n宝可梦？\n\n你也应该多抓几只！")
+        }
+      }
+
+      setFlag("EVENT_BEAT_ROUTE22_RIVAL_1ST_BATTLE")
+      @say("") {
+        @t("I heard POKeMON LEAGUE has\nmany tough trainers!\n\nI have to figure out how to\nget past them!\n\nYou should quit dawdling and\nget a move on!", "我听说宝可梦联盟里有很多厉害\n的训练家！\n\n我得想办法打败他们才行！\n\n你也别磨蹭了，快点出发吧！")
+      }
+
+      // Rival exits and the encounter trigger is cleared (orig
+      // Route22Rival1ExitMovementData1/2, both ending at (31,10)).
+      playSound("SFX_STOP_ALL_MUSIC")
+      // Orig Route22.asm:174: Music_RivalAlternateStart — the rival theme
+      // restarts with a different first measure as he walks off.
+      playMusic("MUSIC_MEET_RIVAL_ALTERNATE_START")
+      setJoyIgnore(0xF0)
+      @if (getPlayerY() == 4) {
+        // From (29,5): RIGHT x2, DOWN x5.
+        moveNpc("ROUTE_22_RIVAL_1", [[30, 5], [31, 5], [31, 6], [31, 7], [31, 8], [31, 9], [31, 10]])
+      } @else {
+        // From (28,5): UP, RIGHT x3, DOWN x6.
+        moveNpc("ROUTE_22_RIVAL_1", [[28, 4], [29, 4], [30, 4], [31, 4], [31, 5], [31, 6], [31, 7], [31, 8], [31, 9], [31, 10]])
+      }
+      hideObjectByName("ROUTE_22_RIVAL_1")
+      playMusic("MUSIC_ROUTES3")
+      resetFlag("EVENT_1ST_ROUTE22_RIVAL_BATTLE")
+      resetFlag("EVENT_ROUTE22_RIVAL_WANTS_BATTLE")
+      clearJoyIgnore()
+    }
+
+    // ---- 2nd rival battle ----
+    @if (getFlag("EVENT_ROUTE22_RIVAL_WANTS_BATTLE") && getFlag("EVENT_2ND_ROUTE22_RIVAL_BATTLE") && !getFlag("EVENT_BEAT_ROUTE22_RIVAL_2ND_BATTLE")) {
+      facePlayer("left")
+      setJoyIgnore(0xF0)
+      showEmotionBubble("ROUTE_22_RIVAL_2", 0)
+      playSound("SFX_STOP_ALL_MUSIC")
+      // Orig Route22.asm:252: Music_RivalAlternateTempo — the rival theme at
+      // an alternate tempo (100 instead of 112) for the 2nd battle approach.
+      playMusic("MUSIC_MEET_RIVAL_ALTERNATE_TEMPO")
+      // Same approach choreography as the 1st battle.
+      @if (getPlayerY() == 4) {
+        moveNpc("ROUTE_22_RIVAL_2", [[26, 5], [27, 5], [28, 5], [29, 5]])
+        facePlayer("down")
+        faceNpc("ROUTE_22_RIVAL_2", "up")
+      } @else {
+        moveNpc("ROUTE_22_RIVAL_2", [[26, 5], [27, 5], [28, 5]])
+        faceNpc("ROUTE_22_RIVAL_2", "right")
+      }
+      clearJoyIgnore()
+
+      @say("") {
+        @t("<RIVAL>: What? <PLAYER>!\nWhat a surprise to see you\nhere!\n\nSo you're going to POKeMON\nLEAGUE?\n\nYou collected all the BADGEs\ntoo? That's cool!\n\nThen I'll whip you <PLAYER>\nas a warm up for POKeMON\nLEAGUE!\n\nCome on!", "劲敌：什么？ <PLAYER>！真没\n想到会在这里见到你！\n\n你也要去宝可梦联盟吗？\n\n你收集齐了所有的徽章吗？真了\n不起！\n\n那我拿你 <PLAYER>来热身，为\n宝可梦联盟做准备！\n\n来吧！")
+      }
+
+      s = getRivalStarter()
+      @if (s == 0) {
+        result = startBattle("OPP_RIVAL2")
+      } @else {
+        @if (s == 1) {
+          result = startBattle("OPP_RIVAL2")
+        } @else {
+          result = startBattle("OPP_RIVAL2")
+        }
+      }
+
+      @if (result == "win") {
+        @say("") {
+          @t("What!?\n\nI was just careless!", "什么！？\n\n我只是大意了！")
+        }
+      } @else {
+        @say("") {
+          @t("<RIVAL>: Hahaha! <PLAYER>!\nThat's your best? You're\nnowhere near as good as me,\npal!\n\nGo train some more! You\nloser!", "劲敌：哈哈哈！ <PLAYER>！这\n就是你的实力？你还差得远呢！\n\n去多练练吧！你这个手下败将！")
+        }
+      }
+
+      setFlag("EVENT_BEAT_ROUTE22_RIVAL_2ND_BATTLE")
+      @say("") {
+        @t("That loosened me up! I'm\nready for POKeMON LEAGUE!\n\n<PLAYER>, you need more\npractice!\n\nBut hey, you know that! I'm\nout of here. Smell ya!", "这让我热身完毕！我已准备好挑\n战宝可梦联盟！\n\n<PLAYER>，你还需要多练习！\n\n不过你也知道吧！我走了，再\n见！")
+      }
+
+      playSound("SFX_STOP_ALL_MUSIC")
+      // Orig Route22.asm:333: Music_RivalAlternateStartAndTempo — alternate
+      // first measure AND slower tempo as the rival walks off.
+      playMusic("MUSIC_MEET_RIVAL_ALTERNATE_START_AND_TEMPO")
+      setJoyIgnore(0xF0)
+      // Orig Route22Rival2ExitMovementData1/2 (overlapping lists): the
+      // rival always returns to his spawn (25,5) — LEFT x4 from (29,5)
+      // on the upper trigger, LEFT x3 from (28,5) on the lower one.
+      @if (getPlayerY() == 4) {
+        moveNpc("ROUTE_22_RIVAL_2", [[28, 5], [27, 5], [26, 5], [25, 5]])
+      } @else {
+        moveNpc("ROUTE_22_RIVAL_2", [[27, 5], [26, 5], [25, 5]])
+      }
+      hideObjectByName("ROUTE_22_RIVAL_2")
+      playMusic("MUSIC_ROUTES3")
+      resetFlag("EVENT_2ND_ROUTE22_RIVAL_BATTLE")
+      resetFlag("EVENT_ROUTE22_RIVAL_WANTS_BATTLE")
+      clearJoyIgnore()
+    }
+  }
+
+  // ── Rival (npc 1) talk handler — 1st-battle dialogue only (orig
+  //    Route22Rival1Text: before/after battle text, no battle on talk) ──
+  @storyline("talkRival1") {
+    @trigger(map = "Route22", npc = 1, toggle = "ROUTE_22_RIVAL_1")
+    @if (getFlag("EVENT_BEAT_ROUTE22_RIVAL_1ST_BATTLE")) {
+      @speaker("") {
+        @t("I heard POKeMON LEAGUE has\nmany tough trainers!\n\nI have to figure out how to\nget past them!\n\nYou should quit dawdling and\nget a move on!", "我听说宝可梦联盟里有很多厉害\n的训练家！\n\n我得想办法打败他们才行！\n\n你也别磨蹭了，快点出发吧！")
+      }
+    } @else {
+      @speaker("") {
+        @t("<RIVAL>: Hey! <PLAYER>!\n\nYou're going to POKeMON\nLEAGUE?\n\nForget it! You probably\ndon't have any BADGEs!\n\nThe guard won't let you\nthrough!\n\nBy the way, did your POKeMON\nget any stronger?", "劲敌：嘿！ <PLAYER>！\n\n你要去宝可梦联盟吗？\n\n算了吧！你可能连一个徽章都没\n有！\n\n守卫不会让你通过的！\n\n对了，你的宝可梦变强了吗？")
+      }
+    }
+  }
+
+  // ── Rival (npc 2) talk handler — 2nd-battle dialogue only (orig
+  //    Route22Rival2Text) ──
+  @storyline("talkRival2") {
+    @trigger(map = "Route22", npc = 2, toggle = "ROUTE_22_RIVAL_2")
+    @if (getFlag("EVENT_BEAT_ROUTE22_RIVAL_2ND_BATTLE")) {
+      @speaker("") {
+        @t("That loosened me up! I'm\nready for POKeMON LEAGUE!\n\n<PLAYER>, you need more\npractice!\n\nBut hey, you know that! I'm\nout of here. Smell ya!", "这让我热身完毕！我已准备好挑\n战宝可梦联盟！\n\n<PLAYER>，你还需要多练习！\n\n不过你也知道吧！我走了，再\n见！")
+      }
+    } @else {
+      @speaker("") {
+        @t("<RIVAL>: What? <PLAYER>!\nWhat a surprise to see you\nhere!\n\nSo you're going to POKeMON\nLEAGUE?\n\nYou collected all the BADGEs\ntoo? That's cool!\n\nThen I'll whip you <PLAYER>\nas a warm up for POKeMON\nLEAGUE!\n\nCome on!", "劲敌：什么？ <PLAYER>！真没\n想到会在这里见到你！\n\n你也要去宝可梦联盟吗？\n\n你收集齐了所有的徽章吗？真了\n不起！\n\n那我拿你 <PLAYER>来热身，为\n宝可梦联盟做准备！\n\n来吧！")
+      }
+    }
+  }
+
+  // ── POKeMON LEAGUE front gate sign (sign 1) ──
+  @storyline("signLeagueGate") {
+    @trigger(map = "Route22", sign = 1)
+    @speaker("") {
+      @t("POKeMON LEAGUE Front Gate", "宝可梦联盟大门")
+    }
+  }
+}

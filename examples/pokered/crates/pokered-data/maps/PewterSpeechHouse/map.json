@@ -1,0 +1,89 @@
+{
+  "$schema": "../../schemas/map.schema.json",
+  "id": 57,
+  "name": "PewterSpeechHouse",
+  "header": {
+    "tileset": "House",
+    "music": "Cities1",
+    "connectionFlags": 0,
+    "width": 4,
+    "height": 4,
+    "borderBlock": 10
+  },
+  "connections": {},
+  "warps": [
+    {
+      "x": 2,
+      "y": 7,
+      "destWarpId": 5
+    },
+    {
+      "x": 3,
+      "y": 7,
+      "destWarpId": 5
+    }
+  ],
+  "npcs": [
+    {
+      "spriteId": 11,
+      "spriteName": "Gambler",
+      "x": 2,
+      "y": 3,
+      "movement": "Stationary",
+      "facing": "Right",
+      "range": 0,
+      "textId": 1,
+      "isTrainer": false
+    },
+    {
+      "spriteId": 4,
+      "spriteName": "Youngster",
+      "x": 4,
+      "y": 5,
+      "movement": "Stationary",
+      "facing": "Down",
+      "range": 0,
+      "textId": 2,
+      "isTrainer": false
+    }
+  ],
+  "signs": [],
+  "text": {
+    "npc": {
+      "1": [
+        {
+          "line1": "#MON learn new",
+          "line2": "techniques as"
+        },
+        {
+          "line1": "they grow!",
+          "line2": ""
+        },
+        {
+          "line1": "But, some moves",
+          "line2": "must be taught by"
+        },
+        {
+          "line1": "the trainer!",
+          "line2": ""
+        }
+      ],
+      "2": [
+        {
+          "line1": "#MON become",
+          "line2": "easier to catch"
+        },
+        {
+          "line1": "when they are",
+          "line2": "hurt or asleep!"
+        },
+        {
+          "line1": "But, it's not a",
+          "line2": "sure thing!"
+        }
+      ]
+    },
+    "sign": {}
+  },
+  "wild": null
+}

@@ -1,0 +1,74 @@
+{
+  "$schema": "../schemas/pokemon.schema.json",
+  "species": "Pidgey",
+  "baseStats": {
+    "hp": 40,
+    "attack": 45,
+    "defense": 40,
+    "speed": 56,
+    "special": 35
+  },
+  "type1": "Normal",
+  "type2": "Flying",
+  "catchRate": 255,
+  "baseExp": 55,
+  "growthRate": "MediumSlow",
+  "initialMoves": [
+    "Gust",
+    "None",
+    "None",
+    "None"
+  ],
+  "tmHmFlags": [
+    42,
+    3,
+    8,
+    192,
+    67,
+    12,
+    10
+  ],
+  "pokedex": {
+    "category": "TINY BIRD",
+    "heightFeet": 1,
+    "heightInches": 0,
+    "weightDecipounds": 40,
+    "flavorTextPages": [
+      "A common sight in\nforests and woods.\nIt flaps its",
+      "wings at ground\nlevel to kick up\nblinding sand"
+    ]
+  },
+  "evolutions": [
+    {
+      "method": "level",
+      "species": "Pidgeotto",
+      "level": 18
+    }
+  ],
+  "learnset": [
+    {
+      "level": 5,
+      "moveId": "SandAttack"
+    },
+    {
+      "level": 12,
+      "moveId": "QuickAttack"
+    },
+    {
+      "level": 19,
+      "moveId": "Whirlwind"
+    },
+    {
+      "level": 28,
+      "moveId": "WingAttack"
+    },
+    {
+      "level": 36,
+      "moveId": "Agility"
+    },
+    {
+      "level": 44,
+      "moveId": "MirrorMove"
+    }
+  ]
+}

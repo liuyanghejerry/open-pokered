@@ -1,0 +1,134 @@
+// ChampionsRoom — translated from the original disassembly
+// (scripts/ChampionsRoom.asm, text/ChampionsRoom.asm) to the real Game DSL API.
+//
+// This is the final RIVAL battle + Oak cutscene. The original is a fully
+// on-entry w*CurScript state machine (no free movement): the player walks in,
+// the rival (waiting champion) talks, you battle OPP_RIVAL3, and on victory
+// EVENT_BEAT_CHAMPION_RIVAL is set, the rival concedes, then Prof. OAK walks in
+// (he is hidden until now, toggle CHAMPIONS_ROOM_OBJ_2), congratulates you,
+// scolds the rival, and leads you up to the HALL OF FAME warp.
+//
+// Fidelity notes:
+//  - Rival party is OPP_RIVAL3; the original picks wTrainerNo from wRivalStarter
+//    (Squirtle->1 / Bulbasaur->2 / Charmander->3). The engine resolves the
+//    starter-advantage party from the rival class, so each getRivalStarter()
+//    branch passes the same OPP_RIVAL3 id (mirrors Route22's handling).
+//  - Oak's "...first left with <STARTER>!" line embeds the player's starter
+//    name (text_ram wNameBuffer); the <STARTER> placeholder resolves it from
+//    the lead party member.
+//  - The original auto-walks the player to the Hall of Fame warp via simulated
+//    joypad input; we approximate the cutscene's end with warpTo(HallOfFame).
+
+game_scene ChampionsRoom {
+  // ── On-entry cutscene: the championship rival battle + Oak ───────────────
+  @load {
+    @if (!getFlag("EVENT_BEAT_CHAMPION_RIVAL")) {
+      setJoyIgnore(0xF0)
+      // Player advances into the room toward the waiting rival (orig
+      // RivalEntrance_RLEMovement: UP x1, RIGHT x1, UP x3, consumed LIFO from
+      // the simulated joypad buffer -> UP x3, RIGHT, UP; player enters at
+      // (3,7) and ends at (4,3), facing the rival at (4,2)).
+      movePlayer([[3, 6], [3, 5], [3, 4], [4, 4], [4, 3]])
+      facePlayer("up")
+      clearJoyIgnore()
+
+      // Rival's championship boast (orig _ChampionsRoomRivalIntroText).
+      @say("") {
+        @t("<RIVAL>: Hey!\n\nI was looking forward to\nseeing you, <PLAYER>!\n\nMy rival should be strong to\nkeep me sharp!\n\nWhile working on POKeDEX, I\nlooked all over for powerful\nPOKeMON!\n\nNot only that, I assembled\nteams that would beat any\nPOKeMON type!\n\nAnd now!\n\nI'm the POKeMON LEAGUE\nchampion!\n\n<PLAYER>! Do you know what\nthat means?\n\nI'll tell you!\n\nI am the most powerful\ntrainer in the world!", "<RIVAL>：嘿！\n\n我一直盼望着能见到你，\n<PLAYER>！\n\n我的劲敌应该足够强，才能让我\n保持锐利！\n\n为了完成图鉴，我找遍了各地，\n只为寻找强大的宝可梦！\n\n不仅如此，我还组建了能打败任\n何属性宝可梦的队伍！\n\n而现在！\n\n我是宝可梦联盟冠军！\n\n<PLAYER>！你知道那意味着什么\n吗？\n\n我来告诉你吧！\n\n我是世界上最强大的训练家！")
+      }
+
+      // Championship battle vs OPP_RIVAL3 (party-by-starter resolved by class).
+      s = getRivalStarter()
+      @if (s == 0) {
+        result = startBattle("OPP_RIVAL3")
+      } @else {
+        @if (s == 1) {
+          result = startBattle("OPP_RIVAL3")
+        } @else {
+          result = startBattle("OPP_RIVAL3")
+        }
+      }
+
+      @if (result == "win") {
+        // Rival loses, then his post-battle lament (orig _RivalDefeatedText then,
+        // after Oak arrives, _ChampionsRoomRivalAfterBattleText).
+        @say("") {
+          @t("NO! That can't be! You beat\nmy best!\n\nAfter all that work to\nbecome LEAGUE champ?\n\nMy reign is over already?\nIt's not fair!", "不！怎么可能！你打败了我的最\n强！\n\n我付出了那么多努力才成为联盟\n冠军？\n\n我的时代就这样结束了吗？太不\n公平了！")
+        }
+        setFlag("EVENT_BEAT_CHAMPION_RIVAL")
+
+        @say("") {
+          @t("Why? Why did I lose?\n\nI never made any mistakes\nraising my POKeMON...\n\nDarn it! You're the new\nPOKeMON LEAGUE champion!\n\nAlthough I don't like to\nadmit it.", "为什么？我为什么会输？\n\n我培育宝可梦从来没有犯过任何\n错误……\n\n可恶！你成了新的宝可梦联盟冠\n军！\n\n虽然我不愿意承认这一点。")
+        }
+
+        // Prof. OAK arrives (orig ChampionsRoom.asm:112
+        // Music_Cities1AlternateTempo: fade out, then restart Cities1 slower;
+        // reveals the hidden Oak object, walks him up the room).
+        playMusic("MUSIC_CITIES1_ALTERNATE_TEMPO")
+        showObjectByName("CHAMPIONS_ROOM_OBJ_2")
+        setJoyIgnore(0xF0)
+        moveNpc("CHAMPIONS_ROOM_OBJ_2", [[3, 6], [3, 5], [3, 4], [3, 3], [3, 2]])
+        clearJoyIgnore()
+
+        @say("") {
+          @t("OAK: <PLAYER>!", "大木博士：<PLAYER>！")
+        }
+        // OAK congratulates the player (orig _ChampionsRoomOakCongratulatesPlayerText).
+        // The original embeds the player's starter name after "left with"
+        // (text_ram wNameBuffer) — resolved via the <STARTER> placeholder.
+        faceNpc("CHAMPIONS_ROOM_OBJ_2", "down")
+        @say("") {
+          @t("OAK: So, you won!\nCongratulations! You're the\nnew POKeMON LEAGUE champion!\n\nYou've grown up so much\nsince you first left with\n<STARTER>!\n\n<PLAYER>, you have come of\nage!", "大木博士：你赢了！恭喜！你是\n新的宝可梦联盟冠军！\n\n你成长了许多，比起当初带着\n<STARTER>！\n\n<PLAYER>，你已经长大成人了！")
+        }
+
+        // OAK turns to the rival, disappointed (orig _ChampionsRoomOakDisappointedWithRivalText).
+        faceNpc("CHAMPIONS_ROOM_OBJ_2", "right")
+        @say("") {
+          @t("OAK: <RIVAL>! I'm\ndisappointed!\n\nI came when I heard you beat\nthe ELITE FOUR!\n\nBut, when I got here, you\nhad already lost!\n\n<RIVAL>! Do you understand\nwhy you lost?\n\nYou have forgotten to treat\nyour POKeMON with trust and\nlove!\n\nWithout them, you will never\nbecome a champ again!", "大木博士：<RIVAL>！我很失\n望！\n\n我听说你打败了四天王，便赶了\n过来！\n\n但是等我到这里时，你已经输\n了！\n\n<RIVAL>！你明白自己为什么会\n输吗？\n\n你忘了要信任和爱护自己的宝可\n梦！\n\n没有它们，你永远也成不了冠\n军！")
+        }
+
+        // OAK calls the player to follow him (orig _ChampionsRoomOakComeWithMeText).
+        faceNpc("CHAMPIONS_ROOM_OBJ_2", "down")
+        @say("") {
+          @t("OAK: <PLAYER>!\n\nYou understand that your\nvictory was not just your\nown doing!\n\nThe bond you share with your\nPOKeMON is marvelous!\n\n<PLAYER>! Come with me!", "大木博士：<PLAYER>！\n\n你要明白，这场胜利不只是靠你\n一个人的力量！\n\n你和宝可梦之间的羁绊真是了不\n起！\n\n<PLAYER>！跟我来吧！")
+        }
+
+        // OAK exits up and is hidden; the player follows him out to the
+        // HALL OF FAME (orig: Oak walks up + HideObject, then the player is
+        // auto-walked via WalkToHallOfFame_RLEMovement: UP x4, LEFT x1,
+        // consumed LIFO -> LEFT, UP x4: (4,3) -> (3,3) -> (3,0), onto the
+        // Hall of Fame warp at (3,0)).
+        setJoyIgnore(0xF0)
+        moveNpc("CHAMPIONS_ROOM_OBJ_2", [[3, 1], [3, 0]])
+        hideObjectByName("CHAMPIONS_ROOM_OBJ_2")
+        movePlayer([[3, 3], [3, 2], [3, 1], [3, 0]])
+        clearJoyIgnore()
+        warpTo("HallOfFame", 0, 0)
+      }
+    }
+  }
+
+  // ── Rival (npc 1) talk handler — orig ChampionsRoomRivalText branches on
+  //    EVENT_BEAT_CHAMPION_RIVAL: intro boast before, lament after. ──────────
+  @storyline("talkBlue") {
+    @trigger(map = "ChampionsRoom", npc = 1)
+    @if (getFlag("EVENT_BEAT_CHAMPION_RIVAL")) {
+      @speaker("") {
+        @t("Why? Why did I lose?\n\nI never made any mistakes\nraising my POKeMON...\n\nDarn it! You're the new\nPOKeMON LEAGUE champion!\n\nAlthough I don't like to\nadmit it.", "为什么？我为什么会输？\n\n我培育宝可梦从来没有犯过任何\n错误……\n\n可恶！你成了新的宝可梦联盟冠\n军！\n\n虽然我不愿意承认这一点。")
+      }
+    } @else {
+      @speaker("") {
+        @t("<RIVAL>: Hey!\n\nI was looking forward to\nseeing you, <PLAYER>!\n\nMy rival should be strong to\nkeep me sharp!\n\nWhile working on POKeDEX, I\nlooked all over for powerful\nPOKeMON!\n\nNot only that, I assembled\nteams that would beat any\nPOKeMON type!\n\nAnd now!\n\nI'm the POKeMON LEAGUE\nchampion!\n\n<PLAYER>! Do you know what\nthat means?\n\nI'll tell you!\n\nI am the most powerful\ntrainer in the world!", "<RIVAL>：嘿！\n\n我一直盼望着能见到你，\n<PLAYER>！\n\n我的劲敌应该足够强，才能让我\n保持锐利！\n\n为了完成图鉴，我找遍了各地，\n只为寻找强大的宝可梦！\n\n不仅如此，我还组建了能打败任\n何属性宝可梦的队伍！\n\n而现在！\n\n我是宝可梦联盟冠军！\n\n<PLAYER>！你知道那意味着什么\n吗？\n\n我来告诉你吧！\n\n我是世界上最强大的训练家！")
+      }
+    }
+  }
+
+  // ── Prof. OAK (npc 2) — hidden until the cutscene reveals him; orig
+  //    ChampionsRoomOakText is just his arrival cue "OAK: <PLAYER>!". ─────────
+  @storyline("talkOak") {
+    @trigger(map = "ChampionsRoom", npc = 2, toggle = "CHAMPIONS_ROOM_OBJ_2", hidden = true)
+    @speaker("") {
+      @t("OAK: <PLAYER>!", "大木博士：<PLAYER>！")
+    }
+  }
+}

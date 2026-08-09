@@ -1,0 +1,19 @@
+{
+  "$schema": "../../schemas/script_config.schema.json",
+  "coordEvents": [],
+  "npcs": [
+    {
+      "id": 1,
+      "talk": "talkMiddleAgedWoman"
+    },
+    {
+      "id": 2,
+      "talk": "talkBillsGrandpa"
+    },
+    {
+      "id": 3,
+      "talk": "talkYoungster"
+    }
+  ],
+  "signs": []
+}

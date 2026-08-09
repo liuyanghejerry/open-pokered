@@ -1,0 +1,50 @@
+screen PokedexList {
+  panel {
+    rect = {tx: 0, ty: 0, tw: 20, th: 18}
+    style = "default"
+  }
+  text("№") {
+    rect = {tx: 1, ty: 1, tw: 2, th: 1}
+    color = "DarkGray"
+  }
+  text(@t("NAME", "名称")) {
+    rect = {tx: 4, ty: 1, tw: 9, th: 1}
+    color = "DarkGray"
+  }
+  flex_list("{pokedex_entries}") {
+    rect = {tx: 1, ty: 2, tw: 12, th: 14}
+    item_layout = [{field: "num", width: 3, align: "right"}, {field: "name", width: 9, align: "left"}]
+    padding = {top: 0, left: 0}
+    gap = 0
+    cursor = {tile: 223}
+  }
+  panel {
+    rect = {tx: 13, ty: 1, tw: 6, th: 15}
+    style = "default"
+  }
+  tile("{sprite_index}") {
+    rect = {tx: 15, ty: 4, tw: 2, th: 2}
+    visible = "{has_selected}"
+  }
+  text("{selected_num}") {
+    rect = {tx: 13, ty: 12, tw: 6, th: 1}
+    align = "center"
+  }
+  text("{selected_name}") {
+    rect = {tx: 13, ty: 13, tw: 6, th: 1}
+    align = "center"
+  }
+  text(@t("SEEN", "见过")) {
+    rect = {tx: 14, ty: 15, tw: 4, th: 1}
+    color = "DarkGray"
+    align = "center"
+  }
+  text("{seen_count}") {
+    rect = {tx: 14, ty: 16, tw: 4, th: 1}
+    align = "center"
+  }
+  text("{owned_count}/151") {
+    rect = {tx: 1, ty: 17, tw: 10, th: 1}
+    color = "DarkGray"
+  }
+}

@@ -1,0 +1,13 @@
+// Route15Gate1F — translated from the original disassembly
+// (scripts/Route15Gate1F.asm, text/Route15Gate1F.asm) to the real Game DSL API.
+// A simple guard gate: the only NPC is a guard with dialogue-only text.
+
+game_scene Route15Gate1F {
+  // ── Guard (npc 1) — dialogue only ──────────────────────────────────────
+  @storyline("talkGuard") {
+    @trigger(map = "Route15Gate1F", npc = 1)
+    @speaker("") {
+      @t("Are you working on a\nPOKeDEX?\n\nPROF.OAK's AIDE came by\nhere.", "你在制作图鉴吗？\n\n大木博士的助手来过这里。")
+    }
+  }
+}

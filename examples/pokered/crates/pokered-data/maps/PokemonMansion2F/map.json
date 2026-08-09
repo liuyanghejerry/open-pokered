@@ -1,0 +1,196 @@
+{
+  "$schema": "../../schemas/map.schema.json",
+  "id": 214,
+  "name": "PokemonMansion2F",
+  "header": {
+    "tileset": "Facility",
+    "music": "CinnabarMansion",
+    "connectionFlags": 0,
+    "width": 15,
+    "height": 14,
+    "borderBlock": 1
+  },
+  "connections": {},
+  "warps": [
+    {
+      "x": 5,
+      "y": 10,
+      "destMap": "PokemonMansion1F",
+      "destWarpId": 4
+    },
+    {
+      "x": 7,
+      "y": 10,
+      "destMap": "PokemonMansion3F",
+      "destWarpId": 0
+    },
+    {
+      "x": 25,
+      "y": 14,
+      "destMap": "PokemonMansion3F",
+      "destWarpId": 2
+    },
+    {
+      "x": 6,
+      "y": 1,
+      "destMap": "PokemonMansion3F",
+      "destWarpId": 1
+    }
+  ],
+  "npcs": [
+    {
+      "spriteId": 12,
+      "spriteName": "SuperNerd",
+      "x": 3,
+      "y": 17,
+      "movement": "Wander",
+      "facing": "Left",
+      "range": 2,
+      "textId": 1,
+      "isTrainer": true,
+      "trainerClass": "Burglar",
+      "trainerSet": 7,
+      "endBattleText": "Oh no!\nMy bag of loot!"
+    },
+    {
+      "spriteId": 61,
+      "spriteName": "PokeBall",
+      "x": 28,
+      "y": 7,
+      "movement": "Stationary",
+      "facing": "Down",
+      "range": 0,
+      "textId": 2,
+      "isTrainer": false,
+      "itemId": 39
+    },
+    {
+      "spriteId": 65,
+      "spriteName": "Pokedex",
+      "x": 18,
+      "y": 2,
+      "movement": "Stationary",
+      "facing": "Down",
+      "range": 0,
+      "textId": 3,
+      "isTrainer": false
+    },
+    {
+      "spriteId": 65,
+      "spriteName": "Pokedex",
+      "x": 3,
+      "y": 22,
+      "movement": "Stationary",
+      "facing": "Down",
+      "range": 0,
+      "textId": 4,
+      "isTrainer": false
+    }
+  ],
+  "signs": [],
+  "text": {},
+  "wild": {
+    "red": {
+      "grass": {
+        "encounterRate": 10,
+        "mons": [
+          {
+            "level": 32,
+            "species": "Growlithe"
+          },
+          {
+            "level": 34,
+            "species": "Koffing"
+          },
+          {
+            "level": 34,
+            "species": "Koffing"
+          },
+          {
+            "level": 30,
+            "species": "Ponyta"
+          },
+          {
+            "level": 30,
+            "species": "Koffing"
+          },
+          {
+            "level": 32,
+            "species": "Ponyta"
+          },
+          {
+            "level": 30,
+            "species": "Grimer"
+          },
+          {
+            "level": 28,
+            "species": "Ponyta"
+          },
+          {
+            "level": 39,
+            "species": "Weezing"
+          },
+          {
+            "level": 37,
+            "species": "Muk"
+          }
+        ]
+      },
+      "water": {
+        "encounterRate": 0,
+        "mons": []
+      }
+    },
+    "blue": {
+      "grass": {
+        "encounterRate": 10,
+        "mons": [
+          {
+            "level": 32,
+            "species": "Vulpix"
+          },
+          {
+            "level": 34,
+            "species": "Grimer"
+          },
+          {
+            "level": 34,
+            "species": "Grimer"
+          },
+          {
+            "level": 30,
+            "species": "Ponyta"
+          },
+          {
+            "level": 30,
+            "species": "Grimer"
+          },
+          {
+            "level": 32,
+            "species": "Ponyta"
+          },
+          {
+            "level": 30,
+            "species": "Koffing"
+          },
+          {
+            "level": 28,
+            "species": "Ponyta"
+          },
+          {
+            "level": 39,
+            "species": "Muk"
+          },
+          {
+            "level": 37,
+            "species": "Weezing"
+          }
+        ]
+      },
+      "water": {
+        "encounterRate": 0,
+        "mons": []
+      }
+    }
+  }
+}

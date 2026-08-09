@@ -1,0 +1,64 @@
+{
+  "$schema": "../schemas/pokemon.schema.json",
+  "species": "Golduck",
+  "baseStats": {
+    "hp": 80,
+    "attack": 82,
+    "defense": 78,
+    "speed": 85,
+    "special": 80
+  },
+  "type1": "Water",
+  "type2": "Water",
+  "catchRate": 75,
+  "baseExp": 174,
+  "growthRate": "MediumFast",
+  "initialMoves": [
+    "Scratch",
+    "TailWhip",
+    "Disable",
+    "None"
+  ],
+  "tmHmFlags": [
+    177,
+    255,
+    15,
+    200,
+    194,
+    8,
+    50
+  ],
+  "pokedex": {
+    "category": "DUCK",
+    "heightFeet": 5,
+    "heightInches": 7,
+    "weightDecipounds": 1690,
+    "flavorTextPages": [
+      "Often seen swim-\nming elegantly by\nlake shores. It",
+      "is often mistaken\nfor the Japanese\nmonster, Kappa"
+    ]
+  },
+  "evolutions": [],
+  "learnset": [
+    {
+      "level": 28,
+      "moveId": "TailWhip"
+    },
+    {
+      "level": 31,
+      "moveId": "Disable"
+    },
+    {
+      "level": 39,
+      "moveId": "Confusion"
+    },
+    {
+      "level": 48,
+      "moveId": "FurySwipes"
+    },
+    {
+      "level": 59,
+      "moveId": "HydroPump"
+    }
+  ]
+}

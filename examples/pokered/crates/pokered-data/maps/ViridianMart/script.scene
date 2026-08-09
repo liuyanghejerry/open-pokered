@@ -1,0 +1,67 @@
+// ViridianMart — translated from the original disassembly (scripts/ViridianMart.asm,
+// text/ViridianMart.asm, data/items/marts.asm) to the real Game DSL API surface.
+// This is the early-game PoKeMart with a one-time on-enter cutscene: before the
+// player has Oak's Parcel, the clerk flags down the player, walks them to the
+// counter and hands over OAK's PARCEL (the script-pointer state machine in the
+// original). Once Oak has received the parcel (EVENT_OAK_GOT_PARCEL), npc 1
+// reverts to a standard mart clerk and opens the shop. NPCs 2/3 are dialogue-only.
+
+game_scene ViridianMart {
+  // ── On-enter parcel cutscene — runs once, before the player has the parcel ─
+  @load {
+    @if (getFlag("EVENT_GOT_OAKS_PARCEL")) {
+      return
+    }
+    // Original locks the joypad, displays the clerk's "hello" text, then RLE-walks
+    // the player to the counter (.PlayerMovement: LEFT x1, UP x2, consumed LIFO
+    // from the simulated joypad buffer -> UP x2, LEFT: from the (4,7) door tile
+    // to (3,5)) before the parcel hand-off.
+    setJoyIgnore(255)
+    @say("") {
+      @t("Hey! You came from PALLET\nTOWN?", "嘿！你是从真新镇来的吗？")
+    }
+    movePlayer([[4, 6], [4, 5], [3, 5]])
+    facePlayer("left")
+    delay(3)
+    @say("") {
+      @t("You know PROF. OAK, right?\n\nHis order came in. Will you\ntake it to him?", "你认识大木博士吧？\n\n他订的货到了。你能帮他送过去\n吗？")
+    }
+    giveItem("OAKS_PARCEL", 1)
+    setFlag("EVENT_GOT_OAKS_PARCEL")
+    playSound("SFX_GET_KEY_ITEM")
+    @say("") {
+      @t("<PLAYER> got OAK's PARCEL!", "<PLAYER>得到了大木博士的包\n裹！")
+    }
+    clearJoyIgnore()
+  }
+
+  // ── Clerk (npc 1) ──────────────────────────────────────────────────────────
+  @storyline("talkClerk") {
+    @trigger(map = "ViridianMart", npc = 1)
+    @if (getFlag("EVENT_OAK_GOT_PARCEL")) {
+      // Parcel delivered to Oak: this is now a normal PoKeMart clerk.
+      openShop(["POKE_BALL", "ANTIDOTE", "PARLYZ_HEAL", "BURN_HEAL"])
+    } @else {
+      // Parcel taken but not yet delivered to Oak.
+      @speaker("") {
+        @t("Okay! Say hi to PROF.OAK for\nme!", "好！替我向大木博士问好！")
+      }
+    }
+  }
+
+  // ── Youngster (npc 2) — dialogue only ───────────────────────────────────────
+  @storyline("talkYoungster") {
+    @trigger(map = "ViridianMart", npc = 2)
+    @speaker("") {
+      @t("This shop sells many\nANTIDOTEs.", "这家店卖很多解毒药。")
+    }
+  }
+
+  // ── CooltrainerM (npc 3) — dialogue only ────────────────────────────────────
+  @storyline("talkCooltrainerM") {
+    @trigger(map = "ViridianMart", npc = 3)
+    @speaker("") {
+      @t("No! POTIONs are all sold\nout.", "不！伤药全部卖完了。")
+    }
+  }
+}

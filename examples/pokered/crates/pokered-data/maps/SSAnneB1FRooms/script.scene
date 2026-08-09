@@ -1,0 +1,158 @@
+// SSAnneB1FRooms — translated from the original disassembly
+// (scripts/SSAnneB1FRooms.asm, text/SSAnneB1FRooms.asm) to the real Game DSL API.
+// NPCs 1-6 are sight-engaged trainers (Sailor x5, Fisher): the runtime drives
+// their battles, so their .scene handlers are DIALOGUE ONLY, branching on
+// EVENT_BEAT_SS_ANNE_10_TRAINER_0..5. NPC 7 (SuperNerd) is a plain talk NPC;
+// NPC 8 (Machoke) plays its cry. NPCs 9-11 are PokeBall ground items
+// (ETHER, TM44=REST, MAX_POTION).
+
+game_scene SSAnneB1FRooms {
+  // ── Sailor 1 (npc 1) — sight-engaged trainer; dialogue only ─────────────
+  @storyline("talkSailor1") {
+    @trigger(map = "SSAnneB1FRooms", npc = 1)
+    @if (getFlag("EVENT_BEAT_SS_ANNE_10_TRAINER_0")) {
+      @speaker("") {
+        @t("Haha! Want to be a sailor,\nmate?", "哈哈！想成为水手吗，伙计？")
+      }
+    } @else {
+      @speaker("") {
+        @t("You know what they say about\nsailors and fighting!", "你知道关于水手和打架的谚语\n吧！")
+      }
+    }
+  }
+
+  // ── Sailor 2 (npc 2) — sight-engaged trainer; dialogue only ─────────────
+  @storyline("talkSailor2") {
+    @trigger(map = "SSAnneB1FRooms", npc = 2)
+    @if (getFlag("EVENT_BEAT_SS_ANNE_10_TRAINER_1")) {
+      @speaker("") {
+        @t("Did you see the FISHING GURU\nin VERMILION CITY?", "你见过枯叶市的钓鱼达人吗？")
+      }
+    } @else {
+      @speaker("") {
+        @t("My sailor's pride is at\nstake!", "水手的骄傲可不容侵犯！")
+      }
+    }
+  }
+
+  // ── Sailor 3 (npc 3) — sight-engaged trainer; dialogue only ─────────────
+  @storyline("talkSailor3") {
+    @trigger(map = "SSAnneB1FRooms", npc = 3)
+    @if (getFlag("EVENT_BEAT_SS_ANNE_10_TRAINER_2")) {
+      @speaker("") {
+        @t("We caught all our POKeMON\nwhile out at sea!", "我们所有的宝可梦都是在海上抓\n的！")
+      }
+    } @else {
+      @speaker("") {
+        @t("Us sailors have POKeMON too!", "我们水手也有宝可梦！")
+      }
+    }
+  }
+
+  // ── Sailor 4 (npc 4) — sight-engaged trainer; dialogue only ─────────────
+  @storyline("talkSailor4") {
+    @trigger(map = "SSAnneB1FRooms", npc = 4)
+    @if (getFlag("EVENT_BEAT_SS_ANNE_10_TRAINER_3")) {
+      @speaker("") {
+        @t("Sea POKeMON live in deep\nwater. You'll need a ROD!", "海里的宝可梦生活在深水中。你\n需要钓竿！")
+      }
+    } @else {
+      @speaker("") {
+        @t("I like feisty kids like you!", "我喜欢活泼的孩子！")
+      }
+    }
+  }
+
+  // ── Sailor 5 (npc 5) — sight-engaged trainer; dialogue only ─────────────
+  @storyline("talkSailor5") {
+    @trigger(map = "SSAnneB1FRooms", npc = 5)
+    @if (getFlag("EVENT_BEAT_SS_ANNE_10_TRAINER_4")) {
+      @speaker("") {
+        @t("Jellyfish some- times drift\ninto the ship.", "水母有时会漂进船里来。")
+      }
+    } @else {
+      @speaker("") {
+        @t("Matey, you're walking the\nplank if you lose!", "伙计，输了的话就要你走跳板！")
+      }
+    }
+  }
+
+  // ── Fisher (npc 6) — sight-engaged trainer; dialogue only ───────────────
+  @storyline("talkFisher") {
+    @trigger(map = "SSAnneB1FRooms", npc = 6)
+    @if (getFlag("EVENT_BEAT_SS_ANNE_10_TRAINER_5")) {
+      @speaker("") {
+        @t("I was going to make you my\nassistant too!", "我刚才还想让你也当我的助手\n呢！")
+      }
+    } @else {
+      @speaker("") {
+        @t("Hello stranger! Stop and\nchat!\n\nAll my POKeMON are from the\nsea!", "你好，陌生人！停下来聊聊！\n\n我所有的宝可梦都来自大海！")
+      }
+    }
+  }
+
+  // ── SuperNerd (npc 7) — plain talk NPC ──────────────────────────────────
+  @storyline("talkSuperNerd") {
+    @trigger(map = "SSAnneB1FRooms", npc = 7)
+    @speaker("") {
+      @t("My buddy, MACHOKE, is super\nstrong!\n\nHe has enough STRENGTH to\nmove big rocks!", "我的搭档，豪力，非常强壮！\n\n它有足够的怪力来搬动巨大的岩\n石！")
+    }
+  }
+
+  // ── Machoke (npc 8) — text then play its cry ────────────────────────────
+  @storyline("talkMachoke") {
+    @trigger(map = "SSAnneB1FRooms", npc = 8)
+    @speaker("") {
+      @t("MACHOKE: Gwoh! Goggoh!", "豪力：吼！吼吼！")
+    }
+    playCry("MACHOKE")
+  }
+
+  // ── PokeBall ground item (npc 9) — ETHER ────────────────────────────────
+  @storyline("talkPokeBallEther") {
+    @trigger(map = "SSAnneB1FRooms", npc = 9, toggle = "SS_ANNE_B1F_ROOMS_OBJ_9")
+    @if (getFlag("EVENT_GOT_ETHER_SS_ANNE_B1F_ROOMS")) {
+      @speaker("") {
+        @t("It's empty.", "是空的。")
+      }
+    } @else {
+      giveItem("ETHER", 1)
+      setFlag("EVENT_GOT_ETHER_SS_ANNE_B1F_ROOMS")
+      @speaker("") {
+        @t("<PLAYER> found ETHER!", "<PLAYER>发现了元气药片！")
+      }
+    }
+  }
+
+  // ── PokeBall ground item (npc 10) — TM44 (REST) ─────────────────────────
+  @storyline("talkPokeBallTmRest") {
+    @trigger(map = "SSAnneB1FRooms", npc = 10, toggle = "SS_ANNE_B1F_ROOMS_OBJ_10")
+    @if (getFlag("EVENT_GOT_TM44_SS_ANNE_B1F_ROOMS")) {
+      @speaker("") {
+        @t("It's empty.", "是空的。")
+      }
+    } @else {
+      giveItem("TM_44", 1)
+      setFlag("EVENT_GOT_TM44_SS_ANNE_B1F_ROOMS")
+      @speaker("") {
+        @t("<PLAYER> found TM44!", "<PLAYER>发现了招式机44！")
+      }
+    }
+  }
+
+  // ── PokeBall ground item (npc 11) — MAX_POTION ──────────────────────────
+  @storyline("talkPokeBallMaxPotion") {
+    @trigger(map = "SSAnneB1FRooms", npc = 11, toggle = "SS_ANNE_B1F_ROOMS_OBJ_11")
+    @if (getFlag("EVENT_GOT_MAX_POTION_SS_ANNE_B1F_ROOMS")) {
+      @speaker("") {
+        @t("It's empty.", "是空的。")
+      }
+    } @else {
+      giveItem("MAX_POTION", 1)
+      setFlag("EVENT_GOT_MAX_POTION_SS_ANNE_B1F_ROOMS")
+      @speaker("") {
+        @t("<PLAYER> found MAX POTION!", "<PLAYER>发现了全满药！")
+      }
+    }
+  }
+}

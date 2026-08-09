@@ -1,0 +1,271 @@
+{
+  "$schema": "../schemas/trainer.schema.json",
+  "class": "BirdKeeper",
+  "constName": "BIRD_KEEPER",
+  "parties": [
+    {
+      "pokemon": [
+        {
+          "level": 29,
+          "species": "Pidgey"
+        },
+        {
+          "level": 29,
+          "species": "Pidgeotto"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 25,
+          "species": "Spearow"
+        },
+        {
+          "level": 25,
+          "species": "Pidgey"
+        },
+        {
+          "level": 25,
+          "species": "Pidgey"
+        },
+        {
+          "level": 25,
+          "species": "Spearow"
+        },
+        {
+          "level": 25,
+          "species": "Spearow"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 26,
+          "species": "Pidgey"
+        },
+        {
+          "level": 26,
+          "species": "Pidgeotto"
+        },
+        {
+          "level": 26,
+          "species": "Spearow"
+        },
+        {
+          "level": 26,
+          "species": "Fearow"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 33,
+          "species": "Farfetchd"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 29,
+          "species": "Spearow"
+        },
+        {
+          "level": 29,
+          "species": "Fearow"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 26,
+          "species": "Pidgeotto"
+        },
+        {
+          "level": 26,
+          "species": "Farfetchd"
+        },
+        {
+          "level": 26,
+          "species": "Doduo"
+        },
+        {
+          "level": 26,
+          "species": "Pidgey"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 28,
+          "species": "Dodrio"
+        },
+        {
+          "level": 28,
+          "species": "Doduo"
+        },
+        {
+          "level": 28,
+          "species": "Doduo"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 29,
+          "species": "Spearow"
+        },
+        {
+          "level": 29,
+          "species": "Fearow"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 34,
+          "species": "Dodrio"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 26,
+          "species": "Spearow"
+        },
+        {
+          "level": 26,
+          "species": "Spearow"
+        },
+        {
+          "level": 26,
+          "species": "Fearow"
+        },
+        {
+          "level": 26,
+          "species": "Spearow"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 30,
+          "species": "Fearow"
+        },
+        {
+          "level": 30,
+          "species": "Fearow"
+        },
+        {
+          "level": 30,
+          "species": "Pidgeotto"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 39,
+          "species": "Pidgeotto"
+        },
+        {
+          "level": 39,
+          "species": "Pidgeotto"
+        },
+        {
+          "level": 39,
+          "species": "Pidgey"
+        },
+        {
+          "level": 39,
+          "species": "Pidgeotto"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 42,
+          "species": "Farfetchd"
+        },
+        {
+          "level": 42,
+          "species": "Fearow"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 28,
+          "species": "Pidgey"
+        },
+        {
+          "level": 28,
+          "species": "Doduo"
+        },
+        {
+          "level": 28,
+          "species": "Pidgeotto"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 26,
+          "species": "Pidgey"
+        },
+        {
+          "level": 26,
+          "species": "Spearow"
+        },
+        {
+          "level": 26,
+          "species": "Pidgey"
+        },
+        {
+          "level": 26,
+          "species": "Fearow"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 29,
+          "species": "Pidgeotto"
+        },
+        {
+          "level": 29,
+          "species": "Fearow"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 28,
+          "species": "Spearow"
+        },
+        {
+          "level": 28,
+          "species": "Doduo"
+        },
+        {
+          "level": 28,
+          "species": "Fearow"
+        }
+      ]
+    }
+  ]
+}

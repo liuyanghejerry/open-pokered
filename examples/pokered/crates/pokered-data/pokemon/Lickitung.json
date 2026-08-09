@@ -1,0 +1,64 @@
+{
+  "$schema": "../schemas/pokemon.schema.json",
+  "species": "Lickitung",
+  "baseStats": {
+    "hp": 90,
+    "attack": 55,
+    "defense": 75,
+    "speed": 30,
+    "special": 60
+  },
+  "type1": "Normal",
+  "type2": "Normal",
+  "catchRate": 45,
+  "baseExp": 127,
+  "growthRate": "MediumFast",
+  "initialMoves": [
+    "Wrap",
+    "Supersonic",
+    "None",
+    "None"
+  ],
+  "tmHmFlags": [
+    181,
+    127,
+    143,
+    199,
+    162,
+    8,
+    54
+  ],
+  "pokedex": {
+    "category": "LICKING",
+    "heightFeet": 3,
+    "heightInches": 11,
+    "weightDecipounds": 1440,
+    "flavorTextPages": [
+      "Its tongue can be\nextended like a\nchameleon's. It",
+      "leaves a tingling\nsensation when it\nlicks enemies"
+    ]
+  },
+  "evolutions": [],
+  "learnset": [
+    {
+      "level": 7,
+      "moveId": "Stomp"
+    },
+    {
+      "level": 15,
+      "moveId": "Disable"
+    },
+    {
+      "level": 23,
+      "moveId": "DefenseCurl"
+    },
+    {
+      "level": 31,
+      "moveId": "Slam"
+    },
+    {
+      "level": 39,
+      "moveId": "Screech"
+    }
+  ]
+}

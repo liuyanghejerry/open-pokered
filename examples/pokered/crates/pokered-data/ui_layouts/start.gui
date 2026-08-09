@@ -1,0 +1,13 @@
+screen Start {
+  panel {
+    rect = {tx: 10, ty: 0, tw: 10, th: 15}
+    style = "default"
+  }
+  list {
+    rect = {tx: 11, ty: 1, tw: 8, th: 13}
+    source = "{items}"
+    item_template = {height: 1, gap: 1}
+    cursor = {tile: 223, position: "left"}
+    max_visible = 7
+  }
+}

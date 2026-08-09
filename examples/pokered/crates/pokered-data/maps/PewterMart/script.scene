@@ -1,0 +1,29 @@
+// PewterMart — translated from the original disassembly (scripts/PewterMart.asm,
+// text/PewterMart.asm, data/items/marts.asm) to the real Game DSL API surface.
+// A standard PoKeMart: the clerk (npc 1) opens the shop (script_mart inventory
+// via openShop); the other two NPCs are dialogue-only tip-givers. No on-enter
+// logic in the original beyond text-box control, so no @load block.
+
+game_scene PewterMart {
+  // ── Clerk (npc 1) — opens the PoKeMart shop ───────────────────────────
+  @storyline("talkClerk") {
+    @trigger(map = "PewterMart", npc = 1)
+    openShop(["POKE_BALL", "POTION", "ESCAPE_ROPE", "ANTIDOTE", "BURN_HEAL", "AWAKENING", "PARLYZ_HEAL"])
+  }
+
+  // ── Youngster (npc 2) — dialogue only ─────────────────────────────────
+  @storyline("talkYoungster") {
+    @trigger(map = "PewterMart", npc = 2)
+    @speaker("") {
+      @t("A shady, old man got me to\nbuy this really weird fish\nPOKeMON!\n\nIt's totally weak and it\ncost ¥500!", "一个可疑的老头让我买了这条奇\n怪的鱼宝可梦！\n\n它特别弱，还花了500元！")
+    }
+  }
+
+  // ── SuperNerd (npc 3) — dialogue only ─────────────────────────────────
+  @storyline("talkSuperNerd") {
+    @trigger(map = "PewterMart", npc = 3)
+    @speaker("") {
+      @t("Good things can happen if\nyou raise POKeMON\ndiligently, even the weak\nones!", "只要你认真培育宝可梦，就算是\n很弱的宝可梦，也会有好事发\n生！")
+    }
+  }
+}

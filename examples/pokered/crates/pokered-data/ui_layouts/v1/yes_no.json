@@ -1,0 +1,28 @@
+{
+  "$schema": "/schemas/layout.schema.json",
+  "schema_version": 1,
+  "screen": "yes_no",
+  "variants": {
+    "default": {
+      "cursor": {
+        "tx": 12,
+        "base_ty": 10,
+        "row_step": 2,
+        "glyph": "\u25b6",
+        "color": "Black"
+      },
+      "children": [
+        {
+          "id": "box_0",
+          "rect": {
+            "tx": 11,
+            "ty": 8,
+            "tw": 9,
+            "th": 6
+          },
+          "color": "Black"
+        }
+      ]
+    }
+  }
+}

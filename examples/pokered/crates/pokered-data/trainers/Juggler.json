@@ -1,0 +1,107 @@
+{
+  "$schema": "../schemas/trainer.schema.json",
+  "class": "Juggler",
+  "constName": "JUGGLER",
+  "parties": [
+    {
+      "pokemon": [
+        {
+          "level": 29,
+          "species": "Kadabra"
+        },
+        {
+          "level": 29,
+          "species": "MrMime"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 41,
+          "species": "Drowzee"
+        },
+        {
+          "level": 41,
+          "species": "Hypno"
+        },
+        {
+          "level": 41,
+          "species": "Kadabra"
+        },
+        {
+          "level": 41,
+          "species": "Kadabra"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 31,
+          "species": "Drowzee"
+        },
+        {
+          "level": 31,
+          "species": "Drowzee"
+        },
+        {
+          "level": 31,
+          "species": "Kadabra"
+        },
+        {
+          "level": 31,
+          "species": "Drowzee"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 34,
+          "species": "Drowzee"
+        },
+        {
+          "level": 34,
+          "species": "Hypno"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 48,
+          "species": "MrMime"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 33,
+          "species": "Hypno"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 38,
+          "species": "Hypno"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 34,
+          "species": "Drowzee"
+        },
+        {
+          "level": 34,
+          "species": "Kadabra"
+        }
+      ]
+    }
+  ]
+}

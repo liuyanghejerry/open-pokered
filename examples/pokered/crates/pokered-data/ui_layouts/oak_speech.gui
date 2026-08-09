@@ -1,0 +1,14 @@
+screen OakSpeech {
+  panel {
+    rect = {tx: 0, ty: 12, tw: 20, th: 6}
+    style = "default"
+    text("{text}") {
+      rect = {tx: 1, ty: 13, tw: 18, th: 4}
+      wrap = "word"
+      line_spacing = 1
+    }
+    tile(31) {
+      rect = {tx: 18, ty: 16, tw: 1, th: 1}
+    }
+  }
+}

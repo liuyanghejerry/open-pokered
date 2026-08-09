@@ -1,0 +1,705 @@
+// rules.ron — pokered Gen-1 battle ruleset, BUCKET-A moves only (P1 of the
+// battle migration; blueprint 15 §2 / §5 P1). Authored as DATA against the
+// closed no-code vocabulary (doc 11 §1.1, doc 12 §2). This is the SINGLE source
+// of truth the dual-mode `jrpg_rules::RuleSource` loads either BAKED
+// (include_str!, release) or from DISK (dev, hot-reloaded).
+//
+// SCOPE (HONEST): only the bucket-A effects genuinely expressible with TODAY's
+// op vocabulary + the type chart are here. P1 is ADDITIVE and DIFFERENTIAL-ONLY:
+// the legacy `apply_move_effect` dispatcher stays the production oracle; these
+// data effects are run side-by-side through the StackDriver and asserted to
+// produce an IDENTICAL BattleState + identical rng consumed() vs legacy.
+//
+// THE DAMAGE AUTHORITY: `pokered_core::battle::damage::calculate_damage` stays
+// the single damage authority (it folds STAB + the type chart + the ×roll/255
+// ordering into ONE number). The driver precomputes that full number into
+// `ctx.mv.damage` BEFORE the fold (mirroring minimon's move-damage hook). So:
+//   • `DealMoveDamage` is the ModifyDamage SUBSCRIPTION MARKER (resolves
+//     Unchanged — the number is already in `ctx.mv.damage`);
+//   • `ApplyTypeChart` rides the Effectiveness fold as the DECLARATIVE marker but
+//     resolves NEUTRAL (1×) on purpose, because the chart already rode the damage
+//     formula. Re-applying it here would DOUBLE-COUNT. The pokered binding's
+//     `type_chart_mult` therefore returns (1,1) — the chart lives in the damage
+//     authority, not a second fold. (This is the faithful Gen-1 composition: the
+//     real super-effective/resisted/STAB numbers come out of calculate_damage.)
+//
+// What is authored as DATA here (vs DEFERRED — see the module doc):
+//   • ~31 pure-damage moves (NoAdditionalEffect) + Swift  → [DealMoveDamage, ApplyTypeChart]
+//   • the 9 used self-Boost effects (+1 / +2 stat stages on self) → [Boost(... Source)]
+//     (AccuracyUp1/AccuracyUp2/EvasionUp2 of the 11 variants are unused in Gen-1)
+//   • Recover / Softboiled (heal 1/2 max HP)              → [HealFraction(Source, MaxHp, 1/2)]
+// All self-Boost / self-heal effects ride the `DamagingHit` event (the StackDriver's
+// post-connect hook; it fires only after accuracy passes, matching the legacy power-0
+// "hit then apply effect" branch) and target `Source` (the mover), since on
+// DamagingHit `target` = the defender and `source` = the actor.
+//   • Splash (no-op)                                      → (no hooks)
+// DEFERRED to a later phase (today's vocabulary lacks the primitive):
+//   • Drain  (needs HealFraction `of: LastDamage`)
+//   • Recoil (needs DamageFraction `of: LastDamage`)
+//   • PayDay (needs an AWARD-resource / session-coin op; PayResource only DEDUCTS)
+Ruleset(
+    // The pokered stat names; order = the interned stat index the binding maps ↔
+    // `pokered_core::battle::stat_stages::StatIndex`.
+    stats: ["Attack", "Defense", "Speed", "Special", "Accuracy", "Evasion"],
+
+    // The 15 Gen-1 types; order = the interned type index the binding maps ↔
+    // `pokered_data::types::PokemonType`. The type chart is NOT authored here as a
+    // `type_chart:` relation because the chart is owned by the damage authority
+    // (`calculate_damage`, which folds STAB + per-type effectiveness into the
+    // damage number). `ApplyTypeChart` resolves neutral (the binding returns 1×),
+    // so the data fold never double-counts. (Listing the types keeps `HasType`/
+    // chart names load-validatable for future buckets.)
+    types: [
+        "Normal", "Fighting", "Flying", "Poison", "Ground", "Rock", "Bird",
+        "Bug", "Ghost", "Fire", "Water", "Grass", "Electric", "Psychic",
+        "Ice", "Dragon",
+    ],
+
+    effects: [
+        // ── PURE-DAMAGE moves (NoAdditionalEffect). The damage number is the full
+        //    Gen-1 calculate_damage result (STAB + type chart + ×roll/255) already
+        //    in `ctx.mv.damage`; DealMoveDamage subscribes to ModifyDamage,
+        //    ApplyTypeChart rides Effectiveness neutrally (chart owned by the
+        //    damage authority). One record per representative pure-damage move; the
+        //    harness reads the REAL MoveData (power/type/accuracy) for each.
+        Effect(id: "move.tackle", kind: Move, power: 35, type: "Normal", accuracy: 95,
+            hooks: [
+                Hook(on: "ModifyDamage",  do: [ DealMoveDamage ]),
+                Hook(on: "Effectiveness", order: 100, do: [ ApplyTypeChart ]),
+            ]),
+        Effect(id: "move.surf", kind: Move, power: 95, type: "Water", accuracy: 100,
+            hooks: [
+                Hook(on: "ModifyDamage",  do: [ DealMoveDamage ]),
+                Hook(on: "Effectiveness", order: 100, do: [ ApplyTypeChart ]),
+            ]),
+        Effect(id: "move.earthquake", kind: Move, power: 100, type: "Ground", accuracy: 100,
+            hooks: [
+                Hook(on: "ModifyDamage",  do: [ DealMoveDamage ]),
+                Hook(on: "Effectiveness", order: 100, do: [ ApplyTypeChart ]),
+            ]),
+        // ── Swift (SwiftEffect): identical op-list to a pure-damage move; the
+        //    always-hit (accuracy bypass) lives in the move-execution accuracy
+        //    stage (the harness's accuracy handler short-circuits SwiftEffect), so
+        //    no extra op is needed here.
+        Effect(id: "move.swift", kind: Move, power: 60, type: "Normal", accuracy: 100,
+            hooks: [
+                Hook(on: "ModifyDamage",  do: [ DealMoveDamage ]),
+                Hook(on: "Effectiveness", order: 100, do: [ ApplyTypeChart ]),
+            ]),
+
+        // ── SELF-BOOST moves (Boost on Host = the mover). +1 / +2 stage on the
+        //    attacker's own stat, with the engine's -6..+6 stage clamp. One record
+        //    per live self-Boost effect variant (blueprint 15 §2 A tier).
+        Effect(id: "boost.attack_up_1",  kind: Move, power: 0, type: "Normal", accuracy: 100,
+            hooks: [ Hook(on: "DamagingHit", do: [ Boost(stat: "Attack",  stages: 1, target: Source) ]) ]),
+        Effect(id: "boost.defense_up_1", kind: Move, power: 0, type: "Normal", accuracy: 100,
+            hooks: [ Hook(on: "DamagingHit", do: [ Boost(stat: "Defense", stages: 1, target: Source) ]) ]),
+        Effect(id: "boost.speed_up_1",   kind: Move, power: 0, type: "Normal", accuracy: 100,
+            hooks: [ Hook(on: "DamagingHit", do: [ Boost(stat: "Speed",   stages: 1, target: Source) ]) ]),
+        Effect(id: "boost.special_up_1", kind: Move, power: 0, type: "Normal", accuracy: 100,
+            hooks: [ Hook(on: "DamagingHit", do: [ Boost(stat: "Special", stages: 1, target: Source) ]) ]),
+        Effect(id: "boost.evasion_up_1", kind: Move, power: 0, type: "Normal", accuracy: 100,
+            hooks: [ Hook(on: "DamagingHit", do: [ Boost(stat: "Evasion", stages: 1, target: Source) ]) ]),
+        Effect(id: "boost.attack_up_2",  kind: Move, power: 0, type: "Normal", accuracy: 100,
+            hooks: [ Hook(on: "DamagingHit", do: [ Boost(stat: "Attack",  stages: 2, target: Source) ]) ]),
+        Effect(id: "boost.defense_up_2", kind: Move, power: 0, type: "Normal", accuracy: 100,
+            hooks: [ Hook(on: "DamagingHit", do: [ Boost(stat: "Defense", stages: 2, target: Source) ]) ]),
+        Effect(id: "boost.speed_up_2",   kind: Move, power: 0, type: "Normal", accuracy: 100,
+            hooks: [ Hook(on: "DamagingHit", do: [ Boost(stat: "Speed",   stages: 2, target: Source) ]) ]),
+        Effect(id: "boost.special_up_2", kind: Move, power: 0, type: "Normal", accuracy: 100,
+            hooks: [ Hook(on: "DamagingHit", do: [ Boost(stat: "Special", stages: 2, target: Source) ]) ]),
+
+        // ── SELF-HEAL (HealEffect): Recover / Softboiled heal 1/2 the user's max
+        //    HP (capped at max). Authored as HealFraction on Host. (Rest is C —
+        //    full-heal + self-sleep + cure — and stays native; not here.)
+        Effect(id: "heal.recover", kind: Move, power: 0, type: "Normal", accuracy: 100,
+            hooks: [ Hook(on: "DamagingHit", do: [ HealFraction(num: 1, den: 2, of: MaxHp, target: Source) ]) ]),
+
+        // ── Splash: a true no-op move (no hooks). Proves an empty op-list move is
+        //    expressible as data and consumes zero rng beyond the accuracy roll.
+        Effect(id: "move.splash", kind: Move, power: 0, type: "Normal", accuracy: 100, hooks: []),
+
+        // ═══════════════════════════════════════════════════════════════════════
+        // P2 — SIDE-STATUS + DRAIN/RECOIL (blueprint 15 §2 bucket-B-expressible /
+        //      §5 P2). All authored as DATA via the P2 primitives:
+        //   • side-status → Hook(on:DamagingHit, chance:[n,256], do:[ guards…,
+        //       InflictStatus(status, Target) ]) — the chance byte is drawn at the
+        //       legacy side_effect ordinal (after the damage byte) whether or not
+        //       the secondary fires, so consumed() stays invariant;
+        //   • guards mirror the legacy `status_effects.rs`:
+        //       - Substitute block → VetoIf(HasVolatile("Substitute"))
+        //       - type immunity #23 (burn/freeze/para) → VetoIf(MoveTypeIsDefenderType)
+        //       - poison-type immunity (poison-side) → VetoIf(HasType("Poison"))
+        //       - the "no-status target" guard lives in the binding's set_status
+        //         (only inflicts on a status-free target), so no HasAnyStatus op;
+        //   • drain  → HealFraction  (of: LastDamage, 1/2, Source) — Gen-1 half-of-dealt
+        //   • recoil → DamageFraction(of: LastDamage, 1/4, Source) — Gen-1 quarter-of-dealt
+        //   The `chance:[n,256]` gate is bit-identical to the legacy `byte < n`
+        //   (51/102/26/77/85), one byte drawn (doc 11 §4.1).
+        //
+        // DEFERRED (honest — not P2-expressible; see the module doc):
+        //   • Sleep primary (rng&7 turn count → needs StatusWithDuration)
+        //   • Toxic branch of PoisonEffect (badly-poisoned counter → arena state)
+        //   • Flinch/Confusion side (need SetVolatile + EffectStateKind slot)
+        //   • PayDay (needs an AWARD-resource / session-coin op; PayResource DEDUCTS)
+        //   • the foe stat-down side effects (need the nested TryBoost veto driver)
+
+        // ── POISON side-effect: poison-type immunity (HasType Poison) + Substitute
+        //    block + no-status guard. PoisonSideEffect1 = 51/256 (Poison Sting),
+        //    PoisonSideEffect2 = 102/256 (Sludge).
+        Effect(id: "side.poison_1", kind: Move, power: 15, type: "Poison", accuracy: 100,
+            hooks: [
+                Hook(on: "ModifyDamage",  do: [ DealMoveDamage ]),
+                Hook(on: "Effectiveness", order: 100, do: [ ApplyTypeChart ]),
+                Hook(on: "DamagingHit", chance: [51, 256], do: [
+                    VetoIf(cond: HasType("Poison")),
+                    VetoIf(cond: HasVolatile("Substitute")),
+                    InflictStatus(status: "poison", target: Target),
+                ]),
+            ]),
+        Effect(id: "side.poison_2", kind: Move, power: 65, type: "Poison", accuracy: 100,
+            hooks: [
+                Hook(on: "ModifyDamage",  do: [ DealMoveDamage ]),
+                Hook(on: "Effectiveness", order: 100, do: [ ApplyTypeChart ]),
+                Hook(on: "DamagingHit", chance: [102, 256], do: [
+                    VetoIf(cond: HasType("Poison")),
+                    VetoIf(cond: HasVolatile("Substitute")),
+                    InflictStatus(status: "poison", target: Target),
+                ]),
+            ]),
+
+        // ── BURN side-effect: self-type immunity #23 (MoveTypeIsDefenderType) +
+        //    Substitute block. BurnSideEffect1 = 26/256 (Ember-shaped, Fire).
+        Effect(id: "side.burn_1", kind: Move, power: 40, type: "Fire", accuracy: 100,
+            hooks: [
+                Hook(on: "ModifyDamage",  do: [ DealMoveDamage ]),
+                Hook(on: "Effectiveness", order: 100, do: [ ApplyTypeChart ]),
+                Hook(on: "DamagingHit", chance: [26, 256], do: [
+                    VetoIf(cond: MoveTypeIsDefenderType),
+                    VetoIf(cond: HasVolatile("Substitute")),
+                    InflictStatus(status: "burn", target: Target),
+                ]),
+            ]),
+        // BurnSideEffect2 = 77/256 (Fire Blast-shaped).
+        Effect(id: "side.burn_2", kind: Move, power: 120, type: "Fire", accuracy: 85,
+            hooks: [
+                Hook(on: "ModifyDamage",  do: [ DealMoveDamage ]),
+                Hook(on: "Effectiveness", order: 100, do: [ ApplyTypeChart ]),
+                Hook(on: "DamagingHit", chance: [77, 256], do: [
+                    VetoIf(cond: MoveTypeIsDefenderType),
+                    VetoIf(cond: HasVolatile("Substitute")),
+                    InflictStatus(status: "burn", target: Target),
+                ]),
+            ]),
+
+        // ── FREEZE side-effect: same shape as burn (#23 + Substitute). 26/256.
+        Effect(id: "side.freeze_1", kind: Move, power: 95, type: "Ice", accuracy: 100,
+            hooks: [
+                Hook(on: "ModifyDamage",  do: [ DealMoveDamage ]),
+                Hook(on: "Effectiveness", order: 100, do: [ ApplyTypeChart ]),
+                Hook(on: "DamagingHit", chance: [26, 256], do: [
+                    VetoIf(cond: MoveTypeIsDefenderType),
+                    VetoIf(cond: HasVolatile("Substitute")),
+                    InflictStatus(status: "freeze", target: Target),
+                ]),
+            ]),
+
+        // ── PARALYZE side-effect: same shape as burn (#23 + Substitute).
+        //    ParalyzeSideEffect1 = 26/256 (Thunder-shaped, Electric).
+        Effect(id: "side.paralyze_1", kind: Move, power: 120, type: "Electric", accuracy: 70,
+            hooks: [
+                Hook(on: "ModifyDamage",  do: [ DealMoveDamage ]),
+                Hook(on: "Effectiveness", order: 100, do: [ ApplyTypeChart ]),
+                Hook(on: "DamagingHit", chance: [26, 256], do: [
+                    VetoIf(cond: MoveTypeIsDefenderType),
+                    VetoIf(cond: HasVolatile("Substitute")),
+                    InflictStatus(status: "paralysis", target: Target),
+                ]),
+            ]),
+        // ParalyzeSideEffect2 = 77/256 (Body Slam-shaped, Normal).
+        Effect(id: "side.paralyze_2", kind: Move, power: 85, type: "Normal", accuracy: 100,
+            hooks: [
+                Hook(on: "ModifyDamage",  do: [ DealMoveDamage ]),
+                Hook(on: "Effectiveness", order: 100, do: [ ApplyTypeChart ]),
+                Hook(on: "DamagingHit", chance: [77, 256], do: [
+                    VetoIf(cond: MoveTypeIsDefenderType),
+                    VetoIf(cond: HasVolatile("Substitute")),
+                    InflictStatus(status: "paralysis", target: Target),
+                ]),
+            ]),
+
+        // ── PRIMARY status (power-0, guaranteed, after accuracy hit). The
+        //    no-status / type-immunity / Substitute guards mirror the side-status
+        //    ones. ParalyzeEffect (Thunder Wave): #23 + Substitute block.
+        Effect(id: "status.paralyze", kind: Move, power: 0, type: "Electric", accuracy: 100,
+            hooks: [
+                Hook(on: "DamagingHit", do: [
+                    VetoIf(cond: MoveTypeIsDefenderType),
+                    VetoIf(cond: HasVolatile("Substitute")),
+                    InflictStatus(status: "paralysis", target: Target),
+                ]),
+            ]),
+        // PoisonEffect (Poisonpowder — the PLAIN poison branch; Toxic's badly-
+        //    poisoned ramp is DEFERRED). Poison-type immunity + Substitute block.
+        Effect(id: "status.poison", kind: Move, power: 0, type: "Poison", accuracy: 75,
+            hooks: [
+                Hook(on: "DamagingHit", do: [
+                    VetoIf(cond: HasType("Poison")),
+                    VetoIf(cond: HasVolatile("Substitute")),
+                    InflictStatus(status: "poison", target: Target),
+                ]),
+            ]),
+
+        // ── SLEEP (SleepEffect): guaranteed sleep with a 1..7-turn counter drawn
+        //    by the ENGINE from the op's AmountSpec (the game only maps the
+        //    number → LegacyStatus::Sleep). No self-type immunity; the Substitute
+        //    + no-status guards apply. The already-wired sleep_gate (BeforeMove)
+        //    ticks it down and wakes. Shared by Hypnosis/Sing/Sleep Powder/Lovely
+        //    Kiss/Spore (each move's real accuracy comes from live MoveData).
+        Effect(id: "status.sleep", kind: Move, power: 0, type: "Psychic", accuracy: 100,
+            hooks: [
+                // Gen-1 SLEEP goes THROUGH a Substitute (the oracle `apply_sleep` has no
+                // sub check — "SleepEffect does NOT check Substitute"), unlike every other
+                // primary status. So NO `VetoIf(HasVolatile("Substitute"))` here.
+                Hook(on: "DamagingHit", do: [
+                    InflictStatus(status: "sleep", target: Target, amount: RngRange(lo: 1, hi: 7)),
+                ]),
+            ]),
+
+        // ── CONFUSION (ConfuseEffect): a guaranteed 2..5-turn confusion VOLATILE
+        //    ((rng & 3) + 2). No re-confuse (HasVolatile guard) + Substitute
+        //    block; the already-wired confusion_gate drives the self-hit/snap-out.
+        //    Confuse Ray / Supersonic.
+        Effect(id: "status.confuse", kind: Move, power: 0, type: "Normal", accuracy: 100,
+            hooks: [
+                Hook(on: "DamagingHit", do: [
+                    VetoIf(cond: HasVolatile("Substitute")),
+                    VetoIf(cond: HasVolatile("confusion")),
+                    InflictVolatile(kind: "confusion", target: Target, amount: RngMask(mask: 3, plus: 2)),
+                ]),
+            ]),
+        // ── CONFUSION side-effect (~10% = 26/256): a damaging move + confuse
+        //    rider (Confusion move / Psybeam / Dizzy Punch).
+        Effect(id: "side.confuse", kind: Move, power: 50, type: "Psychic", accuracy: 100,
+            hooks: [
+                Hook(on: "ModifyDamage",  do: [ DealMoveDamage ]),
+                Hook(on: "Effectiveness", order: 100, do: [ ApplyTypeChart ]),
+                Hook(on: "DamagingHit", chance: [26, 256], do: [
+                    VetoIf(cond: HasVolatile("Substitute")),
+                    VetoIf(cond: HasVolatile("confusion")),
+                    InflictVolatile(kind: "confusion", target: Target, amount: RngMask(mask: 3, plus: 2)),
+                ]),
+            ]),
+
+        // ── LEECH SEED (LeechSeedEffect): install the "leechseed" volatile; the
+        //    already-wired end-of-turn leech_residual drains 1/16 to the seeder.
+        //    Grass-type immunity + no re-seed + Substitute block.
+        Effect(id: "status.leechseed", kind: Move, power: 0, type: "Grass", accuracy: 90,
+            hooks: [
+                Hook(on: "DamagingHit", do: [
+                    VetoIf(cond: HasType("Grass")),
+                    VetoIf(cond: HasVolatile("leechseed")),
+                    VetoIf(cond: HasVolatile("Substitute")),
+                    InflictVolatile(kind: "leechseed", target: Target),
+                ]),
+            ]),
+
+        // ── FLINCH side-effect: a damaging move installs the "flinch" volatile;
+        //    the flinch_gate (BeforeMove, order 30) consumes it and skips the
+        //    target's next move. _1 = 26/256 (Bite/Bone Club/Hyper Fang), _2 =
+        //    77/256 (Stomp/Rolling Kick/Headbutt/Low Kick). Substitute-blocked.
+        Effect(id: "side.flinch_1", kind: Move, power: 60, type: "Normal", accuracy: 100,
+            hooks: [
+                Hook(on: "ModifyDamage",  do: [ DealMoveDamage ]),
+                Hook(on: "Effectiveness", order: 100, do: [ ApplyTypeChart ]),
+                Hook(on: "DamagingHit", chance: [26, 256], do: [
+                    VetoIf(cond: HasVolatile("Substitute")),
+                    InflictVolatile(kind: "flinch", target: Target),
+                ]),
+            ]),
+        Effect(id: "side.flinch_2", kind: Move, power: 65, type: "Normal", accuracy: 100,
+            hooks: [
+                Hook(on: "ModifyDamage",  do: [ DealMoveDamage ]),
+                Hook(on: "Effectiveness", order: 100, do: [ ApplyTypeChart ]),
+                Hook(on: "DamagingHit", chance: [77, 256], do: [
+                    VetoIf(cond: HasVolatile("Substitute")),
+                    InflictVolatile(kind: "flinch", target: Target),
+                ]),
+            ]),
+
+        // ── TOXIC (ToxicEffect): badly-poison — set Poison AND the "toxic"
+        //    counter volatile ATOMICALLY. The TargetHasAnyStatus guard makes it
+        //    all-or-nothing (Gen-1: already statused ⇒ nothing happens). The
+        //    toxic_residual (already wired) does the uncapped ramp (bug #6);
+        //    poison_residual self-skips while the toxic counter is live.
+        Effect(id: "status.toxic", kind: Move, power: 0, type: "Poison", accuracy: 85,
+            hooks: [
+                Hook(on: "DamagingHit", do: [
+                    VetoIf(cond: HasType("Poison")),
+                    VetoIf(cond: HasVolatile("Substitute")),
+                    VetoIf(cond: TargetHasAnyStatus),
+                    InflictStatus(status: "poison", target: Target),
+                    InflictVolatile(kind: "toxic", target: Target, amount: Const(0)),
+                ]),
+            ]),
+
+        // ── FOCUS ENERGY (FocusEnergyEffect, self): install the "focusenergy"
+        //    volatile on the user. pokered_crit already reads it — and applies
+        //    the Gen-1 /4 crit-rate BUG (#1), preserved deliberately.
+        Effect(id: "status.focus_energy", kind: Move, power: 0, type: "Normal", accuracy: 100,
+            hooks: [
+                Hook(on: "DamagingHit", do: [
+                    VetoIf(cond: HasVolatile("focusenergy")),
+                    InflictVolatile(kind: "focusenergy", target: Source),
+                ]),
+            ]),
+
+        // ── LIGHT SCREEN / REFLECT (self): install the screen volatile on the
+        //    user. pokered_damage reads it — Reflect doubles the user's Defense
+        //    vs physical, Light Screen doubles it vs special. No turn counter
+        //    (Gen-1 screens last until switch-out).
+        Effect(id: "status.lightscreen", kind: Move, power: 0, type: "Psychic", accuracy: 100,
+            hooks: [
+                Hook(on: "DamagingHit", do: [
+                    VetoIf(cond: HasVolatile("lightscreen")),
+                    InflictVolatile(kind: "lightscreen", target: Source),
+                ]),
+            ]),
+        Effect(id: "status.reflect", kind: Move, power: 0, type: "Psychic", accuracy: 100,
+            hooks: [
+                Hook(on: "DamagingHit", do: [
+                    VetoIf(cond: HasVolatile("reflect")),
+                    InflictVolatile(kind: "reflect", target: Source),
+                ]),
+            ]),
+
+        // ── MIST (self): install the Mist volatile on the user. Its consumer is
+        //    already wired — effect_for_volatile hands the driver a TryBoost veto
+        //    handler, so bridge_foe_stat_down's Event::TryBoost is refused while
+        //    Mist is up (foe stat-down moves can't lower a Mist-protected mon).
+        Effect(id: "status.mist", kind: Move, power: 0, type: "Ice", accuracy: 100,
+            hooks: [
+                Hook(on: "DamagingHit", do: [
+                    VetoIf(cond: HasVolatile("mist")),
+                    InflictVolatile(kind: "mist", target: Source),
+                ]),
+            ]),
+
+        // ── REST (RestEffect, self-target): cure any status, sleep for 2 turns,
+        //    and heal to full. RemoveStatus clears the existing status first so
+        //    the no-status guard lets the fresh Sleep through.
+        Effect(id: "status.rest", kind: Move, power: 0, type: "Psychic", accuracy: 100,
+            hooks: [
+                Hook(on: "DamagingHit", do: [
+                    RemoveStatus(target: Source),
+                    InflictStatus(status: "sleep", target: Source, amount: Const(2)),
+                    HealFraction(num: 1, den: 1, of: MaxHp, target: Source),
+                ]),
+            ]),
+
+        // ── EXPLOSION / SELF-DESTRUCT (ExplodeEffect): the target's Defense is
+        //    halved in pokered_damage (detected from the move effect); the user
+        //    then faints via the generic SetHp(Source, 0) after the hit.
+        Effect(id: "special.explosion", kind: Move, power: 170, type: "Normal", accuracy: 100,
+            hooks: [
+                Hook(on: "ModifyDamage",  do: [ DealMoveDamage ]),
+                Hook(on: "Effectiveness", order: 100, do: [ ApplyTypeChart ]),
+                Hook(on: "DamagingHit", do: [
+                    SetHp(target: Source, value: 0),
+                ]),
+            ]),
+
+        // ── DRAIN (DrainHpEffect): heal the mover by HALF the damage just dealt
+        //    (Gen-1 `(dealt/2).max(1)`), via HealFraction of LastDamage on Source.
+        //    Mega Drain-shaped (Grass, power 40).
+        Effect(id: "drain.absorb", kind: Move, power: 40, type: "Grass", accuracy: 100,
+            hooks: [
+                Hook(on: "ModifyDamage",  do: [ DealMoveDamage ]),
+                Hook(on: "Effectiveness", order: 100, do: [ ApplyTypeChart ]),
+                Hook(on: "DamagingHit", do: [
+                    HealFraction(num: 1, den: 2, of: LastDamage, target: Source),
+                ]),
+            ]),
+
+        // ── RECOIL (RecoilEffect): hit the mover for a QUARTER of the damage dealt
+        //    (Gen-1 `(dealt/4).max(1)`), via DamageFraction of LastDamage on Source.
+        //    Take Down-shaped (Normal, power 90). (Struggle's 1/2 recoil is a
+        //    separate record, not authored here — Struggle is a fallback move.)
+        Effect(id: "recoil.take_down", kind: Move, power: 90, type: "Normal", accuracy: 85,
+            hooks: [
+                Hook(on: "ModifyDamage",  do: [ DealMoveDamage ]),
+                Hook(on: "Effectiveness", order: 100, do: [ ApplyTypeChart ]),
+                Hook(on: "DamagingHit", do: [
+                    DamageFraction(num: 1, den: 4, of: LastDamage, target: Source),
+                ]),
+            ]),
+
+        // ── STRUGGLE: the fallback move — deals normal damage then recoils HALF the
+        //    damage dealt (Gen-1 `(dealt/2)`), unlike Take Down's quarter.
+        Effect(id: "recoil.struggle", kind: Move, power: 50, type: "Normal", accuracy: 100,
+            hooks: [
+                Hook(on: "ModifyDamage",  do: [ DealMoveDamage ]),
+                Hook(on: "Effectiveness", order: 100, do: [ ApplyTypeChart ]),
+                Hook(on: "DamagingHit", do: [
+                    DamageFraction(num: 1, den: 2, of: LastDamage, target: Source),
+                ]),
+            ]),
+
+        // ── DREAM EATER: the WHOLE MOVE fails when the target is not asleep —
+        //    core.asm:5240-5245 (MoveHitTest's dreamEaterCheck) jumps to
+        //    .moveMissed before any damage/accuracy roll. Mirrored as a pre-hit
+        //    veto on the Accuracy event (order 50 ⇒ fires before the native
+        //    accuracy handler at order u32::MAX, so no accuracy byte is drawn on
+        //    the failure — exactly the original's early-out). Only when the target
+        //    IS asleep does the move deal damage and drain HALF of it.
+        Effect(id: "dream.eater", kind: Move, power: 100, type: "Psychic", accuracy: 100,
+            hooks: [
+                Hook(on: "Accuracy", order: 50, do: [
+                    VetoIf(cond: Not(TargetHasStatus("sleep"))),
+                ]),
+                Hook(on: "ModifyDamage",  do: [ DealMoveDamage ]),
+                Hook(on: "Effectiveness", order: 100, do: [ ApplyTypeChart ]),
+                Hook(on: "DamagingHit", do: [
+                    HealFraction(num: 1, den: 2, of: LastDamage, target: Source),
+                ]),
+            ]),
+
+        // ═══════════════════════════════════════════════════════════════════════
+        // P3 — SPECIAL / FIXED / OHKO / SUPER FANG (blueprint 15 §2 bucket-B
+        //      special-damage / §5 P3). These BYPASS the damage formula + type
+        //      chart: the SetDamage / DamageCurrentHpFraction / SetHp op writes
+        //      `ctx.mv.damage` (or sets HP) directly. The native crit/damage
+        //      handlers short-circuit on these effects (only the accuracy byte is
+        //      drawn), matching the standalone legacy oracle's zero-rng path
+        //      (`damage_effects::apply_special_damage`/`apply_super_fang`/`apply_ohko`,
+        //      which the production `execute_turn` does NOT wire — an honest
+        //      finding: there is no `execute_turn` oracle for these, so the
+        //      standalone fn IS the oracle). All records are power-0 here so no
+        //      formula draw occurs even via the harness's real MoveData (the native
+        //      handlers also gate on the effect).
+        //
+        //   • SpecialDamageEffect → SetDamage(expr, of:Source) on ModifyDamage:
+        //       Seismic Toss / Night Shade = UserLevel; Dragon Rage = Const(40);
+        //       Sonic Boom = Const(20); Psywave = RngScaledLevel(3,2) (= rng·1.5·lvl
+        //       /256, ONE byte drawn at the ModifyDamage ordinal).
+        //   • SuperFangEffect → DamageCurrentHpFraction(1/2, Target) on DamagingHit
+        //       (half the target's CURRENT hp, floored at 1).
+        //   • OhkoEffect → SetHp(Foe, 0, when:[LevelGE]) on DamagingHit — the KO
+        //       lands only when the user's level ≥ the foe's (bug #19: a
+        //       higher-level foe is IMMUNE). `Foe` of the DamagingHit target
+        //       (the defender) resolves to the attacker; we author `Target` so the
+        //       SetHp hits the defender, and `LevelGE` compares source≥target.
+
+        // Seismic Toss / Night Shade: damage = user's level.
+        Effect(id: "special.user_level", kind: Move, power: 0, type: "Normal", accuracy: 100,
+            hooks: [
+                Hook(on: "ModifyDamage", order: 2000, do: [ SetDamage(value: UserLevel, of: Source) ]),
+            ]),
+        // Dragon Rage: fixed 40.
+        Effect(id: "special.const_40", kind: Move, power: 0, type: "Dragon", accuracy: 100,
+            hooks: [
+                Hook(on: "ModifyDamage", order: 2000, do: [ SetDamage(value: Const(40)) ]),
+            ]),
+        // Sonic Boom: fixed 20.
+        Effect(id: "special.const_20", kind: Move, power: 0, type: "Normal", accuracy: 90,
+            hooks: [
+                Hook(on: "ModifyDamage", order: 2000, do: [ SetDamage(value: Const(20)) ]),
+            ]),
+        // Psywave: rng·1.5·level/256 (ONE byte drawn at the ModifyDamage ordinal).
+        Effect(id: "special.psywave", kind: Move, power: 0, type: "Psychic", accuracy: 80,
+            hooks: [
+                Hook(on: "ModifyDamage", order: 2000, do: [ SetDamage(value: RngScaledLevel(num: 3, den: 2), of: Source) ]),
+            ]),
+        // Super Fang: half the target's CURRENT hp (min 1).
+        Effect(id: "special.super_fang", kind: Move, power: 0, type: "Normal", accuracy: 90,
+            hooks: [
+                Hook(on: "DamagingHit", do: [ DamageCurrentHpFraction(num: 1, den: 2, target: Target) ]),
+            ]),
+        // OHKO (Horn Drill / Guillotine / Fissure): set the defender's hp to 0,
+        // gated by LevelGE (user ≥ foe). A higher-level foe is immune (bug #19).
+        Effect(id: "special.ohko", kind: Move, power: 0, type: "Normal", accuracy: 30,
+            hooks: [
+                Hook(on: "DamagingHit", do: [ SetHp(target: Target, value: 0, when: [ LevelGE ]) ]),
+            ]),
+
+        // JUMP KICK / HI JUMP KICK (JumpKickEffect): the DAMAGE half is a plain
+        // pure-damage move (power 70 / 85, Fighting) — it rides the `move.tackle`
+        // pure-damage record (`record_id_for_move` falls through to it; the real
+        // MoveData governs power/type/accuracy). The CRASH-ON-MISS half (the user
+        // takes 1 HP when the move misses) needs the `on:Miss` hook event, which
+        // does NOT exist yet (blueprint 15 §3 "New engine seam: on:Miss" — phase
+        // P5). DEFERRED to P5 with this note: JumpKick's damage is authored as data
+        // (the pure-damage path); only its crash is deferred. (Authoring the crash
+        // now would require a non-additive engine event, which P3 must not add.)
+
+        // ═══════════════════════════════════════════════════════════════════════
+        // P3 — FOE STAT-DOWN via the NESTED-VETO driver (blueprint 15 §2 bucket-B
+        //      foe-down / §3 shared native orchestration / §5 P3). A foe stat-down
+        //      is NOT pure data: the StackDriver never fires Event::TryBoost. The
+        //      pokered-side `bridge_foe_stat_down` (mod.rs §7b) rides DamagingHit,
+        //      reads the `Boost(stat, -N, Target)` op below, FIRES Event::TryBoost
+        //      via the engine's `collect_handlers` + `run_event_checked` seams, and
+        //      applies the drop ONLY if no Mist / Substitute handler vetoed. The
+        //      `Boost` op here is DATA (the stat + magnitude); the firing is the
+        //      one shared native orchestration. (A `Target` selector on DamagingHit
+        //      = the defender = the foe being lowered.)
+        //
+        //   • primary foe-down (power 0): no chance gate.
+        //       AttackDown1 (Growl), DefenseDown1 (Leer/Tail Whip), SpeedDown1
+        //       (String Shot), AccuracyDown1 (Sand-Attack/Flash/Kinesis/Smokescreen),
+        //       DefenseDown2 (Screech, -2).
+        //   • side foe-down (power>0, chance 85/256 drawn at the legacy ordinal):
+        //       AttackDownSide (Aurora Beam), DefenseDownSide (Acid), SpeedDownSide
+        //       (Bubble/Bubblebeam/Constrict), SpecialDownSide (Psychic).
+
+        // ── PRIMARY foe stat-down (power 0, guaranteed on a hit). ──
+        Effect(id: "foedown.attack_1", kind: Move, power: 0, type: "Normal", accuracy: 100,
+            hooks: [ Hook(on: "DamagingHit", do: [ Boost(stat: "Attack",  stages: -1, target: Target) ]) ]),
+        Effect(id: "foedown.defense_1", kind: Move, power: 0, type: "Normal", accuracy: 100,
+            hooks: [ Hook(on: "DamagingHit", do: [ Boost(stat: "Defense", stages: -1, target: Target) ]) ]),
+        Effect(id: "foedown.speed_1", kind: Move, power: 0, type: "Bug", accuracy: 95,
+            hooks: [ Hook(on: "DamagingHit", do: [ Boost(stat: "Speed",   stages: -1, target: Target) ]) ]),
+        Effect(id: "foedown.accuracy_1", kind: Move, power: 0, type: "Normal", accuracy: 100,
+            hooks: [ Hook(on: "DamagingHit", do: [ Boost(stat: "Accuracy", stages: -1, target: Target) ]) ]),
+        Effect(id: "foedown.defense_2", kind: Move, power: 0, type: "Normal", accuracy: 85,
+            hooks: [ Hook(on: "DamagingHit", do: [ Boost(stat: "Defense", stages: -2, target: Target) ]) ]),
+
+        // ── SIDE foe stat-down (power>0, chance 85/256 — the side_effect byte is
+        //    drawn at the legacy ordinal even when Mist/Substitute veto). ──
+        Effect(id: "foedown.attack_side", kind: Move, power: 65, type: "Ice", accuracy: 100,
+            hooks: [
+                Hook(on: "ModifyDamage",  do: [ DealMoveDamage ]),
+                Hook(on: "Effectiveness", order: 100, do: [ ApplyTypeChart ]),
+                Hook(on: "DamagingHit", chance: [85, 256], do: [ Boost(stat: "Attack", stages: -1, target: Target) ]),
+            ]),
+        Effect(id: "foedown.defense_side", kind: Move, power: 40, type: "Poison", accuracy: 100,
+            hooks: [
+                Hook(on: "ModifyDamage",  do: [ DealMoveDamage ]),
+                Hook(on: "Effectiveness", order: 100, do: [ ApplyTypeChart ]),
+                Hook(on: "DamagingHit", chance: [85, 256], do: [ Boost(stat: "Defense", stages: -1, target: Target) ]),
+            ]),
+        Effect(id: "foedown.speed_side", kind: Move, power: 65, type: "Water", accuracy: 100,
+            hooks: [
+                Hook(on: "ModifyDamage",  do: [ DealMoveDamage ]),
+                Hook(on: "Effectiveness", order: 100, do: [ ApplyTypeChart ]),
+                Hook(on: "DamagingHit", chance: [85, 256], do: [ Boost(stat: "Speed", stages: -1, target: Target) ]),
+            ]),
+        Effect(id: "foedown.special_side", kind: Move, power: 90, type: "Psychic", accuracy: 100,
+            hooks: [
+                Hook(on: "ModifyDamage",  do: [ DealMoveDamage ]),
+                Hook(on: "Effectiveness", order: 100, do: [ ApplyTypeChart ]),
+                Hook(on: "DamagingHit", chance: [85, 256], do: [ Boost(stat: "Special", stages: -1, target: Target) ]),
+            ]),
+
+        // ═══════════════════════════════════════════════════════════════════════
+        // P4 — MULTI-HIT via the RepeatHits seam (blueprint 15 §2 multi-hit rows /
+        //      §5 P4). The mechanism is a GAME-SIDE op (NO engine change): the
+        //      StackDriver computes the per-hit damage ONCE into `ctx.mv.damage`,
+        //      checks accuracy ONCE, deals the FIRST hit, then fires `DamagingHit`,
+        //      where the `RepeatHits` op re-applies that SAME number `(N-1)` more
+        //      times (Gen-1 "compute damage once, deal it N times"). N is drawn from:
+        //        • TwoToFive → ONE byte folded by the legacy `determine_hit_count`
+        //          (3/8·3/8·1/8·1/8 over {2,3,4,5}) — the `multi_hit_roll`;
+        //        • Fixed(2) → exactly 2 hits, NO byte (Double Kick / Bonemerang /
+        //          the Twineedle double-hit).
+        //      Total real damage = per-hit × N (the per-hit number rides the FULL
+        //      `calculate_damage` STAB + type chart + ×roll/255 authority, computed
+        //      once). The `multi_hit_roll` byte is drawn at the DamagingHit ordinal
+        //      (after the damage byte) — matching the legacy EffectRandoms ordinal —
+        //      so `consumed()` is invariant.
+        //
+        //      ALL 10 multi-hit moves are authored as DATA. Twineedle's final-hit
+        //      poison (52/256, on the 2nd hit only) is composed via the
+        //      `final_hit: OnFinal { chance, ops }` rider, which draws ONE chance
+        //      byte at the legacy `side_effect` ordinal (after the count) and runs
+        //      the SAME side-status guard ops (poison-type immunity + Substitute
+        //      block + InflictStatus) a side-status hook uses — so it reuses the P2
+        //      side-status machinery + the hit index (final hit) cleanly. NONE
+        //      deferred.
+
+        // ── TWO-TO-FIVE multi-hit (TwoToFiveAttacksEffect): 7 moves. Each is a
+        //    pure-damage move whose DamagingHit re-deals the per-hit damage (N-1)
+        //    more times, N ~ the 2-5 distribution (one byte). ──
+        Effect(id: "multi.doubleslap", kind: Move, power: 15, type: "Normal", accuracy: 85,
+            hooks: [
+                Hook(on: "ModifyDamage",  do: [ DealMoveDamage ]),
+                Hook(on: "Effectiveness", order: 100, do: [ ApplyTypeChart ]),
+                Hook(on: "DamagingHit", order: 100, do: [ RepeatHits(count: TwoToFive, target: Target) ]),
+            ]),
+        Effect(id: "multi.comet_punch", kind: Move, power: 18, type: "Normal", accuracy: 85,
+            hooks: [
+                Hook(on: "ModifyDamage",  do: [ DealMoveDamage ]),
+                Hook(on: "Effectiveness", order: 100, do: [ ApplyTypeChart ]),
+                Hook(on: "DamagingHit", order: 100, do: [ RepeatHits(count: TwoToFive, target: Target) ]),
+            ]),
+        Effect(id: "multi.fury_attack", kind: Move, power: 15, type: "Normal", accuracy: 85,
+            hooks: [
+                Hook(on: "ModifyDamage",  do: [ DealMoveDamage ]),
+                Hook(on: "Effectiveness", order: 100, do: [ ApplyTypeChart ]),
+                Hook(on: "DamagingHit", order: 100, do: [ RepeatHits(count: TwoToFive, target: Target) ]),
+            ]),
+        Effect(id: "multi.pin_missile", kind: Move, power: 14, type: "Bug", accuracy: 85,
+            hooks: [
+                Hook(on: "ModifyDamage",  do: [ DealMoveDamage ]),
+                Hook(on: "Effectiveness", order: 100, do: [ ApplyTypeChart ]),
+                Hook(on: "DamagingHit", order: 100, do: [ RepeatHits(count: TwoToFive, target: Target) ]),
+            ]),
+        Effect(id: "multi.spike_cannon", kind: Move, power: 20, type: "Normal", accuracy: 100,
+            hooks: [
+                Hook(on: "ModifyDamage",  do: [ DealMoveDamage ]),
+                Hook(on: "Effectiveness", order: 100, do: [ ApplyTypeChart ]),
+                Hook(on: "DamagingHit", order: 100, do: [ RepeatHits(count: TwoToFive, target: Target) ]),
+            ]),
+        Effect(id: "multi.barrage", kind: Move, power: 15, type: "Normal", accuracy: 85,
+            hooks: [
+                Hook(on: "ModifyDamage",  do: [ DealMoveDamage ]),
+                Hook(on: "Effectiveness", order: 100, do: [ ApplyTypeChart ]),
+                Hook(on: "DamagingHit", order: 100, do: [ RepeatHits(count: TwoToFive, target: Target) ]),
+            ]),
+        Effect(id: "multi.fury_swipes", kind: Move, power: 18, type: "Normal", accuracy: 80,
+            hooks: [
+                Hook(on: "ModifyDamage",  do: [ DealMoveDamage ]),
+                Hook(on: "Effectiveness", order: 100, do: [ ApplyTypeChart ]),
+                Hook(on: "DamagingHit", order: 100, do: [ RepeatHits(count: TwoToFive, target: Target) ]),
+            ]),
+
+        // ── ATTACK-TWICE (AttackTwiceEffect): Double Kick + Bonemerang. Exactly 2
+        //    hits, NO count byte (Fixed(2)). ──
+        Effect(id: "multi.double_kick", kind: Move, power: 30, type: "Fighting", accuracy: 100,
+            hooks: [
+                Hook(on: "ModifyDamage",  do: [ DealMoveDamage ]),
+                Hook(on: "Effectiveness", order: 100, do: [ ApplyTypeChart ]),
+                Hook(on: "DamagingHit", order: 100, do: [ RepeatHits(count: Fixed(2), target: Target) ]),
+            ]),
+        Effect(id: "multi.bonemerang", kind: Move, power: 50, type: "Ground", accuracy: 90,
+            hooks: [
+                Hook(on: "ModifyDamage",  do: [ DealMoveDamage ]),
+                Hook(on: "Effectiveness", order: 100, do: [ ApplyTypeChart ]),
+                Hook(on: "DamagingHit", order: 100, do: [ RepeatHits(count: Fixed(2), target: Target) ]),
+            ]),
+
+        // ── TWINEEDLE (TwineedleEffect): 2 fixed hits + 20%+1 (52/256) poison on the
+        //    FINAL hit only. The poison rider draws its chance byte at the legacy
+        //    side_effect ordinal (after the count) and runs the SAME guards a poison
+        //    side-status uses (poison-type immunity + Substitute block + the binding
+        //    no-status guard) — composing the P2 side-status machinery with the hit
+        //    index. NOT deferred. ──
+        Effect(id: "multi.twineedle", kind: Move, power: 25, type: "Bug", accuracy: 100,
+            hooks: [
+                Hook(on: "ModifyDamage",  do: [ DealMoveDamage ]),
+                Hook(on: "Effectiveness", order: 100, do: [ ApplyTypeChart ]),
+                Hook(on: "DamagingHit", order: 100, do: [ RepeatHits(
+                    count: Fixed(2),
+                    target: Target,
+                    final_hit: OnFinal(
+                        chance: [52, 256],
+                        ops: [
+                            VetoIf(cond: HasType("Poison")),
+                            VetoIf(cond: HasVolatile("Substitute")),
+                            InflictStatus(status: "poison", target: Target),
+                        ],
+                    ),
+                ) ]),
+            ]),
+    ],
+)

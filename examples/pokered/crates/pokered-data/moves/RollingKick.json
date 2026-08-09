@@ -1,0 +1,9 @@
+{
+  "$schema": "../schemas/move.schema.json",
+  "id": "RollingKick",
+  "effect": "FlinchSideEffect2",
+  "power": 60,
+  "type": "Fighting",
+  "accuracy": 85,
+  "pp": 15
+}

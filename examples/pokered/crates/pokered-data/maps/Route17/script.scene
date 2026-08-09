@@ -1,0 +1,148 @@
+// Route17 (Cycling Road) — translated from the original disassembly
+// (scripts/Route17.asm, text/Route17.asm) to the real Game DSL API surface.
+// Pure route map: 10 sight-engaged Biker trainers (the runtime drives their
+// battles), so each talk handler is DIALOGUE ONLY — branch on the beaten flag
+// between the after-battle line and the pre-battle taunt. Plus 6 signs.
+
+game_scene Route17 {
+  // ── Biker 1 (npc 1) — sight-engaged ─────────────────────────────────────
+  @storyline("talkBiker1") {
+    @trigger(map = "Route17", npc = 1)
+    @if (getFlag("EVENT_BEAT_ROUTE_17_TRAINER_0")) {
+      @speaker("") { @t("Good stuff is lying around\non CYCLING ROAD!", "好东西散落在自行车道上！") }
+    } @else {
+      @speaker("") { @t("There's no money in fighting\nkids!", "和小孩子打架赚不到钱！") }
+    }
+  }
+
+  // ── Biker 2 (npc 2) ─────────────────────────────────────────────────────
+  @storyline("talkBiker2") {
+    @trigger(map = "Route17", npc = 2)
+    @if (getFlag("EVENT_BEAT_ROUTE_17_TRAINER_1")) {
+      @speaker("") { @t("I could belly- bump you\noutta here!", "小心我用肚子把你撞出这里！") }
+    } @else {
+      @speaker("") { @t("What do you want, kiddo?", "你想干什么，小鬼？") }
+    }
+  }
+
+  // ── Biker 3 (npc 3) ─────────────────────────────────────────────────────
+  @storyline("talkBiker3") {
+    @trigger(map = "Route17", npc = 3)
+    @if (getFlag("EVENT_BEAT_ROUTE_17_TRAINER_2")) {
+      @speaker("") { @t("I love racing downhill!", "我喜欢从坡上飞驰而下！") }
+    } @else {
+      @speaker("") { @t("You heading to FUCHSIA?", "你是要去浅红市吗？") }
+    }
+  }
+
+  // ── Biker 4 (npc 4) ─────────────────────────────────────────────────────
+  @storyline("talkBiker4") {
+    @trigger(map = "Route17", npc = 4)
+    @if (getFlag("EVENT_BEAT_ROUTE_17_TRAINER_3")) {
+      @speaker("") { @t("Are you looking for\nadventure?", "你在寻找冒险吗？") }
+    } @else {
+      @speaker("") { @t("We're BIKERs! Highway stars!", "我们是摩托车手！公路之星！") }
+    }
+  }
+
+  // ── Biker 5 (npc 5) ─────────────────────────────────────────────────────
+  @storyline("talkBiker5") {
+    @trigger(map = "Route17", npc = 5)
+    @if (getFlag("EVENT_BEAT_ROUTE_17_TRAINER_4")) {
+      @speaker("") { @t("I got my VOLTORB at the\nabandoned POWER PLANT.", "我在废弃的发电厂抓到了雷电\n球。") }
+    } @else {
+      @speaker("") { @t("Let VOLTORB electrify you!", "让雷电球电击你吧！") }
+    }
+  }
+
+  // ── Biker 6 (npc 6) ─────────────────────────────────────────────────────
+  @storyline("talkBiker6") {
+    @trigger(map = "Route17", npc = 6)
+    @if (getFlag("EVENT_BEAT_ROUTE_17_TRAINER_5")) {
+      @speaker("") { @t("Maybe some POKeMON need\nelement STONEs to evolve.", "有些宝可梦进化需要属性石头。") }
+    } @else {
+      @speaker("") { @t("My POKeMON won't evolve!\nWhy?", "我的宝可梦不进化！为什么？") }
+    }
+  }
+
+  // ── Biker 7 (npc 7) ─────────────────────────────────────────────────────
+  @storyline("talkBiker7") {
+    @trigger(map = "Route17", npc = 7)
+    @if (getFlag("EVENT_BEAT_ROUTE_17_TRAINER_6")) {
+      @speaker("") { @t("I'm sure I lost weight\nthere!", "在那里一定能减肥！") }
+    } @else {
+      @speaker("") { @t("I need a little exercise!", "我需要稍微锻炼一下！") }
+    }
+  }
+
+  // ── Biker 8 (npc 8) ─────────────────────────────────────────────────────
+  @storyline("talkBiker8") {
+    @trigger(map = "Route17", npc = 8)
+    @if (getFlag("EVENT_BEAT_ROUTE_17_TRAINER_7")) {
+      @speaker("") { @t("Be ready to fight for your\nbeliefs!", "准备好为你的信念而战！") }
+    } @else {
+      @speaker("") { @t("Be a rebel!", "做个叛逆者！") }
+    }
+  }
+
+  // ── Biker 9 (npc 9) ─────────────────────────────────────────────────────
+  @storyline("talkBiker9") {
+    @trigger(map = "Route17", npc = 9)
+    @if (getFlag("EVENT_BEAT_ROUTE_17_TRAINER_8")) {
+      @speaker("") { @t("The slope makes it hard to\nsteer!", "坡道让转弯变得困难！") }
+    } @else {
+      @speaker("") { @t("Nice BIKE! How's it handle?", "好帅的自行车！骑着感觉怎样？") }
+    }
+  }
+
+  // ── Biker 10 (npc 10) ───────────────────────────────────────────────────
+  @storyline("talkBiker10") {
+    @trigger(map = "Route17", npc = 10)
+    @if (getFlag("EVENT_BEAT_ROUTE_17_TRAINER_9")) {
+      @speaker("") { @t("I need to catch a few Zs!", "我需要打个盹休息一下！") }
+    } @else {
+      @speaker("") { @t("Get lost kid! I'm bushed!", "滚开小鬼！我累坏了！") }
+    }
+  }
+
+  // ── Signs ────────────────────────────────────────────────────────────────
+  // sign 1 = Notice sign #1
+  @storyline("sign1") {
+    @trigger(map = "Route17", sign = 1)
+    @speaker("") { @t("It's a notice!\n\nWatch out for discarded\nitems!", "这是告示！\n\n小心地上的丢弃物！") }
+  }
+
+  // sign 2 = Trainer Tips #1
+  @storyline("sign2") {
+    @trigger(map = "Route17", sign = 2)
+    @speaker("") {
+      @t("TRAINER TIPS\n\nAll POKeMON are unique.\n\nEven POKeMON of the same\ntype and level grow at\ndifferent rates.", "训练家提示\n\n所有宝可梦都是独一无二的。\n\n即使是同属性同等级的宝可梦，\n成长速度也各不相同。")
+    }
+  }
+
+  // sign 3 = Trainer Tips #2
+  @storyline("sign3") {
+    @trigger(map = "Route17", sign = 3)
+    @speaker("") {
+      @t("TRAINER TIPS\n\nPress the A or B Button to\nstay in place while on a\nslope.", "训练家提示\n\n在坡道上按下 A或B按钮就可以\n保持原地不动。")
+    }
+  }
+
+  // sign 4 = Route 17 sign
+  @storyline("sign4") {
+    @trigger(map = "Route17", sign = 4)
+    @speaker("") { @t("ROUTE 17 CELADON CITY -\nFUCHSIA CITY", "17号道路彩虹市 - 浅红市") }
+  }
+
+  // sign 5 = Notice sign #2
+  @storyline("sign5") {
+    @trigger(map = "Route17", sign = 5)
+    @speaker("") { @t("It's a notice!\n\nDon't throw the game, throw\nPOKe BALLs instead!", "这是告示！\n\n别轻易放弃游戏，改扔精灵球\n吧！") }
+  }
+
+  // sign 6 = Cycling Road ends sign
+  @storyline("sign6") {
+    @trigger(map = "Route17", sign = 6)
+    @speaker("") { @t("CYCLING ROAD Slope ends\nhere!", "自行车道坡道到此结束！") }
+  }
+}

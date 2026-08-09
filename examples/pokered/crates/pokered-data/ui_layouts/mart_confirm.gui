@@ -1,0 +1,22 @@
+screen MartConfirm {
+  panel {
+    rect = {tx: 14, ty: 7, tw: 6, th: 5}
+    style = "default"
+  }
+  text(@t("YES", "是")) {
+    rect = {tx: 15, ty: 8, tw: 4, th: 1}
+  }
+  text(@t("NO", "否")) {
+    rect = {tx: 15, ty: 9, tw: 4, th: 1}
+  }
+  tile(223) {
+    rect = {tx: 14, ty: 2, tw: 1, th: 1}
+  }
+  panel {
+    rect = {tx: 0, ty: 11, tw: 20, th: 6}
+    style = "default"
+  }
+  text("{confirm_message}") {
+    rect = {tx: 1, ty: 12, tw: 18, th: 3}
+  }
+}

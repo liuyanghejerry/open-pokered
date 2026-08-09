@@ -1,0 +1,70 @@
+{
+  "$schema": "../schemas/pokemon.schema.json",
+  "species": "Psyduck",
+  "baseStats": {
+    "hp": 50,
+    "attack": 52,
+    "defense": 48,
+    "speed": 55,
+    "special": 50
+  },
+  "type1": "Water",
+  "type2": "Water",
+  "catchRate": 190,
+  "baseExp": 80,
+  "growthRate": "MediumFast",
+  "initialMoves": [
+    "Scratch",
+    "None",
+    "None",
+    "None"
+  ],
+  "tmHmFlags": [
+    177,
+    191,
+    15,
+    200,
+    194,
+    8,
+    50
+  ],
+  "pokedex": {
+    "category": "DUCK",
+    "heightFeet": 2,
+    "heightInches": 7,
+    "weightDecipounds": 430,
+    "flavorTextPages": [
+      "While lulling its\nenemies with its\nvacant look, this",
+      "wily #MON will\nuse psychokinetic\npowers"
+    ]
+  },
+  "evolutions": [
+    {
+      "method": "level",
+      "species": "Golduck",
+      "level": 33
+    }
+  ],
+  "learnset": [
+    {
+      "level": 28,
+      "moveId": "TailWhip"
+    },
+    {
+      "level": 31,
+      "moveId": "Disable"
+    },
+    {
+      "level": 36,
+      "moveId": "Confusion"
+    },
+    {
+      "level": 43,
+      "moveId": "FurySwipes"
+    },
+    {
+      "level": 52,
+      "moveId": "HydroPump"
+    }
+  ]
+}

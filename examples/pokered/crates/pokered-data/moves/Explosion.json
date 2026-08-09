@@ -1,0 +1,9 @@
+{
+  "$schema": "../schemas/move.schema.json",
+  "id": "Explosion",
+  "effect": "ExplodeEffect",
+  "power": 170,
+  "type": "Normal",
+  "accuracy": 100,
+  "pp": 5
+}

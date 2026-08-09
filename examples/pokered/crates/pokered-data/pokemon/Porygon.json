@@ -1,0 +1,60 @@
+{
+  "$schema": "../schemas/pokemon.schema.json",
+  "species": "Porygon",
+  "baseStats": {
+    "hp": 65,
+    "attack": 60,
+    "defense": 70,
+    "speed": 40,
+    "special": 75
+  },
+  "type1": "Normal",
+  "type2": "Normal",
+  "catchRate": 45,
+  "baseExp": 130,
+  "growthRate": "MediumFast",
+  "initialMoves": [
+    "Tackle",
+    "Sharpen",
+    "Conversion",
+    "None"
+  ],
+  "tmHmFlags": [
+    32,
+    115,
+    136,
+    241,
+    195,
+    56,
+    67
+  ],
+  "pokedex": {
+    "category": "VIRTUAL",
+    "heightFeet": 2,
+    "heightInches": 7,
+    "weightDecipounds": 800,
+    "flavorTextPages": [
+      "A #MON that\nconsists entirely\nof programming",
+      "code. Capable of\nmoving freely in\ncyberspace"
+    ]
+  },
+  "evolutions": [],
+  "learnset": [
+    {
+      "level": 23,
+      "moveId": "Psybeam"
+    },
+    {
+      "level": 28,
+      "moveId": "Recover"
+    },
+    {
+      "level": 35,
+      "moveId": "Agility"
+    },
+    {
+      "level": 42,
+      "moveId": "TriAttack"
+    }
+  ]
+}

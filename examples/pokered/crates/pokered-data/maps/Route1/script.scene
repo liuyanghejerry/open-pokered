@@ -1,0 +1,47 @@
+// Route1 — translated from the original disassembly (scripts/Route1.asm,
+// text/Route1.asm) to the real Game DSL API surface. Route1 has no on-enter
+// logic (its script is just EnableAutoTextBoxDrawing); only NPC/sign dialogue.
+// Youngster 1 hands out a one-time POTION sample gated by a story flag.
+
+game_scene Route1 {
+  // ── Youngster 1 (npc 1) — POKeMON MART rep, gives a POTION sample once ──
+  // Original: CheckAndSetEvent EVENT_GOT_POTION_SAMPLE — on first talk the flag
+  // is set and the sample is offered; on later talks only the # BALLs line.
+  @storyline("talkYoungster1") {
+    @trigger(map = "Route1", npc = 1)
+    @if (getFlag("EVENT_GOT_POTION_SAMPLE")) {
+      @speaker("") {
+        @t("We also carry POKe BALLs for\ncatching POKeMON!", "我们也出售精灵球，用来捕捉宝\n可梦！")
+      }
+    } @else {
+      setFlag("EVENT_GOT_POTION_SAMPLE")
+      @speaker("") {
+        @t("Hi! I work at a POKeMON\nMART.\n\nIt's a convenient shop, so\nplease visit us in VIRIDIAN\nCITY.\n\nI know, I'll give you a\nsample! Here you go!", "嗨！我在一家友好商店工作。\n\n那里很方便，所以请务必到常青\n市来光顾我们！\n\n这样吧，我给你一点样品！给\n你！")
+      }
+      // Original: EVENT_GOT_POTION_SAMPLE is set unconditionally (CheckAndSetEvent)
+      // before the GiveItem attempt, so this offer never re-arms even on a full bag.
+      given = giveItem("POTION", 1)
+      @if (given) {
+        @speaker("") { @t("<PLAYER> got a POTION!", "<PLAYER>得到了一瓶伤药！") }
+      } @else {
+        @speaker("") { @t("You have too much stuff with\nyou!", "你带的东西太多了！") }
+      }
+    }
+  }
+
+  // ── Youngster 2 (npc 2) — ledge tip, dialogue only ─────────────────────
+  @storyline("talkYoungster2") {
+    @trigger(map = "Route1", npc = 2)
+    @speaker("") {
+      @t("See those ledges along the\nroad?\n\nIt's a bit scary, but you\ncan jump from them.\n\nYou can get back to PALLET\nTOWN quicker that way.", "看到路边的那些岩壁了吗？\n\n虽然有点吓人，但你可以从上面\n跳下去。\n\n这样就能更快地回到真新镇哦。")
+    }
+  }
+
+  // ── Route sign (sign 1) ────────────────────────────────────────────────
+  @storyline("sign1") {
+    @trigger(map = "Route1", sign = 1)
+    @speaker("") {
+      @t("ROUTE 1 PALLET TOWN -\nVIRIDIAN CITY", "1号道路真新镇 - 常青市")
+    }
+  }
+}

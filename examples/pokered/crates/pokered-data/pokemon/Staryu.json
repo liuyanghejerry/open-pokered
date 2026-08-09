@@ -1,0 +1,79 @@
+{
+  "$schema": "../schemas/pokemon.schema.json",
+  "species": "Staryu",
+  "baseStats": {
+    "hp": 30,
+    "attack": 45,
+    "defense": 55,
+    "speed": 85,
+    "special": 70
+  },
+  "type1": "Water",
+  "type2": "Water",
+  "catchRate": 225,
+  "baseExp": 106,
+  "growthRate": "Slow",
+  "initialMoves": [
+    "Tackle",
+    "None",
+    "None",
+    "None"
+  ],
+  "tmHmFlags": [
+    32,
+    63,
+    136,
+    241,
+    195,
+    56,
+    83
+  ],
+  "pokedex": {
+    "category": "STARSHAPE",
+    "heightFeet": 2,
+    "heightInches": 7,
+    "weightDecipounds": 760,
+    "flavorTextPages": [
+      "An enigmatic\n#MON that can\neffortlessly",
+      "regenerate any\nappendage it\nloses in battle"
+    ]
+  },
+  "evolutions": [
+    {
+      "method": "item",
+      "species": "Starmie",
+      "item": "WaterStone",
+      "minLevel": 1
+    }
+  ],
+  "learnset": [
+    {
+      "level": 17,
+      "moveId": "WaterGun"
+    },
+    {
+      "level": 22,
+      "moveId": "Harden"
+    },
+    {
+      "level": 27,
+      "moveId": "Recover"
+    },
+    {
+      "level": 32,
+      "moveId": "Swift"
+    },
+    {
+      "level": 37,
+      "moveId": "Minimize"
+    },
+    {
+      "level": 42,
+      "moveId": "LightScreen"
+    },
+    {
+      "level": 47,
+      "moveId": "HydroPump"
+    }
+  ]
+}

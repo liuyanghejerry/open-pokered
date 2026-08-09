@@ -1,0 +1,31 @@
+{
+  "$schema": "../schemas/trainer.schema.json",
+  "class": "Lance",
+  "constName": "LANCE",
+  "parties": [
+    {
+      "pokemon": [
+        {
+          "level": 58,
+          "species": "Gyarados"
+        },
+        {
+          "level": 56,
+          "species": "Dragonair"
+        },
+        {
+          "level": 56,
+          "species": "Dragonair"
+        },
+        {
+          "level": 60,
+          "species": "Aerodactyl"
+        },
+        {
+          "level": 62,
+          "species": "Dragonite"
+        }
+      ]
+    }
+  ]
+}

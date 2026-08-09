@@ -1,0 +1,128 @@
+// SSAnne1FRooms — translated from the original disassembly
+// (scripts/SSAnne1FRooms.asm, text/SSAnne1FRooms.asm) to the real Game DSL API.
+// NPCs 1-4 are sight-engaged trainers (Gentleman x2, Youngster, Lass): the
+// runtime drives their battles, so their .scene handlers are DIALOGUE ONLY,
+// branching on EVENT_BEAT_SS_ANNE_8_TRAINER_0..3. NPCs 5-9,11 are plain talk
+// NPCs; npc 8 (Wigglytuff) plays its cry; npc 10 is a TM_08 ground item.
+
+game_scene SSAnne1FRooms {
+  // ── Gentleman 1 (npc 1) — sight-engaged trainer; dialogue only ──────────
+  @storyline("talkGentleman1") {
+    @trigger(map = "SSAnne1FRooms", npc = 1)
+    @if (getFlag("EVENT_BEAT_SS_ANNE_8_TRAINER_0")) {
+      @speaker("") {
+        @t("You should be nice to\nfriends!", "你应该对朋友好一点！")
+      }
+    } @else {
+      @speaker("") {
+        @t("I travel alone on my\njourneys!\n\nMy POKeMON are my only\nfriends!", "我独自一人旅行！\n\n我的宝可梦是我唯一的朋友！")
+      }
+    }
+  }
+
+  // ── Gentleman 2 (npc 2) — sight-engaged trainer; dialogue only ──────────
+  @storyline("talkGentleman2") {
+    @trigger(map = "SSAnne1FRooms", npc = 2)
+    @if (getFlag("EVENT_BEAT_SS_ANNE_8_TRAINER_1")) {
+      @speaker("") {
+        @t("I wish to be left alone! Get\nout!", "我想一个人待着！出去！")
+      }
+    } @else {
+      @speaker("") {
+        @t("You pup! How dare you barge\nin!", "你这小子！竟敢闯进来！")
+      }
+    }
+  }
+
+  // ── Youngster (npc 3) — sight-engaged trainer; dialogue only ────────────
+  @storyline("talkYoungster") {
+    @trigger(map = "SSAnne1FRooms", npc = 3)
+    @if (getFlag("EVENT_BEAT_SS_ANNE_8_TRAINER_2")) {
+      @speaker("") {
+        @t("Let me be your friend, OK?\n\nThen we can trade POKeMON!", "让我做你的朋友，好吗？\n\n然后我们就能交换宝可梦！")
+      }
+    } @else {
+      @speaker("") {
+        @t("I love POKeMON! Do you?", "我爱宝可梦！你呢？")
+      }
+    }
+  }
+
+  // ── Cooltrainer♀ / Lass (npc 4) — sight-engaged trainer; dialogue only ──
+  @storyline("talkCooltrainerF") {
+    @trigger(map = "SSAnne1FRooms", npc = 4)
+    @if (getFlag("EVENT_BEAT_SS_ANNE_8_TRAINER_3")) {
+      @speaker("") {
+        @t("You hurt my poor worldly\nPOKeMON!\n\nI demand that you heal them\nat a POKeMON CENTER!", "你伤害了我可怜的宝可梦！\n\n我要求你去宝可梦中心给它们治\n疗！")
+      }
+    } @else {
+      @speaker("") {
+        @t("I collected these POKeMON\nfrom all around the world!", "这些宝可梦是我从世界各地收集\n来的！")
+      }
+    }
+  }
+
+  // ── Girl 1 (npc 5) ──────────────────────────────────────────────────────
+  @storyline("talkGirl1") {
+    @trigger(map = "SSAnne1FRooms", npc = 5)
+    @speaker("") {
+      @t("Waiter, I would like a\ncherry pie please!", "服务员，我想要一份樱桃派！")
+    }
+  }
+
+  // ── Middle-aged man (npc 6) ─────────────────────────────────────────────
+  @storyline("talkMiddleAgedMan") {
+    @trigger(map = "SSAnne1FRooms", npc = 6)
+    @speaker("") {
+      @t("A cruise is so elegant yet\ncozy!", "邮轮旅行优雅又舒适！")
+    }
+  }
+
+  // ── Little girl (npc 7) ─────────────────────────────────────────────────
+  @storyline("talkLittleGirl") {
+    @trigger(map = "SSAnne1FRooms", npc = 7)
+    @speaker("") {
+      @t("I always travel with\nWIGGLYTUFF!", "我出门总是带着胖丁！")
+    }
+  }
+
+  // ── Wigglytuff (npc 8) — text then play its cry ─────────────────────────
+  @storyline("talkWigglytuff") {
+    @trigger(map = "SSAnne1FRooms", npc = 8)
+    @speaker("") {
+      @t("WIGGLYTUFF: Puup pupuu!", "胖丁：噗噗噗噗！")
+    }
+    playCry("WIGGLYTUFF")
+  }
+
+  // ── Girl 2 (npc 9) ──────────────────────────────────────────────────────
+  @storyline("talkGirl2") {
+    @trigger(map = "SSAnne1FRooms", npc = 9)
+    @speaker("") {
+      @t("We are cruising around the\nworld.", "我们正在环游世界。")
+    }
+  }
+
+  // ── PokeBall ground item (npc 10) — TM_08 (BODY SLAM) ───────────────────
+  @storyline("talkPokeBall") {
+    @trigger(map = "SSAnne1FRooms", npc = 10, toggle = "SS_ANNE_1F_ROOMS_OBJ_10")
+    given = giveItem("TM_08", 1)
+    @if (given) {
+      @speaker("") {
+        @t("<PLAYER> found TM_08!", "<PLAYER>发现了 TM_08！")
+      }
+    } @else {
+      @speaker("") {
+        @t("You have no more room for\nthis.", "你身上没有多余的地方了。")
+      }
+    }
+  }
+
+  // ── Gentleman 3 (npc 11) — Global Police agent ──────────────────────────
+  @storyline("talkGentleman3") {
+    @trigger(map = "SSAnne1FRooms", npc = 11)
+    @speaker("") {
+      @t("Ssh! I'm a GLOBAL POLICE\nagent!\n\nI'm on the trail of TEAM\nROCKET!", "嘘！我是国际刑警！\n\n我在追踪火箭队的行踪！")
+    }
+  }
+}

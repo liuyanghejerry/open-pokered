@@ -1,0 +1,227 @@
+{
+  "$schema": "../schemas/trainer.schema.json",
+  "class": "Channeler",
+  "constName": "CHANNELER",
+  "parties": [
+    {
+      "pokemon": [
+        {
+          "level": 22,
+          "species": "Gastly"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 24,
+          "species": "Gastly"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 23,
+          "species": "Gastly"
+        },
+        {
+          "level": 23,
+          "species": "Gastly"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 24,
+          "species": "Gastly"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 23,
+          "species": "Gastly"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 24,
+          "species": "Gastly"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 24,
+          "species": "Haunter"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 22,
+          "species": "Gastly"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 24,
+          "species": "Gastly"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 23,
+          "species": "Gastly"
+        },
+        {
+          "level": 23,
+          "species": "Gastly"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 24,
+          "species": "Gastly"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 22,
+          "species": "Gastly"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 24,
+          "species": "Gastly"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 23,
+          "species": "Haunter"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 24,
+          "species": "Gastly"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 22,
+          "species": "Gastly"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 24,
+          "species": "Gastly"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 22,
+          "species": "Haunter"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 22,
+          "species": "Gastly"
+        },
+        {
+          "level": 22,
+          "species": "Gastly"
+        },
+        {
+          "level": 22,
+          "species": "Gastly"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 24,
+          "species": "Gastly"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 24,
+          "species": "Gastly"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 34,
+          "species": "Gastly"
+        },
+        {
+          "level": 34,
+          "species": "Haunter"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 38,
+          "species": "Haunter"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 33,
+          "species": "Gastly"
+        },
+        {
+          "level": 33,
+          "species": "Gastly"
+        },
+        {
+          "level": 33,
+          "species": "Haunter"
+        }
+      ]
+    }
+  ]
+}

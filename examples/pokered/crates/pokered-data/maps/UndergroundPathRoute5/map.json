@@ -1,0 +1,57 @@
+{
+  "$schema": "../../schemas/map.schema.json",
+  "id": 71,
+  "name": "UndergroundPathRoute5",
+  "header": {
+    "tileset": "Gate",
+    "music": "Cities1",
+    "connectionFlags": 0,
+    "width": 4,
+    "height": 4,
+    "borderBlock": 10
+  },
+  "connections": {},
+  "warps": [
+    {
+      "x": 3,
+      "y": 7,
+      "destWarpId": 3
+    },
+    {
+      "x": 4,
+      "y": 7,
+      "destWarpId": 3
+    },
+    {
+      "x": 4,
+      "y": 4,
+      "destMap": "UndergroundPathNorthSouth",
+      "destWarpId": 0
+    }
+  ],
+  "npcs": [
+    {
+      "spriteId": 8,
+      "spriteName": "LittleGirl",
+      "x": 2,
+      "y": 3,
+      "movement": "Stationary",
+      "facing": "Down",
+      "range": 0,
+      "textId": 1,
+      "isTrainer": false
+    }
+  ],
+  "signs": [],
+  "text": {
+    "npc": {
+      "1": [
+        {
+          "line1": "[In-game trade",
+          "line2": "script]"
+        }
+      ]
+    }
+  },
+  "wild": null
+}

@@ -1,0 +1,68 @@
+{
+  "$schema": "../schemas/pokemon.schema.json",
+  "species": "Beedrill",
+  "baseStats": {
+    "hp": 65,
+    "attack": 80,
+    "defense": 40,
+    "speed": 75,
+    "special": 45
+  },
+  "type1": "Bug",
+  "type2": "Poison",
+  "catchRate": 45,
+  "baseExp": 159,
+  "growthRate": "MediumFast",
+  "initialMoves": [
+    "FuryAttack",
+    "None",
+    "None",
+    "None"
+  ],
+  "tmHmFlags": [
+    36,
+    67,
+    24,
+    192,
+    195,
+    8,
+    6
+  ],
+  "pokedex": {
+    "category": "POISON BEE",
+    "heightFeet": 3,
+    "heightInches": 3,
+    "weightDecipounds": 650,
+    "flavorTextPages": [
+      "Flies at high\nspeed and attacks\nusing its large",
+      "venomous stingers\non its forelegs\nand tail"
+    ]
+  },
+  "evolutions": [],
+  "learnset": [
+    {
+      "level": 12,
+      "moveId": "FuryAttack"
+    },
+    {
+      "level": 16,
+      "moveId": "FocusEnergy"
+    },
+    {
+      "level": 20,
+      "moveId": "Twineedle"
+    },
+    {
+      "level": 25,
+      "moveId": "Rage"
+    },
+    {
+      "level": 30,
+      "moveId": "PinMissile"
+    },
+    {
+      "level": 35,
+      "moveId": "Agility"
+    }
+  ]
+}

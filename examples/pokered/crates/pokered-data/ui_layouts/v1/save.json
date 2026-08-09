@@ -1,0 +1,147 @@
+{
+  "$schema": "/schemas/layout.schema.json",
+  "schema_version": 1,
+  "screen": "save",
+  "variants": {
+    "default": {
+      "children": [
+        {
+          "id": "box_0",
+          "rect": {
+            "tx": 4,
+            "ty": 0,
+            "tw": 15,
+            "th": 10
+          },
+          "color": "Black",
+          "labels": [
+            {
+              "tx": 0,
+              "ty": 1,
+              "text": "PLAYER",
+              "color": "Black"
+            },
+            {
+              "tx": 0,
+              "ty": 3,
+              "text": "BADGES",
+              "color": "Black"
+            },
+            {
+              "tx": 0,
+              "ty": 5,
+              "text": "#DEX",
+              "color": "Black"
+            },
+            {
+              "tx": 0,
+              "ty": 7,
+              "text": "TIME",
+              "color": "Black"
+            }
+          ]
+        },
+        {
+          "id": "box_1",
+          "rect": {
+            "tx": 0,
+            "ty": 11,
+            "tw": 18,
+            "th": 4
+          },
+          "color": "Black",
+          "labels": [
+            {
+              "tx": 0,
+              "ty": 2,
+              "text": "Now saving...",
+              "color": "Black"
+            }
+          ]
+        },
+        {
+          "id": "box_2",
+          "rect": {
+            "tx": 0,
+            "ty": 11,
+            "tw": 18,
+            "th": 4
+          },
+          "color": "Black",
+          "labels": [
+            {
+              "tx": 0,
+              "ty": 2,
+              "text": "the game!",
+              "color": "Black"
+            }
+          ]
+        }
+      ]
+    },
+    "ask_prompt": {
+      "cursor": {
+        "tx": 14,
+        "base_ty": 8,
+        "row_step": 1,
+        "glyph": "\u25b6",
+        "color": "Black"
+      },
+      "enum_position_map": {
+        "Yes": 0,
+        "No": 1
+      },
+      "children": [
+        {
+          "id": "box_0",
+          "rect": {
+            "tx": 0,
+            "ty": 11,
+            "tw": 20,
+            "th": 6
+          },
+          "color": "Black",
+          "labels": [
+            {
+              "tx": 0,
+              "ty": 0,
+              "text": "Would you like to",
+              "color": "Black"
+            },
+            {
+              "tx": 0,
+              "ty": 2,
+              "text": "SAVE the game?",
+              "color": "Black"
+            }
+          ]
+        },
+        {
+          "id": "box_1",
+          "rect": {
+            "tx": 13,
+            "ty": 7,
+            "tw": 6,
+            "th": 4
+          },
+          "color": "Black",
+          "border": true,
+          "labels": [
+            {
+              "tx": 1,
+              "ty": 0,
+              "text": "YES",
+              "color": "Black"
+            },
+            {
+              "tx": 1,
+              "ty": 1,
+              "text": "NO",
+              "color": "Black"
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

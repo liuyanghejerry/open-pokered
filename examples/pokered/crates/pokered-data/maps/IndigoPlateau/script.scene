@@ -1,0 +1,11 @@
+// IndigoPlateau — translated from the original disassembly
+// (scripts/IndigoPlateau.asm, text/IndigoPlateau.asm, data/maps/objects/IndigoPlateau.asm).
+// This is the outdoor exterior of the Indigo Plateau (map id 9), distinct from
+// IndigoPlateauLobby which holds all the dialogue/NPCs. The original map has an
+// empty script (`IndigoPlateau_Script` is just `ret`), empty `*_TextPointers`,
+// no object events (no NPCs/signs), and no on-enter logic. Its only events are
+// the two warp tiles leading into IndigoPlateauLobby, which are map.json warps
+// (not script-driven). So there is nothing to translate beyond an empty scene.
+
+game_scene IndigoPlateau {
+}

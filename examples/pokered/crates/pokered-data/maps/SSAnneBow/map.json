@@ -1,0 +1,179 @@
+{
+  "$schema": "../../schemas/map.schema.json",
+  "id": 99,
+  "name": "SSAnneBow",
+  "header": {
+    "tileset": "Ship",
+    "music": "SSAnne",
+    "connectionFlags": 0,
+    "width": 10,
+    "height": 7,
+    "borderBlock": 35
+  },
+  "connections": {},
+  "warps": [
+    {
+      "x": 13,
+      "y": 6,
+      "destMap": "SSAnne3F",
+      "destWarpId": 0
+    },
+    {
+      "x": 13,
+      "y": 7,
+      "destMap": "SSAnne3F",
+      "destWarpId": 0
+    }
+  ],
+  "npcs": [
+    {
+      "spriteId": 12,
+      "spriteName": "SuperNerd",
+      "x": 5,
+      "y": 2,
+      "movement": "Stationary",
+      "facing": "Up",
+      "range": 0,
+      "textId": 1,
+      "isTrainer": false
+    },
+    {
+      "spriteId": 19,
+      "spriteName": "Sailor",
+      "x": 4,
+      "y": 9,
+      "movement": "Stationary",
+      "facing": "Down",
+      "range": 0,
+      "textId": 2,
+      "isTrainer": false
+    },
+    {
+      "spriteId": 7,
+      "spriteName": "CooltrainerM",
+      "x": 7,
+      "y": 11,
+      "movement": "Stationary",
+      "facing": "Down",
+      "range": 0,
+      "textId": 3,
+      "isTrainer": false
+    },
+    {
+      "spriteId": 19,
+      "spriteName": "Sailor",
+      "x": 4,
+      "y": 4,
+      "movement": "Stationary",
+      "facing": "Down",
+      "range": 0,
+      "textId": 4,
+      "isTrainer": true,
+      "trainerClass": "Sailor",
+      "trainerSet": 1,
+      "endBattleText": "You're\nimpressive!"
+    },
+    {
+      "spriteId": 19,
+      "spriteName": "Sailor",
+      "x": 10,
+      "y": 8,
+      "movement": "Stationary",
+      "facing": "Up",
+      "range": 0,
+      "textId": 5,
+      "isTrainer": true,
+      "trainerClass": "Sailor",
+      "trainerSet": 2,
+      "endBattleText": "I was\njust careless!"
+    }
+  ],
+  "signs": [],
+  "text": {
+    "npc": {
+      "1": [
+        {
+          "line1": "The party's over.",
+          "line2": "The ship will be"
+        },
+        {
+          "line1": "departing soon.",
+          "line2": ""
+        }
+      ],
+      "2": [
+        {
+          "line1": "Scrubbing decks",
+          "line2": "is hard work!"
+        }
+      ],
+      "3": [
+        {
+          "line1": "Urf. I feel ill.",
+          "line2": ""
+        },
+        {
+          "line1": "",
+          "line2": ""
+        },
+        {
+          "line1": "I stepped out to",
+          "line2": "get some air."
+        }
+      ],
+      "4": [
+        {
+          "line1": "Hey matey!",
+          "line2": ""
+        },
+        {
+          "line1": "",
+          "line2": ""
+        },
+        {
+          "line1": "Let's do a little",
+          "line2": "jig!"
+        }
+      ],
+      "4_Defeated": [
+        {
+          "line1": "You're",
+          "line2": "impressive!"
+        }
+      ],
+      "4_AfterBattle": [
+        {
+          "line1": "How many kinds of",
+          "line2": "#MON do you"
+        },
+        {
+          "line1": "think there are?",
+          "line2": ""
+        }
+      ],
+      "5": [
+        {
+          "line1": "Ahoy there!",
+          "line2": "Are you seasick?"
+        }
+      ],
+      "5_Defeated": [
+        {
+          "line1": "I was",
+          "line2": "just careless!"
+        }
+      ],
+      "5_AfterBattle": [
+        {
+          "line1": "My Pa said there",
+          "line2": "are 100 kinds of"
+        },
+        {
+          "line1": "#MON. I think",
+          "line2": "there are more."
+        }
+      ]
+    }
+  },
+  "wild": null
+}

@@ -1,0 +1,183 @@
+{
+  "$schema": "../schemas/trainer.schema.json",
+  "class": "SuperNerd",
+  "constName": "SUPER_NERD",
+  "parties": [
+    {
+      "pokemon": [
+        {
+          "level": 11,
+          "species": "Magnemite"
+        },
+        {
+          "level": 11,
+          "species": "Voltorb"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 12,
+          "species": "Grimer"
+        },
+        {
+          "level": 12,
+          "species": "Voltorb"
+        },
+        {
+          "level": 12,
+          "species": "Koffing"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 20,
+          "species": "Voltorb"
+        },
+        {
+          "level": 20,
+          "species": "Koffing"
+        },
+        {
+          "level": 20,
+          "species": "Voltorb"
+        },
+        {
+          "level": 20,
+          "species": "Magnemite"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 22,
+          "species": "Grimer"
+        },
+        {
+          "level": 22,
+          "species": "Muk"
+        },
+        {
+          "level": 22,
+          "species": "Grimer"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 26,
+          "species": "Koffing"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 22,
+          "species": "Koffing"
+        },
+        {
+          "level": 22,
+          "species": "Magnemite"
+        },
+        {
+          "level": 22,
+          "species": "Weezing"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 20,
+          "species": "Magnemite"
+        },
+        {
+          "level": 20,
+          "species": "Magnemite"
+        },
+        {
+          "level": 20,
+          "species": "Koffing"
+        },
+        {
+          "level": 20,
+          "species": "Magnemite"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 24,
+          "species": "Magnemite"
+        },
+        {
+          "level": 24,
+          "species": "Voltorb"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 36,
+          "species": "Vulpix"
+        },
+        {
+          "level": 36,
+          "species": "Vulpix"
+        },
+        {
+          "level": 36,
+          "species": "Ninetales"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 34,
+          "species": "Ponyta"
+        },
+        {
+          "level": 34,
+          "species": "Charmander"
+        },
+        {
+          "level": 34,
+          "species": "Vulpix"
+        },
+        {
+          "level": 34,
+          "species": "Growlithe"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 41,
+          "species": "Rapidash"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 37,
+          "species": "Growlithe"
+        },
+        {
+          "level": 37,
+          "species": "Vulpix"
+        }
+      ]
+    }
+  ]
+}

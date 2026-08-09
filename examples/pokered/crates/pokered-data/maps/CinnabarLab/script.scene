@@ -1,0 +1,46 @@
+// CinnabarLab — translated from the original disassembly (scripts/CinnabarLab.asm,
+// text/CinnabarLab.asm) to the real Game DSL API surface. Pure dialogue map: one
+// NPC (the Fishing Guru / lab researcher), a photo sign, and three room signs by
+// the doors to the trade/metronome/fossil sub-rooms. No battles or items.
+
+game_scene CinnabarLab {
+  // ── Lab researcher (npc 1) ─────────────────────────────────────────────
+  @storyline("talkFishingGuru") {
+    @trigger(map = "CinnabarLab", npc = 1)
+    @speaker("") {
+      @t("We study POKeMON extensively\nhere.\n\nPeople often bring us rare\nPOKeMON for examination.", "我们在这里深入研究宝可梦。\n\n人们常把稀有的宝可梦送来检\n查。")
+    }
+  }
+
+  // ── Photo of the LAB's founder (sign 1, at 3,2) ────────────────────────
+  @storyline("signPhoto") {
+    @trigger(map = "CinnabarLab", sign = 1)
+    @speaker("") {
+      @t("A photo of the LAB's\nfounder, DR.FUJI!", "研究所创始人富士老人的照片！")
+    }
+  }
+
+  // ── Meeting Room sign (sign 2, by the trade-room door) ─────────────────
+  @storyline("signMeetingRoom") {
+    @trigger(map = "CinnabarLab", sign = 2)
+    @speaker("") {
+      @t("POKeMON LAB Meeting Room", "宝可梦研究所会议室")
+    }
+  }
+
+  // ── R-and-D Room sign (sign 3, by the metronome-room door) ─────────────
+  @storyline("signRAndD") {
+    @trigger(map = "CinnabarLab", sign = 3)
+    @speaker("") {
+      @t("POKeMON LAB R-and-D Room", "宝可梦研究所研发室")
+    }
+  }
+
+  // ── Testing Room sign (sign 4, by the fossil-room door) ────────────────
+  @storyline("signTestingRoom") {
+    @trigger(map = "CinnabarLab", sign = 4)
+    @speaker("") {
+      @t("POKeMON LAB Testing Room", "宝可梦研究所实验室")
+    }
+  }
+}

@@ -1,0 +1,42 @@
+// Route12Gate2F — translated from the original disassembly
+// (scripts/Route12Gate2F.asm, text/Route12Gate2F.asm) to the real Game DSL API.
+// A brunette girl gives the player TM39 (SWIFT); two binocular signs only print
+// their view text when the player is facing up (GateUpstairsScript_PrintIfFacingUp).
+
+game_scene Route12Gate2F {
+  // ── Brunette Girl (npc 1) — gives TM39 SWIFT ───────────────────────────
+  @storyline("talkBrunetteGirl") {
+    @trigger(map = "Route12Gate2F", npc = 1)
+    @if (getFlag("EVENT_GOT_TM39")) {
+      @speaker("") {
+        @t("TM39 is a move called SWIFT.\n\nIt's very accurate, so use\nit during battles you can't\nafford to lose.", "TM39是招式叫做迅星。\n\n它非常精准，所以在不能输的战\n斗中一定要用它。")
+      }
+    } @else {
+      @speaker("") {
+        @t("My POKeMON's ashes are\nstored in POKeMON TOWER.\n\nYou can have this TM. I\ndon't need it any more...", "我的宝可梦的骨灰存放在宝可梦\n塔里。\n\n这个TM给你吧。我已经不需要它\n了……")
+      }
+      // The original checks for a full bag and prints "You don't have room for
+      // this." on failure; giveItem has no failure signal here, so we take the
+      // success path faithfully. (Bag-full branch text preserved in comment.)
+      giveItem("TM39", 1)
+      setFlag("EVENT_GOT_TM39")
+      @speaker("") { @t("<PLAYER> received TM39!", "<PLAYER>得到了 TM39！") }
+    }
+  }
+
+  // ── Left binoculars (sign 1) — only prints when facing up ──────────────
+  @storyline("signLeftBinoculars") {
+    @trigger(map = "Route12Gate2F", sign = 1)
+    @if (getPlayerFacing() == "up") {
+      @speaker("") { @t("Looked into the binoculars.\n\nA man fishing!", "用望远镜看了一下。\n\n有个男人在钓鱼！") }
+    }
+  }
+
+  // ── Right binoculars (sign 2) — only prints when facing up ─────────────
+  @storyline("signRightBinoculars") {
+    @trigger(map = "Route12Gate2F", sign = 2)
+    @if (getPlayerFacing() == "up") {
+      @speaker("") { @t("Looked into the binoculars.\n\nIt's POKeMON TOWER!", "用望远镜看了一下。\n\n是宝可梦塔！") }
+    }
+  }
+}

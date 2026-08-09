@@ -1,0 +1,14 @@
+{
+  "$schema": "../../schemas/script_config.schema.json",
+  "coordEvents": [],
+  "npcs": [
+    {
+      "defaultHidden": true,
+      "id": 1,
+      "talk": "talkLinkReceptionist",
+      "toggleId": "SILPH_CO_1F_OBJ_1"
+    }
+  ],
+  "onLoad": "SilphCo1FOnLoad",
+  "signs": []
+}

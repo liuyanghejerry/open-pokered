@@ -1,0 +1,9 @@
+{
+  "$schema": "../schemas/move.schema.json",
+  "id": "Bonemerang",
+  "effect": "AttackTwiceEffect",
+  "power": 50,
+  "type": "Ground",
+  "accuracy": 90,
+  "pp": 10
+}

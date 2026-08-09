@@ -1,0 +1,9 @@
+{
+  "$schema": "../schemas/move.schema.json",
+  "id": "Constrict",
+  "effect": "SpeedDownSideEffect",
+  "power": 10,
+  "type": "Normal",
+  "accuracy": 100,
+  "pp": 35
+}

@@ -1,0 +1,9 @@
+{
+  "$schema": "../schemas/move.schema.json",
+  "id": "VineWhip",
+  "effect": "NoAdditionalEffect",
+  "power": 35,
+  "type": "Grass",
+  "accuracy": 100,
+  "pp": 10
+}

@@ -1,0 +1,41 @@
+screen Pokedex {
+  panel {
+    rect = {tx: 0, ty: 0, tw: 20, th: 18}
+    style = {corner_tl: 99, edge_top: 100, corner_tr: 101, edge_left: 102, edge_right: 103, corner_bl: 108, edge_bottom: 111, corner_br: 110}
+  }
+  divider {
+    rect = {tx: 1, ty: 9, tw: 18, th: 1}
+    tiles = [122]
+    repeat = 17
+  }
+  text("{name}") {
+    rect = {tx: 9, ty: 2, tw: 10, th: 1}
+  }
+  text("{species}") {
+    rect = {tx: 9, ty: 4, tw: 10, th: 1}
+  }
+  text(@t("HT", "身高")) {
+    rect = {tx: 9, ty: 6, tw: 3, th: 1}
+  }
+  text("{height_ft}′{height_in:02}″") {
+    rect = {tx: 12, ty: 6, tw: 5, th: 1}
+  }
+  text(@t("WT", "体重")) {
+    rect = {tx: 9, ty: 7, tw: 3, th: 1}
+  }
+  text("{weight_lbs} lb") {
+    rect = {tx: 11, ty: 7, tw: 7, th: 1}
+    color = "DarkGray"
+  }
+  text("No.{dex_num:03}") {
+    rect = {tx: 1, ty: 8, tw: 8, th: 1}
+  }
+  text("{description_lines}") {
+    rect = {tx: 1, ty: 11, tw: 18, th: 6}
+    wrap = "word"
+  }
+  tile(31) {
+    rect = {tx: 18, ty: 16, tw: 1, th: 1}
+    visible = "{has_more_pages}"
+  }
+}

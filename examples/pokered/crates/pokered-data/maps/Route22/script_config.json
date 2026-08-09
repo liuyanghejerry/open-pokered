@@ -1,0 +1,39 @@
+{
+  "$schema": "../../schemas/script_config.schema.json",
+  "coordEvents": [
+    {
+      "name": "rivalBattle1",
+      "position": [
+        29,
+        4
+      ],
+      "trigger": "coordRivalBattle"
+    },
+    {
+      "name": "rivalBattle2",
+      "position": [
+        29,
+        5
+      ],
+      "trigger": "coordRivalBattle"
+    }
+  ],
+  "npcs": [
+    {
+      "id": 1,
+      "talk": "talkRival1",
+      "toggleId": "ROUTE_22_RIVAL_1"
+    },
+    {
+      "id": 2,
+      "talk": "talkRival2",
+      "toggleId": "ROUTE_22_RIVAL_2"
+    }
+  ],
+  "signs": [
+    {
+      "id": 1,
+      "talk": "signLeagueGate"
+    }
+  ]
+}

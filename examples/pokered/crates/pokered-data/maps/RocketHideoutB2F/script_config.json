@@ -1,0 +1,32 @@
+{
+  "$schema": "../../schemas/script_config.schema.json",
+  "coordEvents": [],
+  "npcs": [
+    {
+      "id": 1,
+      "talk": "talkRocket"
+    },
+    {
+      "id": 2,
+      "talk": "itemMoonStone",
+      "toggleId": "ROCKET_HIDEOUT_B2F_OBJ_2"
+    },
+    {
+      "id": 3,
+      "talk": "itemNugget",
+      "toggleId": "ROCKET_HIDEOUT_B2F_OBJ_3"
+    },
+    {
+      "id": 4,
+      "talk": "itemTmHornDrill",
+      "toggleId": "ROCKET_HIDEOUT_B2F_OBJ_4"
+    },
+    {
+      "id": 5,
+      "talk": "itemSuperPotion",
+      "toggleId": "ROCKET_HIDEOUT_B2F_OBJ_5"
+    }
+  ],
+  "onLoad": "RocketHideoutB2FOnLoad",
+  "signs": []
+}

@@ -1,0 +1,15 @@
+screen YesNo {
+  panel {
+    rect = {tx: 11, ty: 8, tw: 9, th: 6}
+    style = "default"
+  }
+  text("{yes_text}") {
+    rect = {tx: 13, ty: 10, tw: 5, th: 1}
+  }
+  text("{no_text}") {
+    rect = {tx: 13, ty: 12, tw: 5, th: 1}
+  }
+  tile(223) {
+    rect = {tx: 12, ty: "{cursor_y}", tw: 1, th: 1}
+  }
+}

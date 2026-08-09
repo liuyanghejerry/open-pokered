@@ -1,0 +1,9 @@
+{
+  "$schema": "../schemas/move.schema.json",
+  "id": "Bide",
+  "effect": "BideEffect",
+  "power": 0,
+  "type": "Normal",
+  "accuracy": 100,
+  "pp": 10
+}

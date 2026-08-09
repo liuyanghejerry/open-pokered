@@ -1,0 +1,158 @@
+name: Deploy Web to GitHub Pages
+
+on:
+  push:
+    branches: [master]
+  workflow_dispatch:
+
+# Allow only one concurrent deployment
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+env:
+  CARGO_TERM_COLOR: always
+  RUSTFLAGS: ""
+
+jobs:
+  build:
+    runs-on: self-hosted
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Fetch gfx assets
+        # gfx/ is not committed; the wasm build embeds it at build time (build.rs).
+        run: ./scripts/fetch-gfx.sh
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+
+      - name: Cache cargo registry & build
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: wasm-cargo-${{ hashFiles('Cargo.lock', '**/Cargo.toml') }}
+          restore-keys: |
+            wasm-cargo-
+
+      - name: Install wasm-bindgen-cli
+        # The CLI's bindgen schema version must exactly match the wasm-bindgen
+        # crate version in Cargo.lock, so derive it from the lockfile instead
+        # of pinning it here.
+        run: |
+          WBG_VERSION=$(awk '/^name = "wasm-bindgen"$/{getline; if ($1 == "version") {gsub(/"/, "", $3); print $3; exit}}' Cargo.lock)
+          test -n "$WBG_VERSION"
+          cargo install wasm-bindgen-cli --version "$WBG_VERSION" --locked
+
+      - name: Build Rust → WASM (release)
+        run: |
+          cargo build -p pokered-web --target wasm32-unknown-unknown --release
+
+      - name: Generate JS bindings
+        working-directory: crates/pokered-web
+        run: |
+          WASM_BIN="../target/wasm32-unknown-unknown/release/pokered_web.wasm"
+          WASM_OUT_DIR="frontend/src/wasm"
+          rm -f "$WASM_OUT_DIR"/*.wasm "$WASM_OUT_DIR"/*.js
+          wasm-bindgen --target web --no-typescript --out-dir "$WASM_OUT_DIR" "$WASM_BIN"
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: crates/pokered-web/frontend/package-lock.json
+
+      - name: Install npm dependencies
+        working-directory: crates/pokered-web/frontend
+        run: npm ci
+
+      - name: Build Vite bundle
+        working-directory: crates/pokered-web/frontend
+        env:
+          VITE_BASE_PATH: /${{ github.event.repository.name }}/
+        run: npm run build
+
+      # ── pokered-editor (WYSIWYG editor) → /<repo>/editor/ ──────────────
+      # GitHub Pages gives one site per repo; the editor shares it with the
+      # game under a sub-path. Static hosting has no /api backend, so
+      # dataFetch routes /api/* onto IndexedDB deltas + these static
+      # baselines; every /gfx image is copied into dist/gfx so base-prefixed
+      # asset URLs resolve instead of 404ing.
+      #
+      # NOTE: the Layout-editor preview wasm (`jrpg-web`, engine crate) is
+      # NOT built here anymore — jrpg-web ships from the jrpg-engine repo.
+      # Drop its pkg into `tools/pokered-editor/src/wasm/jrpg-web/` (or point
+      # JRPG_WASM_ROOT at a checkout) before deploying to keep the Layout
+      # preview alive; the Playtest bridge (pokered-runner-web, below) is
+      # built from this repo.
+      - name: Build editor wasm (pokered-runner-web)
+        run: cargo build -p pokered-runner-web --target wasm32-unknown-unknown --release
+
+      - name: Generate editor wasm bindings
+        working-directory: crates/pokered-runner-web
+        run: |
+          WASM_BIN="../target/wasm32-unknown-unknown/release/pokered_runner_web.wasm"
+          mkdir -p editor-wasm
+          wasm-bindgen --target web --no-typescript --out-dir editor-wasm "$WASM_BIN"
+
+      - name: Setup Node.js (editor)
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: tools/pokered-editor/package-lock.json
+
+      - name: Install editor npm dependencies
+        working-directory: tools/pokered-editor
+        run: npm ci
+
+      - name: Build editor Vite bundle
+        working-directory: tools/pokered-editor
+        env:
+          VITE_BASE_PATH: /${{ github.event.repository.name }}/editor/
+        run: npm run build
+
+      - name: Generate editor static data baseline + gfx
+        # Bundles pokered-data JSON (maps/trainers/pokemon/moves/items/
+        # ui_layouts + blocksets/passable-tiles/town-map/tileset-extras) into
+        # dist/data, writes dist/maps.json (static warp list) and copies the
+        # gfx tree into dist/gfx so image URLs work on static hosting.
+        # dataFetch GETs fall back to these baselines, PUTs persist to
+        # IndexedDB deltas. See tools/pokered-editor/scripts/generate-static-data.mjs.
+        run: node tools/pokered-editor/scripts/generate-static-data.mjs
+
+      - name: Merge editor into Pages artifact
+        run: |
+          DEST="crates/pokered-web/frontend/dist/editor"
+          mkdir -p "$DEST"
+          cp -r tools/pokered-editor/dist/. "$DEST/"
+          mkdir -p "$DEST/wasm"
+          cp -r crates/pokered-runner-web/editor-wasm/. "$DEST/wasm/"
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: crates/pokered-web/frontend/dist
+
+  deploy:
+    needs: build
+    runs-on: self-hosted
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

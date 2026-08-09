@@ -1,0 +1,70 @@
+{
+  "$schema": "../schemas/pokemon.schema.json",
+  "species": "Sandshrew",
+  "baseStats": {
+    "hp": 50,
+    "attack": 75,
+    "defense": 85,
+    "speed": 40,
+    "special": 30
+  },
+  "type1": "Ground",
+  "type2": "Ground",
+  "catchRate": 255,
+  "baseExp": 93,
+  "growthRate": "MediumFast",
+  "initialMoves": [
+    "Scratch",
+    "None",
+    "None",
+    "None"
+  ],
+  "tmHmFlags": [
+    164,
+    3,
+    13,
+    206,
+    194,
+    136,
+    38
+  ],
+  "pokedex": {
+    "category": "MOUSE",
+    "heightFeet": 2,
+    "heightInches": 0,
+    "weightDecipounds": 260,
+    "flavorTextPages": [
+      "Burrows deep\nunderground in\narid locations",
+      "far from water.\nIt only emerges\nto hunt for food"
+    ]
+  },
+  "evolutions": [
+    {
+      "method": "level",
+      "species": "Sandslash",
+      "level": 22
+    }
+  ],
+  "learnset": [
+    {
+      "level": 10,
+      "moveId": "SandAttack"
+    },
+    {
+      "level": 17,
+      "moveId": "Slash"
+    },
+    {
+      "level": 24,
+      "moveId": "PoisonSting"
+    },
+    {
+      "level": 31,
+      "moveId": "Swift"
+    },
+    {
+      "level": 38,
+      "moveId": "FurySwipes"
+    }
+  ]
+}

@@ -1,0 +1,9 @@
+{
+  "$schema": "../schemas/move.schema.json",
+  "id": "SpikeCannon",
+  "effect": "TwoToFiveAttacksEffect",
+  "power": 20,
+  "type": "Normal",
+  "accuracy": 100,
+  "pp": 15
+}

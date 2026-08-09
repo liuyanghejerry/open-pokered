@@ -1,0 +1,32 @@
+[package]
+name = "pokered-ui"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+# Declarative immediate-mode menu layout engine for Pokémon Red/Blue.
+#
+# Provides a backend-agnostic `Painter` trait + a closure-based `Ui` builder
+# in 8x8 tile units, with a `FrameBufferPainter` for the pixel backend used
+# by both pokered-app (native/web) and pokered-tui (which renders the same
+# FrameBuffer to terminal halfblocks; see ADR in
+# .sisyphus/plans/menu-layout-engine.md Appendix A.4).
+
+[dependencies]
+jrpg-engine = { git = "file:///Users/liuyanghe02/develop/pokered-worktree-2", tag = "v0.1.0" }
+pokered-core = { path = "../pokered-core" }
+pokered-data = { path = "../pokered-data" }
+pokered-renderer = { path = "../pokered-renderer", default-features = false }
+jrpg-renderer = { git = "file:///Users/liuyanghe02/develop/pokered-worktree-2", tag = "v0.1.0" }
+jrpg-ui = { git = "file:///Users/liuyanghe02/develop/pokered-worktree-2", tag = "v0.1.0" }
+serde = { workspace = true }
+serde_json = { workspace = true }
+log = "0.4"
+
+[features]
+default = ["gpu"]
+framebuffer = ["pokered-renderer/framebuffer"]
+gpu = ["pokered-renderer/gpu"]
+
+[dev-dependencies]
+pokered-data = { path = "../pokered-data" }

@@ -1,0 +1,113 @@
+{
+  "$schema": "../../schemas/map.schema.json",
+  "id": 200,
+  "name": "RocketHideoutB2F",
+  "header": {
+    "tileset": "Facility",
+    "music": "Dungeon1",
+    "connectionFlags": 0,
+    "width": 15,
+    "height": 14,
+    "borderBlock": 46
+  },
+  "connections": {},
+  "warps": [
+    {
+      "x": 27,
+      "y": 8,
+      "destMap": "RocketHideoutB1F",
+      "destWarpId": 0
+    },
+    {
+      "x": 21,
+      "y": 8,
+      "destMap": "RocketHideoutB3F",
+      "destWarpId": 0
+    },
+    {
+      "x": 24,
+      "y": 19,
+      "destMap": "RocketHideoutElevator",
+      "destWarpId": 0
+    },
+    {
+      "x": 21,
+      "y": 22,
+      "destMap": "RocketHideoutB1F",
+      "destWarpId": 3
+    },
+    {
+      "x": 25,
+      "y": 19,
+      "destMap": "RocketHideoutElevator",
+      "destWarpId": 1
+    }
+  ],
+  "npcs": [
+    {
+      "spriteId": 24,
+      "spriteName": "Rocket",
+      "x": 20,
+      "y": 12,
+      "movement": "Stationary",
+      "facing": "Down",
+      "range": 0,
+      "textId": 1,
+      "isTrainer": true,
+      "trainerClass": "Rocket",
+      "trainerSet": 13,
+      "endBattleText": "I\nsurrender!"
+    },
+    {
+      "spriteId": 61,
+      "spriteName": "PokeBall",
+      "x": 1,
+      "y": 11,
+      "movement": "Stationary",
+      "facing": "Down",
+      "range": 0,
+      "textId": 2,
+      "isTrainer": false,
+      "itemId": 10
+    },
+    {
+      "spriteId": 61,
+      "spriteName": "PokeBall",
+      "x": 16,
+      "y": 8,
+      "movement": "Stationary",
+      "facing": "Down",
+      "range": 0,
+      "textId": 3,
+      "isTrainer": false,
+      "itemId": 49
+    },
+    {
+      "spriteId": 61,
+      "spriteName": "PokeBall",
+      "x": 6,
+      "y": 12,
+      "movement": "Stationary",
+      "facing": "Down",
+      "range": 0,
+      "textId": 4,
+      "isTrainer": false,
+      "itemId": 207
+    },
+    {
+      "spriteId": 61,
+      "spriteName": "PokeBall",
+      "x": 3,
+      "y": 21,
+      "movement": "Stationary",
+      "facing": "Down",
+      "range": 0,
+      "textId": 5,
+      "isTrainer": false,
+      "itemId": 19
+    }
+  ],
+  "signs": [],
+  "text": {},
+  "wild": null
+}

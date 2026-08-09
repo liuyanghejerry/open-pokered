@@ -1,0 +1,30 @@
+// FuchsiaMeetingRoom — translated from the original disassembly
+// (scripts/FuchsiaMeetingRoom.asm, text/FuchsiaMeetingRoom.asm) to the real
+// Game DSL API surface. Pure NPC-dialogue map: three Safari Zone Workers, each
+// with static flavor text about the WARDEN's SLOWPOKE. No flags/battles/items.
+
+game_scene FuchsiaMeetingRoom {
+  // ── Safari Zone Worker 1 (npc 1) ──────────────────────────────────────
+  @storyline("talkSafariZoneWorker1") {
+    @trigger(map = "FuchsiaMeetingRoom", npc = 1)
+    @speaker("") {
+      @t("We nicknamed the WARDEN\nSLOWPOKE.\n\nHe and SLOWPOKE both look\nvacant!", "我们给园长起了个外号叫呆呆\n兽。\n\n他和呆呆兽看起来都很呆！")
+    }
+  }
+
+  // ── Safari Zone Worker 2 (npc 2) ──────────────────────────────────────
+  @storyline("talkSafariZoneWorker2") {
+    @trigger(map = "FuchsiaMeetingRoom", npc = 2)
+    @speaker("") {
+      @t("SLOWPOKE is very\nknowledgeable about POKeMON!\n\nHe even has some fossils of\nrare, extinct POKeMON!", "园长对宝可梦知道得非常多！\n\n他甚至有一些稀有灭绝宝可梦的\n化石！")
+    }
+  }
+
+  // ── Safari Zone Worker 3 (npc 3) ──────────────────────────────────────
+  @storyline("talkSafariZoneWorker3") {
+    @trigger(map = "FuchsiaMeetingRoom", npc = 3)
+    @speaker("") {
+      @t("SLOWPOKE came in, but I\ncouldn't understand him.\n\nI think he's got a speech\nproblem!", "园长进来了，但我听不懂他说的\n话。\n\n我觉得他说话有问题！")
+    }
+  }
+}

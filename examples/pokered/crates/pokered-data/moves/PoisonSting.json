@@ -1,0 +1,9 @@
+{
+  "$schema": "../schemas/move.schema.json",
+  "id": "PoisonSting",
+  "effect": "PoisonSideEffect1",
+  "power": 15,
+  "type": "Poison",
+  "accuracy": 100,
+  "pp": 35
+}

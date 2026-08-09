@@ -1,0 +1,123 @@
+// SeafoamIslandsB4F — translated from the original disassembly
+// (scripts/SeafoamIslandsB4F.asm, text/SeafoamIslandsB4F.asm, shared BoulderText)
+// to the real Game DSL API surface.
+//
+// The original map script is a forced-movement state machine: two Strength
+// boulders are pushed into holes on B3F, which stops the strong water current
+// so the surfing player can reach ARTICUNO. This floor's two boulders are the
+// ones that fell through the B3F holes — the original hides them by default and
+// Shows each when the corresponding B3F boulder lands
+// (TOGGLE_SEAFOAM_ISLANDS_B4F_BOULDER_{1,2} in scripts/SeafoamIslandsB3F.asm).
+// We reproduce that with defaultHidden + flag-gated showObjectByName on entry.
+// Two coord sweeps enforce the current (scripts/SeafoamIslandsB4F.asm):
+//   - SeafoamIslandsB4FDefaultScript: in the south-east corner the current
+//     shoves the player back UP while the B3F boulders
+//     (EVENT_SEAFOAM3_BOULDER{1,2}_DOWN_HOLE) are not both down — x2 tiles
+//     from the ladder row (20/21,17), x1 tile from (20/21,16);
+//   - SeafoamIslandsB4FMoveObjectScript: surfing onto (4,14)/(5,14) while
+//     this floor's boulders (EVENT_SEAFOAM4_BOULDER{1,2}_DOWN_HOLE) are not
+//     both down sweeps the player up the west channel.
+
+game_scene SeafoamIslandsB4F {
+  @load {
+    // These boulders are the ones pushed into the B3F holes: each appears here
+    // only once the corresponding boulder has landed (orig ShowObject of
+    // TOGGLE_SEAFOAM_ISLANDS_B4F_BOULDER_{1,2}). They are defaultHidden in
+    // script_config.json, so an unset flag leaves the object hidden.
+    @if (getFlag("EVENT_SEAFOAM4_BOULDER1_DOWN_HOLE")) {
+      showObjectByName("SEAFOAM_ISLANDS_B4F_OBJ_1")
+    }
+    @if (getFlag("EVENT_SEAFOAM4_BOULDER2_DOWN_HOLE")) {
+      showObjectByName("SEAFOAM_ISLANDS_B4F_OBJ_2")
+    }
+  }
+
+  // ── Fallen boulder #1 (npc 1) — wedged in the west channel ────────────────
+  // Original shares the engine-wide BoulderText; the boulders on this floor are
+  // static (STAY, NONE) and no script sets flags on talk — the DOWN_HOLE flags
+  // are set engine-side when the B3F boulders are pushed into their holes.
+  @storyline("talkBoulder1") {
+    @trigger(map = "SeafoamIslandsB4F", npc = 1, toggle = "SEAFOAM_ISLANDS_B4F_OBJ_1", hidden = true)
+    @speaker("") {
+      @t("This requires STRENGTH to\nmove!", "要移动它需要怪力！")
+    }
+  }
+
+  // ── Fallen boulder #2 (npc 2) — wedged in the west channel ────────────────
+  @storyline("talkBoulder2") {
+    @trigger(map = "SeafoamIslandsB4F", npc = 2, toggle = "SEAFOAM_ISLANDS_B4F_OBJ_2", hidden = true)
+    @speaker("") {
+      @t("This requires STRENGTH to\nmove!", "要移动它需要怪力！")
+    }
+  }
+
+  // ── South-east current shove (orig SeafoamIslandsB4FDefaultScript) ────────
+  // While the B3F boulders are not both down their holes, the current shoves
+  // the player back UP off the south-east water: 2 tiles from the ladder row
+  // (20/21,17), 1 tile from (20/21,16).
+  @storyline("currentSouthEastFar") {
+    @trigger(map = "SeafoamIslandsB4F", name = "currentSEFar", coords = [[20, 17], [21, 17]])
+    @if (!getFlag("EVENT_SEAFOAM3_BOULDER1_DOWN_HOLE") || !getFlag("EVENT_SEAFOAM3_BOULDER2_DOWN_HOLE")) {
+      movePlayerRelative([[0, -1], [0, -1]])
+    }
+  }
+  @storyline("currentSouthEastNear") {
+    @trigger(map = "SeafoamIslandsB4F", name = "currentSENear", coords = [[20, 16], [21, 16]])
+    @if (!getFlag("EVENT_SEAFOAM3_BOULDER1_DOWN_HOLE") || !getFlag("EVENT_SEAFOAM3_BOULDER2_DOWN_HOLE")) {
+      movePlayerRelative([[0, -1]])
+    }
+  }
+
+  // ── West-channel current sweep (orig SeafoamIslandsB4FMoveObjectScript) ───
+  // While this floor's boulders are not both down, surfing onto (4,14)/(5,14)
+  // sweeps the player up the channel. Orig RLEs consumed LIFO: (4,14) gets
+  // RIGHT x3 (NearLeftBoulder list), (5,14) gets RIGHT x2 (NearRightBoulder);
+  // both end at (7,10).
+  @storyline("currentWestChannel") {
+    @trigger(map = "SeafoamIslandsB4F", name = "currentWest", coords = [[4, 14], [5, 14]])
+    @if (!getFlag("EVENT_SEAFOAM4_BOULDER1_DOWN_HOLE") || !getFlag("EVENT_SEAFOAM4_BOULDER2_DOWN_HOLE")) {
+      @if (getPlayerX() == 4) {
+        movePlayer([[4, 13], [5, 13], [6, 13], [7, 13], [7, 12], [7, 11], [7, 10]])
+      } @else {
+        movePlayer([[5, 13], [6, 13], [7, 13], [7, 12], [7, 11], [7, 10]])
+      }
+    }
+  }
+
+  // ── Articuno (npc 3) — unreachable across the current until boulders down ──
+  @storyline("talkArticuno") {
+    @trigger(map = "SeafoamIslandsB4F", npc = 3)
+    @if (!getFlag("EVENT_BEAT_ARTICUNO")) {
+      playCry("ARTICUNO")
+      @speaker("") {
+        @t("Gyaoo!", "嘎呜！")
+      }
+      // Static wild Lv50 ARTICUNO battle (catchable); flag set only on win/catch.
+      result = startWildBattle("ARTICUNO", 50)
+      @if (result == "win" || result == "caught") {
+        setFlag("EVENT_BEAT_ARTICUNO")
+      }
+    } @else {
+      playCry("ARTICUNO")
+      @speaker("") {
+        @t("Gyaoo!", "嘎呜！")
+      }
+    }
+  }
+
+  // ── Boulders sign (sign 1) ────────────────────────────────────────────────
+  @storyline("bouldersSign") {
+    @trigger(map = "SeafoamIslandsB4F", sign = 1)
+    @speaker("") {
+      @t("Boulders might change the\nflow of water!", "巨石可能会改变水流的方向！")
+    }
+  }
+
+  // ── Danger sign (sign 2) ──────────────────────────────────────────────────
+  @storyline("dangerSign") {
+    @trigger(map = "SeafoamIslandsB4F", sign = 2)
+    @speaker("") {
+      @t("DANGER Fast current!", "危险水流湍急！")
+    }
+  }
+}

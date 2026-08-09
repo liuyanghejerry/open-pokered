@@ -1,0 +1,55 @@
+// Refactored from CinnabarPokecenter/script.js to jrpg-engine-dsl.
+// Follows the CeladonPokecenter pattern (Pokecenter nurse dialog
+// with @choice + @option). See docs/MIGRATION_NOTES.md §A.
+
+game_scene CinnabarPokecenter {
+  @storyline("talkNurse") {
+    @trigger(map = "CinnabarPokecenter", npc = 1)
+    @speaker("") {
+      @t("Welcome to the POKEMON\nCENTER!\n\nWe heal your POKEMON back to\nperfect health!\n\nShall we heal your POKEMON?", "欢迎光临宝可梦中心！\n\n我们会把你的宝可梦恢复到最佳\n状态！\n\n要为你治疗宝可梦吗？")
+    }
+    @choice {
+      @option(@t("Yes", "是")) {
+        @speaker("") {
+          @t("OK, we will need your\nPOKEMON.", "OK，请把你的宝可梦交给我。")
+        }
+        faceNpc("1", "right")
+        delay(8)
+        heal()
+        animateHealingMachine()
+        faceNpc("1", "down")
+        delay(8)
+        @speaker("") {
+          @t("Thank you for waiting.\n\nYour POKEMON are fully\nhealed!", "感谢您的耐心等待。\n\n你的宝可梦已完全治愈！")
+        }
+      }
+      @option(@t("No", "否")) {
+      }
+    }
+    @speaker("") {
+      @t("We hope to see you again!", "欢迎下次再来！")
+    }
+  }
+
+  @storyline("talkCooltrainerF") {
+    @trigger(map = "CinnabarPokecenter", npc = 2)
+    @speaker("") { @t("You can cancel evolution.\n\nWhen a POKEMON is evolving,\nyou can stop it and leave it\nthe way it is.", "你可以取消进化。\n\n当宝可梦进化时，可以停止并保\n持原样。") }
+  }
+
+  @storyline("talkGentleman") {
+    @trigger(map = "CinnabarPokecenter", npc = 3)
+    @speaker("") { @t("Do you have any friends?\n\nPOKEMON you get in trades\ngrow very quickly.\n\nI think it's worth a try!", "你有朋友吗？\n\n通过交换得到的宝可梦会长得非\n常快。\n\n我觉得值得一试！") }
+  }
+
+  @storyline("talkLinkReceptionist") {
+    @trigger(map = "CinnabarPokecenter", npc = 4)
+    @speaker("") { @t("Welcome to the CABLE CLUB!", "欢迎来到联机俱乐部！") }
+  }
+
+  // ── Pokémon Center PC (sign 1 at 13,3) ───────────────────────────────
+  // engine/menus/pc.asm ActivatePC: BILL's PC / item PC / PROF.OAK's PC.
+  @storyline("pcStorage") {
+    @trigger(map = "CinnabarPokecenter", sign = 1)
+    openPC()
+  }
+}

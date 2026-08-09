@@ -1,0 +1,61 @@
+{
+  "$schema": "../../schemas/script_config.schema.json",
+  "coordEvents": [
+    {
+      "name": "ticketGate1",
+      "position": [
+        9,
+        4
+      ],
+      "trigger": "ticketGate"
+    },
+    {
+      "name": "ticketGate2",
+      "position": [
+        10,
+        4
+      ],
+      "trigger": "ticketGate"
+    },
+    {
+      "name": "behindCounter1",
+      "position": [
+        13,
+        4
+      ],
+      "trigger": "behindCounter"
+    },
+    {
+      "name": "behindCounter2",
+      "position": [
+        12,
+        3
+      ],
+      "trigger": "behindCounter"
+    }
+  ],
+  "npcs": [
+    {
+      "id": 1,
+      "talk": "talkScientist"
+    },
+    {
+      "id": 2,
+      "talk": "talkGambler"
+    },
+    {
+      "id": 3,
+      "talk": "talkScientist1"
+    },
+    {
+      "id": 4,
+      "talk": "talkScientist2"
+    },
+    {
+      "id": 5,
+      "talk": "talkOldAmber",
+      "toggleId": "MUSEUM_1F_OBJ_5"
+    }
+  ],
+  "signs": []
+}

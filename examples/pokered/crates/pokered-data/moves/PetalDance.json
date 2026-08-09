@@ -1,0 +1,9 @@
+{
+  "$schema": "../schemas/move.schema.json",
+  "id": "PetalDance",
+  "effect": "ThrashPetalDanceEffect",
+  "power": 70,
+  "type": "Grass",
+  "accuracy": 100,
+  "pp": 20
+}

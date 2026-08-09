@@ -1,0 +1,30 @@
+// FuchsiaBillsGrandpasHouse — translated from the original disassembly
+// (scripts/FuchsiaBillsGrandpasHouse.asm, text/FuchsiaBillsGrandpasHouse.asm).
+// Plain NPC-dialogue house: no flags, battles, or special mechanics. The map
+// script only enabled auto text boxes, so there is no @load logic.
+
+game_scene FuchsiaBillsGrandpasHouse {
+  // npc 1 (MiddleAgedWoman sprite) — textId 1
+  @storyline("talkMiddleAgedWoman") {
+    @trigger(map = "FuchsiaBillsGrandpasHouse", npc = 1)
+    @speaker("") {
+      @t("SAFARI ZONE's WARDEN is old,\nbut still active!\n\nAll his teeth are false,\nthough.", "狩猎地带的园长年纪大了，但还\n很活跃！\n\n不过他的牙齿全都是假的。")
+    }
+  }
+
+  // npc 2 (Gambler sprite) — textId 2, BILL's grandpa
+  @storyline("talkBillsGrandpa") {
+    @trigger(map = "FuchsiaBillsGrandpasHouse", npc = 2)
+    @speaker("") {
+      @t("Hmm? You've met BILL?\n\nHe's my grandson!\n\nHe always liked collecting\nthings even as a child!", "嗯？你见过正辉了？\n\n他是我的孙子！\n\n他从小就喜欢收集东西，一直如\n此！")
+    }
+  }
+
+  // npc 3 (Youngster sprite) — textId 3
+  @storyline("talkYoungster") {
+    @trigger(map = "FuchsiaBillsGrandpasHouse", npc = 3)
+    @speaker("") {
+      @t("BILL files his own POKeMON\ndata on his PC!\n\nDid he show you?", "正辉把他自己的宝可梦数据存在\n电脑里！\n\n他给你看过吗？")
+    }
+  }
+}

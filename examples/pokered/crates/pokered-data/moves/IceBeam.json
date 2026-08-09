@@ -1,0 +1,9 @@
+{
+  "$schema": "../schemas/move.schema.json",
+  "id": "IceBeam",
+  "effect": "FreezeSideEffect1",
+  "power": 95,
+  "type": "Ice",
+  "accuracy": 100,
+  "pp": 10
+}

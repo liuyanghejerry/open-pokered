@@ -1,0 +1,60 @@
+{
+  "$schema": "../schemas/pokemon.schema.json",
+  "species": "Aerodactyl",
+  "baseStats": {
+    "hp": 80,
+    "attack": 105,
+    "defense": 65,
+    "speed": 130,
+    "special": 60
+  },
+  "type1": "Rock",
+  "type2": "Flying",
+  "catchRate": 45,
+  "baseExp": 202,
+  "growthRate": "Slow",
+  "initialMoves": [
+    "WingAttack",
+    "Agility",
+    "None",
+    "None"
+  ],
+  "tmHmFlags": [
+    42,
+    67,
+    72,
+    192,
+    99,
+    12,
+    10
+  ],
+  "pokedex": {
+    "category": "FOSSIL",
+    "heightFeet": 5,
+    "heightInches": 11,
+    "weightDecipounds": 1300,
+    "flavorTextPages": [
+      "A ferocious, pre-\nhistoric #MON\nthat goes for the",
+      "enemy's throat\nwith its serrated\nsaw-like fangs"
+    ]
+  },
+  "evolutions": [],
+  "learnset": [
+    {
+      "level": 33,
+      "moveId": "Supersonic"
+    },
+    {
+      "level": 38,
+      "moveId": "Bite"
+    },
+    {
+      "level": 45,
+      "moveId": "TakeDown"
+    },
+    {
+      "level": 54,
+      "moveId": "HyperBeam"
+    }
+  ]
+}

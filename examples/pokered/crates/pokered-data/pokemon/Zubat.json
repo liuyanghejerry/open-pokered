@@ -1,0 +1,70 @@
+{
+  "$schema": "../schemas/pokemon.schema.json",
+  "species": "Zubat",
+  "baseStats": {
+    "hp": 40,
+    "attack": 45,
+    "defense": 35,
+    "speed": 55,
+    "special": 40
+  },
+  "type1": "Poison",
+  "type2": "Flying",
+  "catchRate": 255,
+  "baseExp": 54,
+  "growthRate": "MediumFast",
+  "initialMoves": [
+    "LeechLife",
+    "None",
+    "None",
+    "None"
+  ],
+  "tmHmFlags": [
+    42,
+    3,
+    24,
+    192,
+    66,
+    8,
+    2
+  ],
+  "pokedex": {
+    "category": "BAT",
+    "heightFeet": 2,
+    "heightInches": 7,
+    "weightDecipounds": 170,
+    "flavorTextPages": [
+      "Forms colonies in\nperpetually dark\nplaces. Uses",
+      "ultrasonic waves\nto identify and\napproach targets"
+    ]
+  },
+  "evolutions": [
+    {
+      "method": "level",
+      "species": "Golbat",
+      "level": 22
+    }
+  ],
+  "learnset": [
+    {
+      "level": 10,
+      "moveId": "Supersonic"
+    },
+    {
+      "level": 15,
+      "moveId": "Bite"
+    },
+    {
+      "level": 21,
+      "moveId": "ConfuseRay"
+    },
+    {
+      "level": 28,
+      "moveId": "WingAttack"
+    },
+    {
+      "level": 36,
+      "moveId": "Haze"
+    }
+  ]
+}

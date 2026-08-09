@@ -1,0 +1,64 @@
+{
+  "$schema": "../../schemas/map.schema.json",
+  "id": 139,
+  "name": "CeladonChiefHouse",
+  "header": {
+    "tileset": "Mansion",
+    "music": "Celadon",
+    "connectionFlags": 0,
+    "width": 4,
+    "height": 4,
+    "borderBlock": 15
+  },
+  "connections": {},
+  "warps": [
+    {
+      "x": 2,
+      "y": 7,
+      "destWarpId": 11
+    },
+    {
+      "x": 3,
+      "y": 7,
+      "destWarpId": 11
+    }
+  ],
+  "npcs": [
+    {
+      "spriteId": 37,
+      "spriteName": "Gramps",
+      "x": 4,
+      "y": 2,
+      "movement": "Stationary",
+      "facing": "Down",
+      "range": 0,
+      "textId": 1,
+      "isTrainer": false
+    },
+    {
+      "spriteId": 24,
+      "spriteName": "Rocket",
+      "x": 1,
+      "y": 4,
+      "movement": "Wander",
+      "facing": "Down",
+      "range": 0,
+      "textId": 2,
+      "isTrainer": false
+    },
+    {
+      "spriteId": 19,
+      "spriteName": "Sailor",
+      "x": 5,
+      "y": 6,
+      "movement": "Stationary",
+      "facing": "Left",
+      "range": 0,
+      "textId": 3,
+      "isTrainer": false
+    }
+  ],
+  "signs": [],
+  "text": {},
+  "wild": null
+}

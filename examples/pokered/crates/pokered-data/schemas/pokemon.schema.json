@@ -1,0 +1,193 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://pokered.dev/schemas/pokemon.schema.json",
+  "title": "Pokemon Species Data",
+  "description": "Schema for Pokemon JSON files — defines a single species with base stats, types, growth/learnset, and evolution. One file per species (e.g. Bulbasaur.json).",
+  "type": "object",
+  "required": [
+    "species",
+    "baseStats",
+    "type1",
+    "type2",
+    "catchRate",
+    "baseExp",
+    "growthRate",
+    "initialMoves",
+    "tmHmFlags",
+    "pokedex",
+    "evolutions",
+    "learnset"
+  ],
+  "properties": {
+    "$schema": { "type": "string" },
+    "species": {
+      "type": "string",
+      "pattern": "^[A-Z][A-Za-z]+$",
+      "description": "Species name in PascalCase, matching the Species enum variant (e.g. 'Bulbasaur', 'NidoranM')."
+    },
+    "baseStats": {
+      "type": "object",
+      "required": ["hp", "attack", "defense", "speed", "special"],
+      "properties": {
+        "hp":       { "type": "integer", "minimum": 1, "maximum": 255 },
+        "attack":   { "type": "integer", "minimum": 1, "maximum": 255 },
+        "defense":  { "type": "integer", "minimum": 1, "maximum": 255 },
+        "speed":    { "type": "integer", "minimum": 1, "maximum": 255 },
+        "special":  { "type": "integer", "minimum": 1, "maximum": 255 }
+      },
+      "additionalProperties": false
+    },
+    "type1": { "$ref": "#/$defs/pokemonType" },
+    "type2": {
+      "$ref": "#/$defs/pokemonType",
+      "description": "Same as type1 for single-typed Pokemon (matches the original ROM layout)."
+    },
+    "catchRate": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 255,
+      "description": "Base catch rate (0 = uncatchable, 255 = easiest)."
+    },
+    "baseExp": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 255,
+      "description": "Base experience yield when defeated."
+    },
+    "growthRate": {
+      "type": "string",
+      "enum": ["MediumFast", "SlightlyFast", "SlightlySlow", "MediumSlow", "Fast", "Slow"]
+    },
+    "initialMoves": {
+      "type": "array",
+      "minItems": 4,
+      "maxItems": 4,
+      "items": { "$ref": "#/$defs/moveId" },
+      "description": "Exactly 4 moves; use 'None' for empty slots."
+    },
+    "tmHmFlags": {
+      "type": "array",
+      "minItems": 7,
+      "maxItems": 7,
+      "items": { "type": "integer", "minimum": 0, "maximum": 255 },
+      "description": "7 bytes of TM/HM compatibility bit flags (TM01..HM05). Bit n of byte i means TM/HM (i*8 + n + 1) is learnable."
+    },
+    "pokedex": {
+      "type": "object",
+      "required": [
+        "category",
+        "heightFeet",
+        "heightInches",
+        "weightDecipounds",
+        "flavorTextPages"
+      ],
+      "properties": {
+        "category": {
+          "type": "string",
+          "maxLength": 11,
+          "description": "Species classification (e.g. 'SEED', 'MOUSE'). ROM uses GB charmap so practical input is uppercase ASCII letters and spaces, max 11 chars (the width of the in-game label box)."
+        },
+        "heightFeet": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 99,
+          "description": "Height — whole feet portion (e.g. 2 for 2'4\")."
+        },
+        "heightInches": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 11,
+          "description": "Height — inches remainder (e.g. 4 for 2'4\")."
+        },
+        "weightDecipounds": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9999,
+          "description": "Weight in tenths of a pound (e.g. 150 = 15.0 lbs). Stored as little-endian u16 in the ROM."
+        },
+        "flavorTextPages": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 4,
+          "items": {
+            "type": "string",
+            "description": "One Pokedex page. Lines within a page are separated by '\\n'; in-game each page is shown on its own screen. Embed in-game tokens literally (e.g. '#MON' renders as 'POKéMON')."
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "evolutions": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/evolution" },
+      "description": "Possible evolutions. Empty array if the species does not evolve."
+    },
+    "learnset": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/levelUpMove" },
+      "description": "Level-up move learnset, ordered by level."
+    }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "pokemonType": {
+      "type": "string",
+      "enum": [
+        "Normal", "Fighting", "Flying", "Poison", "Ground", "Rock",
+        "Bird", "Bug", "Ghost",
+        "Fire", "Water", "Grass", "Electric", "Psychic", "Ice", "Dragon"
+      ]
+    },
+    "moveId": {
+      "type": "string",
+      "pattern": "^[A-Za-z][A-Za-z0-9]*$",
+      "description": "Move name in PascalCase, matching the MoveId enum variant (e.g. 'Tackle', 'None'). Some retain original ROM casing (e.g. 'Thunderpunch', 'PsychicM')."
+    },
+    "evolution": {
+      "type": "object",
+      "required": ["method", "species"],
+      "properties": {
+        "method": {
+          "type": "string",
+          "enum": ["level", "item", "trade"]
+        },
+        "species": {
+          "type": "string",
+          "pattern": "^[A-Z][A-Za-z]+$",
+          "description": "Target species after evolution."
+        },
+        "level": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100,
+          "description": "Required for method='level'; the level at which the Pokemon evolves."
+        },
+        "item": {
+          "type": "string",
+          "pattern": "^[A-Za-z][A-Za-z0-9]*$",
+          "description": "Required for method='item'; the ItemId triggering evolution (e.g. 'FireStone')."
+        },
+        "minLevel": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100,
+          "description": "Required for method='item' and method='trade'; the minimum level. In the original ROM this is always 1 for the canonical games, but the field is preserved for fidelity."
+        }
+      },
+      "additionalProperties": false
+    },
+    "levelUpMove": {
+      "type": "object",
+      "required": ["level", "moveId"],
+      "properties": {
+        "level": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100
+        },
+        "moveId": { "$ref": "#/$defs/moveId" }
+      },
+      "additionalProperties": false
+    }
+  }
+}

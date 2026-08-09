@@ -1,0 +1,121 @@
+// Route9 — translated from the original disassembly (scripts/Route9.asm,
+// text/Route9.asm) to the real Game DSL API surface.
+//
+// Content type: a pure route-trainer map. NPCs 1-9 are sight-engaged trainers
+// (map.json isTrainer = true), so the runtime owns each battle and the .scene
+// talk handler is DIALOGUE ONLY: before-battle taunt vs. after-battle line,
+// branched on EVENT_BEAT_ROUTE_9_TRAINER_n. NPC 10 is a ground-item Poke Ball
+// (TM30 TELEPORT). One sign.
+
+game_scene Route9 {
+  // ── CooltrainerF / JrTrainerF (npc 1) — Route9TrainerHeader0 ──────────────
+  @storyline("talkCooltrainerF") {
+    @trigger(map = "Route9", npc = 1)
+    @if (getFlag("EVENT_BEAT_ROUTE_9_TRAINER_0")) {
+      @speaker("") { @t("You need light to get\nthrough that dark tunnel\nahead.", "你需要光亮才能通过那条黑暗隧\n道。") }
+    } @else {
+      @speaker("") { @t("You have POKeMON with you!\nYou're mine!", "你带着宝可梦那就来吧！你是我\n的！") }
+    }
+  }
+
+  // ── CooltrainerM / JrTrainerM (npc 2) — Route9TrainerHeader1 ──────────────
+  @storyline("talkCooltrainerM") {
+    @trigger(map = "Route9", npc = 2)
+    @if (getFlag("EVENT_BEAT_ROUTE_9_TRAINER_1")) {
+      @speaker("") { @t("Keep walking!", "继续走吧！") }
+    } @else {
+      @speaker("") { @t("Who's that walking with\nthose good looking POKeMON?", "那个带着漂亮宝可梦的人是谁？") }
+    }
+  }
+
+  // ── CooltrainerM / JrTrainerM (npc 3) — Route9TrainerHeader2 ──────────────
+  @storyline("talkCooltrainerM1") {
+    @trigger(map = "Route9", npc = 3)
+    @if (getFlag("EVENT_BEAT_ROUTE_9_TRAINER_2")) {
+      @speaker("") { @t("Are you off to ROCK TUNNEL\ntoo?", "你也要去岩山隧道吗？") }
+    } @else {
+      @speaker("") { @t("I'm taking ROCK TUNNEL to go\nto LAVENDER...", "我要穿过岩山隧道去紫苑镇……") }
+    }
+  }
+
+  // ── CooltrainerF / JrTrainerF (npc 4) — Route9TrainerHeader3 ──────────────
+  @storyline("talkCooltrainerF1") {
+    @trigger(map = "Route9", npc = 4)
+    @if (getFlag("EVENT_BEAT_ROUTE_9_TRAINER_3")) {
+      @speaker("") { @t("You're obviously talented!\nGood luck to you!", "你显然很有天赋！祝你好运！") }
+    } @else {
+      @speaker("") { @t("Don't you dare condescend\nme!", "别想居高临下地小看我！") }
+    }
+  }
+
+  // ── Hiker (npc 5) — Route9TrainerHeader4 ──────────────────────────────────
+  @storyline("talkHiker") {
+    @trigger(map = "Route9", npc = 5)
+    @if (getFlag("EVENT_BEAT_ROUTE_9_TRAINER_4")) {
+      @speaker("") { @t("You sure had guts standing\nup to me there, eh?", "你真有胆量敢和我较量，嗯？") }
+    } @else {
+      @speaker("") { @t("Bwahaha! Great! I was bored,\neh!", "哇哈哈哈！太棒了！我正无聊\n呢，嗯！") }
+    }
+  }
+
+  // ── Hiker (npc 6) — Route9TrainerHeader5 ──────────────────────────────────
+  @storyline("talkHiker1") {
+    @trigger(map = "Route9", npc = 6)
+    @if (getFlag("EVENT_BEAT_ROUTE_9_TRAINER_5")) {
+      @speaker("") { @t("Hahaha! Kids should be\ntough!", "哈哈哈！小孩就该结实点！") }
+    } @else {
+      @speaker("") { @t("Hahaha! Aren't you a little\ntoughie!", "哈哈哈！你这小家伙还挺结实\n的！") }
+    }
+  }
+
+  // ── Youngster / BugCatcher (npc 7) — Route9TrainerHeader6 ─────────────────
+  @storyline("talkYoungster") {
+    @trigger(map = "Route9", npc = 7)
+    @if (getFlag("EVENT_BEAT_ROUTE_9_TRAINER_6")) {
+      @speaker("") { @t("I have to collect more than\nbugs to get stronger...", "要想变强光收集虫系宝可梦还不\n够……") }
+    } @else {
+      @speaker("") { @t("I got up early every day to\nraise my POKeMON from\ncocoons!", "我每天早早起来，把宝可梦从虫\n茧培育长大！") }
+    }
+  }
+
+  // ── Hiker (npc 8) — Route9TrainerHeader7 ──────────────────────────────────
+  @storyline("talkHiker2") {
+    @trigger(map = "Route9", npc = 8)
+    @if (getFlag("EVENT_BEAT_ROUTE_9_TRAINER_7")) {
+      @speaker("") { @t("Hahahaha! Us hearty guys\nalways laugh!", "哈哈哈！我们壮实的人总是笑哈\n哈！") }
+    } @else {
+      @speaker("") { @t("Hahahaha! Come on, dude!", "哈哈哈！来吧，老兄！") }
+    }
+  }
+
+  // ── Youngster / BugCatcher (npc 9) — Route9TrainerHeader8 ─────────────────
+  @storyline("talkYoungster1") {
+    @trigger(map = "Route9", npc = 9)
+    @if (getFlag("EVENT_BEAT_ROUTE_9_TRAINER_8")) {
+      @speaker("") { @t("If you don't like bug\nPOKeMON, you bug me!", "如果你不喜欢虫系宝可梦，就别\n烦我！") }
+    } @else {
+      @speaker("") { @t("Go, my super bug POKeMON!", "上吧，我的超级虫系宝可梦！") }
+    }
+  }
+
+  // ── Poke Ball ground item (npc 10) — TM30 TELEPORT ───────────────────────
+  @storyline("talkPokeBall") {
+    @trigger(map = "Route9", npc = 10, toggle = "ROUTE_9_OBJ_10")
+    @if (!getFlag("EVENT_GOT_ROUTE_9_TM_TELEPORT")) {
+      given = giveItem("TM30", 1)
+      @if (given) {
+        setFlag("EVENT_GOT_ROUTE_9_TM_TELEPORT")
+        hideObjectByName("ROUTE_9_OBJ_10")
+        @speaker("") { @t("<PLAYER> found TM30!", "<PLAYER>找到了 TM30！") }
+      } @else {
+        @speaker("") { @t("You have too much stuff\nalready!", "你带的东西已经太多了！") }
+      }
+    }
+  }
+
+  // ── Sign 1: ROUTE 9 ───────────────────────────────────────────────────────
+  @storyline("sign1") {
+    @trigger(map = "Route9", sign = 1)
+    @speaker("") { @t("ROUTE 9 CERULEAN CITY- ROCK\nTUNNEL", "9号道路华蓝市 - 岩山隧道") }
+  }
+}

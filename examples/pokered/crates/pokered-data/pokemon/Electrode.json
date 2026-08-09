@@ -1,0 +1,64 @@
+{
+  "$schema": "../schemas/pokemon.schema.json",
+  "species": "Electrode",
+  "baseStats": {
+    "hp": 60,
+    "attack": 50,
+    "defense": 70,
+    "speed": 140,
+    "special": 80
+  },
+  "type1": "Electric",
+  "type2": "Electric",
+  "catchRate": 60,
+  "baseExp": 150,
+  "growthRate": "MediumFast",
+  "initialMoves": [
+    "Tackle",
+    "Screech",
+    "Sonicboom",
+    "None"
+  ],
+  "tmHmFlags": [
+    32,
+    65,
+    136,
+    225,
+    203,
+    88,
+    66
+  ],
+  "pokedex": {
+    "category": "BALL",
+    "heightFeet": 3,
+    "heightInches": 11,
+    "weightDecipounds": 1470,
+    "flavorTextPages": [
+      "It stores electric\nenergy under very\nhigh pressure.",
+      "It often explodes\nwith little or no\nprovocation"
+    ]
+  },
+  "evolutions": [],
+  "learnset": [
+    {
+      "level": 17,
+      "moveId": "Sonicboom"
+    },
+    {
+      "level": 22,
+      "moveId": "Selfdestruct"
+    },
+    {
+      "level": 29,
+      "moveId": "LightScreen"
+    },
+    {
+      "level": 40,
+      "moveId": "Swift"
+    },
+    {
+      "level": 50,
+      "moveId": "Explosion"
+    }
+  ]
+}

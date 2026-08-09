@@ -1,0 +1,29 @@
+{
+  "$schema": "../../schemas/script_config.schema.json",
+  "coordEvents": [],
+  "npcs": [
+    {
+      "id": 1,
+      "talk": "talkWarden"
+    },
+    {
+      "id": 2,
+      "talk": "talkPokeBall",
+      "toggleId": "WARDENS_HOUSE_OBJ_2"
+    },
+    {
+      "id": 3,
+      "talk": "talkBoulder"
+    }
+  ],
+  "signs": [
+    {
+      "id": 1,
+      "talk": "sign1"
+    },
+    {
+      "id": 2,
+      "talk": "sign2"
+    }
+  ]
+}

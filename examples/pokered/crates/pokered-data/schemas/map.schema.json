@@ -1,0 +1,280 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://pokered.dev/schemas/map.schema.json",
+  "title": "Map Data",
+  "description": "Schema for map.json — defines a single game map's header, connections, warps, NPCs, signs, text, and wild encounters.",
+  "type": "object",
+  "required": ["id", "name", "header", "connections", "warps", "npcs", "signs", "text"],
+  "properties": {
+    "$schema": { "type": "string" },
+    "id": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 255,
+      "description": "Map numeric ID (0x00-0xF7)"
+    },
+    "name": {
+      "type": "string",
+      "pattern": "^[A-Z][A-Za-z0-9]+$",
+      "description": "Map name, PascalCase (e.g. 'PalletTown', 'Route2')"
+    },
+    "header": {
+      "type": "object",
+      "required": ["tileset", "music", "connectionFlags", "width", "height", "borderBlock"],
+      "properties": {
+        "tileset": {
+          "type": "string",
+          "description": "Tileset name (e.g. 'Overworld', 'House', 'Forest')"
+        },
+        "music": {
+          "type": "string",
+          "description": "Background music track name"
+        },
+        "connectionFlags": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 15,
+          "description": "Bitfield: bit3=north, bit2=south, bit1=west, bit0=east"
+        },
+        "width": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255,
+          "description": "Map width in blocks (0 for unused maps)"
+        },
+        "height": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255,
+          "description": "Map height in blocks (0 for unused maps)"
+        },
+        "borderBlock": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255,
+          "description": "Border block ID"
+        }
+      },
+      "additionalProperties": false
+    },
+    "connections": {
+      "type": "object",
+      "properties": {
+        "north": { "$ref": "#/$defs/connectionEntry" },
+        "south": { "$ref": "#/$defs/connectionEntry" },
+        "west": { "$ref": "#/$defs/connectionEntry" },
+        "east": { "$ref": "#/$defs/connectionEntry" }
+      },
+      "additionalProperties": false
+    },
+    "warps": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/warp" }
+    },
+    "npcs": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/npc" }
+    },
+    "signs": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/sign" }
+    },
+    "text": { "$ref": "#/$defs/mapText" },
+    "wild": {
+      "oneOf": [
+        { "type": "null" },
+        { "$ref": "#/$defs/wildData" }
+      ]
+    }
+  },
+  "additionalProperties": false,
+
+  "$defs": {
+    "connectionEntry": {
+      "type": "object",
+      "required": ["targetMap", "offset"],
+      "properties": {
+        "targetMap": {
+          "type": "string",
+          "description": "Adjacent map name"
+        },
+        "offset": {
+          "type": "integer",
+          "description": "Connection scroll offset"
+        }
+      },
+      "additionalProperties": false
+    },
+
+    "warp": {
+      "type": "object",
+      "required": ["x", "y", "destWarpId"],
+      "properties": {
+        "x": { "type": "integer", "minimum": 0 },
+        "y": { "type": "integer", "minimum": 0 },
+        "destMap": {
+          "type": "string",
+          "description": "Destination map name (null/absent for LAST_MAP)"
+        },
+        "destWarpId": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Destination warp index"
+        }
+      },
+      "additionalProperties": false
+    },
+
+    "npc": {
+      "type": "object",
+      "required": ["spriteId", "x", "y", "movement", "facing", "range", "textId", "isTrainer"],
+      "properties": {
+        "spriteId": { "type": "integer", "minimum": 0 },
+        "spriteName": { "type": "string" },
+        "x": { "type": "integer", "minimum": 0 },
+        "y": { "type": "integer", "minimum": 0 },
+        "movement": {
+          "type": "string",
+          "enum": ["Stationary", "Wander", "FixedPath", "FacePlayer"]
+        },
+        "facing": {
+          "type": "string",
+          "enum": ["Down", "Up", "Left", "Right"]
+        },
+        "range": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255,
+          "description": "Trainer sight range (0 for non-trainers)"
+        },
+        "textId": { "type": "integer", "minimum": 0 },
+        "isTrainer": { "type": "boolean" },
+        "trainerClass": {
+          "type": "string",
+          "description": "Trainer class name (e.g. 'Youngster', 'BugCatcher'). Required if isTrainer=true."
+        },
+        "trainerSet": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Trainer party index (1-based). Required if isTrainer=true."
+        },
+        "itemId": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Item ID for PokeBall pickups"
+        }
+      },
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {
+            "properties": { "isTrainer": { "const": true } }
+          },
+          "then": {
+            "required": ["trainerClass", "trainerSet"]
+          }
+        }
+      ]
+    },
+
+    "sign": {
+      "type": "object",
+      "required": ["x", "y", "textId"],
+      "properties": {
+        "x": { "type": "integer", "minimum": 0 },
+        "y": { "type": "integer", "minimum": 0 },
+        "textId": { "type": "integer", "minimum": 0 }
+      },
+      "additionalProperties": false
+    },
+
+    "mapText": {
+      "type": "object",
+      "properties": {
+        "npc": {
+          "type": "object",
+          "default": {},
+          "additionalProperties": { "$ref": "#/$defs/textPages" },
+          "description": "NPC dialog keyed by text ID (string)"
+        },
+        "sign": {
+          "type": "object",
+          "default": {},
+          "additionalProperties": { "$ref": "#/$defs/textPages" },
+          "description": "Sign dialog keyed by text ID (string)"
+        }
+      },
+      "additionalProperties": false
+    },
+
+    "textPages": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/textPage" },
+      "minItems": 1
+    },
+
+    "textPage": {
+      "type": "object",
+      "required": ["line1"],
+      "properties": {
+        "line1": { "type": "string" },
+        "line2": { "type": "string", "default": "" }
+      },
+      "additionalProperties": false
+    },
+
+    "wildData": {
+      "type": "object",
+      "properties": {
+        "red": { "$ref": "#/$defs/versionWild" },
+        "blue": { "$ref": "#/$defs/versionWild" }
+      },
+      "additionalProperties": false
+    },
+
+    "versionWild": {
+      "type": "object",
+      "required": ["grass", "water"],
+      "properties": {
+        "grass": { "$ref": "#/$defs/encounterTable" },
+        "water": { "$ref": "#/$defs/encounterTable" }
+      },
+      "additionalProperties": false
+    },
+
+    "encounterTable": {
+      "type": "object",
+      "required": ["encounterRate", "mons"],
+      "properties": {
+        "encounterRate": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255
+        },
+        "mons": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/wildMon" },
+          "maxItems": 10
+        }
+      },
+      "additionalProperties": false
+    },
+
+    "wildMon": {
+      "type": "object",
+      "required": ["level", "species"],
+      "properties": {
+        "level": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100
+        },
+        "species": {
+          "type": "string",
+          "pattern": "^[A-Z][A-Za-z]+$"
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}

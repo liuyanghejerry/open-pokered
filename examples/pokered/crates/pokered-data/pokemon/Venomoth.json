@@ -1,0 +1,68 @@
+{
+  "$schema": "../schemas/pokemon.schema.json",
+  "species": "Venomoth",
+  "baseStats": {
+    "hp": 70,
+    "attack": 65,
+    "defense": 60,
+    "speed": 90,
+    "special": 90
+  },
+  "type1": "Bug",
+  "type2": "Poison",
+  "catchRate": 75,
+  "baseExp": 138,
+  "growthRate": "MediumFast",
+  "initialMoves": [
+    "Tackle",
+    "Disable",
+    "Poisonpowder",
+    "LeechLife"
+  ],
+  "tmHmFlags": [
+    42,
+    67,
+    56,
+    240,
+    67,
+    40,
+    2
+  ],
+  "pokedex": {
+    "category": "POISONMOTH",
+    "heightFeet": 4,
+    "heightInches": 11,
+    "weightDecipounds": 280,
+    "flavorTextPages": [
+      "The dust-like\nscales covering\nits wings are",
+      "color coded to\nindicate the kinds\nof poison it has"
+    ]
+  },
+  "evolutions": [],
+  "learnset": [
+    {
+      "level": 24,
+      "moveId": "Poisonpowder"
+    },
+    {
+      "level": 27,
+      "moveId": "LeechLife"
+    },
+    {
+      "level": 30,
+      "moveId": "StunSpore"
+    },
+    {
+      "level": 38,
+      "moveId": "Psybeam"
+    },
+    {
+      "level": 43,
+      "moveId": "SleepPowder"
+    },
+    {
+      "level": 50,
+      "moveId": "PsychicM"
+    }
+  ]
+}

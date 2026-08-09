@@ -1,0 +1,127 @@
+// PokemonMansion3F — translated from the original disassembly
+// (scripts/PokemonMansion3F.asm, text/PokemonMansion3F*.asm) to the real Game
+// DSL API. This floor is dungeon content: two sight-engaged trainers (Burglar
+// "SuperNerd" + Scientist, runtime-driven battles → dialogue-only handlers),
+// two ground-item Poke Balls (MAX_POTION, IRON), a readable diary, and the
+// secret switch that toggles the warp-door blocks (now wired via
+// replaceTileBlock — see @load + switch handler below).
+//
+// Door block-swap (Mansion3CheckReplaceSwitchDoorBlocks, gated by
+// EVENT_MANSION_SWITCH_ON; asm uses lb bc, Y, X so coords flip to (X, Y)):
+//   Switch OFF: block $e(=14) at (Y=2,X=7) → replaceTileBlock(7, 2, 14)
+//               block $5f(=95) at (Y=5,X=7) → replaceTileBlock(7, 5, 95)
+//   Switch ON:  block $5f(=95) at (Y=2,X=7) → replaceTileBlock(7, 2, 95)
+//               block $e(=14) at (Y=5,X=7) → replaceTileBlock(7, 5, 14)
+// It is a TOGGLE: each switch press flips EVENT_MANSION_SWITCH_ON, swapping
+// which of the two door tiles is the open passage (14) vs the wall (95). Both
+// branches must be re-applied on map (re)load and on each toggle.
+
+game_scene PokemonMansion3F {
+  // ── On entry: re-apply the door blocks for the current toggle state ───────
+  // Mirrors Mansion3CheckReplaceSwitchDoorBlocks, which re-runs on map load.
+  @load {
+    @if (getFlag("EVENT_MANSION_SWITCH_ON")) {
+      replaceTileBlock(7, 2, 95)
+      replaceTileBlock(7, 5, 14)
+    } @else {
+      replaceTileBlock(7, 2, 14)
+      replaceTileBlock(7, 5, 95)
+    }
+  }
+
+  // ── Secret switch (hidden_event at tile X=10, Y=5, SPRITE_FACING_UP) ──────
+  // Shares the 2F switch text/logic (PokemonMansion2FSwitchText): prompt to
+  // press, on YES play SFX_GO_INSIDE and CheckAndSetEvent/ResetEvent toggles
+  // EVENT_MANSION_SWITCH_ON, then re-applies the door blocks. The original is a
+  // facing-up tile interaction with no npc/sign; bound here as a coords trigger.
+  @storyline("secretSwitch") {
+    @trigger(map = "PokemonMansion3F", name = "secretSwitch")
+    @speaker("") { @t("A secret switch!\n\nPress it?", "有秘密开关！\n\n要按下吗？") }
+    @choice {
+      @option(@t("YES", "是")) {
+        @speaker("") { @t("Who wouldn't?", "谁会不想呢？") }
+        playSound("SFX_GO_INSIDE")
+        @if (getFlag("EVENT_MANSION_SWITCH_ON")) {
+          // Toggle OFF.
+          resetFlag("EVENT_MANSION_SWITCH_ON")
+          replaceTileBlock(7, 2, 14)
+          replaceTileBlock(7, 5, 95)
+        } @else {
+          // Toggle ON.
+          setFlag("EVENT_MANSION_SWITCH_ON")
+          replaceTileBlock(7, 2, 95)
+          replaceTileBlock(7, 5, 14)
+        }
+      }
+      @option(@t("NO", "否")) {
+        @speaker("") { @t("Not quite yet!", "还不是时候！") }
+      }
+    }
+  }
+
+  // ── Burglar "SuperNerd" (npc 1) — sight-engaged; dialogue only ──────────
+  @storyline("talkSuperNerd") {
+    @trigger(map = "PokemonMansion3F", npc = 1)
+    @if (getFlag("EVENT_BEAT_MANSION_3_TRAINER_0")) {
+      @speaker("") { @t("I wonder where my partner\nwent.", "真不知道我的搭档去了哪儿。") }
+    } @else {
+      @speaker("") { @t("This place is like, huge!", "这地方好大啊！") }
+    }
+  }
+
+  // ── Scientist (npc 2) — sight-engaged; dialogue only ────────────────────
+  @storyline("talkScientist") {
+    @trigger(map = "PokemonMansion3F", npc = 2)
+    @if (getFlag("EVENT_BEAT_MANSION_3_TRAINER_1")) {
+      @speaker("") { @t("So, you're stuck? Try\njumping off over there!", "怎么，你被困住了？试着从那里\n跳下去吧！") }
+    } @else {
+      @speaker("") { @t("My mentor once lived here.", "我的师父以前住在这里。") }
+    }
+  }
+
+  // ── Ground item: MAX POTION Poke Ball (npc 3) ───────────────────────────
+  @storyline("itemMaxPotion") {
+    @trigger(map = "PokemonMansion3F", npc = 3, toggle = "POKEMON_MANSION_3F_OBJ_3")
+    @if (!getFlag("EVENT_GOT_MANSION_3F_MAX_POTION")) {
+      giveItem("MAX_POTION", 1)
+      setFlag("EVENT_GOT_MANSION_3F_MAX_POTION")
+      hideObjectByName("POKEMON_MANSION_3F_OBJ_3")
+      @speaker("") { @t("<PLAYER> found MAX POTION!", "<PLAYER>找到了厉害伤药！") }
+    }
+  }
+
+  // ── Ground item: IRON Poke Ball (npc 4) ─────────────────────────────────
+  @storyline("itemIron") {
+    @trigger(map = "PokemonMansion3F", npc = 4, toggle = "POKEMON_MANSION_3F_OBJ_4")
+    @if (!getFlag("EVENT_GOT_MANSION_3F_IRON")) {
+      giveItem("IRON", 1)
+      setFlag("EVENT_GOT_MANSION_3F_IRON")
+      hideObjectByName("POKEMON_MANSION_3F_OBJ_4")
+      @speaker("") { @t("<PLAYER> found IRON!", "<PLAYER>找到了防御增强剂！") }
+    }
+  }
+
+  // ── Diary (npc 5) — readable bookshelf entry ────────────────────────────
+  @storyline("talkDiary") {
+    @trigger(map = "PokemonMansion3F", npc = 5)
+    @speaker("") {
+      @t("Diary: Feb. 6 MEW gave\nbirth.\n\nWe named the newborn MEWTWO.", "日记：2月6日梦幻生下了孩子。\n\n我们给新生的宝可梦取名超梦。")
+    }
+  }
+
+  // ── Floor holes: fall through to the floor below ───────────────────────
+  // Original PokemonMansion3FDefaultScript + DungeonWarpData: stepping onto a
+  // hole drops the player — holes (16,14)/(17,14) land on 1F (16,14), hole
+  // (19,14) lands on 2F (18,14).
+  @storyline("coordHole") {
+    @trigger(map = "PokemonMansion3F", name = "hole1")
+    @if (getPlayerX() == 19) {
+      warpTo("PokemonMansion2F", 18, 14)
+    } @else {
+      warpTo("PokemonMansion1F", 16, 14)
+    }
+  }
+
+  // NOTE: The secret switch + its door block-swap is now wired above (@load +
+  // the "secretSwitch" coords storyline) using replaceTileBlock.
+}

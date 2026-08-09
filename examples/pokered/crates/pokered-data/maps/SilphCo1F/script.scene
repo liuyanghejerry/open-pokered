@@ -1,0 +1,32 @@
+// SilphCo1F — translated from the original disassembly (scripts/SilphCo1F.asm,
+// text/SilphCo1F.asm) to the real Game DSL API surface.
+//
+// Content types:
+//  - On-enter cutscene (@load): the lobby receptionist (npc 1) is hidden until
+//    Giovanni is beaten on SilphCo11F. The original script returns early unless
+//    EVENT_BEAT_SILPH_CO_GIOVANNI is set, then CheckAndSetEvent
+//    EVENT_SILPH_CO_RECEPTIONIST_AT_DESK gates a one-time ShowObject of
+//    TOGGLE_SILPH_CO_1F_RECEPTIONIST. We reproduce that with a flag-gated
+//    showObjectByName on map entry.
+//  - Receptionist (npc 1): plain NPC dialogue.
+
+game_scene SilphCo1F {
+  // On map entry: once Giovanni has been defeated, reveal the lobby
+  // receptionist at the desk (one-time).
+  @load {
+    @if (getFlag("EVENT_BEAT_SILPH_CO_GIOVANNI")) {
+      @if (!getFlag("EVENT_SILPH_CO_RECEPTIONIST_AT_DESK")) {
+        setFlag("EVENT_SILPH_CO_RECEPTIONIST_AT_DESK")
+      }
+      showObjectByName("SILPH_CO_1F_OBJ_1")
+    }
+  }
+
+  // ── Lobby receptionist (npc 1) ──────────────────────────────────────────
+  @storyline("talkLinkReceptionist") {
+    @trigger(map = "SilphCo1F", npc = 1, toggle = "SILPH_CO_1F_OBJ_1", hidden = true)
+    @speaker("") {
+      @t("Welcome!\n\nThe PRESIDENT is in the\nboardroom on 11F!", "欢迎光临！\n\n董事长在 11层的会议室里！")
+    }
+  }
+}

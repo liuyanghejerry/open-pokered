@@ -1,0 +1,121 @@
+{
+  "$schema": "../../schemas/map.schema.json",
+  "id": 37,
+  "name": "RedsHouse1F",
+  "header": {
+    "tileset": "RedsHouse1",
+    "music": "PalletTown",
+    "connectionFlags": 0,
+    "width": 4,
+    "height": 4,
+    "borderBlock": 10
+  },
+  "connections": {},
+  "warps": [
+    {
+      "x": 2,
+      "y": 7,
+      "destWarpId": 0
+    },
+    {
+      "x": 3,
+      "y": 7,
+      "destWarpId": 0
+    },
+    {
+      "x": 7,
+      "y": 1,
+      "destMap": "RedsHouse2F",
+      "destWarpId": 0
+    }
+  ],
+  "npcs": [
+    {
+      "spriteId": 51,
+      "spriteName": "Mom",
+      "x": 5,
+      "y": 4,
+      "movement": "Stationary",
+      "facing": "Left",
+      "range": 0,
+      "textId": 1,
+      "isTrainer": false
+    }
+  ],
+  "signs": [
+    {
+      "x": 3,
+      "y": 1,
+      "textId": 1
+    }
+  ],
+  "text": {
+    "npc": {
+      "1": [
+        {
+          "line1": "MOM: Right.",
+          "line2": "All boys leave"
+        },
+        {
+          "line1": "home some day.",
+          "line2": "It said so on TV."
+        },
+        {
+          "line1": "PROF.OAK, next",
+          "line2": "door, is looking"
+        },
+        {
+          "line1": "for you.",
+          "line2": ""
+        }
+      ],
+      "1_Heal": [
+        {
+          "line1": "MOM: <PLAYER>!",
+          "line2": "You should take a"
+        },
+        {
+          "line1": "quick rest.",
+          "line2": ""
+        }
+      ],
+      "1_HealDone": [
+        {
+          "line1": "MOM: Oh good!",
+          "line2": "You and your"
+        },
+        {
+          "line1": "POKeMON are",
+          "line2": "looking great!"
+        },
+        {
+          "line1": "Take care now!",
+          "line2": ""
+        }
+      ]
+    },
+    "sign": {
+      "1": [
+        {
+          "line1": "There's a movie",
+          "line2": "on TV. Four boys"
+        },
+        {
+          "line1": "are walking on",
+          "line2": "railroad tracks."
+        },
+        {
+          "line1": "I better go too.",
+          "line2": ""
+        }
+      ],
+      "1_WrongSide": [
+        {
+          "line1": "Oops, wrong side.",
+          "line2": ""
+        }
+      ]
+    }
+  },
+  "wild": null
+}

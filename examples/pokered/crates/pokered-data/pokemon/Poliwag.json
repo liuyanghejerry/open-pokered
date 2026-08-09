@@ -1,0 +1,74 @@
+{
+  "$schema": "../schemas/pokemon.schema.json",
+  "species": "Poliwag",
+  "baseStats": {
+    "hp": 40,
+    "attack": 50,
+    "defense": 40,
+    "speed": 90,
+    "special": 40
+  },
+  "type1": "Water",
+  "type2": "Water",
+  "catchRate": 255,
+  "baseExp": 77,
+  "growthRate": "MediumSlow",
+  "initialMoves": [
+    "Bubble",
+    "None",
+    "None",
+    "None"
+  ],
+  "tmHmFlags": [
+    160,
+    63,
+    8,
+    208,
+    130,
+    40,
+    18
+  ],
+  "pokedex": {
+    "category": "TADPOLE",
+    "heightFeet": 2,
+    "heightInches": 0,
+    "weightDecipounds": 270,
+    "flavorTextPages": [
+      "Its newly grown\nlegs prevent it\nfrom running. It",
+      "appears to prefer\nswimming than\ntrying to stand"
+    ]
+  },
+  "evolutions": [
+    {
+      "method": "level",
+      "species": "Poliwhirl",
+      "level": 25
+    }
+  ],
+  "learnset": [
+    {
+      "level": 16,
+      "moveId": "Hypnosis"
+    },
+    {
+      "level": 19,
+      "moveId": "WaterGun"
+    },
+    {
+      "level": 25,
+      "moveId": "Doubleslap"
+    },
+    {
+      "level": 31,
+      "moveId": "BodySlam"
+    },
+    {
+      "level": 38,
+      "moveId": "Amnesia"
+    },
+    {
+      "level": 45,
+      "moveId": "HydroPump"
+    }
+  ]
+}

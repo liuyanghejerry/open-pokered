@@ -1,0 +1,771 @@
+{
+  "$schema": "../../schemas/map.schema.json",
+  "id": 40,
+  "name": "OaksLab",
+  "header": {
+    "tileset": "Dojo",
+    "music": "OaksLab",
+    "connectionFlags": 0,
+    "width": 5,
+    "height": 6,
+    "borderBlock": 3
+  },
+  "connections": {},
+  "warps": [
+    {
+      "x": 4,
+      "y": 11,
+      "destWarpId": 2
+    },
+    {
+      "x": 5,
+      "y": 11,
+      "destWarpId": 2
+    }
+  ],
+  "npcs": [
+    {
+      "spriteId": 2,
+      "spriteName": "Blue",
+      "x": 4,
+      "y": 3,
+      "movement": "Stationary",
+      "facing": "Down",
+      "range": 0,
+      "textId": 1,
+      "isTrainer": false,
+      "trainerClass": "Rival1",
+      "trainerSet": 1
+    },
+    {
+      "spriteId": 61,
+      "spriteName": "PokeBall",
+      "x": 6,
+      "y": 3,
+      "movement": "Stationary",
+      "facing": "Down",
+      "range": 0,
+      "textId": 2,
+      "isTrainer": false
+    },
+    {
+      "spriteId": 61,
+      "spriteName": "PokeBall",
+      "x": 7,
+      "y": 3,
+      "movement": "Stationary",
+      "facing": "Down",
+      "range": 0,
+      "textId": 3,
+      "isTrainer": false
+    },
+    {
+      "spriteId": 61,
+      "spriteName": "PokeBall",
+      "x": 8,
+      "y": 3,
+      "movement": "Stationary",
+      "facing": "Down",
+      "range": 0,
+      "textId": 4,
+      "isTrainer": false
+    },
+    {
+      "spriteId": 3,
+      "spriteName": "Oak",
+      "x": 5,
+      "y": 2,
+      "movement": "Stationary",
+      "facing": "Down",
+      "range": 0,
+      "textId": 5,
+      "isTrainer": false
+    },
+    {
+      "spriteId": 65,
+      "spriteName": "Pokedex",
+      "x": 2,
+      "y": 1,
+      "movement": "Stationary",
+      "facing": "Down",
+      "range": 0,
+      "textId": 6,
+      "isTrainer": false
+    },
+    {
+      "spriteId": 65,
+      "spriteName": "Pokedex",
+      "x": 3,
+      "y": 1,
+      "movement": "Stationary",
+      "facing": "Down",
+      "range": 0,
+      "textId": 7,
+      "isTrainer": false
+    },
+    {
+      "spriteId": 3,
+      "spriteName": "Oak",
+      "x": 5,
+      "y": 10,
+      "movement": "Stationary",
+      "facing": "Up",
+      "range": 0,
+      "textId": 8,
+      "isTrainer": false
+    },
+    {
+      "spriteId": 13,
+      "spriteName": "Girl",
+      "x": 1,
+      "y": 9,
+      "movement": "Wander",
+      "facing": "Down",
+      "range": 1,
+      "textId": 9,
+      "isTrainer": false
+    },
+    {
+      "spriteId": 32,
+      "spriteName": "Scientist",
+      "x": 2,
+      "y": 10,
+      "movement": "Stationary",
+      "facing": "Down",
+      "range": 0,
+      "textId": 10,
+      "isTrainer": false
+    },
+    {
+      "spriteId": 32,
+      "spriteName": "Scientist",
+      "x": 8,
+      "y": 10,
+      "movement": "Stationary",
+      "facing": "Down",
+      "range": 0,
+      "textId": 11,
+      "isTrainer": false
+    }
+  ],
+  "signs": [],
+  "text": {
+    "npc": {
+      "1": [
+        {
+          "line1": "<RIVAL>: Yo",
+          "line2": "<PLAYER>! Gramps"
+        },
+        {
+          "line1": "isn't around!",
+          "line2": ""
+        }
+      ],
+      "1_BeforeChoose": [
+        {
+          "line1": "<RIVAL>: Heh, I",
+          "line2": "don't need to be"
+        },
+        {
+          "line1": "greedy like you!",
+          "line2": ""
+        },
+        {
+          "line1": "Go ahead and",
+          "line2": "choose, <PLAYER>!"
+        }
+      ],
+      "1_AfterChoose": [
+        {
+          "line1": "<RIVAL>: My",
+          "line2": "POKeMON looks a"
+        },
+        {
+          "line1": "lot stronger.",
+          "line2": ""
+        }
+      ],
+      "2": [
+        {
+          "line1": "Those are POKe",
+          "line2": "BALLs. They"
+        },
+        {
+          "line1": "contain POKeMON!",
+          "line2": ""
+        }
+      ],
+      "2_WantCharmander": [
+        {
+          "line1": "So! You want the",
+          "line2": "fire POKeMON,"
+        },
+        {
+          "line1": "CHARMANDER?",
+          "line2": ""
+        }
+      ],
+      "2_MonEnergetic": [
+        {
+          "line1": "This POKeMON is",
+          "line2": "really energetic!"
+        }
+      ],
+      "2_LastMon": [
+        {
+          "line1": "That's PROF.OAK's",
+          "line2": "last POKeMON!"
+        }
+      ],
+      "3": [
+        {
+          "line1": "Those are POKe",
+          "line2": "BALLs. They"
+        },
+        {
+          "line1": "contain POKeMON!",
+          "line2": ""
+        }
+      ],
+      "3_WantSquirtle": [
+        {
+          "line1": "So! You want the",
+          "line2": "water POKeMON,"
+        },
+        {
+          "line1": "SQUIRTLE?",
+          "line2": ""
+        }
+      ],
+      "3_MonEnergetic": [
+        {
+          "line1": "This POKeMON is",
+          "line2": "really energetic!"
+        }
+      ],
+      "3_LastMon": [
+        {
+          "line1": "That's PROF.OAK's",
+          "line2": "last POKeMON!"
+        }
+      ],
+      "4": [
+        {
+          "line1": "Those are POKe",
+          "line2": "BALLs. They"
+        },
+        {
+          "line1": "contain POKeMON!",
+          "line2": ""
+        }
+      ],
+      "4_WantBulbasaur": [
+        {
+          "line1": "So! You want the",
+          "line2": "plant POKeMON,"
+        },
+        {
+          "line1": "BULBASAUR?",
+          "line2": ""
+        }
+      ],
+      "4_MonEnergetic": [
+        {
+          "line1": "This POKeMON is",
+          "line2": "really energetic!"
+        }
+      ],
+      "4_LastMon": [
+        {
+          "line1": "That's PROF.OAK's",
+          "line2": "last POKeMON!"
+        }
+      ],
+      "5": [
+        {
+          "line1": "OAK: Now, <PLAYER>,",
+          "line2": "which POKeMON do"
+        },
+        {
+          "line1": "you want?",
+          "line2": ""
+        }
+      ],
+      "5_YourPokemonCanFight": [
+        {
+          "line1": "OAK: If a wild",
+          "line2": "POKeMON appears,"
+        },
+        {
+          "line1": "your POKeMON can",
+          "line2": "fight against it!"
+        }
+      ],
+      "5_RaiseYoungPokemon": [
+        {
+          "line1": "OAK: <PLAYER>,",
+          "line2": "raise your young"
+        },
+        {
+          "line1": "POKeMON by making",
+          "line2": "it fight!"
+        }
+      ],
+      "5_DeliverParcel": [
+        {
+          "line1": "OAK: Oh, <PLAYER>!",
+          "line2": ""
+        },
+        {
+          "line1": "How is my old",
+          "line2": "POKeMON?"
+        },
+        {
+          "line1": "Well, it seems to",
+          "line2": "like you a lot."
+        },
+        {
+          "line1": "You must be",
+          "line2": "talented as a"
+        },
+        {
+          "line1": "POKeMON trainer!",
+          "line2": ""
+        },
+        {
+          "line1": "What? You have",
+          "line2": "something for me?"
+        },
+        {
+          "line1": "<PLAYER> delivered",
+          "line2": "OAK's PARCEL."
+        }
+      ],
+      "5_ParcelThanks": [
+        {
+          "line1": "Ah! This is the",
+          "line2": "custom POKe BALL"
+        },
+        {
+          "line1": "I ordered!",
+          "line2": "Thank you!"
+        }
+      ],
+      "5_PokemonAroundTheWorld": [
+        {
+          "line1": "POKeMON around the",
+          "line2": "world wait for"
+        },
+        {
+          "line1": "you, <PLAYER>!",
+          "line2": ""
+        }
+      ],
+      "5_GivePokeballs": [
+        {
+          "line1": "OAK: You can't get",
+          "line2": "detailed data on"
+        },
+        {
+          "line1": "POKeMON by just",
+          "line2": "seeing them."
+        },
+        {
+          "line1": "You must catch",
+          "line2": "them! Use these"
+        },
+        {
+          "line1": "to capture wild",
+          "line2": "POKeMON."
+        },
+        {
+          "line1": "<PLAYER> got 5",
+          "line2": "POKe BALLs!"
+        }
+      ],
+      "5_PokeballsExplanation": [
+        {
+          "line1": "When a wild",
+          "line2": "POKeMON appears,"
+        },
+        {
+          "line1": "it's fair game.",
+          "line2": ""
+        },
+        {
+          "line1": "Just throw a POKe",
+          "line2": "BALL at it and try"
+        },
+        {
+          "line1": "to catch it!",
+          "line2": ""
+        },
+        {
+          "line1": "This won't always",
+          "line2": "work, though."
+        },
+        {
+          "line1": "A healthy POKeMON",
+          "line2": "could escape. You"
+        },
+        {
+          "line1": "have to be lucky!",
+          "line2": ""
+        }
+      ],
+      "5_ComeSeeMeSometimes": [
+        {
+          "line1": "OAK: Come see me",
+          "line2": "sometimes."
+        },
+        {
+          "line1": "I want to know how",
+          "line2": "your POKeDEX is"
+        },
+        {
+          "line1": "coming along.",
+          "line2": ""
+        }
+      ],
+      "5_HowIsYourPokedexComing": [
+        {
+          "line1": "OAK: Good to see",
+          "line2": "you! How is your"
+        },
+        {
+          "line1": "POKeDEX coming?",
+          "line2": "Here, let me take"
+        },
+        {
+          "line1": "a look!",
+          "line2": ""
+        }
+      ],
+      "6": [
+        {
+          "line1": "It's encyclopedia-",
+          "line2": "like, but the"
+        },
+        {
+          "line1": "pages are blank!",
+          "line2": ""
+        }
+      ],
+      "7": [
+        {
+          "line1": "It's encyclopedia-",
+          "line2": "like, but the"
+        },
+        {
+          "line1": "pages are blank!",
+          "line2": ""
+        }
+      ],
+      "8": [
+        {
+          "line1": "?",
+          "line2": ""
+        }
+      ],
+      "9": [
+        {
+          "line1": "PROF.OAK is the",
+          "line2": "authority on"
+        },
+        {
+          "line1": "POKeMON!",
+          "line2": ""
+        },
+        {
+          "line1": "Many POKeMON",
+          "line2": "trainers hold him"
+        },
+        {
+          "line1": "in high regard!",
+          "line2": ""
+        }
+      ],
+      "10": [
+        {
+          "line1": "I study POKeMON as",
+          "line2": "PROF.OAK's AIDE."
+        }
+      ],
+      "11": [
+        {
+          "line1": "I study POKeMON as",
+          "line2": "PROF.OAK's AIDE."
+        }
+      ],
+      "script_RivalFedUpWithWaiting": [
+        {
+          "line1": "<RIVAL>: Gramps!",
+          "line2": "I'm fed up with"
+        },
+        {
+          "line1": "waiting!",
+          "line2": ""
+        }
+      ],
+      "script_OakChooseMon": [
+        {
+          "line1": "OAK: <RIVAL>?",
+          "line2": "Let me think..."
+        },
+        {
+          "line1": "Oh, that's right,",
+          "line2": "I told you to"
+        },
+        {
+          "line1": "come! Just wait!",
+          "line2": ""
+        },
+        {
+          "line1": "Here, <PLAYER>!",
+          "line2": ""
+        },
+        {
+          "line1": "There are 3",
+          "line2": "POKeMON here!"
+        },
+        {
+          "line1": "Haha!",
+          "line2": ""
+        },
+        {
+          "line1": "They are inside",
+          "line2": "the POKe BALLs."
+        },
+        {
+          "line1": "When I was young,",
+          "line2": "I was a serious"
+        },
+        {
+          "line1": "POKeMON trainer!",
+          "line2": ""
+        },
+        {
+          "line1": "In my old age, I",
+          "line2": "have only 3 left,"
+        },
+        {
+          "line1": "but you can have",
+          "line2": "one! Choose!"
+        }
+      ],
+      "script_RivalWhatAboutMe": [
+        {
+          "line1": "<RIVAL>: Hey!",
+          "line2": "Gramps! What"
+        },
+        {
+          "line1": "about me?",
+          "line2": ""
+        }
+      ],
+      "script_OakBePatient": [
+        {
+          "line1": "OAK: Be patient!",
+          "line2": "<RIVAL>, you can"
+        },
+        {
+          "line1": "have one too!",
+          "line2": ""
+        }
+      ],
+      "script_OakDontGoAwayYet": [
+        {
+          "line1": "OAK: Hey! Don't go",
+          "line2": "away yet!"
+        }
+      ],
+      "script_RivalIllTakeThisOne": [
+        {
+          "line1": "<RIVAL>: I'll take",
+          "line2": "this one, then!"
+        }
+      ],
+      "script_RivalReceivedMon": [
+        {
+          "line1": "<RIVAL> received",
+          "line2": "a POKeMON!"
+        }
+      ],
+      "script_RivalIllTakeYouOn": [
+        {
+          "line1": "<RIVAL>: Wait",
+          "line2": "<PLAYER>!"
+        },
+        {
+          "line1": "Let's check out",
+          "line2": "our POKeMON!"
+        },
+        {
+          "line1": "Come on, I'll take",
+          "line2": "you on!"
+        }
+      ],
+      "script_RivalSmellYouLater": [
+        {
+          "line1": "<RIVAL>: Okay!",
+          "line2": "I'll make my"
+        },
+        {
+          "line1": "POKeMON fight to",
+          "line2": "toughen it up!"
+        },
+        {
+          "line1": "<PLAYER>! Gramps!",
+          "line2": "Smell you later!"
+        }
+      ],
+      "script_RivalIPickedTheWrongPokemon": [
+        {
+          "line1": "WHAT?",
+          "line2": "Unbelievable!"
+        },
+        {
+          "line1": "I picked the",
+          "line2": "wrong POKeMON!"
+        }
+      ],
+      "script_RivalAmIGreatOrWhat": [
+        {
+          "line1": "<RIVAL>: Yeah! Am",
+          "line2": "I great or what?"
+        }
+      ],
+      "script_RivalGramps": [
+        {
+          "line1": "<RIVAL>: Gramps!",
+          "line2": ""
+        }
+      ],
+      "script_RivalWhatDidYouCallMeFor": [
+        {
+          "line1": "<RIVAL>: What did",
+          "line2": "you call me for?"
+        }
+      ],
+      "script_OakIHaveARequest": [
+        {
+          "line1": "OAK: Oh right! I",
+          "line2": "have a request"
+        },
+        {
+          "line1": "of you two.",
+          "line2": ""
+        }
+      ],
+      "script_OakMyInventionPokedex": [
+        {
+          "line1": "On the desk there",
+          "line2": "is my invention,"
+        },
+        {
+          "line1": "POKeDEX!",
+          "line2": ""
+        },
+        {
+          "line1": "It automatically",
+          "line2": "records data on"
+        },
+        {
+          "line1": "POKeMON you've",
+          "line2": "seen or caught!"
+        },
+        {
+          "line1": "It's a hi-tech",
+          "line2": "encyclopedia!"
+        }
+      ],
+      "script_OakGotPokedex": [
+        {
+          "line1": "OAK: <PLAYER> and",
+          "line2": "<RIVAL>! Take"
+        },
+        {
+          "line1": "these with you!",
+          "line2": ""
+        },
+        {
+          "line1": "<PLAYER> got",
+          "line2": "POKeDEX from OAK!"
+        }
+      ],
+      "script_OakThatWasMyDream": [
+        {
+          "line1": "To make a complete",
+          "line2": "guide on all the"
+        },
+        {
+          "line1": "POKeMON in the",
+          "line2": "world..."
+        },
+        {
+          "line1": "That was my dream!",
+          "line2": ""
+        },
+        {
+          "line1": "But, I'm too old!",
+          "line2": "I can't do it!"
+        },
+        {
+          "line1": "So, I want you two",
+          "line2": "to fulfill my"
+        },
+        {
+          "line1": "dream for me!",
+          "line2": ""
+        },
+        {
+          "line1": "Get moving, you",
+          "line2": "two!"
+        },
+        {
+          "line1": "This is a great",
+          "line2": "undertaking in"
+        },
+        {
+          "line1": "POKeMON history!",
+          "line2": ""
+        }
+      ],
+      "script_RivalLeaveItAllToMe": [
+        {
+          "line1": "<RIVAL>: Alright",
+          "line2": "Gramps! Leave it"
+        },
+        {
+          "line1": "all to me!",
+          "line2": ""
+        },
+        {
+          "line1": "<PLAYER>, I hate to",
+          "line2": "say it, but I"
+        },
+        {
+          "line1": "don't need you!",
+          "line2": ""
+        },
+        {
+          "line1": "I know! I'll",
+          "line2": "borrow a TOWN MAP"
+        },
+        {
+          "line1": "from my sis!",
+          "line2": ""
+        },
+        {
+          "line1": "I'll tell her not",
+          "line2": "to lend you one,"
+        },
+        {
+          "line1": "<PLAYER>! Hahaha!",
+          "line2": ""
+        }
+      ]
+    }
+  },
+  "wild": null
+}

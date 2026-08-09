@@ -1,0 +1,9 @@
+{
+  "$schema": "../schemas/move.schema.json",
+  "id": "Confusion",
+  "effect": "ConfusionSideEffect",
+  "power": 50,
+  "type": "Psychic",
+  "accuracy": 100,
+  "pp": 25
+}

@@ -1,0 +1,68 @@
+{
+  "$schema": "../schemas/pokemon.schema.json",
+  "species": "Lapras",
+  "baseStats": {
+    "hp": 130,
+    "attack": 85,
+    "defense": 80,
+    "speed": 60,
+    "special": 95
+  },
+  "type1": "Water",
+  "type2": "Ice",
+  "catchRate": 45,
+  "baseExp": 219,
+  "growthRate": "Slow",
+  "initialMoves": [
+    "WaterGun",
+    "Growl",
+    "None",
+    "None"
+  ],
+  "tmHmFlags": [
+    224,
+    127,
+    232,
+    209,
+    131,
+    40,
+    50
+  ],
+  "pokedex": {
+    "category": "TRANSPORT",
+    "heightFeet": 8,
+    "heightInches": 2,
+    "weightDecipounds": 4850,
+    "flavorTextPages": [
+      "A #MON that\nhas been over-\nhunted almost to",
+      "extinction. It\ncan ferry people\nacross the water"
+    ]
+  },
+  "evolutions": [],
+  "learnset": [
+    {
+      "level": 16,
+      "moveId": "Sing"
+    },
+    {
+      "level": 20,
+      "moveId": "Mist"
+    },
+    {
+      "level": 25,
+      "moveId": "BodySlam"
+    },
+    {
+      "level": 31,
+      "moveId": "ConfuseRay"
+    },
+    {
+      "level": 38,
+      "moveId": "IceBeam"
+    },
+    {
+      "level": 46,
+      "moveId": "HydroPump"
+    }
+  ]
+}

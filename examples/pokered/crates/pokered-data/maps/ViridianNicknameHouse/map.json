@@ -1,0 +1,114 @@
+{
+  "$schema": "../../schemas/map.schema.json",
+  "id": 44,
+  "name": "ViridianNicknameHouse",
+  "header": {
+    "tileset": "House",
+    "music": "Cities1",
+    "connectionFlags": 0,
+    "width": 4,
+    "height": 4,
+    "borderBlock": 10
+  },
+  "connections": {},
+  "warps": [
+    {
+      "x": 2,
+      "y": 7,
+      "destWarpId": 3
+    },
+    {
+      "x": 3,
+      "y": 7,
+      "destWarpId": 3
+    }
+  ],
+  "npcs": [
+    {
+      "spriteId": 52,
+      "spriteName": "BaldingGuy",
+      "x": 5,
+      "y": 3,
+      "movement": "Stationary",
+      "facing": "Down",
+      "range": 0,
+      "textId": 1,
+      "isTrainer": false
+    },
+    {
+      "spriteId": 8,
+      "spriteName": "LittleGirl",
+      "x": 1,
+      "y": 4,
+      "movement": "Wander",
+      "facing": "Down",
+      "range": 1,
+      "textId": 2,
+      "isTrainer": false
+    },
+    {
+      "spriteId": 9,
+      "spriteName": "Bird",
+      "x": 5,
+      "y": 5,
+      "movement": "Wander",
+      "facing": "Left",
+      "range": 2,
+      "textId": 3,
+      "isTrainer": false
+    },
+    {
+      "spriteId": 66,
+      "spriteName": "Clipboard",
+      "x": 4,
+      "y": 0,
+      "movement": "Stationary",
+      "facing": "Down",
+      "range": 0,
+      "textId": 4,
+      "isTrainer": false
+    }
+  ],
+  "signs": [],
+  "text": {
+    "npc": {
+      "1": [
+        {
+          "line1": "Coming up with",
+          "line2": "nicknames is fun,"
+        },
+        {
+          "line1": "but hard.",
+          "line2": ""
+        },
+        {
+          "line1": "Simple names are",
+          "line2": "the easiest to"
+        },
+        {
+          "line1": "remember.",
+          "line2": ""
+        }
+      ],
+      "2": [
+        {
+          "line1": "My Daddy loves",
+          "line2": "POKeMON too."
+        }
+      ],
+      "3": [
+        {
+          "line1": "SPEARY: Tetweet!",
+          "line2": ""
+        }
+      ],
+      "4": [
+        {
+          "line1": "SPEAROW",
+          "line2": "Name: SPEARY"
+        }
+      ]
+    }
+  },
+  "wild": null
+}

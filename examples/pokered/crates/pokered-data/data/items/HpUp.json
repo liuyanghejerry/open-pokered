@@ -1,0 +1,1 @@
+{"id":"HpUp","name":"HP UP","price":9800,"category":"Medicine","effect":{"type":"Vitamin","params":{"statIdx":0,"amount":10}},"held_effect":null,"berry":null,"use_outside_battle":true,"use_in_battle":false,"consume":true,"key_item":false,"sellable":true,"description":"","tags":["vitamin","hp"]}

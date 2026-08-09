@@ -1,0 +1,35 @@
+// Route16Gate2F — translated from the original disassembly
+// (scripts/Route16Gate2F.asm, text/Route16Gate2F.asm) to the real Game DSL API
+// surface. This is a gate-upstairs map: two plain NPC dialogues and two
+// binocular signs that, per GateUpstairsScript_PrintIfFacingUp, only print
+// their text when the player is facing up.
+
+game_scene Route16Gate2F {
+  // ── Little Boy (npc 1) ──────────────────────────────────────────────────
+  @storyline("talkLittleBoy") {
+    @trigger(map = "Route16Gate2F", npc = 1)
+    @speaker("") { @t("I'm going for a ride with my\ngirl friend!", "我要和我的女朋友一起去骑车！") }
+  }
+
+  // ── Little Girl (npc 2) ─────────────────────────────────────────────────
+  @storyline("talkLittleGirl") {
+    @trigger(map = "Route16Gate2F", npc = 2)
+    @speaker("") { @t("We're going riding together!", "我们要一起骑车去！") }
+  }
+
+  // ── Left binoculars (sign 1) — only readable while facing up ─────────────
+  @storyline("leftBinoculars") {
+    @trigger(map = "Route16Gate2F", sign = 1)
+    @if (getPlayerFacing() == "up") {
+      @speaker("") { @t("Looked into the binoculars.\n\nIt's CELADON DEPT. STORE!", "用望远镜看了看。\n\n是彩虹市的百货公司！") }
+    }
+  }
+
+  // ── Right binoculars (sign 2) — only readable while facing up ────────────
+  @storyline("rightBinoculars") {
+    @trigger(map = "Route16Gate2F", sign = 2)
+    @if (getPlayerFacing() == "up") {
+      @speaker("") { @t("Looked into the binoculars.\n\nThere's a long path over\nwater!", "用望远镜看了看。\n\n水面上有一条长长的道路！") }
+    }
+  }
+}

@@ -1,0 +1,36 @@
+// LavenderMart — translated from the original disassembly (scripts/LavenderMart.asm,
+// text/LavenderMart.asm, data/items/marts.asm) to the real Game DSL API surface.
+// A standard PoKeMart: the clerk opens the shop (openShop with the Lavender
+// inventory); two flavor NPCs, one of whom branches on EVENT_RESCUED_MR_FUJI.
+
+game_scene LavenderMart {
+  // ── Clerk (npc 1) — standard PoKeMart shop ─────────────────────────────
+  @storyline("talkClerk") {
+    @trigger(map = "LavenderMart", npc = 1)
+    openShop(["GREAT_BALL", "SUPER_POTION", "REVIVE", "ESCAPE_ROPE", "SUPER_REPEL", "ANTIDOTE", "BURN_HEAL", "ICE_HEAL", "PARLYZ_HEAL"])
+  }
+
+  // ── Balding guy (npc 2) — flavor dialogue ──────────────────────────────
+  @storyline("talkBaldingGuy") {
+    @trigger(map = "LavenderMart", npc = 2)
+    @speaker("") {
+      @t("I'm searching for items that\nraise the abilities of\nPOKeMON during a single\nbattle.\n\nX ATTACK, X DEFEND, X SPEED\nand X SPECIAL are what I'm\nafter.\n\nDo you know where I can get\nthem?", "我在寻找能提升宝可梦能力的道\n具，在单场战斗中起效的那种。\n\n力量强化、防御强化、速度强化\n和特防强化是我要找的。\n\n你知道哪里能买到吗？")
+    }
+  }
+
+  // ── Cooltrainer M (npc 3) — branches on EVENT_RESCUED_MR_FUJI ───────────
+  // Original: CheckEvent EVENT_RESCUED_MR_FUJI; jr nz, .Nugget
+  //   flag set  -> NUGGET text; flag clear -> REVIVE text.
+  @storyline("talkCooltrainerM") {
+    @trigger(map = "LavenderMart", npc = 3)
+    @if (getFlag("EVENT_RESCUED_MR_FUJI")) {
+      @speaker("") {
+        @t("I found a NUGGET in the\nmountains.\n\nI thought it was useless,\nbut it sold for ¥5000!", "我在山里找到了金珠。\n\n我原以为它没什么用，结果卖了\n¥5000！")
+      }
+    } @else {
+      @speaker("") {
+        @t("You know REVIVE? It revives\nany fainted POKeMON!", "你知道活力碎片吗？它能让昏倒\n的宝可梦复活！")
+      }
+    }
+  }
+}

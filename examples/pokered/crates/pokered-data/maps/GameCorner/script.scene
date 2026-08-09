@@ -1,0 +1,216 @@
+// GameCorner (ROCKET GAME CORNER) — translated from the original disassembly
+// (scripts/GameCorner.asm, text/GameCorner.asm) to the real Game DSL API surface.
+//
+// Slot machines are playable via openSlots() (Beauty 2), and the coin balance
+// settles through getCoins/giveCoins/takeCoins: Clerk 1's ¥1000-for-50 exchange
+// counter and the one-time coin gifts (Fishing Guru 10 / Clerk 2 20 / Gentleman
+// 20) all credit/deduct real coins. The poster "switch" tile-swap that opens the
+// stairs down to the Rocket Hideout is wired via replaceTileBlock (open=67 at
+// block 8,2). The Rocket who guards the poster is a talk-driven scripted battle
+// (map.json isTrainer = false): the script owns OPP_ROCKET8 and, on a win, makes
+// him flee (hideObject) just as the original walk-away movement does.
+
+game_scene GameCorner {
+  // ── Beauty 1 (npc 1) ────────────────────────────────────────────────────
+  @storyline("talkBeauty1") {
+    @trigger(map = "GameCorner", npc = 1)
+    @speaker("") {
+      @t("Welcome!\n\nYou can exchange your coins\nfor fabulous prizes next\ndoor.", "欢迎光临！\n\n你可以用代币在隔壁换取精美的\n奖品。")
+    }
+  }
+
+  // ── Clerk 1 (npc 2) — coin exchange counter ─────────────────────────────
+  // Original: buy 50 coins for ¥1000 (needs COIN CASE, room, money). Now fully
+  // wired via the coin balance API: ¥1000 is deducted and 50 coins credited.
+  // The coin-case-full guard prevents paying ¥1000 for fewer than 50 coins at
+  // the 9999 cap (the coins credit would otherwise saturate).
+  @storyline("talkClerk1") {
+    @trigger(map = "GameCorner", npc = 2)
+    @speaker("") {
+      @t("Welcome to ROCKET GAME\nCORNER!\n\nDo you need some game coins?\n\nIt's ¥1000 for 50 coins.\nWould you like some?", "欢迎来到火箭游戏中心！\n\n你需要一些游戏代币吗？\n\n1000日元换 50枚代币，想要\n吗？")
+    }
+    @choice {
+      @option(@t("YES", "是")) {
+        @if (!hasItem("COIN_CASE")) {
+          @speaker("") { @t("You don't have a COIN CASE!", "你没有代币盒！") }
+        } @else @if (getCoins() > 9949) {
+          @speaker("") { @t("But your COIN CASE is full!", "但是你的代币盒满了！") }
+        } @else {
+          @if (hasMoney(1000)) {
+            takeMoney(1000)
+            giveCoins(50)
+            @speaker("") { @t("Thanks! Here are your 50\ncoins!", "谢谢！这是你的50枚代币！") }
+          } @else {
+            @speaker("") { @t("You can't afford the coins!", "你买不起这些代币！") }
+          }
+        }
+      }
+      @option(@t("NO", "否")) {
+        @speaker("") { @t("No? Please come play\nsometime!", "不要吗？那下次再来玩吧！") }
+      }
+    }
+  }
+
+  // ── Middle-aged man (npc 3) ─────────────────────────────────────────────
+  @storyline("talkMiddleAgedMan1") {
+    @trigger(map = "GameCorner", npc = 3)
+    @speaker("") {
+      @t("Keep this quiet.\n\nIt's rumored that this place\nis run by TEAM ROCKET.", "别声张。\n\n有传言说这里是由火箭队经营\n的。")
+    }
+  }
+
+  // ── Beauty 2 (npc 4) — tends the slot machines ──────────────────────────
+  // Original flavor line, now also the entry point to the playable slot
+  // machine minigame. Gated on the COIN CASE (as the coin-buying counter is).
+  @storyline("talkBeauty2") {
+    @trigger(map = "GameCorner", npc = 4)
+    @speaker("") {
+      @t("I think these machines have\ndifferent odds.", "我觉得这些机器的中奖概率不一\n样。")
+    }
+    @if (!hasItem("COIN_CASE")) {
+      @speaker("") { @t("You need a COIN CASE to\nplay!", "你需要代币盒才能玩！") }
+    } @else {
+      @speaker("") { @t("Want to try your luck?", "想试试你的运气吗？") }
+      @choice {
+        @option(@t("PLAY", "开始")) {
+          openSlots()
+        }
+        @option(@t("QUIT", "退出")) {
+          @speaker("") { @t("Come back anytime!", "随时再来玩！") }
+        }
+      }
+    }
+  }
+
+  // ── Fishing Guru (npc 5) — one-time gift of 10 coins ────────────────────
+  @storyline("talkFishingGuru") {
+    @trigger(map = "GameCorner", npc = 5)
+    @if (getFlag("EVENT_GOT_10_COINS")) {
+      @speaker("") { @t("Wins seem to come and go.", "输赢就像潮起潮落。") }
+    } @else {
+      @speaker("") { @t("Kid, do you want to play?", "小朋友，想玩一玩吗？") }
+      @if (!hasItem("COIN_CASE")) {
+        @speaker("") { @t("Oops! Forgot the COIN CASE!", "哎呀！忘记带代币盒了！") }
+      } @else {
+        giveCoins(10)
+        setFlag("EVENT_GOT_10_COINS")
+        @speaker("") { @t("<PLAYER> received 10 coins!", "<PLAYER>获得了 10枚代币！") }
+      }
+    }
+  }
+
+  // ── Middle-aged woman (npc 6) ───────────────────────────────────────────
+  @storyline("talkMiddleAgedWoman") {
+    @trigger(map = "GameCorner", npc = 6)
+    @speaker("") {
+      @t("I'm having a wonderful time!", "我玩得很开心！")
+    }
+  }
+
+  // ── Gym Guide (npc 7) — branches on whether ERIKA is beaten ─────────────
+  @storyline("talkGymGuide") {
+    @trigger(map = "GameCorner", npc = 7)
+    @if (getFlag("EVENT_BEAT_ERIKA")) {
+      @speaker("") {
+        @t("They offer rare POKeMON that\ncan be exchanged for your\ncoins.\n\nBut, I just can't seem to\nwin!", "他们用你的代币可以换取稀有的\n宝可梦。\n\n但是我就是赢不了！")
+      }
+    } @else {
+      @speaker("") {
+        @t("Hey!\n\nYou have better things to\ndo, champ in making!\n\nCELADON GYM's LEADER is\nERIKA! She uses grass- type\nPOKeMON!\n\nShe might appear docile, but\ndon't be fooled!", "嘿！\n\n你有更重要的事要做，未来的冠\n军！\n\n彩虹道馆的馆主是莉佳！她用草\n属性宝可梦！\n\n她看起来温顺，但别上当！")
+      }
+    }
+  }
+
+  // ── Gambler (npc 8) ─────────────────────────────────────────────────────
+  @storyline("talkGambler") {
+    @trigger(map = "GameCorner", npc = 8)
+    @speaker("") {
+      @t("Games are scary! It's so\neasy to get hooked!", "游戏真可怕！很容易就上瘾了！")
+    }
+  }
+
+  // ── Clerk 2 (npc 9) — one-time gift of 20 coins ─────────────────────────
+  @storyline("talkClerk2") {
+    @trigger(map = "GameCorner", npc = 9)
+    @if (getFlag("EVENT_GOT_20_COINS_2")) {
+      @speaker("") { @t("Darn! I need more coins for\nthe POKeMON I want!", "该死！我还需要更多代币来换取\n想要的宝可梦！") }
+    } @else {
+      @speaker("") { @t("What's up? Want some coins?", "怎么了？想要些代币吗？") }
+      @if (!hasItem("COIN_CASE")) {
+        @speaker("") { @t("Oops! Forgot the COIN CASE!", "哎呀！忘记带代币盒了！") }
+      } @else {
+        giveCoins(20)
+        setFlag("EVENT_GOT_20_COINS_2")
+        @speaker("") { @t("<PLAYER> received 20 coins!", "<PLAYER>获得了 20枚代币！") }
+      }
+    }
+  }
+
+  // ── Gentleman (npc 10) — one-time gift of 20 coins ──────────────────────
+  @storyline("talkGentleman") {
+    @trigger(map = "GameCorner", npc = 10)
+    @if (getFlag("EVENT_GOT_20_COINS")) {
+      @speaker("") { @t("The trick is to watch the\nreels closely!", "诀窍就是仔细观察转轮！") }
+    } @else {
+      @speaker("") {
+        @t("Hey, what? You're throwing\nme off! Here are some coins,\nshoo!", "喂，什么？你打扰到我了！这些\n代币给你，走开！")
+      }
+      @if (!hasItem("COIN_CASE")) {
+        @speaker("") { @t("Oops! Forgot the COIN CASE!", "哎呀！忘记带代币盒了！") }
+      } @else {
+        giveCoins(20)
+        setFlag("EVENT_GOT_20_COINS")
+        @speaker("") { @t("<PLAYER> received 20 coins!", "<PLAYER>获得了 20枚代币！") }
+      }
+    }
+  }
+
+  // ── Rocket grunt (npc 11) — talk-driven scripted battle (OPP_ROCKET8) ───
+  // Original: he taunts, EngageMapTrainer runs the fight, then on victory he
+  // walks off the poster and hides; talking again does nothing (object hidden).
+  @storyline("talkRocket") {
+    @trigger(map = "GameCorner", npc = 11, toggle = "GAME_CORNER_OBJ_11")
+    @if (getFlag("EVENT_BEAT_GAME_CORNER_ROCKET")) {
+      hideObjectByName("GAME_CORNER_OBJ_11")
+    } @else {
+      @speaker("") {
+        @t("I'm guarding this poster! Go\naway, or else!", "我在守着这张海报！走开，不然\n的话！")
+      }
+      result = startBattle("OPP_ROCKET8")
+      @if (result == "win") {
+        @speaker("") { @t("Dang!", "可恶！") }
+        setFlag("EVENT_BEAT_GAME_CORNER_ROCKET")
+        @speaker("") {
+          @t("Our hideout might be\ndiscovered! I better tell\nBOSS!", "我们的基地可能会被发现！我得\n去告诉老大！")
+        }
+        // Original walk-away movement then HideObject — approximate by hiding.
+        hideObjectByName("GAME_CORNER_OBJ_11")
+      }
+    }
+  }
+
+  // ── Poster (sign 1) — hidden switch to the Rocket Hideout ───────────────
+  // Original plays SFX, sets EVENT_FOUND_ROCKET_HIDEOUT, and ReplaceTileBlock
+  // swaps the poster block (open=$43=67) at asm `lb bc, 2, 8` (Y=2, X=8) to
+  // reveal the stairs down. API is X-first: replaceTileBlock(8, 2, 67).
+  @storyline("posterSign") {
+    @trigger(map = "GameCorner", sign = 1)
+    @speaker("") {
+      @t("Hey!\n\nA switch behind the poster!?\nLet's push it!", "嘿！\n\n海报后面有开关！？把它按下去\n吧！")
+    }
+    playSound("SFX_GO_INSIDE")
+    setFlag("EVENT_FOUND_ROCKET_HIDEOUT")
+    replaceTileBlock(8, 2, 67)
+  }
+
+  // ── On map entry: re-apply the opened stairs if the switch was found ─────
+  // Original GameCornerSetRocketHideoutDoorTile: if EVENT_FOUND_ROCKET_HIDEOUT
+  // is NOT set it forces the closed poster ($2a=42); the door never re-closes
+  // once found, so we only need to re-open it here from the flag. Coords are
+  // asm `lb bc, 2, 8` (Y=2, X=8) -> replaceTileBlock(8, 2, 67).
+  @load {
+    @if (getFlag("EVENT_FOUND_ROCKET_HIDEOUT")) {
+      replaceTileBlock(8, 2, 67)
+    }
+  }
+}

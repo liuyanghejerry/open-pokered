@@ -1,0 +1,62 @@
+// Museum2F — translated from the original disassembly (scripts/Museum2F.asm,
+// text/Museum2F.asm) to the real Game DSL API surface. This is a dialogue-only
+// map: the original Museum2F_Script just enables auto text boxes (no state
+// machine, no flags, no battles). Five NPCs and two signs, all plain text.
+
+game_scene Museum2F {
+  // ── Youngster (npc 1) ──────────────────────────────────────────────────
+  @storyline("talkYoungster") {
+    @trigger(map = "Museum2F", npc = 1)
+    @speaker("") {
+      @t("MOON STONE?\n\nWhat's so special about it?", "月之石？\n\n它有什么特别的？")
+    }
+  }
+
+  // ── Gramps (npc 2) ─────────────────────────────────────────────────────
+  @storyline("talkGramps") {
+    @trigger(map = "Museum2F", npc = 2)
+    @speaker("") {
+      @t("July 20, 1969!\n\nThe 1st lunar landing!\n\nI bought a color TV to watch\nit!", "1969年7月20日！\n\n人类首次登月！\n\n我买了台彩电看直播！")
+    }
+  }
+
+  // ── Scientist (npc 3) ──────────────────────────────────────────────────
+  @storyline("talkScientist") {
+    @trigger(map = "Museum2F", npc = 3)
+    @speaker("") {
+      @t("We have a space exhibit now.", "我们现在有太空展览！")
+    }
+  }
+
+  // ── Brunette Girl (npc 4) ──────────────────────────────────────────────
+  @storyline("talkBrunetteGirl") {
+    @trigger(map = "Museum2F", npc = 4)
+    @speaker("") {
+      @t("I want a PIKACHU! It's so\ncute!\n\nI asked my Daddy to catch me\none!", "我想要皮卡丘！它太可爱了！\n\n我求爸爸给我抓一只！")
+    }
+  }
+
+  // ── Hiker (npc 5) ──────────────────────────────────────────────────────
+  @storyline("talkHiker") {
+    @trigger(map = "Museum2F", npc = 5)
+    @speaker("") {
+      @t("Yeah, a PIKACHU soon, I\npromise!", "是啊，很快就给你抓皮卡丘！")
+    }
+  }
+
+  // ── Space Shuttle sign (sign 1) ────────────────────────────────────────
+  @storyline("spaceShuttleSign") {
+    @trigger(map = "Museum2F", sign = 1)
+    @speaker("") {
+      @t("SPACE SHUTTLE COLUMBIA", "航天飞机哥伦比亚号")
+    }
+  }
+
+  // ── Moon Stone sign (sign 2) ───────────────────────────────────────────
+  @storyline("moonStoneSign") {
+    @trigger(map = "Museum2F", sign = 2)
+    @speaker("") {
+      @t("Meteorite that fell on\nMT.MOON. (MOON STONE?)", "落在月见山的陨石。（月之\n石？）")
+    }
+  }
+}

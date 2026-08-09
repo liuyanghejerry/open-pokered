@@ -1,0 +1,106 @@
+{
+  "$schema": "../../schemas/map.schema.json",
+  "id": 67,
+  "name": "CeruleanMart",
+  "header": {
+    "tileset": "Mart",
+    "music": "Pokecenter",
+    "connectionFlags": 0,
+    "width": 4,
+    "height": 4,
+    "borderBlock": 0
+  },
+  "connections": {},
+  "warps": [
+    {
+      "x": 3,
+      "y": 7,
+      "destWarpId": 5
+    },
+    {
+      "x": 4,
+      "y": 7,
+      "destWarpId": 5
+    }
+  ],
+  "npcs": [
+    {
+      "spriteId": 38,
+      "spriteName": "Clerk",
+      "x": 0,
+      "y": 5,
+      "movement": "Stationary",
+      "facing": "Right",
+      "range": 0,
+      "textId": 1,
+      "isTrainer": false
+    },
+    {
+      "spriteId": 7,
+      "spriteName": "CooltrainerM",
+      "x": 3,
+      "y": 4,
+      "movement": "Wander",
+      "facing": "Down",
+      "range": 1,
+      "textId": 2,
+      "isTrainer": false
+    },
+    {
+      "spriteId": 6,
+      "spriteName": "CooltrainerF",
+      "x": 6,
+      "y": 2,
+      "movement": "Wander",
+      "facing": "Left",
+      "range": 2,
+      "textId": 3,
+      "isTrainer": false
+    }
+  ],
+  "signs": [],
+  "text": {
+    "npc": {
+      "1": [
+        {
+          "line1": "[Mart script]",
+          "line2": ""
+        }
+      ],
+      "2": [
+        {
+          "line1": "Use REPEL to keep",
+          "line2": "bugs and weak"
+        },
+        {
+          "line1": "#MON away.",
+          "line2": ""
+        },
+        {
+          "line1": "Put your strongest",
+          "line2": "#MON at the"
+        },
+        {
+          "line1": "top of the list",
+          "line2": "for best results!"
+        }
+      ],
+      "3": [
+        {
+          "line1": "Have you seen any",
+          "line2": "RARE CANDY?"
+        },
+        {
+          "line1": "It's supposed to",
+          "line2": "make #MON go"
+        },
+        {
+          "line1": "up one level!",
+          "line2": ""
+        }
+      ]
+    },
+    "sign": {}
+  },
+  "wild": null
+}

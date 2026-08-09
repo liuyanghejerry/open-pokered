@@ -1,0 +1,9 @@
+{
+  "$schema": "../schemas/move.schema.json",
+  "id": "RazorWind",
+  "effect": "ChargeEffect",
+  "power": 80,
+  "type": "Normal",
+  "accuracy": 75,
+  "pp": 10
+}

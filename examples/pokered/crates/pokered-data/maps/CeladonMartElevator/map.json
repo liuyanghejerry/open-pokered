@@ -1,0 +1,38 @@
+{
+  "$schema": "../../schemas/map.schema.json",
+  "id": 127,
+  "name": "CeladonMartElevator",
+  "header": {
+    "tileset": "Lobby",
+    "music": "Pokecenter",
+    "connectionFlags": 0,
+    "width": 2,
+    "height": 2,
+    "borderBlock": 15
+  },
+  "connections": {},
+  "warps": [
+    {
+      "x": 1,
+      "y": 3,
+      "destMap": "CeladonMart1F",
+      "destWarpId": 5
+    },
+    {
+      "x": 2,
+      "y": 3,
+      "destMap": "CeladonMart1F",
+      "destWarpId": 5
+    }
+  ],
+  "npcs": [],
+  "signs": [
+    {
+      "x": 3,
+      "y": 0,
+      "textId": 1
+    }
+  ],
+  "text": {},
+  "wild": null
+}

@@ -1,0 +1,55 @@
+// Refactored from LavenderPokecenter/script.js to jrpg-engine-dsl.
+// Follows the CeladonPokecenter pattern (Pokecenter nurse dialog
+// with @choice + @option). See docs/MIGRATION_NOTES.md §A.
+
+game_scene LavenderPokecenter {
+  @storyline("talkNurse") {
+    @trigger(map = "LavenderPokecenter", npc = 1)
+    @speaker("") {
+      @t("Welcome to the POKEMON\nCENTER!\n\nWe heal your POKEMON back to\nperfect health!\n\nShall we heal your POKEMON?", "欢迎光临宝可梦中心！\n\n我们会把你的宝可梦恢复到最佳\n状态！\n\n要为你治疗宝可梦吗？")
+    }
+    @choice {
+      @option(@t("Yes", "是")) {
+        @speaker("") {
+          @t("OK, we will need your\nPOKEMON.", "OK，请把你的宝可梦交给我。")
+        }
+        faceNpc("1", "right")
+        delay(8)
+        heal()
+        animateHealingMachine()
+        faceNpc("1", "down")
+        delay(8)
+        @speaker("") {
+          @t("Thank you for waiting.\n\nYour POKEMON are fully\nhealed!", "感谢您的耐心等待。\n\n你的宝可梦已完全治愈！")
+        }
+      }
+      @option(@t("No", "否")) {
+      }
+    }
+    @speaker("") {
+      @t("We hope to see you again!", "欢迎下次再来！")
+    }
+  }
+
+  @storyline("talkGentleman") {
+    @trigger(map = "LavenderPokecenter", npc = 2)
+    @speaker("") { @t("TEAM ROCKET will do anything\nfor the sake of gold!", "火箭队为了钱财什么都干得出\n来！") }
+  }
+
+  @storyline("talkLittleGirl") {
+    @trigger(map = "LavenderPokecenter", npc = 3)
+    @speaker("") { @t("I saw CUBONE's mother die\ntrying to escape from TEAM\nROCKET!", "我看到卡拉卡拉的母亲在试图逃\n离火箭队时死去了！") }
+  }
+
+  @storyline("talkLinkReceptionist") {
+    @trigger(map = "LavenderPokecenter", npc = 4)
+    @speaker("") { @t("Welcome to the CABLE CLUB!", "欢迎来到联机俱乐部！") }
+  }
+
+  // ── Pokémon Center PC (sign 1 at 13,3) ───────────────────────────────
+  // engine/menus/pc.asm ActivatePC: BILL's PC / item PC / PROF.OAK's PC.
+  @storyline("pcStorage") {
+    @trigger(map = "LavenderPokecenter", sign = 1)
+    openPC()
+  }
+}

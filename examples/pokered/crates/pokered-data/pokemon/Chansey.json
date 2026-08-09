@@ -1,0 +1,68 @@
+{
+  "$schema": "../schemas/pokemon.schema.json",
+  "species": "Chansey",
+  "baseStats": {
+    "hp": 250,
+    "attack": 5,
+    "defense": 5,
+    "speed": 50,
+    "special": 105
+  },
+  "type1": "Normal",
+  "type2": "Normal",
+  "catchRate": 30,
+  "baseExp": 255,
+  "growthRate": "Fast",
+  "initialMoves": [
+    "Pound",
+    "Doubleslap",
+    "None",
+    "None"
+  ],
+  "tmHmFlags": [
+    177,
+    127,
+    175,
+    241,
+    183,
+    57,
+    99
+  ],
+  "pokedex": {
+    "category": "EGG",
+    "heightFeet": 3,
+    "heightInches": 7,
+    "weightDecipounds": 760,
+    "flavorTextPages": [
+      "A rare and elusive\n#MON that is\nsaid to bring",
+      "happiness to those\nwho manage to get\nit"
+    ]
+  },
+  "evolutions": [],
+  "learnset": [
+    {
+      "level": 24,
+      "moveId": "Sing"
+    },
+    {
+      "level": 30,
+      "moveId": "Growl"
+    },
+    {
+      "level": 38,
+      "moveId": "Minimize"
+    },
+    {
+      "level": 44,
+      "moveId": "DefenseCurl"
+    },
+    {
+      "level": 48,
+      "moveId": "LightScreen"
+    },
+    {
+      "level": 54,
+      "moveId": "DoubleEdge"
+    }
+  ]
+}

@@ -1,0 +1,54 @@
+{
+  "$schema": "../../schemas/script_config.schema.json",
+  "coordEvents": [
+    {
+      "name": "cardKeyDoor1",
+      "position": [
+        10,
+        8
+      ],
+      "trigger": "cardKeyDoor"
+    },
+    {
+      "name": "cardKeyDoor2",
+      "position": [
+        10,
+        9
+      ],
+      "trigger": "cardKeyDoor"
+    }
+  ],
+  "npcs": [
+    {
+      "id": 1,
+      "talk": "talkRocket",
+      "toggleId": "SILPH_CO_10F_OBJ_1"
+    },
+    {
+      "id": 2,
+      "talk": "talkScientist",
+      "toggleId": "SILPH_CO_10F_OBJ_2"
+    },
+    {
+      "id": 3,
+      "talk": "talkSilphWorkerF"
+    },
+    {
+      "id": 4,
+      "talk": "itemTmEarthquake",
+      "toggleId": "SILPH_CO_10F_OBJ_4"
+    },
+    {
+      "id": 5,
+      "talk": "itemRareCandy",
+      "toggleId": "SILPH_CO_10F_OBJ_5"
+    },
+    {
+      "id": 6,
+      "talk": "itemCarbos",
+      "toggleId": "SILPH_CO_10F_OBJ_6"
+    }
+  ],
+  "onLoad": "SilphCo10FOnLoad",
+  "signs": []
+}

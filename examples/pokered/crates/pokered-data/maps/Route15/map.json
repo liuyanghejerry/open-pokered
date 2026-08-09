@@ -1,0 +1,574 @@
+{
+  "$schema": "../../schemas/map.schema.json",
+  "id": 26,
+  "name": "Route15",
+  "header": {
+    "tileset": "Overworld",
+    "music": "Routes4",
+    "connectionFlags": 3,
+    "width": 30,
+    "height": 9,
+    "borderBlock": 67
+  },
+  "connections": {
+    "west": {
+      "targetMap": "FuchsiaCity",
+      "offset": -4
+    },
+    "east": {
+      "targetMap": "Route14",
+      "offset": -18
+    }
+  },
+  "warps": [
+    {
+      "x": 7,
+      "y": 8,
+      "destMap": "Route15Gate1F",
+      "destWarpId": 0
+    },
+    {
+      "x": 7,
+      "y": 9,
+      "destMap": "Route15Gate1F",
+      "destWarpId": 1
+    },
+    {
+      "x": 14,
+      "y": 8,
+      "destMap": "Route15Gate1F",
+      "destWarpId": 2
+    },
+    {
+      "x": 14,
+      "y": 9,
+      "destMap": "Route15Gate1F",
+      "destWarpId": 3
+    }
+  ],
+  "npcs": [
+    {
+      "spriteId": 6,
+      "spriteName": "CooltrainerF",
+      "x": 41,
+      "y": 11,
+      "movement": "Stationary",
+      "facing": "Down",
+      "range": 2,
+      "textId": 1,
+      "isTrainer": true,
+      "trainerClass": "JrTrainerF",
+      "trainerSet": 20,
+      "endBattleText": "Not\ngood enough!"
+    },
+    {
+      "spriteId": 6,
+      "spriteName": "CooltrainerF",
+      "x": 53,
+      "y": 10,
+      "movement": "Stationary",
+      "facing": "Left",
+      "range": 2,
+      "textId": 2,
+      "isTrainer": true,
+      "trainerClass": "JrTrainerF",
+      "trainerSet": 21,
+      "endBattleText": "No,\nwrong!"
+    },
+    {
+      "spriteId": 7,
+      "spriteName": "CooltrainerM",
+      "x": 31,
+      "y": 13,
+      "movement": "Stationary",
+      "facing": "Up",
+      "range": 2,
+      "textId": 3,
+      "isTrainer": true,
+      "trainerClass": "BirdKeeper",
+      "trainerSet": 6,
+      "endBattleText": "Ow!\nThat's tragic!"
+    },
+    {
+      "spriteId": 7,
+      "spriteName": "CooltrainerM",
+      "x": 35,
+      "y": 13,
+      "movement": "Stationary",
+      "facing": "Up",
+      "range": 2,
+      "textId": 4,
+      "isTrainer": true,
+      "trainerClass": "BirdKeeper",
+      "trainerSet": 7,
+      "endBattleText": "Just\nas I thought!"
+    },
+    {
+      "spriteId": 15,
+      "spriteName": "Beauty",
+      "x": 53,
+      "y": 11,
+      "movement": "Stationary",
+      "facing": "Down",
+      "range": 2,
+      "textId": 5,
+      "isTrainer": true,
+      "trainerClass": "Beauty",
+      "trainerSet": 9,
+      "endBattleText": "You looked\nso cute too!"
+    },
+    {
+      "spriteId": 15,
+      "spriteName": "Beauty",
+      "x": 41,
+      "y": 10,
+      "movement": "Stationary",
+      "facing": "Right",
+      "range": 2,
+      "textId": 6,
+      "isTrainer": true,
+      "trainerClass": "Beauty",
+      "trainerSet": 10,
+      "endBattleText": "I didn't\nask for this!"
+    },
+    {
+      "spriteId": 18,
+      "spriteName": "Biker",
+      "x": 48,
+      "y": 10,
+      "movement": "Stationary",
+      "facing": "Down",
+      "range": 2,
+      "textId": 7,
+      "isTrainer": true,
+      "trainerClass": "Biker",
+      "trainerSet": 3,
+      "endBattleText": "Why\nnot?"
+    },
+    {
+      "spriteId": 18,
+      "spriteName": "Biker",
+      "x": 46,
+      "y": 10,
+      "movement": "Stationary",
+      "facing": "Down",
+      "range": 2,
+      "textId": 8,
+      "isTrainer": true,
+      "trainerClass": "Biker",
+      "trainerSet": 4,
+      "endBattleText": "That\ncan't be true!"
+    },
+    {
+      "spriteId": 6,
+      "spriteName": "CooltrainerF",
+      "x": 37,
+      "y": 5,
+      "movement": "Stationary",
+      "facing": "Right",
+      "range": 2,
+      "textId": 9,
+      "isTrainer": true,
+      "trainerClass": "JrTrainerF",
+      "trainerSet": 22,
+      "endBattleText": "I\nsaid trade!"
+    },
+    {
+      "spriteId": 6,
+      "spriteName": "CooltrainerF",
+      "x": 18,
+      "y": 13,
+      "movement": "Stationary",
+      "facing": "Up",
+      "range": 2,
+      "textId": 10,
+      "isTrainer": true,
+      "trainerClass": "JrTrainerF",
+      "trainerSet": 23,
+      "endBattleText": "I was\ntoo impatient!"
+    },
+    {
+      "spriteId": 61,
+      "spriteName": "PokeBall",
+      "x": 18,
+      "y": 5,
+      "movement": "Stationary",
+      "facing": "Down",
+      "range": 0,
+      "textId": 11,
+      "isTrainer": false,
+      "itemId": 220
+    }
+  ],
+  "signs": [
+    {
+      "x": 39,
+      "y": 9,
+      "textId": 1
+    }
+  ],
+  "text": {
+    "npc": {
+      "1": [
+        {
+          "line1": "Let me try out the",
+          "line2": "#MON I just"
+        },
+        {
+          "line1": "got in a trade!",
+          "line2": ""
+        }
+      ],
+      "1_Defeated": [
+        {
+          "line1": "Not",
+          "line2": "good enough!"
+        }
+      ],
+      "1_AfterBattle": [
+        {
+          "line1": "You can't change",
+          "line2": "the nickname of"
+        },
+        {
+          "line1": "any #MON you",
+          "line2": ""
+        },
+        {
+          "line1": "get in a trade.",
+          "line2": ""
+        },
+        {
+          "line1": "",
+          "line2": ""
+        },
+        {
+          "line1": "Only the Original",
+          "line2": "Trainer can."
+        }
+      ],
+      "2": [
+        {
+          "line1": "You look gentle,",
+          "line2": "so I think I can"
+        },
+        {
+          "line1": "beat you!",
+          "line2": ""
+        }
+      ],
+      "2_Defeated": [
+        {
+          "line1": "No,",
+          "line2": "wrong!"
+        }
+      ],
+      "2_AfterBattle": [
+        {
+          "line1": "I'm afraid of",
+          "line2": "BIKERs, they look"
+        },
+        {
+          "line1": "so ugly and mean!",
+          "line2": ""
+        }
+      ],
+      "3": [
+        {
+          "line1": "When I whistle, I",
+          "line2": "can summon bird"
+        },
+        {
+          "line1": "#MON!",
+          "line2": ""
+        }
+      ],
+      "3_Defeated": [
+        {
+          "line1": "Ow!",
+          "line2": "That's tragic!"
+        }
+      ],
+      "3_AfterBattle": [
+        {
+          "line1": "Maybe I'm not cut",
+          "line2": "out for battles."
+        }
+      ],
+      "4": [
+        {
+          "line1": "Hmm? My birds are",
+          "line2": "shivering! You're"
+        },
+        {
+          "line1": "good, aren't you?",
+          "line2": ""
+        }
+      ],
+      "4_Defeated": [
+        {
+          "line1": "Just",
+          "line2": "as I thought!"
+        }
+      ],
+      "4_AfterBattle": [
+        {
+          "line1": "Did you know moves",
+          "line2": "like EARTHQUAKE"
+        },
+        {
+          "line1": "don't have any",
+          "line2": ""
+        },
+        {
+          "line1": "effect on birds?",
+          "line2": ""
+        }
+      ],
+      "5": [
+        {
+          "line1": "Oh, you're a",
+          "line2": "little cutie!"
+        }
+      ],
+      "5_Defeated": [
+        {
+          "line1": "You looked",
+          "line2": "so cute too!"
+        }
+      ],
+      "5_AfterBattle": [
+        {
+          "line1": "I forgive you!",
+          "line2": "I can take it!"
+        }
+      ],
+      "6": [
+        {
+          "line1": "I raise #MON",
+          "line2": "because I live"
+        },
+        {
+          "line1": "alone!",
+          "line2": ""
+        }
+      ],
+      "6_Defeated": [
+        {
+          "line1": "I didn't",
+          "line2": "ask for this!"
+        }
+      ],
+      "6_AfterBattle": [
+        {
+          "line1": "I just like going",
+          "line2": "home to be with"
+        },
+        {
+          "line1": "my #MON!",
+          "line2": ""
+        }
+      ],
+      "7": [
+        {
+          "line1": "Hey kid! C'mon!",
+          "line2": "I just got these!"
+        }
+      ],
+      "7_Defeated": [
+        {
+          "line1": "Why",
+          "line2": "not?"
+        }
+      ],
+      "7_AfterBattle": [
+        {
+          "line1": "You only live",
+          "line2": "once, so I live"
+        },
+        {
+          "line1": "as an outlaw!",
+          "line2": ""
+        },
+        {
+          "line1": "TEAM ROCKET RULES!",
+          "line2": ""
+        }
+      ],
+      "8": [
+        {
+          "line1": "Fork over all your",
+          "line2": "cash when you"
+        },
+        {
+          "line1": "lose to me, kid!",
+          "line2": ""
+        }
+      ],
+      "8_Defeated": [
+        {
+          "line1": "That",
+          "line2": "can't be true!"
+        }
+      ],
+      "8_AfterBattle": [
+        {
+          "line1": "I was just joking",
+          "line2": "about the money!"
+        }
+      ],
+      "9": [
+        {
+          "line1": "What's cool?",
+          "line2": "Trading #MON!"
+        }
+      ],
+      "9_Defeated": [
+        {
+          "line1": "I",
+          "line2": "said trade!"
+        }
+      ],
+      "9_AfterBattle": [
+        {
+          "line1": "I trade #MON",
+          "line2": "with my friends!"
+        }
+      ],
+      "10": [
+        {
+          "line1": "Want to play with",
+          "line2": "my #MON?"
+        }
+      ],
+      "10_Defeated": [
+        {
+          "line1": "I was",
+          "line2": "too impatient!"
+        }
+      ],
+      "10_AfterBattle": [
+        {
+          "line1": "I'll go train with",
+          "line2": "weaker people."
+        }
+      ]
+    },
+    "sign": {
+      "1": [
+        {
+          "line1": "ROUTE 15",
+          "line2": "West to FUCHSIA"
+        },
+        {
+          "line1": "CITY",
+          "line2": ""
+        }
+      ]
+    }
+  },
+  "wild": {
+    "red": {
+      "grass": {
+        "encounterRate": 15,
+        "mons": [
+          {
+            "level": 24,
+            "species": "Oddish"
+          },
+          {
+            "level": 26,
+            "species": "Ditto"
+          },
+          {
+            "level": 23,
+            "species": "Pidgey"
+          },
+          {
+            "level": 26,
+            "species": "Venonat"
+          },
+          {
+            "level": 22,
+            "species": "Oddish"
+          },
+          {
+            "level": 28,
+            "species": "Venonat"
+          },
+          {
+            "level": 26,
+            "species": "Oddish"
+          },
+          {
+            "level": 30,
+            "species": "Gloom"
+          },
+          {
+            "level": 28,
+            "species": "Pidgeotto"
+          },
+          {
+            "level": 30,
+            "species": "Pidgeotto"
+          }
+        ]
+      },
+      "water": {
+        "encounterRate": 0,
+        "mons": []
+      }
+    },
+    "blue": {
+      "grass": {
+        "encounterRate": 15,
+        "mons": [
+          {
+            "level": 24,
+            "species": "Bellsprout"
+          },
+          {
+            "level": 26,
+            "species": "Ditto"
+          },
+          {
+            "level": 23,
+            "species": "Pidgey"
+          },
+          {
+            "level": 26,
+            "species": "Venonat"
+          },
+          {
+            "level": 22,
+            "species": "Bellsprout"
+          },
+          {
+            "level": 28,
+            "species": "Venonat"
+          },
+          {
+            "level": 26,
+            "species": "Bellsprout"
+          },
+          {
+            "level": 30,
+            "species": "Weepinbell"
+          },
+          {
+            "level": 28,
+            "species": "Pidgeotto"
+          },
+          {
+            "level": 30,
+            "species": "Pidgeotto"
+          }
+        ]
+      },
+      "water": {
+        "encounterRate": 0,
+        "mons": []
+      }
+    }
+  }
+}

@@ -1,0 +1,23 @@
+// ViridianForestSouthGate — translated from the original disassembly
+// (scripts/ViridianForestSouthGate.asm, text/ViridianForestSouthGate.asm) to the
+// real Game DSL API surface. The original script only enables auto text box
+// drawing; the map is two NPCs with plain dialogue (no flags, battles, or
+// on-enter logic).
+
+game_scene ViridianForestSouthGate {
+  // ── Girl (npc 1) ───────────────────────────────────────────────────────
+  @storyline("talkGirl") {
+    @trigger(map = "ViridianForestSouthGate", npc = 1)
+    @speaker("") {
+      @t("Are you going to VIRIDIAN\nFOREST? Be careful, it's a\nnatural maze!", "你要去常青森林吗？小心点，那\n里是个天然的迷宫！")
+    }
+  }
+
+  // ── Little Girl (npc 2) ────────────────────────────────────────────────
+  @storyline("talkLittleGirl") {
+    @trigger(map = "ViridianForestSouthGate", npc = 2)
+    @speaker("") {
+      @t("RATTATA may be small, but\nits bite is wicked! Did you\nget one?", "小拉达个头虽小，咬人却厉害！\n你抓到了吗？")
+    }
+  }
+}

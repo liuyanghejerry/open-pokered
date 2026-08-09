@@ -1,0 +1,71 @@
+// BikeShop — translated from the original disassembly (scripts/BikeShop.asm,
+// text/BikeShop.asm) to the real Game DSL API surface. Item-gate / NPC-dialogue
+// map: the clerk swaps a BIKE_VOUCHER for a BICYCLE; the ¥1,000,000 "buy" path
+// is unaffordable by design, so it always falls through to "can't afford".
+
+game_scene BikeShop {
+  // ── Clerk (npc 1) — voucher exchange + unaffordable sale ────────────────
+  @storyline("talkBikeShopClerk") {
+    @trigger(map = "BikeShop", npc = 1)
+    @if (getFlag("EVENT_GOT_BICYCLE")) {
+      @speaker("") {
+        @t("How do you like your new\nBICYCLE?\n\nYou can take it on CYCLING\nROAD and in caves!", "你觉得新买的自行车怎么样？\n\n你可以骑着它去自行车道和洞窟\n里！")
+      }
+    } @else {
+      @if (hasItem("BIKE_VOUCHER")) {
+        @speaker("") {
+          @t("Oh, that's...\n\nA BIKE VOUCHER!\n\nOK! Here you go!", "哦，这是……\n\n自行车兑换券！\n\n好！给你！")
+        }
+        giveItem("BICYCLE", 1)
+        takeItem("BIKE_VOUCHER", 1)
+        setFlag("EVENT_GOT_BICYCLE")
+        @speaker("") {
+          @t("<PLAYER> exchanged the BIKE\nVOUCHER for a BICYCLE.", "<PLAYER>用自行车兑换券换到了\n一辆自行车。")
+        }
+      } @else {
+        @speaker("") {
+          @t("Hi! Welcome to our BIKE\nSHOP.\n\nHave we got just the BIKE\nfor you!", "你好！欢迎来到自行车店。\n\n我们正好有适合你的自行车！")
+        }
+        // BICYCLE sells for ¥1,000,000 — you can never afford it, so the
+        // original always prints "can't afford" before saying goodbye.
+        @speaker("") {
+          @t("It's a cool BIKE! Do you\nwant it?", "这自行车很酷吧！你想要吗？")
+        }
+        @choice {
+          @option(@t("YES", "是")) {
+            @speaker("") {
+              @t("Sorry! You can't afford it!", "抱歉！你买不起它！")
+            }
+          }
+          @option(@t("NO", "否")) {
+          }
+        }
+        @speaker("") {
+          @t("Come back again some time!", "欢迎下次再来！")
+        }
+      }
+    }
+  }
+
+  // ── Middle-aged woman (npc 2) — plain dialogue ──────────────────────────
+  @storyline("talkMiddleAgedWoman") {
+    @trigger(map = "BikeShop", npc = 2)
+    @speaker("") {
+      @t("A plain city BIKE is good\nenough for me!\n\nYou can't put a shopping\nbasket on an MTB!", "普通的城市自行车对我来说就足\n够了！\n\n山地车上可装不了购物篮！")
+    }
+  }
+
+  // ── Youngster (npc 3) — branches on having the bicycle ──────────────────
+  @storyline("talkYoungster") {
+    @trigger(map = "BikeShop", npc = 3)
+    @if (getFlag("EVENT_GOT_BICYCLE")) {
+      @speaker("") {
+        @t("Wow. Your BIKE is really\ncool!", "哇！你的自行车真酷！")
+      }
+    } @else {
+      @speaker("") {
+        @t("These BIKEs are cool, but\nthey're way expensive!", "这些自行车很酷，但是太贵了！")
+      }
+    }
+  }
+}

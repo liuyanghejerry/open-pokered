@@ -1,0 +1,23 @@
+screen BattleMove {
+  panel {
+    rect = {tx: 0, ty: 12, tw: 20, th: 6}
+    style = "default"
+  }
+  panel {
+    rect = {tx: 0, ty: 8, tw: 11, th: 5}
+    style = "default"
+  }
+  text(@t("TYPE/", "属性/")) {
+    rect = {tx: 1, ty: 9, tw: 9, th: 1}
+  }
+  text("PP") {
+    rect = {tx: 2, ty: 11, tw: 8, th: 1}
+  }
+  list {
+    rect = {tx: 6, ty: 13, tw: 13, th: 4}
+    source = "{moves}"
+    item_template = {height: 1, gap: 0}
+    cursor = {tile: 223, position: "left"}
+    max_visible = 4
+  }
+}

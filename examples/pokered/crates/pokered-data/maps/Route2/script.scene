@@ -1,0 +1,44 @@
+// Route2 — translated from the original disassembly (scripts/Route2.asm,
+// text/Route2.asm, data/maps/objects/Route2.asm) to the real Game DSL API.
+// Route2 has no trainers/cutscenes: it is two item-ball ground pickups
+// (MOON STONE, HP UP — both PickUpItemText in the original) plus two signs.
+
+game_scene Route2 {
+  // ── Ground item: MOON STONE (npc 1, PokeBall) ───────────────────────────
+  @storyline("itemMoonStone") {
+    @trigger(map = "Route2", npc = 1, toggle = "ROUTE_2_OBJ_1")
+    @if (getFlag("EVENT_GOT_MOON_STONE_ROUTE2")) {
+      @speaker("") { @t("The item ball is empty.", "精灵球里是空的。") }
+    } @else {
+      giveItem("MOON_STONE", 1)
+      setFlag("EVENT_GOT_MOON_STONE_ROUTE2")
+      hideObject("ROUTE_2_OBJ_1")
+      @speaker("") { @t("<PLAYER> found MOON_STONE!", "<PLAYER>找到了月之石！") }
+    }
+  }
+
+  // ── Ground item: HP UP (npc 2, PokeBall) ────────────────────────────────
+  @storyline("itemHpUp") {
+    @trigger(map = "Route2", npc = 2, toggle = "ROUTE_2_OBJ_2")
+    @if (getFlag("EVENT_GOT_HP_UP_ROUTE2")) {
+      @speaker("") { @t("The item ball is empty.", "精灵球里是空的。") }
+    } @else {
+      giveItem("HP_UP", 1)
+      setFlag("EVENT_GOT_HP_UP_ROUTE2")
+      hideObject("ROUTE_2_OBJ_2")
+      @speaker("") { @t("<PLAYER> found HP_UP!", "<PLAYER>找到了体力增强剂！") }
+    }
+  }
+
+  // ── Sign 1: Route 2 marker ──────────────────────────────────────────────
+  @storyline("sign1") {
+    @trigger(map = "Route2", sign = 1)
+    @speaker("") { @t("ROUTE 2 VIRIDIAN CITY -\nPEWTER CITY", "2号道路常青市 - 深灰市") }
+  }
+
+  // ── Sign 2: DIGLETT's CAVE ──────────────────────────────────────────────
+  @storyline("sign2") {
+    @trigger(map = "Route2", sign = 2)
+    @speaker("") { @t("DIGLETT's CAVE", "地鼠洞") }
+  }
+}

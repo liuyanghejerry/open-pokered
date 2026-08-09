@@ -1,0 +1,9 @@
+{
+  "$schema": "../schemas/move.schema.json",
+  "id": "ConfuseRay",
+  "effect": "ConfusionEffect",
+  "power": 0,
+  "type": "Ghost",
+  "accuracy": 100,
+  "pp": 10
+}

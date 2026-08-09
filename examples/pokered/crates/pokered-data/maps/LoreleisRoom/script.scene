@@ -1,0 +1,76 @@
+// LoreleisRoom — translated from the original disassembly (scripts/LoreleisRoom.asm,
+// text/LoreleisRoom.asm) to the real Game DSL API surface. Lorelei is the first
+// of the ELITE FOUR; like a gym leader she is talk-driven (map.json isTrainer =
+// false) so the script owns the battle and sets EVENT_BEAT_LORELEI(S_ROOM) on
+// victory. The ELITE FOUR award no badge.
+//
+// Exit gate (replaceTileBlock — wired): LoreleiShowOrHideExitBlock swaps the
+// exit staircase block at asm `lb bc, 0, 2` (Y=0, X=2 -> replaceTileBlock(2,0,id)):
+// CLOSED id $24=36 until EVENT_BEAT_LORELEIS_ROOM_TRAINER_0 is set, OPEN id $5=5
+// once Lorelei is beaten. Re-applied on @load from the flag and opened on victory.
+//
+// Stubbed mechanics: trying to leave early shows "Someone's voice: Don't run
+// away!" and shoves the player back — a single-step PAD_UP push-back wired via
+// coordEvents on the entrance tiles (4,10)/(5,10) + movePlayerRelative. The
+// exit warp tiles (4,11)/(5,11) are handled by the warp system; the (5,11)
+// tile is left passable, matching the original's coordIndex<3 check.
+
+game_scene LoreleisRoom {
+  // ── On entry: auto-walk the player up into the room ────────────────────
+  @load {
+    // LoreleiShowOrHideExitBlock (scripts/LoreleisRoom.asm:16-18): entering
+    // the first ELITE FOUR room marks the challenge as started
+    // (wElite4Flags BIT_STARTED_ELITE_4). IndigoPlateauLobby's @load checks
+    // this flag to reset the gauntlet when the player returns.
+    setFlag("EVENT_STARTED_ELITE_4")
+    @if (!getFlag("EVENT_AUTOWALKED_INTO_LORELEIS_ROOM")) {
+      setFlag("EVENT_AUTOWALKED_INTO_LORELEIS_ROOM")
+      // Original walks six tiles up from the entrance to face Lorelei.
+      movePlayerRelative([[0, -1], [0, -1], [0, -1], [0, -1], [0, -1], [0, -1]])
+    }
+    // Re-apply the exit-block state from the flag (block X=2, Y=0):
+    // open (5) once Lorelei is beaten, closed (36) otherwise.
+    @if (getFlag("EVENT_BEAT_LORELEIS_ROOM_TRAINER_0")) {
+      replaceTileBlock(2, 0, 5)
+    } @else {
+      replaceTileBlock(2, 0, 36)
+    }
+  }
+
+  // ── "Don't run away!" push-back (coord (4,10)/(5,10)) ──────────────────
+  // Original LoreleiEntranceCoords + StopPlayerFromLeaving: stepping back
+  // toward the exit before beating Lorelei shows the voice line and shoves
+  // the player up one tile (PAD_UP).
+  @storyline("coordDontRunAway") {
+    @trigger(map = "LoreleisRoom", name = "dontRunAway")
+    @speaker("") { @t("Someone's voice: Don't run\naway!", "有个声音：别想逃！") }
+    movePlayerRelative(["up"])
+  }
+
+  // ── Lorelei, first of the ELITE FOUR (npc 1) ───────────────────────────
+  @storyline("talkLorelei") {
+    @trigger(map = "LoreleisRoom", npc = 1)
+    @if (getFlag("EVENT_BEAT_LORELEIS_ROOM_TRAINER_0")) {
+      // Post-battle: Lorelei concedes and sends the player on.
+      @speaker("") {
+        @t("You're better than I\nthought! Go on ahead!\n\nYou only got a taste of\nPOKeMON LEAGUE power!", "你比我想的还要强！继续前进\n吧！\n\n你刚才只尝到了宝可梦联盟的实\n力！")
+      }
+    } @else {
+      @speaker("") {
+        @t("Welcome to POKeMON LEAGUE!\n\nI am LORELEI of the ELITE\nFOUR!\n\nNo one can best me when it\ncomes to icy POKeMON!\n\nFreezing moves are powerful!\n\nYour POKeMON will be at my\nmercy when they are frozen\nsolid!\n\nHahaha! Are you ready?", "欢迎来到宝可梦联盟！\n\n我是四天王之一的科拿！\n\n论冰系宝可梦的运用，没人能赢\n我！\n\n冰冻招式非常强大！\n\n你的宝可梦一旦被冻住就任由我\n宰割了！\n\n哈哈哈！准备好了吗？")
+      }
+      result = startBattle("OPP_LORELEI1")
+      @if (result == "win") {
+        @speaker("") {
+          @t("How dare you!", "竟敢如此放肆！")
+        }
+        @speaker("") {
+          @t("You're better than I\nthought! Go on ahead!\n\nYou only got a taste of\nPOKeMON LEAGUE power!", "你比我想的还要强！继续前进\n吧！\n\n你刚才只尝到了宝可梦联盟的实\n力！")
+        }
+        setFlag("EVENT_BEAT_LORELEIS_ROOM_TRAINER_0")
+        // Open the exit staircase to BrunosRoom (block X=2, Y=0 -> open id 5).
+        replaceTileBlock(2, 0, 5)
+      }
+    }
+  }
+}

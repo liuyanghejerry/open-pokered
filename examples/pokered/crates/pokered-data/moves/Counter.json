@@ -1,0 +1,9 @@
+{
+  "$schema": "../schemas/move.schema.json",
+  "id": "Counter",
+  "effect": "NoAdditionalEffect",
+  "power": 1,
+  "type": "Fighting",
+  "accuracy": 100,
+  "pp": 20
+}

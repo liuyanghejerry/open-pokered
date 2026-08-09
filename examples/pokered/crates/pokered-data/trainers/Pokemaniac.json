@@ -1,0 +1,95 @@
+{
+  "$schema": "../schemas/trainer.schema.json",
+  "class": "Pokemaniac",
+  "constName": "POKEMANIAC",
+  "parties": [
+    {
+      "pokemon": [
+        {
+          "level": 30,
+          "species": "Rhyhorn"
+        },
+        {
+          "level": 30,
+          "species": "Lickitung"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 20,
+          "species": "Cubone"
+        },
+        {
+          "level": 20,
+          "species": "Slowpoke"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 20,
+          "species": "Slowpoke"
+        },
+        {
+          "level": 20,
+          "species": "Slowpoke"
+        },
+        {
+          "level": 20,
+          "species": "Slowpoke"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 22,
+          "species": "Charmander"
+        },
+        {
+          "level": 22,
+          "species": "Cubone"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 25,
+          "species": "Slowpoke"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 40,
+          "species": "Charmeleon"
+        },
+        {
+          "level": 40,
+          "species": "Lapras"
+        },
+        {
+          "level": 40,
+          "species": "Lickitung"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 23,
+          "species": "Cubone"
+        },
+        {
+          "level": 23,
+          "species": "Slowpoke"
+        }
+      ]
+    }
+  ]
+}

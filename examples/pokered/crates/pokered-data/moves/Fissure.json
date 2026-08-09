@@ -1,0 +1,9 @@
+{
+  "$schema": "../schemas/move.schema.json",
+  "id": "Fissure",
+  "effect": "OhkoEffect",
+  "power": 1,
+  "type": "Ground",
+  "accuracy": 30,
+  "pp": 5
+}

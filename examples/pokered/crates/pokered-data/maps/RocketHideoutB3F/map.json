@@ -1,0 +1,85 @@
+{
+  "$schema": "../../schemas/map.schema.json",
+  "id": 201,
+  "name": "RocketHideoutB3F",
+  "header": {
+    "tileset": "Facility",
+    "music": "Dungeon1",
+    "connectionFlags": 0,
+    "width": 15,
+    "height": 14,
+    "borderBlock": 46
+  },
+  "connections": {},
+  "warps": [
+    {
+      "x": 25,
+      "y": 6,
+      "destMap": "RocketHideoutB2F",
+      "destWarpId": 1
+    },
+    {
+      "x": 19,
+      "y": 18,
+      "destMap": "RocketHideoutB4F",
+      "destWarpId": 0
+    }
+  ],
+  "npcs": [
+    {
+      "spriteId": 24,
+      "spriteName": "Rocket",
+      "x": 10,
+      "y": 22,
+      "movement": "Stationary",
+      "facing": "Right",
+      "range": 0,
+      "textId": 1,
+      "isTrainer": true,
+      "trainerClass": "Rocket",
+      "trainerSet": 14,
+      "endBattleText": "Oof!\nTaken down!"
+    },
+    {
+      "spriteId": 24,
+      "spriteName": "Rocket",
+      "x": 26,
+      "y": 12,
+      "movement": "Stationary",
+      "facing": "Up",
+      "range": 0,
+      "textId": 2,
+      "isTrainer": true,
+      "trainerClass": "Rocket",
+      "trainerSet": 15,
+      "endBattleText": "What?\nI lost? No!"
+    },
+    {
+      "spriteId": 61,
+      "spriteName": "PokeBall",
+      "x": 26,
+      "y": 17,
+      "movement": "Stationary",
+      "facing": "Down",
+      "range": 0,
+      "textId": 3,
+      "isTrainer": false,
+      "itemId": 210
+    },
+    {
+      "spriteId": 61,
+      "spriteName": "PokeBall",
+      "x": 20,
+      "y": 14,
+      "movement": "Stationary",
+      "facing": "Down",
+      "range": 0,
+      "textId": 4,
+      "isTrainer": false,
+      "itemId": 40
+    }
+  ],
+  "signs": [],
+  "text": {},
+  "wild": null
+}

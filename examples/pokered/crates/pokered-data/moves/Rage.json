@@ -1,0 +1,9 @@
+{
+  "$schema": "../schemas/move.schema.json",
+  "id": "Rage",
+  "effect": "RageEffect",
+  "power": 20,
+  "type": "Normal",
+  "accuracy": 100,
+  "pp": 20
+}

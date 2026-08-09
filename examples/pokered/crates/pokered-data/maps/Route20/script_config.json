@@ -1,0 +1,57 @@
+{
+  "$schema": "../../schemas/script_config.schema.json",
+  "coordEvents": [],
+  "npcs": [
+    {
+      "id": 1,
+      "talk": "talkSwimmer1"
+    },
+    {
+      "id": 2,
+      "talk": "talkSwimmer2"
+    },
+    {
+      "id": 3,
+      "talk": "talkSwimmer3"
+    },
+    {
+      "id": 4,
+      "talk": "talkSwimmer4"
+    },
+    {
+      "id": 5,
+      "talk": "talkSwimmer5"
+    },
+    {
+      "id": 6,
+      "talk": "talkSwimmer6"
+    },
+    {
+      "id": 7,
+      "talk": "talkCooltrainerM"
+    },
+    {
+      "id": 8,
+      "talk": "talkSwimmer7"
+    },
+    {
+      "id": 9,
+      "talk": "talkSwimmer8"
+    },
+    {
+      "id": 10,
+      "talk": "talkSwimmer9"
+    }
+  ],
+  "onLoad": "Route20OnLoad",
+  "signs": [
+    {
+      "id": 1,
+      "talk": "signSeafoamWest"
+    },
+    {
+      "id": 2,
+      "talk": "signSeafoamEast"
+    }
+  ]
+}

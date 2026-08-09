@@ -1,0 +1,36 @@
+// RedsHouse1F — translated from the original disassembly (scripts/RedsHouse1F.asm,
+// text/RedsHouse1F.asm) to the real Game DSL API surface. Mom (npc 1) branches on
+// EVENT_GOT_STARTER: pre-starter she gives the wake-up line; afterwards talking to
+// her heals the party. The TV (sign 1) branches on the player's facing direction.
+
+game_scene RedsHouse1F {
+  // ── Mom (npc 1) ────────────────────────────────────────────────────────
+  @storyline("talkMom") {
+    @trigger(map = "RedsHouse1F", npc = 1)
+    @if (!getFlag("EVENT_GOT_STARTER")) {
+      @speaker("") {
+        @t("MOM: Right. All boys leave\nhome some day. It said so on\nTV.\n\nPROF.OAK, next door, is\nlooking for you.", "妈妈：没错。男孩子总要离开家\n的。电视上是这么说的。\n\n隔壁的大木博士正在找你。")
+      }
+    } @else {
+      @speaker("") { @t("MOM: <PLAYER>! You should\ntake a quick rest.", "妈妈：<PLAYER>！你最好好好休\n息一下。") }
+      heal()
+      @speaker("") {
+        @t("MOM: Oh good! You and your\nPOKeMON are looking great!\nTake care now!", "妈妈：太好了！你和你的宝可梦\n都精神饱满！以后也要保重！")
+      }
+    }
+  }
+
+  // ── TV (sign 1) ────────────────────────────────────────────────────────
+  // The original prints the movie text only when the player faces UP (the TV's
+  // viewable side); from any other direction it's the wrong side.
+  @storyline("watchTV") {
+    @trigger(map = "RedsHouse1F", sign = 1)
+    @if (getPlayerFacing() == "up") {
+      @speaker("") {
+        @t("There's a movie on TV. Four\nboys are walking on railroad\ntracks.\n\nI better go too.", "电视上在播电影，四个男孩正走\n在铁轨上。\n\n我也该走了。")
+      }
+    } @else {
+      @speaker("") { @t("Oops, wrong side.", "哎呀，看错方向了。") }
+    }
+  }
+}

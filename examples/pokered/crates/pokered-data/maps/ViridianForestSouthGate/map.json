@@ -1,0 +1,88 @@
+{
+  "$schema": "../../schemas/map.schema.json",
+  "id": 50,
+  "name": "ViridianForestSouthGate",
+  "header": {
+    "tileset": "ForestGate",
+    "music": "Cities1",
+    "connectionFlags": 0,
+    "width": 5,
+    "height": 4,
+    "borderBlock": 10
+  },
+  "connections": {},
+  "warps": [
+    {
+      "x": 4,
+      "y": 0,
+      "destMap": "ViridianForest",
+      "destWarpId": 3
+    },
+    {
+      "x": 5,
+      "y": 0,
+      "destMap": "ViridianForest",
+      "destWarpId": 4
+    },
+    {
+      "x": 4,
+      "y": 7,
+      "destWarpId": 5
+    },
+    {
+      "x": 5,
+      "y": 7,
+      "destWarpId": 5
+    }
+  ],
+  "npcs": [
+    {
+      "spriteId": 13,
+      "spriteName": "Girl",
+      "x": 8,
+      "y": 4,
+      "movement": "Stationary",
+      "facing": "Left",
+      "range": 0,
+      "textId": 1,
+      "isTrainer": false
+    },
+    {
+      "spriteId": 8,
+      "spriteName": "LittleGirl",
+      "x": 2,
+      "y": 4,
+      "movement": "Wander",
+      "facing": "Down",
+      "range": 1,
+      "textId": 2,
+      "isTrainer": false
+    }
+  ],
+  "signs": [],
+  "text": {
+    "npc": {
+      "1": [
+        {
+          "line1": "Are you going to",
+          "line2": "VIRIDIAN FOREST?"
+        },
+        {
+          "line1": "Be careful, it's",
+          "line2": "a natural maze!"
+        }
+      ],
+      "2": [
+        {
+          "line1": "RATTATA may be",
+          "line2": "small, but its"
+        },
+        {
+          "line1": "bite is wicked!",
+          "line2": "Did you get one?"
+        }
+      ]
+    }
+  },
+  "wild": null
+}

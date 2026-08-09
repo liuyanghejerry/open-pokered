@@ -1,0 +1,166 @@
+{
+  "$schema": "../../schemas/map.schema.json",
+  "id": 135,
+  "name": "GameCorner",
+  "header": {
+    "tileset": "Lobby",
+    "music": "GameCorner",
+    "connectionFlags": 0,
+    "width": 10,
+    "height": 9,
+    "borderBlock": 15
+  },
+  "connections": {},
+  "warps": [
+    {
+      "x": 15,
+      "y": 17,
+      "destWarpId": 7
+    },
+    {
+      "x": 16,
+      "y": 17,
+      "destWarpId": 7
+    },
+    {
+      "x": 17,
+      "y": 4,
+      "destMap": "RocketHideoutB1F",
+      "destWarpId": 1
+    }
+  ],
+  "npcs": [
+    {
+      "spriteId": 15,
+      "spriteName": "Beauty",
+      "x": 2,
+      "y": 6,
+      "movement": "Stationary",
+      "facing": "Down",
+      "range": 0,
+      "textId": 1,
+      "isTrainer": false
+    },
+    {
+      "spriteId": 38,
+      "spriteName": "Clerk",
+      "x": 5,
+      "y": 6,
+      "movement": "Stationary",
+      "facing": "Down",
+      "range": 0,
+      "textId": 2,
+      "isTrainer": false
+    },
+    {
+      "spriteId": 10,
+      "spriteName": "MiddleAgedMan",
+      "x": 2,
+      "y": 10,
+      "movement": "Stationary",
+      "facing": "Left",
+      "range": 0,
+      "textId": 3,
+      "isTrainer": false
+    },
+    {
+      "spriteId": 15,
+      "spriteName": "Beauty",
+      "x": 2,
+      "y": 13,
+      "movement": "Stationary",
+      "facing": "Left",
+      "range": 0,
+      "textId": 4,
+      "isTrainer": false
+    },
+    {
+      "spriteId": 39,
+      "spriteName": "FishingGuru",
+      "x": 5,
+      "y": 11,
+      "movement": "Stationary",
+      "facing": "Right",
+      "range": 0,
+      "textId": 5,
+      "isTrainer": false
+    },
+    {
+      "spriteId": 28,
+      "spriteName": "MiddleAgedWoman",
+      "x": 8,
+      "y": 11,
+      "movement": "Stationary",
+      "facing": "Left",
+      "range": 0,
+      "textId": 6,
+      "isTrainer": false
+    },
+    {
+      "spriteId": 36,
+      "spriteName": "GymGuide",
+      "x": 8,
+      "y": 14,
+      "movement": "Stationary",
+      "facing": "Left",
+      "range": 0,
+      "textId": 7,
+      "isTrainer": false
+    },
+    {
+      "spriteId": 11,
+      "spriteName": "Gambler",
+      "x": 11,
+      "y": 15,
+      "movement": "Stationary",
+      "facing": "Right",
+      "range": 0,
+      "textId": 8,
+      "isTrainer": false
+    },
+    {
+      "spriteId": 38,
+      "spriteName": "Clerk",
+      "x": 14,
+      "y": 11,
+      "movement": "Stationary",
+      "facing": "Left",
+      "range": 0,
+      "textId": 9,
+      "isTrainer": false
+    },
+    {
+      "spriteId": 16,
+      "spriteName": "Gentleman",
+      "x": 17,
+      "y": 13,
+      "movement": "Stationary",
+      "facing": "Right",
+      "range": 0,
+      "textId": 10,
+      "isTrainer": false
+    },
+    {
+      "spriteId": 24,
+      "spriteName": "Rocket",
+      "x": 9,
+      "y": 5,
+      "movement": "Stationary",
+      "facing": "Up",
+      "range": 0,
+      "textId": 11,
+      "isTrainer": false,
+      "trainerClass": "Rocket",
+      "trainerSet": 7
+    }
+  ],
+  "signs": [
+    {
+      "x": 9,
+      "y": 4,
+      "textId": 1
+    }
+  ],
+  "text": {},
+  "wild": null
+}

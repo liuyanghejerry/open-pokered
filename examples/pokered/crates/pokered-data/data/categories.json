@@ -1,0 +1,16 @@
+[
+  {"id": "Items",         "label": "Items",         "icon_tile": 244, "color": "#4a9eff"},
+  {"id": "Medicine",      "label": "Medicine",      "icon_tile": 245, "color": "#ff6b6b"},
+  {"id": "Poké Balls",    "label": "Poké Balls",    "icon_tile": 246, "color": "#ffaa00"},
+  {"id": "TMs",           "label": "TMs",            "icon_tile": 247, "color": "#00cc66"},
+  {"id": "Berries",       "label": "Berries",        "icon_tile": 248, "color": "#cc66ff"},
+  {"id": "Battle",        "label": "Battle Items",   "icon_tile": 249, "color": "#ff4444"},
+  {"id": "Evolution",     "label": "Evolution",      "icon_tile": 250, "color": "#44ccff"},
+  {"id": "Key",           "label": "Key Items",      "icon_tile": 251, "color": "#aaaaaa"},
+  {"id": "Mega Stones",   "label": "Mega Stones",    "icon_tile": 252, "color": "#ff66cc"},
+  {"id": "Z-Crystals",    "label": "Z-Crystals",     "icon_tile": 253, "color": "#ff9933"},
+  {"id": "Mail",          "label": "Mail",            "icon_tile": 254, "color": "#ffcc00"},
+  {"id": "Held",          "label": "Held Items",     "icon_tile": 255, "color": "#8888ff"},
+  {"id": "Treasure",      "label": "Treasure",        "icon_tile": 240, "color": "#ffdd00"},
+  {"id": "Mints",         "label": "Mints",           "icon_tile": 241, "color": "#66ff66"}
+]

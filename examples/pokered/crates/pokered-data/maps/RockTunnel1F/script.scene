@@ -1,0 +1,83 @@
+// RockTunnel1F — translated from the original disassembly (scripts/RockTunnel1F.asm,
+// text/RockTunnel1F.asm) to the real Game DSL API surface. Every NPC here is a
+// sight-engaged trainer (map.json isTrainer = true), so the runtime drives the
+// battle; each talk handler is DIALOGUE ONLY, branching on the trainer's
+// EVENT_BEAT_ROCK_TUNNEL_1_TRAINER_N flag (taunt before, remark after).
+
+game_scene RockTunnel1F {
+  // ── Hiker 1 (npc 1) — trainer 0 ─────────────────────────────────────────
+  @storyline("talkHiker1") {
+    @trigger(map = "RockTunnel1F", npc = 1)
+    @if (getFlag("EVENT_BEAT_ROCK_TUNNEL_1_TRAINER_0")) {
+      @speaker("") { @t("Watch for ONIX! It can put\nthe squeeze on you!", "小心大岩蛇！它会把你们紧紧缠\n住！") }
+    } @else {
+      @speaker("") { @t("This tunnel goes a long way,\nkid!", "这条隧道很长，小子！") }
+    }
+  }
+
+  // ── Hiker 2 (npc 2) — trainer 1 ─────────────────────────────────────────
+  @storyline("talkHiker2") {
+    @trigger(map = "RockTunnel1F", npc = 2)
+    @if (getFlag("EVENT_BEAT_ROCK_TUNNEL_1_TRAINER_1")) {
+      @speaker("") { @t("That sleeping POKeMON on\nROUTE 12 forced me to take\nthis detour.", "12号道路上睡着的宝可梦逼得我\n只好绕道而行。") }
+    } @else {
+      @speaker("") { @t("Hmm. Maybe I'm lost in\nhere...", "嗯……我是不是在这里迷路\n了……") }
+    }
+  }
+
+  // ── Hiker 3 (npc 3) — trainer 2 ─────────────────────────────────────────
+  @storyline("talkHiker3") {
+    @trigger(map = "RockTunnel1F", npc = 3)
+    @if (getFlag("EVENT_BEAT_ROCK_TUNNEL_1_TRAINER_2")) {
+      @speaker("") { @t("You're talented enough to\nhike!", "你很有天分，够格来爬山！") }
+    } @else {
+      @speaker("") { @t("Outsiders like you need to\nshow me some respect!", "像你这样的外人，得对我尊重一\n点！") }
+    }
+  }
+
+  // ── Super Nerd / Pokemaniac (npc 4) — trainer 3 ─────────────────────────
+  @storyline("talkSuperNerd") {
+    @trigger(map = "RockTunnel1F", npc = 4)
+    @if (getFlag("EVENT_BEAT_ROCK_TUNNEL_1_TRAINER_3")) {
+      @speaker("") { @t("Oh well, I'll get a ZUBAT as\nI go!", "算了，我边走边抓超音蝠吧！") }
+    } @else {
+      @speaker("") { @t("POKeMON fight! Ready, go!", "宝可梦对战！准备，开始！") }
+    }
+  }
+
+  // ── Cooltrainer F 1 (npc 5) — trainer 4 ─────────────────────────────────
+  @storyline("talkCooltrainerF1") {
+    @trigger(map = "RockTunnel1F", npc = 5)
+    @if (getFlag("EVENT_BEAT_ROCK_TUNNEL_1_TRAINER_4")) {
+      @speaker("") { @t("I saw a MACHOP in this\ntunnel!", "我在这条隧道里见过腕力！") }
+    } @else {
+      @speaker("") { @t("Eek! Don't try anything\nfunny in the dark!", "呀！别在黑暗里搞什么小动作！") }
+    }
+  }
+
+  // ── Cooltrainer F 2 (npc 6) — trainer 5 ─────────────────────────────────
+  @storyline("talkCooltrainerF2") {
+    @trigger(map = "RockTunnel1F", npc = 6)
+    @if (getFlag("EVENT_BEAT_ROCK_TUNNEL_1_TRAINER_5")) {
+      @speaker("") { @t("You looked cute and\nharmless!", "你看上去很可爱又无害！") }
+    } @else {
+      @speaker("") { @t("I came this far for POKeMON!", "我为了宝可梦来到了这里！") }
+    }
+  }
+
+  // ── Cooltrainer F 3 (npc 7) — trainer 6 ─────────────────────────────────
+  @storyline("talkCooltrainerF3") {
+    @trigger(map = "RockTunnel1F", npc = 7)
+    @if (getFlag("EVENT_BEAT_ROCK_TUNNEL_1_TRAINER_6")) {
+      @speaker("") { @t("Whew! I'm all sweaty now!", "呼！我出了一身汗！") }
+    } @else {
+      @speaker("") { @t("You have POKeMON! Let's\nstart!", "你有宝可梦！开始吧！") }
+    }
+  }
+
+  // ── Sign (sign 1) ───────────────────────────────────────────────────────
+  @storyline("sign1") {
+    @trigger(map = "RockTunnel1F", sign = 1)
+    @speaker("") { @t("ROCK TUNNEL CERULEAN CITY -\nLAVENDER TOWN", "岩山隧道华蓝市 - 紫苑镇") }
+  }
+}

@@ -1,0 +1,240 @@
+{
+  "$schema": "../../schemas/map.schema.json",
+  "id": 34,
+  "name": "Route23",
+  "header": {
+    "tileset": "Plateau",
+    "music": "IndigoPlateau",
+    "connectionFlags": 12,
+    "width": 10,
+    "height": 72,
+    "borderBlock": 15
+  },
+  "connections": {
+    "north": {
+      "targetMap": "IndigoPlateau",
+      "offset": 0
+    },
+    "south": {
+      "targetMap": "Route22",
+      "offset": 0
+    }
+  },
+  "warps": [
+    {
+      "x": 7,
+      "y": 139,
+      "destMap": "Route22Gate",
+      "destWarpId": 2
+    },
+    {
+      "x": 8,
+      "y": 139,
+      "destMap": "Route22Gate",
+      "destWarpId": 3
+    },
+    {
+      "x": 4,
+      "y": 31,
+      "destMap": "VictoryRoad1F",
+      "destWarpId": 0
+    },
+    {
+      "x": 14,
+      "y": 31,
+      "destMap": "VictoryRoad2F",
+      "destWarpId": 1
+    }
+  ],
+  "npcs": [
+    {
+      "spriteId": 49,
+      "spriteName": "Guard",
+      "x": 4,
+      "y": 35,
+      "movement": "Stationary",
+      "facing": "Down",
+      "range": 0,
+      "textId": 1,
+      "isTrainer": false
+    },
+    {
+      "spriteId": 49,
+      "spriteName": "Guard",
+      "x": 10,
+      "y": 56,
+      "movement": "Stationary",
+      "facing": "Down",
+      "range": 0,
+      "textId": 2,
+      "isTrainer": false
+    },
+    {
+      "spriteId": 34,
+      "spriteName": "Swimmer",
+      "x": 8,
+      "y": 85,
+      "movement": "Stationary",
+      "facing": "Down",
+      "range": 0,
+      "textId": 3,
+      "isTrainer": false
+    },
+    {
+      "spriteId": 34,
+      "spriteName": "Swimmer",
+      "x": 11,
+      "y": 96,
+      "movement": "Stationary",
+      "facing": "Down",
+      "range": 0,
+      "textId": 4,
+      "isTrainer": false
+    },
+    {
+      "spriteId": 49,
+      "spriteName": "Guard",
+      "x": 12,
+      "y": 105,
+      "movement": "Stationary",
+      "facing": "Down",
+      "range": 0,
+      "textId": 5,
+      "isTrainer": false
+    },
+    {
+      "spriteId": 49,
+      "spriteName": "Guard",
+      "x": 8,
+      "y": 119,
+      "movement": "Stationary",
+      "facing": "Down",
+      "range": 0,
+      "textId": 6,
+      "isTrainer": false
+    },
+    {
+      "spriteId": 49,
+      "spriteName": "Guard",
+      "x": 8,
+      "y": 136,
+      "movement": "Stationary",
+      "facing": "Down",
+      "range": 0,
+      "textId": 7,
+      "isTrainer": false
+    }
+  ],
+  "signs": [
+    {
+      "x": 3,
+      "y": 33,
+      "textId": 1
+    }
+  ],
+  "text": {},
+  "wild": {
+    "red": {
+      "grass": {
+        "encounterRate": 10,
+        "mons": [
+          {
+            "level": 26,
+            "species": "Ekans"
+          },
+          {
+            "level": 33,
+            "species": "Ditto"
+          },
+          {
+            "level": 26,
+            "species": "Spearow"
+          },
+          {
+            "level": 38,
+            "species": "Fearow"
+          },
+          {
+            "level": 38,
+            "species": "Ditto"
+          },
+          {
+            "level": 38,
+            "species": "Fearow"
+          },
+          {
+            "level": 41,
+            "species": "Arbok"
+          },
+          {
+            "level": 43,
+            "species": "Ditto"
+          },
+          {
+            "level": 41,
+            "species": "Fearow"
+          },
+          {
+            "level": 43,
+            "species": "Fearow"
+          }
+        ]
+      },
+      "water": {
+        "encounterRate": 0,
+        "mons": []
+      }
+    },
+    "blue": {
+      "grass": {
+        "encounterRate": 10,
+        "mons": [
+          {
+            "level": 26,
+            "species": "Sandshrew"
+          },
+          {
+            "level": 33,
+            "species": "Ditto"
+          },
+          {
+            "level": 26,
+            "species": "Spearow"
+          },
+          {
+            "level": 38,
+            "species": "Fearow"
+          },
+          {
+            "level": 38,
+            "species": "Ditto"
+          },
+          {
+            "level": 38,
+            "species": "Fearow"
+          },
+          {
+            "level": 41,
+            "species": "Sandslash"
+          },
+          {
+            "level": 43,
+            "species": "Ditto"
+          },
+          {
+            "level": 41,
+            "species": "Fearow"
+          },
+          {
+            "level": 43,
+            "species": "Fearow"
+          }
+        ]
+      },
+      "water": {
+        "encounterRate": 0,
+        "mons": []
+      }
+    }
+  }
+}

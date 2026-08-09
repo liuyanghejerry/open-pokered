@@ -1,0 +1,12 @@
+{
+  "$schema": "../../schemas/script_config.schema.json",
+  "coordEvents": [],
+  "npcs": [],
+  "onLoad": "RedsHouse2FOnLoad",
+  "signs": [
+    {
+      "id": 1,
+      "talk": "bedroomPC"
+    }
+  ]
+}

@@ -1,0 +1,9 @@
+{
+  "$schema": "../schemas/move.schema.json",
+  "id": "DoubleEdge",
+  "effect": "RecoilEffect",
+  "power": 100,
+  "type": "Normal",
+  "accuracy": 100,
+  "pp": 15
+}

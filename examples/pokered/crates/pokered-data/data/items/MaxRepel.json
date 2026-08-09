@@ -1,0 +1,1 @@
+{"id":"MaxRepel","name":"MAX REPEL","price":700,"category":"Items","effect":{"type":"None","params":{}},"held_effect":null,"berry":null,"use_outside_battle":true,"use_in_battle":false,"consume":true,"key_item":false,"sellable":true,"description":"","tags":["field","repel"]}

@@ -1,0 +1,131 @@
+// PalletTown — Pallet Town map script, hand-refactored from script.js
+// to jrpg-engine-dsl.
+//
+// The original used helper functions (palletTownOakWalksToPlayer,
+// palletTownOakNotSafe, etc.) and member access (pos.x, pos.y from
+// game.getPlayerPosition()). The DSL has no member access on
+// variables, so Oak's walk-to-player uses the scalar getPlayerX() /
+// getPlayerY() accessors instead — this handles both north-exit
+// trigger tiles (10, 1) and (11, 1), matching the original
+// FindPathToPlayer predef.
+//
+// Written in first-class DSL (no @run): conditions are `@if (getFlag(...))`
+// and game actions are bare commands — both compile to `game.<api>(...)`.
+
+game_scene PalletTown {
+  @load {
+    @if (getFlag("EVENT_GOT_POKEBALLS_FROM_OAK")) {
+      setFlag("EVENT_PALLET_AFTER_GETTING_POKEBALLS")
+    }
+  }
+
+  @storyline("coordNorthExit") {
+    @trigger(map = "PalletTown", name = "northExit1")
+    @if (!getFlag("EVENT_FOLLOWED_OAK_INTO_LAB")) {
+      facePlayer("down")
+      playSound("SFX_STOP_ALL_MUSIC")
+      playMusic("MUSIC_MEET_PROF_OAK")
+      setJoyIgnore(0x04 | 0x08 | 0xF0)
+      setFlag("EVENT_OAK_APPEARED_IN_PALLET")
+    }
+    @if (!getFlag("EVENT_FOLLOWED_OAK_INTO_LAB")) {
+      // Inlined palletTownOakHeyWait + palletTownOakWalksToPlayer
+      // + palletTownOakNotSafe + palletTownPlayerFollowsOak
+      @say("") {
+        @t("OAK: Hey! Wait! Don't go\nout!", "大木博士：嘿！等等！别出去！")
+      }
+      delay(10)
+      facePlayer("down")
+      setJoyIgnore(0x0F | 0xF0)
+      showObject("PALLET_TOWN_OBJ_1")
+      delay(3)
+      // Oak spawns at (8, 5) and walks to the cell directly below the
+      // player (original: FindPathToPlayer predef). Inlined from
+      // palletTownOakWalksToPlayer.
+      moveNpcTo("PALLET_TOWN_OBJ_1", getPlayerX(), getPlayerY() + 1)
+      faceNpc("PALLET_TOWN_OBJ_1", "up")
+      setJoyIgnore(0x0F | 0xF0)
+      facePlayer("down")
+      setJoyIgnore(0x04 | 0x08 | 0xF0)
+      @say("") {
+        @t("OAK: It's unsafe! Wild\nPOKeMON live in tall grass!\nYou need your own POKeMON\nfor your protection. I know!\nHere, come with me!", "大木博士：外面很危险！野生的\n宝可梦生活在草丛中！你需要自\n己的宝可梦来保护自己。我知道\n了！来，跟我来！")
+      }
+      setJoyIgnore(0x0F | 0xF0)
+      // Inlined palletTownPlayerFollowsOak: hand off to the Rust
+      // followNpc state machine — Oak leads the player to the lab
+      // door at (12, 11), the player shadows Oak's trail.
+      followNpc("PALLET_TOWN_OBJ_1", 12, 11)
+      hideObject("PALLET_TOWN_OBJ_1")
+      setFlag("EVENT_FOLLOWED_OAK_INTO_LAB")
+      clearJoyIgnore()
+    }
+    // Inlined palletTownDaisy
+    @if (!getFlag("EVENT_DAISY_WALKING")) {
+      @if (getFlag("EVENT_GOT_TOWN_MAP") && getFlag("EVENT_ENTERED_BLUES_HOUSE")) {
+        setFlag("EVENT_DAISY_WALKING")
+        hideObject("PALLET_TOWN_OBJ_2")
+        showObject("PALLET_TOWN_OBJ_3")
+      }
+    }
+    @if (getFlag("EVENT_GOT_POKEBALLS_FROM_OAK")) {
+      setFlag("EVENT_PALLET_AFTER_GETTING_POKEBALLS_2")
+    }
+  }
+
+  @storyline("talkOak") {
+    @trigger(map = "PalletTown", npc = 1, toggle = "PALLET_TOWN_OBJ_1", script = "PALLETTOWN_OAK", hidden = true)
+    @if (!getFlag("OAK_WALKED_TO_PLAYER")) {
+      @speaker("") {
+        @t("OAK: Hey! Wait! Don't go\nout!", "大木博士：嘿！等等！别出去！")
+      }
+      delay(10)
+      facePlayer("down")
+    } @else {
+      @speaker("") {
+        @t("OAK: It's unsafe! Wild\nPOKeMON live in tall grass!\nYou need your own POKeMON\nfor your protection. I know!\nHere, come with me!", "大木博士：外面很危险！野生的\n宝可梦生活在草丛中！你需要自\n己的宝可梦来保护自己。我知道\n了！来，跟我来！")
+      }
+    }
+  }
+
+  @storyline("talkGirl") {
+    @trigger(map = "PalletTown", npc = 2)
+    @speaker("") {
+      @t("I'm raising POKeMON too!\nWhen they get strong, they\ncan protect me!", "我也在培育宝可梦！等它们变强\n了，就能保护我！")
+    }
+  }
+
+  @storyline("talkFisher") {
+    @trigger(map = "PalletTown", npc = 3)
+    @speaker("") {
+      @t("Technology is incredible!\nYou can now store and recall\nitems and POKeMON as data\nvia PC!", "科技真是了不起！现在你可以通\n过电脑把道具和宝可梦作为数据\n存取！")
+    }
+  }
+
+  @storyline("signOakLab") {
+    @trigger(map = "PalletTown", sign = 1)
+    @speaker("") {
+      @t("OAK POKeMON RESEARCH LAB", "大木宝可梦研究所")
+    }
+  }
+
+  @storyline("signPalletTown") {
+    @trigger(map = "PalletTown", sign = 2)
+    @speaker("") {
+      @t("PALLET TOWN Shades of your\njourney await!", "真新镇旅途从这里开始！")
+    }
+  }
+
+  @storyline("signPlayersHouse") {
+    @trigger(map = "PalletTown", sign = 3)
+    @speaker("") {
+      @t("<PLAYER>'s house", "<PLAYER>的家")
+    }
+  }
+
+  @storyline("signRivalsHouse") {
+    @trigger(map = "PalletTown", sign = 4)
+    @speaker("") {
+      @t("<RIVAL>'s house", "<RIVAL>的家")
+    }
+  }
+}

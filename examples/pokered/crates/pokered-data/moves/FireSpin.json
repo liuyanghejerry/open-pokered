@@ -1,0 +1,9 @@
+{
+  "$schema": "../schemas/move.schema.json",
+  "id": "FireSpin",
+  "effect": "TrappingEffect",
+  "power": 15,
+  "type": "Fire",
+  "accuracy": 70,
+  "pp": 15
+}

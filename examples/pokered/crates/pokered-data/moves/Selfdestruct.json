@@ -1,0 +1,9 @@
+{
+  "$schema": "../schemas/move.schema.json",
+  "id": "Selfdestruct",
+  "effect": "ExplodeEffect",
+  "power": 130,
+  "type": "Normal",
+  "accuracy": 100,
+  "pp": 5
+}

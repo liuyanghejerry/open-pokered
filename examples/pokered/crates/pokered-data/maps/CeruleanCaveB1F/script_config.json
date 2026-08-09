@@ -1,0 +1,21 @@
+{
+  "$schema": "../../schemas/script_config.schema.json",
+  "coordEvents": [],
+  "npcs": [
+    {
+      "id": 1,
+      "talk": "talkMewtwo"
+    },
+    {
+      "id": 2,
+      "talk": "talkPokeBall",
+      "toggleId": "CERULEAN_CAVE_B1F_OBJ_2"
+    },
+    {
+      "id": 3,
+      "talk": "talkPokeBall1",
+      "toggleId": "CERULEAN_CAVE_B1F_OBJ_3"
+    }
+  ],
+  "signs": []
+}

@@ -1,0 +1,116 @@
+{
+  "$schema": "../../schemas/map.schema.json",
+  "id": 195,
+  "name": "Route12Gate2F",
+  "header": {
+    "tileset": "Gate",
+    "music": "Cities1",
+    "connectionFlags": 0,
+    "width": 4,
+    "height": 4,
+    "borderBlock": 10
+  },
+  "connections": {},
+  "warps": [
+    {
+      "x": 7,
+      "y": 7,
+      "destMap": "Route12Gate1F",
+      "destWarpId": 4
+    }
+  ],
+  "npcs": [
+    {
+      "spriteId": 29,
+      "spriteName": "BrunetteGirl",
+      "x": 3,
+      "y": 4,
+      "movement": "Wander",
+      "facing": "Down",
+      "range": 1,
+      "textId": 1,
+      "isTrainer": false
+    }
+  ],
+  "signs": [
+    {
+      "x": 1,
+      "y": 2,
+      "textId": 1
+    },
+    {
+      "x": 6,
+      "y": 2,
+      "textId": 2
+    }
+  ],
+  "text": {
+    "npc": {
+      "1": [
+        {
+          "line1": "[TM39 giver script]",
+          "line2": ""
+        }
+      ],
+      "1_GotItem": [
+        {
+          "line1": "TM39 is a move",
+          "line2": "called SWIFT."
+        },
+        {
+          "line1": "",
+          "line2": ""
+        },
+        {
+          "line1": "It's very accurate,",
+          "line2": "so use it during"
+        },
+        {
+          "line1": "battles you can't",
+          "line2": ""
+        },
+        {
+          "line1": "afford to lose.",
+          "line2": ""
+        }
+      ],
+      "1_NoRoom": [
+        {
+          "line1": "You don't have",
+          "line2": "room for this."
+        }
+      ]
+    },
+    "sign": {
+      "1": [
+        {
+          "line1": "Looked into the",
+          "line2": "binoculars."
+        },
+        {
+          "line1": "",
+          "line2": ""
+        },
+        {
+          "line1": "A man fishing!",
+          "line2": ""
+        }
+      ],
+      "2": [
+        {
+          "line1": "Looked into the",
+          "line2": "binoculars."
+        },
+        {
+          "line1": "",
+          "line2": ""
+        },
+        {
+          "line1": "It's #MON TOWER!",
+          "line2": ""
+        }
+      ]
+    }
+  },
+  "wild": null
+}

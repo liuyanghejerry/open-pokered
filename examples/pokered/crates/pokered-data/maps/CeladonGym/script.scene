@@ -1,0 +1,165 @@
+// CeladonGym — translated from the original disassembly (scripts/CeladonGym.asm,
+// text/CeladonGym.asm) to the real Game DSL API surface. Following the gym
+// template: leader Erika is talk-driven (map.json isTrainer = false) so the
+// script owns the battle->badge->TM(21) reward; the 7 gym trainers are
+// sight-engaged by the runtime, so their .scene handlers are dialogue only.
+
+game_scene CeladonGym {
+  // ── Erika, the Gym Leader (npc 1) ──────────────────────────────────────
+  @storyline("talkErika") {
+    @trigger(map = "CeladonGym", npc = 1)
+    @if (getFlag("EVENT_BEAT_ERIKA")) {
+      @if (!getFlag("EVENT_GOT_TM21")) {
+        // Beat Erika previously but had no room for the TM — receive it now.
+        @speaker("") {
+          @t("The RAINBOWBADGE will make\nPOKeMON up to L50 obey.\n\nIt also allows POKeMON to\nuse STRENGTH in and out of\nbattle.\n\nPlease also take this with\nyou.", "彩虹徽章能让50级以下的宝可梦\n听话。\n\n它还能让宝可梦在战斗内和战斗\n外使用怪力。\n\n请把这个也收下吧。")
+        }
+        given = giveItem("TM21", 1)
+        @if (given) {
+          setFlag("EVENT_GOT_TM21")
+          @speaker("") { @t("<PLAYER> received TM21!", "<PLAYER>获得了 TM21！") }
+          @speaker("") {
+            @t("TM21 contains MEGA DRAIN.\n\nHalf the damage it inflicts\nis drained to heal your\nPOKeMON!", "TM21里是超级吸取。\n\n它造成的伤害一半会被吸收来治\n愈你的宝可梦！")
+          }
+        } @else {
+          @speaker("") { @t("You should make room for\nthis.", "你应该腾出地方来装它。") }
+        }
+      } @else {
+        @speaker("") {
+          @t("You are cataloging POKeMON?\nI must say I'm impressed.\n\nI would never collect\nPOKeMON if they were\nunattractive.", "你在记录宝可梦？我真是佩服。\n\n我永远不会去收集不漂亮的宝可\n梦。")
+        }
+      }
+    } @else {
+      @speaker("") {
+        @t("Hello. Lovely weather isn't\nit? It's so pleasant.\n\n...Oh dear... I must have\ndozed off. Welcome.\n\nMy name is ERIKA. I am the\nLEADER of CELADON GYM.\n\nI teach the art of flower\narranging. My POKeMON are of\nthe grass-type.\n\nOh, I'm sorry, I had no idea\nthat you wished to challenge\nme.\n\nVery well, but I shall not\nlose.", "你好。天气真好，不是吗？真令\n人愉快。\n\n……哎呀……我一定是打瞌睡\n了。欢迎光临。\n\n我叫莉佳，是彩虹道馆的馆主。\n\n我教授插花艺术。我的宝可梦都\n是草属性。\n\n啊，抱歉，我不知道你想要挑战\n我。\n\n好吧，不过我是不会输的。")
+      }
+      result = startBattle("OPP_ERIKA1")
+      @if (result == "win") {
+        @speaker("") {
+          @t("Oh! I concede defeat.\n\nYou are remarkably strong.\n\nI must confer you the\nRAINBOWBADGE.", "啊！我认输了。\n\n你真是强得惊人。\n\n我必须授予你彩虹徽章。")
+        }
+        giveBadge("RAINBOWBADGE")
+        setFlag("EVENT_BEAT_ERIKA")
+        @speaker("") {
+          @t("The RAINBOWBADGE will make\nPOKeMON up to L50 obey.\n\nIt also allows POKeMON to\nuse STRENGTH in and out of\nbattle.\n\nPlease also take this with\nyou.", "彩虹徽章能让50级以下的宝可梦\n听话。\n\n它还能让宝可梦在战斗内和战斗\n外使用怪力。\n\n请把这个也收下吧。")
+        }
+        given = giveItem("TM21", 1)
+        @if (given) {
+          setFlag("EVENT_GOT_TM21")
+          @speaker("") { @t("<PLAYER> received TM21!", "<PLAYER>获得了 TM21！") }
+          @speaker("") {
+            @t("TM21 contains MEGA DRAIN.\n\nHalf the damage it inflicts\nis drained to heal your\nPOKeMON!", "TM21里是超级吸取。\n\n它造成的伤害一半会被吸收来治\n愈你的宝可梦！")
+          }
+        } @else {
+          @speaker("") { @t("You should make room for\nthis.", "你应该腾出地方来装它。") }
+        }
+        // Deactivate the gym trainers (original SetEventRange on Erika's win).
+        setFlag("EVENT_BEAT_CELADON_GYM_TRAINER_0")
+        setFlag("EVENT_BEAT_CELADON_GYM_TRAINER_1")
+        setFlag("EVENT_BEAT_CELADON_GYM_TRAINER_2")
+        setFlag("EVENT_BEAT_CELADON_GYM_TRAINER_3")
+        setFlag("EVENT_BEAT_CELADON_GYM_TRAINER_4")
+        setFlag("EVENT_BEAT_CELADON_GYM_TRAINER_5")
+        setFlag("EVENT_BEAT_CELADON_GYM_TRAINER_6")
+      }
+    }
+  }
+
+  // ── Gym trainer: CooltrainerF (npc 2) — sight-engaged; dialogue only ────
+  @storyline("talkCooltrainerF1") {
+    @trigger(map = "CeladonGym", npc = 2)
+    @if (getFlag("EVENT_BEAT_CELADON_GYM_TRAINER_0")) {
+      @speaker("") {
+        @t("Bleaah! I hope ERIKA wipes\nyou out!", "呸！我希望莉佳把你打趴下！")
+      }
+    } @else {
+      @speaker("") {
+        @t("Hey!\n\nYou are not allowed in here!", "嘿！\n\n这里可不是你能进来的地方！")
+      }
+    }
+  }
+
+  // ── Gym trainer: Beauty (npc 3) — sight-engaged; dialogue only ──────────
+  @storyline("talkBeauty1") {
+    @trigger(map = "CeladonGym", npc = 3)
+    @if (getFlag("EVENT_BEAT_CELADON_GYM_TRAINER_1")) {
+      @speaker("") {
+        @t("Grass-type POKeMON are tough\nagainst the water-type!\n\nThey also have an edge on\nrock and ground POKeMON!", "草属性宝可梦对水属性很强！\n\n它们对岩石和地面属性的宝可梦\n也有优势！")
+      }
+    } @else {
+      @speaker("") {
+        @t("I was getting bored.", "我觉得无聊。")
+      }
+    }
+  }
+
+  // ── Gym trainer: CooltrainerF (npc 4) — sight-engaged; dialogue only ────
+  @storyline("talkCooltrainerF2") {
+    @trigger(map = "CeladonGym", npc = 4)
+    @if (getFlag("EVENT_BEAT_CELADON_GYM_TRAINER_2")) {
+      @speaker("") {
+        @t("Oh, you weren't peeping? We\nget a lot of gawkers!", "哦，你没有偷看？我们见过很多\n偷窥狂！")
+      }
+    } @else {
+      @speaker("") {
+        @t("Aren't you the peeping Tom?", "你难道是那个偷窥狂？")
+      }
+    }
+  }
+
+  // ── Gym trainer: Beauty (npc 5) — sight-engaged; dialogue only ──────────
+  @storyline("talkBeauty2") {
+    @trigger(map = "CeladonGym", npc = 5)
+    @if (getFlag("EVENT_BEAT_CELADON_GYM_TRAINER_3")) {
+      @speaker("") {
+        @t("We only use grass- type\nPOKeMON at our GYM!\n\nWe also use them for making\nflower arrangements!", "我们道馆只使用草属性的宝可\n梦！\n\n我们还用它们来制作插花作品！")
+      }
+    } @else {
+      @speaker("") {
+        @t("Look at my grass POKeMON!\n\nThey're so easy to raise!", "看看我的草宝可梦！\n\n它们很容易培育！")
+      }
+    }
+  }
+
+  // ── Gym trainer: CooltrainerF (npc 6) — sight-engaged; dialogue only ────
+  @storyline("talkCooltrainerF3") {
+    @trigger(map = "CeladonGym", npc = 6)
+    @if (getFlag("EVENT_BEAT_CELADON_GYM_TRAINER_4")) {
+      @speaker("") {
+        @t("Our LEADER, ERIKA, might be\nquiet, but she's also very\nskilled!", "我们的馆主莉佳，虽然很文静，\n但也非常厉害！")
+      }
+    } @else {
+      @speaker("") {
+        @t("Don't bring any bugs or fire\nPOKeMON in here!", "别把虫系或火系的宝可梦带进\n来！")
+      }
+    }
+  }
+
+  // ── Gym trainer: Beauty (npc 7) — sight-engaged; dialogue only ──────────
+  @storyline("talkBeauty3") {
+    @trigger(map = "CeladonGym", npc = 7)
+    @if (getFlag("EVENT_BEAT_CELADON_GYM_TRAINER_5")) {
+      @speaker("") {
+        @t("I have a blind date coming\nup. I have to learn to be\npolite.", "我马上要去相亲。我得学会有礼\n貌。")
+      }
+    } @else {
+      @speaker("") {
+        @t("Pleased to meet you. My\nhobby is POKeMON training.", "很高兴见到你。我的爱好是培育\n宝可梦。")
+      }
+    }
+  }
+
+  // ── Gym trainer: CooltrainerF (npc 8) — sight-engaged; dialogue only ────
+  @storyline("talkCooltrainerF4") {
+    @trigger(map = "CeladonGym", npc = 8)
+    @if (getFlag("EVENT_BEAT_CELADON_GYM_TRAINER_6")) {
+      @speaker("") {
+        @t("I didn't bring my best\nPOKeMON!\n\nWait 'til next time!", "我没带最强的宝可梦！\n\n等下次再战！")
+      }
+    } @else {
+      @speaker("") {
+        @t("Welcome to CELADON GYM!\n\nYou better not underestimate\ngirl power!", "欢迎来到彩虹道馆！\n\n你最好别小看女生的力量！")
+      }
+    }
+  }
+}

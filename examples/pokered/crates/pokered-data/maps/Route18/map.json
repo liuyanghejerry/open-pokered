@@ -1,0 +1,210 @@
+{
+  "$schema": "../../schemas/map.schema.json",
+  "id": 29,
+  "name": "Route18",
+  "header": {
+    "tileset": "Overworld",
+    "music": "Routes3",
+    "connectionFlags": 9,
+    "width": 25,
+    "height": 9,
+    "borderBlock": 67
+  },
+  "connections": {
+    "north": {
+      "targetMap": "Route17",
+      "offset": 0
+    },
+    "east": {
+      "targetMap": "FuchsiaCity",
+      "offset": -4
+    }
+  },
+  "warps": [
+    {
+      "x": 33,
+      "y": 8,
+      "destMap": "Route18Gate1F",
+      "destWarpId": 0
+    },
+    {
+      "x": 33,
+      "y": 9,
+      "destMap": "Route18Gate1F",
+      "destWarpId": 1
+    },
+    {
+      "x": 40,
+      "y": 8,
+      "destMap": "Route18Gate1F",
+      "destWarpId": 2
+    },
+    {
+      "x": 40,
+      "y": 9,
+      "destMap": "Route18Gate1F",
+      "destWarpId": 3
+    }
+  ],
+  "npcs": [
+    {
+      "spriteId": 7,
+      "spriteName": "CooltrainerM",
+      "x": 36,
+      "y": 11,
+      "movement": "Stationary",
+      "facing": "Right",
+      "range": 2,
+      "textId": 1,
+      "isTrainer": true,
+      "trainerClass": "BirdKeeper",
+      "trainerSet": 8,
+      "endBattleText": "Tch!"
+    },
+    {
+      "spriteId": 7,
+      "spriteName": "CooltrainerM",
+      "x": 40,
+      "y": 15,
+      "movement": "Stationary",
+      "facing": "Left",
+      "range": 2,
+      "textId": 2,
+      "isTrainer": true,
+      "trainerClass": "BirdKeeper",
+      "trainerSet": 9,
+      "endBattleText": "I\nhad to bug you!"
+    },
+    {
+      "spriteId": 7,
+      "spriteName": "CooltrainerM",
+      "x": 42,
+      "y": 13,
+      "movement": "Stationary",
+      "facing": "Left",
+      "range": 2,
+      "textId": 3,
+      "isTrainer": true,
+      "trainerClass": "BirdKeeper",
+      "trainerSet": 10,
+      "endBattleText": "Darn!"
+    }
+  ],
+  "signs": [
+    {
+      "x": 43,
+      "y": 7,
+      "textId": 1
+    },
+    {
+      "x": 33,
+      "y": 5,
+      "textId": 2
+    }
+  ],
+  "text": {},
+  "wild": {
+    "red": {
+      "grass": {
+        "encounterRate": 25,
+        "mons": [
+          {
+            "level": 20,
+            "species": "Spearow"
+          },
+          {
+            "level": 22,
+            "species": "Spearow"
+          },
+          {
+            "level": 25,
+            "species": "Raticate"
+          },
+          {
+            "level": 24,
+            "species": "Doduo"
+          },
+          {
+            "level": 25,
+            "species": "Fearow"
+          },
+          {
+            "level": 26,
+            "species": "Doduo"
+          },
+          {
+            "level": 28,
+            "species": "Doduo"
+          },
+          {
+            "level": 29,
+            "species": "Raticate"
+          },
+          {
+            "level": 27,
+            "species": "Fearow"
+          },
+          {
+            "level": 29,
+            "species": "Fearow"
+          }
+        ]
+      },
+      "water": {
+        "encounterRate": 0,
+        "mons": []
+      }
+    },
+    "blue": {
+      "grass": {
+        "encounterRate": 25,
+        "mons": [
+          {
+            "level": 20,
+            "species": "Spearow"
+          },
+          {
+            "level": 22,
+            "species": "Spearow"
+          },
+          {
+            "level": 25,
+            "species": "Raticate"
+          },
+          {
+            "level": 24,
+            "species": "Doduo"
+          },
+          {
+            "level": 25,
+            "species": "Fearow"
+          },
+          {
+            "level": 26,
+            "species": "Doduo"
+          },
+          {
+            "level": 28,
+            "species": "Doduo"
+          },
+          {
+            "level": 29,
+            "species": "Raticate"
+          },
+          {
+            "level": 27,
+            "species": "Fearow"
+          },
+          {
+            "level": 29,
+            "species": "Fearow"
+          }
+        ]
+      },
+      "water": {
+        "encounterRate": 0,
+        "mons": []
+      }
+    }
+  }
+}

@@ -1,0 +1,199 @@
+{
+  "$schema": "../schemas/trainer.schema.json",
+  "class": "Hiker",
+  "constName": "HIKER",
+  "parties": [
+    {
+      "pokemon": [
+        {
+          "level": 10,
+          "species": "Geodude"
+        },
+        {
+          "level": 10,
+          "species": "Geodude"
+        },
+        {
+          "level": 10,
+          "species": "Onix"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 15,
+          "species": "Machop"
+        },
+        {
+          "level": 15,
+          "species": "Geodude"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 13,
+          "species": "Geodude"
+        },
+        {
+          "level": 13,
+          "species": "Geodude"
+        },
+        {
+          "level": 13,
+          "species": "Machop"
+        },
+        {
+          "level": 13,
+          "species": "Geodude"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 17,
+          "species": "Onix"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 21,
+          "species": "Geodude"
+        },
+        {
+          "level": 21,
+          "species": "Onix"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 20,
+          "species": "Geodude"
+        },
+        {
+          "level": 20,
+          "species": "Machop"
+        },
+        {
+          "level": 20,
+          "species": "Geodude"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 21,
+          "species": "Geodude"
+        },
+        {
+          "level": 21,
+          "species": "Onix"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 19,
+          "species": "Onix"
+        },
+        {
+          "level": 19,
+          "species": "Graveler"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 21,
+          "species": "Geodude"
+        },
+        {
+          "level": 21,
+          "species": "Geodude"
+        },
+        {
+          "level": 21,
+          "species": "Graveler"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 25,
+          "species": "Geodude"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 20,
+          "species": "Machop"
+        },
+        {
+          "level": 20,
+          "species": "Onix"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 19,
+          "species": "Geodude"
+        },
+        {
+          "level": 19,
+          "species": "Machop"
+        },
+        {
+          "level": 19,
+          "species": "Geodude"
+        },
+        {
+          "level": 19,
+          "species": "Geodude"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 20,
+          "species": "Onix"
+        },
+        {
+          "level": 20,
+          "species": "Onix"
+        },
+        {
+          "level": 20,
+          "species": "Geodude"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 21,
+          "species": "Geodude"
+        },
+        {
+          "level": 21,
+          "species": "Graveler"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,184 @@
+{
+  "$schema": "../../schemas/map.schema.json",
+  "id": 192,
+  "name": "SeafoamIslands1F",
+  "header": {
+    "tileset": "Cavern",
+    "music": "Dungeon2",
+    "connectionFlags": 0,
+    "width": 15,
+    "height": 9,
+    "borderBlock": 125
+  },
+  "connections": {},
+  "warps": [
+    {
+      "x": 4,
+      "y": 17,
+      "destWarpId": 0
+    },
+    {
+      "x": 5,
+      "y": 17,
+      "destWarpId": 0
+    },
+    {
+      "x": 26,
+      "y": 17,
+      "destWarpId": 1
+    },
+    {
+      "x": 27,
+      "y": 17,
+      "destWarpId": 1
+    },
+    {
+      "x": 7,
+      "y": 5,
+      "destMap": "SeafoamIslandsB1F",
+      "destWarpId": 1
+    },
+    {
+      "x": 25,
+      "y": 3,
+      "destMap": "SeafoamIslandsB1F",
+      "destWarpId": 6
+    },
+    {
+      "x": 23,
+      "y": 15,
+      "destMap": "SeafoamIslandsB1F",
+      "destWarpId": 4
+    }
+  ],
+  "npcs": [
+    {
+      "spriteId": 63,
+      "spriteName": "Boulder",
+      "x": 18,
+      "y": 10,
+      "movement": "Stationary",
+      "facing": "Down",
+      "range": 0,
+      "textId": 1,
+      "isTrainer": false
+    },
+    {
+      "spriteId": 63,
+      "spriteName": "Boulder",
+      "x": 26,
+      "y": 7,
+      "movement": "Stationary",
+      "facing": "Down",
+      "range": 0,
+      "textId": 2,
+      "isTrainer": false
+    }
+  ],
+  "signs": [],
+  "text": {},
+  "wild": {
+    "red": {
+      "grass": {
+        "encounterRate": 15,
+        "mons": [
+          {
+            "level": 30,
+            "species": "Seel"
+          },
+          {
+            "level": 30,
+            "species": "Slowpoke"
+          },
+          {
+            "level": 30,
+            "species": "Shellder"
+          },
+          {
+            "level": 30,
+            "species": "Horsea"
+          },
+          {
+            "level": 28,
+            "species": "Horsea"
+          },
+          {
+            "level": 21,
+            "species": "Zubat"
+          },
+          {
+            "level": 29,
+            "species": "Golbat"
+          },
+          {
+            "level": 28,
+            "species": "Psyduck"
+          },
+          {
+            "level": 28,
+            "species": "Shellder"
+          },
+          {
+            "level": 38,
+            "species": "Golduck"
+          }
+        ]
+      },
+      "water": {
+        "encounterRate": 0,
+        "mons": []
+      }
+    },
+    "blue": {
+      "grass": {
+        "encounterRate": 15,
+        "mons": [
+          {
+            "level": 30,
+            "species": "Seel"
+          },
+          {
+            "level": 30,
+            "species": "Psyduck"
+          },
+          {
+            "level": 30,
+            "species": "Staryu"
+          },
+          {
+            "level": 30,
+            "species": "Krabby"
+          },
+          {
+            "level": 28,
+            "species": "Krabby"
+          },
+          {
+            "level": 21,
+            "species": "Zubat"
+          },
+          {
+            "level": 29,
+            "species": "Golbat"
+          },
+          {
+            "level": 28,
+            "species": "Slowpoke"
+          },
+          {
+            "level": 28,
+            "species": "Staryu"
+          },
+          {
+            "level": 38,
+            "species": "Slowbro"
+          }
+        ]
+      },
+      "water": {
+        "encounterRate": 0,
+        "mons": []
+      }
+    }
+  }
+}

@@ -1,0 +1,48 @@
+// CeruleanCave1F — translated from the original disassembly
+// (scripts/CeruleanCave1F.asm, data/maps/objects/CeruleanCave1F.asm) to the
+// real Game DSL API surface. Cerulean Cave 1F (Mewtwo's cave) has no trainers,
+// no signs, and no on-enter cutscene — its map script is just
+// EnableAutoTextBoxDrawing (the default runtime behavior). The only events are
+// three ground items in PokeBalls (FULL_RESTORE, MAX_ELIXER, NUGGET), each
+// using the standard PickUpItem routine: give the item, then hide the ball.
+
+game_scene CeruleanCave1F {
+  // ── Ground item: FULL RESTORE (npc 1) ───────────────────────────────────
+  @storyline("itemFullRestore") {
+    @trigger(map = "CeruleanCave1F", npc = 1, toggle = "CERULEAN_CAVE_1F_OBJ_1")
+    @if (getFlag("EVENT_GOT_FULL_RESTORE_CERULEAN_CAVE_1F")) {
+      @speaker("") { @t("The item ball is empty.", "这个精灵球是空的。") }
+    } @else {
+      giveItem("FULL_RESTORE", 1)
+      setFlag("EVENT_GOT_FULL_RESTORE_CERULEAN_CAVE_1F")
+      hideObject("CERULEAN_CAVE_1F_OBJ_1")
+      @speaker("") { @t("<PLAYER> found FULL_RESTORE!", "<PLAYER>找到了全复药！") }
+    }
+  }
+
+  // ── Ground item: MAX ELIXER (npc 2) ─────────────────────────────────────
+  @storyline("itemMaxElixer") {
+    @trigger(map = "CeruleanCave1F", npc = 2, toggle = "CERULEAN_CAVE_1F_OBJ_2")
+    @if (getFlag("EVENT_GOT_MAX_ELIXER_CERULEAN_CAVE_1F")) {
+      @speaker("") { @t("The item ball is empty.", "这个精灵球是空的。") }
+    } @else {
+      giveItem("MAX_ELIXER", 1)
+      setFlag("EVENT_GOT_MAX_ELIXER_CERULEAN_CAVE_1F")
+      hideObject("CERULEAN_CAVE_1F_OBJ_2")
+      @speaker("") { @t("<PLAYER> found MAX_ELIXER!", "<PLAYER>找到了招式全补药！") }
+    }
+  }
+
+  // ── Ground item: NUGGET (npc 3) ─────────────────────────────────────────
+  @storyline("itemNugget") {
+    @trigger(map = "CeruleanCave1F", npc = 3, toggle = "CERULEAN_CAVE_1F_OBJ_3")
+    @if (getFlag("EVENT_GOT_NUGGET_CERULEAN_CAVE_1F")) {
+      @speaker("") { @t("The item ball is empty.", "这个精灵球是空的。") }
+    } @else {
+      giveItem("NUGGET", 1)
+      setFlag("EVENT_GOT_NUGGET_CERULEAN_CAVE_1F")
+      hideObject("CERULEAN_CAVE_1F_OBJ_3")
+      @speaker("") { @t("<PLAYER> found NUGGET!", "<PLAYER>找到了金珠！") }
+    }
+  }
+}

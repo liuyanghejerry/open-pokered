@@ -1,0 +1,64 @@
+{
+  "$schema": "../schemas/pokemon.schema.json",
+  "species": "Parasect",
+  "baseStats": {
+    "hp": 60,
+    "attack": 95,
+    "defense": 80,
+    "speed": 30,
+    "special": 80
+  },
+  "type1": "Bug",
+  "type2": "Grass",
+  "catchRate": 75,
+  "baseExp": 128,
+  "growthRate": "MediumFast",
+  "initialMoves": [
+    "Scratch",
+    "StunSpore",
+    "LeechLife",
+    "None"
+  ],
+  "tmHmFlags": [
+    164,
+    67,
+    56,
+    200,
+    131,
+    8,
+    6
+  ],
+  "pokedex": {
+    "category": "MUSHROOM",
+    "heightFeet": 3,
+    "heightInches": 3,
+    "weightDecipounds": 650,
+    "flavorTextPages": [
+      "A host-parasite\npair in which the\nparasite mushroom",
+      "has taken over the\nhost bug. Prefers\ndamp places"
+    ]
+  },
+  "evolutions": [],
+  "learnset": [
+    {
+      "level": 13,
+      "moveId": "StunSpore"
+    },
+    {
+      "level": 20,
+      "moveId": "LeechLife"
+    },
+    {
+      "level": 30,
+      "moveId": "Spore"
+    },
+    {
+      "level": 39,
+      "moveId": "Slash"
+    },
+    {
+      "level": 48,
+      "moveId": "Growth"
+    }
+  ]
+}

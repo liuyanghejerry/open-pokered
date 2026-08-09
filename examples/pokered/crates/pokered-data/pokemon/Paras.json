@@ -1,0 +1,70 @@
+{
+  "$schema": "../schemas/pokemon.schema.json",
+  "species": "Paras",
+  "baseStats": {
+    "hp": 35,
+    "attack": 70,
+    "defense": 55,
+    "speed": 25,
+    "special": 55
+  },
+  "type1": "Bug",
+  "type2": "Grass",
+  "catchRate": 190,
+  "baseExp": 70,
+  "growthRate": "MediumFast",
+  "initialMoves": [
+    "Scratch",
+    "None",
+    "None",
+    "None"
+  ],
+  "tmHmFlags": [
+    164,
+    3,
+    56,
+    200,
+    131,
+    8,
+    6
+  ],
+  "pokedex": {
+    "category": "MUSHROOM",
+    "heightFeet": 1,
+    "heightInches": 0,
+    "weightDecipounds": 120,
+    "flavorTextPages": [
+      "Burrows to suck\ntree roots. The\nmushrooms on its",
+      "back grow by draw-\ning nutrients from\nthe bug host"
+    ]
+  },
+  "evolutions": [
+    {
+      "method": "level",
+      "species": "Parasect",
+      "level": 24
+    }
+  ],
+  "learnset": [
+    {
+      "level": 13,
+      "moveId": "StunSpore"
+    },
+    {
+      "level": 20,
+      "moveId": "LeechLife"
+    },
+    {
+      "level": 27,
+      "moveId": "Spore"
+    },
+    {
+      "level": 34,
+      "moveId": "Slash"
+    },
+    {
+      "level": 41,
+      "moveId": "Growth"
+    }
+  ]
+}

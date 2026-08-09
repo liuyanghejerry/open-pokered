@@ -1,0 +1,53 @@
+{
+  "$schema": "/schemas/layout.schema.json",
+  "schema_version": 1,
+  "screen": "main",
+  "variants": {
+    "default": {
+      "children": [
+        {
+          "id": "menu",
+          "rect": {
+            "tx": 0,
+            "ty": 0,
+            "tw": 13,
+            "th": 16
+          },
+          "color": "Black",
+          "width": "fixed",
+          "height": "auto",
+          "min_height": 4,
+          "padding": {
+            "top": 1,
+            "bottom": 1,
+            "left": 1,
+            "right": 1
+          },
+          "gap": 1,
+          "justify": "start",
+          "align": "start",
+          "items": [
+            {
+              "text": "POK\u00e9DEX",
+              "color": "Black"
+            },
+            {
+              "text": "POK\u00e9MON",
+              "color": "Black"
+            },
+            {
+              "text": "ITEM",
+              "color": "Black"
+            }
+          ],
+          "cursor": {
+            "glyph": "\u25b6",
+            "color": "Black"
+          },
+          "layout": "flex",
+          "z_index": 0
+        }
+      ]
+    }
+  }
+}

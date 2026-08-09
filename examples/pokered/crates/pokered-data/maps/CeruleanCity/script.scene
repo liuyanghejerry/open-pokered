@@ -1,0 +1,270 @@
+// CeruleanCity — translated from the original disassembly (scripts/CeruleanCity.asm,
+// text/CeruleanCity.asm) to the real Game DSL API surface.
+//
+// Two scripted content beats plus town NPCs/signs:
+//   - The RIVAL ambush on the bridge: the original w*CurScript state machine shows
+//     the rival object (CERULEAN_RIVAL), walks him down to the player, battles
+//     OPP_RIVAL1 (party by wRivalStarter), then walks him off and hides him. We
+//     translate this as a coord trigger that owns startBattle (rival NPC is
+//     script-driven, so map.json isTrainer = false). EVENT_BEAT_CERULEAN_RIVAL.
+//   - The TEAM ROCKET thief outside the trashed house: a talk-driven battle that,
+//     once beaten, returns the stolen TM28 (DIG). Rocket NPC is talk-driven here,
+//     so map.json isTrainer = false and this handler owns startBattle.
+// Several town NPCs use a random pick among flavor lines (CooltrainerF / Slowbro);
+// these use game.showRandomText(...) to reproduce the original hRandomAdd pools.
+
+game_scene CeruleanCity {
+  // ── On-enter: once the player is CHAMPION (HallOfFame sets
+  // EVENT_HALL_OF_FAME_DEX_RATING), the SuperNerd guard blocking CERULEAN CAVE
+  // leaves (original TOGGLE_CERULEAN_CAVE_GUY), unlocking the Unknown Dungeon
+  // (MEWTWO). Without this the cave stays permanently blocked.
+  @load {
+    @if (getFlag("EVENT_HALL_OF_FAME_DEX_RATING")) {
+      hideObjectByName("CERULEAN_CAVE_GUY")
+    }
+  }
+
+  // ── Scripted RIVAL battle on the bridge (orig CeruleanCityCoords2 20,6/21,6) ──
+  @storyline("coordRivalBattle") {
+    @trigger(map = "CeruleanCity", name = "rivalBattle1", coords = [[20, 6], [21, 6]])
+    @if (!getFlag("EVENT_BEAT_CERULEAN_RIVAL")) {
+      setJoyIgnore(0xF0)
+      playSound("SFX_STOP_ALL_MUSIC")
+      playMusic("MUSIC_MEET_RIVAL")
+      // Orig: for the (21,6) trigger the rival's mapX is overwritten to 25
+      // BEFORE ShowObject, so he appears in the fenced yard east of the bridge
+      // and walks down there; for (20,6) he walks down from his (20,2) spawn.
+      // Both cases: movement DOWN x3 (CeruleanCityMovement1), then face DOWN
+      // (CeruleanCityFaceRivalScript).
+      @if (getPlayerX() == 21) {
+        setNpcPosition("CERULEAN_RIVAL", 25, 2)
+      }
+      showObjectByName("CERULEAN_RIVAL")
+      @if (getPlayerX() == 20) {
+        moveNpc("CERULEAN_RIVAL", [[20, 3], [20, 4], [20, 5]])
+      } @else {
+        moveNpc("CERULEAN_RIVAL", [[25, 3], [25, 4], [25, 5]])
+      }
+      faceNpc("CERULEAN_RIVAL", "down")
+      clearJoyIgnore()
+
+      @say("") {
+        @t("<RIVAL>: Yo! <PLAYER>!\n\nYou're still struggling\nalong back here?\n\nI'm doing great! I caught a\nbunch of strong and smart\nPOKeMON!\n\nHere, let me see what you\ncaught, <PLAYER>!", "<RIVAL>：哟！ <PLAYER>！\n\n你现在还在这里苦苦挣扎吗？\n\n我可过得很好！我抓到了一群又\n强又聪明的宝可梦！\n\n来，让我看看你抓到了什么，\n<PLAYER>！")
+      }
+
+      // Rival party-by-starter (orig StarterTable: Squirtle->$7, Bulbasaur->$9,
+      // Charmander->$8). The engine resolves the starter-advantage party from the
+      // rival class, so we branch on getRivalStarter() for fidelity and pass the
+      // rival class id OPP_RIVAL1 in each branch.
+      s = getRivalStarter()
+      @if (s == 0) {
+        result = startBattle("OPP_RIVAL1")
+      } @else {
+        @if (s == 1) {
+          result = startBattle("OPP_RIVAL1")
+        } @else {
+          result = startBattle("OPP_RIVAL1")
+        }
+      }
+
+      @if (result == "win") {
+        @say("") {
+          @t("Hey! Take it easy! You won\nalready!", "嘿！别紧张！你已经赢了！")
+        }
+      } @else {
+        @say("") {
+          @t("Heh! You're no match for my\ngenius!", "哼！你根本比不上我的天才头\n脑！")
+        }
+      }
+
+      setFlag("EVENT_BEAT_CERULEAN_RIVAL")
+
+      // Orig CeruleanCityRivalDefeatedScript/Cleanup: stop battle music, face
+      // DOWN, sidestep around the player and walk DOWN x6 off the bridge, hide
+      // him, restore the default town music. From (20,5): RIGHT then down
+      // (CeruleanCityMovement4); from (25,5): LEFT then down (Movement3).
+      playSound("SFX_STOP_ALL_MUSIC")
+      // Orig CeruleanCity.asm:182: Music_RivalAlternateStart — the rival theme
+      // restarts with a different first measure as he walks off.
+      playMusic("MUSIC_MEET_RIVAL_ALTERNATE_START")
+      setJoyIgnore(0xF0)
+      faceNpc("CERULEAN_RIVAL", "down")
+      @if (getPlayerX() == 20) {
+        moveNpc("CERULEAN_RIVAL", [[21, 5], [21, 6], [21, 7], [21, 8], [21, 9], [21, 10], [21, 11]])
+      } @else {
+        moveNpc("CERULEAN_RIVAL", [[24, 5], [24, 6], [24, 7], [24, 8], [24, 9], [24, 10], [24, 11]])
+      }
+      hideObjectByName("CERULEAN_RIVAL")
+      playMusic("Cities2")
+      clearJoyIgnore()
+    }
+  }
+
+  // ── Rival (npc 1) talk handler — post-battle Bill text only (orig
+  //    CeruleanCityRivalText: pre-battle text before the fight, else Bill text) ──
+  @storyline("talkBlue") {
+    @trigger(map = "CeruleanCity", npc = 1, toggle = "CERULEAN_RIVAL", hidden = true)
+    @if (getFlag("EVENT_BEAT_CERULEAN_RIVAL")) {
+      @speaker("") {
+        @t("<RIVAL>: Hey, guess what?\n\nI went to BILL's and got him\nto show me his rare POKeMON!\n\nThat added a lot of pages to\nmy POKeDEX!\n\nAfter all, BILL's world\nfamous as a POKeMANIAC!\n\nHe invented the POKeMON\nStorage System on PC!\n\nSince you're using his\nsystem, go thank him!\n\nWell, I better get rolling!\nSmell ya later!", "<RIVAL>：嘿，你知道吗？\n\n我去找正辉，让他给我看了他珍\n藏的宝可梦！\n\n这让我的图鉴增加了很多页数！\n\n毕竟，正辉是世界闻名的宝可梦\n狂！\n\n他发明了电脑上的宝可梦存储系\n统！\n\n既然你在用他的系统，去谢谢他\n吧！\n\n好了，我该走了！回头见！")
+      }
+    } @else {
+      @speaker("") {
+        @t("<RIVAL>: Yo! <PLAYER>!\n\nYou're still struggling\nalong back here?\n\nI'm doing great! I caught a\nbunch of strong and smart\nPOKeMON!\n\nHere, let me see what you\ncaught, <PLAYER>!", "<RIVAL>：哟！ <PLAYER>！\n\n你现在还在这里苦苦挣扎吗？\n\n我可过得很好！我抓到了一群又\n强又聪明的宝可梦！\n\n来，让我看看你抓到了什么，\n<PLAYER>！")
+      }
+    }
+  }
+
+  // ── TEAM ROCKET thief (npc 2) — talk-driven battle, returns TM28 once beaten ──
+  @storyline("talkRocket") {
+    @trigger(map = "CeruleanCity", npc = 2, toggle = "CERULEAN_ROCKET")
+    @if (!getFlag("EVENT_BEAT_CERULEAN_ROCKET_THIEF")) {
+      @speaker("") {
+        @t("Hey! Stay out! It's not your\nyard! Huh? Me?\n\nI'm an innocent bystander!\nDon't you believe me?", "嘿！别进来！这里不是你的院\n子！嗯？我？\n\n我是个无辜的路人！难道你不相\n信我吗？")
+      }
+      result = startBattle("OPP_ROCKET5")
+      @if (result == "win") {
+        @speaker("") {
+          @t("Stop! I give up! I'll leave\nquietly!", "住手！我认输！我会安静地离\n开！")
+        }
+        setFlag("EVENT_BEAT_CERULEAN_ROCKET_THIEF")
+        @speaker("") {
+          @t("OK! I'll return the TM I\nstole!", "好！我会把偷来的TM还回去！")
+        }
+        giveItem("TM_28", 1)
+        @speaker("") {
+          @t("<PLAYER> recovered TM28!", "<PLAYER>找回了 TM28！")
+        }
+        @speaker("") {
+          @t("I better get moving! Bye!", "我最好赶快离开！再见！")
+        }
+        hideObjectByName("CERULEAN_ROCKET")
+      }
+    } @else {
+      // Already beaten: thief is gone (object hidden). If room was full before,
+      // returning the TM. Orig re-offers the TM until accepted.
+      @speaker("") {
+        @t("OK! I'll return the TM I\nstole!", "好！我会把偷来的TM还回去！")
+      }
+      giveItem("TM_28", 1)
+      @speaker("") {
+        @t("<PLAYER> recovered TM28!", "<PLAYER>找回了 TM28！")
+      }
+      hideObjectByName("CERULEAN_ROCKET")
+    }
+  }
+
+  // ── CooltrainerM (npc 3) ──────────────────────────────────────────────────
+  @storyline("talkCooltrainerM") {
+    @trigger(map = "CeruleanCity", npc = 3)
+    @speaker("") {
+      @t("You're a trainer too?\nCollecting, fighting, it's a\ntough life.", "你也是训练家？收集、对战，这\n是很辛苦的生活啊。")
+    }
+  }
+
+  // ── SuperNerd by the bike shop bush (npc 4) ───────────────────────────────
+  @storyline("talkSuperNerd") {
+    @trigger(map = "CeruleanCity", npc = 4)
+    @speaker("") {
+      @t("That bush in front of the\nshop is in the way.\n\nThere might be a way around.", "商店前面的那丛灌木挡住了路。\n\n也许有别的路可以绕过去。")
+    }
+  }
+
+  // ── SuperNerd (npc 5) ─────────────────────────────────────────────────────
+  @storyline("talkSuperNerd1") {
+    @trigger(map = "CeruleanCity", npc = 5)
+    @speaker("") {
+      @t("You're making an\nencyclopedia on POKeMON?\nThat sounds amusing.", "你在做关于宝可梦的图鉴吗？那\n听起来真有趣。")
+    }
+  }
+
+  // ── Police guard (npc 6) ──────────────────────────────────────────────────
+  @storyline("talkGuard") {
+    @trigger(map = "CeruleanCity", npc = 6, toggle = "CERULEAN_GUARD_1", hidden = true)
+    @speaker("") {
+      @t("The people here were robbed.\n\nIt's obvious that TEAM\nROCKET is behind this most\nheinous crime!\n\nEven our POLICE force has\ntrouble with the ROCKETs!", "这里的人们被抢劫了。\n\n很明显，这是火箭队犯下的最凶\n残的罪行！\n\n就连我们的警察部队都拿火箭队\n没办法！")
+    }
+  }
+
+  // ── CooltrainerF with the Slowbro (npc 7) — orig random flavor line ───────
+  // Original picks one of 3 lines per talk from hRandomAdd; showRandomText
+  // reproduces the pool (RNG sourced from the Rust overworld RNG).
+  @storyline("talkCooltrainerF") {
+    @trigger(map = "CeruleanCity", npc = 7)
+    showRandomText(@t("OK! SLOWBRO! Use SONICBOOM!\nCome on, SLOWBRO pay\nattention!", "好的！呆壳兽！用音爆！加油\n啊，呆壳兽集中注意力！"), @t("SLOWBRO punch! No! You blew\nit again!", "呆壳兽攻击！不！又搞砸了！"), @t("SLOWBRO, WITHDRAW! No!\nThat's wrong! It's so hard\nto control #MON!\n\nYour #MON's obedience\ndepends on your abilities as\na trainer!", "呆壳兽，退下！不！不对！要控\n制宝可梦太难了！\n\n你的宝可梦听不听话，全看你作\n为训练家的本事！"))
+  }
+
+  // ── The Slowbro itself (npc 8) — orig random flavor line ──────────────────
+  // Original picks one of 4 lines per talk from hRandomAdd.
+  @storyline("talkMonster") {
+    @trigger(map = "CeruleanCity", npc = 8)
+    showRandomText(@t("SLOWBRO took a snooze...", "呆壳兽打了个盹……"), @t("SLOWBRO is loafing around...", "呆壳兽在偷懒……"), @t("SLOWBRO turned away...", "呆壳兽转过头去……"), @t("SLOWBRO ignored orders...", "呆壳兽无视了命令……"))
+  }
+
+  // ── CooltrainerF wanting a bike (npc 9) ───────────────────────────────────
+  @storyline("talkCooltrainerF1") {
+    @trigger(map = "CeruleanCity", npc = 9)
+    @speaker("") {
+      @t("I want a bright red BICYCLE!\n\nI'll keep it at home, so it\nwon't get dirty!", "我想要一辆鲜红色的自行车！\n\n我要把它放在家里，这样就不会\n弄脏！")
+    }
+  }
+
+  // ── SuperNerd at CERULEAN CAVE (npc 10) ───────────────────────────────────
+  @storyline("talkSuperNerd2") {
+    @trigger(map = "CeruleanCity", npc = 10, toggle = "CERULEAN_CAVE_GUY")
+    @speaker("") {
+      @t("This is CERULEAN CAVE!\nHorribly strong POKeMON live\nin there!\n\nThe POKeMON LEAGUE champion\nis the only person who is\nallowed in!", "这里是华蓝洞窟！有非常强大的\n宝可梦住在里面！\n\n宝可梦联盟的冠军是唯一被允许\n进入的人！")
+    }
+  }
+
+  // ── Police guard (npc 11) ─────────────────────────────────────────────────
+  @storyline("talkGuard1") {
+    @trigger(map = "CeruleanCity", npc = 11, toggle = "CERULEAN_GUARD_2")
+    @speaker("") {
+      @t("The people here were robbed.\n\nIt's obvious that TEAM\nROCKET is behind this most\nheinous crime!\n\nEven our POLICE force has\ntrouble with the ROCKETs!", "这里的人们被抢劫了。\n\n很明显，这是火箭队犯下的最凶\n残的罪行！\n\n就连我们的警察部队都拿火箭队\n没办法！")
+    }
+  }
+
+  // ── Signs ─────────────────────────────────────────────────────────────────
+  @storyline("sign1") {
+    @trigger(map = "CeruleanCity", sign = 1)
+    @speaker("") {
+      @t("CERULEAN CITY A Mysterious,\nBlue Aura Surrounds It", "华蓝市神秘的蓝色灵气环绕此地")
+    }
+  }
+
+  @storyline("sign2") {
+    @trigger(map = "CeruleanCity", sign = 2)
+    @speaker("") {
+      @t("TRAINER TIPS\n\nPressing B Button during\nevolution cancels the whole\nprocess.", "训练家须知\n\n进化过程中按B键会取消整个进\n化过程。")
+    }
+  }
+
+  @storyline("sign3") {
+    @trigger(map = "CeruleanCity", sign = 3)
+    @speaker("") {
+      @t("Grass and caves handled\neasily! BIKE SHOP", "草地和洞窟轻松应对！自行车店")
+    }
+  }
+
+  @storyline("sign4") {
+    @trigger(map = "CeruleanCity", sign = 4)
+    @speaker("") {
+      @t("Heal Your POKeMON! POKeMON\nCENTER", "治愈你的宝可梦！宝可梦中心")
+    }
+  }
+
+  @storyline("sign5") {
+    @trigger(map = "CeruleanCity", sign = 5)
+    @speaker("") {
+      @t("All your item needs\nfulfilled! POKeMON MART", "你所有的道具需求都满足！友好\n商店")
+    }
+  }
+
+  @storyline("sign6") {
+    @trigger(map = "CeruleanCity", sign = 6)
+    @speaker("") {
+      @t("CERULEAN CITY POKeMON GYM\nLEADER: MISTY\n\nThe Tomboyish Mermaid!", "华蓝市宝可梦道馆馆主：小霞\n\n假小子美人鱼！")
+    }
+  }
+}

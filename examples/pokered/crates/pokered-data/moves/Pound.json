@@ -1,0 +1,9 @@
+{
+  "$schema": "../schemas/move.schema.json",
+  "id": "Pound",
+  "effect": "NoAdditionalEffect",
+  "power": 40,
+  "type": "Normal",
+  "accuracy": 100,
+  "pp": 35
+}

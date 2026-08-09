@@ -1,0 +1,68 @@
+{
+  "$schema": "../schemas/pokemon.schema.json",
+  "species": "Hypno",
+  "baseStats": {
+    "hp": 85,
+    "attack": 73,
+    "defense": 70,
+    "speed": 67,
+    "special": 115
+  },
+  "type1": "Psychic",
+  "type2": "Psychic",
+  "catchRate": 75,
+  "baseExp": 165,
+  "growthRate": "MediumFast",
+  "initialMoves": [
+    "Pound",
+    "Hypnosis",
+    "Disable",
+    "Confusion"
+  ],
+  "tmHmFlags": [
+    177,
+    67,
+    15,
+    240,
+    135,
+    58,
+    67
+  ],
+  "pokedex": {
+    "category": "HYPNOSIS",
+    "heightFeet": 5,
+    "heightInches": 3,
+    "weightDecipounds": 1670,
+    "flavorTextPages": [
+      "When it locks eyes\nwith an enemy, it\nwill use a mix of",
+      "PSI moves such as\nHYPNOSIS and\nCONFUSION"
+    ]
+  },
+  "evolutions": [],
+  "learnset": [
+    {
+      "level": 12,
+      "moveId": "Disable"
+    },
+    {
+      "level": 17,
+      "moveId": "Confusion"
+    },
+    {
+      "level": 24,
+      "moveId": "Headbutt"
+    },
+    {
+      "level": 33,
+      "moveId": "PoisonGas"
+    },
+    {
+      "level": 37,
+      "moveId": "PsychicM"
+    },
+    {
+      "level": 43,
+      "moveId": "Meditate"
+    }
+  ]
+}

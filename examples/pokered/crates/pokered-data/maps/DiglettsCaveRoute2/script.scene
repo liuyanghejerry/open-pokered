@@ -1,0 +1,15 @@
+// DiglettsCaveRoute2 — translated from the original disassembly
+// (scripts/DiglettsCaveRoute2.asm, text/DiglettsCaveRoute2.asm) to the real
+// Game DSL API surface. This small cave exit has a single talk-only NPC
+// (the FISHING GURU); the map script itself only does standard bookkeeping
+// (set wLastMap = ROUTE_2 + enable auto text boxes), which has no DSL effect.
+
+game_scene DiglettsCaveRoute2 {
+  // ── Fishing Guru (npc 1) — dialogue only ───────────────────────────────
+  @storyline("talkFishingGuru") {
+    @trigger(map = "DiglettsCaveRoute2", npc = 1)
+    @speaker("") {
+      @t("I went to ROCK TUNNEL, but\nit's dark and scary.\n\nIf a POKeMON's FLASH could\nlight it up...", "我去过岩山隧道，但里面又黑又\n可怕。\n\n如果宝可梦会用闪光来照亮就好\n了……")
+    }
+  }
+}

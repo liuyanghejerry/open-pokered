@@ -1,0 +1,241 @@
+{
+  "$schema": "../../schemas/map.schema.json",
+  "id": 219,
+  "name": "SafariZoneWest",
+  "header": {
+    "tileset": "Forest",
+    "music": "SafariZone",
+    "connectionFlags": 0,
+    "width": 15,
+    "height": 13,
+    "borderBlock": 0
+  },
+  "connections": {},
+  "warps": [
+    {
+      "x": 20,
+      "y": 0,
+      "destMap": "SafariZoneNorth",
+      "destWarpId": 0
+    },
+    {
+      "x": 21,
+      "y": 0,
+      "destMap": "SafariZoneNorth",
+      "destWarpId": 1
+    },
+    {
+      "x": 26,
+      "y": 0,
+      "destMap": "SafariZoneNorth",
+      "destWarpId": 2
+    },
+    {
+      "x": 27,
+      "y": 0,
+      "destMap": "SafariZoneNorth",
+      "destWarpId": 3
+    },
+    {
+      "x": 29,
+      "y": 22,
+      "destMap": "SafariZoneCenter",
+      "destWarpId": 2
+    },
+    {
+      "x": 29,
+      "y": 23,
+      "destMap": "SafariZoneCenter",
+      "destWarpId": 3
+    },
+    {
+      "x": 3,
+      "y": 3,
+      "destMap": "SafariZoneSecretHouse",
+      "destWarpId": 0
+    },
+    {
+      "x": 11,
+      "y": 11,
+      "destMap": "SafariZoneWestRestHouse",
+      "destWarpId": 0
+    }
+  ],
+  "npcs": [
+    {
+      "spriteId": 61,
+      "spriteName": "PokeBall",
+      "x": 8,
+      "y": 20,
+      "movement": "Stationary",
+      "facing": "Down",
+      "range": 0,
+      "textId": 1,
+      "isTrainer": false,
+      "itemId": 17
+    },
+    {
+      "spriteId": 61,
+      "spriteName": "PokeBall",
+      "x": 9,
+      "y": 7,
+      "movement": "Stationary",
+      "facing": "Down",
+      "range": 0,
+      "textId": 2,
+      "isTrainer": false,
+      "itemId": 232
+    },
+    {
+      "spriteId": 61,
+      "spriteName": "PokeBall",
+      "x": 18,
+      "y": 18,
+      "movement": "Stationary",
+      "facing": "Down",
+      "range": 0,
+      "textId": 3,
+      "isTrainer": false,
+      "itemId": 54
+    },
+    {
+      "spriteId": 61,
+      "spriteName": "PokeBall",
+      "x": 19,
+      "y": 7,
+      "movement": "Stationary",
+      "facing": "Down",
+      "range": 0,
+      "textId": 4,
+      "isTrainer": false,
+      "itemId": 64
+    }
+  ],
+  "signs": [
+    {
+      "x": 12,
+      "y": 12,
+      "textId": 1
+    },
+    {
+      "x": 17,
+      "y": 3,
+      "textId": 2
+    },
+    {
+      "x": 26,
+      "y": 4,
+      "textId": 3
+    },
+    {
+      "x": 24,
+      "y": 22,
+      "textId": 4
+    }
+  ],
+  "text": {},
+  "wild": {
+    "red": {
+      "grass": {
+        "encounterRate": 30,
+        "mons": [
+          {
+            "level": 25,
+            "species": "NidoranM"
+          },
+          {
+            "level": 26,
+            "species": "Doduo"
+          },
+          {
+            "level": 23,
+            "species": "Venonat"
+          },
+          {
+            "level": 24,
+            "species": "Exeggcute"
+          },
+          {
+            "level": 33,
+            "species": "Nidorino"
+          },
+          {
+            "level": 26,
+            "species": "Exeggcute"
+          },
+          {
+            "level": 25,
+            "species": "NidoranF"
+          },
+          {
+            "level": 31,
+            "species": "Venomoth"
+          },
+          {
+            "level": 26,
+            "species": "Tauros"
+          },
+          {
+            "level": 28,
+            "species": "Kangaskhan"
+          }
+        ]
+      },
+      "water": {
+        "encounterRate": 0,
+        "mons": []
+      }
+    },
+    "blue": {
+      "grass": {
+        "encounterRate": 30,
+        "mons": [
+          {
+            "level": 25,
+            "species": "NidoranF"
+          },
+          {
+            "level": 26,
+            "species": "Doduo"
+          },
+          {
+            "level": 23,
+            "species": "Venonat"
+          },
+          {
+            "level": 24,
+            "species": "Exeggcute"
+          },
+          {
+            "level": 33,
+            "species": "Nidorina"
+          },
+          {
+            "level": 26,
+            "species": "Exeggcute"
+          },
+          {
+            "level": 25,
+            "species": "NidoranM"
+          },
+          {
+            "level": 31,
+            "species": "Venomoth"
+          },
+          {
+            "level": 26,
+            "species": "Tauros"
+          },
+          {
+            "level": 28,
+            "species": "Kangaskhan"
+          }
+        ]
+      },
+      "water": {
+        "encounterRate": 0,
+        "mons": []
+      }
+    }
+  }
+}

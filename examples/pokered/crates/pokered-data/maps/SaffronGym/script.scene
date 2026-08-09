@@ -1,0 +1,185 @@
+// SaffronGym — translated from the original disassembly (scripts/SaffronGym.asm,
+// text/SaffronGym.asm) to the real Game DSL API surface. Gym template: leader
+// Sabrina is talk-driven (map.json isTrainer = false) so the script owns the
+// battle->badge->TM reward; the 7 gym trainers (Channelers + Psychics, sprites
+// labeled Channeler/Youngster) are sight-engaged by the runtime, so their .scene
+// handlers are dialogue only.
+//
+// PUZZLE NOTE: the Saffron Gym maze of teleport-pad warps is implemented by the
+// warps[] table in map.json (each pad loops SaffronGym->SaffronGym, matching the
+// original's warp pairs one-for-one), so the maze is fully reproduced. Sabrina
+// battle / MARSHBADGE / TM46 are handled in talkSabrina below.
+
+game_scene SaffronGym {
+  // ── Sabrina, the Gym Leader (npc 1) ─────────────────────────────────────
+  @storyline("talkSabrina") {
+    @trigger(map = "SaffronGym", npc = 1)
+    @if (getFlag("EVENT_BEAT_SABRINA")) {
+      @if (!getFlag("EVENT_GOT_TM46")) {
+        // Beat Sabrina previously but had no room for the TM — try again.
+        @speaker("") {
+          @t("The MARSHBADGE makes POKeMON\nup to L70 obey you!\n\nStronger POKeMON will become\nwild, ignoring your orders\nin battle!\n\nJust don't raise your\nPOKeMON too much!\n\nWait, please take this TM\nwith you!", "粉色徽章能让等级L70以下的宝\n可梦听你的话！\n\n更强的宝可梦会变得野性难驯战\n斗中会无视你的指令！\n\n所以别把宝可梦培育得太过强\n大！\n\n等等，请收下这个招式学习器！")
+        }
+        given = giveItem("TM46", 1)
+        @if (given) {
+          setFlag("EVENT_GOT_TM46")
+          @speaker("") { @t("<PLAYER> received TM46!", "<PLAYER>收到了 TM46！") }
+          @speaker("") {
+            @t("TM46 is PSYWAVE! It uses\npowerful psychic waves to\ninflict damage!", "TM46是精神波！用强大的精神波\n动来给予伤害！")
+          }
+        } @else {
+          @speaker("") { @t("Your pack is full of other\nitems!", "你的背包里装满了其他道具！") }
+        }
+      } @else {
+        @speaker("") {
+          @t("Everyone has psychic power!\nPeople just don't realize\nit!", "每个人都有超能力！只是人们没\n有意识到而已！")
+        }
+      }
+    } @else {
+      @speaker("") {
+        @t("I had a vision of your\narrival!\n\nI have had psychic powers\nsince I was a child.\n\nI first learned to bend\nspoons with my mind.\n\nI dislike fight- ing, but if\nyou wish, I will show you my\npowers!", "我预见到了你的到来！\n\n我从幼年时代开始，就拥有超能\n力。\n\n我最初学会的就是用念力折弯勺\n子。\n\n我不喜欢战斗但如果你愿意我就\n让你见识我的力量！")
+      }
+      result = startBattle("OPP_SABRINA1")
+      @if (result == "win") {
+        @speaker("") {
+          @t("I'm shocked! But, a loss is\na loss.\n\nI admit I didn't work hard\nenough to win!\n\nYou earned the MARSHBADGE!", "我太震惊了！但输了就是输了。\n\n我承认自己不够努力没能取胜！\n\n你赢得了粉色徽章！")
+        }
+        giveBadge("MARSHBADGE")
+        setFlag("EVENT_BEAT_SABRINA")
+        @speaker("") {
+          @t("The MARSHBADGE makes POKeMON\nup to L70 obey you!\n\nStronger POKeMON will become\nwild, ignoring your orders\nin battle!\n\nJust don't raise your\nPOKeMON too much!\n\nWait, please take this TM\nwith you!", "粉色徽章能让等级L70以下的宝\n可梦听你的话！\n\n更强的宝可梦会变得野性难驯战\n斗中会无视你的指令！\n\n所以别把宝可梦培育得太过强\n大！\n\n等等，请收下这个招式学习器！")
+        }
+        given = giveItem("TM46", 1)
+        @if (given) {
+          setFlag("EVENT_GOT_TM46")
+          @speaker("") { @t("<PLAYER> received TM46!", "<PLAYER>收到了 TM46！") }
+          @speaker("") {
+            @t("TM46 is PSYWAVE! It uses\npowerful psychic waves to\ninflict damage!", "TM46是精神波！用强大的精神波\n动来给予伤害！")
+          }
+        } @else {
+          @speaker("") { @t("Your pack is full of other\nitems!", "你的背包里装满了其他道具！") }
+        }
+        // Deactivate the gym trainers (original SetEventRange in post-battle).
+        setFlag("EVENT_BEAT_SAFFRON_GYM_TRAINER_0")
+        setFlag("EVENT_BEAT_SAFFRON_GYM_TRAINER_1")
+        setFlag("EVENT_BEAT_SAFFRON_GYM_TRAINER_2")
+        setFlag("EVENT_BEAT_SAFFRON_GYM_TRAINER_3")
+        setFlag("EVENT_BEAT_SAFFRON_GYM_TRAINER_4")
+        setFlag("EVENT_BEAT_SAFFRON_GYM_TRAINER_5")
+        setFlag("EVENT_BEAT_SAFFRON_GYM_TRAINER_6")
+      }
+    }
+  }
+
+  // ── Channeler 1 (npc 2) — sight-engaged; dialogue only ──────────────────
+  @storyline("talkChanneler1") {
+    @trigger(map = "SaffronGym", npc = 2)
+    @if (getFlag("EVENT_BEAT_SAFFRON_GYM_TRAINER_0")) {
+      @speaker("") {
+        @t("In a battle of equals, the\none with the stronger will\nwins!\n\nIf you wish to beat SABRINA,\nfocus on winning!", "在势均力敌的战斗中，意志更强\n的一方才会获胜！\n\n如果你想打败娜姿，就要一心求\n胜！")
+      }
+    } @else {
+      @speaker("") {
+        @t("SABRINA is younger than I,\nbut I respect her!", "娜姿比我年轻但我很尊敬她！")
+      }
+    }
+  }
+
+  // ── Psychic 1 (npc 3) — sight-engaged; dialogue only ────────────────────
+  @storyline("talkPsychic1") {
+    @trigger(map = "SaffronGym", npc = 3)
+    @if (getFlag("EVENT_BEAT_SAFFRON_GYM_TRAINER_1")) {
+      @speaker("") {
+        @t("Psychic POKeMON fear only\nghosts and bugs!", "超能力宝可梦只怕幽灵和虫系宝\n可梦！")
+      }
+    } @else {
+      @speaker("") {
+        @t("Does our unseen power scare\nyou?", "我们无形的力量吓到你了吗？")
+      }
+    }
+  }
+
+  // ── Channeler 2 (npc 4) — sight-engaged; dialogue only ──────────────────
+  @storyline("talkChanneler2") {
+    @trigger(map = "SaffronGym", npc = 4)
+    @if (getFlag("EVENT_BEAT_SAFFRON_GYM_TRAINER_2")) {
+      @speaker("") {
+        @t("I must teach better\ntechniques to my POKeMON!", "我必须教会我的宝可梦更好的招\n式！")
+      }
+    } @else {
+      @speaker("") {
+        @t("POKeMON take on the\nappearance of their\ntrainers.\n\nYour POKeMON must be tough,\nthen!", "宝可梦会变得像它们的训练家一\n样。\n\n那你的宝可梦一定也很强吧！")
+      }
+    }
+  }
+
+  // ── Psychic 2 (npc 5) — sight-engaged; dialogue only ────────────────────
+  @storyline("talkPsychic2") {
+    @trigger(map = "SaffronGym", npc = 5)
+    @if (getFlag("EVENT_BEAT_SAFFRON_GYM_TRAINER_3")) {
+      @speaker("") {
+        @t("SABRINA just wiped out the\nKARATE MASTER next door!", "娜姿刚刚打败了隔壁的空手道大\n师！")
+      }
+    } @else {
+      @speaker("") {
+        @t("You know that power alone\nisn't enough!", "光靠力量是不足以取胜的！")
+      }
+    }
+  }
+
+  // ── Channeler 3 (npc 6) — sight-engaged; dialogue only ──────────────────
+  @storyline("talkChanneler3") {
+    @trigger(map = "SaffronGym", npc = 6)
+    @if (getFlag("EVENT_BEAT_SAFFRON_GYM_TRAINER_4")) {
+      @speaker("") {
+        @t("I knew that this was going\nto take place.", "我早就知道这一天会到来。")
+      }
+    } @else {
+      @speaker("") {
+        @t("You and I, our POKeMON shall\nfight!", "你和我，用宝可梦一决胜负吧！")
+      }
+    }
+  }
+
+  // ── Psychic 3 (npc 7) — sight-engaged; dialogue only ────────────────────
+  @storyline("talkPsychic3") {
+    @trigger(map = "SaffronGym", npc = 7)
+    @if (getFlag("EVENT_BEAT_SAFFRON_GYM_TRAINER_5")) {
+      @speaker("") {
+        @t("There used to be 2 POKeMON\nGYMs in SAFFRON.\n\nThe FIGHTING DOJO next door\nlost its GYM status when we\nwent and creamed them!", "从前，金黄市有2座宝可梦道\n馆。\n\n隔壁的格斗道场被我们狠狠打\n败，从此失去了道馆的资格！")
+      }
+    } @else {
+      @speaker("") {
+        @t("SABRINA is young, but she's\nalso our LEADER!\n\nYou won't reach her easily!", "娜姿虽然年轻但她可是我们的馆\n主！\n\n你想见到她可没那么容易！")
+      }
+    }
+  }
+
+  // ── Psychic 4 (npc 8) — sight-engaged; dialogue only ────────────────────
+  @storyline("talkPsychic4") {
+    @trigger(map = "SaffronGym", npc = 8)
+    @if (getFlag("EVENT_BEAT_SAFFRON_GYM_TRAINER_6")) {
+      @speaker("") {
+        @t("That's right! I used\ntelepathy to read your mind!", "没错！我用心灵感应读了你的内\n心！")
+      }
+    } @else {
+      @speaker("") {
+        @t("SAFFRON POKeMON GYM is\nfamous for its psychics!\n\nYou want to see SABRINA! I\ncan tell!", "金黄市宝可梦道馆以超能力者闻\n名！\n\n你想见娜姿！我一眼就看出来\n了！")
+      }
+    }
+  }
+
+  // ── Gym guide (npc 9) ───────────────────────────────────────────────────
+  @storyline("talkGymGuide") {
+    @trigger(map = "SaffronGym", npc = 9)
+    @if (getFlag("EVENT_BEAT_SABRINA")) {
+      @speaker("") {
+        @t("Psychic power, huh?\n\nIf I had that, I'd make a\nbundle at the slots!", "超能力，是吗？\n\n要是我也有就能在老虎机赚大钱\n了！")
+      }
+    } @else {
+      @speaker("") {
+        @t("Yo! Champ in making!\n\nSABRINA's POKeMON use\npsychic power instead of\nforce!\n\nFighting POKeMON are weak\nagainst psychic POKeMON!\n\nThey get creamed before they\ncan even aim a punch!", "哟！未来的冠军！\n\n娜姿的宝可梦靠的是超能力而不\n是蛮力！\n\n格斗系宝可梦对超能力系很不\n利！\n\n它们还没出拳就被打得落花流\n水！")
+      }
+    }
+  }
+}

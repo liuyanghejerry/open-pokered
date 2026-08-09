@@ -1,0 +1,9 @@
+{
+  "$schema": "../schemas/move.schema.json",
+  "id": "Blizzard",
+  "effect": "FreezeSideEffect1",
+  "power": 120,
+  "type": "Ice",
+  "accuracy": 90,
+  "pp": 5
+}

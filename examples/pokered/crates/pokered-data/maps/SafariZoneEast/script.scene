@@ -1,0 +1,104 @@
+// SafariZoneEast — translated from the original disassembly
+// (scripts/SafariZoneEast.asm, text/SafariZoneEast.asm, home/overworld_text.asm
+// PickUpItemText) to the real Game DSL API surface.
+//
+// Content type: ground-items + signs only. The original script is just
+// `EnableAutoTextBoxDrawing`; there are no NPCs, trainers, or on-enter cutscenes.
+// The four PokeBall objects use the shared PickUpItemText (predef PickUpItem);
+// map.json itemIds 16/17/38/237 map to FULL_RESTORE / MAX_RESTORE / CARBOS /
+// TM39 (EGG BOMB). Each PokeBall is a runtime-hidden object once picked up via
+// its toggle, so the handler just hands over the item with the standard
+// found / too-much-stuff dialogue. The three signs are static text.
+//
+// Note: Safari Zone mechanics (500-step ball-only catching, declining step
+// counter, no faint/run) are not modeled by the DSL surface; the map's wild
+// encounters fall through to ordinary battles. This is a known global Safari
+// stub, not specific to this map.
+
+game_scene SafariZoneEast {
+  // ── PokeBall ground item (npc 1) — FULL_RESTORE ─────────────────────────
+  @storyline("talkPokeBall") {
+    @trigger(map = "SafariZoneEast", npc = 1, toggle = "SAFARI_ZONE_EAST_OBJ_1")
+    given = giveItem("FULL_RESTORE", 1)
+    @if (given) {
+      @speaker("") {
+        @t("<PLAYER> found FULL_RESTORE!", "<PLAYER>发现了全复药！")
+      }
+    } @else {
+      @speaker("") {
+        @t("You have too much stuff\nalready!", "你带的东西已经太多了！")
+      }
+    }
+  }
+
+  // ── PokeBall ground item (npc 2) — MAX POTION ───────────────────────────
+  // (map.json awards item 17 = MAX_POTION; the TEXT_..._MAX_RESTORE label is a
+  // misnomer in the original — the granted item is Max Potion.)
+  @storyline("talkPokeBall1") {
+    @trigger(map = "SafariZoneEast", npc = 2, toggle = "SAFARI_ZONE_EAST_OBJ_2")
+    given = giveItem("MAX_POTION", 1)
+    @if (given) {
+      @speaker("") {
+        @t("<PLAYER> found MAX POTION!", "<PLAYER>发现了全满药！")
+      }
+    } @else {
+      @speaker("") {
+        @t("You have too much stuff\nalready!", "你带的东西已经太多了！")
+      }
+    }
+  }
+
+  // ── PokeBall ground item (npc 3) — CARBOS ───────────────────────────────
+  @storyline("talkPokeBall2") {
+    @trigger(map = "SafariZoneEast", npc = 3, toggle = "SAFARI_ZONE_EAST_OBJ_3")
+    given = giveItem("CARBOS", 1)
+    @if (given) {
+      @speaker("") {
+        @t("<PLAYER> found CARBOS!", "<PLAYER>发现了速度增强剂！")
+      }
+    } @else {
+      @speaker("") {
+        @t("You have too much stuff\nalready!", "你带的东西已经太多了！")
+      }
+    }
+  }
+
+  // ── PokeBall ground item (npc 4) — TM39 (EGG BOMB) ──────────────────────
+  @storyline("talkPokeBall3") {
+    @trigger(map = "SafariZoneEast", npc = 4, toggle = "SAFARI_ZONE_EAST_OBJ_4")
+    given = giveItem("TM39", 1)
+    @if (given) {
+      @speaker("") {
+        @t("<PLAYER> found TM39!", "<PLAYER>发现了 TM39！")
+      }
+    } @else {
+      @speaker("") {
+        @t("You have too much stuff\nalready!", "你带的东西已经太多了！")
+      }
+    }
+  }
+
+  // ── Rest House sign (sign 1) ────────────────────────────────────────────
+  @storyline("sign1") {
+    @trigger(map = "SafariZoneEast", sign = 1)
+    @speaker("") {
+      @t("REST HOUSE", "休息小屋")
+    }
+  }
+
+  // ── Trainer Tips sign (sign 2) ──────────────────────────────────────────
+  @storyline("sign2") {
+    @trigger(map = "SafariZoneEast", sign = 2)
+    @speaker("") {
+      @t("TRAINER TIPS\n\nThe remaining time declines\nonly while you walk!", "训练家提示\n\n剩余时间只在走路时才会减少！")
+    }
+  }
+
+  // ── Area direction sign (sign 3) ────────────────────────────────────────
+  @storyline("sign3") {
+    @trigger(map = "SafariZoneEast", sign = 3)
+    @speaker("") {
+      @t("CENTER AREA NORTH: AREA 2", "中心区域北边：2号区域")
+    }
+  }
+}

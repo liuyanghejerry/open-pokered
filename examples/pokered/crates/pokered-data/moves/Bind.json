@@ -1,0 +1,9 @@
+{
+  "$schema": "../schemas/move.schema.json",
+  "id": "Bind",
+  "effect": "TrappingEffect",
+  "power": 15,
+  "type": "Normal",
+  "accuracy": 75,
+  "pp": 20
+}

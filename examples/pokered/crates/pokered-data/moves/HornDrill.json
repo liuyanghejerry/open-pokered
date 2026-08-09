@@ -1,0 +1,9 @@
+{
+  "$schema": "../schemas/move.schema.json",
+  "id": "HornDrill",
+  "effect": "OhkoEffect",
+  "power": 1,
+  "type": "Normal",
+  "accuracy": 30,
+  "pp": 5
+}

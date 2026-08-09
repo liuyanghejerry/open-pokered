@@ -1,0 +1,64 @@
+{
+  "$schema": "../schemas/pokemon.schema.json",
+  "species": "Kangaskhan",
+  "baseStats": {
+    "hp": 105,
+    "attack": 95,
+    "defense": 80,
+    "speed": 90,
+    "special": 40
+  },
+  "type1": "Normal",
+  "type2": "Normal",
+  "catchRate": 45,
+  "baseExp": 175,
+  "growthRate": "MediumFast",
+  "initialMoves": [
+    "CometPunch",
+    "Rage",
+    "None",
+    "None"
+  ],
+  "tmHmFlags": [
+    177,
+    127,
+    143,
+    199,
+    162,
+    136,
+    50
+  ],
+  "pokedex": {
+    "category": "PARENT",
+    "heightFeet": 7,
+    "heightInches": 3,
+    "weightDecipounds": 1760,
+    "flavorTextPages": [
+      "The infant rarely\nventures out of\nits mother's",
+      "protective pouch\nuntil it is 3\nyears old"
+    ]
+  },
+  "evolutions": [],
+  "learnset": [
+    {
+      "level": 26,
+      "moveId": "Bite"
+    },
+    {
+      "level": 31,
+      "moveId": "TailWhip"
+    },
+    {
+      "level": 36,
+      "moveId": "MegaPunch"
+    },
+    {
+      "level": 41,
+      "moveId": "Leer"
+    },
+    {
+      "level": 46,
+      "moveId": "DizzyPunch"
+    }
+  ]
+}

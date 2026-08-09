@@ -1,0 +1,48 @@
+{
+  "$schema": "../schemas/pokemon.schema.json",
+  "species": "Cloyster",
+  "baseStats": {
+    "hp": 50,
+    "attack": 95,
+    "defense": 180,
+    "speed": 70,
+    "special": 85
+  },
+  "type1": "Water",
+  "type2": "Ice",
+  "catchRate": 60,
+  "baseExp": 203,
+  "growthRate": "Slow",
+  "initialMoves": [
+    "Withdraw",
+    "Supersonic",
+    "Clamp",
+    "AuroraBeam"
+  ],
+  "tmHmFlags": [
+    32,
+    127,
+    8,
+    224,
+    75,
+    72,
+    19
+  ],
+  "pokedex": {
+    "category": "BIVALVE",
+    "heightFeet": 4,
+    "heightInches": 11,
+    "weightDecipounds": 2920,
+    "flavorTextPages": [
+      "When attacked, it\nlaunches its\nhorns in quick",
+      "volleys. Its\ninnards have\nnever been seen"
+    ]
+  },
+  "evolutions": [],
+  "learnset": [
+    {
+      "level": 50,
+      "moveId": "SpikeCannon"
+    }
+  ]
+}

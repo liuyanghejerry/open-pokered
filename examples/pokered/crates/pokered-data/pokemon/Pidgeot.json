@@ -1,0 +1,68 @@
+{
+  "$schema": "../schemas/pokemon.schema.json",
+  "species": "Pidgeot",
+  "baseStats": {
+    "hp": 83,
+    "attack": 80,
+    "defense": 75,
+    "speed": 91,
+    "special": 70
+  },
+  "type1": "Normal",
+  "type2": "Flying",
+  "catchRate": 45,
+  "baseExp": 172,
+  "growthRate": "MediumSlow",
+  "initialMoves": [
+    "Gust",
+    "SandAttack",
+    "QuickAttack",
+    "None"
+  ],
+  "tmHmFlags": [
+    42,
+    67,
+    8,
+    192,
+    67,
+    12,
+    10
+  ],
+  "pokedex": {
+    "category": "BIRD",
+    "heightFeet": 4,
+    "heightInches": 11,
+    "weightDecipounds": 870,
+    "flavorTextPages": [
+      "When hunting, it\nskims the surface\nof water at high",
+      "speed to pick off\nunwary prey such\nas MAGIKARP"
+    ]
+  },
+  "evolutions": [],
+  "learnset": [
+    {
+      "level": 5,
+      "moveId": "SandAttack"
+    },
+    {
+      "level": 12,
+      "moveId": "QuickAttack"
+    },
+    {
+      "level": 21,
+      "moveId": "Whirlwind"
+    },
+    {
+      "level": 31,
+      "moveId": "WingAttack"
+    },
+    {
+      "level": 44,
+      "moveId": "Agility"
+    },
+    {
+      "level": 54,
+      "moveId": "MirrorMove"
+    }
+  ]
+}

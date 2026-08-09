@@ -1,0 +1,6 @@
+{
+  "$schema": "../schemas/trainer.schema.json",
+  "class": "UnusedJuggler",
+  "constName": "JUGGLER",
+  "parties": []
+}

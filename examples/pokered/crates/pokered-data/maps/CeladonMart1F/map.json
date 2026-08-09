@@ -1,0 +1,75 @@
+{
+  "$schema": "../../schemas/map.schema.json",
+  "id": 122,
+  "name": "CeladonMart1F",
+  "header": {
+    "tileset": "Lobby",
+    "music": "Pokecenter",
+    "connectionFlags": 0,
+    "width": 10,
+    "height": 4,
+    "borderBlock": 15
+  },
+  "connections": {},
+  "warps": [
+    {
+      "x": 2,
+      "y": 7,
+      "destWarpId": 0
+    },
+    {
+      "x": 3,
+      "y": 7,
+      "destWarpId": 0
+    },
+    {
+      "x": 16,
+      "y": 7,
+      "destWarpId": 1
+    },
+    {
+      "x": 17,
+      "y": 7,
+      "destWarpId": 1
+    },
+    {
+      "x": 12,
+      "y": 1,
+      "destMap": "CeladonMart2F",
+      "destWarpId": 0
+    },
+    {
+      "x": 1,
+      "y": 1,
+      "destMap": "CeladonMartElevator",
+      "destWarpId": 0
+    }
+  ],
+  "npcs": [
+    {
+      "spriteId": 42,
+      "spriteName": "LinkReceptionist",
+      "x": 8,
+      "y": 3,
+      "movement": "Stationary",
+      "facing": "Down",
+      "range": 0,
+      "textId": 1,
+      "isTrainer": false
+    }
+  ],
+  "signs": [
+    {
+      "x": 11,
+      "y": 4,
+      "textId": 1
+    },
+    {
+      "x": 14,
+      "y": 1,
+      "textId": 2
+    }
+  ],
+  "text": {},
+  "wild": null
+}

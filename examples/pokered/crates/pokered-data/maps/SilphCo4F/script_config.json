@@ -1,0 +1,72 @@
+{
+  "$schema": "../../schemas/script_config.schema.json",
+  "coordEvents": [
+    {
+      "name": "cardKeyDoor11",
+      "position": [
+        4,
+        12
+      ],
+      "trigger": "cardKeyDoor1"
+    },
+    {
+      "name": "cardKeyDoor12",
+      "position": [
+        4,
+        13
+      ],
+      "trigger": "cardKeyDoor1"
+    },
+    {
+      "name": "cardKeyDoor21",
+      "position": [
+        12,
+        8
+      ],
+      "trigger": "cardKeyDoor2"
+    },
+    {
+      "name": "cardKeyDoor22",
+      "position": [
+        12,
+        9
+      ],
+      "trigger": "cardKeyDoor2"
+    }
+  ],
+  "npcs": [
+    {
+      "id": 1,
+      "talk": "talkSilphWorkerM"
+    },
+    {
+      "id": 2,
+      "talk": "talkRocket1"
+    },
+    {
+      "id": 3,
+      "talk": "talkScientist"
+    },
+    {
+      "id": 4,
+      "talk": "talkRocket2"
+    },
+    {
+      "id": 5,
+      "talk": "itemFullHeal",
+      "toggleId": "SILPH_CO_4F_OBJ_5"
+    },
+    {
+      "id": 6,
+      "talk": "itemMaxRevive",
+      "toggleId": "SILPH_CO_4F_OBJ_6"
+    },
+    {
+      "id": 7,
+      "talk": "itemEscapeRope",
+      "toggleId": "SILPH_CO_4F_OBJ_7"
+    }
+  ],
+  "onLoad": "SilphCo4FOnLoad",
+  "signs": []
+}

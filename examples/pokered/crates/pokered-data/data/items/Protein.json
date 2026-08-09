@@ -1,0 +1,1 @@
+{"id":"Protein","name":"PROTEIN","price":9800,"category":"Medicine","effect":{"type":"Vitamin","params":{"statIdx":1,"amount":10}},"held_effect":null,"berry":null,"use_outside_battle":true,"use_in_battle":false,"consume":true,"key_item":false,"sellable":true,"description":"","tags":["vitamin","attack"]}

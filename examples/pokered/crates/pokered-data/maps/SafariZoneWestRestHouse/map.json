@@ -1,0 +1,66 @@
+{
+  "$schema": "../../schemas/map.schema.json",
+  "id": 223,
+  "name": "SafariZoneWestRestHouse",
+  "header": {
+    "tileset": "Gate",
+    "music": "SafariZone",
+    "connectionFlags": 0,
+    "width": 4,
+    "height": 4,
+    "borderBlock": 10
+  },
+  "connections": {},
+  "warps": [
+    {
+      "x": 2,
+      "y": 7,
+      "destMap": "SafariZoneWest",
+      "destWarpId": 7
+    },
+    {
+      "x": 3,
+      "y": 7,
+      "destMap": "SafariZoneWest",
+      "destWarpId": 7
+    }
+  ],
+  "npcs": [
+    {
+      "spriteId": 32,
+      "spriteName": "Scientist",
+      "x": 4,
+      "y": 4,
+      "movement": "Wander",
+      "facing": "Down",
+      "range": 0,
+      "textId": 1,
+      "isTrainer": false
+    },
+    {
+      "spriteId": 7,
+      "spriteName": "CooltrainerM",
+      "x": 0,
+      "y": 2,
+      "movement": "Stationary",
+      "facing": "Right",
+      "range": 0,
+      "textId": 2,
+      "isTrainer": false
+    },
+    {
+      "spriteId": 27,
+      "spriteName": "SilphWorkerF",
+      "x": 6,
+      "y": 2,
+      "movement": "Stationary",
+      "facing": "Down",
+      "range": 0,
+      "textId": 3,
+      "isTrainer": false
+    }
+  ],
+  "signs": [],
+  "text": {},
+  "wild": null
+}

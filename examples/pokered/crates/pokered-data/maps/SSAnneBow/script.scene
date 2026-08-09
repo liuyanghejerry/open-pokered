@@ -1,0 +1,59 @@
+// SSAnneBow — translated from the original disassembly (scripts/SSAnneBow.asm,
+// text/SSAnneBow.asm) to the real Game DSL API surface. Three talk-only NPCs
+// (SuperNerd, Sailor1, CooltrainerM) plus two sight-engaged Sailor trainers
+// (SS_ANNE_5_TRAINER_0/_1) whose battles are driven by the runtime — their
+// .scene handlers are dialogue only (pre-battle taunt vs. after-battle text).
+
+game_scene SSAnneBow {
+  // ── Super Nerd (npc 1) ──────────────────────────────────────────────────
+  @storyline("talkSuperNerd") {
+    @trigger(map = "SSAnneBow", npc = 1)
+    @speaker("") {
+      @t("The party's over. The ship\nwill be departing soon.", "派对结束了。船马上就要起航\n了。")
+    }
+  }
+
+  // ── Sailor 1 (npc 2) — deck scrubber ────────────────────────────────────
+  @storyline("talkSailor1") {
+    @trigger(map = "SSAnneBow", npc = 2)
+    @speaker("") {
+      @t("Scrubbing decks is hard\nwork!", "擦洗甲板真是辛苦活！")
+    }
+  }
+
+  // ── Cooltrainer M (npc 3) — feeling seasick ─────────────────────────────
+  @storyline("talkCooltrainerM") {
+    @trigger(map = "SSAnneBow", npc = 3)
+    @speaker("") {
+      @t("Urf. I feel ill.\n\nI stepped out to get some\nair.", "呕……我不舒服。\n\n我出来透透气。")
+    }
+  }
+
+  // ── Sailor 2 (npc 4) — sight trainer SS_ANNE_5_TRAINER_0; dialogue only ──
+  @storyline("talkSailor2") {
+    @trigger(map = "SSAnneBow", npc = 4)
+    @if (getFlag("EVENT_BEAT_SS_ANNE_5_TRAINER_0")) {
+      @speaker("") {
+        @t("How many kinds of POKeMON do\nyou think there are?", "你觉得世界上有多少种宝可梦？")
+      }
+    } @else {
+      @speaker("") {
+        @t("Hey matey!\n\nLet's do a little jig!", "嘿，伙计！\n\n我们来跳个小舞吧！")
+      }
+    }
+  }
+
+  // ── Sailor 3 (npc 5) — sight trainer SS_ANNE_5_TRAINER_1; dialogue only ──
+  @storyline("talkSailor3") {
+    @trigger(map = "SSAnneBow", npc = 5)
+    @if (getFlag("EVENT_BEAT_SS_ANNE_5_TRAINER_1")) {
+      @speaker("") {
+        @t("My Pa said there are 100\nkinds of POKeMON. I think\nthere are more.", "我老爸说世界上有100种宝可\n梦。可我觉得肯定更多。")
+      }
+    } @else {
+      @speaker("") {
+        @t("Ahoy there! Are you seasick?", "喂，你好！你晕船了吗？")
+      }
+    }
+  }
+}

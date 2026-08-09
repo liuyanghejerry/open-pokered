@@ -1,0 +1,40 @@
+{
+  "$schema": "/schemas/layout.schema.json",
+  "schema_version": 1,
+  "screen": "battle_bag",
+  "variants": {
+    "default": {
+      "children": [
+        {
+          "id": "list",
+          "rect": {
+            "tx": 4,
+            "ty": 10,
+            "tw": 16,
+            "th": 6
+          },
+          "color": "Black",
+          "width": "fixed",
+          "height": "auto",
+          "min_height": 3,
+          "padding": {
+            "top": 1,
+            "bottom": 1,
+            "left": 1,
+            "right": 1
+          },
+          "gap": 0,
+          "justify": "start",
+          "align": "start",
+          "items": [],
+          "cursor": {
+            "glyph": "\u25b6",
+            "color": "Black"
+          },
+          "layout": "flex",
+          "z_index": 0
+        }
+      ]
+    }
+  }
+}

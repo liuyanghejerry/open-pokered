@@ -1,0 +1,67 @@
+{
+  "$schema": "/schemas/layout.schema.json",
+  "schema_version": 1,
+  "screen": "oak_speech",
+  "variants": {
+    "text_phase": {
+      "cursor": {
+        "tx": 18,
+        "base_ty": 15,
+        "row_step": 0,
+        "glyph": "\u25bc",
+        "color": "Black"
+      },
+      "children": [
+        {
+          "id": "dialog_box",
+          "rect": {
+            "tx": 0,
+            "ty": 12,
+            "tw": 20,
+            "th": 6
+          },
+          "color": "Black"
+        }
+      ]
+    },
+    "name_choice": {
+      "cursor": {
+        "tx": 1,
+        "base_ty": 2,
+        "row_step": 2,
+        "glyph": "\u25b6",
+        "color": "Black"
+      },
+      "children": [
+        {
+          "id": "name_list",
+          "rect": {
+            "tx": 0,
+            "ty": 0,
+            "tw": 11,
+            "th": 10
+          },
+          "color": "Black",
+          "labels": [
+            {
+              "tx": 3,
+              "ty": 1,
+              "text": "NAME",
+              "color": "Black"
+            }
+          ]
+        },
+        {
+          "id": "prompt_box",
+          "rect": {
+            "tx": 0,
+            "ty": 12,
+            "tw": 18,
+            "th": 4
+          },
+          "color": "Black"
+        }
+      ]
+    }
+  }
+}

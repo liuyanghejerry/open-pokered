@@ -1,0 +1,28 @@
+{
+  "$schema": "../../schemas/script_config.schema.json",
+  "coordEvents": [
+    {
+      "name": "gateThreshold1",
+      "position": [
+        4,
+        2
+      ],
+      "trigger": "gateThreshold"
+    },
+    {
+      "name": "gateThreshold2",
+      "position": [
+        5,
+        2
+      ],
+      "trigger": "gateThreshold"
+    }
+  ],
+  "npcs": [
+    {
+      "id": 1,
+      "talk": "talkGuard"
+    }
+  ],
+  "signs": []
+}

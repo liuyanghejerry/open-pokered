@@ -1,0 +1,37 @@
+{
+  "$schema": "../../schemas/script_config.schema.json",
+  "coordEvents": [],
+  "npcs": [
+    {
+      "id": 1,
+      "talk": "talkKarateMaster"
+    },
+    {
+      "id": 2,
+      "talk": "talkBlackbelt1"
+    },
+    {
+      "id": 3,
+      "talk": "talkBlackbelt2"
+    },
+    {
+      "id": 4,
+      "talk": "talkBlackbelt3"
+    },
+    {
+      "id": 5,
+      "talk": "talkBlackbelt4"
+    },
+    {
+      "id": 6,
+      "talk": "talkHitmonleeBall",
+      "toggleId": "FIGHTINGDOJO_HITMONLEE_POKE_BALL"
+    },
+    {
+      "id": 7,
+      "talk": "talkHitmonchanBall",
+      "toggleId": "FIGHTINGDOJO_HITMONCHAN_POKE_BALL"
+    }
+  ],
+  "signs": []
+}

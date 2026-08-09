@@ -1,0 +1,58 @@
+// CeruleanCave2F — translated from the original disassembly
+// (scripts/CeruleanCave2F.asm, home/overworld_text.asm PickUpItemText) to the
+// real Game DSL API surface.
+//
+// Content type: ground-items only. The original script is just
+// `EnableAutoTextBoxDrawing` plus three PokeBall objects, each using the shared
+// PickUpItemText (predef PickUpItem). No NPCs, signs, trainers, or cutscenes.
+// The three items are PP_UP, ULTRA_BALL and FULL_RESTORE (map.json itemIds
+// 79/2/16). Each PokeBall is a runtime-hidden object once picked up via its
+// toggle, so the handler just hands over the item with the standard
+// found/too-much-stuff dialogue.
+
+game_scene CeruleanCave2F {
+  // ── PokeBall ground item (npc 1) — PP_UP ────────────────────────────────
+  @storyline("talkPokeBall") {
+    @trigger(map = "CeruleanCave2F", npc = 1, toggle = "CERULEAN_CAVE_2F_OBJ_1")
+    given = giveItem("PP_UP", 1)
+    @if (given) {
+      @speaker("") {
+        @t("<PLAYER> found PP_UP!", "<PLAYER>找到了 PP提升剂！")
+      }
+    } @else {
+      @speaker("") {
+        @t("You have too much stuff\nalready!", "你带的东西太多了！")
+      }
+    }
+  }
+
+  // ── PokeBall ground item (npc 2) — ULTRA_BALL ───────────────────────────
+  @storyline("talkPokeBall1") {
+    @trigger(map = "CeruleanCave2F", npc = 2, toggle = "CERULEAN_CAVE_2F_OBJ_2")
+    given = giveItem("ULTRA_BALL", 1)
+    @if (given) {
+      @speaker("") {
+        @t("<PLAYER> found ULTRA_BALL!", "<PLAYER>找到了高级球！")
+      }
+    } @else {
+      @speaker("") {
+        @t("You have too much stuff\nalready!", "你带的东西太多了！")
+      }
+    }
+  }
+
+  // ── PokeBall ground item (npc 3) — FULL_RESTORE ─────────────────────────
+  @storyline("talkPokeBall2") {
+    @trigger(map = "CeruleanCave2F", npc = 3, toggle = "CERULEAN_CAVE_2F_OBJ_3")
+    given = giveItem("FULL_RESTORE", 1)
+    @if (given) {
+      @speaker("") {
+        @t("<PLAYER> found FULL_RESTORE!", "<PLAYER>找到了全复药！")
+      }
+    } @else {
+      @speaker("") {
+        @t("You have too much stuff\nalready!", "你带的东西太多了！")
+      }
+    }
+  }
+}

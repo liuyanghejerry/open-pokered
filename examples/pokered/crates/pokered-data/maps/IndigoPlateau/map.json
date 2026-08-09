@@ -1,0 +1,37 @@
+{
+  "$schema": "../../schemas/map.schema.json",
+  "id": 9,
+  "name": "IndigoPlateau",
+  "header": {
+    "tileset": "Plateau",
+    "music": "IndigoPlateau",
+    "connectionFlags": 4,
+    "width": 10,
+    "height": 9,
+    "borderBlock": 14
+  },
+  "connections": {
+    "south": {
+      "targetMap": "Route23",
+      "offset": 0
+    }
+  },
+  "warps": [
+    {
+      "x": 9,
+      "y": 5,
+      "destMap": "IndigoPlateauLobby",
+      "destWarpId": 0
+    },
+    {
+      "x": 10,
+      "y": 5,
+      "destMap": "IndigoPlateauLobby",
+      "destWarpId": 0
+    }
+  ],
+  "npcs": [],
+  "signs": [],
+  "text": {},
+  "wild": null
+}

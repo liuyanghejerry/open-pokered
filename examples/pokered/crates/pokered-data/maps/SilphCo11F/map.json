@@ -1,0 +1,107 @@
+{
+  "$schema": "../../schemas/map.schema.json",
+  "id": 235,
+  "name": "SilphCo11F",
+  "header": {
+    "tileset": "Interior",
+    "music": "SilphCo",
+    "connectionFlags": 0,
+    "width": 9,
+    "height": 9,
+    "borderBlock": 13
+  },
+  "connections": {},
+  "warps": [
+    {
+      "x": 9,
+      "y": 0,
+      "destMap": "SilphCo10F",
+      "destWarpId": 1
+    },
+    {
+      "x": 13,
+      "y": 0,
+      "destMap": "SilphCoElevator",
+      "destWarpId": 0
+    },
+    {
+      "x": 5,
+      "y": 5,
+      "destWarpId": 9
+    },
+    {
+      "x": 3,
+      "y": 2,
+      "destMap": "SilphCo7F",
+      "destWarpId": 3
+    }
+  ],
+  "npcs": [
+    {
+      "spriteId": 43,
+      "spriteName": "SilphPresident",
+      "x": 7,
+      "y": 5,
+      "movement": "Stationary",
+      "facing": "Down",
+      "range": 0,
+      "textId": 1,
+      "isTrainer": false
+    },
+    {
+      "spriteId": 15,
+      "spriteName": "Beauty",
+      "x": 10,
+      "y": 5,
+      "movement": "Stationary",
+      "facing": "Down",
+      "range": 0,
+      "textId": 2,
+      "isTrainer": false
+    },
+    {
+      "spriteId": 23,
+      "spriteName": "Giovanni",
+      "x": 6,
+      "y": 9,
+      "movement": "Stationary",
+      "facing": "Down",
+      "range": 0,
+      "textId": 3,
+      "isTrainer": false,
+      "trainerClass": "Giovanni",
+      "trainerSet": 2
+    },
+    {
+      "spriteId": 24,
+      "spriteName": "Rocket",
+      "x": 3,
+      "y": 16,
+      "movement": "Stationary",
+      "facing": "Up",
+      "range": 0,
+      "textId": 4,
+      "isTrainer": true,
+      "trainerClass": "Rocket",
+      "trainerSet": 41,
+      "endBattleText": "Don't...\nPlease!"
+    },
+    {
+      "spriteId": 24,
+      "spriteName": "Rocket",
+      "x": 15,
+      "y": 9,
+      "movement": "Stationary",
+      "facing": "Up",
+      "range": 0,
+      "textId": 5,
+      "isTrainer": true,
+      "trainerClass": "Rocket",
+      "trainerSet": 40,
+      "endBattleText": "Gaah!\nDemolished!"
+    }
+  ],
+  "signs": [],
+  "text": {},
+  "wild": null
+}

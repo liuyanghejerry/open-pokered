@@ -1,0 +1,67 @@
+// SSAnneKitchen — translated from the original disassembly
+// (scripts/SSAnneKitchen.asm, text/SSAnneKitchen.asm) to the real Game DSL API.
+// Pure NPC-dialogue map: seven cooks, no battles/items/flags. Cook 7 (the CHEF)
+// announces a randomly chosen "main course" in the original; game.showRandomText
+// reproduces the pool of three faithful dish lines (RNG from the Rust side).
+
+game_scene SSAnneKitchen {
+  // ── Cook 1 (npc 1) ──────────────────────────────────────────────────────
+  @storyline("talkCook1") {
+    @trigger(map = "SSAnneKitchen", npc = 1)
+    @speaker("") {
+      @t("You, mon petit! We're busy\nhere! Out of the way!", "喂，小家伙！我们正忙着呢！快\n让开！")
+    }
+  }
+
+  // ── Cook 2 (npc 2) ──────────────────────────────────────────────────────
+  @storyline("talkCook2") {
+    @trigger(map = "SSAnneKitchen", npc = 2)
+    @speaker("") {
+      @t("I saw an odd ball in the\ntrash.", "我在垃圾桶里看到了一个奇怪的\n球。")
+    }
+  }
+
+  // ── Cook 3 (npc 3) ──────────────────────────────────────────────────────
+  @storyline("talkCook3") {
+    @trigger(map = "SSAnneKitchen", npc = 3)
+    @speaker("") {
+      @t("I'm so busy I'm getting\ndizzy!", "我忙得都快晕头转向了！")
+    }
+  }
+
+  // ── Cook 4 (npc 4) ──────────────────────────────────────────────────────
+  @storyline("talkCook4") {
+    @trigger(map = "SSAnneKitchen", npc = 4)
+    @speaker("") {
+      @t("Hum-de-hum-de- ho...\n\nI peel spuds every day!\nHum-hum...", "嗯哼嗯哼哼……\n\n我每天都在削土豆！嗯哼……")
+    }
+  }
+
+  // ── Cook 5 (npc 5) ──────────────────────────────────────────────────────
+  @storyline("talkCook5") {
+    @trigger(map = "SSAnneKitchen", npc = 5)
+    @speaker("") {
+      @t("Did you hear about SNORLAX?\n\nAll it does is eat and\nsleep!", "你听说过卡比兽吗？\n\n它整天就知道吃和睡！")
+    }
+  }
+
+  // ── Cook 6 (npc 6) ──────────────────────────────────────────────────────
+  @storyline("talkCook6") {
+    @trigger(map = "SSAnneKitchen", npc = 6)
+    @speaker("") {
+      @t("Snivel...Sniff...\n\nI only get to peel onions...\nSnivel...", "呜咽……抽泣……\n\n我只能一直剥洋葱……呜咽……")
+    }
+  }
+
+  // ── Cook 7, "le CHEF" (npc 7) ───────────────────────────────────────────
+  // Original picks the main course from a random value (hRandomAdd bits): a 1/2
+  // chance of Salmon, else 1/2 of Eels, else Prime Beef. game.showRandomText
+  // reproduces the pool of three faithful dish lines (RNG from the Rust side).
+  @storyline("talkCook7") {
+    @trigger(map = "SSAnneKitchen", npc = 7)
+    @speaker("") {
+      @t("Er-hem! Indeed I am le CHEF!\n\nLe main course is", "咳咳！没错，我就是主厨！\n\n今天的主菜是")
+    }
+    showRandomText(@t("Salmon du Salad!\n\nLes guests may gripe it's\nfish again, however!", "三文鱼沙拉！\n\n客人们可能会抱怨又是鱼！"), @t("Eels au Barbecue!\n\nLes guests will mutiny, I\nfear.", "烤鳗鱼！\n\n恐怕客人们要造反了。"), @t("Prime Beef Steak!\n\nBut, have I enough fillets\ndu beef?", "顶级牛排！\n\n但我的牛肉够用吗？"))
+  }
+}

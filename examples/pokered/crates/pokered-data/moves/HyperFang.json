@@ -1,0 +1,9 @@
+{
+  "$schema": "../schemas/move.schema.json",
+  "id": "HyperFang",
+  "effect": "FlinchSideEffect1",
+  "power": 80,
+  "type": "Normal",
+  "accuracy": 90,
+  "pp": 15
+}

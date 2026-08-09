@@ -1,0 +1,66 @@
+// Refactored from PewterPokecenter/script.js to jrpg-engine-dsl.
+// Follows the CeladonPokecenter pattern (Pokecenter nurse dialog
+// with @choice + @option). See docs/MIGRATION_NOTES.md §A.
+
+game_scene PewterPokecenter {
+  @storyline("talkNurse") {
+    @trigger(map = "PewterPokecenter", npc = 1)
+    @speaker("") {
+      @t("Welcome to the POKEMON\nCENTER!\n\nWe heal your POKEMON back to\nperfect health!\n\nShall we heal your POKEMON?", "欢迎来到宝可梦中心！\n\n我们会让你的宝可梦恢复最佳状\n态！\n\n要为你治疗宝可梦吗？")
+    }
+    @choice {
+      @option(@t("Yes", "是")) {
+        @speaker("") {
+          @t("OK, we will need your\nPOKEMON.", "好的，请把宝可梦交给我。")
+        }
+        faceNpc("1", "right")
+        delay(8)
+        heal()
+        animateHealingMachine()
+        faceNpc("1", "down")
+        delay(8)
+        @speaker("") {
+          @t("Thank you for waiting.\n\nYour POKEMON are fully\nhealed!", "谢谢你的等待。\n\n你的宝可梦已完全恢复了！")
+        }
+      }
+      @option(@t("No", "否")) {
+      }
+    }
+    @speaker("") {
+      @t("We hope to see you again!", "期待你再次光临！")
+    }
+  }
+
+  @storyline("talkGentleman") {
+    @trigger(map = "PewterPokecenter", npc = 2)
+    @speaker("") { @t("What!?\n\nTEAM ROCKET is at MT.MOON?\nHuh? I'm on the phone!\n\nScram!", "什么！？\n\n火箭队竟然在月见山？嗯？我在\n打电话！\n\n快走开！") }
+  }
+
+  @storyline("talkFairy") {
+    @trigger(map = "PewterPokecenter", npc = 3)
+    @speaker("") {
+      @t("JIGGLYPUFF: Puu pupuu!", "胖丁：噗噗噗！")
+    }
+    playCry("JIGGLYPUFF")
+    playSound("SFX_STOP_ALL_MUSIC")
+    delay(32)
+    playMusic("MUSIC_JIGGLYPUFF_SONG")
+    @speaker("") {
+      @t("JIGGLYPUFF sang its SONG.\n\nEveryone started to feel\nsleepy...", "胖丁唱起了它的歌。\n\n大家都开始犯困了……")
+    }
+    delay(32)
+    playMusic("Pokecenter")
+  }
+
+  @storyline("talkLinkReceptionist") {
+    @trigger(map = "PewterPokecenter", npc = 4)
+    @speaker("") { @t("Welcome to the CABLE CLUB!", "欢迎来到通信俱乐部！") }
+  }
+
+  // ── Pokémon Center PC (sign 1 at 13,3) ───────────────────────────────
+  // engine/menus/pc.asm ActivatePC: BILL's PC / item PC / PROF.OAK's PC.
+  @storyline("pcStorage") {
+    @trigger(map = "PewterPokecenter", sign = 1)
+    openPC()
+  }
+}

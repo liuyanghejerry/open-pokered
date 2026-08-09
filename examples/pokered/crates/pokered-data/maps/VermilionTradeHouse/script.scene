@@ -1,0 +1,53 @@
+// VermilionTradeHouse — translated from the original disassembly
+// (scripts/VermilionTradeHouse.asm, engine/events/in_game_trades.asm,
+// data/events/trades.asm, data/text/text_7.asm).
+//
+// One NPC: a Little Girl who offers in-game trade TRADE_FOR_DUX — the player
+// gives SPEAROW and receives a FARFETCH'D nicknamed "DUX"
+// (TRADE_DIALOGSET_HAPPY / dialogset 3).
+//
+// The trade is fully implemented via tradePokemon(): it verifies the player
+// carries SPEAROW, removes it from the party, and adds FARFETCH'D nicknamed
+// DUX with the trade animation; the wrong-mon path (_WrongMon3Text) returns
+// false. See talkLittleGirl below.
+
+game_scene VermilionTradeHouse {
+  // ── Little Girl (npc 1) — TRADE_FOR_DUX: SPEAROW -> FARFETCH'D (DUX) ──────
+  // dialogset HAPPY (set 3).
+  @storyline("talkLittleGirl") {
+    @trigger(map = "VermilionTradeHouse", npc = 1)
+    @if (getFlag("EVENT_TRADED_FOR_DUX")) {
+      // _AfterTrade3Text — the girl asks after the FARFETCH'D she gave away.
+      @speaker("") {
+        @t("How is my old FARFETCH'D?\n\nMy SPEAROW is doing great!", "我以前的大葱鸭还好吗？\n\n我的烈雀过得很好！")
+      }
+    } @else {
+      // _WannaTrade3Text (HAPPY): looking for SPEAROW, offering FARFETCH'D.
+      @speaker("") {
+        @t("Hi! Do you have SPEAROW?\n\nWant to trade it for\nFARFETCH'D?", "嗨！你有烈雀吗？\n\n想把它换成大葱鸭吗？")
+      }
+      @choice {
+        @option(@t("YES", "是")) {
+          // ConnectCableText -> real in-game trade (removes SPEAROW, adds
+          // FARFETCH'D nicknamed DUX). tradePokemon returns false if the player
+          // doesn't actually carry SPEAROW -> wrong-mon (dialogset HAPPY).
+          @speaker("") { @t("Okay, connect the cable like\nso!", "好的，请像这样连接线路！") }
+          traded = tradePokemon("SPEAROW", "FARFETCHD", "DUX")
+          @if (traded) {
+            setFlag("EVENT_TRADED_FOR_DUX")
+            @speaker("") { @t("Thanks pal!", "谢啦，朋友！") }
+            @speaker("") {
+              @t("<PLAYER> traded SPEAROW for\nFARFETCH'D!", "<PLAYER>用烈雀换到了大葱鸭！")
+            }
+          } @else {
+            @speaker("") { @t("Hmmm? This isn't SPEAROW.\n\nThink of me when you get\none.", "嗯？这不是烈雀。\n\n等你抓到一只，记得想到我。") }
+          }
+        }
+        @option(@t("NO", "否")) {
+          // _NoTrade3Text
+          @speaker("") { @t("That's too bad.", "那太可惜了。") }
+        }
+      }
+    }
+  }
+}

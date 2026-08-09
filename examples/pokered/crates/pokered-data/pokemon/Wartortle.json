@@ -1,0 +1,74 @@
+{
+  "$schema": "../schemas/pokemon.schema.json",
+  "species": "Wartortle",
+  "baseStats": {
+    "hp": 59,
+    "attack": 63,
+    "defense": 80,
+    "speed": 58,
+    "special": 65
+  },
+  "type1": "Water",
+  "type2": "Water",
+  "catchRate": 45,
+  "baseExp": 143,
+  "growthRate": "MediumSlow",
+  "initialMoves": [
+    "Tackle",
+    "TailWhip",
+    "Bubble",
+    "None"
+  ],
+  "tmHmFlags": [
+    177,
+    63,
+    15,
+    200,
+    131,
+    8,
+    50
+  ],
+  "pokedex": {
+    "category": "TURTLE",
+    "heightFeet": 3,
+    "heightInches": 3,
+    "weightDecipounds": 500,
+    "flavorTextPages": [
+      "Often hides in\nwater to stalk\nunwary prey. For",
+      "swimming fast, it\nmoves its ears to\nmaintain balance"
+    ]
+  },
+  "evolutions": [
+    {
+      "method": "level",
+      "species": "Blastoise",
+      "level": 36
+    }
+  ],
+  "learnset": [
+    {
+      "level": 8,
+      "moveId": "Bubble"
+    },
+    {
+      "level": 15,
+      "moveId": "WaterGun"
+    },
+    {
+      "level": 24,
+      "moveId": "Bite"
+    },
+    {
+      "level": 31,
+      "moveId": "Withdraw"
+    },
+    {
+      "level": 39,
+      "moveId": "SkullBash"
+    },
+    {
+      "level": 47,
+      "moveId": "HydroPump"
+    }
+  ]
+}

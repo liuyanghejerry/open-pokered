@@ -1,0 +1,55 @@
+// Refactored from FuchsiaPokecenter/script.js to jrpg-engine-dsl.
+// Follows the CeladonPokecenter pattern (Pokecenter nurse dialog
+// with @choice + @option). See docs/MIGRATION_NOTES.md §A.
+
+game_scene FuchsiaPokecenter {
+  @storyline("talkNurse") {
+    @trigger(map = "FuchsiaPokecenter", npc = 1)
+    @speaker("") {
+      @t("Welcome to the POKEMON\nCENTER!\n\nWe heal your POKEMON back to\nperfect health!\n\nShall we heal your POKEMON?", "欢迎光临宝可梦中心！\n\n我们会把你的宝可梦恢复到最佳\n状态！\n\n要为你治疗宝可梦吗？")
+    }
+    @choice {
+      @option(@t("Yes", "是")) {
+        @speaker("") {
+          @t("OK, we will need your\nPOKEMON.", "OK，请把你的宝可梦交给我。")
+        }
+        faceNpc("1", "right")
+        delay(8)
+        heal()
+        animateHealingMachine()
+        faceNpc("1", "down")
+        delay(8)
+        @speaker("") {
+          @t("Thank you for waiting.\n\nYour POKEMON are fully\nhealed!", "感谢您的耐心等待。\n\n你的宝可梦已完全治愈！")
+        }
+      }
+      @option(@t("No", "否")) {
+      }
+    }
+    @speaker("") {
+      @t("We hope to see you again!", "欢迎下次再来！")
+    }
+  }
+
+  @storyline("talkRocker") {
+    @trigger(map = "FuchsiaPokecenter", npc = 2)
+    @speaker("") { @t("You can't win with just one\nstrong POKEMON.\n\nIt's tough, but you have to\nraise them evenly.", "只靠一只强大的宝可梦是赢不了\n的。\n\n虽然辛苦，但必须均匀地培养它\n们。") }
+  }
+
+  @storyline("talkCooltrainerF") {
+    @trigger(map = "FuchsiaPokecenter", npc = 3)
+    @speaker("") { @t("There's a narrow trail west\nof VIRIDIAN CITY.\n\nIt goes to POKEMON LEAGUE\nHQ. The HQ governs all\ntrainers.", "常青市西边有一条狭窄的小路。\n\n通往宝可梦联盟总部。总部管理\n着所有训练家。") }
+  }
+
+  @storyline("talkLinkReceptionist") {
+    @trigger(map = "FuchsiaPokecenter", npc = 4)
+    @speaker("") { @t("Welcome to the CABLE CLUB!", "欢迎来到联机俱乐部！") }
+  }
+
+  // ── Pokémon Center PC (sign 1 at 13,3) ───────────────────────────────
+  // engine/menus/pc.asm ActivatePC: BILL's PC / item PC / PROF.OAK's PC.
+  @storyline("pcStorage") {
+    @trigger(map = "FuchsiaPokecenter", sign = 1)
+    openPC()
+  }
+}

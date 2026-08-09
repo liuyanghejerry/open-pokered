@@ -1,0 +1,443 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  width: 100%;
+  min-height: 100%;
+  overflow-x: hidden;
+}
+
+body {
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+  color: #fff;
+  font-family: 'Courier New', monospace;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  min-height: 100vh;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 10px 0;
+}
+
+/* Game canvas: 160×144 at 3× scale = 480×432 */
+.container {
+  position: relative;
+  width: 100%;
+  max-width: 540px;
+  padding: 10px;
+}
+
+.game-wrapper {
+  position: relative;
+  background: #222;
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+}
+
+#game-canvas {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  height: auto;
+  background: #000;
+  border-radius: 4px;
+  image-rendering: pixelated;
+}
+
+/* ── Loading overlay ─────────────────────────────────────────────── */
+
+.loading {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+  color: #fff;
+  z-index: 10;
+  width: 80%;
+}
+
+.loading-spinner {
+  width: 50px;
+  height: 50px;
+  border: 4px solid #333;
+  border-top: 4px solid #ff0000;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin: 20px auto;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* ── Progress bar ────────────────────────────────────────────────── */
+
+.progress-bar-container {
+  width: 100%;
+  height: 8px;
+  background: #333;
+  border-radius: 4px;
+  overflow: hidden;
+  margin: 12px 0 8px;
+}
+
+.progress-bar {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, #ff0000, #ff4444);
+  border-radius: 4px;
+  transition: width 0.15s ease-out;
+}
+
+.progress-text {
+  font-size: 11px;
+  color: #aaa;
+}
+
+/* ── Volume toolbar ──────────────────────────────────────────────── */
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
+  padding: 6px 12px;
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 6px;
+}
+
+.volume-btn {
+  background: none;
+  border: none;
+  color: #ccc;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  transition: color 0.15s;
+}
+
+.volume-btn:hover {
+  color: #fff;
+}
+
+.volume-icon {
+  width: 20px;
+  height: 20px;
+}
+
+.volume-slider {
+  flex: 1;
+  -webkit-appearance: none;
+  appearance: none;
+  height: 4px;
+  background: #444;
+  border-radius: 2px;
+  outline: none;
+  cursor: pointer;
+}
+
+.volume-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #ff4444;
+  cursor: pointer;
+}
+
+.volume-slider::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #ff4444;
+  border: none;
+  cursor: pointer;
+}
+
+.volume-label {
+  font-size: 11px;
+  color: #888;
+  min-width: 40px;
+  text-align: right;
+}
+
+/* ── Controls info ───────────────────────────────────────────────── */
+
+.controls-info {
+  margin-top: 20px;
+  text-align: center;
+  font-size: 12px;
+  color: #888;
+}
+
+.controls-info h3 {
+  margin-bottom: 10px;
+  color: #ff4444;
+  font-size: 14px;
+}
+
+.controls-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.control-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 5px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 4px;
+}
+
+.key {
+  background: #333;
+  padding: 2px 8px;
+  border-radius: 3px;
+  font-weight: bold;
+}
+
+/* ── Error message ───────────────────────────────────────────────── */
+
+.error-message {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+  color: #ff4444;
+  background: rgba(0, 0, 0, 0.9);
+  padding: 20px;
+  border-radius: 8px;
+  z-index: 20;
+  max-width: 80%;
+}
+
+.error-hint {
+  margin-top: 10px;
+  font-size: 12px;
+}
+
+.hidden {
+  display: none;
+}
+
+/* ── Virtual Gamepad ─────────────────────────────────────────────── */
+
+.gamepad {
+  display: none; /* shown via JS on touch devices */
+  width: 100%;
+  max-width: 540px;
+  margin-top: 12px;
+  padding: 8px 10px;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+
+/* Fallback: ensure the gamepad is visible on touch / coarse-pointer
+   devices even if JS init has not run yet (e.g. during WASM download
+   or if loading fails). JS may still hide it on hybrid devices. */
+@media (hover: none) and (pointer: coarse) {
+  body {
+    padding: 0;
+  }
+
+  .container {
+    max-width: none;
+    padding: 0;
+  }
+
+  .game-wrapper {
+    padding: 0;
+    border-radius: 0;
+    box-shadow: none;
+  }
+
+  #game-canvas {
+    width: 100%;
+    border-radius: 0;
+  }
+
+  .gamepad {
+    display: block;
+    max-width: none;
+  }
+}
+
+.gamepad-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.gamepad-row-main {
+  padding: 0 6px;
+}
+
+.gamepad-row-meta {
+  justify-content: center;
+  gap: 24px;
+  margin-top: 8px;
+}
+
+/* ── D-Pad ─── */
+
+.dpad {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+}
+
+.dpad-middle-row {
+  display: flex;
+  align-items: center;
+  gap: 0;
+}
+
+.dpad-btn {
+  width: 52px;
+  height: 52px;
+  background: #2a2a3e;
+  border: 2px solid #3a3a5e;
+  color: #ccc;
+  font-size: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: background 0.08s;
+}
+
+.dpad-btn.pressed,
+.dpad-btn:active {
+  background: #ff4444;
+  border-color: #ff6666;
+  color: #fff;
+}
+
+.dpad-up {
+  border-radius: 8px 8px 0 0;
+}
+
+.dpad-down {
+  border-radius: 0 0 8px 8px;
+}
+
+.dpad-left {
+  border-radius: 8px 0 0 8px;
+}
+
+.dpad-right {
+  border-radius: 0 8px 8px 0;
+}
+
+.dpad-center {
+  width: 52px;
+  height: 52px;
+  background: #222238;
+  border: 2px solid #3a3a5e;
+}
+
+/* ── A / B Buttons ─── */
+
+.ab-buttons {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.action-btn {
+  width: 62px;
+  height: 62px;
+  border-radius: 50%;
+  border: 2px solid #3a3a5e;
+  font-family: 'Courier New', monospace;
+  font-size: 18px;
+  font-weight: bold;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: background 0.08s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-a {
+  background: #cc2222;
+  color: #fff;
+}
+
+.btn-a.pressed,
+.btn-a:active {
+  background: #ff4444;
+  border-color: #ff6666;
+}
+
+.btn-b {
+  background: #cc2222;
+  color: #fff;
+  margin-top: -20px;
+}
+
+.btn-b.pressed,
+.btn-b:active {
+  background: #ff4444;
+  border-color: #ff6666;
+}
+
+/* ── Start / Select ─── */
+
+.meta-btn {
+  padding: 8px 18px;
+  background: #333350;
+  border: 2px solid #3a3a5e;
+  border-radius: 16px;
+  color: #aaa;
+  font-family: 'Courier New', monospace;
+  font-size: 11px;
+  font-weight: bold;
+  letter-spacing: 1px;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: background 0.08s;
+}
+
+.meta-btn.pressed,
+.meta-btn:active {
+  background: #ff4444;
+  border-color: #ff6666;
+  color: #fff;
+}
+
+/* ── FPS counter ─────────────────────────────────────────────────── */
+
+.fps-counter {
+  position: absolute;
+  top: 24px;
+  left: 24px;
+  font-size: 11px;
+  font-family: 'Courier New', monospace;
+  color: rgba(255, 255, 255, 0.75);
+  background: rgba(0, 0, 0, 0.45);
+  padding: 2px 6px;
+  border-radius: 3px;
+  pointer-events: none;
+  z-index: 5;
+  min-width: 52px;
+  text-align: center;
+}

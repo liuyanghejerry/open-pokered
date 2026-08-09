@@ -1,0 +1,61 @@
+{
+  "$schema": "../../schemas/script_config.schema.json",
+  "coordEvents": [],
+  "npcs": [
+    {
+      "id": 1,
+      "talk": "talkGentleman1"
+    },
+    {
+      "id": 2,
+      "talk": "talkFisher"
+    },
+    {
+      "id": 3,
+      "talk": "talkGentleman2"
+    },
+    {
+      "id": 4,
+      "talk": "talkCooltrainerF"
+    },
+    {
+      "id": 5,
+      "talk": "talkGentleman3"
+    },
+    {
+      "id": 6,
+      "talk": "itemMaxEther",
+      "toggleId": "SS_ANNE_2F_ROOMS_OBJ_6"
+    },
+    {
+      "id": 7,
+      "talk": "talkGentleman4"
+    },
+    {
+      "id": 8,
+      "talk": "talkGramps"
+    },
+    {
+      "id": 9,
+      "talk": "itemRareCandy",
+      "toggleId": "SS_ANNE_2F_ROOMS_OBJ_9"
+    },
+    {
+      "id": 10,
+      "talk": "talkGentleman5"
+    },
+    {
+      "id": 11,
+      "talk": "talkLittleBoy"
+    },
+    {
+      "id": 12,
+      "talk": "talkBrunetteGirl"
+    },
+    {
+      "id": 13,
+      "talk": "talkBeauty"
+    }
+  ],
+  "signs": []
+}

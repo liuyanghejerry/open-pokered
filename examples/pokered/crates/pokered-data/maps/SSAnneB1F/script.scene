@@ -1,0 +1,8 @@
+// SSAnneB1F — translated from the original disassembly (scripts/SSAnneB1F.asm,
+// text/SSAnneB1F.asm). This is the S.S. Anne B1F cabin corridor: the original
+// script only calls EnableAutoTextBoxDrawing (engine default) and has an empty,
+// unused text-pointer table. The map has no NPCs, signs, text, or on-enter
+// cutscene, so the faithful translation is an empty scene.
+
+game_scene SSAnneB1F {
+}

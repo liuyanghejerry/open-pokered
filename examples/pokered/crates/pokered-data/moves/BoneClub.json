@@ -1,0 +1,9 @@
+{
+  "$schema": "../schemas/move.schema.json",
+  "id": "BoneClub",
+  "effect": "FlinchSideEffect1",
+  "power": 65,
+  "type": "Ground",
+  "accuracy": 85,
+  "pp": 20
+}

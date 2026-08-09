@@ -1,0 +1,66 @@
+// SilphCoElevator — translated from the original disassembly
+// (scripts/SilphCoElevator.asm; the floor menu uses the shared
+// engine/events/elevator.asm "Which floor do you want?" prompt) to the real
+// Game DSL API surface. The only interactive object is the elevator panel
+// (sign 1): it opens the floor menu for all 11 Silph Co floors. Unlike the
+// Rocket Hideout elevator there is no LIFT_KEY gate here — the menu is always
+// available.
+//
+// The floor menu runs through `game.elevatorMenu(floors)` (resolves to the
+// chosen 0-based index; -1 on cancel). The warp targets follow the original
+// SilphCoElevatorWarpMaps table (floor -> warp number on that floor),
+// resolved through each floor's `map.json` warp list (0-based indices — the
+// same convention the engine's `elevator_data` uses). Each floor's elevator
+// sits at the top of the map (shaft positions):
+//   1F  -> warp 3  (20, 0)     7F  -> warp 2  (18, 0)
+//   2F  -> warp 2  (20, 0)     8F  -> warp 2  (18, 0)
+//   3F  -> warp 2  (20, 0)     9F  -> warp 2  (18, 0)
+//   4F  -> warp 2  (20, 0)    10F  -> warp 2  (12, 0)
+//   5F  -> warp 2  (20, 0)    11F  -> warp 1  (13, 0)
+//   6F  -> warp 2  (18, 0)
+// The on-enter ShakeElevator animation (SilphCoElevatorShakeScript) is
+// handled by the engine: choosing a floor in `elevatorMenu` shakes the screen
+// for 200 frames once the floor warp completes (SFX_COLLISION rumble +
+// SFX_SAFARI_ZONE_PA ding), with the player standing at the elevator.
+
+game_scene SilphCoElevator {
+  // ── Elevator panel (sign 1) ──────────────────────────────────────────────
+  @storyline("elevatorPanel") {
+    @trigger(map = "SilphCoElevator", sign = 1)
+    @speaker("") { @t("Which floor do you want? ", "你要去哪一层？") }
+    floor = elevatorMenu(["1F", "2F", "3F", "4F", "5F", "6F", "7F", "8F", "9F", "10F", "11F"])
+    @if (floor == 0) {
+      warpTo("SilphCo1F", 20, 0)
+    }
+    @if (floor == 1) {
+      warpTo("SilphCo2F", 20, 0)
+    }
+    @if (floor == 2) {
+      warpTo("SilphCo3F", 20, 0)
+    }
+    @if (floor == 3) {
+      warpTo("SilphCo4F", 20, 0)
+    }
+    @if (floor == 4) {
+      warpTo("SilphCo5F", 20, 0)
+    }
+    @if (floor == 5) {
+      warpTo("SilphCo6F", 18, 0)
+    }
+    @if (floor == 6) {
+      warpTo("SilphCo7F", 18, 0)
+    }
+    @if (floor == 7) {
+      warpTo("SilphCo8F", 18, 0)
+    }
+    @if (floor == 8) {
+      warpTo("SilphCo9F", 18, 0)
+    }
+    @if (floor == 9) {
+      warpTo("SilphCo10F", 12, 0)
+    }
+    @if (floor == 10) {
+      warpTo("SilphCo11F", 13, 0)
+    }
+  }
+}

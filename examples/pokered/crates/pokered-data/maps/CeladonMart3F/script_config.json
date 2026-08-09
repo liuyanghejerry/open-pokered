@@ -1,0 +1,76 @@
+{
+  "$schema": "../../schemas/script_config.schema.json",
+  "coordEvents": [],
+  "npcs": [
+    {
+      "id": 1,
+      "talk": "talkClerk"
+    },
+    {
+      "id": 2,
+      "talk": "talkGameboyKid1"
+    },
+    {
+      "id": 3,
+      "talk": "talkGameboyKid2"
+    },
+    {
+      "id": 4,
+      "talk": "talkGameboyKid3"
+    },
+    {
+      "id": 5,
+      "talk": "talkLittleBoy"
+    }
+  ],
+  "signs": [
+    {
+      "id": 1,
+      "talk": "signSNES1"
+    },
+    {
+      "id": 2,
+      "talk": "signRPG"
+    },
+    {
+      "id": 3,
+      "talk": "signSNES2"
+    },
+    {
+      "id": 4,
+      "talk": "signSportsGame"
+    },
+    {
+      "id": 5,
+      "talk": "signSNES3"
+    },
+    {
+      "id": 6,
+      "talk": "signPuzzleGame"
+    },
+    {
+      "id": 7,
+      "talk": "signSNES4"
+    },
+    {
+      "id": 8,
+      "talk": "signFightingGame"
+    },
+    {
+      "id": 9,
+      "talk": "signCurrentFloor"
+    },
+    {
+      "id": 10,
+      "talk": "signPokemonPoster1"
+    },
+    {
+      "id": 11,
+      "talk": "signPokemonPoster2"
+    },
+    {
+      "id": 12,
+      "talk": "signPokemonPoster3"
+    }
+  ]
+}

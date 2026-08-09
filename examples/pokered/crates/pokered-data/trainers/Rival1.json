@@ -1,0 +1,127 @@
+{
+  "$schema": "../schemas/trainer.schema.json",
+  "class": "Rival1",
+  "constName": "RIVAL1",
+  "parties": [
+    {
+      "pokemon": [
+        {
+          "level": 5,
+          "species": "Squirtle"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 5,
+          "species": "Bulbasaur"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 5,
+          "species": "Charmander"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 9,
+          "species": "Pidgey"
+        },
+        {
+          "level": 8,
+          "species": "Squirtle"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 9,
+          "species": "Pidgey"
+        },
+        {
+          "level": 8,
+          "species": "Bulbasaur"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 9,
+          "species": "Pidgey"
+        },
+        {
+          "level": 8,
+          "species": "Charmander"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 18,
+          "species": "Pidgeotto"
+        },
+        {
+          "level": 15,
+          "species": "Abra"
+        },
+        {
+          "level": 15,
+          "species": "Rattata"
+        },
+        {
+          "level": 17,
+          "species": "Squirtle"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 18,
+          "species": "Pidgeotto"
+        },
+        {
+          "level": 15,
+          "species": "Abra"
+        },
+        {
+          "level": 15,
+          "species": "Rattata"
+        },
+        {
+          "level": 17,
+          "species": "Bulbasaur"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 18,
+          "species": "Pidgeotto"
+        },
+        {
+          "level": 15,
+          "species": "Abra"
+        },
+        {
+          "level": 15,
+          "species": "Rattata"
+        },
+        {
+          "level": 17,
+          "species": "Charmander"
+        }
+      ]
+    }
+  ]
+}

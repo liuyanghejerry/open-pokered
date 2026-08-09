@@ -1,0 +1,1 @@
+{"id":"SodaPop","name":"SODA POP","price":300,"category":"Medicine","effect":{"type":"Heal","params":{"amount":60}},"held_effect":null,"berry":null,"use_outside_battle":true,"use_in_battle":true,"consume":true,"key_item":false,"sellable":true,"description":"","tags":["healing","hp"]}

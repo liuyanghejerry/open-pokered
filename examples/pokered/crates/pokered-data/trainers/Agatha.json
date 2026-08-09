@@ -1,0 +1,31 @@
+{
+  "$schema": "../schemas/trainer.schema.json",
+  "class": "Agatha",
+  "constName": "AGATHA",
+  "parties": [
+    {
+      "pokemon": [
+        {
+          "level": 56,
+          "species": "Gengar"
+        },
+        {
+          "level": 56,
+          "species": "Golbat"
+        },
+        {
+          "level": 55,
+          "species": "Haunter"
+        },
+        {
+          "level": 58,
+          "species": "Arbok"
+        },
+        {
+          "level": 60,
+          "species": "Gengar"
+        }
+      ]
+    }
+  ]
+}

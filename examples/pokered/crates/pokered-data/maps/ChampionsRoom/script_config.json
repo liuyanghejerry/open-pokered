@@ -1,0 +1,18 @@
+{
+  "$schema": "../../schemas/script_config.schema.json",
+  "coordEvents": [],
+  "npcs": [
+    {
+      "id": 1,
+      "talk": "talkBlue"
+    },
+    {
+      "defaultHidden": true,
+      "id": 2,
+      "talk": "talkOak",
+      "toggleId": "CHAMPIONS_ROOM_OBJ_2"
+    }
+  ],
+  "onLoad": "ChampionsRoomOnLoad",
+  "signs": []
+}

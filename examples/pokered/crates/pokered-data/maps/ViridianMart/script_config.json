@@ -1,0 +1,20 @@
+{
+  "$schema": "../../schemas/script_config.schema.json",
+  "coordEvents": [],
+  "npcs": [
+    {
+      "id": 1,
+      "talk": "talkClerk"
+    },
+    {
+      "id": 2,
+      "talk": "talkYoungster"
+    },
+    {
+      "id": 3,
+      "talk": "talkCooltrainerM"
+    }
+  ],
+  "onLoad": "ViridianMartOnLoad",
+  "signs": []
+}

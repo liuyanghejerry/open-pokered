@@ -1,0 +1,60 @@
+{
+  "$schema": "../schemas/pokemon.schema.json",
+  "species": "Raticate",
+  "baseStats": {
+    "hp": 55,
+    "attack": 81,
+    "defense": 60,
+    "speed": 97,
+    "special": 50
+  },
+  "type1": "Normal",
+  "type2": "Normal",
+  "catchRate": 90,
+  "baseExp": 116,
+  "growthRate": "MediumFast",
+  "initialMoves": [
+    "Tackle",
+    "TailWhip",
+    "QuickAttack",
+    "None"
+  ],
+  "tmHmFlags": [
+    160,
+    127,
+    136,
+    201,
+    194,
+    8,
+    2
+  ],
+  "pokedex": {
+    "category": "RAT",
+    "heightFeet": 2,
+    "heightInches": 4,
+    "weightDecipounds": 410,
+    "flavorTextPages": [
+      "It uses its whis-\nkers to maintain\nits balance.",
+      "It apparently\nslows down if\nthey are cut off"
+    ]
+  },
+  "evolutions": [],
+  "learnset": [
+    {
+      "level": 7,
+      "moveId": "QuickAttack"
+    },
+    {
+      "level": 14,
+      "moveId": "HyperFang"
+    },
+    {
+      "level": 27,
+      "moveId": "FocusEnergy"
+    },
+    {
+      "level": 41,
+      "moveId": "SuperFang"
+    }
+  ]
+}

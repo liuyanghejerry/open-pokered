@@ -1,0 +1,33 @@
+{
+  "$schema": "../../schemas/script_config.schema.json",
+  "coordEvents": [],
+  "npcs": [
+    {
+      "id": 1,
+      "talk": "talkBillPokemon",
+      "toggleId": "BILLS_HOUSE_OBJ_1"
+    },
+    {
+      "defaultHidden": true,
+      "id": 2,
+      "talk": "talkBill",
+      "toggleId": "BILLS_HOUSE_OBJ_2"
+    },
+    {
+      "defaultHidden": true,
+      "id": 3,
+      "talk": "talkBillRarePokemon",
+      "toggleId": "BILLS_HOUSE_OBJ_3"
+    }
+  ],
+  "signs": [
+    {
+      "id": 1,
+      "talk": "pcMachine"
+    },
+    {
+      "id": 2,
+      "talk": "billsPc"
+    }
+  ]
+}

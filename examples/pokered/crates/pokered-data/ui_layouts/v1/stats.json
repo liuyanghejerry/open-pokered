@@ -1,0 +1,182 @@
+{
+  "$schema": "/schemas/layout.schema.json",
+  "schema_version": 1,
+  "screen": "stats",
+  "variants": {
+    "page1": {
+      "primitives": [
+        {
+          "id": "prim_0",
+          "parent_id": null,
+          "kind": "hp_bar",
+          "color": "Black",
+          "tx": 13,
+          "ty": 3,
+          "width_tiles": 6
+        },
+        {
+          "id": "bracket_0",
+          "kind": "bracket_box",
+          "rect": {
+            "tx": 9,
+            "ty": 1,
+            "tw": 11,
+            "th": 7
+          },
+          "sides": {"top": false, "bottom": true, "left": false, "right": true},
+          "with_arrow": true
+        },
+        {
+          "id": "bracket_1",
+          "kind": "bracket_box",
+          "rect": {
+            "tx": 13,
+            "ty": 9,
+            "tw": 7,
+            "th": 9
+          },
+          "sides": {"top": false, "bottom": true, "left": false, "right": true},
+          "with_arrow": true
+        }
+      ],
+      "children": [
+        {
+          "id": "box_0",
+          "rect": {
+            "tx": 0,
+            "ty": 8,
+            "tw": 10,
+            "th": 10
+          },
+          "color": "Black"
+        },
+        {
+          "id": "region_0",
+          "rect": {
+            "tx": 0,
+            "ty": 0,
+            "tw": 20,
+            "th": 18
+          },
+          "labels": [
+            {
+              "tx": 10,
+              "ty": 3,
+              "text": "HP:",
+              "color": "Black"
+            },
+            {
+              "tx": 9,
+              "ty": 6,
+              "text": "STATUS/",
+              "color": "Black"
+            },
+            {
+              "tx": 2,
+              "ty": 7,
+              "text": "\u2116",
+              "color": "Black"
+            },
+            {
+              "tx": 11,
+              "ty": 9,
+              "text": "TYPE1/",
+              "color": "Black"
+            },
+            {
+              "tx": 11,
+              "ty": 11,
+              "text": "TYPE2/",
+              "color": "Black"
+            },
+            {
+              "tx": 11,
+              "ty": 13,
+              "text": "ID \u2116/",
+              "color": "Black"
+            },
+            {
+              "tx": 13,
+              "ty": 14,
+              "text": "00000",
+              "color": "Black"
+            },
+            {
+              "tx": 11,
+              "ty": 15,
+              "text": "OT/",
+              "color": "Black"
+            },
+            {
+              "tx": 13,
+              "ty": 16,
+              "text": "RED",
+              "color": "Black"
+            }
+          ],
+          "border": false,
+          "color": "Black"
+        }
+      ]
+    },
+    "page2": {
+      "children": [
+        {
+          "id": "box_0",
+          "rect": {
+            "tx": 0,
+            "ty": 8,
+            "tw": 20,
+            "th": 10
+          },
+          "color": "Black"
+        },
+        {
+          "id": "region_0",
+          "rect": {
+            "tx": 0,
+            "ty": 0,
+            "tw": 20,
+            "th": 18
+          },
+          "labels": [
+            {
+              "tx": 9,
+              "ty": 3,
+              "text": "EXP POINTS",
+              "color": "Black"
+            },
+            {
+              "tx": 9,
+              "ty": 5,
+              "text": "LEVEL UP",
+              "color": "Black"
+            },
+            {
+              "tx": 13,
+              "ty": 6,
+              "text": "to",
+              "color": "Black"
+            }
+          ],
+          "border": false,
+          "color": "Black"
+        },
+        {
+          "id": "list_page2",
+          "layout": "list",
+          "z_index": 0,
+          "rect": {
+            "tx": 0,
+            "ty": 0,
+            "tw": 20,
+            "th": 18
+          },
+          "color": "Black",
+          "border": true,
+          "max_visible_rows": 4
+        }
+      ]
+    }
+  }
+}

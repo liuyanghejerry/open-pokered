@@ -1,0 +1,155 @@
+{
+  "$schema": "../../schemas/map.schema.json",
+  "id": 124,
+  "name": "CeladonMart3F",
+  "header": {
+    "tileset": "Lobby",
+    "music": "Pokecenter",
+    "connectionFlags": 0,
+    "width": 10,
+    "height": 4,
+    "borderBlock": 15
+  },
+  "connections": {},
+  "warps": [
+    {
+      "x": 12,
+      "y": 1,
+      "destMap": "CeladonMart4F",
+      "destWarpId": 0
+    },
+    {
+      "x": 16,
+      "y": 1,
+      "destMap": "CeladonMart2F",
+      "destWarpId": 1
+    },
+    {
+      "x": 1,
+      "y": 1,
+      "destMap": "CeladonMartElevator",
+      "destWarpId": 0
+    }
+  ],
+  "npcs": [
+    {
+      "spriteId": 38,
+      "spriteName": "Clerk",
+      "x": 16,
+      "y": 5,
+      "movement": "Stationary",
+      "facing": "Down",
+      "range": 0,
+      "textId": 1,
+      "isTrainer": false
+    },
+    {
+      "spriteId": 55,
+      "spriteName": "GameboyKid",
+      "x": 11,
+      "y": 6,
+      "movement": "Stationary",
+      "facing": "Right",
+      "range": 0,
+      "textId": 2,
+      "isTrainer": false
+    },
+    {
+      "spriteId": 55,
+      "spriteName": "GameboyKid",
+      "x": 7,
+      "y": 2,
+      "movement": "Stationary",
+      "facing": "Down",
+      "range": 0,
+      "textId": 3,
+      "isTrainer": false
+    },
+    {
+      "spriteId": 55,
+      "spriteName": "GameboyKid",
+      "x": 8,
+      "y": 2,
+      "movement": "Stationary",
+      "facing": "Down",
+      "range": 0,
+      "textId": 4,
+      "isTrainer": false
+    },
+    {
+      "spriteId": 53,
+      "spriteName": "LittleBoy",
+      "x": 2,
+      "y": 5,
+      "movement": "Stationary",
+      "facing": "Up",
+      "range": 0,
+      "textId": 5,
+      "isTrainer": false
+    }
+  ],
+  "signs": [
+    {
+      "x": 2,
+      "y": 4,
+      "textId": 1
+    },
+    {
+      "x": 3,
+      "y": 4,
+      "textId": 2
+    },
+    {
+      "x": 5,
+      "y": 4,
+      "textId": 3
+    },
+    {
+      "x": 6,
+      "y": 4,
+      "textId": 4
+    },
+    {
+      "x": 2,
+      "y": 6,
+      "textId": 5
+    },
+    {
+      "x": 3,
+      "y": 6,
+      "textId": 6
+    },
+    {
+      "x": 5,
+      "y": 6,
+      "textId": 7
+    },
+    {
+      "x": 6,
+      "y": 6,
+      "textId": 8
+    },
+    {
+      "x": 14,
+      "y": 1,
+      "textId": 9
+    },
+    {
+      "x": 4,
+      "y": 1,
+      "textId": 10
+    },
+    {
+      "x": 6,
+      "y": 1,
+      "textId": 11
+    },
+    {
+      "x": 10,
+      "y": 1,
+      "textId": 12
+    }
+  ],
+  "text": {},
+  "wild": null
+}

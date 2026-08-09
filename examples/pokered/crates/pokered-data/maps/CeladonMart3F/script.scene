@@ -1,0 +1,122 @@
+// CeladonMart3F — translated from the original disassembly
+// (scripts/CeladonMart3F.asm, text/CeladonMart3F.asm) to the real Game DSL API.
+// This is the "3F: TV GAME SHOP" floor: pure NPC dialogue + signs, plus the
+// clerk who hands over TM18 (COUNTER) once, gated by EVENT_GOT_TM18.
+
+game_scene CeladonMart3F {
+  // ── Clerk (npc 1) — gives TM18 / COUNTER once ──────────────────────────
+  @storyline("talkClerk") {
+    @trigger(map = "CeladonMart3F", npc = 1)
+    @if (getFlag("EVENT_GOT_TM18")) {
+      @speaker("") {
+        @t("TM18 is COUNTER! Not like\nthe one I'm leaning on, mind\nyou!", "TM18 是反击！和我正靠着的这\n个可不一样，请注意！")
+      }
+    } @else {
+      @speaker("") {
+        @t("Oh, hi! I finally finished\nPOKeMON!\n\nNot done yet? This might be\nuseful!", "哦，你好！我终于通关宝可梦\n了！\n\n还没通关吗？这个也许有用！")
+      }
+      given = giveItem("TM18", 1)
+      @if (given) {
+        setFlag("EVENT_GOT_TM18")
+        @speaker("") { @t("<PLAYER> received TM18!", "<PLAYER>获得了 TM18！") }
+      } @else {
+        @speaker("") { @t("Your pack is full of items!", "你的背包装满了道具！") }
+      }
+    }
+  }
+
+  // ── Game Boy Kid 1 (npc 2) — ID No. / OT explanation ───────────────────
+  @storyline("talkGameboyKid1") {
+    @trigger(map = "CeladonMart3F", npc = 2)
+    @speaker("") {
+      @t("Captured POKeMON are\nregistered with an ID No.\nand OT, the name of the\nOriginal Trainer that caught\nit!", "捕获的宝可梦会登记上 ID No.\n和 OT， OT 就是捕捉它的原训\n练家的名字！")
+    }
+  }
+
+  // ── Game Boy Kid 2 (npc 3) — KANGASKHAN/GRAVELER trade boast ────────────
+  @storyline("talkGameboyKid2") {
+    @trigger(map = "CeladonMart3F", npc = 3)
+    @speaker("") {
+      @t("All right!\n\nMy buddy's going to trade me\nhis KANGASKHAN for my\nGRAVELER!", "太好了！\n\n我的朋友要用他的袋兽和我交换\n隆隆岩！")
+    }
+  }
+
+  // ── Game Boy Kid 3 (npc 4) — GRAVELER evolves on trade ─────────────────
+  @storyline("talkGameboyKid3") {
+    @trigger(map = "CeladonMart3F", npc = 4)
+    @speaker("") {
+      @t("Come on GRAVELER!\n\nI love GRAVELER! I collect\nthem!\n\nHuh?\n\nGRAVELER turned into a\ndifferent POKeMON!", "加油啊隆隆岩！\n\n我爱隆隆岩！我要收集它们！\n\n咦？\n\n隆隆岩变成了另一种宝可梦！")
+    }
+  }
+
+  // ── Little Boy (npc 5) — trade ID Numbers ──────────────────────────────
+  @storyline("talkLittleBoy") {
+    @trigger(map = "CeladonMart3F", npc = 5)
+    @speaker("") {
+      @t("You can identify POKeMON you\ngot in trades by their ID\nNumbers!", "你可以通过 ID No. 来识别交换\n得来的宝可梦！")
+    }
+  }
+
+  // ── Signs (TV game shelves + current-floor sign + posters) ─────────────
+  // map.json sign textId N resolves to the (5+N)th text pointer; the order
+  // below mirrors CeladonMart3F_TextPointers.
+  @storyline("signSNES1") {
+    @trigger(map = "CeladonMart3F", sign = 1)
+    @speaker("") { @t("It's an SNES!", "这是 SNES！") }
+  }
+
+  @storyline("signRPG") {
+    @trigger(map = "CeladonMart3F", sign = 2)
+    @speaker("") { @t("An RPG! There's no time for\nthat!", "这是 RPG！可没时间玩那个！") }
+  }
+
+  @storyline("signSNES2") {
+    @trigger(map = "CeladonMart3F", sign = 3)
+    @speaker("") { @t("It's an SNES!", "这是 SNES！") }
+  }
+
+  @storyline("signSportsGame") {
+    @trigger(map = "CeladonMart3F", sign = 4)
+    @speaker("") { @t("A sports game! Dad'll like\nthat!", "运动游戏！爸爸会喜欢的！") }
+  }
+
+  @storyline("signSNES3") {
+    @trigger(map = "CeladonMart3F", sign = 5)
+    @speaker("") { @t("It's an SNES!", "这是 SNES！") }
+  }
+
+  @storyline("signPuzzleGame") {
+    @trigger(map = "CeladonMart3F", sign = 6)
+    @speaker("") { @t("A puzzle game! Looks\naddictive!", "益智游戏！看起来会上瘾！") }
+  }
+
+  @storyline("signSNES4") {
+    @trigger(map = "CeladonMart3F", sign = 7)
+    @speaker("") { @t("It's an SNES!", "这是 SNES！") }
+  }
+
+  @storyline("signFightingGame") {
+    @trigger(map = "CeladonMart3F", sign = 8)
+    @speaker("") { @t("A fighting game! Looks\ntough!", "格斗游戏！看起来很难！") }
+  }
+
+  @storyline("signCurrentFloor") {
+    @trigger(map = "CeladonMart3F", sign = 9)
+    @speaker("") { @t("3F: TV GAME SHOP", "3层：电视游戏商店") }
+  }
+
+  @storyline("signPokemonPoster1") {
+    @trigger(map = "CeladonMart3F", sign = 10)
+    @speaker("") { @t("Red and Blue! Both are\nPOKeMON!", "红版和蓝版！都是宝可梦！") }
+  }
+
+  @storyline("signPokemonPoster2") {
+    @trigger(map = "CeladonMart3F", sign = 11)
+    @speaker("") { @t("Red and Blue! Both are\nPOKeMON!", "红版和蓝版！都是宝可梦！") }
+  }
+
+  @storyline("signPokemonPoster3") {
+    @trigger(map = "CeladonMart3F", sign = 12)
+    @speaker("") { @t("Red and Blue! Both are\nPOKeMON!", "红版和蓝版！都是宝可梦！") }
+  }
+}

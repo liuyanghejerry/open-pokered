@@ -1,0 +1,97 @@
+// Refactored from MtMoonPokecenter/script.js to jrpg-engine-dsl.
+// Follows the CeladonPokecenter pattern (Pokecenter nurse dialog
+// with @choice + @option). See docs/MIGRATION_NOTES.md §A.
+
+game_scene MtMoonPokecenter {
+  @storyline("talkNurse") {
+    @trigger(map = "MtMoonPokecenter", npc = 1)
+    @speaker("") {
+      @t("Welcome to the POKEMON\nCENTER!\n\nWe heal your POKEMON back to\nperfect health!\n\nShall we heal your POKEMON?", "欢迎光临宝可梦中心！\n\n我们能把你的宝可梦完全治愈！\n\n要我们为你的宝可梦治疗吗？")
+    }
+    @choice {
+      @option(@t("Yes", "是")) {
+        @speaker("") {
+          @t("OK, we will need your\nPOKEMON.", "OK，我们需要你的宝可梦。")
+        }
+        faceNpc("1", "right")
+        delay(8)
+        heal()
+        animateHealingMachine()
+        faceNpc("1", "down")
+        delay(8)
+        @speaker("") {
+          @t("Thank you for waiting.\n\nYour POKEMON are fully\nhealed!", "谢谢你等候。\n\n你的宝可梦已经全部痊愈！")
+        }
+      }
+      @option(@t("No", "否")) {
+      }
+    }
+    @speaker("") {
+      @t("We hope to see you again!", "我们期待再次光临！")
+    }
+  }
+
+  @storyline("talkYoungster") {
+    @trigger(map = "MtMoonPokecenter", npc = 2)
+    @speaker("") { @t("I've 6 POKE BALLs set in my\nbelt.\n\nAt most, you can carry 6\nPOKEMON.", "我腰带上别着 6个精灵球。\n\n你最多只能携带6只宝可梦。") }
+  }
+
+  @storyline("talkGentleman") {
+    @trigger(map = "MtMoonPokecenter", npc = 3)
+    @speaker("") { @t("TEAM ROCKET attacks CERULEAN\ncitizens...\n\nTEAM ROCKET is always in the\nnews!", "火箭队攻击华蓝市市民……\n\n火箭队总是出现在新闻里！") }
+  }
+
+  // npc 4 — the Magikarp salesman. Original: scripts/MtMoonPokecenter.asm
+  // (MtMoonPokecenterMagikarpSalesmanText) + text/MtMoonPokecenter.asm
+  // (_MtMoonPokecenterMagikarpSalesman*Text): one-time ¥500 sale of a Lv5
+  // MAGIKARP, gated on EVENT_BOUGHT_MAGIKARP.
+  @storyline("talkMagikarpSalesman") {
+    @trigger(map = "MtMoonPokecenter", npc = 4)
+    @if (getFlag("EVENT_BOUGHT_MAGIKARP")) {
+      @speaker("") { @t("MAN: Well, I don't give\nrefunds!", "男子：嗯，我可不给退款！") }
+    } @else {
+      @speaker("") {
+        @t("MAN: Hello, there!\n\nHave I got a deal just for\nyou!\n\nI'll let you have a swell\nMAGIKARP for just ¥500!\n\nWhat do you say?", "男子：你好呀！\n\n我有个好买卖只为你准备！\n\n可以让你拥有一条不错的鲤鱼王\n只需500日元！\n\n你觉得怎么样？")
+      }
+      @choice {
+        @option(@t("YES", "是")) {
+          @if (!hasMoney(500)) {
+            @speaker("") { @t("You'll need more money than\nthat!", "你需要更多的钱！") }
+          } @else @if (getPartyCount() >= 6) {
+            // Original: GivePokemon fails when there is no room and the sale
+            // silently aborts (jr nc, .done) — no money taken, no flag set,
+            // no extra text. givePokemon() returns Promise<void>, so failure
+            // is not detectable from script; and engine-side a full party
+            // silently drops the gift (pokered-app game.rs ignores the
+            // party.add() result). Gate on the party count so the player is
+            // never charged for a MAGIKARP they cannot receive.
+          } @else {
+            givePokemon("MAGIKARP", 5)
+            takeMoney(500)
+            setFlag("EVENT_BOUGHT_MAGIKARP")
+          }
+        }
+        @option(@t("NO", "否")) {
+          @speaker("") { @t("No? I'm only doing this as a\nfavor to you!", "不吗？我只是当作是在帮你忙而\n已！") }
+        }
+      }
+    }
+  }
+
+  @storyline("talkClipboard") {
+    @trigger(map = "MtMoonPokecenter", npc = 5)
+    @speaker("") { @t("", "") }
+  }
+
+  @storyline("talkLinkReceptionist") {
+    @trigger(map = "MtMoonPokecenter", npc = 6)
+    @speaker("") { @t("Welcome to the CABLE CLUB!", "欢迎来到联机俱乐部！") }
+  }
+
+  // ── Pokémon Center PC (sign 1 at 13,3) ───────────────────────────────
+  // engine/menus/pc.asm ActivatePC: BILL's PC / item PC / PROF.OAK's PC.
+  @storyline("pcStorage") {
+    @trigger(map = "MtMoonPokecenter", sign = 1)
+    openPC()
+  }
+}

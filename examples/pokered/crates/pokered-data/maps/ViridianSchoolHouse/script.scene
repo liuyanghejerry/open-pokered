@@ -1,0 +1,25 @@
+// ViridianSchoolHouse — translated from the original disassembly
+// (scripts/ViridianSchoolHouse.asm, text/ViridianSchoolHouse.asm) to the real
+// Game DSL API surface. The original script is just EnableAutoTextBoxDrawing:
+// two stationary, dialogue-only NPCs (no trainers, battles, flags, or signs).
+
+game_scene ViridianSchoolHouse {
+  // ── Brunette Girl (npc 1) ───────────────────────────────────────────────
+  @storyline("talkBrunetteGirl") {
+    @trigger(map = "ViridianSchoolHouse", npc = 1)
+    @speaker("") {
+      @t("Whew! I'm trying to memorize\nall my notes.", "呼！我正试着把笔记全部背下\n来。")
+    }
+  }
+
+  // ── Cooltrainer (npc 2) ─────────────────────────────────────────────────
+  @storyline("talkCooltrainerF") {
+    @trigger(map = "ViridianSchoolHouse", npc = 2)
+    @speaker("") {
+      @t("Okay!", "好！")
+    }
+    @speaker("") {
+      @t("Be sure to read the\nblackboard carefully!", "一定要仔细阅读黑板上的内容！")
+    }
+  }
+}

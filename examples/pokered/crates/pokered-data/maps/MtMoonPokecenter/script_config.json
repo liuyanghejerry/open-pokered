@@ -1,0 +1,37 @@
+{
+  "$schema": "../../schemas/script_config.schema.json",
+  "onLoad": "enterMap",
+  "npcs": [
+    {
+      "id": 1,
+      "talk": "talkNurse"
+    },
+    {
+      "id": 2,
+      "talk": "talkYoungster"
+    },
+    {
+      "id": 3,
+      "talk": "talkGentleman"
+    },
+    {
+      "id": 4,
+      "talk": "talkMagikarpSalesman"
+    },
+    {
+      "id": 5,
+      "talk": "talkClipboard"
+    },
+    {
+      "id": 6,
+      "talk": "talkLinkReceptionist"
+    }
+  ],
+  "signs": [
+    {
+      "id": 1,
+      "talk": "pcStorage"
+    }
+  ],
+  "coordEvents": []
+}

@@ -1,0 +1,81 @@
+{
+  "$schema": "../../schemas/script_config.schema.json",
+  "coordEvents": [
+    {
+      "name": "switch1",
+      "position": [
+        1,
+        16
+      ],
+      "trigger": "switch1"
+    },
+    {
+      "name": "switch2",
+      "position": [
+        9,
+        16
+      ],
+      "trigger": "switch2"
+    }
+  ],
+  "npcs": [
+    {
+      "id": 1,
+      "talk": "talkHiker"
+    },
+    {
+      "id": 2,
+      "talk": "talkSuperNerd1"
+    },
+    {
+      "id": 3,
+      "talk": "talkCooltrainerM"
+    },
+    {
+      "id": 4,
+      "talk": "talkSuperNerd2"
+    },
+    {
+      "id": 5,
+      "talk": "talkSuperNerd3"
+    },
+    {
+      "id": 6,
+      "talk": "talkMoltres"
+    },
+    {
+      "id": 7,
+      "talk": "itemTmSubmission",
+      "toggleId": "VICTORY_ROAD_2F_OBJ_7"
+    },
+    {
+      "id": 8,
+      "talk": "itemFullHeal",
+      "toggleId": "VICTORY_ROAD_2F_OBJ_8"
+    },
+    {
+      "id": 9,
+      "talk": "itemTmMegaKick",
+      "toggleId": "VICTORY_ROAD_2F_OBJ_9"
+    },
+    {
+      "id": 10,
+      "talk": "itemGuardSpec",
+      "toggleId": "VICTORY_ROAD_2F_OBJ_10"
+    },
+    {
+      "id": 11,
+      "talk": "talkBoulder1"
+    },
+    {
+      "id": 12,
+      "talk": "talkBoulder2"
+    },
+    {
+      "id": 13,
+      "talk": "talkBoulder3"
+    }
+  ],
+  "onLoad": "VictoryRoad2FOnLoad",
+  "signs": []
+}

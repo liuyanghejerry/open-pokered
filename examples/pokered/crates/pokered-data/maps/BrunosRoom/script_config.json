@@ -1,0 +1,29 @@
+{
+  "$schema": "../../schemas/script_config.schema.json",
+  "coordEvents": [
+    {
+      "name": "dontRunAway1",
+      "position": [
+        4,
+        10
+      ],
+      "trigger": "dontRunAway"
+    },
+    {
+      "name": "dontRunAway2",
+      "position": [
+        5,
+        10
+      ],
+      "trigger": "dontRunAway"
+    }
+  ],
+  "npcs": [
+    {
+      "id": 1,
+      "talk": "talkBruno"
+    }
+  ],
+  "onLoad": "BrunosRoomOnLoad",
+  "signs": []
+}

@@ -1,0 +1,295 @@
+{
+  "$schema": "../schemas/trainer.schema.json",
+  "class": "Rival2",
+  "constName": "RIVAL2",
+  "parties": [
+    {
+      "pokemon": [
+        {
+          "level": 19,
+          "species": "Pidgeotto"
+        },
+        {
+          "level": 16,
+          "species": "Raticate"
+        },
+        {
+          "level": 18,
+          "species": "Kadabra"
+        },
+        {
+          "level": 20,
+          "species": "Wartortle"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 19,
+          "species": "Pidgeotto"
+        },
+        {
+          "level": 16,
+          "species": "Raticate"
+        },
+        {
+          "level": 18,
+          "species": "Kadabra"
+        },
+        {
+          "level": 20,
+          "species": "Ivysaur"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 19,
+          "species": "Pidgeotto"
+        },
+        {
+          "level": 16,
+          "species": "Raticate"
+        },
+        {
+          "level": 18,
+          "species": "Kadabra"
+        },
+        {
+          "level": 20,
+          "species": "Charmeleon"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 25,
+          "species": "Pidgeotto"
+        },
+        {
+          "level": 23,
+          "species": "Growlithe"
+        },
+        {
+          "level": 22,
+          "species": "Exeggcute"
+        },
+        {
+          "level": 20,
+          "species": "Kadabra"
+        },
+        {
+          "level": 25,
+          "species": "Wartortle"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 25,
+          "species": "Pidgeotto"
+        },
+        {
+          "level": 23,
+          "species": "Gyarados"
+        },
+        {
+          "level": 22,
+          "species": "Growlithe"
+        },
+        {
+          "level": 20,
+          "species": "Kadabra"
+        },
+        {
+          "level": 25,
+          "species": "Ivysaur"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 25,
+          "species": "Pidgeotto"
+        },
+        {
+          "level": 23,
+          "species": "Exeggcute"
+        },
+        {
+          "level": 22,
+          "species": "Gyarados"
+        },
+        {
+          "level": 20,
+          "species": "Kadabra"
+        },
+        {
+          "level": 25,
+          "species": "Charmeleon"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 37,
+          "species": "Pidgeot"
+        },
+        {
+          "level": 38,
+          "species": "Growlithe"
+        },
+        {
+          "level": 35,
+          "species": "Exeggcute"
+        },
+        {
+          "level": 35,
+          "species": "Alakazam"
+        },
+        {
+          "level": 40,
+          "species": "Blastoise"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 37,
+          "species": "Pidgeot"
+        },
+        {
+          "level": 38,
+          "species": "Gyarados"
+        },
+        {
+          "level": 35,
+          "species": "Growlithe"
+        },
+        {
+          "level": 35,
+          "species": "Alakazam"
+        },
+        {
+          "level": 40,
+          "species": "Venusaur"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 37,
+          "species": "Pidgeot"
+        },
+        {
+          "level": 38,
+          "species": "Exeggcute"
+        },
+        {
+          "level": 35,
+          "species": "Gyarados"
+        },
+        {
+          "level": 35,
+          "species": "Alakazam"
+        },
+        {
+          "level": 40,
+          "species": "Charizard"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 47,
+          "species": "Pidgeot"
+        },
+        {
+          "level": 45,
+          "species": "Rhyhorn"
+        },
+        {
+          "level": 45,
+          "species": "Growlithe"
+        },
+        {
+          "level": 47,
+          "species": "Exeggcute"
+        },
+        {
+          "level": 50,
+          "species": "Alakazam"
+        },
+        {
+          "level": 53,
+          "species": "Blastoise"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 47,
+          "species": "Pidgeot"
+        },
+        {
+          "level": 45,
+          "species": "Rhyhorn"
+        },
+        {
+          "level": 45,
+          "species": "Gyarados"
+        },
+        {
+          "level": 47,
+          "species": "Growlithe"
+        },
+        {
+          "level": 50,
+          "species": "Alakazam"
+        },
+        {
+          "level": 53,
+          "species": "Venusaur"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 47,
+          "species": "Pidgeot"
+        },
+        {
+          "level": 45,
+          "species": "Rhyhorn"
+        },
+        {
+          "level": 45,
+          "species": "Exeggcute"
+        },
+        {
+          "level": 47,
+          "species": "Gyarados"
+        },
+        {
+          "level": 50,
+          "species": "Alakazam"
+        },
+        {
+          "level": 53,
+          "species": "Charizard"
+        }
+      ]
+    }
+  ]
+}

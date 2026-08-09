@@ -1,0 +1,30 @@
+// SaffronMart — translated from the original disassembly
+// (scripts/SaffronMart.asm, text/SaffronMart.asm, data/items/marts.asm) to the
+// real Game DSL API surface. A plain Poke Mart: one shop clerk (script_mart,
+// sells via openShop) plus two dialogue-only NPCs giving item tips.
+
+game_scene SaffronMart {
+  // ── Clerk (npc 1) — item counter (script_mart) ───────────────────────────
+  // marts.asm: GREAT_BALL, HYPER_POTION, MAX_REPEL, ESCAPE_ROPE, FULL_HEAL,
+  //            REVIVE
+  @storyline("talkClerk") {
+    @trigger(map = "SaffronMart", npc = 1)
+    openShop(["GreatBall", "HyperPotion", "MaxRepel", "EscapeRope", "FullHeal", "Revive"])
+  }
+
+  // ── Super Nerd (npc 2) — dialogue only ───────────────────────────────────
+  @storyline("talkSuperNerd") {
+    @trigger(map = "SaffronMart", npc = 2)
+    @speaker("") {
+      @t("MAX REPEL lasts longer than\nSUPER REPEL for keeping\nweaker POKeMON away!", "厉害驱虫剂比好驱虫剂维持时间\n更长，能让更弱小的宝可梦远\n离！")
+    }
+  }
+
+  // ── Cooltrainer F (npc 3) — dialogue only ────────────────────────────────
+  @storyline("talkCooltrainerF") {
+    @trigger(map = "SaffronMart", npc = 3)
+    @speaker("") {
+      @t("REVIVE is costly, but it\nrevives fainted POKeMON!", "活力碎片很贵，但它能让昏倒的\n宝可梦复活！")
+    }
+  }
+}

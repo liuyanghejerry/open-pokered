@@ -1,0 +1,330 @@
+{
+  "$schema": "../../schemas/map.schema.json",
+  "id": 148,
+  "name": "PokemonTower7F",
+  "header": {
+    "tileset": "Cemetery",
+    "music": "PokemonTower",
+    "connectionFlags": 0,
+    "width": 10,
+    "height": 9,
+    "borderBlock": 1
+  },
+  "connections": {},
+  "warps": [
+    {
+      "x": 9,
+      "y": 16,
+      "destMap": "PokemonTower6F",
+      "destWarpId": 1
+    }
+  ],
+  "npcs": [
+    {
+      "spriteId": 24,
+      "spriteName": "Rocket",
+      "x": 9,
+      "y": 11,
+      "movement": "Stationary",
+      "facing": "Right",
+      "range": 2,
+      "textId": 1,
+      "isTrainer": true,
+      "trainerClass": "Rocket",
+      "trainerSet": 19,
+      "endBattleText": "I give up!"
+    },
+    {
+      "spriteId": 24,
+      "spriteName": "Rocket",
+      "x": 12,
+      "y": 9,
+      "movement": "Stationary",
+      "facing": "Left",
+      "range": 2,
+      "textId": 2,
+      "isTrainer": true,
+      "trainerClass": "Rocket",
+      "trainerSet": 20,
+      "endBattleText": "Please!\nNo more!"
+    },
+    {
+      "spriteId": 24,
+      "spriteName": "Rocket",
+      "x": 9,
+      "y": 7,
+      "movement": "Stationary",
+      "facing": "Right",
+      "range": 2,
+      "textId": 3,
+      "isTrainer": true,
+      "trainerClass": "Rocket",
+      "trainerSet": 21,
+      "endBattleText": "Don't\nfight us ROCKETs!"
+    },
+    {
+      "spriteId": 22,
+      "spriteName": "MrFuji",
+      "x": 10,
+      "y": 3,
+      "movement": "Stationary",
+      "facing": "Down",
+      "range": 0,
+      "textId": 4,
+      "isTrainer": false
+    }
+  ],
+  "signs": [],
+  "text": {
+    "npc": {
+      "1": [
+        {
+          "line1": "MR.FUJI: Heh? You",
+          "line2": "came to save me?"
+        },
+        {
+          "line1": "",
+          "line2": ""
+        },
+        {
+          "line1": "Thank you. But, I",
+          "line2": "came here of my"
+        },
+        {
+          "line1": "own free will.",
+          "line2": ""
+        },
+        {
+          "line1": "",
+          "line2": ""
+        },
+        {
+          "line1": "I came to calm",
+          "line2": "the soul of"
+        },
+        {
+          "line1": "CUBONE's mother.",
+          "line2": ""
+        },
+        {
+          "line1": "",
+          "line2": ""
+        },
+        {
+          "line1": "I think MAROWAK's",
+          "line2": "spirit has gone"
+        },
+        {
+          "line1": "to the afterlife.",
+          "line2": ""
+        },
+        {
+          "line1": "",
+          "line2": ""
+        },
+        {
+          "line1": "I must thank you",
+          "line2": "for your kind"
+        },
+        {
+          "line1": "concern!",
+          "line2": ""
+        },
+        {
+          "line1": "",
+          "line2": ""
+        },
+        {
+          "line1": "Follow me to my",
+          "line2": "home, #MON"
+        },
+        {
+          "line1": "HOUSE at the foot",
+          "line2": "of this tower."
+        }
+      ],
+      "2": [
+        {
+          "line1": "What do you want?",
+          "line2": "Why are you here?"
+        }
+      ],
+      "2_Defeated": [
+        {
+          "line1": "I give up!",
+          "line2": ""
+        }
+      ],
+      "2_AfterBattle": [
+        {
+          "line1": "I'm not going to",
+          "line2": "forget this!"
+        }
+      ],
+      "3": [
+        {
+          "line1": "This old guy came",
+          "line2": "and complained"
+        },
+        {
+          "line1": "about us harming",
+          "line2": "useless #MON!"
+        },
+        {
+          "line1": "",
+          "line2": ""
+        },
+        {
+          "line1": "We're talking it",
+          "line2": "over as adults!"
+        }
+      ],
+      "3_Defeated": [
+        {
+          "line1": "Please!",
+          "line2": "No more!"
+        }
+      ],
+      "3_AfterBattle": [
+        {
+          "line1": "#MON are only",
+          "line2": "good for making"
+        },
+        {
+          "line1": "money!",
+          "line2": ""
+        },
+        {
+          "line1": "",
+          "line2": ""
+        },
+        {
+          "line1": "Stay out of our",
+          "line2": "business!"
+        }
+      ],
+      "4": [
+        {
+          "line1": "You're not saving",
+          "line2": "anyone, kid!"
+        }
+      ],
+      "4_Defeated": [
+        {
+          "line1": "Don't",
+          "line2": "fight us ROCKETs!"
+        }
+      ],
+      "4_AfterBattle": [
+        {
+          "line1": "You're not getting",
+          "line2": "away with this!"
+        }
+      ]
+    }
+  },
+  "wild": {
+    "red": {
+      "grass": {
+        "encounterRate": 15,
+        "mons": [
+          {
+            "level": 21,
+            "species": "Gastly"
+          },
+          {
+            "level": 22,
+            "species": "Gastly"
+          },
+          {
+            "level": 23,
+            "species": "Gastly"
+          },
+          {
+            "level": 24,
+            "species": "Gastly"
+          },
+          {
+            "level": 20,
+            "species": "Gastly"
+          },
+          {
+            "level": 28,
+            "species": "Haunter"
+          },
+          {
+            "level": 22,
+            "species": "Cubone"
+          },
+          {
+            "level": 24,
+            "species": "Cubone"
+          },
+          {
+            "level": 28,
+            "species": "Haunter"
+          },
+          {
+            "level": 30,
+            "species": "Haunter"
+          }
+        ]
+      },
+      "water": {
+        "encounterRate": 0,
+        "mons": []
+      }
+    },
+    "blue": {
+      "grass": {
+        "encounterRate": 15,
+        "mons": [
+          {
+            "level": 21,
+            "species": "Gastly"
+          },
+          {
+            "level": 22,
+            "species": "Gastly"
+          },
+          {
+            "level": 23,
+            "species": "Gastly"
+          },
+          {
+            "level": 24,
+            "species": "Gastly"
+          },
+          {
+            "level": 20,
+            "species": "Gastly"
+          },
+          {
+            "level": 28,
+            "species": "Haunter"
+          },
+          {
+            "level": 22,
+            "species": "Cubone"
+          },
+          {
+            "level": 24,
+            "species": "Cubone"
+          },
+          {
+            "level": 28,
+            "species": "Haunter"
+          },
+          {
+            "level": 30,
+            "species": "Haunter"
+          }
+        ]
+      },
+      "water": {
+        "encounterRate": 0,
+        "mons": []
+      }
+    }
+  }
+}

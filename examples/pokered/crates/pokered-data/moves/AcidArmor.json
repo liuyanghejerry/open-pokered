@@ -1,0 +1,9 @@
+{
+  "$schema": "../schemas/move.schema.json",
+  "id": "AcidArmor",
+  "effect": "DefenseUp2Effect",
+  "power": 0,
+  "type": "Poison",
+  "accuracy": 100,
+  "pp": 40
+}

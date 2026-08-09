@@ -1,0 +1,43 @@
+{
+  "$schema": "../schemas/pokemon.schema.json",
+  "species": "Ditto",
+  "baseStats": {
+    "hp": 48,
+    "attack": 48,
+    "defense": 48,
+    "speed": 48,
+    "special": 48
+  },
+  "type1": "Normal",
+  "type2": "Normal",
+  "catchRate": 35,
+  "baseExp": 61,
+  "growthRate": "MediumFast",
+  "initialMoves": [
+    "Transform",
+    "None",
+    "None",
+    "None"
+  ],
+  "tmHmFlags": [
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0
+  ],
+  "pokedex": {
+    "category": "TRANSFORM",
+    "heightFeet": 1,
+    "heightInches": 0,
+    "weightDecipounds": 90,
+    "flavorTextPages": [
+      "Capable of copying\nan enemy's genetic\ncode to instantly",
+      "transform itself\ninto a duplicate\nof the enemy"
+    ]
+  },
+  "evolutions": [],
+  "learnset": []
+}

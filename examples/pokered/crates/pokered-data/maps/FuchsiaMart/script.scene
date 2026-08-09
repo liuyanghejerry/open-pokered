@@ -1,0 +1,28 @@
+// FuchsiaMart — translated from the original disassembly (scripts/FuchsiaMart.asm,
+// text/FuchsiaMart.asm, data/items/marts.asm) to the real Game DSL API surface.
+// A standard Poke Mart: the clerk (npc 1) opens the shop; the middle-aged man
+// (npc 2) and cooltrainer (npc 3) are NPC dialogue only.
+
+game_scene FuchsiaMart {
+  // ── Clerk (npc 1) — opens the Poke Mart shop ────────────────────────────
+  @storyline("talkClerk") {
+    @trigger(map = "FuchsiaMart", npc = 1)
+    openShop(["ULTRA_BALL", "GREAT_BALL", "SUPER_POTION", "REVIVE", "FULL_HEAL", "SUPER_REPEL"])
+  }
+
+  // ── MiddleAgedMan (npc 2) ───────────────────────────────────────────────
+  @storyline("talkMiddleAgedMan") {
+    @trigger(map = "FuchsiaMart", npc = 2)
+    @speaker("") {
+      @t("Do you have a SAFARI ZONE\nflag?\n\nWhat about cards or\ncalendars?", "你有狩猎地带的旗帜吗？\n\n有卡片或日历吗？")
+    }
+  }
+
+  // ── CooltrainerF (npc 3) ────────────────────────────────────────────────
+  @storyline("talkCooltrainerF") {
+    @trigger(map = "FuchsiaMart", npc = 3)
+    @speaker("") {
+      @t("Did you try X SPEED? It\nspeeds up a POKeMON in\nbattle!", "你试过速度强化吗？它能让宝可\n梦在战斗中加速！")
+    }
+  }
+}

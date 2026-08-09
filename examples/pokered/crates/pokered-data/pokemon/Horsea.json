@@ -1,0 +1,70 @@
+{
+  "$schema": "../schemas/pokemon.schema.json",
+  "species": "Horsea",
+  "baseStats": {
+    "hp": 30,
+    "attack": 40,
+    "defense": 70,
+    "speed": 60,
+    "special": 70
+  },
+  "type1": "Water",
+  "type2": "Water",
+  "catchRate": 225,
+  "baseExp": 83,
+  "growthRate": "MediumFast",
+  "initialMoves": [
+    "Bubble",
+    "None",
+    "None",
+    "None"
+  ],
+  "tmHmFlags": [
+    32,
+    63,
+    8,
+    192,
+    194,
+    8,
+    18
+  ],
+  "pokedex": {
+    "category": "DRAGON",
+    "heightFeet": 1,
+    "heightInches": 4,
+    "weightDecipounds": 180,
+    "flavorTextPages": [
+      "Known to shoot\ndown flying bugs\nwith precision",
+      "blasts of ink\nfrom the surface\nof the water"
+    ]
+  },
+  "evolutions": [
+    {
+      "method": "level",
+      "species": "Seadra",
+      "level": 32
+    }
+  ],
+  "learnset": [
+    {
+      "level": 19,
+      "moveId": "Smokescreen"
+    },
+    {
+      "level": 24,
+      "moveId": "Leer"
+    },
+    {
+      "level": 30,
+      "moveId": "WaterGun"
+    },
+    {
+      "level": 37,
+      "moveId": "Agility"
+    },
+    {
+      "level": 45,
+      "moveId": "HydroPump"
+    }
+  ]
+}

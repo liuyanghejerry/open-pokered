@@ -1,0 +1,78 @@
+// RocketHideoutB3F — translated from the original disassembly
+// (scripts/RocketHideoutB3F.asm, text/RocketHideoutB3F.asm) to the real Game DSL
+// API surface.
+//
+// Content types:
+//  - Team Rocket grunts (npc 1/2): sight-engaged trainers; map.json keeps
+//    isTrainer:true and the runtime drives the battle. The .scene handlers are
+//    dialogue only (pre-battle taunt vs. after-battle line, branched on the
+//    BEAT_ROCKET_HIDEOUT_3_TRAINER flags).
+//  - PokeBalls (npc 3/4): ground items — TM44 (DOUBLE-EDGE) and RARE CANDY.
+//  - Arrow/spinner tiles: the original RocketHideoutB3FDefaultScript forces the
+//    player along arrow-tile paths (BIT_SPINNING + simulated joypad). The engine's
+//    spinner-tile forced movement (update.rs) reproduces this, so no scene logic
+//    is needed.
+
+game_scene RocketHideoutB3F {
+  // ── Team Rocket grunt (npc 1) — sight-engaged; dialogue only ────────────
+  @storyline("talkRocket1") {
+    @trigger(map = "RocketHideoutB3F", npc = 1)
+    @if (getFlag("EVENT_BEAT_ROCKET_HIDEOUT_3_TRAINER_0")) {
+      @speaker("") {
+        @t("SILPH SCOPE? The machine the\nBOSS stole. It's here\nsomewhere.", "西尔佛透视镜？老板偷走的那个\n机器。就在这里某处。")
+      }
+    } @else {
+      @speaker("") {
+        @t("Stop meddling in TEAM\nROCKET's affairs!", "别来妨碍火箭队的勾当！")
+      }
+    }
+  }
+
+  // ── Team Rocket grunt (npc 2) — sight-engaged; dialogue only ────────────
+  @storyline("talkRocket2") {
+    @trigger(map = "RocketHideoutB3F", npc = 2)
+    @if (getFlag("EVENT_BEAT_ROCKET_HIDEOUT_3_TRAINER_1")) {
+      @speaker("") {
+        @t("Go ahead and go! But, you\nneed the LIFT KEY to run the\nelevator!", "走吧，请便！但是，没有电梯钥\n匙就开不了电梯！")
+      }
+    } @else {
+      @speaker("") {
+        @t("We got word from upstairs\nthat you were coming!", "楼上传话说你要来。我们早知道\n了！")
+      }
+    }
+  }
+
+  // ── PokeBall ground item (npc 3) — TM44 (DOUBLE-EDGE) ────────────────────
+  @storyline("talkPokeBall1") {
+    @trigger(map = "RocketHideoutB3F", npc = 3, toggle = "ROCKET_HIDEOUT_B3F_OBJ_3")
+    given = giveItem("TM44", 1)
+    @if (given) {
+      @speaker("") {
+        @t("<PLAYER> found TM44!", "<PLAYER>发现了 TM44！")
+      }
+    } @else {
+      @speaker("") {
+        @t("You have too much stuff\nalready!", "你身上的东西太多了！")
+      }
+    }
+  }
+
+  // ── PokeBall ground item (npc 4) — RARE CANDY ────────────────────────────
+  @storyline("talkPokeBall2") {
+    @trigger(map = "RocketHideoutB3F", npc = 4, toggle = "ROCKET_HIDEOUT_B3F_OBJ_4")
+    given = giveItem("RARE_CANDY", 1)
+    @if (given) {
+      @speaker("") {
+        @t("<PLAYER> found RARE CANDY!", "<PLAYER>发现了神奇糖果！")
+      }
+    } @else {
+      @speaker("") {
+        @t("You have too much stuff\nalready!", "你身上的东西太多了！")
+      }
+    }
+  }
+
+  // The arrow/spinner-tile maze is handled by the engine (spinner tiles force
+  // continuous movement until the player slides off), matching the original
+  // RocketHideout3ArrowTilePlayerMovement.
+}

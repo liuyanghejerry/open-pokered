@@ -1,0 +1,31 @@
+{
+  "$schema": "../schemas/trainer.schema.json",
+  "class": "Lorelei",
+  "constName": "LORELEI",
+  "parties": [
+    {
+      "pokemon": [
+        {
+          "level": 54,
+          "species": "Dewgong"
+        },
+        {
+          "level": 53,
+          "species": "Cloyster"
+        },
+        {
+          "level": 54,
+          "species": "Slowbro"
+        },
+        {
+          "level": 56,
+          "species": "Jynx"
+        },
+        {
+          "level": 56,
+          "species": "Lapras"
+        }
+      ]
+    }
+  ]
+}

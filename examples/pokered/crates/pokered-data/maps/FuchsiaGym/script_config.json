@@ -1,0 +1,40 @@
+{
+  "$schema": "../../schemas/script_config.schema.json",
+  "coordEvents": [],
+  "npcs": [
+    {
+      "id": 1,
+      "talk": "talkKoga"
+    },
+    {
+      "id": 2,
+      "talk": "talkRocker1"
+    },
+    {
+      "id": 3,
+      "talk": "talkRocker2"
+    },
+    {
+      "id": 4,
+      "talk": "talkRocker3"
+    },
+    {
+      "id": 5,
+      "talk": "talkRocker4"
+    },
+    {
+      "id": 6,
+      "talk": "talkRocker5"
+    },
+    {
+      "id": 7,
+      "talk": "talkRocker6"
+    },
+    {
+      "id": 8,
+      "talk": "talkGymGuide"
+    }
+  ],
+  "onLoad": "FuchsiaGymOnLoad",
+  "signs": []
+}

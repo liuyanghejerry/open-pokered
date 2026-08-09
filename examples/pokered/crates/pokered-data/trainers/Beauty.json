@@ -1,0 +1,219 @@
+{
+  "$schema": "../schemas/trainer.schema.json",
+  "class": "Beauty",
+  "constName": "BEAUTY",
+  "parties": [
+    {
+      "pokemon": [
+        {
+          "level": 21,
+          "species": "Oddish"
+        },
+        {
+          "level": 21,
+          "species": "Bellsprout"
+        },
+        {
+          "level": 21,
+          "species": "Oddish"
+        },
+        {
+          "level": 21,
+          "species": "Bellsprout"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 24,
+          "species": "Bellsprout"
+        },
+        {
+          "level": 24,
+          "species": "Bellsprout"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 26,
+          "species": "Exeggcute"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 27,
+          "species": "Rattata"
+        },
+        {
+          "level": 27,
+          "species": "Pikachu"
+        },
+        {
+          "level": 27,
+          "species": "Rattata"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 29,
+          "species": "Clefairy"
+        },
+        {
+          "level": 29,
+          "species": "Meowth"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 35,
+          "species": "Seaking"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 30,
+          "species": "Shellder"
+        },
+        {
+          "level": 30,
+          "species": "Shellder"
+        },
+        {
+          "level": 30,
+          "species": "Cloyster"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 31,
+          "species": "Poliwag"
+        },
+        {
+          "level": 31,
+          "species": "Seaking"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 29,
+          "species": "Pidgeotto"
+        },
+        {
+          "level": 29,
+          "species": "Wigglytuff"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 29,
+          "species": "Bulbasaur"
+        },
+        {
+          "level": 29,
+          "species": "Ivysaur"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 33,
+          "species": "Weepinbell"
+        },
+        {
+          "level": 33,
+          "species": "Bellsprout"
+        },
+        {
+          "level": 33,
+          "species": "Weepinbell"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 27,
+          "species": "Poliwag"
+        },
+        {
+          "level": 27,
+          "species": "Goldeen"
+        },
+        {
+          "level": 27,
+          "species": "Seaking"
+        },
+        {
+          "level": 27,
+          "species": "Goldeen"
+        },
+        {
+          "level": 27,
+          "species": "Poliwag"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 30,
+          "species": "Goldeen"
+        },
+        {
+          "level": 30,
+          "species": "Seaking"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 29,
+          "species": "Staryu"
+        },
+        {
+          "level": 29,
+          "species": "Staryu"
+        },
+        {
+          "level": 29,
+          "species": "Staryu"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 30,
+          "species": "Seadra"
+        },
+        {
+          "level": 30,
+          "species": "Horsea"
+        },
+        {
+          "level": 30,
+          "species": "Seadra"
+        }
+      ]
+    }
+  ]
+}

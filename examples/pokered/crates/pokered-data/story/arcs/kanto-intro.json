@@ -1,0 +1,7 @@
+{
+  "id": "kanto-intro",
+  "title": { "en": "Leaving Pallet Town", "zh": "离开真新镇" },
+  "order": 0,
+  "summary": "The player receives a starter, runs Oak's parcel errand, and earns the Pokédex.",
+  "beats": ["get-starter", "deliver-parcel", "get-pokedex"]
+}

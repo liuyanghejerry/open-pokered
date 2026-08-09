@@ -1,0 +1,49 @@
+{
+  "$schema": "../schemas/pokemon.schema.json",
+  "species": "Abra",
+  "baseStats": {
+    "hp": 25,
+    "attack": 20,
+    "defense": 15,
+    "speed": 90,
+    "special": 105
+  },
+  "type1": "Psychic",
+  "type2": "Psychic",
+  "catchRate": 200,
+  "baseExp": 73,
+  "growthRate": "MediumSlow",
+  "initialMoves": [
+    "Teleport",
+    "None",
+    "None",
+    "None"
+  ],
+  "tmHmFlags": [
+    177,
+    3,
+    15,
+    240,
+    135,
+    56,
+    67
+  ],
+  "pokedex": {
+    "category": "PSI",
+    "heightFeet": 2,
+    "heightInches": 11,
+    "weightDecipounds": 430,
+    "flavorTextPages": [
+      "Using its ability\nto read minds, it\nwill identify",
+      "impending danger\nand TELEPORT to\nsafety"
+    ]
+  },
+  "evolutions": [
+    {
+      "method": "level",
+      "species": "Kadabra",
+      "level": 16
+    }
+  ],
+  "learnset": []
+}

@@ -1,0 +1,9 @@
+{
+  "$schema": "../schemas/move.schema.json",
+  "id": "Struggle",
+  "effect": "RecoilEffect",
+  "power": 50,
+  "type": "Normal",
+  "accuracy": 100,
+  "pp": 10
+}

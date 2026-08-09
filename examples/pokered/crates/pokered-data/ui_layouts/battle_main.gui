@@ -1,0 +1,34 @@
+screen BattleMain {
+  // Full-width message box (left) + the FIGHT/PKMN/ITEM/RUN menu box (right).
+  panel {
+    rect = {tx: 0, ty: 12, tw: 20, th: 6}
+    style = "default"
+  }
+  panel {
+    rect = {tx: 8, ty: 12, tw: 12, th: 6}
+    style = "default"
+  }
+  text(@t("FIGHT", "战斗")) {
+    rect = {tx: 10, ty: 14, tw: 5, th: 1}
+  }
+  // "PKMN" is the original two-tile ligature (Pk + Mn), drawn as GB tiles
+  // regardless of language — matching the v1 battle menu.
+  tile(225) { rect = {tx: 16, ty: 14, tw: 1, th: 1} }
+  tile(226) { rect = {tx: 17, ty: 14, tw: 1, th: 1} }
+  text(@t("ITEM", "道具")) {
+    rect = {tx: 10, ty: 16, tw: 4, th: 1}
+  }
+  text(@t("RUN", "逃跑")) {
+    rect = {tx: 16, ty: 16, tw: 3, th: 1}
+  }
+  // 2×2 grid cursor: base at FIGHT's left column; +6 tiles per column,
+  // +2 rows per row. {bcol}/{brow} come from BattleMenuState.
+  cursor {
+    rect = {tx: 9, ty: 14, tw: 1, th: 1}
+    col_step = 6
+    row_step = 2
+    col = "{bcol}"
+    row = "{brow}"
+    glyph = "▶"
+  }
+}

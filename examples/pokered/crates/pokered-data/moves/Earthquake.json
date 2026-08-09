@@ -1,0 +1,9 @@
+{
+  "$schema": "../schemas/move.schema.json",
+  "id": "Earthquake",
+  "effect": "NoAdditionalEffect",
+  "power": 100,
+  "type": "Ground",
+  "accuracy": 100,
+  "pp": 10
+}

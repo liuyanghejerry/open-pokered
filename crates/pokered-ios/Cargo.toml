@@ -1,0 +1,23 @@
+[package]
+name = "pokered-ios"
+version.workspace = true
+edition.workspace = true
+
+[lib]
+crate-type = ["staticlib"]
+
+[features]
+embedded-scripts = ["pokered-core/embedded-scripts"]
+embedded-map-data = ["pokered-core/embedded-map-data"]
+default = ["embedded-scripts", "embedded-map-data"]
+
+[dependencies]
+pokered-app = { path = "../../examples/pokered/crates/pokered-app" }
+pokered-core = { path = "../../examples/pokered/crates/pokered-core" }
+pokered-data = { path = "../../examples/pokered/crates/pokered-data" }
+pokered-renderer = { path = "../../examples/pokered/crates/pokered-renderer" }
+pokered-audio = { path = "../../examples/pokered/crates/pokered-audio" }
+log = "0.4"
+
+[target.'cfg(target_os = "ios")'.dependencies]
+# oslog = "0.2"  # Deferred — will be enabled when oslog crate is available

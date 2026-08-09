@@ -1,0 +1,168 @@
+// ViridianGym — translated from the original disassembly (scripts/ViridianGym.asm,
+// text/ViridianGym.asm) to the real Game DSL API surface. Gym template: leader
+// Giovanni is talk-driven (map.json isTrainer = false) so the script owns the
+// battle->EARTHBADGE->TM27 reward; the eight gym trainers are sight-engaged by
+// the runtime, so their .scene handlers are dialogue only. The arrow/spinner
+// tile maze is handled by the engine's spinner-tile forced movement (see
+// update.rs — standing on an arrow tile slides the player along it).
+
+game_scene ViridianGym {
+  // ── Giovanni, the Gym Leader (npc 1) ───────────────────────────────────
+  @storyline("talkGiovanni") {
+    @trigger(map = "ViridianGym", npc = 1)
+    @if (getFlag("EVENT_BEAT_VIRIDIAN_GYM_GIOVANNI")) {
+      @if (!getFlag("EVENT_GOT_TM27")) {
+        // Beat Giovanni previously but the bag was full — hand over the TM now.
+        giveItem("TM27", 1)
+        setFlag("EVENT_GOT_TM27")
+        @speaker("") { @t("<PLAYER> received TM27!", "<PLAYER>收到了 TM27！") }
+        @speaker("") {
+          @t("TM27 is FISSURE! It will\ntake out POKeMON with just\none hit!\n\nI made it when I ran the GYM\nhere, too long ago...", "TM27是地裂！一击就能打倒宝可\n梦！\n\n这是我很久以前在这里担任道馆\n馆主时制作的……")
+        }
+      } @else {
+        @speaker("") {
+          @t("Having lost, I cannot face\nmy underlings! TEAM ROCKET\nis finished forever!\n\nI will dedicate my life to\nthe study of POKeMON!\n\nLet us meet again some day!\nFarewell!", "既然输了，我就无法面对我的部\n下！火箭队从此彻底解散了！\n\n我将把余生献给宝可梦的研究！\n\n我们改日再会吧！再见了！")
+        }
+        // Giovanni leaves the gym after his post-battle farewell.
+        hideObjectByName("VIRIDIAN_GYM_GIOVANNI")
+      }
+    } @else {
+      @speaker("") {
+        @t("Fwahahaha! This is my\nhideout!\n\nI planned to resurrect TEAM\nROCKET here!\n\nBut, you have caught me\nagain! So be it! This time,\nI'm not holding back!\n\nOnce more, you shall face\nGIOVANNI, the greatest\ntrainer!", "哈哈哈！这里是我的基地！\n\n我打算在此地让火箭队东山再\n起！\n\n但是，你又抓住了我！也罢！这\n次我不会再手下留情！\n\n再一次，你将要面对最强的训练\n家坂木！")
+      }
+      result = startBattle("OPP_GIOVANNI3")
+      @if (result == "win") {
+        @speaker("") {
+          @t("Ha! That was a truly intense\nfight! You have won! As\nproof, here is the\nEARTHBADGE!", "哈！真是一场激烈的战斗！你赢\n了！作为证明，这是绿色徽章！")
+        }
+        giveBadge("EARTHBADGE")
+        setFlag("EVENT_BEAT_VIRIDIAN_GYM_GIOVANNI")
+        @speaker("") {
+          @t("The EARTHBADGE makes POKeMON\nof any level obey!\n\nIt is evidence of your\nmastery as a POKeMON\ntrainer!\n\nWith it, you can enter the\nPOKeMON LEAGUE!\n\nIt is my gift for your\nPOKeMON LEAGUE challenge!", "绿色徽章能让任何等级的宝可梦\n听话！\n\n它证明了你作为宝可梦训练家的\n才能！\n\n有了它，你就能进入宝可梦联\n盟！\n\n这是我赠予你的宝可梦联盟挑战\n之礼！")
+        }
+        giveItem("TM27", 1)
+        setFlag("EVENT_GOT_TM27")
+        @speaker("") { @t("<PLAYER> received TM27!", "<PLAYER>收到了 TM27！") }
+        @speaker("") {
+          @t("TM27 is FISSURE! It will\ntake out POKeMON with just\none hit!\n\nI made it when I ran the GYM\nhere, too long ago...", "TM27是地裂！一击就能打倒宝可\n梦！\n\n这是我很久以前在这里担任道馆\n馆主时制作的……")
+        }
+        // Deactivate the gym trainers (original SetEventRange 0..7).
+        setFlag("EVENT_BEAT_VIRIDIAN_GYM_TRAINER_0")
+        setFlag("EVENT_BEAT_VIRIDIAN_GYM_TRAINER_1")
+        setFlag("EVENT_BEAT_VIRIDIAN_GYM_TRAINER_2")
+        setFlag("EVENT_BEAT_VIRIDIAN_GYM_TRAINER_3")
+        setFlag("EVENT_BEAT_VIRIDIAN_GYM_TRAINER_4")
+        setFlag("EVENT_BEAT_VIRIDIAN_GYM_TRAINER_5")
+        setFlag("EVENT_BEAT_VIRIDIAN_GYM_TRAINER_6")
+        setFlag("EVENT_BEAT_VIRIDIAN_GYM_TRAINER_7")
+        // Re-enable the Route 22 rival rematch (original ShowObject +
+        // EVENT_2ND_ROUTE22_RIVAL_BATTLE / EVENT_ROUTE22_RIVAL_WANTS_BATTLE).
+        setFlag("EVENT_2ND_ROUTE22_RIVAL_BATTLE")
+        setFlag("EVENT_ROUTE22_RIVAL_WANTS_BATTLE")
+      }
+    }
+  }
+
+  // ── CooltrainerM (npc 2) — sight-engaged; dialogue only ─────────────────
+  @storyline("talkCooltrainerM1") {
+    @trigger(map = "ViridianGym", npc = 2)
+    @if (getFlag("EVENT_BEAT_VIRIDIAN_GYM_TRAINER_0")) {
+      @speaker("") { @t("You need power to keep up\nwith our GYM LEADER!", "你需要力量才能跟上我们馆主的\n脚步！") }
+    } @else {
+      @speaker("") { @t("Heh! You must be running out\nof steam by now!", "嘿！你现在一定快累得精疲力尽\n了吧！") }
+    }
+  }
+
+  // ── Hiker / Blackbelt (npc 3) — sight-engaged; dialogue only ────────────
+  @storyline("talkHiker1") {
+    @trigger(map = "ViridianGym", npc = 3)
+    @if (getFlag("EVENT_BEAT_VIRIDIAN_GYM_TRAINER_1")) {
+      @speaker("") { @t("I'm still not worthy!", "我还不够格！") }
+    } @else {
+      @speaker("") { @t("Rrrroar! I'm working myself\ninto a rage!", "嗷呜！我正在让自己热血沸腾！") }
+    }
+  }
+
+  // ── Rocker / Tamer (npc 4) — sight-engaged; dialogue only ───────────────
+  @storyline("talkRocker1") {
+    @trigger(map = "ViridianGym", npc = 4)
+    @if (getFlag("EVENT_BEAT_VIRIDIAN_GYM_TRAINER_2")) {
+      @speaker("") { @t("Do you know the identity of\nour GYM LEADER?", "你知道我们馆主的真实身份吗？") }
+    } @else {
+      @speaker("") { @t("POKeMON and I, we make\nwonderful music together!", "我和宝可梦一起演奏美妙的音\n乐！") }
+    }
+  }
+
+  // ── Hiker / Blackbelt (npc 5) — sight-engaged; dialogue only ────────────
+  @storyline("talkHiker2") {
+    @trigger(map = "ViridianGym", npc = 5)
+    @if (getFlag("EVENT_BEAT_VIRIDIAN_GYM_TRAINER_3")) {
+      @speaker("") { @t("If my POKeMON were as good\nat Karate as I...", "要是我的宝可梦也能像我一样精\n通空手道……") }
+    } @else {
+      @speaker("") { @t("Karate is the ultimate form\nof martial arts!", "空手道是武术的最高境界！") }
+    }
+  }
+
+  // ── CooltrainerM (npc 6) — sight-engaged; dialogue only ─────────────────
+  @storyline("talkCooltrainerM2") {
+    @trigger(map = "ViridianGym", npc = 6)
+    @if (getFlag("EVENT_BEAT_VIRIDIAN_GYM_TRAINER_4")) {
+      @speaker("") { @t("The LEADER will scold me!", "馆主会骂我的！") }
+    } @else {
+      @speaker("") { @t("The truly talented win with\nstyle!", "真正的高手赢得漂亮！") }
+    }
+  }
+
+  // ── Hiker / Blackbelt (npc 7) — sight-engaged; dialogue only ────────────
+  @storyline("talkHiker3") {
+    @trigger(map = "ViridianGym", npc = 7)
+    @if (getFlag("EVENT_BEAT_VIRIDIAN_GYM_TRAINER_5")) {
+      @speaker("") { @t("POKeMON LEAGUE? You? Don't\nget cocky!", "宝可梦联盟？你？别太得意忘\n形！") }
+    } @else {
+      @speaker("") { @t("I'm the KARATE KING! Your\nfate rests with me!", "我是空手道之王！你的命运掌握\n在我手里！") }
+    }
+  }
+
+  // ── Rocker / Tamer (npc 8) — sight-engaged; dialogue only ───────────────
+  @storyline("talkRocker2") {
+    @trigger(map = "ViridianGym", npc = 8)
+    @if (getFlag("EVENT_BEAT_VIRIDIAN_GYM_TRAINER_6")) {
+      @speaker("") { @t("Wait! I was just careless!", "等等！我只是大意了！") }
+    } @else {
+      @speaker("") { @t("Your POKeMON will cower at\nthe crack of my whip!", "我的鞭子一响你的宝可梦就会吓\n得发抖！") }
+    }
+  }
+
+  // ── CooltrainerM (npc 9) — sight-engaged; dialogue only ─────────────────
+  @storyline("talkCooltrainerM3") {
+    @trigger(map = "ViridianGym", npc = 9)
+    @if (getFlag("EVENT_BEAT_VIRIDIAN_GYM_TRAINER_7")) {
+      @speaker("") { @t("You can go onto POKeMON\nLEAGUE only by defeating our\nGYM LEADER!", "只有打败我们的馆主，才能进入\n宝可梦联盟！") }
+    } @else {
+      @speaker("") { @t("VIRIDIAN GYM was closed for\na long time, but now our\nLEADER is back!", "常青道馆关了很长一段时间但现\n在我们的馆主回来了！") }
+    }
+  }
+
+  // ── Gym guide (npc 10) ──────────────────────────────────────────────────
+  // The Viridian guide only prints pre/post text in the original (no YesNo
+  // prompt, unlike the other gyms), so we reproduce it faithfully.
+  @storyline("talkGymGuide") {
+    @trigger(map = "ViridianGym", npc = 10)
+    @if (getFlag("EVENT_BEAT_VIRIDIAN_GYM_GIOVANNI")) {
+      @speaker("") {
+        @t("Blow me away! GIOVANNI was\nthe GYM LEADER here?", "真让我吃惊！坂木就是这里的馆\n主？")
+      }
+    } @else {
+      @speaker("") {
+        @t("Yo! Champ in making!\n\nEven I don't know VIRIDIAN\nLEADER's identity!\n\nThis will be the toughest of\nall the GYM LEADERs!\n\nI heard that the trainers\nhere like ground-type\nPOKeMON!", "哟！未来的冠军！\n\n连我也不知道常青馆主的真实身\n份！\n\n他将是所有馆主中最难对付的一\n位！\n\n我听说这里的训练家们都喜欢地\n面系宝可梦！")
+      }
+    }
+  }
+
+  // NOTE: npc 11 is the Revive item ball (map.json itemId 53, isTrainer:false);
+  // the runtime handles item-ball pickup from map.json, so it needs no handler.
+
+  // The arrow/spinner-tile maze is handled by the engine (spinner tiles force
+  // continuous movement until the player slides off), so no scene logic is
+  // needed here.
+}

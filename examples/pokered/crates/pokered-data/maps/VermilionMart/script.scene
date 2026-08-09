@@ -1,0 +1,28 @@
+// VermilionMart — translated from the original disassembly (scripts/VermilionMart.asm,
+// text/VermilionMart.asm, data/items/marts.asm) to the real Game DSL API surface.
+// A standard Poke Mart: the clerk (npc 1) opens the shop; the two cooltrainers
+// (npc 2, 3) are NPC dialogue only.
+
+game_scene VermilionMart {
+  // ── Clerk (npc 1) — opens the Poke Mart shop ────────────────────────────
+  @storyline("talkClerk") {
+    @trigger(map = "VermilionMart", npc = 1)
+    openShop(["POKE_BALL", "SUPER_POTION", "ICE_HEAL", "AWAKENING", "PARLYZ_HEAL", "REPEL"])
+  }
+
+  // ── CooltrainerM (npc 2) ────────────────────────────────────────────────
+  @storyline("talkCooltrainerM") {
+    @trigger(map = "VermilionMart", npc = 2)
+    @speaker("") {
+      @t("There are evil people who\nwill use POKeMON for\ncriminal acts.\n\nTEAM ROCKET traffics in rare\nPOKeMON.\n\nThey also abandon POKeMON\nthat they consider not to be\npopular or useful.", "有些邪恶的人会用宝可梦去做犯\n罪的事。\n\n火箭队贩卖稀有的宝可梦。\n\n他们还会抛弃那些他们认为不受\n欢迎或者没用的宝可梦。")
+    }
+  }
+
+  // ── CooltrainerF (npc 3) ────────────────────────────────────────────────
+  @storyline("talkCooltrainerF") {
+    @trigger(map = "VermilionMart", npc = 3)
+    @speaker("") {
+      @t("I think POKeMON can be good\nor evil. It depends on the\ntrainer.", "我觉得宝可梦是好是坏，取决于\n训练家。")
+    }
+  }
+}

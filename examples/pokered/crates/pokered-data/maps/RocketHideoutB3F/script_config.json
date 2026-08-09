@@ -1,0 +1,25 @@
+{
+  "$schema": "../../schemas/script_config.schema.json",
+  "coordEvents": [],
+  "npcs": [
+    {
+      "id": 1,
+      "talk": "talkRocket1"
+    },
+    {
+      "id": 2,
+      "talk": "talkRocket2"
+    },
+    {
+      "id": 3,
+      "talk": "talkPokeBall1",
+      "toggleId": "ROCKET_HIDEOUT_B3F_OBJ_3"
+    },
+    {
+      "id": 4,
+      "talk": "talkPokeBall2",
+      "toggleId": "ROCKET_HIDEOUT_B3F_OBJ_4"
+    }
+  ],
+  "signs": []
+}

@@ -1,0 +1,104 @@
+{
+  "$schema": "../../schemas/map.schema.json",
+  "id": 233,
+  "name": "SilphCo9F",
+  "header": {
+    "tileset": "Facility",
+    "music": "SilphCo",
+    "connectionFlags": 0,
+    "width": 13,
+    "height": 9,
+    "borderBlock": 46
+  },
+  "connections": {},
+  "warps": [
+    {
+      "x": 14,
+      "y": 0,
+      "destMap": "SilphCo10F",
+      "destWarpId": 0
+    },
+    {
+      "x": 16,
+      "y": 0,
+      "destMap": "SilphCo8F",
+      "destWarpId": 0
+    },
+    {
+      "x": 18,
+      "y": 0,
+      "destMap": "SilphCoElevator",
+      "destWarpId": 0
+    },
+    {
+      "x": 9,
+      "y": 3,
+      "destMap": "SilphCo3F",
+      "destWarpId": 7
+    },
+    {
+      "x": 17,
+      "y": 15,
+      "destMap": "SilphCo5F",
+      "destWarpId": 4
+    }
+  ],
+  "npcs": [
+    {
+      "spriteId": 41,
+      "spriteName": "Nurse",
+      "x": 3,
+      "y": 14,
+      "movement": "Stationary",
+      "facing": "Down",
+      "range": 0,
+      "textId": 1,
+      "isTrainer": false
+    },
+    {
+      "spriteId": 24,
+      "spriteName": "Rocket",
+      "x": 2,
+      "y": 4,
+      "movement": "Stationary",
+      "facing": "Up",
+      "range": 0,
+      "textId": 2,
+      "isTrainer": true,
+      "trainerClass": "Rocket",
+      "trainerSet": 37,
+      "endBattleText": "Ghaaah!"
+    },
+    {
+      "spriteId": 32,
+      "spriteName": "Scientist",
+      "x": 21,
+      "y": 13,
+      "movement": "Stationary",
+      "facing": "Down",
+      "range": 0,
+      "textId": 3,
+      "isTrainer": true,
+      "trainerClass": "Scientist",
+      "trainerSet": 10,
+      "endBattleText": "You\nhammered me!"
+    },
+    {
+      "spriteId": 24,
+      "spriteName": "Rocket",
+      "x": 13,
+      "y": 16,
+      "movement": "Stationary",
+      "facing": "Up",
+      "range": 0,
+      "textId": 4,
+      "isTrainer": true,
+      "trainerClass": "Rocket",
+      "trainerSet": 38,
+      "endBattleText": "Warg!\nBrothers, I lost!"
+    }
+  ],
+  "signs": [],
+  "text": {},
+  "wild": null
+}

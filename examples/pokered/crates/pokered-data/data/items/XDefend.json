@@ -1,0 +1,1 @@
+{"id":"XDefend","name":"X DEFEND","price":550,"category":"Battle","effect":{"type":"BattleStat","params":{"stage":1}},"held_effect":null,"berry":null,"use_outside_battle":false,"use_in_battle":true,"consume":true,"key_item":false,"sellable":true,"description":"","tags":["battle","stat","defense"]}

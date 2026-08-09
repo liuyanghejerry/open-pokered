@@ -1,0 +1,74 @@
+{
+  "$schema": "../schemas/pokemon.schema.json",
+  "species": "Pidgeotto",
+  "baseStats": {
+    "hp": 63,
+    "attack": 60,
+    "defense": 55,
+    "speed": 71,
+    "special": 50
+  },
+  "type1": "Normal",
+  "type2": "Flying",
+  "catchRate": 120,
+  "baseExp": 113,
+  "growthRate": "MediumSlow",
+  "initialMoves": [
+    "Gust",
+    "SandAttack",
+    "None",
+    "None"
+  ],
+  "tmHmFlags": [
+    42,
+    3,
+    8,
+    192,
+    67,
+    12,
+    10
+  ],
+  "pokedex": {
+    "category": "BIRD",
+    "heightFeet": 3,
+    "heightInches": 7,
+    "weightDecipounds": 660,
+    "flavorTextPages": [
+      "Very protective\nof its sprawling\nterritorial area,",
+      "this #MON will\nfiercely peck at\nany intruder"
+    ]
+  },
+  "evolutions": [
+    {
+      "method": "level",
+      "species": "Pidgeot",
+      "level": 36
+    }
+  ],
+  "learnset": [
+    {
+      "level": 5,
+      "moveId": "SandAttack"
+    },
+    {
+      "level": 12,
+      "moveId": "QuickAttack"
+    },
+    {
+      "level": 21,
+      "moveId": "Whirlwind"
+    },
+    {
+      "level": 31,
+      "moveId": "WingAttack"
+    },
+    {
+      "level": 40,
+      "moveId": "Agility"
+    },
+    {
+      "level": 49,
+      "moveId": "MirrorMove"
+    }
+  ]
+}

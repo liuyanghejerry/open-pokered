@@ -1,0 +1,181 @@
+{
+  "$schema": "../../schemas/map.schema.json",
+  "id": 18,
+  "name": "Route7",
+  "header": {
+    "tileset": "Overworld",
+    "music": "Routes3",
+    "connectionFlags": 3,
+    "width": 10,
+    "height": 9,
+    "borderBlock": 15
+  },
+  "connections": {
+    "west": {
+      "targetMap": "CeladonCity",
+      "offset": -4
+    },
+    "east": {
+      "targetMap": "SaffronCity",
+      "offset": -4
+    }
+  },
+  "warps": [
+    {
+      "x": 18,
+      "y": 9,
+      "destMap": "Route7Gate",
+      "destWarpId": 2
+    },
+    {
+      "x": 18,
+      "y": 10,
+      "destMap": "Route7Gate",
+      "destWarpId": 3
+    },
+    {
+      "x": 11,
+      "y": 9,
+      "destMap": "Route7Gate",
+      "destWarpId": 0
+    },
+    {
+      "x": 11,
+      "y": 10,
+      "destMap": "Route7Gate",
+      "destWarpId": 1
+    },
+    {
+      "x": 5,
+      "y": 13,
+      "destMap": "UndergroundPathRoute7",
+      "destWarpId": 0
+    }
+  ],
+  "npcs": [],
+  "signs": [
+    {
+      "x": 3,
+      "y": 13,
+      "textId": 1
+    }
+  ],
+  "text": {
+    "sign": {
+      "1": [
+        {
+          "line1": "UNDERGROUND PATH",
+          "line2": "CELADON CITY -"
+        },
+        {
+          "line1": "LAVENDER TOWN",
+          "line2": ""
+        }
+      ]
+    }
+  },
+  "wild": {
+    "red": {
+      "grass": {
+        "encounterRate": 15,
+        "mons": [
+          {
+            "level": 19,
+            "species": "Pidgey"
+          },
+          {
+            "level": 19,
+            "species": "Oddish"
+          },
+          {
+            "level": 17,
+            "species": "Mankey"
+          },
+          {
+            "level": 22,
+            "species": "Oddish"
+          },
+          {
+            "level": 22,
+            "species": "Pidgey"
+          },
+          {
+            "level": 18,
+            "species": "Mankey"
+          },
+          {
+            "level": 18,
+            "species": "Growlithe"
+          },
+          {
+            "level": 20,
+            "species": "Growlithe"
+          },
+          {
+            "level": 19,
+            "species": "Mankey"
+          },
+          {
+            "level": 20,
+            "species": "Mankey"
+          }
+        ]
+      },
+      "water": {
+        "encounterRate": 0,
+        "mons": []
+      }
+    },
+    "blue": {
+      "grass": {
+        "encounterRate": 15,
+        "mons": [
+          {
+            "level": 19,
+            "species": "Pidgey"
+          },
+          {
+            "level": 19,
+            "species": "Bellsprout"
+          },
+          {
+            "level": 17,
+            "species": "Meowth"
+          },
+          {
+            "level": 22,
+            "species": "Bellsprout"
+          },
+          {
+            "level": 22,
+            "species": "Pidgey"
+          },
+          {
+            "level": 18,
+            "species": "Meowth"
+          },
+          {
+            "level": 18,
+            "species": "Vulpix"
+          },
+          {
+            "level": 20,
+            "species": "Vulpix"
+          },
+          {
+            "level": 19,
+            "species": "Meowth"
+          },
+          {
+            "level": 20,
+            "species": "Meowth"
+          }
+        ]
+      },
+      "water": {
+        "encounterRate": 0,
+        "mons": []
+      }
+    }
+  }
+}

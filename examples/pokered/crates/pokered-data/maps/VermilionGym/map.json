@@ -1,0 +1,502 @@
+{
+  "$schema": "../../schemas/map.schema.json",
+  "id": 92,
+  "name": "VermilionGym",
+  "header": {
+    "tileset": "Gym",
+    "music": "Gym",
+    "connectionFlags": 0,
+    "width": 5,
+    "height": 9,
+    "borderBlock": 3
+  },
+  "connections": {},
+  "warps": [
+    {
+      "x": 4,
+      "y": 17,
+      "destWarpId": 3
+    },
+    {
+      "x": 5,
+      "y": 17,
+      "destWarpId": 3
+    }
+  ],
+  "npcs": [
+    {
+      "spriteId": 33,
+      "spriteName": "Rocker",
+      "x": 5,
+      "y": 1,
+      "movement": "Stationary",
+      "facing": "Down",
+      "range": 0,
+      "textId": 1,
+      "isTrainer": false,
+      "trainerClass": "LtSurge",
+      "trainerSet": 1
+    },
+    {
+      "spriteId": 16,
+      "spriteName": "Gentleman",
+      "x": 9,
+      "y": 6,
+      "movement": "Stationary",
+      "facing": "Left",
+      "range": 0,
+      "textId": 2,
+      "isTrainer": true,
+      "trainerClass": "Gentleman",
+      "trainerSet": 3,
+      "endBattleText": "Stop!\nYou're very good!"
+    },
+    {
+      "spriteId": 12,
+      "spriteName": "SuperNerd",
+      "x": 3,
+      "y": 8,
+      "movement": "Stationary",
+      "facing": "Left",
+      "range": 0,
+      "textId": 3,
+      "isTrainer": true,
+      "trainerClass": "Rocker",
+      "trainerSet": 1,
+      "endBattleText": "Fried!"
+    },
+    {
+      "spriteId": 19,
+      "spriteName": "Sailor",
+      "x": 0,
+      "y": 10,
+      "movement": "Stationary",
+      "facing": "Right",
+      "range": 0,
+      "textId": 4,
+      "isTrainer": true,
+      "trainerClass": "Sailor",
+      "trainerSet": 8,
+      "endBattleText": "Wow!\nSurprised me!"
+    },
+    {
+      "spriteId": 36,
+      "spriteName": "GymGuide",
+      "x": 4,
+      "y": 14,
+      "movement": "Stationary",
+      "facing": "Down",
+      "range": 0,
+      "textId": 5,
+      "isTrainer": false
+    }
+  ],
+  "signs": [
+    {
+      "x": 1,
+      "y": 7,
+      "textId": 1
+    },
+    {
+      "x": 1,
+      "y": 9,
+      "textId": 2
+    },
+    {
+      "x": 1,
+      "y": 11,
+      "textId": 3
+    },
+    {
+      "x": 3,
+      "y": 7,
+      "textId": 4
+    },
+    {
+      "x": 3,
+      "y": 9,
+      "textId": 5
+    },
+    {
+      "x": 3,
+      "y": 11,
+      "textId": 6
+    },
+    {
+      "x": 5,
+      "y": 7,
+      "textId": 7
+    },
+    {
+      "x": 5,
+      "y": 9,
+      "textId": 8
+    },
+    {
+      "x": 5,
+      "y": 11,
+      "textId": 9
+    },
+    {
+      "x": 7,
+      "y": 7,
+      "textId": 10
+    },
+    {
+      "x": 7,
+      "y": 9,
+      "textId": 11
+    },
+    {
+      "x": 7,
+      "y": 11,
+      "textId": 12
+    },
+    {
+      "x": 9,
+      "y": 7,
+      "textId": 13
+    },
+    {
+      "x": 9,
+      "y": 9,
+      "textId": 14
+    },
+    {
+      "x": 9,
+      "y": 11,
+      "textId": 15
+    }
+  ],
+  "text": {
+    "npc": {
+      "1": [
+        {
+          "line1": "Hey, kid! What do",
+          "line2": "you think you're"
+        },
+        {
+          "line1": "doing here?",
+          "line2": ""
+        },
+        {
+          "line1": "",
+          "line2": ""
+        },
+        {
+          "line1": "You won't live",
+          "line2": "long in combat!"
+        },
+        {
+          "line1": "That's for sure!",
+          "line2": ""
+        },
+        {
+          "line1": "",
+          "line2": ""
+        },
+        {
+          "line1": "I tell you kid,",
+          "line2": "electric #MON"
+        },
+        {
+          "line1": "saved me during",
+          "line2": "the war!"
+        },
+        {
+          "line1": "",
+          "line2": ""
+        },
+        {
+          "line1": "They zapped my",
+          "line2": "enemies into"
+        },
+        {
+          "line1": "paralysis!",
+          "line2": ""
+        },
+        {
+          "line1": "",
+          "line2": ""
+        },
+        {
+          "line1": "The same as I'll",
+          "line2": "do to you!"
+        }
+      ],
+      "1_Defeated": [
+        {
+          "line1": "Whoa!",
+          "line2": ""
+        },
+        {
+          "line1": "",
+          "line2": ""
+        },
+        {
+          "line1": "You're the real",
+          "line2": "deal, kid!"
+        },
+        {
+          "line1": "",
+          "line2": ""
+        },
+        {
+          "line1": "Fine then, take",
+          "line2": "the THUNDERBADGE!"
+        }
+      ],
+      "1_ThunderBadgeInfo": [
+        {
+          "line1": "The THUNDERBADGE",
+          "line2": "cranks up your"
+        },
+        {
+          "line1": "#MON's SPEED!",
+          "line2": ""
+        },
+        {
+          "line1": "",
+          "line2": ""
+        },
+        {
+          "line1": "It also lets your",
+          "line2": "#MON FLY any"
+        },
+        {
+          "line1": "time, kid!",
+          "line2": ""
+        },
+        {
+          "line1": "",
+          "line2": ""
+        },
+        {
+          "line1": "You're special,",
+          "line2": "kid! Take this!"
+        }
+      ],
+      "1_ReceivedTM24": [
+        {
+          "line1": "[TM24 received",
+          "line2": "script]"
+        },
+        {
+          "line1": "",
+          "line2": ""
+        },
+        {
+          "line1": "TM24 contains",
+          "line2": "THUNDERBOLT!"
+        },
+        {
+          "line1": "",
+          "line2": ""
+        },
+        {
+          "line1": "Teach it to an",
+          "line2": "electric #MON!"
+        }
+      ],
+      "1_NoRoom": [
+        {
+          "line1": "Yo kid, make room",
+          "line2": "in your pack!"
+        }
+      ],
+      "1_AfterBattle": [
+        {
+          "line1": "A little word of",
+          "line2": "advice, kid!"
+        },
+        {
+          "line1": "",
+          "line2": ""
+        },
+        {
+          "line1": "Electricity is",
+          "line2": "sure powerful!"
+        },
+        {
+          "line1": "",
+          "line2": ""
+        },
+        {
+          "line1": "But, it's useless",
+          "line2": "against ground-"
+        },
+        {
+          "line1": "type #MON!",
+          "line2": ""
+        }
+      ],
+      "2": [
+        {
+          "line1": "When I was in the",
+          "line2": "Army, LT.SURGE"
+        },
+        {
+          "line1": "was my strict CO!",
+          "line2": ""
+        }
+      ],
+      "2_Defeated": [
+        {
+          "line1": "Stop!",
+          "line2": "You're very good!"
+        }
+      ],
+      "2_AfterBattle": [
+        {
+          "line1": "The door won't",
+          "line2": "open?"
+        },
+        {
+          "line1": "",
+          "line2": ""
+        },
+        {
+          "line1": "LT.SURGE always",
+          "line2": "was cautious!"
+        }
+      ],
+      "3": [
+        {
+          "line1": "I'm a lightweight,",
+          "line2": "but I'm good with"
+        },
+        {
+          "line1": "electricity!",
+          "line2": ""
+        }
+      ],
+      "3_Defeated": [
+        {
+          "line1": "Fried!",
+          "line2": ""
+        }
+      ],
+      "3_AfterBattle": [
+        {
+          "line1": "OK, I'll talk!",
+          "line2": ""
+        },
+        {
+          "line1": "",
+          "line2": ""
+        },
+        {
+          "line1": "LT.SURGE said he",
+          "line2": "hid door switches"
+        },
+        {
+          "line1": "inside something!",
+          "line2": ""
+        }
+      ],
+      "4": [
+        {
+          "line1": "This is no place",
+          "line2": "for kids!"
+        }
+      ],
+      "4_Defeated": [
+        {
+          "line1": "Wow!",
+          "line2": "Surprised me!"
+        }
+      ],
+      "4_AfterBattle": [
+        {
+          "line1": "LT.SURGE set up",
+          "line2": "double locks!"
+        },
+        {
+          "line1": "Here's a hint!",
+          "line2": ""
+        },
+        {
+          "line1": "",
+          "line2": ""
+        },
+        {
+          "line1": "When you open the",
+          "line2": "1st lock, the 2nd"
+        },
+        {
+          "line1": "lock is right",
+          "line2": "next to it!"
+        }
+      ],
+      "5": [
+        {
+          "line1": "Yo! Champ in",
+          "line2": "making!"
+        },
+        {
+          "line1": "",
+          "line2": ""
+        },
+        {
+          "line1": "LT.SURGE has a",
+          "line2": "nickname. People"
+        },
+        {
+          "line1": "refer to him as",
+          "line2": "the Lightning"
+        },
+        {
+          "line1": "American!",
+          "line2": ""
+        },
+        {
+          "line1": "",
+          "line2": ""
+        },
+        {
+          "line1": "He's an expert on",
+          "line2": "electric #MON!"
+        },
+        {
+          "line1": "",
+          "line2": ""
+        },
+        {
+          "line1": "Birds and water",
+          "line2": "#MON are at"
+        },
+        {
+          "line1": "risk! Beware of",
+          "line2": "paralysis too!"
+        },
+        {
+          "line1": "",
+          "line2": ""
+        },
+        {
+          "line1": "LT.SURGE is very",
+          "line2": "cautious!"
+        },
+        {
+          "line1": "",
+          "line2": ""
+        },
+        {
+          "line1": "You'll have to",
+          "line2": "break a code to"
+        },
+        {
+          "line1": "get to him!",
+          "line2": ""
+        }
+      ],
+      "5_AfterBeat": [
+        {
+          "line1": "Whew! That match",
+          "line2": "was electric!"
+        }
+      ]
+    }
+  },
+  "wild": null
+}

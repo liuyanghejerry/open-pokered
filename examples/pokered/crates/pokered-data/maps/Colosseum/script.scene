@@ -1,0 +1,35 @@
+// Colosseum — translated from the original disassembly (scripts/Colosseum.asm,
+// data/text/text_3.asm) to the real Game DSL API surface.
+//
+// The Colosseum is the Cable Club's LINK BATTLE room. Its only logic
+// (Colosseum_Script -> TradeCenter_Script) just positions the remote player's
+// sprite based on the serial connection — there is no single-player content.
+// The lone opponent NPC's text is literally "!" (_ColosseumOpponentText).
+//
+// Cable-club link battles are not reproduced (no link/serial API); this is a
+// local placeholder: talking to the opponent shows the original "!" dialogue.
+
+game_scene Colosseum {
+  // ── Link opponent (npc 1) ──────────────────────────────────────────────
+  // In the original this is the other connected player; talking to them shows
+  // "!" before the link battle starts. Without a link API this stays a local
+  // placeholder (no battle follows the "!").
+  @storyline("talkOpponent") {
+    @trigger(map = "Colosseum", npc = 1)
+    @speaker("") { @t("!", "！") }
+  }
+
+  // ── Gameboy on the table (signs 2 & 3 at 4,4 / 5,4) ────────────────────
+  // Original: `hidden_event 5,4 CableClubRightGameboy` + `4,4
+  // CableClubLeftGameboy` (data/events/hidden_events.asm:127-133) — pressing
+  // A on the table's gameboy sets LINK_STATE_START_BATTLE and runs the
+  // "Just a moment." → PLEASE WAIT! → party-exchange flow (engine/pokemon/
+  // bills_pc.asm:513-533, engine/link/cable_club.asm:4-23). The app drains
+  // `game.linkStart()` and drives the request/accept flow; offline it shows
+  // "Just a moment." and nothing happens.
+  @storyline("useGameboy") {
+    @trigger(map = "Colosseum", sign = 2)
+    @trigger(map = "Colosseum", sign = 3)
+    linkStart()
+  }
+}

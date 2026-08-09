@@ -1,0 +1,56 @@
+{
+  "$schema": "../schemas/pokemon.schema.json",
+  "species": "Nidoking",
+  "baseStats": {
+    "hp": 81,
+    "attack": 92,
+    "defense": 77,
+    "speed": 85,
+    "special": 75
+  },
+  "type1": "Poison",
+  "type2": "Ground",
+  "catchRate": 45,
+  "baseExp": 195,
+  "growthRate": "MediumSlow",
+  "initialMoves": [
+    "Tackle",
+    "HornAttack",
+    "PoisonSting",
+    "Thrash"
+  ],
+  "tmHmFlags": [
+    241,
+    255,
+    143,
+    199,
+    163,
+    136,
+    50
+  ],
+  "pokedex": {
+    "category": "DRILL",
+    "heightFeet": 4,
+    "heightInches": 7,
+    "weightDecipounds": 1370,
+    "flavorTextPages": [
+      "It uses its\npowerful tail in\nbattle to smash,",
+      "constrict, then\nbreak the prey's\nbones"
+    ]
+  },
+  "evolutions": [],
+  "learnset": [
+    {
+      "level": 8,
+      "moveId": "HornAttack"
+    },
+    {
+      "level": 14,
+      "moveId": "PoisonSting"
+    },
+    {
+      "level": 23,
+      "moveId": "Thrash"
+    }
+  ]
+}

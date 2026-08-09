@@ -1,0 +1,28 @@
+{
+  "$schema": "../../schemas/script_config.schema.json",
+  "coordEvents": [],
+  "npcs": [
+    {
+      "id": 1,
+      "talk": "talkNurse"
+    },
+    {
+      "id": 2,
+      "talk": "talkGymGuide"
+    },
+    {
+      "id": 3,
+      "talk": "talkCooltrainerF"
+    },
+    {
+      "id": 4,
+      "talk": "talkClerk"
+    },
+    {
+      "id": 5,
+      "talk": "talkLinkReceptionist"
+    }
+  ],
+  "onLoad": "IndigoPlateauLobbyOnLoad",
+  "signs": []
+}

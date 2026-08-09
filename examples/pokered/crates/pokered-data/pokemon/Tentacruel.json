@@ -1,0 +1,76 @@
+{
+  "$schema": "../schemas/pokemon.schema.json",
+  "species": "Tentacruel",
+  "baseStats": {
+    "hp": 80,
+    "attack": 70,
+    "defense": 65,
+    "speed": 100,
+    "special": 120
+  },
+  "type1": "Water",
+  "type2": "Poison",
+  "catchRate": 60,
+  "baseExp": 205,
+  "growthRate": "Slow",
+  "initialMoves": [
+    "Acid",
+    "Supersonic",
+    "Wrap",
+    "None"
+  ],
+  "tmHmFlags": [
+    36,
+    127,
+    24,
+    192,
+    131,
+    8,
+    22
+  ],
+  "pokedex": {
+    "category": "JELLYFISH",
+    "heightFeet": 5,
+    "heightInches": 3,
+    "weightDecipounds": 1210,
+    "flavorTextPages": [
+      "The tentacles are\nnormally kept\nshort. On hunts,",
+      "they are extended\nto ensnare and\nimmobilize prey"
+    ]
+  },
+  "evolutions": [],
+  "learnset": [
+    {
+      "level": 7,
+      "moveId": "Supersonic"
+    },
+    {
+      "level": 13,
+      "moveId": "Wrap"
+    },
+    {
+      "level": 18,
+      "moveId": "PoisonSting"
+    },
+    {
+      "level": 22,
+      "moveId": "WaterGun"
+    },
+    {
+      "level": 27,
+      "moveId": "Constrict"
+    },
+    {
+      "level": 35,
+      "moveId": "Barrier"
+    },
+    {
+      "level": 43,
+      "moveId": "Screech"
+    },
+    {
+      "level": 50,
+      "moveId": "HydroPump"
+    }
+  ]
+}

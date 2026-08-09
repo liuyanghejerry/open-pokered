@@ -1,0 +1,165 @@
+{
+  "$schema": "../../schemas/map.schema.json",
+  "id": 227,
+  "name": "CeruleanCaveB1F",
+  "header": {
+    "tileset": "Cavern",
+    "music": "Dungeon1",
+    "connectionFlags": 0,
+    "width": 15,
+    "height": 9,
+    "borderBlock": 125
+  },
+  "connections": {},
+  "warps": [
+    {
+      "x": 3,
+      "y": 6,
+      "destMap": "CeruleanCave1F",
+      "destWarpId": 8
+    }
+  ],
+  "npcs": [
+    {
+      "spriteId": 5,
+      "spriteName": "Monster",
+      "x": 27,
+      "y": 13,
+      "movement": "Stationary",
+      "facing": "Down",
+      "range": 0,
+      "textId": 1,
+      "isTrainer": false
+    },
+    {
+      "spriteId": 61,
+      "spriteName": "PokeBall",
+      "x": 16,
+      "y": 9,
+      "movement": "Stationary",
+      "facing": "Down",
+      "range": 0,
+      "textId": 2,
+      "isTrainer": false,
+      "itemId": 2
+    },
+    {
+      "spriteId": 61,
+      "spriteName": "PokeBall",
+      "x": 18,
+      "y": 1,
+      "movement": "Stationary",
+      "facing": "Down",
+      "range": 0,
+      "textId": 3,
+      "isTrainer": false,
+      "itemId": 54
+    }
+  ],
+  "signs": [],
+  "text": {},
+  "wild": {
+    "red": {
+      "grass": {
+        "encounterRate": 25,
+        "mons": [
+          {
+            "level": 55,
+            "species": "Rhydon"
+          },
+          {
+            "level": 55,
+            "species": "Marowak"
+          },
+          {
+            "level": 55,
+            "species": "Electrode"
+          },
+          {
+            "level": 64,
+            "species": "Chansey"
+          },
+          {
+            "level": 64,
+            "species": "Parasect"
+          },
+          {
+            "level": 64,
+            "species": "Raichu"
+          },
+          {
+            "level": 57,
+            "species": "Arbok"
+          },
+          {
+            "level": 65,
+            "species": "Ditto"
+          },
+          {
+            "level": 63,
+            "species": "Ditto"
+          },
+          {
+            "level": 67,
+            "species": "Ditto"
+          }
+        ]
+      },
+      "water": {
+        "encounterRate": 0,
+        "mons": []
+      }
+    },
+    "blue": {
+      "grass": {
+        "encounterRate": 25,
+        "mons": [
+          {
+            "level": 55,
+            "species": "Rhydon"
+          },
+          {
+            "level": 55,
+            "species": "Marowak"
+          },
+          {
+            "level": 55,
+            "species": "Electrode"
+          },
+          {
+            "level": 64,
+            "species": "Chansey"
+          },
+          {
+            "level": 64,
+            "species": "Parasect"
+          },
+          {
+            "level": 64,
+            "species": "Raichu"
+          },
+          {
+            "level": 57,
+            "species": "Sandslash"
+          },
+          {
+            "level": 65,
+            "species": "Ditto"
+          },
+          {
+            "level": 63,
+            "species": "Ditto"
+          },
+          {
+            "level": 67,
+            "species": "Ditto"
+          }
+        ]
+      },
+      "water": {
+        "encounterRate": 0,
+        "mons": []
+      }
+    }
+  }
+}

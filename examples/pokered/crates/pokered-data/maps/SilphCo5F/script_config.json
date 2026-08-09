@@ -1,0 +1,152 @@
+{
+  "$schema": "../../schemas/script_config.schema.json",
+  "coordEvents": [
+    {
+      "name": "cardKeyDoor11",
+      "position": [
+        6,
+        4
+      ],
+      "trigger": "cardKeyDoor1"
+    },
+    {
+      "name": "cardKeyDoor12",
+      "position": [
+        7,
+        4
+      ],
+      "trigger": "cardKeyDoor1"
+    },
+    {
+      "name": "cardKeyDoor13",
+      "position": [
+        6,
+        5
+      ],
+      "trigger": "cardKeyDoor1"
+    },
+    {
+      "name": "cardKeyDoor14",
+      "position": [
+        7,
+        5
+      ],
+      "trigger": "cardKeyDoor1"
+    },
+    {
+      "name": "cardKeyDoor21",
+      "position": [
+        6,
+        12
+      ],
+      "trigger": "cardKeyDoor2"
+    },
+    {
+      "name": "cardKeyDoor22",
+      "position": [
+        7,
+        12
+      ],
+      "trigger": "cardKeyDoor2"
+    },
+    {
+      "name": "cardKeyDoor23",
+      "position": [
+        6,
+        13
+      ],
+      "trigger": "cardKeyDoor2"
+    },
+    {
+      "name": "cardKeyDoor24",
+      "position": [
+        7,
+        13
+      ],
+      "trigger": "cardKeyDoor2"
+    },
+    {
+      "name": "cardKeyDoor31",
+      "position": [
+        14,
+        10
+      ],
+      "trigger": "cardKeyDoor3"
+    },
+    {
+      "name": "cardKeyDoor32",
+      "position": [
+        15,
+        10
+      ],
+      "trigger": "cardKeyDoor3"
+    },
+    {
+      "name": "cardKeyDoor33",
+      "position": [
+        14,
+        11
+      ],
+      "trigger": "cardKeyDoor3"
+    },
+    {
+      "name": "cardKeyDoor34",
+      "position": [
+        15,
+        11
+      ],
+      "trigger": "cardKeyDoor3"
+    }
+  ],
+  "npcs": [
+    {
+      "id": 1,
+      "talk": "talkSilphWorkerM"
+    },
+    {
+      "id": 2,
+      "talk": "talkRocket1"
+    },
+    {
+      "id": 3,
+      "talk": "talkScientist"
+    },
+    {
+      "id": 4,
+      "talk": "talkRocker"
+    },
+    {
+      "id": 5,
+      "talk": "talkRocket2"
+    },
+    {
+      "id": 6,
+      "talk": "itemTM09",
+      "toggleId": "SILPH_CO_5F_OBJ_6"
+    },
+    {
+      "id": 7,
+      "talk": "itemProtein",
+      "toggleId": "SILPH_CO_5F_OBJ_7"
+    },
+    {
+      "id": 8,
+      "talk": "itemCardKey",
+      "toggleId": "SILPH_CO_5F_OBJ_8"
+    },
+    {
+      "id": 9,
+      "talk": "talkPokemonReport1"
+    },
+    {
+      "id": 10,
+      "talk": "talkPokemonReport2"
+    },
+    {
+      "id": 11,
+      "talk": "talkPokemonReport3"
+    }
+  ],
+  "onLoad": "SilphCo5FOnLoad",
+  "signs": []
+}

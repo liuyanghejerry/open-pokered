@@ -1,0 +1,59 @@
+{
+  "$schema": "../../schemas/script_config.schema.json",
+  "coordEvents": [],
+  "npcs": [
+    {
+      "id": 1,
+      "talk": "talkSnorlax",
+      "toggleId": "ROUTE_12_OBJ_1"
+    },
+    {
+      "id": 2,
+      "talk": "talkFisher1"
+    },
+    {
+      "id": 3,
+      "talk": "talkFisher2"
+    },
+    {
+      "id": 4,
+      "talk": "talkCooltrainerM"
+    },
+    {
+      "id": 5,
+      "talk": "talkSuperNerd"
+    },
+    {
+      "id": 6,
+      "talk": "talkFisher3"
+    },
+    {
+      "id": 7,
+      "talk": "talkFisher4"
+    },
+    {
+      "id": 8,
+      "talk": "talkFisher5"
+    },
+    {
+      "id": 9,
+      "talk": "itemTmPayDay",
+      "toggleId": "ROUTE_12_OBJ_9"
+    },
+    {
+      "id": 10,
+      "talk": "itemIron",
+      "toggleId": "ROUTE_12_OBJ_10"
+    }
+  ],
+  "signs": [
+    {
+      "id": 1,
+      "talk": "sign1"
+    },
+    {
+      "id": 2,
+      "talk": "sign2"
+    }
+  ]
+}

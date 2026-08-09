@@ -1,0 +1,196 @@
+{
+  "$schema": "../../schemas/map.schema.json",
+  "id": 226,
+  "name": "CeruleanCave2F",
+  "header": {
+    "tileset": "Cavern",
+    "music": "Dungeon1",
+    "connectionFlags": 0,
+    "width": 15,
+    "height": 9,
+    "borderBlock": 125
+  },
+  "connections": {},
+  "warps": [
+    {
+      "x": 29,
+      "y": 1,
+      "destMap": "CeruleanCave1F",
+      "destWarpId": 2
+    },
+    {
+      "x": 22,
+      "y": 6,
+      "destMap": "CeruleanCave1F",
+      "destWarpId": 3
+    },
+    {
+      "x": 19,
+      "y": 7,
+      "destMap": "CeruleanCave1F",
+      "destWarpId": 4
+    },
+    {
+      "x": 9,
+      "y": 1,
+      "destMap": "CeruleanCave1F",
+      "destWarpId": 5
+    },
+    {
+      "x": 1,
+      "y": 3,
+      "destMap": "CeruleanCave1F",
+      "destWarpId": 6
+    },
+    {
+      "x": 3,
+      "y": 11,
+      "destMap": "CeruleanCave1F",
+      "destWarpId": 7
+    }
+  ],
+  "npcs": [
+    {
+      "spriteId": 61,
+      "spriteName": "PokeBall",
+      "x": 29,
+      "y": 9,
+      "movement": "Stationary",
+      "facing": "Down",
+      "range": 0,
+      "textId": 1,
+      "isTrainer": false,
+      "itemId": 79
+    },
+    {
+      "spriteId": 61,
+      "spriteName": "PokeBall",
+      "x": 4,
+      "y": 15,
+      "movement": "Stationary",
+      "facing": "Down",
+      "range": 0,
+      "textId": 2,
+      "isTrainer": false,
+      "itemId": 2
+    },
+    {
+      "spriteId": 61,
+      "spriteName": "PokeBall",
+      "x": 13,
+      "y": 6,
+      "movement": "Stationary",
+      "facing": "Down",
+      "range": 0,
+      "textId": 3,
+      "isTrainer": false,
+      "itemId": 16
+    }
+  ],
+  "signs": [],
+  "text": {},
+  "wild": {
+    "red": {
+      "grass": {
+        "encounterRate": 15,
+        "mons": [
+          {
+            "level": 51,
+            "species": "Dodrio"
+          },
+          {
+            "level": 51,
+            "species": "Venomoth"
+          },
+          {
+            "level": 51,
+            "species": "Kadabra"
+          },
+          {
+            "level": 52,
+            "species": "Rhydon"
+          },
+          {
+            "level": 52,
+            "species": "Marowak"
+          },
+          {
+            "level": 52,
+            "species": "Electrode"
+          },
+          {
+            "level": 56,
+            "species": "Chansey"
+          },
+          {
+            "level": 54,
+            "species": "Wigglytuff"
+          },
+          {
+            "level": 55,
+            "species": "Ditto"
+          },
+          {
+            "level": 60,
+            "species": "Ditto"
+          }
+        ]
+      },
+      "water": {
+        "encounterRate": 0,
+        "mons": []
+      }
+    },
+    "blue": {
+      "grass": {
+        "encounterRate": 15,
+        "mons": [
+          {
+            "level": 51,
+            "species": "Dodrio"
+          },
+          {
+            "level": 51,
+            "species": "Venomoth"
+          },
+          {
+            "level": 51,
+            "species": "Kadabra"
+          },
+          {
+            "level": 52,
+            "species": "Rhydon"
+          },
+          {
+            "level": 52,
+            "species": "Marowak"
+          },
+          {
+            "level": 52,
+            "species": "Electrode"
+          },
+          {
+            "level": 56,
+            "species": "Chansey"
+          },
+          {
+            "level": 54,
+            "species": "Wigglytuff"
+          },
+          {
+            "level": 55,
+            "species": "Ditto"
+          },
+          {
+            "level": 60,
+            "species": "Ditto"
+          }
+        ]
+      },
+      "water": {
+        "encounterRate": 0,
+        "mons": []
+      }
+    }
+  }
+}

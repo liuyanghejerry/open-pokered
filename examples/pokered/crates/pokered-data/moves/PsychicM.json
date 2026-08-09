@@ -1,0 +1,9 @@
+{
+  "$schema": "../schemas/move.schema.json",
+  "id": "PsychicM",
+  "effect": "SpecialDownSideEffect",
+  "power": 90,
+  "type": "Psychic",
+  "accuracy": 100,
+  "pp": 10
+}

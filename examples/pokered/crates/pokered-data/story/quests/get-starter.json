@@ -1,0 +1,18 @@
+{
+  "id": "get-starter",
+  "title": { "en": "Choose Your Starter", "zh": "选择你的初始宝可梦" },
+  "type": "main",
+  "arc": "kanto-intro",
+  "summary": "Oak lets the player pick their first Pokémon in his lab.",
+  "giver": "oak",
+  "characters": ["oak", "rival"],
+  "maps": ["OaksLab"],
+  "objectives": [
+    { "id": "o1", "text": { "en": "Pick a starter Pokémon", "zh": "选择一只初始宝可梦" }, "doneFlag": "EVENT_GOT_STARTER" }
+  ],
+  "requires": [],
+  "sets": ["EVENT_GOT_STARTER"],
+  "rewards": [{ "kind": "pokemon", "id": "STARTER" }],
+  "implementedBy": [{ "scene": "OaksLab", "storyline": "talkOak1" }],
+  "status": "scripted"
+}

@@ -1,0 +1,176 @@
+{
+  "$schema": "../../schemas/map.schema.json",
+  "id": 101,
+  "name": "SSAnneCaptainsRoom",
+  "header": {
+    "tileset": "Ship",
+    "music": "SSAnne",
+    "connectionFlags": 0,
+    "width": 3,
+    "height": 4,
+    "borderBlock": 12
+  },
+  "connections": {},
+  "warps": [
+    {
+      "x": 0,
+      "y": 7,
+      "destMap": "SSAnne2F",
+      "destWarpId": 8
+    }
+  ],
+  "npcs": [
+    {
+      "spriteId": 46,
+      "spriteName": "Captain",
+      "x": 4,
+      "y": 2,
+      "movement": "Stationary",
+      "facing": "Up",
+      "range": 0,
+      "textId": 1,
+      "isTrainer": false
+    }
+  ],
+  "signs": [
+    {
+      "x": 4,
+      "y": 1,
+      "textId": 1
+    },
+    {
+      "x": 1,
+      "y": 2,
+      "textId": 2
+    }
+  ],
+  "text": {
+    "npc": {
+      "1": [
+        {
+          "line1": "CAPTAIN: Ooargh...",
+          "line2": "I feel hideous..."
+        },
+        {
+          "line1": "Urrp! Seasick...",
+          "line2": ""
+        },
+        {
+          "line1": "",
+          "line2": ""
+        },
+        {
+          "line1": "<PLAYER> rubbed",
+          "line2": "the CAPTAIN's"
+        },
+        {
+          "line1": "back!",
+          "line2": ""
+        },
+        {
+          "line1": "",
+          "line2": ""
+        },
+        {
+          "line1": "Rub-rub...",
+          "line2": "Rub-rub..."
+        }
+      ],
+      "1_BetterGiveHM": [
+        {
+          "line1": "CAPTAIN: Whew!",
+          "line2": "Thank you! I"
+        },
+        {
+          "line1": "feel much better!",
+          "line2": ""
+        },
+        {
+          "line1": "",
+          "line2": ""
+        },
+        {
+          "line1": "You want to see",
+          "line2": "my CUT technique?"
+        },
+        {
+          "line1": "",
+          "line2": ""
+        },
+        {
+          "line1": "I could show you",
+          "line2": "if I wasn't ill..."
+        },
+        {
+          "line1": "",
+          "line2": ""
+        },
+        {
+          "line1": "I know! You can",
+          "line2": "have this!"
+        },
+        {
+          "line1": "",
+          "line2": ""
+        },
+        {
+          "line1": "Teach it to your",
+          "line2": "#MON and you"
+        },
+        {
+          "line1": "can see it CUT",
+          "line2": "any time!"
+        }
+      ],
+      "1_ReceivedHM": [
+        {
+          "line1": "[HM01 received",
+          "line2": "script]"
+        }
+      ],
+      "1_NoRoom": [
+        {
+          "line1": "Oh no! You have",
+          "line2": "no room for this!"
+        }
+      ],
+      "1_AfterHM": [
+        {
+          "line1": "CAPTAIN: Whew!",
+          "line2": ""
+        },
+        {
+          "line1": "",
+          "line2": ""
+        },
+        {
+          "line1": "Now that I'm not",
+          "line2": "sick any more, I"
+        },
+        {
+          "line1": "guess it's time.",
+          "line2": ""
+        }
+      ]
+    },
+    "sign": {
+      "1": [
+        {
+          "line1": "Yuck! Shouldn't",
+          "line2": "have looked!"
+        }
+      ],
+      "2": [
+        {
+          "line1": "How to Conquer",
+          "line2": "Seasickness..."
+        },
+        {
+          "line1": "The CAPTAIN's",
+          "line2": "reading this!"
+        }
+      ]
+    }
+  },
+  "wild": null
+}

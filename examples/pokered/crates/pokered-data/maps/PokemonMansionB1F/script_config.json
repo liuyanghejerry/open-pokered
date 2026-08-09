@@ -1,0 +1,62 @@
+{
+  "$schema": "../../schemas/script_config.schema.json",
+  "coordEvents": [
+    {
+      "name": "switchA",
+      "position": [
+        20,
+        3
+      ],
+      "trigger": "coordSwitchA"
+    },
+    {
+      "name": "switchB",
+      "position": [
+        18,
+        25
+      ],
+      "trigger": "coordSwitchB"
+    }
+  ],
+  "npcs": [
+    {
+      "id": 1,
+      "talk": "talkBurglar"
+    },
+    {
+      "id": 2,
+      "talk": "talkScientist"
+    },
+    {
+      "id": 3,
+      "talk": "talkPokeBall",
+      "toggleId": "POKEMON_MANSION_B1F_OBJ_3"
+    },
+    {
+      "id": 4,
+      "talk": "talkPokeBall1",
+      "toggleId": "POKEMON_MANSION_B1F_OBJ_4"
+    },
+    {
+      "id": 5,
+      "talk": "talkPokeBall2",
+      "toggleId": "POKEMON_MANSION_B1F_OBJ_5"
+    },
+    {
+      "id": 6,
+      "talk": "talkPokeBall3",
+      "toggleId": "POKEMON_MANSION_B1F_OBJ_6"
+    },
+    {
+      "id": 7,
+      "talk": "talkDiary"
+    },
+    {
+      "id": 8,
+      "talk": "talkPokeBall4",
+      "toggleId": "POKEMON_MANSION_B1F_OBJ_8"
+    }
+  ],
+  "onLoad": "PokemonMansionB1FOnLoad",
+  "signs": []
+}

@@ -1,0 +1,641 @@
+{
+  "$schema": "../../schemas/map.schema.json",
+  "id": 3,
+  "name": "CeruleanCity",
+  "header": {
+    "tileset": "Overworld",
+    "music": "Cities2",
+    "connectionFlags": 15,
+    "width": 20,
+    "height": 18,
+    "borderBlock": 15
+  },
+  "connections": {
+    "north": {
+      "targetMap": "Route24",
+      "offset": 5
+    },
+    "south": {
+      "targetMap": "Route5",
+      "offset": 5
+    },
+    "west": {
+      "targetMap": "Route4",
+      "offset": 4
+    },
+    "east": {
+      "targetMap": "Route9",
+      "offset": 4
+    }
+  },
+  "warps": [
+    {
+      "x": 27,
+      "y": 11,
+      "destMap": "CeruleanTrashedHouse",
+      "destWarpId": 0
+    },
+    {
+      "x": 13,
+      "y": 15,
+      "destMap": "CeruleanTradeHouse",
+      "destWarpId": 0
+    },
+    {
+      "x": 19,
+      "y": 17,
+      "destMap": "CeruleanPokecenter",
+      "destWarpId": 0
+    },
+    {
+      "x": 30,
+      "y": 19,
+      "destMap": "CeruleanGym",
+      "destWarpId": 0
+    },
+    {
+      "x": 13,
+      "y": 25,
+      "destMap": "BikeShop",
+      "destWarpId": 0
+    },
+    {
+      "x": 25,
+      "y": 25,
+      "destMap": "CeruleanMart",
+      "destWarpId": 0
+    },
+    {
+      "x": 4,
+      "y": 11,
+      "destMap": "CeruleanCave1F",
+      "destWarpId": 0
+    },
+    {
+      "x": 27,
+      "y": 9,
+      "destMap": "CeruleanTrashedHouse",
+      "destWarpId": 2
+    },
+    {
+      "x": 9,
+      "y": 11,
+      "destMap": "CeruleanBadgeHouse",
+      "destWarpId": 1
+    },
+    {
+      "x": 9,
+      "y": 9,
+      "destMap": "CeruleanBadgeHouse",
+      "destWarpId": 0
+    }
+  ],
+  "npcs": [
+    {
+      "spriteId": 2,
+      "spriteName": "Blue",
+      "x": 20,
+      "y": 2,
+      "movement": "Stationary",
+      "facing": "Down",
+      "range": 0,
+      "textId": 1,
+      "isTrainer": false
+    },
+    {
+      "spriteId": 24,
+      "spriteName": "Rocket",
+      "x": 30,
+      "y": 8,
+      "movement": "Stationary",
+      "facing": "Down",
+      "range": 0,
+      "textId": 2,
+      "isTrainer": false
+    },
+    {
+      "spriteId": 7,
+      "spriteName": "CooltrainerM",
+      "x": 31,
+      "y": 20,
+      "movement": "Stationary",
+      "facing": "Down",
+      "range": 0,
+      "textId": 3,
+      "isTrainer": false
+    },
+    {
+      "spriteId": 12,
+      "spriteName": "SuperNerd",
+      "x": 15,
+      "y": 18,
+      "movement": "Wander",
+      "facing": "Down",
+      "range": 1,
+      "textId": 4,
+      "isTrainer": false
+    },
+    {
+      "spriteId": 12,
+      "spriteName": "SuperNerd",
+      "x": 9,
+      "y": 21,
+      "movement": "Wander",
+      "facing": "Left",
+      "range": 2,
+      "textId": 5,
+      "isTrainer": false
+    },
+    {
+      "spriteId": 49,
+      "spriteName": "Guard",
+      "x": 28,
+      "y": 12,
+      "movement": "Stationary",
+      "facing": "Down",
+      "range": 0,
+      "textId": 6,
+      "isTrainer": false
+    },
+    {
+      "spriteId": 6,
+      "spriteName": "CooltrainerF",
+      "x": 29,
+      "y": 26,
+      "movement": "Stationary",
+      "facing": "Left",
+      "range": 0,
+      "textId": 7,
+      "isTrainer": false
+    },
+    {
+      "spriteId": 5,
+      "spriteName": "Monster",
+      "x": 28,
+      "y": 26,
+      "movement": "Stationary",
+      "facing": "Down",
+      "range": 0,
+      "textId": 8,
+      "isTrainer": false
+    },
+    {
+      "spriteId": 6,
+      "spriteName": "CooltrainerF",
+      "x": 9,
+      "y": 27,
+      "movement": "Wander",
+      "facing": "Left",
+      "range": 2,
+      "textId": 9,
+      "isTrainer": false
+    },
+    {
+      "spriteId": 12,
+      "spriteName": "SuperNerd",
+      "x": 4,
+      "y": 12,
+      "movement": "Stationary",
+      "facing": "Down",
+      "range": 0,
+      "textId": 10,
+      "isTrainer": false
+    },
+    {
+      "spriteId": 49,
+      "spriteName": "Guard",
+      "x": 27,
+      "y": 12,
+      "movement": "Stationary",
+      "facing": "Down",
+      "range": 0,
+      "textId": 11,
+      "isTrainer": false
+    }
+  ],
+  "signs": [
+    {
+      "x": 23,
+      "y": 19,
+      "textId": 1
+    },
+    {
+      "x": 17,
+      "y": 29,
+      "textId": 2
+    },
+    {
+      "x": 26,
+      "y": 25,
+      "textId": 3
+    },
+    {
+      "x": 20,
+      "y": 17,
+      "textId": 4
+    },
+    {
+      "x": 11,
+      "y": 25,
+      "textId": 5
+    },
+    {
+      "x": 27,
+      "y": 21,
+      "textId": 6
+    }
+  ],
+  "text": {
+    "npc": {
+      "1": [
+        {
+          "line1": "<RIVAL>: Yo!",
+          "line2": "<PLAYER>!"
+        },
+        {
+          "line1": "You're still",
+          "line2": "struggling along"
+        },
+        {
+          "line1": "back here?",
+          "line2": ""
+        },
+        {
+          "line1": "I'm doing great!",
+          "line2": "I caught a bunch"
+        },
+        {
+          "line1": "of strong and",
+          "line2": "smart #MON!"
+        },
+        {
+          "line1": "Here, let me see",
+          "line2": "what you caught,"
+        },
+        {
+          "line1": "<PLAYER>!",
+          "line2": ""
+        }
+      ],
+      "1_AfterBeat": [
+        {
+          "line1": "<RIVAL>: Hey,",
+          "line2": "guess what?"
+        },
+        {
+          "line1": "I went to BILL's",
+          "line2": "and got him to"
+        },
+        {
+          "line1": "show me his rare",
+          "line2": "#MON!"
+        },
+        {
+          "line1": "That added a lot",
+          "line2": "of pages to my"
+        },
+        {
+          "line1": "#DEX!",
+          "line2": ""
+        },
+        {
+          "line1": "After all, BILL's",
+          "line2": "world famous as a"
+        },
+        {
+          "line1": "#MANIAC!",
+          "line2": ""
+        },
+        {
+          "line1": "He invented the",
+          "line2": "#MON Storage"
+        },
+        {
+          "line1": "System on PC!",
+          "line2": ""
+        },
+        {
+          "line1": "Since you're using",
+          "line2": "his system, go"
+        },
+        {
+          "line1": "thank him!",
+          "line2": ""
+        },
+        {
+          "line1": "Well, I better",
+          "line2": "get rolling!"
+        },
+        {
+          "line1": "Smell ya later!",
+          "line2": ""
+        }
+      ],
+      "script_RivalDefeated": [
+        {
+          "line1": "Hey!",
+          "line2": "Take it easy!"
+        },
+        {
+          "line1": "You won already!",
+          "line2": ""
+        }
+      ],
+      "2": [
+        {
+          "line1": "Hey! Stay out!",
+          "line2": "It's not your"
+        },
+        {
+          "line1": "yard! Huh? Me?",
+          "line2": ""
+        },
+        {
+          "line1": "I'm an innocent",
+          "line2": "bystander! Don't"
+        },
+        {
+          "line1": "you believe me?",
+          "line2": ""
+        }
+      ],
+      "2_Defeated": [
+        {
+          "line1": "Stop!",
+          "line2": "I give up! I'll"
+        },
+        {
+          "line1": "leave quietly!",
+          "line2": ""
+        }
+      ],
+      "2_ReturnTM": [
+        {
+          "line1": "OK! I'll return",
+          "line2": "the TM I stole!"
+        }
+      ],
+      "2_ReceivedTM28": [
+        {
+          "line1": "<PLAYER> recovered",
+          "line2": "TM28!"
+        }
+      ],
+      "2_NoRoom": [
+        {
+          "line1": "Make room for",
+          "line2": "this!"
+        },
+        {
+          "line1": "I can't run until",
+          "line2": "I give it to you!"
+        }
+      ],
+      "2_IBetterGetMoving": [
+        {
+          "line1": "I better get",
+          "line2": "moving! Bye!"
+        }
+      ],
+      "3": [
+        {
+          "line1": "You're a trainer",
+          "line2": "too? Collecting,"
+        },
+        {
+          "line1": "fighting, it's a",
+          "line2": "tough life."
+        }
+      ],
+      "4": [
+        {
+          "line1": "That bush in",
+          "line2": "front of the shop"
+        },
+        {
+          "line1": "is in the way.",
+          "line2": ""
+        },
+        {
+          "line1": "There might be a",
+          "line2": "way around."
+        }
+      ],
+      "5": [
+        {
+          "line1": "You're making an",
+          "line2": "encyclopedia on"
+        },
+        {
+          "line1": "#MON? That",
+          "line2": "sounds amusing."
+        }
+      ],
+      "6": [
+        {
+          "line1": "The people here",
+          "line2": "were robbed."
+        },
+        {
+          "line1": "It's obvious that",
+          "line2": "TEAM ROCKET is"
+        },
+        {
+          "line1": "behind this most",
+          "line2": "heinous crime!"
+        },
+        {
+          "line1": "Even our POLICE",
+          "line2": "force has trouble"
+        },
+        {
+          "line1": "with the ROCKETs!",
+          "line2": ""
+        }
+      ],
+      "7": [
+        {
+          "line1": "OK! SLOWBRO!",
+          "line2": "Use SONICBOOM!"
+        },
+        {
+          "line1": "Come on, SLOWBRO",
+          "line2": "pay attention!"
+        }
+      ],
+      "7_Variant2": [
+        {
+          "line1": "SLOWBRO punch!",
+          "line2": "No! You blew it"
+        },
+        {
+          "line1": "again!",
+          "line2": ""
+        }
+      ],
+      "7_Variant3": [
+        {
+          "line1": "SLOWBRO, WITHDRAW!",
+          "line2": "No! That's wrong!"
+        },
+        {
+          "line1": "It's so hard to",
+          "line2": "control #MON!"
+        },
+        {
+          "line1": "Your #MON's",
+          "line2": "obedience depends"
+        },
+        {
+          "line1": "on your abilities",
+          "line2": "as a trainer!"
+        }
+      ],
+      "8": [
+        {
+          "line1": "SLOWBRO took a",
+          "line2": "snooze..."
+        }
+      ],
+      "8_Variant2": [
+        {
+          "line1": "SLOWBRO is",
+          "line2": "loafing around..."
+        }
+      ],
+      "8_Variant3": [
+        {
+          "line1": "SLOWBRO turned",
+          "line2": "away..."
+        }
+      ],
+      "8_Variant4": [
+        {
+          "line1": "SLOWBRO",
+          "line2": "ignored orders..."
+        }
+      ],
+      "9": [
+        {
+          "line1": "I want a bright",
+          "line2": "red BICYCLE!"
+        },
+        {
+          "line1": "I'll keep it at",
+          "line2": "home, so it won't"
+        },
+        {
+          "line1": "get dirty!",
+          "line2": ""
+        }
+      ],
+      "10": [
+        {
+          "line1": "This is CERULEAN",
+          "line2": "CAVE! Horribly"
+        },
+        {
+          "line1": "strong #MON",
+          "line2": "live in there!"
+        },
+        {
+          "line1": "The #MON LEAGUE",
+          "line2": "champion is the"
+        },
+        {
+          "line1": "only person who",
+          "line2": "is allowed in!"
+        }
+      ],
+      "11": [
+        {
+          "line1": "The people here",
+          "line2": "were robbed."
+        },
+        {
+          "line1": "It's obvious that",
+          "line2": "TEAM ROCKET is"
+        },
+        {
+          "line1": "behind this most",
+          "line2": "heinous crime!"
+        },
+        {
+          "line1": "Even our POLICE",
+          "line2": "force has trouble"
+        },
+        {
+          "line1": "with the ROCKETs!",
+          "line2": ""
+        }
+      ]
+    },
+    "sign": {
+      "1": [
+        {
+          "line1": "CERULEAN CITY",
+          "line2": "A Mysterious,"
+        },
+        {
+          "line1": "Blue Aura",
+          "line2": "Surrounds It"
+        }
+      ],
+      "2": [
+        {
+          "line1": "TRAINER TIPS",
+          "line2": ""
+        },
+        {
+          "line1": "Pressing B Button",
+          "line2": "during evolution"
+        },
+        {
+          "line1": "cancels the whole",
+          "line2": "process."
+        }
+      ],
+      "3": [
+        {
+          "line1": "Grass and caves",
+          "line2": "handled easily!"
+        },
+        {
+          "line1": "BIKE SHOP",
+          "line2": ""
+        }
+      ],
+      "4": [
+        {
+          "line1": "Heal Your #MON!",
+          "line2": "#MON CENTER"
+        }
+      ],
+      "5": [
+        {
+          "line1": "All your item",
+          "line2": "needs fulfilled!"
+        },
+        {
+          "line1": "#MON MART",
+          "line2": ""
+        }
+      ],
+      "6": [
+        {
+          "line1": "CERULEAN CITY",
+          "line2": "#MON GYM"
+        },
+        {
+          "line1": "LEADER: MISTY",
+          "line2": ""
+        },
+        {
+          "line1": "The Tomboyish",
+          "line2": "Mermaid!"
+        }
+      ]
+    }
+  },
+  "wild": null
+}

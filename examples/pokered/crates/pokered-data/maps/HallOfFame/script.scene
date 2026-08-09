@@ -1,0 +1,47 @@
+// HallOfFame — translated from the original disassembly (scripts/HallOfFame.asm,
+// text/HallOfFame.asm) to the real Game DSL API surface. This is an on-enter
+// cutscene: the player is force-walked up to OAK, OAK delivers the Hall of Fame
+// congratulations, then the Elite 4 events are reset
+// (HallOfFameResetEventsAndSaveScript's ResetEventRange), the party is recorded
+// in the Hall of Fame, the roll-call movie + credits play, the game saves and
+// restarts (the last three run as a frontend takeover via enterHallOfFame()).
+
+game_scene HallOfFame {
+  // ── On entry: force the player up to OAK, then OAK congratulates ──────────
+  @load {
+    // Original DecodeRLEList(HallOfFameEntryMovement) = PAD_UP x5: walk the
+    // player straight up the room toward OAK.
+    movePlayerRelative([[0, -1], [0, -1], [0, -1], [0, -1], [0, -1]])
+
+    // OAK turns to face the player and the player faces OAK (PLAYER_DIR_RIGHT /
+    // SPRITE_FACING_LEFT in the original).
+    facePlayer("right")
+    faceNpc(1, "left")
+
+    @speaker("") {
+      @t("OAK: Er-hem! Congratulations\n<PLAYER>!\n\nThis floor is the POKeMON\nHALL OF FAME!\n\nPOKeMON LEAGUE champions are\nhonored for their exploits\nhere!\n\nTheir POKeMON are also\nrecorded in the HALL OF\nFAME!\n\n<PLAYER>! You have\nendeavored hard to become\nthe new LEAGUE champion!\n\nCongratulations, <PLAYER>,\nyou and your POKeMON are\nHALL OF FAMERs!", "大木博士：咳咳！恭喜！\n<PLAYER>！\n\n这里就是宝可梦名人堂！\n\n宝可梦联盟冠军们在这里接受荣\n誉致敬！\n\n他们的宝可梦也会记录在名人堂\n里！\n\n<PLAYER>！你已经历经千辛万苦\n成为了新的联盟冠军！\n\n恭喜你， <PLAYER>，你和你的\n宝可梦都是名人堂成员！")
+    }
+
+    // Original hides the Cerulean Cave guy (TOGGLE_CERULEAN_CAVE_GUY) so MEWTWO's
+    // cave becomes accessible after entering the Hall of Fame.
+    setFlag("EVENT_HALL_OF_FAME_DEX_RATING")
+
+    // HallOfFameResetEventsAndSaveScript (scripts/HallOfFame.asm:39-44):
+    // ResetEventRange INDIGO_PLATEAU_EVENTS_START..INDIGO_PLATEAU_EVENTS_END —
+    // the whole Elite 4 gauntlet (incl. the Champion) resets for the rematch.
+    resetFlag("EVENT_BEAT_LORELEIS_ROOM_TRAINER_0")
+    resetFlag("EVENT_AUTOWALKED_INTO_LORELEIS_ROOM")
+    resetFlag("EVENT_BEAT_BRUNOS_ROOM_TRAINER_0")
+    resetFlag("EVENT_AUTOWALKED_INTO_BRUNOS_ROOM")
+    resetFlag("EVENT_BEAT_AGATHAS_ROOM_TRAINER_0")
+    resetFlag("EVENT_AUTOWALKED_INTO_AGATHAS_ROOM")
+    resetFlag("EVENT_BEAT_LANCES_ROOM_TRAINER_0")
+    resetFlag("EVENT_BEAT_LANCE")
+    resetFlag("EVENT_LANCES_ROOM_LOCK_DOOR")
+    resetFlag("EVENT_BEAT_CHAMPION_RIVAL")
+
+    // AnimateHallOfFame (roll-call movie) + Credits + SaveGameData + Init
+    // restart run as a frontend takeover; this storyline ends here.
+    enterHallOfFame()
+  }
+}

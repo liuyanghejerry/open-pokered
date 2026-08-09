@@ -1,0 +1,135 @@
+// Route20 — translated from the original disassembly (scripts/Route20.asm,
+// text/Route20.asm) to the real Game DSL API surface. Route20 is a water route
+// (CinnabarIsland <-> Seafoam Islands <-> Route19) populated entirely by
+// sight-engaged trainers (Swimmers, Beauties, JrTrainerF, a BirdKeeper). The
+// runtime drives each sight battle, so every talk handler here is dialogue only:
+// after-battle text once beaten, otherwise the pre-battle taunt.
+//
+// The original Route20_Script also runs a boulder cutscene on entry that shows/
+// hides Seafoam Islands boulder objects on OTHER maps based on the strength-
+// puzzle progress. hideObjectByName/showObjectByName persist across maps
+// (toggle_id -> __OBJ_HIDDEN_<id> unified flags + SRAM, applied when the target
+// map loads); the real gap is detecting a boulder pushed into a Seafoam hole
+// (see the Seafoam scene).
+
+game_scene Route20 {
+  // ── On-enter: Seafoam Islands boulder bookkeeping (cross-map) ───────────
+  @load {
+    // Original Route20BoulderScript toggles Seafoam Islands boulder objects
+    // (TOGGLE_SEAFOAM_ISLANDS_*) on other maps depending on EVENT_SEAFOAM*_
+    // BOULDER*_DOWN_HOLE. hideObjectByName/showObjectByName support the
+    // cross-map persistence; the remaining gap is the boulder-into-hole
+    // detection itself (see the Seafoam scene).
+  }
+
+  // ── Swimmer (npc 1) — TRAINER_0 ─────────────────────────────────────────
+  @storyline("talkSwimmer1") {
+    @trigger(map = "Route20", npc = 1)
+    @if (getFlag("EVENT_BEAT_ROUTE_20_TRAINER_0")) {
+      @speaker("") { @t("I wish I could ride my\nPOKeMON.", "我希望我能骑宝可梦。") }
+    } @else {
+      @speaker("") { @t("The water is shallow here.", "这里的水很浅。") }
+    }
+  }
+
+  // ── Swimmer (npc 2) — TRAINER_1 ─────────────────────────────────────────
+  @storyline("talkSwimmer2") {
+    @trigger(map = "Route20", npc = 2)
+    @if (getFlag("EVENT_BEAT_ROUTE_20_TRAINER_1")) {
+      @speaker("") { @t("There's a huge cavern\nunderneath this island.", "这座岛下面有一个巨大的洞窟。") }
+    } @else {
+      @speaker("") { @t("SEAFOAM is a quiet getaway!", "双子岛是个安静的度假地！") }
+    }
+  }
+
+  // ── Swimmer (npc 3) — TRAINER_2 ─────────────────────────────────────────
+  @storyline("talkSwimmer3") {
+    @trigger(map = "Route20", npc = 3)
+    @if (getFlag("EVENT_BEAT_ROUTE_20_TRAINER_2")) {
+      @speaker("") { @t("Want to float with me?", "想和我一起漂流吗？") }
+    } @else {
+      @speaker("") { @t("I love floating with the\nfishes!", "我喜欢和鱼儿们一起漂流！") }
+    }
+  }
+
+  // ── Swimmer (npc 4) — TRAINER_3 ─────────────────────────────────────────
+  @storyline("talkSwimmer4") {
+    @trigger(map = "Route20", npc = 4)
+    @if (getFlag("EVENT_BEAT_ROUTE_20_TRAINER_3")) {
+      @speaker("") { @t("SEAFOAM used to be one\nisland!", "双子岛以前是一座岛！") }
+    } @else {
+      @speaker("") { @t("Are you on vacation too?", "你也是来度假的吗？") }
+    }
+  }
+
+  // ── Swimmer (npc 5) — TRAINER_4 ─────────────────────────────────────────
+  @storyline("talkSwimmer5") {
+    @trigger(map = "Route20", npc = 5)
+    @if (getFlag("EVENT_BEAT_ROUTE_20_TRAINER_4")) {
+      @speaker("") { @t("I should've been buffing up\nmy POKeMON, not me!", "我本该锻炼我的宝可梦而不是我\n自己！") }
+    } @else {
+      @speaker("") { @t("Check out my buff physique!", "看看我这健美的体格！") }
+    }
+  }
+
+  // ── Swimmer (npc 6) — TRAINER_5 ─────────────────────────────────────────
+  @storyline("talkSwimmer6") {
+    @trigger(map = "Route20", npc = 6)
+    @if (getFlag("EVENT_BEAT_ROUTE_20_TRAINER_5")) {
+      @speaker("") { @t("Riding a POKeMON sure looks\nfun!", "骑着宝可梦看起来真好玩！") }
+    } @else {
+      @speaker("") { @t("Why are you riding a\nPOKeMON? Can't you swim?", "你为什么要骑着宝可梦？你不会\n游泳吗？") }
+    }
+  }
+
+  // ── BirdKeeper / CooltrainerM (npc 7) — TRAINER_6 ───────────────────────
+  @storyline("talkCooltrainerM") {
+    @trigger(map = "Route20", npc = 7)
+    @if (getFlag("EVENT_BEAT_ROUTE_20_TRAINER_6")) {
+      @speaker("") { @t("My birds can't FLY me back!", "我的鸟没法载我飞回去！") }
+    } @else {
+      @speaker("") { @t("I rode my bird POKeMON here!", "我是骑着鸟宝可梦来的！") }
+    }
+  }
+
+  // ── Swimmer (npc 8) — TRAINER_7 ─────────────────────────────────────────
+  @storyline("talkSwimmer7") {
+    @trigger(map = "Route20", npc = 8)
+    @if (getFlag("EVENT_BEAT_ROUTE_20_TRAINER_7")) {
+      @speaker("") { @t("Will my pearls grow bigger\ninside CLOYSTER?", "我的珍珠在刺甲贝体内会变大\n吗？") }
+    } @else {
+      @speaker("") { @t("My boy friend gave me big\npearls!", "我男朋友给了我大珍珠！") }
+    }
+  }
+
+  // ── Swimmer (npc 9) — TRAINER_8 ─────────────────────────────────────────
+  @storyline("talkSwimmer8") {
+    @trigger(map = "Route20", npc = 9)
+    @if (getFlag("EVENT_BEAT_ROUTE_20_TRAINER_8")) {
+      @speaker("") { @t("POKeMON have taken over an\nabandoned mansion on\nCINNABAR!", "宝可梦占据了红莲岛上的一座废\n弃宅邸！") }
+    } @else {
+      @speaker("") { @t("I swam here from CINNABAR\nISLAND!", "我从红莲岛游到这里！") }
+    }
+  }
+
+  // ── Swimmer (npc 10) — TRAINER_9 ────────────────────────────────────────
+  @storyline("talkSwimmer9") {
+    @trigger(map = "Route20", npc = 10)
+    @if (getFlag("EVENT_BEAT_ROUTE_20_TRAINER_9")) {
+      @speaker("") { @t("CINNABAR is a volcanic\nisland!", "红莲岛是火山岛！") }
+    } @else {
+      @speaker("") { @t("CINNABAR, in the west, has a\nLAB for POKeMON.", "西边的红莲岛有研究宝可梦的实\n验室。") }
+    }
+  }
+
+  // ── Seafoam Islands signs (west + east, same text) ──────────────────────
+  @storyline("signSeafoamWest") {
+    @trigger(map = "Route20", sign = 1)
+    @speaker("") { @t("SEAFOAM ISLANDS", "双子岛") }
+  }
+
+  @storyline("signSeafoamEast") {
+    @trigger(map = "Route20", sign = 2)
+    @speaker("") { @t("SEAFOAM ISLANDS", "双子岛") }
+  }
+}

@@ -1,0 +1,170 @@
+{
+  "$schema": "../../schemas/map.schema.json",
+  "id": 60,
+  "name": "MtMoonB1F",
+  "header": {
+    "tileset": "Cavern",
+    "music": "Dungeon3",
+    "connectionFlags": 0,
+    "width": 14,
+    "height": 14,
+    "borderBlock": 3
+  },
+  "connections": {},
+  "warps": [
+    {
+      "x": 5,
+      "y": 5,
+      "destMap": "MtMoon1F",
+      "destWarpId": 2
+    },
+    {
+      "x": 17,
+      "y": 11,
+      "destMap": "MtMoonB2F",
+      "destWarpId": 0
+    },
+    {
+      "x": 25,
+      "y": 9,
+      "destMap": "MtMoon1F",
+      "destWarpId": 3
+    },
+    {
+      "x": 25,
+      "y": 15,
+      "destMap": "MtMoon1F",
+      "destWarpId": 4
+    },
+    {
+      "x": 21,
+      "y": 17,
+      "destMap": "MtMoonB2F",
+      "destWarpId": 1
+    },
+    {
+      "x": 13,
+      "y": 27,
+      "destMap": "MtMoonB2F",
+      "destWarpId": 2
+    },
+    {
+      "x": 23,
+      "y": 3,
+      "destMap": "MtMoonB2F",
+      "destWarpId": 3
+    },
+    {
+      "x": 27,
+      "y": 3,
+      "destWarpId": 2
+    }
+  ],
+  "npcs": [],
+  "signs": [],
+  "text": {},
+  "wild": {
+    "red": {
+      "grass": {
+        "encounterRate": 10,
+        "mons": [
+          {
+            "level": 8,
+            "species": "Zubat"
+          },
+          {
+            "level": 7,
+            "species": "Zubat"
+          },
+          {
+            "level": 7,
+            "species": "Geodude"
+          },
+          {
+            "level": 8,
+            "species": "Geodude"
+          },
+          {
+            "level": 9,
+            "species": "Zubat"
+          },
+          {
+            "level": 10,
+            "species": "Paras"
+          },
+          {
+            "level": 10,
+            "species": "Zubat"
+          },
+          {
+            "level": 11,
+            "species": "Zubat"
+          },
+          {
+            "level": 9,
+            "species": "Clefairy"
+          },
+          {
+            "level": 9,
+            "species": "Geodude"
+          }
+        ]
+      },
+      "water": {
+        "encounterRate": 0,
+        "mons": []
+      }
+    },
+    "blue": {
+      "grass": {
+        "encounterRate": 10,
+        "mons": [
+          {
+            "level": 8,
+            "species": "Zubat"
+          },
+          {
+            "level": 7,
+            "species": "Zubat"
+          },
+          {
+            "level": 7,
+            "species": "Geodude"
+          },
+          {
+            "level": 8,
+            "species": "Geodude"
+          },
+          {
+            "level": 9,
+            "species": "Zubat"
+          },
+          {
+            "level": 10,
+            "species": "Paras"
+          },
+          {
+            "level": 10,
+            "species": "Zubat"
+          },
+          {
+            "level": 11,
+            "species": "Zubat"
+          },
+          {
+            "level": 9,
+            "species": "Clefairy"
+          },
+          {
+            "level": 9,
+            "species": "Geodude"
+          }
+        ]
+      },
+      "water": {
+        "encounterRate": 0,
+        "mons": []
+      }
+    }
+  }
+}

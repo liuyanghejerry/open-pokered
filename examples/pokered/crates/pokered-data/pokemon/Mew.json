@@ -1,0 +1,60 @@
+{
+  "$schema": "../schemas/pokemon.schema.json",
+  "species": "Mew",
+  "baseStats": {
+    "hp": 100,
+    "attack": 100,
+    "defense": 100,
+    "speed": 100,
+    "special": 100
+  },
+  "type1": "Psychic",
+  "type2": "Psychic",
+  "catchRate": 45,
+  "baseExp": 64,
+  "growthRate": "MediumSlow",
+  "initialMoves": [
+    "Pound",
+    "None",
+    "None",
+    "None"
+  ],
+  "tmHmFlags": [
+    255,
+    255,
+    255,
+    255,
+    255,
+    255,
+    127
+  ],
+  "pokedex": {
+    "category": "NEW SPECIE",
+    "heightFeet": 1,
+    "heightInches": 4,
+    "weightDecipounds": 90,
+    "flavorTextPages": [
+      "So rare that it\nis still said to\nbe a mirage by",
+      "many experts. Only\na few people have\nseen it worldwide"
+    ]
+  },
+  "evolutions": [],
+  "learnset": [
+    {
+      "level": 10,
+      "moveId": "Transform"
+    },
+    {
+      "level": 20,
+      "moveId": "MegaPunch"
+    },
+    {
+      "level": 30,
+      "moveId": "Metronome"
+    },
+    {
+      "level": 40,
+      "moveId": "PsychicM"
+    }
+  ]
+}

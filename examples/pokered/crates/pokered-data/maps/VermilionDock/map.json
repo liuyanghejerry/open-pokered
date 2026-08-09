@@ -1,0 +1,31 @@
+{
+  "$schema": "../../schemas/map.schema.json",
+  "id": 94,
+  "name": "VermilionDock",
+  "header": {
+    "tileset": "ShipPort",
+    "music": "SSAnne",
+    "connectionFlags": 0,
+    "width": 14,
+    "height": 6,
+    "borderBlock": 15
+  },
+  "connections": {},
+  "warps": [
+    {
+      "x": 14,
+      "y": 0,
+      "destWarpId": 5
+    },
+    {
+      "x": 14,
+      "y": 2,
+      "destMap": "SSAnne1F",
+      "destWarpId": 1
+    }
+  ],
+  "npcs": [],
+  "signs": [],
+  "text": {},
+  "wild": null
+}

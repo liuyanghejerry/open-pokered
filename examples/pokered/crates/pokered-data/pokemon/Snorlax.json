@@ -1,0 +1,60 @@
+{
+  "$schema": "../schemas/pokemon.schema.json",
+  "species": "Snorlax",
+  "baseStats": {
+    "hp": 160,
+    "attack": 110,
+    "defense": 65,
+    "speed": 30,
+    "special": 65
+  },
+  "type1": "Normal",
+  "type2": "Normal",
+  "catchRate": 25,
+  "baseExp": 154,
+  "growthRate": "Slow",
+  "initialMoves": [
+    "Headbutt",
+    "Amnesia",
+    "Rest",
+    "None"
+  ],
+  "tmHmFlags": [
+    177,
+    255,
+    175,
+    215,
+    175,
+    168,
+    50
+  ],
+  "pokedex": {
+    "category": "SLEEPING",
+    "heightFeet": 6,
+    "heightInches": 11,
+    "weightDecipounds": 10140,
+    "flavorTextPages": [
+      "Very lazy. Just\neats and sleeps.\nAs its rotund",
+      "bulk builds, it\nbecomes steadily\nmore slothful"
+    ]
+  },
+  "evolutions": [],
+  "learnset": [
+    {
+      "level": 35,
+      "moveId": "BodySlam"
+    },
+    {
+      "level": 41,
+      "moveId": "Harden"
+    },
+    {
+      "level": 48,
+      "moveId": "DoubleEdge"
+    },
+    {
+      "level": 56,
+      "moveId": "HyperBeam"
+    }
+  ]
+}

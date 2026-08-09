@@ -1,0 +1,54 @@
+{
+  "$schema": "../../schemas/script_config.schema.json",
+  "coordEvents": [],
+  "npcs": [
+    {
+      "id": 1,
+      "talk": "talkYoungster1"
+    },
+    {
+      "id": 2,
+      "talk": "talkYoungster2"
+    },
+    {
+      "id": 3,
+      "talk": "talkCooltrainerM"
+    },
+    {
+      "id": 4,
+      "talk": "talkCooltrainerF1"
+    },
+    {
+      "id": 5,
+      "talk": "talkYoungster3"
+    },
+    {
+      "id": 6,
+      "talk": "talkCooltrainerF2"
+    },
+    {
+      "id": 7,
+      "talk": "talkHiker1"
+    },
+    {
+      "id": 8,
+      "talk": "talkHiker2"
+    },
+    {
+      "id": 9,
+      "talk": "talkHiker3"
+    },
+    {
+      "id": 10,
+      "talk": "itemTmSeismicToss",
+      "toggleId": "ROUTE_25_OBJ_10"
+    }
+  ],
+  "onLoad": "Route25OnLoad",
+  "signs": [
+    {
+      "id": 1,
+      "talk": "sign1"
+    }
+  ]
+}

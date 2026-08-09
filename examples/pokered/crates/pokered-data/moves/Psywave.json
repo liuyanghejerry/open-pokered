@@ -1,0 +1,9 @@
+{
+  "$schema": "../schemas/move.schema.json",
+  "id": "Psywave",
+  "effect": "SpecialDamageEffect",
+  "power": 1,
+  "type": "Psychic",
+  "accuracy": 80,
+  "pp": 15
+}

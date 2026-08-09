@@ -1,0 +1,52 @@
+{
+  "$schema": "../schemas/pokemon.schema.json",
+  "species": "Poliwrath",
+  "baseStats": {
+    "hp": 90,
+    "attack": 85,
+    "defense": 95,
+    "speed": 70,
+    "special": 70
+  },
+  "type1": "Water",
+  "type2": "Fighting",
+  "catchRate": 45,
+  "baseExp": 185,
+  "growthRate": "MediumSlow",
+  "initialMoves": [
+    "Hypnosis",
+    "WaterGun",
+    "Doubleslap",
+    "BodySlam"
+  ],
+  "tmHmFlags": [
+    177,
+    127,
+    15,
+    214,
+    134,
+    40,
+    50
+  ],
+  "pokedex": {
+    "category": "TADPOLE",
+    "heightFeet": 4,
+    "heightInches": 3,
+    "weightDecipounds": 1190,
+    "flavorTextPages": [
+      "An adept swimmer\nat both the front\ncrawl and breast",
+      "stroke. Easily\novertakes the best\nhuman swimmers"
+    ]
+  },
+  "evolutions": [],
+  "learnset": [
+    {
+      "level": 16,
+      "moveId": "Hypnosis"
+    },
+    {
+      "level": 19,
+      "moveId": "WaterGun"
+    }
+  ]
+}

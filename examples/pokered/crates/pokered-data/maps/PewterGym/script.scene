@@ -1,0 +1,99 @@
+// PewterGym — translated from the original disassembly (scripts/PewterGym.asm,
+// text/PewterGym*.asm) to the real Game DSL API surface. This is the gym
+// template: leader Brock is talk-driven (map.json isTrainer = false) so the
+// script owns the battle->badge->TM reward; the Jr.Trainer is sight-engaged by
+// the runtime, so its .scene handler is dialogue only.
+
+game_scene PewterGym {
+  // ── Brock, the Gym Leader (npc 1) ──────────────────────────────────────
+  @storyline("talkBrock") {
+    @trigger(map = "PewterGym", npc = 1)
+    @if (getFlag("EVENT_BEAT_BROCK")) {
+      @if (!getFlag("EVENT_GOT_TM34")) {
+        // Beat Brock previously but had no room for the TM — try again.
+        @speaker("") { @t("Wait! Take this with you!", "等等！请收下这个！") }
+        given = giveItem("TM34", 1)
+        @if (given) {
+          setFlag("EVENT_GOT_TM34")
+          @speaker("") { @t("<PLAYER> received TM34!", "<PLAYER>获得了 TM34！") }
+          @speaker("") {
+            @t("A TM contains a technique\nthat can be taught to\nPOKeMON!\n\nA TM is good only once! So\nwhen you use one to teach a\nnew technique, pick the\nPOKeMON carefully!\n\nTM34 contains BIDE!\n\nYour POKeMON will absorb\ndamage in battle then pay it\nback double!", "TM中记载着可以传授给宝可梦的\n招式！\n\nTM只能用一次！所以教宝可梦新\n招式时，要仔细挑选宝可梦！\n\nTM34是忍耐！\n\n你的宝可梦会在战斗中承受伤\n害，之后以双倍威力还击！")
+          }
+        } @else {
+          @speaker("") { @t("You don't have room for\nthis!", "已经没有空位了！") }
+        }
+      } @else {
+        @speaker("") {
+          @t("There are all kinds of\ntrainers in the world!\n\nYou appear to be very gifted\nas a POKeMON trainer!\n\nGo to the GYM in CERULEAN\nand test your abilities!", "世界上有各种各样的训练家！\n\n你似乎是很有天赋的宝可梦训练\n家！\n\n去华蓝市的道馆挑战，试试你的\n实力！")
+        }
+      }
+    } @else {
+      @speaker("") {
+        @t("I'm BROCK! I'm PEWTER's GYM\nLEADER!\n\nI believe in rock hard\ndefense and determination!\n\nThat's why my POKeMON are\nall the rock-type!\n\nDo you still want to\nchallenge me? Fine then!\nShow me your best!", "我是小刚！深灰市的道馆馆主！\n\n我相信岩石般坚固的防御和决\n心！\n\n因此我的宝可梦全都是岩石系\n的！\n\n你还想向我挑战吗？好啊！让你\n见识我的实力！")
+      }
+      result = startBattle("OPP_BROCK1")
+      @if (result == "win") {
+        @speaker("") {
+          @t("I took you for granted.\n\nAs proof of your victory,\nhere's the BOULDERBADGE!\n\n<PLAYER> received the\nBOULDERBADGE!", "是我小看你了。\n\n作为你获胜的证明，收下灰色徽\n章吧！\n\n<PLAYER>获得了灰色徽章！")
+        }
+        giveBadge("BOULDERBADGE")
+        setFlag("EVENT_BEAT_BROCK")
+        @speaker("") {
+          @t("That's an official POKeMON\nLEAGUE BADGE!\n\nIts bearer's POKeMON become\nmore powerful!\n\nThe technique FLASH can now\nbe used any time!", "这是宝可梦联盟公认的徽章！\n\n持有它的宝可梦会变得更强大！\n\n现在随时都可以使用闪光了！")
+        }
+        @speaker("") { @t("Wait! Take this with you!", "等等！请收下这个！") }
+        given = giveItem("TM34", 1)
+        @if (given) {
+          setFlag("EVENT_GOT_TM34")
+          @speaker("") { @t("<PLAYER> received TM34!", "<PLAYER>获得了 TM34！") }
+          @speaker("") {
+            @t("A TM contains a technique\nthat can be taught to\nPOKeMON!\n\nA TM is good only once! So\nwhen you use one to teach a\nnew technique, pick the\nPOKeMON carefully!\n\nTM34 contains BIDE!\n\nYour POKeMON will absorb\ndamage in battle then pay it\nback double!", "TM中记载着可以传授给宝可梦的\n招式！\n\nTM只能用一次！所以教宝可梦新\n招式时，要仔细挑选宝可梦！\n\nTM34是忍耐！\n\n你的宝可梦会在战斗中承受伤\n害，之后以双倍威力还击！")
+          }
+        } @else {
+          @speaker("") { @t("You don't have room for\nthis!", "已经没有空位了！") }
+        }
+        // Deactivate the gym trainers (original sets this in Brock's post-battle).
+        setFlag("EVENT_BEAT_PEWTER_GYM_TRAINER_0")
+      }
+    }
+  }
+
+  // ── Jr.Trainer (npc 2) — sight-engaged by the runtime; dialogue only ────
+  @storyline("talkJrTrainer") {
+    @trigger(map = "PewterGym", npc = 2)
+    @if (getFlag("EVENT_BEAT_PEWTER_GYM_TRAINER_0")) {
+      @speaker("") {
+        @t("You're pretty hot, but not\nas hot as BROCK!", "你实力不错，但还比不上小刚！")
+      }
+    } @else {
+      @speaker("") {
+        @t("Stop right there, kid!\n\nYou're still light years\nfrom facing BROCK!", "给我站住，小鬼！\n\n想跟小刚交手你还差得远呢！")
+      }
+    }
+  }
+
+  // ── Gym guide (npc 3) ──────────────────────────────────────────────────
+  @storyline("talkGymGuide") {
+    @trigger(map = "PewterGym", npc = 3)
+    @if (getFlag("EVENT_BEAT_BROCK")) {
+      @speaker("") {
+        @t("Just as I thought! You're\nPOKeMON champ material!", "果然和我想的一样！你就是宝可\n梦冠军的料！")
+      }
+    } @else {
+      @speaker("") {
+        @t("Hiya! I can tell you have\nwhat it takes to become a\nPOKeMON champ!\n\nI'm no trainer, but I can\ntell you how to win!\n\nLet me take you to the top!", "嗨！我看得出来你有成为宝可梦\n冠军的潜质！\n\n我不是训练家，但我可以告诉你\n获胜的方法！\n\n让我带你走向巅峰吧！")
+      }
+      @choice {
+        @option(@t("YES", "是")) {
+          @speaker("") { @t("All right! Let's get\nhappening!", "好！我们开始吧！") }
+        }
+        @option(@t("NO", "否")) {
+          @speaker("") { @t("It's a free service! Let's\nget happening!", "这可是免费的服务！咱们开始\n吧！") }
+        }
+      }
+      @speaker("") {
+        @t("The 1st POKeMON out in a\nmatch is at the top of the\nPOKeMON LIST!\n\nBy changing the order of\nPOKeMON, matches could be\nmade easier!", "对战中派出的第一只宝可梦会出\n现在宝可梦列表顶部！\n\n通过调整宝可梦的顺序，战斗可\n能会变得更容易！")
+      }
+    }
+  }
+}

@@ -1,0 +1,70 @@
+{
+  "$schema": "../schemas/pokemon.schema.json",
+  "species": "Meowth",
+  "baseStats": {
+    "hp": 40,
+    "attack": 45,
+    "defense": 35,
+    "speed": 90,
+    "special": 40
+  },
+  "type1": "Normal",
+  "type2": "Normal",
+  "catchRate": 255,
+  "baseExp": 69,
+  "growthRate": "MediumFast",
+  "initialMoves": [
+    "Scratch",
+    "Growl",
+    "None",
+    "None"
+  ],
+  "tmHmFlags": [
+    160,
+    143,
+    136,
+    193,
+    194,
+    8,
+    2
+  ],
+  "pokedex": {
+    "category": "SCRATCHCAT",
+    "heightFeet": 1,
+    "heightInches": 4,
+    "weightDecipounds": 90,
+    "flavorTextPages": [
+      "Adores circular\nobjects. Wanders\nthe streets on a",
+      "nightly basis to\nlook for dropped\nloose change"
+    ]
+  },
+  "evolutions": [
+    {
+      "method": "level",
+      "species": "Persian",
+      "level": 28
+    }
+  ],
+  "learnset": [
+    {
+      "level": 12,
+      "moveId": "Bite"
+    },
+    {
+      "level": 17,
+      "moveId": "PayDay"
+    },
+    {
+      "level": 24,
+      "moveId": "Screech"
+    },
+    {
+      "level": 33,
+      "moveId": "FurySwipes"
+    },
+    {
+      "level": 44,
+      "moveId": "Slash"
+    }
+  ]
+}

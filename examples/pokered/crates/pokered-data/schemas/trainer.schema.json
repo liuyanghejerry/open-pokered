@@ -1,0 +1,62 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://pokered.dev/schemas/trainer.schema.json",
+  "title": "Trainer Data",
+  "description": "Schema for trainer JSON files — defines a trainer class with its party rosters. One file per trainer class (e.g. Youngster.json, Brock.json).",
+  "type": "object",
+  "required": ["class", "constName", "parties"],
+  "properties": {
+    "$schema": { "type": "string" },
+    "class": {
+      "type": "string",
+      "pattern": "^[A-Z][A-Za-z0-9]+$",
+      "description": "Trainer class name in PascalCase (e.g. 'Youngster', 'JrTrainerM')"
+    },
+    "constName": {
+      "type": "string",
+      "pattern": "^[A-Z][A-Z0-9_]+$",
+      "description": "Constant name matching the original disassembly (e.g. 'YOUNGSTER', 'BROCK')"
+    },
+    "parties": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/trainerParty" },
+      "description": "Ordered party rosters. trainerSet in map.json is a 1-based index into this array."
+    }
+  },
+  "additionalProperties": false,
+
+  "$defs": {
+    "trainerParty": {
+      "type": "object",
+      "required": ["pokemon"],
+      "properties": {
+        "pokemon": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 6,
+          "items": { "$ref": "#/$defs/trainerMon" }
+        }
+      },
+      "additionalProperties": false
+    },
+
+    "trainerMon": {
+      "type": "object",
+      "required": ["level", "species"],
+      "properties": {
+        "level": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100,
+          "description": "Pokémon level"
+        },
+        "species": {
+          "type": "string",
+          "pattern": "^[A-Z][A-Za-z]+$",
+          "description": "Pokémon species name in PascalCase (e.g. 'Rattata', 'NidoranM')"
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}

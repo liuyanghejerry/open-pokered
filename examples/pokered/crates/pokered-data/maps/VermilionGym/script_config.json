@@ -1,0 +1,89 @@
+{
+  "$schema": "../../schemas/script_config.schema.json",
+  "coordEvents": [],
+  "npcs": [
+    {
+      "id": 1,
+      "talk": "talkLtSurge"
+    },
+    {
+      "id": 2,
+      "talk": "talkGentleman"
+    },
+    {
+      "id": 3,
+      "talk": "talkSuperNerd"
+    },
+    {
+      "id": 4,
+      "talk": "talkSailor"
+    },
+    {
+      "id": 5,
+      "talk": "talkGymGuide"
+    }
+  ],
+  "onLoad": "VermilionGymOnLoad",
+  "signs": [
+    {
+      "id": 1,
+      "talk": "trashCans"
+    },
+    {
+      "id": 2,
+      "talk": "trashCans"
+    },
+    {
+      "id": 3,
+      "talk": "trashCans"
+    },
+    {
+      "id": 4,
+      "talk": "trashCans"
+    },
+    {
+      "id": 5,
+      "talk": "trashCans"
+    },
+    {
+      "id": 6,
+      "talk": "trashCans"
+    },
+    {
+      "id": 7,
+      "talk": "trashCans"
+    },
+    {
+      "id": 8,
+      "talk": "trashCans"
+    },
+    {
+      "id": 9,
+      "talk": "trashCans"
+    },
+    {
+      "id": 10,
+      "talk": "trashCans"
+    },
+    {
+      "id": 11,
+      "talk": "trashCans"
+    },
+    {
+      "id": 12,
+      "talk": "trashCans"
+    },
+    {
+      "id": 13,
+      "talk": "trashCans"
+    },
+    {
+      "id": 14,
+      "talk": "trashCans"
+    },
+    {
+      "id": 15,
+      "talk": "trashCans"
+    }
+  ]
+}

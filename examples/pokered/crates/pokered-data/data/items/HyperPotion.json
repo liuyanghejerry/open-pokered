@@ -1,0 +1,1 @@
+{"id":"HyperPotion","name":"HYPER POTION","price":1500,"category":"Medicine","effect":{"type":"Heal","params":{"amount":200}},"held_effect":null,"berry":null,"use_outside_battle":true,"use_in_battle":true,"consume":true,"key_item":false,"sellable":true,"description":"","tags":["healing","hp"]}

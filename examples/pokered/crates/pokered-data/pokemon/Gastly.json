@@ -1,0 +1,58 @@
+{
+  "$schema": "../schemas/pokemon.schema.json",
+  "species": "Gastly",
+  "baseStats": {
+    "hp": 30,
+    "attack": 35,
+    "defense": 30,
+    "speed": 80,
+    "special": 100
+  },
+  "type1": "Ghost",
+  "type2": "Poison",
+  "catchRate": 190,
+  "baseExp": 95,
+  "growthRate": "MediumSlow",
+  "initialMoves": [
+    "Lick",
+    "ConfuseRay",
+    "NightShade",
+    "None"
+  ],
+  "tmHmFlags": [
+    32,
+    0,
+    152,
+    209,
+    10,
+    106,
+    2
+  ],
+  "pokedex": {
+    "category": "GAS",
+    "heightFeet": 4,
+    "heightInches": 3,
+    "weightDecipounds": 2,
+    "flavorTextPages": [
+      "Almost invisible,\nthis gaseous\n#MON cloaks",
+      "the target and\nputs it to sleep\nwithout notice"
+    ]
+  },
+  "evolutions": [
+    {
+      "method": "level",
+      "species": "Haunter",
+      "level": 25
+    }
+  ],
+  "learnset": [
+    {
+      "level": 27,
+      "moveId": "Hypnosis"
+    },
+    {
+      "level": 35,
+      "moveId": "DreamEater"
+    }
+  ]
+}

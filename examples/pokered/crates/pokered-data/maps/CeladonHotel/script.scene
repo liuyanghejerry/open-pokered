@@ -1,0 +1,30 @@
+// CeladonHotel — translated from the original disassembly
+// (scripts/CeladonHotel.asm, text/CeladonHotel.asm) to the real Game DSL API.
+// This map has no on-enter logic, flags, signs or battles — just three NPCs
+// with plain dialogue (Granny, Beauty, SuperNerd).
+
+game_scene CeladonHotel {
+  // ── Granny (npc 1) ──────────────────────────────────────────────────────
+  @storyline("talkGranny") {
+    @trigger(map = "CeladonHotel", npc = 1)
+    @speaker("") {
+      @t("POKeMON? No, this is a hotel\nfor people.\n\nWe're full up.", "宝可梦？不，这里是给人住的旅\n馆。\n\n已经住满了。")
+    }
+  }
+
+  // ── Beauty (npc 2) ──────────────────────────────────────────────────────
+  @storyline("talkBeauty") {
+    @trigger(map = "CeladonHotel", npc = 2)
+    @speaker("") {
+      @t("I'm on vacation with my\nbrother and boy friend.\n\nCELADON is such a pretty\ncity!", "我和哥哥还有男朋友一起来度\n假。\n\n彩虹市真是个美丽的城市！")
+    }
+  }
+
+  // ── SuperNerd (npc 3) ───────────────────────────────────────────────────
+  @storyline("talkSuperNerd") {
+    @trigger(map = "CeladonHotel", npc = 3)
+    @speaker("") {
+      @t("Why did she bring her\nbrother?", "她为什么还带着哥哥？")
+    }
+  }
+}

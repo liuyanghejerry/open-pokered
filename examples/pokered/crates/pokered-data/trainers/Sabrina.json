@@ -1,0 +1,27 @@
+{
+  "$schema": "../schemas/trainer.schema.json",
+  "class": "Sabrina",
+  "constName": "SABRINA",
+  "parties": [
+    {
+      "pokemon": [
+        {
+          "level": 38,
+          "species": "Kadabra"
+        },
+        {
+          "level": 37,
+          "species": "MrMime"
+        },
+        {
+          "level": 38,
+          "species": "Venomoth"
+        },
+        {
+          "level": 43,
+          "species": "Alakazam"
+        }
+      ]
+    }
+  ]
+}

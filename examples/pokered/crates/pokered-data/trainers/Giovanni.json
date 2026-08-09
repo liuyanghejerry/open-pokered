@@ -1,0 +1,67 @@
+{
+  "$schema": "../schemas/trainer.schema.json",
+  "class": "Giovanni",
+  "constName": "GIOVANNI",
+  "parties": [
+    {
+      "pokemon": [
+        {
+          "level": 25,
+          "species": "Onix"
+        },
+        {
+          "level": 24,
+          "species": "Rhyhorn"
+        },
+        {
+          "level": 29,
+          "species": "Kangaskhan"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 37,
+          "species": "Nidorino"
+        },
+        {
+          "level": 35,
+          "species": "Kangaskhan"
+        },
+        {
+          "level": 37,
+          "species": "Rhyhorn"
+        },
+        {
+          "level": 41,
+          "species": "Nidoqueen"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 45,
+          "species": "Rhyhorn"
+        },
+        {
+          "level": 42,
+          "species": "Dugtrio"
+        },
+        {
+          "level": 44,
+          "species": "Nidoqueen"
+        },
+        {
+          "level": 45,
+          "species": "Nidoking"
+        },
+        {
+          "level": 50,
+          "species": "Rhydon"
+        }
+      ]
+    }
+  ]
+}

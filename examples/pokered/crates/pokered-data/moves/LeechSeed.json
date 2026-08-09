@@ -1,0 +1,9 @@
+{
+  "$schema": "../schemas/move.schema.json",
+  "id": "LeechSeed",
+  "effect": "LeechSeedEffect",
+  "power": 0,
+  "type": "Grass",
+  "accuracy": 90,
+  "pp": 10
+}

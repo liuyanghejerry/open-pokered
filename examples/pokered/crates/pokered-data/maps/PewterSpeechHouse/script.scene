@@ -1,0 +1,22 @@
+// PewterSpeechHouse — translated from the original disassembly
+// (scripts/PewterSpeechHouse.asm, text/PewterSpeechHouse.asm) to the real
+// Game DSL API. A two-NPC tip house: a Gambler and a Youngster who each give
+// a static gameplay-hint line. No flags, battles, or on-enter logic.
+
+game_scene PewterSpeechHouse {
+  // ── Gambler (npc 1) ─────────────────────────────────────────────────────
+  @storyline("talkGambler") {
+    @trigger(map = "PewterSpeechHouse", npc = 1)
+    @speaker("") {
+      @t("POKeMON learn new techniques\nas they grow!\n\nBut, some moves must be\ntaught by the trainer!", "宝可梦长大时会学会新的技能！\n\n但是有些招式必须由训练家来\n教！")
+    }
+  }
+
+  // ── Youngster (npc 2) ───────────────────────────────────────────────────
+  @storyline("talkYoungster") {
+    @trigger(map = "PewterSpeechHouse", npc = 2)
+    @speaker("") {
+      @t("POKeMON become easier to\ncatch when they are hurt or\nasleep!\n\nBut, it's not a sure thing!", "宝可梦在受伤或睡着时，会变得\n更容易捕捉！\n\n但也不是百分百能抓到！")
+    }
+  }
+}

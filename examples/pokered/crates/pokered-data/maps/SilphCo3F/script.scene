@@ -1,0 +1,117 @@
+// SilphCo3F — translated from the original disassembly (scripts/SilphCo3F.asm,
+// text/SilphCo3F.asm) to the real Game DSL API surface. A Team Rocket facility
+// floor: one talk-driven Silph worker (worried while Rocket holds the building,
+// grateful once Giovanni is beaten), two sight-engaged trainers (a Rocket and a
+// Scientist; the runtime drives those battles, so their handlers are dialogue
+// only), and one PokeBall ground item (HYPER POTION).
+//
+// CARD KEY doors are now wired via replaceTileBlock:
+//   SilphCo3FGateCallbackScript swaps two locked-door blocks to their OPEN block
+//   ($5f = 95 decimal) once the matching CARD KEY door has been opened.
+//     Door 1: EVENT_SILPH_CO_3_UNLOCKED_DOOR1, asm lb bc, 4, 4 → Y=4,X=4 →
+//             replaceTileBlock(4, 4, 95)
+//     Door 2: EVENT_SILPH_CO_3_UNLOCKED_DOOR2, asm lb bc, 4, 8 → Y=4,X=8 →
+//             replaceTileBlock(8, 4, 95)
+//   The doors only ever open (the gate callback never re-applies a CLOSED block),
+//   so @load only re-applies OPEN from the flags.
+//   The actual solve in the original is the CARD KEY item used on the door tile
+//   (engine/events/card_key.asm: checks CARD_KEY in bag, plays SFX_GO_INSIDE,
+//   swaps the block, sets wCardKeyDoorY/X which the gate callback turns into the
+//   EVENT_SILPH_CO_3_UNLOCKED_DOOR* flags). There is no "use item on facing tile"
+//   primitive, so we approximate faithfully with a coord trigger on each door
+//   block's walkable tiles gated by hasItem("CARD_KEY"): stepping onto the door
+//   with the CARD KEY opens it (flag + replaceTileBlock + SFX_GO_INSIDE + the
+//   original CARD KEY success text); without it, the CARD KEY fail text.
+
+game_scene SilphCo3F {
+  // ── On-enter: re-apply OPEN CARD KEY door blocks from their flags ────────
+  // Original SilphCo3FGateCallbackScript re-runs on map load and re-opens any
+  // already-unlocked door. map.blk ships them closed, so we only re-apply OPEN.
+  @load {
+    @if (getFlag("EVENT_SILPH_CO_3_UNLOCKED_DOOR1")) {
+      replaceTileBlock(4, 4, 95)
+    }
+    @if (getFlag("EVENT_SILPH_CO_3_UNLOCKED_DOOR2")) {
+      replaceTileBlock(8, 4, 95)
+    }
+  }
+
+  // ── CARD KEY door 1 (block 4,4 → tiles 8-9, 8-9) ────────────────────────
+  @storyline("cardKeyDoor1") {
+    @trigger(map = "SilphCo3F", name = "cardKeyDoor11")
+    @if (!getFlag("EVENT_SILPH_CO_3_UNLOCKED_DOOR1")) {
+      @if (hasItem("CARD_KEY")) {
+        // CardKeySuccessText + open the door (card_key.asm plays SFX_GO_INSIDE).
+        @speaker("") { @t("Bingo!", "猜中了！") }
+        @speaker("") { @t("The CARD KEY opened the\ndoor!", "磁卡钥匙打开了门！") }
+        setFlag("EVENT_SILPH_CO_3_UNLOCKED_DOOR1")
+        replaceTileBlock(4, 4, 95)
+        playSound("SFX_GO_INSIDE")
+      } @else {
+        // CardKeyFailText.
+        @speaker("") { @t("Darn! It needs a CARD KEY!", "可恶！需要磁卡钥匙！") }
+      }
+    }
+  }
+
+  // ── CARD KEY door 2 (block 8,4 → tiles 16-17, 8-9) ──────────────────────
+  @storyline("cardKeyDoor2") {
+    @trigger(map = "SilphCo3F", name = "cardKeyDoor21")
+    @if (!getFlag("EVENT_SILPH_CO_3_UNLOCKED_DOOR2")) {
+      @if (hasItem("CARD_KEY")) {
+        @speaker("") { @t("Bingo!", "猜中了！") }
+        @speaker("") { @t("The CARD KEY opened the\ndoor!", "磁卡钥匙打开了门！") }
+        setFlag("EVENT_SILPH_CO_3_UNLOCKED_DOOR2")
+        replaceTileBlock(8, 4, 95)
+        playSound("SFX_GO_INSIDE")
+      } @else {
+        @speaker("") { @t("Darn! It needs a CARD KEY!", "可恶！需要磁卡钥匙！") }
+      }
+    }
+  }
+
+  // ── Silph worker (npc 1) — talk-driven civilian ─────────────────────────
+  @storyline("talkSilphWorkerM") {
+    @trigger(map = "SilphCo3F", npc = 1)
+    @if (getFlag("EVENT_BEAT_SILPH_CO_GIOVANNI")) {
+      @speaker("") { @t("<PLAYER>! You and your\nPOKeMON saved us!", "<PLAYER>！你和你的宝可梦救了\n我们！") }
+    } @else {
+      @speaker("") { @t("I work for SILPH. What\nshould I do?", "我为西尔佛工作。我该怎么办？") }
+    }
+  }
+
+  // ── Rocket (npc 2) — sight-engaged trainer; dialogue only ───────────────
+  @storyline("talkRocket") {
+    @trigger(map = "SilphCo3F", npc = 2)
+    @if (getFlag("EVENT_BEAT_SILPH_CO_3F_TRAINER_0")) {
+      @speaker("") { @t("A hint? You can open doors\nwith a CARD KEY!", "给你个提示？用磁卡钥匙就能开\n门！") }
+    } @else {
+      @speaker("") { @t("Quit messing with us, kid!", "别来烦我们，小子！") }
+    }
+  }
+
+  // ── Scientist (npc 3) — sight-engaged trainer; dialogue only ────────────
+  @storyline("talkScientist") {
+    @trigger(map = "SilphCo3F", npc = 3)
+    @if (getFlag("EVENT_BEAT_SILPH_CO_3F_TRAINER_1")) {
+      @speaker("") {
+        @t("Humph...\n\nTEAM ROCKET said that if I\nhelped them, they'd let me\nstudy POKeMON!", "哼……\n\n火箭队说过只要我帮他们，他们\n就让我研究宝可梦！")
+      }
+    } @else {
+      @speaker("") { @t("I support TEAM ROCKET more\nthan I support SILPH!", "比起西尔佛，我更支持火箭队！") }
+    }
+  }
+
+  // ── Ground item: HYPER POTION (npc 4) ───────────────────────────────────
+  @storyline("itemHyperPotion") {
+    @trigger(map = "SilphCo3F", npc = 4, toggle = "SILPH_CO_3F_OBJ_4")
+    @if (getFlag("EVENT_GOT_HYPER_POTION_SILPH_CO_3F")) {
+      @speaker("") { @t("The item ball is empty.", "这个道具球是空的。") }
+    } @else {
+      giveItem("HYPER_POTION", 1)
+      setFlag("EVENT_GOT_HYPER_POTION_SILPH_CO_3F")
+      hideObject("SILPH_CO_3F_OBJ_4")
+      @speaker("") { @t("<PLAYER> found HYPER_POTION!", "<PLAYER>找到了厉害伤药！") }
+    }
+  }
+}

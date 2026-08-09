@@ -1,0 +1,103 @@
+// Route8 — translated from the original disassembly (scripts/Route8.asm,
+// text/Route8.asm) to the real Game DSL API surface. All nine NPCs are
+// sight-engaged trainers (map.json isTrainer = true); the runtime drives
+// their battles, so each .scene talk handler is DIALOGUE ONLY: if beaten →
+// after-battle text, else → the pre-battle taunt. One underground-path sign.
+
+game_scene Route8 {
+  // ── SuperNerd 1 (npc 1) — EVENT_BEAT_ROUTE_8_TRAINER_0 ──────────────────
+  @storyline("talkSuperNerd1") {
+    @trigger(map = "Route8", npc = 1)
+    @if (getFlag("EVENT_BEAT_ROUTE_8_TRAINER_0")) {
+      @speaker("") { @t("I am better at school than\nthis!", "我在学校可比这个强！") }
+    } @else {
+      @speaker("") { @t("You look good at POKeMON,\nbut how's your chem?", "你宝可梦玩得不错，可化学怎么\n样？") }
+    }
+  }
+
+  // ── Gambler 1 (npc 2) — EVENT_BEAT_ROUTE_8_TRAINER_1 ────────────────────
+  @storyline("talkGambler1") {
+    @trigger(map = "Route8", npc = 2)
+    @if (getFlag("EVENT_BEAT_ROUTE_8_TRAINER_1")) {
+      @speaker("") { @t("Lady Luck's not with me\ntoday!", "幸运女神今天没有眷顾我！") }
+    } @else {
+      @speaker("") { @t("All right! Let's roll the\ndice!", "好！让我们掷骰子吧！") }
+    }
+  }
+
+  // ── SuperNerd 2 (npc 3) — EVENT_BEAT_ROUTE_8_TRAINER_2 ──────────────────
+  @storyline("talkSuperNerd2") {
+    @trigger(map = "Route8", npc = 3)
+    @if (getFlag("EVENT_BEAT_ROUTE_8_TRAINER_2")) {
+      @speaker("") { @t("Go with GRIMER\nfirst...and...\n...and...then...", "先上臭泥……然后……接着……") }
+    } @else {
+      @speaker("") { @t("You need strategy to win at\nthis!", "想赢就得靠战术才行！") }
+    }
+  }
+
+  // ── CooltrainerF 1 / Lass (npc 4) — EVENT_BEAT_ROUTE_8_TRAINER_3 ────────
+  @storyline("talkCooltrainerF1") {
+    @trigger(map = "Route8", npc = 4)
+    @if (getFlag("EVENT_BEAT_ROUTE_8_TRAINER_3")) {
+      @speaker("") { @t("When POKeMON grow up they\nget ugly! They shouldn't\nevolve!", "宝可梦长大后就变丑了！它们不\n该进化！") }
+    } @else {
+      @speaker("") { @t("I like NIDORAN, so I collect\nthem!", "我喜欢尼多兰，所以一直在收\n集！") }
+    }
+  }
+
+  // ── SuperNerd 3 (npc 5) — EVENT_BEAT_ROUTE_8_TRAINER_4 ──────────────────
+  @storyline("talkSuperNerd3") {
+    @trigger(map = "Route8", npc = 5)
+    @if (getFlag("EVENT_BEAT_ROUTE_8_TRAINER_4")) {
+      @speaker("") { @t("We're stuck here because of\nthe gates at SAFFRON.", "我们被困在这里都是因为金黄市\n的大门。") }
+    } @else {
+      @speaker("") { @t("School is fun, but so are\nPOKeMON.", "学校很有趣，宝可梦也是。") }
+    }
+  }
+
+  // ── CooltrainerF 2 / Lass (npc 6) — EVENT_BEAT_ROUTE_8_TRAINER_5 ────────
+  @storyline("talkCooltrainerF2") {
+    @trigger(map = "Route8", npc = 6)
+    @if (getFlag("EVENT_BEAT_ROUTE_8_TRAINER_5")) {
+      @speaker("") { @t("I think PIDGEY and RATTATA\nare cute too!", "我觉得波波和小拉达也很可爱！") }
+    } @else {
+      @speaker("") { @t("MEOWTH is so cute, meow,\nmeow, meow!", "喵喵好可爱，喵，喵，喵！") }
+    }
+  }
+
+  // ── CooltrainerF 3 / Lass (npc 7) — EVENT_BEAT_ROUTE_8_TRAINER_6 ────────
+  @storyline("talkCooltrainerF3") {
+    @trigger(map = "Route8", npc = 7)
+    @if (getFlag("EVENT_BEAT_ROUTE_8_TRAINER_6")) {
+      @speaker("") { @t("SAFFRON's gate keeper won't\nlet us through. He's so\nmean!", "金黄市的守门人不让我们过去。\n他真过分！") }
+    } @else {
+      @speaker("") { @t("We must look silly standing\nhere like this!", "我们这样站着一定显得很傻吧！") }
+    }
+  }
+
+  // ── Gambler 2 (npc 8) — EVENT_BEAT_ROUTE_8_TRAINER_7 ────────────────────
+  @storyline("talkGambler2") {
+    @trigger(map = "Route8", npc = 8)
+    @if (getFlag("EVENT_BEAT_ROUTE_8_TRAINER_7")) {
+      @speaker("") { @t("Gambling and POKeMON are\nlike eating peanuts! Just\ncan't stop!", "赌博和宝可梦就像吃花生一样，\n根本停不下来！") }
+    } @else {
+      @speaker("") { @t("I'm a rambling, gambling\ndude!", "我是到处流浪爱赌博的家伙！") }
+    }
+  }
+
+  // ── CooltrainerF 4 / Lass (npc 9) — EVENT_BEAT_ROUTE_8_TRAINER_8 ────────
+  @storyline("talkCooltrainerF4") {
+    @trigger(map = "Route8", npc = 9)
+    @if (getFlag("EVENT_BEAT_ROUTE_8_TRAINER_8")) {
+      @speaker("") { @t("I heard that CLEFAIRY\nevolves when it's exposed to\na MOON STONE.", "我听说皮皮在接触月之石后就会\n进化。") }
+    } @else {
+      @speaker("") { @t("What's a cute, round and\nfluffy POKeMON?", "什么样的宝可梦可爱、圆滚滚又\n毛茸茸？") }
+    }
+  }
+
+  // ── Underground Path sign (sign 1) ─────────────────────────────────────
+  @storyline("sign1") {
+    @trigger(map = "Route8", sign = 1)
+    @speaker("") { @t("UNDERGROUND PATH CELADON\nCITY - LAVENDER TOWN", "地下通道彩虹市～紫苑镇") }
+  }
+}

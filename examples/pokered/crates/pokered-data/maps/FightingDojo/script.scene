@@ -1,0 +1,137 @@
+// FightingDojo — translated from the original disassembly (scripts/FightingDojo.asm,
+// text/FightingDojo.asm) to the real Game DSL API surface. The Karate Master is the
+// talk-driven leader (map.json isTrainer = false) whose talk handler owns the battle
+// and the reward (he then lets you choose a fighting POKeMON from the two Poké Balls).
+// The four Blackbelts are sight-engaged by the runtime, so their handlers are dialogue
+// only. The two Poké Balls are the Hitmonlee / Hitmonchan gift mons (pick exactly one).
+
+game_scene FightingDojo {
+  // ── Karate Master (npc 1) — the talk-driven DOJO leader ─────────────────
+  @storyline("talkKarateMaster") {
+    @trigger(map = "FightingDojo", npc = 1)
+    @if (getFlag("EVENT_DEFEATED_FIGHTING_DOJO")) {
+      // The gift mon was already claimed — nothing left to win here.
+      @speaker("") { @t("Ho!\n\nStay and train at Karate\nwith us!", "哼！\n\n留下来和我们学空手道吧！") }
+    } @else {
+      @if (getFlag("EVENT_BEAT_KARATE_MASTER")) {
+        // Beaten, but the player hasn't taken a gift POKeMON yet.
+        @speaker("") {
+          @t("Indeed, I have lost!\n\nBut, I beseech you, do not\ntake our emblem as your\ntrophy!\n\nIn return, I will give you a\nprized fighting POKeMON!\n\nChoose whichever one you\nlike!", "确实，我输了！\n\n但是，我请求你不要把我们的徽\n章当作战利品！\n\n作为回报，我会给你一只珍贵的\n格斗系宝可梦！\n\n随你挑一只吧！")
+        }
+      } @else {
+        @speaker("") {
+          @t("Grunt!\n\nI am the KARATE MASTER! I am\nthe LEADER here!\n\nYou wish to challenge us?\nExpect no mercy!\n\nFwaaa!", "哼！\n\n我是空手道之王！这里的馆主！\n\n你想来挑战我们？别指望留情！\n\n哇啊！")
+        }
+        result = startBattle("OPP_BLACKBELT1")
+        @if (result == "win") {
+          @speaker("") { @t("Hwa! Arrgh! Beaten!", "哈！呃啊！被打败了！") }
+          // Defeating the Master also deactivates the four gym Blackbelts.
+          setFlag("EVENT_BEAT_KARATE_MASTER")
+          setFlag("EVENT_BEAT_FIGHTING_DOJO_TRAINER_0")
+          setFlag("EVENT_BEAT_FIGHTING_DOJO_TRAINER_1")
+          setFlag("EVENT_BEAT_FIGHTING_DOJO_TRAINER_2")
+          setFlag("EVENT_BEAT_FIGHTING_DOJO_TRAINER_3")
+          @speaker("") {
+            @t("Indeed, I have lost!\n\nBut, I beseech you, do not\ntake our emblem as your\ntrophy!\n\nIn return, I will give you a\nprized fighting POKeMON!\n\nChoose whichever one you\nlike!", "确实，我输了！\n\n但是，我请求你不要把我们的徽\n章当作战利品！\n\n作为回报，我会给你一只珍贵的\n格斗系宝可梦！\n\n随你挑一只吧！")
+          }
+        }
+      }
+    }
+  }
+
+  // ── Blackbelt 1 (npc 2) — sight-engaged; dialogue only ──────────────────
+  @storyline("talkBlackbelt1") {
+    @trigger(map = "FightingDojo", npc = 2)
+    @if (getFlag("EVENT_BEAT_FIGHTING_DOJO_TRAINER_0")) {
+      @speaker("") {
+        @t("You wait 'til you see our\nMaster!\n\nI'm a small fry compared to\nhim!", "你等着见到我们的师父吧！\n\n跟他比，我就是小喽啰！")
+      }
+    } @else {
+      @speaker("") { @t("Hoargh! Take your shoes off!", "吼啊！把鞋脱了！") }
+    }
+  }
+
+  // ── Blackbelt 2 (npc 3) — sight-engaged; dialogue only ──────────────────
+  @storyline("talkBlackbelt2") {
+    @trigger(map = "FightingDojo", npc = 3)
+    @if (getFlag("EVENT_BEAT_FIGHTING_DOJO_TRAINER_1")) {
+      @speaker("") { @t("Our Master is a pro fighter!", "我们的师父是专业拳手！") }
+    } @else {
+      @speaker("") { @t("I hear you're good! Show me!", "听说你很厉害！让我看看！") }
+    }
+  }
+
+  // ── Blackbelt 3 (npc 4) — sight-engaged; dialogue only ──────────────────
+  @storyline("talkBlackbelt3") {
+    @trigger(map = "FightingDojo", npc = 4)
+    @if (getFlag("EVENT_BEAT_FIGHTING_DOJO_TRAINER_2")) {
+      @speaker("") {
+        @t("The only thing that\nfrightens us is psychic\npower!", "唯一让我们害怕的是超能力！")
+      }
+    } @else {
+      @speaker("") {
+        @t("Nothing tough frightens me!\n\nI break boulders for\ntraining!", "再厉害的东西也吓不倒我！\n\n我练功就是打碎巨石！")
+      }
+    }
+  }
+
+  // ── Blackbelt 4 (npc 5) — sight-engaged; dialogue only ──────────────────
+  @storyline("talkBlackbelt4") {
+    @trigger(map = "FightingDojo", npc = 5)
+    @if (getFlag("EVENT_BEAT_FIGHTING_DOJO_TRAINER_3")) {
+      @speaker("") {
+        @t("The prime fighters across\nthe land train here.", "全国顶尖的格斗家都在这里训\n练。")
+      }
+    } @else {
+      @speaker("") {
+        @t("Hoohah!\n\nYou're trespassing in our\nFIGHTING DOJO!", "嚯哈！\n\n你们竟敢闯入我们的空手道道\n馆！")
+      }
+    }
+  }
+
+  // ── Hitmonlee Poké Ball (npc 6) — gift mon; pick exactly one ────────────
+  @storyline("talkHitmonleeBall") {
+    @trigger(map = "FightingDojo", npc = 6, toggle = "FIGHTINGDOJO_HITMONLEE_POKE_BALL")
+    @if (getFlag("EVENT_GOT_HITMONLEE") || getFlag("EVENT_GOT_HITMONCHAN")) {
+      @speaker("") { @t("Better not get greedy...", "还是别太贪心……") }
+    } @else {
+      showPokedexEntry("HITMONLEE")
+      @speaker("") {
+        @t("You want the hard kicking\nHITMONLEE?", "你想要踢腿厉害的飞腿郎吗？")
+      }
+      @choice {
+        @option(@t("YES", "是")) {
+          givePokemon("HITMONLEE", 30)
+          hideObjectByName("FIGHTINGDOJO_HITMONLEE_POKE_BALL")
+          setFlag("EVENT_GOT_HITMONLEE")
+          setFlag("EVENT_DEFEATED_FIGHTING_DOJO")
+        }
+        @option(@t("NO", "否")) {
+        }
+      }
+    }
+  }
+
+  // ── Hitmonchan Poké Ball (npc 7) — gift mon; pick exactly one ───────────
+  @storyline("talkHitmonchanBall") {
+    @trigger(map = "FightingDojo", npc = 7, toggle = "FIGHTINGDOJO_HITMONCHAN_POKE_BALL")
+    @if (getFlag("EVENT_GOT_HITMONLEE") || getFlag("EVENT_GOT_HITMONCHAN")) {
+      @speaker("") { @t("Better not get greedy...", "还是别太贪心……") }
+    } @else {
+      showPokedexEntry("HITMONCHAN")
+      @speaker("") {
+        @t("You want the piston punching\nHITMONCHAN?", "你想要拳击厉害的快拳郎吗？")
+      }
+      @choice {
+        @option(@t("YES", "是")) {
+          givePokemon("HITMONCHAN", 30)
+          hideObjectByName("FIGHTINGDOJO_HITMONCHAN_POKE_BALL")
+          setFlag("EVENT_GOT_HITMONCHAN")
+          setFlag("EVENT_DEFEATED_FIGHTING_DOJO")
+        }
+        @option(@t("NO", "否")) {
+        }
+      }
+    }
+  }
+}

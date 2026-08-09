@@ -1,0 +1,27 @@
+{
+  "$schema": "../../schemas/script_config.schema.json",
+  "coordEvents": [],
+  "npcs": [
+    {
+      "id": 1,
+      "talk": "talkSuperNerd"
+    },
+    {
+      "id": 2,
+      "talk": "talkSailor1"
+    },
+    {
+      "id": 3,
+      "talk": "talkCooltrainerM"
+    },
+    {
+      "id": 4,
+      "talk": "talkSailor2"
+    },
+    {
+      "id": 5,
+      "talk": "talkSailor3"
+    }
+  ],
+  "signs": []
+}

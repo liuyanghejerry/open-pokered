@@ -1,0 +1,90 @@
+// RockTunnelB1F — translated from the original disassembly (scripts/RockTunnelB1F.asm,
+// text/RockTunnelB1F.asm + RockTunnelB1F_2.asm) to the real Game DSL API surface.
+// This map is purely a cave full of sight-engaged trainers (no gym leader, no items,
+// no on-enter cutscene). All 8 NPCs keep isTrainer:true in map.json, so the runtime
+// drives the actual battles. Each talk handler is dialogue-only: the pre-battle taunt
+// before the trainer is beaten, and the after-battle line afterward (the original's
+// TalkToTrainer + trainer header). The battle/end-battle text is shown by the runtime
+// during the sight battle; we surface the battle line as the pre-fight talk dialogue.
+
+game_scene RockTunnelB1F {
+  // ── CooltrainerF (JrTrainerF) — npc 1 / trainer 0 ──────────────────────
+  @storyline("talkCooltrainerF1") {
+    @trigger(map = "RockTunnelB1F", npc = 1)
+    @if (getFlag("EVENT_BEAT_ROCK_TUNNEL_2_TRAINER_0")) {
+      @speaker("") { @t("I want to go home!", "我想回家！") }
+    } @else {
+      @speaker("") { @t("Hikers leave twigs as trail\nmarkers.", "登山男会留下树枝当路标。") }
+    }
+  }
+
+  // ── Hiker — npc 2 / trainer 1 ──────────────────────────────────────────
+  @storyline("talkHiker1") {
+    @trigger(map = "RockTunnelB1F", npc = 2)
+    @if (getFlag("EVENT_BEAT_ROCK_TUNNEL_2_TRAINER_1")) {
+      @speaker("") { @t("I go for power because I\nhate thinking!", "我追求力量，因为我讨厌思考！") }
+    } @else {
+      @speaker("") { @t("Hahaha! Can you beat my\npower?", "哈哈哈！你能打赢我的力量吗？") }
+    }
+  }
+
+  // ── SuperNerd (Pokemaniac) — npc 3 / trainer 2 ─────────────────────────
+  @storyline("talkSuperNerd1") {
+    @trigger(map = "RockTunnelB1F", npc = 3)
+    @if (getFlag("EVENT_BEAT_ROCK_TUNNEL_2_TRAINER_2")) {
+      @speaker("") { @t("When you finish your\nPOKeDEX, can I have it?", "你完成图鉴后，能给我吗？") }
+    } @else {
+      @speaker("") { @t("You have a POKeDEX? I want\none too!", "你有图鉴？我也想要！") }
+    }
+  }
+
+  // ── SuperNerd (Pokemaniac) — npc 4 / trainer 3 ─────────────────────────
+  @storyline("talkSuperNerd2") {
+    @trigger(map = "RockTunnelB1F", npc = 4)
+    @if (getFlag("EVENT_BEAT_ROCK_TUNNEL_2_TRAINER_3")) {
+      @speaker("") { @t("Costume players dress up as\nPOKeMON for fun.", "角色扮演者们会打扮成宝可梦来\n玩。") }
+    } @else {
+      @speaker("") { @t("Do you know about costume\nplayers?", "你知道角色扮演者吗？") }
+    }
+  }
+
+  // ── Hiker — npc 5 / trainer 4 ──────────────────────────────────────────
+  @storyline("talkHiker2") {
+    @trigger(map = "RockTunnelB1F", npc = 5)
+    @if (getFlag("EVENT_BEAT_ROCK_TUNNEL_2_TRAINER_4")) {
+      @speaker("") { @t("In mountains, you'll often\nfind rock-type POKeMON.", "在山里，经常能找到岩石系宝可\n梦。") }
+    } @else {
+      @speaker("") { @t("My POKeMON techniques will\nleave you crying!", "我的宝可梦招式会让你哭出来！") }
+    }
+  }
+
+  // ── CooltrainerF (JrTrainerF) — npc 6 / trainer 5 ──────────────────────
+  @storyline("talkCooltrainerF2") {
+    @trigger(map = "RockTunnelB1F", npc = 6)
+    @if (getFlag("EVENT_BEAT_ROCK_TUNNEL_2_TRAINER_5")) {
+      @speaker("") { @t("I like tiny POKeMON, big\nones are too scary!", "我喜欢小宝可梦，大的太可怕\n了！") }
+    } @else {
+      @speaker("") { @t("I don't often come here, but\nI will fight you.", "我虽然不常来这里，但我会跟你\n打。") }
+    }
+  }
+
+  // ── Hiker — npc 7 / trainer 6 ──────────────────────────────────────────
+  @storyline("talkHiker3") {
+    @trigger(map = "RockTunnelB1F", npc = 7)
+    @if (getFlag("EVENT_BEAT_ROCK_TUNNEL_2_TRAINER_6")) {
+      @speaker("") { @t("I'll raise my POKeMON to\nbeat yours, kid!", "我会培养我的宝可梦来打败你\n的，小子！") }
+    } @else {
+      @speaker("") { @t("Hit me with your best shot!", "拿出你的最强招式来吧！") }
+    }
+  }
+
+  // ── SuperNerd (Pokemaniac) — npc 8 / trainer 7 ─────────────────────────
+  @storyline("talkSuperNerd3") {
+    @trigger(map = "RockTunnelB1F", npc = 8)
+    @if (getFlag("EVENT_BEAT_ROCK_TUNNEL_2_TRAINER_7")) {
+      @speaker("") { @t("I'm an artist, not a\nfighter.", "我是艺术家，不是格斗家。") }
+    } @else {
+      @speaker("") { @t("I draw POKeMON when I'm\nhome.", "我在家时会画宝可梦。") }
+    }
+  }
+}

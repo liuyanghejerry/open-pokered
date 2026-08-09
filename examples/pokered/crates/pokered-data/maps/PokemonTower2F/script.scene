@@ -1,0 +1,117 @@
+// PokemonTower2F — translated from the original disassembly
+// (scripts/PokemonTower2F.asm, text/PokemonTower2F.asm) to the real Game DSL
+// API surface.
+//
+// This is a SCRIPTED RIVAL map. The original drives the encounter via a
+// w*CurScript state machine: when the player steps onto the battle coords
+// (orig dbmapcoord 15,5 / 14,6 — this map has no connection offset, so the
+// coords map directly) and EVENT_BEAT_POKEMON_TOWER_RIVAL is unset, music
+// switches to MEET_RIVAL, the rival faces the player, talks, battles
+// (OPP_RIVAL2, party-by-starter), then walks off-screen and is hidden.
+//
+// Rival party-by-starter: the original picks wTrainerNo from wRivalStarter
+// (Squirtle/STARTER2 -> party 4, Charmander/STARTER3 -> party 5, else
+// Bulbasaur -> party 6). The engine resolves the rival starter advantage from
+// the rival class id, so for fidelity to the control flow we branch on
+// getRivalStarter() but pass the rival class id OPP_RIVAL2 in each branch.
+//
+// The rival NPC is script/coord-driven (not line-of-sight), so map.json keeps
+// isTrainer = false and the coord trigger owns the startBattle.
+
+game_scene PokemonTower2F {
+  // ── Scripted rival encounter at the battle coords (orig 15,5 / 14,6) ──
+  @storyline("coordRivalBattle") {
+    @trigger(map = "PokemonTower2F", name = "rivalBattle1")
+    @if (!getFlag("EVENT_BEAT_POKEMON_TOWER_RIVAL")) {
+      setJoyIgnore(0xF0)
+      playSound("SFX_STOP_ALL_MUSIC")
+      playMusic("MUSIC_MEET_RIVAL")
+      // Orig PokemonTower2FDefaultScript: no entry movement — the rival only
+      // turns to face the player. Player at (15,5): the rival is on the left,
+      // so he faces RIGHT and the player faces LEFT (orig sets
+      // EVENT_POKEMON_TOWER_RIVAL_ON_LEFT). Player at (14,6) (below the
+      // rival): rival faces DOWN, player faces UP.
+      @if (getPlayerX() == 15) {
+        faceNpc("POKEMON_TOWER_2F_RIVAL", "right")
+        facePlayer("left")
+      } @else {
+        faceNpc("POKEMON_TOWER_2F_RIVAL", "down")
+        facePlayer("up")
+      }
+      clearJoyIgnore()
+
+      @say("") {
+        @t("<RIVAL>: Hey, <PLAYER>! What\nbrings you here? Your\nPOKeMON don't look dead!\n\nI can at least make them\nfaint! Let's go, pal!", "<RIVAL>：嘿， <PLAYER>！你来\n这里做什么？你的宝可梦看上去\n不像死的！\n\n至少我能让它们倒下！来吧，伙\n计！")
+      }
+
+      // Rival party-by-starter (orig StarterTable -> wTrainerNo 4/5/6). The
+      // engine derives the starter-advantage party from the rival class id, so
+      // each branch passes OPP_RIVAL2.
+      s = getRivalStarter()
+      @if (s == 0) {
+        result = startBattle("OPP_RIVAL2")
+      } @else {
+        @if (s == 1) {
+          result = startBattle("OPP_RIVAL2")
+        } @else {
+          result = startBattle("OPP_RIVAL2")
+        }
+      }
+
+      @if (result == "win") {
+        @say("") {
+          @t("What? You stinker!\n\nI took it easy on you too!", "什么？你这个混蛋！\n\n我刚才对你手下留情了！")
+        }
+      } @else {
+        @say("") {
+          @t("<RIVAL>: Well, look at all\nyour wimpy POKeMON!\n\nToughen them up a bit more!", "<RIVAL>：哼，看看你的宝可梦\n多软弱！\n\n好好锻炼它们再来吧！")
+        }
+      }
+
+      setFlag("EVENT_BEAT_POKEMON_TOWER_RIVAL")
+
+      // Rival exits: stop music, walk to the stairs warp tile (18,9), hide the
+      // object, restore the default tower music (orig
+      // PokemonTower2FDefeatedRival / RivalExits). Player at (15,5) (rival on
+      // left): DOWN x2, RIGHT x4, DOWN x2 (RivalDownThenRightMovement). Player
+      // at (14,6): RIGHT, DOWN x2, RIGHT, DOWN x2, RIGHT x2
+      // (RivalRightThenDownMovement).
+      playSound("SFX_STOP_ALL_MUSIC")
+      // Orig PokemonTower2F.asm:87: Music_RivalAlternateStart — the rival theme
+      // restarts with a different first measure as he walks off.
+      playMusic("MUSIC_MEET_RIVAL_ALTERNATE_START")
+      setJoyIgnore(0xF0)
+      @if (getPlayerX() == 15) {
+        moveNpc("POKEMON_TOWER_2F_RIVAL", [[14, 6], [14, 7], [15, 7], [16, 7], [17, 7], [18, 7], [18, 8], [18, 9]])
+      } @else {
+        moveNpc("POKEMON_TOWER_2F_RIVAL", [[15, 5], [15, 6], [15, 7], [16, 7], [16, 8], [16, 9], [17, 9], [18, 9]])
+      }
+      hideObjectByName("POKEMON_TOWER_2F_RIVAL")
+      playMusic("MUSIC_POKEMON_TOWER")
+      clearJoyIgnore()
+    }
+  }
+
+  // ── Rival (npc 1) talk handler — dialogue only; the coord trigger owns the
+  //    battle (orig PokemonTower2FRivalText: post-battle HowsYourDex text) ──
+  @storyline("talkRival") {
+    @trigger(map = "PokemonTower2F", npc = 1, toggle = "POKEMON_TOWER_2F_RIVAL")
+    @if (getFlag("EVENT_BEAT_POKEMON_TOWER_RIVAL")) {
+      @speaker("") {
+        @t("How's your POKeDEX coming,\npal? I just caught a CUBONE!\n\nI can't find the grown-up\nMAROWAK yet!\n\nI doubt there are any left!\nWell, I better get going!\nI've got a lot to\naccomplish, pal!\n\nSmell ya later!", "你的图鉴收集得怎么样了，伙\n计？我刚抓到一只卡拉卡拉！\n\n还找不到它的进化型嘎啦嘎啦\n呢！\n\n我怀疑这世上还有没有！好，我\n得出发了！我还有好多事要做\n呢，伙计！\n\n回头见啦！")
+      }
+    } @else {
+      @speaker("") {
+        @t("<RIVAL>: Hey, <PLAYER>! What\nbrings you here? Your\nPOKeMON don't look dead!\n\nI can at least make them\nfaint! Let's go, pal!", "<RIVAL>：嘿， <PLAYER>！你来\n这里做什么？你的宝可梦看上去\n不像死的！\n\n至少我能让它们倒下！来吧，伙\n计！")
+      }
+    }
+  }
+
+  // ── Channeler (npc 2) — SILPH SCOPE hint ──
+  @storyline("talkChanneler") {
+    @trigger(map = "PokemonTower2F", npc = 2)
+    @speaker("") {
+      @t("Even we could not identify\nthe wayward GHOSTs!\n\nA SILPH SCOPE might be able\nto unmask them.", "就连我们也无法辨认那些幽灵的\n真身！\n\n西尔佛透视镜或许可以让它们现\n形。")
+    }
+  }
+}

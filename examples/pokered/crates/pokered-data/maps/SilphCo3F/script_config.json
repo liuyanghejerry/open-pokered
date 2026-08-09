@@ -1,0 +1,90 @@
+{
+  "$schema": "../../schemas/script_config.schema.json",
+  "coordEvents": [
+    {
+      "name": "cardKeyDoor11",
+      "position": [
+        8,
+        8
+      ],
+      "trigger": "cardKeyDoor1"
+    },
+    {
+      "name": "cardKeyDoor12",
+      "position": [
+        9,
+        8
+      ],
+      "trigger": "cardKeyDoor1"
+    },
+    {
+      "name": "cardKeyDoor13",
+      "position": [
+        8,
+        9
+      ],
+      "trigger": "cardKeyDoor1"
+    },
+    {
+      "name": "cardKeyDoor14",
+      "position": [
+        9,
+        9
+      ],
+      "trigger": "cardKeyDoor1"
+    },
+    {
+      "name": "cardKeyDoor21",
+      "position": [
+        16,
+        8
+      ],
+      "trigger": "cardKeyDoor2"
+    },
+    {
+      "name": "cardKeyDoor22",
+      "position": [
+        17,
+        8
+      ],
+      "trigger": "cardKeyDoor2"
+    },
+    {
+      "name": "cardKeyDoor23",
+      "position": [
+        16,
+        9
+      ],
+      "trigger": "cardKeyDoor2"
+    },
+    {
+      "name": "cardKeyDoor24",
+      "position": [
+        17,
+        9
+      ],
+      "trigger": "cardKeyDoor2"
+    }
+  ],
+  "npcs": [
+    {
+      "id": 1,
+      "talk": "talkSilphWorkerM"
+    },
+    {
+      "id": 2,
+      "talk": "talkRocket"
+    },
+    {
+      "id": 3,
+      "talk": "talkScientist"
+    },
+    {
+      "id": 4,
+      "talk": "itemHyperPotion",
+      "toggleId": "SILPH_CO_3F_OBJ_4"
+    }
+  ],
+  "onLoad": "SilphCo3FOnLoad",
+  "signs": []
+}

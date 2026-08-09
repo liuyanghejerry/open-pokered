@@ -1,0 +1,25 @@
+[package]
+name = "pokered-renderer"
+version.workspace = true
+edition.workspace = true
+
+[features]
+default = ["gpu"]
+framebuffer = []
+gpu = ["dep:pixels", "dep:winit", "dep:winit_input_helper", "dep:image", "dep:error-iter"]
+
+[dependencies]
+pokered-data = { path = "../pokered-data" }
+pokered-core = { path = "../pokered-core" }
+jrpg-engine = { git = "file:///Users/liuyanghe02/develop/pokered-worktree-2", tag = "v0.1.0" }
+jrpg-renderer = { git = "file:///Users/liuyanghe02/develop/pokered-worktree-2", tag = "v0.1.0" }
+log = "0.4"
+thiserror = { workspace = true }
+pixels = { version = "=0.15.0", optional = true }
+winit = { version = "0.30", optional = true }
+winit_input_helper = { version = "0.17", optional = true }
+image = { version = "0.25", default-features = false, features = ["png"], optional = true }
+error-iter = { version = "0.4", optional = true }
+
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+getrandom = { version = "0.2", features = ["js"] }

@@ -1,0 +1,82 @@
+{
+  "$schema": "../../schemas/script_config.schema.json",
+  "coordEvents": [
+    {
+      "name": "currentSEFar1",
+      "position": [
+        20,
+        17
+      ],
+      "trigger": "currentSouthEastFar"
+    },
+    {
+      "name": "currentSEFar2",
+      "position": [
+        21,
+        17
+      ],
+      "trigger": "currentSouthEastFar"
+    },
+    {
+      "name": "currentSENear1",
+      "position": [
+        20,
+        16
+      ],
+      "trigger": "currentSouthEastNear"
+    },
+    {
+      "name": "currentSENear2",
+      "position": [
+        21,
+        16
+      ],
+      "trigger": "currentSouthEastNear"
+    },
+    {
+      "name": "currentWest1",
+      "position": [
+        4,
+        14
+      ],
+      "trigger": "currentWestChannel"
+    },
+    {
+      "name": "currentWest2",
+      "position": [
+        5,
+        14
+      ],
+      "trigger": "currentWestChannel"
+    }
+  ],
+  "npcs": [
+    {
+      "defaultHidden": true,
+      "id": 1,
+      "talk": "talkBoulder1",
+      "toggleId": "SEAFOAM_ISLANDS_B4F_OBJ_1"
+    },
+    {
+      "defaultHidden": true,
+      "id": 2,
+      "talk": "talkBoulder2",
+      "toggleId": "SEAFOAM_ISLANDS_B4F_OBJ_2"
+    },
+    {
+      "id": 3,
+      "talk": "talkArticuno"
+    }
+  ],
+  "onLoad": "SeafoamIslandsB4FOnLoad",
+  "signs": [
+    {
+      "id": 1,
+      "talk": "bouldersSign"
+    },
+    {
+      "id": 2,
+      "talk": "dangerSign"
+    }
+  ]
+}

@@ -1,0 +1,69 @@
+{
+  "$schema": "../../schemas/map.schema.json",
+  "id": 85,
+  "name": "DiglettsCaveRoute11",
+  "header": {
+    "tileset": "Cavern",
+    "music": "Dungeon2",
+    "connectionFlags": 0,
+    "width": 4,
+    "height": 4,
+    "borderBlock": 125
+  },
+  "connections": {},
+  "warps": [
+    {
+      "x": 2,
+      "y": 7,
+      "destWarpId": 4
+    },
+    {
+      "x": 3,
+      "y": 7,
+      "destWarpId": 4
+    },
+    {
+      "x": 4,
+      "y": 4,
+      "destMap": "DiglettsCave",
+      "destWarpId": 1
+    }
+  ],
+  "npcs": [
+    {
+      "spriteId": 11,
+      "spriteName": "Gambler",
+      "x": 2,
+      "y": 3,
+      "movement": "Stationary",
+      "facing": "Down",
+      "range": 0,
+      "textId": 1,
+      "isTrainer": false
+    }
+  ],
+  "signs": [],
+  "text": {
+    "npc": {
+      "1": [
+        {
+          "line1": "What a surprise!",
+          "line2": "DIGLETTs dug this"
+        },
+        {
+          "line1": "long tunnel!",
+          "line2": ""
+        },
+        {
+          "line1": "",
+          "line2": ""
+        },
+        {
+          "line1": "It goes right to",
+          "line2": "VIRIDIAN CITY!"
+        }
+      ]
+    }
+  },
+  "wild": null
+}

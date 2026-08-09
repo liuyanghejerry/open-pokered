@@ -1,0 +1,1 @@
+{"id":"Unused32","name":"PP UP","price":9800,"category":"Medicine","effect":{"type":"PpUp","params":{}},"held_effect":null,"berry":null,"use_outside_battle":true,"use_in_battle":false,"consume":true,"key_item":false,"sellable":true,"description":"Duplicate PP UP at different ID","tags":["pp","boost","unused"]}

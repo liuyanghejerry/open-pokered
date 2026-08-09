@@ -1,0 +1,74 @@
+{
+  "$schema": "../schemas/pokemon.schema.json",
+  "species": "Ponyta",
+  "baseStats": {
+    "hp": 50,
+    "attack": 85,
+    "defense": 55,
+    "speed": 90,
+    "special": 65
+  },
+  "type1": "Fire",
+  "type2": "Fire",
+  "catchRate": 190,
+  "baseExp": 152,
+  "growthRate": "MediumFast",
+  "initialMoves": [
+    "Ember",
+    "None",
+    "None",
+    "None"
+  ],
+  "tmHmFlags": [
+    224,
+    3,
+    8,
+    192,
+    227,
+    8,
+    2
+  ],
+  "pokedex": {
+    "category": "FIRE HORSE",
+    "heightFeet": 3,
+    "heightInches": 3,
+    "weightDecipounds": 660,
+    "flavorTextPages": [
+      "Its hooves are 10\ntimes harder than\ndiamonds. It can",
+      "trample anything\ncompletely flat\nin little time"
+    ]
+  },
+  "evolutions": [
+    {
+      "method": "level",
+      "species": "Rapidash",
+      "level": 40
+    }
+  ],
+  "learnset": [
+    {
+      "level": 30,
+      "moveId": "TailWhip"
+    },
+    {
+      "level": 32,
+      "moveId": "Stomp"
+    },
+    {
+      "level": 35,
+      "moveId": "Growl"
+    },
+    {
+      "level": 39,
+      "moveId": "FireSpin"
+    },
+    {
+      "level": 43,
+      "moveId": "TakeDown"
+    },
+    {
+      "level": 48,
+      "moveId": "Agility"
+    }
+  ]
+}

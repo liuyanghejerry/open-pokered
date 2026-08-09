@@ -1,0 +1,59 @@
+{
+  "$schema": "../schemas/trainer.schema.json",
+  "class": "Gentleman",
+  "constName": "GENTLEMAN",
+  "parties": [
+    {
+      "pokemon": [
+        {
+          "level": 18,
+          "species": "Growlithe"
+        },
+        {
+          "level": 18,
+          "species": "Growlithe"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 19,
+          "species": "NidoranM"
+        },
+        {
+          "level": 19,
+          "species": "NidoranF"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 23,
+          "species": "Pikachu"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 48,
+          "species": "Primeape"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 17,
+          "species": "Growlithe"
+        },
+        {
+          "level": 17,
+          "species": "Ponyta"
+        }
+      ]
+    }
+  ]
+}

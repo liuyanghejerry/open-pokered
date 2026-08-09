@@ -1,0 +1,9 @@
+// UndergroundPathWestEast — translated from the original disassembly
+// (scripts/UndergroundPathWestEast.asm, text/UndergroundPathWestEast.asm).
+// This is the west<->east underground path tunnel connecting Route 7 and
+// Route 8. The original script only calls EnableAutoTextBoxDrawing (the default
+// map text-box setup, not a real event); the map has no NPCs, signs, text, or
+// on-enter cutscene. So there is nothing to script here.
+
+game_scene UndergroundPathWestEast {
+}

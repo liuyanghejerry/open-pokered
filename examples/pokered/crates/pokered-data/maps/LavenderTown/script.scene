@@ -1,0 +1,79 @@
+// LavenderTown — translated from the original disassembly (scripts/LavenderTown.asm,
+// text/LavenderTown.asm, data/maps/objects/LavenderTown.asm) to the real Game DSL
+// API surface. LavenderTown is a plain overworld town: the original script only
+// enables auto text-box drawing (no on-enter cutscene, no battles, no flags), so
+// this is pure NPC dialogue + signs. The only branch is the Little Girl's
+// believe-in-ghosts YES/NO question.
+
+game_scene LavenderTown {
+  // ── Little Girl (npc 1) — "Do you believe in GHOSTs?" YES/NO ────────────
+  @storyline("talkLittleGirl") {
+    @trigger(map = "LavenderTown", npc = 1)
+    @speaker("") { @t("Do you believe in GHOSTs?", "你相信有幽灵吗？") }
+    @choice {
+      @option(@t("YES", "是")) {
+        @speaker("") { @t("Really? So there are\nbelievers...", "真的吗？原来还有相信的人……") }
+      }
+      @option(@t("NO", "否")) {
+        @speaker("") {
+          @t("Hahaha, I guess not.\n\nThat white hand on your\nshoulder, it's not real.", "哈哈哈，我猜没有。\n\n你肩上的那只白手，不是真的。")
+        }
+      }
+    }
+  }
+
+  // ── Cooltrainer M (npc 2) ───────────────────────────────────────────────
+  @storyline("talkCooltrainerM") {
+    @trigger(map = "LavenderTown", npc = 2)
+    @speaker("") {
+      @t("This town is known as the\ngrave site of POKeMON.\n\nMemorial services are held\nin POKeMON TOWER.", "这座小镇是宝可梦的安息之地。\n\n悼念仪式在宝可梦塔举行。")
+    }
+  }
+
+  // ── Super Nerd (npc 3) ──────────────────────────────────────────────────
+  @storyline("talkSuperNerd") {
+    @trigger(map = "LavenderTown", npc = 3)
+    @speaker("") {
+      @t("GHOSTs appeared in POKeMON\nTOWER.\n\nI think they're the spirits\nof POKeMON that the ROCKETs\nkilled.", "宝可梦塔里出现了幽灵。\n\n我觉得它们是被火箭队杀害的宝\n可梦的怨灵。")
+    }
+  }
+
+  // ── Signs (bg_events, in object-data order) ─────────────────────────────
+  // sign 1 (11,9): town sign
+  @storyline("sign1") {
+    @trigger(map = "LavenderTown", sign = 1)
+    @speaker("") { @t("LAVENDER TOWN The Noble\nPurple Town", "紫苑镇高贵的紫色小镇") }
+  }
+
+  // sign 2 (9,3): SILPH SCOPE advert
+  @storyline("sign2") {
+    @trigger(map = "LavenderTown", sign = 2)
+    @speaker("") {
+      @t("New SILPH SCOPE!\n\nMake the Invisible Plain to\nSee!\n\nSILPH CO.", "新款西尔佛透视镜！\n\n让隐形之物清晰可见！\n\n西尔佛公司")
+    }
+  }
+
+  // sign 3 (16,13): MART sign
+  @storyline("sign3") {
+    @trigger(map = "LavenderTown", sign = 3)
+    @speaker("") { @t("All your item needs\nfulfilled! POKeMON MART", "满足你的一切道具需求！友好商\n店") }
+  }
+
+  // sign 4 (4,5): POKeMON CENTER sign
+  @storyline("sign4") {
+    @trigger(map = "LavenderTown", sign = 4)
+    @speaker("") { @t("Heal Your POKeMON! POKeMON\nCENTER", "治愈你的宝可梦！宝可梦中心") }
+  }
+
+  // sign 5 (5,9): VOLUNTEER POKeMON HOUSE sign
+  @storyline("sign5") {
+    @trigger(map = "LavenderTown", sign = 5)
+    @speaker("") { @t("LAVENDER VOLUNTEER POKeMON\nHOUSE", "紫苑志愿者宝可梦之家") }
+  }
+
+  // sign 6 (17,7): POKeMON TOWER sign
+  @storyline("sign6") {
+    @trigger(map = "LavenderTown", sign = 6)
+    @speaker("") { @t("May the Souls of POKeMON\nRest Easy POKeMON TOWER", "愿宝可梦的灵魂安息宝可梦塔") }
+  }
+}

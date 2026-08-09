@@ -1,0 +1,55 @@
+// Route4 — translated from the original disassembly (scripts/Route4.asm,
+// text/Route4.asm) to the real Game DSL API surface. Route4 has one dialogue-only
+// NPC, one sight-engaged Lass (dialogue-only handler), a Poke Ball ground item
+// (TM04 WHIRLWIND), and three signs.
+
+game_scene Route4 {
+  // ── CooltrainerF, dialogue-only (npc 1) ─────────────────────────────────
+  @storyline("talkCooltrainerF1") {
+    @trigger(map = "Route4", npc = 1)
+    @speaker("") { @t("Ouch! I tripped over a rocky\nPOKeMON, GEODUDE!", "哎哟！我绊倒在岩石宝可梦小拳\n石上了！") }
+  }
+
+  // ── Cooltrainer (Lass) — sight-engaged by the runtime; dialogue only (npc 2) ──
+  @storyline("talkCooltrainerF2") {
+    @trigger(map = "Route4", npc = 2)
+    @if (getFlag("EVENT_BEAT_ROUTE_4_TRAINER_0")) {
+      @speaker("") {
+        @t("There might not be any more\nmushrooms here.\n\nI think I got them all.", "这里可能已经没有蘑菇了。\n\n我想我已经全部采完了！")
+      }
+    } @else {
+      @speaker("") { @t("I came to get my mushroom\nPOKeMON!", "我是来抓我的蘑菇宝可梦的！") }
+    }
+  }
+
+  // ── Ground item: Poke Ball with TM04 WHIRLWIND (npc 3) ──────────────────
+  // Original PickUpItemText gives the item, sets the got-item event and clears
+  // the ball object. Gate on EVENT_GOT_TM04 so it is only collected once.
+  @storyline("itemTmWhirlwind") {
+    @trigger(map = "Route4", npc = 3, toggle = "ROUTE_4_OBJ_3")
+    @if (!getFlag("EVENT_GOT_TM04")) {
+      giveItem("TM04", 1)
+      setFlag("EVENT_GOT_TM04")
+      hideObjectByName("ROUTE_4_OBJ_3")
+      @speaker("") { @t("<PLAYER> found TM04!", "<PLAYER>找到了 TM04！") }
+    }
+  }
+
+  // ── Sign 1: Poke Center sign ────────────────────────────────────────────
+  @storyline("sign1") {
+    @trigger(map = "Route4", sign = 1)
+    @speaker("") { @t("Heal Your POKeMON! POKeMON\nCENTER", "治愈你的宝可梦！宝可梦中心") }
+  }
+
+  // ── Sign 2: MT.MOON Tunnel Entrance ─────────────────────────────────────
+  @storyline("sign2") {
+    @trigger(map = "Route4", sign = 2)
+    @speaker("") { @t("MT.MOON Tunnel Entrance", "月见山隧道入口") }
+  }
+
+  // ── Sign 3: ROUTE 4 ─────────────────────────────────────────────────────
+  @storyline("sign3") {
+    @trigger(map = "Route4", sign = 3)
+    @speaker("") { @t("ROUTE 4 MT.MOON - CERULEAN\nCITY", "4号道路月见山 - 华蓝市") }
+  }
+}

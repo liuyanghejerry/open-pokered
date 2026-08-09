@@ -1,0 +1,74 @@
+{
+  "$schema": "../schemas/pokemon.schema.json",
+  "species": "Grimer",
+  "baseStats": {
+    "hp": 80,
+    "attack": 80,
+    "defense": 50,
+    "speed": 25,
+    "special": 40
+  },
+  "type1": "Poison",
+  "type2": "Poison",
+  "catchRate": 190,
+  "baseExp": 90,
+  "growthRate": "MediumFast",
+  "initialMoves": [
+    "Pound",
+    "Disable",
+    "None",
+    "None"
+  ],
+  "tmHmFlags": [
+    160,
+    0,
+    152,
+    193,
+    42,
+    72,
+    2
+  ],
+  "pokedex": {
+    "category": "SLUDGE",
+    "heightFeet": 2,
+    "heightInches": 11,
+    "weightDecipounds": 660,
+    "flavorTextPages": [
+      "Appears in filthy\nareas. Thrives by\nsucking up",
+      "polluted sludge\nthat is pumped\nout of factories"
+    ]
+  },
+  "evolutions": [
+    {
+      "method": "level",
+      "species": "Muk",
+      "level": 38
+    }
+  ],
+  "learnset": [
+    {
+      "level": 30,
+      "moveId": "PoisonGas"
+    },
+    {
+      "level": 33,
+      "moveId": "Minimize"
+    },
+    {
+      "level": 37,
+      "moveId": "Sludge"
+    },
+    {
+      "level": 42,
+      "moveId": "Harden"
+    },
+    {
+      "level": 48,
+      "moveId": "Screech"
+    },
+    {
+      "level": 55,
+      "moveId": "AcidArmor"
+    }
+  ]
+}

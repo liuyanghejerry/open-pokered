@@ -1,0 +1,375 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 60;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		B0C1D2E3F4A5B0C1D2E3F4A5 /* AudioEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8C9D0E1F2A3B8C9D0E1F2A3 /* AudioEngine.swift */; };
+		A5B6C7D8E9F0A5B6C7D8E9F0 /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A3B4C5D6E7F8A3B4C5D6E7F8 /* UIKit.framework */; };
+		A9B0C1D2E3F4A9B0C1D2E3F4 /* GameViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7B8C9D0E1F2A7B8C9D0E1F2 /* GameViewController.swift */; };
+		B6C7D8E9F0A1B6C7D8E9F0A1 /* AVFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B4C5D6E7F8A9B4C5D6E7F8A9 /* AVFoundation.framework */; };
+		C1D2E3F4A5B6C1D2E3F4A5B6 /* TouchHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = C9D0E1F2A3B4C9D0E1F2A3B4 /* TouchHandler.swift */; };
+		E3F4A5B6C7D8E3F4A5B6C7D8 /* Metal.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E1F2A3B4C5D6E1F2A3B4C5D6 /* Metal.framework */; };
+		F4A5B6C7D8E9F4A5B6C7D8E9 /* MetalKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F2A3B4C5D6E7F2A3B4C5D6E7 /* MetalKit.framework */; };
+		F8A9B0C1D2E3F8A9B0C1D2E3 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6A7B8C9D0E1F6A7B8C9D0E1 /* AppDelegate.swift */; };
+		C7D8E9F0A1B2C7D8E9F0A1B2 /* libpokered_ios_device.a in Frameworks */ = {isa = PBXBuildFile; fileRef = C5D6E7F8A9B0C5D6E7F8A9B0 /* libpokered_ios_device.a */; platformFilters = (iphoneos); };
+		D8E9F0A1B2C3D8E9F0A1B2C5 /* libpokered_ios_sim.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D6E7F8A9B0C1D6E7F8A9B0C1 /* libpokered_ios_sim.a */; platformFilters = (iphonesimulator); };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		A3B4C5D6E7F8A3B4C5D6E7F8 /* UIKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UIKit.framework; path = System/Library/Frameworks/UIKit.framework; sourceTree = SDKROOT; };
+		A7B8C9D0E1F2A7B8C9D0E1F2 /* GameViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameViewController.swift; sourceTree = "<group>"; };
+		B4C5D6E7F8A9B4C5D6E7F8A9 /* AVFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVFoundation.framework; path = System/Library/Frameworks/AVFoundation.framework; sourceTree = SDKROOT; };
+		B8C9D0E1F2A3B8C9D0E1F2A3 /* AudioEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioEngine.swift; sourceTree = "<group>"; };
+		C5D6E7F8A9B0C5D6E7F8A9B0 /* libpokered_ios_device.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = Pokered/lib/libpokered_ios_device.a; sourceTree = "<group>"; };
+		C9D0E1F2A3B4C9D0E1F2A3B4 /* TouchHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TouchHandler.swift; sourceTree = "<group>"; };
+		D0E1F2A3B4C5D0E1F2A3B4C5 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		D6E7F8A9B0C1D6E7F8A9B0C1 /* libpokered_ios_sim.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = Pokered/lib/libpokered_ios_sim.a; sourceTree = "<group>"; };
+		E1F2A3B4C5D6E1F2A3B4C5D6 /* Metal.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Metal.framework; path = System/Library/Frameworks/Metal.framework; sourceTree = SDKROOT; };
+		E7F8A9B0C1D2E7F8A9B0C1D2 /* Pokered.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Pokered.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		F2A3B4C5D6E7F2A3B4C5D6E7 /* MetalKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MetalKit.framework; path = System/Library/Frameworks/MetalKit.framework; sourceTree = SDKROOT; };
+		F6A7B8C9D0E1F6A7B8C9D0E1 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		E9F0A1B2C3D4E9F0A1B2C3D4 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A5B6C7D8E9F0A5B6C7D8E9F0 /* UIKit.framework in Frameworks */,
+				E3F4A5B6C7D8E3F4A5B6C7D8 /* Metal.framework in Frameworks */,
+				F4A5B6C7D8E9F4A5B6C7D8E9 /* MetalKit.framework in Frameworks */,
+				B6C7D8E9F0A1B6C7D8E9F0A1 /* AVFoundation.framework in Frameworks */,
+				D8E9F0A1B2C3D8E9F0A1B2C5 /* libpokered_ios_sim.a in Frameworks */,
+				C7D8E9F0A1B2C7D8E9F0A1B2 /* libpokered_ios_device.a in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		A1B2C3D4E5F6A1B2C3D4E5F6 = {
+			isa = PBXGroup;
+			children = (
+				C3D4E5F6A7B8C3D4E5F6A7B8 /* Pokered */,
+				D4E5F6A7B8C9D4E5F6A7B8C9 /* Products */,
+				E5F6A7B8C9D0E5F6A7B8C9D0 /* Frameworks */,
+			);
+			sourceTree = "<group>";
+		};
+		C3D4E5F6A7B8C3D4E5F6A7B8 /* Pokered */ = {
+			isa = PBXGroup;
+			children = (
+				F6A7B8C9D0E1F6A7B8C9D0E1 /* AppDelegate.swift */,
+				A7B8C9D0E1F2A7B8C9D0E1F2 /* GameViewController.swift */,
+				B8C9D0E1F2A3B8C9D0E1F2A3 /* AudioEngine.swift */,
+				C9D0E1F2A3B4C9D0E1F2A3B4 /* TouchHandler.swift */,
+				D0E1F2A3B4C5D0E1F2A3B4C5 /* Info.plist */,
+			);
+			path = Pokered;
+			sourceTree = "<group>";
+		};
+		D4E5F6A7B8C9D4E5F6A7B8C9 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				E7F8A9B0C1D2E7F8A9B0C1D2 /* Pokered.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		E5F6A7B8C9D0E5F6A7B8C9D0 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				E1F2A3B4C5D6E1F2A3B4C5D6 /* Metal.framework */,
+				F2A3B4C5D6E7F2A3B4C5D6E7 /* MetalKit.framework */,
+				A3B4C5D6E7F8A3B4C5D6E7F8 /* UIKit.framework */,
+				B4C5D6E7F8A9B4C5D6E7F8A9 /* AVFoundation.framework */,
+				C5D6E7F8A9B0C5D6E7F8A9B0 /* libpokered_ios_device.a */,
+				D6E7F8A9B0C1D6E7F8A9B0C1 /* libpokered_ios_sim.a */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		A1B2C3D4E5F6A1B2C3D4E5F7 /* Pokered */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = A7B8C9D0E1F2A7B8C9D0E1F3 /* Build configuration list for PBXNativeTarget "Pokered" */;
+			buildPhases = (
+				D8E9F0A1B2C3D8E9F0A1B2C3 /* Sources */,
+				E9F0A1B2C3D4E9F0A1B2C3D4 /* Frameworks */,
+				F0A1B2C3D4E5F0A1B2C3D4E5 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = Pokered;
+			productName = Pokered;
+			productReference = E7F8A9B0C1D2E7F8A9B0C1D2 /* Pokered.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		B2C3D4E5F6A7B2C3D4E5F6A7 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 1630;
+				LastUpgradeCheck = 1630;
+				TargetAttributes = {
+					A1B2C3D4E5F6A1B2C3D4E5F7 = {
+						CreatedOnToolsVersion = 16.3;
+					};
+				};
+			};
+			buildConfigurationList = F6A7B8C9D0E1F6A7B8C9D0E2 /* Build configuration list for PBXProject "Pokered" */;
+			compatibilityVersion = "Xcode 15.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = A1B2C3D4E5F6A1B2C3D4E5F6;
+			productRefGroup = D4E5F6A7B8C9D4E5F6A7B8C9 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				A1B2C3D4E5F6A1B2C3D4E5F7 /* Pokered */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		F0A1B2C3D4E5F0A1B2C3D4E5 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		D8E9F0A1B2C3D8E9F0A1B2C3 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				F8A9B0C1D2E3F8A9B0C1D2E3 /* AppDelegate.swift in Sources */,
+				A9B0C1D2E3F4A9B0C1D2E3F4 /* GameViewController.swift in Sources */,
+				B0C1D2E3F4A5B0C1D2E3F4A5 /* AudioEngine.swift in Sources */,
+				C1D2E3F4A5B6C1D2E3F4A5B6 /* TouchHandler.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		B2C3D4E5F6A7B2C3D4E5F6A8 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		C3D4E5F6A7B8C3D4E5F6A7B9 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		D4E5F6A7B8C9D4E5F6A7B8C0 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				ENABLE_MODULES = YES;
+				INFOPLIST_FILE = Pokered/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				LIBRARY_SEARCH_PATHS = "$(PROJECT_DIR)/Pokered/lib";
+				"LIBRARY_SEARCH_PATHS[sdk=iphoneos*]" = "$(PROJECT_DIR)/Pokered/lib";
+				"LIBRARY_SEARCH_PATHS[sdk=iphonesimulator*]" = "$(PROJECT_DIR)/Pokered/lib";
+				MARKETING_VERSION = 1.0;
+				OTHER_LDFLAGS = "-lresolv";
+				"OTHER_LDFLAGS[sdk=iphoneos*]" = "-lresolv -lpokered_ios_device";
+				"OTHER_LDFLAGS[sdk=iphonesimulator*]" = "-lresolv -lpokered_ios_sim";
+				PRODUCT_BUNDLE_IDENTIFIER = com.pokered.ios;
+				PRODUCT_NAME = Pokered;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Debug;
+		};
+		E5F6A7B8C9D0E5F6A7B8C9D1 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				ENABLE_MODULES = YES;
+				INFOPLIST_FILE = Pokered/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				LIBRARY_SEARCH_PATHS = "$(PROJECT_DIR)/Pokered/lib";
+				MARKETING_VERSION = 1.0;
+				OTHER_LDFLAGS = "-lresolv";
+				"OTHER_LDFLAGS[sdk=iphoneos*]" = "-lresolv -lpokered_ios_device";
+				"OTHER_LDFLAGS[sdk=iphonesimulator*]" = "-lresolv -lpokered_ios_sim";
+				PRODUCT_BUNDLE_IDENTIFIER = com.pokered.ios;
+				PRODUCT_NAME = Pokered;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		F6A7B8C9D0E1F6A7B8C9D0E2 /* Build configuration list for PBXProject "Pokered" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				B2C3D4E5F6A7B2C3D4E5F6A8 /* Debug */,
+				C3D4E5F6A7B8C3D4E5F6A7B9 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		A7B8C9D0E1F2A7B8C9D0E1F3 /* Build configuration list for PBXNativeTarget "Pokered" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				D4E5F6A7B8C9D4E5F6A7B8C0 /* Debug */,
+				E5F6A7B8C9D0E5F6A7B8C9D1 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = B2C3D4E5F6A7B2C3D4E5F6A7 /* Project object */;
+}

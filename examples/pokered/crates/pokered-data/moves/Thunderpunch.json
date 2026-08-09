@@ -1,0 +1,9 @@
+{
+  "$schema": "../schemas/move.schema.json",
+  "id": "Thunderpunch",
+  "effect": "ParalyzeSideEffect1",
+  "power": 75,
+  "type": "Electric",
+  "accuracy": 100,
+  "pp": 15
+}

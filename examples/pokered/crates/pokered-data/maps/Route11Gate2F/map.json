@@ -1,0 +1,165 @@
+{
+  "$schema": "../../schemas/map.schema.json",
+  "id": 86,
+  "name": "Route11Gate2F",
+  "header": {
+    "tileset": "Gate",
+    "music": "Vermilion",
+    "connectionFlags": 0,
+    "width": 4,
+    "height": 4,
+    "borderBlock": 10
+  },
+  "connections": {},
+  "warps": [
+    {
+      "x": 7,
+      "y": 7,
+      "destMap": "Route11Gate1F",
+      "destWarpId": 4
+    }
+  ],
+  "npcs": [
+    {
+      "spriteId": 4,
+      "spriteName": "Youngster",
+      "x": 4,
+      "y": 2,
+      "movement": "Wander",
+      "facing": "Left",
+      "range": 2,
+      "textId": 1,
+      "isTrainer": false
+    },
+    {
+      "spriteId": 32,
+      "spriteName": "Scientist",
+      "x": 2,
+      "y": 6,
+      "movement": "Stationary",
+      "facing": "Down",
+      "range": 0,
+      "textId": 2,
+      "isTrainer": false
+    }
+  ],
+  "signs": [
+    {
+      "x": 1,
+      "y": 2,
+      "textId": 1
+    },
+    {
+      "x": 6,
+      "y": 2,
+      "textId": 2
+    }
+  ],
+  "text": {
+    "npc": {
+      "1": [
+        {
+          "line1": "[In-game trade script]",
+          "line2": ""
+        }
+      ],
+      "2": [
+        {
+          "line1": "[OaksAide script]",
+          "line2": ""
+        }
+      ],
+      "2_GotItem": [
+        {
+          "line1": "There are items on",
+          "line2": "the ground that"
+        },
+        {
+          "line1": "can't be seen.",
+          "line2": ""
+        },
+        {
+          "line1": "",
+          "line2": ""
+        },
+        {
+          "line1": "ITEMFINDER will",
+          "line2": "detect an item"
+        },
+        {
+          "line1": "close to you.",
+          "line2": ""
+        },
+        {
+          "line1": "",
+          "line2": ""
+        },
+        {
+          "line1": "It can't pinpoint",
+          "line2": "it, so you have"
+        },
+        {
+          "line1": "to look yourself!",
+          "line2": ""
+        }
+      ]
+    },
+    "sign": {
+      "1": [
+        {
+          "line1": "Looked into the",
+          "line2": "binoculars."
+        },
+        {
+          "line1": "",
+          "line2": ""
+        },
+        {
+          "line1": "A big #MON is",
+          "line2": "asleep on a road!"
+        }
+      ],
+      "1_NoSnorlax": [
+        {
+          "line1": "Looked into the",
+          "line2": "binoculars."
+        },
+        {
+          "line1": "",
+          "line2": ""
+        },
+        {
+          "line1": "It's a beautiful",
+          "line2": "view!"
+        }
+      ],
+      "2": [
+        {
+          "line1": "Looked into the",
+          "line2": "binoculars."
+        },
+        {
+          "line1": "",
+          "line2": ""
+        },
+        {
+          "line1": "The only way to",
+          "line2": "get from CERULEAN"
+        },
+        {
+          "line1": "CITY to LAVENDER",
+          "line2": ""
+        },
+        {
+          "line1": "is by way of the",
+          "line2": ""
+        },
+        {
+          "line1": "ROCK TUNNEL.",
+          "line2": ""
+        }
+      ]
+    }
+  },
+  "wild": null
+}

@@ -1,0 +1,27 @@
+{
+  "$schema": "../schemas/trainer.schema.json",
+  "class": "Blaine",
+  "constName": "BLAINE",
+  "parties": [
+    {
+      "pokemon": [
+        {
+          "level": 42,
+          "species": "Growlithe"
+        },
+        {
+          "level": 40,
+          "species": "Ponyta"
+        },
+        {
+          "level": 42,
+          "species": "Rapidash"
+        },
+        {
+          "level": 47,
+          "species": "Arcanine"
+        }
+      ]
+    }
+  ]
+}

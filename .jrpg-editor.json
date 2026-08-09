@@ -1,0 +1,71 @@
+{
+  "name": "Pokémon Red (jrpg-engine)",
+  "dataRoot": "examples/pokered/crates/pokered-data",
+  "gfxRoot": "examples/pokered/gfx",
+  "activities": [
+    {
+      "id": "story",
+      "type": "story",
+      "label": "Story",
+      "icon": "book",
+      "enabled": true,
+      "config": {
+        "storiesDir": "story",
+        "scenesDir": "maps",
+        "locales": ["en", "zh"],
+        "flagSource": {
+          "scan": { "dir": "maps", "fns": ["getFlag", "setFlag"], "recursive": true },
+          "table": null
+        },
+        "ai": {
+          "dslGuide": "docs/DSL_TRANSLATION_GUIDE.md",
+          "apiTypes": "scripts/types/game.d.ts",
+          "exampleScenes": [
+            "examples/pokered/crates/pokered-data/maps/OaksLab/script.scene",
+            "examples/pokered/crates/pokered-data/maps/Route10/script.scene"
+          ]
+        },
+        "scene": {
+          "ext": ".scene",
+          "validateCmd": "target/debug/scene_apply {scene}"
+        },
+        "sprite": {
+          "dir": "sprites",
+          "size": "1024x1024"
+        }
+      }
+    },
+    {
+      "id": "scenes",
+      "type": "script",
+      "label": "Scenes",
+      "icon": "code",
+      "enabled": true,
+      "config": { "scriptsDir": "maps", "extension": ".scene" }
+    },
+    {
+      "id": "maps",
+      "type": "map",
+      "label": "Maps",
+      "icon": "map",
+      "enabled": true,
+      "config": { "mapsDir": "maps", "tileSize": 8, "blockSize": 4, "screen": { "width": 160, "height": 144 } }
+    },
+    {
+      "id": "settings",
+      "type": "settings",
+      "label": "Config",
+      "icon": "settings",
+      "enabled": true,
+      "config": {}
+    },
+    {
+      "id": "characters",
+      "type": "character-sprite",
+      "label": "Sprites",
+      "icon": "👤",
+      "enabled": true,
+      "config": {}
+    }
+  ]
+}

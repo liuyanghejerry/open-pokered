@@ -1,0 +1,9 @@
+{
+  "$schema": "../schemas/move.schema.json",
+  "id": "KarateChop",
+  "effect": "NoAdditionalEffect",
+  "power": 50,
+  "type": "Normal",
+  "accuracy": 100,
+  "pp": 25
+}

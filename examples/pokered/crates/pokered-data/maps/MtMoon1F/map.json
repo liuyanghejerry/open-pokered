@@ -1,0 +1,505 @@
+{
+  "$schema": "../../schemas/map.schema.json",
+  "id": 59,
+  "name": "MtMoon1F",
+  "header": {
+    "tileset": "Cavern",
+    "music": "Dungeon3",
+    "connectionFlags": 0,
+    "width": 20,
+    "height": 18,
+    "borderBlock": 3
+  },
+  "connections": {},
+  "warps": [
+    {
+      "x": 14,
+      "y": 35,
+      "destWarpId": 1
+    },
+    {
+      "x": 15,
+      "y": 35,
+      "destWarpId": 1
+    },
+    {
+      "x": 5,
+      "y": 5,
+      "destMap": "MtMoonB1F",
+      "destWarpId": 0
+    },
+    {
+      "x": 17,
+      "y": 11,
+      "destMap": "MtMoonB1F",
+      "destWarpId": 2
+    },
+    {
+      "x": 25,
+      "y": 15,
+      "destMap": "MtMoonB1F",
+      "destWarpId": 3
+    }
+  ],
+  "npcs": [
+    {
+      "spriteId": 14,
+      "spriteName": "Hiker",
+      "x": 5,
+      "y": 6,
+      "movement": "Stationary",
+      "facing": "Down",
+      "range": 2,
+      "textId": 1,
+      "isTrainer": true,
+      "trainerClass": "Hiker",
+      "trainerSet": 1,
+      "endBattleText": "Wow!\nShocked again!"
+    },
+    {
+      "spriteId": 4,
+      "spriteName": "Youngster",
+      "x": 12,
+      "y": 16,
+      "movement": "Stationary",
+      "facing": "Right",
+      "range": 2,
+      "textId": 2,
+      "isTrainer": true,
+      "trainerClass": "Youngster",
+      "trainerSet": 3,
+      "endBattleText": "Losing\nstinks!"
+    },
+    {
+      "spriteId": 6,
+      "spriteName": "CooltrainerF",
+      "x": 30,
+      "y": 4,
+      "movement": "Stationary",
+      "facing": "Down",
+      "range": 2,
+      "textId": 3,
+      "isTrainer": true,
+      "trainerClass": "Lass",
+      "trainerSet": 5,
+      "endBattleText": "Oh!\nI lost it!"
+    },
+    {
+      "spriteId": 12,
+      "spriteName": "SuperNerd",
+      "x": 24,
+      "y": 31,
+      "movement": "Stationary",
+      "facing": "Up",
+      "range": 2,
+      "textId": 4,
+      "isTrainer": true,
+      "trainerClass": "SuperNerd",
+      "trainerSet": 1,
+      "endBattleText": "My\nPOKeMON won't do!"
+    },
+    {
+      "spriteId": 6,
+      "spriteName": "CooltrainerF",
+      "x": 16,
+      "y": 23,
+      "movement": "Stationary",
+      "facing": "Down",
+      "range": 2,
+      "textId": 5,
+      "isTrainer": true,
+      "trainerClass": "Lass",
+      "trainerSet": 6,
+      "endBattleText": "I lost?"
+    },
+    {
+      "spriteId": 4,
+      "spriteName": "Youngster",
+      "x": 7,
+      "y": 22,
+      "movement": "Stationary",
+      "facing": "Down",
+      "range": 2,
+      "textId": 6,
+      "isTrainer": true,
+      "trainerClass": "BugCatcher",
+      "trainerSet": 7,
+      "endBattleText": "You\ngot me!"
+    },
+    {
+      "spriteId": 4,
+      "spriteName": "Youngster",
+      "x": 30,
+      "y": 27,
+      "movement": "Stationary",
+      "facing": "Right",
+      "range": 2,
+      "textId": 7,
+      "isTrainer": true,
+      "trainerClass": "BugCatcher",
+      "trainerSet": 8,
+      "endBattleText": "I\nlost."
+    },
+    {
+      "spriteId": 61,
+      "spriteName": "PokeBall",
+      "x": 2,
+      "y": 20,
+      "movement": "Stationary",
+      "facing": "Down",
+      "range": 0,
+      "textId": 8,
+      "isTrainer": false,
+      "itemId": 20
+    },
+    {
+      "spriteId": 61,
+      "spriteName": "PokeBall",
+      "x": 2,
+      "y": 2,
+      "movement": "Stationary",
+      "facing": "Down",
+      "range": 0,
+      "textId": 9,
+      "isTrainer": false,
+      "itemId": 10
+    },
+    {
+      "spriteId": 61,
+      "spriteName": "PokeBall",
+      "x": 35,
+      "y": 31,
+      "movement": "Stationary",
+      "facing": "Down",
+      "range": 0,
+      "textId": 10,
+      "isTrainer": false,
+      "itemId": 40
+    },
+    {
+      "spriteId": 61,
+      "spriteName": "PokeBall",
+      "x": 36,
+      "y": 23,
+      "movement": "Stationary",
+      "facing": "Down",
+      "range": 0,
+      "textId": 11,
+      "isTrainer": false,
+      "itemId": 29
+    },
+    {
+      "spriteId": 61,
+      "spriteName": "PokeBall",
+      "x": 20,
+      "y": 33,
+      "movement": "Stationary",
+      "facing": "Down",
+      "range": 0,
+      "textId": 12,
+      "isTrainer": false,
+      "itemId": 20
+    },
+    {
+      "spriteId": 61,
+      "spriteName": "PokeBall",
+      "x": 5,
+      "y": 32,
+      "movement": "Stationary",
+      "facing": "Down",
+      "range": 0,
+      "textId": 13,
+      "isTrainer": false,
+      "itemId": 212
+    }
+  ],
+  "signs": [
+    {
+      "x": 15,
+      "y": 23,
+      "textId": 1
+    }
+  ],
+  "text": {
+    "npc": {
+      "1": [
+        {
+          "line1": "WHOA! You shocked",
+          "line2": "me! Oh, you're"
+        },
+        {
+          "line1": "just a kid!",
+          "line2": ""
+        }
+      ],
+      "1_Defeated": [
+        {
+          "line1": "Wow!",
+          "line2": "Shocked again!"
+        }
+      ],
+      "1_AfterBattle": [
+        {
+          "line1": "Kids like you",
+          "line2": "shouldn't be"
+        },
+        {
+          "line1": "here!",
+          "line2": ""
+        }
+      ],
+      "2": [
+        {
+          "line1": "Did you come to",
+          "line2": "explore too?"
+        }
+      ],
+      "2_Defeated": [
+        {
+          "line1": "Losing",
+          "line2": "stinks!"
+        }
+      ],
+      "2_AfterBattle": [
+        {
+          "line1": "I came down here",
+          "line2": "to show off to"
+        },
+        {
+          "line1": "girls.",
+          "line2": ""
+        }
+      ],
+      "3": [
+        {
+          "line1": "Wow! It's way",
+          "line2": "bigger in here"
+        },
+        {
+          "line1": "than I thought!",
+          "line2": ""
+        }
+      ],
+      "3_Defeated": [
+        {
+          "line1": "Oh!",
+          "line2": "I lost it!"
+        }
+      ],
+      "3_AfterBattle": [
+        {
+          "line1": "How do you get",
+          "line2": "out of here?"
+        }
+      ],
+      "4": [
+        {
+          "line1": "What! Don't sneak",
+          "line2": "up on me!"
+        }
+      ],
+      "4_Defeated": [
+        {
+          "line1": "My",
+          "line2": "#MON won't do!"
+        }
+      ],
+      "4_AfterBattle": [
+        {
+          "line1": "I have to find",
+          "line2": "stronger #MON."
+        }
+      ],
+      "5": [
+        {
+          "line1": "What? I'm waiting",
+          "line2": "for my friends to"
+        },
+        {
+          "line1": "find me here.",
+          "line2": ""
+        }
+      ],
+      "5_Defeated": [
+        {
+          "line1": "I lost?",
+          "line2": ""
+        }
+      ],
+      "5_AfterBattle": [
+        {
+          "line1": "I heard there are",
+          "line2": "some very rare"
+        },
+        {
+          "line1": "fossils here.",
+          "line2": ""
+        }
+      ],
+      "6": [
+        {
+          "line1": "Suspicious men",
+          "line2": "are in the cave."
+        },
+        {
+          "line1": "What about you?",
+          "line2": ""
+        }
+      ],
+      "6_Defeated": [
+        {
+          "line1": "You",
+          "line2": "got me!"
+        }
+      ],
+      "6_AfterBattle": [
+        {
+          "line1": "I saw them! I'm",
+          "line2": "sure they're from"
+        },
+        {
+          "line1": "TEAM ROCKET!",
+          "line2": ""
+        }
+      ],
+      "7": [
+        {
+          "line1": "Go through this",
+          "line2": "cave to get to"
+        },
+        {
+          "line1": "CERULEAN CITY!",
+          "line2": ""
+        }
+      ],
+      "7_Defeated": [
+        {
+          "line1": "I",
+          "line2": "lost."
+        }
+      ],
+      "7_AfterBattle": [
+        {
+          "line1": "ZUBAT is tough!",
+          "line2": "But, it can be"
+        },
+        {
+          "line1": "useful if you",
+          "line2": "catch one."
+        }
+      ]
+    },
+    "sign": {
+      "1": [
+        {
+          "line1": "Beware! ZUBAT is",
+          "line2": "a blood sucker!"
+        }
+      ]
+    }
+  },
+  "wild": {
+    "red": {
+      "grass": {
+        "encounterRate": 10,
+        "mons": [
+          {
+            "level": 8,
+            "species": "Zubat"
+          },
+          {
+            "level": 7,
+            "species": "Zubat"
+          },
+          {
+            "level": 9,
+            "species": "Zubat"
+          },
+          {
+            "level": 8,
+            "species": "Geodude"
+          },
+          {
+            "level": 6,
+            "species": "Zubat"
+          },
+          {
+            "level": 10,
+            "species": "Zubat"
+          },
+          {
+            "level": 10,
+            "species": "Geodude"
+          },
+          {
+            "level": 8,
+            "species": "Paras"
+          },
+          {
+            "level": 11,
+            "species": "Zubat"
+          },
+          {
+            "level": 8,
+            "species": "Clefairy"
+          }
+        ]
+      },
+      "water": {
+        "encounterRate": 0,
+        "mons": []
+      }
+    },
+    "blue": {
+      "grass": {
+        "encounterRate": 10,
+        "mons": [
+          {
+            "level": 8,
+            "species": "Zubat"
+          },
+          {
+            "level": 7,
+            "species": "Zubat"
+          },
+          {
+            "level": 9,
+            "species": "Zubat"
+          },
+          {
+            "level": 8,
+            "species": "Geodude"
+          },
+          {
+            "level": 6,
+            "species": "Zubat"
+          },
+          {
+            "level": 10,
+            "species": "Zubat"
+          },
+          {
+            "level": 10,
+            "species": "Geodude"
+          },
+          {
+            "level": 8,
+            "species": "Paras"
+          },
+          {
+            "level": 11,
+            "species": "Zubat"
+          },
+          {
+            "level": 8,
+            "species": "Clefairy"
+          }
+        ]
+      },
+      "water": {
+        "encounterRate": 0,
+        "mons": []
+      }
+    }
+  }
+}

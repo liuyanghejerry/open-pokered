@@ -1,0 +1,131 @@
+// Route15 — translated from the original disassembly (scripts/Route15.asm,
+// text/Route15.asm) to the real Game DSL API surface.
+//
+// Content type: a pure route-trainer map. NPCs 1-10 are sight-engaged trainers
+// (map.json isTrainer = true), so the runtime owns each battle and the .scene
+// handler is DIALOGUE ONLY — the pre-battle taunt before they are beaten, the
+// after-battle line once EVENT_BEAT_ROUTE_15_TRAINER_n is set. NPC 11 is a
+// ground-item Poke Ball (TM20 RAGE). Sign 1 is the route marker.
+
+game_scene Route15 {
+  // ── CooltrainerF (npc 1) — Route15TrainerHeader0 ──────────────────────────
+  @storyline("talkCooltrainerF1") {
+    @trigger(map = "Route15", npc = 1)
+    @if (getFlag("EVENT_BEAT_ROUTE_15_TRAINER_0")) {
+      @speaker("") { @t("You can't change the\nnickname of any POKeMON you\nget in a trade.\n\nOnly the Original Trainer\ncan.", "你无法更改交易得到的宝可梦的\n昵称\n\n只有最初的训练家才可以") }
+    } @else {
+      @speaker("") { @t("Let me try out the POKeMON I\njust got in a trade!", "让我试试刚交易得到的宝可梦！") }
+    }
+  }
+
+  // ── CooltrainerF (npc 2) — Route15TrainerHeader1 ──────────────────────────
+  @storyline("talkCooltrainerF2") {
+    @trigger(map = "Route15", npc = 2)
+    @if (getFlag("EVENT_BEAT_ROUTE_15_TRAINER_1")) {
+      @speaker("") { @t("I'm afraid of BIKERs, they\nlook so ugly and mean!", "我怕摩托车手他们看起来又丑又\n凶！") }
+    } @else {
+      @speaker("") { @t("You look gentle, so I think\nI can beat you!", "你看起来很温柔所以我觉得能打\n败你！") }
+    }
+  }
+
+  // ── CooltrainerM (npc 3) — Route15TrainerHeader2 ──────────────────────────
+  @storyline("talkCooltrainerM1") {
+    @trigger(map = "Route15", npc = 3)
+    @if (getFlag("EVENT_BEAT_ROUTE_15_TRAINER_2")) {
+      @speaker("") { @t("Maybe I'm not cut out for\nbattles.", "也许我不适合对战吧。") }
+    } @else {
+      @speaker("") { @t("When I whistle, I can summon\nbird POKeMON!", "我一吹口哨就能召唤鸟类宝可\n梦！") }
+    }
+  }
+
+  // ── CooltrainerM (npc 4) — Route15TrainerHeader3 ──────────────────────────
+  @storyline("talkCooltrainerM2") {
+    @trigger(map = "Route15", npc = 4)
+    @if (getFlag("EVENT_BEAT_ROUTE_15_TRAINER_3")) {
+      @speaker("") { @t("Did you know moves like\nEARTHQUAKE don't have any\neffect on birds?", "你知道吗地震之类的招式对鸟类\n没有效果？") }
+    } @else {
+      @speaker("") { @t("Hmm? My birds are shivering!\nYou're good, aren't you?", "嗯？我的鸟在发抖！你果然很厉\n害呢？") }
+    }
+  }
+
+  // ── Beauty (npc 5) — Route15TrainerHeader4 ────────────────────────────────
+  @storyline("talkBeauty1") {
+    @trigger(map = "Route15", npc = 5)
+    @if (getFlag("EVENT_BEAT_ROUTE_15_TRAINER_4")) {
+      @speaker("") { @t("I forgive you! I can take\nit!", "我原谅你！我能承受！") }
+    } @else {
+      @speaker("") { @t("Oh, you're a little cutie!", "哦，你真是个小可爱！") }
+    }
+  }
+
+  // ── Beauty (npc 6) — Route15TrainerHeader5 ────────────────────────────────
+  @storyline("talkBeauty2") {
+    @trigger(map = "Route15", npc = 6)
+    @if (getFlag("EVENT_BEAT_ROUTE_15_TRAINER_5")) {
+      @speaker("") { @t("I just like going home to be\nwith my POKeMON!", "我只是想回家和我的宝可梦待在\n一起！") }
+    } @else {
+      @speaker("") { @t("I raise POKeMON because I\nlive alone!", "我培育宝可梦是因为我独自生\n活！") }
+    }
+  }
+
+  // ── Biker (npc 7) — Route15TrainerHeader6 ─────────────────────────────────
+  @storyline("talkBiker1") {
+    @trigger(map = "Route15", npc = 7)
+    @if (getFlag("EVENT_BEAT_ROUTE_15_TRAINER_6")) {
+      @speaker("") { @t("You only live once, so I\nlive as an outlaw! TEAM\nROCKET RULES!", "人生只有一次所以我要当亡命之\n徒！火箭队万岁！") }
+    } @else {
+      @speaker("") { @t("Hey kid! C'mon! I just got\nthese!", "嘿小子！来啊！我刚得到这些！") }
+    }
+  }
+
+  // ── Biker (npc 8) — Route15TrainerHeader7 ─────────────────────────────────
+  @storyline("talkBiker2") {
+    @trigger(map = "Route15", npc = 8)
+    @if (getFlag("EVENT_BEAT_ROUTE_15_TRAINER_7")) {
+      @speaker("") { @t("I was just joking about the\nmoney!", "关于钱的事我只是开玩笑！") }
+    } @else {
+      @speaker("") { @t("Fork over all your cash when\nyou lose to me, kid!", "输给我之后把身上所有钱都交出\n来！") }
+    }
+  }
+
+  // ── CooltrainerF (npc 9) — Route15TrainerHeader8 ──────────────────────────
+  @storyline("talkCooltrainerF3") {
+    @trigger(map = "Route15", npc = 9)
+    @if (getFlag("EVENT_BEAT_ROUTE_15_TRAINER_8")) {
+      @speaker("") { @t("I trade POKeMON with my\nfriends!", "我和朋友们交换宝可梦！") }
+    } @else {
+      @speaker("") { @t("What's cool? Trading\nPOKeMON!", "什么最酷？交换宝可梦！") }
+    }
+  }
+
+  // ── CooltrainerF (npc 10) — Route15TrainerHeader9 ─────────────────────────
+  @storyline("talkCooltrainerF4") {
+    @trigger(map = "Route15", npc = 10)
+    @if (getFlag("EVENT_BEAT_ROUTE_15_TRAINER_9")) {
+      @speaker("") { @t("I'll go train with weaker\npeople.", "我要和比我弱的人去训练。") }
+    } @else {
+      @speaker("") { @t("Want to play with my\nPOKeMON?", "想和我的宝可梦玩吗？") }
+    }
+  }
+
+  // ── Poke Ball ground item (npc 11) — TM20 RAGE ────────────────────────────
+  @storyline("itemTmRage") {
+    @trigger(map = "Route15", npc = 11, toggle = "ROUTE_15_OBJ_11")
+    @if (!getFlag("EVENT_GOT_ROUTE_15_TM_RAGE")) {
+      given = giveItem("TM20", 1)
+      @if (given) {
+        setFlag("EVENT_GOT_ROUTE_15_TM_RAGE")
+        hideObjectByName("ROUTE_15_OBJ_11")
+        @speaker("") { @t("<PLAYER> found TM20!", "<PLAYER>找到了 TM20！") }
+      } @else {
+        @speaker("") { @t("You have too much stuff\nalready!", "你的东西已经太多了！") }
+      }
+    }
+  }
+
+  // ── Sign 1: ROUTE 15, west to FUCHSIA CITY ────────────────────────────────
+  @storyline("sign1") {
+    @trigger(map = "Route15", sign = 1)
+    @speaker("") { @t("ROUTE 15 West to FUCHSIA\nCITY", "15号道路向西通往浅红市") }
+  }
+}

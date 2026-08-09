@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pokémon Red - Web Edition</title>
+    <link rel="shortcut icon" href="./favicon.ico">
+    <link rel="icon" type="image/svg+xml" href="./favicon.svg">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: #fff;
+            font-family: 'Courier New', monospace;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            overflow: hidden;
+        }
+        
+        .container {
+            position: relative;
+            width: 100%;
+            max-width: 480px;
+            padding: 20px;
+        }
+        
+        .game-wrapper {
+            position: relative;
+            background: #222;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+        }
+        
+        #game-canvas {
+            display: block;
+            width: 100%;
+            height: auto;
+            background: #fff;
+            border-radius: 4px;
+        }
+        
+        .loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            color: #fff;
+            z-index: 10;
+        }
+        
+        .loading-spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid #333;
+            border-top: 4px solid #ff0000;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .controls-info {
+            margin-top: 20px;
+            text-align: center;
+            font-size: 12px;
+            color: #888;
+        }
+        
+        .controls-info h3 {
+            margin-bottom: 10px;
+            color: #ff4444;
+            font-size: 14px;
+        }
+        
+        .controls-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .control-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 5px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 4px;
+        }
+        
+        .key {
+            background: #333;
+            padding: 2px 8px;
+            border-radius: 3px;
+            font-weight: bold;
+        }
+        
+        .error-message {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            color: #ff4444;
+            background: rgba(0, 0, 0, 0.9);
+            padding: 20px;
+            border-radius: 8px;
+            z-index: 20;
+            max-width: 80%;
+        }
+        
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="game-wrapper">
+            <div class="loading" id="loading">
+                <div class="loading-spinner"></div>
+                <p>Loading Pokémon Red...</p>
+                <p id="loading-status">Initializing...</p>
+            </div>
+            
+            <div class="error-message hidden" id="error">
+                <h3>Error Loading Game</h3>
+                <p id="error-message"></p>
+                <p style="margin-top: 10px; font-size: 12px;">
+                    Make sure your browser supports WebGPU or WebGL2.
+                </p>
+            </div>
+            
+            <canvas id="game-canvas"></canvas>
+        </div>
+        
+        <div class="controls-info">
+            <h3>Controls</h3>
+            <div class="controls-grid">
+                <div class="control-item">
+                    <span>D-Pad</span>
+                    <span class="key">Arrow Keys / WASD</span>
+                </div>
+                <div class="control-item">
+                    <span>A Button</span>
+                    <span class="key">Z / Enter</span>
+                </div>
+                <div class="control-item">
+                    <span>B Button</span>
+                    <span class="key">X / Backspace</span>
+                </div>
+                <div class="control-item">
+                    <span>Start</span>
+                    <span class="key">Space / Return</span>
+                </div>
+                <div class="control-item">
+                    <span>Select</span>
+                    <span class="key">Right Shift</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script type="module">
+        import init from './pokered_web.js';
+        
+        const loading = document.getElementById('loading');
+        const loadingStatus = document.getElementById('loading-status');
+        const errorDiv = document.getElementById('error');
+        const errorMessage = document.getElementById('error-message');
+        const canvas = document.getElementById('game-canvas');
+        
+        async function run() {
+            try {
+                loadingStatus.textContent = 'Loading WASM module...';
+                
+                await init();
+                
+                loadingStatus.textContent = 'Game initialized!';
+                
+                setTimeout(() => {
+                    loading.classList.add('hidden');
+                }, 500);
+                
+            } catch (e) {
+                console.error('Failed to load game:', e);
+                loading.classList.add('hidden');
+                errorDiv.classList.remove('hidden');
+                errorMessage.textContent = e.message || 'Unknown error occurred';
+            }
+        }
+        
+        run();
+    </script>
+</body>
+</html>

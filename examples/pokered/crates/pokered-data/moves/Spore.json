@@ -1,0 +1,9 @@
+{
+  "$schema": "../schemas/move.schema.json",
+  "id": "Spore",
+  "effect": "SleepEffect",
+  "power": 0,
+  "type": "Grass",
+  "accuracy": 100,
+  "pp": 15
+}

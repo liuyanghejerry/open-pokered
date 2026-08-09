@@ -1,0 +1,12 @@
+// Route12Gate1F — translated from the original disassembly
+// (scripts/Route12Gate1F.asm, text/Route12Gate1F.asm) to the real Game DSL API.
+// The map script only enables auto text box drawing (no on-enter logic); the
+// single guard NPC is plain dialogue.
+
+game_scene Route12Gate1F {
+  // ── Guard (npc 1) — points the player to the lookout upstairs ──────────
+  @storyline("talkGuard") {
+    @trigger(map = "Route12Gate1F", npc = 1)
+    @speaker("") { @t("There's a lookout spot\nupstairs.", "上面有个瞭望台。") }
+  }
+}

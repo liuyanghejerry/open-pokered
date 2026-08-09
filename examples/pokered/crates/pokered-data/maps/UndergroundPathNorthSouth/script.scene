@@ -1,0 +1,9 @@
+// UndergroundPathNorthSouth — translated from the original disassembly
+// (scripts/UndergroundPathNorthSouth.asm, text/UndergroundPathNorthSouth.asm).
+// This is the north-south underground passage connecting Route 5 and Route 6.
+// The original script only runs `EnableAutoTextBoxDrawing` and has an empty
+// (unused) text-pointer table: no NPCs, no signs, no triggers, no on-enter
+// cutscene. There is nothing to script — the two warps live in map.json.
+
+game_scene UndergroundPathNorthSouth {
+}

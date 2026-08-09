@@ -1,0 +1,139 @@
+{
+  "$schema": "../schemas/trainer.schema.json",
+  "class": "CooltrainerM",
+  "constName": "COOLTRAINER_M",
+  "parties": [
+    {
+      "pokemon": [
+        {
+          "level": 39,
+          "species": "Nidorino"
+        },
+        {
+          "level": 39,
+          "species": "Nidoking"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 43,
+          "species": "Exeggutor"
+        },
+        {
+          "level": 43,
+          "species": "Cloyster"
+        },
+        {
+          "level": 43,
+          "species": "Arcanine"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 43,
+          "species": "Kingler"
+        },
+        {
+          "level": 43,
+          "species": "Tentacruel"
+        },
+        {
+          "level": 43,
+          "species": "Blastoise"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 45,
+          "species": "Kingler"
+        },
+        {
+          "level": 45,
+          "species": "Starmie"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 42,
+          "species": "Ivysaur"
+        },
+        {
+          "level": 42,
+          "species": "Wartortle"
+        },
+        {
+          "level": 42,
+          "species": "Charmeleon"
+        },
+        {
+          "level": 42,
+          "species": "Charizard"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 44,
+          "species": "Ivysaur"
+        },
+        {
+          "level": 44,
+          "species": "Wartortle"
+        },
+        {
+          "level": 44,
+          "species": "Charmeleon"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 49,
+          "species": "Nidoking"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 44,
+          "species": "Kingler"
+        },
+        {
+          "level": 44,
+          "species": "Cloyster"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 39,
+          "species": "Sandslash"
+        },
+        {
+          "level": 39,
+          "species": "Dugtrio"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 43,
+          "species": "Rhyhorn"
+        }
+      ]
+    }
+  ]
+}

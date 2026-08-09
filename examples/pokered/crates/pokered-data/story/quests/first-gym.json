@@ -1,0 +1,18 @@
+{
+  "id": "first-gym",
+  "title": { "en": "Pewter Gym", "zh": "尼比道馆" },
+  "type": "main",
+  "arc": "boulder-badge",
+  "summary": "Cross Viridian Forest and defeat the Pewter City Gym Leader for the first badge.",
+  "giver": "",
+  "characters": [],
+  "maps": ["PewterGym"],
+  "objectives": [
+    { "id": "o1", "text": { "en": "Defeat the Pewter Gym Leader", "zh": "击败尼比道馆馆主" }, "doneFlag": "EVENT_BEAT_BROCK" }
+  ],
+  "requires": ["EVENT_GOT_POKEDEX"],
+  "sets": ["EVENT_BEAT_BROCK"],
+  "rewards": [{ "kind": "badge", "id": "BOULDERBADGE" }],
+  "implementedBy": [],
+  "status": "drafted"
+}

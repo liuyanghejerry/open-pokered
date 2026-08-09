@@ -1,0 +1,14 @@
+// SSAnne3F — translated from the original disassembly (scripts/SSAnne3F.asm,
+// text/SSAnne3F.asm) to the real Game DSL API surface. The map only enables
+// auto text-box drawing on enter and has a single Sailor NPC with talk-only
+// dialogue, so there is no @load logic and the handler is dialogue only.
+
+game_scene SSAnne3F {
+  // ── Sailor (npc 1) — talk-only dialogue ───────────────────────────────
+  @storyline("talkSailor") {
+    @trigger(map = "SSAnne3F", npc = 1)
+    @speaker("") {
+      @t("Our CAPTAIN is a sword\nmaster!\n\nHe even teaches CUT to\nPOKeMON!", "我们的船长是个剑术大师！\n\n他甚至教宝可梦居合斩！")
+    }
+  }
+}

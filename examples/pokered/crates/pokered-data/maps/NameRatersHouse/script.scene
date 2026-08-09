@@ -1,0 +1,48 @@
+// NameRatersHouse — translated from the original disassembly
+// (scripts/NameRatersHouse.asm, text/NameRatersHouse.asm) to the real Game
+// DSL API surface. Single NPC: the NAME RATER, who offers to rename a party
+// POKeMON's nickname. Talk -> YES -> pick a party POKeMON via the party menu
+// (choosePartyPokemon) -> YES -> open the naming screen (openNamingScreen) ->
+// write the chosen nickname back to that party slot (setPartyNickname).
+// The OT-match check (traded mons are "impeccable" and can't be renamed) is
+// not modelled; every party member can be renamed here.
+
+game_scene NameRatersHouse {
+  // ── NAME RATER (npc 1) ────────────────────────────────────────────────
+  @storyline("talkNameRater") {
+    @trigger(map = "NameRatersHouse", npc = 1)
+    @speaker("") {
+      @t("Hello, hello! I am the\nofficial NAME RATER!\n\nWant me to rate the\nnicknames of your POKeMON?", "你好，你好！我是正式的名字评\n定师！\n\n想让我给你宝可梦的昵称打分\n吗？")
+    }
+    @choice {
+      @option(@t("YES", "是")) {
+        // Original: "Which POKeMON should I look at?" then opens the party
+        // menu. choosePartyPokemon() returns the chosen 0-based index, or -1
+        // if the player backed out of the menu.
+        @speaker("") { @t("Which POKeMON should I look\nat?", "你想让我看哪只宝可梦？") }
+        slot = choosePartyPokemon()
+        @if (slot >= 0) {
+          @speaker("") {
+            @t("That is a decent nickname!\n\nBut, would you like me to\ngive it a nicer name?\n\nHow about it?", "这个名字还不错！\n\n但是，要不要我给它起一个更好\n的名字？\n\n你觉得怎么样？")
+          }
+          @choice {
+            @option(@t("YES", "是")) {
+              @speaker("") { @t("Fine! What should we name\nit?", "好！你想给它起什么名字？") }
+              newName = openNamingScreen("")
+              setPartyNickname(slot, newName)
+              @speaker("") {
+                @t("OK! This POKeMON has been\nrenamed!\n\nThat's a better name than\nbefore!", "OK！这只宝可梦已经改名了！\n\n比原来的名字好多了！")
+              }
+            }
+            @option(@t("NO", "否")) {
+              @speaker("") { @t("Fine! Come any time you\nlike!", "好！随时欢迎再来！") }
+            }
+          }
+        }
+      }
+      @option(@t("NO", "否")) {
+        @speaker("") { @t("Fine! Come any time you\nlike!", "好！随时欢迎再来！") }
+      }
+    }
+  }
+}

@@ -1,0 +1,156 @@
+{
+  "$schema": "../../schemas/script_config.schema.json",
+  "coordEvents": [
+    {
+      "name": "cardKeyDoor11",
+      "position": [
+        2,
+        8
+      ],
+      "trigger": "cardKeyDoor1"
+    },
+    {
+      "name": "cardKeyDoor12",
+      "position": [
+        3,
+        8
+      ],
+      "trigger": "cardKeyDoor1"
+    },
+    {
+      "name": "cardKeyDoor13",
+      "position": [
+        2,
+        9
+      ],
+      "trigger": "cardKeyDoor1"
+    },
+    {
+      "name": "cardKeyDoor14",
+      "position": [
+        3,
+        9
+      ],
+      "trigger": "cardKeyDoor1"
+    },
+    {
+      "name": "cardKeyDoor21",
+      "position": [
+        18,
+        4
+      ],
+      "trigger": "cardKeyDoor2"
+    },
+    {
+      "name": "cardKeyDoor22",
+      "position": [
+        19,
+        4
+      ],
+      "trigger": "cardKeyDoor2"
+    },
+    {
+      "name": "cardKeyDoor23",
+      "position": [
+        18,
+        5
+      ],
+      "trigger": "cardKeyDoor2"
+    },
+    {
+      "name": "cardKeyDoor24",
+      "position": [
+        19,
+        5
+      ],
+      "trigger": "cardKeyDoor2"
+    },
+    {
+      "name": "cardKeyDoor31",
+      "position": [
+        18,
+        10
+      ],
+      "trigger": "cardKeyDoor3"
+    },
+    {
+      "name": "cardKeyDoor32",
+      "position": [
+        19,
+        10
+      ],
+      "trigger": "cardKeyDoor3"
+    },
+    {
+      "name": "cardKeyDoor33",
+      "position": [
+        18,
+        11
+      ],
+      "trigger": "cardKeyDoor3"
+    },
+    {
+      "name": "cardKeyDoor34",
+      "position": [
+        19,
+        11
+      ],
+      "trigger": "cardKeyDoor3"
+    },
+    {
+      "name": "cardKeyDoor41",
+      "position": [
+        10,
+        12
+      ],
+      "trigger": "cardKeyDoor4"
+    },
+    {
+      "name": "cardKeyDoor42",
+      "position": [
+        11,
+        12
+      ],
+      "trigger": "cardKeyDoor4"
+    },
+    {
+      "name": "cardKeyDoor43",
+      "position": [
+        10,
+        13
+      ],
+      "trigger": "cardKeyDoor4"
+    },
+    {
+      "name": "cardKeyDoor44",
+      "position": [
+        11,
+        13
+      ],
+      "trigger": "cardKeyDoor4"
+    }
+  ],
+  "npcs": [
+    {
+      "id": 1,
+      "talk": "talkNurse"
+    },
+    {
+      "id": 2,
+      "talk": "talkRocket1",
+      "toggleId": "SILPH_CO_9F_OBJ_2"
+    },
+    {
+      "id": 3,
+      "talk": "talkScientist",
+      "toggleId": "SILPH_CO_9F_OBJ_3"
+    },
+    {
+      "id": 4,
+      "talk": "talkRocket2",
+      "toggleId": "SILPH_CO_9F_OBJ_4"
+    }
+  ],
+  "onLoad": "SilphCo9FOnLoad",
+  "signs": []
+}

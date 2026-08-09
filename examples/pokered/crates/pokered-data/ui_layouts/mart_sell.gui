@@ -1,0 +1,20 @@
+screen MartSell {
+  panel {
+    rect = {tx: 0, ty: 0, tw: 18, th: 15}
+    style = "default"
+  }
+  flex_list("{sell_items}") {
+    rect = {tx: 1, ty: 1, tw: 16, th: 13}
+    item_layout = [{field: "name", width: 13, align: "left"}, {field: "qty", width: 3, align: "right", prefix: "x"}]
+    padding = {top: 0, left: 1}
+    gap = 1
+    cursor = {tile: 223, position: "left"}
+  }
+  panel {
+    rect = {tx: 0, ty: 15, tw: 18, th: 3}
+    style = "default"
+  }
+  text(@t("MONEY ${balance}", "金钱 ${balance}")) {
+    rect = {tx: 1, ty: 16, tw: 16, th: 1}
+  }
+}

@@ -1,0 +1,173 @@
+// FuchsiaGym — translated from the original disassembly (scripts/FuchsiaGym.asm,
+// text/FuchsiaGym.asm + FuchsiaGym_2.asm) to the real Game DSL API surface.
+// Gym pattern: leader KOGA is talk-driven (map.json isTrainer = false) so the
+// script owns the battle -> SOULBADGE -> TM06 (TOXIC) reward; the six Rocker gym
+// trainers are sight-engaged by the runtime, so their .scene handlers are
+// dialogue only. The "invisible walls" maze is pure map collision data (the
+// blockset matches the original byte-for-byte), so it needs no script API.
+
+game_scene FuchsiaGym {
+  // The "invisible walls" maze is implemented by the map's collision data (blk
+  // matches the original byte-for-byte): the path to KOGA stays blocked until
+  // the player walks through the gaps, exactly like the original. No script API
+  // is needed here. KOGA battle / SOULBADGE / TM06 are handled in talkKoga.
+  @load {
+  }
+
+  // ── KOGA, the Gym Leader (npc 1) — talk-driven battle + reward ───────────
+  @storyline("talkKoga") {
+    @trigger(map = "FuchsiaGym", npc = 1)
+    @if (getFlag("EVENT_BEAT_KOGA")) {
+      @if (!getFlag("EVENT_GOT_TM06")) {
+        // Beat KOGA previously but had no room for the TM — give it now.
+        @speaker("") {
+          @t("Now that you have the\nSOULBADGE, the DEFENSE of\nyour POKeMON increases!\n\nIt also lets you SURF\noutside of battle!\n\nAh! Take this too!", "现在你拥有了灵魂徽章，你的宝\n可梦的防御力会提升！\n\n而且还可以在战斗外使用冲浪！\n\n啊！这个也拿去吧！")
+        }
+        given = giveItem("TM06", 1)
+        @if (given) {
+          setFlag("EVENT_GOT_TM06")
+          @speaker("") { @t("<PLAYER> received TM06!", "<PLAYER>得到了 TM06！") }
+          @speaker("") {
+            @t("TM06 contains TOXIC!\n\nIt is a secret technique\nover 400 years old!", "TM06是剧毒！\n\n这是流传了 400多年的秘传招\n式！")
+          }
+        } @else {
+          @speaker("") { @t("Make space for this, child!", "小孩子，腾出地方来！") }
+        }
+      } @else {
+        @speaker("") {
+          @t("When afflicted by TOXIC,\nPOKeMON suffer more and more\nas battle progresses!\n\nIt will surely terrorize\nfoes!", "中了剧毒的宝可梦随着战斗推\n进，受伤会越来越深！\n\n它一定会让敌人胆寒！")
+        }
+      }
+    } @else {
+      @speaker("") {
+        @t("KOGA: Fwahahaha!\n\nA mere child like you dares\nto challenge me?\n\nVery well, I shall show you\ntrue terror as a ninja\nmaster!\n\nYou shall feel the despair\nof poison and sleep\ntechniques!", "阿桔：哈哈哈！\n\n像你这样的小孩子，竟敢挑战\n我？\n\n好吧，就让你见识见识忍者大师\n的恐怖！\n\n让你尝尝中毒与催眠招式的绝望\n吧！")
+      }
+      result = startBattle("OPP_KOGA1")
+      @if (result == "win") {
+        @speaker("") {
+          @t("Humph! You have proven your\nworth!\n\nHere! Take the SOULBADGE!", "哼！你证明了自己的实力！\n\n给你！收下灵魂徽章吧！")
+        }
+        giveBadge("SOULBADGE")
+        setFlag("EVENT_BEAT_KOGA")
+        @speaker("") {
+          @t("Now that you have the\nSOULBADGE, the DEFENSE of\nyour POKeMON increases!\n\nIt also lets you SURF\noutside of battle!\n\nAh! Take this too!", "现在你拥有了灵魂徽章，你的宝\n可梦的防御力会提升！\n\n而且还可以在战斗外使用冲浪！\n\n啊！这个也拿去吧！")
+        }
+        given = giveItem("TM06", 1)
+        @if (given) {
+          setFlag("EVENT_GOT_TM06")
+          @speaker("") { @t("<PLAYER> received TM06!", "<PLAYER>得到了 TM06！") }
+          @speaker("") {
+            @t("TM06 contains TOXIC!\n\nIt is a secret technique\nover 400 years old!", "TM06是剧毒！\n\n这是流传了 400多年的秘传招\n式！")
+          }
+        } @else {
+          @speaker("") { @t("Make space for this, child!", "小孩子，腾出地方来！") }
+        }
+        // Deactivate the gym trainers (original SetEventRange in Koga's post-battle).
+        setFlag("EVENT_BEAT_FUCHSIA_GYM_TRAINER_0")
+        setFlag("EVENT_BEAT_FUCHSIA_GYM_TRAINER_1")
+        setFlag("EVENT_BEAT_FUCHSIA_GYM_TRAINER_2")
+        setFlag("EVENT_BEAT_FUCHSIA_GYM_TRAINER_3")
+        setFlag("EVENT_BEAT_FUCHSIA_GYM_TRAINER_4")
+        setFlag("EVENT_BEAT_FUCHSIA_GYM_TRAINER_5")
+      }
+    }
+  }
+
+  // ── Rocker 1 (npc 2) — sight-engaged by the runtime; dialogue only ───────
+  @storyline("talkRocker1") {
+    @trigger(map = "FuchsiaGym", npc = 2)
+    @if (getFlag("EVENT_BEAT_FUCHSIA_GYM_TRAINER_0")) {
+      @speaker("") {
+        @t("So, you mix brawn with\nbrains? Good strategy!", "原来你是智勇双全？好策略！")
+      }
+    } @else {
+      @speaker("") {
+        @t("Strength isn't the key for\nPOKeMON!\n\nIt's strategy!\n\nI'll show you how strategy\ncan beat brute strength!", "对宝可梦来说力量不是关键！\n\n关键是策略！\n\n我来让你见识策略如何击败蛮\n力！")
+      }
+    }
+  }
+
+  // ── Rocker 2 (npc 3) — sight-engaged by the runtime; dialogue only ───────
+  @storyline("talkRocker2") {
+    @trigger(map = "FuchsiaGym", npc = 3)
+    @if (getFlag("EVENT_BEAT_FUCHSIA_GYM_TRAINER_1")) {
+      @speaker("") {
+        @t("I will keep on training\nunder KOGA, my ninja master!", "我会继续在忍者师父阿桔手下训\n练！")
+      }
+    } @else {
+      @speaker("") {
+        @t("I wanted to become a ninja,\nso I joined this GYM!", "我想成为忍者，所以加入了这个\n道馆！")
+      }
+    }
+  }
+
+  // ── Rocker 3 (npc 4) — sight-engaged by the runtime; dialogue only ───────
+  @storyline("talkRocker3") {
+    @trigger(map = "FuchsiaGym", npc = 4)
+    @if (getFlag("EVENT_BEAT_FUCHSIA_GYM_TRAINER_2")) {
+      @speaker("") {
+        @t("I like poison and sleep\ntechniques, as they linger\nafter battle!", "我喜欢毒和催眠招式，它们在战\n斗后仍会持续！")
+      }
+    } @else {
+      @speaker("") {
+        @t("Let's see you beat my\nspecial techniques!", "看你怎么打败我的特殊招式！")
+      }
+    }
+  }
+
+  // ── Rocker 4 (npc 5) — sight-engaged by the runtime; dialogue only ───────
+  @storyline("talkRocker4") {
+    @trigger(map = "FuchsiaGym", npc = 5)
+    @if (getFlag("EVENT_BEAT_FUCHSIA_GYM_TRAINER_3")) {
+      @speaker("") {
+        @t("You impressed me! Here's a\nhint!\n\nLook very closely for gaps\nin the invisible walls!", "你让我印象深刻！给你个提示！\n\n仔细观察隐形墙壁上的空隙！")
+      }
+    } @else {
+      @speaker("") {
+        @t("Stop right there!\n\nOur invisible walls have you\nfrustrated?", "站住！\n\n我们的隐形墙壁让你很困扰吧？")
+      }
+    }
+  }
+
+  // ── Rocker 5 (npc 6) — sight-engaged by the runtime; dialogue only ───────
+  @storyline("talkRocker5") {
+    @trigger(map = "FuchsiaGym", npc = 6)
+    @if (getFlag("EVENT_BEAT_FUCHSIA_GYM_TRAINER_4")) {
+      @speaker("") {
+        @t("I still have much to learn!", "我还有很多要学的！")
+      }
+    } @else {
+      @speaker("") {
+        @t("I also study the way of the\nninja with master KOGA!\n\nNinja have a long history of\nusing animals!", "我也在和师父阿桔一起学习忍者\n之道！\n\n忍者自古以来就有使用动物的历\n史！")
+      }
+    }
+  }
+
+  // ── Rocker 6 (npc 7) — sight-engaged by the runtime; dialogue only ───────
+  @storyline("talkRocker6") {
+    @trigger(map = "FuchsiaGym", npc = 7)
+    @if (getFlag("EVENT_BEAT_FUCHSIA_GYM_TRAINER_5")) {
+      @speaker("") {
+        @t("Where there is light, there\nis shadow!\n\nLight and shadow! Which do\nyou choose?", "有光的地方就有影子！\n\n光与影！你会选择哪一个？")
+      }
+    } @else {
+      @speaker("") {
+        @t("Master KOGA comes from a\nlong line of ninjas!\n\nWhat did you descend from?", "阿桔师父出身于忍者世家！\n\n你又是从哪里来的？")
+      }
+    }
+  }
+
+  // ── Gym guide (npc 8) ────────────────────────────────────────────────────
+  @storyline("talkGymGuide") {
+    @trigger(map = "FuchsiaGym", npc = 8)
+    @if (getFlag("EVENT_BEAT_KOGA")) {
+      @speaker("") {
+        @t("It's amazing how ninja can\nterrify even now!", "忍者至今仍能令人畏惧，真是厉\n害！")
+      }
+    } @else {
+      @speaker("") {
+        @t("Yo! Champ in making!\n\nFUCHSIA GYM is riddled with\ninvisible walls!\n\nKOGA might appear close, but\nhe's blocked off!\n\nYou have to find gaps in the\nwalls to reach him!", "哟！未来的冠军！\n\n浅红道馆里布满了隐形墙壁！\n\n阿桔看起来很近，但被挡住了去\n路！\n\n你得找到墙壁的空隙才能接近\n他！")
+      }
+    }
+  }
+}

@@ -1,0 +1,48 @@
+// Route7Gate — translated from the original disassembly (scripts/Route7Gate.asm,
+// text/SaffronGates.asm) to the real Game DSL API surface. This is a Saffron City
+// gate guard (the west/Route 7 side): the guard blocks the road into Saffron until
+// you give him a drink. The original scans the bag via RemoveGuardDrink
+// (FRESH WATER / SODA POP / LEMONADE, in that priority) and sets the
+// GAVE_SAFFRON_GUARDS_DRINK status bit; we approximate with hasItem/takeItem + an
+// EVENT flag, and approximate the forced "push the player back left" with movePlayer.
+
+game_scene Route7Gate {
+  // ── Saffron gate guard (npc 1) ─────────────────────────────────────────
+  @storyline("talkGuard") {
+    @trigger(map = "Route7Gate", npc = 1)
+    @if (getFlag("EVENT_GAVE_SAFFRON_GUARDS_DRINK")) {
+      // Already bribed — he just thanks you and lets you pass freely.
+      @speaker("") {
+        @t("Hi, thanks for the cool\ndrinks!", "嗨，谢谢你的冰凉饮料！")
+      }
+    } @else {
+      @if (hasItem("FRESH_WATER") || hasItem("SODA_POP") || hasItem("LEMONADE")) {
+        // Hand over one drink (priority: FRESH WATER -> SODA POP -> LEMONADE).
+        @speaker("") {
+          @t("Whoa, boy! I'm parched! ...\nHuh? I can have this drink?\nGee, thanks!", "哇，小子！我渴死了！……嗯？\n我可以喝这饮料？哎呀，谢谢！")
+        }
+        @if (hasItem("FRESH_WATER")) {
+          takeItem("FRESH_WATER", 1)
+        } @else {
+          @if (hasItem("SODA_POP")) {
+            takeItem("SODA_POP", 1)
+          } @else {
+            takeItem("LEMONADE", 1)
+          }
+        }
+        setFlag("EVENT_GAVE_SAFFRON_GUARDS_DRINK")
+        @speaker("") {
+          @t("... Glug glug... ... Gulp...\nIf you want to go to SAFFRON\nCITY... ... You can go on\nthrough. I'll share this\nwith the other guards!", "……咕嘟咕嘟…………咕咚……\n如果你想去金黄市…………你可\n以过去了。我会和其他守卫分享\n这饮料！")
+        }
+      } @else {
+        // No drink — he turns you away and shoves you back into the gate.
+        @speaker("") {
+          @t("I'm on guard duty. Gee, I'm\nthirsty, though!\n\nOh wait there, the road's\nclosed.", "我在站岗。哎呀，真渴啊！\n\n哦等等，这条路不通。")
+        }
+        // Original simulates a forced LEFT press to push the player back into the
+        // gate (from the doorway coords 3,3 / 3,4). Approximate with movePlayer.
+        movePlayerRelative([[-1, 0]])
+      }
+    }
+  }
+}

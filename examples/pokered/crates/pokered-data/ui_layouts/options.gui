@@ -1,0 +1,42 @@
+screen Options {
+  panel {
+    rect = {tx: 0, ty: 0, tw: 20, th: 5}
+    style = "default"
+  }
+  text(@t("TEXT SPEED", "文字速度")) {
+    rect = {tx: 1, ty: 1, tw: 16, th: 1}
+  }
+  text(@t(" FAST  MEDIUM SLOW", " 快  中  慢")) {
+    rect = {tx: 1, ty: 3, tw: 18, th: 1}
+  }
+  panel {
+    rect = {tx: 0, ty: 5, tw: 20, th: 5}
+    style = "default"
+  }
+  text(@t("BATTLE ANIMATION", "战斗动画")) {
+    rect = {tx: 1, ty: 6, tw: 16, th: 1}
+  }
+  text(@t(" ON       OFF", " 开       关")) {
+    rect = {tx: 1, ty: 8, tw: 18, th: 1}
+  }
+  panel {
+    rect = {tx: 0, ty: 10, tw: 20, th: 5}
+    style = "default"
+  }
+  text(@t("BATTLE STYLE", "战斗模式")) {
+    rect = {tx: 1, ty: 11, tw: 16, th: 1}
+  }
+  text(@t(" SHIFT    SET", " 替换    固定")) {
+    rect = {tx: 1, ty: 13, tw: 18, th: 1}
+  }
+  text(@t("CANCEL", "取消")) {
+    rect = {tx: 2, ty: 16, tw: 8, th: 1}
+  }
+  // Single control cursor: a ▶ on the active row only, at the selected
+  // option's x-position (bound from the menu state). Positions
+  // ({rN_tx}/{rN_ty}) are computed by the adapter.
+  cursor { rect = {tx: "{r0_tx}", ty: "{r0_ty}", tw: 1, th: 1} glyph = "▶" visible = "{r0_active}" }
+  cursor { rect = {tx: "{r1_tx}", ty: "{r1_ty}", tw: 1, th: 1} glyph = "▶" visible = "{r1_active}" }
+  cursor { rect = {tx: "{r2_tx}", ty: "{r2_ty}", tw: 1, th: 1} glyph = "▶" visible = "{r2_active}" }
+  cursor { rect = {tx: "{r3_tx}", ty: "{r3_ty}", tw: 1, th: 1} glyph = "▶" visible = "{r3_active}" }
+}

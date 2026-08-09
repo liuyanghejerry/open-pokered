@@ -1,0 +1,46 @@
+{
+ "$schema": "../../schemas/script_config.schema.json",
+ "coordEvents": [
+  {
+   "name": "gymDoorLocked",
+   "position": [
+    18,
+    4
+   ],
+   "trigger": "coordGymDoorLocked"
+  }
+ ],
+ "npcs": [
+  {
+   "id": 1,
+   "talk": "talkGirl"
+  },
+  {
+   "id": 2,
+   "talk": "talkGambler"
+  }
+ ],
+ "signs": [
+  {
+   "id": 1,
+   "talk": "signTown"
+  },
+  {
+   "id": 2,
+   "talk": "signMart"
+  },
+  {
+   "id": 3,
+   "talk": "signPokecenter"
+  },
+  {
+   "id": 4,
+   "talk": "signPokemonLab"
+  },
+  {
+   "id": 5,
+   "talk": "signGym"
+  }
+ ],
+ "onLoad": "CinnabarIslandOnLoad"
+}

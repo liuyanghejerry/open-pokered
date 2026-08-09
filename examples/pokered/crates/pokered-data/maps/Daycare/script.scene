@@ -1,0 +1,85 @@
+// Daycare — translated from the original disassembly (scripts/Daycare.asm,
+// text/Daycare.asm + Daycare_2.asm) to the real Game DSL API surface.
+//
+// The Day Care Man raises one party POKeMON off-party: deposit it (removed
+// from the party, gains 1 EXP per overworld step), then withdraw it later at
+// its grown level for a fee of ¥100 * (levels grown + 1). This is now a real
+// mechanic backed by the engine:
+//   • depositDaycare(index)  — MoveMon PARTY_TO_DAYCARE (removes the mon)
+//   • withdrawDaycare()      — MoveMon DAYCARE_TO_PARTY (re-derives level/
+//                              stats/moves, restores HP)
+//   • isDaycareInUse()       — wDayCareInUse
+//   • getDaycareMonName()    — deposited mon's nickname/species
+//   • getDaycareLevelsGrown()/getDaycareCost() — the growth + fee math
+//   • getPartyCount()/getPartyMonName(i)/partyMonKnowsHm(i) — party queries
+//
+// The state persists in the save's day-care box struct (game_data.daycare),
+// so it survives save/load. Deposits reject a mon that knows an HM move and
+// the player's last POKeMON, matching KnowsHMMove / wPartyCount==1 in the asm.
+
+game_scene Daycare {
+  // ── Day Care Man / Gentleman (npc 1) ───────────────────────────────────
+  @storyline("talkGentleman") {
+    @trigger(map = "Daycare", npc = 1)
+    @if (isDaycareInUse()) {
+      // A POKeMON is deposited: report its growth, then offer to return it.
+      @if (getDaycareLevelsGrown() == 0) {
+        showText(@t("Back already? Your ", "这么快就回来？你的") + getDaycareMonName() + @t(" needs some more time with\nme.", "还需要和我多待一段时间。"))
+      } @else {
+        showText(@t("Your ", "你的") + getDaycareMonName() + @t(" has grown a lot!\n\nBy level, it's grown by ", "长大了不少！\n\n等级提升了") + getDaycareLevelsGrown() + @t("!\n\nAren't I great?", "！\n\n我很厉害吧？"))
+      }
+      @if (getPartyCount() >= 6) {
+        // No party room to take the mon back (original .leaveMonInDayCare).
+        @speaker("") { @t("You have no room for this\nPOKeMON!", "你没有地方放这只宝可梦！") }
+      } @else {
+        showText(@t("You owe me ¥", "你要付我¥") + getDaycareCost() + @t(" for the return of this\nPOKeMON.", "才能领回这只宝可梦。"))
+        @choice {
+          @option(@t("YES", "是")) {
+            @if (hasMoney(getDaycareCost())) {
+              takeMoney(getDaycareCost())
+              // Capture the name before withdrawal clears the day-care box.
+              name = getDaycareMonName()
+              withdrawDaycare()
+              @speaker("") { @t("Thank you! Here's your\nPOKeMON!", "谢谢你！这是你的宝可梦！") }
+              showText(@t("<PLAYER> got ", "<PLAYER>把") + name + @t(" back!", "领回来了！"))
+            } @else {
+              @speaker("") { @t("Hey, you don't have enough\n¥!", "喂，你带的钱不够啊！") }
+            }
+          }
+          @option(@t("NO", "否")) {
+            @speaker("") { @t("All right then, come again.", "那好吧，下次再来吧。") }
+          }
+        }
+      }
+    } @else {
+      // Nothing deposited yet: offer to raise one of the player's POKeMON.
+      @speaker("") {
+        @t("I run a DAYCARE. Would you\nlike me to raise one of your\nPOKeMON?", "我经营宝可梦托儿所。要不要我\n帮你培育一只宝可梦？")
+      }
+      @choice {
+        @option(@t("YES", "是")) {
+          @if (getPartyCount() <= 1) {
+            // Can't deposit your last POKeMON (original wPartyCount==1 guard).
+            @speaker("") { @t("You only have one POKeMON\nwith you.", "你身边只有一只宝可梦。") }
+          } @else {
+            @speaker("") { @t("Which POKeMON should I\nraise?", "你想让我培育哪只宝可梦？") }
+            slot = choosePartyPokemon()
+            @if (slot >= 0) {
+              @if (partyMonKnowsHm(slot)) {
+                // KnowsHMMove rejection.
+                @speaker("") { @t("I can't accept a POKeMON\nthat knows an HM move.", "我不能收会秘传招式的宝可梦。") }
+              } @else {
+                showText(@t("Fine, I'll look after ", "好的，我会帮你照顾") + getPartyMonName(slot) + @t(" for a while.", "一段时间。"))
+                depositDaycare(slot)
+                @speaker("") { @t("Come see me in a while.", "过一会儿再来看我。") }
+              }
+            }
+          }
+        }
+        @option(@t("NO", "否")) {
+          @speaker("") { @t("All right then, come again.", "那好吧，下次再来吧。") }
+        }
+      }
+    }
+  }
+}

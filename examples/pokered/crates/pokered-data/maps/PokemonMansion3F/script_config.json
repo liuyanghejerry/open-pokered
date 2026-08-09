@@ -1,0 +1,63 @@
+{
+  "$schema": "../../schemas/script_config.schema.json",
+  "coordEvents": [
+    {
+      "name": "secretSwitch",
+      "position": [
+        10,
+        5
+      ],
+      "trigger": "secretSwitch"
+    },
+    {
+      "name": "hole1",
+      "position": [
+        16,
+        14
+      ],
+      "trigger": "coordHole"
+    },
+    {
+      "name": "hole2",
+      "position": [
+        17,
+        14
+      ],
+      "trigger": "coordHole"
+    },
+    {
+      "name": "hole3",
+      "position": [
+        19,
+        14
+      ],
+      "trigger": "coordHole"
+    }
+  ],
+  "npcs": [
+    {
+      "id": 1,
+      "talk": "talkSuperNerd"
+    },
+    {
+      "id": 2,
+      "talk": "talkScientist"
+    },
+    {
+      "id": 3,
+      "talk": "itemMaxPotion",
+      "toggleId": "POKEMON_MANSION_3F_OBJ_3"
+    },
+    {
+      "id": 4,
+      "talk": "itemIron",
+      "toggleId": "POKEMON_MANSION_3F_OBJ_4"
+    },
+    {
+      "id": 5,
+      "talk": "talkDiary"
+    }
+  ],
+  "onLoad": "PokemonMansion3FOnLoad",
+  "signs": []
+}

@@ -1,0 +1,59 @@
+{
+  "$schema": "../../schemas/map.schema.json",
+  "id": 247,
+  "name": "AgathasRoom",
+  "header": {
+    "tileset": "Cemetery",
+    "music": "PokemonTower",
+    "connectionFlags": 0,
+    "width": 5,
+    "height": 6,
+    "borderBlock": 0
+  },
+  "connections": {},
+  "warps": [
+    {
+      "x": 4,
+      "y": 11,
+      "destMap": "BrunosRoom",
+      "destWarpId": 2
+    },
+    {
+      "x": 5,
+      "y": 11,
+      "destMap": "BrunosRoom",
+      "destWarpId": 3
+    },
+    {
+      "x": 4,
+      "y": 0,
+      "destMap": "LancesRoom",
+      "destWarpId": 0
+    },
+    {
+      "x": 5,
+      "y": 0,
+      "destMap": "LancesRoom",
+      "destWarpId": 0
+    }
+  ],
+  "npcs": [
+    {
+      "spriteId": 57,
+      "spriteName": "Agatha",
+      "x": 5,
+      "y": 2,
+      "movement": "Stationary",
+      "facing": "Down",
+      "range": 0,
+      "textId": 1,
+      "isTrainer": true,
+      "trainerClass": "Agatha",
+      "trainerSet": 1,
+      "endBattleText": "Oh ho!\nYou're something\nspecial, child!"
+    }
+  ],
+  "signs": [],
+  "text": {},
+  "wild": null
+}

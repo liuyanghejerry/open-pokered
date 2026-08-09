@@ -1,0 +1,25 @@
+screen Mart {
+  panel {
+    rect = {tx: 0, ty: 0, tw: 7, th: 8}
+    style = "default"
+  }
+  panel {
+    rect = {tx: 6, ty: 0, tw: 14, th: 3}
+    style = "default"
+  }
+  text(@t("BUY", "购买")) {
+    rect = {tx: 2, ty: 2, tw: 4, th: 1}
+  }
+  text(@t("SELL", "出售")) {
+    rect = {tx: 2, ty: 4, tw: 4, th: 1}
+  }
+  text(@t("QUIT", "退出")) {
+    rect = {tx: 2, ty: 6, tw: 4, th: 1}
+  }
+  tile(223) {
+    rect = {tx: 1, ty: 2, tw: 1, th: 1}
+  }
+  text(@t("MONEY ${balance}", "金钱 ${balance}")) {
+    rect = {tx: 7, ty: 1, tw: 12, th: 1}
+  }
+}

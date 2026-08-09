@@ -1,0 +1,26 @@
+// MrPsychicsHouse — translated from the original disassembly
+// (scripts/MrPsychicsHouse.asm, text/MrPsychicsHouse.asm) to the real Game DSL
+// API surface. Single NPC (Mr. Psychic) gives the player TM29 (PSYCHIC) once.
+
+game_scene MrPsychicsHouse {
+  // ── Mr. Psychic (npc 1) — gives TM29 (PSYCHIC) ─────────────────────────
+  @storyline("talkMrPsychic") {
+    @trigger(map = "MrPsychicsHouse", npc = 1)
+    @if (getFlag("EVENT_GOT_TM29")) {
+      @speaker("") {
+        @t("TM29 is PSYCHIC!\n\nIt can lower the target's\nSPECIAL abilities.", "TM29是精神强念！\n\n它能降低对手的特殊能力。")
+      }
+    } @else {
+      @speaker("") {
+        @t("...Wait! Don't say a word!\n\nYou wanted this!", "……等等！别说话！\n\n你想要这个吧！")
+      }
+      given = giveItem("TM29", 1)
+      @if (given) {
+        setFlag("EVENT_GOT_TM29")
+        @speaker("") { @t("<PLAYER> received TM29!", "<PLAYER>得到了 TM29！") }
+      } @else {
+        @speaker("") { @t("Where do you plan to put\nthis?", "你打算把它放在哪里？") }
+      }
+    }
+  }
+}

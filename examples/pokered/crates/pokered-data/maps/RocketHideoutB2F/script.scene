@@ -1,0 +1,87 @@
+// RocketHideoutB2F — translated from the original disassembly
+// (scripts/RocketHideoutB2F.asm, text/RocketHideoutB2F.asm) to the real Game DSL
+// API surface. This basement floor has: one sight-engaged Rocket grunt (the
+// runtime drives that battle, so the .scene handler is dialogue only — beaten vs.
+// pre-battle taunt) and four ground items in PokeBalls (giveItem + a per-item
+// "got" flag guard + hideObject). The original DefaultScript drives the arrow-tile
+// spinner maze; the engine's spinner-tile forced movement (update.rs) handles
+// sliding the player along arrow tiles, so no scene logic is needed.
+
+game_scene RocketHideoutB2F {
+  // ── On-enter spinner maze ───────────────────────────────────────────────
+  // The original RocketHideoutB2FDefaultScript reads RocketHideout2ArrowTilePlayer-
+  // Movement: stepping onto an arrow tile sets BIT_SPINNING, ignores joypad input,
+  // and force-walks the player along a fixed PAD direction list until they land on
+  // a non-arrow tile (then re-checks for fighting trainers). The engine's spinner
+  // tiles reproduce this (standing on an arrow tile slides the player along it,
+  // rotating per SPINNER_FACING_CYCLE), so the maze works without scene logic.
+  @load {
+  }
+
+  // ── Rocket grunt (npc 1) — sight-engaged trainer; dialogue only ─────────
+  // Original TalkToTrainer header: EVENT_BEAT_ROCKET_HIDEOUT_2_TRAINER_0.
+  @storyline("talkRocket") {
+    @trigger(map = "RocketHideoutB2F", npc = 1)
+    @if (getFlag("EVENT_BEAT_ROCKET_HIDEOUT_2_TRAINER_0")) {
+      @speaker("") {
+        @t("The TEAM ROCKET HQ has 4\nbasement floors. Can you\nreach the BOSS?", "火箭队总部有 4个地下楼层。你\n能到达老大那里吗？")
+      }
+    } @else {
+      @speaker("") {
+        @t("BOSS said you can see GHOSTs\nwith the SILPH SCOPE!", "老大说用西尔佛透视镜就能看见\n幽灵！")
+      }
+    }
+  }
+
+  // ── Ground item: MOON STONE (npc 2) ─────────────────────────────────────
+  @storyline("itemMoonStone") {
+    @trigger(map = "RocketHideoutB2F", npc = 2, toggle = "ROCKET_HIDEOUT_B2F_OBJ_2")
+    @if (getFlag("EVENT_GOT_MOON_STONE_ROCKET_HIDEOUT_B2F")) {
+      @speaker("") { @t("The item ball is empty.", "这个精灵球是空的。") }
+    } @else {
+      giveItem("MOON_STONE", 1)
+      setFlag("EVENT_GOT_MOON_STONE_ROCKET_HIDEOUT_B2F")
+      hideObject("ROCKET_HIDEOUT_B2F_OBJ_2")
+      @speaker("") { @t("<PLAYER> found MOON_STONE!", "<PLAYER>发现了月之石！") }
+    }
+  }
+
+  // ── Ground item: NUGGET (npc 3) ─────────────────────────────────────────
+  @storyline("itemNugget") {
+    @trigger(map = "RocketHideoutB2F", npc = 3, toggle = "ROCKET_HIDEOUT_B2F_OBJ_3")
+    @if (getFlag("EVENT_GOT_NUGGET_ROCKET_HIDEOUT_B2F")) {
+      @speaker("") { @t("The item ball is empty.", "这个精灵球是空的。") }
+    } @else {
+      giveItem("NUGGET", 1)
+      setFlag("EVENT_GOT_NUGGET_ROCKET_HIDEOUT_B2F")
+      hideObject("ROCKET_HIDEOUT_B2F_OBJ_3")
+      @speaker("") { @t("<PLAYER> found NUGGET!", "<PLAYER>发现了金珠！") }
+    }
+  }
+
+  // ── Ground item: TM07 / HORN DRILL (npc 4) ──────────────────────────────
+  @storyline("itemTmHornDrill") {
+    @trigger(map = "RocketHideoutB2F", npc = 4, toggle = "ROCKET_HIDEOUT_B2F_OBJ_4")
+    @if (getFlag("EVENT_GOT_TM07_ROCKET_HIDEOUT_B2F")) {
+      @speaker("") { @t("The item ball is empty.", "这个精灵球是空的。") }
+    } @else {
+      giveItem("TM07", 1)
+      setFlag("EVENT_GOT_TM07_ROCKET_HIDEOUT_B2F")
+      hideObject("ROCKET_HIDEOUT_B2F_OBJ_4")
+      @speaker("") { @t("<PLAYER> found TM07!", "<PLAYER>发现了 TM07！") }
+    }
+  }
+
+  // ── Ground item: SUPER POTION (npc 5) ───────────────────────────────────
+  @storyline("itemSuperPotion") {
+    @trigger(map = "RocketHideoutB2F", npc = 5, toggle = "ROCKET_HIDEOUT_B2F_OBJ_5")
+    @if (getFlag("EVENT_GOT_SUPER_POTION_ROCKET_HIDEOUT_B2F")) {
+      @speaker("") { @t("The item ball is empty.", "这个精灵球是空的。") }
+    } @else {
+      giveItem("SUPER_POTION", 1)
+      setFlag("EVENT_GOT_SUPER_POTION_ROCKET_HIDEOUT_B2F")
+      hideObject("ROCKET_HIDEOUT_B2F_OBJ_5")
+      @speaker("") { @t("<PLAYER> found SUPER_POTION!", "<PLAYER>发现了好伤药！") }
+    }
+  }
+}

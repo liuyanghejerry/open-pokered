@@ -1,0 +1,59 @@
+// BrunosRoom — translated from the original disassembly (scripts/BrunosRoom.asm,
+// text/BrunosRoom.asm) to the real Game DSL API surface. Elite Four room: Bruno is
+// a sight-engaged trainer (map.json isTrainer = true), so the runtime drives the
+// battle and his talk handler is dialogue only. The on-enter cutscene auto-walks
+// the player up into the room once, and the room blocks the exit (a tile-swap with
+// no API yet) until Bruno is beaten — approximated below with a coord guard.
+
+game_scene BrunosRoom {
+  // ── On entry: auto-walk six steps up into the room (once) ───────────────
+  // Original: BrunoScriptWalkIntoRoom simulates PAD_UP x6, gated by
+  // EVENT_AUTOWALKED_INTO_BRUNOS_ROOM. The exit-block tile swap
+  // (BrunoShowOrHideExitBlock / ReplaceTileBlock) has no API — see the
+  // "don't run away" coord guard below for the gameplay-facing approximation.
+  @load {
+    @if (!getFlag("EVENT_AUTOWALKED_INTO_BRUNOS_ROOM")) {
+      setFlag("EVENT_AUTOWALKED_INTO_BRUNOS_ROOM")
+      movePlayerRelative([[0, -1], [0, -1], [0, -1], [0, -1], [0, -1], [0, -1]])
+    }
+    // Exit door tile-swap (BrunoShowOrHideExitBlock / ReplaceTileBlock).
+    // Original: CheckEvent EVENT_BEAT_BRUNOS_ROOM_TRAINER_0 → beaten = open
+    // block $5 (=5), not-beaten = closed block $24 (=36); lb bc, 0, 2 → Y=0, X=2.
+    // The map.blk already has the door closed, so on re-entry we only need to
+    // re-apply the OPEN block once Bruno has been beaten.
+    @if (getFlag("EVENT_BEAT_BRUNOS_ROOM_TRAINER_0")) {
+      replaceTileBlock(2, 0, 5)
+    }
+  }
+
+  // ── Exit guard: "Don't run away!" until Bruno is beaten ─────────────────
+  // Original BrunosRoomDefaultScript stops the player from stepping onto the
+  // exit tiles (4,10/5,10/4,11/5,11) and shoves them back up with the voice
+  // text until EVENT_BEAT_BRUNOS_ROOM_TRAINER_0 is set. Approximated as a coord
+  // trigger that shows the line and walks the player back up one tile.
+  @storyline("dontRunAway") {
+    @trigger(map = "BrunosRoom", name = "dontRunAway1")
+    @if (!getFlag("EVENT_BEAT_BRUNOS_ROOM_TRAINER_0")) {
+      @speaker("") { @t("Someone's voice: Don't run\naway!", "某人的声音：别想逃走！") }
+      movePlayer([[0, -1]])
+    }
+  }
+
+  // ── Bruno (npc 1) — sight-engaged by the runtime; dialogue only ─────────
+  @storyline("talkBruno") {
+    @trigger(map = "BrunosRoom", npc = 1)
+    @if (getFlag("EVENT_BEAT_BRUNOS_ROOM_TRAINER_0")) {
+      // Bruno is sight-engaged: the runtime sets the beaten flag after the
+      // battle. Re-open the exit door immediately (open block $5 = 5 at X=2,Y=0)
+      // so it's swapped without needing a map re-entry.
+      replaceTileBlock(2, 0, 5)
+      @speaker("") {
+        @t("My job is done! Go face your\nnext challenge!", "我的任务完成了！去迎接你的下\n一个挑战吧！")
+      }
+    } @else {
+      @speaker("") {
+        @t("I am BRUNO of the ELITE\nFOUR!\n\nThrough rigorous training,\npeople and POKeMON can\nbecome stronger!\n\nI've weight trained with my\nPOKeMON!\n\n<PLAYER>!\n\nWe will grind you down with\nour superior power!\n\nHoo hah!", "我是四天王希巴！\n\n通过严格的训练，人和宝可梦都\n能变得更强！\n\n我一直和我的宝可梦一起进行力\n量训练！\n\n<PLAYER>！\n\n我们会用强大的力量把你碾碎！\n\n呼哈！")
+      }
+    }
+  }
+}

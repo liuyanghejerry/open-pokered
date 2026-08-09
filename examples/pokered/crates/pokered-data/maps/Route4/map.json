@@ -1,0 +1,267 @@
+{
+  "$schema": "../../schemas/map.schema.json",
+  "id": 15,
+  "name": "Route4",
+  "header": {
+    "tileset": "Overworld",
+    "music": "Routes3",
+    "connectionFlags": 5,
+    "width": 45,
+    "height": 9,
+    "borderBlock": 44
+  },
+  "connections": {
+    "south": {
+      "targetMap": "Route3",
+      "offset": -25
+    },
+    "east": {
+      "targetMap": "CeruleanCity",
+      "offset": -4
+    }
+  },
+  "warps": [
+    {
+      "x": 11,
+      "y": 5,
+      "destMap": "MtMoonPokecenter",
+      "destWarpId": 0
+    },
+    {
+      "x": 18,
+      "y": 5,
+      "destMap": "MtMoon1F",
+      "destWarpId": 0
+    },
+    {
+      "x": 24,
+      "y": 5,
+      "destMap": "MtMoonB1F",
+      "destWarpId": 7
+    }
+  ],
+  "npcs": [
+    {
+      "spriteId": 6,
+      "spriteName": "CooltrainerF",
+      "x": 9,
+      "y": 8,
+      "movement": "Wander",
+      "facing": "Down",
+      "range": 0,
+      "textId": 1,
+      "isTrainer": false
+    },
+    {
+      "spriteId": 6,
+      "spriteName": "CooltrainerF",
+      "x": 63,
+      "y": 3,
+      "movement": "Stationary",
+      "facing": "Right",
+      "range": 2,
+      "textId": 2,
+      "isTrainer": true,
+      "trainerClass": "Lass",
+      "trainerSet": 4,
+      "endBattleText": "Oh! My cute\nmushroom POKeMON!"
+    },
+    {
+      "spriteId": 61,
+      "spriteName": "PokeBall",
+      "x": 57,
+      "y": 3,
+      "movement": "Stationary",
+      "facing": "Down",
+      "range": 0,
+      "textId": 3,
+      "isTrainer": false,
+      "itemId": 204
+    }
+  ],
+  "signs": [
+    {
+      "x": 12,
+      "y": 5,
+      "textId": 1
+    },
+    {
+      "x": 17,
+      "y": 7,
+      "textId": 2
+    },
+    {
+      "x": 27,
+      "y": 7,
+      "textId": 3
+    }
+  ],
+  "text": {
+    "npc": {
+      "1": [
+        {
+          "line1": "Ouch! I tripped",
+          "line2": "over a rocky"
+        },
+        {
+          "line1": "#MON, GEODUDE!",
+          "line2": ""
+        }
+      ],
+      "2": [
+        {
+          "line1": "I came to get my",
+          "line2": "mushroom #MON!"
+        }
+      ],
+      "2_Defeated": [
+        {
+          "line1": "Oh! My cute",
+          "line2": "mushroom #MON!"
+        }
+      ],
+      "2_AfterBattle": [
+        {
+          "line1": "There might not",
+          "line2": "be any more"
+        },
+        {
+          "line1": "mushrooms here.",
+          "line2": ""
+        },
+        {
+          "line1": "I think I got",
+          "line2": "them all."
+        }
+      ]
+    },
+    "sign": {
+      "1": [
+        {
+          "line1": "Heal Your #MON!",
+          "line2": "#MON CENTER"
+        }
+      ],
+      "2": [
+        {
+          "line1": "MT.MOON",
+          "line2": "Tunnel Entrance"
+        }
+      ],
+      "3": [
+        {
+          "line1": "ROUTE 4",
+          "line2": "MT.MOON -"
+        },
+        {
+          "line1": "CERULEAN CITY",
+          "line2": ""
+        }
+      ]
+    }
+  },
+  "wild": {
+    "red": {
+      "grass": {
+        "encounterRate": 20,
+        "mons": [
+          {
+            "level": 10,
+            "species": "Rattata"
+          },
+          {
+            "level": 10,
+            "species": "Spearow"
+          },
+          {
+            "level": 8,
+            "species": "Rattata"
+          },
+          {
+            "level": 6,
+            "species": "Ekans"
+          },
+          {
+            "level": 8,
+            "species": "Spearow"
+          },
+          {
+            "level": 10,
+            "species": "Ekans"
+          },
+          {
+            "level": 12,
+            "species": "Rattata"
+          },
+          {
+            "level": 12,
+            "species": "Spearow"
+          },
+          {
+            "level": 8,
+            "species": "Ekans"
+          },
+          {
+            "level": 12,
+            "species": "Ekans"
+          }
+        ]
+      },
+      "water": {
+        "encounterRate": 0,
+        "mons": []
+      }
+    },
+    "blue": {
+      "grass": {
+        "encounterRate": 20,
+        "mons": [
+          {
+            "level": 10,
+            "species": "Rattata"
+          },
+          {
+            "level": 10,
+            "species": "Spearow"
+          },
+          {
+            "level": 8,
+            "species": "Rattata"
+          },
+          {
+            "level": 6,
+            "species": "Sandshrew"
+          },
+          {
+            "level": 8,
+            "species": "Spearow"
+          },
+          {
+            "level": 10,
+            "species": "Sandshrew"
+          },
+          {
+            "level": 12,
+            "species": "Rattata"
+          },
+          {
+            "level": 12,
+            "species": "Spearow"
+          },
+          {
+            "level": 8,
+            "species": "Sandshrew"
+          },
+          {
+            "level": 12,
+            "species": "Sandshrew"
+          }
+        ]
+      },
+      "water": {
+        "encounterRate": 0,
+        "mons": []
+      }
+    }
+  }
+}

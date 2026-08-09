@@ -1,0 +1,112 @@
+// PokemonTower6F — translated from the original disassembly
+// (scripts/PokemonTower6F.asm, text/PokemonTower6F.asm) to the real Game DSL
+// API surface.
+//
+// Map content:
+//   - 3 sight-engaged Channeler trainers (npcs 1-3, isTrainer:true in map.json);
+//     the runtime drives their battles, so their .scene handlers are dialogue
+//     only (pre-battle taunt vs. after-battle line).
+//   - 2 ground items in PokeBalls: RARE_CANDY (npc 4) and X_ACCURACY (npc 5).
+//   - The Ghost Marowak: a coord-triggered scripted battle at the stairs to 7F.
+//     The original is a w*CurScript state machine (RESTLESS_SOUL/Marowak Lv 30)
+//     that starts the battle REGARDLESS of the SILPH_SCOPE — with the scope the
+//     ghost is unveiled (SILPH SCOPE text + MarowakAnim reveal) and fightable;
+//     without it the battle stays an unwinnable ghost fight (moves fail,
+//     "too scared to move", escape always allowed) and the player must return
+//     with the scope. On win it sets EVENT_BEAT_GHOST_MAROWAK, plays the
+//     Marowak cry and shows the "calmed" text. The encounter is implemented
+//     with startWildBattle("MAROWAK", 30): the battle layer derives the ghost /
+//     ghost-reveal state from the map + bag (see start_wild_battle), then the
+//     fight resolves once (on flee/lose the ghost stays and re-triggers at the
+//     stairs) and the faithful departed sequence runs. (The original also
+//     nudges the player one tile right on flee; that push is not reproduced.)
+
+game_scene PokemonTower6F {
+  // ── Channeler #1 (npc 1) — sight-engaged; dialogue only ──────────────────
+  @storyline("talkChanneler1") {
+    @trigger(map = "PokemonTower6F", npc = 1)
+    @if (getFlag("EVENT_BEAT_POKEMONTOWER_6_TRAINER_0")) {
+      @speaker("") { @t("I feel anemic and weak...", "我觉得贫血浑身无力……") }
+    } @else {
+      @speaker("") { @t("Give...me... blood...", "给我……血……") }
+    }
+  }
+
+  // ── Channeler #2 (npc 2) — sight-engaged; dialogue only ──────────────────
+  @storyline("talkChanneler2") {
+    @trigger(map = "PokemonTower6F", npc = 2)
+    @if (getFlag("EVENT_BEAT_POKEMONTOWER_6_TRAINER_1")) {
+      @speaker("") { @t("Hair didn't fall out! It was\nan evil spirit!", "头发没掉！是恶灵在作怪！") }
+    } @else {
+      @speaker("") { @t("Urff... Kwaah!", "唔……哇啊啊！") }
+    }
+  }
+
+  // ── Channeler #3 (npc 3) — sight-engaged; dialogue only ──────────────────
+  @storyline("talkChanneler3") {
+    @trigger(map = "PokemonTower6F", npc = 3)
+    @if (getFlag("EVENT_BEAT_POKEMONTOWER_6_TRAINER_2")) {
+      @speaker("") { @t("What's going on here?", "这里发生了什么事？") }
+    } @else {
+      @speaker("") { @t("Ke..ke...ke... ke..ke...ke!!", "嘿嘿嘿……嘿嘿嘿！！") }
+    }
+  }
+
+  // ── Ground item: RARE CANDY (npc 4) ──────────────────────────────────────
+  @storyline("itemRareCandy") {
+    @trigger(map = "PokemonTower6F", npc = 4, toggle = "POKEMON_TOWER_6F_OBJ_4")
+    @if (getFlag("EVENT_GOT_RARE_CANDY_POKEMON_TOWER_6F")) {
+      @speaker("") { @t("The item ball is empty.", "精灵球里是空的。") }
+    } @else {
+      giveItem("RARE_CANDY", 1)
+      setFlag("EVENT_GOT_RARE_CANDY_POKEMON_TOWER_6F")
+      hideObject("POKEMON_TOWER_6F_OBJ_4")
+      @speaker("") { @t("<PLAYER> found RARE_CANDY!", "<PLAYER>发现了神奇糖果！") }
+    }
+  }
+
+  // ── Ground item: X ACCURACY (npc 5) ──────────────────────────────────────
+  @storyline("itemXAccuracy") {
+    @trigger(map = "PokemonTower6F", npc = 5, toggle = "POKEMON_TOWER_6F_OBJ_5")
+    @if (getFlag("EVENT_GOT_X_ACCURACY_POKEMON_TOWER_6F")) {
+      @speaker("") { @t("The item ball is empty.", "精灵球里是空的。") }
+    } @else {
+      giveItem("X_ACCURACY", 1)
+      setFlag("EVENT_GOT_X_ACCURACY_POKEMON_TOWER_6F")
+      hideObject("POKEMON_TOWER_6F_OBJ_5")
+      @speaker("") { @t("<PLAYER> found X_ACCURACY!", "<PLAYER>发现了特攻强化！") }
+    }
+  }
+
+  // ── Ghost Marowak — coord-triggered scripted battle at the 7F stairs ──────
+  // Original: PokemonTower6FDefaultScript fires when the player stands on
+  // PokemonTower6FMarowakCoords (dbmapcoord 10,16) and EVENT_BEAT_GHOST_MAROWAK
+  // is clear: shows _PokemonTower6FBeGoneText then starts a battle vs
+  // RESTLESS_SOUL (= MAROWAK, constants/pokemon_constants.asm:209) Lv 30 —
+  // REGARDLESS of the SILPH_SCOPE (scripts/PokemonTower6F.asm:36-42). The
+  // scope only changes what the battle IS: with it, the SILPH SCOPE unveil
+  // sequence reveals a normal Marowak fight; without it, the battle stays a
+  // ghost battle (unidentified, uncatchable, "too scared to move", escape
+  // always allowed — see PrintBeginningBattleText/PrintGhostText). Both are
+  // derived in the battle layer from the tower map + bag, so the scene just
+  // starts the fight. On win the original sets the flag, prints "GHOST was
+  // CUBONE's mother", plays the Marowak cry, then "soul was calmed / departed".
+  @storyline("coordGhostMarowak") {
+    @trigger(map = "PokemonTower6F", name = "ghostMarowak")
+    @if (!getFlag("EVENT_BEAT_GHOST_MAROWAK")) {
+      @speaker("") { @t("Be gone... Intruders...", "离开……入侵者……") }
+      // Scripted wild battle vs the RESTLESS_SOUL (Marowak) Lv 30. On win/catch
+      // (only possible with the SILPH_SCOPE) the ghost is calmed; on flee/lose
+      // it stays and re-triggers at the stairs.
+      result = startWildBattle("MAROWAK", 30)
+      @if (result == "win" || result == "caught") {
+        setFlag("EVENT_BEAT_GHOST_MAROWAK")
+        @speaker("") { @t("The GHOST was the restless\nsoul of CUBONE's mother!", "这个幽灵是卡拉卡拉的母亲未安\n息的灵魂！") }
+        playCry("MAROWAK")
+        @speaker("") {
+          @t("The mother's soul was\ncalmed.\n\nIt departed to the\nafterlife!", "母亲的灵魂得到了安息。\n\n她去了另一个世界！")
+        }
+      }
+    }
+  }
+}

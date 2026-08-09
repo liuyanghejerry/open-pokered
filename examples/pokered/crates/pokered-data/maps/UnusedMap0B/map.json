@@ -1,0 +1,19 @@
+{
+  "$schema": "../../schemas/map.schema.json",
+  "id": 11,
+  "name": "UnusedMap0B",
+  "header": {
+    "tileset": "Overworld",
+    "music": "Cities1",
+    "connectionFlags": 0,
+    "width": 0,
+    "height": 0,
+    "borderBlock": 0
+  },
+  "connections": {},
+  "warps": [],
+  "npcs": [],
+  "signs": [],
+  "text": {},
+  "wild": null
+}

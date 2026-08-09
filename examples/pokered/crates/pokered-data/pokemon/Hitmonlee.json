@@ -1,0 +1,64 @@
+{
+  "$schema": "../schemas/pokemon.schema.json",
+  "species": "Hitmonlee",
+  "baseStats": {
+    "hp": 50,
+    "attack": 120,
+    "defense": 53,
+    "speed": 87,
+    "special": 35
+  },
+  "type1": "Fighting",
+  "type2": "Fighting",
+  "catchRate": 45,
+  "baseExp": 139,
+  "growthRate": "MediumFast",
+  "initialMoves": [
+    "DoubleKick",
+    "Meditate",
+    "None",
+    "None"
+  ],
+  "tmHmFlags": [
+    177,
+    3,
+    15,
+    192,
+    198,
+    8,
+    34
+  ],
+  "pokedex": {
+    "category": "KICKING",
+    "heightFeet": 4,
+    "heightInches": 11,
+    "weightDecipounds": 1100,
+    "flavorTextPages": [
+      "When in a hurry,\nits legs lengthen\nprogressively.",
+      "It runs smoothly\nwith extra long,\nloping strides"
+    ]
+  },
+  "evolutions": [],
+  "learnset": [
+    {
+      "level": 33,
+      "moveId": "RollingKick"
+    },
+    {
+      "level": 38,
+      "moveId": "JumpKick"
+    },
+    {
+      "level": 43,
+      "moveId": "FocusEnergy"
+    },
+    {
+      "level": 48,
+      "moveId": "HiJumpKick"
+    },
+    {
+      "level": 53,
+      "moveId": "MegaKick"
+    }
+  ]
+}

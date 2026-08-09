@@ -1,0 +1,34 @@
+screen BattleSafari {
+  // Safari battle menu: BALL / BAIT / ROCK / RUN (the FIGHT menu is replaced).
+  // Message box (left) + the 2×2 action box (right), matching battle_main.
+  panel {
+    rect = {tx: 0, ty: 12, tw: 20, th: 6}
+    style = "default"
+  }
+  panel {
+    rect = {tx: 8, ty: 12, tw: 12, th: 6}
+    style = "default"
+  }
+  text(@t("BALL", "球")) {
+    rect = {tx: 10, ty: 14, tw: 4, th: 1}
+  }
+  text(@t("BAIT", "饵")) {
+    rect = {tx: 16, ty: 14, tw: 4, th: 1}
+  }
+  text(@t("ROCK", "石")) {
+    rect = {tx: 10, ty: 16, tw: 4, th: 1}
+  }
+  text(@t("RUN", "逃跑")) {
+    rect = {tx: 16, ty: 16, tw: 3, th: 1}
+  }
+  // 2×2 grid cursor: same geometry as battle_main. {bcol}/{brow} come from
+  // SafariBattleMenuState (Ball/Bait top row, Rock/Run bottom row).
+  cursor {
+    rect = {tx: 9, ty: 14, tw: 1, th: 1}
+    col_step = 6
+    row_step = 2
+    col = "{bcol}"
+    row = "{brow}"
+    glyph = "▶"
+  }
+}

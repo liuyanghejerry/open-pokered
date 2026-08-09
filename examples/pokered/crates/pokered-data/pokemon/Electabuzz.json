@@ -1,0 +1,64 @@
+{
+  "$schema": "../schemas/pokemon.schema.json",
+  "species": "Electabuzz",
+  "baseStats": {
+    "hp": 65,
+    "attack": 83,
+    "defense": 57,
+    "speed": 105,
+    "special": 85
+  },
+  "type1": "Electric",
+  "type2": "Electric",
+  "catchRate": 45,
+  "baseExp": 156,
+  "growthRate": "MediumFast",
+  "initialMoves": [
+    "QuickAttack",
+    "Leer",
+    "None",
+    "None"
+  ],
+  "tmHmFlags": [
+    177,
+    67,
+    143,
+    241,
+    199,
+    56,
+    98
+  ],
+  "pokedex": {
+    "category": "ELECTRIC",
+    "heightFeet": 3,
+    "heightInches": 7,
+    "weightDecipounds": 660,
+    "flavorTextPages": [
+      "Normally found\nnear power plants,\nthey can wander",
+      "away and cause\nmajor blackouts\nin cities"
+    ]
+  },
+  "evolutions": [],
+  "learnset": [
+    {
+      "level": 34,
+      "moveId": "Thundershock"
+    },
+    {
+      "level": 37,
+      "moveId": "Screech"
+    },
+    {
+      "level": 42,
+      "moveId": "Thunderpunch"
+    },
+    {
+      "level": 49,
+      "moveId": "LightScreen"
+    },
+    {
+      "level": 54,
+      "moveId": "Thunder"
+    }
+  ]
+}

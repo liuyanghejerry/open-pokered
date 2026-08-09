@@ -1,0 +1,337 @@
+// CinnabarGym — translated from the original disassembly (scripts/CinnabarGym.asm,
+// text/CinnabarGym.asm) to the real Game DSL API surface. Gym leader BLAINE is
+// talk-driven (map.json isTrainer = false) so the script owns the
+// battle->VOLCANOBADGE->TM38 reward.
+//
+// QUIZ-GATE PUZZLE: CINNABAR GYM is BLAINE's quiz maze — each Super Nerd guards a
+// locked gate and asks a yes/no POKeMON question. Answer correctly and the gate
+// opens (the guard steps aside — hideObject on the barrier) so you can advance;
+// answer wrong and the guard battles you, and beating him opens the gate anyway.
+// To make the quiz the real gate, the seven guards are talk-driven (map.json
+// isTrainer = false, mirroring BLAINE) rather than sight-engaged, so the .scene
+// owns the quiz -> open / battle flow. Each guard's EVENT_BEAT_CINNABAR_GYM_-
+// TRAINER_N flag records a cleared gate.
+//
+// NOTE: the original quiz question wording is not recoverable from this repo (the
+// RGBDS disassembly was removed and no transcript of the exact questions survives
+// in docs/). The quiz *mechanic* is reproduced faithfully; the questions below are
+// authored from genuine Gen-1 facts and each guard's original pre/post-battle
+// dialogue is preserved.
+
+game_scene CinnabarGym {
+  // ── BLAINE, the Gym Leader (npc 1) ─────────────────────────────────────
+  @storyline("talkBlaine") {
+    @trigger(map = "CinnabarGym", npc = 1)
+    @if (getFlag("EVENT_BEAT_BLAINE")) {
+      @if (!getFlag("EVENT_GOT_TM38")) {
+        // Beat Blaine previously but had no room for the TM — try again.
+        @speaker("") { @t("Make room for my gift!", "腾个地方收下礼物！") }
+        giveItem("TM_38", 1)
+        setFlag("EVENT_GOT_TM38")
+        @speaker("") { @t("<PLAYER> received TM38!", "<PLAYER>得到了 TM38！") }
+        @speaker("") {
+          @t("TM38 contains FIRE BLAST!\n\nTeach it to fire- type\nPOKeMON!\n\nCHARMELEON or PONYTA would\nbe good bets!", "TM38里有大字爆炎！\n\n教给火系的宝可梦吧！\n\n火恐龙或小火马是不错的选择！")
+        }
+      } @else {
+        @speaker("") {
+          @t("FIRE BLAST is the ultimate\nfire technique!\n\nDon't waste it on water\nPOKeMON!", "大字爆炎是最终极的火系招式！\n\n别把它浪费在水系宝可梦上！")
+        }
+      }
+    } @else {
+      @speaker("") {
+        @t("Hah!\n\nI am BLAINE! I am the LEADER\nof CINNABAR GYM!\n\nMy fiery POKeMON will\nincinerate all challengers!\n\nHah! You better have BURN\nHEAL!", "哈哈！\n\n我就是夏伯！我是红莲道馆的馆\n主！\n\n我的火焰宝可梦会把挑战者全部\n烧成灰！\n\n哈哈！你最好带上灼伤药！")
+      }
+      result = startBattle("OPP_BLAINE1")
+      @if (result == "win") {
+        @speaker("") {
+          @t("I have burnt out!\n\nYou have earned the\nVOLCANOBADGE!", "我已经烧尽了！\n\n你获得了深红徽章！")
+        }
+        giveBadge("VOLCANOBADGE")
+        setFlag("EVENT_BEAT_BLAINE")
+        @speaker("") {
+          @t("Hah!\n\nThe VOLCANOBADGE heightens\nthe SPECIAL abilities of\nyour POKeMON!\n\nHere, you can have this too!", "哈哈！\n\n深红徽章能提高你的宝可梦的特\n殊能力！\n\n来，这个也给你！")
+        }
+        giveItem("TM_38", 1)
+        setFlag("EVENT_GOT_TM38")
+        @speaker("") { @t("<PLAYER> received TM38!", "<PLAYER>得到了 TM38！") }
+        @speaker("") {
+          @t("TM38 contains FIRE BLAST!\n\nTeach it to fire- type\nPOKeMON!\n\nCHARMELEON or PONYTA would\nbe good bets!", "TM38里有大字爆炎！\n\n教给火系的宝可梦吧！\n\n火恐龙或小火马是不错的选择！")
+        }
+        // Deactivate the gym trainers (original SetEventRange TRAINER_0..6).
+        setFlag("EVENT_BEAT_CINNABAR_GYM_TRAINER_0")
+        setFlag("EVENT_BEAT_CINNABAR_GYM_TRAINER_1")
+        setFlag("EVENT_BEAT_CINNABAR_GYM_TRAINER_2")
+        setFlag("EVENT_BEAT_CINNABAR_GYM_TRAINER_3")
+        setFlag("EVENT_BEAT_CINNABAR_GYM_TRAINER_4")
+        setFlag("EVENT_BEAT_CINNABAR_GYM_TRAINER_5")
+        setFlag("EVENT_BEAT_CINNABAR_GYM_TRAINER_6")
+      }
+    }
+  }
+
+  // ── Quiz gate 1 — Super Nerd (npc 2) ────────────────────────────────────
+  // Correct answer: NO (CATERPIE evolves into METAPOD first).
+  @storyline("talkSuperNerd1") {
+    @trigger(map = "CinnabarGym", npc = 2, toggle = "CINNABAR_GYM_OBJ_2")
+    @if (getFlag("EVENT_BEAT_CINNABAR_GYM_TRAINER_0")) {
+      @speaker("") {
+        @t("Fire, or to be more precise,\ncombustion...\n\nBlah, blah, blah, blah...", "火，或者说更准确地说，燃\n烧……\n\n啰嗦，啰嗦，啰嗦……")
+      }
+    } @else {
+      @speaker("") {
+        @t("Do you know how hot POKeMON\nfire breath can get?\n\nCINNABAR GYM's QUIZ! Answer\nto open the gate!", "你知道宝可梦的火焰温度有多高\n吗？\n\n红莲道馆的猜谜！答对就能开\n门！")
+      }
+      @speaker("") {
+        @t("A CATERPIE evolves straight\ninto BUTTERFREE!\n\nYES or NO?", "绿毛虫会直接进化成巴大蝶吗？\n\n是或否？")
+      }
+      @choice {
+        @option(@t("YES", "是")) {
+          @speaker("") { @t("Yow! Wrong! METAPOD comes\nfirst!", "哎哟！答错了！铁甲蛹才是第一\n步！") }
+          result = startBattle("OPP_SUPER_NERD9")
+          @if (result == "win") {
+            setFlag("EVENT_BEAT_CINNABAR_GYM_TRAINER_0")
+            @speaker("") { @t("Argh! The gate is all yours!", "呃啊！大门是你的了！") }
+            playSound("SFX_GO_INSIDE")
+            hideObjectByName("CINNABAR_GYM_OBJ_2")
+          }
+        }
+        @option(@t("NO", "否")) {
+          @speaker("") { @t("Correct! It goes CATERPIE,\nMETAPOD, then BUTTERFREE!\n\nThe gate is open!", "答对了！顺序是绿毛虫、铁甲\n蛹，然后巴大蝶！\n\n大门打开了！") }
+          setFlag("EVENT_BEAT_CINNABAR_GYM_TRAINER_0")
+          playSound("SFX_GO_INSIDE")
+          hideObjectByName("CINNABAR_GYM_OBJ_2")
+        }
+      }
+    }
+  }
+
+  // ── Quiz gate 2 — Burglar (npc 3) ───────────────────────────────────────
+  // Correct answer: YES (there are 8 official League Badges).
+  @storyline("talkSuperNerd2") {
+    @trigger(map = "CinnabarGym", npc = 3, toggle = "CINNABAR_GYM_OBJ_3")
+    @if (getFlag("EVENT_BEAT_CINNABAR_GYM_TRAINER_1")) {
+      @speaker("") {
+        @t("I can't help stealing other\npeople's POKeMON!", "我忍不住想偷别人的宝可梦！")
+      }
+    } @else {
+      @speaker("") {
+        @t("I was a thief, but I became\nstraight as a trainer!\n\nQUIZ! Answer to open the\ngate!", "我以前是小偷，但现在改邪归正\n了！\n\n猜谜！答对就能开门！")
+      }
+      @speaker("") {
+        @t("There are 8 official POKeMON\nLEAGUE BADGES!\n\nYES or NO?", "宝可梦联盟有官方认可的 8枚徽\n章！\n\n是或否？")
+      }
+      @choice {
+        @option(@t("YES", "是")) {
+          @speaker("") { @t("Correct! Collect all 8 to\nreach the LEAGUE!\n\nThe gate is open!", "答对了！集齐 8枚就能到达联\n盟！\n\n大门打开了！") }
+          setFlag("EVENT_BEAT_CINNABAR_GYM_TRAINER_1")
+          playSound("SFX_GO_INSIDE")
+          hideObjectByName("CINNABAR_GYM_OBJ_3")
+        }
+        @option(@t("NO", "否")) {
+          @speaker("") { @t("Wrong! There are 8! I'll\nteach you!", "错了！有8枚！我要教训你！") }
+          result = startBattle("OPP_BURGLAR4")
+          @if (result == "win") {
+            setFlag("EVENT_BEAT_CINNABAR_GYM_TRAINER_1")
+            @speaker("") { @t("Argh! The gate is all yours!", "呃啊！大门是你的了！") }
+            playSound("SFX_GO_INSIDE")
+            hideObjectByName("CINNABAR_GYM_OBJ_3")
+          }
+        }
+      }
+    }
+  }
+
+  // ── Quiz gate 3 — Super Nerd (npc 4) ────────────────────────────────────
+  // Correct answer: YES (POLIWAG -> POLIWHIRL -> POLIWRATH).
+  @storyline("talkSuperNerd3") {
+    @trigger(map = "CinnabarGym", npc = 4, toggle = "CINNABAR_GYM_OBJ_4")
+    @if (getFlag("EVENT_BEAT_CINNABAR_GYM_TRAINER_2")) {
+      @speaker("") {
+        @t("My theories are too\ncomplicated for you!", "我的理论太复杂，你听不懂！")
+      }
+    } @else {
+      @speaker("") {
+        @t("You can't win! I have\nstudied POKeMON totally!\n\nQUIZ! Answer to open the\ngate!", "你赢不了的！我已经把宝可梦研\n究透了！\n\n猜谜！答对就能开门！")
+      }
+      @speaker("") {
+        @t("POLIWAG evolves into\nPOLIWHIRL, then POLIWRATH!\n\nYES or NO?", "蚊香蝌蚪进化成蚊香君，再成蚊\n香泳士！\n\n是或否？")
+      }
+      @choice {
+        @option(@t("YES", "是")) {
+          @speaker("") { @t("Correct! A perfect answer!\n\nThe gate is open!", "答对了！完美的答案！\n\n大门打开了！") }
+          setFlag("EVENT_BEAT_CINNABAR_GYM_TRAINER_2")
+          playSound("SFX_GO_INSIDE")
+          hideObjectByName("CINNABAR_GYM_OBJ_4")
+        }
+        @option(@t("NO", "否")) {
+          @speaker("") { @t("Wrong! You need more study!", "错了！你还得多学习！") }
+          result = startBattle("OPP_SUPER_NERD10")
+          @if (result == "win") {
+            setFlag("EVENT_BEAT_CINNABAR_GYM_TRAINER_2")
+            @speaker("") { @t("Argh! The gate is all yours!", "呃啊！大门是你的了！") }
+            playSound("SFX_GO_INSIDE")
+            hideObjectByName("CINNABAR_GYM_OBJ_4")
+          }
+        }
+      }
+    }
+  }
+
+  // ── Quiz gate 4 — Burglar (npc 5) ───────────────────────────────────────
+  // Correct answer: YES (WATER is super effective against FIRE).
+  @storyline("talkSuperNerd4") {
+    @trigger(map = "CinnabarGym", npc = 5, toggle = "CINNABAR_GYM_OBJ_5")
+    @if (getFlag("EVENT_BEAT_CINNABAR_GYM_TRAINER_3")) {
+      @speaker("") {
+        @t("I wish there was a thief\nPOKeMON! I'd use that!", "真希望有小偷宝可梦！我一定\n用！")
+      }
+    } @else {
+      @speaker("") {
+        @t("I just like using fire\nPOKeMON!\n\nQUIZ! Answer to open the\ngate!", "我就是喜欢用火系宝可梦！\n\n猜谜！答对就能开门！")
+      }
+      @speaker("") {
+        @t("Are WATER moves effective\nagainst FIRE POKeMON?\n\nYES or NO?", "水系招式对火系宝可梦有效吗？\n\n是或否？")
+      }
+      @choice {
+        @option(@t("YES", "是")) {
+          @speaker("") { @t("Correct! WATER douses fire!\n\nThe gate is open!", "答对了！水能浇灭火！\n\n大门打开了！") }
+          setFlag("EVENT_BEAT_CINNABAR_GYM_TRAINER_3")
+          playSound("SFX_GO_INSIDE")
+          hideObjectByName("CINNABAR_GYM_OBJ_5")
+        }
+        @option(@t("NO", "否")) {
+          @speaker("") { @t("Wrong! WATER puts out fire!\nBattle me!", "错了！水能浇灭火！跟我打一\n场！") }
+          result = startBattle("OPP_BURGLAR5")
+          @if (result == "win") {
+            setFlag("EVENT_BEAT_CINNABAR_GYM_TRAINER_3")
+            @speaker("") { @t("Argh! The gate is all yours!", "呃啊！大门是你的了！") }
+            playSound("SFX_GO_INSIDE")
+            hideObjectByName("CINNABAR_GYM_OBJ_5")
+          }
+        }
+      }
+    }
+  }
+
+  // ── Quiz gate 5 — Super Nerd (npc 6) ────────────────────────────────────
+  // Correct answer: YES (MOLTRES is FIRE/FLYING).
+  @storyline("talkSuperNerd5") {
+    @trigger(map = "CinnabarGym", npc = 6, toggle = "CINNABAR_GYM_OBJ_6")
+    @if (getFlag("EVENT_BEAT_CINNABAR_GYM_TRAINER_4")) {
+      @speaker("") {
+        @t("BLAINE was lost in the\nmountains when a fiery bird\nPOKeMON appeared.\n\nIts light enabled BLAINE to\nfind his way down!", "夏伯在山上迷了路，这时一只火\n鸟宝可梦出现了。\n\n它的光芒指引夏伯下了山！")
+      }
+    } @else {
+      @speaker("") {
+        @t("I know why BLAINE became a\ntrainer!\n\nQUIZ! Answer to open the\ngate!", "我知道夏伯为何成为训练家！\n\n猜谜！答对就能开门！")
+      }
+      @speaker("") {
+        @t("MOLTRES is a FIRE and FLYING\ntype POKeMON!\n\nYES or NO?", "火焰鸟是火加飞行的宝可梦！\n\n是或否？")
+      }
+      @choice {
+        @option(@t("YES", "是")) {
+          @speaker("") { @t("Correct! The fiery bird\nitself!\n\nThe gate is open!", "答对了！就是那只火鸟！\n\n大门打开了！") }
+          setFlag("EVENT_BEAT_CINNABAR_GYM_TRAINER_4")
+          playSound("SFX_GO_INSIDE")
+          hideObjectByName("CINNABAR_GYM_OBJ_6")
+        }
+        @option(@t("NO", "否")) {
+          @speaker("") { @t("Wrong! It's FIRE and FLYING!", "错了！它是火加飞行系！") }
+          result = startBattle("OPP_SUPER_NERD11")
+          @if (result == "win") {
+            setFlag("EVENT_BEAT_CINNABAR_GYM_TRAINER_4")
+            @speaker("") { @t("Argh! The gate is all yours!", "呃啊！大门是你的了！") }
+            playSound("SFX_GO_INSIDE")
+            hideObjectByName("CINNABAR_GYM_OBJ_6")
+          }
+        }
+      }
+    }
+  }
+
+  // ── Quiz gate 6 — Burglar (npc 7) ───────────────────────────────────────
+  // Correct answer: NO (GRASS is weak to FIRE, it does not resist it).
+  @storyline("talkSuperNerd6") {
+    @trigger(map = "CinnabarGym", npc = 7, toggle = "CINNABAR_GYM_OBJ_7")
+    @if (getFlag("EVENT_BEAT_CINNABAR_GYM_TRAINER_5")) {
+      @speaker("") {
+        @t("Us fire POKeMON fans like\nPONYTA and NINETALES!", "我们火系宝可梦迷喜欢小火马和\n九尾！")
+      }
+    } @else {
+      @speaker("") {
+        @t("I've been to many GYMs, but\nthis is my favorite!\n\nQUIZ! Answer to open the\ngate!", "我去过很多道馆，这里最棒！\n\n猜谜！答对就能开门！")
+      }
+      @speaker("") {
+        @t("GRASS POKeMON RESIST\nfire-type moves!\n\nYES or NO?", "草系宝可梦抵抗火系招式！\n\n是或否？")
+      }
+      @choice {
+        @option(@t("YES", "是")) {
+          @speaker("") { @t("Wrong! Fire BURNS grass!\nBattle me!", "错了！火会烧草！跟我打！") }
+          result = startBattle("OPP_BURGLAR6")
+          @if (result == "win") {
+            setFlag("EVENT_BEAT_CINNABAR_GYM_TRAINER_5")
+            @speaker("") { @t("Argh! The gate is all yours!", "呃啊！大门是你的了！") }
+            playSound("SFX_GO_INSIDE")
+            hideObjectByName("CINNABAR_GYM_OBJ_7")
+          }
+        }
+        @option(@t("NO", "否")) {
+          @speaker("") { @t("Correct! Fire roasts grass!\n\nThe gate is open!", "答对了！火会烤焦草！\n\n大门打开了！") }
+          setFlag("EVENT_BEAT_CINNABAR_GYM_TRAINER_5")
+          playSound("SFX_GO_INSIDE")
+          hideObjectByName("CINNABAR_GYM_OBJ_7")
+        }
+      }
+    }
+  }
+
+  // ── Quiz gate 7 — Super Nerd (npc 8) ────────────────────────────────────
+  // Correct answer: YES (fire is weak to water, but melts ice).
+  @storyline("talkSuperNerd7") {
+    @trigger(map = "CinnabarGym", npc = 8, toggle = "CINNABAR_GYM_OBJ_8")
+    @if (getFlag("EVENT_BEAT_CINNABAR_GYM_TRAINER_6")) {
+      @speaker("") {
+        @t("Water beats fire! But, fire\nmelts ice POKeMON!", "水能克火！但火能融化冰系宝可\n梦！")
+      }
+    } @else {
+      @speaker("") {
+        @t("Fire is weak against H2O!\n\nQUIZ! Answer to open the\ngate!", "火怕水，就是H2O！\n\n猜谜！答对就能开门！")
+      }
+      @speaker("") {
+        @t("Fire is weak to WATER, but\nit melts ICE POKeMON!\n\nYES or NO?", "火怕水，但能融化冰系宝可梦！\n\n是或否？")
+      }
+      @choice {
+        @option(@t("YES", "是")) {
+          @speaker("") { @t("Correct! You know your\ntypes!\n\nThe gate is open!", "答对了！你很懂属性！\n\n大门打开了！") }
+          setFlag("EVENT_BEAT_CINNABAR_GYM_TRAINER_6")
+          playSound("SFX_GO_INSIDE")
+          hideObjectByName("CINNABAR_GYM_OBJ_8")
+        }
+        @option(@t("NO", "否")) {
+          @speaker("") { @t("Wrong! Fire melts ice!\nBattle me!", "错了！火会化冰！跟我打！") }
+          result = startBattle("OPP_SUPER_NERD12")
+          @if (result == "win") {
+            setFlag("EVENT_BEAT_CINNABAR_GYM_TRAINER_6")
+            @speaker("") { @t("Argh! The gate is all yours!", "呃啊！大门是你的了！") }
+            playSound("SFX_GO_INSIDE")
+            hideObjectByName("CINNABAR_GYM_OBJ_8")
+          }
+        }
+      }
+    }
+  }
+
+  // ── Gym guide (npc 9) ───────────────────────────────────────────────────
+  @storyline("talkGymGuide") {
+    @trigger(map = "CinnabarGym", npc = 9)
+    @if (getFlag("EVENT_BEAT_BLAINE")) {
+      @speaker("") {
+        @t("<PLAYER>! You beat that fire\nbrand!", "<PLAYER>！你打败了那火霸王！")
+      }
+    } @else {
+      @speaker("") {
+        @t("Yo! Champ in making!\n\nThe hot-headed BLAINE is a\nfire POKeMON pro!\n\nDouse his spirits with\nwater!\n\nYou better take some BURN\nHEALs!", "哟！未来的冠军！\n\n急性子的夏伯是火系宝可梦专\n家！\n\n用水浇灭他的气焰！\n\n你最好带上些灼伤药！")
+      }
+    }
+  }
+}

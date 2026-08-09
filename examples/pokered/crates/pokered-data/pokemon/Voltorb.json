@@ -1,0 +1,70 @@
+{
+  "$schema": "../schemas/pokemon.schema.json",
+  "species": "Voltorb",
+  "baseStats": {
+    "hp": 40,
+    "attack": 30,
+    "defense": 50,
+    "speed": 100,
+    "special": 55
+  },
+  "type1": "Electric",
+  "type2": "Electric",
+  "catchRate": 190,
+  "baseExp": 103,
+  "growthRate": "MediumFast",
+  "initialMoves": [
+    "Tackle",
+    "Screech",
+    "None",
+    "None"
+  ],
+  "tmHmFlags": [
+    32,
+    1,
+    136,
+    225,
+    75,
+    88,
+    66
+  ],
+  "pokedex": {
+    "category": "BALL",
+    "heightFeet": 1,
+    "heightInches": 8,
+    "weightDecipounds": 230,
+    "flavorTextPages": [
+      "Usually found in\npower plants.\nEasily mistaken",
+      "for a # BALL,\nthey have zapped\nmany people"
+    ]
+  },
+  "evolutions": [
+    {
+      "method": "level",
+      "species": "Electrode",
+      "level": 30
+    }
+  ],
+  "learnset": [
+    {
+      "level": 17,
+      "moveId": "Sonicboom"
+    },
+    {
+      "level": 22,
+      "moveId": "Selfdestruct"
+    },
+    {
+      "level": 29,
+      "moveId": "LightScreen"
+    },
+    {
+      "level": 36,
+      "moveId": "Swift"
+    },
+    {
+      "level": 43,
+      "moveId": "Explosion"
+    }
+  ]
+}

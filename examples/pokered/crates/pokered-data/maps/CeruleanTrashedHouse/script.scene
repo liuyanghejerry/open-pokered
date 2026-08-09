@@ -1,0 +1,40 @@
+// CeruleanTrashedHouse — translated from the original disassembly
+// (scripts/CeruleanTrashedHouse.asm, text/CeruleanTrashedHouse.asm) to the real
+// Game DSL API surface. Pure NPC-dialogue map (no battles, no on-enter logic):
+// the Fishing Guru branches on whether the player already holds the DIG TM
+// (TM28 / TM_DIG) in the bag — if so he gave up on it, otherwise he laments
+// TEAM ROCKET stealing it.
+
+game_scene CeruleanTrashedHouse {
+  // ── Fishing Guru (npc 1) ───────────────────────────────────────────────
+  @storyline("talkFishingGuru") {
+    @trigger(map = "CeruleanTrashedHouse", npc = 1)
+    @if (hasItem("TM28")) {
+      // .WhatsLostIsLostText — player already has the DIG TM.
+      @speaker("") {
+        @t("I figure what's lost is\nlost!\n\nI decided to teach DIGLETT\nhow to DIG without a TM!", "我想，丢了就丢了吧！\n\n我决定教地鼠不用TM 也能挖\n洞！")
+      }
+    } @else {
+      // .TheyStoleATMText — TEAM ROCKET stole the DIG TM.
+      @speaker("") {
+        @t("Those miserable ROCKETs!\n\nLook what they did here!\n\nThey stole a TM for teaching\nPOKeMON how to DIG holes!\n\nThat cost me a bundle, it\ndid!", "那些可恶的火箭队！\n\n看看他们干了什么！\n\n他们偷走了教宝可梦挖洞的\nTM！\n\n那花了我一大笔钱啊！")
+      }
+    }
+  }
+
+  // ── Girl (npc 2) ───────────────────────────────────────────────────────
+  @storyline("talkGirl") {
+    @trigger(map = "CeruleanTrashedHouse", npc = 2)
+    @speaker("") {
+      @t("TEAM ROCKET must be trying\nto DIG their way into no\ngood!", "火箭队一定又想用挖洞来干坏事\n了！")
+    }
+  }
+
+  // ── Wall-hole sign (sign 1) ────────────────────────────────────────────
+  @storyline("sign1") {
+    @trigger(map = "CeruleanTrashedHouse", sign = 1)
+    @speaker("") {
+      @t("TEAM ROCKET left a way out!", "火箭队留下了一条出路！")
+    }
+  }
+}

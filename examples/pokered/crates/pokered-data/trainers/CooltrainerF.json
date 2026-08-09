@@ -1,0 +1,119 @@
+{
+  "$schema": "../schemas/trainer.schema.json",
+  "class": "CooltrainerF",
+  "constName": "COOLTRAINER_F",
+  "parties": [
+    {
+      "pokemon": [
+        {
+          "level": 24,
+          "species": "Weepinbell"
+        },
+        {
+          "level": 24,
+          "species": "Gloom"
+        },
+        {
+          "level": 24,
+          "species": "Ivysaur"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 43,
+          "species": "Bellsprout"
+        },
+        {
+          "level": 43,
+          "species": "Weepinbell"
+        },
+        {
+          "level": 43,
+          "species": "Victreebel"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 43,
+          "species": "Parasect"
+        },
+        {
+          "level": 43,
+          "species": "Dewgong"
+        },
+        {
+          "level": 43,
+          "species": "Chansey"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 46,
+          "species": "Vileplume"
+        },
+        {
+          "level": 46,
+          "species": "Butterfree"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 44,
+          "species": "Persian"
+        },
+        {
+          "level": 44,
+          "species": "Ninetales"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 45,
+          "species": "Ivysaur"
+        },
+        {
+          "level": 45,
+          "species": "Venusaur"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 45,
+          "species": "Nidorina"
+        },
+        {
+          "level": 45,
+          "species": "Nidoqueen"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 43,
+          "species": "Persian"
+        },
+        {
+          "level": 43,
+          "species": "Ninetales"
+        },
+        {
+          "level": 43,
+          "species": "Raichu"
+        }
+      ]
+    }
+  ]
+}

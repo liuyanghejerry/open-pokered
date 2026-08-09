@@ -1,0 +1,111 @@
+{
+  "$schema": "../schemas/trainer.schema.json",
+  "class": "Burglar",
+  "constName": "BURGLAR",
+  "parties": [
+    {
+      "pokemon": [
+        {
+          "level": 29,
+          "species": "Growlithe"
+        },
+        {
+          "level": 29,
+          "species": "Vulpix"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 33,
+          "species": "Growlithe"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 28,
+          "species": "Vulpix"
+        },
+        {
+          "level": 28,
+          "species": "Charmander"
+        },
+        {
+          "level": 28,
+          "species": "Ponyta"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 36,
+          "species": "Growlithe"
+        },
+        {
+          "level": 36,
+          "species": "Vulpix"
+        },
+        {
+          "level": 36,
+          "species": "Ninetales"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 41,
+          "species": "Ponyta"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 37,
+          "species": "Vulpix"
+        },
+        {
+          "level": 37,
+          "species": "Growlithe"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 34,
+          "species": "Charmander"
+        },
+        {
+          "level": 34,
+          "species": "Charmeleon"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 38,
+          "species": "Ninetales"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 34,
+          "species": "Growlithe"
+        },
+        {
+          "level": 34,
+          "species": "Ponyta"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,171 @@
+{
+  "$schema": "../../schemas/map.schema.json",
+  "id": 33,
+  "name": "Route22",
+  "header": {
+    "tileset": "Overworld",
+    "music": "Routes3",
+    "connectionFlags": 9,
+    "width": 20,
+    "height": 9,
+    "borderBlock": 44
+  },
+  "connections": {
+    "north": {
+      "targetMap": "Route23",
+      "offset": 0
+    },
+    "east": {
+      "targetMap": "ViridianCity",
+      "offset": -4
+    }
+  },
+  "warps": [
+    {
+      "x": 8,
+      "y": 5,
+      "destMap": "Route22Gate",
+      "destWarpId": 0
+    }
+  ],
+  "npcs": [
+    {
+      "spriteId": 2,
+      "spriteName": "Blue",
+      "x": 25,
+      "y": 5,
+      "movement": "Stationary",
+      "facing": "Down",
+      "range": 2,
+      "textId": 1,
+      "isTrainer": false,
+      "trainerClass": "Rival1",
+      "trainerSet": 1
+    },
+    {
+      "spriteId": 2,
+      "spriteName": "Blue",
+      "x": 25,
+      "y": 5,
+      "movement": "Stationary",
+      "facing": "Down",
+      "range": 2,
+      "textId": 2,
+      "isTrainer": false,
+      "trainerClass": "Rival2",
+      "trainerSet": 1
+    }
+  ],
+  "signs": [
+    {
+      "x": 7,
+      "y": 11,
+      "textId": 1
+    }
+  ],
+  "text": {},
+  "wild": {
+    "red": {
+      "grass": {
+        "encounterRate": 25,
+        "mons": [
+          {
+            "level": 3,
+            "species": "Rattata"
+          },
+          {
+            "level": 3,
+            "species": "NidoranM"
+          },
+          {
+            "level": 4,
+            "species": "Rattata"
+          },
+          {
+            "level": 4,
+            "species": "NidoranM"
+          },
+          {
+            "level": 2,
+            "species": "Rattata"
+          },
+          {
+            "level": 2,
+            "species": "NidoranM"
+          },
+          {
+            "level": 3,
+            "species": "Spearow"
+          },
+          {
+            "level": 5,
+            "species": "Spearow"
+          },
+          {
+            "level": 3,
+            "species": "NidoranF"
+          },
+          {
+            "level": 4,
+            "species": "NidoranF"
+          }
+        ]
+      },
+      "water": {
+        "encounterRate": 0,
+        "mons": []
+      }
+    },
+    "blue": {
+      "grass": {
+        "encounterRate": 25,
+        "mons": [
+          {
+            "level": 3,
+            "species": "Rattata"
+          },
+          {
+            "level": 3,
+            "species": "NidoranF"
+          },
+          {
+            "level": 4,
+            "species": "Rattata"
+          },
+          {
+            "level": 4,
+            "species": "NidoranF"
+          },
+          {
+            "level": 2,
+            "species": "Rattata"
+          },
+          {
+            "level": 2,
+            "species": "NidoranF"
+          },
+          {
+            "level": 3,
+            "species": "Spearow"
+          },
+          {
+            "level": 5,
+            "species": "Spearow"
+          },
+          {
+            "level": 3,
+            "species": "NidoranM"
+          },
+          {
+            "level": 4,
+            "species": "NidoranM"
+          }
+        ]
+      },
+      "water": {
+        "encounterRate": 0,
+        "mons": []
+      }
+    }
+  }
+}

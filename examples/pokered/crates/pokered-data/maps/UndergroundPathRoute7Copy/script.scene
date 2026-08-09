@@ -1,0 +1,23 @@
+// UndergroundPathRoute7Copy — translated from the original disassembly
+// (scripts/UndergroundPathRoute7Copy.asm, text/UndergroundPathRoute7Copy.asm) to
+// the real Game DSL API surface. This is an unused gate-house copy map: the
+// original script only sets wLastMap = ROUTE_7 (warp bookkeeping, no DSL API).
+// Two stationary NPCs (Girl, MiddleAgedMan) have dialogue-only handlers.
+
+game_scene UndergroundPathRoute7Copy {
+  // ── Girl (npc 1) ───────────────────────────────────────────────────────
+  @storyline("talkGirl") {
+    @trigger(map = "UndergroundPathRoute7Copy", npc = 1)
+    @speaker("") {
+      @t("I want to shop at the dept.\nstore in CELADON but...\n\nThere are so many rough\nlooking people there.", "我想去彩虹市的百货商店买东\n西，但是……\n\n那里有太多看起来凶神恶煞的\n人。")
+    }
+  }
+
+  // ── Middle-aged man (npc 2) ─────────────────────────────────────────────
+  @storyline("talkMiddleAgedMan") {
+    @trigger(map = "UndergroundPathRoute7Copy", npc = 2)
+    @speaker("") {
+      @t("You're here to shop in\nCELADON?\n\nJust step outside and head\nwest!", "你是来彩虹市购物的吗？\n\n只要走出门往西走就行！")
+    }
+  }
+}

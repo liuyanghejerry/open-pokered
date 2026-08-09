@@ -1,0 +1,181 @@
+{
+  "$schema": "../../schemas/map.schema.json",
+  "id": 16,
+  "name": "Route5",
+  "header": {
+    "tileset": "Overworld",
+    "music": "Routes3",
+    "connectionFlags": 12,
+    "width": 10,
+    "height": 18,
+    "borderBlock": 10
+  },
+  "connections": {
+    "north": {
+      "targetMap": "CeruleanCity",
+      "offset": -5
+    },
+    "south": {
+      "targetMap": "SaffronCity",
+      "offset": -5
+    }
+  },
+  "warps": [
+    {
+      "x": 10,
+      "y": 29,
+      "destMap": "Route5Gate",
+      "destWarpId": 3
+    },
+    {
+      "x": 9,
+      "y": 29,
+      "destMap": "Route5Gate",
+      "destWarpId": 2
+    },
+    {
+      "x": 10,
+      "y": 33,
+      "destMap": "Route5Gate",
+      "destWarpId": 0
+    },
+    {
+      "x": 17,
+      "y": 27,
+      "destMap": "UndergroundPathRoute5",
+      "destWarpId": 0
+    },
+    {
+      "x": 10,
+      "y": 21,
+      "destMap": "Daycare",
+      "destWarpId": 0
+    }
+  ],
+  "npcs": [],
+  "signs": [
+    {
+      "x": 17,
+      "y": 29,
+      "textId": 1
+    }
+  ],
+  "text": {
+    "sign": {
+      "1": [
+        {
+          "line1": "UNDERGROUND PATH",
+          "line2": "CERULEAN CITY -"
+        },
+        {
+          "line1": "VERMILION CITY",
+          "line2": ""
+        }
+      ]
+    }
+  },
+  "wild": {
+    "red": {
+      "grass": {
+        "encounterRate": 15,
+        "mons": [
+          {
+            "level": 13,
+            "species": "Oddish"
+          },
+          {
+            "level": 13,
+            "species": "Pidgey"
+          },
+          {
+            "level": 15,
+            "species": "Pidgey"
+          },
+          {
+            "level": 10,
+            "species": "Mankey"
+          },
+          {
+            "level": 12,
+            "species": "Mankey"
+          },
+          {
+            "level": 15,
+            "species": "Oddish"
+          },
+          {
+            "level": 16,
+            "species": "Oddish"
+          },
+          {
+            "level": 16,
+            "species": "Pidgey"
+          },
+          {
+            "level": 14,
+            "species": "Mankey"
+          },
+          {
+            "level": 16,
+            "species": "Mankey"
+          }
+        ]
+      },
+      "water": {
+        "encounterRate": 0,
+        "mons": []
+      }
+    },
+    "blue": {
+      "grass": {
+        "encounterRate": 15,
+        "mons": [
+          {
+            "level": 13,
+            "species": "Bellsprout"
+          },
+          {
+            "level": 13,
+            "species": "Pidgey"
+          },
+          {
+            "level": 15,
+            "species": "Pidgey"
+          },
+          {
+            "level": 10,
+            "species": "Meowth"
+          },
+          {
+            "level": 12,
+            "species": "Meowth"
+          },
+          {
+            "level": 15,
+            "species": "Bellsprout"
+          },
+          {
+            "level": 16,
+            "species": "Bellsprout"
+          },
+          {
+            "level": 16,
+            "species": "Pidgey"
+          },
+          {
+            "level": 14,
+            "species": "Meowth"
+          },
+          {
+            "level": 16,
+            "species": "Meowth"
+          }
+        ]
+      },
+      "water": {
+        "encounterRate": 0,
+        "mons": []
+      }
+    }
+  }
+}

@@ -1,0 +1,32 @@
+{
+  "$schema": "../../schemas/map.schema.json",
+  "id": 121,
+  "name": "UndergroundPathWestEast",
+  "header": {
+    "tileset": "Underground",
+    "music": "Routes1",
+    "connectionFlags": 0,
+    "width": 25,
+    "height": 4,
+    "borderBlock": 1
+  },
+  "connections": {},
+  "warps": [
+    {
+      "x": 2,
+      "y": 5,
+      "destMap": "UndergroundPathRoute7",
+      "destWarpId": 2
+    },
+    {
+      "x": 47,
+      "y": 2,
+      "destMap": "UndergroundPathRoute8",
+      "destWarpId": 2
+    }
+  ],
+  "npcs": [],
+  "signs": [],
+  "text": {},
+  "wild": null
+}

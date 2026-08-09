@@ -1,0 +1,83 @@
+screen Stats {
+  text("{name}") {
+    rect = {tx: 10, ty: 1, tw: 9, th: 1}
+  }
+  text(":L{level}") {
+    rect = {tx: 15, ty: 2, tw: 4, th: 1}
+  }
+  text(@t("HP:", "HP：")) {
+    rect = {tx: 9, ty: 3, tw: 3, th: 1}
+  }
+  hp_bar {
+    rect = {tx: 13, ty: 3, tw: 6, th: 1}
+    current = "{hp}"
+    max = "{max_hp}"
+  }
+  text("{hp}/{max_hp}") {
+    rect = {tx: 14, ty: 4, tw: 5, th: 1}
+  }
+  text(@t("STATUS/", "状态/")) {
+    rect = {tx: 9, ty: 6, tw: 7, th: 1}
+    color = "DarkGray"
+  }
+  text("{status}") {
+    rect = {tx: 16, ty: 6, tw: 3, th: 1}
+  }
+  text("№{dex_num:03}") {
+    rect = {tx: 2, ty: 7, tw: 5, th: 1}
+  }
+  panel {
+    rect = {tx: 0, ty: 8, tw: 10, th: 10}
+    style = "default"
+  }
+  text(@t("ATTACK", "攻击")) {
+    rect = {tx: 1, ty: 9, tw: 8, th: 1}
+  }
+  text("{attack}") {
+    rect = {tx: 7, ty: 10, tw: 3, th: 1}
+    align = "right"
+  }
+  text(@t("DEFENSE", "防御")) {
+    rect = {tx: 1, ty: 11, tw: 8, th: 1}
+  }
+  text("{defense}") {
+    rect = {tx: 7, ty: 12, tw: 3, th: 1}
+    align = "right"
+  }
+  text(@t("SPEED", "速度")) {
+    rect = {tx: 1, ty: 13, tw: 8, th: 1}
+  }
+  text("{speed}") {
+    rect = {tx: 7, ty: 14, tw: 3, th: 1}
+    align = "right"
+  }
+  text(@t("SPECIAL", "特殊")) {
+    rect = {tx: 1, ty: 15, tw: 8, th: 1}
+  }
+  text("{special}") {
+    rect = {tx: 7, ty: 16, tw: 3, th: 1}
+    align = "right"
+  }
+  text(@t("TYPE1/", "属性1/")) {
+    rect = {tx: 11, ty: 9, tw: 6, th: 1}
+    color = "DarkGray"
+  }
+  text("{type1}") {
+    rect = {tx: 12, ty: 10, tw: 8, th: 1}
+  }
+  text(@t("TYPE2/", "属性2/")) {
+    rect = {tx: 11, ty: 11, tw: 6, th: 1}
+    color = "DarkGray"
+  }
+  text("{type2}") {
+    rect = {tx: 12, ty: 12, tw: 8, th: 1}
+  }
+  text(@t("ID №/", "编号/")) {
+    rect = {tx: 11, ty: 13, tw: 6, th: 1}
+    color = "DarkGray"
+  }
+  text(@t("OT/", "主人/")) {
+    rect = {tx: 11, ty: 15, tw: 4, th: 1}
+    color = "DarkGray"
+  }
+}

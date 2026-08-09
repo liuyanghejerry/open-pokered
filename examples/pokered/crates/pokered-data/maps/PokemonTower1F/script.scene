@@ -1,0 +1,46 @@
+// PokemonTower1F — translated from the original disassembly
+// (scripts/PokemonTower1F.asm, text/PokemonTower1F.asm) to the real Game DSL API.
+// The original script is just EnableAutoTextBoxDrawing (no state machine, no
+// events): all five NPCs are plain dialogue-only NPCs. Nothing to stub.
+
+game_scene PokemonTower1F {
+  // ── Receptionist (npc 1) ───────────────────────────────────────────────
+  @storyline("talkLinkReceptionist") {
+    @trigger(map = "PokemonTower1F", npc = 1)
+    @speaker("") {
+      @t("POKeMON TOWER was erected in\nthe memory of POKeMON that\nhad died.", "宝可梦塔是为了纪念逝去的宝可\n梦而建立的。")
+    }
+  }
+
+  // ── Middle-aged woman (npc 2) ───────────────────────────────────────────
+  @storyline("talkMiddleAgedWoman") {
+    @trigger(map = "PokemonTower1F", npc = 2)
+    @speaker("") {
+      @t("Did you come to pay\nrespects? Bless you!", "你是来祭拜的吗？祝福你！")
+    }
+  }
+
+  // ── Balding guy (npc 3) ─────────────────────────────────────────────────
+  @storyline("talkBaldingGuy") {
+    @trigger(map = "PokemonTower1F", npc = 3)
+    @speaker("") {
+      @t("I came to pray for my\nCLEFAIRY.\n\nSniff! I can't stop\ncrying...", "我是来为我的皮皮祈祷的。\n\n呜咽……我止不住泪水……")
+    }
+  }
+
+  // ── Girl (npc 4) ────────────────────────────────────────────────────────
+  @storyline("talkGirl") {
+    @trigger(map = "PokemonTower1F", npc = 4)
+    @speaker("") {
+      @t("My GROWLITHE... Why did you\ndie?", "我的卡蒂狗……你为什么要死？")
+    }
+  }
+
+  // ── Channeler (npc 5) ───────────────────────────────────────────────────
+  @storyline("talkChanneler") {
+    @trigger(map = "PokemonTower1F", npc = 5)
+    @speaker("") {
+      @t("I am a CHANNELER! There are\nspirits up to mischief!", "我是灵媒师！这里有幽灵在作\n怪！")
+    }
+  }
+}

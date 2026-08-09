@@ -1,0 +1,64 @@
+{
+  "$schema": "../schemas/pokemon.schema.json",
+  "species": "Seadra",
+  "baseStats": {
+    "hp": 55,
+    "attack": 65,
+    "defense": 95,
+    "speed": 85,
+    "special": 95
+  },
+  "type1": "Water",
+  "type2": "Water",
+  "catchRate": 75,
+  "baseExp": 155,
+  "growthRate": "MediumFast",
+  "initialMoves": [
+    "Bubble",
+    "Smokescreen",
+    "None",
+    "None"
+  ],
+  "tmHmFlags": [
+    32,
+    127,
+    8,
+    192,
+    194,
+    8,
+    18
+  ],
+  "pokedex": {
+    "category": "DRAGON",
+    "heightFeet": 3,
+    "heightInches": 11,
+    "weightDecipounds": 550,
+    "flavorTextPages": [
+      "Capable of swim-\nming backwards by\nrapidly flapping",
+      "its wing-like\npectoral fins and\nstout tail"
+    ]
+  },
+  "evolutions": [],
+  "learnset": [
+    {
+      "level": 19,
+      "moveId": "Smokescreen"
+    },
+    {
+      "level": 24,
+      "moveId": "Leer"
+    },
+    {
+      "level": 30,
+      "moveId": "WaterGun"
+    },
+    {
+      "level": 41,
+      "moveId": "Agility"
+    },
+    {
+      "level": 52,
+      "moveId": "HydroPump"
+    }
+  ]
+}

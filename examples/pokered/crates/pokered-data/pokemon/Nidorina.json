@@ -1,0 +1,75 @@
+{
+  "$schema": "../schemas/pokemon.schema.json",
+  "species": "Nidorina",
+  "baseStats": {
+    "hp": 70,
+    "attack": 62,
+    "defense": 67,
+    "speed": 56,
+    "special": 55
+  },
+  "type1": "Poison",
+  "type2": "Poison",
+  "catchRate": 120,
+  "baseExp": 117,
+  "growthRate": "MediumSlow",
+  "initialMoves": [
+    "Growl",
+    "Tackle",
+    "Scratch",
+    "None"
+  ],
+  "tmHmFlags": [
+    224,
+    63,
+    136,
+    193,
+    131,
+    8,
+    2
+  ],
+  "pokedex": {
+    "category": "POISON PIN",
+    "heightFeet": 2,
+    "heightInches": 7,
+    "weightDecipounds": 440,
+    "flavorTextPages": [
+      "The female's horn\ndevelops slowly.\nPrefers physical",
+      "attacks such as\nclawing and\nbiting"
+    ]
+  },
+  "evolutions": [
+    {
+      "method": "item",
+      "species": "Nidoqueen",
+      "item": "MoonStone",
+      "minLevel": 1
+    }
+  ],
+  "learnset": [
+    {
+      "level": 8,
+      "moveId": "Scratch"
+    },
+    {
+      "level": 14,
+      "moveId": "PoisonSting"
+    },
+    {
+      "level": 23,
+      "moveId": "TailWhip"
+    },
+    {
+      "level": 32,
+      "moveId": "Bite"
+    },
+    {
+      "level": 41,
+      "moveId": "FurySwipes"
+    },
+    {
+      "level": 50,
+      "moveId": "DoubleKick"
+    }
+  ]
+}

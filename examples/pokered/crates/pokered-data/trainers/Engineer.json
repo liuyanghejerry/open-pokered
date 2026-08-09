@@ -1,0 +1,43 @@
+{
+  "$schema": "../schemas/trainer.schema.json",
+  "class": "Engineer",
+  "constName": "ENGINEER",
+  "parties": [
+    {
+      "pokemon": [
+        {
+          "level": 21,
+          "species": "Voltorb"
+        },
+        {
+          "level": 21,
+          "species": "Magnemite"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 21,
+          "species": "Magnemite"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 18,
+          "species": "Magnemite"
+        },
+        {
+          "level": 18,
+          "species": "Magnemite"
+        },
+        {
+          "level": 18,
+          "species": "Magneton"
+        }
+      ]
+    }
+  ]
+}

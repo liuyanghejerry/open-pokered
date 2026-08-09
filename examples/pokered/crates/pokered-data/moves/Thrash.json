@@ -1,0 +1,9 @@
+{
+  "$schema": "../schemas/move.schema.json",
+  "id": "Thrash",
+  "effect": "ThrashPetalDanceEffect",
+  "power": 90,
+  "type": "Normal",
+  "accuracy": 100,
+  "pp": 20
+}

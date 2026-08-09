@@ -1,0 +1,171 @@
+// CeladonCity — translated from the original disassembly (scripts/CeladonCity.asm,
+// text/CeladonCity.asm) to the real Game DSL API surface. Overworld city: NPC
+// dialogue + signs only (no gym leader here — CeladonGym is a separate map, and
+// the Game Corner / Dept Store are reached via warps). The one branching NPC is
+// GRAMPS3, who gifts TM41 (SOFTBOILED). POLIWRATH plays its cry on talk.
+
+game_scene CeladonCity {
+  // On map entry the original resets a span of hidden internal events
+  // (ResetEvents EVENT_1B8..EVENT_1BF; ResetEvent EVENT_67F). These are `; ???`
+  // unknown internal flags in constants.asm with no gameplay-visible effect, so
+  // nothing to run on load.
+
+  // ── Little Girl (npc 1) ────────────────────────────────────────────────
+  @storyline("talkLittleGirl") {
+    @trigger(map = "CeladonCity", npc = 1)
+    @speaker("") {
+      @t("I got my KOFFING in\nCINNABAR!\n\nIt's nice, but it breathes\npoison when it's angry!", "我的瓦斯弹是在红莲岛抓到的！\n\n它很可爱，但生气时会喷毒气！")
+    }
+  }
+
+  // ── Gramps 1 (npc 2) ───────────────────────────────────────────────────
+  @storyline("talkGramps1") {
+    @trigger(map = "CeladonCity", npc = 2)
+    @speaker("") {
+      @t("Heheh! This GYM is great!\nIt's full of women!", "嘿嘿！这个道馆真棒！里面全是\n女孩子！")
+    }
+  }
+
+  // ── Girl (npc 3) ───────────────────────────────────────────────────────
+  @storyline("talkGirl") {
+    @trigger(map = "CeladonCity", npc = 3)
+    @speaker("") {
+      @t("The GAME CORNER is bad for\nour city's image!", "游戏厅对我们城市的形象不好！")
+    }
+  }
+
+  // ── Gramps 2 (npc 4) ───────────────────────────────────────────────────
+  @storyline("talkGramps2") {
+    @trigger(map = "CeladonCity", npc = 4)
+    @speaker("") {
+      @t("Moan! I blew it all at the\nslots!\n\nI knew I should have cashed\nin my coins for prizes!", "唉！我把钱全输在老虎机上了！\n\n我早知道就该把代币换成奖品才\n对！")
+    }
+  }
+
+  // ── Gramps 3 (npc 5) — gifts TM41 (SOFTBOILED) ─────────────────────────
+  @storyline("talkGramps3") {
+    @trigger(map = "CeladonCity", npc = 5)
+    @if (getFlag("EVENT_GOT_TM41")) {
+      @speaker("") {
+        @t("TM41 teaches SOFTBOILED!\n\nOnly one POKeMON can use it!\n\nThat POKeMON is CHANSEY!", "招式机41 传授生蛋！\n\n只有一只宝可梦能用它！\n\n那只宝可梦就是吉利蛋！")
+      }
+    } @else {
+      @speaker("") {
+        @t("Hello, there!\n\nI've seen you, but I never\nhad a chance to talk!\n\nHere's a gift for dropping\nby!", "你好啊！\n\n我见过你，但一直没机会和你说\n话！\n\n这是给你的见面礼！")
+      }
+      given = giveItem("TM41", 1)
+      @if (given) {
+        @speaker("") { @t("<PLAYER> received TM41!", "<PLAYER>获得了招式机41！") }
+        setFlag("EVENT_GOT_TM41")
+      } @else {
+        @speaker("") { @t("Oh, your pack is full of\nitems!", "哎呀，你的背包已经满了！") }
+      }
+    }
+  }
+
+  // ── Fisher (npc 6) ─────────────────────────────────────────────────────
+  @storyline("talkFisher") {
+    @trigger(map = "CeladonCity", npc = 6)
+    @speaker("") {
+      @t("This is my trusted pal,\nPOLIWRATH!\n\nIt evolved from POLIWHIRL\nwhen I used WATER STONE!", "这是我最信赖的搭档，快泳蛙！\n\n它是在我使用水之石时从蚊香蛙\n进化来的！")
+    }
+  }
+
+  // ── Poliwrath (npc 7) — plays its cry ──────────────────────────────────
+  @storyline("talkPoliwrath") {
+    @trigger(map = "CeladonCity", npc = 7)
+    @speaker("") {
+      @t("POLIWRATH: Ribi ribit!", "快泳蛙：呱呱呱呱！")
+    }
+    playCry("POLIWRATH")
+  }
+
+  // ── Rocket 1 (npc 8) ───────────────────────────────────────────────────
+  @storyline("talkRocket1") {
+    @trigger(map = "CeladonCity", npc = 8)
+    @speaker("") {
+      @t("What are you staring at?", "你在看什么？")
+    }
+  }
+
+  // ── Rocket 2 (npc 9) ───────────────────────────────────────────────────
+  @storyline("talkRocket2") {
+    @trigger(map = "CeladonCity", npc = 9)
+    @speaker("") {
+      @t("Keep out of TEAM ROCKET's\nway!", "别挡火箭队的路！")
+    }
+  }
+
+  // ── Signs ──────────────────────────────────────────────────────────────
+  // sign 1 (27,15): Trainer Tips 1
+  @storyline("sign1") {
+    @trigger(map = "CeladonCity", sign = 1)
+    @speaker("") {
+      @t("TRAINER TIPS\n\nX ACCURACY boosts the\naccuracy of techniques!\n\nDIRE HIT jacks up the\nlikelihood of critical hits!\n\nGet your items at CELADON\nDEPT. STORE!", "训练家须知\n\n特攻强化能提升招式的命中率！\n\n会心药片能提升击中要害的几\n率！\n\n请到彩虹市百货商店购买道具！")
+    }
+  }
+
+  // sign 2 (19,15): City sign
+  @storyline("sign2") {
+    @trigger(map = "CeladonCity", sign = 2)
+    @speaker("") {
+      @t("CELADON CITY The City of\nRainbow Dreams", "彩虹市彩虹之梦的城市")
+    }
+  }
+
+  // sign 3 (42,9): Poke Center sign
+  @storyline("sign3") {
+    @trigger(map = "CeladonCity", sign = 3)
+    @speaker("") {
+      @t("Heal Your POKeMON! POKeMON\nCENTER", "治愈你的宝可梦！宝可梦中心")
+    }
+  }
+
+  // sign 4 (13,29): Gym sign
+  @storyline("sign4") {
+    @trigger(map = "CeladonCity", sign = 4)
+    @speaker("") {
+      @t("CELADON CITY POKeMON GYM\nLEADER: ERIKA\n\nThe Nature Loving Princess!", "彩虹市宝可梦道馆馆主：莉佳\n\n热爱自然的公主殿下！")
+    }
+  }
+
+  // sign 5 (21,9): Mansion sign
+  @storyline("sign5") {
+    @trigger(map = "CeladonCity", sign = 5)
+    @speaker("") {
+      @t("CELADON MANSION", "彩虹公馆")
+    }
+  }
+
+  // sign 6 (12,13): Dept Store sign
+  @storyline("sign6") {
+    @trigger(map = "CeladonCity", sign = 6)
+    @speaker("") {
+      @t("Find what you need at\nCELADON DEPT. STORE!", "在彩虹市百货商店找到你需要的\n东西！")
+    }
+  }
+
+  // sign 7 (39,21): Trainer Tips 2
+  @storyline("sign7") {
+    @trigger(map = "CeladonCity", sign = 7)
+    @speaker("") {
+      @t("TRAINER TIPS\n\nGUARD SPEC. protects POKeMON\nagainst SPECIAL attacks such\nas fire and water!\n\nGet your items at CELADON\nDEPT. STORE!", "训练家须知\n\n特殊防御能保护宝可梦免受特殊\n攻击例如火和水的招式！\n\n请到彩虹市百货商店购买道具！")
+    }
+  }
+
+  // sign 8 (33,21): Prize Exchange sign
+  @storyline("sign8") {
+    @trigger(map = "CeladonCity", sign = 8)
+    @speaker("") {
+      @t("Coins exchanged for prizes!\nPRIZE EXCHANGE", "用代币兑换奖品！奖品兑换处")
+    }
+  }
+
+  // sign 9 (27,21): Game Corner sign
+  @storyline("sign9") {
+    @trigger(map = "CeladonCity", sign = 9)
+    @speaker("") {
+      @t("ROCKET GAME CORNER The\nplayground for grown-ups!", "火箭队游戏厅成年人的游乐场！")
+    }
+  }
+}

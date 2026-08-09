@@ -1,0 +1,102 @@
+{
+  "$schema": "../../schemas/map.schema.json",
+  "id": 56,
+  "name": "PewterMart",
+  "header": {
+    "tileset": "Mart",
+    "music": "Pokecenter",
+    "connectionFlags": 0,
+    "width": 4,
+    "height": 4,
+    "borderBlock": 0
+  },
+  "connections": {},
+  "warps": [
+    {
+      "x": 3,
+      "y": 7,
+      "destWarpId": 4
+    },
+    {
+      "x": 4,
+      "y": 7,
+      "destWarpId": 4
+    }
+  ],
+  "npcs": [
+    {
+      "spriteId": 38,
+      "spriteName": "Clerk",
+      "x": 0,
+      "y": 5,
+      "movement": "Stationary",
+      "facing": "Right",
+      "range": 0,
+      "textId": 1,
+      "isTrainer": false
+    },
+    {
+      "spriteId": 4,
+      "spriteName": "Youngster",
+      "x": 3,
+      "y": 3,
+      "movement": "Wander",
+      "facing": "Down",
+      "range": 1,
+      "textId": 2,
+      "isTrainer": false
+    },
+    {
+      "spriteId": 12,
+      "spriteName": "SuperNerd",
+      "x": 5,
+      "y": 5,
+      "movement": "Stationary",
+      "facing": "Down",
+      "range": 0,
+      "textId": 3,
+      "isTrainer": false
+    }
+  ],
+  "signs": [],
+  "text": {
+    "npc": {
+      "1": [
+        {
+          "line1": "[Mart script]",
+          "line2": ""
+        }
+      ],
+      "2": [
+        {
+          "line1": "A shady, old man",
+          "line2": "got me to buy"
+        },
+        {
+          "line1": "this really weird",
+          "line2": "fish #MON!"
+        },
+        {
+          "line1": "It's totally weak",
+          "line2": "and it cost ¥500!"
+        }
+      ],
+      "3": [
+        {
+          "line1": "Good things can",
+          "line2": "happen if you"
+        },
+        {
+          "line1": "raise #MON",
+          "line2": "diligently, even"
+        },
+        {
+          "line1": "the weak ones!",
+          "line2": ""
+        }
+      ]
+    },
+    "sign": {}
+  },
+  "wild": null
+}

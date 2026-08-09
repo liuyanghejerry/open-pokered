@@ -1,0 +1,39 @@
+// Route12SuperRodHouse — translated from the original disassembly
+// (scripts/Route12SuperRodHouse.asm, text/Route12SuperRodHouse.asm) to the real
+// Game DSL API surface. Single-NPC item-gate map: the FISHING GURU's brother
+// gives the SUPER ROD via a Yes/No choice. The original gates on the
+// GOT_SUPER_ROD status bit; SUPER_ROD is a one-time key item, so hasItem(
+// "SUPER_ROD") is a faithful proxy for "already received it".
+
+game_scene Route12SuperRodHouse {
+  // ── FISHING GURU's brother (npc 1) — gives the SUPER ROD ────────────────
+  @storyline("talkFishingGuru") {
+    @trigger(map = "Route12SuperRodHouse", npc = 1)
+    @if (hasItem("SUPER_ROD")) {
+      // Already got the rod — fishing advice.
+      @speaker("") {
+        @t("Hello there, <PLAYER>!\n\nUse the SUPER ROD in any\nwater! You can catch\ndifferent kinds of POKeMON.\n\nTry fishing wherever you\ncan!", "你好呀， <PLAYER>！\n\n在任何水面用厉害钓竿！能钓到\n不同种类的宝可梦。\n\n试着在任何地方钓鱼吧！")
+      }
+    } @else {
+      @speaker("") {
+        @t("I'm the FISHING GURU's\nbrother!\n\nI simply Looove fishing!\n\nDo you like to fish?", "我是垂钓大师的哥哥！\n\n我超喜欢钓鱼！\n\n你喜欢钓鱼吗？")
+      }
+      @choice {
+        @option(@t("YES", "是")) {
+          giveItem("SUPER_ROD", 1)
+          @speaker("") {
+            @t("Grand! I like your style!\n\nTake this and fish, young\none!\n\n<PLAYER> received a SUPER\nROD!", "很好！我喜欢你的风格！\n\n拿上这个，去钓鱼吧，少年！\n\n<PLAYER>得到了厉害钓竿！")
+          }
+          @speaker("") {
+            @t("Fishing is a way of life!\n\nFrom the seas to rivers, go\nout and land the big one!", "钓鱼是一种生活方式！\n\n从大海到河流，去钓上一条大家\n伙吧！")
+          }
+        }
+        @option(@t("NO", "否")) {
+          @speaker("") {
+            @t("Oh... That's so\ndisappointing...", "哦……真让人失望……")
+          }
+        }
+      }
+    }
+  }
+}

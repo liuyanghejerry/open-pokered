@@ -1,0 +1,30 @@
+// CeladonMansionRoofHouse — translated from the original disassembly
+// (scripts/CeladonMansionRoofHouse.asm, text/CeladonMansionRoofHouse.asm) to the
+// real Game DSL API surface. A tiny 4x4 house with two NPCs: a Hiker who gives
+// trade/link advice (dialogue only), and a Poké Ball that is the famous gift
+// EEVEE (Lv 25). The original calls GivePokemon then HideObject on the toggle
+// when the party isn't full; here the gift is gated by a guard flag and the
+// object is hidden by name (matching the FightingDojo gift-mon pattern).
+
+game_scene CeladonMansionRoofHouse {
+  // ── Hiker (npc 1) — dialogue only ───────────────────────────────────────
+  @storyline("talkHiker") {
+    @trigger(map = "CeladonMansionRoofHouse", npc = 1)
+    @speaker("") {
+      @t("I know everything about the\nworld of POKeMON in your\nGAME BOY!\n\nGet together with your\nfriends and trade POKeMON!", "我什么都懂关于这个宝可梦世界\n的游戏机的事！\n\n和朋友们聚在一起交换宝可梦\n吧！")
+    }
+  }
+
+  // ── Gift EEVEE Poké Ball (npc 2) ────────────────────────────────────────
+  // Original: GivePokemon EEVEE Lv 25; on success (party not full) HideObject
+  // via TOGGLE_CELADON_MANSION_EEVEE_GIFT. No on-screen text in the original —
+  // GivePokemon shows the standard "received POKeMON" message itself.
+  @storyline("talkPokeBall") {
+    @trigger(map = "CeladonMansionRoofHouse", npc = 2, toggle = "CELADON_MANSION_ROOF_HOUSE_OBJ_2")
+    @if (!getFlag("EVENT_GOT_EEVEE")) {
+      givePokemon("EEVEE", 25)
+      hideObjectByName("CELADON_MANSION_ROOF_HOUSE_OBJ_2")
+      setFlag("EVENT_GOT_EEVEE")
+    }
+  }
+}

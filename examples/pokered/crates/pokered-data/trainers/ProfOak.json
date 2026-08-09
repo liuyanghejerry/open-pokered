@@ -1,0 +1,79 @@
+{
+  "$schema": "../schemas/trainer.schema.json",
+  "class": "ProfOak",
+  "constName": "OAK",
+  "parties": [
+    {
+      "pokemon": [
+        {
+          "level": 66,
+          "species": "Tauros"
+        },
+        {
+          "level": 67,
+          "species": "Exeggutor"
+        },
+        {
+          "level": 68,
+          "species": "Arcanine"
+        },
+        {
+          "level": 69,
+          "species": "Blastoise"
+        },
+        {
+          "level": 70,
+          "species": "Gyarados"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 66,
+          "species": "Tauros"
+        },
+        {
+          "level": 67,
+          "species": "Exeggutor"
+        },
+        {
+          "level": 68,
+          "species": "Arcanine"
+        },
+        {
+          "level": 69,
+          "species": "Venusaur"
+        },
+        {
+          "level": 70,
+          "species": "Gyarados"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 66,
+          "species": "Tauros"
+        },
+        {
+          "level": 67,
+          "species": "Exeggutor"
+        },
+        {
+          "level": 68,
+          "species": "Arcanine"
+        },
+        {
+          "level": 69,
+          "species": "Charizard"
+        },
+        {
+          "level": 70,
+          "species": "Gyarados"
+        }
+      ]
+    }
+  ]
+}

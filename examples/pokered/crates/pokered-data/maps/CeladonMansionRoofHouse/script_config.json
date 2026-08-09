@@ -1,0 +1,16 @@
+{
+  "$schema": "../../schemas/script_config.schema.json",
+  "coordEvents": [],
+  "npcs": [
+    {
+      "id": 1,
+      "talk": "talkHiker"
+    },
+    {
+      "id": 2,
+      "talk": "talkPokeBall",
+      "toggleId": "CELADON_MANSION_ROOF_HOUSE_OBJ_2"
+    }
+  ],
+  "signs": []
+}

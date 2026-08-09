@@ -1,0 +1,140 @@
+// PowerPlant — translated from the original disassembly (scripts/PowerPlant.asm,
+// text/PowerPlant.asm) to the real Game DSL API surface.
+//
+// PowerPlant is a dungeon. The "PokeBall" NPCs 1-8 are not items: in the
+// original they are static VOLTORB/ELECTRODE that disguise as item balls and
+// start a wild single-Pokémon battle when talked to (sight_range 0 trainer
+// headers EVENT_BEAT_POWER_PLANT_VOLTORB_0..7, battle text "Bzzzt!"). NPC 9
+// (the Bird) is the legendary ZAPDOS (cry + "Gyaoo!", EVENT_BEAT_ZAPDOS).
+// NPCs 10-14 are real item balls (itemId in map.json) and are picked up
+// natively by the runtime ItemPickup path — they need NO .scene handler
+// (CARBOS, HP_UP, RARE_CANDY, TM25 THUNDER, TM33 REFLECT).
+//
+// The Voltorbs and ZAPDOS are implemented as real wild battles via
+// startWildBattle (VOLTORB Lv40 / ELECTRODE Lv43 / ZAPDOS Lv50), with each
+// EVENT_BEAT_* flag set on win/catch; ZAPDOS mirrors the SeafoamIslandsB4F
+// Articuno handling (cry + text + obtained once + EVENT_BEAT_ZAPDOS).
+
+game_scene PowerPlant {
+  // ── VOLTORB #1 (npc 1, EVENT_BEAT_POWER_PLANT_VOLTORB_0) ────────────────
+  @storyline("talkVoltorb1") {
+    @trigger(map = "PowerPlant", npc = 1)
+    @if (!getFlag("EVENT_BEAT_POWER_PLANT_VOLTORB_0")) {
+      @speaker("") { @t("Bzzzt!", "滋滋！") }
+      result = startWildBattle("VOLTORB", 40)
+      @if (result == "win" || result == "caught") {
+        setFlag("EVENT_BEAT_POWER_PLANT_VOLTORB_0")
+      }
+    }
+  }
+
+  // ── VOLTORB #2 (npc 2, EVENT_BEAT_POWER_PLANT_VOLTORB_1) ────────────────
+  @storyline("talkVoltorb2") {
+    @trigger(map = "PowerPlant", npc = 2)
+    @if (!getFlag("EVENT_BEAT_POWER_PLANT_VOLTORB_1")) {
+      @speaker("") { @t("Bzzzt!", "滋滋！") }
+      result = startWildBattle("VOLTORB", 40)
+      @if (result == "win" || result == "caught") {
+        setFlag("EVENT_BEAT_POWER_PLANT_VOLTORB_1")
+      }
+    }
+  }
+
+  // ── VOLTORB #3 (npc 3, EVENT_BEAT_POWER_PLANT_VOLTORB_2) ────────────────
+  @storyline("talkVoltorb3") {
+    @trigger(map = "PowerPlant", npc = 3)
+    @if (!getFlag("EVENT_BEAT_POWER_PLANT_VOLTORB_2")) {
+      @speaker("") { @t("Bzzzt!", "滋滋！") }
+      result = startWildBattle("VOLTORB", 40)
+      @if (result == "win" || result == "caught") {
+        setFlag("EVENT_BEAT_POWER_PLANT_VOLTORB_2")
+      }
+    }
+  }
+
+  // ── ELECTRODE #1 (npc 4, EVENT_BEAT_POWER_PLANT_VOLTORB_3) ──────────────
+  @storyline("talkElectrode1") {
+    @trigger(map = "PowerPlant", npc = 4)
+    @if (!getFlag("EVENT_BEAT_POWER_PLANT_VOLTORB_3")) {
+      @speaker("") { @t("Bzzzt!", "滋滋！") }
+      result = startWildBattle("ELECTRODE", 43)
+      @if (result == "win" || result == "caught") {
+        setFlag("EVENT_BEAT_POWER_PLANT_VOLTORB_3")
+      }
+    }
+  }
+
+  // ── VOLTORB #4 (npc 5, EVENT_BEAT_POWER_PLANT_VOLTORB_4) ────────────────
+  @storyline("talkVoltorb4") {
+    @trigger(map = "PowerPlant", npc = 5)
+    @if (!getFlag("EVENT_BEAT_POWER_PLANT_VOLTORB_4")) {
+      @speaker("") { @t("Bzzzt!", "滋滋！") }
+      result = startWildBattle("VOLTORB", 40)
+      @if (result == "win" || result == "caught") {
+        setFlag("EVENT_BEAT_POWER_PLANT_VOLTORB_4")
+      }
+    }
+  }
+
+  // ── VOLTORB #5 (npc 6, EVENT_BEAT_POWER_PLANT_VOLTORB_5) ────────────────
+  @storyline("talkVoltorb5") {
+    @trigger(map = "PowerPlant", npc = 6)
+    @if (!getFlag("EVENT_BEAT_POWER_PLANT_VOLTORB_5")) {
+      @speaker("") { @t("Bzzzt!", "滋滋！") }
+      result = startWildBattle("VOLTORB", 40)
+      @if (result == "win" || result == "caught") {
+        setFlag("EVENT_BEAT_POWER_PLANT_VOLTORB_5")
+      }
+    }
+  }
+
+  // ── ELECTRODE #2 (npc 7, EVENT_BEAT_POWER_PLANT_VOLTORB_6) ──────────────
+  @storyline("talkElectrode2") {
+    @trigger(map = "PowerPlant", npc = 7)
+    @if (!getFlag("EVENT_BEAT_POWER_PLANT_VOLTORB_6")) {
+      @speaker("") { @t("Bzzzt!", "滋滋！") }
+      result = startWildBattle("ELECTRODE", 43)
+      @if (result == "win" || result == "caught") {
+        setFlag("EVENT_BEAT_POWER_PLANT_VOLTORB_6")
+      }
+    }
+  }
+
+  // ── VOLTORB #6 (npc 8, EVENT_BEAT_POWER_PLANT_VOLTORB_7) ────────────────
+  @storyline("talkVoltorb6") {
+    @trigger(map = "PowerPlant", npc = 8)
+    @if (!getFlag("EVENT_BEAT_POWER_PLANT_VOLTORB_7")) {
+      @speaker("") { @t("Bzzzt!", "滋滋！") }
+      result = startWildBattle("VOLTORB", 40)
+      @if (result == "win" || result == "caught") {
+        setFlag("EVENT_BEAT_POWER_PLANT_VOLTORB_7")
+      }
+    }
+  }
+
+  // ── ZAPDOS (npc 9, the Bird, EVENT_BEAT_ZAPDOS) ─────────────────────────
+  // Original: TalkToTrainer on a sight-range-0 "trainer" header => a wild
+  // legendary battle vs ZAPDOS, preceded by its cry + "Gyaoo!" text.
+  // Implemented as a static wild battle via startWildBattle (Lv 50); the cry +
+  // text match the original, matching SeafoamIslandsB4F.
+  @storyline("talkZapdos") {
+    @trigger(map = "PowerPlant", npc = 9)
+    @if (!getFlag("EVENT_BEAT_ZAPDOS")) {
+      playCry("ZAPDOS")
+      @speaker("") { @t("Gyaoo!", "嘎嗷！") }
+      // Static wild Lv50 ZAPDOS battle (catchable); flag set only on win/catch.
+      result = startWildBattle("ZAPDOS", 50)
+      @if (result == "win" || result == "caught") {
+        setFlag("EVENT_BEAT_ZAPDOS")
+      }
+    } @else {
+      playCry("ZAPDOS")
+      @speaker("") { @t("Gyaoo!", "嘎嗷！") }
+    }
+  }
+
+  // NPCs 10-14 are item balls (CARBOS, HP_UP, RARE_CANDY, TM25, TM33). Their
+  // itemId is set in map.json, so the runtime ItemPickup path grants them
+  // natively (no .scene handler required) — adding one here would be dead code
+  // since ItemPickup short-circuits before the Talk/dialogue handler.
+}

@@ -1,0 +1,9 @@
+{
+  "$schema": "../schemas/move.schema.json",
+  "id": "SuperFang",
+  "effect": "SuperFangEffect",
+  "power": 1,
+  "type": "Normal",
+  "accuracy": 90,
+  "pp": 10
+}

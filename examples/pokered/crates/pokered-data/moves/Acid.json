@@ -1,0 +1,9 @@
+{
+  "$schema": "../schemas/move.schema.json",
+  "id": "Acid",
+  "effect": "DefenseDownSideEffect",
+  "power": 40,
+  "type": "Poison",
+  "accuracy": 100,
+  "pp": 30
+}

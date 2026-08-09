@@ -1,0 +1,164 @@
+// VermilionCity — translated from the original disassembly (scripts/VermilionCity.asm,
+// text/VermilionCity.asm) to the real Game DSL API surface. NPC/sign dialogue, plus
+// the ticket-gate behavior: a one-step UP push-back when the player has no ticket
+// or the ship has left (coord (18,30) + movePlayerRelative), and the talk-driven
+// S.S.TICKET gate dialogue.
+
+game_scene VermilionCity {
+  // ── Beauty (npc 1) ─────────────────────────────────────────────────────
+  @storyline("talkBeauty") {
+    @trigger(map = "VermilionCity", npc = 1)
+    @speaker("") {
+      @t("We're careful about\npollution!\n\nWe've heard GRIMER\nmultiplies in toxic sludge!", "我们很注意污染防治！\n\n听说臭泥在有毒的污泥中会不断\n繁殖！")
+    }
+  }
+
+  // ── Gambler near the gate (npc 2) — branches on S.S.ANNE departure ──────
+  @storyline("talkGambler1") {
+    @trigger(map = "VermilionCity", npc = 2)
+    @if (getFlag("EVENT_SS_ANNE_LEFT")) {
+      @speaker("") {
+        @t("So, S.S.ANNE has departed!\n\nShe'll be back in about a\nyear.", "圣安奴号已经启航了！\n\n大概一年后才会回来。")
+      }
+    } @else {
+      @speaker("") {
+        @t("Did you see S.S. ANNE moored\nin the harbor?", "你看到圣安奴号停泊在港口吗？")
+      }
+    }
+  }
+
+  // ── Sailor / SS Anne gatekeeper (npc 3) ────────────────────────────────
+  // Original VermilionCitySailor1Text: greets the player; if approached from
+  // the front/back of the guard, asks for the S.S.TICKET. There is no forced
+  // movement on the talk path at all — only the coord script
+  // (VermilionCityDefaultScript) shoves a ticket-less player back one step.
+  @storyline("talkSailor1") {
+    @trigger(map = "VermilionCity", npc = 3)
+    @if (getFlag("EVENT_SS_ANNE_LEFT")) {
+      @speaker("") { @t("The ship set sail.", "船已经起航了。") }
+    } @else {
+      @if (hasItem("S_S_TICKET")) {
+        @speaker("") {
+          @t("Welcome to S.S. ANNE!\n\nExcuse me, do you have a\nticket?", "欢迎来到圣安奴号！\n\n请问，你有船票吗？")
+        }
+        @speaker("") {
+          @t("<PLAYER> flashed the\nS.S.TICKET!\n\nGreat! Welcome to S.S.ANNE!", "<PLAYER>出示了圣安奴号船票！\n\n太好了！欢迎来到圣安奴号！")
+        }
+      } @else {
+        @speaker("") {
+          @t("Welcome to S.S. ANNE!\n\nExcuse me, do you have a\nticket?", "欢迎来到圣安奴号！\n\n请问，你有船票吗？")
+        }
+        @speaker("") {
+          @t("<PLAYER> doesn't have the\nneeded S.S.TICKET.\n\nSorry!\n\nYou need a ticket to get\naboard.", "<PLAYER>没有需要的船票。\n\n抱歉！\n\n你需要船票才能上船。")
+        }
+      }
+    }
+  }
+
+  // ── Ticket-check auto trigger (coord (18,30)) ─────────────────────────
+  // Original VermilionCityDefaultScript: stepping onto (18,30) in front of the
+  // dock shows the gatekeeper's line and shoves a ticket-less player back one
+  // step (PAD_UP). With a ticket the player walks onto the dock freely.
+  @storyline("coordSailorGate") {
+    @trigger(map = "VermilionCity", name = "sailorGate")
+    @if (getFlag("EVENT_SS_ANNE_LEFT")) {
+      @speaker("") { @t("The ship set sail.", "船已经起航了。") }
+      movePlayerRelative(["up"])
+    } @else {
+      @if (hasItem("S_S_TICKET")) {
+        @speaker("") {
+          @t("Welcome to S.S. ANNE!\n\nExcuse me, do you have a\nticket?", "欢迎来到圣安奴号！\n\n请问，你有船票吗？")
+        }
+        @speaker("") {
+          @t("<PLAYER> flashed the\nS.S.TICKET!\n\nGreat! Welcome to S.S.ANNE!", "<PLAYER>出示了圣安奴号船票！\n\n太好了！欢迎来到圣安奴号！")
+        }
+      } @else {
+        @speaker("") {
+          @t("Welcome to S.S. ANNE!\n\nExcuse me, do you have a\nticket?", "欢迎来到圣安奴号！\n\n请问，你有船票吗？")
+        }
+        @speaker("") {
+          @t("<PLAYER> doesn't have the\nneeded S.S.TICKET.\n\nSorry!\n\nYou need a ticket to get\naboard.", "<PLAYER>没有需要的船票。\n\n抱歉！\n\n你需要船票才能上船。")
+        }
+        movePlayerRelative(["up"])
+      }
+    }
+  }
+
+  // ── Gambler on the construction plot (npc 4) ───────────────────────────
+  @storyline("talkGambler2") {
+    @trigger(map = "VermilionCity", npc = 4)
+    @speaker("") {
+      @t("I'm putting up a building on\nthis plot of land.\n\nMy POKeMON is tamping the\nland.", "我要在这块土地上盖一座大楼。\n\n我的宝可梦正在把地压平。")
+    }
+  }
+
+  // ── Machop (npc 5) — plays its cry, then narrates ──────────────────────
+  @storyline("talkMachop") {
+    @trigger(map = "VermilionCity", npc = 5)
+    @speaker("") {
+      @t("MACHOP: Guoh! Gogogoh!", "腕力：咕！咯咯咯！")
+    }
+    playCry("MACHOP")
+    @speaker("") {
+      @t("A MACHOP is stomping the\nland flat.", "一只腕力正在把地面踩得平平\n的。")
+    }
+  }
+
+  // ── Sailor in the harbor (npc 6) ───────────────────────────────────────
+  @storyline("talkSailor2") {
+    @trigger(map = "VermilionCity", npc = 6)
+    @speaker("") {
+      @t("S.S.ANNE is a famous luxury\ncruise ship.\n\nWe visit VERMILION once a\nyear.", "圣安奴号是著名的豪华游轮。\n\n我们每年来一次枯叶市。")
+    }
+  }
+
+  // ── Signs (map.json sign ids 1-7) ──────────────────────────────────────
+  @storyline("sign1") {
+    @trigger(map = "VermilionCity", sign = 1)
+    @speaker("") {
+      @t("VERMILION CITY The Port of\nExquisite Sunsets", "枯叶市夕阳绝美的港口")
+    }
+  }
+
+  @storyline("sign2") {
+    @trigger(map = "VermilionCity", sign = 2)
+    @speaker("") {
+      @t("NOTICE!\n\nROUTE 12 may be blocked off\nby a sleeping POKeMON.\n\nDetour through ROCK TUNNEL\nto LAVENDER TOWN.\n\nVERMILION POLICE", "通知！\n\n12号道路可能被一只睡着的宝可\n梦挡住。\n\n请绕行岩山隧道去紫苑镇。\n\n枯叶市警察")
+    }
+  }
+
+  @storyline("sign3") {
+    @trigger(map = "VermilionCity", sign = 3)
+    @speaker("") {
+      @t("All your item needs\nfulfilled! POKeMON MART", "你所有的道具需求都满足！友好\n商店")
+    }
+  }
+
+  @storyline("sign4") {
+    @trigger(map = "VermilionCity", sign = 4)
+    @speaker("") {
+      @t("Heal Your POKeMON! POKeMON\nCENTER", "治愈你的宝可梦！宝可梦中心")
+    }
+  }
+
+  @storyline("sign5") {
+    @trigger(map = "VermilionCity", sign = 5)
+    @speaker("") {
+      @t("POKeMON FAN CLUB All POKeMON\nfans welcome!", "宝可梦粉丝俱乐部所有宝可梦粉\n丝都欢迎！")
+    }
+  }
+
+  @storyline("sign6") {
+    @trigger(map = "VermilionCity", sign = 6)
+    @speaker("") {
+      @t("VERMILION CITY POKeMON GYM\nLEADER: LT.SURGE\n\nThe Lightning  American!", "枯叶市宝可梦道馆馆主：马志士\n\n闪电般的美国人！")
+    }
+  }
+
+  @storyline("sign7") {
+    @trigger(map = "VermilionCity", sign = 7)
+    @speaker("") {
+      @t("VERMILION HARBOR", "枯叶市港口")
+    }
+  }
+}

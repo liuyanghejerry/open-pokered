@@ -1,0 +1,16 @@
+// UndergroundPathRoute6 — translated from the original disassembly
+// (scripts/UndergroundPathRoute6.asm, text/UndergroundPathRoute6.asm).
+// This is the Route 6 entrance gate to the underground path. The only event
+// is one Girl NPC with a single line of map-flavor dialogue. The original
+// map script just records wLastMap = ROUTE_6 (engine bookkeeping); there is
+// no on-enter cutscene to translate.
+
+game_scene UndergroundPathRoute6 {
+  // ── Girl (npc 1) ───────────────────────────────────────────────────────
+  @storyline("talkGirl") {
+    @trigger(map = "UndergroundPathRoute6", npc = 1)
+    @speaker("") {
+      @t("People often lose things in\nthat UNDERGROUND PATH.", "人们经常在那条地下通道里丢东\n西。")
+    }
+  }
+}

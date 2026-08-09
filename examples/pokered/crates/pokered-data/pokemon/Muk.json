@@ -1,0 +1,68 @@
+{
+  "$schema": "../schemas/pokemon.schema.json",
+  "species": "Muk",
+  "baseStats": {
+    "hp": 105,
+    "attack": 105,
+    "defense": 75,
+    "speed": 50,
+    "special": 65
+  },
+  "type1": "Poison",
+  "type2": "Poison",
+  "catchRate": 75,
+  "baseExp": 157,
+  "growthRate": "MediumFast",
+  "initialMoves": [
+    "Pound",
+    "Disable",
+    "PoisonGas",
+    "None"
+  ],
+  "tmHmFlags": [
+    160,
+    64,
+    152,
+    193,
+    42,
+    72,
+    2
+  ],
+  "pokedex": {
+    "category": "SLUDGE",
+    "heightFeet": 3,
+    "heightInches": 11,
+    "weightDecipounds": 660,
+    "flavorTextPages": [
+      "Thickly covered\nwith a filthy,\nvile sludge. It",
+      "is so toxic, even\nits footprints\ncontain poison"
+    ]
+  },
+  "evolutions": [],
+  "learnset": [
+    {
+      "level": 30,
+      "moveId": "PoisonGas"
+    },
+    {
+      "level": 33,
+      "moveId": "Minimize"
+    },
+    {
+      "level": 37,
+      "moveId": "Sludge"
+    },
+    {
+      "level": 45,
+      "moveId": "Harden"
+    },
+    {
+      "level": 53,
+      "moveId": "Screech"
+    },
+    {
+      "level": 60,
+      "moveId": "AcidArmor"
+    }
+  ]
+}

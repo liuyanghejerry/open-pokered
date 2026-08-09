@@ -1,0 +1,100 @@
+// IndigoPlateauLobby — translated from the original disassembly
+// (scripts/IndigoPlateauLobby.asm, text/IndigoPlateauLobby*.asm,
+// data/items/marts.asm) to the real Game DSL API surface.
+//
+// Five NPCs: a Pokemon Center nurse (heal), the gym-guide and a
+// cooltrainer (dialogue-only Elite Four hints), a mart clerk (shop),
+// and the cable-club link receptionist (link has no API -> stubbed).
+// The original on-enter logic resets a few Elite Four / Victory Road
+// boulder events; reproduced with resetFlag for the ones that map to
+// real flags.
+
+game_scene IndigoPlateauLobby {
+  // ── On-enter: clear Elite Four progress so a fresh run starts clean ──────
+  @load {
+    // Original: ResetEvent EVENT_VICTORY_ROAD_1_BOULDER_ON_SWITCH, then if the
+    // player had started the Elite Four, ResetEventRange across the gauntlet
+    // (INDIGO_PLATEAU_EVENTS_START..EVENT_LANCES_ROOM_LOCK_DOOR,
+    // scripts/IndigoPlateauLobby.asm:9-14). BIT_STARTED_ELITE_4 is set by
+    // LoreleisRoom's @load.
+    resetFlag("EVENT_VICTORY_ROAD_1_BOULDER_ON_SWITCH")
+    @if (getFlag("EVENT_STARTED_ELITE_4")) {
+      resetFlag("EVENT_STARTED_ELITE_4")
+      resetFlag("EVENT_BEAT_LORELEIS_ROOM_TRAINER_0")
+      resetFlag("EVENT_AUTOWALKED_INTO_LORELEIS_ROOM")
+      resetFlag("EVENT_BEAT_BRUNOS_ROOM_TRAINER_0")
+      resetFlag("EVENT_AUTOWALKED_INTO_BRUNOS_ROOM")
+      resetFlag("EVENT_BEAT_AGATHAS_ROOM_TRAINER_0")
+      resetFlag("EVENT_AUTOWALKED_INTO_AGATHAS_ROOM")
+      resetFlag("EVENT_BEAT_LANCES_ROOM_TRAINER_0")
+      resetFlag("EVENT_BEAT_LANCE")
+      resetFlag("EVENT_LANCES_ROOM_LOCK_DOOR")
+    }
+  }
+
+  // ── Pokemon Center Nurse (npc 1) — script_pokecenter_nurse ───────────────
+  @storyline("talkNurse") {
+    @trigger(map = "IndigoPlateauLobby", npc = 1)
+    @speaker("") {
+      @t("Welcome to the POKeMON\nCENTER!\n\nWe heal your POKeMON back to\nperfect health!\n\nShall we heal your POKeMON?", "欢迎来到宝可梦中心！\n\n我们会让你的宝可梦恢复最佳状\n态！\n\n要为你治疗宝可梦吗？")
+    }
+    @choice {
+      @option(@t("Yes", "是")) {
+        @speaker("") {
+          @t("OK, we will need your\nPOKeMON.", "好的，请把宝可梦交给我。")
+        }
+        faceNpc("1", "right")
+        delay(8)
+        heal()
+        animateHealingMachine()
+        faceNpc("1", "down")
+        delay(8)
+        @speaker("") {
+          @t("Thank you for waiting.\n\nYour POKeMON are fully\nhealed!", "谢谢你的等待。\n\n你的宝可梦已完全恢复了！")
+        }
+      }
+      @option(@t("No", "否")) {
+      }
+    }
+    @speaker("") {
+      @t("We hope to see you again!", "期待你再次光临！")
+    }
+  }
+
+  // ── Gym Guide (npc 2) — Elite Four pep talk, dialogue only ───────────────
+  @storyline("talkGymGuide") {
+    @trigger(map = "IndigoPlateauLobby", npc = 2)
+    @speaker("") {
+      @t("Yo! Champ in making!\n\nAt POKeMON LEAGUE, you have\nto face the ELITE FOUR in\nsuccession.\n\nIf you lose, you have to\nstart all over again! This\nis it! Go for it!", "哟！未来的冠军！\n\n在宝可梦联盟，你必须接连挑战\n四天王！依次进行。\n\n如果输了，就得从头再来一次！\n去吧，全力以赴！")
+    }
+  }
+
+  // ── CooltrainerF (npc 3) — Elite Four explanation, dialogue only ─────────
+  @storyline("talkCooltrainerF") {
+    @trigger(map = "IndigoPlateauLobby", npc = 3)
+    @speaker("") {
+      @t("From here on, you face the\nELITE FOUR one by one!\n\nIf you win, a door opens to\nthe next trainer! Good luck!", "从这里开始，你要逐一挑战四天\n王！\n\n如果赢了，通往下一位训练家的\n门就会打开！祝你好运！")
+    }
+  }
+
+  // ── Mart Clerk (npc 4) — script_mart (Indigo Plateau inventory) ──────────
+  @storyline("talkClerk") {
+    @trigger(map = "IndigoPlateauLobby", npc = 4)
+    openShop(["Ultra Ball", "Great Ball", "Full Restore", "Max Potion", "Full Heal", "Revive", "Max Repel"])
+  }
+
+  // ── Link Receptionist (npc 5) — script_cable_club_receptionist ───────────
+  // Cable-club link play has no engine API. Reproduce the welcome line and
+  // the "making preparations" fallback the original shows offline.
+  @storyline("talkLinkReceptionist") {
+    @trigger(map = "IndigoPlateauLobby", npc = 5)
+    @speaker("") {
+      @t("Welcome to the Cable Club!", "欢迎来到通信俱乐部！")
+    }
+    // Cable-club link battle/trade needs a link API; offline this shows the
+    // original's "making preparations" message as a local placeholder.
+    @speaker("") {
+      @t("Cable Club: This is for\ntrading and battling with\nfriends. We're making final\npreparations. Please wait.", "通信俱乐部：这里是用来和朋友\n进行交换和对战的。我们正在做\n最后的准备。请稍候。")
+    }
+  }
+}

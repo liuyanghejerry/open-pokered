@@ -1,0 +1,43 @@
+{
+  "$schema": "../schemas/pokemon.schema.json",
+  "species": "Wigglytuff",
+  "baseStats": {
+    "hp": 140,
+    "attack": 70,
+    "defense": 45,
+    "speed": 45,
+    "special": 50
+  },
+  "type1": "Normal",
+  "type2": "Normal",
+  "catchRate": 50,
+  "baseExp": 109,
+  "growthRate": "Fast",
+  "initialMoves": [
+    "Sing",
+    "Disable",
+    "DefenseCurl",
+    "Doubleslap"
+  ],
+  "tmHmFlags": [
+    177,
+    127,
+    175,
+    241,
+    163,
+    56,
+    99
+  ],
+  "pokedex": {
+    "category": "BALLOON",
+    "heightFeet": 3,
+    "heightInches": 3,
+    "weightDecipounds": 260,
+    "flavorTextPages": [
+      "The body is soft\nand rubbery. When\nangered, it will",
+      "suck in air and\ninflate itself to\nan enormous size"
+    ]
+  },
+  "evolutions": [],
+  "learnset": []
+}

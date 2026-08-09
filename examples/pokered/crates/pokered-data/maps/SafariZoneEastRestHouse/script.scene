@@ -1,0 +1,30 @@
+// SafariZoneEastRestHouse — translated from the original disassembly
+// (scripts/SafariZoneEastRestHouse.asm, text/SafariZoneEastRestHouse.asm) to the
+// real Game DSL API surface. The original script only enables auto text boxes;
+// the three NPCs are plain dialogue (no flags, battles, or on-enter logic).
+
+game_scene SafariZoneEastRestHouse {
+  // ── Scientist (npc 1) ──────────────────────────────────────────────────
+  @storyline("talkScientist") {
+    @trigger(map = "SafariZoneEastRestHouse", npc = 1)
+    @speaker("") {
+      @t("How many did you catch? I'm\nbushed from the work!", "你抓到了多少？我累得精疲力尽\n了！")
+    }
+  }
+
+  // ── Rocker (npc 2) ─────────────────────────────────────────────────────
+  @storyline("talkRocker") {
+    @trigger(map = "SafariZoneEastRestHouse", npc = 2)
+    @speaker("") {
+      @t("I caught a CHANSEY!\n\nThat makes this all\nworthwhile!", "我抓到了吉利蛋！\n\n这样一切都值得了！")
+    }
+  }
+
+  // ── SilphWorkerM (npc 3) ───────────────────────────────────────────────
+  @storyline("talkSilphWorkerM") {
+    @trigger(map = "SafariZoneEastRestHouse", npc = 3)
+    @speaker("") {
+      @t("Whew! I'm tired from all the\nfun!", "呼！玩得这么开心，好累呀！")
+    }
+  }
+}

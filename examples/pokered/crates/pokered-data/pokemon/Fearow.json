@@ -1,0 +1,64 @@
+{
+  "$schema": "../schemas/pokemon.schema.json",
+  "species": "Fearow",
+  "baseStats": {
+    "hp": 65,
+    "attack": 90,
+    "defense": 65,
+    "speed": 100,
+    "special": 61
+  },
+  "type1": "Normal",
+  "type2": "Flying",
+  "catchRate": 90,
+  "baseExp": 162,
+  "growthRate": "MediumFast",
+  "initialMoves": [
+    "Peck",
+    "Growl",
+    "Leer",
+    "None"
+  ],
+  "tmHmFlags": [
+    42,
+    67,
+    8,
+    192,
+    66,
+    12,
+    10
+  ],
+  "pokedex": {
+    "category": "BEAK",
+    "heightFeet": 3,
+    "heightInches": 11,
+    "weightDecipounds": 840,
+    "flavorTextPages": [
+      "With its huge and\nmagnificent wings,\nit can keep aloft",
+      "without ever\nhaving to land\nfor rest"
+    ]
+  },
+  "evolutions": [],
+  "learnset": [
+    {
+      "level": 9,
+      "moveId": "Leer"
+    },
+    {
+      "level": 15,
+      "moveId": "FuryAttack"
+    },
+    {
+      "level": 25,
+      "moveId": "MirrorMove"
+    },
+    {
+      "level": 34,
+      "moveId": "DrillPeck"
+    },
+    {
+      "level": 43,
+      "moveId": "Agility"
+    }
+  ]
+}

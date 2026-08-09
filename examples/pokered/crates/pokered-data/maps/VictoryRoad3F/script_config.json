@@ -1,0 +1,59 @@
+{
+  "$schema": "../../schemas/script_config.schema.json",
+  "coordEvents": [
+    {
+      "name": "switch1",
+      "position": [
+        3,
+        5
+      ],
+      "trigger": "switch1"
+    }
+  ],
+  "npcs": [
+    {
+      "id": 1,
+      "talk": "talkCooltrainerM1"
+    },
+    {
+      "id": 2,
+      "talk": "talkCooltrainerF1"
+    },
+    {
+      "id": 3,
+      "talk": "talkCooltrainerM2"
+    },
+    {
+      "id": 4,
+      "talk": "talkCooltrainerF2"
+    },
+    {
+      "id": 5,
+      "talk": "itemMaxRevive",
+      "toggleId": "VICTORY_ROAD_3F_OBJ_5"
+    },
+    {
+      "id": 6,
+      "talk": "itemTmExplosion",
+      "toggleId": "VICTORY_ROAD_3F_OBJ_6"
+    },
+    {
+      "id": 7,
+      "talk": "talkBoulder1"
+    },
+    {
+      "id": 8,
+      "talk": "talkBoulder2"
+    },
+    {
+      "id": 9,
+      "talk": "talkBoulder3"
+    },
+    {
+      "id": 10,
+      "talk": "talkBoulder4"
+    }
+  ],
+  "onLoad": "VictoryRoad3FOnLoad",
+  "signs": []
+}

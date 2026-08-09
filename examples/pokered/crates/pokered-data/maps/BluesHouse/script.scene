@@ -1,0 +1,61 @@
+// BluesHouse — translated from the original disassembly (scripts/BluesHouse.asm,
+// text/BluesHouse.asm) to the real Game DSL API surface. This is the rival's
+// house in Pallet Town: Daisy (the rival's sister) hands the player the TOWN
+// MAP once they have the POKeDEX and an errand from Oak. Plain NPC-dialogue map.
+//
+// Stub note: the original GiveItem has a "bag full" failure branch
+// (BluesHouseDaisyBagFullText). The DSL giveItem() returns no result, so the
+// bag-full path is omitted — at this point in the game the bag is never full.
+
+game_scene BluesHouse {
+  // ── On-enter: mark the house as entered (BluesHouseDefaultScript) ────────
+  @load {
+    setFlag("EVENT_ENTERED_BLUES_HOUSE")
+  }
+
+  // ── Daisy, sitting (npc 1) — gives the TOWN MAP ─────────────────────────
+  // BluesHouseDaisySittingText: three-way branch on POKeDEX / TOWN MAP events.
+  @storyline("talkDaisySitting") {
+    @trigger(map = "BluesHouse", npc = 1)
+    @if (getFlag("EVENT_GOT_TOWN_MAP")) {
+      // Already have the map.
+      @speaker("") {
+        @t("Use the TOWN MAP to find out\nwhere you are.", "用城镇地图就能知道你在哪里。")
+      }
+    } @else @if (getFlag("EVENT_GOT_POKEDEX")) {
+      // Player has the POKeDEX (Oak's errand) — offer the TOWN MAP.
+      @speaker("") {
+        @t("Grandpa asked you to run an\nerrand? Here, this will help\nyou!", "爷爷让你去跑腿办事？给你，这\n个会帮到你！")
+      }
+      giveItem("TOWN_MAP", 1)
+      // Hide the TOWN MAP object on the table (TOGGLE_TOWN_MAP = npc 3).
+      hideObjectByName("BLUES_HOUSE_OBJ_3")
+      @speaker("") {
+        @t("<PLAYER> got a TOWN MAP!", "<PLAYER>得到了城镇地图！")
+      }
+      playSound("SFX_GET_KEY_ITEM")
+      setFlag("EVENT_GOT_TOWN_MAP")
+    } @else {
+      // No POKeDEX yet — just chit-chat.
+      @speaker("") {
+        @t("Hi <PLAYER>! <RIVAL> is out\nat Grandpa's lab.", "嗨，<PLAYER>！ <RIVAL>现在在\n大木研究所。")
+      }
+    }
+  }
+
+  // ── Daisy, walking (npc 2) — POKeMON-rest tip ───────────────────────────
+  @storyline("talkDaisyWalking") {
+    @trigger(map = "BluesHouse", npc = 2)
+    @speaker("") {
+      @t("POKeMON are living things!\nIf they get tired, give them\na rest!", "宝可梦也是有生命的！如果它们\n累了，就让它们休息吧！")
+    }
+  }
+
+  // ── TOWN MAP object on the table (npc 3) ────────────────────────────────
+  @storyline("talkTownMap") {
+    @trigger(map = "BluesHouse", npc = 3)
+    @speaker("") {
+      @t("It's a big map! This is\nuseful!", "好大的地图！这个真有用！")
+    }
+  }
+}

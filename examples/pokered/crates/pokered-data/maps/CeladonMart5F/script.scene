@@ -1,0 +1,44 @@
+// CeladonMart5F — translated from the original disassembly
+// (scripts/CeladonMart5F.asm, text/CeladonMart5F.asm, data/items/marts.asm)
+// to the real Game DSL API surface. This is a Celadon Dept. Store sales floor:
+// two flavor NPCs and two shop clerks (Clerk1 sells battle X-items, Clerk2
+// sells vitamins). The original CeladonMart5F_Script just enables auto-textbox;
+// there is no on-enter logic, so no @load block.
+
+game_scene CeladonMart5F {
+  // ── Gentleman (npc 1) — flavor ─────────────────────────────────────────
+  @storyline("talkGentleman") {
+    @trigger(map = "CeladonMart5F", npc = 1)
+    @speaker("") {
+      @t("POKeMON ability enhancers\ncan be bought only here.\n\nUse CALCIUM to increase\nSPECIAL abilities.\n\nUse CARBOS to increase\nSPEED.", "宝可梦的能力增强剂只有在这里\n才能买到。\n\n用特攻增强剂可以提升特殊能\n力。\n\n用速度增强剂可以提升速度。")
+    }
+  }
+
+  // ── Sailor (npc 2) — flavor ────────────────────────────────────────────
+  @storyline("talkSailor") {
+    @trigger(map = "CeladonMart5F", npc = 2)
+    @speaker("") {
+      @t("I'm here for POKeMON ability\nenhancers.\n\nPROTEIN increases ATTACK\npower.\n\nIRON increases DEFENSE!", "我来这里是为了买宝可梦的能力\n增强剂。\n\n攻击增强剂能提升攻击力。\n\n防御增强剂能提升防御！")
+    }
+  }
+
+  // ── Clerk1 (npc 3) — shop: battle X-items ──────────────────────────────
+  @storyline("talkClerk1") {
+    @trigger(map = "CeladonMart5F", npc = 3)
+    openShop(["X_ACCURACY", "GUARD_SPEC", "DIRE_HIT", "X_ATTACK", "X_DEFEND", "X_SPEED", "X_SPECIAL"])
+  }
+
+  // ── Clerk2 (npc 4) — shop: vitamins ────────────────────────────────────
+  @storyline("talkClerk2") {
+    @trigger(map = "CeladonMart5F", npc = 4)
+    openShop(["HP_UP", "PROTEIN", "IRON", "CARBOS", "CALCIUM"])
+  }
+
+  // ── Current-floor sign (sign 1) ────────────────────────────────────────
+  @storyline("sign1") {
+    @trigger(map = "CeladonMart5F", sign = 1)
+    @speaker("") {
+      @t("5F: DRUG STORE", "5层：药品商店")
+    }
+  }
+}

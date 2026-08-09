@@ -1,0 +1,29 @@
+{
+  "$schema": "../../schemas/script_config.schema.json",
+  "coordEvents": [
+    {
+      "name": "dontRunAway",
+      "position": [
+        4,
+        10
+      ],
+      "trigger": "coordDontRunAway"
+    },
+    {
+      "name": "dontRunAway2",
+      "position": [
+        5,
+        10
+      ],
+      "trigger": "coordDontRunAway"
+    }
+  ],
+  "npcs": [
+    {
+      "id": 1,
+      "talk": "talkLorelei"
+    }
+  ],
+  "onLoad": "LoreleisRoomOnLoad",
+  "signs": []
+}

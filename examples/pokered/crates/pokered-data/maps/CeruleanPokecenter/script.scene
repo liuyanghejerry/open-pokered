@@ -1,0 +1,55 @@
+// Refactored from CeruleanPokecenter/script.js to jrpg-engine-dsl.
+// Follows the CeladonPokecenter pattern (Pokecenter nurse dialog
+// with @choice + @option). See docs/MIGRATION_NOTES.md §A.
+
+game_scene CeruleanPokecenter {
+  @storyline("talkNurse") {
+    @trigger(map = "CeruleanPokecenter", npc = 1)
+    @speaker("") {
+      @t("Welcome to the POKEMON\nCENTER!\n\nWe heal your POKEMON back to\nperfect health!\n\nShall we heal your POKEMON?", "欢迎光临宝可梦中心！\n\n我们会把你的宝可梦恢复到最佳\n状态！\n\n要为你治疗宝可梦吗？")
+    }
+    @choice {
+      @option(@t("Yes", "是")) {
+        @speaker("") {
+          @t("OK, we will need your\nPOKEMON.", "OK，请把你的宝可梦交给我。")
+        }
+        faceNpc("1", "right")
+        delay(8)
+        heal()
+        animateHealingMachine()
+        faceNpc("1", "down")
+        delay(8)
+        @speaker("") {
+          @t("Thank you for waiting.\n\nYour POKEMON are fully\nhealed!", "感谢您的耐心等待。\n\n你的宝可梦已完全治愈！")
+        }
+      }
+      @option(@t("No", "否")) {
+      }
+    }
+    @speaker("") {
+      @t("We hope to see you again!", "欢迎下次再来！")
+    }
+  }
+
+  @storyline("talkSuperNerd") {
+    @trigger(map = "CeruleanPokecenter", npc = 2)
+    @speaker("") { @t("That BILL!\n\nI heard that he'll do\nwhatever it takes to get\nrare POKEMON!", "那个正辉！\n\n我听说他为了得到稀有的宝可梦\n什么都干得出来！") }
+  }
+
+  @storyline("talkGentleman") {
+    @trigger(map = "CeruleanPokecenter", npc = 3)
+    @speaker("") { @t("Have you heard about BILL?\n\nEveryone calls him a\nPOKEMANIAC!\n\nI think people are just\njealous of BILL, though.\n\nWho wouldn't want to boast\nabout their POKEMON?", "你听说过正辉吗？\n\n大家都叫他宝可梦狂！\n\n不过我觉得人们只是嫉妒正辉罢\n了。\n\n谁不想炫耀自己的宝可梦呢？") }
+  }
+
+  @storyline("talkLinkReceptionist") {
+    @trigger(map = "CeruleanPokecenter", npc = 4)
+    @speaker("") { @t("Welcome to the CABLE CLUB!", "欢迎来到联机俱乐部！") }
+  }
+
+  // ── Pokémon Center PC (sign 1 at 13,3) ───────────────────────────────
+  // engine/menus/pc.asm ActivatePC: BILL's PC / item PC / PROF.OAK's PC.
+  @storyline("pcStorage") {
+    @trigger(map = "CeruleanPokecenter", sign = 1)
+    openPC()
+  }
+}

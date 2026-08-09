@@ -1,0 +1,115 @@
+{
+  "$schema": "../../schemas/map.schema.json",
+  "id": 185,
+  "name": "Route15Gate2F",
+  "header": {
+    "tileset": "Gate",
+    "music": "Cities1",
+    "connectionFlags": 0,
+    "width": 4,
+    "height": 4,
+    "borderBlock": 10
+  },
+  "connections": {},
+  "warps": [
+    {
+      "x": 7,
+      "y": 7,
+      "destMap": "Route15Gate1F",
+      "destWarpId": 4
+    }
+  ],
+  "npcs": [
+    {
+      "spriteId": 32,
+      "spriteName": "Scientist",
+      "x": 4,
+      "y": 2,
+      "movement": "Stationary",
+      "facing": "Down",
+      "range": 0,
+      "textId": 1,
+      "isTrainer": false
+    }
+  ],
+  "signs": [
+    {
+      "x": 6,
+      "y": 2,
+      "textId": 1
+    }
+  ],
+  "text": {
+    "npc": {
+      "1": [
+        {
+          "line1": "[OaksAide script]",
+          "line2": ""
+        }
+      ],
+      "1_GotItem": [
+        {
+          "line1": "EXP.ALL gives",
+          "line2": "EXP points to all"
+        },
+        {
+          "line1": "the #MON with",
+          "line2": ""
+        },
+        {
+          "line1": "you, even if they",
+          "line2": ""
+        },
+        {
+          "line1": "don't fight.",
+          "line2": ""
+        },
+        {
+          "line1": "",
+          "line2": ""
+        },
+        {
+          "line1": "It does, however,",
+          "line2": "reduce the amount"
+        },
+        {
+          "line1": "of EXP for each",
+          "line2": ""
+        },
+        {
+          "line1": "#MON.",
+          "line2": ""
+        },
+        {
+          "line1": "",
+          "line2": ""
+        },
+        {
+          "line1": "If you don't need",
+          "line2": "it, you should "
+        },
+        {
+          "line1": "store it via PC.",
+          "line2": ""
+        }
+      ]
+    },
+    "sign": {
+      "1": [
+        {
+          "line1": "Looked into the",
+          "line2": "binoculars."
+        },
+        {
+          "line1": "",
+          "line2": ""
+        },
+        {
+          "line1": "It looks like a",
+          "line2": "small island!"
+        }
+      ]
+    }
+  },
+  "wild": null
+}

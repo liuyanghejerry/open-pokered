@@ -1,0 +1,190 @@
+{
+  "$schema": "../../schemas/map.schema.json",
+  "id": 43,
+  "name": "ViridianSchoolHouse",
+  "header": {
+    "tileset": "House",
+    "music": "Cities1",
+    "connectionFlags": 0,
+    "width": 4,
+    "height": 4,
+    "borderBlock": 10
+  },
+  "connections": {},
+  "warps": [
+    {
+      "x": 2,
+      "y": 7,
+      "destWarpId": 2
+    },
+    {
+      "x": 3,
+      "y": 7,
+      "destWarpId": 2
+    }
+  ],
+  "npcs": [
+    {
+      "spriteId": 29,
+      "spriteName": "BrunetteGirl",
+      "x": 3,
+      "y": 5,
+      "movement": "Stationary",
+      "facing": "Up",
+      "range": 0,
+      "textId": 1,
+      "isTrainer": false
+    },
+    {
+      "spriteId": 6,
+      "spriteName": "CooltrainerF",
+      "x": 4,
+      "y": 1,
+      "movement": "Stationary",
+      "facing": "Down",
+      "range": 0,
+      "textId": 2,
+      "isTrainer": false
+    }
+  ],
+  "signs": [],
+  "text": {
+    "npc": {
+      "1": [
+        {
+          "line1": "Whew! I'm trying",
+          "line2": "to memorize all"
+        },
+        {
+          "line1": "my notes.",
+          "line2": ""
+        }
+      ],
+      "2": [
+        {
+          "line1": "Okay!",
+          "line2": ""
+        },
+        {
+          "line1": "Be sure to read",
+          "line2": "the blackboard"
+        },
+        {
+          "line1": "carefully!",
+          "line2": ""
+        }
+      ]
+    },
+    "sign": {
+      "1_Intro": [
+        {
+          "line1": "The blackboard",
+          "line2": "describes POKeMON"
+        },
+        {
+          "line1": "STATUS changes",
+          "line2": "during battles."
+        }
+      ],
+      "1_SLP": [
+        {
+          "line1": "A POKeMON can't",
+          "line2": "attack if it's"
+        },
+        {
+          "line1": "asleep!",
+          "line2": ""
+        },
+        {
+          "line1": "POKeMON will stay",
+          "line2": "asleep even after"
+        },
+        {
+          "line1": "battles.",
+          "line2": ""
+        },
+        {
+          "line1": "Use AWAKENING to",
+          "line2": "wake them up!"
+        }
+      ],
+      "1_PSN": [
+        {
+          "line1": "When poisoned, a",
+          "line2": "POKeMON's health"
+        },
+        {
+          "line1": "steadily drops.",
+          "line2": ""
+        },
+        {
+          "line1": "Poison lingers",
+          "line2": "after battles."
+        },
+        {
+          "line1": "Use an ANTIDOTE",
+          "line2": "to cure poison!"
+        }
+      ],
+      "1_PAR": [
+        {
+          "line1": "Paralysis could",
+          "line2": "make POKeMON"
+        },
+        {
+          "line1": "moves misfire!",
+          "line2": ""
+        },
+        {
+          "line1": "Paralysis remains",
+          "line2": "after battles."
+        },
+        {
+          "line1": "Use PARLYZ HEAL",
+          "line2": "for treatment!"
+        }
+      ],
+      "1_BRN": [
+        {
+          "line1": "A burn reduces",
+          "line2": "power and speed."
+        },
+        {
+          "line1": "It also causes",
+          "line2": "ongoing damage."
+        },
+        {
+          "line1": "Burns remain",
+          "line2": "after battles."
+        },
+        {
+          "line1": "Use BURN HEAL to",
+          "line2": "cure a burn!"
+        }
+      ],
+      "1_FRZ": [
+        {
+          "line1": "If frozen, a",
+          "line2": "POKeMON becomes"
+        },
+        {
+          "line1": "totally immobile!",
+          "line2": ""
+        },
+        {
+          "line1": "It stays frozen",
+          "line2": "even after the"
+        },
+        {
+          "line1": "battle ends.",
+          "line2": ""
+        },
+        {
+          "line1": "Use ICE HEAL to",
+          "line2": "thaw out POKeMON!"
+        }
+      ]
+    }
+  },
+  "wild": null
+}

@@ -1,0 +1,50 @@
+{
+  "$schema": "../../schemas/map.schema.json",
+  "id": 129,
+  "name": "CeladonMansion2F",
+  "header": {
+    "tileset": "Mansion",
+    "music": "Celadon",
+    "connectionFlags": 0,
+    "width": 4,
+    "height": 6,
+    "borderBlock": 15
+  },
+  "connections": {},
+  "warps": [
+    {
+      "x": 6,
+      "y": 1,
+      "destMap": "CeladonMansion3F",
+      "destWarpId": 0
+    },
+    {
+      "x": 7,
+      "y": 1,
+      "destMap": "CeladonMansion1F",
+      "destWarpId": 3
+    },
+    {
+      "x": 2,
+      "y": 1,
+      "destMap": "CeladonMansion1F",
+      "destWarpId": 4
+    },
+    {
+      "x": 4,
+      "y": 1,
+      "destMap": "CeladonMansion3F",
+      "destWarpId": 3
+    }
+  ],
+  "npcs": [],
+  "signs": [
+    {
+      "x": 4,
+      "y": 9,
+      "textId": 1
+    }
+  ],
+  "text": {},
+  "wild": null
+}

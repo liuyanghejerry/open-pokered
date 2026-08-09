@@ -1,0 +1,67 @@
+// SeafoamIslandsB3F — translated from the original disassembly
+// (scripts/SeafoamIslandsB3F.asm, text/SeafoamIslandsB3F.asm + shared BoulderText)
+// to the real Game DSL API surface.
+//
+// This map has no NPCs/trainers/signs with dialogue beyond six STRENGTH boulders,
+// all of which share the engine-shared BoulderText. The boulder-hole mechanic:
+// pushing a boulder onto a hole (Seafoam4HolesCoords (3,16)/(6,16)) drops it to
+// B4F (engine-side check in tick_boulder_push sets EVENT_SEAFOAM4_BOULDER{n}_
+// DOWN_HOLE), and the player can fall through the holes to B4F via the coord
+// warps below (DungeonWarpData: (4,14)/(5,14)). The original's forced-surfing
+// current (simulated joypad after both boulders are down) is not reproduced.
+
+game_scene SeafoamIslandsB3F {
+  // ── On-enter logic ──────────────────────────────────────────────────────
+  @load {
+    // Keep a boulder hidden once it has fallen through its hole.
+    @if (getFlag("EVENT_SEAFOAM4_BOULDER1_DOWN_HOLE")) {
+      hideObjectByName("SEAFOAM_ISLANDS_B3F_OBJ_1")
+    }
+    @if (getFlag("EVENT_SEAFOAM4_BOULDER2_DOWN_HOLE")) {
+      hideObjectByName("SEAFOAM_ISLANDS_B3F_OBJ_2")
+    }
+  }
+
+  // ── Falling through the holes to B4F ───────────────────────────────────
+  @storyline("coordHole1") {
+    @trigger(map = "SeafoamIslandsB3F", name = "hole1")
+    warpTo("SeafoamIslandsB4F", 4, 14)
+  }
+  @storyline("coordHole2") {
+    @trigger(map = "SeafoamIslandsB3F", name = "hole2")
+    warpTo("SeafoamIslandsB4F", 5, 14)
+  }
+
+  // ── STRENGTH boulders (npc 1-6) ─────────────────────────────────────────
+  // All six share the engine-shared BoulderText. The actual pushing is the
+  // engine's STRENGTH field move; talking just shows the prompt.
+  @storyline("talkBoulder1") {
+    @trigger(map = "SeafoamIslandsB3F", npc = 1, toggle = "SEAFOAM_ISLANDS_B3F_OBJ_1")
+    @speaker("") { @t("This requires STRENGTH to\nmove!", "要移动它需要怪力！") }
+  }
+
+  @storyline("talkBoulder2") {
+    @trigger(map = "SeafoamIslandsB3F", npc = 2, toggle = "SEAFOAM_ISLANDS_B3F_OBJ_2")
+    @speaker("") { @t("This requires STRENGTH to\nmove!", "要移动它需要怪力！") }
+  }
+
+  @storyline("talkBoulder3") {
+    @trigger(map = "SeafoamIslandsB3F", npc = 3)
+    @speaker("") { @t("This requires STRENGTH to\nmove!", "要移动它需要怪力！") }
+  }
+
+  @storyline("talkBoulder4") {
+    @trigger(map = "SeafoamIslandsB3F", npc = 4)
+    @speaker("") { @t("This requires STRENGTH to\nmove!", "要移动它需要怪力！") }
+  }
+
+  @storyline("talkBoulder5") {
+    @trigger(map = "SeafoamIslandsB3F", npc = 5)
+    @speaker("") { @t("This requires STRENGTH to\nmove!", "要移动它需要怪力！") }
+  }
+
+  @storyline("talkBoulder6") {
+    @trigger(map = "SeafoamIslandsB3F", npc = 6)
+    @speaker("") { @t("This requires STRENGTH to\nmove!", "要移动它需要怪力！") }
+  }
+}

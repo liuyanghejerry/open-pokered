@@ -1,0 +1,9 @@
+{
+  "$schema": "../schemas/move.schema.json",
+  "id": "Submission",
+  "effect": "RecoilEffect",
+  "power": 80,
+  "type": "Fighting",
+  "accuracy": 80,
+  "pp": 25
+}

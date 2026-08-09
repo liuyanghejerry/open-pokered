@@ -1,0 +1,55 @@
+// Refactored from ViridianPokecenter/script.js to jrpg-engine-dsl.
+// Follows the CeladonPokecenter pattern (Pokecenter nurse dialog
+// with @choice + @option). See docs/MIGRATION_NOTES.md §A.
+
+game_scene ViridianPokecenter {
+  @storyline("talkNurse") {
+    @trigger(map = "ViridianPokecenter", npc = 1)
+    @speaker("") {
+      @t("Welcome to the POKEMON\nCENTER!\n\nWe heal your POKEMON back to\nperfect health!\n\nShall we heal your POKEMON?", "欢迎来到宝可梦中心！\n\n我们会让你的宝可梦恢复最佳状\n态！\n\n要为你治疗宝可梦吗？")
+    }
+    @choice {
+      @option(@t("Yes", "是")) {
+        @speaker("") {
+          @t("OK, we will need your\nPOKEMON.", "好的，请把宝可梦交给我。")
+        }
+        faceNpc("1", "right")
+        delay(8)
+        heal()
+        animateHealingMachine()
+        faceNpc("1", "down")
+        delay(8)
+        @speaker("") {
+          @t("Thank you for waiting.\n\nYour POKEMON are fully\nhealed!", "谢谢你的等待。\n\n你的宝可梦已完全恢复了！")
+        }
+      }
+      @option(@t("No", "否")) {
+      }
+    }
+    @speaker("") {
+      @t("We hope to see you again!", "期待你再次光临！")
+    }
+  }
+
+  @storyline("talkGentleman") {
+    @trigger(map = "ViridianPokecenter", npc = 2)
+    @speaker("") { @t("You can use that PC in the\ncorner.\n\nThe receptionist told me. So\nkind!", "你可以使用角落里的电脑。\n\n是接待员告诉我的。她真好！") }
+  }
+
+  @storyline("talkCooltrainerM") {
+    @trigger(map = "ViridianPokecenter", npc = 3)
+    @speaker("") { @t("There's a POKEMON CENTER in\nevery town ahead.\n\nThey don't charge any money\neither!", "前面每一座城镇都有宝可梦中\n心。\n\n而且完全不收费！") }
+  }
+
+  @storyline("talkLinkReceptionist") {
+    @trigger(map = "ViridianPokecenter", npc = 4)
+    @speaker("") { @t("Welcome to the CABLE CLUB!", "欢迎来到通信俱乐部！") }
+  }
+
+  // ── Pokémon Center PC (sign 1 at 13,3) ───────────────────────────────
+  // engine/menus/pc.asm ActivatePC: BILL's PC / item PC / PROF.OAK's PC.
+  @storyline("pcStorage") {
+    @trigger(map = "ViridianPokecenter", sign = 1)
+    openPC()
+  }
+}

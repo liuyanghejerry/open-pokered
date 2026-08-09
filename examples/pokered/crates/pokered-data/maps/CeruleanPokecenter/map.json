@@ -1,0 +1,137 @@
+{
+  "$schema": "../../schemas/map.schema.json",
+  "id": 64,
+  "name": "CeruleanPokecenter",
+  "header": {
+    "tileset": "Pokecenter",
+    "music": "Pokecenter",
+    "connectionFlags": 0,
+    "width": 7,
+    "height": 4,
+    "borderBlock": 0
+  },
+  "connections": {},
+  "warps": [
+    {
+      "x": 3,
+      "y": 7,
+      "destWarpId": 2
+    },
+    {
+      "x": 4,
+      "y": 7,
+      "destWarpId": 2
+    }
+  ],
+  "npcs": [
+    {
+      "spriteId": 41,
+      "spriteName": "Nurse",
+      "x": 3,
+      "y": 1,
+      "movement": "Stationary",
+      "facing": "Down",
+      "range": 0,
+      "textId": 1,
+      "isTrainer": false
+    },
+    {
+      "spriteId": 12,
+      "spriteName": "SuperNerd",
+      "x": 10,
+      "y": 5,
+      "movement": "Wander",
+      "facing": "Down",
+      "range": 0,
+      "textId": 2,
+      "isTrainer": false
+    },
+    {
+      "spriteId": 16,
+      "spriteName": "Gentleman",
+      "x": 4,
+      "y": 3,
+      "movement": "Stationary",
+      "facing": "Down",
+      "range": 0,
+      "textId": 3,
+      "isTrainer": false
+    },
+    {
+      "spriteId": 42,
+      "spriteName": "LinkReceptionist",
+      "x": 11,
+      "y": 2,
+      "movement": "Stationary",
+      "facing": "Down",
+      "range": 0,
+      "textId": 4,
+      "isTrainer": false
+    }
+  ],
+  "signs": [
+    {
+      "x": 13,
+      "y": 3,
+      "textId": 1
+    }
+  ],
+  "text": {
+    "npc": {
+      "1": [
+        {
+          "line1": "[Pokecenter Nurse script]",
+          "line2": ""
+        }
+      ],
+      "2": [
+        {
+          "line1": "That BILL!",
+          "line2": ""
+        },
+        {
+          "line1": "I heard that",
+          "line2": "he'll do whatever"
+        },
+        {
+          "line1": "it takes to get",
+          "line2": "rare #MON!"
+        }
+      ],
+      "3": [
+        {
+          "line1": "Have you heard",
+          "line2": "about BILL?"
+        },
+        {
+          "line1": "Everyone calls",
+          "line2": "him a #MANIAC!"
+        },
+        {
+          "line1": "I think people",
+          "line2": "are just jealous"
+        },
+        {
+          "line1": "of BILL, though.",
+          "line2": ""
+        },
+        {
+          "line1": "Who wouldn't want",
+          "line2": "to boast about"
+        },
+        {
+          "line1": "their #MON?",
+          "line2": ""
+        }
+      ],
+      "4": [
+        {
+          "line1": "[Cable Club script]",
+          "line2": ""
+        }
+      ]
+    },
+    "sign": {}
+  },
+  "wild": null
+}

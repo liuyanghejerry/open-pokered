@@ -1,0 +1,104 @@
+{
+  "$schema": "../../schemas/script_config.schema.json",
+  "coordEvents": [],
+  "npcs": [
+    {
+      "id": 1,
+      "talk": "talkYoungster1"
+    },
+    {
+      "id": 2,
+      "talk": "talkGambler"
+    },
+    {
+      "id": 3,
+      "talk": "talkErik"
+    },
+    {
+      "id": 4,
+      "talk": "talkYoungster2"
+    },
+    {
+      "id": 5,
+      "talk": "talkChansey"
+    },
+    {
+      "id": 6,
+      "talk": "talkVoltorb"
+    },
+    {
+      "id": 7,
+      "talk": "talkKangaskhan"
+    },
+    {
+      "id": 8,
+      "talk": "talkSlowpoke"
+    },
+    {
+      "id": 9,
+      "talk": "talkLapras"
+    },
+    {
+      "id": 10,
+      "talk": "talkFossil"
+    }
+  ],
+  "signs": [
+    {
+      "id": 1,
+      "talk": "sign1"
+    },
+    {
+      "id": 2,
+      "talk": "sign2"
+    },
+    {
+      "id": 3,
+      "talk": "signSafariGame"
+    },
+    {
+      "id": 4,
+      "talk": "signMart"
+    },
+    {
+      "id": 5,
+      "talk": "signPokecenter"
+    },
+    {
+      "id": 6,
+      "talk": "signWardensHome"
+    },
+    {
+      "id": 7,
+      "talk": "signSafariZone"
+    },
+    {
+      "id": 8,
+      "talk": "signGym"
+    },
+    {
+      "id": 9,
+      "talk": "signChansey"
+    },
+    {
+      "id": 10,
+      "talk": "signVoltorb"
+    },
+    {
+      "id": 11,
+      "talk": "signKangaskhan"
+    },
+    {
+      "id": 12,
+      "talk": "signSlowpoke"
+    },
+    {
+      "id": 13,
+      "talk": "signLapras"
+    },
+    {
+      "id": 14,
+      "talk": "signFossil"
+    }
+  ]
+}

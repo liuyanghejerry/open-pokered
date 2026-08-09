@@ -1,0 +1,199 @@
+// MtMoonB2F — translated from the original disassembly (scripts/MtMoonB2F.asm,
+// text/MtMoonB2F.asm) to the real Game DSL API surface.
+//
+// Content types:
+//  - SuperNerd (npc 1): talk/scripted-battle "boss" guarding the fossils. Set
+//    isTrainer=false in map.json so the script owns the battle->reward flow.
+//  - Team Rocket grunts (npc 2-5): sight-engaged trainers; .scene handlers are
+//    dialogue only (runtime drives the battle).
+//  - Dome/Helix Fossils (npc 6/7): item gate — pick one; the SuperNerd "takes"
+//    the other (we hide it). Only one fossil can be obtained.
+//  - PokeBalls (npc 8/9): ground items (HP_UP, TM_01).
+
+game_scene MtMoonB2F {
+  // ── Super Nerd (npc 1) — scripted battle + fossil intro ─────────────────
+  @storyline("talkSuperNerd") {
+    @trigger(map = "MtMoonB2F", npc = 1)
+    @if (getFlag("EVENT_BEAT_MT_MOON_EXIT_SUPER_NERD")) {
+      @if (getFlag("EVENT_GOT_DOME_FOSSIL") || getFlag("EVENT_GOT_HELIX_FOSSIL")) {
+        @speaker("") {
+          @t("Far away, on CINNABAR\nISLAND, there's a POKeMON\nLAB.\n\nThey do research on\nregenerating fossils.", "在遥远的红莲岛上，有一座宝可\n梦研究所。\n\n他们正在研究如何让化石复活。")
+        }
+      } @else {
+        @speaker("") {
+          @t("We'll each take one! No\nbeing greedy!", "我们一人拿一个！不许贪心！")
+        }
+      }
+    } @else {
+      @speaker("") {
+        @t("Hey, stop!\n\nI found these fossils!\nThey're both mine!", "嘿，站住！\n\n这些化石是我发现的！都是我\n的！")
+      }
+      result = startBattle("OPP_SUPER_NERD3")
+      @if (result == "win") {
+        @speaker("") {
+          @t("OK! I'll share!", "好吧！我分你一份！")
+        }
+        setFlag("EVENT_BEAT_MT_MOON_EXIT_SUPER_NERD")
+      }
+    }
+  }
+
+  // ── Team Rocket grunt (npc 2) — sight-engaged; dialogue only ────────────
+  @storyline("talkRocket1") {
+    @trigger(map = "MtMoonB2F", npc = 2)
+    @if (getFlag("EVENT_BEAT_MT_MOON_3_TRAINER_0")) {
+      @speaker("") {
+        @t("You made me mad! TEAM ROCKET\nwill blacklist you!", "你把我惹火了！火箭队会把你列\n入黑名单！")
+      }
+    } @else {
+      @speaker("") {
+        @t("TEAM ROCKET will find the\nfossils, revive and sell\nthem for cash!", "火箭队会找到化石，把它们复活\n后卖钱！")
+      }
+    }
+  }
+
+  // ── Team Rocket grunt (npc 3) — sight-engaged; dialogue only ────────────
+  @storyline("talkRocket2") {
+    @trigger(map = "MtMoonB2F", npc = 3)
+    @if (getFlag("EVENT_BEAT_MT_MOON_3_TRAINER_1")) {
+      @speaker("") {
+        @t("Darn it all! My associates\nwon't stand for this!", "可恶！我的同伴们不会善罢甘休\n的！")
+      }
+    } @else {
+      @speaker("") {
+        @t("We, TEAM ROCKET, are POKeMON\ngangsters!", "我们火箭队是宝可梦黑帮！")
+      }
+    }
+  }
+
+  // ── Team Rocket grunt (npc 4) — sight-engaged; dialogue only ────────────
+  @storyline("talkRocket3") {
+    @trigger(map = "MtMoonB2F", npc = 4)
+    @if (getFlag("EVENT_BEAT_MT_MOON_3_TRAINER_2")) {
+      @speaker("") {
+        @t("If you find a fossil, give\nit to me and scram!", "如果你找到化石，就把它给我然\n后滚开！")
+      }
+    } @else {
+      @speaker("") {
+        @t("We're pulling a big job\nhere! Get lost, kid!", "我们正在这里干大买卖！小子，\n快走开！")
+      }
+    }
+  }
+
+  // ── Team Rocket grunt (npc 5) — sight-engaged; dialogue only ────────────
+  @storyline("talkRocket4") {
+    @trigger(map = "MtMoonB2F", npc = 5)
+    @if (getFlag("EVENT_BEAT_MT_MOON_3_TRAINER_3")) {
+      @speaker("") {
+        @t("POKeMON lived here long\nbefore people came.", "在人类到来之前，宝可梦就住在\n这里了。")
+      }
+    } @else {
+      @speaker("") {
+        @t("Little kids should leave\ngrown-ups alone!", "小孩子应该离大人们远一点！")
+      }
+    }
+  }
+
+  // ── Dome Fossil (npc 6) — only takeable after beating the Super Nerd; pick
+  //    one fossil, then the Super Nerd "takes" the other (we hide it). ──────
+  @storyline("talkDomeFossil") {
+    @trigger(map = "MtMoonB2F", npc = 6)
+    @if (getFlag("EVENT_GOT_DOME_FOSSIL") || getFlag("EVENT_GOT_HELIX_FOSSIL")) {
+      // A fossil was already taken; nothing left to grab here.
+      return
+    }
+    @speaker("") {
+      @t("You want the DOME FOSSIL?", "你想要甲壳化石吗？")
+    }
+    @choice {
+      @option(@t("YES", "是")) {
+        given = giveItem("DOME_FOSSIL", 1)
+        @if (given) {
+          @speaker("") {
+            @t("<PLAYER> got the DOME\nFOSSIL!", "<PLAYER>得到了甲壳化石！")
+          }
+          setFlag("EVENT_GOT_DOME_FOSSIL")
+          hideObjectByName("MTMOONB2F_DOME_FOSSIL")
+          // The Super Nerd grabs the other (Helix) fossil for himself.
+          @speaker("") {
+            @t("All right. Then this is\nmine!", "好吧。那这个归我了！")
+          }
+          hideObjectByName("MTMOONB2F_HELIX_FOSSIL")
+        } @else {
+          @speaker("") {
+            @t("Look, you've got no room for\nthis.", "喂，你已经放不下了。")
+          }
+        }
+      }
+      @option(@t("NO", "否")) {
+      }
+    }
+  }
+
+  // ── Helix Fossil (npc 7) ────────────────────────────────────────────────
+  @storyline("talkHelixFossil") {
+    @trigger(map = "MtMoonB2F", npc = 7)
+    @if (getFlag("EVENT_GOT_DOME_FOSSIL") || getFlag("EVENT_GOT_HELIX_FOSSIL")) {
+      return
+    }
+    @speaker("") {
+      @t("You want the HELIX FOSSIL?", "你想要贝壳化石吗？")
+    }
+    @choice {
+      @option(@t("YES", "是")) {
+        given = giveItem("HELIX_FOSSIL", 1)
+        @if (given) {
+          @speaker("") {
+            @t("<PLAYER> got the HELIX\nFOSSIL!", "<PLAYER>得到了贝壳化石！")
+          }
+          setFlag("EVENT_GOT_HELIX_FOSSIL")
+          hideObjectByName("MTMOONB2F_HELIX_FOSSIL")
+          // The Super Nerd grabs the other (Dome) fossil for himself.
+          @speaker("") {
+            @t("All right. Then this is\nmine!", "好吧。那这个归我了！")
+          }
+          hideObjectByName("MTMOONB2F_DOME_FOSSIL")
+        } @else {
+          @speaker("") {
+            @t("Look, you've got no room for\nthis.", "喂，你已经放不下了。")
+          }
+        }
+      }
+      @option(@t("NO", "否")) {
+      }
+    }
+  }
+
+  // ── PokeBall ground item (npc 8) — HP_UP ────────────────────────────────
+  @storyline("talkPokeBall1") {
+    @trigger(map = "MtMoonB2F", npc = 8, toggle = "MT_MOON_B2F_OBJ_8")
+    given = giveItem("HP_UP", 1)
+    @if (given) {
+      @speaker("") {
+        @t("<PLAYER> found HP_UP!", "<PLAYER>找到了体力增强剂！")
+      }
+    } @else {
+      @speaker("") {
+        @t("You have too much stuff\nalready!", "你身上的东西太多了！")
+      }
+    }
+  }
+
+  // ── PokeBall ground item (npc 9) — TM_01 (MEGA PUNCH) ────────────────────
+  @storyline("talkPokeBall2") {
+    @trigger(map = "MtMoonB2F", npc = 9, toggle = "MT_MOON_B2F_OBJ_9")
+    given = giveItem("TM_01", 1)
+    @if (given) {
+      @speaker("") {
+        @t("<PLAYER> found TM_01!", "<PLAYER>找到了 TM_01！")
+      }
+    } @else {
+      @speaker("") {
+        @t("You have too much stuff\nalready!", "你身上的东西太多了！")
+      }
+    }
+  }
+
+  // Wild battles are disabled inside the fossil area (x 11-14, y 5-8) once
+  // the Super Nerd is beaten, matching MtMoonB2F_Script's BIT_NO_BATTLES.
+}

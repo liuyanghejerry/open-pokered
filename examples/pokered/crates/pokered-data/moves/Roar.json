@@ -1,0 +1,9 @@
+{
+  "$schema": "../schemas/move.schema.json",
+  "id": "Roar",
+  "effect": "SwitchAndTeleportEffect",
+  "power": 0,
+  "type": "Normal",
+  "accuracy": 100,
+  "pp": 20
+}

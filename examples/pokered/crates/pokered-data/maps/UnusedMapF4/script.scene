@@ -1,0 +1,10 @@
+// Auto-converted from UnusedMapF4/script.js by convert_script_to_scene.py
+// Manual review recommended: state machines, local vars, complex control flow.
+
+game_scene UnusedMapF4 {
+  @load {
+  }
+  @storyline("UnusedMapF4_obj2") {
+    @trigger(map = "UnusedMapF4", npc = 2, toggle = "UNUSED_MAP_F4_OBJ_2", no_talk = true)
+  }
+}

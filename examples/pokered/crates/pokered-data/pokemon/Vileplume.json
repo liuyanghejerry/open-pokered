@@ -1,0 +1,56 @@
+{
+  "$schema": "../schemas/pokemon.schema.json",
+  "species": "Vileplume",
+  "baseStats": {
+    "hp": 75,
+    "attack": 80,
+    "defense": 85,
+    "speed": 50,
+    "special": 100
+  },
+  "type1": "Grass",
+  "type2": "Poison",
+  "catchRate": 45,
+  "baseExp": 184,
+  "growthRate": "MediumSlow",
+  "initialMoves": [
+    "StunSpore",
+    "SleepPowder",
+    "Acid",
+    "PetalDance"
+  ],
+  "tmHmFlags": [
+    164,
+    67,
+    56,
+    192,
+    3,
+    8,
+    6
+  ],
+  "pokedex": {
+    "category": "FLOWER",
+    "heightFeet": 3,
+    "heightInches": 11,
+    "weightDecipounds": 410,
+    "flavorTextPages": [
+      "The larger its\npetals, the more\ntoxic pollen it",
+      "contains. Its big\nhead is heavy and\nhard to hold up"
+    ]
+  },
+  "evolutions": [],
+  "learnset": [
+    {
+      "level": 15,
+      "moveId": "Poisonpowder"
+    },
+    {
+      "level": 17,
+      "moveId": "StunSpore"
+    },
+    {
+      "level": 19,
+      "moveId": "SleepPowder"
+    }
+  ]
+}

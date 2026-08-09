@@ -1,0 +1,143 @@
+{
+  "$schema": "/schemas/layout.schema.json",
+  "schema_version": 1,
+  "screen": "party",
+  "variants": {
+    "default": {
+      "children": [
+        {
+          "id": "region_0",
+          "rect": {
+            "tx": 0,
+            "ty": 0,
+            "tw": 20,
+            "th": 18
+          },
+          "labels": [
+            {
+              "tx": 3,
+              "ty": 8,
+              "text": "No #MON!",
+              "color": "Black"
+            },
+            {
+              "tx": 2,
+              "ty": 16,
+              "text": "B:Cancel",
+              "color": "DarkGray"
+            }
+          ],
+          "border": false,
+          "color": "Black"
+        },
+        {
+          "id": "region_1",
+          "rect": {
+            "tx": 0,
+            "ty": 0,
+            "tw": 20,
+            "th": 18
+          },
+          "border": false,
+          "color": "Black"
+        }
+      ]
+    },
+    "entry": {
+      "cursors": [
+        {
+          "tx": 0,
+          "base_ty": 0,
+          "row_step": 2,
+          "glyph": "\u25b6",
+          "color": "Black"
+        },
+        {
+          "tx": 0,
+          "base_ty": 0,
+          "row_step": 2,
+          "glyph": "\u25c6",
+          "color": "DarkGray"
+        }
+      ],
+      "dynamic_labels": {
+        "name": {
+          "parent": "screen",
+          "tx": 4,
+          "ty": 0,
+          "color": "Black"
+        },
+        "level": {
+          "parent": "screen",
+          "tx": 14,
+          "ty": 0,
+          "color": "Black"
+        },
+        "status": {
+          "parent": "screen",
+          "tx": 17,
+          "ty": 0,
+          "color": "Black"
+        },
+        "hp_value": {
+          "parent": "screen",
+          "tx": 14,
+          "ty": 1,
+          "color": "Black"
+        }
+      }
+    },
+    "hp_line": {
+      "dynamic_labels": {
+        "hp_value": {
+          "parent": "screen",
+          "tx": 14,
+          "ty": 1,
+          "color": "Black"
+        }
+      }
+    },
+    "action_menu": {
+      "children": [
+        {
+          "id": "box_0",
+          "rect": {
+            "tx": 11,
+            "ty": 11,
+            "tw": 7,
+            "th": 5
+          },
+          "color": "Black"
+        }
+      ]
+    },
+    "switch_hint": {
+      "children": [
+        {
+          "id": "box_0",
+          "rect": {
+            "tx": 0,
+            "ty": 14,
+            "tw": 18,
+            "th": 2
+          },
+          "color": "Black",
+          "labels": [
+            {
+              "tx": 0,
+              "ty": 0,
+              "text": "Move #MON to",
+              "color": "Black"
+            },
+            {
+              "tx": 0,
+              "ty": 1,
+              "text": "where?",
+              "color": "Black"
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

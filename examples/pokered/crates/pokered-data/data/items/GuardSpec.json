@@ -1,0 +1,1 @@
+{"id":"GuardSpec","name":"GUARD SPEC.","price":700,"category":"Battle","effect":{"type":"BattleFlag","params":{"flag":"guard_spec"}},"held_effect":null,"berry":null,"use_outside_battle":false,"use_in_battle":true,"consume":true,"key_item":false,"sellable":true,"description":"","tags":["battle","guard"]}

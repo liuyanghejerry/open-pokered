@@ -1,0 +1,76 @@
+{
+  "$schema": "../schemas/pokemon.schema.json",
+  "species": "Flareon",
+  "baseStats": {
+    "hp": 65,
+    "attack": 130,
+    "defense": 60,
+    "speed": 65,
+    "special": 110
+  },
+  "type1": "Fire",
+  "type2": "Fire",
+  "catchRate": 45,
+  "baseExp": 198,
+  "growthRate": "MediumFast",
+  "initialMoves": [
+    "Tackle",
+    "SandAttack",
+    "QuickAttack",
+    "Ember"
+  ],
+  "tmHmFlags": [
+    160,
+    67,
+    8,
+    192,
+    227,
+    8,
+    2
+  ],
+  "pokedex": {
+    "category": "FLAME",
+    "heightFeet": 2,
+    "heightInches": 11,
+    "weightDecipounds": 550,
+    "flavorTextPages": [
+      "When storing\nthermal energy in\nits body, its",
+      "temperature could\nsoar to over 1600\ndegrees"
+    ]
+  },
+  "evolutions": [],
+  "learnset": [
+    {
+      "level": 27,
+      "moveId": "QuickAttack"
+    },
+    {
+      "level": 31,
+      "moveId": "Ember"
+    },
+    {
+      "level": 37,
+      "moveId": "TailWhip"
+    },
+    {
+      "level": 40,
+      "moveId": "Bite"
+    },
+    {
+      "level": 42,
+      "moveId": "Leer"
+    },
+    {
+      "level": 44,
+      "moveId": "FireSpin"
+    },
+    {
+      "level": 48,
+      "moveId": "Rage"
+    },
+    {
+      "level": 54,
+      "moveId": "Flamethrower"
+    }
+  ]
+}

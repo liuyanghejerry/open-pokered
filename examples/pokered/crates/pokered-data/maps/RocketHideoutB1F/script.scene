@@ -1,0 +1,104 @@
+// RocketHideoutB1F — translated from the original disassembly
+// (scripts/RocketHideoutB1F.asm, text/RocketHideoutB1F.asm) to the real Game DSL
+// API surface. NPCs 1-5 are the five sight-engaged TEAM ROCKET grunts (map.json
+// isTrainer = true), so the runtime owns each battle; their .scene handlers are
+// DIALOGUE ONLY (pre-battle taunt vs after-battle, branched on
+// EVENT_BEAT_ROCKET_HIDEOUT_1_TRAINER_n). NPCs 6-7 are ground-item Poke Balls
+// (ESCAPE_ROPE, HYPER_POTION). The original door-callback opens a locked door once
+// the 5th grunt (TRAINER_4) is beaten via a tile-block replace — see @load stub.
+
+game_scene RocketHideoutB1F {
+  // ── On-enter door callback (RocketHideoutB1FDoorCallbackScript) ──────────
+  // Original: the door block at asm lb bc, 8, 12 (Y=8, X=12 -> replaceTileBlock
+  // X-first = (12, 8)) is the locked DOOR block $54 = 84 while the puzzle is
+  // unsolved. Once EVENT_BEAT_ROCKET_HIDEOUT_1_TRAINER_4 is set, the callback
+  // swaps it for the FLOOR block $e = 14 (and plays SFX_GO_INSIDE once, guarded
+  // by EVENT_ENTERED_ROCKET_HIDEOUT). On re-entry we re-apply the open floor
+  // block so a solved door stays open. The door never re-closes in the original.
+  @load {
+    @if (getFlag("EVENT_BEAT_ROCKET_HIDEOUT_1_TRAINER_4")) {
+      replaceTileBlock(12, 8, 14)
+      @if (!getFlag("EVENT_ENTERED_ROCKET_HIDEOUT")) {
+        playSound("SFX_GO_INSIDE")
+        setFlag("EVENT_ENTERED_ROCKET_HIDEOUT")
+      }
+    }
+  }
+
+  // ── Rocket grunt (npc 1) — RocketHideout1TrainerHeader0 ─────────────────
+  @storyline("talkRocket1") {
+    @trigger(map = "RocketHideoutB1F", npc = 1)
+    @if (getFlag("EVENT_BEAT_ROCKET_HIDEOUT_1_TRAINER_0")) {
+      @speaker("") { @t("Are you dissing TEAM ROCKET?", "你是在侮辱火箭队吗？") }
+    } @else {
+      @speaker("") { @t("Who are you? How did you get\nhere?", "你是谁？你是怎么进来的？") }
+    }
+  }
+
+  // ── Rocket grunt (npc 2) — RocketHideout1TrainerHeader1 ─────────────────
+  @storyline("talkRocket2") {
+    @trigger(map = "RocketHideoutB1F", npc = 2)
+    @if (getFlag("EVENT_BEAT_ROCKET_HIDEOUT_1_TRAINER_1")) {
+      @speaker("") { @t("You're not going to get away\nwith this, brat!", "你这小鬼，别想就这么算了！") }
+    } @else {
+      @speaker("") { @t("You broke into our\noperation?", "你闯进了我们的据点？") }
+    }
+  }
+
+  // ── Rocket grunt (npc 3) — RocketHideout1TrainerHeader2 ─────────────────
+  @storyline("talkRocket3") {
+    @trigger(map = "RocketHideoutB1F", npc = 3)
+    @if (getFlag("EVENT_BEAT_ROCKET_HIDEOUT_1_TRAINER_2")) {
+      @speaker("") { @t("SILPH SCOPE? I don't know\nwhere it is!", "西尔佛透视镜？我不知道在哪\n里！") }
+    } @else {
+      @speaker("") { @t("Intruder alert!", "入侵警报！") }
+    }
+  }
+
+  // ── Rocket grunt (npc 4) — RocketHideout1TrainerHeader3 ─────────────────
+  @storyline("talkRocket4") {
+    @trigger(map = "RocketHideoutB1F", npc = 4)
+    @if (getFlag("EVENT_BEAT_ROCKET_HIDEOUT_1_TRAINER_3")) {
+      @speaker("") { @t("OK, I'll talk! Take the\nelevator to see my BOSS!", "好，我说！坐电梯上去见我们老\n大吧！") }
+    } @else {
+      @speaker("") { @t("Why did you come here?", "你为什么会来这里？") }
+    }
+  }
+
+  // ── Rocket grunt (npc 5) — RocketHideout1TrainerHeader4 ─────────────────
+  // Original RocketHideoutB1FRocket5EndBattleText is "Why...?" and SetEvent
+  // EVENT_BEAT_ROCKET_HIDEOUT_1_TRAINER_4 (which unlocks the door). The runtime
+  // owns this sight battle and sets that beat flag. The door-open is the SOLVE
+  // of this map's tile-block puzzle, so on the after-battle branch we drive the
+  // ReplaceTileBlock ourselves: swap the locked DOOR block (84) at (12, 8) for
+  // the FLOOR block (14) and play SFX_GO_INSIDE, mirroring the door callback.
+  // note: the asm sets the beat flag from the runtime-owned battle; here we also
+  // setFlag so the @load re-apply keeps the door open on every re-entry.
+  @storyline("talkRocket5") {
+    @trigger(map = "RocketHideoutB1F", npc = 5)
+    @if (getFlag("EVENT_BEAT_ROCKET_HIDEOUT_1_TRAINER_4")) {
+      setFlag("EVENT_BEAT_ROCKET_HIDEOUT_1_TRAINER_4")
+      replaceTileBlock(12, 8, 14)
+      playSound("SFX_GO_INSIDE")
+      @speaker("") { @t("Uh-oh, that fight opened the\ndoor!", "糟糕，刚才那场战斗把门打开\n了！") }
+    } @else {
+      @speaker("") { @t("Are you lost, you little\nrat?", "你迷路了吗，小老鼠？") }
+    }
+  }
+
+  // ── Ground item: Poke Ball — ESCAPE ROPE (npc 6) ────────────────────────
+  @storyline("itemEscapeRope") {
+    @trigger(map = "RocketHideoutB1F", npc = 6, toggle = "ROCKET_HIDEOUT_B1F_OBJ_6")
+    giveItem("ESCAPE_ROPE", 1)
+    hideObjectByName("ROCKET_HIDEOUT_B1F_OBJ_6")
+    @speaker("") { @t("<PLAYER> found ESCAPE ROPE!", "<PLAYER>发现了逃脱绳！") }
+  }
+
+  // ── Ground item: Poke Ball — HYPER POTION (npc 7) ───────────────────────
+  @storyline("itemHyperPotion") {
+    @trigger(map = "RocketHideoutB1F", npc = 7, toggle = "ROCKET_HIDEOUT_B1F_OBJ_7")
+    giveItem("HYPER_POTION", 1)
+    hideObjectByName("ROCKET_HIDEOUT_B1F_OBJ_7")
+    @speaker("") { @t("<PLAYER> found HYPER POTION!", "<PLAYER>发现了厉害伤药！") }
+  }
+}

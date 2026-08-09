@@ -1,0 +1,48 @@
+// SeafoamIslandsB1F — translated from the original disassembly
+// (scripts/SeafoamIslandsB1F.asm, text/SeafoamIslandsB1F.asm) to the real
+// Game DSL API surface.
+//
+// This floor is a STRENGTH-boulder puzzle: two pushable boulders (npcs 1 & 2)
+// can be shoved one tile east into the holes at (18,6) / (23,6); each boulder
+// then falls through to SeafoamIslandsB2F (engine-side check in
+// tick_boulder_push sets EVENT_SEAFOAM2_BOULDER{n}_DOWN_HOLE). The player can
+// also fall through the holes to B2F via the coord warps below (DungeonWarpData
+// lands at (19,7) / (22,7)).
+
+game_scene SeafoamIslandsB1F {
+  // ── On entry: reflect any boulders already dropped through the holes ──────
+  @load {
+    @if (getFlag("EVENT_SEAFOAM2_BOULDER1_DOWN_HOLE")) {
+      hideObjectByName("SEAFOAM_ISLANDS_B1F_OBJ_1")
+    }
+    @if (getFlag("EVENT_SEAFOAM2_BOULDER2_DOWN_HOLE")) {
+      hideObjectByName("SEAFOAM_ISLANDS_B1F_OBJ_2")
+    }
+  }
+
+  // ── Falling through the holes to B2F ───────────────────────────────────
+  @storyline("coordHole1") {
+    @trigger(map = "SeafoamIslandsB1F", name = "hole1")
+    warpTo("SeafoamIslandsB2F", 19, 7)
+  }
+  @storyline("coordHole2") {
+    @trigger(map = "SeafoamIslandsB1F", name = "hole2")
+    warpTo("SeafoamIslandsB2F", 22, 7)
+  }
+
+  // ── Boulder 1 (npc 1) — pushable STRENGTH rock at (17,6) ─────────────────
+  @storyline("talkBoulder") {
+    @trigger(map = "SeafoamIslandsB1F", npc = 1, toggle = "SEAFOAM_ISLANDS_B1F_OBJ_1")
+    @speaker("") {
+      @t("This requires STRENGTH to\nmove!", "这需要怪力才能移动！")
+    }
+  }
+
+  // ── Boulder 2 (npc 2) — pushable STRENGTH rock at (22,6) ─────────────────
+  @storyline("talkBoulder1") {
+    @trigger(map = "SeafoamIslandsB1F", npc = 2, toggle = "SEAFOAM_ISLANDS_B1F_OBJ_2")
+    @speaker("") {
+      @t("This requires STRENGTH to\nmove!", "这需要怪力才能移动！")
+    }
+  }
+}

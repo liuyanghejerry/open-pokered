@@ -1,0 +1,106 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://pokered.dev/schemas/script_config.schema.json",
+  "title": "Script Config",
+  "description": "Schema for script_config.json — maps NPC/sign IDs to JavaScript handler functions.",
+  "type": "object",
+  "required": ["npcs", "signs", "coordEvents"],
+  "properties": {
+    "$schema": { "type": "string" },
+    "onLoad": {
+      "type": "string",
+      "description": "Map entry handler function name (e.g. 'enterMap')"
+    },
+    "npcs": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/npcScriptBinding" }
+    },
+    "signs": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/signScriptBinding" }
+    },
+    "coordEvents": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/coordEvent" },
+      "description": "Coordinate-triggered events (player steps on tile)"
+    }
+  },
+  "additionalProperties": false,
+
+  "$defs": {
+    "npcScriptBinding": {
+      "type": "object",
+      "required": ["id"],
+      "properties": {
+        "id": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "NPC index (1-based, matches NPC order in map.json)"
+        },
+        "talk": {
+          "type": "string",
+          "description": "Handler function name exported from script.js"
+        },
+        "toggleId": {
+          "type": "string",
+          "description": "Toggleable object constant name (e.g. 'ROUTE_2_OBJ_1') for PokeBall/item pickups"
+        },
+        "defaultHidden": {
+          "type": "boolean",
+          "description": "If true, NPC starts hidden (shown via SetEvent)"
+        },
+        "scriptId": {
+          "type": "string",
+          "description": "Optional script identifier for special scripted sequences (e.g. 'PALLETTOWN_OAK')"
+        }
+      },
+      "additionalProperties": false
+    },
+
+    "signScriptBinding": {
+      "type": "object",
+      "required": ["id", "talk"],
+      "properties": {
+        "id": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Sign index (1-based, matches sign order in map.json)"
+        },
+        "talk": {
+          "type": "string",
+          "description": "Handler function name exported from script.js"
+        }
+      },
+      "additionalProperties": false
+    },
+
+    "coordEvent": {
+      "type": "object",
+      "required": ["name", "position", "trigger"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "pattern": "^[a-z][a-zA-Z0-9]*$",
+          "description": "Unique camelCase identifier for this coord event (e.g. 'northExit1')"
+        },
+        "position": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": { "type": "integer" },
+          "description": "Tile coordinates [x, y]"
+        },
+        "trigger": {
+          "type": "string",
+          "description": "Handler function name"
+        },
+        "oneShot": {
+          "type": "boolean",
+          "default": true,
+          "description": "If false, the event re-fires every time the player steps onto the tile (the storyline's own flag checks gate re-entry). Default true = fire once per map entry."
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}

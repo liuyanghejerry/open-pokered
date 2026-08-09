@@ -1,0 +1,100 @@
+// VictoryRoad1F — translated from the original disassembly (scripts/VictoryRoad1F.asm,
+// text/VictoryRoad1F.asm) to the real Game DSL API surface. Victory Road 1F is a
+// cave: two sight-engaged Cooltrainers (the runtime drives those battles, so the
+// .scene handlers are dialogue only — beaten vs. pre-battle taunt), two ground
+// items in PokeBalls (giveItem + a per-item "got" flag guard), and three STRENGTH
+// boulders used in the switch puzzle. The original map script detects a boulder
+// resting on the pressure switch at block (17,13) and replaces a tile block to open
+// the path (EVENT_VICTORY_ROAD_1_BOULDER_ON_SWITCH). The block swap is now wired via
+// replaceTileBlock; see the @load re-apply and the boulder solve handler below.
+
+game_scene VictoryRoad1F {
+  // ── Door / switch tile-block (replaceTileBlock — from VictoryRoad1F.asm) ──
+  // asm `.next` (re-run on map load): CheckEvent EVENT_VICTORY_ROAD_1_BOULDER_ON_SWITCH
+  //   -> ld a, $1d (open block id 29) -> lb bc, 6, 4 (Y=6, X=4) -> ReplaceTileBlock.
+  // So once solved, re-apply the open block on every entry: replaceTileBlock(4, 6, 29).
+  // No CLOSED block id in the asm (the .blk ships with the path closed), and the
+  // original plays no SFX here.
+  @load {
+    @if (getFlag("EVENT_VICTORY_ROAD_1_BOULDER_ON_SWITCH")) {
+      replaceTileBlock(4, 6, 29)
+    }
+  }
+
+  // ── Cooltrainer♀ (npc 1) — sight-engaged trainer; dialogue only ─────────
+  @storyline("talkCooltrainerF") {
+    @trigger(map = "VictoryRoad1F", npc = 1)
+    @if (getFlag("EVENT_BEAT_VICTORY_ROAD_1_TRAINER_0")) {
+      @speaker("") { @t("I never wanted to lose to\nanybody!", "我从来没想输给任何人！") }
+    } @else {
+      @speaker("") { @t("I wonder if you are good\nenough for me!", "不知道你够不够格来挑战我！") }
+    }
+  }
+
+  // ── Cooltrainer♂ (npc 2) — sight-engaged trainer; dialogue only ─────────
+  @storyline("talkCooltrainerM") {
+    @trigger(map = "VictoryRoad1F", npc = 2)
+    @if (getFlag("EVENT_BEAT_VICTORY_ROAD_1_TRAINER_1")) {
+      @speaker("") { @t("I concede, you're better\nthan me!", "我认输，你比我强！") }
+    } @else {
+      @speaker("") { @t("I can see you're good! Let\nme see exactly how good!", "看得出你很强！让我见识一下\n吧！") }
+    }
+  }
+
+  // ── Ground item: TM43 / SKY ATTACK (npc 3) ──────────────────────────────
+  @storyline("itemTmSkyAttack") {
+    @trigger(map = "VictoryRoad1F", npc = 3, toggle = "VICTORY_ROAD_1F_OBJ_3")
+    @if (getFlag("EVENT_GOT_TM43_VICTORY_ROAD_1F")) {
+      @speaker("") { @t("The item ball is empty.", "精灵球里是空的。") }
+    } @else {
+      giveItem("TM43", 1)
+      setFlag("EVENT_GOT_TM43_VICTORY_ROAD_1F")
+      hideObject("VICTORY_ROAD_1F_OBJ_3")
+      @speaker("") { @t("<PLAYER> found TM43!", "<PLAYER>发现了 TM43！") }
+    }
+  }
+
+  // ── Ground item: RARE CANDY (npc 4) ─────────────────────────────────────
+  @storyline("itemRareCandy") {
+    @trigger(map = "VictoryRoad1F", npc = 4, toggle = "VICTORY_ROAD_1F_OBJ_4")
+    @if (getFlag("EVENT_GOT_RARE_CANDY_VICTORY_ROAD_1F")) {
+      @speaker("") { @t("The item ball is empty.", "精灵球里是空的。") }
+    } @else {
+      giveItem("RARE_CANDY", 1)
+      setFlag("EVENT_GOT_RARE_CANDY_VICTORY_ROAD_1F")
+      hideObject("VICTORY_ROAD_1F_OBJ_4")
+      @speaker("") { @t("<PLAYER> found RARE_CANDY!", "<PLAYER>发现了神奇糖果！") }
+    }
+  }
+
+  // ── STRENGTH boulder (npc 5) — the switch-puzzle boulder ─────────────────
+  // In the original, EVENT_VICTORY_ROAD_1_BOULDER_ON_SWITCH is set when a STRENGTH
+  // boulder is detected resting on the pressure switch at block (17,13); the map
+  // script then swaps the tile block to open the path (replaceTileBlock(4, 6, 29)).
+  // note: boulder-push + on-switch detection has no DSL primitive, so we approximate
+  // faithfully — inspecting this puzzle boulder solves the switch: set the flag and
+  // open the door immediately via the same block swap the asm uses. The @load block
+  // re-applies it on re-entry. (The original plays no SFX for this swap.)
+  @storyline("talkBoulder1") {
+    @trigger(map = "VictoryRoad1F", npc = 5)
+    @if (getFlag("EVENT_VICTORY_ROAD_1_BOULDER_ON_SWITCH")) {
+      @speaker("") { @t("It looks like the boulder is\nsettled on the switch.", "看起来这块巨石已经压住了开\n关。") }
+    } @else {
+      @speaker("") { @t("This requires STRENGTH to\nmove!", "这块巨石需要用怪力才能推动！") }
+      setFlag("EVENT_VICTORY_ROAD_1_BOULDER_ON_SWITCH")
+      replaceTileBlock(4, 6, 29)
+    }
+  }
+
+  // ── STRENGTH boulder (npc 6) ────────────────────────────────────────────
+  @storyline("talkBoulder2") {
+    @trigger(map = "VictoryRoad1F", npc = 6)
+    @speaker("") { @t("This requires STRENGTH to\nmove!", "这块巨石需要用怪力才能推动！") }
+  }
+
+  // ── STRENGTH boulder (npc 7) ────────────────────────────────────────────
+  @storyline("talkBoulder3") {
+    @trigger(map = "VictoryRoad1F", npc = 7)
+    @speaker("") { @t("This requires STRENGTH to\nmove!", "这块巨石需要用怪力才能推动！") }
+  }
+}

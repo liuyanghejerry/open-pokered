@@ -1,0 +1,224 @@
+{
+  "$schema": "../../schemas/map.schema.json",
+  "id": 13,
+  "name": "Route2",
+  "header": {
+    "tileset": "Overworld",
+    "music": "Routes1",
+    "connectionFlags": 12,
+    "width": 10,
+    "height": 36,
+    "borderBlock": 15
+  },
+  "connections": {
+    "north": {
+      "targetMap": "PewterCity",
+      "offset": -5
+    },
+    "south": {
+      "targetMap": "ViridianCity",
+      "offset": -5
+    }
+  },
+  "warps": [
+    {
+      "x": 12,
+      "y": 9,
+      "destMap": "DiglettsCaveRoute2",
+      "destWarpId": 0
+    },
+    {
+      "x": 3,
+      "y": 11,
+      "destMap": "ViridianForestNorthGate",
+      "destWarpId": 1
+    },
+    {
+      "x": 15,
+      "y": 19,
+      "destMap": "Route2TradeHouse",
+      "destWarpId": 0
+    },
+    {
+      "x": 16,
+      "y": 35,
+      "destMap": "Route2Gate",
+      "destWarpId": 1
+    },
+    {
+      "x": 15,
+      "y": 39,
+      "destMap": "Route2Gate",
+      "destWarpId": 2
+    },
+    {
+      "x": 3,
+      "y": 43,
+      "destMap": "ViridianForestSouthGate",
+      "destWarpId": 2
+    }
+  ],
+  "npcs": [
+    {
+      "spriteId": 61,
+      "spriteName": "PokeBall",
+      "x": 13,
+      "y": 54,
+      "movement": "Stationary",
+      "facing": "Down",
+      "range": 0,
+      "textId": 1,
+      "isTrainer": false,
+      "itemId": 10
+    },
+    {
+      "spriteId": 61,
+      "spriteName": "PokeBall",
+      "x": 13,
+      "y": 45,
+      "movement": "Stationary",
+      "facing": "Down",
+      "range": 0,
+      "textId": 2,
+      "isTrainer": false,
+      "itemId": 35
+    }
+  ],
+  "signs": [
+    {
+      "x": 5,
+      "y": 65,
+      "textId": 1
+    },
+    {
+      "x": 11,
+      "y": 11,
+      "textId": 2
+    }
+  ],
+  "text": {
+    "npc": {},
+    "sign": {
+      "1": [
+        {
+          "line1": "ROUTE 2",
+          "line2": "VIRIDIAN CITY -"
+        },
+        {
+          "line1": "PEWTER CITY",
+          "line2": ""
+        }
+      ],
+      "2": [
+        {
+          "line1": "DIGLETT's CAVE",
+          "line2": ""
+        }
+      ]
+    }
+  },
+  "wild": {
+    "red": {
+      "grass": {
+        "encounterRate": 25,
+        "mons": [
+          {
+            "level": 3,
+            "species": "Rattata"
+          },
+          {
+            "level": 3,
+            "species": "Pidgey"
+          },
+          {
+            "level": 4,
+            "species": "Pidgey"
+          },
+          {
+            "level": 4,
+            "species": "Rattata"
+          },
+          {
+            "level": 5,
+            "species": "Pidgey"
+          },
+          {
+            "level": 3,
+            "species": "Weedle"
+          },
+          {
+            "level": 2,
+            "species": "Rattata"
+          },
+          {
+            "level": 5,
+            "species": "Rattata"
+          },
+          {
+            "level": 4,
+            "species": "Weedle"
+          },
+          {
+            "level": 5,
+            "species": "Weedle"
+          }
+        ]
+      },
+      "water": {
+        "encounterRate": 0,
+        "mons": []
+      }
+    },
+    "blue": {
+      "grass": {
+        "encounterRate": 25,
+        "mons": [
+          {
+            "level": 3,
+            "species": "Rattata"
+          },
+          {
+            "level": 3,
+            "species": "Pidgey"
+          },
+          {
+            "level": 4,
+            "species": "Pidgey"
+          },
+          {
+            "level": 4,
+            "species": "Rattata"
+          },
+          {
+            "level": 5,
+            "species": "Pidgey"
+          },
+          {
+            "level": 3,
+            "species": "Caterpie"
+          },
+          {
+            "level": 2,
+            "species": "Rattata"
+          },
+          {
+            "level": 5,
+            "species": "Rattata"
+          },
+          {
+            "level": 4,
+            "species": "Caterpie"
+          },
+          {
+            "level": 5,
+            "species": "Caterpie"
+          }
+        ]
+      },
+      "water": {
+        "encounterRate": 0,
+        "mons": []
+      }
+    }
+  }
+}

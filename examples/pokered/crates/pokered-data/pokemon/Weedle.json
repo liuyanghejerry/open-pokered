@@ -1,0 +1,49 @@
+{
+  "$schema": "../schemas/pokemon.schema.json",
+  "species": "Weedle",
+  "baseStats": {
+    "hp": 40,
+    "attack": 35,
+    "defense": 30,
+    "speed": 50,
+    "special": 20
+  },
+  "type1": "Bug",
+  "type2": "Poison",
+  "catchRate": 255,
+  "baseExp": 52,
+  "growthRate": "MediumFast",
+  "initialMoves": [
+    "PoisonSting",
+    "StringShot",
+    "None",
+    "None"
+  ],
+  "tmHmFlags": [
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0
+  ],
+  "pokedex": {
+    "category": "HAIRY BUG",
+    "heightFeet": 1,
+    "heightInches": 0,
+    "weightDecipounds": 70,
+    "flavorTextPages": [
+      "Often found in\nforests, eating\nleaves.",
+      "It has a sharp\nvenomous stinger\non its head"
+    ]
+  },
+  "evolutions": [
+    {
+      "method": "level",
+      "species": "Kakuna",
+      "level": 7
+    }
+  ],
+  "learnset": []
+}

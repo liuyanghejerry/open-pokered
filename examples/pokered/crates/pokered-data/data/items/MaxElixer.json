@@ -1,0 +1,1 @@
+{"id":"MaxElixer","name":"MAX ELIXER","price":0,"category":"Medicine","effect":{"type":"PpRestore","params":{"all":true,"amount":null}},"held_effect":null,"berry":null,"use_outside_battle":true,"use_in_battle":true,"consume":true,"key_item":false,"sellable":false,"description":"","tags":["pp","restore"]}

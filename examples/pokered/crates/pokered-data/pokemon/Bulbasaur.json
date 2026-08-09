@@ -1,0 +1,78 @@
+{
+  "$schema": "../schemas/pokemon.schema.json",
+  "species": "Bulbasaur",
+  "baseStats": {
+    "hp": 45,
+    "attack": 49,
+    "defense": 49,
+    "speed": 45,
+    "special": 65
+  },
+  "type1": "Grass",
+  "type2": "Poison",
+  "catchRate": 45,
+  "baseExp": 64,
+  "growthRate": "MediumSlow",
+  "initialMoves": [
+    "Tackle",
+    "Growl",
+    "None",
+    "None"
+  ],
+  "tmHmFlags": [
+    164,
+    3,
+    56,
+    192,
+    3,
+    8,
+    6
+  ],
+  "pokedex": {
+    "category": "SEED",
+    "heightFeet": 2,
+    "heightInches": 4,
+    "weightDecipounds": 150,
+    "flavorTextPages": [
+      "A strange seed was\nplanted on its\nback at birth.",
+      "The plant sprouts\nand grows with\nthis #MON"
+    ]
+  },
+  "evolutions": [
+    {
+      "method": "level",
+      "species": "Ivysaur",
+      "level": 16
+    }
+  ],
+  "learnset": [
+    {
+      "level": 7,
+      "moveId": "LeechSeed"
+    },
+    {
+      "level": 13,
+      "moveId": "VineWhip"
+    },
+    {
+      "level": 20,
+      "moveId": "Poisonpowder"
+    },
+    {
+      "level": 27,
+      "moveId": "RazorLeaf"
+    },
+    {
+      "level": 34,
+      "moveId": "Growth"
+    },
+    {
+      "level": 41,
+      "moveId": "SleepPowder"
+    },
+    {
+      "level": 48,
+      "moveId": "Solarbeam"
+    }
+  ]
+}

@@ -1,0 +1,72 @@
+{
+  "$schema": "../schemas/pokemon.schema.json",
+  "species": "Butterfree",
+  "baseStats": {
+    "hp": 60,
+    "attack": 45,
+    "defense": 50,
+    "speed": 70,
+    "special": 80
+  },
+  "type1": "Bug",
+  "type2": "Flying",
+  "catchRate": 45,
+  "baseExp": 160,
+  "growthRate": "MediumFast",
+  "initialMoves": [
+    "Confusion",
+    "None",
+    "None",
+    "None"
+  ],
+  "tmHmFlags": [
+    42,
+    67,
+    56,
+    240,
+    67,
+    40,
+    2
+  ],
+  "pokedex": {
+    "category": "BUTTERFLY",
+    "heightFeet": 3,
+    "heightInches": 7,
+    "weightDecipounds": 710,
+    "flavorTextPages": [
+      "In battle, it\nflaps its wings\nat high speed to",
+      "release highly\ntoxic dust into\nthe air"
+    ]
+  },
+  "evolutions": [],
+  "learnset": [
+    {
+      "level": 12,
+      "moveId": "Confusion"
+    },
+    {
+      "level": 15,
+      "moveId": "Poisonpowder"
+    },
+    {
+      "level": 16,
+      "moveId": "StunSpore"
+    },
+    {
+      "level": 17,
+      "moveId": "SleepPowder"
+    },
+    {
+      "level": 21,
+      "moveId": "Supersonic"
+    },
+    {
+      "level": 26,
+      "moveId": "Whirlwind"
+    },
+    {
+      "level": 32,
+      "moveId": "Psybeam"
+    }
+  ]
+}

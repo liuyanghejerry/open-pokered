@@ -1,0 +1,27 @@
+// LavenderCuboneHouse — translated from the original disassembly
+// (scripts/LavenderCuboneHouse.asm, text/LavenderCuboneHouse.asm) to the real
+// Game DSL API surface. Pure NPC-dialogue house: the CUBONE plays its cry, and
+// the brunette girl branches on whether Mr. Fuji has been rescued.
+
+game_scene LavenderCuboneHouse {
+  // ── CUBONE (npc 1) — plays its cry, then a one-line bark ───────────────
+  @storyline("talkCubone") {
+    @trigger(map = "LavenderCuboneHouse", npc = 1)
+    playCry("CUBONE")
+    @speaker("") { @t("CUBONE: Kyarugoo!", "卡拉卡拉：咔噜咕！") }
+  }
+
+  // ── Brunette girl (npc 2) — branches on EVENT_RESCUED_MR_FUJI ───────────
+  @storyline("talkBrunetteGirl") {
+    @trigger(map = "LavenderCuboneHouse", npc = 2)
+    @if (getFlag("EVENT_RESCUED_MR_FUJI")) {
+      @speaker("") {
+        @t("The GHOST of POKeMON TOWER\nis gone!\n\nSomeone must have soothed\nits restless soul!", "宝可梦塔的幽灵消失了！\n\n一定是有人安抚了它躁动的灵\n魂！")
+      }
+    } @else {
+      @speaker("") {
+        @t("I hate those horrible\nROCKETs!\n\nThat poor CUBONE's mother...\n\nIt was killed trying to\nescape from TEAM ROCKET!", "我讨厌那些可恶的火箭队！\n\n那只可怜的卡拉卡拉的妈妈……\n\n它为了逃离火箭队而被杀死了！")
+      }
+    }
+  }
+}

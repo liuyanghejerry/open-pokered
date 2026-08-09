@@ -1,0 +1,44 @@
+{
+  "$schema": "../../schemas/map.schema.json",
+  "id": 222,
+  "name": "SafariZoneSecretHouse",
+  "header": {
+    "tileset": "Lab",
+    "music": "SafariZone",
+    "connectionFlags": 0,
+    "width": 4,
+    "height": 4,
+    "borderBlock": 23
+  },
+  "connections": {},
+  "warps": [
+    {
+      "x": 2,
+      "y": 7,
+      "destMap": "SafariZoneWest",
+      "destWarpId": 6
+    },
+    {
+      "x": 3,
+      "y": 7,
+      "destMap": "SafariZoneWest",
+      "destWarpId": 6
+    }
+  ],
+  "npcs": [
+    {
+      "spriteId": 39,
+      "spriteName": "FishingGuru",
+      "x": 3,
+      "y": 3,
+      "movement": "Stationary",
+      "facing": "Down",
+      "range": 0,
+      "textId": 1,
+      "isTrainer": false
+    }
+  ],
+  "signs": [],
+  "text": {},
+  "wild": null
+}

@@ -1,0 +1,64 @@
+{
+  "$schema": "../schemas/pokemon.schema.json",
+  "species": "Mewtwo",
+  "baseStats": {
+    "hp": 106,
+    "attack": 110,
+    "defense": 90,
+    "speed": 130,
+    "special": 154
+  },
+  "type1": "Psychic",
+  "type2": "Psychic",
+  "catchRate": 3,
+  "baseExp": 220,
+  "growthRate": "Slow",
+  "initialMoves": [
+    "Confusion",
+    "Disable",
+    "Swift",
+    "PsychicM"
+  ],
+  "tmHmFlags": [
+    177,
+    255,
+    175,
+    241,
+    175,
+    56,
+    99
+  ],
+  "pokedex": {
+    "category": "GENETIC",
+    "heightFeet": 6,
+    "heightInches": 7,
+    "weightDecipounds": 2690,
+    "flavorTextPages": [
+      "It was created by\na scientist after\nyears of horrific",
+      "gene splicing and\nDNA engineering\nexperiments"
+    ]
+  },
+  "evolutions": [],
+  "learnset": [
+    {
+      "level": 63,
+      "moveId": "Barrier"
+    },
+    {
+      "level": 66,
+      "moveId": "PsychicM"
+    },
+    {
+      "level": 70,
+      "moveId": "Recover"
+    },
+    {
+      "level": 75,
+      "moveId": "Mist"
+    },
+    {
+      "level": 81,
+      "moveId": "Amnesia"
+    }
+  ]
+}

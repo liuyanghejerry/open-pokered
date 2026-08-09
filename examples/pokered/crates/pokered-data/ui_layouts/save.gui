@@ -1,0 +1,55 @@
+screen Save {
+  panel {
+    rect = {tx: 4, ty: 0, tw: 15, th: 10}
+    style = "default"
+  }
+  text(@t("PLAYER", "玩家")) {
+    rect = {tx: 5, ty: 2, tw: 7, th: 1}
+  }
+  text("{player_name}") {
+    rect = {tx: 13, ty: 2, tw: 5, th: 1}
+  }
+  text(@t("BADGES", "徽章")) {
+    rect = {tx: 5, ty: 4, tw: 7, th: 1}
+  }
+  text("{badges}") {
+    rect = {tx: 16, ty: 4, tw: 2, th: 1}
+    align = "right"
+  }
+  text(@t("№DEX", "图鉴")) {
+    rect = {tx: 5, ty: 6, tw: 5, th: 1}
+  }
+  text("{seen_count}") {
+    rect = {tx: 15, ty: 6, tw: 3, th: 1}
+    align = "right"
+  }
+  text(@t("TIME", "时间")) {
+    rect = {tx: 5, ty: 8, tw: 5, th: 1}
+  }
+  text("{play_time}") {
+    rect = {tx: 13, ty: 8, tw: 5, th: 1}
+  }
+  panel {
+    rect = {tx: 0, ty: 12, tw: 20, th: 6}
+    style = "default"
+  }
+  text(@t("Would you like to", "是否要")) {
+    rect = {tx: 1, ty: 13, tw: 18, th: 1}
+  }
+  text(@t("SAVE the game?", "保存游戏？")) {
+    rect = {tx: 1, ty: 15, tw: 18, th: 1}
+  }
+  panel {
+    rect = {tx: 13, ty: 6, tw: 6, th: 5}
+    style = "default"
+  }
+  text(@t("YES", "是")) {
+    rect = {tx: 15, ty: 7, tw: 3, th: 1}
+  }
+  text(@t("NO", "否")) {
+    rect = {tx: 15, ty: 9, tw: 3, th: 1}
+  }
+  tile(223) {
+    rect = {tx: 14, ty: 7, tw: 1, th: 1}
+  }
+}

@@ -1,0 +1,218 @@
+{
+  "$schema": "../../schemas/map.schema.json",
+  "id": 217,
+  "name": "SafariZoneEast",
+  "header": {
+    "tileset": "Forest",
+    "music": "SafariZone",
+    "connectionFlags": 0,
+    "width": 15,
+    "height": 13,
+    "borderBlock": 0
+  },
+  "connections": {},
+  "warps": [
+    {
+      "x": 0,
+      "y": 4,
+      "destMap": "SafariZoneNorth",
+      "destWarpId": 6
+    },
+    {
+      "x": 0,
+      "y": 5,
+      "destMap": "SafariZoneNorth",
+      "destWarpId": 7
+    },
+    {
+      "x": 0,
+      "y": 22,
+      "destMap": "SafariZoneCenter",
+      "destWarpId": 6
+    },
+    {
+      "x": 0,
+      "y": 23,
+      "destMap": "SafariZoneCenter",
+      "destWarpId": 6
+    },
+    {
+      "x": 25,
+      "y": 9,
+      "destMap": "SafariZoneEastRestHouse",
+      "destWarpId": 0
+    }
+  ],
+  "npcs": [
+    {
+      "spriteId": 61,
+      "spriteName": "PokeBall",
+      "x": 21,
+      "y": 10,
+      "movement": "Stationary",
+      "facing": "Down",
+      "range": 0,
+      "textId": 1,
+      "isTrainer": false,
+      "itemId": 16
+    },
+    {
+      "spriteId": 61,
+      "spriteName": "PokeBall",
+      "x": 3,
+      "y": 7,
+      "movement": "Stationary",
+      "facing": "Down",
+      "range": 0,
+      "textId": 2,
+      "isTrainer": false,
+      "itemId": 17
+    },
+    {
+      "spriteId": 61,
+      "spriteName": "PokeBall",
+      "x": 20,
+      "y": 13,
+      "movement": "Stationary",
+      "facing": "Down",
+      "range": 0,
+      "textId": 3,
+      "isTrainer": false,
+      "itemId": 38
+    },
+    {
+      "spriteId": 61,
+      "spriteName": "PokeBall",
+      "x": 15,
+      "y": 12,
+      "movement": "Stationary",
+      "facing": "Down",
+      "range": 0,
+      "textId": 4,
+      "isTrainer": false,
+      "itemId": 237
+    }
+  ],
+  "signs": [
+    {
+      "x": 26,
+      "y": 10,
+      "textId": 1
+    },
+    {
+      "x": 6,
+      "y": 4,
+      "textId": 2
+    },
+    {
+      "x": 5,
+      "y": 23,
+      "textId": 3
+    }
+  ],
+  "text": {},
+  "wild": {
+    "red": {
+      "grass": {
+        "encounterRate": 30,
+        "mons": [
+          {
+            "level": 24,
+            "species": "NidoranM"
+          },
+          {
+            "level": 26,
+            "species": "Doduo"
+          },
+          {
+            "level": 22,
+            "species": "Paras"
+          },
+          {
+            "level": 25,
+            "species": "Exeggcute"
+          },
+          {
+            "level": 33,
+            "species": "Nidorino"
+          },
+          {
+            "level": 23,
+            "species": "Exeggcute"
+          },
+          {
+            "level": 24,
+            "species": "NidoranF"
+          },
+          {
+            "level": 25,
+            "species": "Parasect"
+          },
+          {
+            "level": 25,
+            "species": "Kangaskhan"
+          },
+          {
+            "level": 28,
+            "species": "Scyther"
+          }
+        ]
+      },
+      "water": {
+        "encounterRate": 0,
+        "mons": []
+      }
+    },
+    "blue": {
+      "grass": {
+        "encounterRate": 30,
+        "mons": [
+          {
+            "level": 24,
+            "species": "NidoranF"
+          },
+          {
+            "level": 26,
+            "species": "Doduo"
+          },
+          {
+            "level": 22,
+            "species": "Paras"
+          },
+          {
+            "level": 25,
+            "species": "Exeggcute"
+          },
+          {
+            "level": 33,
+            "species": "Nidorina"
+          },
+          {
+            "level": 23,
+            "species": "Exeggcute"
+          },
+          {
+            "level": 24,
+            "species": "NidoranM"
+          },
+          {
+            "level": 25,
+            "species": "Parasect"
+          },
+          {
+            "level": 25,
+            "species": "Kangaskhan"
+          },
+          {
+            "level": 28,
+            "species": "Pinsir"
+          }
+        ]
+      },
+      "water": {
+        "encounterRate": 0,
+        "mons": []
+      }
+    }
+  }
+}

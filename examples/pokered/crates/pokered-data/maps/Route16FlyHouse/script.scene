@@ -1,0 +1,37 @@
+// Route16FlyHouse — translated from the original disassembly
+// (scripts/Route16FlyHouse.asm, text/Route16FlyHouse.asm) to the real Game DSL
+// API surface. Small house: the Brunette Girl gives the player HM02 (FLY) once,
+// guarded by EVENT_GOT_HM02 with a bag-full fallback; the Fearow just chirps.
+
+game_scene Route16FlyHouse {
+  // ── Brunette Girl (npc 1) — gives HM02 (FLY) ───────────────────────────
+  @storyline("talkBrunetteGirl") {
+    @trigger(map = "Route16FlyHouse", npc = 1)
+    @if (getFlag("EVENT_GOT_HM02")) {
+      @speaker("") {
+        @t("HM02 is FLY. It will take\nyou back to any town.\n\nPut it to good use!", "HM02是飞翔。它能带你回到任何\n城镇。\n\n请好好善用它吧！")
+      }
+    } @else {
+      @speaker("") {
+        @t("Oh, you found my secret\nretreat!\n\nPlease don't tell anyone I'm\nhere. I'll make it up to you\nwith this!", "哦，你找到了我的秘密小屋！\n\n请不要告诉任何人我在这里。我\n会补偿你把这个给你！")
+      }
+      given = giveItem("HM02", 1)
+      @if (given) {
+        setFlag("EVENT_GOT_HM02")
+        @speaker("") { @t("<PLAYER> received HM02!", "<PLAYER>得到了 HM02！") }
+        @speaker("") {
+          @t("HM02 is FLY. It will take\nyou back to any town.\n\nPut it to good use!", "HM02是飞翔。它能带你回到任何\n城镇。\n\n请好好善用它吧！")
+        }
+      } @else {
+        @speaker("") { @t("You don't have any room for\nthis.", "你身上没有放它的空间。") }
+      }
+    }
+  }
+
+  // ── Fearow (npc 2) — plays its cry ─────────────────────────────────────
+  @storyline("talkBird") {
+    @trigger(map = "Route16FlyHouse", npc = 2)
+    @speaker("") { @t("FEAROW: Kyueen!", "大嘴雀：Kyueen！") }
+    playCry("FEAROW")
+  }
+}

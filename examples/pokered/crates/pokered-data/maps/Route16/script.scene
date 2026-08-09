@@ -1,0 +1,116 @@
+// Route16 — translated from the original disassembly (scripts/Route16.asm,
+// text/Route16.asm) to the real Game DSL API surface.
+//
+// Content type: a route-trainer map (CYCLING ROAD entrance) with a story
+// Snorlax blocker. NPCs 1-6 are sight-engaged Bikers/CueBalls (map.json
+// isTrainer = true), so the runtime owns each battle and the .scene handler is
+// DIALOGUE ONLY (before- vs after-battle text, branched on
+// EVENT_BEAT_ROUTE_16_TRAINER_n). NPC 7 is the blocking SNORLAX.
+//
+// The Snorlax is the same case as Route12's: a static catchable wild battle
+// woken by the POKe FLUTE, run through startWildBattle.
+
+game_scene Route16 {
+  // ── Biker (npc 1) — Route16TrainerHeader0 ────────────────────────────────
+  @storyline("talkBiker1") {
+    @trigger(map = "Route16", npc = 1)
+    @if (getFlag("EVENT_BEAT_ROUTE_16_TRAINER_0")) {
+      @speaker("") { @t("We like just hanging here,\nwhat's it to you?", "我们就是喜欢在这儿待着，关你\n什么事？") }
+    } @else {
+      @speaker("") { @t("What do you want?", "你想干什么？") }
+    }
+  }
+
+  // ── Biker (npc 2) — Route16TrainerHeader1 ────────────────────────────────
+  @storyline("talkBiker2") {
+    @trigger(map = "Route16", npc = 2)
+    @if (getFlag("EVENT_BEAT_ROUTE_16_TRAINER_1")) {
+      @speaker("") { @t("Forget it, who needs your\nBIKE!", "算了，谁稀罕你的自行车！") }
+    } @else {
+      @speaker("") { @t("Nice BIKE! Hand it over!", "好自行车！把它交出来！") }
+    }
+  }
+
+  // ── Biker (npc 3) — Route16TrainerHeader2 ────────────────────────────────
+  @storyline("talkBiker3") {
+    @trigger(map = "Route16", npc = 3)
+    @if (getFlag("EVENT_BEAT_ROUTE_16_TRAINER_2")) {
+      @speaker("") { @t("I hate losing! Get away from\nme!", "我讨厌输！离我远点！") }
+    } @else {
+      @speaker("") { @t("Come out and play, little\nmouse!", "出来玩玩吧，小老鼠！") }
+    }
+  }
+
+  // ── Biker (npc 4) — Route16TrainerHeader3 ────────────────────────────────
+  @storyline("talkBiker4") {
+    @trigger(map = "Route16", npc = 4)
+    @if (getFlag("EVENT_BEAT_ROUTE_16_TRAINER_3")) {
+      @speaker("") { @t("You can also get to FUCHSIA\nfrom VERMILION using a\ncoastal road.", "从枯叶市沿着海岸公路走，也能\n到达浅红市。") }
+    } @else {
+      @speaker("") { @t("Hey, you just bumped me!", "喂，你撞到我了！") }
+    }
+  }
+
+  // ── Biker (npc 5) — Route16TrainerHeader4 ────────────────────────────────
+  @storyline("talkBiker5") {
+    @trigger(map = "Route16", npc = 5)
+    @if (getFlag("EVENT_BEAT_ROUTE_16_TRAINER_4")) {
+      @speaker("") { @t("I like my POKeMON ferocious!\nThey tear up enemies!", "我喜欢凶猛的宝可梦！它们会撕\n碎敌人！") }
+    } @else {
+      @speaker("") { @t("I'm feeling hungry and mean!", "我现在又饿又想找人打架！") }
+    }
+  }
+
+  // ── Biker (npc 6) — Route16TrainerHeader5 ────────────────────────────────
+  @storyline("talkBiker6") {
+    @trigger(map = "Route16", npc = 6)
+    @if (getFlag("EVENT_BEAT_ROUTE_16_TRAINER_5")) {
+      @speaker("") { @t("I like harassing people with\nmy vicious POKeMON!", "我喜欢用凶恶的宝可梦去欺负别\n人！") }
+    } @else {
+      @speaker("") { @t("Sure, I'll go!", "好，我这就去！") }
+    }
+  }
+
+  // ── SNORLAX (npc 7) — blocks the way until woken by the POKe FLUTE ────────
+  @storyline("talkSnorlax") {
+    @trigger(map = "Route16", npc = 7, toggle = "ROUTE_16_OBJ_7")
+    @if (getFlag("EVENT_BEAT_ROUTE16_SNORLAX")) {
+      // Already dealt with — Snorlax has returned to the mountains.
+      hideObjectByName("ROUTE_16_OBJ_7")
+    } @else @if (hasItem("POKE_FLUTE") || getFlag("EVENT_FIGHT_ROUTE16_SNORLAX")) {
+      // No overworld bag/use-item screen exists yet, so the POKe FLUTE is "used"
+      // by talking to the sleeping SNORLAX while carrying it — approximating the
+      // original ItemUsePokeFlute path that sets EVENT_FIGHT_ROUTE16_SNORLAX.
+      @if (!getFlag("EVENT_FIGHT_ROUTE16_SNORLAX")) {
+        @speaker("") { @t("<PLAYER> played the POKe\nFLUTE!", "<PLAYER>吹响了宝可梦之笛！") }
+        // PlayedFluteHadEffectText (engine/items/item_effects.asm:1801-1806)
+        playSound("SFX_POKEFLUTE")
+        setFlag("EVENT_FIGHT_ROUTE16_SNORLAX")
+      }
+      playCry("SNORLAX")
+      @speaker("") { @t("SNORLAX woke up!\n\nIt attacked in a grumpy\nrage!", "卡比兽醒过来了！\n\n它气呼呼地发起了攻击！") }
+      // Static wild Lv30 SNORLAX battle (catchable). On win/catch it is cleared;
+      // on flee/lose it stays woken (EVENT_FIGHT set) and re-fights on next talk.
+      result = startWildBattle("SNORLAX", 30)
+      @if (result == "win" || result == "caught") {
+        @speaker("") { @t("With a big yawn, SNORLAX\nreturned to the mountains!", "卡比兽打个大哈欠，回到了山\n里！") }
+        setFlag("EVENT_BEAT_ROUTE16_SNORLAX")
+        hideObjectByName("ROUTE_16_OBJ_7")
+      }
+    } @else {
+      @speaker("") { @t("A sleeping POKeMON blocks\nthe way!", "熟睡的宝可梦挡住了去路！") }
+    }
+  }
+
+  // ── Sign 1: CYCLING ROAD slope sign ──────────────────────────────────────
+  @storyline("sign1") {
+    @trigger(map = "Route16", sign = 1)
+    @speaker("") { @t("Enjoy the slope! CYCLING\nROAD", "尽情享受坡道吧！自行车道") }
+  }
+
+  // ── Sign 2: ROUTE 16 area sign ───────────────────────────────────────────
+  @storyline("sign2") {
+    @trigger(map = "Route16", sign = 2)
+    @speaker("") { @t("ROUTE 16 CELADON CITY -\nFUCHSIA CITY", "16号道路彩虹市 - 浅红市") }
+  }
+}

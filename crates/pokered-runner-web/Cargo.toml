@@ -1,0 +1,30 @@
+[package]
+name = "pokered-runner-web"
+version.workspace = true
+edition.workspace = true
+description = "wasm-bindgen shell that embeds the full pokered game headless in the browser editor for WYSIWYG previews (tick → RGBA, warp/script/save/wild-data injection)"
+license.workspace = true
+
+# rlib is included alongside cdylib so the wrapper can be unit-tested
+# natively (`cargo test -p pokered-runner-web`); wasm-pack still consumes the cdylib.
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+pokered-app = { path = "../../examples/pokered/crates/pokered-app" }
+pokered-core = { path = "../../examples/pokered/crates/pokered-core" }
+pokered-data = { path = "../../examples/pokered/crates/pokered-data" }
+pokered-renderer = { path = "../../examples/pokered/crates/pokered-renderer" }
+wasm-bindgen = "0.2"
+serde = { workspace = true }
+serde_json = { workspace = true }
+log = "0.4"
+
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+console_error_panic_hook = { version = "0.1", optional = true }
+
+[features]
+default = ["embedded-scripts", "embedded-map-data"]
+embedded-scripts = ["pokered-core/embedded-scripts"]
+embedded-map-data = ["pokered-core/embedded-map-data"]
+debug-panic-hook = ["dep:console_error_panic_hook"]

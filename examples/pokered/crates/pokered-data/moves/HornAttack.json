@@ -1,0 +1,9 @@
+{
+  "$schema": "../schemas/move.schema.json",
+  "id": "HornAttack",
+  "effect": "NoAdditionalEffect",
+  "power": 65,
+  "type": "Normal",
+  "accuracy": 100,
+  "pp": 25
+}

@@ -1,0 +1,74 @@
+{
+  "$schema": "../schemas/pokemon.schema.json",
+  "species": "Charmeleon",
+  "baseStats": {
+    "hp": 58,
+    "attack": 64,
+    "defense": 58,
+    "speed": 80,
+    "special": 65
+  },
+  "type1": "Fire",
+  "type2": "Fire",
+  "catchRate": 45,
+  "baseExp": 142,
+  "growthRate": "MediumSlow",
+  "initialMoves": [
+    "Scratch",
+    "Growl",
+    "Ember",
+    "None"
+  ],
+  "tmHmFlags": [
+    181,
+    3,
+    79,
+    200,
+    227,
+    8,
+    38
+  ],
+  "pokedex": {
+    "category": "FLAME",
+    "heightFeet": 3,
+    "heightInches": 7,
+    "weightDecipounds": 420,
+    "flavorTextPages": [
+      "When it swings\nits burning tail,\nit elevates the",
+      "temperature to\nunbearably high\nlevels"
+    ]
+  },
+  "evolutions": [
+    {
+      "method": "level",
+      "species": "Charizard",
+      "level": 36
+    }
+  ],
+  "learnset": [
+    {
+      "level": 9,
+      "moveId": "Ember"
+    },
+    {
+      "level": 15,
+      "moveId": "Leer"
+    },
+    {
+      "level": 24,
+      "moveId": "Rage"
+    },
+    {
+      "level": 33,
+      "moveId": "Slash"
+    },
+    {
+      "level": 42,
+      "moveId": "Flamethrower"
+    },
+    {
+      "level": 56,
+      "moveId": "FireSpin"
+    }
+  ]
+}

@@ -1,0 +1,135 @@
+{
+  "$schema": "../../schemas/map.schema.json",
+  "id": 150,
+  "name": "LavenderMart",
+  "header": {
+    "tileset": "Mart",
+    "music": "Pokecenter",
+    "connectionFlags": 0,
+    "width": 4,
+    "height": 4,
+    "borderBlock": 0
+  },
+  "connections": {},
+  "warps": [
+    {
+      "x": 3,
+      "y": 7,
+      "destWarpId": 3
+    },
+    {
+      "x": 4,
+      "y": 7,
+      "destWarpId": 3
+    }
+  ],
+  "npcs": [
+    {
+      "spriteId": 38,
+      "spriteName": "Clerk",
+      "x": 0,
+      "y": 5,
+      "movement": "Stationary",
+      "facing": "Right",
+      "range": 0,
+      "textId": 1,
+      "isTrainer": false
+    },
+    {
+      "spriteId": 52,
+      "spriteName": "BaldingGuy",
+      "x": 3,
+      "y": 4,
+      "movement": "Stationary",
+      "facing": "Down",
+      "range": 0,
+      "textId": 2,
+      "isTrainer": false
+    },
+    {
+      "spriteId": 7,
+      "spriteName": "CooltrainerM",
+      "x": 7,
+      "y": 2,
+      "movement": "Stationary",
+      "facing": "Down",
+      "range": 0,
+      "textId": 3,
+      "isTrainer": false
+    }
+  ],
+  "signs": [],
+  "text": {
+    "npc": {
+      "1": [
+        {
+          "line1": "[Mart script]",
+          "line2": ""
+        }
+      ],
+      "2": [
+        {
+          "line1": "I'm searching for",
+          "line2": "items that raise"
+        },
+        {
+          "line1": "the abilities of",
+          "line2": "#MON during a"
+        },
+        {
+          "line1": "single battle.",
+          "line2": ""
+        },
+        {
+          "line1": "",
+          "line2": ""
+        },
+        {
+          "line1": "X ATTACK, X",
+          "line2": "DEFEND, X SPEED"
+        },
+        {
+          "line1": "and X SPECIAL are",
+          "line2": "what I'm after."
+        },
+        {
+          "line1": "",
+          "line2": ""
+        },
+        {
+          "line1": "Do you know where",
+          "line2": "I can get them?"
+        }
+      ],
+      "3": [
+        {
+          "line1": "You know REVIVE?",
+          "line2": "It revives any"
+        },
+        {
+          "line1": "fainted #MON!",
+          "line2": ""
+        }
+      ],
+      "3_AfterRescue": [
+        {
+          "line1": "I found a NUGGET",
+          "line2": "in the mountains."
+        },
+        {
+          "line1": "",
+          "line2": ""
+        },
+        {
+          "line1": "I thought it was",
+          "line2": "useless, but it"
+        },
+        {
+          "line1": "sold for ¥5000!",
+          "line2": ""
+        }
+      ]
+    }
+  },
+  "wild": null
+}
