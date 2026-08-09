@@ -69,7 +69,7 @@ module.exports = {
     'package.json',
   ],
   // The WASM layout-preview pkg rides alongside the app (Resources/wasm-pkg),
-  // not inside the asar — the /wasm route reads it via JRPG_WASM_ROOT.
+  // not inside the asar — the /wasm route reads it via DOTZUKI_WASM_ROOT.
   extraResources: [{ from: 'dist-electron/wasm-pkg', to: 'wasm-pkg' }],
   asar: true,
   mac: {

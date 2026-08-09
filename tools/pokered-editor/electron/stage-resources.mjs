@@ -1,6 +1,6 @@
 // Stage the dotzuki-web WASM preview package into dist-electron/wasm-pkg so
 // electron-builder can ship it as an extraResource (→ Resources/wasm-pkg),
-// which the packaged app's /wasm route reads via JRPG_WASM_ROOT.
+// which the packaged app's /wasm route reads via DOTZUKI_WASM_ROOT.
 //
 // The pkg is built by `pnpm build:wasm` (wasm-pack) into crates/dotzuki-web/pkg.
 // If it isn't there we still create the (near-empty) dest so extraResources

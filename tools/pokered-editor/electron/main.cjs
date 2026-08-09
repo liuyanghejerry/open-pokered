@@ -30,8 +30,8 @@ const EDITOR_ROOT = path.resolve(__dirname, '..')
 // preview, but a packaged app has no repo — it ships the pkg as an extraResource
 // (Resources/wasm-pkg). Point the /wasm route there. Unpackaged runs leave this
 // unset so the route falls back to the in-repo path.
-if (app.isPackaged && !process.env.JRPG_WASM_ROOT) {
-  process.env.JRPG_WASM_ROOT = path.join(process.resourcesPath, 'wasm-pkg')
+if (app.isPackaged && !process.env.DOTZUKI_WASM_ROOT) {
+  process.env.DOTZUKI_WASM_ROOT = path.join(process.resourcesPath, 'wasm-pkg')
 }
 
 /** @type {import('http').Server extends any ? any : never} */
@@ -45,15 +45,15 @@ async function startProdServer() {
   const serverPath = path.join(EDITOR_ROOT, 'dist-electron', 'api-server.mjs')
   const { startApiServer } = await import(pathToFileURL(serverPath).href)
   // pokered-editor edits one repo: default to the workspace root two levels
-  // above this package (where .dotzuki-editor.json lives); JRPG_PROJECT_ROOT
+  // above this package (where .dotzuki-editor.json lives); DOTZUKI_PROJECT_ROOT
   // overrides, and File → Open Repo Folder… re-roots at runtime.
-  const projectRoot = process.env.JRPG_PROJECT_ROOT || path.resolve(EDITOR_ROOT, '..', '..')
+  const projectRoot = process.env.DOTZUKI_PROJECT_ROOT || path.resolve(EDITOR_ROOT, '..', '..')
   apiServer = await startApiServer({
     projectRoot,
     staticDir: path.join(EDITOR_ROOT, 'dist'),
     host: '127.0.0.1',
-    // Ephemeral by default; JRPG_PORT pins it (handy for debugging/automation).
-    port: Number(process.env.JRPG_PORT) || 0,
+    // Ephemeral by default; DOTZUKI_PORT pins it (handy for debugging/automation).
+    port: Number(process.env.DOTZUKI_PORT) || 0,
   })
   return apiServer.url
 }

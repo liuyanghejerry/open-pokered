@@ -93,7 +93,7 @@ const WUXIA_TABLES: TemplateTable[] = [
     ] },
 ]
 
-const JRPG_TABLES: TemplateTable[] = [
+const DOTZUKI_TABLES: TemplateTable[] = [
   { id: 'heroes', label: 'Heroes', dir: 'heroes', icon: 'user', idField: 'id',
     fields: [
       { key: 'id', type: 'string', label: 'ID', required: true },
@@ -175,7 +175,7 @@ export const PROJECT_TEMPLATES: ProjectTemplate[] = [
       zh: '传统回合制 RPG，包含英雄、怪物、魔法、装备。',
     },
     icon: 'star',
-    tables: JRPG_TABLES,
+    tables: DOTZUKI_TABLES,
     map: { mapsDir: 'maps', tileSize: 16, blockSize: 4 },
     assets: { roots: ['gfx'], extensions: ['.png', '.jpg', '.gif'] },
   },
@@ -234,7 +234,7 @@ A JRPG project created with the JRPG Editor.
 ## Editing
 
 Reopen this folder from the editor's welcome screen (**Open Project**), or
-start the editor with \`JRPG_PROJECT_ROOT=<this folder>\`.
+start the editor with \`DOTZUKI_PROJECT_ROOT=<this folder>\`.
 `
 }
 
