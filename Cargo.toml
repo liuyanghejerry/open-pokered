@@ -6,7 +6,7 @@ members = [
     "crates/pokered-debug-server",
     "crates/pokered-android",
     "crates/pokered-ios",
-    "crates/scene-apply",
+    "crates/scene_apply",
     "examples/pokered/crates/pokered-core",
     "examples/pokered/crates/pokered-data",
     "examples/pokered/crates/pokered-renderer",
