@@ -2,7 +2,7 @@ import { defineConfig, type Plugin, type ViteDevServer } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import tailwindcss from '@tailwindcss/vite'
 // AI assistant / action framework / sprite pipeline, ported from jrpg-editor
-// (workspace/tools/jrpg-editor/server) as Vite dev-server middleware.
+// (tools/jrpg-editor/server) as Vite dev-server middleware.
 import { registerBuiltinActions } from './server/actions'
 import { registerProject } from './server/api/routes/project'
 import { registerAi } from './server/api/routes/ai'
