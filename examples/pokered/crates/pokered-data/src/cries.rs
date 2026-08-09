@@ -4,7 +4,7 @@
 //! plus the pitch/length bytes written to `wFrequencyModifier` /
 //! `wTempoModifier`; the audio engine then applies them when the cry plays
 //! (`Audio1_ApplyFrequencyModifier` / `Audio1_SetSfxTempo`, engine_1.asm).
-//! Verified byte-for-byte by `workspace/scripts/verify_cry_data.py`.
+//! Verified byte-for-byte by `scripts/verify_cry_data.py`.
 
 use crate::species::Species;
 

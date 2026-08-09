@@ -10,7 +10,7 @@
 //! engine currently does not apply them (see docs/FIDELITY_GAPS.md).
 //!
 //! Verified byte-for-byte (pitch/tempo) and id-for-id (sfx) against the
-//! disassembly by `workspace/scripts/verify_move_sfx_data.py`.
+//! disassembly by `scripts/verify_move_sfx_data.py`.
 
 use crate::moves::MoveId;
 use crate::species::Species;
