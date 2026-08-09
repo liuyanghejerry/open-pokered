@@ -15,12 +15,12 @@
 
 #![cfg(test)]
 
-use jrpg_engine::battle::rng::ScriptedRng;
-use jrpg_engine::battle::stack::dispatch::collect_from_effect;
-use jrpg_engine::battle::stack::{
+use dotzuki_engine::battle::rng::ScriptedRng;
+use dotzuki_engine::battle::stack::dispatch::collect_from_effect;
+use dotzuki_engine::battle::stack::{
     run_event, BattleCtx, CollectedHandler, Effect, EffectState, Event, MoveContext, RelayVar,
 };
-use jrpg_engine::battle::{
+use dotzuki_engine::battle::{
     BattleState as EngineState, BattlerRef, BattlerState as EngineBattler, EnumMap,
 };
 
@@ -209,7 +209,7 @@ fn p5_leech_seed_residual_parity() {
     reset_p5_scratch();
     // Native: seed OPP, drain to PLAYER. max_hp 200 → 200/16 = 12.
     let mut es = EngineState::new(vec![engine_battler(Species::Pikachu, 100, 200)], vec![engine_battler(Species::Pikachu, 200, 200)]);
-    let mut effects = vec![EffectState { id: jrpg_engine::battle::stack::EffectId(0x50_900), host: OPP, effect_order: 0, kind: PokeVolatile::LeechSeed }];
+    let mut effects = vec![EffectState { id: dotzuki_engine::battle::stack::EffectId(0x50_900), host: OPP, effect_order: 0, kind: PokeVolatile::LeechSeed }];
     fire_p5(&mut es, &mut effects, leech_residual_effect(), Event::Residual, OPP, OPP, RelayVar::Unit, vec![]);
     assert_eq!(es.opponent_battlers[0].hp, 200 - 12, "seeded host drained max/16 = 12");
     assert_eq!(es.player_battlers[0].hp, 100 + 12, "seeder healed by the drain");
@@ -228,8 +228,8 @@ fn p5_leech_seed_scales_with_toxic_counter() {
     // 1→2 and drains 12×2 = 24, healing the seeder 24.
     let mut es = EngineState::new(vec![engine_battler(Species::Pikachu, 100, 200)], vec![engine_battler(Species::Pikachu, 200, 200)]);
     let mut effects = vec![
-        EffectState { id: jrpg_engine::battle::stack::EffectId(0x50_910), host: OPP, effect_order: 0, kind: PokeVolatile::Toxic { counter: 0 } },
-        EffectState { id: jrpg_engine::battle::stack::EffectId(0x50_911), host: OPP, effect_order: 1, kind: PokeVolatile::LeechSeed },
+        EffectState { id: dotzuki_engine::battle::stack::EffectId(0x50_910), host: OPP, effect_order: 0, kind: PokeVolatile::Toxic { counter: 0 } },
+        EffectState { id: dotzuki_engine::battle::stack::EffectId(0x50_911), host: OPP, effect_order: 1, kind: PokeVolatile::LeechSeed },
     ];
     fire_p5(&mut es, &mut effects, toxic_residual_effect(), Event::Residual, OPP, OPP, RelayVar::Unit, vec![]);
     assert_eq!(es.opponent_battlers[0].hp, 200 - 12, "toxic tick: 12×1");
@@ -273,8 +273,8 @@ fn p5_haze_parity() {
     eb.status = Some(StatusCondition::Poison);
     let mut es = EngineState::new(vec![pb], vec![eb]);
     let mut effects = vec![
-        EffectState { id: jrpg_engine::battle::stack::EffectId(0x50_901), host: PLAYER, effect_order: 0, kind: PokeVolatile::Confused { turns: 3 } },
-        EffectState { id: jrpg_engine::battle::stack::EffectId(0x50_902), host: OPP, effect_order: 1, kind: PokeVolatile::LeechSeed },
+        EffectState { id: dotzuki_engine::battle::stack::EffectId(0x50_901), host: PLAYER, effect_order: 0, kind: PokeVolatile::Confused { turns: 3 } },
+        EffectState { id: dotzuki_engine::battle::stack::EffectId(0x50_902), host: OPP, effect_order: 1, kind: PokeVolatile::LeechSeed },
     ];
     fire_p5(&mut es, &mut effects, haze_effect(), Event::Custom(EV_HAZE), OPP, PLAYER, RelayVar::Unit, vec![]);
     assert_eq!(es.player_battlers[0].stat_stages.get(StatIndex::Attack).copied().unwrap_or(0), 0, "haze cleared player Attack stage");
@@ -367,7 +367,7 @@ fn p5_flinch_parity() {
     assert!(has_kind(&effects, OPP, |k| matches!(k, PokeVolatile::Flinched)), "native flinch set on defender");
     // Native: Substitute block.
     let mut es_sub = EngineState::new(vec![engine_battler(Species::Pikachu, 200, 200)], vec![engine_battler(Species::Pikachu, 200, 200)]);
-    let mut eff_sub = vec![EffectState { id: jrpg_engine::battle::stack::EffectId(0x50_910), host: OPP, effect_order: 0, kind: PokeVolatile::SubstituteHp { hp: 50 } }];
+    let mut eff_sub = vec![EffectState { id: dotzuki_engine::battle::stack::EffectId(0x50_910), host: OPP, effect_order: 0, kind: PokeVolatile::SubstituteHp { hp: 50 } }];
     fire_p5(&mut es_sub, &mut eff_sub, flinch_effect(), Event::Custom(EV_FLINCH), OPP, PLAYER, RelayVar::Unit, vec![]);
     assert!(!has_kind(&eff_sub, OPP, |k| matches!(k, PokeVolatile::Flinched)), "native flinch blocked by Substitute (parity)");
 }
@@ -592,11 +592,11 @@ fn p5_mirror_move_parity() {
 /// through `StackDriver::execute_turn` so the `OnMiss` seam itself is exercised.
 #[test]
 fn p5_jump_kick_crash_on_miss_via_driver() {
-    use jrpg_engine::battle::stack::{
+    use dotzuki_engine::battle::stack::{
         Effect as E, EffectId, EffectProvider, EffectType, Event as Ev, EventHook, FirstMover,
         HandlerResult as HR, StackDriver,
     };
-    use jrpg_engine::battle::BattleAction;
+    use dotzuki_engine::battle::BattleAction;
     use pokered_data::move_data::MoveData;
     use pokered_data::moves::MoveEffect;
 
@@ -635,7 +635,7 @@ fn p5_jump_kick_crash_on_miss_via_driver() {
         ],
     };
 
-    impl jrpg_engine::battle::BattleProvider for JkProvider {
+    impl dotzuki_engine::battle::BattleProvider for JkProvider {
         type Monster = ();
         type Move = MoveId;
         type Ability = ();
@@ -644,14 +644,14 @@ fn p5_jump_kick_crash_on_miss_via_driver() {
         type Species = Species;
         type Type = PokemonType;
         type Item = ();
-        fn calculate_damage(&self, _m: &MoveId, _a: &EngineBattler<Self>, _d: &EngineBattler<Self>, _r: u8, _c: bool) -> jrpg_engine::battle::DamageResult {
-            jrpg_engine::battle::DamageResult { damage: 0, effectiveness: 1.0, is_miss: false }
+        fn calculate_damage(&self, _m: &MoveId, _a: &EngineBattler<Self>, _d: &EngineBattler<Self>, _r: u8, _c: bool) -> dotzuki_engine::battle::DamageResult {
+            dotzuki_engine::battle::DamageResult { damage: 0, effectiveness: 1.0, is_miss: false }
         }
         fn select_move(&self, b: &EngineBattler<Self>, _s: &EngineState<Self>) -> MoveId {
             b.moves.first().copied().unwrap_or(MoveId::Tackle)
         }
-        fn apply_move_effect(&self, _e: jrpg_engine::battle::MoveEffect, _u: &mut EngineBattler<Self>, _t: &mut EngineBattler<Self>) -> jrpg_engine::battle::EffectResult {
-            jrpg_engine::battle::EffectResult::NoEffect
+        fn apply_move_effect(&self, _e: dotzuki_engine::battle::MoveEffect, _u: &mut EngineBattler<Self>, _t: &mut EngineBattler<Self>) -> dotzuki_engine::battle::EffectResult {
+            dotzuki_engine::battle::EffectResult::NoEffect
         }
         fn create_monster(&self, s: Species, _l: u8) -> EngineBattler<Self> {
             EngineBattler::new(s, 100, 100, EnumMap::new(), vec![])
@@ -705,8 +705,8 @@ fn p5_jump_kick_crash_on_miss_via_driver() {
 #[test]
 fn p5_on_miss_inert_without_subscriber() {
     use super::{install_canonical, set_active_move, move_effect_for};
-    use jrpg_engine::battle::stack::{FirstMover, StackDriver};
-    use jrpg_engine::battle::BattleAction;
+    use dotzuki_engine::battle::stack::{FirstMover, StackDriver};
+    use dotzuki_engine::battle::BattleAction;
     use pokered_data::move_data::MoveData;
     install_canonical();
     super::set_level(Species::Snorlax, 50);

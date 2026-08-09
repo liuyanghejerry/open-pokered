@@ -28,7 +28,7 @@ import { registerSprites } from '../server/api/routes/sprites'
 import { setProjectRootDir, getProjectRoot } from '../server/api/projectConfig'
 
 export interface StartOptions {
-  /** Absolute path of the project root (dir holding .jrpg-editor.json). */
+  /** Absolute path of the project root (dir holding .dotzuki-editor.json). */
   projectRoot?: string
   /** Directory of the built Vue app to serve statically (dist/). */
   staticDir?: string

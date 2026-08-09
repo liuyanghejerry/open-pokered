@@ -13,12 +13,12 @@ license.workspace = true
 # .sisyphus/plans/menu-layout-engine.md Appendix A.4).
 
 [dependencies]
-jrpg-engine = { git = "ssh://git@github.com/liuyanghejerry/dotzuki.git", tag = "v0.1.0" }
+dotzuki-engine = { git = "ssh://git@github.com/liuyanghejerry/dotzuki.git", tag = "v0.2.0" }
 pokered-core = { path = "../pokered-core" }
 pokered-data = { path = "../pokered-data" }
 pokered-renderer = { path = "../pokered-renderer", default-features = false }
-jrpg-renderer = { git = "ssh://git@github.com/liuyanghejerry/dotzuki.git", tag = "v0.1.0" }
-jrpg-ui = { git = "ssh://git@github.com/liuyanghejerry/dotzuki.git", tag = "v0.1.0" }
+dotzuki-renderer = { git = "ssh://git@github.com/liuyanghejerry/dotzuki.git", tag = "v0.2.0" }
+dotzuki-ui = { git = "ssh://git@github.com/liuyanghejerry/dotzuki.git", tag = "v0.2.0" }
 serde = { workspace = true }
 serde_json = { workspace = true }
 log = "0.4"

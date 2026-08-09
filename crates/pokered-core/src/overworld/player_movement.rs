@@ -1,11 +1,11 @@
-//! Pokémon Red/Blue player movement — re-exports from jrpg-engine.
+//! Pokémon Red/Blue player movement — re-exports from dotzuki-engine.
 
-pub use jrpg_engine::overworld::player_movement::{
+pub use dotzuki_engine::overworld::player_movement::{
     advance_step, direction_delta, frames_per_step, get_tile_at_position, opposite_direction,
     process_frame, try_move, InputState, MoveResult, WALK_COUNTER_INIT,
 };
 
-use jrpg_engine::tileset::TilesetTrait;
+use dotzuki_engine::tileset::TilesetTrait;
 use pokered_data::tilesets::TilesetId;
 
 /// Check if the player is currently on a grass tile.

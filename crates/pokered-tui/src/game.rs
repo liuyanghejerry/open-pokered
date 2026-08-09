@@ -46,8 +46,8 @@ use pokered_core::trainer_card_screen::{
     TrainerCardAction, TrainerCardInput, TrainerCardScreenState,
 };
 use pokered_core::title_screen::{TitlePhase, TitleScreenState};
-use jrpg_engine::render_config::RenderConfig;
-use jrpg_tui::InputState;
+use dotzuki_engine::render_config::RenderConfig;
+use dotzuki_tui::InputState;
 use pokered_renderer::input::GbButton;
 use pokered_renderer::resource::ResourceManager;
 
@@ -3166,10 +3166,10 @@ const BLACK_SCREEN_DURATION: u32 = 30;
 /// (`hSoftReset` starts at 16 in home/init.asm).
 const SOFT_RESET_HOLD_FRAMES: u8 = 16;
 
-impl jrpg_tui::TuiGame for PokemonGame {
+impl dotzuki_tui::TuiGame for PokemonGame {
     type Button = GbButton;
 
-    fn update(&mut self, input: &jrpg_tui::InputState<Self::Button>) {
+    fn update(&mut self, input: &dotzuki_tui::InputState<Self::Button>) {
         self.update(input);
     }
 
@@ -3236,7 +3236,7 @@ fn parse_sfx_id(name: &str) -> Option<SfxId> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use jrpg_tui::InputState;
+    use dotzuki_tui::InputState;
     use pokered_core::game_state::MainMenuChoice;
 
     /// A game standing in the overworld as if a save was loaded via CONTINUE:

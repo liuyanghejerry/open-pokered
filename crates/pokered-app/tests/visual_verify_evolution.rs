@@ -6,7 +6,7 @@
 //! Run with:
 //!   cargo test -p pokered-app --test visual_verify_evolution -- --nocapture
 
-use jrpg_engine::render_config::RenderConfig;
+use dotzuki_engine::render_config::RenderConfig;
 use pokered_app::render::draw_evolution;
 use pokered_core::evolution_screen::{
     EvolutionInput, EvolutionPhase, EvolutionScreenState, PendingEvolution,

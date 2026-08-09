@@ -14,8 +14,8 @@ use image::GenericImageView;
 use thiserror::Error;
 
 use crate::tile::{RgbaTileSet, TileSet, TILE_PIXELS};
-use jrpg_engine::render::Rgba;
-use jrpg_renderer::asset_provider::ResourceProvider;
+use dotzuki_engine::render::Rgba;
+use dotzuki_renderer::asset_provider::ResourceProvider;
 
 // ---------------------------------------------------------------------------
 // Errors
@@ -1088,7 +1088,7 @@ pub fn load_1bpp_from_png(path: impl AsRef<Path>) -> Result<Vec<u8>> {
 }
 
 // ---------------------------------------------------------------------------
-// ResourceProvider implementation (bridges to jrpg-renderer trait)
+// ResourceProvider implementation (bridges to dotzuki-renderer trait)
 // ---------------------------------------------------------------------------
 
 impl ResourceProvider for ResourceManager {

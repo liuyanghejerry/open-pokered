@@ -3,9 +3,9 @@
 //! Loaded via `--demo` CLI flag. Shows a ground layer (grass),
 //! a decoration layer (trees), a player entity, and camera follow.
 
-use jrpg_engine::camera::{Camera, Rect, Vec2};
-use jrpg_engine::render::{MapLayer, MapRenderState};
-use jrpg_engine::tilemap::{Tilemap, TilemapEntry};
+use dotzuki_engine::camera::{Camera, Rect, Vec2};
+use dotzuki_engine::render::{MapLayer, MapRenderState};
+use dotzuki_engine::tilemap::{Tilemap, TilemapEntry};
 use image::{ImageBuffer, ImageEncoder, Rgba as ImgRgba, RgbaImage};
 use pokered_renderer::input::{GbButton, InputState};
 use pokered_renderer::layer_renderer::render_layers;

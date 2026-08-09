@@ -16,7 +16,7 @@ mod v2_registry_tests {
         // `main` has a v1 (variants) JSON, so `get_layout_json` returns that;
         // the v2 registry must still expose `main.gui`'s element-format JSON
         // (with `"elements"`) so the migrated main menu can render via the
-        // jrpg-renderer layout engine.
+        // dotzuki-renderer layout engine.
         let v2 = get_screen_v2_json("main").expect("main.gui must be in the v2 registry");
         assert!(v2.contains("\"elements\""), "v2 JSON should be element-format");
         assert!(v2.contains("\"schema_version\": 2"));

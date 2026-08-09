@@ -1,7 +1,7 @@
 //! Cable Club link-presence tests: the remote player's avatar override in
 //! the Colosseum / Trade Center rooms (`OverworldScreen::link_opponent`).
 
-use jrpg_engine::overworld::{Direction, NpcMovementType};
+use dotzuki_engine::overworld::{Direction, NpcMovementType};
 
 use crate::link::{LinkOpponentPresence, LinkRole};
 use crate::overworld::OverworldInput;

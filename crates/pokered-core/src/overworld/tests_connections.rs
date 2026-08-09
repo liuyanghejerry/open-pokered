@@ -8,13 +8,13 @@ use pokered_data::maps::MapId;
 use pokered_data::music::MusicId;
 use pokered_data::tilesets::TilesetId;
 
-use jrpg_engine::overworld::collision::CollisionProvider;
-use jrpg_engine::overworld::collision::CollisionResult;
-use jrpg_engine::overworld::map_transitions::{
+use dotzuki_engine::overworld::collision::CollisionProvider;
+use dotzuki_engine::overworld::collision::CollisionResult;
+use dotzuki_engine::overworld::map_transitions::{
     calculate_connection_transition, check_warp_at, ConnectionTransition,
 };
-use jrpg_engine::overworld::types::TransportMode;
-use jrpg_engine::overworld::MapData;
+use dotzuki_engine::overworld::types::TransportMode;
+use dotzuki_engine::overworld::MapData;
 use pokered_data::collision::is_tile_passable;
 use crate::overworld::{Direction, MapConnection, MapConnections, WarpPoint};
 use super::update::{execute_warp, resolve_warp_destination};
@@ -509,7 +509,7 @@ fn edge_collision(
     direction: Direction,
     transport: TransportMode,
 ) -> CollisionResult {
-    use jrpg_engine::overworld::collision::{check_movement_collision, SpritePosition};
+    use dotzuki_engine::overworld::collision::{check_movement_collision, SpritePosition};
 
     let blocks = pokered_data::map_data_loader::get_block_data(map_id);
     let (w, h) = map_id.dimensions();

@@ -13,7 +13,7 @@ use pokered_core::pokemon::stats::{create_pokemon, create_pokemon_with_moves};
 use pokered_core::stats_screen::{StatsPage, StatsScreenState};
 use pokered_data::moves::MoveId;
 use pokered_data::species::Species;
-use jrpg_engine::render_config::RenderConfig;
+use dotzuki_engine::render_config::RenderConfig;
 use pokered_renderer::{resource::ResourceManager, FrameBuffer, Rgba};
 
 fn create_resource_manager() -> ResourceManager {

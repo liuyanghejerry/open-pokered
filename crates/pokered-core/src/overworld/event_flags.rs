@@ -1,13 +1,13 @@
 // Pokémon-specific event flag extensions.
 //
-// The base `EventFlags` struct lives in `jrpg-engine` as a generic
+// The base `EventFlags` struct lives in `dotzuki-engine` as a generic
 // string-keyed flag system. This module re‑exports it and adds Pokémon‑specific
 // methods that depend on `pokered_data::event_flags::{EventFlag, EVENT_FLAGS_SIZE}`.
 
 use std::collections::HashMap;
 use std::ops::{Deref, DerefMut};
 
-use jrpg_engine::overworld::event_flags::EventFlags as GenericEventFlags;
+use dotzuki_engine::overworld::event_flags::EventFlags as GenericEventFlags;
 use pokered_data::event_flags::{EventFlag, EVENT_FLAGS_SIZE};
 
 /// Pokémon‑specific event flag container.

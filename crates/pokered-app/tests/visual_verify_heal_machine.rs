@@ -13,7 +13,7 @@ use pokered_app::render::draw_overworld;
 use pokered_core::game_state::Lang;
 use pokered_core::overworld::{HealingMachinePhase, HealingMachineState, OverworldScreen};
 use pokered_data::maps::MapId;
-use jrpg_engine::render_config::RenderConfig;
+use dotzuki_engine::render_config::RenderConfig;
 use pokered_renderer::{resource::ResourceManager, FrameBuffer, Rgba};
 
 /// Create a `ResourceManager` by auto-detecting the gfx/ asset root.

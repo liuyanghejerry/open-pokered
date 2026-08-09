@@ -1,6 +1,6 @@
 # Pokémon Red/Blue — Rust Reimplementation
 
-A faithful reimplementation of Pokémon Red and Blue in Rust, based on the [pret/pokered](https://github.com/pret/pokered) disassembly. This repo is **game-only**: the generic **JRPG engine** lives in a separate repository and is consumed here as a Cargo **git dependency** (`jrpg-engine`, `jrpg-engine-dsl`, `jrpg-engine-script`, `jrpg-rules`, `jrpg-renderer`, `jrpg-ui`, `jrpg-audio`, `jrpg-app`, `jrpg-tui` — see `Cargo.toml`, all pinned to a `v0.1.0` tag of the engine repo).
+A faithful reimplementation of Pokémon Red and Blue in Rust, based on the [pret/pokered](https://github.com/pret/pokered) disassembly. This repo is **game-only**: the generic **JRPG engine** lives in a separate repository and is consumed here as a Cargo **git dependency** (`dotzuki-engine`, `dotzuki-engine-dsl`, `dotzuki-engine-script`, `dotzuki-rules`, `dotzuki-renderer`, `dotzuki-ui`, `dotzuki-audio`, `dotzuki-app`, `dotzuki-tui` — see `Cargo.toml`, all pinned to a `v0.1.0` tag of the engine repo).
 
 ## Getting started
 

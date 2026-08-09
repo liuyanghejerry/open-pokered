@@ -19,8 +19,8 @@
 //! use, the animation plays after the item-use text closes, and the result
 //! text (plus the hooked battle on a bite) is queued when it finishes.
 
-use jrpg_engine::overworld::types::TransportMode;
-use jrpg_engine::GameData;
+use dotzuki_engine::overworld::types::TransportMode;
+use dotzuki_engine::GameData;
 use pokered_data::items::ItemId;
 use pokered_data::maps::MapId;
 use pokered_data::species::Species;

@@ -21,7 +21,7 @@ use pokered_core::overworld::presentation::{
 use pokered_core::overworld::{Direction, OverworldInput, OverworldScreen};
 use pokered_core::data::impl_traits::PokemonRedData;
 use pokered_data::maps::MapId;
-use jrpg_engine::render_config::RenderConfig;
+use dotzuki_engine::render_config::RenderConfig;
 use pokered_renderer::{resource::ResourceManager, FrameBuffer, Rgba};
 
 fn create_resource_manager() -> ResourceManager {

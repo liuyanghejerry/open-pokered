@@ -25,17 +25,17 @@ function profileFile(projectFileName: string, globalFileName: string): string {
     loadConfig()
     return path.join(getProjectRoot(), projectFileName)
   } catch {
-    return path.join(os.homedir(), '.jrpg-editor', globalFileName)
+    return path.join(os.homedir(), '.dotzuki-editor', globalFileName)
   }
 }
 export function providersFile(): string {
-  return profileFile('.jrpg-editor.providers.json', 'providers.json')
+  return profileFile('.dotzuki-editor.providers.json', 'providers.json')
 }
 export function imageProvidersFile(): string {
-  return profileFile('.jrpg-editor.image-providers.json', 'image-providers.json')
+  return profileFile('.dotzuki-editor.image-providers.json', 'image-providers.json')
 }
 export function editorSettingsFile(): string {
-  return path.join(getProjectRoot(), '.jrpg-editor.settings.json')
+  return path.join(getProjectRoot(), '.dotzuki-editor.settings.json')
 }
 /** Kebab-ASCII slug for a record id; falls back to the sanitized id (e.g. a
  *  non-ASCII display name) so the filename is always safe and deterministic. */

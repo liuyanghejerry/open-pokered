@@ -7,11 +7,11 @@
 //!
 //! - `custom:hp_bar` → `pokered_ui::custom_elements::HpBarElement`
 
-use jrpg_engine::render::{Painter, Rgba};
-use jrpg_renderer::layout_engine::registry::{
+use dotzuki_engine::render::{Painter, Rgba};
+use dotzuki_renderer::layout_engine::registry::{
     ComponentSchema, CustomElement, ElementRegistry, PropSpec, PropType,
 };
-use jrpg_renderer::layout_engine::types::{
+use dotzuki_renderer::layout_engine::types::{
     Coord, DataContext, ElementParams, LayoutElement, RenderContext, RenderError,
 };
 

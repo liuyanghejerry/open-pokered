@@ -4,7 +4,7 @@
 //! Run with:
 //!   cargo test -p pokered-app --test visual_verify_continue_info -- --nocapture
 
-use jrpg_engine::render_config::RenderConfig;
+use dotzuki_engine::render_config::RenderConfig;
 use pokered_app::render::draw_main_menu;
 use pokered_core::game_state::{Lang, SaveFileSummary};
 use pokered_core::main_menu::{MainMenuState, MenuInput, CONTINUE_INFO_DELAY_FRAMES};

@@ -4,7 +4,7 @@
 //! This module stands up a **game-side** [`PokeredRules`] provider that drives
 //! the bucket-A Gen-1 moves through the engine's [`StackDriver`] using effects
 //! authored in [`rules.ron`](./rules.ron) (loaded via the game-agnostic
-//! `jrpg-rules` loader). It is **ADDITIVE and DIFFERENTIAL-ONLY** (`#![cfg(test)]`
+//! `dotzuki-rules` loader). It is **ADDITIVE and DIFFERENTIAL-ONLY** (`#![cfg(test)]`
 //! at the module-decl site): the legacy [`apply_move_effect`](super::effects) /
 //! [`execute_turn`](super::turn::execute_turn) dispatcher stays the **production
 //! oracle**, untouched, and the frame-stepped production loop is NOT routed
@@ -76,16 +76,16 @@
 
 use std::cell::RefCell;
 
-use jrpg_engine::battle::stack::{
+use dotzuki_engine::battle::stack::{
     BattleCtx, Effect, EffectId, EffectProvider, EffectState, EffectType, Event, EventHook,
     HandlerResult, RelayVar,
 };
-use jrpg_engine::battle::{
+use dotzuki_engine::battle::{
     BattleAction, BattleProvider, BattleState as EngineState, BattlerRef,
     BattlerState as EngineBattler, DamageResult, EffectResult, EnumMap, MoveEffect as EngineMoveEffect,
 };
 
-use jrpg_rules::{
+use dotzuki_rules::{
     CompiledHook, CompiledRuleset, Op, RuleBindings, RuleSource, Ruleset, RulesHost, RulesProvider,
 };
 
@@ -132,7 +132,7 @@ pub const MOVE_EFFECT_ID_BASE: u32 = 0x30_000;
 
 /// The game-supplied typed per-effect-state enum for the P1 stack path. Minimal:
 /// only the Focus-Energy marker the crit pipeline reads. Richer volatiles (the
-/// B/C tiers) land in later phases — adding them here keeps `jrpg-engine` 100%
+/// B/C tiers) land in later phases — adding them here keeps `dotzuki-engine` 100%
 /// game-agnostic (the engine treats `EffectStateKind` opaquely).
 #[derive(Clone, Debug, PartialEq)]
 #[allow(dead_code)]
@@ -805,7 +805,7 @@ pub fn load_ruleset(hot: bool) -> RuleSource {
 /// Compile a [`Ruleset`] into pokered's registry (names→indices + status
 /// vocabulary). Validates every name against the closed vocabulary NOW; an
 /// unknown name is a load error, never a battle-time surprise (doc 11 §4.2).
-pub fn compile(ruleset: &Ruleset) -> Result<CompiledRuleset, jrpg_rules::LoadError> {
+pub fn compile(ruleset: &Ruleset) -> Result<CompiledRuleset, dotzuki_rules::LoadError> {
     CompiledRuleset::compile::<PokeredRules, PokeredBindings>(
         ruleset,
         DATA_ID_BASE,
@@ -828,12 +828,12 @@ pub fn install_canonical() {
 //
 //    The StackDriver fires ONE move effect via `effect_for_move`, threading that
 //    effect's id to EVERY hook as `source_effect` (dispatch.rs:128). The
-//    `jrpg_rules::interpret` bridge keys an op-list by `source_effect` ALONE — so
+//    `dotzuki_rules::interpret` bridge keys an op-list by `source_effect` ALONE — so
 //    a move with hooks on several events would collapse to one op-list. We
 //    therefore build OUR OWN per-record index keyed by `(record_index, Event)`
 //    and a small set of per-event bridge fns (one per event the bucket-A moves
 //    use) that look the op-list up by the combined effect's id (= the record) +
-//    the bridge's own static event, then fold it via `jrpg_rules::run_ops`. This
+//    the bridge's own static event, then fold it via `dotzuki_rules::run_ops`. This
 //    is the same Option-A "data is read by source_effect" shape minimon uses,
 //    extended to disambiguate by event so a single StackDriver move-effect call
 //    drives all of a move's data hooks.
@@ -1036,7 +1036,7 @@ fn rebuild_move_index() {
         //    on the first Fail makes a confusion self-hit stop before the paralysis
         //    gate fires.
         for (order, call) in [
-            (10u32, p5_native::sleep_gate as jrpg_engine::battle::stack::HandlerFn<PokeredRules>),
+            (10u32, p5_native::sleep_gate as dotzuki_engine::battle::stack::HandlerFn<PokeredRules>),
             (20, p5_native::freeze_gate),
             (30, p5_native::flinch_gate),
             // Disable: the ASM decrements the counter (step 6) then blocks the disabled
@@ -1207,13 +1207,13 @@ fn rebuild_move_index() {
                 && h.ops.iter().any(|op| {
                     matches!(
                         op,
-                        jrpg_rules::Op::Boost {
-                            target: jrpg_rules::Selector::Target | jrpg_rules::Selector::Foe,
+                        dotzuki_rules::Op::Boost {
+                            target: dotzuki_rules::Selector::Target | dotzuki_rules::Selector::Foe,
                             ..
                         }
                     )
                 });
-            let call: jrpg_engine::battle::stack::HandlerFn<PokeredRules> = match h.event {
+            let call: dotzuki_engine::battle::stack::HandlerFn<PokeredRules> = match h.event {
                 Event::ModifyDamage => bridge_modify_damage,
                 Event::Effectiveness => bridge_effectiveness,
                 Event::AfterMove => bridge_after_move,
@@ -2465,8 +2465,8 @@ fn bridge_foe_stat_down(
     source: BattlerRef,
     source_effect: EffectId,
 ) -> HandlerResult {
-    use jrpg_engine::battle::stack::{collect_handlers, run_event_checked};
-    use jrpg_rules::Op;
+    use dotzuki_engine::battle::stack::{collect_handlers, run_event_checked};
+    use dotzuki_rules::Op;
 
     let Some(hook) = hook_for(source_effect, Event::DamagingHit) else {
         return HandlerResult::Unchanged;
@@ -2497,9 +2497,9 @@ fn bridge_foe_stat_down(
     // OPPONENT of the mover" = the defender = `target`. We author the down as
     // `target: Target` (the defender) so the resolved battler is the defender.
     let lowered = match sel {
-        jrpg_rules::Selector::Target | jrpg_rules::Selector::Host => target,
-        jrpg_rules::Selector::Source => source,
-        jrpg_rules::Selector::Foe => {
+        dotzuki_rules::Selector::Target | dotzuki_rules::Selector::Host => target,
+        dotzuki_rules::Selector::Source => source,
+        dotzuki_rules::Selector::Foe => {
             BattlerRef::new(if target.side == 0 { 1 } else { 0 }, target.slot)
         }
     };
@@ -2554,7 +2554,7 @@ fn host_stat_index(name: &str) -> Option<usize> {
 // ─────────────────────────────────────────────────────────────────────────────
 // 8. The data bridge fns (one per event). Each looks up its record's op-list by
 //    (source_effect, its own static event), applies the chance gate, and folds
-//    via `jrpg_rules::run_ops`. This is the genuine DATA path: the op-list comes
+//    via `dotzuki_rules::run_ops`. This is the genuine DATA path: the op-list comes
 //    from rules.ron, not from native code.
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -2577,7 +2577,7 @@ fn run_bridge(
         }
     }
     let host = PokeredRules::rules_host().expect("pokered rules host installed");
-    jrpg_rules::run_ops(ctx, relay, target, source, &host.bindings, &hook)
+    dotzuki_rules::run_ops(ctx, relay, target, source, &host.bindings, &hook)
 }
 
 fn bridge_modify_damage(

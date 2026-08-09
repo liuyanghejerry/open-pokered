@@ -1,13 +1,13 @@
 //! Pokémon-specific layout constants for title screen, intro scene, and
 //! copyright screen.
 //!
-//! These constants were extracted from `jrpg-renderer::layout` because they
+//! These constants were extracted from `dotzuki-renderer::layout` because they
 //! are game-specific data, not generic coordinate-conversion utilities.
 
 use crate::oam_constants::{SCREEN_WIDTH_PX, TILE_SIZE_PX};
 
 /// OAM (Object Attribute Memory) offset constants — copied locally because
-/// `jrpg-renderer::layout` is not a dependency of `pokered-data`.
+/// `dotzuki-renderer::layout` is not a dependency of `pokered-data`.
 pub const OAM_Y_OFFSET: u32 = 16;
 pub const OAM_X_OFFSET: u32 = 8;
 

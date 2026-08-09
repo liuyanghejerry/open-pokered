@@ -1,8 +1,8 @@
 /**
- * jrpg-engine-script Game API Type Definitions
+ * dotzuki-engine-script Game API Type Definitions
  *
  * These declarations describe the global `game` object injected by the
- * jrpg-engine-script Boa engine.  They are provided for editor autocompletion
+ * dotzuki-engine-script Boa engine.  They are provided for editor autocompletion
  * and type-checking of map script files (PalletTown.js, OaksLab.js, …).
  *
  * Async methods return a Promise that resolves once the game loop has

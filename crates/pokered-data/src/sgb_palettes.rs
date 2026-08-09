@@ -7,11 +7,11 @@
 //! - Palette helper functions
 //!
 //! The base types (`SgbColor`, `SgbPaletteEntry`, `SgbPaletteId`, `SetPalCommand`)
-//! are defined in `jrpg-engine` and re-used here.
+//! are defined in `dotzuki-engine` and re-used here.
 //!
 //! Transcribed from `data/sgb/sgb_palettes.asm` and `data/pokemon/palettes.asm`.
 
-pub use jrpg_engine::palette::{
+pub use dotzuki_engine::palette::{
     SgbColor, SgbPaletteEntry, SgbPaletteId, SetPalCommand, NUM_SGB_PALS,
     SET_PAL_PARTY_MENU_HP_BARS, SET_PAL_DEFAULT,
 };

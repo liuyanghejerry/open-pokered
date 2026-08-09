@@ -2,7 +2,7 @@
 //!
 //! This module is the single point where concrete pokered data types implement
 //! the generic provider traits defined in `engine-core`. Keeping all trait impls
-//! here avoids scattering `use jrpg_engine::…` imports across the data crate
+//! here avoids scattering `use dotzuki_engine::…` imports across the data crate
 //! and makes it easy to see which providers are available at a glance.
 
 use crate::blockset_data::{self, BLOCK_SIZE, BLOCK_TILES_H, BLOCK_TILES_W};
@@ -11,11 +11,11 @@ use crate::map_data_loader;
 use crate::maps::MapId;
 use crate::tileset_data;
 use crate::tilesets::{TilesetId, NUM_BUILTIN_TILESETS};
-use jrpg_engine::map::{MapConnection, MapProvider, MapTrait};
-use jrpg_engine::overworld::map_transitions::MapTransitionProvider;
-use jrpg_engine::tile_meta::{CollisionType, TileMetadata, TileMetaTrait};
-use jrpg_engine::tileset::TilesetProvider;
-use jrpg_engine::GameData;
+use dotzuki_engine::map::{MapConnection, MapProvider, MapTrait};
+use dotzuki_engine::overworld::map_transitions::MapTransitionProvider;
+use dotzuki_engine::tile_meta::{CollisionType, TileMetadata, TileMetaTrait};
+use dotzuki_engine::tileset::TilesetProvider;
+use dotzuki_engine::GameData;
 
 /// Provider of tileset data backed by the built-in Pokemon Red/Blue tilesets.
 pub struct PokemonTilesetData;
@@ -261,9 +261,9 @@ mod tests {
 // ============================================================================
 
 use crate::sgb_palettes::{self, SgbPaletteId};
-use jrpg_engine::palette::{PaletteProvider, PaletteTrait, SgbPaletteEntry};
+use dotzuki_engine::palette::{PaletteProvider, PaletteTrait, SgbPaletteEntry};
 
-// PaletteTrait is already implemented for SgbPaletteId in jrpg-engine.
+// PaletteTrait is already implemented for SgbPaletteId in dotzuki-engine.
 
 /// Palette data provider for Pokemon Red/Blue.
 pub struct PokemonPaletteData {
@@ -479,7 +479,7 @@ use crate::lang_data;
 use crate::move_data;
 use crate::moves::MoveId;
 use crate::species::Species;
-use jrpg_engine::render_data::RenderData;
+use dotzuki_engine::render_data::RenderData;
 
 pub struct PokemonRenderData {
     pub is_zh: bool,
@@ -978,7 +978,7 @@ use crate::move_data::MoveData;
 use crate::pokemon_data;
 use crate::type_chart;
 use crate::types::PokemonType;
-use jrpg_engine::battle::{
+use dotzuki_engine::battle::{
     BattleAI, BattleAction, BattleProvider, BattleRng, BattleState, BattlerRef, BattlerState,
     DamageResult, EffectHandler, EffectResult, EnumMap, MoveEffect, OrderKey, TypeChart,
 };
@@ -1659,7 +1659,7 @@ mod battle_trait_tests {
 // ============================================================================
 
 use crate::save::{PokemonSaveData, SAV_FILE_SIZE};
-use jrpg_engine::save::{SaveData, SaveError};
+use dotzuki_engine::save::{SaveData, SaveError};
 
 impl SaveData for PokemonSaveData {
     fn serialize(&self) -> Vec<u8> {
@@ -1680,7 +1680,7 @@ impl SaveData for PokemonSaveData {
 #[cfg(test)]
 mod save_data_tests {
     use super::*;
-    use jrpg_engine::save::{InMemoryStorage, SaveManager, SaveSlot, SaveStorage};
+    use dotzuki_engine::save::{InMemoryStorage, SaveManager, SaveSlot, SaveStorage};
 
     #[test]
     fn test_pokemon_save_data_new_is_zero_filled() {
@@ -1798,7 +1798,7 @@ mod save_data_tests {
 // ============================================================================
 
 use crate::items::{CustomKind, ItemEffect, ShopId};
-use jrpg_engine::items::{ItemProvider, ItemResult, ShopProvider};
+use dotzuki_engine::items::{ItemProvider, ItemResult, ShopProvider};
 
 impl ItemProvider for PokemonRedData {
     type Item = ItemId;
@@ -1898,7 +1898,7 @@ impl ItemProvider for PokemonRedData {
         !item.is_key_item() && !item.is_badge()
     }
 
-    fn item_kind(&self, item: &Self::Item) -> jrpg_engine::items::ItemKind<Self::CustomKind> {
+    fn item_kind(&self, item: &Self::Item) -> dotzuki_engine::items::ItemKind<Self::CustomKind> {
         crate::items::item_kind(*item)
     }
 }

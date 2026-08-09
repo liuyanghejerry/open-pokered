@@ -1,11 +1,11 @@
 //! WASM layout-preview bridge for the pokered editor (`tools/pokered-editor`).
 //!
 //! This is the pokered-flavoured counterpart of the engine's generic
-//! `jrpg-web` preview: it renders compiled `.gui` layout JSON on the fixed
+//! `dotzuki-web` preview: it renders compiled `.gui` layout JSON on the fixed
 //! 160×144 Game Boy canvas with per-menu pokered mock data and registers
 //! pokered's `custom:*` elements (see `preview_elements`), plus thin wrappers
-//! around the `jrpg-engine-dsl` compiler so the editor can validate `.scene`
-//! / `.gui` sources inline. It was extracted from `jrpg-web` during the
+//! around the `dotzuki-engine-dsl` compiler so the editor can validate `.scene`
+//! / `.gui` sources inline. It was extracted from `dotzuki-web` during the
 //! engine/game repo split — the engine crate now only ships the game-agnostic
 //! `render_gui` path.
 
@@ -13,16 +13,16 @@ use std::collections::HashMap;
 
 use wasm_bindgen::prelude::*;
 
-use jrpg_renderer::{FrameBuffer, RenderConfig};
-use jrpg_renderer::layout_engine::deserialize::{parse_layout, load_layout};
-use jrpg_renderer::layout_engine::types::{DataContext, RenderContext};
-use jrpg_renderer::layout_engine::renderer::render_layout as render_screen;
+use dotzuki_renderer::{FrameBuffer, RenderConfig};
+use dotzuki_renderer::layout_engine::deserialize::{parse_layout, load_layout};
+use dotzuki_renderer::layout_engine::types::{DataContext, RenderContext};
+use dotzuki_renderer::layout_engine::renderer::render_layout as render_screen;
 
 mod mock_data;
 mod preview_elements;
 
-use jrpg_ui::FrameBufferPainter;
-use jrpg_engine::render::{Painter, Rgba};
+use dotzuki_ui::FrameBufferPainter;
+use dotzuki_engine::render::{Painter, Rgba};
 
 /// Log a warning message (goes to stderr; in WASM this reaches the browser
 /// console when using `wasm-bindgen` test runner or `console_log`).
@@ -116,7 +116,7 @@ pub fn render_layout(menu_name: &str, layout_json: &str, mock_state_id: u32, lan
 
 // ── DSL (.scene) compile bridge ───────────────────────────────────────────
 //
-// These exports wrap the `jrpg-engine-dsl` compiler so the game-editor can
+// These exports wrap the `dotzuki-engine-dsl` compiler so the game-editor can
 // validate `.scene` files inline (CM6 linter) and show a compiled-JS preview.
 //
 // They return a **JSON string** rather than a structured `JsValue` so we avoid
@@ -172,7 +172,7 @@ fn dsl_err_json(err: &str) -> String {
 ///   `{ ok: false, error, raw, line, col }` on failure
 #[wasm_bindgen]
 pub fn compile_scene(source: &str) -> String {
-    match jrpg_engine_dsl::compiler::compile_scene_to_js(source, EDITOR_SCENE_PATH) {
+    match dotzuki_engine_dsl::compiler::compile_scene_to_js(source, EDITOR_SCENE_PATH) {
         Ok(js) => dsl_ok_json("js", &js),
         Err(e) => dsl_err_json(&e),
     }
@@ -185,7 +185,7 @@ pub fn compile_scene(source: &str) -> String {
 ///   `{ ok: false, error, raw, line, col }` on failure
 #[wasm_bindgen]
 pub fn compile_scene_config(source: &str) -> String {
-    match jrpg_engine_dsl::config_gen::compile_scene_to_config(source, EDITOR_SCENE_PATH) {
+    match dotzuki_engine_dsl::config_gen::compile_scene_to_config(source, EDITOR_SCENE_PATH) {
         Ok(config) => dsl_ok_json("config", &config),
         Err(e) => dsl_err_json(&e),
     }
@@ -207,7 +207,7 @@ pub fn compile_screen_source(source: &str) -> String {
 /// Compile `.gui` DSL source → schema-v2 ScreenLayout JSON, or a `line:col: msg`
 /// error string. Shared by [`compile_screen_source`] and the layout preview.
 fn compile_gui_inner(source: &str) -> Result<String, String> {
-    let tokens = jrpg_engine_dsl::lexer::Lexer::new(source, "editor/screen.gui")
+    let tokens = dotzuki_engine_dsl::lexer::Lexer::new(source, "editor/screen.gui")
         .tokenize()
         .map_err(|errors| {
             errors
@@ -217,7 +217,7 @@ fn compile_gui_inner(source: &str) -> Result<String, String> {
                 .join("; ")
         })?;
 
-    let (doc, parse_errors) = jrpg_engine_dsl::parser::Parser::new(tokens, source).parse();
+    let (doc, parse_errors) = dotzuki_engine_dsl::parser::Parser::new(tokens, source).parse();
     if !parse_errors.is_empty() {
         return Err(parse_errors
             .iter()
@@ -227,8 +227,8 @@ fn compile_gui_inner(source: &str) -> Result<String, String> {
     }
 
     match doc.ok_or_else(|| "parser returned no document".to_string())? {
-        jrpg_engine_dsl::ast::Document::Screen(screen) => {
-            jrpg_engine_dsl::codegen::json_ui::compile_screen(&screen).map_err(|e| e.to_string())
+        dotzuki_engine_dsl::ast::Document::Screen(screen) => {
+            dotzuki_engine_dsl::codegen::json_ui::compile_screen(&screen).map_err(|e| e.to_string())
         }
         _ => Err("expected a screen layout (screen { ... })".to_string()),
     }

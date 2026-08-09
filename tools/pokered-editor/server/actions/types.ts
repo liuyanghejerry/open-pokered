@@ -5,7 +5,7 @@
 // an `AiAction` in a registry, run behind ONE streaming endpoint (/api/ai/run)
 // that emits a STANDARD event vocabulary. This replaces the per-feature
 // middlewares that each re-implemented body parsing, key validation and the SSE
-// write loop. See tools/jrpg-editor/docs/AI_AGENT_FRAMEWORK.md.
+// write loop. See tools/dotzuki-editor/docs/AI_AGENT_FRAMEWORK.md.
 // ───────────────────────────────────────────────────────────────────────────
 import type { ProjectContext } from '../context/projectContext'
 import type { ProviderProfile } from '../ai'

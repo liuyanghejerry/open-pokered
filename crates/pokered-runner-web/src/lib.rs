@@ -3,7 +3,7 @@
 //! Embeds the full Rust game ([`PokemonGame`](pokered_app::PokemonGame) from
 //! `pokered-app`) headless in the browser editor and exposes a frame-driven
 //! `tick(input_bitmask) → RGBA bytes` loop for a `<canvas>` `ImageData`
-//! blit — the same pattern as `jrpg-runner-web`'s `WasmRunner`, but for the
+//! blit — the same pattern as `dotzuki-runner-web`'s `WasmRunner`, but for the
 //! *real* game instead of a zero-Rust DSL project.
 //!
 //! Audio needs no bridge: the game's `AudioOutput` uses the Web Audio API

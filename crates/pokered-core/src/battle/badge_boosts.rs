@@ -53,7 +53,7 @@
 //! `PokeredBindings::apply_boost` re-applies the glitch in-turn via
 //! [`reapply_on_stage_change`].
 
-use jrpg_engine::battle::BattlerState as EngineBattler;
+use dotzuki_engine::battle::BattlerState as EngineBattler;
 
 use super::pokered_rules::PokeredRules;
 use super::stat_stages::StatIndex;
@@ -339,7 +339,7 @@ mod tests {
     // ── engine-battler hook (the in-turn glitch) ──
 
     use super::super::pokered_rules::PokeredRules;
-    use jrpg_engine::battle::EnumMap;
+    use dotzuki_engine::battle::EnumMap;
     use pokered_data::moves::MoveId;
     use pokered_data::species::Species;
 

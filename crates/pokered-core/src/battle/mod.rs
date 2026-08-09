@@ -21,7 +21,7 @@ pub mod turn_order;
 pub mod types;
 pub mod wild;
 
-use jrpg_engine::battle::rng::BattleRng as _;
+use dotzuki_engine::battle::rng::BattleRng as _;
 
 #[cfg(test)]
 mod menu_tests;
@@ -138,7 +138,7 @@ mod stack_p0_ai;
 /// provider (over the REAL `Species`/`MoveId`/`StatIndex`/`PokemonType`/
 /// `StatusCondition`) that drives the bucket-A Gen-1 effects through the engine's
 /// `StackDriver` using effects authored in `pokered_rules/rules.ron` (loaded via
-/// the game-agnostic `jrpg-rules` loader, dual-mode baked + hot-reload).
+/// the game-agnostic `dotzuki-rules` loader, dual-mode baked + hot-reload).
 /// `calculate_damage` stays the single damage authority (precomputed into
 /// `ctx.mv.damage`); `DealMoveDamage`/`ApplyTypeChart` are the declarative
 /// markers (the chart already rides the damage authority, so `ApplyTypeChart`
@@ -596,7 +596,7 @@ fn disable_target_last_move(b: &state::BattlerState) -> MoveId {
 /// legal ids (the old `(byte % 163) + 1` oversampled low ids ~2×). The retry is
 /// BOUNDED so a degenerate rng can't spin forever; on exhaustion it falls back
 /// to id 1 (still a legal, non-Metronome move).
-fn metronome_pick(rng: &mut dyn jrpg_engine::battle::rng::BattleRng) -> MoveId {
+fn metronome_pick(rng: &mut dyn dotzuki_engine::battle::rng::BattleRng) -> MoveId {
     const METRONOME: u8 = 0x76;
     const STRUGGLE: u8 = 0xA5;
     let mut byte = rng.next_u8();
@@ -623,7 +623,7 @@ fn metronome_pick(rng: &mut dyn jrpg_engine::battle::rng::BattleRng) -> MoveId {
 fn resolve_called_move(
     id: MoveId,
     foe_last_move: MoveId,
-    rng: &mut dyn jrpg_engine::battle::rng::BattleRng,
+    rng: &mut dyn dotzuki_engine::battle::rng::BattleRng,
 ) -> (MoveId, Option<&'static str>, bool) {
     use pokered_data::moves::MoveEffect;
     let mut cur = id;
@@ -2889,8 +2889,8 @@ impl BattleScreen {
         use crate::battle::pokered_rules;
         use crate::battle::state::status1::CHARGING_UP;
         use crate::battle::state::status2::{HAS_SUBSTITUTE_UP, NEEDS_TO_RECHARGE};
-        use jrpg_engine::battle::stack::{StackDriver, TurnEvent};
-        use jrpg_engine::battle::{BattleAction, BattlerRef};
+        use dotzuki_engine::battle::stack::{StackDriver, TurnEvent};
+        use dotzuki_engine::battle::{BattleAction, BattlerRef};
 
         // Player just switched / is fleeing: the incoming mon's badge boosts
         // apply from send-out (before the enemy's free hit lands).
@@ -2906,7 +2906,7 @@ impl BattleScreen {
                 None => return,
             };
             let mut default_rng = pokered_rules::runtime::RandBattleRng;
-            let rng: &mut dyn jrpg_engine::battle::rng::BattleRng = match self.link_rng.as_mut()
+            let rng: &mut dyn dotzuki_engine::battle::rng::BattleRng = match self.link_rng.as_mut()
             {
                 Some(link) => link,
                 None => &mut default_rng,
@@ -2959,7 +2959,7 @@ impl BattleScreen {
             // draws (accuracy, damage, crit, status, multi-hit, …) come from
             // the link RNG so both sides resolve identically (BattleRandom).
             let mut default_rng = pokered_rules::runtime::RandBattleRng;
-            let rng: &mut dyn jrpg_engine::battle::rng::BattleRng = match self.link_rng.as_mut()
+            let rng: &mut dyn dotzuki_engine::battle::rng::BattleRng = match self.link_rng.as_mut()
             {
                 Some(link) => link,
                 None => &mut default_rng,
@@ -3420,7 +3420,7 @@ impl BattleScreen {
         let (mut player_call_failed, mut enemy_call_failed) = (false, false);
         if let Some(ref bs) = self.battle_state {
             let mut default_rng = pokered_rules::runtime::RandBattleRng;
-            let rng: &mut dyn jrpg_engine::battle::rng::BattleRng = match self.link_rng.as_mut()
+            let rng: &mut dyn dotzuki_engine::battle::rng::BattleRng = match self.link_rng.as_mut()
             {
                 Some(link) => link,
                 None => &mut default_rng,
@@ -3487,8 +3487,8 @@ impl BattleScreen {
         // retired from production — it survives only as the differential-test oracle.
         {
             use crate::battle::pokered_rules;
-            use jrpg_engine::battle::stack::StackDriver;
-            use jrpg_engine::battle::{BattleAction, BattlerRef};
+            use dotzuki_engine::battle::stack::StackDriver;
+            use dotzuki_engine::battle::{BattleAction, BattlerRef};
 
             pokered_rules::install_canonical();
             pokered_rules::clear_current_moves();
@@ -3547,7 +3547,7 @@ impl BattleScreen {
                     && crate::battle::turn_order::determine_order(bs, rand::random())
                         == crate::battle::turn_order::TurnOrder::EnemyFirst;
             let mut default_rng = pokered_rules::runtime::RandBattleRng;
-            let rng: &mut dyn jrpg_engine::battle::rng::BattleRng = match self.link_rng.as_mut()
+            let rng: &mut dyn dotzuki_engine::battle::rng::BattleRng = match self.link_rng.as_mut()
             {
                 Some(link) => link,
                 None => &mut default_rng,
@@ -3561,7 +3561,7 @@ impl BattleScreen {
                 // BeforeMove gates and executed, so a blocked / asleep / recharge /
                 // forced-Nothing turn correctly leaves last_move_used unchanged.
                 for ev in &log.events {
-                    if let jrpg_engine::battle::stack::TurnEvent::MoveUsed { actor, move_ } = ev {
+                    if let dotzuki_engine::battle::stack::TurnEvent::MoveUsed { actor, move_ } = ev {
                         if actor.side == 0 {
                             bs.player.last_move_used = *move_;
                         } else {
@@ -3573,7 +3573,7 @@ impl BattleScreen {
                 // with the FOE's prior last-used move, PP→5 (apply_mimic). Fails
                 // silently if the foe has no last move.
                 {
-                    use jrpg_engine::battle::stack::TurnEvent;
+                    use dotzuki_engine::battle::stack::TurnEvent;
                     let used_mimic = |who: BattlerRef| {
                         log.events.iter().any(|ev| {
                             matches!(ev, TurnEvent::MoveUsed { actor, move_ }
@@ -3602,7 +3602,7 @@ impl BattleScreen {
                 // Pay Day: each side that connected with Pay Day scatters coins = 2 ×
                 // its level into the battle-wide payday pot (read by settlement).
                 {
-                    use jrpg_engine::battle::stack::TurnEvent;
+                    use dotzuki_engine::battle::stack::TurnEvent;
                     let used_payday = |who: BattlerRef| {
                         log.events.iter().any(|ev| {
                             matches!(ev, TurnEvent::MoveUsed { actor, move_ }
@@ -3625,7 +3625,7 @@ impl BattleScreen {
                 // block, where `self` is free); keyed on the resolved move's effect so
                 // Metronome/Mirror-Move→Teleport also flees.
                 let escape = {
-                    use jrpg_engine::battle::stack::TurnEvent;
+                    use dotzuki_engine::battle::stack::TurnEvent;
                     log.events.iter().any(|ev| {
                         if let TurnEvent::MoveUsed { actor, move_ } = ev {
                             let is_flee = MoveData::get(*move_).map(|m| m.effect)
@@ -4751,7 +4751,7 @@ mod recharge_lifecycle_tests {
     /// to itself — uniform over the 163 legal move ids.
     #[test]
     fn metronome_pick_skips_metronome() {
-        use jrpg_engine::battle::rng::ScriptedRng;
+        use dotzuki_engine::battle::rng::ScriptedRng;
         // Every accepted byte (1..=0xA4 except 0x76) is picked as-is, in one draw.
         for roll in 0u8..=255 {
             let mut rng = ScriptedRng::new(vec![roll, 1]);
@@ -6040,9 +6040,9 @@ mod badge_obedience_integration_tests {
     #[test]
     fn stat_up_glitch_through_stack_turn() {
         use crate::battle::pokered_rules;
-        use jrpg_engine::battle::rng::ScriptedRng;
-        use jrpg_engine::battle::stack::StackDriver;
-        use jrpg_engine::battle::{BattleAction, BattlerRef};
+        use dotzuki_engine::battle::rng::ScriptedRng;
+        use dotzuki_engine::battle::stack::StackDriver;
+        use dotzuki_engine::battle::{BattleAction, BattlerRef};
 
         let player = mk(Species::Scyther, 50, [MoveId::SwordsDance, MoveId::None, MoveId::None, MoveId::None]);
         let raw = [player.attack, player.defense, player.speed, player.special];

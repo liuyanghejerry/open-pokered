@@ -1,16 +1,16 @@
 //! # P6 production runtime — drive a real battle through the stack engine.
 //!
 //! The PRODUCTION-side glue the live battle loop uses to route a turn through
-//! [`StackDriver`](jrpg_engine::battle::stack::StackDriver): a `rand`-backed
+//! [`StackDriver`](dotzuki_engine::battle::stack::StackDriver): a `rand`-backed
 //! [`RandBattleRng`], the [`TurnEvent`] → battle-text translator, and the
 //! legacy `Pokemon` → engine `BattlerState` adapter.
 //!
 //! The translator here is the canonical, production copy; the differential
 //! `translate_*` tests in [`tests`](super) exercise the same logic test-side.
 
-use jrpg_engine::battle::rng::BattleRng;
-use jrpg_engine::battle::stack::{HpChangeCause, TurnEvent, TurnLog};
-use jrpg_engine::battle::{
+use dotzuki_engine::battle::rng::BattleRng;
+use dotzuki_engine::battle::stack::{HpChangeCause, TurnEvent, TurnLog};
+use dotzuki_engine::battle::{
     BattlerState as EngineBattler, BattlerRef, EnumMap, BattleState as EngineState,
 };
 
@@ -20,7 +20,7 @@ use pokered_data::moves::MoveId;
 use pokered_data::pokemon_data::get_base_stats;
 use pokered_data::types::{Effectiveness, PokemonType};
 
-use jrpg_engine::battle::stack::{EffectId, EffectState};
+use dotzuki_engine::battle::stack::{EffectId, EffectState};
 
 use crate::battle::stat_stages::StatIndex;
 use crate::battle::state::{

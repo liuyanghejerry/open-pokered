@@ -1,7 +1,7 @@
 // rules.ron — pokered Gen-1 battle ruleset, BUCKET-A moves only (P1 of the
 // battle migration; blueprint 15 §2 / §5 P1). Authored as DATA against the
 // closed no-code vocabulary (doc 11 §1.1, doc 12 §2). This is the SINGLE source
-// of truth the dual-mode `jrpg_rules::RuleSource` loads either BAKED
+// of truth the dual-mode `dotzuki_rules::RuleSource` loads either BAKED
 // (include_str!, release) or from DISK (dev, hot-reloaded).
 //
 // SCOPE (HONEST): only the bucket-A effects genuinely expressible with TODAY's

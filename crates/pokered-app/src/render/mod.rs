@@ -45,7 +45,7 @@ use pokered_renderer::palette::Palette;
 use pokered_renderer::tile::TileSet;
 use pokered_renderer::{FrameBuffer, Rgba, TILE_SIZE};
 
-use jrpg_renderer::transition::FadePalette;
+use dotzuki_renderer::transition::FadePalette;
 
 /// Map every framebuffer pixel through a GB palette byte (rBGP).
 ///

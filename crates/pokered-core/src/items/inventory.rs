@@ -1,4 +1,4 @@
-use jrpg_engine::items::Inventory as EngineInventory;
+use dotzuki_engine::items::Inventory as EngineInventory;
 use pokered_data::items::ItemId;
 use serde::{Deserialize, Serialize};
 
@@ -29,8 +29,8 @@ pub fn is_tossable(item: ItemId) -> bool {
     }
     !matches!(
         pokered_data::items::item_kind(item),
-        jrpg_engine::items::ItemKind::Custom(pokered_data::items::CustomKind::Hm)
-            | jrpg_engine::items::ItemKind::KeyItem
+        dotzuki_engine::items::ItemKind::Custom(pokered_data::items::CustomKind::Hm)
+            | dotzuki_engine::items::ItemKind::KeyItem
     )
 }
 

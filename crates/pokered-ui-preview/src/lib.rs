@@ -1918,7 +1918,7 @@ mod tests {
     // battle_move / options / naming / battle_main re-recorded after their
     // .gui migration plus the template-`visible` compiler fix (options ▶ now
     // only on the active row) and the 0xE1/0xE2 PKMN tile mapping.
-    // NOTE: START/BAG/BATTLE_BAG/OPTIONS/NAMING re-recorded after the jrpg-renderer
+    // NOTE: START/BAG/BATTLE_BAG/OPTIONS/NAMING re-recorded after the dotzuki-renderer
     // CJK-repertoire font bake (full Fusion Pixel set; ASCII now from the Latin
     // face). The v2 preview renders pokered menus through the shared engine font,
     // so these snapshots track that font. Verified the new render is clean/legible

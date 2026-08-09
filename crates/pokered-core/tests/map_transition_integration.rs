@@ -6,10 +6,10 @@ use pokered_core::overworld::doors_elevators::{
     teleport_spin_direction,
 };
 use pokered_core::overworld::hm_effects::{fly_destination_for_map, FLY_DESTINATIONS};
-use jrpg_engine::overworld::map_transitions::{
+use dotzuki_engine::overworld::map_transitions::{
     calculate_connection_transition, check_warp_at,
 };
-use jrpg_engine::overworld::MapData;
+use dotzuki_engine::overworld::MapData;
 use pokered_core::overworld::{Direction, MapConnection, MapConnections, WarpPoint};
 use pokered_data::elevator_data::ElevatorId;
 use pokered_data::fly_warp_data::LinkWarpType;

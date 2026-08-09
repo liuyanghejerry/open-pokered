@@ -91,9 +91,9 @@ jobs:
       # baselines; every /gfx image is copied into dist/gfx so base-prefixed
       # asset URLs resolve instead of 404ing.
       #
-      # NOTE: the Layout-editor preview wasm (`jrpg-web`, engine crate) is
-      # NOT built here anymore — jrpg-web ships from the jrpg-engine repo.
-      # Drop its pkg into `tools/pokered-editor/src/wasm/jrpg-web/` (or point
+      # NOTE: the Layout-editor preview wasm (`dotzuki-web`, engine crate) is
+      # NOT built here anymore — dotzuki-web ships from the dotzuki-engine repo.
+      # Drop its pkg into `tools/pokered-editor/src/wasm/dotzuki-web/` (or point
       # JRPG_WASM_ROOT at a checkout) before deploying to keep the Layout
       # preview alive; the Playtest bridge (pokered-runner-web, below) is
       # built from this repo.

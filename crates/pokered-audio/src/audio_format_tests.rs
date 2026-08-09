@@ -1,4 +1,4 @@
-//! Round-trip validation of the generic `jrpg-audio` file-based audio format
+//! Round-trip validation of the generic `dotzuki-audio` file-based audio format
 //! against the full corpus of real pokered data (45 music tracks + 161 SFX).
 //!
 //! If the byte-code encoder is a faithful inverse of the decoder, then
@@ -6,9 +6,9 @@
 //! track. This is a far stronger test than hand-written unit cases — it covers
 //! every command shape that actually occurs in the original game's audio.
 
-use jrpg_audio::commands::{decode_channel, encode_channel};
-use jrpg_audio::format::{TrackDef, TrackKind};
-use jrpg_audio::HwChannel;
+use dotzuki_audio::commands::{decode_channel, encode_channel};
+use dotzuki_audio::format::{TrackDef, TrackKind};
+use dotzuki_audio::HwChannel;
 
 use crate::music_data::MUSIC_TRACKS;
 use crate::sfx_data::SFX_TRACKS;
@@ -105,7 +105,7 @@ fn sfx_trackdef_reproduces_channels_and_json() {
         let def = TrackDef::from_raw_channels(
             format!("{:?}", track.id),
             TrackKind::Sfx,
-            jrpg_audio::format::DEFAULT_TEMPO,
+            dotzuki_audio::format::DEFAULT_TEMPO,
             &raw,
         );
 

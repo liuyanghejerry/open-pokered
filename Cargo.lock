@@ -1135,6 +1135,109 @@ dependencies = [
 ]
 
 [[package]]
+name = "dotzuki-app"
+version = "0.1.0"
+source = "git+ssh://git@github.com/liuyanghejerry/dotzuki.git?tag=v0.2.0#c1f62efc1164c98d3ad00119d5f065d0a4047dbb"
+dependencies = [
+ "dotzuki-renderer",
+ "notify",
+]
+
+[[package]]
+name = "dotzuki-audio"
+version = "0.1.0"
+source = "git+ssh://git@github.com/liuyanghejerry/dotzuki.git?tag=v0.2.0#c1f62efc1164c98d3ad00119d5f065d0a4047dbb"
+dependencies = [
+ "bitflags 2.13.1",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "dotzuki-engine"
+version = "0.1.0"
+source = "git+ssh://git@github.com/liuyanghejerry/dotzuki.git?tag=v0.2.0#c1f62efc1164c98d3ad00119d5f065d0a4047dbb"
+dependencies = [
+ "image",
+ "serde",
+ "thiserror 2.0.20",
+]
+
+[[package]]
+name = "dotzuki-engine-dsl"
+version = "0.1.0"
+source = "git+ssh://git@github.com/liuyanghejerry/dotzuki.git?tag=v0.2.0#c1f62efc1164c98d3ad00119d5f065d0a4047dbb"
+dependencies = [
+ "dotzuki-engine-script",
+ "miette",
+ "serde",
+ "serde_json",
+ "sourcemap",
+ "thiserror 2.0.20",
+]
+
+[[package]]
+name = "dotzuki-engine-script"
+version = "0.1.0"
+source = "git+ssh://git@github.com/liuyanghejerry/dotzuki.git?tag=v0.2.0#c1f62efc1164c98d3ad00119d5f065d0a4047dbb"
+dependencies = [
+ "boa_engine",
+ "log",
+ "serde",
+ "serde_json",
+ "thiserror 2.0.20",
+]
+
+[[package]]
+name = "dotzuki-renderer"
+version = "0.1.0"
+source = "git+ssh://git@github.com/liuyanghejerry/dotzuki.git?tag=v0.2.0#c1f62efc1164c98d3ad00119d5f065d0a4047dbb"
+dependencies = [
+ "dotzuki-engine",
+ "error-iter",
+ "getrandom 0.2.17",
+ "image",
+ "log",
+ "pixels",
+ "serde",
+ "serde_json",
+ "thiserror 2.0.20",
+ "winit",
+ "winit_input_helper",
+]
+
+[[package]]
+name = "dotzuki-rules"
+version = "0.1.0"
+source = "git+ssh://git@github.com/liuyanghejerry/dotzuki.git?tag=v0.2.0#c1f62efc1164c98d3ad00119d5f065d0a4047dbb"
+dependencies = [
+ "dotzuki-engine",
+ "notify",
+ "ron",
+ "serde",
+ "thiserror 2.0.20",
+]
+
+[[package]]
+name = "dotzuki-tui"
+version = "0.1.0"
+source = "git+ssh://git@github.com/liuyanghejerry/dotzuki.git?tag=v0.2.0#c1f62efc1164c98d3ad00119d5f065d0a4047dbb"
+dependencies = [
+ "crossterm",
+ "dotzuki-renderer",
+ "ratatui",
+]
+
+[[package]]
+name = "dotzuki-ui"
+version = "0.1.0"
+source = "git+ssh://git@github.com/liuyanghejerry/dotzuki.git?tag=v0.2.0#c1f62efc1164c98d3ad00119d5f065d0a4047dbb"
+dependencies = [
+ "dotzuki-engine",
+ "dotzuki-renderer",
+]
+
+[[package]]
 name = "downcast-rs"
 version = "1.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2005,109 +2108,6 @@ checksum = "1c00acbd29eabad4a2392fa0e921c874934dbbf4194312ad20f04a0ed67a3cb3"
 dependencies = [
  "getrandom 0.4.3",
  "libc",
-]
-
-[[package]]
-name = "jrpg-app"
-version = "0.1.0"
-source = "git+ssh://git@github.com/liuyanghejerry/dotzuki.git?tag=v0.1.0#a0973dc85c49ec7f364881292c9da947de374cd4"
-dependencies = [
- "jrpg-renderer",
- "notify",
-]
-
-[[package]]
-name = "jrpg-audio"
-version = "0.1.0"
-source = "git+ssh://git@github.com/liuyanghejerry/dotzuki.git?tag=v0.1.0#a0973dc85c49ec7f364881292c9da947de374cd4"
-dependencies = [
- "bitflags 2.13.1",
- "serde",
- "serde_json",
-]
-
-[[package]]
-name = "jrpg-engine"
-version = "0.1.0"
-source = "git+ssh://git@github.com/liuyanghejerry/dotzuki.git?tag=v0.1.0#a0973dc85c49ec7f364881292c9da947de374cd4"
-dependencies = [
- "image",
- "serde",
- "thiserror 2.0.20",
-]
-
-[[package]]
-name = "jrpg-engine-dsl"
-version = "0.1.0"
-source = "git+ssh://git@github.com/liuyanghejerry/dotzuki.git?tag=v0.1.0#a0973dc85c49ec7f364881292c9da947de374cd4"
-dependencies = [
- "jrpg-engine-script",
- "miette",
- "serde",
- "serde_json",
- "sourcemap",
- "thiserror 2.0.20",
-]
-
-[[package]]
-name = "jrpg-engine-script"
-version = "0.1.0"
-source = "git+ssh://git@github.com/liuyanghejerry/dotzuki.git?tag=v0.1.0#a0973dc85c49ec7f364881292c9da947de374cd4"
-dependencies = [
- "boa_engine",
- "log",
- "serde",
- "serde_json",
- "thiserror 2.0.20",
-]
-
-[[package]]
-name = "jrpg-renderer"
-version = "0.1.0"
-source = "git+ssh://git@github.com/liuyanghejerry/dotzuki.git?tag=v0.1.0#a0973dc85c49ec7f364881292c9da947de374cd4"
-dependencies = [
- "error-iter",
- "getrandom 0.2.17",
- "image",
- "jrpg-engine",
- "log",
- "pixels",
- "serde",
- "serde_json",
- "thiserror 2.0.20",
- "winit",
- "winit_input_helper",
-]
-
-[[package]]
-name = "jrpg-rules"
-version = "0.1.0"
-source = "git+ssh://git@github.com/liuyanghejerry/dotzuki.git?tag=v0.1.0#a0973dc85c49ec7f364881292c9da947de374cd4"
-dependencies = [
- "jrpg-engine",
- "notify",
- "ron",
- "serde",
- "thiserror 2.0.20",
-]
-
-[[package]]
-name = "jrpg-tui"
-version = "0.1.0"
-source = "git+ssh://git@github.com/liuyanghejerry/dotzuki.git?tag=v0.1.0#a0973dc85c49ec7f364881292c9da947de374cd4"
-dependencies = [
- "crossterm",
- "jrpg-renderer",
- "ratatui",
-]
-
-[[package]]
-name = "jrpg-ui"
-version = "0.1.0"
-source = "git+ssh://git@github.com/liuyanghejerry/dotzuki.git?tag=v0.1.0#a0973dc85c49ec7f364881292c9da947de374cd4"
-dependencies = [
- "jrpg-engine",
- "jrpg-renderer",
 ]
 
 [[package]]
@@ -3079,11 +3079,11 @@ dependencies = [
  "anyhow",
  "clap",
  "cpal",
+ "dotzuki-app",
+ "dotzuki-engine",
+ "dotzuki-engine-dsl",
+ "dotzuki-renderer",
  "image",
- "jrpg-app",
- "jrpg-engine",
- "jrpg-engine-dsl",
- "jrpg-renderer",
  "js-sys",
  "log",
  "notify",
@@ -3105,7 +3105,7 @@ name = "pokered-audio"
 version = "0.1.0"
 dependencies = [
  "bitflags 2.13.1",
- "jrpg-audio",
+ "dotzuki-audio",
  "serde_json",
 ]
 
@@ -3114,10 +3114,10 @@ name = "pokered-core"
 version = "0.1.0"
 dependencies = [
  "criterion",
+ "dotzuki-engine",
+ "dotzuki-engine-script",
+ "dotzuki-rules",
  "getrandom 0.2.17",
- "jrpg-engine",
- "jrpg-engine-script",
- "jrpg-rules",
  "log",
  "pokered-data",
  "rand",
@@ -3130,9 +3130,9 @@ name = "pokered-data"
 version = "0.1.0"
 dependencies = [
  "boa_engine",
- "jrpg-engine",
- "jrpg-engine-dsl",
- "jrpg-engine-script",
+ "dotzuki-engine",
+ "dotzuki-engine-dsl",
+ "dotzuki-engine-script",
  "log",
  "num-derive",
  "num-traits",
@@ -3171,10 +3171,10 @@ dependencies = [
 name = "pokered-layout-preview"
 version = "0.1.0"
 dependencies = [
- "jrpg-engine",
- "jrpg-engine-dsl",
- "jrpg-renderer",
- "jrpg-ui",
+ "dotzuki-engine",
+ "dotzuki-engine-dsl",
+ "dotzuki-renderer",
+ "dotzuki-ui",
  "serde",
  "serde_json",
  "wasm-bindgen",
@@ -3184,11 +3184,11 @@ dependencies = [
 name = "pokered-renderer"
 version = "0.1.0"
 dependencies = [
+ "dotzuki-engine",
+ "dotzuki-renderer",
  "error-iter",
  "getrandom 0.2.17",
  "image",
- "jrpg-engine",
- "jrpg-renderer",
  "log",
  "pixels",
  "pokered-core",
@@ -3221,9 +3221,9 @@ dependencies = [
  "clap",
  "cpal",
  "crossterm",
- "jrpg-engine",
- "jrpg-renderer",
- "jrpg-tui",
+ "dotzuki-engine",
+ "dotzuki-renderer",
+ "dotzuki-tui",
  "log",
  "pokered-audio",
  "pokered-core",
@@ -3239,9 +3239,9 @@ dependencies = [
 name = "pokered-ui"
 version = "0.1.0"
 dependencies = [
- "jrpg-engine",
- "jrpg-renderer",
- "jrpg-ui",
+ "dotzuki-engine",
+ "dotzuki-renderer",
+ "dotzuki-ui",
  "log",
  "pokered-core",
  "pokered-data",
@@ -3255,7 +3255,7 @@ name = "pokered-ui-preview"
 version = "0.1.0"
 dependencies = [
  "console_error_panic_hook",
- "jrpg-renderer",
+ "dotzuki-renderer",
  "pokered-core",
  "pokered-data",
  "pokered-renderer",
@@ -3676,7 +3676,7 @@ dependencies = [
 name = "scene_apply"
 version = "0.1.0"
 dependencies = [
- "jrpg-engine-dsl",
+ "dotzuki-engine-dsl",
 ]
 
 [[package]]

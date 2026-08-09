@@ -1,4 +1,4 @@
-use jrpg_engine::text::{ControlAction, DialogState, TextProvider, TextStream, TileBuffer};
+use dotzuki_engine::text::{ControlAction, DialogState, TextProvider, TextStream, TileBuffer};
 use pokered_data::{charmap, text_commands::TextCommand};
 
 use super::NameBuffers;

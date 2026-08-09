@@ -2,7 +2,7 @@
 """Verify Rust battle-animation data against the original pokered disassembly.
 
 Compares, entry by entry, the four data tables transcribed into
-  workspace/crates/jrpg-renderer/src/battle_anim/data.rs
+  workspace/crates/dotzuki-renderer/src/battle_anim/data.rs
 against the original assembly sources in a pret/pokered-style repo:
   data/battle_anims/base_coords.asm    -> BASE_COORDS
   data/battle_anims/frame_blocks.asm   -> FRAME_BLOCK_DATA
@@ -37,7 +37,7 @@ from pathlib import Path
 
 DEFAULT_ASM_REPO = "/Users/liuyanghe02/develop/pokered-worktree"
 RUST_DATA_RS = Path(__file__).resolve().parent.parent / \
-    "crates/jrpg-renderer/src/battle_anim/data.rs"
+    "crates/dotzuki-renderer/src/battle_anim/data.rs"
 
 
 # ─── asm constant parsing ─────────────────────────────────────────────

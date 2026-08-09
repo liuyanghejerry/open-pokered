@@ -2,7 +2,7 @@ use pokered_data::charmap;
 use pokered_data::text_commands::inline_control_chars;
 
 use super::*;
-use jrpg_engine::text::{ControlAction, TextProvider};
+use dotzuki_engine::text::{ControlAction, TextProvider};
 
 #[test]
 fn dialog_runner_starts_not_done() {
@@ -83,7 +83,7 @@ fn process_next_line_control() {
     let provider = PokemonTextProvider::default();
     let mut engine = DialogEngine::new(provider);
     let mut buf = TileBuffer::new(20, 18);
-    buf.cursor = jrpg_engine::text::TilePos::new(5, 5);
+    buf.cursor = dotzuki_engine::text::TilePos::new(5, 5);
     engine.open_dialog(&[inline_control_chars::NEXT, inline_control_chars::DONE]);
     engine.update(&mut buf);
     assert_eq!(buf.cursor.y, 6);
@@ -159,7 +159,7 @@ fn process_wait_button_command() {
     runner.engine.open_dialog(&[0x0D]);
     assert!(runner.engine.is_active());
     runner.engine.update(&mut runner.tile_buffer);
-    assert_eq!(runner.engine.state.mode, jrpg_engine::text::DialogMode::WaitingForInput);
+    assert_eq!(runner.engine.state.mode, dotzuki_engine::text::DialogMode::WaitingForInput);
     assert!(runner.engine.is_active());
 }
 
@@ -168,10 +168,10 @@ fn text_engine_pause_handling() {
     let mut runner = DialogRunner::default();
     runner.engine.open_dialog(&[0x0A, inline_control_chars::DONE]);
     runner.engine.update(&mut runner.tile_buffer);
-    assert_eq!(runner.engine.state.mode, jrpg_engine::text::DialogMode::Paused);
+    assert_eq!(runner.engine.state.mode, dotzuki_engine::text::DialogMode::Paused);
     assert!(runner.engine.is_active());
     runner.engine.advance();
-    assert_eq!(runner.engine.state.mode, jrpg_engine::text::DialogMode::Typing);
+    assert_eq!(runner.engine.state.mode, dotzuki_engine::text::DialogMode::Typing);
 }
 
 #[test]
@@ -221,7 +221,7 @@ fn provider_decode_byte_control_codes() {
 #[test]
 fn provider_process_control_done() {
     let provider = PokemonTextProvider::default();
-    let mut state = jrpg_engine::text::DialogState::default();
+    let mut state = dotzuki_engine::text::DialogState::default();
     let action = provider.process_control(&provider::PokemonChar::Done, &mut state);
     assert_eq!(action, ControlAction::Done);
 }
@@ -229,7 +229,7 @@ fn provider_process_control_done() {
 #[test]
 fn provider_process_control_newline() {
     let provider = PokemonTextProvider::default();
-    let mut state = jrpg_engine::text::DialogState::default();
+    let mut state = dotzuki_engine::text::DialogState::default();
     let action = provider.process_control(&provider::PokemonChar::NextLine, &mut state);
     assert_eq!(action, ControlAction::Newline);
 }

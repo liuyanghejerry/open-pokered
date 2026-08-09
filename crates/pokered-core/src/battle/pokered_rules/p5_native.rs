@@ -53,10 +53,10 @@
 // → covered by allow(dead_code).
 #![allow(dead_code)]
 
-use jrpg_engine::battle::stack::{
+use dotzuki_engine::battle::stack::{
     BattleCtx, Effect, EffectId, EffectState, EffectType, Event, EventHook, HandlerResult, RelayVar,
 };
-use jrpg_engine::battle::BattlerRef;
+use dotzuki_engine::battle::BattlerRef;
 
 use pokered_data::pokemon_data::get_base_stats;
 use pokered_data::types::PokemonType;
@@ -325,7 +325,7 @@ fn haze_reset(
 ) -> HandlerResult {
     for who in [BattlerRef::PLAYER, BattlerRef::OPPONENT] {
         let b = ctx.battler_mut(who);
-        b.stat_stages = jrpg_engine::battle::EnumMap::new();
+        b.stat_stages = dotzuki_engine::battle::EnumMap::new();
         b.status = None;
         // Haze copies the UNMODIFIED stats over the battle stats
         // (engine/battle/move_effects/haze.asm `ResetStats`) WITHOUT re-applying

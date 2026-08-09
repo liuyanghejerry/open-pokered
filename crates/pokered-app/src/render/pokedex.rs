@@ -327,7 +327,7 @@ pub fn draw_entry_for_species(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use jrpg_engine::render_config::RenderConfig;
+    use dotzuki_engine::render_config::RenderConfig;
     use pokered_core::pokemon::pokedex::Pokedex;
     use pokered_core::pokedex_screen::PokedexScreenInput;
     use pokered_data::wild_data::GameVersion;
@@ -497,7 +497,7 @@ mod tests {
 #[cfg(test)]
 mod area_marker_visual {
     use super::*;
-    use jrpg_engine::render_config::RenderConfig;
+    use dotzuki_engine::render_config::RenderConfig;
     use pokered_renderer::palette::GbColor;
     use pokered_core::pokemon::pokedex::Pokedex;
     use pokered_core::pokedex_screen::{PokedexScreenInput, PokedexScreenState};

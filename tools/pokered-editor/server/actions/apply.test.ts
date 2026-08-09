@@ -17,8 +17,8 @@ function write(rel: string, content: string) {
 const read = (rel: string) => fs.readFileSync(path.join(ROOT, rel), 'utf-8')
 
 beforeAll(() => {
-  ROOT = fs.mkdtempSync(path.join(os.tmpdir(), 'jrpg-apply-'))
-  write('.jrpg-editor.json', JSON.stringify({
+  ROOT = fs.mkdtempSync(path.join(os.tmpdir(), 'dotzuki-apply-'))
+  write('.dotzuki-editor.json', JSON.stringify({
     name: 'F', dataRoot: '.', activities: [
       { id: 'story', type: 'story', config: { storiesDir: 'data/story', scenesDir: 'data/maps', scene: { ext: '.scene' } } },
       { id: 'data', type: 'data', config: { tables: [{ id: 'skills', dir: 'data/skills', idField: 'id' }] } },
@@ -108,25 +108,25 @@ describe('applyChange — project kinds', () => {
   // as the project create route), so pin it to a fresh temp dir per test.
   let PARENT = ''
   beforeEach(() => {
-    PARENT = fs.mkdtempSync(path.join(os.tmpdir(), 'jrpg-apply-proj-'))
+    PARENT = fs.mkdtempSync(path.join(os.tmpdir(), 'dotzuki-apply-proj-'))
     setProjectRootDir(PARENT)
   })
   afterEach(() => { try { fs.rmSync(PARENT, { recursive: true, force: true }) } catch { /* ignore */ } })
 
-  it('writes .jrpg-editor.json for project-config, resets the cache, and honors the stale guard', () => {
+  it('writes .dotzuki-editor.json for project-config, resets the cache, and honors the stale guard', () => {
     const p = createProjectContext(ROOT)
-    const before = read('.jrpg-editor.json')
+    const before = read('.dotzuki-editor.json')
     const next = JSON.stringify({ ...JSON.parse(before), name: 'Renamed' }, null, 2)
 
-    const res = applyChange(p, { target: { kind: 'project-config', path: '.jrpg-editor.json' }, after: next, expect: before })
+    const res = applyChange(p, { target: { kind: 'project-config', path: '.dotzuki-editor.json' }, after: next, expect: before })
     expect(res.ok).toBe(true)
     expect(res.backup).toBe(before)
-    expect(JSON.parse(read('.jrpg-editor.json')).name).toBe('Renamed')
+    expect(JSON.parse(read('.dotzuki-editor.json')).name).toBe('Renamed')
     // The context cache was dropped, so config() re-reads the new file.
     expect(p.config().name).toBe('Renamed')
 
     // The proposal was built against `before`; the file has since drifted.
-    const conflict = applyChange(p, { target: { kind: 'project-config', path: '.jrpg-editor.json' }, after: next, expect: before })
+    const conflict = applyChange(p, { target: { kind: 'project-config', path: '.dotzuki-editor.json' }, after: next, expect: before })
     expect(conflict.ok).toBe(false)
     expect(conflict.conflict).toBe(true)
   })
@@ -141,7 +141,7 @@ describe('applyChange — project kinds', () => {
 
     const target = path.join(PARENT, 'ai-game')
     expect(getProjectRoot()).toBe(target) // editor root switched to the new project
-    expect(fs.existsSync(path.join(target, '.jrpg-editor.json'))).toBe(true)
+    expect(fs.existsSync(path.join(target, '.dotzuki-editor.json'))).toBe(true)
     expect(fs.existsSync(path.join(target, 'assets', 'scenes', 'main.scene'))).toBe(true)
     expect(fs.existsSync(path.join(target, 'data', 'maps'))).toBe(true)
     expect(fs.existsSync(path.join(target, 'Cargo.toml'))).toBe(false) // pure editor content, no Rust
@@ -161,14 +161,14 @@ describe('applyChange — project kinds', () => {
     const res = applyChange(p, { target: scaffoldTarget, after: scaffoldPayload, expect: null })
     expect(res.ok).toBe(false)
     expect(res.conflict).toBe(true)
-    expect(fs.existsSync(path.join(target, '.jrpg-editor.json'))).toBe(false)
+    expect(fs.existsSync(path.join(target, '.dotzuki-editor.json'))).toBe(false)
     expect(fs.existsSync(path.join(target, 'keep.txt'))).toBe(true)
   })
 
   it('refuses to delete a directory this proposal did not create', () => {
     const target = path.join(PARENT, 'ai-game')
     fs.mkdirSync(target, { recursive: true })
-    fs.writeFileSync(path.join(target, 'keep.txt'), 'hi') // no .jrpg-editor.json marker
+    fs.writeFileSync(path.join(target, 'keep.txt'), 'hi') // no .dotzuki-editor.json marker
     const p = createProjectContext(ROOT)
     expect(() => applyChange(p, { target: scaffoldTarget, op: 'delete' })).toThrow(/refusing to delete/)
     expect(fs.existsSync(path.join(target, 'keep.txt'))).toBe(true)

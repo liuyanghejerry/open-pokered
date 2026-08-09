@@ -11,7 +11,7 @@
 use super::field_moves::FieldMoveOutcome;
 use super::screen::{OverworldScreen, PendingWarp};
 use super::{Direction, OverworldInput};
-use jrpg_engine::overworld::types::{MovementState, TransportMode};
+use dotzuki_engine::overworld::types::{MovementState, TransportMode};
 use pokered_data::impl_traits::PokemonRedData;
 use pokered_data::maps::MapId;
 use pokered_data::moves::MoveId;

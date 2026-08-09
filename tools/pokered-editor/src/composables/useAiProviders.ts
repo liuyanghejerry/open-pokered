@@ -3,7 +3,7 @@
 // provider editor and the Story activity's AI generators (character refine /
 // scene generation).
 //
-// Dev/Electron: profiles persist to `.jrpg-editor.providers.json` via the
+// Dev/Electron: profiles persist to `.dotzuki-editor.providers.json` via the
 // `/api/ai/providers` endpoint. Static hosting (GitHub Pages): there is no
 // /api backend, so profiles persist to localStorage instead, seeded with a
 // DeepSeek profile (OpenAI-compatible, browser-direct) so the AI Assistant

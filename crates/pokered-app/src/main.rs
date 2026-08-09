@@ -13,9 +13,9 @@ mod hot_reload;
 
 use clap::Parser;
 use pokered_core::data::wild_data::GameVersion;
-use jrpg_app::{run, GameLoop, GameWindowConfig, InputState};
+use dotzuki_app::{run, GameLoop, GameWindowConfig, InputState};
 use pokered_renderer::{FrameBuffer, Rgba};
-use jrpg_engine::render_config::RenderConfig;
+use dotzuki_engine::render_config::RenderConfig;
 
 use crate::battle_config::BattleConfig;
 use crate::cli::Cli;

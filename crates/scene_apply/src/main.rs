@@ -8,8 +8,8 @@
 //!
 //!   cargo run -p scene_apply -- PewterGym CeruleanGym
 
-use jrpg_engine_dsl::compiler::compile_scene_to_js;
-use jrpg_engine_dsl::config_gen::compile_scene_to_config;
+use dotzuki_engine_dsl::compiler::compile_scene_to_js;
+use dotzuki_engine_dsl::config_gen::compile_scene_to_config;
 use std::path::PathBuf;
 use std::process::exit;
 

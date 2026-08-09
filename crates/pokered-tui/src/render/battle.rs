@@ -299,7 +299,7 @@ pub struct BattleVisualEffects {
     /// when a substitute breaks (the SE itself latches the doll on).
     player_sub_flag: bool,
     enemy_sub_flag: bool,
-    /// Shared framebuffer special effects (jrpg-renderer battle_anim::effects).
+    /// Shared framebuffer special effects (dotzuki-renderer battle_anim::effects).
     fx: BattleEffects,
     intro_anim: IntroAnimState,
     /// Active screen-wipe transition (engine/battle/battle_transitions.asm),
@@ -492,7 +492,7 @@ impl BattleVisualEffects {
         match intro_phase {
             IntroPhase::BattleTransitionWipe(transition) => {
                 // Real screen wipe (engine/battle/battle_transitions.asm):
-                // the jrpg-renderer port eats the overworld snapshot tile by
+                // the dotzuki-renderer port eats the overworld snapshot tile by
                 // tile (circle/spiral/stripes/shrink/split), instead of the
                 // previous 8-frame black flash approximation.
                 let kind = match transition {
@@ -873,7 +873,7 @@ impl BattleVisualEffects {
             return;
         }
 
-        // Shared framebuffer effects (jrpg-renderer). The returned frame
+        // Shared framebuffer effects (dotzuki-renderer). The returned frame
         // count is how long the original routine blocks the command stream.
         let wait = self.fx.apply(&effect, attacker);
         if wait > 0 {

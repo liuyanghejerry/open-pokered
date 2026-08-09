@@ -1,7 +1,7 @@
 use super::*;
 use crate::input::{keycode_to_gb_button, GbButton, InputState};
 use crate::palette::*;
-use jrpg_engine::render_config::RenderConfig;
+use dotzuki_engine::render_config::RenderConfig;
 use pokered_data::impl_traits::PokemonPaletteData;
 use pokered_data::sgb_palettes::*;
 use winit::keyboard::KeyCode;
@@ -393,8 +393,8 @@ fn obp0_default_makes_color0_transparent() {
 
 use crate::tile::{decode_2bpp_row, RgbaTileSet, Tile, TileSet, BYTES_PER_TILE, TILE_PIXELS};
 use crate::tilemap::{BG_MAP_HEIGHT, BG_MAP_SIZE, BG_MAP_WIDTH};
-use jrpg_engine::tilemap::Tilemap as TileMap;
-use jrpg_engine::tilemap::TilemapEntry;
+use dotzuki_engine::tilemap::Tilemap as TileMap;
+use dotzuki_engine::tilemap::TilemapEntry;
 use crate::window_layer::WindowLayer;
 
 // --- Tile tests ---

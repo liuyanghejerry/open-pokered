@@ -20,11 +20,11 @@ use super::{
     PokeredRules,
 };
 
-use jrpg_engine::battle::rng::ScriptedRng;
-use jrpg_engine::battle::stack::{
+use dotzuki_engine::battle::rng::ScriptedRng;
+use dotzuki_engine::battle::stack::{
     EffectId, EffectProvider, EffectState, FirstMover, StackDriver, TurnEvent, TurnLog,
 };
-use jrpg_engine::battle::{
+use dotzuki_engine::battle::{
     BattleAction, BattleState as EngineState, BattlerRef,
     BattlerState as EngineBattler, EnumMap,
 };
@@ -525,12 +525,12 @@ fn stack_run_logged(s: &Scenario) -> (EngineState<PokeredRules>, TurnLog<Pokered
 // ─── P1B batch 4: the DECOUPLED status/volatile-infliction seam ────────────────
 //
 // These verify that the game-agnostic `InflictVolatile` / `InflictStatus(amount)`
-// ops (jrpg-rules) drive Pokémon-specific volatiles/statuses purely through the
+// ops (dotzuki-rules) drive Pokémon-specific volatiles/statuses purely through the
 // `RuleBindings` seam — the engine never learns "confusion"/"sleep".
 
 #[test]
 fn decoupled_make_volatile_maps_the_game_vocabulary() {
-    use jrpg_rules::RuleBindings;
+    use dotzuki_rules::RuleBindings;
     let b = super::PokeredBindings;
     // The game binding is the ONLY place a volatile name → PokeVolatile.
     assert!(matches!(b.make_volatile("confusion", 4), Some(PokeVolatile::Confused { turns: 4 })));
@@ -3741,7 +3741,7 @@ fn bucket_a_matrix() {
 #[test]
 fn baked_and_disk_yield_identical_ruleset() {
     use super::{compile, load_ruleset, RULES_RON_PATH};
-    use jrpg_rules::RuleSource;
+    use dotzuki_rules::RuleSource;
     let baked = load_ruleset(false).load().expect("baked parses");
     let disk = RuleSource::from_path(RULES_RON_PATH).load().expect("disk parses");
     let cb = compile(&baked).expect("baked compiles");
@@ -3764,7 +3764,7 @@ fn baked_and_disk_yield_identical_ruleset() {
 #[test]
 fn baked_and_disk_drive_identical_battle() {
     use super::{compile, install_compiled, load_ruleset, RULES_RON_PATH};
-    use jrpg_rules::RuleSource;
+    use dotzuki_rules::RuleSource;
     let s = Scenario::base("Surf baked==disk", MoveId::Surf);
     let run_one = || {
         set_active_move(real_move(s.move_id));
@@ -3796,7 +3796,7 @@ fn baked_and_disk_drive_identical_battle() {
 #[test]
 fn authored_moves_resolve_as_data() {
     install_canonical();
-    use jrpg_rules::{FractionOf, Op, Selector};
+    use dotzuki_rules::{FractionOf, Op, Selector};
     // Pure-damage moves carry [DealMoveDamage] + [ApplyTypeChart].
     assert!(super::record_has_op("move.surf", &Op::DealMoveDamage), "surf is DealMoveDamage data");
     assert!(super::record_has_op("move.surf", &Op::ApplyTypeChart), "surf is ApplyTypeChart data");
@@ -4200,7 +4200,7 @@ fn recoil_hits_attacker_quarter_damage_dealt() {
 #[test]
 fn p2_authored_as_data() {
     install_canonical();
-    use jrpg_rules::{FractionOf, Op, Predicate, Selector};
+    use dotzuki_rules::{FractionOf, Op, Predicate, Selector};
     assert!(super::record_has_op("drain.absorb", &Op::HealFraction {
         num: 1, den: 2, of: FractionOf::LastDamage, target: Selector::Source, unless: None
     }), "drain is a 1/2 LastDamage HealFraction on Source");
@@ -4615,7 +4615,7 @@ fn foe_stat_down_floor_at_minus_6() {
 #[test]
 fn p3_authored_as_data() {
     install_canonical();
-    use jrpg_rules::{DamageValue, Op, Predicate, Selector};
+    use dotzuki_rules::{DamageValue, Op, Predicate, Selector};
     // Special damage: SetDamage(UserLevel) / Const(40) / RngScaledLevel; SuperFang;
     // OHKO SetHp+LevelGE.
     assert!(super::record_has_op("special.user_level", &Op::SetDamage {
@@ -4648,7 +4648,7 @@ fn p3_authored_as_data() {
 
 // ═════════════════════════════════════════════════════════════════════════════
 // P4 — MULTI-HIT via the RepeatHits seam (blueprint 15 §5 P4). The RepeatHits
-// mechanism is a GAME-SIDE `jrpg_rules::Op` (NO engine change): the StackDriver
+// mechanism is a GAME-SIDE `dotzuki_rules::Op` (NO engine change): the StackDriver
 // computes the per-hit damage once into `ctx.mv.damage`, checks accuracy once,
 // deals the FIRST hit, then fires `DamagingHit`, where the `RepeatHits` op
 // re-deals the SAME number `(N-1)` more times. So total = per-hit × N.
@@ -4846,7 +4846,7 @@ fn multi_hit_twineedle_poison_type_immune() {
 #[test]
 fn p4_authored_as_data() {
     install_canonical();
-    use jrpg_rules::{FinalHitRider, HitCount, Op, Predicate, Rational, Selector};
+    use dotzuki_rules::{FinalHitRider, HitCount, Op, Predicate, Rational, Selector};
     // The 7 TwoToFive moves carry RepeatHits(TwoToFive, Target).
     for sid in ["multi.doubleslap", "multi.comet_punch", "multi.fury_attack",
                 "multi.pin_missile", "multi.spike_cannon", "multi.barrage", "multi.fury_swipes"] {
@@ -4892,7 +4892,7 @@ fn p4_authored_as_data() {
 
 /// A deterministic LCG `BattleRng` so the demo battle is reproducible (and varied).
 struct DemoRng(u64);
-impl jrpg_engine::battle::rng::BattleRng for DemoRng {
+impl dotzuki_engine::battle::rng::BattleRng for DemoRng {
     fn next_u8(&mut self) -> u8 {
         self.0 = self.0.wrapping_mul(6364136223846793005).wrapping_add(1442695040888963407);
         (self.0 >> 33) as u8
@@ -4914,7 +4914,7 @@ fn engine_from_pokemon(p: &Pokemon) -> EngineBattler<PokeredRules> {
 
 #[test]
 fn demo_stack_battle_transcript() {
-    use jrpg_engine::battle::rng::BattleRng; // for rng.next_u8() at the call site
+    use dotzuki_engine::battle::rng::BattleRng; // for rng.next_u8() at the call site
     install_canonical();
     super::clear_current_moves();
     let dvs = [0xFF, 0xFF];

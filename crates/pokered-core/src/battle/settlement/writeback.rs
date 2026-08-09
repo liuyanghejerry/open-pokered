@@ -14,7 +14,7 @@ use crate::battle::settlement::EvolutionEvent;
 use crate::battle::BattleScreen;
 use crate::overworld::OverworldScreen;
 use crate::save::SaveData;
-use jrpg_engine::overworld::types::TransportMode;
+use dotzuki_engine::overworld::types::TransportMode;
 
 /// What [`settle_battle_into_save`] produced.
 pub struct SettleWriteback {

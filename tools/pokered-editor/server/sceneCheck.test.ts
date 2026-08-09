@@ -11,7 +11,7 @@ import { checkScene } from './sceneCheck'
 
 let ROOT = ''
 function writeConfig(sceneBlock: Record<string, unknown>) {
-  fs.writeFileSync(path.join(ROOT, '.jrpg-editor.json'), JSON.stringify({
+  fs.writeFileSync(path.join(ROOT, '.dotzuki-editor.json'), JSON.stringify({
     name: 'F', dataRoot: '.', activities: [
       { id: 'story', type: 'story', config: { storiesDir: 'data/story', scenesDir: 'data/maps', scene: sceneBlock } },
     ],

@@ -1,4 +1,4 @@
-use jrpg_engine::tileset::TilesetTrait;
+use dotzuki_engine::tileset::TilesetTrait;
 use pokered_data::maps::MapId;
 use pokered_data::tileset_data::{
     check_warp_pad_or_hole as data_check_warp_pad_or_hole, spinner_next_facing, PadInput,

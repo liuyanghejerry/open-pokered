@@ -2,7 +2,7 @@ use super::collision::PokemonCollisionProvider;
 use super::npc_interaction::*;
 use super::npc_movement::*;
 use super::*;
-use jrpg_engine::overworld::MapData;
+use dotzuki_engine::overworld::MapData;
 use pokered_data::maps::MapId;
 use pokered_data::music::MusicId;
 use pokered_data::npc_data::{get_map_npcs, NpcFacing, NpcMovement};

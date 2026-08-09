@@ -19,7 +19,7 @@ function write(rel: string, content: string) {
 
 beforeAll(() => {
   ROOT = fs.mkdtempSync(path.join(os.tmpdir(), 'jrpg-tools-'))
-  write('.jrpg-editor.json', JSON.stringify({
+  write('.dotzuki-editor.json', JSON.stringify({
     name: 'F', dataRoot: '.', activities: [
       { id: 'story', type: 'story', config: { storiesDir: 'data/story', scenesDir: 'data/maps', scene: { ext: '.scene' } } },
       { id: 'data', type: 'data', config: { tables: [{ id: 'skills', dir: 'data/skills', idField: 'id' }] } },
@@ -219,17 +219,17 @@ describe('project-level propose tools', () => {
   it('propose_project_config stages the complete new config against the current file', async () => {
     const { ctx } = makeCtx()
     const cs = new ChangeSet()
-    const current = JSON.parse(fs.readFileSync(path.join(ROOT, '.jrpg-editor.json'), 'utf-8'))
+    const current = JSON.parse(fs.readFileSync(path.join(ROOT, '.dotzuki-editor.json'), 'utf-8'))
     const res = await proposeToolImpls(ctx, cs).propose_project_config({
       config: JSON.stringify({ ...current, name: 'Renamed' }),
     })
     expect(res).toMatchObject({ ok: true })
     const prop = cs.proposals[0]
-    expect(prop.target).toMatchObject({ kind: 'project-config', path: '.jrpg-editor.json' })
+    expect(prop.target).toMatchObject({ kind: 'project-config', path: '.dotzuki-editor.json' })
     expect(prop.before).toContain('"F"')
     expect(prop.after).toContain('"Renamed"')
     // disk untouched — propose ≠ apply
-    expect(JSON.parse(fs.readFileSync(path.join(ROOT, '.jrpg-editor.json'), 'utf-8')).name).toBe('F')
+    expect(JSON.parse(fs.readFileSync(path.join(ROOT, '.dotzuki-editor.json'), 'utf-8')).name).toBe('F')
   })
 
   it('propose_project_config rejects a config without an activities array', async () => {
@@ -252,7 +252,7 @@ describe('story-tool gating (no story activity configured)', () => {
     }
     // Same shape as a scaffolded wuxia/jrpg template project: data tables and
     // maps, but NO story activity — story tools must not be registered.
-    bareWrite('.jrpg-editor.json', JSON.stringify({
+    bareWrite('.dotzuki-editor.json', JSON.stringify({
       name: 'B', dataRoot: '.', activities: [
         { id: 'data', type: 'data', config: { tables: [{ id: 'characters', dir: 'data/characters', idField: 'id' }] } },
         { id: 'map', type: 'map', config: { mapsDir: 'data/maps' } },

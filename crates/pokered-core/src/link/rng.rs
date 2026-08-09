@@ -64,7 +64,7 @@
 //! `crate::link::link_battle_driver`), so both sides feed the constructor the
 //! host's list.
 
-use jrpg_engine::battle::rng::BattleRng;
+use dotzuki_engine::battle::rng::BattleRng;
 
 /// Length of the exchanged random-number list (SERIAL_RNS_LENGTH, 10).
 pub const LINK_RANDOM_LIST_SIZE: usize = 10;
@@ -192,7 +192,7 @@ mod tests {
     fn battle_rng_trait_feeds_chance() {
         let list = [128, 64, 32, 16, 8, 4, 2, 1, 255, 0];
         let mut rng = LinkRng::new(list);
-        use jrpg_engine::battle::rng::BattleRng as _;
+        use dotzuki_engine::battle::rng::BattleRng as _;
         // chance(num, den) = next_u8() % den < num.
         assert_eq!(rng.next_u8(), 128);
         assert_eq!(rng.range(200), 64 % 200);

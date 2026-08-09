@@ -2,7 +2,7 @@ use pokered_core::game_state::Lang;
 use pokered_data::ui_layout::schema::BattleTextDefaultLayout;
 
 use crate::engine::{InkColor, Painter, Ui};
-use jrpg_ui::widgets::dialog::wrap_lines;
+use dotzuki_ui::widgets::dialog::wrap_lines;
 
 /// Draw the battle message box.
 ///

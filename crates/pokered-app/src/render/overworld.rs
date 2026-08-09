@@ -10,16 +10,16 @@ use pokered_core::overworld::presentation::{
 use pokered_core::overworld::screen::{WarpFadeState, WARP_FADE_DELAY, WARP_FADE_IN_FRAMES};
 use pokered_core::overworld::{Direction, MovementState, OverworldScreen};
 use pokered_data::impl_traits::PokemonTilesetData;
-use jrpg_engine::overworld::types::TransportMode;
-use jrpg_engine::tileset::TilesetProvider;
-use jrpg_renderer::transition::{FadePalette, FADE_PALETTES};
+use dotzuki_engine::overworld::types::TransportMode;
+use dotzuki_engine::tileset::TilesetProvider;
+use dotzuki_renderer::transition::{FadePalette, FADE_PALETTES};
 use pokered_renderer::embedded_font::draw_text;
 use pokered_renderer::palette::{GbColor, Palette, GRAYSCALE_PALETTE};
 use pokered_renderer::resource::{AssetCategory, ResourceManager};
 use pokered_renderer::{FrameBuffer, Rgba, TILE_SIZE};
 
-use jrpg_engine::render::MapLayer;
-use jrpg_engine::tilemap::{Tilemap, TilemapEntry};
+use dotzuki_engine::render::MapLayer;
+use dotzuki_engine::tilemap::{Tilemap, TilemapEntry};
 use pokered_renderer::layer_renderer::render_layers;
 use pokered_renderer::tile::TileSet;
 use pokered_ui::backends::FrameBufferPainter;
@@ -1201,7 +1201,7 @@ pub fn draw_overworld(
         return;
     }
     if screen.dark_cave.is_dark() {
-        apply_gb_palette(fb, &jrpg_renderer::transition::load_gb_pal(6));
+        apply_gb_palette(fb, &dotzuki_renderer::transition::load_gb_pal(6));
         return;
     }
     if let Some(pal) = warp_fade_palette(screen) {
@@ -1317,7 +1317,7 @@ mod tests {
     #[test]
     fn apply_gb_palette_maps_shades() {
         let mut fb = FrameBuffer::new(
-            jrpg_engine::render_config::RenderConfig::new(4, 1),
+            dotzuki_engine::render_config::RenderConfig::new(4, 1),
             Rgba::WHITE,
         );
         fb.set_pixel(1, 0, Rgba::rgb(0xAA, 0xAA, 0xAA));
@@ -1334,7 +1334,7 @@ mod tests {
     #[test]
     fn dark_cave_palette_is_fadepal2() {
         // LoadGBPal with wMapPalOffset=6 reads FadePal4 - 6 bytes = FadePal2.
-        let pal = jrpg_renderer::transition::load_gb_pal(6);
+        let pal = dotzuki_renderer::transition::load_gb_pal(6);
         assert_eq!(pal, FADE_PALETTES[1]);
         assert_eq!(pal.bgp, 0xFE); // dc 3,3,3,2
     }
@@ -1344,7 +1344,7 @@ mod tests {
     fn shade_histogram(screen: &mut OverworldScreen) -> [usize; 4] {
         let mut res = pokered_renderer::resource::AssetRoot::auto_detect().ok().map(pokered_renderer::resource::ResourceManager::new);
         let mut fb = FrameBuffer::new(
-            jrpg_engine::render_config::RenderConfig::new(160, 144),
+            dotzuki_engine::render_config::RenderConfig::new(160, 144),
             Rgba::WHITE,
         );
         draw_overworld(screen, &mut res, &mut fb, pokered_core::game_state::Lang::En);
@@ -1391,7 +1391,7 @@ mod tests {
         );
         let mut res = pokered_renderer::resource::AssetRoot::auto_detect().ok().map(pokered_renderer::resource::ResourceManager::new);
         let mut fb_a = FrameBuffer::new(
-            jrpg_engine::render_config::RenderConfig::new(160, 144),
+            dotzuki_engine::render_config::RenderConfig::new(160, 144),
             Rgba::WHITE,
         );
         draw_overworld(&mut s, &mut res, &mut fb_a, pokered_core::game_state::Lang::En);
@@ -1401,7 +1401,7 @@ mod tests {
         }
         assert_eq!(s.tile_anim.water_shift(), 1);
         let mut fb_b = FrameBuffer::new(
-            jrpg_engine::render_config::RenderConfig::new(160, 144),
+            dotzuki_engine::render_config::RenderConfig::new(160, 144),
             Rgba::WHITE,
         );
         draw_overworld(&mut s, &mut res, &mut fb_b, pokered_core::game_state::Lang::En);
@@ -1422,7 +1422,7 @@ mod elevator_edge_tests {
             .ok()
             .map(pokered_renderer::resource::ResourceManager::new);
         let mut fb = FrameBuffer::new(
-            jrpg_engine::render_config::RenderConfig::new(160, 144),
+            dotzuki_engine::render_config::RenderConfig::new(160, 144),
             Rgba::WHITE,
         );
         draw_overworld(screen, &mut res, &mut fb, pokered_core::game_state::Lang::En);
@@ -1606,7 +1606,7 @@ mod elevator_edge_tests {
         s.state.player.x = 5;
         s.state.player.y = 5;
         s.state.player.facing = Direction::Down;
-        s.npc_states.push(jrpg_engine::overworld::npc_movement::NpcRuntimeState {
+        s.npc_states.push(dotzuki_engine::overworld::npc_movement::NpcRuntimeState {
             npc_index: 0,
             sprite_id: pokered_data::sprites::SpriteId::Boulder as u8,
             x: 5,
@@ -1615,7 +1615,7 @@ mod elevator_edge_tests {
             home_y: 6,
             facing: Direction::Down,
             scripted_frame: None,
-            movement_type: jrpg_engine::overworld::NpcMovementType::Stationary,
+            movement_type: dotzuki_engine::overworld::NpcMovementType::Stationary,
             range: 0,
             walk_counter: 0,
             delay_counter: 0,
@@ -1666,7 +1666,7 @@ mod elevator_edge_tests {
     #[cfg(not(target_arch = "wasm32"))]
     #[test]
     fn biking_renders_red_bike_sheet_not_red() {
-        use jrpg_engine::overworld::types::TransportMode;
+        use dotzuki_engine::overworld::types::TransportMode;
 
         let mut walking = OverworldScreen::new(MapId::PalletTown, None, PokemonRedData);
         let mut biking = OverworldScreen::new(MapId::PalletTown, None, PokemonRedData);

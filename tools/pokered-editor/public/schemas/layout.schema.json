@@ -2,7 +2,7 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "/schemas/layout.schema.json",
   "title": "Pokered UI Layout",
-  "description": "Schema for pokered screen layout JSON files (schema_version 2 — flat element tree). Mirrors crates/jrpg-renderer/src/layout_engine/types.rs.",
+  "description": "Schema for pokered screen layout JSON files (schema_version 2 — flat element tree). Mirrors crates/dotzuki-renderer/src/layout_engine/types.rs.",
   "type": "object",
   "required": ["schema_version", "screen", "elements"],
   "properties": {

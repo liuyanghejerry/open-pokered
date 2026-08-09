@@ -98,7 +98,7 @@ impl<'fb> Painter for FrameBufferPainter<'fb> {
         let ink = color;
         let bg = Rgba::INK_WHITE;
         // Map common Game Boy tile IDs to Fusion Pixel glyphs.
-        // Matches the mapping in jrpg-ui/src/lib.rs.
+        // Matches the mapping in dotzuki-ui/src/lib.rs.
         match tile_id {
             // Menu cursor ▶
             223 => {

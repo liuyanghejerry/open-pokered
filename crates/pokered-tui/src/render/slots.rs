@@ -105,7 +105,7 @@ pub fn draw_slots(slots: &SlotsScreen, fb: &mut FrameBuffer) {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use jrpg_engine::render_config::RenderConfig;
+    use dotzuki_engine::render_config::RenderConfig;
     use pokered_core::slots_screen::SlotsInput;
 
     /// Rendering must not panic in any phase (guards against coordinate

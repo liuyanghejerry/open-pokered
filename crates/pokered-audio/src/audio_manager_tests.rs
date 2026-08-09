@@ -414,7 +414,7 @@ fn test_low_health_alarm_suppresses_pulse1_sfx() {
 
 #[test]
 fn test_play_flute_in_battle() {
-    use jrpg_audio::sequencer::{CHAN5, CHAN6, CHAN7};
+    use dotzuki_audio::sequencer::{CHAN5, CHAN6, CHAN7};
 
     let mut mgr = AudioManager::new();
     mgr.play_flute_in_battle();

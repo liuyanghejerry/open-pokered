@@ -1,6 +1,6 @@
 // ───────────────────────────────────────────────────────────────────────────
 // Image-generation provider profiles — kept SEPARATE from the text providers
-// (useAiProviders). Persist to `.jrpg-editor.image-providers.json` via
+// (useAiProviders). Persist to `.dotzuki-editor.image-providers.json` via
 // `/api/ai/image-providers`; API keys live in localStorage (see useAiStream),
 // never on disk here. kind: 'openai' (OpenAI-compatible images) | 'gemini'.
 // ───────────────────────────────────────────────────────────────────────────

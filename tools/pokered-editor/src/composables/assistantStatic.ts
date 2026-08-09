@@ -9,7 +9,7 @@
 // localStorage, same shape as the dev-server `buildModel`.
 //
 // Tools: a pokered-shaped subset of the server surface (the server tools
-// speak jrpg-editor's ProjectContext model — characters/quests/.gui — which
+// speak dotzuki-editor's ProjectContext model — characters/quests/.gui — which
 // doesn't exist in pokered). READ tools return project data; PROPOSE tools
 // stage a proposal into the review tray via `emit` and never write directly.
 //

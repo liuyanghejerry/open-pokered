@@ -1,6 +1,6 @@
 // ───────────────────────────────────────────────────────────────────────────
 // Byte-level progress fetch, shared by the wasm loaders (pokered-runner-web
-// game engine + jrpg-web layout preview) so the boot loading screen can show
+// game engine + dotzuki-web layout preview) so the boot loading screen can show
 // download progress for the .wasm binaries on static hosting.
 // ───────────────────────────────────────────────────────────────────────────
 

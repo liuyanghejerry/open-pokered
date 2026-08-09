@@ -5,8 +5,8 @@
 
 use std::sync::LazyLock;
 
-use jrpg_engine::menu::{BorderStyle, CursorStyle, MenuConfig};
-use jrpg_engine::render::TileRect;
+use dotzuki_engine::menu::{BorderStyle, CursorStyle, MenuConfig};
+use dotzuki_engine::render::TileRect;
 
 /// Standard Pokémon menu border using the default Game Boy border tiles
 /// (tile indices 192–200).

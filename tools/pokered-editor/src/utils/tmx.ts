@@ -16,7 +16,7 @@
  */
 
 // ---------------------------------------------------------------------------
-// Tiled JSON types (mirrors jrpg-engine-tiled/src/lib.rs)
+// Tiled JSON types (mirrors dotzuki-engine-tiled/src/lib.rs)
 // ---------------------------------------------------------------------------
 
 /** A single custom property from Tiled. */
@@ -85,7 +85,7 @@ export interface TmxMap {
 }
 
 // ---------------------------------------------------------------------------
-// GID helpers (from jrpg-engine-tiled)
+// GID helpers (from dotzuki-engine-tiled)
 // ---------------------------------------------------------------------------
 
 /** Mask to strip flip flags from a Tiled GID, leaving the raw tile ID. */

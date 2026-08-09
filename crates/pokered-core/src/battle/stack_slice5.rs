@@ -56,7 +56,7 @@ mod slice5_tests {
         stack_toxic_counter, ResidualMon, ResidualScenario,
     };
     use crate::battle::state::StatusCondition as S;
-    use jrpg_engine::battle::BattlerRef;
+    use dotzuki_engine::battle::BattlerRef;
 
     use pokered_data::move_data::MoveData;
     use pokered_data::moves::{MoveEffect, MoveId};

@@ -549,8 +549,8 @@ fn all_dungeon_maps_have_valid_data() {
 // two bytes pre-rolled as `WildEncounterRandoms`. Comparing results proves the
 // draw order matches.
 
-use jrpg_engine::battle::rng::ScriptedRng;
-use jrpg_engine::overworld::encounter::{EncounterEngine, EncounterMode, EncounterStep};
+use dotzuki_engine::battle::rng::ScriptedRng;
+use dotzuki_engine::overworld::encounter::{EncounterEngine, EncounterMode, EncounterStep};
 
 /// Run both paths over the same inputs + rng stream and assert they agree.
 #[allow(clippy::too_many_arguments)]

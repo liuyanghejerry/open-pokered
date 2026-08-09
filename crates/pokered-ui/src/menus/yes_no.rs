@@ -1,14 +1,14 @@
-// Yes/No widget — thin wrapper around jrpg-ui generic yes_no.
+// Yes/No widget — thin wrapper around dotzuki-ui generic yes_no.
 //
 // Keeps the pokered-specific public API (taking YesNoDefaultLayout)
-// while delegating the actual rendering to jrpg_ui::widgets::yes_no.
+// while delegating the actual rendering to dotzuki_ui::widgets::yes_no.
 
-use jrpg_engine::menu::{CursorStyle, MenuConfig};
-use jrpg_engine::render::TileRect;
+use dotzuki_engine::menu::{CursorStyle, MenuConfig};
+use dotzuki_engine::render::TileRect;
 use pokered_data::ui_layout::schema::YesNoDefaultLayout;
 
 use crate::engine::{Painter, Ui};
-use jrpg_ui::widgets::yes_no;
+use dotzuki_ui::widgets::yes_no;
 
 /// Draw a yes/no choice box using a pokered layout definition.
 pub fn draw<P: Painter>(options: &[String], selected: u32, layout: &YesNoDefaultLayout, ui: &mut Ui<P>) {

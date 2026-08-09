@@ -1,9 +1,9 @@
 //! Export pokered's built-in music & SFX to the generic, file-based audio JSON
-//! format defined in `jrpg-audio`'s `format` module.
+//! format defined in `dotzuki-audio`'s `format` module.
 //!
 //! This doubles as a demonstration that the generated pokered tables convert
 //! losslessly into the editable format, and as a way to seed real content for
-//! the jrpg-editor audio activity.
+//! the dotzuki-editor audio activity.
 //!
 //! Usage:
 //!   cargo run -p pokered-audio --example export_audio -- <out_dir>
@@ -13,8 +13,8 @@
 use std::fs;
 use std::path::{Path, PathBuf};
 
-use jrpg_audio::format::{TrackDef, TrackKind, DEFAULT_TEMPO};
-use jrpg_audio::HwChannel;
+use dotzuki_audio::format::{TrackDef, TrackKind, DEFAULT_TEMPO};
+use dotzuki_audio::HwChannel;
 use pokered_audio::music_data::MUSIC_TRACKS;
 use pokered_audio::sfx_data::SFX_TRACKS;
 
