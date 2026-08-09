@@ -1,0 +1,62 @@
+// Route2TradeHouse — translated from the original disassembly
+// (scripts/Route2TradeHouse.asm, text/Route2TradeHouse.asm,
+// engine/events/in_game_trades.asm + data/events/trades.asm).
+//
+// Two NPCs: a Scientist who gives a flavor hint about using CUT outside of
+// battle, and a Gameboy Kid who offers in-game trade TRADE_FOR_MARCEL — the
+// player gives ABRA and receives a MR.MIME nicknamed "MARCEL"
+// (TRADE_DIALOGSET_CASUAL / dialogset 1).
+//
+// The trade is fully implemented via tradePokemon(): it verifies the player
+// carries ABRA, removes it from the party, and adds MR.MIME nicknamed MARCEL
+// with the trade animation; the wrong-mon path returns false. See
+// talkGameboyKid below.
+
+game_scene Route2TradeHouse {
+  // ── Scientist (npc 1) — flavor hint about CUT ───────────────────────────
+  @storyline("talkScientist") {
+    @trigger(map = "Route2TradeHouse", npc = 1)
+    @speaker("") {
+      @t("A fainted POKeMON can't\nfight. But, it can still use\nmoves like CUT!", "昏迷的宝可梦无法战斗，但还能\n使用居合斩之类的招式！")
+    }
+  }
+
+  // ── Gameboy Kid (npc 2) — TRADE_FOR_MARCEL: ABRA -> MR.MIME (MARCEL) ─────
+  // dialogset CASUAL (set 1).
+  @storyline("talkGameboyKid") {
+    @trigger(map = "Route2TradeHouse", npc = 2)
+    @if (getFlag("EVENT_TRADED_FOR_MARCEL")) {
+      // _AfterTrade1Text — the kid is enjoying the ABRA it received.
+      @speaker("") {
+        @t("Isn't my old MR.MIME great?", "我的魔墙人偶是不是很棒？")
+      }
+    } @else {
+      // _WannaTrade1Text (CASUAL): looking for ABRA, offering MR.MIME.
+      @speaker("") {
+        @t("I'm looking for ABRA! Wanna\n\ntrade one for MR.MIME?", "我在找凯西！要不要\n\n用一只来换魔墙人偶？")
+      }
+      @choice {
+        @option(@t("YES", "是")) {
+          // ConnectCableText -> real in-game trade (removes ABRA, adds
+          // MR.MIME nicknamed MARCEL). tradePokemon returns false if the player
+          // doesn't actually carry ABRA -> wrong-mon (dialogset CASUAL).
+          @speaker("") { @t("Okay, connect the cable like\nso!", "好，请把通信线接上！") }
+          traded = tradePokemon("ABRA", "MR_MIME", "MARCEL")
+          @if (traded) {
+            setFlag("EVENT_TRADED_FOR_MARCEL")
+            @speaker("") { @t("Hey thanks!", "嘿，谢谢！") }
+            @speaker("") {
+              @t("<PLAYER> traded ABRA for\nMR.MIME!", "<PLAYER>用凯西换到了魔墙人\n偶！")
+            }
+          } @else {
+            @speaker("") { @t("What? That's not ABRA!\n\nIf you get one, come back\nhere!", "什么？那不是凯西！\n\n如果你弄到一只，就回来找我\n吧！") }
+          }
+        }
+        @option(@t("NO", "否")) {
+          // _NoTrade1Text
+          @speaker("") { @t("Awww! Oh well...", "唉！那就算了吧……") }
+        }
+      }
+    }
+  }
+}

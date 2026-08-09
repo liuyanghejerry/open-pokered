@@ -1,0 +1,326 @@
+{
+  "$schema": "../../schemas/map.schema.json",
+  "id": 194,
+  "name": "VictoryRoad2F",
+  "header": {
+    "tileset": "Cavern",
+    "music": "Dungeon3",
+    "connectionFlags": 0,
+    "width": 15,
+    "height": 9,
+    "borderBlock": 125
+  },
+  "connections": {},
+  "warps": [
+    {
+      "x": 0,
+      "y": 8,
+      "destMap": "VictoryRoad1F",
+      "destWarpId": 2
+    },
+    {
+      "x": 29,
+      "y": 7,
+      "destWarpId": 3
+    },
+    {
+      "x": 29,
+      "y": 8,
+      "destWarpId": 3
+    },
+    {
+      "x": 23,
+      "y": 7,
+      "destMap": "VictoryRoad3F",
+      "destWarpId": 0
+    },
+    {
+      "x": 25,
+      "y": 14,
+      "destMap": "VictoryRoad3F",
+      "destWarpId": 2
+    },
+    {
+      "x": 27,
+      "y": 7,
+      "destMap": "VictoryRoad3F",
+      "destWarpId": 1
+    },
+    {
+      "x": 1,
+      "y": 1,
+      "destMap": "VictoryRoad3F",
+      "destWarpId": 3
+    }
+  ],
+  "npcs": [
+    {
+      "spriteId": 14,
+      "spriteName": "Hiker",
+      "x": 12,
+      "y": 9,
+      "movement": "Stationary",
+      "facing": "Left",
+      "range": 2,
+      "textId": 1,
+      "isTrainer": true,
+      "trainerClass": "Blackbelt",
+      "trainerSet": 9,
+      "endBattleText": "Aiyah!"
+    },
+    {
+      "spriteId": 12,
+      "spriteName": "SuperNerd",
+      "x": 21,
+      "y": 13,
+      "movement": "Stationary",
+      "facing": "Left",
+      "range": 2,
+      "textId": 2,
+      "isTrainer": true,
+      "trainerClass": "Juggler",
+      "trainerSet": 2,
+      "endBattleText": "You\ngot me!"
+    },
+    {
+      "spriteId": 7,
+      "spriteName": "CooltrainerM",
+      "x": 19,
+      "y": 8,
+      "movement": "Stationary",
+      "facing": "Down",
+      "range": 2,
+      "textId": 3,
+      "isTrainer": true,
+      "trainerClass": "Tamer",
+      "trainerSet": 5,
+      "endBattleText": "I got\nwhipped!"
+    },
+    {
+      "spriteId": 12,
+      "spriteName": "SuperNerd",
+      "x": 4,
+      "y": 2,
+      "movement": "Stationary",
+      "facing": "Down",
+      "range": 2,
+      "textId": 4,
+      "isTrainer": true,
+      "trainerClass": "Pokemaniac",
+      "trainerSet": 6,
+      "endBattleText": "No!\nUnbelievable!"
+    },
+    {
+      "spriteId": 12,
+      "spriteName": "SuperNerd",
+      "x": 26,
+      "y": 3,
+      "movement": "Stationary",
+      "facing": "Left",
+      "range": 2,
+      "textId": 5,
+      "isTrainer": true,
+      "trainerClass": "Juggler",
+      "trainerSet": 5,
+      "endBattleText": "Well\ndone!"
+    },
+    {
+      "spriteId": 9,
+      "spriteName": "Bird",
+      "x": 11,
+      "y": 5,
+      "movement": "Stationary",
+      "facing": "Up",
+      "range": 0,
+      "textId": 6,
+      "isTrainer": false
+    },
+    {
+      "spriteId": 61,
+      "spriteName": "PokeBall",
+      "x": 27,
+      "y": 5,
+      "movement": "Stationary",
+      "facing": "Down",
+      "range": 0,
+      "textId": 7,
+      "isTrainer": false,
+      "itemId": 217
+    },
+    {
+      "spriteId": 61,
+      "spriteName": "PokeBall",
+      "x": 18,
+      "y": 9,
+      "movement": "Stationary",
+      "facing": "Down",
+      "range": 0,
+      "textId": 8,
+      "isTrainer": false,
+      "itemId": 52
+    },
+    {
+      "spriteId": 61,
+      "spriteName": "PokeBall",
+      "x": 9,
+      "y": 11,
+      "movement": "Stationary",
+      "facing": "Down",
+      "range": 0,
+      "textId": 9,
+      "isTrainer": false,
+      "itemId": 205
+    },
+    {
+      "spriteId": 61,
+      "spriteName": "PokeBall",
+      "x": 11,
+      "y": 0,
+      "movement": "Stationary",
+      "facing": "Down",
+      "range": 0,
+      "textId": 10,
+      "isTrainer": false,
+      "itemId": 55
+    },
+    {
+      "spriteId": 63,
+      "spriteName": "Boulder",
+      "x": 4,
+      "y": 14,
+      "movement": "Stationary",
+      "facing": "Down",
+      "range": 0,
+      "textId": 11,
+      "isTrainer": false
+    },
+    {
+      "spriteId": 63,
+      "spriteName": "Boulder",
+      "x": 5,
+      "y": 5,
+      "movement": "Stationary",
+      "facing": "Down",
+      "range": 0,
+      "textId": 12,
+      "isTrainer": false
+    },
+    {
+      "spriteId": 63,
+      "spriteName": "Boulder",
+      "x": 23,
+      "y": 16,
+      "movement": "Stationary",
+      "facing": "Down",
+      "range": 0,
+      "textId": 13,
+      "isTrainer": false
+    }
+  ],
+  "signs": [],
+  "text": {},
+  "wild": {
+    "red": {
+      "grass": {
+        "encounterRate": 10,
+        "mons": [
+          {
+            "level": 22,
+            "species": "Machop"
+          },
+          {
+            "level": 24,
+            "species": "Geodude"
+          },
+          {
+            "level": 26,
+            "species": "Zubat"
+          },
+          {
+            "level": 36,
+            "species": "Onix"
+          },
+          {
+            "level": 39,
+            "species": "Onix"
+          },
+          {
+            "level": 42,
+            "species": "Onix"
+          },
+          {
+            "level": 41,
+            "species": "Machoke"
+          },
+          {
+            "level": 40,
+            "species": "Golbat"
+          },
+          {
+            "level": 40,
+            "species": "Marowak"
+          },
+          {
+            "level": 43,
+            "species": "Graveler"
+          }
+        ]
+      },
+      "water": {
+        "encounterRate": 0,
+        "mons": []
+      }
+    },
+    "blue": {
+      "grass": {
+        "encounterRate": 10,
+        "mons": [
+          {
+            "level": 22,
+            "species": "Machop"
+          },
+          {
+            "level": 24,
+            "species": "Geodude"
+          },
+          {
+            "level": 26,
+            "species": "Zubat"
+          },
+          {
+            "level": 36,
+            "species": "Onix"
+          },
+          {
+            "level": 39,
+            "species": "Onix"
+          },
+          {
+            "level": 42,
+            "species": "Onix"
+          },
+          {
+            "level": 41,
+            "species": "Machoke"
+          },
+          {
+            "level": 40,
+            "species": "Golbat"
+          },
+          {
+            "level": 40,
+            "species": "Marowak"
+          },
+          {
+            "level": 43,
+            "species": "Graveler"
+          }
+        ]
+      },
+      "water": {
+        "encounterRate": 0,
+        "mons": []
+      }
+    }
+  }
+}

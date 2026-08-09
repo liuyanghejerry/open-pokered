@@ -1,0 +1,116 @@
+// BillsHouse — translated from the original disassembly (scripts/BillsHouse.asm,
+// text/BillsHouse.asm) to the real Game DSL API surface. Bill first appears as
+// the "Monster" sprite (npc 1) claiming to be a POKeMON; after asking the player
+// for help he points at the teleporter PC (sign 1), where running the Cell
+// Separation System swaps him for his human form (npc 2), who rewards the
+// S.S.TICKET. npc 3 is Bill pointing at his PC of rare POKeMON.
+//
+// The original walk-to-machine cutscene (moveNpc/startNpcMove/awaitNpcMove
+// would cover it) is approximated by skipping the walk; the machine conversion
+// itself is reproduced at the pcMachine sign.
+
+game_scene BillsHouse {
+  // ── Bill, disguised as a POKeMON (npc 1) ───────────────────────────────
+  @storyline("talkBillPokemon") {
+    @trigger(map = "BillsHouse", npc = 1, toggle = "BILLS_HOUSE_OBJ_1")
+    @speaker("") {
+      @t("Hiya! I'm a POKeMON... ...No\nI'm not!\n\nCall me BILL! I'm a true\nblue POKeMANIAC! Hey! What's\nwith that skeptical look?\n\nI'm not joshing you, I\nscrewed up an experiment and\ngot combined with a POKeMON!\n\nSo, how about it? Help me\nout here!", "嗨！我是一只宝可梦…………\n不，不是！\n\n叫我正辉！我是真正的宝可梦\n狂！嗨！你那怀疑的眼神是怎么\n回事？\n\n我没骗你，我做实验时出了差\n错，结果和一只宝可梦融合了！\n\n那么，怎么样？帮帮我吧！")
+    }
+    @choice {
+      @option(@t("YES", "是")) {
+      }
+      @option(@t("NO", "否")) {
+        @speaker("") {
+          @t("No!? Come on, you gotta help\na guy in deep trouble!\n\nWhat do you say, chief?\nPlease? OK? All right!", "不吗！？来吧，你得帮帮陷入大\n麻烦的家伙！\n\n怎么样，兄弟？求你了？好？没\n问题！")
+        }
+      }
+    }
+    @speaker("") {
+      @t("When I'm in the TELEPORTER,\ngo to my PC and run the Cell\nSeparation System!", "当我在传送机里的时候，去我的\n电脑运行细胞分离系统！")
+    }
+    // Original then plays a walk-to-machine cutscene and the player runs the
+    // Cell Separation System at the PC (BillsHousePCScript -> script_bills_pc).
+    // The cutscene movement is approximated by skipping it; the machine
+    // conversion happens at the pcMachine sign below.
+    setFlag("EVENT_BILL_SAID_USE_CELL_SEPARATOR")
+  }
+
+  // ── The PC / teleporter machine (sign 1) — Cell Separation System ──────
+  // Original BillsHousePCScript: after Bill asks for help, running the PC
+  // activates the Cell Separation System and Bill exits the machine in human
+  // form (the game plays the separation cutscene). We reproduce the dialogue
+  // + the object swap.
+  @storyline("pcMachine") {
+    @trigger(map = "BillsHouse", sign = 1)
+    @if (getFlag("EVENT_BILL_SAID_USE_CELL_SEPARATOR") && !getFlag("EVENT_MET_BILL_2")) {
+      @speaker("") {
+        @t("The Cell Separation System\nis running...\n\n... ... ...\n\nBILL is back to normal!", "细胞分离系统正在运行……\n\n…… …… ……\n\n正辉恢复了正常！")
+      }
+      setFlag("EVENT_USED_CELL_SEPARATOR_ON_BILL")
+      setFlag("EVENT_MET_BILL_2")
+      setFlag("EVENT_MET_BILL")
+      hideObjectByName("BILLS_HOUSE_OBJ_1")
+      showObjectByName("BILLS_HOUSE_OBJ_2")
+    } @else {
+      @speaker("") { @t("It's a PC! ...It's a PC set\nup for Bill.", "这是一台电脑！……是正辉用的\n电脑。") }
+    }
+  }
+
+  // ── Bill in human form — gives the S.S.TICKET (npc 2) ──────────────────
+  @storyline("talkBill") {
+    @trigger(map = "BillsHouse", npc = 2, toggle = "BILLS_HOUSE_OBJ_2", hidden = true)
+    @if (!getFlag("EVENT_GOT_SS_TICKET")) {
+      @speaker("") {
+        @t("BILL: Yeehah! Thanks, bud! I\nowe you one!\n\nSo, did you come to see my\nPOKeMON collection? You\ndidn't? That's a bummer.\n\nI've got to thank you... Oh\nhere, maybe this'll do.", "正辉：耶哈！谢谢你，兄弟！我\n欠你一个人情！\n\n那么，你是来看我的宝可梦收藏\n的吗？不是吗？真可惜。\n\n我得好好谢谢你……对了，给\n你，这个也许行。")
+      }
+      given = giveItem("SS_TICKET", 1)
+      @if (given) {
+        setFlag("EVENT_GOT_SS_TICKET")
+        @speaker("") { @t("<PLAYER> received an\nS.S.TICKET!", "<PLAYER>获得了圣安奴号船票！") }
+        // Original BillsHouse.asm (TOGGLE_CERULEAN_GUARD_1 Show /
+        // TOGGLE_CERULEAN_GUARD_2 Hide): swap the Cerulean City bridge guards
+        // now that the S.S.TICKET lets the player through. The toggle persists
+        // across maps (__OBJ_HIDDEN_/__OBJ_SHOWN_ + SRAM toggleable bits) and
+        // is applied when CeruleanCity loads.
+        showObjectByName("CERULEAN_GUARD_1")
+        hideObjectByName("CERULEAN_GUARD_2")
+        @speaker("") {
+          @t("That cruise ship, S.S.ANNE,\nis in VERMILION CITY. Its\npassengers are all trainers!\n\nThey invited me to their\nparty, but I can't stand\nfancy do's. Why don't you go\ninstead of me?", "那艘游轮圣安奴号停靠在枯叶\n市。船上的乘客都是训练家！\n\n他们邀请我去参加派对，但我受\n不了那些花哨的聚会。为什么你\n不替我去呢？")
+        }
+      } @else {
+        @speaker("") { @t("You've got too much stuff,\nbud!", "你带的东西太多了，兄弟！") }
+      }
+    } @else {
+      @speaker("") {
+        @t("That cruise ship, S.S.ANNE,\nis in VERMILION CITY. Its\npassengers are all trainers!\n\nThey invited me to their\nparty, but I can't stand\nfancy do's. Why don't you go\ninstead of me?", "那艘游轮圣安奴号停靠在枯叶\n市。船上的乘客都是训练家！\n\n他们邀请我去参加派对，但我受\n不了那些花哨的聚会。为什么你\n不替我去呢？")
+      }
+    }
+  }
+
+  // ── Bill, pointing at his PC of rare POKeMON (npc 3) ───────────────────
+  @storyline("talkBillRarePokemon") {
+    @trigger(map = "BillsHouse", npc = 3, toggle = "BILLS_HOUSE_OBJ_3", hidden = true)
+    @speaker("") {
+      @t("BILL: Look, bud, just check\nout some of my rare POKeMON\non my PC!", "正辉：看，兄弟，来看看我的电\n脑里的稀有宝可梦吧！")
+    }
+  }
+
+  // ── Bill's PC (sign 2 at 1,4) — direct BillsPc entry ───────────────────
+  // Original hidden event at (1,4) facing up (data/events/hidden_events.asm
+  // hidden_events_for BILLS_HOUSE -> BillsHousePC). Before the Bill subplot
+  // the monitor just shows the teleporter (_BillsHouseMonitorText); once Bill
+  // is back in human form (EVENT_MET_BILL, set by the pcMachine flow) the
+  // original's BillsPc entry (scripts/BillsHouse.asm BillsHousePCScript ->
+  // script_bills_pc, home/map_objects.asm TextScript_BillsPC) takes over:
+  // "Switch on!" then straight into Bill's #MON storage.
+  @storyline("billsPc") {
+    @trigger(map = "BillsHouse", sign = 2)
+    @if (getFlag("EVENT_MET_BILL")) {
+      openBillsPC()
+    } @else {
+      @speaker("") {
+        @t("TELEPORTER is displayed on\nthe PC monitor.", "传送机显示在电脑显示器上。")
+      }
+    }
+  }
+}

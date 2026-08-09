@@ -1,0 +1,91 @@
+{
+  "$schema": "../schemas/trainer.schema.json",
+  "class": "Rival3",
+  "constName": "RIVAL3",
+  "parties": [
+    {
+      "pokemon": [
+        {
+          "level": 61,
+          "species": "Pidgeot"
+        },
+        {
+          "level": 59,
+          "species": "Alakazam"
+        },
+        {
+          "level": 61,
+          "species": "Rhydon"
+        },
+        {
+          "level": 61,
+          "species": "Arcanine"
+        },
+        {
+          "level": 63,
+          "species": "Exeggutor"
+        },
+        {
+          "level": 65,
+          "species": "Blastoise"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 61,
+          "species": "Pidgeot"
+        },
+        {
+          "level": 59,
+          "species": "Alakazam"
+        },
+        {
+          "level": 61,
+          "species": "Rhydon"
+        },
+        {
+          "level": 61,
+          "species": "Gyarados"
+        },
+        {
+          "level": 63,
+          "species": "Arcanine"
+        },
+        {
+          "level": 65,
+          "species": "Venusaur"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 61,
+          "species": "Pidgeot"
+        },
+        {
+          "level": 59,
+          "species": "Alakazam"
+        },
+        {
+          "level": 61,
+          "species": "Rhydon"
+        },
+        {
+          "level": 61,
+          "species": "Exeggutor"
+        },
+        {
+          "level": 63,
+          "species": "Gyarados"
+        },
+        {
+          "level": 65,
+          "species": "Charizard"
+        }
+      ]
+    }
+  ]
+}

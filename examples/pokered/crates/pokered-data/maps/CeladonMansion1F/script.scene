@@ -1,0 +1,44 @@
+// CeladonMansion1F — translated from the original disassembly
+// (scripts/CeladonMansion1F.asm, text/CeladonMansion1F*.asm) to the real Game
+// DSL API. This map has no on-enter logic (the original script only calls
+// EnableAutoTextBoxDrawing); it is pure NPC dialogue + one sign. Three of the
+// "NPCs" are pets that play a POKeMON cry when talked to (text_asm PlayCry).
+
+game_scene CeladonMansion1F {
+  // ── MEOWTH (npc 1) — plays its cry on talk ──────────────────────────────
+  @storyline("talkMeowth") {
+    @trigger(map = "CeladonMansion1F", npc = 1)
+    @speaker("") { @t("MEOWTH: Meow!", "喵喵：喵！") }
+    playCry("MEOWTH")
+  }
+
+  // ── Granny (npc 2) — dialogue only ──────────────────────────────────────
+  @storyline("talkGranny") {
+    @trigger(map = "CeladonMansion1F", npc = 2)
+    @speaker("") {
+      @t("My dear POKeMON keep me\ncompany.\n\nMEOWTH even brings money\nhome!", "我心爱的宝可梦一直陪着我。\n\n喵喵还会往家里叼钱！")
+    }
+  }
+
+  // ── CLEFAIRY (npc 3) — plays its cry on talk ────────────────────────────
+  @storyline("talkClefairy") {
+    @trigger(map = "CeladonMansion1F", npc = 3)
+    @speaker("") { @t("CLEFAIRY: Pi pippippi!", "皮皮：Pi pippippi！") }
+    playCry("CLEFAIRY")
+  }
+
+  // ── NIDORAN (npc 4) — plays its cry on talk ─────────────────────────────
+  @storyline("talkNidoran") {
+    @trigger(map = "CeladonMansion1F", npc = 4)
+    @speaker("") { @t("NIDORAN: Kya kyaoo!", "尼多兰：Kya kyaoo！") }
+    playCry("NIDORAN_F")
+  }
+
+  // ── Manager's Suite sign (sign 1) ───────────────────────────────────────
+  @storyline("signManagersSuite") {
+    @trigger(map = "CeladonMansion1F", sign = 1)
+    @speaker("") {
+      @t("CELADON MANSION Manager's\nSuite", "彩虹大厦经理办公室")
+    }
+  }
+}

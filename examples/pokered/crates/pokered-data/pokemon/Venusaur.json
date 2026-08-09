@@ -1,0 +1,72 @@
+{
+  "$schema": "../schemas/pokemon.schema.json",
+  "species": "Venusaur",
+  "baseStats": {
+    "hp": 80,
+    "attack": 82,
+    "defense": 83,
+    "speed": 80,
+    "special": 100
+  },
+  "type1": "Grass",
+  "type2": "Poison",
+  "catchRate": 45,
+  "baseExp": 208,
+  "growthRate": "MediumSlow",
+  "initialMoves": [
+    "Tackle",
+    "Growl",
+    "LeechSeed",
+    "VineWhip"
+  ],
+  "tmHmFlags": [
+    164,
+    67,
+    56,
+    192,
+    3,
+    8,
+    6
+  ],
+  "pokedex": {
+    "category": "SEED",
+    "heightFeet": 6,
+    "heightInches": 7,
+    "weightDecipounds": 2210,
+    "flavorTextPages": [
+      "The plant blooms\nwhen it is\nabsorbing solar",
+      "energy. It stays\non the move to\nseek sunlight"
+    ]
+  },
+  "evolutions": [],
+  "learnset": [
+    {
+      "level": 7,
+      "moveId": "LeechSeed"
+    },
+    {
+      "level": 13,
+      "moveId": "VineWhip"
+    },
+    {
+      "level": 22,
+      "moveId": "Poisonpowder"
+    },
+    {
+      "level": 30,
+      "moveId": "RazorLeaf"
+    },
+    {
+      "level": 43,
+      "moveId": "Growth"
+    },
+    {
+      "level": 55,
+      "moveId": "SleepPowder"
+    },
+    {
+      "level": 65,
+      "moveId": "Solarbeam"
+    }
+  ]
+}

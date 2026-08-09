@@ -1,0 +1,14 @@
+// Route11Gate1F — translated from the original disassembly
+// (scripts/Route11Gate1F.asm, text/Route11Gate1F.asm) to the real Game DSL API.
+// A simple gate map: one guard NPC who chats about POKeMON nicknames. The
+// original map script only enables auto text box drawing, so there is no @load.
+
+game_scene Route11Gate1F {
+  // ── Guard (npc 1) — nickname-rater tip ─────────────────────────────────
+  @storyline("talkGuard") {
+    @trigger(map = "Route11Gate1F", npc = 1)
+    @speaker("") {
+      @t("When you catch lots of\nPOKeMON, isn't it hard to\nthink up names?\n\nIn LAVENDER TOWN, there's a\nman who rates POKeMON\nnicknames.\n\nHe'll help you rename them\ntoo!", "抓到很多宝可梦时，给它们取名\n很伤脑筋吧？\n\n紫苑镇里，有位老人会评价宝可\n梦的昵称。\n\n他还能帮你改名字哦！")
+    }
+  }
+}

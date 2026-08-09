@@ -1,0 +1,56 @@
+{
+  "$schema": "../schemas/pokemon.schema.json",
+  "species": "Victreebel",
+  "baseStats": {
+    "hp": 80,
+    "attack": 105,
+    "defense": 65,
+    "speed": 70,
+    "special": 100
+  },
+  "type1": "Grass",
+  "type2": "Poison",
+  "catchRate": 45,
+  "baseExp": 191,
+  "growthRate": "MediumSlow",
+  "initialMoves": [
+    "SleepPowder",
+    "StunSpore",
+    "Acid",
+    "RazorLeaf"
+  ],
+  "tmHmFlags": [
+    164,
+    67,
+    56,
+    192,
+    3,
+    8,
+    6
+  ],
+  "pokedex": {
+    "category": "FLYCATCHER",
+    "heightFeet": 5,
+    "heightInches": 7,
+    "weightDecipounds": 340,
+    "flavorTextPages": [
+      "Said to live in\nhuge colonies\ndeep in jungles,",
+      "although no one\nhas ever returned\nfrom there"
+    ]
+  },
+  "evolutions": [],
+  "learnset": [
+    {
+      "level": 13,
+      "moveId": "Wrap"
+    },
+    {
+      "level": 15,
+      "moveId": "Poisonpowder"
+    },
+    {
+      "level": 18,
+      "moveId": "SleepPowder"
+    }
+  ]
+}

@@ -1,0 +1,80 @@
+{
+  "$schema": "../../schemas/script_config.schema.json",
+  "coordEvents": [],
+  "npcs": [
+    {
+      "id": 1,
+      "talk": "talkLittleGirl"
+    },
+    {
+      "id": 2,
+      "talk": "talkGramps1"
+    },
+    {
+      "id": 3,
+      "talk": "talkGirl"
+    },
+    {
+      "id": 4,
+      "talk": "talkGramps2"
+    },
+    {
+      "id": 5,
+      "talk": "talkGramps3"
+    },
+    {
+      "id": 6,
+      "talk": "talkFisher"
+    },
+    {
+      "id": 7,
+      "talk": "talkPoliwrath"
+    },
+    {
+      "id": 8,
+      "talk": "talkRocket1"
+    },
+    {
+      "id": 9,
+      "talk": "talkRocket2"
+    }
+  ],
+  "signs": [
+    {
+      "id": 1,
+      "talk": "sign1"
+    },
+    {
+      "id": 2,
+      "talk": "sign2"
+    },
+    {
+      "id": 3,
+      "talk": "sign3"
+    },
+    {
+      "id": 4,
+      "talk": "sign4"
+    },
+    {
+      "id": 5,
+      "talk": "sign5"
+    },
+    {
+      "id": 6,
+      "talk": "sign6"
+    },
+    {
+      "id": 7,
+      "talk": "sign7"
+    },
+    {
+      "id": 8,
+      "talk": "sign8"
+    },
+    {
+      "id": 9,
+      "talk": "sign9"
+    }
+  ]
+}

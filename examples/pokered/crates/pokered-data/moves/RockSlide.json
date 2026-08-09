@@ -1,0 +1,9 @@
+{
+  "$schema": "../schemas/move.schema.json",
+  "id": "RockSlide",
+  "effect": "NoAdditionalEffect",
+  "power": 75,
+  "type": "Rock",
+  "accuracy": 90,
+  "pp": 10
+}

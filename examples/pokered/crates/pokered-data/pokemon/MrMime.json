@@ -1,0 +1,64 @@
+{
+  "$schema": "../schemas/pokemon.schema.json",
+  "species": "MrMime",
+  "baseStats": {
+    "hp": 40,
+    "attack": 45,
+    "defense": 65,
+    "speed": 90,
+    "special": 100
+  },
+  "type1": "Psychic",
+  "type2": "Psychic",
+  "catchRate": 45,
+  "baseExp": 136,
+  "growthRate": "MediumFast",
+  "initialMoves": [
+    "Confusion",
+    "Barrier",
+    "None",
+    "None"
+  ],
+  "tmHmFlags": [
+    177,
+    67,
+    175,
+    241,
+    135,
+    56,
+    66
+  ],
+  "pokedex": {
+    "category": "BARRIER",
+    "heightFeet": 4,
+    "heightInches": 3,
+    "weightDecipounds": 1200,
+    "flavorTextPages": [
+      "If interrupted\nwhile it is\nmiming, it will",
+      "slap around the\noffender with its\nbroad hands"
+    ]
+  },
+  "evolutions": [],
+  "learnset": [
+    {
+      "level": 15,
+      "moveId": "Confusion"
+    },
+    {
+      "level": 23,
+      "moveId": "LightScreen"
+    },
+    {
+      "level": 31,
+      "moveId": "Doubleslap"
+    },
+    {
+      "level": 39,
+      "moveId": "Meditate"
+    },
+    {
+      "level": 47,
+      "moveId": "Substitute"
+    }
+  ]
+}

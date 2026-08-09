@@ -1,0 +1,60 @@
+{
+  "$schema": "../../schemas/map.schema.json",
+  "id": 181,
+  "name": "SilphCo1F",
+  "header": {
+    "tileset": "Facility",
+    "music": "SilphCo",
+    "connectionFlags": 0,
+    "width": 15,
+    "height": 9,
+    "borderBlock": 46
+  },
+  "connections": {},
+  "warps": [
+    {
+      "x": 10,
+      "y": 17,
+      "destWarpId": 5
+    },
+    {
+      "x": 11,
+      "y": 17,
+      "destWarpId": 5
+    },
+    {
+      "x": 26,
+      "y": 0,
+      "destMap": "SilphCo2F",
+      "destWarpId": 0
+    },
+    {
+      "x": 20,
+      "y": 0,
+      "destMap": "SilphCoElevator",
+      "destWarpId": 0
+    },
+    {
+      "x": 16,
+      "y": 10,
+      "destMap": "SilphCo3F",
+      "destWarpId": 6
+    }
+  ],
+  "npcs": [
+    {
+      "spriteId": 42,
+      "spriteName": "LinkReceptionist",
+      "x": 4,
+      "y": 2,
+      "movement": "Stationary",
+      "facing": "Down",
+      "range": 0,
+      "textId": 1,
+      "isTrainer": false
+    }
+  ],
+  "signs": [],
+  "text": {},
+  "wild": null
+}

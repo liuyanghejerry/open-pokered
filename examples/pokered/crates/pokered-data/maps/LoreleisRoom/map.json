@@ -1,0 +1,58 @@
+{
+  "$schema": "../../schemas/map.schema.json",
+  "id": 245,
+  "name": "LoreleisRoom",
+  "header": {
+    "tileset": "Gym",
+    "music": "Gym",
+    "connectionFlags": 0,
+    "width": 5,
+    "height": 6,
+    "borderBlock": 3
+  },
+  "connections": {},
+  "warps": [
+    {
+      "x": 4,
+      "y": 11,
+      "destMap": "IndigoPlateauLobby",
+      "destWarpId": 2
+    },
+    {
+      "x": 5,
+      "y": 11,
+      "destMap": "IndigoPlateauLobby",
+      "destWarpId": 2
+    },
+    {
+      "x": 4,
+      "y": 0,
+      "destMap": "BrunosRoom",
+      "destWarpId": 0
+    },
+    {
+      "x": 5,
+      "y": 0,
+      "destMap": "BrunosRoom",
+      "destWarpId": 1
+    }
+  ],
+  "npcs": [
+    {
+      "spriteId": 59,
+      "spriteName": "Lorelei",
+      "x": 5,
+      "y": 2,
+      "movement": "Stationary",
+      "facing": "Down",
+      "range": 0,
+      "textId": 1,
+      "isTrainer": false,
+      "trainerClass": "Lorelei",
+      "trainerSet": 1
+    }
+  ],
+  "signs": [],
+  "text": {},
+  "wild": null
+}

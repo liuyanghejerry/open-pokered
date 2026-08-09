@@ -1,0 +1,204 @@
+// PokemonMansionB1F — translated from the original disassembly
+// (scripts/PokemonMansionB1F.asm, text/PokemonMansionB1F.asm) to the real Game DSL
+// API surface. The Mansion B1F has: two sight-engaged trainers (Burglar and
+// Scientist, runtime-driven so their handlers are dialogue only), four ground
+// items in PokeBalls (RARE_CANDY, FULL_RESTORE, TM18/Blizzard, TM26/Solarbeam,
+// SECRET_KEY), a readable diary (Pokedex sprite), and two hidden secret switches
+// (coords [20,3] and [18,25], must face up) that toggle the gate door-blocks.
+// The secret switch's tile-replacement (MansionB1FCheckReplaceSwitchDoorBlocks
+// / Mansion2ReplaceBlock) is now wired via replaceTileBlock: it TOGGLES four
+// door/floor blocks on EVENT_MANSION_SWITCH_ON. The switch reuses the 2F text.
+
+game_scene PokemonMansionB1F {
+  // ── On-enter: re-apply the door-block state from EVENT_MANSION_SWITCH_ON ──
+  // Mirrors MansionB1FCheckReplaceSwitchDoorBlocks. This is a TOGGLE, so BOTH the
+  // ON and OFF block sets must be re-applied on load (the asm sets all four
+  // blocks in each branch). asm lb bc, Y, X -> replaceTileBlock(X, Y, id);
+  // ids are decimal ($e=14, $2d=45, $54=84, $5f=95).
+  @load {
+    @if (getFlag("EVENT_MANSION_SWITCH_ON")) {
+      replaceTileBlock(13, 8, 45)
+      replaceTileBlock(6, 11, 95)
+      replaceTileBlock(4, 3, 14)
+      replaceTileBlock(8, 8, 14)
+    } @else {
+      replaceTileBlock(13, 8, 14)
+      replaceTileBlock(6, 11, 14)
+      replaceTileBlock(4, 3, 95)
+      replaceTileBlock(8, 8, 84)
+    }
+  }
+
+  // ── Burglar (npc 1) — sight-engaged by the runtime; dialogue only ─────────
+  @storyline("talkBurglar") {
+    @trigger(map = "PokemonMansionB1F", npc = 1)
+    @if (getFlag("EVENT_BEAT_MANSION_4_TRAINER_0")) {
+      @speaker("") {
+        @t("You can find stuff lying\naround.", "到处都能捡到东西。")
+      }
+    } @else {
+      @speaker("") {
+        @t("Uh-oh. Where am I now?", "哎呀。我现在在哪儿？")
+      }
+    }
+  }
+
+  // ── Scientist (npc 2) — sight-engaged by the runtime; dialogue only ───────
+  @storyline("talkScientist") {
+    @trigger(map = "PokemonMansionB1F", npc = 2)
+    @if (getFlag("EVENT_BEAT_MANSION_4_TRAINER_1")) {
+      @speaker("") {
+        @t("I like it here! It's\nconducive to my studies!", "我喜欢这里！很适合我做研究！")
+      }
+    } @else {
+      @speaker("") {
+        @t("This place is ideal for a\nlab.", "这里很适合做实验室。")
+      }
+    }
+  }
+
+  // ── Ground item: RARE_CANDY (npc 3) ───────────────────────────────────────
+  @storyline("talkPokeBall") {
+    @trigger(map = "PokemonMansionB1F", npc = 3, toggle = "POKEMON_MANSION_B1F_OBJ_3")
+    @if (getFlag("EVENT_GOT_RARE_CANDY_MANSION_B1F")) {
+      @speaker("") { @t("The item ball is empty.", "道具球里空空如也。") }
+    } @else {
+      giveItem("RARE_CANDY", 1)
+      setFlag("EVENT_GOT_RARE_CANDY_MANSION_B1F")
+      hideObject("POKEMON_MANSION_B1F_OBJ_3")
+      @speaker("") { @t("<PLAYER> found RARE_CANDY!", "<PLAYER>找到了神奇糖果！") }
+    }
+  }
+
+  // ── Ground item: FULL_RESTORE (npc 4) ─────────────────────────────────────
+  @storyline("talkPokeBall1") {
+    @trigger(map = "PokemonMansionB1F", npc = 4, toggle = "POKEMON_MANSION_B1F_OBJ_4")
+    @if (getFlag("EVENT_GOT_FULL_RESTORE_MANSION_B1F")) {
+      @speaker("") { @t("The item ball is empty.", "道具球里空空如也。") }
+    } @else {
+      giveItem("FULL_RESTORE", 1)
+      setFlag("EVENT_GOT_FULL_RESTORE_MANSION_B1F")
+      hideObject("POKEMON_MANSION_B1F_OBJ_4")
+      @speaker("") { @t("<PLAYER> found FULL_RESTORE!", "<PLAYER>找到了全复药！") }
+    }
+  }
+
+  // ── Ground item: TM18 / BLIZZARD (npc 5) ──────────────────────────────────
+  @storyline("talkPokeBall2") {
+    @trigger(map = "PokemonMansionB1F", npc = 5, toggle = "POKEMON_MANSION_B1F_OBJ_5")
+    @if (getFlag("EVENT_GOT_TM18_MANSION_B1F")) {
+      @speaker("") { @t("The item ball is empty.", "道具球里空空如也。") }
+    } @else {
+      giveItem("TM18", 1)
+      setFlag("EVENT_GOT_TM18_MANSION_B1F")
+      hideObject("POKEMON_MANSION_B1F_OBJ_5")
+      @speaker("") { @t("<PLAYER> found TM18!", "<PLAYER>找到了 TM18！") }
+    }
+  }
+
+  // ── Ground item: TM26 / SOLARBEAM (npc 6) ─────────────────────────────────
+  @storyline("talkPokeBall3") {
+    @trigger(map = "PokemonMansionB1F", npc = 6, toggle = "POKEMON_MANSION_B1F_OBJ_6")
+    @if (getFlag("EVENT_GOT_TM26_MANSION_B1F")) {
+      @speaker("") { @t("The item ball is empty.", "道具球里空空如也。") }
+    } @else {
+      giveItem("TM26", 1)
+      setFlag("EVENT_GOT_TM26_MANSION_B1F")
+      hideObject("POKEMON_MANSION_B1F_OBJ_6")
+      @speaker("") { @t("<PLAYER> found TM26!", "<PLAYER>找到了 TM26！") }
+    }
+  }
+
+  // ── Diary (npc 7, Pokedex sprite) — readable text only ────────────────────
+  @storyline("talkDiary") {
+    @trigger(map = "PokemonMansionB1F", npc = 7)
+    @speaker("") {
+      @t("Diary; Sept. 1 MEWTWO is far\ntoo powerful.\n\nWe have failed to curb its\nvicious tendencies...", "日记：9月1日超梦实在太强大\n了。\n\n我们没能遏制它凶残的本性……")
+    }
+  }
+
+  // ── Ground item: SECRET_KEY (npc 8) ───────────────────────────────────────
+  @storyline("talkPokeBall4") {
+    @trigger(map = "PokemonMansionB1F", npc = 8, toggle = "POKEMON_MANSION_B1F_OBJ_8")
+    @if (getFlag("EVENT_GOT_SECRET_KEY_MANSION_B1F")) {
+      @speaker("") { @t("The item ball is empty.", "道具球里空空如也。") }
+    } @else {
+      giveItem("SECRET_KEY", 1)
+      setFlag("EVENT_GOT_SECRET_KEY_MANSION_B1F")
+      hideObject("POKEMON_MANSION_B1F_OBJ_8")
+      @speaker("") { @t("<PLAYER> found SECRET_KEY!", "<PLAYER>找到了秘密钥匙！") }
+    }
+  }
+
+  // ── Secret switch (hidden_event at [20,3], original requires facing up) ────
+  // The original toggles EVENT_MANSION_SWITCH_ON and swaps gate/floor tile
+  // blocks (MansionB1FCheckReplaceSwitchDoorBlocks / Mansion2ReplaceBlock). Now
+  // wired: pressing the switch toggles the flag AND immediately swaps all four
+  // door/floor blocks via replaceTileBlock (same coords/ids as the @load re-apply
+  // above), and plays SFX_GO_INSIDE like the asm. The faithful dialogue (reused
+  // from the 2F switch) is preserved.
+  @storyline("coordSwitchA") {
+    @trigger(map = "PokemonMansionB1F", name = "switchA")
+    @if (getPlayerFacing() == "up") {
+      @speaker("") {
+        @t("A secret switch!\n\nPress it?", "一个秘密开关！\n\n要按下去吗？")
+      }
+      @choice {
+        @option(@t("YES", "是")) {
+          @speaker("") { @t("Who wouldn't?", "谁不想按呢？") }
+          playSound("SFX_GO_INSIDE")
+          @if (getFlag("EVENT_MANSION_SWITCH_ON")) {
+            resetFlag("EVENT_MANSION_SWITCH_ON")
+            replaceTileBlock(13, 8, 14)
+            replaceTileBlock(6, 11, 14)
+            replaceTileBlock(4, 3, 95)
+            replaceTileBlock(8, 8, 84)
+          } @else {
+            setFlag("EVENT_MANSION_SWITCH_ON")
+            replaceTileBlock(13, 8, 45)
+            replaceTileBlock(6, 11, 95)
+            replaceTileBlock(4, 3, 14)
+            replaceTileBlock(8, 8, 14)
+          }
+        }
+        @option(@t("NO", "否")) {
+          @speaker("") { @t("Not quite yet!", "还不到时候！") }
+        }
+      }
+    }
+  }
+
+  // ── Secret switch (hidden_event at [18,25], original requires facing up) ───
+  // Same toggle/swap as coordSwitchA (the floor has multiple switch tiles, all
+  // wired to the shared EVENT_MANSION_SWITCH_ON door-block swap).
+  @storyline("coordSwitchB") {
+    @trigger(map = "PokemonMansionB1F", name = "switchB")
+    @if (getPlayerFacing() == "up") {
+      @speaker("") {
+        @t("A secret switch!\n\nPress it?", "一个秘密开关！\n\n要按下去吗？")
+      }
+      @choice {
+        @option(@t("YES", "是")) {
+          @speaker("") { @t("Who wouldn't?", "谁不想按呢？") }
+          playSound("SFX_GO_INSIDE")
+          @if (getFlag("EVENT_MANSION_SWITCH_ON")) {
+            resetFlag("EVENT_MANSION_SWITCH_ON")
+            replaceTileBlock(13, 8, 14)
+            replaceTileBlock(6, 11, 14)
+            replaceTileBlock(4, 3, 95)
+            replaceTileBlock(8, 8, 84)
+          } @else {
+            setFlag("EVENT_MANSION_SWITCH_ON")
+            replaceTileBlock(13, 8, 45)
+            replaceTileBlock(6, 11, 95)
+            replaceTileBlock(4, 3, 14)
+            replaceTileBlock(8, 8, 14)
+          }
+        }
+        @option(@t("NO", "否")) {
+          @speaker("") { @t("Not quite yet!", "还不到时候！") }
+        }
+      }
+    }
+  }
+}

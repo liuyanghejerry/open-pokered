@@ -1,0 +1,200 @@
+// PewterCity — translated from the original disassembly (scripts/PewterCity.asm,
+// text/PewterCity.asm) to the real Game DSL API surface.
+//
+// PewterCity is an overworld town: chatty NPCs + signs, plus two scripted
+// "guide" NPCs. SuperNerd1 (npc 3, TOGGLE_MUSEUM_GUY = PEWTER_CITY_OBJ_3) walks
+// the player to the MUSEUM if they answer "no" to having visited; Youngster
+// (npc 5, TOGGLE_GYM_GUY = PEWTER_CITY_OBJ_5) walks the player to the GYM and
+// also intercepts the player at the east exit before BROCK is beaten.
+//
+// The original drives those two cutscenes with a sprite state machine plus
+// the PewterGuys predef (per-tile player positioning moves) and fixed
+// movement-data paths (auto_movement.asm RLE lists). Here the escorts run on
+// the engine's followNpc (terrain-aware path, the player shadows the guide)
+// with setNpcPosition for the walk-off reposition; after each escort the
+// guide is reset to his spawn and shown again, matching
+// PewterCityReset*Script.
+
+game_scene PewterCity {
+  // On entry the original clears the museum-ticket purchase flag.
+  @load {
+    resetFlag("EVENT_BOUGHT_MUSEUM_TICKET")
+  }
+
+  // ── Cooltrainer F (npc 1) ──────────────────────────────────────────────
+  @storyline("talkCooltrainerF") {
+    @trigger(map = "PewterCity", npc = 1)
+    @speaker("") {
+      @t("It's rumored that CLEFAIRYs\ncame from the moon!\n\nThey appeared after MOON\nSTONE fell on MT.MOON.", "据说皮皮是从月亮上来的！\n\n它们是在月之石落在月见山之后\n出现的")
+    }
+  }
+
+  // ── Cooltrainer M (npc 2) ──────────────────────────────────────────────
+  @storyline("talkCooltrainerM") {
+    @trigger(map = "PewterCity", npc = 2)
+    @speaker("") {
+      @t("There aren't many serious\nPOKeMON trainers here!\n\nThey're all like BUG\nCATCHERs, but PEWTER GYM's\nBROCK is totally into it!", "这里没有几个认真的宝可梦训练\n家！\n\n他们大多像捕虫少年，但深灰道\n馆的小刚却是完全入迷！")
+    }
+  }
+
+  // ── SuperNerd1, the museum guide (npc 3) ───────────────────────────────
+  // YES → fossils chat. NO → he insists and escorts the player to the museum
+  // entrance (orig: PewterGuys predef + RLEList_PewterMuseumGuy/Player).
+  @storyline("talkSuperNerd1") {
+    @trigger(map = "PewterCity", npc = 3, toggle = "PEWTER_CITY_OBJ_3")
+    @speaker("") { @t("Did you check out the\nMUSEUM?", "你去过博物馆吗？") }
+    @choice {
+      @option(@t("YES", "是")) {
+        @speaker("") {
+          @t("Weren't those fossils from\nMT. MOON amazing?", "月见山的那些化石不是很棒吗？")
+        }
+      }
+      @option(@t("NO", "否")) {
+        @speaker("") {
+          @t("Really? You absolutely have\nto go!", "真的吗？你绝对要去看看！")
+        }
+        // Escort: the guide walks to the museum door area with the player
+        // shadowing. The original ends the player ON the door tile (14,7)
+        // (scripted movement suppresses warps there); we stop one tile
+        // south so the player isn't warped inside mid-cutscene.
+        followNpc("PEWTER_CITY_OBJ_3", 14, 8)
+        @speaker("") {
+          @t("It's right here! You have to\npay to get in, but it's\nworth it! See you around!", "就在这里！虽然进去要花钱，但\n很值得！回头见！")
+        }
+        // Orig walk-off: the guide is repositioned to (17,12) and walks
+        // DOWN x4, is hidden, then reset to his spawn and shown again
+        // (PewterCityHide/ResetSuperNerd1Script).
+        setNpcPosition("PEWTER_CITY_OBJ_3", 17, 12)
+        moveNpc("PEWTER_CITY_OBJ_3", [[17, 13], [17, 14], [17, 15], [17, 16]])
+        hideObjectByName("PEWTER_CITY_OBJ_3")
+        setNpcPosition("PEWTER_CITY_OBJ_3", 27, 17)
+        showObjectByName("PEWTER_CITY_OBJ_3")
+      }
+    }
+  }
+
+  // ── SuperNerd2, the repel gardener (npc 4) ─────────────────────────────
+  @storyline("talkSuperNerd2") {
+    @trigger(map = "PewterCity", npc = 4)
+    @speaker("") { @t("Psssst! Do you know what I'm\ndoing?", "喂喂！你知道我在做什么吗？") }
+    @choice {
+      @option(@t("YES", "是")) {
+        @speaker("") {
+          @t("That's right! It's hard\nwork!", "没错！这是辛苦活！")
+        }
+      }
+      @option(@t("NO", "否")) {
+        @speaker("") {
+          @t("I'm spraying REPEL to keep\nPOKeMON out of my garden!", "我喷驱虫剂是为了让宝可梦远离\n我的花园！")
+        }
+      }
+    }
+  }
+
+  // ── Youngster, the gym guide (npc 5) ───────────────────────────────────
+  // Before BROCK is beaten he escorts the player to the gym (orig:
+  // PewterGuys predef + RLEList_PewterGymGuy/Player); afterward he just
+  // cheers you on.
+  @storyline("talkYoungster") {
+    @trigger(map = "PewterCity", npc = 5, toggle = "PEWTER_CITY_OBJ_5")
+    @if (getFlag("EVENT_BEAT_BROCK")) {
+      @speaker("") {
+        @t("If you have the right stuff,\ngo take on BROCK!", "如果你有实力，就去挑战小刚\n吧！")
+      }
+    } @else {
+      @speaker("") {
+        @t("You're a trainer right?\nBROCK's looking for new\nchallengers! Follow me!", "你是训练家对吧？小刚正在寻找\n新的挑战者！跟我来！")
+      }
+      // Escort: the guide walks the player to the gym front (orig ends the
+      // player at (11,18) and the guide at (12,18), in front of the gym
+      // sign — NOT onto the door tile (16,17)).
+      followNpc("PEWTER_CITY_OBJ_5", 12, 18)
+      @speaker("") {
+        @t("If you have the right stuff,\ngo take on BROCK!", "如果你有实力，就去挑战小刚\n吧！")
+      }
+      // Orig walk-off: repositioned to (16,22), walks RIGHT x5, hidden,
+      // then reset to his spawn and shown again
+      // (PewterCityHide/ResetYoungsterScript).
+      setNpcPosition("PEWTER_CITY_OBJ_5", 16, 22)
+      moveNpc("PEWTER_CITY_OBJ_5", [[17, 22], [18, 22], [19, 22], [20, 22], [21, 22]])
+      hideObjectByName("PEWTER_CITY_OBJ_5")
+      setNpcPosition("PEWTER_CITY_OBJ_5", 35, 16)
+      showObjectByName("PEWTER_CITY_OBJ_5")
+    }
+  }
+
+  // ── Leaving-east interception (coord trigger) ──────────────────────────
+  // Before beating BROCK, stepping onto the east-exit tiles makes the Youngster
+  // stop the player and run the same escort. Coords from
+  // PewterCityPlayerLeavingEastCoords.
+  @storyline("coordLeavingEast") {
+    @trigger(map = "PewterCity", name = "leavingEast1")
+    @if (!getFlag("EVENT_BEAT_BROCK")) {
+      @speaker("") {
+        @t("You're a trainer right?\nBROCK's looking for new\nchallengers! Follow me!", "你是训练家对吧？小刚正在寻找\n新的挑战者！跟我来！")
+      }
+      // Orig: the player does a small positioning dance (PewterGuysCoords
+      // table) while the guide starts walking from his (35,16) spawn; the
+      // followNpc trail-shadowing absorbs the initial gap instead.
+      followNpc("PEWTER_CITY_OBJ_5", 12, 18)
+      @speaker("") {
+        @t("If you have the right stuff,\ngo take on BROCK!", "如果你有实力，就去挑战小刚\n吧！")
+      }
+      setNpcPosition("PEWTER_CITY_OBJ_5", 16, 22)
+      moveNpc("PEWTER_CITY_OBJ_5", [[17, 22], [18, 22], [19, 22], [20, 22], [21, 22]])
+      hideObjectByName("PEWTER_CITY_OBJ_5")
+      setNpcPosition("PEWTER_CITY_OBJ_5", 35, 16)
+      showObjectByName("PEWTER_CITY_OBJ_5")
+    }
+  }
+
+  // ── Signs ──────────────────────────────────────────────────────────────
+  @storyline("signTrainerTips") {
+    @trigger(map = "PewterCity", sign = 1)
+    @speaker("") {
+      @t("TRAINER TIPS\n\nAny POKeMON that takes part\nin battle, however short,\nearns EXP!", "训练家须知\n\n任何参加战斗的宝可梦，即使只\n战斗很短也能获得经验值！")
+    }
+  }
+
+  @storyline("signPoliceNotice") {
+    @trigger(map = "PewterCity", sign = 2)
+    @speaker("") {
+      @t("NOTICE!\n\nThieves have been stealing\nPOKeMON fossils at MT. MOON!\nPlease call PEWTER POLICE\nwith any info!", "通告！\n\n有小偷在月见山偷窃宝可梦化\n石！如有线索请联系深灰市警察\n局！")
+    }
+  }
+
+  @storyline("signMart") {
+    @trigger(map = "PewterCity", sign = 3)
+    @speaker("") {
+      @t("All your item needs\nfulfilled! POKeMON MART", "你的道具需求都能满足！友好商\n店")
+    }
+  }
+
+  @storyline("signPokecenter") {
+    @trigger(map = "PewterCity", sign = 4)
+    @speaker("") {
+      @t("Heal Your POKeMON! POKeMON\nCENTER", "治愈你的宝可梦！宝可梦中心")
+    }
+  }
+
+  @storyline("signMuseum") {
+    @trigger(map = "PewterCity", sign = 5)
+    @speaker("") {
+      @t("PEWTER MUSEUM OF SCIENCE", "深灰博物馆自然科学馆")
+    }
+  }
+
+  @storyline("signGym") {
+    @trigger(map = "PewterCity", sign = 6)
+    @speaker("") {
+      @t("PEWTER CITY POKeMON GYM\nLEADER: BROCK\n\nThe Rock Solid POKeMON\nTrainer!", "深灰市宝可梦道馆馆主：小刚\n\n岩石般坚固的宝可梦训练家！")
+    }
+  }
+
+  @storyline("signCity") {
+    @trigger(map = "PewterCity", sign = 7)
+    @speaker("") {
+      @t("PEWTER CITY A Stone Gray\nCity", "深灰市灰色的石头之城")
+    }
+  }
+}

@@ -1,0 +1,44 @@
+// SafariZoneCenter — translated from the original disassembly
+// (scripts/SafariZoneCenter.asm, text/SafariZoneCenter.asm) to the real Game
+// DSL API surface.
+//
+// Content types:
+//  - PokeBall (npc 1): a ground item — NUGGET. Uses the standard PickUpItem
+//    pattern (giveItem + the runtime hides the object via its toggle).
+//  - Rest House sign (sign 1) and Trainer Tips sign (sign 2): plain bg signs.
+//
+// The original SafariZoneCenter_Script only enables auto text box drawing
+// (no on-enter cutscene), so there is no @load block.
+
+game_scene SafariZoneCenter {
+  // ── PokeBall ground item (npc 1) — NUGGET ───────────────────────────────
+  @storyline("talkPokeBall") {
+    @trigger(map = "SafariZoneCenter", npc = 1, toggle = "SAFARI_ZONE_CENTER_OBJ_1")
+    given = giveItem("NUGGET", 1)
+    @if (given) {
+      @speaker("") {
+        @t("<PLAYER> found NUGGET!", "<PLAYER>找到了金珠！")
+      }
+    } @else {
+      @speaker("") {
+        @t("You have too much stuff\nalready!", "你带的东西太多了！")
+      }
+    }
+  }
+
+  // ── Rest House sign (sign 1) ────────────────────────────────────────────
+  @storyline("restHouseSign") {
+    @trigger(map = "SafariZoneCenter", sign = 1)
+    @speaker("") {
+      @t("REST HOUSE", "休息小屋")
+    }
+  }
+
+  // ── Trainer Tips sign (sign 2) ──────────────────────────────────────────
+  @storyline("trainerTipsSign") {
+    @trigger(map = "SafariZoneCenter", sign = 2)
+    @speaker("") {
+      @t("TRAINER TIPS\n\nPress the START Button to\ncheck remaining time!", "训练家提示\n\n按START键可以查看剩余时间！")
+    }
+  }
+}

@@ -1,0 +1,9 @@
+// MtMoonB1F — translated from the original disassembly (scripts/MtMoonB1F.asm,
+// text/MtMoonB1F.asm). This basement of Mt. Moon is a pure cave: the original
+// script only calls EnableAutoTextBoxDrawing (the default runtime behavior) and
+// has no NPCs, signs, items, or on-enter cutscene. map.json has empty npcs/signs.
+// The only text pointer (MtMoonB1FUnusedText) is unused and empty in the
+// original. So there are no storylines to bind — the scene is intentionally bare.
+
+game_scene MtMoonB1F {
+}

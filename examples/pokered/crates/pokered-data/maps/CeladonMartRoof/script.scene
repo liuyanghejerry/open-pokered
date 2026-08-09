@@ -1,0 +1,273 @@
+// CeladonMartRoof — translated from the original disassembly
+// (scripts/CeladonMartRoof.asm, text/CeladonMartRoof.asm) to the real Game DSL API.
+// The roof has a Super Nerd (plain dialogue), a thirsty Little Girl who trades a
+// drink for a TM (drink-select menu approximated with hasItem/takeItem + @choice),
+// three vending-machine signs (purchase implementable with @choice + hasMoney/
+// takeMoney/giveItem + playSound), and a current-floor sign.
+
+game_scene CeladonMartRoof {
+  // ── Super Nerd (npc 1) ─────────────────────────────────────────────────
+  @storyline("talkSuperNerd") {
+    @trigger(map = "CeladonMartRoof", npc = 1)
+    @speaker("") {
+      @t("My sister is a trainer,\nbelieve it or not.\n\nBut, she's so immature, she\ndrives me nuts!", "我姐姐是训练家，信不由你！\n\n但她太幼稚，真是让我抓狂！")
+    }
+  }
+
+  // ── Little Girl (npc 2) — thirsty; trades a drink for a TM ──────────────
+  // Original: scans the bag for FRESH WATER / SODA POP / LEMONADE. If none, she
+  // just complains. If she has any, she asks "Give her a drink?" then opens a
+  // menu listing the drinks the player carries; picking one (first time per
+  // drink) consumes it and rewards a TM:
+  //   FRESH WATER -> TM13 (ICE BEAM), SODA POP -> TM48 (ROCK SLIDE),
+  //   LEMONADE    -> TM49 (TRI ATTACK).
+  // No dynamic item-select menu API exists, so the carried-drinks menu is
+  // approximated with hasItem() guards and a fixed @choice. The per-drink
+  // "already gave" guard is the same TM flags the original checks.
+  @storyline("talkLittleGirl") {
+    @trigger(map = "CeladonMartRoof", npc = 2)
+    @if (hasItem("FRESH_WATER") || hasItem("SODA_POP") || hasItem("LEMONADE")) {
+      @speaker("") {
+        @t("I'm thirsty! I want\nsomething to drink!\n\nGive her a drink?", "我渴了！想喝点东西！\n\n给她喝点什么？")
+      }
+      @choice {
+        @option(@t("YES", "是")) {
+          @speaker("") { @t("Give her which drink?", "给她哪一瓶呢？") }
+          // Original CeladonMartRoofScript_GetDrinksInBag: a dynamic menu of
+          // only the drinks in the bag. filterBag shows the carried ones.
+          drink = filterBag(["FRESH_WATER", "SODA_POP", "LEMONADE"])
+          @if (drink == "FRESH_WATER") {
+            @if (!getFlag("EVENT_GOT_TM13")) {
+              @speaker("") {
+                @t("Yay!\n\nFRESH WATER!\n\nThank you!\n\nYou can have this from me!", "太好了！\n\n新鲜水！\n\n谢谢你！\n\n这个就送给你吧！")
+              }
+              takeItem("FRESH_WATER", 1)
+              giveItem("TM13", 1)
+              setFlag("EVENT_GOT_TM13")
+              @speaker("") { @t("<PLAYER> received TM13!", "<PLAYER>得到了 TM13！") }
+              @speaker("") {
+                @t("TM13 contains ICE BEAM!\n\nIt can freeze the target\nsometimes!", "TM13里有冰冻光束！\n\n有时能让对手冻住！")
+              }
+            } @else {
+              @speaker("") {
+                @t("No thank you! I'm not\nthirsty after all!", "不用了！我突然又不渴了！")
+              }
+            }
+          }
+          @if (drink == "SODA_POP") {
+            @if (!getFlag("EVENT_GOT_TM48")) {
+              @speaker("") {
+                @t("Yay!\n\nSODA POP!\n\nThank you!\n\nYou can have this from me!", "太好了！\n\n汽水！\n\n谢谢你！\n\n这个就送给你吧！")
+              }
+              takeItem("SODA_POP", 1)
+              giveItem("TM48", 1)
+              setFlag("EVENT_GOT_TM48")
+              @speaker("") { @t("<PLAYER> received TM48!", "<PLAYER>得到了 TM48！") }
+              @speaker("") {
+                @t("TM48 contains ROCK SLIDE!\n\nIt can spook the target\nsometimes!", "TM48里有岩崩！\n\n有时会吓到对手！")
+              }
+            } @else {
+              @speaker("") {
+                @t("No thank you! I'm not\nthirsty after all!", "不用了！我突然又不渴了！")
+              }
+            }
+          }
+          @if (drink == "LEMONADE") {
+            @if (!getFlag("EVENT_GOT_TM49")) {
+              @speaker("") {
+                @t("Yay!\n\nLEMONADE!\n\nThank you!\n\nYou can have this from me!", "太好了！\n\n柠檬水！\n\n谢谢你！\n\n这个就送给你吧！")
+              }
+              takeItem("LEMONADE", 1)
+              giveItem("TM49", 1)
+              setFlag("EVENT_GOT_TM49")
+              @speaker("") { @t("<PLAYER> received TM49!", "<PLAYER>得到了 TM49！") }
+              @speaker("") {
+                @t("TM49 contains TRI ATTACK!", "TM49里有三重攻击！")
+              }
+            } @else {
+              @speaker("") {
+                @t("No thank you! I'm not\nthirsty after all!", "不用了！我突然又不渴了！")
+              }
+            }
+          }
+        }
+        @option(@t("NO", "否")) {
+        }
+      }
+    } @else {
+      @speaker("") {
+        @t("I'm thirsty! I want\nsomething to drink!", "我渴了！想喝点东西！")
+      }
+    }
+  }
+
+  // ── Vending machine (sign 1) ───────────────────────────────────────────
+  // Original VendingMachineMenu: FRESH WATER ¥200 / SODA POP ¥300 /
+  // LEMONADE ¥350 / CANCEL, with money check, bag-full branch and the
+  // "brrrrr" delivery sound.
+  @storyline("sign1") {
+    @trigger(map = "CeladonMartRoof", sign = 1)
+    @speaker("") { @t("A vending machine! Here's\nthe menu!", "是自动售货机！菜单如下！") }
+    @choice {
+      @option(@t("FRESH WATER", "新鲜水")) {
+        @if (hasMoney(200)) {
+          given = giveItem("FRESH_WATER", 1)
+          @if (given) {
+            takeMoney(200)
+            playSound("SFX_PUSH_BOULDER")
+            @speaker("") { @t("FRESH WATER popped out!", "新鲜水出来了！") }
+          } @else {
+            @speaker("") { @t("There's no more room for\nstuff!", "没有多余的空间了！") }
+          }
+        } @else {
+          @speaker("") { @t("Oops, not enough money!", "哎呀，钱不够！") }
+        }
+      }
+      @option(@t("SODA POP", "汽水")) {
+        @if (hasMoney(300)) {
+          given = giveItem("SODA_POP", 1)
+          @if (given) {
+            takeMoney(300)
+            playSound("SFX_PUSH_BOULDER")
+            @speaker("") { @t("SODA POP popped out!", "汽水出来了！") }
+          } @else {
+            @speaker("") { @t("There's no more room for\nstuff!", "没有多余的空间了！") }
+          }
+        } @else {
+          @speaker("") { @t("Oops, not enough money!", "哎呀，钱不够！") }
+        }
+      }
+      @option(@t("LEMONADE", "柠檬水")) {
+        @if (hasMoney(350)) {
+          given = giveItem("LEMONADE", 1)
+          @if (given) {
+            takeMoney(350)
+            playSound("SFX_PUSH_BOULDER")
+            @speaker("") { @t("LEMONADE popped out!", "柠檬水出来了！") }
+          } @else {
+            @speaker("") { @t("There's no more room for\nstuff!", "没有多余的空间了！") }
+          }
+        } @else {
+          @speaker("") { @t("Oops, not enough money!", "哎呀，钱不够！") }
+        }
+      }
+      @option(@t("CANCEL", "取消")) {
+        @speaker("") { @t("Not thirsty!", "不想喝！") }
+      }
+    }
+  }
+
+  // ── Vending machine (sign 2) ───────────────────────────────────────────
+  @storyline("sign2") {
+    @trigger(map = "CeladonMartRoof", sign = 2)
+    @speaker("") { @t("A vending machine! Here's\nthe menu!", "是自动售货机！菜单如下！") }
+    @choice {
+      @option(@t("FRESH WATER", "新鲜水")) {
+        @if (hasMoney(200)) {
+          given = giveItem("FRESH_WATER", 1)
+          @if (given) {
+            takeMoney(200)
+            playSound("SFX_PUSH_BOULDER")
+            @speaker("") { @t("FRESH WATER popped out!", "新鲜水出来了！") }
+          } @else {
+            @speaker("") { @t("There's no more room for\nstuff!", "没有多余的空间了！") }
+          }
+        } @else {
+          @speaker("") { @t("Oops, not enough money!", "哎呀，钱不够！") }
+        }
+      }
+      @option(@t("SODA POP", "汽水")) {
+        @if (hasMoney(300)) {
+          given = giveItem("SODA_POP", 1)
+          @if (given) {
+            takeMoney(300)
+            playSound("SFX_PUSH_BOULDER")
+            @speaker("") { @t("SODA POP popped out!", "汽水出来了！") }
+          } @else {
+            @speaker("") { @t("There's no more room for\nstuff!", "没有多余的空间了！") }
+          }
+        } @else {
+          @speaker("") { @t("Oops, not enough money!", "哎呀，钱不够！") }
+        }
+      }
+      @option(@t("LEMONADE", "柠檬水")) {
+        @if (hasMoney(350)) {
+          given = giveItem("LEMONADE", 1)
+          @if (given) {
+            takeMoney(350)
+            playSound("SFX_PUSH_BOULDER")
+            @speaker("") { @t("LEMONADE popped out!", "柠檬水出来了！") }
+          } @else {
+            @speaker("") { @t("There's no more room for\nstuff!", "没有多余的空间了！") }
+          }
+        } @else {
+          @speaker("") { @t("Oops, not enough money!", "哎呀，钱不够！") }
+        }
+      }
+      @option(@t("CANCEL", "取消")) {
+        @speaker("") { @t("Not thirsty!", "不想喝！") }
+      }
+    }
+  }
+
+  // ── Vending machine (sign 3) ───────────────────────────────────────────
+  @storyline("sign3") {
+    @trigger(map = "CeladonMartRoof", sign = 3)
+    @speaker("") { @t("A vending machine! Here's\nthe menu!", "是自动售货机！菜单如下！") }
+    @choice {
+      @option(@t("FRESH WATER", "新鲜水")) {
+        @if (hasMoney(200)) {
+          given = giveItem("FRESH_WATER", 1)
+          @if (given) {
+            takeMoney(200)
+            playSound("SFX_PUSH_BOULDER")
+            @speaker("") { @t("FRESH WATER popped out!", "新鲜水出来了！") }
+          } @else {
+            @speaker("") { @t("There's no more room for\nstuff!", "没有多余的空间了！") }
+          }
+        } @else {
+          @speaker("") { @t("Oops, not enough money!", "哎呀，钱不够！") }
+        }
+      }
+      @option(@t("SODA POP", "汽水")) {
+        @if (hasMoney(300)) {
+          given = giveItem("SODA_POP", 1)
+          @if (given) {
+            takeMoney(300)
+            playSound("SFX_PUSH_BOULDER")
+            @speaker("") { @t("SODA POP popped out!", "汽水出来了！") }
+          } @else {
+            @speaker("") { @t("There's no more room for\nstuff!", "没有多余的空间了！") }
+          }
+        } @else {
+          @speaker("") { @t("Oops, not enough money!", "哎呀，钱不够！") }
+        }
+      }
+      @option(@t("LEMONADE", "柠檬水")) {
+        @if (hasMoney(350)) {
+          given = giveItem("LEMONADE", 1)
+          @if (given) {
+            takeMoney(350)
+            playSound("SFX_PUSH_BOULDER")
+            @speaker("") { @t("LEMONADE popped out!", "柠檬水出来了！") }
+          } @else {
+            @speaker("") { @t("There's no more room for\nstuff!", "没有多余的空间了！") }
+          }
+        } @else {
+          @speaker("") { @t("Oops, not enough money!", "哎呀，钱不够！") }
+        }
+      }
+      @option(@t("CANCEL", "取消")) {
+        @speaker("") { @t("Not thirsty!", "不想喝！") }
+      }
+    }
+  }
+
+  // ── Current floor sign (sign 4) ────────────────────────────────────────
+  @storyline("sign4") {
+    @trigger(map = "CeladonMartRoof", sign = 4)
+    @speaker("") {
+      @t("ROOFTOP SQUARE: VENDING\nMACHINES", "屋顶广场：自动售货机")
+    }
+  }
+}

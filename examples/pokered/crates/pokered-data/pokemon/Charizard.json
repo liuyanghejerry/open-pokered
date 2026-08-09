@@ -1,0 +1,68 @@
+{
+  "$schema": "../schemas/pokemon.schema.json",
+  "species": "Charizard",
+  "baseStats": {
+    "hp": 78,
+    "attack": 84,
+    "defense": 78,
+    "speed": 100,
+    "special": 85
+  },
+  "type1": "Fire",
+  "type2": "Flying",
+  "catchRate": 45,
+  "baseExp": 209,
+  "growthRate": "MediumSlow",
+  "initialMoves": [
+    "Scratch",
+    "Growl",
+    "Ember",
+    "Leer"
+  ],
+  "tmHmFlags": [
+    181,
+    67,
+    79,
+    206,
+    227,
+    8,
+    38
+  ],
+  "pokedex": {
+    "category": "FLAME",
+    "heightFeet": 5,
+    "heightInches": 7,
+    "weightDecipounds": 2000,
+    "flavorTextPages": [
+      "Spits fire that\nis hot enough to\nmelt boulders.",
+      "Known to cause\nforest fires\nunintentionally"
+    ]
+  },
+  "evolutions": [],
+  "learnset": [
+    {
+      "level": 9,
+      "moveId": "Ember"
+    },
+    {
+      "level": 15,
+      "moveId": "Leer"
+    },
+    {
+      "level": 24,
+      "moveId": "Rage"
+    },
+    {
+      "level": 36,
+      "moveId": "Slash"
+    },
+    {
+      "level": 46,
+      "moveId": "Flamethrower"
+    },
+    {
+      "level": 55,
+      "moveId": "FireSpin"
+    }
+  ]
+}

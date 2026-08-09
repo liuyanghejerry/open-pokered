@@ -1,0 +1,64 @@
+{
+  "$schema": "../schemas/pokemon.schema.json",
+  "species": "Persian",
+  "baseStats": {
+    "hp": 65,
+    "attack": 70,
+    "defense": 60,
+    "speed": 115,
+    "special": 65
+  },
+  "type1": "Normal",
+  "type2": "Normal",
+  "catchRate": 90,
+  "baseExp": 148,
+  "growthRate": "MediumFast",
+  "initialMoves": [
+    "Scratch",
+    "Growl",
+    "Bite",
+    "Screech"
+  ],
+  "tmHmFlags": [
+    160,
+    207,
+    136,
+    193,
+    194,
+    8,
+    2
+  ],
+  "pokedex": {
+    "category": "CLASSY CAT",
+    "heightFeet": 3,
+    "heightInches": 3,
+    "weightDecipounds": 710,
+    "flavorTextPages": [
+      "Although its fur\nhas many admirers,\nit is tough to",
+      "raise as a pet\nbecause of its\nfickle meanness"
+    ]
+  },
+  "evolutions": [],
+  "learnset": [
+    {
+      "level": 12,
+      "moveId": "Bite"
+    },
+    {
+      "level": 17,
+      "moveId": "PayDay"
+    },
+    {
+      "level": 24,
+      "moveId": "Screech"
+    },
+    {
+      "level": 37,
+      "moveId": "FurySwipes"
+    },
+    {
+      "level": 51,
+      "moveId": "Slash"
+    }
+  ]
+}

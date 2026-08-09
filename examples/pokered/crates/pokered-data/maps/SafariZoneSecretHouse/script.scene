@@ -1,0 +1,27 @@
+// SafariZoneSecretHouse — translated from the original disassembly
+// (scripts/SafariZoneSecretHouse.asm, text/SafariZoneSecretHouse.asm) to the
+// real Game DSL API surface. The Fishing Guru is the Safari Zone campaign-prize
+// giver: the first to reach the Secret House wins HM03 (SURF), gated on
+// EVENT_GOT_HM03. The original checks for a full bag; we replicate that branch.
+
+game_scene SafariZoneSecretHouse {
+  @storyline("talkFishingGuru") {
+    @trigger(map = "SafariZoneSecretHouse", npc = 1)
+    @if (getFlag("EVENT_GOT_HM03")) {
+      @speaker("") {
+        @t("HM03 is SURF!\n\nPOKeMON will be able to\nferry you across water!\n\nAnd, this HM isn't\ndisposable! You can use it\nover and over!\n\nYou're super lucky for\nwinning this fabulous prize!", "HM03是冲浪！\n\n宝可梦将能载着你渡过水面！\n\n而且，这个HM 不是一次性的！\n你可以反复使用！\n\n能得到这个超棒的奖品，你太幸\n运了！")
+      }
+    } @else {
+      @speaker("") {
+        @t("Ah! Finally!\n\nYou're the first person to\nreach the SECRET HOUSE!\n\nI was getting worried that\nno one would win our\ncampaign prize.\n\nCongratulations! You have\nwon!", "啊！终于！\n\n你是第一个到达秘密小屋的人！\n\n我还担心没有人能赢得这次活动\n的奖品呢。\n\n恭喜你！你获胜了！")
+      }
+      @if (hasItem("HM03")) {
+        @speaker("") { @t("You don't have room for this\nfabulous prize!", "你没有地方放这个超棒的奖品！") }
+      } @else {
+        giveItem("HM03", 1)
+        setFlag("EVENT_GOT_HM03")
+        @speaker("") { @t("<PLAYER> received HM03!", "<PLAYER>得到了 HM03！") }
+      }
+    }
+  }
+}

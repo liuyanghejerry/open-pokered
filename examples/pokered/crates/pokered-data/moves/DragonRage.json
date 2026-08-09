@@ -1,0 +1,9 @@
+{
+  "$schema": "../schemas/move.schema.json",
+  "id": "DragonRage",
+  "effect": "SpecialDamageEffect",
+  "power": 1,
+  "type": "Dragon",
+  "accuracy": 100,
+  "pp": 10
+}

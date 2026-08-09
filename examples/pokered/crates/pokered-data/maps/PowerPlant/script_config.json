@@ -1,0 +1,43 @@
+{
+  "$schema": "../../schemas/script_config.schema.json",
+  "coordEvents": [],
+  "npcs": [
+    {
+      "id": 1,
+      "talk": "talkVoltorb1"
+    },
+    {
+      "id": 2,
+      "talk": "talkVoltorb2"
+    },
+    {
+      "id": 3,
+      "talk": "talkVoltorb3"
+    },
+    {
+      "id": 4,
+      "talk": "talkElectrode1"
+    },
+    {
+      "id": 5,
+      "talk": "talkVoltorb4"
+    },
+    {
+      "id": 6,
+      "talk": "talkVoltorb5"
+    },
+    {
+      "id": 7,
+      "talk": "talkElectrode2"
+    },
+    {
+      "id": 8,
+      "talk": "talkVoltorb6"
+    },
+    {
+      "id": 9,
+      "talk": "talkZapdos"
+    }
+  ],
+  "signs": []
+}

@@ -1,0 +1,38 @@
+// ViridianNicknameHouse — translated from the original disassembly
+// (scripts/ViridianNicknameHouse.asm, text/ViridianNicknameHouse.asm) to the
+// real Game DSL API surface. Pure NPC-dialogue house: no on-enter logic, no
+// flags, no battles. The SPEAROW's text plays its cry via the original
+// text_asm PlayCry hook.
+
+game_scene ViridianNicknameHouse {
+  // ── Balding guy (npc 1) ─────────────────────────────────────────────────
+  @storyline("talkBaldingGuy") {
+    @trigger(map = "ViridianNicknameHouse", npc = 1)
+    @speaker("") {
+      @t("Coming up with nicknames is\nfun, but hard.\n\nSimple names are the easiest\nto remember.", "给宝可梦起昵称很有趣，但也很\n难。\n\n简单的名字最容易记住。")
+    }
+  }
+
+  // ── Little girl (npc 2) ─────────────────────────────────────────────────
+  @storyline("talkLittleGirl") {
+    @trigger(map = "ViridianNicknameHouse", npc = 2)
+    @speaker("") {
+      @t("My Daddy loves POKeMON too.", "我爸爸也很喜欢宝可梦。")
+    }
+  }
+
+  // ── SPEARY the SPEAROW (npc 3) — plays its cry, like the original text_asm ──
+  @storyline("talkSpearow") {
+    @trigger(map = "ViridianNicknameHouse", npc = 3)
+    @speaker("") { @t("SPEARY: Tetweet!", "SPEARY：Tetweet！") }
+    playCry("SPEAROW")
+  }
+
+  // ── Speary's name sign / clipboard (npc 4) ──────────────────────────────
+  @storyline("talkSpearySign") {
+    @trigger(map = "ViridianNicknameHouse", npc = 4)
+    @speaker("") {
+      @t("SPEAROW Name: SPEARY", "烈雀名字：SPEARY")
+    }
+  }
+}

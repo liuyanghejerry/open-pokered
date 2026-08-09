@@ -1,0 +1,24 @@
+{
+  "$schema": "../../schemas/script_config.schema.json",
+  "coordEvents": [],
+  "npcs": [
+    {
+      "id": 1,
+      "talk": "talkChanneler"
+    },
+    {
+      "id": 2,
+      "talk": "talkChanneler1"
+    },
+    {
+      "id": 3,
+      "talk": "talkChanneler2"
+    },
+    {
+      "id": 4,
+      "talk": "talkPokeBall",
+      "toggleId": "POKEMON_TOWER_3F_OBJ_4"
+    }
+  ],
+  "signs": []
+}

@@ -1,0 +1,70 @@
+{
+  "$schema": "/schemas/layout.schema.json",
+  "schema_version": 1,
+  "screen": "battle_main",
+  "variants": {
+    "default": {
+      "cursor": {
+        "tx": 0,
+        "base_ty": 1,
+        "row_step": 2,
+        "col_step": 6,
+        "base_tx": 0,
+        "glyph": "\u25b6",
+        "color": "Black"
+      },
+      "children": [
+        {
+          "id": "base",
+          "rect": {
+            "tx": 0,
+            "ty": 12,
+            "tw": 20,
+            "th": 6
+          },
+          "color": "Black"
+        },
+        {
+          "id": "box_0",
+          "rect": {
+            "tx": 8,
+            "ty": 12,
+            "tw": 12,
+            "th": 6
+          },
+          "color": "Black",
+          "labels": [
+            {
+              "tx": 1,
+              "ty": 1,
+              "text": "FIGHT",
+              "color": "Black"
+            },
+            {
+              "tx": 7,
+              "ty": 1,
+              "text": "PKMN",
+              "color": "Black",
+              "tile_ids": [
+                225,
+                226
+              ]
+            },
+            {
+              "tx": 1,
+              "ty": 3,
+              "text": "ITEM",
+              "color": "Black"
+            },
+            {
+              "tx": 7,
+              "ty": 3,
+              "text": "RUN",
+              "color": "Black"
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

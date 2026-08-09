@@ -1,0 +1,123 @@
+{
+  "$schema": "../schemas/trainer.schema.json",
+  "class": "CueBall",
+  "constName": "CUE_BALL",
+  "parties": [
+    {
+      "pokemon": [
+        {
+          "level": 28,
+          "species": "Machop"
+        },
+        {
+          "level": 28,
+          "species": "Mankey"
+        },
+        {
+          "level": 28,
+          "species": "Machop"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 29,
+          "species": "Mankey"
+        },
+        {
+          "level": 29,
+          "species": "Machop"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 33,
+          "species": "Machop"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 29,
+          "species": "Mankey"
+        },
+        {
+          "level": 29,
+          "species": "Primeape"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 29,
+          "species": "Machop"
+        },
+        {
+          "level": 29,
+          "species": "Machoke"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 33,
+          "species": "Machoke"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 26,
+          "species": "Mankey"
+        },
+        {
+          "level": 26,
+          "species": "Mankey"
+        },
+        {
+          "level": 26,
+          "species": "Machoke"
+        },
+        {
+          "level": 26,
+          "species": "Machop"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 29,
+          "species": "Primeape"
+        },
+        {
+          "level": 29,
+          "species": "Machoke"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 31,
+          "species": "Tentacool"
+        },
+        {
+          "level": 31,
+          "species": "Tentacool"
+        },
+        {
+          "level": 31,
+          "species": "Tentacruel"
+        }
+      ]
+    }
+  ]
+}

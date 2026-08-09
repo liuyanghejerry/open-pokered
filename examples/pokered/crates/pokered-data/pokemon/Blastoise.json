@@ -1,0 +1,68 @@
+{
+  "$schema": "../schemas/pokemon.schema.json",
+  "species": "Blastoise",
+  "baseStats": {
+    "hp": 79,
+    "attack": 83,
+    "defense": 100,
+    "speed": 78,
+    "special": 85
+  },
+  "type1": "Water",
+  "type2": "Water",
+  "catchRate": 45,
+  "baseExp": 210,
+  "growthRate": "MediumSlow",
+  "initialMoves": [
+    "Tackle",
+    "TailWhip",
+    "Bubble",
+    "WaterGun"
+  ],
+  "tmHmFlags": [
+    177,
+    127,
+    15,
+    206,
+    131,
+    8,
+    50
+  ],
+  "pokedex": {
+    "category": "SHELLFISH",
+    "heightFeet": 5,
+    "heightInches": 3,
+    "weightDecipounds": 1890,
+    "flavorTextPages": [
+      "A brutal #MON\nwith pressurized\nwater jets on its",
+      "shell. They are\nused for high\nspeed tackles"
+    ]
+  },
+  "evolutions": [],
+  "learnset": [
+    {
+      "level": 8,
+      "moveId": "Bubble"
+    },
+    {
+      "level": 15,
+      "moveId": "WaterGun"
+    },
+    {
+      "level": 24,
+      "moveId": "Bite"
+    },
+    {
+      "level": 31,
+      "moveId": "Withdraw"
+    },
+    {
+      "level": 42,
+      "moveId": "SkullBash"
+    },
+    {
+      "level": 52,
+      "moveId": "HydroPump"
+    }
+  ]
+}

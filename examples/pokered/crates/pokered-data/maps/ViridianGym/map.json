@@ -1,0 +1,179 @@
+{
+  "$schema": "../../schemas/map.schema.json",
+  "id": 45,
+  "name": "ViridianGym",
+  "header": {
+    "tileset": "Gym",
+    "music": "Gym",
+    "connectionFlags": 0,
+    "width": 10,
+    "height": 9,
+    "borderBlock": 3
+  },
+  "connections": {},
+  "warps": [
+    {
+      "x": 16,
+      "y": 17,
+      "destWarpId": 4
+    },
+    {
+      "x": 17,
+      "y": 17,
+      "destWarpId": 4
+    }
+  ],
+  "npcs": [
+    {
+      "spriteId": 23,
+      "spriteName": "Giovanni",
+      "x": 2,
+      "y": 1,
+      "movement": "Stationary",
+      "facing": "Down",
+      "range": 0,
+      "textId": 1,
+      "isTrainer": false,
+      "trainerClass": "Giovanni",
+      "trainerSet": 3
+    },
+    {
+      "spriteId": 7,
+      "spriteName": "CooltrainerM",
+      "x": 12,
+      "y": 7,
+      "movement": "Stationary",
+      "facing": "Down",
+      "range": 0,
+      "textId": 2,
+      "isTrainer": true,
+      "trainerClass": "CooltrainerM",
+      "trainerSet": 9,
+      "endBattleText": "I\nran out of gas!"
+    },
+    {
+      "spriteId": 14,
+      "spriteName": "Hiker",
+      "x": 11,
+      "y": 11,
+      "movement": "Stationary",
+      "facing": "Up",
+      "range": 0,
+      "textId": 3,
+      "isTrainer": true,
+      "trainerClass": "Blackbelt",
+      "trainerSet": 6,
+      "endBattleText": "Wargh!"
+    },
+    {
+      "spriteId": 33,
+      "spriteName": "Rocker",
+      "x": 10,
+      "y": 7,
+      "movement": "Stationary",
+      "facing": "Down",
+      "range": 0,
+      "textId": 4,
+      "isTrainer": true,
+      "trainerClass": "Tamer",
+      "trainerSet": 3,
+      "endBattleText": "You are in\nperfect harmony!"
+    },
+    {
+      "spriteId": 14,
+      "spriteName": "Hiker",
+      "x": 3,
+      "y": 7,
+      "movement": "Stationary",
+      "facing": "Left",
+      "range": 0,
+      "textId": 5,
+      "isTrainer": true,
+      "trainerClass": "Blackbelt",
+      "trainerSet": 7,
+      "endBattleText": "Atcho!"
+    },
+    {
+      "spriteId": 7,
+      "spriteName": "CooltrainerM",
+      "x": 13,
+      "y": 5,
+      "movement": "Stationary",
+      "facing": "Right",
+      "range": 0,
+      "textId": 6,
+      "isTrainer": true,
+      "trainerClass": "CooltrainerM",
+      "trainerSet": 10,
+      "endBattleText": "I\nlost my grip!"
+    },
+    {
+      "spriteId": 14,
+      "spriteName": "Hiker",
+      "x": 10,
+      "y": 1,
+      "movement": "Stationary",
+      "facing": "Down",
+      "range": 0,
+      "textId": 7,
+      "isTrainer": true,
+      "trainerClass": "Blackbelt",
+      "trainerSet": 8,
+      "endBattleText": "Ayah!"
+    },
+    {
+      "spriteId": 33,
+      "spriteName": "Rocker",
+      "x": 2,
+      "y": 16,
+      "movement": "Stationary",
+      "facing": "Right",
+      "range": 0,
+      "textId": 8,
+      "isTrainer": true,
+      "trainerClass": "Tamer",
+      "trainerSet": 4,
+      "endBattleText": "Yowch!\nWhiplash!"
+    },
+    {
+      "spriteId": 7,
+      "spriteName": "CooltrainerM",
+      "x": 6,
+      "y": 5,
+      "movement": "Stationary",
+      "facing": "Down",
+      "range": 0,
+      "textId": 9,
+      "isTrainer": true,
+      "trainerClass": "CooltrainerM",
+      "trainerSet": 1,
+      "endBattleText": "I\nwas beaten?"
+    },
+    {
+      "spriteId": 36,
+      "spriteName": "GymGuide",
+      "x": 16,
+      "y": 15,
+      "movement": "Stationary",
+      "facing": "Down",
+      "range": 0,
+      "textId": 10,
+      "isTrainer": false
+    },
+    {
+      "spriteId": 61,
+      "spriteName": "PokeBall",
+      "x": 16,
+      "y": 9,
+      "movement": "Stationary",
+      "facing": "Down",
+      "range": 0,
+      "textId": 11,
+      "isTrainer": false,
+      "itemId": 53
+    }
+  ],
+  "signs": [],
+  "text": {},
+  "wild": null
+}

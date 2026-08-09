@@ -1,0 +1,99 @@
+{
+  "$schema": "../schemas/trainer.schema.json",
+  "class": "Gambler",
+  "constName": "GAMBLER",
+  "parties": [
+    {
+      "pokemon": [
+        {
+          "level": 18,
+          "species": "Poliwag"
+        },
+        {
+          "level": 18,
+          "species": "Horsea"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 18,
+          "species": "Bellsprout"
+        },
+        {
+          "level": 18,
+          "species": "Oddish"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 18,
+          "species": "Voltorb"
+        },
+        {
+          "level": 18,
+          "species": "Magnemite"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 18,
+          "species": "Growlithe"
+        },
+        {
+          "level": 18,
+          "species": "Vulpix"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 22,
+          "species": "Poliwag"
+        },
+        {
+          "level": 22,
+          "species": "Poliwag"
+        },
+        {
+          "level": 22,
+          "species": "Poliwhirl"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 22,
+          "species": "Onix"
+        },
+        {
+          "level": 22,
+          "species": "Geodude"
+        },
+        {
+          "level": 22,
+          "species": "Graveler"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 24,
+          "species": "Growlithe"
+        },
+        {
+          "level": 24,
+          "species": "Vulpix"
+        }
+      ]
+    }
+  ]
+}

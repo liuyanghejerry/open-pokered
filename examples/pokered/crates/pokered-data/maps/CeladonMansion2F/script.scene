@@ -1,0 +1,13 @@
+// CeladonMansion2F — translated from the original disassembly
+// (scripts/CeladonMansion2F.asm, text/CeladonMansion2F*.asm) to the real Game DSL.
+// The map has no NPCs and no on-enter logic (the original script only calls
+// EnableAutoTextBoxDrawing, which our engine does automatically). The only
+// interactable is the "GAME FREAK Meeting Room" sign.
+
+game_scene CeladonMansion2F {
+  // ── Meeting Room sign (sign 1) ─────────────────────────────────────────
+  @storyline("meetingRoomSign") {
+    @trigger(map = "CeladonMansion2F", sign = 1)
+    @speaker("") { @t("GAME FREAK Meeting Room", "GAME FREAK 会议室") }
+  }
+}

@@ -1,0 +1,129 @@
+// SSAnne2F — translated from the original disassembly (scripts/SSAnne2F.asm,
+// text/SSAnne2F.asm) to the real Game DSL API surface.
+//
+// This is a SCRIPTED RIVAL map. The original drives the encounter with a
+// w*CurScript state machine: when the player steps onto the battle coords
+// (orig dbmapcoord 36,8 / 37,8 — this map has connectionFlags 0, so the coords
+// map directly), the rival object (TOGGLE_SS_ANNE_2F_RIVAL) is revealed, the
+// MEET_RIVAL music plays, the rival walks DOWN to the player, talks, battles
+// (OPP_RIVAL2, party-by-starter), gives the "CUT master on board" hint, then
+// walks off and the object is hidden again. The original has no persistent
+// "beat" event (it ends the script in a NOOP state and re-hides the object), so
+// we gate re-entry on EVENT_BEAT_SS_ANNE_RIVAL (a generic flag-store key).
+//
+// Rival party-by-starter: the original picks wTrainerNo from wRivalStarter
+// (Squirtle/STARTER2 -> party 1, Charmander/STARTER3 -> party 2, else
+// Bulbasaur -> party 3). The engine resolves the rival starter advantage from
+// the rival class id, so for fidelity to the control flow we branch on
+// getRivalStarter() but pass the rival class id OPP_RIVAL2 in each branch.
+//
+// The rival NPC is script/coord-driven (not line-of-sight), so map.json sets
+// isTrainer = false and the coord trigger owns the startBattle.
+
+game_scene SSAnne2F {
+  // ── Scripted rival encounter at the battle coords (orig 36,8 / 37,8) ──
+  @storyline("coordRivalBattle") {
+    @trigger(map = "SSAnne2F", name = "rivalBattle1")
+    @if (!getFlag("EVENT_BEAT_SS_ANNE_RIVAL")) {
+      // Reveal the rival (orig ShowObject TOGGLE_SS_ANNE_2F_RIVAL), switch to
+      // the MEET_RIVAL theme, then walk the rival down from the stairs (36,4)
+      // to meet the player. Orig: player at (36,8) -> DOWN x3 to (36,7), rival
+      // faces DOWN (player UP); player at (37,8) -> DOWN x4 to (36,8), rival
+      // faces RIGHT (player LEFT) — SSAnne2FSetFacingDirectionScript.
+      setJoyIgnore(0xF0)
+      playSound("SFX_STOP_ALL_MUSIC")
+      playMusic("MUSIC_MEET_RIVAL")
+      showObjectByName("SS_ANNE_2F_RIVAL")
+      @if (getPlayerX() == 37) {
+        moveNpc("SS_ANNE_2F_RIVAL", [[36, 5], [36, 6], [36, 7], [36, 8]])
+        faceNpc("SS_ANNE_2F_RIVAL", "right")
+        facePlayer("left")
+      } @else {
+        moveNpc("SS_ANNE_2F_RIVAL", [[36, 5], [36, 6], [36, 7]])
+        faceNpc("SS_ANNE_2F_RIVAL", "down")
+        facePlayer("up")
+      }
+      clearJoyIgnore()
+
+      @say("") {
+        @t("<RIVAL>: Bonjour! <PLAYER>!\n\nImagine seeing you here!\n\n<PLAYER>, were you really\ninvited?\n\nSo how's your POKeDEX\ncoming?\n\nI already caught 40 kinds,\npal!\n\nDifferent kinds are\neverywhere!\n\nCrawl around in grassy\nareas!", "<RIVAL>：你好！ <PLAYER>！\n\n没想到会在这里见到你！\n\n<PLAYER>，你真的是被邀请来的\n吗？\n\n你的宝可梦图鉴收集得怎么样\n了？\n\n我已经抓到 40种了，伙计！\n\n不同种类的宝可梦到处都是！\n\n在草丛里到处走走吧！")
+      }
+
+      // Rival party-by-starter (orig StarterTable -> wTrainerNo 1/2/3). The
+      // engine derives the starter-advantage party from the rival class id, so
+      // each branch passes OPP_RIVAL2.
+      s = getRivalStarter()
+      @if (s == 0) {
+        result = startBattle("OPP_RIVAL2")
+      } @else {
+        @if (s == 1) {
+          result = startBattle("OPP_RIVAL2")
+        } @else {
+          result = startBattle("OPP_RIVAL2")
+        }
+      }
+
+      @if (result == "win") {
+        @say("") {
+          @t("Humph!\n\nAt least you're raising your\nPOKeMON!", "哼！\n\n至少你还在培育你的宝可梦！")
+        }
+      } @else {
+        @say("") {
+          @t("<PLAYER>! What are you,\nseasick?\n\nYou should shape up, pal!", "<PLAYER>！你晕船了吗？\n\n你应该振作起来，伙计！")
+        }
+      }
+
+      // Post-battle "CUT master" hint (orig TEXT_SSANNE2F_RIVAL_CUT_MASTER).
+      @say("") {
+        @t("<RIVAL>: I heard there was a\nCUT master on board.\n\nBut, he was just a seasick,\nold man!\n\nBut, CUT itself is really\nuseful!\n\nYou should go see him! Smell\nya!", "<RIVAL>：我听说船上有一位居\n合斩大师。\n\n但是，他只是个晕船的老头！\n\n不过，居合斩本身确实很有用！\n\n你应该去见见他！再见啦！")
+      }
+
+      setFlag("EVENT_BEAT_SS_ANNE_RIVAL")
+
+      // Rival exits SOUTH (orig SSAnne2FRivalAfterBattleScript): stop the
+      // MEET_RIVAL music, walk him off mid-map, hide the object (orig
+      // HideObject TOGGLE_SS_ANNE_2F_RIVAL), then restore the map's default
+      // music. Player at (37,8): rival (at (36,8)) walks DOWN x4. Player at
+      // (36,8): rival (at (36,7)) steps RIGHT around the player, then DOWN x5
+      // (RivalWalkAroundPlayerMovement falls into RivalDownFourMovement).
+      playSound("SFX_STOP_ALL_MUSIC")
+      // Orig SSAnne2F.asm:151: Music_RivalAlternateStart — the rival theme
+      // restarts with a different first measure as he walks off.
+      playMusic("MUSIC_MEET_RIVAL_ALTERNATE_START")
+      setJoyIgnore(0xF0)
+      @if (getPlayerX() == 37) {
+        moveNpc("SS_ANNE_2F_RIVAL", [[36, 9], [36, 10], [36, 11], [36, 12]])
+      } @else {
+        moveNpc("SS_ANNE_2F_RIVAL", [[37, 7], [37, 8], [37, 9], [37, 10], [37, 11], [37, 12]])
+      }
+      hideObjectByName("SS_ANNE_2F_RIVAL")
+      clearJoyIgnore()
+      // Orig PlayDefaultMusic restores the SS ANNE theme here; playMusic
+      // resolves "MUSIC_SS_ANNE" via the case/underscore-insensitive lookup.
+      playMusic("MUSIC_SS_ANNE")
+    }
+  }
+
+  // ── Waiter (npc 1) ──────────────────────────────────────────────────────
+  @storyline("talkWaiter") {
+    @trigger(map = "SSAnne2F", npc = 1)
+    @speaker("") {
+      @t("This ship, she is a luxury\nliner for trainers!\n\nAt every port, we hold\nparties with invited\ntrainers!", "这艘船是为训练家准备的豪华邮\n轮！\n\n每到一座港口，我们都会和受邀\n的训练家开派对！")
+    }
+  }
+
+  // ── Rival (npc 2) talk handler — dialogue only; the coord trigger owns the
+  //    battle (orig SSAnne2FRivalText) ──
+  @storyline("talkRival") {
+    @trigger(map = "SSAnne2F", npc = 2, toggle = "SS_ANNE_2F_RIVAL")
+    @if (getFlag("EVENT_BEAT_SS_ANNE_RIVAL")) {
+      @speaker("") {
+        @t("<RIVAL>: I heard there was a\nCUT master on board.\n\nBut, he was just a seasick,\nold man!\n\nBut, CUT itself is really\nuseful!\n\nYou should go see him! Smell\nya!", "<RIVAL>：我听说船上有一位居\n合斩大师。\n\n但是，他只是个晕船的老头！\n\n不过，居合斩本身确实很有用！\n\n你应该去见见他！再见啦！")
+      }
+    } @else {
+      @speaker("") {
+        @t("<RIVAL>: Bonjour! <PLAYER>!\n\nImagine seeing you here!\n\n<PLAYER>, were you really\ninvited?\n\nSo how's your POKeDEX\ncoming?\n\nI already caught 40 kinds,\npal!\n\nDifferent kinds are\neverywhere!\n\nCrawl around in grassy\nareas!", "<RIVAL>：你好！ <PLAYER>！\n\n没想到会在这里见到你！\n\n<PLAYER>，你真的是被邀请来的\n吗？\n\n你的宝可梦图鉴收集得怎么样\n了？\n\n我已经抓到 40种了，伙计！\n\n不同种类的宝可梦到处都是！\n\n在草丛里到处走走吧！")
+      }
+    }
+  }
+}

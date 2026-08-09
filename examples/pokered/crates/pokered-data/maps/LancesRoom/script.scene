@@ -1,0 +1,75 @@
+// LancesRoom — translated from the original disassembly (scripts/LancesRoom.asm,
+// text/LancesRoom.asm) to the real Game DSL API surface. Lance is the last of
+// the ELITE FOUR; like a gym leader he is talk-driven (map.json isTrainer =
+// false) so the script owns the battle and sets EVENT_BEAT_LANCE on victory.
+//
+// Entrance-lock door wired via replaceTileBlock (see LanceShowOrHideEntranceBlocks).
+// The forced-walk down the hallway (DecodeRLEList / SimulatedJoypad) still has no
+// API and stays approximated; faithful dialogue is preserved.
+
+game_scene LancesRoom {
+  // ── Entrance-lock door (LanceShowOrHideEntranceBlocks / ReplaceTileBlock) ─
+  // Original: CheckEvent EVENT_LANCES_ROOM_LOCK_DOOR → not-set = OPEN entrance
+  // (block $31=49, $32=50), set = CLOSED entrance (block $72=114, $73=115).
+  // Two stacked blocks at lb bc,6,2 → Y=6,X=2 and lb bc,6,3 → Y=6,X=3, so
+  // replaceTileBlock(2,6,id) and replaceTileBlock(3,6,id). Re-apply on entry so
+  // the entrance stays locked while the player is committed to the room.
+  @load {
+    @if (getFlag("EVENT_LANCES_ROOM_LOCK_DOOR")) {
+      replaceTileBlock(2, 6, 114)
+      replaceTileBlock(3, 6, 115)
+    } @else {
+      replaceTileBlock(2, 6, 49)
+      replaceTileBlock(3, 6, 50)
+    }
+  }
+
+  // ── Entrance trigger: crossing in seals the room behind the player ───────
+  // Original LancesRoomDefaultScript: stepping onto the entrance trigger coord
+  // (not next to Lance / not on the staircase) does CheckAndSetEvent
+  // EVENT_LANCES_ROOM_LOCK_DOOR, plays SFX_GO_INSIDE, then closes the entrance
+  // blocks. Coord index 3 = dbmapcoord 6,11. Only fires before Lance is beaten.
+  @storyline("lockEntrance") {
+    @trigger(map = "LancesRoom", name = "lockEntrance")
+    @if (!getFlag("EVENT_BEAT_LANCE") && !getFlag("EVENT_LANCES_ROOM_LOCK_DOOR")) {
+      setFlag("EVENT_LANCES_ROOM_LOCK_DOOR")
+      playSound("SFX_GO_INSIDE")
+      replaceTileBlock(2, 6, 114)
+      replaceTileBlock(3, 6, 115)
+    }
+  }
+
+  // ── Lance, last of the ELITE FOUR (npc 1) ──────────────────────────────
+  @storyline("talkLance") {
+    @trigger(map = "LancesRoom", npc = 1)
+    @if (getFlag("EVENT_BEAT_LANCE")) {
+      // Post-battle: Lance concedes and points the player to the RIVAL.
+      @speaker("") {
+        @t("I still can't believe my\ndragons lost to you,\n<PLAYER>!\n\nYou are now the POKeMON\nLEAGUE champion!\n\n...Or, you would have been,\nbut you have one more\nchallenge ahead.\n\nYou have to face another\ntrainer! His name is...\n\n<RIVAL>! He beat the ELITE\nFOUR before you!\n\nHe is the real POKeMON\nLEAGUE champion!", "我还是无法相信我的龙竟然输给\n了你， <PLAYER>！\n\n你现在已经是宝可梦联盟的冠军\n了！\n\n……或者说，你本来是的，但还\n有一个挑战等着你。\n\n你还必须面对另一个训练家！他\n的名字是……\n\n<RIVAL>！他先你一步打败了四\n天王！\n\n他才是真正的宝可梦联盟冠军！")
+      }
+    } @else {
+      @speaker("") {
+        @t("Ah! I heard about you\n<PLAYER>!\n\nI lead the ELITE FOUR! You\ncan call me LANCE the dragon\ntrainer!\n\nYou know that dragons are\nmythical POKeMON!\n\nThey're hard to catch and\nraise, but their powers are\nsuperior!\n\nThey're virtually\nindestructible!\n\nWell, are you ready to lose?\n\nYour LEAGUE challenge ends\nwith me, <PLAYER>!", "啊！我听说了你的事，\n<PLAYER>！\n\n我是四天王的首领！你可以叫我\n龙之训练家阿渡！\n\n你知道吗，龙是传说中的宝可\n梦！\n\n它们很难捕捉和培育，但力量却\n非常强大！\n\n它们几乎无坚不摧！\n\n好了，你准备好输了吗？\n\n你的联盟挑战就到此为止了，\n<PLAYER>！")
+      }
+      result = startBattle("OPP_LANCE1")
+      @if (result == "win") {
+        @speaker("") {
+          @t("That's it!\n\nI hate to admit it, but you\nare a POKeMON master!", "就是这样！\n\n虽然我不想承认，但你确实是宝\n可梦大师！")
+        }
+        @speaker("") {
+          @t("I still can't believe my\ndragons lost to you,\n<PLAYER>!\n\nYou are now the POKeMON\nLEAGUE champion!\n\n...Or, you would have been,\nbut you have one more\nchallenge ahead.\n\nYou have to face another\ntrainer! His name is...\n\n<RIVAL>! He beat the ELITE\nFOUR before you!\n\nHe is the real POKeMON\nLEAGUE champion!", "我还是无法相信我的龙竟然输给\n了你， <PLAYER>！\n\n你现在已经是宝可梦联盟的冠军\n了！\n\n……或者说，你本来是的，但还\n有一个挑战等着你。\n\n你还必须面对另一个训练家！他\n的名字是……\n\n<RIVAL>！他先你一步打败了四\n天王！\n\n他才是真正的宝可梦联盟冠军！")
+        }
+        setFlag("EVENT_BEAT_LANCE")
+        setFlag("EVENT_BEAT_LANCES_ROOM_TRAINER_0")
+        // Unlock the entrance once Lance is beaten: clear the lock flag and
+        // re-apply the OPEN blocks ($31=49 at X=2,Y=6, $32=50 at X=3,Y=6) so the
+        // staircase swaps open without a map re-entry. (note: the original leaves
+        // the lock flag as-is and routes the player up to ChampionsRoom; reopening
+        // is the faithful player-facing result — they may freely leave once won.)
+        resetFlag("EVENT_LANCES_ROOM_LOCK_DOOR")
+        replaceTileBlock(2, 6, 49)
+        replaceTileBlock(3, 6, 50)
+      }
+    }
+  }
+}

@@ -1,0 +1,68 @@
+{
+  "$schema": "../schemas/pokemon.schema.json",
+  "species": "Tangela",
+  "baseStats": {
+    "hp": 65,
+    "attack": 55,
+    "defense": 115,
+    "speed": 60,
+    "special": 100
+  },
+  "type1": "Grass",
+  "type2": "Grass",
+  "catchRate": 45,
+  "baseExp": 166,
+  "growthRate": "MediumFast",
+  "initialMoves": [
+    "Constrict",
+    "Bind",
+    "None",
+    "None"
+  ],
+  "tmHmFlags": [
+    164,
+    67,
+    56,
+    192,
+    130,
+    8,
+    6
+  ],
+  "pokedex": {
+    "category": "VINE",
+    "heightFeet": 3,
+    "heightInches": 3,
+    "weightDecipounds": 770,
+    "flavorTextPages": [
+      "The whole body is\nswathed with wide\nvines that are",
+      "similar to sea-\nweed. Its vines\nshake as it walks"
+    ]
+  },
+  "evolutions": [],
+  "learnset": [
+    {
+      "level": 29,
+      "moveId": "Absorb"
+    },
+    {
+      "level": 32,
+      "moveId": "Poisonpowder"
+    },
+    {
+      "level": 36,
+      "moveId": "StunSpore"
+    },
+    {
+      "level": 39,
+      "moveId": "SleepPowder"
+    },
+    {
+      "level": 45,
+      "moveId": "Slam"
+    },
+    {
+      "level": 49,
+      "moveId": "Growth"
+    }
+  ]
+}

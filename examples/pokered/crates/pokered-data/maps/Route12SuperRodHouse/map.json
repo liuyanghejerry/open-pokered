@@ -1,0 +1,109 @@
+{
+  "$schema": "../../schemas/map.schema.json",
+  "id": 189,
+  "name": "Route12SuperRodHouse",
+  "header": {
+    "tileset": "House",
+    "music": "Celadon",
+    "connectionFlags": 0,
+    "width": 4,
+    "height": 4,
+    "borderBlock": 10
+  },
+  "connections": {},
+  "warps": [
+    {
+      "x": 2,
+      "y": 7,
+      "destWarpId": 3
+    },
+    {
+      "x": 3,
+      "y": 7,
+      "destWarpId": 3
+    }
+  ],
+  "npcs": [
+    {
+      "spriteId": 39,
+      "spriteName": "FishingGuru",
+      "x": 2,
+      "y": 4,
+      "movement": "Stationary",
+      "facing": "Right",
+      "range": 0,
+      "textId": 1,
+      "isTrainer": false
+    }
+  ],
+  "signs": [],
+  "text": {
+    "npc": {
+      "1": [
+        {
+          "line1": "[Super Rod giver script]",
+          "line2": ""
+        }
+      ],
+      "1_GotItem": [
+        {
+          "line1": "Hello there,",
+          "line2": "<PLAYER>!"
+        },
+        {
+          "line1": "",
+          "line2": ""
+        },
+        {
+          "line1": "Use the SUPER ROD",
+          "line2": "in any water!"
+        },
+        {
+          "line1": "You can catch",
+          "line2": ""
+        },
+        {
+          "line1": "different kinds",
+          "line2": ""
+        },
+        {
+          "line1": "of #MON.",
+          "line2": ""
+        },
+        {
+          "line1": "",
+          "line2": ""
+        },
+        {
+          "line1": "Try fishing",
+          "line2": "wherever you can!"
+        }
+      ],
+      "1_NoRoom": [
+        {
+          "line1": "Oh no!",
+          "line2": ""
+        },
+        {
+          "line1": "",
+          "line2": ""
+        },
+        {
+          "line1": "I had a gift for",
+          "line2": "you, but you have"
+        },
+        {
+          "line1": "no room for it!",
+          "line2": ""
+        }
+      ],
+      "1_Refused": [
+        {
+          "line1": "Oh... That's so",
+          "line2": "disappointing..."
+        }
+      ]
+    }
+  },
+  "wild": null
+}

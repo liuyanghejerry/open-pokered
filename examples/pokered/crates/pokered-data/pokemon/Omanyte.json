@@ -1,0 +1,66 @@
+{
+  "$schema": "../schemas/pokemon.schema.json",
+  "species": "Omanyte",
+  "baseStats": {
+    "hp": 35,
+    "attack": 40,
+    "defense": 100,
+    "speed": 35,
+    "special": 90
+  },
+  "type1": "Rock",
+  "type2": "Water",
+  "catchRate": 45,
+  "baseExp": 120,
+  "growthRate": "MediumFast",
+  "initialMoves": [
+    "WaterGun",
+    "Withdraw",
+    "None",
+    "None"
+  ],
+  "tmHmFlags": [
+    160,
+    63,
+    8,
+    192,
+    3,
+    8,
+    18
+  ],
+  "pokedex": {
+    "category": "SPIRAL",
+    "heightFeet": 1,
+    "heightInches": 4,
+    "weightDecipounds": 170,
+    "flavorTextPages": [
+      "Although long\nextinct, in rare\ncases, it can be",
+      "genetically\nresurrected from\nfossils"
+    ]
+  },
+  "evolutions": [
+    {
+      "method": "level",
+      "species": "Omastar",
+      "level": 40
+    }
+  ],
+  "learnset": [
+    {
+      "level": 34,
+      "moveId": "HornAttack"
+    },
+    {
+      "level": 39,
+      "moveId": "Leer"
+    },
+    {
+      "level": 46,
+      "moveId": "SpikeCannon"
+    },
+    {
+      "level": 53,
+      "moveId": "HydroPump"
+    }
+  ]
+}

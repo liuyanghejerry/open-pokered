@@ -1,0 +1,71 @@
+{
+  "$schema": "../schemas/pokemon.schema.json",
+  "species": "Shellder",
+  "baseStats": {
+    "hp": 30,
+    "attack": 65,
+    "defense": 100,
+    "speed": 40,
+    "special": 45
+  },
+  "type1": "Water",
+  "type2": "Water",
+  "catchRate": 190,
+  "baseExp": 97,
+  "growthRate": "Slow",
+  "initialMoves": [
+    "Tackle",
+    "Withdraw",
+    "None",
+    "None"
+  ],
+  "tmHmFlags": [
+    32,
+    63,
+    8,
+    224,
+    75,
+    72,
+    19
+  ],
+  "pokedex": {
+    "category": "BIVALVE",
+    "heightFeet": 1,
+    "heightInches": 0,
+    "weightDecipounds": 90,
+    "flavorTextPages": [
+      "Its hard shell\nrepels any kind\nof attack.",
+      "It is vulnerable\nonly when its\nshell is open"
+    ]
+  },
+  "evolutions": [
+    {
+      "method": "item",
+      "species": "Cloyster",
+      "item": "WaterStone",
+      "minLevel": 1
+    }
+  ],
+  "learnset": [
+    {
+      "level": 18,
+      "moveId": "Supersonic"
+    },
+    {
+      "level": 23,
+      "moveId": "Clamp"
+    },
+    {
+      "level": 30,
+      "moveId": "AuroraBeam"
+    },
+    {
+      "level": 39,
+      "moveId": "Leer"
+    },
+    {
+      "level": 50,
+      "moveId": "IceBeam"
+    }
+  ]
+}

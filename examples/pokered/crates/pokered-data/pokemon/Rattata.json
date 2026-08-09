@@ -1,0 +1,66 @@
+{
+  "$schema": "../schemas/pokemon.schema.json",
+  "species": "Rattata",
+  "baseStats": {
+    "hp": 30,
+    "attack": 56,
+    "defense": 35,
+    "speed": 72,
+    "special": 25
+  },
+  "type1": "Normal",
+  "type2": "Normal",
+  "catchRate": 255,
+  "baseExp": 57,
+  "growthRate": "MediumFast",
+  "initialMoves": [
+    "Tackle",
+    "TailWhip",
+    "None",
+    "None"
+  ],
+  "tmHmFlags": [
+    160,
+    47,
+    136,
+    201,
+    194,
+    8,
+    2
+  ],
+  "pokedex": {
+    "category": "RAT",
+    "heightFeet": 1,
+    "heightInches": 0,
+    "weightDecipounds": 80,
+    "flavorTextPages": [
+      "Bites anything\nwhen it attacks.\nSmall and very",
+      "quick, it is a\ncommon sight in\nmany places"
+    ]
+  },
+  "evolutions": [
+    {
+      "method": "level",
+      "species": "Raticate",
+      "level": 20
+    }
+  ],
+  "learnset": [
+    {
+      "level": 7,
+      "moveId": "QuickAttack"
+    },
+    {
+      "level": 14,
+      "moveId": "HyperFang"
+    },
+    {
+      "level": 23,
+      "moveId": "FocusEnergy"
+    },
+    {
+      "level": 34,
+      "moveId": "SuperFang"
+    }
+  ]
+}

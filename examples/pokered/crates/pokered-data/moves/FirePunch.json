@@ -1,0 +1,9 @@
+{
+  "$schema": "../schemas/move.schema.json",
+  "id": "FirePunch",
+  "effect": "BurnSideEffect1",
+  "power": 75,
+  "type": "Fire",
+  "accuracy": 100,
+  "pp": 15
+}

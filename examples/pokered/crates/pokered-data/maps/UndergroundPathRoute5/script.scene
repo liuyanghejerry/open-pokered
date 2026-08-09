@@ -1,0 +1,62 @@
+// UndergroundPathRoute5 — translated from the original disassembly
+// (scripts/UndergroundPathRoute5.asm, engine/events/in_game_trades.asm,
+// data/events/trades.asm, data/text/text_7.asm).
+//
+// The map's only script work is bookkeeping: on entry the original sets
+// wLastMap = ROUTE_5 (so the underground-path warp knows which side to exit).
+// There is no API for cross-map state writes, so that is skipped (see @load).
+//
+// The single NPC is a Little Girl who offers in-game trade TRADE_FOR_SPOT:
+// the player gives a NIDORAN_M and receives a NIDORAN_F nicknamed "SPOT"
+// (TRADE_DIALOGSET_HAPPY -> dialogset 3).
+//
+// The trade is fully implemented via tradePokemon(): it verifies the player
+// carries NIDORAN_M, removes it from the party, and adds NIDORAN_F nicknamed
+// SPOT with the trade animation; the wrong-mon path returns false. See
+// talkLittleGirl below.
+
+game_scene UndergroundPathRoute5 {
+  // On-enter: original sets wLastMap = ROUTE_5 for underground-path exit
+  // bookkeeping. No API for cross-map state writes; nothing to do here.
+  @load {
+  }
+
+  // ── Little Girl (npc 1) — TRADE_FOR_SPOT: NIDORAN_M -> NIDORAN_F (SPOT) ──
+  // dialogset HAPPY (set 3).
+  @storyline("talkLittleGirl") {
+    @trigger(map = "UndergroundPathRoute5", npc = 1)
+    @if (getFlag("EVENT_TRADED_FOR_SPOT")) {
+      // AfterTrade3Text (dialogset HAPPY)
+      @speaker("") {
+        @t("How is my old NIDORAN?\n\nMy NIDORAN is doing great!", "我以前的小尼多兰还好吗？\n\n我的尼多朗过得很好！")
+      }
+    } @else {
+      // WannaTrade3Text (dialogset HAPPY)
+      @speaker("") {
+        @t("Hi! Do you have NIDORAN?\n\nWant to trade it for\nNIDORAN?", "嗨！你有尼多朗吗？\n\n想把它换成尼多兰吗？")
+      }
+      @choice {
+        @option(@t("YES", "是")) {
+          // ConnectCableText -> real in-game trade (removes NIDORAN_M, adds
+          // NIDORAN_F nicknamed SPOT). tradePokemon returns false if the player
+          // doesn't actually carry NIDORAN_M -> wrong-mon (dialogset HAPPY).
+          @speaker("") { @t("Okay, connect the cable like\nso!", "好的，请像这样连接线路！") }
+          traded = tradePokemon("NIDORAN_M", "NIDORAN_F", "SPOT")
+          @if (traded) {
+            setFlag("EVENT_TRADED_FOR_SPOT")
+            @speaker("") { @t("Thanks pal!", "谢啦，朋友！") }
+            @speaker("") {
+              @t("<PLAYER> traded NIDORAN for\nNIDORAN!", "<PLAYER>用尼多朗换到了尼多\n兰！")
+            }
+          } @else {
+            @speaker("") { @t("Hmmm? This isn't NIDORAN.\n\nThink of me when you get\none.", "嗯？这不是尼多朗。\n\n等你抓到一只，记得想到我。") }
+          }
+        }
+        @option(@t("NO", "否")) {
+          // NoTrade3Text
+          @speaker("") { @t("That's too bad.", "那太可惜了。") }
+        }
+      }
+    }
+  }
+}

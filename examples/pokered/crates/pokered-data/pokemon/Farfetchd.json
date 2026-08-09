@@ -1,0 +1,64 @@
+{
+  "$schema": "../schemas/pokemon.schema.json",
+  "species": "Farfetchd",
+  "baseStats": {
+    "hp": 52,
+    "attack": 65,
+    "defense": 55,
+    "speed": 60,
+    "special": 58
+  },
+  "type1": "Normal",
+  "type2": "Flying",
+  "catchRate": 45,
+  "baseExp": 94,
+  "growthRate": "MediumFast",
+  "initialMoves": [
+    "Peck",
+    "SandAttack",
+    "None",
+    "None"
+  ],
+  "tmHmFlags": [
+    174,
+    3,
+    8,
+    192,
+    195,
+    8,
+    14
+  ],
+  "pokedex": {
+    "category": "WILD DUCK",
+    "heightFeet": 2,
+    "heightInches": 7,
+    "weightDecipounds": 330,
+    "flavorTextPages": [
+      "The sprig of\ngreen onions it\nholds is its",
+      "weapon. It is\nused much like a\nmetal sword"
+    ]
+  },
+  "evolutions": [],
+  "learnset": [
+    {
+      "level": 7,
+      "moveId": "Leer"
+    },
+    {
+      "level": 15,
+      "moveId": "FuryAttack"
+    },
+    {
+      "level": 23,
+      "moveId": "SwordsDance"
+    },
+    {
+      "level": 31,
+      "moveId": "Agility"
+    },
+    {
+      "level": 39,
+      "moveId": "Slash"
+    }
+  ]
+}

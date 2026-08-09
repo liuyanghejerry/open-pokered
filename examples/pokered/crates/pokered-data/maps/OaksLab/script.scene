@@ -1,0 +1,493 @@
+// OaksLab — translated from the original disassembly (scripts/OaksLab.asm,
+// text/OaksLab.asm) to the real Game DSL API surface. This map is one big
+// scripted cutscene: Oak walks the player in, the player picks a starter,
+// the rival takes the type-advantage ball, challenges the player when they
+// try to leave (coordDontGoAway at y=6), and (much later, after the
+// Route 22 rival fight + delivering OAK's PARCEL) Oak hands out the POKeDEX.
+//
+// The original used a wOaksLabCurScript state machine + helper subroutines;
+// the DSL has no callable storylines, so the pokedex-handout sequence is
+// inlined at its trigger point (the same approach PalletTown uses for Oak's
+// intro).
+//
+// Stubs / approximations (no API for them yet):
+//  - StarterDex preview while choosing -> showPokedexEntry(species) per ball.
+//  - Rival's starter battle is the runtime trainer OPP_RIVAL1 (party-by-starter
+//    is driven by map.json trainerSet); getRivalStarter() picks the species we
+//    name for dialogue fidelity.
+//  - DisplayDexRating ("let me take a look") -> faithful dialogue only.
+//  - Cross-map writes (PalletTown daisy script, Route22 rival spawn) -> we set
+//    the EVENT_* flags we can; the remaining object/script writes are // TODO.
+//  - The rival's walk to the ball uses the original's explicit movement
+//    tables (down to row 5 and around, so he never crosses the player at
+//    the table); the challenge approach uses moveNpcTo (terrain pathfinding)
+//    for the original's FindPathToPlayer. End tiles match the original.
+
+game_scene OaksLab {
+  // ── On-enter cutscene: Oak follows the player into the lab ──────────────
+  // Original OaksLabDefaultScript -> ...OakChooseMonSpeech: only runs once,
+  // when Oak appeared in Pallet and the player walked up after him.
+  @load {
+    @if (getFlag("EVENT_OAK_APPEARED_IN_PALLET") && !getFlag("EVENT_FOLLOWED_OAK_INTO_LAB")) {
+      // OakEntersLab: Oak walks up to his spot, then swaps to his lab sprite.
+      showObject("OAKS_LAB_OBJ_8")
+      moveNpc("OAKS_LAB_OBJ_8", [[5, 9], [5, 8], [5, 7]])
+      hideObject("OAKS_LAB_OBJ_8")
+      showObject("OAKS_LAB_OBJ_5")
+      // PlayerEntersLab: the player is force-walked up behind Oak.
+      // Original PlayerEntryMovementRLE is PAD_UP x8: from the door
+      // (5,11) to (5,3), right in front of Oak's desk (5,2).
+      setJoyIgnore(0x0F | 0xF0)
+      movePlayer([[5, 10], [5, 9], [5, 8], [5, 7], [5, 6], [5, 5], [5, 4], [5, 3]])
+      faceNpc("OAKS_LAB_OBJ_1", "up")
+      facePlayer("up")
+      setFlag("EVENT_FOLLOWED_OAK_INTO_LAB")
+      setFlag("EVENT_FOLLOWED_OAK_INTO_LAB_2")
+      playMusic("MUSIC_OAKS_LAB")
+      // OakChooseMonSpeech: rival nags, Oak presents the three POKeMON.
+      @say("") {
+        @t("<RIVAL>: Gramps! I'm fed up\nwith waiting!", "<RIVAL>：爷爷！我已经受够等\n待了！")
+      }
+      @say("") {
+        @t("OAK: <RIVAL>? Let me\nthink...\n\nOh, that's right, I told you\nto come! Just wait!\n\nHere, <PLAYER>!\n\nThere are 3 POKeMON here!\n\nHaha!\n\nThey are inside the POKe\nBALLs.\n\nWhen I was young, I was a\nserious POKeMON trainer!\n\nIn my old age, I have only 3\nleft, but you can have one!\nChoose!", "大木博士：<RIVAL>？让我想\n想……\n\n啊，对了，我告诉过你来吧！等\n着吧！\n\n来，<PLAYER>！\n\n这里有3只宝可梦！\n\n哈哈！\n\n它们就在精灵球里面。\n\n我年轻的时候，是个认真的宝可\n梦训练家！\n\n如今年纪大了，只剩下3只了，\n但你可以从中选一只！")
+      }
+      @say("") {
+        @t("<RIVAL>: Hey! Gramps! What\nabout me?", "<RIVAL>：嘿！爷爷！什么那我\n呢？")
+      }
+      @say("") {
+        @t("OAK: Be patient! <RIVAL>,\nyou can have one too!", "大木博士：别着急！ <RIVAL>，\n你也能拿一只！")
+      }
+      setFlag("EVENT_OAK_ASKED_TO_CHOOSE_MON")
+      clearJoyIgnore()
+    }
+  }
+
+  // ── "Don't go away yet!" — if the player tries to leave before choosing ─
+  // Original OaksLabPlayerDontGoAwayScript + PlayerForcedToWalkBack.
+  // The same y=6 row also runs the rival challenge once a starter is chosen
+  // (orig OaksLabRivalChallengesPlayerScript). The coord events are
+  // oneShot=false in script_config.json so both phases can fire.
+  @storyline("coordDontGoAway") {
+    @trigger(map = "OaksLab", name = "dontGoAway1", coords = [[4, 6], [5, 6], [6, 6]])
+    @if (getFlag("EVENT_OAK_ASKED_TO_CHOOSE_MON") && !getFlag("EVENT_GOT_STARTER")) {
+      faceNpc("OAKS_LAB_OBJ_5", "down")
+      facePlayer("up")
+      @speaker("") {
+        @t("OAK: Hey! Don't go away yet!", "大木博士：嘿！别走开啊！")
+      }
+      // Force the player back up toward the table (orig: one PAD_UP).
+      movePlayerRelative([[0, -1]])
+    }
+    // ── Rival challenge (orig OaksLabRivalChallengesPlayerScript): with a
+    // starter chosen, walking down to row 6 makes the rival call out, then
+    // pathfind to the player (orig FindPathToPlayer, stopping one tile
+    // short), then the battle starts. ─────────────────────────────────────
+    @if (getFlag("EVENT_GOT_STARTER") && !getFlag("EVENT_BATTLED_RIVAL_IN_OAKS_LAB")) {
+      faceNpc("OAKS_LAB_OBJ_1", "down")
+      facePlayer("up")
+      playMusic("MUSIC_MEET_RIVAL")
+      @speaker("") {
+        @t("<RIVAL>: Wait <PLAYER>!\nLet's check out our POKeMON!\n\nCome on, I'll take you on!", "<RIVAL>：等等 <PLAYER>！来看\n看我们的宝可梦吧！\n\n来吧，我要跟你对战！")
+      }
+      moveNpcTo("OAKS_LAB_OBJ_1", getPlayerX(), getPlayerY() - 1)
+      faceNpc("OAKS_LAB_OBJ_1", "down")
+      result = startBattle("OPP_RIVAL1")
+      // hl=win / de=lose per SaveEndBattleTextPointers: player WIN shows the
+      // "wrong POKeMON" regret, player LOSE shows the "am I great" brag.
+      @if (result == "win") {
+        @speaker("") {
+          @t("WHAT? Unbelievable! I picked\nthe wrong POKeMON!", "什么？难以置信！我选错了宝可\n梦！")
+        }
+      } @else {
+        @speaker("") {
+          @t("<RIVAL>: Yeah! Am I great or\nwhat?", "<RIVAL>：是啊！我是不是很厉\n害？")
+        }
+      }
+      heal()
+      setFlag("EVENT_BATTLED_RIVAL_IN_OAKS_LAB")
+      @speaker("") {
+        @t("<RIVAL>: Okay! I'll make my\nPOKeMON fight to toughen it\nup!\n\n<PLAYER>! Gramps! Smell you\nlater!", "<RIVAL>：好！我要让我的宝可\n梦不断战斗变强！\n\n<PLAYER>！爷爷！回头见！")
+      }
+      // Orig OaksLab.asm:445 (OaksLabRivalStartsExitScript):
+      // Music_RivalAlternateStart — the rival theme restarts with a different
+      // first measure as he walks out (no SFX_STOP_ALL_MUSIC here).
+      playMusic("MUSIC_MEET_RIVAL_ALTERNATE_START")
+      // Orig OaksLabRivalStartsExitScript: the rival sidesteps one tile
+      // (RIGHT if the player is at x=4, LEFT otherwise), then walks DOWN x5
+      // and is hidden mid-map at y=10 — never on a door tile.
+      @if (getPlayerX() == 4) {
+        moveNpc("OAKS_LAB_OBJ_1", [[5, 5], [5, 6], [5, 7], [5, 8], [5, 9], [5, 10]])
+      } @else @if (getPlayerX() == 5) {
+        moveNpc("OAKS_LAB_OBJ_1", [[4, 5], [4, 6], [4, 7], [4, 8], [4, 9], [4, 10]])
+      } @else {
+        moveNpc("OAKS_LAB_OBJ_1", [[5, 5], [5, 6], [5, 7], [5, 8], [5, 9], [5, 10]])
+      }
+      hideObjectByName("OAKS_LAB_OBJ_1")
+      playMusic("MUSIC_OAKS_LAB")
+    }
+  }
+
+  // ── The three starter POKe BALLs (npc 2 = Charmander, 3 = Squirtle,
+  //    4 = Bulbasaur). Picking one gives that starter, then runs the
+  //    rival-takes-the-leftover-and-battles-you sequence (inlined). ────────
+  @storyline("talkCharmanderBall") {
+    @trigger(map = "OaksLab", npc = 2, toggle = "OAKS_LAB_OBJ_2")
+    @if (getFlag("EVENT_GOT_STARTER")) {
+      @speaker("") {
+        @t("That's PROF.OAK's last\nPOKeMON!", "那是大木博士最后的宝可梦！")
+      }
+    } @else @if (!getFlag("EVENT_OAK_ASKED_TO_CHOOSE_MON")) {
+      @speaker("") {
+        @t("Those are POKe BALLs. They\ncontain POKeMON!", "这些是精灵球。里面装着宝可\n梦！")
+      }
+    } @else {
+      faceNpc("OAKS_LAB_OBJ_5", "down")
+      showPokedexEntry("CHARMANDER")
+      @speaker("") {
+        @t("So! You want the fire\nPOKeMON, CHARMANDER?", "哦！你想要火系的宝可梦，小火\n龙？")
+      }
+      @choice {
+        @option(@t("YES", "是")) {
+          hideObjectByName("OAKS_LAB_OBJ_2")
+          @speaker("") {
+            @t("This POKeMON is really\nenergetic!", "这只宝可梦很有活力！")
+          }
+          givePokemon("CHARMANDER", 5)
+          @speaker("") {
+            @t("<PLAYER> received a\nCHARMANDER!", "<PLAYER>得到了一只小火龙！")
+          }
+          playSound("SFX_GET_KEY_ITEM")
+          setFlag("EVENT_GOT_STARTER")
+          // ── rival sequence (rival gets SQUIRTLE, the type advantage) ──
+          // Orig OaksLabChoseStarterScript (player-below-table variant): the
+          // rival walks down to row 5 and around, so he never crosses the
+          // player standing at the table. The challenge battle happens
+          // later, when the player walks down to leave (coordDontGoAway, y=6).
+          moveNpc("OAKS_LAB_OBJ_1", [[4, 4], [4, 5], [5, 5], [6, 5], [7, 5], [7, 4]])
+          @speaker("") {
+            @t("<RIVAL>: I'll take this one,\nthen!", "<RIVAL>：那我就要这只了！")
+          }
+          hideObjectByName("OAKS_LAB_OBJ_3")
+          @speaker("") {
+            @t("<RIVAL> received a SQUIRTLE!", "<RIVAL>得到了一只杰尼龟！")
+          }
+          playSound("SFX_GET_KEY_ITEM")
+        }
+        @option(@t("NO", "否")) {
+        }
+      }
+    }
+  }
+
+  @storyline("talkSquirtleBall") {
+    @trigger(map = "OaksLab", npc = 3, toggle = "OAKS_LAB_OBJ_3")
+    @if (getFlag("EVENT_GOT_STARTER")) {
+      @speaker("") {
+        @t("That's PROF.OAK's last\nPOKeMON!", "那是大木博士最后的宝可梦！")
+      }
+    } @else @if (!getFlag("EVENT_OAK_ASKED_TO_CHOOSE_MON")) {
+      @speaker("") {
+        @t("Those are POKe BALLs. They\ncontain POKeMON!", "这些是精灵球。里面装着宝可\n梦！")
+      }
+    } @else {
+      faceNpc("OAKS_LAB_OBJ_5", "down")
+      showPokedexEntry("SQUIRTLE")
+      @speaker("") {
+        @t("So! You want the water\nPOKeMON, SQUIRTLE?", "哦！你想要水系的宝可梦，杰尼\n龟？")
+      }
+      @choice {
+        @option(@t("YES", "是")) {
+          hideObjectByName("OAKS_LAB_OBJ_3")
+          @speaker("") {
+            @t("This POKeMON is really\nenergetic!", "这只宝可梦很有活力！")
+          }
+          givePokemon("SQUIRTLE", 5)
+          @speaker("") {
+            @t("<PLAYER> received a\nSQUIRTLE!", "<PLAYER>得到了一只杰尼龟！")
+          }
+          playSound("SFX_GET_KEY_ITEM")
+          setFlag("EVENT_GOT_STARTER")
+          // ── rival sequence (rival gets BULBASAUR, the type advantage) ──
+          // Orig OaksLabChoseStarterScript (player-below-table variant): the
+          // rival walks down to row 5 and around, so he never crosses the
+          // player standing at the table. The challenge battle happens
+          // later, when the player walks down to leave (coordDontGoAway, y=6).
+          moveNpc("OAKS_LAB_OBJ_1", [[4, 4], [4, 5], [5, 5], [6, 5], [7, 5], [8, 5], [8, 4]])
+          @speaker("") {
+            @t("<RIVAL>: I'll take this one,\nthen!", "<RIVAL>：那我就要这只了！")
+          }
+          hideObjectByName("OAKS_LAB_OBJ_4")
+          @speaker("") {
+            @t("<RIVAL> received a\nBULBASAUR!", "<RIVAL>得到了一只妙蛙种子！")
+          }
+          playSound("SFX_GET_KEY_ITEM")
+        }
+        @option(@t("NO", "否")) {
+        }
+      }
+    }
+  }
+
+  @storyline("talkBulbasaurBall") {
+    @trigger(map = "OaksLab", npc = 4, toggle = "OAKS_LAB_OBJ_4")
+    @if (getFlag("EVENT_GOT_STARTER")) {
+      @speaker("") {
+        @t("That's PROF.OAK's last\nPOKeMON!", "那是大木博士最后的宝可梦！")
+      }
+    } @else @if (!getFlag("EVENT_OAK_ASKED_TO_CHOOSE_MON")) {
+      @speaker("") {
+        @t("Those are POKe BALLs. They\ncontain POKeMON!", "这些是精灵球。里面装着宝可\n梦！")
+      }
+    } @else {
+      faceNpc("OAKS_LAB_OBJ_5", "down")
+      showPokedexEntry("BULBASAUR")
+      @speaker("") {
+        @t("So! You want the plant\nPOKeMON, BULBASAUR?", "哦！你想要草系的宝可梦，妙蛙\n种子？")
+      }
+      @choice {
+        @option(@t("YES", "是")) {
+          hideObjectByName("OAKS_LAB_OBJ_4")
+          @speaker("") {
+            @t("This POKeMON is really\nenergetic!", "这只宝可梦很有活力！")
+          }
+          givePokemon("BULBASAUR", 5)
+          @speaker("") {
+            @t("<PLAYER> received a\nBULBASAUR!", "<PLAYER>得到了一只妙蛙种子！")
+          }
+          playSound("SFX_GET_KEY_ITEM")
+          setFlag("EVENT_GOT_STARTER")
+          // ── rival sequence (rival gets CHARMANDER, the type advantage) ──
+          // Orig OaksLabChoseStarterScript: the rival walks below the ball he
+          // takes, then speaks. The challenge battle happens later, when the
+          // player walks down to leave (coordDontGoAway, y=6).
+          moveNpc("OAKS_LAB_OBJ_1", [[4, 4], [5, 4], [6, 4]])
+          @speaker("") {
+            @t("<RIVAL>: I'll take this one,\nthen!", "<RIVAL>：那我就要这只了！")
+          }
+          hideObjectByName("OAKS_LAB_OBJ_2")
+          @speaker("") {
+            @t("<RIVAL> received a\nCHARMANDER!", "<RIVAL>得到了一只小火龙！")
+          }
+          playSound("SFX_GET_KEY_ITEM")
+        }
+        @option(@t("NO", "否")) {
+        }
+      }
+    }
+  }
+
+  // ── Rival (npc 1) — talk handler before/around the choose-mon scene ──────
+  @storyline("talkRival") {
+    @trigger(map = "OaksLab", npc = 1, toggle = "OAKS_LAB_OBJ_1")
+    @if (!getFlag("EVENT_FOLLOWED_OAK_INTO_LAB_2")) {
+      @speaker("") {
+        @t("<RIVAL>: Yo <PLAYER>! Gramps\nisn't around!", "<RIVAL>：哟 <PLAYER>！爷爷不\n在这里！")
+      }
+    } @else @if (!getFlag("EVENT_GOT_STARTER")) {
+      @speaker("") {
+        @t("<RIVAL>: Heh, I don't need\nto be greedy like you!\n\nGo ahead and choose,\n<PLAYER>!", "<RIVAL>：嘿嘿，我可不像你那\n么贪心！\n\n你先选吧， <PLAYER>！")
+      }
+    } @else {
+      @speaker("") {
+        @t("<RIVAL>: My POKeMON looks a\nlot stronger.", "<RIVAL>：我的宝可梦看起来强\n多了。")
+      }
+    }
+  }
+
+  // ── PROF.OAK (npc 5) — many states. Original OaksLabOak1Text. ────────────
+  // After the lab rival battle and once you bring back OAK's PARCEL, talking
+  // to Oak delivers the parcel and runs the POKeDEX-handout scene (inlined).
+  @storyline("talkOak1") {
+    @trigger(map = "OaksLab", npc = 5, toggle = "OAKS_LAB_OBJ_5", hidden = true)
+    @if (getFlag("EVENT_GOT_POKEDEX")) {
+      // Post-POKeDEX states, faithful to OaksLabOak1Text's priority chain
+      // (.already_got_poke_balls / .check_for_poke_balls). All four are
+      // post-POKeDEX, so they nest here without touching the pre-dex flow.
+      @if (getFlag("EVENT_PALLET_AFTER_GETTING_POKEBALLS") || getPokedexOwnedCount() >= 2) {
+        // DisplayDexRating: Oak rates the dex by owned-species count
+        // (engine/events/pokedex_rating.asm DexRatingsTable thresholds).
+        @speaker("") {
+          @t("OAK: Good to see you! How is\nyour POKeDEX coming? Here,\nlet me take a look!", "大木博士：见到你真好！你的图\n鉴进展如何？让我看看吧！")
+        }
+        showText(@t("POKeDEX completion is:\n\n", "图鉴完成度：\n\n") + getPokedexSeenCount() + @t(" POKeMON seen ", "只宝可梦见过") + getPokedexOwnedCount() + @t(" POKeMON owned\n\nPROF.OAK's Rating:", "只宝可梦拥有\n\n大木博士的评价："))
+        @if (getPokedexOwnedCount() < 10) {
+          @speaker("") { @t("You still have lots to do.\nLook for POKeMON in grassy\nareas!", "你还有很多事要做。去草丛里找\n宝可梦吧！") }
+        } @else @if (getPokedexOwnedCount() < 20) {
+          @speaker("") { @t("You're on the right track!\nGet a FLASH HM from my AIDE!", "你方向是对的！去找我的助手拿\n闪光秘传招式吧！") }
+        } @else @if (getPokedexOwnedCount() < 30) {
+          @speaker("") { @t("You still need more POKeMON!\nTry to catch other species!", "你还需要更多的宝可梦！试着捕\n捉其他种类吧！") }
+        } @else @if (getPokedexOwnedCount() < 40) {
+          @speaker("") { @t("Good, you're trying hard!\nGet an ITEMFINDER from my\nAIDE!", "很好，你很努力！去助手那里拿\n探宝器吧！") }
+        } @else @if (getPokedexOwnedCount() < 50) {
+          @speaker("") { @t("Looking good! Go find my\nAIDE when you get 50!", "不错嘛！集齐50只后去找我的助\n手！") }
+        } @else @if (getPokedexOwnedCount() < 60) {
+          @speaker("") { @t("You finally got at least 50\nspecies! Be sure to get\nEXP.ALL from my AIDE!", "你终于集齐了至少50种！记得从\n我助手那里拿学习装置！") }
+        } @else @if (getPokedexOwnedCount() < 70) {
+          @speaker("") { @t("Ho! This is geting even\nbetter!", "嚯！越来越厉害了！") }
+        } @else @if (getPokedexOwnedCount() < 80) {
+          @speaker("") { @t("Very good! Go fish for some\nmarine POKeMON!", "非常好！去钓一些水里的宝可梦\n吧！") }
+        } @else @if (getPokedexOwnedCount() < 90) {
+          @speaker("") { @t("Wonderful! Do you like to\ncollect things?", "太棒了！你喜欢收集东西吗？") }
+        } @else @if (getPokedexOwnedCount() < 100) {
+          @speaker("") { @t("I'm impressed! It must have\nbeen difficult to do!", "我很佩服！这一定很不容易吧！") }
+        } @else @if (getPokedexOwnedCount() < 110) {
+          @speaker("") { @t("You finally got at least 100\nspecies! I can't believe how\ngood you are!", "你终于集齐了至少100种！真不\n敢相信你太厉害了！") }
+        } @else @if (getPokedexOwnedCount() < 120) {
+          @speaker("") { @t("You even have the evolved\nforms of POKeMON! Super!", "你连宝可梦的进化形态都有！太\n棒了！") }
+        } @else @if (getPokedexOwnedCount() < 130) {
+          @speaker("") { @t("Excellent! Trade with\nfriends to get some more!", "太棒了！和朋友交换来收集更多\n吧！") }
+        } @else @if (getPokedexOwnedCount() < 140) {
+          @speaker("") { @t("Outstanding! You've become a\nreal pro at this!", "真出色！你已经成了真正的行\n家！") }
+        } @else @if (getPokedexOwnedCount() < 150) {
+          @speaker("") { @t("I have nothing left to say!\nYou're the authority now!", "我已经无话可说了！你现在是权\n威了！") }
+        } @else {
+          @speaker("") { @t("Your POKeDEX is entirely\ncomplete! Congratulations!", "你的图鉴完全集齐了！恭喜！") }
+        }
+      } @else @if (hasItem("POKE_BALL")) {
+        @speaker("") {
+          @t("OAK: Come see me sometimes.\n\nI want to know how your\nPOKeDEX is coming along.", "大木博士：常来找我。\n\n我想知道你的图鉴进展如何。")
+        }
+      } @else @if (getFlag("EVENT_BEAT_ROUTE22_RIVAL_1ST_BATTLE")) {
+        // Give the player 5 POKe BALLs, once (original .give_poke_balls).
+        @if (!getFlag("EVENT_GOT_POKEBALLS_FROM_OAK")) {
+          setFlag("EVENT_GOT_POKEBALLS_FROM_OAK")
+          giveItem("POKE_BALL", 5)
+          @speaker("") {
+            @t("OAK: You can't get detailed\ndata on POKeMON by just\nseeing them.\n\nYou must catch them! Use\nthese to capture wild\nPOKeMON.\n\n<PLAYER> got 5 POKe BALLs!", "大木博士：只靠看是得不到宝可\n梦的详细资料的。\n\n你必须捕捉它们！用这些来捕获\n野生宝可梦。\n\n<PLAYER>得到了 5个精灵球！")
+          }
+          playSound("SFX_GET_KEY_ITEM")
+          @speaker("") {
+            @t("When a wild POKeMON appears,\nit's fair game.\n\nJust throw a POKe BALL at it\nand try to catch it!\n\nThis won't always work,\nthough.\n\nA healthy POKeMON could\nescape. You have to be\nlucky!", "当野生宝可梦出现时，就可以捕\n捉。\n\n朝它扔出精灵球，试着捕捉它！\n\n但这并不总能成功。\n\n健康的宝可梦可能会逃走。你得\n靠运气！")
+          }
+        } @else {
+          @speaker("") {
+            @t("OAK: Come see me sometimes.\n\nI want to know how your\nPOKeDEX is coming along.", "大木博士：常来找我。\n\n我想知道你的图鉴进展如何。")
+          }
+        }
+      } @else {
+        // GOT_POKEDEX but not yet beaten the Route 22 rival (.mon_around_the_world).
+        @speaker("") {
+          @t("POKeMON around the world\nwait for you, <PLAYER>!", "世界各地的宝可梦都在等你，\n<PLAYER>！")
+        }
+      }
+    } @else @if (getFlag("EVENT_BATTLED_RIVAL_IN_OAKS_LAB") && hasItem("OAKS_PARCEL")) {
+      // DeliverParcel -> OakGivesPokedex (inlined).
+      @speaker("") {
+        @t("OAK: Oh, <PLAYER>!\n\nHow is my old POKeMON?\n\nWell, it seems to like you a\nlot.\n\nYou must be talented as a\nPOKeMON trainer!\n\nWhat? You have something for\nme?\n\n<PLAYER> delivered OAK's\nPARCEL.", "大木博士：哦， <PLAYER>！我\n那只老宝可梦还好吗？\n\n它好像很喜欢你。\n\n你一定是当宝可梦训练家的料！\n\n什么？你有事找我？\n\n<PLAYER>送来了大木博士的包\n裹。")
+      }
+      takeItem("OAKS_PARCEL", 1)
+      playSound("SFX_GET_KEY_ITEM")
+      @speaker("") {
+        @t("Ah! This is the custom POKe\nBALL I ordered! Thank you!", "啊！这就是我订购的定制精灵\n球！谢谢你！")
+      }
+      setFlag("EVENT_OAK_GOT_PARCEL")
+      // ── POKeDEX handout: rival returns, Oak hands out the dexes ──
+      // Orig OaksLab.asm:514-517 (OaksLabRivalArrivesAtOaksRequestScript):
+      // stop the lab music, then Music_RivalAlternateStart as the rival
+      // re-enters with his "Gramps!" line.
+      playSound("SFX_STOP_ALL_MUSIC")
+      playMusic("MUSIC_MEET_RIVAL_ALTERNATE_START")
+      @speaker("") {
+        @t("<RIVAL>: Gramps!", "<RIVAL>：爷爷！")
+      }
+      // The rival re-enters. The original teleports him near the door
+      // and walks him up to his spot (4,3); we have no teleport API, and
+      // the map reload between the lab battle and the parcel delivery
+      // already resets him to his (4,3) spawn — so just show him there.
+      showObjectByName("OAKS_LAB_OBJ_1")
+      faceNpc("OAKS_LAB_OBJ_1", "up")
+      @speaker("") {
+        @t("<RIVAL>: What did you call\nme for?", "<RIVAL>：叫我来干什么？")
+      }
+      @speaker("") {
+        @t("OAK: Oh right! I have a\nrequest of you two.", "大木博士：对了！我有一件事想\n拜托你们。")
+      }
+      @speaker("") {
+        @t("On the desk there is my\ninvention, POKeDEX!\n\nIt automatically records\ndata on POKeMON you've seen\nor caught!\n\nIt's a hi-tech encyclopedia!", "桌上的是我的发明，宝可梦图\n鉴！\n\n它会自动记录你见过或捕捉到的\n宝可梦数据！\n\n这是高科技百科全书！")
+      }
+      @speaker("") {
+        @t("OAK: <PLAYER> and <RIVAL>!\nTake these with you!\n\n<PLAYER> got POKeDEX from\nOAK!", "大木博士：<PLAYER> 和\n<RIVAL>！把这些带上！\n\n<PLAYER>得到了大木博士的图\n鉴！")
+      }
+      playSound("SFX_GET_KEY_ITEM")
+      setFlag("EVENT_GOT_POKEDEX")
+      hideObjectByName("OAKS_LAB_OBJ_6")
+      hideObjectByName("OAKS_LAB_OBJ_7")
+      @speaker("") {
+        @t("To make a complete guide on\nall the POKeMON in the\nworld...\n\nThat was my dream!\n\nBut, I'm too old! I can't do\nit!\n\nSo, I want you two to\nfulfill my dream for me!\n\nGet moving, you two!\n\nThis is a great undertaking\nin POKeMON history!", "要编写一部收录世界上所有宝可\n梦的完整图鉴……\n\n那是我的梦想！\n\n但是，我太老了！我做不到了！\n\n所以，我想请你们俩替我实现梦\n想！\n\n快行动起来，你们俩！\n\n这在宝可梦历史上是伟大的壮\n举！")
+      }
+      @speaker("") {
+        @t("<RIVAL>: Alright Gramps!\nLeave it all to me!\n\n<PLAYER>, I hate to say it,\nbut I don't need you!\n\nI know! I'll borrow a TOWN\nMAP from my sis!\n\nI'll tell her not to lend\nyou one, <PLAYER>! Hahaha!", "<RIVAL>：好的爷爷！全部交给\n我！\n\n<PLAYER>，虽然不好意思，但我\n不需要你！\n\n对了！我要从我姐姐那里借城镇\n地图！\n\n我会告诉她别借给你，\n<PLAYER>！哈哈！")
+      }
+      // Orig: the rival walks back down 2/3/4 steps (by player Y) and is
+      // hidden mid-map — never on the door tile.
+      // Orig OaksLab.asm:615-618: stop the music, then
+      // Music_RivalAlternateStart as the rival leaves with the POKeDEX.
+      playSound("SFX_STOP_ALL_MUSIC")
+      playMusic("MUSIC_MEET_RIVAL_ALTERNATE_START")
+      @if (getPlayerY() == 1) {
+        moveNpc("OAKS_LAB_OBJ_1", [[4, 4], [4, 5]])
+      } @else @if (getPlayerY() == 3) {
+        moveNpc("OAKS_LAB_OBJ_1", [[4, 4], [4, 5], [4, 6], [4, 7]])
+      } @else {
+        moveNpc("OAKS_LAB_OBJ_1", [[4, 4], [4, 5], [4, 6]])
+      }
+      hideObjectByName("OAKS_LAB_OBJ_1")
+      playMusic("MUSIC_OAKS_LAB")
+      // Original arms the first Route 22 rival battle here.
+      setFlag("EVENT_1ST_ROUTE22_RIVAL_BATTLE")
+      resetFlag("EVENT_2ND_ROUTE22_RIVAL_BATTLE")
+      setFlag("EVENT_ROUTE22_RIVAL_WANTS_BATTLE")
+      // Route22's coordRivalBattle storyline gates on these flags, which is
+      // functionally equivalent to the original TOGGLE_ROUTE_22_RIVAL_1 show.
+      // TOGGLE_LYING_OLD_MAN hide / TOGGLE_OLD_MAN show (the PalletTown
+      // old-man NPC pair) is a content gap — those NPCs are not modeled in a
+      // scene yet (see docs/pokered-gap-completion-plan.md Phase 4).
+    } @else @if (getFlag("EVENT_BATTLED_RIVAL_IN_OAKS_LAB")) {
+      @speaker("") {
+        @t("OAK: <PLAYER>, raise your\nyoung POKeMON by making it\nfight!", "大木博士：<PLAYER> 让你的宝\n可梦通过战斗成长吧！")
+      }
+    } @else @if (getFlag("EVENT_GOT_STARTER")) {
+      @speaker("") {
+        @t("OAK: If a wild POKeMON\nappears, your POKeMON can\nfight against it!", "大木博士：如果野生宝可梦出\n现，你的宝可梦就能与它对战！")
+      }
+    } @else {
+      @speaker("") {
+        @t("OAK: Now, <PLAYER>, which\nPOKeMON do you want?", "大木博士：现在 <PLAYER>，你\n想要哪只宝可梦？")
+      }
+    }
+  }
+
+  // ── The POKeDEX objects on the desk (npc 6, 7) ──────────────────────────
+  @storyline("talkPokedex") {
+    @trigger(map = "OaksLab", npc = 6, toggle = "OAKS_LAB_OBJ_6")
+    @trigger(map = "OaksLab", npc = 7, toggle = "OAKS_LAB_OBJ_7")
+    @speaker("") {
+      @t("It's encyclopedia- like, but\nthe pages are blank!", "像百科全书一样，但是页面是空\n白的！")
+    }
+  }
+
+  // ── Oak (npc 8) — the pre-entry "?" sprite (hidden until the cutscene) ──
+  @storyline("talkOak2") {
+    @trigger(map = "OaksLab", npc = 8, toggle = "OAKS_LAB_OBJ_8", hidden = true)
+    @speaker("") {
+      @t("?", "？")
+    }
+  }
+
+  // ── Lab girl (npc 9) ────────────────────────────────────────────────────
+  @storyline("talkLabGirl") {
+    @trigger(map = "OaksLab", npc = 9)
+    @speaker("") {
+      @t("PROF.OAK is the authority on\nPOKeMON!\n\nMany POKeMON trainers hold\nhim in high regard!", "大木博士是宝可梦的权威！\n\n许多宝可梦训练家都很尊敬他！")
+    }
+  }
+
+  // ── Lab aides (npc 10, 11) ──────────────────────────────────────────────
+  @storyline("talkScientist") {
+    @trigger(map = "OaksLab", npc = 10)
+    @trigger(map = "OaksLab", npc = 11)
+    @speaker("") {
+      @t("I study POKeMON as\nPROF.OAK's AIDE.", "我是大木博士的助手，研究宝可\n梦。")
+    }
+  }
+}

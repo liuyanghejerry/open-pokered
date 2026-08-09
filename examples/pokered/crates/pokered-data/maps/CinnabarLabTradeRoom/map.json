@@ -1,0 +1,66 @@
+{
+  "$schema": "../../schemas/map.schema.json",
+  "id": 168,
+  "name": "CinnabarLabTradeRoom",
+  "header": {
+    "tileset": "Lab",
+    "music": "Cinnabar",
+    "connectionFlags": 0,
+    "width": 4,
+    "height": 4,
+    "borderBlock": 23
+  },
+  "connections": {},
+  "warps": [
+    {
+      "x": 2,
+      "y": 7,
+      "destMap": "CinnabarLab",
+      "destWarpId": 2
+    },
+    {
+      "x": 3,
+      "y": 7,
+      "destMap": "CinnabarLab",
+      "destWarpId": 2
+    }
+  ],
+  "npcs": [
+    {
+      "spriteId": 12,
+      "spriteName": "SuperNerd",
+      "x": 3,
+      "y": 2,
+      "movement": "Stationary",
+      "facing": "Down",
+      "range": 0,
+      "textId": 1,
+      "isTrainer": false
+    },
+    {
+      "spriteId": 37,
+      "spriteName": "Gramps",
+      "x": 1,
+      "y": 4,
+      "movement": "Stationary",
+      "facing": "Down",
+      "range": 0,
+      "textId": 2,
+      "isTrainer": false
+    },
+    {
+      "spriteId": 15,
+      "spriteName": "Beauty",
+      "x": 5,
+      "y": 5,
+      "movement": "Stationary",
+      "facing": "Up",
+      "range": 0,
+      "textId": 3,
+      "isTrainer": false
+    }
+  ],
+  "signs": [],
+  "text": {},
+  "wild": null
+}

@@ -1,0 +1,71 @@
+{
+  "$schema": "../schemas/pokemon.schema.json",
+  "species": "Vulpix",
+  "baseStats": {
+    "hp": 38,
+    "attack": 41,
+    "defense": 40,
+    "speed": 65,
+    "special": 65
+  },
+  "type1": "Fire",
+  "type2": "Fire",
+  "catchRate": 190,
+  "baseExp": 63,
+  "growthRate": "MediumFast",
+  "initialMoves": [
+    "Ember",
+    "TailWhip",
+    "None",
+    "None"
+  ],
+  "tmHmFlags": [
+    160,
+    3,
+    8,
+    200,
+    227,
+    8,
+    2
+  ],
+  "pokedex": {
+    "category": "FOX",
+    "heightFeet": 2,
+    "heightInches": 0,
+    "weightDecipounds": 220,
+    "flavorTextPages": [
+      "At the time of\nbirth, it has\njust one tail.",
+      "The tail splits\nfrom its tip as\nit grows older"
+    ]
+  },
+  "evolutions": [
+    {
+      "method": "item",
+      "species": "Ninetales",
+      "item": "FireStone",
+      "minLevel": 1
+    }
+  ],
+  "learnset": [
+    {
+      "level": 16,
+      "moveId": "QuickAttack"
+    },
+    {
+      "level": 21,
+      "moveId": "Roar"
+    },
+    {
+      "level": 28,
+      "moveId": "ConfuseRay"
+    },
+    {
+      "level": 35,
+      "moveId": "Flamethrower"
+    },
+    {
+      "level": 42,
+      "moveId": "FireSpin"
+    }
+  ]
+}

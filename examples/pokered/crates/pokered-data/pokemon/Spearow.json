@@ -1,0 +1,70 @@
+{
+  "$schema": "../schemas/pokemon.schema.json",
+  "species": "Spearow",
+  "baseStats": {
+    "hp": 40,
+    "attack": 60,
+    "defense": 30,
+    "speed": 70,
+    "special": 31
+  },
+  "type1": "Normal",
+  "type2": "Flying",
+  "catchRate": 255,
+  "baseExp": 58,
+  "growthRate": "MediumFast",
+  "initialMoves": [
+    "Peck",
+    "Growl",
+    "None",
+    "None"
+  ],
+  "tmHmFlags": [
+    42,
+    3,
+    8,
+    192,
+    66,
+    12,
+    10
+  ],
+  "pokedex": {
+    "category": "TINY BIRD",
+    "heightFeet": 1,
+    "heightInches": 0,
+    "weightDecipounds": 40,
+    "flavorTextPages": [
+      "Eats bugs in\ngrassy areas. It\nhas to flap its",
+      "short wings at\nhigh speed to\nstay airborne"
+    ]
+  },
+  "evolutions": [
+    {
+      "method": "level",
+      "species": "Fearow",
+      "level": 20
+    }
+  ],
+  "learnset": [
+    {
+      "level": 9,
+      "moveId": "Leer"
+    },
+    {
+      "level": 15,
+      "moveId": "FuryAttack"
+    },
+    {
+      "level": 22,
+      "moveId": "MirrorMove"
+    },
+    {
+      "level": 29,
+      "moveId": "DrillPeck"
+    },
+    {
+      "level": 36,
+      "moveId": "Agility"
+    }
+  ]
+}

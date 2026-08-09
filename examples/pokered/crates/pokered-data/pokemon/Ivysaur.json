@@ -1,0 +1,78 @@
+{
+  "$schema": "../schemas/pokemon.schema.json",
+  "species": "Ivysaur",
+  "baseStats": {
+    "hp": 60,
+    "attack": 62,
+    "defense": 63,
+    "speed": 60,
+    "special": 80
+  },
+  "type1": "Grass",
+  "type2": "Poison",
+  "catchRate": 45,
+  "baseExp": 141,
+  "growthRate": "MediumSlow",
+  "initialMoves": [
+    "Tackle",
+    "Growl",
+    "LeechSeed",
+    "None"
+  ],
+  "tmHmFlags": [
+    164,
+    3,
+    56,
+    192,
+    3,
+    8,
+    6
+  ],
+  "pokedex": {
+    "category": "SEED",
+    "heightFeet": 3,
+    "heightInches": 3,
+    "weightDecipounds": 290,
+    "flavorTextPages": [
+      "When the bulb on\nits back grows\nlarge, it appears",
+      "to lose the\nability to stand\non its hind legs"
+    ]
+  },
+  "evolutions": [
+    {
+      "method": "level",
+      "species": "Venusaur",
+      "level": 32
+    }
+  ],
+  "learnset": [
+    {
+      "level": 7,
+      "moveId": "LeechSeed"
+    },
+    {
+      "level": 13,
+      "moveId": "VineWhip"
+    },
+    {
+      "level": 22,
+      "moveId": "Poisonpowder"
+    },
+    {
+      "level": 30,
+      "moveId": "RazorLeaf"
+    },
+    {
+      "level": 38,
+      "moveId": "Growth"
+    },
+    {
+      "level": 46,
+      "moveId": "SleepPowder"
+    },
+    {
+      "level": 54,
+      "moveId": "Solarbeam"
+    }
+  ]
+}

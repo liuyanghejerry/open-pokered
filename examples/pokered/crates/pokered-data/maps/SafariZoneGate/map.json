@@ -1,0 +1,65 @@
+{
+  "$schema": "../../schemas/map.schema.json",
+  "id": 156,
+  "name": "SafariZoneGate",
+  "header": {
+    "tileset": "Gate",
+    "music": "Cities2",
+    "connectionFlags": 0,
+    "width": 4,
+    "height": 3,
+    "borderBlock": 10
+  },
+  "connections": {},
+  "warps": [
+    {
+      "x": 3,
+      "y": 5,
+      "destWarpId": 4
+    },
+    {
+      "x": 4,
+      "y": 5,
+      "destWarpId": 4
+    },
+    {
+      "x": 3,
+      "y": 0,
+      "destMap": "SafariZoneCenter",
+      "destWarpId": 0
+    },
+    {
+      "x": 4,
+      "y": 0,
+      "destMap": "SafariZoneCenter",
+      "destWarpId": 1
+    }
+  ],
+  "npcs": [
+    {
+      "spriteId": 35,
+      "spriteName": "SafariZoneWorker",
+      "x": 6,
+      "y": 2,
+      "movement": "Stationary",
+      "facing": "Left",
+      "range": 0,
+      "textId": 1,
+      "isTrainer": false
+    },
+    {
+      "spriteId": 35,
+      "spriteName": "SafariZoneWorker",
+      "x": 1,
+      "y": 4,
+      "movement": "Stationary",
+      "facing": "Right",
+      "range": 0,
+      "textId": 2,
+      "isTrainer": false
+    }
+  ],
+  "signs": [],
+  "text": {},
+  "wild": null
+}

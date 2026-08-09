@@ -1,0 +1,64 @@
+{
+  "$schema": "../schemas/pokemon.schema.json",
+  "species": "Weezing",
+  "baseStats": {
+    "hp": 65,
+    "attack": 90,
+    "defense": 120,
+    "speed": 60,
+    "special": 85
+  },
+  "type1": "Poison",
+  "type2": "Poison",
+  "catchRate": 60,
+  "baseExp": 173,
+  "growthRate": "MediumFast",
+  "initialMoves": [
+    "Tackle",
+    "Smog",
+    "Sludge",
+    "None"
+  ],
+  "tmHmFlags": [
+    32,
+    64,
+    136,
+    193,
+    42,
+    72,
+    2
+  ],
+  "pokedex": {
+    "category": "POISON GAS",
+    "heightFeet": 3,
+    "heightInches": 11,
+    "weightDecipounds": 210,
+    "flavorTextPages": [
+      "Where two kinds\nof poison gases\nmeet, 2 KOFFINGs",
+      "can fuse into a\nWEEZING over many\nyears"
+    ]
+  },
+  "evolutions": [],
+  "learnset": [
+    {
+      "level": 32,
+      "moveId": "Sludge"
+    },
+    {
+      "level": 39,
+      "moveId": "Smokescreen"
+    },
+    {
+      "level": 43,
+      "moveId": "Selfdestruct"
+    },
+    {
+      "level": 49,
+      "moveId": "Haze"
+    },
+    {
+      "level": 53,
+      "moveId": "Explosion"
+    }
+  ]
+}

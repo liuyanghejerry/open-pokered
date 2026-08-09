@@ -1,0 +1,9 @@
+{
+  "$schema": "../schemas/move.schema.json",
+  "id": "Solarbeam",
+  "effect": "ChargeEffect",
+  "power": 120,
+  "type": "Grass",
+  "accuracy": 100,
+  "pp": 10
+}

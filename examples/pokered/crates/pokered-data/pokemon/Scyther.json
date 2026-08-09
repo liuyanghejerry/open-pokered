@@ -1,0 +1,68 @@
+{
+  "$schema": "../schemas/pokemon.schema.json",
+  "species": "Scyther",
+  "baseStats": {
+    "hp": 70,
+    "attack": 110,
+    "defense": 80,
+    "speed": 105,
+    "special": 55
+  },
+  "type1": "Bug",
+  "type2": "Flying",
+  "catchRate": 45,
+  "baseExp": 187,
+  "growthRate": "MediumFast",
+  "initialMoves": [
+    "QuickAttack",
+    "None",
+    "None",
+    "None"
+  ],
+  "tmHmFlags": [
+    36,
+    67,
+    8,
+    192,
+    194,
+    8,
+    6
+  ],
+  "pokedex": {
+    "category": "MANTIS",
+    "heightFeet": 4,
+    "heightInches": 11,
+    "weightDecipounds": 1230,
+    "flavorTextPages": [
+      "With ninja-like\nagility and speed,\nit can create the",
+      "illusion that\nthere is more\nthan one"
+    ]
+  },
+  "evolutions": [],
+  "learnset": [
+    {
+      "level": 17,
+      "moveId": "Leer"
+    },
+    {
+      "level": 20,
+      "moveId": "FocusEnergy"
+    },
+    {
+      "level": 24,
+      "moveId": "DoubleTeam"
+    },
+    {
+      "level": 29,
+      "moveId": "Slash"
+    },
+    {
+      "level": 35,
+      "moveId": "SwordsDance"
+    },
+    {
+      "level": 42,
+      "moveId": "Agility"
+    }
+  ]
+}

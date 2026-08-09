@@ -1,0 +1,14 @@
+// Route7 — translated from the original disassembly (scripts/Route7.asm,
+// text/Route7.asm) to the real Game DSL API surface. Route7 has no NPCs and
+// no trainers; its only event content is the Underground Path sign. The
+// original Route7_Script is just EnableAutoTextBoxDrawing (no on-enter logic).
+
+game_scene Route7 {
+  // ── Underground Path sign (sign 1) ─────────────────────────────────────
+  @storyline("sign1") {
+    @trigger(map = "Route7", sign = 1)
+    @speaker("") {
+      @t("UNDERGROUND PATH CELADON\nCITY - LAVENDER TOWN", "地下通道彩虹市 - 紫苑镇")
+    }
+  }
+}

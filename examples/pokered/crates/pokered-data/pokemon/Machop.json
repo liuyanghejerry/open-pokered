@@ -1,0 +1,70 @@
+{
+  "$schema": "../schemas/pokemon.schema.json",
+  "species": "Machop",
+  "baseStats": {
+    "hp": 70,
+    "attack": 80,
+    "defense": 50,
+    "speed": 35,
+    "special": 35
+  },
+  "type1": "Fighting",
+  "type2": "Fighting",
+  "catchRate": 180,
+  "baseExp": 88,
+  "growthRate": "MediumSlow",
+  "initialMoves": [
+    "KarateChop",
+    "None",
+    "None",
+    "None"
+  ],
+  "tmHmFlags": [
+    177,
+    3,
+    15,
+    206,
+    166,
+    136,
+    34
+  ],
+  "pokedex": {
+    "category": "SUPERPOWER",
+    "heightFeet": 2,
+    "heightInches": 7,
+    "weightDecipounds": 430,
+    "flavorTextPages": [
+      "Loves to build\nits muscles.\nIt trains in all",
+      "styles of martial\narts to become\neven stronger"
+    ]
+  },
+  "evolutions": [
+    {
+      "method": "level",
+      "species": "Machoke",
+      "level": 28
+    }
+  ],
+  "learnset": [
+    {
+      "level": 20,
+      "moveId": "LowKick"
+    },
+    {
+      "level": 25,
+      "moveId": "Leer"
+    },
+    {
+      "level": 32,
+      "moveId": "FocusEnergy"
+    },
+    {
+      "level": 39,
+      "moveId": "SeismicToss"
+    },
+    {
+      "level": 46,
+      "moveId": "Submission"
+    }
+  ]
+}

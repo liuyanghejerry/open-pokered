@@ -1,0 +1,34 @@
+{
+  "active_effects": [
+    {"type": "Heal",          "params": [{"name": "amount",  "type": "number", "min": 1, "max": 999}]},
+    {"type": "FullHeal",      "params": []},
+    {"type": "FullRestore",   "params": []},
+    {"type": "Revive",        "params": [{"name": "full",    "type": "select", "options": ["partial","full"]}]},
+    {"type": "CurePoison",    "params": []},
+    {"type": "CureBurn",      "params": []},
+    {"type": "CureFreeze",    "params": []},
+    {"type": "CureSleep",     "params": []},
+    {"type": "CureParalysis", "params": []},
+    {"type": "CureAllStatus", "params": []},
+    {"type": "Vitamin",       "params": [{"name": "stat",    "type": "stat"}, {"name": "amount", "type": "number", "default": 10}]},
+    {"type": "RareCandy",     "params": []},
+    {"type": "BattleStat",    "params": [{"name": "stage",   "type": "number", "min": 1, "max": 6}]},
+    {"type": "BattleFlag",    "params": [{"name": "flag",    "type": "select", "options": ["protect","focus","guard_spec"]}]},
+    {"type": "Escape",        "params": []},
+    {"type": "PpRestore",     "params": [{"name": "all",     "type": "select", "options": ["single","all"]}, {"name": "amount","type":"number","min":1,"max":20}]},
+    {"type": "PpUp",          "params": []},
+    {"type": "EvolutionStone","params": [{"name": "stone",   "type": "select", "options": ["Thunder","Moon","Fire","Leaf","Water"]}]},
+    {"type": "PokeDoll",      "params": []},
+    {"type": "None",          "params": []}
+  ],
+  "held_effects": [
+    {"type": "BoostStat",     "params": [{"name": "stat","type":"stat"}, {"name":"multiplier","type":"number","default":1.5}]},
+    {"type": "ReduceDamage",  "params": [{"name":"type","type":"pokemonType"}, {"name":"multiplier","type":"number","default":0.5}]},
+    {"type": "HealOnDamage",  "params": [{"name":"percent","type":"number","min":0,"max":1}]},
+    {"type": "MegaEvolve",    "params": [{"name":"species","type":"species"}, {"name":"form","type":"string"}]},
+    {"type": "ZMove",         "params": [{"name":"move","type":"move"}]},
+    {"type": "ChangeTeraType","params": [{"name":"type","type":"pokemonType"}]},
+    {"type": "None",          "params": []}
+  ],
+  "held_triggers": ["OnDamage","BeforeMove","AfterMove","OnStatus","OnEntry","Passive","FirstTurn","LowHP"]
+}

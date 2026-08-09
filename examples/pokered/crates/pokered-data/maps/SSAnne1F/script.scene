@@ -1,0 +1,22 @@
+// SSAnne1F — translated from the original disassembly (scripts/SSAnne1F.asm,
+// text/SSAnne1F.asm) to the real Game DSL API surface. This deck has no
+// on-enter cutscene or events: the original script only enables auto text-box
+// drawing. Both NPCs are dialogue-only (map.json isTrainer = false).
+
+game_scene SSAnne1F {
+  // ── Waiter (npc 1) ──────────────────────────────────────────────────────
+  @storyline("talkWaiter") {
+    @trigger(map = "SSAnne1F", npc = 1)
+    @speaker("") {
+      @t("Bonjour! I am le waiter on\nthis ship!\n\nI will be happy to serve you\nany- thing you please!\n\nAh! Le strong silent type!", "你好！我是这艘船上的服务员！\n\n无论您想要什么，我都会乐意效\n劳！\n\n啊！您是那种强壮沉默的类型！")
+    }
+  }
+
+  // ── Sailor (npc 2) ──────────────────────────────────────────────────────
+  @storyline("talkSailor") {
+    @trigger(map = "SSAnne1F", npc = 2)
+    @speaker("") {
+      @t("The passengers are restless!\n\nYou might be challenged by\nthe more bored ones!", "乘客们都闲得发慌！\n\n那些最无聊的人可能会向你挑\n战！")
+    }
+  }
+}

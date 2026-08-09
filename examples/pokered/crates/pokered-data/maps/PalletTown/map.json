@@ -1,0 +1,185 @@
+{
+  "$schema": "../../schemas/map.schema.json",
+  "id": 0,
+  "name": "PalletTown",
+  "header": {
+    "tileset": "Overworld",
+    "music": "PalletTown",
+    "connectionFlags": 12,
+    "width": 10,
+    "height": 9,
+    "borderBlock": 11
+  },
+  "connections": {
+    "north": {
+      "targetMap": "Route1",
+      "offset": 0
+    },
+    "south": {
+      "targetMap": "Route21",
+      "offset": 0
+    }
+  },
+  "warps": [
+    {
+      "x": 5,
+      "y": 5,
+      "destMap": "RedsHouse1F",
+      "destWarpId": 0
+    },
+    {
+      "x": 13,
+      "y": 5,
+      "destMap": "BluesHouse",
+      "destWarpId": 0
+    },
+    {
+      "x": 12,
+      "y": 11,
+      "destMap": "OaksLab",
+      "destWarpId": 1
+    }
+  ],
+  "npcs": [
+    {
+      "spriteId": 3,
+      "spriteName": "Oak",
+      "x": 8,
+      "y": 5,
+      "movement": "Stationary",
+      "facing": "Down",
+      "range": 0,
+      "textId": 1,
+      "isTrainer": false
+    },
+    {
+      "spriteId": 13,
+      "spriteName": "Girl",
+      "x": 3,
+      "y": 8,
+      "movement": "Wander",
+      "facing": "Down",
+      "range": 0,
+      "textId": 2,
+      "isTrainer": false
+    },
+    {
+      "spriteId": 47,
+      "spriteName": "Fisher",
+      "x": 11,
+      "y": 14,
+      "movement": "Wander",
+      "facing": "Down",
+      "range": 0,
+      "textId": 3,
+      "isTrainer": false
+    }
+  ],
+  "signs": [
+    {
+      "x": 13,
+      "y": 13,
+      "textId": 1
+    },
+    {
+      "x": 7,
+      "y": 9,
+      "textId": 2
+    },
+    {
+      "x": 3,
+      "y": 5,
+      "textId": 3
+    },
+    {
+      "x": 11,
+      "y": 5,
+      "textId": 4
+    }
+  ],
+  "text": {
+    "npc": {
+      "1": [
+        {
+          "line1": "OAK: It's unsafe!",
+          "line2": "Wild POKeMON live"
+        },
+        {
+          "line1": "in tall grass!",
+          "line2": ""
+        },
+        {
+          "line1": "You need your own",
+          "line2": "POKeMON for your"
+        },
+        {
+          "line1": "protection.",
+          "line2": "I know!"
+        },
+        {
+          "line1": "Here, come with",
+          "line2": "me!"
+        }
+      ],
+      "2": [
+        {
+          "line1": "I'm raising",
+          "line2": "POKeMON too!"
+        },
+        {
+          "line1": "When they get",
+          "line2": "strong, they can"
+        },
+        {
+          "line1": "protect me!",
+          "line2": ""
+        }
+      ],
+      "3": [
+        {
+          "line1": "Technology is",
+          "line2": "incredible!"
+        },
+        {
+          "line1": "You can now store",
+          "line2": "and recall items"
+        },
+        {
+          "line1": "and POKeMON as",
+          "line2": "data via PC!"
+        }
+      ]
+    },
+    "sign": {
+      "1": [
+        {
+          "line1": "OAK POKeMON",
+          "line2": "RESEARCH LAB"
+        }
+      ],
+      "2": [
+        {
+          "line1": "PALLET TOWN",
+          "line2": "Shades of your"
+        },
+        {
+          "line1": "journey await!",
+          "line2": ""
+        }
+      ],
+      "3": [
+        {
+          "line1": "<PLAYER>'s house",
+          "line2": ""
+        }
+      ],
+      "4": [
+        {
+          "line1": "<RIVAL>'s house",
+          "line2": ""
+        }
+      ]
+    }
+  },
+  "wild": null
+}

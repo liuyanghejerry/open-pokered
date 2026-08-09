@@ -1,0 +1,9 @@
+{
+  "$schema": "../schemas/move.schema.json",
+  "id": "WingAttack",
+  "effect": "NoAdditionalEffect",
+  "power": 35,
+  "type": "Flying",
+  "accuracy": 100,
+  "pp": 35
+}

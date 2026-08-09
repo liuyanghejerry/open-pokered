@@ -1,0 +1,51 @@
+{
+ "$schema": "../../schemas/script_config.schema.json",
+ "coordEvents": [
+  {
+   "name": "hole1",
+   "position": [
+    3,
+    16
+   ],
+   "trigger": "coordHole1"
+  },
+  {
+   "name": "hole2",
+   "position": [
+    6,
+    16
+   ],
+   "trigger": "coordHole2"
+  }
+ ],
+ "npcs": [
+  {
+   "id": 1,
+   "talk": "talkBoulder1",
+   "toggleId": "SEAFOAM_ISLANDS_B3F_OBJ_1"
+  },
+  {
+   "id": 2,
+   "talk": "talkBoulder2",
+   "toggleId": "SEAFOAM_ISLANDS_B3F_OBJ_2"
+  },
+  {
+   "id": 3,
+   "talk": "talkBoulder3"
+  },
+  {
+   "id": 4,
+   "talk": "talkBoulder4"
+  },
+  {
+   "id": 5,
+   "talk": "talkBoulder5"
+  },
+  {
+   "id": 6,
+   "talk": "talkBoulder6"
+  }
+ ],
+ "onLoad": "SeafoamIslandsB3FOnLoad",
+ "signs": []
+}

@@ -1,0 +1,87 @@
+// PokemonTower5F — translated from the original disassembly
+// (scripts/PokemonTower5F.asm, text/PokemonTower5F.asm) to the real Game DSL API.
+//
+// Content: one non-trainer Channeler who guards a "purified zone" (NPC 1), four
+// sight-engaged Channeler trainers (NPCs 2-5; map.json keeps isTrainer:true so
+// the runtime drives the battle and these handlers are dialogue-only), a ground
+// NUGGET (NPC 6), and an on-step "purified zone" heal cutscene. The original
+// healed the party + faded the screen when the player stood on coords
+// (10,8)/(11,8)/(10,9)/(11,9), guarded by EVENT_IN_PURIFIED_ZONE (set on enter,
+// reset when leaving). We approximate with heal()+fade+text, re-armed on map load.
+
+game_scene PokemonTower5F {
+  // Re-arm the purified-zone trigger on every map entry (the original resets
+  // EVENT_IN_PURIFIED_ZONE in its per-frame default script when you leave the zone).
+  @load {
+    resetFlag("EVENT_IN_PURIFIED_ZONE")
+  }
+
+  // ── Channeler 1 (npc 1) — non-trainer, guards the purified rest zone ──────
+  @storyline("talkChanneler1") {
+    @trigger(map = "PokemonTower5F", npc = 1)
+    @speaker("") {
+      @t("Come, child! I sealed this\nspace with white magic!\n\nYou can rest here!", "来吧，孩子！我用白魔法封印了\n这块地方！\n\n你可以在这里休息！")
+    }
+  }
+
+  // ── Channeler 2 (npc 2) — sight-engaged trainer; dialogue only ────────────
+  @storyline("talkChanneler2") {
+    @trigger(map = "PokemonTower5F", npc = 2)
+    @if (getFlag("EVENT_BEAT_POKEMONTOWER_5_TRAINER_0")) {
+      @speaker("") { @t("I was under possession!", "我当时被附身了！") }
+    } @else {
+      @speaker("") { @t("Give...me... your...soul...", "把……你的……灵魂……给\n我……") }
+    }
+  }
+
+  // ── Channeler 3 (npc 3) — sight-engaged trainer; dialogue only ────────────
+  @storyline("talkChanneler3") {
+    @trigger(map = "PokemonTower5F", npc = 3)
+    @if (getFlag("EVENT_BEAT_POKEMONTOWER_5_TRAINER_1")) {
+      @speaker("") { @t("I was possessed!", "我被附身了！") }
+    } @else {
+      @speaker("") { @t("You...shall... join...us...", "你也……来……加入……我\n们……") }
+    }
+  }
+
+  // ── Channeler 4 (npc 4) — sight-engaged trainer; dialogue only ────────────
+  @storyline("talkChanneler4") {
+    @trigger(map = "PokemonTower5F", npc = 4)
+    @if (getFlag("EVENT_BEAT_POKEMONTOWER_5_TRAINER_2")) {
+      @speaker("") { @t("I regained my senses!", "我恢复了意识！") }
+    } @else {
+      @speaker("") { @t("Zombies!", "僵尸！") }
+    }
+  }
+
+  // ── Channeler 5 (npc 5) — sight-engaged trainer; dialogue only ────────────
+  @storyline("talkChanneler5") {
+    @trigger(map = "PokemonTower5F", npc = 5)
+    @if (getFlag("EVENT_BEAT_POKEMONTOWER_5_TRAINER_3")) {
+      @speaker("") { @t("I fell to evil spirits\ndespite my training!", "尽管我修炼过，还是被邪灵附身\n了！") }
+    } @else {
+      @speaker("") { @t("Urgah... Urff....", "呜嘎……呜呼……") }
+    }
+  }
+
+  // ── Ground item: Poke Ball containing a NUGGET (npc 6) ────────────────────
+  @storyline("itemNugget") {
+    @trigger(map = "PokemonTower5F", npc = 6, toggle = "POKEMON_TOWER_5F_OBJ_6")
+    giveItem("NUGGET", 1)
+    hideObjectByName("POKEMON_TOWER_5F_OBJ_6")
+    @speaker("") { @t("<PLAYER> found a NUGGET!", "<PLAYER>发现了一个金珠！") }
+  }
+
+  // ── Purified zone (orig PokemonTower5FPurifiedZoneCoords) — on-step heal ───
+  @storyline("coordPurifiedZone") {
+    @trigger(map = "PokemonTower5F", name = "purifiedZone1")
+    @if (!getFlag("EVENT_IN_PURIFIED_ZONE")) {
+      setFlag("EVENT_IN_PURIFIED_ZONE")
+      fadeOutMusic()
+      heal()
+      @speaker("") {
+        @t("Entered purified, protected\nzone!\n\n<PLAYER>'s POKeMON are fully\nhealed!", "进入了净化保护区！\n\n<PLAYER>的宝可梦已完全治愈！")
+      }
+    }
+  }
+}

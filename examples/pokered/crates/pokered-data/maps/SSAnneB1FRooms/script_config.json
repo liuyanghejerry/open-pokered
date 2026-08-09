@@ -1,0 +1,54 @@
+{
+  "$schema": "../../schemas/script_config.schema.json",
+  "coordEvents": [],
+  "npcs": [
+    {
+      "id": 1,
+      "talk": "talkSailor1"
+    },
+    {
+      "id": 2,
+      "talk": "talkSailor2"
+    },
+    {
+      "id": 3,
+      "talk": "talkSailor3"
+    },
+    {
+      "id": 4,
+      "talk": "talkSailor4"
+    },
+    {
+      "id": 5,
+      "talk": "talkSailor5"
+    },
+    {
+      "id": 6,
+      "talk": "talkFisher"
+    },
+    {
+      "id": 7,
+      "talk": "talkSuperNerd"
+    },
+    {
+      "id": 8,
+      "talk": "talkMachoke"
+    },
+    {
+      "id": 9,
+      "talk": "talkPokeBallEther",
+      "toggleId": "SS_ANNE_B1F_ROOMS_OBJ_9"
+    },
+    {
+      "id": 10,
+      "talk": "talkPokeBallTmRest",
+      "toggleId": "SS_ANNE_B1F_ROOMS_OBJ_10"
+    },
+    {
+      "id": 11,
+      "talk": "talkPokeBallMaxPotion",
+      "toggleId": "SS_ANNE_B1F_ROOMS_OBJ_11"
+    }
+  ],
+  "signs": []
+}

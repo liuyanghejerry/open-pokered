@@ -1,0 +1,9 @@
+{
+  "$schema": "../schemas/move.schema.json",
+  "id": "WaterGun",
+  "effect": "NoAdditionalEffect",
+  "power": 40,
+  "type": "Water",
+  "accuracy": 100,
+  "pp": 25
+}

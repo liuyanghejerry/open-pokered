@@ -1,0 +1,49 @@
+// Route6Gate — translated from the original disassembly (scripts/Route6Gate.asm,
+// text/SaffronGates.asm) to the real Game DSL API surface. This is a Saffron-gate
+// guard: the road to SAFFRON CITY is closed until the player hands the thirsty
+// guard a drink (any of FRESH_WATER / SODA_POP / LEMONADE). Giving the drink sets
+// EVENT_GAVE_SAFFRON_GUARDS_DRINK permanently and opens the gate.
+
+game_scene Route6Gate {
+  // ── Saffron gate guard (npc 1) ─────────────────────────────────────────
+  @storyline("talkGuard") {
+    @trigger(map = "Route6Gate", npc = 1)
+    @if (getFlag("EVENT_GAVE_SAFFRON_GUARDS_DRINK")) {
+      // Already let the player through — friendly thanks.
+      @speaker("") {
+        @t("Hi, thanks for the cool\ndrinks!", "嗨，谢谢你的冰凉饮料！")
+      }
+    } @else {
+      @if (hasItem("FRESH_WATER") || hasItem("SODA_POP") || hasItem("LEMONADE")) {
+        // Player has a drink: guard accepts it and opens the road.
+        // Original removes the first matching drink in bag order
+        // (FRESH_WATER, then SODA_POP, then LEMONADE).
+        @if (hasItem("FRESH_WATER")) {
+          takeItem("FRESH_WATER", 1)
+        } @else {
+          @if (hasItem("SODA_POP")) {
+            takeItem("SODA_POP", 1)
+          } @else {
+            takeItem("LEMONADE", 1)
+          }
+        }
+        @speaker("") {
+          @t("Whoa, boy! I'm parched! ...\nHuh? I can have this drink?\nGee, thanks!", "哇，小子！我渴死了！……嗯？\n我可以喝这饮料？哎呀，谢谢！")
+        }
+        @speaker("") {
+          @t("... Glug glug... ... Gulp...\nIf you want to go to SAFFRON\nCITY... ... You can go on\nthrough. I'll share this\nwith the other guards!", "……咕嘟咕嘟…………咕咚……\n如果你想去金黄市…………你可\n以过去了。我会和其他守卫分享\n这饮料！")
+        }
+        setFlag("EVENT_GAVE_SAFFRON_GUARDS_DRINK")
+      } @else {
+        // No drink: the road stays closed and the guard turns the player away.
+        @speaker("") {
+          @t("I'm on guard duty. Gee, I'm\nthirsty, though!\n\nOh wait there, the road's\nclosed.", "我在站岗。哎呀，真渴啊！\n\n哦等等，这条路不通。")
+        }
+        // Original nudges the player back down one tile via scripted joypad
+        // input so they can't slip past; movePlayerRelative is the faithful
+        // implementation of that pushback.
+        movePlayerRelative([[0, 1]])
+      }
+    }
+  }
+}

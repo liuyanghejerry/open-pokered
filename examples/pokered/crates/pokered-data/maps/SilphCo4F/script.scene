@@ -1,0 +1,136 @@
+// SilphCo4F — translated from the original disassembly (scripts/SilphCo4F.asm,
+// text/SilphCo4F.asm) to the real Game DSL API surface. A Team Rocket facility
+// floor: one talk-driven Silph worker (hiding / "Rocket is gone" once Giovanni
+// is beaten), three sight-engaged trainers (two Rockets + a Scientist; the
+// runtime drives those battles, so their handlers are dialogue only), and three
+// PokeBall ground items (FULL_HEAL, MAX_REVIVE, ESCAPE_ROPE). The original map
+// script's gate callback also does CARD KEY door tile swaps — now wired below.
+
+game_scene SilphCo4F {
+  // ── Card-Key gate doors (SilphCo4FGateCallbackScript) ───────────────────
+  // Original: the map.blk ships these two doors OPEN (block $e = 14). On map
+  // load the gate callback re-CLOSES each door (writes wall block $54 = 84) if
+  // its EVENT_SILPH_CO_4_UNLOCKED_DOORn flag is NOT yet set. Using the CARD_KEY
+  // on the door (tile $18/$24) opens it, sets the flag, and plays SFX_GO_INSIDE.
+  //   Door1: asm "lb bc, 6, 2"  → block (X=2, Y=6), flag EVENT_SILPH_CO_4_UNLOCKED_DOOR1
+  //   Door2: asm "lb bc, 4, 6"  → block (X=6, Y=4), flag EVENT_SILPH_CO_4_UNLOCKED_DOOR2
+  //   OPEN block id = $e (14), CLOSED (wall) block id = $54 (84).
+  @load {
+    // Re-close each door on entry until its flag is set (mirrors the callback).
+    @if (!getFlag("EVENT_SILPH_CO_4_UNLOCKED_DOOR1")) {
+      replaceTileBlock(2, 6, 84)
+    }
+    @if (!getFlag("EVENT_SILPH_CO_4_UNLOCKED_DOOR2")) {
+      replaceTileBlock(6, 4, 84)
+    }
+  }
+
+  // ── Silph worker (npc 1) — talk-driven civilian ─────────────────────────
+  @storyline("talkSilphWorkerM") {
+    @trigger(map = "SilphCo4F", npc = 1)
+    @if (getFlag("EVENT_BEAT_SILPH_CO_GIOVANNI")) {
+      @speaker("") { @t("Huh? TEAM ROCKET is gone?", "咦？火箭队已经走了？") }
+    } @else {
+      @speaker("") { @t("Sssh! Can't you see I'm\nhiding?", "嘘！你看不到我在躲吗？") }
+    }
+  }
+
+  // ── Rocket (npc 2) — sight-engaged trainer; dialogue only ───────────────
+  @storyline("talkRocket1") {
+    @trigger(map = "SilphCo4F", npc = 2)
+    @if (getFlag("EVENT_BEAT_SILPH_CO_4F_TRAINER_0")) {
+      @speaker("") { @t("Fwahahaha! My BOSS has been\nafter this place!", "哈哈哈！我的老大一直想要这个\n地方！") }
+    } @else {
+      @speaker("") { @t("TEAM ROCKET has taken\ncommand of SILPH CO.!", "火箭队已经占领了西尔佛公司！") }
+    }
+  }
+
+  // ── Scientist (npc 3) — sight-engaged trainer; dialogue only ────────────
+  @storyline("talkScientist") {
+    @trigger(map = "SilphCo4F", npc = 3)
+    @if (getFlag("EVENT_BEAT_SILPH_CO_4F_TRAINER_1")) {
+      @speaker("") { @t("The doors are electronically\nlocked! A CARD KEY opens\nthem!", "这些门是电子锁的！磁卡钥匙能\n打开它们！") }
+    } @else {
+      @speaker("") { @t("My POKeMON are my loyal\nsoldiers!", "我的宝可梦是我忠诚的士兵！") }
+    }
+  }
+
+  // ── Rocket (npc 4) — sight-engaged trainer; dialogue only ───────────────
+  @storyline("talkRocket2") {
+    @trigger(map = "SilphCo4F", npc = 4)
+    @if (getFlag("EVENT_BEAT_SILPH_CO_4F_TRAINER_2")) {
+      @speaker("") { @t("I better tell the BOSS on\n11F!", "我得去11层告诉老大！") }
+    } @else {
+      @speaker("") { @t("Intruder spotted!", "发现入侵者！") }
+    }
+  }
+
+  // ── Ground item: FULL HEAL (npc 5) ──────────────────────────────────────
+  @storyline("itemFullHeal") {
+    @trigger(map = "SilphCo4F", npc = 5, toggle = "SILPH_CO_4F_OBJ_5")
+    @if (getFlag("EVENT_GOT_FULL_HEAL_SILPH_CO_4F")) {
+      @speaker("") { @t("The item ball is empty.", "精灵球里是空的。") }
+    } @else {
+      giveItem("FULL_HEAL", 1)
+      setFlag("EVENT_GOT_FULL_HEAL_SILPH_CO_4F")
+      hideObject("SILPH_CO_4F_OBJ_5")
+      @speaker("") { @t("<PLAYER> found FULL_HEAL!", "<PLAYER>发现了万灵药！") }
+    }
+  }
+
+  // ── Ground item: MAX REVIVE (npc 6) ─────────────────────────────────────
+  @storyline("itemMaxRevive") {
+    @trigger(map = "SilphCo4F", npc = 6, toggle = "SILPH_CO_4F_OBJ_6")
+    @if (getFlag("EVENT_GOT_MAX_REVIVE_SILPH_CO_4F")) {
+      @speaker("") { @t("The item ball is empty.", "精灵球里是空的。") }
+    } @else {
+      giveItem("MAX_REVIVE", 1)
+      setFlag("EVENT_GOT_MAX_REVIVE_SILPH_CO_4F")
+      hideObject("SILPH_CO_4F_OBJ_6")
+      @speaker("") { @t("<PLAYER> found MAX_REVIVE!", "<PLAYER>发现了活力块！") }
+    }
+  }
+
+  // ── Ground item: ESCAPE ROPE (npc 7) ────────────────────────────────────
+  @storyline("itemEscapeRope") {
+    @trigger(map = "SilphCo4F", npc = 7, toggle = "SILPH_CO_4F_OBJ_7")
+    @if (getFlag("EVENT_GOT_ESCAPE_ROPE_SILPH_CO_4F")) {
+      @speaker("") { @t("The item ball is empty.", "精灵球里是空的。") }
+    } @else {
+      giveItem("ESCAPE_ROPE", 1)
+      setFlag("EVENT_GOT_ESCAPE_ROPE_SILPH_CO_4F")
+      hideObject("SILPH_CO_4F_OBJ_7")
+      @speaker("") { @t("<PLAYER> found ESCAPE_ROPE!", "<PLAYER>发现了逃脱绳！") }
+    }
+  }
+
+  // Door1 solve: original is a CARD_KEY inspect on the door tile (no tile-inspect
+  // trigger exists, so approximate with a coord trigger at the door tiles gated
+  // by hasItem("CARD_KEY")). Opens block (X=2, Y=6) with block id 14.
+  @storyline("cardKeyDoor1") {
+    @trigger(map = "SilphCo4F", name = "cardKeyDoor11")
+    @if (hasItem("CARD_KEY") && !getFlag("EVENT_SILPH_CO_4_UNLOCKED_DOOR1")) {
+      @speaker("") { @t("Bingo!", "中了！") }
+      @speaker("") { @t("The CARD KEY opened the\ndoor!", "磁卡钥匙把门打开了！") }
+      setFlag("EVENT_SILPH_CO_4_UNLOCKED_DOOR1")
+      replaceTileBlock(2, 6, 14)
+      playSound("SFX_GO_INSIDE")
+    } @else {
+      @speaker("") { @t("Darn! It needs a CARD KEY!", "可恶！需要磁卡钥匙！") }
+    }
+  }
+
+  // Door2 solve: block (X=6, Y=4) door tiles at (X=12,Y=8)/(X=12,Y=9).
+  @storyline("cardKeyDoor2") {
+    @trigger(map = "SilphCo4F", name = "cardKeyDoor21")
+    @if (hasItem("CARD_KEY") && !getFlag("EVENT_SILPH_CO_4_UNLOCKED_DOOR2")) {
+      @speaker("") { @t("Bingo!", "中了！") }
+      @speaker("") { @t("The CARD KEY opened the\ndoor!", "磁卡钥匙把门打开了！") }
+      setFlag("EVENT_SILPH_CO_4_UNLOCKED_DOOR2")
+      replaceTileBlock(6, 4, 14)
+      playSound("SFX_GO_INSIDE")
+    } @else {
+      @speaker("") { @t("Darn! It needs a CARD KEY!", "可恶！需要磁卡钥匙！") }
+    }
+  }
+}

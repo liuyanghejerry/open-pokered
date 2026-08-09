@@ -1,0 +1,141 @@
+{
+  "$schema": "/schemas/layout.schema.json",
+  "schema_version": 1,
+  "screen": "options",
+  "variants": {
+    "default": {
+      "cursors": [
+        {
+          "tx": 0,
+          "base_ty": 2,
+          "row_step": 0,
+          "glyph": "\u25b6",
+          "color": "Black"
+        },
+        {
+          "tx": 0,
+          "base_ty": 7,
+          "row_step": 0,
+          "glyph": "\u25b6",
+          "color": "Black"
+        },
+        {
+          "tx": 0,
+          "base_ty": 12,
+          "row_step": 0,
+          "glyph": "\u25b6",
+          "color": "Black"
+        },
+        {
+          "tx": 1,
+          "base_ty": 16,
+          "row_step": 0,
+          "glyph": "\u25b6",
+          "color": "Black"
+        }
+      ],
+      "enum_position_map": {
+        "Fast": 0,
+        "Medium": 6,
+        "Slow": 13,
+        "On": 0,
+        "Off": 9,
+        "Shift": 0,
+        "Set": 9
+      },
+      "children": [
+        {
+          "id": "box_0",
+          "rect": {
+            "tx": 0,
+            "ty": 0,
+            "tw": 20,
+            "th": 5
+          },
+          "color": "Black",
+          "labels": [
+            {
+              "tx": 0,
+              "ty": 0,
+              "text": "TEXT SPEED",
+              "color": "Black"
+            },
+            {
+              "tx": 0,
+              "ty": 2,
+              "text": " FAST  MEDIUM SLOW",
+              "color": "Black"
+            }
+          ]
+        },
+        {
+          "id": "box_1",
+          "rect": {
+            "tx": 0,
+            "ty": 5,
+            "tw": 20,
+            "th": 5
+          },
+          "color": "Black",
+          "labels": [
+            {
+              "tx": 0,
+              "ty": 0,
+              "text": "BATTLE ANIMATION",
+              "color": "Black"
+            },
+            {
+              "tx": 0,
+              "ty": 2,
+              "text": " ON       OFF",
+              "color": "Black"
+            }
+          ]
+        },
+        {
+          "id": "box_2",
+          "rect": {
+            "tx": 0,
+            "ty": 10,
+            "tw": 20,
+            "th": 5
+          },
+          "color": "Black",
+          "labels": [
+            {
+              "tx": 0,
+              "ty": 0,
+              "text": "BATTLE STYLE",
+              "color": "Black"
+            },
+            {
+              "tx": 0,
+              "ty": 2,
+              "text": " SHIFT    SET",
+              "color": "Black"
+            }
+          ]
+        },
+        {
+          "id": "region_0",
+          "rect": {
+            "tx": 0,
+            "ty": 0,
+            "tw": 20,
+            "th": 18
+          },
+          "labels": [
+            {
+              "tx": 2,
+              "ty": 16,
+              "text": "CANCEL",
+              "color": "Black"
+            }
+          ],
+          "border": false,
+          "color": "Black"
+        }
+      ]
+    }
+  }
+}

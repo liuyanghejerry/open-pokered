@@ -1,0 +1,9 @@
+{
+  "$schema": "../schemas/move.schema.json",
+  "id": "HyperBeam",
+  "effect": "HyperBeamEffect",
+  "power": 150,
+  "type": "Normal",
+  "accuracy": 90,
+  "pp": 5
+}

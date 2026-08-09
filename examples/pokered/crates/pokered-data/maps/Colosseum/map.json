@@ -1,0 +1,42 @@
+{
+  "$schema": "../../schemas/map.schema.json",
+  "id": 240,
+  "name": "Colosseum",
+  "header": {
+    "tileset": "Club",
+    "music": "Celadon",
+    "connectionFlags": 0,
+    "width": 5,
+    "height": 4,
+    "borderBlock": 14
+  },
+  "connections": {},
+  "warps": [],
+  "npcs": [
+    {
+      "spriteId": 1,
+      "spriteName": "Red",
+      "x": 2,
+      "y": 2,
+      "movement": "Wander",
+      "facing": "Down",
+      "range": 0,
+      "textId": 1,
+      "isTrainer": false
+    }
+  ],
+  "signs": [
+    {
+      "x": 4,
+      "y": 4,
+      "textId": 2
+    },
+    {
+      "x": 5,
+      "y": 4,
+      "textId": 3
+    }
+  ],
+  "text": {},
+  "wild": null
+}

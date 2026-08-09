@@ -1,0 +1,114 @@
+// Route14 — translated from the original disassembly (scripts/Route14.asm,
+// text/Route14.asm) to the real Game DSL API surface. Route14 is a plain route:
+// 6 Bird Keepers (CooltrainerM sprites) and 4 Bikers, all sight-engaged by the
+// runtime, plus one route sign. Each talk handler is DIALOGUE ONLY (per the
+// sight-trainer pattern): if already beaten show the after-battle line, else the
+// pre-battle taunt. The runtime owns the actual battle.
+
+game_scene Route14 {
+  // ── Bird Keeper / CooltrainerM 1 (npc 1) ───────────────────────────────
+  @storyline("talkCooltrainerM1") {
+    @trigger(map = "Route14", npc = 1)
+    @if (getFlag("EVENT_BEAT_ROUTE_14_TRAINER_0")) {
+      @speaker("") { @t("You have some HMs right?\nPOKeMON can't ever forget\nthose moves.", "你有HM吧？宝可梦学会的招式是\n不会忘的。") }
+    } @else {
+      @speaker("") { @t("You need to use TMs to teach\ngood moves to POKeMON!", "你得用TM 才能教会宝可梦好的\n招式！") }
+    }
+  }
+
+  // ── Bird Keeper / CooltrainerM 2 (npc 2) ───────────────────────────────
+  @storyline("talkCooltrainerM2") {
+    @trigger(map = "Route14", npc = 2)
+    @if (getFlag("EVENT_BEAT_ROUTE_14_TRAINER_1")) {
+      @speaker("") { @t("They need to learn better\nmoves.", "它们需要学习更好的招式。") }
+    } @else {
+      @speaker("") { @t("My bird POKeMON should be\nready for battle.", "我的飞行系宝可梦应该准备好战\n斗了。") }
+    }
+  }
+
+  // ── Bird Keeper / CooltrainerM 3 (npc 3) ───────────────────────────────
+  @storyline("talkCooltrainerM3") {
+    @trigger(map = "Route14", npc = 3)
+    @if (getFlag("EVENT_BEAT_ROUTE_14_TRAINER_2")) {
+      @speaker("") { @t("Teach POKeMON moves of the\nsame element type for more\npower.", "给宝可梦学习相同属性的招式，\n威力会更大。") }
+    } @else {
+      @speaker("") { @t("TMs are on sale in CELADON!\nBut, only a few people have\nHMs!", "彩虹市有售 TM！但是拥有HM的\n人很少！") }
+    }
+  }
+
+  // ── Bird Keeper / CooltrainerM 4 (npc 4) ───────────────────────────────
+  @storyline("talkCooltrainerM4") {
+    @trigger(map = "Route14", npc = 4)
+    @if (getFlag("EVENT_BEAT_ROUTE_14_TRAINER_3")) {
+      @speaker("") { @t("Bird POKeMON are my true\nlove!", "飞行系宝可梦是我的最爱！") }
+    } @else {
+      @speaker("") { @t("Have you taught your bird\nPOKeMON how to FLY?", "你教过你的飞行系宝可梦使用飞\n翔吗？") }
+    }
+  }
+
+  // ── Bird Keeper / CooltrainerM 5 (npc 5) ───────────────────────────────
+  @storyline("talkCooltrainerM5") {
+    @trigger(map = "Route14", npc = 5)
+    @if (getFlag("EVENT_BEAT_ROUTE_14_TRAINER_4")) {
+      @speaker("") { @t("The 3 legendary POKeMON are\nall birds of prey.", "3只传说中的宝可梦全都是猛禽\n类。") }
+    } @else {
+      @speaker("") { @t("Have you heard of the\nlegendary POKeMON?", "你听说过传说中的宝可梦吗？") }
+    }
+  }
+
+  // ── Bird Keeper / CooltrainerM 6 (npc 6) ───────────────────────────────
+  @storyline("talkCooltrainerM6") {
+    @trigger(map = "Route14", npc = 6)
+    @if (getFlag("EVENT_BEAT_ROUTE_14_TRAINER_5")) {
+      @speaker("") { @t("Winning, losing, it doesn't\nmatter in the long run!", "胜也好，败也好，从长远来看都\n不重要！") }
+    } @else {
+      @speaker("") { @t("I'm not into it, but OK!\nLet's go!", "我本来没兴趣，不过OK！来吧！") }
+    }
+  }
+
+  // ── Biker 1 (npc 7) ────────────────────────────────────────────────────
+  @storyline("talkBiker1") {
+    @trigger(map = "Route14", npc = 7)
+    @if (getFlag("EVENT_BEAT_ROUTE_14_TRAINER_6")) {
+      @speaker("") { @t("What, what, what? What do\nyou want?", "什么，什么，什么？你想要什\n么？") }
+    } @else {
+      @speaker("") { @t("C'mon, c'mon. Let's go,\nlet's go, let's go!", "来吧，来吧。上吧，上吧，上\n吧！") }
+    }
+  }
+
+  // ── Biker 2 (npc 8) ────────────────────────────────────────────────────
+  @storyline("talkBiker2") {
+    @trigger(map = "Route14", npc = 8)
+    @if (getFlag("EVENT_BEAT_ROUTE_14_TRAINER_7")) {
+      @speaker("") { @t("Raising POKeMON is a drag,\nman.", "培育宝可梦真是麻烦，兄弟。") }
+    } @else {
+      @speaker("") { @t("Perfect! I need to burn some\ntime!", "太好了！我正想消磨时间！") }
+    }
+  }
+
+  // ── Biker 3 (npc 9) ────────────────────────────────────────────────────
+  @storyline("talkBiker3") {
+    @trigger(map = "Route14", npc = 9)
+    @if (getFlag("EVENT_BEAT_ROUTE_14_TRAINER_8")) {
+      @speaker("") { @t("It's cool you made your\nPOKeMON so strong!\n\nMight is right! And you know\nit!", "你把宝可梦培育得这么强，真了\n不起！\n\n强者为王！你懂的！") }
+    } @else {
+      @speaker("") { @t("We ride out here because\nthere's more room!", "我们骑车到这里是因为这里更宽\n敞！") }
+    }
+  }
+
+  // ── Biker 4 (npc 10) ───────────────────────────────────────────────────
+  @storyline("talkBiker4") {
+    @trigger(map = "Route14", npc = 10)
+    @if (getFlag("EVENT_BEAT_ROUTE_14_TRAINER_9")) {
+      @speaker("") { @t("You know who'd win, you and\nme one on one!", "你知道吗，一对一的话，你和我\n谁会赢！") }
+    } @else {
+      @speaker("") { @t("POKeMON fight? Cool! Rumble!", "宝可梦对战？酷！开打吧！") }
+    }
+  }
+
+  // ── Route sign (sign 1) ────────────────────────────────────────────────
+  @storyline("sign1") {
+    @trigger(map = "Route14", sign = 1)
+    @speaker("") { @t("ROUTE 14 West to FUCHSIA\nCITY", "14号道路西行通往浅红市") }
+  }
+}

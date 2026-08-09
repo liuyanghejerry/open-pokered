@@ -1,0 +1,145 @@
+{
+  "$schema": "../../schemas/map.schema.json",
+  "id": 199,
+  "name": "RocketHideoutB1F",
+  "header": {
+    "tileset": "Facility",
+    "music": "Dungeon1",
+    "connectionFlags": 0,
+    "width": 15,
+    "height": 14,
+    "borderBlock": 46
+  },
+  "connections": {},
+  "warps": [
+    {
+      "x": 23,
+      "y": 2,
+      "destMap": "RocketHideoutB2F",
+      "destWarpId": 0
+    },
+    {
+      "x": 21,
+      "y": 2,
+      "destMap": "GameCorner",
+      "destWarpId": 2
+    },
+    {
+      "x": 24,
+      "y": 19,
+      "destMap": "RocketHideoutElevator",
+      "destWarpId": 0
+    },
+    {
+      "x": 21,
+      "y": 24,
+      "destMap": "RocketHideoutB2F",
+      "destWarpId": 3
+    },
+    {
+      "x": 25,
+      "y": 19,
+      "destMap": "RocketHideoutElevator",
+      "destWarpId": 1
+    }
+  ],
+  "npcs": [
+    {
+      "spriteId": 24,
+      "spriteName": "Rocket",
+      "x": 26,
+      "y": 8,
+      "movement": "Stationary",
+      "facing": "Left",
+      "range": 0,
+      "textId": 1,
+      "isTrainer": true,
+      "trainerClass": "Rocket",
+      "trainerSet": 8,
+      "endBattleText": "Oww!\nBeaten!"
+    },
+    {
+      "spriteId": 24,
+      "spriteName": "Rocket",
+      "x": 12,
+      "y": 6,
+      "movement": "Stationary",
+      "facing": "Right",
+      "range": 0,
+      "textId": 2,
+      "isTrainer": true,
+      "trainerClass": "Rocket",
+      "trainerSet": 9,
+      "endBattleText": "Burnt!"
+    },
+    {
+      "spriteId": 24,
+      "spriteName": "Rocket",
+      "x": 18,
+      "y": 17,
+      "movement": "Stationary",
+      "facing": "Down",
+      "range": 0,
+      "textId": 3,
+      "isTrainer": true,
+      "trainerClass": "Rocket",
+      "trainerSet": 10,
+      "endBattleText": "I\ncan't do it!"
+    },
+    {
+      "spriteId": 24,
+      "spriteName": "Rocket",
+      "x": 15,
+      "y": 25,
+      "movement": "Stationary",
+      "facing": "Right",
+      "range": 0,
+      "textId": 4,
+      "isTrainer": true,
+      "trainerClass": "Rocket",
+      "trainerSet": 11,
+      "endBattleText": "This\nwon't do!"
+    },
+    {
+      "spriteId": 24,
+      "spriteName": "Rocket",
+      "x": 28,
+      "y": 18,
+      "movement": "Stationary",
+      "facing": "Left",
+      "range": 0,
+      "textId": 5,
+      "isTrainer": true,
+      "trainerClass": "Rocket",
+      "trainerSet": 12,
+      "endBattleText": "Why...?@"
+    },
+    {
+      "spriteId": 61,
+      "spriteName": "PokeBall",
+      "x": 11,
+      "y": 14,
+      "movement": "Stationary",
+      "facing": "Down",
+      "range": 0,
+      "textId": 6,
+      "isTrainer": false,
+      "itemId": 29
+    },
+    {
+      "spriteId": 61,
+      "spriteName": "PokeBall",
+      "x": 9,
+      "y": 17,
+      "movement": "Stationary",
+      "facing": "Down",
+      "range": 0,
+      "textId": 7,
+      "isTrainer": false,
+      "itemId": 18
+    }
+  ],
+  "signs": [],
+  "text": {},
+  "wild": null
+}

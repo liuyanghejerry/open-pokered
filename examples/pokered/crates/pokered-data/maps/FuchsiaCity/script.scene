@@ -1,0 +1,185 @@
+// FuchsiaCity — translated from the original disassembly (scripts/FuchsiaCity.asm,
+// text/FuchsiaCity.asm) to the real Game DSL API surface. This is an overworld
+// city map: no gym leader (the gym is the separate FuchsiaGym map) and no
+// trainers — only NPC dialogue and town signs. The zoo NPCs in front of the
+// Safari Zone only cry ("!"); the matching pokedex-style descriptions live on
+// the signs facing them, which also pop the real Pokedex entry.
+
+game_scene FuchsiaCity {
+  // ── NPCs ────────────────────────────────────────────────────────────────
+  @storyline("talkYoungster1") {
+    @trigger(map = "FuchsiaCity", npc = 1)
+    @speaker("") {
+      @t("Did you try the SAFARI GAME?\nSome POKeMON can only be\ncaught there.", "你试过狩猎游戏吗？有些宝可梦\n只有在那里才能抓到。")
+    }
+  }
+
+  @storyline("talkGambler") {
+    @trigger(map = "FuchsiaCity", npc = 2)
+    @speaker("") {
+      @t("SAFARI ZONE has a zoo in\nfront of the entrance.\n\nOut back is the SAFARI GAME\nfor catching POKeMON.", "狩猎地带入口前面有动物园。\n\n后面是捕捉宝可梦的狩猎游戏。")
+    }
+  }
+
+  @storyline("talkErik") {
+    @trigger(map = "FuchsiaCity", npc = 3)
+    @speaker("") {
+      @t("ERIK: Where's SARA? I said\nI'd meet her here.", "埃里克：莎拉在哪里？我们说好\n在这里见面。")
+    }
+  }
+
+  @storyline("talkYoungster2") {
+    @trigger(map = "FuchsiaCity", npc = 4)
+    @speaker("") {
+      @t("That item ball in there is\nreally a POKeMON.", "那里的精灵球其实是宝可梦。")
+    }
+  }
+
+  // Zoo POKeMON (npcs 5-10) — each just cries in the original ("!").
+  @storyline("talkChansey") {
+    @trigger(map = "FuchsiaCity", npc = 5)
+    @speaker("") { @t("!", "！") }
+  }
+
+  @storyline("talkVoltorb") {
+    @trigger(map = "FuchsiaCity", npc = 6)
+    @speaker("") { @t("!", "！") }
+  }
+
+  @storyline("talkKangaskhan") {
+    @trigger(map = "FuchsiaCity", npc = 7)
+    @speaker("") { @t("!", "！") }
+  }
+
+  @storyline("talkSlowpoke") {
+    @trigger(map = "FuchsiaCity", npc = 8)
+    @speaker("") { @t("!", "！") }
+  }
+
+  @storyline("talkLapras") {
+    @trigger(map = "FuchsiaCity", npc = 9)
+    @speaker("") { @t("!", "！") }
+  }
+
+  @storyline("talkFossil") {
+    @trigger(map = "FuchsiaCity", npc = 10)
+    @speaker("") { @t("!", "！") }
+  }
+
+  // ── Town signs ──────────────────────────────────────────────────────────
+  @storyline("sign1") {
+    @trigger(map = "FuchsiaCity", sign = 1)
+    @speaker("") {
+      @t("FUCHSIA CITY Behold! It's\nPassion Pink!", "浅红市看！是热情的粉红色！")
+    }
+  }
+
+  @storyline("sign2") {
+    @trigger(map = "FuchsiaCity", sign = 2)
+    @speaker("") {
+      @t("FUCHSIA CITY Behold! It's\nPassion Pink!", "浅红市看！是热情的粉红色！")
+    }
+  }
+
+  @storyline("signSafariGame") {
+    @trigger(map = "FuchsiaCity", sign = 3)
+    @speaker("") {
+      @t("SAFARI GAME POKeMON-U-CATCH!", "狩猎游戏来抓宝可梦吧！")
+    }
+  }
+
+  @storyline("signMart") {
+    @trigger(map = "FuchsiaCity", sign = 4)
+    @speaker("") {
+      @t("All your item needs\nfulfilled! POKeMON MART", "满足你一切道具需求的友好商店")
+    }
+  }
+
+  @storyline("signPokecenter") {
+    @trigger(map = "FuchsiaCity", sign = 5)
+    @speaker("") {
+      @t("Heal Your POKeMON! POKeMON\nCENTER", "治愈你的宝可梦！宝可梦中心")
+    }
+  }
+
+  @storyline("signWardensHome") {
+    @trigger(map = "FuchsiaCity", sign = 6)
+    @speaker("") {
+      @t("SAFARI ZONE WARDEN's HOME", "狩猎地带园长之家")
+    }
+  }
+
+  @storyline("signSafariZone") {
+    @trigger(map = "FuchsiaCity", sign = 7)
+    @speaker("") {
+      @t("POKeMON PARADISE SAFARI ZONE", "宝可梦乐园狩猎地带")
+    }
+  }
+
+  @storyline("signGym") {
+    @trigger(map = "FuchsiaCity", sign = 8)
+    @speaker("") {
+      @t("FUCHSIA CITY POKeMON GYM\nLEADER: KOGA\n\nThe Poisonous Ninja Master", "浅红市宝可梦道馆馆主：阿桔\n\n毒术忍者大师")
+    }
+  }
+
+  @storyline("signChansey") {
+    @trigger(map = "FuchsiaCity", sign = 9)
+    @speaker("") {
+      @t("Name: CHANSEY\n\nCatching one is all up to\nchance.", "名称：吉利蛋\n\n能不能抓到全凭运气。")
+    }
+    showPokedexEntry("CHANSEY")
+  }
+
+  @storyline("signVoltorb") {
+    @trigger(map = "FuchsiaCity", sign = 10)
+    @speaker("") {
+      @t("Name: VOLTORB\n\nThe very image of a POKe\nBALL.", "名称：雷电球\n\n简直就像精灵球。")
+    }
+    showPokedexEntry("VOLTORB")
+  }
+
+  @storyline("signKangaskhan") {
+    @trigger(map = "FuchsiaCity", sign = 11)
+    @speaker("") {
+      @t("Name: KANGASKHAN\n\nA maternal POKeMON that\nraises its young in a pouch\non its belly.", "名称：袋兽\n\n母爱深厚的宝可梦把幼崽放在腹\n部的育儿袋中养育。")
+    }
+    showPokedexEntry("KANGASKHAN")
+  }
+
+  @storyline("signSlowpoke") {
+    @trigger(map = "FuchsiaCity", sign = 12)
+    @speaker("") {
+      @t("Name: SLOWPOKE\n\nFriendly and very slow\nmoving.", "名称：呆呆兽\n\n性格友好，行动非常迟缓。")
+    }
+    showPokedexEntry("SLOWPOKE")
+  }
+
+  @storyline("signLapras") {
+    @trigger(map = "FuchsiaCity", sign = 13)
+    @speaker("") {
+      @t("Name: LAPRAS\n\nA.K.A. the king of the seas.", "名称：拉普拉斯\n\n人称海洋之王。")
+    }
+    showPokedexEntry("LAPRAS")
+  }
+
+  // Fossil sign: depends on which fossil the player chose at Mt. Moon.
+  @storyline("signFossil") {
+    @trigger(map = "FuchsiaCity", sign = 14)
+    @if (getFlag("EVENT_GOT_DOME_FOSSIL")) {
+      @speaker("") {
+        @t("Name: OMANYTE\n\nA POKeMON that was\nresurrected from a fossil.", "名称：菊石兽\n\n从化石中复活的宝可梦。")
+      }
+      showPokedexEntry("OMANYTE")
+    } @else {
+      @if (getFlag("EVENT_GOT_HELIX_FOSSIL")) {
+        @speaker("") {
+          @t("Name: KABUTO\n\nA POKeMON that was\nresurrected from a fossil.", "名称：化石盔\n\n从化石中复活的宝可梦。")
+        }
+        showPokedexEntry("KABUTO")
+      } @else {
+        @speaker("") { @t("...", "……") }
+      }
+    }
+  }
+}

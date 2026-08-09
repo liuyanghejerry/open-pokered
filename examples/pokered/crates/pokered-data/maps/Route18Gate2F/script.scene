@@ -1,0 +1,63 @@
+// Route18Gate2F — translated from the original disassembly
+// (scripts/Route18Gate2F.asm, text/Route18Gate2F*.asm, data/events/trades.asm).
+// The Youngster (npc 1) offers in-game trade TRADE_FOR_MARC: the player gives
+// SLOWBRO and receives a LICKITUNG nicknamed "MARC" (TRADE_DIALOGSET_CASUAL).
+// The two signs are upstairs binoculars (only print when facing up).
+
+game_scene Route18Gate2F {
+  // ── Youngster (npc 1) — in-game trade (TRADE_FOR_MARC) ──────────────────
+  @storyline("talkYoungster") {
+    @trigger(map = "Route18Gate2F", npc = 1)
+    @if (getFlag("EVENT_GOT_LICKITUNG_FROM_TRADE")) {
+      // _AfterTrade1Text — NPC is happy with the SLOWBRO it received.
+      @speaker("") { @t("Isn't my old LICKITUNG\ngreat?", "我的大舌头是不是很棒？") }
+    } @else {
+      // _WannaTrade1Text (CASUAL): looking for SLOWBRO, offering LICKITUNG.
+      @speaker("") {
+        @t("I'm looking for SLOWBRO!\nWanna\n\ntrade one for LICKITUNG?", "我在找呆壳兽！要不要\n\n用一只来换大舌头？")
+      }
+      @choice {
+        @option(@t("YES", "是")) {
+          // Real in-game trade (removes SLOWBRO, adds LICKITUNG nicknamed
+          // MARC). tradePokemon returns false if the player doesn't actually
+          // carry SLOWBRO -> wrong-mon (dialogset CASUAL).
+          // _Thanks1Text + _TradedForText
+          traded = tradePokemon("SLOWBRO", "LICKITUNG", "MARC")
+          @if (traded) {
+            setFlag("EVENT_GOT_LICKITUNG_FROM_TRADE")
+            @speaker("") { @t("Hey thanks!", "嘿，谢谢！") }
+            @speaker("") {
+              @t("<PLAYER> traded SLOWBRO for\nLICKITUNG!", "<PLAYER>用呆壳兽换到了大舌\n头！")
+            }
+          } @else {
+            @speaker("") { @t("What? That's not SLOWBRO!\n\nIf you get one, come back\nhere!", "什么？那不是呆壳兽！\n\n如果你弄到一只，就回来找我\n吧！") }
+          }
+        }
+        @option(@t("NO", "否")) {
+          // _NoTrade1Text
+          @speaker("") { @t("Awww! Oh well...", "唉！那就算了吧……") }
+        }
+      }
+    }
+  }
+
+  // ── Left binoculars sign (sign 1) — only when facing up ─────────────────
+  @storyline("signLeftBinoculars") {
+    @trigger(map = "Route18Gate2F", sign = 1)
+    @if (getPlayerFacing() == "up") {
+      @speaker("") {
+        @t("Looked into the binoculars.\n\nPALLET TOWN is in the west!", "通过望远镜看了看。\n\n真新镇就在西边！")
+      }
+    }
+  }
+
+  // ── Right binoculars sign (sign 2) — only when facing up ────────────────
+  @storyline("signRightBinoculars") {
+    @trigger(map = "Route18Gate2F", sign = 2)
+    @if (getPlayerFacing() == "up") {
+      @speaker("") {
+        @t("Looked into the binoculars.\n\nThere are people swimming!", "通过望远镜看了看。\n\n有人正在海里游泳！")
+      }
+    }
+  }
+}

@@ -1,0 +1,210 @@
+// SilphCo5F — translated from the original disassembly (scripts/SilphCo5F.asm,
+// text/SilphCo5F.asm + SilphCo5F_2.asm) to the real Game DSL API surface. A Team
+// Rocket facility floor: one talk-driven Silph worker (intruder question while
+// Rocket holds the building / "you're our hero" once Giovanni is beaten), four
+// sight-engaged trainers (two Rockets, a Scientist, a Rocker; the runtime drives
+// those battles, so their handlers are dialogue only), three PokeBall ground
+// items (TM09 Take Down, PROTEIN, CARD KEY) and three "POKeMON REPORT" clipboards.
+//
+// The original map script's gate callback (SilphCo5FGateCallbackScript) is the
+// Silph Card-Key door-tile swap, now wired via replaceTileBlock. It opens up to
+// three card-key doors, each gated on its own flag:
+//   door1: CheckEvent EVENT_SILPH_CO_5_UNLOCKED_DOOR1 → open block $5f (=95);
+//          lb bc, 2, 3 → Y=2, X=3 → replaceTileBlock(3, 2, 95)
+//   door2: CheckEvent EVENT_SILPH_CO_5_UNLOCKED_DOOR2 → open block $5f (=95);
+//          lb bc, 6, 3 → Y=6, X=3 → replaceTileBlock(3, 6, 95)
+//   door3: CheckEvent EVENT_SILPH_CO_5_UNLOCKED_DOOR3 → open block $5f (=95);
+//          lb bc, 5, 7 → Y=5, X=7 → replaceTileBlock(7, 5, 95)
+// The doors only ever open (no CLOSED id / no re-close), so the @load re-applies
+// each OPEN block from its flag, and the card-key triggers open them on solve.
+// NOTE: the original solve is the shared Silph card-key interaction
+// (hUnlockedSilphCoDoors / wCardKeyDoorY matched against this floor's gate
+// coords (3,2)/(3,6)/(7,5), set when the player uses the CARD_KEY on the door).
+// That tile-step item check has no DSL primitive, so it is approximated
+// faithfully (matching SilphCo6F): a coords trigger on each card-key door's
+// tiles, gated by hasItem("CARD_KEY"), sets the matching unlock flag and opens
+// that door immediately (with SFX_GO_INSIDE, as the original PrintCardKeyText).
+
+game_scene SilphCo5F {
+  // ── On-enter gate callback (SilphCo5FGateCallbackScript) ────────────────
+  // Re-apply each OPEN door block from its flag so a solved door stays open on
+  // re-entry. open block $5f = 95 decimal; asm lb bc, Y, X → replaceTileBlock(X, Y, 95).
+  @load {
+    @if (getFlag("EVENT_SILPH_CO_5_UNLOCKED_DOOR1")) {
+      replaceTileBlock(3, 2, 95)
+    }
+    @if (getFlag("EVENT_SILPH_CO_5_UNLOCKED_DOOR2")) {
+      replaceTileBlock(3, 6, 95)
+    }
+    @if (getFlag("EVENT_SILPH_CO_5_UNLOCKED_DOOR3")) {
+      replaceTileBlock(7, 5, 95)
+    }
+  }
+
+  // ── Card-Key door 1 (gate coord (3,2), door block (3,2)) ────────────────
+  // Approximated like SilphCo6F: standing on the card-key door tiles with the
+  // CARD_KEY opens it. Door block (3,2) → tiles x∈{6,7}, y∈{4,5}.
+  @storyline("cardKeyDoor1") {
+    @trigger(map = "SilphCo5F", name = "cardKeyDoor11")
+    @if (!getFlag("EVENT_SILPH_CO_5_UNLOCKED_DOOR1")) {
+      @if (hasItem("CARD_KEY")) {
+        @speaker("") { @t("Bingo!", "猜对了！") }
+        @speaker("") { @t("The CARD KEY opened the\ndoor!", "磁卡钥匙打开了门！") }
+        setFlag("EVENT_SILPH_CO_5_UNLOCKED_DOOR1")
+        replaceTileBlock(3, 2, 95)
+        playSound("SFX_GO_INSIDE")
+      } @else {
+        @speaker("") { @t("Darn! It needs a CARD KEY!", "可恶！开门需要磁卡钥匙！") }
+      }
+    }
+  }
+
+  // ── Card-Key door 2 (gate coord (3,6), door block (3,6)) ────────────────
+  // Door block (3,6) → tiles x∈{6,7}, y∈{12,13}.
+  @storyline("cardKeyDoor2") {
+    @trigger(map = "SilphCo5F", name = "cardKeyDoor21")
+    @if (!getFlag("EVENT_SILPH_CO_5_UNLOCKED_DOOR2")) {
+      @if (hasItem("CARD_KEY")) {
+        @speaker("") { @t("Bingo!", "猜对了！") }
+        @speaker("") { @t("The CARD KEY opened the\ndoor!", "磁卡钥匙打开了门！") }
+        setFlag("EVENT_SILPH_CO_5_UNLOCKED_DOOR2")
+        replaceTileBlock(3, 6, 95)
+        playSound("SFX_GO_INSIDE")
+      } @else {
+        @speaker("") { @t("Darn! It needs a CARD KEY!", "可恶！开门需要磁卡钥匙！") }
+      }
+    }
+  }
+
+  // ── Card-Key door 3 (gate coord (7,5), door block (7,5)) ────────────────
+  // Door block (7,5) → tiles x∈{14,15}, y∈{10,11}.
+  @storyline("cardKeyDoor3") {
+    @trigger(map = "SilphCo5F", name = "cardKeyDoor31")
+    @if (!getFlag("EVENT_SILPH_CO_5_UNLOCKED_DOOR3")) {
+      @if (hasItem("CARD_KEY")) {
+        @speaker("") { @t("Bingo!", "猜对了！") }
+        @speaker("") { @t("The CARD KEY opened the\ndoor!", "磁卡钥匙打开了门！") }
+        setFlag("EVENT_SILPH_CO_5_UNLOCKED_DOOR3")
+        replaceTileBlock(7, 5, 95)
+        playSound("SFX_GO_INSIDE")
+      } @else {
+        @speaker("") { @t("Darn! It needs a CARD KEY!", "可恶！开门需要磁卡钥匙！") }
+      }
+    }
+  }
+
+  // ── Silph worker (npc 1) — talk-driven civilian ─────────────────────────
+  @storyline("talkSilphWorkerM") {
+    @trigger(map = "SilphCo5F", npc = 1)
+    @if (getFlag("EVENT_BEAT_SILPH_CO_GIOVANNI")) {
+      @speaker("") { @t("TEAM ROCKET took off! You're\nour hero! Thank you!", "火箭队逃走了！你是我们的英\n雄！谢谢你！") }
+    } @else {
+      @speaker("") { @t("TEAM ROCKET is in an uproar\nover some intruder. That's\nyou right?", "火箭队正为某个闯入者而大吵大\n闹。那个人就是你吧？") }
+    }
+  }
+
+  // ── Rocket (npc 2) — sight-engaged trainer; dialogue only ───────────────
+  @storyline("talkRocket1") {
+    @trigger(map = "SilphCo5F", npc = 2)
+    @if (getFlag("EVENT_BEAT_SILPH_CO_5F_TRAINER_0")) {
+      @speaker("") { @t("It's not smart to pick a\nfight with TEAM ROCKET!", "跟火箭队作对可不是聪明的做\n法！") }
+    } @else {
+      @speaker("") { @t("I heard a kid was wandering\naround.", "听说有个孩子在四处游荡。") }
+    }
+  }
+
+  // ── Scientist (npc 3) — sight-engaged trainer; dialogue only ────────────
+  @storyline("talkScientist") {
+    @trigger(map = "SilphCo5F", npc = 3)
+    @if (getFlag("EVENT_BEAT_SILPH_CO_5F_TRAINER_1")) {
+      @speaker("") { @t("We worked on the ultimate\nPOKeMON BALL which would\ncatch anything!", "我们曾致力于制造终极精灵球无\n论什么宝可梦都能抓到！") }
+    } @else {
+      @speaker("") { @t("We study POKeMON BALL\ntechnology on this floor!", "我们在这个楼层研究精灵球的技\n术！") }
+    }
+  }
+
+  // ── Rocker (npc 4) — sight-engaged trainer; dialogue only ───────────────
+  @storyline("talkRocker") {
+    @trigger(map = "SilphCo5F", npc = 4)
+    @if (getFlag("EVENT_BEAT_SILPH_CO_5F_TRAINER_2")) {
+      @speaker("") { @t("You're only on 5F. It's a\nlong way to my BOSS!", "你才到5层而已。要见到我的老\n大还远着呢！") }
+    } @else {
+      @speaker("") { @t("Whaaat? There shouldn't be\nany children here?", "什什么？这里不该有孩子才对\n啊？") }
+    }
+  }
+
+  // ── Rocket (npc 5) — sight-engaged trainer; dialogue only ───────────────
+  @storyline("talkRocket2") {
+    @trigger(map = "SilphCo5F", npc = 5)
+    @if (getFlag("EVENT_BEAT_SILPH_CO_5F_TRAINER_3")) {
+      @speaker("") {
+        @t("Which reminds me.\n\nKOFFING evolves into\nWEEZING!", "说起来……\n\n瓦斯弹会进化成双弹瓦斯！")
+      }
+    } @else {
+      @speaker("") { @t("Show TEAM ROCKET a little\nrespect!", "对火箭队要尊重一点！") }
+    }
+  }
+
+  // ── Ground item: TM09 / TAKE DOWN (npc 6) ───────────────────────────────
+  @storyline("itemTM09") {
+    @trigger(map = "SilphCo5F", npc = 6, toggle = "SILPH_CO_5F_OBJ_6")
+    @if (getFlag("EVENT_GOT_TM09_SILPH_CO_5F")) {
+      @speaker("") { @t("The item ball is empty.", "精灵球里面是空的。") }
+    } @else {
+      giveItem("TM09", 1)
+      setFlag("EVENT_GOT_TM09_SILPH_CO_5F")
+      hideObject("SILPH_CO_5F_OBJ_6")
+      @speaker("") { @t("<PLAYER> found TM09!", "<PLAYER>找到了 TM09！") }
+    }
+  }
+
+  // ── Ground item: PROTEIN (npc 7) ────────────────────────────────────────
+  @storyline("itemProtein") {
+    @trigger(map = "SilphCo5F", npc = 7, toggle = "SILPH_CO_5F_OBJ_7")
+    @if (getFlag("EVENT_GOT_PROTEIN_SILPH_CO_5F")) {
+      @speaker("") { @t("The item ball is empty.", "精灵球里面是空的。") }
+    } @else {
+      giveItem("PROTEIN", 1)
+      setFlag("EVENT_GOT_PROTEIN_SILPH_CO_5F")
+      hideObject("SILPH_CO_5F_OBJ_7")
+      @speaker("") { @t("<PLAYER> found PROTEIN!", "<PLAYER>找到了攻击增强剂！") }
+    }
+  }
+
+  // ── Ground item: CARD KEY (npc 8) ───────────────────────────────────────
+  @storyline("itemCardKey") {
+    @trigger(map = "SilphCo5F", npc = 8, toggle = "SILPH_CO_5F_OBJ_8")
+    @if (getFlag("EVENT_GOT_CARD_KEY_SILPH_CO_5F")) {
+      @speaker("") { @t("The item ball is empty.", "精灵球里面是空的。") }
+    } @else {
+      giveItem("CARD_KEY", 1)
+      setFlag("EVENT_GOT_CARD_KEY_SILPH_CO_5F")
+      hideObject("SILPH_CO_5F_OBJ_8")
+      @speaker("") { @t("<PLAYER> found CARD_KEY!", "<PLAYER>找到了磁卡钥匙！") }
+    }
+  }
+
+  // ── Clipboard (npc 9) — POKeMON REPORT 1 ────────────────────────────────
+  @storyline("talkPokemonReport1") {
+    @trigger(map = "SilphCo5F", npc = 9)
+    @speaker("") {
+      @t("It's a POKeMON REPORT!\n\nPOKeMON LAB created PORYGON,\nthe first virtual reality\nPOKeMON.", "这是宝可梦报告！\n\n宝可梦研究所制造了多边兽第一\n只虚拟现实的宝可梦。")
+    }
+  }
+
+  // ── Clipboard (npc 10) — POKeMON REPORT 2 ───────────────────────────────
+  @storyline("talkPokemonReport2") {
+    @trigger(map = "SilphCo5F", npc = 10)
+    @speaker("") {
+      @t("It's a POKeMON REPORT!\n\nOver 160 POKeMON techniques\nhave been confirmed.", "这是宝可梦报告！\n\n已确认有超过 160种宝可梦的招\n式。")
+    }
+  }
+
+  // ── Clipboard (npc 11) — POKeMON REPORT 3 ───────────────────────────────
+  @storyline("talkPokemonReport3") {
+    @trigger(map = "SilphCo5F", npc = 11)
+    @speaker("") {
+      @t("It's a POKeMON REPORT!\n\n4 POKeMON evolve only when\ntraded by link-cable.", "这是宝可梦报告！\n\n有4种宝可梦只有通过连接线交\n换才能进化。")
+    }
+  }
+}

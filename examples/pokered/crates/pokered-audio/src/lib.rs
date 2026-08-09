@@ -1,0 +1,22 @@
+//! Audio engine for pokered — re-exports the generic `jrpg-audio` crate and
+//! provides pokered-specific music/SFX data and audio manager.
+
+pub use jrpg_audio::*;
+
+pub mod audio_manager;
+pub mod music_data;
+pub mod sfx_data;
+
+#[cfg(test)]
+mod music_data_tests;
+
+#[cfg(test)]
+mod sfx_data_tests;
+
+#[cfg(test)]
+mod audio_manager_tests;
+
+// Validates the generic `jrpg-audio` file-based format against every real
+// pokered track (needs the `serde` feature, active via dev-dependencies).
+#[cfg(test)]
+mod audio_format_tests;

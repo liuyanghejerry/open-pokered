@@ -1,0 +1,60 @@
+{
+  "$schema": "../schemas/pokemon.schema.json",
+  "species": "Omastar",
+  "baseStats": {
+    "hp": 70,
+    "attack": 60,
+    "defense": 125,
+    "speed": 55,
+    "special": 115
+  },
+  "type1": "Rock",
+  "type2": "Water",
+  "catchRate": 45,
+  "baseExp": 199,
+  "growthRate": "MediumFast",
+  "initialMoves": [
+    "WaterGun",
+    "Withdraw",
+    "HornAttack",
+    "None"
+  ],
+  "tmHmFlags": [
+    224,
+    127,
+    13,
+    192,
+    131,
+    8,
+    18
+  ],
+  "pokedex": {
+    "category": "SPIRAL",
+    "heightFeet": 3,
+    "heightInches": 3,
+    "weightDecipounds": 770,
+    "flavorTextPages": [
+      "A prehistoric\n#MON that died\nout when its",
+      "heavy shell made\nit impossible to\ncatch prey"
+    ]
+  },
+  "evolutions": [],
+  "learnset": [
+    {
+      "level": 34,
+      "moveId": "HornAttack"
+    },
+    {
+      "level": 39,
+      "moveId": "Leer"
+    },
+    {
+      "level": 44,
+      "moveId": "SpikeCannon"
+    },
+    {
+      "level": 49,
+      "moveId": "HydroPump"
+    }
+  ]
+}

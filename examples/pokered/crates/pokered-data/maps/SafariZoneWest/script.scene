@@ -1,0 +1,112 @@
+// SafariZoneWest — translated from the original disassembly
+// (scripts/SafariZoneWest.asm, text/SafariZoneWest.asm, home/overworld_text.asm
+// PickUpItemText) to the real Game DSL API surface.
+//
+// Content type: ground-items + signs only. The original script is just
+// `EnableAutoTextBoxDrawing`; there are no NPCs, trainers, or on-enter cutscenes.
+// The four PokeBall objects use the shared PickUpItemText (predef PickUpItem);
+// map.json itemIds 17/232/54/64 map to MAX_POTION / TM49 (DOUBLE TEAM,
+// TM_DOUBLE_TEAM) / MAX_REVIVE / GOLD_TEETH. Each PokeBall is a runtime-hidden
+// object once picked up via its toggle, so the handler just hands over the item
+// with the standard found / too-much-stuff dialogue. The four signs are static
+// text.
+//
+// Note: Safari Zone mechanics (500-step ball-only catching, declining step
+// counter, no faint/run) are not modeled by the DSL surface; the map's wild
+// encounters fall through to ordinary battles, and the GOLD_TEETH pickup here is
+// a plain ground item rather than part of the warden's reward exchange. This is
+// a known global Safari stub, not specific to this map.
+
+game_scene SafariZoneWest {
+  // ── PokeBall ground item (npc 1) — MAX_POTION ───────────────────────────
+  @storyline("talkPokeBall") {
+    @trigger(map = "SafariZoneWest", npc = 1, toggle = "SAFARI_ZONE_WEST_OBJ_1")
+    given = giveItem("MAX_POTION", 1)
+    @if (given) {
+      @speaker("") {
+        @t("<PLAYER> found MAX_POTION!", "<PLAYER>发现了全满药！")
+      }
+    } @else {
+      @speaker("") {
+        @t("You have too much stuff\nalready!", "你身上东西太多了！")
+      }
+    }
+  }
+
+  // ── PokeBall ground item (npc 2) — TM49 (DOUBLE TEAM) ───────────────────
+  @storyline("talkPokeBall1") {
+    @trigger(map = "SafariZoneWest", npc = 2, toggle = "SAFARI_ZONE_WEST_OBJ_2")
+    given = giveItem("TM49", 1)
+    @if (given) {
+      @speaker("") {
+        @t("<PLAYER> found TM49!", "<PLAYER>发现了 TM49！")
+      }
+    } @else {
+      @speaker("") {
+        @t("You have too much stuff\nalready!", "你身上东西太多了！")
+      }
+    }
+  }
+
+  // ── PokeBall ground item (npc 3) — MAX_REVIVE ───────────────────────────
+  @storyline("talkPokeBall2") {
+    @trigger(map = "SafariZoneWest", npc = 3, toggle = "SAFARI_ZONE_WEST_OBJ_3")
+    given = giveItem("MAX_REVIVE", 1)
+    @if (given) {
+      @speaker("") {
+        @t("<PLAYER> found MAX_REVIVE!", "<PLAYER>发现了活力块！")
+      }
+    } @else {
+      @speaker("") {
+        @t("You have too much stuff\nalready!", "你身上东西太多了！")
+      }
+    }
+  }
+
+  // ── PokeBall ground item (npc 4) — GOLD_TEETH ───────────────────────────
+  @storyline("talkPokeBall3") {
+    @trigger(map = "SafariZoneWest", npc = 4, toggle = "SAFARI_ZONE_WEST_OBJ_4")
+    given = giveItem("GOLD_TEETH", 1)
+    @if (given) {
+      @speaker("") {
+        @t("<PLAYER> found GOLD_TEETH!", "<PLAYER>发现了金假牙！")
+      }
+    } @else {
+      @speaker("") {
+        @t("You have too much stuff\nalready!", "你身上东西太多了！")
+      }
+    }
+  }
+
+  // ── Rest House sign (sign 1) ────────────────────────────────────────────
+  @storyline("sign1") {
+    @trigger(map = "SafariZoneWest", sign = 1)
+    @speaker("") {
+      @t("REST HOUSE", "休息所")
+    }
+  }
+
+  // ── Request Notice / Warden's Teeth sign (sign 2) ───────────────────────
+  @storyline("sign2") {
+    @trigger(map = "SafariZoneWest", sign = 2)
+    @speaker("") {
+      @t("REQUEST NOTICE\n\nPlease find the SAFARI\nWARDEN's lost GOLD TEETH.\nThey're around here\nsomewhere.\n\nReward offered! Contact:\nWARDEN", "委托启事\n\n请帮我找回狩猎地带园长的金假\n牙。就在这附近的某个地方。\n\n找到有奖！联系：园长")
+    }
+  }
+
+  // ── Trainer Tips sign (sign 3) ──────────────────────────────────────────
+  @storyline("sign3") {
+    @trigger(map = "SafariZoneWest", sign = 3)
+    @speaker("") {
+      @t("TRAINER TIPS\n\nZone Exploration Campaign!\n\nThe Search for the SECRET\nHOUSE!", "训练家提示\n\n区域探索活动！\n\n去寻找秘密小屋吧！")
+    }
+  }
+
+  // ── Area direction sign (sign 4) ────────────────────────────────────────
+  @storyline("sign4") {
+    @trigger(map = "SafariZoneWest", sign = 4)
+    @speaker("") {
+      @t("AREA 3 EAST: CENTER AREA", "区域3 东边：中央区域")
+    }
+  }
+}

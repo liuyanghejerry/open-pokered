@@ -1,0 +1,9 @@
+{
+  "$schema": "../schemas/move.schema.json",
+  "id": "Agility",
+  "effect": "SpeedUp2Effect",
+  "power": 0,
+  "type": "Psychic",
+  "accuracy": 100,
+  "pp": 30
+}

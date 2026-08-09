@@ -1,0 +1,109 @@
+// SilphCo10F — translated from the original disassembly (scripts/SilphCo10F.asm,
+// text/SilphCo10F.asm) to the real Game DSL API surface. This floor has two
+// sight-engaged trainers (Rocket + Scientist, driven by the runtime, so their
+// talk handlers are dialogue only), a crying Silph worker NPC, three ground
+// items in PokeBalls, and a Card-Key gate door (now wired via replaceTileBlock).
+
+game_scene SilphCo10F {
+  // ── Card-Key gate door (SilphCo10FGateCallbackScript) ────────────────────
+  // Original: the map.blk ships this door OPEN (floor block $e = 14). On map
+  // load the gate callback re-CLOSES the door (writes wall block $54 = 84) if
+  // EVENT_SILPH_CO_10_UNLOCKED_DOOR is NOT yet set (asm: CheckEvent ... / ret nz
+  // skips the close once unlocked). Using the CARD_KEY on the door tile ($18)
+  // opens it (engine/events/card_key.asm writes block $e = 14), sets the unlock,
+  // and plays SFX_GO_INSIDE.
+  //   Door: asm "lb bc, 4, 5" → block (X=5, Y=4), flag EVENT_SILPH_CO_10_UNLOCKED_DOOR
+  //   OPEN block id = $e (14), CLOSED (wall) block id = $54 (84).
+  @load {
+    // Re-close the door on entry until its flag is set (mirrors the callback).
+    @if (!getFlag("EVENT_SILPH_CO_10_UNLOCKED_DOOR")) {
+      replaceTileBlock(5, 4, 84)
+    }
+  }
+
+  // Door solve: original is a CARD_KEY inspect on the door tile $18 (no tile-
+  // inspect trigger exists, so approximate with a coord trigger at the door
+  // tiles (X=10,Y=8)/(X=10,Y=9) — block (5,4)*2 — gated by hasItem("CARD_KEY")).
+  // Opens block (X=5, Y=4).
+  @storyline("cardKeyDoor") {
+    @trigger(map = "SilphCo10F", name = "cardKeyDoor1")
+    @if (hasItem("CARD_KEY") && !getFlag("EVENT_SILPH_CO_10_UNLOCKED_DOOR")) {
+      @speaker("") { @t("Bingo!", "猜中了！") }
+      @speaker("") { @t("The CARD KEY opened the\ndoor!", "磁卡钥匙打开了门！") }
+      setFlag("EVENT_SILPH_CO_10_UNLOCKED_DOOR")
+      replaceTileBlock(5, 4, 14)
+      playSound("SFX_GO_INSIDE")
+    } @else {
+      @speaker("") { @t("Darn! It needs a CARD KEY!", "可恶！需要磁卡钥匙！") }
+    }
+  }
+
+  // ── Rocket (npc 1) — sight-engaged by the runtime; dialogue only ─────────
+  @storyline("talkRocket") {
+    @trigger(map = "SilphCo10F", npc = 1, toggle = "SILPH_CO_10F_OBJ_1")
+    @if (getFlag("EVENT_BEAT_SILPH_CO_10F_TRAINER_0")) {
+      @speaker("") { @t("Nice try, but the boardroom\nis up one more floor!", "想得美，可是会议室还在上一\n层！") }
+    } @else {
+      @speaker("") { @t("Welcome to the 10F! So good\nof you to join me!", "欢迎来到 10层！你能加入我真\n好！") }
+    }
+  }
+
+  // ── Scientist (npc 2) — sight-engaged by the runtime; dialogue only ──────
+  @storyline("talkScientist") {
+    @trigger(map = "SilphCo10F", npc = 2, toggle = "SILPH_CO_10F_OBJ_2")
+    @if (getFlag("EVENT_BEAT_SILPH_CO_10F_TRAINER_1")) {
+      @speaker("") { @t("Are you satisfied with\nbeating me? Then go on home!", "打败我你满意了吗？那就回家\n吧！") }
+    } @else {
+      @speaker("") { @t("Enough of your silly games!", "够了！少跟我玩把戏！") }
+    }
+  }
+
+  // ── Silph worker (npc 3) — crying; calmer once Giovanni is beaten ────────
+  @storyline("talkSilphWorkerF") {
+    @trigger(map = "SilphCo10F", npc = 3)
+    @if (getFlag("EVENT_BEAT_SILPH_CO_GIOVANNI")) {
+      @speaker("") { @t("Please keep quiet about my\ncrying!", "请对我的哭声保密！") }
+    } @else {
+      @speaker("") { @t("Waaaaa! I'm scared!", "呜哇哇哇！我好害怕！") }
+    }
+  }
+
+  // ── Ground item: TM_EARTHQUAKE / TM26 (npc 4) ────────────────────────────
+  @storyline("itemTmEarthquake") {
+    @trigger(map = "SilphCo10F", npc = 4, toggle = "SILPH_CO_10F_OBJ_4")
+    @if (getFlag("EVENT_GOT_TM26")) {
+      @speaker("") { @t("It's an empty POKe BALL.", "这是一个空的精灵球。") }
+    } @else {
+      giveItem("TM26", 1)
+      setFlag("EVENT_GOT_TM26")
+      hideObjectByName("SILPH_CO_10F_OBJ_4")
+      @speaker("") { @t("<PLAYER> found TM26!", "<PLAYER>找到了 TM26！") }
+    }
+  }
+
+  // ── Ground item: RARE_CANDY (npc 5) ──────────────────────────────────────
+  @storyline("itemRareCandy") {
+    @trigger(map = "SilphCo10F", npc = 5, toggle = "SILPH_CO_10F_OBJ_5")
+    @if (getFlag("EVENT_GOT_RARE_CANDY_SILPH_CO_10F")) {
+      @speaker("") { @t("It's an empty POKe BALL.", "这是一个空的精灵球。") }
+    } @else {
+      giveItem("RARE_CANDY", 1)
+      setFlag("EVENT_GOT_RARE_CANDY_SILPH_CO_10F")
+      hideObjectByName("SILPH_CO_10F_OBJ_5")
+      @speaker("") { @t("<PLAYER> found RARE_CANDY!", "<PLAYER>找到了神奇糖果！") }
+    }
+  }
+
+  // ── Ground item: CARBOS (npc 6) ──────────────────────────────────────────
+  @storyline("itemCarbos") {
+    @trigger(map = "SilphCo10F", npc = 6, toggle = "SILPH_CO_10F_OBJ_6")
+    @if (getFlag("EVENT_GOT_CARBOS_SILPH_CO_10F")) {
+      @speaker("") { @t("It's an empty POKe BALL.", "这是一个空的精灵球。") }
+    } @else {
+      giveItem("CARBOS", 1)
+      setFlag("EVENT_GOT_CARBOS_SILPH_CO_10F")
+      hideObjectByName("SILPH_CO_10F_OBJ_6")
+      @speaker("") { @t("<PLAYER> found CARBOS!", "<PLAYER>找到了速度增强剂！") }
+    }
+  }
+}

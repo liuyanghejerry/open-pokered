@@ -1,0 +1,1 @@
+{"id":"MaxPotion","name":"MAX POTION","price":2500,"category":"Medicine","effect":{"type":"FullHeal","params":{}},"held_effect":null,"berry":null,"use_outside_battle":true,"use_in_battle":true,"consume":true,"key_item":false,"sellable":true,"description":"","tags":["healing","hp"]}

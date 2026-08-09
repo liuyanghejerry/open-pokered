@@ -1,0 +1,31 @@
+{
+  "$schema": "../schemas/trainer.schema.json",
+  "class": "Bruno",
+  "constName": "BRUNO",
+  "parties": [
+    {
+      "pokemon": [
+        {
+          "level": 53,
+          "species": "Onix"
+        },
+        {
+          "level": 55,
+          "species": "Hitmonchan"
+        },
+        {
+          "level": 55,
+          "species": "Hitmonlee"
+        },
+        {
+          "level": 56,
+          "species": "Onix"
+        },
+        {
+          "level": 58,
+          "species": "Machamp"
+        }
+      ]
+    }
+  ]
+}

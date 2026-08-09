@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <!--
+    Entitlements applied when signing with hardened runtime (required for Apple
+    notarization). Electron's V8 uses JIT and writable/executable memory, and
+    loads unsigned helper libraries, so these three are mandatory or the signed
+    app crashes on launch. Only used during a real signed build (see
+    electron-builder.cjs → mac.hardenedRuntime).
+  -->
+  <key>com.apple.security.cs.allow-jit</key>
+  <true/>
+  <key>com.apple.security.cs.allow-unsigned-executable-memory</key>
+  <true/>
+  <key>com.apple.security.cs.disable-library-validation</key>
+  <true/>
+  <!-- Needed if any child process reads DYLD_* env vars (Electron helpers). -->
+  <key>com.apple.security.cs.allow-dyld-environment-variables</key>
+  <true/>
+</dict>
+</plist>

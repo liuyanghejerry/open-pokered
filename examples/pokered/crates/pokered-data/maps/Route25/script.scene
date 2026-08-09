@@ -1,0 +1,131 @@
+// Route25 — translated from the original disassembly (scripts/Route25.asm,
+// text/Route25.asm) to the real Game DSL API surface. This is a route-trainer
+// map: npcs 1-9 are sight-engaged trainers (map.json isTrainer = true), so the
+// runtime owns the battle and each .scene handler is DIALOGUE ONLY (before- vs
+// after-battle text, branched on EVENT_BEAT_ROUTE_25_TRAINER_n). NPC 10 is the
+// ground-item Poke Ball (TM39 SEISMIC TOSS); sign 1 is Bill's SEA COTTAGE sign.
+
+game_scene Route25 {
+  // ── On entry: toggle Bill's NPCs after the S.S.Ticket questline ──────────
+  // Original Route25ToggleBillsScript swaps the Nugget Bridge guy / Bill object
+  // visibility based on EVENT_MET_BILL_2 / EVENT_GOT_SS_TICKET. The primitives
+  // (showObjectByName/hideObjectByName with toggle_id) exist, but this map's
+  // Bill / Nugget-Bridge-guy NPC objects are not modeled in map.json — a
+  // content gap (see docs/pokered-gap-completion-plan.md Phase 4); the
+  // trainers, item and sign below are fully faithful.
+  @load {
+    // Content gap: TOGGLE_BILL_POKEMON / NUGGET_BRIDGE_GUY / BILL_1 / BILL_2
+    // have no matching NPCs in Route25's map.json. Once modeled, gate here on
+    // EVENT_MET_BILL_2 / EVENT_GOT_SS_TICKET and toggle them (see
+    // Route25ToggleBillsScript in the original asm).
+  }
+
+  // ── Youngster (npc 1) — Route25TrainerHeader0 ───────────────────────────
+  @storyline("talkYoungster1") {
+    @trigger(map = "Route25", npc = 1)
+    @if (getFlag("EVENT_BEAT_ROUTE_25_TRAINER_0")) {
+      @speaker("") { @t("All POKeMON have weaknesses.\nIt's best to raise different\nkinds.", "每只宝可梦都有弱点。最好多培\n养几种不同的！") }
+    } @else {
+      @speaker("") { @t("Local trainers come here to\npractice!", "本地的训练家都会来这里练习！") }
+    }
+  }
+
+  // ── Youngster (npc 2) — Route25TrainerHeader1 ───────────────────────────
+  @storyline("talkYoungster2") {
+    @trigger(map = "Route25", npc = 2)
+    @if (getFlag("EVENT_BEAT_ROUTE_25_TRAINER_1")) {
+      @speaker("") { @t("On S.S.ANNE, I saw trainers\nfrom around the world.", "在圣安奴号上，我看到了来自世\n界各地的训练家。") }
+    } @else {
+      @speaker("") { @t("Dad took me to a great party\non S.S.ANNE at VERMILION\nCITY!", "爸爸带我去参加圣安奴号的盛大\n派对就在枯叶市！") }
+    }
+  }
+
+  // ── CooltrainerM / JrTrainerM (npc 3) — Route25TrainerHeader2 ───────────
+  @storyline("talkCooltrainerM") {
+    @trigger(map = "Route25", npc = 3)
+    @if (getFlag("EVENT_BEAT_ROUTE_25_TRAINER_2")) {
+      @speaker("") { @t("Oh well. My girl will cheer\nme up.", "算了。我的女朋友会让我振作起\n来。") }
+    } @else {
+      @speaker("") { @t("I'm a cool guy. I've got a\ngirl friend!", "我是酷哥。我已经有了女朋友！") }
+    }
+  }
+
+  // ── CooltrainerF / Lass (npc 4) — Route25TrainerHeader3 ─────────────────
+  @storyline("talkCooltrainerF1") {
+    @trigger(map = "Route25", npc = 4)
+    @if (getFlag("EVENT_BEAT_ROUTE_25_TRAINER_3")) {
+      @speaker("") { @t("I wish my guy was as good as\nyou!", "希望我的男朋友能和你一样厉\n害！") }
+    } @else {
+      @speaker("") { @t("Hi! My boy friend is cool!", "你好！我的男朋友很酷！") }
+    }
+  }
+
+  // ── Youngster (npc 5) — Route25TrainerHeader4 ───────────────────────────
+  @storyline("talkYoungster3") {
+    @trigger(map = "Route25", npc = 5)
+    @if (getFlag("EVENT_BEAT_ROUTE_25_TRAINER_4")) {
+      @speaker("") { @t("If your POKeMON gets\nconfused or falls asleep,\nswitch it!", "如果你的宝可梦混乱了或者睡着\n了，就换掉它！") }
+    } @else {
+      @speaker("") { @t("I knew I had to fight you!", "我就知道必须和你战斗！") }
+    }
+  }
+
+  // ── CooltrainerF / Lass (npc 6) — Route25TrainerHeader5 ─────────────────
+  @storyline("talkCooltrainerF2") {
+    @trigger(map = "Route25", npc = 6)
+    @if (getFlag("EVENT_BEAT_ROUTE_25_TRAINER_5")) {
+      @speaker("") { @t("You came from MT. MOON? May\nI have a CLEFAIRY?", "你从月见山来的吗？能给我一只\n皮皮吗？") }
+    } @else {
+      @speaker("") { @t("My friend has a cute\nPOKeMON. I'm so jealous!", "我的朋友有一只可爱的宝可梦。\n我好嫉妒！") }
+    }
+  }
+
+  // ── Hiker (npc 7) — Route25TrainerHeader6 ───────────────────────────────
+  @storyline("talkHiker1") {
+    @trigger(map = "Route25", npc = 7)
+    @if (getFlag("EVENT_BEAT_ROUTE_25_TRAINER_6")) {
+      @speaker("") { @t("Drat! A ZUBAT bit me back in\nthere.", "可恶！里面的超音蝠咬了我。") }
+    } @else {
+      @speaker("") { @t("I just got down from\nMT.MOON, but I'm ready!", "我刚从月见山下来，但我准备好\n了！") }
+    }
+  }
+
+  // ── Hiker (npc 8) — Route25TrainerHeader7 ───────────────────────────────
+  @storyline("talkHiker2") {
+    @trigger(map = "Route25", npc = 8)
+    @if (getFlag("EVENT_BEAT_ROUTE_25_TRAINER_7")) {
+      @speaker("") { @t("The collector has many rare\nkinds of POKeMON.", "那位收藏家有许多稀有的宝可\n梦。") }
+    } @else {
+      @speaker("") { @t("I'm off to see a POKeMON\ncollector at the cape!", "我要去海角见一位宝可梦收藏\n家！") }
+    }
+  }
+
+  // ── Hiker (npc 9) — Route25TrainerHeader8 ───────────────────────────────
+  @storyline("talkHiker3") {
+    @trigger(map = "Route25", npc = 9)
+    @if (getFlag("EVENT_BEAT_ROUTE_25_TRAINER_8")) {
+      @speaker("") { @t("The trail below is a\nshortcut to CERULEAN CITY.", "下面的小路是通往华蓝市的捷\n径。") }
+    } @else {
+      @speaker("") { @t("You're going to see BILL?\nFirst, let's fight!", "你要去见正辉？先和我打一场\n吧！") }
+    }
+  }
+
+  // ── Ground item: Poke Ball with TM39 SEISMIC TOSS (npc 10) ──────────────
+  // Original PickUpItemText gives the item, sets the got-item event and clears
+  // the ball object. Gate on EVENT_GOT_TM39 so it is only collected once.
+  @storyline("itemTmSeismicToss") {
+    @trigger(map = "Route25", npc = 10, toggle = "ROUTE_25_OBJ_10")
+    @if (!getFlag("EVENT_GOT_TM39")) {
+      giveItem("TM39", 1)
+      setFlag("EVENT_GOT_TM39")
+      hideObjectByName("ROUTE_25_OBJ_10")
+      @speaker("") { @t("<PLAYER> found TM39!", "<PLAYER>找到了 TM39！") }
+    }
+  }
+
+  // ── Sign 1: Bill's SEA COTTAGE ──────────────────────────────────────────
+  @storyline("sign1") {
+    @trigger(map = "Route25", sign = 1)
+    @speaker("") { @t("SEA COTTAGE BILL lives here!", "海边小屋正辉住在这里！") }
+  }
+}

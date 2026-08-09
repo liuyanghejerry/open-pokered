@@ -1,0 +1,36 @@
+{
+  "$schema": "../../schemas/script_config.schema.json",
+  "coordEvents": [],
+  "npcs": [
+    {
+      "id": 1,
+      "talk": "talkCopycat"
+    },
+    {
+      "id": 2,
+      "talk": "talkDoduo"
+    },
+    {
+      "id": 3,
+      "talk": "talkMonster"
+    },
+    {
+      "id": 4,
+      "talk": "talkBird"
+    },
+    {
+      "id": 5,
+      "talk": "talkFairy"
+    }
+  ],
+  "signs": [
+    {
+      "id": 1,
+      "talk": "signSNES"
+    },
+    {
+      "id": 2,
+      "talk": "signPC"
+    }
+  ]
+}

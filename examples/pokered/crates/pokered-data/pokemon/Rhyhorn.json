@@ -1,0 +1,74 @@
+{
+  "$schema": "../schemas/pokemon.schema.json",
+  "species": "Rhyhorn",
+  "baseStats": {
+    "hp": 80,
+    "attack": 85,
+    "defense": 95,
+    "speed": 25,
+    "special": 30
+  },
+  "type1": "Ground",
+  "type2": "Rock",
+  "catchRate": 120,
+  "baseExp": 135,
+  "growthRate": "Slow",
+  "initialMoves": [
+    "HornAttack",
+    "None",
+    "None",
+    "None"
+  ],
+  "tmHmFlags": [
+    224,
+    3,
+    136,
+    207,
+    162,
+    136,
+    34
+  ],
+  "pokedex": {
+    "category": "SPIKES",
+    "heightFeet": 3,
+    "heightInches": 3,
+    "weightDecipounds": 2540,
+    "flavorTextPages": [
+      "Its massive bones\nare 1000 times\nharder than human",
+      "bones. It can\neasily knock a\ntrailer flying"
+    ]
+  },
+  "evolutions": [
+    {
+      "method": "level",
+      "species": "Rhydon",
+      "level": 42
+    }
+  ],
+  "learnset": [
+    {
+      "level": 30,
+      "moveId": "Stomp"
+    },
+    {
+      "level": 35,
+      "moveId": "TailWhip"
+    },
+    {
+      "level": 40,
+      "moveId": "FuryAttack"
+    },
+    {
+      "level": 45,
+      "moveId": "HornDrill"
+    },
+    {
+      "level": 50,
+      "moveId": "Leer"
+    },
+    {
+      "level": 55,
+      "moveId": "TakeDown"
+    }
+  ]
+}

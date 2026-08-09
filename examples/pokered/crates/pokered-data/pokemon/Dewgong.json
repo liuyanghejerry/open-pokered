@@ -1,0 +1,64 @@
+{
+  "$schema": "../schemas/pokemon.schema.json",
+  "species": "Dewgong",
+  "baseStats": {
+    "hp": 90,
+    "attack": 70,
+    "defense": 80,
+    "speed": 70,
+    "special": 95
+  },
+  "type1": "Water",
+  "type2": "Ice",
+  "catchRate": 75,
+  "baseExp": 176,
+  "growthRate": "MediumFast",
+  "initialMoves": [
+    "Headbutt",
+    "Growl",
+    "AuroraBeam",
+    "None"
+  ],
+  "tmHmFlags": [
+    224,
+    255,
+    8,
+    192,
+    130,
+    8,
+    50
+  ],
+  "pokedex": {
+    "category": "SEA LION",
+    "heightFeet": 5,
+    "heightInches": 7,
+    "weightDecipounds": 2650,
+    "flavorTextPages": [
+      "Stores thermal\nenergy in its\nbody. Swims at a",
+      "steady 8 knots\neven in intensely\ncold waters"
+    ]
+  },
+  "evolutions": [],
+  "learnset": [
+    {
+      "level": 30,
+      "moveId": "Growl"
+    },
+    {
+      "level": 35,
+      "moveId": "AuroraBeam"
+    },
+    {
+      "level": 44,
+      "moveId": "Rest"
+    },
+    {
+      "level": 50,
+      "moveId": "TakeDown"
+    },
+    {
+      "level": 56,
+      "moveId": "IceBeam"
+    }
+  ]
+}

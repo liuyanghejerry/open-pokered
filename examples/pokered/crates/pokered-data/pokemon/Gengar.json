@@ -1,0 +1,52 @@
+{
+  "$schema": "../schemas/pokemon.schema.json",
+  "species": "Gengar",
+  "baseStats": {
+    "hp": 60,
+    "attack": 65,
+    "defense": 60,
+    "speed": 110,
+    "special": 130
+  },
+  "type1": "Ghost",
+  "type2": "Poison",
+  "catchRate": 45,
+  "baseExp": 190,
+  "growthRate": "MediumSlow",
+  "initialMoves": [
+    "Lick",
+    "ConfuseRay",
+    "NightShade",
+    "None"
+  ],
+  "tmHmFlags": [
+    177,
+    67,
+    159,
+    209,
+    142,
+    106,
+    34
+  ],
+  "pokedex": {
+    "category": "SHADOW",
+    "heightFeet": 4,
+    "heightInches": 11,
+    "weightDecipounds": 890,
+    "flavorTextPages": [
+      "Under a full moon,\nthis #MON\nlikes to mimic",
+      "the shadows of\npeople and laugh\nat their fright"
+    ]
+  },
+  "evolutions": [],
+  "learnset": [
+    {
+      "level": 29,
+      "moveId": "Hypnosis"
+    },
+    {
+      "level": 38,
+      "moveId": "DreamEater"
+    }
+  ]
+}

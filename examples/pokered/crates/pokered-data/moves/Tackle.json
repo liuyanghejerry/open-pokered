@@ -1,0 +1,9 @@
+{
+  "$schema": "../schemas/move.schema.json",
+  "id": "Tackle",
+  "effect": "NoAdditionalEffect",
+  "power": 35,
+  "type": "Normal",
+  "accuracy": 95,
+  "pp": 35
+}

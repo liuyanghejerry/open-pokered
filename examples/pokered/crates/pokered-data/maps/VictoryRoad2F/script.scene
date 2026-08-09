@@ -1,0 +1,225 @@
+// VictoryRoad2F — translated from the original disassembly
+// (scripts/VictoryRoad2F.asm, text/VictoryRoad2F.asm, shared BoulderText) to the
+// real Game DSL API surface.
+//
+// Content: five sight-engaged trainers (Hiker/Blackbelt, two SuperNerd/Jugglers,
+// a CooltrainerM/Tamer, a SuperNerd/Pokemaniac) whose battles the runtime drives,
+// so their .scene handlers are DIALOGUE ONLY; the Moltres encounter (a range-0
+// "trainer" header => legendary battle, implemented as a static wild battle via
+// startWildBattle, see talkMoltres); four PokeBall ground items (TM17
+// SUBMISSION, FULL_HEAL, TM05 MEGA_KICK, GUARD_SPEC); and three Strength
+// boulders (shared BoulderText). The original map script only does
+// Strength-boulder tile-block swaps onto the two floor switches; @load replays
+// the open-floor tiles with replaceTileBlock from each switch flag.
+
+game_scene VictoryRoad2F {
+  // ── On-enter: Strength-boulder-on-switch tile updates ─────────────────────
+  // Original VictoryRoad2FCheckBoulderEventScript re-applies the open floor
+  // block on map load from each switch flag (predef ReplaceTileBlock):
+  //   SWITCH1 -> ld a,$15 (block 21); lb bc, 4, 3  => replaceTileBlock(X=3,  Y=4,  21)
+  //   SWITCH2 -> ld a,$1d (block 29); lb bc, 7, 11 => replaceTileBlock(X=11, Y=7,  29)
+  // (asm lb bc, B, C = Y,X; our API is replaceTileBlock(X, Y, id) X-first.)
+  @load {
+    @if (getFlag("EVENT_VICTORY_ROAD_2_BOULDER_ON_SWITCH1")) {
+      replaceTileBlock(3, 4, 21)
+    }
+    @if (getFlag("EVENT_VICTORY_ROAD_2_BOULDER_ON_SWITCH2")) {
+      replaceTileBlock(11, 7, 29)
+    }
+  }
+
+  // ── Floor switch 1 (boulder-on-switch coord 1,16) ─────────────────────────
+  // VictoryRoad2FDefaultScript checks .SwitchCoords (dbmapcoord 1,16 / 9,16)
+  // and SetEvent the matching BOULDER_ON_SWITCH flag, which then opens the
+  // floor via the @load ReplaceTileBlock above. The original requires a
+  // STRENGTH boulder pushed onto the tile; there is no boulder-push API, so we
+  // approximate faithfully: reaching the switch coord solves it and opens the
+  // door immediately (same flag + same tile swap as the asm).
+  @storyline("switch1") {
+    @trigger(map = "VictoryRoad2F", name = "switch1")
+    @if (!getFlag("EVENT_VICTORY_ROAD_2_BOULDER_ON_SWITCH1")) {
+      setFlag("EVENT_VICTORY_ROAD_2_BOULDER_ON_SWITCH1")
+      replaceTileBlock(3, 4, 21)
+    }
+  }
+
+  // ── Floor switch 2 (boulder-on-switch coord 9,16) ─────────────────────────
+  @storyline("switch2") {
+    @trigger(map = "VictoryRoad2F", name = "switch2")
+    @if (!getFlag("EVENT_VICTORY_ROAD_2_BOULDER_ON_SWITCH2")) {
+      setFlag("EVENT_VICTORY_ROAD_2_BOULDER_ON_SWITCH2")
+      replaceTileBlock(11, 7, 29)
+    }
+  }
+
+  // ── Hiker / Blackbelt (npc 1) — sight-engaged trainer; dialogue only ──────
+  @storyline("talkHiker") {
+    @trigger(map = "VictoryRoad2F", npc = 1)
+    @if (getFlag("EVENT_BEAT_VICTORY_ROAD_2_TRAINER_0")) {
+      @speaker("") {
+        @t("If you get stuck, try moving\nsome boulders around!", "如果你卡住了，试着挪动一些巨\n石吧！")
+      }
+    } @else {
+      @speaker("") {
+        @t("VICTORY ROAD is the final\ntest for trainers!", "冠军之路是对训练家的最终考\n验！")
+      }
+    }
+  }
+
+  // ── SuperNerd / Juggler (npc 2) — sight-engaged trainer; dialogue only ────
+  @storyline("talkSuperNerd1") {
+    @trigger(map = "VictoryRoad2F", npc = 2)
+    @if (getFlag("EVENT_BEAT_VICTORY_ROAD_2_TRAINER_1")) {
+      @speaker("") {
+        @t("<RIVAL> also came through\nhere!", "<RIVAL>也来过这里！")
+      }
+    } @else {
+      @speaker("") {
+        @t("Ah, so you wish to challenge\nthe ELITE FOUR?", "啊，你是想挑战四天王吗？")
+      }
+    }
+  }
+
+  // ── CooltrainerM / Tamer (npc 3) — sight-engaged trainer; dialogue only ───
+  @storyline("talkCooltrainerM") {
+    @trigger(map = "VictoryRoad2F", npc = 3)
+    @if (getFlag("EVENT_BEAT_VICTORY_ROAD_2_TRAINER_2")) {
+      @speaker("") {
+        @t("You earned the right to be\non VICTORY ROAD!", "你赢得了踏上冠军之路的资格！")
+      }
+    } @else {
+      @speaker("") {
+        @t("Come on! I'll whip you!", "来吧！我要好好教训你！")
+      }
+    }
+  }
+
+  // ── SuperNerd / Pokemaniac (npc 4) — sight-engaged trainer; dialogue only ─
+  @storyline("talkSuperNerd2") {
+    @trigger(map = "VictoryRoad2F", npc = 4)
+    @if (getFlag("EVENT_BEAT_VICTORY_ROAD_2_TRAINER_3")) {
+      @speaker("") {
+        @t("I can beat you when it comes\nto knowledge about POKeMON!", "论对宝可梦的了解，我可不会输\n给你！")
+      }
+    } @else {
+      @speaker("") {
+        @t("If you can get through here,\nyou can go meet the ELITE\nFOUR!", "如果你能通过这里，就能见到四\n天王！")
+      }
+    }
+  }
+
+  // ── SuperNerd / Juggler (npc 5) — sight-engaged trainer; dialogue only ────
+  @storyline("talkSuperNerd3") {
+    @trigger(map = "VictoryRoad2F", npc = 5)
+    @if (getFlag("EVENT_BEAT_VICTORY_ROAD_2_TRAINER_4")) {
+      @speaker("") {
+        @t("Many trainers give up the\nchallenge here.", "很多训练家都在这里放弃了挑\n战。")
+      }
+    } @else {
+      @speaker("") {
+        @t("Is VICTORY ROAD too tough?", "冠军之路太难了吗？")
+      }
+    }
+  }
+
+  // ── Moltres (npc 6, the Bird) ─────────────────────────────────────────────
+  // Original: TalkToTrainer on a sight-range-0 "trainer" header => a wild
+  // legendary battle vs MOLTRES (Lv 50), preceded by its cry + "Gyaoo!" text.
+  // Implemented as a static wild battle via startWildBattle; the cry + text
+  // match the original.
+  @storyline("talkMoltres") {
+    @trigger(map = "VictoryRoad2F", npc = 6)
+    @if (!getFlag("EVENT_BEAT_MOLTRES")) {
+      playCry("MOLTRES")
+      @speaker("") {
+        @t("Gyaoo!", "嘎嗷！")
+      }
+      // Static wild Lv50 MOLTRES battle (catchable); flag set only on win/catch.
+      result = startWildBattle("MOLTRES", 50)
+      @if (result == "win" || result == "caught") {
+        setFlag("EVENT_BEAT_MOLTRES")
+      }
+    } @else {
+      playCry("MOLTRES")
+      @speaker("") {
+        @t("Gyaoo!", "嘎嗷！")
+      }
+    }
+  }
+
+  // ── Ground item: TM17 SUBMISSION (npc 7) ──────────────────────────────────
+  @storyline("itemTmSubmission") {
+    @trigger(map = "VictoryRoad2F", npc = 7, toggle = "VICTORY_ROAD_2F_OBJ_7")
+    @if (getFlag("EVENT_GOT_TM17")) {
+      @speaker("") { @t("The item ball is empty.", "这个道具球是空的。") }
+    } @else {
+      giveItem("TM17", 1)
+      setFlag("EVENT_GOT_TM17")
+      hideObject("VICTORY_ROAD_2F_OBJ_7")
+      @speaker("") { @t("<PLAYER> found TM17!", "<PLAYER>找到了 TM17！") }
+    }
+  }
+
+  // ── Ground item: FULL HEAL (npc 8) ────────────────────────────────────────
+  @storyline("itemFullHeal") {
+    @trigger(map = "VictoryRoad2F", npc = 8, toggle = "VICTORY_ROAD_2F_OBJ_8")
+    @if (getFlag("EVENT_GOT_FULL_HEAL_VICTORY_ROAD_2F")) {
+      @speaker("") { @t("The item ball is empty.", "这个道具球是空的。") }
+    } @else {
+      giveItem("FULL_HEAL", 1)
+      setFlag("EVENT_GOT_FULL_HEAL_VICTORY_ROAD_2F")
+      hideObject("VICTORY_ROAD_2F_OBJ_8")
+      @speaker("") { @t("<PLAYER> found FULL_HEAL!", "<PLAYER>找到了万灵药！") }
+    }
+  }
+
+  // ── Ground item: TM05 MEGA KICK (npc 9) ───────────────────────────────────
+  @storyline("itemTmMegaKick") {
+    @trigger(map = "VictoryRoad2F", npc = 9, toggle = "VICTORY_ROAD_2F_OBJ_9")
+    @if (getFlag("EVENT_GOT_TM05")) {
+      @speaker("") { @t("The item ball is empty.", "这个道具球是空的。") }
+    } @else {
+      giveItem("TM05", 1)
+      setFlag("EVENT_GOT_TM05")
+      hideObject("VICTORY_ROAD_2F_OBJ_9")
+      @speaker("") { @t("<PLAYER> found TM05!", "<PLAYER>找到了 TM05！") }
+    }
+  }
+
+  // ── Ground item: GUARD SPEC. (npc 10) ─────────────────────────────────────
+  @storyline("itemGuardSpec") {
+    @trigger(map = "VictoryRoad2F", npc = 10, toggle = "VICTORY_ROAD_2F_OBJ_10")
+    @if (getFlag("EVENT_GOT_GUARD_SPEC_VICTORY_ROAD_2F")) {
+      @speaker("") { @t("The item ball is empty.", "这个道具球是空的。") }
+    } @else {
+      giveItem("GUARD_SPEC", 1)
+      setFlag("EVENT_GOT_GUARD_SPEC_VICTORY_ROAD_2F")
+      hideObject("VICTORY_ROAD_2F_OBJ_10")
+      @speaker("") { @t("<PLAYER> found GUARD_SPEC!", "<PLAYER>找到了特殊防御！") }
+    }
+  }
+
+  // ── Strength boulder (npc 11) — shared BoulderText ────────────────────────
+  @storyline("talkBoulder1") {
+    @trigger(map = "VictoryRoad2F", npc = 11)
+    @speaker("") {
+      @t("This requires STRENGTH to\nmove!", "这个巨石需要怪力才能推动！")
+    }
+  }
+
+  // ── Strength boulder (npc 12) — shared BoulderText ────────────────────────
+  @storyline("talkBoulder2") {
+    @trigger(map = "VictoryRoad2F", npc = 12)
+    @speaker("") {
+      @t("This requires STRENGTH to\nmove!", "这个巨石需要怪力才能推动！")
+    }
+  }
+
+  // ── Strength boulder (npc 13) — shared BoulderText ────────────────────────
+  @storyline("talkBoulder3") {
+    @trigger(map = "VictoryRoad2F", npc = 13)
+    @speaker("") {
+      @t("This requires STRENGTH to\nmove!", "这个巨石需要怪力才能推动！")
+    }
+  }
+}

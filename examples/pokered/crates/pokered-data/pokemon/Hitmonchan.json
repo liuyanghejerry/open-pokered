@@ -1,0 +1,64 @@
+{
+  "$schema": "../schemas/pokemon.schema.json",
+  "species": "Hitmonchan",
+  "baseStats": {
+    "hp": 50,
+    "attack": 105,
+    "defense": 79,
+    "speed": 76,
+    "special": 35
+  },
+  "type1": "Fighting",
+  "type2": "Fighting",
+  "catchRate": 45,
+  "baseExp": 140,
+  "growthRate": "MediumFast",
+  "initialMoves": [
+    "CometPunch",
+    "Agility",
+    "None",
+    "None"
+  ],
+  "tmHmFlags": [
+    177,
+    3,
+    15,
+    192,
+    198,
+    8,
+    34
+  ],
+  "pokedex": {
+    "category": "PUNCHING",
+    "heightFeet": 4,
+    "heightInches": 7,
+    "weightDecipounds": 1110,
+    "flavorTextPages": [
+      "While apparently\ndoing nothing, it\nfires punches in",
+      "lightning fast\nvolleys that are\nimpossible to see"
+    ]
+  },
+  "evolutions": [],
+  "learnset": [
+    {
+      "level": 33,
+      "moveId": "FirePunch"
+    },
+    {
+      "level": 38,
+      "moveId": "IcePunch"
+    },
+    {
+      "level": 43,
+      "moveId": "Thunderpunch"
+    },
+    {
+      "level": 48,
+      "moveId": "MegaPunch"
+    },
+    {
+      "level": 53,
+      "moveId": "Counter"
+    }
+  ]
+}

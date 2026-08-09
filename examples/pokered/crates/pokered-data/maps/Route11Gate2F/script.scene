@@ -1,0 +1,122 @@
+// Route11Gate2F — translated from the original disassembly
+// (scripts/Route11Gate2F.asm, text/Route11Gate2F.asm,
+// engine/events/in_game_trades.asm + data/events/trades.asm,
+// engine/events/oaks_aide.asm). Two NPCs (an in-game-trade Youngster and an
+// Oak's Aide) plus two binocular signs that only display when the player
+// faces up.
+
+game_scene Route11Gate2F {
+  // ── Youngster (npc 1) — TRADE_FOR_TERRY: NIDORINO -> NIDORINA (TERRY) ────
+  // dialogset CASUAL (set 1).
+  //
+  // The trade is fully implemented via tradePokemon(): it verifies the player
+  // carries NIDORINO, removes it from the party, and adds NIDORINA nicknamed
+  // TERRY with the trade animation; the wrong-mon path returns false. See
+  // talkYoungster below.
+  @storyline("talkYoungster") {
+    @trigger(map = "Route11Gate2F", npc = 1)
+    @if (getFlag("EVENT_TRADED_FOR_TERRY")) {
+      // AfterTrade1Text (dialogset CASUAL)
+      @speaker("") {
+        @t("Isn't my old NIDORINA great?", "我的这只尼多兰棒吧？")
+      }
+    } @else {
+      // WannaTrade1Text (dialogset CASUAL)
+      @speaker("") {
+        @t("I'm looking for NIDORINO!\nWanna\n\ntrade one for NIDORINA?", "我在找尼多朗！\n\n想跟我交换尼多兰？")
+      }
+      @choice {
+        @option(@t("YES", "是")) {
+          // ConnectCableText -> real in-game trade (removes NIDORINO, adds
+          // NIDORINA nicknamed TERRY). tradePokemon returns false if the player
+          // doesn't actually carry NIDORINO -> wrong-mon (dialogset CASUAL).
+          @speaker("") { @t("Okay, connect the cable like\nso!", "好，请像这样连接线缆！") }
+          traded = tradePokemon("NIDORINO", "NIDORINA", "TERRY")
+          @if (traded) {
+            setFlag("EVENT_TRADED_FOR_TERRY")
+            @speaker("") { @t("<PLAYER> traded NIDORINO for\nNIDORINA!", "<PLAYER>用尼多朗交换了尼多\n兰！") }
+            @speaker("") { @t("Hey thanks!", "嘿，谢啦！") }
+          } @else {
+            @speaker("") { @t("What? That's not NIDORINO!\n\nIf you get one, come back\nhere!", "什么？那不是尼多朗！\n\n你要是抓到，再来找我吧！") }
+          }
+        }
+        @option(@t("NO", "否")) {
+          // NoTrade1Text
+          @speaker("") { @t("Awww! Oh well...", "哎呀！算了吧……") }
+        }
+      }
+    }
+  }
+
+  // ── Oak's Aide / Scientist (npc 2) — gives ITEMFINDER at 30 kinds owned ──
+  @storyline("talkOaksAide") {
+    @trigger(map = "Route11Gate2F", npc = 2)
+    @if (getFlag("EVENT_GOT_ITEMFINDER")) {
+      // ItemfinderDescriptionText (shown once the player already has it)
+      @speaker("") {
+        @t("There are items on the\nground that can't be seen.\n\nITEMFINDER will detect an\nitem close to you.\n\nIt can't pinpoint it, so you\nhave to look yourself!", "地上有些看不见的道具。\n\n探宝器能探测到附近的道具。\n\n但无法准确定位，你得自己找才\n行！")
+      }
+    } @else {
+      // OaksAideHiText (requirement = 30 kinds, reward = ITEMFINDER)
+      @speaker("") {
+        @t("Hi! Remember me? I'm\nPROF.OAK's AIDE!\n\nIf you caught 30 kinds of\nPOKeMON, I'm supposed to\ngive you an ITEMFINDER!\n\nSo, <PLAYER>! Have you\ncaught at least 30 kinds of\nPOKeMON?", "嗨！还记得我吗？我是大木博士\n的助手！\n\n如果你抓到了 30种宝可梦，我\n就要给你一个探宝器！\n\n那么，<PLAYER>！你抓到 30种\n以上的宝可梦了吗？")
+      }
+      @choice {
+        @option(@t("YES", "是")) {
+          @if (getPokedexOwnedCount() >= 30) {
+            // OaksAideHereYouGoText -> give item -> OaksAideGotItemText
+            @speaker("") {
+              @t("Great! You have caught 30\nkinds of POKeMON!\nCongratulations!\n\nHere you go!", "太好了！你已经抓到了 30种宝\n可梦！恭喜你！\n\n给你！")
+            }
+            giveItem("ITEMFINDER", 1)
+            setFlag("EVENT_GOT_ITEMFINDER")
+            @speaker("") { @t("<PLAYER> got the ITEMFINDER!", "<PLAYER>得到了探宝器！") }
+            // ItemfinderDescriptionText follows in the original.
+            @speaker("") {
+              @t("There are items on the\nground that can't be seen.\n\nITEMFINDER will detect an\nitem close to you.\n\nIt can't pinpoint it, so you\nhave to look yourself!", "地上有些看不见的道具。\n\n探宝器能探测到附近的道具。\n\n但无法准确定位，你得自己找才\n行！")
+            }
+          } @else {
+            // OaksAideUhOhText (not enough kinds owned)
+            @speaker("") {
+              @t("Let's see... Uh-oh! You\nhaven't caught 30 kinds of\nPOKeMON yet!\n\nYou need 30 kinds if you\nwant the ITEMFINDER.", "让我看看……哎呀！你还没抓到\n30种宝可梦！\n\n想要探宝器就需要 30种才行。")
+            }
+          }
+        }
+        @option(@t("NO", "否")) {
+          // OaksAideComeBackText
+          @speaker("") {
+            @t("Oh. I see.\n\nWhen you get 30 kinds, come\nback for ITEMFINDER.", "哦，是吗。\n\n等你抓到30种，再来拿探宝器\n吧。")
+          }
+        }
+      }
+    }
+  }
+
+  // ── Left binoculars (sign 1) — only shown when facing up ─────────────────
+  @storyline("leftBinoculars") {
+    @trigger(map = "Route11Gate2F", sign = 1)
+    @if (getPlayerFacing() == "up") {
+      @if (getFlag("EVENT_BEAT_ROUTE12_SNORLAX")) {
+        // LeftBinocularsNoSnorlaxText (Snorlax already cleared from Route 12)
+        @speaker("") {
+          @t("Looked into the binoculars.\n\nIt's a beautiful view!", "用望远镜看了看。\n\n真是美丽的景色！")
+        }
+      } @else {
+        // LeftBinocularsSnorlaxText (Snorlax still asleep on Route 12)
+        @speaker("") {
+          @t("Looked into the binoculars.\n\nA big POKeMON is asleep on a\nroad!", "用望远镜看了看。\n\n有只大宝可梦在路上睡着！")
+        }
+      }
+    }
+  }
+
+  // ── Right binoculars (sign 2) — only shown when facing up ────────────────
+  @storyline("rightBinoculars") {
+    @trigger(map = "Route11Gate2F", sign = 2)
+    @if (getPlayerFacing() == "up") {
+      @speaker("") {
+        @t("Looked into the binoculars.\n\nThe only way to get from\nCERULEAN CITY to LAVENDER is\nby way of the ROCK TUNNEL.", "用望远镜看了看。\n\n从华蓝市到紫苑镇只有经过岩山\n隧道这条路。")
+      }
+    }
+  }
+}

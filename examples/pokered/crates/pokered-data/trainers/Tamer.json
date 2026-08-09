@@ -1,0 +1,87 @@
+{
+  "$schema": "../schemas/trainer.schema.json",
+  "class": "Tamer",
+  "constName": "TAMER",
+  "parties": [
+    {
+      "pokemon": [
+        {
+          "level": 34,
+          "species": "Sandslash"
+        },
+        {
+          "level": 34,
+          "species": "Arbok"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 33,
+          "species": "Arbok"
+        },
+        {
+          "level": 33,
+          "species": "Sandslash"
+        },
+        {
+          "level": 33,
+          "species": "Arbok"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 43,
+          "species": "Rhyhorn"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 39,
+          "species": "Arbok"
+        },
+        {
+          "level": 39,
+          "species": "Tauros"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 44,
+          "species": "Persian"
+        },
+        {
+          "level": 44,
+          "species": "Golduck"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 42,
+          "species": "Rhyhorn"
+        },
+        {
+          "level": 42,
+          "species": "Primeape"
+        },
+        {
+          "level": 42,
+          "species": "Arbok"
+        },
+        {
+          "level": 42,
+          "species": "Tauros"
+        }
+      ]
+    }
+  ]
+}

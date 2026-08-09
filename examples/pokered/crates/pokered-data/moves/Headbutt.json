@@ -1,0 +1,9 @@
+{
+  "$schema": "../schemas/move.schema.json",
+  "id": "Headbutt",
+  "effect": "FlinchSideEffect2",
+  "power": 70,
+  "type": "Normal",
+  "accuracy": 100,
+  "pp": 15
+}

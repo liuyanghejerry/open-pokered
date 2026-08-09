@@ -1,0 +1,109 @@
+# node dependencies
+node_modules/
+
+# compiled objects
+*.o
+
+# compiled graphics
+*.1bpp
+*.2bpp
+*.pic
+
+# pokered graphics assets: fetched from pret/pokered by scripts/fetch-gfx.sh
+# rather than vendored here. REQUIRED for any build — run scripts/fetch-gfx.sh
+# once after cloning (pokered-data include_bytes!s gfx/blocksets/*.bst).
+# See docs/gfx-assets.md.
+/examples/pokered/gfx/
+
+# compiled roms
+*.gbc
+*.gb
+*.patch
+
+# rgbds extras
+*.map
+*.sym
+
+# tool binaries
+*.exe
+
+# precompiled python
+*.pyc
+*$py.class
+__pycache__/
+
+# save game files
+*.sgm
+*.sav
+*.rtc
+*.sn*
+*.sa*
+
+# insta snapshot references: the save-state `*.sn*` above also matches `*.snap`,
+# so re-include committed snapshot references. Pending `*.snap.new` stays ignored
+# (it ends in `.new`, so this negation doesn't touch it).
+!*.snap
+
+# AI session artifacts
+**/.sisyphus/evidence/
+**/.sisyphus/notepads/
+**/boulder.json
+**/.playwright-mcp/
+*.sg1
+
+# opencode / agent tooling
+.opencode/
+.codegraph/
+.omo/
+
+# Build artifacts
+/target/
+/tools/pokered-editor/target/
+
+# iOS build artifacts
+DerivedData/
+*.app
+*.ipa
+*.xcworkspace
+xcuserdata/
+Pods/
+.build/
+**/*.xcodeproj/xcuserdata/
+**/*.xcodeproj/project.xcworkspace/xcuserdata/
+**/libpokered_ios_*.a
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Environment
+.env
+
+# pokered-web frontend
+crates/pokered-web/frontend/node_modules/
+crates/pokered-web/frontend/dist/
+crates/pokered-web/frontend/src/wasm/pokered_web.js
+crates/pokered-web/frontend/src/wasm/pokered_web_bg.wasm
+crates/pokered-web/frontend/src/wasm/pokered_web_bg.js
+
+# jrpg-editor: local AI provider profiles (no API keys, machine-local) — not versioned
+.jrpg-editor.providers.json
+
+# pnpm workspace
+tools/pnpm-lock.yaml
+
+# pokered-runner-web wasm-pack output (rebuilt by tools/pokered-editor build:wasm-pokered)
+crates/pokered-runner-web/pkg/
+
+# visual-verify / screenshot artifacts
+heal_machine_frame.png
+examples/pokered/crates/pokered-app/heal_machine_frame_*.png
+examples/pokered/crates/pokered-app/party_screen_*.png
+examples/pokered/crates/pokered-app/stats_page1_*.png
+examples/pokered/crates/pokered-app/stats_page2_*.png

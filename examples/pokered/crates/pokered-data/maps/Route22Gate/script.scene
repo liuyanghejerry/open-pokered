@@ -1,0 +1,51 @@
+// Route22Gate — translated from the original disassembly
+// (scripts/Route22Gate.asm, text/Route22Gate.asm) to the real Game DSL API.
+// This is the checkpoint gate north of Viridian, on the way to the POKeMON
+// LEAGUE (Route 22 -> Route 23). The guard blocks passage unless the player
+// has the BOULDERBADGE (the original checks wObtainedBadges; we use the
+// EVENT_BEAT_BROCK flag, which is set when the BOULDERBADGE is earned). The
+// on-enter coord script shoves the player back south with simulated joypad
+// input; reproduced with a relative movePlayerRelative step.
+
+game_scene Route22Gate {
+  // ── Guard (npc 1) — badge gate on the BOULDERBADGE ─────────────────────
+  // Talking to the guard runs the same check the gate threshold does.
+  @storyline("talkGuard") {
+    @trigger(map = "Route22Gate", npc = 1)
+    @if (getFlag("EVENT_BEAT_BROCK")) {
+      @speaker("") {
+        @t("Oh! That is the\nBOULDERBADGE! Go right\nahead!", "哦！那是灰色徽章！请过去吧！")
+      }
+    } @else {
+      @speaker("") {
+        @t("Only truly skilled trainers\nare allowed through.\n\nYou don't have the\nBOULDERBADGE yet!", "只有真正高强的训练家才能通过\n这里。\n\n你还没有灰色徽章！")
+      }
+      playSound("SFX_DENIED")
+      @speaker("") {
+        @t("The rules are rules. I can't\nlet you pass.", "规矩就是规矩，我不能让你过\n去。")
+      }
+    }
+  }
+
+  // ── Gate threshold (Route22GateDefaultScript) ──────────────────────────
+  // Stepping onto the counter tiles (x=4..5, y=2) makes the guard call out.
+  // Without the BOULDERBADGE the original simulates a DOWN press to shove the
+  // player back south; there's no forced-movement API, so we step the player
+  // back down one tile after the refusal dialogue.
+  @storyline("gateThreshold") {
+    @trigger(map = "Route22Gate", name = "gateThreshold1")
+    @if (!getFlag("EVENT_BEAT_BROCK")) {
+      @speaker("") {
+        @t("Only truly skilled trainers\nare allowed through.\n\nYou don't have the\nBOULDERBADGE yet!", "只有真正高强的训练家才能通过\n这里。\n\n你还没有灰色徽章！")
+      }
+      playSound("SFX_DENIED")
+      @speaker("") {
+        @t("The rules are rules. I can't\nlet you pass.", "规矩就是规矩，我不能让你过\n去。")
+      }
+      // Original simulates joypad DOWN x1 to shove the player back south from
+      // trigger tiles (4,2)/(5,2), ending at (4,3)/(5,3). A relative step
+      // down matches both trigger tiles.
+      movePlayerRelative([[0, 1]])
+    }
+  }
+}

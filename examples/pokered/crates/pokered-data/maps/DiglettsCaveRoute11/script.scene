@@ -1,0 +1,14 @@
+// DiglettsCaveRoute11 — translated from the original disassembly
+// (scripts/DiglettsCaveRoute11.asm, text/DiglettsCaveRoute11.asm) to the real
+// Game DSL API surface. A single Gambler NPC with one dialogue; the original
+// on-enter script only set wLastMap (runtime bookkeeping, no DSL equivalent).
+
+game_scene DiglettsCaveRoute11 {
+  // ── Gambler (npc 1) — dialogue only ───────────────────────────────────
+  @storyline("talkGambler") {
+    @trigger(map = "DiglettsCaveRoute11", npc = 1)
+    @speaker("") {
+      @t("What a surprise! DIGLETTs\ndug this long tunnel!\n\nIt goes right to VIRIDIAN\nCITY!", "真令人吃惊！地鼠们挖出了这条\n长隧道！\n\n一直通向常青市！")
+    }
+  }
+}

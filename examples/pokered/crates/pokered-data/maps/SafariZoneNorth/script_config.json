@@ -1,0 +1,38 @@
+{
+  "$schema": "../../schemas/script_config.schema.json",
+  "coordEvents": [],
+  "npcs": [
+    {
+      "id": 1,
+      "talk": "itemProtein",
+      "toggleId": "SAFARI_ZONE_NORTH_OBJ_1"
+    },
+    {
+      "id": 2,
+      "talk": "itemTmSkullBash",
+      "toggleId": "SAFARI_ZONE_NORTH_OBJ_2"
+    }
+  ],
+  "signs": [
+    {
+      "id": 1,
+      "talk": "sign1"
+    },
+    {
+      "id": 2,
+      "talk": "sign2"
+    },
+    {
+      "id": 3,
+      "talk": "sign3"
+    },
+    {
+      "id": 4,
+      "talk": "sign4"
+    },
+    {
+      "id": 5,
+      "talk": "sign5"
+    }
+  ]
+}

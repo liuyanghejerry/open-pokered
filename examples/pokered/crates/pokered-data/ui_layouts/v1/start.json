@@ -1,0 +1,50 @@
+{
+  "$schema": "/schemas/layout.schema.json",
+  "schema_version": 1,
+  "screen": "start",
+  "variants": {
+    "default": {
+      "children": [
+        {
+          "id": "menu",
+          "rect": {
+            "tx": 10,
+            "ty": 0,
+            "tw": 10,
+            "th": 16
+          },
+          "color": "Black",
+          "width": "auto",
+          "height": "auto",
+          "min_width": 6,
+          "min_height": 4,
+          "padding": {
+            "top": 1,
+            "bottom": 1,
+            "left": 1,
+            "right": 1
+          },
+          "gap": 1,
+          "justify": "start",
+          "align": "start",
+          "items": [
+            {
+              "text": "NEW GAME",
+              "color": "Black"
+            },
+            {
+              "text": "OPTION",
+              "color": "Black"
+            }
+          ],
+          "cursor": {
+            "glyph": "\u25b6",
+            "color": "Black"
+          },
+          "layout": "flex",
+          "z_index": 0
+        }
+      ]
+    }
+  }
+}

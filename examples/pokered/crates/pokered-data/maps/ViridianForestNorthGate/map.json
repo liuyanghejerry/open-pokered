@@ -1,0 +1,104 @@
+{
+  "$schema": "../../schemas/map.schema.json",
+  "id": 47,
+  "name": "ViridianForestNorthGate",
+  "header": {
+    "tileset": "ForestGate",
+    "music": "Cities1",
+    "connectionFlags": 0,
+    "width": 5,
+    "height": 4,
+    "borderBlock": 10
+  },
+  "connections": {},
+  "warps": [
+    {
+      "x": 4,
+      "y": 0,
+      "destWarpId": 1
+    },
+    {
+      "x": 5,
+      "y": 0,
+      "destWarpId": 1
+    },
+    {
+      "x": 4,
+      "y": 7,
+      "destMap": "ViridianForest",
+      "destWarpId": 0
+    },
+    {
+      "x": 5,
+      "y": 7,
+      "destMap": "ViridianForest",
+      "destWarpId": 0
+    }
+  ],
+  "npcs": [
+    {
+      "spriteId": 12,
+      "spriteName": "SuperNerd",
+      "x": 3,
+      "y": 2,
+      "movement": "Stationary",
+      "facing": "Down",
+      "range": 0,
+      "textId": 1,
+      "isTrainer": false
+    },
+    {
+      "spriteId": 37,
+      "spriteName": "Gramps",
+      "x": 2,
+      "y": 5,
+      "movement": "Stationary",
+      "facing": "Down",
+      "range": 0,
+      "textId": 2,
+      "isTrainer": false
+    }
+  ],
+  "signs": [],
+  "text": {
+    "npc": {
+      "1": [
+        {
+          "line1": "Many POKeMON live",
+          "line2": "only in forests"
+        },
+        {
+          "line1": "and caves.",
+          "line2": ""
+        },
+        {
+          "line1": "You need to look",
+          "line2": "everywhere to get"
+        },
+        {
+          "line1": "different kinds!",
+          "line2": ""
+        }
+      ],
+      "2": [
+        {
+          "line1": "Have you noticed",
+          "line2": "the bushes on the"
+        },
+        {
+          "line1": "roadside?",
+          "line2": ""
+        },
+        {
+          "line1": "They can be cut",
+          "line2": "down by a special"
+        },
+        {
+          "line1": "POKeMON move.",
+          "line2": ""
+        }
+      ]
+    }
+  },
+  "wild": null
+}

@@ -1,0 +1,9 @@
+{
+  "$schema": "../schemas/move.schema.json",
+  "id": "Crabhammer",
+  "effect": "NoAdditionalEffect",
+  "power": 90,
+  "type": "Water",
+  "accuracy": 85,
+  "pp": 10
+}

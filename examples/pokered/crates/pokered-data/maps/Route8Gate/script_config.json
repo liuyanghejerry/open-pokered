@@ -1,0 +1,28 @@
+{
+  "$schema": "../../schemas/script_config.schema.json",
+  "coordEvents": [
+    {
+      "name": "gateBlock1",
+      "position": [
+        2,
+        3
+      ],
+      "trigger": "gateBlock"
+    },
+    {
+      "name": "gateBlock2",
+      "position": [
+        2,
+        4
+      ],
+      "trigger": "gateBlock"
+    }
+  ],
+  "npcs": [
+    {
+      "id": 1,
+      "talk": "talkGuard"
+    }
+  ],
+  "signs": []
+}

@@ -1,0 +1,201 @@
+{
+  "$schema": "../../schemas/map.schema.json",
+  "id": 220,
+  "name": "SafariZoneCenter",
+  "header": {
+    "tileset": "Forest",
+    "music": "SafariZone",
+    "connectionFlags": 0,
+    "width": 15,
+    "height": 13,
+    "borderBlock": 0
+  },
+  "connections": {},
+  "warps": [
+    {
+      "x": 14,
+      "y": 25,
+      "destMap": "SafariZoneGate",
+      "destWarpId": 2
+    },
+    {
+      "x": 15,
+      "y": 25,
+      "destMap": "SafariZoneGate",
+      "destWarpId": 3
+    },
+    {
+      "x": 0,
+      "y": 10,
+      "destMap": "SafariZoneWest",
+      "destWarpId": 4
+    },
+    {
+      "x": 0,
+      "y": 11,
+      "destMap": "SafariZoneWest",
+      "destWarpId": 5
+    },
+    {
+      "x": 14,
+      "y": 0,
+      "destMap": "SafariZoneNorth",
+      "destWarpId": 4
+    },
+    {
+      "x": 15,
+      "y": 0,
+      "destMap": "SafariZoneNorth",
+      "destWarpId": 5
+    },
+    {
+      "x": 29,
+      "y": 10,
+      "destMap": "SafariZoneEast",
+      "destWarpId": 2
+    },
+    {
+      "x": 29,
+      "y": 11,
+      "destMap": "SafariZoneEast",
+      "destWarpId": 3
+    },
+    {
+      "x": 17,
+      "y": 19,
+      "destMap": "SafariZoneCenterRestHouse",
+      "destWarpId": 0
+    }
+  ],
+  "npcs": [
+    {
+      "spriteId": 61,
+      "spriteName": "PokeBall",
+      "x": 14,
+      "y": 10,
+      "movement": "Stationary",
+      "facing": "Down",
+      "range": 0,
+      "textId": 1,
+      "isTrainer": false,
+      "itemId": 49
+    }
+  ],
+  "signs": [
+    {
+      "x": 18,
+      "y": 20,
+      "textId": 1
+    },
+    {
+      "x": 14,
+      "y": 22,
+      "textId": 2
+    }
+  ],
+  "text": {},
+  "wild": {
+    "red": {
+      "grass": {
+        "encounterRate": 30,
+        "mons": [
+          {
+            "level": 22,
+            "species": "NidoranM"
+          },
+          {
+            "level": 25,
+            "species": "Rhyhorn"
+          },
+          {
+            "level": 22,
+            "species": "Venonat"
+          },
+          {
+            "level": 24,
+            "species": "Exeggcute"
+          },
+          {
+            "level": 31,
+            "species": "Nidorino"
+          },
+          {
+            "level": 25,
+            "species": "Exeggcute"
+          },
+          {
+            "level": 31,
+            "species": "Nidorina"
+          },
+          {
+            "level": 30,
+            "species": "Parasect"
+          },
+          {
+            "level": 23,
+            "species": "Scyther"
+          },
+          {
+            "level": 23,
+            "species": "Chansey"
+          }
+        ]
+      },
+      "water": {
+        "encounterRate": 0,
+        "mons": []
+      }
+    },
+    "blue": {
+      "grass": {
+        "encounterRate": 30,
+        "mons": [
+          {
+            "level": 22,
+            "species": "NidoranF"
+          },
+          {
+            "level": 25,
+            "species": "Rhyhorn"
+          },
+          {
+            "level": 22,
+            "species": "Venonat"
+          },
+          {
+            "level": 24,
+            "species": "Exeggcute"
+          },
+          {
+            "level": 31,
+            "species": "Nidorina"
+          },
+          {
+            "level": 25,
+            "species": "Exeggcute"
+          },
+          {
+            "level": 31,
+            "species": "Nidorino"
+          },
+          {
+            "level": 30,
+            "species": "Parasect"
+          },
+          {
+            "level": 23,
+            "species": "Pinsir"
+          },
+          {
+            "level": 23,
+            "species": "Chansey"
+          }
+        ]
+      },
+      "water": {
+        "encounterRate": 0,
+        "mons": []
+      }
+    }
+  }
+}

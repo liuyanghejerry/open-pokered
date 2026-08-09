@@ -1,0 +1,398 @@
+{
+  "$schema": "../../schemas/map.schema.json",
+  "id": 104,
+  "name": "SSAnneB1FRooms",
+  "header": {
+    "tileset": "Ship",
+    "music": "SSAnne",
+    "connectionFlags": 0,
+    "width": 12,
+    "height": 8,
+    "borderBlock": 12
+  },
+  "connections": {},
+  "warps": [
+    {
+      "x": 2,
+      "y": 5,
+      "destMap": "SSAnneB1F",
+      "destWarpId": 4
+    },
+    {
+      "x": 3,
+      "y": 5,
+      "destMap": "SSAnneB1F",
+      "destWarpId": 4
+    },
+    {
+      "x": 12,
+      "y": 5,
+      "destMap": "SSAnneB1F",
+      "destWarpId": 3
+    },
+    {
+      "x": 13,
+      "y": 5,
+      "destMap": "SSAnneB1F",
+      "destWarpId": 3
+    },
+    {
+      "x": 22,
+      "y": 5,
+      "destMap": "SSAnneB1F",
+      "destWarpId": 2
+    },
+    {
+      "x": 23,
+      "y": 5,
+      "destMap": "SSAnneB1F",
+      "destWarpId": 2
+    },
+    {
+      "x": 2,
+      "y": 15,
+      "destMap": "SSAnneB1F",
+      "destWarpId": 1
+    },
+    {
+      "x": 3,
+      "y": 15,
+      "destMap": "SSAnneB1F",
+      "destWarpId": 1
+    },
+    {
+      "x": 12,
+      "y": 15,
+      "destMap": "SSAnneB1F",
+      "destWarpId": 0
+    },
+    {
+      "x": 13,
+      "y": 15,
+      "destMap": "SSAnneB1F",
+      "destWarpId": 0
+    }
+  ],
+  "npcs": [
+    {
+      "spriteId": 19,
+      "spriteName": "Sailor",
+      "x": 0,
+      "y": 13,
+      "movement": "Stationary",
+      "facing": "Down",
+      "range": 0,
+      "textId": 1,
+      "isTrainer": true,
+      "trainerClass": "Sailor",
+      "trainerSet": 3,
+      "endBattleText": "Right!\nGood fight, mate!"
+    },
+    {
+      "spriteId": 19,
+      "spriteName": "Sailor",
+      "x": 2,
+      "y": 11,
+      "movement": "Stationary",
+      "facing": "Down",
+      "range": 0,
+      "textId": 2,
+      "isTrainer": true,
+      "trainerClass": "Sailor",
+      "trainerSet": 4,
+      "endBattleText": "Your\nspirit sank me!"
+    },
+    {
+      "spriteId": 19,
+      "spriteName": "Sailor",
+      "x": 12,
+      "y": 3,
+      "movement": "Stationary",
+      "facing": "Left",
+      "range": 0,
+      "textId": 3,
+      "isTrainer": true,
+      "trainerClass": "Sailor",
+      "trainerSet": 5,
+      "endBattleText": "OK, \nyou're not bad."
+    },
+    {
+      "spriteId": 19,
+      "spriteName": "Sailor",
+      "x": 22,
+      "y": 2,
+      "movement": "Stationary",
+      "facing": "Down",
+      "range": 0,
+      "textId": 4,
+      "isTrainer": true,
+      "trainerClass": "Sailor",
+      "trainerSet": 6,
+      "endBattleText": "Argh!\nLost it!"
+    },
+    {
+      "spriteId": 19,
+      "spriteName": "Sailor",
+      "x": 0,
+      "y": 2,
+      "movement": "Stationary",
+      "facing": "Right",
+      "range": 0,
+      "textId": 5,
+      "isTrainer": true,
+      "trainerClass": "Sailor",
+      "trainerSet": 7,
+      "endBattleText": "Argh!\nBeaten by a kid!"
+    },
+    {
+      "spriteId": 47,
+      "spriteName": "Fisher",
+      "x": 0,
+      "y": 4,
+      "movement": "Stationary",
+      "facing": "Right",
+      "range": 0,
+      "textId": 6,
+      "isTrainer": true,
+      "trainerClass": "Fisher",
+      "trainerSet": 2,
+      "endBattleText": "Darn!\nI let that one\nget away!"
+    },
+    {
+      "spriteId": 12,
+      "spriteName": "SuperNerd",
+      "x": 10,
+      "y": 13,
+      "movement": "Stationary",
+      "facing": "Right",
+      "range": 0,
+      "textId": 7,
+      "isTrainer": false
+    },
+    {
+      "spriteId": 5,
+      "spriteName": "Monster",
+      "x": 11,
+      "y": 12,
+      "movement": "Stationary",
+      "facing": "Down",
+      "range": 0,
+      "textId": 8,
+      "isTrainer": false
+    },
+    {
+      "spriteId": 61,
+      "spriteName": "PokeBall",
+      "x": 20,
+      "y": 2,
+      "movement": "Stationary",
+      "facing": "Down",
+      "range": 0,
+      "textId": 9,
+      "isTrainer": false,
+      "itemId": 80
+    },
+    {
+      "spriteId": 61,
+      "spriteName": "PokeBall",
+      "x": 10,
+      "y": 2,
+      "movement": "Stationary",
+      "facing": "Down",
+      "range": 0,
+      "textId": 10,
+      "isTrainer": false,
+      "itemId": 244
+    },
+    {
+      "spriteId": 61,
+      "spriteName": "PokeBall",
+      "x": 12,
+      "y": 11,
+      "movement": "Stationary",
+      "facing": "Down",
+      "range": 0,
+      "textId": 11,
+      "isTrainer": false,
+      "itemId": 17
+    }
+  ],
+  "signs": [],
+  "text": {
+    "npc": {
+      "1": [
+        {
+          "line1": "You know what they",
+          "line2": "say about sailors"
+        },
+        {
+          "line1": "and fighting!",
+          "line2": ""
+        }
+      ],
+      "1_Defeated": [
+        {
+          "line1": "Right!",
+          "line2": "Good fight, mate!"
+        }
+      ],
+      "1_AfterBattle": [
+        {
+          "line1": "Haha! Want to be",
+          "line2": "a sailor, mate?"
+        }
+      ],
+      "2": [
+        {
+          "line1": "My sailor's pride",
+          "line2": "is at stake!"
+        }
+      ],
+      "2_Defeated": [
+        {
+          "line1": "Your",
+          "line2": "spirit sank me!"
+        }
+      ],
+      "2_AfterBattle": [
+        {
+          "line1": "Did you see the",
+          "line2": "FISHING GURU in"
+        },
+        {
+          "line1": "VERMILION CITY?",
+          "line2": ""
+        }
+      ],
+      "3": [
+        {
+          "line1": "Us sailors have",
+          "line2": "#MON too!"
+        }
+      ],
+      "3_Defeated": [
+        {
+          "line1": "OK,",
+          "line2": "you're not bad."
+        }
+      ],
+      "3_AfterBattle": [
+        {
+          "line1": "We caught all our",
+          "line2": "#MON while"
+        },
+        {
+          "line1": "out at sea!",
+          "line2": ""
+        }
+      ],
+      "4": [
+        {
+          "line1": "I like feisty",
+          "line2": "kids like you!"
+        }
+      ],
+      "4_Defeated": [
+        {
+          "line1": "Argh!",
+          "line2": "Lost it!"
+        }
+      ],
+      "4_AfterBattle": [
+        {
+          "line1": "Sea #MON live",
+          "line2": "in deep water."
+        },
+        {
+          "line1": "You'll need a ROD!",
+          "line2": ""
+        }
+      ],
+      "5": [
+        {
+          "line1": "Matey, you're",
+          "line2": "walking the plank"
+        },
+        {
+          "line1": "if you lose!",
+          "line2": ""
+        }
+      ],
+      "5_Defeated": [
+        {
+          "line1": "Argh!",
+          "line2": "Beaten by a kid!"
+        }
+      ],
+      "5_AfterBattle": [
+        {
+          "line1": "Jellyfish some-",
+          "line2": "times drift into"
+        },
+        {
+          "line1": "the ship.",
+          "line2": ""
+        }
+      ],
+      "6": [
+        {
+          "line1": "Hello stranger!",
+          "line2": "Stop and chat!"
+        },
+        {
+          "line1": "",
+          "line2": ""
+        },
+        {
+          "line1": "All my #MON",
+          "line2": "are from the sea!"
+        }
+      ],
+      "6_Defeated": [
+        {
+          "line1": "Darn!",
+          "line2": "I let that one"
+        },
+        {
+          "line1": "get away!",
+          "line2": ""
+        }
+      ],
+      "6_AfterBattle": [
+        {
+          "line1": "I was going to",
+          "line2": "make you my"
+        },
+        {
+          "line1": "assistant too!",
+          "line2": ""
+        }
+      ],
+      "7": [
+        {
+          "line1": "My buddy, MACHOKE,",
+          "line2": "is super strong!"
+        },
+        {
+          "line1": "",
+          "line2": ""
+        },
+        {
+          "line1": "He has enough",
+          "line2": "STRENGTH to move"
+        },
+        {
+          "line1": "big rocks!",
+          "line2": ""
+        }
+      ],
+      "8": [
+        {
+          "line1": "MACHOKE: Gwoh!",
+          "line2": "Goggoh!"
+        }
+      ]
+    }
+  },
+  "wild": null
+}

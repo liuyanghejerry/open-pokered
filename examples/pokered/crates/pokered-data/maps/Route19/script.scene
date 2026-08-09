@@ -1,0 +1,113 @@
+// Route19 (Sea Route 19) — translated from the original disassembly
+// (scripts/Route19.asm, text/Route19.asm) to the real Game DSL API surface.
+// All ten NPCs are sight-engaged trainers (map.json isTrainer:true); the runtime
+// drives each battle, so every talk handler here is DIALOGUE ONLY: if beaten show
+// the after-battle line, otherwise show the pre-battle line.
+
+game_scene Route19 {
+  // ── Cooltrainer M1 (npc 1) — Route19TrainerHeader0 ──────────────────────
+  @storyline("talkCooltrainerM1") {
+    @trigger(map = "Route19", npc = 1)
+    @if (getFlag("EVENT_BEAT_ROUTE_19_TRAINER_0")) {
+      @speaker("") { @t("Thanks, kid! I'm ready for a\nswim!", "谢了，小鬼！我准备好游泳了！") }
+    } @else {
+      @speaker("") { @t("Have to warm up before my\nswim!", "游泳前得先热身！") }
+    }
+  }
+
+  // ── Cooltrainer M2 (npc 2) — Route19TrainerHeader1 ──────────────────────
+  @storyline("talkCooltrainerM2") {
+    @trigger(map = "Route19", npc = 2)
+    @if (getFlag("EVENT_BEAT_ROUTE_19_TRAINER_1")) {
+      @speaker("") { @t("Watch out for TENTACOOL!", "小心玛瑙水母！") }
+    } @else {
+      @speaker("") { @t("Wait! You'll have a heart\nattack!", "等等！你会吓出心脏病的！") }
+    }
+  }
+
+  // ── Swimmer 1 (npc 3) — Route19TrainerHeader2 ───────────────────────────
+  @storyline("talkSwimmer1") {
+    @trigger(map = "Route19", npc = 3)
+    @if (getFlag("EVENT_BEAT_ROUTE_19_TRAINER_2")) {
+      @speaker("") { @t("I can beat POKeMON at\nswimming!", "游泳的话我能赢过宝可梦！") }
+    } @else {
+      @speaker("") { @t("I love swimming! What about\nyou?", "我最喜欢游泳了！你呢？") }
+    }
+  }
+
+  // ── Swimmer 2 (npc 4) — Route19TrainerHeader3 ───────────────────────────
+  @storyline("talkSwimmer2") {
+    @trigger(map = "Route19", npc = 4)
+    @if (getFlag("EVENT_BEAT_ROUTE_19_TRAINER_3")) {
+      @speaker("") { @t("I see a couple of islands!", "我能看到几座岛屿！") }
+    } @else {
+      @speaker("") { @t("What's beyond the horizon?", "地平线的那头是什么呢？") }
+    }
+  }
+
+  // ── Swimmer 3 (npc 5) — Route19TrainerHeader4 ───────────────────────────
+  @storyline("talkSwimmer3") {
+    @trigger(map = "Route19", npc = 5)
+    @if (getFlag("EVENT_BEAT_ROUTE_19_TRAINER_4")) {
+      @speaker("") { @t("You have to fish for sea\nPOKeMON!", "你得钓海里的宝可梦！") }
+    } @else {
+      @speaker("") { @t("I tried diving for POKeMON,\nbut it was a no go!", "我试着潜水寻找宝可梦，但一无\n所获！") }
+    }
+  }
+
+  // ── Swimmer 4 (npc 6) — Route19TrainerHeader5 ───────────────────────────
+  @storyline("talkSwimmer4") {
+    @trigger(map = "Route19", npc = 6)
+    @if (getFlag("EVENT_BEAT_ROUTE_19_TRAINER_5")) {
+      @speaker("") { @t("I'm looking at the sea to\nforget!", "我望着大海来忘却烦恼！") }
+    } @else {
+      @speaker("") { @t("I look at the sea to forget!", "我望着大海忘却烦恼！") }
+    }
+  }
+
+  // ── Swimmer 5 (npc 7) — Route19TrainerHeader6 ───────────────────────────
+  @storyline("talkSwimmer5") {
+    @trigger(map = "Route19", npc = 7)
+    @if (getFlag("EVENT_BEAT_ROUTE_19_TRAINER_6")) {
+      @speaker("") { @t("It's still a long way to go\nto SEAFOAM ISLANDS.", "离双子岛还有好长的路要走。") }
+    } @else {
+      @speaker("") { @t("Oh, I just love your ride!\nCan I have it if I win?", "哦，我太喜欢你的坐骑了！赢了\n能给我吗？") }
+    }
+  }
+
+  // ── Swimmer 6 (npc 8) — Route19TrainerHeader7 ───────────────────────────
+  @storyline("talkSwimmer6") {
+    @trigger(map = "Route19", npc = 8)
+    @if (getFlag("EVENT_BEAT_ROUTE_19_TRAINER_7")) {
+      @speaker("") { @t("My boy friend wanted to swim\nto SEAFOAM ISLANDS.", "我男朋友想游到双子岛去。") }
+    } @else {
+      @speaker("") { @t("Swimming's great! Sunburns\naren't!", "游泳很棒！晒伤可不好！") }
+    }
+  }
+
+  // ── Swimmer 7 (npc 9) — Route19TrainerHeader8 ───────────────────────────
+  @storyline("talkSwimmer7") {
+    @trigger(map = "Route19", npc = 9)
+    @if (getFlag("EVENT_BEAT_ROUTE_19_TRAINER_8")) {
+      @speaker("") { @t("I got a cramp! Glub, glub...", "我抽筋了！咕嘟，咕嘟……") }
+    } @else {
+      @speaker("") { @t("These waters are\ntreacherous!", "这片水域很危险！") }
+    }
+  }
+
+  // ── Swimmer 8 (npc 10) — Route19TrainerHeader9 ──────────────────────────
+  @storyline("talkSwimmer8") {
+    @trigger(map = "Route19", npc = 10)
+    @if (getFlag("EVENT_BEAT_ROUTE_19_TRAINER_9")) {
+      @speaker("") { @t("LAPRAS is so big, it must\nkeep you dry on water.", "拉普拉斯这么大，骑它过水肯定\n不湿身。") }
+    } @else {
+      @speaker("") { @t("I swam here, but I'm tired.", "我是游到这里的但好累。") }
+    }
+  }
+
+  // ── Sign (sign 1): SEA ROUTE 19 ─────────────────────────────────────────
+  @storyline("sign1") {
+    @trigger(map = "Route19", sign = 1)
+    @speaker("") { @t("SEA ROUTE 19 FUCHSIA CITY -\nSEAFOAM ISLANDS", "海上19号道路浅红市 - 双子岛") }
+  }
+}

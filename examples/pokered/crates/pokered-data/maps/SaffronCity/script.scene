@@ -1,0 +1,186 @@
+// SaffronCity — translated from the original disassembly (scripts/SaffronCity.asm,
+// text/SaffronCity.asm) to the real Game DSL API surface. SaffronCity is a
+// dialogue-only city map. It has two NPC states keyed on EVENT_BEAT_SILPH_CO_GIOVANNI:
+// the Rocket occupation (rockets visible) and the liberated city (citizens visible).
+// The show/hide of each NPC object is driven by the runtime's toggleable-objects
+// table (set when Giovanni is beaten in SilphCo11F), so each NPC keeps its single
+// static line and there is no @load / state machine here (the original only calls
+// EnableAutoTextBoxDrawing).
+
+game_scene SaffronCity {
+  // ── On-enter: after the Mr.Fuji rescue (PokemonTower7F sets
+  // EVENT_RESCUED_MR_FUJI), the Rocket guards blocking the Silph Co. entrance
+  // leave (original TOGGLE_SAFFRON_CITY_E/F). OBJ_14 sits on the Silph door's
+  // approach tile (18,22), so this unblocks the Silph Co. warp — required before
+  // Giovanni can be challenged. (The remaining Rockets clear on beating Silph.)
+  @load {
+    @if (getFlag("EVENT_RESCUED_MR_FUJI")) {
+      hideObjectByName("SAFFRON_CITY_OBJ_14")
+      hideObjectByName("SAFFRON_CITY_OBJ_15")
+    }
+  }
+
+  // ── Team Rocket occupation NPCs (visible before Silph Co. is liberated) ──
+  @storyline("talkRocket1") {
+    @trigger(map = "SaffronCity", npc = 1, toggle = "SAFFRON_CITY_OBJ_1")
+    @speaker("") { @t("What do you want? Get lost!", "你想干什么？滚开！") }
+  }
+
+  @storyline("talkRocket2") {
+    @trigger(map = "SaffronCity", npc = 2, toggle = "SAFFRON_CITY_OBJ_2")
+    @speaker("") { @t("BOSS said he'll take this\ntown!", "老大说了这座城归我们！") }
+  }
+
+  @storyline("talkRocket3") {
+    @trigger(map = "SaffronCity", npc = 3, toggle = "SAFFRON_CITY_OBJ_3")
+    @speaker("") { @t("Get out of the way!", "给我滚到一边去！") }
+  }
+
+  @storyline("talkRocket4") {
+    @trigger(map = "SaffronCity", npc = 4, toggle = "SAFFRON_CITY_OBJ_4")
+    @speaker("") { @t("SAFFRON belongs to TEAM\nROCKET!", "金黄市属于火箭队！") }
+  }
+
+  @storyline("talkRocket5") {
+    @trigger(map = "SaffronCity", npc = 5, toggle = "SAFFRON_CITY_OBJ_5")
+    @speaker("") { @t("Being evil makes me feel so\nalive!", "当坏人让我感觉充满活力！") }
+  }
+
+  @storyline("talkRocket6") {
+    @trigger(map = "SaffronCity", npc = 6, toggle = "SAFFRON_CITY_OBJ_6")
+    @speaker("") { @t("Ow! Watch where you're\nwalking!", "哎哟！看着点走路！") }
+  }
+
+  @storyline("talkRocket7") {
+    @trigger(map = "SaffronCity", npc = 7, toggle = "SAFFRON_CITY_OBJ_7")
+    @speaker("") {
+      @t("With SILPH under control, we\ncan exploit POKeMON around\nthe world!", "只要控制住西尔佛，就能利用全\n世界的宝可梦！")
+    }
+  }
+
+  // Rocket8 — the security guard at the Silph Co. entrance (visible while occupied).
+  @storyline("talkRocket8") {
+    @trigger(map = "SaffronCity", npc = 14, toggle = "SAFFRON_CITY_OBJ_14")
+    @speaker("") {
+      @t("I'm a security guard.\n\nSuspicious kids I don't\nallow in!", "我是保安。\n\n可疑的小孩不许进来！")
+    }
+  }
+
+  // ── Liberated-city NPCs (hidden until Silph Co. is freed) ────────────────
+  @storyline("talkScientist") {
+    @trigger(map = "SaffronCity", npc = 8, toggle = "SAFFRON_CITY_OBJ_8", hidden = true)
+    @speaker("") {
+      @t("You beat TEAM ROCKET all\nalone? That's amazing!", "你一个人打败了火箭队？太厉害\n了！")
+    }
+  }
+
+  @storyline("talkSilphWorkerM") {
+    @trigger(map = "SaffronCity", npc = 9, toggle = "SAFFRON_CITY_OBJ_9", hidden = true)
+    @speaker("") {
+      @t("Yeah! TEAM ROCKET is gone!\nIt's safe to go out again!", "太好了！火箭队消失了！现在可\n以放心出门了！")
+    }
+  }
+
+  @storyline("talkSilphWorkerF") {
+    @trigger(map = "SaffronCity", npc = 10, toggle = "SAFFRON_CITY_OBJ_10", hidden = true)
+    @speaker("") {
+      @t("People should be flocking\nback to SAFFRON now.", "现在人们应该会陆续回到金黄市\n了。")
+    }
+  }
+
+  @storyline("talkGentleman") {
+    @trigger(map = "SaffronCity", npc = 11, toggle = "SAFFRON_CITY_OBJ_11", hidden = true)
+    @speaker("") {
+      @t("I flew here on my PIDGEOT\nwhen I read about SILPH.\n\nIt's already over? I missed\nthe media action.", "我听说西尔佛的事就骑着大比鸟\n飞来了。\n\n已经结束了？我错过了这场好\n戏。")
+    }
+  }
+
+  // Pidgeot — the gentleman's bird; in the original its text plays its cry.
+  @storyline("talkPidgeot") {
+    @trigger(map = "SaffronCity", npc = 12, toggle = "SAFFRON_CITY_OBJ_12", hidden = true)
+    @speaker("") { @t("PIDGEOT: Bi bibii!", "大比鸟：Bi bibii！") }
+    playCry("PIDGEOT")
+  }
+
+  @storyline("talkRocker") {
+    @trigger(map = "SaffronCity", npc = 13, toggle = "SAFFRON_CITY_OBJ_13", hidden = true)
+    @speaker("") {
+      @t("I saw ROCKET BOSS escaping\nSILPH's building.", "我看到火箭队的老大从西尔佛的\n大楼里逃走了。")
+    }
+  }
+
+  // Rocket9 — the sleeping guard, revealed after liberation.
+  @storyline("talkRocket9") {
+    @trigger(map = "SaffronCity", npc = 15, toggle = "SAFFRON_CITY_OBJ_15", hidden = true)
+    @speaker("") {
+      @t("... Snore...\n\nHah! He's taking a snooze!", "……呼……\n\n哈！他在打瞌睡！")
+    }
+  }
+
+  // ── Signs ────────────────────────────────────────────────────────────────
+  @storyline("citySign") {
+    @trigger(map = "SaffronCity", sign = 1)
+    @speaker("") {
+      @t("SAFFRON CITY Shining, Golden\nLand of Commerce", "金黄市闪耀的黄金商业之都")
+    }
+  }
+
+  @storyline("fightingDojoSign") {
+    @trigger(map = "SaffronCity", sign = 2)
+    @speaker("") { @t("FIGHTING DOJO", "格斗道场") }
+  }
+
+  @storyline("gymSign") {
+    @trigger(map = "SaffronCity", sign = 3)
+    @speaker("") {
+      @t("SAFFRON CITY POKeMON GYM\nLEADER: SABRINA\n\nThe Master of Psychic\nPOKeMON!", "金黄市宝可梦道馆馆主：娜姿\n\n超能力宝可梦大师！")
+    }
+  }
+
+  // sign 4 (textId 4) is the Mart sign — shared MartSignText.
+  @storyline("martSign") {
+    @trigger(map = "SaffronCity", sign = 4)
+    @speaker("") {
+      @t("All your item needs\nfulfilled! POKeMON MART", "满足你一切道具需求的友好商店")
+    }
+  }
+
+  @storyline("trainerTips1Sign") {
+    @trigger(map = "SaffronCity", sign = 5)
+    @speaker("") {
+      @t("TRAINER TIPS\n\nFULL HEAL cures all ailments\nlike sleep and burns.\n\nIt costs a bit more, but\nit's more convenient.", "训练家提示\n\n万灵药能治愈睡眠、灼伤等所有\n异常状态。\n\n价格虽然稍贵，但用起来更方\n便。")
+    }
+  }
+
+  @storyline("trainerTips2Sign") {
+    @trigger(map = "SaffronCity", sign = 6)
+    @speaker("") {
+      @t("TRAINER TIPS\n\nNew GREAT BALL offers\nimproved capture rates.\n\nTry it on those\nhard-to-catch POKeMON.", "训练家提示\n\n新出的超级球捕捉率提高了。\n\n试试用它捕捉那些难抓的宝可梦\n吧。")
+    }
+  }
+
+  @storyline("silphCoSign") {
+    @trigger(map = "SaffronCity", sign = 7)
+    @speaker("") { @t("SILPH CO. OFFICE BUILDING", "西尔佛公司办公大楼") }
+  }
+
+  // sign 8 (textId 8) is the PokeCenter sign — shared PokeCenterSignText.
+  @storyline("pokecenterSign") {
+    @trigger(map = "SaffronCity", sign = 8)
+    @speaker("") {
+      @t("Heal Your POKeMON! POKeMON\nCENTER", "治愈你的宝可梦！宝可梦中心")
+    }
+  }
+
+  @storyline("mrPsychicsHouseSign") {
+    @trigger(map = "SaffronCity", sign = 9)
+    @speaker("") { @t("MR.PSYCHIC's HOUSE", "超能力先生的家") }
+  }
+
+  @storyline("silphCoLatestProductSign") {
+    @trigger(map = "SaffronCity", sign = 10)
+    @speaker("") {
+      @t("SILPH's latest product!\n\nRelease to be determined...", "西尔佛的最新产品！\n\n发售日未定……")
+    }
+  }
+}

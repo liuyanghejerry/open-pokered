@@ -1,0 +1,28 @@
+// CeruleanMart — translated from the original disassembly (scripts/CeruleanMart.asm,
+// text/CeruleanMart.asm, data/items/marts.asm) to the real Game DSL API surface.
+// A standard Poke Mart: the clerk (npc 1) opens the shop; the two cooltrainers
+// (npc 2, 3) are NPC dialogue only.
+
+game_scene CeruleanMart {
+  // ── Clerk (npc 1) — opens the Poke Mart shop ────────────────────────────
+  @storyline("talkClerk") {
+    @trigger(map = "CeruleanMart", npc = 1)
+    openShop(["POKE_BALL", "POTION", "REPEL", "ANTIDOTE", "BURN_HEAL", "AWAKENING", "PARLYZ_HEAL"])
+  }
+
+  // ── CooltrainerM (npc 2) ────────────────────────────────────────────────
+  @storyline("talkCooltrainerM") {
+    @trigger(map = "CeruleanMart", npc = 2)
+    @speaker("") {
+      @t("Use REPEL to keep bugs and\nweak POKeMON away.\n\nPut your strongest POKeMON\nat the top of the list for\nbest results!", "用驱虫剂让虫子和弱小的宝可梦\n远离。\n\n把最强的宝可梦放在队伍最前面\n效果最好！")
+    }
+  }
+
+  // ── CooltrainerF (npc 3) ────────────────────────────────────────────────
+  @storyline("talkCooltrainerF") {
+    @trigger(map = "CeruleanMart", npc = 3)
+    @speaker("") {
+      @t("Have you seen any RARE\nCANDY?\n\nIt's supposed to make\nPOKeMON go up one level!", "你见过神奇糖果吗？\n\n据说它能让宝可梦升一级！")
+    }
+  }
+}

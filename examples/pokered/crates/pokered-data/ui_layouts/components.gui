@@ -1,0 +1,14 @@
+// Custom-component declarations shared by every screen in this directory.
+//
+// Each `component` here is the build-time schema for an element implemented
+// game-side as a registered `CustomElement` (see pokered-ui's
+// `custom_elements` module). The DSL compiler validates every use site in
+// the *.gui screens against these declarations; the runtime re-validates
+// loaded layouts against the implementation's schema().
+
+// Gen-I HP bar: 4px tall at the element rect, tri-color fill at the original
+// GetHealthBarColor thresholds (>50% / >20%). Width = rect.tw tiles.
+component hp_bar {
+  current: expr required
+  max: expr required
+}

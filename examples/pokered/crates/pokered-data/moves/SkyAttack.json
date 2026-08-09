@@ -1,0 +1,9 @@
+{
+  "$schema": "../schemas/move.schema.json",
+  "id": "SkyAttack",
+  "effect": "ChargeEffect",
+  "power": 140,
+  "type": "Flying",
+  "accuracy": 90,
+  "pp": 5
+}

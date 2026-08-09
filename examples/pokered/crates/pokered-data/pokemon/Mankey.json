@@ -1,0 +1,70 @@
+{
+  "$schema": "../schemas/pokemon.schema.json",
+  "species": "Mankey",
+  "baseStats": {
+    "hp": 40,
+    "attack": 80,
+    "defense": 35,
+    "speed": 70,
+    "special": 35
+  },
+  "type1": "Fighting",
+  "type2": "Fighting",
+  "catchRate": 190,
+  "baseExp": 74,
+  "growthRate": "MediumFast",
+  "initialMoves": [
+    "Scratch",
+    "Leer",
+    "None",
+    "None"
+  ],
+  "tmHmFlags": [
+    177,
+    131,
+    143,
+    201,
+    198,
+    136,
+    34
+  ],
+  "pokedex": {
+    "category": "PIG MONKEY",
+    "heightFeet": 1,
+    "heightInches": 8,
+    "weightDecipounds": 620,
+    "flavorTextPages": [
+      "Extremely quick to\nanger. It could\nbe docile one",
+      "moment then\nthrashing away\nthe next instant"
+    ]
+  },
+  "evolutions": [
+    {
+      "method": "level",
+      "species": "Primeape",
+      "level": 28
+    }
+  ],
+  "learnset": [
+    {
+      "level": 15,
+      "moveId": "KarateChop"
+    },
+    {
+      "level": 21,
+      "moveId": "FurySwipes"
+    },
+    {
+      "level": 27,
+      "moveId": "FocusEnergy"
+    },
+    {
+      "level": 33,
+      "moveId": "SeismicToss"
+    },
+    {
+      "level": 39,
+      "moveId": "Thrash"
+    }
+  ]
+}

@@ -1,0 +1,74 @@
+{
+  "$schema": "../schemas/pokemon.schema.json",
+  "species": "NidoranM",
+  "baseStats": {
+    "hp": 46,
+    "attack": 57,
+    "defense": 40,
+    "speed": 50,
+    "special": 40
+  },
+  "type1": "Poison",
+  "type2": "Poison",
+  "catchRate": 235,
+  "baseExp": 60,
+  "growthRate": "MediumSlow",
+  "initialMoves": [
+    "Leer",
+    "Tackle",
+    "None",
+    "None"
+  ],
+  "tmHmFlags": [
+    224,
+    35,
+    136,
+    193,
+    131,
+    8,
+    2
+  ],
+  "pokedex": {
+    "category": "POISON PIN",
+    "heightFeet": 1,
+    "heightInches": 8,
+    "weightDecipounds": 200,
+    "flavorTextPages": [
+      "Stiffens its ears\nto sense danger.\nThe larger its",
+      "horns, the more\npowerful its\nsecreted venom"
+    ]
+  },
+  "evolutions": [
+    {
+      "method": "level",
+      "species": "Nidorino",
+      "level": 16
+    }
+  ],
+  "learnset": [
+    {
+      "level": 8,
+      "moveId": "HornAttack"
+    },
+    {
+      "level": 14,
+      "moveId": "PoisonSting"
+    },
+    {
+      "level": 21,
+      "moveId": "FocusEnergy"
+    },
+    {
+      "level": 29,
+      "moveId": "FuryAttack"
+    },
+    {
+      "level": 36,
+      "moveId": "HornDrill"
+    },
+    {
+      "level": 43,
+      "moveId": "DoubleKick"
+    }
+  ]
+}

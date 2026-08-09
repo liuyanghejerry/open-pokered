@@ -1,0 +1,69 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://pokered.dev/schemas/move.schema.json",
+  "title": "Move Data",
+  "description": "Schema for move JSON files — defines a single battle move. One file per move (e.g. Pound.json).",
+  "type": "object",
+  "required": ["id", "effect", "power", "type", "accuracy", "pp"],
+  "properties": {
+    "$schema": { "type": "string" },
+    "id": {
+      "type": "string",
+      "pattern": "^[A-Za-z][A-Za-z0-9]*$",
+      "description": "Move name in PascalCase, matching the MoveId enum variant (e.g. 'Pound', 'Thunderpunch', 'PsychicM')."
+    },
+    "effect": {
+      "type": "string",
+      "enum": [
+        "NoAdditionalEffect", "Effect01", "PoisonSideEffect1", "DrainHpEffect",
+        "BurnSideEffect1", "FreezeSideEffect1", "ParalyzeSideEffect1", "ExplodeEffect",
+        "DreamEaterEffect", "MirrorMoveEffect", "AttackUp1Effect", "DefenseUp1Effect",
+        "SpeedUp1Effect", "SpecialUp1Effect", "AccuracyUp1Effect", "EvasionUp1Effect",
+        "PayDayEffect", "SwiftEffect", "AttackDown1Effect", "DefenseDown1Effect",
+        "SpeedDown1Effect", "SpecialDown1Effect", "AccuracyDown1Effect", "EvasionDown1Effect",
+        "ConversionEffect", "HazeEffect", "BideEffect", "ThrashPetalDanceEffect",
+        "SwitchAndTeleportEffect", "TwoToFiveAttacksEffect", "Effect1E", "FlinchSideEffect1",
+        "SleepEffect", "PoisonSideEffect2", "BurnSideEffect2", "FreezeSideEffect2",
+        "ParalyzeSideEffect2", "FlinchSideEffect2", "OhkoEffect", "ChargeEffect",
+        "SuperFangEffect", "SpecialDamageEffect", "TrappingEffect", "FlyEffect",
+        "AttackTwiceEffect", "JumpKickEffect", "MistEffect", "FocusEnergyEffect",
+        "RecoilEffect", "ConfusionEffect", "AttackUp2Effect", "DefenseUp2Effect",
+        "SpeedUp2Effect", "SpecialUp2Effect", "AccuracyUp2Effect", "EvasionUp2Effect",
+        "HealEffect", "TransformEffect", "AttackDown2Effect", "DefenseDown2Effect",
+        "SpeedDown2Effect", "SpecialDown2Effect", "AccuracyDown2Effect", "EvasionDown2Effect",
+        "LightScreenEffect", "ReflectEffect", "PoisonEffect", "ParalyzeEffect",
+        "AttackDownSideEffect", "DefenseDownSideEffect", "SpeedDownSideEffect",
+        "SpecialDownSideEffect", "ConfusionSideEffect", "TwineedleEffect", "SubstituteEffect",
+        "HyperBeamEffect", "RageEffect", "MimicEffect", "MetronomeEffect", "LeechSeedEffect",
+        "SplashEffect", "DisableEffect"
+      ]
+    },
+    "power": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 255,
+      "description": "Base power. 0 for status moves and most special-effect moves."
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "Normal", "Fighting", "Flying", "Poison", "Ground", "Rock",
+        "Bird", "Bug", "Ghost",
+        "Fire", "Water", "Grass", "Electric", "Psychic", "Ice", "Dragon"
+      ]
+    },
+    "accuracy": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 100,
+      "description": "Base accuracy in percent. 100 = always hits (modulo 1/256 miss bug)."
+    },
+    "pp": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 40,
+      "description": "Base PP (Power Points)."
+    }
+  },
+  "additionalProperties": false
+}

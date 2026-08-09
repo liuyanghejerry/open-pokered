@@ -1,0 +1,179 @@
+{
+  "$schema": "../schemas/trainer.schema.json",
+  "class": "Fisher",
+  "constName": "FISHER",
+  "parties": [
+    {
+      "pokemon": [
+        {
+          "level": 17,
+          "species": "Goldeen"
+        },
+        {
+          "level": 17,
+          "species": "Tentacool"
+        },
+        {
+          "level": 17,
+          "species": "Goldeen"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 17,
+          "species": "Tentacool"
+        },
+        {
+          "level": 17,
+          "species": "Staryu"
+        },
+        {
+          "level": 17,
+          "species": "Shellder"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 22,
+          "species": "Goldeen"
+        },
+        {
+          "level": 22,
+          "species": "Poliwag"
+        },
+        {
+          "level": 22,
+          "species": "Goldeen"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 24,
+          "species": "Tentacool"
+        },
+        {
+          "level": 24,
+          "species": "Goldeen"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 27,
+          "species": "Goldeen"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 21,
+          "species": "Poliwag"
+        },
+        {
+          "level": 21,
+          "species": "Shellder"
+        },
+        {
+          "level": 21,
+          "species": "Goldeen"
+        },
+        {
+          "level": 21,
+          "species": "Horsea"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 28,
+          "species": "Seaking"
+        },
+        {
+          "level": 28,
+          "species": "Goldeen"
+        },
+        {
+          "level": 28,
+          "species": "Seaking"
+        },
+        {
+          "level": 28,
+          "species": "Seaking"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 31,
+          "species": "Shellder"
+        },
+        {
+          "level": 31,
+          "species": "Cloyster"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 27,
+          "species": "Magikarp"
+        },
+        {
+          "level": 27,
+          "species": "Magikarp"
+        },
+        {
+          "level": 27,
+          "species": "Magikarp"
+        },
+        {
+          "level": 27,
+          "species": "Magikarp"
+        },
+        {
+          "level": 27,
+          "species": "Magikarp"
+        },
+        {
+          "level": 27,
+          "species": "Magikarp"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 33,
+          "species": "Seaking"
+        },
+        {
+          "level": 33,
+          "species": "Goldeen"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 24,
+          "species": "Magikarp"
+        },
+        {
+          "level": 24,
+          "species": "Magikarp"
+        }
+      ]
+    }
+  ]
+}

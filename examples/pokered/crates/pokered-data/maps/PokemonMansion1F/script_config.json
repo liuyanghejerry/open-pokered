@@ -1,0 +1,31 @@
+{
+  "$schema": "../../schemas/script_config.schema.json",
+  "coordEvents": [
+    {
+      "name": "switch",
+      "position": [
+        2,
+        5
+      ],
+      "trigger": "coordSwitch"
+    }
+  ],
+  "npcs": [
+    {
+      "id": 1,
+      "talk": "talkScientist"
+    },
+    {
+      "id": 2,
+      "talk": "talkPokeBall",
+      "toggleId": "POKEMON_MANSION_1F_OBJ_2"
+    },
+    {
+      "id": 3,
+      "talk": "talkPokeBall1",
+      "toggleId": "POKEMON_MANSION_1F_OBJ_3"
+    }
+  ],
+  "onLoad": "PokemonMansion1FOnLoad",
+  "signs": []
+}

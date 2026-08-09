@@ -1,0 +1,70 @@
+{
+  "$schema": "../../schemas/map.schema.json",
+  "id": 46,
+  "name": "DiglettsCaveRoute2",
+  "header": {
+    "tileset": "Cavern",
+    "music": "Dungeon2",
+    "connectionFlags": 0,
+    "width": 4,
+    "height": 4,
+    "borderBlock": 125
+  },
+  "connections": {},
+  "warps": [
+    {
+      "x": 2,
+      "y": 7,
+      "destWarpId": 0
+    },
+    {
+      "x": 3,
+      "y": 7,
+      "destWarpId": 0
+    },
+    {
+      "x": 4,
+      "y": 4,
+      "destMap": "DiglettsCave",
+      "destWarpId": 0
+    }
+  ],
+  "npcs": [
+    {
+      "spriteId": 39,
+      "spriteName": "FishingGuru",
+      "x": 3,
+      "y": 3,
+      "movement": "Stationary",
+      "facing": "Down",
+      "range": 0,
+      "textId": 1,
+      "isTrainer": false
+    }
+  ],
+  "signs": [],
+  "text": {
+    "npc": {
+      "1": [
+        {
+          "line1": "I went to ROCK",
+          "line2": "TUNNEL, but it's"
+        },
+        {
+          "line1": "dark and scary.",
+          "line2": ""
+        },
+        {
+          "line1": "If a #MON's",
+          "line2": "FLASH could light"
+        },
+        {
+          "line1": "it up...",
+          "line2": ""
+        }
+      ]
+    },
+    "sign": {}
+  },
+  "wild": null
+}

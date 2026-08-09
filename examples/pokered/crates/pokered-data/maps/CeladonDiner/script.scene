@@ -1,0 +1,58 @@
+// CeladonDiner — translated from the original disassembly
+// (scripts/CeladonDiner.asm, text/CeladonDiner.asm) to the real Game DSL API.
+// All five NPCs are dialogue-only; the GymGuide (busted slots player) gives the
+// COIN_CASE key item the first time you talk to him (item-gate pattern).
+
+game_scene CeladonDiner {
+  // ── Cook (npc 1) ────────────────────────────────────────────────────────
+  @storyline("talkCook") {
+    @trigger(map = "CeladonDiner", npc = 1)
+    @speaker("") {
+      @t("Hi!\n\nWe're taking a break now.", "你好！\n\n我们现在在休息。")
+    }
+  }
+
+  // ── Middle-aged woman (npc 2) ───────────────────────────────────────────
+  @storyline("talkMiddleAgedWoman") {
+    @trigger(map = "CeladonDiner", npc = 2)
+    @speaker("") {
+      @t("My POKeMON are weak, so I\noften have to go to the DRUG\nSTORE.", "我的宝可梦很弱，所以我经常要\n去药店。")
+    }
+  }
+
+  // ── Middle-aged man (npc 3) ─────────────────────────────────────────────
+  @storyline("talkMiddleAgedMan") {
+    @trigger(map = "CeladonDiner", npc = 3)
+    @speaker("") {
+      @t("Psst! There's a basement\nunder the GAME CORNER.", "嘘！游戏厅下面有地下室！")
+    }
+  }
+
+  // ── Fisher (npc 4) ──────────────────────────────────────────────────────
+  @storyline("talkFisher") {
+    @trigger(map = "CeladonDiner", npc = 4)
+    @speaker("") {
+      @t("Munch...\n\nThe man at that table lost\nit all at the slots.", "吧唧吧唧……\n\n那张桌子旁的男人把家产都输在\n老虎机上了。")
+    }
+  }
+
+  // ── Gym guide / busted slots player (npc 5) ─────────────────────────────
+  // Gives the COIN_CASE the first time. After that, just laments his losses.
+  @storyline("talkGymGuide") {
+    @trigger(map = "CeladonDiner", npc = 5)
+    @if (getFlag("EVENT_GOT_COIN_CASE")) {
+      @speaker("") {
+        @t("I always thought I was going\nto win it back...", "我总想着总有一天能赢回来……")
+      }
+    } @else {
+      @speaker("") {
+        @t("Go ahead! Laugh!\n\nI'm flat out busted!\n\nNo more slots for me! I'm\ngoing straight!\n\nHere! I won't be needing\nthis any- more!", "尽管笑吧！\n\n我彻底破产了！\n\n我再也不玩老虎机了！我要改邪\n归正！\n\n给你！这个我再也用不上了！")
+      }
+      giveItem("COIN_CASE", 1)
+      setFlag("EVENT_GOT_COIN_CASE")
+      @speaker("") {
+        @t("<PLAYER> received a COIN\nCASE!", "<PLAYER>得到了代币盒！")
+      }
+    }
+  }
+}

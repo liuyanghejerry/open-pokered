@@ -1,0 +1,56 @@
+{
+  "$schema": "../schemas/pokemon.schema.json",
+  "species": "Nidoqueen",
+  "baseStats": {
+    "hp": 90,
+    "attack": 82,
+    "defense": 87,
+    "speed": 76,
+    "special": 75
+  },
+  "type1": "Poison",
+  "type2": "Ground",
+  "catchRate": 45,
+  "baseExp": 194,
+  "growthRate": "MediumSlow",
+  "initialMoves": [
+    "Tackle",
+    "Scratch",
+    "TailWhip",
+    "BodySlam"
+  ],
+  "tmHmFlags": [
+    241,
+    255,
+    143,
+    199,
+    163,
+    136,
+    50
+  ],
+  "pokedex": {
+    "category": "DRILL",
+    "heightFeet": 4,
+    "heightInches": 3,
+    "weightDecipounds": 1320,
+    "flavorTextPages": [
+      "Its hard scales\nprovide strong\nprotection. It",
+      "uses its hefty\nbulk to execute\npowerful moves"
+    ]
+  },
+  "evolutions": [],
+  "learnset": [
+    {
+      "level": 8,
+      "moveId": "Scratch"
+    },
+    {
+      "level": 14,
+      "moveId": "PoisonSting"
+    },
+    {
+      "level": 23,
+      "moveId": "BodySlam"
+    }
+  ]
+}

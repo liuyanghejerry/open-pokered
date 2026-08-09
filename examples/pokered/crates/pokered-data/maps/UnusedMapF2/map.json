@@ -1,0 +1,19 @@
+{
+  "$schema": "../../schemas/map.schema.json",
+  "id": 242,
+  "name": "UnusedMapF2",
+  "header": {
+    "tileset": "Overworld",
+    "music": "SilphCo",
+    "connectionFlags": 0,
+    "width": 0,
+    "height": 0,
+    "borderBlock": 0
+  },
+  "connections": {},
+  "warps": [],
+  "npcs": [],
+  "signs": [],
+  "text": {},
+  "wild": null
+}

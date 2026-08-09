@@ -1,0 +1,50 @@
+// Route18 — translated from the original disassembly (scripts/Route18.asm,
+// text/Route18.asm) to the real Game DSL API surface. Route 18 is a plain route:
+// three sight-engaged trainers (Bird Keepers) and two signs. The trainers stay
+// isTrainer:true in map.json, so the runtime owns the battle and each talk
+// handler is DIALOGUE ONLY (pre-battle taunt vs. after-battle line, branched on
+// the per-trainer EVENT flag).
+
+game_scene Route18 {
+  // ── Bird Keeper #1 (npc 1) — sight-engaged; dialogue only ───────────────
+  @storyline("talkCooltrainerM1") {
+    @trigger(map = "Route18", npc = 1)
+    @if (getFlag("EVENT_BEAT_ROUTE_18_TRAINER_0")) {
+      @speaker("") { @t("I wish I had a BIKE!", "真希望我也有一辆自行车！") }
+    } @else {
+      @speaker("") { @t("I always check every grassy\narea for new POKeMON.", "我总是会在每一片草丛里寻找新\n的宝可梦。") }
+    }
+  }
+
+  // ── Bird Keeper #2 (npc 2) — sight-engaged; dialogue only ───────────────
+  @storyline("talkCooltrainerM2") {
+    @trigger(map = "Route18", npc = 2)
+    @if (getFlag("EVENT_BEAT_ROUTE_18_TRAINER_1")) {
+      @speaker("") { @t("I also collect sea POKeMON\non weekends!", "我周末也会去收集海洋宝可梦！") }
+    } @else {
+      @speaker("") { @t("Kurukkoo! How do you like my\nbird call?", "咕噜咕噜！你觉得我的鸟叫声怎\n么样？") }
+    }
+  }
+
+  // ── Bird Keeper #3 (npc 3) — sight-engaged; dialogue only ───────────────
+  @storyline("talkCooltrainerM3") {
+    @trigger(map = "Route18", npc = 3)
+    @if (getFlag("EVENT_BEAT_ROUTE_18_TRAINER_2")) {
+      @speaker("") { @t("This is my fave POKeMON\nhunting area!", "这里是我最喜欢的宝可梦狩猎\n场！") }
+    } @else {
+      @speaker("") { @t("This is my turf! Get out of\nhere!", "这里是我的地盘！快离开！") }
+    }
+  }
+
+  // ── Route 18 sign (sign 1) ──────────────────────────────────────────────
+  @storyline("sign1") {
+    @trigger(map = "Route18", sign = 1)
+    @speaker("") { @t("ROUTE 18 CELADON CITY -\nFUCHSIA CITY", "18号道路彩虹市 - 浅红市") }
+  }
+
+  // ── Cycling Road sign (sign 2) ──────────────────────────────────────────
+  @storyline("sign2") {
+    @trigger(map = "Route18", sign = 2)
+    @speaker("") { @t("CYCLING ROAD No pedestrians\npermitted!", "自行车道行人禁止通行！") }
+  }
+}

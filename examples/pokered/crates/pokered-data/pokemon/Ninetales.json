@@ -1,0 +1,43 @@
+{
+  "$schema": "../schemas/pokemon.schema.json",
+  "species": "Ninetales",
+  "baseStats": {
+    "hp": 73,
+    "attack": 76,
+    "defense": 75,
+    "speed": 100,
+    "special": 100
+  },
+  "type1": "Fire",
+  "type2": "Fire",
+  "catchRate": 75,
+  "baseExp": 178,
+  "growthRate": "MediumFast",
+  "initialMoves": [
+    "Ember",
+    "TailWhip",
+    "QuickAttack",
+    "Roar"
+  ],
+  "tmHmFlags": [
+    160,
+    67,
+    8,
+    200,
+    227,
+    8,
+    2
+  ],
+  "pokedex": {
+    "category": "FOX",
+    "heightFeet": 3,
+    "heightInches": 7,
+    "weightDecipounds": 440,
+    "flavorTextPages": [
+      "Very smart and\nvery vengeful.\nGrabbing one of",
+      "its many tails\ncould result in a\n1000-year curse"
+    ]
+  },
+  "evolutions": [],
+  "learnset": []
+}

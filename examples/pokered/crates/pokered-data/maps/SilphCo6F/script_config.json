@@ -1,0 +1,81 @@
+{
+  "$schema": "../../schemas/script_config.schema.json",
+  "coordEvents": [
+    {
+      "name": "cardKeyDoor1",
+      "position": [
+        4,
+        12
+      ],
+      "trigger": "cardKeyDoor"
+    },
+    {
+      "name": "cardKeyDoor2",
+      "position": [
+        5,
+        12
+      ],
+      "trigger": "cardKeyDoor"
+    },
+    {
+      "name": "cardKeyDoor3",
+      "position": [
+        4,
+        13
+      ],
+      "trigger": "cardKeyDoor"
+    },
+    {
+      "name": "cardKeyDoor4",
+      "position": [
+        5,
+        13
+      ],
+      "trigger": "cardKeyDoor"
+    }
+  ],
+  "npcs": [
+    {
+      "id": 1,
+      "talk": "talkSilphWorkerM1"
+    },
+    {
+      "id": 2,
+      "talk": "talkSilphWorkerM2"
+    },
+    {
+      "id": 3,
+      "talk": "talkSilphWorkerF1"
+    },
+    {
+      "id": 4,
+      "talk": "talkSilphWorkerF2"
+    },
+    {
+      "id": 5,
+      "talk": "talkSilphWorkerM3"
+    },
+    {
+      "id": 6,
+      "talk": "talkRocket1"
+    },
+    {
+      "id": 7,
+      "talk": "talkScientist"
+    },
+    {
+      "id": 8,
+      "talk": "talkRocket2"
+    },
+    {
+      "id": 9,
+      "talk": "itemHpUp"
+    },
+    {
+      "id": 10,
+      "talk": "itemXAccuracy"
+    }
+  ],
+  "onLoad": "SilphCo6FOnLoad",
+  "signs": []
+}

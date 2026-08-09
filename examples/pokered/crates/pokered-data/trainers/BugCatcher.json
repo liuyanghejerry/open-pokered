@@ -1,0 +1,199 @@
+{
+  "$schema": "../schemas/trainer.schema.json",
+  "class": "BugCatcher",
+  "constName": "BUG_CATCHER",
+  "parties": [
+    {
+      "pokemon": [
+        {
+          "level": 6,
+          "species": "Weedle"
+        },
+        {
+          "level": 6,
+          "species": "Caterpie"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 7,
+          "species": "Weedle"
+        },
+        {
+          "level": 7,
+          "species": "Kakuna"
+        },
+        {
+          "level": 7,
+          "species": "Weedle"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 9,
+          "species": "Weedle"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 10,
+          "species": "Caterpie"
+        },
+        {
+          "level": 10,
+          "species": "Weedle"
+        },
+        {
+          "level": 10,
+          "species": "Caterpie"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 9,
+          "species": "Weedle"
+        },
+        {
+          "level": 9,
+          "species": "Kakuna"
+        },
+        {
+          "level": 9,
+          "species": "Caterpie"
+        },
+        {
+          "level": 9,
+          "species": "Metapod"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 11,
+          "species": "Caterpie"
+        },
+        {
+          "level": 11,
+          "species": "Metapod"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 11,
+          "species": "Weedle"
+        },
+        {
+          "level": 11,
+          "species": "Kakuna"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 10,
+          "species": "Caterpie"
+        },
+        {
+          "level": 10,
+          "species": "Metapod"
+        },
+        {
+          "level": 10,
+          "species": "Caterpie"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 14,
+          "species": "Caterpie"
+        },
+        {
+          "level": 14,
+          "species": "Weedle"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 16,
+          "species": "Weedle"
+        },
+        {
+          "level": 16,
+          "species": "Caterpie"
+        },
+        {
+          "level": 16,
+          "species": "Weedle"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 20,
+          "species": "Butterfree"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 18,
+          "species": "Metapod"
+        },
+        {
+          "level": 18,
+          "species": "Caterpie"
+        },
+        {
+          "level": 18,
+          "species": "Venonat"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 19,
+          "species": "Beedrill"
+        },
+        {
+          "level": 19,
+          "species": "Beedrill"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 20,
+          "species": "Caterpie"
+        },
+        {
+          "level": 20,
+          "species": "Weedle"
+        },
+        {
+          "level": 20,
+          "species": "Venonat"
+        }
+      ]
+    }
+  ]
+}

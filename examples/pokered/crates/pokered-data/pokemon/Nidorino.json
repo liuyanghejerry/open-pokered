@@ -1,0 +1,75 @@
+{
+  "$schema": "../schemas/pokemon.schema.json",
+  "species": "Nidorino",
+  "baseStats": {
+    "hp": 61,
+    "attack": 72,
+    "defense": 57,
+    "speed": 65,
+    "special": 55
+  },
+  "type1": "Poison",
+  "type2": "Poison",
+  "catchRate": 120,
+  "baseExp": 118,
+  "growthRate": "MediumSlow",
+  "initialMoves": [
+    "Leer",
+    "Tackle",
+    "HornAttack",
+    "None"
+  ],
+  "tmHmFlags": [
+    224,
+    63,
+    136,
+    193,
+    131,
+    8,
+    2
+  ],
+  "pokedex": {
+    "category": "POISON PIN",
+    "heightFeet": 2,
+    "heightInches": 11,
+    "weightDecipounds": 430,
+    "flavorTextPages": [
+      "An aggressive\n#MON that is\nquick to attack.",
+      "The horn on its\nhead secretes a\npowerful venom"
+    ]
+  },
+  "evolutions": [
+    {
+      "method": "item",
+      "species": "Nidoking",
+      "item": "MoonStone",
+      "minLevel": 1
+    }
+  ],
+  "learnset": [
+    {
+      "level": 8,
+      "moveId": "HornAttack"
+    },
+    {
+      "level": 14,
+      "moveId": "PoisonSting"
+    },
+    {
+      "level": 23,
+      "moveId": "FocusEnergy"
+    },
+    {
+      "level": 32,
+      "moveId": "FuryAttack"
+    },
+    {
+      "level": 41,
+      "moveId": "HornDrill"
+    },
+    {
+      "level": 50,
+      "moveId": "DoubleKick"
+    }
+  ]
+}

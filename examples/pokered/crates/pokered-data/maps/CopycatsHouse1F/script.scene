@@ -1,0 +1,31 @@
+// CopycatsHouse1F — translated from the original disassembly
+// (scripts/CopycatsHouse1F.asm, text/CopycatsHouse1F.asm) to the real Game DSL
+// API. Plain NPC house: COPYCAT's parents (dialogue only) and her CHANSEY,
+// which plays its cry then chirps.
+
+game_scene CopycatsHouse1F {
+  // ── COPYCAT's mother (npc 1) ────────────────────────────────────────────
+  @storyline("talkMiddleAgedWoman") {
+    @trigger(map = "CopycatsHouse1F", npc = 1)
+    @speaker("") {
+      @t("My daughter is so\nself-centered. She only has\na few friends.", "我的女儿太自我为中心了。她只\n有几个朋友。")
+    }
+  }
+
+  // ── COPYCAT's father (npc 2) ────────────────────────────────────────────
+  @storyline("talkMiddleAgedMan") {
+    @trigger(map = "CopycatsHouse1F", npc = 2)
+    @speaker("") {
+      @t("My daughter likes to mimic\npeople.\n\nHer mimicry has earned her\nthe nickname COPYCAT around\nhere!", "我的女儿喜欢模仿别人。\n\n她的模仿让她在这一带有了「模\n仿少女」这个外号！")
+    }
+  }
+
+  // ── CHANSEY (Fairy sprite, npc 3) — plays its cry then chirps ────────────
+  @storyline("talkChansey") {
+    @trigger(map = "CopycatsHouse1F", npc = 3)
+    playCry("CHANSEY")
+    @speaker("") {
+      @t("CHANSEY: Chaan! Sii!", "吉利蛋：恰恩！叽！")
+    }
+  }
+}

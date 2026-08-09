@@ -1,0 +1,25 @@
+screen MartQuantity {
+  panel {
+    rect = {tx: 0, ty: 0, tw: 10, th: 6}
+    style = "default"
+  }
+  text("{item_name}") {
+    rect = {tx: 1, ty: 1, tw: 8, th: 1}
+  }
+  text(@t("QTY", "数量")) {
+    rect = {tx: 1, ty: 3, tw: 4, th: 1}
+  }
+  text("{quantity}") {
+    rect = {tx: 5, ty: 3, tw: 4, th: 1}
+  }
+  text("×${unit_price}") {
+    rect = {tx: 1, ty: 4, tw: 4, th: 1}
+  }
+  panel {
+    rect = {tx: 10, ty: 0, tw: 8, th: 3}
+    style = "default"
+  }
+  text(@t("MONEY ${balance}", "金钱 ${balance}")) {
+    rect = {tx: 11, ty: 1, tw: 6, th: 1}
+  }
+}

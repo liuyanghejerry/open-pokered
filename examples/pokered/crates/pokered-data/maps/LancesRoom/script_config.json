@@ -1,0 +1,21 @@
+{
+  "$schema": "../../schemas/script_config.schema.json",
+  "coordEvents": [
+    {
+      "name": "lockEntrance",
+      "position": [
+        6,
+        11
+      ],
+      "trigger": "lockEntrance"
+    }
+  ],
+  "npcs": [
+    {
+      "id": 1,
+      "talk": "talkLance"
+    }
+  ],
+  "onLoad": "LancesRoomOnLoad",
+  "signs": []
+}

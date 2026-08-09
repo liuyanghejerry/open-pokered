@@ -1,0 +1,124 @@
+screen Party {
+  text(@t("No #MON!", "无宝可梦！")) {
+    rect = {tx: 3, ty: 8, tw: 10, th: 1}
+    visible = "{show_empty}"
+  }
+  text(@t("B:Cancel", "B：取消")) {
+    rect = {tx: 2, ty: 16, tw: 10, th: 1}
+    color = "DarkGray"
+  }
+  container {
+    rect = {tx: 0, ty: 0, tw: 20, th: 18}
+    layout = {gap: 0}
+    clip = false
+    visible = "{show_entry1}"
+    text("{mon1_name}") {
+      rect = {tx: 4, ty: 0, tw: 10, th: 1}
+    }
+    text("L{mon1_level}") {
+      rect = {tx: 14, ty: 0, tw: 3, th: 1}
+    }
+    text("{mon1_status}") {
+      rect = {tx: 17, ty: 0, tw: 3, th: 1}
+      color = "DarkGray"
+    }
+    text("{mon1_hp}") {
+      rect = {tx: 14, ty: 1, tw: 6, th: 1}
+    }
+  }
+  container {
+    rect = {tx: 0, ty: 2, tw: 20, th: 18}
+    layout = {gap: 0}
+    clip = false
+    visible = "{show_entry2}"
+    text("{mon2_name}") {
+      rect = {tx: 4, ty: 0, tw: 10, th: 1}
+    }
+    text("L{mon2_level}") {
+      rect = {tx: 14, ty: 0, tw: 3, th: 1}
+    }
+    text("{mon2_status}") {
+      rect = {tx: 17, ty: 0, tw: 3, th: 1}
+      color = "DarkGray"
+    }
+    text("{mon2_hp}") {
+      rect = {tx: 14, ty: 1, tw: 6, th: 1}
+    }
+  }
+  container {
+    rect = {tx: 0, ty: 4, tw: 20, th: 18}
+    layout = {gap: 0}
+    clip = false
+    visible = "{show_entry3}"
+    text("{mon3_name}") {
+      rect = {tx: 4, ty: 0, tw: 10, th: 1}
+    }
+    text("L{mon3_level}") {
+      rect = {tx: 14, ty: 0, tw: 3, th: 1}
+    }
+    text("{mon3_status}") {
+      rect = {tx: 17, ty: 0, tw: 3, th: 1}
+      color = "DarkGray"
+    }
+    text("{mon3_hp}") {
+      rect = {tx: 14, ty: 1, tw: 6, th: 1}
+    }
+  }
+  container {
+    rect = {tx: 0, ty: 6, tw: 20, th: 18}
+    layout = {gap: 0}
+    clip = false
+    visible = "{show_entry4}"
+    text("{mon4_name}") {
+      rect = {tx: 4, ty: 0, tw: 10, th: 1}
+    }
+    text("L{mon4_level}") {
+      rect = {tx: 14, ty: 0, tw: 3, th: 1}
+    }
+    text("{mon4_status}") {
+      rect = {tx: 17, ty: 0, tw: 3, th: 1}
+      color = "DarkGray"
+    }
+    text("{mon4_hp}") {
+      rect = {tx: 14, ty: 1, tw: 6, th: 1}
+    }
+  }
+  container {
+    rect = {tx: 0, ty: 8, tw: 20, th: 18}
+    layout = {gap: 0}
+    clip = false
+    visible = "{show_entry5}"
+    text("{mon5_name}") {
+      rect = {tx: 4, ty: 0, tw: 10, th: 1}
+    }
+    text("L{mon5_level}") {
+      rect = {tx: 14, ty: 0, tw: 3, th: 1}
+    }
+    text("{mon5_status}") {
+      rect = {tx: 17, ty: 0, tw: 3, th: 1}
+      color = "DarkGray"
+    }
+    text("{mon5_hp}") {
+      rect = {tx: 14, ty: 1, tw: 6, th: 1}
+    }
+  }
+  container {
+    rect = {tx: 0, ty: 10, tw: 20, th: 18}
+    layout = {gap: 0}
+    clip = false
+    visible = "{show_entry6}"
+    text("{mon6_name}") {
+      rect = {tx: 4, ty: 0, tw: 10, th: 1}
+    }
+    text("L{mon6_level}") {
+      rect = {tx: 14, ty: 0, tw: 3, th: 1}
+    }
+    text("{mon6_status}") {
+      rect = {tx: 17, ty: 0, tw: 3, th: 1}
+      color = "DarkGray"
+    }
+    text("{mon6_hp}") {
+      rect = {tx: 14, ty: 1, tw: 6, th: 1}
+    }
+  }
+}

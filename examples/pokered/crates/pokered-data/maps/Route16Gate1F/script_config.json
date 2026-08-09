@@ -1,0 +1,48 @@
+{
+  "$schema": "../../schemas/script_config.schema.json",
+  "coordEvents": [
+    {
+      "name": "guardWaitUp1",
+      "position": [
+        4,
+        7
+      ],
+      "trigger": "guardWaitUp"
+    },
+    {
+      "name": "guardWaitUp2",
+      "position": [
+        4,
+        8
+      ],
+      "trigger": "guardWaitUp"
+    },
+    {
+      "name": "guardWaitUp3",
+      "position": [
+        4,
+        9
+      ],
+      "trigger": "guardWaitUp"
+    },
+    {
+      "name": "guardWaitUp4",
+      "position": [
+        4,
+        10
+      ],
+      "trigger": "guardWaitUp"
+    }
+  ],
+  "npcs": [
+    {
+      "id": 1,
+      "talk": "talkGuard"
+    },
+    {
+      "id": 2,
+      "talk": "talkGambler"
+    }
+  ],
+  "signs": []
+}

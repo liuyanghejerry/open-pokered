@@ -1,0 +1,89 @@
+{
+  "$schema": "../../schemas/map.schema.json",
+  "id": 136,
+  "name": "CeladonMart5F",
+  "header": {
+    "tileset": "Lobby",
+    "music": "Pokecenter",
+    "connectionFlags": 0,
+    "width": 10,
+    "height": 4,
+    "borderBlock": 15
+  },
+  "connections": {},
+  "warps": [
+    {
+      "x": 12,
+      "y": 1,
+      "destMap": "CeladonMartRoof",
+      "destWarpId": 0
+    },
+    {
+      "x": 16,
+      "y": 1,
+      "destMap": "CeladonMart4F",
+      "destWarpId": 1
+    },
+    {
+      "x": 1,
+      "y": 1,
+      "destMap": "CeladonMartElevator",
+      "destWarpId": 0
+    }
+  ],
+  "npcs": [
+    {
+      "spriteId": 16,
+      "spriteName": "Gentleman",
+      "x": 14,
+      "y": 5,
+      "movement": "Wander",
+      "facing": "Down",
+      "range": 1,
+      "textId": 1,
+      "isTrainer": false
+    },
+    {
+      "spriteId": 19,
+      "spriteName": "Sailor",
+      "x": 2,
+      "y": 6,
+      "movement": "Stationary",
+      "facing": "Down",
+      "range": 0,
+      "textId": 2,
+      "isTrainer": false
+    },
+    {
+      "spriteId": 38,
+      "spriteName": "Clerk",
+      "x": 5,
+      "y": 3,
+      "movement": "Stationary",
+      "facing": "Down",
+      "range": 0,
+      "textId": 3,
+      "isTrainer": false
+    },
+    {
+      "spriteId": 38,
+      "spriteName": "Clerk",
+      "x": 6,
+      "y": 3,
+      "movement": "Stationary",
+      "facing": "Down",
+      "range": 0,
+      "textId": 4,
+      "isTrainer": false
+    }
+  ],
+  "signs": [
+    {
+      "x": 14,
+      "y": 1,
+      "textId": 1
+    }
+  ],
+  "text": {},
+  "wild": null
+}

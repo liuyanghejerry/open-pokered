@@ -1,0 +1,152 @@
+{
+  "$schema": "../../schemas/map.schema.json",
+  "id": 209,
+  "name": "SilphCo4F",
+  "header": {
+    "tileset": "Facility",
+    "music": "SilphCo",
+    "connectionFlags": 0,
+    "width": 15,
+    "height": 9,
+    "borderBlock": 46
+  },
+  "connections": {},
+  "warps": [
+    {
+      "x": 24,
+      "y": 0,
+      "destMap": "SilphCo3F",
+      "destWarpId": 1
+    },
+    {
+      "x": 26,
+      "y": 0,
+      "destMap": "SilphCo5F",
+      "destWarpId": 1
+    },
+    {
+      "x": 20,
+      "y": 0,
+      "destMap": "SilphCoElevator",
+      "destWarpId": 0
+    },
+    {
+      "x": 11,
+      "y": 7,
+      "destMap": "SilphCo10F",
+      "destWarpId": 3
+    },
+    {
+      "x": 17,
+      "y": 3,
+      "destMap": "SilphCo6F",
+      "destWarpId": 3
+    },
+    {
+      "x": 3,
+      "y": 15,
+      "destMap": "SilphCo10F",
+      "destWarpId": 4
+    },
+    {
+      "x": 17,
+      "y": 11,
+      "destMap": "SilphCo10F",
+      "destWarpId": 5
+    }
+  ],
+  "npcs": [
+    {
+      "spriteId": 44,
+      "spriteName": "SilphWorkerM",
+      "x": 6,
+      "y": 2,
+      "movement": "Stationary",
+      "facing": "Down",
+      "range": 0,
+      "textId": 1,
+      "isTrainer": false
+    },
+    {
+      "spriteId": 24,
+      "spriteName": "Rocket",
+      "x": 9,
+      "y": 14,
+      "movement": "Stationary",
+      "facing": "Right",
+      "range": 0,
+      "textId": 2,
+      "isTrainer": true,
+      "trainerClass": "Rocket",
+      "trainerSet": 26,
+      "endBattleText": "Arrgh!"
+    },
+    {
+      "spriteId": 32,
+      "spriteName": "Scientist",
+      "x": 14,
+      "y": 6,
+      "movement": "Stationary",
+      "facing": "Left",
+      "range": 0,
+      "textId": 3,
+      "isTrainer": true,
+      "trainerClass": "Scientist",
+      "trainerSet": 5,
+      "endBattleText": "Darn!\nYou weak POKeMON!"
+    },
+    {
+      "spriteId": 24,
+      "spriteName": "Rocket",
+      "x": 26,
+      "y": 10,
+      "movement": "Stationary",
+      "facing": "Up",
+      "range": 0,
+      "textId": 4,
+      "isTrainer": true,
+      "trainerClass": "Rocket",
+      "trainerSet": 27,
+      "endBattleText": "Who\nare you?"
+    },
+    {
+      "spriteId": 61,
+      "spriteName": "PokeBall",
+      "x": 3,
+      "y": 9,
+      "movement": "Stationary",
+      "facing": "Down",
+      "range": 0,
+      "textId": 5,
+      "isTrainer": false,
+      "itemId": 52
+    },
+    {
+      "spriteId": 61,
+      "spriteName": "PokeBall",
+      "x": 4,
+      "y": 7,
+      "movement": "Stationary",
+      "facing": "Down",
+      "range": 0,
+      "textId": 6,
+      "isTrainer": false,
+      "itemId": 54
+    },
+    {
+      "spriteId": 61,
+      "spriteName": "PokeBall",
+      "x": 5,
+      "y": 8,
+      "movement": "Stationary",
+      "facing": "Down",
+      "range": 0,
+      "textId": 7,
+      "isTrainer": false,
+      "itemId": 29
+    }
+  ],
+  "signs": [],
+  "text": {},
+  "wild": null
+}

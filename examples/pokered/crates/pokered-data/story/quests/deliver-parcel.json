@@ -1,0 +1,19 @@
+{
+  "id": "deliver-parcel",
+  "title": { "en": "Oak's Parcel", "zh": "大木的包裹" },
+  "type": "main",
+  "arc": "kanto-intro",
+  "summary": "Pick up Oak's parcel at the Viridian mart and bring it back to him.",
+  "giver": "oak",
+  "characters": ["oak"],
+  "maps": ["ViridianCity", "OaksLab"],
+  "objectives": [
+    { "id": "o1", "text": { "en": "Collect the parcel in Viridian City", "zh": "在常磐市取得包裹" }, "doneFlag": "EVENT_GOT_OAKS_PARCEL" },
+    { "id": "o2", "text": { "en": "Deliver it to Prof. Oak", "zh": "把它交给大木博士" }, "doneFlag": "EVENT_OAK_GOT_PARCEL" }
+  ],
+  "requires": ["EVENT_GOT_STARTER"],
+  "sets": ["EVENT_GOT_OAKS_PARCEL", "EVENT_OAK_GOT_PARCEL"],
+  "rewards": [],
+  "implementedBy": [],
+  "status": "drafted"
+}

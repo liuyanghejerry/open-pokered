@@ -1,0 +1,14 @@
+// Route5 — translated from the original disassembly (scripts/Route5.asm,
+// text/Route5.asm) to the real Game DSL API surface. Route5_Script only enables
+// auto text-box drawing; the map has no NPCs, no trainers and no on-enter
+// cutscene. Its sole interactive object is the Underground Path sign.
+
+game_scene Route5 {
+  // ── Underground Path sign (sign 1) ──────────────────────────────────────
+  @storyline("undergroundPathSign") {
+    @trigger(map = "Route5", sign = 1)
+    @speaker("") {
+      @t("UNDERGROUND PATH CERULEAN\nCITY - VERMILION CITY", "地下通道华蓝市 - 枯叶市")
+    }
+  }
+}

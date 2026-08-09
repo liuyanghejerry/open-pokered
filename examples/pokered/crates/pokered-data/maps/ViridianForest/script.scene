@@ -1,0 +1,139 @@
+// ViridianForest — translated from the original disassembly
+// (scripts/ViridianForest.asm, text/ViridianForest.asm) to the real Game DSL
+// API surface. This is a route/dungeon map: npcs 2-4 are sight-engaged
+// BugCatcher trainers (map.json isTrainer = true), so the runtime owns the
+// battle and each .scene handler is DIALOGUE ONLY (before- vs after-battle
+// text, branched on EVENT_BEAT_VIRIDIAN_FOREST_TRAINER_n). npcs 1 and 8 are
+// plain dialogue Youngsters; npcs 5-7 are ground-item Poke Balls; signs 1-6
+// are trainer-tip / direction signs.
+
+game_scene ViridianForest {
+  // ── Youngster (npc 1) — plain dialogue ──────────────────────────────────
+  @storyline("talkYoungster1") {
+    @trigger(map = "ViridianForest", npc = 1)
+    @speaker("") {
+      @t("I came here with some\nfriends!\n\nThey're out for POKeMON\nfights!", "我和朋友们一起来的！\n\n他们正在找宝可梦对战！")
+    }
+  }
+
+  // ── BugCatcher (npc 2) — ViridianForestTrainerHeader0, sight-engaged ─────
+  @storyline("talkBugCatcher1") {
+    @trigger(map = "ViridianForest", npc = 2)
+    @if (getFlag("EVENT_BEAT_VIRIDIAN_FOREST_TRAINER_0")) {
+      @speaker("") { @t("Ssh! You'll scare the bugs\naway!", "嘘！你会把虫子吓跑的！") }
+    } @else {
+      @speaker("") { @t("Hey! You have POKeMON! Come\non! Let's battle'em!", "嘿！你有宝可梦！来吧！让我们\n对战吧！") }
+    }
+  }
+
+  // ── BugCatcher (npc 3) — ViridianForestTrainerHeader1, sight-engaged ─────
+  @storyline("talkBugCatcher2") {
+    @trigger(map = "ViridianForest", npc = 3)
+    @if (getFlag("EVENT_BEAT_VIRIDIAN_FOREST_TRAINER_1")) {
+      @speaker("") { @t("Darn! I'm going to catch\nsome stronger ones!", "可恶！我要去抓些更强的！") }
+    } @else {
+      @speaker("") { @t("Yo! You can't jam out if\nyou're a POKeMON trainer!", "哟！宝可梦训练家可不能中途放\n弃！") }
+    }
+  }
+
+  // ── BugCatcher (npc 4) — ViridianForestTrainerHeader2, sight-engaged ─────
+  @storyline("talkBugCatcher3") {
+    @trigger(map = "ViridianForest", npc = 4)
+    @if (getFlag("EVENT_BEAT_VIRIDIAN_FOREST_TRAINER_2")) {
+      @speaker("") {
+        @t("Sometimes, you can find\nstuff on the ground!\n\nI'm looking for the stuff I\ndropped!", "有时候，地上也能找到好东西！\n\n我正在找我弄丢的东西！")
+      }
+    } @else {
+      @speaker("") { @t("Hey, wait up! What's the\nhurry?", "嘿，等等！这么急干嘛？") }
+    }
+  }
+
+  // ── Ground item: ANTIDOTE Poke Ball (npc 5) ─────────────────────────────
+  @storyline("itemAntidote") {
+    @trigger(map = "ViridianForest", npc = 5, toggle = "VIRIDIAN_FOREST_OBJ_5")
+    @if (!getFlag("EVENT_GOT_VIRIDIAN_FOREST_ANTIDOTE")) {
+      giveItem("ANTIDOTE", 1)
+      setFlag("EVENT_GOT_VIRIDIAN_FOREST_ANTIDOTE")
+      hideObjectByName("VIRIDIAN_FOREST_OBJ_5")
+      @speaker("") { @t("<PLAYER> found ANTIDOTE!", "<PLAYER>发现了解毒药！") }
+    }
+  }
+
+  // ── Ground item: POTION Poke Ball (npc 6) ───────────────────────────────
+  @storyline("itemPotion") {
+    @trigger(map = "ViridianForest", npc = 6, toggle = "VIRIDIAN_FOREST_OBJ_6")
+    @if (!getFlag("EVENT_GOT_VIRIDIAN_FOREST_POTION")) {
+      giveItem("POTION", 1)
+      setFlag("EVENT_GOT_VIRIDIAN_FOREST_POTION")
+      hideObjectByName("VIRIDIAN_FOREST_OBJ_6")
+      @speaker("") { @t("<PLAYER> found POTION!", "<PLAYER>发现了伤药！") }
+    }
+  }
+
+  // ── Ground item: POKe BALL Poke Ball (npc 7) ────────────────────────────
+  @storyline("itemPokeBall") {
+    @trigger(map = "ViridianForest", npc = 7, toggle = "VIRIDIAN_FOREST_OBJ_7")
+    @if (!getFlag("EVENT_GOT_VIRIDIAN_FOREST_POKE_BALL")) {
+      giveItem("POKE_BALL", 1)
+      setFlag("EVENT_GOT_VIRIDIAN_FOREST_POKE_BALL")
+      hideObjectByName("VIRIDIAN_FOREST_OBJ_7")
+      @speaker("") { @t("<PLAYER> found POKe BALL!", "<PLAYER>发现了精灵球！") }
+    }
+  }
+
+  // ── Youngster (npc 8) — plain dialogue ──────────────────────────────────
+  @storyline("talkYoungster2") {
+    @trigger(map = "ViridianForest", npc = 8)
+    @speaker("") {
+      @t("I ran out of POKe BALLs to\ncatch POKeMON with!\n\nYou should carry extras!", "我的精灵球用完了，没法抓宝可\n梦了！\n\n你应该多带一些！")
+    }
+  }
+
+  // ── Sign 1 — Trainer Tips (avoid grassy areas) ──────────────────────────
+  @storyline("signTrainerTips1") {
+    @trigger(map = "ViridianForest", sign = 1)
+    @speaker("") {
+      @t("TRAINER TIPS\n\nIf you want to avoid\nbattles, stay away from\ngrassy areas!", "训练家提示\n\n想要避免对战的话，远离草丛区\n域吧！")
+    }
+  }
+
+  // ── Sign 2 — Use ANTIDOTE for poison ────────────────────────────────────
+  @storyline("signUseAntidote") {
+    @trigger(map = "ViridianForest", sign = 2)
+    @speaker("") {
+      @t("For poison, use ANTIDOTE!\nGet it at POKeMON MARTs!", "中毒的话就用解毒药！友好商店\n有卖！")
+    }
+  }
+
+  // ── Sign 3 — Trainer Tips (PROF.OAK / #DEX evaluation) ──────────────────
+  @storyline("signTrainerTips2") {
+    @trigger(map = "ViridianForest", sign = 3)
+    @speaker("") {
+      @t("TRAINER TIPS\n\nContact PROF.OAK via PC to\nget your POKeDEX evaluated!", "训练家提示\n\n通过电脑联系大木博士，给图鉴\n做评定吧！")
+    }
+  }
+
+  // ── Sign 4 — Trainer Tips (no stealing POKeMON) ─────────────────────────
+  @storyline("signTrainerTips3") {
+    @trigger(map = "ViridianForest", sign = 4)
+    @speaker("") {
+      @t("TRAINER TIPS\n\nNo stealing of POKeMON from\nother trainers! Catch only\nwild POKeMON!", "训练家提示\n\n不能偷走其他训练家的宝可梦！\n只抓野生的宝可梦吧！")
+    }
+  }
+
+  // ── Sign 5 — Trainer Tips (weaken before capture) ───────────────────────
+  @storyline("signTrainerTips4") {
+    @trigger(map = "ViridianForest", sign = 5)
+    @speaker("") {
+      @t("TRAINER TIPS\n\nWeaken POKeMON before\nattempting capture!\n\nWhen healthy, they may\nescape!", "训练家提示\n\n捕捉之前先削弱宝可梦！\n\n状态好的话，可能会逃走！")
+    }
+  }
+
+  // ── Sign 6 — Leaving Viridian Forest ────────────────────────────────────
+  @storyline("signLeaving") {
+    @trigger(map = "ViridianForest", sign = 6)
+    @speaker("") {
+      @t("LEAVING VIRIDIAN FOREST\nPEWTER CITY AHEAD", "离开常青森林前方深灰市")
+    }
+  }
+}

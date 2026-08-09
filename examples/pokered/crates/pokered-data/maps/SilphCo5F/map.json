@@ -1,0 +1,199 @@
+{
+  "$schema": "../../schemas/map.schema.json",
+  "id": 210,
+  "name": "SilphCo5F",
+  "header": {
+    "tileset": "Facility",
+    "music": "SilphCo",
+    "connectionFlags": 0,
+    "width": 15,
+    "height": 9,
+    "borderBlock": 46
+  },
+  "connections": {},
+  "warps": [
+    {
+      "x": 24,
+      "y": 0,
+      "destMap": "SilphCo6F",
+      "destWarpId": 1
+    },
+    {
+      "x": 26,
+      "y": 0,
+      "destMap": "SilphCo4F",
+      "destWarpId": 1
+    },
+    {
+      "x": 20,
+      "y": 0,
+      "destMap": "SilphCoElevator",
+      "destWarpId": 0
+    },
+    {
+      "x": 27,
+      "y": 3,
+      "destMap": "SilphCo7F",
+      "destWarpId": 5
+    },
+    {
+      "x": 9,
+      "y": 15,
+      "destMap": "SilphCo9F",
+      "destWarpId": 4
+    },
+    {
+      "x": 11,
+      "y": 5,
+      "destMap": "SilphCo3F",
+      "destWarpId": 4
+    },
+    {
+      "x": 3,
+      "y": 15,
+      "destMap": "SilphCo3F",
+      "destWarpId": 5
+    }
+  ],
+  "npcs": [
+    {
+      "spriteId": 44,
+      "spriteName": "SilphWorkerM",
+      "x": 13,
+      "y": 9,
+      "movement": "Stationary",
+      "facing": "Down",
+      "range": 0,
+      "textId": 1,
+      "isTrainer": false
+    },
+    {
+      "spriteId": 24,
+      "spriteName": "Rocket",
+      "x": 8,
+      "y": 16,
+      "movement": "Stationary",
+      "facing": "Right",
+      "range": 0,
+      "textId": 2,
+      "isTrainer": true,
+      "trainerClass": "Rocket",
+      "trainerSet": 28,
+      "endBattleText": "Boom!"
+    },
+    {
+      "spriteId": 32,
+      "spriteName": "Scientist",
+      "x": 8,
+      "y": 3,
+      "movement": "Stationary",
+      "facing": "Right",
+      "range": 0,
+      "textId": 3,
+      "isTrainer": true,
+      "trainerClass": "Scientist",
+      "trainerSet": 6,
+      "endBattleText": "Dang!\nBlast it!"
+    },
+    {
+      "spriteId": 33,
+      "spriteName": "Rocker",
+      "x": 18,
+      "y": 10,
+      "movement": "Stationary",
+      "facing": "Up",
+      "range": 0,
+      "textId": 4,
+      "isTrainer": true,
+      "trainerClass": "Juggler",
+      "trainerSet": 1,
+      "endBattleText": "Oh\ngoodness!"
+    },
+    {
+      "spriteId": 24,
+      "spriteName": "Rocket",
+      "x": 28,
+      "y": 4,
+      "movement": "Stationary",
+      "facing": "Up",
+      "range": 0,
+      "textId": 5,
+      "isTrainer": true,
+      "trainerClass": "Rocket",
+      "trainerSet": 29,
+      "endBattleText": "Cough...\nCough..."
+    },
+    {
+      "spriteId": 61,
+      "spriteName": "PokeBall",
+      "x": 2,
+      "y": 13,
+      "movement": "Stationary",
+      "facing": "Down",
+      "range": 0,
+      "textId": 6,
+      "isTrainer": false,
+      "itemId": 209
+    },
+    {
+      "spriteId": 61,
+      "spriteName": "PokeBall",
+      "x": 4,
+      "y": 6,
+      "movement": "Stationary",
+      "facing": "Down",
+      "range": 0,
+      "textId": 7,
+      "isTrainer": false,
+      "itemId": 36
+    },
+    {
+      "spriteId": 61,
+      "spriteName": "PokeBall",
+      "x": 21,
+      "y": 16,
+      "movement": "Stationary",
+      "facing": "Down",
+      "range": 0,
+      "textId": 8,
+      "isTrainer": false,
+      "itemId": 48
+    },
+    {
+      "spriteId": 66,
+      "spriteName": "Clipboard",
+      "x": 22,
+      "y": 12,
+      "movement": "Stationary",
+      "facing": "Down",
+      "range": 0,
+      "textId": 9,
+      "isTrainer": false
+    },
+    {
+      "spriteId": 66,
+      "spriteName": "Clipboard",
+      "x": 25,
+      "y": 10,
+      "movement": "Stationary",
+      "facing": "Down",
+      "range": 0,
+      "textId": 10,
+      "isTrainer": false
+    },
+    {
+      "spriteId": 66,
+      "spriteName": "Clipboard",
+      "x": 24,
+      "y": 6,
+      "movement": "Stationary",
+      "facing": "Down",
+      "range": 0,
+      "textId": 11,
+      "isTrainer": false
+    }
+  ],
+  "signs": [],
+  "text": {},
+  "wild": null
+}

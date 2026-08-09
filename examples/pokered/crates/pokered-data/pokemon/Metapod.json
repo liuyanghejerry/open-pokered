@@ -1,0 +1,49 @@
+{
+  "$schema": "../schemas/pokemon.schema.json",
+  "species": "Metapod",
+  "baseStats": {
+    "hp": 50,
+    "attack": 20,
+    "defense": 55,
+    "speed": 30,
+    "special": 25
+  },
+  "type1": "Bug",
+  "type2": "Bug",
+  "catchRate": 120,
+  "baseExp": 72,
+  "growthRate": "MediumFast",
+  "initialMoves": [
+    "Harden",
+    "None",
+    "None",
+    "None"
+  ],
+  "tmHmFlags": [
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0
+  ],
+  "pokedex": {
+    "category": "COCOON",
+    "heightFeet": 2,
+    "heightInches": 4,
+    "weightDecipounds": 220,
+    "flavorTextPages": [
+      "This #MON is\nvulnerable to\nattack while its",
+      "shell is soft,\nexposing its weak\nand tender body"
+    ]
+  },
+  "evolutions": [
+    {
+      "method": "level",
+      "species": "Butterfree",
+      "level": 10
+    }
+  ],
+  "learnset": []
+}

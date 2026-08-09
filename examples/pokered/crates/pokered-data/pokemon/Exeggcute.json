@@ -1,0 +1,75 @@
+{
+  "$schema": "../schemas/pokemon.schema.json",
+  "species": "Exeggcute",
+  "baseStats": {
+    "hp": 60,
+    "attack": 40,
+    "defense": 80,
+    "speed": 40,
+    "special": 60
+  },
+  "type1": "Grass",
+  "type2": "Psychic",
+  "catchRate": 90,
+  "baseExp": 98,
+  "growthRate": "Slow",
+  "initialMoves": [
+    "Barrage",
+    "Hypnosis",
+    "None",
+    "None"
+  ],
+  "tmHmFlags": [
+    32,
+    3,
+    8,
+    240,
+    27,
+    104,
+    2
+  ],
+  "pokedex": {
+    "category": "EGG",
+    "heightFeet": 1,
+    "heightInches": 4,
+    "weightDecipounds": 60,
+    "flavorTextPages": [
+      "Often mistaken\nfor eggs.\nWhen disturbed,",
+      "they quickly\ngather and attack\nin swarms"
+    ]
+  },
+  "evolutions": [
+    {
+      "method": "item",
+      "species": "Exeggutor",
+      "item": "LeafStone",
+      "minLevel": 1
+    }
+  ],
+  "learnset": [
+    {
+      "level": 25,
+      "moveId": "Reflect"
+    },
+    {
+      "level": 28,
+      "moveId": "LeechSeed"
+    },
+    {
+      "level": 32,
+      "moveId": "StunSpore"
+    },
+    {
+      "level": 37,
+      "moveId": "Poisonpowder"
+    },
+    {
+      "level": 42,
+      "moveId": "Solarbeam"
+    },
+    {
+      "level": 48,
+      "moveId": "SleepPowder"
+    }
+  ]
+}

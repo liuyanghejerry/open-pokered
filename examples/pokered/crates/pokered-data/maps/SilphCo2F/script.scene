@@ -1,0 +1,117 @@
+// SilphCo2F — translated from the original disassembly (scripts/SilphCo2F.asm,
+// text/SilphCo2F.asm) to the real Game DSL API surface. The Silph worker (npc 1)
+// is a non-trainer who gives TM36 (SELFDESTRUCT). The two Scientists and two
+// Rockets are sight-engaged trainers driven by the runtime, so their handlers
+// are dialogue only.
+
+game_scene SilphCo2F {
+  // ── Silph Co. worker (npc 1) — gives TM36 (SELFDESTRUCT) ────────────────
+  @storyline("talkSilphWorkerF") {
+    @trigger(map = "SilphCo2F", npc = 1)
+    @if (getFlag("EVENT_GOT_TM36")) {
+      @speaker("") {
+        @t("TM36 is SELFDESTRUCT!\n\nIt's powerful, but the\nPOKeMON that uses it faints!\nBe careful.", "TM36是自爆！\n\n威力强大，但使用它的宝可梦会\n晕倒！要小心。")
+      }
+    } @else {
+      @speaker("") {
+        @t("Eeek! No! Stop! Help!\n\nOh, you're not with TEAM\nROCKET. I thought... I'm\nsorry. Here, please take\nthis!", "呀！不要！住手！救命！\n\n啊，你不是火箭队的人。我还以\n为……对不起。这个请你收下\n吧！")
+      }
+      giveItem("TM36", 1)
+      setFlag("EVENT_GOT_TM36")
+      @speaker("") { @t("<PLAYER> got TM36!", "<PLAYER>获得了 TM36！") }
+      @speaker("") {
+        @t("TM36 is SELFDESTRUCT!\n\nIt's powerful, but the\nPOKeMON that uses it faints!\nBe careful.", "TM36是自爆！\n\n威力强大，但使用它的宝可梦会\n晕倒！要小心。")
+      }
+    }
+  }
+
+  // ── Scientist 1 (npc 2) — sight-engaged trainer; dialogue only ──────────
+  @storyline("talkScientist1") {
+    @trigger(map = "SilphCo2F", npc = 2)
+    @if (getFlag("EVENT_BEAT_SILPH_CO_2F_TRAINER_0")) {
+      @speaker("") { @t("I work for both SILPH and\nTEAM ROCKET!", "我同时为西尔佛和火箭队工作！") }
+    } @else {
+      @speaker("") { @t("Help! I'm a SILPH employee.", "救命！我是西尔佛的员工。") }
+    }
+  }
+
+  // ── Scientist 2 (npc 3) — sight-engaged trainer; dialogue only ──────────
+  @storyline("talkScientist2") {
+    @trigger(map = "SilphCo2F", npc = 3)
+    @if (getFlag("EVENT_BEAT_SILPH_CO_2F_TRAINER_1")) {
+      @speaker("") { @t("Can you solve the maze in\nhere?", "你能解开这里的迷宫吗？") }
+    } @else {
+      @speaker("") { @t("It's off limits here! Go\nhome!", "这里禁止入内！快回家吧！") }
+    }
+  }
+
+  // ── Rocket 1 (npc 4) — sight-engaged trainer; dialogue only ─────────────
+  @storyline("talkRocket1") {
+    @trigger(map = "SilphCo2F", npc = 4)
+    @if (getFlag("EVENT_BEAT_SILPH_CO_2F_TRAINER_2")) {
+      @speaker("") {
+        @t("Diamond shaped tiles are\nteleport blocks!\n\nThey're hi-tech\ntransporters!", "菱形的地板是传送方块！\n\n它们是高科技的传送装置！")
+      }
+    } @else {
+      @speaker("") { @t("No kids are allowed in here!", "小孩子不准进入这里！") }
+    }
+  }
+
+  // ── Rocket 2 (npc 5) — sight-engaged trainer; dialogue only ─────────────
+  @storyline("talkRocket2") {
+    @trigger(map = "SilphCo2F", npc = 5)
+    @if (getFlag("EVENT_BEAT_SILPH_CO_2F_TRAINER_3")) {
+      @speaker("") { @t("SILPH CO. will be merged\nwith TEAM ROCKET!", "西尔佛公司将会与火箭队合并！") }
+    } @else {
+      @speaker("") { @t("Hey kid! What are you doing\nhere?", "喂！小鬼，你在这里干什么？") }
+    }
+  }
+
+  // ── Card-Key gate doors (SilphCo2FGateCallbackScript) ───────────────────
+  // Original: the map.blk ships these two doors OPEN (block $e = 14). On map
+  // load the gate callback re-CLOSES each door (writes wall block $54 = 84) if
+  // its EVENT_SILPH_CO_2_UNLOCKED_DOORn flag is NOT yet set. Using the CARD_KEY
+  // on the door (tile $18/$24) opens it, sets the flag, and plays SFX_GO_INSIDE.
+  //   Door1: asm "lb bc, 2, 2"  → block (X=2, Y=2), flag EVENT_SILPH_CO_2_UNLOCKED_DOOR1
+  //   Door2: asm "lb bc, 5, 2"  → block (X=2, Y=5), flag EVENT_SILPH_CO_2_UNLOCKED_DOOR2
+  //   OPEN block id = $e (14), CLOSED (wall) block id = $54 (84).
+  @load {
+    // Re-close each door on entry until its flag is set (mirrors the callback).
+    @if (!getFlag("EVENT_SILPH_CO_2_UNLOCKED_DOOR1")) {
+      replaceTileBlock(2, 2, 84)
+    }
+    @if (!getFlag("EVENT_SILPH_CO_2_UNLOCKED_DOOR2")) {
+      replaceTileBlock(2, 5, 84)
+    }
+  }
+
+  // Door1 solve: original is a CARD_KEY inspect on the door tile (no tile-inspect
+  // trigger exists, so approximate with a coord trigger at the door tiles
+  // (X=4,Y=4)/(X=4,Y=5) gated by hasItem("CARD_KEY")). Opens block (X=2,Y=2).
+  @storyline("cardKeyDoor1") {
+    @trigger(map = "SilphCo2F", name = "cardKeyDoor11")
+    @if (hasItem("CARD_KEY") && !getFlag("EVENT_SILPH_CO_2_UNLOCKED_DOOR1")) {
+      @speaker("") { @t("Bingo!", "成功了！") }
+      @speaker("") { @t("The CARD KEY opened the\ndoor!", "磁卡钥匙打开了门！") }
+      setFlag("EVENT_SILPH_CO_2_UNLOCKED_DOOR1")
+      replaceTileBlock(2, 2, 14)
+      playSound("SFX_GO_INSIDE")
+    } @else {
+      @speaker("") { @t("Darn! It needs a CARD KEY!", "可恶！需要磁卡钥匙！") }
+    }
+  }
+
+  // Door2 solve: block (X=2,Y=5) door tiles at (X=4,Y=10)/(X=4,Y=11).
+  @storyline("cardKeyDoor2") {
+    @trigger(map = "SilphCo2F", name = "cardKeyDoor21")
+    @if (hasItem("CARD_KEY") && !getFlag("EVENT_SILPH_CO_2_UNLOCKED_DOOR2")) {
+      @speaker("") { @t("Bingo!", "成功了！") }
+      @speaker("") { @t("The CARD KEY opened the\ndoor!", "磁卡钥匙打开了门！") }
+      setFlag("EVENT_SILPH_CO_2_UNLOCKED_DOOR2")
+      replaceTileBlock(2, 5, 14)
+      playSound("SFX_GO_INSIDE")
+    } @else {
+      @speaker("") { @t("Darn! It needs a CARD KEY!", "可恶！需要磁卡钥匙！") }
+    }
+  }
+}

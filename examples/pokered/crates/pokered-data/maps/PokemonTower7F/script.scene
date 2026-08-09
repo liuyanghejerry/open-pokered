@@ -1,0 +1,71 @@
+// PokemonTower7F — translated from the original disassembly
+// (scripts/PokemonTower7F.asm, text/PokemonTower7F.asm) to the real Game DSL.
+//
+// Content types:
+//  - Three Team Rocket grunts (npcs 1-3): sight-engaged trainers; the runtime
+//    drives the battle, so the .scene handlers are dialogue only, branching on
+//    EVENT_BEAT_POKEMONTOWER_7_TRAINER_0/1/2.
+//  - Mr.Fuji (npc 4): talk-driven rescue cutscene. Talking to him sets the
+//    rescued flags and warps the player to MR.FUJI's house (POKeMON HOUSE).
+//    The original's "Rockets walk away + hide NPC" choreography is approximated
+//    by the rescue dialogue + flag set + warp (see TODO at the bottom).
+
+game_scene PokemonTower7F {
+  // ── Team Rocket grunt (npc 1) — sight-engaged; dialogue only ──────────────
+  @storyline("talkRocket1") {
+    @trigger(map = "PokemonTower7F", npc = 1)
+    @if (getFlag("EVENT_BEAT_POKEMONTOWER_7_TRAINER_0")) {
+      @speaker("") {
+        @t("I'm not going to forget\nthis!", "我绝不会忘记这件事！")
+      }
+    } @else {
+      @speaker("") {
+        @t("What do you want? Why are\nyou here?", "你想干什么？为什么会在这里？")
+      }
+    }
+  }
+
+  // ── Team Rocket grunt (npc 2) — sight-engaged; dialogue only ──────────────
+  @storyline("talkRocket2") {
+    @trigger(map = "PokemonTower7F", npc = 2)
+    @if (getFlag("EVENT_BEAT_POKEMONTOWER_7_TRAINER_1")) {
+      @speaker("") {
+        @t("POKeMON are only good for\nmaking money!\n\nStay out of our business!", "宝可梦不过是用来赚钱的工具！\n\n别来管我们的闲事！")
+      }
+    } @else {
+      @speaker("") {
+        @t("This old guy came and\ncomplained about us harming\nuseless POKeMON!\n\nWe're talking it over as\nadults!", "那个老头跑来抱怨我们说我们伤\n害没用的宝可梦！\n\n我们正在大人式商量！")
+      }
+    }
+  }
+
+  // ── Team Rocket grunt (npc 3) — sight-engaged; dialogue only ──────────────
+  @storyline("talkRocket3") {
+    @trigger(map = "PokemonTower7F", npc = 3)
+    @if (getFlag("EVENT_BEAT_POKEMONTOWER_7_TRAINER_2")) {
+      @speaker("") {
+        @t("You're not getting away with\nthis!", "你别想轻易逃掉！")
+      }
+    } @else {
+      @speaker("") {
+        @t("You're not saving anyone,\nkid!", "小鬼，你谁也救不了的！")
+      }
+    }
+  }
+
+  // ── Mr.Fuji (npc 4) — rescue cutscene, then warp to his house ─────────────
+  @storyline("talkMrFuji") {
+    @trigger(map = "PokemonTower7F", npc = 4)
+    @speaker("") {
+      @t("MR.FUJI: Heh? You came to\nsave me?\n\nThank you. But, I came here\nof my own free will.\n\nI came to calm the soul of\nCUBONE's mother.\n\nI think MAROWAK's spirit has\ngone to the afterlife.\n\nI must thank you for your\nkind concern!\n\nFollow me to my home,\nPOKeMON HOUSE at the foot of\nthis tower.", "富士老人：嗯？你是来救我的\n吗？\n\n谢谢你。但我是自愿来到这里\n的。\n\n我来此是为了安抚卡拉卡拉母亲\n的灵魂。\n\n我想嘎拉嘎拉的灵魂已经升入天\n国了。\n\n我必须感谢你对我的善意和关\n心！\n\n跟我来我家，位于塔脚下的宝可\n梦之家吧！")
+    }
+    setFlag("EVENT_RESCUED_MR_FUJI")
+    setFlag("EVENT_RESCUED_MR_FUJI_2")
+    // Original: hide Mr.Fuji here, show him in his house, flip the Saffron guard
+    // toggles, then warp to MR.FUJIS_HOUSE (destWarpId 1 -> x:3, y:7).
+    // The Saffron City guards are unblocked by SaffronCity's @load gating on
+    // EVENT_RESCUED_MR_FUJI (hideObjectByName SAFFRON_CITY_OBJ_14/15), which is
+    // functionally equivalent to the original TOGGLE_SAFFRON_CITY_E/F.
+    warpTo("MrFujisHouse", 3, 7)
+  }
+}

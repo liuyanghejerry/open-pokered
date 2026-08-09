@@ -1,0 +1,50 @@
+[package]
+name = "pokered-app"
+version.workspace = true
+edition.workspace = true
+
+[features]
+embedded-scripts = ["pokered-core/embedded-scripts"]
+embedded-map-data = ["pokered-core/embedded-map-data"]
+debug-server = ["pokered-debug-server"]
+
+[dependencies]
+pokered-core = { path = "../pokered-core" }
+pokered-data = { path = "../pokered-data" }
+jrpg-engine = { git = "file:///Users/liuyanghe02/develop/pokered-worktree-2", tag = "v0.1.0" }
+jrpg-engine-dsl = { git = "file:///Users/liuyanghe02/develop/pokered-worktree-2", tag = "v0.1.0" }
+pokered-renderer = { path = "../pokered-renderer" }
+jrpg-renderer = { git = "file:///Users/liuyanghe02/develop/pokered-worktree-2", tag = "v0.1.0" }
+jrpg-app = { git = "file:///Users/liuyanghe02/develop/pokered-worktree-2", tag = "v0.1.0" }
+pokered-ui = { path = "../pokered-ui" }
+pokered-audio = { path = "../pokered-audio" }
+pokered-debug-server = { path = "../../../../crates/pokered-debug-server", optional = true }
+anyhow = { workspace = true }
+tracing = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+log = "0.4"
+image = { version = "0.25", default-features = false, features = ["png"] }
+
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+cpal = "0.15"
+clap = { version = "4", features = ["derive"] }
+notify = "6"
+
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+wasm-bindgen = "0.2"
+js-sys = "0.3"
+web-sys = { version = "0.3", features = [
+    "AudioContext",
+    "AudioContextOptions",
+    "AudioContextState",
+    "AudioDestinationNode",
+    "AudioBuffer",
+    "AudioBufferSourceNode",
+    "AudioProcessingEvent",
+    "ScriptProcessorNode",
+    "BroadcastChannel",
+    "MessageEvent",
+    "Window",
+    "Storage",
+] }

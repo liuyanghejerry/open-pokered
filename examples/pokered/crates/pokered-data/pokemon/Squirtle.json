@@ -1,0 +1,74 @@
+{
+  "$schema": "../schemas/pokemon.schema.json",
+  "species": "Squirtle",
+  "baseStats": {
+    "hp": 44,
+    "attack": 48,
+    "defense": 65,
+    "speed": 43,
+    "special": 50
+  },
+  "type1": "Water",
+  "type2": "Water",
+  "catchRate": 45,
+  "baseExp": 66,
+  "growthRate": "MediumSlow",
+  "initialMoves": [
+    "Tackle",
+    "TailWhip",
+    "None",
+    "None"
+  ],
+  "tmHmFlags": [
+    177,
+    63,
+    15,
+    200,
+    131,
+    8,
+    50
+  ],
+  "pokedex": {
+    "category": "TINYTURTLE",
+    "heightFeet": 1,
+    "heightInches": 8,
+    "weightDecipounds": 200,
+    "flavorTextPages": [
+      "After birth, its\nback swells and\nhardens into a",
+      "shell. Powerfully\nsprays foam from\nits mouth"
+    ]
+  },
+  "evolutions": [
+    {
+      "method": "level",
+      "species": "Wartortle",
+      "level": 16
+    }
+  ],
+  "learnset": [
+    {
+      "level": 8,
+      "moveId": "Bubble"
+    },
+    {
+      "level": 15,
+      "moveId": "WaterGun"
+    },
+    {
+      "level": 22,
+      "moveId": "Bite"
+    },
+    {
+      "level": 28,
+      "moveId": "Withdraw"
+    },
+    {
+      "level": 35,
+      "moveId": "SkullBash"
+    },
+    {
+      "level": 42,
+      "moveId": "HydroPump"
+    }
+  ]
+}

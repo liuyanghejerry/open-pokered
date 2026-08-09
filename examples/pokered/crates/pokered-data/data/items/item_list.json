@@ -1,0 +1,22 @@
+{
+  "items": [
+    "MasterBall", "UltraBall", "GreatBall", "PokeBall", "TownMap",
+    "Bicycle", "Surfboard", "SafariBall", "Pokedex", "MoonStone",
+    "Antidote", "BurnHeal", "IceHeal", "Awakening", "ParlyzHeal",
+    "FullRestore", "MaxPotion", "HyperPotion", "SuperPotion", "Potion",
+    "BoulderBadge", "CascadeBadge", "ThunderBadge", "RainbowBadge", "SoulBadge",
+    "MarshBadge", "VolcanoBadge", "EarthBadge", "EscapeRope", "Repel",
+    "OldAmber", "FireStone", "ThunderStone", "WaterStone", "HpUp",
+    "Protein", "Iron", "Carbos", "Calcium", "RareCandy",
+    "DomeFossil", "HelixFossil", "SecretKey", "Unused2C", "BikeVoucher",
+    "XAccuracy", "LeafStone", "CardKey", "Nugget", "Unused32",
+    "PokeDoll", "FullHeal", "Revive", "MaxRevive", "GuardSpec",
+    "SuperRepel", "MaxRepel", "DireHit", "Coin", "FreshWater",
+    "SodaPop", "Lemonade", "SsTicket", "GoldTeeth", "XAttack",
+    "XDefend", "XSpeed", "XSpecial", "CoinCase", "OaksParcel",
+    "Itemfinder", "SilphScope", "PokeFlute", "LiftKey", "ExpAll",
+    "OldRod", "GoodRod", "SuperRod", "PpUp", "Ether",
+    "MaxEther", "Elixer", "MaxElixer"
+  ],
+  "count": 83
+}

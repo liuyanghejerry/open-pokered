@@ -1,0 +1,49 @@
+{
+  "$schema": "../schemas/pokemon.schema.json",
+  "species": "Caterpie",
+  "baseStats": {
+    "hp": 45,
+    "attack": 30,
+    "defense": 35,
+    "speed": 45,
+    "special": 20
+  },
+  "type1": "Bug",
+  "type2": "Bug",
+  "catchRate": 255,
+  "baseExp": 53,
+  "growthRate": "MediumFast",
+  "initialMoves": [
+    "Tackle",
+    "StringShot",
+    "None",
+    "None"
+  ],
+  "tmHmFlags": [
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0
+  ],
+  "pokedex": {
+    "category": "WORM",
+    "heightFeet": 1,
+    "heightInches": 0,
+    "weightDecipounds": 60,
+    "flavorTextPages": [
+      "Its short feet\nare tipped with\nsuction pads that",
+      "enable it to\ntirelessly climb\nslopes and walls"
+    ]
+  },
+  "evolutions": [
+    {
+      "method": "level",
+      "species": "Metapod",
+      "level": 7
+    }
+  ],
+  "learnset": []
+}

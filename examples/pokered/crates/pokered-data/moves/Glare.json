@@ -1,0 +1,9 @@
+{
+  "$schema": "../schemas/move.schema.json",
+  "id": "Glare",
+  "effect": "ParalyzeEffect",
+  "power": 0,
+  "type": "Normal",
+  "accuracy": 75,
+  "pp": 30
+}

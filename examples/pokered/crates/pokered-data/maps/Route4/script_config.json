@@ -1,0 +1,33 @@
+{
+  "$schema": "../../schemas/script_config.schema.json",
+  "coordEvents": [],
+  "npcs": [
+    {
+      "id": 1,
+      "talk": "talkCooltrainerF1"
+    },
+    {
+      "id": 2,
+      "talk": "talkCooltrainerF2"
+    },
+    {
+      "id": 3,
+      "talk": "itemTmWhirlwind",
+      "toggleId": "ROUTE_4_OBJ_3"
+    }
+  ],
+  "signs": [
+    {
+      "id": 1,
+      "talk": "sign1"
+    },
+    {
+      "id": 2,
+      "talk": "sign2"
+    },
+    {
+      "id": 3,
+      "talk": "sign3"
+    }
+  ]
+}

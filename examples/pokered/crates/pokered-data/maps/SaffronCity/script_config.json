@@ -1,0 +1,131 @@
+{
+  "$schema": "../../schemas/script_config.schema.json",
+  "coordEvents": [],
+  "npcs": [
+    {
+      "id": 1,
+      "talk": "talkRocket1",
+      "toggleId": "SAFFRON_CITY_OBJ_1"
+    },
+    {
+      "id": 2,
+      "talk": "talkRocket2",
+      "toggleId": "SAFFRON_CITY_OBJ_2"
+    },
+    {
+      "id": 3,
+      "talk": "talkRocket3",
+      "toggleId": "SAFFRON_CITY_OBJ_3"
+    },
+    {
+      "id": 4,
+      "talk": "talkRocket4",
+      "toggleId": "SAFFRON_CITY_OBJ_4"
+    },
+    {
+      "id": 5,
+      "talk": "talkRocket5",
+      "toggleId": "SAFFRON_CITY_OBJ_5"
+    },
+    {
+      "id": 6,
+      "talk": "talkRocket6",
+      "toggleId": "SAFFRON_CITY_OBJ_6"
+    },
+    {
+      "id": 7,
+      "talk": "talkRocket7",
+      "toggleId": "SAFFRON_CITY_OBJ_7"
+    },
+    {
+      "defaultHidden": true,
+      "id": 8,
+      "talk": "talkScientist",
+      "toggleId": "SAFFRON_CITY_OBJ_8"
+    },
+    {
+      "defaultHidden": true,
+      "id": 9,
+      "talk": "talkSilphWorkerM",
+      "toggleId": "SAFFRON_CITY_OBJ_9"
+    },
+    {
+      "defaultHidden": true,
+      "id": 10,
+      "talk": "talkSilphWorkerF",
+      "toggleId": "SAFFRON_CITY_OBJ_10"
+    },
+    {
+      "defaultHidden": true,
+      "id": 11,
+      "talk": "talkGentleman",
+      "toggleId": "SAFFRON_CITY_OBJ_11"
+    },
+    {
+      "defaultHidden": true,
+      "id": 12,
+      "talk": "talkPidgeot",
+      "toggleId": "SAFFRON_CITY_OBJ_12"
+    },
+    {
+      "defaultHidden": true,
+      "id": 13,
+      "talk": "talkRocker",
+      "toggleId": "SAFFRON_CITY_OBJ_13"
+    },
+    {
+      "id": 14,
+      "talk": "talkRocket8",
+      "toggleId": "SAFFRON_CITY_OBJ_14"
+    },
+    {
+      "defaultHidden": true,
+      "id": 15,
+      "talk": "talkRocket9",
+      "toggleId": "SAFFRON_CITY_OBJ_15"
+    }
+  ],
+  "onLoad": "SaffronCityOnLoad",
+  "signs": [
+    {
+      "id": 1,
+      "talk": "citySign"
+    },
+    {
+      "id": 2,
+      "talk": "fightingDojoSign"
+    },
+    {
+      "id": 3,
+      "talk": "gymSign"
+    },
+    {
+      "id": 4,
+      "talk": "martSign"
+    },
+    {
+      "id": 5,
+      "talk": "trainerTips1Sign"
+    },
+    {
+      "id": 6,
+      "talk": "trainerTips2Sign"
+    },
+    {
+      "id": 7,
+      "talk": "silphCoSign"
+    },
+    {
+      "id": 8,
+      "talk": "pokecenterSign"
+    },
+    {
+      "id": 9,
+      "talk": "mrPsychicsHouseSign"
+    },
+    {
+      "id": 10,
+      "talk": "silphCoLatestProductSign"
+    }
+  ]
+}

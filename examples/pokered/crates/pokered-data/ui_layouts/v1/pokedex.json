@@ -1,0 +1,42 @@
+{
+  "$schema": "/schemas/layout.schema.json",
+  "schema_version": 1,
+  "screen": "pokedex",
+  "variants": {
+    "default": {
+      "cursor": {
+        "tx": 18,
+        "base_ty": 16,
+        "row_step": 0,
+        "glyph": "\u25bc",
+        "color": "Black"
+      },
+      "children": [
+        {
+          "id": "frame",
+          "rect": {
+            "tx": 0,
+            "ty": 0,
+            "tw": 20,
+            "th": 18
+          },
+          "color": "Black",
+          "labels": [
+            {
+              "tx": 8,
+              "ty": 5,
+              "text": "HT",
+              "color": "Black"
+            },
+            {
+              "tx": 8,
+              "ty": 7,
+              "text": "WT",
+              "color": "Black"
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

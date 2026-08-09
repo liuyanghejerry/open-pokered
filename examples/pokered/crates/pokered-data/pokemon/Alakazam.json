@@ -1,0 +1,68 @@
+{
+  "$schema": "../schemas/pokemon.schema.json",
+  "species": "Alakazam",
+  "baseStats": {
+    "hp": 55,
+    "attack": 50,
+    "defense": 45,
+    "speed": 120,
+    "special": 135
+  },
+  "type1": "Psychic",
+  "type2": "Psychic",
+  "catchRate": 50,
+  "baseExp": 186,
+  "growthRate": "MediumSlow",
+  "initialMoves": [
+    "Teleport",
+    "Confusion",
+    "Disable",
+    "None"
+  ],
+  "tmHmFlags": [
+    177,
+    67,
+    15,
+    248,
+    135,
+    56,
+    67
+  ],
+  "pokedex": {
+    "category": "PSI",
+    "heightFeet": 4,
+    "heightInches": 11,
+    "weightDecipounds": 1060,
+    "flavorTextPages": [
+      "Its brain can out-\nperform a super-\ncomputer.",
+      "Its intelligence\nquotient is said\nto be 5,000"
+    ]
+  },
+  "evolutions": [],
+  "learnset": [
+    {
+      "level": 16,
+      "moveId": "Confusion"
+    },
+    {
+      "level": 20,
+      "moveId": "Disable"
+    },
+    {
+      "level": 27,
+      "moveId": "Psybeam"
+    },
+    {
+      "level": 31,
+      "moveId": "Recover"
+    },
+    {
+      "level": 38,
+      "moveId": "PsychicM"
+    },
+    {
+      "level": 42,
+      "moveId": "Reflect"
+    }
+  ]
+}

@@ -1,0 +1,9 @@
+{
+  "$schema": "../schemas/move.schema.json",
+  "id": "ThunderWave",
+  "effect": "ParalyzeEffect",
+  "power": 0,
+  "type": "Electric",
+  "accuracy": 100,
+  "pp": 20
+}

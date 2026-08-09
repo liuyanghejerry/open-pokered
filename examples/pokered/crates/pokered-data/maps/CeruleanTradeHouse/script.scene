@@ -1,0 +1,58 @@
+// CeruleanTradeHouse — translated from the original disassembly
+// (scripts/CeruleanTradeHouse.asm, text/CeruleanTradeHouse.asm,
+// engine/events/in_game_trades.asm, data/events/trades.asm).
+//
+// This is an in-game trade house. The Granny is a flavor NPC pointing at her
+// husband. The Gambler offers TRADE_FOR_LOLA (give POLIWHIRL, receive JYNX
+// nicknamed LOLA, dialogset EVOLUTION / dialogset 3).
+//
+// The trade is fully implemented via tradePokemon(): it verifies the player
+// carries POLIWHIRL, removes it from the party, and adds JYNX nicknamed LOLA
+// with the trade animation; the wrong-mon path returns false. See talkGambler
+// below.
+
+game_scene CeruleanTradeHouse {
+  // ── Granny (npc 1) — flavor dialogue ────────────────────────────────────
+  @storyline("talkGranny") {
+    @trigger(map = "CeruleanTradeHouse", npc = 1)
+    @speaker("") {
+      @t("My husband likes trading\nPOKeMON.\n\nIf you are a collector,\nwould you please trade with\nhim?", "我丈夫喜欢交换宝可梦。\n\n如果你是一位收藏家，能和他交\n换吗？")
+    }
+  }
+
+  // ── Gambler (npc 2) — TRADE_FOR_LOLA: POLIWHIRL -> JYNX (LOLA) ───────────
+  @storyline("talkGambler") {
+    @trigger(map = "CeruleanTradeHouse", npc = 2)
+    @if (getFlag("EVENT_TRADED_FOR_LOLA")) {
+      // AfterTrade3Text (dialogset EVOLUTION)
+      @speaker("") {
+        @t("How is my old JYNX?\n\nMy POLIWHIRL is doing great!", "我以前的迷唇姐还好吗？\n\n我的蚊香君过得很好！")
+      }
+    } @else {
+      // WannaTrade3Text (dialogset EVOLUTION)
+      @speaker("") {
+        @t("Hi! Do you have POLIWHIRL?\n\nWant to trade it for JYNX?", "嗨！你有蚊香君吗？\n\n想把它换成迷唇姐吗？")
+      }
+      @choice {
+        @option(@t("YES", "是")) {
+          // ConnectCableText -> real in-game trade (removes POLIWHIRL, adds
+          // JYNX nicknamed LOLA). tradePokemon returns false if the player
+          // doesn't actually carry POLIWHIRL -> WrongMon3 (dialogset EVOLUTION).
+          @speaker("") { @t("Okay, connect the cable like\nso!", "好的，请像这样连接线路！") }
+          traded = tradePokemon("POLIWHIRL", "JYNX", "LOLA")
+          @if (traded) {
+            setFlag("EVENT_TRADED_FOR_LOLA")
+            @speaker("") { @t("<PLAYER> traded POLIWHIRL\nfor JYNX!", "<PLAYER>用蚊香君换到了迷唇\n姐！") }
+            @speaker("") { @t("Thanks pal!", "谢啦，朋友！") }
+          } @else {
+            @speaker("") { @t("...This is no POLIWHIRL.\n\nIf you get one, trade it\nwith me!", "……这不是蚊香君。\n\n如果你弄到一只，就来和我交换\n吧！") }
+          }
+        }
+        @option(@t("NO", "否")) {
+          // NoTrade3Text
+          @speaker("") { @t("That's too bad.", "那太可惜了。") }
+        }
+      }
+    }
+  }
+}

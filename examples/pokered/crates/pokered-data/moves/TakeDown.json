@@ -1,0 +1,9 @@
+{
+  "$schema": "../schemas/move.schema.json",
+  "id": "TakeDown",
+  "effect": "RecoilEffect",
+  "power": 90,
+  "type": "Normal",
+  "accuracy": 85,
+  "pp": 20
+}

@@ -1,0 +1,7 @@
+// Auto-converted from UnusedMapF3/script.js by convert_script_to_scene.py
+// Manual review recommended: state machines, local vars, complex control flow.
+
+game_scene UnusedMapF3 {
+  @load {
+  }
+}

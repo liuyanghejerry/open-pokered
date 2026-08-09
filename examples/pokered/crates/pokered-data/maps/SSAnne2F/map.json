@@ -1,0 +1,247 @@
+{
+  "$schema": "../../schemas/map.schema.json",
+  "id": 96,
+  "name": "SSAnne2F",
+  "header": {
+    "tileset": "Ship",
+    "music": "SSAnne",
+    "connectionFlags": 0,
+    "width": 20,
+    "height": 9,
+    "borderBlock": 12
+  },
+  "connections": {},
+  "warps": [
+    {
+      "x": 9,
+      "y": 11,
+      "destMap": "SSAnne2FRooms",
+      "destWarpId": 0
+    },
+    {
+      "x": 13,
+      "y": 11,
+      "destMap": "SSAnne2FRooms",
+      "destWarpId": 2
+    },
+    {
+      "x": 17,
+      "y": 11,
+      "destMap": "SSAnne2FRooms",
+      "destWarpId": 4
+    },
+    {
+      "x": 21,
+      "y": 11,
+      "destMap": "SSAnne2FRooms",
+      "destWarpId": 6
+    },
+    {
+      "x": 25,
+      "y": 11,
+      "destMap": "SSAnne2FRooms",
+      "destWarpId": 8
+    },
+    {
+      "x": 29,
+      "y": 11,
+      "destMap": "SSAnne2FRooms",
+      "destWarpId": 10
+    },
+    {
+      "x": 2,
+      "y": 4,
+      "destMap": "SSAnne1F",
+      "destWarpId": 8
+    },
+    {
+      "x": 2,
+      "y": 12,
+      "destMap": "SSAnne3F",
+      "destWarpId": 1
+    },
+    {
+      "x": 36,
+      "y": 4,
+      "destMap": "SSAnneCaptainsRoom",
+      "destWarpId": 0
+    }
+  ],
+  "npcs": [
+    {
+      "spriteId": 26,
+      "spriteName": "Waiter",
+      "x": 3,
+      "y": 7,
+      "movement": "Wander",
+      "facing": "Down",
+      "range": 1,
+      "textId": 1,
+      "isTrainer": false
+    },
+    {
+      "spriteId": 2,
+      "spriteName": "Blue",
+      "x": 36,
+      "y": 4,
+      "movement": "Stationary",
+      "facing": "Down",
+      "range": 0,
+      "textId": 2,
+      "isTrainer": false,
+      "trainerClass": "Rival1",
+      "trainerSet": 1
+    }
+  ],
+  "signs": [],
+  "text": {
+    "npc": {
+      "1": [
+        {
+          "line1": "This ship, she is",
+          "line2": "a luxury liner"
+        },
+        {
+          "line1": "for trainers!",
+          "line2": ""
+        },
+        {
+          "line1": "",
+          "line2": ""
+        },
+        {
+          "line1": "At every port, we",
+          "line2": "hold parties with"
+        },
+        {
+          "line1": "invited trainers!",
+          "line2": ""
+        }
+      ],
+      "2": [
+        {
+          "line1": "[Rival battle",
+          "line2": "script]"
+        },
+        {
+          "line1": "<RIVAL>: Bonjour!",
+          "line2": "<PLAYER>!"
+        },
+        {
+          "line1": "",
+          "line2": ""
+        },
+        {
+          "line1": "Imagine seeing",
+          "line2": "you here!"
+        },
+        {
+          "line1": "",
+          "line2": ""
+        },
+        {
+          "line1": "<PLAYER>, were you",
+          "line2": "really invited?"
+        },
+        {
+          "line1": "",
+          "line2": ""
+        },
+        {
+          "line1": "So how's your",
+          "line2": "#DEX coming?"
+        },
+        {
+          "line1": "",
+          "line2": ""
+        },
+        {
+          "line1": "I already caught",
+          "line2": "40 kinds, pal!"
+        },
+        {
+          "line1": "",
+          "line2": ""
+        },
+        {
+          "line1": "Different kinds",
+          "line2": "are everywhere!"
+        },
+        {
+          "line1": "",
+          "line2": ""
+        },
+        {
+          "line1": "Crawl around in",
+          "line2": "grassy areas!"
+        }
+      ],
+      "2_Defeated": [
+        {
+          "line1": "Humph!",
+          "line2": ""
+        },
+        {
+          "line1": "",
+          "line2": ""
+        },
+        {
+          "line1": "At least you're",
+          "line2": "raising your"
+        },
+        {
+          "line1": "#MON!"
+        }
+      ],
+      "2_Won": [
+        {
+          "line1": "<PLAYER>! What are",
+          "line2": "you, seasick?"
+        },
+        {
+          "line1": "",
+          "line2": ""
+        },
+        {
+          "line1": "You should shape",
+          "line2": "up, pal!"
+        }
+      ],
+      "2_AfterBattle": [
+        {
+          "line1": "<RIVAL>: I heard",
+          "line2": "there was a CUT"
+        },
+        {
+          "line1": "master on board.",
+          "line2": ""
+        },
+        {
+          "line1": "",
+          "line2": ""
+        },
+        {
+          "line1": "But, he was just a",
+          "line2": "seasick, old man!"
+        },
+        {
+          "line1": "",
+          "line2": ""
+        },
+        {
+          "line1": "But, CUT itself is",
+          "line2": "really useful!"
+        },
+        {
+          "line1": "",
+          "line2": ""
+        },
+        {
+          "line1": "You should go see",
+          "line2": "him! Smell ya!"
+        }
+      ]
+    }
+  },
+  "wild": null
+}

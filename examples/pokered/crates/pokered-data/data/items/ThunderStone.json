@@ -1,0 +1,1 @@
+{"id":"ThunderStone","name":"THUNDERSTONE","price":2100,"category":"Evolution","effect":{"type":"EvolutionStone","params":{"stone":"Thunder"}},"held_effect":null,"berry":null,"use_outside_battle":true,"use_in_battle":false,"consume":true,"key_item":false,"sellable":true,"description":"","tags":["evolution","stone"]}

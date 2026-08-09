@@ -1,0 +1,68 @@
+// Route2Gate — translated from the original disassembly
+// (scripts/Route2Gate.asm, text/Route2Gate.asm + Route2Gate_2.asm,
+// engine/events/oaks_aide.asm). An Oak's Aide (Scientist) gives HM05 FLASH
+// once the player has caught 10 kinds of POKeMON, then prints the Flash
+// explanation; a Youngster gives a ROCK TUNNEL hint.
+
+game_scene Route2Gate {
+  // ── Oak's Aide / Scientist (npc 1) — gives HM05 FLASH at 10 kinds owned ───
+  // requirement = 10, reward = HM_FLASH (HM05), completion flag = EVENT_GOT_HM05.
+  // The OaksAide @-decimal tokens substitute to fixed values here (10 / FLASH),
+  // and the owned-count phrase is approximated with getPokedexOwnedCount().
+  // In the original, the FlashExplanationText prints after the OaksAideScript
+  // runs, whether the item was just given or already held.
+  @storyline("talkOaksAide") {
+    @trigger(map = "Route2Gate", npc = 1)
+    @if (getFlag("EVENT_GOT_HM05")) {
+      // Already received it: the aide just prints the FLASH explanation.
+      @speaker("") {
+        @t("The HM FLASH lights even the\ndarkest dungeons.", "秘传招式闪光能照亮最黑暗的洞\n窟。")
+      }
+    } @else {
+      // OaksAideHiText (requirement = 10 kinds, reward = HM05 FLASH)
+      @speaker("") {
+        @t("Hi! Remember me? I'm\nPROF.OAK's AIDE!\n\nIf you caught 10 kinds of\nPOKeMON, I'm supposed to\ngive you an HM05!\n\nSo, <PLAYER>! Have you\ncaught at least 10 kinds of\nPOKeMON?", "嗨！还记得我吗？我是大木博士\n的助手！\n\n如果你抓到了 10种宝可梦，我\n就可以把HM05给你！\n\n那么，<PLAYER>！你抓到至少\n10种宝可梦了吗？")
+      }
+      @choice {
+        @option(@t("YES", "是")) {
+          @if (getPokedexOwnedCount() >= 10) {
+            // OaksAideHereYouGoText -> give item -> OaksAideGotItemText
+            @speaker("") {
+              @t("Great! You have caught 10\nkinds of POKeMON!\nCongratulations!\n\nHere you go!", "太好了！你抓到了 10种宝可\n梦！恭喜你！\n\n给你！")
+            }
+            given = giveItem("HM05", 1)
+            @if (given) {
+              setFlag("EVENT_GOT_HM05")
+              @speaker("") { @t("<PLAYER> got HM05!", "<PLAYER>得到了HM05！") }
+              // FlashExplanationText follows once the item is received.
+              @speaker("") {
+                @t("The HM FLASH lights even the\ndarkest dungeons.", "秘传招式闪光能照亮最黑暗的洞\n窟。")
+              }
+            } @else {
+              @speaker("") { @t("Oh! I see you don't have any\nroom for the HM05.", "哎呀！你身上已经没有放HM05的\n空位了。") }
+            }
+          } @else {
+            // OaksAideUhOhText (not enough kinds owned)
+            @speaker("") {
+              @t("Let's see... Uh-oh! You have\ncaught only a few kinds of\nPOKeMON!\n\nYou need 10 kinds if you\nwant the HM05.", "让我看看……哎呀！你抓到的宝\n可梦种类很少！\n\n想要HM05的话，需要抓到 10种\n才行。")
+            }
+          }
+        }
+        @option(@t("NO", "否")) {
+          // OaksAideComeBackText
+          @speaker("") {
+            @t("Oh. I see.\n\nWhen you get 10 kinds, come\nback for the HM05.", "哦，是这样。\n\n等你抓到 10种宝可梦，再来拿\nHM05吧。")
+          }
+        }
+      }
+    }
+  }
+
+  // ── Youngster (npc 2) — ROCK TUNNEL hint ─────────────────────────────────
+  @storyline("talkYoungster") {
+    @trigger(map = "Route2Gate", npc = 2)
+    @speaker("") {
+      @t("Once a POKeMON learns FLASH,\nyou can get through ROCK\nTUNNEL.", "宝可梦学会闪光后，就能穿过岩\n山隧道了。")
+    }
+  }
+}

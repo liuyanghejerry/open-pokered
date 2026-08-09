@@ -1,0 +1,56 @@
+// Route16Gate1F — translated from the original disassembly
+// (scripts/Route16Gate1F.asm, text/Route16Gate1F.asm) to the real Game DSL API.
+// This is the south gate to CYCLING ROAD (Route 16). The guard blocks foot
+// traffic onto CYCLING ROAD unless the player has the BICYCLE (item gate). The
+// on-enter coord script that shoved a pedestrian back with simulated joypad
+// input is approximated below (forced/scripted movement has no DSL API).
+
+game_scene Route16Gate1F {
+  // ── Guard (npc 1) — item gate on the BICYCLE ───────────────────────────
+  // Talking to the guard: with a bike you get the CYCLING ROAD blurb,
+  // without one you're told no pedestrians are allowed.
+  @storyline("talkGuard") {
+    @trigger(map = "Route16Gate1F", npc = 1)
+    @if (hasItem("BICYCLE")) {
+      @speaker("") {
+        @t("CYCLING ROAD is a downhill\ncourse by the sea. It's a\ngreat ride.", "自行车道是一条沿海的下坡路。\n骑起来很棒！")
+      }
+    } @else {
+      @speaker("") {
+        @t("No pedestrians are allowed\non CYCLING ROAD!", "行人禁止进入自行车道！")
+      }
+    }
+  }
+
+  // ── Gambler (npc 2) ────────────────────────────────────────────────────
+  @storyline("talkGambler") {
+    @trigger(map = "Route16Gate1F", npc = 2)
+    @speaker("") {
+      @t("How'd you get in? Good\neffort!", "你是怎么进来的？干得漂亮！")
+    }
+  }
+
+  // ── Guard "wait up!" block (Route16Gate1FDefaultScript) ────────────────
+  // Without a bike, stepping onto the approach to the gate (x=4, y=7..10)
+  // triggers the guard to call out. The original then auto-walks the player UP
+  // to the counter tile (4,7) with simulated joypad input, shows the guard's
+  // "No pedestrians..." text, and finally shoves the player one tile RIGHT
+  // (PAD_RIGHT x1) to (5,7).
+  @storyline("guardWaitUp") {
+    @trigger(map = "Route16Gate1F", name = "guardWaitUp1")
+    @if (!hasItem("BICYCLE")) {
+      @speaker("") {
+        @t("Excuse me! Wait up please!", "等一下！请留步！")
+      }
+      // Original walks the player UP to the counter tile (4,7) from whichever
+      // trigger tile (4,7..10) fired (same column, so a straight walk up).
+      movePlayer([[4, 7]])
+      // Route16Gate1FGuardScript: guard's refusal text, then the PAD_RIGHT
+      // shove off the counter line.
+      @speaker("") {
+        @t("No pedestrians are allowed\non CYCLING ROAD!", "行人禁止进入自行车道！")
+      }
+      movePlayerRelative([[1, 0]])
+    }
+  }
+}

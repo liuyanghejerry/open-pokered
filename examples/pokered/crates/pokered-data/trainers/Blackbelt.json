@@ -1,0 +1,123 @@
+{
+  "$schema": "../schemas/trainer.schema.json",
+  "class": "Blackbelt",
+  "constName": "BLACKBELT",
+  "parties": [
+    {
+      "pokemon": [
+        {
+          "level": 37,
+          "species": "Hitmonlee"
+        },
+        {
+          "level": 37,
+          "species": "Hitmonchan"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 31,
+          "species": "Mankey"
+        },
+        {
+          "level": 31,
+          "species": "Mankey"
+        },
+        {
+          "level": 31,
+          "species": "Primeape"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 32,
+          "species": "Machop"
+        },
+        {
+          "level": 32,
+          "species": "Machoke"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 36,
+          "species": "Primeape"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 31,
+          "species": "Machop"
+        },
+        {
+          "level": 31,
+          "species": "Mankey"
+        },
+        {
+          "level": 31,
+          "species": "Primeape"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 40,
+          "species": "Machop"
+        },
+        {
+          "level": 40,
+          "species": "Machoke"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 43,
+          "species": "Machoke"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 38,
+          "species": "Machoke"
+        },
+        {
+          "level": 38,
+          "species": "Machop"
+        },
+        {
+          "level": 38,
+          "species": "Machoke"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 43,
+          "species": "Machoke"
+        },
+        {
+          "level": 43,
+          "species": "Machop"
+        },
+        {
+          "level": 43,
+          "species": "Machoke"
+        }
+      ]
+    }
+  ]
+}

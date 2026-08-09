@@ -1,0 +1,31 @@
+// CeladonMart1F — translated from the original disassembly
+// (scripts/CeladonMart1F.asm, text/CeladonMart1F.asm) to the real Game DSL API.
+// 1F service counter of the Celadon Dept. Store: one receptionist NPC plus two
+// directory signs. The original script only enables auto text box drawing — no
+// on-enter logic, no battles — so this is a pure dialogue/sign map.
+
+game_scene CeladonMart1F {
+  // ── Receptionist (npc 1, textId 1) ───────────────────────────────────────
+  @storyline("talkLinkReceptionist") {
+    @trigger(map = "CeladonMart1F", npc = 1)
+    @speaker("") {
+      @t("Hello! Welcome to CELADON\nDEPT. STORE.\n\nThe board on the right\ndescribes the store layout.", "你好！欢迎来到彩虹百货商店。\n\n右边的告示牌写着本店的楼层指\n南。")
+    }
+  }
+
+  // ── Current-floor sign (sign 1, textId 1) ────────────────────────────────
+  @storyline("currentFloorSign") {
+    @trigger(map = "CeladonMart1F", sign = 1)
+    @speaker("") {
+      @t("1F: SERVICE     COUNTER", "1层：服务    柜台")
+    }
+  }
+
+  // ── Floor directory sign (sign 2, textId 2) ──────────────────────────────
+  @storyline("directorySign") {
+    @trigger(map = "CeladonMart1F", sign = 2)
+    @speaker("") {
+      @t("1F: SERVICE     COUNTER\n\n2F: TRAINER'S     MARKET\n\n3F: TV GAME SHOP\n\n4F: WISEMAN GIFTS\n\n5F: DRUG STORE\n\nROOFTOP SQUARE: VENDING\nMACHINES", "1层：服务    柜台\n\n2层：训练家    市场\n\n3层：电视游戏商店\n\n4层：智者礼品店\n\n5层：药品商店\n\n屋顶广场：自动售货机")
+    }
+  }
+}

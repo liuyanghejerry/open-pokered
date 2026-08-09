@@ -1,0 +1,55 @@
+// Refactored from SaffronPokecenter/script.js to jrpg-engine-dsl.
+// Follows the CeladonPokecenter pattern (Pokecenter nurse dialog
+// with @choice + @option). See docs/MIGRATION_NOTES.md §A.
+
+game_scene SaffronPokecenter {
+  @storyline("talkNurse") {
+    @trigger(map = "SaffronPokecenter", npc = 1)
+    @speaker("") {
+      @t("Welcome to the POKEMON\nCENTER!\n\nWe heal your POKEMON back to\nperfect health!\n\nShall we heal your POKEMON?", "欢迎来到宝可梦中心！\n\n我们会让你的宝可梦恢复最佳状\n态！\n\n要为你治疗宝可梦吗？")
+    }
+    @choice {
+      @option(@t("Yes", "是")) {
+        @speaker("") {
+          @t("OK, we will need your\nPOKEMON.", "好的，请把宝可梦交给我。")
+        }
+        faceNpc("1", "right")
+        delay(8)
+        heal()
+        animateHealingMachine()
+        faceNpc("1", "down")
+        delay(8)
+        @speaker("") {
+          @t("Thank you for waiting.\n\nYour POKEMON are fully\nhealed!", "谢谢你的等待。\n\n你的宝可梦已完全恢复了！")
+        }
+      }
+      @option(@t("No", "否")) {
+      }
+    }
+    @speaker("") {
+      @t("We hope to see you again!", "期待你再次光临！")
+    }
+  }
+
+  @storyline("talkBeauty") {
+    @trigger(map = "SaffronPokecenter", npc = 2)
+    @speaker("") { @t("POKEMON growth rates differ\nfrom specie to specie.", "宝可梦的成长速度因种类而异。") }
+  }
+
+  @storyline("talkGentleman") {
+    @trigger(map = "SaffronPokecenter", npc = 3)
+    @speaker("") { @t("SILPH CO. is very famous.\nThat's why it attracted TEAM\nROCKET!", "西尔佛公司非常有名，所以才会\n被火箭队盯上！") }
+  }
+
+  @storyline("talkLinkReceptionist") {
+    @trigger(map = "SaffronPokecenter", npc = 4)
+    @speaker("") { @t("Welcome to the CABLE CLUB!", "欢迎来到通信俱乐部！") }
+  }
+
+  // ── Pokémon Center PC (sign 1 at 13,3) ───────────────────────────────
+  // engine/menus/pc.asm ActivatePC: BILL's PC / item PC / PROF.OAK's PC.
+  @storyline("pcStorage") {
+    @trigger(map = "SaffronPokecenter", sign = 1)
+    openPC()
+  }
+}

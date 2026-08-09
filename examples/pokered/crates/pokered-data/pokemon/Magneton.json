@@ -1,0 +1,68 @@
+{
+  "$schema": "../schemas/pokemon.schema.json",
+  "species": "Magneton",
+  "baseStats": {
+    "hp": 50,
+    "attack": 60,
+    "defense": 95,
+    "speed": 70,
+    "special": 120
+  },
+  "type1": "Electric",
+  "type2": "Electric",
+  "catchRate": 60,
+  "baseExp": 161,
+  "growthRate": "MediumFast",
+  "initialMoves": [
+    "Tackle",
+    "Sonicboom",
+    "Thundershock",
+    "None"
+  ],
+  "tmHmFlags": [
+    32,
+    67,
+    136,
+    225,
+    67,
+    24,
+    66
+  ],
+  "pokedex": {
+    "category": "MAGNET",
+    "heightFeet": 3,
+    "heightInches": 3,
+    "weightDecipounds": 1320,
+    "flavorTextPages": [
+      "Formed by several\nMAGNEMITEs linked\ntogether. They",
+      "frequently appear\nwhen sunspots\nflare up"
+    ]
+  },
+  "evolutions": [],
+  "learnset": [
+    {
+      "level": 21,
+      "moveId": "Sonicboom"
+    },
+    {
+      "level": 25,
+      "moveId": "Thundershock"
+    },
+    {
+      "level": 29,
+      "moveId": "Supersonic"
+    },
+    {
+      "level": 38,
+      "moveId": "ThunderWave"
+    },
+    {
+      "level": 46,
+      "moveId": "Swift"
+    },
+    {
+      "level": 54,
+      "moveId": "Screech"
+    }
+  ]
+}

@@ -1,0 +1,258 @@
+{
+  "$schema": "../../schemas/map.schema.json",
+  "id": 52,
+  "name": "Museum1F",
+  "header": {
+    "tileset": "Museum",
+    "music": "Cities1",
+    "connectionFlags": 0,
+    "width": 10,
+    "height": 4,
+    "borderBlock": 10
+  },
+  "connections": {},
+  "warps": [
+    {
+      "x": 10,
+      "y": 7,
+      "destWarpId": 0
+    },
+    {
+      "x": 11,
+      "y": 7,
+      "destWarpId": 0
+    },
+    {
+      "x": 16,
+      "y": 7,
+      "destWarpId": 1
+    },
+    {
+      "x": 17,
+      "y": 7,
+      "destWarpId": 1
+    },
+    {
+      "x": 7,
+      "y": 7,
+      "destMap": "Museum2F",
+      "destWarpId": 0
+    }
+  ],
+  "npcs": [
+    {
+      "spriteId": 32,
+      "spriteName": "Scientist",
+      "x": 12,
+      "y": 4,
+      "movement": "Stationary",
+      "facing": "Left",
+      "range": 0,
+      "textId": 1,
+      "isTrainer": false
+    },
+    {
+      "spriteId": 11,
+      "spriteName": "Gambler",
+      "x": 1,
+      "y": 4,
+      "movement": "Stationary",
+      "facing": "Down",
+      "range": 0,
+      "textId": 2,
+      "isTrainer": false
+    },
+    {
+      "spriteId": 32,
+      "spriteName": "Scientist",
+      "x": 15,
+      "y": 2,
+      "movement": "Stationary",
+      "facing": "Down",
+      "range": 0,
+      "textId": 3,
+      "isTrainer": false
+    },
+    {
+      "spriteId": 32,
+      "spriteName": "Scientist",
+      "x": 17,
+      "y": 4,
+      "movement": "Stationary",
+      "facing": "Down",
+      "range": 0,
+      "textId": 4,
+      "isTrainer": false
+    },
+    {
+      "spriteId": 69,
+      "spriteName": "OldAmber",
+      "x": 16,
+      "y": 2,
+      "movement": "Stationary",
+      "facing": "Down",
+      "range": 0,
+      "textId": 5,
+      "isTrainer": false
+    }
+  ],
+  "signs": [],
+  "text": {
+    "npc": {
+      "1": [
+        {
+          "line1": "It's ¥50 for a",
+          "line2": "child's ticket."
+        },
+        {
+          "line1": "Would you like to",
+          "line2": "come in?"
+        }
+      ],
+      "1_HasTicket": [
+        {
+          "line1": "Take plenty of",
+          "line2": "time to look!"
+        }
+      ],
+      "1_BuyTicket": [
+        {
+          "line1": "Right, ¥50!",
+          "line2": "Thank you!"
+        }
+      ],
+      "1_NoMoney": [
+        {
+          "line1": "You don't have",
+          "line2": "enough money."
+        }
+      ],
+      "1_ComeAgain": [
+        {
+          "line1": "Come again!",
+          "line2": ""
+        }
+      ],
+      "1_GoToOtherSide": [
+        {
+          "line1": "Please go to the",
+          "line2": "other side!"
+        }
+      ],
+      "1_BehindCounter": [
+        {
+          "line1": "You can't sneak",
+          "line2": "in the back way!"
+        },
+        {
+          "line1": "Oh, whatever!",
+          "line2": "Do you know what"
+        },
+        {
+          "line1": "AMBER is?",
+          "line2": ""
+        }
+      ],
+      "1_BehindCounterYes": [
+        {
+          "line1": "There's a lab",
+          "line2": "somewhere trying"
+        },
+        {
+          "line1": "to resurrect",
+          "line2": "ancient #MON"
+        },
+        {
+          "line1": "from AMBER.",
+          "line2": ""
+        }
+      ],
+      "1_BehindCounterNo": [
+        {
+          "line1": "AMBER is fossil-",
+          "line2": "ized tree sap."
+        }
+      ],
+      "2": [
+        {
+          "line1": "That is one",
+          "line2": "magnificent"
+        },
+        {
+          "line1": "fossil!",
+          "line2": ""
+        }
+      ],
+      "3": [
+        {
+          "line1": "Ssh! I think that",
+          "line2": "this chunk of"
+        },
+        {
+          "line1": "AMBER contains",
+          "line2": "#MON DNA!"
+        },
+        {
+          "line1": "It would be great",
+          "line2": "if #MON could"
+        },
+        {
+          "line1": "be resurrected",
+          "line2": "from it!"
+        },
+        {
+          "line1": "But, my colleagues",
+          "line2": "just ignore me!"
+        },
+        {
+          "line1": "So I have a favor",
+          "line2": "to ask!"
+        },
+        {
+          "line1": "Take this to a",
+          "line2": "#MON LAB and"
+        },
+        {
+          "line1": "get it examined!",
+          "line2": ""
+        }
+      ],
+      "3_ReceivedOldAmber": [
+        {
+          "line1": "<PLAYER> received",
+          "line2": "OLD AMBER!"
+        }
+      ],
+      "3_AlreadyReceived": [
+        {
+          "line1": "Ssh! Get the OLD",
+          "line2": "AMBER checked!"
+        }
+      ],
+      "3_BagFull": [
+        {
+          "line1": "You don't have",
+          "line2": "space for this!"
+        }
+      ],
+      "4": [
+        {
+          "line1": "We are proud of 2",
+          "line2": "fossils of very"
+        },
+        {
+          "line1": "rare, prehistoric",
+          "line2": "#MON!"
+        }
+      ],
+      "5": [
+        {
+          "line1": "The AMBER is",
+          "line2": "clear and gold!"
+        }
+      ]
+    },
+    "sign": {}
+  },
+  "wild": null
+}

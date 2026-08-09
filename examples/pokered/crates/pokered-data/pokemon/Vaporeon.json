@@ -1,0 +1,76 @@
+{
+  "$schema": "../schemas/pokemon.schema.json",
+  "species": "Vaporeon",
+  "baseStats": {
+    "hp": 130,
+    "attack": 65,
+    "defense": 60,
+    "speed": 65,
+    "special": 110
+  },
+  "type1": "Water",
+  "type2": "Water",
+  "catchRate": 45,
+  "baseExp": 196,
+  "growthRate": "MediumFast",
+  "initialMoves": [
+    "Tackle",
+    "SandAttack",
+    "QuickAttack",
+    "WaterGun"
+  ],
+  "tmHmFlags": [
+    160,
+    127,
+    8,
+    192,
+    195,
+    8,
+    18
+  ],
+  "pokedex": {
+    "category": "BUBBLE JET",
+    "heightFeet": 3,
+    "heightInches": 3,
+    "weightDecipounds": 640,
+    "flavorTextPages": [
+      "Lives close to\nwater. Its long\ntail is ridged",
+      "with a fin which\nis often mistaken\nfor a mermaid's"
+    ]
+  },
+  "evolutions": [],
+  "learnset": [
+    {
+      "level": 27,
+      "moveId": "QuickAttack"
+    },
+    {
+      "level": 31,
+      "moveId": "WaterGun"
+    },
+    {
+      "level": 37,
+      "moveId": "TailWhip"
+    },
+    {
+      "level": 40,
+      "moveId": "Bite"
+    },
+    {
+      "level": 42,
+      "moveId": "AcidArmor"
+    },
+    {
+      "level": 44,
+      "moveId": "Haze"
+    },
+    {
+      "level": 48,
+      "moveId": "Mist"
+    },
+    {
+      "level": 54,
+      "moveId": "HydroPump"
+    }
+  ]
+}

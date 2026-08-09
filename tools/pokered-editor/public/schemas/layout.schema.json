@@ -1,0 +1,326 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "/schemas/layout.schema.json",
+  "title": "Pokered UI Layout",
+  "description": "Schema for pokered screen layout JSON files (schema_version 2 — flat element tree). Mirrors crates/jrpg-renderer/src/layout_engine/types.rs.",
+  "type": "object",
+  "required": ["schema_version", "screen", "elements"],
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "description": "JSON Schema reference for IDE support"
+    },
+    "schema_version": {
+      "type": "integer",
+      "description": "Layout schema version (currently 2)"
+    },
+    "screen": {
+      "type": "string",
+      "description": "Screen identifier, e.g. 'save', 'options', 'bag', 'start', 'main', 'title', 'pokedex', 'pokedex_list', 'battle_main', 'oak_speech'."
+    },
+    "theme": { "$ref": "#/$defs/Theme" },
+    "elements": {
+      "type": "array",
+      "description": "Flat list of layout elements drawn in document order (z_index breaks ties).",
+      "items": { "$ref": "#/$defs/Element" }
+    }
+  },
+  "additionalProperties": true,
+  "$defs": {
+    "Theme": {
+      "type": "object",
+      "description": "Optional theme overrides.",
+      "required": ["bg_color"],
+      "properties": {
+        "bg_color": {
+          "type": "string",
+          "description": "Background color (e.g. '#FFFFFF')."
+        },
+        "default_font": {
+          "type": "string",
+          "description": "Default font name (defaults to 'default')."
+        }
+      },
+      "additionalProperties": true
+    },
+    "Element": {
+      "type": "object",
+      "description": "A single layout element. The `type` field selects which extra fields apply.",
+      "required": ["type", "rect"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Optional unique identifier for this element."
+        },
+        "type": {
+          "type": "string",
+          "description": "Element kind: 'border', 'text', 'tile', 'divider', 'image', 'list', 'flex_list', 'group', or a 'custom:<name>' element."
+        },
+        "rect": { "$ref": "#/$defs/ElementRect" },
+        "visible": {
+          "type": ["boolean", "string"],
+          "description": "Static bool, or a {template} condition string evaluated against the data context at render time (truthy → visible). Defaults to true."
+        },
+        "z_index": {
+          "type": "integer",
+          "description": "Stacking order; higher values draw on top (default 0)."
+        },
+
+        "style": { "$ref": "#/$defs/BorderStyle" },
+        "tileset": {
+          "type": "string",
+          "description": "border: tileset name override."
+        },
+
+        "value": {
+          "type": "string",
+          "description": "text: display text; supports {template} variables."
+        },
+        "format": {
+          "type": "string",
+          "description": "text: optional value format specifier."
+        },
+        "color": {
+          "type": "string",
+          "description": "text: ink color, e.g. 'Black', 'DarkGray', 'LightGray', 'White' (case-insensitive)."
+        },
+        "align": { "$ref": "#/$defs/TextAlign" },
+        "font": {
+          "type": "string",
+          "description": "text: font name override."
+        },
+        "wrap": {
+          "type": "string",
+          "description": "text: 'word' enables word wrapping (omit for no wrap)."
+        },
+        "line_spacing": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "text: extra spacing (in pixels/tiles) between wrapped lines."
+        },
+
+        "tile_id": {
+          "description": "tile: tile id (integer) or a {template} string."
+        },
+        "flip_x": {
+          "type": "boolean",
+          "description": "tile/image: mirror horizontally."
+        },
+        "flip_y": {
+          "type": "boolean",
+          "description": "tile/image: mirror vertically."
+        },
+        "palette": {
+          "type": "string",
+          "description": "tile/image: palette name."
+        },
+        "repeat": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "tile: how many times to repeat the tile / divider: repeat count."
+        },
+
+        "tiles": {
+          "type": "array",
+          "description": "divider: tile ids tiled along the divider.",
+          "items": { "type": "integer", "minimum": 0 }
+        },
+        "orientation": { "$ref": "#/$defs/Direction" },
+
+        "source": {
+          "type": "string",
+          "description": "image: source identifier; supports {template} variables."
+        },
+
+        "items": {
+          "type": "string",
+          "description": "list/flex_list: {template} that resolves to the row data."
+        },
+        "item_template": { "$ref": "#/$defs/ItemTemplate" },
+        "max_visible": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "list: maximum visible rows before scrolling."
+        },
+        "footer": {
+          "type": "string",
+          "description": "list: footer text drawn below the list."
+        },
+        "cursor": { "$ref": "#/$defs/ListCursor" },
+        "selected": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "list/flex_list: index of the highlighted row (default first)."
+        },
+
+        "item_layout": {
+          "type": "array",
+          "description": "flex_list: column definitions.",
+          "items": { "$ref": "#/$defs/ColumnDef" }
+        },
+        "padding": { "$ref": "#/$defs/EdgeInsets" },
+        "gap": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "flex_list/group: gap (in tiles) between items."
+        },
+
+        "layout": { "$ref": "#/$defs/LayoutConfig" },
+        "clip": {
+          "type": "boolean",
+          "description": "group: clip children to the group rect."
+        },
+        "children": {
+          "type": "array",
+          "description": "group: nested child elements.",
+          "items": { "$ref": "#/$defs/Element" }
+        }
+      },
+      "additionalProperties": true,
+      "anyOf": [
+        { "properties": { "type": { "enum": ["border"] } } },
+        { "properties": { "type": { "enum": ["text"] } }, "required": ["value"] },
+        { "properties": { "type": { "enum": ["tile"] } }, "required": ["tile_id"] },
+        { "properties": { "type": { "enum": ["divider"] } }, "required": ["tiles", "repeat"] },
+        { "properties": { "type": { "enum": ["image"] } }, "required": ["source"] },
+        { "properties": { "type": { "enum": ["list"] } }, "required": ["items", "item_template"] },
+        { "properties": { "type": { "enum": ["flex_list"] } }, "required": ["items", "item_layout", "padding", "gap"] },
+        { "properties": { "type": { "enum": ["group"] } }, "required": ["layout", "children"] },
+        {
+          "properties": {
+            "type": {
+              "not": {
+                "enum": ["border", "text", "tile", "divider", "image", "list", "flex_list", "group"]
+              }
+            }
+          }
+        }
+      ]
+    },
+    "ElementRect": {
+      "type": "object",
+      "description": "Tile-space rectangle (1 tile = 8 pixels).",
+      "properties": {
+        "tx": {
+          "type": ["integer", "string"],
+          "description": "Left column in tiles — a literal or a {template} string (default 0)."
+        },
+        "ty": {
+          "type": ["integer", "string"],
+          "description": "Top row in tiles — a literal or a {template} string (default 0)."
+        },
+        "tw": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Width in tiles."
+        },
+        "th": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Height in tiles."
+        }
+      },
+      "additionalProperties": true
+    },
+    "BorderStyle": {
+      "type": ["string", "object", "null"],
+      "description": "border: style name ('default', 'single', 'double'; case-insensitive), a per-corner tile-id object, or null."
+    },
+    "TextAlign": {
+      "type": "string",
+      "description": "Horizontal text alignment (case-insensitive).",
+      "enum": ["left", "center", "right", "Left", "Center", "Right"]
+    },
+    "Direction": {
+      "type": "string",
+      "description": "Layout / tiling direction (default 'Horizontal').",
+      "enum": ["Horizontal", "Vertical"]
+    },
+    "ItemTemplate": {
+      "type": "object",
+      "description": "list: per-row geometry.",
+      "required": ["height", "gap"],
+      "properties": {
+        "height": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Row height in tiles."
+        },
+        "gap": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Gap between rows in tiles."
+        }
+      },
+      "additionalProperties": true
+    },
+    "ColumnDef": {
+      "type": "object",
+      "description": "flex_list: a single column.",
+      "required": ["field", "width"],
+      "properties": {
+        "field": {
+          "type": "string",
+          "description": "Row field name to render in this column."
+        },
+        "width": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Column width in tiles."
+        },
+        "align": { "$ref": "#/$defs/TextAlign" },
+        "prefix": {
+          "type": "string",
+          "description": "Static prefix prepended to the value (e.g. '$')."
+        }
+      },
+      "additionalProperties": true
+    },
+    "ListCursor": {
+      "description": "list/flex_list: cursor glyph — a bare tile-id integer, a {tile, position} object, or null.",
+      "anyOf": [
+        { "type": "integer" },
+        {
+          "type": "object",
+          "properties": {
+            "tile": {
+              "type": "integer",
+              "description": "Tile id used to draw the cursor glyph."
+            },
+            "position": {
+              "type": "string",
+              "description": "Position hint, e.g. 'left'."
+            }
+          },
+          "additionalProperties": true
+        },
+        { "type": "null" }
+      ]
+    },
+    "LayoutConfig": {
+      "type": "object",
+      "description": "group: child layout configuration.",
+      "properties": {
+        "direction": { "$ref": "#/$defs/Direction" },
+        "gap": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Gap between children in tiles (default 0)."
+        },
+        "padding": { "$ref": "#/$defs/EdgeInsets" }
+      },
+      "additionalProperties": true
+    },
+    "EdgeInsets": {
+      "type": "object",
+      "description": "Padding in tiles; omitted sides default to 0.",
+      "properties": {
+        "top": { "type": "integer", "minimum": 0 },
+        "bottom": { "type": "integer", "minimum": 0 },
+        "left": { "type": "integer", "minimum": 0 },
+        "right": { "type": "integer", "minimum": 0 }
+      },
+      "additionalProperties": true
+    }
+  }
+}

@@ -1,0 +1,235 @@
+{
+  "$schema": "../schemas/trainer.schema.json",
+  "class": "Biker",
+  "constName": "BIKER",
+  "parties": [
+    {
+      "pokemon": [
+        {
+          "level": 28,
+          "species": "Koffing"
+        },
+        {
+          "level": 28,
+          "species": "Koffing"
+        },
+        {
+          "level": 28,
+          "species": "Koffing"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 29,
+          "species": "Koffing"
+        },
+        {
+          "level": 29,
+          "species": "Grimer"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 25,
+          "species": "Koffing"
+        },
+        {
+          "level": 25,
+          "species": "Koffing"
+        },
+        {
+          "level": 25,
+          "species": "Weezing"
+        },
+        {
+          "level": 25,
+          "species": "Koffing"
+        },
+        {
+          "level": 25,
+          "species": "Grimer"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 28,
+          "species": "Koffing"
+        },
+        {
+          "level": 28,
+          "species": "Grimer"
+        },
+        {
+          "level": 28,
+          "species": "Weezing"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 29,
+          "species": "Grimer"
+        },
+        {
+          "level": 29,
+          "species": "Koffing"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 33,
+          "species": "Weezing"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 26,
+          "species": "Grimer"
+        },
+        {
+          "level": 26,
+          "species": "Grimer"
+        },
+        {
+          "level": 26,
+          "species": "Grimer"
+        },
+        {
+          "level": 26,
+          "species": "Grimer"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 28,
+          "species": "Weezing"
+        },
+        {
+          "level": 28,
+          "species": "Koffing"
+        },
+        {
+          "level": 28,
+          "species": "Weezing"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 33,
+          "species": "Muk"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 29,
+          "species": "Voltorb"
+        },
+        {
+          "level": 29,
+          "species": "Voltorb"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 29,
+          "species": "Weezing"
+        },
+        {
+          "level": 29,
+          "species": "Muk"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 25,
+          "species": "Koffing"
+        },
+        {
+          "level": 25,
+          "species": "Weezing"
+        },
+        {
+          "level": 25,
+          "species": "Koffing"
+        },
+        {
+          "level": 25,
+          "species": "Koffing"
+        },
+        {
+          "level": 25,
+          "species": "Weezing"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 26,
+          "species": "Koffing"
+        },
+        {
+          "level": 26,
+          "species": "Koffing"
+        },
+        {
+          "level": 26,
+          "species": "Grimer"
+        },
+        {
+          "level": 26,
+          "species": "Koffing"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 28,
+          "species": "Grimer"
+        },
+        {
+          "level": 28,
+          "species": "Grimer"
+        },
+        {
+          "level": 28,
+          "species": "Koffing"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 29,
+          "species": "Koffing"
+        },
+        {
+          "level": 29,
+          "species": "Muk"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,70 @@
+{
+  "$schema": "../schemas/pokemon.schema.json",
+  "species": "Dragonair",
+  "baseStats": {
+    "hp": 61,
+    "attack": 84,
+    "defense": 65,
+    "speed": 70,
+    "special": 70
+  },
+  "type1": "Dragon",
+  "type2": "Dragon",
+  "catchRate": 45,
+  "baseExp": 144,
+  "growthRate": "Slow",
+  "initialMoves": [
+    "Wrap",
+    "Leer",
+    "ThunderWave",
+    "None"
+  ],
+  "tmHmFlags": [
+    224,
+    63,
+    200,
+    193,
+    227,
+    24,
+    18
+  ],
+  "pokedex": {
+    "category": "DRAGON",
+    "heightFeet": 13,
+    "heightInches": 1,
+    "weightDecipounds": 360,
+    "flavorTextPages": [
+      "A mystical #MON\nthat exudes a\ngentle aura.",
+      "Has the ability\nto change climate\nconditions"
+    ]
+  },
+  "evolutions": [
+    {
+      "method": "level",
+      "species": "Dragonite",
+      "level": 55
+    }
+  ],
+  "learnset": [
+    {
+      "level": 10,
+      "moveId": "ThunderWave"
+    },
+    {
+      "level": 20,
+      "moveId": "Agility"
+    },
+    {
+      "level": 35,
+      "moveId": "Slam"
+    },
+    {
+      "level": 45,
+      "moveId": "DragonRage"
+    },
+    {
+      "level": 55,
+      "moveId": "HyperBeam"
+    }
+  ]
+}

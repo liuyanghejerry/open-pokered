@@ -1,0 +1,92 @@
+{
+  "$schema": "../../schemas/map.schema.json",
+  "id": 174,
+  "name": "IndigoPlateauLobby",
+  "header": {
+    "tileset": "Mart",
+    "music": "IndigoPlateau",
+    "connectionFlags": 0,
+    "width": 8,
+    "height": 6,
+    "borderBlock": 0
+  },
+  "connections": {},
+  "warps": [
+    {
+      "x": 7,
+      "y": 11,
+      "destWarpId": 0
+    },
+    {
+      "x": 8,
+      "y": 11,
+      "destWarpId": 1
+    },
+    {
+      "x": 8,
+      "y": 0,
+      "destMap": "LoreleisRoom",
+      "destWarpId": 0
+    }
+  ],
+  "npcs": [
+    {
+      "spriteId": 41,
+      "spriteName": "Nurse",
+      "x": 7,
+      "y": 5,
+      "movement": "Stationary",
+      "facing": "Down",
+      "range": 0,
+      "textId": 1,
+      "isTrainer": false
+    },
+    {
+      "spriteId": 36,
+      "spriteName": "GymGuide",
+      "x": 4,
+      "y": 9,
+      "movement": "Stationary",
+      "facing": "Right",
+      "range": 0,
+      "textId": 2,
+      "isTrainer": false
+    },
+    {
+      "spriteId": 6,
+      "spriteName": "CooltrainerF",
+      "x": 5,
+      "y": 1,
+      "movement": "Stationary",
+      "facing": "Down",
+      "range": 0,
+      "textId": 3,
+      "isTrainer": false
+    },
+    {
+      "spriteId": 38,
+      "spriteName": "Clerk",
+      "x": 0,
+      "y": 5,
+      "movement": "Stationary",
+      "facing": "Right",
+      "range": 0,
+      "textId": 4,
+      "isTrainer": false
+    },
+    {
+      "spriteId": 42,
+      "spriteName": "LinkReceptionist",
+      "x": 13,
+      "y": 6,
+      "movement": "Stationary",
+      "facing": "Down",
+      "range": 0,
+      "textId": 5,
+      "isTrainer": false
+    }
+  ],
+  "signs": [],
+  "text": {},
+  "wild": null
+}

@@ -1,0 +1,87 @@
+// WardensHouse — translated from the original disassembly (scripts/WardensHouse.asm,
+// text/WardensHouse.asm) to the real Game DSL API surface. The Warden is an
+// in-game item exchange (GOLD_TEETH -> HM04 STRENGTH): before he has his teeth he
+// only speaks gibberish; once you carry the GOLD TEETH he takes them and rewards
+// HM04. The PokeBall is a RARE_CANDY ground item; the boulder needs STRENGTH; the
+// two display cases are signs.
+
+game_scene WardensHouse {
+  // ── Warden (npc 1) — GOLD TEETH for HM04 (STRENGTH) exchange ─────────────
+  @storyline("talkWarden") {
+    @trigger(map = "WardensHouse", npc = 1)
+    @if (getFlag("EVENT_GOT_HM04")) {
+      // Already received HM04 — explanation / hint dialogue.
+      @speaker("") {
+        @t("WARDEN: HM04 teaches\nSTRENGTH!\n\nIt lets POKeMON move\nboulders when you're out-\nside of battle.\n\nOh yes, did you find SECRET\nHOUSE in SAFARI ZONE?\n\nIf you do, you win an HM!\n\nI hear it's the rare SURF\nHM.", "园长：HM04 教授怪力！\n\n它能让宝可梦移动巨石，在战斗\n之外也能做到。\n\n对了，你找到狩猎地带里的秘密\n小屋了吗？\n\n如果找到了，就能得到HM！\n\n听说那是稀有的冲浪HM。")
+      }
+    } @else {
+      @if (hasItem("GOLD_TEETH")) {
+        // Hand over the GOLD TEETH, then reward HM04.
+        @speaker("") { @t("<PLAYER> gave the GOLD TEETH\nto the WARDEN!", "<PLAYER>把金牙交给了园长！") }
+        takeItem("GOLD_TEETH", 1)
+        setFlag("EVENT_GAVE_GOLD_TEETH")
+        @speaker("") {
+          @t("WARDEN: Thanks, kid! No one\ncould understand a word that\nI said.\n\nI couldn't work that way.\nLet me give you something\nfor your trouble.", "园长：谢谢，孩子！没人能听懂\n我说的话。\n\n那样我无法工作。让我给你一点\n东西作为答谢。")
+        }
+        giveItem("HM04", 1)
+        setFlag("EVENT_GOT_HM04")
+        @speaker("") { @t("<PLAYER> received HM04!", "<PLAYER>得到了 HM04！") }
+      } @else {
+        @if (getFlag("EVENT_GAVE_GOLD_TEETH")) {
+          // Already gave the teeth (e.g. bag was full last time) — give HM04 now.
+          @speaker("") {
+            @t("WARDEN: Thanks, kid! No one\ncould understand a word that\nI said.\n\nI couldn't work that way.\nLet me give you something\nfor your trouble.", "园长：谢谢，孩子！没人能听懂\n我说的话。\n\n那样我无法工作。让我给你一点\n东西作为答谢。")
+          }
+          giveItem("HM04", 1)
+          setFlag("EVENT_GOT_HM04")
+          @speaker("") { @t("<PLAYER> received HM04!", "<PLAYER>得到了 HM04！") }
+        } @else {
+          // No teeth: the WARDEN can only mumble.
+          @speaker("") {
+            @t("WARDEN: Hif fuff hefifoo!\n\nHa lof ha feef ee hafahi ho.\nHeff hee fwee!", "园长：呜啦呜呼哇呜！\n\n哈噜 哈噜噜哈呜噜。呼噜呼噜\n噜！")
+          }
+          @choice {
+            @option(@t("YES", "是")) {
+              @speaker("") { @t("Ah howhee ho hoo! Eef ee\nhafahi ho!", "啊呼嘿呼呼！伊夫伊哈法希呼！") }
+            }
+            @option(@t("NO", "否")) {
+              @speaker("") { @t("Ha? He ohay heh ha hoo ee\nhaheh!", "哈？嘿哦嘿哈呼伊哈哈！") }
+            }
+          }
+        }
+      }
+    }
+  }
+
+  // ── PokeBall (npc 2) — RARE_CANDY ground item ───────────────────────────
+  @storyline("talkPokeBall") {
+    @trigger(map = "WardensHouse", npc = 2, toggle = "WARDENS_HOUSE_OBJ_2")
+    @if (getFlag("EVENT_GOT_RARE_CANDY_WARDENS_HOUSE")) {
+      @speaker("") { @t("The item ball is empty.", "这个道具球是空的。") }
+    } @else {
+      giveItem("RARE_CANDY", 1)
+      setFlag("EVENT_GOT_RARE_CANDY_WARDENS_HOUSE")
+      hideObjectByName("WARDENS_HOUSE_OBJ_2")
+      @speaker("") { @t("<PLAYER> found RARE_CANDY!", "<PLAYER>找到了神奇糖果！") }
+    }
+  }
+
+  // ── Boulder (npc 3) — needs STRENGTH to move ────────────────────────────
+  @storyline("talkBoulder") {
+    @trigger(map = "WardensHouse", npc = 3)
+    @speaker("") { @t("This requires STRENGTH to\nmove!", "这需要怪力才能推动！") }
+  }
+
+  // ── Display cases (signs) ───────────────────────────────────────────────
+  // sign 1 = DISPLAY_LEFT -> "POKeMON photos and fossils."
+  @storyline("sign1") {
+    @trigger(map = "WardensHouse", sign = 1)
+    @speaker("") { @t("POKeMON photos and fossils.", "宝可梦的照片和化石。") }
+  }
+
+  // sign 2 = DISPLAY_RIGHT -> "Old POKeMON merchandise."
+  @storyline("sign2") {
+    @trigger(map = "WardensHouse", sign = 2)
+    @speaker("") { @t("Old POKeMON merchandise.", "古老的宝可梦商品。") }
+  }
+}

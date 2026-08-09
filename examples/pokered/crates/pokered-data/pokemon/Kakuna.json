@@ -1,0 +1,49 @@
+{
+  "$schema": "../schemas/pokemon.schema.json",
+  "species": "Kakuna",
+  "baseStats": {
+    "hp": 45,
+    "attack": 25,
+    "defense": 50,
+    "speed": 35,
+    "special": 25
+  },
+  "type1": "Bug",
+  "type2": "Poison",
+  "catchRate": 120,
+  "baseExp": 71,
+  "growthRate": "MediumFast",
+  "initialMoves": [
+    "Harden",
+    "None",
+    "None",
+    "None"
+  ],
+  "tmHmFlags": [
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0
+  ],
+  "pokedex": {
+    "category": "COCOON",
+    "heightFeet": 2,
+    "heightInches": 0,
+    "weightDecipounds": 220,
+    "flavorTextPages": [
+      "Almost incapable\nof moving, this\n#MON can only",
+      "harden its shell\nto protect itself\nfrom predators"
+    ]
+  },
+  "evolutions": [
+    {
+      "method": "level",
+      "species": "Beedrill",
+      "level": 10
+    }
+  ],
+  "learnset": []
+}

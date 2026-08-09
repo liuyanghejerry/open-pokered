@@ -1,0 +1,43 @@
+{
+  "$schema": "../schemas/pokemon.schema.json",
+  "species": "Raichu",
+  "baseStats": {
+    "hp": 60,
+    "attack": 90,
+    "defense": 55,
+    "speed": 100,
+    "special": 90
+  },
+  "type1": "Electric",
+  "type2": "Electric",
+  "catchRate": 75,
+  "baseExp": 122,
+  "growthRate": "MediumFast",
+  "initialMoves": [
+    "Thundershock",
+    "Growl",
+    "ThunderWave",
+    "None"
+  ],
+  "tmHmFlags": [
+    177,
+    195,
+    141,
+    193,
+    195,
+    24,
+    66
+  ],
+  "pokedex": {
+    "category": "MOUSE",
+    "heightFeet": 2,
+    "heightInches": 7,
+    "weightDecipounds": 660,
+    "flavorTextPages": [
+      "Its long tail\nserves as a\nground to protect",
+      "itself from its\nown high voltage\npower"
+    ]
+  },
+  "evolutions": [],
+  "learnset": []
+}

@@ -1,0 +1,72 @@
+{
+  "$schema": "../schemas/pokemon.schema.json",
+  "species": "Slowbro",
+  "baseStats": {
+    "hp": 95,
+    "attack": 75,
+    "defense": 110,
+    "speed": 30,
+    "special": 80
+  },
+  "type1": "Water",
+  "type2": "Psychic",
+  "catchRate": 75,
+  "baseExp": 164,
+  "growthRate": "MediumFast",
+  "initialMoves": [
+    "Confusion",
+    "Disable",
+    "Headbutt",
+    "None"
+  ],
+  "tmHmFlags": [
+    177,
+    255,
+    15,
+    254,
+    227,
+    56,
+    115
+  ],
+  "pokedex": {
+    "category": "HERMITCRAB",
+    "heightFeet": 5,
+    "heightInches": 3,
+    "weightDecipounds": 1730,
+    "flavorTextPages": [
+      "The SHELLDER that\nis latched onto\nSLOWPOKE's tail",
+      "is said to feed\non the host's left\nover scraps"
+    ]
+  },
+  "evolutions": [],
+  "learnset": [
+    {
+      "level": 18,
+      "moveId": "Disable"
+    },
+    {
+      "level": 22,
+      "moveId": "Headbutt"
+    },
+    {
+      "level": 27,
+      "moveId": "Growl"
+    },
+    {
+      "level": 33,
+      "moveId": "WaterGun"
+    },
+    {
+      "level": 37,
+      "moveId": "Withdraw"
+    },
+    {
+      "level": 44,
+      "moveId": "Amnesia"
+    },
+    {
+      "level": 55,
+      "moveId": "PsychicM"
+    }
+  ]
+}

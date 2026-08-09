@@ -1,0 +1,1 @@
+{"id":"XSpecial","name":"X SPECIAL","price":350,"category":"Battle","effect":{"type":"BattleStat","params":{"stage":3}},"held_effect":null,"berry":null,"use_outside_battle":false,"use_in_battle":true,"consume":true,"key_item":false,"sellable":true,"description":"","tags":["battle","stat","special"]}

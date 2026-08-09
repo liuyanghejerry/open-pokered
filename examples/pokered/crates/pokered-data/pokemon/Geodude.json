@@ -1,0 +1,74 @@
+{
+  "$schema": "../schemas/pokemon.schema.json",
+  "species": "Geodude",
+  "baseStats": {
+    "hp": 40,
+    "attack": 80,
+    "defense": 100,
+    "speed": 20,
+    "special": 30
+  },
+  "type1": "Rock",
+  "type2": "Ground",
+  "catchRate": 255,
+  "baseExp": 86,
+  "growthRate": "MediumSlow",
+  "initialMoves": [
+    "Tackle",
+    "None",
+    "None",
+    "None"
+  ],
+  "tmHmFlags": [
+    161,
+    3,
+    15,
+    206,
+    46,
+    200,
+    34
+  ],
+  "pokedex": {
+    "category": "ROCK",
+    "heightFeet": 1,
+    "heightInches": 4,
+    "weightDecipounds": 440,
+    "flavorTextPages": [
+      "Found in fields\nand mountains.\nMistaking them",
+      "for boulders,\npeople often step\nor trip on them"
+    ]
+  },
+  "evolutions": [
+    {
+      "method": "level",
+      "species": "Graveler",
+      "level": 25
+    }
+  ],
+  "learnset": [
+    {
+      "level": 11,
+      "moveId": "DefenseCurl"
+    },
+    {
+      "level": 16,
+      "moveId": "RockThrow"
+    },
+    {
+      "level": 21,
+      "moveId": "Selfdestruct"
+    },
+    {
+      "level": 26,
+      "moveId": "Harden"
+    },
+    {
+      "level": 31,
+      "moveId": "Earthquake"
+    },
+    {
+      "level": 36,
+      "moveId": "Explosion"
+    }
+  ]
+}

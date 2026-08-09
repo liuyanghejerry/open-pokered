@@ -1,0 +1,60 @@
+{
+  "$schema": "/schemas/layout.schema.json",
+  "schema_version": 1,
+  "screen": "bag",
+  "variants": {
+    "default": {
+      "children": [
+        {
+          "id": "box_0",
+          "rect": {
+            "tx": 6,
+            "ty": 0,
+            "tw": 8,
+            "th": 3
+          },
+          "color": "Black",
+          "labels": [
+            {
+              "tx": 1,
+              "ty": 0,
+              "text": "ITEM",
+              "color": "Black"
+            }
+          ]
+        },
+        {
+          "id": "list",
+          "rect": {
+            "tx": 0,
+            "ty": 3,
+            "tw": 20,
+            "th": 14
+          },
+          "color": "Black",
+          "width": "fixed",
+          "height": "auto",
+          "min_height": 4,
+          "padding": {
+            "top": 1,
+            "bottom": 1,
+            "left": 1,
+            "right": 1
+          },
+          "gap": 1,
+          "justify": "start",
+          "align": "start",
+          "items": [],
+          "cursor": {
+            "glyph": "\u25b6",
+            "color": "Black"
+          },
+          "item_name_width": 12,
+          "qty_width": 2,
+          "layout": "flex",
+          "z_index": 0
+        }
+      ]
+    }
+  }
+}

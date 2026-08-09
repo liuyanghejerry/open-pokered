@@ -1,0 +1,45 @@
+{
+  "$schema": "../../schemas/script_config.schema.json",
+  "coordEvents": [],
+  "npcs": [
+    {
+      "id": 1,
+      "talk": "talkSuperNerd"
+    },
+    {
+      "id": 2,
+      "talk": "talkRocket1"
+    },
+    {
+      "id": 3,
+      "talk": "talkRocket2"
+    },
+    {
+      "id": 4,
+      "talk": "talkRocket3"
+    },
+    {
+      "id": 5,
+      "talk": "talkRocket4"
+    },
+    {
+      "id": 6,
+      "talk": "talkDomeFossil"
+    },
+    {
+      "id": 7,
+      "talk": "talkHelixFossil"
+    },
+    {
+      "id": 8,
+      "talk": "talkPokeBall1",
+      "toggleId": "MT_MOON_B2F_OBJ_8"
+    },
+    {
+      "id": 9,
+      "talk": "talkPokeBall2",
+      "toggleId": "MT_MOON_B2F_OBJ_9"
+    }
+  ],
+  "signs": []
+}

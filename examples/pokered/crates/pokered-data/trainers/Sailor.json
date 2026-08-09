@@ -1,0 +1,103 @@
+{
+  "$schema": "../schemas/trainer.schema.json",
+  "class": "Sailor",
+  "constName": "SAILOR",
+  "parties": [
+    {
+      "pokemon": [
+        {
+          "level": 18,
+          "species": "Machop"
+        },
+        {
+          "level": 18,
+          "species": "Shellder"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 17,
+          "species": "Machop"
+        },
+        {
+          "level": 17,
+          "species": "Tentacool"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 21,
+          "species": "Shellder"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 17,
+          "species": "Horsea"
+        },
+        {
+          "level": 17,
+          "species": "Shellder"
+        },
+        {
+          "level": 17,
+          "species": "Tentacool"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 18,
+          "species": "Tentacool"
+        },
+        {
+          "level": 18,
+          "species": "Staryu"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 17,
+          "species": "Horsea"
+        },
+        {
+          "level": 17,
+          "species": "Horsea"
+        },
+        {
+          "level": 17,
+          "species": "Horsea"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 20,
+          "species": "Machop"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 21,
+          "species": "Pikachu"
+        },
+        {
+          "level": 21,
+          "species": "Pikachu"
+        }
+      ]
+    }
+  ]
+}

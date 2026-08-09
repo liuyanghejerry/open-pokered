@@ -1,0 +1,31 @@
+// SafariZoneWestRestHouse — translated from the original disassembly
+// (scripts/SafariZoneWestRestHouse.asm, text/SafariZoneWestRestHouse.asm) to the
+// real Game DSL API surface. Pure NPC dialogue: three NPCs offer Safari Zone
+// catching tips. The original script only calls EnableAutoTextBoxDrawing (no
+// on-enter logic, no flags, no battles).
+
+game_scene SafariZoneWestRestHouse {
+  // ── Scientist (npc 1) ──────────────────────────────────────────────────
+  @storyline("talkScientist") {
+    @trigger(map = "SafariZoneWestRestHouse", npc = 1)
+    @speaker("") {
+      @t("Tossing ROCKs at POKeMON\nmight make them run, but\nthey'll be easier to catch.", "向宝可梦扔石头可能会让它们逃\n跑，但会更容易捕获。")
+    }
+  }
+
+  // ── CooltrainerM (npc 2) ───────────────────────────────────────────────
+  @storyline("talkCooltrainerM") {
+    @trigger(map = "SafariZoneWestRestHouse", npc = 2)
+    @speaker("") {
+      @t("Using BAIT will make POKeMON\neasier to catch.", "使用饵料会让宝可梦更容易捕\n获。")
+    }
+  }
+
+  // ── SilphWorkerF (npc 3) ───────────────────────────────────────────────
+  @storyline("talkSilphWorkerF") {
+    @trigger(map = "SafariZoneWestRestHouse", npc = 3)
+    @speaker("") {
+      @t("I hiked a lot, but I didn't\nsee any POKeMON I wanted.", "我走了很多路，但没看到想要的\n宝可梦。")
+    }
+  }
+}

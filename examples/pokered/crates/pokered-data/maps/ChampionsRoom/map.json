@@ -1,0 +1,67 @@
+{
+  "$schema": "../../schemas/map.schema.json",
+  "id": 120,
+  "name": "ChampionsRoom",
+  "header": {
+    "tileset": "Gym",
+    "music": "IndigoPlateau",
+    "connectionFlags": 0,
+    "width": 4,
+    "height": 4,
+    "borderBlock": 3
+  },
+  "connections": {},
+  "warps": [
+    {
+      "x": 3,
+      "y": 7,
+      "destMap": "LancesRoom",
+      "destWarpId": 1
+    },
+    {
+      "x": 4,
+      "y": 7,
+      "destMap": "LancesRoom",
+      "destWarpId": 2
+    },
+    {
+      "x": 3,
+      "y": 0,
+      "destMap": "HallOfFame",
+      "destWarpId": 0
+    },
+    {
+      "x": 4,
+      "y": 0,
+      "destMap": "HallOfFame",
+      "destWarpId": 0
+    }
+  ],
+  "npcs": [
+    {
+      "spriteId": 2,
+      "spriteName": "Blue",
+      "x": 4,
+      "y": 2,
+      "movement": "Stationary",
+      "facing": "Down",
+      "range": 0,
+      "textId": 1,
+      "isTrainer": false
+    },
+    {
+      "spriteId": 3,
+      "spriteName": "Oak",
+      "x": 3,
+      "y": 7,
+      "movement": "Stationary",
+      "facing": "Up",
+      "range": 0,
+      "textId": 2,
+      "isTrainer": false
+    }
+  ],
+  "signs": [],
+  "text": {},
+  "wild": null
+}

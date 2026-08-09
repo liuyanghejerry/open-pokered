@@ -1,0 +1,37 @@
+// CeladonMart4F — translated from the original disassembly
+// (scripts/CeladonMart4F.asm, text/CeladonMart4F*.asm, data/items/marts.asm) to
+// the real Game DSL API surface. This is a Celadon Department Store floor (4F:
+// WISEMAN GIFTS): the Clerk runs a shop; the SuperNerd and Youngster are
+// dialogue-only NPCs; the sign is the floor directory.
+
+game_scene CeladonMart4F {
+  // ── Clerk (npc 1) — 4F shop: POKE DOLL + evolution stones ──────────────
+  @storyline("talkClerk") {
+    @trigger(map = "CeladonMart4F", npc = 1)
+    openShop(["PokeDoll", "FireStone", "ThunderStone", "WaterStone", "LeafStone"])
+  }
+
+  // ── SuperNerd (npc 2) ──────────────────────────────────────────────────
+  @storyline("talkSuperNerd") {
+    @trigger(map = "CeladonMart4F", npc = 2)
+    @speaker("") {
+      @t("I'm getting a POKeDOLL for\nmy girl friend!", "我要给我的女朋友买个皮皮玩\n偶！")
+    }
+  }
+
+  // ── Youngster (npc 3) ──────────────────────────────────────────────────
+  @storyline("talkYoungster") {
+    @trigger(map = "CeladonMart4F", npc = 3)
+    @speaker("") {
+      @t("I heard something useful.\n\nYou can run from wild\nPOKeMON by distracting them\nwith a POKeDOLL!", "我听说了一件有用的事。\n\n给野生宝可梦扔皮皮玩偶就能从\n它们身边逃走！")
+    }
+  }
+
+  // ── Floor directory sign (sign 1) ──────────────────────────────────────
+  @storyline("sign1") {
+    @trigger(map = "CeladonMart4F", sign = 1)
+    @speaker("") {
+      @t("Express yourself with gifts!\n\n4F: WISEMAN GIFTS\n\nEvolution Special! Element\nSTONEs on sale now!", "用礼物表达你的心意！\n\n4层：智者礼品店\n\n进化特卖！各种元素之石正在大\n甩卖！")
+    }
+  }
+}

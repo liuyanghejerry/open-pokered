@@ -1,0 +1,88 @@
+// Route10 — translated from the original disassembly (scripts/Route10.asm,
+// text/Route10.asm) to the real Game DSL API surface. Route10 is a route map:
+// six sight-engaged trainers (map.json isTrainer = true, runtime drives the
+// battle) so each talk handler is DIALOGUE ONLY, branching on the per-trainer
+// beaten flag (pre-battle taunt vs. after-battle line). Plus four signs.
+
+game_scene Route10 {
+  // ── SuperNerd / Pokémaniac (npc 1, trainer 0) ───────────────────────────
+  @storyline("talkSuperNerd1") {
+    @trigger(map = "Route10", npc = 1)
+    @if (getFlag("EVENT_BEAT_ROUTE_10_TRAINER_0")) {
+      @speaker("") { @t("I have more rare POKeMON at\nhome!", "我家还有更稀有的宝可梦！") }
+    } @else {
+      @speaker("") { @t("Wow, are you a POKeMANIAC\ntoo? Want to see my\ncollection?", "哇，你也是宝可梦狂吗？想看看\n我的收藏吗？") }
+    }
+  }
+
+  // ── Hiker (npc 2, trainer 1) ─────────────────────────────────────────────
+  @storyline("talkHiker1") {
+    @trigger(map = "Route10", npc = 2)
+    @if (getFlag("EVENT_BEAT_ROUTE_10_TRAINER_1")) {
+      @speaker("") { @t("Haha-ha-choo! Ha-choo!\nSnort! Snivel!", "哈啊-啊-嚏！哈-嚏！吸溜！呼\n哧！") }
+    } @else {
+      @speaker("") { @t("Ha-hahah-ah-ha!", "哈-哈哈哈-哈！") }
+    }
+  }
+
+  // ── SuperNerd / Pokémaniac (npc 3, trainer 2) ───────────────────────────
+  @storyline("talkSuperNerd2") {
+    @trigger(map = "Route10", npc = 3)
+    @if (getFlag("EVENT_BEAT_ROUTE_10_TRAINER_2")) {
+      @speaker("") { @t("I don't like you for beating\nme!", "你打败了我，真讨厌！") }
+    } @else {
+      @speaker("") { @t("Hi kid, want to see my\nPOKeMON?", "嘿，小朋友，想看我的宝可梦\n吗？") }
+    }
+  }
+
+  // ── JrTrainerF / Cooltrainer (npc 4, trainer 3) ─────────────────────────
+  @storyline("talkCooltrainerF1") {
+    @trigger(map = "Route10", npc = 4)
+    @if (getFlag("EVENT_BEAT_ROUTE_10_TRAINER_3")) {
+      @speaker("") { @t("I noticed some POKeMANIACs\nprowling around.", "我注意到几个宝可梦狂在附近转\n悠。") }
+    } @else {
+      @speaker("") { @t("I've been to a POKeMON GYM a\nfew times. But, I lost each\ntime.", "我去过几次宝可梦道馆。但是，\n我每次都输了。") }
+    }
+  }
+
+  // ── Hiker (npc 5, trainer 4) ─────────────────────────────────────────────
+  @storyline("talkHiker2") {
+    @trigger(map = "Route10", npc = 5)
+    @if (getFlag("EVENT_BEAT_ROUTE_10_TRAINER_4")) {
+      @speaker("") { @t("I feel bloated on mountain\nair!", "山里空气让我胀得慌！") }
+    } @else {
+      @speaker("") { @t("Ah! This mountain air is\ndelicious!", "啊！这山里的空气真棒！") }
+    }
+  }
+
+  // ── JrTrainerF / Cooltrainer (npc 6, trainer 5) ─────────────────────────
+  @storyline("talkCooltrainerF2") {
+    @trigger(map = "Route10", npc = 6)
+    @if (getFlag("EVENT_BEAT_ROUTE_10_TRAINER_5")) {
+      @speaker("") { @t("The POKeMON here are so\nchunky! There should be a\npink one with a floral\npattern!", "这里的宝可梦都胖乎乎的！应该\n有一只粉色带花纹的！") }
+    } @else {
+      @speaker("") { @t("I'm feeling a bit faint from\nthis tough hike.", "这次艰难的徒步让我有点晕。") }
+    }
+  }
+
+  // ── Signs ────────────────────────────────────────────────────────────────
+  @storyline("sign1") {
+    @trigger(map = "Route10", sign = 1)
+    @speaker("") { @t("ROCK TUNNEL", "岩山隧道") }
+  }
+
+  @storyline("sign2") {
+    @trigger(map = "Route10", sign = 2)
+    @speaker("") { @t("Heal Your POKeMON! POKeMON\nCENTER", "治疗你的宝可梦！宝可梦中心") }
+  }
+
+  @storyline("sign3") {
+    @trigger(map = "Route10", sign = 3)
+    @speaker("") { @t("ROCK TUNNEL", "岩山隧道") }
+  }
+
+  @storyline("sign4") {
+    @trigger(map = "Route10", sign = 4)
+    @speaker("") { @t("POWER PLANT", "发电厂") }
+  }
+}

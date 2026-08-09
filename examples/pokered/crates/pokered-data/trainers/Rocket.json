@@ -1,0 +1,603 @@
+{
+  "$schema": "../schemas/trainer.schema.json",
+  "class": "Rocket",
+  "constName": "ROCKET",
+  "parties": [
+    {
+      "pokemon": [
+        {
+          "level": 13,
+          "species": "Rattata"
+        },
+        {
+          "level": 13,
+          "species": "Zubat"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 11,
+          "species": "Sandshrew"
+        },
+        {
+          "level": 11,
+          "species": "Rattata"
+        },
+        {
+          "level": 11,
+          "species": "Zubat"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 12,
+          "species": "Zubat"
+        },
+        {
+          "level": 12,
+          "species": "Ekans"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 16,
+          "species": "Raticate"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 17,
+          "species": "Machop"
+        },
+        {
+          "level": 17,
+          "species": "Drowzee"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 15,
+          "species": "Ekans"
+        },
+        {
+          "level": 15,
+          "species": "Zubat"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 20,
+          "species": "Raticate"
+        },
+        {
+          "level": 20,
+          "species": "Zubat"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 21,
+          "species": "Drowzee"
+        },
+        {
+          "level": 21,
+          "species": "Machop"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 21,
+          "species": "Raticate"
+        },
+        {
+          "level": 21,
+          "species": "Raticate"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 20,
+          "species": "Grimer"
+        },
+        {
+          "level": 20,
+          "species": "Koffing"
+        },
+        {
+          "level": 20,
+          "species": "Koffing"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 19,
+          "species": "Rattata"
+        },
+        {
+          "level": 19,
+          "species": "Raticate"
+        },
+        {
+          "level": 19,
+          "species": "Raticate"
+        },
+        {
+          "level": 19,
+          "species": "Rattata"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 22,
+          "species": "Grimer"
+        },
+        {
+          "level": 22,
+          "species": "Koffing"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 17,
+          "species": "Zubat"
+        },
+        {
+          "level": 17,
+          "species": "Koffing"
+        },
+        {
+          "level": 17,
+          "species": "Grimer"
+        },
+        {
+          "level": 17,
+          "species": "Zubat"
+        },
+        {
+          "level": 17,
+          "species": "Raticate"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 20,
+          "species": "Rattata"
+        },
+        {
+          "level": 20,
+          "species": "Raticate"
+        },
+        {
+          "level": 20,
+          "species": "Drowzee"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 21,
+          "species": "Machop"
+        },
+        {
+          "level": 21,
+          "species": "Machop"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 23,
+          "species": "Sandshrew"
+        },
+        {
+          "level": 23,
+          "species": "Ekans"
+        },
+        {
+          "level": 23,
+          "species": "Sandslash"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 23,
+          "species": "Ekans"
+        },
+        {
+          "level": 23,
+          "species": "Sandshrew"
+        },
+        {
+          "level": 23,
+          "species": "Arbok"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 21,
+          "species": "Koffing"
+        },
+        {
+          "level": 21,
+          "species": "Zubat"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 25,
+          "species": "Zubat"
+        },
+        {
+          "level": 25,
+          "species": "Zubat"
+        },
+        {
+          "level": 25,
+          "species": "Golbat"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 26,
+          "species": "Koffing"
+        },
+        {
+          "level": 26,
+          "species": "Drowzee"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 23,
+          "species": "Zubat"
+        },
+        {
+          "level": 23,
+          "species": "Rattata"
+        },
+        {
+          "level": 23,
+          "species": "Raticate"
+        },
+        {
+          "level": 23,
+          "species": "Zubat"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 26,
+          "species": "Drowzee"
+        },
+        {
+          "level": 26,
+          "species": "Koffing"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 29,
+          "species": "Cubone"
+        },
+        {
+          "level": 29,
+          "species": "Zubat"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 25,
+          "species": "Golbat"
+        },
+        {
+          "level": 25,
+          "species": "Zubat"
+        },
+        {
+          "level": 25,
+          "species": "Zubat"
+        },
+        {
+          "level": 25,
+          "species": "Raticate"
+        },
+        {
+          "level": 25,
+          "species": "Zubat"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 28,
+          "species": "Raticate"
+        },
+        {
+          "level": 28,
+          "species": "Hypno"
+        },
+        {
+          "level": 28,
+          "species": "Raticate"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 29,
+          "species": "Machop"
+        },
+        {
+          "level": 29,
+          "species": "Drowzee"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 28,
+          "species": "Ekans"
+        },
+        {
+          "level": 28,
+          "species": "Zubat"
+        },
+        {
+          "level": 28,
+          "species": "Cubone"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 33,
+          "species": "Arbok"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 33,
+          "species": "Hypno"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 29,
+          "species": "Machop"
+        },
+        {
+          "level": 29,
+          "species": "Machoke"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 28,
+          "species": "Zubat"
+        },
+        {
+          "level": 28,
+          "species": "Zubat"
+        },
+        {
+          "level": 28,
+          "species": "Golbat"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 26,
+          "species": "Raticate"
+        },
+        {
+          "level": 26,
+          "species": "Arbok"
+        },
+        {
+          "level": 26,
+          "species": "Koffing"
+        },
+        {
+          "level": 26,
+          "species": "Golbat"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 29,
+          "species": "Cubone"
+        },
+        {
+          "level": 29,
+          "species": "Cubone"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 29,
+          "species": "Sandshrew"
+        },
+        {
+          "level": 29,
+          "species": "Sandslash"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 26,
+          "species": "Raticate"
+        },
+        {
+          "level": 26,
+          "species": "Zubat"
+        },
+        {
+          "level": 26,
+          "species": "Golbat"
+        },
+        {
+          "level": 26,
+          "species": "Rattata"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 28,
+          "species": "Weezing"
+        },
+        {
+          "level": 28,
+          "species": "Golbat"
+        },
+        {
+          "level": 28,
+          "species": "Koffing"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 28,
+          "species": "Drowzee"
+        },
+        {
+          "level": 28,
+          "species": "Grimer"
+        },
+        {
+          "level": 28,
+          "species": "Machop"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 28,
+          "species": "Golbat"
+        },
+        {
+          "level": 28,
+          "species": "Drowzee"
+        },
+        {
+          "level": 28,
+          "species": "Hypno"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 33,
+          "species": "Machoke"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 25,
+          "species": "Rattata"
+        },
+        {
+          "level": 25,
+          "species": "Rattata"
+        },
+        {
+          "level": 25,
+          "species": "Zubat"
+        },
+        {
+          "level": 25,
+          "species": "Rattata"
+        },
+        {
+          "level": 25,
+          "species": "Ekans"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 32,
+          "species": "Cubone"
+        },
+        {
+          "level": 32,
+          "species": "Drowzee"
+        },
+        {
+          "level": 32,
+          "species": "Marowak"
+        }
+      ]
+    }
+  ]
+}

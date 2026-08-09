@@ -1,0 +1,76 @@
+{
+  "$schema": "../../schemas/map.schema.json",
+  "id": 155,
+  "name": "WardensHouse",
+  "header": {
+    "tileset": "Lab",
+    "music": "Cities2",
+    "connectionFlags": 0,
+    "width": 5,
+    "height": 4,
+    "borderBlock": 23
+  },
+  "connections": {},
+  "warps": [
+    {
+      "x": 4,
+      "y": 7,
+      "destWarpId": 3
+    },
+    {
+      "x": 5,
+      "y": 7,
+      "destWarpId": 3
+    }
+  ],
+  "npcs": [
+    {
+      "spriteId": 45,
+      "spriteName": "Warden",
+      "x": 2,
+      "y": 3,
+      "movement": "Stationary",
+      "facing": "Down",
+      "range": 0,
+      "textId": 1,
+      "isTrainer": false
+    },
+    {
+      "spriteId": 61,
+      "spriteName": "PokeBall",
+      "x": 8,
+      "y": 3,
+      "movement": "Stationary",
+      "facing": "Down",
+      "range": 0,
+      "textId": 2,
+      "isTrainer": false,
+      "itemId": 40
+    },
+    {
+      "spriteId": 63,
+      "spriteName": "Boulder",
+      "x": 8,
+      "y": 4,
+      "movement": "Stationary",
+      "facing": "Down",
+      "range": 0,
+      "textId": 3,
+      "isTrainer": false
+    }
+  ],
+  "signs": [
+    {
+      "x": 4,
+      "y": 3,
+      "textId": 1
+    },
+    {
+      "x": 5,
+      "y": 3,
+      "textId": 2
+    }
+  ],
+  "text": {},
+  "wild": null
+}

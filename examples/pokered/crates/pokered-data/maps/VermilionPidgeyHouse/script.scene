@@ -1,0 +1,31 @@
+// VermilionPidgeyHouse — translated from the original disassembly
+// (scripts/VermilionPidgeyHouse.asm, text/VermilionPidgeyHouse.asm) to the real
+// Game DSL API surface. A small house with a youngster, his PIDGEY (plays its
+// cry), and a letter on the table. No flags, battles, or on-enter logic.
+
+game_scene VermilionPidgeyHouse {
+  // ── Youngster (npc 1) ──────────────────────────────────────────────────
+  @storyline("talkYoungster") {
+    @trigger(map = "VermilionPidgeyHouse", npc = 1)
+    @speaker("") {
+      @t("I'm getting my PIDGEY to fly\na letter to SAFFRON in the\nnorth!", "我要让我的波波把信送到北边的\n金黄市去！")
+    }
+  }
+
+  // ── PIDGEY (npc 2) — plays its cry after the text ──────────────────────
+  @storyline("talkPidgey") {
+    @trigger(map = "VermilionPidgeyHouse", npc = 2)
+    @speaker("") {
+      @t("PIDGEY: Kurukkoo!", "波波：咕咕咕！")
+    }
+    playCry("PIDGEY")
+  }
+
+  // ── Letter on the table (npc 3) ────────────────────────────────────────
+  @storyline("talkLetter") {
+    @trigger(map = "VermilionPidgeyHouse", npc = 3)
+    @speaker("") {
+      @t("Dear PIPPI, I hope to see\nyou soon.\n\nI heard SAFFRON has problems\nwith TEAM ROCKET.\n\nVERMILION appears to be\nsafe.", "亲爱的皮皮，希望能早日见到\n你。\n\n我听说金黄市正受火箭队骚扰。\n\n枯叶市看起来还很安全。")
+    }
+  }
+}

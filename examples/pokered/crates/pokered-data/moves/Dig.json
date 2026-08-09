@@ -1,0 +1,9 @@
+{
+  "$schema": "../schemas/move.schema.json",
+  "id": "Dig",
+  "effect": "ChargeEffect",
+  "power": 100,
+  "type": "Ground",
+  "accuracy": 100,
+  "pp": 10
+}

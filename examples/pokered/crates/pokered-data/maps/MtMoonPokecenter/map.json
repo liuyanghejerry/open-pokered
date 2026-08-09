@@ -1,0 +1,197 @@
+{
+  "$schema": "../../schemas/map.schema.json",
+  "id": 68,
+  "name": "MtMoonPokecenter",
+  "header": {
+    "tileset": "Pokecenter",
+    "music": "Pokecenter",
+    "connectionFlags": 0,
+    "width": 7,
+    "height": 4,
+    "borderBlock": 0
+  },
+  "connections": {},
+  "warps": [
+    {
+      "x": 3,
+      "y": 7,
+      "destWarpId": 0
+    },
+    {
+      "x": 4,
+      "y": 7,
+      "destWarpId": 0
+    }
+  ],
+  "npcs": [
+    {
+      "spriteId": 41,
+      "spriteName": "Nurse",
+      "x": 3,
+      "y": 1,
+      "movement": "Stationary",
+      "facing": "Down",
+      "range": 0,
+      "textId": 1,
+      "isTrainer": false
+    },
+    {
+      "spriteId": 4,
+      "spriteName": "Youngster",
+      "x": 4,
+      "y": 3,
+      "movement": "Stationary",
+      "facing": "Up",
+      "range": 0,
+      "textId": 2,
+      "isTrainer": false
+    },
+    {
+      "spriteId": 16,
+      "spriteName": "Gentleman",
+      "x": 7,
+      "y": 3,
+      "movement": "Stationary",
+      "facing": "Up",
+      "range": 0,
+      "textId": 3,
+      "isTrainer": false
+    },
+    {
+      "spriteId": 10,
+      "spriteName": "MiddleAgedMan",
+      "x": 10,
+      "y": 6,
+      "movement": "Wander",
+      "facing": "Left",
+      "range": 2,
+      "textId": 4,
+      "isTrainer": false
+    },
+    {
+      "spriteId": 66,
+      "spriteName": "Clipboard",
+      "x": 7,
+      "y": 2,
+      "movement": "Stationary",
+      "facing": "Down",
+      "range": 0,
+      "textId": 5,
+      "isTrainer": false
+    },
+    {
+      "spriteId": 42,
+      "spriteName": "LinkReceptionist",
+      "x": 11,
+      "y": 2,
+      "movement": "Stationary",
+      "facing": "Down",
+      "range": 0,
+      "textId": 6,
+      "isTrainer": false
+    }
+  ],
+  "signs": [
+    {
+      "x": 13,
+      "y": 3,
+      "textId": 1
+    }
+  ],
+  "text": {
+    "npc": {
+      "1": [
+        {
+          "line1": "[Pokecenter Nurse script]",
+          "line2": ""
+        }
+      ],
+      "2": [
+        {
+          "line1": "I've 6 # BALLs",
+          "line2": "set in my belt."
+        },
+        {
+          "line1": "At most, you can",
+          "line2": "carry 6 #MON."
+        }
+      ],
+      "3": [
+        {
+          "line1": "TEAM ROCKET",
+          "line2": "attacks CERULEAN"
+        },
+        {
+          "line1": "citizens...",
+          "line2": ""
+        },
+        {
+          "line1": "TEAM ROCKET is",
+          "line2": "always in the"
+        },
+        {
+          "line1": "news!",
+          "line2": ""
+        }
+      ],
+      "4": [
+        {
+          "line1": "MAN: Hello, there!",
+          "line2": "Have I got a deal"
+        },
+        {
+          "line1": "just for you!",
+          "line2": ""
+        },
+        {
+          "line1": "I'll let you have",
+          "line2": "a swell MAGIKARP"
+        },
+        {
+          "line1": "for just \u00a5500!",
+          "line2": ""
+        },
+        {
+          "line1": "What do you say?",
+          "line2": ""
+        }
+      ],
+      "4_NoRefund": [
+        {
+          "line1": "MAN: Well, I don't",
+          "line2": "give refunds!"
+        }
+      ],
+      "4_NoMoney": [
+        {
+          "line1": "You'll need more",
+          "line2": "money than that!"
+        }
+      ],
+      "4_SaidNo": [
+        {
+          "line1": "No? I'm only",
+          "line2": "doing this as a"
+        },
+        {
+          "line1": "favor to you!",
+          "line2": ""
+        }
+      ],
+      "5": [
+        {
+          "line1": "",
+          "line2": ""
+        }
+      ],
+      "6": [
+        {
+          "line1": "[Cable Club script]",
+          "line2": ""
+        }
+      ]
+    },
+    "sign": {}
+  },
+  "wild": null
+}

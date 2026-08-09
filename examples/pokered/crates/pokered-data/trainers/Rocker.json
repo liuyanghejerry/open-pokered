@@ -1,0 +1,35 @@
+{
+  "$schema": "../schemas/trainer.schema.json",
+  "class": "Rocker",
+  "constName": "ROCKER",
+  "parties": [
+    {
+      "pokemon": [
+        {
+          "level": 20,
+          "species": "Voltorb"
+        },
+        {
+          "level": 20,
+          "species": "Magnemite"
+        },
+        {
+          "level": 20,
+          "species": "Voltorb"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 29,
+          "species": "Voltorb"
+        },
+        {
+          "level": 29,
+          "species": "Electrode"
+        }
+      ]
+    }
+  ]
+}

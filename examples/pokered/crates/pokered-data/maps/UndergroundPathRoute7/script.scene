@@ -1,0 +1,17 @@
+// UndergroundPathRoute7 — translated from the original disassembly
+// (scripts/UndergroundPathRoute7.asm, text/UndergroundPathRoute7.asm) to the
+// real Game DSL API surface. This is the Route 7 entrance to the east-west
+// Underground Path: a single NPC (a middle-aged man) with one line of dialogue.
+// The original script only sets wLastMap = ROUTE_7 on entry (warp-return
+// bookkeeping with no player-facing effect and no DSL API), so there is no
+// @load block.
+
+game_scene UndergroundPathRoute7 {
+  // ── Middle-aged man (npc 1) ────────────────────────────────────────────
+  @storyline("talkMiddleAgedMan") {
+    @trigger(map = "UndergroundPathRoute7", npc = 1)
+    @speaker("") {
+      @t("I heard a sleepy POKeMON\nappeared near CELADON CITY.", "听说彩虹市附近出现了一只睡着\n的宝可梦。")
+    }
+  }
+}

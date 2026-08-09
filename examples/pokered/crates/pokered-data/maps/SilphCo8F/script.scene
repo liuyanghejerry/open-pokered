@@ -1,0 +1,96 @@
+// SilphCo8F — translated from the original disassembly (scripts/SilphCo8F.asm,
+// text/SilphCo8F.asm) to the real Game DSL API surface. One talk NPC (a freed
+// Silph worker) plus three sight-engaged Team Rocket / Scientist trainers whose
+// .scene handlers are dialogue only (the runtime drives the actual battles).
+//
+// On-enter gate logic (SilphCo8FGateCallbackScript) + Card-Key door tile swap,
+// now wired via replaceTileBlock:
+//   - Door block at X=3, Y=4 (asm: .GateCoordinates dbmapcoord 3,4; the
+//     re-close uses lb bc, 4, 3 → Y=4, X=3 → replaceTileBlock(3, 4, ...)).
+//   - CLOSED block id $5f = 95 decimal (gate callback forces it closed on entry
+//     when EVENT_SILPH_CO_8_UNLOCKED_DOOR is NOT set).
+//   - OPEN block id $e = 14 decimal (engine/events/card_key.asm .notSilphCo11F:
+//     ld a, $e → wNewTileBlockID when the CARD_KEY is used in front of the door).
+//   - Gating flag: EVENT_SILPH_CO_8_UNLOCKED_DOOR.
+//   The original solve is the shared Silph card-key door interaction
+//   (hUnlockedSilphCoDoors / wCardKeyDoorY matched against this floor's door
+//   coordinate, set when the player uses the CARD_KEY in front of the door
+//   tile). That item-in-front check has no DSL primitive, so it is approximated
+//   faithfully: a coords trigger on the door tiles gated by hasItem("CARD_KEY")
+//   sets EVENT_SILPH_CO_8_UNLOCKED_DOOR and opens the door (block 14)
+//   immediately, playing SFX_GO_INSIDE as the asm does.
+
+game_scene SilphCo8F {
+  // ── On-enter gate callback (SilphCo8FGateCallbackScript) ────────────────
+  // Mirror the asm: if the door is unlocked, leave/re-apply the OPEN block (14);
+  // otherwise force the CLOSED block (95) at (3,4) so the gate is shut again.
+  @load {
+    @if (getFlag("EVENT_SILPH_CO_8_UNLOCKED_DOOR")) {
+      replaceTileBlock(3, 4, 14)
+    } @else {
+      replaceTileBlock(3, 4, 95)
+    }
+  }
+
+  // ── Card-Key door (door block (3,4)) ─────────────────────────────────────
+  // Original: using the CARD_KEY in front of this door tile writes
+  // wCardKeyDoorX/Y, the gate callback sets EVENT_SILPH_CO_8_UNLOCKED_DOOR, and
+  // the door block is swapped to the OPEN id (14). The "card key used in front
+  // of door" check has no DSL primitive, so it is approximated: standing on the
+  // door tiles with the Card Key opens it. Door tiles = block (3,4) → tiles
+  // x∈{6,7}, y∈{8,9}.
+  @storyline("cardKeyDoor") {
+    @trigger(map = "SilphCo8F", name = "cardKeyDoor1")
+    @if (!getFlag("EVENT_SILPH_CO_8_UNLOCKED_DOOR")) {
+      @if (hasItem("CARD_KEY")) {
+        @speaker("") { @t("Bingo!", "中了！") }
+        @speaker("") { @t("The CARD KEY opened the\ndoor!", "磁卡钥匙打开了门！") }
+        setFlag("EVENT_SILPH_CO_8_UNLOCKED_DOOR")
+        replaceTileBlock(3, 4, 14)
+        playSound("SFX_GO_INSIDE")
+      } @else {
+        @speaker("") { @t("Darn! It needs a CARD KEY!", "可恶！需要磁卡钥匙！") }
+      }
+    }
+  }
+
+  // ── Silph Worker (npc 1) — talk NPC, branches on Giovanni beaten ─────────
+  @storyline("talkSilphWorkerM") {
+    @trigger(map = "SilphCo8F", npc = 1)
+    @if (getFlag("EVENT_BEAT_SILPH_CO_GIOVANNI")) {
+      @speaker("") { @t("Thanks for saving us!", "谢谢你救了我们！") }
+    } @else {
+      @speaker("") { @t("I wonder if SILPH is\nfinished...", "不知道西尔佛公司是不是完\n了……") }
+    }
+  }
+
+  // ── Rocket #1 (npc 2) — sight-engaged trainer; dialogue only ─────────────
+  @storyline("talkRocket1") {
+    @trigger(map = "SilphCo8F", npc = 2)
+    @if (getFlag("EVENT_BEAT_SILPH_CO_8F_TRAINER_0")) {
+      @speaker("") { @t("If you don't turn back, I'll\ncall for backup!", "你再不回头，我就要呼叫增援\n了！") }
+    } @else {
+      @speaker("") { @t("That's as far as you'll go!", "你就到此为止了！") }
+    }
+  }
+
+  // ── Scientist (npc 3) — sight-engaged trainer; dialogue only ─────────────
+  @storyline("talkScientist") {
+    @trigger(map = "SilphCo8F", npc = 3)
+    @if (getFlag("EVENT_BEAT_SILPH_CO_8F_TRAINER_1")) {
+      @speaker("") { @t("So, what do you think of\nSILPH BUILDING's maze?", "你觉得西尔佛公司的迷宫怎么\n样？") }
+    } @else {
+      @speaker("") { @t("You're causing us problems!", "你给我们添麻烦了！") }
+    }
+  }
+
+  // ── Rocket #2 (npc 4) — sight-engaged trainer; dialogue only ─────────────
+  @storyline("talkRocket2") {
+    @trigger(map = "SilphCo8F", npc = 4)
+    @if (getFlag("EVENT_BEAT_SILPH_CO_8F_TRAINER_2")) {
+      @speaker("") { @t("I'll leave you up to my\nbrothers!", "我会把你交给我的兄弟们！") }
+    } @else {
+      @speaker("") { @t("I am one of the 4 ROCKET\nBROTHERS!", "我是火箭队四兄弟中的一员！") }
+    }
+  }
+}

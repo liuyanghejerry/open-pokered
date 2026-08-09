@@ -1,0 +1,169 @@
+// RocketHideoutB4F — translated from the original disassembly
+// (scripts/RocketHideoutB4F.asm, text/RocketHideoutB4F.asm) to the real Game DSL
+// API surface.
+//
+// Content types:
+//  - Giovanni (npc 1): talk-driven scripted boss battle. isTrainer=false in
+//    map.json so the script owns the battle->reward flow. On victory we set
+//    EVENT_BEAT_ROCKET_HIDEOUT_GIOVANNI, hide Giovanni, and reveal the SILPH
+//    SCOPE PokeBall (npc 8, originally TOGGLE ..._ITEM_4 / ShowObject).
+//  - Rocket grunts (npc 2-4): sight-engaged trainers; handlers are dialogue
+//    only (the runtime drives the battle). Beating Rocket3 reveals the dropped
+//    LIFT KEY PokeBall (npc 9, originally TOGGLE ..._ITEM_5 / ShowObject).
+//  - PokeBalls (npc 5-9): ground items (HP_UP, TM_02/RAZOR WIND, IRON,
+//    SILPH SCOPE, LIFT KEY).
+
+game_scene RocketHideoutB4F {
+  // ── Giovanni (npc 1) — scripted boss battle ─────────────────────────────
+  @storyline("talkGiovanni") {
+    @trigger(map = "RocketHideoutB4F", npc = 1, toggle = "ROCKET_HIDEOUT_B4F_OBJ_1")
+    @if (getFlag("EVENT_BEAT_ROCKET_HIDEOUT_GIOVANNI")) {
+      @speaker("") {
+        @t("I see that you raise POKeMON\nwith utmost care.\n\nA child like you would never\nunderstand what I hope to\nachieve.\n\nI shall step aside this\ntime!\n\nI hope we meet again...", "我明白了，你对宝可梦如此用\n心。\n\n像你这样的孩子永远不会明白我\n想要实现的目标。\n\n这次我就让开一步！\n\n希望我们还会再见……")
+      }
+    } @else {
+      @speaker("") {
+        @t("So! I must say, I am\nimpressed you got here!", "哼！我得说，你能来到这里真让\n我佩服！")
+      }
+      result = startBattle("OPP_GIOVANNI1")
+      @if (result == "win") {
+        @speaker("") {
+          @t("WHAT! This cannot be!", "什么！这不可能！")
+        }
+        setFlag("EVENT_BEAT_ROCKET_HIDEOUT_GIOVANNI")
+        @speaker("") {
+          @t("I see that you raise POKeMON\nwith utmost care.\n\nA child like you would never\nunderstand what I hope to\nachieve.\n\nI shall step aside this\ntime!\n\nI hope we meet again...", "我明白了，你对宝可梦如此用\n心。\n\n像你这样的孩子永远不会明白我\n想要实现的目标。\n\n这次我就让开一步！\n\n希望我们还会再见……")
+        }
+        // Giovanni flees; the SILPH SCOPE PokeBall (npc 8) appears in his spot.
+        hideObjectByName("ROCKET_HIDEOUT_B4F_OBJ_1")
+        showObjectByName("ROCKET_HIDEOUT_B4F_OBJ_8")
+      }
+    }
+  }
+
+  // ── Rocket grunt (npc 2) — sight-engaged; dialogue only ─────────────────
+  @storyline("talkRocket") {
+    @trigger(map = "RocketHideoutB4F", npc = 2)
+    @if (getFlag("EVENT_BEAT_ROCKET_HIDEOUT_4_TRAINER_0")) {
+      @speaker("") {
+        @t("Do you have something\nagainst TEAM ROCKET?", "你对火箭队有什么不满吗？")
+      }
+    } @else {
+      @speaker("") {
+        @t("I know you! You ruined our\nplans at MT.MOON!", "我认识你！你破坏了我们在月见\n山的计划！")
+      }
+    }
+  }
+
+  // ── Rocket grunt (npc 3) — sight-engaged; dialogue only ─────────────────
+  @storyline("talkRocket1") {
+    @trigger(map = "RocketHideoutB4F", npc = 3)
+    @if (getFlag("EVENT_BEAT_ROCKET_HIDEOUT_4_TRAINER_1")) {
+      @speaker("") {
+        @t("BOSS! I'm sorry I failed\nyou!", "老大！对不起，我让你失望了！")
+      }
+    } @else {
+      @speaker("") {
+        @t("How can you not see the\nbeauty of our evil?", "你怎么就看不到我们邪恶的美\n呢？")
+      }
+    }
+  }
+
+  // ── Rocket grunt (npc 4) — sight-engaged; dialogue only. Beating him
+  //    reveals the dropped LIFT KEY (npc 9). ───────────────────────────────
+  @storyline("talkRocket2") {
+    @trigger(map = "RocketHideoutB4F", npc = 4)
+    @if (getFlag("EVENT_BEAT_ROCKET_HIDEOUT_4_TRAINER_2")) {
+      @speaker("") {
+        @t("Oh no! I dropped the LIFT\nKEY!", "糟糕！我把电梯钥匙弄丢了！")
+      }
+      @if (!getFlag("EVENT_ROCKET_DROPPED_LIFT_KEY")) {
+        setFlag("EVENT_ROCKET_DROPPED_LIFT_KEY")
+        showObjectByName("ROCKET_HIDEOUT_B4F_OBJ_9")
+      }
+    } @else {
+      @speaker("") {
+        @t("The elevator doesn't work?\nWho has the LIFT KEY?", "电梯不工作？谁拿着电梯钥匙？")
+      }
+    }
+  }
+
+  // ── PokeBall ground item (npc 5) — HP_UP ────────────────────────────────
+  @storyline("talkPokeBall") {
+    @trigger(map = "RocketHideoutB4F", npc = 5, toggle = "ROCKET_HIDEOUT_B4F_OBJ_5")
+    given = giveItem("HP_UP", 1)
+    @if (given) {
+      @speaker("") { @t("<PLAYER> found HP_UP!", "<PLAYER>找到了体力增强剂！") }
+    } @else {
+      @speaker("") { @t("You have too much stuff\nalready!", "你带的东西太多了！") }
+    }
+  }
+
+  // ── PokeBall ground item (npc 6) — TM_02 (RAZOR WIND) ────────────────────
+  @storyline("talkPokeBall1") {
+    @trigger(map = "RocketHideoutB4F", npc = 6, toggle = "ROCKET_HIDEOUT_B4F_OBJ_6")
+    given = giveItem("TM_02", 1)
+    @if (given) {
+      @speaker("") { @t("<PLAYER> found TM_02!", "<PLAYER>找到了 TM_02！") }
+    } @else {
+      @speaker("") { @t("You have too much stuff\nalready!", "你带的东西太多了！") }
+    }
+  }
+
+  // ── PokeBall ground item (npc 7) — IRON ──────────────────────────────────
+  @storyline("talkPokeBall2") {
+    @trigger(map = "RocketHideoutB4F", npc = 7, toggle = "ROCKET_HIDEOUT_B4F_OBJ_7")
+    given = giveItem("IRON", 1)
+    @if (given) {
+      @speaker("") { @t("<PLAYER> found IRON!", "<PLAYER>找到了防御增强剂！") }
+    } @else {
+      @speaker("") { @t("You have too much stuff\nalready!", "你带的东西太多了！") }
+    }
+  }
+
+  // ── PokeBall ground item (npc 8) — SILPH SCOPE (hidden until Giovanni is
+  //    beaten). ──────────────────────────────────────────────────────────
+  @storyline("talkPokeBall3") {
+    @trigger(map = "RocketHideoutB4F", npc = 8, toggle = "ROCKET_HIDEOUT_B4F_OBJ_8", hidden = true)
+    given = giveItem("SILPH_SCOPE", 1)
+    @if (given) {
+      @speaker("") { @t("<PLAYER> found SILPH SCOPE!", "<PLAYER>找到了西尔佛透视镜！") }
+    } @else {
+      @speaker("") { @t("You have too much stuff\nalready!", "你带的东西太多了！") }
+    }
+  }
+
+  // ── PokeBall ground item (npc 9) — LIFT KEY (hidden until Rocket3 drops
+  //    it). ────────────────────────────────────────────────────────────────
+  @storyline("talkPokeBall4") {
+    @trigger(map = "RocketHideoutB4F", npc = 9, toggle = "ROCKET_HIDEOUT_B4F_OBJ_9", hidden = true)
+    given = giveItem("LIFT_KEY", 1)
+    @if (given) {
+      @speaker("") { @t("<PLAYER> found LIFT KEY!", "<PLAYER>找到了电梯钥匙！") }
+    } @else {
+      @speaker("") { @t("You have too much stuff\nalready!", "你带的东西太多了！") }
+    }
+  }
+
+  // ── Door callback (RocketHideoutB4FDoorCallbackScript) ───────────────────
+  // The original re-runs this on every map load. It opens the locked door once
+  // Rocket grunts 0 & 1 are beaten: ReplaceTileBlock at asm `lb bc, 5, 12`
+  // (Y=5, X=12 -> replaceTileBlock(12, 5, ...)) swapping the door block ($2d=45,
+  // already in map.blk) for the floor block ($e=14). On the load that first sees
+  // both trainers beaten it plays SFX_GO_INSIDE and latches
+  // EVENT_ROCKET_HIDEOUT_4_DOOR_UNLOCKED. The door never re-closes, so we only
+  // ever draw the open (floor) block.
+  @load {
+    @if (getFlag("EVENT_ROCKET_HIDEOUT_4_DOOR_UNLOCKED")) {
+      // Already solved on a prior visit -> keep the door open.
+      replaceTileBlock(12, 5, 14)
+    } @else {
+      @if (getFlag("EVENT_BEAT_ROCKET_HIDEOUT_4_TRAINER_0") && getFlag("EVENT_BEAT_ROCKET_HIDEOUT_4_TRAINER_1")) {
+        // First load after both grunts are beaten -> unlock now.
+        playSound("SFX_GO_INSIDE")
+        setFlag("EVENT_ROCKET_HIDEOUT_4_DOOR_UNLOCKED")
+        replaceTileBlock(12, 5, 14)
+      }
+    }
+  }
+}

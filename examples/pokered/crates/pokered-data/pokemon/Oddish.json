@@ -1,0 +1,74 @@
+{
+  "$schema": "../schemas/pokemon.schema.json",
+  "species": "Oddish",
+  "baseStats": {
+    "hp": 45,
+    "attack": 50,
+    "defense": 55,
+    "speed": 30,
+    "special": 75
+  },
+  "type1": "Grass",
+  "type2": "Poison",
+  "catchRate": 255,
+  "baseExp": 78,
+  "growthRate": "MediumSlow",
+  "initialMoves": [
+    "Absorb",
+    "None",
+    "None",
+    "None"
+  ],
+  "tmHmFlags": [
+    36,
+    3,
+    56,
+    192,
+    3,
+    8,
+    6
+  ],
+  "pokedex": {
+    "category": "WEED",
+    "heightFeet": 1,
+    "heightInches": 8,
+    "weightDecipounds": 120,
+    "flavorTextPages": [
+      "During the day,\nit keeps its face\nburied in the",
+      "ground. At night,\nit wanders around\nsowing its seeds"
+    ]
+  },
+  "evolutions": [
+    {
+      "method": "level",
+      "species": "Gloom",
+      "level": 21
+    }
+  ],
+  "learnset": [
+    {
+      "level": 15,
+      "moveId": "Poisonpowder"
+    },
+    {
+      "level": 17,
+      "moveId": "StunSpore"
+    },
+    {
+      "level": 19,
+      "moveId": "SleepPowder"
+    },
+    {
+      "level": 24,
+      "moveId": "Acid"
+    },
+    {
+      "level": 33,
+      "moveId": "PetalDance"
+    },
+    {
+      "level": 46,
+      "moveId": "Solarbeam"
+    }
+  ]
+}

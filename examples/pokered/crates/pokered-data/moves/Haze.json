@@ -1,0 +1,9 @@
+{
+  "$schema": "../schemas/move.schema.json",
+  "id": "Haze",
+  "effect": "HazeEffect",
+  "power": 0,
+  "type": "Ice",
+  "accuracy": 100,
+  "pp": 30
+}

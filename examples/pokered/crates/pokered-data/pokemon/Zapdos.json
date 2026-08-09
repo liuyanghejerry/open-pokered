@@ -1,0 +1,56 @@
+{
+  "$schema": "../schemas/pokemon.schema.json",
+  "species": "Zapdos",
+  "baseStats": {
+    "hp": 90,
+    "attack": 90,
+    "defense": 85,
+    "speed": 100,
+    "special": 125
+  },
+  "type1": "Electric",
+  "type2": "Flying",
+  "catchRate": 3,
+  "baseExp": 216,
+  "growthRate": "Slow",
+  "initialMoves": [
+    "Thundershock",
+    "DrillPeck",
+    "None",
+    "None"
+  ],
+  "tmHmFlags": [
+    42,
+    67,
+    136,
+    193,
+    67,
+    28,
+    74
+  ],
+  "pokedex": {
+    "category": "ELECTRIC",
+    "heightFeet": 5,
+    "heightInches": 3,
+    "weightDecipounds": 1160,
+    "flavorTextPages": [
+      "A legendary bird\n#MON that is\nsaid to appear",
+      "from clouds while\ndropping enormous\nlightning bolts"
+    ]
+  },
+  "evolutions": [],
+  "learnset": [
+    {
+      "level": 51,
+      "moveId": "Thunder"
+    },
+    {
+      "level": 55,
+      "moveId": "Agility"
+    },
+    {
+      "level": 60,
+      "moveId": "LightScreen"
+    }
+  ]
+}

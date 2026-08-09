@@ -1,0 +1,44 @@
+{
+  "$schema": "../../schemas/map.schema.json",
+  "id": 118,
+  "name": "HallOfFame",
+  "header": {
+    "tileset": "Gym",
+    "music": "PalletTown",
+    "connectionFlags": 0,
+    "width": 5,
+    "height": 4,
+    "borderBlock": 3
+  },
+  "connections": {},
+  "warps": [
+    {
+      "x": 4,
+      "y": 7,
+      "destMap": "ChampionsRoom",
+      "destWarpId": 2
+    },
+    {
+      "x": 5,
+      "y": 7,
+      "destMap": "ChampionsRoom",
+      "destWarpId": 3
+    }
+  ],
+  "npcs": [
+    {
+      "spriteId": 3,
+      "spriteName": "Oak",
+      "x": 5,
+      "y": 2,
+      "movement": "Stationary",
+      "facing": "Down",
+      "range": 0,
+      "textId": 1,
+      "isTrainer": false
+    }
+  ],
+  "signs": [],
+  "text": {},
+  "wild": null
+}

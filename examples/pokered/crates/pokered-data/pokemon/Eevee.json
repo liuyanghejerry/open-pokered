@@ -1,0 +1,79 @@
+{
+  "$schema": "../schemas/pokemon.schema.json",
+  "species": "Eevee",
+  "baseStats": {
+    "hp": 55,
+    "attack": 55,
+    "defense": 50,
+    "speed": 55,
+    "special": 65
+  },
+  "type1": "Normal",
+  "type2": "Normal",
+  "catchRate": 45,
+  "baseExp": 92,
+  "growthRate": "MediumFast",
+  "initialMoves": [
+    "Tackle",
+    "SandAttack",
+    "None",
+    "None"
+  ],
+  "tmHmFlags": [
+    160,
+    3,
+    8,
+    192,
+    195,
+    8,
+    2
+  ],
+  "pokedex": {
+    "category": "EVOLUTION",
+    "heightFeet": 1,
+    "heightInches": 0,
+    "weightDecipounds": 140,
+    "flavorTextPages": [
+      "Its genetic code\nis irregular.\nIt may mutate if",
+      "it is exposed to\nradiation from\nelement STONEs"
+    ]
+  },
+  "evolutions": [
+    {
+      "method": "item",
+      "species": "Flareon",
+      "item": "FireStone",
+      "minLevel": 1
+    },
+    {
+      "method": "item",
+      "species": "Jolteon",
+      "item": "ThunderStone",
+      "minLevel": 1
+    },
+    {
+      "method": "item",
+      "species": "Vaporeon",
+      "item": "WaterStone",
+      "minLevel": 1
+    }
+  ],
+  "learnset": [
+    {
+      "level": 27,
+      "moveId": "QuickAttack"
+    },
+    {
+      "level": 31,
+      "moveId": "TailWhip"
+    },
+    {
+      "level": 37,
+      "moveId": "Bite"
+    },
+    {
+      "level": 45,
+      "moveId": "TakeDown"
+    }
+  ]
+}

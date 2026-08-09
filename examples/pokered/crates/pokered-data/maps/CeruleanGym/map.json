@@ -1,0 +1,287 @@
+{
+  "$schema": "../../schemas/map.schema.json",
+  "id": 65,
+  "name": "CeruleanGym",
+  "header": {
+    "tileset": "Gym",
+    "music": "Gym",
+    "connectionFlags": 0,
+    "width": 5,
+    "height": 7,
+    "borderBlock": 3
+  },
+  "connections": {},
+  "warps": [
+    {
+      "x": 4,
+      "y": 13,
+      "destWarpId": 3
+    },
+    {
+      "x": 5,
+      "y": 13,
+      "destWarpId": 3
+    }
+  ],
+  "npcs": [
+    {
+      "spriteId": 29,
+      "spriteName": "BrunetteGirl",
+      "x": 4,
+      "y": 2,
+      "movement": "Stationary",
+      "facing": "Down",
+      "range": 0,
+      "textId": 1,
+      "isTrainer": false,
+      "trainerClass": "Misty",
+      "trainerSet": 1
+    },
+    {
+      "spriteId": 6,
+      "spriteName": "CooltrainerF",
+      "x": 2,
+      "y": 3,
+      "movement": "Stationary",
+      "facing": "Right",
+      "range": 0,
+      "textId": 2,
+      "isTrainer": true,
+      "trainerClass": "JrTrainerF",
+      "trainerSet": 1,
+      "endBattleText": "You\noverwhelmed me!"
+    },
+    {
+      "spriteId": 34,
+      "spriteName": "Swimmer",
+      "x": 8,
+      "y": 7,
+      "movement": "Stationary",
+      "facing": "Left",
+      "range": 0,
+      "textId": 3,
+      "isTrainer": true,
+      "trainerClass": "Swimmer",
+      "trainerSet": 1,
+      "endBattleText": "That\ncan't be!"
+    },
+    {
+      "spriteId": 36,
+      "spriteName": "GymGuide",
+      "x": 7,
+      "y": 10,
+      "movement": "Stationary",
+      "facing": "Down",
+      "range": 0,
+      "textId": 4,
+      "isTrainer": false
+    }
+  ],
+  "signs": [],
+  "text": {
+    "npc": {
+      "1": [
+        {
+          "line1": "Hi, you're a new",
+          "line2": "face!"
+        },
+        {
+          "line1": "Trainers who want",
+          "line2": "to turn pro have"
+        },
+        {
+          "line1": "to have a policy",
+          "line2": "about #MON!"
+        },
+        {
+          "line1": "What is your",
+          "line2": "approach when you"
+        },
+        {
+          "line1": "catch #MON?",
+          "line2": ""
+        },
+        {
+          "line1": "My policy is an",
+          "line2": "all-out offensive"
+        },
+        {
+          "line1": "with water-type",
+          "line2": "#MON!"
+        }
+      ],
+      "1_AfterBeat": [
+        {
+          "line1": "TM11 teaches",
+          "line2": "BUBBLEBEAM!"
+        },
+        {
+          "line1": "Use it on an",
+          "line2": "aquatic #MON!"
+        }
+      ],
+      "1_CascadeBadgeInfo": [
+        {
+          "line1": "The CASCADEBADGE",
+          "line2": "makes all #MON"
+        },
+        {
+          "line1": "up to L30 obey!",
+          "line2": ""
+        },
+        {
+          "line1": "That includes",
+          "line2": "even outsiders!"
+        },
+        {
+          "line1": "There's more, you",
+          "line2": "can now use CUT"
+        },
+        {
+          "line1": "any time!",
+          "line2": ""
+        },
+        {
+          "line1": "You can CUT down",
+          "line2": "small bushes to"
+        },
+        {
+          "line1": "open new paths!",
+          "line2": ""
+        },
+        {
+          "line1": "You can also have",
+          "line2": "my favorite TM!"
+        }
+      ],
+      "1_ReceivedTM11": [
+        {
+          "line1": "<PLAYER> received",
+          "line2": "TM11!"
+        }
+      ],
+      "1_TM11NoRoom": [
+        {
+          "line1": "You better make",
+          "line2": "room for this!"
+        }
+      ],
+      "1_ReceivedCascadeBadge": [
+        {
+          "line1": "Wow!",
+          "line2": "You're too much!"
+        },
+        {
+          "line1": "All right!",
+          "line2": ""
+        },
+        {
+          "line1": "You can have the",
+          "line2": "CASCADEBADGE to"
+        },
+        {
+          "line1": "show you beat me!",
+          "line2": ""
+        }
+      ],
+      "2": [
+        {
+          "line1": "I'm more than good",
+          "line2": "enough for you!"
+        },
+        {
+          "line1": "MISTY can wait!",
+          "line2": ""
+        }
+      ],
+      "2_Defeated": [
+        {
+          "line1": "You",
+          "line2": "overwhelmed me!"
+        }
+      ],
+      "2_AfterBattle": [
+        {
+          "line1": "You have to face",
+          "line2": "other trainers to"
+        },
+        {
+          "line1": "find out how good",
+          "line2": "you really are."
+        }
+      ],
+      "3": [
+        {
+          "line1": "Splash!",
+          "line2": ""
+        },
+        {
+          "line1": "I'm first up!",
+          "line2": "Let's do it!"
+        }
+      ],
+      "3_Defeated": [
+        {
+          "line1": "That",
+          "line2": "can't be!"
+        }
+      ],
+      "3_AfterBattle": [
+        {
+          "line1": "MISTY is going to",
+          "line2": "keep improving!"
+        },
+        {
+          "line1": "She won't lose to",
+          "line2": "someone like you!"
+        }
+      ],
+      "4": [
+        {
+          "line1": "Yo! Champ in",
+          "line2": "making!"
+        },
+        {
+          "line1": "Here's my advice!",
+          "line2": ""
+        },
+        {
+          "line1": "The LEADER, MISTY,",
+          "line2": "is a pro who uses"
+        },
+        {
+          "line1": "water #MON!",
+          "line2": ""
+        },
+        {
+          "line1": "You can drain all",
+          "line2": "their water with"
+        },
+        {
+          "line1": "plant #MON!",
+          "line2": ""
+        },
+        {
+          "line1": "Or, zap them with",
+          "line2": "electricity!"
+        }
+      ],
+      "4_AfterBeat": [
+        {
+          "line1": "You beat MISTY!",
+          "line2": "What'd I tell ya?"
+        },
+        {
+          "line1": "You and me kid,",
+          "line2": "we make a pretty"
+        },
+        {
+          "line1": "darn good team!",
+          "line2": ""
+        }
+      ]
+    },
+    "sign": {}
+  },
+  "wild": null
+}

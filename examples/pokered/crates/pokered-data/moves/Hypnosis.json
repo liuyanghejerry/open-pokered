@@ -1,0 +1,9 @@
+{
+  "$schema": "../schemas/move.schema.json",
+  "id": "Hypnosis",
+  "effect": "SleepEffect",
+  "power": 0,
+  "type": "Psychic",
+  "accuracy": 60,
+  "pp": 20
+}

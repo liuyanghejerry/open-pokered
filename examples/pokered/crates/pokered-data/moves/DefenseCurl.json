@@ -1,0 +1,9 @@
+{
+  "$schema": "../schemas/move.schema.json",
+  "id": "DefenseCurl",
+  "effect": "DefenseUp1Effect",
+  "power": 0,
+  "type": "Normal",
+  "accuracy": 100,
+  "pp": 40
+}

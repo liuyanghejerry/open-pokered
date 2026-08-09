@@ -1,0 +1,57 @@
+{
+  "$schema": "../../schemas/script_config.schema.json",
+  "onLoad": "PalletTownOnLoad",
+  "npcs": [
+    {
+      "id": 1,
+      "talk": "talkOak",
+      "toggleId": "PALLET_TOWN_OBJ_1",
+      "scriptId": "PALLETTOWN_OAK",
+      "defaultHidden": true
+    },
+    {
+      "id": 2,
+      "talk": "talkGirl"
+    },
+    {
+      "id": 3,
+      "talk": "talkFisher"
+    }
+  ],
+  "signs": [
+    {
+      "id": 1,
+      "talk": "signOakLab"
+    },
+    {
+      "id": 2,
+      "talk": "signPalletTown"
+    },
+    {
+      "id": 3,
+      "talk": "signPlayersHouse"
+    },
+    {
+      "id": 4,
+      "talk": "signRivalsHouse"
+    }
+  ],
+  "coordEvents": [
+    {
+      "name": "northExit1",
+      "position": [
+        10,
+        1
+      ],
+      "trigger": "coordNorthExit"
+    },
+    {
+      "name": "northExit2",
+      "position": [
+        11,
+        1
+      ],
+      "trigger": "coordNorthExit"
+    }
+  ]
+}

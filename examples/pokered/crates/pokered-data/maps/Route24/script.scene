@@ -1,0 +1,115 @@
+// Route24 (NUGGET BRIDGE) — translated from the original disassembly
+// (scripts/Route24.asm, text/Route24.asm + Route24_2.asm) to the real Game DSL
+// API surface. NPCs 2-7 are the five+one sight-engaged contest trainers (map.json
+// isTrainer = true), so the runtime owns each battle and their .scene handlers are
+// DIALOGUE ONLY (before- vs after-battle, branched on EVENT_BEAT_ROUTE_24_TRAINER_n).
+// NPC 1 is the talk-driven ROCKET reward NPC at the bridge's end: the script owns
+// his "join TEAM ROCKET" battle (map.json isTrainer = false). NPC 8 is the ground
+// item Poke Ball (TM45 THUNDER WAVE).
+
+game_scene Route24 {
+  // ── ROCKET reward NPC at the end of the bridge (npc 1) ───────────────────
+  // Original Route24CooltrainerM1Text: first clear (no EVENT_GOT_NUGGET) awards
+  // the NUGGET, then taunts you into a battle (EngageMapTrainer -> OPP_ROCKET7);
+  // beating him sets EVENT_BEAT_ROUTE24_ROCKET. A full bag defers the prize.
+  @storyline("talkRocket") {
+    @trigger(map = "Route24", npc = 1, toggle = "ROUTE_24_OBJ_1")
+    resetFlag("EVENT_NUGGET_REWARD_AVAILABLE")
+    @if (getFlag("EVENT_GOT_NUGGET")) {
+      @speaker("") {
+        @t("With your ability, you could\nbecome a top leader in TEAM\nROCKET!", "以你的实力，完全可以成为火箭\n队里的顶级干部！")
+      }
+    } @else {
+      @speaker("") {
+        @t("Congratulations! You beat\nour 5 contest trainers!\n\nYou just earned a fabulous\nprize!", "恭喜你！你打败了我们 5 位参\n赛训练家！\n\n你赢得了一份丰厚的奖品！")
+      }
+      given = giveItem("NUGGET", 1)
+      @if (given) {
+        setFlag("EVENT_GOT_NUGGET")
+        @speaker("") { @t("<PLAYER> received a NUGGET!", "<PLAYER>获得了金珠！") }
+        @speaker("") {
+          @t("By the way, would you like\nto join TEAM ROCKET?\n\nWe're a group dedicated to\nevil using POKeMON!\n\nWant to join?\n\nAre you sure?\n\nCome on, join us!\n\nI'm telling you to join!\n\nOK, you need convincing!\n\nI'll make you an offer you\ncan't refuse!", "顺便问一下，你愿意加入火箭队\n吗？\n\n我们是一心作恶利用宝可梦的组\n织！\n\n想加入吗？\n\n你确定吗？\n\n来吧，加入我们！\n\n我告诉你加入吧！\n\n好吧，需要说服你！\n\n我会给你一个无法拒绝的提议！")
+        }
+        result = startBattle("OPP_ROCKET7")
+        @if (result == "win") {
+          setFlag("EVENT_BEAT_ROUTE24_ROCKET")
+          @speaker("") { @t("Arrgh! You are good!", "可恶！你挺厉害！") }
+        }
+      } @else {
+        // Bag full — defer the prize; re-arm the reward for the next walk-in.
+        setFlag("EVENT_NUGGET_REWARD_AVAILABLE")
+        @speaker("") { @t("You don't have any room!", "你没有空位了！") }
+      }
+    }
+  }
+
+  // ── Cooltrainer M (npc 2) — Route24TrainerHeader0, contest trainer No.1 ───
+  @storyline("talkCooltrainerM2") {
+    @trigger(map = "Route24", npc = 2)
+    @if (getFlag("EVENT_BEAT_ROUTE_24_TRAINER_0")) {
+      @speaker("") { @t("I hid because the people on\nthe bridge scared me!", "我躲起来是因为桥上的人们吓到\n我了！") }
+    } @else {
+      @speaker("") { @t("I saw your feat from the\ngrass!", "我在草丛里看到了你的壮举！") }
+    }
+  }
+
+  // ── Cooltrainer M (npc 3) — Route24TrainerHeader1, contest trainer No.5 ───
+  @storyline("talkCooltrainerM3") {
+    @trigger(map = "Route24", npc = 3)
+    @if (getFlag("EVENT_BEAT_ROUTE_24_TRAINER_1")) {
+      @speaker("") { @t("I did my best, I have no\nregrets!", "我尽了全力，没有遗憾！") }
+    } @else {
+      @speaker("") { @t("OK! I'm No. 5! I'll stomp\nyou!", "好！我是 5 号！我要打败你！") }
+    }
+  }
+
+  // ── Cooltrainer F / Lass (npc 4) — Route24TrainerHeader2, No.4 ───────────
+  @storyline("talkCooltrainerF1") {
+    @trigger(map = "Route24", npc = 4)
+    @if (getFlag("EVENT_BEAT_ROUTE_24_TRAINER_2")) {
+      @speaker("") { @t("I did my best, so I've no\nregrets!", "我尽了全力，所以没有遗憾！") }
+    } @else {
+      @speaker("") { @t("I'm No. 4! Getting tired?", "我是 4 号！累了吗？") }
+    }
+  }
+
+  // ── Youngster (npc 5) — Route24TrainerHeader3, contest trainer No.3 ──────
+  @storyline("talkYoungster1") {
+    @trigger(map = "Route24", npc = 5)
+    @if (getFlag("EVENT_BEAT_ROUTE_24_TRAINER_3")) {
+      @speaker("") { @t("I did my best, I have no\nregrets!", "我尽了全力，没有遗憾！") }
+    } @else {
+      @speaker("") { @t("Here's No. 3! I won't be\neasy!", "我是 3 号！我可不好对付！") }
+    }
+  }
+
+  // ── Cooltrainer F / Lass (npc 6) — Route24TrainerHeader4, No.2 ───────────
+  @storyline("talkCooltrainerF2") {
+    @trigger(map = "Route24", npc = 6)
+    @if (getFlag("EVENT_BEAT_ROUTE_24_TRAINER_4")) {
+      @speaker("") { @t("I did my best, I have no\nregrets!", "我尽了全力，没有遗憾！") }
+    } @else {
+      @speaker("") { @t("I'm second! Now it's\nserious!", "我是 2 号！现在要认真了！") }
+    }
+  }
+
+  // ── Youngster / BugCatcher (npc 7) — Route24TrainerHeader5, No.1 ─────────
+  @storyline("talkYoungster2") {
+    @trigger(map = "Route24", npc = 7)
+    @if (getFlag("EVENT_BEAT_ROUTE_24_TRAINER_5")) {
+      @speaker("") { @t("I did my best, I have no\nregrets!", "我尽了全力，没有遗憾！") }
+    } @else {
+      @speaker("") {
+        @t("This is NUGGET BRIDGE! Beat\nus 5 trainers and win a\nfabulous prize!\n\nThink you got what it takes?", "这里是金珠大桥！打败我们 5\n位训练家，就能赢得丰厚的奖\n品！\n\n你觉得你有这个本事吗？")
+      }
+    }
+  }
+
+  // ── Ground item: Poke Ball with TM45 THUNDER WAVE (npc 8) ────────────────
+  @storyline("itemTmThunderWave") {
+    @trigger(map = "Route24", npc = 8, toggle = "ROUTE_24_OBJ_8")
+    giveItem("TM_45", 1)
+    hideObjectByName("ROUTE_24_OBJ_8")
+    @speaker("") { @t("<PLAYER> found TM45!", "<PLAYER>找到了 TM45！") }
+  }
+}

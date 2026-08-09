@@ -1,0 +1,61 @@
+{
+  "$schema": "../../schemas/map.schema.json",
+  "id": 77,
+  "name": "UndergroundPathRoute7",
+  "header": {
+    "tileset": "Gate",
+    "music": "Cities1",
+    "connectionFlags": 0,
+    "width": 4,
+    "height": 4,
+    "borderBlock": 10
+  },
+  "connections": {},
+  "warps": [
+    {
+      "x": 3,
+      "y": 7,
+      "destWarpId": 4
+    },
+    {
+      "x": 4,
+      "y": 7,
+      "destWarpId": 4
+    },
+    {
+      "x": 4,
+      "y": 4,
+      "destMap": "UndergroundPathWestEast",
+      "destWarpId": 0
+    }
+  ],
+  "npcs": [
+    {
+      "spriteId": 10,
+      "spriteName": "MiddleAgedMan",
+      "x": 2,
+      "y": 4,
+      "movement": "Stationary",
+      "facing": "Down",
+      "range": 0,
+      "textId": 1,
+      "isTrainer": false
+    }
+  ],
+  "signs": [],
+  "text": {
+    "npc": {
+      "1": [
+        {
+          "line1": "I heard a sleepy",
+          "line2": "#MON appeared"
+        },
+        {
+          "line1": "near CELADON CITY.",
+          "line2": ""
+        }
+      ]
+    }
+  },
+  "wild": null
+}

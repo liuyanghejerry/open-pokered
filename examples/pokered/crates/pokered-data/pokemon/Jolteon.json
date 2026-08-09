@@ -1,0 +1,76 @@
+{
+  "$schema": "../schemas/pokemon.schema.json",
+  "species": "Jolteon",
+  "baseStats": {
+    "hp": 65,
+    "attack": 65,
+    "defense": 60,
+    "speed": 130,
+    "special": 110
+  },
+  "type1": "Electric",
+  "type2": "Electric",
+  "catchRate": 45,
+  "baseExp": 197,
+  "growthRate": "MediumFast",
+  "initialMoves": [
+    "Tackle",
+    "SandAttack",
+    "QuickAttack",
+    "Thundershock"
+  ],
+  "tmHmFlags": [
+    160,
+    67,
+    136,
+    193,
+    195,
+    24,
+    66
+  ],
+  "pokedex": {
+    "category": "LIGHTNING",
+    "heightFeet": 2,
+    "heightInches": 7,
+    "weightDecipounds": 540,
+    "flavorTextPages": [
+      "It accumulates\nnegative ions in\nthe atmosphere to",
+      "blast out 10000-\nvolt lightning\nbolts"
+    ]
+  },
+  "evolutions": [],
+  "learnset": [
+    {
+      "level": 27,
+      "moveId": "QuickAttack"
+    },
+    {
+      "level": 31,
+      "moveId": "Thundershock"
+    },
+    {
+      "level": 37,
+      "moveId": "TailWhip"
+    },
+    {
+      "level": 40,
+      "moveId": "ThunderWave"
+    },
+    {
+      "level": 42,
+      "moveId": "DoubleKick"
+    },
+    {
+      "level": 44,
+      "moveId": "Agility"
+    },
+    {
+      "level": 48,
+      "moveId": "PinMissile"
+    },
+    {
+      "level": 54,
+      "moveId": "Thunder"
+    }
+  ]
+}

@@ -1,0 +1,9 @@
+{
+  "$schema": "../schemas/move.schema.json",
+  "id": "Reflect",
+  "effect": "ReflectEffect",
+  "power": 0,
+  "type": "Psychic",
+  "accuracy": 100,
+  "pp": 20
+}

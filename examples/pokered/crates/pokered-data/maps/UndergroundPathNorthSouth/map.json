@@ -1,0 +1,32 @@
+{
+  "$schema": "../../schemas/map.schema.json",
+  "id": 119,
+  "name": "UndergroundPathNorthSouth",
+  "header": {
+    "tileset": "Underground",
+    "music": "Routes1",
+    "connectionFlags": 0,
+    "width": 4,
+    "height": 24,
+    "borderBlock": 1
+  },
+  "connections": {},
+  "warps": [
+    {
+      "x": 5,
+      "y": 4,
+      "destMap": "UndergroundPathRoute5",
+      "destWarpId": 2
+    },
+    {
+      "x": 2,
+      "y": 41,
+      "destMap": "UndergroundPathRoute6",
+      "destWarpId": 2
+    }
+  ],
+  "npcs": [],
+  "signs": [],
+  "text": {},
+  "wild": null
+}

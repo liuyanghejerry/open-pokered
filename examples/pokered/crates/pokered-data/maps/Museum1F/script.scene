@@ -1,0 +1,136 @@
+// Museum1F — translated from the original disassembly (scripts/Museum1F.asm,
+// text/Museum1F.asm) to the real Game DSL API surface. NPC-dialogue map with a
+// money/flag ticket gate (Scientist1), a behind-the-counter AMBER chat, an
+// Old-Amber key-item gift (Scientist2), and flavor NPCs/sign.
+
+game_scene Museum1F {
+  // ── Entrance gate (default on-step script) ─────────────────────────────
+  // Original Museum1FDefaultScript: standing at Y=4, X=9 or X=10 (the lobby
+  // tiles in front of the ticket counter) auto-fires the Scientist1 ticket
+  // dialogue. Once a ticket is bought the original sets the script to NOOP.
+  @storyline("ticketGate") {
+    @trigger(map = "Museum1F", name = "ticketGate1")
+    @if (!getFlag("EVENT_BOUGHT_MUSEUM_TICKET")) {
+      @speaker("") {
+        @t("It's ¥50 for a child's\nticket.\n\nWould you like to come in?", "儿童票是 50日元。\n\n你想进来看看吗？")
+      }
+      @choice {
+        @option(@t("YES", "是")) {
+          @if (hasMoney(50)) {
+            takeMoney(50)
+            setFlag("EVENT_BOUGHT_MUSEUM_TICKET")
+            playSound("SFX_PURCHASE")
+            @speaker("") { @t("Right, ¥50! Thank you!", "好的，50日元！谢谢！") }
+          } @else {
+            @speaker("") { @t("You don't have enough money.", "你的钱不够。") }
+            @speaker("") { @t("Come again!", "欢迎再来！") }
+            movePlayerRelative(["down"])
+          }
+        }
+        @option(@t("NO", "否")) {
+          @speaker("") { @t("Come again!", "欢迎再来！") }
+          movePlayerRelative(["down"])
+        }
+      }
+    }
+  }
+
+  // ── Scientist1 — the ticket clerk at the counter (npc 1) ───────────────
+  // Talking from the front: gate on the ticket. (The original also branches
+  // on player coords for a behind-the-counter chat; that is handled below by
+  // the `behindCounter` coord trigger.)
+  @storyline("talkScientist") {
+    @trigger(map = "Museum1F", npc = 1)
+    @if (getFlag("EVENT_BOUGHT_MUSEUM_TICKET")) {
+      @speaker("") { @t("Take plenty of time to look!", "请慢慢欣赏吧！") }
+    } @else {
+      @speaker("") {
+        @t("It's ¥50 for a child's\nticket.\n\nWould you like to come in?", "儿童票是 50日元。\n\n你想进来看看吗？")
+      }
+      @choice {
+        @option(@t("YES", "是")) {
+          @if (hasMoney(50)) {
+            takeMoney(50)
+            setFlag("EVENT_BOUGHT_MUSEUM_TICKET")
+            playSound("SFX_PURCHASE")
+            @speaker("") { @t("Right, ¥50! Thank you!", "好的，50日元！谢谢！") }
+          } @else {
+            @speaker("") { @t("You don't have enough money.", "你的钱不够。") }
+            @speaker("") { @t("Come again!", "欢迎再来！") }
+            movePlayerRelative(["down"])
+          }
+        }
+        @option(@t("NO", "否")) {
+          @speaker("") { @t("Come again!", "欢迎再来！") }
+          movePlayerRelative(["down"])
+        }
+      }
+    }
+  }
+
+  // ── Behind-the-counter AMBER chat (player on the back tiles) ────────────
+  // Original: talking to Scientist1 while standing at Y=4,X=13 or Y=3,X=12
+  // runs this "you can't sneak in" / "do you know AMBER?" branch. Approximated
+  // with a coord trigger on those back-room tiles.
+  @storyline("behindCounter") {
+    @trigger(map = "Museum1F", name = "behindCounter1")
+    @speaker("") {
+      @t("You can't sneak in the back\nway!\n\nOh, whatever! Do you know\nwhat AMBER is?", "你不能从后门溜进来！\n\n算了，算了！你知道琥珀是什么\n吗？")
+    }
+    @choice {
+      @option(@t("YES", "是")) {
+        @speaker("") {
+          @t("There's a lab somewhere\ntrying to resurrect ancient\nPOKeMON from AMBER.", "有一间实验室正在尝试用琥珀复\n活古代的宝可梦。")
+        }
+      }
+      @option(@t("NO", "否")) {
+        @speaker("") {
+          @t("AMBER is fossil- ized tree\nsap.", "琥珀是树脂的化石。")
+        }
+      }
+    }
+  }
+
+  // ── Gambler (npc 2) ────────────────────────────────────────────────────
+  @storyline("talkGambler") {
+    @trigger(map = "Museum1F", npc = 2)
+    @speaker("") {
+      @t("That is one magnificent\nfossil!", "这真是一块宏伟的化石！")
+    }
+  }
+
+  // ── Scientist2 — gives the OLD AMBER (npc 3) ───────────────────────────
+  @storyline("talkScientist1") {
+    @trigger(map = "Museum1F", npc = 3)
+    @if (getFlag("EVENT_GOT_OLD_AMBER")) {
+      @speaker("") { @t("Ssh! Get the OLD AMBER\nchecked!", "嘘！把古老的琥珀拿去检验！") }
+    } @else {
+      @speaker("") {
+        @t("Ssh! I think that this chunk\nof AMBER contains POKeMON\nDNA!\n\nIt would be great if POKeMON\ncould be resurrected from\nit!\n\nBut, my colleagues just\nignore me!\n\nSo I have a favor to ask!\n\nTake this to a POKeMON LAB\nand get it examined!", "嘘！我觉得这块琥珀里面含有宝\n可梦的DNA！\n\n如果能从里面复活出宝可梦就好\n了！\n\n但是，我的同事们都不理我！\n\n所以我有一个请求！\n\n把这个拿到宝可梦研究所去检验\n吧！")
+      }
+      given = giveItem("OLD_AMBER", 1)
+      @if (given) {
+        setFlag("EVENT_GOT_OLD_AMBER")
+        @speaker("") { @t("<PLAYER> received OLD AMBER!", "<PLAYER>获得了古老的琥珀！") }
+      } @else {
+        @speaker("") { @t("You don't have space for\nthis!", "你的背包没有空间了！") }
+      }
+    }
+  }
+
+  // ── Scientist3 — flavor (npc 4) ────────────────────────────────────────
+  @storyline("talkScientist2") {
+    @trigger(map = "Museum1F", npc = 4)
+    @speaker("") {
+      @t("We are proud of 2 fossils of\nvery rare, prehistoric\nPOKeMON!", "我们为2块极其珍稀的史前宝可\n梦化石而自豪！")
+    }
+  }
+
+  // ── Old Amber display object (npc 5) ───────────────────────────────────
+  @storyline("talkOldAmber") {
+    @trigger(map = "Museum1F", npc = 5, toggle = "MUSEUM_1F_OBJ_5")
+    @speaker("") {
+      @t("The AMBER is clear and gold!", "这块琥珀清澈透亮！")
+    }
+  }
+}

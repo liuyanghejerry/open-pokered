@@ -1,0 +1,9 @@
+{
+  "$schema": "../schemas/move.schema.json",
+  "id": "SeismicToss",
+  "effect": "SpecialDamageEffect",
+  "power": 1,
+  "type": "Fighting",
+  "accuracy": 100,
+  "pp": 20
+}

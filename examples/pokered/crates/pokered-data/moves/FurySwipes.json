@@ -1,0 +1,9 @@
+{
+  "$schema": "../schemas/move.schema.json",
+  "id": "FurySwipes",
+  "effect": "TwoToFiveAttacksEffect",
+  "power": 18,
+  "type": "Normal",
+  "accuracy": 80,
+  "pp": 15
+}

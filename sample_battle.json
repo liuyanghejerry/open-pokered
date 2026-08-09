@@ -1,0 +1,27 @@
+{
+  "battle_type": "Trainer",
+  "player_party": [
+    {
+      "species": "Pikachu",
+      "level": 25,
+      "moves": ["Thunderbolt", "QuickAttack", "ThunderWave", "Slam"]
+    },
+    {
+      "species": "Charmander",
+      "level": 20,
+      "moves": ["Scratch", "Ember", "Leer", "Rage"]
+    }
+  ],
+  "enemy_party": [
+    {
+      "species": "Onix",
+      "level": 14,
+      "moves": ["Tackle", "Screech", "Bide", "RockThrow"]
+    },
+    {
+      "species": "Geodude",
+      "level": 12,
+      "moves": ["Tackle", "Harden", "RockThrow", "None"]
+    }
+  ]
+}

@@ -1,0 +1,7 @@
+{
+  "id": "boulder-badge",
+  "title": { "en": "The First Badge", "zh": "第一枚徽章" },
+  "order": 1,
+  "summary": "Reach Pewter City and win the first Gym Badge.",
+  "beats": ["first-gym"]
+}

@@ -1,0 +1,227 @@
+{
+ "$schema": "../../schemas/map.schema.json",
+ "id": 88,
+ "name": "BillsHouse",
+ "header": {
+  "tileset": "Interior",
+  "music": "Cities2",
+  "connectionFlags": 0,
+  "width": 4,
+  "height": 4,
+  "borderBlock": 13
+ },
+ "connections": {},
+ "warps": [
+  {
+   "x": 2,
+   "y": 7,
+   "destWarpId": 0
+  },
+  {
+   "x": 3,
+   "y": 7,
+   "destWarpId": 0
+  }
+ ],
+ "npcs": [
+  {
+   "spriteId": 5,
+   "spriteName": "Monster",
+   "x": 6,
+   "y": 5,
+   "movement": "Stationary",
+   "facing": "Down",
+   "range": 0,
+   "textId": 1,
+   "isTrainer": false
+  },
+  {
+   "spriteId": 12,
+   "spriteName": "SuperNerd",
+   "x": 4,
+   "y": 4,
+   "movement": "Stationary",
+   "facing": "Down",
+   "range": 0,
+   "textId": 2,
+   "isTrainer": false
+  },
+  {
+   "spriteId": 12,
+   "spriteName": "SuperNerd",
+   "x": 6,
+   "y": 5,
+   "movement": "Stationary",
+   "facing": "Down",
+   "range": 0,
+   "textId": 3,
+   "isTrainer": false
+  }
+ ],
+ "signs": [
+  {
+   "x": 5,
+   "y": 4,
+   "textId": 1
+  },
+  {
+   "x": 1,
+   "y": 4,
+   "textId": 2
+  }
+ ],
+ "text": {
+  "npc": {
+   "1": [
+    {
+     "line1": "Hiya! I'm a",
+     "line2": "#MON..."
+    },
+    {
+     "line1": "...No I'm not!",
+     "line2": ""
+    },
+    {
+     "line1": "Call me BILL!",
+     "line2": "I'm a true blue"
+    },
+    {
+     "line1": "#MANIAC! Hey!",
+     "line2": "What's with that"
+    },
+    {
+     "line1": "skeptical look?",
+     "line2": ""
+    },
+    {
+     "line1": "I'm not joshing",
+     "line2": "you, I screwed up"
+    },
+    {
+     "line1": "an experiment and",
+     "line2": "got combined with"
+    },
+    {
+     "line1": "a #MON!",
+     "line2": ""
+    },
+    {
+     "line1": "So, how about it?",
+     "line2": "Help me out here!"
+    }
+   ],
+   "1_Yes": [
+    {
+     "line1": "When I'm in the",
+     "line2": "TELEPORTER, go to"
+    },
+    {
+     "line1": "my PC and run the",
+     "line2": "Cell Separation"
+    },
+    {
+     "line1": "System!",
+     "line2": ""
+    }
+   ],
+   "1_No": [
+    {
+     "line1": "No!? Come on, you",
+     "line2": "gotta help a guy"
+    },
+    {
+     "line1": "in deep trouble!",
+     "line2": ""
+    },
+    {
+     "line1": "What do you say,",
+     "line2": "chief? Please?"
+    },
+    {
+     "line1": "OK? All right!",
+     "line2": ""
+    }
+   ],
+   "2": [
+    {
+     "line1": "BILL: Yeehah!",
+     "line2": "Thanks, bud! I"
+    },
+    {
+     "line1": "owe you one!",
+     "line2": ""
+    },
+    {
+     "line1": "So, did you come",
+     "line2": "to see my #MON"
+    },
+    {
+     "line1": "collection?",
+     "line2": "You didn't?"
+    },
+    {
+     "line1": "That's a bummer.",
+     "line2": ""
+    },
+    {
+     "line1": "I've got to thank",
+     "line2": "you... Oh here,"
+    },
+    {
+     "line1": "maybe this'll do.",
+     "line2": ""
+    }
+   ],
+   "2_ReceivedSSTicket": [
+    {
+     "line1": "<PLAYER> received",
+     "line2": "an S.S.TICKET!"
+    }
+   ],
+   "2_NoRoom": [
+    {
+     "line1": "You've got too",
+     "line2": "much stuff, bud!"
+    }
+   ],
+   "2_SSTicketInfo": [
+    {
+     "line1": "That cruise ship,",
+     "line2": "S.S.ANNE, is in"
+    },
+    {
+     "line1": "VERMILION CITY.",
+     "line2": "Its passengers"
+    },
+    {
+     "line1": "are all trainers!",
+     "line2": ""
+    },
+    {
+     "line1": "They invited me",
+     "line2": "to their party,"
+    },
+    {
+     "line1": "but I can't stand",
+     "line2": "fancy do's. Why"
+    },
+    {
+     "line1": "don't you go",
+     "line2": "instead of me?"
+    }
+   ],
+   "3": [
+    {
+     "line1": "BILL: Look, bud,",
+     "line2": "just check out"
+    },
+    {
+     "line1": "some of my rare",
+     "line2": "#MON on my PC!"
+    }
+   ]
+  },
+  "sign": {}
+ },
+ "wild": null
+}

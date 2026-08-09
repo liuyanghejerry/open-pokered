@@ -1,0 +1,12 @@
+{
+  "$schema": "../../schemas/script_config.schema.json",
+  "onLoad": "enterMap",
+  "npcs": [
+    {
+      "id": 2,
+      "toggleId": "UNUSED_MAP_F4_OBJ_2"
+    }
+  ],
+  "signs": [],
+  "coordEvents": []
+}

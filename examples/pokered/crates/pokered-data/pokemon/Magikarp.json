@@ -1,0 +1,54 @@
+{
+  "$schema": "../schemas/pokemon.schema.json",
+  "species": "Magikarp",
+  "baseStats": {
+    "hp": 20,
+    "attack": 10,
+    "defense": 55,
+    "speed": 80,
+    "special": 20
+  },
+  "type1": "Water",
+  "type2": "Water",
+  "catchRate": 255,
+  "baseExp": 20,
+  "growthRate": "Slow",
+  "initialMoves": [
+    "Splash",
+    "None",
+    "None",
+    "None"
+  ],
+  "tmHmFlags": [
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0
+  ],
+  "pokedex": {
+    "category": "FISH",
+    "heightFeet": 2,
+    "heightInches": 11,
+    "weightDecipounds": 220,
+    "flavorTextPages": [
+      "In the distant\npast, it was\nsomewhat stronger",
+      "than the horribly\nweak descendants\nthat exist today"
+    ]
+  },
+  "evolutions": [
+    {
+      "method": "level",
+      "species": "Gyarados",
+      "level": 20
+    }
+  ],
+  "learnset": [
+    {
+      "level": 15,
+      "moveId": "Tackle"
+    }
+  ]
+}

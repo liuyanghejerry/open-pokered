@@ -1,0 +1,135 @@
+{
+  "$schema": "../../schemas/map.schema.json",
+  "id": 197,
+  "name": "DiglettsCave",
+  "header": {
+    "tileset": "Cavern",
+    "music": "Dungeon2",
+    "connectionFlags": 0,
+    "width": 20,
+    "height": 18,
+    "borderBlock": 25
+  },
+  "connections": {},
+  "warps": [
+    {
+      "x": 5,
+      "y": 5,
+      "destMap": "DiglettsCaveRoute2",
+      "destWarpId": 2
+    },
+    {
+      "x": 37,
+      "y": 31,
+      "destMap": "DiglettsCaveRoute11",
+      "destWarpId": 2
+    }
+  ],
+  "npcs": [],
+  "signs": [],
+  "text": {},
+  "wild": {
+    "red": {
+      "grass": {
+        "encounterRate": 20,
+        "mons": [
+          {
+            "level": 18,
+            "species": "Diglett"
+          },
+          {
+            "level": 19,
+            "species": "Diglett"
+          },
+          {
+            "level": 17,
+            "species": "Diglett"
+          },
+          {
+            "level": 20,
+            "species": "Diglett"
+          },
+          {
+            "level": 16,
+            "species": "Diglett"
+          },
+          {
+            "level": 15,
+            "species": "Diglett"
+          },
+          {
+            "level": 21,
+            "species": "Diglett"
+          },
+          {
+            "level": 22,
+            "species": "Diglett"
+          },
+          {
+            "level": 29,
+            "species": "Dugtrio"
+          },
+          {
+            "level": 31,
+            "species": "Dugtrio"
+          }
+        ]
+      },
+      "water": {
+        "encounterRate": 0,
+        "mons": []
+      }
+    },
+    "blue": {
+      "grass": {
+        "encounterRate": 20,
+        "mons": [
+          {
+            "level": 18,
+            "species": "Diglett"
+          },
+          {
+            "level": 19,
+            "species": "Diglett"
+          },
+          {
+            "level": 17,
+            "species": "Diglett"
+          },
+          {
+            "level": 20,
+            "species": "Diglett"
+          },
+          {
+            "level": 16,
+            "species": "Diglett"
+          },
+          {
+            "level": 15,
+            "species": "Diglett"
+          },
+          {
+            "level": 21,
+            "species": "Diglett"
+          },
+          {
+            "level": 22,
+            "species": "Diglett"
+          },
+          {
+            "level": 29,
+            "species": "Dugtrio"
+          },
+          {
+            "level": 31,
+            "species": "Dugtrio"
+          }
+        ]
+      },
+      "water": {
+        "encounterRate": 0,
+        "mons": []
+      }
+    }
+  }
+}

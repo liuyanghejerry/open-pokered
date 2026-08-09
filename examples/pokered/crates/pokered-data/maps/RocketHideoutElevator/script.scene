@@ -1,0 +1,36 @@
+// RocketHideoutElevator — translated from the original disassembly
+// (scripts/RocketHideoutElevator.asm, text/RocketHideoutElevator*.asm) to the
+// real Game DSL API surface. The only interactive object is the elevator panel
+// (sign 1): with the LIFT_KEY it opens the floor menu (B1F/B2F/B4F), otherwise
+// it reports the missing key. The floor menu runs through
+// `game.elevatorMenu(floors)` (resolves to the chosen 0-based index; -1 on
+// cancel); warp targets follow the RocketHideoutElevatorWarpMaps table,
+// resolved through each floor's `map.json` warp list (0-based indices — the
+// same convention the engine's `elevator_data` uses):
+//   B1F -> warp 4 (25,19), B2F -> warp 4 (25,19), B4F -> warp 2 (25,15).
+// Each target is the elevator shaft tile on that floor.
+
+game_scene RocketHideoutElevator {
+  // ── Elevator panel (sign 1) ────────────────────────────────────────────
+  @storyline("elevatorPanel") {
+    @trigger(map = "RocketHideoutElevator", sign = 1)
+    @if (hasItem("LIFT_KEY")) {
+      // Original DisplayElevatorFloorMenu (floors B1F/B2F/B4F). Warp targets
+      // follow the original RocketHideoutElevatorWarpMaps table:
+      //   B1F -> warp 4 (25,19), B2F -> warp 4 (25,19), B4F -> warp 2 (25,15).
+      @speaker("") { @t("Which floor do you want? ", "你要去哪一层？") }
+      floor = elevatorMenu(["B1F", "B2F", "B4F"])
+      @if (floor == 0) {
+        warpTo("RocketHideoutB1F", 25, 19)
+      }
+      @if (floor == 1) {
+        warpTo("RocketHideoutB2F", 25, 19)
+      }
+      @if (floor == 2) {
+        warpTo("RocketHideoutB4F", 25, 15)
+      }
+    } @else {
+      @speaker("") { @t("It appears to need a key.", "看起来需要钥匙。") }
+    }
+  }
+}

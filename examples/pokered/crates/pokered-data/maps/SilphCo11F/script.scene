@@ -1,0 +1,110 @@
+// SilphCo11F — translated from the original disassembly (scripts/SilphCo11F.asm,
+// text/SilphCo11F.asm) to the real Game DSL API surface.
+//
+// Content types:
+//  - Silph President (npc 1): talk-driven key-item gate. First talk gives the
+//    MASTER BALL (EVENT_GOT_MASTER_BALL); later talks give the description. The
+//    original tries GiveItem and falls back to a "no room" line if the bag is
+//    full.
+//  - Secretary / Beauty (npc 2): dialogue only (thank-you).
+//  - Giovanni (npc 3): the Silph Co. boss battle. In the original this is a
+//    coord-triggered scripted state machine (player steps onto 6,13 / 7,12,
+//    Giovanni walks down 3 tiles, talks, battles). We translate it to the
+//    talk-driven scripted-boss pattern (map.json isTrainer=false so the script
+//    owns the battle->reward flow), which reproduces the dialogue and the
+//    OPP_GIOVANNI3 battle faithfully within the DSL surface. On victory we set
+//    EVENT_BEAT_SILPH_CO_GIOVANNI and hide Giovanni and the two Rocket guards
+//    (the original's "Team Rocket leaves SILPH" sequence).
+//  - Rocket guards (npc 4, 5): sight-engaged trainers; handlers are dialogue
+//    only (the runtime drives the battle).
+
+game_scene SilphCo11F {
+  // ── Silph President (npc 1) — gives the MASTER BALL ─────────────────────
+  @storyline("talkSilphPresident") {
+    @trigger(map = "SilphCo11F", npc = 1)
+    @if (getFlag("EVENT_GOT_MASTER_BALL")) {
+      @speaker("") {
+        @t("PRESIDENT: You can't buy\nthat anywhere!\n\nIt's our secret prototype\nMASTER BALL!\n\nIt will catch any POKeMON\nwithout fail!\n\nYou should be quiet about\nusing it, though.", "社长：这个东西哪里都买不到！\n\n这是我们秘密开发的试作型大师\n球！\n\n无论什么宝可梦都能抓住！\n\n不过这件事你可要保密不要声\n张！")
+      }
+    } @else {
+      @speaker("") {
+        @t("PRESIDENT: Thank you for\nsaving SILPH!\n\nI will never forget you\nsaved us in our moment of\nperil!\n\nI have to thank you in some\nway!\n\nBecause I am rich, I can\ngive you anything!\n\nHere, maybe this will do!", "社长：谢谢你拯救了西尔佛公\n司！\n\n我永远不会忘记你在我们危难时\n刻救了我们！\n\n我必须要好好谢你！\n\n因为我很有钱，想要什么都给\n你！\n\n来，这个送给你！")
+      }
+      given = giveItem("MASTER_BALL", 1)
+      @if (given) {
+        setFlag("EVENT_GOT_MASTER_BALL")
+        @speaker("") { @t("<PLAYER> got a MASTER BALL!", "<PLAYER>获得了大师球！") }
+      } @else {
+        @speaker("") { @t("You have no room for this.", "你没有空间放这个了！") }
+      }
+    }
+  }
+
+  // ── Secretary / Beauty (npc 2) — dialogue only ──────────────────────────
+  @storyline("talkBeauty") {
+    @trigger(map = "SilphCo11F", npc = 2)
+    @speaker("") {
+      @t("SECRETARY: Thank you for\nrescuing all of us!\n\nWe admire your courage.", "秘书：谢谢你救了我们所有人！\n\n我们很敬佩你的勇气！")
+    }
+  }
+
+  // ── Giovanni (npc 3) — scripted boss battle ─────────────────────────────
+  @storyline("talkGiovanni") {
+    @trigger(map = "SilphCo11F", npc = 3, toggle = "SILPH_CO_11F_OBJ_3")
+    @if (getFlag("EVENT_BEAT_SILPH_CO_GIOVANNI")) {
+      @speaker("") {
+        @t("Arrgh!! I lost again!?", "啊！！我又输了！？")
+      }
+    } @else {
+      @speaker("") {
+        @t("Ah <PLAYER>! So we meet\nagain!\n\nThe PRESIDENT and I are\ndiscussing a vital business\nproposition.\n\nKeep your nose out of\ngrown-up matters...\n\nOr, experience a world of\npain!", "啊，<PLAYER>！我们又见面了！\n\n我和社长正在商讨一个重要的商\n业提案。\n\n大人的事情小孩子不要插手……\n\n否则的话，让你尝尝苦头！")
+      }
+      result = startBattle("OPP_GIOVANNI3")
+      @if (result == "win") {
+        @speaker("") {
+          @t("Arrgh!! I lost again!?", "啊！！我又输了！？")
+        }
+        @speaker("") {
+          @t("Blast it all! You ruined our\nplans for SILPH!\n\nBut, TEAM ROCKET will never\nfall!\n\n<PLAYER>! Never forget that\nall POKeMON exist for TEAM\nROCKET!\n\nI must go, but I shall\nreturn!", "可恶！你毁了我们西尔佛的计\n划！\n\n但是，火箭队永远打不倒！\n\n<PLAYER>！永远不要忘记，所有\n宝可梦都归火箭队所有！\n\n我该走了，还会再回来！")
+        }
+        setFlag("EVENT_BEAT_SILPH_CO_GIOVANNI")
+        // TEAM ROCKET leaves SILPH. The original hides dozens of Rocket grunts
+        // across every Silph floor (cross-map ShowObject/HideObject on the
+        // SAFFRON/SILPH toggle tables); the DSL surface can only touch this
+        // map's objects, so we hide Giovanni and the two guards here. The
+        // EVENT flag is what gates the other floors' grunts on re-entry.
+        hideObjectByName("SILPH_CO_11F_OBJ_3")
+        hideObjectByName("SILPH_CO_11F_OBJ_4")
+        hideObjectByName("SILPH_CO_11F_OBJ_5")
+      }
+    }
+  }
+
+  // ── Rocket guard (npc 4) — sight-engaged; dialogue only ─────────────────
+  @storyline("talkRocket") {
+    @trigger(map = "SilphCo11F", npc = 4, toggle = "SILPH_CO_11F_OBJ_4")
+    @if (getFlag("EVENT_BEAT_SILPH_CO_11F_TRAINER_0")) {
+      @speaker("") {
+        @t("So, you want to see my BOSS?", "你想去见我们老大吗？")
+      }
+    } @else {
+      @speaker("") {
+        @t("Stop right there! Don't you\nmove!", "站住！不许动！")
+      }
+    }
+  }
+
+  // ── Rocket guard (npc 5) — sight-engaged; dialogue only ─────────────────
+  @storyline("talkRocket1") {
+    @trigger(map = "SilphCo11F", npc = 5, toggle = "SILPH_CO_11F_OBJ_5")
+    @if (getFlag("EVENT_BEAT_SILPH_CO_11F_TRAINER_1")) {
+      @speaker("") {
+        @t("Watch your step, my BOSS\nlikes his POKeMON tough!", "小心点，我们老大喜欢强悍的宝\n可梦！")
+      }
+    } @else {
+      @speaker("") {
+        @t("Halt! Do you have an\nappointment with my BOSS?", "站住！你与我们老大有预约吗？")
+      }
+    }
+  }
+}

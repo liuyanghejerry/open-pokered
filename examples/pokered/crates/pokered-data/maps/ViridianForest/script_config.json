@@ -1,0 +1,67 @@
+{
+  "$schema": "../../schemas/script_config.schema.json",
+  "coordEvents": [],
+  "npcs": [
+    {
+      "id": 1,
+      "talk": "talkYoungster1"
+    },
+    {
+      "id": 2,
+      "talk": "talkBugCatcher1"
+    },
+    {
+      "id": 3,
+      "talk": "talkBugCatcher2"
+    },
+    {
+      "id": 4,
+      "talk": "talkBugCatcher3"
+    },
+    {
+      "id": 5,
+      "talk": "itemAntidote",
+      "toggleId": "VIRIDIAN_FOREST_OBJ_5"
+    },
+    {
+      "id": 6,
+      "talk": "itemPotion",
+      "toggleId": "VIRIDIAN_FOREST_OBJ_6"
+    },
+    {
+      "id": 7,
+      "talk": "itemPokeBall",
+      "toggleId": "VIRIDIAN_FOREST_OBJ_7"
+    },
+    {
+      "id": 8,
+      "talk": "talkYoungster2"
+    }
+  ],
+  "signs": [
+    {
+      "id": 1,
+      "talk": "signTrainerTips1"
+    },
+    {
+      "id": 2,
+      "talk": "signUseAntidote"
+    },
+    {
+      "id": 3,
+      "talk": "signTrainerTips2"
+    },
+    {
+      "id": 4,
+      "talk": "signTrainerTips3"
+    },
+    {
+      "id": 5,
+      "talk": "signTrainerTips4"
+    },
+    {
+      "id": 6,
+      "talk": "signLeaving"
+    }
+  ]
+}

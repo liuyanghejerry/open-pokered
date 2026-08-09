@@ -1,0 +1,31 @@
+// CeladonChiefHouse — translated from the original disassembly
+// (scripts/CeladonChiefHouse.asm, text/CeladonChiefHouse.asm) to the real Game
+// DSL API surface. Plain NPC dialogue map: no events, flags, or battles — the
+// original script only enables auto text-box drawing, and each of the three
+// NPCs has a single unconditional text.
+
+game_scene CeladonChiefHouse {
+  // ── Chief (npc 1) ──────────────────────────────────────────────────────
+  @storyline("talkChief") {
+    @trigger(map = "CeladonChiefHouse", npc = 1)
+    @speaker("") {
+      @t("Hehehe! The slots just reel\nin the dough, big time!", "嘿嘿嘿！老虎机赚起钱来真是快\n啊！")
+    }
+  }
+
+  // ── Rocket grunt (npc 2) ───────────────────────────────────────────────
+  @storyline("talkRocket") {
+    @trigger(map = "CeladonChiefHouse", npc = 2)
+    @speaker("") {
+      @t("CHIEF!\n\nWe just shipped 2000 POKeMON\nas slot prizes!", "老大！\n\n我们刚把2000只宝可梦当作老虎\n机奖品运走了！")
+    }
+  }
+
+  // ── Sailor (npc 3) ─────────────────────────────────────────────────────
+  @storyline("talkSailor") {
+    @trigger(map = "CeladonChiefHouse", npc = 3)
+    @speaker("") {
+      @t("Don't touch the poster at\nthe GAME CORNER!\n\nThere's no secret switch\nbehind it!", "别碰游戏厅里的海报！\n\n它后面没有什么秘密开关！")
+    }
+  }
+}

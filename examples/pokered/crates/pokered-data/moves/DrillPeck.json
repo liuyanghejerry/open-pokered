@@ -1,0 +1,9 @@
+{
+  "$schema": "../schemas/move.schema.json",
+  "id": "DrillPeck",
+  "effect": "NoAdditionalEffect",
+  "power": 80,
+  "type": "Flying",
+  "accuracy": 100,
+  "pp": 20
+}

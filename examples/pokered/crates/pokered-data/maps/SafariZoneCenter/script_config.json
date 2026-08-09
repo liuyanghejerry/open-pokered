@@ -1,0 +1,21 @@
+{
+  "$schema": "../../schemas/script_config.schema.json",
+  "coordEvents": [],
+  "npcs": [
+    {
+      "id": 1,
+      "talk": "talkPokeBall",
+      "toggleId": "SAFARI_ZONE_CENTER_OBJ_1"
+    }
+  ],
+  "signs": [
+    {
+      "id": 1,
+      "talk": "restHouseSign"
+    },
+    {
+      "id": 2,
+      "talk": "trainerTipsSign"
+    }
+  ]
+}

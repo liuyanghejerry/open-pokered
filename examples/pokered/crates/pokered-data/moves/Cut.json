@@ -1,0 +1,9 @@
+{
+  "$schema": "../schemas/move.schema.json",
+  "id": "Cut",
+  "effect": "NoAdditionalEffect",
+  "power": 50,
+  "type": "Normal",
+  "accuracy": 95,
+  "pp": 30
+}

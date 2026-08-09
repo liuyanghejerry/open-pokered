@@ -1,0 +1,17 @@
+{
+  "id": "oak",
+  "name": { "en": "Prof. Oak", "zh": "大木博士" },
+  "role": "mentor",
+  "tags": ["pallet-town", "professor"],
+  "appearance": "Elderly researcher with grey hair, a white lab coat, and brown slacks.",
+  "personality": "Warm and encouraging, prone to lecturing, occasionally forgetful.",
+  "backstory": "Kanto's foremost Pokémon researcher; sends new trainers out to fill the Pokédex.",
+  "motivation": "Complete the Pokédex through a new generation of trainers.",
+  "speechStyle": "Formal but kindly; fond of explaining how the world works.",
+  "relationships": [
+    { "to": "rival", "kind": "grandfather-of" }
+  ],
+  "engine": { "npcs": [], "dataRef": null, "spriteAsset": null },
+  "spriteSpec": null,
+  "status": "draft"
+}

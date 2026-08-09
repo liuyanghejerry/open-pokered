@@ -1,0 +1,9 @@
+{
+  "$schema": "../schemas/move.schema.json",
+  "id": "DoubleKick",
+  "effect": "AttackTwiceEffect",
+  "power": 30,
+  "type": "Fighting",
+  "accuracy": 100,
+  "pp": 30
+}

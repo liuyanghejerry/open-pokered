@@ -1,0 +1,74 @@
+{
+  "$schema": "../schemas/pokemon.schema.json",
+  "species": "Magnemite",
+  "baseStats": {
+    "hp": 25,
+    "attack": 35,
+    "defense": 70,
+    "speed": 45,
+    "special": 95
+  },
+  "type1": "Electric",
+  "type2": "Electric",
+  "catchRate": 190,
+  "baseExp": 89,
+  "growthRate": "MediumFast",
+  "initialMoves": [
+    "Tackle",
+    "None",
+    "None",
+    "None"
+  ],
+  "tmHmFlags": [
+    32,
+    3,
+    136,
+    225,
+    67,
+    24,
+    66
+  ],
+  "pokedex": {
+    "category": "MAGNET",
+    "heightFeet": 1,
+    "heightInches": 0,
+    "weightDecipounds": 130,
+    "flavorTextPages": [
+      "Uses anti-gravity\nto stay suspended.\nAppears without",
+      "warning and uses\nTHUNDER WAVE and\nsimilar moves"
+    ]
+  },
+  "evolutions": [
+    {
+      "method": "level",
+      "species": "Magneton",
+      "level": 30
+    }
+  ],
+  "learnset": [
+    {
+      "level": 21,
+      "moveId": "Sonicboom"
+    },
+    {
+      "level": 25,
+      "moveId": "Thundershock"
+    },
+    {
+      "level": 29,
+      "moveId": "Supersonic"
+    },
+    {
+      "level": 35,
+      "moveId": "ThunderWave"
+    },
+    {
+      "level": 41,
+      "moveId": "Swift"
+    },
+    {
+      "level": 47,
+      "moveId": "Screech"
+    }
+  ]
+}

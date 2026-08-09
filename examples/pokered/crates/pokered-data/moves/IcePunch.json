@@ -1,0 +1,9 @@
+{
+  "$schema": "../schemas/move.schema.json",
+  "id": "IcePunch",
+  "effect": "FreezeSideEffect1",
+  "power": 75,
+  "type": "Ice",
+  "accuracy": 100,
+  "pp": 15
+}

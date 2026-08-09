@@ -1,0 +1,74 @@
+{
+  "$schema": "../schemas/pokemon.schema.json",
+  "species": "Goldeen",
+  "baseStats": {
+    "hp": 45,
+    "attack": 67,
+    "defense": 60,
+    "speed": 63,
+    "special": 50
+  },
+  "type1": "Water",
+  "type2": "Water",
+  "catchRate": 225,
+  "baseExp": 111,
+  "growthRate": "MediumFast",
+  "initialMoves": [
+    "Peck",
+    "TailWhip",
+    "None",
+    "None"
+  ],
+  "tmHmFlags": [
+    96,
+    63,
+    8,
+    192,
+    194,
+    8,
+    18
+  ],
+  "pokedex": {
+    "category": "GOLDFISH",
+    "heightFeet": 2,
+    "heightInches": 0,
+    "weightDecipounds": 330,
+    "flavorTextPages": [
+      "Its tail fin\nbillows like an\nelegant ballroom",
+      "dress, giving it\nthe nickname of\nthe Water Queen"
+    ]
+  },
+  "evolutions": [
+    {
+      "method": "level",
+      "species": "Seaking",
+      "level": 33
+    }
+  ],
+  "learnset": [
+    {
+      "level": 19,
+      "moveId": "Supersonic"
+    },
+    {
+      "level": 24,
+      "moveId": "HornAttack"
+    },
+    {
+      "level": 30,
+      "moveId": "FuryAttack"
+    },
+    {
+      "level": 37,
+      "moveId": "Waterfall"
+    },
+    {
+      "level": 45,
+      "moveId": "HornDrill"
+    },
+    {
+      "level": 54,
+      "moveId": "Agility"
+    }
+  ]
+}

@@ -1,0 +1,9 @@
+{
+  "$schema": "../schemas/move.schema.json",
+  "id": "Withdraw",
+  "effect": "DefenseUp1Effect",
+  "power": 0,
+  "type": "Water",
+  "accuracy": 100,
+  "pp": 40
+}

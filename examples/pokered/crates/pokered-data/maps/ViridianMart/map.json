@@ -1,0 +1,115 @@
+{
+  "$schema": "../../schemas/map.schema.json",
+  "id": 42,
+  "name": "ViridianMart",
+  "header": {
+    "tileset": "Mart",
+    "music": "Pokecenter",
+    "connectionFlags": 0,
+    "width": 4,
+    "height": 4,
+    "borderBlock": 0
+  },
+  "connections": {},
+  "warps": [
+    {
+      "x": 3,
+      "y": 7,
+      "destWarpId": 1
+    },
+    {
+      "x": 4,
+      "y": 7,
+      "destWarpId": 1
+    }
+  ],
+  "npcs": [
+    {
+      "spriteId": 38,
+      "spriteName": "Clerk",
+      "x": 0,
+      "y": 5,
+      "movement": "Stationary",
+      "facing": "Right",
+      "range": 0,
+      "textId": 1,
+      "isTrainer": false
+    },
+    {
+      "spriteId": 4,
+      "spriteName": "Youngster",
+      "x": 5,
+      "y": 5,
+      "movement": "Wander",
+      "facing": "Down",
+      "range": 1,
+      "textId": 2,
+      "isTrainer": false
+    },
+    {
+      "spriteId": 7,
+      "spriteName": "CooltrainerM",
+      "x": 3,
+      "y": 3,
+      "movement": "Stationary",
+      "facing": "Down",
+      "range": 0,
+      "textId": 3,
+      "isTrainer": false
+    }
+  ],
+  "signs": [],
+  "text": {
+    "npc": {
+      "1_ParcelNotDelivered": [
+        {
+          "line1": "Okay! Say hi to",
+          "line2": "PROF.OAK for me!"
+        }
+      ],
+      "1_CameFromPalletTown": [
+        {
+          "line1": "Hey! You came from",
+          "line2": "PALLET TOWN?"
+        }
+      ],
+      "1_ParcelQuest": [
+        {
+          "line1": "You know PROF.",
+          "line2": "OAK, right?"
+        },
+        {
+          "line1": "His order came in.",
+          "line2": "Will you take it"
+        },
+        {
+          "line1": "to him?",
+          "line2": ""
+        },
+        {
+          "line1": "<PLAYER> got",
+          "line2": "OAK's PARCEL!"
+        }
+      ],
+      "1_Mart": [
+        {
+          "line1": "[Mart script]",
+          "line2": ""
+        }
+      ],
+      "2": [
+        {
+          "line1": "This shop sells",
+          "line2": "many ANTIDOTEs."
+        }
+      ],
+      "3": [
+        {
+          "line1": "No! POTIONs are",
+          "line2": "all sold out."
+        }
+      ]
+    }
+  },
+  "wild": null
+}

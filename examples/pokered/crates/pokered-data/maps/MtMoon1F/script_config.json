@@ -1,0 +1,70 @@
+{
+  "$schema": "../../schemas/script_config.schema.json",
+  "coordEvents": [],
+  "npcs": [
+    {
+      "id": 1,
+      "talk": "talkHiker"
+    },
+    {
+      "id": 2,
+      "talk": "talkYoungster1"
+    },
+    {
+      "id": 3,
+      "talk": "talkCooltrainerF1"
+    },
+    {
+      "id": 4,
+      "talk": "talkSuperNerd"
+    },
+    {
+      "id": 5,
+      "talk": "talkCooltrainerF2"
+    },
+    {
+      "id": 6,
+      "talk": "talkYoungster2"
+    },
+    {
+      "id": 7,
+      "talk": "talkYoungster3"
+    },
+    {
+      "id": 8,
+      "talk": "itemPotion1",
+      "toggleId": "MT_MOON_1F_OBJ_8"
+    },
+    {
+      "id": 9,
+      "talk": "itemMoonStone",
+      "toggleId": "MT_MOON_1F_OBJ_9"
+    },
+    {
+      "id": 10,
+      "talk": "itemRareCandy",
+      "toggleId": "MT_MOON_1F_OBJ_10"
+    },
+    {
+      "id": 11,
+      "talk": "itemEscapeRope",
+      "toggleId": "MT_MOON_1F_OBJ_11"
+    },
+    {
+      "id": 12,
+      "talk": "itemPotion2",
+      "toggleId": "MT_MOON_1F_OBJ_12"
+    },
+    {
+      "id": 13,
+      "talk": "itemTmWaterGun",
+      "toggleId": "MT_MOON_1F_OBJ_13"
+    }
+  ],
+  "signs": [
+    {
+      "id": 1,
+      "talk": "sign1"
+    }
+  ]
+}

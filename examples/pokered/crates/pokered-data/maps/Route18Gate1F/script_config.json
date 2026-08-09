@@ -1,0 +1,44 @@
+{
+  "$schema": "../../schemas/script_config.schema.json",
+  "coordEvents": [
+    {
+      "name": "guardExcuseMe1",
+      "position": [
+        4,
+        3
+      ],
+      "trigger": "guardExcuseMe"
+    },
+    {
+      "name": "guardExcuseMe2",
+      "position": [
+        4,
+        4
+      ],
+      "trigger": "guardExcuseMe"
+    },
+    {
+      "name": "guardExcuseMe3",
+      "position": [
+        4,
+        5
+      ],
+      "trigger": "guardExcuseMe"
+    },
+    {
+      "name": "guardExcuseMe4",
+      "position": [
+        4,
+        6
+      ],
+      "trigger": "guardExcuseMe"
+    }
+  ],
+  "npcs": [
+    {
+      "id": 1,
+      "talk": "talkGuard"
+    }
+  ],
+  "signs": []
+}

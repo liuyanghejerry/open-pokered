@@ -1,0 +1,12 @@
+// CeladonMansionRoof — translated from the original disassembly
+// (scripts/CeladonMansionRoof.asm, text/CeladonMansionRoof.asm) to the real
+// Game DSL API surface. The original script only calls EnableAutoTextBoxDrawing
+// (no on-enter cutscene); the map has no NPCs/trainers, just one house sign.
+
+game_scene CeladonMansionRoof {
+  // ── House sign (sign 1) ────────────────────────────────────────────────
+  @storyline("houseSign") {
+    @trigger(map = "CeladonMansionRoof", sign = 1)
+    @speaker("") { @t("I KNOW EVERYTHING!", "我什么都知道！") }
+  }
+}

@@ -1,0 +1,38 @@
+{
+  "$schema": "../../schemas/script_config.schema.json",
+  "coordEvents": [],
+  "npcs": [
+    {
+      "id": 1,
+      "talk": "talkCooltrainerF"
+    },
+    {
+      "id": 2,
+      "talk": "talkCooltrainerM"
+    },
+    {
+      "id": 3,
+      "talk": "itemTmSkyAttack",
+      "toggleId": "VICTORY_ROAD_1F_OBJ_3"
+    },
+    {
+      "id": 4,
+      "talk": "itemRareCandy",
+      "toggleId": "VICTORY_ROAD_1F_OBJ_4"
+    },
+    {
+      "id": 5,
+      "talk": "talkBoulder1"
+    },
+    {
+      "id": 6,
+      "talk": "talkBoulder2"
+    },
+    {
+      "id": 7,
+      "talk": "talkBoulder3"
+    }
+  ],
+  "onLoad": "VictoryRoad1FOnLoad",
+  "signs": []
+}

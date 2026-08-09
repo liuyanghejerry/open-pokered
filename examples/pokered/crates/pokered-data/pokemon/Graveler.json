@@ -1,0 +1,74 @@
+{
+  "$schema": "../schemas/pokemon.schema.json",
+  "species": "Graveler",
+  "baseStats": {
+    "hp": 55,
+    "attack": 95,
+    "defense": 115,
+    "speed": 35,
+    "special": 45
+  },
+  "type1": "Rock",
+  "type2": "Ground",
+  "catchRate": 120,
+  "baseExp": 134,
+  "growthRate": "MediumSlow",
+  "initialMoves": [
+    "Tackle",
+    "DefenseCurl",
+    "None",
+    "None"
+  ],
+  "tmHmFlags": [
+    161,
+    3,
+    15,
+    206,
+    46,
+    200,
+    34
+  ],
+  "pokedex": {
+    "category": "ROCK",
+    "heightFeet": 3,
+    "heightInches": 3,
+    "weightDecipounds": 2320,
+    "flavorTextPages": [
+      "Rolls down slopes\nto move. It rolls\nover any obstacle",
+      "without slowing\nor changing its\ndirection"
+    ]
+  },
+  "evolutions": [
+    {
+      "method": "trade",
+      "species": "Golem",
+      "minLevel": 1
+    }
+  ],
+  "learnset": [
+    {
+      "level": 11,
+      "moveId": "DefenseCurl"
+    },
+    {
+      "level": 16,
+      "moveId": "RockThrow"
+    },
+    {
+      "level": 21,
+      "moveId": "Selfdestruct"
+    },
+    {
+      "level": 29,
+      "moveId": "Harden"
+    },
+    {
+      "level": 36,
+      "moveId": "Earthquake"
+    },
+    {
+      "level": 43,
+      "moveId": "Explosion"
+    }
+  ]
+}

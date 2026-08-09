@@ -1,0 +1,9 @@
+{
+  "$schema": "../schemas/move.schema.json",
+  "id": "MegaPunch",
+  "effect": "NoAdditionalEffect",
+  "power": 80,
+  "type": "Normal",
+  "accuracy": 85,
+  "pp": 20
+}

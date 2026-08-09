@@ -1,0 +1,116 @@
+{
+  "$schema": "../../schemas/map.schema.json",
+  "id": 141,
+  "name": "LavenderPokecenter",
+  "header": {
+    "tileset": "Pokecenter",
+    "music": "Pokecenter",
+    "connectionFlags": 0,
+    "width": 7,
+    "height": 4,
+    "borderBlock": 0
+  },
+  "connections": {},
+  "warps": [
+    {
+      "x": 3,
+      "y": 7,
+      "destWarpId": 0
+    },
+    {
+      "x": 4,
+      "y": 7,
+      "destWarpId": 0
+    }
+  ],
+  "npcs": [
+    {
+      "spriteId": 41,
+      "spriteName": "Nurse",
+      "x": 3,
+      "y": 1,
+      "movement": "Stationary",
+      "facing": "Down",
+      "range": 0,
+      "textId": 1,
+      "isTrainer": false
+    },
+    {
+      "spriteId": 16,
+      "spriteName": "Gentleman",
+      "x": 5,
+      "y": 3,
+      "movement": "Stationary",
+      "facing": "Down",
+      "range": 0,
+      "textId": 2,
+      "isTrainer": false
+    },
+    {
+      "spriteId": 8,
+      "spriteName": "LittleGirl",
+      "x": 2,
+      "y": 6,
+      "movement": "Wander",
+      "facing": "Down",
+      "range": 1,
+      "textId": 3,
+      "isTrainer": false
+    },
+    {
+      "spriteId": 42,
+      "spriteName": "LinkReceptionist",
+      "x": 11,
+      "y": 2,
+      "movement": "Stationary",
+      "facing": "Down",
+      "range": 0,
+      "textId": 4,
+      "isTrainer": false
+    }
+  ],
+  "signs": [
+    {
+      "x": 13,
+      "y": 3,
+      "textId": 1
+    }
+  ],
+  "text": {
+    "npc": {
+      "1": [
+        {
+          "line1": "[Pokecenter Nurse",
+          "line2": "script]"
+        }
+      ],
+      "2": [
+        {
+          "line1": "TEAM ROCKET will",
+          "line2": "do anything for"
+        },
+        {
+          "line1": "the sake of gold!",
+          "line2": ""
+        }
+      ],
+      "3": [
+        {
+          "line1": "I saw CUBONE's",
+          "line2": "mother die trying"
+        },
+        {
+          "line1": "to escape from",
+          "line2": "TEAM ROCKET!"
+        }
+      ],
+      "4": [
+        {
+          "line1": "[Cable Club",
+          "line2": "script]"
+        }
+      ]
+    }
+  },
+  "wild": null
+}

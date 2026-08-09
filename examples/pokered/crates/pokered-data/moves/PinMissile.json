@@ -1,0 +1,9 @@
+{
+  "$schema": "../schemas/move.schema.json",
+  "id": "PinMissile",
+  "effect": "TwoToFiveAttacksEffect",
+  "power": 14,
+  "type": "Bug",
+  "accuracy": 85,
+  "pp": 20
+}

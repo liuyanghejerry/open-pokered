@@ -1,0 +1,56 @@
+{
+  "$schema": "../schemas/pokemon.schema.json",
+  "species": "Articuno",
+  "baseStats": {
+    "hp": 90,
+    "attack": 85,
+    "defense": 100,
+    "speed": 85,
+    "special": 125
+  },
+  "type1": "Ice",
+  "type2": "Flying",
+  "catchRate": 3,
+  "baseExp": 215,
+  "growthRate": "Slow",
+  "initialMoves": [
+    "Peck",
+    "IceBeam",
+    "None",
+    "None"
+  ],
+  "tmHmFlags": [
+    42,
+    127,
+    8,
+    192,
+    67,
+    12,
+    10
+  ],
+  "pokedex": {
+    "category": "FREEZE",
+    "heightFeet": 5,
+    "heightInches": 7,
+    "weightDecipounds": 1220,
+    "flavorTextPages": [
+      "A legendary bird\n#MON that is\nsaid to appear to",
+      "doomed people who\nare lost in icy\nmountains"
+    ]
+  },
+  "evolutions": [],
+  "learnset": [
+    {
+      "level": 51,
+      "moveId": "Blizzard"
+    },
+    {
+      "level": 55,
+      "moveId": "Agility"
+    },
+    {
+      "level": 60,
+      "moveId": "Mist"
+    }
+  ]
+}

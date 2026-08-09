@@ -1,0 +1,9 @@
+{
+  "$schema": "../schemas/move.schema.json",
+  "id": "StringShot",
+  "effect": "SpeedDown1Effect",
+  "power": 0,
+  "type": "Bug",
+  "accuracy": 95,
+  "pp": 40
+}

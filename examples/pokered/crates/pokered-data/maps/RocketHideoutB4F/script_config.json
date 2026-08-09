@@ -1,0 +1,52 @@
+{
+  "$schema": "../../schemas/script_config.schema.json",
+  "coordEvents": [],
+  "npcs": [
+    {
+      "id": 1,
+      "talk": "talkGiovanni",
+      "toggleId": "ROCKET_HIDEOUT_B4F_OBJ_1"
+    },
+    {
+      "id": 2,
+      "talk": "talkRocket"
+    },
+    {
+      "id": 3,
+      "talk": "talkRocket1"
+    },
+    {
+      "id": 4,
+      "talk": "talkRocket2"
+    },
+    {
+      "id": 5,
+      "talk": "talkPokeBall",
+      "toggleId": "ROCKET_HIDEOUT_B4F_OBJ_5"
+    },
+    {
+      "id": 6,
+      "talk": "talkPokeBall1",
+      "toggleId": "ROCKET_HIDEOUT_B4F_OBJ_6"
+    },
+    {
+      "id": 7,
+      "talk": "talkPokeBall2",
+      "toggleId": "ROCKET_HIDEOUT_B4F_OBJ_7"
+    },
+    {
+      "defaultHidden": true,
+      "id": 8,
+      "talk": "talkPokeBall3",
+      "toggleId": "ROCKET_HIDEOUT_B4F_OBJ_8"
+    },
+    {
+      "defaultHidden": true,
+      "id": 9,
+      "talk": "talkPokeBall4",
+      "toggleId": "ROCKET_HIDEOUT_B4F_OBJ_9"
+    }
+  ],
+  "onLoad": "RocketHideoutB4FOnLoad",
+  "signs": []
+}

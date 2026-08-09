@@ -1,0 +1,31 @@
+// SafariZoneNorthRestHouse — translated from the original disassembly
+// (scripts/SafariZoneNorthRestHouse.asm, text/SafariZoneNorthRestHouse.asm) to the
+// real Game DSL API surface. A simple rest house: three NPCs with plain dialogue,
+// no flags, trainers, or special mechanics (the original script only enables auto
+// text box drawing).
+
+game_scene SafariZoneNorthRestHouse {
+  // ── Scientist (npc 1) ──────────────────────────────────────────────────
+  @storyline("talkScientist") {
+    @trigger(map = "SafariZoneNorthRestHouse", npc = 1)
+    @speaker("") {
+      @t("You can keep any item you\nfind on the ground here.\n\nBut, you'll run out of time\nif you try for all of them\nat once!", "在这里捡到的任何道具都可以拿\n走。\n\n但是，如果想一次全部拿到手，\n时间会不够！")
+    }
+  }
+
+  // ── Safari Zone Worker (npc 2) ─────────────────────────────────────────
+  @storyline("talkSafariZoneWorker") {
+    @trigger(map = "SafariZoneNorthRestHouse", npc = 2)
+    @speaker("") {
+      @t("Go to the deepest part of\nthe SAFARI ZONE. You will\nwin a prize!", "去狩猎地带最深处的地方。你会\n赢得奖品！")
+    }
+  }
+
+  // ── Gentleman (npc 3) ──────────────────────────────────────────────────
+  @storyline("talkGentleman") {
+    @trigger(map = "SafariZoneNorthRestHouse", npc = 3)
+    @speaker("") {
+      @t("My EEVEE evolved into\nFLAREON!\n\nBut, a friend's EEVEE turned\ninto a VAPOREON! I wonder\nwhy?", "我的伊布进化成火伊布了！\n\n但是，朋友的伊布却变成了水伊\n布！真不知道为什么？")
+    }
+  }
+}

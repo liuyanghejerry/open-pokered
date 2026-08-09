@@ -1,0 +1,76 @@
+// PokemonTower4F — translated from the original disassembly (scripts/PokemonTower4F.asm,
+// text/PokemonTower4F.asm, maps/PokemonTower4F/map.json) to the real Game DSL API.
+// Content: 3 sight-engaged CHANNELER trainers (runtime drives the battle; .scene
+// handlers are dialogue-only, branching on the beaten flag) + 3 ground-item
+// PokeBalls (ELIXER, AWAKENING, HP_UP) via giveItem + a per-item "got" flag.
+
+game_scene PokemonTower4F {
+  // ── Channeler 1 (npc 1) — sight-engaged; dialogue only ──────────────────
+  @storyline("talkChanneler1") {
+    @trigger(map = "PokemonTower4F", npc = 1)
+    @if (getFlag("EVENT_BEAT_POKEMONTOWER_4_TRAINER_0")) {
+      @speaker("") { @t("I must have been dreaming...", "我刚才一定是在做梦……") }
+    } @else {
+      @speaker("") { @t("GHOST! No! Kwaaah!", "幽灵！不！哇啊啊！") }
+    }
+  }
+
+  // ── Channeler 2 (npc 2) — sight-engaged; dialogue only ──────────────────
+  @storyline("talkChanneler2") {
+    @trigger(map = "PokemonTower4F", npc = 2)
+    @if (getFlag("EVENT_BEAT_POKEMONTOWER_4_TRAINER_1")) {
+      @speaker("") { @t("We can't crack the identity\nof the GHOSTs.", "我们无法弄清那些幽灵的真面\n目。") }
+    } @else {
+      @speaker("") { @t("Be cursed with me! Kwaaah!", "和我一起被诅咒吧！哇啊啊！") }
+    }
+  }
+
+  // ── Channeler 3 (npc 3) — sight-engaged; dialogue only ──────────────────
+  @storyline("talkChanneler3") {
+    @trigger(map = "PokemonTower4F", npc = 3)
+    @if (getFlag("EVENT_BEAT_POKEMONTOWER_4_TRAINER_2")) {
+      @speaker("") { @t("May the departed souls of\nPOKeMON rest in peace...", "愿死去的宝可梦的灵魂安息……") }
+    } @else {
+      @speaker("") { @t("Huhuhu... Beat me not!", "呵呵呵……别打我！") }
+    }
+  }
+
+  // ── Ground item: ELIXER (npc 4) ─────────────────────────────────────────
+  @storyline("itemElixer") {
+    @trigger(map = "PokemonTower4F", npc = 4, toggle = "POKEMON_TOWER_4F_OBJ_4")
+    @if (getFlag("EVENT_GOT_ELIXER_POKEMON_TOWER_4F")) {
+      @speaker("") { @t("The item ball is empty.", "精灵球里是空的。") }
+    } @else {
+      giveItem("ELIXER", 1)
+      setFlag("EVENT_GOT_ELIXER_POKEMON_TOWER_4F")
+      hideObject("POKEMON_TOWER_4F_OBJ_4")
+      @speaker("") { @t("<PLAYER> found ELIXER!", "<PLAYER>发现了元气药片！") }
+    }
+  }
+
+  // ── Ground item: AWAKENING (npc 5) ──────────────────────────────────────
+  @storyline("itemAwakening") {
+    @trigger(map = "PokemonTower4F", npc = 5, toggle = "POKEMON_TOWER_4F_OBJ_5")
+    @if (getFlag("EVENT_GOT_AWAKENING_POKEMON_TOWER_4F")) {
+      @speaker("") { @t("The item ball is empty.", "精灵球里是空的。") }
+    } @else {
+      giveItem("AWAKENING", 1)
+      setFlag("EVENT_GOT_AWAKENING_POKEMON_TOWER_4F")
+      hideObject("POKEMON_TOWER_4F_OBJ_5")
+      @speaker("") { @t("<PLAYER> found AWAKENING!", "<PLAYER>发现了清醒药！") }
+    }
+  }
+
+  // ── Ground item: HP UP (npc 6) ──────────────────────────────────────────
+  @storyline("itemHpUp") {
+    @trigger(map = "PokemonTower4F", npc = 6, toggle = "POKEMON_TOWER_4F_OBJ_6")
+    @if (getFlag("EVENT_GOT_HP_UP_POKEMON_TOWER_4F")) {
+      @speaker("") { @t("The item ball is empty.", "精灵球里是空的。") }
+    } @else {
+      giveItem("HP_UP", 1)
+      setFlag("EVENT_GOT_HP_UP_POKEMON_TOWER_4F")
+      hideObject("POKEMON_TOWER_4F_OBJ_6")
+      @speaker("") { @t("<PLAYER> found HP_UP!", "<PLAYER>发现了体力增强剂！") }
+    }
+  }
+}

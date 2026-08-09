@@ -1,0 +1,79 @@
+{
+  "$schema": "../schemas/pokemon.schema.json",
+  "species": "Jigglypuff",
+  "baseStats": {
+    "hp": 115,
+    "attack": 45,
+    "defense": 20,
+    "speed": 20,
+    "special": 25
+  },
+  "type1": "Normal",
+  "type2": "Normal",
+  "catchRate": 170,
+  "baseExp": 76,
+  "growthRate": "Fast",
+  "initialMoves": [
+    "Sing",
+    "None",
+    "None",
+    "None"
+  ],
+  "tmHmFlags": [
+    177,
+    63,
+    175,
+    241,
+    163,
+    56,
+    99
+  ],
+  "pokedex": {
+    "category": "BALLOON",
+    "heightFeet": 1,
+    "heightInches": 8,
+    "weightDecipounds": 120,
+    "flavorTextPages": [
+      "When its huge eyes\nlight up, it sings\na mysteriously",
+      "soothing melody\nthat lulls its\nenemies to sleep"
+    ]
+  },
+  "evolutions": [
+    {
+      "method": "item",
+      "species": "Wigglytuff",
+      "item": "MoonStone",
+      "minLevel": 1
+    }
+  ],
+  "learnset": [
+    {
+      "level": 9,
+      "moveId": "Pound"
+    },
+    {
+      "level": 14,
+      "moveId": "Disable"
+    },
+    {
+      "level": 19,
+      "moveId": "DefenseCurl"
+    },
+    {
+      "level": 24,
+      "moveId": "Doubleslap"
+    },
+    {
+      "level": 29,
+      "moveId": "Rest"
+    },
+    {
+      "level": 34,
+      "moveId": "BodySlam"
+    },
+    {
+      "level": 39,
+      "moveId": "DoubleEdge"
+    }
+  ]
+}

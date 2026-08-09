@@ -1,0 +1,9 @@
+{
+  "$schema": "../schemas/move.schema.json",
+  "id": "Bubblebeam",
+  "effect": "SpeedDownSideEffect",
+  "power": 65,
+  "type": "Water",
+  "accuracy": 100,
+  "pp": 20
+}

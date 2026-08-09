@@ -1,0 +1,68 @@
+{
+  "$schema": "../schemas/pokemon.schema.json",
+  "species": "Jynx",
+  "baseStats": {
+    "hp": 65,
+    "attack": 50,
+    "defense": 35,
+    "speed": 95,
+    "special": 95
+  },
+  "type1": "Ice",
+  "type2": "Psychic",
+  "catchRate": 45,
+  "baseExp": 137,
+  "growthRate": "MediumFast",
+  "initialMoves": [
+    "Pound",
+    "LovelyKiss",
+    "None",
+    "None"
+  ],
+  "tmHmFlags": [
+    177,
+    127,
+    15,
+    240,
+    135,
+    40,
+    2
+  ],
+  "pokedex": {
+    "category": "HUMANSHAPE",
+    "heightFeet": 4,
+    "heightInches": 7,
+    "weightDecipounds": 900,
+    "flavorTextPages": [
+      "It seductively\nwiggles its hips\nas it walks. It",
+      "can cause people\nto dance in\nunison with it"
+    ]
+  },
+  "evolutions": [],
+  "learnset": [
+    {
+      "level": 18,
+      "moveId": "Lick"
+    },
+    {
+      "level": 23,
+      "moveId": "Doubleslap"
+    },
+    {
+      "level": 31,
+      "moveId": "IcePunch"
+    },
+    {
+      "level": 39,
+      "moveId": "BodySlam"
+    },
+    {
+      "level": 47,
+      "moveId": "Thrash"
+    },
+    {
+      "level": 58,
+      "moveId": "Blizzard"
+    }
+  ]
+}

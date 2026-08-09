@@ -1,0 +1,37 @@
+// SaffronPidgeyHouse — translated from the original disassembly
+// (scripts/SaffronPidgeyHouse.asm, text/SaffronPidgeyHouse.asm) to the real
+// Game DSL API surface. Pure NPC-dialogue house: no on-enter logic, no flags.
+// The PIDGEY's text plays its cry via the original text_asm PlayCry hook.
+
+game_scene SaffronPidgeyHouse {
+  // ── Brunette girl (npc 1) ──────────────────────────────────────────────
+  @storyline("talkBrunetteGirl") {
+    @trigger(map = "SaffronPidgeyHouse", npc = 1)
+    @speaker("") {
+      @t("Thank you for writing. I\nhope to see you soon!\n\nHey! Don't look at my\nletter!", "谢谢你写信。希望能尽快见到\n你！\n\n喂！别偷看我的信！")
+    }
+  }
+
+  // ── PIDGEY (npc 2) — plays its cry, like the original text_asm ──────────
+  @storyline("talkPidgey") {
+    @trigger(map = "SaffronPidgeyHouse", npc = 2)
+    @speaker("") { @t("PIDGEY: Kurukkoo!", "波波：Kurukkoo！") }
+    playCry("PIDGEY")
+  }
+
+  // ── Youngster (npc 3) ──────────────────────────────────────────────────
+  @storyline("talkYoungster") {
+    @trigger(map = "SaffronPidgeyHouse", npc = 3)
+    @speaker("") {
+      @t("The COPYCAT is cute! I'm\ngetting her a POKe DOLL!", "模仿少女好可爱！我要送她一个\n皮皮玩偶！")
+    }
+  }
+
+  // ── Paper / letter (npc 4) ─────────────────────────────────────────────
+  @storyline("talkPaper") {
+    @trigger(map = "SaffronPidgeyHouse", npc = 4)
+    @speaker("") {
+      @t("I was given a PP UP as a\ngift.\n\nIt's used for increasing the\nPP of techniques!", "我收到了一份 PP提升剂礼物。\n\n它用来增加招式的 PP值！")
+    }
+  }
+}

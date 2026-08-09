@@ -1,0 +1,1 @@
+{"id":"Nugget","name":"NUGGET","price":10000,"category":"Items","effect":{"type":"None","params":{}},"held_effect":null,"berry":null,"use_outside_battle":false,"use_in_battle":false,"consume":false,"key_item":false,"sellable":true,"description":"","tags":["treasure"]}

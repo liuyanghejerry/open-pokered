@@ -1,0 +1,64 @@
+{
+  "$schema": "../schemas/pokemon.schema.json",
+  "species": "Dragonite",
+  "baseStats": {
+    "hp": 91,
+    "attack": 134,
+    "defense": 95,
+    "speed": 80,
+    "special": 100
+  },
+  "type1": "Dragon",
+  "type2": "Flying",
+  "catchRate": 45,
+  "baseExp": 218,
+  "growthRate": "Slow",
+  "initialMoves": [
+    "Wrap",
+    "Leer",
+    "ThunderWave",
+    "Agility"
+  ],
+  "tmHmFlags": [
+    226,
+    127,
+    200,
+    193,
+    227,
+    24,
+    50
+  ],
+  "pokedex": {
+    "category": "DRAGON",
+    "heightFeet": 7,
+    "heightInches": 3,
+    "weightDecipounds": 4630,
+    "flavorTextPages": [
+      "An extremely\nrarely seen\nmarine #MON.",
+      "Its intelligence\nis said to match\nthat of humans"
+    ]
+  },
+  "evolutions": [],
+  "learnset": [
+    {
+      "level": 10,
+      "moveId": "ThunderWave"
+    },
+    {
+      "level": 20,
+      "moveId": "Agility"
+    },
+    {
+      "level": 35,
+      "moveId": "Slam"
+    },
+    {
+      "level": 45,
+      "moveId": "DragonRage"
+    },
+    {
+      "level": 60,
+      "moveId": "HyperBeam"
+    }
+  ]
+}

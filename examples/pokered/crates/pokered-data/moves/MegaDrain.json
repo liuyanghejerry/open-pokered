@@ -1,0 +1,9 @@
+{
+  "$schema": "../schemas/move.schema.json",
+  "id": "MegaDrain",
+  "effect": "DrainHpEffect",
+  "power": 40,
+  "type": "Grass",
+  "accuracy": 100,
+  "pp": 10
+}

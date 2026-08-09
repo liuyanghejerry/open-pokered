@@ -1,0 +1,18 @@
+{
+  "id": "get-pokedex",
+  "title": { "en": "Receive the Pokédex", "zh": "获得图鉴" },
+  "type": "main",
+  "arc": "kanto-intro",
+  "summary": "Once the parcel is delivered, Oak entrusts the player with a Pokédex.",
+  "giver": "oak",
+  "characters": ["oak", "rival"],
+  "maps": ["OaksLab"],
+  "objectives": [
+    { "id": "o1", "text": { "en": "Accept the Pokédex from Oak", "zh": "从大木处接过图鉴" }, "doneFlag": "EVENT_GOT_POKEDEX" }
+  ],
+  "requires": ["EVENT_OAK_GOT_PARCEL"],
+  "sets": ["EVENT_GOT_POKEDEX"],
+  "rewards": [{ "kind": "item", "id": "POKEDEX" }],
+  "implementedBy": [{ "scene": "OaksLab", "storyline": "talkPokedex" }],
+  "status": "scripted"
+}

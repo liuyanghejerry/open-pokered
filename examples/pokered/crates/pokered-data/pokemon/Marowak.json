@@ -1,0 +1,64 @@
+{
+  "$schema": "../schemas/pokemon.schema.json",
+  "species": "Marowak",
+  "baseStats": {
+    "hp": 60,
+    "attack": 80,
+    "defense": 110,
+    "speed": 45,
+    "special": 50
+  },
+  "type1": "Ground",
+  "type2": "Ground",
+  "catchRate": 75,
+  "baseExp": 124,
+  "growthRate": "MediumFast",
+  "initialMoves": [
+    "BoneClub",
+    "Growl",
+    "Leer",
+    "FocusEnergy"
+  ],
+  "tmHmFlags": [
+    177,
+    127,
+    15,
+    206,
+    162,
+    8,
+    34
+  ],
+  "pokedex": {
+    "category": "BONEKEEPER",
+    "heightFeet": 3,
+    "heightInches": 3,
+    "weightDecipounds": 990,
+    "flavorTextPages": [
+      "The bone it holds\nis its key weapon.\nIt throws the",
+      "bone skillfully\nlike a boomerang\nto KO targets"
+    ]
+  },
+  "evolutions": [],
+  "learnset": [
+    {
+      "level": 25,
+      "moveId": "Leer"
+    },
+    {
+      "level": 33,
+      "moveId": "FocusEnergy"
+    },
+    {
+      "level": 41,
+      "moveId": "Thrash"
+    },
+    {
+      "level": 48,
+      "moveId": "Bonemerang"
+    },
+    {
+      "level": 55,
+      "moveId": "Rage"
+    }
+  ]
+}

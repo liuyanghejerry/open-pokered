@@ -1,0 +1,64 @@
+// VermilionDock — translated from the original disassembly
+// (scripts/VermilionDock.asm; text/VermilionDock.asm has only an unused empty
+// text). This map has NO npcs and NO signs: it is a pure on-enter cutscene map.
+// Two pieces of on-enter logic, both gated on having HM01 (Cut) from the
+// SS Anne captain and arriving via the ship warp (destination warp 1):
+//   1) SS Anne departure cutscene — the ship sails away once, sets
+//      EVENT_SS_ANNE_LEFT and removes the warp back onto the ship.
+//   2) Forced walk-out — the game seizes the joypad and auto-walks the player
+//      north off the dock (EVENT_STARTED_WALKING_OUT_OF_DOCK ->
+//      EVENT_WALKED_OUT_OF_DOCK).
+//
+// Departure choreography (VermilionDockSSAnneLeavesScript, scripts/
+// VermilionDock.asm:33-123 + VermilionDock_EraseSSAnne:182-224):
+//   EVENT_SS_ANNE_LEFT is set FIRST (the plays-once gate), the music swaps
+//   to Surfing, then the cutscene plays: 120-frame pause → SFX_SS_ANNE_HORN
+//   → the view scrolls east 2 tiles per iteration (8 iterations, 128 frames
+//   each; the ship slides left) while a smoke puff is emitted above the
+//   smokestack each iteration and drifts right → the ship's map blocks are
+//   replaced with water, the dock→ship warp is removed (wNumberOfWarps--),
+//   the horn plays again, 120-frame pause. `playShipDeparture()` blocks the
+//   script until the whole animation is done (frame-stepped in
+//   pokered-core's ShipDepartureState; the renderers draw the scroll +
+//   puffs).
+//
+// STUBS:
+//   - The original drives the walk-out with simulated joypad input + wJoyIgnore;
+//     approximated with movePlayer up the dock per the stub policy for
+//     forced-movement scripts.
+
+game_scene VermilionDock {
+  @load {
+    // Only act once the player has HM01 (got from the SS Anne captain), and only
+    // when arriving from the ship. The original gates on wDestinationWarpID == 1
+    // (the ship warp); there is no source-warp API, so EVENT_LEFT_SS_ANNE_VIA_GANGPLANK
+    // makes the whole cutscene one-shot instead — without it, re-entering the dock
+    // from Vermilion City later (at the north (14,0) tile) would wrongly replay
+    // the walk-out.
+    @if (getFlag("EVENT_GOT_HM01") && !getFlag("EVENT_LEFT_SS_ANNE_VIA_GANGPLANK")) {
+      // ── SS Anne departure cutscene (plays exactly once) ─────────────────
+      @if (!getFlag("EVENT_SS_ANNE_LEFT")) {
+        // The original sets the flag first (SetEventForceReuseHL), then swaps
+        // the music, then runs the blocking animation.
+        setFlag("EVENT_SS_ANNE_LEFT")
+        playSound("SFX_STOP_ALL_MUSIC")
+        playMusic("Surfing")
+        playShipDeparture()
+      }
+
+      // ── Forced walk-out off the dock (auto-walk north) ──────────────────
+      @if (!getFlag("EVENT_WALKED_OUT_OF_DOCK")) {
+        setFlag("EVENT_STARTED_WALKING_OUT_OF_DOCK")
+        // Original simulates 3 UP presses (PAD_UP x3) from the ship warp
+        // arrival tile (14,2) to walk the player off the north edge. The third
+        // step would land off-map, so it is unreachable here: stepping onto
+        // the warp tile (14,0) already fires the warp during scripted
+        // movement, so two steps suffice to leave the map.
+        // That fixed 3-step PAD_UP walk is what movePlayer implements below.
+        movePlayer([[14, 1], [14, 0]])
+        setFlag("EVENT_WALKED_OUT_OF_DOCK")
+        setFlag("EVENT_LEFT_SS_ANNE_VIA_GANGPLANK")
+      }
+    }
+  }
+}

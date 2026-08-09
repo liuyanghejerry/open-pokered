@@ -1,0 +1,343 @@
+{
+  "$schema": "../schemas/trainer.schema.json",
+  "class": "JrTrainerF",
+  "constName": "JR_TRAINER_F",
+  "parties": [
+    {
+      "pokemon": [
+        {
+          "level": 19,
+          "species": "Goldeen"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 16,
+          "species": "Rattata"
+        },
+        {
+          "level": 16,
+          "species": "Pikachu"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 16,
+          "species": "Pidgey"
+        },
+        {
+          "level": 16,
+          "species": "Pidgey"
+        },
+        {
+          "level": 16,
+          "species": "Pidgey"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 22,
+          "species": "Bulbasaur"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 18,
+          "species": "Oddish"
+        },
+        {
+          "level": 18,
+          "species": "Bellsprout"
+        },
+        {
+          "level": 18,
+          "species": "Oddish"
+        },
+        {
+          "level": 18,
+          "species": "Bellsprout"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 23,
+          "species": "Meowth"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 20,
+          "species": "Pikachu"
+        },
+        {
+          "level": 20,
+          "species": "Clefairy"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 21,
+          "species": "Pidgey"
+        },
+        {
+          "level": 21,
+          "species": "Pidgeotto"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 21,
+          "species": "Jigglypuff"
+        },
+        {
+          "level": 21,
+          "species": "Pidgey"
+        },
+        {
+          "level": 21,
+          "species": "Meowth"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 22,
+          "species": "Oddish"
+        },
+        {
+          "level": 22,
+          "species": "Bulbasaur"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 24,
+          "species": "Bulbasaur"
+        },
+        {
+          "level": 24,
+          "species": "Ivysaur"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 24,
+          "species": "Pidgey"
+        },
+        {
+          "level": 24,
+          "species": "Meowth"
+        },
+        {
+          "level": 24,
+          "species": "Rattata"
+        },
+        {
+          "level": 24,
+          "species": "Pikachu"
+        },
+        {
+          "level": 24,
+          "species": "Meowth"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 30,
+          "species": "Poliwag"
+        },
+        {
+          "level": 30,
+          "species": "Poliwag"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 27,
+          "species": "Pidgey"
+        },
+        {
+          "level": 27,
+          "species": "Meowth"
+        },
+        {
+          "level": 27,
+          "species": "Pidgey"
+        },
+        {
+          "level": 27,
+          "species": "Pidgeotto"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 28,
+          "species": "Goldeen"
+        },
+        {
+          "level": 28,
+          "species": "Poliwag"
+        },
+        {
+          "level": 28,
+          "species": "Horsea"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 31,
+          "species": "Goldeen"
+        },
+        {
+          "level": 31,
+          "species": "Seaking"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 22,
+          "species": "Bellsprout"
+        },
+        {
+          "level": 22,
+          "species": "Clefairy"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 20,
+          "species": "Meowth"
+        },
+        {
+          "level": 20,
+          "species": "Oddish"
+        },
+        {
+          "level": 20,
+          "species": "Pidgey"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 19,
+          "species": "Pidgey"
+        },
+        {
+          "level": 19,
+          "species": "Rattata"
+        },
+        {
+          "level": 19,
+          "species": "Rattata"
+        },
+        {
+          "level": 19,
+          "species": "Bellsprout"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 28,
+          "species": "Gloom"
+        },
+        {
+          "level": 28,
+          "species": "Oddish"
+        },
+        {
+          "level": 28,
+          "species": "Oddish"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 29,
+          "species": "Pikachu"
+        },
+        {
+          "level": 29,
+          "species": "Raichu"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 33,
+          "species": "Clefairy"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 29,
+          "species": "Bellsprout"
+        },
+        {
+          "level": 29,
+          "species": "Oddish"
+        },
+        {
+          "level": 29,
+          "species": "Tangela"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 30,
+          "species": "Tentacool"
+        },
+        {
+          "level": 30,
+          "species": "Horsea"
+        },
+        {
+          "level": 30,
+          "species": "Seel"
+        }
+      ]
+    }
+  ]
+}

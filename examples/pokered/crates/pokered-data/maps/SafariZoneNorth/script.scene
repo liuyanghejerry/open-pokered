@@ -1,0 +1,62 @@
+// SafariZoneNorth — translated from the original disassembly
+// (scripts/SafariZoneNorth.asm, text/SafariZoneNorth.asm,
+// data/maps/objects/SafariZoneNorth.asm) to the real Game DSL API surface.
+// SafariZoneNorth has no trainers or cutscenes: it is two item-ball ground
+// pickups (PROTEIN, TM40 SKULL BASH — both PickUpItemText in the original)
+// plus five signs (a REST HOUSE sign, an AREA 2 sign, and three TRAINER TIPS).
+// The Safari Zone walking-game mechanics (step counter, balls) are runtime
+// concerns, not script logic, so nothing here stubs them.
+
+game_scene SafariZoneNorth {
+  // ── Ground item: PROTEIN (npc 1, PokeBall at 25,1) ──────────────────────
+  @storyline("itemProtein") {
+    @trigger(map = "SafariZoneNorth", npc = 1, toggle = "SAFARI_ZONE_NORTH_OBJ_1")
+    @if (!getFlag("EVENT_GOT_PROTEIN_FROM_SAFARI_ZONE")) {
+      giveItem("PROTEIN", 1)
+      setFlag("EVENT_GOT_PROTEIN_FROM_SAFARI_ZONE")
+      hideObjectByName("SAFARI_ZONE_NORTH_OBJ_1")
+      @speaker("") { @t("<PLAYER> found PROTEIN!", "<PLAYER>发现了攻击增强剂！") }
+    }
+  }
+
+  // ── Ground item: TM40 SKULL BASH (npc 2, PokeBall at 19,7) ──────────────
+  @storyline("itemTmSkullBash") {
+    @trigger(map = "SafariZoneNorth", npc = 2, toggle = "SAFARI_ZONE_NORTH_OBJ_2")
+    @if (!getFlag("EVENT_GOT_TM40_FROM_SAFARI_ZONE")) {
+      giveItem("TM40", 1)
+      setFlag("EVENT_GOT_TM40_FROM_SAFARI_ZONE")
+      hideObjectByName("SAFARI_ZONE_NORTH_OBJ_2")
+      @speaker("") { @t("<PLAYER> found TM40!", "<PLAYER>发现了 TM40！") }
+    }
+  }
+
+  // ── Sign 1: REST HOUSE sign (36,4) ──────────────────────────────────────
+  @storyline("sign1") {
+    @trigger(map = "SafariZoneNorth", sign = 1)
+    @speaker("") { @t("REST HOUSE", "休息小屋") }
+  }
+
+  // ── Sign 2: TRAINER TIPS — SECRET HOUSE ahead (4,25) ────────────────────
+  @storyline("sign2") {
+    @trigger(map = "SafariZoneNorth", sign = 2)
+    @speaker("") { @t("TRAINER TIPS\n\nThe SECRET HOUSE is still\nahead!", "训练家提示\n\n秘密小屋就在前方！") }
+  }
+
+  // ── Sign 3: AREA 2 sign (13,31) ─────────────────────────────────────────
+  @storyline("sign3") {
+    @trigger(map = "SafariZoneNorth", sign = 3)
+    @speaker("") { @t("AREA 2", "2号区域") }
+  }
+
+  // ── Sign 4: TRAINER TIPS — flushing POKeMON from grass (19,33) ──────────
+  @storyline("sign4") {
+    @trigger(map = "SafariZoneNorth", sign = 4)
+    @speaker("") { @t("TRAINER TIPS\n\nPOKeMON hide in tall grass!\n\nZigzag through grassy areas\nto flush them out.", "训练家提示\n\n宝可梦会藏在高高的草丛中！\n\n在草丛区域曲折前进，把它们赶\n出来。") }
+  }
+
+  // ── Sign 5: TRAINER TIPS — free HM for the SECRET HOUSE (26,28) ─────────
+  @storyline("sign5") {
+    @trigger(map = "SafariZoneNorth", sign = 5)
+    @speaker("") { @t("TRAINER TIPS\n\nWin a free HM for finding\nthe SECRET HOUSE!", "训练家提示\n\n找到秘密小屋，就能免费获得一\n个秘传招式！") }
+  }
+}

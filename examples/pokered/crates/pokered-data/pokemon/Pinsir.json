@@ -1,0 +1,68 @@
+{
+  "$schema": "../schemas/pokemon.schema.json",
+  "species": "Pinsir",
+  "baseStats": {
+    "hp": 65,
+    "attack": 125,
+    "defense": 100,
+    "speed": 85,
+    "special": 55
+  },
+  "type1": "Bug",
+  "type2": "Bug",
+  "catchRate": 45,
+  "baseExp": 200,
+  "growthRate": "Slow",
+  "initialMoves": [
+    "Vicegrip",
+    "None",
+    "None",
+    "None"
+  ],
+  "tmHmFlags": [
+    164,
+    67,
+    13,
+    192,
+    2,
+    8,
+    38
+  ],
+  "pokedex": {
+    "category": "STAGBEETLE",
+    "heightFeet": 4,
+    "heightInches": 11,
+    "weightDecipounds": 1210,
+    "flavorTextPages": [
+      "If it fails to\ncrush the victim\nin its pincers,",
+      "it will swing it\naround and toss\nit hard"
+    ]
+  },
+  "evolutions": [],
+  "learnset": [
+    {
+      "level": 25,
+      "moveId": "SeismicToss"
+    },
+    {
+      "level": 30,
+      "moveId": "Guillotine"
+    },
+    {
+      "level": 36,
+      "moveId": "FocusEnergy"
+    },
+    {
+      "level": 43,
+      "moveId": "Harden"
+    },
+    {
+      "level": 49,
+      "moveId": "Slash"
+    },
+    {
+      "level": 54,
+      "moveId": "SwordsDance"
+    }
+  ]
+}

@@ -1,0 +1,193 @@
+{
+  "$schema": "../../schemas/map.schema.json",
+  "id": 100,
+  "name": "SSAnneKitchen",
+  "header": {
+    "tileset": "Ship",
+    "music": "SSAnne",
+    "connectionFlags": 0,
+    "width": 7,
+    "height": 8,
+    "borderBlock": 12
+  },
+  "connections": {},
+  "warps": [
+    {
+      "x": 6,
+      "y": 0,
+      "destMap": "SSAnne1F",
+      "destWarpId": 10
+    }
+  ],
+  "npcs": [
+    {
+      "spriteId": 20,
+      "spriteName": "Cook",
+      "x": 1,
+      "y": 8,
+      "movement": "Wander",
+      "facing": "Down",
+      "range": 1,
+      "textId": 1,
+      "isTrainer": false
+    },
+    {
+      "spriteId": 20,
+      "spriteName": "Cook",
+      "x": 5,
+      "y": 8,
+      "movement": "Wander",
+      "facing": "Down",
+      "range": 1,
+      "textId": 2,
+      "isTrainer": false
+    },
+    {
+      "spriteId": 20,
+      "spriteName": "Cook",
+      "x": 9,
+      "y": 7,
+      "movement": "Wander",
+      "facing": "Down",
+      "range": 1,
+      "textId": 3,
+      "isTrainer": false
+    },
+    {
+      "spriteId": 20,
+      "spriteName": "Cook",
+      "x": 13,
+      "y": 6,
+      "movement": "Stationary",
+      "facing": "Down",
+      "range": 0,
+      "textId": 4,
+      "isTrainer": false
+    },
+    {
+      "spriteId": 20,
+      "spriteName": "Cook",
+      "x": 13,
+      "y": 8,
+      "movement": "Stationary",
+      "facing": "Down",
+      "range": 0,
+      "textId": 5,
+      "isTrainer": false
+    },
+    {
+      "spriteId": 20,
+      "spriteName": "Cook",
+      "x": 13,
+      "y": 10,
+      "movement": "Stationary",
+      "facing": "Down",
+      "range": 0,
+      "textId": 6,
+      "isTrainer": false
+    },
+    {
+      "spriteId": 20,
+      "spriteName": "Cook",
+      "x": 11,
+      "y": 13,
+      "movement": "Stationary",
+      "facing": "Up",
+      "range": 0,
+      "textId": 7,
+      "isTrainer": false
+    }
+  ],
+  "signs": [],
+  "text": {
+    "npc": {
+      "1": [
+        {
+          "line1": "You, mon petit!",
+          "line2": "We're busy here!"
+        },
+        {
+          "line1": "Out of the way!",
+          "line2": ""
+        }
+      ],
+      "2": [
+        {
+          "line1": "I saw an odd ball",
+          "line2": "in the trash."
+        }
+      ],
+      "3": [
+        {
+          "line1": "I'm so busy I'm",
+          "line2": "getting dizzy!"
+        }
+      ],
+      "4": [
+        {
+          "line1": "Hum-de-hum-de-",
+          "line2": "ho..."
+        },
+        {
+          "line1": "",
+          "line2": ""
+        },
+        {
+          "line1": "I peel spuds",
+          "line2": "every day!"
+        },
+        {
+          "line1": "Hum-hum...",
+          "line2": ""
+        }
+      ],
+      "5": [
+        {
+          "line1": "Did you hear about",
+          "line2": "SNORLAX?"
+        },
+        {
+          "line1": "",
+          "line2": ""
+        },
+        {
+          "line1": "All it does is",
+          "line2": "eat and sleep!"
+        }
+      ],
+      "6": [
+        {
+          "line1": "Snivel...Sniff...",
+          "line2": ""
+        },
+        {
+          "line1": "",
+          "line2": ""
+        },
+        {
+          "line1": "I only get to",
+          "line2": "peel onions..."
+        },
+        {
+          "line1": "Snivel...",
+          "line2": ""
+        }
+      ],
+      "7": [
+        {
+          "line1": "Er-hem! Indeed I",
+          "line2": "am le CHEF!"
+        },
+        {
+          "line1": "",
+          "line2": ""
+        },
+        {
+          "line1": "Le main course is",
+          "line2": "[random dish]"
+        }
+      ]
+    }
+  },
+  "wild": null
+}

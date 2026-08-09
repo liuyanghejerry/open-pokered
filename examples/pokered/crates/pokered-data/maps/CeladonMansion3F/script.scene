@@ -1,0 +1,76 @@
+// CeladonMansion3F — translated from the original disassembly
+// (scripts/CeladonMansion3F.asm, text/CeladonMansion3F.asm) to the real Game DSL
+// API surface. This is the GAME FREAK Development Room: the map script is just
+// EnableAutoTextBoxDrawing, so there is no on-enter logic — only NPC dialogue and
+// signs. The Game Designer (npc 4) branches on Pokedex completion.
+
+game_scene CeladonMansion3F {
+  // ── Programmer (npc 1) ─────────────────────────────────────────────────
+  @storyline("talkBikeShopClerk") {
+    @trigger(map = "CeladonMansion3F", npc = 1)
+    @speaker("") { @t("Me? I'm the programmer!", "我？我是程序员！") }
+  }
+
+  // ── Graphic Artist (npc 2) ─────────────────────────────────────────────
+  @storyline("talkClerk") {
+    @trigger(map = "CeladonMansion3F", npc = 2)
+    @speaker("") { @t("I'm the graphic artist! I\ndrew you!", "我是美术设计师！你是我画的！") }
+  }
+
+  // ── Writer (npc 3) ─────────────────────────────────────────────────────
+  @storyline("talkSuperNerd") {
+    @trigger(map = "CeladonMansion3F", npc = 3)
+    @speaker("") {
+      @t("I wrote the story! Isn't\nERIKA cute?\n\nI like MISTY a lot too!\n\nOh, and SABRINA, I like her!", "剧本是我写的！莉佳是不是很可\n爱？\n\n我也很喜欢小霞！\n\n啊，还有娜姿，我也喜欢她！")
+    }
+  }
+
+  // ── Game Designer (npc 4) — branches on Pokedex completion ─────────────
+  // Original: counts wPokedexOwned; if >= NUM_POKEMON-1 (150 with
+  // NUM_POKEMON = 151 — Mew is discounted) shows the completed-dex
+  // congratulations and displays the diploma.
+  @storyline("talkSilphWorkerM") {
+    @trigger(map = "CeladonMansion3F", npc = 4)
+    @if (getPokedexOwnedCount() >= 150) {
+      @speaker("") {
+        @t("Wow! Excellent! You\ncompleted your POKeDEX!\nCongratulations! ...", "哇！太棒了！你完成了你的图\n鉴！恭喜你！……")
+      }
+      // Original calls DisplayDiploma — the full-screen certificate.
+      showDiploma()
+    } @else {
+      @speaker("") {
+        @t("Is that right?\n\nI'm the game designer!\n\nFilling up your POKeDEX is\ntough, but don't quit!\n\nWhen you finish, come tell\nme!", "是这样吗？\n\n我是游戏设计师！\n\n填满图鉴虽然很难，但不要放\n弃！\n\n完成后，来告诉我吧！")
+      }
+    }
+  }
+
+  // ── PC: game program (sign 1) ──────────────────────────────────────────
+  @storyline("sign1") {
+    @trigger(map = "CeladonMansion3F", sign = 1)
+    @speaker("") {
+      @t("It's the game program!\nMessing with it could bug\nout the game!", "这是游戏程序！乱动的话可能会\n让游戏出故障！")
+    }
+  }
+
+  // ── PC: someone playing a game (sign 2) ────────────────────────────────
+  @storyline("sign2") {
+    @trigger(map = "CeladonMansion3F", sign = 2)
+    @speaker("") {
+      @t("Someone's playing a game\ninstead of working!", "有人在上班时间玩游戏！")
+    }
+  }
+
+  // ── PC: the script (sign 3) ────────────────────────────────────────────
+  @storyline("sign3") {
+    @trigger(map = "CeladonMansion3F", sign = 3)
+    @speaker("") {
+      @t("It's the script! Better not\nlook at the ending!", "这是剧本！最好别偷看结局！")
+    }
+  }
+
+  // ── Development Room sign (sign 4) ─────────────────────────────────────
+  @storyline("sign4") {
+    @trigger(map = "CeladonMansion3F", sign = 4)
+    @speaker("") { @t("GAME FREAK Development Room", "GAME FREAK 开发室") }
+  }
+}

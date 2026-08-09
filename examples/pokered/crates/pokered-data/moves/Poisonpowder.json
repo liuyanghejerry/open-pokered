@@ -1,0 +1,9 @@
+{
+  "$schema": "../schemas/move.schema.json",
+  "id": "Poisonpowder",
+  "effect": "PoisonEffect",
+  "power": 0,
+  "type": "Poison",
+  "accuracy": 75,
+  "pp": 35
+}

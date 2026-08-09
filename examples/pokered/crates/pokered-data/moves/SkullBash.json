@@ -1,0 +1,9 @@
+{
+  "$schema": "../schemas/move.schema.json",
+  "id": "SkullBash",
+  "effect": "ChargeEffect",
+  "power": 100,
+  "type": "Normal",
+  "accuracy": 100,
+  "pp": 15
+}

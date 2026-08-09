@@ -1,0 +1,19 @@
+{
+  "$schema": "../schemas/trainer.schema.json",
+  "class": "Brock",
+  "constName": "BROCK",
+  "parties": [
+    {
+      "pokemon": [
+        {
+          "level": 12,
+          "species": "Geodude"
+        },
+        {
+          "level": 14,
+          "species": "Onix"
+        }
+      ]
+    }
+  ]
+}

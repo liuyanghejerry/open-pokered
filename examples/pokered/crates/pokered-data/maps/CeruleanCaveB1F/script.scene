@@ -1,0 +1,68 @@
+// CeruleanCaveB1F — translated from the original disassembly
+// (scripts/CeruleanCaveB1F.asm, text/CeruleanCaveB1F.asm, shared PickUpItemText)
+// to the real Game DSL API surface.
+//
+// Content type: one static legendary encounter + two ground items. The original
+// script is EnableAutoTextBoxDrawing plus a single sight-range-0 trainer header
+// (MewtwoTrainerHeader, EVENT_BEAT_MEWTWO): talking to MEWTWO plays its cry,
+// shows "Mew!" and starts the static wild Lv70 MEWTWO battle. The two PokeBall
+// objects (ULTRA_BALL, MAX_REVIVE) use the shared PickUpItemText.
+//
+// The catchable MEWTWO encounter runs through startWildBattle (play cry +
+// "Mew!" + Lv70 wild battle), same as the SeafoamIslandsB4F Articuno /
+// PowerPlant Zapdos translations.
+
+game_scene CeruleanCaveB1F {
+  // ── MEWTWO (npc 1, the Monster, textId 1) ─────────────────────────────────
+  // Original: TalkToTrainer on MewtwoTrainerHeader (sight range 0) => a wild
+  // legendary battle vs MEWTWO (Lv 70), preceded by its cry + "Mew!" text.
+  @storyline("talkMewtwo") {
+    @trigger(map = "CeruleanCaveB1F", npc = 1)
+    @if (!getFlag("EVENT_BEAT_MEWTWO")) {
+      playCry("MEWTWO")
+      @speaker("") {
+        @t("Mew!", "梦幻！")
+      }
+      // Static wild Lv70 MEWTWO battle (catchable); flag set only on win/catch.
+      result = startWildBattle("MEWTWO", 70)
+      @if (result == "win" || result == "caught") {
+        setFlag("EVENT_BEAT_MEWTWO")
+      }
+    } @else {
+      playCry("MEWTWO")
+      @speaker("") {
+        @t("Mew!", "梦幻！")
+      }
+    }
+  }
+
+  // ── PokeBall ground item (npc 2) — ULTRA_BALL ─────────────────────────────
+  @storyline("talkPokeBall") {
+    @trigger(map = "CeruleanCaveB1F", npc = 2, toggle = "CERULEAN_CAVE_B1F_OBJ_2")
+    given = giveItem("ULTRA_BALL", 1)
+    @if (given) {
+      @speaker("") {
+        @t("<PLAYER> found ULTRA_BALL!", "<PLAYER>找到了高级球！")
+      }
+    } @else {
+      @speaker("") {
+        @t("You have too much stuff\nalready!", "你带的东西太多了！")
+      }
+    }
+  }
+
+  // ── PokeBall ground item (npc 3) — MAX_REVIVE ─────────────────────────────
+  @storyline("talkPokeBall1") {
+    @trigger(map = "CeruleanCaveB1F", npc = 3, toggle = "CERULEAN_CAVE_B1F_OBJ_3")
+    given = giveItem("MAX_REVIVE", 1)
+    @if (given) {
+      @speaker("") {
+        @t("<PLAYER> found MAX_REVIVE!", "<PLAYER>找到了活力块！")
+      }
+    } @else {
+      @speaker("") {
+        @t("You have too much stuff\nalready!", "你带的东西太多了！")
+      }
+    }
+  }
+}

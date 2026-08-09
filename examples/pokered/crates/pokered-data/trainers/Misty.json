@@ -1,0 +1,19 @@
+{
+  "$schema": "../schemas/trainer.schema.json",
+  "class": "Misty",
+  "constName": "MISTY",
+  "parties": [
+    {
+      "pokemon": [
+        {
+          "level": 18,
+          "species": "Staryu"
+        },
+        {
+          "level": 21,
+          "species": "Starmie"
+        }
+      ]
+    }
+  ]
+}

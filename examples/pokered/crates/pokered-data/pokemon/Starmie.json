@@ -1,0 +1,43 @@
+{
+  "$schema": "../schemas/pokemon.schema.json",
+  "species": "Starmie",
+  "baseStats": {
+    "hp": 60,
+    "attack": 75,
+    "defense": 85,
+    "speed": 115,
+    "special": 100
+  },
+  "type1": "Water",
+  "type2": "Psychic",
+  "catchRate": 60,
+  "baseExp": 207,
+  "growthRate": "Slow",
+  "initialMoves": [
+    "Tackle",
+    "WaterGun",
+    "Harden",
+    "None"
+  ],
+  "tmHmFlags": [
+    32,
+    127,
+    136,
+    241,
+    195,
+    56,
+    83
+  ],
+  "pokedex": {
+    "category": "MYSTERIOUS",
+    "heightFeet": 3,
+    "heightInches": 7,
+    "weightDecipounds": 1760,
+    "flavorTextPages": [
+      "Its central core\nglows with the\nseven colors of",
+      "the rainbow. Some\npeople value the\ncore as a gem"
+    ]
+  },
+  "evolutions": [],
+  "learnset": []
+}

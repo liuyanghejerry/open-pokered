@@ -1,0 +1,228 @@
+{
+  "$schema": "../../schemas/map.schema.json",
+  "id": 218,
+  "name": "SafariZoneNorth",
+  "header": {
+    "tileset": "Forest",
+    "music": "SafariZone",
+    "connectionFlags": 0,
+    "width": 20,
+    "height": 18,
+    "borderBlock": 0
+  },
+  "connections": {},
+  "warps": [
+    {
+      "x": 2,
+      "y": 35,
+      "destMap": "SafariZoneWest",
+      "destWarpId": 0
+    },
+    {
+      "x": 3,
+      "y": 35,
+      "destMap": "SafariZoneWest",
+      "destWarpId": 1
+    },
+    {
+      "x": 8,
+      "y": 35,
+      "destMap": "SafariZoneWest",
+      "destWarpId": 2
+    },
+    {
+      "x": 9,
+      "y": 35,
+      "destMap": "SafariZoneWest",
+      "destWarpId": 3
+    },
+    {
+      "x": 20,
+      "y": 35,
+      "destMap": "SafariZoneCenter",
+      "destWarpId": 4
+    },
+    {
+      "x": 21,
+      "y": 35,
+      "destMap": "SafariZoneCenter",
+      "destWarpId": 5
+    },
+    {
+      "x": 39,
+      "y": 30,
+      "destMap": "SafariZoneEast",
+      "destWarpId": 0
+    },
+    {
+      "x": 39,
+      "y": 31,
+      "destMap": "SafariZoneEast",
+      "destWarpId": 1
+    },
+    {
+      "x": 35,
+      "y": 3,
+      "destMap": "SafariZoneNorthRestHouse",
+      "destWarpId": 0
+    }
+  ],
+  "npcs": [
+    {
+      "spriteId": 61,
+      "spriteName": "PokeBall",
+      "x": 25,
+      "y": 1,
+      "movement": "Stationary",
+      "facing": "Down",
+      "range": 0,
+      "textId": 1,
+      "isTrainer": false,
+      "itemId": 36
+    },
+    {
+      "spriteId": 61,
+      "spriteName": "PokeBall",
+      "x": 19,
+      "y": 7,
+      "movement": "Stationary",
+      "facing": "Down",
+      "range": 0,
+      "textId": 2,
+      "isTrainer": false,
+      "itemId": 240
+    }
+  ],
+  "signs": [
+    {
+      "x": 36,
+      "y": 4,
+      "textId": 1
+    },
+    {
+      "x": 4,
+      "y": 25,
+      "textId": 2
+    },
+    {
+      "x": 13,
+      "y": 31,
+      "textId": 3
+    },
+    {
+      "x": 19,
+      "y": 33,
+      "textId": 4
+    },
+    {
+      "x": 26,
+      "y": 28,
+      "textId": 5
+    }
+  ],
+  "text": {},
+  "wild": {
+    "red": {
+      "grass": {
+        "encounterRate": 30,
+        "mons": [
+          {
+            "level": 22,
+            "species": "NidoranM"
+          },
+          {
+            "level": 26,
+            "species": "Rhyhorn"
+          },
+          {
+            "level": 23,
+            "species": "Paras"
+          },
+          {
+            "level": 25,
+            "species": "Exeggcute"
+          },
+          {
+            "level": 30,
+            "species": "Nidorino"
+          },
+          {
+            "level": 27,
+            "species": "Exeggcute"
+          },
+          {
+            "level": 30,
+            "species": "Nidorina"
+          },
+          {
+            "level": 32,
+            "species": "Venomoth"
+          },
+          {
+            "level": 26,
+            "species": "Chansey"
+          },
+          {
+            "level": 28,
+            "species": "Tauros"
+          }
+        ]
+      },
+      "water": {
+        "encounterRate": 0,
+        "mons": []
+      }
+    },
+    "blue": {
+      "grass": {
+        "encounterRate": 30,
+        "mons": [
+          {
+            "level": 22,
+            "species": "NidoranF"
+          },
+          {
+            "level": 26,
+            "species": "Rhyhorn"
+          },
+          {
+            "level": 23,
+            "species": "Paras"
+          },
+          {
+            "level": 25,
+            "species": "Exeggcute"
+          },
+          {
+            "level": 30,
+            "species": "Nidorina"
+          },
+          {
+            "level": 27,
+            "species": "Exeggcute"
+          },
+          {
+            "level": 30,
+            "species": "Nidorino"
+          },
+          {
+            "level": 32,
+            "species": "Venomoth"
+          },
+          {
+            "level": 26,
+            "species": "Chansey"
+          },
+          {
+            "level": 28,
+            "species": "Tauros"
+          }
+        ]
+      },
+      "water": {
+        "encounterRate": 0,
+        "mons": []
+      }
+    }
+  }
+}

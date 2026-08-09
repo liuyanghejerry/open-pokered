@@ -1,0 +1,9 @@
+{
+  "$schema": "../schemas/move.schema.json",
+  "id": "NightShade",
+  "effect": "SpecialDamageEffect",
+  "power": 0,
+  "type": "Ghost",
+  "accuracy": 100,
+  "pp": 15
+}

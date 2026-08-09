@@ -1,0 +1,30 @@
+// CinnabarMart — translated from the original disassembly
+// (scripts/CinnabarMart.asm, text/CinnabarMart.asm, data/items/marts.asm) to the
+// real Game DSL API surface. This is a plain Pokemart: one shop clerk
+// (script_mart, sells via openShop) plus two dialogue-only NPCs giving tips.
+
+game_scene CinnabarMart {
+  // ── Clerk (npc 1) — item counter (script_mart) ───────────────────────────
+  // marts.asm: ULTRA_BALL, GREAT_BALL, HYPER_POTION, MAX_REPEL, ESCAPE_ROPE,
+  //            FULL_HEAL, REVIVE
+  @storyline("talkClerk") {
+    @trigger(map = "CinnabarMart", npc = 1)
+    openShop(["UltraBall", "GreatBall", "HyperPotion", "MaxRepel", "EscapeRope", "FullHeal", "Revive"])
+  }
+
+  // ── Silph Worker F (npc 2) — dialogue only ───────────────────────────────
+  @storyline("talkSilphWorkerF") {
+    @trigger(map = "CinnabarMart", npc = 2)
+    @speaker("") {
+      @t("Don't they have X ATTACK?\nIt's good for battles!", "他们没有力量强化吗？对战斗很\n有用呢！")
+    }
+  }
+
+  // ── Scientist (npc 3) — dialogue only ────────────────────────────────────
+  @storyline("talkScientist") {
+    @trigger(map = "CinnabarMart", npc = 3)
+    @speaker("") {
+      @t("It never hurts to have extra\nitems!", "多带点道具总没坏处！")
+    }
+  }
+}

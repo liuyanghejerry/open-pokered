@@ -1,0 +1,22 @@
+{
+  "$schema": "../../schemas/script_config.schema.json",
+  "coordEvents": [],
+  "npcs": [
+    {
+      "id": 1,
+      "talk": "itemFullRestore",
+      "toggleId": "CERULEAN_CAVE_1F_OBJ_1"
+    },
+    {
+      "id": 2,
+      "talk": "itemMaxElixer",
+      "toggleId": "CERULEAN_CAVE_1F_OBJ_2"
+    },
+    {
+      "id": 3,
+      "talk": "itemNugget",
+      "toggleId": "CERULEAN_CAVE_1F_OBJ_3"
+    }
+  ],
+  "signs": []
+}

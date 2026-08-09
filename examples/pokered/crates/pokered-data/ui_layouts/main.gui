@@ -1,0 +1,14 @@
+screen Main {
+  panel {
+    rect = {tx: 0, ty: 0, tw: 13, th: 9}
+    style = "default"
+  }
+  list {
+    rect = {tx: 1, ty: 2, tw: 11, th: 6}
+    source = "{items}"
+    selected = "{cursor}"
+    item_template = {height: 1, gap: 1}
+    cursor = {tile: 223, position: "left"}
+    max_visible = 3
+  }
+}

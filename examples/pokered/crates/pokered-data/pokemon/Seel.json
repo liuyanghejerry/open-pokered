@@ -1,0 +1,70 @@
+{
+  "$schema": "../schemas/pokemon.schema.json",
+  "species": "Seel",
+  "baseStats": {
+    "hp": 65,
+    "attack": 45,
+    "defense": 55,
+    "speed": 45,
+    "special": 70
+  },
+  "type1": "Water",
+  "type2": "Water",
+  "catchRate": 190,
+  "baseExp": 100,
+  "growthRate": "MediumFast",
+  "initialMoves": [
+    "Headbutt",
+    "None",
+    "None",
+    "None"
+  ],
+  "tmHmFlags": [
+    224,
+    191,
+    8,
+    192,
+    130,
+    8,
+    50
+  ],
+  "pokedex": {
+    "category": "SEA LION",
+    "heightFeet": 3,
+    "heightInches": 7,
+    "weightDecipounds": 1980,
+    "flavorTextPages": [
+      "The protruding\nhorn on its head\nis very hard.",
+      "It is used for\nbashing through\nthick ice"
+    ]
+  },
+  "evolutions": [
+    {
+      "method": "level",
+      "species": "Dewgong",
+      "level": 34
+    }
+  ],
+  "learnset": [
+    {
+      "level": 30,
+      "moveId": "Growl"
+    },
+    {
+      "level": 35,
+      "moveId": "AuroraBeam"
+    },
+    {
+      "level": 40,
+      "moveId": "Rest"
+    },
+    {
+      "level": 45,
+      "moveId": "TakeDown"
+    },
+    {
+      "level": 50,
+      "moveId": "IceBeam"
+    }
+  ]
+}

@@ -1,0 +1,38 @@
+{
+  "$schema": "../../schemas/script_config.schema.json",
+  "coordEvents": [
+    {
+      "name": "ghostMarowak",
+      "position": [
+        10,
+        16
+      ],
+      "trigger": "coordGhostMarowak"
+    }
+  ],
+  "npcs": [
+    {
+      "id": 1,
+      "talk": "talkChanneler1"
+    },
+    {
+      "id": 2,
+      "talk": "talkChanneler2"
+    },
+    {
+      "id": 3,
+      "talk": "talkChanneler3"
+    },
+    {
+      "id": 4,
+      "talk": "itemRareCandy",
+      "toggleId": "POKEMON_TOWER_6F_OBJ_4"
+    },
+    {
+      "id": 5,
+      "talk": "itemXAccuracy",
+      "toggleId": "POKEMON_TOWER_6F_OBJ_5"
+    }
+  ],
+  "signs": []
+}

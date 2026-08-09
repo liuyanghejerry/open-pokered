@@ -1,0 +1,101 @@
+// PokemonMansion2F — translated from the original disassembly
+// (scripts/PokemonMansion2F.asm, text/PokemonMansion2F.asm) to the real Game DSL
+// API surface. This floor has one sight-engaged Burglar (SuperNerd, dialogue-only
+// handler), a ground item (CALCIUM in a PokeBall), two readable Diary panels, and
+// the secret door-block switch. The switch's tile-replacement (Mansion2-
+// CheckReplaceSwitchDoorBlocks / Mansion2ReplaceBlock) is now wired via
+// replaceTileBlock: it TOGGLES three door blocks on EVENT_MANSION_SWITCH_ON.
+
+game_scene PokemonMansion2F {
+  // ── On-enter: re-apply the door-block state from EVENT_MANSION_SWITCH_ON ──
+  // Mirrors Mansion2CheckReplaceSwitchDoorBlocks. This is a TOGGLE, so BOTH the
+  // ON and OFF block sets must be re-applied on load (the asm sets all three
+  // blocks in each branch). asm lb bc, Y, X -> replaceTileBlock(X, Y, id);
+  // ids are decimal ($e=14, $54=84, $5f=95).
+  @load {
+    @if (getFlag("EVENT_MANSION_SWITCH_ON")) {
+      replaceTileBlock(4, 2, 95)
+      replaceTileBlock(9, 4, 14)
+      replaceTileBlock(3, 11, 14)
+    } @else {
+      replaceTileBlock(4, 2, 14)
+      replaceTileBlock(9, 4, 84)
+      replaceTileBlock(3, 11, 95)
+    }
+  }
+
+  // ── SuperNerd / Burglar (npc 1) — sight-engaged by the runtime; dialogue only ──
+  @storyline("talkSuperNerd") {
+    @trigger(map = "PokemonMansion2F", npc = 1)
+    @if (getFlag("EVENT_BEAT_MANSION_2_TRAINER_0")) {
+      @speaker("") {
+        @t("Switches open and close\nalternating sets of doors!", "按下开关，就会交替开启不同的\n门！")
+      }
+    } @else {
+      @speaker("") {
+        @t("I can't get out! This old\nplace is one big puzzle!", "我出不去了！这个老宅子简直是\n个大谜题！")
+      }
+    }
+  }
+
+  // ── Ground item: CALCIUM in a PokeBall (npc 2) ──────────────────────────
+  @storyline("itemCalcium") {
+    @trigger(map = "PokemonMansion2F", npc = 2, toggle = "POKEMON_MANSION_2F_OBJ_2")
+    @if (getFlag("EVENT_GOT_CALCIUM_MANSION_2F")) {
+      @speaker("") { @t("The item ball is empty.", "这个精灵球里是空的。") }
+    } @else {
+      giveItem("CALCIUM", 1)
+      setFlag("EVENT_GOT_CALCIUM_MANSION_2F")
+      hideObject("POKEMON_MANSION_2F_OBJ_2")
+      @speaker("") { @t("<PLAYER> found CALCIUM!", "<PLAYER>找到了特攻增强剂！") }
+    }
+  }
+
+  // ── Diary panel 1 (npc 3) ───────────────────────────────────────────────
+  @storyline("readDiary1") {
+    @trigger(map = "PokemonMansion2F", npc = 3)
+    @speaker("") {
+      @t("Diary: July 5 Guyana, South\nAmerica\n\nA new POKeMON was discovered\ndeep in the jungle.", "日记：7月5日在南美洲的圭亚\n那，\n\n丛林深处发现了一种新的宝可\n梦。")
+    }
+  }
+
+  // ── Diary panel 2 (npc 4) ───────────────────────────────────────────────
+  @storyline("readDiary2") {
+    @trigger(map = "PokemonMansion2F", npc = 4)
+    @speaker("") {
+      @t("Diary: July 10 We christened\nthe newly discovered\nPOKeMON, MEW.", "日记：7月10日我们为新发现的\n宝可梦取名为梦幻。")
+    }
+  }
+
+  // ── Secret door-block switch ─────────────────────────────────────────────
+  // Original: facing the switch tile opens a YES/NO prompt; pressing it toggles
+  // EVENT_MANSION_SWITCH_ON and swaps alternating door blocks (Mansion2ReplaceBlock).
+  // Now wired: pressing the switch toggles the flag AND immediately swaps all three
+  // door blocks via replaceTileBlock (same coords/ids as the @load re-apply above),
+  // and plays SFX_GO_INSIDE like the asm. The switch tile has no bg/sign coordinate
+  // in map.json, so it is bound to the documented switch-block region.
+  @storyline("mansionSwitch") {
+    @trigger(map = "PokemonMansion2F", name = "mansionSwitch1")
+    @speaker("") { @t("A secret switch!\n\nPress it?", "有秘密开关！\n\n要按下吗？") }
+    @choice {
+      @option(@t("YES", "是")) {
+        @speaker("") { @t("Who wouldn't?", "谁会不想呢？") }
+        playSound("SFX_GO_INSIDE")
+        @if (getFlag("EVENT_MANSION_SWITCH_ON")) {
+          resetFlag("EVENT_MANSION_SWITCH_ON")
+          replaceTileBlock(4, 2, 14)
+          replaceTileBlock(9, 4, 84)
+          replaceTileBlock(3, 11, 95)
+        } @else {
+          setFlag("EVENT_MANSION_SWITCH_ON")
+          replaceTileBlock(4, 2, 95)
+          replaceTileBlock(9, 4, 14)
+          replaceTileBlock(3, 11, 14)
+        }
+      }
+      @option(@t("NO", "否")) {
+        @speaker("") { @t("Not quite yet!", "还不是时候！") }
+      }
+    }
+  }
+}

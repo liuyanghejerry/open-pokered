@@ -1,0 +1,1 @@
+{"id":"XAccuracy","name":"X ACCURACY","price":950,"category":"Battle","effect":{"type":"BattleFlag","params":{"flag":"focus"}},"held_effect":null,"berry":null,"use_outside_battle":false,"use_in_battle":true,"consume":true,"key_item":false,"sellable":true,"description":"","tags":["battle","accuracy"]}

@@ -1,0 +1,9 @@
+{
+  "$schema": "../schemas/move.schema.json",
+  "id": "FireBlast",
+  "effect": "BurnSideEffect2",
+  "power": 120,
+  "type": "Fire",
+  "accuracy": 85,
+  "pp": 5
+}

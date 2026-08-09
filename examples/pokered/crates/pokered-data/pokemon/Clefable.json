@@ -1,0 +1,43 @@
+{
+  "$schema": "../schemas/pokemon.schema.json",
+  "species": "Clefable",
+  "baseStats": {
+    "hp": 95,
+    "attack": 70,
+    "defense": 73,
+    "speed": 60,
+    "special": 85
+  },
+  "type1": "Normal",
+  "type2": "Normal",
+  "catchRate": 25,
+  "baseExp": 129,
+  "growthRate": "Fast",
+  "initialMoves": [
+    "Sing",
+    "Doubleslap",
+    "Minimize",
+    "Metronome"
+  ],
+  "tmHmFlags": [
+    177,
+    127,
+    175,
+    241,
+    167,
+    56,
+    99
+  ],
+  "pokedex": {
+    "category": "FAIRY",
+    "heightFeet": 4,
+    "heightInches": 3,
+    "weightDecipounds": 880,
+    "flavorTextPages": [
+      "A timid fairy\n#MON that is\nrarely seen. It",
+      "will run and hide\nthe moment it\nsenses people"
+    ]
+  },
+  "evolutions": [],
+  "learnset": []
+}

@@ -1,0 +1,70 @@
+{
+  "$schema": "../schemas/pokemon.schema.json",
+  "species": "Machoke",
+  "baseStats": {
+    "hp": 80,
+    "attack": 100,
+    "defense": 70,
+    "speed": 45,
+    "special": 50
+  },
+  "type1": "Fighting",
+  "type2": "Fighting",
+  "catchRate": 90,
+  "baseExp": 146,
+  "growthRate": "MediumSlow",
+  "initialMoves": [
+    "KarateChop",
+    "LowKick",
+    "Leer",
+    "None"
+  ],
+  "tmHmFlags": [
+    177,
+    3,
+    15,
+    206,
+    166,
+    136,
+    34
+  ],
+  "pokedex": {
+    "category": "SUPERPOWER",
+    "heightFeet": 4,
+    "heightInches": 11,
+    "weightDecipounds": 1550,
+    "flavorTextPages": [
+      "Its muscular body\nis so powerful, it\nmust wear a power",
+      "save belt to be\nable to regulate\nits motions"
+    ]
+  },
+  "evolutions": [
+    {
+      "method": "trade",
+      "species": "Machamp",
+      "minLevel": 1
+    }
+  ],
+  "learnset": [
+    {
+      "level": 20,
+      "moveId": "LowKick"
+    },
+    {
+      "level": 25,
+      "moveId": "Leer"
+    },
+    {
+      "level": 36,
+      "moveId": "FocusEnergy"
+    },
+    {
+      "level": 44,
+      "moveId": "SeismicToss"
+    },
+    {
+      "level": 52,
+      "moveId": "Submission"
+    }
+  ]
+}

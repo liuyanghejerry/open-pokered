@@ -1,0 +1,1 @@
+{"id":"ParlyzHeal","name":"PARLYZ HEAL","price":200,"category":"Medicine","effect":{"type":"CureParalysis","params":{}},"held_effect":null,"berry":null,"use_outside_battle":true,"use_in_battle":true,"consume":true,"key_item":false,"sellable":true,"description":"","tags":["healing","status","cure","paralysis"]}

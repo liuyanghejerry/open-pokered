@@ -1,0 +1,64 @@
+{
+  "$schema": "../schemas/pokemon.schema.json",
+  "species": "Machamp",
+  "baseStats": {
+    "hp": 90,
+    "attack": 130,
+    "defense": 80,
+    "speed": 55,
+    "special": 65
+  },
+  "type1": "Fighting",
+  "type2": "Fighting",
+  "catchRate": 45,
+  "baseExp": 193,
+  "growthRate": "MediumSlow",
+  "initialMoves": [
+    "KarateChop",
+    "LowKick",
+    "Leer",
+    "None"
+  ],
+  "tmHmFlags": [
+    177,
+    67,
+    15,
+    206,
+    166,
+    136,
+    34
+  ],
+  "pokedex": {
+    "category": "SUPERPOWER",
+    "heightFeet": 5,
+    "heightInches": 3,
+    "weightDecipounds": 2870,
+    "flavorTextPages": [
+      "Using its heavy\nmuscles, it throws\npowerful punches",
+      "that can send the\nvictim clear over\nthe horizon"
+    ]
+  },
+  "evolutions": [],
+  "learnset": [
+    {
+      "level": 20,
+      "moveId": "LowKick"
+    },
+    {
+      "level": 25,
+      "moveId": "Leer"
+    },
+    {
+      "level": 36,
+      "moveId": "FocusEnergy"
+    },
+    {
+      "level": 44,
+      "moveId": "SeismicToss"
+    },
+    {
+      "level": 52,
+      "moveId": "Submission"
+    }
+  ]
+}

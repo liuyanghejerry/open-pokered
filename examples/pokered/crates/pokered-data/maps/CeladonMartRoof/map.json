@@ -1,0 +1,70 @@
+{
+  "$schema": "../../schemas/map.schema.json",
+  "id": 126,
+  "name": "CeladonMartRoof",
+  "header": {
+    "tileset": "Lobby",
+    "music": "Pokecenter",
+    "connectionFlags": 0,
+    "width": 10,
+    "height": 4,
+    "borderBlock": 66
+  },
+  "connections": {},
+  "warps": [
+    {
+      "x": 15,
+      "y": 2,
+      "destMap": "CeladonMart5F",
+      "destWarpId": 0
+    }
+  ],
+  "npcs": [
+    {
+      "spriteId": 12,
+      "spriteName": "SuperNerd",
+      "x": 10,
+      "y": 4,
+      "movement": "Stationary",
+      "facing": "Left",
+      "range": 0,
+      "textId": 1,
+      "isTrainer": false
+    },
+    {
+      "spriteId": 8,
+      "spriteName": "LittleGirl",
+      "x": 5,
+      "y": 5,
+      "movement": "Wander",
+      "facing": "Down",
+      "range": 0,
+      "textId": 2,
+      "isTrainer": false
+    }
+  ],
+  "signs": [
+    {
+      "x": 10,
+      "y": 1,
+      "textId": 1
+    },
+    {
+      "x": 11,
+      "y": 1,
+      "textId": 2
+    },
+    {
+      "x": 12,
+      "y": 2,
+      "textId": 3
+    },
+    {
+      "x": 13,
+      "y": 2,
+      "textId": 4
+    }
+  ],
+  "text": {},
+  "wild": null
+}

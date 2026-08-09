@@ -1,0 +1,9 @@
+{
+  "$schema": "../schemas/move.schema.json",
+  "id": "DreamEater",
+  "effect": "DreamEaterEffect",
+  "power": 100,
+  "type": "Psychic",
+  "accuracy": 100,
+  "pp": 15
+}

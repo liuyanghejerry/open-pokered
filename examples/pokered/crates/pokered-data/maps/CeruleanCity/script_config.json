@@ -1,0 +1,101 @@
+{
+  "$schema": "../../schemas/script_config.schema.json",
+  "coordEvents": [
+    {
+      "name": "rivalBattle1",
+      "position": [
+        20,
+        6
+      ],
+      "trigger": "coordRivalBattle"
+    },
+    {
+      "name": "rivalBattle2",
+      "position": [
+        21,
+        6
+      ],
+      "trigger": "coordRivalBattle"
+    }
+  ],
+  "npcs": [
+    {
+      "defaultHidden": true,
+      "id": 1,
+      "talk": "talkBlue",
+      "toggleId": "CERULEAN_RIVAL"
+    },
+    {
+      "id": 2,
+      "talk": "talkRocket",
+      "toggleId": "CERULEAN_ROCKET"
+    },
+    {
+      "id": 3,
+      "talk": "talkCooltrainerM"
+    },
+    {
+      "id": 4,
+      "talk": "talkSuperNerd"
+    },
+    {
+      "id": 5,
+      "talk": "talkSuperNerd1"
+    },
+    {
+      "defaultHidden": true,
+      "id": 6,
+      "talk": "talkGuard",
+      "toggleId": "CERULEAN_GUARD_1"
+    },
+    {
+      "id": 7,
+      "talk": "talkCooltrainerF"
+    },
+    {
+      "id": 8,
+      "talk": "talkMonster"
+    },
+    {
+      "id": 9,
+      "talk": "talkCooltrainerF1"
+    },
+    {
+      "id": 10,
+      "talk": "talkSuperNerd2",
+      "toggleId": "CERULEAN_CAVE_GUY"
+    },
+    {
+      "id": 11,
+      "talk": "talkGuard1",
+      "toggleId": "CERULEAN_GUARD_2"
+    }
+  ],
+  "onLoad": "CeruleanCityOnLoad",
+  "signs": [
+    {
+      "id": 1,
+      "talk": "sign1"
+    },
+    {
+      "id": 2,
+      "talk": "sign2"
+    },
+    {
+      "id": 3,
+      "talk": "sign3"
+    },
+    {
+      "id": 4,
+      "talk": "sign4"
+    },
+    {
+      "id": 5,
+      "talk": "sign5"
+    },
+    {
+      "id": 6,
+      "talk": "sign6"
+    }
+  ]
+}

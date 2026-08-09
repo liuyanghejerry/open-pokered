@@ -1,0 +1,205 @@
+{
+  "$schema": "../../schemas/map.schema.json",
+  "id": 230,
+  "name": "CeruleanBadgeHouse",
+  "header": {
+    "tileset": "Ship",
+    "music": "Cities1",
+    "connectionFlags": 0,
+    "width": 4,
+    "height": 4,
+    "borderBlock": 12
+  },
+  "connections": {},
+  "warps": [
+    {
+      "x": 2,
+      "y": 0,
+      "destWarpId": 9
+    },
+    {
+      "x": 2,
+      "y": 7,
+      "destWarpId": 8
+    },
+    {
+      "x": 3,
+      "y": 7,
+      "destWarpId": 8
+    }
+  ],
+  "npcs": [
+    {
+      "spriteId": 10,
+      "spriteName": "MiddleAgedMan",
+      "x": 5,
+      "y": 3,
+      "movement": "Stationary",
+      "facing": "Right",
+      "range": 0,
+      "textId": 1,
+      "isTrainer": false
+    }
+  ],
+  "signs": [],
+  "text": {
+    "npc": {
+      "1": [
+        {
+          "line1": "#MON BADGEs",
+          "line2": "are owned only by"
+        },
+        {
+          "line1": "skilled trainers.",
+          "line2": ""
+        },
+        {
+          "line1": "I see you have",
+          "line2": "at least one."
+        },
+        {
+          "line1": "Those BADGEs have",
+          "line2": "amazing secrets!"
+        }
+      ],
+      "1_WhichBadge": [
+        {
+          "line1": "Now then...",
+          "line2": ""
+        },
+        {
+          "line1": "Which of the 8",
+          "line2": "BADGEs should I"
+        },
+        {
+          "line1": "describe?",
+          "line2": ""
+        }
+      ],
+      "1_Quit": [
+        {
+          "line1": "Come visit me any",
+          "line2": "time you wish."
+        }
+      ],
+      "1_BoulderBadge": [
+        {
+          "line1": "The ATTACK of all",
+          "line2": "#MON increases"
+        },
+        {
+          "line1": "a little bit.",
+          "line2": ""
+        },
+        {
+          "line1": "It also lets you",
+          "line2": "use FLASH any"
+        },
+        {
+          "line1": "time you desire.",
+          "line2": ""
+        }
+      ],
+      "1_CascadeBadge": [
+        {
+          "line1": "#MON up to L30",
+          "line2": "will obey you."
+        },
+        {
+          "line1": "Any higher, they",
+          "line2": "become unruly!"
+        },
+        {
+          "line1": "It also lets you",
+          "line2": "use CUT outside"
+        },
+        {
+          "line1": "of battle.",
+          "line2": ""
+        }
+      ],
+      "1_ThunderBadge": [
+        {
+          "line1": "The SPEED of all",
+          "line2": "#MON increases"
+        },
+        {
+          "line1": "a little bit.",
+          "line2": ""
+        },
+        {
+          "line1": "It also lets you",
+          "line2": "use FLY outside"
+        },
+        {
+          "line1": "of battle.",
+          "line2": ""
+        }
+      ],
+      "1_RainbowBadge": [
+        {
+          "line1": "#MON up to L50",
+          "line2": "will obey you."
+        },
+        {
+          "line1": "Any higher, they",
+          "line2": "become unruly!"
+        },
+        {
+          "line1": "It also lets you",
+          "line2": "use STRENGTH out-"
+        },
+        {
+          "line1": "side of battle.",
+          "line2": ""
+        }
+      ],
+      "1_SoulBadge": [
+        {
+          "line1": "The DEFENSE of all",
+          "line2": "#MON increases"
+        },
+        {
+          "line1": "a little bit.",
+          "line2": ""
+        },
+        {
+          "line1": "It also lets you",
+          "line2": "use SURF outside"
+        },
+        {
+          "line1": "of battle.",
+          "line2": ""
+        }
+      ],
+      "1_MarshBadge": [
+        {
+          "line1": "#MON up to L70",
+          "line2": "will obey you."
+        },
+        {
+          "line1": "Any higher, they",
+          "line2": "become unruly!"
+        }
+      ],
+      "1_VolcanoBadge": [
+        {
+          "line1": "Your #MON's",
+          "line2": "SPECIAL abilities"
+        },
+        {
+          "line1": "increase a bit.",
+          "line2": ""
+        }
+      ],
+      "1_EarthBadge": [
+        {
+          "line1": "All #MON will",
+          "line2": "obey you!"
+        }
+      ]
+    },
+    "sign": {}
+  },
+  "wild": null
+}

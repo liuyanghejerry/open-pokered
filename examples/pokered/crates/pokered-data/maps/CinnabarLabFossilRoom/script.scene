@@ -1,0 +1,157 @@
+// CinnabarLabFossilRoom — translated from the original disassembly
+// (scripts/CinnabarLabFossilRoom.asm, engine/events/cinnabar_lab.asm,
+// text/CinnabarLabFossilRoom.asm) to the real Game DSL API surface.
+//
+// Scientist 1 is the fossil-revive doctor. There is no fossil-revive API, so the
+// minigame (filtered-bag fossil menu + RemoveItemByID + delayed GivePokemon) is
+// approximated with real primitives: a @choice over the fossils the player holds,
+// takeItem the chosen fossil, then a "go for a walk" pass that revives it into the
+// matching POKeMON on the next visit (DOME->KABUTO, HELIX->OMANYTE, AMBER->AERODACTYL).
+//
+// Scientist 2 runs the TRADE_FOR_SAILOR in-game trade (give PONYTA, get SEEL/SAILOR),
+// fully implemented via tradePokemon() — it removes PONYTA from the party, adds
+// SEEL nicknamed SAILOR, and returns false on the wrong-mon path. See the
+// tradePokemon call in talkScientist2 below (line 152).
+
+game_scene CinnabarLabFossilRoom {
+  // ── Scientist 1 (npc 1) — fossil resurrection doctor ───────────────────
+  @storyline("talkScientist1") {
+    @trigger(map = "CinnabarLabFossilRoom", npc = 1)
+
+    @if (!getFlag("EVENT_GAVE_FOSSIL_TO_LAB")) {
+      // First visit / not yet handed a fossil over.
+      @speaker("") {
+        @t("Hiya!\n\nI am important doctor!\n\nI study here rare POKeMON\nfossils!\n\nYou! Have you a fossil for\nme?", "你好呀！\n\n我是重要的博士！\n\n我在这里研究稀有的宝可梦化\n石！\n\n你！你有化石给我吗？")
+      }
+      @if (hasItem("DOME_FOSSIL") || hasItem("HELIX_FOSSIL") || hasItem("OLD_AMBER")) {
+        // GiveFossilToCinnabarLab: pick a fossil (filtered to the ones carried),
+        // confirm, hand it over. Original Lab4Script_GetFossilsInBag filters the
+        // bag to DOME/HELIX/OLD_AMBER; filterBag reproduces the dynamic menu.
+        fossil = filterBag(["DOME_FOSSIL", "HELIX_FOSSIL", "OLD_AMBER"])
+        @if (fossil == "DOME_FOSSIL") {
+          @speaker("") {
+            @t("Oh! That is DOME FOSSIL!\n\nIt is fossil of KABUTO, a\nPOKeMON that is already\nextinct!\n\nMy Resurrection Machine will\nmake that POKeMON live\nagain!", "哦！这是甲壳化石！\n\n这是化石盔的化石，是已经灭绝\n的宝可梦！\n\n我的复活机器会让这只宝可梦复\n活！")
+          }
+          @choice {
+            @option(@t("YES", "是")) {
+              @speaker("") { @t("So! You hurry and give me\nthat!\n\n<PLAYER> handed over DOME\nFOSSIL!", "好！你赶快把它给我！\n\n<PLAYER>交出了甲壳化石！") }
+              takeItem("DOME_FOSSIL", 1)
+              setFlag("EVENT_REVIVING_KABUTO")
+              @speaker("") { @t("I take a little time!\n\nYou go for walk a little\nwhile!", "我需要一点时间！\n\n你先出去散散步吧！") }
+              setFlag("EVENT_GAVE_FOSSIL_TO_LAB")
+              setFlag("EVENT_LAB_STILL_REVIVING_FOSSIL")
+            }
+            @option(@t("NO", "否")) {
+              @speaker("") { @t("Aiyah! You come again!", "哎呀！下次再来吧！") }
+            }
+          }
+        }
+        @if (fossil == "HELIX_FOSSIL") {
+          @speaker("") {
+            @t("Oh! That is HELIX FOSSIL!\n\nIt is fossil of OMANYTE, a\nPOKeMON that is already\nextinct!\n\nMy Resurrection Machine will\nmake that POKeMON live\nagain!", "哦！这是贝壳化石！\n\n这是菊石兽的化石，是已经灭绝\n的宝可梦！\n\n我的复活机器会让这只宝可梦复\n活！")
+          }
+          @choice {
+            @option(@t("YES", "是")) {
+              @speaker("") { @t("So! You hurry and give me\nthat!\n\n<PLAYER> handed over HELIX\nFOSSIL!", "好！你赶快把它给我！\n\n<PLAYER>交出了贝壳化石！") }
+              takeItem("HELIX_FOSSIL", 1)
+              setFlag("EVENT_REVIVING_OMANYTE")
+              @speaker("") { @t("I take a little time!\n\nYou go for walk a little\nwhile!", "我需要一点时间！\n\n你先出去散散步吧！") }
+              setFlag("EVENT_GAVE_FOSSIL_TO_LAB")
+              setFlag("EVENT_LAB_STILL_REVIVING_FOSSIL")
+            }
+            @option(@t("NO", "否")) {
+              @speaker("") { @t("Aiyah! You come again!", "哎呀！下次再来吧！") }
+            }
+          }
+        }
+        @if (fossil == "OLD_AMBER") {
+          @speaker("") {
+            @t("Oh! That is OLD AMBER!\n\nIt is fossil of AERODACTYL,\na POKeMON that is already\nextinct!\n\nMy Resurrection Machine will\nmake that POKeMON live\nagain!", "哦！这是秘密琥珀！\n\n这是化石翼龙的化石，是已经灭\n绝的宝可梦！\n\n我的复活机器会让这只宝可梦复\n活！")
+          }
+          @choice {
+            @option(@t("YES", "是")) {
+              @speaker("") { @t("So! You hurry and give me\nthat!\n\n<PLAYER> handed over OLD\nAMBER!", "好！你赶快把它给我！\n\n<PLAYER>交出了秘密琥珀！") }
+              takeItem("OLD_AMBER", 1)
+              setFlag("EVENT_REVIVING_AERODACTYL")
+              @speaker("") { @t("I take a little time!\n\nYou go for walk a little\nwhile!", "我需要一点时间！\n\n你先出去散散步吧！") }
+              setFlag("EVENT_GAVE_FOSSIL_TO_LAB")
+              setFlag("EVENT_LAB_STILL_REVIVING_FOSSIL")
+            }
+            @option(@t("NO", "否")) {
+              @speaker("") { @t("Aiyah! You come again!", "哎呀！下次再来吧！") }
+            }
+          }
+        }
+      } @else {
+        @speaker("") { @t("No! Is too bad!", "没有！太可惜了！") }
+      }
+    } @else {
+      // Already handed a fossil over.
+      @if (getFlag("EVENT_LAB_STILL_REVIVING_FOSSIL")) {
+        // Still reviving: the player hasn't left the island since handing the
+        // fossil over. Original _CinnabarLabFossilRoomScientist1GoForAWalkText.
+        @speaker("") { @t("I take a little time!\n\nYou go for walk a little\nwhile!", "我需要一点时间！\n\n你先出去散散步吧！") }
+      } @else {
+        // Left CinnabarIsland and came back: CinnabarIsland's @load resets
+        // EVENT_LAB_STILL_REVIVING_FOSSIL, so the revive is ready. Original
+        // FossilIsBackToLife path: hand over the revived POKeMON.
+        setFlag("EVENT_LAB_HANDING_OVER_FOSSIL_MON")
+        @if (getFlag("EVENT_REVIVING_KABUTO")) {
+          @speaker("") {
+            @t("Where were you?\n\nYour fossil is back to life!\n\nIt was KABUTO like I think!", "你去哪了？\n\n你的化石复活了！\n\n果然是化石盔，和我想的一样！")
+          }
+          givePokemon("KABUTO", 30)
+        }
+        @if (getFlag("EVENT_REVIVING_OMANYTE")) {
+          @speaker("") {
+            @t("Where were you?\n\nYour fossil is back to life!\n\nIt was OMANYTE like I think!", "你去哪了？\n\n你的化石复活了！\n\n果然是菊石兽，和我想的一样！")
+          }
+          givePokemon("OMANYTE", 30)
+        }
+        @if (getFlag("EVENT_REVIVING_AERODACTYL")) {
+          @speaker("") {
+            @t("Where were you?\n\nYour fossil is back to life!\n\nIt was AERODACTYL like I\nthink!", "你去哪了？\n\n你的化石复活了！\n\n果然是化石翼龙，和我想的一\n样！")
+          }
+          givePokemon("AERODACTYL", 30)
+        }
+        // Revive consumed: reset so another fossil can be brought later.
+        resetFlag("EVENT_GAVE_FOSSIL_TO_LAB")
+        resetFlag("EVENT_LAB_STILL_REVIVING_FOSSIL")
+        resetFlag("EVENT_LAB_HANDING_OVER_FOSSIL_MON")
+        resetFlag("EVENT_REVIVING_KABUTO")
+        resetFlag("EVENT_REVIVING_OMANYTE")
+        resetFlag("EVENT_REVIVING_AERODACTYL")
+      }
+    }
+  }
+
+  // ── Scientist 2 (npc 2) — TRADE_FOR_SAILOR (give PONYTA, get SEEL) ──────
+  @storyline("talkScientist2") {
+    @trigger(map = "CinnabarLabFossilRoom", npc = 2)
+    @if (getFlag("EVENT_TRADED_FOR_SAILOR")) {
+      @speaker("") { @t("Isn't my old SEEL great?", "我的小海狮很棒吧？") }
+    } @else {
+      @speaker("") {
+        @t("I'm looking for PONYTA!\nWanna\n\ntrade one for SEEL? ", "我在找小火马！想用\n\n一只换小海狮吗？")
+      }
+      @choice {
+        @option(@t("YES", "是")) {
+          // Real in-game trade (removes PONYTA, adds SEEL nicknamed SAILOR).
+          // tradePokemon returns false if the player doesn't actually carry
+          // PONYTA -> wrong-mon (dialogset CASUAL).
+          traded = tradePokemon("PONYTA", "SEEL", "SAILOR")
+          @if (traded) {
+            setFlag("EVENT_TRADED_FOR_SAILOR")
+            @speaker("") { @t("Hey thanks!", "嘿，谢谢！") }
+            @speaker("") { @t("<PLAYER> traded PONYTA for\nSEEL!", "<PLAYER>用小火马换来了小海\n狮！") }
+          } @else {
+            @speaker("") { @t("What? That's not PONYTA!\n\nIf you get one, come back\nhere!", "什么？那不是小火马！\n\n如果你弄到了，再来找我吧！") }
+          }
+        }
+        @option(@t("NO", "否")) {
+          @speaker("") { @t("Awww! Oh well...", "哎呀！那就算了……") }
+        }
+      }
+    }
+  }
+}

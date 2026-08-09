@@ -1,0 +1,115 @@
+// Route11 — translated from the original disassembly (scripts/Route11.asm,
+// text/Route11.asm + Route11_2.asm) to the real Game DSL API surface.
+// Route11 is a sight-trainer route: 10 trainers (Gamblers / Youngsters /
+// Super Nerds[Engineers]) all keep isTrainer:true in map.json, so the runtime
+// drives each battle when it sees the player. Each .scene handler is therefore
+// DIALOGUE ONLY — if the trainer is beaten it shows the after-battle text,
+// otherwise the pre-battle taunt. Plus the Diglett's Cave sign.
+
+game_scene Route11 {
+  // ── Gambler 1 (npc 1) — EVENT_BEAT_ROUTE_11_TRAINER_0 ──────────────────
+  @storyline("talkGambler1") {
+    @trigger(map = "Route11", npc = 1)
+    @if (getFlag("EVENT_BEAT_ROUTE_11_TRAINER_0")) {
+      @speaker("") { @t("POKeMON is life! And to live\nis to gamble!", "宝可梦就是生命！而活着就是赌\n博！") }
+    } @else {
+      @speaker("") { @t("Win, lose or draw!", "管他输赢！") }
+    }
+  }
+
+  // ── Gambler 2 (npc 2) — EVENT_BEAT_ROUTE_11_TRAINER_1 ──────────────────
+  @storyline("talkGambler2") {
+    @trigger(map = "Route11", npc = 2)
+    @if (getFlag("EVENT_BEAT_ROUTE_11_TRAINER_1")) {
+      @speaker("") { @t("You can't be a coward in the\nworld of POKeMON!", "在宝可梦的世界里，不能当懦\n夫！") }
+    } @else {
+      @speaker("") { @t("Competition! I can't get\nenough!", "比赛！我怎么也不够！") }
+    }
+  }
+
+  // ── Youngster 1 (npc 3) — EVENT_BEAT_ROUTE_11_TRAINER_2 ────────────────
+  @storyline("talkYoungster1") {
+    @trigger(map = "Route11", npc = 3)
+    @if (getFlag("EVENT_BEAT_ROUTE_11_TRAINER_2")) {
+      @speaker("") { @t("I did my best! I have no\nregrets!", "我已经尽力了！我毫不后悔！") }
+    } @else {
+      @speaker("") { @t("Let's go, but don't cheat!", "来吧，但别耍赖！") }
+    }
+  }
+
+  // ── Super Nerd 1 (npc 4) — EVENT_BEAT_ROUTE_11_TRAINER_3 ───────────────
+  @storyline("talkSuperNerd1") {
+    @trigger(map = "Route11", npc = 4)
+    @if (getFlag("EVENT_BEAT_ROUTE_11_TRAINER_3")) {
+      @speaker("") { @t("Spread the word to save\nenergy!", "请多多宣传节约用电！") }
+    } @else {
+      @speaker("") { @t("Careful! I'm laying down\nsome cables!", "小心！我正在铺设电缆！") }
+    }
+  }
+
+  // ── Youngster 2 (npc 5) — EVENT_BEAT_ROUTE_11_TRAINER_4 ────────────────
+  @storyline("talkYoungster2") {
+    @trigger(map = "Route11", npc = 5)
+    @if (getFlag("EVENT_BEAT_ROUTE_11_TRAINER_4")) {
+      @speaker("") { @t("What do you want? Leave me\nalone!", "你想要什么？别烦我！") }
+    } @else {
+      @speaker("") { @t("I just became a trainer!\nBut, I think I can win!", "我刚成为训练家！但我觉得我能\n赢！") }
+    }
+  }
+
+  // ── Gambler 3 (npc 6) — EVENT_BEAT_ROUTE_11_TRAINER_5 ──────────────────
+  @storyline("talkGambler3") {
+    @trigger(map = "Route11", npc = 6)
+    @if (getFlag("EVENT_BEAT_ROUTE_11_TRAINER_5")) {
+      @speaker("") { @t("Luck of the draw! Just luck!", "全靠抽签运气！纯属运气！") }
+    } @else {
+      @speaker("") { @t("Fwahaha! I have never lost!", "哇哈哈！我从没输过！") }
+    }
+  }
+
+  // ── Gambler 4 (npc 7) — EVENT_BEAT_ROUTE_11_TRAINER_6 ──────────────────
+  @storyline("talkGambler4") {
+    @trigger(map = "Route11", npc = 7)
+    @if (getFlag("EVENT_BEAT_ROUTE_11_TRAINER_6")) {
+      @speaker("") { @t("It's just luck. Luck of the\ndraw.", "这纯属运气。抽签的运气。") }
+    } @else {
+      @speaker("") { @t("I have never won before...", "我从来没赢过……") }
+    }
+  }
+
+  // ── Youngster 3 (npc 8) — EVENT_BEAT_ROUTE_11_TRAINER_7 ────────────────
+  @storyline("talkYoungster3") {
+    @trigger(map = "Route11", npc = 8)
+    @if (getFlag("EVENT_BEAT_ROUTE_11_TRAINER_7")) {
+      @speaker("") { @t("There's a fat POKeMON that\ncomes down from the\nmountains.\n\nIt's strong if you can get\nit.", "有只胖胖的宝可梦会从山上下\n来。\n\n要是能抓到它它可是很强的。") }
+    } @else {
+      @speaker("") { @t("I'm the best in my class!", "我是班里最厉害的！") }
+    }
+  }
+
+  // ── Super Nerd 2 (npc 9) — EVENT_BEAT_ROUTE_11_TRAINER_8 ───────────────
+  @storyline("talkSuperNerd2") {
+    @trigger(map = "Route11", npc = 9)
+    @if (getFlag("EVENT_BEAT_ROUTE_11_TRAINER_8")) {
+      @speaker("") { @t("Well, better get back to\nwork.", "好吧，该回去工作了。") }
+    } @else {
+      @speaker("") { @t("Watch out for live wires!", "小心带电的电线！") }
+    }
+  }
+
+  // ── Youngster 4 (npc 10) — EVENT_BEAT_ROUTE_11_TRAINER_9 ───────────────
+  @storyline("talkYoungster4") {
+    @trigger(map = "Route11", npc = 10)
+    @if (getFlag("EVENT_BEAT_ROUTE_11_TRAINER_9")) {
+      @speaker("") { @t("I better go find stronger\nones!", "我最好去找更强的宝可梦！") }
+    } @else {
+      @speaker("") { @t("My POKeMON should be ready\nby now!", "我的宝可梦应该已经准备好了！") }
+    }
+  }
+
+  // ── Diglett's Cave sign (sign 1) ───────────────────────────────────────
+  @storyline("signDiglettsCave") {
+    @trigger(map = "Route11", sign = 1)
+    @speaker("") { @t("DIGLETT's CAVE", "地鼠洞") }
+  }
+}

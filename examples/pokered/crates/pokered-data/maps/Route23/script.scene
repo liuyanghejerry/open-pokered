@@ -1,0 +1,198 @@
+// Route23 — translated from the original disassembly (scripts/Route23.asm,
+// text/Route23.asm) to the real Game DSL API surface.
+//
+// Route23 is the Victory Road Gate route: a one-way climb to the POKeMON LEAGUE
+// guarded by seven badge checkpoints (5 Guards + 2 Swimmers). Each checkpoint
+// demands a specific badge — in descending League order from south to north:
+//   npc1 EARTHBADGE, npc2 VOLCANOBADGE, npc3 MARSHBADGE, npc4 SOULBADGE,
+//   npc5 RAINBOWBADGE, npc6 THUNDERBADGE, npc7 CASCADEBADGE.
+//
+// There is no badge-query API, so "has badge X" is approximated by the
+// gym-beaten event flag the corresponding gym scene already sets
+// (e.g. CASCADEBADGE <- EVENT_BEAT_MISTY). Passing a checkpoint sets the
+// original EVENT_PASSED_*_CHECK flag. The original's forced push-back on a
+// failed check is a fixed single-step DOWN push, reproduced with
+// movePlayerRelative (DENIED sound + refusal text included).
+
+game_scene Route23 {
+  // ── Checkpoint 1: Guard (npc 1) — EARTHBADGE ─────────────────────────────
+  @storyline("talkGuard1") {
+    @trigger(map = "Route23", npc = 1)
+    @if (getFlag("EVENT_PASSED_EARTHBADGE_CHECK")) {
+      @speaker("") { @t("OK then! Please, go right\nahead!", "那好！请吧，尽管往前走吧！") }
+    } @else {
+      @speaker("") {
+        @t("You can pass here only if\nyou have the EARTHBADGE!", "只有持有绿色徽章才能从这里通\n过！")
+      }
+      @if (getFlag("EVENT_BEAT_VIRIDIAN_GYM_GIOVANNI")) {
+        playSound("SFX_GET_ITEM_1")
+        @speaker("") { @t("Oh! That is the EARTHBADGE!", "哦！那是绿色徽章！") }
+        @speaker("") { @t("OK then! Please, go right\nahead!", "那好！请吧，尽管往前走吧！") }
+        setFlag("EVENT_PASSED_EARTHBADGE_CHECK")
+      } @else {
+        playSound("SFX_DENIED")
+        @speaker("") {
+          @t("You don't have the\nEARTHBADGE yet!\n\nYou have to have it to get\nto POKeMON LEAGUE!", "你还没有绿色徽章！\n\n没有它就无法前往宝可梦联盟！")
+        }
+        // Original Route23MovePlayerDownScript: one-step PAD_DOWN push-back.
+        movePlayerRelative(["down"])
+      }
+    }
+  }
+
+  // ── Checkpoint 2: Guard (npc 2) — VOLCANOBADGE ───────────────────────────
+  @storyline("talkGuard2") {
+    @trigger(map = "Route23", npc = 2)
+    @if (getFlag("EVENT_PASSED_VOLCANOBADGE_CHECK")) {
+      @speaker("") { @t("OK then! Please, go right\nahead!", "那好！请吧，尽管往前走吧！") }
+    } @else {
+      @speaker("") {
+        @t("You can pass here only if\nyou have the VOLCANOBADGE!", "只有持有深红徽章才能从这里通\n过！")
+      }
+      @if (getFlag("EVENT_BEAT_BLAINE")) {
+        playSound("SFX_GET_ITEM_1")
+        @speaker("") { @t("Oh! That is the\nVOLCANOBADGE!", "哦！那是深红徽章！") }
+        @speaker("") { @t("OK then! Please, go right\nahead!", "那好！请吧，尽管往前走吧！") }
+        setFlag("EVENT_PASSED_VOLCANOBADGE_CHECK")
+      } @else {
+        playSound("SFX_DENIED")
+        @speaker("") {
+          @t("You don't have the\nVOLCANOBADGE yet!\n\nYou have to have it to get\nto POKeMON LEAGUE!", "你还没有深红徽章！\n\n没有它就无法前往宝可梦联盟！")
+        }
+        // Original Route23MovePlayerDownScript: one-step PAD_DOWN push-back.
+        movePlayerRelative(["down"])
+      }
+    }
+  }
+
+  // ── Checkpoint 3: Swimmer (npc 3) — MARSHBADGE ───────────────────────────
+  @storyline("talkSwimmer1") {
+    @trigger(map = "Route23", npc = 3)
+    @if (getFlag("EVENT_PASSED_MARSHBADGE_CHECK")) {
+      @speaker("") { @t("OK then! Please, go right\nahead!", "那好！请吧，尽管往前走吧！") }
+    } @else {
+      @speaker("") {
+        @t("You can pass here only if\nyou have the MARSHBADGE!", "只有持有粉色徽章才能从这里通\n过！")
+      }
+      @if (getFlag("EVENT_BEAT_SABRINA")) {
+        playSound("SFX_GET_ITEM_1")
+        @speaker("") { @t("Oh! That is the MARSHBADGE!", "哦！那是粉色徽章！") }
+        @speaker("") { @t("OK then! Please, go right\nahead!", "那好！请吧，尽管往前走吧！") }
+        setFlag("EVENT_PASSED_MARSHBADGE_CHECK")
+      } @else {
+        playSound("SFX_DENIED")
+        @speaker("") {
+          @t("You don't have the\nMARSHBADGE yet!\n\nYou have to have it to get\nto POKeMON LEAGUE!", "你还没有粉色徽章！\n\n没有它就无法前往宝可梦联盟！")
+        }
+        // Original Route23MovePlayerDownScript: one-step PAD_DOWN push-back.
+        movePlayerRelative(["down"])
+      }
+    }
+  }
+
+  // ── Checkpoint 4: Swimmer (npc 4) — SOULBADGE ────────────────────────────
+  @storyline("talkSwimmer2") {
+    @trigger(map = "Route23", npc = 4)
+    @if (getFlag("EVENT_PASSED_SOULBADGE_CHECK")) {
+      @speaker("") { @t("OK then! Please, go right\nahead!", "那好！请吧，尽管往前走吧！") }
+    } @else {
+      @speaker("") {
+        @t("You can pass here only if\nyou have the SOULBADGE!", "只有持有灵魂徽章才能从这里通\n过！")
+      }
+      @if (getFlag("EVENT_BEAT_KOGA")) {
+        playSound("SFX_GET_ITEM_1")
+        @speaker("") { @t("Oh! That is the SOULBADGE!", "哦！那是灵魂徽章！") }
+        @speaker("") { @t("OK then! Please, go right\nahead!", "那好！请吧，尽管往前走吧！") }
+        setFlag("EVENT_PASSED_SOULBADGE_CHECK")
+      } @else {
+        playSound("SFX_DENIED")
+        @speaker("") {
+          @t("You don't have the SOULBADGE\nyet!\n\nYou have to have it to get\nto POKeMON LEAGUE!", "你还没有灵魂徽章！\n\n没有它就无法前往宝可梦联盟！")
+        }
+        // Original Route23MovePlayerDownScript: one-step PAD_DOWN push-back.
+        movePlayerRelative(["down"])
+      }
+    }
+  }
+
+  // ── Checkpoint 5: Guard (npc 5) — RAINBOWBADGE ───────────────────────────
+  @storyline("talkGuard3") {
+    @trigger(map = "Route23", npc = 5)
+    @if (getFlag("EVENT_PASSED_RAINBOWBADGE_CHECK")) {
+      @speaker("") { @t("OK then! Please, go right\nahead!", "那好！请吧，尽管往前走吧！") }
+    } @else {
+      @speaker("") {
+        @t("You can pass here only if\nyou have the RAINBOWBADGE!", "只有持有彩虹徽章才能从这里通\n过！")
+      }
+      @if (getFlag("EVENT_BEAT_ERIKA")) {
+        playSound("SFX_GET_ITEM_1")
+        @speaker("") { @t("Oh! That is the\nRAINBOWBADGE!", "哦！那是彩虹徽章！") }
+        @speaker("") { @t("OK then! Please, go right\nahead!", "那好！请吧，尽管往前走吧！") }
+        setFlag("EVENT_PASSED_RAINBOWBADGE_CHECK")
+      } @else {
+        playSound("SFX_DENIED")
+        @speaker("") {
+          @t("You don't have the\nRAINBOWBADGE yet!\n\nYou have to have it to get\nto POKeMON LEAGUE!", "你还没有彩虹徽章！\n\n没有它就无法前往宝可梦联盟！")
+        }
+        // Original Route23MovePlayerDownScript: one-step PAD_DOWN push-back.
+        movePlayerRelative(["down"])
+      }
+    }
+  }
+
+  // ── Checkpoint 6: Guard (npc 6) — THUNDERBADGE ───────────────────────────
+  @storyline("talkGuard4") {
+    @trigger(map = "Route23", npc = 6)
+    @if (getFlag("EVENT_PASSED_THUNDERBADGE_CHECK")) {
+      @speaker("") { @t("OK then! Please, go right\nahead!", "那好！请吧，尽管往前走吧！") }
+    } @else {
+      @speaker("") {
+        @t("You can pass here only if\nyou have the THUNDERBADGE!", "只有持有橙色徽章才能从这里通\n过！")
+      }
+      @if (getFlag("EVENT_BEAT_LT_SURGE")) {
+        playSound("SFX_GET_ITEM_1")
+        @speaker("") { @t("Oh! That is the\nTHUNDERBADGE!", "哦！那是橙色徽章！") }
+        @speaker("") { @t("OK then! Please, go right\nahead!", "那好！请吧，尽管往前走吧！") }
+        setFlag("EVENT_PASSED_THUNDERBADGE_CHECK")
+      } @else {
+        playSound("SFX_DENIED")
+        @speaker("") {
+          @t("You don't have the\nTHUNDERBADGE yet!\n\nYou have to have it to get\nto POKeMON LEAGUE!", "你还没有橙色徽章！\n\n没有它就无法前往宝可梦联盟！")
+        }
+        // Original Route23MovePlayerDownScript: one-step PAD_DOWN push-back.
+        movePlayerRelative(["down"])
+      }
+    }
+  }
+
+  // ── Checkpoint 7: Guard (npc 7) — CASCADEBADGE ───────────────────────────
+  @storyline("talkGuard5") {
+    @trigger(map = "Route23", npc = 7)
+    @if (getFlag("EVENT_PASSED_CASCADEBADGE_CHECK")) {
+      @speaker("") { @t("OK then! Please, go right\nahead!", "那好！请吧，尽管往前走吧！") }
+    } @else {
+      @speaker("") {
+        @t("You can pass here only if\nyou have the CASCADEBADGE!", "只有持有蓝色徽章才能从这里通\n过！")
+      }
+      @if (getFlag("EVENT_BEAT_MISTY")) {
+        playSound("SFX_GET_ITEM_1")
+        @speaker("") { @t("Oh! That is the\nCASCADEBADGE!", "哦！那是蓝色徽章！") }
+        @speaker("") { @t("OK then! Please, go right\nahead!", "那好！请吧，尽管往前走吧！") }
+        setFlag("EVENT_PASSED_CASCADEBADGE_CHECK")
+      } @else {
+        playSound("SFX_DENIED")
+        @speaker("") {
+          @t("You don't have the\nCASCADEBADGE yet!\n\nYou have to have it to get\nto POKeMON LEAGUE!", "你还没有蓝色徽章！\n\n没有它就无法前往宝可梦联盟！")
+        }
+        // Original Route23MovePlayerDownScript: one-step PAD_DOWN push-back.
+        movePlayerRelative(["down"])
+      }
+    }
+  }
+
+  // ── Victory Road Gate sign (sign 1) ──────────────────────────────────────
+  @storyline("sign1") {
+    @trigger(map = "Route23", sign = 1)
+    @speaker("") { @t("VICTORY ROAD GATE - POKeMON\nLEAGUE", "冠军之路大门 - 宝可梦联盟") }
+  }
+}

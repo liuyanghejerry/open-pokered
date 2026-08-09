@@ -1,0 +1,9 @@
+{
+  "$schema": "../schemas/move.schema.json",
+  "id": "Psybeam",
+  "effect": "ConfusionSideEffect",
+  "power": 65,
+  "type": "Psychic",
+  "accuracy": 100,
+  "pp": 20
+}

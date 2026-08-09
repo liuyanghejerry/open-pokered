@@ -1,0 +1,79 @@
+{
+  "$schema": "../schemas/pokemon.schema.json",
+  "species": "Weepinbell",
+  "baseStats": {
+    "hp": 65,
+    "attack": 90,
+    "defense": 50,
+    "speed": 55,
+    "special": 85
+  },
+  "type1": "Grass",
+  "type2": "Poison",
+  "catchRate": 120,
+  "baseExp": 151,
+  "growthRate": "MediumSlow",
+  "initialMoves": [
+    "VineWhip",
+    "Growth",
+    "Wrap",
+    "None"
+  ],
+  "tmHmFlags": [
+    36,
+    3,
+    56,
+    192,
+    3,
+    8,
+    6
+  ],
+  "pokedex": {
+    "category": "FLYCATCHER",
+    "heightFeet": 3,
+    "heightInches": 3,
+    "weightDecipounds": 140,
+    "flavorTextPages": [
+      "It spits out\nPOISONPOWDER to\nimmobilize the",
+      "enemy and then\nfinishes it with\na spray of ACID"
+    ]
+  },
+  "evolutions": [
+    {
+      "method": "item",
+      "species": "Victreebel",
+      "item": "LeafStone",
+      "minLevel": 1
+    }
+  ],
+  "learnset": [
+    {
+      "level": 13,
+      "moveId": "Wrap"
+    },
+    {
+      "level": 15,
+      "moveId": "Poisonpowder"
+    },
+    {
+      "level": 18,
+      "moveId": "SleepPowder"
+    },
+    {
+      "level": 23,
+      "moveId": "StunSpore"
+    },
+    {
+      "level": 29,
+      "moveId": "Acid"
+    },
+    {
+      "level": 38,
+      "moveId": "RazorLeaf"
+    },
+    {
+      "level": 49,
+      "moveId": "Slam"
+    }
+  ]
+}

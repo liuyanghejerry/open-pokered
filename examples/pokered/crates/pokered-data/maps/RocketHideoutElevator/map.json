@@ -1,0 +1,38 @@
+{
+  "$schema": "../../schemas/map.schema.json",
+  "id": 203,
+  "name": "RocketHideoutElevator",
+  "header": {
+    "tileset": "Lobby",
+    "music": "Dungeon1",
+    "connectionFlags": 0,
+    "width": 3,
+    "height": 4,
+    "borderBlock": 15
+  },
+  "connections": {},
+  "warps": [
+    {
+      "x": 2,
+      "y": 1,
+      "destMap": "RocketHideoutB1F",
+      "destWarpId": 2
+    },
+    {
+      "x": 3,
+      "y": 1,
+      "destMap": "RocketHideoutB1F",
+      "destWarpId": 4
+    }
+  ],
+  "npcs": [],
+  "signs": [
+    {
+      "x": 1,
+      "y": 1,
+      "textId": 1
+    }
+  ],
+  "text": {},
+  "wild": null
+}

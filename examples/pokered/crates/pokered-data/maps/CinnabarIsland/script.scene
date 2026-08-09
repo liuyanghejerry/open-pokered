@@ -1,0 +1,81 @@
+// CinnabarIsland — translated from the original disassembly
+// (scripts/CinnabarIsland.asm, text/CinnabarIsland.asm) to the real Game DSL
+// API surface. This is a town/island map: two dialogue-only NPCs and five
+// signs. The only scripted logic is the locked CINNABAR GYM door — until the
+// player has the SECRET KEY, walking up to the gym entrance shows
+// "The door is locked..." and pushes the player back south (the original
+// simulates a DOWN joypad press). Approximated here with movePlayer.
+
+game_scene CinnabarIsland {
+  // Original CinnabarIsland_Script resets EVENT_LAB_STILL_REVIVING_FOSSIL on
+  // every load: leaving the island to the Lab marks the fossil revive as done,
+  // so the Lab scientist hands the revived POKeMON on the next visit.
+  @load {
+    resetFlag("EVENT_LAB_STILL_REVIVING_FOSSIL")
+  }
+
+  // ── Locked gym door (gym warp is at 18,3; player stands at 18,4 facing up)
+  @storyline("coordGymDoorLocked") {
+    @trigger(map = "CinnabarIsland", name = "gymDoorLocked")
+    @if (!hasItem("SECRET_KEY")) {
+      facePlayer("up")
+      @speaker("") {
+        @t("The door is locked...", "门是锁着的……")
+      }
+      // Original simulates a DOWN press to step the player back off the door.
+      movePlayerRelative([[0, 1]])
+    }
+  }
+
+  // ── Girl (npc 1) ────────────────────────────────────────────────────────
+  @storyline("talkGirl") {
+    @trigger(map = "CinnabarIsland", npc = 1)
+    @speaker("") {
+      @t("CINNABAR GYM's BLAINE is an\nodd man who has lived here\nfor decades.", "红莲道馆的夏伯是个怪人，在这\n里住了几十年。")
+    }
+  }
+
+  // ── Gambler (npc 2) ─────────────────────────────────────────────────────
+  @storyline("talkGambler") {
+    @trigger(map = "CinnabarIsland", npc = 2)
+    @speaker("") {
+      @t("Scientists conduct\nexperiments in the burned\nout building.", "科学家们在烧毁的建筑物里进行\n实验。")
+    }
+  }
+
+  // ── Signs ───────────────────────────────────────────────────────────────
+  @storyline("signTown") {
+    @trigger(map = "CinnabarIsland", sign = 1)
+    @speaker("") {
+      @t("CINNABAR ISLAND The Fiery\nTown of Burning Desire", "红莲岛燃烧欲望的火焰城镇")
+    }
+  }
+
+  @storyline("signMart") {
+    @trigger(map = "CinnabarIsland", sign = 2)
+    @speaker("") {
+      @t("All your item needs\nfulfilled! POKeMON MART", "满足你的一切道具需求！友好商\n店")
+    }
+  }
+
+  @storyline("signPokecenter") {
+    @trigger(map = "CinnabarIsland", sign = 3)
+    @speaker("") {
+      @t("Heal Your POKeMON! POKeMON\nCENTER", "治愈你的宝可梦！宝可梦中心")
+    }
+  }
+
+  @storyline("signPokemonLab") {
+    @trigger(map = "CinnabarIsland", sign = 4)
+    @speaker("") {
+      @t("POKeMON LAB", "宝可梦研究所")
+    }
+  }
+
+  @storyline("signGym") {
+    @trigger(map = "CinnabarIsland", sign = 5)
+    @speaker("") {
+      @t("CINNABAR ISLAND POKeMON GYM\nLEADER: BLAINE\n\nThe Hot-Headed Quiz Master!", "红莲岛宝可梦道馆馆主：夏伯\n\n热情如火的猜谜大师！")
+    }
+  }
+}

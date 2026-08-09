@@ -1,0 +1,9 @@
+{
+  "$schema": "../schemas/move.schema.json",
+  "id": "CometPunch",
+  "effect": "TwoToFiveAttacksEffect",
+  "power": 18,
+  "type": "Normal",
+  "accuracy": 85,
+  "pp": 15
+}

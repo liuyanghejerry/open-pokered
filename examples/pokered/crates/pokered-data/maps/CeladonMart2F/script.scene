@@ -1,0 +1,43 @@
+// CeladonMart2F — translated from the original disassembly
+// (scripts/CeladonMart2F.asm, text/CeladonMart2F.asm, data/items/marts.asm) to
+// the real Game DSL API surface. This is a department-store floor: two shop
+// clerks (Clerk1 sells items, Clerk2 sells TMs via openShop), plus two
+// dialogue-only NPCs and one directory sign.
+
+game_scene CeladonMart2F {
+  // ── Clerk1 (npc 1) — item counter (script_mart) ──────────────────────────
+  @storyline("talkClerk1") {
+    @trigger(map = "CeladonMart2F", npc = 1)
+    openShop(["GreatBall", "SuperPotion", "Revive", "SuperRepel", "Antidote", "BurnHeal", "IceHeal", "Awakening", "ParlyzHeal"])
+  }
+
+  // ── Clerk2 (npc 2) — TM counter (script_mart) ────────────────────────────
+  @storyline("talkClerk2") {
+    @trigger(map = "CeladonMart2F", npc = 2)
+    openShop(["Tm32", "Tm33", "Tm02", "Tm07", "Tm37", "Tm01", "Tm05", "Tm09", "Tm17"])
+  }
+
+  // ── Middle-aged man (npc 3) — dialogue only ──────────────────────────────
+  @storyline("talkMiddleAgedMan") {
+    @trigger(map = "CeladonMart2F", npc = 3)
+    @speaker("") {
+      @t("SUPER REPEL keeps weak\nPOKeMON at bay...\n\nHmm, it's a more powerful\nREPEL!", "好驱虫剂能让弱小的宝可梦不敢\n靠近……\n\n嗯，它比驱虫剂更强劲！")
+    }
+  }
+
+  // ── Girl (npc 4) — dialogue only ─────────────────────────────────────────
+  @storyline("talkGirl") {
+    @trigger(map = "CeladonMart2F", npc = 4)
+    @speaker("") {
+      @t("For long outings, you should\nbuy REVIVE.", "出远门时，应该买些活力碎片。")
+    }
+  }
+
+  // ── Current-floor directory sign (sign 1) ────────────────────────────────
+  @storyline("currentFloorSign") {
+    @trigger(map = "CeladonMart2F", sign = 1)
+    @speaker("") {
+      @t("Top Grade Items for\nTrainers!\n\n2F: TRAINER'S     MARKET", "训练家专用的高级道具！\n\n2层：训练家    市场")
+    }
+  }
+}

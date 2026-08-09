@@ -1,0 +1,65 @@
+// Route15Gate2F — translated from the original disassembly
+// (scripts/Route15Gate2F.asm, text/Route15Gate2F.asm,
+// engine/events/oaks_aide.asm + data/text/text_1.asm). An Oak's Aide
+// (Scientist) gives EXP.ALL once the player has caught 50 kinds of POKeMON,
+// plus one binocular sign that only prints its view text when the player faces
+// up (GateUpstairsScript_PrintIfFacingUp).
+
+game_scene Route15Gate2F {
+  // ── Oak's Aide / Scientist (npc 1) — gives EXP.ALL at 50 kinds owned ─────
+  // requirement = 50, reward = EXP_ALL, completion flag = EVENT_GOT_EXP_ALL.
+  // The OaksAide @-decimal tokens substitute to fixed values here (50 / EXP.ALL),
+  // and the owned-count phrase is approximated with getPokedexOwnedCount().
+  @storyline("talkOaksAide") {
+    @trigger(map = "Route15Gate2F", npc = 1)
+    @if (getFlag("EVENT_GOT_EXP_ALL")) {
+      // Already received it: the aide just prints the EXP.ALL description.
+      @speaker("") {
+        @t("EXP.ALL gives EXP points to\nall the POKeMON with you,\neven if they don't fight.\n\nIt does, however, reduce the\namount of EXP for each\nPOKeMON.\n\nIf you don't need it, you\nshould store it via PC.", "EXP.ALL会把经验值分给同行的\n所有宝可梦，即使它们没有参\n战。\n\n但是，它减少了每只宝可梦获得\n的经验值的数量。\n\n如果不需要，可以通过电脑存放\n起来。")
+      }
+    } @else {
+      // OaksAideHiText (requirement = 50 kinds, reward = EXP.ALL)
+      @speaker("") {
+        @t("Hi! Remember me? I'm\nPROF.OAK's AIDE!\n\nIf you caught 50 kinds of\nPOKeMON, I'm supposed to\ngive you an EXP.ALL!\n\nSo, <PLAYER>! Have you\ncaught at least 50 kinds of\nPOKeMON?", "嗨！还记得我吗？我是大木博士\n的助手！\n\n如果你抓住了 50种宝可梦，我\n就应该把 EXP.ALL 送给你！\n\n那么，<PLAYER>！你至少抓住了\n50种宝可梦吗？")
+      }
+      @choice {
+        @option(@t("YES", "是")) {
+          @if (getPokedexOwnedCount() >= 50) {
+            // OaksAideHereYouGoText -> give item -> OaksAideGotItemText
+            @speaker("") {
+              @t("Great! You have caught 50\nkinds of POKeMON!\nCongratulations!\n\nHere you go!", "太棒了！你已经抓到了50种宝可\n梦！恭喜你！\n\n这个给你！")
+            }
+            giveItem("EXP_ALL", 1)
+            setFlag("EVENT_GOT_EXP_ALL")
+            @speaker("") { @t("<PLAYER> got the EXP.ALL!", "<PLAYER>得到了 EXP.ALL！") }
+            // ExpAllText follows in the original once the item is received.
+            @speaker("") {
+              @t("EXP.ALL gives EXP points to\nall the POKeMON with you,\neven if they don't fight.\n\nIt does, however, reduce the\namount of EXP for each\nPOKeMON.\n\nIf you don't need it, you\nshould store it via PC.", "EXP.ALL会把经验值分给同行的\n所有宝可梦，即使它们没有参\n战。\n\n但是，它减少了每只宝可梦获得\n的经验值的数量。\n\n如果不需要，可以通过电脑存放\n起来。")
+            }
+          } @else {
+            // OaksAideUhOhText (not enough kinds owned)
+            @speaker("") {
+              @t("Let's see... Uh-oh! You have\ncaught only a few kinds of\nPOKeMON!\n\nYou need 50 kinds if you\nwant the EXP.ALL.", "让我看看……哎呀！你只抓到很\n少种类的宝可梦！\n\n要得到EXP.ALL，你需要抓到 50\n种。")
+            }
+          }
+        }
+        @option(@t("NO", "否")) {
+          // OaksAideComeBackText
+          @speaker("") {
+            @t("Oh. I see.\n\nWhen you get 50 kinds, come\nback for EXP.ALL.", "哦，我明白了。\n\n当你抓到50种时，再来拿 EXP.\nALL吧。")
+          }
+        }
+      }
+    }
+  }
+
+  // ── Binoculars (sign 1) — only prints when facing up ────────────────────
+  @storyline("signBinoculars") {
+    @trigger(map = "Route15Gate2F", sign = 1)
+    @if (getPlayerFacing() == "up") {
+      @speaker("") {
+        @t("Looked into the binoculars.\n\nIt looks like a small\nisland!", "朝望远镜里看去。\n\n能看到一座小岛！")
+      }
+    }
+  }
+}

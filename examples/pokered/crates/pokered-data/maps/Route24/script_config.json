@@ -1,0 +1,41 @@
+{
+  "$schema": "../../schemas/script_config.schema.json",
+  "coordEvents": [],
+  "npcs": [
+    {
+      "id": 1,
+      "talk": "talkRocket",
+      "toggleId": "ROUTE_24_OBJ_1"
+    },
+    {
+      "id": 2,
+      "talk": "talkCooltrainerM2"
+    },
+    {
+      "id": 3,
+      "talk": "talkCooltrainerM3"
+    },
+    {
+      "id": 4,
+      "talk": "talkCooltrainerF1"
+    },
+    {
+      "id": 5,
+      "talk": "talkYoungster1"
+    },
+    {
+      "id": 6,
+      "talk": "talkCooltrainerF2"
+    },
+    {
+      "id": 7,
+      "talk": "talkYoungster2"
+    },
+    {
+      "id": 8,
+      "talk": "itemTmThunderWave",
+      "toggleId": "ROUTE_24_OBJ_8"
+    }
+  ],
+  "signs": []
+}

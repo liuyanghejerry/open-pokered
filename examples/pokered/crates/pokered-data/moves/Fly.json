@@ -1,0 +1,9 @@
+{
+  "$schema": "../schemas/move.schema.json",
+  "id": "Fly",
+  "effect": "FlyEffect",
+  "power": 70,
+  "type": "Flying",
+  "accuracy": 95,
+  "pp": 15
+}

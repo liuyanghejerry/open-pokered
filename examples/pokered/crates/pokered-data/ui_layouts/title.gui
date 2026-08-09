@@ -1,0 +1,23 @@
+screen Title {
+  text("{title_text}") {
+    rect = {tx: 2, ty: 2, tw: 16, th: 2}
+    color = "White"
+    align = "center"
+  }
+  text(@t("POKEMON", "宝可梦")) {
+    rect = {tx: 4, ty: 8, tw: 12, th: 1}
+    color = "White"
+    align = "center"
+  }
+  text("{copyright}") {
+    rect = {tx: 2, ty: 16, tw: 16, th: 1}
+    color = "DarkGray"
+    align = "center"
+  }
+  text(@t("PRESS START", "按 START")) {
+    rect = {tx: 4, ty: 14, tw: 12, th: 2}
+    color = "White"
+    align = "center"
+    visible = "{show_blink}"
+  }
+}

@@ -1,0 +1,188 @@
+{
+  "$schema": "../../schemas/map.schema.json",
+  "id": 143,
+  "name": "PokemonTower2F",
+  "header": {
+    "tileset": "Cemetery",
+    "music": "PokemonTower",
+    "connectionFlags": 0,
+    "width": 10,
+    "height": 9,
+    "borderBlock": 1
+  },
+  "connections": {},
+  "warps": [
+    {
+      "x": 3,
+      "y": 9,
+      "destMap": "PokemonTower3F",
+      "destWarpId": 0
+    },
+    {
+      "x": 18,
+      "y": 9,
+      "destMap": "PokemonTower1F",
+      "destWarpId": 2
+    }
+  ],
+  "npcs": [
+    {
+      "spriteId": 2,
+      "spriteName": "Blue",
+      "x": 14,
+      "y": 5,
+      "movement": "Stationary",
+      "facing": "Down",
+      "range": 0,
+      "textId": 1,
+      "isTrainer": false
+    },
+    {
+      "spriteId": 25,
+      "spriteName": "Channeler",
+      "x": 3,
+      "y": 7,
+      "movement": "Stationary",
+      "facing": "Right",
+      "range": 0,
+      "textId": 2,
+      "isTrainer": false
+    }
+  ],
+  "signs": [],
+  "text": {
+    "npc": {
+      "1": [
+        {
+          "line1": "[Rival battle",
+          "line2": "script]"
+        },
+        {
+          "line1": "<RIVAL>: Hey,",
+          "line2": "<PLAYER>! What"
+        },
+        {
+          "line1": "brings you here?",
+          "line2": "Your #MON"
+        },
+        {
+          "line1": "don't look dead!",
+          "line2": ""
+        },
+        {
+          "line1": "",
+          "line2": ""
+        },
+        {
+          "line1": "I can at least",
+          "line2": "make them faint!"
+        },
+        {
+          "line1": "Let's go, pal!",
+          "line2": ""
+        }
+      ],
+      "1_Defeated": [
+        {
+          "line1": "What?",
+          "line2": "You stinker!"
+        },
+        {
+          "line1": "",
+          "line2": ""
+        },
+        {
+          "line1": "I took it easy on",
+          "line2": "you too!"
+        }
+      ],
+      "1_Won": [
+        {
+          "line1": "<RIVAL>: Well,",
+          "line2": "look at all your"
+        },
+        {
+          "line1": "wimpy #MON!",
+          "line2": ""
+        },
+        {
+          "line1": "",
+          "line2": ""
+        },
+        {
+          "line1": "Toughen them up a",
+          "line2": "bit more!"
+        }
+      ],
+      "1_AfterBattle": [
+        {
+          "line1": "How's your #DEX",
+          "line2": "coming, pal?"
+        },
+        {
+          "line1": "I just caught a",
+          "line2": "CUBONE!"
+        },
+        {
+          "line1": "",
+          "line2": ""
+        },
+        {
+          "line1": "I can't find the",
+          "line2": "grown-up MAROWAK"
+        },
+        {
+          "line1": "yet!",
+          "line2": ""
+        },
+        {
+          "line1": "",
+          "line2": ""
+        },
+        {
+          "line1": "I doubt there are",
+          "line2": "any left! Well, I"
+        },
+        {
+          "line1": "better get going!",
+          "line2": ""
+        },
+        {
+          "line1": "I've got a lot to",
+          "line2": "accomplish, pal!"
+        },
+        {
+          "line1": "",
+          "line2": ""
+        },
+        {
+          "line1": "Smell ya later!",
+          "line2": ""
+        }
+      ],
+      "2": [
+        {
+          "line1": "Even we could not",
+          "line2": "identify the"
+        },
+        {
+          "line1": "wayward GHOSTs!",
+          "line2": ""
+        },
+        {
+          "line1": "",
+          "line2": ""
+        },
+        {
+          "line1": "A SILPH SCOPE",
+          "line2": "might be able to"
+        },
+        {
+          "line1": "unmask them.",
+          "line2": ""
+        }
+      ]
+    }
+  },
+  "wild": null
+}

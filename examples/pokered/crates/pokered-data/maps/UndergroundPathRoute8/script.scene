@@ -1,0 +1,14 @@
+// UndergroundPathRoute8 — translated from the original disassembly
+// (scripts/UndergroundPathRoute8.asm, text/UndergroundPathRoute8.asm) to the
+// real Game DSL API surface. A connector room for the Route 8 underground path;
+// the only content is one NPC (a Girl) with a single line of dialogue.
+
+game_scene UndergroundPathRoute8 {
+  // ── Girl (npc 1) — plain dialogue ──────────────────────────────────────
+  @storyline("talkGirl") {
+    @trigger(map = "UndergroundPathRoute8", npc = 1)
+    @speaker("") {
+      @t("The dept. store in CELADON\nhas a great selection!", "彩虹市的百货商店商品很齐全！")
+    }
+  }
+}

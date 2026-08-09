@@ -1,0 +1,76 @@
+{
+  "$schema": "/schemas/layout.schema.json",
+  "schema_version": 1,
+  "screen": "battle_move",
+  "variants": {
+    "default": {
+      "children": [
+        {
+          "id": "base",
+          "rect": {
+            "tx": 0,
+            "ty": 12,
+            "tw": 20,
+            "th": 6
+          },
+          "color": "Black"
+        },
+        {
+          "id": "box_0",
+          "rect": {
+            "tx": 4,
+            "ty": 12,
+            "tw": 16,
+            "th": 6
+          },
+          "color": "Black"
+        },
+        {
+          "id": "box_1",
+          "rect": {
+            "tx": 0,
+            "ty": 8,
+            "tw": 11,
+            "th": 5
+          },
+          "color": "Black",
+          "labels": [
+            {
+              "tx": 0,
+              "ty": 0,
+              "text": "TYPE/",
+              "color": "Black"
+            },
+            {
+              "tx": 1,
+              "ty": 2,
+              "text": "PP",
+              "color": "Black"
+            }
+          ]
+        },
+        {
+          "id": "list_default",
+          "layout": "list",
+          "z_index": 0,
+          "rect": {
+            "tx": 0,
+            "ty": 0,
+            "tw": 20,
+            "th": 18
+          },
+          "color": "Black",
+          "border": true,
+          "max_visible_rows": 12,
+          "cursor": {
+            "tx": 0,
+            "base_ty": 0,
+            "row_step": 1,
+            "glyph": "\u25b6",
+            "color": "Black"
+          }
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,56 @@
+{
+  "$schema": "../schemas/pokemon.schema.json",
+  "species": "Moltres",
+  "baseStats": {
+    "hp": 90,
+    "attack": 100,
+    "defense": 90,
+    "speed": 90,
+    "special": 125
+  },
+  "type1": "Fire",
+  "type2": "Flying",
+  "catchRate": 3,
+  "baseExp": 217,
+  "growthRate": "Slow",
+  "initialMoves": [
+    "Peck",
+    "FireSpin",
+    "None",
+    "None"
+  ],
+  "tmHmFlags": [
+    42,
+    67,
+    8,
+    192,
+    99,
+    12,
+    10
+  ],
+  "pokedex": {
+    "category": "FLAME",
+    "heightFeet": 6,
+    "heightInches": 7,
+    "weightDecipounds": 1320,
+    "flavorTextPages": [
+      "Known as the\nlegendary bird of\nfire. Every flap",
+      "of its wings\ncreates a dazzling\nflash of flames"
+    ]
+  },
+  "evolutions": [],
+  "learnset": [
+    {
+      "level": 51,
+      "moveId": "Leer"
+    },
+    {
+      "level": 55,
+      "moveId": "Agility"
+    },
+    {
+      "level": 60,
+      "moveId": "SkyAttack"
+    }
+  ]
+}

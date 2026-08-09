@@ -1,0 +1,13 @@
+screen BattleBag {
+  panel {
+    rect = {tx: 4, ty: 10, tw: 16, th: 8}
+    style = "default"
+  }
+  flex_list("{bag_items}") {
+    rect = {tx: 5, ty: 11, tw: 14, th: 6}
+    item_layout = [{field: "name", width: 11, align: "left"}, {field: "qty", width: 2, align: "right", prefix: "x"}]
+    padding = {top: 0, left: 0}
+    gap = 0
+    cursor = {tile: 223, position: "left"}
+  }
+}

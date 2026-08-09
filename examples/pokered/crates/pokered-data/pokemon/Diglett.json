@@ -1,0 +1,70 @@
+{
+  "$schema": "../schemas/pokemon.schema.json",
+  "species": "Diglett",
+  "baseStats": {
+    "hp": 10,
+    "attack": 55,
+    "defense": 25,
+    "speed": 95,
+    "special": 45
+  },
+  "type1": "Ground",
+  "type2": "Ground",
+  "catchRate": 255,
+  "baseExp": 81,
+  "growthRate": "MediumFast",
+  "initialMoves": [
+    "Scratch",
+    "None",
+    "None",
+    "None"
+  ],
+  "tmHmFlags": [
+    160,
+    3,
+    8,
+    206,
+    2,
+    136,
+    2
+  ],
+  "pokedex": {
+    "category": "MOLE",
+    "heightFeet": 0,
+    "heightInches": 8,
+    "weightDecipounds": 20,
+    "flavorTextPages": [
+      "Lives about one\nyard underground\nwhere it feeds on",
+      "plant roots. It\nsometimes appears\nabove ground"
+    ]
+  },
+  "evolutions": [
+    {
+      "method": "level",
+      "species": "Dugtrio",
+      "level": 26
+    }
+  ],
+  "learnset": [
+    {
+      "level": 15,
+      "moveId": "Growl"
+    },
+    {
+      "level": 19,
+      "moveId": "Dig"
+    },
+    {
+      "level": 24,
+      "moveId": "SandAttack"
+    },
+    {
+      "level": 31,
+      "moveId": "Slash"
+    },
+    {
+      "level": 40,
+      "moveId": "Earthquake"
+    }
+  ]
+}

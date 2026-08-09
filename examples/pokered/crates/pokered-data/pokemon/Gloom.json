@@ -1,0 +1,75 @@
+{
+  "$schema": "../schemas/pokemon.schema.json",
+  "species": "Gloom",
+  "baseStats": {
+    "hp": 60,
+    "attack": 65,
+    "defense": 70,
+    "speed": 40,
+    "special": 85
+  },
+  "type1": "Grass",
+  "type2": "Poison",
+  "catchRate": 120,
+  "baseExp": 132,
+  "growthRate": "MediumSlow",
+  "initialMoves": [
+    "Absorb",
+    "Poisonpowder",
+    "StunSpore",
+    "None"
+  ],
+  "tmHmFlags": [
+    36,
+    3,
+    56,
+    192,
+    3,
+    8,
+    6
+  ],
+  "pokedex": {
+    "category": "WEED",
+    "heightFeet": 2,
+    "heightInches": 7,
+    "weightDecipounds": 190,
+    "flavorTextPages": [
+      "The fluid that\noozes from its\nmouth isn't drool.",
+      "It is a nectar\nthat is used to\nattract prey"
+    ]
+  },
+  "evolutions": [
+    {
+      "method": "item",
+      "species": "Vileplume",
+      "item": "LeafStone",
+      "minLevel": 1
+    }
+  ],
+  "learnset": [
+    {
+      "level": 15,
+      "moveId": "Poisonpowder"
+    },
+    {
+      "level": 17,
+      "moveId": "StunSpore"
+    },
+    {
+      "level": 19,
+      "moveId": "SleepPowder"
+    },
+    {
+      "level": 28,
+      "moveId": "Acid"
+    },
+    {
+      "level": 38,
+      "moveId": "PetalDance"
+    },
+    {
+      "level": 52,
+      "moveId": "Solarbeam"
+    }
+  ]
+}

@@ -1,0 +1,64 @@
+{
+  "$schema": "../schemas/pokemon.schema.json",
+  "species": "Tauros",
+  "baseStats": {
+    "hp": 75,
+    "attack": 100,
+    "defense": 95,
+    "speed": 110,
+    "special": 70
+  },
+  "type1": "Normal",
+  "type2": "Normal",
+  "catchRate": 45,
+  "baseExp": 211,
+  "growthRate": "Slow",
+  "initialMoves": [
+    "Tackle",
+    "None",
+    "None",
+    "None"
+  ],
+  "tmHmFlags": [
+    224,
+    115,
+    136,
+    199,
+    162,
+    8,
+    34
+  ],
+  "pokedex": {
+    "category": "WILD BULL",
+    "heightFeet": 4,
+    "heightInches": 7,
+    "weightDecipounds": 1950,
+    "flavorTextPages": [
+      "When it targets\nan enemy, it\ncharges furiously",
+      "while whipping its\nbody with its\nlong tails"
+    ]
+  },
+  "evolutions": [],
+  "learnset": [
+    {
+      "level": 21,
+      "moveId": "Stomp"
+    },
+    {
+      "level": 28,
+      "moveId": "TailWhip"
+    },
+    {
+      "level": 35,
+      "moveId": "Leer"
+    },
+    {
+      "level": 44,
+      "moveId": "Rage"
+    },
+    {
+      "level": 51,
+      "moveId": "TakeDown"
+    }
+  ]
+}

@@ -1,0 +1,33 @@
+{
+  "$schema": "../../schemas/script_config.schema.json",
+  "coordEvents": [
+    {
+      "name": "rivalBattle1",
+      "position": [
+        36,
+        8
+      ],
+      "trigger": "coordRivalBattle"
+    },
+    {
+      "name": "rivalBattle2",
+      "position": [
+        37,
+        8
+      ],
+      "trigger": "coordRivalBattle"
+    }
+  ],
+  "npcs": [
+    {
+      "id": 1,
+      "talk": "talkWaiter"
+    },
+    {
+      "id": 2,
+      "talk": "talkRival",
+      "toggleId": "SS_ANNE_2F_RIVAL"
+    }
+  ],
+  "signs": []
+}

@@ -1,0 +1,219 @@
+{
+  "$schema": "../schemas/trainer.schema.json",
+  "class": "Swimmer",
+  "constName": "SWIMMER",
+  "parties": [
+    {
+      "pokemon": [
+        {
+          "level": 16,
+          "species": "Horsea"
+        },
+        {
+          "level": 16,
+          "species": "Shellder"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 30,
+          "species": "Tentacool"
+        },
+        {
+          "level": 30,
+          "species": "Shellder"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 29,
+          "species": "Goldeen"
+        },
+        {
+          "level": 29,
+          "species": "Horsea"
+        },
+        {
+          "level": 29,
+          "species": "Staryu"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 30,
+          "species": "Poliwag"
+        },
+        {
+          "level": 30,
+          "species": "Poliwhirl"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 27,
+          "species": "Horsea"
+        },
+        {
+          "level": 27,
+          "species": "Tentacool"
+        },
+        {
+          "level": 27,
+          "species": "Tentacool"
+        },
+        {
+          "level": 27,
+          "species": "Goldeen"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 29,
+          "species": "Goldeen"
+        },
+        {
+          "level": 29,
+          "species": "Shellder"
+        },
+        {
+          "level": 29,
+          "species": "Seaking"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 30,
+          "species": "Horsea"
+        },
+        {
+          "level": 30,
+          "species": "Horsea"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 27,
+          "species": "Tentacool"
+        },
+        {
+          "level": 27,
+          "species": "Tentacool"
+        },
+        {
+          "level": 27,
+          "species": "Staryu"
+        },
+        {
+          "level": 27,
+          "species": "Horsea"
+        },
+        {
+          "level": 27,
+          "species": "Tentacruel"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 31,
+          "species": "Shellder"
+        },
+        {
+          "level": 31,
+          "species": "Cloyster"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 35,
+          "species": "Staryu"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 28,
+          "species": "Horsea"
+        },
+        {
+          "level": 28,
+          "species": "Horsea"
+        },
+        {
+          "level": 28,
+          "species": "Seadra"
+        },
+        {
+          "level": 28,
+          "species": "Horsea"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 33,
+          "species": "Seadra"
+        },
+        {
+          "level": 33,
+          "species": "Tentacruel"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 37,
+          "species": "Starmie"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 33,
+          "species": "Staryu"
+        },
+        {
+          "level": 33,
+          "species": "Wartortle"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 32,
+          "species": "Poliwhirl"
+        },
+        {
+          "level": 32,
+          "species": "Tentacool"
+        },
+        {
+          "level": 32,
+          "species": "Seadra"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,70 @@
+{
+  "$schema": "../schemas/pokemon.schema.json",
+  "species": "Ekans",
+  "baseStats": {
+    "hp": 35,
+    "attack": 60,
+    "defense": 44,
+    "speed": 55,
+    "special": 40
+  },
+  "type1": "Poison",
+  "type2": "Poison",
+  "catchRate": 255,
+  "baseExp": 62,
+  "growthRate": "MediumFast",
+  "initialMoves": [
+    "Wrap",
+    "Leer",
+    "None",
+    "None"
+  ],
+  "tmHmFlags": [
+    160,
+    3,
+    24,
+    206,
+    130,
+    136,
+    34
+  ],
+  "pokedex": {
+    "category": "SNAKE",
+    "heightFeet": 6,
+    "heightInches": 7,
+    "weightDecipounds": 150,
+    "flavorTextPages": [
+      "Moves silently\nand stealthily.\nEats the eggs of",
+      "birds, such as\nPIDGEY and\nSPEAROW, whole"
+    ]
+  },
+  "evolutions": [
+    {
+      "method": "level",
+      "species": "Arbok",
+      "level": 22
+    }
+  ],
+  "learnset": [
+    {
+      "level": 10,
+      "moveId": "PoisonSting"
+    },
+    {
+      "level": 17,
+      "moveId": "Bite"
+    },
+    {
+      "level": 24,
+      "moveId": "Glare"
+    },
+    {
+      "level": 31,
+      "moveId": "Screech"
+    },
+    {
+      "level": 38,
+      "moveId": "Acid"
+    }
+  ]
+}

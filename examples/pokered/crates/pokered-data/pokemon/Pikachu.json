@@ -1,0 +1,71 @@
+{
+  "$schema": "../schemas/pokemon.schema.json",
+  "species": "Pikachu",
+  "baseStats": {
+    "hp": 35,
+    "attack": 55,
+    "defense": 30,
+    "speed": 90,
+    "special": 50
+  },
+  "type1": "Electric",
+  "type2": "Electric",
+  "catchRate": 190,
+  "baseExp": 82,
+  "growthRate": "MediumFast",
+  "initialMoves": [
+    "Thundershock",
+    "Growl",
+    "None",
+    "None"
+  ],
+  "tmHmFlags": [
+    177,
+    131,
+    141,
+    193,
+    195,
+    24,
+    66
+  ],
+  "pokedex": {
+    "category": "MOUSE",
+    "heightFeet": 1,
+    "heightInches": 4,
+    "weightDecipounds": 130,
+    "flavorTextPages": [
+      "When several of\nthese #MON\ngather, their",
+      "electricity could\nbuild and cause\nlightning storms"
+    ]
+  },
+  "evolutions": [
+    {
+      "method": "item",
+      "species": "Raichu",
+      "item": "ThunderStone",
+      "minLevel": 1
+    }
+  ],
+  "learnset": [
+    {
+      "level": 9,
+      "moveId": "ThunderWave"
+    },
+    {
+      "level": 16,
+      "moveId": "QuickAttack"
+    },
+    {
+      "level": 26,
+      "moveId": "Swift"
+    },
+    {
+      "level": 33,
+      "moveId": "Agility"
+    },
+    {
+      "level": 43,
+      "moveId": "Thunder"
+    }
+  ]
+}

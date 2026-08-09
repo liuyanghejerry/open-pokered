@@ -1,0 +1,74 @@
+{
+  "$schema": "../schemas/pokemon.schema.json",
+  "species": "Slowpoke",
+  "baseStats": {
+    "hp": 90,
+    "attack": 65,
+    "defense": 65,
+    "speed": 15,
+    "special": 40
+  },
+  "type1": "Water",
+  "type2": "Psychic",
+  "catchRate": 190,
+  "baseExp": 99,
+  "growthRate": "MediumFast",
+  "initialMoves": [
+    "Confusion",
+    "None",
+    "None",
+    "None"
+  ],
+  "tmHmFlags": [
+    160,
+    191,
+    8,
+    254,
+    227,
+    56,
+    115
+  ],
+  "pokedex": {
+    "category": "DOPEY",
+    "heightFeet": 3,
+    "heightInches": 11,
+    "weightDecipounds": 790,
+    "flavorTextPages": [
+      "Incredibly slow\nand dopey. It\ntakes 5 seconds",
+      "for it to feel\npain when under\nattack"
+    ]
+  },
+  "evolutions": [
+    {
+      "method": "level",
+      "species": "Slowbro",
+      "level": 37
+    }
+  ],
+  "learnset": [
+    {
+      "level": 18,
+      "moveId": "Disable"
+    },
+    {
+      "level": 22,
+      "moveId": "Headbutt"
+    },
+    {
+      "level": 27,
+      "moveId": "Growl"
+    },
+    {
+      "level": 33,
+      "moveId": "WaterGun"
+    },
+    {
+      "level": 40,
+      "moveId": "Amnesia"
+    },
+    {
+      "level": 48,
+      "moveId": "PsychicM"
+    }
+  ]
+}

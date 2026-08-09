@@ -1,0 +1,24 @@
+screen Bag {
+  panel {
+    rect = {tx: 6, ty: 0, tw: 8, th: 3}
+    style = "default"
+  }
+  text(@t("ITEM", "道具")) {
+    rect = {tx: 7, ty: 1, tw: 6, th: 1}
+  }
+  panel {
+    rect = {tx: 0, ty: 3, tw: 20, th: 15}
+    style = "default"
+  }
+  flex_list("{bag_items}") {
+    rect = {tx: 1, ty: 4, tw: 18, th: 13}
+    item_layout = [{field: "name", width: 14, align: "left"}, {field: "qty", width: 3, align: "right", prefix: "x"}]
+    padding = {top: 1, left: 1}
+    gap = 1
+    cursor = {tile: 223, position: "left"}
+  }
+  text(@t("CANCEL", "取消")) {
+    rect = {tx: 2, ty: 16, tw: 16, th: 1}
+    color = "DarkGray"
+  }
+}

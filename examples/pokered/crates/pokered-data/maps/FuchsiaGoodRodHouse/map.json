@@ -1,0 +1,47 @@
+{
+  "$schema": "../../schemas/map.schema.json",
+  "id": 164,
+  "name": "FuchsiaGoodRodHouse",
+  "header": {
+    "tileset": "Ship",
+    "music": "Cities2",
+    "connectionFlags": 0,
+    "width": 4,
+    "height": 4,
+    "borderBlock": 12
+  },
+  "connections": {},
+  "warps": [
+    {
+      "x": 2,
+      "y": 0,
+      "destWarpId": 8
+    },
+    {
+      "x": 2,
+      "y": 7,
+      "destWarpId": 7
+    },
+    {
+      "x": 3,
+      "y": 7,
+      "destWarpId": 7
+    }
+  ],
+  "npcs": [
+    {
+      "spriteId": 39,
+      "spriteName": "FishingGuru",
+      "x": 5,
+      "y": 3,
+      "movement": "Stationary",
+      "facing": "Right",
+      "range": 0,
+      "textId": 1,
+      "isTrainer": false
+    }
+  ],
+  "signs": [],
+  "text": {},
+  "wild": null
+}

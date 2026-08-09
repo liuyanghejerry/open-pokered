@@ -1,0 +1,9 @@
+{
+  "$schema": "../schemas/move.schema.json",
+  "id": "Mist",
+  "effect": "MistEffect",
+  "power": 0,
+  "type": "Ice",
+  "accuracy": 100,
+  "pp": 30
+}

@@ -1,0 +1,132 @@
+{
+  "$schema": "../../schemas/map.schema.json",
+  "id": 89,
+  "name": "VermilionPokecenter",
+  "header": {
+    "tileset": "Pokecenter",
+    "music": "Pokecenter",
+    "connectionFlags": 0,
+    "width": 7,
+    "height": 4,
+    "borderBlock": 0
+  },
+  "connections": {},
+  "warps": [
+    {
+      "x": 3,
+      "y": 7,
+      "destWarpId": 0
+    },
+    {
+      "x": 4,
+      "y": 7,
+      "destWarpId": 0
+    }
+  ],
+  "npcs": [
+    {
+      "spriteId": 41,
+      "spriteName": "Nurse",
+      "x": 3,
+      "y": 1,
+      "movement": "Stationary",
+      "facing": "Down",
+      "range": 0,
+      "textId": 1,
+      "isTrainer": false
+    },
+    {
+      "spriteId": 39,
+      "spriteName": "FishingGuru",
+      "x": 10,
+      "y": 5,
+      "movement": "Stationary",
+      "facing": "Down",
+      "range": 0,
+      "textId": 2,
+      "isTrainer": false
+    },
+    {
+      "spriteId": 19,
+      "spriteName": "Sailor",
+      "x": 5,
+      "y": 4,
+      "movement": "Stationary",
+      "facing": "Down",
+      "range": 0,
+      "textId": 3,
+      "isTrainer": false
+    },
+    {
+      "spriteId": 42,
+      "spriteName": "LinkReceptionist",
+      "x": 11,
+      "y": 2,
+      "movement": "Stationary",
+      "facing": "Down",
+      "range": 0,
+      "textId": 4,
+      "isTrainer": false
+    }
+  ],
+  "signs": [
+    {
+      "x": 13,
+      "y": 3,
+      "textId": 1
+    }
+  ],
+  "text": {
+    "npc": {
+      "1": [
+        {
+          "line1": "[Pokecenter Nurse",
+          "line2": "script]"
+        }
+      ],
+      "2": [
+        {
+          "line1": "Even if they are",
+          "line2": "the same level,"
+        },
+        {
+          "line1": "#MON can have",
+          "line2": "very different"
+        },
+        {
+          "line1": "abilities.",
+          "line2": ""
+        },
+        {
+          "line1": "",
+          "line2": ""
+        },
+        {
+          "line1": "A #MON raised",
+          "line2": "by a trainer is"
+        },
+        {
+          "line1": "stronger than one",
+          "line2": "in the wild."
+        }
+      ],
+      "3": [
+        {
+          "line1": "My #MON was",
+          "line2": "poisoned! It"
+        },
+        {
+          "line1": "fainted while we",
+          "line2": "were walking!"
+        }
+      ],
+      "4": [
+        {
+          "line1": "[Cable Club",
+          "line2": "script]"
+        }
+      ]
+    }
+  },
+  "wild": null
+}

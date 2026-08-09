@@ -1,0 +1,1 @@
+{"id":"MaxEther","name":"MAX ETHER","price":0,"category":"Medicine","effect":{"type":"PpRestore","params":{"all":false,"amount":null}},"held_effect":null,"berry":null,"use_outside_battle":true,"use_in_battle":true,"consume":true,"key_item":false,"sellable":false,"description":"","tags":["pp","restore"]}

@@ -1,0 +1,45 @@
+// SeafoamIslands1F — translated from the original disassembly
+// (scripts/SeafoamIslands1F.asm, data/text/text_1.asm _BoulderText) to the real
+// Game DSL API. On-enter sets the "in Seafoam" flag; the two strength boulders
+// are talk-only. The boulder-into-hole mechanic: pushing a boulder onto a hole
+// (Seafoam1HolesCoords 17,6 / 24,6) drops it to B1F (engine-side check in
+// tick_boulder_push sets EVENT_SEAFOAM1_BOULDER{n}_DOWN_HOLE), and the player
+// can fall through the holes to SeafoamIslandsB1F via the coord warps below.
+
+game_scene SeafoamIslands1F {
+  // ── On map entry ────────────────────────────────────────────────────────
+  @load {
+    setFlag("EVENT_IN_SEAFOAM_ISLANDS")
+    // Keep a boulder hidden once it has fallen through its hole.
+    @if (getFlag("EVENT_SEAFOAM1_BOULDER1_DOWN_HOLE")) {
+      hideObjectByName("SEAFOAM_ISLANDS_1F_OBJ_1")
+    }
+    @if (getFlag("EVENT_SEAFOAM1_BOULDER2_DOWN_HOLE")) {
+      hideObjectByName("SEAFOAM_ISLANDS_1F_OBJ_2")
+    }
+  }
+
+  // ── Falling through the holes to B1F ───────────────────────────────────
+  // Original IsPlayerOnDungeonWarp: stepping onto a hole drops the player to
+  // SeafoamIslandsB1F (DungeonWarpData: (18,7) / (23,7)).
+  @storyline("coordHole1") {
+    @trigger(map = "SeafoamIslands1F", name = "hole1")
+    warpTo("SeafoamIslandsB1F", 18, 7)
+  }
+  @storyline("coordHole2") {
+    @trigger(map = "SeafoamIslands1F", name = "hole2")
+    warpTo("SeafoamIslandsB1F", 23, 7)
+  }
+
+  // ── Boulder 1 (npc 1) — Strength boulder ────────────────────────────────
+  @storyline("talkBoulder1") {
+    @trigger(map = "SeafoamIslands1F", npc = 1, toggle = "SEAFOAM_ISLANDS_1F_OBJ_1")
+    @speaker("") { @t("This requires STRENGTH to\nmove!", "这需要怪力才能移动！") }
+  }
+
+  // ── Boulder 2 (npc 2) — Strength boulder ────────────────────────────────
+  @storyline("talkBoulder2") {
+    @trigger(map = "SeafoamIslands1F", npc = 2, toggle = "SEAFOAM_ISLANDS_1F_OBJ_2")
+    @speaker("") { @t("This requires STRENGTH to\nmove!", "这需要怪力才能移动！") }
+  }
+}

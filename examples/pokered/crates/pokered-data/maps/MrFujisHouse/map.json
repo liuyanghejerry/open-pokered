@@ -1,0 +1,258 @@
+{
+  "$schema": "../../schemas/map.schema.json",
+  "id": 149,
+  "name": "MrFujisHouse",
+  "header": {
+    "tileset": "House",
+    "music": "Lavender",
+    "connectionFlags": 0,
+    "width": 4,
+    "height": 4,
+    "borderBlock": 10
+  },
+  "connections": {},
+  "warps": [
+    {
+      "x": 2,
+      "y": 7,
+      "destWarpId": 2
+    },
+    {
+      "x": 3,
+      "y": 7,
+      "destWarpId": 2
+    }
+  ],
+  "npcs": [
+    {
+      "spriteId": 12,
+      "spriteName": "SuperNerd",
+      "x": 3,
+      "y": 5,
+      "movement": "Stationary",
+      "facing": "Down",
+      "range": 0,
+      "textId": 1,
+      "isTrainer": false
+    },
+    {
+      "spriteId": 8,
+      "spriteName": "LittleGirl",
+      "x": 6,
+      "y": 3,
+      "movement": "Stationary",
+      "facing": "Down",
+      "range": 0,
+      "textId": 2,
+      "isTrainer": false
+    },
+    {
+      "spriteId": 5,
+      "spriteName": "Monster",
+      "x": 6,
+      "y": 4,
+      "movement": "Stationary",
+      "facing": "Up",
+      "range": 0,
+      "textId": 3,
+      "isTrainer": false
+    },
+    {
+      "spriteId": 5,
+      "spriteName": "Monster",
+      "x": 1,
+      "y": 3,
+      "movement": "Stationary",
+      "facing": "Down",
+      "range": 0,
+      "textId": 4,
+      "isTrainer": false
+    },
+    {
+      "spriteId": 22,
+      "spriteName": "MrFuji",
+      "x": 3,
+      "y": 1,
+      "movement": "Stationary",
+      "facing": "Down",
+      "range": 0,
+      "textId": 5,
+      "isTrainer": false
+    },
+    {
+      "spriteId": 65,
+      "spriteName": "Pokedex",
+      "x": 3,
+      "y": 3,
+      "movement": "Stationary",
+      "facing": "Down",
+      "range": 0,
+      "textId": 6,
+      "isTrainer": false
+    }
+  ],
+  "signs": [],
+  "text": {
+    "npc": {
+      "1": [
+        {
+          "line1": "That's odd, MR.FUJI",
+          "line2": "isn't here."
+        },
+        {
+          "line1": "Where'd he go?",
+          "line2": ""
+        }
+      ],
+      "1_AfterRescue": [
+        {
+          "line1": "MR.FUJI had been",
+          "line2": "praying alone for"
+        },
+        {
+          "line1": "CUBONE's mother.",
+          "line2": ""
+        }
+      ],
+      "2": [
+        {
+          "line1": "This is really",
+          "line2": "MR.FUJI's house."
+        },
+        {
+          "line1": "",
+          "line2": ""
+        },
+        {
+          "line1": "He's really kind!",
+          "line2": ""
+        },
+        {
+          "line1": "",
+          "line2": ""
+        },
+        {
+          "line1": "He looks after",
+          "line2": "abandoned and"
+        },
+        {
+          "line1": "orphaned #MON!",
+          "line2": ""
+        }
+      ],
+      "2_AfterRescue": [
+        {
+          "line1": "It's so warm!",
+          "line2": "#MON are so"
+        },
+        {
+          "line1": "nice to hug!",
+          "line2": ""
+        }
+      ],
+      "3": [
+        {
+          "line1": "PSYDUCK: Gwappa!",
+          "line2": ""
+        }
+      ],
+      "4": [
+        {
+          "line1": "NIDORINO: Gaoo!",
+          "line2": ""
+        }
+      ],
+      "5": [
+        {
+          "line1": "MR.FUJI: <PLAYER>.",
+          "line2": ""
+        },
+        {
+          "line1": "",
+          "line2": ""
+        },
+        {
+          "line1": "Your #DEX quest",
+          "line2": "may fail without"
+        },
+        {
+          "line1": "love for your",
+          "line2": "#MON."
+        },
+        {
+          "line1": "",
+          "line2": ""
+        },
+        {
+          "line1": "I think this may",
+          "line2": "help your quest."
+        }
+      ],
+      "5_ReceivedFlute": [
+        {
+          "line1": "[POKE FLUTE received",
+          "line2": "script]"
+        },
+        {
+          "line1": "",
+          "line2": ""
+        },
+        {
+          "line1": "Upon hearing #",
+          "line2": "FLUTE, sleeping"
+        },
+        {
+          "line1": "#MON will",
+          "line2": "spring awake."
+        },
+        {
+          "line1": "",
+          "line2": ""
+        },
+        {
+          "line1": "It works on all",
+          "line2": "sleeping #MON."
+        }
+      ],
+      "5_NoRoom": [
+        {
+          "line1": "You must make",
+          "line2": "room for this!"
+        }
+      ],
+      "5_AfterFlute": [
+        {
+          "line1": "MR.FUJI: Has my",
+          "line2": "FLUTE helped you?"
+        }
+      ],
+      "6": [
+        {
+          "line1": "#MON Monthly",
+          "line2": "Grand Prize"
+        },
+        {
+          "line1": "Drawing!",
+          "line2": ""
+        },
+        {
+          "line1": "",
+          "line2": ""
+        },
+        {
+          "line1": "The application",
+          "line2": "form is..."
+        },
+        {
+          "line1": "",
+          "line2": ""
+        },
+        {
+          "line1": "Gone! It's been",
+          "line2": "clipped out!"
+        }
+      ]
+    }
+  },
+  "wild": null
+}

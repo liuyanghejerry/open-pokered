@@ -1,0 +1,9 @@
+{
+  "$schema": "../schemas/move.schema.json",
+  "id": "Kinesis",
+  "effect": "AccuracyDown1Effect",
+  "power": 0,
+  "type": "Psychic",
+  "accuracy": 80,
+  "pp": 15
+}

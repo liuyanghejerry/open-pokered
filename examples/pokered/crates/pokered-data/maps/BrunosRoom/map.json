@@ -1,0 +1,59 @@
+{
+  "$schema": "../../schemas/map.schema.json",
+  "id": 246,
+  "name": "BrunosRoom",
+  "header": {
+    "tileset": "Gym",
+    "music": "Dungeon1",
+    "connectionFlags": 0,
+    "width": 5,
+    "height": 6,
+    "borderBlock": 3
+  },
+  "connections": {},
+  "warps": [
+    {
+      "x": 4,
+      "y": 11,
+      "destMap": "LoreleisRoom",
+      "destWarpId": 2
+    },
+    {
+      "x": 5,
+      "y": 11,
+      "destMap": "LoreleisRoom",
+      "destWarpId": 3
+    },
+    {
+      "x": 4,
+      "y": 0,
+      "destMap": "AgathasRoom",
+      "destWarpId": 0
+    },
+    {
+      "x": 5,
+      "y": 0,
+      "destMap": "AgathasRoom",
+      "destWarpId": 1
+    }
+  ],
+  "npcs": [
+    {
+      "spriteId": 58,
+      "spriteName": "Bruno",
+      "x": 5,
+      "y": 2,
+      "movement": "Stationary",
+      "facing": "Down",
+      "range": 0,
+      "textId": 1,
+      "isTrainer": true,
+      "trainerClass": "Bruno",
+      "trainerSet": 1,
+      "endBattleText": "Why?\nHow could I lose?"
+    }
+  ],
+  "signs": [],
+  "text": {},
+  "wild": null
+}

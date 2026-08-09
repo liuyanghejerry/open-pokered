@@ -1,0 +1,145 @@
+{
+  "$schema": "../../schemas/map.schema.json",
+  "id": 142,
+  "name": "PokemonTower1F",
+  "header": {
+    "tileset": "Cemetery",
+    "music": "PokemonTower",
+    "connectionFlags": 0,
+    "width": 10,
+    "height": 9,
+    "borderBlock": 1
+  },
+  "connections": {},
+  "warps": [
+    {
+      "x": 10,
+      "y": 17,
+      "destWarpId": 1
+    },
+    {
+      "x": 11,
+      "y": 17,
+      "destWarpId": 1
+    },
+    {
+      "x": 18,
+      "y": 9,
+      "destMap": "PokemonTower2F",
+      "destWarpId": 1
+    }
+  ],
+  "npcs": [
+    {
+      "spriteId": 42,
+      "spriteName": "LinkReceptionist",
+      "x": 15,
+      "y": 13,
+      "movement": "Stationary",
+      "facing": "Up",
+      "range": 0,
+      "textId": 1,
+      "isTrainer": false
+    },
+    {
+      "spriteId": 28,
+      "spriteName": "MiddleAgedWoman",
+      "x": 6,
+      "y": 8,
+      "movement": "Stationary",
+      "facing": "Down",
+      "range": 0,
+      "textId": 2,
+      "isTrainer": false
+    },
+    {
+      "spriteId": 52,
+      "spriteName": "BaldingGuy",
+      "x": 8,
+      "y": 12,
+      "movement": "Stationary",
+      "facing": "Down",
+      "range": 0,
+      "textId": 3,
+      "isTrainer": false
+    },
+    {
+      "spriteId": 13,
+      "spriteName": "Girl",
+      "x": 13,
+      "y": 7,
+      "movement": "Stationary",
+      "facing": "Down",
+      "range": 0,
+      "textId": 4,
+      "isTrainer": false
+    },
+    {
+      "spriteId": 25,
+      "spriteName": "Channeler",
+      "x": 17,
+      "y": 7,
+      "movement": "Stationary",
+      "facing": "Left",
+      "range": 0,
+      "textId": 5,
+      "isTrainer": false
+    }
+  ],
+  "signs": [],
+  "text": {
+    "npc": {
+      "1": [
+        {
+          "line1": "#MON TOWER was",
+          "line2": "erected in the"
+        },
+        {
+          "line1": "memory of #MON",
+          "line2": "that had died."
+        }
+      ],
+      "2": [
+        {
+          "line1": "Did you come to",
+          "line2": "pay respects?"
+        },
+        {
+          "line1": "Bless you!",
+          "line2": ""
+        }
+      ],
+      "3": [
+        {
+          "line1": "I came to pray",
+          "line2": "for my CLEFAIRY."
+        },
+        {
+          "line1": "",
+          "line2": ""
+        },
+        {
+          "line1": "Sniff! I can't",
+          "line2": "stop crying..."
+        }
+      ],
+      "4": [
+        {
+          "line1": "My GROWLITHE...",
+          "line2": "Why did you die?"
+        }
+      ],
+      "5": [
+        {
+          "line1": "I am a CHANNELER!",
+          "line2": "There are spirits"
+        },
+        {
+          "line1": "up to mischief!",
+          "line2": ""
+        }
+      ]
+    }
+  },
+  "wild": null
+}

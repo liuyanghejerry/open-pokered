@@ -1,0 +1,23 @@
+{
+  "$schema": "../schemas/trainer.schema.json",
+  "class": "Erika",
+  "constName": "ERIKA",
+  "parties": [
+    {
+      "pokemon": [
+        {
+          "level": 29,
+          "species": "Victreebel"
+        },
+        {
+          "level": 24,
+          "species": "Tangela"
+        },
+        {
+          "level": 29,
+          "species": "Vileplume"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,74 @@
+{
+  "$schema": "../schemas/pokemon.schema.json",
+  "species": "Doduo",
+  "baseStats": {
+    "hp": 35,
+    "attack": 85,
+    "defense": 45,
+    "speed": 75,
+    "special": 35
+  },
+  "type1": "Normal",
+  "type2": "Flying",
+  "catchRate": 190,
+  "baseExp": 96,
+  "growthRate": "MediumFast",
+  "initialMoves": [
+    "Peck",
+    "None",
+    "None",
+    "None"
+  ],
+  "tmHmFlags": [
+    168,
+    3,
+    8,
+    192,
+    131,
+    12,
+    11
+  ],
+  "pokedex": {
+    "category": "TWIN BIRD",
+    "heightFeet": 4,
+    "heightInches": 7,
+    "weightDecipounds": 860,
+    "flavorTextPages": [
+      "A bird that makes\nup for its poor\nflying with its",
+      "fast foot speed.\nLeaves giant\nfootprints"
+    ]
+  },
+  "evolutions": [
+    {
+      "method": "level",
+      "species": "Dodrio",
+      "level": 31
+    }
+  ],
+  "learnset": [
+    {
+      "level": 20,
+      "moveId": "Growl"
+    },
+    {
+      "level": 24,
+      "moveId": "FuryAttack"
+    },
+    {
+      "level": 30,
+      "moveId": "DrillPeck"
+    },
+    {
+      "level": 36,
+      "moveId": "Rage"
+    },
+    {
+      "level": 40,
+      "moveId": "TriAttack"
+    },
+    {
+      "level": 44,
+      "moveId": "Agility"
+    }
+  ]
+}

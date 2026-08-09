@@ -1,0 +1,68 @@
+{
+  "$schema": "../schemas/pokemon.schema.json",
+  "species": "Rapidash",
+  "baseStats": {
+    "hp": 65,
+    "attack": 100,
+    "defense": 70,
+    "speed": 105,
+    "special": 80
+  },
+  "type1": "Fire",
+  "type2": "Fire",
+  "catchRate": 60,
+  "baseExp": 192,
+  "growthRate": "MediumFast",
+  "initialMoves": [
+    "Ember",
+    "TailWhip",
+    "Stomp",
+    "Growl"
+  ],
+  "tmHmFlags": [
+    224,
+    67,
+    8,
+    192,
+    227,
+    8,
+    2
+  ],
+  "pokedex": {
+    "category": "FIRE HORSE",
+    "heightFeet": 5,
+    "heightInches": 7,
+    "weightDecipounds": 2090,
+    "flavorTextPages": [
+      "Very competitive,\nthis #MON will\nchase anything",
+      "that moves fast\nin the hopes of\nracing it"
+    ]
+  },
+  "evolutions": [],
+  "learnset": [
+    {
+      "level": 30,
+      "moveId": "TailWhip"
+    },
+    {
+      "level": 32,
+      "moveId": "Stomp"
+    },
+    {
+      "level": 35,
+      "moveId": "Growl"
+    },
+    {
+      "level": 39,
+      "moveId": "FireSpin"
+    },
+    {
+      "level": 47,
+      "moveId": "TakeDown"
+    },
+    {
+      "level": 55,
+      "moveId": "Agility"
+    }
+  ]
+}

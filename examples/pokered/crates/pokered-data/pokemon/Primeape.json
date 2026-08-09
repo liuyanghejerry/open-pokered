@@ -1,0 +1,64 @@
+{
+  "$schema": "../schemas/pokemon.schema.json",
+  "species": "Primeape",
+  "baseStats": {
+    "hp": 65,
+    "attack": 105,
+    "defense": 60,
+    "speed": 95,
+    "special": 60
+  },
+  "type1": "Fighting",
+  "type2": "Fighting",
+  "catchRate": 75,
+  "baseExp": 149,
+  "growthRate": "MediumFast",
+  "initialMoves": [
+    "Scratch",
+    "Leer",
+    "KarateChop",
+    "FurySwipes"
+  ],
+  "tmHmFlags": [
+    177,
+    195,
+    143,
+    201,
+    198,
+    136,
+    34
+  ],
+  "pokedex": {
+    "category": "PIG MONKEY",
+    "heightFeet": 3,
+    "heightInches": 3,
+    "weightDecipounds": 710,
+    "flavorTextPages": [
+      "Always furious\nand tenacious to\nboot. It will not",
+      "abandon chasing\nits quarry until\nit is caught"
+    ]
+  },
+  "evolutions": [],
+  "learnset": [
+    {
+      "level": 15,
+      "moveId": "KarateChop"
+    },
+    {
+      "level": 21,
+      "moveId": "FurySwipes"
+    },
+    {
+      "level": 27,
+      "moveId": "FocusEnergy"
+    },
+    {
+      "level": 37,
+      "moveId": "SeismicToss"
+    },
+    {
+      "level": 46,
+      "moveId": "Thrash"
+    }
+  ]
+}

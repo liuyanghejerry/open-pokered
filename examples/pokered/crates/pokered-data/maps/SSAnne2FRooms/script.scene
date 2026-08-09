@@ -1,0 +1,124 @@
+// SSAnne2FRooms — translated from the original disassembly
+// (scripts/SSAnne2FRooms.asm, text/SSAnne2FRooms.asm) to the real Game DSL
+// API surface.
+//
+// Map content:
+//   - 4 sight-engaged trainers (npcs 1-4, isTrainer:true in map.json): two
+//     Gentlemen, a Fisher, and a Lass (CooltrainerF sprite). The runtime drives
+//     their battles via the trainer headers, so their .scene handlers are
+//     dialogue only — pre-battle taunt vs. after-battle line.
+//   - 2 ground items in PokeBalls: MAX_ETHER (npc 6) and RARE_CANDY (npc 9).
+//   - Several flavor NPCs (npcs 5, 7, 8, 10, 11, 12, 13). NPC 5 (Gentleman) ends
+//     by showing the SNORLAX Pokedex entry, matching the original's
+//     DisplayPokedex SNORLAX call.
+
+game_scene SSAnne2FRooms {
+  // ── Gentleman #1 (npc 1) — sight-engaged trainer; dialogue only ───────────
+  @storyline("talkGentleman1") {
+    @trigger(map = "SSAnne2FRooms", npc = 1)
+    @if (getFlag("EVENT_BEAT_SS_ANNE_9_TRAINER_0")) {
+      @speaker("") { @t("15 years ago, I would have\nwon!", "15 年前的话，赢的会是我！") }
+    } @else {
+      @speaker("") { @t("Competing against the young\nkeeps me youthful.", "和年轻人对战让我保持年轻的心\n态。") }
+    }
+  }
+
+  // ── Fisher (npc 2) — sight-engaged trainer; dialogue only ─────────────────
+  @storyline("talkFisher") {
+    @trigger(map = "SSAnne2FRooms", npc = 2)
+    @if (getFlag("EVENT_BEAT_SS_ANNE_9_TRAINER_1")) {
+      @speaker("") { @t("Party?\n\nThe cruise ship's party\nshould be over by now.", "派对？\n\n邮轮上的派对应该已经结束了\n吧。") }
+    } @else {
+      @speaker("") { @t("Check out what I fished up!", "看看我钓到了什么！") }
+    }
+  }
+
+  // ── Gentleman #2 (npc 3) — sight-engaged trainer; dialogue only ───────────
+  @storyline("talkGentleman2") {
+    @trigger(map = "SSAnne2FRooms", npc = 3)
+    @if (getFlag("EVENT_BEAT_SS_ANNE_9_TRAINER_2")) {
+      @speaker("") { @t("I prefer strong and rare\nPOKeMON.", "我更喜欢强大又稀有的宝可梦。") }
+    } @else {
+      @speaker("") { @t("Which do you like, a strong\nor a rare POKeMON?", "你喜欢哪个，强大的还是稀有的\n宝可梦？") }
+    }
+  }
+
+  // ── Lass / CooltrainerF (npc 4) — sight-engaged trainer; dialogue only ────
+  @storyline("talkCooltrainerF") {
+    @trigger(map = "SSAnne2FRooms", npc = 4)
+    @if (getFlag("EVENT_BEAT_SS_ANNE_9_TRAINER_3")) {
+      @speaker("") { @t("Oh, I adore your strong\nPOKeMON!", "哦，我太喜欢你强大的宝可梦\n了！") }
+    } @else {
+      @speaker("") { @t("I never saw you at the\nparty.", "我在派对上从没见过你。") }
+    }
+  }
+
+  // ── Gentleman #3 (npc 5) — talks, then shows the SNORLAX Pokedex entry ────
+  @storyline("talkGentleman3") {
+    @trigger(map = "SSAnne2FRooms", npc = 5)
+    @speaker("") { @t("In all my travels I've never\nseen any POKeMON sleep like\nthis one!\n\nIt was something like this!", "游历这么多地方我从没见过有宝\n可梦睡得像这样！\n\n它当时就是这样！") }
+    showPokedexEntry("SNORLAX")
+  }
+
+  // ── Ground item: MAX ETHER (npc 6) ────────────────────────────────────────
+  @storyline("itemMaxEther") {
+    @trigger(map = "SSAnne2FRooms", npc = 6, toggle = "SS_ANNE_2F_ROOMS_OBJ_6")
+    @if (getFlag("EVENT_GOT_MAX_ETHER_SS_ANNE_2F_ROOMS")) {
+      @speaker("") { @t("The item ball is empty.", "道具球是空的。") }
+    } @else {
+      giveItem("MAX_ETHER", 1)
+      setFlag("EVENT_GOT_MAX_ETHER_SS_ANNE_2F_ROOMS")
+      hideObject("SS_ANNE_2F_ROOMS_OBJ_6")
+      @speaker("") { @t("<PLAYER> found MAX_ETHER!", "<PLAYER>找到了元气药块！") }
+    }
+  }
+
+  // ── Gentleman #4 (npc 7) — flavor dialogue ────────────────────────────────
+  @storyline("talkGentleman4") {
+    @trigger(map = "SSAnne2FRooms", npc = 7)
+    @speaker("") { @t("Have you gone to the SAFARI\nZONE in FUCHSIA CITY?\n\nIt had many rare kinds of\nPOKeMON!!", "你去过浅红市的狩猎地带吗？\n\n那里有很多稀有的宝可梦！！") }
+  }
+
+  // ── Gramps (npc 8) — flavor dialogue ──────────────────────────────────────
+  @storyline("talkGramps") {
+    @trigger(map = "SSAnne2FRooms", npc = 8)
+    @speaker("") { @t("POKeMON can CUT down small\nbushes.", "宝可梦可以用居合斩砍断小树\n丛。") }
+  }
+
+  // ── Ground item: RARE CANDY (npc 9) ───────────────────────────────────────
+  @storyline("itemRareCandy") {
+    @trigger(map = "SSAnne2FRooms", npc = 9, toggle = "SS_ANNE_2F_ROOMS_OBJ_9")
+    @if (getFlag("EVENT_GOT_RARE_CANDY_SS_ANNE_2F_ROOMS")) {
+      @speaker("") { @t("The item ball is empty.", "道具球是空的。") }
+    } @else {
+      giveItem("RARE_CANDY", 1)
+      setFlag("EVENT_GOT_RARE_CANDY_SS_ANNE_2F_ROOMS")
+      hideObject("SS_ANNE_2F_ROOMS_OBJ_9")
+      @speaker("") { @t("<PLAYER> found RARE_CANDY!", "<PLAYER>找到了神奇糖果！") }
+    }
+  }
+
+  // ── Gentleman #5 (npc 10) — flavor dialogue ───────────────────────────────
+  @storyline("talkGentleman5") {
+    @trigger(map = "SSAnne2FRooms", npc = 10)
+    @speaker("") { @t("Ah yes, I have seen some\nPOKeMON ferry people across\nthe water!", "啊，是的，我见过有些宝可梦载\n着人们渡过水面！") }
+  }
+
+  // ── Little Boy (npc 11) — flavor dialogue ─────────────────────────────────
+  @storyline("talkLittleBoy") {
+    @trigger(map = "SSAnne2FRooms", npc = 11)
+    @speaker("") { @t("Me and my Daddy think the\nSAFARI ZONE is awesome!", "我和爸爸都觉得狩猎地带超棒\n的！") }
+  }
+
+  // ── Brunette Girl (npc 12) — flavor dialogue ──────────────────────────────
+  @storyline("talkBrunetteGirl") {
+    @trigger(map = "SSAnne2FRooms", npc = 12)
+    @speaker("") { @t("The CAPTAIN looked really\nsick and pale!", "船长看上去病得很重，脸色苍\n白！") }
+  }
+
+  // ── Beauty (npc 13) — flavor dialogue ─────────────────────────────────────
+  @storyline("talkBeauty") {
+    @trigger(map = "SSAnne2FRooms", npc = 13)
+    @speaker("") { @t("I hear many people get\nseasick!", "听说有很多人会晕船！") }
+  }
+}

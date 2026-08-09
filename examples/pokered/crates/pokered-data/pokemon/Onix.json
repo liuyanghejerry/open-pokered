@@ -1,0 +1,64 @@
+{
+  "$schema": "../schemas/pokemon.schema.json",
+  "species": "Onix",
+  "baseStats": {
+    "hp": 35,
+    "attack": 45,
+    "defense": 160,
+    "speed": 70,
+    "special": 30
+  },
+  "type1": "Rock",
+  "type2": "Ground",
+  "catchRate": 45,
+  "baseExp": 108,
+  "growthRate": "MediumFast",
+  "initialMoves": [
+    "Tackle",
+    "Screech",
+    "None",
+    "None"
+  ],
+  "tmHmFlags": [
+    160,
+    3,
+    8,
+    206,
+    138,
+    200,
+    34
+  ],
+  "pokedex": {
+    "category": "ROCK SNAKE",
+    "heightFeet": 28,
+    "heightInches": 10,
+    "weightDecipounds": 4630,
+    "flavorTextPages": [
+      "As it grows, the\nstone portions of\nits body harden",
+      "to become similar\nto a diamond, but\ncolored black"
+    ]
+  },
+  "evolutions": [],
+  "learnset": [
+    {
+      "level": 15,
+      "moveId": "Bind"
+    },
+    {
+      "level": 19,
+      "moveId": "RockThrow"
+    },
+    {
+      "level": 25,
+      "moveId": "Rage"
+    },
+    {
+      "level": 33,
+      "moveId": "Slam"
+    },
+    {
+      "level": 43,
+      "moveId": "Harden"
+    }
+  ]
+}

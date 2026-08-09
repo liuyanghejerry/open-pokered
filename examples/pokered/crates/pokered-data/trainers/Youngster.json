@@ -1,0 +1,167 @@
+{
+  "$schema": "../schemas/trainer.schema.json",
+  "class": "Youngster",
+  "constName": "YOUNGSTER",
+  "parties": [
+    {
+      "pokemon": [
+        {
+          "level": 11,
+          "species": "Rattata"
+        },
+        {
+          "level": 11,
+          "species": "Ekans"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 14,
+          "species": "Spearow"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 10,
+          "species": "Rattata"
+        },
+        {
+          "level": 10,
+          "species": "Rattata"
+        },
+        {
+          "level": 10,
+          "species": "Zubat"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 14,
+          "species": "Rattata"
+        },
+        {
+          "level": 14,
+          "species": "Ekans"
+        },
+        {
+          "level": 14,
+          "species": "Zubat"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 15,
+          "species": "Rattata"
+        },
+        {
+          "level": 15,
+          "species": "Spearow"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 17,
+          "species": "Slowpoke"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 14,
+          "species": "Ekans"
+        },
+        {
+          "level": 14,
+          "species": "Sandshrew"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 21,
+          "species": "NidoranM"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 21,
+          "species": "Ekans"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 19,
+          "species": "Sandshrew"
+        },
+        {
+          "level": 19,
+          "species": "Zubat"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 17,
+          "species": "Rattata"
+        },
+        {
+          "level": 17,
+          "species": "Rattata"
+        },
+        {
+          "level": 17,
+          "species": "Raticate"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 18,
+          "species": "NidoranM"
+        },
+        {
+          "level": 18,
+          "species": "Nidorino"
+        }
+      ]
+    },
+    {
+      "pokemon": [
+        {
+          "level": 17,
+          "species": "Spearow"
+        },
+        {
+          "level": 17,
+          "species": "Rattata"
+        },
+        {
+          "level": 17,
+          "species": "Rattata"
+        },
+        {
+          "level": 17,
+          "species": "Spearow"
+        }
+      ]
+    }
+  ]
+}

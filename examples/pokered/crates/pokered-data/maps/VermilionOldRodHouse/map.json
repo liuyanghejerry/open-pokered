@@ -1,0 +1,143 @@
+{
+  "$schema": "../../schemas/map.schema.json",
+  "id": 163,
+  "name": "VermilionOldRodHouse",
+  "header": {
+    "tileset": "House",
+    "music": "Cities2",
+    "connectionFlags": 0,
+    "width": 4,
+    "height": 4,
+    "borderBlock": 10
+  },
+  "connections": {},
+  "warps": [
+    {
+      "x": 2,
+      "y": 7,
+      "destWarpId": 8
+    },
+    {
+      "x": 3,
+      "y": 7,
+      "destWarpId": 8
+    }
+  ],
+  "npcs": [
+    {
+      "spriteId": 39,
+      "spriteName": "FishingGuru",
+      "x": 2,
+      "y": 4,
+      "movement": "Stationary",
+      "facing": "Right",
+      "range": 0,
+      "textId": 1,
+      "isTrainer": false
+    }
+  ],
+  "signs": [],
+  "text": {
+    "npc": {
+      "1": [
+        {
+          "line1": "I'm the FISHING",
+          "line2": "GURU!"
+        },
+        {
+          "line1": "",
+          "line2": ""
+        },
+        {
+          "line1": "I simply Looove",
+          "line2": "fishing!"
+        },
+        {
+          "line1": "",
+          "line2": ""
+        },
+        {
+          "line1": "Do you like to",
+          "line2": "fish?"
+        }
+      ],
+      "1_GiveRod": [
+        {
+          "line1": "Grand! I like",
+          "line2": "your style!"
+        },
+        {
+          "line1": "",
+          "line2": ""
+        },
+        {
+          "line1": "Take this and",
+          "line2": "fish, young one!"
+        },
+        {
+          "line1": "",
+          "line2": ""
+        },
+        {
+          "line1": "<PLAYER> received",
+          "line2": "an OLD ROD!"
+        },
+        {
+          "line1": "",
+          "line2": ""
+        },
+        {
+          "line1": "Fishing is a way",
+          "line2": "of life!"
+        },
+        {
+          "line1": "",
+          "line2": ""
+        },
+        {
+          "line1": "From the seas to",
+          "line2": "rivers, go out"
+        },
+        {
+          "line1": "and land the big",
+          "line2": "one, young one!"
+        }
+      ],
+      "1_Refused": [
+        {
+          "line1": "Oh... That's so",
+          "line2": "disappointing..."
+        }
+      ],
+      "1_NoRoom": [
+        {
+          "line1": "Oh no!",
+          "line2": ""
+        },
+        {
+          "line1": "",
+          "line2": ""
+        },
+        {
+          "line1": "You have no room",
+          "line2": "for my gift!"
+        }
+      ],
+      "1_AlreadyGot": [
+        {
+          "line1": "Hello there,",
+          "line2": "<PLAYER>!"
+        },
+        {
+          "line1": "",
+          "line2": ""
+        },
+        {
+          "line1": "How are the fish",
+          "line2": "biting?"
+        }
+      ]
+    }
+  },
+  "wild": null
+}

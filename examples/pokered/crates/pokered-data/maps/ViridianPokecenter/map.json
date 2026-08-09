@@ -1,0 +1,120 @@
+{
+  "$schema": "../../schemas/map.schema.json",
+  "id": 41,
+  "name": "ViridianPokecenter",
+  "header": {
+    "tileset": "Pokecenter",
+    "music": "Pokecenter",
+    "connectionFlags": 0,
+    "width": 7,
+    "height": 4,
+    "borderBlock": 0
+  },
+  "connections": {},
+  "warps": [
+    {
+      "x": 3,
+      "y": 7,
+      "destWarpId": 0
+    },
+    {
+      "x": 4,
+      "y": 7,
+      "destWarpId": 0
+    }
+  ],
+  "npcs": [
+    {
+      "spriteId": 41,
+      "spriteName": "Nurse",
+      "x": 3,
+      "y": 1,
+      "movement": "Stationary",
+      "facing": "Down",
+      "range": 0,
+      "textId": 1,
+      "isTrainer": false
+    },
+    {
+      "spriteId": 16,
+      "spriteName": "Gentleman",
+      "x": 10,
+      "y": 5,
+      "movement": "Wander",
+      "facing": "Down",
+      "range": 1,
+      "textId": 2,
+      "isTrainer": false
+    },
+    {
+      "spriteId": 7,
+      "spriteName": "CooltrainerM",
+      "x": 4,
+      "y": 3,
+      "movement": "Stationary",
+      "facing": "Down",
+      "range": 0,
+      "textId": 3,
+      "isTrainer": false
+    },
+    {
+      "spriteId": 42,
+      "spriteName": "LinkReceptionist",
+      "x": 11,
+      "y": 2,
+      "movement": "Stationary",
+      "facing": "Down",
+      "range": 0,
+      "textId": 4,
+      "isTrainer": false
+    }
+  ],
+  "signs": [
+    {
+      "x": 13,
+      "y": 3,
+      "textId": 1
+    }
+  ],
+  "text": {
+    "npc": {
+      "1": [
+        {
+          "line1": "[Pokecenter Nurse script]",
+          "line2": ""
+        }
+      ],
+      "2": [
+        {
+          "line1": "You can use that",
+          "line2": "PC in the corner."
+        },
+        {
+          "line1": "The receptionist",
+          "line2": "told me. So kind!"
+        }
+      ],
+      "3": [
+        {
+          "line1": "There's a POKeMON",
+          "line2": "CENTER in every"
+        },
+        {
+          "line1": "town ahead.",
+          "line2": ""
+        },
+        {
+          "line1": "They don't charge",
+          "line2": "any money either!"
+        }
+      ],
+      "4": [
+        {
+          "line1": "[Cable Club Receptionist script]",
+          "line2": ""
+        }
+      ]
+    }
+  },
+  "wild": null
+}

@@ -1,0 +1,82 @@
+{
+  "$schema": "../schemas/pokemon.schema.json",
+  "species": "Tentacool",
+  "baseStats": {
+    "hp": 40,
+    "attack": 40,
+    "defense": 35,
+    "speed": 70,
+    "special": 100
+  },
+  "type1": "Water",
+  "type2": "Poison",
+  "catchRate": 190,
+  "baseExp": 105,
+  "growthRate": "Slow",
+  "initialMoves": [
+    "Acid",
+    "None",
+    "None",
+    "None"
+  ],
+  "tmHmFlags": [
+    36,
+    63,
+    24,
+    192,
+    131,
+    8,
+    22
+  ],
+  "pokedex": {
+    "category": "JELLYFISH",
+    "heightFeet": 2,
+    "heightInches": 11,
+    "weightDecipounds": 1000,
+    "flavorTextPages": [
+      "Drifts in shallow\nseas. Anglers who\nhook them by",
+      "accident are\noften punished by\nits stinging acid"
+    ]
+  },
+  "evolutions": [
+    {
+      "method": "level",
+      "species": "Tentacruel",
+      "level": 30
+    }
+  ],
+  "learnset": [
+    {
+      "level": 7,
+      "moveId": "Supersonic"
+    },
+    {
+      "level": 13,
+      "moveId": "Wrap"
+    },
+    {
+      "level": 18,
+      "moveId": "PoisonSting"
+    },
+    {
+      "level": 22,
+      "moveId": "WaterGun"
+    },
+    {
+      "level": 27,
+      "moveId": "Constrict"
+    },
+    {
+      "level": 33,
+      "moveId": "Barrier"
+    },
+    {
+      "level": 40,
+      "moveId": "Screech"
+    },
+    {
+      "level": 48,
+      "moveId": "HydroPump"
+    }
+  ]
+}

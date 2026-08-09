@@ -1,0 +1,70 @@
+{
+  "$schema": "../schemas/pokemon.schema.json",
+  "species": "Koffing",
+  "baseStats": {
+    "hp": 40,
+    "attack": 65,
+    "defense": 95,
+    "speed": 35,
+    "special": 60
+  },
+  "type1": "Poison",
+  "type2": "Poison",
+  "catchRate": 190,
+  "baseExp": 114,
+  "growthRate": "MediumFast",
+  "initialMoves": [
+    "Tackle",
+    "Smog",
+    "None",
+    "None"
+  ],
+  "tmHmFlags": [
+    32,
+    0,
+    136,
+    193,
+    42,
+    72,
+    2
+  ],
+  "pokedex": {
+    "category": "POISON GAS",
+    "heightFeet": 2,
+    "heightInches": 0,
+    "weightDecipounds": 20,
+    "flavorTextPages": [
+      "Because it stores\nseveral kinds of\ntoxic gases in",
+      "its body, it is\nprone to exploding\nwithout warning"
+    ]
+  },
+  "evolutions": [
+    {
+      "method": "level",
+      "species": "Weezing",
+      "level": 35
+    }
+  ],
+  "learnset": [
+    {
+      "level": 32,
+      "moveId": "Sludge"
+    },
+    {
+      "level": 37,
+      "moveId": "Smokescreen"
+    },
+    {
+      "level": 40,
+      "moveId": "Selfdestruct"
+    },
+    {
+      "level": 45,
+      "moveId": "Haze"
+    },
+    {
+      "level": 48,
+      "moveId": "Explosion"
+    }
+  ]
+}

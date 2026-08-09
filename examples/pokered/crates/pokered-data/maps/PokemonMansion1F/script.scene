@@ -1,0 +1,108 @@
+// PokemonMansion1F — translated from the original disassembly
+// (scripts/PokemonMansion1F.asm, text/PokemonMansion1F.asm) to the real Game DSL
+// API surface. The Mansion 1F has: one sight-engaged trainer (the Scientist,
+// runtime-driven so its handler is dialogue only), two ground items in PokeBalls
+// (ESCAPE_ROPE, CARBOS), and a hidden secret switch (coords [2,5], must face up)
+// that toggles the gate door-blocks via replaceTileBlock.
+//
+// Switch wiring (from Mansion1CheckReplaceSwitchDoorBlocks, gated on
+// EVENT_MANSION_SWITCH_ON). asm "lb bc, Y, X" -> replaceTileBlock(X, Y, id);
+// block ids decimal: horizontal gate $2d=45 (closed), empty floor $e=14 (open).
+//   switch OFF: (12,6)=14 ; (8,3)=45 ; (10,8)=45 ; (13,13)=45
+//   switch ON : (12,6)=45 ; (8,3)=14 ; (10,8)=14 ; (13,13)=14
+// The switch is a TOGGLE in the original (CheckAndSetEvent then ResetEvent), so
+// it can re-close; @load re-applies the correct layout for the current flag.
+
+game_scene PokemonMansion1F {
+  // ── On map entry: re-apply the gate/floor layout from the switch flag ──────
+  // (mirrors Mansion1CheckReplaceSwitchDoorBlocks, which runs every map load)
+  @load {
+    @if (getFlag("EVENT_MANSION_SWITCH_ON")) {
+      replaceTileBlock(12, 6, 45)
+      replaceTileBlock(8, 3, 14)
+      replaceTileBlock(10, 8, 14)
+      replaceTileBlock(13, 13, 14)
+    } @else {
+      replaceTileBlock(12, 6, 14)
+      replaceTileBlock(8, 3, 45)
+      replaceTileBlock(10, 8, 45)
+      replaceTileBlock(13, 13, 45)
+    }
+  }
+
+  // ── Scientist (npc 1) — sight-engaged by the runtime; dialogue only ───────
+  @storyline("talkScientist") {
+    @trigger(map = "PokemonMansion1F", npc = 1)
+    @if (getFlag("EVENT_BEAT_MANSION_1_TRAINER_0")) {
+      @speaker("") {
+        @t("A key? I don't know what\nyou're talking about.", "钥匙？我不知道你在说什么。")
+      }
+    } @else {
+      @speaker("") {
+        @t("Who are you? There shouldn't\nbe anyone here.", "你是谁？这里不应该有任何人。")
+      }
+    }
+  }
+
+  // ── Ground item: ESCAPE_ROPE (npc 2) ──────────────────────────────────────
+  @storyline("talkPokeBall") {
+    @trigger(map = "PokemonMansion1F", npc = 2, toggle = "POKEMON_MANSION_1F_OBJ_2")
+    @if (getFlag("EVENT_GOT_ESCAPE_ROPE_MANSION_1F")) {
+      @speaker("") { @t("The item ball is empty.", "这个精灵球里是空的。") }
+    } @else {
+      giveItem("ESCAPE_ROPE", 1)
+      setFlag("EVENT_GOT_ESCAPE_ROPE_MANSION_1F")
+      hideObject("POKEMON_MANSION_1F_OBJ_2")
+      @speaker("") { @t("<PLAYER> found ESCAPE_ROPE!", "<PLAYER>找到了逃脱绳！") }
+    }
+  }
+
+  // ── Ground item: CARBOS (npc 3) ───────────────────────────────────────────
+  @storyline("talkPokeBall1") {
+    @trigger(map = "PokemonMansion1F", npc = 3, toggle = "POKEMON_MANSION_1F_OBJ_3")
+    @if (getFlag("EVENT_GOT_CARBOS_MANSION_1F")) {
+      @speaker("") { @t("The item ball is empty.", "这个精灵球里是空的。") }
+    } @else {
+      giveItem("CARBOS", 1)
+      setFlag("EVENT_GOT_CARBOS_MANSION_1F")
+      hideObject("POKEMON_MANSION_1F_OBJ_3")
+      @speaker("") { @t("<PLAYER> found CARBOS!", "<PLAYER>找到了速度增强剂！") }
+    }
+  }
+
+  // ── Secret switch (hidden_event at [2,5], original requires facing up) ─────
+  // The original toggles EVENT_MANSION_SWITCH_ON and swaps gate/floor tile
+  // blocks (Mansion1LoadHorizontalGateBlock / Mansion1LoadEmptyFloorTileBlock).
+  // Pressing the switch flips the flag, plays SFX_GO_INSIDE, and immediately
+  // applies the matching gate/floor layout via replaceTileBlock.
+  @storyline("coordSwitch") {
+    @trigger(map = "PokemonMansion1F", name = "switch")
+    @if (getPlayerFacing() == "up") {
+      @speaker("") {
+        @t("A secret switch!\n\nPress it?", "有秘密开关！\n\n要按下吗？")
+      }
+      @choice {
+        @option(@t("YES", "是")) {
+          @speaker("") { @t("Who wouldn't?", "谁会不想呢？") }
+          playSound("SFX_GO_INSIDE")
+          @if (getFlag("EVENT_MANSION_SWITCH_ON")) {
+            resetFlag("EVENT_MANSION_SWITCH_ON")
+            replaceTileBlock(12, 6, 14)
+            replaceTileBlock(8, 3, 45)
+            replaceTileBlock(10, 8, 45)
+            replaceTileBlock(13, 13, 45)
+          } @else {
+            setFlag("EVENT_MANSION_SWITCH_ON")
+            replaceTileBlock(12, 6, 45)
+            replaceTileBlock(8, 3, 14)
+            replaceTileBlock(10, 8, 14)
+            replaceTileBlock(13, 13, 14)
+          }
+        }
+        @option(@t("NO", "否")) {
+          @speaker("") { @t("Not quite yet!", "还不是时候！") }
+        }
+      }
+    }
+  }
+}

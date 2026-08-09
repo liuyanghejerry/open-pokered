@@ -1,0 +1,92 @@
+{
+  "$schema": "../../schemas/script_config.schema.json",
+  "coordEvents": [
+    {
+      "name": "leavingEast1",
+      "position": [
+        35,
+        17
+      ],
+      "trigger": "coordLeavingEast"
+    },
+    {
+      "name": "leavingEast2",
+      "position": [
+        36,
+        17
+      ],
+      "trigger": "coordLeavingEast"
+    },
+    {
+      "name": "leavingEast3",
+      "position": [
+        37,
+        18
+      ],
+      "trigger": "coordLeavingEast"
+    },
+    {
+      "name": "leavingEast4",
+      "position": [
+        37,
+        19
+      ],
+      "trigger": "coordLeavingEast"
+    }
+  ],
+  "npcs": [
+    {
+      "id": 1,
+      "talk": "talkCooltrainerF"
+    },
+    {
+      "id": 2,
+      "talk": "talkCooltrainerM"
+    },
+    {
+      "id": 3,
+      "talk": "talkSuperNerd1",
+      "toggleId": "PEWTER_CITY_OBJ_3"
+    },
+    {
+      "id": 4,
+      "talk": "talkSuperNerd2"
+    },
+    {
+      "id": 5,
+      "talk": "talkYoungster",
+      "toggleId": "PEWTER_CITY_OBJ_5"
+    }
+  ],
+  "onLoad": "PewterCityOnLoad",
+  "signs": [
+    {
+      "id": 1,
+      "talk": "signTrainerTips"
+    },
+    {
+      "id": 2,
+      "talk": "signPoliceNotice"
+    },
+    {
+      "id": 3,
+      "talk": "signMart"
+    },
+    {
+      "id": 4,
+      "talk": "signPokecenter"
+    },
+    {
+      "id": 5,
+      "talk": "signMuseum"
+    },
+    {
+      "id": 6,
+      "talk": "signGym"
+    },
+    {
+      "id": 7,
+      "talk": "signCity"
+    }
+  ]
+}

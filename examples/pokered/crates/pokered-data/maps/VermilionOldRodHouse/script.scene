@@ -1,0 +1,53 @@
+// VermilionOldRodHouse — translated from the original disassembly
+// (scripts/VermilionOldRodHouse.asm, text/VermilionOldRodHouse.asm) to the real
+// Game DSL API surface. Single-NPC item-gate house: the FISHING GURU gives the
+// OLD ROD once (gated on EVENT_GOT_OLD_ROD, the BIT_GOT_OLD_ROD status bit of
+// the original) after a YES/NO prompt, then greets the player on later visits.
+//
+
+game_scene VermilionOldRodHouse {
+  // ── FISHING GURU (npc 1) — gives the OLD ROD ────────────────────────────
+  @storyline("talkFishingGuru") {
+    @trigger(map = "VermilionOldRodHouse", npc = 1)
+    @if (getFlag("EVENT_GOT_OLD_ROD")) {
+      // Already gave the rod (.HowAreTheFishBitingText).
+      @speaker("") {
+        @t("Hello there, <PLAYER>!\n\nHow are the fish biting?", "你好啊， <PLAYER>！\n\n鱼上钩的情况怎么样？")
+      }
+    } @else {
+      // .DoYouLikeToFishText → YesNoChoice.
+      @speaker("") {
+        @t("I'm the FISHING GURU!\n\nI simply Looove fishing!\n\nDo you like to fish?", "我就是垂钓大师！\n\n我超喜欢钓鱼！\n\n你喜欢钓鱼吗？")
+      }
+      @choice {
+        @option(@t("YES", "是")) {
+          // .TakeThisText + GiveItem OLD_ROD + .FishingIsAWayOfLifeText.
+          @speaker("") {
+            @t("Grand! I like your style!\n\nTake this and fish, young\none!", "太棒了！我喜欢你的风格！\n\n拿上这个去钓鱼吧，年轻人！")
+          }
+          given = giveItem("OLD_ROD", 1)
+          @if (given) {
+            playSound("SFX_GET_ITEM_1")
+            setFlag("EVENT_GOT_OLD_ROD")
+            @speaker("") {
+              @t("<PLAYER> received an OLD\nROD!", "<PLAYER>获得了破旧钓竿！")
+            }
+            @speaker("") {
+              @t("Fishing is a way of life!\n\nFrom the seas to rivers, go\nout and land the big one,\nyoung one!", "钓鱼是一种生活方式！\n\n从大海到河流，出去钓上一条大\n家伙吧，年轻人！")
+            }
+          } @else {
+            @speaker("") {
+              @t("Oh no!\n\nYou have no room for my\ngift!", "哎呀！\n\n你没有空间装下我的礼物了！")
+            }
+          }
+        }
+        @option(@t("NO", "否")) {
+          // .ThatsSoDisappointingText.
+          @speaker("") {
+            @t("Oh... That's so\ndisappointing...", "哦……真令人失望……")
+          }
+        }
+      }
+    }
+  }
+}

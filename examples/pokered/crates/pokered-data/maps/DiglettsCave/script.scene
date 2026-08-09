@@ -1,0 +1,8 @@
+// DiglettsCave — translated from the original disassembly (scripts/DiglettsCave.asm,
+// text/DiglettsCave.asm) to the real Game DSL API surface. The original map has no
+// NPCs, signs, text, or on-enter logic; its script is only `jp EnableAutoTextBoxDrawing`
+// (a no-op for our purposes). It is purely a wild-encounter cave (Diglett/Dugtrio),
+// which is data-driven via map.json, so the scene is intentionally empty.
+
+game_scene DiglettsCave {
+}

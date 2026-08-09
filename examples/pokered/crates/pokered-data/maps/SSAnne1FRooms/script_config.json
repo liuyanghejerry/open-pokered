@@ -1,0 +1,52 @@
+{
+  "$schema": "../../schemas/script_config.schema.json",
+  "coordEvents": [],
+  "npcs": [
+    {
+      "id": 1,
+      "talk": "talkGentleman1"
+    },
+    {
+      "id": 2,
+      "talk": "talkGentleman2"
+    },
+    {
+      "id": 3,
+      "talk": "talkYoungster"
+    },
+    {
+      "id": 4,
+      "talk": "talkCooltrainerF"
+    },
+    {
+      "id": 5,
+      "talk": "talkGirl1"
+    },
+    {
+      "id": 6,
+      "talk": "talkMiddleAgedMan"
+    },
+    {
+      "id": 7,
+      "talk": "talkLittleGirl"
+    },
+    {
+      "id": 8,
+      "talk": "talkWigglytuff"
+    },
+    {
+      "id": 9,
+      "talk": "talkGirl2"
+    },
+    {
+      "id": 10,
+      "talk": "talkPokeBall",
+      "toggleId": "SS_ANNE_1F_ROOMS_OBJ_10"
+    },
+    {
+      "id": 11,
+      "talk": "talkGentleman3"
+    }
+  ],
+  "signs": []
+}

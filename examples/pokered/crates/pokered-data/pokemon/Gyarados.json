@@ -1,0 +1,64 @@
+{
+  "$schema": "../schemas/pokemon.schema.json",
+  "species": "Gyarados",
+  "baseStats": {
+    "hp": 95,
+    "attack": 125,
+    "defense": 79,
+    "speed": 81,
+    "special": 100
+  },
+  "type1": "Water",
+  "type2": "Flying",
+  "catchRate": 45,
+  "baseExp": 214,
+  "growthRate": "Slow",
+  "initialMoves": [
+    "Bite",
+    "DragonRage",
+    "Leer",
+    "HydroPump"
+  ],
+  "tmHmFlags": [
+    160,
+    127,
+    200,
+    193,
+    163,
+    8,
+    50
+  ],
+  "pokedex": {
+    "category": "ATROCIOUS",
+    "heightFeet": 21,
+    "heightInches": 4,
+    "weightDecipounds": 5180,
+    "flavorTextPages": [
+      "Rarely seen in\nthe wild. Huge\nand vicious, it",
+      "is capable of\ndestroying entire\ncities in a rage"
+    ]
+  },
+  "evolutions": [],
+  "learnset": [
+    {
+      "level": 20,
+      "moveId": "Bite"
+    },
+    {
+      "level": 25,
+      "moveId": "DragonRage"
+    },
+    {
+      "level": 32,
+      "moveId": "Leer"
+    },
+    {
+      "level": 41,
+      "moveId": "HydroPump"
+    },
+    {
+      "level": 52,
+      "moveId": "HyperBeam"
+    }
+  ]
+}

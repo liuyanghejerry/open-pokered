@@ -1,0 +1,22 @@
+// ViridianForestNorthGate — translated from the original disassembly
+// (scripts/ViridianForestNorthGate.asm, text/ViridianForestNorthGate.asm) to the
+// real Game DSL API surface. This is a plain gate map: two stationary NPCs whose
+// only behavior is flavor dialogue (no flags, trainers, or on-enter logic).
+
+game_scene ViridianForestNorthGate {
+  // ── Super Nerd (npc 1) ──────────────────────────────────────────────────
+  @storyline("talkSuperNerd") {
+    @trigger(map = "ViridianForestNorthGate", npc = 1)
+    @speaker("") {
+      @t("Many POKeMON live only in\nforests and caves.\n\nYou need to look everywhere\nto get different kinds!", "很多宝可梦只生活在森林和洞窟\n里。\n\n想抓不同种类的宝可梦，就要到\n处看看！")
+    }
+  }
+
+  // ── Gramps (npc 2) ──────────────────────────────────────────────────────
+  @storyline("talkGramps") {
+    @trigger(map = "ViridianForestNorthGate", npc = 2)
+    @speaker("") {
+      @t("Have you noticed the bushes\non the roadside?\n\nThey can be cut down by a\nspecial POKeMON move.", "你注意到路边的灌木丛了吗？\n\n它们可以用宝可梦的特殊招式砍\n倒。")
+    }
+  }
+}

@@ -1,0 +1,66 @@
+{
+  "$schema": "../../schemas/script_config.schema.json",
+  "coordEvents": [
+    {
+      "name": "purifiedZone1",
+      "position": [
+        10,
+        8
+      ],
+      "trigger": "coordPurifiedZone"
+    },
+    {
+      "name": "purifiedZone2",
+      "position": [
+        11,
+        8
+      ],
+      "trigger": "coordPurifiedZone"
+    },
+    {
+      "name": "purifiedZone3",
+      "position": [
+        10,
+        9
+      ],
+      "trigger": "coordPurifiedZone"
+    },
+    {
+      "name": "purifiedZone4",
+      "position": [
+        11,
+        9
+      ],
+      "trigger": "coordPurifiedZone"
+    }
+  ],
+  "npcs": [
+    {
+      "id": 1,
+      "talk": "talkChanneler1"
+    },
+    {
+      "id": 2,
+      "talk": "talkChanneler2"
+    },
+    {
+      "id": 3,
+      "talk": "talkChanneler3"
+    },
+    {
+      "id": 4,
+      "talk": "talkChanneler4"
+    },
+    {
+      "id": 5,
+      "talk": "talkChanneler5"
+    },
+    {
+      "id": 6,
+      "talk": "itemNugget",
+      "toggleId": "POKEMON_TOWER_5F_OBJ_6"
+    }
+  ],
+  "onLoad": "PokemonTower5FOnLoad",
+  "signs": []
+}

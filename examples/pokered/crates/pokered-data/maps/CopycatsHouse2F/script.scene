@@ -1,0 +1,86 @@
+// CopycatsHouse2F — translated from the original disassembly
+// (scripts/CopycatsHouse2F.asm, text/CopycatsHouse2F.asm) to the real Game DSL
+// API surface. The Copycat (npc 1) trades TM31 (MIMIC) for the player's
+// POKE_DOLL via a hasItem gate. The PC sign (sign 2) varies on player facing.
+
+game_scene CopycatsHouse2F {
+  // ── Copycat (npc 1) — POKE_DOLL → TM31 (MIMIC) exchange ────────────────
+  @storyline("talkCopycat") {
+    @trigger(map = "CopycatsHouse2F", npc = 1)
+    @if (getFlag("EVENT_GOT_TM31")) {
+      @speaker("") {
+        @t("<PLAYER>: Hi! Thanks for\nTM31!\n\n<PLAYER>: Pardon?\n\n<PLAYER>: Is it that fun to\nmimic my every move?\n\nCOPYCAT: You bet! It's a\nscream!", "<PLAYER>：嗨！谢谢你给我\nTM31！\n\n<PLAYER>：什么？\n\n<PLAYER>：模仿我的一举一动就\n那么有趣吗？\n\n模仿少女：当然！太好玩了！")
+      }
+    } @else {
+      @speaker("") {
+        @t("<PLAYER>: Hi! Do you like\nPOKeMON?\n\n<PLAYER>: Uh no, I just\nasked you.\n\n<PLAYER>: Huh? You're\nstrange!\n\nCOPYCAT: Hmm? Quit\nmimicking?\n\nBut, that's my favorite\nhobby!", "<PLAYER>：嗨！你喜欢宝可梦\n吗？\n\n<PLAYER>：呃，不，我只是问\n你。\n\n<PLAYER>：嗯？你真奇怪！\n\n模仿少女：嗯？叫我别模仿？\n\n可是，这是我最喜欢的爱好！")
+      }
+      @if (hasItem("POKE_DOLL")) {
+        @speaker("") {
+          @t("Oh wow! A POKe DOLL!\n\nFor me? Thank you!\n\nYou can have this, then!", "哇！皮皮玩偶！\n\n给我的吗？谢谢你！\n\n那么，这个就给你吧！")
+        }
+        given = giveItem("TM31", 1)
+        @if (given) {
+          takeItem("POKE_DOLL", 1)
+          setFlag("EVENT_GOT_TM31")
+          @speaker("") { @t("<PLAYER> received TM31!", "<PLAYER>得到了 TM31！") }
+          @speaker("") {
+            @t("TM31 contains my favorite,\nMIMIC!\n\nUse it on a good POKeMON!", "TM31里有我最喜欢的招式模仿！\n\n用在优秀的宝可梦身上！")
+          }
+        } @else {
+          @speaker("") { @t("Don't you want this?", "你不想要这个吗？") }
+        }
+      }
+    }
+  }
+
+  // ── Doduo (npc 2) ──────────────────────────────────────────────────────
+  @storyline("talkDoduo") {
+    @trigger(map = "CopycatsHouse2F", npc = 2)
+    @speaker("") {
+      @t("DODUO: Giiih!\n\nMIRROR MIRROR ON THE WALL,\nWHO IS THE FAIREST ONE OF\nALL?", "嘟嘟：叽叽！\n\n镜子啊，墙上的镜子啊，谁是世\n界上最美丽的女人？")
+    }
+  }
+
+  // ── Rare dolls (npcs 3, 4, 5 all share the same text) ──────────────────
+  @storyline("talkMonster") {
+    @trigger(map = "CopycatsHouse2F", npc = 3)
+    @speaker("") {
+      @t("This is a rare POKeMON! Huh?\nIt's only a doll!", "这是稀有的宝可梦！嗯？只是个\n玩偶！")
+    }
+  }
+
+  @storyline("talkBird") {
+    @trigger(map = "CopycatsHouse2F", npc = 4)
+    @speaker("") {
+      @t("This is a rare POKeMON! Huh?\nIt's only a doll!", "这是稀有的宝可梦！嗯？只是个\n玩偶！")
+    }
+  }
+
+  @storyline("talkFairy") {
+    @trigger(map = "CopycatsHouse2F", npc = 5)
+    @speaker("") {
+      @t("This is a rare POKeMON! Huh?\nIt's only a doll!", "这是稀有的宝可梦！嗯？只是个\n玩偶！")
+    }
+  }
+
+  // ── SNES sign (sign 1) ─────────────────────────────────────────────────
+  @storyline("signSNES") {
+    @trigger(map = "CopycatsHouse2F", sign = 1)
+    @speaker("") {
+      @t("A game with MARIO wearing a\nbucket on his head!", "有个马里奥头上戴着水桶的游\n戏！")
+    }
+  }
+
+  // ── PC sign (sign 2) — different text depending on player facing ───────
+  @storyline("signPC") {
+    @trigger(map = "CopycatsHouse2F", sign = 2)
+    @if (getPlayerFacing() == "up") {
+      @speaker("") {
+        @t("...\n\nMy Secrets!\n\nSkill: Mimicry! Hobby:\nCollecting dolls! Favorite\nPOKeMON: CLEFAIRY!", "……\n\n我的秘密！\n\n特技：模仿！爱好：收集玩偶！\n最喜欢的宝可梦：皮皮！")
+      }
+    } @else {
+      @speaker("") { @t("Huh? Can't see!", "嗯？看不到！") }
+    }
+  }
+}

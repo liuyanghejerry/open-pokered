@@ -1,0 +1,163 @@
+// MtMoon1F — translated from the original disassembly (scripts/MtMoon1F.asm,
+// text/MtMoon1F.asm) to the real Game DSL API surface. Mt. Moon 1F is a cave:
+// seven sight-engaged trainers (the runtime drives those battles, so the .scene
+// handlers are dialogue only — beaten vs. pre-battle taunt), six ground items in
+// PokeBalls (giveItem + a per-item "got" flag guard), and one ZUBAT sign. The
+// original map script only calls EnableAutoTextBoxDrawing (the default runtime
+// behavior), so there is no on-enter cutscene.
+
+game_scene MtMoon1F {
+  // ── Hiker (npc 1) — sight-engaged trainer; dialogue only ────────────────
+  @storyline("talkHiker") {
+    @trigger(map = "MtMoon1F", npc = 1)
+    @if (getFlag("EVENT_BEAT_MT_MOON_1_TRAINER_0")) {
+      @speaker("") { @t("Kids like you shouldn't be\nhere!", "像你这样的孩子不应该来这里！") }
+    } @else {
+      @speaker("") { @t("WHOA! You shocked me! Oh,\nyou're just a kid!", "哇！你吓了我一跳！哦，你只是\n个孩子！") }
+    }
+  }
+
+  // ── Youngster 1 (npc 2) — sight-engaged trainer; dialogue only ──────────
+  @storyline("talkYoungster1") {
+    @trigger(map = "MtMoon1F", npc = 2)
+    @if (getFlag("EVENT_BEAT_MT_MOON_1_TRAINER_1")) {
+      @speaker("") { @t("I came down here to show off\nto girls.", "我到这里来是想在女孩子面前炫\n耀。") }
+    } @else {
+      @speaker("") { @t("Did you come to explore too?", "你也是来探险的吗？") }
+    }
+  }
+
+  // ── Lass 1 (npc 3) — sight-engaged trainer; dialogue only ───────────────
+  @storyline("talkCooltrainerF1") {
+    @trigger(map = "MtMoon1F", npc = 3)
+    @if (getFlag("EVENT_BEAT_MT_MOON_1_TRAINER_2")) {
+      @speaker("") { @t("How do you get out of here?", "该怎么从这里出去？") }
+    } @else {
+      @speaker("") { @t("Wow! It's way bigger in here\nthan I thought!", "哇！这里比我想象的要大得多！") }
+    }
+  }
+
+  // ── Super Nerd (npc 4) — sight-engaged trainer; dialogue only ───────────
+  @storyline("talkSuperNerd") {
+    @trigger(map = "MtMoon1F", npc = 4)
+    @if (getFlag("EVENT_BEAT_MT_MOON_1_TRAINER_3")) {
+      @speaker("") { @t("I have to find stronger\nPOKeMON.", "我得找到更强的宝可梦。") }
+    } @else {
+      @speaker("") { @t("What! Don't sneak up on me!", "什么！别偷偷靠近我！") }
+    }
+  }
+
+  // ── Lass 2 (npc 5) — sight-engaged trainer; dialogue only ───────────────
+  @storyline("talkCooltrainerF2") {
+    @trigger(map = "MtMoon1F", npc = 5)
+    @if (getFlag("EVENT_BEAT_MT_MOON_1_TRAINER_4")) {
+      @speaker("") { @t("I heard there are some very\nrare fossils here.", "我听说这里有非常珍贵的化石。") }
+    } @else {
+      @speaker("") { @t("What? I'm waiting for my\nfriends to find me here.", "什么？我在等朋友来这里找我。") }
+    }
+  }
+
+  // ── Bug Catcher 1 (npc 6) — sight-engaged trainer; dialogue only ────────
+  @storyline("talkYoungster2") {
+    @trigger(map = "MtMoon1F", npc = 6)
+    @if (getFlag("EVENT_BEAT_MT_MOON_1_TRAINER_5")) {
+      @speaker("") { @t("I saw them! I'm sure they're\nfrom TEAM ROCKET!", "我看到他们了！一定是火箭队的\n人！") }
+    } @else {
+      @speaker("") { @t("Suspicious men are in the\ncave. What about you?", "洞窟里有可疑的人。你呢？") }
+    }
+  }
+
+  // ── Bug Catcher 2 (npc 7) — sight-engaged trainer; dialogue only ────────
+  @storyline("talkYoungster3") {
+    @trigger(map = "MtMoon1F", npc = 7)
+    @if (getFlag("EVENT_BEAT_MT_MOON_1_TRAINER_6")) {
+      @speaker("") { @t("ZUBAT is tough! But, it can\nbe useful if you catch one.", "超音蝠很强！但如果抓到它说不\n定会很有用。") }
+    } @else {
+      @speaker("") { @t("Go through this cave to get\nto CERULEAN CITY!", "穿过这个洞窟就能到达华蓝市！") }
+    }
+  }
+
+  // ── Ground item: POTION (npc 8) ─────────────────────────────────────────
+  @storyline("itemPotion1") {
+    @trigger(map = "MtMoon1F", npc = 8, toggle = "MT_MOON_1F_OBJ_8")
+    @if (getFlag("EVENT_GOT_POTION_MT_MOON_1F_A")) {
+      @speaker("") { @t("The item ball is empty.", "精灵球里面是空的。") }
+    } @else {
+      giveItem("POTION", 1)
+      setFlag("EVENT_GOT_POTION_MT_MOON_1F_A")
+      hideObject("MT_MOON_1F_OBJ_8")
+      @speaker("") { @t("<PLAYER> found POTION!", "<PLAYER>找到了伤药！") }
+    }
+  }
+
+  // ── Ground item: MOON STONE (npc 9) ─────────────────────────────────────
+  @storyline("itemMoonStone") {
+    @trigger(map = "MtMoon1F", npc = 9, toggle = "MT_MOON_1F_OBJ_9")
+    @if (getFlag("EVENT_GOT_MOON_STONE_MT_MOON_1F")) {
+      @speaker("") { @t("The item ball is empty.", "精灵球里面是空的。") }
+    } @else {
+      giveItem("MOON_STONE", 1)
+      setFlag("EVENT_GOT_MOON_STONE_MT_MOON_1F")
+      hideObject("MT_MOON_1F_OBJ_9")
+      @speaker("") { @t("<PLAYER> found MOON_STONE!", "<PLAYER>找到了月之石！") }
+    }
+  }
+
+  // ── Ground item: RARE CANDY (npc 10) ────────────────────────────────────
+  @storyline("itemRareCandy") {
+    @trigger(map = "MtMoon1F", npc = 10, toggle = "MT_MOON_1F_OBJ_10")
+    @if (getFlag("EVENT_GOT_RARE_CANDY_MT_MOON_1F")) {
+      @speaker("") { @t("The item ball is empty.", "精灵球里面是空的。") }
+    } @else {
+      giveItem("RARE_CANDY", 1)
+      setFlag("EVENT_GOT_RARE_CANDY_MT_MOON_1F")
+      hideObject("MT_MOON_1F_OBJ_10")
+      @speaker("") { @t("<PLAYER> found RARE_CANDY!", "<PLAYER>找到了神奇糖果！") }
+    }
+  }
+
+  // ── Ground item: ESCAPE ROPE (npc 11) ───────────────────────────────────
+  @storyline("itemEscapeRope") {
+    @trigger(map = "MtMoon1F", npc = 11, toggle = "MT_MOON_1F_OBJ_11")
+    @if (getFlag("EVENT_GOT_ESCAPE_ROPE_MT_MOON_1F")) {
+      @speaker("") { @t("The item ball is empty.", "精灵球里面是空的。") }
+    } @else {
+      giveItem("ESCAPE_ROPE", 1)
+      setFlag("EVENT_GOT_ESCAPE_ROPE_MT_MOON_1F")
+      hideObject("MT_MOON_1F_OBJ_11")
+      @speaker("") { @t("<PLAYER> found ESCAPE_ROPE!", "<PLAYER>找到了逃脱绳！") }
+    }
+  }
+
+  // ── Ground item: POTION (npc 12) ────────────────────────────────────────
+  @storyline("itemPotion2") {
+    @trigger(map = "MtMoon1F", npc = 12, toggle = "MT_MOON_1F_OBJ_12")
+    @if (getFlag("EVENT_GOT_POTION_MT_MOON_1F_B")) {
+      @speaker("") { @t("The item ball is empty.", "精灵球里面是空的。") }
+    } @else {
+      giveItem("POTION", 1)
+      setFlag("EVENT_GOT_POTION_MT_MOON_1F_B")
+      hideObject("MT_MOON_1F_OBJ_12")
+      @speaker("") { @t("<PLAYER> found POTION!", "<PLAYER>找到了伤药！") }
+    }
+  }
+
+  // ── Ground item: TM34 / WATER GUN (npc 13) ──────────────────────────────
+  @storyline("itemTmWaterGun") {
+    @trigger(map = "MtMoon1F", npc = 13, toggle = "MT_MOON_1F_OBJ_13")
+    @if (getFlag("EVENT_GOT_TM34_MT_MOON_1F")) {
+      @speaker("") { @t("The item ball is empty.", "精灵球里面是空的。") }
+    } @else {
+      giveItem("TM34", 1)
+      setFlag("EVENT_GOT_TM34_MT_MOON_1F")
+      hideObject("MT_MOON_1F_OBJ_13")
+      @speaker("") { @t("<PLAYER> found TM34!", "<PLAYER>找到了 TM34！") }
+    }
+  }
+
+  // ── ZUBAT warning sign (sign 1) ─────────────────────────────────────────
+  @storyline("sign1") {
+    @trigger(map = "MtMoon1F", sign = 1)
+    @speaker("") { @t("Beware! ZUBAT is a blood\nsucker!", "小心！超音蝠会吸血！") }
+  }
+}

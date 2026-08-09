@@ -1,0 +1,74 @@
+{
+  "$schema": "../schemas/pokemon.schema.json",
+  "species": "Drowzee",
+  "baseStats": {
+    "hp": 60,
+    "attack": 48,
+    "defense": 45,
+    "speed": 42,
+    "special": 90
+  },
+  "type1": "Psychic",
+  "type2": "Psychic",
+  "catchRate": 190,
+  "baseExp": 102,
+  "growthRate": "MediumFast",
+  "initialMoves": [
+    "Pound",
+    "Hypnosis",
+    "None",
+    "None"
+  ],
+  "tmHmFlags": [
+    177,
+    3,
+    15,
+    240,
+    135,
+    58,
+    67
+  ],
+  "pokedex": {
+    "category": "HYPNOSIS",
+    "heightFeet": 3,
+    "heightInches": 3,
+    "weightDecipounds": 710,
+    "flavorTextPages": [
+      "Puts enemies to\nsleep then eats\ntheir dreams.",
+      "Occasionally gets\nsick from eating\nbad dreams"
+    ]
+  },
+  "evolutions": [
+    {
+      "method": "level",
+      "species": "Hypno",
+      "level": 26
+    }
+  ],
+  "learnset": [
+    {
+      "level": 12,
+      "moveId": "Disable"
+    },
+    {
+      "level": 17,
+      "moveId": "Confusion"
+    },
+    {
+      "level": 24,
+      "moveId": "Headbutt"
+    },
+    {
+      "level": 29,
+      "moveId": "PoisonGas"
+    },
+    {
+      "level": 32,
+      "moveId": "PsychicM"
+    },
+    {
+      "level": 37,
+      "moveId": "Meditate"
+    }
+  ]
+}

@@ -1,0 +1,36 @@
+{
+  "$schema": "../../schemas/map.schema.json",
+  "id": 236,
+  "name": "SilphCoElevator",
+  "header": {
+    "tileset": "Lobby",
+    "music": "SilphCo",
+    "connectionFlags": 0,
+    "width": 2,
+    "height": 2,
+    "borderBlock": 15
+  },
+  "connections": {},
+  "warps": [
+    {
+      "x": 1,
+      "y": 3,
+      "destWarpId": 0
+    },
+    {
+      "x": 2,
+      "y": 3,
+      "destWarpId": 0
+    }
+  ],
+  "npcs": [],
+  "signs": [
+    {
+      "x": 3,
+      "y": 0,
+      "textId": 1
+    }
+  ],
+  "text": {},
+  "wild": null
+}

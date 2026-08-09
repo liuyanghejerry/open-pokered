@@ -1,0 +1,124 @@
+// Route13 — translated from the original disassembly (scripts/Route13.asm,
+// text/Route13.asm) to the real Game DSL API surface. Route13 is a sight-
+// trainer route: all 10 NPCs are sight-engaged by the runtime (map.json keeps
+// isTrainer:true), so each talk handler is DIALOGUE ONLY — beaten -> after-
+// battle text, otherwise the pre-battle taunt. Plus two TrainerTips signs and
+// the Route 13 location sign.
+
+game_scene Route13 {
+  // ── Bird Keeper (npc 1) — Route13 Trainer 0 ────────────────────────────
+  @storyline("talkCooltrainerM1") {
+    @trigger(map = "Route13", npc = 1)
+    @if (getFlag("EVENT_BEAT_ROUTE_13_TRAINER_0")) {
+      @speaker("") { @t("My POKeMON look happy even\nthough they lost.", "我的宝可梦输了也显得很开心。") }
+    } @else {
+      @speaker("") { @t("My bird POKeMON want to\nscrap!", "我的鸟类宝可梦想要一决胜负！") }
+    }
+  }
+
+  // ── Jr.Trainer♀ (npc 2) — Route13 Trainer 1 ───────────────────────────
+  @storyline("talkCooltrainerF1") {
+    @trigger(map = "Route13", npc = 2)
+    @if (getFlag("EVENT_BEAT_ROUTE_13_TRAINER_1")) {
+      @speaker("") { @t("I want to become a good\ntrainer. I'll train hard.", "我想成为一个优秀的训练家。我\n会努力训练。") }
+    } @else {
+      @speaker("") { @t("I'm told I'm good for a kid!", "大家都说我作为小孩很厉害！") }
+    }
+  }
+
+  // ── Jr.Trainer♀ (npc 3) — Route13 Trainer 2 ───────────────────────────
+  @storyline("talkCooltrainerF2") {
+    @trigger(map = "Route13", npc = 3)
+    @if (getFlag("EVENT_BEAT_ROUTE_13_TRAINER_2")) {
+      @speaker("") { @t("You got those BADGEs from\nGYM LEADERs. I know!", "我知道！你的徽章是从道馆馆主\n那里得来的！") }
+    } @else {
+      @speaker("") { @t("Wow! Your BADGEs are too\ncool!", "哇！你的徽章太酷了！") }
+    }
+  }
+
+  // ── Jr.Trainer♀ (npc 4) — Route13 Trainer 3 ───────────────────────────
+  @storyline("talkCooltrainerF3") {
+    @trigger(map = "Route13", npc = 4)
+    @if (getFlag("EVENT_BEAT_ROUTE_13_TRAINER_3")) {
+      @speaker("") { @t("You have to make POKeMON\nfight to toughen them up!", "你要让宝可梦战斗才能锻炼它\n们！") }
+    } @else {
+      @speaker("") { @t("My cute POKeMON wish to make\nyour acquaintance.", "我的可爱宝可梦想和你认识一\n下。") }
+    }
+  }
+
+  // ── Jr.Trainer♀ (npc 5) — Route13 Trainer 4 ───────────────────────────
+  @storyline("talkCooltrainerF4") {
+    @trigger(map = "Route13", npc = 5)
+    @if (getFlag("EVENT_BEAT_ROUTE_13_TRAINER_4")) {
+      @speaker("") { @t("CARBOS boosted the SPEED of\nmy POKeMON.", "速度增强剂提升了我宝可梦的速\n度。") }
+    } @else {
+      @speaker("") { @t("I found CARBOS in a cave\nonce.", "我以前在洞窟里发现过速度增强\n剂。") }
+    }
+  }
+
+  // ── Bird Keeper (npc 6) — Route13 Trainer 5 ────────────────────────────
+  @storyline("talkCooltrainerM2") {
+    @trigger(map = "Route13", npc = 6)
+    @if (getFlag("EVENT_BEAT_ROUTE_13_TRAINER_5")) {
+      @speaker("") { @t("I'm beat. I guess I'll FLY\nhome.", "我输惨了，看来只能用飞翔飞回\n家了。") }
+    } @else {
+      @speaker("") { @t("The wind's blowing my way!", "风正向着我这边吹！") }
+    }
+  }
+
+  // ── Beauty (npc 7) — Route13 Trainer 6 ─────────────────────────────────
+  @storyline("talkBeauty1") {
+    @trigger(map = "Route13", npc = 7)
+    @if (getFlag("EVENT_BEAT_ROUTE_13_TRAINER_6")) {
+      @speaker("") { @t("I wonder which is stronger,\nmale or female POKeMON?", "我在想宝可梦雄性和雌性哪个更\n强？") }
+    } @else {
+      @speaker("") { @t("Sure, I'll play with you!", "好啊，我来陪你玩玩！") }
+    }
+  }
+
+  // ── Beauty (npc 8) — Route13 Trainer 7 ─────────────────────────────────
+  @storyline("talkBeauty2") {
+    @trigger(map = "Route13", npc = 8)
+    @if (getFlag("EVENT_BEAT_ROUTE_13_TRAINER_7")) {
+      @speaker("") { @t("I don't know anything about\nPOKeMON. I just like cool\nones!", "我对宝可梦一无所知。只是喜欢\n帅气的！") }
+    } @else {
+      @speaker("") { @t("Do you want to POKeMON with\nme?", "你想和我一起玩宝可梦吗？") }
+    }
+  }
+
+  // ── Biker (npc 9) — Route13 Trainer 8 ──────────────────────────────────
+  @storyline("talkBiker") {
+    @trigger(map = "Route13", npc = 9)
+    @if (getFlag("EVENT_BEAT_ROUTE_13_TRAINER_8")) {
+      @speaker("") { @t("Get lost!", "滚开！") }
+    } @else {
+      @speaker("") { @t("What're you lookin' at?", "你在看什么？") }
+    }
+  }
+
+  // ── Bird Keeper (npc 10) — Route13 Trainer 9 ───────────────────────────
+  @storyline("talkCooltrainerM3") {
+    @trigger(map = "Route13", npc = 10)
+    @if (getFlag("EVENT_BEAT_ROUTE_13_TRAINER_9")) {
+      @speaker("") { @t("I wish I could fly like\nPIDGEY and PIDGEOTTO...", "我希望我能像波波和比比鸟那样\n飞翔……") }
+    } @else {
+      @speaker("") { @t("I always go with bird\nPOKeMON!", "我总是和鸟类宝可梦一起！") }
+    }
+  }
+
+  // ── Signs ──────────────────────────────────────────────────────────────
+  @storyline("signTrainerTips1") {
+    @trigger(map = "Route13", sign = 1)
+    @speaker("") { @t("TRAINER TIPS\n\nLook to the left of that\npost!", "训练家提示\n\n看看那根柱子的左边！") }
+  }
+
+  @storyline("signTrainerTips2") {
+    @trigger(map = "Route13", sign = 2)
+    @speaker("") { @t("TRAINER TIPS\n\nUse SELECT to switch items\nin the ITEM window!", "训练家提示\n\n用SELECT键在道具窗口中切换道\n具！") }
+  }
+
+  @storyline("signRoute13") {
+    @trigger(map = "Route13", sign = 3)
+    @speaker("") { @t("ROUTE 13 North to SILENCE\nBRIDGE", "13号道路向北通往沉默桥") }
+  }
+}

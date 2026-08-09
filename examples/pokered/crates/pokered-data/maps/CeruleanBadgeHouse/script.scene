@@ -1,0 +1,102 @@
+// CeruleanBadgeHouse — translated from the original disassembly
+// (scripts/CeruleanBadgeHouse.asm, text/CeruleanBadgeHouse.asm) to the real
+// Game DSL API surface.
+//
+// The Middle-Aged Man describes the secret of each #MON BADGE you own. The
+// original builds a SPECIALLISTMENU populated with the badges the player owns,
+// looping prints the matching description until the player cancels. The prompt
+// text itself lists all 8 BADGEs, so the menu keeps all eight options but
+// gates each description on hasBadge() — selecting a badge you don't own yet
+// answers "You don't have that BADGE yet." (the original never offers unowned
+// badges, so that branch is a stand-in for the filtered list).
+
+game_scene CeruleanBadgeHouse {
+  // ── Middle-Aged Man (npc 1) — the BADGE secrets guide ──────────────────
+  @storyline("talkMiddleAgedMan") {
+    @trigger(map = "CeruleanBadgeHouse", npc = 1)
+
+    @speaker("") {
+      @t("POKeMON BADGEs are owned\nonly by skilled trainers.\n\nI see you have at least one.\n\nThose BADGEs have amazing\nsecrets!", "宝可梦徽章只有厉害的训练家才\n拥有。\n\n你好像已经有一枚了吧。\n\n那些徽章藏着惊人的秘密！")
+    }
+    @speaker("") {
+      @t("Now then...\n\nWhich of the 8 BADGEs should\nI describe?", "那么……\n\n8枚徽章中你想让我介绍哪一\n枚？")
+    }
+    @choice {
+      @option(@t("BOULDERBADGE", "灰色徽章")) {
+        @if (hasBadge("BOULDERBADGE")) {
+          @speaker("") {
+            @t("The ATTACK of all POKeMON\nincreases a little bit.\n\nIt also lets you use FLASH\nany time you desire.", "所有宝可梦的攻击都会稍微提\n升。\n\n还能让你随时使用闪光！")
+          }
+        } @else {
+          @speaker("") { @t("You don't have that BADGE\nyet.", "你还没有那枚徽章。") }
+        }
+      }
+      @option(@t("CASCADEBADGE", "蓝色徽章")) {
+        @if (hasBadge("CASCADEBADGE")) {
+          @speaker("") {
+            @t("POKeMON up to L30 will obey\nyou.\n\nAny higher, they become\nunruly!\n\nIt also lets you use CUT\noutside of battle.", "30级以下的宝可梦会服从你。\n\n再高的等级，它们会变得不听\n话！\n\n还能在战斗之外使用居合斩。")
+          }
+        } @else {
+          @speaker("") { @t("You don't have that BADGE\nyet.", "你还没有那枚徽章。") }
+        }
+      }
+      @option(@t("THUNDERBADGE", "橙色徽章")) {
+        @if (hasBadge("THUNDERBADGE")) {
+          @speaker("") {
+            @t("The SPEED of all POKeMON\nincreases a little bit.\n\nIt also lets you use FLY\noutside of battle.", "所有宝可梦的速度都会稍微提\n升。\n\n还能在战斗之外使用飞翔。")
+          }
+        } @else {
+          @speaker("") { @t("You don't have that BADGE\nyet.", "你还没有那枚徽章。") }
+        }
+      }
+      @option(@t("RAINBOWBADGE", "彩虹徽章")) {
+        @if (hasBadge("RAINBOWBADGE")) {
+          @speaker("") {
+            @t("POKeMON up to L50 will obey\nyou.\n\nAny higher, they become\nunruly!\n\nIt also lets you use\nSTRENGTH out- side of\nbattle.", "50级以下的宝可梦会服从你。\n\n再高的等级，它们会变得不听\n话！\n\n还能在战斗之外使用怪力。")
+          }
+        } @else {
+          @speaker("") { @t("You don't have that BADGE\nyet.", "你还没有那枚徽章。") }
+        }
+      }
+      @option(@t("SOULBADGE", "灵魂徽章")) {
+        @if (hasBadge("SOULBADGE")) {
+          @speaker("") {
+            @t("The DEFENSE of all POKeMON\nincreases a little bit.\n\nIt also lets you use SURF\noutside of battle.", "所有宝可梦的防御都会稍微提\n升。\n\n还能在战斗之外使用冲浪。")
+          }
+        } @else {
+          @speaker("") { @t("You don't have that BADGE\nyet.", "你还没有那枚徽章。") }
+        }
+      }
+      @option(@t("MARSHBADGE", "粉色徽章")) {
+        @if (hasBadge("MARSHBADGE")) {
+          @speaker("") {
+            @t("POKeMON up to L70 will obey\nyou.\n\nAny higher, they become\nunruly!", "70级以下的宝可梦会服从你。\n\n再高的等级，它们会变得不听\n话！")
+          }
+        } @else {
+          @speaker("") { @t("You don't have that BADGE\nyet.", "你还没有那枚徽章。") }
+        }
+      }
+      @option(@t("VOLCANOBADGE", "深红徽章")) {
+        @if (hasBadge("VOLCANOBADGE")) {
+          @speaker("") {
+            @t("Your POKeMON's SPECIAL\nabilities increase a bit.", "你的宝可梦的特殊能力会略微提\n升。")
+          }
+        } @else {
+          @speaker("") { @t("You don't have that BADGE\nyet.", "你还没有那枚徽章。") }
+        }
+      }
+      @option(@t("EARTHBADGE", "绿色徽章")) {
+        @if (hasBadge("EARTHBADGE")) {
+          @speaker("") {
+            @t("All POKeMON will obey you!", "所有宝可梦都会服从你！")
+          }
+        } @else {
+          @speaker("") { @t("You don't have that BADGE\nyet.", "你还没有那枚徽章。") }
+        }
+      }
+    }
+    @speaker("") {
+      @t("Come visit me any time you\nwish.", "欢迎随时来找我。")
+    }
+  }
+}

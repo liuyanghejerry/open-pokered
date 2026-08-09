@@ -1,0 +1,9 @@
+{
+  "$schema": "../schemas/move.schema.json",
+  "id": "Screech",
+  "effect": "DefenseDown2Effect",
+  "power": 0,
+  "type": "Normal",
+  "accuracy": 85,
+  "pp": 40
+}

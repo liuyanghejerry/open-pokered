@@ -1,0 +1,199 @@
+// ViridianCity — translated from the original disassembly (scripts/ViridianCity.asm,
+// text/ViridianCity.asm) to the real Game DSL API surface. NPC dialogue + signs,
+// the Fisher's TM42 gift gate, the sleepy-old-man / catch-tutorial old man, and
+// the private-property + gym-locked push-down gates. The old-man catch tutorial
+// (BATTLE_TYPE_OLD_MAN) has no tutorial-battle API; faithful dialogue + a
+// movePlayer approximation are used.
+
+game_scene ViridianCity {
+  // ── On-enter private-property gate (auto-triggered) ─────────────────────
+  // Original ViridianCityCheckGotPokedexScript: stepping onto (19,9) before
+  // getting the POKeDEX shows the sleepy old man's line and shoves the player
+  // back down one tile (same text as npc 5's talk handler). After the POKeDEX,
+  // the block is lifted. The sibling gym-locked door gate at (32,8) blocks the
+  // Viridian Gym path until the player holds every badge except EARTH.
+  @storyline("coordPrivateProperty") {
+    @trigger(map = "ViridianCity", name = "privateProperty")
+    @if (!getFlag("EVENT_GOT_POKEDEX")) {
+      @speaker("") {
+        @t("You can't go through here!\n\nThis is private property!", "你不能从这里过去！\n\n这里是私人领地！")
+      }
+      movePlayerRelative(["down"])
+    }
+  }
+
+  // ── Viridian Gym door gate (coord (32,8)) ───────────────────────────────
+  // Original ViridianCityCheckGymOpenScript: while the player lacks any of the
+  // seven non-EARTH badges, stepping in front of the gym shows "The GYM's doors
+  // are locked..." and shoves the player back down one tile. Once all seven are
+  // held the gym stays open — earning the EARTH badge (8 badges) must not
+  // re-lock it, so the check is "< 7", not "!= 7".
+  @storyline("coordGymLocked") {
+    @trigger(map = "ViridianCity", name = "gymLocked")
+    @if (getBadgeCount() < 7) {
+      @speaker("") { @t("The GYM's doors are\nlocked...", "道馆的门锁着……") }
+      movePlayerRelative(["down"])
+    }
+  }
+
+  // ── Youngster #1 (npc 1) ───────────────────────────────────────────────
+  @storyline("talkYoungster1") {
+    @trigger(map = "ViridianCity", npc = 1)
+    @speaker("") {
+      @t("Those POKe BALLs at your\nwaist! You have POKeMON!\n\nIt's great that you can\ncarry and use POKeMON any\ntime, anywhere!", "你腰间的那些精灵球！你有宝可\n梦！\n\n能随时随地携带和使用宝可梦，\n真是太棒了！")
+    }
+  }
+
+  // ── Gambler (npc 2) — gym status ───────────────────────────────────────
+  // Original ViridianCityGambler1Text: holds every badge except EARTH
+  // (wObtainedBadges == ~(1<<BIT_EARTHBADGE)) or has beaten Giovanni -> the
+  // LEADER "returned" line; otherwise the gym is "always closed".
+  @storyline("talkGambler") {
+    @trigger(map = "ViridianCity", npc = 2)
+    @if (getBadgeCount() == 7 || getFlag("EVENT_BEAT_VIRIDIAN_GYM_GIOVANNI")) {
+      @speaker("") {
+        @t("VIRIDIAN GYM's LEADER\nreturned!", "常青道馆的馆主回来了！")
+      }
+    } @else {
+      @speaker("") {
+        @t("This POKeMON GYM is always\nclosed.\n\nI wonder who the LEADER is?", "这个宝可梦道馆总是关着门。\n\n真不知道馆主是谁？")
+      }
+    }
+  }
+
+  // ── Youngster #2 (npc 3) — caterpillar quiz ────────────────────────────
+  @storyline("talkYoungster2") {
+    @trigger(map = "ViridianCity", npc = 3)
+    @speaker("") {
+      @t("You want to know about the 2\nkinds of caterpillar\nPOKeMON?", "你想知道两种毛毛虫宝可梦的事\n情吗？")
+    }
+    @choice {
+      @option(@t("YES", "是")) {
+        @speaker("") {
+          @t("CATERPIE has no poison, but\nWEEDLE does.\n\nWatch out for its POISON\nSTING!", "绿毛虫没有毒，但独角虫有毒。\n\n小心它的毒针！")
+        }
+      }
+      @option(@t("NO", "否")) {
+        @speaker("") {
+          @t("Oh, OK then!", "哦，那好吧！")
+        }
+      }
+    }
+  }
+
+  // ── Girl (npc 4) ───────────────────────────────────────────────────────
+  @storyline("talkGirl") {
+    @trigger(map = "ViridianCity", npc = 4)
+    @if (!getFlag("EVENT_GOT_POKEDEX")) {
+      @speaker("") {
+        @t("Oh Grandpa! Don't be so\nmean! He hasn't had his\ncoffee yet.", "哎呀爷爷！别这么刻薄！他还没\n喝咖啡呢。")
+      }
+    } @else {
+      @speaker("") {
+        @t("When I go shop in PEWTER\nCITY, I have to take the\nwinding trail in VIRIDIAN\nFOREST.", "我去深灰市买东西时，得走常青\n森林里那条蜿蜒的小路。")
+      }
+    }
+  }
+
+  // ── Sleepy old man (npc 5) — blocks the gym path until he wakes ─────────
+  // Original prints this then force-walks the player one step down. We keep the
+  // faithful push-down approximation.
+  @storyline("talkGamblerAsleep") {
+    @trigger(map = "ViridianCity", npc = 5)
+    @speaker("") {
+      @t("You can't go through here!\n\nThis is private property!", "你不能从这里过去！\n\n这里是私人领地！")
+    }
+    movePlayerRelative(["down"])
+  }
+
+  // ── Fisher (npc 6) — gives TM42 (Dream Eater) ──────────────────────────
+  @storyline("talkFisher") {
+    @trigger(map = "ViridianCity", npc = 6)
+    @if (getFlag("EVENT_GOT_TM42")) {
+      @speaker("") {
+        @t("TM42 contains DREAM EATER...\n...Snore...", "TM42里是食梦…………呼噜……")
+      }
+    } @else {
+      @speaker("") {
+        @t("Yawn! I must have dozed off\nin the sun.\n\nI had this dream about a\nDROWZEE eating my dream.\nWhat's this? Where did this\nTM come from?\n\nThis is spooky! Here, you\ncan have this TM.", "哈欠！我一定是晒太阳晒得睡着\n了。\n\n我做了个梦，梦见一只催眠貘在\n吃我的梦。这是什么？这个TM是\n从哪来的？\n\n真吓人！这个TM就给你吧。")
+      }
+      giveItem("TM42", 1)
+      setFlag("EVENT_GOT_TM42")
+      @speaker("") {
+        @t("<PLAYER> received TM42!", "<PLAYER>获得了 TM42！")
+      }
+    }
+  }
+
+  // ── Old man (npc 7) — coffee gate + catch tutorial ─────────────────────
+  // "Are you in a hurry?" YES → he waves you on; NO → he runs the catch
+  // tutorial: the auto-played BATTLE_TYPE_OLD_MAN demo battle (game.oldManTutorial()).
+  @storyline("talkOldMan") {
+    @trigger(map = "ViridianCity", npc = 7)
+    @speaker("") {
+      @t("Ahh, I've had my coffee now\nand I feel great!\n\nSure you can go through!\n\nAre you in a hurry?", "啊，我已经喝过咖啡了，感觉真\n好！\n\n当然可以过去！\n\n你有什么急事吗？")
+    }
+    @choice {
+      @option(@t("YES", "是")) {
+        @speaker("") {
+          @t("Time is money... Go along\nthen.", "时间就是金钱……那就快走吧。")
+        }
+      }
+      @option(@t("NO", "否")) {
+        @speaker("") {
+          @t("I see you're using a\nPOKeDEX.\n\nWhen you catch a POKeMON,\nPOKeDEX is automatically\nupdated.\n\nWhat? Don't you know how to\ncatch POKeMON?\n\nI'll show you how to then.", "我看你在用图鉴。\n\n当你抓到宝可梦时，图鉴会自动\n更新。\n\n什么？你不知道怎么抓宝可梦\n吗？\n\n那就让我来教你吧。")
+        }
+        // The BATTLE_TYPE_OLD_MAN catch tutorial: an auto-played, guaranteed-catch
+        // demo battle vs a Lv5 WEEDLE (the player is shown as "OLD MAN"), then the
+        // old man's closing line.
+        game.oldManTutorial()
+        @speaker("") {
+          @t("First, you need to weaken\nthe target POKeMON.", "首先，你需要削弱目标宝可梦。")
+        }
+      }
+    }
+  }
+
+  // ── Signs ──────────────────────────────────────────────────────────────
+  @storyline("sign1") {
+    @trigger(map = "ViridianCity", sign = 1)
+    @speaker("") {
+      @t("VIRIDIAN CITY The Eternally\nGreen Paradise", "常青市永远翠绿的乐园")
+    }
+  }
+
+  @storyline("sign2") {
+    @trigger(map = "ViridianCity", sign = 2)
+    @speaker("") {
+      @t("TRAINER TIPS\n\nCatch POKeMON and expand\nyour collection!\n\nThe more you have, the\neasier it is to fight!", "训练家须知\n\n捕捉宝可梦来扩充你的收藏！\n\n拥有的越多，战斗就越轻松！")
+    }
+  }
+
+  @storyline("sign3") {
+    @trigger(map = "ViridianCity", sign = 3)
+    @speaker("") {
+      @t("TRAINER TIPS\n\nThe battle moves of POKeMON\nare limited by their POWER\nPOINTs, PP.\n\nTo replenish PP, rest your\ntired POKeMON at a POKeMON\nCENTER!", "训练家须知\n\n宝可梦的战斗招式受它们的 PP\n点数限制。\n\n要补充PP，就到宝可梦中心让疲\n惫的宝可梦休息吧！")
+    }
+  }
+
+  @storyline("sign4") {
+    @trigger(map = "ViridianCity", sign = 4)
+    @speaker("") {
+      @t("All your item needs\nfulfilled! POKeMON MART", "你所有的道具需求都满足！友好\n商店")
+    }
+  }
+
+  @storyline("sign5") {
+    @trigger(map = "ViridianCity", sign = 5)
+    @speaker("") {
+      @t("Heal Your POKeMON! POKeMON\nCENTER", "治愈你的宝可梦！宝可梦中心")
+    }
+  }
+
+  @storyline("sign6") {
+    @trigger(map = "ViridianCity", sign = 6)
+    @speaker("") {
+      @t("VIRIDIAN CITY POKeMON GYM", "常青市宝可梦道馆")
+    }
+  }
+}

@@ -1,0 +1,1 @@
+{"id":"MoonStone","name":"MOON STONE","price":0,"category":"Evolution","effect":{"type":"EvolutionStone","params":{"stone":"Moon"}},"held_effect":null,"berry":null,"use_outside_battle":true,"use_in_battle":false,"consume":true,"key_item":false,"sellable":false,"description":"","tags":["evolution","stone"]}

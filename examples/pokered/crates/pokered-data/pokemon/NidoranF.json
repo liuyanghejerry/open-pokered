@@ -1,0 +1,74 @@
+{
+  "$schema": "../schemas/pokemon.schema.json",
+  "species": "NidoranF",
+  "baseStats": {
+    "hp": 55,
+    "attack": 47,
+    "defense": 52,
+    "speed": 41,
+    "special": 40
+  },
+  "type1": "Poison",
+  "type2": "Poison",
+  "catchRate": 235,
+  "baseExp": 59,
+  "growthRate": "MediumSlow",
+  "initialMoves": [
+    "Growl",
+    "Tackle",
+    "None",
+    "None"
+  ],
+  "tmHmFlags": [
+    160,
+    35,
+    136,
+    193,
+    131,
+    8,
+    2
+  ],
+  "pokedex": {
+    "category": "POISON PIN",
+    "heightFeet": 1,
+    "heightInches": 4,
+    "weightDecipounds": 150,
+    "flavorTextPages": [
+      "Although small,\nits venomous\nbarbs render this",
+      "#MON dangerous.\nThe female has\nsmaller horns"
+    ]
+  },
+  "evolutions": [
+    {
+      "method": "level",
+      "species": "Nidorina",
+      "level": 16
+    }
+  ],
+  "learnset": [
+    {
+      "level": 8,
+      "moveId": "Scratch"
+    },
+    {
+      "level": 14,
+      "moveId": "PoisonSting"
+    },
+    {
+      "level": 21,
+      "moveId": "TailWhip"
+    },
+    {
+      "level": 29,
+      "moveId": "Bite"
+    },
+    {
+      "level": 36,
+      "moveId": "FurySwipes"
+    },
+    {
+      "level": 43,
+      "moveId": "DoubleKick"
+    }
+  ]
+}

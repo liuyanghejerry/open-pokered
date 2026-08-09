@@ -1,0 +1,121 @@
+{
+  "$schema": "../../schemas/map.schema.json",
+  "id": 58,
+  "name": "PewterPokecenter",
+  "header": {
+    "tileset": "Pokecenter",
+    "music": "Pokecenter",
+    "connectionFlags": 0,
+    "width": 7,
+    "height": 4,
+    "borderBlock": 0
+  },
+  "connections": {},
+  "warps": [
+    {
+      "x": 3,
+      "y": 7,
+      "destWarpId": 6
+    },
+    {
+      "x": 4,
+      "y": 7,
+      "destWarpId": 6
+    }
+  ],
+  "npcs": [
+    {
+      "spriteId": 41,
+      "spriteName": "Nurse",
+      "x": 3,
+      "y": 1,
+      "movement": "Stationary",
+      "facing": "Down",
+      "range": 0,
+      "textId": 1,
+      "isTrainer": false
+    },
+    {
+      "spriteId": 16,
+      "spriteName": "Gentleman",
+      "x": 11,
+      "y": 7,
+      "movement": "Stationary",
+      "facing": "Left",
+      "range": 0,
+      "textId": 2,
+      "isTrainer": false
+    },
+    {
+      "spriteId": 56,
+      "spriteName": "Fairy",
+      "x": 1,
+      "y": 3,
+      "movement": "Stationary",
+      "facing": "Down",
+      "range": 0,
+      "textId": 3,
+      "isTrainer": false
+    },
+    {
+      "spriteId": 42,
+      "spriteName": "LinkReceptionist",
+      "x": 11,
+      "y": 2,
+      "movement": "Stationary",
+      "facing": "Down",
+      "range": 0,
+      "textId": 4,
+      "isTrainer": false
+    }
+  ],
+  "signs": [
+    {
+      "x": 13,
+      "y": 3,
+      "textId": 1
+    }
+  ],
+  "text": {
+    "npc": {
+      "1": [
+        {
+          "line1": "[Pokecenter Nurse script]",
+          "line2": ""
+        }
+      ],
+      "2": [
+        {
+          "line1": "What!?",
+          "line2": ""
+        },
+        {
+          "line1": "TEAM ROCKET is",
+          "line2": "at MT.MOON? Huh?"
+        },
+        {
+          "line1": "I'm on the phone!",
+          "line2": ""
+        },
+        {
+          "line1": "Scram!",
+          "line2": ""
+        }
+      ],
+      "3": [
+        {
+          "line1": "JIGGLYPUFF: Puu",
+          "line2": "pupuu!"
+        }
+      ],
+      "4": [
+        {
+          "line1": "[Cable Club script]",
+          "line2": ""
+        }
+      ]
+    },
+    "sign": {}
+  },
+  "wild": null
+}

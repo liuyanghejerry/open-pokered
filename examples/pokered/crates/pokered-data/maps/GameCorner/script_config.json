@@ -1,0 +1,58 @@
+{
+  "$schema": "../../schemas/script_config.schema.json",
+  "coordEvents": [],
+  "npcs": [
+    {
+      "id": 1,
+      "talk": "talkBeauty1"
+    },
+    {
+      "id": 2,
+      "talk": "talkClerk1"
+    },
+    {
+      "id": 3,
+      "talk": "talkMiddleAgedMan1"
+    },
+    {
+      "id": 4,
+      "talk": "talkBeauty2"
+    },
+    {
+      "id": 5,
+      "talk": "talkFishingGuru"
+    },
+    {
+      "id": 6,
+      "talk": "talkMiddleAgedWoman"
+    },
+    {
+      "id": 7,
+      "talk": "talkGymGuide"
+    },
+    {
+      "id": 8,
+      "talk": "talkGambler"
+    },
+    {
+      "id": 9,
+      "talk": "talkClerk2"
+    },
+    {
+      "id": 10,
+      "talk": "talkGentleman"
+    },
+    {
+      "id": 11,
+      "talk": "talkRocket",
+      "toggleId": "GAME_CORNER_OBJ_11"
+    }
+  ],
+  "onLoad": "GameCornerOnLoad",
+  "signs": [
+    {
+      "id": 1,
+      "talk": "posterSign"
+    }
+  ]
+}

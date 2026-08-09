@@ -1,0 +1,60 @@
+{
+  "$schema": "../schemas/pokemon.schema.json",
+  "species": "Kabutops",
+  "baseStats": {
+    "hp": 60,
+    "attack": 115,
+    "defense": 105,
+    "speed": 80,
+    "special": 70
+  },
+  "type1": "Rock",
+  "type2": "Water",
+  "catchRate": 45,
+  "baseExp": 201,
+  "growthRate": "MediumFast",
+  "initialMoves": [
+    "Scratch",
+    "Harden",
+    "Absorb",
+    "None"
+  ],
+  "tmHmFlags": [
+    182,
+    127,
+    13,
+    192,
+    131,
+    8,
+    18
+  ],
+  "pokedex": {
+    "category": "SHELLFISH",
+    "heightFeet": 4,
+    "heightInches": 3,
+    "weightDecipounds": 890,
+    "flavorTextPages": [
+      "Its sleek shape is\nperfect for swim-\nming. It slashes",
+      "prey with its\nclaws and drains\nthe body fluids"
+    ]
+  },
+  "evolutions": [],
+  "learnset": [
+    {
+      "level": 34,
+      "moveId": "Absorb"
+    },
+    {
+      "level": 39,
+      "moveId": "Slash"
+    },
+    {
+      "level": 46,
+      "moveId": "Leer"
+    },
+    {
+      "level": 53,
+      "moveId": "HydroPump"
+    }
+  ]
+}

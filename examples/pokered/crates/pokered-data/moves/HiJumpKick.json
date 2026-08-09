@@ -1,0 +1,9 @@
+{
+  "$schema": "../schemas/move.schema.json",
+  "id": "HiJumpKick",
+  "effect": "JumpKickEffect",
+  "power": 85,
+  "type": "Fighting",
+  "accuracy": 90,
+  "pp": 20
+}

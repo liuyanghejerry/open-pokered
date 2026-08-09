@@ -1,0 +1,42 @@
+{
+  "$schema": "../../schemas/script_config.schema.json",
+  "coordEvents": [
+    {
+      "name": "mansionSwitch1",
+      "position": [
+        3,
+        8
+      ],
+      "trigger": "mansionSwitch"
+    },
+    {
+      "name": "mansionSwitch2",
+      "position": [
+        4,
+        8
+      ],
+      "trigger": "mansionSwitch"
+    }
+  ],
+  "npcs": [
+    {
+      "id": 1,
+      "talk": "talkSuperNerd"
+    },
+    {
+      "id": 2,
+      "talk": "itemCalcium",
+      "toggleId": "POKEMON_MANSION_2F_OBJ_2"
+    },
+    {
+      "id": 3,
+      "talk": "readDiary1"
+    },
+    {
+      "id": 4,
+      "talk": "readDiary2"
+    }
+  ],
+  "onLoad": "PokemonMansion2FOnLoad",
+  "signs": []
+}

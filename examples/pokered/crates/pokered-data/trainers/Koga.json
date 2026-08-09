@@ -1,0 +1,27 @@
+{
+  "$schema": "../schemas/trainer.schema.json",
+  "class": "Koga",
+  "constName": "KOGA",
+  "parties": [
+    {
+      "pokemon": [
+        {
+          "level": 37,
+          "species": "Koffing"
+        },
+        {
+          "level": 39,
+          "species": "Muk"
+        },
+        {
+          "level": 37,
+          "species": "Koffing"
+        },
+        {
+          "level": 43,
+          "species": "Weezing"
+        }
+      ]
+    }
+  ]
+}

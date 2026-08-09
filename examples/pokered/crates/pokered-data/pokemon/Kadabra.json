@@ -1,0 +1,74 @@
+{
+  "$schema": "../schemas/pokemon.schema.json",
+  "species": "Kadabra",
+  "baseStats": {
+    "hp": 40,
+    "attack": 35,
+    "defense": 30,
+    "speed": 105,
+    "special": 120
+  },
+  "type1": "Psychic",
+  "type2": "Psychic",
+  "catchRate": 100,
+  "baseExp": 145,
+  "growthRate": "MediumSlow",
+  "initialMoves": [
+    "Teleport",
+    "Confusion",
+    "Disable",
+    "None"
+  ],
+  "tmHmFlags": [
+    177,
+    3,
+    15,
+    248,
+    135,
+    56,
+    67
+  ],
+  "pokedex": {
+    "category": "PSI",
+    "heightFeet": 4,
+    "heightInches": 3,
+    "weightDecipounds": 1250,
+    "flavorTextPages": [
+      "It emits special\nalpha waves from\nits body that",
+      "induce headaches\njust by being\nclose by"
+    ]
+  },
+  "evolutions": [
+    {
+      "method": "trade",
+      "species": "Alakazam",
+      "minLevel": 1
+    }
+  ],
+  "learnset": [
+    {
+      "level": 16,
+      "moveId": "Confusion"
+    },
+    {
+      "level": 20,
+      "moveId": "Disable"
+    },
+    {
+      "level": 27,
+      "moveId": "Psybeam"
+    },
+    {
+      "level": 31,
+      "moveId": "Recover"
+    },
+    {
+      "level": 38,
+      "moveId": "PsychicM"
+    },
+    {
+      "level": 42,
+      "moveId": "Reflect"
+    }
+  ]
+}

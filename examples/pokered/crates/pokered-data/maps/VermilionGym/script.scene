@@ -1,0 +1,229 @@
+// VermilionGym — translated from the original disassembly (scripts/VermilionGym.asm,
+// text/VermilionGym.asm + VermilionGym_2.asm) to the real Game DSL API surface.
+// Gym template: leader LT.SURGE is talk-driven (map.json isTrainer = false) so the
+// script owns the battle->badge->TM reward; the Gentleman/SuperNerd/Sailor grunts are
+// sight-engaged by the runtime, so their .scene handlers are dialogue only.
+//
+// Trash-can door-switch puzzle (engine/events/hidden_objects/gym_trash.asm,
+// GymTrashScript). Original: 15 trash cans, two hidden electric switches. The
+// FIRST switch is under a random can; find it (SFX_SWITCH) → 1st lock opens and
+// the SECOND switch is seeded into a can *adjacent* to the first. Match that
+// adjacent can (SFX_GO_INSIDE) → 2nd lock opens and the motorized door opens.
+// Picking any other can while hunting the 2nd switch RE-LOCKS both (SFX_DENIED)
+// and re-randomizes the 1st switch — you start the search over.
+//
+// This is now a real two-switch search. The 15 cans are laid out on a 5-col ×
+// 3-row grid (x ∈ {1,3,5,7,9}, y ∈ {7,9,11}); a can's linear index is
+// col*3 + row (0..14), matching the trashCans1..15 coord-event ordering. The
+// handler reads game.getPlayerPosition() to know which can was stepped on, and
+// keeps the two switch positions on globalThis so they persist across the
+// per-can coord-event calls within a visit.
+//
+// APPROXIMATED vs. the original ROM:
+//   • RNG: the ROM rolls hardware `Random`; there is no seeded-RNG DSL/engine
+//     primitive, so we use Math.floor(Math.random()*…) (still uniform, still
+//     re-rolled on every reset — same observable behaviour, different stream).
+//   • "adjacent": the ROM stores wSecondLockTrashCanIndex; we pick one of the
+//     first can's orthogonal grid neighbours (up/down/left/right) — the faithful
+//     reading of the in-game hint "the 2nd lock is right next to it".
+//   • Switch positions live on globalThis (per-session), not SRAM
+//     (wFirstLockTrashCanIndex/wSecondLockTrashCanIndex), so leaving and
+//     re-entering the gym restarts the search; the solved state itself persists
+//     via EVENT_2ND_LOCK_OPENED. EVENT_1ST_LOCK_OPENED is still mirrored for
+//     save/NPC parity but the logic is driven off globalThis.
+
+game_scene VermilionGym {
+  // ── On entry: re-apply the OPEN door block once the puzzle is solved ─────
+  // Original VermilionGymSetDoorTile re-runs on map load: CheckEvent
+  // EVENT_2ND_LOCK_OPENED → open block $5 (=5), else closed double-door $24 (=36);
+  // lb bc, 2, 2 → Y=2, X=2 → replaceTileBlock(2, 2, id). map.blk ships it closed.
+  @load {
+    @if (getFlag("EVENT_2ND_LOCK_OPENED")) {
+      replaceTileBlock(2, 2, 5)
+    }
+  }
+
+  // ── Trash-can switch puzzle (15 cans, hidden_objects GymTrashScript) ──────
+  // The cans are impassable objects: you press A while FACING a can (original
+  // bgEvent), so each can is a sign at its tile and all 15 route here. The can
+  // being inspected is the tile in FRONT of the player (getPlayerFacing).
+  @storyline("trashCans") {
+    @trigger(map = "VermilionGym", sign = 1)
+    @trigger(map = "VermilionGym", sign = 2)
+    @trigger(map = "VermilionGym", sign = 3)
+    @trigger(map = "VermilionGym", sign = 4)
+    @trigger(map = "VermilionGym", sign = 5)
+    @trigger(map = "VermilionGym", sign = 6)
+    @trigger(map = "VermilionGym", sign = 7)
+    @trigger(map = "VermilionGym", sign = 8)
+    @trigger(map = "VermilionGym", sign = 9)
+    @trigger(map = "VermilionGym", sign = 10)
+    @trigger(map = "VermilionGym", sign = 11)
+    @trigger(map = "VermilionGym", sign = 12)
+    @trigger(map = "VermilionGym", sign = 13)
+    @trigger(map = "VermilionGym", sign = 14)
+    @trigger(map = "VermilionGym", sign = 15)
+    @run {
+      // Persistent puzzle state for this visit (survives across can inspections).
+      let st = globalThis.__vgymTrash;
+      if (!st) { st = { first: -1, second: -1, phase: 0 }; globalThis.__vgymTrash = st; }
+
+      // Which can are we facing? cols at x∈{1,3,5,7,9}, rows at y∈{7,9,11}.
+      let pos = game.getPlayerPosition();
+      let facing = game.getPlayerFacing();
+      let fx = pos.x;
+      let fy = pos.y;
+      if (facing === "up") { fy = fy - 1; }
+      else if (facing === "down") { fy = fy + 1; }
+      else if (facing === "left") { fx = fx - 1; }
+      else if (facing === "right") { fx = fx + 1; }
+      let can = (((fx - 1) / 2) * 3) + ((fy - 7) / 2);   // 0..14
+
+      if (game.getFlag("EVENT_2ND_LOCK_OPENED")) {
+        // Puzzle already solved — just trash now.
+        await game.showText(game.t("Nope, there's\nonly trash here.", "不，这里\n只有垃圾。"));
+      } else if (st.phase === 0) {
+        // Hunting the 1st switch — its can is chosen at random on first look.
+        if (st.first < 0) { st.first = Math.floor(Math.random() * 15); }
+        if (can === st.first) {
+          // Found the 1st switch: open lock 1, seed lock 2 in an adjacent can.
+          let col = Math.floor(st.first / 3);
+          let row = st.first % 3;
+          let adj = [];
+          if (row > 0) { adj.push(st.first - 1); }   // can above
+          if (row < 2) { adj.push(st.first + 1); }   // can below
+          if (col > 0) { adj.push(st.first - 3); }   // can to the left
+          if (col < 4) { adj.push(st.first + 3); }   // can to the right
+          st.second = adj[Math.floor(Math.random() * adj.length)];
+          st.phase = 1;
+          game.setFlag("EVENT_1ST_LOCK_OPENED");
+          await game.playSound("SFX_SWITCH");
+          await game.showText(game.t("Hey! There's a\nswitch under the\ntrash!\nTurn it on!\n\nThe 1st electric\nlock opened!", "嘿！垃圾桶\n下面有开关！\n打开它！\n\n第1道电子锁\n打开了！"));
+        } else {
+          await game.showText(game.t("Nope, there's\nonly trash here.", "不，这里\n只有垃圾。"));
+        }
+      } else {
+        // 1st lock open — the 2nd switch must be the adjacent can we seeded.
+        if (can === st.second) {
+          // Found it: open lock 2 and the motorized door.
+          game.setFlag("EVENT_2ND_LOCK_OPENED");
+          await game.replaceTileBlock(2, 2, 5);
+          await game.playSound("SFX_GO_INSIDE");
+          await game.showText(game.t("The 2nd electric\nlock opened!\n\nThe motorized door\nopened!", "第2道电子锁\n打开了！\n\n电动门\n打开了！"));
+        } else {
+          // Wrong can — both locks re-lock and the 1st switch relocates.
+          st.phase = 0;
+          st.first = Math.floor(Math.random() * 15);
+          st.second = -1;
+          game.resetFlag("EVENT_1ST_LOCK_OPENED");
+          await game.playSound("SFX_DENIED");
+          await game.showText(game.t("Nope, there's\nonly trash here!\n\nHold on!\n\nThe electric locks\nare re-locked!", "不，这里\n只有垃圾！\n\n等等！\n\n电子锁\n又锁上了！"));
+        }
+      }
+    }
+  }
+
+  // ── LT.SURGE, the Gym Leader (npc 1) ───────────────────────────────────
+  @storyline("talkLtSurge") {
+    @trigger(map = "VermilionGym", npc = 1)
+    @if (getFlag("EVENT_BEAT_LT_SURGE")) {
+      @if (!getFlag("EVENT_GOT_TM24")) {
+        // Beat LT.SURGE previously but had no room for the TM — try again.
+        @speaker("") {
+          @t("The THUNDERBADGE cranks up\nyour POKeMON's SPEED!\n\nIt also lets your POKeMON\nFLY any time, kid!\n\nYou're special, kid! Take\nthis!", "橙色徽章能提升你的宝可梦速\n度！\n\n还能让你的宝可梦随时飞翔，小\n子！\n\n你很特别，小子！收下吧！")
+        }
+        giveItem("TM24", 1)
+        setFlag("EVENT_GOT_TM24")
+        @speaker("") { @t("<PLAYER> received TM24!", "<PLAYER>得到了 TM24！") }
+        @speaker("") {
+          @t("TM24 contains THUNDERBOLT!\n\nTeach it to an electric\nPOKeMON!", "TM24 里含有十万伏特！\n\n教给电系宝可梦吧！")
+        }
+      } @else {
+        @speaker("") {
+          @t("A little word of advice,\nkid!\n\nElectricity is sure\npowerful!\n\nBut, it's useless against\nground- type POKeMON!", "小子，给你一句忠告！\n\n电力确实很强大！\n\n但对地面系宝可梦无效！")
+        }
+      }
+    } @else {
+      @speaker("") {
+        @t("Hey, kid! What do you think\nyou're doing here?\n\nYou won't live long in\ncombat! That's for sure!\n\nI tell you kid, electric\nPOKeMON saved me during the\nwar!\n\nThey zapped my enemies into\nparalysis!\n\nThe same as I'll do to you!", "嘿，小子！你在这里干什么？\n\n战斗的话你撑不了多久！肯定没\n错！\n\n告诉你小子，电系宝可梦在战争\n时救过我！\n\n它们把我的敌人电得动弹不得！\n\n我也要这样对你！")
+      }
+      result = startBattle("OPP_LT_SURGE1")
+      @if (result == "win") {
+        @speaker("") {
+          @t("Whoa!\n\nYou're the real deal, kid!\n\nFine then, take the\nTHUNDERBADGE!", "哇！\n\n小子，你真有两下子！\n\n那好，收下橙色徽章吧！")
+        }
+        giveBadge("THUNDERBADGE")
+        setFlag("EVENT_BEAT_LT_SURGE")
+        @speaker("") {
+          @t("The THUNDERBADGE cranks up\nyour POKeMON's SPEED!\n\nIt also lets your POKeMON\nFLY any time, kid!\n\nYou're special, kid! Take\nthis!", "橙色徽章能提升你的宝可梦速\n度！\n\n还能让你的宝可梦随时飞翔，小\n子！\n\n你很特别，小子！收下吧！")
+        }
+        giveItem("TM24", 1)
+        setFlag("EVENT_GOT_TM24")
+        @speaker("") { @t("<PLAYER> received TM24!", "<PLAYER>得到了 TM24！") }
+        @speaker("") {
+          @t("TM24 contains THUNDERBOLT!\n\nTeach it to an electric\nPOKeMON!", "TM24 里含有十万伏特！\n\n教给电系宝可梦吧！")
+        }
+        // Deactivate the gym trainers (original SetEventRange in the after-battle).
+        setFlag("EVENT_BEAT_VERMILION_GYM_TRAINER_0")
+        setFlag("EVENT_BEAT_VERMILION_GYM_TRAINER_1")
+        setFlag("EVENT_BEAT_VERMILION_GYM_TRAINER_2")
+      }
+    }
+  }
+
+  // ── Gentleman (npc 2) — sight-engaged by the runtime; dialogue only ─────
+  @storyline("talkGentleman") {
+    @trigger(map = "VermilionGym", npc = 2)
+    @if (getFlag("EVENT_BEAT_VERMILION_GYM_TRAINER_0")) {
+      @speaker("") {
+        @t("The door won't open?\n\nLT.SURGE always was\ncautious!", "这门打不开？\n\n马志士一向很谨慎！")
+      }
+    } @else {
+      @speaker("") {
+        @t("When I was in the Army,\nLT.SURGE was my strict CO!", "当兵的时候，马志士是我的严厉\n长官！")
+      }
+    }
+  }
+
+  // ── SuperNerd / Rocker (npc 3) — sight-engaged; dialogue only ───────────
+  @storyline("talkSuperNerd") {
+    @trigger(map = "VermilionGym", npc = 3)
+    @if (getFlag("EVENT_BEAT_VERMILION_GYM_TRAINER_1")) {
+      @speaker("") {
+        @t("OK, I'll talk!\n\nLT.SURGE said he hid door\nswitches inside something!", "好，我说！\n\n马志士说他把门的开关藏在了什\n么地方！")
+      }
+    } @else {
+      @speaker("") {
+        @t("I'm a lightweight, but I'm\ngood with electricity!", "我虽然瘦弱，但很擅长用电！")
+      }
+    }
+  }
+
+  // ── Sailor (npc 4) — sight-engaged; dialogue only ───────────────────────
+  @storyline("talkSailor") {
+    @trigger(map = "VermilionGym", npc = 4)
+    @if (getFlag("EVENT_BEAT_VERMILION_GYM_TRAINER_2")) {
+      @speaker("") {
+        @t("LT.SURGE set up double\nlocks! Here's a hint!\n\nWhen you open the 1st lock,\nthe 2nd lock is right next\nto it!", "马志士设了双重锁！给你提示！\n\n打开第一把锁后，第二把锁就在\n旁边！")
+      }
+    } @else {
+      @speaker("") {
+        @t("This is no place for kids!", "这里可不是小孩来的地方！")
+      }
+    }
+  }
+
+  // ── Gym guide (npc 5) ───────────────────────────────────────────────────
+  @storyline("talkGymGuide") {
+    @trigger(map = "VermilionGym", npc = 5)
+    @if (getFlag("EVENT_BEAT_LT_SURGE")) {
+      @speaker("") {
+        @t("Whew! That match was\nelectric!", "呼！那场比赛真带劲！")
+      }
+    } @else {
+      @speaker("") {
+        @t("Yo! Champ in making!\n\nLT.SURGE has a nickname.\nPeople refer to him as the\nLightning American!\n\nHe's an expert on electric\nPOKeMON!\n\nBirds and water POKeMON are\nat risk! Beware of paralysis\ntoo!\n\nLT.SURGE is very cautious!\n\nYou'll have to break a code\nto get to him!", "哟！未来的冠军！\n\n马志士有个绰号。人们都叫他闪\n电美国人！\n\n他可是电系宝可梦专家！\n\n鸟和水的宝可梦很危险！小心麻\n痹！\n\n马志士非常谨慎！\n\n你得破解密码才能见到他！")
+      }
+    }
+  }
+}

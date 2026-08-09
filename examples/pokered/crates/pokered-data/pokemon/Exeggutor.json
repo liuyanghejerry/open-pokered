@@ -1,0 +1,48 @@
+{
+  "$schema": "../schemas/pokemon.schema.json",
+  "species": "Exeggutor",
+  "baseStats": {
+    "hp": 95,
+    "attack": 95,
+    "defense": 85,
+    "speed": 55,
+    "special": 125
+  },
+  "type1": "Grass",
+  "type2": "Psychic",
+  "catchRate": 45,
+  "baseExp": 212,
+  "growthRate": "Slow",
+  "initialMoves": [
+    "Barrage",
+    "Hypnosis",
+    "None",
+    "None"
+  ],
+  "tmHmFlags": [
+    32,
+    67,
+    56,
+    240,
+    27,
+    104,
+    34
+  ],
+  "pokedex": {
+    "category": "COCONUT",
+    "heightFeet": 6,
+    "heightInches": 7,
+    "weightDecipounds": 2650,
+    "flavorTextPages": [
+      "Legend has it that\non rare occasions,\none of its heads",
+      "will drop off and\ncontinue on as an\nEXEGGCUTE"
+    ]
+  },
+  "evolutions": [],
+  "learnset": [
+    {
+      "level": 28,
+      "moveId": "Stomp"
+    }
+  ]
+}

@@ -1,0 +1,27 @@
+// PewterNidoranHouse — translated from the original disassembly
+// (scripts/PewterNidoranHouse.asm, text/PewterNidoranHouse.asm) to the real
+// Game DSL API surface. Pure NPC-dialogue house; the only effect is the Nidoran
+// playing its cry when spoken to (original: PlayCry NIDORAN_M).
+
+game_scene PewterNidoranHouse {
+  // ── NIDORAN_M pet (npc 1) — plays its cry, then "speaks" ───────────────
+  @storyline("talkNidoran") {
+    @trigger(map = "PewterNidoranHouse", npc = 1)
+    playCry("NIDORAN_M")
+    @speaker("") { @t("NIDORAN: Bowbow!", "尼多朗：汪汪！") }
+  }
+
+  // ── Little boy (npc 2) ─────────────────────────────────────────────────
+  @storyline("talkLittleBoy") {
+    @trigger(map = "PewterNidoranHouse", npc = 2)
+    @speaker("") { @t("NIDORAN sit!", "尼多朗，坐下！") }
+  }
+
+  // ── Middle-aged man (npc 3) ────────────────────────────────────────────
+  @storyline("talkMiddleAgedMan") {
+    @trigger(map = "PewterNidoranHouse", npc = 3)
+    @speaker("") {
+      @t("Our POKeMON's an outsider,\nso it's hard to handle.\n\nAn outsider is a POKeMON\nthat you get in a trade.\n\nIt grows fast, but it may\nignore an unskilled trainer\nin battle!\n\nIf only we had some\nBADGEs...", "我们这只宝可梦是外来者，所以\n很难管。\n\n外来者是指通过交换得到的宝可\n梦。\n\n它长得很快，但可能会不听经验\n不足的训练家的话！\n\n要是我们有徽章就好了……")
+    }
+  }
+}

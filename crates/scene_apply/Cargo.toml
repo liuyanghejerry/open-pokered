@@ -1,0 +1,10 @@
+[package]
+name = "scene_apply"
+version = "0.1.0"
+edition = "2021"
+description = "Compile-check a map's script.scene and regenerate its script_config.json from the .scene (story-translation workflow)"
+
+[dependencies]
+# jrpg engine crates are consumed via git (see repo README / docs for how to
+# switch the engine URL once the real hosting is chosen).
+jrpg-engine-dsl = { git = "file:///Users/liuyanghe02/develop/pokered-worktree-2", tag = "v0.1.0" }

@@ -1,0 +1,17 @@
+{
+  "id": "rival",
+  "name": { "en": "Blue", "zh": "青绿" },
+  "role": "rival",
+  "tags": ["pallet-town"],
+  "appearance": "Confident teenager with spiky brown hair; tidy, sporty clothes.",
+  "personality": "Arrogant and competitive, quick to taunt, but a genuinely strong trainer.",
+  "backstory": "Oak's grandson; grew up alongside the player and starts the journey the same day.",
+  "motivation": "Prove he is the strongest trainer in Kanto, one step ahead of the player.",
+  "speechStyle": "Cocky, clipped, fond of put-downs.",
+  "relationships": [
+    { "to": "oak", "kind": "grandson-of" }
+  ],
+  "engine": { "npcs": [], "dataRef": null, "spriteAsset": null },
+  "spriteSpec": null,
+  "status": "draft"
+}

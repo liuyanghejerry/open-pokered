@@ -1,0 +1,1 @@
+{"id":"Revive","name":"REVIVE","price":1500,"category":"Medicine","effect":{"type":"Revive","params":{"full":false}},"held_effect":null,"berry":null,"use_outside_battle":true,"use_in_battle":true,"consume":true,"key_item":false,"sellable":true,"description":"","tags":["healing","revive"]}

@@ -1,0 +1,116 @@
+// VictoryRoad3F — translated from the original disassembly
+// (scripts/VictoryRoad3F.asm, text/VictoryRoad3F*.asm) to the real Game DSL API.
+// Content: 4 sight-engaged Cooltrainers (runtime drives the battle; handlers are
+// dialogue-only), 2 ground items (Max Revive, TM47 Explosion), 4 Strength
+// boulders, and a boulder-on-switch puzzle. The 3F switch is now wired via
+// replaceTileBlock (see @load re-apply + the switch1 handler below).
+
+game_scene VictoryRoad3F {
+  // ── On entry: boulder-on-switch tile-block (replaceTileBlock) ────────────
+  // VictoryRoad3FCheckBoulderEventScript re-runs on map load:
+  //   CheckEvent EVENT_VICTORY_ROAD_3_BOULDER_ON_SWITCH1
+  //   -> ld a, $1d (open block id 29) -> lb bc, 5, 3 (Y=5, X=3) -> ReplaceTileBlock.
+  // (asm `lb bc, B, C` = Y,X; our API is replaceTileBlock(X, Y, id) X-first.)
+  // So once solved, re-apply the open block on every entry: replaceTileBlock(3, 5, 29).
+  // No CLOSED block id in the asm (the .blk ships with the path closed, no re-close),
+  // and the original plays no SFX for this swap.
+  @load {
+    @if (getFlag("EVENT_VICTORY_ROAD_3_BOULDER_ON_SWITCH1")) {
+      replaceTileBlock(3, 5, 29)
+    }
+  }
+
+  // ── Floor switch (boulder-on-switch coord 3,5) ──────────────────────────
+  // VictoryRoad3FDefaultScript checks .SwitchOrHoleCoords (dbmapcoord 3,5 = the
+  // switch, coord index 1) and SetEvent EVENT_VICTORY_ROAD_3_BOULDER_ON_SWITCH1,
+  // which then opens the path via the @load ReplaceTileBlock above. The original
+  // requires a STRENGTH boulder pushed onto the switch tile; there is no
+  // boulder-push API, so we approximate faithfully — reaching the switch coord
+  // solves it and opens the door immediately (same flag + same tile swap as the
+  // asm). The second .SwitchOrHoleCoords entry (23,15) is a dungeon-warp hole, not
+  // a tile-block door, so it is not a replaceTileBlock target.
+  @storyline("switch1") {
+    @trigger(map = "VictoryRoad3F", name = "switch1")
+    @if (!getFlag("EVENT_VICTORY_ROAD_3_BOULDER_ON_SWITCH1")) {
+      setFlag("EVENT_VICTORY_ROAD_3_BOULDER_ON_SWITCH1")
+      replaceTileBlock(3, 5, 29)
+    }
+  }
+
+  // ── Cooltrainer♂ (npc 1) — sight-engaged; dialogue only ─────────────────
+  @storyline("talkCooltrainerM1") {
+    @trigger(map = "VictoryRoad3F", npc = 1)
+    @if (getFlag("EVENT_BEAT_VICTORY_ROAD_3_TRAINER_0")) {
+      @speaker("") { @t("You beat GIOVANNI of TEAM\nROCKET?", "你打败了火箭队的坂木？") }
+    } @else {
+      @speaker("") { @t("I heard rumors of a child\nprodigy!", "我听说有个神童的传闻！") }
+    }
+  }
+
+  // ── Cooltrainer♀ (npc 2) — sight-engaged; dialogue only ─────────────────
+  @storyline("talkCooltrainerF1") {
+    @trigger(map = "VictoryRoad3F", npc = 2)
+    @if (getFlag("EVENT_BEAT_VICTORY_ROAD_3_TRAINER_1")) {
+      @speaker("") { @t("You showed me just how good\nI was!", "你让我见识了我的实力！") }
+    } @else {
+      @speaker("") { @t("I'll show you just how good\nyou are!", "让我看看你有多强！") }
+    }
+  }
+
+  // ── Cooltrainer♂ (npc 3) — sight-engaged; dialogue only ─────────────────
+  @storyline("talkCooltrainerM2") {
+    @trigger(map = "VictoryRoad3F", npc = 3)
+    @if (getFlag("EVENT_BEAT_VICTORY_ROAD_3_TRAINER_2")) {
+      @speaker("") { @t("All trainers here are headed\nto the POKeMON LEAGUE! Be\ncareful!", "这里的训练家都朝着宝可梦联盟\n前进！小心点！") }
+    } @else {
+      @speaker("") { @t("Only the chosen can pass\nhere!", "只有被选中的人才能通过这里！") }
+    }
+  }
+
+  // ── Cooltrainer♀ (npc 4) — sight-engaged; dialogue only ─────────────────
+  @storyline("talkCooltrainerF2") {
+    @trigger(map = "VictoryRoad3F", npc = 4)
+    @if (getFlag("EVENT_BEAT_VICTORY_ROAD_3_TRAINER_3")) {
+      @speaker("") { @t("By fighting tough battles,\nyou get stronger!", "通过激烈的战斗，你会变强的！") }
+    } @else {
+      @speaker("") { @t("Trainers live to seek\nstronger opponents!", "训练家为追寻更强的对手而活！") }
+    }
+  }
+
+  // ── Ground item: MAX REVIVE (npc 5) ─────────────────────────────────────
+  @storyline("itemMaxRevive") {
+    @trigger(map = "VictoryRoad3F", npc = 5, toggle = "VICTORY_ROAD_3F_OBJ_5")
+    giveItem("MAX_REVIVE", 1)
+    hideObjectByName("VICTORY_ROAD_3F_OBJ_5")
+    @speaker("") { @t("<PLAYER> found MAX REVIVE!", "<PLAYER>找到了活力块！") }
+  }
+
+  // ── Ground item: TM47 EXPLOSION (npc 6) ─────────────────────────────────
+  @storyline("itemTmExplosion") {
+    @trigger(map = "VictoryRoad3F", npc = 6, toggle = "VICTORY_ROAD_3F_OBJ_6")
+    giveItem("TM47", 1)
+    hideObjectByName("VICTORY_ROAD_3F_OBJ_6")
+    @speaker("") { @t("<PLAYER> found TM47!", "<PLAYER>找到了 TM47！") }
+  }
+
+  // ── Strength boulders (npcs 7-10) ───────────────────────────────────────
+  @storyline("talkBoulder1") {
+    @trigger(map = "VictoryRoad3F", npc = 7)
+    @speaker("") { @t("This requires STRENGTH to\nmove!", "这需要怪力才能推动！") }
+  }
+
+  @storyline("talkBoulder2") {
+    @trigger(map = "VictoryRoad3F", npc = 8)
+    @speaker("") { @t("This requires STRENGTH to\nmove!", "这需要怪力才能推动！") }
+  }
+
+  @storyline("talkBoulder3") {
+    @trigger(map = "VictoryRoad3F", npc = 9)
+    @speaker("") { @t("This requires STRENGTH to\nmove!", "这需要怪力才能推动！") }
+  }
+
+  @storyline("talkBoulder4") {
+    @trigger(map = "VictoryRoad3F", npc = 10)
+    @speaker("") { @t("This requires STRENGTH to\nmove!", "这需要怪力才能推动！") }
+  }
+}

@@ -1,0 +1,1 @@
+{"id":"PokeFlute","name":"POKé FLUTE","price":0,"category":"Key","effect":{"type":"CureSleep","params":{}},"held_effect":null,"berry":null,"use_outside_battle":true,"use_in_battle":true,"consume":false,"key_item":true,"sellable":false,"description":"","tags":["key","flute","cure","sleep"]}

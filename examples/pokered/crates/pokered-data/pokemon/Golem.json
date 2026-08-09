@@ -1,0 +1,68 @@
+{
+  "$schema": "../schemas/pokemon.schema.json",
+  "species": "Golem",
+  "baseStats": {
+    "hp": 80,
+    "attack": 110,
+    "defense": 130,
+    "speed": 45,
+    "special": 55
+  },
+  "type1": "Rock",
+  "type2": "Ground",
+  "catchRate": 45,
+  "baseExp": 177,
+  "growthRate": "MediumSlow",
+  "initialMoves": [
+    "Tackle",
+    "DefenseCurl",
+    "None",
+    "None"
+  ],
+  "tmHmFlags": [
+    177,
+    67,
+    15,
+    206,
+    46,
+    200,
+    34
+  ],
+  "pokedex": {
+    "category": "MEGATON",
+    "heightFeet": 4,
+    "heightInches": 7,
+    "weightDecipounds": 6620,
+    "flavorTextPages": [
+      "Its boulder-like\nbody is extremely\nhard. It can",
+      "easily withstand\ndynamite blasts\nwithout damage"
+    ]
+  },
+  "evolutions": [],
+  "learnset": [
+    {
+      "level": 11,
+      "moveId": "DefenseCurl"
+    },
+    {
+      "level": 16,
+      "moveId": "RockThrow"
+    },
+    {
+      "level": 21,
+      "moveId": "Selfdestruct"
+    },
+    {
+      "level": 29,
+      "moveId": "Harden"
+    },
+    {
+      "level": 36,
+      "moveId": "Earthquake"
+    },
+    {
+      "level": 43,
+      "moveId": "Explosion"
+    }
+  ]
+}

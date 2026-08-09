@@ -1,0 +1,314 @@
+// SilphCo7F — translated from the original disassembly (scripts/SilphCo7F.asm,
+// text/SilphCo7F.asm) to the real Game DSL API surface.
+//
+// Content types on this floor:
+//  - A SCRIPTED RIVAL encounter (Blue, npc 9) driven off battle coords. The
+//    original w*CurScript state machine triggers when the player steps onto
+//    coords (3,2)/(3,3) and EVENT_BEAT_SILPH_CO_RIVAL is unset: music -> MEET
+//    RIVAL, "What kept you?" text, rival walks up, talks, battles OPP_RIVAL2
+//    (party-by-starter), then walks off and is hidden. This map has no
+//    connections, so coords map 1:1.
+//  - Four SIGHT-ENGAGED trainers (Rocket1/Scientist/Rocket2/Rocket3, npc 5-8):
+//    the runtime owns those battles (map.json isTrainer = true), so their .scene
+//    handlers are DIALOGUE ONLY (after-battle vs pre-battle taunt).
+//  - Four Silph workers (npc 1-4) whose dialogue branches on whether Giovanni
+//    has been beaten (EVENT_BEAT_SILPH_CO_GIOVANNI). Worker M1 hands over the
+//    gift LAPRAS (gated by EVENT_GOT_LAPRAS).
+//  - Two ground items (CALCIUM npc 10, TM03/SWORDS DANCE npc 11) — the runtime
+//    awards them from map.json itemId; handlers give the item + hide the ball.
+
+game_scene SilphCo7F {
+  // ── Card-Key doors (SilphCo7F_GateCallbackScript) — wired via replaceTileBlock.
+  // The original gate callback redraws each door CLOSED ($54 = 84) on map entry
+  // while its EVENT_SILPH_CO_7_UNLOCKED_DOORn flag is unset; using the CARD KEY
+  // in front of the door sets the flag and opens it (native passage block 14).
+  // Asm (note lb bc, Y, X → replaceTileBlock(X, Y, id); open native = 14):
+  //   door1: EVENT_SILPH_CO_7_UNLOCKED_DOOR1; lb bc, 3, 5  → replaceTileBlock(5, 3, 84)
+  //   door2: EVENT_SILPH_CO_7_UNLOCKED_DOOR2; lb bc, 2, 10 → replaceTileBlock(10, 2, 84)
+  //   door3: EVENT_SILPH_CO_7_UNLOCKED_DOOR3; lb bc, 6, 10 → replaceTileBlock(10, 6, 84)
+  // (.GateCoordinates dbmapcoord 5,3 / 10,2 / 10,6 confirm the door blocks.)
+  // There is no "use item on the facing tile" primitive, so the CARD_KEY use is
+  // approximated faithfully (matching the other Silph floors): a coords trigger
+  // on each door block's tiles, gated by hasItem("CARD_KEY"), sets the unlock
+  // flag and opens the door. Door block (bx,by) → tiles x∈{2bx,2bx+1}, y∈{2by,2by+1}.
+  @load {
+    @if (!getFlag("EVENT_SILPH_CO_7_UNLOCKED_DOOR1")) {
+      replaceTileBlock(5, 3, 84)
+    }
+    @if (!getFlag("EVENT_SILPH_CO_7_UNLOCKED_DOOR2")) {
+      replaceTileBlock(10, 2, 84)
+    }
+    @if (!getFlag("EVENT_SILPH_CO_7_UNLOCKED_DOOR3")) {
+      replaceTileBlock(10, 6, 84)
+    }
+  }
+
+  // ── Card-Key door 1 (door block (5,3) → tiles x∈{10,11}, y∈{6,7}) ─────────
+  @storyline("cardKeyDoor1") {
+    @trigger(map = "SilphCo7F", coords = [[10, 6], [11, 6], [10, 7], [11, 7]], name = "cardKeyDoor11")
+    @if (!getFlag("EVENT_SILPH_CO_7_UNLOCKED_DOOR1")) {
+      @if (hasItem("CARD_KEY")) {
+        setFlag("EVENT_SILPH_CO_7_UNLOCKED_DOOR1")
+        replaceTileBlock(5, 3, 14)
+        playSound("SFX_GO_INSIDE")
+      }
+    }
+  }
+
+  // ── Card-Key door 2 (door block (10,2) → tiles x∈{20,21}, y∈{4,5}) ────────
+  @storyline("cardKeyDoor2") {
+    @trigger(map = "SilphCo7F", coords = [[20, 4], [21, 4], [20, 5], [21, 5]], name = "cardKeyDoor21")
+    @if (!getFlag("EVENT_SILPH_CO_7_UNLOCKED_DOOR2")) {
+      @if (hasItem("CARD_KEY")) {
+        setFlag("EVENT_SILPH_CO_7_UNLOCKED_DOOR2")
+        replaceTileBlock(10, 2, 14)
+        playSound("SFX_GO_INSIDE")
+      }
+    }
+  }
+
+  // ── Card-Key door 3 (door block (10,6) → tiles x∈{20,21}, y∈{12,13}) ──────
+  @storyline("cardKeyDoor3") {
+    @trigger(map = "SilphCo7F", coords = [[20, 12], [21, 12], [20, 13], [21, 13]], name = "cardKeyDoor31")
+    @if (!getFlag("EVENT_SILPH_CO_7_UNLOCKED_DOOR3")) {
+      @if (hasItem("CARD_KEY")) {
+        setFlag("EVENT_SILPH_CO_7_UNLOCKED_DOOR3")
+        replaceTileBlock(10, 6, 14)
+        playSound("SFX_GO_INSIDE")
+      }
+    }
+  }
+
+  // ── Scripted rival encounter at the battle coords (orig 3,2 / 3,3) ───────
+  @storyline("coordRivalBattle") {
+    @trigger(map = "SilphCo7F", coords = [[3, 2], [3, 3]], name = "rivalBattle1")
+    @if (!getFlag("EVENT_BEAT_SILPH_CO_RIVAL")) {
+      // orig SilphCo7FDefaultScript: stop music, play MEET_RIVAL, player turns
+      // to face DOWN, the "What kept you?" text (TEXT_SILPHCO7F_RIVAL)
+      // displays BEFORE the rival walks, then the rival walks up toward the
+      // player. Player at (3,2): full UP x4 from (3,7) to (3,3); player at
+      // (3,3): the orig skips the first movement byte (inc de) — UP x3 to
+      // (3,4). The rival ends facing UP (his movement direction), the player
+      // facing DOWN toward him.
+      setJoyIgnore(0xF0)
+      playSound("SFX_STOP_ALL_MUSIC")
+      playMusic("MUSIC_MEET_RIVAL")
+      facePlayer("down")
+      // SilphCo7FRivalText
+      @say("") {
+        @t("<RIVAL>: What kept you\n<PLAYER>?", "<RIVAL>：怎么才来啊？\n<PLAYER>")
+      }
+      @if (getPlayerY() == 2) {
+        moveNpc("SILPH_CO_7F_RIVAL", [[3, 6], [3, 5], [3, 4], [3, 3]])
+      } @else {
+        moveNpc("SILPH_CO_7F_RIVAL", [[3, 6], [3, 5], [3, 4]])
+      }
+      clearJoyIgnore()
+
+      // SilphCo7FRivalWaitedHereText
+      @say("") {
+        @t("<RIVAL>: Hahaha! I thought\nyou'd turn up if I waited\nhere!\n\nI guess TEAM ROCKET slowed\nyou down! Not that I care!\n\nI saw you in SAFFRON, so I\ndecided to see if you got\nbetter!", "<RIVAL>：哈哈！我还以为你会\n在我等着的时候出现！\n\n一定是火箭队拖慢了你的脚步不\n过我不在乎！\n\n我在金黄市看到你了，所以想看\n看你有没有变得更强！")
+      }
+
+      // Rival party-by-starter (orig wTrainerNo 7/8/9 from wRivalStarter). The
+      // engine derives the starter-advantage party from the rival class id, so
+      // each branch passes OPP_RIVAL2.
+      s = getRivalStarter()
+      @if (s == 0) {
+        result = startBattle("OPP_RIVAL2")
+      } @else {
+        @if (s == 1) {
+          result = startBattle("OPP_RIVAL2")
+        } @else {
+          result = startBattle("OPP_RIVAL2")
+        }
+      }
+
+      @if (result == "win") {
+        // SilphCo7FRivalDefeatedText
+        @say("") {
+          @t("Oh ho! So, you are ready for\nBOSS ROCKET!", "哎呀！看来你已经准备好面对火\n箭队老大！")
+        }
+      } @else {
+        // SilphCo7FRivalVictoryText
+        @say("") {
+          @t("<RIVAL>: How can I put this?\n\nYou're not good enough to\nplay with us big boys!", "<RIVAL>：怎么说呢？\n\n你还不够格和我们这些大人物一\n起玩！")
+        }
+      }
+
+      setFlag("EVENT_BEAT_SILPH_CO_RIVAL")
+
+      // Orig SilphCo7FRivalAfterBattleScript: rival faces UP, player faces
+      // DOWN, then the good-luck text (SilphCo7FRivalGoodLuckToYouText).
+      faceNpc("SILPH_CO_7F_RIVAL", "up")
+      facePlayer("down")
+      @say("") {
+        @t("Well, <PLAYER>!\n\nI'm moving on up and ahead!\n\nBy checking my POKeDEX, I'm\nstarting to see what's\nstrong and how they evolve!\n\nI'm going to the POKeMON\nLEAGUE to boot out the ELITE\nFOUR!\n\nI'll become the world's most\npowerful trainer!\n\n<PLAYER>, well good luck to\nyou! Don't sweat it! Smell\nya!", "<PLAYER>，好啊！\n\n我要继续一路向前！\n\n靠我的图鉴，我开始了解什么样\n的宝可梦很强，以及如何进化！\n\n我要去宝可梦联盟把四天王赶下\n台！\n\n我会成为世界上最强的训练家！\n\n<PLAYER>，祝你好运！别担心！\n后会有期！")
+      }
+
+      // Orig exit movement (branch on the saved coord index): player at (3,2)
+      // -> rival (at (3,3)) walks RIGHT x2 to (5,3) (RivalExitRightMovement);
+      // player at (3,3) -> rival (at (3,4)) walks LEFT, UP x2, RIGHT x3, DOWN
+      // around the player to (5,3) (RivalWalkAroundPlayerMovement).
+      playSound("SFX_STOP_ALL_MUSIC")
+      // Orig SilphCo7F.asm:226: Music_RivalAlternateStart — the rival theme
+      // restarts with a different first measure as he walks off.
+      playMusic("MUSIC_MEET_RIVAL_ALTERNATE_START")
+      setJoyIgnore(0xF0)
+      @if (getPlayerY() == 2) {
+        moveNpc("SILPH_CO_7F_RIVAL", [[4, 3], [5, 3]])
+      } @else {
+        moveNpc("SILPH_CO_7F_RIVAL", [[2, 4], [2, 3], [2, 2], [3, 2], [4, 2], [5, 2], [5, 3]])
+      }
+      hideObjectByName("SILPH_CO_7F_RIVAL")
+      playMusic("MUSIC_SILPH_CO")
+      clearJoyIgnore()
+    }
+  }
+
+  // ── Rival (npc 9) talk handler — dialogue only; coord trigger owns battle.
+  //    orig SilphCo7FRivalText is the pre-battle "What kept you" line.
+  @storyline("talkRival") {
+    @trigger(map = "SilphCo7F", npc = 9, toggle = "SILPH_CO_7F_RIVAL")
+    @speaker("") {
+      @t("<RIVAL>: What kept you\n<PLAYER>?", "<RIVAL>：怎么才来啊？\n<PLAYER>")
+    }
+  }
+
+  // ── Silph Worker M1 (npc 1) — gives LAPRAS, branches on Giovanni beaten ──
+  @storyline("talkSilphWorkerM1") {
+    @trigger(map = "SilphCo7F", npc = 1)
+    @if (!getFlag("EVENT_GOT_LAPRAS")) {
+      @speaker("") {
+        @t("Oh! Hi! You're not a ROCKET!\nYou came to save us? Why,\nthank you!\n\nI want you to have this\nPOKeMON for saving us.", "哦！嗨！你不是火箭队队员！你\n是来救我们的？啊，谢谢你！\n\n我想让你收下这只宝可梦作为救\n我们的谢礼。")
+      }
+      givePokemon("LAPRAS", 15)
+      setFlag("EVENT_GOT_LAPRAS")
+      @speaker("") {
+        @t("It's LAPRAS. It's very\nintelligent.\n\nWe kept it in our lab, but\nit will be much better off\nwith you!\n\nI think you will be a good\ntrainer for LAPRAS!\n\nIt's a good swimmer. It'll\ngive you a lift!", "它是拉普拉斯。非常聪明。\n\n我们一直把它养在研究所里，不\n过跟着你会更好！\n\n我想你会是拉普拉斯的好训练\n家！\n\n它很擅长游泳，能载你一程！")
+      }
+    } @else {
+      @if (getFlag("EVENT_BEAT_SILPH_CO_GIOVANNI")) {
+        @speaker("") {
+          @t("Saved at last! Thank you!", "终于得救了！谢谢你！")
+        }
+      } @else {
+        @speaker("") {
+          @t("TEAM ROCKET's BOSS went to\nthe boardroom! Is our\nPRESIDENT OK?", "火箭队的老大去了会议室！我们\n的社长没事吧？")
+        }
+      }
+    }
+  }
+
+  // ── Silph Worker M2 (npc 2) ─────────────────────────────────────────────
+  @storyline("talkSilphWorkerM2") {
+    @trigger(map = "SilphCo7F", npc = 2)
+    @if (getFlag("EVENT_BEAT_SILPH_CO_GIOVANNI")) {
+      @speaker("") {
+        @t("We canceled the MASTER BALL\nproject because of TEAM\nROCKET.", "因为火箭队，我们中止了大师球\n的研发计划。")
+      }
+    } @else {
+      @speaker("") {
+        @t("TEAM ROCKET was after the\nMASTER BALL which will catch\nany POKeMON!", "火箭队一直在追查大师球，它连\n任何宝可梦都能捕获！")
+      }
+    }
+  }
+
+  // ── Silph Worker M3 (npc 3) ─────────────────────────────────────────────
+  @storyline("talkSilphWorkerM3") {
+    @trigger(map = "SilphCo7F", npc = 3)
+    @if (getFlag("EVENT_BEAT_SILPH_CO_GIOVANNI")) {
+      @speaker("") {
+        @t("Wow! You chased off TEAM\nROCKET all by yourself?", "哇！你一个人就赶走了火箭队？")
+      }
+    } @else {
+      @speaker("") {
+        @t("It would be bad if TEAM\nROCKET took over SILPH or\nour POKeMON!", "如果火箭队控制了西尔佛公司或\n者我们的宝可梦，就糟了！")
+      }
+    }
+  }
+
+  // ── Silph Worker F (npc 4) — orig SilphWorkerM4 text ────────────────────
+  @storyline("talkSilphWorkerF") {
+    @trigger(map = "SilphCo7F", npc = 4)
+    @if (getFlag("EVENT_BEAT_SILPH_CO_GIOVANNI")) {
+      @speaker("") {
+        @t("Safe at last! Oh thank you!", "终于安全了！哦，谢谢你！")
+      }
+    } @else {
+      @speaker("") {
+        @t("You! It's really dangerous\nhere! You came to save me?\nYou can't!", "你！这里真的非常危险！你是来\n救我的？你做不到的！")
+      }
+    }
+  }
+
+  // ── Rocket1 (npc 5) — sight-engaged; runtime owns the battle ─────────────
+  @storyline("talkRocket1") {
+    @trigger(map = "SilphCo7F", npc = 5, toggle = "SILPH_CO_7F_OBJ_5")
+    @if (getFlag("EVENT_BEAT_SILPH_CO_7F_TRAINER_0")) {
+      @speaker("") {
+        @t("You won't find my BOSS by\njust scurrying around!", "你四处乱窜也找不到我们老大！")
+      }
+    } @else {
+      @speaker("") {
+        @t("Oh ho! I smell a little rat!", "哦嚯！我闻到小老鼠的气味！")
+      }
+    }
+  }
+
+  // ── Scientist (npc 6) — sight-engaged ───────────────────────────────────
+  @storyline("talkScientist") {
+    @trigger(map = "SilphCo7F", npc = 6, toggle = "SILPH_CO_7F_OBJ_6")
+    @if (getFlag("EVENT_BEAT_SILPH_CO_7F_TRAINER_1")) {
+      @speaker("") {
+        @t("Despite your age, you are a\nskilled trainer!", "虽然你年纪小，却是个熟练的训\n练家！")
+      }
+    } @else {
+      @speaker("") {
+        @t("Heheh!\n\nYou mistook me for a SILPH\nworker?", "嘿嘿！\n\n你把我当成西尔佛的员工？")
+      }
+    }
+  }
+
+  // ── Rocket2 (npc 7) — sight-engaged ─────────────────────────────────────
+  @storyline("talkRocket2") {
+    @trigger(map = "SilphCo7F", npc = 7, toggle = "SILPH_CO_7F_OBJ_7")
+    @if (getFlag("EVENT_BEAT_SILPH_CO_7F_TRAINER_2")) {
+      @speaker("") {
+        @t("Doesn't matter. My brothers\nwill repay the favor!", "没关系。我的兄弟们会加倍奉\n还！")
+      }
+    } @else {
+      @speaker("") {
+        @t("I am one of the 4 ROCKET\nBROTHERS!", "我是火箭队四兄弟之一！")
+      }
+    }
+  }
+
+  // ── Rocket3 (npc 8) — sight-engaged ─────────────────────────────────────
+  @storyline("talkRocket3") {
+    @trigger(map = "SilphCo7F", npc = 8, toggle = "SILPH_CO_7F_OBJ_8")
+    @if (getFlag("EVENT_BEAT_SILPH_CO_7F_TRAINER_3")) {
+      @speaker("") {
+        @t("Go on home before my BOSS\ngets ticked off!", "趁我们老大还没发火，快回家\n吧！")
+      }
+    } @else {
+      @speaker("") {
+        @t("A child intruder? That must\nbe you!", "有小孩闯进来了？那一定是你！")
+      }
+    }
+  }
+
+  // ── Ground item: CALCIUM (npc 10) ───────────────────────────────────────
+  @storyline("itemCalcium") {
+    @trigger(map = "SilphCo7F", npc = 10, toggle = "SILPH_CO_7F_OBJ_10")
+    giveItem("CALCIUM", 1)
+    hideObjectByName("SILPH_CO_7F_OBJ_10")
+  }
+
+  // ── Ground item: TM03 / SWORDS DANCE (npc 11) ───────────────────────────
+  @storyline("itemTmSwordsDance") {
+    @trigger(map = "SilphCo7F", npc = 11, toggle = "SILPH_CO_7F_OBJ_11")
+    giveItem("TM03", 1)
+    hideObjectByName("SILPH_CO_7F_OBJ_11")
+  }
+}

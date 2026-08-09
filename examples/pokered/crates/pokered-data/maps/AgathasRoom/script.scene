@@ -1,0 +1,59 @@
+// AgathasRoom — translated from the original disassembly (scripts/AgathasRoom.asm,
+// text/AgathasRoom.asm) to the real Game DSL API surface. Agatha is an Elite Four
+// member: a SIGHT-engaged trainer (map.json isTrainer = true), so the runtime
+// owns the battle and the .scene talk handler is dialogue only (pre-battle taunt
+// vs. post-battle text). The on-enter auto-walk into the room is approximated via
+// movePlayer; the exit-blocking + "Don't run away" forced-movement is a
+// single-step PAD_UP push-back wired via coordEvents on the entrance tiles
+// (4,10)/(5,10) + movePlayerRelative.
+
+game_scene AgathasRoom {
+  // ── On entry: the original auto-walks the player six steps up into the room
+  // the first time (EVENT_AUTOWALKED_INTO_AGATHAS_ROOM). Approximate with a
+  // scripted movePlayer; only once.
+  @load {
+    @if (!getFlag("EVENT_AUTOWALKED_INTO_AGATHAS_ROOM")) {
+      setFlag("EVENT_AUTOWALKED_INTO_AGATHAS_ROOM")
+      // Six steps upward from the entrance into the room.
+      movePlayerRelative([[0, -1], [0, -1], [0, -1], [0, -1], [0, -1], [0, -1]])
+    }
+    // Exit to BrunosRoom: the original AgathaShowOrHideExitBlock re-runs every map
+    // load and swaps the door block at (X=2, Y=0) — open (id 14) once Agatha is
+    // beaten (EVENT_BEAT_AGATHAS_ROOM_TRAINER_0), closed (id 59) otherwise.
+    // Re-apply that state from the flag on entry so a solved door stays open.
+    @if (getFlag("EVENT_BEAT_AGATHAS_ROOM_TRAINER_0")) {
+      replaceTileBlock(2, 0, 14)
+    } @else {
+      replaceTileBlock(2, 0, 59)
+    }
+    // note: Agatha is a runtime-owned sight trainer, so EVENT_BEAT_AGATHAS_ROOM_TRAINER_0
+    // is set by the battle outcome; the door opens on the next @load re-apply.
+  }
+
+  // ── "Don't run away!" push-back (coord (4,10)/(5,10)) ──────────────────
+  // Original AgathaEntranceCoords + StopPlayerFromLeaving: stepping back
+  // toward the exit before beating Agatha shows the voice line and shoves
+  // the player up one tile (PAD_UP).
+  @storyline("coordDontRunAway") {
+    @trigger(map = "AgathasRoom", name = "dontRunAway")
+    @speaker("") { @t("Someone's voice: Don't run\naway!", "某人的声音：别想逃走！") }
+    movePlayerRelative(["up"])
+  }
+
+  // ── Agatha, Elite Four (npc 1) — sight-engaged by the runtime; dialogue only ──
+  @storyline("talkAgatha") {
+    @trigger(map = "AgathasRoom", npc = 1)
+    @if (getFlag("EVENT_BEAT_AGATHAS_ROOM_TRAINER_0")) {
+      // Beaten: ensure the exit door (X=2, Y=0) is open (block id 14) immediately,
+      // matching the original AgathaShowOrHideExitBlock swap.
+      replaceTileBlock(2, 0, 14)
+      @speaker("") {
+        @t("You win! I see what the old\nduff sees in you now!\n\nI have nothing else to say!\nRun along now, child!", "你赢了！我明白那个老家伙看中\n你什么了！\n\n我无话可说了！快走吧，孩子！")
+      }
+    } @else {
+      @speaker("") {
+        @t("I am AGATHA of the ELITE\nFOUR!\n\nOAK's taken a lot of\ninterest in you, child!\n\nThat old duff was once tough\nand handsome! That was\ndecades ago!\n\nNow he just wants to fiddle\nwith his POKeDEX! He's\nwrong! POKeMON are for\nfighting!\n\n<PLAYER>! I'll show you how\na real trainer fights!", "我是四天王菊子！\n\n大木博士对你很感兴趣呢，孩\n子！\n\n那个老家伙曾经也很强悍、英\n俊！不过那是几十年前的事了！\n\n现在他只想着摆弄他的图鉴！他\n错了！宝可梦是用来战斗的！\n\n<PLAYER>！我会让你知道什么是\n真正的战斗！")
+      }
+    }
+  }
+}

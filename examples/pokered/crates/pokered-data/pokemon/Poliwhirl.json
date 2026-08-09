@@ -1,0 +1,75 @@
+{
+  "$schema": "../schemas/pokemon.schema.json",
+  "species": "Poliwhirl",
+  "baseStats": {
+    "hp": 65,
+    "attack": 65,
+    "defense": 65,
+    "speed": 90,
+    "special": 50
+  },
+  "type1": "Water",
+  "type2": "Water",
+  "catchRate": 120,
+  "baseExp": 131,
+  "growthRate": "MediumSlow",
+  "initialMoves": [
+    "Bubble",
+    "Hypnosis",
+    "WaterGun",
+    "None"
+  ],
+  "tmHmFlags": [
+    177,
+    63,
+    15,
+    214,
+    134,
+    40,
+    50
+  ],
+  "pokedex": {
+    "category": "TADPOLE",
+    "heightFeet": 3,
+    "heightInches": 3,
+    "weightDecipounds": 440,
+    "flavorTextPages": [
+      "Capable of living\nin or out of\nwater. When out",
+      "of water, it\nsweats to keep\nits body slimy"
+    ]
+  },
+  "evolutions": [
+    {
+      "method": "item",
+      "species": "Poliwrath",
+      "item": "WaterStone",
+      "minLevel": 1
+    }
+  ],
+  "learnset": [
+    {
+      "level": 16,
+      "moveId": "Hypnosis"
+    },
+    {
+      "level": 19,
+      "moveId": "WaterGun"
+    },
+    {
+      "level": 26,
+      "moveId": "Doubleslap"
+    },
+    {
+      "level": 33,
+      "moveId": "BodySlam"
+    },
+    {
+      "level": 41,
+      "moveId": "Amnesia"
+    },
+    {
+      "level": 49,
+      "moveId": "HydroPump"
+    }
+  ]
+}

@@ -1,0 +1,7 @@
+{
+  "$schema": "../../schemas/script_config.schema.json",
+  "coordEvents": [],
+  "npcs": [],
+  "onLoad": "VermilionDockOnLoad",
+  "signs": []
+}

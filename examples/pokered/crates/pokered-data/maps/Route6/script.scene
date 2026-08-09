@@ -1,0 +1,73 @@
+// Route6 — translated from the original disassembly (scripts/Route6.asm,
+// text/Route6.asm) to the real Game DSL API surface. Route6 is a plain route
+// with six sight-engaged trainers (the runtime drives their battles) and one
+// sign, so every talk handler is dialogue-only: beaten -> after-battle line,
+// otherwise -> the pre-battle taunt.
+
+game_scene Route6 {
+  // ── CooltrainerM (npc 1) — Jr.Trainer♂, EVENT_BEAT_ROUTE_6_TRAINER_0 ─────
+  @storyline("talkCooltrainerM1") {
+    @trigger(map = "Route6", npc = 1)
+    @if (getFlag("EVENT_BEAT_ROUTE_6_TRAINER_0")) {
+      @speaker("") { @t("Whisper... whisper...", "悄悄……悄悄……") }
+    } @else {
+      @speaker("") { @t("Who's there? Quit listening\nin on us!", "是谁？别偷听我们说话！") }
+    }
+  }
+
+  // ── CooltrainerF (npc 2) — Jr.Trainer♀, EVENT_BEAT_ROUTE_6_TRAINER_1 ─────
+  @storyline("talkCooltrainerF1") {
+    @trigger(map = "Route6", npc = 2)
+    @if (getFlag("EVENT_BEAT_ROUTE_6_TRAINER_1")) {
+      @speaker("") { @t("Whisper... whisper...", "悄悄……悄悄……") }
+    } @else {
+      @speaker("") { @t("Excuse me! This is a private\nconversation!", "不好意思！这是我们的私人谈\n话！") }
+    }
+  }
+
+  // ── Youngster (npc 3) — Bug Catcher, EVENT_BEAT_ROUTE_6_TRAINER_2 ────────
+  @storyline("talkYoungster1") {
+    @trigger(map = "Route6", npc = 3)
+    @if (getFlag("EVENT_BEAT_ROUTE_6_TRAINER_2")) {
+      @speaker("") { @t("I like bugs, so I'm going\nback to VIRIDIAN FOREST.", "我喜欢虫子，我要回常青森林\n了！") }
+    } @else {
+      @speaker("") { @t("There aren't many bugs out\nhere.", "这里没有多少虫子。") }
+    }
+  }
+
+  // ── CooltrainerM (npc 4) — Jr.Trainer♂, EVENT_BEAT_ROUTE_6_TRAINER_3 ─────
+  @storyline("talkCooltrainerM2") {
+    @trigger(map = "Route6", npc = 4)
+    @if (getFlag("EVENT_BEAT_ROUTE_6_TRAINER_3")) {
+      @speaker("") { @t("I should carry more POKeMON\nwith me for safety.", "我应该多带些宝可梦防身才对。") }
+    } @else {
+      @speaker("") { @t("Huh? You want to talk to me?", "嗯？你想和我说话吗？") }
+    }
+  }
+
+  // ── CooltrainerF (npc 5) — Jr.Trainer♀, EVENT_BEAT_ROUTE_6_TRAINER_4 ─────
+  @storyline("talkCooltrainerF2") {
+    @trigger(map = "Route6", npc = 5)
+    @if (getFlag("EVENT_BEAT_ROUTE_6_TRAINER_4")) {
+      @speaker("") { @t("I want to get stronger!\nWhat's your secret?", "我想变得更强！你有什么秘诀？") }
+    } @else {
+      @speaker("") { @t("Me? Well, OK. I'll play!", "我？那好吧。我来陪你玩！") }
+    }
+  }
+
+  // ── Youngster (npc 6) — Bug Catcher, EVENT_BEAT_ROUTE_6_TRAINER_5 ────────
+  @storyline("talkYoungster2") {
+    @trigger(map = "Route6", npc = 6)
+    @if (getFlag("EVENT_BEAT_ROUTE_6_TRAINER_5")) {
+      @speaker("") { @t("Are my POKeMON weak? Or, am\nI just bad?", "是我的宝可梦太弱了？还是我不\n行？") }
+    } @else {
+      @speaker("") { @t("I've never seen you around!\nAre you good?", "我以前没见过你！你很厉害吗？") }
+    }
+  }
+
+  // ── Underground Path sign (sign 1) ──────────────────────────────────────
+  @storyline("sign1") {
+    @trigger(map = "Route6", sign = 1)
+    @speaker("") { @t("UNDERGROUND PATH CERULEAN\nCITY - VERMILION CITY", "地下通道连接华蓝市与枯叶市") }
+  }
+}

@@ -1,0 +1,43 @@
+{
+  "$schema": "../schemas/pokemon.schema.json",
+  "species": "Arcanine",
+  "baseStats": {
+    "hp": 90,
+    "attack": 110,
+    "defense": 80,
+    "speed": 95,
+    "special": 80
+  },
+  "type1": "Fire",
+  "type2": "Fire",
+  "catchRate": 75,
+  "baseExp": 213,
+  "growthRate": "Slow",
+  "initialMoves": [
+    "Roar",
+    "Ember",
+    "Leer",
+    "TakeDown"
+  ],
+  "tmHmFlags": [
+    160,
+    67,
+    72,
+    232,
+    227,
+    8,
+    2
+  ],
+  "pokedex": {
+    "category": "LEGENDARY",
+    "heightFeet": 6,
+    "heightInches": 3,
+    "weightDecipounds": 3420,
+    "flavorTextPages": [
+      "A #MON that\nhas been admired\nsince the past",
+      "for its beauty.\nIt runs agilely\nas if on wings"
+    ]
+  },
+  "evolutions": [],
+  "learnset": []
+}

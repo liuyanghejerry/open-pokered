@@ -1,0 +1,64 @@
+{
+  "$schema": "../../schemas/map.schema.json",
+  "id": 66,
+  "name": "BikeShop",
+  "header": {
+    "tileset": "Club",
+    "music": "Cities2",
+    "connectionFlags": 0,
+    "width": 4,
+    "height": 4,
+    "borderBlock": 14
+  },
+  "connections": {},
+  "warps": [
+    {
+      "x": 2,
+      "y": 7,
+      "destWarpId": 4
+    },
+    {
+      "x": 3,
+      "y": 7,
+      "destWarpId": 4
+    }
+  ],
+  "npcs": [
+    {
+      "spriteId": 21,
+      "spriteName": "BikeShopClerk",
+      "x": 6,
+      "y": 2,
+      "movement": "Stationary",
+      "facing": "Down",
+      "range": 0,
+      "textId": 1,
+      "isTrainer": false
+    },
+    {
+      "spriteId": 28,
+      "spriteName": "MiddleAgedWoman",
+      "x": 5,
+      "y": 6,
+      "movement": "Wander",
+      "facing": "Down",
+      "range": 1,
+      "textId": 2,
+      "isTrainer": false
+    },
+    {
+      "spriteId": 4,
+      "spriteName": "Youngster",
+      "x": 1,
+      "y": 3,
+      "movement": "Stationary",
+      "facing": "Up",
+      "range": 0,
+      "textId": 3,
+      "isTrainer": false
+    }
+  ],
+  "signs": [],
+  "text": {},
+  "wild": null
+}
