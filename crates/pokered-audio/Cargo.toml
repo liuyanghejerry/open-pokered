@@ -4,7 +4,7 @@ version.workspace = true
 edition.workspace = true
 
 [dependencies]
-jrpg-audio = { git = "file:///Users/liuyanghe02/develop/pokered-worktree-2", tag = "v0.1.0" }
+jrpg-audio = { git = "ssh://git@github.com/liuyanghejerry/dotzuki.git", tag = "v0.1.0" }
 bitflags = "2"
 
 # The generated music/SFX tables are the game runtime's source of truth, so the
@@ -12,5 +12,5 @@ bitflags = "2"
 # `export_audio` example opt into the file-based `format`/`library` API — dev
 # feature activation only affects those targets, not `cargo build`.
 [dev-dependencies]
-jrpg-audio = { git = "file:///Users/liuyanghe02/develop/pokered-worktree-2", tag = "v0.1.0", features = ["serde"] }
+jrpg-audio = { git = "ssh://git@github.com/liuyanghejerry/dotzuki.git", tag = "v0.1.0", features = ["serde"] }
 serde_json = "1"
