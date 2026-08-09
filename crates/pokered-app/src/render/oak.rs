@@ -18,7 +18,7 @@ use pokered_renderer::{FrameBuffer, Rgba, TILE_SIZE};
 use pokered_core::game_state::Lang;
 use pokered_ui::backends::FrameBufferPainter;
 use pokered_ui::{menus, Ui};
-use jrpg_renderer::transition::{FadePalette, FADE_PALETTES};
+use dotzuki_renderer::transition::{FadePalette, FADE_PALETTES};
 
 use super::{apply_gb_palette, blit_tileset, draw_centered_sprite};
 

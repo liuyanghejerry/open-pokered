@@ -71,7 +71,7 @@ mod tests_special_terrain;
 mod tests_wild_encounters;
 
 // Re-export engine types for submodules and tests.
-pub use jrpg_engine::overworld::{
+pub use dotzuki_engine::overworld::{
     Direction, MapConnection, MapConnections, MovementState, NpcDefinition,
     NpcMovementType, OverworldInput, PlayerState, Sign, TransportMode, WarpPoint,
 };

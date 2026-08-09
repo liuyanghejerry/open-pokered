@@ -1,4 +1,4 @@
-// Refactored from CeladonPokecenter/script.js to jrpg-engine-dsl.
+// Refactored from CeladonPokecenter/script.js to dotzuki-engine-dsl.
 //
 // This is a representative manual refactor of a Pokecenter map. The
 // auto-converter correctly handles the surrounding structure

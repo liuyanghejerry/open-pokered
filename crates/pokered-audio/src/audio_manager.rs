@@ -2,8 +2,8 @@ use std::collections::HashMap;
 
 use crate::music_data::{self, MusicId};
 use crate::sfx_data::{self, SfxId};
-use jrpg_audio::apu::Apu;
-use jrpg_audio::sequencer::Sequencer;
+use dotzuki_audio::apu::Apu;
+use dotzuki_audio::sequencer::Sequencer;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum FadeState {
@@ -243,15 +243,15 @@ impl AudioManager {
         }
         self.play_sfx(SfxId::CaughtMon);
         self.sequencer.override_channel_stream(
-            jrpg_audio::sequencer::CHAN5,
+            dotzuki_audio::sequencer::CHAN5,
             sfx_data::POKEFLUTE_IN_BATTLE_CH5,
         );
         self.sequencer.override_channel_stream(
-            jrpg_audio::sequencer::CHAN6,
+            dotzuki_audio::sequencer::CHAN6,
             sfx_data::POKEFLUTE_IN_BATTLE_CH6,
         );
         self.sequencer.override_channel_stream(
-            jrpg_audio::sequencer::CHAN7,
+            dotzuki_audio::sequencer::CHAN7,
             sfx_data::POKEFLUTE_IN_BATTLE_CH7,
         );
     }
@@ -270,15 +270,15 @@ impl AudioManager {
         self.saved_music_states.remove(&MusicId::MEET_RIVAL);
         self.play_music(MusicId::MEET_RIVAL);
         self.sequencer.override_channel_stream(
-            jrpg_audio::sequencer::CHAN1,
+            dotzuki_audio::sequencer::CHAN1,
             music_data::MEETRIVAL_CH1_ALTERNATE_START,
         );
         self.sequencer.override_channel_stream(
-            jrpg_audio::sequencer::CHAN2,
+            dotzuki_audio::sequencer::CHAN2,
             music_data::MEETRIVAL_CH2_ALTERNATE_START,
         );
         self.sequencer.override_channel_stream(
-            jrpg_audio::sequencer::CHAN3,
+            dotzuki_audio::sequencer::CHAN3,
             music_data::MEETRIVAL_CH3_ALTERNATE_START,
         );
     }
@@ -291,7 +291,7 @@ impl AudioManager {
         self.saved_music_states.remove(&MusicId::MEET_RIVAL);
         self.play_music(MusicId::MEET_RIVAL);
         self.sequencer.override_channel_stream(
-            jrpg_audio::sequencer::CHAN1,
+            dotzuki_audio::sequencer::CHAN1,
             music_data::MEETRIVAL_CH1_ALTERNATE_TEMPO,
         );
     }
@@ -303,7 +303,7 @@ impl AudioManager {
     pub fn play_meet_rival_alternate_start_and_tempo(&mut self) {
         self.play_meet_rival_alternate_start();
         self.sequencer.override_channel_stream(
-            jrpg_audio::sequencer::CHAN1,
+            dotzuki_audio::sequencer::CHAN1,
             music_data::MEETRIVAL_CH1_ALTERNATE_START_AND_TEMPO,
         );
     }
@@ -324,7 +324,7 @@ impl AudioManager {
             self.saved_music_states.remove(&MusicId::CITIES1);
             self.play_music(MusicId::CITIES1);
             self.sequencer.override_channel_stream(
-                jrpg_audio::sequencer::CHAN1,
+                dotzuki_audio::sequencer::CHAN1,
                 music_data::CITIES1_CH1_ALTERNATE_TEMPO,
             );
             return;
@@ -490,7 +490,7 @@ impl AudioManager {
             // with the queued alternate-tempo stream.
             if let Some(stream) = self.fade_queued_ch1_override.take() {
                 self.sequencer
-                    .override_channel_stream(jrpg_audio::sequencer::CHAN1, stream);
+                    .override_channel_stream(dotzuki_audio::sequencer::CHAN1, stream);
             }
         } else {
             self.fade_queued_ch1_override = None;

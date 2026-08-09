@@ -1,4 +1,4 @@
-use jrpg_engine::tileset::TilesetTrait;
+use dotzuki_engine::tileset::TilesetTrait;
 use pokered_data::map_constants::FIRST_INDOOR_MAP;
 use pokered_data::maps::MapId;
 use pokered_data::tileset_data::get_tileset_header;
@@ -87,7 +87,7 @@ pub fn check_wild_encounter<T: TilesetTrait>(
     try_wild_encounter(table, randoms, context)
 }
 
-/// Game-agnostic [`jrpg_engine::overworld::encounter::EncounterProvider`] impl
+/// Game-agnostic [`dotzuki_engine::overworld::encounter::EncounterProvider`] impl
 /// for pokered.
 ///
 /// Adapts the existing Gen-1 wild-encounter path ([`check_wild_encounter`] /
@@ -102,7 +102,7 @@ pub fn check_wild_encounter<T: TilesetTrait>(
 /// captured [`MapId`] - matching how pokered already resolves encounters from
 /// captured overworld state rather than raw coordinates.
 ///
-/// [`EncounterEngine::on_step`]: jrpg_engine::overworld::encounter::EncounterEngine::on_step
+/// [`EncounterEngine::on_step`]: dotzuki_engine::overworld::encounter::EncounterEngine::on_step
 pub struct PokeredEncounterProvider<T: TilesetTrait> {
     map_id: MapId,
     tileset: T,
@@ -141,7 +141,7 @@ impl<T: TilesetTrait> PokeredEncounterProvider<T> {
     }
 }
 
-impl<T: TilesetTrait + Copy> jrpg_engine::overworld::encounter::EncounterProvider
+impl<T: TilesetTrait + Copy> dotzuki_engine::overworld::encounter::EncounterProvider
     for PokeredEncounterProvider<T>
 {
     type Species = pokered_data::species::Species;
@@ -169,8 +169,8 @@ impl<T: TilesetTrait + Copy> jrpg_engine::overworld::encounter::EncounterProvide
         _map_id: u32,
         _x: i32,
         _y: i32,
-        _mode: jrpg_engine::overworld::encounter::EncounterMode,
-        rng: &mut dyn jrpg_engine::battle::rng::BattleRng,
+        _mode: dotzuki_engine::overworld::encounter::EncounterMode,
+        rng: &mut dyn dotzuki_engine::battle::rng::BattleRng,
     ) -> Option<(Self::Species, u8)> {
         // Draw exactly the legacy two bytes, IN THE LEGACY ORDER:
         // hRandomAdd (encounter rate roll) first, then hRandomSub (slot roll).

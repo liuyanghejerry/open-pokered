@@ -17,7 +17,7 @@ export function composeAtlas(character: string, states: StateFrames[], cellW: nu
 
   const manifest: Manifest = {
     app: 'perfectpixel',
-    generator: 'jrpg-editor/sprite-sheet',
+    generator: 'dotzuki-editor/sprite-sheet',
     schema: 'perfectpixel.sprite/2',
     version: 2,
     character,

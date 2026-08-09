@@ -95,7 +95,7 @@ impl TilemapBuffer {
         let last = (src_y + num_rows - 1) as usize * SCREEN_WIDTH as usize;
         for col in 1..(SCREEN_WIDTH - 1) as usize { self.tiles[last + col] = charmap::CHAR_SPACE; }
     }
-    pub fn copy_from_tile_buffer(&mut self, tb: &jrpg_engine::text::TileBuffer) {
+    pub fn copy_from_tile_buffer(&mut self, tb: &dotzuki_engine::text::TileBuffer) {
         for (i, entry) in tb.tiles.iter().enumerate() {
             if i < TILEMAP_SIZE { self.tiles[i] = entry.tile_id as u8; }
         }
@@ -121,7 +121,7 @@ impl Default for NameBuffers {
     }
 }
 
-use jrpg_engine::text::{DialogEngine, DialogMode, TileBuffer};
+use dotzuki_engine::text::{DialogEngine, DialogMode, TileBuffer};
 use self::provider::PokemonTextProvider;
 
 pub struct DialogRunner {
@@ -141,7 +141,7 @@ impl DialogRunner {
         self.tilemap.draw_box_border(&text_box);
         self.tile_buffer.clear();
         let start = text_box.text_start_coord();
-        self.tile_buffer.cursor = jrpg_engine::text::TilePos::new(start.x as u16, start.y as u16);
+        self.tile_buffer.cursor = dotzuki_engine::text::TilePos::new(start.x as u16, start.y as u16);
         self.engine.open_dialog(&data);
         self.has_started = true;
     }

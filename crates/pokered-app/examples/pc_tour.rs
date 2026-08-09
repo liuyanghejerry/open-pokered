@@ -11,7 +11,7 @@ use pokered_data::items::ItemId;
 use pokered_data::species::Species;
 use pokered_core::pokemon::stats::create_pokemon;
 use pokered_renderer::{FrameBuffer, Rgba};
-use jrpg_engine::render_config::RenderConfig;
+use dotzuki_engine::render_config::RenderConfig;
 
 const A: MenuInput = MenuInput { up: false, down: false, a: true, b: false };
 const B: MenuInput = MenuInput { up: false, down: false, a: false, b: true };

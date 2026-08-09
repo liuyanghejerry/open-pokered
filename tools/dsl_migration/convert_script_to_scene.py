@@ -3,7 +3,7 @@
 
 Usage: convert_script_to_scene.py <map_dir> [--out <out_dir>]
 
-The .scene file uses the jrpg-engine-dsl Game DSL, which compiles to the
+The .scene file uses the dotzuki-engine-dsl Game DSL, which compiles to the
 same JS that script.js would have produced. The DSL compiler picks up
 .scene files via build.rs.
 """

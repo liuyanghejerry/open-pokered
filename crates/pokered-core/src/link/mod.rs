@@ -10,7 +10,7 @@ mod link_battle_tests;
 mod link_trade_tests;
 
 /// The player's role on a link connection — re-exported from the engine
-/// (`jrpg_engine::link::LinkRole`), which names the two sides neutrally:
+/// (`dotzuki_engine::link::LinkRole`), which names the two sides neutrally:
 /// [`LinkRole::Host`] is the original's internal-clock side and
 /// [`LinkRole::Guest`] the external-clock side (`hSerialConnectionStatus`,
 /// USING_INTERNAL_CLOCK vs USING_EXTERNAL_CLOCK).
@@ -20,7 +20,7 @@ mod link_trade_tests;
 /// by connection status: internal clock → x=10 facing left, external →
 /// x=7 facing right). The host (`--link-listen`) is the internal clock;
 /// the client (`--link-connect`) is the external clock.
-pub use jrpg_engine::link::LinkRole;
+pub use dotzuki_engine::link::LinkRole;
 
 /// Overworld placement of the remote player's avatar in the Cable Club rooms.
 ///
@@ -36,7 +36,7 @@ pub use jrpg_engine::link::LinkRole;
 pub struct LinkOpponentPresence {
     pub x: u16,
     pub y: u16,
-    pub facing: jrpg_engine::overworld::Direction,
+    pub facing: dotzuki_engine::overworld::Direction,
 }
 
 impl LinkOpponentPresence {
@@ -45,12 +45,12 @@ impl LinkOpponentPresence {
             LinkRole::Host => LinkOpponentPresence {
                 x: 3,
                 y: 2,
-                facing: jrpg_engine::overworld::Direction::Left,
+                facing: dotzuki_engine::overworld::Direction::Left,
             },
             LinkRole::Guest => LinkOpponentPresence {
                 x: 1,
                 y: 2,
-                facing: jrpg_engine::overworld::Direction::Right,
+                facing: dotzuki_engine::overworld::Direction::Right,
             },
         }
     }

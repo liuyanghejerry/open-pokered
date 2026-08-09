@@ -1,7 +1,7 @@
-use jrpg_engine::overworld::{
+use dotzuki_engine::overworld::{
     Direction, MapConnection, MapConnections, NpcDefinition, NpcMovementType, Sign, WarpPoint,
 };
-use jrpg_engine::tileset::{TilesetProvider, TilesetTrait};
+use dotzuki_engine::tileset::{TilesetProvider, TilesetTrait};
 use pokered_data::map_data_loader::{get_block_data, get_map_json, resolve_map_id};
 use pokered_data::map_json::{ConnectionEntryJson, ConnectionsJson, NpcJson, SignJson, WarpJson};
 use pokered_data::maps::MapId;

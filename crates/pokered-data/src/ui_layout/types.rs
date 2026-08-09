@@ -1,6 +1,6 @@
-pub use jrpg_engine::render::{BracketSides, TilePos, TileRect};
+pub use dotzuki_engine::render::{BracketSides, TilePos, TileRect};
 
-use jrpg_engine::render::Rgba;
+use dotzuki_engine::render::Rgba;
 
 /// Legacy ink color used by the v1 layout schema and v1 menus.
 ///

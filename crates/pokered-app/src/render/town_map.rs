@@ -126,7 +126,7 @@ pub fn draw_town_map(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use jrpg_engine::render_config::RenderConfig;
+    use dotzuki_engine::render_config::RenderConfig;
     use pokered_core::town_map_screen::TownMapScreenState;
     use pokered_data::maps::MapId;
 

@@ -10,7 +10,7 @@ use pokered_renderer::embedded_font::draw_text;
 use pokered_renderer::palette::GRAYSCALE_PALETTE;
 use pokered_renderer::resource::{AssetCategory, ResourceManager};
 use pokered_renderer::{FrameBuffer, Rgba, TILE_SIZE};
-use jrpg_renderer::transition::{FadePalette, FADE_PALETTES};
+use dotzuki_renderer::transition::{FadePalette, FADE_PALETTES};
 
 use super::{apply_gb_palette, blit_tileset, draw_centered_sprite, draw_text_box};
 

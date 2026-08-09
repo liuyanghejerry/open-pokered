@@ -16,16 +16,16 @@ use crate::overworld::{
     script_bridge, special_terrain, wild_encounters,
 };
 use crate::overworld::script_bridge::HealingMachinePhase;
-use jrpg_engine::overworld::{
+use dotzuki_engine::overworld::{
     Direction, MovementState, OverworldInput, PlayerState, TransportMode,
 };
-use jrpg_engine::overworld::collision::CollisionProvider;
-use jrpg_engine::overworld::map_transitions::{
+use dotzuki_engine::overworld::collision::CollisionProvider;
+use dotzuki_engine::overworld::map_transitions::{
     calculate_connection_transition as engine_calculate_connection_transition,
 };
-use jrpg_engine::tileset::TilesetTrait;
-use jrpg_engine::GameData;
-use jrpg_engine_script::{CommandResult, MapScriptConfig};
+use dotzuki_engine::tileset::TilesetTrait;
+use dotzuki_engine::GameData;
+use dotzuki_engine_script::{CommandResult, MapScriptConfig};
 use pokered_data::blockset_data;
 use pokered_data::impl_traits::PokemonMapData;
 use pokered_data::map_data_loader::get_map_json;
@@ -273,7 +273,7 @@ pub(crate) fn execute_warp(
     py: u8,
     last_map: Option<MapId>,
 ) -> Option<(MapId, u8, u8)> {
-    let transition = jrpg_engine::overworld::map_transitions::check_warp_at(map_data, px, py)?;
+    let transition = dotzuki_engine::overworld::map_transitions::check_warp_at(map_data, px, py)?;
     let dest_map = if transition.is_last_map {
         last_map?
     } else {
@@ -325,7 +325,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                 npc.x = presence.x;
                 npc.y = presence.y;
                 npc.facing = presence.facing;
-                npc.movement_type = jrpg_engine::overworld::NpcMovementType::Stationary;
+                npc.movement_type = dotzuki_engine::overworld::NpcMovementType::Stationary;
                 npc.visible = true;
             }
         }
@@ -2684,7 +2684,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
 
         let map_key = script_bridge::map_id_to_script_key(map_id);
         log::info!(target: "pokered::overworld", "[Script] Loading map script for {:?} (key: {})", map_id, map_key);
-        self.script_engine = jrpg_engine_script::ScriptEngine::with_api(&pokered_data::script_api::PokemonScriptApi);
+        self.script_engine = dotzuki_engine_script::ScriptEngine::with_api(&pokered_data::script_api::PokemonScriptApi);
 
         if let Some(shared_source) = self.script_loader.get_script("shared/pokecenter") {
             log::info!(target: "pokered::overworld", "[Script] Loading shared/pokecenter module ({} bytes)", shared_source.len());
@@ -2757,8 +2757,8 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
     /// `npc_talk_fn`, `on_load`) continues to work unchanged — the trigger
     /// manager runs in parallel as an additional unified dispatch layer.
     fn setup_triggers_for_map(&mut self, map_id: MapId) {
-        use jrpg_engine::metatile::TriggerType;
-        use jrpg_engine::trigger_manager::Trigger;
+        use dotzuki_engine::metatile::TriggerType;
+        use dotzuki_engine::trigger_manager::Trigger;
 
         let map_key = script_bridge::map_id_to_script_key(map_id);
         self.trigger_manager.remove_triggers_for_map(&map_key);

@@ -92,8 +92,8 @@ crates/pokered-web/frontend/src/wasm/pokered_web.js
 crates/pokered-web/frontend/src/wasm/pokered_web_bg.wasm
 crates/pokered-web/frontend/src/wasm/pokered_web_bg.js
 
-# jrpg-editor: local AI provider profiles (no API keys, machine-local) — not versioned
-.jrpg-editor.providers.json
+# dotzuki-editor: local AI provider profiles (no API keys, machine-local) — not versioned
+.dotzuki-editor.providers.json
 
 # pnpm workspace
 tools/pnpm-lock.yaml

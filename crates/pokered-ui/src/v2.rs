@@ -1,4 +1,4 @@
-//! Bridge to the v2 layout engine (`jrpg-renderer`) for menus migrated off the
+//! Bridge to the v2 layout engine (`dotzuki-renderer`) for menus migrated off the
 //! v1 hardcoded-layout path.
 //!
 //! A migrated menu fetches its compiled element-format JSON via
@@ -8,13 +8,13 @@
 
 use std::collections::HashMap;
 
-use jrpg_engine::render::painter::Painter;
-use jrpg_renderer::layout_engine::deserialize::parse_layout;
-use jrpg_renderer::layout_engine::renderer::{render_layout, render_layout_no_clear};
-use jrpg_renderer::layout_engine::types::{RenderContext, ScreenLayout};
+use dotzuki_engine::render::painter::Painter;
+use dotzuki_renderer::layout_engine::deserialize::parse_layout;
+use dotzuki_renderer::layout_engine::renderer::{render_layout, render_layout_no_clear};
+use dotzuki_renderer::layout_engine::types::{RenderContext, ScreenLayout};
 use pokered_core::game_state::Lang;
 
-pub use jrpg_renderer::layout_engine::types::{DataContext, DataValue};
+pub use dotzuki_renderer::layout_engine::types::{DataContext, DataValue};
 
 /// Locale code for the reserved `__lang` data key the engine reads to pick a
 /// `@t("en", "中文")` variant.

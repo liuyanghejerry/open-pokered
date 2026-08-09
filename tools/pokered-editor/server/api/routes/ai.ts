@@ -37,7 +37,7 @@ export function registerAi(server: any) {
           ...(p.embeddingModel ? { embeddingModel: String(p.embeddingModel) } : {}),
           ...(p.imageModel ? { imageModel: String(p.imageModel) } : {}),
         }))
-        // The file may be the global ~/.jrpg-editor fallback (no project open).
+        // The file may be the global ~/.dotzuki-editor fallback (no project open).
         fs.mkdirSync(path.dirname(file), { recursive: true })
         fs.writeFileSync(file, JSON.stringify(clean, null, 2), 'utf-8')
         return sendJson(res, { ok: true })
@@ -90,8 +90,8 @@ export function registerAi(server: any) {
   })
 
   // ── GET/PUT /api/editor-settings — editable editor settings (screen size) ──
-  //    Lives in `.jrpg-editor.settings.json`; separate from the read-only
-  //    `.jrpg-editor.json` project config.
+  //    Lives in `.dotzuki-editor.settings.json`; separate from the read-only
+  //    `.dotzuki-editor.json` project config.
   server.middlewares.use('/api/editor-settings', async (req, res) => {
     try {
       const file = editorSettingsFile()
@@ -168,7 +168,7 @@ export function registerAi(server: any) {
     try {
       const { messages, profile, apiKey, uiContext } = JSON.parse(await readBody(req))
       if (!profile || !apiKey) return sendError(res, 'profile and apiKey are required', 400)
-      // loadConfig is the no-project probe: it throws when no .jrpg-editor.json.
+      // loadConfig is the no-project probe: it throws when no .dotzuki-editor.json.
       let project = null
       try { loadConfig(); project = getProjectContext() } catch { project = null }
       const ac = new AbortController()
@@ -214,7 +214,7 @@ export function registerAi(server: any) {
     }
   })
 
-  // pokered-editor: the /api/ai/refine-character legacy shim from jrpg-editor is
+  // pokered-editor: the /api/ai/refine-character legacy shim from dotzuki-editor is
   // omitted — its registry action (Story-Designer-only) is not ported.
 
   // ── POST /api/ai/generate-scene — legacy shim over the registry. ──

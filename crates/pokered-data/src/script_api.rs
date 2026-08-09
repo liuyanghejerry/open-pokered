@@ -1,5 +1,5 @@
 use boa_engine::{Context, JsArgs, JsResult, JsValue};
-use jrpg_engine_script::{BridgeView, ScriptApiRegistrar, ScriptCommand};
+use dotzuki_engine_script::{BridgeView, ScriptApiRegistrar, ScriptCommand};
 
 /// Registers Pokémon-specific JS APIs on the `game` global object.
 ///
@@ -11,7 +11,7 @@ use jrpg_engine_script::{BridgeView, ScriptApiRegistrar, ScriptCommand};
 /// # Usage
 ///
 /// ```ignore
-/// use jrpg_engine_script::ScriptEngine;
+/// use dotzuki_engine_script::ScriptEngine;
 /// use pokered_data::script_api::PokemonScriptApi;
 ///
 /// let engine = ScriptEngine::with_api(&PokemonScriptApi);
@@ -37,7 +37,7 @@ fn badge_index(name: &str) -> Option<u8> {
 }
 
 impl ScriptApiRegistrar for PokemonScriptApi {
-    fn register_api(&self, engine: &mut jrpg_engine_script::ScriptEngine) {
+    fn register_api(&self, engine: &mut dotzuki_engine_script::ScriptEngine) {
         // game.giveItem(itemId: string, quantity: number) -> Promise<void>
         engine.register_async_fn(
             "giveItem",
@@ -547,7 +547,7 @@ impl ScriptApiRegistrar for PokemonScriptApi {
 #[cfg(test)]
 mod tests {
     use super::PokemonScriptApi;
-    use jrpg_engine_script::{CommandResult, ScriptCommand, ScriptEngine};
+    use dotzuki_engine_script::{CommandResult, ScriptCommand, ScriptEngine};
 
     /// Proves the synchronous query APIs (`hasItem`, `getMoney`) read seeded
     /// state: seeding money=5000 + bag={SILPH_SCOPE} makes the gate take the

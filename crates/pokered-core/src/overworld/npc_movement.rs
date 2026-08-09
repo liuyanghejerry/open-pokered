@@ -1,16 +1,16 @@
 //! Pokémon-specific NPC movement helpers and engine re-exports.
 //!
 //! Generic NPC movement (NpcRuntimeState, update_npc_movement, etc.) is
-//! provided by `jrpg_engine::overworld::npc_movement`. This module adds
+//! provided by `dotzuki_engine::overworld::npc_movement`. This module adds
 //! Pokémon-specific data conversion functions.
 
 use std::collections::VecDeque;
 
-use jrpg_engine::overworld::{Direction, NpcMovementType};
+use dotzuki_engine::overworld::{Direction, NpcMovementType};
 use pokered_data::npc_data::{NpcEntry, NpcFacing, NpcMovement};
 
 // Re-export engine NPC movement types and functions
-pub use jrpg_engine::overworld::npc_movement::{
+pub use dotzuki_engine::overworld::npc_movement::{
     direction_toward, get_npc_positions, is_scripted_move_done, npc_at_position,
     npc_at_position_mut, npc_in_front_of_player, start_scripted_move, update_npc_movement,
     NpcRuntimeState, NPC_MAX_DELAY, NPC_WALK_FRAMES,

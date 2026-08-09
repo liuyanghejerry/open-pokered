@@ -1,5 +1,5 @@
 {
-  "name": "Pokémon Red (jrpg-engine)",
+  "name": "Pokémon Red (dotzuki-engine)",
   "dataRoot": "crates/pokered-data",
   "gfxRoot": "gfx",
   "activities": [

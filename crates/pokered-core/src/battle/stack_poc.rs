@@ -38,9 +38,9 @@ mod parity_tests {
         legacy_run, order_is_tie, run_scenario, stack_run, MoveBytes, PocData, Scenario,
     };
 
-    use jrpg_engine::battle::rng::ScriptedRng;
-    use jrpg_engine::battle::stack::{EffectState, StackDriver};
-    use jrpg_engine::battle::{BattleAction, BattleState as EngineState};
+    use dotzuki_engine::battle::rng::ScriptedRng;
+    use dotzuki_engine::battle::stack::{EffectState, StackDriver};
+    use dotzuki_engine::battle::{BattleAction, BattleState as EngineState};
 
     use pokered_data::moves::MoveId;
     use pokered_data::pokemon_data::get_base_stats;

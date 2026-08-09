@@ -6,7 +6,7 @@
 // middleware, so the exact same handlers can be mounted on any connect-style
 // app: the Vite dev server (vite.config.ts) or the Electron production
 // api-server (electron/api-server.ts). Both hand over a `{ middlewares }`
-// object, the same shape the jrpg-editor route modules (server/api/routes/*)
+// object, the same shape the dotzuki-editor route modules (server/api/routes/*)
 // are written against.
 //
 // All filesystem roots derive from getProjectRoot() (server/api/projectConfig)

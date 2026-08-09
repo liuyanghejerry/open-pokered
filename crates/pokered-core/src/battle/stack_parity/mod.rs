@@ -32,11 +32,11 @@
 
 #![cfg(test)]
 
-use jrpg_engine::battle::stack::{
+use dotzuki_engine::battle::stack::{
     BattleCtx, Effect, EffectId, EffectProvider, EffectState, EffectType, Event, EventHook,
     FirstMover, HandlerResult, RelayVar, StackDriver,
 };
-use jrpg_engine::battle::{
+use dotzuki_engine::battle::{
     BattleAction, BattleProvider, BattleState as EngineState, BattlerRef,
     BattlerState as EngineBattler, DamageResult, EffectResult, EnumMap,
     MoveEffect as EngineMoveEffect,
@@ -48,7 +48,7 @@ use pokered_data::pokemon_data::get_base_stats;
 use pokered_data::species::Species;
 use pokered_data::types::PokemonType;
 
-use jrpg_engine::battle::rng::ScriptedRng;
+use dotzuki_engine::battle::rng::ScriptedRng;
 
 use super::effects::EffectRandoms;
 use super::move_execution::MoveRandoms;
@@ -87,7 +87,7 @@ pub enum Stat {
 ///
 /// All variants are POKERED-side (the engine treats `EffectStateKind` opaquely —
 /// design §3.1 "provider-supplied / concrete-for-now"), so adding Substitute/
-/// Trapping here keeps `jrpg-engine` 100% game-agnostic (no engine change).
+/// Trapping here keeps `dotzuki-engine` 100% game-agnostic (no engine change).
 #[derive(Clone)]
 #[allow(dead_code)] // `None` is the inert variant of the typed-state shape (§3.1)
 pub enum PocKind {
@@ -4222,7 +4222,7 @@ pub fn run_scenario_secondary(s: &SecondaryScenario) {
 
 use super::trainer_ai::move_choice::choose_moves as ai_choose_moves;
 use super::trainer_ai::move_choice_layers as ai_move_choice_layers;
-use jrpg_engine::battle::rng::BattleRng;
+use dotzuki_engine::battle::rng::BattleRng;
 use pokered_data::trainer_data::TrainerClass;
 
 /// Re-home of the production `BattleScreen::pick_enemy_move` (`mod.rs:777-805`),

@@ -23,7 +23,7 @@ beforeAll(() => {
   ROOT = fs.mkdtempSync(path.join(os.tmpdir(), 'jrpg-ctx-'))
 
   // Config with story / script / data / map / ui — and intentionally NO `ai`.
-  write('.jrpg-editor.json', JSON.stringify({
+  write('.dotzuki-editor.json', JSON.stringify({
     name: 'Fixture Game',
     dataRoot: '.',
     gfxRoot: '.',

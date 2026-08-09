@@ -1,4 +1,4 @@
-// Refactored from PewterPokecenter/script.js to jrpg-engine-dsl.
+// Refactored from PewterPokecenter/script.js to dotzuki-engine-dsl.
 // Follows the CeladonPokecenter pattern (Pokecenter nurse dialog
 // with @choice + @option). See docs/MIGRATION_NOTES.md §A.
 

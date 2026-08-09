@@ -1,4 +1,4 @@
-use jrpg_engine::tileset::TilesetTrait;
+use dotzuki_engine::tileset::TilesetTrait;
 
 /// Number of built-in tilesets (i.e. those that exist in the original game's ROM).
 /// `TilesetId::Custom(slot)` uses indices `slot < CUSTOM_TILESETS.len()` on top of these.
@@ -338,7 +338,7 @@ pub mod custom {
 /// `TilesetTrait::name()` is the snake_case PNG basename for both built-ins
 /// and customs, so a custom is detected by basename lookup first; otherwise
 /// the built-in u8 id applies.
-pub fn resolve_concrete<T: jrpg_engine::tileset::TilesetTrait>(tileset: &T) -> TilesetId {
+pub fn resolve_concrete<T: dotzuki_engine::tileset::TilesetTrait>(tileset: &T) -> TilesetId {
     if let Some(slot) = custom::slot_for_png_basename(tileset.name()) {
         return TilesetId::Custom(slot);
     }

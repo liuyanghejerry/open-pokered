@@ -75,9 +75,9 @@ export function registerProject(server: any) {
           return sendError(res, '"path" is required', 400)
         }
         const absPath = path.resolve(projectPath)
-        const cfgPath = path.join(absPath, '.jrpg-editor.json')
+        const cfgPath = path.join(absPath, '.dotzuki-editor.json')
         if (!fs.existsSync(cfgPath)) {
-          return sendError(res, `No .jrpg-editor.json found in ${absPath}`, 404)
+          return sendError(res, `No .dotzuki-editor.json found in ${absPath}`, 404)
         }
         setProjectRootDir(absPath)
         const cfg = loadConfig()

@@ -1,6 +1,6 @@
 /**
  * TypeScript types mirroring the schema_version 2 layout format defined by
- * crates/jrpg-renderer/src/layout_engine/types.rs (and validated by
+ * crates/dotzuki-renderer/src/layout_engine/types.rs (and validated by
  * src/schemas/layout.schema.json).
  *
  * v2 is a flat element tree: a screen owns an ordered `elements` array, each

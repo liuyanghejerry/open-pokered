@@ -1,21 +1,21 @@
 //! Pokémon-specific NPC interaction system.
 //!
 //! Generic interaction logic (talk, sign, line-of-sight) is provided by
-//! `jrpg_engine::overworld::npc_interaction`. This module adds Pokémon-specific
+//! `dotzuki_engine::overworld::npc_interaction`. This module adds Pokémon-specific
 //! handling for trainer battles and item pickups.
 
 use crate::overworld::collision::PokemonCollisionProvider;
 use crate::overworld::npc_movement::NpcRuntimeState;
 use crate::overworld::PokemonNpcData;
 
-use jrpg_engine::overworld::Direction;
-use jrpg_engine::overworld::npc_interaction as engine;
+use dotzuki_engine::overworld::Direction;
+use dotzuki_engine::overworld::npc_interaction as engine;
 
 use super::npc_movement::npc_in_front_of_player;
 
 // ── Re-exports ─────────────────────────────────────────────────────
 
-pub use jrpg_engine::overworld::npc_interaction::{
+pub use dotzuki_engine::overworld::npc_interaction::{
     check_line_of_sight, check_sign_interaction, mark_defeated as mark_trainer_defeated,
     LineOfSightResult,
 };

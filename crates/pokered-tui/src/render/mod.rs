@@ -142,7 +142,7 @@ pub fn draw_centered_sprite(
 
 /// Map every framebuffer pixel through a GB palette byte (rBGP) — same
 /// helper as pokered-app's `render::apply_gb_palette` (home/fade.asm).
-pub(crate) fn apply_gb_palette(fb: &mut FrameBuffer, pal: &jrpg_renderer::transition::FadePalette) {
+pub(crate) fn apply_gb_palette(fb: &mut FrameBuffer, pal: &dotzuki_renderer::transition::FadePalette) {
     const SHADES: [u8; 4] = [0xFF, 0xAA, 0x55, 0x00];
     for px in fb.data.chunks_exact_mut(4) {
         let shade: u8 = match (px[0], px[1], px[2]) {

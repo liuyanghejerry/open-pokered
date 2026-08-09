@@ -1,4 +1,4 @@
-//! Adoption of the generic `jrpg-engine` party/monster model (milestone P0a,
+//! Adoption of the generic `dotzuki-engine` party/monster model (milestone P0a,
 //! step 2).
 //!
 //! This module implements the engine's provider traits
@@ -27,7 +27,7 @@
 //! (the `Pokemon`-struct re-point is staged); see
 //! `docs/engine-gap-analysis/05-p0-migration-report.md` (party section).
 
-use jrpg_engine::party::{
+use dotzuki_engine::party::{
     EvolutionProvider, EvolutionTrigger as EngineEvolutionTrigger, ExpProvider, MonsterInstance,
     MonsterProvider, MonsterStatus, MoveSlot, StatSet,
 };

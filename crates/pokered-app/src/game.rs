@@ -69,7 +69,7 @@ use pokered_renderer::resource::AssetRoot;
 #[cfg(not(target_arch = "wasm32"))]
 use pokered_renderer::window::GameLoop;
 use pokered_renderer::{FrameBuffer, Rgba};
-use jrpg_engine::render_config::RenderConfig;
+use dotzuki_engine::render_config::RenderConfig;
 
 #[cfg(all(debug_assertions, not(target_arch = "wasm32")))]
 use crate::hot_reload::AssetWatcher;
@@ -2046,7 +2046,7 @@ impl PokemonGame {
                 {
                     use std::fs;
                     if let Ok(source) = fs::read_to_string(&change.path) {
-                        match jrpg_engine_dsl::compiler::compile_scene_to_js(
+                        match dotzuki_engine_dsl::compiler::compile_scene_to_js(
                             &source,
                             &change.path.to_string_lossy(),
                         ) {

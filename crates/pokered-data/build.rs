@@ -1457,17 +1457,17 @@ fn read_overrides(path: &Path) -> BTreeMap<String, Vec<u8>> {
 
 /// Parse `ui_layouts/components.gui` (if present) into the shared component
 /// declarations every screen compile is seeded with.
-fn load_component_prelude(v2_dir: &Path) -> Vec<jrpg_engine_dsl::ast::ComponentDecl> {
+fn load_component_prelude(v2_dir: &Path) -> Vec<dotzuki_engine_dsl::ast::ComponentDecl> {
     let prelude_path = v2_dir.join("components.gui");
     let Ok(source) = fs::read_to_string(&prelude_path) else {
         return Vec::new();
     };
     let path_str = prelude_path.to_string_lossy().to_string();
-    let mut lexer = jrpg_engine_dsl::lexer::Lexer::new(&source, &path_str);
+    let mut lexer = dotzuki_engine_dsl::lexer::Lexer::new(&source, &path_str);
     let tokens = lexer
         .tokenize()
         .unwrap_or_else(|e| panic!("Lexer errors in {}: {:?}", prelude_path.display(), e));
-    let (doc, parse_errors) = jrpg_engine_dsl::parser::parse(tokens);
+    let (doc, parse_errors) = dotzuki_engine_dsl::parser::parse(tokens);
     assert!(
         parse_errors.is_empty(),
         "Parser errors in {}: {:?}",
@@ -1475,7 +1475,7 @@ fn load_component_prelude(v2_dir: &Path) -> Vec<jrpg_engine_dsl::ast::ComponentD
         parse_errors
     );
     match doc.unwrap() {
-        jrpg_engine_dsl::ast::Document::Components(decls) => decls,
+        dotzuki_engine_dsl::ast::Document::Components(decls) => decls,
         other => panic!(
             "Expected only component declarations in {}, got {:?}",
             prelude_path.display(),
@@ -1485,17 +1485,17 @@ fn load_component_prelude(v2_dir: &Path) -> Vec<jrpg_engine_dsl::ast::ComponentD
 }
 
 /// Compile a .gui DSL file to a schema v2 JSON string via the DSL compiler.
-fn compile_gui_to_json(gui_path: &Path, components: &[jrpg_engine_dsl::ast::ComponentDecl]) -> String {
+fn compile_gui_to_json(gui_path: &Path, components: &[dotzuki_engine_dsl::ast::ComponentDecl]) -> String {
     let source = fs::read_to_string(gui_path)
         .unwrap_or_else(|e| panic!("read {}: {}", gui_path.display(), e));
 
     let path_str = gui_path.to_string_lossy().to_string();
-    let mut lexer = jrpg_engine_dsl::lexer::Lexer::new(&source, &path_str);
+    let mut lexer = dotzuki_engine_dsl::lexer::Lexer::new(&source, &path_str);
     let tokens = lexer
         .tokenize()
         .unwrap_or_else(|e| panic!("Lexer errors in {}: {:?}", gui_path.display(), e));
 
-    let (doc, parse_errors) = jrpg_engine_dsl::parser::parse_with_components(tokens, components);
+    let (doc, parse_errors) = dotzuki_engine_dsl::parser::parse_with_components(tokens, components);
     assert!(
         parse_errors.is_empty(),
         "Parser errors in {}: {:?}",
@@ -1504,7 +1504,7 @@ fn compile_gui_to_json(gui_path: &Path, components: &[jrpg_engine_dsl::ast::Comp
     );
 
     let mut screen = match doc.unwrap() {
-        jrpg_engine_dsl::ast::Document::Screen(s) => s,
+        dotzuki_engine_dsl::ast::Document::Screen(s) => s,
         other => panic!("Expected Screen document in {}, got {:?}", gui_path.display(), other),
     };
 
@@ -1516,7 +1516,7 @@ fn compile_gui_to_json(gui_path: &Path, components: &[jrpg_engine_dsl::ast::Comp
         screen.name = stem.to_string();
     }
 
-    jrpg_engine_dsl::codegen::json_ui::compile_screen(&screen)
+    dotzuki_engine_dsl::codegen::json_ui::compile_screen(&screen)
         .unwrap_or_else(|e| panic!("Codegen error in {}: {}", gui_path.display(), e))
 }
 
@@ -1619,7 +1619,7 @@ fn generate_ui_layouts(manifest_dir: &Path, out_dir: &str) {
 
     // Every compiled .gui (element-format schema v2), keyed by stem —
     // regardless of v1 precedence. This is the source the v2 layout engine
-    // (jrpg-renderer) consumes for menus migrated off the v1 path.
+    // (dotzuki-renderer) consumes for menus migrated off the v1 path.
     let mut gui_v2_literals: Vec<(String, String)> = Vec::new();
 
     for entry in &gui_entries {
@@ -1659,7 +1659,7 @@ fn generate_ui_layouts(manifest_dir: &Path, out_dir: &str) {
     out.push_str("        _ => None,\n    }\n}\n");
 
     // Element-format (schema v2) JSON for every `.gui` screen, used by menus
-    // rendered through the jrpg-renderer layout engine. Unlike
+    // rendered through the dotzuki-renderer layout engine. Unlike
     // `get_layout_json`, this is NOT shadowed by v1 variants JSON.
     out.push_str("\npub fn get_screen_v2_json(screen: &str) -> Option<&'static str> {\n");
     out.push_str("    match screen {\n");
@@ -1846,7 +1846,7 @@ fn generate_script_assets(manifest_dir: &Path, out_dir: &str) {
 // ── Compiled .scene embedding ──────────────────────────────────────────────
 
 /// Compiles every `maps/{MapName}/script.scene` to JavaScript at build time
-/// (via the jrpg-engine-dsl compiler) and emits `scene_scripts_gen.rs` into
+/// (via the dotzuki-engine-dsl compiler) and emits `scene_scripts_gen.rs` into
 /// `OUT_DIR` with two static tables:
 ///
 /// - `SCENE_SCRIPTS: &[(&str, &str)]` — map name → compiled JS module
@@ -1883,7 +1883,7 @@ fn generate_scene_scripts(manifest_dir: &Path, out_dir: &str) {
             println!("cargo:rerun-if-changed={}", scene_path.display());
             let source = fs::read_to_string(&scene_path)
                 .unwrap_or_else(|e| panic!("read {}: {}", scene_path.display(), e));
-            let js = jrpg_engine_dsl::compiler::compile_scene_to_js(
+            let js = dotzuki_engine_dsl::compiler::compile_scene_to_js(
                 &source,
                 &scene_path.to_string_lossy(),
             )

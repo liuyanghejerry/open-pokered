@@ -1,4 +1,4 @@
-use jrpg_engine::save::{SaveError, SaveStorage};
+use dotzuki_engine::save::{SaveError, SaveStorage};
 use std::path::PathBuf;
 
 const SAVE_FILE_NAME: &str = "save.dat";

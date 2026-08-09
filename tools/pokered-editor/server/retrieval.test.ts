@@ -14,7 +14,7 @@ function write(rel: string, content: string) {
 
 beforeAll(() => {
   ROOT = fs.mkdtempSync(path.join(os.tmpdir(), 'jrpg-rag-'))
-  write('.jrpg-editor.json', JSON.stringify({
+  write('.dotzuki-editor.json', JSON.stringify({
     name: 'F', dataRoot: '.', activities: [
       { id: 'story', type: 'story', config: { storiesDir: 'data/story', scenesDir: 'data/maps', scene: { ext: '.scene' } } },
       { id: 'data', type: 'data', config: { tables: [{ id: 'skills', dir: 'data/skills', idField: 'id' }] } },

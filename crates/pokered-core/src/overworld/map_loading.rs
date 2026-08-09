@@ -1,5 +1,5 @@
-use jrpg_engine::map::MapProvider;
-use jrpg_engine::tileset::{TilesetProvider, TilesetTrait};
+use dotzuki_engine::map::MapProvider;
+use dotzuki_engine::tileset::{TilesetProvider, TilesetTrait};
 use pokered_data::map_data_loader::get_map_json;
 use pokered_data::map_flags;
 use pokered_data::map_names::{self, MapNameId};

@@ -2,7 +2,7 @@
 //!
 //! `PokemonSaveData` wraps the complete 32 KiB Game Boy SRAM dump in its
 //! original byte format, including the internal XOR checksums. It implements
-//! the [`jrpg_engine::save::SaveData`] trait so that the engine-level
+//! the [`dotzuki_engine::save::SaveData`] trait so that the engine-level
 //! [`SaveManager`] can persist it through any [`SaveStorage`] backend.
 
 /// Total size of a Game Boy .sav file (4 banks × 8 KiB).

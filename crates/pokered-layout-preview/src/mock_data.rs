@@ -2,10 +2,10 @@
 //!
 //! Each `fill_mock_*` fills the [`DataContext`] bindings a menu's compiled
 //! layout expects, so the editor can render realistic previews without the
-//! game running. Moved verbatim from the engine's `jrpg-web` during the
+//! game running. Moved verbatim from the engine's `dotzuki-web` during the
 //! engine/game repo split — this data is pokered-flavoured by definition.
 
-use jrpg_renderer::layout_engine::types::{DataContext, DataValue};
+use dotzuki_renderer::layout_engine::types::{DataContext, DataValue};
 
 
 // ── Mock data ────────────────────────────────────────────────────────────

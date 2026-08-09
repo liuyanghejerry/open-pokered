@@ -1,8 +1,8 @@
 import { defineConfig, type Plugin, type ViteDevServer } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import tailwindcss from '@tailwindcss/vite'
-// AI assistant / action framework / sprite pipeline, ported from jrpg-editor
-// (tools/jrpg-editor/server) as Vite dev-server middleware.
+// AI assistant / action framework / sprite pipeline, ported from dotzuki-editor
+// (tools/dotzuki-editor/server) as Vite dev-server middleware.
 import { registerBuiltinActions } from './server/actions'
 import { registerProject } from './server/api/routes/project'
 import { registerAi } from './server/api/routes/ai'
@@ -30,7 +30,7 @@ function pokeredRoutesPlugin(): Plugin {
 }
 
 // ──────────────────────────────────────────────────────────────
-// AI assistant + sprite generation pipeline (ported from jrpg-editor; the
+// AI assistant + sprite generation pipeline (ported from dotzuki-editor; the
 // routes live under server/api/routes/). The project root defaults to the
 // workspace root — see server/api/projectConfig.ts.
 // Registered LAST in the plugins array so the pokered-specific routes above
@@ -46,7 +46,7 @@ function apiAiPlugin(): Plugin {
       // generate-data, …) so /api/ai/run + the legacy shims can resolve them.
       registerBuiltinActions()
 
-      // ── CORS — matches all /api/* and falls through (same as jrpg-editor). ──
+      // ── CORS — matches all /api/* and falls through (same as dotzuki-editor). ──
       server.middlewares.use('/api', (req, res, next) => {
         res.setHeader('Access-Control-Allow-Origin', '*')
         res.setHeader('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS')

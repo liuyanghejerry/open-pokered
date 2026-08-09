@@ -21,7 +21,7 @@ use pokered_data::blockset_data;
 use pokered_data::items::ItemId;
 use pokered_data::maps::MapId;
 use pokered_data::tilesets::TilesetId;
-use jrpg_engine::render_config::RenderConfig;
+use dotzuki_engine::render_config::RenderConfig;
 use pokered_renderer::{resource::ResourceManager, FrameBuffer, Rgba};
 
 /// Create a `ResourceManager` by auto-detecting the gfx/ asset root.

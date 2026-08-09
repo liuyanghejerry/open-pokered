@@ -2,9 +2,9 @@ use std::path::PathBuf;
 
 use pokered_core::data::wild_data::GameVersion;
 use pokered_core::game_state::GameScreen;
-use jrpg_app::InputState;
+use dotzuki_app::InputState;
 use pokered_renderer::{FrameBuffer, Rgba};
-use jrpg_engine::render_config::RenderConfig;
+use dotzuki_engine::render_config::RenderConfig;
 
 use crate::cli::{screen_name, screen_target_to_game_screen, ScreenTarget, ALL_SCREENS};
 use crate::game::PokemonGame;
@@ -67,9 +67,9 @@ pub fn cmd_screenshot(target: &ScreenTarget, output: &PathBuf, frames: u32) {
         // A-press to dismiss the "RED turned on the PC." boot message, then a
         // few idle frames so the main menu is what's captured.
         let mut input = InputState::new();
-        input.press(jrpg_renderer::input::GbButton::A);
+        input.press(dotzuki_renderer::input::GbButton::A);
         game.update(&input);
-        input.release(jrpg_renderer::input::GbButton::A);
+        input.release(dotzuki_renderer::input::GbButton::A);
         for _ in 0..frames {
             game.update(&input);
         }

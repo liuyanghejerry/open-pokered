@@ -3,8 +3,8 @@
 // the project. They are folded into the system prompt on every turn (see
 // assistantSystem.ts) and appended to via the remember_fact tool.
 //
-//   project memory: <projectRoot>/.jrpg-editor.memory.md
-//   global memory:  ~/.jrpg-editor/memory.md  (the only one in creation mode)
+//   project memory: <projectRoot>/.dotzuki-editor.memory.md
+//   global memory:  ~/.dotzuki-editor/memory.md  (the only one in creation mode)
 //
 // `homeDir` parameters exist so tests can point the global file at a temp dir.
 // ───────────────────────────────────────────────────────────────────────────
@@ -22,10 +22,10 @@ export interface Memories { global: string; project: string }
 export type MemoryScope = 'project' | 'global'
 
 export function globalMemoryFile(homeDir: string = os.homedir()): string {
-  return path.join(homeDir, '.jrpg-editor', 'memory.md')
+  return path.join(homeDir, '.dotzuki-editor', 'memory.md')
 }
 export function projectMemoryFile(project: ProjectContext): string {
-  return path.join(project.root, '.jrpg-editor.memory.md')
+  return path.join(project.root, '.dotzuki-editor.memory.md')
 }
 
 /** Read a memory file (missing/unreadable → ''), truncated to READ_CAP. */

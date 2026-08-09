@@ -2,7 +2,7 @@
 //! transparent (leave the underlying framebuffer untouched) instead of being
 //! painted with the box background color.
 
-use jrpg_engine::render_config::RenderConfig;
+use dotzuki_engine::render_config::RenderConfig;
 use pokered_renderer::{FrameBuffer, Rgba};
 use pokered_ui::backends::FrameBufferPainter;
 use pokered_ui::{Painter, TileRect};

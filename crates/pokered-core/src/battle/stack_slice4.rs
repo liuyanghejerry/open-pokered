@@ -5,7 +5,7 @@
 //! #16 partial-trap, slice 4 of the §7 strangler plan).
 //!
 //! This is the FIRST slice to exercise the engine's cross-battler
-//! [`pair_mut`](jrpg_engine::battle::stack::BattleCtx::pair_mut) with a REAL
+//! [`pair_mut`](dotzuki_engine::battle::stack::BattleCtx::pair_mut) with a REAL
 //! handler (not the synthetic slice-1 probe). The Substitute interceptor reads the
 //! ATTACKER's context and writes the DEFENDER's volatile through a single
 //! `pair_mut(source, target)` borrow — and because mover and defender are on
@@ -115,7 +115,7 @@ mod slice4_tests {
             .iter()
             .find_map(|e| match &e.kind {
                 crate::battle::stack_parity::PocKind::Substitute { hp }
-                    if e.host == jrpg_engine::battle::BattlerRef::OPPONENT =>
+                    if e.host == dotzuki_engine::battle::BattlerRef::OPPONENT =>
                 {
                     Some(*hp)
                 }
@@ -141,7 +141,7 @@ mod slice4_tests {
         let (stack, _c, _f, effects) = stack_run_sub(&s);
         // The sub is GONE (no Substitute volatile for the enemy) and real hp full.
         let still_up = effects.iter().any(|e| {
-            e.host == jrpg_engine::battle::BattlerRef::OPPONENT
+            e.host == dotzuki_engine::battle::BattlerRef::OPPONENT
                 && matches!(e.kind, crate::battle::stack_parity::PocKind::Substitute { .. })
         });
         assert!(!still_up, "overkill must BREAK the substitute (volatile removed)");
@@ -165,7 +165,7 @@ mod slice4_tests {
 
         let (stack, _c, _f, effects) = stack_run_sub(&s);
         let still_up = effects.iter().any(|e| {
-            e.host == jrpg_engine::battle::BattlerRef::OPPONENT
+            e.host == dotzuki_engine::battle::BattlerRef::OPPONENT
                 && matches!(e.kind, crate::battle::stack_parity::PocKind::Substitute { .. })
         });
         assert!(!still_up, "damage == sub_hp must BREAK (legacy uses `>=`)");
@@ -266,7 +266,7 @@ mod slice4_tests {
             .iter()
             .find_map(|e| match &e.kind {
                 crate::battle::stack_parity::PocKind::Substitute { hp }
-                    if e.host == jrpg_engine::battle::BattlerRef::OPPONENT =>
+                    if e.host == dotzuki_engine::battle::BattlerRef::OPPONENT =>
                 {
                     Some(*hp)
                 }
@@ -352,7 +352,7 @@ mod slice4_tests {
             .iter()
             .find_map(|e| match &e.kind {
                 crate::battle::stack_parity::PocKind::Substitute { hp }
-                    if e.host == jrpg_engine::battle::BattlerRef::PLAYER =>
+                    if e.host == dotzuki_engine::battle::BattlerRef::PLAYER =>
                 {
                     Some(*hp)
                 }
@@ -486,9 +486,9 @@ mod slice4_tests {
 
     /// Helper: does the ENEMY still have a Substitute volatile in the post-turn
     /// arena? (the engine equivalent of the legacy `HAS_SUBSTITUTE_UP` flag).
-    fn sub_up(effects: &[jrpg_engine::battle::stack::EffectState<crate::battle::stack_parity::PocData>]) -> bool {
+    fn sub_up(effects: &[dotzuki_engine::battle::stack::EffectState<crate::battle::stack_parity::PocData>]) -> bool {
         effects.iter().any(|e| {
-            e.host == jrpg_engine::battle::BattlerRef::OPPONENT
+            e.host == dotzuki_engine::battle::BattlerRef::OPPONENT
                 && matches!(e.kind, crate::battle::stack_parity::PocKind::Substitute { .. })
         })
     }

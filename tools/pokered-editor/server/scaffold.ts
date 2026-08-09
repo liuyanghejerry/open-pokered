@@ -1,5 +1,5 @@
 // ───────────────────────────────────────────────────────────────────────────
-// Project scaffolding — turns a template into a fresh jrpg-editor project.
+// Project scaffolding — turns a template into a fresh dotzuki-editor project.
 //
 // The create route (server/api/routes/project.ts) is a thin shell over this
 // module: it validates the request, resolves the target directory, then calls
@@ -8,7 +8,7 @@
 // name/description via ?lang=).
 //
 // A scaffolded project is pure editor content — no Rust workspace, no build
-// system: just .jrpg-editor.json + data/gfx folders and a starter scene.
+// system: just .dotzuki-editor.json + data/gfx folders and a starter scene.
 // ───────────────────────────────────────────────────────────────────────────
 import path from 'path'
 import fs from 'fs'
@@ -182,7 +182,7 @@ export const PROJECT_TEMPLATES: ProjectTemplate[] = [
 ]
 
 /**
- * Activity list written into `.jrpg-editor.json`. Scripts use the `.scene`
+ * Activity list written into `.dotzuki-editor.json`. Scripts use the `.scene`
  * Game DSL (the repo standard); the tiles activity backs the map editor's
  * tile library (Backdrop / Trace-to-map need it — see README).
  */
@@ -206,7 +206,7 @@ export function slugify(name: string): string {
 
 // A minimal scene so a fresh project has something openable on day one.
 const MAIN_SCENE = `// main.scene — your game's first scene, written in the jrpg Game DSL.
-// Scenes compile to JavaScript and run on the jrpg-engine runtime; ask the
+// Scenes compile to JavaScript and run on the dotzuki-engine runtime; ask the
 // in-editor AI assistant (✨) to sketch characters, quests and scenes for you.
 
 game_scene Main {
@@ -226,7 +226,7 @@ A JRPG project created with the JRPG Editor.
 
 ## Layout
 
-- \`.jrpg-editor.json\` — editor project config (activities, data roots)
+- \`.dotzuki-editor.json\` — editor project config (activities, data roots)
 - \`data/\` — game data: maps, data tables, the shared tile library
 - \`gfx/\` — graphics assets (tilesets, sprites)
 - \`assets/scenes/\` — Game DSL scene scripts (\`.scene\`)
@@ -239,7 +239,7 @@ start the editor with \`JRPG_PROJECT_ROOT=<this folder>\`.
 }
 
 export interface ScaffoldOptions {
-  /** Display name stored in .jrpg-editor.json. */
+  /** Display name stored in .dotzuki-editor.json. */
   name: string
   /** Template id — must match PROJECT_TEMPLATES. */
   templateId: string
@@ -264,7 +264,7 @@ export function scaffoldProject(targetDir: string, opts: ScaffoldOptions) {
   }
 
   fs.mkdirSync(targetDir, { recursive: true })
-  fs.writeFileSync(path.join(targetDir, '.jrpg-editor.json'), JSON.stringify(config, null, 2), 'utf-8')
+  fs.writeFileSync(path.join(targetDir, '.dotzuki-editor.json'), JSON.stringify(config, null, 2), 'utf-8')
 
   // Data tables (template-specific) + the shared maps/tile-library folders.
   for (const t of tpl.tables) {

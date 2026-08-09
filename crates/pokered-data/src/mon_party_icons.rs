@@ -9,7 +9,7 @@
 
 use crate::species::Species;
 
-pub use jrpg_engine::icon::IconKind;
+pub use dotzuki_engine::icon::IconKind;
 
 /// Lookup the icon for a given species.
 /// Species::None falls back to [`IconKind::Mon`].

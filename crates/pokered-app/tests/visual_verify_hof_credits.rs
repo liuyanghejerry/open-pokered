@@ -8,7 +8,7 @@
 //! Run with:
 //!   cargo test -p pokered-app --test visual_verify_hof_credits -- --nocapture
 
-use jrpg_engine::render_config::RenderConfig;
+use dotzuki_engine::render_config::RenderConfig;
 use pokered_app::render::{draw_credits, draw_hof_ceremony};
 use pokered_core::credits::{CreditsInput, CreditsPhase, CreditsState};
 use pokered_core::game_state::Lang;

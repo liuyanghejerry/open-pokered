@@ -11,7 +11,7 @@ use pokered_core::battle::state::{Pokemon, StatusCondition};
 use pokered_core::party_screen::PartyScreenState;
 use pokered_core::pokemon::stats::create_pokemon;
 use pokered_data::species::Species;
-use jrpg_engine::render_config::RenderConfig;
+use dotzuki_engine::render_config::RenderConfig;
 use pokered_renderer::{FrameBuffer, Rgba};
 
 fn save_frame(fb: &FrameBuffer, filename: &str) {

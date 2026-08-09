@@ -7,7 +7,7 @@
 
 use pokered_data::ui_layout::schema::DIALOG_DEFAULT_LAYOUT;
 use pokered_renderer::{FrameBuffer, Rgba};
-use jrpg_engine::render_config::RenderConfig;
+use dotzuki_engine::render_config::RenderConfig;
 use pokered_core::game_state::Lang;
 use pokered_ui::backends::FrameBufferPainter;
 use pokered_ui::{menus, Ui};
@@ -91,7 +91,7 @@ fn en_dialog_line_fills_box() {
     // the 5px Latin font (18 × 5px = 90px of a 144px interior). A 27-char
     // line (135px) must stay on one line and fill the box.
     let text = "What will CHARIZARD do now?";
-    assert_eq!(jrpg_renderer::embedded_font::measure_text(text), 135);
+    assert_eq!(dotzuki_renderer::embedded_font::measure_text(text), 135);
     let fb = render_dialog(text, Lang::En);
     // Ink must reach past the old 90px limit (tile 12) without crossing the
     // right border — proving the line wraps at the pixel width, not the

@@ -1,11 +1,11 @@
 use pokered_data::maps::MapId;
-use jrpg_engine_script::{CommandResult, ScriptCommand};
+use dotzuki_engine_script::{CommandResult, ScriptCommand};
 
 use super::npc_movement::NpcRuntimeState;
 use super::{BedroomDialogue, DialoguePage, Direction};
 use crate::naming_screen::NamingScreenState;
 
-pub use jrpg_engine_script::config::{CoordEventBinding, NpcBinding, SignBinding};
+pub use dotzuki_engine_script::config::{CoordEventBinding, NpcBinding, SignBinding};
 
 #[derive(Debug, Clone)]
 pub struct PendingChoice {
@@ -525,13 +525,13 @@ pub fn dispatch_command_with_names(
         | ScriptCommand::CheckFlag { .. } => ScriptEffect::Immediate {
             result: CommandResult::Void,
         },
-        // jrpg-engine UI/scene commands — not used by pokered, no-op.
+        // dotzuki-engine UI/scene commands — not used by pokered, no-op.
         ScriptCommand::ShowScene { .. }
         | ScriptCommand::HideScene { .. }
         | ScriptCommand::UpdateUI { .. } => ScriptEffect::Immediate {
             result: CommandResult::Void,
         },
-        // jrpg-runner battle weather — registered only by the jrpg runner's
+        // dotzuki-runner battle weather — registered only by the jrpg runner's
         // scene engine; never produced by pokered scripts. No-op.
         ScriptCommand::SetWeather { .. } => ScriptEffect::Immediate {
             result: CommandResult::Void,

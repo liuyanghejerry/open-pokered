@@ -68,7 +68,7 @@ async function createProject(body: unknown) {
 }
 
 function readConfig(target: string) {
-  return JSON.parse(fs.readFileSync(path.join(target, '.jrpg-editor.json'), 'utf-8'))
+  return JSON.parse(fs.readFileSync(path.join(target, '.dotzuki-editor.json'), 'utf-8'))
 }
 
 describe('POST /api/project/create', () => {
@@ -125,7 +125,7 @@ describe('POST /api/project/create', () => {
     const res = await createProject({ name: 'My Game', template: 'empty', dir: 'occupied' })
     expect(res.status).toBe(409)
     // The existing directory is left untouched.
-    expect(fs.existsSync(path.join(target, '.jrpg-editor.json'))).toBe(false)
+    expect(fs.existsSync(path.join(target, '.dotzuki-editor.json'))).toBe(false)
     expect(fs.existsSync(path.join(target, 'keep.txt'))).toBe(true)
   })
 
@@ -133,21 +133,21 @@ describe('POST /api/project/create', () => {
     fs.mkdirSync(path.join(ROOT, 'empty-dir'), { recursive: true })
     const res = await createProject({ name: 'My Game', template: 'empty', dir: 'empty-dir' })
     expect(res.status).toBe(200)
-    expect(fs.existsSync(path.join(ROOT, 'empty-dir', '.jrpg-editor.json'))).toBe(true)
+    expect(fs.existsSync(path.join(ROOT, 'empty-dir', '.dotzuki-editor.json'))).toBe(true)
   })
 
   it('accepts an absolute directory path (Electron folder picker)', async () => {
     const target = path.join(ROOT, 'abs-game')
     const res = await createProject({ name: 'Abs Game', template: 'empty', dir: target })
     expect(res.status).toBe(200)
-    expect(fs.existsSync(path.join(target, '.jrpg-editor.json'))).toBe(true)
+    expect(fs.existsSync(path.join(target, '.dotzuki-editor.json'))).toBe(true)
     expect(getProjectRoot()).toBe(target)
   })
 
   it('derives the directory from the game name when dir is omitted', async () => {
     const res = await createProject({ name: 'My Cool Game', template: 'empty' })
     expect(res.status).toBe(200)
-    expect(fs.existsSync(path.join(ROOT, 'my-cool-game', '.jrpg-editor.json'))).toBe(true)
+    expect(fs.existsSync(path.join(ROOT, 'my-cool-game', '.dotzuki-editor.json'))).toBe(true)
   })
 })
 

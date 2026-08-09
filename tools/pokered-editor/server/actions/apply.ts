@@ -7,7 +7,7 @@
 // client can offer Revert (re-apply `before`, or delete a freshly-created file).
 //
 // Beyond single-file targets, three PROJECT-level kinds are handled here:
-//   project-config   — overwrite `.jrpg-editor.json` (caches reset after write)
+//   project-config   — overwrite `.dotzuki-editor.json` (caches reset after write)
 //   project-scaffold — lay out a whole new project via scaffoldProject and
 //                      switch the editor root to it (revert deletes the new dir)
 //   map-create       — create a map directory via the shared createMap helper
@@ -102,7 +102,7 @@ function removeCreatedDir(abs: string, t: ChangeTarget): void {
   if (!fs.existsSync(abs)) return
   if (!fs.statSync(abs).isDirectory()) throw new Error('not a directory: ' + abs)
   const marker = t.kind === 'project-scaffold'
-    ? path.join(abs, '.jrpg-editor.json')
+    ? path.join(abs, '.dotzuki-editor.json')
     : path.join(abs, 'map.json')
   if (!fs.existsSync(marker)) throw new Error('refusing to delete: directory was not created by this proposal')
   if (t.kind === 'project-scaffold' && t.name) {

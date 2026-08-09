@@ -1,9 +1,9 @@
 //! Menu provider for Pokemon Red — bridges the [`MenuSystem`] abstraction
 //! with the concrete Pokemon menu screens.
 //!
-//! [`MenuSystem`]: jrpg_engine::menu::MenuSystem
+//! [`MenuSystem`]: dotzuki_engine::menu::MenuSystem
 
-use jrpg_engine::menu::{MenuLayout, MenuOption, MenuProvider};
+use dotzuki_engine::menu::{MenuLayout, MenuOption, MenuProvider};
 
 // ---------------------------------------------------------------------------
 // PokemonMenuId
@@ -181,7 +181,7 @@ impl MenuProvider for PokemonMenuProvider {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use jrpg_engine::menu::MenuSystem;
+    use dotzuki_engine::menu::MenuSystem;
 
     fn provider() -> PokemonMenuProvider {
         PokemonMenuProvider::new()
@@ -362,7 +362,7 @@ mod tests {
         assert!(sys.is_open());
         assert_eq!(sys.cursor, 0);
 
-        use jrpg_engine::menu::{MenuAction, MenuInput};
+        use dotzuki_engine::menu::{MenuAction, MenuInput};
         let action = sys.handle_input(&MenuInput {
             down: true,
             ..Default::default()
@@ -387,7 +387,7 @@ mod tests {
         let mut sys = MenuSystem::new(&p);
         sys.open(PokemonMenuId::Options);
 
-        use jrpg_engine::menu::{MenuAction, MenuInput};
+        use dotzuki_engine::menu::{MenuAction, MenuInput};
         let action = sys.handle_input(&MenuInput {
             confirm: true,
             ..Default::default()
@@ -401,7 +401,7 @@ mod tests {
         let mut sys = MenuSystem::new(&p);
         sys.open(PokemonMenuId::Save);
 
-        use jrpg_engine::menu::{MenuAction, MenuInput};
+        use dotzuki_engine::menu::{MenuAction, MenuInput};
         let action = sys.handle_input(&MenuInput {
             cancel: true,
             ..Default::default()
@@ -416,7 +416,7 @@ mod tests {
         let mut sys = MenuSystem::new(&p);
         sys.open(PokemonMenuId::Start);
 
-        use jrpg_engine::menu::MenuInput;
+        use dotzuki_engine::menu::MenuInput;
 
         let total = p.option_count(PokemonMenuId::Start);
         for i in 0..total {
@@ -441,7 +441,7 @@ mod tests {
         let mut sys = MenuSystem::new(&p);
         sys.open(PokemonMenuId::Start);
 
-        use jrpg_engine::menu::MenuInput;
+        use dotzuki_engine::menu::MenuInput;
 
         for _ in 0..3 {
             sys.handle_input(&MenuInput {

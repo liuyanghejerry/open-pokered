@@ -12,7 +12,7 @@ units with kinsoku rules (ASCII words and <PLACEHOLDERS> stay intact,
 closing punctuation never opens a line — it pulls one unit down to the next
 line so character order is preserved, consecutive closing runs like ……
 never split, opening brackets never close a line), mirroring
-`jrpg-ui/src/widgets/dialog.rs::wrap_lines`.
+`dotzuki-ui/src/widgets/dialog.rs::wrap_lines`.
 
 Invariant: the re-flow only *moves* `\n` — the character sequence of every
 `@t` argument is preserved modulo whitespace (a space at a wrap point
@@ -243,7 +243,7 @@ def merge_zh(p: str) -> str:
     vanishes (CJK needs no inter-word space); next to Latin it stands for a
     space — otherwise "TM23 3300\\nTM15" would fuse into "3300TM15", and a
     space trimmed at an earlier pass's wrap point would be lost for good.
-    Mirrors `cjk_units` in `jrpg-ui/src/widgets/dialog.rs`."""
+    Mirrors `cjk_units` in `dotzuki-ui/src/widgets/dialog.rs`."""
     out = []
     chars = list(p)
     for idx, ch in enumerate(chars):

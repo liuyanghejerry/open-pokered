@@ -4,25 +4,25 @@ version.workspace = true
 edition.workspace = true
 
 [features]
-embedded-scripts = ["jrpg-engine-script/embedded-scripts"]
+embedded-scripts = ["dotzuki-engine-script/embedded-scripts"]
 embedded-map-data = ["pokered-data/embedded-map-data"]
 # P1 battle migration: dev hot-reload of the pokered rules.ron (mirrors minimon's
 # dual-mode flag). OFF (default) ⇒ BAKED rules.ron (include_str!, zero file IO);
 # ON ⇒ read + watch rules.ron on disk, rebuild the registry between turns. Both
 # modes drive the SAME rules.ron. Additive; the production battle loop never reads
 # the RON — it stays the legacy oracle (P1 is strictly differential-harness-only).
-hot-reload = ["jrpg-rules/hot-reload"]
+hot-reload = ["dotzuki-rules/hot-reload"]
 
 [dependencies]
-jrpg-engine = { git = "ssh://git@github.com/liuyanghejerry/dotzuki.git", tag = "v0.1.0" }
+dotzuki-engine = { git = "ssh://git@github.com/liuyanghejerry/dotzuki.git", tag = "v0.2.0" }
 pokered-data = { path = "../pokered-data" }
-jrpg-engine-script = { git = "ssh://git@github.com/liuyanghejerry/dotzuki.git", tag = "v0.1.0" }
+dotzuki-engine-script = { git = "ssh://git@github.com/liuyanghejerry/dotzuki.git", tag = "v0.2.0" }
 # P1 battle migration: the game-agnostic no-code RON loader + dual-mode sourcing.
 # pokered-core authors a rules.ron for the bucket-A moves and a game binding; the
 # loader stays engine-only (no pokered types leak into it). Used by the additive
 # PokeredRules provider + the differential parity harness ONLY — the legacy
 # `apply_move_effect` dispatcher stays the production oracle (P1 is additive).
-jrpg-rules = { git = "ssh://git@github.com/liuyanghejerry/dotzuki.git", tag = "v0.1.0" }
+dotzuki-rules = { git = "ssh://git@github.com/liuyanghejerry/dotzuki.git", tag = "v0.2.0" }
 serde = { workspace = true }
 thiserror = { workspace = true }
 rand = { workspace = true }

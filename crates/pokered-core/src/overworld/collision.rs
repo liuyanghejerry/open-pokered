@@ -1,6 +1,6 @@
-use jrpg_engine::overworld::collision::CollisionProvider as CollisionProviderTrait;
-use jrpg_engine::overworld::types::Direction;
-use jrpg_engine::tileset::TilesetTrait;
+use dotzuki_engine::overworld::collision::CollisionProvider as CollisionProviderTrait;
+use dotzuki_engine::overworld::types::Direction;
+use dotzuki_engine::tileset::TilesetTrait;
 use pokered_data::blockset_data;
 use pokered_data::collision as pokered_collision;
 use pokered_data::map_connections::get_map_connections;
@@ -9,7 +9,7 @@ use pokered_data::maps::MapId;
 use pokered_data::tileset_data;
 use pokered_data::tilesets::TilesetId;
 
-pub use jrpg_engine::overworld::collision::{
+pub use dotzuki_engine::overworld::collision::{
     check_movement_collision, check_sprite_collision, check_warp_at_position,
     direction_to_pad_input, direction_to_sprite_facing, get_block_at, get_target_coords,
     is_facing_map_edge, CollisionProvider, CollisionResult, SpritePosition, PAD_DOWN, PAD_LEFT,
@@ -23,7 +23,7 @@ pub struct PokemonCollisionProvider {
     is_ssanne_bow: bool,
 }
 
-/// Match `jrpg_engine::overworld::map_transitions::apply_offset`: arrival
+/// Match `dotzuki_engine::overworld::map_transitions::apply_offset`: arrival
 /// coordinates on the connected map are shifted by `-2 * offset` (the offset
 /// is in blocks, clamped at 0).
 fn apply_connection_offset(coord: u16, offset: i8) -> u16 {
@@ -209,7 +209,7 @@ impl CollisionProviderTrait<TilesetId> for PokemonCollisionProvider {
 mod tests {
     use super::*;
     use crate::overworld::screen::MapData;
-    use jrpg_engine::overworld::types::MapConnections;
+    use dotzuki_engine::overworld::types::MapConnections;
     use pokered_data::music::MusicId;
 
     /// The sub-tile that `get_tile_at_position` reads for sub_x=sub_y=0 is

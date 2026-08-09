@@ -1,5 +1,5 @@
 //! Bridge from pokered's trainer-AI move scorer to the engine's generic
-//! [`BattleAiProvider`] / [`BattleAi`](jrpg_engine::battle::BattleAi) loop (P0c).
+//! [`BattleAiProvider`] / [`BattleAi`](dotzuki_engine::battle::BattleAi) loop (P0c).
 //!
 //! The engine owns the AI *decision loop scaffold* (enumerate legal actions →
 //! ask the game to score → pick best with an injected tie-break RNG). All Gen-1
@@ -25,12 +25,12 @@
 //! [`choose_moves`] flags (its minimum-score winners). So every candidate gets
 //! an **equal score** here; the engine's `BattleAi::choose` then sees a tie and
 //! draws one value from the RNG to pick — and because pokered's
-//! [`ScriptedRng`](jrpg_engine::battle::rng::ScriptedRng)-style `range(n)` is
+//! [`ScriptedRng`](dotzuki_engine::battle::rng::ScriptedRng)-style `range(n)` is
 //! `rand_val % n` for `n <= 256`, that reproduces `pick_move(rand_val)` exactly
 //! (same candidate order, same modulo). Non-candidate / no-PP moves are not
 //! enumerated, mirroring `pick_move` skipping them.
 
-use jrpg_engine::battle::{
+use dotzuki_engine::battle::{
     BattleAction, BattleAiProvider, BattleProvider, BattleRng, BattleState, BattlerRef,
     BattlerState as EngineBattlerState, DamageResult, EffectResult, EnumMap, MoveEffect,
 };
@@ -49,7 +49,7 @@ use crate::battle::state::BattlerState;
 /// trainer-class modification `layers`, so the per-turn context the original AI
 /// consumes travels with the provider.
 ///
-/// [`BattleAi::choose`]: jrpg_engine::battle::BattleAi::choose
+/// [`BattleAi::choose`]: dotzuki_engine::battle::BattleAi::choose
 #[derive(Debug, Clone)]
 pub struct TrainerAiProvider {
     enemy: BattlerState,
@@ -187,8 +187,8 @@ impl BattleAiProvider for TrainerAiProvider {
 mod tests {
     use super::*;
     use crate::battle::state::{new_battler_state, BattlerState, Pokemon, StatusCondition};
-    use jrpg_engine::battle::rng::ScriptedRng;
-    use jrpg_engine::battle::BattleAi;
+    use dotzuki_engine::battle::rng::ScriptedRng;
+    use dotzuki_engine::battle::BattleAi;
     use pokered_data::types::PokemonType;
 
     fn make_mon(moves: [MoveId; 4]) -> Pokemon {

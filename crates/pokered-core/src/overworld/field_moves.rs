@@ -14,8 +14,8 @@
 //! The pure gating logic lives in [`super::hm_effects`] (unit-tested); this
 //! module wires it to the live [`OverworldScreen`].
 
-use jrpg_engine::overworld::types::TransportMode;
-use jrpg_engine::GameData;
+use dotzuki_engine::overworld::types::TransportMode;
+use dotzuki_engine::GameData;
 use pokered_data::event_flags::EventFlag;
 use pokered_data::items::ItemId;
 use pokered_data::maps::MapId;

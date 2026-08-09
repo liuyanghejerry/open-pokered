@@ -4,7 +4,7 @@ import { fileURLToPath } from 'url'
 import { setProjectRoot } from '../context/projectContext'
 
 // pokered-editor adaptation: default to the workspace root (where the pokered
-// project's .jrpg-editor.json lives) instead of process.cwd(). Under Vite 8
+// project's .dotzuki-editor.json lives) instead of process.cwd(). Under Vite 8
 // (rolldown) and vitest, `import.meta.url` is each module's real file URL — for
 // this file that is pokered-editor/server/api — so the workspace root is four
 // levels up. JRPG_PROJECT_ROOT still overrides. (import.meta.url rather than
@@ -48,12 +48,12 @@ export function resetConfigCache(): void {
   cachedConfig = null
 }
 
-export function configFile() { return path.join(projectRoot, '.jrpg-editor.json') }
+export function configFile() { return path.join(projectRoot, '.dotzuki-editor.json') }
 
 export function loadConfig(): ProjectConfig {
   if (cachedConfig) return cachedConfig
     if (!fs.existsSync(configFile())) {
-    throw new Error(`No .jrpg-editor.json found in ${projectRoot}. Run 'jrpg-editor init' first.`)
+    throw new Error(`No .dotzuki-editor.json found in ${projectRoot}. Run 'dotzuki-editor init' first.`)
   }
   cachedConfig = JSON.parse(fs.readFileSync(configFile(), 'utf-8'))
   return cachedConfig!

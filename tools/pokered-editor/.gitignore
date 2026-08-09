@@ -14,7 +14,7 @@ release
 dist-ssr
 *.local
 
-# Electron build outputs (aligned with jrpg-editor/.gitignore)
+# Electron build outputs (aligned with dotzuki-editor/.gitignore)
 dist-electron/
 release/
 

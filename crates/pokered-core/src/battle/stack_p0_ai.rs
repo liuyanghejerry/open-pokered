@@ -41,7 +41,7 @@ mod p0_ai_tests {
     };
 
     use crate::battle::state::StatusCondition as LegacyStatus;
-    use jrpg_engine::battle::rng::ScriptedRng;
+    use dotzuki_engine::battle::rng::ScriptedRng;
     use pokered_data::moves::MoveId;
     use pokered_data::trainer_data::TrainerClass;
 
@@ -387,14 +387,14 @@ mod p0_ai_tests {
         // raw speed) moves FIRST on both paths.
         let first = first_mover_ai_pub(&s, MoveId::QuickAttack);
         assert!(
-            matches!(first, jrpg_engine::battle::stack::FirstMover::Opponent),
+            matches!(first, dotzuki_engine::battle::stack::FirstMover::Opponent),
             "QuickAttack pick must make the slower enemy move first"
         );
         // Cross-check: if the AI had picked slot 0 (Thundershock, priority 0), the
         // faster player would move first — proving the AI byte changes the outcome.
         let first0 = first_mover_ai_pub(&s, MoveId::Thundershock);
         assert!(
-            matches!(first0, jrpg_engine::battle::stack::FirstMover::Player),
+            matches!(first0, dotzuki_engine::battle::stack::FirstMover::Player),
             "Thundershock pick would keep the faster player first"
         );
     }

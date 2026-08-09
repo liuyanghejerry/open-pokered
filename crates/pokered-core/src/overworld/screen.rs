@@ -3,18 +3,18 @@
 //!
 //! The game-loop (`update_frame`) and its helpers live in `update.rs`.
 
-use jrpg_engine::overworld::map_transitions::{
+use dotzuki_engine::overworld::map_transitions::{
     ConnectionTransition as EngineConnectionTransition,
 };
-use jrpg_engine::overworld::{
+use dotzuki_engine::overworld::{
     MapData as EngineMapData, OverworldState as EngineOverworldState,
     Direction, MovementState, NpcDefinition,
 };
-use jrpg_engine::overworld::types::TransportMode;
-use jrpg_engine::trigger_manager::TriggerManager;
-use jrpg_engine::GameData;
-use jrpg_engine::overworld::collision::CollisionProvider;
-use jrpg_engine_script::{CutsceneManager, MapScriptConfig, ScriptEngine, ScriptLoader};
+use dotzuki_engine::overworld::types::TransportMode;
+use dotzuki_engine::trigger_manager::TriggerManager;
+use dotzuki_engine::GameData;
+use dotzuki_engine::overworld::collision::CollisionProvider;
+use dotzuki_engine_script::{CutsceneManager, MapScriptConfig, ScriptEngine, ScriptLoader};
 use pokered_data::map_flags::is_city_map;
 use pokered_data::maps::MapId;
 use pokered_data::music::MusicId;
@@ -27,7 +27,7 @@ use super::forced_bike;
 use super::hm_effects;
 
 // Re-export engine types for submodules and tests.
-pub use jrpg_engine::overworld::{
+pub use dotzuki_engine::overworld::{
     MapConnection, MapConnections, NpcMovementType, Sign, WarpPoint,
 };
 

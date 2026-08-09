@@ -10,10 +10,10 @@
 // The renderer stays a locked-down web view (contextIsolation on, no node): it
 // only ever talks to the local HTTP server, exactly like the browser build.
 //
-// Unlike jrpg-editor this is a SINGLE-PROJECT editor: there is no create-a-
+// Unlike dotzuki-editor this is a SINGLE-PROJECT editor: there is no create-a-
 // project wizard. File → Open Repo Folder… switches the API (and every data
 // route) to another pokered checkout via POST /api/project/open; a folder
-// without .jrpg-editor.json is simply rejected, never scaffolded.
+// without .dotzuki-editor.json is simply rejected, never scaffolded.
 // ──────────────────────────────────────────────────────────────────────────
 const { app, BrowserWindow, ipcMain, dialog, Menu, shell } = require('electron')
 const path = require('node:path')
@@ -26,7 +26,7 @@ const isDev =
   (process.env.ELECTRON_DEV === '1' || !app.isPackaged)
 const EDITOR_ROOT = path.resolve(__dirname, '..')
 
-// The WASM layout-preview pkg lives in the repo (crates/jrpg-web/pkg) in dev and
+// The WASM layout-preview pkg lives in the repo (crates/dotzuki-web/pkg) in dev and
 // preview, but a packaged app has no repo — it ships the pkg as an extraResource
 // (Resources/wasm-pkg). Point the /wasm route there. Unpackaged runs leave this
 // unset so the route falls back to the in-repo path.
@@ -45,7 +45,7 @@ async function startProdServer() {
   const serverPath = path.join(EDITOR_ROOT, 'dist-electron', 'api-server.mjs')
   const { startApiServer } = await import(pathToFileURL(serverPath).href)
   // pokered-editor edits one repo: default to the workspace root two levels
-  // above this package (where .jrpg-editor.json lives); JRPG_PROJECT_ROOT
+  // above this package (where .dotzuki-editor.json lives); JRPG_PROJECT_ROOT
   // overrides, and File → Open Repo Folder… re-roots at runtime.
   const projectRoot = process.env.JRPG_PROJECT_ROOT || path.resolve(EDITOR_ROOT, '..', '..')
   apiServer = await startApiServer({
@@ -91,7 +91,7 @@ async function openProjectDialog() {
   const target = win ?? BrowserWindow.getFocusedWindow()
   const result = await dialog.showOpenDialog(target ?? undefined, {
     title: 'Open pokered repo',
-    message: 'Choose the pokered workspace root (the folder containing .jrpg-editor.json)',
+    message: 'Choose the pokered workspace root (the folder containing .dotzuki-editor.json)',
     properties: ['openDirectory'],
   })
   if (result.canceled || !result.filePaths[0]) return { ok: false }
@@ -110,7 +110,7 @@ async function openProjectDialog() {
       await dialog.showMessageBox(target ?? undefined, {
         type: 'error',
         title: 'Could not open repo',
-        message: data.error || `No .jrpg-editor.json found in ${dir}`,
+        message: data.error || `No .dotzuki-editor.json found in ${dir}`,
       })
       return { ok: false, error: data.error }
     }

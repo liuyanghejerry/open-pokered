@@ -12,16 +12,16 @@
 //! edge (`Trade_SlideTextBoxOffScreen`).
 //!
 //! The ball poof/drop/shake/tilt frames are rendered from the shared
-//! battle-animation data (`jrpg_renderer::battle_anim::SUBANIM_DATA` 0x48-0x4B
+//! battle-animation data (`dotzuki_renderer::battle_anim::SUBANIM_DATA` 0x48-0x4B
 //! + the move-anim tileset) — the same frame blocks the original's
 //! `Trade_ShowAnimation` plays. `gfx/trade/` assets (game_boy, cable_ball) are
 //! used when present; simple shapes stand in otherwise (e.g. missing embedded
 //! assets on wasm).
 
-use jrpg_renderer::battle_anim::{
+use dotzuki_renderer::battle_anim::{
     AnimationPlayer, SubAnimTransform, ANIM_BASE_TILE_ID, SUBANIM_DATA,
 };
-use jrpg_renderer::sprite::SpriteLayer;
+use dotzuki_renderer::sprite::SpriteLayer;
 use pokered_core::game_state::Lang;
 use pokered_core::trade::{TradeAnim, TradeBallSubAnim, TRADE_CABLE_Y};
 use pokered_data::ui_layout::schema::DIALOG_DEFAULT_LAYOUT;
@@ -236,7 +236,7 @@ fn draw_ball(resources: &mut Option<ResourceManager>, bx: i32, by: i32, fb: &mut
 #[cfg(test)]
 mod tests {
     use super::*;
-    use jrpg_engine::render_config::RenderConfig;
+    use dotzuki_engine::render_config::RenderConfig;
     use pokered_core::trade::TradeAnimPhase;
     use pokered_data::species::Species;
     use pokered_renderer::resource::{AssetRoot, ResourceManager};

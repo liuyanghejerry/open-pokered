@@ -3,8 +3,8 @@
 //! Covers the full bridge: compiled `.gui` JSON → `v2::parse_screen`
 //! (load-time schema validation) → `v2::render_screen` (registry dispatch).
 
-use jrpg_renderer::layout_engine::deserialize::parse_layout;
-use jrpg_renderer::layout_engine::types::LayoutElement;
+use dotzuki_renderer::layout_engine::deserialize::parse_layout;
+use dotzuki_renderer::layout_engine::types::LayoutElement;
 use pokered_ui::custom_elements::element_registry;
 use pokered_ui::v2::{self, DataContext};
 use pokered_ui::{Painter, Rgba, TilePos, TileRect};
@@ -97,7 +97,7 @@ fn find_custom(el: &LayoutElement, found: &mut Vec<String>) {
     if el.element_type.starts_with("custom:") {
         found.push(el.element_type.clone());
     }
-    use jrpg_renderer::layout_engine::types::ElementParams;
+    use dotzuki_renderer::layout_engine::types::ElementParams;
     match &el.params {
         ElementParams::Group(g) => g.children.iter().for_each(|c| find_custom(c, found)),
         ElementParams::Border(b) => b.children.iter().for_each(|c| find_custom(c, found)),

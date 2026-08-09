@@ -165,12 +165,12 @@ export function proposeToolImpls(ctx: ActionContext, cs: ChangeSet) {
       if (norm.error) return 'ERROR: ' + norm.error
       const parsed = JSON.parse(norm.text)
       if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed) || !Array.isArray(parsed.activities)) {
-        return 'ERROR: config must be a JSON object with an `activities` array (the COMPLETE new .jrpg-editor.json)'
+        return 'ERROR: config must be a JSON object with an `activities` array (the COMPLETE new .dotzuki-editor.json)'
       }
       const file = p.configFile()
       const before = fs.existsSync(file) ? fs.readFileSync(file, 'utf-8') : null
       const after = JSON.stringify(parsed, null, 2)
-      const pr = cs.add({ target: { kind: 'project-config', path: '.jrpg-editor.json' }, title: `${before ? 'Edit' : 'Create'} project config (.jrpg-editor.json)`, rationale, before, after })
+      const pr = cs.add({ target: { kind: 'project-config', path: '.dotzuki-editor.json' }, title: `${before ? 'Edit' : 'Create'} project config (.dotzuki-editor.json)`, rationale, before, after })
       emit(pr); return { ok: true, proposalId: pr.id }
     },
     propose_map_create: async ({ name, rationale }: { name: string; rationale?: string }) => {
@@ -313,7 +313,7 @@ export async function buildProposeTools(ctx: ActionContext, cs: ChangeSet): Prom
     }),
     draft_project_scaffold: scaffoldTool(tool, z, impl, note),
     propose_project_config: tool({
-      description: 'Propose replacing the project config `.jrpg-editor.json`. `config` = the COMPLETE new config as a JSON string: { name: string, dataRoot: string (e.g. "./data"), gfxRoot?: string (e.g. "./gfx"), activities: [{ id, type, label?, icon?, enabled?, config }] }. Preserve unrelated fields from the current config (read it first with read_file).' + note,
+      description: 'Propose replacing the project config `.dotzuki-editor.json`. `config` = the COMPLETE new config as a JSON string: { name: string, dataRoot: string (e.g. "./data"), gfxRoot?: string (e.g. "./gfx"), activities: [{ id, type, label?, icon?, enabled?, config }] }. Preserve unrelated fields from the current config (read it first with read_file).' + note,
       inputSchema: z.object({ config: z.string(), rationale: z.string().optional() }),
       execute: impl.propose_project_config,
     }),
@@ -332,7 +332,7 @@ export async function buildProposeTools(ctx: ActionContext, cs: ChangeSet): Prom
 /** Shared draft_project_scaffold tool definition (in-project + creation mode). */
 function scaffoldTool(tool: any, z: any, impl: ReturnType<typeof proposeToolImpls>, note: string) {
   return tool({
-    description: 'Draft scaffolding a NEW jrpg-editor project (used in creation mode when no project is open, or to spin up a sibling project). `name` = display name, `dir` = folder slug (lowercase letters/digits/dashes; derived from the name when omitted) or absolute path, `templateId` = one of "empty" | "wuxia" | "jrpg", `summary` = a short rationale for the review card. The result is pure editor content: .jrpg-editor.json + data/ (maps, tables, tiles) + gfx/ + assets/scenes/main.scene — no Rust workspace, no build step.' + note,
+    description: 'Draft scaffolding a NEW dotzuki-editor project (used in creation mode when no project is open, or to spin up a sibling project). `name` = display name, `dir` = folder slug (lowercase letters/digits/dashes; derived from the name when omitted) or absolute path, `templateId` = one of "empty" | "wuxia" | "jrpg", `summary` = a short rationale for the review card. The result is pure editor content: .dotzuki-editor.json + data/ (maps, tables, tiles) + gfx/ + assets/scenes/main.scene — no Rust workspace, no build step.' + note,
     inputSchema: z.object({
       name: z.string(),
       dir: z.string().optional(),

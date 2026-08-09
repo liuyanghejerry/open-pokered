@@ -14,9 +14,9 @@
 //! the committed `onLoad` equals the compiled `<Scene>OnLoad` export. All other
 //! binding data must match exactly.
 
-use jrpg_engine_dsl::compiler::compile_scene_to_js;
-use jrpg_engine_dsl::config_gen::{compile_scene_to_config, normalize_config};
-use jrpg_engine_dsl::{ast, lexer, parser};
+use dotzuki_engine_dsl::compiler::compile_scene_to_js;
+use dotzuki_engine_dsl::config_gen::{compile_scene_to_config, normalize_config};
+use dotzuki_engine_dsl::{ast, lexer, parser};
 use serde_json::Value;
 use std::path::PathBuf;
 

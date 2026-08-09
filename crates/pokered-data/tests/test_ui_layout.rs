@@ -107,7 +107,7 @@ mod serde_tests {
                 }
             } else {
                 // v2 documents (gui-only screens) use the layout-engine
-                // element schema, which lives in jrpg-renderer — just check
+                // element schema, which lives in dotzuki-renderer — just check
                 // the structural shape here.
                 assert!(
                     val.get("elements").and_then(|v| v.as_array()).is_some_and(|a| !a.is_empty()),

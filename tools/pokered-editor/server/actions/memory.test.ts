@@ -61,7 +61,7 @@ describe('appendMemory', () => {
     const { home, root, proj } = fresh()
     const r = appendMemory(proj, 'project', 'uses pinyin ids', home)
     expect(r.scope).toBe('project')
-    expect(r.file).toBe(path.join(root, '.jrpg-editor.memory.md'))
+    expect(r.file).toBe(path.join(root, '.dotzuki-editor.memory.md'))
     expect(fs.readFileSync(r.file, 'utf-8')).toMatch(/^- \[\d{4}-\d{2}-\d{2}\] uses pinyin ids\n$/)
   })
 

@@ -180,8 +180,8 @@ mod engine_parity_tests {
     use crate::battle::state::{
         new_battle_state, BattleType, Pokemon, StatusCondition as CoreStatus,
     };
-    use jrpg_engine::battle::rng::ScriptedRng;
-    use jrpg_engine::battle::{
+    use dotzuki_engine::battle::rng::ScriptedRng;
+    use dotzuki_engine::battle::{
         BattleAction, BattleProvider, BattleState as EngineState,
         BattlerState as EngineBattler, BattlerRef, EnumMap, OrderKey,
     };

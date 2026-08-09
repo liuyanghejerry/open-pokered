@@ -1,9 +1,9 @@
 // ───────────────────────────────────────────────────────────────────────────
 // ProjectContext — the editor-agent framework's read/retrieval layer.
 //
-// One module that knows how to read a jrpg-engine project (stories, scenes,
+// One module that knows how to read a dotzuki-engine project (stories, scenes,
 // flags, data tables, gui, maps, the DSL guide) entirely from its
-// `.jrpg-editor.json` config — no game-specific knowledge. It generalizes the
+// `.dotzuki-editor.json` config — no game-specific knowledge. It generalizes the
 // helpers that were previously closures inside vite.config.ts
 // (storiesRoot / readStoryRecord / scanFlags / listScenes / assembleAiContext)
 // so every AI action (refine-character, generate-scene, the chat assistant, …)
@@ -94,7 +94,7 @@ export interface AssembleContextOptions {
 const SCENE_DEFAULT_DIR = 'maps'
 
 /**
- * A read/retrieval view over one jrpg-engine project. Construct with
+ * A read/retrieval view over one dotzuki-engine project. Construct with
  * `createProjectContext(root)`; use `getProjectContext()` for the default
  * (env / cwd) project shared across the dev server.
  */
@@ -109,21 +109,21 @@ export class ProjectContext {
   // ── Config & roots ────────────────────────────────────────────────────────
 
   configFile(): string {
-    return path.join(this.root, '.jrpg-editor.json')
+    return path.join(this.root, '.dotzuki-editor.json')
   }
 
-  /** Loaded `.jrpg-editor.json` (cached). Throws if missing — same as the server. */
+  /** Loaded `.dotzuki-editor.json` (cached). Throws if missing — same as the server. */
   config(): ProjectConfig {
     if (this._config) return this._config
     const file = this.configFile()
     if (!fs.existsSync(file)) {
-      throw new Error(`No .jrpg-editor.json found in ${this.root}. Run 'jrpg-editor init' first.`)
+      throw new Error(`No .dotzuki-editor.json found in ${this.root}. Run 'dotzuki-editor init' first.`)
     }
     this._config = JSON.parse(fs.readFileSync(file, 'utf-8')) as ProjectConfig
     return this._config
   }
 
-  /** Drop the cached config so the next config() re-reads `.jrpg-editor.json`. */
+  /** Drop the cached config so the next config() re-reads `.dotzuki-editor.json`. */
   resetConfigCache(): void {
     this._config = null
   }

@@ -18,14 +18,14 @@ struct QuittableGame {
     quit: Arc<AtomicBool>,
 }
 
-impl jrpg_tui::TuiGame for QuittableGame {
+impl dotzuki_tui::TuiGame for QuittableGame {
     type Button = GbButton;
 
-    fn update(&mut self, input: &jrpg_tui::InputState<Self::Button>) {
+    fn update(&mut self, input: &dotzuki_tui::InputState<Self::Button>) {
         self.game.update(input);
     }
 
-    fn draw(&mut self, fb: &mut jrpg_renderer::FrameBuffer) {
+    fn draw(&mut self, fb: &mut dotzuki_renderer::FrameBuffer) {
         self.game.draw(fb);
     }
 
@@ -57,7 +57,7 @@ fn main() -> anyhow::Result<()> {
         quit: Arc::clone(&quit),
     };
 
-    jrpg_tui::run(
+    dotzuki_tui::run(
         &mut wrapped,
         {
             let q = Arc::clone(&quit);

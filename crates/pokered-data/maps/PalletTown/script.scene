@@ -1,5 +1,5 @@
 // PalletTown — Pallet Town map script, hand-refactored from script.js
-// to jrpg-engine-dsl.
+// to dotzuki-engine-dsl.
 //
 // The original used helper functions (palletTownOakWalksToPlayer,
 // palletTownOakNotSafe, etc.) and member access (pos.x, pos.y from

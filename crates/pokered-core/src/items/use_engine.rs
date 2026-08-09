@@ -2,13 +2,13 @@
 //! item-effect + bag/shop driver.
 //!
 //! This module implements the engine traits
-//! [`jrpg_engine::items::ItemProvider`] (the opaque `apply_effect` / `usable_in`
-//! hooks) and [`jrpg_engine::items::ShopProvider`] (buy/sell pricing) for
+//! [`dotzuki_engine::items::ItemProvider`] (the opaque `apply_effect` / `usable_in`
+//! hooks) and [`dotzuki_engine::items::ShopProvider`] (buy/sell pricing) for
 //! pokered's [`ItemId`], delegating to the *existing* pokered effect functions
 //! in [`crate::items`]`::{healing, status_cure, pp_restore, vitamins}` and the
 //! shop math in [`crate::items::shop`]. The Gen-1 numbers and quirks stay in
 //! those modules; this adapter only wires them to the engine's control-flow
-//! driver so the generic [`jrpg_engine::items::use_item`] / `buy` / `sell`
+//! driver so the generic [`dotzuki_engine::items::use_item`] / `buy` / `sell`
 //! drivers become usable from pokered.
 //!
 //! **Staging.** Production call sites are **not** swapped to the engine drivers
@@ -18,7 +18,7 @@
 //! swap for a follow-up.
 //!
 //! The opaque `apply_effect` operates on the engine
-//! [`MonsterInstance`](jrpg_engine::party::MonsterInstance) for the
+//! [`MonsterInstance`](dotzuki_engine::party::MonsterInstance) for the
 //! generically-expressible **status cure**, which it reproduces exactly for
 //! every status [`use_status_cure`] handles (Poison/Burn/Freeze/Sleep/Paralysis
 //! single-cures and the Full Heal cure-all). HP healing, PP restore, vitamins,
@@ -39,9 +39,9 @@ use crate::items::pp_restore::{use_pp_restore, PpRestoreResult};
 use crate::items::shop;
 use crate::items::status_cure::{use_status_cure, StatusCureResult};
 use crate::items::vitamins::{use_rare_candy, use_vitamin, VitaminResult};
-use jrpg_engine::battle::rng::BattleRng;
-use jrpg_engine::items::{ItemKind, ItemProvider, ItemResult, ItemUseResult, ShopProvider, UsageContext};
-use jrpg_engine::party::{MonsterInstance, MonsterProvider, MonsterStatus};
+use dotzuki_engine::battle::rng::BattleRng;
+use dotzuki_engine::items::{ItemKind, ItemProvider, ItemResult, ItemUseResult, ShopProvider, UsageContext};
+use dotzuki_engine::party::{MonsterInstance, MonsterProvider, MonsterStatus};
 use pokered_data::item_data::get_item_data;
 use pokered_data::items::ItemId;
 
@@ -302,7 +302,7 @@ impl ShopProvider for PokeShopProvider {
 mod tests {
     use super::*;
     use crate::pokemon::engine_adapter::PokeredMonsters;
-    use jrpg_engine::items::{buy, sell, use_item, Inventory};
+    use dotzuki_engine::items::{buy, sell, use_item, Inventory};
     use pokered_data::items::ItemId;
 
     struct ZeroRng;

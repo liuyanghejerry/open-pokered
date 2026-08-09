@@ -1,4 +1,4 @@
-use jrpg_engine_dsl::compiler::compile_scene_to_js;
+use dotzuki_engine_dsl::compiler::compile_scene_to_js;
 use std::collections::HashMap;
 use std::fs;
 use std::path::{Path, PathBuf};
