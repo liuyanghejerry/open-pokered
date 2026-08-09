@@ -15,7 +15,7 @@ The original RGBDS assembly disassembly has been **removed**. `ANALYSIS.md` at t
 The Cargo workspace root is the **repo root**. Run every `cargo` command from there:
 
 ```bash
-cd /path/to/pokered-standalone
+cd /path/to/open-pokered
 ```
 
 The repo layout:
