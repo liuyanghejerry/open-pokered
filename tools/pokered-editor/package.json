@@ -10,7 +10,7 @@
     "build": "vue-tsc -b && vite build",
     "preview": "vite preview",
     "test": "vitest run",
-    "build:wasm": "sh -c 'if [ -d ../../crates/jrpg-web ]; then cd ../../crates/jrpg-web && wasm-pack build --target web --out-dir pkg --dev; else echo \"jrpg-web (engine crate) not in this repo — supply its pkg via JRPG_WASM_ROOT or a checkout\"; fi'",
+    "build:wasm": "cd ../../crates/pokered-layout-preview && wasm-pack build --target web --out-dir pkg --dev",
     "build:wasm-pokered": "cd ../../crates/pokered-runner-web && wasm-pack build --target web --out-dir pkg --dev",
     "build:renderer": "vite build",
     "build:server": "node electron/build-server.mjs",

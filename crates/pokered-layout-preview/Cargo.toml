@@ -1,0 +1,18 @@
+[package]
+name = "pokered-layout-preview"
+version.workspace = true
+edition.workspace = true
+
+# rlib is included alongside cdylib so the crate can be checked/tested natively
+# (`cargo test -p pokered-layout-preview`); wasm-pack still consumes the cdylib.
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+jrpg-renderer = { git = "file:///Users/liuyanghe02/develop/pokered-worktree-2", tag = "v0.1.0" }
+jrpg-engine = { git = "file:///Users/liuyanghe02/develop/pokered-worktree-2", tag = "v0.1.0" }
+jrpg-ui = { git = "file:///Users/liuyanghe02/develop/pokered-worktree-2", tag = "v0.1.0" }
+jrpg-engine-dsl = { git = "file:///Users/liuyanghe02/develop/pokered-worktree-2", tag = "v0.1.0" }
+wasm-bindgen = "0.2"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
