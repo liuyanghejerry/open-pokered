@@ -6,7 +6,7 @@
 ## 背景与目标
 
 对照原版 worktree(`/Users/liuyanghe02/develop/pokered-worktree`,224 个 asm 脚本),
-复刻版(`workspace/examples/pokered/crates/pokered-data/maps/`,248 个场景)地图已全覆盖,
+复刻版(`crates/pokered-data/maps/`,248 个场景)地图已全覆盖,
 但存在约 101 条 TODO/STUB 分布在 53 个地图中,以及若干纯内容缺失(占位对话)。
 
 目标:逐阶段核实并补全,使剧情内容与原版对齐。

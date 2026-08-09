@@ -611,8 +611,8 @@ fn write_encounter_table_indented<W: Write>(out: &mut W, field: &str, table: Opt
 fn generate_custom_tilesets(manifest_dir: &Path, out_dir: &str) {
     let extras_path = manifest_dir.join("tileset_extras.json");
     let overrides_path = manifest_dir.join("tileset_passable_overrides.json");
-    // Editor places cloned .bst/.png under the pokered example's `gfx/`
-    // (examples/pokered/gfx); this crate is at examples/pokered/crates/pokered-data.
+    // Editor places cloned .bst/.png under the repo-root `gfx/`;
+    // this crate is at crates/pokered-data.
     let gfx_dir = manifest_dir.join("../../gfx");
 
     println!("cargo:rerun-if-changed={}", extras_path.display());

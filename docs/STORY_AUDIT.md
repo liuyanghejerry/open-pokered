@@ -1,7 +1,7 @@
 # Story Completion Audit — Rust rewrite vs. original Red disassembly
 
 **Baseline:** `pokered-worktree` (branch `pure-red`, pret/pokered disassembly)
-**Target:** `workspace/examples/pokered/crates/pokered-data/maps/*/script.scene`
+**Target:** `crates/pokered-data/maps/*/script.scene`
 **Method:** 223 maps (every Rust map with an original `scripts/<Map>.asm` counterpart) diffed
 against the original `scripts/*.asm` + `text/*.asm` by 16 parallel agents.
 **Excluded:** 26 maps with no original counterpart — `*Copy` duplicates, `UnusedMap*`

@@ -23,31 +23,30 @@ The repo layout:
 ```
 Cargo.toml                 # Workspace root (members: pokered crates + scene_apply bin)
 crates/
+├── pokered-data/          # All static data; maps/<MapName>/ holds map.json, map.blk,
+│                          #   script.scene (+ script_config.json), ui_layouts/*.gui
+├── pokered-core/          # Pure game logic, NO I/O (battle/, overworld/, events/,
+│                          #   items/, pokemon/, save/, link/, slots/, screen state
+│                          #   machines: title, oak_speech, main_menu, naming_screen…)
+├── pokered-renderer/      # 160×144 framebuffer rendering, battle anims, fonts
+├── pokered-ui/            # UI engine + menus (pluggable Painter backends)
+├── pokered-audio/         # Game Boy APU emulation (4 channels), sequencer, SFX
+├── pokered-app/           # ★ The native binary `pokered-app` + debug CLI
+├── pokered-tui/           # Terminal UI frontend (same pokered-ui code)
+├── pokered-ui-preview/    # WASM shim for pokered-editor WYSIWYG layout preview
+├── pokered-layout-preview/# WASM layout preview for the editor (mock data + custom:hp_bar + DSL compile bridge)
 ├── pokered-web/           # Full game for WASM/browser (wgpu/pixels)
 ├── pokered-runner-web/    # Headless WASM bridge for the editor's Play activity
 ├── pokered-debug-server/  # TCP debug server (JSON-line protocol); `debug-server` feature
 ├── pokered-android/       # Android shell (cdylib, winit + JNI)
 ├── pokered-ios/           # iOS shell (staticlib)
 └── scene_apply/           # Story-translation helper: .scene → script_config.json
-examples/pokered/
-└── crates/                # The game itself
-    ├── pokered-data/      # All static data; maps/<MapName>/ holds map.json, map.blk,
-    │                      #   script.scene (+ script_config.json), ui_layouts/*.gui
-    ├── pokered-core/      # Pure game logic, NO I/O (battle/, overworld/, events/,
-    │                      #   items/, pokemon/, save/, link/, slots/, screen state
-    │                      #   machines: title, oak_speech, main_menu, naming_screen…)
-    ├── pokered-renderer/  # 160×144 framebuffer rendering, battle anims, fonts
-    ├── pokered-ui/        # UI engine + menus (pluggable Painter backends)
-    ├── pokered-audio/     # Game Boy APU emulation (4 channels), sequencer, SFX
-    ├── pokered-app/       # ★ The native binary `pokered-app` + debug CLI
-    ├── pokered-tui/       # Terminal UI frontend (same pokered-ui code)
-    └── pokered-ui-preview/# WASM shim for pokered-editor WYSIWYG layout preview
 tools/pokered-editor/      # Pokémon-specific Vue/Vite editor suite + Electron shell
 scripts/                   # Python data-extraction/verification helpers + fetch-gfx.sh
 docs/                      # Reference notes (NPC dialogue transcripts, move anims, fidelity)
 ```
 
-The game's graphics live at `examples/pokered/gfx/` (PNG/2bpp asset dumps from the original game, consumed by conversion tools, embedded at build time, and loaded at runtime). This directory is **not committed** — it is a byte-for-byte copy of [`pret/pokered`](https://github.com/pret/pokered)'s `gfx/` tree, fetched on demand and gitignored. **Run `scripts/fetch-gfx.sh` once after cloning** — it is required before *any* build, because `pokered-data` embeds `gfx/blocksets/*.bst` via `include_bytes!` (a missing `gfx/` fails compilation, not just wasm/android/ios packaging). See `docs/gfx-assets.md`.
+The game's graphics live at `gfx/` (PNG/2bpp asset dumps from the original game, consumed by conversion tools, embedded at build time, and loaded at runtime). This directory is **not committed** — it is a byte-for-byte copy of [`pret/pokered`](https://github.com/pret/pokered)'s `gfx/` tree, fetched on demand and gitignored. **Run `scripts/fetch-gfx.sh` once after cloning** — it is required before *any* build, because `pokered-data` embeds `gfx/blocksets/*.bst` via `include_bytes!` (a missing `gfx/` fails compilation, not just wasm/android/ios packaging). See `docs/gfx-assets.md`.
 
 ## Architecture notes
 

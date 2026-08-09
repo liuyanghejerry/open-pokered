@@ -8,10 +8,10 @@
 //   node tools/pokered-editor/scripts/generate-static-data.mjs
 //
 // Reads:
-//   examples/pokered/crates/pokered-data/  — maps, trainers, pokemon, moves,
+//   crates/pokered-data/  — maps, trainers, pokemon, moves,
 //                                             items, ui_layouts, town-map extras,
 //                                             tileset extras, passable overrides
-//   examples/pokered/gfx/                  — blockset .bst files + every image
+//   gfx/                  — blockset .bst files + every image
 //                                             (copied verbatim so /gfx URLs work)
 //
 // Writes into tools/pokered-editor/dist/ (which exists after `npm run build`):
@@ -34,8 +34,8 @@ import fs from 'node:fs'
 import path from 'node:path'
 
 const cwd = process.cwd()
-const DATA_ROOT = path.join(cwd, 'examples/pokered/crates/pokered-data')
-const GFX_ROOT = path.join(cwd, 'examples/pokered/gfx')
+const DATA_ROOT = path.join(cwd, 'crates/pokered-data')
+const GFX_ROOT = path.join(cwd, 'gfx')
 const OUT = path.join(cwd, 'tools/pokered-editor/dist')
 
 if (!fs.existsSync(path.join(DATA_ROOT, 'maps'))) {

@@ -4411,8 +4411,8 @@ fn asset_category_tileset_is_not_1bpp() {
 /// Skips if gfx/ is not found (e.g., CI/checkout that hasn't run
 /// `scripts/fetch-gfx.sh`).
 fn get_test_asset_root() -> Option<AssetRoot> {
-    // gfx/ lives at examples/pokered/gfx; this crate is at
-    // examples/pokered/crates/pokered-renderer, so two levels up.
+    // gfx/ lives at the repo root; this crate is at
+    // crates/pokered-renderer, so two levels up.
     let candidate = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../gfx");
     if candidate.is_dir() {
         return AssetRoot::new(candidate).ok();
@@ -4423,11 +4423,11 @@ fn get_test_asset_root() -> Option<AssetRoot> {
 #[test]
 fn asset_root_from_parent_finds_gfx() {
     let manifest = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"));
-    // gfx/ lives at examples/pokered/gfx, so its parent (examples/pokered) is
-    // two levels up from this crate (examples/pokered/crates/pokered-renderer).
-    let pokered_example_root = manifest.join("../..");
-    if pokered_example_root.join("gfx").is_dir() {
-        let root = AssetRoot::from_parent(&pokered_example_root).unwrap();
+    // gfx/ lives at the repo root, two levels up from this crate
+    // (crates/pokered-renderer).
+    let repo_root = manifest.join("../..");
+    if repo_root.join("gfx").is_dir() {
+        let root = AssetRoot::from_parent(&repo_root).unwrap();
         assert!(root.gfx_dir().is_dir());
     }
 }

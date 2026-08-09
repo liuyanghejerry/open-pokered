@@ -9,8 +9,8 @@ fn main() {
     let is_embedded_target = target_arch == "wasm32" || target_os == "android" || target_os == "ios";
 
     let manifest_dir = env::var("CARGO_MANIFEST_DIR").unwrap();
-    // gfx/ lives at examples/pokered/gfx (sibling of crates/); this crate is at
-    // examples/pokered/crates/pokered-renderer, so two levels up.
+    // gfx/ lives at gfx (sibling of crates/); this crate is at
+    // crates/pokered-renderer, so two levels up.
     let gfx_dir = Path::new(&manifest_dir).join("../../gfx");
     let gfx_dir = gfx_dir.canonicalize().unwrap_or_else(|_| gfx_dir);
 

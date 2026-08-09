@@ -13,14 +13,14 @@ How the **pokered** example game maps Gen-1 Pokémon battles onto the generic
 > gated step; see [`engine-gap-analysis/17-p6-production-flip-plan.md`](./engine-gap-analysis/17-p6-production-flip-plan.md).
 > So: the *mapping below is real and green*; it is not yet the production path.
 
-All paths are under `examples/pokered/crates/pokered-core/src/battle/`.
+All paths are under `crates/pokered-core/src/battle/`.
 
 ---
 
 ## 1. The provider — `PokeredRules`
 
 A game tells the engine about itself by implementing three traits on one type,
-`PokeredRules` (in [`pokered_rules/mod.rs`](../examples/pokered/crates/pokered-core/src/battle/pokered_rules/mod.rs)):
+`PokeredRules` (in [`pokered_rules/mod.rs`](../crates/pokered-core/src/battle/pokered_rules/mod.rs)):
 
 | Trait | What pokered binds | Notes |
 |---|---|---|
@@ -52,13 +52,13 @@ The 165 moves split by *how much* is data vs. native Rust
    the species / move table.
 
 The native handlers live in
-[`pokered_rules/p5_native.rs`](../examples/pokered/crates/pokered-core/src/battle/pokered_rules/p5_native.rs).
+[`pokered_rules/p5_native.rs`](../crates/pokered-core/src/battle/pokered_rules/p5_native.rs).
 
 ---
 
 ## 3. No-code moves — `rules.ron`
 
-[`pokered_rules/rules.ron`](../examples/pokered/crates/pokered-core/src/battle/pokered_rules/rules.ron)
+[`pokered_rules/rules.ron`](../crates/pokered-core/src/battle/pokered_rules/rules.ron)
 authors the data-tier moves as `EffectRecord`s whose hooks carry a list of closed
 primitive `Op`s (`DealMoveDamage`, `Boost`, `HealFraction`, `InflictStatus`,
 `VetoIf`, `ApplyTypeChart`, `RepeatHits`, `SetDamage`, …) plus a `chance:[n,d]`

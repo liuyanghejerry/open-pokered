@@ -8,15 +8,15 @@ work is picked up in a fresh session, read this first.
 
 `pokered-core` has an **extensive, well-tested pure-logic layer** for almost
 every system. The gap is overwhelmingly at the **app glue layer**
-(`examples/pokered/crates/pokered-app/src/game.rs`): the logic exists and is
+(`crates/pokered-app/src/game.rs`): the logic exists and is
 unit-tested but is **not called from real play**. Most "missing" features are one
 glue hookup away, not a from-scratch build. Exceptions needing genuinely new work:
 real link networking, and the end-game / cutscene screens.
 
-Path shorthand: **CORE** = `examples/pokered/crates/pokered-core/src` ·
-**DATA** = `examples/pokered/crates/pokered-data/src` ·
-**APP** = `examples/pokered/crates/pokered-app/src` ·
-**RENDER** = `examples/pokered/crates/pokered-renderer/src` /
+Path shorthand: **CORE** = `crates/pokered-core/src` ·
+**DATA** = `crates/pokered-data/src` ·
+**APP** = `crates/pokered-app/src` ·
+**RENDER** = `crates/pokered-renderer/src` /
 `crates/jrpg-renderer/src`.
 
 Fidelity policy: reproduce Gen-1 behaviour **including deliberate bugs**. Verify

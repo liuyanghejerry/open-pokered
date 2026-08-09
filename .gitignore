@@ -13,7 +13,7 @@ node_modules/
 # rather than vendored here. REQUIRED for any build — run scripts/fetch-gfx.sh
 # once after cloning (pokered-data include_bytes!s gfx/blocksets/*.bst).
 # See docs/gfx-assets.md.
-/examples/pokered/gfx/
+/gfx/
 
 # compiled roms
 *.gbc
@@ -100,10 +100,11 @@ tools/pnpm-lock.yaml
 
 # pokered-runner-web wasm-pack output (rebuilt by tools/pokered-editor build:wasm-pokered)
 crates/pokered-runner-web/pkg/
+crates/pokered-layout-preview/pkg/
 
 # visual-verify / screenshot artifacts
 heal_machine_frame.png
-examples/pokered/crates/pokered-app/heal_machine_frame_*.png
-examples/pokered/crates/pokered-app/party_screen_*.png
-examples/pokered/crates/pokered-app/stats_page1_*.png
-examples/pokered/crates/pokered-app/stats_page2_*.png
+crates/pokered-app/heal_machine_frame_*.png
+crates/pokered-app/party_screen_*.png
+crates/pokered-app/stats_page1_*.png
+crates/pokered-app/stats_page2_*.png

@@ -7,14 +7,15 @@ members = [
     "crates/pokered-android",
     "crates/pokered-ios",
     "crates/scene_apply",
-    "examples/pokered/crates/pokered-core",
-    "examples/pokered/crates/pokered-data",
-    "examples/pokered/crates/pokered-renderer",
-    "examples/pokered/crates/pokered-ui",
-    "examples/pokered/crates/pokered-audio",
-    "examples/pokered/crates/pokered-app",
-    "examples/pokered/crates/pokered-ui-preview",
-    "examples/pokered/crates/pokered-tui",
+    "crates/pokered-layout-preview",
+    "crates/pokered-core",
+    "crates/pokered-data",
+    "crates/pokered-renderer",
+    "crates/pokered-ui",
+    "crates/pokered-audio",
+    "crates/pokered-app",
+    "crates/pokered-ui-preview",
+    "crates/pokered-tui",
 ]
 
 [workspace.package]

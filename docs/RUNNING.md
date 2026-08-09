@@ -69,8 +69,8 @@ embedded features below):
 
 | Resource | Default location | Contents |
 |----------|------------------|----------|
-| **Graphics** (`gfx/`) | `examples/pokered/gfx/` (sibling of the example's `crates/`) | tilesets, sprites, fonts, … |
-| **Map data** (`maps/`) | `examples/pokered/crates/pokered-data/maps/` | per-map `map.json` / `map.blk` / `script.js` |
+| **Graphics** (`gfx/`) | `gfx/` (sibling of the example's `crates/`) | tilesets, sprites, fonts, … |
+| **Map data** (`maps/`) | `crates/pokered-data/maps/` | per-map `map.json` / `map.blk` / `script.js` |
 
 > **First-time setup (required):** `gfx/` is not committed to this repo — it is
 > fetched from [`pret/pokered`](https://github.com/pret/pokered) (pinned commit).
@@ -84,7 +84,7 @@ embedded features below):
 
 **Graphics — `AssetRoot::auto_detect()`**
 1. `POKERED_GFX_DIR` environment variable, if set and a valid directory.
-2. `examples/pokered/gfx/` baked relative to the crate manifest
+2. `gfx/` baked relative to the crate manifest
    (`CARGO_MANIFEST_DIR/../../gfx`) — resolves for a locally-built binary from
    any working directory.
 3. `gfx/` in the current working directory, then walking **up to 5 parent
@@ -93,7 +93,7 @@ embedded features below):
 
 **Map data — `find_maps_directory()`** (filesystem mode only)
 1. `POKERED_MAPS_DIR` environment variable, if set and a valid directory.
-2. A set of cwd-relative candidates (`examples/pokered/crates/pokered-data/maps`,
+2. A set of cwd-relative candidates (`crates/pokered-data/maps`,
    `crates/pokered-data/maps`, `maps`, …).
 3. The compile-time crate manifest path (`CARGO_MANIFEST_DIR/maps`) — baked in at
    build time, so it resolves even when the binary is launched directly.

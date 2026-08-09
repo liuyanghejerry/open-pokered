@@ -190,7 +190,7 @@ impl DemoGame {
             .expect("failed to load demo tileset from PNG");
 
         // 2. Parse TMX map data (embedded at compile time)
-        let tmx_data = include_str!("../../../../../assets/demo/demo.tmx");
+        let tmx_data = include_str!("../../../assets/demo/demo.tmx");
         let (layers, map_w_tiles, map_h_tiles) = parse_tmx_simple(tmx_data);
 
         let map_pixels_w = map_w_tiles as f32 * 8.0;

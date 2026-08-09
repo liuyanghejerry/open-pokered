@@ -12,11 +12,11 @@ embedded-map-data = ["pokered-core/embedded-map-data"]
 default = ["embedded-scripts", "embedded-map-data"]
 
 [dependencies]
-pokered-app = { path = "../../examples/pokered/crates/pokered-app" }
-pokered-core = { path = "../../examples/pokered/crates/pokered-core" }
-pokered-data = { path = "../../examples/pokered/crates/pokered-data" }
-pokered-renderer = { path = "../../examples/pokered/crates/pokered-renderer" }
-pokered-audio = { path = "../../examples/pokered/crates/pokered-audio" }
+pokered-app = { path = "../pokered-app" }
+pokered-core = { path = "../pokered-core" }
+pokered-data = { path = "../pokered-data" }
+pokered-renderer = { path = "../pokered-renderer" }
+pokered-audio = { path = "../pokered-audio" }
 log = "0.4"
 
 [target.'cfg(target_os = "ios")'.dependencies]

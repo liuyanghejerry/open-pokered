@@ -7,7 +7,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-MAPS_DIR = Path(__file__).resolve().parents[2] / "examples/pokered/crates/pokered-data/maps"
+MAPS_DIR = Path(__file__).resolve().parents[2] / "crates/pokered-data/maps"
 TOOL = Path(__file__).resolve().parent / "convert_script_to_scene.py"
 
 

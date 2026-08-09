@@ -1,7 +1,7 @@
 {
   "name": "Pokémon Red (jrpg-engine)",
-  "dataRoot": "examples/pokered/crates/pokered-data",
-  "gfxRoot": "examples/pokered/gfx",
+  "dataRoot": "crates/pokered-data",
+  "gfxRoot": "gfx",
   "activities": [
     {
       "id": "story",
@@ -21,8 +21,8 @@
           "dslGuide": "docs/DSL_TRANSLATION_GUIDE.md",
           "apiTypes": "scripts/types/game.d.ts",
           "exampleScenes": [
-            "examples/pokered/crates/pokered-data/maps/OaksLab/script.scene",
-            "examples/pokered/crates/pokered-data/maps/Route10/script.scene"
+            "crates/pokered-data/maps/OaksLab/script.scene",
+            "crates/pokered-data/maps/Route10/script.scene"
           ]
         },
         "scene": {

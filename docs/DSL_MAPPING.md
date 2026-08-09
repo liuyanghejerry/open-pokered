@@ -786,5 +786,5 @@ When migrating existing `.scene` files, use these mappings:
 
 ### Example: Real-World Migration
 
-See `examples/pokered/crates/pokered-data/maps/PalletTown/script.scene` for a
+See `crates/pokered-data/maps/PalletTown/script.scene` for a
 complete migration from old `@if`/bare-command syntax to `@run` blocks.

@@ -37,60 +37,60 @@ jobs:
             pokered-data:
               - 'Cargo.lock'
               - 'Cargo.toml'
-              - 'examples/pokered/crates/pokered-data/**'
+              - 'crates/pokered-data/**'
             pokered-core:
               - 'Cargo.lock'
               - 'Cargo.toml'
-              - 'examples/pokered/crates/pokered-core/**'
+              - 'crates/pokered-core/**'
             pokered-renderer:
               - 'Cargo.lock'
               - 'Cargo.toml'
-              - 'examples/pokered/crates/pokered-renderer/**'
+              - 'crates/pokered-renderer/**'
             pokered-audio:
               - 'Cargo.lock'
               - 'Cargo.toml'
-              - 'examples/pokered/crates/pokered-audio/**'
+              - 'crates/pokered-audio/**'
             pokered-app:
               - 'Cargo.lock'
               - 'Cargo.toml'
-              - 'examples/pokered/crates/pokered-app/**'
+              - 'crates/pokered-app/**'
             pokered-web:
               - 'Cargo.lock'
               - 'Cargo.toml'
               - 'crates/pokered-web/**'
-              - 'examples/pokered/crates/pokered-core/**'
-              - 'examples/pokered/crates/pokered-data/**'
-              - 'examples/pokered/crates/pokered-renderer/**'
-              - 'examples/pokered/crates/pokered-audio/**'
-              - 'examples/pokered/crates/pokered-app/**'
+              - 'crates/pokered-core/**'
+              - 'crates/pokered-data/**'
+              - 'crates/pokered-renderer/**'
+              - 'crates/pokered-audio/**'
+              - 'crates/pokered-app/**'
             pokered-runner-web:
               - 'Cargo.lock'
               - 'Cargo.toml'
               - 'crates/pokered-runner-web/**'
-              - 'examples/pokered/crates/pokered-core/**'
-              - 'examples/pokered/crates/pokered-data/**'
-              - 'examples/pokered/crates/pokered-renderer/**'
-              - 'examples/pokered/crates/pokered-app/**'
+              - 'crates/pokered-core/**'
+              - 'crates/pokered-data/**'
+              - 'crates/pokered-renderer/**'
+              - 'crates/pokered-app/**'
             pokered-tui:
               - 'Cargo.lock'
               - 'Cargo.toml'
-              - 'examples/pokered/crates/pokered-tui/**'
+              - 'crates/pokered-tui/**'
             pokered-android:
               - 'Cargo.lock'
               - 'Cargo.toml'
               - '.cargo/config.toml'
               - 'crates/pokered-android/**'
-              - 'examples/pokered/crates/pokered-app/**'
-              - 'examples/pokered/crates/pokered-renderer/**'
-              - 'examples/pokered/crates/pokered-core/**'
+              - 'crates/pokered-app/**'
+              - 'crates/pokered-renderer/**'
+              - 'crates/pokered-core/**'
               - 'android/**'
             pokered-ios:
               - 'Cargo.lock'
               - 'Cargo.toml'
               - 'crates/pokered-ios/**'
-              - 'examples/pokered/crates/pokered-app/**'
-              - 'examples/pokered/crates/pokered-renderer/**'
-              - 'examples/pokered/crates/pokered-core/**'
+              - 'crates/pokered-app/**'
+              - 'crates/pokered-renderer/**'
+              - 'crates/pokered-core/**'
               - 'ios/**'
             pokered-debug-server:
               - 'Cargo.lock'
@@ -213,7 +213,7 @@ jobs:
             ~/.cargo/registry
             ~/.cargo/git
             target
-          key: ci-cargo-${{ matrix.target || 'native' }}-${{ hashFiles('Cargo.lock', 'Cargo.toml', 'crates/*/Cargo.toml', 'examples/pokered/crates/*/Cargo.toml', 'run-wasm/Cargo.toml') }}
+          key: ci-cargo-${{ matrix.target || 'native' }}-${{ hashFiles('Cargo.lock', 'Cargo.toml', 'crates/*/Cargo.toml', 'run-wasm/Cargo.toml') }}
           restore-keys: |
             ci-cargo-${{ matrix.target || 'native' }}-
             ci-cargo-
@@ -380,7 +380,7 @@ jobs:
             ~/.cargo/registry
             ~/.cargo/git
             target
-          key: ios-cargo-${{ hashFiles('Cargo.lock', 'Cargo.toml', 'crates/*/Cargo.toml', 'examples/pokered/crates/*/Cargo.toml') }}
+          key: ios-cargo-${{ hashFiles('Cargo.lock', 'Cargo.toml', 'crates/*/Cargo.toml') }}
           restore-keys: |
             ios-cargo-
 
