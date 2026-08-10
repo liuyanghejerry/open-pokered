@@ -89,14 +89,9 @@ jobs:
       # game under a sub-path. Static hosting has no /api backend, so
       # dataFetch routes /api/* onto IndexedDB deltas + these static
       # baselines; every /gfx image is copied into dist/gfx so base-prefixed
-      # asset URLs resolve instead of 404ing.
-      #
-      # NOTE: the Layout-editor preview wasm (`dotzuki-web`, engine crate) is
-      # NOT built here anymore — dotzuki-web ships from the dotzuki-engine repo.
-      # Drop its pkg into `tools/pokered-editor/src/wasm/dotzuki-web/` (or point
-      # DOTZUKI_WASM_ROOT at a checkout) before deploying to keep the Layout
-      # preview alive; the Playtest bridge (pokered-runner-web, below) is
-      # built from this repo.
+      # asset URLs resolve instead of 404ing. Both wasm bridges are bundled
+      # into dist/editor/wasm/: pokered-runner-web (Playtest / Game preview)
+      # and pokered-layout-preview (Layout editor .gui compile + preview).
       - name: Build editor wasm (pokered-runner-web)
         run: cargo build -p pokered-runner-web --target wasm32-unknown-unknown --release
 
@@ -104,6 +99,16 @@ jobs:
         working-directory: crates/pokered-runner-web
         run: |
           WASM_BIN="../target/wasm32-unknown-unknown/release/pokered_runner_web.wasm"
+          mkdir -p editor-wasm
+          wasm-bindgen --target web --no-typescript --out-dir editor-wasm "$WASM_BIN"
+
+      - name: Build layout-preview wasm (pokered-layout-preview)
+        run: cargo build -p pokered-layout-preview --target wasm32-unknown-unknown --release
+
+      - name: Generate layout-preview wasm bindings
+        working-directory: crates/pokered-layout-preview
+        run: |
+          WASM_BIN="../target/wasm32-unknown-unknown/release/pokered_layout_preview.wasm"
           mkdir -p editor-wasm
           wasm-bindgen --target web --no-typescript --out-dir editor-wasm "$WASM_BIN"
 
@@ -140,6 +145,7 @@ jobs:
           cp -r tools/pokered-editor/dist/. "$DEST/"
           mkdir -p "$DEST/wasm"
           cp -r crates/pokered-runner-web/editor-wasm/. "$DEST/wasm/"
+          cp -r crates/pokered-layout-preview/editor-wasm/. "$DEST/wasm/"
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3

@@ -26,6 +26,10 @@ jobs:
       pokered-android: ${{ steps.filter.outputs.pokered-android }}
       pokered-ios: ${{ steps.filter.outputs.pokered-ios }}
       pokered-debug-server: ${{ steps.filter.outputs.pokered-debug-server }}
+      pokered-ui: ${{ steps.filter.outputs.pokered-ui }}
+      pokered-ui-preview: ${{ steps.filter.outputs.pokered-ui-preview }}
+      pokered-layout-preview: ${{ steps.filter.outputs.pokered-layout-preview }}
+      scene_apply: ${{ steps.filter.outputs.scene_apply }}
       pokered-editor: ${{ steps.filter.outputs.pokered-editor }}
       changes-list: ${{ steps.build-changes-list.outputs.list }}
     steps:
@@ -96,13 +100,30 @@ jobs:
               - 'Cargo.lock'
               - 'Cargo.toml'
               - 'crates/pokered-debug-server/**'
+            pokered-ui:
+              - 'Cargo.lock'
+              - 'Cargo.toml'
+              - 'crates/pokered-ui/**'
+            pokered-ui-preview:
+              - 'Cargo.lock'
+              - 'Cargo.toml'
+              - 'crates/pokered-ui-preview/**'
+              - 'crates/pokered-ui/**'
+            pokered-layout-preview:
+              - 'Cargo.lock'
+              - 'Cargo.toml'
+              - 'crates/pokered-layout-preview/**'
+            scene_apply:
+              - 'Cargo.lock'
+              - 'Cargo.toml'
+              - 'crates/scene_apply/**'
             pokered-editor:
               - 'tools/pokered-editor/**'
       - name: Build changes list
         id: build-changes-list
         run: |
           LIST=""
-          for key in pokered-data pokered-core pokered-renderer pokered-audio pokered-app pokered-web pokered-runner-web pokered-tui pokered-android pokered-ios pokered-debug-server pokered-editor; do
+          for key in pokered-data pokered-core pokered-renderer pokered-audio pokered-app pokered-web pokered-runner-web pokered-tui pokered-android pokered-ios pokered-debug-server pokered-ui pokered-ui-preview pokered-layout-preview scene_apply pokered-editor; do
             if [ "${{ steps.filter.outputs[format('{0}', key)] }}" == "true" ]; then
               LIST="$LIST $key"
             fi
@@ -149,6 +170,18 @@ jobs:
           - package: pokered-debug-server
             build_name: pokered-debug-server
             changes_key: pokered-debug-server
+          - package: pokered-ui
+            build_name: pokered-ui
+            changes_key: pokered-ui
+          - package: pokered-ui-preview
+            build_name: pokered-ui-preview
+            changes_key: pokered-ui-preview
+          - package: pokered-layout-preview
+            build_name: pokered-layout-preview
+            changes_key: pokered-layout-preview
+          - package: scene_apply
+            build_name: scene_apply
+            changes_key: scene_apply
           - package: pokered-web
             target: wasm32-unknown-unknown
             build_name: pokered-web (wasm32-unknown-unknown)
@@ -229,6 +262,71 @@ jobs:
       - name: Build targeted package
         if: ${{ steps.changes-check.outputs.has-changes == 'true' && matrix.target }}
         run: cargo build -p ${{ matrix.package }} --target ${{ matrix.target }}
+
+  coverage:
+    permissions:
+      contents: read
+    name: Coverage (cargo-llvm-cov)
+    runs-on: self-hosted
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Fetch gfx assets
+        # gfx/ is not committed; pokered-data embeds it at build time.
+        run: ./scripts/fetch-gfx.sh
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -yq \
+            build-essential \
+            pkg-config \
+            libxkbcommon-dev \
+            libwayland-dev \
+            libx11-dev \
+            libxrandr-dev \
+            libxi-dev \
+            libxcursor-dev \
+            libvulkan-dev \
+            libasound2-dev \
+            libudev-dev
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: llvm-tools-preview
+
+      - name: Install cargo-llvm-cov
+        uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-llvm-cov
+
+      - name: Cache cargo registry & build
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ci-coverage-${{ hashFiles('Cargo.lock', 'Cargo.toml', 'crates/*/Cargo.toml') }}
+          restore-keys: |
+            ci-coverage-
+            ci-cargo-native-
+
+      - name: Run coverage
+        # --workspace: all crates; summary table goes to the job log, the
+        # lcov report is uploaded as an artifact for inspection.
+        run: |
+          cargo llvm-cov --workspace --lcov --output-path lcov.info
+          cargo llvm-cov report --summary-only
+
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-lcov
+          path: lcov.info
+          retention-days: 30
 
   build-pokered-editor:
     needs: [detect-changes]
