@@ -138,7 +138,7 @@ This repo ships Claude Code skills under `.claude/skills/` — invoke them when 
 ## Tooling outside Cargo
 
 - `tools/pokered-editor/` — Pokémon-specific Vue 3/Vite editor suite (`pnpm install && pnpm dev`, http://localhost:5173): map editor, save editor, trainer/Pokémon/move data editors, UI layout editor (WASM-backed WYSIWYG preview, understands `.gui` DSL), map script editor, pixel editor. Also includes an **AI assistant** (chat with read/propose tools, reviewable change proposals, scene/gui/data generation, AI sprite generation) and an **Electron shell** (`pnpm electron:dev`, `pnpm electron:pack`).
-  - The layout-preview WASM bridge is `dotzuki-web` (engine crate) — not in this repo. `pnpm build:wasm` skips it when absent; supply the pkg via `DOTZUKI_WASM_ROOT` or a checkout of the engine repo.
+  - The layout-preview WASM bridge is the in-repo `crates/pokered-layout-preview` crate, built by `pnpm build:wasm` (wasm-pack → `crates/pokered-layout-preview/pkg`).
 - `tools/asm2music.py` / `tools/asm2sfx.py` — convert pokered `audio/music|sfx/*.asm` to Rust byte tables.
 - `tools/dsl_migration/` — historical scripts that converted legacy `script.js` map scripts to `.scene` DSL.
 - `scripts/verify_battle_anim_data.py` / `verify_move_sfx_data.py` / `verify_cry_data.py` — byte-exact auditors that diff the battle-animation tables, the move SFX table, and the cry table against a local pret/pokered disassembly checkout (path is a CLI arg). Run them after touching any of these data files; all must report 0 diffs.

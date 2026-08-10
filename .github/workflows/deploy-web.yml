@@ -67,22 +67,27 @@ jobs:
           rm -f "$WASM_OUT_DIR"/*.wasm "$WASM_OUT_DIR"/*.js
           wasm-bindgen --target web --no-typescript --out-dir "$WASM_OUT_DIR" "$WASM_BIN"
 
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: npm
-          cache-dependency-path: crates/pokered-web/frontend/package-lock.json
+          cache: pnpm
+          cache-dependency-path: crates/pokered-web/frontend/pnpm-lock.yaml
 
-      - name: Install npm dependencies
+      - name: Install dependencies
         working-directory: crates/pokered-web/frontend
-        run: npm ci
+        run: pnpm install --frozen-lockfile
 
       - name: Build Vite bundle
         working-directory: crates/pokered-web/frontend
         env:
           VITE_BASE_PATH: /${{ github.event.repository.name }}/
-        run: npm run build
+        run: pnpm run build
 
       # ── pokered-editor (WYSIWYG editor) → /<repo>/editor/ ──────────────
       # GitHub Pages gives one site per repo; the editor shares it with the
@@ -116,18 +121,18 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: npm
-          cache-dependency-path: tools/pokered-editor/package-lock.json
+          cache: pnpm
+          cache-dependency-path: tools/pokered-editor/pnpm-lock.yaml
 
-      - name: Install editor npm dependencies
+      - name: Install editor dependencies
         working-directory: tools/pokered-editor
-        run: npm ci
+        run: pnpm install --frozen-lockfile
 
       - name: Build editor Vite bundle
         working-directory: tools/pokered-editor
         env:
           VITE_BASE_PATH: /${{ github.event.repository.name }}/editor/
-        run: npm run build
+        run: pnpm run build
 
       - name: Generate editor static data baseline + gfx
         # Bundles pokered-data JSON (maps/trainers/pokemon/moves/items/

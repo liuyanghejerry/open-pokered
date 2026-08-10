@@ -6,7 +6,7 @@
   "main": "electron/main.cjs",
   "description": "Editor for the pokered JRPG project (maps, data, sprites, AI assistant) — configured via .dotzuki-editor.json in the workspace root",
   "scripts": {
-    "dev": "npm run build:wasm && vite",
+    "dev": "pnpm run build:wasm && vite",
     "build": "vue-tsc -b && vite build",
     "preview": "vite preview",
     "test": "vitest run",
