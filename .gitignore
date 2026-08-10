@@ -98,9 +98,6 @@ crates/pokered-web/frontend/src/wasm/pokered_web_bg.js
 # dotzuki-editor: local AI provider profiles (no API keys, machine-local) — not versioned
 .dotzuki-editor.providers.json
 
-# pnpm workspace
-tools/pnpm-lock.yaml
-
 # pokered-runner-web wasm-pack output (rebuilt by tools/pokered-editor build:wasm-pokered)
 crates/pokered-runner-web/pkg/
 crates/pokered-layout-preview/pkg/
