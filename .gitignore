@@ -13,7 +13,10 @@ node_modules/
 # rather than vendored here. REQUIRED for any build — run scripts/fetch-gfx.sh
 # once after cloning (pokered-data include_bytes!s gfx/blocksets/*.bst).
 # See docs/gfx-assets.md.
+# Note: in git worktrees the path is a symlink, so match it without the
+# trailing slash too.
 /gfx/
+/gfx
 
 # compiled roms
 *.gbc

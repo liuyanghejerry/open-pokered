@@ -451,3 +451,37 @@ fn items_slice_matches_internal_state() {
     assert_eq!(items[0], (ItemId::Potion, 5));
     assert_eq!(items[1], (ItemId::Antidote, 3));
 }
+
+#[test]
+fn serde_roundtrip_preserves_shape() {
+    let mut bag = Inventory::new_bag();
+    bag.add_item(ItemId::Potion, 5).unwrap();
+    bag.add_item(ItemId::Antidote, 3).unwrap();
+    let json = serde_json::to_string(&bag).unwrap();
+    // Same JSON shape as the pre-fixed-capacity derive: items list + capacity.
+    assert_eq!(
+        json,
+        r#"{"items":[["Potion",5],["Antidote",3]],"capacity":20}"#
+    );
+    let back: Inventory<BAG_ITEM_CAPACITY> = serde_json::from_str(&json).unwrap();
+    assert_eq!(back, bag);
+    assert_eq!(back.capacity(), BAG_ITEM_CAPACITY);
+}
+
+#[test]
+fn serde_loads_legacy_json_shape() {
+    // Old saves written by the Vec-backed format carry the same shape
+    // (`capacity` matches the const generic) and must load unchanged.
+    let json = r#"{"items":[["Potion",99],["PokeBall",10]],"capacity":20}"#;
+    let bag: Inventory<BAG_ITEM_CAPACITY> = serde_json::from_str(json).unwrap();
+    assert_eq!(bag.count(), 2);
+    assert_eq!(bag.get(0), Some((ItemId::Potion, 99)));
+    assert_eq!(bag.get(1), Some((ItemId::PokeBall, 10)));
+}
+
+#[test]
+fn serde_rejects_more_items_than_capacity() {
+    let json = r#"{"items":[["Potion",1],["Antidote",1],["PokeBall",1]],"capacity":2}"#;
+    let err = serde_json::from_str::<Inventory<2>>(json).unwrap_err();
+    assert!(err.is_data());
+}

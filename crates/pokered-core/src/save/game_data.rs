@@ -1,4 +1,4 @@
-use crate::items::inventory::Inventory;
+use crate::items::inventory::{Inventory, BAG_ITEM_CAPACITY, PC_ITEM_CAPACITY};
 use crate::options_menu::GameOptions;
 use crate::pokemon::pokedex::Pokedex;
 use serde::{Deserialize, Serialize};
@@ -16,6 +16,12 @@ pub const HIDDEN_COINS_BYTES: usize = (16 + 7) / 8;
 pub const CITY_VISITED_BYTES: usize = (11 + 7) / 8;
 pub const TOGGLEABLE_OBJECT_BYTES: usize = (256 + 7) / 8;
 pub const WILDDATA_LENGTH: usize = 1 + 10 * 2;
+
+// The SRAM event-flags region is the original game's `wEventFlags` array
+// (`flag_array NUM_EVENTS`, NUM_EVENTS = $A00 bits → 320 bytes).
+// `pokered_data::event_flags::EVENT_FLAGS_SIZE` is the runtime bitset size
+// and must stay in sync with this save-layout constant.
+const _: () = assert!(NUM_EVENTS_BYTES == pokered_data::event_flags::EVENT_FLAGS_SIZE);
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub struct MapPosition {
@@ -248,7 +254,7 @@ impl Default for DayCareMon {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct GameData {
     pub pokedex: Pokedex,
-    pub bag: Inventory,
+    pub bag: Inventory<BAG_ITEM_CAPACITY>,
     pub player_money: u32,
     pub rival_name: Vec<u8>,
     pub options: GameOptions,
@@ -285,7 +291,7 @@ pub struct GameData {
     pub tileset_collision_ptr: u16,
     pub tileset_talking_over_tiles: [u8; 3],
     pub grass_tile: u8,
-    pub pc_items: Inventory,
+    pub pc_items: Inventory<PC_ITEM_CAPACITY>,
     pub current_box_num: u8,
     pub num_hof_teams: u8,
     pub player_coins: u16,

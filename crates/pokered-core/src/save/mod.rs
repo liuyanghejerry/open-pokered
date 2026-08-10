@@ -16,8 +16,6 @@ mod sram_import_tests;
 #[cfg(test)]
 mod daycare_tests;
 
-use std::collections::HashMap;
-
 use crate::pokemon::party::Party;
 use crate::pokemon::pc_box::{PcBox, PcStorage};
 use game_data::{DayCareMon, GameData};
@@ -37,10 +35,6 @@ pub struct SaveData {
     pub pc_storage: PcStorage,
     pub hall_of_fame: HallOfFame,
     pub tile_animations: u8,
-    /// Script engine flags (JS-side event flags like EVENT_GOT_STARTER).
-    /// Not part of the fixed-size SRAM region — saved as a companion file.
-    #[serde(default)]
-    pub script_flags: HashMap<String, bool>,
 }
 
 impl SaveData {
@@ -53,7 +47,6 @@ impl SaveData {
             pc_storage: PcStorage::new(),
             hall_of_fame: HallOfFame::new(),
             tile_animations: 0,
-            script_flags: HashMap::new(),
         }
     }
 
@@ -82,7 +75,8 @@ impl SaveData {
             .map(|b| b.catch_rate)
             .unwrap_or(0);
         let player_id = self.game_data.player_id;
-        let name = mon.display_name();
+        let mut name_buf = [0u8; crate::battle::state::NAME_TEXT_BUF];
+        let name = mon.display_name(&mut name_buf);
         let dc = &mut self.game_data.daycare;
         dc.in_use = true;
         dc.species = mon.species as u8;
@@ -156,9 +150,8 @@ impl SaveData {
                 recalculate_stats(&mut mon);
                 mon.hp = mon.max_hp;
                 let name = pokered_data::charmap::decode_string(&self.game_data.daycare_mon_name);
-                let default_name = format!("{:?}", species).to_uppercase();
-                if !name.is_empty() && name != default_name {
-                    mon.set_nickname(name);
+                if !name.is_empty() && name != crate::save::ser_pokemon::species_default_name(species) {
+                    mon.set_nickname(&name);
                 }
                 let _ = self.party.add(mon);
             }

@@ -2684,26 +2684,46 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
 
         let map_key = script_bridge::map_id_to_script_key(map_id);
         log::info!(target: "pokered::overworld", "[Script] Loading map script for {:?} (key: {})", map_id, map_key);
-        self.script_engine = dotzuki_engine_script::ScriptEngine::with_api(&pokered_data::script_api::PokemonScriptApi);
+        // Resolve the scene ASTs before mutating the engine (native path).
+        let shared_ast = self.shared_scene_ast();
+        let map_ast = self.map_scene_ast(&map_key);
+        self.script_engine = super::native_script::OverworldScriptEngine::new();
 
-        if let Some(shared_source) = self.script_loader.get_script("shared/pokecenter") {
-            log::info!(target: "pokered::overworld", "[Script] Loading shared/pokecenter module ({} bytes)", shared_source.len());
-            match self.script_engine.load_shared_module("pokecenter.js", shared_source) {
-                Ok(()) => log::info!(target: "pokered::overworld", "[Script] Shared pokecenter module loaded OK"),
-                Err(e) => log::warn!(target: "pokered::overworld", "[Script] Shared pokecenter module FAILED: {}", e),
-            }
-        } else {
-            log::warn!(target: "pokered::overworld", "[Script] No shared/pokecenter module found in loader");
-        }
+        match &mut self.script_engine {
+            #[cfg(feature = "script-boa")]
+            super::native_script::OverworldScriptEngine::Boa(engine) => {
+                if let Some(shared_source) = self.script_loader.get_script("shared/pokecenter") {
+                    log::info!(target: "pokered::overworld", "[Script] Loading shared/pokecenter module ({} bytes)", shared_source.len());
+                    match engine.load_shared_module("pokecenter.js", shared_source) {
+                        Ok(()) => log::info!(target: "pokered::overworld", "[Script] Shared pokecenter module loaded OK"),
+                        Err(e) => log::warn!(target: "pokered::overworld", "[Script] Shared pokecenter module FAILED: {}", e),
+                    }
+                } else {
+                    log::warn!(target: "pokered::overworld", "[Script] No shared/pokecenter module found in loader");
+                }
 
-        if let Some(source) = self.script_loader.get_script(&map_key) {
-            log::info!(target: "pokered::overworld", "[Script] Loading {} script ({} bytes)", map_key, source.len());
-            match self.script_engine.load_script(source) {
-                Ok(()) => log::info!(target: "pokered::overworld", "[Script] {} script loaded OK", map_key),
-                Err(e) => log::warn!(target: "pokered::overworld", "[Script] {} script FAILED: {}", map_key, e),
+                if let Some(source) = self.script_loader.get_script(&map_key) {
+                    log::info!(target: "pokered::overworld", "[Script] Loading {} script ({} bytes)", map_key, source.len());
+                    match engine.load_script(source) {
+                        Ok(()) => log::info!(target: "pokered::overworld", "[Script] {} script loaded OK", map_key),
+                        Err(e) => log::warn!(target: "pokered::overworld", "[Script] {} script FAILED: {}", map_key, e),
+                    }
+                } else {
+                    log::warn!(target: "pokered::overworld", "[Script] No script found for key '{}'", map_key);
+                }
             }
-        } else {
-            log::warn!(target: "pokered::overworld", "[Script] No script found for key '{}'", map_key);
+            super::native_script::OverworldScriptEngine::Native(engine) => {
+                if let Some(scene) = &shared_ast {
+                    engine.register_shared_scene(scene);
+                }
+                match map_ast {
+                    Some(ref scene) => {
+                        engine.load_map(&map_key, scene);
+                        log::info!(target: "pokered::overworld", "[NativeScript] Loaded AST for {} ({} storylines)", map_key, scene.storylines.len());
+                    }
+                    None => log::warn!(target: "pokered::overworld", "[NativeScript] No scene AST found for key '{}'", map_key),
+                }
+            }
         }
 
         self.map_script_config = self
@@ -2722,7 +2742,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
         self.active_script_effect = None;
 
         self.script_engine
-            .seed_flags(self.unified_flags.as_hashmap());
+            .seed_flags(&self.unified_flags.to_hashmap());
 
         if let Some(fn_name) = self.map_script_config.on_load() {
             log::info!(target: "pokered::overworld", "[Script] on_load function: {}", fn_name);

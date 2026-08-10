@@ -100,7 +100,7 @@ pub fn serialize_name(name: &[u8], buf: &mut Vec<u8>) {
 /// The all-caps species name the original stores as a mon's "nickname" when no
 /// real nickname was given (`display_name`'s fallback).
 pub fn species_default_name(species: Species) -> String {
-    format!("{:?}", species).to_uppercase()
+    pokered_data::lang_data::species_name(species, false).to_string()
 }
 
 /// Encode a decoded-text name to the charmap bytes `serialize_name` expects.
@@ -113,9 +113,10 @@ fn encode_name_or_blank(name: Option<&str>) -> Vec<u8> {
 /// The nickname bytes for SRAM: the real nickname if set, else the species
 /// name (the original always stores a name — never a blank nickname).
 fn nickname_bytes(mon: &Pokemon) -> Vec<u8> {
-    match &mon.nickname {
-        Some(n) => encode_name_or_blank(Some(n)),
-        None => encode_name_or_blank(Some(&species_default_name(mon.species))),
+    if mon.has_nickname() {
+        mon.nickname.to_vec()
+    } else {
+        encode_name_or_blank(Some(&species_default_name(mon.species)))
     }
 }
 
@@ -138,7 +139,7 @@ pub fn serialize_party_into(party: &Party, buf: &mut Vec<u8>) {
     }
     // OT-name table, then nickname table (6 × NAME_LENGTH each).
     for mon in party.iter() {
-        serialize_name(&encode_name_or_blank(mon.ot_name.as_deref()), buf);
+        serialize_name(&mon.ot_name, buf);
     }
     for _ in party.count()..6 {
         serialize_name(&[], buf);
@@ -169,7 +170,7 @@ pub fn serialize_box_into(box_data: &PcBox, buf: &mut Vec<u8>) {
         buf.extend_from_slice(&[0u8; BOX_STRUCT_SIZE]);
     }
     for mon in box_data.iter() {
-        serialize_name(&encode_name_or_blank(mon.ot_name.as_deref()), buf);
+        serialize_name(&mon.ot_name, buf);
     }
     for _ in box_data.count()..20 {
         serialize_name(&[], buf);
@@ -224,7 +225,7 @@ pub fn deserialize_box_mon(data: &[u8]) -> Result<Pokemon, SaveError> {
 
     Ok(Pokemon {
         species,
-        nickname: None,
+        nickname: [0x50; 11],
         level: box_level,
         hp,
         max_hp: hp,
@@ -243,7 +244,7 @@ pub fn deserialize_box_mon(data: &[u8]) -> Result<Pokemon, SaveError> {
         total_exp: exp,
         is_traded: false,
         ot_id,
-        ot_name: None,
+        ot_name: [0x50; 11],
     })
 }
 

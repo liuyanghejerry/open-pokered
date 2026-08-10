@@ -27,7 +27,7 @@ pub fn new_game_config_red() -> GameConfig {
 pub fn make_starter_bulbasaur() -> Pokemon {
     Pokemon {
         species: Species::Bulbasaur,
-        nickname: None,
+        nickname: [0x50; 11],
         level: 5,
         hp: 20,
         max_hp: 20,
@@ -44,14 +44,14 @@ pub fn make_starter_bulbasaur() -> Pokemon {
         dv_bytes: [0xFF, 0xFF],
         stat_exp: [0; 5],
         total_exp: 0,
-        is_traded: false, ot_id: 0, ot_name: None,
+        is_traded: false, ot_id: 0, ot_name: [0x50; 11],
     }
 }
 
 pub fn make_starter_charmander() -> Pokemon {
     Pokemon {
         species: Species::Charmander,
-        nickname: None,
+        nickname: [0x50; 11],
         level: 5,
         hp: 19,
         max_hp: 19,
@@ -68,14 +68,14 @@ pub fn make_starter_charmander() -> Pokemon {
         dv_bytes: [0xFF, 0xFF],
         stat_exp: [0; 5],
         total_exp: 0,
-        is_traded: false, ot_id: 0, ot_name: None,
+        is_traded: false, ot_id: 0, ot_name: [0x50; 11],
     }
 }
 
 pub fn make_starter_squirtle() -> Pokemon {
     Pokemon {
         species: Species::Squirtle,
-        nickname: None,
+        nickname: [0x50; 11],
         level: 5,
         hp: 20,
         max_hp: 20,
@@ -92,7 +92,7 @@ pub fn make_starter_squirtle() -> Pokemon {
         dv_bytes: [0xFF, 0xFF],
         stat_exp: [0; 5],
         total_exp: 0,
-        is_traded: false, ot_id: 0, ot_name: None,
+        is_traded: false, ot_id: 0, ot_name: [0x50; 11],
     }
 }
 
@@ -111,7 +111,7 @@ pub fn make_pokemon(
 ) -> Pokemon {
     Pokemon {
         species,
-        nickname: None,
+        nickname: [0x50; 11],
         level,
         hp,
         max_hp: hp,
@@ -128,7 +128,7 @@ pub fn make_pokemon(
         dv_bytes: [0xFF, 0xFF],
         stat_exp: [0; 5],
         total_exp: 0,
-        is_traded: false, ot_id: 0, ot_name: None,
+        is_traded: false, ot_id: 0, ot_name: [0x50; 11],
     }
 }
 

@@ -100,10 +100,12 @@ fn draw_trade_party_list(
         .iter()
         .enumerate()
         .map(|(i, m)| {
-            let name = m
-                .nickname
-                .clone()
-                .unwrap_or_else(|| species_name(m.species, is_zh).to_string());
+            let mut name_buf = [0u8; pokered_core::battle::state::NAME_TEXT_BUF];
+            let name = if m.has_nickname() {
+                m.display_name(&mut name_buf).to_string()
+            } else {
+                species_name(m.species, is_zh).to_string()
+            };
             let marker = if i == cursor { "▶" } else { " " };
             format!("{}{}", marker, name)
         })

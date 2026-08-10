@@ -170,20 +170,15 @@ async function handleSave() {
 const injectStatus = ref('')
 let injecting = false
 
-/** Compile a `.scene` to JS and hot-inject it (script + config) into the game. */
+/** Hot-inject a `.scene`'s raw DSL source (script + config) into the game;
+ *  the wasm runner compiles it on the native AST engine. */
 async function injectSavedScene(mapName: string, sceneSource: string) {
   if (injecting) return
   injecting = true
-  injectStatus.value = 'compiling…'
+  injectStatus.value = 'injecting…'
   try {
-    const result = await compileScene(sceneSource)
-    if (!result.ok) {
-      injectStatus.value = `compile error ${result.line}:${result.col}`
-      return
-    }
-    injectStatus.value = 'injecting…'
     const config = store.scriptConfigs[mapName]
-    await injectSceneScript(mapName, result.output, config ? JSON.stringify(config) : null)
+    await injectSceneScript(mapName, sceneSource, config ? JSON.stringify(config) : null)
     injectStatus.value = '✓ preview updated'
   } catch (e) {
     injectStatus.value = `preview unavailable: ${(e as Error).message}`

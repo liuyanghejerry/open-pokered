@@ -16,40 +16,47 @@ pub enum PartyError {
     SameIndex,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Party {
-    mons: Vec<Pokemon>,
+    mons: [Pokemon; PARTY_LENGTH],
+    count: usize,
 }
 
 impl Party {
     pub fn new() -> Self {
-        Self { mons: Vec::new() }
+        Self {
+            mons: [crate::battle::state::blank_pokemon(); PARTY_LENGTH],
+            count: 0,
+        }
     }
 
     pub fn from_pokemon(pokemon: Vec<Pokemon>) -> Result<Self, PartyError> {
         if pokemon.len() > PARTY_LENGTH {
             return Err(PartyError::PartyFull);
         }
-        Ok(Self { mons: pokemon })
+        Ok(Self::from(pokemon))
     }
 
     pub fn count(&self) -> usize {
-        self.mons.len()
+        self.count
     }
 
     pub fn is_full(&self) -> bool {
-        self.mons.len() >= PARTY_LENGTH
+        self.count >= PARTY_LENGTH
     }
 
     pub fn is_empty(&self) -> bool {
-        self.mons.is_empty()
+        self.count == 0
     }
 
     pub fn get(&self, index: usize) -> Option<&Pokemon> {
-        self.mons.get(index)
+        self.mons.get(index).filter(|_| index < self.count)
     }
 
     pub fn get_mut(&mut self, index: usize) -> Option<&mut Pokemon> {
+        if index >= self.count {
+            return None;
+        }
         self.mons.get_mut(index)
     }
 
@@ -57,7 +64,7 @@ impl Party {
     /// used by the SOFTBOILED field move, which touches the user and the
     /// target in one step.
     pub fn get_two_mut(&mut self, a: usize, b: usize) -> Option<(&mut Pokemon, &mut Pokemon)> {
-        if a == b {
+        if a == b || a >= self.count || b >= self.count {
             return None;
         }
         if a < b {
@@ -70,19 +77,28 @@ impl Party {
     }
 
     pub fn leader(&self) -> Option<&Pokemon> {
-        self.mons.first()
+        if self.count == 0 {
+            None
+        } else {
+            Some(&self.mons[0])
+        }
     }
 
     pub fn leader_level(&self) -> u8 {
-        self.mons.first().map_or(0, |p| p.level)
+        if self.count == 0 {
+            0
+        } else {
+            self.mons[0].level
+        }
     }
 
     pub fn add(&mut self, pokemon: Pokemon) -> Result<usize, PartyError> {
         if self.is_full() {
             return Err(PartyError::PartyFull);
         }
-        let index = self.mons.len();
-        self.mons.push(pokemon);
+        let index = self.count;
+        self.mons[index] = pokemon;
+        self.count += 1;
         Ok(index)
     }
 
@@ -99,13 +115,14 @@ impl Party {
             create_pokemon(species, level, [0xFF, 0xFF]).ok_or(PartyError::IndexOutOfBounds)?;
 
         let ask_name = AskNameState::new(species);
-        let index = self.mons.len();
-        self.mons.push(pokemon);
+        let index = self.count;
+        self.mons[index] = pokemon;
+        self.count += 1;
         Ok((index, ask_name))
     }
 
-    pub fn set_nickname(&mut self, index: usize, nickname: String) -> Result<(), PartyError> {
-        if index >= self.mons.len() {
+    pub fn set_nickname(&mut self, index: usize, nickname: &str) -> Result<(), PartyError> {
+        if index >= self.count {
             return Err(PartyError::IndexOutOfBounds);
         }
         self.mons[index].set_nickname(nickname);
@@ -113,13 +130,13 @@ impl Party {
     }
 
     pub fn remove(&mut self, index: usize) -> Result<Pokemon, PartyError> {
-        if index >= self.mons.len() {
+        if index >= self.count {
             return Err(PartyError::IndexOutOfBounds);
         }
-        if self.mons.len() <= 1 {
+        if self.count <= 1 {
             return Err(PartyError::CannotRemoveLast);
         }
-        Ok(self.mons.remove(index))
+        Ok(self.take(index))
     }
 
     /// Remove a party member WITHOUT the last-mon guard.
@@ -130,18 +147,29 @@ impl Party {
     /// calls `RemovePokemon` with no party-count check. Used by the link trade
     /// driver; every other removal path keeps the guard.
     pub fn remove_for_trade(&mut self, index: usize) -> Result<Pokemon, PartyError> {
-        if index >= self.mons.len() {
+        if index >= self.count {
             return Err(PartyError::IndexOutOfBounds);
         }
-        Ok(self.mons.remove(index))
+        Ok(self.take(index))
+    }
+
+    /// Pop `mons[index]` out of the active region, shifting later members
+    /// left and blanking the vacated slot.
+    fn take(&mut self, index: usize) -> Pokemon {
+        let mon = self.mons[index]; // Pokemon: Copy
+        for i in index..self.count - 1 {
+            self.mons[i] = self.mons[i + 1];
+        }
+        self.count -= 1;
+        self.mons[self.count] = crate::battle::state::blank_pokemon();
+        mon
     }
 
     pub fn swap(&mut self, a: usize, b: usize) -> Result<(), PartyError> {
         if a == b {
             return Err(PartyError::SameIndex);
         }
-        let len = self.mons.len();
-        if a >= len || b >= len {
+        if a >= self.count || b >= self.count {
             return Err(PartyError::IndexOutOfBounds);
         }
         self.mons.swap(a, b);
@@ -149,27 +177,27 @@ impl Party {
     }
 
     pub fn species_list(&self) -> Vec<Species> {
-        self.mons.iter().map(|p| p.species).collect()
+        self.iter().map(|p| p.species).collect()
     }
 
     pub fn find_species(&self, species: Species) -> Option<usize> {
-        self.mons.iter().position(|p| p.species == species)
+        self.iter().position(|p| p.species == species)
     }
 
     pub fn alive_count(&self) -> usize {
-        self.mons.iter().filter(|p| p.hp > 0).count()
+        self.iter().filter(|p| p.hp > 0).count()
     }
 
     pub fn all_fainted(&self) -> bool {
-        !self.mons.is_empty() && self.mons.iter().all(|p| p.hp == 0)
+        !self.is_empty() && self.iter().all(|p| p.hp == 0)
     }
 
     pub fn first_alive_index(&self) -> Option<usize> {
-        self.mons.iter().position(|p| p.hp > 0)
+        self.iter().position(|p| p.hp > 0)
     }
 
     pub fn heal_all(&mut self) {
-        for mon in &mut self.mons {
+        for mon in self.iter_mut() {
             mon.hp = mon.max_hp;
             mon.status = crate::battle::state::StatusCondition::None;
             for i in 0..4 {
@@ -184,19 +212,20 @@ impl Party {
     }
 
     pub fn to_vec(&self) -> Vec<Pokemon> {
-        self.mons.clone()
+        self.mons[..self.count].to_vec()
     }
 
     pub fn into_vec(self) -> Vec<Pokemon> {
-        self.mons
+        self.mons[..self.count].to_vec()
     }
 
     pub fn iter(&self) -> impl Iterator<Item = &Pokemon> {
-        self.mons.iter()
+        self.mons[..self.count].iter()
     }
 
     pub fn iter_mut(&mut self) -> impl Iterator<Item = &mut Pokemon> {
-        self.mons.iter_mut()
+        let count = self.count;
+        self.mons[..count].iter_mut()
     }
 }
 
@@ -209,12 +238,46 @@ impl Default for Party {
 impl From<Vec<Pokemon>> for Party {
     fn from(mons: Vec<Pokemon>) -> Self {
         debug_assert!(mons.len() <= PARTY_LENGTH);
-        Self { mons }
+        let mut party = Self::new();
+        for mon in mons.into_iter().take(PARTY_LENGTH) {
+            party.mons[party.count] = mon;
+            party.count += 1;
+        }
+        party
     }
 }
 
 impl From<Party> for Vec<Pokemon> {
     fn from(party: Party) -> Self {
-        party.mons
+        party.into_vec()
+    }
+}
+
+// JSON shape preserved from the `Vec` era: a plain array of the active mons
+// (no `count`/`mons` wrapper), so old snapshots and the editor tooling that
+// reads/writes them are unaffected by the fixed-capacity storage.
+impl Serialize for Party {
+    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        use serde::ser::SerializeSeq;
+        let mut seq = serializer.serialize_seq(Some(self.count))?;
+        for mon in self.iter() {
+            seq.serialize_element(mon)?;
+        }
+        seq.end()
+    }
+}
+
+impl<'de> Deserialize<'de> for Party {
+    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        let mons = Vec::<Pokemon>::deserialize(deserializer)?;
+        if mons.len() > PARTY_LENGTH {
+            return Err(serde::de::Error::custom("party exceeds 6 members"));
+        }
+        let mut party = Self::new();
+        for mon in mons {
+            party.mons[party.count] = mon;
+            party.count += 1;
+        }
+        Ok(party)
     }
 }

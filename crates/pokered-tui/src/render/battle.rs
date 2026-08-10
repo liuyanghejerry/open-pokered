@@ -1450,20 +1450,14 @@ impl BattleVisualEffects {
     fn apply_intro_effects(&self, fb: &mut FrameBuffer) {
         match self.intro_anim {
             IntroAnimState::ScreenFlash { .. } => {
-                for px in fb.data.chunks_exact_mut(4) {
-                    px[0] = 0;
-                    px[1] = 0;
-                    px[2] = 0;
-                }
+                // All black (matches the per-pixel black-out the RGBA loop
+                // produced); indices untouched, palette remap instead.
+                fb.remap_shades(&[3, 3, 3, 3]);
             }
             IntroAnimState::SilhouetteSlide { .. } => {
-                for px in fb.data.chunks_exact_mut(4) {
-                    let lum = (px[0] as u32 * 30 + px[1] as u32 * 59 + px[2] as u32 * 11) / 100;
-                    let inv = 255 - lum as u8;
-                    px[0] = inv;
-                    px[1] = inv;
-                    px[2] = inv;
-                }
+                // Luminance inversion of the 4 grayscale shades (white↔black,
+                // 0xAA↔0x55), as a display-palette remap.
+                fb.remap_shades(&[3, 2, 1, 0]);
             }
             _ => {}
         }
@@ -1970,10 +1964,7 @@ fn draw_pokeball_tile(
                 2
             };
             let c = pal.colors[idx];
-            let off = (py as usize * fb.width() as usize + px as usize) * 4;
-            fb.data[off] = c.r;
-            fb.data[off + 1] = c.g;
-            fb.data[off + 2] = c.b;
+            fb.set_pixel(px, py, c);
         }
     }
 }

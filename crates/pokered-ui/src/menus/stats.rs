@@ -136,10 +136,9 @@ fn display_name(
     mon: &Pokemon,
     render_data: &dyn RenderData<Move = MoveId, Item = pokered_data::items::ItemId, Species = Species>,
 ) -> String {
-    if let Some(ref nick) = mon.nickname {
-        if !nick.is_empty() {
-            return nick.clone();
-        }
+    let mut buf = [0u8; pokered_core::battle::state::NAME_TEXT_BUF];
+    if mon.has_nickname() {
+        return mon.display_name(&mut buf).to_string();
     }
     render_data.species_name(mon.species).to_string()
 }

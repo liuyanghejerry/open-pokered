@@ -29,7 +29,7 @@ use wasm_bindgen::prelude::*;
 use pokered_app::PokemonGame;
 use pokered_core::data::wild_data::GameVersion;
 use pokered_renderer::input::InputState;
-use pokered_renderer::{FrameBuffer, RenderConfig, Rgba};
+use pokered_renderer::{FbSurface, FrameBuffer, RenderConfig, Rgba};
 
 #[cfg(target_arch = "wasm32")]
 use pokered_app::link::broadcast_channel::BroadcastChannelTransport;
@@ -312,7 +312,8 @@ async fn run() -> Result<(), Box<dyn std::error::Error>> {
             WindowEvent::CloseRequested => elwt.exit(),
             WindowEvent::RedrawRequested => {
                 game.borrow_mut().draw(&mut frame_buffer);
-                pixels.frame_mut().copy_from_slice(&frame_buffer.data);
+                // Indexed 2bpp buffer → RGBA texture via the display palette.
+                frame_buffer.present_into(pixels.frame_mut());
                 if let Err(err) = pixels.render() {
                     log_error("pixels.render", err);
                     elwt.exit();

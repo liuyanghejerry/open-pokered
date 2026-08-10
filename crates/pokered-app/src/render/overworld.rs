@@ -1323,12 +1323,16 @@ mod tests {
         fb.set_pixel(1, 0, Rgba::rgb(0xAA, 0xAA, 0xAA));
         fb.set_pixel(2, 0, Rgba::rgb(0x55, 0x55, 0x55));
         fb.set_pixel(3, 0, Rgba::BLACK);
-        // FadePal2 (dark cave): color0→2, everything else→3.
+        // FadePal2 (dark cave): color0→2, everything else→3. The indices
+        // underneath stay untouched (draws are unaffected); only the
+        // display palette remaps.
         apply_gb_palette(&mut fb, &FADE_PALETTES[1]);
         assert_eq!(fb.get_pixel(0, 0).unwrap(), Rgba::rgb(0x55, 0x55, 0x55));
         assert_eq!(fb.get_pixel(1, 0).unwrap(), Rgba::BLACK);
         assert_eq!(fb.get_pixel(2, 0).unwrap(), Rgba::BLACK);
         assert_eq!(fb.get_pixel(3, 0).unwrap(), Rgba::BLACK);
+        assert_eq!(fb.get_index(0, 0), Some(GbColor::White));
+        assert_eq!(fb.get_index(1, 0), Some(GbColor::LightGray));
     }
 
     #[test]
@@ -1348,13 +1352,19 @@ mod tests {
             Rgba::WHITE,
         );
         draw_overworld(screen, &mut res, &mut fb, pokered_core::game_state::Lang::En);
+        // Classify by the *displayed* color: the fade now lives in the
+        // display palette (indices stay as drawn), so get_pixel applies it.
         let mut counts = [0usize; 4];
-        for px in fb.data.chunks_exact(4) {
-            match (px[0], px[1], px[2]) {
-                (0xFF, 0xFF, 0xFF) => counts[0] += 1,
-                (0xAA, 0xAA, 0xAA) => counts[1] += 1,
-                (0x55, 0x55, 0x55) => counts[2] += 1,
-                _ => counts[3] += 1,
+        for y in 0..fb.height() {
+            for x in 0..fb.width() {
+                let c = fb.get_pixel(x, y).unwrap();
+                let idx = match (c.r, c.g, c.b) {
+                    (0xFF, 0xFF, 0xFF) => 0,
+                    (0xAA, 0xAA, 0xAA) => 1,
+                    (0x55, 0x55, 0x55) => 2,
+                    _ => 3,
+                };
+                counts[idx] += 1;
             }
         }
         counts
@@ -1405,7 +1415,7 @@ mod tests {
             Rgba::WHITE,
         );
         draw_overworld(&mut s, &mut res, &mut fb_b, pokered_core::game_state::Lang::En);
-        assert_ne!(fb_a.data, fb_b.data, "water rotation changes the frame");
+        assert_ne!(fb_a.packed(), fb_b.packed(), "water rotation changes the frame");
     }
 }
 

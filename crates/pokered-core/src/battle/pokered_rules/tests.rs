@@ -135,7 +135,7 @@ fn poke(m: &Mon, move_id: MoveId) -> Pokemon {
     let base = pokered_data::pokemon_data::get_base_stats(m.species).expect("base stats");
     Pokemon {
         species: m.species,
-        nickname: None,
+        nickname: [0x50; 11],
         level: 50,
         hp: m.hp,
         max_hp: m.hp,
@@ -152,7 +152,7 @@ fn poke(m: &Mon, move_id: MoveId) -> Pokemon {
         dv_bytes: [0xFF, 0xFF],
         stat_exp: [0; 5],
         total_exp: 0,
-        is_traded: false, ot_id: 0, ot_name: None,
+        is_traded: false, ot_id: 0, ot_name: [0x50; 11],
     }
 }
 

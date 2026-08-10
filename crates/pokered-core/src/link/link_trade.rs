@@ -747,13 +747,16 @@ impl LinkTradeDriver {
         // can trigger while trading (evos_moves.asm:70-94) and the cutscene
         // cannot be B-cancelled (evolution.asm:156-158).
         let pending = match self.party.get(index) {
-            Some(mon) => check_trade_evolution(mon.species, mon.level).map(|to| PendingEvolution {
-                party_index: index,
-                from: mon.species,
-                to,
-                name: mon.display_name(),
-                force: true,
-            }),
+            Some(mon) => {
+                let mut name_buf = [0u8; crate::battle::state::NAME_TEXT_BUF];
+                check_trade_evolution(mon.species, mon.level).map(|to| PendingEvolution {
+                    party_index: index,
+                    from: mon.species,
+                    to,
+                    name: mon.display_name(&mut name_buf).to_string(),
+                    force: true,
+                })
+            }
             None => None,
         };
         self.local_index = None;

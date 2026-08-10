@@ -38,3 +38,17 @@ strum = { version = "0.26", features = ["derive"] }
 strum_macros = "0.26"
 num-derive = "0.4"
 num-traits = "0.2"
+
+# TODO(port): temporary local override so this branch builds against the
+# dotzuki port/pr-160 branch (PR #160 engine side) before a new dotzuki tag
+# is published. Drop this section and bump the tag once dotzuki releases.
+[patch."ssh://git@github.com/liuyanghejerry/dotzuki.git"]
+dotzuki-app = { path = "../dotzuki/workspace/crates/dotzuki-app" }
+dotzuki-audio = { path = "../dotzuki/workspace/crates/dotzuki-audio" }
+dotzuki-engine = { path = "../dotzuki/workspace/crates/dotzuki-engine" }
+dotzuki-engine-dsl = { path = "../dotzuki/workspace/crates/dotzuki-engine-dsl" }
+dotzuki-engine-script = { path = "../dotzuki/workspace/crates/dotzuki-engine-script" }
+dotzuki-renderer = { path = "../dotzuki/workspace/crates/dotzuki-renderer" }
+dotzuki-rules = { path = "../dotzuki/workspace/crates/dotzuki-rules" }
+dotzuki-tui = { path = "../dotzuki/workspace/crates/dotzuki-tui" }
+dotzuki-ui = { path = "../dotzuki/workspace/crates/dotzuki-ui" }

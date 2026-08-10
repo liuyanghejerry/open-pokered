@@ -1137,7 +1137,6 @@ dependencies = [
 [[package]]
 name = "dotzuki-app"
 version = "0.1.0"
-source = "git+ssh://git@github.com/liuyanghejerry/dotzuki.git?tag=v0.3.0#51324fcf5d22f9a6f94620f184039332cf8e452d"
 dependencies = [
  "dotzuki-renderer",
  "notify",
@@ -1146,7 +1145,6 @@ dependencies = [
 [[package]]
 name = "dotzuki-audio"
 version = "0.1.0"
-source = "git+ssh://git@github.com/liuyanghejerry/dotzuki.git?tag=v0.3.0#51324fcf5d22f9a6f94620f184039332cf8e452d"
 dependencies = [
  "bitflags 2.13.1",
  "serde",
@@ -1156,7 +1154,6 @@ dependencies = [
 [[package]]
 name = "dotzuki-engine"
 version = "0.1.0"
-source = "git+ssh://git@github.com/liuyanghejerry/dotzuki.git?tag=v0.3.0#51324fcf5d22f9a6f94620f184039332cf8e452d"
 dependencies = [
  "image",
  "serde",
@@ -1166,7 +1163,6 @@ dependencies = [
 [[package]]
 name = "dotzuki-engine-dsl"
 version = "0.1.0"
-source = "git+ssh://git@github.com/liuyanghejerry/dotzuki.git?tag=v0.3.0#51324fcf5d22f9a6f94620f184039332cf8e452d"
 dependencies = [
  "dotzuki-engine-script",
  "miette",
@@ -1179,7 +1175,6 @@ dependencies = [
 [[package]]
 name = "dotzuki-engine-script"
 version = "0.1.0"
-source = "git+ssh://git@github.com/liuyanghejerry/dotzuki.git?tag=v0.3.0#51324fcf5d22f9a6f94620f184039332cf8e452d"
 dependencies = [
  "boa_engine",
  "log",
@@ -1191,7 +1186,6 @@ dependencies = [
 [[package]]
 name = "dotzuki-renderer"
 version = "0.1.0"
-source = "git+ssh://git@github.com/liuyanghejerry/dotzuki.git?tag=v0.3.0#51324fcf5d22f9a6f94620f184039332cf8e452d"
 dependencies = [
  "dotzuki-engine",
  "error-iter",
@@ -1209,7 +1203,6 @@ dependencies = [
 [[package]]
 name = "dotzuki-rules"
 version = "0.1.0"
-source = "git+ssh://git@github.com/liuyanghejerry/dotzuki.git?tag=v0.3.0#51324fcf5d22f9a6f94620f184039332cf8e452d"
 dependencies = [
  "dotzuki-engine",
  "notify",
@@ -1221,7 +1214,6 @@ dependencies = [
 [[package]]
 name = "dotzuki-tui"
 version = "0.1.0"
-source = "git+ssh://git@github.com/liuyanghejerry/dotzuki.git?tag=v0.3.0#51324fcf5d22f9a6f94620f184039332cf8e452d"
 dependencies = [
  "crossterm",
  "dotzuki-renderer",
@@ -1231,7 +1223,6 @@ dependencies = [
 [[package]]
 name = "dotzuki-ui"
 version = "0.1.0"
-source = "git+ssh://git@github.com/liuyanghejerry/dotzuki.git?tag=v0.3.0#51324fcf5d22f9a6f94620f184039332cf8e452d"
 dependencies = [
  "dotzuki-engine",
  "dotzuki-renderer",
@@ -3115,6 +3106,7 @@ version = "0.1.0"
 dependencies = [
  "criterion",
  "dotzuki-engine",
+ "dotzuki-engine-dsl",
  "dotzuki-engine-script",
  "dotzuki-rules",
  "getrandom 0.2.17",
@@ -3122,6 +3114,7 @@ dependencies = [
  "pokered-data",
  "rand",
  "serde",
+ "serde_json",
  "thiserror 2.0.20",
 ]
 

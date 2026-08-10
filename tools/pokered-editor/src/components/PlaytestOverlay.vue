@@ -2,7 +2,7 @@
 import { ref, computed, watch, onMounted } from 'vue'
 import { useGameSession } from '../composables/useGameSession'
 import { dataFetch } from '../composables/dataAdapter'
-import { getPokeredRunner, EDITOR_SAVE_KEY } from '../composables/usePokeredRunner'
+import { getPokeredRunner, EDITOR_SAVE_KEY, EDITOR_FLAGS_KEY } from '../composables/usePokeredRunner'
 import { usePlaytestOverlay } from '../composables/usePlaytestOverlay'
 import GameCanvas from './GameCanvas.vue'
 
@@ -35,6 +35,9 @@ const session = useGameSession(canvasEl, {
     try {
       const save = runner.export_save()
       if (save) localStorage.setItem(EDITOR_SAVE_KEY, save)
+      // Runtime-only script flags (hidden-object toggles etc.) live outside
+      // SaveData — snapshot them alongside the save.
+      localStorage.setItem(EDITOR_FLAGS_KEY, runner.export_flags())
     } catch {
       /* best-effort */
     }
@@ -53,15 +56,31 @@ function startNewGame() {
   void session.boot(null)
 }
 
+/** Restore the script-flag snapshot saved alongside the playtest save. */
+function restoreScriptFlags() {
+  const flags = localStorage.getItem(EDITOR_FLAGS_KEY)
+  if (!flags) return
+  try {
+    getPokeredRunner().then((runner) => runner.import_flags(flags))
+  } catch {
+    /* best-effort */
+  }
+}
+
 function continueGame() {
   playSession = true
   lastSave = localStorage.getItem(EDITOR_SAVE_KEY)
   started.value = true
-  void session.boot(lastSave)
+  void session.boot(lastSave).then(restoreScriptFlags)
 }
 
 function retry() {
-  void session.boot(mode.value === 'play' ? lastSave : null)
+  const play = mode.value === 'play'
+  void session.boot(play ? lastSave : null).then(() => {
+    // Retrying a Play session re-applies the flag snapshot; Test sessions
+    // are scratch and keep whatever the runner already holds.
+    if (play) restoreScriptFlags()
+  })
 }
 
 /** Export the current runner state to the Play save. Callers only invoke
@@ -72,6 +91,7 @@ async function persistPlaySave() {
     const runner = await getPokeredRunner()
     const save = runner.export_save()
     if (save) localStorage.setItem(EDITOR_SAVE_KEY, save)
+    localStorage.setItem(EDITOR_FLAGS_KEY, runner.export_flags())
   } catch {
     /* best-effort */
   }
@@ -331,6 +351,10 @@ function importSnapshot() {
       const runner = await getPokeredRunner()
       if (runner.import_save(await file.text())) {
         statusMessage.value = '已载入存档快照'
+        // The snapshot carries the save's event bits but not the runtime
+        // extras (`__OBJ_HIDDEN_*` etc.) — re-apply the session's flag
+        // snapshot so hidden objects stay consistent after the reboot.
+        if (playSession) restoreScriptFlags()
       } else {
         statusMessage.value = '存档快照无效'
       }

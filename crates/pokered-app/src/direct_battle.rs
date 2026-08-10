@@ -318,6 +318,8 @@ impl DirectBattleGame {
 }
 
 impl GameLoop for DirectBattleGame {
+    type Fb = FrameBuffer;
+
     fn update(&mut self, input: &InputState) {
         #[cfg(not(target_arch = "wasm32"))]
         {

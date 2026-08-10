@@ -226,16 +226,17 @@ fn move_display(move_id: MoveId) -> &'static str {
 pub fn apply_item_to_pokemon(item: ItemId, mon: &mut Pokemon, pokedex: &mut Pokedex) -> ItemApplyOutcome {
     // Dex updates for evolutions happen in finalize_evolution, not here.
     let _ = &pokedex;
+    let mut name_buf = [0u8; crate::battle::state::NAME_TEXT_BUF];
     // Healing (HP / revive / full-restore).
     match use_healing_item(mon, item) {
         HealResult::Healed { hp_restored } => {
             return used(
-                format!("{}'s HP was\nrestored by {}!", mon.display_name(), hp_restored),
+                format!("{}'s HP was\nrestored by {}!", mon.display_name(&mut name_buf), hp_restored),
                 true,
             )
         }
         HealResult::Revived { .. } => {
-            return used(format!("{} was\nrevitalized!", mon.display_name()), true)
+            return used(format!("{} was\nrevitalized!", mon.display_name(&mut name_buf)), true)
         }
         HealResult::AlreadyFullHp | HealResult::NotFainted => return no_effect(),
         HealResult::NotApplicable => {}
@@ -243,7 +244,7 @@ pub fn apply_item_to_pokemon(item: ItemId, mon: &mut Pokemon, pokedex: &mut Poke
     // Status cures.
     match use_status_cure(mon, item) {
         StatusCureResult::Cured => {
-            return used(format!("{} was cured\nof its status!", mon.display_name()), true)
+            return used(format!("{} was cured\nof its status!", mon.display_name(&mut name_buf)), true)
         }
         StatusCureResult::NoEffect => return no_effect(),
         StatusCureResult::NotApplicable => {}
@@ -266,7 +267,7 @@ pub fn apply_item_to_pokemon(item: ItemId, mon: &mut Pokemon, pokedex: &mut Poke
     // Vitamins.
     match use_vitamin(mon, item) {
         VitaminResult::Applied { .. } => {
-            return used(format!("{}'s stats\nrose!", mon.display_name()), true)
+            return used(format!("{}'s stats\nrose!", mon.display_name(&mut name_buf)), true)
         }
         VitaminResult::NoEffect => return no_effect(),
         VitaminResult::NotApplicable => {}
@@ -275,7 +276,7 @@ pub fn apply_item_to_pokemon(item: ItemId, mon: &mut Pokemon, pokedex: &mut Poke
     // runs through the cutscene (ItemUseRareCandy → TryEvolvingMon with
     // wForceEvolution = 0, item_effects.asm:1409-1411).
     if item == ItemId::RareCandy {
-        let name = mon.display_name();
+        let name = mon.display_name(&mut name_buf);
         return match use_rare_candy(mon) {
             Some(result) => {
                 let msg = format!("{} grew to\nlevel {}!", name, result.new_level);
@@ -315,7 +316,7 @@ pub fn apply_item_to_pokemon(item: ItemId, mon: &mut Pokemon, pokedex: &mut Poke
         if mon.hp == 0 {
             return no_effect();
         }
-        let name = mon.display_name();
+        let name = mon.display_name(&mut name_buf);
         let result = match machine {
             MachineKind::Tm(n) => teach_tm(mon, n),
             MachineKind::Hm(n) => teach_hm(mon, n),
@@ -373,8 +374,9 @@ pub fn apply_softboiled(user: &mut Pokemon, target: &mut Pokemon) -> ItemApplyOu
     let old_hp = target.hp;
     target.hp = target.hp.saturating_add(cost).min(target.max_hp);
     // POTION_MSG (data/text/text_2.asm:1384-1390): "{name} recovered by {N}!"
+    let mut name_buf = [0u8; crate::battle::state::NAME_TEXT_BUF];
     used(
-        format!("{} recovered by\n{}!", target.display_name(), target.hp - old_hp),
+        format!("{} recovered by\n{}!", target.display_name(&mut name_buf), target.hp - old_hp),
         false,
     )
 }
@@ -406,10 +408,11 @@ pub fn finish_tm_hm_replace(item: ItemId, mon: &mut Pokemon, forget_slot: usize)
     }
     let old_move = mon.moves[forget_slot];
     replace_move(mon, forget_slot, move_id);
+    let mut name_buf = [0u8; crate::battle::state::NAME_TEXT_BUF];
     used(
         format!(
             "{} forgot\n{}...\nand learned\n{}!",
-            mon.display_name(),
+            mon.display_name(&mut name_buf),
             move_display(old_move),
             move_display(move_id)
         ),

@@ -34,7 +34,8 @@ fn item_name(id: pokered_data::items::ItemId, is_zh: bool) -> String {
 }
 
 fn mon_row(mon: &Pokemon) -> String {
-    format!("{} :L{}", mon.display_name(), mon.level)
+    let mut name_buf = [0u8; pokered_core::battle::state::NAME_TEXT_BUF];
+    format!("{} :L{}", mon.display_name(&mut name_buf), mon.level)
 }
 
 /// Bottom text box holding up to `lines` lines (max 5), plus the current
@@ -118,7 +119,7 @@ fn mon_rows(pc: &PcScreen, save: &SaveData, is_zh: bool) -> Vec<String> {
 
 /// Current item list (bag for DEPOSIT, PC storage otherwise) + CANCEL.
 fn item_rows(pc: &PcScreen, save: &SaveData, is_zh: bool) -> Vec<String> {
-    let src: &[(pokered_data::items::ItemId, u32)] = match pc.item_mode() {
+    let src: Vec<(pokered_data::items::ItemId, u32)> = match pc.item_mode() {
         ItemListMode::Deposit => save.game_data.bag.items(),
         ItemListMode::Withdraw | ItemListMode::Toss => save.game_data.pc_items.items(),
     };
@@ -243,12 +244,13 @@ pub fn draw_pc(
                     draw_menu(10 * T, 8 * T, 8, &labels, pc.mon_action_cursor(), fb);
                 }
                 PcPhase::ReleaseConfirm => {
+                    let mut name_buf = [0u8; pokered_core::battle::state::NAME_TEXT_BUF];
                     let name = save
                         .pc_storage
                         .current_box()
                         .get(cursor)
-                        .map(|m| m.display_name())
-                        .unwrap_or_default();
+                        .map(|m| m.display_name(&mut name_buf))
+                        .unwrap_or("");
                     // "Once released, {NAME} is gone forever. OK?"
                     // (_OnceReleasedText)
                     if is_zh {

@@ -42,7 +42,7 @@ pub fn create_pokemon(species: Species, level: u8, dv_bytes: [u8; 2]) -> Option<
 
     Some(Pokemon {
         species,
-        nickname: None,
+        nickname: [0x50; 11],
         level,
         hp,
         max_hp: hp,
@@ -64,7 +64,7 @@ pub fn create_pokemon(species: Species, level: u8, dv_bytes: [u8; 2]) -> Option<
         dv_bytes,
         stat_exp: [0; 5],
         total_exp: crate::battle::experience::growth::exp_for_level(base.growth_rate, level),
-        is_traded: false, ot_id: 0, ot_name: None,
+        is_traded: false, ot_id: 0, ot_name: [0x50; 11],
     })
 }
 

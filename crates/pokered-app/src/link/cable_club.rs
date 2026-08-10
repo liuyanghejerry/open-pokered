@@ -253,8 +253,12 @@ impl CableClubFlow {
                 let local_name = self
                     .selector
                     .as_ref()
-                    .and_then(|s| s.party().get(self.trade_confirm_local_index()))
-                    .map(|m| m.display_name())
+                    .and_then(|s| {
+                        let mut name_buf = [0u8; pokered_core::battle::state::NAME_TEXT_BUF];
+                        s.party()
+                            .get(self.trade_confirm_local_index())
+                            .map(|m| m.display_name(&mut name_buf).to_string())
+                    })
                     .unwrap_or_default();
                 Some((format!("{} will\nbe traded.", local_name), *selected))
             }

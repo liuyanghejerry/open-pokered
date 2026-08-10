@@ -1,6 +1,6 @@
 use std::str::FromStr;
 
-use crate::items::inventory::Inventory;
+use crate::items::inventory::{BAG_ITEM_CAPACITY, Inventory};
 use crate::main_menu::MenuInput;
 use pokered_data::item_data::get_item_data;
 use pokered_data::items::ItemId;
@@ -13,7 +13,7 @@ use pokered_data::items::ItemId;
 #[derive(Debug, Clone)]
 pub struct PlayerData {
     pub money: u32,
-    pub bag: Inventory,
+    pub bag: Inventory<BAG_ITEM_CAPACITY>,
 }
 
 /// Sound effects the mart layer can request.
@@ -681,7 +681,7 @@ pub fn can_sell(item: ItemId) -> bool {
     }
 }
 
-pub fn try_buy(item: ItemId, quantity: u8, money: &mut u32, bag: &mut Inventory) -> BuyResult {
+pub fn try_buy(item: ItemId, quantity: u8, money: &mut u32, bag: &mut Inventory<BAG_ITEM_CAPACITY>) -> BuyResult {
     let cost = match buy_price(item, quantity) {
         Some(c) => c,
         None => return BuyResult::InvalidItem,
@@ -700,7 +700,7 @@ pub fn try_sell(
     bag_index: usize,
     quantity: u8,
     money: &mut u32,
-    bag: &mut Inventory,
+    bag: &mut Inventory<BAG_ITEM_CAPACITY>,
 ) -> SellResult {
     let (item, owned) = match bag.get(bag_index) {
         Some(entry) => entry,

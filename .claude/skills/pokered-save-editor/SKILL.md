@@ -45,10 +45,16 @@ The JSON snapshot format mirrors the `SaveData` struct. Here's the complete sche
   "party": [ ... ],
   "current_box": { ... },
   "pc_storage": { ... },
-  "hall_of_fame": { ... },
-  "script_flags": { ... }
+  "hall_of_fame": { ... }
 }
 ```
+
+> `script_flags` was removed from `SaveData` (fixed-memory refactor): named
+> event flags live in `game_data.event_flags` (320-byte bitset) and
+> runtime-only extras (`__OBJ_HIDDEN_*` etc.) are kept outside SaveData (native
+> sidecar `pokered.script_flags.json`, editor localStorage key
+> `pokered-editor-script-flags`). Old JSON with `script_flags` still loads
+> (unknown fields are ignored) — flag edits made that way are silently dropped.
 
 ### `player_name`
 
@@ -79,57 +85,60 @@ Array of up to 6 Pokémon:
 ```json
 {
   "species": "Bulbasaur",
+  "nickname": [129, 148, 139, 129, 128, 146, 128, 148, 145, 80, 80],
   "level": 5,
-  "current_hp": 21,
-  "status": "None",
+  "hp": 21,
+  "max_hp": 21,
+  "attack": 11,
+  "defense": 11,
+  "speed": 11,
+  "special": 13,
   "type1": "Grass",
   "type2": "Poison",
-  "catch_rate": 45,
-  "moves": [
-    {"MoveId": "Tackle"},
-    {"MoveId": "Growl"}
-  ],
-  "original_trainer_id": 12345,
-  "experience": 125,
-  "hp_exp": 0,
-  "attack_exp": 0,
-  "defense_exp": 0,
-  "speed_exp": 0,
-  "special_exp": 0,
-  "dvs": {"raw": 39480},
+  "moves": ["Tackle", "Growl", "Pound", "Pound"],
   "pp": [35, 40, 0, 0],
-  "stats": {
-    "max_hp": 21,
-    "attack": 11,
-    "defense": 11,
-    "speed": 11,
-    "special": 13
-  }
+  "pp_ups": [0, 0, 0, 0],
+  "status": "None",
+  "dv_bytes": [154, 218],
+  "stat_exp": [0, 0, 0, 0, 0],
+  "total_exp": 125,
+  "is_traded": false,
+  "ot_id": 0,
+  "ot_name": [80, 80, 80, 80, 80, 80, 80, 80, 80, 80, 80]
 }
 ```
 
 **Key fields:**
 - `species`: PascalCase name (e.g., "Bulbasaur", "Charizard", "Mewtwo")
-- `level`: 1–100
-- `moves`: Array of up to 4 moves. Use the MoveId variant name (e.g., "Tackle", "Thunderbolt")
-- `dvs.raw`: Determinant Values encoded as u16 (atk/def/spd/spc, 4 bits each)
-- `stats`: Calculated stats (max_hp, attack, defense, speed, special)
+- `nickname` / `ot_name`: charmap-encoded byte arrays (`NameBytes`, max 10 chars,
+  0x50 = no-name padding). On deserialize, legacy `null` or decoded-string
+  values are still accepted.
+- `moves`: Array of up to 4 MoveId variant names (e.g., "Tackle", "Thunderbolt")
+- `dv_bytes`: two bytes packing the 4-bit DVs (high nybble = Atk/Spd, low nybble =
+  Def/Spc; HP IV is derived from the low bits)
+- `stat_exp`: [hp, atk, def, spd, spc] stat experience
+- `ot_id`: 0 = unknown/own mon; a mon is "traded" iff `ot_id != 0 && ot_id != player_id`
 
-### `script_flags` — Event Flags
+### `event_flags` — Event Flags (bitset)
 
-HashMap of flag names to booleans:
+Named event flags live in `game_data.event_flags`: a **320-byte bit array**
+(`EVENT_FLAGS_SIZE`, matching the original wEventFlags at SRAM $A00).
+To set a flag in a snapshot, flip the right bit — the per-flag
+`byte_offset`/`bit_mask` const tables live in `pokered-data/src/event_flags.rs`
+(507 defined flags, max bit 0x9DA):
 
-```json
-{
-  "EVENT_GOT_STARTER": true,
-  "EVENT_GOT_POKEDEX": false,
-  "EVENT_GOT_BOULDERBADGE": true,
-  "EVENT_BEAT_BROCK": true,
-  "EVENT_GOT_HM01": false
-}
+```python
+# e.g. EVENT_GOT_STARTER — look up byte/bit from event_flags.rs, then:
+flags = bytearray(save["game_data"]["event_flags"])
+flags[0x1A] |= 0x08   # example: byte 26, bit 3
+save["game_data"]["event_flags"] = list(flags)
 ```
 
-There are 507 defined event flags. Key categories:
+Runtime-only keys (`__OBJ_HIDDEN_*`, `__OBJ_SHOWN_*`) are NOT in the bitset;
+they live in the overworld's extras map, persisted by the native app to
+`pokered.script_flags.json` and by the editor to its own localStorage key.
+
+Key flag categories:
 
 | Prefix | Category |
 |--------|----------|
@@ -159,19 +168,36 @@ cargo run --release --bin pokered-app -- run --snapshot template.json --skip-int
 
 ### Set specific event flags for story testing
 
-```json
-// In snapshot.json, add to script_flags:
-{
-  "EVENT_GOT_STARTER": true,
-  "EVENT_GOT_POKEDEX": true,
-  "EVENT_GOT_BOULDERBADGE": true,
-  "EVENT_GOT_CASCADEBADGE": true,
-  "EVENT_GOT_THUNDERBADGE": true,
-  "EVENT_BEAT_BROCK": true,
-  "EVENT_BEAT_MISTY": true,
-  "EVENT_BEAT_LT_SURGE": true
+`script_flags` no longer exists in the snapshot — set named flags via the
+`game_data.event_flags` bitset (see the `event_flags` section above), or use
+the editor's FlagEditor / the debug-server `SetFlag` command. A Python helper
+snippet:
+
+```python
+import json
+
+FLAG_BITS = {  # byte_offset, bit_mask — derived from event_flags.rs enum values
+    "EVENT_GOT_STARTER": (4, 0x04),          # bit 0x022
+    "EVENT_GOT_POKEDEX": (4, 0x20),          # bit 0x025
+    "EVENT_BEAT_BROCK": (0x0E, 0x80),        # bit 0x077
+    "EVENT_BEAT_MISTY": (0x17, 0x80),        # bit 0x0BF
+    "EVENT_BEAT_LT_SURGE": (0x2C, 0x80),     # bit 0x167
 }
+with open("snapshot.json") as f:
+    save = json.load(f)
+flags = bytearray(save["game_data"]["event_flags"])
+for name, (byte, mask) in FLAG_BITS.items():
+    flags[byte] |= mask
+save["game_data"]["event_flags"] = list(flags)
+with open("snapshot.json", "w") as f:
+    json.dump(save, f)
 ```
+
+> The `EventFlag` enum values ARE the bit indices (`byte = bit >> 3`,
+> `mask = 1 << (bit & 7)`); recompute offsets from
+> `pokered-data/src/event_flags.rs` — the enum is the source of truth.
+> Gym badges are NOT event flags — they are the `game_data.obtained_badges`
+> bitfield (bit0=Boulder … bit7=Earth).
 
 ### Create a save with specific items
 

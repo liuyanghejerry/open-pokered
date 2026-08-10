@@ -15,6 +15,7 @@ pub mod hidden_items;
 pub mod hm_effects;
 pub mod map_data_loading;
 pub mod map_loading;
+pub mod native_script;
 pub mod npc_interaction;
 pub mod npc_movement;
 pub mod player_movement;

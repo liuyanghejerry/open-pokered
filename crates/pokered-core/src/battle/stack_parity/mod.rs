@@ -2093,7 +2093,7 @@ pub fn poke(species: Species, hp: u16, speed: u16, status: LegacyStatus) -> Poke
     let base = get_base_stats(species).expect("species base stats");
     Pokemon {
         species,
-        nickname: None,
+        nickname: [0x50; 11],
         level: 50,
         hp,
         max_hp: hp,
@@ -2110,7 +2110,7 @@ pub fn poke(species: Species, hp: u16, speed: u16, status: LegacyStatus) -> Poke
         dv_bytes: [0xFF, 0xFF],
         stat_exp: [0; 5],
         total_exp: 0,
-        is_traded: false, ot_id: 0, ot_name: None,
+        is_traded: false, ot_id: 0, ot_name: [0x50; 11],
     }
 }
 
@@ -2626,7 +2626,7 @@ fn poke_spec(m: &MonSpec) -> Pokemon {
     let base = get_base_stats(m.species).expect("species base stats");
     Pokemon {
         species: m.species,
-        nickname: None,
+        nickname: [0x50; 11],
         level: 50,
         hp: m.hp,
         max_hp: m.hp,
@@ -2643,7 +2643,7 @@ fn poke_spec(m: &MonSpec) -> Pokemon {
         dv_bytes: [0xFF, 0xFF],
         stat_exp: [0; 5],
         total_exp: 0,
-        is_traded: false, ot_id: 0, ot_name: None,
+        is_traded: false, ot_id: 0, ot_name: [0x50; 11],
     }
 }
 
@@ -3118,7 +3118,7 @@ fn poke_residual(m: &ResidualMon) -> Pokemon {
     let base = get_base_stats(Species::Pikachu).expect("species base stats");
     Pokemon {
         species: Species::Pikachu,
-        nickname: None,
+        nickname: [0x50; 11],
         level: 50,
         hp: m.hp,
         max_hp: m.max_hp,
@@ -3135,7 +3135,7 @@ fn poke_residual(m: &ResidualMon) -> Pokemon {
         dv_bytes: [0xFF, 0xFF],
         stat_exp: [0; 5],
         total_exp: 0,
-        is_traded: false, ot_id: 0, ot_name: None,
+        is_traded: false, ot_id: 0, ot_name: [0x50; 11],
     }
 }
 
@@ -3806,7 +3806,7 @@ fn poke_secondary(m: &SecondaryMon) -> Pokemon {
     let base = get_base_stats(m.species).expect("species base stats");
     Pokemon {
         species: m.species,
-        nickname: None,
+        nickname: [0x50; 11],
         level: 50,
         hp: m.hp,
         max_hp: m.max_hp,
@@ -3823,7 +3823,7 @@ fn poke_secondary(m: &SecondaryMon) -> Pokemon {
         dv_bytes: [0xFF, 0xFF],
         stat_exp: [0; 5],
         total_exp: 0,
-        is_traded: false, ot_id: 0, ot_name: None,
+        is_traded: false, ot_id: 0, ot_name: [0x50; 11],
     }
 }
 
@@ -4370,7 +4370,7 @@ fn poke_ai(m: &AiMonSpec) -> Pokemon {
     let base = get_base_stats(m.species).expect("species base stats");
     Pokemon {
         species: m.species,
-        nickname: None,
+        nickname: [0x50; 11],
         level: 50,
         hp: m.hp,
         max_hp: m.hp,
@@ -4387,7 +4387,7 @@ fn poke_ai(m: &AiMonSpec) -> Pokemon {
         dv_bytes: [0xFF, 0xFF],
         stat_exp: [0; 5],
         total_exp: 0,
-        is_traded: false, ot_id: 0, ot_name: None,
+        is_traded: false, ot_id: 0, ot_name: [0x50; 11],
     }
 }
 

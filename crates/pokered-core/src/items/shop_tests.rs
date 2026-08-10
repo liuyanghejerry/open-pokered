@@ -1,4 +1,4 @@
-use super::inventory::Inventory;
+use super::inventory::{BAG_ITEM_CAPACITY, Inventory};
 use super::shop::*;
 use crate::main_menu::MenuInput;
 use pokered_data::items::ItemId;
@@ -247,7 +247,7 @@ fn from_item_id_strings_unknown_item() {
 
 // ─── MartState tests ──────────────────────────
 
-fn player_data(money: u32, bag: Inventory) -> PlayerData {
+fn player_data(money: u32, bag: Inventory<BAG_ITEM_CAPACITY>) -> PlayerData {
     PlayerData { money, bag }
 }
 

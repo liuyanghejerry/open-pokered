@@ -42,10 +42,9 @@ fn serialize_map_connection(conn: &MapConnection, buf: &mut Vec<u8>) {
     push_u16_be(buf, conn.view_pointer);
 }
 
-fn serialize_inventory(
-    inv: &crate::items::inventory::Inventory,
+fn serialize_inventory<const N: usize>(
+    inv: &crate::items::inventory::Inventory<N>,
     buf: &mut Vec<u8>,
-    capacity: usize,
 ) {
     let count = inv.count() as u8;
     buf.push(count);
@@ -57,7 +56,7 @@ fn serialize_inventory(
     }
     buf.push(0xFF);
     let items_written = inv.count() * 2 + 1;
-    let total_slots = capacity * 2 + 1;
+    let total_slots = N * 2 + 1;
     for _ in items_written..total_slots {
         buf.push(0);
     }
@@ -74,7 +73,7 @@ pub fn serialize_game_data_into(data: &GameData, buf: &mut Vec<u8>) {
     buf.extend_from_slice(data.pokedex.seen_flags());
 
     // -- Bag inventory (count + 20*2 slots + terminator) --
-    serialize_inventory(&data.bag, buf, 20);
+    serialize_inventory(&data.bag, buf);
 
     // -- Money (3 bytes BCD) --
     push_bcd_money(buf, data.player_money);
@@ -198,7 +197,7 @@ pub fn serialize_game_data_into(data: &GameData, buf: &mut Vec<u8>) {
     buf.extend_from_slice(&[0u8; 4]); // 4 bytes padding after grass_tile
 
     // -- PC items inventory --
-    serialize_inventory(&data.pc_items, buf, 50);
+    serialize_inventory(&data.pc_items, buf);
 
     // -- Current box num + 1 byte padding --
     buf.push(data.current_box_num);

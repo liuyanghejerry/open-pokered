@@ -95,7 +95,8 @@ fn draw_entry<P: Painter>(
     let status_dl = dl.iter().find_map(|(k, v)| if k == "status" { Some(v) } else { None });
     let hp_val_dl = dl.iter().find_map(|(k, v)| if k == "hp_value" { Some(v) } else { None });
 
-    let name = pokemon.display_name();
+    let mut name_buf = [0u8; pokered_core::battle::state::NAME_TEXT_BUF];
+    let name = pokemon.display_name(&mut name_buf);
     let display_name: &str = if name.len() > NAME_MAX_LEN { &name[..NAME_MAX_LEN] } else { &name };
     if let Some(dl) = name_dl {
         frame.label(dl.tx, dl.ty + row, display_name, dl.color);

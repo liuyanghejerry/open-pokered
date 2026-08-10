@@ -29,14 +29,14 @@ pub fn export_sram(save: &SaveData) -> Vec<u8> {
 fn write_bank0(hof: &HallOfFame, bank: &mut [u8]) {
     let mut offset = HOF_OFFSET;
     for team in hof.iter() {
-        for (mon_idx, mon) in team.mons.iter().enumerate() {
+        for (mon_idx, mon) in team.mons().iter().enumerate() {
             let base = offset + mon_idx * HOF_MON_SIZE;
             bank[base] = mon.species;
             bank[base + 1] = mon.level;
             let name_slot = &mut bank[base + 2..base + HOF_MON_SIZE];
             name_slot.fill(0x50);
-            let len = mon.nickname.len().min(HOF_MON_SIZE - 3);
-            name_slot[..len].copy_from_slice(&mon.nickname[..len]);
+            let len = mon.nickname_bytes().len().min(HOF_MON_SIZE - 3);
+            name_slot[..len].copy_from_slice(&mon.nickname_bytes()[..len]);
             name_slot[len] = 0x50;
         }
         offset += HOF_TEAM_SIZE;

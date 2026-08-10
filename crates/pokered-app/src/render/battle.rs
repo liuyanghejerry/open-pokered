@@ -1603,64 +1603,27 @@ impl BattleVisualEffects {
             // repeated 3 times (palette index = step % 12). The strobe plays
             // over the OVERWORLD frame before the Circle/DoubleCircle wipe,
             // exactly as the original calls BattleTransition_FlashScreen first.
+            // Each entry is a shade→shade map — a BGP register write on the
+            // indexed framebuffer (the pixel loop becomes a palette remap).
             IntroAnimState::ScreenFlash { step, .. } => {
                 let idx = (step as usize) % FLASH_SCREEN_PALETTE.len();
-                let brightness = FLASH_SCREEN_PALETTE[idx];
-                for px in fb.data.chunks_exact_mut(4) {
-                    let lum = (px[0] as u32 * 30 + px[1] as u32 * 59 + px[2] as u32 * 11) / 100;
-                    let shade = if lum >= 192 {
-                        0u8
-                    } else if lum >= 96 {
-                        1u8
-                    } else if lum >= 48 {
-                        2u8
-                    } else {
-                        3u8
-                    };
-                    let mapped_shade = brightness[shade as usize];
-                    let v = match mapped_shade {
-                        0 => 255u8,
-                        1 => 170u8,
-                        2 => 85u8,
-                        _ => 0u8,
-                    };
-                    px[0] = v;
-                    px[1] = v;
-                    px[2] = v;
-                }
+                fb.remap_shades(&FLASH_SCREEN_PALETTE[idx]);
             }
             // Original GB uses BGP=%11100100 which maps: color0→3, color1→2, color2→1, color3→0
             // This creates a silhouette/negative effect within the 4-shade palette,
             // not a harsh full-RGB inversion. Bright areas become dark, dark become bright,
             // but within the GB's limited palette — producing the iconic white-on-black silhouettes.
             IntroAnimState::SilhouetteSlide { .. } => {
-                // Invert pixels for white-on-black silhouette effect.
-                // Do NOT clear to white first — preserve rendered sprites.
-                for px in fb.data.chunks_exact_mut(4) {
-                    let lum = (px[0] as u32 * 30 + px[1] as u32 * 59 + px[2] as u32 * 11) / 100;
-                    let shade = if lum >= 192 {
-                        0u8
-                    } else if lum >= 96 {
-                        1u8
-                    } else if lum >= 48 {
-                        2u8
-                    } else {
-                        3u8
-                    };
-                    let inverted = 3 - shade;
-                    let v = match inverted {
-                        0 => 255u8,
-                        1 => 170u8,
-                        2 => 85u8,
-                        _ => 0u8,
-                    };
-                    px[0] = v;
-                    px[1] = v;
-                    px[2] = v;
-                }
+                // Invert the display palette for the white-on-black
+                // silhouette effect. Do NOT clear to white first — the
+                // rendered sprites' indices are preserved.
+                fb.remap_shades(&[3, 2, 1, 0]);
             }
             IntroAnimState::GhostMarowakReveal { phase, counter } => {
                 // Ghost Marowak palette manipulation - progressively brighten/darken.
+                // Scales the display palette toward black (per-frame, applied
+                // to the freshly drawn frame — same result as the old
+                // per-pixel multiply, without touching the pixels).
                 let palette_val = self.ghost_marowak_palette;
                 let mut scale = (palette_val as f32 / 0xe4 as f32).min(1.0);
                 if phase == 0 {
@@ -1671,14 +1634,7 @@ impl BattleVisualEffects {
                         scale *= 0.35;
                     }
                 }
-                for px in fb.data.chunks_exact_mut(4) {
-                    let r = (px[0] as f32 * scale) as u8;
-                    let g = (px[1] as f32 * scale) as u8;
-                    let b = (px[2] as f32 * scale) as u8;
-                    px[0] = r;
-                    px[1] = g;
-                    px[2] = b;
-                }
+                fb.scale_shades(scale);
             }
             _ => {}
         }
@@ -1950,10 +1906,7 @@ fn draw_pokeball_tile(
                 2
             };
             let c = pal.colors[idx];
-            let off = (py as usize * fb.width() as usize + px as usize) * 4;
-            fb.data[off] = c.r;
-            fb.data[off + 1] = c.g;
-            fb.data[off + 2] = c.b;
+            fb.set_pixel(px, py, c);
         }
     }
 }
@@ -1999,7 +1952,7 @@ pub fn draw_battle(
         // (BattleTransition_Circle/DoubleCircle call BattleTransition_FlashScreen
         // first). Draw the snapshot, then apply the palette strobe on top.
         if let Some(snap) = effects.overworld_snapshot.as_ref() {
-            fb.data.copy_from_slice(&snap.data);
+            fb.copy_from(snap);
         } else {
             fb.clear(Rgba::BLACK);
         }
@@ -2008,6 +1961,10 @@ pub fn draw_battle(
     }
 
     if skip_battle_render {
+        // Start from the base palette: the wipe would otherwise display through
+        // whatever display palette the previous frame left behind (today it is
+        // only safe by accident of the flash strobe ending on the identity map).
+        fb.reset_palette();
         // During transition wipe, render the wipe on top of the overworld snapshot.
         // If the wipe animation has already finished (transition_state cleared)
         // but the core is still in BattleTransitionWipe waiting out its
