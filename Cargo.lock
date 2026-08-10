@@ -1137,6 +1137,7 @@ dependencies = [
 [[package]]
 name = "dotzuki-app"
 version = "0.1.0"
+source = "git+ssh://git@github.com/liuyanghejerry/dotzuki.git?branch=port%2Fpr-160#5f2cfad9178ffc52c29002f9d6aff44da971f11b"
 dependencies = [
  "dotzuki-renderer",
  "notify",
@@ -1145,6 +1146,7 @@ dependencies = [
 [[package]]
 name = "dotzuki-audio"
 version = "0.1.0"
+source = "git+ssh://git@github.com/liuyanghejerry/dotzuki.git?branch=port%2Fpr-160#5f2cfad9178ffc52c29002f9d6aff44da971f11b"
 dependencies = [
  "bitflags 2.13.1",
  "serde",
@@ -1154,6 +1156,7 @@ dependencies = [
 [[package]]
 name = "dotzuki-engine"
 version = "0.1.0"
+source = "git+ssh://git@github.com/liuyanghejerry/dotzuki.git?branch=port%2Fpr-160#5f2cfad9178ffc52c29002f9d6aff44da971f11b"
 dependencies = [
  "image",
  "serde",
@@ -1163,6 +1166,7 @@ dependencies = [
 [[package]]
 name = "dotzuki-engine-dsl"
 version = "0.1.0"
+source = "git+ssh://git@github.com/liuyanghejerry/dotzuki.git?branch=port%2Fpr-160#5f2cfad9178ffc52c29002f9d6aff44da971f11b"
 dependencies = [
  "dotzuki-engine-script",
  "miette",
@@ -1175,6 +1179,7 @@ dependencies = [
 [[package]]
 name = "dotzuki-engine-script"
 version = "0.1.0"
+source = "git+ssh://git@github.com/liuyanghejerry/dotzuki.git?branch=port%2Fpr-160#5f2cfad9178ffc52c29002f9d6aff44da971f11b"
 dependencies = [
  "boa_engine",
  "log",
@@ -1186,6 +1191,7 @@ dependencies = [
 [[package]]
 name = "dotzuki-renderer"
 version = "0.1.0"
+source = "git+ssh://git@github.com/liuyanghejerry/dotzuki.git?branch=port%2Fpr-160#5f2cfad9178ffc52c29002f9d6aff44da971f11b"
 dependencies = [
  "dotzuki-engine",
  "error-iter",
@@ -1203,6 +1209,7 @@ dependencies = [
 [[package]]
 name = "dotzuki-rules"
 version = "0.1.0"
+source = "git+ssh://git@github.com/liuyanghejerry/dotzuki.git?branch=port%2Fpr-160#5f2cfad9178ffc52c29002f9d6aff44da971f11b"
 dependencies = [
  "dotzuki-engine",
  "notify",
@@ -1214,6 +1221,7 @@ dependencies = [
 [[package]]
 name = "dotzuki-tui"
 version = "0.1.0"
+source = "git+ssh://git@github.com/liuyanghejerry/dotzuki.git?branch=port%2Fpr-160#5f2cfad9178ffc52c29002f9d6aff44da971f11b"
 dependencies = [
  "crossterm",
  "dotzuki-renderer",
@@ -1223,6 +1231,7 @@ dependencies = [
 [[package]]
 name = "dotzuki-ui"
 version = "0.1.0"
+source = "git+ssh://git@github.com/liuyanghejerry/dotzuki.git?branch=port%2Fpr-160#5f2cfad9178ffc52c29002f9d6aff44da971f11b"
 dependencies = [
  "dotzuki-engine",
  "dotzuki-renderer",
@@ -3309,9 +3318,9 @@ checksum = "2f3a9f18d041e6d0e102a0a46750538147e5e8992d3b4873aaafee2520b00ce3"
 
 [[package]]
 name = "portable-atomic"
-version = "1.14.0"
+version = "1.15.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3d20d5497ef88037a52ff98267d066e7f11fcc5e99bbfbd58a42336193aacec3"
+checksum = "05c8b63e8d9609db387f0324918f81d68fe27748f084ef092fb35954d0539a85"
 
 [[package]]
 name = "potential_utf"

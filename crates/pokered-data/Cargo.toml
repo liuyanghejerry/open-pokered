@@ -9,8 +9,8 @@ serde = []
 embedded-map-data = []
 
 [dependencies]
-dotzuki-engine-script = { git = "ssh://git@github.com/liuyanghejerry/dotzuki.git", tag = "v0.3.0" }
-dotzuki-engine-dsl = { git = "ssh://git@github.com/liuyanghejerry/dotzuki.git", tag = "v0.3.0" }
+dotzuki-engine-script = { git = "ssh://git@github.com/liuyanghejerry/dotzuki.git", branch = "port/pr-160" }
+dotzuki-engine-dsl = { git = "ssh://git@github.com/liuyanghejerry/dotzuki.git", branch = "port/pr-160" }
 boa_engine = { version = "0.20", default-features = false }
 serde = { workspace = true }
 serde_json = { workspace = true }
@@ -20,11 +20,11 @@ num-derive = { workspace = true }
 num-traits = { workspace = true }
 thiserror = { workspace = true }
 log = "0.4"
-dotzuki-engine = { git = "ssh://git@github.com/liuyanghejerry/dotzuki.git", tag = "v0.3.0" }
+dotzuki-engine = { git = "ssh://git@github.com/liuyanghejerry/dotzuki.git", branch = "port/pr-160" }
 
 [dev-dependencies]
 ron = { workspace = true }
 
 [build-dependencies]
 serde_json = { workspace = true }
-dotzuki-engine-dsl = { git = "ssh://git@github.com/liuyanghejerry/dotzuki.git", tag = "v0.3.0" }
+dotzuki-engine-dsl = { git = "ssh://git@github.com/liuyanghejerry/dotzuki.git", branch = "port/pr-160" }
