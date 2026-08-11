@@ -122,13 +122,24 @@ jobs:
       - name: Build changes list
         id: build-changes-list
         run: |
-          LIST=""
-          for key in pokered-data pokered-core pokered-renderer pokered-audio pokered-app pokered-web pokered-runner-web pokered-tui pokered-android pokered-ios pokered-debug-server pokered-ui pokered-ui-preview pokered-layout-preview scene_apply pokered-editor; do
-            if [ "${{ steps.filter.outputs[format('{0}', key)] }}" == "true" ]; then
-              LIST="$LIST $key"
-            fi
-          done
-          echo "list=$LIST" >> $GITHUB_OUTPUT
+          CHANGES=""
+          [ "${{ steps.filter.outputs.pokered-data }}" == "true" ]            && CHANGES="$CHANGES pokered-data"            || true
+          [ "${{ steps.filter.outputs.pokered-core }}" == "true" ]            && CHANGES="$CHANGES pokered-core"            || true
+          [ "${{ steps.filter.outputs.pokered-renderer }}" == "true" ]        && CHANGES="$CHANGES pokered-renderer"        || true
+          [ "${{ steps.filter.outputs.pokered-audio }}" == "true" ]           && CHANGES="$CHANGES pokered-audio"           || true
+          [ "${{ steps.filter.outputs.pokered-app }}" == "true" ]             && CHANGES="$CHANGES pokered-app"             || true
+          [ "${{ steps.filter.outputs.pokered-web }}" == "true" ]             && CHANGES="$CHANGES pokered-web"             || true
+          [ "${{ steps.filter.outputs.pokered-runner-web }}" == "true" ]      && CHANGES="$CHANGES pokered-runner-web"      || true
+          [ "${{ steps.filter.outputs.pokered-tui }}" == "true" ]             && CHANGES="$CHANGES pokered-tui"             || true
+          [ "${{ steps.filter.outputs.pokered-android }}" == "true" ]         && CHANGES="$CHANGES pokered-android"         || true
+          [ "${{ steps.filter.outputs.pokered-ios }}" == "true" ]             && CHANGES="$CHANGES pokered-ios"             || true
+          [ "${{ steps.filter.outputs.pokered-debug-server }}" == "true" ]    && CHANGES="$CHANGES pokered-debug-server"    || true
+          [ "${{ steps.filter.outputs.pokered-ui }}" == "true" ]              && CHANGES="$CHANGES pokered-ui"              || true
+          [ "${{ steps.filter.outputs.pokered-ui-preview }}" == "true" ]      && CHANGES="$CHANGES pokered-ui-preview"      || true
+          [ "${{ steps.filter.outputs.pokered-layout-preview }}" == "true" ]  && CHANGES="$CHANGES pokered-layout-preview"  || true
+          [ "${{ steps.filter.outputs.scene_apply }}" == "true" ]             && CHANGES="$CHANGES scene_apply"             || true
+          [ "${{ steps.filter.outputs.pokered-editor }}" == "true" ]          && CHANGES="$CHANGES pokered-editor"          || true
+          echo "list=$CHANGES" >> $GITHUB_OUTPUT
 
   build-rust-packages:
     needs: [detect-changes]
