@@ -7,6 +7,9 @@ on:
 
 env:
   CARGO_TERM_COLOR: always
+  # dotzuki engine deps are fetched from a private GitHub repo over ssh; use
+  # the git CLI so GIT_SSH_COMMAND (deploy key, set up per job) applies.
+  CARGO_NET_GIT_FETCH_WITH_CLI: "true"
 
 jobs:
   detect-changes:
@@ -218,6 +221,19 @@ jobs:
         if: steps.changes-check.outputs.has-changes == 'true'
         uses: actions/checkout@v4
 
+      - name: Configure dotzuki deploy key
+        # dotzuki is a private repo; cargo fetches engine deps over ssh using
+        # this read-only deploy key (consumed via CARGO_NET_GIT_FETCH_WITH_CLI).
+        if: steps.changes-check.outputs.has-changes == 'true'
+        env:
+          DOTZUKI_DEPLOY_KEY: ${{ secrets.DOTZUKI_DEPLOY_KEY }}
+        run: |
+          mkdir -p ~/.ssh
+          echo "$DOTZUKI_DEPLOY_KEY" > ~/.ssh/dotzuki_deploy_key
+          chmod 600 ~/.ssh/dotzuki_deploy_key
+          ssh-keyscan github.com >> ~/.ssh/known_hosts 2>/dev/null || true
+          echo "GIT_SSH_COMMAND=ssh -i ~/.ssh/dotzuki_deploy_key -o IdentitiesOnly=yes" >> "$GITHUB_ENV"
+
       - name: Fetch gfx assets
         # gfx/ is not committed (fetched from pret/pokered). Renderer/app tests
         # read it from disk; the pokered-web wasm build embeds it at build time.
@@ -282,6 +298,16 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Configure dotzuki deploy key
+        env:
+          DOTZUKI_DEPLOY_KEY: ${{ secrets.DOTZUKI_DEPLOY_KEY }}
+        run: |
+          mkdir -p ~/.ssh
+          echo "$DOTZUKI_DEPLOY_KEY" > ~/.ssh/dotzuki_deploy_key
+          chmod 600 ~/.ssh/dotzuki_deploy_key
+          ssh-keyscan github.com >> ~/.ssh/known_hosts 2>/dev/null || true
+          echo "GIT_SSH_COMMAND=ssh -i ~/.ssh/dotzuki_deploy_key -o IdentitiesOnly=yes" >> "$GITHUB_ENV"
 
       - name: Fetch gfx assets
         # gfx/ is not committed; pokered-data embeds it at build time.
@@ -389,6 +415,16 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Configure dotzuki deploy key
+        env:
+          DOTZUKI_DEPLOY_KEY: ${{ secrets.DOTZUKI_DEPLOY_KEY }}
+        run: |
+          mkdir -p ~/.ssh
+          echo "$DOTZUKI_DEPLOY_KEY" > ~/.ssh/dotzuki_deploy_key
+          chmod 600 ~/.ssh/dotzuki_deploy_key
+          ssh-keyscan github.com >> ~/.ssh/known_hosts 2>/dev/null || true
+          echo "GIT_SSH_COMMAND=ssh -i ~/.ssh/dotzuki_deploy_key -o IdentitiesOnly=yes" >> "$GITHUB_ENV"
+
       - name: Fetch gfx assets
         # Android build embeds gfx/ into the .so at build time (build.rs).
         run: ./scripts/fetch-gfx.sh
@@ -474,6 +510,16 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Configure dotzuki deploy key
+        env:
+          DOTZUKI_DEPLOY_KEY: ${{ secrets.DOTZUKI_DEPLOY_KEY }}
+        run: |
+          mkdir -p ~/.ssh
+          echo "$DOTZUKI_DEPLOY_KEY" > ~/.ssh/dotzuki_deploy_key
+          chmod 600 ~/.ssh/dotzuki_deploy_key
+          ssh-keyscan github.com >> ~/.ssh/known_hosts 2>/dev/null || true
+          echo "GIT_SSH_COMMAND=ssh -i ~/.ssh/dotzuki_deploy_key -o IdentitiesOnly=yes" >> "$GITHUB_ENV"
 
       - name: Fetch gfx assets
         # iOS build embeds gfx/ into the staticlib at build time (build.rs).
