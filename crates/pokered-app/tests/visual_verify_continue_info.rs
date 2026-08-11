@@ -15,8 +15,12 @@ fn save_frame(fb: &FrameBuffer, filename: &str) {
         let c = fb.get_pixel(x, y).unwrap_or(pokered_renderer::Rgba::WHITE);
         image::Rgba(c.to_array())
     });
-    img.save(filename).expect("Failed to save PNG");
-    eprintln!("Saved: {filename}");
+    // Debug dump only — go through temp_dir like the other visual-verify
+    // tests so CI can redirect it ($RUNNER_TEMP); the runner's checkout dir
+    // rejects stray writes.
+    let path = std::env::temp_dir().join(filename);
+    img.save(&path).expect("Failed to save PNG");
+    eprintln!("Saved: {}", path.display());
 }
 
 #[test]
