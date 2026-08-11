@@ -11,8 +11,8 @@ gpu = ["dep:pixels", "dep:winit", "dep:winit_input_helper", "dep:image", "dep:er
 [dependencies]
 pokered-data = { path = "../pokered-data" }
 pokered-core = { path = "../pokered-core" }
-dotzuki-engine = { git = "ssh://git@github.com/liuyanghejerry/dotzuki.git", branch = "port/pr-160" }
-dotzuki-renderer = { git = "ssh://git@github.com/liuyanghejerry/dotzuki.git", branch = "port/pr-160" }
+dotzuki-engine = { git = "ssh://git@github.com/liuyanghejerry/dotzuki.git", tag = "v0.4.0" }
+dotzuki-renderer = { git = "ssh://git@github.com/liuyanghejerry/dotzuki.git", tag = "v0.4.0" }
 log = "0.4"
 thiserror = { workspace = true }
 pixels = { version = "=0.15.0", optional = true }

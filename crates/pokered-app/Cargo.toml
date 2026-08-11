@@ -11,11 +11,11 @@ debug-server = ["pokered-debug-server"]
 [dependencies]
 pokered-core = { path = "../pokered-core" }
 pokered-data = { path = "../pokered-data" }
-dotzuki-engine = { git = "ssh://git@github.com/liuyanghejerry/dotzuki.git", branch = "port/pr-160" }
-dotzuki-engine-dsl = { git = "ssh://git@github.com/liuyanghejerry/dotzuki.git", branch = "port/pr-160" }
+dotzuki-engine = { git = "ssh://git@github.com/liuyanghejerry/dotzuki.git", tag = "v0.4.0" }
+dotzuki-engine-dsl = { git = "ssh://git@github.com/liuyanghejerry/dotzuki.git", tag = "v0.4.0" }
 pokered-renderer = { path = "../pokered-renderer" }
-dotzuki-renderer = { git = "ssh://git@github.com/liuyanghejerry/dotzuki.git", branch = "port/pr-160" }
-dotzuki-app = { git = "ssh://git@github.com/liuyanghejerry/dotzuki.git", branch = "port/pr-160" }
+dotzuki-renderer = { git = "ssh://git@github.com/liuyanghejerry/dotzuki.git", tag = "v0.4.0" }
+dotzuki-app = { git = "ssh://git@github.com/liuyanghejerry/dotzuki.git", tag = "v0.4.0" }
 pokered-ui = { path = "../pokered-ui" }
 pokered-audio = { path = "../pokered-audio" }
 pokered-debug-server = { path = "../pokered-debug-server", optional = true }
