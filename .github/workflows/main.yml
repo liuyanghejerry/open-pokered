@@ -284,7 +284,12 @@ jobs:
 
       - name: Test native package
         if: ${{ steps.changes-check.outputs.has-changes == 'true' && !matrix.target }}
-        run: cargo test -p ${{ matrix.package }}
+        run: |
+          # render tests dump debug PNGs via std::env::temp_dir(); the
+          # runner's /tmp rejects writes, so use the per-job temp dir.
+          export TMPDIR="$RUNNER_TEMP/test-tmp"
+          mkdir -p "$TMPDIR"
+          cargo test -p ${{ matrix.package }}
 
       - name: Build targeted package
         if: ${{ steps.changes-check.outputs.has-changes == 'true' && matrix.target }}
@@ -355,6 +360,8 @@ jobs:
         # --workspace: all crates; summary table goes to the job log, the
         # lcov report is uploaded as an artifact for inspection.
         run: |
+          export TMPDIR="$RUNNER_TEMP/test-tmp"
+          mkdir -p "$TMPDIR"
           cargo llvm-cov --workspace --lcov --output-path lcov.info
           cargo llvm-cov report --summary-only
 

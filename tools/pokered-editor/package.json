@@ -50,6 +50,7 @@
   "devDependencies": {
     "@tailwindcss/vite": "^4.3.3",
     "@types/connect": "^3.4.38",
+    "@types/node": "^26.2.0",
     "@types/pngjs": "^6.0.5",
     "@vitejs/plugin-vue": "^5.2.4",
     "@vue/tsconfig": "^0.9.1",
