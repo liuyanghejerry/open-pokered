@@ -4725,7 +4725,11 @@ mod recharge_lifecycle_tests {
             create_pokemon_with_moves(sp, lvl, [0xFF, 0xFF], moves).unwrap()
         };
         let player = vec![mk(Species::Snorlax, 50, [MoveId::Mimic, MoveId::None, MoveId::None, MoveId::None])];
-        let enemy = vec![mk(Species::Snorlax, 50, [MoveId::Swift, MoveId::Swift, MoveId::Swift, MoveId::Swift])];
+        // The foe is deliberately low-level: the player spends turns 1-2
+        // Mimicking (no damage), so a same-level foe's Swift can KO the
+        // player on turn 3 before it fires — that made this test flaky
+        // (~2% per run) whenever damage rolls ran high.
+        let enemy = vec![mk(Species::Snorlax, 5, [MoveId::Swift, MoveId::Swift, MoveId::Swift, MoveId::Swift])];
         let mut screen = BattleScreen::from_parties(true, &player, &enemy, None);
         let enemy_hp = |s: &BattleScreen| s.battle_state.as_ref().unwrap().enemy.active_mon().hp;
 
@@ -4738,7 +4742,14 @@ mod recharge_lifecycle_tests {
         );
 
         // Turn 2 — player Mimics again; the foe's prior move is now Swift → copy it.
-        screen.execute_turn_with_move(0);
+        // Mimic itself has 100% accuracy, so the faithful Gen-1 1/256 miss
+        // glitch can eat it — retry until it connects (Mimic has the PP).
+        for _ in 0..9 {
+            screen.execute_turn_with_move(0);
+            if screen.battle_state.as_ref().unwrap().player.active_mon().moves[0] == MoveId::Swift {
+                break;
+            }
+        }
         {
             let mon = screen.battle_state.as_ref().unwrap().player.active_mon();
             assert_eq!(mon.moves[0], MoveId::Swift, "Mimic copies the foe's last move into the slot");
@@ -4748,7 +4759,8 @@ mod recharge_lifecycle_tests {
         // Turn 3 — the copied Swift is selectable in slot 0 and (never missing) hits.
         let before = enemy_hp(&screen);
         screen.execute_turn_with_move(0);
-        assert!(enemy_hp(&screen) < before, "the Mimic'd move fires and hits");
+        let after = enemy_hp(&screen);
+        assert!(after < before, "the Mimic'd move fires and hits");
     }
 
     /// Metronome's pick rejection-samples (core.asm:5013-5037): 0, ≥ 0xA5
