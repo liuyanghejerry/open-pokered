@@ -71,7 +71,7 @@ jobs:
       - name: Generate JS bindings
         working-directory: crates/pokered-web
         run: |
-          WASM_BIN="../target/wasm32-unknown-unknown/release/pokered_web.wasm"
+          WASM_BIN="${{ github.workspace }}/target/wasm32-unknown-unknown/release/pokered_web.wasm"
           WASM_OUT_DIR="frontend/src/wasm"
           rm -f "$WASM_OUT_DIR"/*.wasm "$WASM_OUT_DIR"/*.js
           wasm-bindgen --target web --no-typescript --out-dir "$WASM_OUT_DIR" "$WASM_BIN"
@@ -112,7 +112,7 @@ jobs:
       - name: Generate editor wasm bindings
         working-directory: crates/pokered-runner-web
         run: |
-          WASM_BIN="../target/wasm32-unknown-unknown/release/pokered_runner_web.wasm"
+          WASM_BIN="${{ github.workspace }}/target/wasm32-unknown-unknown/release/pokered_runner_web.wasm"
           mkdir -p editor-wasm
           wasm-bindgen --target web --no-typescript --out-dir editor-wasm "$WASM_BIN"
 
@@ -122,7 +122,7 @@ jobs:
       - name: Generate layout-preview wasm bindings
         working-directory: crates/pokered-layout-preview
         run: |
-          WASM_BIN="../target/wasm32-unknown-unknown/release/pokered_layout_preview.wasm"
+          WASM_BIN="${{ github.workspace }}/target/wasm32-unknown-unknown/release/pokered_layout_preview.wasm"
           mkdir -p editor-wasm
           wasm-bindgen --target web --no-typescript --out-dir editor-wasm "$WASM_BIN"
 
