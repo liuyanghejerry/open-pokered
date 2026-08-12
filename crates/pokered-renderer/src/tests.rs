@@ -1610,7 +1610,7 @@ fn start_menu_draw_with_pokedex() {
     assert_eq!(ml.top_item_y, 2);
     assert_eq!(buf.get(10, 0), TILE_TOP_LEFT);
     assert_eq!(buf.get(19, 0), TILE_TOP_RIGHT);
-    let pokedex_tiles = encode_menu_str("POK");
+    let pokedex_tiles = encode_menu_str("DEX");
     assert_eq!(buf.get(12, 2), pokedex_tiles[0]);
 }
 
@@ -1620,7 +1620,7 @@ fn start_menu_draw_without_pokedex() {
     let ml = StartMenuRenderer::draw(&mut buf, false);
     assert_eq!(ml.frame.height, 14);
     assert_eq!(ml.item_count, 6);
-    let pokemon_tiles = encode_menu_str("POK");
+    let pokemon_tiles = encode_menu_str("MONSTER");
     assert_eq!(buf.get(12, 2), pokemon_tiles[0]);
 }
 
@@ -2038,10 +2038,10 @@ fn hp_bar_pixels_overflow_clamped() {
 
 #[test]
 fn pokeball_status_tiles() {
-    assert_eq!(PokeballStatus::Normal.tile(), TILE_POKEBALL_NORMAL);
-    assert_eq!(PokeballStatus::StatusAilment.tile(), TILE_POKEBALL_STATUS);
-    assert_eq!(PokeballStatus::Fainted.tile(), TILE_POKEBALL_FAINTED);
-    assert_eq!(PokeballStatus::Empty.tile(), TILE_POKEBALL_EMPTY);
+    assert_eq!(BallStatus::Normal.tile(), TILE_BALL_NORMAL);
+    assert_eq!(BallStatus::StatusAilment.tile(), TILE_BALL_STATUS);
+    assert_eq!(BallStatus::Fainted.tile(), TILE_BALL_FAINTED);
+    assert_eq!(BallStatus::Empty.tile(), TILE_BALL_EMPTY);
 }
 
 #[test]
@@ -2235,57 +2235,57 @@ fn enemy_hud_draw_no_hp_numbers() {
 fn pokeball_indicators_player() {
     let mut buf = ScreenTileBuffer::new(SCREEN_TILES_X, SCREEN_TILES_Y);
     let party = [
-        PokeballStatus::Normal,
-        PokeballStatus::StatusAilment,
-        PokeballStatus::Fainted,
-        PokeballStatus::Normal,
-        PokeballStatus::Empty,
-        PokeballStatus::Empty,
+        BallStatus::Normal,
+        BallStatus::StatusAilment,
+        BallStatus::Fainted,
+        BallStatus::Normal,
+        BallStatus::Empty,
+        BallStatus::Empty,
     ];
-    PokeballIndicators::draw_player(&mut buf, &party);
-    assert_eq!(buf.get(10, 11), TILE_POKEBALL_NORMAL);
-    assert_eq!(buf.get(11, 11), TILE_POKEBALL_STATUS);
-    assert_eq!(buf.get(12, 11), TILE_POKEBALL_FAINTED);
-    assert_eq!(buf.get(13, 11), TILE_POKEBALL_NORMAL);
-    assert_eq!(buf.get(14, 11), TILE_POKEBALL_EMPTY);
-    assert_eq!(buf.get(15, 11), TILE_POKEBALL_EMPTY);
+    BallIndicators::draw_player(&mut buf, &party);
+    assert_eq!(buf.get(10, 11), TILE_BALL_NORMAL);
+    assert_eq!(buf.get(11, 11), TILE_BALL_STATUS);
+    assert_eq!(buf.get(12, 11), TILE_BALL_FAINTED);
+    assert_eq!(buf.get(13, 11), TILE_BALL_NORMAL);
+    assert_eq!(buf.get(14, 11), TILE_BALL_EMPTY);
+    assert_eq!(buf.get(15, 11), TILE_BALL_EMPTY);
 }
 
 #[test]
 fn pokeball_indicators_enemy() {
     let mut buf = ScreenTileBuffer::new(SCREEN_TILES_X, SCREEN_TILES_Y);
     let party = [
-        PokeballStatus::Normal,
-        PokeballStatus::Normal,
-        PokeballStatus::Fainted,
-        PokeballStatus::Empty,
-        PokeballStatus::Empty,
-        PokeballStatus::Empty,
+        BallStatus::Normal,
+        BallStatus::Normal,
+        BallStatus::Fainted,
+        BallStatus::Empty,
+        BallStatus::Empty,
+        BallStatus::Empty,
     ];
-    PokeballIndicators::draw_enemy(&mut buf, &party);
-    assert_eq!(buf.get(7, 4), TILE_POKEBALL_NORMAL);
-    assert_eq!(buf.get(6, 4), TILE_POKEBALL_NORMAL);
-    assert_eq!(buf.get(5, 4), TILE_POKEBALL_FAINTED);
-    assert_eq!(buf.get(4, 4), TILE_POKEBALL_EMPTY);
-    assert_eq!(buf.get(3, 4), TILE_POKEBALL_EMPTY);
-    assert_eq!(buf.get(2, 4), TILE_POKEBALL_EMPTY);
+    BallIndicators::draw_enemy(&mut buf, &party);
+    assert_eq!(buf.get(7, 4), TILE_BALL_NORMAL);
+    assert_eq!(buf.get(6, 4), TILE_BALL_NORMAL);
+    assert_eq!(buf.get(5, 4), TILE_BALL_FAINTED);
+    assert_eq!(buf.get(4, 4), TILE_BALL_EMPTY);
+    assert_eq!(buf.get(3, 4), TILE_BALL_EMPTY);
+    assert_eq!(buf.get(2, 4), TILE_BALL_EMPTY);
 }
 
 #[test]
 fn pokeball_indicators_partial_party() {
     let mut buf = ScreenTileBuffer::new(SCREEN_TILES_X, SCREEN_TILES_Y);
     let party = [
-        PokeballStatus::Normal,
-        PokeballStatus::Normal,
-        PokeballStatus::Normal,
+        BallStatus::Normal,
+        BallStatus::Normal,
+        BallStatus::Normal,
     ];
-    PokeballIndicators::draw_player(&mut buf, &party);
-    assert_eq!(buf.get(10, 11), TILE_POKEBALL_NORMAL);
-    assert_eq!(buf.get(11, 11), TILE_POKEBALL_NORMAL);
-    assert_eq!(buf.get(12, 11), TILE_POKEBALL_NORMAL);
-    assert_eq!(buf.get(13, 11), TILE_POKEBALL_EMPTY);
-    assert_eq!(buf.get(14, 11), TILE_POKEBALL_EMPTY);
-    assert_eq!(buf.get(15, 11), TILE_POKEBALL_EMPTY);
+    BallIndicators::draw_player(&mut buf, &party);
+    assert_eq!(buf.get(10, 11), TILE_BALL_NORMAL);
+    assert_eq!(buf.get(11, 11), TILE_BALL_NORMAL);
+    assert_eq!(buf.get(12, 11), TILE_BALL_NORMAL);
+    assert_eq!(buf.get(13, 11), TILE_BALL_EMPTY);
+    assert_eq!(buf.get(14, 11), TILE_BALL_EMPTY);
+    assert_eq!(buf.get(15, 11), TILE_BALL_EMPTY);
 }
 
 #[test]
@@ -2293,28 +2293,28 @@ fn retreat_stage_layout() {
     assert_eq!(RetreatStage::Full.layout(), (1, 5, 7, 7));
     assert_eq!(RetreatStage::Medium.layout(), (3, 7, 5, 5));
     assert_eq!(RetreatStage::Small.layout(), (4, 9, 3, 3));
-    assert_eq!(RetreatStage::Pokeball.layout(), (5, 11, 1, 1));
+    assert_eq!(RetreatStage::Ball.layout(), (5, 11, 1, 1));
 }
 
 #[test]
 fn retreat_stage_next() {
     assert_eq!(RetreatStage::Full.next(), Some(RetreatStage::Medium));
     assert_eq!(RetreatStage::Medium.next(), Some(RetreatStage::Small));
-    assert_eq!(RetreatStage::Small.next(), Some(RetreatStage::Pokeball));
-    assert_eq!(RetreatStage::Pokeball.next(), None);
+    assert_eq!(RetreatStage::Small.next(), Some(RetreatStage::Ball));
+    assert_eq!(RetreatStage::Ball.next(), None);
 }
 
 #[test]
 fn draw_retreat_stage_pokeball() {
     let mut buf = ScreenTileBuffer::new(SCREEN_TILES_X, SCREEN_TILES_Y);
     buf.fill(0xFF);
-    draw_retreat_stage(&mut buf, RetreatStage::Pokeball);
+    draw_retreat_stage(&mut buf, RetreatStage::Ball);
     // 7×7 area should be cleared
     for row in 0..7 {
         for col in 0..7 {
             if col == 4 && row == 6 {
                 // (5, 11) = (1+4, 5+6) = pokeball tile
-                assert_eq!(buf.get(1 + col, 5 + row), TILE_POKEBALL_RETREATED);
+                assert_eq!(buf.get(1 + col, 5 + row), TILE_BALL_RETREATED);
             } else {
                 assert_eq!(buf.get(1 + col, 5 + row), TILE_SPACE);
             }
@@ -2439,8 +2439,8 @@ fn battle_scene_new_defaults() {
     let scene = BattleScene::new();
     assert!(!scene.show_player_hud);
     assert!(!scene.show_enemy_hud);
-    assert_eq!(scene.player_party, [PokeballStatus::Empty; 6]);
-    assert_eq!(scene.enemy_party, [PokeballStatus::Empty; 6]);
+    assert_eq!(scene.player_party, [BallStatus::Empty; 6]);
+    assert_eq!(scene.enemy_party, [BallStatus::Empty; 6]);
     assert!(scene.retreat_stage.is_none());
     assert!(scene.trainer_scroll.is_none());
 }
@@ -2475,20 +2475,20 @@ fn battle_scene_draw_huds_visible() {
     scene.show_player_hud = true;
     scene.show_enemy_hud = true;
     scene.player_party = [
-        PokeballStatus::Normal,
-        PokeballStatus::Normal,
-        PokeballStatus::Normal,
-        PokeballStatus::Empty,
-        PokeballStatus::Empty,
-        PokeballStatus::Empty,
+        BallStatus::Normal,
+        BallStatus::Normal,
+        BallStatus::Normal,
+        BallStatus::Empty,
+        BallStatus::Empty,
+        BallStatus::Empty,
     ];
     scene.enemy_party = [
-        PokeballStatus::Normal,
-        PokeballStatus::Fainted,
-        PokeballStatus::Empty,
-        PokeballStatus::Empty,
-        PokeballStatus::Empty,
-        PokeballStatus::Empty,
+        BallStatus::Normal,
+        BallStatus::Fainted,
+        BallStatus::Empty,
+        BallStatus::Empty,
+        BallStatus::Empty,
+        BallStatus::Empty,
     ];
 
     let mut buf = ScreenTileBuffer::new(SCREEN_TILES_X, SCREEN_TILES_Y);
@@ -2513,10 +2513,10 @@ fn battle_scene_draw_huds_visible() {
     );
     // Enemy HUD: 2-char name → +2 centering offset
     assert_eq!(buf.get(EnemyHud::NAME_X + 2, EnemyHud::NAME_Y), 0x90);
-    // Pokeball indicators
-    assert_eq!(buf.get(10, 11), TILE_POKEBALL_NORMAL); // player
-    assert_eq!(buf.get(7, 4), TILE_POKEBALL_NORMAL); // enemy first
-    assert_eq!(buf.get(6, 4), TILE_POKEBALL_FAINTED); // enemy second
+    // Ball indicators
+    assert_eq!(buf.get(10, 11), TILE_BALL_NORMAL); // player
+    assert_eq!(buf.get(7, 4), TILE_BALL_NORMAL); // enemy first
+    assert_eq!(buf.get(6, 4), TILE_BALL_FAINTED); // enemy second
 }
 
 // ═══════════════════════════════════════════════════════════════════════
@@ -3526,7 +3526,7 @@ fn health_bar_color_red() {
 #[test]
 fn sgb_palette_id_enum_values() {
     assert_eq!(SgbPaletteId::Route as u8, 0x00);
-    assert_eq!(SgbPaletteId::Pallet as u8, 0x01);
+    assert_eq!(SgbPaletteId::HomeTown as u8, 0x01);
     assert_eq!(SgbPaletteId::Viridian as u8, 0x02);
     assert_eq!(SgbPaletteId::Pewter as u8, 0x03);
     assert_eq!(SgbPaletteId::Cerulean as u8, 0x04);
@@ -3539,7 +3539,7 @@ fn sgb_palette_id_enum_values() {
     assert_eq!(SgbPaletteId::Saffron as u8, 0x0B);
     assert_eq!(SgbPaletteId::TownMap as u8, 0x0C);
     assert_eq!(SgbPaletteId::Logo1 as u8, 0x0D);
-    assert_eq!(SgbPaletteId::MewMon as u8, 0x10);
+    assert_eq!(SgbPaletteId::PaleMon as u8, 0x10);
     assert_eq!(SgbPaletteId::GreenMon as u8, 0x16);
     assert_eq!(SgbPaletteId::YellowMon as u8, 0x18);
     assert_eq!(SgbPaletteId::GrayMon as u8, 0x19);
@@ -3548,14 +3548,14 @@ fn sgb_palette_id_enum_values() {
     assert_eq!(SgbPaletteId::YellowBar as u8, 0x20);
     assert_eq!(SgbPaletteId::RedBar as u8, 0x21);
     assert_eq!(SgbPaletteId::Cave as u8, 0x23);
-    assert_eq!(SgbPaletteId::GameFreak as u8, 0x24);
+    assert_eq!(SgbPaletteId::CompanyLogo as u8, 0x24);
 }
 
 #[test]
 fn sgb_palette_id_from_u8_valid() {
     assert_eq!(SgbPaletteId::from_u8(0x00), Some(SgbPaletteId::Route));
-    assert_eq!(SgbPaletteId::from_u8(0x01), Some(SgbPaletteId::Pallet));
-    assert_eq!(SgbPaletteId::from_u8(0x24), Some(SgbPaletteId::GameFreak));
+    assert_eq!(SgbPaletteId::from_u8(0x01), Some(SgbPaletteId::HomeTown));
+    assert_eq!(SgbPaletteId::from_u8(0x24), Some(SgbPaletteId::CompanyLogo));
 }
 
 #[test]
@@ -3583,15 +3583,15 @@ fn set_pal_command_enum_values() {
     assert_eq!(SetPalCommand::Battle as u8, 0x01);
     assert_eq!(SetPalCommand::TownMap as u8, 0x02);
     assert_eq!(SetPalCommand::StatusScreen as u8, 0x03);
-    assert_eq!(SetPalCommand::Pokedex as u8, 0x04);
+    assert_eq!(SetPalCommand::Dex as u8, 0x04);
     assert_eq!(SetPalCommand::Slots as u8, 0x05);
     assert_eq!(SetPalCommand::TitleScreen as u8, 0x06);
-    assert_eq!(SetPalCommand::NidorinoIntro as u8, 0x07);
+    assert_eq!(SetPalCommand::MonsterIntro as u8, 0x07);
     assert_eq!(SetPalCommand::Generic as u8, 0x08);
     assert_eq!(SetPalCommand::Overworld as u8, 0x09);
     assert_eq!(SetPalCommand::PartyMenu as u8, 0x0A);
-    assert_eq!(SetPalCommand::PokemonWholeScreen as u8, 0x0B);
-    assert_eq!(SetPalCommand::GameFreakIntro as u8, 0x0C);
+    assert_eq!(SetPalCommand::WholeScreen as u8, 0x0B);
+    assert_eq!(SetPalCommand::CompanyLogoIntro as u8, 0x0C);
     assert_eq!(SetPalCommand::TrainerCard as u8, 0x0D);
 }
 
@@ -3696,8 +3696,8 @@ fn super_palettes_red_vs_blue_slots2_differ() {
 #[test]
 fn super_palettes_red_vs_blue_pallet_same() {
     // PAL_PALLET should be identical in both versions
-    let red = &SUPER_PALETTES_RED[SgbPaletteId::Pallet as usize];
-    let blue = &SUPER_PALETTES_BLUE[SgbPaletteId::Pallet as usize];
+    let red = &SUPER_PALETTES_RED[SgbPaletteId::HomeTown as usize];
+    let blue = &SUPER_PALETTES_BLUE[SgbPaletteId::HomeTown as usize];
     assert_eq!(red, blue);
 }
 
@@ -3769,24 +3769,24 @@ fn monster_palette_gengar() {
 
 #[test]
 fn monster_palette_mewtwo() {
-    assert_eq!(monster_palette(150), SgbPaletteId::MewMon);
+    assert_eq!(monster_palette(150), SgbPaletteId::PaleMon);
 }
 
 #[test]
 fn monster_palette_mew() {
-    assert_eq!(monster_palette(151), SgbPaletteId::MewMon);
+    assert_eq!(monster_palette(151), SgbPaletteId::PaleMon);
 }
 
 #[test]
 fn monster_palette_missingno() {
-    assert_eq!(monster_palette(0), SgbPaletteId::MewMon);
+    assert_eq!(monster_palette(0), SgbPaletteId::PaleMon);
 }
 
 #[test]
 fn monster_palette_out_of_range_fallback() {
     // Index >= 152 should fallback to MISSINGNO (MewMon)
-    assert_eq!(monster_palette(200), SgbPaletteId::MewMon);
-    assert_eq!(monster_palette(255), SgbPaletteId::MewMon);
+    assert_eq!(monster_palette(200), SgbPaletteId::PaleMon);
+    assert_eq!(monster_palette(255), SgbPaletteId::PaleMon);
 }
 
 #[test]
@@ -3833,7 +3833,7 @@ fn overworld_palette_pallet_town() {
     // town = 0x00 < NUM_CITY_MAPS → palette = 0+1 = 1 = PAL_PALLET
     assert_eq!(
         overworld_palette_for_map(0, 0x00, 0x00),
-        SgbPaletteId::Pallet
+        SgbPaletteId::HomeTown
     );
 }
 
@@ -3873,7 +3873,7 @@ fn overworld_palette_indoor_pallet_town() {
     // Indoor map (>= FIRST_INDOOR_MAP), last_map = Pallet Town (0x00)
     assert_eq!(
         overworld_palette_for_map(0, 0x25, 0x00),
-        SgbPaletteId::Pallet
+        SgbPaletteId::HomeTown
     );
 }
 
@@ -3915,7 +3915,7 @@ fn overworld_palette_cerulean_cave() {
 fn overworld_palette_loreleis_room() {
     assert_eq!(
         overworld_palette_for_map(0, MAP_LORELEIS_ROOM, 0x00),
-        SgbPaletteId::Pallet
+        SgbPaletteId::HomeTown
     );
 }
 
@@ -3938,7 +3938,7 @@ fn hp_bar_to_sgb_palette_values() {
 #[test]
 fn color_palette_state_new_defaults() {
     let provider = PokemonPaletteData::new(true);
-    let state = ColorPaletteState::new(PaletteMode::Dmg, true, &provider);
+    let state = ColorPaletteState::new_classic(PaletteMode::Dmg, true, &provider);
     assert_eq!(state.mode, PaletteMode::Dmg);
     assert_eq!(state.is_red, true);
     assert_eq!(state.sgb_bg_palette, SgbPaletteId::Route);
@@ -3950,7 +3950,7 @@ fn color_palette_state_new_defaults() {
 #[test]
 fn color_palette_state_dmg_mode_uses_dmg_palette() {
     let provider = PokemonPaletteData::new(true);
-    let state = ColorPaletteState::new(PaletteMode::Dmg, true, &provider);
+    let state = ColorPaletteState::new_classic(PaletteMode::Dmg, true, &provider);
     let bg = state.bg_palette();
     let expected = PaletteState::default().bg_palette();
     assert_eq!(bg.colors, expected.colors);
@@ -3959,7 +3959,7 @@ fn color_palette_state_dmg_mode_uses_dmg_palette() {
 #[test]
 fn color_palette_state_sgb_mode_uses_sgb_palette() {
     let provider = PokemonPaletteData::new(true);
-    let mut state = ColorPaletteState::new(PaletteMode::Sgb, true, &provider);
+    let mut state = ColorPaletteState::new_classic(PaletteMode::Sgb, true, &provider);
     state.sgb_bg_palette = SgbPaletteId::Cave;
     let bg = state.bg_palette();
     let expected = sgb_entry_to_palette(lookup_sgb_palette(SgbPaletteId::Cave, true));
@@ -3969,7 +3969,7 @@ fn color_palette_state_sgb_mode_uses_sgb_palette() {
 #[test]
 fn color_palette_state_grayscale_mode() {
     let provider = PokemonPaletteData::new(true);
-    let state = ColorPaletteState::new(PaletteMode::Grayscale, true, &provider);
+    let state = ColorPaletteState::new_classic(PaletteMode::Grayscale, true, &provider);
     let bg = state.bg_palette();
     // Should use GRAYSCALE_PALETTE as base
     let mut ps = PaletteState::default();
@@ -3980,7 +3980,7 @@ fn color_palette_state_grayscale_mode() {
 #[test]
 fn color_palette_state_pocket_mode() {
     let provider = PokemonPaletteData::new(true);
-    let state = ColorPaletteState::new(PaletteMode::Pocket, true, &provider);
+    let state = ColorPaletteState::new_classic(PaletteMode::Pocket, true, &provider);
     let bg = state.bg_palette();
     let mut ps = PaletteState::default();
     ps.base = POCKET_PALETTE;
@@ -3990,18 +3990,18 @@ fn color_palette_state_pocket_mode() {
 #[test]
 fn color_palette_state_set_overworld() {
     let provider = PokemonPaletteData::new(true);
-    let mut state = ColorPaletteState::new(PaletteMode::Sgb, true, &provider);
+    let mut state = ColorPaletteState::new_classic(PaletteMode::Sgb, true, &provider);
     state.set_overworld_palette(0, 0x00, 0x00); // Pallet Town
-    assert_eq!(state.sgb_bg_palette, SgbPaletteId::Pallet);
+    assert_eq!(state.sgb_bg_palette, SgbPaletteId::HomeTown);
     assert_eq!(state.default_command, SetPalCommand::Overworld);
 }
 
 #[test]
 fn color_palette_state_set_battle() {
     let provider = PokemonPaletteData::new(true);
-    let mut state = ColorPaletteState::new(PaletteMode::Sgb, true, &provider);
-    // Bulbasaur (1, not transformed) vs Pikachu (25, not transformed), HP bars green
-    state.set_battle_palette(1, false, 25, false, 0, 0);
+    let mut state = ColorPaletteState::new_classic(PaletteMode::Sgb, true, &provider);
+    // Bulbasaur (GreenMon) vs Pikachu (YellowMon), HP bars green
+    state.set_battle_palette(SgbPaletteId::GreenMon, SgbPaletteId::YellowMon, 0);
     assert_eq!(state.sgb_obj0_palette, SgbPaletteId::GreenMon); // Bulbasaur
     assert_eq!(state.sgb_obj1_palette, SgbPaletteId::YellowMon); // Pikachu
     assert_eq!(state.sgb_bg_palette, SgbPaletteId::GreenBar); // HP bar green
@@ -4011,11 +4011,11 @@ fn color_palette_state_set_battle() {
 #[test]
 fn color_palette_state_set_battle_transformed() {
     let provider = PokemonPaletteData::new(true);
-    let mut state = ColorPaletteState::new(PaletteMode::Sgb, true, &provider);
+    let mut state = ColorPaletteState::new_classic(PaletteMode::Sgb, true, &provider);
     // Ditto transformed as Pikachu vs Mewtwo, HP bar yellow/red
-    state.set_battle_palette(25, true, 150, false, 1, 2);
+    state.set_battle_palette(SgbPaletteId::GrayMon, SgbPaletteId::PaleMon, 1);
     assert_eq!(state.sgb_obj0_palette, SgbPaletteId::GrayMon); // transformed → GrayMon
-    assert_eq!(state.sgb_obj1_palette, SgbPaletteId::MewMon); // Mewtwo
+    assert_eq!(state.sgb_obj1_palette, SgbPaletteId::PaleMon); // Mewtwo
     assert_eq!(state.sgb_bg_palette, SgbPaletteId::YellowBar); // player HP bar yellow
 }
 

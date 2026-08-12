@@ -406,7 +406,7 @@ mod palette_tests {
         let provider = PokemonPaletteData::new(true);
         // Pallet Town (map_id=0x00) → (0+1)=1 → PAL_PALLET
         let pal = provider.overworld_palette_for(0, 0x00, 0);
-        assert_eq!(pal, SgbPaletteId::Pallet);
+        assert_eq!(pal, SgbPaletteId::HomeTown);
     }
 
     #[test]
@@ -427,7 +427,7 @@ mod palette_tests {
     fn test_overworld_palette_lorelei() {
         let provider = PokemonPaletteData::new(true);
         let pal = provider.overworld_palette_for(0, 0xF5, 0);
-        assert_eq!(pal, SgbPaletteId::Pallet);
+        assert_eq!(pal, SgbPaletteId::HomeTown);
     }
 
     #[test]
@@ -458,7 +458,7 @@ mod palette_tests {
     #[test]
     fn test_monster_palette_out_of_bounds() {
         let provider = PokemonPaletteData::new(true);
-        assert_eq!(provider.monster_palette(255), SgbPaletteId::MewMon);
+        assert_eq!(provider.monster_palette(255), SgbPaletteId::PaleMon);
     }
 
     #[test]
