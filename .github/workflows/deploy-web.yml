@@ -24,7 +24,7 @@ env:
 
 jobs:
   build:
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -51,15 +51,9 @@ jobs:
           targets: wasm32-unknown-unknown
 
       - name: Cache cargo registry & build
-        uses: actions/cache@v4
+        uses: Swatinem/rust-cache@v2
         with:
-          path: |
-            ~/.cargo/registry
-            ~/.cargo/git
-            target
-          key: wasm-cargo-${{ hashFiles('Cargo.lock', '**/Cargo.toml') }}
-          restore-keys: |
-            wasm-cargo-
+          key: wasm
 
       - name: Install wasm-bindgen-cli
         # The CLI's bindgen schema version must exactly match the wasm-bindgen
@@ -174,7 +168,7 @@ jobs:
 
   deploy:
     needs: build
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}

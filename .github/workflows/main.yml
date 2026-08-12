@@ -13,7 +13,7 @@ env:
 
 jobs:
   detect-changes:
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     permissions:
       contents: read
       pull-requests: read
@@ -148,7 +148,7 @@ jobs:
     needs: [detect-changes]
     permissions:
       contents: read
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       # The self-hosted runner is a single machine; running all matrix jobs at
@@ -267,16 +267,12 @@ jobs:
 
       - name: Cache cargo registry & build
         if: steps.changes-check.outputs.has-changes == 'true'
-        uses: actions/cache@v4
+        # rust-cache prunes the target dir before saving and uses its own key
+        # namespace; the old actions/cache entries grew to 1 GB+ and stalled
+        # restores on GitHub-hosted runners.
+        uses: Swatinem/rust-cache@v2
         with:
-          path: |
-            ~/.cargo/registry
-            ~/.cargo/git
-            target
-          key: ci-cargo-${{ matrix.target || 'native' }}-${{ hashFiles('Cargo.lock', 'Cargo.toml', 'crates/*/Cargo.toml', 'run-wasm/Cargo.toml') }}
-          restore-keys: |
-            ci-cargo-${{ matrix.target || 'native' }}-
-            ci-cargo-
+          key: ${{ matrix.target || 'native' }}
 
       - name: Build native package
         if: ${{ steps.changes-check.outputs.has-changes == 'true' && !matrix.target }}
@@ -299,7 +295,7 @@ jobs:
     permissions:
       contents: read
     name: Coverage (cargo-llvm-cov)
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -345,16 +341,9 @@ jobs:
           tool: cargo-llvm-cov
 
       - name: Cache cargo registry & build
-        uses: actions/cache@v4
+        uses: Swatinem/rust-cache@v2
         with:
-          path: |
-            ~/.cargo/registry
-            ~/.cargo/git
-            target
-          key: ci-coverage-${{ hashFiles('Cargo.lock', 'Cargo.toml', 'crates/*/Cargo.toml') }}
-          restore-keys: |
-            ci-coverage-
-            ci-cargo-native-
+          key: coverage
 
       - name: Run coverage
         # --workspace: all crates; summary table goes to the job log, the
@@ -378,7 +367,7 @@ jobs:
     permissions:
       contents: read
     name: Build pokered-editor
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
