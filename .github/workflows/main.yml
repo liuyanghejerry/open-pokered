@@ -243,6 +243,10 @@ jobs:
       - name: Install system dependencies
         if: steps.changes-check.outputs.has-changes == 'true'
         run: |
+          # The preinstalled Microsoft apt repos (azure-cli, microsoft-prod)
+          # intermittently 403 on apt-get update; we don't need anything from
+          # them, so drop them before updating.
+          sudo rm -f /etc/apt/sources.list.d/azure-cli.* /etc/apt/sources.list.d/microsoft-prod.*
           sudo apt-get update
           sudo apt-get install -yq \
             build-essential \
@@ -316,6 +320,7 @@ jobs:
 
       - name: Install system dependencies
         run: |
+          sudo rm -f /etc/apt/sources.list.d/azure-cli.* /etc/apt/sources.list.d/microsoft-prod.*
           sudo apt-get update
           sudo apt-get install -yq \
             build-essential \
@@ -329,6 +334,14 @@ jobs:
             libvulkan-dev \
             libasound2-dev \
             libudev-dev
+
+      - name: Free disk space
+        # The instrumented llvm-cov build needs well over the ~14 GB a stock
+        # ubuntu-latest runner has free; linking otherwise dies with SIGBUS.
+        run: |
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc \
+            /usr/local/share/powershell /usr/share/swift /usr/local/julia* || true
+          df -h /
 
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
