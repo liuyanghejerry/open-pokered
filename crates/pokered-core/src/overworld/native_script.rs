@@ -22,6 +22,7 @@ use std::collections::{HashMap, VecDeque};
 use dotzuki_engine_dsl::ast::{GameScene, StoryStmt};
 use dotzuki_engine_dsl::interpreter::{HostCall, Interpreter, InterpState, ScriptHost, Value};
 use dotzuki_engine_script::{CommandResult, ScriptCommand};
+use serde_json::json;
 
 /// Non-zero default seed (a common splitmix64/golden-ratio constant) —
 /// matches `dotzuki_engine_script::engine::DEFAULT_RNG_SEED` so `seed_rng` /
@@ -41,6 +42,16 @@ fn badge_index(name: &str) -> Option<u8> {
         "VOLCANOBADGE" => Some(6),
         "EARTHBADGE" => Some(7),
         _ => None,
+    }
+}
+
+/// Build a game-defined command from its JS verb name and JSON args
+/// (`ScriptCommand::Custom` — the engine's generic escape hatch for
+/// game-specific verbs; the engine dropped their dedicated variants).
+fn custom(name: &str, args: Vec<serde_json::Value>) -> ScriptCommand {
+    ScriptCommand::Custom {
+        name: name.to_string(),
+        args,
     }
 }
 
@@ -351,7 +362,7 @@ impl ScriptHost for NativeHost {
             "givePokemon" => {
                 let species = args::text(v.first().ok_or("givePokemon: missing species")?, "givePokemon")?;
                 let level = args::u8(v.get(1).ok_or("givePokemon: missing level")?, "givePokemon")?;
-                Ok(HostCall::Command(ScriptCommand::GivePokemon { species, level }))
+                Ok(HostCall::Command(ScriptCommand::GiveMonster { species, level }))
             }
             "startBattle" => {
                 let trainer_id = args::text(v.first().ok_or("startBattle: missing trainer")?, "startBattle")?;
@@ -362,20 +373,19 @@ impl ScriptHost for NativeHost {
                 let level = args::u8(v.get(1).ok_or("startWildBattle: missing level")?, "startWildBattle")?;
                 Ok(HostCall::Command(ScriptCommand::StartWildBattle { species, level }))
             }
-            "oldManTutorial" => Ok(HostCall::Command(ScriptCommand::OldManTutorial)),
+            "oldManTutorial" => Ok(HostCall::Command(custom("oldManTutorial", vec![]))),
             "tradePokemon" => {
                 let offered = args::text(v.first().ok_or("tradePokemon: missing offered")?, "tradePokemon")?;
                 let received = args::text(v.get(1).ok_or("tradePokemon: missing received")?, "tradePokemon")?;
                 let nickname = args::text(v.get(2).ok_or("tradePokemon: missing nickname")?, "tradePokemon")?;
-                Ok(HostCall::Command(ScriptCommand::TradePokemon {
-                    offered,
-                    received,
-                    nickname,
-                }))
+                Ok(HostCall::Command(custom(
+                    "tradePokemon",
+                    vec![json!(offered), json!(received), json!(nickname)],
+                )))
             }
             "showPokedexEntry" => {
                 let species = args::text(v.first().ok_or("showPokedexEntry: missing species")?, "showPokedexEntry")?;
-                Ok(HostCall::Command(ScriptCommand::ShowPokedexEntry { species }))
+                Ok(HostCall::Command(custom("showPokedexEntry", vec![json!(species)])))
             }
             "giveMoney" => {
                 let amount = args::u32(v.first().ok_or("giveMoney: missing amount")?, "giveMoney")?;
@@ -389,7 +399,10 @@ impl ScriptHost for NativeHost {
                 let x = args::u8(v.first().ok_or("replaceTileBlock: missing x")?, "replaceTileBlock")?;
                 let y = args::u8(v.get(1).ok_or("replaceTileBlock: missing y")?, "replaceTileBlock")?;
                 let block_id = args::u8(v.get(2).ok_or("replaceTileBlock: missing block")?, "replaceTileBlock")?;
-                Ok(HostCall::Command(ScriptCommand::ReplaceTileBlock { x, y, block_id }))
+                Ok(HostCall::Command(custom(
+                    "replaceTileBlock",
+                    vec![json!(x), json!(y), json!(block_id)],
+                )))
             }
             "playCry" => {
                 let species = args::text(v.first().ok_or("playCry: missing species")?, "playCry")?;
@@ -411,41 +424,35 @@ impl ScriptHost for NativeHost {
                     Some(Value::Bool(b)) => *b,
                     _ => false,
                 };
-                Ok(HostCall::Command(ScriptCommand::OpenSlots { lucky }))
+                Ok(HostCall::Command(custom("openSlots", vec![json!(lucky)])))
             }
             "elevatorMenu" => {
                 let floors = args::string_array(v.first().ok_or("elevatorMenu: missing floors")?, "elevatorMenu")?;
-                Ok(HostCall::Command(ScriptCommand::ElevatorMenu { floors }))
+                Ok(HostCall::Command(custom("elevatorMenu", vec![json!(floors)])))
             }
             "filterBag" => {
                 let item_ids = args::string_array(v.first().ok_or("filterBag: missing items")?, "filterBag")?;
-                Ok(HostCall::Command(ScriptCommand::FilterBag { item_ids }))
+                Ok(HostCall::Command(custom("filterBag", vec![json!(item_ids)])))
             }
-            "showDiploma" => Ok(HostCall::Command(ScriptCommand::ShowDiploma)),
-            "openPC" => Ok(HostCall::Command(ScriptCommand::OpenPc {
-                kind: "center".to_string(),
-            })),
-            "openItemPC" => Ok(HostCall::Command(ScriptCommand::OpenPc {
-                kind: "items".to_string(),
-            })),
-            "openBillsPC" => Ok(HostCall::Command(ScriptCommand::OpenPc {
-                kind: "bills".to_string(),
-            })),
-            "linkStart" => Ok(HostCall::Command(ScriptCommand::LinkStart)),
-            "enterHallOfFame" => Ok(HostCall::Command(ScriptCommand::EnterHallOfFame)),
+            "showDiploma" => Ok(HostCall::Command(custom("showDiploma", vec![]))),
+            "openPC" => Ok(HostCall::Command(custom("openPC", vec![]))),
+            "openItemPC" => Ok(HostCall::Command(custom("openItemPC", vec![]))),
+            "openBillsPC" => Ok(HostCall::Command(custom("openBillsPC", vec![]))),
+            "linkStart" => Ok(HostCall::Command(custom("linkStart", vec![]))),
+            "enterHallOfFame" => Ok(HostCall::Command(custom("enterHallOfFame", vec![]))),
             "giveCoins" => {
                 let amount = args::u32(v.first().ok_or("giveCoins: missing amount")?, "giveCoins")?.min(u16::MAX as u32) as u16;
-                Ok(HostCall::Command(ScriptCommand::GiveCoins { amount }))
+                Ok(HostCall::Command(custom("giveCoins", vec![json!(amount)])))
             }
             "takeCoins" => {
                 let amount = args::u32(v.first().ok_or("takeCoins: missing amount")?, "takeCoins")?.min(u16::MAX as u32) as u16;
-                Ok(HostCall::Command(ScriptCommand::TakeCoins { amount }))
+                Ok(HostCall::Command(custom("takeCoins", vec![json!(amount)])))
             }
             "depositDaycare" => {
                 let index = args::u8(v.first().ok_or("depositDaycare: missing index")?, "depositDaycare")?;
-                Ok(HostCall::Command(ScriptCommand::DepositDaycare { index }))
+                Ok(HostCall::Command(custom("depositDaycare", vec![json!(index)])))
             }
-            "withdrawDaycare" => Ok(HostCall::Command(ScriptCommand::WithdrawDaycare)),
+            "withdrawDaycare" => Ok(HostCall::Command(custom("withdrawDaycare", vec![]))),
 
             // ── core engine commands (dotzuki-engine-script/src/engine.rs) ──
             "moveNpc" => {
@@ -509,7 +516,7 @@ impl ScriptHost for NativeHost {
                 let sound_id = args::text(v.first().ok_or("playSound: missing sound")?, "playSound")?;
                 Ok(HostCall::Command(ScriptCommand::PlaySound { sound_id }))
             }
-            "playShipDeparture" => Ok(HostCall::Command(ScriptCommand::PlayShipDeparture)),
+            "playShipDeparture" => Ok(HostCall::Command(custom("playShipDeparture", vec![]))),
             "stopMusic" => Ok(HostCall::Command(ScriptCommand::StopMusic)),
             "fadeOutMusic" => Ok(HostCall::Command(ScriptCommand::FadeOutMusic)),
             "delay" => {
@@ -523,7 +530,7 @@ impl ScriptHost for NativeHost {
                 Ok(HostCall::Command(ScriptCommand::WarpTo { map, x, y }))
             }
             "heal" => Ok(HostCall::Command(ScriptCommand::Heal)),
-            "animateHealingMachine" => Ok(HostCall::Command(ScriptCommand::AnimateHealingMachine)),
+            "animateHealingMachine" => Ok(HostCall::Command(custom("animateHealingMachine", vec![]))),
             "fadeScreen" => {
                 let fade_type = args::text(v.first().ok_or("fadeScreen: missing type")?, "fadeScreen")?;
                 Ok(HostCall::Command(ScriptCommand::FadeScreen { fade_type }))
@@ -573,13 +580,16 @@ impl ScriptHost for NativeHost {
             }
             "openNamingScreen" => {
                 let species = args::text(v.first().ok_or("openNamingScreen: missing species")?, "openNamingScreen")?;
-                Ok(HostCall::Command(ScriptCommand::OpenNamingScreen { species }))
+                Ok(HostCall::Command(custom("openNamingScreen", vec![json!(species)])))
             }
-            "choosePartyPokemon" => Ok(HostCall::Command(ScriptCommand::ChoosePartyPokemon)),
+            "choosePartyPokemon" => Ok(HostCall::Command(custom("choosePartyPokemon", vec![]))),
             "setPartyNickname" => {
                 let index = args::u8(v.first().ok_or("setPartyNickname: missing index")?, "setPartyNickname")?;
                 let nickname = args::text(v.get(1).ok_or("setPartyNickname: missing nickname")?, "setPartyNickname")?;
-                Ok(HostCall::Command(ScriptCommand::SetPartyNickname { index, nickname }))
+                Ok(HostCall::Command(custom(
+                    "setPartyNickname",
+                    vec![json!(index), json!(nickname)],
+                )))
             }
             "openShop" => {
                 let items = args::string_array(v.first().ok_or("openShop: missing items")?, "openShop")?;
@@ -791,7 +801,10 @@ impl VgymTrashState {
                     return Some(cmd);
                 }
                 TrashStep::ReplaceTileBlock(x, y, block_id) => {
-                    let cmd = ScriptCommand::ReplaceTileBlock { x, y, block_id };
+                    let cmd = custom(
+                        "replaceTileBlock",
+                        vec![json!(x), json!(y), json!(block_id)],
+                    );
                     self.pending = Some(cmd.clone());
                     self.active = true;
                     return Some(cmd);

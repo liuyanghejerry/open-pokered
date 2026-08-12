@@ -13,7 +13,7 @@ use pokered_renderer::battle_anim::{
     ANIM_BASE_TILE_ID,
 };
 use pokered_renderer::battle_scene::{
-    EnemyHud, PlayerHud, PokeballIndicators, PokeballStatus, StatusCondition,
+    EnemyHud, PlayerHud, BallIndicators, BallStatus, StatusCondition,
 };
 use pokered_renderer::battle_transition::{BattleTransitionKind, BattleTransitionState};
 use pokered_renderer::palette::GRAYSCALE_PALETTE;
@@ -1602,13 +1602,13 @@ fn core_status_to_tiles(status: &CoreStatus) -> Option<StatusCondition> {
     }
 }
 
-fn slot_status_to_pokeball(slot: pokered_core::battle::PokeballSlotStatus) -> PokeballStatus {
+fn slot_status_to_pokeball(slot: pokered_core::battle::PokeballSlotStatus) -> BallStatus {
     use pokered_core::battle::PokeballSlotStatus as S;
     match slot {
-        S::Normal => PokeballStatus::Normal,
-        S::StatusAilment => PokeballStatus::StatusAilment,
-        S::Fainted => PokeballStatus::Fainted,
-        S::Empty => PokeballStatus::Empty,
+        S::Normal => BallStatus::Normal,
+        S::StatusAilment => BallStatus::StatusAilment,
+        S::Fainted => BallStatus::Fainted,
+        S::Empty => BallStatus::Empty,
     }
 }
 
@@ -2107,15 +2107,15 @@ pub fn draw_battle(
         }
 
         if screen.show_player_pokeballs {
-            let player_balls: [PokeballStatus; 6] =
+            let player_balls: [BallStatus; 6] =
                 screen.player_pokeball_status.map(slot_status_to_pokeball);
-            PokeballIndicators::draw_player(&mut tile_buf, &player_balls);
+            BallIndicators::draw_player(&mut tile_buf, &player_balls);
         }
 
         if screen.show_enemy_pokeballs {
-            let enemy_balls: [PokeballStatus; 6] =
+            let enemy_balls: [BallStatus; 6] =
                 screen.enemy_pokeball_status.map(slot_status_to_pokeball);
-            PokeballIndicators::draw_enemy(&mut tile_buf, &enemy_balls);
+            BallIndicators::draw_enemy(&mut tile_buf, &enemy_balls);
         }
 
         // ── Bottom area (text box + menu or message) ─────────────────

@@ -6,14 +6,15 @@
 //! - Map/tileset constants for overworld palette selection
 //! - Palette helper functions
 //!
-//! The base types (`SgbColor`, `SgbPaletteEntry`, `SgbPaletteId`, `SetPalCommand`)
-//! are defined in `dotzuki-engine` and re-used here.
+//! The color types (`SgbColor`, `SgbPaletteEntry`) live in `dotzuki-engine`;
+//! the palette-slot tables (`SgbPaletteId`, `SetPalCommand`) live in
+//! `dotzuki-renderer` and are re-used here.
 //!
 //! Transcribed from `data/sgb/sgb_palettes.asm` and `data/pokemon/palettes.asm`.
 
-pub use dotzuki_engine::palette::{
-    SgbColor, SgbPaletteEntry, SgbPaletteId, SetPalCommand, NUM_SGB_PALS,
-    SET_PAL_PARTY_MENU_HP_BARS, SET_PAL_DEFAULT,
+pub use dotzuki_engine::palette::{SgbColor, SgbPaletteEntry};
+pub use dotzuki_renderer::palette::{
+    SgbPaletteId, SetPalCommand, NUM_SGB_PALS, SET_PAL_PARTY_MENU_HP_BARS, SET_PAL_DEFAULT,
 };
 
 /// Helper to create an SGB palette entry from 12 values (r,g,b × 4 colors).
@@ -153,7 +154,7 @@ pub const NUM_POKEMON_PLUS_ONE: usize = 151 + 1; // indices 0..=151
 /// Index 0 = MISSINGNO, 1 = BULBASAUR, ..., 151 = MEW.
 /// Transcribed from data/pokemon/palettes.asm.
 pub const MONSTER_PALETTES: [SgbPaletteId; NUM_POKEMON_PLUS_ONE] = [
-    SgbPaletteId::MewMon,    // 0: MISSINGNO
+    SgbPaletteId::PaleMon,    // 0: MISSINGNO
     SgbPaletteId::GreenMon,  // 1: BULBASAUR
     SgbPaletteId::GreenMon,  // 2: IVYSAUR
     SgbPaletteId::GreenMon,  // 3: VENUSAUR
@@ -277,7 +278,7 @@ pub const MONSTER_PALETTES: [SgbPaletteId; NUM_POKEMON_PLUS_ONE] = [
     SgbPaletteId::GrayMon,   // 121: STARMIE
     SgbPaletteId::PinkMon,   // 122: MR. MIME
     SgbPaletteId::GreenMon,  // 123: SCYTHER
-    SgbPaletteId::MewMon,    // 124: JYNX
+    SgbPaletteId::PaleMon,    // 124: JYNX
     SgbPaletteId::YellowMon, // 125: ELECTABUZZ
     SgbPaletteId::RedMon,    // 126: MAGMAR
     SgbPaletteId::BrownMon,  // 127: PINSIR
@@ -303,8 +304,8 @@ pub const MONSTER_PALETTES: [SgbPaletteId; NUM_POKEMON_PLUS_ONE] = [
     SgbPaletteId::GrayMon,   // 147: DRATINI
     SgbPaletteId::BlueMon,   // 148: DRAGONAIR
     SgbPaletteId::BrownMon,  // 149: DRAGONITE
-    SgbPaletteId::MewMon,    // 150: MEWTWO
-    SgbPaletteId::MewMon,    // 151: MEW
+    SgbPaletteId::PaleMon,    // 150: MEWTWO
+    SgbPaletteId::PaleMon,    // 151: MEW
 ];
 
 /// Lookup the SGB palette for a Pokémon by Pokédex index (1-based).
@@ -380,7 +381,7 @@ pub fn overworld_palette_for_map(tileset: u8, map_id: u8, last_map: u8) -> SgbPa
         return SgbPaletteId::Cave;
     } else if map_id == MAP_LORELEIS_ROOM {
         // Lorelei's room → PAL_ROUTE (xor a; inc a → 1 → PAL_ROUTE... actually 0+1=1=PAL_PALLET)
-        return SgbPaletteId::Pallet;
+        return SgbPaletteId::HomeTown;
     } else if map_id == MAP_BRUNOS_ROOM {
         // Bruno's room → PAL_CAVE
         return SgbPaletteId::Cave;

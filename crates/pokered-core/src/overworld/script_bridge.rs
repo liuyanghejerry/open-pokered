@@ -1,5 +1,6 @@
 use pokered_data::maps::MapId;
 use dotzuki_engine_script::{CommandResult, ScriptCommand};
+use serde_json::Value;
 
 use super::npc_movement::NpcRuntimeState;
 use super::{BedroomDialogue, DialoguePage, Direction};
@@ -213,18 +214,21 @@ pub enum ScriptEffect {
     },
     /// Show the full-screen diploma (completed-POKeDEX reward).
     ShowDiploma,
-    /// Open the PC storage screen (see `ScriptCommand::OpenPc` for `kind`).
+    /// Open the PC storage screen (dispatched from the `openPC` /
+    /// `openItemPC` / `openBillsPC` custom commands).
     /// Instant effect: the app opens the screen; the script runs on.
     OpenPc {
         kind: String,
     },
-    /// Start the Cable Club link flow (see `ScriptCommand::LinkStart`).
+    /// Start the Cable Club link flow (dispatched from the `linkStart` custom
+    /// command).
     /// Instant effect: flags `link_start_requested`; the app layer (which
     /// owns the link session) drives the request/accept flow.
     LinkStart,
     /// Record the party and play the Hall of Fame ceremony + credits
-    /// (see `ScriptCommand::EnterHallOfFame`). Instant effect: the app runs
-    /// the ceremony and resets to the title screen; the script runs on.
+    /// (dispatched from the `enterHallOfFame` custom command). Instant
+    /// effect: the app runs the ceremony and resets to the title screen;
+    /// the script runs on.
     HallOfFameCeremony,
     ShowEmotionBubble {
         npc_id: String,
@@ -342,7 +346,7 @@ pub fn dispatch_command_with_names(
             item_id: item_id.clone(),
             quantity: *quantity,
         },
-        ScriptCommand::GivePokemon { species, level } => ScriptEffect::GivePokemon {
+        ScriptCommand::GiveMonster { species, level } => ScriptEffect::GivePokemon {
             species: species.clone(),
             nickname: None,
             level: *level,
@@ -417,16 +421,10 @@ pub fn dispatch_command_with_names(
             species: species.clone(),
             level: *level,
         },
-        ScriptCommand::OldManTutorial => ScriptEffect::OldManTutorial,
-        ScriptCommand::TradePokemon {
-            offered,
-            received,
-            nickname,
-        } => ScriptEffect::TradePokemon {
-            offered: offered.clone(),
-            received: received.clone(),
-            nickname: nickname.clone(),
-        },
+        // Game-defined commands: formerly dedicated engine variants, now
+        // `ScriptCommand::Custom` dispatched by JS verb name (registered in
+        // `pokered-data::script_api`).
+        ScriptCommand::Custom { name, args } => dispatch_custom(name, args),
         ScriptCommand::Delay { frames } => ScriptEffect::Delay {
             frames: *frames,
             frames_remaining: *frames,
@@ -437,10 +435,6 @@ pub fn dispatch_command_with_names(
             y: *y,
         },
         ScriptCommand::Heal => ScriptEffect::Heal,
-        ScriptCommand::AnimateHealingMachine => ScriptEffect::AnimateHealingMachine {
-            phase: HealingMachinePhase::FadeOutMusic,
-            frames_remaining: 0,
-        },
         ScriptCommand::FadeScreen { fade_type } => ScriptEffect::FadeScreen {
             fade_type: fade_type.clone(),
         },
@@ -456,38 +450,9 @@ pub fn dispatch_command_with_names(
             target_y: *target_y,
             phase: FollowNpcPhase::StartNpc,
         },
-        ScriptCommand::ShowPokedexEntry { species } => ScriptEffect::ShowPokedexEntry {
-            species: species.clone(),
-            started: false,
-        },
-        ScriptCommand::OpenNamingScreen { species } => ScriptEffect::NamingScreen {
-            species: species.clone(),
-            naming_state: None,
-            started: false,
-            result_name: None,
-        },
-        ScriptCommand::ChoosePartyPokemon => ScriptEffect::ChoosePartyPokemon {
-            started: false,
-            result_index: None,
-        },
-        ScriptCommand::SetPartyNickname { index, nickname } => ScriptEffect::SetPartyNickname {
-            index: *index,
-            nickname: nickname.clone(),
-        },
         ScriptCommand::OpenShop { items } => ScriptEffect::OpenShop {
             items: items.clone(),
         },
-        ScriptCommand::OpenSlots { lucky } => ScriptEffect::OpenSlots { lucky: *lucky },
-        ScriptCommand::ElevatorMenu { floors } => ScriptEffect::ElevatorMenu {
-            floors: floors.clone(),
-        },
-        ScriptCommand::FilterBag { item_ids } => ScriptEffect::FilterBag {
-            item_ids: item_ids.clone(),
-        },
-        ScriptCommand::ShowDiploma => ScriptEffect::ShowDiploma,
-        ScriptCommand::OpenPc { kind } => ScriptEffect::OpenPc { kind: kind.clone() },
-        ScriptCommand::LinkStart => ScriptEffect::LinkStart,
-        ScriptCommand::EnterHallOfFame => ScriptEffect::HallOfFameCeremony,
         ScriptCommand::ShowEmotionBubble { npc_id, emotion } => ScriptEffect::ShowEmotionBubble {
             npc_id: npc_id.clone(),
             emotion: emotion.clone(),
@@ -505,20 +470,10 @@ pub fn dispatch_command_with_names(
         },
         ScriptCommand::GiveMoney { amount } => ScriptEffect::GiveMoney { amount: *amount },
         ScriptCommand::TakeMoney { amount } => ScriptEffect::TakeMoney { amount: *amount },
-        ScriptCommand::GiveCoins { amount } => ScriptEffect::GiveCoins { amount: *amount },
-        ScriptCommand::TakeCoins { amount } => ScriptEffect::TakeCoins { amount: *amount },
-        ScriptCommand::DepositDaycare { index } => ScriptEffect::DepositDaycare { index: *index },
-        ScriptCommand::WithdrawDaycare => ScriptEffect::WithdrawDaycare,
         ScriptCommand::PlayCry { species } => ScriptEffect::PlayCry {
             species: species.clone(),
         },
         ScriptCommand::GiveBadge { badge } => ScriptEffect::GiveBadge { badge: *badge },
-        ScriptCommand::ReplaceTileBlock { x, y, block_id } => ScriptEffect::ReplaceTileBlock {
-            x: *x,
-            y: *y,
-            block_id: *block_id,
-        },
-        ScriptCommand::PlayShipDeparture => ScriptEffect::PlayShipDeparture { started: false },
         // Sync flag ops never reach dispatch — defensive fallback.
         ScriptCommand::SetFlag { .. }
         | ScriptCommand::ResetFlag { .. }
@@ -537,6 +492,113 @@ pub fn dispatch_command_with_names(
             result: CommandResult::Void,
         },
     }
+}
+
+/// Dispatch a game-defined [`ScriptCommand::Custom`] to the matching
+/// [`ScriptEffect`] by its JS verb name. `args` are the raw JSON values the
+/// registrar passed through (see `pokered-data::script_api`); unknown names
+/// are a defensive no-op (Void), like the unhandled engine commands above.
+fn dispatch_custom(name: &str, args: &[Value]) -> ScriptEffect {
+    match name {
+        "oldManTutorial" => ScriptEffect::OldManTutorial,
+        "tradePokemon" => ScriptEffect::TradePokemon {
+            offered: custom_str(args, 0),
+            received: custom_str(args, 1),
+            nickname: custom_str(args, 2),
+        },
+        "animateHealingMachine" => ScriptEffect::AnimateHealingMachine {
+            phase: HealingMachinePhase::FadeOutMusic,
+            frames_remaining: 0,
+        },
+        "showPokedexEntry" => ScriptEffect::ShowPokedexEntry {
+            species: custom_str(args, 0),
+            started: false,
+        },
+        "openNamingScreen" => ScriptEffect::NamingScreen {
+            species: custom_str(args, 0),
+            naming_state: None,
+            started: false,
+            result_name: None,
+        },
+        "choosePartyPokemon" => ScriptEffect::ChoosePartyPokemon {
+            started: false,
+            result_index: None,
+        },
+        "setPartyNickname" => ScriptEffect::SetPartyNickname {
+            index: custom_u64(args, 0) as u8,
+            nickname: custom_str(args, 1),
+        },
+        "openSlots" => ScriptEffect::OpenSlots {
+            lucky: custom_bool(args, 0),
+        },
+        "elevatorMenu" => ScriptEffect::ElevatorMenu {
+            floors: json_string_vec(args.first()),
+        },
+        "filterBag" => ScriptEffect::FilterBag {
+            item_ids: json_string_vec(args.first()),
+        },
+        "showDiploma" => ScriptEffect::ShowDiploma,
+        "openPC" => ScriptEffect::OpenPc {
+            kind: "center".to_string(),
+        },
+        "openItemPC" => ScriptEffect::OpenPc {
+            kind: "items".to_string(),
+        },
+        "openBillsPC" => ScriptEffect::OpenPc {
+            kind: "bills".to_string(),
+        },
+        "linkStart" => ScriptEffect::LinkStart,
+        "giveCoins" => ScriptEffect::GiveCoins {
+            amount: custom_u64(args, 0) as u16,
+        },
+        "takeCoins" => ScriptEffect::TakeCoins {
+            amount: custom_u64(args, 0) as u16,
+        },
+        "depositDaycare" => ScriptEffect::DepositDaycare {
+            index: custom_u64(args, 0) as u8,
+        },
+        "withdrawDaycare" => ScriptEffect::WithdrawDaycare,
+        "replaceTileBlock" => ScriptEffect::ReplaceTileBlock {
+            x: custom_u64(args, 0) as u8,
+            y: custom_u64(args, 1) as u8,
+            block_id: custom_u64(args, 2) as u8,
+        },
+        "playShipDeparture" => ScriptEffect::PlayShipDeparture { started: false },
+        "enterHallOfFame" => ScriptEffect::HallOfFameCeremony,
+        _ => ScriptEffect::Immediate {
+            result: CommandResult::Void,
+        },
+    }
+}
+
+/// Read the `i`-th `Custom` argument as a string ("" when missing or not a
+/// string).
+fn custom_str(args: &[Value], i: usize) -> String {
+    args.get(i).and_then(|v| v.as_str()).unwrap_or("").to_string()
+}
+
+/// Read the `i`-th `Custom` argument as an unsigned integer (0 when missing
+/// or not an integer).
+fn custom_u64(args: &[Value], i: usize) -> u64 {
+    args.get(i).and_then(|v| v.as_u64()).unwrap_or(0)
+}
+
+/// Read the `i`-th `Custom` argument as a boolean (false when missing or not
+/// a boolean).
+fn custom_bool(args: &[Value], i: usize) -> bool {
+    args.get(i).and_then(|v| v.as_bool()).unwrap_or(false)
+}
+
+/// Convert a `Custom` array argument into a `Vec<String>` (empty when absent
+/// or not an array of strings).
+fn json_string_vec(arg: Option<&Value>) -> Vec<String> {
+    arg.and_then(|v| v.as_array())
+        .map(|arr| {
+            arr.iter()
+                .filter_map(|x| x.as_str().map(str::to_string))
+                .collect()
+        })
+        .unwrap_or_default()
 }
 
 fn resolve_placeholders(text: &str, player_name: &str, rival_name: &str, starter_name: &str) -> String {
@@ -589,7 +651,10 @@ mod name_rater_tests {
 
     #[test]
     fn choose_party_pokemon_maps_to_effect() {
-        let eff = dispatch_command(&ScriptCommand::ChoosePartyPokemon);
+        let eff = dispatch_command(&ScriptCommand::Custom {
+            name: "choosePartyPokemon".to_string(),
+            args: vec![],
+        });
         match eff {
             ScriptEffect::ChoosePartyPokemon {
                 started,
@@ -604,9 +669,9 @@ mod name_rater_tests {
 
     #[test]
     fn set_party_nickname_maps_to_effect() {
-        let eff = dispatch_command(&ScriptCommand::SetPartyNickname {
-            index: 2,
-            nickname: "SPARKY".to_string(),
+        let eff = dispatch_command(&ScriptCommand::Custom {
+            name: "setPartyNickname".to_string(),
+            args: vec![serde_json::json!(2), serde_json::json!("SPARKY")],
         });
         match eff {
             ScriptEffect::SetPartyNickname { index, nickname } => {
