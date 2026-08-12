@@ -7,10 +7,13 @@ on:
 
 env:
   CARGO_TERM_COLOR: always
+  # dotzuki engine deps are fetched from a private GitHub repo over ssh; use
+  # the git CLI so GIT_SSH_COMMAND (deploy key, set up per job) applies.
+  CARGO_NET_GIT_FETCH_WITH_CLI: "true"
 
 jobs:
   detect-changes:
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     permissions:
       contents: read
       pull-requests: read
@@ -26,6 +29,10 @@ jobs:
       pokered-android: ${{ steps.filter.outputs.pokered-android }}
       pokered-ios: ${{ steps.filter.outputs.pokered-ios }}
       pokered-debug-server: ${{ steps.filter.outputs.pokered-debug-server }}
+      pokered-ui: ${{ steps.filter.outputs.pokered-ui }}
+      pokered-ui-preview: ${{ steps.filter.outputs.pokered-ui-preview }}
+      pokered-layout-preview: ${{ steps.filter.outputs.pokered-layout-preview }}
+      scene_apply: ${{ steps.filter.outputs.scene_apply }}
       pokered-editor: ${{ steps.filter.outputs.pokered-editor }}
       changes-list: ${{ steps.build-changes-list.outputs.list }}
     steps:
@@ -96,24 +103,52 @@ jobs:
               - 'Cargo.lock'
               - 'Cargo.toml'
               - 'crates/pokered-debug-server/**'
+            pokered-ui:
+              - 'Cargo.lock'
+              - 'Cargo.toml'
+              - 'crates/pokered-ui/**'
+            pokered-ui-preview:
+              - 'Cargo.lock'
+              - 'Cargo.toml'
+              - 'crates/pokered-ui-preview/**'
+              - 'crates/pokered-ui/**'
+            pokered-layout-preview:
+              - 'Cargo.lock'
+              - 'Cargo.toml'
+              - 'crates/pokered-layout-preview/**'
+            scene_apply:
+              - 'Cargo.lock'
+              - 'Cargo.toml'
+              - 'crates/scene_apply/**'
             pokered-editor:
               - 'tools/pokered-editor/**'
       - name: Build changes list
         id: build-changes-list
         run: |
-          LIST=""
-          for key in pokered-data pokered-core pokered-renderer pokered-audio pokered-app pokered-web pokered-runner-web pokered-tui pokered-android pokered-ios pokered-debug-server pokered-editor; do
-            if [ "${{ steps.filter.outputs[format('{0}', key)] }}" == "true" ]; then
-              LIST="$LIST $key"
-            fi
-          done
-          echo "list=$LIST" >> $GITHUB_OUTPUT
+          CHANGES=""
+          [ "${{ steps.filter.outputs.pokered-data }}" == "true" ]            && CHANGES="$CHANGES pokered-data"            || true
+          [ "${{ steps.filter.outputs.pokered-core }}" == "true" ]            && CHANGES="$CHANGES pokered-core"            || true
+          [ "${{ steps.filter.outputs.pokered-renderer }}" == "true" ]        && CHANGES="$CHANGES pokered-renderer"        || true
+          [ "${{ steps.filter.outputs.pokered-audio }}" == "true" ]           && CHANGES="$CHANGES pokered-audio"           || true
+          [ "${{ steps.filter.outputs.pokered-app }}" == "true" ]             && CHANGES="$CHANGES pokered-app"             || true
+          [ "${{ steps.filter.outputs.pokered-web }}" == "true" ]             && CHANGES="$CHANGES pokered-web"             || true
+          [ "${{ steps.filter.outputs.pokered-runner-web }}" == "true" ]      && CHANGES="$CHANGES pokered-runner-web"      || true
+          [ "${{ steps.filter.outputs.pokered-tui }}" == "true" ]             && CHANGES="$CHANGES pokered-tui"             || true
+          [ "${{ steps.filter.outputs.pokered-android }}" == "true" ]         && CHANGES="$CHANGES pokered-android"         || true
+          [ "${{ steps.filter.outputs.pokered-ios }}" == "true" ]             && CHANGES="$CHANGES pokered-ios"             || true
+          [ "${{ steps.filter.outputs.pokered-debug-server }}" == "true" ]    && CHANGES="$CHANGES pokered-debug-server"    || true
+          [ "${{ steps.filter.outputs.pokered-ui }}" == "true" ]              && CHANGES="$CHANGES pokered-ui"              || true
+          [ "${{ steps.filter.outputs.pokered-ui-preview }}" == "true" ]      && CHANGES="$CHANGES pokered-ui-preview"      || true
+          [ "${{ steps.filter.outputs.pokered-layout-preview }}" == "true" ]  && CHANGES="$CHANGES pokered-layout-preview"  || true
+          [ "${{ steps.filter.outputs.scene_apply }}" == "true" ]             && CHANGES="$CHANGES scene_apply"             || true
+          [ "${{ steps.filter.outputs.pokered-editor }}" == "true" ]          && CHANGES="$CHANGES pokered-editor"          || true
+          echo "list=$CHANGES" >> $GITHUB_OUTPUT
 
   build-rust-packages:
     needs: [detect-changes]
     permissions:
       contents: read
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       # The self-hosted runner is a single machine; running all matrix jobs at
@@ -149,6 +184,18 @@ jobs:
           - package: pokered-debug-server
             build_name: pokered-debug-server
             changes_key: pokered-debug-server
+          - package: pokered-ui
+            build_name: pokered-ui
+            changes_key: pokered-ui
+          - package: pokered-ui-preview
+            build_name: pokered-ui-preview
+            changes_key: pokered-ui-preview
+          - package: pokered-layout-preview
+            build_name: pokered-layout-preview
+            changes_key: pokered-layout-preview
+          - package: scene_apply
+            build_name: scene_apply
+            changes_key: scene_apply
           - package: pokered-web
             target: wasm32-unknown-unknown
             build_name: pokered-web (wasm32-unknown-unknown)
@@ -174,6 +221,19 @@ jobs:
         if: steps.changes-check.outputs.has-changes == 'true'
         uses: actions/checkout@v4
 
+      - name: Configure dotzuki deploy key
+        # dotzuki is a private repo; cargo fetches engine deps over ssh using
+        # this read-only deploy key (consumed via CARGO_NET_GIT_FETCH_WITH_CLI).
+        if: steps.changes-check.outputs.has-changes == 'true'
+        env:
+          DOTZUKI_DEPLOY_KEY: ${{ secrets.DOTZUKI_DEPLOY_KEY }}
+        run: |
+          mkdir -p ~/.ssh
+          echo "$DOTZUKI_DEPLOY_KEY" > ~/.ssh/dotzuki_deploy_key
+          chmod 600 ~/.ssh/dotzuki_deploy_key
+          ssh-keyscan github.com >> ~/.ssh/known_hosts 2>/dev/null || true
+          echo "GIT_SSH_COMMAND=ssh -i ~/.ssh/dotzuki_deploy_key -o IdentitiesOnly=yes" >> "$GITHUB_ENV"
+
       - name: Fetch gfx assets
         # gfx/ is not committed (fetched from pret/pokered). Renderer/app tests
         # read it from disk; the pokered-web wasm build embeds it at build time.
@@ -183,6 +243,10 @@ jobs:
       - name: Install system dependencies
         if: steps.changes-check.outputs.has-changes == 'true'
         run: |
+          # The preinstalled Microsoft apt repos (azure-cli, microsoft-prod)
+          # intermittently 403 on apt-get update; we don't need anything from
+          # them, so drop them before updating.
+          sudo rm -f /etc/apt/sources.list.d/azure-cli.* /etc/apt/sources.list.d/microsoft-prod.*
           sudo apt-get update
           sudo apt-get install -yq \
             build-essential \
@@ -207,16 +271,12 @@ jobs:
 
       - name: Cache cargo registry & build
         if: steps.changes-check.outputs.has-changes == 'true'
-        uses: actions/cache@v4
+        # rust-cache prunes the target dir before saving and uses its own key
+        # namespace; the old actions/cache entries grew to 1 GB+ and stalled
+        # restores on GitHub-hosted runners.
+        uses: Swatinem/rust-cache@v2
         with:
-          path: |
-            ~/.cargo/registry
-            ~/.cargo/git
-            target
-          key: ci-cargo-${{ matrix.target || 'native' }}-${{ hashFiles('Cargo.lock', 'Cargo.toml', 'crates/*/Cargo.toml', 'run-wasm/Cargo.toml') }}
-          restore-keys: |
-            ci-cargo-${{ matrix.target || 'native' }}-
-            ci-cargo-
+          key: ${{ matrix.target || 'native' }}
 
       - name: Build native package
         if: ${{ steps.changes-check.outputs.has-changes == 'true' && !matrix.target }}
@@ -224,11 +284,95 @@ jobs:
 
       - name: Test native package
         if: ${{ steps.changes-check.outputs.has-changes == 'true' && !matrix.target }}
-        run: cargo test -p ${{ matrix.package }}
+        run: |
+          # render tests dump debug PNGs via std::env::temp_dir(); the
+          # runner's /tmp rejects writes, so use the per-job temp dir.
+          export TMPDIR="$RUNNER_TEMP/test-tmp"
+          mkdir -p "$TMPDIR"
+          cargo test -p ${{ matrix.package }}
 
       - name: Build targeted package
         if: ${{ steps.changes-check.outputs.has-changes == 'true' && matrix.target }}
         run: cargo build -p ${{ matrix.package }} --target ${{ matrix.target }}
+
+  coverage:
+    permissions:
+      contents: read
+    name: Coverage (cargo-llvm-cov)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure dotzuki deploy key
+        env:
+          DOTZUKI_DEPLOY_KEY: ${{ secrets.DOTZUKI_DEPLOY_KEY }}
+        run: |
+          mkdir -p ~/.ssh
+          echo "$DOTZUKI_DEPLOY_KEY" > ~/.ssh/dotzuki_deploy_key
+          chmod 600 ~/.ssh/dotzuki_deploy_key
+          ssh-keyscan github.com >> ~/.ssh/known_hosts 2>/dev/null || true
+          echo "GIT_SSH_COMMAND=ssh -i ~/.ssh/dotzuki_deploy_key -o IdentitiesOnly=yes" >> "$GITHUB_ENV"
+
+      - name: Fetch gfx assets
+        # gfx/ is not committed; pokered-data embeds it at build time.
+        run: ./scripts/fetch-gfx.sh
+
+      - name: Install system dependencies
+        run: |
+          sudo rm -f /etc/apt/sources.list.d/azure-cli.* /etc/apt/sources.list.d/microsoft-prod.*
+          sudo apt-get update
+          sudo apt-get install -yq \
+            build-essential \
+            pkg-config \
+            libxkbcommon-dev \
+            libwayland-dev \
+            libx11-dev \
+            libxrandr-dev \
+            libxi-dev \
+            libxcursor-dev \
+            libvulkan-dev \
+            libasound2-dev \
+            libudev-dev
+
+      - name: Free disk space
+        # The instrumented llvm-cov build needs well over the ~14 GB a stock
+        # ubuntu-latest runner has free; linking otherwise dies with SIGBUS.
+        run: |
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc \
+            /usr/local/share/powershell /usr/share/swift /usr/local/julia* || true
+          df -h /
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: llvm-tools-preview
+
+      - name: Install cargo-llvm-cov
+        uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-llvm-cov
+
+      - name: Cache cargo registry & build
+        uses: Swatinem/rust-cache@v2
+        with:
+          key: coverage
+
+      - name: Run coverage
+        # --workspace: all crates; summary table goes to the job log, the
+        # lcov report is uploaded as an artifact for inspection.
+        run: |
+          export TMPDIR="$RUNNER_TEMP/test-tmp"
+          mkdir -p "$TMPDIR"
+          cargo llvm-cov --workspace --lcov --output-path lcov.info
+          cargo llvm-cov report --summary-only
+
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-lcov
+          path: lcov.info
+          retention-days: 30
 
   build-pokered-editor:
     needs: [detect-changes]
@@ -236,33 +380,38 @@ jobs:
     permissions:
       contents: read
     name: Build pokered-editor
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: npm
-          cache-dependency-path: tools/pokered-editor/package-lock.json
+          cache: pnpm
+          cache-dependency-path: tools/pokered-editor/pnpm-lock.yaml
 
-      - name: Install npm dependencies
+      - name: Install dependencies
         working-directory: tools/pokered-editor
-        run: npm ci
+        run: pnpm install --frozen-lockfile
 
       - name: Type check
         working-directory: tools/pokered-editor
-        run: npx vue-tsc --noEmit
+        run: pnpm exec vue-tsc --noEmit
 
       - name: Test
         working-directory: tools/pokered-editor
-        run: npx vitest run
+        run: pnpm exec vitest run
 
       - name: Build
         working-directory: tools/pokered-editor
-        run: npm run build
+        run: pnpm run build
 
   build-android-apk:
     needs: [detect-changes]
@@ -274,6 +423,16 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Configure dotzuki deploy key
+        env:
+          DOTZUKI_DEPLOY_KEY: ${{ secrets.DOTZUKI_DEPLOY_KEY }}
+        run: |
+          mkdir -p ~/.ssh
+          echo "$DOTZUKI_DEPLOY_KEY" > ~/.ssh/dotzuki_deploy_key
+          chmod 600 ~/.ssh/dotzuki_deploy_key
+          ssh-keyscan github.com >> ~/.ssh/known_hosts 2>/dev/null || true
+          echo "GIT_SSH_COMMAND=ssh -i ~/.ssh/dotzuki_deploy_key -o IdentitiesOnly=yes" >> "$GITHUB_ENV"
 
       - name: Fetch gfx assets
         # Android build embeds gfx/ into the .so at build time (build.rs).
@@ -360,6 +519,16 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Configure dotzuki deploy key
+        env:
+          DOTZUKI_DEPLOY_KEY: ${{ secrets.DOTZUKI_DEPLOY_KEY }}
+        run: |
+          mkdir -p ~/.ssh
+          echo "$DOTZUKI_DEPLOY_KEY" > ~/.ssh/dotzuki_deploy_key
+          chmod 600 ~/.ssh/dotzuki_deploy_key
+          ssh-keyscan github.com >> ~/.ssh/known_hosts 2>/dev/null || true
+          echo "GIT_SSH_COMMAND=ssh -i ~/.ssh/dotzuki_deploy_key -o IdentitiesOnly=yes" >> "$GITHUB_ENV"
 
       - name: Fetch gfx assets
         # iOS build embeds gfx/ into the staticlib at build time (build.rs).

@@ -51,6 +51,10 @@ export interface PokeredRunner {
   has_data_overrides(): boolean
   import_save(json: string): boolean
   export_save(): string | undefined
+  /** JSON map of the overworld's live script flags (named bits + runtime extras). */
+  export_flags(): string
+  /** Restore flags from [`export_flags`](PokeredRunner.export_flags) JSON. */
+  import_flags(json: string): boolean
   reset(saveJson?: string | null): void
   set_muted(muted: boolean): void
   is_muted(): boolean
@@ -154,6 +158,10 @@ export function keyToBit(key: string, code = ''): number {
 /** localStorage key the editor uses for its playtest/preview session save. */
 export const EDITOR_SAVE_KEY = 'pokered-save-editor'
 
+/** localStorage key for the runtime script-flag snapshot stored alongside the
+ *  playtest save (named event bits + runtime extras like `__OBJ_HIDDEN_*`). */
+export const EDITOR_FLAGS_KEY = 'pokered-editor-script-flags'
+
 // A single shared runner instance for the whole editor: the wasm game owns
 // global (localStorage) state, so multiple instances would fight.
 let runnerInstance: PokeredRunner | null = null
@@ -193,20 +201,21 @@ export function pokeredRunnerActive(): boolean {
 // front-end still keeps its own list so a deleted override can be removed.
 
 interface InjectedScene {
-  js: string
+  /** Raw `.scene` DSL source — the wasm side compiles it (native AST engine). */
+  source: string
   config?: string
 }
 
 const injectedScenes = new Map<string, InjectedScene>()
 const wildOverrides = new Map<string, string>()
 
-/** Inject a compiled `.scene` (JS + optional script_config.json) for a map key. */
+/** Inject a `.scene` (raw DSL source + optional script_config.json) for a map key. */
 export async function injectSceneScript(
   mapKey: string,
-  js: string,
+  source: string,
   configJson?: string | null,
 ): Promise<void> {
-  const entry: InjectedScene = { js, config: configJson ?? undefined }
+  const entry: InjectedScene = { source, config: configJson ?? undefined }
   injectedScenes.set(mapKey, entry)
   const runner = await ensureRunner()
   pushScenesToRunner(runner)
@@ -314,7 +323,7 @@ function pushScenesToRunner(runner: PokeredRunner) {
   const scenes: Record<string, string> = {}
   const configs: Record<string, string> = {}
   for (const [key, entry] of injectedScenes) {
-    scenes[key] = entry.js
+    scenes[key] = entry.source
     if (entry.config) configs[key] = entry.config
   }
   runner.reload_scripts(JSON.stringify(scenes), JSON.stringify(configs))
@@ -327,7 +336,13 @@ function pushScenesToRunner(runner: PokeredRunner) {
 export async function resetPokeredRunner(saveJson?: string | null): Promise<void> {
   const runner = await getPokeredRunner(saveJson)
   runner.reset(saveJson ?? null)
-  if (injectedScenes.size > 0) pushScenesToRunner(runner)
+  try {
+    // A scene that fails to compile shouldn't block the boot — the error is
+    // surfaced at inject time and the next successful edit re-pushes the set.
+    if (injectedScenes.size > 0) pushScenesToRunner(runner)
+  } catch {
+    /* best-effort: keep the boot going */
+  }
   if (wildOverrides.size > 0) {
     for (const [name, json] of wildOverrides) {
       runner.set_wild_data(name, json)

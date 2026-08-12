@@ -161,7 +161,7 @@ use crate::battle::settlement::money::{calc_prize_money, calc_total_winnings};
 use crate::battle::settlement::settle::settle_battle;
 use crate::battle::settlement::{BattleOutcome, BattleSettlement};
 use crate::game_state::{BattleStyle, GameScreen, ScreenAction};
-use crate::items::inventory::Inventory;
+use crate::items::inventory::{BAG_ITEM_CAPACITY, Inventory};
 use crate::main_menu::MenuInput;
 use effects::EffectRandoms;
 use escape::{try_run_from_battle, RunResult};
@@ -890,7 +890,7 @@ pub struct BattleScreen {
     pub is_wild: bool,
     pub trainer_class: Option<TrainerClass>,
     pub trainer_name: Option<String>,
-    pub player_bag: Inventory,
+    pub player_bag: Inventory<BAG_ITEM_CAPACITY>,
 
     // Display fields (synced from battle_state after every action)
     pub enemy_species: Species,
@@ -1318,7 +1318,7 @@ impl BattleScreen {
         }
     }
 
-    pub fn with_bag(mut self, bag: Inventory) -> Self {
+    pub fn with_bag(mut self, bag: Inventory<BAG_ITEM_CAPACITY>) -> Self {
         self.player_bag = bag;
         self
     }
@@ -2638,8 +2638,10 @@ impl BattleScreen {
             // obedience and the SRAM round-trip see it as self-caught.
             let mut caught_candidate = enemy.clone();
             caught_candidate.ot_id = self.player_id;
-            if caught_candidate.ot_name.is_none() {
-                caught_candidate.ot_name = self.player_name.clone();
+            if caught_candidate.ot_name == [0x50; 11] {
+                if let Some(name) = &self.player_name {
+                    caught_candidate.ot_name = crate::battle::state::encode_name(name);
+                }
             }
             let ctx = CaptureContext {
                 ball: ball_id,
@@ -3336,6 +3338,7 @@ impl BattleScreen {
                     } else {
                         move_index
                     };
+                    let mut name_buf = [0u8; crate::battle::state::NAME_TEXT_BUF];
                     let (level, ot_id, moves, pp, has_disabled, name) = {
                         let m = p.active_mon();
                         (
@@ -3344,7 +3347,7 @@ impl BattleScreen {
                             m.moves,
                             m.pp,
                             p.disabled_move > 0,
-                            m.display_name(),
+                            m.display_name(&mut name_buf),
                         )
                     };
                     if crate::battle::obedience::is_traded_for(ot_id, bs.player_id) {
@@ -4178,9 +4181,10 @@ impl BattleScreen {
         for &idx in &result.leveled_up {
             if let Some(ref bs) = self.battle_state {
                 let mon = &bs.player.party[idx];
+                let mut name_buf = [0u8; crate::battle::state::NAME_TEXT_BUF];
                 msgs.push(format!(
                     "{} grew to level {}!",
-                    mon.display_name(),
+                    mon.display_name(&mut name_buf),
                     mon.level
                 ));
             }
@@ -4189,9 +4193,10 @@ impl BattleScreen {
         for &(idx, move_id) in &result.new_moves {
             if let Some(ref bs) = self.battle_state {
                 let mon = &bs.player.party[idx];
+                let mut name_buf = [0u8; crate::battle::state::NAME_TEXT_BUF];
                 msgs.push(format!(
                     "{} learned {}!",
-                    mon.display_name(),
+                    mon.display_name(&mut name_buf),
                     move_display_name(move_id)
                 ));
             }

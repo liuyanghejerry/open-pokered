@@ -1,4 +1,4 @@
-use crate::battle::state::{Pokemon, StatusCondition};
+use crate::battle::state::{decode_name, encode_name, Pokemon, StatusCondition, NAME_TEXT_BUF};
 use crate::pokemon::party::Party;
 use crate::pokemon::pc_box::PcBox;
 use crate::save::game_data::{GameData, PlayTime, GAME_PROGRESS_FLAGS_SIZE, NUM_EVENTS_BYTES};
@@ -14,7 +14,7 @@ use pokered_data::types::PokemonType;
 fn make_test_pokemon(species: Species, level: u8) -> Pokemon {
     Pokemon {
         species,
-        nickname: None,
+        nickname: [0x50; 11],
         level,
         hp: 100,
         max_hp: 100,
@@ -31,7 +31,7 @@ fn make_test_pokemon(species: Species, level: u8) -> Pokemon {
         dv_bytes: [0xAB, 0xCD],
         stat_exp: [100, 200, 300, 400, 500],
         total_exp: 1000,
-        is_traded: false, ot_id: 0, ot_name: None,
+        is_traded: false, ot_id: 0, ot_name: [0x50; 11],
     }
 }
 
@@ -330,10 +330,10 @@ fn test_hof_push_team() {
     let mut hof = HallOfFame::new();
     assert_eq!(hof.team_count(), 0);
     let mut team = HofTeam::new();
-    team.add_mon(HofMon::new(25, 50, vec![0x80, 0x81]));
+    team.add_mon(HofMon::new(25, 50, &[0x80, 0x81]));
     hof.push_team(team);
     assert_eq!(hof.team_count(), 1);
-    assert_eq!(hof.get_team(0).unwrap().mons.len(), 1);
+    assert_eq!(hof.get_team(0).unwrap().mons().len(), 1);
 }
 
 #[test]
@@ -341,12 +341,12 @@ fn test_hof_capacity_evicts_oldest() {
     let mut hof = HallOfFame::new();
     for i in 0..HOF_TEAM_CAPACITY + 5 {
         let mut team = HofTeam::new();
-        team.add_mon(HofMon::new(i as u8, 50, vec![]));
+        team.add_mon(HofMon::new(i as u8, 50, &[]));
         hof.push_team(team);
     }
     assert_eq!(hof.team_count(), HOF_TEAM_CAPACITY);
     let first = hof.get_team(0).unwrap();
-    assert_eq!(first.mons[0].species, 5);
+    assert_eq!(first.mons()[0].species, 5);
 }
 
 #[test]
@@ -362,9 +362,9 @@ fn test_hof_clear() {
 fn test_hof_team_max_mons() {
     let mut team = HofTeam::new();
     for i in 0..10 {
-        team.add_mon(HofMon::new(i, 50, vec![]));
+        team.add_mon(HofMon::new(i, 50, &[]));
     }
-    assert_eq!(team.mons.len(), 6);
+    assert_eq!(team.mons().len(), 6);
 }
 
 #[test]
@@ -565,8 +565,8 @@ fn test_party_sram_roundtrip_preserves_ot_and_nickname() {
     // A nicknamed, traded mon: OT id/name + nickname + PP-Ups all set.
     let mut traded = make_test_pokemon(Species::Pikachu, 25);
     traded.ot_id = 0x1234;
-    traded.ot_name = Some("RED".to_string());
-    traded.set_nickname("SPARKY".to_string());
+    traded.ot_name = encode_name("RED");
+    traded.set_nickname("SPARKY");
     traded.pp_ups = [2, 0, 0, 0];
     save.party.add(traded).unwrap();
 
@@ -578,8 +578,9 @@ fn test_party_sram_roundtrip_preserves_ot_and_nickname() {
 
     let m0 = restored.party.get(0).unwrap();
     assert_eq!(m0.ot_id, 0x1234, "OT id must survive the round-trip");
-    assert_eq!(m0.ot_name.as_deref(), Some("RED"), "OT name must survive");
-    assert_eq!(m0.nickname.as_deref(), Some("SPARKY"), "nickname must survive");
+    let mut buf = [0u8; NAME_TEXT_BUF];
+    assert_eq!(decode_name(&m0.ot_name, &mut buf), "RED", "OT name must survive");
+    assert_eq!(decode_name(&m0.nickname, &mut buf), "SPARKY", "nickname must survive");
     assert_eq!(m0.pp_ups, [2, 0, 0, 0], "PP-Ups must survive");
     assert!(
         m0.is_traded,
@@ -589,10 +590,10 @@ fn test_party_sram_roundtrip_preserves_ot_and_nickname() {
     let m1 = restored.party.get(1).unwrap();
     assert_eq!(m1.ot_id, 0);
     assert!(!m1.is_traded, "ot_id 0 (unknown) counts as own");
-    assert_eq!(m1.ot_name, None, "blank OT name decodes to None");
+    assert_eq!(m1.ot_name, [0x50; 11], "blank OT name stays unset");
     assert_eq!(
-        m1.nickname, None,
-        "a stored species-name nickname decodes back to None"
+        m1.nickname, [0x50; 11],
+        "a stored species-name nickname decodes back to unset"
     );
 }
 
@@ -606,8 +607,8 @@ fn test_box_sram_roundtrip_preserves_ot_and_nickname() {
 
     let mut boxed = make_test_pokemon(Species::Eevee, 30);
     boxed.ot_id = 0x00FF;
-    boxed.ot_name = Some("BLUE".to_string());
-    boxed.set_nickname("VOLT".to_string());
+    boxed.ot_name = encode_name("BLUE");
+    boxed.set_nickname("VOLT");
     boxed.pp_ups = [1, 1, 0, 0];
     save.current_box.deposit(boxed).unwrap();
 
@@ -616,7 +617,70 @@ fn test_box_sram_roundtrip_preserves_ot_and_nickname() {
 
     let m = restored.current_box.get(0).expect("box mon present");
     assert_eq!(m.ot_id, 0x00FF);
-    assert_eq!(m.ot_name.as_deref(), Some("BLUE"));
-    assert_eq!(m.nickname.as_deref(), Some("VOLT"));
+    let mut buf = [0u8; NAME_TEXT_BUF];
+    assert_eq!(decode_name(&m.ot_name, &mut buf), "BLUE");
+    assert_eq!(decode_name(&m.nickname, &mut buf), "VOLT");
     assert_eq!(m.pp_ups, [1, 1, 0, 0]);
+}
+
+/// The editor tooling (`export-snapshot`/`import-snapshot`, pokered-runner-web)
+/// persists `SaveData` as JSON. Chunk C moved party/boxes/HoF to fixed-capacity
+/// arrays; this locks the legacy JSON shapes (plain arrays of active entries —
+/// no `mons`/`count` wrappers) so snapshots stay round-trip compatible.
+#[test]
+fn test_snapshot_json_keeps_legacy_shapes() {
+    let mut save = SaveData::new();
+    save.player_name = vec![0x80, 0x81];
+    save.party.add(make_test_pokemon(Species::Pikachu, 25)).unwrap();
+    save.party.add(make_test_pokemon(Species::Bulbasaur, 5)).unwrap();
+    save.current_box
+        .deposit(make_test_pokemon(Species::Charmander, 10))
+        .unwrap();
+    let mut team = HofTeam::new();
+    team.add_mon(HofMon::new(25, 50, &[0x8F, 0x88, 0x8A, 0x80]));
+    save.hall_of_fame.push_team(team);
+
+    let json = serde_json::to_string(&save).unwrap();
+    let value: serde_json::Value = serde_json::from_str(&json).unwrap();
+
+    // `party`: a plain 2-element array (the old Vec shape). Species serialize
+    // as their enum-variant names.
+    let party = value["party"].as_array().expect("party is an array");
+    assert_eq!(party.len(), 2);
+    assert_eq!(party[0]["species"], "Pikachu");
+    assert_eq!(party[1]["species"], "Bulbasaur");
+
+    // `current_box`: a plain 1-element array.
+    let box_data = value["current_box"].as_array().expect("current_box is an array");
+    assert_eq!(box_data.len(), 1);
+    assert_eq!(box_data[0]["species"], "Charmander");
+
+    // `pc_storage.boxes`: 12 plain arrays.
+    let boxes = value["pc_storage"]["boxes"]
+        .as_array()
+        .expect("pc_storage.boxes is an array");
+    assert_eq!(boxes.len(), 12);
+    assert!(boxes.iter().all(|b| b.as_array().unwrap().is_empty()));
+
+    // `hall_of_fame`: a 1-team array; team is a 1-mon array; nickname stays a
+    // byte array without the 0x50 padding.
+    let hof = value["hall_of_fame"].as_array().expect("hof is an array");
+    assert_eq!(hof.len(), 1);
+    let team_json = hof[0].as_array().expect("team is an array");
+    assert_eq!(team_json.len(), 1);
+    assert_eq!(team_json[0]["species"], 25);
+    assert_eq!(team_json[0]["level"], 50);
+    assert_eq!(
+        team_json[0]["nickname"].as_array().unwrap(),
+        &[serde_json::Value::from(0x8F), serde_json::Value::from(0x88),
+          serde_json::Value::from(0x8A), serde_json::Value::from(0x80)]
+    );
+
+    // Full round-trip: JSON → SaveData → JSON is stable.
+    let back: SaveData = serde_json::from_str(&json).unwrap();
+    assert_eq!(back.party.count(), 2);
+    assert_eq!(back.current_box.count(), 1);
+    assert_eq!(back.hall_of_fame.team_count(), 1);
+    assert_eq!(back.hall_of_fame.get_team(0).unwrap().mons()[0].nickname_bytes(), &[0x8F, 0x88, 0x8A, 0x80]);
+    assert_eq!(serde_json::to_string(&back).unwrap(), json);
 }

@@ -1847,15 +1847,24 @@ fn generate_script_assets(manifest_dir: &Path, out_dir: &str) {
 
 /// Compiles every `maps/{MapName}/script.scene` to JavaScript at build time
 /// (via the dotzuki-engine-dsl compiler) and emits `scene_scripts_gen.rs` into
-/// `OUT_DIR` with two static tables:
+/// `OUT_DIR` with three static tables:
 ///
 /// - `SCENE_SCRIPTS: &[(&str, &str)]` — map name → compiled JS module
+/// - `SCENE_ASTS: &[(&str, &[u8])]` — map name → serialized scene AST
+///   (serde_json of `dotzuki_engine_dsl::ast::GameScene`, consumed by the native
+///   AST interpreter — see `pokered-core::overworld::native_script`)
 /// - `SCENE_CONFIGS: &[(&str, &str)]` — map name → raw `script_config.json`
 ///
 /// The compiled JS is written to `OUT_DIR/scene_js/{MapName}.js` and pulled
-/// in via `include_str!` so the generated Rust stays small. A scene that
+/// in via `include_str!` so the generated Rust stays small; ASTs go to
+/// `OUT_DIR/scene_asts/{MapName}.bin` (`include_bytes!`). A scene that
 /// fails to compile is a hard build error — the `.scene` files are the
 /// source of truth for map scripting and a broken one must not ship.
+///
+/// Shared modules: `maps/shared/*.scene` files are compiled to ASTs under the
+/// key `shared/{name}` (e.g. `shared/pokecenter`) and appended to
+/// `SCENE_ASTS`. The Boa path's shared JS modules (`shared/*.js`) are
+/// embedded separately by dotzuki-engine-script's own build.
 fn generate_scene_scripts(manifest_dir: &Path, out_dir: &str) {
     let maps_dir = manifest_dir.join("maps");
     println!("cargo:rerun-if-changed={}", maps_dir.display());
@@ -1870,8 +1879,12 @@ fn generate_scene_scripts(manifest_dir: &Path, out_dir: &str) {
     let js_out_dir = Path::new(out_dir).join("scene_js");
     fs::create_dir_all(&js_out_dir)
         .unwrap_or_else(|e| panic!("create {}: {}", js_out_dir.display(), e));
+    let ast_out_dir = Path::new(out_dir).join("scene_asts");
+    fs::create_dir_all(&ast_out_dir)
+        .unwrap_or_else(|e| panic!("create {}: {}", ast_out_dir.display(), e));
 
     let mut scripts: Vec<(String, PathBuf)> = Vec::new();
+    let mut asts: Vec<(String, PathBuf)> = Vec::new();
     let mut configs: Vec<(String, PathBuf)> = Vec::new();
 
     for entry in dir_entries {
@@ -1892,12 +1905,62 @@ fn generate_scene_scripts(manifest_dir: &Path, out_dir: &str) {
             fs::write(&js_path, js)
                 .unwrap_or_else(|e| panic!("write {}: {}", js_path.display(), e));
             scripts.push((map_name.clone(), js_path));
+
+            // Native-interpreter path: serialize the parsed AST alongside the
+            // JS so pokered-core can run scenes without Boa.
+            let ast = dotzuki_engine_dsl::compiler::compile_scene_to_ast(
+                &source,
+                &scene_path.to_string_lossy(),
+            )
+            .unwrap_or_else(|e| panic!("parse {} to AST: {}", scene_path.display(), e));
+            let ast_bytes = serde_json::to_vec(&ast)
+                .unwrap_or_else(|e| panic!("serialize AST {}: {}", scene_path.display(), e));
+            let ast_path = ast_out_dir.join(format!("{}.bin", map_name));
+            fs::write(&ast_path, ast_bytes)
+                .unwrap_or_else(|e| panic!("write {}: {}", ast_path.display(), e));
+            asts.push((map_name.clone(), ast_path));
         }
 
         let config_path = path.join("script_config.json");
         if config_path.is_file() {
             println!("cargo:rerun-if-changed={}", config_path.display());
             configs.push((map_name, config_path));
+        }
+    }
+
+    // Shared modules (`maps/shared/*.scene`) → ASTs under `shared/{name}`.
+    let shared_dir = maps_dir.join("shared");
+    if shared_dir.is_dir() {
+        let mut shared_entries: Vec<_> = fs::read_dir(&shared_dir)
+            .unwrap_or_else(|e| panic!("read_dir {}: {}", shared_dir.display(), e))
+            .filter_map(|r| r.ok())
+            .filter(|e| {
+                e.path().is_file()
+                    && e.path().extension().map(|x| x == "scene").unwrap_or(false)
+            })
+            .collect();
+        shared_entries.sort_by_key(|e| e.file_name());
+        for entry in shared_entries {
+            let path = entry.path();
+            let stem = path
+                .file_stem()
+                .and_then(|s| s.to_str())
+                .unwrap_or("")
+                .to_string();
+            println!("cargo:rerun-if-changed={}", path.display());
+            let source = fs::read_to_string(&path)
+                .unwrap_or_else(|e| panic!("read {}: {}", path.display(), e));
+            let ast = dotzuki_engine_dsl::compiler::compile_scene_to_ast(
+                &source,
+                &path.to_string_lossy(),
+            )
+            .unwrap_or_else(|e| panic!("parse shared scene {}: {}", path.display(), e));
+            let ast_bytes = serde_json::to_vec(&ast)
+                .unwrap_or_else(|e| panic!("serialize shared AST {}: {}", path.display(), e));
+            let ast_path = ast_out_dir.join(format!("shared_{}.bin", stem));
+            fs::write(&ast_path, ast_bytes)
+                .unwrap_or_else(|e| panic!("write {}: {}", ast_path.display(), e));
+            asts.push((format!("shared/{}", stem), ast_path));
         }
     }
 
@@ -1924,6 +1987,13 @@ fn generate_scene_scripts(manifest_dir: &Path, out_dir: &str) {
     }
     writeln!(out, "];").unwrap();
 
+    writeln!(out, "pub static SCENE_ASTS: &[(&str, &[u8])] = &[").unwrap();
+    for (map_name, ast_path) in &asts {
+        let path_str = ast_path.to_str().unwrap().replace('\\', "/");
+        writeln!(out, "    ({:?}, include_bytes!({:?})),", map_name, path_str).unwrap();
+    }
+    writeln!(out, "];").unwrap();
+
     writeln!(out, "pub static SCENE_CONFIGS: &[(&str, &str)] = &[").unwrap();
     for (map_name, config_path) in &configs {
         let path_str = config_path.to_str().unwrap().replace('\\', "/");
@@ -1932,6 +2002,7 @@ fn generate_scene_scripts(manifest_dir: &Path, out_dir: &str) {
     writeln!(out, "];").unwrap();
 
     writeln!(out, "pub const SCENE_SCRIPT_COUNT: usize = {};", scripts.len()).unwrap();
+    writeln!(out, "pub const SCENE_AST_COUNT: usize = {};", asts.len()).unwrap();
 }
 
 fn emit_variant_struct(out: &mut String, screen: &str, variant_name: &str, variant: &serde_json::Value) {

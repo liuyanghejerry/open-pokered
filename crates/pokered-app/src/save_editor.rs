@@ -120,11 +120,11 @@ pub fn apply_editor_save(snapshot: &EditorSaveSnapshot) -> Result<SaveData, Stri
         };
         if let Some(p) = pkmn.as_mut() {
             p.hp = mon.current_hp.min(p.max_hp);
-            p.nickname = if mon.nickname.is_empty() {
-                None
+            if mon.nickname.is_empty() {
+                p.clear_nickname();
             } else {
-                Some(mon.nickname.clone())
-            };
+                p.set_nickname(&mon.nickname);
+            }
         }
         if let Some(p) = pkmn {
             let _ = save.party.add(p);
@@ -142,7 +142,15 @@ pub fn apply_editor_save(snapshot: &EditorSaveSnapshot) -> Result<SaveData, Stri
         }
     }
 
-    save.script_flags = snapshot.flags.clone();
+    // Editor flags are event flags (named or __RAW_BIT_n): route them into
+    // the fixed event-flag bitset that serializes into the SRAM region.
+    // Runtime-only keys with no bit representation cannot be stored in the
+    // save file and are dropped.
+    if !snapshot.flags.is_empty() {
+        let mut ef = pokered_core::overworld::event_flags::EventFlags::new();
+        ef.merge_from(&snapshot.flags);
+        save.game_data.event_flags = ef.as_bytes().to_vec();
+    }
     Ok(save)
 }
 
@@ -253,11 +261,15 @@ mod tests {
         assert_eq!(mon.species, Species::Pikachu);
         assert_eq!(mon.level, 12);
         assert_eq!(mon.hp, 30);
-        assert_eq!(mon.nickname.as_deref(), Some("Sparky"));
+        let mut name_buf = [0u8; pokered_core::battle::state::NAME_TEXT_BUF];
+        assert_eq!(pokered_core::battle::state::decode_name(&mon.nickname, &mut name_buf), "Sparky");
         assert_eq!(mon.moves[0], MoveId::Thundershock);
         assert_eq!(mon.moves[1], MoveId::QuickAttack);
         assert!(save.game_data.bag.has_item(ItemId::Potion, 5));
-        assert_eq!(save.script_flags.get("EVENT_GOT_POKEDEX"), Some(&true));
+        assert!(
+            pokered_core::overworld::event_flags::EventFlags::from_event_bytes(&save.game_data.event_flags)
+                .get_flag("EVENT_GOT_POKEDEX")
+        );
         assert!(!save.player_name.is_empty());
     }
 

@@ -6,6 +6,11 @@ edition.workspace = true
 [features]
 embedded-scripts = ["dotzuki-engine-script/embedded-scripts"]
 embedded-map-data = ["pokered-data/embedded-map-data"]
+# Use the legacy Boa (JavaScript) script engine for overworld scenes instead
+# of the default native DSL-AST interpreter. Kept for development/fallback —
+# the AST interpreter is the canonical scene semantics (see
+# docs/low-end-hardware-optimization.md §四).
+script-boa = []
 # P1 battle migration: dev hot-reload of the pokered rules.ron (mirrors minimon's
 # dual-mode flag). OFF (default) ⇒ BAKED rules.ron (include_str!, zero file IO);
 # ON ⇒ read + watch rules.ron on disk, rebuild the registry between turns. Both
@@ -14,15 +19,18 @@ embedded-map-data = ["pokered-data/embedded-map-data"]
 hot-reload = ["dotzuki-rules/hot-reload"]
 
 [dependencies]
-dotzuki-engine = { git = "ssh://git@github.com/liuyanghejerry/dotzuki.git", tag = "v0.3.0" }
+dotzuki-engine = { git = "ssh://git@github.com/liuyanghejerry/dotzuki.git", tag = "v0.4.0" }
 pokered-data = { path = "../pokered-data" }
-dotzuki-engine-script = { git = "ssh://git@github.com/liuyanghejerry/dotzuki.git", tag = "v0.3.0" }
+dotzuki-engine-script = { git = "ssh://git@github.com/liuyanghejerry/dotzuki.git", tag = "v0.4.0" }
+# Native script interpreter (de-Boa path): AST interpretation of compiled
+# `.scene` storylines — no JavaScript engine involved.
+dotzuki-engine-dsl = { git = "ssh://git@github.com/liuyanghejerry/dotzuki.git", tag = "v0.4.0" }
 # P1 battle migration: the game-agnostic no-code RON loader + dual-mode sourcing.
 # pokered-core authors a rules.ron for the bucket-A moves and a game binding; the
 # loader stays engine-only (no pokered types leak into it). Used by the additive
 # PokeredRules provider + the differential parity harness ONLY — the legacy
 # `apply_move_effect` dispatcher stays the production oracle (P1 is additive).
-dotzuki-rules = { git = "ssh://git@github.com/liuyanghejerry/dotzuki.git", tag = "v0.3.0" }
+dotzuki-rules = { git = "ssh://git@github.com/liuyanghejerry/dotzuki.git", tag = "v0.4.0" }
 serde = { workspace = true }
 thiserror = { workspace = true }
 rand = { workspace = true }
@@ -33,6 +41,7 @@ getrandom = { version = "0.2", features = ["js"] }
 
 [dev-dependencies]
 criterion = { version = "0.5", features = ["html_reports"] }
+serde_json = { workspace = true }
 
 [[bench]]
 name = "battle_bench"

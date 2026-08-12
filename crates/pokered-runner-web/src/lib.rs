@@ -20,8 +20,9 @@
 //! | [`start_wild_battle`](Self::start_wild_battle) | jump straight into a wild battle vs a species |
 //! | [`start_trainer_battle`](Self::start_trainer_battle) | jump straight into a trainer battle (class + party index) |
 //! | [`open_pokedex`](Self::open_pokedex) | open the Pokédex on a species' entry |
-//! | [`reload_scripts`](Self::reload_scripts) | hot-register compiled `.scene` JS + `script_config.json` per map |
+//! | [`reload_scripts`](Self::reload_scripts) | hot-register raw `.scene` source + `script_config.json` per map |
 //! | [`set_wild_data`](Self::set_wild_data) | override a map's wild-encounter tables at runtime |
+//! | [`export_flags`](Self::export_flags) / [`import_flags`](Self::import_flags) | round-trip live script flags (runtime-only `__OBJ_HIDDEN_*` etc.) without a save |
 //! | [`import_save`](Self::import_save) / [`export_save`](Self::export_save) | snapshot/restore the editor-side save |
 //! | [`reset`](Self::reset) | reboot the game (after heavy data edits) |
 //!
@@ -112,7 +113,9 @@ impl PokeredRunner {
         self.game.update(&self.input);
         self.input.begin_frame();
         self.game.draw(&mut self.fb);
-        self.fb.data.clone()
+        let mut out = vec![0u8; SCREEN_W as usize * SCREEN_H as usize * 4];
+        self.fb.to_rgba(&mut out);
+        out
     }
 
     /// Framebuffer width in pixels.
@@ -152,23 +155,26 @@ impl PokeredRunner {
         Ok(())
     }
 
-    /// Hot-reload compiled scene scripts and their configs without a rebuild.
+    /// Hot-reload scene sources and their configs without a rebuild.
     ///
-    /// `scenes_json` maps a map key (e.g. `"PalletTown"`) to compiled `.scene`
-    /// JavaScript; `configs_json` optionally maps the same keys to their
-    /// `script_config.json` contents. Both accept `"{}"`/`""` for "nothing".
-    /// When a key matches the current map, its script engine, config and
-    /// triggers are fully reloaded (`load_map_script` semantics — the map's
-    /// `on_load` runs again, same as re-entering the map).
+    /// `scenes_json` maps a map key (e.g. `"PalletTown"`) to the map's **raw
+    /// `.scene` source text** (not compiled JS — the game recompiles it with
+    /// its active engine: the native DSL-AST interpreter by default, Boa
+    /// behind the `script-boa` feature). `configs_json` optionally maps the
+    /// same keys to their `script_config.json` contents. Both accept
+    /// `"{}"`/`""` for "nothing". When a key matches the current map, its
+    /// script engine, config and triggers are fully reloaded
+    /// (`load_map_script` semantics — the map's `on_load` runs again, same
+    /// as re-entering the map).
     pub fn reload_scripts(&mut self, scenes_json: &str, configs_json: &str) -> Result<(), JsValue> {
         let scenes: HashMap<String, String> =
             parse_string_map(scenes_json, "scenes_json").map_err(|e| JsValue::from_str(&e))?;
         let configs: HashMap<String, String> =
             parse_string_map(configs_json, "configs_json").map_err(|e| JsValue::from_str(&e))?;
-        for (map_key, js) in &scenes {
+        for (map_key, source) in &scenes {
             self.game
                 .overworld
-                .hot_reload_map_scripts(map_key, js, configs.get(map_key).map(|s| s.as_str()))
+                .reload_scene_with_config(map_key, source, configs.get(map_key).map(|s| s.as_str()))
                 .map_err(|e| JsValue::from_str(&e))?;
         }
         Ok(())
@@ -231,6 +237,39 @@ impl PokeredRunner {
     /// (`localStorage`); `None` when it can't be serialized.
     pub fn export_save(&self) -> Option<String> {
         serde_json::to_string(&self.game.save_data).ok()
+    }
+
+    /// Snapshot of every live script flag (`overworld.script_flags()` — event
+    /// bits plus runtime-only extras such as `__OBJ_HIDDEN_*`) as a
+    /// `{ "key": bool }` JSON object, so runtime flags round-trip through the
+    /// editor without touching the save. An empty flag set yields `"{}"`.
+    pub fn export_flags(&self) -> String {
+        serde_json::to_string(&self.game.overworld.script_flags())
+            .unwrap_or_else(|_| "{}".to_string())
+    }
+
+    /// Restore a flag snapshot produced by [`export_flags`](Self::export_flags):
+    /// parses the `{ "key": bool }` object and applies it through
+    /// `set_flag_live` — persistent bitset AND the running script engine's
+    /// flag store (so a live scene's `getFlag(...)` observes it immediately,
+    /// not just after the next map load) — then re-applies hidden-object
+    /// visibility. `""`/`"{}"` is a no-op success. Returns `false` — the
+    /// flag store keeps its current state — when the JSON is malformed or a
+    /// value isn't a boolean.
+    pub fn import_flags(&mut self, json: &str) -> bool {
+        let trimmed = json.trim();
+        if trimmed.is_empty() {
+            return true;
+        }
+        let flags: HashMap<String, bool> = match serde_json::from_str(trimmed) {
+            Ok(f) => f,
+            Err(_) => return false,
+        };
+        for (name, value) in &flags {
+            self.game.overworld.set_flag_live(name, *value);
+        }
+        self.game.overworld.apply_hidden_object_flags();
+        true
     }
 
     /// Reboot the game from scratch (same as [`new`](Self::new)), keeping
@@ -495,7 +534,7 @@ fn apply_editor_save(game: &mut PokemonGame, save_json: Option<&str>) {
     game.overworld.state.player.facing = Direction::Down;
     game.overworld.player_name = game.player_name.clone();
     game.overworld.rival_name = game.rival_name.clone();
-    game.overworld.set_script_flags(game.save_data.script_flags.clone());
+    game.overworld.set_event_flags_bytes(&game.save_data.game_data.event_flags);
     game.overworld
         .set_toggleable_object_flags(game.save_data.game_data.toggleable_object_flags);
     game.overworld
@@ -634,7 +673,10 @@ mod tests {
         assert_eq!(runner.game.save_data.game_data.player_money, 9999);
         assert_eq!(runner.game.save_data.game_data.obtained_badges, 0b1111);
         assert!(runner.game.save_data.game_data.bag.has_item(ItemId::PokeBall, 12));
-        assert_eq!(runner.game.save_data.script_flags.get("EVENT_GOT_POKEDEX"), Some(&true));
+        let flags = pokered_core::overworld::event_flags::EventFlags::from_event_bytes(
+            &runner.game.save_data.game_data.event_flags,
+        );
+        assert!(flags.get_flag("EVENT_GOT_POKEDEX"));
         // Upper-case move name ("THUNDERSHOCK") resolves tolerantly.
         assert_eq!(runner.game.save_data.party.leader().unwrap().moves[0], MoveId::Thundershock);
     }
@@ -698,6 +740,131 @@ mod tests {
     #[test]
     fn parse_string_map_reports_bad_json() {
         assert!(parse_string_map("not json", "test").is_err());
+    }
+
+    #[test]
+    fn reload_scripts_executes_injected_scene_source() {
+        // The native default engine (no `script-boa`) must execute a scene
+        // the editor pushed as RAW `.scene` source — not compiled JS (the
+        // de-Boa editor contract). Injecting a PalletTown scene whose `@load`
+        // sets a flag proves the injected source is recompiled to an AST,
+        // registered, and the current map fully reloaded (on_load re-runs).
+        let mut runner = PokeredRunner::new(None).unwrap();
+        assert_eq!(
+            runner
+                .game
+                .overworld
+                .script_flags()
+                .get("EDITOR_TEST_FLAG_RELOAD"),
+            None,
+            "flag must not pre-exist on a fresh boot"
+        );
+        let scene = r#"game_scene PalletTown {
+  @load {
+    setFlag("EDITOR_TEST_FLAG_RELOAD")
+  }
+}
+"#;
+        let scenes = {
+            let mut m = HashMap::new();
+            m.insert("PalletTown".to_string(), scene.to_string());
+            serde_json::to_string(&m).unwrap()
+        };
+        runner.reload_scripts(&scenes, "{}").unwrap();
+        assert_eq!(
+            runner
+                .game
+                .overworld
+                .script_flags()
+                .get("EDITOR_TEST_FLAG_RELOAD"),
+            Some(&true),
+            "injected .scene @load must have run on the full map reload"
+        );
+    }
+
+    #[test]
+    fn reload_scripts_accepts_empty_payloads() {
+        let mut runner = PokeredRunner::new(None).unwrap();
+        // Nothing to inject: no-op success.
+        runner.reload_scripts("{}", "{}").unwrap();
+        runner.reload_scripts("", "").unwrap();
+    }
+
+    #[test]
+    fn reload_scene_with_config_reports_bad_dsl_and_config() {
+        // The native seam surfaces compile/config errors as plain strings
+        // (the wasm boundary maps them to JsValue, which cannot be built on
+        // native — wasm-bindgen's off-wasm stub aborts — so the error path
+        // is asserted below the runner).
+        let mut runner = PokeredRunner::new(None).unwrap();
+        // Bad DSL source: compile error, nothing injected.
+        let err = runner
+            .game
+            .overworld
+            .reload_scene_with_config(
+                "PalletTown",
+                r#"game_scene PalletTown { @load { setFlag( } }"#,
+                None,
+            )
+            .unwrap_err();
+        assert!(!err.is_empty(), "bad DSL must produce a compile error");
+        // Bad config JSON: config error after the scene compiled.
+        let scene = r#"game_scene PalletTown { @load { setFlag("X") } }"#;
+        let err = runner
+            .game
+            .overworld
+            .reload_scene_with_config("PalletTown", scene, Some("not json"))
+            .unwrap_err();
+        assert!(err.contains("config JSON"), "unexpected error: {err}");
+    }
+
+    #[test]
+    fn export_import_flags_round_trip() {
+        // Runtime-only script flags (e.g. __OBJ_HIDDEN_*) must round-trip
+        // through the editor without a save: set → export → fresh runner →
+        // import → restored.
+        let mut runner = PokeredRunner::new(None).unwrap();
+        let mut flags = HashMap::new();
+        flags.insert("EVENT_GOT_POKEDEX".to_string(), true);
+        flags.insert("__OBJ_HIDDEN_EDITOR_TEST".to_string(), true);
+        flags.insert("__OBJ_HIDDEN_EDITOR_FALSE".to_string(), false);
+        runner.game.overworld.set_script_flags(flags);
+
+        let exported = runner.export_flags();
+        let exported_map: HashMap<String, bool> = serde_json::from_str(&exported).unwrap();
+        assert_eq!(exported_map.get("EVENT_GOT_POKEDEX"), Some(&true));
+        assert_eq!(exported_map.get("__OBJ_HIDDEN_EDITOR_TEST"), Some(&true));
+        assert_eq!(exported_map.get("__OBJ_HIDDEN_EDITOR_FALSE"), Some(&false));
+
+        let mut fresh = PokeredRunner::new(None).unwrap();
+        assert_eq!(
+            fresh.game.overworld.script_flags().get("EVENT_GOT_POKEDEX"),
+            None,
+            "fresh runner must not carry the flags"
+        );
+        assert!(fresh.import_flags(&exported));
+        let restored = fresh.game.overworld.script_flags();
+        assert_eq!(restored.get("EVENT_GOT_POKEDEX"), Some(&true));
+        assert_eq!(restored.get("__OBJ_HIDDEN_EDITOR_TEST"), Some(&true));
+        assert_eq!(restored.get("__OBJ_HIDDEN_EDITOR_FALSE"), Some(&false));
+    }
+
+    #[test]
+    fn import_flags_rejects_bad_json_and_accepts_empty() {
+        let mut runner = PokeredRunner::new(None).unwrap();
+        assert!(!runner.import_flags("not json"));
+        assert!(!runner.import_flags(r#"{"EVENT_GOT_POKEDEX": "yes"}"#));
+        // Empty / blank payloads are no-op successes.
+        assert!(runner.import_flags(""));
+        assert!(runner.import_flags("{}"));
+        assert!(runner.import_flags("   "));
+    }
+
+    #[test]
+    fn export_flags_empty_is_empty_object() {
+        // A fresh boot sets no flags, so the export must be exactly "{}".
+        let runner = PokeredRunner::new(None).unwrap();
+        assert_eq!(runner.export_flags(), "{}");
     }
 
     #[test]

@@ -28,7 +28,8 @@ pub fn draw<P: Painter>(party: &[Pokemon], cursor: usize, layout: &BattlePartyDe
             let mon = &party[party_idx];
             let row = 1 + i as u32;
 
-            let name = mon.display_name();
+            let mut name_buf = [0u8; pokered_core::battle::state::NAME_TEXT_BUF];
+            let name = mon.display_name(&mut name_buf);
             let label = if mon.hp == 0 {
                 if is_zh {
                     format!("{} 倒下", name)

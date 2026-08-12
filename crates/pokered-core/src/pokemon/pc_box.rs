@@ -14,33 +14,40 @@ pub enum BoxError {
     InvalidBoxNumber,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct PcBox {
-    mons: Vec<Pokemon>,
+    mons: [Pokemon; MONS_PER_BOX],
+    count: usize,
 }
 
 impl PcBox {
     pub fn new() -> Self {
-        Self { mons: Vec::new() }
+        Self {
+            mons: [crate::battle::state::blank_pokemon(); MONS_PER_BOX],
+            count: 0,
+        }
     }
 
     pub fn count(&self) -> usize {
-        self.mons.len()
+        self.count
     }
 
     pub fn is_full(&self) -> bool {
-        self.mons.len() >= MONS_PER_BOX
+        self.count >= MONS_PER_BOX
     }
 
     pub fn is_empty(&self) -> bool {
-        self.mons.is_empty()
+        self.count == 0
     }
 
     pub fn get(&self, index: usize) -> Option<&Pokemon> {
-        self.mons.get(index)
+        self.mons.get(index).filter(|_| index < self.count)
     }
 
     pub fn get_mut(&mut self, index: usize) -> Option<&mut Pokemon> {
+        if index >= self.count {
+            return None;
+        }
         self.mons.get_mut(index)
     }
 
@@ -48,16 +55,23 @@ impl PcBox {
         if self.is_full() {
             return Err(BoxError::BoxFull);
         }
-        let index = self.mons.len();
-        self.mons.push(pokemon);
+        let index = self.count;
+        self.mons[index] = pokemon;
+        self.count += 1;
         Ok(index)
     }
 
     pub fn withdraw(&mut self, index: usize) -> Result<Pokemon, BoxError> {
-        if index >= self.mons.len() {
+        if index >= self.count {
             return Err(BoxError::IndexOutOfBounds);
         }
-        Ok(self.mons.remove(index))
+        let mon = self.mons[index]; // Pokemon: Copy
+        for i in index..self.count - 1 {
+            self.mons[i] = self.mons[i + 1];
+        }
+        self.count -= 1;
+        self.mons[self.count] = crate::battle::state::blank_pokemon();
+        Ok(mon)
     }
 
     pub fn release(&mut self, index: usize) -> Result<Pokemon, BoxError> {
@@ -65,19 +79,20 @@ impl PcBox {
     }
 
     pub fn species_list(&self) -> Vec<Species> {
-        self.mons.iter().map(|p| p.species).collect()
+        self.iter().map(|p| p.species).collect()
     }
 
     pub fn find_species(&self, species: Species) -> Option<usize> {
-        self.mons.iter().position(|p| p.species == species)
+        self.iter().position(|p| p.species == species)
     }
 
     pub fn iter(&self) -> impl Iterator<Item = &Pokemon> {
-        self.mons.iter()
+        self.mons[..self.count].iter()
     }
 
     pub fn iter_mut(&mut self) -> impl Iterator<Item = &mut Pokemon> {
-        self.mons.iter_mut()
+        let count = self.count;
+        self.mons[..count].iter_mut()
     }
 }
 
@@ -87,16 +102,43 @@ impl Default for PcBox {
     }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+// JSON shape preserved from the `Vec` era: a plain array of the active mons.
+impl Serialize for PcBox {
+    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        use serde::ser::SerializeSeq;
+        let mut seq = serializer.serialize_seq(Some(self.count))?;
+        for mon in self.iter() {
+            seq.serialize_element(mon)?;
+        }
+        seq.end()
+    }
+}
+
+impl<'de> Deserialize<'de> for PcBox {
+    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        let mons = Vec::<Pokemon>::deserialize(deserializer)?;
+        if mons.len() > MONS_PER_BOX {
+            return Err(serde::de::Error::custom("box exceeds 20 members"));
+        }
+        let mut box_data = Self::new();
+        for mon in mons {
+            box_data.mons[box_data.count] = mon;
+            box_data.count += 1;
+        }
+        Ok(box_data)
+    }
+}
+
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct PcStorage {
-    boxes: Vec<PcBox>,
+    boxes: [PcBox; NUM_BOXES],
     current_box: usize,
 }
 
 impl PcStorage {
     pub fn new() -> Self {
         Self {
-            boxes: (0..NUM_BOXES).map(|_| PcBox::new()).collect(),
+            boxes: [PcBox::new(); NUM_BOXES],
             current_box: 0,
         }
     }

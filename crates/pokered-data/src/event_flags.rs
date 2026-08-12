@@ -2,8 +2,15 @@
 //!
 //! DO NOT EDIT MANUALLY. Run scripts/parse_event_flags.py to regenerate.
 
-/// Total number of event flag bytes needed (bit array storage).
-pub const EVENT_FLAGS_SIZE: usize = 316;
+/// Size of the original game's `wEventFlags` array, in bytes.
+///
+/// The original `wram.asm` declares `wEventFlags:: flag_array NUM_EVENTS`
+/// with `NUM_EVENTS = $A00` (2560) bits, so the array is
+/// `($A00 + 7) / 8 = 320` bytes. The highest *defined* flag (0x9DA) only
+/// needs 316 bytes, but SRAM always holds the full 320-byte region, and
+/// bits beyond the last named flag are still addressable — so the bitset
+/// storage must match the original 320-byte layout.
+pub const EVENT_FLAGS_SIZE: usize = 320;
 
 /// Total number of defined event flags.
 pub const NUM_EVENT_FLAGS: usize = 507;

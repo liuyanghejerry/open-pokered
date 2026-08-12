@@ -20,12 +20,13 @@ struct QuittableGame {
 
 impl dotzuki_tui::TuiGame for QuittableGame {
     type Button = GbButton;
+    type Fb = pokered_renderer::FrameBuffer;
 
     fn update(&mut self, input: &dotzuki_tui::InputState<Self::Button>) {
         self.game.update(input);
     }
 
-    fn draw(&mut self, fb: &mut dotzuki_renderer::FrameBuffer) {
+    fn draw(&mut self, fb: &mut Self::Fb) {
         self.game.draw(fb);
     }
 

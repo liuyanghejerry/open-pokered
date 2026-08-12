@@ -46,12 +46,6 @@ pub fn import_sram(data: &[u8]) -> Result<SaveData, SaveError> {
     parse_box_bank(bank2, &mut pc_storage, 0)?;
     parse_box_bank(bank3, &mut pc_storage, 6)?;
 
-    // Populate script_flags from SRAM event_flags bytes so the unified
-    // HashMap has all typed EventFlag entries immediately after import.
-    let mut unified = crate::overworld::event_flags::EventFlags::new();
-    unified.load_event_bytes(&game_data.event_flags);
-    let script_flags = unified.to_hashmap();
-
     let mut save = SaveData {
         player_name,
         game_data,
@@ -60,7 +54,6 @@ pub fn import_sram(data: &[u8]) -> Result<SaveData, SaveError> {
         pc_storage,
         hall_of_fame,
         tile_animations,
-        script_flags,
     };
     derive_traded_flags(&mut save);
     Ok(save)
@@ -143,9 +136,9 @@ fn parse_hall_of_fame(bank0: &[u8]) -> Result<HallOfFame, SaveError> {
             let level = team_data[mon_start + 1];
             let nickname_data = &team_data[mon_start + 2..mon_start + HOF_MON_ENTRY_SIZE];
             let nickname = deserialize_name(nickname_data);
-            team.add_mon(HofMon::new(species, level, nickname));
+            team.add_mon(HofMon::new(species, level, &nickname));
         }
-        if !team.mons.is_empty() {
+        if team.count() > 0 {
             hof.push_team(team);
         }
     }
@@ -199,17 +192,28 @@ fn parse_party(reader: &mut SramReader) -> Result<Party, SaveError> {
 }
 
 /// Apply the OT-name / nickname table entries to a freshly deserialized mon.
-/// A blank OT name stays `None`; a nickname equal to the species name (what the
-/// original stores for an unnamed mon) decodes back to `None`.
+/// A blank OT name stays unset; a nickname equal to the species name (what the
+/// original stores for an unnamed mon) decodes back to unset. The raw SRAM
+/// charmap bytes are kept as-is (never re-encoded — decode→encode is not
+/// identity for e.g. the 0x70 quote glyphs).
 fn apply_name_tables(mon: &mut crate::battle::state::Pokemon, ot_name: &[u8], nickname: &[u8]) {
     let ot = pokered_data::charmap::decode_string(ot_name);
     if !ot.is_empty() {
-        mon.ot_name = Some(ot);
+        mon.ot_name = to_name_bytes(ot_name);
     }
     let nick = pokered_data::charmap::decode_string(nickname);
     if !nick.is_empty() && nick != super::ser_pokemon::species_default_name(mon.species) {
-        mon.set_nickname(nick);
+        mon.nickname = to_name_bytes(nickname);
     }
+}
+
+/// Copy SRAM name-table bytes into the fixed in-memory form, padding with
+/// 0x50 terminators.
+fn to_name_bytes(name: &[u8]) -> [u8; 11] {
+    let mut out = [0x50u8; 11];
+    let len = name.len().min(out.len() - 1);
+    out[..len].copy_from_slice(&name[..len]);
+    out
 }
 
 // Box: count(1) + species(21) + 20×box_struct(33) + 20×OT(11) + 20×nick(11) = 1122 bytes
@@ -279,10 +283,6 @@ pub fn import_sram_no_checksum(data: &[u8]) -> Result<SaveData, SaveError> {
     parse_box_bank(bank2, &mut pc_storage, 0)?;
     parse_box_bank(bank3, &mut pc_storage, 6)?;
 
-    let mut unified = crate::overworld::event_flags::EventFlags::new();
-    unified.load_event_bytes(&game_data.event_flags);
-    let script_flags = unified.to_hashmap();
-
     let mut save = SaveData {
         player_name,
         game_data,
@@ -291,7 +291,6 @@ pub fn import_sram_no_checksum(data: &[u8]) -> Result<SaveData, SaveError> {
         pc_storage,
         hall_of_fame,
         tile_animations,
-        script_flags,
     };
     derive_traded_flags(&mut save);
     Ok(save)

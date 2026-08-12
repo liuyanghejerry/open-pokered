@@ -8,7 +8,7 @@ use pokered_data::types::PokemonType;
 fn make_mon_with_pp(moves: [MoveId; 4], pp: [u8; 4], pp_ups: [u8; 4]) -> Pokemon {
     Pokemon {
         species: Species::Pikachu,
-        nickname: None,
+        nickname: [0x50; 11],
         level: 25,
         hp: 50,
         max_hp: 100,
@@ -25,7 +25,7 @@ fn make_mon_with_pp(moves: [MoveId; 4], pp: [u8; 4], pp_ups: [u8; 4]) -> Pokemon
         dv_bytes: [0xFF, 0xFF],
         stat_exp: [0; 5],
         total_exp: 0,
-        is_traded: false, ot_id: 0, ot_name: None,
+        is_traded: false, ot_id: 0, ot_name: [0x50; 11],
     }
 }
 

@@ -33,8 +33,11 @@ fn init_logging() {
 pub struct GameContext {
     /// Core game engine instance.
     pub game: PokemonGame,
-    /// RGBA framebuffer (160×144 pixels at 4 bytes per pixel).
+    /// Indexed framebuffer (160×144, packed 2bpp + display palette).
     pub fb: FrameBuffer,
+    /// Scratch RGBA expansion of the framebuffer for the C export contract
+    /// (160×144×4 = 92160 bytes, refreshed each `pokered_draw`).
+    pub fb_rgba: Vec<u8>,
     /// Current input state (8 buttons as bitmask).
     pub input: InputState,
     /// Optional audio manager for sound generation.
@@ -74,6 +77,7 @@ pub extern "C" fn pokered_init(version: u8) -> *mut GameContext {
     let ctx = GameContext {
         game: PokemonGame::new(version),
         fb: FrameBuffer::new(RenderConfig::new(160, 144), Rgba::WHITE),
+        fb_rgba: vec![0u8; 160 * 144 * 4],
         input: InputState::new(),
         audio: None,
         save_dir: None,
@@ -158,10 +162,11 @@ pub extern "C" fn pokered_draw(ctx: *mut GameContext, buffer: *mut u8, len: usiz
     );
 
     // Safety: buffer is writable with at least 92160 bytes (asserted above).
-    // fb.data is a Vec<u8> of exactly 92160 bytes (160×144×4 RGBA).
-    // Regions are non-overlapping: fb.data is owned by ctx, buffer is caller-provided.
+    // ctx.fb_rgba is the RGBA expansion of the indexed framebuffer (160×144×4).
+    // Regions are non-overlapping: fb_rgba is owned by ctx, buffer is caller-provided.
+    ctx.fb.to_rgba(&mut ctx.fb_rgba);
     unsafe {
-        ptr::copy_nonoverlapping(ctx.fb.data.as_ptr(), buffer, 92160);
+        ptr::copy_nonoverlapping(ctx.fb_rgba.as_ptr(), buffer, 92160);
     }
 }
 
@@ -342,6 +347,7 @@ mod tests {
         let ctx = GameContext {
             game: PokemonGame::new(version),
             fb: FrameBuffer::new(RenderConfig::new(160, 144), Rgba::WHITE),
+            fb_rgba: vec![0u8; 160 * 144 * 4],
             input: InputState::new(),
             audio: None,
             save_dir: None,

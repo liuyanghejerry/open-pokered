@@ -33,10 +33,13 @@ fn rgba_constructors() {
 
 #[test]
 fn framebuffer_new_cleared() {
+    // The pokered framebuffer is the indexed 4-shade facade: 160×144 packs
+    // into 5,760 bytes of 2bpp (92,160 → 5,760).
     let fb = FrameBuffer::new(RenderConfig::new(160, 144), Rgba::BLACK);
-    assert_eq!(fb.data.len(), 160 * 144 * 4);
+    assert_eq!(fb.packed().len(), 5760);
     assert_eq!(fb.get_pixel(0, 0), Some(Rgba::BLACK));
     assert_eq!(fb.get_pixel(159, 143), Some(Rgba::BLACK));
+    assert_eq!(fb.get_index(0, 0), Some(GbColor::Black));
 }
 
 #[test]
@@ -48,9 +51,10 @@ fn framebuffer_default_is_white() {
 #[test]
 fn framebuffer_set_get_pixel() {
     let mut fb = FrameBuffer::new(RenderConfig::new(160, 144), Rgba::WHITE);
-    let red = Rgba::rgb(0xFF, 0, 0);
-    assert!(fb.set_pixel(10, 20, red));
-    assert_eq!(fb.get_pixel(10, 20), Some(red));
+    // Arbitrary colors quantize to the nearest grayscale shade.
+    assert!(fb.set_pixel(10, 20, Rgba::rgb(0xAA, 0xAA, 0xAA)));
+    assert_eq!(fb.get_pixel(10, 20), Some(Rgba::rgb(0xAA, 0xAA, 0xAA)));
+    assert_eq!(fb.get_index(10, 20), Some(GbColor::LightGray));
     assert_eq!(fb.get_pixel(11, 20), Some(Rgba::WHITE));
 }
 
@@ -68,19 +72,19 @@ fn framebuffer_out_of_bounds() {
 fn framebuffer_clear() {
     let mut fb = FrameBuffer::new(RenderConfig::new(160, 144), Rgba::WHITE);
     fb.set_pixel(50, 50, Rgba::BLACK);
-    fb.clear(Rgba::rgb(0x12, 0x34, 0x56));
-    assert_eq!(fb.get_pixel(50, 50), Some(Rgba::rgb(0x12, 0x34, 0x56)));
-    assert_eq!(fb.get_pixel(0, 0), Some(Rgba::rgb(0x12, 0x34, 0x56)));
+    fb.clear(Rgba::rgb(0x55, 0x55, 0x55));
+    assert_eq!(fb.get_pixel(50, 50), Some(Rgba::rgb(0x55, 0x55, 0x55)));
+    assert_eq!(fb.get_pixel(0, 0), Some(Rgba::rgb(0x55, 0x55, 0x55)));
 }
 
 #[test]
 fn framebuffer_fill_rect() {
     let mut fb = FrameBuffer::new(RenderConfig::new(160, 144), Rgba::WHITE);
-    let blue = Rgba::rgb(0, 0, 0xFF);
-    fb.fill_rect(10, 20, 5, 3, blue);
+    let dark = Rgba::rgb(0x55, 0x55, 0x55);
+    fb.fill_rect(10, 20, 5, 3, dark);
     for y in 20..23 {
         for x in 10..15 {
-            assert_eq!(fb.get_pixel(x, y), Some(blue), "pixel ({x}, {y})");
+            assert_eq!(fb.get_pixel(x, y), Some(dark), "pixel ({x}, {y})");
         }
     }
     assert_eq!(fb.get_pixel(9, 20), Some(Rgba::WHITE));
@@ -99,34 +103,24 @@ fn framebuffer_fill_rect_clamped() {
 }
 
 #[test]
-fn framebuffer_row_slice() {
-    let fb = FrameBuffer::new(RenderConfig::new(160, 144), Rgba::WHITE);
-    let row = fb.row_slice(0).unwrap();
-    assert_eq!(row.len(), 160 * 4);
-    assert_eq!(&row[0..4], &[0xFF, 0xFF, 0xFF, 0xFF]);
-    assert!(fb.row_slice(144).is_none());
-}
-
-#[test]
-fn framebuffer_row_slice_mut() {
-    let mut fb = FrameBuffer::new(RenderConfig::new(160, 144), Rgba::WHITE);
-    {
-        let row = fb.row_slice_mut(5).unwrap();
-        row[0] = 0x12;
-        row[1] = 0x34;
-        row[2] = 0x56;
-        row[3] = 0x78;
+fn framebuffer_packed_layout_is_2bpp_planes() {
+    let mut fb = FrameBuffer::new(RenderConfig::new(8, 1), Rgba::WHITE);
+    // Row [1,0,3,0,2,0,1,0] packs to plane0 = 0b10100010, plane1 = 0b00101000
+    // (same layout as GB VRAM tile data).
+    let row = [1u8, 0, 3, 0, 2, 0, 1, 0];
+    for (x, &v) in row.iter().enumerate() {
+        fb.set_pixel_index(x as u32, 0, GbColor::from_u8(v));
     }
-    assert_eq!(fb.get_pixel(0, 5), Some(Rgba::new(0x12, 0x34, 0x56, 0x78)));
+    assert_eq!(fb.packed(), &[0xA2, 0x28]);
 }
 
 #[test]
 fn framebuffer_blit_row() {
     let mut fb = FrameBuffer::new(RenderConfig::new(160, 144), Rgba::WHITE);
-    let src = [0xAA, 0xBB, 0xCC, 0xDD, 0x11, 0x22, 0x33, 0x44];
+    let src = [0xAA, 0xAA, 0xAA, 0xFF, 0x55, 0x55, 0x55, 0xFF];
     assert!(fb.blit_row(5, 10, &src, 2));
-    assert_eq!(fb.get_pixel(5, 10), Some(Rgba::new(0xAA, 0xBB, 0xCC, 0xDD)));
-    assert_eq!(fb.get_pixel(6, 10), Some(Rgba::new(0x11, 0x22, 0x33, 0x44)));
+    assert_eq!(fb.get_pixel(5, 10), Some(Rgba::rgb(0xAA, 0xAA, 0xAA)));
+    assert_eq!(fb.get_pixel(6, 10), Some(Rgba::rgb(0x55, 0x55, 0x55)));
     assert_eq!(fb.get_pixel(4, 10), Some(Rgba::WHITE));
 }
 
@@ -136,6 +130,20 @@ fn framebuffer_blit_row_out_of_bounds() {
     let src = [0; 8];
     assert!(!fb.blit_row(160, 0, &src, 2));
     assert!(!fb.blit_row(0, 144, &src, 2));
+}
+
+#[test]
+fn framebuffer_palette_effects_are_index_remaps() {
+    let mut fb = FrameBuffer::new(RenderConfig::new(160, 144), Rgba::WHITE);
+    fb.fill_rect(0, 0, 8, 8, Rgba::BLACK);
+    // FadePal1 (all black): every index maps to shade 3.
+    fb.apply_bgp(0b11111111);
+    assert_eq!(fb.get_pixel(0, 0), Some(Rgba::BLACK));
+    // The index underneath is untouched — reset restores the base palette.
+    assert_eq!(fb.get_index(0, 0), Some(GbColor::Black));
+    fb.reset_palette();
+    assert_eq!(fb.get_pixel(0, 0), Some(Rgba::BLACK));
+    assert_eq!(fb.get_pixel(10, 10), Some(Rgba::WHITE));
 }
 
 // --- Palette tests ---
@@ -759,13 +767,7 @@ fn tilemap_render_solid_tile() {
     let tile_data = [0xFFu8; BYTES_PER_TILE];
     let ts = TileSet::from_2bpp(&tile_data);
 
-    let mut fb = FrameBuffer {
-        data: vec![0u8; (8 * 8 * 4) as usize],
-        width: 8,
-        height: 8,
-        dirty_region: DirtyRegion::full(8, 8),
-    };
-    fb.clear(Rgba::WHITE);
+    let mut fb = FrameBuffer::new(RenderConfig::new(8, 8), Rgba::WHITE);
 
     for y in 0..tm.height {
         for x in 0..tm.width {
@@ -815,19 +817,14 @@ fn tilemap_render_with_scroll() {
     }
     let ts = TileSet::from_2bpp(&ts_data);
 
-    let mut fb = FrameBuffer {
-        data: vec![0u8; (8 * 8 * 4) as usize],
-        width: 8,
-        height: 8,
-        dirty_region: DirtyRegion::full(8, 8),
-    };
+    let mut fb = FrameBuffer::new(RenderConfig::new(8, 8), Rgba::WHITE);
     fb.clear(Rgba::TRANSPARENT);
 
     let scroll_x: i32 = 4;
     let scroll_y: i32 = 0;
 
-    let screen_w = fb.width;
-    let screen_h = fb.height;
+    let screen_w = fb.width();
+    let screen_h = fb.height();
     for screen_y in 0..screen_h {
         let world_y = scroll_y + screen_y as i32;
         if world_y < 0 {
@@ -1072,16 +1069,18 @@ fn sprite_render_obp1() {
     let tile_data = [0xFF; BYTES_PER_TILE]; // all color 3
     let ts = TileSet::from_2bpp(&tile_data);
 
-    let obp0 = Palette::new(&[Rgba::WHITE, Rgba::WHITE, Rgba::WHITE, Rgba::rgb(0xAA, 0, 0)]);
-    let obp1 = Palette::new(&[Rgba::WHITE, Rgba::WHITE, Rgba::WHITE, Rgba::rgb(0, 0, 0xBB)]);
+    // Distinct grayscale shades so palette *selection* is still verified
+    // through the indexed buffer's quantization.
+    let obp0 = Palette::new(&[Rgba::WHITE, Rgba::WHITE, Rgba::WHITE, Rgba::rgb(0xAA, 0xAA, 0xAA)]);
+    let obp1 = Palette::new(&[Rgba::WHITE, Rgba::WHITE, Rgba::WHITE, Rgba::rgb(0x55, 0x55, 0x55)]);
 
     let mut fb = FrameBuffer::new(RenderConfig::new(160, 144), Rgba::WHITE);
     let mut layer = SpriteLayer::new();
     layer.add(SpriteOamEntry::new(0, 0, 0, OAM_PALETTE));
     layer.render(&mut fb, &ts, &obp0, &obp1, None);
 
-    // Should use OBP1's color 3 (blue)
-    assert_eq!(fb.get_pixel(0, 0), Some(Rgba::rgb(0, 0, 0xBB)));
+    // Should use OBP1's color 3 (dark gray), not OBP0's light gray
+    assert_eq!(fb.get_pixel(0, 0), Some(Rgba::rgb(0x55, 0x55, 0x55)));
 }
 
 #[test]
@@ -1253,10 +1252,10 @@ fn screen_tile_buffer_render_pixel_check() {
 fn screen_tile_buffer_render_region() {
     let ts = TileSet::blank(256);
     let buf = ScreenTileBuffer::new(SCREEN_TILES_X, SCREEN_TILES_Y);
-    let mut fb = FrameBuffer::new(RenderConfig::new(160, 144), Rgba::rgb(0xFF, 0, 0));
+    let mut fb = FrameBuffer::new(RenderConfig::new(160, 144), Rgba::rgb(0x55, 0x55, 0x55));
     buf.render_region(&mut fb, &ts, &GRAYSCALE_PALETTE, 0, 0, 1, 1);
     assert_eq!(fb.get_pixel(0, 0), Some(Rgba::rgb(0xFF, 0xFF, 0xFF)));
-    assert_eq!(fb.get_pixel(8, 0), Some(Rgba::rgb(0xFF, 0, 0)));
+    assert_eq!(fb.get_pixel(8, 0), Some(Rgba::rgb(0x55, 0x55, 0x55)));
 }
 
 #[test]

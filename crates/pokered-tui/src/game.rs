@@ -124,7 +124,7 @@ fn hof_team_records(save: &SaveData) -> Vec<pokered_core::pc_screen::HofTeamReco
         .map(|(i, team)| HofTeamRecord {
             team_no: first_no.wrapping_add(i as u8).wrapping_add(1),
             mons: team
-                .mons
+                .mons()
                 .iter()
                 .map(|m| HofMonView {
                     species: pokered_data::species::Species::from_index_id(m.species),
@@ -480,24 +480,22 @@ impl PokemonGame {
     #[cfg(not(target_arch = "wasm32"))]
     fn try_load_default_save() -> (SaveData, Option<SaveFileSummary>) {
         let path = save_file_path();
-        let (mut save, summary) = match std::fs::read(&path) {
+        let (save, summary) = match std::fs::read(&path) {
             Ok(data) => Self::parse_sram(&path, &data),
             Err(_) => (SaveData::new(), None),
         };
-        Self::load_companion_script_flags(&mut save);
         (save, summary)
     }
 
     #[cfg(not(target_arch = "wasm32"))]
     fn load_sram_from_path(path: &Path) -> (SaveData, Option<SaveFileSummary>) {
-        let (mut save, summary) = match std::fs::read(path) {
+        let (save, summary) = match std::fs::read(path) {
             Ok(data) => Self::parse_sram(path, &data),
             Err(e) => {
                 eprintln!("Error: failed to read save file {:?}: {}", path, e);
                 (SaveData::new(), None)
             }
         };
-        Self::load_companion_script_flags(&mut save);
         (save, summary)
     }
 
@@ -544,22 +542,49 @@ impl PokemonGame {
         }
     }
 
+    /// Read the companion script-flags file (native sidecar for the
+    /// runtime-only dynamic keys — e.g. `__OBJ_HIDDEN_*` — that have no bit
+    /// in the fixed SRAM event-flags region). Named event flags in old
+    /// sidecars are harmless: `set_script_flags` routes them to the bitset.
     #[cfg(not(target_arch = "wasm32"))]
-    fn load_companion_script_flags(save: &mut SaveData) {
+    fn read_companion_script_flags() -> Option<std::collections::HashMap<String, bool>> {
         let flags_path = script_flags_file_path();
-        if let Ok(data) = std::fs::read(&flags_path) {
-            match serde_json::from_slice::<std::collections::HashMap<String, bool>>(&data) {
-                Ok(flags) => {
-                    for (k, v) in flags {
-                        save.script_flags.insert(k, v);
-                    }
+        let data = std::fs::read(&flags_path).ok()?;
+        match serde_json::from_slice::<std::collections::HashMap<String, bool>>(&data) {
+            Ok(flags) => Some(flags),
+            Err(e) => {
+                eprintln!(
+                    "Warning: failed to parse script flags {:?}: {}",
+                    flags_path, e
+                );
+                None
+            }
+        }
+    }
+
+    /// Persist the runtime-only extras (companion sidecar) if any exist;
+    /// remove a stale sidecar when none do, so a previous save's extras
+    /// can't re-merge onto a different save on next load.
+    #[cfg(not(target_arch = "wasm32"))]
+    fn save_companion_script_flags(overworld: &OverworldScreen<PokemonRedData>) {
+        let extras = overworld.unified_flags().extras();
+        let flags_path = script_flags_file_path();
+        if extras.is_empty() {
+            if let Err(e) = std::fs::remove_file(&flags_path) {
+                if e.kind() != std::io::ErrorKind::NotFound {
+                    eprintln!("Error: failed to remove script flags file: {}", e);
                 }
-                Err(e) => {
-                    eprintln!(
-                        "Warning: failed to parse script flags {:?}: {}",
-                        flags_path, e
-                    );
+            }
+            return;
+        }
+        match serde_json::to_string(extras) {
+            Ok(json) => {
+                if let Err(e) = std::fs::write(&flags_path, json.as_bytes()) {
+                    eprintln!("Error: failed to write script flags file: {}", e);
                 }
+            }
+            Err(e) => {
+                eprintln!("Error: failed to serialize script flags: {}", e);
             }
         }
     }
@@ -638,14 +663,9 @@ impl PokemonGame {
             save.game_data.map_header.width = map_data.width;
         }
 
-        save.script_flags = self.overworld.script_flags().clone();
-
-        let ef = pokered_core::overworld::event_flags::EventFlags::from_hashmap(&save.script_flags);
-        let bytes = ef.to_event_bytes();
-        // Pad to NUM_EVENTS_BYTES (320) — to_event_bytes() returns EVENT_FLAGS_SIZE (316).
-        // SRAM format always expects 320 bytes; a short Vec shifts all subsequent fields.
-        save.game_data.event_flags = vec![0u8; pokered_core::save::game_data::NUM_EVENTS_BYTES];
-        save.game_data.event_flags[..bytes.len()].copy_from_slice(&bytes);
+        // The event-flag bitset serializes directly into the original
+        // 320-byte SRAM region (wEventFlags, NUM_EVENTS = $A00 bits).
+        save.game_data.event_flags = self.overworld.unified_flags().as_bytes().to_vec();
 
         // SRAM writebacks for runtime-mutated overworld state (mirrors the
         // app): the toggleable object bits and the itemfinder hidden-item
@@ -667,17 +687,15 @@ impl PokemonGame {
         let mut team = HofTeam::new();
         let mut entries = Vec::new();
         for mon in self.save_data.party.iter() {
-            let name = mon
-                .nickname
-                .clone()
-                .unwrap_or_else(|| format!("{}", mon.species).to_uppercase());
+            let mut name_buf = [0u8; pokered_core::battle::state::NAME_TEXT_BUF];
+            let name = mon.display_name(&mut name_buf);
             entries.push(HofEntry {
                 species: mon.species,
                 level: mon.level,
-                nickname: name.clone(),
+                nickname: name.to_string(),
             });
-            let encoded = pokered_data::charmap::encode_string(&name).unwrap_or_default();
-            team.add_mon(HofMon::new(mon.species as u8, mon.level, encoded));
+            let encoded = pokered_data::charmap::encode_string(name).unwrap_or_default();
+            team.add_mon(HofMon::new(mon.species as u8, mon.level, &encoded));
         }
         self.save_data.hall_of_fame.push_team(team);
         // wNumHoFTeams: incremented unless it would wrap to 0
@@ -733,19 +751,7 @@ impl PokemonGame {
                 eprintln!("Error: failed to write save file: {}", e);
             }
         }
-        if !self.save_data.script_flags.is_empty() {
-            let flags_path = script_flags_file_path();
-            match serde_json::to_string(&self.save_data.script_flags) {
-                Ok(json) => {
-                    if let Err(e) = std::fs::write(&flags_path, json.as_bytes()) {
-                        eprintln!("Error: failed to write script flags file: {}", e);
-                    }
-                }
-                Err(e) => {
-                    eprintln!("Error: failed to serialize script flags: {}", e);
-                }
-            }
-        }
+        Self::save_companion_script_flags(&self.overworld);
     }
 
     #[cfg(target_arch = "wasm32")]
@@ -836,7 +842,13 @@ impl PokemonGame {
                         self.rival_name = pokered_data::charmap::decode_string(
                             &self.save_data.game_data.rival_name,
                         );
-                        overworld.set_script_flags(self.save_data.script_flags.clone());
+                        // Seed the event-flag bitset from SRAM bytes, then
+                        // merge any runtime-only extras (companion sidecar)
+                        // on top.
+                        overworld.set_event_flags_bytes(&self.save_data.game_data.event_flags);
+                        if let Some(extras) = Self::read_companion_script_flags() {
+                            overworld.set_script_flags(extras);
+                        }
                         overworld.set_toggleable_object_flags(
                             self.save_data.game_data.toggleable_object_flags,
                         );
@@ -950,7 +962,9 @@ impl PokemonGame {
                 }
             }
             GameScreen::StartMenu => {
-                let has_pokedex = self.save_data.script_flags.get("EVENT_GOT_POKEDEX").copied().unwrap_or(false);
+                // Read the LIVE overworld flag store (unified_flags), not
+                // the `save_data` snapshot which is only synced at save time.
+                let has_pokedex = self.overworld.unified_flags().get_flag("EVENT_GOT_POKEDEX");
                 let has_pokemon = self.save_data.party.count() > 0;
                 self.start_menu.open(has_pokedex, has_pokemon, false);
                 if let Some(ref audio) = self.audio {
@@ -1678,12 +1692,13 @@ impl PokemonGame {
                         let dc_name = pokered_data::charmap::decode_string(
                             &self.save_data.game_data.daycare_mon_name,
                         );
+                        let mut name_buf = [0u8; pokered_core::battle::state::NAME_TEXT_BUF];
                         let party_names: Vec<String> = self
                             .save_data
                             .party
                             .to_vec()
                             .iter()
-                            .map(|m| m.display_name())
+                            .map(|m| m.display_name(&mut name_buf).to_string())
                             .collect();
                         let party_knows_hm: Vec<bool> = self
                             .save_data
@@ -2387,12 +2402,16 @@ impl PokemonGame {
                                         replace_move_guarded, ReplaceMoveError,
                                     };
                                     match replace_move_guarded(mon, slot, move_id) {
-                                        Ok(old_move) => format!(
-                                            "{} forgot\n{}...\nand learned\n{}!",
-                                            mon.display_name(),
-                                            pokered_data::lang_data::move_name(old_move, false),
-                                            pokered_data::lang_data::move_name(move_id, false)
-                                        ),
+                                        Ok(old_move) => {
+                                            let mut name_buf =
+                                                [0u8; pokered_core::battle::state::NAME_TEXT_BUF];
+                                            format!(
+                                                "{} forgot\n{}...\nand learned\n{}!",
+                                                mon.display_name(&mut name_buf),
+                                                pokered_data::lang_data::move_name(old_move, false),
+                                                pokered_data::lang_data::move_name(move_id, false)
+                                            )
+                                        }
                                         Err(ReplaceMoveError::HmCantDelete) => {
                                             // HMCantDeleteText (learn_move.asm:178-181).
                                             "HM techniques\ncan't be deleted!".to_string()
@@ -2924,12 +2943,14 @@ impl PokemonGame {
         let queue: Vec<PendingEvolution> = events
             .into_iter()
             .map(|e| {
+                let mut name_buf = [0u8; pokered_core::battle::state::NAME_TEXT_BUF];
                 let name = self
                     .save_data
                     .party
                     .get(e.party_index)
-                    .map(|m| m.display_name())
-                    .unwrap_or_default();
+                    .map(|m| m.display_name(&mut name_buf))
+                    .unwrap_or("")
+                    .to_string();
                 PendingEvolution {
                     party_index: e.party_index,
                     from: e.old_species,
@@ -2961,12 +2982,14 @@ impl PokemonGame {
             self.state.config.language,
             pokered_core::game_state::Lang::Zh
         );
+        let mut name_buf = [0u8; pokered_core::battle::state::NAME_TEXT_BUF];
         let name = self
             .save_data
             .party
             .get(party_index)
-            .map(|m| m.display_name())
-            .unwrap_or_default();
+            .map(|m| m.display_name(&mut name_buf))
+            .unwrap_or("")
+            .to_string();
         self.evolution_anim = Some(EvolutionScreenState::new(
             vec![PendingEvolution {
                 party_index,
@@ -3094,7 +3117,7 @@ impl PokemonGame {
             GameScreen::Shop(ref mart_state) => {
                 let money = self.save_data.game_data.player_money;
                 let bag_slice = self.save_data.game_data.bag.items();
-                draw_mart(mart_state, money, bag_slice, frame_buffer, self.state.config.language);
+                draw_mart(mart_state, money, &bag_slice[..], frame_buffer, self.state.config.language);
             }
             GameScreen::PC => {
                 if let Some(ref pc) = self.pc_screen {
@@ -3168,6 +3191,7 @@ const SOFT_RESET_HOLD_FRAMES: u8 = 16;
 
 impl dotzuki_tui::TuiGame for PokemonGame {
     type Button = GbButton;
+    type Fb = FrameBuffer;
 
     fn update(&mut self, input: &dotzuki_tui::InputState<Self::Button>) {
         self.update(input);

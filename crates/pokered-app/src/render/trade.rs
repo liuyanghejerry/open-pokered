@@ -25,7 +25,7 @@ use dotzuki_renderer::sprite::SpriteLayer;
 use pokered_core::game_state::Lang;
 use pokered_core::trade::{TradeAnim, TradeBallSubAnim, TRADE_CABLE_Y};
 use pokered_data::ui_layout::schema::DIALOG_DEFAULT_LAYOUT;
-use pokered_renderer::palette::GRAYSCALE_SPRITE_PALETTE;
+use pokered_renderer::palette::{GbColor, GRAYSCALE_SPRITE_PALETTE};
 use pokered_renderer::resource::ResourceManager;
 use pokered_renderer::{FrameBuffer, Rgba, TILE_SIZE};
 use pokered_ui::backends::FrameBufferPainter;
@@ -92,10 +92,20 @@ pub fn draw_trade(anim: &TradeAnim, resources: &mut Option<ResourceManager>, fb:
 /// left edge with white (the window's background shade).
 fn shift_right(fb: &mut FrameBuffer, px: usize) {
     let w = fb.width() as usize;
+    let h = fb.height() as usize;
     let px = px.min(w);
-    for row in fb.data.chunks_exact_mut(w * 4) {
-        row.copy_within(0..(w - px) * 4, px * 4);
-        row[..px * 4].fill(0xFF);
+    // Indexed framebuffer: shift via the per-pixel index API — the 2bpp
+    // planar storage can't be row-shifted with a byte-level copy_within
+    // without corrupting the bitplane layout.
+    for y in 0..h as u32 {
+        for x in (px..w).rev() {
+            if let Some(c) = fb.get_index((x - px) as u32, y) {
+                fb.set_pixel_index(x as u32, y, c);
+            }
+        }
+        for x in 0..px {
+            fb.set_pixel_index(x as u32, y, GbColor::White);
+        }
     }
 }
 

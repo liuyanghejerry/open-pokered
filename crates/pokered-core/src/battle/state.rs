@@ -84,12 +84,66 @@ pub mod status3 {
     pub const TRANSFORMED: u8 = 1 << 3;
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+/// A fixed name field: 10 charmap-encoded characters plus the 0x50
+/// terminator — the exact width of the SRAM name tables
+/// (`save::game_data::NAME_LENGTH`). `[0x50; 11]` ([`NO_NAME`]) = unset/blank.
+///
+/// The Game Boy charmap has no CJK glyphs, so decoded-text names (e.g. from
+/// the pinyin naming screen) that contain unencodable characters degrade to
+/// the species-name fallback, exactly as they already did after one SRAM
+/// round-trip.
+pub type NameBytes = [u8; 11];
+
+/// Unset name — eleven 0x50 terminators.
+pub const NO_NAME: NameBytes = [0x50; 11];
+
+/// serde default for optional name fields (missing JSON field → [`NO_NAME`]).
+pub(crate) fn default_no_name() -> NameBytes {
+    NO_NAME
+}
+
+/// Stack buffer size for [`Pokemon::display_name`] / [`decode_name`]:
+/// 10 charmap chars × worst-case 6 UTF-8 bytes each.
+pub const NAME_TEXT_BUF: usize = 64;
+
+/// serde glue: names serialize as fixed byte arrays (JSON array of numbers),
+/// but deserialize from the legacy `null`/decoded-string forms of old JSON
+/// saves as well.
+mod name_serde {
+    use super::{encode_name, NameBytes, NO_NAME};
+    use serde::{Deserialize, Deserializer, Serialize, Serializer};
+
+    pub fn serialize<S: Serializer>(bytes: &NameBytes, s: S) -> Result<S::Ok, S::Error> {
+        bytes.serialize(s)
+    }
+
+    pub fn deserialize<'de, D: Deserializer<'de>>(d: D) -> Result<NameBytes, D::Error> {
+        #[derive(Deserialize)]
+        #[serde(untagged)]
+        enum Name {
+            Bytes(NameBytes),
+            Legacy(Option<String>),
+        }
+        match Name::deserialize(d)? {
+            Name::Bytes(b) => Ok(b),
+            // Legacy saves stored the NPC-trade OT name with its script
+            // markup (`<TRAINER>`); '<' has no charmap glyph, so encode the
+            // bare "TRAINER" exactly as `trade.rs` now stores it in-game.
+            Name::Legacy(Some(text)) if text == "<TRAINER>" => Ok(encode_name("TRAINER")),
+            Name::Legacy(Some(text)) => Ok(encode_name(&text)),
+            Name::Legacy(None) => Ok(NO_NAME),
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Pokemon {
     pub species: Species,
-    /// Optional nickname. None means use species name.
-    /// Max 10 characters (NAME_LENGTH - 1 in original).
-    pub nickname: Option<String>,
+    /// Optional nickname, charmap-encoded (see [`NameBytes`]; [`NO_NAME`]
+    /// means "use the species name"). Max 10 characters
+    /// (NAME_LENGTH - 1 in original).
+    #[serde(default = "default_no_name", with = "name_serde")]
+    pub nickname: NameBytes,
     pub level: u8,
     pub hp: u16,
     pub max_hp: u16,
@@ -118,32 +172,116 @@ pub struct Pokemon {
     /// tracked, or by a code path that never set it) and is treated as own.
     #[serde(default)]
     pub ot_id: u16,
-    /// Original-trainer name (decoded text; `None` = unknown/blank). The party/box
-    /// OT-name table in SRAM round-trips through this.
-    #[serde(default)]
-    pub ot_name: Option<String>,
+    /// Original-trainer name (charmap-encoded; [`NO_NAME`] = unknown/blank).
+    /// The party/box OT-name table in SRAM round-trips through this.
+    /// Missing field defaults to 0x50-padded [`NO_NAME`], not zero bytes
+    /// (zeroes would serialize into SRAM as control bytes).
+    #[serde(default = "default_no_name", with = "name_serde")]
+    pub ot_name: NameBytes,
 }
 
 impl Pokemon {
-    pub fn display_name(&self) -> String {
-        self.nickname
-            .clone()
-            .unwrap_or_else(|| format!("{:?}", self.species).to_uppercase())
+    /// The mon's display name: the nickname when set, else the species'
+    /// English name from the `lang_data` table. A set nickname decodes into
+    /// `out` (a caller-owned stack buffer); species names are `&'static str`
+    /// and borrow nothing.
+    pub fn display_name<'a>(&self, out: &'a mut [u8; NAME_TEXT_BUF]) -> &'a str {
+        if self.has_nickname() {
+            decode_name(&self.nickname, out)
+        } else {
+            pokered_data::lang_data::species_name(self.species, false)
+        }
     }
 
-    pub fn set_nickname(&mut self, nickname: String) {
-        self.nickname = if nickname.len() <= 10 && !nickname.is_empty() {
-            Some(nickname)
-        } else if nickname.is_empty() {
-            None
-        } else {
-            Some(nickname.chars().take(10).collect())
-        };
+    pub fn has_nickname(&self) -> bool {
+        // A leading 0x00 (only reachable from corrupt SRAM) would decode to an
+        // empty string — treat it like the terminator/absence of a nickname.
+        self.nickname[0] != pokered_data::charmap::control_chars::CHAR_TERMINATOR
+            && self.nickname[0] != 0x00
+    }
+
+    /// Encode and store a decoded-text nickname: up to 10 characters, charmap
+    /// bytes; encoding stops at the first unencodable character. An empty
+    /// name clears the nickname.
+    pub fn set_nickname(&mut self, nickname: &str) {
+        self.nickname = encode_name(nickname);
     }
 
     pub fn clear_nickname(&mut self) {
-        self.nickname = None;
+        self.nickname = NO_NAME;
     }
+}
+
+/// A blank, semantically-empty `Pokemon` used to fill fixed-capacity slots
+/// beyond the active count (`Party`/`PcBox` fixed arrays). Never surfaced
+/// through the public API — all accessors are count-bounded.
+pub(crate) fn blank_pokemon() -> Pokemon {
+    Pokemon {
+        species: Species::None,
+        nickname: NO_NAME,
+        level: 0,
+        hp: 0,
+        max_hp: 0,
+        attack: 0,
+        defense: 0,
+        speed: 0,
+        special: 0,
+        type1: PokemonType::Normal,
+        type2: PokemonType::Normal,
+        moves: [MoveId::None; 4],
+        pp: [0; 4],
+        pp_ups: [0; 4],
+        status: StatusCondition::None,
+        dv_bytes: [0; 2],
+        stat_exp: [0; 5],
+        total_exp: 0,
+        is_traded: false,
+        ot_id: 0,
+        ot_name: NO_NAME,
+    }
+}
+
+/// Encode a decoded-text name to charmap bytes: up to 10 characters followed
+/// by the 0x50 terminator; encoding stops at the first unencodable character.
+/// An empty (or immediately unencodable) name yields [`NO_NAME`].
+pub fn encode_name(name: &str) -> NameBytes {
+    let mut out = NO_NAME;
+    let mut i = 0;
+    for c in name.chars() {
+        if i >= out.len() - 1 {
+            break;
+        }
+        match pokered_data::charmap::encode_char(c) {
+            Some(b) => {
+                out[i] = b;
+                i += 1;
+            }
+            None => break,
+        }
+    }
+    out[i] = pokered_data::charmap::control_chars::CHAR_TERMINATOR;
+    out
+}
+
+/// Decode charmap name bytes (stopping at the first 0x50 terminator) into
+/// `out`, returning the decoded text. Unmappable control bytes are skipped.
+pub fn decode_name<'a>(bytes: &[u8], out: &'a mut [u8; NAME_TEXT_BUF]) -> &'a str {
+    let mut len = 0;
+    for &b in bytes {
+        if b == pokered_data::charmap::control_chars::CHAR_TERMINATOR {
+            break;
+        }
+        if let Some(s) = pokered_data::charmap::decode_char(b) {
+            let sb = s.as_bytes();
+            if len + sb.len() > out.len() {
+                break;
+            }
+            out[len..len + sb.len()].copy_from_slice(sb);
+            len += sb.len();
+        }
+    }
+    // decode_char only yields valid UTF-8.
+    std::str::from_utf8(&out[..len]).unwrap_or("")
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -414,7 +552,7 @@ mod tests {
     fn make_test_pokemon() -> Pokemon {
         Pokemon {
             species: Species::Pikachu,
-            nickname: None,
+            nickname: [0x50; 11],
             level: 25,
             hp: 55,
             max_hp: 55,
@@ -436,7 +574,7 @@ mod tests {
             dv_bytes: [0xFF, 0xFF],
             stat_exp: [0; 5],
             total_exp: 0,
-            is_traded: false, ot_id: 0, ot_name: None,
+            is_traded: false, ot_id: 0, ot_name: [0x50; 11],
         }
     }
 
@@ -542,5 +680,159 @@ mod tests {
         assert_eq!(state.num_run_attempts, 0);
         assert_eq!(state.player.unmodified_speed, 90);
         assert_eq!(state.enemy.unmodified_attack, 55);
+    }
+
+    #[test]
+    fn encode_decode_name_round_trips() {
+        let bytes = encode_name("SPARKY");
+        assert_eq!(bytes[0], 0x92); // S
+        assert_eq!(bytes[5], 0x98); // Y
+        assert_eq!(bytes[6], 0x50, "terminator after the name");
+        assert_eq!(bytes[7..], [0x50; 4]);
+        let mut buf = [0u8; NAME_TEXT_BUF];
+        assert_eq!(decode_name(&bytes, &mut buf), "SPARKY");
+    }
+
+    #[test]
+    fn encode_name_truncates_at_10_chars_and_stops_unencodable() {
+        let bytes = encode_name("ABCDEFGHIJKLMNOP");
+        assert_eq!(decode_name(&bytes, &mut [0u8; NAME_TEXT_BUF]), "ABCDEFGHIJ");
+        // '<' has no charmap entry — encoding stops there.
+        let bytes = encode_name("AB<CD");
+        assert_eq!(decode_name(&bytes, &mut [0u8; NAME_TEXT_BUF]), "AB");
+        // Chinese has no charmap glyphs — degrades to the species-name
+        // fallback, exactly like a name that never survived an SRAM round-trip.
+        let bytes = encode_name("皮卡丘");
+        assert_eq!(bytes, NO_NAME);
+    }
+
+    #[test]
+    fn display_name_falls_back_to_species_table() {
+        let mon = make_test_pokemon();
+        assert!(!mon.has_nickname());
+        let mut buf = [0u8; NAME_TEXT_BUF];
+        assert_eq!(mon.display_name(&mut buf), "PIKACHU");
+    }
+
+    #[test]
+    fn display_name_uses_nickname_when_set() {
+        let mut mon = make_test_pokemon();
+        mon.set_nickname("Chu");
+        assert!(mon.has_nickname());
+        let mut buf = [0u8; NAME_TEXT_BUF];
+        assert_eq!(mon.display_name(&mut buf), "Chu");
+        mon.clear_nickname();
+        assert!(!mon.has_nickname());
+        assert_eq!(mon.display_name(&mut buf), "PIKACHU");
+        // Empty string also clears.
+        mon.set_nickname("");
+        assert!(!mon.has_nickname());
+    }
+
+    #[test]
+    fn name_serde_accepts_legacy_json_forms() {
+        // Legacy JSON saves stored names as `null` or decoded strings.
+        let legacy = serde_json::json!({
+            "species": "Pikachu",
+            "nickname": "Chu",
+            "level": 5,
+            "hp": 1,
+            "max_hp": 1,
+            "attack": 1,
+            "defense": 1,
+            "speed": 1,
+            "special": 1,
+            "type1": "Electric",
+            "type2": "Electric",
+            "moves": ["None", "None", "None", "None"],
+            "pp": [0, 0, 0, 0],
+            "pp_ups": [0, 0, 0, 0],
+            "status": "None",
+            "dv_bytes": [0, 0],
+            "stat_exp": [0, 0, 0, 0, 0],
+            "total_exp": 0,
+            "is_traded": false,
+            "ot_id": 0,
+            "ot_name": null
+        });
+        let mon: Pokemon = serde_json::from_value(legacy).unwrap();
+        assert_eq!(mon.nickname, encode_name("Chu"));
+        assert_eq!(mon.ot_name, NO_NAME);
+    }
+
+    #[test]
+    fn name_serde_missing_nickname_key_defaults_to_no_name() {
+        // Master stored nicknames as `Option<String>`; a JSON snapshot without
+        // the `nickname` key must not hard-fail.
+        let value = serde_json::json!({
+            "species": "Pikachu",
+            "level": 5,
+            "hp": 1,
+            "max_hp": 1,
+            "attack": 1,
+            "defense": 1,
+            "speed": 1,
+            "special": 1,
+            "type1": "Electric",
+            "type2": "Electric",
+            "moves": ["None", "None", "None", "None"],
+            "pp": [0, 0, 0, 0],
+            "pp_ups": [0, 0, 0, 0],
+            "status": "None",
+            "dv_bytes": [0, 0],
+            "stat_exp": [0, 0, 0, 0, 0],
+            "total_exp": 0,
+            "is_traded": false
+        });
+        let mon: Pokemon = serde_json::from_value(value).unwrap();
+        assert_eq!(mon.nickname, NO_NAME);
+        assert!(!mon.has_nickname());
+        // Same for a missing `ot_name` key.
+        assert_eq!(mon.ot_name, NO_NAME);
+    }
+
+    #[test]
+    fn name_serde_legacy_trainer_markup_decodes_to_trainer() {
+        // Old JSON snapshots stored the NPC-trade OT name with its script
+        // markup; it must decode to the same bytes `trade.rs` stores in-game.
+        let value = serde_json::json!({
+            "species": "Ditto",
+            "nickname": null,
+            "level": 5,
+            "hp": 1,
+            "max_hp": 1,
+            "attack": 1,
+            "defense": 1,
+            "speed": 1,
+            "special": 1,
+            "type1": "Normal",
+            "type2": "Normal",
+            "moves": ["None", "None", "None", "None"],
+            "pp": [0, 0, 0, 0],
+            "pp_ups": [0, 0, 0, 0],
+            "status": "None",
+            "dv_bytes": [0, 0],
+            "stat_exp": [0, 0, 0, 0, 0],
+            "total_exp": 0,
+            "is_traded": true,
+            "ot_id": 1,
+            "ot_name": "<TRAINER>"
+        });
+        let mon: Pokemon = serde_json::from_value(value).unwrap();
+        assert_eq!(mon.ot_name, encode_name("TRAINER"));
+        let mut buf = [0u8; NAME_TEXT_BUF];
+        assert_eq!(decode_name(&mon.ot_name, &mut buf), "TRAINER");
+    }
+
+    #[test]
+    fn leading_zero_byte_nickname_counts_as_unset() {
+        // Corrupt SRAM can leave a 0x00 in the first name byte; that would
+        // decode to an empty display name, so treat it as no nickname.
+        let mut mon = blank_pokemon();
+        mon.species = Species::Pikachu;
+        mon.nickname = [0x00; 11];
+        assert!(!mon.has_nickname());
+        let mut buf = [0u8; NAME_TEXT_BUF];
+        assert_eq!(mon.display_name(&mut buf), "PIKACHU");
     }
 }

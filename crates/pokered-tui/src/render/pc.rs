@@ -27,7 +27,8 @@ fn item_name(id: pokered_data::items::ItemId) -> String {
 }
 
 fn mon_row(mon: &Pokemon) -> String {
-    format!("{} :L{}", mon.display_name(), mon.level)
+    let mut name_buf = [0u8; pokered_core::battle::state::NAME_TEXT_BUF];
+    format!("{} :L{}", mon.display_name(&mut name_buf), mon.level)
 }
 
 /// Bottom text box holding up to `lines` lines (max 5), plus the current
@@ -108,7 +109,7 @@ fn mon_rows(pc: &PcScreen, save: &SaveData) -> Vec<String> {
 
 /// Current item list (bag for DEPOSIT, PC storage otherwise) + CANCEL.
 fn item_rows(pc: &PcScreen, save: &SaveData) -> Vec<String> {
-    let src: &[(pokered_data::items::ItemId, u32)] = match pc.item_mode() {
+    let src: Vec<(pokered_data::items::ItemId, u32)> = match pc.item_mode() {
         ItemListMode::Deposit => save.game_data.bag.items(),
         ItemListMode::Withdraw | ItemListMode::Toss => save.game_data.pc_items.items(),
     };
@@ -207,7 +208,10 @@ pub fn draw_pc(
                         .pc_storage
                         .current_box()
                         .get(cursor)
-                        .map(|m| m.display_name())
+                        .map(|m| {
+                            let mut name_buf = [0u8; pokered_core::battle::state::NAME_TEXT_BUF];
+                            m.display_name(&mut name_buf).to_string()
+                        })
                         .unwrap_or_default();
                     // "Once released, {NAME} is gone forever. OK?"
                     // (_OnceReleasedText)

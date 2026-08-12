@@ -18,13 +18,28 @@ permissions:
 env:
   CARGO_TERM_COLOR: always
   RUSTFLAGS: ""
+  # dotzuki engine deps are fetched from a private GitHub repo over ssh; use
+  # the git CLI so GIT_SSH_COMMAND (deploy key, set up below) applies.
+  CARGO_NET_GIT_FETCH_WITH_CLI: "true"
 
 jobs:
   build:
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Configure dotzuki deploy key
+        # dotzuki is a private repo; cargo fetches engine deps over ssh using
+        # this read-only deploy key (consumed via CARGO_NET_GIT_FETCH_WITH_CLI).
+        env:
+          DOTZUKI_DEPLOY_KEY: ${{ secrets.DOTZUKI_DEPLOY_KEY }}
+        run: |
+          mkdir -p ~/.ssh
+          echo "$DOTZUKI_DEPLOY_KEY" > ~/.ssh/dotzuki_deploy_key
+          chmod 600 ~/.ssh/dotzuki_deploy_key
+          ssh-keyscan github.com >> ~/.ssh/known_hosts 2>/dev/null || true
+          echo "GIT_SSH_COMMAND=ssh -i ~/.ssh/dotzuki_deploy_key -o IdentitiesOnly=yes" >> "$GITHUB_ENV"
 
       - name: Fetch gfx assets
         # gfx/ is not committed; the wasm build embeds it at build time (build.rs).
@@ -36,15 +51,9 @@ jobs:
           targets: wasm32-unknown-unknown
 
       - name: Cache cargo registry & build
-        uses: actions/cache@v4
+        uses: Swatinem/rust-cache@v2
         with:
-          path: |
-            ~/.cargo/registry
-            ~/.cargo/git
-            target
-          key: wasm-cargo-${{ hashFiles('Cargo.lock', '**/Cargo.toml') }}
-          restore-keys: |
-            wasm-cargo-
+          key: wasm
 
       - name: Install wasm-bindgen-cli
         # The CLI's bindgen schema version must exactly match the wasm-bindgen
@@ -67,36 +76,36 @@ jobs:
           rm -f "$WASM_OUT_DIR"/*.wasm "$WASM_OUT_DIR"/*.js
           wasm-bindgen --target web --no-typescript --out-dir "$WASM_OUT_DIR" "$WASM_BIN"
 
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: npm
-          cache-dependency-path: crates/pokered-web/frontend/package-lock.json
+          cache: pnpm
+          cache-dependency-path: crates/pokered-web/frontend/pnpm-lock.yaml
 
-      - name: Install npm dependencies
+      - name: Install dependencies
         working-directory: crates/pokered-web/frontend
-        run: npm ci
+        run: pnpm install --frozen-lockfile
 
       - name: Build Vite bundle
         working-directory: crates/pokered-web/frontend
         env:
           VITE_BASE_PATH: /${{ github.event.repository.name }}/
-        run: npm run build
+        run: pnpm run build
 
       # ── pokered-editor (WYSIWYG editor) → /<repo>/editor/ ──────────────
       # GitHub Pages gives one site per repo; the editor shares it with the
       # game under a sub-path. Static hosting has no /api backend, so
       # dataFetch routes /api/* onto IndexedDB deltas + these static
       # baselines; every /gfx image is copied into dist/gfx so base-prefixed
-      # asset URLs resolve instead of 404ing.
-      #
-      # NOTE: the Layout-editor preview wasm (`dotzuki-web`, engine crate) is
-      # NOT built here anymore — dotzuki-web ships from the dotzuki-engine repo.
-      # Drop its pkg into `tools/pokered-editor/src/wasm/dotzuki-web/` (or point
-      # DOTZUKI_WASM_ROOT at a checkout) before deploying to keep the Layout
-      # preview alive; the Playtest bridge (pokered-runner-web, below) is
-      # built from this repo.
+      # asset URLs resolve instead of 404ing. Both wasm bridges are bundled
+      # into dist/editor/wasm/: pokered-runner-web (Playtest / Game preview)
+      # and pokered-layout-preview (Layout editor .gui compile + preview).
       - name: Build editor wasm (pokered-runner-web)
         run: cargo build -p pokered-runner-web --target wasm32-unknown-unknown --release
 
@@ -107,22 +116,32 @@ jobs:
           mkdir -p editor-wasm
           wasm-bindgen --target web --no-typescript --out-dir editor-wasm "$WASM_BIN"
 
+      - name: Build layout-preview wasm (pokered-layout-preview)
+        run: cargo build -p pokered-layout-preview --target wasm32-unknown-unknown --release
+
+      - name: Generate layout-preview wasm bindings
+        working-directory: crates/pokered-layout-preview
+        run: |
+          WASM_BIN="../target/wasm32-unknown-unknown/release/pokered_layout_preview.wasm"
+          mkdir -p editor-wasm
+          wasm-bindgen --target web --no-typescript --out-dir editor-wasm "$WASM_BIN"
+
       - name: Setup Node.js (editor)
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: npm
-          cache-dependency-path: tools/pokered-editor/package-lock.json
+          cache: pnpm
+          cache-dependency-path: tools/pokered-editor/pnpm-lock.yaml
 
-      - name: Install editor npm dependencies
+      - name: Install editor dependencies
         working-directory: tools/pokered-editor
-        run: npm ci
+        run: pnpm install --frozen-lockfile
 
       - name: Build editor Vite bundle
         working-directory: tools/pokered-editor
         env:
           VITE_BASE_PATH: /${{ github.event.repository.name }}/editor/
-        run: npm run build
+        run: pnpm run build
 
       - name: Generate editor static data baseline + gfx
         # Bundles pokered-data JSON (maps/trainers/pokemon/moves/items/
@@ -140,6 +159,7 @@ jobs:
           cp -r tools/pokered-editor/dist/. "$DEST/"
           mkdir -p "$DEST/wasm"
           cp -r crates/pokered-runner-web/editor-wasm/. "$DEST/wasm/"
+          cp -r crates/pokered-layout-preview/editor-wasm/. "$DEST/wasm/"
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
@@ -148,7 +168,7 @@ jobs:
 
   deploy:
     needs: build
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}

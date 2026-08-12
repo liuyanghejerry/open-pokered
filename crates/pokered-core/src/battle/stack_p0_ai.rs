@@ -353,7 +353,7 @@ mod p0_ai_tests {
             let base = get_base_stats(Species::Pikachu).unwrap();
             let mk = |spec: &AiMonSpec| Pokemon {
                 species: spec.species,
-                nickname: None,
+                nickname: [0x50; 11],
                 level: 50,
                 hp: spec.hp,
                 max_hp: spec.hp,
@@ -370,7 +370,7 @@ mod p0_ai_tests {
                 dv_bytes: [0xFF, 0xFF],
                 stat_exp: [0; 5],
                 total_exp: 0,
-                is_traded: false, ot_id: 0, ot_name: None,
+                is_traded: false, ot_id: 0, ot_name: [0x50; 11],
             };
             new_battle_state(BattleType::Wild, vec![mk(&s.player)], vec![mk(&s.enemy)])
         };

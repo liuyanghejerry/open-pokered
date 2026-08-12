@@ -21,7 +21,9 @@
 //! Rendering lives in the app layer (`pokered-app/src/render/pc.rs`); the
 //! screen exposes its phase and cursors for it.
 
-use crate::items::inventory::{is_tossable, Inventory};
+use crate::items::inventory::{
+    is_tossable, BAG_ITEM_CAPACITY, MAX_ITEM_QUANTITY, PC_ITEM_CAPACITY, Inventory,
+};
 use crate::main_menu::MenuInput;
 use crate::pokemon::party::Party;
 use crate::pokemon::pc_box::{PcStorage, NUM_BOXES};
@@ -114,8 +116,8 @@ pub enum PcScreenAction {
 pub struct PcContext<'a> {
     pub party: &'a mut Party,
     pub pc_storage: &'a mut PcStorage,
-    pub bag: &'a mut Inventory,
-    pub pc_items: &'a mut Inventory,
+    pub bag: &'a mut Inventory<BAG_ITEM_CAPACITY>,
+    pub pc_items: &'a mut Inventory<PC_ITEM_CAPACITY>,
     pub pokedex: &'a Pokedex,
 }
 
@@ -830,11 +832,12 @@ impl PcScreen {
                     let idx = self.mon_cursor;
                     match self.mon_mode {
                         MonListMode::Deposit => {
+                            let mut name_buf = [0u8; crate::battle::state::NAME_TEXT_BUF];
                             let name = ctx
                                 .party
                                 .get(idx)
-                                .map(|m| m.display_name())
-                                .unwrap_or_default();
+                                .map(|m| m.display_name(&mut name_buf))
+                                .unwrap_or("");
                             if let Ok(mon) = ctx.party.remove(idx) {
                                 let _ = ctx.pc_storage.current_box_mut().deposit(mon);
                                 self.sfx.push(PcSfx::WithdrawDeposit);
@@ -852,12 +855,13 @@ impl PcScreen {
                             }
                         }
                         MonListMode::Withdraw => {
+                            let mut name_buf = [0u8; crate::battle::state::NAME_TEXT_BUF];
                             let name = ctx
                                 .pc_storage
                                 .current_box()
                                 .get(idx)
-                                .map(|m| m.display_name())
-                                .unwrap_or_default();
+                                .map(|m| m.display_name(&mut name_buf))
+                                .unwrap_or("");
                             if ctx.party.is_full() {
                                 // Party filled up between the menu check and
                                 // here — leave the mon in the box.
@@ -912,12 +916,13 @@ impl PcScreen {
         if input.a {
             if self.yes_selected {
                 let idx = self.mon_cursor;
+                let mut name_buf = [0u8; crate::battle::state::NAME_TEXT_BUF];
                 let name = ctx
                     .pc_storage
                     .current_box()
                     .get(idx)
-                    .map(|m| m.display_name())
-                    .unwrap_or_default();
+                    .map(|m| m.display_name(&mut name_buf))
+                    .unwrap_or("");
                 if ctx.pc_storage.current_box_mut().release(idx).is_ok() {
                     // "{NAME} was released outside. Bye {NAME}!"
                     // (_MonWasReleasedText)
@@ -1036,16 +1041,28 @@ impl PcScreen {
         }
     }
 
-    /// The inventory the current item list shows.
-    fn item_source<'c>(&self, ctx: &'c PcContext) -> &'c Inventory {
+    /// The inventory the current item list shows (bag for DEPOSIT, PC
+    /// storage otherwise), as occupied slots in list order.
+    fn item_source<'c>(&self, ctx: &'c PcContext) -> Vec<(ItemId, u8)> {
+        let cap = MAX_ITEM_QUANTITY as u32;
         match self.item_mode {
-            ItemListMode::Deposit => ctx.bag,
-            ItemListMode::Withdraw | ItemListMode::Toss => ctx.pc_items,
+            ItemListMode::Deposit => ctx
+                .bag
+                .items()
+                .into_iter()
+                .map(|(id, q)| (id, q.min(cap) as u8))
+                .collect(),
+            ItemListMode::Withdraw | ItemListMode::Toss => ctx
+                .pc_items
+                .items()
+                .into_iter()
+                .map(|(id, q)| (id, q.min(cap) as u8))
+                .collect(),
         }
     }
 
     fn item_row_count(&self, ctx: &PcContext) -> usize {
-        self.item_source(ctx).count() + 1 // + CANCEL
+        self.item_source(ctx).len() + 1 // + CANCEL
     }
 
     fn clamp_item_scroll(&mut self, ctx: &PcContext) {
@@ -1083,7 +1100,8 @@ impl PcScreen {
                 self.enter_item_menu();
                 return PcScreenAction::Continue;
             }
-            let Some((item, have)) = self.item_source(ctx).get(self.item_list_cursor) else {
+            let source = self.item_source(ctx);
+            let Some((item, have)) = source.get(self.item_list_cursor) else {
                 self.enter_item_menu();
                 return PcScreenAction::Continue;
             };
@@ -1092,7 +1110,7 @@ impl PcScreen {
                 // (players_pc.asm:110-121,164-175).
                 ItemListMode::Deposit | ItemListMode::Withdraw => {
                     if item.is_key_item() {
-                        self.exec_item_move(ctx, self.item_list_cursor, item, 1);
+                        self.exec_item_move(ctx, self.item_list_cursor, *item, 1);
                     } else {
                         self.item_qty = 1;
                         let _ = have;
@@ -1100,7 +1118,7 @@ impl PcScreen {
                     }
                 }
                 ItemListMode::Toss => {
-                    if !is_tossable(item) {
+                    if !is_tossable(*item) {
                         // HMs/key items: TossItem refuses outright
                         // (item_effects.asm:2550-2559).
                         self.set_message(
@@ -1118,11 +1136,12 @@ impl PcScreen {
     }
 
     fn update_item_quantity(&mut self, input: MenuInput, ctx: &mut PcContext) -> PcScreenAction {
-        let Some((item, have)) = self.item_source(ctx).get(self.item_list_cursor) else {
+        let source = self.item_source(ctx);
+        let Some((item, have)) = source.get(self.item_list_cursor) else {
             self.phase = PcPhase::ItemList;
             return PcScreenAction::Continue;
         };
-        if input.up && self.item_qty < have {
+        if input.up && self.item_qty < *have {
             self.item_qty += 1;
         } else if input.down && self.item_qty > 1 {
             self.item_qty -= 1;
@@ -1135,7 +1154,7 @@ impl PcScreen {
             let qty = self.item_qty;
             match self.item_mode {
                 ItemListMode::Deposit | ItemListMode::Withdraw => {
-                    self.exec_item_move(ctx, self.item_list_cursor, item, qty);
+                    self.exec_item_move(ctx, self.item_list_cursor, *item, qty);
                 }
                 ItemListMode::Toss => {
                     // "Is it OK to toss {ITEM}?" (_IsItOKToTossItemText) YES/NO.
@@ -1212,7 +1231,7 @@ impl PcScreen {
                 let name = self
                     .item_source(ctx)
                     .get(idx)
-                    .map(|(item, _)| item_name(item))
+                    .map(|(item, _)| item_name(*item))
                     .unwrap_or_default();
                 let _ = ctx.pc_items.remove_item_at(idx, qty);
                 // "Threw away {ITEM}." (_ThrewAwayItemText)
@@ -1307,8 +1326,8 @@ mod tests {
     struct World {
         party: Party,
         pc_storage: PcStorage,
-        bag: Inventory,
-        pc_items: Inventory,
+        bag: Inventory<BAG_ITEM_CAPACITY>,
+        pc_items: Inventory<PC_ITEM_CAPACITY>,
         pokedex: Pokedex,
     }
 

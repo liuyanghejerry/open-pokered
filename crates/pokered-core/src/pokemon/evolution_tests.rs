@@ -8,7 +8,7 @@ use pokered_data::types::PokemonType;
 fn make_pokemon(species: Species, level: u8) -> Pokemon {
     Pokemon {
         species,
-        nickname: None,
+        nickname: [0x50; 11],
         level,
         hp: 50,
         max_hp: 50,
@@ -25,7 +25,7 @@ fn make_pokemon(species: Species, level: u8) -> Pokemon {
         dv_bytes: [0xAA, 0xAA],
         stat_exp: [0; 5],
         total_exp: 0,
-        is_traded: false, ot_id: 0, ot_name: None,
+        is_traded: false, ot_id: 0, ot_name: [0x50; 11],
     }
 }
 
@@ -202,19 +202,20 @@ fn finalize_renames_only_species_default_nicknames() {
     // No nickname: display_name follows the species automatically.
     let mut mon = make_pokemon(Species::Bulbasaur, 16);
     finalize_evolution(&mut mon, &mut dex, Species::Ivysaur);
-    assert_eq!(mon.display_name(), "IVYSAUR");
+    let mut buf = [0u8; crate::battle::state::NAME_TEXT_BUF];
+    assert_eq!(mon.display_name(&mut buf), "IVYSAUR");
 
     // "Nickname" == old species name → renamed to the new species name.
     let mut mon = make_pokemon(Species::Bulbasaur, 16);
-    mon.set_nickname("BULBASAUR".to_string());
+    mon.set_nickname("BULBASAUR");
     finalize_evolution(&mut mon, &mut dex, Species::Ivysaur);
-    assert_eq!(mon.display_name(), "IVYSAUR");
+    assert_eq!(mon.display_name(&mut buf), "IVYSAUR");
 
     // Real nickname → kept.
     let mut mon = make_pokemon(Species::Bulbasaur, 16);
-    mon.set_nickname("SPROUT".to_string());
+    mon.set_nickname("SPROUT");
     finalize_evolution(&mut mon, &mut dex, Species::Ivysaur);
-    assert_eq!(mon.display_name(), "SPROUT");
+    assert_eq!(mon.display_name(&mut buf), "SPROUT");
 }
 
 /// LearnMoveFromLevelUp at the current level (evos_moves.asm:212): the
