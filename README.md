@@ -15,7 +15,7 @@ cargo run --release --bin pokered-app
 cargo test
 ```
 
-The engine is consumed as a Cargo git dependency: `ssh://git@github.com/liuyanghejerry/dotzuki.git`, pinned to tag `v0.1.0` (see the `Cargo.toml` of each crate). After pulling a new engine tag, bump the `tag` and run `cargo update`.
+The engine is consumed as a Cargo git dependency: `https://github.com/liuyanghejerry/dotzuki`, pinned to tag `v0.5.1` (see the `Cargo.toml` of each crate). After pulling a new engine tag, bump the `tag` and run `cargo update`.
 
 ## What this repo contains
 
