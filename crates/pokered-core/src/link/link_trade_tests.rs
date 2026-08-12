@@ -1,7 +1,7 @@
 use super::link_trade::*;
 use super::protocol::*;
 use super::transport::*;
-use crate::battle::state::{Pokemon, StatusCondition};
+use crate::battle::state::{decode_name, encode_name, Pokemon, StatusCondition, NAME_TEXT_BUF};
 use pokered_data::moves::MoveId;
 use pokered_data::species::Species;
 use pokered_data::types::PokemonType;
@@ -9,7 +9,7 @@ use pokered_data::types::PokemonType;
 fn make_test_pokemon(species: Species, level: u8) -> Pokemon {
     Pokemon {
         species,
-        nickname: None,
+        nickname: [0x50; 11],
         level,
         hp: 100,
         max_hp: 100,
@@ -26,7 +26,7 @@ fn make_test_pokemon(species: Species, level: u8) -> Pokemon {
         dv_bytes: [0xAB, 0xCD],
         stat_exp: [0; 5],
         total_exp: 1000,
-        is_traded: false, ot_id: 0, ot_name: None,
+        is_traded: false, ot_id: 0, ot_name: [0x50; 11],
     }
 }
 
@@ -376,13 +376,13 @@ use crate::pokemon::pokedex::Pokedex;
 fn trade_mon(species: Species, level: u8, ot_id: u16, nickname: Option<&str>) -> Pokemon {
     let mut mon = make_test_pokemon(species, level);
     mon.ot_id = ot_id;
-    mon.ot_name = Some("REMOTE".to_string());
+    mon.ot_name = encode_name("REMOTE");
     mon.is_traded = false;
     mon.pp_ups = [2, 0, 1, 3];
     mon.total_exp = 123456;
     mon.dv_bytes = [0x12, 0x34];
     if let Some(nick) = nickname {
-        mon.set_nickname(nick.to_string());
+        mon.set_nickname(nick);
     }
     mon
 }
@@ -475,13 +475,14 @@ fn driver_full_trade_both_directions_with_integrity() {
     assert_eq!(a_party[0], bulbasaur);
     let recv = &a_party[1];
     assert_eq!(recv.species, Species::Charmander);
-    assert_eq!(recv.nickname.as_deref(), Some("BLAZE"));
+    let mut buf = [0u8; NAME_TEXT_BUF];
+    assert_eq!(decode_name(&recv.nickname, &mut buf), "BLAZE");
     assert_eq!(recv.level, 36);
     assert_eq!(recv.dv_bytes, [0x12, 0x34]);
     assert_eq!(recv.pp_ups, [2, 0, 1, 3]);
     assert_eq!(recv.total_exp, 123456);
     assert_eq!(recv.ot_id, 0x2222, "OT stays the remote trainer's");
-    assert_eq!(recv.ot_name.as_deref(), Some("REMOTE"));
+    assert_eq!(decode_name(&recv.ot_name, &mut buf), "REMOTE");
     assert!(recv.is_traded, "remote OT != local player ID → traded");
     assert_eq!(d_a.given_mon(), Some(&pikachu), "removed mon still exposed");
 
@@ -490,7 +491,7 @@ fn driver_full_trade_both_directions_with_integrity() {
     assert_eq!(b_party.len(), 1);
     let recv_b = &b_party[0];
     assert_eq!(recv_b.species, Species::Pikachu);
-    assert_eq!(recv_b.nickname.as_deref(), Some("SPARKY"));
+    assert_eq!(decode_name(&recv_b.nickname, &mut buf), "SPARKY");
     assert_eq!(recv_b.dv_bytes, [0x12, 0x34]);
     assert_eq!(recv_b.pp_ups, [2, 0, 1, 3]);
     assert_eq!(recv_b.total_exp, 123456);
@@ -809,14 +810,15 @@ fn driver_received_mon_accessors() {
     let mut dex = Pokedex::new();
     d_a.apply_exchange(&mut dex).unwrap();
     // Mutating through received_mon_mut lands in the party.
-    d_a.received_mon_mut().unwrap().set_nickname("NEWOWNER".to_string());
+    d_a.received_mon_mut().unwrap().set_nickname("NEWOWNER");
+    let mut buf = [0u8; NAME_TEXT_BUF];
     assert_eq!(
-        d_a.received_mon().unwrap().nickname.as_deref(),
-        Some("NEWOWNER")
+        decode_name(&d_a.received_mon().unwrap().nickname, &mut buf),
+        "NEWOWNER"
     );
     assert_eq!(
-        d_a.party().get(0).unwrap().nickname.as_deref(),
-        Some("NEWOWNER")
+        decode_name(&d_a.party().get(0).unwrap().nickname, &mut buf),
+        "NEWOWNER"
     );
 }
 

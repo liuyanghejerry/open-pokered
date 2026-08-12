@@ -157,10 +157,10 @@ fn test_import_hof_one_team() {
     let save = import_sram(&sram).unwrap();
     assert_eq!(save.hall_of_fame.team_count(), 1);
     let team = save.hall_of_fame.get_team(0).unwrap();
-    assert_eq!(team.mons.len(), 1);
-    assert_eq!(team.mons[0].species, 0x54);
-    assert_eq!(team.mons[0].level, 25);
-    assert_eq!(team.mons[0].nickname, vec![0x8F, 0x88, 0x8A, 0x80]);
+    assert_eq!(team.mons().len(), 1);
+    assert_eq!(team.mons()[0].species, 0x54);
+    assert_eq!(team.mons()[0].level, 25);
+    assert_eq!(team.mons()[0].nickname_bytes(), &[0x8F, 0x88, 0x8A, 0x80]);
 }
 
 #[test]

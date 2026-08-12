@@ -244,7 +244,7 @@ mod tests {
     fn mon(species: Species, level: u8) -> Pokemon {
         Pokemon {
             species,
-            nickname: None,
+            nickname: [0x50; 11],
             level,
             hp: 100,
             max_hp: 100,
@@ -263,7 +263,7 @@ mod tests {
             total_exp: 1000,
             is_traded: false,
             ot_id: 0,
-            ot_name: None,
+            ot_name: [0x50; 11],
         }
     }
 

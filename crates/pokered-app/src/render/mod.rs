@@ -49,25 +49,13 @@ use dotzuki_renderer::transition::FadePalette;
 
 /// Map every framebuffer pixel through a GB palette byte (rBGP).
 ///
-/// Pixels are assumed to be one of the four GRAYSCALE_PALETTE shades; any
-/// other color is treated as black (shade 3). The palette byte packs four
-/// 2-bit shade mappings with color 0 in the LOW bits — `dc a,b,c,d` in
-/// home/fade.asm is (a<<6)|(b<<4)|(c<<2)|d, i.e. colors 3,2,1,0.
+/// The palette byte packs four 2-bit shade mappings with color 0 in the LOW
+/// bits — `dc a,b,c,d` in home/fade.asm is (a<<6)|(b<<4)|(c<<2)|d, i.e.
+/// colors 3,2,1,0. On the indexed framebuffer this is a display-palette
+/// remap (exactly what the original hardware does with an rBGP write), so
+/// the per-pixel RGBA loop becomes a single palette op.
 pub(crate) fn apply_gb_palette(fb: &mut FrameBuffer, pal: &FadePalette) {
-    const SHADES: [u8; 4] = [0xFF, 0xAA, 0x55, 0x00];
-    for px in fb.data.chunks_exact_mut(4) {
-        let shade: u8 = match (px[0], px[1], px[2]) {
-            (0xFF, 0xFF, 0xFF) => 0,
-            (0xAA, 0xAA, 0xAA) => 1,
-            (0x55, 0x55, 0x55) => 2,
-            _ => 3,
-        };
-        let mapped = (pal.bgp >> (2 * shade)) & 3;
-        let v = SHADES[mapped as usize];
-        px[0] = v;
-        px[1] = v;
-        px[2] = v;
-    }
+    fb.apply_bgp(pal.bgp);
 }
 
 pub fn blit_tileset(

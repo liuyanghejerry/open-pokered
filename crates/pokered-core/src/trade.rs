@@ -41,8 +41,11 @@ pub fn assemble_npc_trade_mon(
     player_id: u16,
 ) -> Option<Pokemon> {
     let mut mon = crate::pokemon::stats::create_pokemon(species, level, dv_bytes)?;
-    mon.set_nickname(nickname.to_string());
-    mon.ot_name = Some(NPC_TRADE_OT_NAME.to_string());
+    mon.set_nickname(nickname);
+    // The OT name is stored as the literal "TRAINER" — the angle brackets of
+    // the `<TRAINER>` table text are script markup (the CHAR_TRAINER control
+    // code), not part of the name, and '<' has no charmap glyph.
+    mon.ot_name = crate::battle::state::encode_name("TRAINER");
     mon.ot_id = ot_id;
     mon.is_traded = is_traded_for(ot_id, player_id);
     Some(mon)
@@ -485,8 +488,9 @@ mod tests {
         assert_eq!(mon.species, Species::MrMime);
         assert_eq!(mon.level, 17, "received level = given mon's level");
         assert_eq!(mon.dv_bytes, [0x12, 0x34]);
-        assert_eq!(mon.nickname.as_deref(), Some("MARCEL"));
-        assert_eq!(mon.ot_name.as_deref(), Some("<TRAINER>"));
+        let mut buf = [0u8; crate::battle::state::NAME_TEXT_BUF];
+        assert_eq!(crate::battle::state::decode_name(&mon.nickname, &mut buf), "MARCEL");
+        assert_eq!(crate::battle::state::decode_name(&mon.ot_name, &mut buf), "TRAINER");
         assert_eq!(mon.ot_id, 40001);
         assert!(mon.is_traded, "OT ID mismatch → traded (1.5x EXP)");
     }
@@ -518,8 +522,12 @@ mod tests {
             let mon =
                 assemble_npc_trade_mon(trade.receive, 5, trade.nickname, [0xAB, 0xCD], 1, 2)
                     .unwrap();
-            assert_eq!(mon.nickname.as_deref(), Some(trade.nickname));
-            assert_eq!(mon.ot_name.as_deref(), Some(NPC_TRADE_OT_NAME));
+            let mut buf = [0u8; crate::battle::state::NAME_TEXT_BUF];
+            assert_eq!(
+                crate::battle::state::decode_name(&mon.nickname, &mut buf),
+                trade.nickname
+            );
+            assert_eq!(crate::battle::state::decode_name(&mon.ot_name, &mut buf), "TRAINER");
         }
     }
 

@@ -81,17 +81,32 @@ export function useGameSession(
     pressed.clear()
   }
 
-  /** Don't steal keys while the user types in an input. */
+  /** Don't steal keys while the user types in an input (or navigates a
+   *  dropdown/select inside the overlay). */
   function isTypingTarget(): boolean {
     const el = document.activeElement as HTMLElement | null
     if (!el) return false
-    return el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.isContentEditable
+    return (
+      el.tagName === 'INPUT' ||
+      el.tagName === 'TEXTAREA' ||
+      el.tagName === 'SELECT' ||
+      el.isContentEditable
+    )
   }
 
   function onKeyDown(e: KeyboardEvent) {
+    // Modifier combos (Ctrl/Cmd/Alt) are editor shortcuts (save, undo, …) —
+    // never game input. Without this, Cmd+S would walk down (KeyS) and Cmd+Z
+    // would press A (KeyZ) inside the playtest.
+    if (e.ctrlKey || e.metaKey || e.altKey) return
     const bit = keyToBit(e.key, e.code)
-    if (!bit || isTypingTarget()) return
+    if (!bit || status.value !== 'running' || isTypingTarget()) return
     e.preventDefault()
+    // The playtest owns its keys exclusively while the game runs: swallow the
+    // event in the capture phase so the editor's document/window shortcut
+    // handlers behind the overlay (map navigation, tool switching, …) never
+    // fire for the same press.
+    e.stopImmediatePropagation()
     pressed.add(bit)
   }
 
@@ -216,14 +231,16 @@ export function useGameSession(
     // would otherwise keep rendering the last note through Web Audio).
     runner?.stop_audio()
     ctx = null
-    document.removeEventListener('keydown', onKeyDown)
-    document.removeEventListener('keyup', onKeyUp)
+    window.removeEventListener('keydown', onKeyDown, true)
+    window.removeEventListener('keyup', onKeyUp, true)
     document.removeEventListener('visibilitychange', onVisibilityChange)
   }
 
   // Attach keyboard + visibility listeners for this session's lifetime.
-  document.addEventListener('keydown', onKeyDown)
-  document.addEventListener('keyup', onKeyUp)
+  // Keyboard uses the window capture phase so the game sees its keys before —
+  // and, once consumed, exclusively of — the editor's shortcut handlers.
+  window.addEventListener('keydown', onKeyDown, true)
+  window.addEventListener('keyup', onKeyUp, true)
   document.addEventListener('visibilitychange', onVisibilityChange)
   onBeforeUnmount(dispose)
 

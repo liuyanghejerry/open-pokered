@@ -10,6 +10,17 @@
 // Re-export everything from dotzuki-renderer (all generic rendering modules)
 pub use dotzuki_renderer::*;
 
+use dotzuki_renderer::palette::GbColor;
+
+// Pokemon-specific framebuffer: the indexed 4-shade buffer with an RGBA
+// facade. All pokered draw code keeps calling set_pixel(Rgba)/fill_rect/
+// clear on `FrameBuffer`; writes quantize through the grayscale base
+// palette (exact for the pokered render chain), and the 160×144 storage
+// is 5,760 bytes of packed 2bpp instead of 92,160 bytes of RGBA.
+// The engine's RGBA `dotzuki_renderer::FrameBuffer` stays available for the
+// true-color paths (e.g. the `--demo` tileset demo).
+pub type FrameBuffer = dotzuki_renderer::RgbaIndexedFrameBuffer<GbColor>;
+
 // Pokemon-specific modules (not in dotzuki-renderer)
 pub mod embedded;
 #[cfg(feature = "gpu")]

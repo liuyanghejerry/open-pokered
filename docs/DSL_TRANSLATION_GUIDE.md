@@ -130,10 +130,9 @@ broken call is not.
 2. If the gym-leader pattern applies, edit `maps/<Map>/map.json` to set the leader npc
    `isTrainer:false`.
 3. Run the PRE-BUILT binary directly (do NOT use `cargo run` — concurrent cargo
-   invocations contend on the build lock and hang): from the workspace root
-   (`workspace/`), run
+   invocations contend on the build lock and hang): from the repo root, run
    `./target/debug/scene_apply <Map>` (if that binary is missing, build it once with
-   `cargo build -p jrpg-engine-dsl --bin scene_apply`, then use `./target/debug/scene_apply <Map>`).
+   `cargo build -p scene_apply`, then use `./target/debug/scene_apply <Map>`).
    It compiles the .scene and regenerates `script_config.json`. ITERATE until it prints `<Map>: ok` (fix any COMPILE
    ERROR it reports — usually a typo, an unknown construct, or a missing `@trigger`).
 4. Do NOT edit other maps, the DSL compiler, or engine code.

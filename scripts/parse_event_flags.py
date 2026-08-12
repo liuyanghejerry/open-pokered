@@ -79,15 +79,27 @@ def to_pascal_case(name):
 
 def generate_rust_code(flags):
     """Generate the Rust event_flags module."""
-    max_bit = max(bit for _, bit in flags) if flags else 0
-    num_bytes = (max_bit // 8) + 1
+    # The original `wEventFlags` array is `flag_array NUM_EVENTS` with
+    # NUM_EVENTS = $A00 bits (see wram.asm / event_constants.asm), i.e.
+    # ($A00 + 7) / 8 = 320 bytes. The highest defined flag only needs
+    # (max_bit // 8) + 1 bytes, but SRAM always holds the full 320-byte
+    # region and bits beyond the last named flag are addressable, so the
+    # bitset storage size must match the original array.
+    num_bytes = 320
 
     lines = []
     lines.append('//! Event flag definitions — auto-generated from event_constants.asm')
     lines.append('//!')
     lines.append('//! DO NOT EDIT MANUALLY. Run scripts/parse_event_flags.py to regenerate.')
     lines.append('')
-    lines.append(f'/// Total number of event flag bytes needed (bit array storage).')
+    lines.append('/// Size of the original game\'s `wEventFlags` array, in bytes.')
+    lines.append('///')
+    lines.append('/// The original `wram.asm` declares `wEventFlags:: flag_array NUM_EVENTS`')
+    lines.append('/// with `NUM_EVENTS = $A00` (2560) bits, so the array is')
+    lines.append('/// `($A00 + 7) / 8 = 320` bytes. The highest *defined* flag (0x9DA) only')
+    lines.append('/// needs 316 bytes, but SRAM always holds the full 320-byte region, and')
+    lines.append('/// bits beyond the last named flag are still addressable — so the bitset')
+    lines.append('/// storage must match the original 320-byte layout.')
     lines.append(f'pub const EVENT_FLAGS_SIZE: usize = {num_bytes};')
     lines.append('')
     lines.append(f'/// Total number of defined event flags.')

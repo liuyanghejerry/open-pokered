@@ -75,10 +75,15 @@ pub fn evolve_party_after_battle(party: &mut [Pokemon]) -> Vec<EvolutionResult> 
 pub fn finalize_evolution(mon: &mut Pokemon, pokedex: &mut Pokedex, to: Species) -> Vec<MoveId> {
     let from = mon.species;
     apply_evolution(mon, to);
-    if let Some(nick) = mon.nickname.clone() {
-        if nick.eq_ignore_ascii_case(&format!("{:?}", from)) {
-            mon.set_nickname(format!("{:?}", to).to_uppercase());
-        }
+    // RenameEvolvedMon: a mon whose "nickname" is just its old species name
+    // is renamed to the new species name; real nicknames are kept. An unset
+    // nickname needs nothing — display_name already follows the species.
+    let mut name_buf = [0u8; crate::battle::state::NAME_TEXT_BUF];
+    if mon.has_nickname()
+        && crate::battle::state::decode_name(&mon.nickname, &mut name_buf)
+            .eq_ignore_ascii_case(pokered_data::lang_data::species_name(from, false))
+    {
+        mon.set_nickname(pokered_data::lang_data::species_name(to, false));
     }
     let mut blocked = Vec::new();
     for move_id in moves_at_level(to, mon.level) {

@@ -372,7 +372,7 @@ mod tests {
         let _ = &provider;
         Pokemon {
             species: TEST_SPECIES,
-            nickname: Some("Bud".to_string()),
+            nickname: crate::battle::state::encode_name("Bud"),
             level,
             hp: hp / 2, // damaged
             max_hp: hp,
@@ -389,7 +389,7 @@ mod tests {
             dv_bytes,
             stat_exp,
             total_exp: exp_for_level(base.growth_rate, level),
-            is_traded: false, ot_id: 0, ot_name: None,
+            is_traded: false, ot_id: 0, ot_name: [0x50; 11],
         }
     }
 
@@ -430,7 +430,7 @@ mod tests {
         let original = sample();
         let inst = original.to_monster_instance();
         let mut target = Pokemon {
-            nickname: Some("KEEPME".to_string()),
+            nickname: crate::battle::state::encode_name("KEEPME"),
             type1: PokemonType::Grass,
             type2: PokemonType::Poison,
             is_traded: true,
@@ -438,7 +438,7 @@ mod tests {
         };
         target.apply_monster_instance(&inst);
         // Pokered-only fields untouched by apply.
-        assert_eq!(target.nickname, Some("KEEPME".to_string()));
+        assert_eq!(target.nickname, crate::battle::state::encode_name("KEEPME"));
         assert!(target.is_traded);
         // Engine-relevant fields adopted from the instance.
         assert_eq!(target.species, original.species);
@@ -487,7 +487,7 @@ mod tests {
             calc_all_stats(base, dv_bytes, &stat_exp, level);
         Pokemon {
             species: TEST_SPECIES,
-            nickname: Some("Bud".to_string()),
+            nickname: crate::battle::state::encode_name("Bud"),
             level,
             hp: (hp / 3).max(1), // clearly damaged, below max
             max_hp: hp,
@@ -506,7 +506,7 @@ mod tests {
             dv_bytes,
             stat_exp,
             total_exp: exp_for_level(base.growth_rate, level),
-            is_traded: false, ot_id: 0, ot_name: None,
+            is_traded: false, ot_id: 0, ot_name: [0x50; 11],
         }
     }
 

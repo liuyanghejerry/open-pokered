@@ -72,15 +72,16 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
         obtained_badges: u8,
         last_blackout_map: MapId,
     ) -> FieldMoveOutcome {
-        let mon_name = mon.display_name();
+        let mut name_buf = [0u8; crate::battle::state::NAME_TEXT_BUF];
+        let mon_name = mon.display_name(&mut name_buf);
         match move_id {
-            MoveId::Cut => self.field_cut(obtained_badges, &mon_name),
-            MoveId::Fly => self.field_fly(obtained_badges, &mon_name),
-            MoveId::Surf => self.field_surf(obtained_badges, &mon_name),
+            MoveId::Cut => self.field_cut(obtained_badges, mon_name),
+            MoveId::Fly => self.field_fly(obtained_badges, mon_name),
+            MoveId::Surf => self.field_surf(obtained_badges, mon_name),
             MoveId::Strength => self.field_strength(obtained_badges, mon),
             MoveId::Flash => self.field_flash(obtained_badges),
             MoveId::Dig => self.field_dig(last_blackout_map),
-            MoveId::Teleport => self.field_teleport(&mon_name, last_blackout_map),
+            MoveId::Teleport => self.field_teleport(mon_name, last_blackout_map),
             MoveId::Softboiled => self.field_softboiled(mon),
             // Not a field move — the party menu never offers it.
             _ => self.field_message("This isn't the\ntime to use that!"),
@@ -291,7 +292,8 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                 self.audio_requests.push(OverworldAudioRequest::PlayCry {
                     species: format!("{:?}", mon.species),
                 });
-                let name = mon.display_name();
+                let mut name_buf = [0u8; crate::battle::state::NAME_TEXT_BUF];
+                let name = mon.display_name(&mut name_buf);
                 self.field_message(&format!(
                     "{} used\nSTRENGTH.\n{} can\nmove boulders.",
                     name, name

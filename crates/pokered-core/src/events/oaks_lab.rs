@@ -56,7 +56,7 @@ impl OaksLabStarterEvent {
                     self.phase = OaksLabStarterPhase::NamingPokemon;
                 }
                 AskNameResult::Finished(nickname) => {
-                    self.player_party.set_nickname(0, nickname).ok();
+                    self.player_party.set_nickname(0, &nickname).ok();
                     self.phase = OaksLabStarterPhase::Done;
                     self.ask_name_state = None;
                 }
@@ -73,7 +73,7 @@ impl OaksLabStarterEvent {
         if let Some(state) = &mut self.ask_name_state {
             match state.update_naming(input, is_zh) {
                 AskNameResult::Finished(nickname) => {
-                    self.player_party.set_nickname(0, nickname).ok();
+                    self.player_party.set_nickname(0, &nickname).ok();
                     self.phase = OaksLabStarterPhase::Done;
                     self.ask_name_state = None;
                 }
@@ -128,7 +128,8 @@ mod tests {
         assert!(event.is_done());
 
         let pokemon = event.player_party.get(0).unwrap();
-        assert_eq!(pokemon.display_name(), "BULBASAUR");
+        let mut buf = [0u8; crate::battle::state::NAME_TEXT_BUF];
+        assert_eq!(pokemon.display_name(&mut buf), "BULBASAUR");
     }
 
     #[test]
@@ -161,6 +162,7 @@ mod tests {
         assert_eq!(event.phase, OaksLabStarterPhase::Done);
 
         let pokemon = event.player_party.get(0).unwrap();
-        assert_eq!(pokemon.display_name(), "A");
+        let mut buf = [0u8; crate::battle::state::NAME_TEXT_BUF];
+        assert_eq!(pokemon.display_name(&mut buf), "A");
     }
 }

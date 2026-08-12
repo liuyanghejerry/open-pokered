@@ -170,26 +170,26 @@ fn hall_of_fame_records_winning_team() {
     team.add_mon(HofMon::new(
         Species::Charizard as u8,
         63,
-        vec![0x82, 0x87, 0x80, 0x91, 0x88, 0x99, 0x80, 0x91, 0x83, 0x50],
+        &[0x82, 0x87, 0x80, 0x91, 0x88, 0x99, 0x80, 0x91, 0x83, 0x50],
     ));
     team.add_mon(HofMon::new(
         Species::Alakazam as u8,
         60,
-        vec![0x80, 0x8B, 0x80, 0x8A, 0x80, 0x99, 0x80, 0x8C, 0x50],
+        &[0x80, 0x8B, 0x80, 0x8A, 0x80, 0x99, 0x80, 0x8C, 0x50],
     ));
     team.add_mon(HofMon::new(
         Species::Lapras as u8,
         58,
-        vec![0x8B, 0x80, 0x8F, 0x91, 0x80, 0x92, 0x50],
+        &[0x8B, 0x80, 0x8F, 0x91, 0x80, 0x92, 0x50],
     ));
 
     hof.push_team(team);
     assert_eq!(hof.team_count(), 1);
 
     let recorded = hof.get_team(0).unwrap();
-    assert_eq!(recorded.mons.len(), 3);
-    assert_eq!(recorded.mons[0].species, Species::Charizard as u8);
-    assert_eq!(recorded.mons[0].level, 63);
+    assert_eq!(recorded.mons().len(), 3);
+    assert_eq!(recorded.mons()[0].species, Species::Charizard as u8);
+    assert_eq!(recorded.mons()[0].level, 63);
 }
 
 #[test]
@@ -198,19 +198,19 @@ fn hall_of_fame_max_50_entries() {
 
     for i in 0..50 {
         let mut team = HofTeam::new();
-        team.add_mon(HofMon::new(i as u8, 50, vec![0x50]));
+        team.add_mon(HofMon::new(i as u8, 50, &[0x50]));
         hof.push_team(team);
     }
     assert_eq!(hof.team_count(), 50);
 
     let mut overflow_team = HofTeam::new();
-    overflow_team.add_mon(HofMon::new(200, 99, vec![0x50]));
+    overflow_team.add_mon(HofMon::new(200, 99, &[0x50]));
     hof.push_team(overflow_team);
 
     assert_eq!(hof.team_count(), 50, "Should not exceed 50 entries");
     let last = hof.get_team(49).unwrap();
     assert_eq!(
-        last.mons[0].species, 200,
+        last.mons()[0].species, 200,
         "Most recent entry should be at end"
     );
 }

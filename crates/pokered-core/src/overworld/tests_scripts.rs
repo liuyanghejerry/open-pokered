@@ -98,10 +98,10 @@ fn event_flags_raw_operations() {
 }
 
 #[test]
-fn event_flags_raw_out_of_bounds_safe() {
+fn event_flags_raw_out_of_bounds_are_noops() {
     let mut flags = EventFlags::new();
     flags.set_raw(0xFFFF);
-    assert!(flags.check_raw(0xFFFF));
+    assert!(!flags.check_raw(0xFFFF));
     flags.reset_raw(0xFFFF);
     assert!(!flags.check_raw(0xFFFF));
 }
@@ -122,10 +122,12 @@ fn event_flags_save_load_roundtrip() {
 }
 
 #[test]
-fn event_flags_size_is_316() {
-    assert_eq!(EVENT_FLAGS_SIZE, 316);
+fn event_flags_size_matches_original_wram() {
+    // The original wEventFlags array is flag_array NUM_EVENTS with
+    // NUM_EVENTS = $A00 bits → 320 bytes; SRAM holds the full region.
+    assert_eq!(EVENT_FLAGS_SIZE, 320);
     let flags = EventFlags::new();
-    assert_eq!(flags.as_bytes().len(), 316);
+    assert_eq!(flags.as_bytes().len(), 320);
 }
 
 // ══════════════════════════════════════════════════════════════════════

@@ -11,7 +11,9 @@ use pokered_renderer::input::{GbButton, InputState};
 use pokered_renderer::layer_renderer::render_layers;
 use pokered_renderer::tile::RgbaTileSet;
 use pokered_renderer::window::GameLoop;
-use pokered_renderer::{FrameBuffer, Rgba};
+// True-color demo keeps the engine's RGBA FrameBuffer (full-color
+// RgbaTileSet tilesets); the indexed facade would quantize it to 4 shades.
+use dotzuki_renderer::{FrameBuffer, Rgba};
 
 /// Tileset is 3 tiles of 8x8 pixels, laid out horizontally: 24×8 PNG.
 const TILESET_COLS: u32 = 3;
@@ -240,6 +242,10 @@ impl DemoGame {
 }
 
 impl GameLoop for DemoGame {
+    // True-color demo: stays on the engine's RGBA FrameBuffer (the demo's
+    // tilesets are full-color RgbaTileSet, not 2bpp GB tiles).
+    type Fb = FrameBuffer;
+
     fn update(&mut self, input: &InputState) {
         let step = 8.0; // one tile per press
 

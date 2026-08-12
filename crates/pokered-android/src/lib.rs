@@ -238,7 +238,9 @@ impl ApplicationHandler for AndroidGame {
                     } else {
                         draw_loading_screen(&mut self.frame_buffer, self.loading_tick);
                     }
-                    p.frame_mut().copy_from_slice(&self.frame_buffer.data);
+                    // The indexed framebuffer expands to RGBA via its display
+                    // palette; the pixels frame is exactly 160×144×4.
+                    self.frame_buffer.to_rgba(p.frame_mut());
                     if let Err(err) = p.render() {
                         log_error("pixels.render", err);
                         event_loop.exit();
@@ -311,34 +313,31 @@ impl ApplicationHandler for AndroidGame {
 fn draw_loading_screen(fb: &mut FrameBuffer, tick: u32) {
     let h = SCREEN_HEIGHT as usize;
     let w = SCREEN_WIDTH as usize;
-    let dark = [40, 40, 50, 255u8];
-    let accent = [255, 80, 80, 255u8];
+    let dark = Rgba::new(40, 40, 50, 255);
+    let accent = Rgba::new(255, 80, 80, 255);
     let bar_w = 80;
     let bar_x = (w - bar_w) / 2;
     let bar_y = h / 2 + 20;
 
-    for y in 0..h {
-        for x in 0..w {
-            let idx = (y * w + x) * 4;
-            fb.data[idx..idx + 4].copy_from_slice(&dark);
-        }
-    }
+    // RGBA facade writes quantize into the indexed buffer.
+    fb.fill_rect(0, 0, w as u32, h as u32, dark);
 
     let progress = (tick as usize / 6) % (bar_w + 10);
     let fill = if progress > bar_w { bar_w } else { progress };
     let pulse = ((tick as f32 * 0.1).sin() * 0.3 + 0.7) as f32;
-    let pulse_color = [
-        (accent[0] as f32 * pulse) as u8,
-        (accent[1] as f32 * pulse) as u8,
-        (accent[2] as f32 * pulse) as u8,
+    let pulse_color = Rgba::new(
+        (accent.r as f32 * pulse) as u8,
+        (accent.g as f32 * pulse) as u8,
+        (accent.b as f32 * pulse) as u8,
         255,
-    ];
+    );
 
     for y in bar_y..(bar_y + LOADING_BAR_H) {
         for x in bar_x..(bar_x + fill) {
-            if x >= w { continue; }
-            let idx = (y * w + x) * 4;
-            fb.data[idx..idx + 4].copy_from_slice(&pulse_color);
+            if x >= w {
+                continue;
+            }
+            fb.set_pixel(x as u32, y as u32, pulse_color);
         }
     }
 }

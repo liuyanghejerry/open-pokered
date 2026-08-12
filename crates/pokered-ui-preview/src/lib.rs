@@ -26,7 +26,7 @@ use pokered_data::moves::MoveId;
 use pokered_data::species::Species;
 use pokered_data::impl_traits::PokemonRenderData;
 use pokered_core::game_state::Lang;
-use pokered_renderer::{FrameBuffer, RenderConfig, Rgba};
+use pokered_renderer::{FbSurface, FrameBuffer, RenderConfig, Rgba};
 use pokered_ui::backends::FrameBufferPainter;
 use pokered_ui::Ui;
 
@@ -59,7 +59,10 @@ where
         let mut ui = Ui::new(&mut painter);
         draw_fn(&mut ui);
     }
-    fb.data
+    // Indexed buffer → RGBA pixels via the display palette.
+    let mut rgba = vec![0u8; (160 * 144 * 4) as usize];
+    fb.present_into(&mut rgba);
+    rgba
 }
 
 /// Build a minimal Pokemon for mock state construction,
@@ -1923,20 +1926,24 @@ mod tests {
     // face). The v2 preview renders pokered menus through the shared engine font,
     // so these snapshots track that font. Verified the new render is clean/legible
     // (pokered-app screenshots of options + main-menu) — an intentional change.
-    const GOLDEN_MAIN: u64                 = 0x2708152520481bec;
-    const GOLDEN_START: u64                = 0x39c01e00fa9daf25;
-    const GOLDEN_DIALOG: u64               = 0x00bca8cdd951c80c;
-    const GOLDEN_BATTLE_MOVE: u64          = 0x32e6d7f437e8c7f5;
-    const GOLDEN_BAG: u64                  = 0x11925ebd809db43d;
-    const GOLDEN_BATTLE_BAG: u64           = 0xa590234630604f9c;
-    const GOLDEN_POKEDEX: u64              = 0x8a3a2f5ef81eed6d;
-    const GOLDEN_YES_NO: u64               = 0x0a8743f31c0acdad;
-    const GOLDEN_OAK_SPEECH: u64           = 0x69da641919f996ec;
-    const GOLDEN_SAVE: u64                 = 0xbfe24358695a190d;
-    const GOLDEN_OPTIONS: u64              = 0x4d87ce12033ce29c;
-    const GOLDEN_NAMING: u64               = 0x3816ff8f4a7ee334;
-    const GOLDEN_BATTLE_MAIN: u64          = 0x3a3f636fd146abc5;
-    const GOLDEN_BATTLE_PARTY: u64         = 0x41ce2a3d42dacacc;
+    // NOTE: all 14 re-recorded after the PR #160 port — pokered's FrameBuffer
+    // is now RgbaIndexedFrameBuffer<GbColor> (2bpp indexed with RGBA facade),
+    // which changed the output bytes. Frames were dumped and visually verified
+    // (main/options/dialog/bag/save/naming/battle_*) before locking these in.
+    const GOLDEN_MAIN: u64                 = 0x555c2241622d304c;
+    const GOLDEN_START: u64                = 0xc6b47deb954abba5;
+    const GOLDEN_DIALOG: u64               = 0x70fcd165c797e06c;
+    const GOLDEN_BATTLE_MOVE: u64          = 0x056c79ac4b7cba74;
+    const GOLDEN_BAG: u64                  = 0x7bf0b1c7855dd23d;
+    const GOLDEN_BATTLE_BAG: u64           = 0xcbae1996d0bdd27c;
+    const GOLDEN_POKEDEX: u64              = 0xa57ba6970d36f9ed;
+    const GOLDEN_YES_NO: u64               = 0x1e909ba6b5d931c5;
+    const GOLDEN_OAK_SPEECH: u64           = 0x7a144f18ff89940c;
+    const GOLDEN_SAVE: u64                 = 0xb7155169d0120a44;
+    const GOLDEN_OPTIONS: u64              = 0xcb4d404c05f57d94;
+    const GOLDEN_NAMING: u64               = 0x89ad8c5c5fd0be84;
+    const GOLDEN_BATTLE_MAIN: u64          = 0xf3505dc326671255;
+    const GOLDEN_BATTLE_PARTY: u64         = 0xb4d0d35185567b6c;
 
     macro_rules! assert_golden {
         ($name:expr, $mock:expr, $golden:ident) => {

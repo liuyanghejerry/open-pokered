@@ -14,10 +14,11 @@ use dotzuki_engine::overworld::types::TransportMode;
 use dotzuki_engine::trigger_manager::TriggerManager;
 use dotzuki_engine::GameData;
 use dotzuki_engine::overworld::collision::CollisionProvider;
-use dotzuki_engine_script::{CutsceneManager, MapScriptConfig, ScriptEngine, ScriptLoader};
+use dotzuki_engine_script::{CutsceneManager, MapScriptConfig, ScriptLoader};
 use pokered_data::map_flags::is_city_map;
 use pokered_data::maps::MapId;
 use pokered_data::music::MusicId;
+#[cfg(feature = "script-boa")]
 use pokered_data::script_api::PokemonScriptApi;
 use pokered_data::tilesets::TilesetId;
 use rand::SeedableRng;
@@ -596,9 +597,10 @@ pub struct OverworldScreen<G: GameData = pokered_data::impl_traits::PokemonRedDa
     pub(crate) prev_b_pressed: bool,
     pub(crate) prev_up_pressed: bool,
     pub(crate) prev_down_pressed: bool,
-    pub(crate) script_engine: ScriptEngine,
+    pub(crate) script_engine: super::native_script::OverworldScriptEngine,
     pub(crate) script_loader: ScriptLoader,
     pub(crate) scene_script_provider: pokered_data::scene_loader::SceneScriptProvider,
+    pub(crate) scene_ast_provider: pokered_data::scene_loader::SceneAstProvider,
     pub(crate) map_script_config: MapScriptConfig,
     pub(crate) cutscene_manager: CutsceneManager,
     pub(crate) trigger_manager: TriggerManager,
@@ -789,6 +791,9 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
         let map_data = Some(map);
 
         let mut scene_provider = pokered_data::scene_loader::SceneScriptProvider::new();
+        // Native-interpreter disk provider: compiles .scene → AST at runtime
+        // for `--scripts-dir` (the Boa path compiles .scene → JS instead).
+        let mut scene_ast_provider = pokered_data::scene_loader::SceneAstProvider::new();
         let mut has_scenes = false;
         if let Some(ref dir) = scripts_dir {
             match scene_provider.load_from_directory(dir) {
@@ -798,6 +803,10 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                 }
                 Ok(_) => log::info!(target: "pokered::overworld", "[SceneLoader] no .scene files found, falling back to .js"),
                 Err(e) => log::warn!(target: "pokered::overworld", "[SceneLoader] .scene load error: {}", e),
+            }
+            match scene_ast_provider.load_from_directory(dir) {
+                Ok(count) => log::info!(target: "pokered::overworld", "[SceneLoader] compiled {} .scene files to ASTs", count),
+                Err(e) => log::warn!(target: "pokered::overworld", "[SceneLoader] .scene AST load error: {}", e),
             }
         }
 
@@ -845,10 +854,37 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
             }
         }
 
-        let mut script_engine = ScriptEngine::with_api(&PokemonScriptApi);
+        let mut script_engine = super::native_script::OverworldScriptEngine::new();
         let map_key = crate::overworld::script_bridge::map_id_to_script_key(start_map);
+        // Load the start map's script so its triggers work before the first
+        // `load_map_script` (Boa: raw JS; native: shared module + scene AST).
+        #[cfg(feature = "script-boa")]
         if let Some(source) = script_loader.get_script(&map_key) {
             let _ = script_engine.load_script(source);
+        }
+        #[cfg(not(feature = "script-boa"))]
+        {
+            // Same all-or-nothing convention as the JS loader: a `--scripts-dir`
+            // provider shadows the embedded ASTs entirely; otherwise the
+            // provider only holds runtime injections and misses fall back.
+            let use_disk = scene_ast_provider.disk_mode;
+            let shared = if use_disk {
+                scene_ast_provider.get_scene("shared/pokecenter").cloned()
+            } else {
+                pokered_data::embedded_scenes::get_scene_ast("shared/pokecenter")
+            };
+            if let Some(scene) = shared {
+                script_engine.register_shared_scene_native(&scene);
+            }
+            let map_scene = if use_disk {
+                scene_ast_provider.get_scene(&map_key).cloned()
+            } else {
+                pokered_data::embedded_scenes::get_scene_ast(&map_key)
+            };
+            match map_scene {
+                Some(scene) => script_engine.load_map_native(&map_key, &scene),
+                None => log::warn!(target: "pokered::overworld", "[SceneLoader] no scene AST found for start map '{}'", map_key),
+            }
         }
         let map_script_config = script_loader
             .get_config(&map_key)
@@ -916,6 +952,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
             script_engine,
             script_loader,
             scene_script_provider: scene_provider,
+            scene_ast_provider,
             map_script_config,
             cutscene_manager: CutsceneManager::new(),
             trigger_manager: TriggerManager::new(),
@@ -1030,6 +1067,37 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
         self.script_engine.set_lang(lang);
     }
 
+    /// Resolve the scene AST for `map_key` (native interpreter path). In
+    /// disk mode (`--scripts-dir`) the provider shadows the embedded ASTs
+    /// entirely, mirroring the JS loader's all-or-nothing convention. In
+    /// embedded mode the provider only carries runtime injections/overrides
+    /// (editor hot reload, asset watcher), so a miss falls back to the
+    /// embedded AST — one injected map must not shadow the other 247.
+    pub(crate) fn map_scene_ast(&self, map_key: &str) -> Option<dotzuki_engine_dsl::ast::GameScene> {
+        if self.scene_ast_provider.disk_mode {
+            return self.scene_ast_provider.get_scene(map_key).cloned();
+        }
+        self.scene_ast_provider
+            .get_scene(map_key)
+            .cloned()
+            .or_else(|| pokered_data::embedded_scenes::get_scene_ast(map_key))
+    }
+
+    /// Resolve the shared `shared/pokecenter` scene AST (native path). Same
+    /// disk/embedded fallback rule as [`map_scene_ast`](Self::map_scene_ast).
+    pub(crate) fn shared_scene_ast(&self) -> Option<dotzuki_engine_dsl::ast::GameScene> {
+        if self.scene_ast_provider.disk_mode {
+            return self
+                .scene_ast_provider
+                .get_scene("shared/pokecenter")
+                .cloned();
+        }
+        self.scene_ast_provider
+            .get_scene("shared/pokecenter")
+            .cloned()
+            .or_else(|| pokered_data::embedded_scenes::get_scene_ast("shared/pokecenter"))
+    }
+
     /// Push the configured text speed (frames between revealed characters —
     /// 1/3/5) into any active dialogue. Called by the frontend every frame.
     pub fn set_text_delay_frames(&mut self, frames: u16) {
@@ -1133,8 +1201,96 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
     pub fn reload_scene_script(&mut self, map_key: &str, js: &str) {
         self.script_loader.register_script(map_key, js);
         if map_key == crate::overworld::script_bridge::map_id_to_script_key(self.state.current_map) {
+            #[cfg(feature = "script-boa")]
             let _ = self.script_engine.load_script(js);
+            #[cfg(not(feature = "script-boa"))]
+            log::warn!(
+                target: "pokered::overworld",
+                "[NativeScript] reload_scene_script: JS-only reload is a Boa-path seam; \
+                 use reload_scene_source (raw .scene) on the native engine"
+            );
         }
+    }
+
+    /// Asset-watcher hot reload from the raw `.scene` source — works on both
+    /// engines: the native path recompiles the DSL to an AST and reloads the
+    /// current map's engine; the Boa path compiles to JS and reloads.
+    pub fn reload_scene_source(&mut self, map_key: &str, source: &str) -> Result<(), String> {
+        #[cfg(not(feature = "script-boa"))]
+        {
+            let scene = dotzuki_engine_dsl::compiler::compile_scene_to_ast(source, map_key)?;
+            self.scene_ast_provider
+                .scenes
+                .insert(map_key.to_string(), scene.clone());
+            if map_key == crate::overworld::script_bridge::map_id_to_script_key(self.state.current_map)
+            {
+                let shared = self.shared_scene_ast();
+                #[cfg_attr(not(feature = "script-boa"), allow(irrefutable_let_patterns))]
+                if let super::native_script::OverworldScriptEngine::Native(engine) =
+                    &mut self.script_engine
+                {
+                    if let Some(scene) = &shared {
+                        engine.register_shared_scene(scene);
+                    }
+                    engine.load_map(map_key, &scene);
+                }
+            }
+        }
+        #[cfg(feature = "script-boa")]
+        {
+            let js = dotzuki_engine_dsl::compiler::compile_scene_to_js(source, map_key)?;
+            self.reload_scene_script(map_key, &js);
+        }
+        Ok(())
+    }
+
+    /// Editor hot-reload from the raw `.scene` source with an optional
+    /// `script_config.json` — the browser editor's WYSIWYG injection seam
+    /// after the de-Boa refactor (compiled JS is only meaningful on the Boa
+    /// path; the native default recompiles the DSL to an AST). When `map_key`
+    /// is the current map the map is fully reloaded (`load_map_script`:
+    /// config + triggers + `on_load`, same as re-entering the map), so a
+    /// saved `.scene` edit shows up in the running game without a rebuild.
+    ///
+    /// Native path: `compile_scene_to_ast` + register in
+    /// `scene_ast_provider.scenes`, register the config JSON when given,
+    /// then re-enter the map via `load_map_script`.
+    ///
+    /// Boa path: `compile_scene_to_js` + `hot_reload_map_scripts`.
+    pub fn reload_scene_with_config(
+        &mut self,
+        map_key: &str,
+        source: &str,
+        config_json: Option<&str>,
+    ) -> Result<(), String> {
+        #[cfg(not(feature = "script-boa"))]
+        {
+            let scene = dotzuki_engine_dsl::compiler::compile_scene_to_ast(source, map_key)?;
+            self.scene_ast_provider
+                .scenes
+                .insert(map_key.to_string(), scene);
+            if let Some(json) = config_json {
+                self.script_loader
+                    .register_config_json(map_key, json)
+                    .map_err(|e| format!("config JSON for '{map_key}': {e}"))?;
+            }
+            if map_key == crate::overworld::script_bridge::map_id_to_script_key(self.state.current_map)
+            {
+                // Full map-entry reload: `load_map_script` re-creates the
+                // native engine, re-registers the shared + map scene ASTs
+                // (now including the injected one), re-applies the config
+                // and triggers, seeds flags and re-runs `on_load` — exactly
+                // like re-entering the map. No separate engine.load_map call
+                // here; that would double-load.
+                self.load_map_script(self.state.current_map);
+            }
+        }
+        #[cfg(feature = "script-boa")]
+        {
+            let js = dotzuki_engine_dsl::compiler::compile_scene_to_js(source, map_key)?;
+            self.hot_reload_map_scripts(map_key, &js, config_json)?;
+        }
+        Ok(())
     }
 
     /// Editor hot-reload: register (or override) a compiled scene script and
@@ -1157,7 +1313,14 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
         }
         if map_key == crate::overworld::script_bridge::map_id_to_script_key(self.state.current_map)
         {
+            #[cfg(feature = "script-boa")]
             self.load_map_script(self.state.current_map);
+            #[cfg(not(feature = "script-boa"))]
+            log::warn!(
+                target: "pokered::overworld",
+                "[NativeScript] hot_reload_map_scripts: the native engine reloads from .scene \
+                 source (reload_scene_source), not compiled JS — config updated, script kept"
+            );
         }
         Ok(())
     }
@@ -1249,8 +1412,9 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
         (1, 1)
     }
 
-    pub fn script_flags(&self) -> &std::collections::HashMap<String, bool> {
-        self.unified_flags.as_hashmap()
+    /// Snapshot of all live flags (bits + extras) as a name→value map.
+    pub fn script_flags(&self) -> std::collections::HashMap<String, bool> {
+        self.unified_flags.to_hashmap()
     }
 
     /// Label of the currently active script effect (e.g. "ShowDialogue",
@@ -1267,6 +1431,12 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
 
     pub fn set_script_flags(&mut self, flags: std::collections::HashMap<String, bool>) {
         self.unified_flags.merge_from(&flags);
+    }
+
+    /// Replace the event-flag bit array from SRAM bytes (the original
+    /// `wEventFlags` region). Runtime-only extras are left untouched.
+    pub fn set_event_flags_bytes(&mut self, bytes: &[u8]) {
+        self.unified_flags.load_event_bytes(bytes);
     }
 
     /// Set a script flag on BOTH the persistent `unified_flags` and the live
@@ -1607,10 +1777,10 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
         let hidden_keys: Vec<(String, String)> = self
             .unified_flags
             .iter()
-            .filter(|(key, &val)| val && key.starts_with("__OBJ_HIDDEN_"))
+            .filter(|(key, val)| *val && key.starts_with("__OBJ_HIDDEN_"))
             .map(|(key, _)| {
                 let toggle_id = key["__OBJ_HIDDEN_".len()..].to_owned();
-                (key.clone(), toggle_id)
+                (key.to_owned(), toggle_id)
             })
             .collect();
         for (_key, toggle_id) in hidden_keys {
@@ -1640,7 +1810,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
 
     pub fn run_on_load(&mut self) {
         self.script_engine
-            .seed_flags(self.unified_flags.as_hashmap());
+            .seed_flags(&self.unified_flags.to_hashmap());
 
         if let Some(fn_name) = self.map_script_config.on_load() {
             if self.script_engine.has_function(fn_name) {

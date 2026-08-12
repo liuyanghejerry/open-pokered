@@ -269,3 +269,32 @@ fn oaks_lab_dont_go_away_shoves_player_up() {
         screen.state.player.x, screen.state.player.y
     );
 }
+
+/// Regression (review F2): injecting/editing ONE map's scene must not shadow
+/// the other 247 embedded maps. The provider only carries the injected
+/// override; misses fall back to the embedded ASTs.
+#[test]
+fn injected_scene_does_not_shadow_other_maps() {
+    let mut screen = OverworldScreen::new(MapId::PalletTown, None, PokemonRedData);
+    let injected = "game_scene PalletTown { @storyline(\"editorInjected\") { setFlag(\"TEST_FLAG\") } }";
+    screen
+        .reload_scene_with_config("PalletTown", injected, None)
+        .expect("inject PalletTown scene");
+    // The injected scene replaces PalletTown's own…
+    let pallet = screen
+        .map_scene_ast("PalletTown")
+        .expect("PalletTown AST resolves");
+    assert!(
+        pallet.storylines.iter().any(|s| s.name == "editorInjected"),
+        "injected storyline must be the resolved PalletTown scene"
+    );
+    // …but every other map still resolves from the embedded table.
+    assert!(
+        screen.map_scene_ast("ViridianCity").is_some(),
+        "non-injected map must fall back to the embedded AST"
+    );
+    assert!(
+        screen.shared_scene_ast().is_some(),
+        "shared pokecenter AST must still resolve"
+    );
+}

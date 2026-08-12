@@ -1,0 +1,37 @@
+// Shared Pokémon Center dialogue — the native-AST port of `shared/pokecenter.js`.
+//
+// The original shared JS module (`maps/shared/pokecenter.js`) stays for the
+// Boa fallback path; this `.scene` is compiled to a serialized AST at build
+// time (`generate_scene_scripts` → `SCENE_ASTS`) and registered by the native
+// script engine (`pokered-core::overworld::native_script`) so
+// `talkNurse` / `talkLinkReceptionist` resolve for any map whose own
+// `script.scene` does not define them.
+//
+// Text is byte-for-byte the original English module — do not localize here
+// without also updating `pokecenter.js` (the Boa path) to keep both paths
+// identical.
+game_scene pokecenter {
+  @storyline("talkNurse") {
+    @speaker("") { "Welcome to our\n#MON CENTER!\n\nWe heal your\n#MON back to\nperfect health!" }
+    @speaker("") { "Shall we heal\nyour #MON?" }
+    @choice {
+      @option("Yes") {
+        @speaker("") { "OK. We'll need\nyour #MON." }
+        faceNpc("1", "right")
+        delay(8)
+        heal()
+        animateHealingMachine()
+        faceNpc("1", "down")
+        delay(8)
+        @speaker("") { "Thank you!\nYour #MON are\nfighting fit!" }
+      }
+      @option("No") {
+      }
+    }
+    @speaker("") { "We hope to see\nyou again!" }
+  }
+
+  @storyline("talkLinkReceptionist") {
+    @speaker("") { "Welcome to the\nCable Club!" }
+  }
+}

@@ -132,7 +132,7 @@ fn scratch_pokemon() -> Pokemon {
     use pokered_data::types::PokemonType;
     Pokemon {
         species: Species::Pikachu,
-        nickname: None,
+        nickname: [0x50; 11],
         level: 25,
         hp: 60,
         max_hp: 60,
@@ -149,7 +149,7 @@ fn scratch_pokemon() -> Pokemon {
         dv_bytes: [0xFF, 0xFF],
         stat_exp: [0; 5],
         total_exp: 0,
-        is_traded: false, ot_id: 0, ot_name: None,
+        is_traded: false, ot_id: 0, ot_name: [0x50; 11],
     }
 }
 
@@ -369,10 +369,10 @@ mod tests {
         let provider = PokeItemProvider;
         let mut inst = poisoned_pokemon().to_monster_instance();
         assert_eq!(inst.status, MonsterStatus::Poison);
-        let mut inv: Inventory<ItemId> = Inventory::new();
+        let mut inv: Inventory<ItemId, 20> = Inventory::new();
         inv.add(ItemId::Antidote, 1);
         let mut rng = ZeroRng;
-        let r = use_item::<PokeItemProvider, PokeredMonsters>(
+        let r = use_item(
             &provider,
             &PokeredMonsters,
             &mut inv,
@@ -394,10 +394,10 @@ mod tests {
             p.status = StatusCondition::None;
             p.to_monster_instance()
         };
-        let mut inv: Inventory<ItemId> = Inventory::new();
+        let mut inv: Inventory<ItemId, 20> = Inventory::new();
         inv.add(ItemId::Antidote, 1);
         let mut rng = ZeroRng;
-        let r = use_item::<PokeItemProvider, PokeredMonsters>(
+        let r = use_item(
             &provider,
             &PokeredMonsters,
             &mut inv,
@@ -433,10 +433,10 @@ mod tests {
     fn engine_use(item: ItemId, mon: &Pokemon) -> (ItemUseResult<ItemId>, bool) {
         let provider = PokeItemProvider;
         let mut inst = mon.to_monster_instance();
-        let mut inv: Inventory<ItemId> = Inventory::new();
+        let mut inv: Inventory<ItemId, 20> = Inventory::new();
         inv.add(item, 1);
         let mut rng = ZeroRng;
-        let r = use_item::<PokeItemProvider, PokeredMonsters>(
+        let r = use_item(
             &provider,
             &PokeredMonsters,
             &mut inv,
@@ -575,10 +575,10 @@ mod tests {
         let healthy = pokemon_with_status(StatusCondition::None);
         let provider = PokeItemProvider;
         let mut inst = healthy.to_monster_instance();
-        let mut inv: Inventory<ItemId> = Inventory::new();
+        let mut inv: Inventory<ItemId, 20> = Inventory::new();
         inv.add(ItemId::FullHeal, 1);
         let mut rng = ZeroRng;
-        let r = use_item::<PokeItemProvider, PokeredMonsters>(
+        let r = use_item(
             &provider,
             &PokeredMonsters,
             &mut inv,
@@ -625,10 +625,10 @@ mod tests {
     fn no_target_apply_effect_fails() {
         // `apply_effect` with no target returns Failed (and nothing consumed).
         let provider = PokeItemProvider;
-        let mut inv: Inventory<ItemId> = Inventory::new();
+        let mut inv: Inventory<ItemId, 20> = Inventory::new();
         inv.add(ItemId::FullHeal, 1);
         let mut rng = ZeroRng;
-        let r = use_item::<PokeItemProvider, PokeredMonsters>(
+        let r = use_item(
             &provider,
             &PokeredMonsters,
             &mut inv,
@@ -671,7 +671,7 @@ mod tests {
         assert_eq!(Some(unit), shop::buy_price(ItemId::Potion, 1));
 
         let mut money = 1000u32;
-        let mut inv: Inventory<ItemId> = Inventory::new();
+        let mut inv: Inventory<ItemId, 20> = Inventory::new();
         let receipt = buy(&provider, &0u8, &mut inv, &mut money, ItemId::Potion, 2).unwrap();
         assert_eq!(receipt.total, unit * 2);
         assert_eq!(money, 1000 - unit * 2);
@@ -683,7 +683,7 @@ mod tests {
         let provider = PokeShopProvider;
         let unit = provider.buy_price(&ItemId::Potion);
         let mut money = unit.saturating_sub(1);
-        let mut inv: Inventory<ItemId> = Inventory::new();
+        let mut inv: Inventory<ItemId, 20> = Inventory::new();
         let err = buy(&provider, &0u8, &mut inv, &mut money, ItemId::Potion, 1);
         assert!(err.is_err());
         assert_eq!(money, unit.saturating_sub(1)); // unchanged
@@ -697,7 +697,7 @@ mod tests {
         assert_eq!(Some(value), shop::sell_price(ItemId::Potion, 1));
 
         let mut money = 500u32;
-        let mut inv: Inventory<ItemId> = Inventory::new();
+        let mut inv: Inventory<ItemId, 20> = Inventory::new();
         inv.add(ItemId::Potion, 3);
         let receipt = sell(&provider, &0u8, &mut inv, &mut money, ItemId::Potion, 1).unwrap();
         assert_eq!(receipt.total, value);

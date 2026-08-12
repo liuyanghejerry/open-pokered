@@ -99,12 +99,12 @@ impl<'a> SramReader<'a> {
         })
     }
 
-    pub fn read_inventory(
+    pub fn read_inventory<const N: usize>(
         &mut self,
-        capacity: usize,
-    ) -> Result<crate::items::inventory::Inventory, SaveError> {
+    ) -> Result<crate::items::inventory::Inventory<N>, SaveError> {
+        let capacity = N;
         let count = self.read_u8()? as usize;
-        let mut inv = crate::items::inventory::Inventory::new(capacity);
+        let mut inv = crate::items::inventory::Inventory::<N>::new();
         for _ in 0..count {
             let item_id = self.read_u8()?;
             let qty = self.read_u8()?;

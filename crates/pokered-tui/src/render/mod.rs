@@ -143,20 +143,7 @@ pub fn draw_centered_sprite(
 /// Map every framebuffer pixel through a GB palette byte (rBGP) — same
 /// helper as pokered-app's `render::apply_gb_palette` (home/fade.asm).
 pub(crate) fn apply_gb_palette(fb: &mut FrameBuffer, pal: &dotzuki_renderer::transition::FadePalette) {
-    const SHADES: [u8; 4] = [0xFF, 0xAA, 0x55, 0x00];
-    for px in fb.data.chunks_exact_mut(4) {
-        let shade: u8 = match (px[0], px[1], px[2]) {
-            (0xFF, 0xFF, 0xFF) => 0,
-            (0xAA, 0xAA, 0xAA) => 1,
-            (0x55, 0x55, 0x55) => 2,
-            _ => 3,
-        };
-        let mapped = (pal.bgp >> (2 * shade)) & 3;
-        let v = SHADES[mapped as usize];
-        px[0] = v;
-        px[1] = v;
-        px[2] = v;
-    }
+    fb.apply_bgp(pal.bgp);
 }
 
 pub fn blit_single_tile(

@@ -109,7 +109,7 @@ mod tests {
     fn make_pokemon_with(hp: u16, speed: u16) -> Pokemon {
         Pokemon {
             species: Species::Pikachu,
-            nickname: None,
+            nickname: [0x50; 11],
             level: 50,
             hp,
             max_hp: hp,
@@ -131,7 +131,7 @@ mod tests {
             dv_bytes: [0xFF, 0xFF],
             stat_exp: [0; 5],
             total_exp: 0,
-            is_traded: false, ot_id: 0, ot_name: None,
+            is_traded: false, ot_id: 0, ot_name: [0x50; 11],
         }
     }
 
@@ -211,7 +211,7 @@ mod tests {
         let p = vec![make_pokemon_with(200, 100)];
         let e_mon = Pokemon {
             species: Species::Pikachu,
-            nickname: None,
+            nickname: [0x50; 11],
             level: 50,
             hp: 1,
             max_hp: 200,
@@ -233,7 +233,7 @@ mod tests {
             dv_bytes: [0xFF, 0xFF],
             stat_exp: [0; 5],
             total_exp: 0,
-            is_traded: false, ot_id: 0, ot_name: None,
+            is_traded: false, ot_id: 0, ot_name: [0x50; 11],
         };
         let e = vec![e_mon];
         let mut state = new_battle_state(BattleType::Wild, p, e);

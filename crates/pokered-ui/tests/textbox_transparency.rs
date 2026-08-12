@@ -7,7 +7,10 @@ use pokered_renderer::{FrameBuffer, Rgba};
 use pokered_ui::backends::FrameBufferPainter;
 use pokered_ui::{Painter, TileRect};
 
-const BG: Rgba = Rgba::rgb(0x20, 0x60, 0x20); // stand-in for the overworld map
+// Stand-in for the overworld map. Since PR #160 pokered's FrameBuffer is an
+// indexed 2bpp buffer with an RGBA facade: writes quantize to the 4 grayscale
+// GB shades, so the background must be a palette-exact shade to round-trip.
+const BG: Rgba = Rgba::rgb(85, 85, 85);
 
 fn render_box() -> FrameBuffer {
     let mut fb = FrameBuffer::new(RenderConfig::new(160, 144), BG);

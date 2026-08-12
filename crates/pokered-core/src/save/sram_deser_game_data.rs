@@ -11,7 +11,7 @@ pub fn deserialize_game_data(reader: &mut SramReader) -> Result<GameData, SaveEr
     let seen = reader.read_bytes(19)?;
     data.pokedex = Pokedex::from_flags(owned, seen);
 
-    data.bag = reader.read_inventory(20)?;
+    data.bag = reader.read_inventory::<20>()?;
     data.player_money = reader.read_bcd_money()?;
     data.rival_name = reader.read_name()?;
     data.options = GameOptions::from_byte(reader.read_u8()?);
@@ -119,7 +119,7 @@ pub fn deserialize_game_data(reader: &mut SramReader) -> Result<GameData, SaveEr
     data.grass_tile = reader.read_u8()?;
     reader.skip(4)?;
 
-    data.pc_items = reader.read_inventory(50)?;
+    data.pc_items = reader.read_inventory::<50>()?;
     data.current_box_num = reader.read_u8()?;
     reader.skip(1)?;
     data.num_hof_teams = reader.read_u8()?;

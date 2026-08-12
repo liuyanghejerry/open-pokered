@@ -128,7 +128,7 @@ mod tests {
     fn make_pokemon() -> Pokemon {
         Pokemon {
             species: Species::Pikachu,
-            nickname: None,
+            nickname: [0x50; 11],
             level: 50,
             hp: 100,
             max_hp: 100,
@@ -150,7 +150,7 @@ mod tests {
             dv_bytes: [0xFF, 0xFF],
             stat_exp: [0; 5],
             total_exp: 0,
-            is_traded: false, ot_id: 0, ot_name: None,
+            is_traded: false, ot_id: 0, ot_name: [0x50; 11],
         }
     }
 
