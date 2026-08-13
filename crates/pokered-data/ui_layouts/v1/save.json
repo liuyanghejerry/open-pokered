@@ -53,7 +53,7 @@
           "labels": [
             {
               "tx": 0,
-              "ty": 2,
+              "ty": 1,
               "text": "Now saving...",
               "color": "Black"
             }
@@ -71,7 +71,7 @@
           "labels": [
             {
               "tx": 0,
-              "ty": 2,
+              "ty": 1,
               "text": "the game!",
               "color": "Black"
             }
