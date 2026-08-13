@@ -971,6 +971,11 @@ impl NativeScriptEngine {
         self.interp.host_mut().lang = lang.to_string();
     }
 
+    /// The current script language ("en" / "zh") driving `t()` dialogue selection.
+    pub fn script_lang(&self) -> &str {
+        self.interp.host().lang()
+    }
+
     /// Whether `name` resolves to a registered function — exact name first,
     /// then the `storyline_` prefix (mirrors the Boa `resolved_fn_name`).
     pub fn has_function(&self, name: &str) -> bool {
@@ -1226,6 +1231,17 @@ impl OverworldScriptEngine {
             #[cfg(feature = "script-boa")]
             OverworldScriptEngine::Boa(e) => e.set_lang(lang),
             OverworldScriptEngine::Native(e) => e.set_lang(lang),
+        }
+    }
+
+    /// The current script language ("en" / "zh"), when the active engine
+    /// exposes it. The dormant Boa fallback keeps its language inside a
+    /// private bridge with no getter, hence `None` there.
+    pub fn script_lang(&self) -> Option<&str> {
+        match self {
+            #[cfg(feature = "script-boa")]
+            OverworldScriptEngine::Boa(_) => None,
+            OverworldScriptEngine::Native(e) => Some(e.script_lang()),
         }
     }
 
