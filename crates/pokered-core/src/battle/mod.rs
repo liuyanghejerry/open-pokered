@@ -4515,8 +4515,10 @@ mod recharge_lifecycle_tests {
 
     /// End-to-end Thrash across its lock via the production loop: turn 1 locks (menu
     /// ignored thereafter), the forced Thrash keeps dealing damage, and when the
-    /// rampage ends the mon self-confuses. Deterministic (Thrash is 100% accuracy);
-    /// a low-level attacker keeps the bulky foe alive through the whole lock.
+    /// rampage ends the mon self-confuses. Thrash's accuracy is 255, but the faithful
+    /// Gen-1 accuracy check still rolls the 1/256 miss, so the whole scenario retries
+    /// (same deflake pattern as Pay Day / Mimic); a low-level attacker keeps the bulky
+    /// foe alive through the whole lock.
     #[test]
     fn thrash_lock_lifecycle_then_confuses() {
         use crate::battle::state::status1::{CONFUSED, THRASHING_ABOUT};
@@ -4527,28 +4529,40 @@ mod recharge_lifecycle_tests {
         let thrashing = |s: &BattleScreen| s.battle_state.as_ref().unwrap().player.has_status1(THRASHING_ABOUT);
         let confused = |s: &BattleScreen| s.battle_state.as_ref().unwrap().player.has_status1(CONFUSED);
 
-        let player = vec![mk(Species::Tauros, 10, [MoveId::Thrash, MoveId::Growl, MoveId::None, MoveId::None])];
-        let enemy = vec![mk(Species::Snorlax, 100, [MoveId::Growl, MoveId::Growl, MoveId::Growl, MoveId::Growl])];
-        let mut screen = BattleScreen::from_parties(true, &player, &enemy, None);
-        let full = enemy_hp(&screen);
+        for _attempt in 0..8 {
+            let player = vec![mk(Species::Tauros, 10, [MoveId::Thrash, MoveId::Growl, MoveId::None, MoveId::None])];
+            let enemy = vec![mk(Species::Snorlax, 100, [MoveId::Growl, MoveId::Growl, MoveId::Growl, MoveId::Growl])];
+            let mut screen = BattleScreen::from_parties(true, &player, &enemy, None);
+            let full = enemy_hp(&screen);
 
-        // Turn 1 — select Thrash: locks + deals damage.
-        screen.execute_turn_with_move(0);
-        assert!(thrashing(&screen), "Thrash locks the mon");
-        assert!(enemy_hp(&screen) < full, "Thrash dealt damage on turn 1");
-
-        // Subsequent turns pass Growl's slot (1); the lock must FORCE Thrash until it
-        // exhausts (bounded loop), after which the mon self-confuses.
-        for _ in 0..5 {
-            if !thrashing(&screen) {
-                break;
+            // Turn 1 — select Thrash: locks + deals damage.
+            screen.execute_turn_with_move(0);
+            if !thrashing(&screen) || enemy_hp(&screen) >= full {
+                continue; // the 1/256 miss on turn 1: retry the whole scenario
             }
-            let before = enemy_hp(&screen);
-            screen.execute_turn_with_move(1); // menu says Growl (power 0); lock forces Thrash
-            assert!(enemy_hp(&screen) < before, "the forced Thrash keeps hitting (menu ignored)");
+
+            // Subsequent turns pass Growl's slot (1); the lock must FORCE Thrash until it
+            // exhausts (bounded loop), after which the mon self-confuses.
+            let mut connected = true;
+            for _ in 0..5 {
+                if !thrashing(&screen) {
+                    break;
+                }
+                let before = enemy_hp(&screen);
+                screen.execute_turn_with_move(1); // menu says Growl (power 0); lock forces Thrash
+                if enemy_hp(&screen) >= before {
+                    connected = false; // another 1/256 miss: retry
+                    break;
+                }
+            }
+            if !connected {
+                continue;
+            }
+            if !thrashing(&screen) && confused(&screen) {
+                return; // rampage ended → self-confused; lock + menu-ignore confirmed
+            }
         }
-        assert!(!thrashing(&screen), "the rampage ended within its 2–3 turn lock");
-        assert!(confused(&screen), "the mon self-confused after the rampage");
+        panic!("Thrash never completed its lock without a 1/256 miss across 8 attempts");
     }
 
     /// last_move_used records the move each side actually executed this turn (the

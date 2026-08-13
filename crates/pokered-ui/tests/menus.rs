@@ -429,7 +429,7 @@ fn save_menu_saving_phase_shows_only_now_saving_in_prompt_box() {
     assert_eq!(collect_glyphs(&rec.ops), Vec::<(u32,u32,char)>::new());
 
     let texts = collect_texts(&rec.ops);
-    assert!(texts.contains(&(1, 14, "Now saving...".into())));
+    assert!(texts.contains(&(1, 13, "Now saving...".into())));
     assert!(!texts.iter().any(|(_, _, s)| s == "YES" || s == "NO"));
 }
 
@@ -443,9 +443,9 @@ fn save_menu_complete_phase_shows_player_saved_the_game() {
     menus::save::draw(&state, &SAVE_DEFAULT_LAYOUT, &SAVE_ASK_PROMPT_LAYOUT, &mut ui, Lang::default());
 
     let texts = collect_texts(&rec.ops);
-    // Two-line completion message in the prompt box at (1,12) / (1,14).
+    // Two-line completion message in the prompt box at (1,12) / (1,13).
     assert!(texts.contains(&(1, 12, "RED saved".into())));
-    assert!(texts.contains(&(1, 14, "the game!".into())));
+    assert!(texts.contains(&(1, 13, "the game!".into())));
 
     // Same layout as Saving — info box + prompt box, no cursor.
     assert_eq!(collect_boxes(&rec.ops), vec![

@@ -722,6 +722,14 @@ impl PokemonGame {
             None
         };
 
+        // The script engine language starts from the saved/default config;
+        // the LanguageSelect screen re-syncs it whenever the choice changes.
+        overworld.set_script_lang(if state.config.language == pokered_core::game_state::Lang::Zh {
+            "zh"
+        } else {
+            "en"
+        });
+
         Self {
             state,
             title_screen,
@@ -1437,6 +1445,11 @@ impl PokemonGame {
                         overworld.party_count = self.save_data.party.count() as u8;
                         overworld.party_lead_level = self.save_data.party.leader_level();
                         overworld.run_on_load();
+                        overworld.set_script_lang(if self.state.config.language == pokered_core::game_state::Lang::Zh {
+                            "zh"
+                        } else {
+                            "en"
+                        });
                         self.overworld = overworld;
                         pokered_core::log_save!(
                             "continue: overworld created: player x={}, y={}, map={:?}",
@@ -1491,6 +1504,11 @@ impl PokemonGame {
                         overworld.rival_name = self.rival_name.clone();
                         overworld.party_count = self.save_data.party.count() as u8;
                         overworld.party_lead_level = self.save_data.party.leader_level();
+                        overworld.set_script_lang(if self.state.config.language == pokered_core::game_state::Lang::Zh {
+                            "zh"
+                        } else {
+                            "en"
+                        });
                         self.overworld = overworld;
                         if let Some(ref audio) = self.audio {
                             audio.play_music(MusicId::PALLET_TOWN);
@@ -2384,7 +2402,7 @@ impl PokemonGame {
             }
             GameScreen::LanguageSelect => {
                 use pokered_core::game_state::Lang;
-                if input.is_just_pressed(GbButton::Up) || input.is_just_pressed(GbButton::Down) {
+                let action = if input.is_just_pressed(GbButton::Up) || input.is_just_pressed(GbButton::Down) {
                     self.state.config.language = match self.state.config.language {
                         Lang::En => Lang::Zh,
                         Lang::Zh => Lang::En,
@@ -2394,7 +2412,15 @@ impl PokemonGame {
                     ScreenAction::Transition(GameScreen::IntroScene)
                 } else {
                     ScreenAction::Continue
-                }
+                };
+                // Keep the overworld script engine in sync with the chosen
+                // language so NPC dialogue (`@t` literals) renders in it.
+                self.overworld.set_script_lang(if self.state.config.language == Lang::Zh {
+                    "zh"
+                } else {
+                    "en"
+                });
+                action
             }
             GameScreen::IntroScene => {
                 let any_pressed = input.any_just_pressed();
