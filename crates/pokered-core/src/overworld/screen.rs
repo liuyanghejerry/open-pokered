@@ -1067,6 +1067,12 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
         self.script_engine.set_lang(lang);
     }
 
+    /// The script engine's current language ("en" / "zh"), when the active
+    /// engine exposes it. Drives `t()` dialogue selection in map scenes.
+    pub fn script_lang(&self) -> Option<&str> {
+        self.script_engine.script_lang()
+    }
+
     /// Resolve the scene AST for `map_key` (native interpreter path). In
     /// disk mode (`--scripts-dir`) the provider shadows the embedded ASTs
     /// entirely, mirroring the JS loader's all-or-nothing convention. In
