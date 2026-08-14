@@ -16,7 +16,7 @@ game_scene BluesHouse {
   // ── Daisy, sitting (npc 1) — gives the TOWN MAP ─────────────────────────
   // BluesHouseDaisySittingText: three-way branch on POKeDEX / TOWN MAP events.
   @storyline("talkDaisySitting") {
-    @trigger(map = "BluesHouse", npc = 1)
+    @trigger(map = "BluesHouse", npc = 1, toggle = "BLUESHOUSE_DAISY1")
     @if (getFlag("EVENT_GOT_TOWN_MAP")) {
       // Already have the map.
       @speaker("") {
@@ -29,7 +29,7 @@ game_scene BluesHouse {
       }
       giveItem("TOWN_MAP", 1)
       // Hide the TOWN MAP object on the table (TOGGLE_TOWN_MAP = npc 3).
-      hideObjectByName("BLUES_HOUSE_OBJ_3")
+      hideObjectByName("BLUESHOUSE_TOWN_MAP")
       @speaker("") {
         @t("<PLAYER> got a TOWN MAP!", "<PLAYER>得到了城镇地图！")
       }
@@ -45,7 +45,7 @@ game_scene BluesHouse {
 
   // ── Daisy, walking (npc 2) — POKeMON-rest tip ───────────────────────────
   @storyline("talkDaisyWalking") {
-    @trigger(map = "BluesHouse", npc = 2)
+    @trigger(map = "BluesHouse", npc = 2, toggle = "BLUESHOUSE_DAISY2", hidden = true)
     @speaker("") {
       @t("POKeMON are living things!\nIf they get tired, give them\na rest!", "宝可梦也是有生命的！如果它们\n累了，就让它们休息吧！")
     }
@@ -53,7 +53,7 @@ game_scene BluesHouse {
 
   // ── TOWN MAP object on the table (npc 3) ────────────────────────────────
   @storyline("talkTownMap") {
-    @trigger(map = "BluesHouse", npc = 3)
+    @trigger(map = "BluesHouse", npc = 3, toggle = "BLUESHOUSE_TOWN_MAP")
     @speaker("") {
       @t("It's a big map! This is\nuseful!", "好大的地图！这个真有用！")
     }
