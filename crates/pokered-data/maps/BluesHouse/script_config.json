@@ -4,15 +4,19 @@
   "npcs": [
     {
       "id": 1,
-      "talk": "talkDaisySitting"
+      "talk": "talkDaisySitting",
+      "toggleId": "BLUESHOUSE_DAISY1"
     },
     {
       "id": 2,
-      "talk": "talkDaisyWalking"
+      "talk": "talkDaisyWalking",
+      "toggleId": "BLUESHOUSE_DAISY2",
+      "defaultHidden": true
     },
     {
       "id": 3,
-      "talk": "talkTownMap"
+      "talk": "talkTownMap",
+      "toggleId": "BLUESHOUSE_TOWN_MAP"
     }
   ],
   "onLoad": "BluesHouseOnLoad",

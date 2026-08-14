@@ -69,11 +69,13 @@
     },
     {
       "id": 9,
-      "talk": "itemHpUp"
+      "talk": "itemHpUp",
+      "toggleId": "SILPH_CO_6F_OBJ_9"
     },
     {
       "id": 10,
-      "talk": "itemXAccuracy"
+      "talk": "itemXAccuracy",
+      "toggleId": "SILPH_CO_6F_OBJ_10"
     }
   ],
   "onLoad": "SilphCo6FOnLoad",
