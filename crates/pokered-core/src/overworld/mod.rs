@@ -67,6 +67,8 @@ mod tests_oaks_lab;
 #[cfg(test)]
 mod tests_scripts;
 #[cfg(test)]
+mod tests_toggle_objects;
+#[cfg(test)]
 mod tests_special_terrain;
 #[cfg(test)]
 mod tests_wild_encounters;

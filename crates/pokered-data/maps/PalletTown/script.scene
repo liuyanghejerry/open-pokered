@@ -53,18 +53,34 @@ game_scene PalletTown {
       setJoyIgnore(0x0F | 0xF0)
       // Inlined palletTownPlayerFollowsOak: hand off to the Rust
       // followNpc state machine — Oak leads the player to the lab
-      // door at (12, 11), the player shadows Oak's trail.
-      followNpc("PALLET_TOWN_OBJ_1", 12, 11)
+      // door. The target is the cell just south of the door warp tile
+      // (12, 11): ending the follow ON a warp tile would fire the warp
+      // before the hideObject cleanup below runs — warp fades freeze
+      // script execution and the leftover effect is dropped on commit,
+      // leaving Oak stuck visible in Pallet Town. Same stop-short
+      // pattern as the PewterCity escort scenes.
+      followNpc("PALLET_TOWN_OBJ_1", 12, 12)
       hideObject("PALLET_TOWN_OBJ_1")
-      setFlag("EVENT_FOLLOWED_OAK_INTO_LAB")
+      // EVENT_FOLLOWED_OAK_INTO_LAB is set by the OaksLab @load entry
+      // cutscene (orig OaksLabFollowedOakScript), not here — setting it
+      // here would skip the lab's entry animation.
       clearJoyIgnore()
+      // Walk the final step onto the door tile to trigger the lab warp,
+      // now that Oak is hidden. An explicit movePlayer path is required:
+      // the door tile is unwalkable, so movePlayerTo's path planner
+      // would refuse it.
+      movePlayer([[12, 11]])
     }
     // Inlined palletTownDaisy
+    // The original toggles Daisy's two BluesHouse sprites (sitting → walking)
+    // via TOGGLE_DAISY_SITTING / TOGGLE_DAISY_WALKING. Those bits live in the
+    // global toggleable_object_flags and are picked up when BluesHouse loads —
+    // the PalletTown Girl/Fisher NPCs must NOT be touched.
     @if (!getFlag("EVENT_DAISY_WALKING")) {
       @if (getFlag("EVENT_GOT_TOWN_MAP") && getFlag("EVENT_ENTERED_BLUES_HOUSE")) {
         setFlag("EVENT_DAISY_WALKING")
-        hideObject("PALLET_TOWN_OBJ_2")
-        showObject("PALLET_TOWN_OBJ_3")
+        hideObject("BLUESHOUSE_DAISY1")
+        showObject("BLUESHOUSE_DAISY2")
       }
     }
     @if (getFlag("EVENT_GOT_POKEBALLS_FROM_OAK")) {
