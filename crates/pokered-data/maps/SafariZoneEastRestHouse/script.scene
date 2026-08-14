@@ -27,4 +27,10 @@ game_scene SafariZoneEastRestHouse {
       @t("Whew! I'm tired from all the\nfun!", "呼！玩得这么开心，好累呀！")
     }
   }
+
+  // ── PC (sign 1 at 13,3) — OpenPokemonCenterPC ──
+  @storyline("pcSign1") {
+    @trigger(map = "SafariZoneEastRestHouse", sign = 1)
+    openPC()
+  }
 }

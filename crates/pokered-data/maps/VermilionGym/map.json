@@ -166,6 +166,21 @@
       "x": 9,
       "y": 11,
       "textId": 15
+    },
+    {
+      "x": 3,
+      "y": 14,
+      "textId": 16
+    },
+    {
+      "x": 6,
+      "y": 14,
+      "textId": 17
+    },
+    {
+      "x": 6,
+      "y": 1,
+      "textId": 18
     }
   ],
   "text": {
@@ -494,6 +509,44 @@
         {
           "line1": "Whew! That match",
           "line2": "was electric!"
+        }
+      ]
+    },
+    "sign": {
+      "1": [
+        {
+          "line1": "",
+          "line2": ""
+        }
+      ],
+      "2": [
+        {
+          "line1": "",
+          "line2": ""
+        }
+      ],
+      "3": [
+        {
+          "line1": "Nope, there's",
+          "line2": "only trash here."
+        }
+      ],
+      "16": [
+        {
+          "line1": "",
+          "line2": ""
+        }
+      ],
+      "17": [
+        {
+          "line1": "",
+          "line2": ""
+        }
+      ],
+      "18": [
+        {
+          "line1": "Nope, there's",
+          "line2": "only trash here."
         }
       ]
     }

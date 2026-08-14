@@ -74,6 +74,11 @@
       "x": 13,
       "y": 3,
       "textId": 1
+    },
+    {
+      "x": 0,
+      "y": 4,
+      "textId": 2
     }
   ],
   "text": {
@@ -131,7 +136,18 @@
         }
       ]
     },
-    "sign": {}
+    "sign": {
+      "2": [
+        {
+          "line1": "BILL has lots of",
+          "line2": "POKeMON!"
+        },
+        {
+          "line1": "He collects rare",
+          "line2": ""
+        }
+      ]
+    }
   },
   "wild": null
 }

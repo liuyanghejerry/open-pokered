@@ -8,12 +8,14 @@ game_scene CeladonMart2F {
   // ── Clerk1 (npc 1) — item counter (script_mart) ──────────────────────────
   @storyline("talkClerk1") {
     @trigger(map = "CeladonMart2F", npc = 1)
+    @say("") { @t("Hi there!\n\nMay I help you?", "你好！\n\n需要帮忙吗？") }
     openShop(["GreatBall", "SuperPotion", "Revive", "SuperRepel", "Antidote", "BurnHeal", "IceHeal", "Awakening", "ParlyzHeal"])
   }
 
   // ── Clerk2 (npc 2) — TM counter (script_mart) ────────────────────────────
   @storyline("talkClerk2") {
     @trigger(map = "CeladonMart2F", npc = 2)
+    @say("") { @t("Hi there!\n\nMay I help you?", "你好！\n\n需要帮忙吗？") }
     openShop(["Tm32", "Tm33", "Tm02", "Tm07", "Tm37", "Tm01", "Tm05", "Tm09", "Tm17"])
   }
 

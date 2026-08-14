@@ -8,6 +8,7 @@ game_scene CeladonMart4F {
   // ── Clerk (npc 1) — 4F shop: POKE DOLL + evolution stones ──────────────
   @storyline("talkClerk") {
     @trigger(map = "CeladonMart4F", npc = 1)
+    @say("") { @t("Hi there!\n\nMay I help you?", "你好！\n\n需要帮忙吗？") }
     openShop(["PokeDoll", "FireStone", "ThunderStone", "WaterStone", "LeafStone"])
   }
 

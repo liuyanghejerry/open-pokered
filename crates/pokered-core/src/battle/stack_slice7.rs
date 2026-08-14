@@ -132,7 +132,7 @@ mod slice7_tests {
         let mut at_minus_1 = SecondaryScenario::base("poison thr-1 FIRES", mv);
         at_minus_1.first = hit();
         at_minus_1.second = miss();
-        at_minus_1.first_side_effect = 101; // 101 < 102 → FIRES
+        at_minus_1.first_side_effect = 102; // 102 < 103 → FIRES
         at_minus_1.second_side_effect = 255;
         run_scenario_secondary(&at_minus_1);
         let (s1, c1, _f, _e) = stack_run_secondary(&at_minus_1);
@@ -141,7 +141,7 @@ mod slice7_tests {
         let mut at_threshold = SecondaryScenario::base("poison thr does NOT fire", mv);
         at_threshold.first = hit();
         at_threshold.second = miss();
-        at_threshold.first_side_effect = 102; // 102 >= 102 → does NOT fire
+        at_threshold.first_side_effect = 103; // 103 >= 103 → does NOT fire
         at_threshold.second_side_effect = 255;
         run_scenario_secondary(&at_threshold);
         let (s2, c2, _f2, _e2) = stack_run_secondary(&at_threshold);

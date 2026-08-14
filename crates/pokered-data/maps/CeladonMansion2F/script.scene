@@ -10,4 +10,10 @@ game_scene CeladonMansion2F {
     @trigger(map = "CeladonMansion2F", sign = 1)
     @speaker("") { @t("GAME FREAK Meeting Room", "GAME FREAK 会议室") }
   }
+
+  // ── PC (sign 2 at 0,5) — OpenPokemonCenterPC ──
+  @storyline("pcSign2") {
+    @trigger(map = "CeladonMansion2F", sign = 2)
+    openPC()
+  }
 }

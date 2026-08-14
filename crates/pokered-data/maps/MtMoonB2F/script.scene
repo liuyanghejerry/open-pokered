@@ -28,7 +28,7 @@ game_scene MtMoonB2F {
       @speaker("") {
         @t("Hey, stop!\n\nI found these fossils!\nThey're both mine!", "嘿，站住！\n\n这些化石是我发现的！都是我\n的！")
       }
-      result = startBattle("OPP_SUPER_NERD3")
+      result = startBattle("OPP_SUPER_NERD2")
       @if (result == "win") {
         @speaker("") {
           @t("OK! I'll share!", "好吧！我分你一份！")

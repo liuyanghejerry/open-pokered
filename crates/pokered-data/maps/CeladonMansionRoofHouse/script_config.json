@@ -12,5 +12,14 @@
       "toggleId": "CELADON_MANSION_ROOF_HOUSE_OBJ_2"
     }
   ],
-  "signs": []
+  "signs": [
+    {
+      "id": 2,
+      "talk": "linkCableHelp"
+    },
+    {
+      "id": 3,
+      "talk": "linkCableHelp"
+    }
+  ]
 }

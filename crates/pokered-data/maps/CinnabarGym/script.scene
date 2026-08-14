@@ -90,7 +90,7 @@ game_scene CinnabarGym {
           result = startBattle("OPP_SUPER_NERD9")
           @if (result == "win") {
             setFlag("EVENT_BEAT_CINNABAR_GYM_TRAINER_0")
-            @speaker("") { @t("Argh! The gate is all yours!", "呃啊！大门是你的了！") }
+            @speaker("") { @t("Yow!\nHot, hot, hot!", "哎哟！\n好烫，好烫，好烫！") }
             playSound("SFX_GO_INSIDE")
             hideObjectByName("CINNABAR_GYM_OBJ_2")
           }
@@ -132,7 +132,7 @@ game_scene CinnabarGym {
           result = startBattle("OPP_BURGLAR4")
           @if (result == "win") {
             setFlag("EVENT_BEAT_CINNABAR_GYM_TRAINER_1")
-            @speaker("") { @t("Argh! The gate is all yours!", "呃啊！大门是你的了！") }
+            @speaker("") { @t("I\nsurrender!", "我\n投降了！") }
             playSound("SFX_GO_INSIDE")
             hideObjectByName("CINNABAR_GYM_OBJ_3")
           }
@@ -168,7 +168,7 @@ game_scene CinnabarGym {
           result = startBattle("OPP_SUPER_NERD10")
           @if (result == "win") {
             setFlag("EVENT_BEAT_CINNABAR_GYM_TRAINER_2")
-            @speaker("") { @t("Argh! The gate is all yours!", "呃啊！大门是你的了！") }
+            @speaker("") { @t("Waah!\nMy studies!", "哇！\n我的研究啊！") }
             playSound("SFX_GO_INSIDE")
             hideObjectByName("CINNABAR_GYM_OBJ_4")
           }
@@ -204,7 +204,7 @@ game_scene CinnabarGym {
           result = startBattle("OPP_BURGLAR5")
           @if (result == "win") {
             setFlag("EVENT_BEAT_CINNABAR_GYM_TRAINER_3")
-            @speaker("") { @t("Argh! The gate is all yours!", "呃啊！大门是你的了！") }
+            @speaker("") { @t("Too hot\nto handle!", "烫得\n受不了！") }
             playSound("SFX_GO_INSIDE")
             hideObjectByName("CINNABAR_GYM_OBJ_5")
           }
@@ -240,7 +240,7 @@ game_scene CinnabarGym {
           result = startBattle("OPP_SUPER_NERD11")
           @if (result == "win") {
             setFlag("EVENT_BEAT_CINNABAR_GYM_TRAINER_4")
-            @speaker("") { @t("Argh! The gate is all yours!", "呃啊！大门是你的了！") }
+            @speaker("") { @t("Ow!", "痛！") }
             playSound("SFX_GO_INSIDE")
             hideObjectByName("CINNABAR_GYM_OBJ_6")
           }
@@ -270,7 +270,7 @@ game_scene CinnabarGym {
           result = startBattle("OPP_BURGLAR6")
           @if (result == "win") {
             setFlag("EVENT_BEAT_CINNABAR_GYM_TRAINER_5")
-            @speaker("") { @t("Argh! The gate is all yours!", "呃啊！大门是你的了！") }
+            @speaker("") { @t("Yowza!\nToo hot!", "哎哟喂！\n太烫了！") }
             playSound("SFX_GO_INSIDE")
             hideObjectByName("CINNABAR_GYM_OBJ_7")
           }
@@ -312,7 +312,7 @@ game_scene CinnabarGym {
           result = startBattle("OPP_SUPER_NERD12")
           @if (result == "win") {
             setFlag("EVENT_BEAT_CINNABAR_GYM_TRAINER_6")
-            @speaker("") { @t("Argh! The gate is all yours!", "呃啊！大门是你的了！") }
+            @speaker("") { @t("Oh!\nSnuffed out!", "哦！\n被扑灭了！") }
             playSound("SFX_GO_INSIDE")
             hideObjectByName("CINNABAR_GYM_OBJ_8")
           }
@@ -332,6 +332,16 @@ game_scene CinnabarGym {
       @speaker("") {
         @t("Yo! Champ in making!\n\nThe hot-headed BLAINE is a\nfire POKeMON pro!\n\nDouse his spirits with\nwater!\n\nYou better take some BURN\nHEALs!", "哟！未来的冠军！\n\n急性子的夏伯是火系宝可梦专\n家！\n\n用水浇灭他的气焰！\n\n你最好带上些灼伤药！")
       }
+    }
+  }
+
+  // ── Gym statue (sign 1 at 17,13) — badge-conditional ──
+  @storyline("gymStatue1") {
+    @trigger(map = "CinnabarGym", sign = 1)
+    @if (getFlag("EVENT_BEAT_BLAINE")) {
+      @speaker("") { @t("CINNABAR ISLAND\nPOKeMON GYM\nLEADER: BLAINE\n\nWINNING TRAINERS:\n<RIVAL>\n<PLAYER>", "红莲岛宝可梦道馆\n馆主：夏伯\n\n获胜训练家：\n劲敌\n玩家") }
+    } @else {
+      @speaker("") { @t("CINNABAR ISLAND\nPOKeMON GYM\nLEADER: BLAINE\n\nWINNING TRAINERS:\n<RIVAL>", "红莲岛宝可梦道馆\n馆主：夏伯\n\n获胜训练家：\n劲敌") }
     }
   }
 }

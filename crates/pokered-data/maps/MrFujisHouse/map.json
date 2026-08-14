@@ -91,7 +91,23 @@
       "isTrainer": false
     }
   ],
-  "signs": [],
+  "signs": [
+    {
+      "x": 0,
+      "y": 1,
+      "textId": 1
+    },
+    {
+      "x": 1,
+      "y": 1,
+      "textId": 2
+    },
+    {
+      "x": 7,
+      "y": 1,
+      "textId": 3
+    }
+  ],
   "text": {
     "npc": {
       "1": [
@@ -250,6 +266,50 @@
         {
           "line1": "Gone! It's been",
           "line2": "clipped out!"
+        }
+      ]
+    },
+    "sign": {
+      "1": [
+        {
+          "line1": "POKeMON magazines!",
+          "line2": ""
+        },
+        {
+          "line1": "POKeMON notebooks!",
+          "line2": ""
+        },
+        {
+          "line1": "POKeMON graphs!",
+          "line2": ""
+        }
+      ],
+      "2": [
+        {
+          "line1": "POKeMON magazines!",
+          "line2": ""
+        },
+        {
+          "line1": "POKeMON notebooks!",
+          "line2": ""
+        },
+        {
+          "line1": "POKeMON graphs!",
+          "line2": ""
+        }
+      ],
+      "3": [
+        {
+          "line1": "POKeMON magazines!",
+          "line2": ""
+        },
+        {
+          "line1": "POKeMON notebooks!",
+          "line2": ""
+        },
+        {
+          "line1": "POKeMON graphs!",
+          "line2": ""
         }
       ]
     }

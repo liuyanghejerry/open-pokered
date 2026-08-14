@@ -193,7 +193,7 @@ mod tests {
         EffectRandoms {
             side_effect_roll: 0,
             duration_roll: 3,
-            multi_hit_roll: 0,
+            multi_hit_roll: 0, stat_down_miss_roll: 255,
         }
     }
 
@@ -203,7 +203,7 @@ mod tests {
         let randoms = EffectRandoms {
             side_effect_roll: 0,
             duration_roll: 0,
-            multi_hit_roll: 0,
+            multi_hit_roll: 0, stat_down_miss_roll: 255,
         };
         let result = apply_flinch_side(&mut state, &randoms, 26);
         assert_eq!(result, EffectResult::FlinchApplied);
@@ -216,7 +216,7 @@ mod tests {
         let randoms = EffectRandoms {
             side_effect_roll: 200,
             duration_roll: 0,
-            multi_hit_roll: 0,
+            multi_hit_roll: 0, stat_down_miss_roll: 255,
         };
         let result = apply_flinch_side(&mut state, &randoms, 26);
         assert_eq!(result, EffectResult::NoEffect);
@@ -230,7 +230,7 @@ mod tests {
         let randoms = EffectRandoms {
             side_effect_roll: 0,
             duration_roll: 0,
-            multi_hit_roll: 0,
+            multi_hit_roll: 0, stat_down_miss_roll: 255,
         };
         let result = apply_flinch_side(&mut state, &randoms, 26);
         assert_eq!(result, EffectResult::StatusFailed);
@@ -262,7 +262,7 @@ mod tests {
         let randoms = EffectRandoms {
             side_effect_roll: 200,
             duration_roll: 3,
-            multi_hit_roll: 0,
+            multi_hit_roll: 0, stat_down_miss_roll: 255,
         };
         let result = apply_confusion_side(&mut state, &randoms, 26);
         assert_eq!(result, EffectResult::NoEffect);

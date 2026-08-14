@@ -47,8 +47,9 @@ game_scene GameCornerPrizeRoom {
     } @else {
       @speaker("") { @t("We exchange your coins for\nprizes.", "我们用代币换取奖品。") }
       @speaker("") { @t("Which prize do you want?", "你想要哪个奖品？") }
+            @if (getGameVersion() == 0) {
       @choice {
-        @option(@t("ABRA      180", "凯西 180")) {
+        @option(@t("ABRA     180", "凯西 180")) {
           @if (hasCoins(180)) {
             givePokemon("ABRA", 9)
             takeCoins(180)
@@ -57,7 +58,7 @@ game_scene GameCornerPrizeRoom {
             @speaker("") { @t("Sorry, you need more coins.", "对不起，你需要更多代币。") }
           }
         }
-        @option(@t("CLEFAIRY  500", "皮皮 500")) {
+        @option(@t("CLEFAIRY     500", "皮皮 500")) {
           @if (hasCoins(500)) {
             givePokemon("CLEFAIRY", 8)
             takeCoins(500)
@@ -66,7 +67,7 @@ game_scene GameCornerPrizeRoom {
             @speaker("") { @t("Sorry, you need more coins.", "对不起，你需要更多代币。") }
           }
         }
-        @option(@t("NIDORINA 1200", "尼多娜 1200")) {
+        @option(@t("NIDORINA    1200", "尼多娜 1200")) {
           @if (hasCoins(1200)) {
             givePokemon("NIDORINA", 17)
             takeCoins(1200)
@@ -79,10 +80,44 @@ game_scene GameCornerPrizeRoom {
           @speaker("") { @t("Oh, fine then.", "那好吧。") }
         }
       }
+      } @else {
+      @choice {
+        @option(@t("ABRA     120", "凯西 120")) {
+          @if (hasCoins(120)) {
+            givePokemon("ABRA", 6)
+            takeCoins(120)
+            @speaker("") { @t("Here you go!", "给你！") }
+          } @else {
+            @speaker("") { @t("Sorry, you need more coins.", "对不起，你需要更多代币。") }
+          }
+        }
+        @option(@t("CLEFAIRY     750", "皮皮 750")) {
+          @if (hasCoins(750)) {
+            givePokemon("CLEFAIRY", 12)
+            takeCoins(750)
+            @speaker("") { @t("Here you go!", "给你！") }
+          } @else {
+            @speaker("") { @t("Sorry, you need more coins.", "对不起，你需要更多代币。") }
+          }
+        }
+        @option(@t("NIDORINO    1200", "尼多力诺 1200")) {
+          @if (hasCoins(1200)) {
+            givePokemon("NIDORINO", 17)
+            takeCoins(1200)
+            @speaker("") { @t("Here you go!", "给你！") }
+          } @else {
+            @speaker("") { @t("Sorry, you need more coins.", "对不起，你需要更多代币。") }
+          }
+        }
+        @option(@t("NO THANKS", "不用了")) {
+          @speaker("") { @t("Oh, fine then.", "那好吧。") }
+        }
+      }
+      }
     }
   }
 
-  // ── Prize vendor counter 2 (sign 2) — POKeMON prizes set 2 ─────────────
+// ── Prize vendor counter 2 (sign 2) — POKeMON prizes set 2 ─────────────
   // RED prizes: DRATINI L18 / 2800, SCYTHER L25 / 5500, PORYGON L26 / 9999.
   @storyline("prizeVendor2") {
     @trigger(map = "GameCornerPrizeRoom", sign = 2)
@@ -91,8 +126,9 @@ game_scene GameCornerPrizeRoom {
     } @else {
       @speaker("") { @t("We exchange your coins for\nprizes.", "我们用代币换取奖品。") }
       @speaker("") { @t("Which prize do you want?", "你想要哪个奖品？") }
+            @if (getGameVersion() == 0) {
       @choice {
-        @option(@t("DRATINI  2800", "迷你龙 2800")) {
+        @option(@t("DRATINI    2800", "迷你龙 2800")) {
           @if (hasCoins(2800)) {
             givePokemon("DRATINI", 18)
             takeCoins(2800)
@@ -101,7 +137,7 @@ game_scene GameCornerPrizeRoom {
             @speaker("") { @t("Sorry, you need more coins.", "对不起，你需要更多代币。") }
           }
         }
-        @option(@t("SCYTHER  5500", "飞天螳螂 5500")) {
+        @option(@t("SCYTHER    5500", "飞天螳螂 5500")) {
           @if (hasCoins(5500)) {
             givePokemon("SCYTHER", 25)
             takeCoins(5500)
@@ -110,7 +146,7 @@ game_scene GameCornerPrizeRoom {
             @speaker("") { @t("Sorry, you need more coins.", "对不起，你需要更多代币。") }
           }
         }
-        @option(@t("PORYGON  9999", "多边兽 9999")) {
+        @option(@t("PORYGON    9999", "多边兽 9999")) {
           @if (hasCoins(9999)) {
             givePokemon("PORYGON", 26)
             takeCoins(9999)
@@ -123,10 +159,44 @@ game_scene GameCornerPrizeRoom {
           @speaker("") { @t("Oh, fine then.", "那好吧。") }
         }
       }
+      } @else {
+      @choice {
+        @option(@t("PINSIR    2500", "凯罗斯 2500")) {
+          @if (hasCoins(2500)) {
+            givePokemon("PINSIR", 20)
+            takeCoins(2500)
+            @speaker("") { @t("Here you go!", "给你！") }
+          } @else {
+            @speaker("") { @t("Sorry, you need more coins.", "对不起，你需要更多代币。") }
+          }
+        }
+        @option(@t("DRATINI    4600", "迷你龙 4600")) {
+          @if (hasCoins(4600)) {
+            givePokemon("DRATINI", 24)
+            takeCoins(4600)
+            @speaker("") { @t("Here you go!", "给你！") }
+          } @else {
+            @speaker("") { @t("Sorry, you need more coins.", "对不起，你需要更多代币。") }
+          }
+        }
+        @option(@t("PORYGON    6500", "多边兽 6500")) {
+          @if (hasCoins(6500)) {
+            givePokemon("PORYGON", 18)
+            takeCoins(6500)
+            @speaker("") { @t("Here you go!", "给你！") }
+          } @else {
+            @speaker("") { @t("Sorry, you need more coins.", "对不起，你需要更多代币。") }
+          }
+        }
+        @option(@t("NO THANKS", "不用了")) {
+          @speaker("") { @t("Oh, fine then.", "那好吧。") }
+        }
+      }
+      }
     }
   }
 
-  // ── Prize vendor counter 3 (sign 3) — TM prizes ────────────────────────
+// ── Prize vendor counter 3 (sign 3) — TM prizes ────────────────────────
   // RED prizes: TM23 DRAGON RAGE 3300, TM15 HYPER BEAM 5500, TM50 SUBSTITUTE
   // 7700 coins. TMs are bag-storable (ItemId TM variants), so the exchange
   // follows the same pick -> hasCoins -> giveItem/takeCoins flow as the
@@ -181,7 +251,7 @@ game_scene GameCornerPrizeRoom {
             @speaker("") { @t("Sorry, you need more coins.", "对不起，你需要更多代币。") }
           }
         }
-        @option(@t("CANCEL", "取消")) {
+        @option(@t("NO THANKS", "不用了")) {
           @speaker("") { @t("Oh, fine then.", "那好吧。") }
         }
       }

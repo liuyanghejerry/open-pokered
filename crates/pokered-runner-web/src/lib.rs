@@ -539,6 +539,8 @@ fn apply_editor_save(game: &mut PokemonGame, save_json: Option<&str>) {
         .set_toggleable_object_flags(game.save_data.game_data.toggleable_object_flags);
     game.overworld
         .set_hidden_item_flags(game.save_data.game_data.obtained_hidden_items);
+    game.overworld
+        .set_hidden_coin_flags(game.save_data.game_data.obtained_hidden_coins);
     game.overworld.apply_hidden_object_flags();
     game.overworld.party_count = game.save_data.party.count() as u8;
     game.overworld.party_lead_level = game.save_data.party.leader_level();

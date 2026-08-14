@@ -91,12 +91,13 @@ fn total_sign_count() {
             total += get_map_signs(map).len();
         }
     }
-    // 229 + 4: the Cable Club rooms (Colosseum + TradeCenter) each gained
-    // two invisible "gameboy on the table" signs (data/events/hidden_events
-    // .asm:127-133 — the original's hidden events are sign-like triggers).
-    // + 1: Bill's house PC (hidden_event 1,4 BillsHousePC,
-    // data/events/hidden_events.asm:488).
-    assert_eq!(total, 234, "Total signs across all maps should be 234");
+    // 234 + 106: the hidden-event fill (tools/fill_hidden_events.py) ported
+    // the remaining sign-like hidden events (gym statues, bench guys, PCs,
+    // trash texts, slot machines, house flavor texts, ...) as signs at the
+    // reference coordinates, plus the PokemonMansion2F switch sign, the two
+    // FightingDojo wall texts, the CeladonMansionRoofHouse blackboard (×2)
+    // and the ViridianSchoolHouse blackboard.
+    assert_eq!(total, 340, "Total signs across all maps should be 340");
 }
 
 #[test]

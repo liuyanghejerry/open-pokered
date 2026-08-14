@@ -349,7 +349,7 @@ fn p5_rest_parity() {
 #[test]
 fn p5_flinch_parity() {
     reset_p5_scratch();
-    let randoms = EffectRandoms { side_effect_roll: 0, duration_roll: 0, multi_hit_roll: 0 };
+    let randoms = EffectRandoms { side_effect_roll: 0, duration_roll: 0, multi_hit_roll: 0, stat_down_miss_roll: 255 };
     let mut ls = legacy_state(legacy_poke(Species::Pikachu, 200, 200), legacy_poke(Species::Pikachu, 200, 200));
     let r = crate::battle::effects::special_effects::apply_flinch_side(&mut ls, &randoms, 26);
     assert_eq!(r, crate::battle::effects::EffectResult::FlinchApplied);
@@ -378,7 +378,7 @@ fn p5_flinch_parity() {
 fn p5_confusion_parity() {
     reset_p5_scratch();
     // Legacy: duration 3 → (3&3)+2 = 5 turns.
-    let randoms = EffectRandoms { side_effect_roll: 0, duration_roll: 3, multi_hit_roll: 0 };
+    let randoms = EffectRandoms { side_effect_roll: 0, duration_roll: 3, multi_hit_roll: 0, stat_down_miss_roll: 255 };
     let mut ls = legacy_state(legacy_poke(Species::Pikachu, 200, 200), legacy_poke(Species::Pikachu, 200, 200));
     let r = crate::battle::effects::special_effects::apply_confusion_primary(&mut ls, &randoms);
     assert_eq!(r, crate::battle::effects::EffectResult::ConfusionApplied);
@@ -402,7 +402,7 @@ fn p5_confusion_parity() {
 fn p5_disable_parity() {
     reset_p5_scratch();
     // Legacy: enemy last move Thundershock in slot 0 → disabled_move 1.
-    let randoms = EffectRandoms { side_effect_roll: 0, duration_roll: 3, multi_hit_roll: 0 };
+    let randoms = EffectRandoms { side_effect_roll: 0, duration_roll: 3, multi_hit_roll: 0, stat_down_miss_roll: 255 };
     let mut e_poke = legacy_poke(Species::Pikachu, 200, 200);
     e_poke.moves = [MoveId::Thundershock, MoveId::QuickAttack, MoveId::None, MoveId::None];
     e_poke.pp = [30, 30, 0, 0];
@@ -547,7 +547,7 @@ fn p5_mimic_parity() {
 fn p5_metronome_parity() {
     reset_p5_scratch();
     for dur in [0u8, 1, 50, 117, 162, 200] {
-        let randoms = EffectRandoms { side_effect_roll: 0, duration_roll: dur, multi_hit_roll: 0 };
+        let randoms = EffectRandoms { side_effect_roll: 0, duration_roll: dur, multi_hit_roll: 0, stat_down_miss_roll: 255 };
         let legacy = crate::battle::effects::special_effects::apply_metronome(&randoms);
         let legacy_pick = match legacy {
             crate::battle::effects::EffectResult::MetronomeMove { picked_move } => picked_move,

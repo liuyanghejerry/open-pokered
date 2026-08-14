@@ -28,4 +28,10 @@ game_scene SafariZoneWestRestHouse {
       @t("I hiked a lot, but I didn't\nsee any POKeMON I wanted.", "我走了很多路，但没看到想要的\n宝可梦。")
     }
   }
+
+  // ── PC (sign 1 at 13,3) — OpenPokemonCenterPC ──
+  @storyline("pcSign1") {
+    @trigger(map = "SafariZoneWestRestHouse", sign = 1)
+    openPC()
+  }
 }
