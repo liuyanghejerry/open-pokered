@@ -13,11 +13,15 @@ game_scene ViridianGym {
     @if (getFlag("EVENT_BEAT_VIRIDIAN_GYM_GIOVANNI")) {
       @if (!getFlag("EVENT_GOT_TM27")) {
         // Beat Giovanni previously but the bag was full — hand over the TM now.
-        giveItem("TM27", 1)
-        setFlag("EVENT_GOT_TM27")
-        @speaker("") { @t("<PLAYER> received TM27!", "<PLAYER>收到了 TM27！") }
-        @speaker("") {
-          @t("TM27 is FISSURE! It will\ntake out POKeMON with just\none hit!\n\nI made it when I ran the GYM\nhere, too long ago...", "TM27是地裂！一击就能打倒宝可\n梦！\n\n这是我很久以前在这里担任道馆\n馆主时制作的……")
+        given = giveItem("TM27", 1)
+        @if (given) {
+          setFlag("EVENT_GOT_TM27")
+          @speaker("") { @t("<PLAYER> received TM27!", "<PLAYER>收到了 TM27！") }
+          @speaker("") {
+            @t("TM27 is FISSURE! It will\ntake out POKeMON with just\none hit!\n\nI made it when I ran the GYM\nhere, too long ago...", "TM27是地裂！一击就能打倒宝可\n梦！\n\n这是我很久以前在这里担任道馆\n馆主时制作的……")
+          }
+        } @else {
+          @speaker("") { @t("You do not have\nspace for this!", "你没有空间\n放这个！") }
         }
       } @else {
         @speaker("") {
@@ -40,11 +44,15 @@ game_scene ViridianGym {
         @speaker("") {
           @t("The EARTHBADGE makes POKeMON\nof any level obey!\n\nIt is evidence of your\nmastery as a POKeMON\ntrainer!\n\nWith it, you can enter the\nPOKeMON LEAGUE!\n\nIt is my gift for your\nPOKeMON LEAGUE challenge!", "绿色徽章能让任何等级的宝可梦\n听话！\n\n它证明了你作为宝可梦训练家的\n才能！\n\n有了它，你就能进入宝可梦联\n盟！\n\n这是我赠予你的宝可梦联盟挑战\n之礼！")
         }
-        giveItem("TM27", 1)
-        setFlag("EVENT_GOT_TM27")
-        @speaker("") { @t("<PLAYER> received TM27!", "<PLAYER>收到了 TM27！") }
-        @speaker("") {
-          @t("TM27 is FISSURE! It will\ntake out POKeMON with just\none hit!\n\nI made it when I ran the GYM\nhere, too long ago...", "TM27是地裂！一击就能打倒宝可\n梦！\n\n这是我很久以前在这里担任道馆\n馆主时制作的……")
+        given = giveItem("TM27", 1)
+        @if (given) {
+          setFlag("EVENT_GOT_TM27")
+          @speaker("") { @t("<PLAYER> received TM27!", "<PLAYER>收到了 TM27！") }
+          @speaker("") {
+            @t("TM27 is FISSURE! It will\ntake out POKeMON with just\none hit!\n\nI made it when I ran the GYM\nhere, too long ago...", "TM27是地裂！一击就能打倒宝可\n梦！\n\n这是我很久以前在这里担任道馆\n馆主时制作的……")
+          }
+        } @else {
+          @speaker("") { @t("You do not have\nspace for this!", "你没有空间\n放这个！") }
         }
         // Deactivate the gym trainers (original SetEventRange 0..7).
         setFlag("EVENT_BEAT_VIRIDIAN_GYM_TRAINER_0")
@@ -165,4 +173,24 @@ game_scene ViridianGym {
   // The arrow/spinner-tile maze is handled by the engine (spinner tiles force
   // continuous movement until the player slides off), so no scene logic is
   // needed here.
+
+  // ── Gym statue (sign 1 at 15,15) — badge-conditional ──
+  @storyline("gymStatue1") {
+    @trigger(map = "ViridianGym", sign = 1)
+    @if (getFlag("EVENT_BEAT_VIRIDIAN_GYM_GIOVANNI")) {
+      @speaker("") { @t("VIRIDIAN CITY\nPOKeMON GYM\nLEADER: GIOVANNI\n\nWINNING TRAINERS:\n<RIVAL>\n<PLAYER>", "常磐市宝可梦道馆\n馆主：坂木\n\n获胜训练家：\n劲敌\n玩家") }
+    } @else {
+      @speaker("") { @t("VIRIDIAN CITY\nPOKeMON GYM\nLEADER: GIOVANNI\n\nWINNING TRAINERS:\n<RIVAL>", "常磐市宝可梦道馆\n馆主：坂木\n\n获胜训练家：\n劲敌") }
+    }
+  }
+
+  // ── Gym statue (sign 2 at 18,15) — badge-conditional ──
+  @storyline("gymStatue2") {
+    @trigger(map = "ViridianGym", sign = 2)
+    @if (getFlag("EVENT_BEAT_VIRIDIAN_GYM_GIOVANNI")) {
+      @speaker("") { @t("VIRIDIAN CITY\nPOKeMON GYM\nLEADER: GIOVANNI\n\nWINNING TRAINERS:\n<RIVAL>\n<PLAYER>", "常磐市宝可梦道馆\n馆主：坂木\n\n获胜训练家：\n劲敌\n玩家") }
+    } @else {
+      @speaker("") { @t("VIRIDIAN CITY\nPOKeMON GYM\nLEADER: GIOVANNI\n\nWINNING TRAINERS:\n<RIVAL>", "常磐市宝可梦道馆\n馆主：坂木\n\n获胜训练家：\n劲敌") }
+    }
+  }
 }

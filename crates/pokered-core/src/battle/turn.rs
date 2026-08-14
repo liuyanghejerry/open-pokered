@@ -168,6 +168,7 @@ mod tests {
                 side_effect_roll: 255,
                 duration_roll: 0,
                 multi_hit_roll: 0,
+                stat_down_miss_roll: 255,
             },
         }
     }

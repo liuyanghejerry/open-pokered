@@ -7,7 +7,7 @@
 // 20) all credit/deduct real coins. The poster "switch" tile-swap that opens the
 // stairs down to the Rocket Hideout is wired via replaceTileBlock (open=67 at
 // block 8,2). The Rocket who guards the poster is a talk-driven scripted battle
-// (map.json isTrainer = false): the script owns OPP_ROCKET8 and, on a win, makes
+// (map.json isTrainer = false): the script owns OPP_ROCKET7 and, on a win, makes
 // him flee (hideObject) just as the original walk-away movement does.
 
 game_scene GameCorner {
@@ -34,7 +34,7 @@ game_scene GameCorner {
         @if (!hasItem("COIN_CASE")) {
           @speaker("") { @t("You don't have a COIN CASE!", "你没有代币盒！") }
         } @else @if (getCoins() > 9949) {
-          @speaker("") { @t("But your COIN CASE is full!", "但是你的代币盒满了！") }
+          @speaker("") { @t("Oops! Your COIN\nCASE is full.", "哎呀！你的代币盒满了！") }
         } @else {
           @if (hasMoney(1000)) {
             takeMoney(1000)
@@ -92,9 +92,13 @@ game_scene GameCorner {
       @if (!hasItem("COIN_CASE")) {
         @speaker("") { @t("Oops! Forgot the COIN CASE!", "哎呀！忘记带代币盒了！") }
       } @else {
-        giveCoins(10)
-        setFlag("EVENT_GOT_10_COINS")
-        @speaker("") { @t("<PLAYER> received 10 coins!", "<PLAYER>获得了 10枚代币！") }
+        @if (getCoins() >= 9990) {
+          @speaker("") { @t("You don't need my\ncoins!", "你不需要我的代币！") }
+        } @else {
+          giveCoins(10)
+          setFlag("EVENT_GOT_10_COINS")
+          @speaker("") { @t("<PLAYER> received 10 coins!", "<PLAYER>获得了 10枚代币！") }
+        }
       }
     }
   }
@@ -165,7 +169,7 @@ game_scene GameCorner {
     }
   }
 
-  // ── Rocket grunt (npc 11) — talk-driven scripted battle (OPP_ROCKET8) ───
+  // ── Rocket grunt (npc 11) — talk-driven scripted battle (OPP_ROCKET7) ───
   // Original: he taunts, EngageMapTrainer runs the fight, then on victory he
   // walks off the poster and hides; talking again does nothing (object hidden).
   @storyline("talkRocket") {
@@ -176,7 +180,7 @@ game_scene GameCorner {
       @speaker("") {
         @t("I'm guarding this poster! Go\naway, or else!", "我在守着这张海报！走开，不然\n的话！")
       }
-      result = startBattle("OPP_ROCKET8")
+      result = startBattle("OPP_ROCKET7")
       @if (result == "win") {
         @speaker("") { @t("Dang!", "可恶！") }
         setFlag("EVENT_BEAT_GAME_CORNER_ROCKET")
@@ -212,5 +216,58 @@ game_scene GameCorner {
     @if (getFlag("EVENT_FOUND_ROCKET_HIDEOUT")) {
       replaceTileBlock(8, 2, 67)
     }
+  }
+
+  // ── Slot machines (signs [2, 3, 4, 5, 6, 8, 9, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 30, 31, 32, 33, 34, 35, 36, 37]) — StartSlotMachine ──
+  @storyline("slotMachines") {
+    @trigger(map = "GameCorner", sign = 2)
+    @trigger(map = "GameCorner", sign = 3)
+    @trigger(map = "GameCorner", sign = 4)
+    @trigger(map = "GameCorner", sign = 5)
+    @trigger(map = "GameCorner", sign = 6)
+    @trigger(map = "GameCorner", sign = 8)
+    @trigger(map = "GameCorner", sign = 9)
+    @trigger(map = "GameCorner", sign = 11)
+    @trigger(map = "GameCorner", sign = 12)
+    @trigger(map = "GameCorner", sign = 13)
+    @trigger(map = "GameCorner", sign = 14)
+    @trigger(map = "GameCorner", sign = 15)
+    @trigger(map = "GameCorner", sign = 16)
+    @trigger(map = "GameCorner", sign = 17)
+    @trigger(map = "GameCorner", sign = 18)
+    @trigger(map = "GameCorner", sign = 19)
+    @trigger(map = "GameCorner", sign = 20)
+    @trigger(map = "GameCorner", sign = 21)
+    @trigger(map = "GameCorner", sign = 22)
+    @trigger(map = "GameCorner", sign = 23)
+    @trigger(map = "GameCorner", sign = 24)
+    @trigger(map = "GameCorner", sign = 25)
+    @trigger(map = "GameCorner", sign = 26)
+    @trigger(map = "GameCorner", sign = 27)
+    @trigger(map = "GameCorner", sign = 28)
+    @trigger(map = "GameCorner", sign = 30)
+    @trigger(map = "GameCorner", sign = 31)
+    @trigger(map = "GameCorner", sign = 32)
+    @trigger(map = "GameCorner", sign = 33)
+    @trigger(map = "GameCorner", sign = 34)
+    @trigger(map = "GameCorner", sign = 35)
+    @trigger(map = "GameCorner", sign = 36)
+    @trigger(map = "GameCorner", sign = 37)
+    openSlots()
+  }
+
+  // ── Slot machines (signs []) — StartSlotMachine ──
+  @storyline("slotMachines") {
+    openSlots()
+  }
+
+  // ── Slot machines (signs []) — StartSlotMachine ──
+  @storyline("slotMachines") {
+    openSlots()
+  }
+
+  // ── Slot machines (signs []) — StartSlotMachine ──
+  @storyline("slotMachines") {
+    openSlots()
   }
 }

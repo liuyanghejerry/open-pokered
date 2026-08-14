@@ -27,4 +27,61 @@ game_scene CeladonMansionRoofHouse {
       setFlag("EVENT_GOT_EEVEE")
     }
   }
+  // ── Blackboard (signs 2/3 at (3,0)/(4,0)) — LinkCableHelp ──────────────
+  // engine/events/hidden_events/school_blackboard.asm::LinkCableHelp — the
+  // heading menu loops until STOP READING; the DSL has no loop, so after each
+  // info text the menu re-opens once (two reads max), then the flow ends.
+  @storyline("linkCableHelp") {
+    @trigger(map = "CeladonMansionRoofHouse", sign = 2)
+    @trigger(map = "CeladonMansionRoofHouse", sign = 3)
+    @speaker("") { @t("TRAINER TIPS\n\nUsing a Game Link\nCable", "训练家提示\n\n使用联机线缆") }
+    @speaker("") { @t("Which heading do you\nwant to read?", "你想读哪个标题？") }
+    @choice {
+      @option(@t("HOW TO LINK", "如何联机")) {
+        @speaker("") { @t("When you have linked your\nGAME BOY with another GAME\nBOY, talk to the attendant\non the right in any POKeMON\nCENTER.", "当你把 GAME BOY 与另一台 GAME\nBOY 连接后，到任意宝可梦中\n心与右侧的服务员对话。") }
+        @speaker("") { @t("Which heading do you\nwant to read?", "你想读哪个标题？") }
+        @choice {
+          @option(@t("COLOSSEUM", "竞技场")) {
+            @speaker("") { @t("COLOSSEUM lets you play\nagainst a friend.", "竞技场可以让你与朋友对战。") }
+          }
+          @option(@t("TRADE CENTER", "交换中心")) {
+            @speaker("") { @t("TRADE CENTER is used for\ntrading POKeMON.", "交换中心用来交换宝可梦。") }
+          }
+          @option(@t("STOP READING", "停止阅读")) {
+          }
+        }
+      }
+      @option(@t("COLOSSEUM", "竞技场")) {
+        @speaker("") { @t("COLOSSEUM lets you play\nagainst a friend.", "竞技场可以让你与朋友对战。") }
+        @speaker("") { @t("Which heading do you\nwant to read?", "你想读哪个标题？") }
+        @choice {
+          @option(@t("HOW TO LINK", "如何联机")) {
+            @speaker("") { @t("When you have linked your\nGAME BOY with another GAME\nBOY, talk to the attendant\non the right in any POKeMON\nCENTER.", "当你把 GAME BOY 与另一台 GAME\nBOY 连接后，到任意宝可梦中\n心与右侧的服务员对话。") }
+          }
+          @option(@t("TRADE CENTER", "交换中心")) {
+            @speaker("") { @t("TRADE CENTER is used for\ntrading POKeMON.", "交换中心用来交换宝可梦。") }
+          }
+          @option(@t("STOP READING", "停止阅读")) {
+          }
+        }
+      }
+      @option(@t("TRADE CENTER", "交换中心")) {
+        @speaker("") { @t("TRADE CENTER is used for\ntrading POKeMON.", "交换中心用来交换宝可梦。") }
+        @speaker("") { @t("Which heading do you\nwant to read?", "你想读哪个标题？") }
+        @choice {
+          @option(@t("HOW TO LINK", "如何联机")) {
+            @speaker("") { @t("When you have linked your\nGAME BOY with another GAME\nBOY, talk to the attendant\non the right in any POKeMON\nCENTER.", "当你把 GAME BOY 与另一台 GAME\nBOY 连接后，到任意宝可梦中\n心与右侧的服务员对话。") }
+          }
+          @option(@t("COLOSSEUM", "竞技场")) {
+            @speaker("") { @t("COLOSSEUM lets you play\nagainst a friend.", "竞技场可以让你与朋友对战。") }
+          }
+          @option(@t("STOP READING", "停止阅读")) {
+          }
+        }
+      }
+      @option(@t("STOP READING", "停止阅读")) {
+      }
+    }
+  }
+
 }

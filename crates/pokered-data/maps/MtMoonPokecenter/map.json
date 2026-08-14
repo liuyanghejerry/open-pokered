@@ -96,6 +96,11 @@
       "x": 13,
       "y": 3,
       "textId": 1
+    },
+    {
+      "x": 0,
+      "y": 4,
+      "textId": 2
     }
   ],
   "text": {
@@ -148,7 +153,7 @@
           "line2": "a swell MAGIKARP"
         },
         {
-          "line1": "for just \u00a5500!",
+          "line1": "for just ¥500!",
           "line2": ""
         },
         {
@@ -191,7 +196,14 @@
         }
       ]
     },
-    "sign": {}
+    "sign": {
+      "2": [
+        {
+          "line1": "If you have too",
+          "line2": "many POKeMON, you"
+        }
+      ]
+    }
   },
   "wild": null
 }

@@ -154,4 +154,16 @@ game_scene CinnabarLabFossilRoom {
       }
     }
   }
+
+  // ── PC (sign 1 at 0,4) — OpenPokemonCenterPC ──
+  @storyline("pcSign1") {
+    @trigger(map = "CinnabarLabFossilRoom", sign = 1)
+    openPC()
+  }
+
+  // ── PC (sign 2 at 2,4) — OpenPokemonCenterPC ──
+  @storyline("pcSign2") {
+    @trigger(map = "CinnabarLabFossilRoom", sign = 2)
+    openPC()
+  }
 }

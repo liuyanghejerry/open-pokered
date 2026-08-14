@@ -15,12 +15,14 @@
     {
       "x": 1,
       "y": 3,
-      "destWarpId": 0
+      "destWarpId": 0,
+      "destMap": "UnusedMapED"
     },
     {
       "x": 2,
       "y": 3,
-      "destWarpId": 0
+      "destWarpId": 0,
+      "destMap": "UnusedMapED"
     }
   ],
   "npcs": [],

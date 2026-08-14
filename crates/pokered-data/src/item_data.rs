@@ -11,17 +11,30 @@ pub struct ItemData {
 }
 
 /// Get item data by ItemId. Returns None for NoItem.
+///
+/// TM/HM ids ($C4–$FA) are synthesized from `TMHM_DATA` — the reference
+/// generates "TM01".."TM50" / "HM01".."HM05" names at runtime
+/// (home/names.asm:51-91) and prices from `data/items/tm_prices.asm`.
 pub fn get_item_data(id: ItemId) -> Option<&'static ItemData> {
     // Editor-injected runtime override shadows the baseline.
     if let Some(ov) = crate::runtime_overrides::item_override(id) {
         return Some(ov);
     }
     let idx = id as usize;
-    if idx == 0 || idx > ITEM_DATA.len() {
-        None
-    } else {
-        Some(&ITEM_DATA[idx - 1])
+    if idx == 0 {
+        return None;
     }
+    if idx <= ITEM_DATA.len() {
+        return Some(&ITEM_DATA[idx - 1]);
+    }
+    // TM01..TM50 = $C9..$FA, HM01..HM05 = $C4..$C8.
+    if (0xC9..=0xFA).contains(&idx) {
+        return Some(&TMHM_DATA[idx - 0xC9]);
+    }
+    if (0xC4..=0xC8).contains(&idx) {
+        return Some(&TMHM_DATA[50 + (idx - 0xC4)]);
+    }
+    None
 }
 
 include!(concat!(env!("OUT_DIR"), "/item_data_gen.rs"));
@@ -80,4 +93,65 @@ pub const TM_PRICES: [u16; 50] = [
     4000, // TM48
     4000, // TM49
     2000, // TM50
+];
+/// Synthesized TM/HM item definitions (the reference generates these at
+/// runtime in home/names.asm:51-91; TMs get their price from tm_prices.asm,
+/// HMs are key items with no price). Indices: [0..50) = TM01..TM50,
+/// [50..55) = HM01..HM05.
+pub const TMHM_DATA: [ItemData; 55] = [
+    ItemData { id: ItemId::Tm01, name: "TM01", price: 3000, is_key_item: false },
+    ItemData { id: ItemId::Tm02, name: "TM02", price: 2000, is_key_item: false },
+    ItemData { id: ItemId::Tm03, name: "TM03", price: 2000, is_key_item: false },
+    ItemData { id: ItemId::Tm04, name: "TM04", price: 1000, is_key_item: false },
+    ItemData { id: ItemId::Tm05, name: "TM05", price: 3000, is_key_item: false },
+    ItemData { id: ItemId::Tm06, name: "TM06", price: 4000, is_key_item: false },
+    ItemData { id: ItemId::Tm07, name: "TM07", price: 2000, is_key_item: false },
+    ItemData { id: ItemId::Tm08, name: "TM08", price: 4000, is_key_item: false },
+    ItemData { id: ItemId::Tm09, name: "TM09", price: 3000, is_key_item: false },
+    ItemData { id: ItemId::Tm10, name: "TM10", price: 4000, is_key_item: false },
+    ItemData { id: ItemId::Tm11, name: "TM11", price: 2000, is_key_item: false },
+    ItemData { id: ItemId::Tm12, name: "TM12", price: 1000, is_key_item: false },
+    ItemData { id: ItemId::Tm13, name: "TM13", price: 4000, is_key_item: false },
+    ItemData { id: ItemId::Tm14, name: "TM14", price: 5000, is_key_item: false },
+    ItemData { id: ItemId::Tm15, name: "TM15", price: 5000, is_key_item: false },
+    ItemData { id: ItemId::Tm16, name: "TM16", price: 5000, is_key_item: false },
+    ItemData { id: ItemId::Tm17, name: "TM17", price: 3000, is_key_item: false },
+    ItemData { id: ItemId::Tm18, name: "TM18", price: 2000, is_key_item: false },
+    ItemData { id: ItemId::Tm19, name: "TM19", price: 3000, is_key_item: false },
+    ItemData { id: ItemId::Tm20, name: "TM20", price: 2000, is_key_item: false },
+    ItemData { id: ItemId::Tm21, name: "TM21", price: 5000, is_key_item: false },
+    ItemData { id: ItemId::Tm22, name: "TM22", price: 5000, is_key_item: false },
+    ItemData { id: ItemId::Tm23, name: "TM23", price: 5000, is_key_item: false },
+    ItemData { id: ItemId::Tm24, name: "TM24", price: 2000, is_key_item: false },
+    ItemData { id: ItemId::Tm25, name: "TM25", price: 5000, is_key_item: false },
+    ItemData { id: ItemId::Tm26, name: "TM26", price: 4000, is_key_item: false },
+    ItemData { id: ItemId::Tm27, name: "TM27", price: 5000, is_key_item: false },
+    ItemData { id: ItemId::Tm28, name: "TM28", price: 2000, is_key_item: false },
+    ItemData { id: ItemId::Tm29, name: "TM29", price: 4000, is_key_item: false },
+    ItemData { id: ItemId::Tm30, name: "TM30", price: 1000, is_key_item: false },
+    ItemData { id: ItemId::Tm31, name: "TM31", price: 2000, is_key_item: false },
+    ItemData { id: ItemId::Tm32, name: "TM32", price: 1000, is_key_item: false },
+    ItemData { id: ItemId::Tm33, name: "TM33", price: 1000, is_key_item: false },
+    ItemData { id: ItemId::Tm34, name: "TM34", price: 2000, is_key_item: false },
+    ItemData { id: ItemId::Tm35, name: "TM35", price: 4000, is_key_item: false },
+    ItemData { id: ItemId::Tm36, name: "TM36", price: 2000, is_key_item: false },
+    ItemData { id: ItemId::Tm37, name: "TM37", price: 2000, is_key_item: false },
+    ItemData { id: ItemId::Tm38, name: "TM38", price: 5000, is_key_item: false },
+    ItemData { id: ItemId::Tm39, name: "TM39", price: 2000, is_key_item: false },
+    ItemData { id: ItemId::Tm40, name: "TM40", price: 4000, is_key_item: false },
+    ItemData { id: ItemId::Tm41, name: "TM41", price: 2000, is_key_item: false },
+    ItemData { id: ItemId::Tm42, name: "TM42", price: 2000, is_key_item: false },
+    ItemData { id: ItemId::Tm43, name: "TM43", price: 5000, is_key_item: false },
+    ItemData { id: ItemId::Tm44, name: "TM44", price: 2000, is_key_item: false },
+    ItemData { id: ItemId::Tm45, name: "TM45", price: 2000, is_key_item: false },
+    ItemData { id: ItemId::Tm46, name: "TM46", price: 4000, is_key_item: false },
+    ItemData { id: ItemId::Tm47, name: "TM47", price: 3000, is_key_item: false },
+    ItemData { id: ItemId::Tm48, name: "TM48", price: 4000, is_key_item: false },
+    ItemData { id: ItemId::Tm49, name: "TM49", price: 4000, is_key_item: false },
+    ItemData { id: ItemId::Tm50, name: "TM50", price: 2000, is_key_item: false },
+    ItemData { id: ItemId::Hm01, name: "HM01", price: 0, is_key_item: true },
+    ItemData { id: ItemId::Hm02, name: "HM02", price: 0, is_key_item: true },
+    ItemData { id: ItemId::Hm03, name: "HM03", price: 0, is_key_item: true },
+    ItemData { id: ItemId::Hm04, name: "HM04", price: 0, is_key_item: true },
+    ItemData { id: ItemId::Hm05, name: "HM05", price: 0, is_key_item: true },
 ];

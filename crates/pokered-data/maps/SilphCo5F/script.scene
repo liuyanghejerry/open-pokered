@@ -117,9 +117,9 @@ game_scene SilphCo5F {
   @storyline("talkScientist") {
     @trigger(map = "SilphCo5F", npc = 3)
     @if (getFlag("EVENT_BEAT_SILPH_CO_5F_TRAINER_1")) {
-      @speaker("") { @t("We worked on the ultimate\nPOKeMON BALL which would\ncatch anything!", "我们曾致力于制造终极精灵球无\n论什么宝可梦都能抓到！") }
+      @speaker("") { @t("We worked on the ultimate\nPOKé BALL which would\ncontain anything!", "我们曾致力于制造终极精灵球无\n论什么宝可梦都能抓到！") }
     } @else {
-      @speaker("") { @t("We study POKeMON BALL\ntechnology on this floor!", "我们在这个楼层研究精灵球的技\n术！") }
+      @speaker("") { @t("We study POKé BALL\ntechnology on this floor!", "我们在这个楼层研究精灵球的技\n术！") }
     }
   }
 

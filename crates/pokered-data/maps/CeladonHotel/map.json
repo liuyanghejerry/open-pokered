@@ -58,7 +58,33 @@
       "isTrainer": false
     }
   ],
-  "signs": [],
-  "text": {},
+  "signs": [
+    {
+      "x": 13,
+      "y": 3,
+      "textId": 1
+    },
+    {
+      "x": 0,
+      "y": 4,
+      "textId": 2
+    }
+  ],
+  "text": {
+    "sign": {
+      "1": [
+        {
+          "line1": "",
+          "line2": ""
+        }
+      ],
+      "2": [
+        {
+          "line1": "My sis brought me",
+          "line2": ""
+        }
+      ]
+    }
+  },
   "wild": null
 }

@@ -58,7 +58,23 @@
       "isTrainer": false
     }
   ],
-  "signs": [],
+  "signs": [
+    {
+      "x": 0,
+      "y": 1,
+      "textId": 1
+    },
+    {
+      "x": 1,
+      "y": 1,
+      "textId": 2
+    },
+    {
+      "x": 7,
+      "y": 1,
+      "textId": 3
+    }
+  ],
   "text": {
     "npc": {
       "1": [
@@ -111,6 +127,26 @@
         {
           "line1": "It's a big map!",
           "line2": "This is useful!"
+        }
+      ]
+    },
+    "sign": {
+      "1": [
+        {
+          "line1": "Crammed full of",
+          "line2": "POKeMON books!"
+        }
+      ],
+      "2": [
+        {
+          "line1": "Crammed full of",
+          "line2": "POKeMON books!"
+        }
+      ],
+      "3": [
+        {
+          "line1": "Crammed full of",
+          "line2": "POKeMON books!"
         }
       ]
     }

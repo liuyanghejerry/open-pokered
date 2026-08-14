@@ -185,3 +185,83 @@ fn itemfinder_ignores_obtained_items() {
     );
     assert!(screen.itemfinder_dings.is_none());
 }
+
+// ── Hidden coins (Game Corner floor spots) ────────────────────────────────
+
+/// Player one tile above the (0,8) +10 coin spot, facing it.
+fn screen_facing_gamecorner_coin() -> OverworldScreen<PokemonRedData> {
+    let mut screen = screen_on(MapId::GameCorner);
+    screen.state.player.x = 0;
+    screen.state.player.y = 7;
+    screen.state.player.facing = Direction::Down;
+    screen.script_bag_names = vec!["COIN_CASE".to_string()];
+    screen
+}
+
+#[test]
+fn a_press_facing_hidden_coin_awards_it() {
+    let mut screen = screen_facing_gamecorner_coin();
+    press_a(&mut screen);
+
+    let text = pending_dialogue_text(&screen);
+    assert!(text.contains("found"), "shows the found text, got: {text:?}");
+    assert!(text.contains("10 coins!"), "names the amount, got: {text:?}");
+    assert_eq!(screen.hidden_coin_flags()[0] & 1, 1, "flag index 0 set");
+    assert!(
+        screen.game_data_requests.iter().any(|r| matches!(
+            r,
+            OverworldGameDataRequest::GiveCoins { amount: 10 }
+        )),
+        "queues the coin award"
+    );
+    assert!(
+        screen.audio_requests.iter().any(|r| matches!(
+            r,
+            OverworldAudioRequest::PlaySound { sound_id } if sound_id == "SFX_GET_ITEM_2"
+        )),
+        "plays the get-item jingle"
+    );
+}
+
+#[test]
+fn hidden_coin_needs_coin_case() {
+    let mut screen = screen_facing_gamecorner_coin();
+    screen.script_bag_names = vec!["POTION".to_string()];
+    press_a(&mut screen);
+
+    assert!(screen.pending_dialogue.is_none(), "no case, no text");
+    assert!(screen.game_data_requests.is_empty(), "no coins given");
+    assert_eq!(screen.hidden_coin_flags()[0] & 1, 0, "flag stays clear");
+}
+
+#[test]
+fn forty_coin_spot_awards_twenty_gen1_bug() {
+    // The (11,7) spot stores 40 but the original jumps to .bcd20 for both 20
+    // and 40 ("should be bcd40" — hidden_items.asm).
+    let mut screen = screen_on(MapId::GameCorner);
+    screen.state.player.x = 11;
+    screen.state.player.y = 6;
+    screen.state.player.facing = Direction::Down;
+    screen.script_bag_names = vec!["COIN_CASE".to_string()];
+    press_a(&mut screen);
+
+    let text = pending_dialogue_text(&screen);
+    assert!(text.contains("20 coins!"), "40 spot awards 20, got: {text:?}");
+    assert!(
+        screen.game_data_requests.iter().any(|r| matches!(
+            r,
+            OverworldGameDataRequest::GiveCoins { amount: 20 }
+        )),
+        "queues 20 coins"
+    );
+}
+
+#[test]
+fn already_collected_hidden_coin_shows_nothing() {
+    let mut screen = screen_facing_gamecorner_coin();
+    screen.hidden_coin_flags[0] |= 1;
+    press_a(&mut screen);
+
+    assert!(screen.pending_dialogue.is_none(), "nothing shown");
+    assert!(screen.game_data_requests.is_empty(), "no coins given");
+}

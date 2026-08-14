@@ -672,6 +672,7 @@ impl PokemonGame {
         // bitfield.
         save.game_data.toggleable_object_flags = *self.overworld.toggleable_object_flags();
         save.game_data.obtained_hidden_items = *self.overworld.hidden_item_flags();
+        save.game_data.obtained_hidden_coins = *self.overworld.hidden_coin_flags();
 
         save
     }
@@ -854,6 +855,9 @@ impl PokemonGame {
                         );
                         overworld.set_hidden_item_flags(
                             self.save_data.game_data.obtained_hidden_items,
+                        );
+                        overworld.set_hidden_coin_flags(
+                            self.save_data.game_data.obtained_hidden_coins,
                         );
                         overworld.apply_hidden_object_flags();
                         overworld.player_name = self.player_name.clone();
@@ -1210,7 +1214,7 @@ impl PokemonGame {
         }
     }
 
-    fn start_trainer_battle(&mut self, trainer_id: &str) {
+    fn start_trainer_battle(&mut self, trainer_id: &str, rival_triplet_base: Option<u8>) {
         use pokered_core::pokemon::stats::create_pokemon;
         use pokered_data::trainer_data::{get_trainer_party, parse_trainer_id, TrainerClass};
         use pokered_data::species::Species;
@@ -1223,15 +1227,13 @@ impl PokemonGame {
         });
 
         let enemy_party = if let Some((class, default_index)) = parsed {
-            // Rival gets type advantage: Grass→Fire, Fire→Water, Water→Grass
+            // Rival gets type advantage: Grass→Fire, Fire→Water, Water→Grass.
+            // Each triplet is ordered Squirtle/Bulbasaur/Charmander; the scene
+            // supplies the triplet base (scripts/{Map}.asm StarterTable).
             let party_index = if is_rival {
+                let base = rival_triplet_base.unwrap_or(0) as usize;
                 player_party.first().map_or(default_index, |starter| {
-                    match starter.species {
-                        Species::Bulbasaur => 2,
-                        Species::Charmander => 0,
-                        Species::Squirtle => 1,
-                        _ => default_index,
-                    }
+                    base + pokered_data::trainer_data::rival_starter_offset(starter.species)
                 })
             } else {
                 default_index
@@ -1672,6 +1674,10 @@ impl PokemonGame {
                         &party_species,
                         self.save_data.game_data.player_coins,
                         self.save_data.game_data.obtained_badges,
+                        match self.state.config.version {
+                            GameVersion::Red => 0,
+                            GameVersion::Blue => 1,
+                        },
                     );
                     {
                         use pokered_core::battle::experience::growth::level_from_exp;
@@ -1925,7 +1931,7 @@ impl PokemonGame {
                         self.battle.hooked = encounter.hooked;
                         ScreenAction::Transition(GameScreen::Battle)
                     } else if let Some(trainer) = self.overworld.pending_trainer_battle.take() {
-                        self.start_trainer_battle(&trainer.trainer_id);
+                        self.start_trainer_battle(&trainer.trainer_id, trainer.rival_triplet_base);
                         if trainer.npc_index < u8::MAX {
                             self.battle.trainer_npc_index = Some(trainer.npc_index);
                         }

@@ -9,6 +9,7 @@ game_scene CinnabarMart {
   //            FULL_HEAL, REVIVE
   @storyline("talkClerk") {
     @trigger(map = "CinnabarMart", npc = 1)
+    @say("") { @t("Hi there!\n\nMay I help you?", "你好！\n\n需要帮忙吗？") }
     openShop(["UltraBall", "GreatBall", "HyperPotion", "MaxRepel", "EscapeRope", "FullHeal", "Revive"])
   }
 

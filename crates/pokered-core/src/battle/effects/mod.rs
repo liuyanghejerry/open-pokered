@@ -20,6 +20,9 @@ pub struct EffectRandoms {
     pub duration_roll: u8,
     /// 0-255: used for multi-hit count determination
     pub multi_hit_roll: u8,
+    /// 0-255: used for the primary stat-down moves' extra 25% miss roll in
+    /// regular battles (engine/battle/effects.asm:553, `cp 25 percent + 1`).
+    pub stat_down_miss_roll: u8,
 }
 
 /// Result of applying a move effect.
@@ -101,6 +104,10 @@ pub enum EffectResult {
     MetronomeMove {
         picked_move: pokered_data::moves::MoveId,
     },
+    /// The whole move missed during the effect phase (Gen-1 quirk: primary
+    /// stat-down moves have an extra 25% miss roll in regular battles,
+    /// engine/battle/effects.asm:553).
+    Missed,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -138,8 +145,10 @@ pub fn apply_move_effect(
         ParalyzeEffect => status_effects::apply_paralyze_primary(state, move_data),
 
         // Status infliction — side effects (chance-based, after damage)
-        PoisonSideEffect1 => status_effects::apply_poison_side(state, move_data, randoms, 51),
-        PoisonSideEffect2 => status_effects::apply_poison_side(state, move_data, randoms, 102),
+        // Thresholds match engine/battle/effects.asm: `cp 20 percent + 1` (52),
+        // `cp 40 percent + 1` (103) — roll < threshold applies the status.
+        PoisonSideEffect1 => status_effects::apply_poison_side(state, move_data, randoms, 52),
+        PoisonSideEffect2 => status_effects::apply_poison_side(state, move_data, randoms, 103),
         BurnSideEffect1 => status_effects::apply_burn_side(state, move_data, randoms, 26),
         BurnSideEffect2 => status_effects::apply_burn_side(state, move_data, randoms, 77),
         FreezeSideEffect1 => status_effects::apply_freeze_side(state, move_data, randoms, 26),
@@ -161,19 +170,21 @@ pub fn apply_move_effect(
         AccuracyUp2Effect => stat_effects::apply_stat_up(state, 4, 2),
         EvasionUp2Effect => stat_effects::apply_stat_up(state, 5, 2),
 
-        // Stat modifications — opponent (primary)
-        AttackDown1Effect => stat_effects::apply_stat_down(state, 0, 1),
-        DefenseDown1Effect => stat_effects::apply_stat_down(state, 1, 1),
-        SpeedDown1Effect => stat_effects::apply_stat_down(state, 2, 1),
-        SpecialDown1Effect => stat_effects::apply_stat_down(state, 3, 1),
-        AccuracyDown1Effect => stat_effects::apply_stat_down(state, 4, 1),
-        EvasionDown1Effect => stat_effects::apply_stat_down(state, 5, 1),
-        AttackDown2Effect => stat_effects::apply_stat_down(state, 0, 2),
-        DefenseDown2Effect => stat_effects::apply_stat_down(state, 1, 2),
-        SpeedDown2Effect => stat_effects::apply_stat_down(state, 2, 2),
-        SpecialDown2Effect => stat_effects::apply_stat_down(state, 3, 2),
-        AccuracyDown2Effect => stat_effects::apply_stat_down(state, 4, 2),
-        EvasionDown2Effect => stat_effects::apply_stat_down(state, 5, 2),
+        // Stat modifications — opponent (primary).
+        // Gen-1 quirk: in a regular battle these moves get an extra 25% miss
+        // roll (effects.asm:553) before the Mist/substitute checks.
+        AttackDown1Effect => stat_effects::apply_stat_down_primary(state, 0, 1, randoms),
+        DefenseDown1Effect => stat_effects::apply_stat_down_primary(state, 1, 1, randoms),
+        SpeedDown1Effect => stat_effects::apply_stat_down_primary(state, 2, 1, randoms),
+        SpecialDown1Effect => stat_effects::apply_stat_down_primary(state, 3, 1, randoms),
+        AccuracyDown1Effect => stat_effects::apply_stat_down_primary(state, 4, 1, randoms),
+        EvasionDown1Effect => stat_effects::apply_stat_down_primary(state, 5, 1, randoms),
+        AttackDown2Effect => stat_effects::apply_stat_down_primary(state, 0, 2, randoms),
+        DefenseDown2Effect => stat_effects::apply_stat_down_primary(state, 1, 2, randoms),
+        SpeedDown2Effect => stat_effects::apply_stat_down_primary(state, 2, 2, randoms),
+        SpecialDown2Effect => stat_effects::apply_stat_down_primary(state, 3, 2, randoms),
+        AccuracyDown2Effect => stat_effects::apply_stat_down_primary(state, 4, 2, randoms),
+        EvasionDown2Effect => stat_effects::apply_stat_down_primary(state, 5, 2, randoms),
 
         // Stat-down side effects (33% chance, after damage)
         AttackDownSideEffect => stat_effects::apply_stat_down_side(state, 0, randoms),
@@ -197,7 +208,8 @@ pub fn apply_move_effect(
 
         // Confusion
         ConfusionEffect => special_effects::apply_confusion_primary(state, randoms),
-        ConfusionSideEffect => special_effects::apply_confusion_side(state, randoms, 26),
+        // Ref: `cp 10 percent; ret nc` (effects.asm:1116) — no `+1`, so 25.
+        ConfusionSideEffect => special_effects::apply_confusion_side(state, randoms, 25),
 
         // Multi-hit effects
         TwoToFiveAttacksEffect => multi_hit_effects::apply_two_to_five(state, randoms),
@@ -234,5 +246,123 @@ pub fn apply_move_effect(
         PayDayEffect => special_effects::apply_pay_day(state, damage_dealt),
         SwitchAndTeleportEffect => special_effects::apply_switch_teleport(state),
         SwiftEffect => EffectResult::NoEffect, // handled in accuracy check
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::battle::state::*;
+    use pokered_data::moves::{MoveEffect, MoveId};
+    use pokered_data::species::Species;
+    use pokered_data::types::PokemonType;
+
+    fn make_pokemon() -> Pokemon {
+        Pokemon {
+            species: Species::Pikachu,
+            nickname: [0x50; 11],
+            level: 50,
+            hp: 200,
+            max_hp: 200,
+            attack: 100,
+            defense: 80,
+            speed: 110,
+            special: 80,
+            type1: PokemonType::Normal,
+            type2: PokemonType::Normal,
+            moves: [MoveId::Tackle, MoveId::None, MoveId::None, MoveId::None],
+            pp: [35, 0, 0, 0],
+            pp_ups: [0; 4],
+            status: StatusCondition::None,
+            dv_bytes: [0xFF, 0xFF],
+            stat_exp: [0; 5],
+            total_exp: 0,
+            is_traded: false, ot_id: 0, ot_name: [0x50; 11],
+        }
+    }
+
+    fn make_state() -> BattleState {
+        new_battle_state(BattleType::Wild, vec![make_pokemon()], vec![make_pokemon()])
+    }
+
+    fn move_data(effect: MoveEffect) -> MoveData {
+        MoveData {
+            id: MoveId::Tackle,
+            effect,
+            power: 0,
+            move_type: PokemonType::Normal,
+            accuracy: 255,
+            pp: 35,
+        }
+    }
+
+    fn randoms(side_effect_roll: u8, stat_down_miss_roll: u8) -> EffectRandoms {
+        EffectRandoms {
+            side_effect_roll,
+            duration_roll: 0,
+            multi_hit_roll: 0,
+            stat_down_miss_roll,
+        }
+    }
+
+    #[test]
+    fn poison_side_thresholds_match_asm() {
+        // effects.asm:101 `cp 20 percent + 1` → 52: roll 51 fires, 52 does not.
+        let mut state = make_state();
+        let r = randoms(51, 255);
+        let res = apply_move_effect(&mut state, &move_data(MoveEffect::PoisonSideEffect1), &r, 10);
+        assert_eq!(res, EffectResult::StatusInflicted(StatusEffectType::Poison));
+
+        let mut state = make_state();
+        let r = randoms(52, 255);
+        let res = apply_move_effect(&mut state, &move_data(MoveEffect::PoisonSideEffect1), &r, 10);
+        assert_eq!(res, EffectResult::NoEffect);
+
+        // effects.asm:104 `cp 40 percent + 1` → 103: roll 102 fires, 103 does not.
+        let mut state = make_state();
+        let r = randoms(102, 255);
+        let res = apply_move_effect(&mut state, &move_data(MoveEffect::PoisonSideEffect2), &r, 10);
+        assert_eq!(res, EffectResult::StatusInflicted(StatusEffectType::Poison));
+
+        let mut state = make_state();
+        let r = randoms(103, 255);
+        let res = apply_move_effect(&mut state, &move_data(MoveEffect::PoisonSideEffect2), &r, 10);
+        assert_eq!(res, EffectResult::NoEffect);
+    }
+
+    #[test]
+    fn confusion_side_threshold_matches_asm() {
+        // effects.asm:1116 `cp 10 percent` (no +1) → 25: roll 24 fires, 25 not.
+        let mut state = make_state();
+        let r = randoms(24, 255);
+        let res = apply_move_effect(&mut state, &move_data(MoveEffect::ConfusionSideEffect), &r, 10);
+        assert_eq!(res, EffectResult::ConfusionApplied);
+
+        let mut state = make_state();
+        let r = randoms(25, 255);
+        let res = apply_move_effect(&mut state, &move_data(MoveEffect::ConfusionSideEffect), &r, 10);
+        assert_eq!(res, EffectResult::NoEffect);
+    }
+
+    #[test]
+    fn stat_down_primary_extra_miss_quirk() {
+        // effects.asm:553 `cp 25 percent + 1` → 64: roll 63 misses, 64 lands.
+        let mut state = make_state();
+        let r = randoms(0, 63);
+        let res = apply_move_effect(&mut state, &move_data(MoveEffect::AttackDown1Effect), &r, 0);
+        assert_eq!(res, EffectResult::Missed);
+        assert!(state.move_missed);
+
+        let mut state = make_state();
+        let r = randoms(0, 64);
+        let res = apply_move_effect(&mut state, &move_data(MoveEffect::AttackDown1Effect), &r, 0);
+        assert_eq!(res, EffectResult::StatModified { stat: 0, stages: -1 });
+
+        // Link battles skip the quirk roll (effects.asm:549-551).
+        let mut state = make_state();
+        state.link_battle = true;
+        let r = randoms(0, 0);
+        let res = apply_move_effect(&mut state, &move_data(MoveEffect::AttackDown1Effect), &r, 0);
+        assert_eq!(res, EffectResult::StatModified { stat: 0, stages: -1 });
     }
 }
