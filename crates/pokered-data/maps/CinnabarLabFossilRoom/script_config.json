@@ -11,5 +11,14 @@
       "talk": "talkScientist2"
     }
   ],
-  "signs": []
+  "signs": [
+    {
+      "id": 1,
+      "talk": "pcSign1"
+    },
+    {
+      "id": 2,
+      "talk": "pcSign2"
+    }
+  ]
 }

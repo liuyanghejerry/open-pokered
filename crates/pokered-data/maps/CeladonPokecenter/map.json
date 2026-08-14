@@ -74,8 +74,22 @@
       "x": 13,
       "y": 3,
       "textId": 1
+    },
+    {
+      "x": 0,
+      "y": 4,
+      "textId": 2
     }
   ],
-  "text": {},
+  "text": {
+    "sign": {
+      "2": [
+        {
+          "line1": "If I had a BIKE,",
+          "line2": "I would go to"
+        }
+      ]
+    }
+  },
   "wild": null
 }

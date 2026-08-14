@@ -167,7 +167,7 @@ fn to_move_randoms(b: MoveBytes) -> MoveRandoms {
         // the stack draws, so a fired-vs-not side-status is byte-identical. P4: the
         // multi_hit_roll is laid into the legacy field too (the legacy
         // `apply_two_to_five` reads `randoms.multi_hit_roll` for its hit count).
-        effect_randoms: EffectRandoms { side_effect_roll: b.side_effect, duration_roll: 0, multi_hit_roll: b.multi_hit },
+        effect_randoms: EffectRandoms { side_effect_roll: b.side_effect, duration_roll: 0, multi_hit_roll: b.multi_hit, stat_down_miss_roll: 255 },
     }
 }
 

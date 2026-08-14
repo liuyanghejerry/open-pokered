@@ -49,7 +49,60 @@
       "isTrainer": false
     }
   ],
-  "signs": [],
-  "text": {},
+  "signs": [
+    {
+      "x": 3,
+      "y": 4,
+      "textId": 1
+    },
+    {
+      "x": 3,
+      "y": 0,
+      "textId": 2
+    },
+    {
+      "x": 4,
+      "y": 0,
+      "textId": 3
+    }
+  ],
+  "text": {
+    "sign": {
+      "1": [
+        {
+          "line1": "It's a pamphlet on TMs.",
+          "line2": ""
+        },
+        {
+          "line1": "...",
+          "line2": ""
+        },
+        {
+          "line1": "There are 50 TMs in all.",
+          "line2": ""
+        },
+        {
+          "line1": "There are also 5 HMs that can be used repeatedly.",
+          "line2": ""
+        },
+        {
+          "line1": "SILPH CO.",
+          "line2": ""
+        }
+      ],
+      "2": [
+        {
+          "line1": "",
+          "line2": ""
+        }
+      ],
+      "3": [
+        {
+          "line1": "",
+          "line2": ""
+        }
+      ]
+    }
+  },
   "wild": null
 }

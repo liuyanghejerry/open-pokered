@@ -96,4 +96,24 @@ game_scene PewterGym {
       }
     }
   }
+
+  // ── Gym statue (sign 1 at 3,10) — badge-conditional ──
+  @storyline("gymStatue1") {
+    @trigger(map = "PewterGym", sign = 1)
+    @if (getFlag("EVENT_BEAT_BROCK")) {
+      @speaker("") { @t("PEWTER CITY\nPOKeMON GYM\nLEADER: BROCK\n\nWINNING TRAINERS:\n<RIVAL>\n<PLAYER>", "深灰市宝可梦道馆\n馆主：小刚\n\n获胜训练家：\n劲敌\n玩家") }
+    } @else {
+      @speaker("") { @t("PEWTER CITY\nPOKeMON GYM\nLEADER: BROCK\n\nWINNING TRAINERS:\n<RIVAL>", "深灰市宝可梦道馆\n馆主：小刚\n\n获胜训练家：\n劲敌") }
+    }
+  }
+
+  // ── Gym statue (sign 2 at 6,10) — badge-conditional ──
+  @storyline("gymStatue2") {
+    @trigger(map = "PewterGym", sign = 2)
+    @if (getFlag("EVENT_BEAT_BROCK")) {
+      @speaker("") { @t("PEWTER CITY\nPOKeMON GYM\nLEADER: BROCK\n\nWINNING TRAINERS:\n<RIVAL>\n<PLAYER>", "深灰市宝可梦道馆\n馆主：小刚\n\n获胜训练家：\n劲敌\n玩家") }
+    } @else {
+      @speaker("") { @t("PEWTER CITY\nPOKeMON GYM\nLEADER: BROCK\n\nWINNING TRAINERS:\n<RIVAL>", "深灰市宝可梦道馆\n馆主：小刚\n\n获胜训练家：\n劲敌") }
+    }
+  }
 }

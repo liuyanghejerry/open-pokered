@@ -230,11 +230,13 @@ fn test_viridian_city_warps() {
 
 #[test]
 fn test_silph_co_elevator_last_map_warps() {
-    // SilphCo Elevator warps have UNUSED_MAP_ED → stored as None
+    // SilphCo Elevator warps target UNUSED_MAP_ED (the placeholder overwritten
+    // by the elevator select flow at runtime), like the reference
+    // data/maps/objects/SilphCoElevator.asm.
     let warps = get_map_warps(MapId::SilphCoElevator);
     assert_eq!(warps.len(), 2);
-    assert_eq!(warps[0].dest_map, None); // dynamically assigned
-    assert_eq!(warps[1].dest_map, None);
+    assert_eq!(warps[0].dest_map, Some(MapId::UnusedMapED));
+    assert_eq!(warps[1].dest_map, Some(MapId::UnusedMapED));
 }
 
 #[test]

@@ -58,7 +58,77 @@
       "isTrainer": false
     }
   ],
-  "signs": [],
-  "text": {},
+  "signs": [
+    {
+      "x": 1,
+      "y": 0,
+      "textId": 1
+    },
+    {
+      "x": 2,
+      "y": 1,
+      "textId": 2
+    },
+    {
+      "x": 1,
+      "y": 2,
+      "textId": 3
+    },
+    {
+      "x": 3,
+      "y": 2,
+      "textId": 4
+    },
+    {
+      "x": 0,
+      "y": 4,
+      "textId": 5
+    },
+    {
+      "x": 1,
+      "y": 5,
+      "textId": 6
+    }
+  ],
+  "text": {
+    "sign": {
+      "1": [
+        {
+          "line1": "A shiny new",
+          "line2": "BICYCLE!"
+        }
+      ],
+      "2": [
+        {
+          "line1": "A shiny new",
+          "line2": "BICYCLE!"
+        }
+      ],
+      "3": [
+        {
+          "line1": "A shiny new",
+          "line2": "BICYCLE!"
+        }
+      ],
+      "4": [
+        {
+          "line1": "A shiny new",
+          "line2": "BICYCLE!"
+        }
+      ],
+      "5": [
+        {
+          "line1": "A shiny new",
+          "line2": "BICYCLE!"
+        }
+      ],
+      "6": [
+        {
+          "line1": "A shiny new",
+          "line2": "BICYCLE!"
+        }
+      ]
+    }
+  },
   "wild": null
 }

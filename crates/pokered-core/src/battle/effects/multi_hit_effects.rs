@@ -135,7 +135,7 @@ mod tests {
         let randoms = EffectRandoms {
             side_effect_roll: 0,
             duration_roll: 0,
-            multi_hit_roll: 50,
+            multi_hit_roll: 50, stat_down_miss_roll: 255,
         };
         apply_two_to_five(&mut state, &randoms);
         assert_eq!(state.player.num_hits, 1);
@@ -154,7 +154,7 @@ mod tests {
         let randoms = EffectRandoms {
             side_effect_roll: 0,
             duration_roll: 0,
-            multi_hit_roll: 240,
+            multi_hit_roll: 240, stat_down_miss_roll: 255,
         };
         for i in 1..=5 {
             apply_two_to_five(&mut state, &randoms);
@@ -182,7 +182,7 @@ mod tests {
         let randoms = EffectRandoms {
             side_effect_roll: 0,
             duration_roll: 0,
-            multi_hit_roll: 0,
+            multi_hit_roll: 0, stat_down_miss_roll: 255,
         };
         apply_twineedle(&mut state, &randoms);
         assert_eq!(state.player.num_hits, 1);

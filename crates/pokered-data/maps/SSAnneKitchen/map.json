@@ -98,7 +98,18 @@
       "isTrainer": false
     }
   ],
-  "signs": [],
+  "signs": [
+    {
+      "x": 13,
+      "y": 5,
+      "textId": 1
+    },
+    {
+      "x": 13,
+      "y": 7,
+      "textId": 2
+    }
+  ],
   "text": {
     "npc": {
       "1": [
@@ -185,6 +196,20 @@
         {
           "line1": "Le main course is",
           "line2": "[random dish]"
+        }
+      ]
+    },
+    "sign": {
+      "1": [
+        {
+          "line1": "Nope, there's",
+          "line2": "only trash here."
+        }
+      ],
+      "2": [
+        {
+          "line1": "Nope, there's",
+          "line2": "only trash here."
         }
       ]
     }

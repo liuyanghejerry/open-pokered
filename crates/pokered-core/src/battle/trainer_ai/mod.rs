@@ -36,8 +36,9 @@ pub fn move_choice_layers(class: TrainerClass) -> &'static [MoveChoiceLayer] {
         Youngster | CueBall | Nobody => &[],
 
         // Layer 1 only
-        BugCatcher | Lass | JrTrainerM | JrTrainerF | Hiker | Engineer | Juggler | Tamer
-        | BirdKeeper | Blackbelt | Rival1 | Rocket | Bruno | Brock | Channeler | Agatha => {
+        BugCatcher | Lass | JrTrainerM | JrTrainerF | Hiker | Biker | Engineer | Juggler
+        | Tamer | BirdKeeper | Blackbelt | Rival1 | Rocket | Bruno | Brock | Channeler
+        | Agatha | Gambler => {
             &[Layer1]
         }
 
@@ -51,9 +52,6 @@ pub fn move_choice_layers(class: TrainerClass) -> &'static [MoveChoiceLayer] {
 
         // Layer 1 + Layer 2 + Layer 3
         Pokemaniac | Lorelei => &[Layer1, Layer2, Layer3],
-
-        // Biker and Gambler: not explicitly listed in ASM data, default to no modifications
-        Biker | Gambler => &[],
     }
 }
 
@@ -306,5 +304,18 @@ mod tests {
         let cfg = trainer_ai_config(TrainerClass::Rival3);
         assert_eq!(cfg.ai_count, 1);
         assert_eq!(cfg.routine, AiRoutine::Rival3);
+    }
+}
+
+#[cfg(test)]
+mod move_choice_layer_regression_tests {
+    use super::*;
+
+    /// data/trainers/move_choices.asm lists BIKER and GAMBLER with
+    /// `move_choices 1` — Layer1 only, not the default empty set.
+    #[test]
+    fn biker_and_gambler_use_layer1() {
+        assert_eq!(move_choice_layers(TrainerClass::Biker), &[MoveChoiceLayer::Layer1]);
+        assert_eq!(move_choice_layers(TrainerClass::Gambler), &[MoveChoiceLayer::Layer1]);
     }
 }

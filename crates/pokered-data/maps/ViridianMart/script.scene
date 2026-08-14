@@ -40,6 +40,7 @@ game_scene ViridianMart {
     @trigger(map = "ViridianMart", npc = 1)
     @if (getFlag("EVENT_OAK_GOT_PARCEL")) {
       // Parcel delivered to Oak: this is now a normal PoKeMart clerk.
+    @say("") { @t("Hi there!\n\nMay I help you?", "你好！\n\n需要帮忙吗？") }
       openShop(["POKE_BALL", "ANTIDOTE", "PARLYZ_HEAL", "BURN_HEAL"])
     } @else {
       // Parcel taken but not yet delivered to Oak.

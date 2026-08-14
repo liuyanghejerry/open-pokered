@@ -1464,6 +1464,7 @@ impl BattleScreen {
                 side_effect_roll: rand::random(),
                 duration_roll: rand::random(),
                 multi_hit_roll: rand::random(),
+                stat_down_miss_roll: rand::random(),
             },
         }
     }
@@ -1559,7 +1560,13 @@ impl BattleScreen {
                 msgs.clear();
                 msgs.push(format!("{} {}", side_name, format_cannot_move(reason)));
             }
-            move_execution::MoveOutcome::NoDamageMove { .. } => {}
+            move_execution::MoveOutcome::NoDamageMove { effect } => {
+                // Gen-1 quirk: primary stat-down moves can miss during the
+                // effect phase (effects.asm:553) — shown as a normal miss.
+                if matches!(effect, crate::battle::effects::EffectResult::Missed) {
+                    msgs.push(format!("{}'s attack missed!", side_name));
+                }
+            }
         }
         msgs
     }

@@ -148,7 +148,28 @@
       "isTrainer": false
     }
   ],
-  "signs": [],
+  "signs": [
+    {
+      "x": 4,
+      "y": 0,
+      "textId": 1
+    },
+    {
+      "x": 5,
+      "y": 0,
+      "textId": 2
+    },
+    {
+      "x": 0,
+      "y": 1,
+      "textId": 3
+    },
+    {
+      "x": 1,
+      "y": 1,
+      "textId": 4
+    }
+  ],
   "text": {
     "npc": {
       "1": [
@@ -762,6 +783,72 @@
         },
         {
           "line1": "<PLAYER>! Hahaha!",
+          "line2": ""
+        }
+      ]
+    },
+    "sign": {
+      "1": [
+        {
+          "line1": "Push START to",
+          "line2": "open the MENU!"
+        }
+      ],
+      "2": [
+        {
+          "line1": "The SAVE option is",
+          "line2": "on the MENU screen."
+        }
+      ],
+      "3": [
+        {
+          "line1": "There's an e-mail message here!",
+          "line2": ""
+        },
+        {
+          "line1": "...",
+          "line2": ""
+        },
+        {
+          "line1": "Calling all POKeMON trainers!",
+          "line2": "The elite trainers of POKeMON LEAGUE are ready to take on all comers!"
+        },
+        {
+          "line1": "Bring your best POKeMON and see how you rate as a trainer!",
+          "line2": ""
+        },
+        {
+          "line1": "POKeMON LEAGUE HQ INDIGO PLATEAU",
+          "line2": ""
+        },
+        {
+          "line1": "PS: PROF.OAK, please visit us! ...",
+          "line2": ""
+        }
+      ],
+      "4": [
+        {
+          "line1": "There's an e-mail message here!",
+          "line2": ""
+        },
+        {
+          "line1": "...",
+          "line2": ""
+        },
+        {
+          "line1": "Calling all POKeMON trainers!",
+          "line2": "The elite trainers of POKeMON LEAGUE are ready to take on all comers!"
+        },
+        {
+          "line1": "Bring your best POKeMON and see how you rate as a trainer!",
+          "line2": ""
+        },
+        {
+          "line1": "POKeMON LEAGUE HQ INDIGO PLATEAU",
+          "line2": ""
+        },
+        {
+          "line1": "PS: PROF.OAK, please visit us! ...",
           "line2": ""
         }
       ]

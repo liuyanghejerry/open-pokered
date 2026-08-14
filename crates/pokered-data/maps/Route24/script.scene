@@ -10,10 +10,15 @@
 game_scene Route24 {
   // ── ROCKET reward NPC at the end of the bridge (npc 1) ───────────────────
   // Original Route24CooltrainerM1Text: first clear (no EVENT_GOT_NUGGET) awards
-  // the NUGGET, then taunts you into a battle (EngageMapTrainer -> OPP_ROCKET7);
+  // the NUGGET, then taunts you into a battle (EngageMapTrainer -> OPP_ROCKET6);
   // beating him sets EVENT_BEAT_ROUTE24_ROCKET. A full bag defers the prize.
+  // The (10,15) bridge coord trigger (rocketApproach) auto-engages the
+  // dialogue so the player can't walk past. Approximation: the original also
+  // force-walks the player one step down before the reward (Route24.asm:38-42);
+  // the DSL has no conditional player-position walk, so that step is skipped.
   @storyline("talkRocket") {
     @trigger(map = "Route24", npc = 1, toggle = "ROUTE_24_OBJ_1")
+    @trigger(map = "Route24", name = "rocketApproach")
     resetFlag("EVENT_NUGGET_REWARD_AVAILABLE")
     @if (getFlag("EVENT_GOT_NUGGET")) {
       @speaker("") {
@@ -30,7 +35,7 @@ game_scene Route24 {
         @speaker("") {
           @t("By the way, would you like\nto join TEAM ROCKET?\n\nWe're a group dedicated to\nevil using POKeMON!\n\nWant to join?\n\nAre you sure?\n\nCome on, join us!\n\nI'm telling you to join!\n\nOK, you need convincing!\n\nI'll make you an offer you\ncan't refuse!", "顺便问一下，你愿意加入火箭队\n吗？\n\n我们是一心作恶利用宝可梦的组\n织！\n\n想加入吗？\n\n你确定吗？\n\n来吧，加入我们！\n\n我告诉你加入吧！\n\n好吧，需要说服你！\n\n我会给你一个无法拒绝的提议！")
         }
-        result = startBattle("OPP_ROCKET7")
+        result = startBattle("OPP_ROCKET6")
         @if (result == "win") {
           setFlag("EVENT_BEAT_ROUTE24_ROCKET")
           @speaker("") { @t("Arrgh! You are good!", "可恶！你挺厉害！") }

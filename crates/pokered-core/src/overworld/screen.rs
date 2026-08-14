@@ -176,6 +176,9 @@ pub struct PendingTrainerBattle {
     /// [`PokemonNpcData::end_battle_text`]). Shown inside the battle victory
     /// sequence, before the prize-money text.
     pub end_battle_text: Option<String>,
+    /// For rival battles: the 0-based party index of the triplet's Squirtle
+    /// slot (scripts/RivalX `StarterTable` bases). None = the base triplet.
+    pub rival_triplet_base: Option<u8>,
 }
 
 #[derive(Debug, Clone)]
@@ -671,6 +674,11 @@ pub struct OverworldScreen<G: GameData = pokered_data::impl_traits::PokemonRedDa
     /// (`wObtainedHiddenItemsFlags`), seeded by the app at load and read back
     /// at save — same pattern as `toggleable_object_flags`.
     pub(crate) hidden_item_flags: [u8; crate::save::game_data::HIDDEN_ITEMS_BYTES],
+    /// `wObtainedHiddenCoinsFlags` — the 12 Game Corner floor-coin spots.
+    pub(crate) hidden_coin_flags: [u8; crate::save::game_data::HIDDEN_COINS_BYTES],
+    /// Cached casino-coin total (seeded by `seed_script_query_state`), used by
+    /// the hidden-coin "dropped" text check (9999 cap).
+    pub(crate) player_coins: u16,
     /// ITEMFINDER ding sequencer: `(dings_remaining, frames_until_next)`. The
     /// original blocks on each SFX (PlaySoundWaitForCurrent, 4× HEALING_MACHINE
     /// + PURCHASE); here one ding is emitted every ITEMFINDER_DING_FRAMES.
@@ -983,6 +991,8 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
             toggleable_object_flags: [0u8;
                 pokered_data::toggleable_objects::TOGGLEABLE_OBJECT_FLAGS_SIZE],
             hidden_item_flags: [0u8; crate::save::game_data::HIDDEN_ITEMS_BYTES],
+            hidden_coin_flags: [0u8; crate::save::game_data::HIDDEN_COINS_BYTES],
+            player_coins: 0,
             itemfinder_dings: None,
             rng: rand::rngs::StdRng::from_entropy(),
             safari_steps: 0,
@@ -1126,6 +1136,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
         party_species: &[String],
         coins: u16,
         obtained_badges: u8,
+        game_version: u8,
     ) {
         let facing = match self.state.player.facing {
             Direction::Up => "up",
@@ -1135,6 +1146,8 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
         };
         self.script_engine.seed_number("money", money as f64);
         self.script_engine.seed_number("coins", coins as f64);
+        self.script_engine.seed_number("gameVersion", game_version as f64);
+        self.player_coins = coins;
         self.script_engine.seed_set("bag", bag_const_names);
         self.script_bag_names = bag_const_names.to_vec();
         self.script_engine.seed_set("party", party_species);
@@ -1713,6 +1726,64 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
         flags: [u8; crate::save::game_data::HIDDEN_ITEMS_BYTES],
     ) {
         self.hidden_item_flags = flags;
+    }
+
+    pub fn hidden_coin_flags(&self) -> &[u8; crate::save::game_data::HIDDEN_COINS_BYTES] {
+        &self.hidden_coin_flags
+    }
+
+    pub fn set_hidden_coin_flags(
+        &mut self,
+        flags: [u8; crate::save::game_data::HIDDEN_COINS_BYTES],
+    ) {
+        self.hidden_coin_flags = flags;
+    }
+
+    /// `HiddenCoins` (engine/events/hidden_items.asm): the A-button handler
+    /// found the tile in front of the player in `HiddenCoinCoords`.
+    ///
+    /// * No COIN CASE in the bag → nothing happens (the original returns
+    ///   before the flag test); the caller still consumes the A press.
+    /// * Already obtained → show nothing; the A press is consumed.
+    /// * Otherwise award the coins (the 40-spot's Gen-1 bug degrades to 20),
+    ///   set the flag, play `SFX_GET_ITEM_2` and show
+    ///   "<PLAYER> found @NN coins!"; when the total hit the 9999 cap the
+    ///   "Oops! Dropped some coins!" continuation is appended.
+    pub(crate) fn handle_hidden_coin(&mut self, facing_x: u8, facing_y: u8) -> bool {
+        use crate::overworld::hidden_items as hi;
+        let find = hi::examine_facing_coin_tile(
+            self.state.current_map,
+            facing_x,
+            facing_y,
+            &self.hidden_coin_flags,
+        );
+        match find {
+            None => return false,
+            Some(hi::HiddenCoinFind::AlreadyObtained) => return true,
+            Some(hi::HiddenCoinFind::Found { index, amount }) => {
+                // COIN CASE required (hidden_items.asm: `ld b, COIN_CASE`).
+                let has_case = self
+                    .script_bag_names
+                    .iter()
+                    .any(|n| n == "COIN_CASE");
+                if !has_case {
+                    return true;
+                }
+                hi::set_obtained(&mut self.hidden_coin_flags, index);
+                self.game_data_requests
+                    .push(OverworldGameDataRequest::GiveCoins { amount });
+                self.audio_requests.push(OverworldAudioRequest::PlaySound {
+                    sound_id: "SFX_GET_ITEM_2".to_string(),
+                });
+                let mut text = hi::found_coins_message(&self.player_name, amount);
+                if self.player_coins.saturating_add(amount) >= 9999 {
+                    text.push_str("\n\n");
+                    text.push_str(&hi::dropped_coins_message());
+                }
+                self.pending_dialogue = Some(BedroomDialogue::from_message(&text));
+                return true;
+            }
+        }
     }
 
     /// `HiddenItems` (engine/events/hidden_items.asm:1-50): the A-button

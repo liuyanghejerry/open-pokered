@@ -54,12 +54,12 @@ game_scene Route22 {
       // the rival class, so we keep one valid class id per branch.
       s = getRivalStarter()
       @if (s == 0) {
-        result = startBattle("OPP_RIVAL1")
+        result = startBattleSet("OPP_RIVAL1", 3)
       } @else {
         @if (s == 1) {
-          result = startBattle("OPP_RIVAL1")
+          result = startBattleSet("OPP_RIVAL1", 3)
         } @else {
-          result = startBattle("OPP_RIVAL1")
+          result = startBattleSet("OPP_RIVAL1", 3)
         }
       }
 
@@ -125,12 +125,12 @@ game_scene Route22 {
 
       s = getRivalStarter()
       @if (s == 0) {
-        result = startBattle("OPP_RIVAL2")
+        result = startBattleSet("OPP_RIVAL2", 9)
       } @else {
         @if (s == 1) {
-          result = startBattle("OPP_RIVAL2")
+          result = startBattleSet("OPP_RIVAL2", 9)
         } @else {
-          result = startBattle("OPP_RIVAL2")
+          result = startBattleSet("OPP_RIVAL2", 9)
         }
       }
 

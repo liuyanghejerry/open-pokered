@@ -116,7 +116,55 @@
       "isTrainer": false
     }
   ],
-  "signs": [],
-  "text": {},
+  "signs": [
+    {
+      "x": 3,
+      "y": 9,
+      "textId": 1
+    },
+    {
+      "x": 6,
+      "y": 9,
+      "textId": 2
+    },
+    {
+      "x": 4,
+      "y": 0,
+      "textId": 3
+    },
+    {
+      "x": 5,
+      "y": 0,
+      "textId": 4
+    }
+  ],
+  "text": {
+    "sign": {
+      "1": [
+        {
+          "line1": "FIGHTING DOJO",
+          "line2": ""
+        }
+      ],
+      "2": [
+        {
+          "line1": "FIGHTING DOJO",
+          "line2": ""
+        }
+      ],
+      "3": [
+        {
+          "line1": "Enemies on every",
+          "line2": "side!"
+        }
+      ],
+      "4": [
+        {
+          "line1": "What goes around",
+          "line2": "comes around!"
+        }
+      ]
+    }
+  },
   "wild": null
 }

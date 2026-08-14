@@ -170,4 +170,24 @@ game_scene FuchsiaGym {
       }
     }
   }
+
+  // ── Gym statue (sign 1 at 3,15) — badge-conditional ──
+  @storyline("gymStatue1") {
+    @trigger(map = "FuchsiaGym", sign = 1)
+    @if (getFlag("EVENT_BEAT_KOGA")) {
+      @speaker("") { @t("FUCHSIA CITY\nPOKeMON GYM\nLEADER: KOGA\n\nWINNING TRAINERS:\n<RIVAL>\n<PLAYER>", "浅红市宝可梦道馆\n馆主：阿桔\n\n获胜训练家：\n劲敌\n玩家") }
+    } @else {
+      @speaker("") { @t("FUCHSIA CITY\nPOKeMON GYM\nLEADER: KOGA\n\nWINNING TRAINERS:\n<RIVAL>", "浅红市宝可梦道馆\n馆主：阿桔\n\n获胜训练家：\n劲敌") }
+    }
+  }
+
+  // ── Gym statue (sign 2 at 6,15) — badge-conditional ──
+  @storyline("gymStatue2") {
+    @trigger(map = "FuchsiaGym", sign = 2)
+    @if (getFlag("EVENT_BEAT_KOGA")) {
+      @speaker("") { @t("FUCHSIA CITY\nPOKeMON GYM\nLEADER: KOGA\n\nWINNING TRAINERS:\n<RIVAL>\n<PLAYER>", "浅红市宝可梦道馆\n馆主：阿桔\n\n获胜训练家：\n劲敌\n玩家") }
+    } @else {
+      @speaker("") { @t("FUCHSIA CITY\nPOKeMON GYM\nLEADER: KOGA\n\nWINNING TRAINERS:\n<RIVAL>", "浅红市宝可梦道馆\n馆主：阿桔\n\n获胜训练家：\n劲敌") }
+    }
+  }
 }
