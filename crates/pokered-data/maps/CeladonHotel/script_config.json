@@ -15,5 +15,10 @@
       "talk": "talkSuperNerd"
     }
   ],
-  "signs": []
+  "signs": [
+    {
+      "id": 1,
+      "talk": "pcSign1"
+    }
+  ]
 }

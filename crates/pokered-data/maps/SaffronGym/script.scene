@@ -182,4 +182,14 @@ game_scene SaffronGym {
       }
     }
   }
+
+  // ── Gym statue (sign 1 at 9,15) — badge-conditional ──
+  @storyline("gymStatue1") {
+    @trigger(map = "SaffronGym", sign = 1)
+    @if (getFlag("EVENT_BEAT_SABRINA")) {
+      @speaker("") { @t("SAFFRON CITY\nPOKeMON GYM\nLEADER: SABRINA\n\nWINNING TRAINERS:\n<RIVAL>\n<PLAYER>", "金黄市宝可梦道馆\n馆主：娜姿\n\n获胜训练家：\n劲敌\n玩家") }
+    } @else {
+      @speaker("") { @t("SAFFRON CITY\nPOKeMON GYM\nLEADER: SABRINA\n\nWINNING TRAINERS:\n<RIVAL>", "金黄市宝可梦道馆\n馆主：娜姿\n\n获胜训练家：\n劲敌") }
+    }
+  }
 }

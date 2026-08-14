@@ -674,11 +674,10 @@ pub fn sell_price(item: ItemId, quantity: u8) -> Option<u32> {
 }
 
 pub fn can_sell(item: ItemId) -> bool {
-    if let Some(data) = get_item_data(item) {
-        !data.is_key_item && data.price > 0
-    } else {
-        false
-    }
+    // engine/events/pokemart.asm:70-77 — only key items (and HMs, which are
+    // key items) cannot be sold. ¥0 items like MASTER BALL / MOON STONE / ETHER
+    // and every TM are sellable in the original.
+    get_item_data(item).is_some_and(|d| !d.is_key_item)
 }
 
 pub fn try_buy(item: ItemId, quantity: u8, money: &mut u32, bag: &mut Inventory<BAG_ITEM_CAPACITY>) -> BuyResult {
@@ -766,5 +765,22 @@ impl ShopInventory {
             parsed.push(id);
         }
         Ok(Self::new(parsed))
+    }
+}
+
+#[cfg(test)]
+mod can_sell_tests {
+    use super::*;
+    use pokered_data::items::ItemId;
+
+    /// engine/events/pokemart.asm:70-77 — only key items (and HMs) are blocked.
+    #[test]
+    fn non_key_items_are_sellable_including_zero_price_and_tms() {
+        assert!(can_sell(ItemId::MasterBall), "¥0 items sellable");
+        assert!(can_sell(ItemId::MoonStone));
+        assert!(can_sell(ItemId::Tm01), "TMs sellable");
+        assert!(!can_sell(ItemId::Hm01), "HMs blocked");
+        assert!(!can_sell(ItemId::Bicycle), "key items blocked");
+        assert!(!can_sell(ItemId::BoulderBadge), "badges blocked");
     }
 }

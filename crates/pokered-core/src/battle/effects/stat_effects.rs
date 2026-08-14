@@ -28,6 +28,23 @@ pub fn apply_stat_up(state: &mut BattleState, stat_idx: u8, stages: i8) -> Effec
     }
 }
 
+/// Primary stat-down moves in a regular battle: Gen-1 quirk — an extra 25%
+/// miss roll happens BEFORE the Mist/substitute checks
+/// (engine/battle/effects.asm:551-555: `cp 25 percent + 1` → 64/256).
+/// Link battles skip the roll (`cp LINK_STATE_BATTLING / jr z, .statModifierDownEffect`).
+pub fn apply_stat_down_primary(
+    state: &mut BattleState,
+    stat_idx: u8,
+    stages: i8,
+    randoms: &EffectRandoms,
+) -> EffectResult {
+    if !state.link_battle && randoms.stat_down_miss_roll < 64 {
+        state.move_missed = true;
+        return EffectResult::Missed;
+    }
+    apply_stat_down(state, stat_idx, stages)
+}
+
 pub fn apply_stat_down(state: &mut BattleState, stat_idx: u8, stages: i8) -> EffectResult {
     let stat = stat_index_from_u8(stat_idx);
     let defender = state.defender();
@@ -104,7 +121,7 @@ mod tests {
         EffectRandoms {
             side_effect_roll: 0,
             duration_roll: 0,
-            multi_hit_roll: 0,
+            multi_hit_roll: 0, stat_down_miss_roll: 255,
         }
     }
 
@@ -183,7 +200,7 @@ mod tests {
         let randoms = EffectRandoms {
             side_effect_roll: 200,
             duration_roll: 0,
-            multi_hit_roll: 0,
+            multi_hit_roll: 0, stat_down_miss_roll: 255,
         };
         let result = apply_stat_down_side(&mut state, 0, &randoms);
         assert_eq!(result, EffectResult::NoEffect);

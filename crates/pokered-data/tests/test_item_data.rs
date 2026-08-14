@@ -92,3 +92,25 @@ fn spot_check_poke_ball_price() {
     let pb = get_item_data(ItemId::PokeBall).unwrap();
     assert_eq!(pb.price, 200);
 }
+
+#[test]
+fn tm_hm_names_and_prices_are_synthesized() {
+    use pokered_data::item_data::{get_item_data, TM_PRICES};
+    use pokered_data::items::ItemId;
+
+    // home/names.asm:51-91 generates TM01..TM50 / HM01..HM05 at runtime.
+    for i in 0..50 {
+        let id = ItemId::from_id(0xC9 + i);
+        let d = get_item_data(id).expect("TM data");
+        assert_eq!(d.name, format!("TM{:02}", i + 1));
+        assert_eq!(d.price, TM_PRICES[i as usize]);
+        assert!(!d.is_key_item, "TMs are sellable (pokemart.asm:76-77)");
+    }
+    for i in 0..5 {
+        let id = ItemId::from_id(0xC4 + i);
+        let d = get_item_data(id).expect("HM data");
+        assert_eq!(d.name, format!("HM{:02}", i + 1));
+        assert_eq!(d.price, 0);
+        assert!(d.is_key_item, "HMs cannot be sold");
+    }
+}

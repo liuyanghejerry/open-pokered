@@ -413,6 +413,10 @@ pub struct BattleState {
     pub enemy: BattlerState,
     pub whose_turn: Side,
     pub move_missed: bool,
+    /// True when this battle runs over the link cable. Gates the Gen-1
+    /// stat-down-miss quirk (effects.asm:551-555 skips the roll in link
+    /// battles). Set by the link battle driver.
+    pub link_battle: bool,
     /// 0=normal, 1=crit, 2=OHKO success, 0xFF=OHKO fail
     pub critical_or_ohko: u8,
     pub damage: u16,
@@ -531,6 +535,7 @@ pub fn new_battle_state(
         enemy: new_battler_state(enemy_party),
         whose_turn: Side::Player,
         move_missed: false,
+        link_battle: false,
         critical_or_ohko: 0,
         damage: 0,
         num_run_attempts: 0,

@@ -96,7 +96,18 @@
       "isTrainer": false
     }
   ],
-  "signs": [],
+  "signs": [
+    {
+      "x": 2,
+      "y": 3,
+      "textId": 1
+    },
+    {
+      "x": 2,
+      "y": 6,
+      "textId": 2
+    }
+  ],
   "text": {
     "npc": {
       "1": [
@@ -252,7 +263,28 @@
         }
       ]
     },
-    "sign": {}
+    "sign": {
+      "1": [
+        {
+          "line1": "AERODACTYL Fossil",
+          "line2": "A primitive and"
+        },
+        {
+          "line1": "rare POKeMON.",
+          "line2": ""
+        }
+      ],
+      "2": [
+        {
+          "line1": "KABUTOPS Fossil",
+          "line2": "A primitive and"
+        },
+        {
+          "line1": "rare POKeMON.",
+          "line2": ""
+        }
+      ]
+    }
   },
   "wild": null
 }

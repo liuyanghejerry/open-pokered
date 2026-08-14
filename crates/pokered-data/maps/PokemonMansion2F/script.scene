@@ -75,7 +75,7 @@ game_scene PokemonMansion2F {
   // and plays SFX_GO_INSIDE like the asm. The switch tile has no bg/sign coordinate
   // in map.json, so it is bound to the documented switch-block region.
   @storyline("mansionSwitch") {
-    @trigger(map = "PokemonMansion2F", name = "mansionSwitch1")
+    @trigger(map = "PokemonMansion2F", sign = 1)
     @speaker("") { @t("A secret switch!\n\nPress it?", "有秘密开关！\n\n要按下吗？") }
     @choice {
       @option(@t("YES", "是")) {

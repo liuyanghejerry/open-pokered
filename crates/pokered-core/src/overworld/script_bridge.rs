@@ -131,6 +131,7 @@ pub enum ScriptEffect {
     FadeOutMusic,
     StartBattle {
         trainer_id: String,
+        rival_triplet_base: Option<u8>,
     },
     StartWildBattle {
         species: String,
@@ -416,6 +417,7 @@ pub fn dispatch_command_with_names(
         ScriptCommand::FadeOutMusic => ScriptEffect::FadeOutMusic,
         ScriptCommand::StartBattle { trainer_id } => ScriptEffect::StartBattle {
             trainer_id: trainer_id.clone(),
+            rival_triplet_base: None,
         },
         ScriptCommand::StartWildBattle { species, level } => ScriptEffect::StartWildBattle {
             species: species.clone(),
@@ -527,6 +529,10 @@ fn dispatch_custom(name: &str, args: &[Value]) -> ScriptEffect {
         "setPartyNickname" => ScriptEffect::SetPartyNickname {
             index: custom_u64(args, 0) as u8,
             nickname: custom_str(args, 1),
+        },
+        "startBattleSet" => ScriptEffect::StartBattle {
+            trainer_id: custom_str(args, 0),
+            rival_triplet_base: Some(custom_u64(args, 1) as u8),
         },
         "openSlots" => ScriptEffect::OpenSlots {
             lucky: custom_bool(args, 0),

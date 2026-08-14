@@ -1,23 +1,6 @@
 {
   "$schema": "../../schemas/script_config.schema.json",
-  "coordEvents": [
-    {
-      "name": "mansionSwitch1",
-      "position": [
-        3,
-        8
-      ],
-      "trigger": "mansionSwitch"
-    },
-    {
-      "name": "mansionSwitch2",
-      "position": [
-        4,
-        8
-      ],
-      "trigger": "mansionSwitch"
-    }
-  ],
+  "coordEvents": [],
   "npcs": [
     {
       "id": 1,
@@ -38,5 +21,10 @@
     }
   ],
   "onLoad": "PokemonMansion2FOnLoad",
-  "signs": []
+  "signs": [
+    {
+      "id": 1,
+      "talk": "mansionSwitch"
+    }
+  ]
 }

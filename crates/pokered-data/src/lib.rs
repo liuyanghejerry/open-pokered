@@ -9,6 +9,7 @@ pub mod elevator_data;
 pub mod event_flags;
 pub mod evos_moves;
 pub mod fly_warp_data;
+pub mod hidden_coins;
 pub mod hidden_items;
 pub mod cries;
 pub mod item_data;

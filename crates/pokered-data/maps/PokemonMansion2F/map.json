@@ -87,8 +87,23 @@
       "isTrainer": false
     }
   ],
-  "signs": [],
-  "text": {},
+  "signs": [
+    {
+      "x": 2,
+      "y": 11,
+      "textId": 1
+    }
+  ],
+  "text": {
+    "sign": {
+      "1": [
+        {
+          "line1": "",
+          "line2": ""
+        }
+      ]
+    }
+  },
   "wild": {
     "red": {
       "grass": {

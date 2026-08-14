@@ -19,5 +19,14 @@
       "talk": "talkGymGuide"
     }
   ],
-  "signs": []
+  "signs": [
+    {
+      "id": 1,
+      "talk": "gymStatue1"
+    },
+    {
+      "id": 2,
+      "talk": "gymStatue2"
+    }
+  ]
 }

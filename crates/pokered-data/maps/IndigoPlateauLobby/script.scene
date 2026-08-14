@@ -41,7 +41,8 @@ game_scene IndigoPlateauLobby {
     @choice {
       @option(@t("Yes", "是")) {
         @speaker("") {
-          @t("OK, we will need your\nPOKeMON.", "好的，请把宝可梦交给我。")
+          @t("OK. We'll need your
+POKeMON.", "好的，请把宝可梦交给我。")
         }
         faceNpc("1", "right")
         delay(8)
@@ -80,6 +81,7 @@ game_scene IndigoPlateauLobby {
   // ── Mart Clerk (npc 4) — script_mart (Indigo Plateau inventory) ──────────
   @storyline("talkClerk") {
     @trigger(map = "IndigoPlateauLobby", npc = 4)
+    @say("") { @t("Hi there!\n\nMay I help you?", "你好！\n\n需要帮忙吗？") }
     openShop(["Ultra Ball", "Great Ball", "Full Restore", "Max Potion", "Full Heal", "Revive", "Max Repel"])
   }
 
@@ -96,5 +98,11 @@ game_scene IndigoPlateauLobby {
     @speaker("") {
       @t("Cable Club: This is for\ntrading and battling with\nfriends. We're making final\npreparations. Please wait.", "通信俱乐部：这里是用来和朋友\n进行交换和对战的。我们正在做\n最后的准备。请稍候。")
     }
+  }
+
+  // ── PC (sign 1 at 15,7) — OpenPokemonCenterPC ──
+  @storyline("pcSign1") {
+    @trigger(map = "IndigoPlateauLobby", sign = 1)
+    openPC()
   }
 }

@@ -126,8 +126,8 @@ impl TrainerClass {
             TrainerClass::BugCatcher => "BUG CATCHER",
             TrainerClass::Lass => "LASS",
             TrainerClass::Sailor => "SAILOR",
-            TrainerClass::JrTrainerM => "JR.TRAINER",
-            TrainerClass::JrTrainerF => "JR.TRAINER",
+            TrainerClass::JrTrainerM => "JR.TRAINER♂",
+            TrainerClass::JrTrainerF => "JR.TRAINER♀",
             TrainerClass::Pokemaniac => "POKeMANIAC",
             TrainerClass::SuperNerd => "SUPER NERD",
             TrainerClass::Hiker => "HIKER",
@@ -135,7 +135,7 @@ impl TrainerClass {
             TrainerClass::Burglar => "BURGLAR",
             TrainerClass::Engineer => "ENGINEER",
             TrainerClass::UnusedJuggler => "JUGGLER",
-            TrainerClass::Fisher => "FISHER",
+            TrainerClass::Fisher => "FISHERMAN",
             TrainerClass::Swimmer => "SWIMMER",
             TrainerClass::CueBall => "CUE BALL",
             TrainerClass::Gambler => "GAMBLER",
@@ -146,14 +146,14 @@ impl TrainerClass {
             TrainerClass::Tamer => "TAMER",
             TrainerClass::BirdKeeper => "BIRD KEEPER",
             TrainerClass::Blackbelt => "BLACKBELT",
-            TrainerClass::Rival1 => "RIVAL",
+            TrainerClass::Rival1 => "RIVAL1",
             TrainerClass::ProfOak => "PROF.OAK",
-            TrainerClass::Chief => "SCIENTIST",
+            TrainerClass::Chief => "CHIEF",
             TrainerClass::Scientist => "SCIENTIST",
             TrainerClass::Giovanni => "GIOVANNI",
             TrainerClass::Rocket => "ROCKET",
-            TrainerClass::CooltrainerM => "COOLTRAINER",
-            TrainerClass::CooltrainerF => "COOLTRAINER",
+            TrainerClass::CooltrainerM => "COOLTRAINER♂",
+            TrainerClass::CooltrainerF => "COOLTRAINER♀",
             TrainerClass::Bruno => "BRUNO",
             TrainerClass::Brock => "BROCK",
             TrainerClass::Misty => "MISTY",
@@ -163,8 +163,8 @@ impl TrainerClass {
             TrainerClass::Blaine => "BLAINE",
             TrainerClass::Sabrina => "SABRINA",
             TrainerClass::Gentleman => "GENTLEMAN",
-            TrainerClass::Rival2 => "RIVAL",
-            TrainerClass::Rival3 => "RIVAL",
+            TrainerClass::Rival2 => "RIVAL2",
+            TrainerClass::Rival3 => "RIVAL3",
             TrainerClass::Lorelei => "LORELEI",
             TrainerClass::Channeler => "CHANNELER",
             TrainerClass::Agatha => "AGATHA",
@@ -352,10 +352,31 @@ pub fn parse_trainer_id(trainer_id: &str) -> Option<(TrainerClass, usize)> {
 }
 
 /// Convert trainer class + set index into an OPP_-style trainer ID string,
-/// e.g. `(Youngster, 0)` → `"OPP_YOUNGSTER1"`.
+/// e.g. `(Youngster, 6)` → `"OPP_YOUNGSTER6"`.
+///
+/// `set` is the **1-based** set number as stored in the reference objects
+/// tables (`data/maps/objects/*.asm` 8th object_event arg, mirrored verbatim
+/// in `map.json` `trainerSet`). `parse_trainer_id` converts the trailing
+/// number back to a 0-based party index.
 pub fn make_trainer_id(class: TrainerClass, set: u8) -> String {
     let name = trainer_class_name(class);
-    format!("OPP_{}{}", name, set + 1)
+    format!("OPP_{}{}", name, set)
+}
+
+/// Rival party-triplet offset by the player's starter. The rival picks the
+/// type-advantage starter, and each Rival1/2/3 triplet is ordered
+/// Squirtle/Bulbasaur/Charmander (parties.asm), so:
+/// player Bulbasaur -> rival Charmander (offset 2),
+/// player Charmander -> rival Squirtle   (offset 0),
+/// player Squirtle  -> rival Bulbasaur   (offset 1).
+pub fn rival_starter_offset(player_starter: crate::species::Species) -> usize {
+    use crate::species::Species;
+    match player_starter {
+        Species::Bulbasaur => 2,
+        Species::Charmander => 0,
+        Species::Squirtle => 1,
+        _ => 0,
+    }
 }
 
 /// Return the uppercase string name for a trainer class (without OPP_ prefix).
@@ -409,5 +430,38 @@ pub fn trainer_class_name(class: TrainerClass) -> &'static str {
         TrainerClass::Channeler => "CHANNELER",
         TrainerClass::Agatha => "AGATHA",
         TrainerClass::Lance => "LANCE",
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// map.json `trainerSet` stores the reference's 1-based set number verbatim
+    /// (`data/maps/objects/*.asm` 8th object_event arg). `make_trainer_id` must
+    /// emit that same number so `parse_trainer_id` resolves the party with the
+    /// matching 1-based index.
+    #[test]
+    fn make_trainer_id_round_trips_ref_set_numbers() {
+        assert_eq!(make_trainer_id(TrainerClass::Youngster, 1), "OPP_YOUNGSTER1");
+        assert_eq!(make_trainer_id(TrainerClass::Rocket, 6), "OPP_ROCKET6");
+        assert_eq!(make_trainer_id(TrainerClass::Giovanni, 2), "OPP_GIOVANNI2");
+
+        // Round-trip: ref set N (1-based) must resolve to parties[N-1].
+        for (id, class, party_index) in [
+            ("OPP_YOUNGSTER1", TrainerClass::Youngster, 0),
+            ("OPP_ROCKET6", TrainerClass::Rocket, 5),
+            ("OPP_GIOVANNI2", TrainerClass::Giovanni, 1),
+        ] {
+            assert_eq!(parse_trainer_id(id), Some((class, party_index)));
+        }
+    }
+
+    #[test]
+    fn display_names_match_reference_trainer_names() {
+        // data/trainers/names.asm
+        assert_eq!(TrainerClass::Fisher.display_name(), "FISHERMAN");
+        assert_eq!(TrainerClass::Chief.display_name(), "CHIEF");
+        assert_eq!(TrainerClass::Youngster.display_name(), "YOUNGSTER");
     }
 }

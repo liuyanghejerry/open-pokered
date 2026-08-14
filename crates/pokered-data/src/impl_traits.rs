@@ -2034,9 +2034,10 @@ mod shop_provider_tests {
     fn viridian_mart_inventory() {
         let p = provider();
         let inv = p.shop_inventory(&ShopId::ViridianMart);
-        assert_eq!(inv.len(), 5);
+        // data/items/marts.asm: POKE_BALL, ANTIDOTE, PARLYZ_HEAL, BURN_HEAL
+        assert_eq!(inv.len(), 4);
         assert_eq!(inv[0], (ItemId::PokeBall, 200));
-        assert_eq!(inv[1], (ItemId::Potion, 300));
+        assert_eq!(inv[1], (ItemId::Antidote, 100));
     }
 
     #[test]
