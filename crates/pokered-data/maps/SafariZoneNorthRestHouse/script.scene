@@ -28,4 +28,10 @@ game_scene SafariZoneNorthRestHouse {
       @t("My EEVEE evolved into\nFLAREON!\n\nBut, a friend's EEVEE turned\ninto a VAPOREON! I wonder\nwhy?", "我的伊布进化成火伊布了！\n\n但是，朋友的伊布却变成了水伊\n布！真不知道为什么？")
     }
   }
+
+  // ── PC (sign 1 at 13,3) — OpenPokemonCenterPC ──
+  @storyline("pcSign1") {
+    @trigger(map = "SafariZoneNorthRestHouse", sign = 1)
+    openPC()
+  }
 }

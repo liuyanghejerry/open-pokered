@@ -27,4 +27,10 @@ game_scene CeladonHotel {
       @t("Why did she bring her\nbrother?", "她为什么还带着哥哥？")
     }
   }
+
+  // ── PC (sign 1 at 13,3) — OpenPokemonCenterPC ──
+  @storyline("pcSign1") {
+    @trigger(map = "CeladonHotel", sign = 1)
+    openPC()
+  }
 }

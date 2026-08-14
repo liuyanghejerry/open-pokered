@@ -18,7 +18,7 @@
       "spriteName": "Red",
       "x": 2,
       "y": 2,
-      "movement": "Wander",
+      "movement": "Stationary",
       "facing": "Down",
       "range": 0,
       "textId": 1,

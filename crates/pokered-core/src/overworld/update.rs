@@ -875,6 +875,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                     trainer_id,
                     npc_index: sighting.npc_index,
                     end_battle_text,
+                    rival_triplet_base: None,
                 });
             }
         }
@@ -926,6 +927,11 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                     .is_some()
                     {
                         self.handle_hidden_item(fx, fy);
+                        return ScreenAction::Continue;
+                    }
+                    // Hidden coins (Game Corner floor spots) — the ref checks
+                    // them in the same hidden-event pass.
+                    if self.handle_hidden_coin(fx, fy) {
                         return ScreenAction::Continue;
                     }
                 }
@@ -1015,6 +1021,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                             trainer_id,
                             npc_index,
                             end_battle_text,
+                            rival_triplet_base: None,
                         });
                     }
                     npc_interaction::InteractionResult::ItemPickup { npc_index, .. } => {
@@ -2454,13 +2461,14 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                     self.audio_requests
                         .push(OverworldAudioRequest::FadeOutMusic);
                 }
-                script_bridge::ScriptEffect::StartBattle { trainer_id } => {
+                script_bridge::ScriptEffect::StartBattle { trainer_id, rival_triplet_base } => {
                     self.pending_trainer_battle = Some(PendingTrainerBattle {
                         trainer_id,
                         npc_index: u8::MAX,
                         // Script-driven battles (gym leaders, rivals) show their
                         // own reward/quip text from the .scene.
                         end_battle_text: None,
+                        rival_triplet_base,
                     });
                 }
                 script_bridge::ScriptEffect::StartWildBattle { species, level } => {

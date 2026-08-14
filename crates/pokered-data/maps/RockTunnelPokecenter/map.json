@@ -74,6 +74,11 @@
       "x": 13,
       "y": 3,
       "textId": 1
+    },
+    {
+      "x": 0,
+      "y": 4,
+      "textId": 2
     }
   ],
   "text": {
@@ -101,13 +106,21 @@
       "3": [
         {
           "line1": "I sold a useless",
-          "line2": "NUGGET for \u00a55000!"
+          "line2": "NUGGET for ¥5000!"
         }
       ],
       "4": [
         {
           "line1": "[Cable Club",
           "line2": "script]"
+        }
+      ]
+    },
+    "sign": {
+      "2": [
+        {
+          "line1": "I heard that",
+          "line2": "GHOSTs haunt"
         }
       ]
     }

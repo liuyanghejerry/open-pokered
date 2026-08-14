@@ -22,4 +22,34 @@ game_scene ViridianSchoolHouse {
       @t("Be sure to read the\nblackboard carefully!", "一定要仔细阅读黑板上的内容！")
     }
   }
+
+  // ── Blackboard (sign 2 at (3,0)) — ViridianSchoolBlackboard ────────────
+  // engine/events/hidden_events/school_blackboard.asm::ViridianSchoolBlackboard
+  // — the status menu loops until QUIT; the DSL has no loop, so after each
+  // status text the menu re-opens once, then the flow ends.
+  @storyline("statusBlackboard") {
+    @trigger(map = "ViridianSchoolHouse", sign = 2)
+    @speaker("") { @t("The blackboard describes\nPOKeMON STATUS changes\nduring battles.", "黑板上描述了宝可梦在战斗中的\n状态变化。") }
+    @speaker("") { @t("Which heading do you\nwant to read?", "你想读哪个标题？") }
+    @choice {
+      @option(@t("SLP", "睡眠")) {
+        @speaker("") { @t("A POKeMON can't attack if\nit's asleep!\n\nPOKeMON will stay asleep\neven after battles.\n\nUse AWAKENING to wake\nthem up!", "宝可梦睡着后无法攻击！\n\n宝可梦在战斗结束后仍会保持\n睡眠。\n\n使用苏醒药叫醒它们吧！") }
+      }
+      @option(@t("PSN", "中毒")) {
+        @speaker("") { @t("When poisoned, a POKeMON's\nhealth steadily drops.\n\nPoison lingers after battles.\n\nUse an ANTIDOTE to cure\npoison!", "中毒后宝可梦的体力会持续下\n降。\n\n中毒状态在战斗后仍会保留。\n\n使用解毒药解毒吧！") }
+      }
+      @option(@t("PAR", "麻痹")) {
+        @speaker("") { @t("Paralysis could make POKeMON\nmoves misfire!\n\nParalysis remains after\nbattles.\n\nUse PARLYZ HEAL for\ntreatment!", "麻痹可能导致宝可梦招式失\n误！\n\n麻痹状态在战斗后仍会保留。\n\n使用麻痹药来治疗吧！") }
+      }
+      @option(@t("BRN", "烧伤")) {
+        @speaker("") { @t("A burn reduces power and\nspeed. It also causes ongoing\ndamage.\n\nBurns remain after battles.\n\nUse BURN HEAL to cure a\nburn!", "烧伤会降低力量和速度，还会\n持续造成伤害。\n\n烧伤状态在战斗后仍会保留。\n\n使用灼伤药治疗烧伤吧！") }
+      }
+      @option(@t("FRZ", "冰冻")) {
+        @speaker("") { @t("If frozen, a POKeMON becomes\ntotally immobile!\n\nIt stays frozen even after\nthe battle ends.\n\nUse ICE HEAL to thaw out\nPOKeMON!", "冰冻的宝可梦完全无法行动！\n\n即使战斗结束它也会保持冰冻。\n\n使用解冻药给宝可梦解冻吧！") }
+      }
+      @option(@t("QUIT", "退出")) {
+      }
+    }
+  }
+
 }

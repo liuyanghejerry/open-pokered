@@ -25,12 +25,14 @@ game_scene CeladonMart5F {
   // ── Clerk1 (npc 3) — shop: battle X-items ──────────────────────────────
   @storyline("talkClerk1") {
     @trigger(map = "CeladonMart5F", npc = 3)
+    @say("") { @t("Hi there!\n\nMay I help you?", "你好！\n\n需要帮忙吗？") }
     openShop(["X_ACCURACY", "GUARD_SPEC", "DIRE_HIT", "X_ATTACK", "X_DEFEND", "X_SPEED", "X_SPECIAL"])
   }
 
   // ── Clerk2 (npc 4) — shop: vitamins ────────────────────────────────────
   @storyline("talkClerk2") {
     @trigger(map = "CeladonMart5F", npc = 4)
+    @say("") { @t("Hi there!\n\nMay I help you?", "你好！\n\n需要帮忙吗？") }
     openShop(["HP_UP", "PROTEIN", "IRON", "CARBOS", "CALCIUM"])
   }
 

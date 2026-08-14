@@ -9,6 +9,7 @@ game_scene SaffronMart {
   //            REVIVE
   @storyline("talkClerk") {
     @trigger(map = "SaffronMart", npc = 1)
+    @say("") { @t("Hi there!\n\nMay I help you?", "你好！\n\n需要帮忙吗？") }
     openShop(["GreatBall", "HyperPotion", "MaxRepel", "EscapeRope", "FullHeal", "Revive"])
   }
 

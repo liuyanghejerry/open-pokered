@@ -95,6 +95,17 @@ impl ItemId {
                 | ItemId::SuperRod
                 | ItemId::DomeFossil
                 | ItemId::HelixFossil
+                // key_items.asm: badges, SAFARI_BALL and ITEM_2C are also TRUE.
+                | ItemId::BoulderBadge
+                | ItemId::CascadeBadge
+                | ItemId::ThunderBadge
+                | ItemId::RainbowBadge
+                | ItemId::SoulBadge
+                | ItemId::MarshBadge
+                | ItemId::VolcanoBadge
+                | ItemId::EarthBadge
+                | ItemId::SafariBall
+                | ItemId::Unused2C
         )
     }
 }

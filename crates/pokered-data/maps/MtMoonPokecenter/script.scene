@@ -6,12 +6,15 @@ game_scene MtMoonPokecenter {
   @storyline("talkNurse") {
     @trigger(map = "MtMoonPokecenter", npc = 1)
     @speaker("") {
-      @t("Welcome to the POKEMON\nCENTER!\n\nWe heal your POKEMON back to\nperfect health!\n\nShall we heal your POKEMON?", "欢迎光临宝可梦中心！\n\n我们能把你的宝可梦完全治愈！\n\n要我们为你的宝可梦治疗吗？")
+      @t("Welcome to our POKeMON
+CENTER!\n\nWe heal your POKeMON back to
+perfect health!\n\nShall we heal your POKeMON?", "欢迎光临宝可梦中心！\n\n我们能把你的宝可梦完全治愈！\n\n要我们为你的宝可梦治疗吗？")
     }
     @choice {
       @option(@t("Yes", "是")) {
         @speaker("") {
-          @t("OK, we will need your\nPOKEMON.", "OK，我们需要你的宝可梦。")
+          @t("OK. We'll need your
+POKeMON.", "OK，我们需要你的宝可梦。")
         }
         faceNpc("1", "right")
         delay(8)
@@ -20,7 +23,9 @@ game_scene MtMoonPokecenter {
         faceNpc("1", "down")
         delay(8)
         @speaker("") {
-          @t("Thank you for waiting.\n\nYour POKEMON are fully\nhealed!", "谢谢你等候。\n\n你的宝可梦已经全部痊愈！")
+          @t("Thank you!
+Your POKeMON are
+fighting fit!", "谢谢你等候。\n\n你的宝可梦已经全部痊愈！")
         }
       }
       @option(@t("No", "否")) {

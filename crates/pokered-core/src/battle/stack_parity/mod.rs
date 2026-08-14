@@ -1573,9 +1573,9 @@ fn secondary_handler(
 ) -> HandlerResult {
     use pokered_data::moves::MoveEffect as ME;
     match poc_move_data().effect {
-        // ── status-on-hit side-effect (`apply_poison_side`, threshold 51/102) ──
-        ME::PoisonSideEffect1 => poison_side(ctx, target, 51),
-        ME::PoisonSideEffect2 => poison_side(ctx, target, 102),
+        // ── status-on-hit side-effect (`apply_poison_side`, threshold 52/103) ──
+        ME::PoisonSideEffect1 => poison_side(ctx, target, 52),
+        ME::PoisonSideEffect2 => poison_side(ctx, target, 103),
         // ── stat-drop-on-hit (`apply_stat_down_side`, Special, 33% = thr 85) ──
         ME::SpecialDownSideEffect => stat_down_side(ctx, target, Stat::Special, 85),
         // ── flinch-on-hit (`apply_flinch_side`, threshold 26/77) ──
@@ -2165,6 +2165,7 @@ fn to_move_randoms(b: MoveBytes) -> MoveRandoms {
             side_effect_roll: 255,
             duration_roll: 0,
             multi_hit_roll: 0,
+            stat_down_miss_roll: 255,
         },
     }
 }
@@ -3798,6 +3799,7 @@ fn to_move_randoms_se(b: MoveBytes, side_effect: u8) -> MoveRandoms {
             side_effect_roll: side_effect,
             duration_roll: 0,
             multi_hit_roll: 0,
+            stat_down_miss_roll: 255,
         },
     }
 }

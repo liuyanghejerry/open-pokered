@@ -167,7 +167,7 @@ mod tests {
         EffectRandoms {
             side_effect_roll: 0,
             duration_roll: 0,
-            multi_hit_roll: 0,
+            multi_hit_roll: 0, stat_down_miss_roll: 255,
         }
     }
 
@@ -215,7 +215,7 @@ mod tests {
         let randoms = EffectRandoms {
             side_effect_roll: 0,
             duration_roll: 0,
-            multi_hit_roll: 1,
+            multi_hit_roll: 1, stat_down_miss_roll: 255,
         };
         apply_trapping(&mut state, &randoms);
         assert!(state.player.has_status1(status1::USING_TRAPPING_MOVE));
@@ -231,7 +231,7 @@ mod tests {
             let randoms = EffectRandoms {
                 side_effect_roll: 0,
                 duration_roll: 0,
-                multi_hit_roll: roll,
+                multi_hit_roll: roll, stat_down_miss_roll: 255,
             };
             apply_trapping(&mut state, &randoms);
             state.player.num_attacks_left + 1
@@ -297,7 +297,7 @@ mod tests {
         let randoms = EffectRandoms {
             side_effect_roll: 0,
             duration_roll: 0,
-            multi_hit_roll: 0,
+            multi_hit_roll: 0, stat_down_miss_roll: 255,
         };
 
         // First turn: sets THRASHING_ABOUT, counter = 2
@@ -323,7 +323,7 @@ mod tests {
         let randoms = EffectRandoms {
             side_effect_roll: 0,
             duration_roll: 1, // (1 & 1) + 2 = 3
-            multi_hit_roll: 0,
+            multi_hit_roll: 0, stat_down_miss_roll: 255,
         };
 
         apply_thrash(&mut state, &randoms);

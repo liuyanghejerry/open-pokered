@@ -97,6 +97,30 @@ impl ScriptApiRegistrar for PokemonScriptApi {
             },
         );
 
+        // game.startBattleSet(trainerId: string, rivalTripletBase: number)
+        // -> Promise<string>
+        // Like startBattle, but for rival battles the 0-based party index of
+        // the triplet's Squirtle slot is explicit (scripts/{Map}.asm
+        // StarterTable: Route22 1st = 3, CeruleanCity = 6, PokemonTower2F = 3,
+        // Route22 2nd = 9).
+        engine.register_async_fn(
+            "startBattleSet",
+            |args: &[JsValue], ctx: &mut Context| -> JsResult<ScriptCommand> {
+                let trainer_id = args
+                    .get_or_undefined(0)
+                    .to_string(ctx)?
+                    .to_std_string_lossy();
+                let base = args.get_or_undefined(1).to_json(ctx)?;
+                Ok(ScriptCommand::Custom {
+                    name: "startBattleSet".to_string(),
+                    args: vec![
+                        serde_json::Value::String(trainer_id),
+                        base,
+                    ],
+                })
+            },
+        );
+
         // game.startWildBattle(species: string, level: number) -> Promise<string>
         // Starts a catchable wild/static battle (legendary or route blocker) and
         // resolves to the outcome ("win" | "lose" | "caught" | "fled" | "draw").
@@ -535,6 +559,14 @@ impl ScriptApiRegistrar for PokemonScriptApi {
             "getRivalStarter",
             |_args: &[JsValue], _ctx: &mut Context, view: &BridgeView| -> JsResult<JsValue> {
                 Ok(JsValue::from(view.number("rivalStarter")))
+            },
+        );
+
+        // game.getGameVersion() -> number  (0 = Red, 1 = Blue)
+        engine.register_sync_fn(
+            "getGameVersion",
+            |_args: &[JsValue], _ctx: &mut Context, view: &BridgeView| -> JsResult<JsValue> {
+                Ok(JsValue::from(view.number("gameVersion")))
             },
         );
 

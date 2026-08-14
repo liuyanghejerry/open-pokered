@@ -24,15 +24,15 @@ use pokered_data::hidden_items;
 use pokered_data::items::ItemId;
 use pokered_data::maps::MapId;
 
-use crate::save::game_data::HIDDEN_ITEMS_BYTES;
+use crate::save::game_data::{HIDDEN_COINS_BYTES, HIDDEN_ITEMS_BYTES};
 
-/// `FLAG_TEST` on `wObtainedHiddenItemsFlags` (engine/flag_action.asm).
-pub fn check_obtained(flags: &[u8; HIDDEN_ITEMS_BYTES], index: usize) -> bool {
+/// `FLAG_TEST` on a hidden flag byte slice (engine/flag_action.asm).
+pub fn check_obtained<const N: usize>(flags: &[u8; N], index: usize) -> bool {
     flags[index / 8] & (1 << (index % 8)) != 0
 }
 
-/// `FLAG_SET` on `wObtainedHiddenItemsFlags` (engine/flag_action.asm).
-pub fn set_obtained(flags: &mut [u8; HIDDEN_ITEMS_BYTES], index: usize) {
+/// `FLAG_SET` on a hidden flag byte slice (engine/flag_action.asm).
+pub fn set_obtained<const N: usize>(flags: &mut [u8; N], index: usize) {
     flags[index / 8] |= 1 << (index % 8);
 }
 
@@ -192,4 +192,45 @@ mod tests {
     fn found_message_uses_display_name() {
         assert_eq!(found_message("RED", ItemId::Nugget), "RED found\nNUGGET!");
     }
+}
+
+// ── Hidden coins (Game Corner floor spots) ────────────────────────────────
+// engine/events/hidden_items.asm::HiddenCoins + data/events/hidden_coins.asm.
+
+/// Result of pressing A while facing a hidden-coin tile.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum HiddenCoinFind {
+    /// Spot already collected — the original swallows the A press silently.
+    AlreadyObtained,
+    /// Award `amount` coins (the 40-spot's Gen-1 bug degrades 40 → 20).
+    Found { index: usize, amount: u16 },
+}
+
+/// Examine the tile in front of the player for a Game Corner floor coin.
+pub fn examine_facing_coin_tile(
+    map: MapId,
+    facing_x: u8,
+    facing_y: u8,
+    flags: &[u8; HIDDEN_COINS_BYTES],
+) -> Option<HiddenCoinFind> {
+    let index = pokered_data::hidden_coins::find_hidden_coin(map, facing_x, facing_y)?;
+    if check_obtained(flags, index) {
+        return Some(HiddenCoinFind::AlreadyObtained);
+    }
+    let stored = pokered_data::hidden_coins::HIDDEN_COIN_SPOTS[index].amount;
+    // hidden_items.asm: `cp 40 / jr z, .bcd20 ; should be bcd40` — the 40
+    // spot awards 20 in the original.
+    let amount = if stored == 40 { 20 } else { stored as u16 };
+    Some(HiddenCoinFind::Found { index, amount })
+}
+
+/// `_FoundHiddenCoinsText` (data/text/text_2.asm:764): "<PLAYER> found @NN coins!"
+pub fn found_coins_message(player_name: &str, amount: u16) -> String {
+    format!("{} found\n@{} coins!", player_name, amount)
+}
+
+/// `_DroppedHiddenCoinsText` (data/text/text_2.asm:774): shown right after the
+/// found text when the coin total hit the 9999 cap.
+pub fn dropped_coins_message() -> String {
+    "Oops! Dropped\nsome coins!".to_string()
 }

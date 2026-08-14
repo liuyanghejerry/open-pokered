@@ -58,12 +58,12 @@ game_scene CeruleanCity {
       // rival class id OPP_RIVAL1 in each branch.
       s = getRivalStarter()
       @if (s == 0) {
-        result = startBattle("OPP_RIVAL1")
+        result = startBattleSet("OPP_RIVAL1", 6)
       } @else {
         @if (s == 1) {
-          result = startBattle("OPP_RIVAL1")
+          result = startBattleSet("OPP_RIVAL1", 6)
         } @else {
-          result = startBattle("OPP_RIVAL1")
+          result = startBattleSet("OPP_RIVAL1", 6)
         }
       }
 

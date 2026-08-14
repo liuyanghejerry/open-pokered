@@ -245,7 +245,7 @@ pub fn hit_randoms() -> MoveRandoms {
         effect_randoms: EffectRandoms {
             side_effect_roll: 255,
             duration_roll: 0,
-            multi_hit_roll: 0,
+            multi_hit_roll: 0, stat_down_miss_roll: 255,
         },
     }
 }
@@ -260,7 +260,7 @@ pub fn hit_randoms_no_side_effect() -> MoveRandoms {
         effect_randoms: EffectRandoms {
             side_effect_roll: 255,
             duration_roll: 0,
-            multi_hit_roll: 0,
+            multi_hit_roll: 0, stat_down_miss_roll: 255,
         },
     }
 }

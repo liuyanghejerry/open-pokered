@@ -37,6 +37,11 @@
       "x": 6,
       "y": 2,
       "textId": 1
+    },
+    {
+      "x": 1,
+      "y": 2,
+      "textId": 2
     }
   ],
   "text": {
@@ -107,6 +112,20 @@
         {
           "line1": "It looks like a",
           "line2": "small island!"
+        }
+      ],
+      "2": [
+        {
+          "line1": "Looked into the",
+          "line2": "binoculars..."
+        },
+        {
+          "line1": "A large, shining",
+          "line2": "bird is flying"
+        },
+        {
+          "line1": "toward the sea.",
+          "line2": ""
         }
       ]
     }

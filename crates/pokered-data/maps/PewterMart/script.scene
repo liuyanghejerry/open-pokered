@@ -8,6 +8,7 @@ game_scene PewterMart {
   // ── Clerk (npc 1) — opens the PoKeMart shop ───────────────────────────
   @storyline("talkClerk") {
     @trigger(map = "PewterMart", npc = 1)
+    @say("") { @t("Hi there!\n\nMay I help you?", "你好！\n\n需要帮忙吗？") }
     openShop(["POKE_BALL", "POTION", "ESCAPE_ROPE", "ANTIDOTE", "BURN_HEAL", "AWAKENING", "PARLYZ_HEAL"])
   }
 
