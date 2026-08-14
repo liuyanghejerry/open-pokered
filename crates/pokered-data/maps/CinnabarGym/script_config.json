@@ -46,5 +46,10 @@
       "talk": "talkGymGuide"
     }
   ],
-  "signs": []
+  "signs": [
+    {
+      "id": 1,
+      "talk": "gymStatue1"
+    }
+  ]
 }

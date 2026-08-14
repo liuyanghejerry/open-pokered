@@ -91,4 +91,24 @@ game_scene CeruleanGym {
       }
     }
   }
+
+  // ── Gym statue (sign 1 at 3,11) — badge-conditional ──
+  @storyline("gymStatue1") {
+    @trigger(map = "CeruleanGym", sign = 1)
+    @if (getFlag("EVENT_BEAT_MISTY")) {
+      @speaker("") { @t("CERULEAN CITY\nPOKeMON GYM\nLEADER: MISTY\n\nWINNING TRAINERS:\n<RIVAL>\n<PLAYER>", "华蓝市宝可梦道馆\n馆主：小霞\n\n获胜训练家：\n劲敌\n玩家") }
+    } @else {
+      @speaker("") { @t("CERULEAN CITY\nPOKeMON GYM\nLEADER: MISTY\n\nWINNING TRAINERS:\n<RIVAL>", "华蓝市宝可梦道馆\n馆主：小霞\n\n获胜训练家：\n劲敌") }
+    }
+  }
+
+  // ── Gym statue (sign 2 at 6,11) — badge-conditional ──
+  @storyline("gymStatue2") {
+    @trigger(map = "CeruleanGym", sign = 2)
+    @if (getFlag("EVENT_BEAT_MISTY")) {
+      @speaker("") { @t("CERULEAN CITY\nPOKeMON GYM\nLEADER: MISTY\n\nWINNING TRAINERS:\n<RIVAL>\n<PLAYER>", "华蓝市宝可梦道馆\n馆主：小霞\n\n获胜训练家：\n劲敌\n玩家") }
+    } @else {
+      @speaker("") { @t("CERULEAN CITY\nPOKeMON GYM\nLEADER: MISTY\n\nWINNING TRAINERS:\n<RIVAL>", "华蓝市宝可梦道馆\n馆主：小霞\n\n获胜训练家：\n劲敌") }
+    }
+  }
 }

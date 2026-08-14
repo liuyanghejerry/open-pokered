@@ -49,12 +49,12 @@ game_scene PokemonTower2F {
       // each branch passes OPP_RIVAL2.
       s = getRivalStarter()
       @if (s == 0) {
-        result = startBattle("OPP_RIVAL2")
+        result = startBattleSet("OPP_RIVAL2", 3)
       } @else {
         @if (s == 1) {
-          result = startBattle("OPP_RIVAL2")
+          result = startBattleSet("OPP_RIVAL2", 3)
         } @else {
-          result = startBattle("OPP_RIVAL2")
+          result = startBattleSet("OPP_RIVAL2", 3)
         }
       }
 

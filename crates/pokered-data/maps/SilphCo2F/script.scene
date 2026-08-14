@@ -16,11 +16,15 @@ game_scene SilphCo2F {
       @speaker("") {
         @t("Eeek! No! Stop! Help!\n\nOh, you're not with TEAM\nROCKET. I thought... I'm\nsorry. Here, please take\nthis!", "呀！不要！住手！救命！\n\n啊，你不是火箭队的人。我还以\n为……对不起。这个请你收下\n吧！")
       }
-      giveItem("TM36", 1)
-      setFlag("EVENT_GOT_TM36")
-      @speaker("") { @t("<PLAYER> got TM36!", "<PLAYER>获得了 TM36！") }
-      @speaker("") {
-        @t("TM36 is SELFDESTRUCT!\n\nIt's powerful, but the\nPOKeMON that uses it faints!\nBe careful.", "TM36是自爆！\n\n威力强大，但使用它的宝可梦会\n晕倒！要小心。")
+      given = giveItem("TM36", 1)
+      @if (given) {
+        setFlag("EVENT_GOT_TM36")
+        @speaker("") { @t("<PLAYER> got TM36!", "<PLAYER>获得了 TM36！") }
+        @speaker("") {
+          @t("TM36 is SELFDESTRUCT!\n\nIt's powerful, but the\nPOKeMON that uses it faints!\nBe careful.", "TM36是自爆！\n\n威力强大，但使用它的宝可梦会\n晕倒！要小心。")
+        }
+      } @else {
+        @speaker("") { @t("You don't have any\nroom for this.", "你的背包没有\n空间放这个。") }
       }
     }
   }

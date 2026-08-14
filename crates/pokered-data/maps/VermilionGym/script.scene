@@ -226,4 +226,24 @@ game_scene VermilionGym {
       }
     }
   }
+
+  // ── Gym statue (sign 16 at 3,14) — badge-conditional ──
+  @storyline("gymStatue16") {
+    @trigger(map = "VermilionGym", sign = 16)
+    @if (getFlag("EVENT_BEAT_LT_SURGE")) {
+      @speaker("") { @t("VERMILION CITY\nPOKeMON GYM\nLEADER: LT.SURGE\n\nWINNING TRAINERS:\n<RIVAL>\n<PLAYER>", "枯叶市宝可梦道馆\n馆主：马志士\n\n获胜训练家：\n劲敌\n玩家") }
+    } @else {
+      @speaker("") { @t("VERMILION CITY\nPOKeMON GYM\nLEADER: LT.SURGE\n\nWINNING TRAINERS:\n<RIVAL>", "枯叶市宝可梦道馆\n馆主：马志士\n\n获胜训练家：\n劲敌") }
+    }
+  }
+
+  // ── Gym statue (sign 17 at 6,14) — badge-conditional ──
+  @storyline("gymStatue17") {
+    @trigger(map = "VermilionGym", sign = 17)
+    @if (getFlag("EVENT_BEAT_LT_SURGE")) {
+      @speaker("") { @t("VERMILION CITY\nPOKeMON GYM\nLEADER: LT.SURGE\n\nWINNING TRAINERS:\n<RIVAL>\n<PLAYER>", "枯叶市宝可梦道馆\n馆主：马志士\n\n获胜训练家：\n劲敌\n玩家") }
+    } @else {
+      @speaker("") { @t("VERMILION CITY\nPOKeMON GYM\nLEADER: LT.SURGE\n\nWINNING TRAINERS:\n<RIVAL>", "枯叶市宝可梦道馆\n馆主：马志士\n\n获胜训练家：\n劲敌") }
+    }
+  }
 }

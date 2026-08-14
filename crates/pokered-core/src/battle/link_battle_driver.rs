@@ -462,6 +462,9 @@ impl LinkBattleDriver {
         screen.trainer_name = Some(String::from_utf8_lossy(&remote.trainer_name).into_owned());
         screen.player_name = Some(self.local_trainer_name.clone());
         screen.link_mode = true;
+        if let Some(bs) = screen.battle_state.as_mut() {
+            bs.link_battle = true;
+        }
         screen.link_rng = Some(LinkRng::new(host_list));
         self.screen = Some(screen);
     }

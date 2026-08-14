@@ -47,7 +47,18 @@
       "isTrainer": false
     }
   ],
-  "signs": [],
+  "signs": [
+    {
+      "x": 3,
+      "y": 4,
+      "textId": 1
+    },
+    {
+      "x": 3,
+      "y": 0,
+      "textId": 2
+    }
+  ],
   "text": {
     "npc": {
       "1": [
@@ -76,112 +87,60 @@
       ]
     },
     "sign": {
-      "1_Intro": [
+      "1": [
         {
-          "line1": "The blackboard",
-          "line2": "describes POKeMON"
+          "line1": "Looked at the notebook!",
+          "line2": ""
         },
         {
-          "line1": "STATUS changes",
-          "line2": "during battles."
+          "line1": "First page...",
+          "line2": ""
+        },
+        {
+          "line1": "# BALLs are used to catch POKeMON.",
+          "line2": "Up to 6 POKeMON can be carried."
+        },
+        {
+          "line1": "People who raise and make POKeMON fight are called POKeMON trainers.",
+          "line2": ""
+        },
+        {
+          "line1": "Second page...",
+          "line2": ""
+        },
+        {
+          "line1": "A healthy POKeMON may be hard to catch, so weaken it first!",
+          "line2": "Poison, burns and other damage are effective!"
+        },
+        {
+          "line1": "Third page...",
+          "line2": ""
+        },
+        {
+          "line1": "POKeMON trainers seek others to engage in POKeMON fights.",
+          "line2": "Battles are constantly fought at POKeMON GYMs."
+        },
+        {
+          "line1": "Fourth page...",
+          "line2": ""
+        },
+        {
+          "line1": "The goal for POKeMON trainers is to beat the top 8 POKeMON GYM LEADERs.",
+          "line2": "Do so to earn the right to face..."
+        },
+        {
+          "line1": "The ELITE FOUR of POKeMON LEAGUE!",
+          "line2": ""
+        },
+        {
+          "line1": "GIRL: Hey! Don't look at my notes!",
+          "line2": ""
         }
       ],
-      "1_SLP": [
+      "2": [
         {
-          "line1": "A POKeMON can't",
-          "line2": "attack if it's"
-        },
-        {
-          "line1": "asleep!",
+          "line1": "",
           "line2": ""
-        },
-        {
-          "line1": "POKeMON will stay",
-          "line2": "asleep even after"
-        },
-        {
-          "line1": "battles.",
-          "line2": ""
-        },
-        {
-          "line1": "Use AWAKENING to",
-          "line2": "wake them up!"
-        }
-      ],
-      "1_PSN": [
-        {
-          "line1": "When poisoned, a",
-          "line2": "POKeMON's health"
-        },
-        {
-          "line1": "steadily drops.",
-          "line2": ""
-        },
-        {
-          "line1": "Poison lingers",
-          "line2": "after battles."
-        },
-        {
-          "line1": "Use an ANTIDOTE",
-          "line2": "to cure poison!"
-        }
-      ],
-      "1_PAR": [
-        {
-          "line1": "Paralysis could",
-          "line2": "make POKeMON"
-        },
-        {
-          "line1": "moves misfire!",
-          "line2": ""
-        },
-        {
-          "line1": "Paralysis remains",
-          "line2": "after battles."
-        },
-        {
-          "line1": "Use PARLYZ HEAL",
-          "line2": "for treatment!"
-        }
-      ],
-      "1_BRN": [
-        {
-          "line1": "A burn reduces",
-          "line2": "power and speed."
-        },
-        {
-          "line1": "It also causes",
-          "line2": "ongoing damage."
-        },
-        {
-          "line1": "Burns remain",
-          "line2": "after battles."
-        },
-        {
-          "line1": "Use BURN HEAL to",
-          "line2": "cure a burn!"
-        }
-      ],
-      "1_FRZ": [
-        {
-          "line1": "If frozen, a",
-          "line2": "POKeMON becomes"
-        },
-        {
-          "line1": "totally immobile!",
-          "line2": ""
-        },
-        {
-          "line1": "It stays frozen",
-          "line2": "even after the"
-        },
-        {
-          "line1": "battle ends.",
-          "line2": ""
-        },
-        {
-          "line1": "Use ICE HEAL to",
-          "line2": "thaw out POKeMON!"
         }
       ]
     }

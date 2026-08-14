@@ -1,6 +1,15 @@
 {
   "$schema": "../../schemas/script_config.schema.json",
-  "coordEvents": [],
+  "coordEvents": [
+    {
+      "name": "rocketApproach",
+      "position": [
+        10,
+        15
+      ],
+      "trigger": "talkRocket"
+    }
+  ],
   "npcs": [
     {
       "id": 1,

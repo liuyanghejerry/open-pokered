@@ -1,6 +1,23 @@
 {
   "$schema": "../../schemas/script_config.schema.json",
-  "coordEvents": [],
+  "coordEvents": [
+    {
+      "name": "cardKeyDoor1",
+      "position": [
+        6,
+        12
+      ],
+      "trigger": "cardKeyDoor"
+    },
+    {
+      "name": "cardKeyDoor2",
+      "position": [
+        6,
+        13
+      ],
+      "trigger": "cardKeyDoor"
+    }
+  ],
   "npcs": [
     {
       "id": 1,
@@ -26,5 +43,11 @@
       "toggleId": "SILPH_CO_11F_OBJ_5"
     }
   ],
-  "signs": []
+  "signs": [
+    {
+      "id": 1,
+      "talk": "pcSign1"
+    }
+  ],
+  "onLoad": "SilphCo11FOnLoad"
 }

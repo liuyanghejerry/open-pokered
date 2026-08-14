@@ -112,7 +112,7 @@
       "isTrainer": true,
       "trainerClass": "Rocket",
       "trainerSet": 12,
-      "endBattleText": "Why...?@"
+      "endBattleText": "Why...?"
     },
     {
       "spriteId": 61,

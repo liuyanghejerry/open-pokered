@@ -19,6 +19,31 @@
 //    only (the runtime drives the battle).
 
 game_scene SilphCo11F {
+  // ── Card-Key gate door (SilphCo11FGateCallbackScript) ────────────────────
+  // Original: on load the callback writes the LOCKED wall block $20 (32) at
+  // block (X=3, Y=6) unless EVENT_SILPH_CO_11_UNLOCKED_DOOR is already set;
+  // using the CARD KEY on the door opens it (block $e = 14).
+  @load {
+    @if (!getFlag("EVENT_SILPH_CO_11_UNLOCKED_DOOR")) {
+      replaceTileBlock(3, 6, 32)
+    }
+  }
+
+  // Door solve: coord triggers at the door tiles (block (3,6) → tiles (6,12)/
+  // (6,13)) — gated by hasItem("CARD_KEY").
+  @storyline("cardKeyDoor") {
+    @trigger(map = "SilphCo11F", name = "cardKeyDoor1")
+    @if (hasItem("CARD_KEY") && !getFlag("EVENT_SILPH_CO_11_UNLOCKED_DOOR")) {
+      @speaker("") { @t("Bingo!", "猜中了！") }
+      @speaker("") { @t("The CARD KEY opened the\ndoor!", "磁卡钥匙打开了门！") }
+      setFlag("EVENT_SILPH_CO_11_UNLOCKED_DOOR")
+      replaceTileBlock(3, 6, 14)
+      playSound("SFX_GO_INSIDE")
+    } @else {
+      @speaker("") { @t("Darn! It needs a CARD KEY!", "可恶！需要磁卡钥匙！") }
+    }
+  }
+
   // ── Silph President (npc 1) — gives the MASTER BALL ─────────────────────
   @storyline("talkSilphPresident") {
     @trigger(map = "SilphCo11F", npc = 1)
@@ -106,5 +131,11 @@ game_scene SilphCo11F {
         @t("Halt! Do you have an\nappointment with my BOSS?", "站住！你与我们老大有预约吗？")
       }
     }
+  }
+
+  // ── PC (sign 1 at 10,12) — OpenPokemonCenterPC ──
+  @storyline("pcSign1") {
+    @trigger(map = "SilphCo11F", sign = 1)
+    openPC()
   }
 }

@@ -49,7 +49,33 @@
       "isTrainer": false
     }
   ],
-  "signs": [],
-  "text": {},
+  "signs": [
+    {
+      "x": 0,
+      "y": 4,
+      "textId": 1
+    },
+    {
+      "x": 2,
+      "y": 4,
+      "textId": 2
+    }
+  ],
+  "text": {
+    "sign": {
+      "1": [
+        {
+          "line1": "",
+          "line2": ""
+        }
+      ],
+      "2": [
+        {
+          "line1": "",
+          "line2": ""
+        }
+      ]
+    }
+  },
   "wild": null
 }

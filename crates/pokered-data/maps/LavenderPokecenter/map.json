@@ -74,6 +74,11 @@
       "x": 13,
       "y": 3,
       "textId": 1
+    },
+    {
+      "x": 0,
+      "y": 4,
+      "textId": 2
     }
   ],
   "text": {
@@ -108,6 +113,18 @@
         {
           "line1": "[Cable Club",
           "line2": "script]"
+        }
+      ]
+    },
+    "sign": {
+      "2": [
+        {
+          "line1": "CUBONEs wear",
+          "line2": "skulls, right?"
+        },
+        {
+          "line1": "People will pay a",
+          "line2": ""
         }
       ]
     }

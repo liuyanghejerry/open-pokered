@@ -74,6 +74,11 @@
       "x": 13,
       "y": 3,
       "textId": 1
+    },
+    {
+      "x": 0,
+      "y": 4,
+      "textId": 2
     }
   ],
   "text": {
@@ -115,7 +120,22 @@
         }
       ]
     },
-    "sign": {}
+    "sign": {
+      "2": [
+        {
+          "line1": "Yawn!",
+          "line2": ""
+        },
+        {
+          "line1": "When JIGGLYPUFF",
+          "line2": "sings, POKeMON"
+        },
+        {
+          "line1": "...Me too...",
+          "line2": ""
+        }
+      ]
+    }
   },
   "wild": null
 }

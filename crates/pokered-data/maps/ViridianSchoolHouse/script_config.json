@@ -11,5 +11,10 @@
       "talk": "talkCooltrainerF"
     }
   ],
-  "signs": []
+  "signs": [
+    {
+      "id": 2,
+      "talk": "statusBlackboard"
+    }
+  ]
 }

@@ -74,6 +74,11 @@
       "x": 13,
       "y": 3,
       "textId": 1
+    },
+    {
+      "x": 0,
+      "y": 4,
+      "textId": 2
     }
   ],
   "text": {
@@ -112,6 +117,14 @@
         {
           "line1": "[Cable Club Receptionist script]",
           "line2": ""
+        }
+      ]
+    },
+    "sign": {
+      "2": [
+        {
+          "line1": "POKeMON CENTERs",
+          "line2": "heal your tired,"
         }
       ]
     }
