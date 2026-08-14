@@ -134,22 +134,22 @@ game_scene SilphCo6F {
 
   // ── Ground item: HP_UP (npc 9) ──────────────────────────────────────────
   @storyline("itemHpUp") {
-    @trigger(map = "SilphCo6F", npc = 9)
+    @trigger(map = "SilphCo6F", npc = 9, toggle = "SILPH_CO_6F_OBJ_9")
     @if (!getFlag("EVENT_GOT_SILPH_CO_6F_HP_UP")) {
       giveItem("HP_UP", 1)
       setFlag("EVENT_GOT_SILPH_CO_6F_HP_UP")
-      hideObject(9)
+      hideObject("SILPH_CO_6F_OBJ_9")
       @speaker("") { @t("<PLAYER> found HP UP!", "<PLAYER>找到了体力增强剂！") }
     }
   }
 
   // ── Ground item: X_ACCURACY (npc 10) ────────────────────────────────────
   @storyline("itemXAccuracy") {
-    @trigger(map = "SilphCo6F", npc = 10)
+    @trigger(map = "SilphCo6F", npc = 10, toggle = "SILPH_CO_6F_OBJ_10")
     @if (!getFlag("EVENT_GOT_SILPH_CO_6F_X_ACCURACY")) {
       giveItem("X_ACCURACY", 1)
       setFlag("EVENT_GOT_SILPH_CO_6F_X_ACCURACY")
-      hideObject(10)
+      hideObject("SILPH_CO_6F_OBJ_10")
       @speaker("") { @t("<PLAYER> found X ACCURACY!", "<PLAYER>找到了特攻强化！") }
     }
   }

@@ -165,6 +165,65 @@ fn run_oak_escort(player_x: u16) {
         frames
     );
 
+    // ── Regression: "Oak stays visible in Pallet Town" ─────────────────
+    // The escort's cleanup must all run BEFORE the player steps onto the
+    // door warp tile. Oak's path to the lab door crosses the door warp
+    // tile (12,11), and the player's shadow-walk follows his trail — a
+    // warp fired mid-follow froze the script and dropped the leftover
+    // FollowNpc effect at commit, so hideObject never ran and the runtime
+    // __OBJ_SHOWN_* flag stayed set — Oak kept showing whenever Pallet
+    // Town reloaded.
+    assert!(
+        flag_set(&screen, "__OBJ_HIDDEN_PALLET_TOWN_OBJ_1"),
+        "hideObject for Oak must run before the warp (start x={})",
+        player_x
+    );
+    assert!(
+        pokered_data::toggleable_objects::is_object_hidden(
+            screen.toggleable_object_flags(),
+            pokered_data::toggleable_objects::toggle_id_to_bit_index("PALLET_TOWN_OBJ_1").unwrap(),
+        ),
+        "Oak's SRAM toggle bit must be hidden after the escort (start x={})",
+        player_x
+    );
+
+    // EVENT_FOLLOWED_OAK_INTO_LAB belongs to the OaksLab @load entry
+    // cutscene (orig OaksLabFollowedOakScript), NOT to Pallet Town —
+    // drive the entry animation to completion to prove it still runs.
+    let mut entry_done = false;
+    for frame in 0..1200 {
+        let input = if screen.active_script_effect.is_some() {
+            if frame % 40 == 0 {
+                a_input()
+            } else {
+                neutral_input()
+            }
+        } else {
+            neutral_input()
+        };
+        screen.update_frame(input);
+        if flag_set(&screen, "EVENT_FOLLOWED_OAK_INTO_LAB") {
+            entry_done = true;
+            break;
+        }
+    }
+    assert!(
+        entry_done,
+        "OaksLab entry cutscene must set EVENT_FOLLOWED_OAK_INTO_LAB (start x={})",
+        player_x
+    );
+
+    // Simulate a save/reload: a fresh Pallet Town screen restored from
+    // SRAM must start with Oak hidden (default_hidden + persisted bit).
+    let mut reload = OverworldScreen::new(MapId::PalletTown, None, PokemonRedData);
+    reload.set_toggleable_object_flags(*screen.toggleable_object_flags());
+    reload.apply_hidden_object_flags();
+    assert!(
+        !reload.npc_states[0].visible,
+        "Oak must stay hidden when Pallet Town is reloaded after the escort (start x={})",
+        player_x
+    );
+
     // Every escort-phase tile the player walked on (except the lab door
     // warp tile) must be genuinely walkable on the Pallet Town map —
     // no cutting through the lab building. (screen.map_data has already
