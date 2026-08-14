@@ -494,6 +494,17 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
         }
 
         // ── Script engine tick ────────────────────────────────────────
+        // While a FollowNpc effect is active, suppress warp triggers: the
+        // player's shadow-walk trail can pass over a door warp tile (e.g.
+        // Pallet Town's Oak escort crosses (12,11)), and warping mid-follow
+        // freezes the script and drops the leftover effect at commit — the
+        // hideObject cleanup right after followNpc never runs. The follow
+        // finishes first; the scene then walks the player onto the door
+        // tile deliberately (movePlayer) to trigger the warp safely.
+        let effect_was_follow_npc = matches!(
+            self.active_script_effect,
+            Some(script_bridge::ScriptEffect::FollowNpc { .. })
+        );
         if let Some(ref mut effect) = self.active_script_effect {
             let naming_was_open = self.pending_naming_screen.is_some();
             let done = Self::tick_active_effect(
@@ -626,7 +637,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
             // causing an immediate re-warp (e.g. entering OaksLab at the door
             // tile and getting warped back to PalletTown).
             let pos_after = (self.state.player.x, self.state.player.y);
-            if pos_before != pos_after {
+            if pos_before != pos_after && !effect_was_follow_npc {
                 self.try_trigger_warp_at_player_position();
             }
 
