@@ -6,7 +6,8 @@ use pokered_data::tilesets::TilesetId;
 use pokered_data::wild_data::{wild_data_for_map, GameVersion, MapWildData, WildEncounterTable};
 
 use crate::battle::wild::{
-    try_wild_encounter, EncounterContext, WildEncounterRandoms, WildEncounterResult,
+    try_wild_encounter, try_wild_encounter_with_rate, EncounterContext, WildEncounterRandoms,
+    WildEncounterResult,
 };
 
 pub const WATER_TILE: u8 = 0x14;
@@ -42,6 +43,23 @@ pub fn determine_encounter_type<T: TilesetTrait>(
     TileEncounterType::None
 }
 
+/// The RATE anchor tile: the original rolls the encounter check against the
+/// tile at screen (9,9) — the player's standing position shifted HALF a block
+/// right, i.e. the tile RIGHT of the standing tile (wild_encounters.asm:28-47).
+/// Standing on a shore tile whose right neighbour is water therefore rolls the
+/// WATER rate; standing on grass whose right neighbour is not grass rolls
+/// NOTHING outdoors.
+pub fn determine_rate_encounter_type<T: TilesetTrait>(
+    right_tile: u8,
+    tileset: T,
+    map_id: MapId,
+) -> TileEncounterType {
+    // Same classification, applied to the right-neighbour tile. The indoor
+    // catch-all keys on the MAP, not the tile, so it holds for the shifted
+    // anchor too.
+    determine_encounter_type(right_tile, tileset, map_id)
+}
+
 pub fn select_encounter_table(
     encounter_type: TileEncounterType,
     wild_data: &MapWildData,
@@ -61,10 +79,27 @@ pub fn should_check_encounter(
     !on_warp_tile && !npc_script_active && encounter_cooldown == 0
 }
 
+/// The per-anchor encounter RATE, exactly like the original: the rate comes
+/// from the RATE anchor tile (grass-rate / water-rate / indoor=grass-rate),
+/// INDEPENDENT of which table supplies the encounter list (the "left shore"
+/// split, wild_encounters.asm:28-72). Returns None when the anchor gives no
+/// roll (outdoor, anchor not grass/water).
+fn anchor_encounter_rate(
+    rate_type: TileEncounterType,
+    wild_data: &MapWildData,
+) -> Option<u8> {
+    match rate_type {
+        TileEncounterType::Grass | TileEncounterType::IndoorCave => Some(wild_data.grass.encounter_rate),
+        TileEncounterType::Water => Some(wild_data.water.encounter_rate),
+        TileEncounterType::None => Option::None,
+    }
+}
+
 pub fn check_wild_encounter<T: TilesetTrait>(
     map_id: MapId,
     tileset: T,
     standing_tile: u8,
+    right_tile: u8,
     version: GameVersion,
     randoms: &WildEncounterRandoms,
     context: &EncounterContext,
@@ -81,10 +116,25 @@ pub fn check_wild_encounter<T: TilesetTrait>(
         Option::None => return WildEncounterResult::NoEncounter,
     };
 
-    let encounter_type = determine_encounter_type(standing_tile, tileset, map_id);
-    let table = select_encounter_table(encounter_type, &wild_data);
+    // Two anchors, exactly like the original (wild_encounters.asm:28-72):
+    //   * the RATE anchor is screen (9,9) — the tile RIGHT of the standing
+    //     tile — deciding the encounter RATE (grass-rate / water-rate / none);
+    //   * the TABLE anchor is screen (8,9) — the STANDING tile — choosing
+    //     between the grass and water encounter LISTS. The split produces the
+    //     famous "left shore" quirk: standing on a shore tile whose right
+    //     neighbour is water rolls the WATER rate but reads the GRASS list.
+    let rate_type = determine_rate_encounter_type(right_tile, tileset, map_id);
+    let rate = match anchor_encounter_rate(rate_type, &wild_data) {
+        Some(r) => r,
+        Option::None => return WildEncounterResult::NoEncounter,
+    };
+    let table_type = determine_encounter_type(standing_tile, tileset, map_id);
+    let table = match table_type {
+        TileEncounterType::Water => &wild_data.water,
+        _ => &wild_data.grass, // asm treats (8,9) ≠ $14 as the grass list
+    };
 
-    try_wild_encounter(table, randoms, context)
+    try_wild_encounter_with_rate(table, rate, randoms, context)
 }
 
 /// Game-agnostic [`dotzuki_engine::overworld::encounter::EncounterProvider`] impl

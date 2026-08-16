@@ -167,6 +167,7 @@ fn route1_grass_encounter_triggers() {
         MapId::Route1,
         TilesetId::Overworld,
         0x52, // grass tile
+        0x52, // right anchor: same tile
         GameVersion::Red,
         &low_roll(),
         &no_repel(),
@@ -182,6 +183,7 @@ fn route1_high_roll_no_encounter() {
     let result = check_wild_encounter(
         MapId::Route1,
         TilesetId::Overworld,
+        0x52,
         0x52,
         GameVersion::Red,
         &high_roll(),
@@ -199,6 +201,7 @@ fn route1_non_grass_tile_no_encounter() {
         MapId::Route1,
         TilesetId::Overworld,
         0x00, // not a grass tile
+        0x00, // right anchor: same tile
         GameVersion::Red,
         &low_roll(),
         &no_repel(),
@@ -215,6 +218,7 @@ fn mt_moon_cave_encounter_on_any_tile() {
         MapId::MtMoon1F,
         TilesetId::Cavern,
         0x00, // any tile — indoor cave exception applies
+        0x00, // right anchor: same tile
         GameVersion::Red,
         &low_roll(),
         &no_repel(),
@@ -230,6 +234,7 @@ fn pallet_town_never_encounters() {
     let result = check_wild_encounter(
         MapId::PalletTown,
         TilesetId::Overworld,
+        0x52,
         0x52,
         GameVersion::Red,
         &low_roll(),
@@ -247,6 +252,7 @@ fn warp_tile_blocks_encounter() {
         MapId::Route1,
         TilesetId::Overworld,
         0x52,
+        0x52,
         GameVersion::Red,
         &low_roll(),
         &no_repel(),
@@ -262,6 +268,7 @@ fn npc_script_blocks_encounter() {
     let result = check_wild_encounter(
         MapId::Route1,
         TilesetId::Overworld,
+        0x52,
         0x52,
         GameVersion::Red,
         &low_roll(),
@@ -279,6 +286,7 @@ fn cooldown_blocks_encounter() {
         MapId::Route1,
         TilesetId::Overworld,
         0x52,
+        0x52,
         GameVersion::Red,
         &low_roll(),
         &no_repel(),
@@ -294,6 +302,7 @@ fn route19_water_encounter() {
     let result = check_wild_encounter(
         MapId::Route19,
         TilesetId::Overworld,
+        WATER_TILE,
         WATER_TILE,
         GameVersion::Red,
         &low_roll(),
@@ -314,6 +323,7 @@ fn route20_uses_same_sea_routes_data() {
         MapId::Route19,
         TilesetId::Overworld,
         WATER_TILE,
+        WATER_TILE,
         GameVersion::Red,
         &low_roll(),
         &no_repel(),
@@ -324,6 +334,7 @@ fn route20_uses_same_sea_routes_data() {
     let r20 = check_wild_encounter(
         MapId::Route20,
         TilesetId::Overworld,
+        WATER_TILE,
         WATER_TILE,
         GameVersion::Red,
         &low_roll(),
@@ -345,6 +356,7 @@ fn repel_blocks_low_level_encounter() {
         MapId::Route1,
         TilesetId::Overworld,
         0x52,
+        0x52,
         GameVersion::Red,
         &low_roll(),
         &ctx,
@@ -365,6 +377,7 @@ fn repel_allows_high_level_encounter() {
         MapId::Route1,
         TilesetId::Overworld,
         0x52,
+        0x52,
         GameVersion::Red,
         &low_roll(),
         &ctx,
@@ -381,6 +394,7 @@ fn viridian_forest_needs_grass_tile_despite_being_indoor() {
         MapId::ViridianForest,
         TilesetId::Forest,
         0x00,
+        0x00,
         GameVersion::Red,
         &low_roll(),
         &no_repel(),
@@ -394,6 +408,7 @@ fn viridian_forest_needs_grass_tile_despite_being_indoor() {
         MapId::ViridianForest,
         TilesetId::Forest,
         0x20, // Forest grass tile
+        0x20, // right anchor: same tile
         GameVersion::Red,
         &low_roll(),
         &no_repel(),
@@ -409,6 +424,7 @@ fn pokemon_tower_3f_cemetery_encounter() {
     let result = check_wild_encounter(
         MapId::PokemonTower3F,
         TilesetId::Cemetery,
+        0x00,
         0x00,
         GameVersion::Red,
         &low_roll(),
@@ -450,6 +466,7 @@ fn digletts_cave_encounter() {
         MapId::DiglettsCave,
         TilesetId::Cavern,
         0x00,
+        0x00,
         GameVersion::Red,
         &low_roll(),
         &no_repel(),
@@ -468,6 +485,7 @@ fn power_plant_encounter() {
     let result = check_wild_encounter(
         MapId::PowerPlant,
         TilesetId::Cavern,
+        0x00,
         0x00,
         GameVersion::Red,
         &low_roll(),
@@ -569,6 +587,7 @@ fn assert_encounter_parity(
     let legacy = check_wild_encounter(
         map_id,
         tileset,
+        standing_tile,
         standing_tile,
         version,
         &WildEncounterRandoms {
@@ -969,4 +988,106 @@ fn engine_gate_consumes_no_rng_when_ineligible() {
     );
     assert_eq!(step, EncounterStep::None);
     assert_eq!(rng.consumed(), 0);
+}
+
+// ── dual-anchor parity (wild_encounters.asm:28-72) ─────────────────
+// Rate anchor = RIGHT neighbour (screen 9,9); table anchor = STANDING
+// tile (screen 8,9). The "left shore" quirk: standing on land whose right
+// neighbour is water rolls the WATER rate but reads the GRASS table.
+
+#[test]
+fn left_shore_rolls_water_rate_with_grass_table() {
+    // Standing tile: land (not grass, not water). Right neighbour: water.
+    // The rate anchor (water) lets the roll through; the table anchor is
+    // land ≠ $14 → the GRASS list is consulted (the Cinnabar east-coast
+    // setup). Route 21 has BOTH tables (grass 25 / water 5), so the split is
+    // observable: a WATER rate roll must yield a GRASS species. (In the
+    // original the grass read hits the cross-map stale wGrassMons buffer —
+    // the Missingno mechanism; the port reads the map's own list, a
+    // documented deviation.)
+    let result = check_wild_encounter(
+        MapId::Route21,
+        TilesetId::Overworld,
+        0x00, // standing: land
+        WATER_TILE, // right neighbour: water → water rate
+        GameVersion::Red,
+        &WildEncounterRandoms { encounter_roll: 0, slot_roll: 0 },
+        &no_repel(),
+        false,
+        false,
+        0,
+    );
+    match result {
+        WildEncounterResult::Encounter { species, .. } => {
+            assert!(
+                !matches!(species, pokered_data::species::Species::Tentacool),
+                "left shore must read the GRASS list, got the water-only {species:?}"
+            );
+        }
+        other => panic!("water-rate anchor must roll: {other:?}"),
+    }
+}
+
+#[test]
+fn grass_with_non_grass_right_neighbour_never_rolls() {
+    // Standing on grass but the right neighbour is plain land → the rate
+    // anchor finds NOTHING → no roll at all (the original's (9,9) check).
+    let result = check_wild_encounter(
+        MapId::Route1,
+        TilesetId::Overworld,
+        0x52, // standing: grass
+        0x00, // right neighbour: land → no rate
+        GameVersion::Red,
+        &low_roll(),
+        &no_repel(),
+        false,
+        false,
+        0,
+    );
+    assert_eq!(result, WildEncounterResult::NoEncounter);
+}
+
+#[test]
+fn surfing_with_land_right_neighbour_never_rolls() {
+    // Surfing on water whose right neighbour is land → no roll (the original
+    // reads (9,9) for the rate; land there suppresses the check entirely).
+    let result = check_wild_encounter(
+        MapId::Route19,
+        TilesetId::Overworld,
+        WATER_TILE,
+        0x00,
+        GameVersion::Red,
+        &low_roll(),
+        &no_repel(),
+        false,
+        false,
+        0,
+    );
+    assert_eq!(result, WildEncounterResult::NoEncounter);
+}
+
+// The 180° turn-in-place encounter roll lives in update.rs's frame loop
+// (MoveResult::TurnedOnly → the same on-step check); the dual-anchor split
+// it shares is covered above. Unit-level proof that the TURN runs the roll
+// lives in tests_turn_encounter below via a scripted provider is not
+// feasible without the full frame harness — the behaviour is exercised by
+// the update.rs integration tests (turn-in-place does not panic and can
+// pend an encounter on grass).
+#[test]
+fn turn_only_result_semantics_documented() {
+    // Guard the anchor semantics the turn path relies on: the roll uses the
+    // RIGHT-neighbour rate anchor (grass pair → grass rate > 0 → rolls).
+    let result = check_wild_encounter(
+        MapId::Route1,
+        TilesetId::Overworld,
+        0x52,
+        0x52,
+        GameVersion::Red,
+        &WildEncounterRandoms { encounter_roll: 0, slot_roll: 0 },
+        &no_repel(),
+        false,
+        false,
+        0,
+    );
+    assert!(matches!(result, WildEncounterResult::Encounter { .. }));
 }

@@ -291,7 +291,7 @@ dependencies = [
  "bitflags 2.13.1",
  "cexpr",
  "clang-sys",
- "itertools 0.13.0",
+ "itertools 0.10.5",
  "proc-macro2",
  "quote",
  "regex",
@@ -1136,8 +1136,7 @@ dependencies = [
 
 [[package]]
 name = "dotzuki-app"
-version = "0.1.0"
-source = "git+https://github.com/liuyanghejerry/dotzuki?tag=v0.5.1#99738b150fc564b0714b1ce8b5634b3427edbdba"
+version = "0.1.1"
 dependencies = [
  "dotzuki-renderer",
  "notify",
@@ -1145,8 +1144,7 @@ dependencies = [
 
 [[package]]
 name = "dotzuki-audio"
-version = "0.1.0"
-source = "git+https://github.com/liuyanghejerry/dotzuki?tag=v0.5.1#99738b150fc564b0714b1ce8b5634b3427edbdba"
+version = "0.1.1"
 dependencies = [
  "bitflags 2.13.1",
  "serde",
@@ -1155,8 +1153,7 @@ dependencies = [
 
 [[package]]
 name = "dotzuki-engine"
-version = "0.1.0"
-source = "git+https://github.com/liuyanghejerry/dotzuki?tag=v0.5.1#99738b150fc564b0714b1ce8b5634b3427edbdba"
+version = "0.1.1"
 dependencies = [
  "image",
  "serde",
@@ -1165,8 +1162,7 @@ dependencies = [
 
 [[package]]
 name = "dotzuki-engine-dsl"
-version = "0.1.0"
-source = "git+https://github.com/liuyanghejerry/dotzuki?tag=v0.5.1#99738b150fc564b0714b1ce8b5634b3427edbdba"
+version = "0.1.1"
 dependencies = [
  "dotzuki-engine-script",
  "miette",
@@ -1178,8 +1174,7 @@ dependencies = [
 
 [[package]]
 name = "dotzuki-engine-script"
-version = "0.1.0"
-source = "git+https://github.com/liuyanghejerry/dotzuki?tag=v0.5.1#99738b150fc564b0714b1ce8b5634b3427edbdba"
+version = "0.1.1"
 dependencies = [
  "boa_engine",
  "log",
@@ -1190,8 +1185,7 @@ dependencies = [
 
 [[package]]
 name = "dotzuki-renderer"
-version = "0.1.0"
-source = "git+https://github.com/liuyanghejerry/dotzuki?tag=v0.5.1#99738b150fc564b0714b1ce8b5634b3427edbdba"
+version = "0.1.1"
 dependencies = [
  "dotzuki-engine",
  "error-iter",
@@ -1208,8 +1202,7 @@ dependencies = [
 
 [[package]]
 name = "dotzuki-rules"
-version = "0.1.0"
-source = "git+https://github.com/liuyanghejerry/dotzuki?tag=v0.5.1#99738b150fc564b0714b1ce8b5634b3427edbdba"
+version = "0.1.1"
 dependencies = [
  "dotzuki-engine",
  "notify",
@@ -1220,8 +1213,7 @@ dependencies = [
 
 [[package]]
 name = "dotzuki-tui"
-version = "0.1.0"
-source = "git+https://github.com/liuyanghejerry/dotzuki?tag=v0.5.1#99738b150fc564b0714b1ce8b5634b3427edbdba"
+version = "0.1.1"
 dependencies = [
  "crossterm",
  "dotzuki-renderer",
@@ -1230,8 +1222,7 @@ dependencies = [
 
 [[package]]
 name = "dotzuki-ui"
-version = "0.1.0"
-source = "git+https://github.com/liuyanghejerry/dotzuki?tag=v0.5.1#99738b150fc564b0714b1ce8b5634b3427edbdba"
+version = "0.1.1"
 dependencies = [
  "dotzuki-engine",
  "dotzuki-renderer",
