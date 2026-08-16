@@ -131,6 +131,7 @@ fn main_menu_with_save_file_shows_continue() {
         play_time_hours: 5,
         play_time_minutes: 30,
         play_time_seconds: 0,
+        player_id: 0,
     };
     let mut menu = MainMenuState::new(Some(summary));
     assert_eq!(menu.item_count(), 3);
@@ -469,6 +470,7 @@ fn save_file_summary_badge_count() {
         play_time_hours: 0,
         play_time_minutes: 0,
         play_time_seconds: 0,
+        player_id: 0,
     };
     assert_eq!(summary.badge_count(), 0);
 
@@ -479,6 +481,7 @@ fn save_file_summary_badge_count() {
         play_time_hours: 99,
         play_time_minutes: 59,
         play_time_seconds: 59,
+        player_id: 0,
     };
     assert_eq!(summary.badge_count(), 8);
 }

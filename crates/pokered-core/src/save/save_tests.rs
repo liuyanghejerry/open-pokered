@@ -684,3 +684,44 @@ fn test_snapshot_json_keeps_legacy_shapes() {
     assert_eq!(back.hall_of_fame.get_team(0).unwrap().mons()[0].nickname_bytes(), &[0x8F, 0x88, 0x8A, 0x80]);
     assert_eq!(serde_json::to_string(&back).unwrap(), json);
 }
+
+#[cfg(test)]
+mod current_box_roundtrip_tests {
+    use crate::save::sram_export::export_sram;
+    use crate::save::sram_import::import_sram;
+    use super::SaveData;
+    use crate::pokemon::pc_box::PcStorage;
+
+    /// wCurrentBoxNum survives a save→load round-trip: the export writes the
+    /// box number (menu index | $80, save.asm:382-384) and the import masks
+    /// it back (GetBoxSRAMLocation's BOX_NUM_MASK) so Bill's PC re-opens on
+    /// the trainer's last box instead of box 1.
+    #[test]
+    fn current_box_number_round_trips_through_sram() {
+        let mut save = SaveData::new();
+        // Select box 5 (0-based 4) and stamp the byte like the game does.
+        let _ = save.pc_storage.change_box(4);
+        save.game_data.current_box_num =
+            save.pc_storage.current_box_index() as u8 | 0x80;
+
+        let bytes = export_sram(&save);
+        let back = import_sram(&bytes).expect("round-trip parses");
+        assert_eq!(
+            back.pc_storage.current_box_index(),
+            4,
+            "the saved current box is restored on load"
+        );
+        assert_eq!(back.game_data.current_box_num & 0x7F, 4);
+    }
+
+    /// Legacy/damaged bytes (≥ 12 boxes) fall back to box 1 without panic.
+    #[test]
+    fn out_of_range_box_number_falls_back() {
+        let mut save = SaveData::new();
+        save.game_data.current_box_num = 0x8C; // box 12 — out of range
+        let bytes = export_sram(&save);
+        let back = import_sram(&bytes).expect("parses despite bad box byte");
+        assert_eq!(back.pc_storage.current_box_index(), 0);
+        let _: PcStorage = back.pc_storage; // type anchor
+    }
+}
