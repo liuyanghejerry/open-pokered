@@ -40,6 +40,7 @@ fn make_npc(
         facing,
         scripted_frame: None,
         movement_type: pokered_core::overworld::NpcMovementType::Stationary,
+        wander_axis: dotzuki_engine::overworld::NpcWanderAxis::Any,
         range,
         walk_counter: 0,
         delay_counter: 0,

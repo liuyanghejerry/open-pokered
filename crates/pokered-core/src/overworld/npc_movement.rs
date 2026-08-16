@@ -28,6 +28,18 @@ pub fn convert_movement(m: NpcMovement) -> NpcMovementType {
     }
 }
 
+/// The generator's `range` field carries the classic movement byte 2 for
+/// Wander NPCs (parse_npcs.py DIRECTION_MAP: 0 = ANY_DIR, 1 = UP_DOWN,
+/// 2 = LEFT_RIGHT). Map it onto the engine's axis restriction.
+pub fn convert_wander_axis(range_code: u8) -> dotzuki_engine::overworld::NpcWanderAxis {
+    use dotzuki_engine::overworld::NpcWanderAxis;
+    match range_code {
+        1 => NpcWanderAxis::Vertical,
+        2 => NpcWanderAxis::Horizontal,
+        _ => NpcWanderAxis::Any,
+    }
+}
+
 pub fn convert_facing(f: NpcFacing) -> Direction {
     match f.0 {
         0 => Direction::Down,
@@ -55,6 +67,7 @@ pub fn load_map_npcs(npcs: &[NpcEntry]) -> Vec<NpcRuntimeState> {
             facing: convert_facing(npc.facing),
             scripted_frame: None,
             movement_type: convert_movement(npc.movement),
+            wander_axis: convert_wander_axis(npc.range),
             range: npc.range,
             walk_counter: 0,
             delay_counter: 0,

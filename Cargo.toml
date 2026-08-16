@@ -1,3 +1,17 @@
+# Local-engine override for the fidelity-audit branch: the NPC movement /
+# repel fixes live in the dotzuki-2 worktree until the next tagged release.
+# Remove when the workspace deps move to the new tag.
+[patch."https://github.com/liuyanghejerry/dotzuki"]
+dotzuki-engine = { path = "../dotzuki-2/workspace/crates/dotzuki-engine" }
+dotzuki-engine-dsl = { path = "../dotzuki-2/workspace/crates/dotzuki-engine-dsl" }
+dotzuki-engine-script = { path = "../dotzuki-2/workspace/crates/dotzuki-engine-script" }
+dotzuki-renderer = { path = "../dotzuki-2/workspace/crates/dotzuki-renderer" }
+dotzuki-rules = { path = "../dotzuki-2/workspace/crates/dotzuki-rules" }
+dotzuki-app = { path = "../dotzuki-2/workspace/crates/dotzuki-app" }
+dotzuki-audio = { path = "../dotzuki-2/workspace/crates/dotzuki-audio" }
+dotzuki-tui = { path = "../dotzuki-2/workspace/crates/dotzuki-tui" }
+dotzuki-ui = { path = "../dotzuki-2/workspace/crates/dotzuki-ui" }
+
 [workspace]
 resolver = "2"
 members = [

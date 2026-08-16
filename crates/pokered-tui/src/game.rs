@@ -971,6 +971,15 @@ impl PokemonGame {
                 let has_pokedex = self.overworld.unified_flags().get_flag("EVENT_GOT_POKEDEX");
                 let has_pokemon = self.save_data.party.count() > 0;
                 self.start_menu.open(has_pokedex, has_pokemon, false);
+                // PrintSafariZoneSteps parity (see the app frontend).
+                self.start_menu.safari_info = if self.overworld.is_safari_game_active() {
+                    Some(pokered_core::start_menu::SafariZoneInfo {
+                        steps: self.overworld.safari_steps_remaining(),
+                        balls: self.overworld.safari_balls_remaining(),
+                    })
+                } else {
+                    None
+                };
                 if let Some(ref audio) = self.audio {
                     audio.play_sfx(SfxId::StartMenu);
                 }

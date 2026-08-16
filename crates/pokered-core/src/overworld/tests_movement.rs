@@ -220,7 +220,11 @@ fn test_advance_step_ledge_jump_moves_two_tiles() {
 }
 
 #[test]
-fn test_advance_step_decrements_repel() {
+fn test_advance_step_does_not_tick_repel() {
+    // REPEL now ticks inside the game's encounter-check gate (the classic
+    // TryDoWildEncounter placement), NOT per step — warp/script/cooldown
+    // steps must not burn charges. advance_step leaves it untouched; the
+    // explicit `tick_repel_step` helper does the decrement.
     let mut state = make_state();
     state.player.movement_state = MovementState::Walking;
     state.player.facing = Direction::Down;
@@ -228,7 +232,10 @@ fn test_advance_step_decrements_repel() {
     state.repel_steps = 10;
 
     advance_step(&mut state);
-    assert_eq!(state.repel_steps, 9);
+    assert_eq!(state.repel_steps, 10, "advance_step does not tick repel");
+
+    dotzuki_engine::overworld::player_movement::tick_repel_step(&mut state);
+    assert_eq!(state.repel_steps, 9, "tick_repel_step does");
 }
 
 #[test]
