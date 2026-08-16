@@ -43,6 +43,16 @@ pub enum SlotsAction {
     Exit,
 }
 
+/// Slot-machine sound cues (engine/slots/slot_machine.asm): the spin start
+/// (:120), each reel's stop (:842) and the payout (:694). Pure events — the
+/// frontends map them to SfxId::SlotsNewSpin / SlotsStopWheel / SlotsReward.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum SlotsSfx {
+    NewSpin,
+    StopWheel,
+    Reward,
+}
+
 /// High-level phase of the minigame.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum SlotsPhase {
@@ -75,6 +85,8 @@ pub struct SlotsScreen {
     pub last_payout: u16,
     /// Winning symbol of the most recent spin, if any.
     pub last_symbol: Option<SlotSymbol>,
+    /// Pending sound cues (drained by the frontend each frame).
+    pending_sfx: std::collections::VecDeque<SlotsSfx>,
     /// Human-readable status line for rendering.
     pub message: String,
     /// Frame counter (drives reel animation cadence).
@@ -91,6 +103,7 @@ impl SlotsScreen {
             machine: SlotMachineState::new(lucky),
             coins: coins.min(MAX_COINS),
             phase: SlotsPhase::BetSelect,
+            pending_sfx: std::collections::VecDeque::new(),
             bet: 1,
             reels_stopped: [false; 3],
             current_reel: 0,
@@ -160,6 +173,7 @@ impl SlotsScreen {
             self.last_symbol = None;
             self.phase = SlotsPhase::Spinning;
             self.message = String::from("STOP THE REELS!");
+            self.pending_sfx.push_back(SlotsSfx::NewSpin);
         } else {
             self.message = format!("BET {} COIN{}", self.bet, if self.bet == 1 { "" } else { "S" });
         }
@@ -185,6 +199,7 @@ impl SlotsScreen {
                 self.reels_stopped[idx] = true;
                 self.current_reel += 1;
                 self.stop_pending = false;
+                self.pending_sfx.push_back(SlotsSfx::StopWheel);
             }
         }
 
@@ -204,6 +219,7 @@ impl SlotsScreen {
             self.last_payout = payout;
             self.credit(payout);
             self.message = format!("WIN! {} COINS", payout);
+            self.pending_sfx.push_back(SlotsSfx::Reward);
         } else {
             self.last_symbol = None;
             self.last_payout = 0;
@@ -221,6 +237,11 @@ impl SlotsScreen {
             self.message = format!("BET {} COIN{}", self.bet, if self.bet == 1 { "" } else { "S" });
         }
         SlotsAction::Continue
+    }
+
+    /// Drain the pending sound cues (frontends play them this frame).
+    pub fn take_sfx(&mut self) -> Vec<SlotsSfx> {
+        self.pending_sfx.drain(..).collect()
     }
 
     /// Reel animation progress 0.0..1.0 for a moving reel (for rendering).
