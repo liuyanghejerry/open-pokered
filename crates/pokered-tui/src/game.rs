@@ -1143,9 +1143,10 @@ impl PokemonGame {
     }
 
     fn start_wild_battle(&mut self, species: pokered_data::species::Species, level: u8) {
-        use pokered_core::pokemon::stats::create_pokemon;
+        use pokered_core::pokemon::stats::{create_pokemon, roll_random_dvs};
 
-        let enemy_mon = create_pokemon(species, level, [0x9A, 0x78]);
+        // Wild DVs are two random bytes (core.asm:6012-6019).
+        let enemy_mon = create_pokemon(species, level, roll_random_dvs());
         let player_party = self.save_data.party.to_vec();
 
         if let Some(enemy) = enemy_mon {
@@ -1214,6 +1215,17 @@ impl PokemonGame {
         }
     }
 
+    /// ReadTrainer's special-move pass — same rules as the app's
+    /// `apply_trainer_special_moves` (read_trainer_party.asm
+    /// `.AddLoneMove`/`.AddTeamMove`/`.ChampionRival`).
+    fn apply_trainer_special_moves(
+        class: pokered_data::trainer_data::TrainerClass,
+        party: &mut [pokered_core::battle::state::Pokemon],
+    ) {
+        use pokered_core::battle::special_moves::apply_trainer_special_moves as apply;
+        apply(class, party);
+    }
+
     fn start_trainer_battle(&mut self, trainer_id: &str, rival_triplet_base: Option<u8>) {
         use pokered_core::pokemon::stats::create_pokemon;
         use pokered_data::trainer_data::{get_trainer_party, parse_trainer_id, TrainerClass};
@@ -1240,11 +1252,19 @@ impl PokemonGame {
             };
 
             if let Some(party) = get_trainer_party(class, party_index) {
-                party
+                let mut mons: Vec<_> = party
                     .pokemon
                     .iter()
-                    .filter_map(|mon| create_pokemon(mon.species, mon.level, [0x9A, 0x78]))
-                    .collect::<Vec<_>>()
+                    .filter_map(|mon| {
+                        create_pokemon(
+                            mon.species,
+                            mon.level,
+                            pokered_core::pokemon::stats::TRAINER_DV_BYTES,
+                        )
+                    })
+                    .collect();
+                Self::apply_trainer_special_moves(class, &mut mons);
+                mons
             } else {
                 vec![]
             }

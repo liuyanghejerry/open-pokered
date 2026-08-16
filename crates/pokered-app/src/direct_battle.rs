@@ -27,6 +27,8 @@ fn phase_tag(phase: &BattlePhase) -> u8 {
         BattlePhase::EnemySendingNext { .. } => 6,
         BattlePhase::ShiftPrompt => 14,
         BattlePhase::ShiftSwitchSelect => 15,
+        // Forced-struggle countdown behaves like a text wait (enemy still visible).
+        BattlePhase::ForcedStruggle { .. } => 17,
         BattlePhase::PlayerFaintSwitch => 7,
         BattlePhase::TrainerVictory { .. } => 13,
         BattlePhase::BattleOver { .. } => 8,

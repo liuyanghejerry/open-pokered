@@ -33,8 +33,13 @@ pub fn try_run_from_battle(state: &mut BattleState, random_byte: u8) -> RunResul
     // Wild battle
     state.num_run_attempts += 1;
 
-    let player_speed = state.player.active_mon().speed;
-    let enemy_speed = state.enemy.active_mon().speed;
+    // The escape check reads the CURRENT battle speeds (`wBattleMonSpeed` /
+    // `wEnemyMonSpeed`, core.asm:2451-2452) — the working copies that already
+    // carry paralysis quartering, stat stages, and badge boosts (all in-place
+    // mutations of wBattleMon in the original). Use the same effective speed
+    // basis as the turn-order comparison.
+    let player_speed = crate::battle::turn_order::effective_speed_for(&state.player);
+    let enemy_speed = crate::battle::turn_order::effective_speed_for(&state.enemy);
 
     // If player speed >= enemy speed → always escape
     // ASM: StringCmp on 2-byte big-endian speeds, jump if player >= enemy

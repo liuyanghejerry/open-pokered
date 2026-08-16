@@ -374,13 +374,21 @@ impl BattlerState {
     }
 
     pub fn reset_volatile_status(&mut self) {
+        // Gen-1 Toxic side-quirk: switching out does NOT clear the side's
+        // Toxic counter / BADLY_POISONED bit — `wPlayer/EnemyToxicCounter` is
+        // only reset by Toxic's own re-application (effects.asm:137), the
+        // status-heal item (item_effects.asm:905) and the enemy-AI heal
+        // (trainer_ai.asm:635). A switched-out mon resumes the ramp on return.
+        // (Battle end also lands here, but the whole state is discarded then.)
+        let toxic_counter = self.toxic_counter;
+        let badly_poisoned = self.has_status3(status3::BADLY_POISONED);
+
         self.battle_status1 = 0;
         self.battle_status2 = 0;
         self.battle_status3 = 0;
         self.stat_stages.reset();
         self.substitute_hp = 0;
         self.confused_turns_left = 0;
-        self.toxic_counter = 0;
         self.disabled_move = 0;
         self.disabled_turns_left = 0;
         self.num_attacks_left = 0;
@@ -395,6 +403,11 @@ impl BattlerState {
         // mon re-applies them from scratch at send-out (core.asm:1659), so the
         // accumulated stat-up-glitch rounds reset here.
         self.badge_boosted_stats = None;
+
+        if badly_poisoned {
+            self.toxic_counter = toxic_counter;
+            self.set_status3(status3::BADLY_POISONED);
+        }
     }
 
     pub fn refresh_unmodified_stats(&mut self) {
@@ -644,9 +657,7 @@ mod tests {
         let mut battler = new_battler_state(party);
         battler.set_status1(status1::CONFUSED | status1::FLINCHED);
         battler.set_status2(status2::SEEDED);
-        battler.set_status3(status3::BADLY_POISONED);
         battler.confused_turns_left = 3;
-        battler.toxic_counter = 5;
         battler.substitute_hp = 20;
 
         battler.reset_volatile_status();
@@ -655,8 +666,27 @@ mod tests {
         assert_eq!(battler.battle_status2, 0);
         assert_eq!(battler.battle_status3, 0);
         assert_eq!(battler.confused_turns_left, 0);
-        assert_eq!(battler.toxic_counter, 0);
         assert_eq!(battler.substitute_hp, 0);
+    }
+
+    /// Gen-1 Toxic survives a switch-out (side-level counter): reset clears
+    /// everything else but keeps the ramp + BADLY_POISONED bit.
+    #[test]
+    fn battler_reset_volatile_preserves_toxic() {
+        let party = vec![make_test_pokemon()];
+        let mut battler = new_battler_state(party);
+        battler.set_status1(status1::CONFUSED);
+        battler.set_status2(status2::SEEDED);
+        battler.set_status3(status3::BADLY_POISONED);
+        battler.confused_turns_left = 3;
+        battler.toxic_counter = 4;
+
+        battler.reset_volatile_status();
+
+        assert!(battler.has_status3(status3::BADLY_POISONED), "Toxic bit survives the switch");
+        assert_eq!(battler.toxic_counter, 4, "the ramp resumes from its old value");
+        assert_eq!(battler.battle_status1, 0, "other volatiles still clear");
+        assert_eq!(battler.battle_status2 & status2::SEEDED, 0);
     }
 
     #[test]

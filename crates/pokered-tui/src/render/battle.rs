@@ -453,6 +453,7 @@ impl BattleVisualEffects {
             BattlePhase::EnemySendingNext { .. } => BattlePhaseKind::EnemySendingNext,
             BattlePhase::ShiftPrompt => BattlePhaseKind::ShiftPrompt,
             BattlePhase::ShiftSwitchSelect => BattlePhaseKind::ShiftSwitchSelect,
+            BattlePhase::ForcedStruggle { .. } => BattlePhaseKind::ShowingText,
             BattlePhase::PlayerFaintSwitch => BattlePhaseKind::PlayerFaintSwitch,
             BattlePhase::LinkWaiting => BattlePhaseKind::LinkWaiting,
             BattlePhase::TrainerVictory { .. } => BattlePhaseKind::TrainerVictory,

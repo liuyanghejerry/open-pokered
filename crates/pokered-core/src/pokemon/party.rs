@@ -1,6 +1,6 @@
 use crate::battle::state::Pokemon;
 use crate::pokemon::ask_name::AskNameState;
-use crate::pokemon::stats::create_pokemon;
+use crate::pokemon::stats::{create_pokemon, roll_random_dvs};
 use pokered_data::moves::MoveId;
 use pokered_data::species::Species;
 use serde::{Deserialize, Serialize};
@@ -112,7 +112,7 @@ impl Party {
         }
 
         let pokemon =
-            create_pokemon(species, level, [0xFF, 0xFF]).ok_or(PartyError::IndexOutOfBounds)?;
+            create_pokemon(species, level, roll_random_dvs()).ok_or(PartyError::IndexOutOfBounds)?;
 
         let ask_name = AskNameState::new(species);
         let index = self.count;

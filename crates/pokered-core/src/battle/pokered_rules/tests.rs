@@ -799,7 +799,11 @@ fn reflect_halves_physical_damage_via_decoupled_stack() {
             BattleAction::<PokeredRules>::Fight { move_: MoveId::Tackle },
             BattleAction::<PokeredRules>::Fight { move_: MoveId::Tackle },
         ];
-        let mut rng = ScriptedRng::new(vec![0u8; 64]);
+        // Draw order: crit byte, then accuracy, then the ≥217 damage byte.
+        // A cyclic [255, 0, 217] stream gives: no crit (255 ≥ threshold),
+        // hit (0 < 255 accuracy), damage roll 217 — deterministic and non-crit
+        // (a crit discards Reflect, core.asm:4059-4064, out of scope here).
+        let mut rng = ScriptedRng::new([255u8, 0, 217].iter().copied().cycle().take(64).collect::<Vec<u8>>());
         let (_r, log) = StackDriver::execute_turn_logged(
             &PokeredRules, &mut state, &mut effects, actions, &mut rng,
         );
@@ -811,6 +815,48 @@ fn reflect_halves_physical_damage_via_decoupled_stack() {
     assert!(
         shielded < plain,
         "Reflect must reduce physical damage: shielded {shielded} vs plain {plain}"
+    );
+}
+
+/// The crit-vs-screen quirk (core.asm:4044-4103): a critical hit re-loads the
+/// defender's RAW stat, discarding a live Reflect — a crit into Reflect deals
+/// the SAME damage as a crit without it.
+#[test]
+fn crit_ignores_reflect_screen() {
+    let crit_damage = |reflect: bool| -> i32 {
+        install_canonical();
+        set_active_move(real_move(MoveId::Tackle));
+        let mut state = EngineState::new(
+            vec![engine_battler(&Mon::new(Species::Tauros, 300, 110), MoveId::Tackle)],
+            vec![engine_battler(&Mon::new(Species::Snorlax, 500, 40), MoveId::Tackle)],
+        );
+        let mut effects: Vec<EffectState<PokeredRules>> = Vec::new();
+        if reflect {
+            effects.push(EffectState {
+                id: EffectId(200),
+                host: BattlerRef::OPPONENT,
+                effect_order: 0,
+                kind: PokeVolatile::Reflect,
+            });
+        }
+        let actions = [
+            BattleAction::<PokeredRules>::Fight { move_: MoveId::Tackle },
+            BattleAction::<PokeredRules>::Fight { move_: MoveId::Tackle },
+        ];
+        // Draw order: crit byte, then accuracy, then damage. A cyclic [0, 0, 217]
+        // stream gives crit (0 < threshold), hit, damage 217 — guaranteed crit.
+        let mut rng = ScriptedRng::new([0u8, 0, 217].iter().copied().cycle().take(64).collect::<Vec<u8>>());
+        let (_r, log) = StackDriver::execute_turn_logged(
+            &PokeredRules, &mut state, &mut effects, actions, &mut rng,
+        );
+        log_net_damage(&log, BattlerRef::OPPONENT)
+    };
+    let plain = crit_damage(false);
+    let shielded = crit_damage(true);
+    assert!(plain > 0, "the crit must deal damage ({plain})");
+    assert_eq!(
+        shielded, plain,
+        "a crit discards Reflect (asm reloads the raw stat): {shielded} vs {plain}"
     );
 }
 

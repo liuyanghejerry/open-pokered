@@ -1778,9 +1778,10 @@ impl PokemonGame {
     }
 
     fn start_wild_battle(&mut self, species: pokered_data::species::Species, level: u8) {
-        use pokered_core::pokemon::stats::create_pokemon;
+        use pokered_core::pokemon::stats::{create_pokemon, roll_random_dvs};
 
-        let enemy_mon = create_pokemon(species, level, [0x9A, 0x78]);
+        // Wild DVs are two random bytes (core.asm:6012-6019).
+        let enemy_mon = create_pokemon(species, level, roll_random_dvs());
         let player_party = self.save_data.party.to_vec();
 
         if let Some(enemy) = enemy_mon {
@@ -2004,6 +2005,15 @@ impl PokemonGame {
         }
     }
 
+    /// ReadTrainer's special-move pass — delegates to the CORE implementation
+    /// (battle::special_moves, shared with the TUI).
+    fn apply_trainer_special_moves(
+        class: pokered_data::trainer_data::TrainerClass,
+        party: &mut [pokered_core::battle::state::Pokemon],
+    ) {
+        pokered_core::battle::special_moves::apply_trainer_special_moves(class, party);
+    }
+
     fn start_trainer_battle(&mut self, trainer_id: &str, rival_triplet_base: Option<u8>) {
         use pokered_core::pokemon::stats::create_pokemon;
         use pokered_data::trainer_data::{get_trainer_party, parse_trainer_id, TrainerClass};
@@ -2030,11 +2040,15 @@ impl PokemonGame {
             };
 
             if let Some(party) = get_trainer_party(class, party_index) {
-                party
+                let mut mons: Vec<_> = party
                     .pokemon
                     .iter()
-                    .filter_map(|mon| create_pokemon(mon.species, mon.level, [0x9A, 0x78]))
-                    .collect::<Vec<_>>()
+                    .filter_map(|mon| {
+                        create_pokemon(mon.species, mon.level, pokered_core::pokemon::stats::TRAINER_DV_BYTES)
+                    })
+                    .collect();
+                Self::apply_trainer_special_moves(class, &mut mons);
+                mons
             } else {
                 vec![]
             }
@@ -2989,10 +3003,12 @@ impl PokemonGame {
                     }
 
                     if let Some(pending) = self.overworld.pending_give_pokemon.take() {
+                        // Gifted mons get random DVs (AddPartyMon Random ×2,
+                        // add_mon.asm:95-101).
                         if let Some(mut pokemon) = pokered_core::pokemon::stats::create_pokemon(
                             pending.species,
                             pending.level,
-                            [0x9A, 0x78],
+                            pokered_core::pokemon::stats::roll_random_dvs(),
                         ) {
                             if let Some(nick) = pending.nickname {
                                 pokemon.set_nickname(&nick);
