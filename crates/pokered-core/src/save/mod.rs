@@ -111,8 +111,11 @@ impl SaveData {
     /// level/stats are recomputed from the accumulated experience, HP is
     /// restored to max, and any level-up moves learned since the deposit level
     /// are taught (this preserves TM/HM-taught moves, unlike the original
-    /// `WriteMonMoves` rebuild). No-op if nothing is deposited or the party is
-    /// full. The caller charges the withdrawal fee separately.
+    /// `WriteMonMoves` rebuild). STAT EXP IS LOST — the original's
+    /// `wDayCareMon` is a 33-byte box_struct with no stat-exp fields
+    /// (ram/wram.asm:2221), so a deposit/withdraw round-trip resets effort to
+    /// zero (the famous Day-Care EV wipe). No-op if nothing is deposited or
+    /// the party is full.
     pub fn withdraw_daycare(&mut self) {
         use crate::battle::experience::growth::level_from_exp;
         use crate::pokemon::move_learning::process_level_up_moves;
@@ -129,24 +132,17 @@ impl SaveData {
             let new_level = level_from_exp(base.growth_rate, dc.exp).clamp(1, 100);
             if let Some(mut mon) = create_pokemon(species, new_level, dc.dvs.to_be_bytes()) {
                 mon.total_exp = dc.exp;
-                mon.stat_exp = [
-                    dc.hp_exp,
-                    dc.attack_exp,
-                    dc.defense_exp,
-                    dc.speed_exp,
-                    dc.special_exp,
-                ];
-                let box_moves = [
-                    MoveId::from_id(dc.moves[0]),
-                    MoveId::from_id(dc.moves[1]),
-                    MoveId::from_id(dc.moves[2]),
-                    MoveId::from_id(dc.moves[3]),
-                ];
-                if box_moves.iter().any(|m| *m != MoveId::None) {
-                    mon.moves = box_moves;
-                    mon.pp = dc.pp;
-                }
-                process_level_up_moves(&mut mon, dc.box_level, new_level);
+            let box_moves = [
+                MoveId::from_id(dc.moves[0]),
+                MoveId::from_id(dc.moves[1]),
+                MoveId::from_id(dc.moves[2]),
+                MoveId::from_id(dc.moves[3]),
+            ];
+            if box_moves.iter().any(|m| *m != MoveId::None) {
+                mon.moves = box_moves;
+                mon.pp = dc.pp;
+            }
+            process_level_up_moves(&mut mon, dc.box_level, new_level);
                 recalculate_stats(&mut mon);
                 mon.hp = mon.max_hp;
                 let name = pokered_data::charmap::decode_string(&self.game_data.daycare_mon_name);

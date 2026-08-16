@@ -128,3 +128,24 @@ fn coins_credit_caps_at_9999_and_debit_saturates() {
     save.game_data.take_coins(10000);
     assert_eq!(save.game_data.player_coins, 0, "debit saturates at zero");
 }
+
+/// The famous Day-Care EV wipe: `wDayCareMon` is a box_struct with NO stat
+/// exp fields (ram/wram.asm:2221) — a deposit/withdraw round-trip resets
+/// effort to zero even though level/exp growth is preserved.
+#[test]
+fn withdraw_wipes_stat_exp() {
+    let mut save = SaveData::new();
+    let mut m = mon(Species::Bulbasaur, 20);
+    m.stat_exp = [1000, 2000, 3000, 4000, 5000];
+    let _ = save.party.add(m);
+    let _ = save.party.add(mon(Species::Charmander, 7));
+    save.deposit_daycare(0);
+
+    // Growth while deposited (1 exp per step in the original).
+    save.game_data.daycare.exp = save.game_data.daycare.exp.saturating_add(300);
+
+    save.withdraw_daycare();
+    let back = save.party.get(0).expect("mon returned");
+    assert_eq!(back.stat_exp, [0, 0, 0, 0, 0], "stat exp is wiped by the box_struct round-trip");
+    assert!(back.total_exp > 0, "level/exp growth is kept");
+}
