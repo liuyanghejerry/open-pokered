@@ -35,10 +35,26 @@ pub fn recalculate_stats(mon: &mut Pokemon) {
     }
 }
 
+/// DV bytes for enemy trainer Pokémon — ATKDEFDV_TRAINER / SPDSPCDV_TRAINER
+/// (constants/battle_constants.asm:72-73, applied in add_mon.asm:78-79).
+pub const TRAINER_DV_BYTES: [u8; 2] = [0x98, 0x88];
+
+/// Roll the two random DV bytes used by every non-trainer `AddPartyMon` path:
+/// wild encounters (`BattleRandom` ×2, core.asm:6012-6019) and gifted/starter
+/// mons (`Random` ×2, add_mon.asm:95-101).
+pub fn roll_random_dvs() -> [u8; 2] {
+    [rand::random::<u8>(), rand::random::<u8>()]
+}
+
 pub fn create_pokemon(species: Species, level: u8, dv_bytes: [u8; 2]) -> Option<Pokemon> {
     let base = get_base_stats(species)?;
 
     let (hp, atk, def, spd, spc) = calc_all_stats(base, dv_bytes, &[0u16; 5], level);
+
+    // Start from the L1 initial moves, then apply level-up learnset entries
+    // (Gen-1 WriteMonMoves via AddPartyMon, evos_moves.asm:383-470).
+    let mut moves = base.initial_moves;
+    super::move_learning::write_mon_moves(species, level, &mut moves);
 
     Some(Pokemon {
         species,
@@ -52,12 +68,12 @@ pub fn create_pokemon(species: Species, level: u8, dv_bytes: [u8; 2]) -> Option<
         special: spc,
         type1: base.type1,
         type2: base.type2,
-        moves: base.initial_moves,
+        moves,
         pp: [
-            super::move_learning::get_move_max_pp(base.initial_moves[0]),
-            super::move_learning::get_move_max_pp(base.initial_moves[1]),
-            super::move_learning::get_move_max_pp(base.initial_moves[2]),
-            super::move_learning::get_move_max_pp(base.initial_moves[3]),
+            super::move_learning::get_move_max_pp(moves[0]),
+            super::move_learning::get_move_max_pp(moves[1]),
+            super::move_learning::get_move_max_pp(moves[2]),
+            super::move_learning::get_move_max_pp(moves[3]),
         ],
         pp_ups: [0; 4],
         status: StatusCondition::None,

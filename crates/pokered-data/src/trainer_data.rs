@@ -1,3 +1,4 @@
+use crate::moves::MoveId;
 use crate::species::Species;
 use serde::{Deserialize, Serialize};
 
@@ -431,6 +432,56 @@ pub fn trainer_class_name(class: TrainerClass) -> &'static str {
         TrainerClass::Agatha => "AGATHA",
         TrainerClass::Lance => "LANCE",
     }
+}
+
+/// `wGymLeaderNo` written by each gym's script before the leader battle
+/// (scripts/<Gym>.asm `ld a, N / ld [wGymLeaderNo], a`). NOTE: `wGymLeaderNo`
+/// and `wLoneAttackNo` are the SAME byte (ram/wram.asm:1264-1265 union alias)
+/// — the gym-leader number IS the LoneMoves index.
+pub fn gym_leader_no(class: TrainerClass) -> Option<u8> {
+    use TrainerClass::*;
+    Some(match class {
+        Brock => 1,
+        Misty => 2,
+        LtSurge => 3,
+        Erika => 4,
+        Koga => 5,
+        Sabrina => 6,
+        Blaine => 7,
+        Giovanni => 8,
+        _ => return None,
+    })
+}
+
+/// LoneMoves (data/trainers/special_moves.asm): for LoneAttackNo N (1-based),
+/// the Nth entry's (pokemon index, move) pair — the special move overwrites
+/// move slot 3 (index 2) of that party member.
+pub fn lone_move(lone_attack_no: u8) -> Option<(usize, MoveId)> {
+    use MoveId as M;
+    Some(match lone_attack_no {
+        1 => (0, M::Bide),        // Brock's 1st mon: BIDE
+        2 => (0, M::Bubblebeam),  // Misty's 1st mon: BUBBLEBEAM
+        3 => (1, M::Thunderbolt), // Lt.Surge's 2nd mon: THUNDERBOLT
+        4 => (1, M::MegaDrain),   // Erika's 2nd mon: MEGA_DRAIN
+        5 => (2, M::Toxic),       // Koga's 3rd mon: TOXIC
+        6 => (2, M::Psywave),     // Sabrina's 3rd mon: PSYWAVE
+        7 => (2, M::FireBlast),   // Blaine's 3rd mon: FIRE_BLAST
+        8 => (3, M::Fissure),     // Giovanni's 4th mon: FISSURE
+        _ => return Option::None,
+    })
+}
+
+/// TeamMoves (special_moves.asm): the Elite Four member's whole team gets this
+/// move on their 5th party member's slot 3 (`wEnemyMon5Moves + 2`).
+pub fn team_move(class: TrainerClass) -> Option<MoveId> {
+    use MoveId as M;
+    Some(match class {
+        TrainerClass::Lorelei => M::Blizzard,
+        TrainerClass::Bruno => M::Fissure,
+        TrainerClass::Agatha => M::Toxic,
+        TrainerClass::Lance => M::Barrier,
+        _ => return Option::None,
+    })
 }
 
 #[cfg(test)]

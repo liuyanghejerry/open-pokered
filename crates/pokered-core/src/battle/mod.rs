@@ -11,6 +11,7 @@ pub mod menu;
 pub mod move_execution;
 pub mod obedience;
 pub mod residual;
+pub mod special_moves;
 pub mod settlement;
 pub mod stat_stages;
 pub mod state;
@@ -410,6 +411,13 @@ pub enum BattlePhase {
     /// (free switch — the fainted enemy cannot attack). B proceeds without
     /// switching, exactly like the original party menu here.
     ShiftSwitchSelect,
+    /// Forced Struggle turn: every move is at 0 PP (AnyMoveToSelect returned
+    /// "nothing selectable", core.asm:2715-2762). After "X has no moves left!"
+    /// + DelayFrames(60), the turn executes as Struggle. `wait_frames` counts
+    /// down before the turn fires.
+    ForcedStruggle {
+        wait_frames: u16,
+    },
     /// Player must choose replacement after their Pokémon faints.
     PlayerFaintSwitch,
     /// Link battle: the local action was chosen and sent; the screen waits
@@ -1528,6 +1536,61 @@ impl BattleScreen {
         MoveMenuState::new(slots)
     }
 
+    /// AnyMoveToSelect (core.asm:2715-2762): is any move usable? `false` means
+    /// every move is at 0 PP — a disabled move's PP slot is IGNORED in the
+    /// check (its PP loop skips the disabled index).
+    fn any_move_to_select(p: &crate::battle::state::BattlerState) -> bool {
+        let mon = p.active_mon();
+        let disabled_slot = if p.disabled_move > 0 {
+            Some(p.disabled_move - 1)
+        } else {
+            None
+        };
+        mon.moves
+            .iter()
+            .zip(mon.pp.iter())
+            .enumerate()
+            .filter(|(i, _)| Some(*i as u8) != disabled_slot)
+            .any(|(_, (m, pp))| *m != MoveId::None && *pp > 0)
+    }
+
+    /// DecrementPP (engine/battle/decrement_pp.asm): after a move is USED,
+    /// tick down its PP. Exemptions, in the original's order:
+    ///   * Struggle itself never spends PP;
+    ///   * a side STORING_ENERGY (Bide) / THRASHING_ABOUT / on a MULTI_HIT
+    ///     continuation turn (ATTACKING_MULTIPLE_TIMES) or USING_RAGE skips
+    ///     the decrement — those turns re-run the move without a new PP tick;
+    ///   * the check reads the side's status on ENTRY to the turn (the flags
+    ///     the continuation turn arrived with).
+    /// PP_MASK: values ≥ 0x80 encode "no PP" sentinels — only the low 7 bits
+    /// count.
+    fn decrement_player_pp(bs: &mut BattleState) {
+        use crate::battle::state::status1;
+        use crate::battle::state::status2;
+
+        let idx = bs.player.selected_move_index as usize;
+        if idx >= 4 {
+            return;
+        }
+        let mon = bs.player.active_mon();
+        if mon.moves[idx] == MoveId::Struggle {
+            return;
+        }
+        let skip = bs.player.has_status1(
+            status1::STORING_ENERGY | status1::THRASHING_ABOUT | status1::MULTI_HIT,
+        ) || bs.player.has_status2(status2::USING_RAGE);
+        if skip {
+            return;
+        }
+        // Transformed mons keep their copied PP separate from the party copy —
+        // the battle-struct tick only (the original returns before the party
+        // writeback; this port's single struct IS the battle copy).
+        let mon = bs.player.active_mon_mut();
+        if mon.pp[idx] > 0 && mon.pp[idx] < 0x80 {
+            mon.pp[idx] -= 1;
+        }
+    }
+
     fn format_move_outcome(
         side_name: &str,
         move_name: &str,
@@ -1717,10 +1780,36 @@ impl BattleScreen {
                 } else if let Some(action) = self.battle_menu.update_frame(menu_input) {
                     match action {
                         BattleMenuAction::Fight => {
-                            if let Some(ref bs) = self.battle_state {
-                                self.move_menu = Some(Self::build_move_menu_from_state(bs));
+                            // AnyMoveToSelect (core.asm:2487-2488, 2715-2762):
+                            // if every move is at 0 PP (a disabled move's PP is
+                            // ignored), print "X has no moves left!" and run the
+                            // turn as a forced Struggle instead of opening the
+                            // move menu.
+                            let struggle_now = self.battle_state.as_ref().map_or(false, |bs| {
+                                !Self::any_move_to_select(&bs.player)
+                            });
+                            if struggle_now {
+                                let name = self
+                                    .battle_state
+                                    .as_ref()
+                                    .map(|bs| {
+                                        let mut nb = [0u8; crate::battle::state::NAME_TEXT_BUF];
+                                        bs.player.active_mon().display_name(&mut nb).to_string()
+                                    })
+                                    .unwrap_or_else(|| "#MON".to_string());
+                                let msg = format!("{name} has no\nmoves left!");
+                                self.show_text_then(
+                                    vec![msg],
+                                    BattlePhase::ForcedStruggle {
+                                        wait_frames: 60,
+                                    },
+                                );
+                            } else {
+                                if let Some(ref bs) = self.battle_state {
+                                    self.move_menu = Some(Self::build_move_menu_from_state(bs));
+                                }
+                                self.phase = BattlePhase::MoveSelect;
                             }
-                            self.phase = BattlePhase::MoveSelect;
                         }
                         BattleMenuAction::Run => {
                             self.handle_run();
@@ -2017,6 +2106,28 @@ impl BattleScreen {
                     self.apply_shift_switch(chosen);
                 } else {
                     self.phase = BattlePhase::PlayerMenu;
+                }
+                ScreenAction::Continue
+            }
+            BattlePhase::ForcedStruggle { wait_frames } => {
+                // AnyMoveToSelect's no-moves path: after the text + a 60-frame
+                // delay (the original's DelayFrames right after PrintText,
+                // core.asm:2751-2755), the turn runs as a Struggle against the
+                // current enemy pick.
+                if wait_frames > 0 {
+                    self.phase = BattlePhase::ForcedStruggle {
+                        wait_frames: wait_frames - 1,
+                    };
+                    return ScreenAction::Continue;
+                }
+                if self.link_mode {
+                    // Link: send the dedicated STRUGGLE nybble instead of a
+                    // move index (SelectEnemyMove's LINKBATTLE_STRUGGLE).
+                    self.link_pending_local_action =
+                        Some(crate::link::protocol::LinkAction::Struggle);
+                    self.phase = BattlePhase::LinkWaiting;
+                } else {
+                    self.execute_turn_with_struggle();
                 }
                 ScreenAction::Continue
             }
@@ -2481,11 +2592,11 @@ impl BattleScreen {
         let mut caught = false;
         match action {
             SafariMenuAction::Ball => {
-                let randoms = CaptureRandoms { rand1: rand::random(), rand2: rand::random() };
+                // Rand1 rejection-sampled inside throw_ball (the `.loop`).
                 let result = self
                     .safari
                     .as_mut()
-                    .map(|s| s.throw_ball(max_hp, cur_hp, status, randoms));
+                    .map(|s| s.throw_ball(max_hp, cur_hp, status, rand::random(), &mut rand::random));
                 match result {
                     Some(CaptureResult::Captured) => {
                         caught = true;
@@ -2606,7 +2717,9 @@ impl BattleScreen {
     }
 
     fn use_ball(&mut self, ball_id: ItemId) {
-        use crate::battle::capture::{try_capture, CaptureContext, CaptureRandoms, CaptureResult};
+        use crate::battle::capture::{
+            try_capture_with_rolls, CaptureContext, CaptureResult,
+        };
         use pokered_data::pokemon_data::get_base_stats;
         let ball_name = pokered_data::item_data::get_item_data(ball_id)
             .map(|d| d.name)
@@ -2657,11 +2770,9 @@ impl BattleScreen {
                 wild_catch_rate: catch_rate,
                 wild_status: enemy.status,
             };
-            let randoms = CaptureRandoms {
-                rand1: rand::random(),
-                rand2: rand::random(),
-            };
-            let result = try_capture(&ctx, &randoms);
+            // Rand1 uses the original's rejection sampling (the `.loop` redraw):
+            // a Great/Ultra/Safari draw above threshold is REDRAWN, never a fail.
+            let result = try_capture_with_rolls(&ctx, &mut rand::random, rand::random());
             self.consume_selected_item();
             // wPokeBallAnimData: $43 caught (3 shakes) / $20 missed /
             // $61-$63 broke free after N shakes (ItemUseBall's
@@ -3089,7 +3200,6 @@ impl BattleScreen {
             return None;
         }
         let cfg = trainer_ai_config(class);
-        let count_before = self.enemy_ai_count; // > 0 (checked above)
         let action = {
             let bs = self.battle_state.as_ref()?;
             // Conservative guard (documented simplification): skip — and spend NO charge —
@@ -3099,11 +3209,13 @@ impl BattleScreen {
             }
             execute_ai_action(cfg.routine, &mut self.enemy_ai_count, &bs.enemy, rand_val)
         };
-        // Per-turn budget: one charge per consultation (overrides execute_ai_action's
-        // per-action decrement). Gen-1 decrements `wAICount` in the wrapper BEFORE the
-        // class routine runs, so a DoNothing roll or a rolled-but-impossible switch STILL
-        // spends a charge — a routine may only act within the first `count` turns a mon is out.
-        self.enemy_ai_count = count_before - 1;
+        // wAICount semantics (trainer_ai.asm:289-322 + DecrementAICount at
+        // :453): the wrapper does NOT decrement on a consultation — it only
+        // RELOADS the table value when the counter wraps to $FF. The decrement
+        // happens inside the class routines' ACTION paths (item use / switch /
+        // stat boost — the DecrementAICount call sites :552/:725/:730), so a
+        // DoNothing roll spends nothing. `execute_ai_action` performs that
+        // per-action decrement; nothing to do here.
         match action {
             AiAction::DoNothing => None,
             AiAction::SwitchPokemon => {
@@ -3242,6 +3354,19 @@ impl BattleScreen {
         }
     }
 
+    /// A forced Struggle turn (AnyMoveToSelect found nothing usable): pin the
+    /// player's selection to STRUGGLE for this turn (index 4 — past the move
+    /// slots, so the PP tick is out of range and Struggle's own guard also
+    /// applies), then run the normal turn pipeline. The enemy's move comes
+    /// from the usual AI/wire path.
+    fn execute_turn_with_struggle(&mut self) {
+        if let Some(ref mut bs) = self.battle_state {
+            bs.player.selected_move = MoveId::Struggle;
+            bs.player.selected_move_index = 4;
+        }
+        self.execute_turn_with_move(0);
+    }
+
     fn execute_turn_with_move(&mut self, move_index: usize) {
         // Badge stat boosts / obedience context: push the frontend-supplied
         // badges + trainer ID into the battle state and apply the send-out
@@ -3276,7 +3401,13 @@ impl BattleScreen {
             // ignored — the continuation re-uses the locked move (persisted in
             // `selected_move`). forced_action forces the same move engine-side; pinning
             // it here keeps CURRENT_MOVES consistent so the native handlers use its data.
-            player_move_id = if move_is_locked(&bs.player) {
+            // A forced-Struggle turn (selected_move pinned to STRUGGLE with an
+            // out-of-range slot index) takes the same pin path.
+            player_move_id = if bs.player.selected_move == MoveId::Struggle
+                && bs.player.selected_move_index >= 4
+            {
+                MoveId::Struggle
+            } else if move_is_locked(&bs.player) {
                 bs.player.selected_move
             } else {
                 mon.moves[move_index]
@@ -3489,6 +3620,25 @@ impl BattleScreen {
             None => return,
         };
 
+        // DecrementPP (decrement_pp.asm) — tick the used move's PP now, at
+        // PlayerCanExecuteMove (core.asm:3118-3122): the move is committed and
+        // the flags on entry decide the exemptions (Bide/Thrash/MultiHit/Rage
+        // continuations spend nothing). Skipped for the blocked paths that
+        // never reach PlayerCanExecuteMove: ghost-scared, disobedient, or a
+        // called-move failure.
+        {
+            use crate::battle::state::{status1, status2};
+            let bs = self.battle_state.as_mut().unwrap();
+            let pp_spend = !player_call_failed
+                && !player_scared
+                && !player_disobeyed
+                && !bs.player.has_status2(status2::NEEDS_TO_RECHARGE)
+                && !bs.player.has_status1(status1::FLINCHED);
+            if pp_spend {
+                Self::decrement_player_pp(bs);
+            }
+        }
+
         // ════ P6: the whole turn runs through the stack engine ════
         // pick_enemy_move (legacy AI) chose the enemy move above; both movers +
         // ordering + residual + the faint short-circuit then run in ONE StackDriver
@@ -3523,7 +3673,15 @@ impl BattleScreen {
                 pokered_rules::set_last_move_live(BattlerRef::PLAYER, disable_target_last_move(&bs.player));
                 pokered_rules::set_last_move_live(BattlerRef::OPPONENT, disable_target_last_move(&bs.enemy));
                 bs.player.selected_move = player_move_id;
-                bs.player.selected_move_index = move_index as u8;
+                // Preserve a forced-Struggle's out-of-range marker (slot 4);
+                // normal turns record the menu slot.
+                bs.player.selected_move_index = if player_move_id == MoveId::Struggle
+                    && bs.player.selected_move_index >= 4
+                {
+                    4
+                } else {
+                    move_index as u8
+                };
                 bs.enemy.selected_move = enemy_move_id;
                 bs.enemy.selected_move_index = enemy_move_idx;
                 // A mon that ENTERS the turn recharging (Hyper Beam) is forced to skip
@@ -5014,7 +5172,7 @@ mod trainer_ai_action_tests {
     fn cooltrainer_f_heals_low_hp() {
         let mut enemy = vec![mk(Species::Nidoking, 40, [MoveId::Tackle, MoveId::None, MoveId::None, MoveId::None])];
         let max = enemy[0].max_hp;
-        enemy[0].hp = max / 6; // below the max/5 heal threshold
+        enemy[0].hp = max / 12; // below the max/10 heal threshold
         let mut screen = trainer_battle(TrainerClass::CooltrainerF, enemy);
         let mut msgs = Vec::new();
         assert!(screen.enemy_ai_action_inner(0, &mut msgs));
@@ -5027,7 +5185,7 @@ mod trainer_ai_action_tests {
     fn full_restore_heals_and_cures() {
         let mut enemy = vec![mk(Species::Charizard, 50, [MoveId::Tackle, MoveId::None, MoveId::None, MoveId::None])];
         let max = enemy[0].max_hp;
-        enemy[0].hp = max / 6; // below max/5
+        enemy[0].hp = max / 6; // below max/10
         enemy[0].status = StatusCondition::Burn;
         let mut screen = trainer_battle(TrainerClass::Rival3, enemy);
         let mut msgs = Vec::new();
@@ -5050,16 +5208,17 @@ mod trainer_ai_action_tests {
         assert!(msgs.iter().any(|m| m.contains("DEFENSE rose!")), "{msgs:?}");
     }
 
-    /// A consulted DoNothing STILL spends a charge — Gen-1 decrements wAICount once per
-    /// consultation (in the TrainerAI wrapper), not per action.
+    /// A consulted DoNothing spends NO charge — Gen-1's wrapper (trainer_ai.asm:
+    /// 289-322) never decrements wAICount; only the class routine's ACTION
+    /// paths call DecrementAICount (:453, reached from :552/:725/:730).
     #[test]
-    fn bruno_idle_still_spends_a_charge() {
+    fn bruno_idle_spends_no_charge() {
         let enemy = vec![mk(Species::Onix, 40, [MoveId::Tackle, MoveId::None, MoveId::None, MoveId::None])];
         let mut screen = trainer_battle(TrainerClass::Bruno, enemy);
         let start = screen.enemy_ai_count;
         let mut msgs = Vec::new();
         assert!(!screen.enemy_ai_action_inner(200, &mut msgs), "rand >= 64 → Bruno idles (no X Defend)");
-        assert_eq!(screen.enemy_ai_count, start - 1, "the per-turn consultation spent a charge");
+        assert_eq!(screen.enemy_ai_count, start, "an idle consultation spends no charge");
         assert_eq!(enemy_def_stage(&screen), 0, "no stat change");
     }
 
@@ -5213,7 +5372,7 @@ mod trainer_ai_action_tests {
     #[test]
     fn player_first_ko_cancels_ai_heal() {
         for _ in 0..80 {
-            // enemy 1/300 HP (below max/5 → would heal), slow; fast player.
+            // enemy 1/300 HP (below max/10 → would heal), slow; fast player.
             let mut screen = speed_scenario(1, 300, 10, Species::Electrode, 50, 200);
             screen.execute_turn_with_move(0);
             if enemy_hp(&screen) == 0 {
@@ -5229,8 +5388,9 @@ mod trainer_ai_action_tests {
     #[test]
     fn player_first_non_ko_heals_after_move() {
         for _ in 0..40 {
-            // enemy 30/300 HP (below max/5), slow; fast but weak lvl-3 player.
-            let mut screen = speed_scenario(30, 300, 10, Species::Rattata, 3, 200);
+            // enemy 20/300 HP (below max/10 — the CooltrainerF heal threshold),
+            // slow; fast but weak lvl-3 player.
+            let mut screen = speed_scenario(20, 300, 10, Species::Rattata, 3, 200);
             screen.execute_turn_with_move(0);
             let hp = enemy_hp(&screen);
             if hp == 0 {
@@ -5247,7 +5407,7 @@ mod trainer_ai_action_tests {
     /// wrongly deferred, the weak player would KO the 1-HP enemy instead.
     #[test]
     fn enemy_first_heals_before_player_move() {
-        // enemy 1/300 HP (below max/5), fast; slow weak lvl-3 player.
+        // enemy 1/300 HP (below max/10), fast; slow weak lvl-3 player.
         let mut screen = speed_scenario(1, 300, 200, Species::Rattata, 3, 10);
         screen.execute_turn_with_move(0);
         let hp = enemy_hp(&screen);
@@ -6385,3 +6545,111 @@ mod hp_bar_anim_tests {
         }
     }
 }
+
+    // ── DecrementPP / AnyMoveToSelect parity (decrement_pp.asm, core.asm:2715) ──
+
+    mod pp_lifecycle_tests {
+        use super::*;
+        use crate::battle::state::status1;
+        use crate::pokemon::stats::create_pokemon_with_moves;
+        use pokered_data::species::Species;
+
+        fn mk(sp: Species, lvl: u8, moves: [MoveId; 4]) -> crate::battle::state::Pokemon {
+            create_pokemon_with_moves(sp, lvl, [0xFF, 0xFF], moves).unwrap()
+        }
+
+        /// A used move's PP ticks down by exactly 1 per turn.
+        #[test]
+        fn used_move_costs_one_pp() {
+            let player = vec![mk(Species::Pidgey, 20, [MoveId::Gust, MoveId::Growl, MoveId::None, MoveId::None])];
+            let enemy = vec![mk(Species::Rattata, 3, [MoveId::Tackle, MoveId::None, MoveId::None, MoveId::None])];
+            let mut screen = BattleScreen::from_parties(true, &player, &enemy, None);
+            let pp0 = screen.battle_state.as_ref().unwrap().player.active_mon().pp[0];
+            screen.execute_turn_with_move(0);
+            let pp1 = screen.battle_state.as_ref().unwrap().player.active_mon().pp[0];
+            assert_eq!(pp0.saturating_sub(1), pp1, "Gust costs 1 PP");
+        }
+
+        /// Thrash's continuation turns (THRASHING_ABOUT set on entry) spend no PP —
+        /// decrement_pp.asm's `ret nz` path.
+        #[test]
+        fn thrash_continuation_spends_no_pp() {
+            use crate::battle::state::status1::THRASHING_ABOUT;
+            let player = vec![mk(Species::Tauros, 10, [MoveId::Thrash, MoveId::None, MoveId::None, MoveId::None])];
+            let enemy = vec![mk(Species::Snorlax, 100, [MoveId::Growl, MoveId::Growl, MoveId::Growl, MoveId::Growl])];
+            let mut screen = BattleScreen::from_parties(true, &player, &enemy, None);
+            // Force the rampage state directly: the second turn enters with
+            // THRASHING_ABOUT already set (turn 1 spent its PP).
+            {
+                let bs = screen.battle_state.as_mut().unwrap();
+                bs.player.set_status1(THRASHING_ABOUT);
+                bs.player.selected_move = MoveId::Thrash;
+                bs.player.selected_move_index = 0;
+                bs.player.num_attacks_left = 2;
+                bs.player.active_mon_mut().pp[0] = 5;
+            }
+            screen.execute_turn_with_move(0);
+            assert_eq!(
+                screen.battle_state.as_ref().unwrap().player.active_mon().pp[0],
+                5,
+                "a THRASHING_ABOUT continuation spends no PP"
+            );
+        }
+
+        /// AnyMoveToSelect: all-zero PP ⇒ nothing selectable; a disabled move's
+        /// PP slot is ignored in the check.
+        #[test]
+        fn any_move_to_select_respects_zero_pp_and_disabled() {
+            let player = vec![mk(Species::Pidgey, 20, [MoveId::Gust, MoveId::Growl, MoveId::None, MoveId::None])];
+            let enemy = vec![mk(Species::Rattata, 3, [MoveId::Tackle, MoveId::None, MoveId::None, MoveId::None])];
+            let screen = BattleScreen::from_parties(true, &player, &enemy, None);
+            let bs = screen.battle_state.as_ref().unwrap();
+            assert!(BattleScreen::any_move_to_select(&bs.player));
+
+            let mut p2 = bs.player.clone();
+            p2.active_mon_mut().pp = [0; 4];
+            assert!(!BattleScreen::any_move_to_select(&p2), "all-zero PP → Struggle");
+
+            // Disabled slot 1's PP is IGNORED: PP[0]=0 (disabled slot would be
+            // ignored anyway) — set disabled to slot 0 with PP[0]>0 and slot 1
+            // at 0 → nothing usable even though slot 0 has PP.
+            let mut p3 = bs.player.clone();
+            p3.active_mon_mut().pp = [9, 0, 0, 0];
+            p3.disabled_move = 1;
+            assert!(!BattleScreen::any_move_to_select(&p3), "disabled slot's PP ignored");
+        }
+
+        /// Struggle itself spends no PP and the forced-struggle slot marker (4)
+        /// survives the turn bookkeeping.
+        #[test]
+        fn struggle_turn_spends_no_pp_and_keeps_marker() {
+            let player = vec![mk(Species::Pidgey, 20, [MoveId::Gust, MoveId::Growl, MoveId::None, MoveId::None])];
+            let enemy = vec![mk(Species::Rattata, 3, [MoveId::Tackle, MoveId::None, MoveId::None, MoveId::None])];
+            let mut screen = BattleScreen::from_parties(true, &player, &enemy, None);
+            let before = screen.battle_state.as_ref().unwrap().player.active_mon().pp;
+            screen.execute_turn_with_struggle();
+            let bs = screen.battle_state.as_ref().unwrap();
+            assert_eq!(bs.player.active_mon().pp, before, "Struggle spends no PP");
+            assert_eq!(bs.player.last_move_used, MoveId::Struggle);
+        }
+
+        /// A recharge turn (Hyper Beam's aftermath) spends no PP.
+        #[test]
+        fn recharge_turn_spends_no_pp() {
+            use crate::battle::state::status2::NEEDS_TO_RECHARGE;
+            let player = vec![mk(Species::Tauros, 30, [MoveId::HyperBeam, MoveId::None, MoveId::None, MoveId::None])];
+            let enemy = vec![mk(Species::Snorlax, 100, [MoveId::Growl, MoveId::Growl, MoveId::Growl, MoveId::Growl])];
+            let mut screen = BattleScreen::from_parties(true, &player, &enemy, None);
+            {
+                let bs = screen.battle_state.as_mut().unwrap();
+                bs.player.set_status2(NEEDS_TO_RECHARGE);
+                bs.player.active_mon_mut().pp[0] = 3;
+            }
+            screen.execute_turn_with_move(0);
+            assert_eq!(
+                screen.battle_state.as_ref().unwrap().player.active_mon().pp[0],
+                3,
+                "recharge skip spends no PP"
+            );
+        }
+    }

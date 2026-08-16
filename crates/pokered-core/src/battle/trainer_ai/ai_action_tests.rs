@@ -106,31 +106,33 @@ mod tests {
         assert_eq!(action, AiAction::UseXAttack);
     }
 
-    // --- CooltrainerF (bugged) ---
+    // --- CooltrainerF (the 25% gate is commented out in the asm — no random roll) ---
 
     #[test]
-    fn cooltrainer_f_heals_when_low_hp() {
-        // HP 19 out of 100 → below 100/5=20 → heals
-        let enemy = make_battler_hp(19, 100, StatusCondition::None);
+    fn cooltrainer_f_heals_when_hp_below_one_tenth() {
+        // HP 9/100 → below 1/10 → Hyper Potion (trainer_ai.asm:349-352, `ld a, 10`).
+        let enemy = make_battler_hp(9, 100, StatusCondition::None);
         let mut count = 1;
         let action = execute_ai_action(AiRoutine::CooltrainerF, &mut count, &enemy, 255);
         assert_eq!(action, AiAction::UsePotion { heal_amount: 200 });
     }
 
     #[test]
-    fn cooltrainer_f_switches_when_hp_ok_and_rand_low() {
-        // HP 50 out of 100 → not below 20% → check rand < 51
-        let enemy = make_battler_hp(50, 100, StatusCondition::None);
+    fn cooltrainer_f_switches_when_hp_below_one_fifth() {
+        // HP 15/100 → NOT below 1/10 but below 1/5 → switch (no random roll).
+        let enemy = make_battler_hp(15, 100, StatusCondition::None);
         let mut count = 1;
-        let action = execute_ai_action(AiRoutine::CooltrainerF, &mut count, &enemy, 50);
+        let action = execute_ai_action(AiRoutine::CooltrainerF, &mut count, &enemy, 255);
         assert_eq!(action, AiAction::SwitchPokemon);
     }
 
     #[test]
-    fn cooltrainer_f_does_nothing_when_hp_ok_and_rand_high() {
+    fn cooltrainer_f_does_nothing_when_hp_ok_regardless_of_rand() {
+        // HP 50/100 → neither threshold hit → DoNothing — the rand byte is
+        // irrelevant (the gate that would have used it is commented out).
         let enemy = make_battler_hp(50, 100, StatusCondition::None);
         let mut count = 1;
-        let action = execute_ai_action(AiRoutine::CooltrainerF, &mut count, &enemy, 51);
+        let action = execute_ai_action(AiRoutine::CooltrainerF, &mut count, &enemy, 0);
         assert_eq!(action, AiAction::DoNothing);
     }
 

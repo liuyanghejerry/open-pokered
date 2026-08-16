@@ -10,7 +10,7 @@
 //! rock (double, restored to base when the anger wears off), plus an "eating" (bait) and
 //! "angry" (rock) counter that bias the per-turn flee roll.
 
-use crate::battle::capture::{try_capture, CaptureContext, CaptureResult, CaptureRandoms};
+use crate::battle::capture::{try_capture_with_rolls, CaptureContext, CaptureResult};
 use crate::battle::state::StatusCondition;
 use pokered_data::items::ItemId;
 
@@ -71,12 +71,16 @@ impl SafariState {
 
     /// Throw a **SAFARI BALL**: consume one ball and attempt the capture with the current
     /// (bait/rock-modified) catch rate.
-    pub fn throw_ball(
+    /// Throw a **SAFARI BALL**: consume one ball and attempt the capture with the current
+    /// (bait/rock-modified) catch rate. Rand1 redraws via the rejection loop
+    /// (item_effects.asm:182-209) — the caller only supplies Rand2.
+    pub fn throw_ball<R: FnMut() -> u8>(
         &mut self,
         wild_max_hp: u16,
         wild_current_hp: u16,
         wild_status: StatusCondition,
-        randoms: CaptureRandoms,
+        rand2: u8,
+        roll1: &mut R,
     ) -> CaptureResult {
         self.balls = self.balls.saturating_sub(1);
         let ctx = CaptureContext {
@@ -86,7 +90,7 @@ impl SafariState {
             wild_catch_rate: self.catch_rate,
             wild_status,
         };
-        try_capture(&ctx, &randoms)
+        try_capture_with_rolls(&ctx, roll1, rand2)
     }
 
     /// Per-turn upkeep (`PrintSafariZoneBattleText`): decrement the active counter (bait
