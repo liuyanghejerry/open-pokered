@@ -1626,6 +1626,7 @@ mod elevator_edge_tests {
             facing: Direction::Down,
             scripted_frame: None,
             movement_type: dotzuki_engine::overworld::NpcMovementType::Stationary,
+            wander_axis: dotzuki_engine::overworld::NpcWanderAxis::Any,
             range: 0,
             walk_counter: 0,
             delay_counter: 0,

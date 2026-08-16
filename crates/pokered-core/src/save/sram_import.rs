@@ -45,6 +45,13 @@ pub fn import_sram(data: &[u8]) -> Result<SaveData, SaveError> {
     let mut pc_storage = PcStorage::new();
     parse_box_bank(bank2, &mut pc_storage, 0)?;
     parse_box_bank(bank3, &mut pc_storage, 6)?;
+    // wCurrentBoxNum (save.asm:382-384: menu index | $80; GetBoxSRAMLocation
+    // masks with BOX_NUM_MASK) — restore the trainer's last-open box so a
+    // save→load round-trip keeps Bill's PC where it was left.
+    let saved_box = (game_data.current_box_num & 0x7F) as usize;
+    if saved_box < 12 {
+        let _ = pc_storage.change_box(saved_box);
+    }
 
     let mut save = SaveData {
         player_name,

@@ -108,6 +108,7 @@ fn save_summary_from_data(save: &SaveData) -> SaveFileSummary {
         play_time_hours: save.game_data.play_time.hours as u16,
         play_time_minutes: save.game_data.play_time.minutes,
         play_time_seconds: save.game_data.play_time.seconds,
+        player_id: save.game_data.player_id,
     }
 }
 
@@ -263,6 +264,33 @@ pub struct PokemonGame {
     /// Last battle message text, for the message-based SFX block
     /// (SuperEffective / FaintFall / etc. fire on message change).
     battle_prev_message: Option<String>,
+}
+
+/// In-session screens that must not re-enter the MainMenu Continue/NewGame
+/// arms (same semantics as the app frontend's helper — see the audit fix:
+/// carried variants like `Shop(_)` were missed by `!=` comparisons, which
+/// rebuilt the overworld and teleported the player on exit).
+fn is_ingame_session_screen(s: &GameScreen) -> bool {
+    matches!(
+        s,
+        GameScreen::Overworld
+            | GameScreen::Battle
+            | GameScreen::Shop(_)
+            | GameScreen::StartMenu
+            | GameScreen::OptionsMenu
+            | GameScreen::SaveMenu
+            | GameScreen::PartyScreen
+            | GameScreen::PokemonStatsScreen(_)
+            | GameScreen::Bag
+            | GameScreen::TownMap
+            | GameScreen::Slots
+            | GameScreen::Elevator
+            | GameScreen::FilterBag
+            | GameScreen::Diploma
+            | GameScreen::PC
+            | GameScreen::Pokedex
+            | GameScreen::TrainerCard
+    )
 }
 
 impl PokemonGame {
@@ -806,17 +834,7 @@ impl PokemonGame {
                 // and drop the pending result dialogue, so they must NOT rebuild.
                 match self.main_menu.last_choice {
                     Some(MainMenuChoice::Continue)
-                        if self.state.screen != GameScreen::Overworld
-                            && self.state.screen != GameScreen::StartMenu
-                            && self.state.screen != GameScreen::OptionsMenu
-                            && self.state.screen != GameScreen::SaveMenu
-                            && self.state.screen != GameScreen::Bag
-                            && self.state.screen != GameScreen::PartyScreen
-                            && self.state.screen != GameScreen::TownMap
-                            && self.state.screen != GameScreen::Pokedex
-                            && self.state.screen != GameScreen::TrainerCard
-                            && self.state.screen != GameScreen::PC
-                            && self.state.screen != GameScreen::Battle =>
+                        if !is_ingame_session_screen(&self.state.screen) =>
                     {
                         let pos = &self.save_data.game_data.position;
                         pokered_core::log_save!(
@@ -875,17 +893,7 @@ impl PokemonGame {
                         }
                     }
                     Some(MainMenuChoice::NewGame)
-                        if self.state.screen != GameScreen::Overworld
-                            && self.state.screen != GameScreen::StartMenu
-                            && self.state.screen != GameScreen::OptionsMenu
-                            && self.state.screen != GameScreen::SaveMenu
-                            && self.state.screen != GameScreen::Bag
-                            && self.state.screen != GameScreen::PartyScreen
-                            && self.state.screen != GameScreen::TownMap
-                            && self.state.screen != GameScreen::Pokedex
-                            && self.state.screen != GameScreen::TrainerCard
-                            && self.state.screen != GameScreen::PC
-                            && self.state.screen != GameScreen::Battle =>
+                        if !is_ingame_session_screen(&self.state.screen) =>
                     {
                         // InitOptions (engine/menus/main_menu.asm): a NEW GAME
                         // resets wOptions to defaults (medium text, animation
@@ -1017,7 +1025,15 @@ impl PokemonGame {
                         play_time_minutes: self.save_data.game_data.play_time.minutes,
                     },
                     has_previous,
-                    false,
+                    // CheckPreviousSaveFile (save.asm:622-653): a stored
+                    // file from a different trainer ID asks before erasing.
+                    self.state
+                        .save_summary
+                        .as_ref()
+                        .map_or(false, |s| {
+                            s.player_id != 0
+                                && s.player_id != self.save_data.game_data.player_id
+                        }),
                 );
             }
             GameScreen::PartyScreen => {
@@ -1115,7 +1131,20 @@ impl PokemonGame {
     }
 
     fn game_timer_active(&self) -> bool {
-        self.state.screen == GameScreen::Overworld && self.black_screen_frames == 0
+        // TrackPlayTime runs from the VBlank interrupt every frame
+        // (home/vblank.asm:75); its only gate is BIT_GAME_TIMER_COUNTING,
+        // set once at SpecialEnterMap (main_menu.asm:333-334) and never
+        // cleared anywhere in the original — so the clock keeps running in
+        // battles, menus, and dialogs.
+        !matches!(
+            self.state.screen,
+            GameScreen::GameFreakSplash
+                | GameScreen::CopyrightSplash
+                | GameScreen::TitleScreen
+                | GameScreen::MainMenu
+                | GameScreen::OakSpeech
+                | GameScreen::LanguageSelect
+        )
     }
 
     /// A+B+Start+Select held for 16 frames — the original's soft reset
@@ -2749,6 +2778,7 @@ impl PokemonGame {
                     right: input.is_just_pressed(GbButton::Right),
                     a: input.is_just_pressed(GbButton::A),
                     b: input.is_just_pressed(GbButton::B),
+                    select: input.is_just_pressed(GbButton::Select),
                 };
                 match self.bag_screen.update_frame(bag_input) {
                     BagScreenAction::Cancelled => {
@@ -2881,6 +2911,10 @@ impl PokemonGame {
                         // SaveGameData); keep the SRAM box-num byte in sync.
                         self.save_data.game_data.current_box_num =
                             self.save_data.pc_storage.current_box_index() as u8 | 0x80;
+                        // Keep the sCurBoxData mirror (bank-1 copy of the
+                        // active box, rewritten on every save — save.asm:229-233)
+                        // in sync with the storage.
+                        self.save_data.current_box = self.save_data.pc_storage.current_box().clone();
                         self.save_to_file();
                     }
                     self.overworld.party_count = self.save_data.party.count() as u8;
