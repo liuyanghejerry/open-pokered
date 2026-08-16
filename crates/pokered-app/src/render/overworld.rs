@@ -503,12 +503,52 @@ pub fn draw_overworld(
             let (frame, flip_h) = if screen.state.player.movement_state == MovementState::Walking
                 || screen.state.player.movement_state == MovementState::Jumping
             {
-                let walk_frame = screen.state.walk_counter > 4;
+                // 4-frame walk cycle (facings.asm:3-18 + movement.asm:298-320):
+                // stand → step → stand → step(mirrored) for Down/Up; Left/
+                // Right have no mirror (Right = mirrored Left sheet). The
+                // NPC path below uses the same cadence.
+                let anim_frame = if screen.state.walk_counter > 6 {
+                    0 // 7,8: stand
+                } else if screen.state.walk_counter > 4 {
+                    1 // 5,6: step
+                } else if screen.state.walk_counter > 2 {
+                    2 // 3,4: stand
+                } else {
+                    3 // 1,2: step (mirrored for Down/Up)
+                };
                 match player_facing {
-                    Direction::Down => (if walk_frame { 3 } else { 0 }, false),
-                    Direction::Up => (if walk_frame { 4 } else { 1 }, false),
-                    Direction::Left => (if walk_frame { 5 } else { 2 }, false),
-                    Direction::Right => (if walk_frame { 5 } else { 2 }, true),
+                    Direction::Down => {
+                        if anim_frame == 0 || anim_frame == 2 {
+                            (0, false)
+                        } else if anim_frame == 1 {
+                            (3, false)
+                        } else {
+                            (3, true)
+                        }
+                    }
+                    Direction::Up => {
+                        if anim_frame == 0 || anim_frame == 2 {
+                            (1, false)
+                        } else if anim_frame == 1 {
+                            (4, false)
+                        } else {
+                            (4, true)
+                        }
+                    }
+                    Direction::Left => {
+                        if anim_frame == 0 || anim_frame == 2 {
+                            (2, false)
+                        } else {
+                            (5, false)
+                        }
+                    }
+                    Direction::Right => {
+                        if anim_frame == 0 || anim_frame == 2 {
+                            (2, true)
+                        } else {
+                            (5, true)
+                        }
+                    }
                 }
             } else if screen.bump_anim_counter > 0 {
                 let walk_frame = (screen.bump_anim_counter / 4) % 2 == 1;

@@ -53,6 +53,10 @@ game_scene PewterCity {
         @speaker("") {
           @t("Really? You absolutely have\nto go!", "真的吗？你绝对要去看看！")
         }
+        // The guide's escort jingle (auto_movement.asm:168:
+        // PewterMovementScript_WalkToMuseum plays MUSIC_MUSEUM_GUY before
+        // the scripted walk).
+        playMusic("MUSIC_MUSEUM_GUY")
         // Escort: the guide walks to the museum door area with the player
         // shadowing. The original ends the player ON the door tile (14,7)
         // (scripted movement suppresses warps there); we stop one tile
@@ -105,6 +109,9 @@ game_scene PewterCity {
       @speaker("") {
         @t("You're a trainer right?\nBROCK's looking for new\nchallengers! Follow me!", "你是训练家对吧？小刚正在寻找\n新的挑战者！跟我来！")
       }
+      // The gym guide's escort jingle (auto_movement.asm:224:
+      // PewterMovementScript_WalkToGym also plays MUSIC_MUSEUM_GUY).
+      playMusic("MUSIC_MUSEUM_GUY")
       // Escort: the guide walks the player to the gym front (orig ends the
       // player at (11,18) and the guide at (12,18), in front of the gym
       // sign — NOT onto the door tile (16,17)).

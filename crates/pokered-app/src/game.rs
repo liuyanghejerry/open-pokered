@@ -3985,8 +3985,19 @@ impl PokemonGame {
                     let prev_phase = slots.phase;
                     result = slots.update_frame(slots_input);
                     coins_out = Some(slots.coins);
+                    // The slots' own cues (slot_machine.asm: :120 spin start,
+                    // :842 each reel stop, :694 payout).
+                    let sfx = slots.take_sfx();
                     if let Some(ref audio) = self.audio {
-                        use pokered_core::slots_screen::SlotsPhase;
+                        use pokered_core::slots_screen::{SlotsPhase, SlotsSfx};
+                        for cue in sfx {
+                            let id = match cue {
+                                SlotsSfx::NewSpin => SfxId::SlotsNewSpin,
+                                SlotsSfx::StopWheel => SfxId::SlotsStopWheel,
+                                SlotsSfx::Reward => SfxId::SlotsReward,
+                            };
+                            audio.play_sfx(id);
+                        }
                         // Reel-stop / spin start feedback.
                         if prev_phase == SlotsPhase::BetSelect
                             && slots.phase == SlotsPhase::Spinning
