@@ -82,6 +82,20 @@ pub struct StartMenuState {
     is_link_connected: bool,
     /// `wBattleAndStartSavedMenuItem` — persists cursor position across menu opens.
     saved_cursor: usize,
+    /// PrintSafariZoneSteps (player_state.asm:219-255, called from
+    /// home/start_menu.asm:12): inside the Safari Zone the START menu opens
+    /// with the "NNN/500" steps + "BALL×× NN" info box in the top-left.
+    /// None = not in the Safari Zone.
+    pub safari_info: Option<SafariZoneInfo>,
+}
+
+/// The Safari Zone START-menu info box contents.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct SafariZoneInfo {
+    /// Remaining steps (of 500).
+    pub steps: u16,
+    /// Remaining Safari Balls (of 30).
+    pub balls: u8,
 }
 
 impl StartMenuState {
@@ -93,6 +107,7 @@ impl StartMenuState {
             has_pokedex,
             is_link_connected,
             saved_cursor: 0,
+            safari_info: None,
         }
     }
 
@@ -240,5 +255,27 @@ impl<'a> ItemLabel<'a> {
             ItemLabel::Static(s) => s,
             ItemLabel::PlayerName(s) => s,
         }
+    }
+}
+
+#[cfg(test)]
+mod safari_info_tests {
+    use super::*;
+
+    /// The info box contents mirror wSafariSteps / wNumSafariBalls at menu
+    /// open (PrintSafariZoneSteps, player_state.asm:219-255).
+    #[test]
+    fn safari_info_defaults_to_none() {
+        let m = StartMenuState::new(true, true, false);
+        assert!(m.safari_info.is_none(), "no Safari run → no info box");
+    }
+
+    #[test]
+    fn safari_info_carries_steps_and_balls() {
+        let mut m = StartMenuState::new(true, true, false);
+        m.safari_info = Some(SafariZoneInfo { steps: 427, balls: 17 });
+        let info = m.safari_info.unwrap();
+        assert_eq!(info.steps, 427);
+        assert_eq!(info.balls, 17);
     }
 }

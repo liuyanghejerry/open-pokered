@@ -117,23 +117,34 @@ pub fn try_wild_encounter(
         Some(t) => t,
         None => return WildEncounterResult::NoEncounter,
     };
+    try_wild_encounter_with_rate(table, table.encounter_rate, randoms, context)
+}
 
-    if table.encounter_rate == 0 {
+/// Rate-decoupled variant: the encounter RATE comes from the RATE anchor
+/// (which may be the water rate while the table is the grass list — the
+/// left-shore quirk); only the LIST and slot draw come from `encounter_table`.
+pub fn try_wild_encounter_with_rate(
+    encounter_table: &WildEncounterTable,
+    rate: u8,
+    randoms: &WildEncounterRandoms,
+    context: &EncounterContext,
+) -> WildEncounterResult {
+    if rate == 0 {
         return WildEncounterResult::NoEncounter;
     }
 
-    if table.mons.is_empty() {
+    if encounter_table.mons.is_empty() {
         return WildEncounterResult::NoEncounter;
     }
 
     // ASM: cp b / jr nc — encounter triggers only when random < rate
-    if randoms.encounter_roll >= table.encounter_rate {
+    if randoms.encounter_roll >= rate {
         return WildEncounterResult::NoEncounter;
     }
 
     let slot_index = select_encounter_slot(randoms.slot_roll);
-    let slot_index = slot_index.min(table.mons.len() - 1);
-    let wild_mon = &table.mons[slot_index];
+    let slot_index = slot_index.min(encounter_table.mons.len() - 1);
+    let wild_mon = &encounter_table.mons[slot_index];
 
     // ASM: cp b / jr c — repel blocks when wild level < party lead level
     if context.repel_active && wild_mon.level < context.party_lead_level {
