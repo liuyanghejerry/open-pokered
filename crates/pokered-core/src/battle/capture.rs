@@ -76,20 +76,43 @@ fn calculate_wobbles(catch_rate: u8, ball: ItemId, x: u8, status: &StatusConditi
     }
 }
 
-pub fn try_capture(ctx: &CaptureContext, randoms: &CaptureRandoms) -> CaptureResult {
+/// Roll Rand1 with the original's REJECTION SAMPLING (item_effects.asm:182-209,
+/// `.loop`): "Loop until an acceptable number is found" — Great Ball redraws
+/// while Rand1 > 200, Ultra/Safari while Rand1 > 150. A rejected draw NEVER
+/// fails the throw; the ball is only consumed once a capture result exists.
+fn sample_rand1<R: FnMut() -> u8>(ball: ItemId, roll: &mut R) -> u8 {
+    if ball == ItemId::PokeBall {
+        // "Anything will do for the basic Poké Ball."
+        return roll();
+    }
+    loop {
+        let r = roll();
+        let threshold = rand1_threshold(ball);
+        if r <= threshold {
+            return r;
+        }
+    }
+}
+
+pub fn try_capture_with_rolls<R: FnMut() -> u8>(
+    ctx: &CaptureContext,
+    roll1: &mut R,
+    rand2: u8,
+) -> CaptureResult {
     if ctx.ball == ItemId::MasterBall {
         return CaptureResult::Captured;
     }
 
-    let threshold = rand1_threshold(ctx.ball);
-    if ctx.ball != ItemId::PokeBall && randoms.rand1 > threshold {
-        return CaptureResult::Failed {
-            shakes: calculate_wobbles(ctx.wild_catch_rate, ctx.ball, 0, &ctx.wild_status),
-        };
-    }
+    let rand1 = sample_rand1(ctx.ball, roll1);
+    try_capture_with_rand1(ctx, rand1, rand2)
+}
 
+/// The post-Rand1 pipeline (status subtraction → catch-rate gate → W/X/Rand2),
+/// shared by `try_capture_with_rolls` and direct-call test seams.
+fn try_capture_with_rand1(ctx: &CaptureContext, rand1: u8, rand2: u8) -> CaptureResult {
+    let randoms = CaptureRandoms { rand1, rand2 };
     let status_sub = status_subtract(&ctx.wild_status);
-    if status_sub > randoms.rand1 {
+    if status_sub > rand1 {
         return CaptureResult::Captured;
     }
 
@@ -98,7 +121,7 @@ pub fn try_capture(ctx: &CaptureContext, randoms: &CaptureRandoms) -> CaptureRes
     let max_hp_scaled = (ctx.wild_max_hp as u32) * 255;
     let w_raw = max_hp_scaled / (ball_f as u32) / (hp_quarter as u32);
 
-    let adjusted_rand1 = randoms.rand1.saturating_sub(status_sub);
+    let adjusted_rand1 = rand1.saturating_sub(status_sub);
 
     if adjusted_rand1 > ctx.wild_catch_rate {
         let x = std::cmp::min(w_raw, 255) as u8;
@@ -112,13 +135,22 @@ pub fn try_capture(ctx: &CaptureContext, randoms: &CaptureRandoms) -> CaptureRes
     }
 
     let x = w_raw as u8;
-    if randoms.rand2 <= x {
+    if rand2 <= x {
         CaptureResult::Captured
     } else {
         CaptureResult::Failed {
             shakes: calculate_wobbles(ctx.wild_catch_rate, ctx.ball, x, &ctx.wild_status),
         }
     }
+}
+
+/// Deterministic entry used by tests: both randoms supplied directly (the
+/// Rand1 value must ALREADY satisfy the ball's rejection window).
+pub fn try_capture(ctx: &CaptureContext, randoms: &CaptureRandoms) -> CaptureResult {
+    if ctx.ball == ItemId::MasterBall {
+        return CaptureResult::Captured;
+    }
+    try_capture_with_rand1(ctx, randoms.rand1, randoms.rand2)
 }
 
 #[cfg(test)]
@@ -152,7 +184,10 @@ mod tests {
     }
 
     #[test]
-    fn great_ball_rand1_rejection() {
+    fn great_ball_rand1_rejection_redraws() {
+        // The original's `.loop` REDRAWS an out-of-window Rand1 — it is never
+        // a throw failure. Rolls 255 (reject), 201 (reject), 80 (accept):
+        // capture proceeds with Rand1=80.
         let ctx = CaptureContext {
             ball: ItemId::GreatBall,
             wild_max_hp: 100,
@@ -160,11 +195,43 @@ mod tests {
             wild_catch_rate: 45,
             wild_status: StatusCondition::None,
         };
-        let randoms = CaptureRandoms {
-            rand1: 201,
-            rand2: 0,
+        let mut rolls = [255u8, 201, 80].iter().copied();
+        let result = try_capture_with_rolls(&ctx, &mut || rolls.next().unwrap(), 0);
+        // Rand1=80 ≤ 200 window; adjusted 80 > catch_rate 45 → Failed with
+        // wobbles (not an instant break).
+        assert!(matches!(result, CaptureResult::Failed { .. }));
+    }
+
+    #[test]
+    fn ultra_ball_rand1_rejection_redraws() {
+        let ctx = CaptureContext {
+            ball: ItemId::UltraBall,
+            wild_max_hp: 100,
+            wild_current_hp: 100,
+            wild_catch_rate: 45,
+            wild_status: StatusCondition::None,
         };
-        let result = try_capture(&ctx, &randoms);
+        // 151/200 rejected twice, 0 accepted → proceeds (catch_rate 45 < …
+        // adjusted 0 ≤ 45 → rand2 gate; rand2=255 > w ⇒ Failed with wobbles).
+        let mut rolls = [151u8, 200, 0].iter().copied();
+        let result = try_capture_with_rolls(&ctx, &mut || rolls.next().unwrap(), 255);
+        assert!(matches!(result, CaptureResult::Failed { .. }));
+    }
+
+    #[test]
+    fn safari_ball_rejection_window_is_150() {
+        let ctx = CaptureContext {
+            ball: ItemId::SafariBall,
+            wild_max_hp: 100,
+            wild_current_hp: 100,
+            wild_catch_rate: 45,
+            wild_status: StatusCondition::None,
+        };
+        // 151 rejected, 150 accepted (window is inclusive ≤ 150).
+        let mut rolls = [151u8, 150].iter().copied();
+        let result = try_capture_with_rolls(&ctx, &mut || rolls.next().unwrap(), 255);
+        // Rand1=150, adjusted 150 > 45 → Failed (the ball is still consumed by
+        // the caller — the redraw never aborts the throw).
         assert!(matches!(result, CaptureResult::Failed { .. }));
     }
 
@@ -188,20 +255,18 @@ mod tests {
     }
 
     #[test]
-    fn ultra_ball_rand1_rejection() {
+    fn ultra_ball_rand1_at_threshold_passes_deterministically() {
+        // try_capture (deterministic seam): Rand1 must be in-window for the ball;
+        // 150 ≤ 150 for Ultra → the pipeline runs.
         let ctx = CaptureContext {
             ball: ItemId::UltraBall,
             wild_max_hp: 100,
-            wild_current_hp: 100,
-            wild_catch_rate: 45,
+            wild_current_hp: 1,
+            wild_catch_rate: 255,
             wild_status: StatusCondition::None,
         };
-        let randoms = CaptureRandoms {
-            rand1: 151,
-            rand2: 0,
-        };
-        let result = try_capture(&ctx, &randoms);
-        assert!(matches!(result, CaptureResult::Failed { .. }));
+        let randoms = CaptureRandoms { rand1: 150, rand2: 0 };
+        assert_eq!(try_capture(&ctx, &randoms), CaptureResult::Captured);
     }
 
     #[test]
@@ -386,24 +451,6 @@ mod tests {
             try_capture(&ctx, &randoms),
             CaptureResult::Failed { shakes: 3 }
         );
-    }
-
-    #[test]
-    fn safari_ball_uses_ultra_threshold() {
-        let ctx = CaptureContext {
-            ball: ItemId::SafariBall,
-            wild_max_hp: 100,
-            wild_current_hp: 100,
-            wild_catch_rate: 45,
-            wild_status: StatusCondition::None,
-        };
-        // rand1=151 > 150 threshold → rejected
-        let randoms = CaptureRandoms {
-            rand1: 151,
-            rand2: 0,
-        };
-        let result = try_capture(&ctx, &randoms);
-        assert!(matches!(result, CaptureResult::Failed { .. }));
     }
 
     #[test]

@@ -62,10 +62,17 @@ impl StatStages {
     }
 }
 
+/// MAX_STAT_VALUE (constants/battle_constants.asm): every applied stage result
+/// is capped at 999, and a computed 0 is bumped to 1 (core.asm:6431-6448 —
+/// the `sub LOW(MAX_STAT_VALUE)` carry check before `.storeNewStatValue`, then
+/// the `or b / jr nz / inc [hl]` floor).
+pub const MAX_STAT_VALUE: u16 = 999;
+
 pub fn apply_stage(base_stat: u16, stage: i8) -> u16 {
     let index = (stage + 6) as usize;
     let num = STAGE_MULTIPLIERS_NUMERATOR[index];
-    (base_stat as u32 * num as u32 / STAGE_MULTIPLIERS_DENOMINATOR as u32) as u16
+    let v = (base_stat as u32 * num as u32 / STAGE_MULTIPLIERS_DENOMINATOR as u32) as u16;
+    v.clamp(1, MAX_STAT_VALUE)
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
