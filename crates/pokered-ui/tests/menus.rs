@@ -94,6 +94,7 @@ fn main_menu_with_save_uses_taller_box() {
         play_time_hours: 0,
         play_time_minutes: 0,
         play_time_seconds: 0,
+        player_id: 0,
     }));
     let mut rec = Recorder::default();
     let mut ui = Ui::new(&mut rec);

@@ -532,3 +532,54 @@ FIDELITY_GAPS.md 时效性 / 非战斗系统),基线 master @ 6c773ebfe。
       无持久锁,传输状态恢复正常。遗留:B3F 的 MOVE_OBJECT/DEFAULT 强制
       冲浪扫描脚本(scene 层,15,8 与 18,7/19,7 的 RLE)仍未移植(见 B3F
       scene 头注释),B4F 侧 currentWest/currentSouthEast 已有。
+
+---
+
+## 第二轮审计修复(2026-08-15/17,分支 fix/fidelity-audit-high-med-2026-08)
+
+六路并行复审(战斗机制/野外地图/静态数据/菜单存档/音频渲染/自身 bug)在既有
+文档之外新发现 8 严重 + 21 中等,已全部修复,每项附测试。聚类 commit:
+
+- `7518a27` **战斗**:PP 消耗+Struggle(force) / WriteMonMoves 按等级补招 /
+  野生·礼物随机 DV+训练家 $98$88 / 捕捉 Rand1 拒绝重采样 / 逃跑速度口径
+  (麻痹·等级·徽章) / Toxic 换人保留 / 暴击忽略 Reflect·光墙 /
+  stat 阶段 999/1 钳制 / 道馆主 LoneMoves·四天王 TeamMoves·冠军劲敌特殊招
+  (wGymLeaderNo≡wLoneAttackNo 联合体) / CooltrainerF 1/10 阈值无随机换怪 /
+  wAICount 仅实际行动扣(DoNothing 掷骰不耗)。
+- `63a7c43` **野外**:双锚点遭遇(rate=右邻格(9,9),表=站立格(8,9),左岸
+  quirk)/ 180° 转身掷遭遇 / Safari START 步数·球数框 / repel 在掷骰门控内
+  递减(warp·脚本·冷却步不烧) / NPC 轴向漫游(UP_DOWN/LEFT_RIGHT,无径向
+  leash)+16 帧/步+delay&7F(引擎侧,tag v0.5.2)/ 步完成检测兼容同帧续走。
+- `6f559c4` **菜单存档**:Shop 载荷变体守卫(is_ingame_session_screen,
+  app+TUI 双端,修退出商店传送)/ 游戏时间常走(VBlank 语义)/ Day Care
+  寄养 EV 清零(33 字节 box_struct)/ 覆盖异 ID 旧档确认(CheckPreviousSaveFile
+  +GenRandomTrainerID 随机 ID)/ 当前箱号读回(去死写)/ sCurBoxData 镜像同步 /
+  背包 SELECT 交换·合并(≤99 单格,溢出 99 封顶)。
+- `62881a5` **音频渲染**:老虎机三专属 SFX(NewSpin/StopWheel/Reward 事件队列)/
+  深灰市双带路 MUSIC_MUSEUM_GUY / 玩家行走第 4 帧镜像迈步。
+- 严重#5/#6/#8 commit(同分支):训练师遭遇前奏(MEET_* 分派+!气泡 32 帧+
+  视线走近)/ Spinner 按每图 RLE 表直线滑行(scripts/extract_spinner_paths.py
+  生成 71 条,SFX_ARROW_TILES,B1F/B4F 箭头为装饰无表=忠实)/ SRAM 布局改原版
+  兼容(UNION 425 字节·Day Care 33 字节·校验和紧跟 sGameDataEnd)+ 旧格式
+  检测迁移(legacy 校验和位验证,损坏档拒绝不"治愈")。
+
+引擎仓库(dotzuki-2)`fix/npc-fidelity-2026-08` → tag **v0.5.2**(已推送),
+主仓 git 依赖已指向新 tag,[patch] 段移除。
+
+### FIDELITY_GAPS.md 更正(2026-07-18 wAICount 条目)
+
+原记载"Gen-1 在 wrapper 内于例程运行前递减 wAICount,故 DoNothing 掷骰也耗
+一次"系误读:trainer_ai.asm:289-322 的 wrapper 只在 $FF 回卷时重载表值,
+不递减;递减仅在 DecrementAICount(:453),其调用点全在道具/换怪/强化路径
+(:552/:725/:730)。即预算按"累计 N 次实际使用"消耗,非"出场前 N 回合"。
+实现与测试(bruno_idle_spends_no_charge)已按此修正。
+
+### 复核遗留(记录在案,低优先)
+
+- 左岸 quirk 读本图草表(原作读跨图 stale wGrassMons 缓冲=Missingno 机制,
+  有意不复现,测试内注明);
+- 迁移只在读档时发生:旧档一经保存即升为 canonical 格式。
+
+验证:六 crate 全绿(core 2421 / data 223 / app 60 / ui / renderer 398 /
+tui 12),引擎 424;verify_scene_translations 与三个数据 verify 脚本 0 差异
+(anim verify 经 crates/dotzuki-renderer symlink 保持历史路径)。
