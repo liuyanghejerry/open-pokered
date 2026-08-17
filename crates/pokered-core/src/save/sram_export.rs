@@ -49,7 +49,9 @@ fn write_bank1(save: &SaveData, bank: &mut [u8]) {
     dest.copy_from_slice(&checksummed);
 
     let checksum = calc_checksum(&checksummed);
-    bank[SRAM_BANK_SIZE_LAYOUT - 1] = checksum;
+    // sMainDataCheckSum sits DIRECTLY after sGameDataEnd (ram/sram.asm "Save
+    // Data" section — no trailing alignment), not at the bank's end.
+    bank[GAME_DATA_OFFSET + checksummed.len()] = checksum;
 }
 
 fn write_box_bank(save: &SaveData, start_box_index: usize, bank: &mut [u8]) {

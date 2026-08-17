@@ -324,6 +324,14 @@ pub fn serialize_game_data_into(data: &GameData, buf: &mut Vec<u8>) {
     buf.push(data.water_rate);
     buf.extend_from_slice(&data.water_mons);
 
+    // -- UNION region (ram/wram.asm:2146-2187): branch 1 is the grass/water
+    // tables above (48 bytes); branch 2 is the link-battle enemy data
+    // (trainer name 11 + 1 + 9 + party count/species 8 + 6×44 party
+    // structs + 6×11 OT + 6×11 nicks = 425). The UNION occupies its max:
+    // pad the remaining 425 − 48 = 377 bytes so every field after it sits
+    // at the original sMainData offsets.
+    buf.extend_from_slice(&[0u8; 377]);
+
     // -- Trainer header ptr + 6 bytes padding --
     push_u16_be(buf, data.trainer_header_ptr);
     buf.extend_from_slice(&[0u8; 6]);
@@ -352,6 +360,8 @@ pub fn serialize_game_data_into(data: &GameData, buf: &mut Vec<u8>) {
 }
 
 fn serialize_daycare_mon(dc: &super::game_data::DayCareMon, buf: &mut Vec<u8>) {
+    // box_struct (33 bytes — ram/wram.asm wDayCareMon): NO stat-exp fields.
+    // The Rust model keeps them for gameplay, but they never hit SRAM.
     buf.push(dc.species);
     push_u16_be(buf, dc.hp);
     buf.push(dc.box_level);
@@ -366,11 +376,6 @@ fn serialize_daycare_mon(dc: &super::game_data::DayCareMon, buf: &mut Vec<u8>) {
     buf.push(((dc.exp >> 16) & 0xFF) as u8);
     buf.push(((dc.exp >> 8) & 0xFF) as u8);
     buf.push((dc.exp & 0xFF) as u8);
-    push_u16_be(buf, dc.hp_exp);
-    push_u16_be(buf, dc.attack_exp);
-    push_u16_be(buf, dc.defense_exp);
-    push_u16_be(buf, dc.speed_exp);
-    push_u16_be(buf, dc.special_exp);
     buf.push((dc.dvs >> 8) as u8);
     buf.push((dc.dvs & 0xFF) as u8);
     for &p in &dc.pp {
