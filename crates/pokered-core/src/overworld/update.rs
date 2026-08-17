@@ -7,6 +7,7 @@ use super::screen::{
     self, BedroomDialogue, ConnectionNpcPreview, EmotionBubbleState, HealingMachineState,
     MapData, OverworldAudioRequest, OverworldGameDataRequest, OverworldScreen, OverworldSfxEvent,
     PendingConnection, PendingTrainerBattle, PendingWarp, PendingWildEncounter,
+    TrainerEncounterIntro,
     PokedexEntryState, WARP_FADE_IN_FRAMES, WARP_FADE_OUT_FRAMES, WARP_FADE_OUT_WHITE_FRAMES,
     WarpFadeState, build_npc_runtime_states,
 };
@@ -16,6 +17,7 @@ use crate::overworld::{
     script_bridge, special_terrain, wild_encounters,
 };
 use crate::overworld::script_bridge::HealingMachinePhase;
+use crate::overworld::spinner_paths::spinner_paths;
 use dotzuki_engine::overworld::{
     Direction, MovementState, OverworldInput, PlayerState, TransportMode,
 };
@@ -856,8 +858,12 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
         }
 
         // Trainer line-of-sight detection: runs every frame during normal gameplay.
-        // When a trainer spots the player, set up a pending battle.
-        if self.pending_trainer_battle.is_none() {
+        // When a trainer spots the player, run the ENGAGE INTRO first
+        // (CheckFightingMapTrainers, home/trainers.asm:129-159): "!" bubble →
+        // trainer walks up to the player → THEN the battle. The intro state
+        // replaces the instant-battle path; `pending_trainer_battle` is set
+        // when the intro completes.
+        if self.pending_trainer_battle.is_none() && self.trainer_encounter_intro.is_none() {
             if let Some(sighting) = npc_interaction::check_trainer_line_of_sight(
                 &self.npc_states,
                 &self.npc_pokemon_data,
@@ -871,12 +877,83 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                     .npc_pokemon_data
                     .get(sighting.npc_index as usize)
                     .and_then(|d| d.end_battle_text.clone());
-                self.pending_trainer_battle = Some(PendingTrainerBattle {
+                // PlayTrainerMusic (home/trainers.asm:390-443): RIVAL1/2/3
+                // keep the current music; gym leaders keep theirs too
+                // (wGymLeaderNo — identified by class here); everyone else
+                // gets MEET_EVIL / MEET_FEMALE / MEET_MALE by the lists in
+                // data/trainers/encounter_types.asm.
+                let music = crate::battle::trainer_encounter::encounter_music(tc);
+                if let Some(id) = music {
+                    let name = format!("{:?}", id); // enum Debug → name
+                    self.audio_requests
+                        .push(OverworldAudioRequest::PlayMusic { music_id: name });
+                }
+                // EXCLAMATION_BUBBLE over the trainer (predef EmotionBubble,
+                // trainers.asm:132-135), held for 32 frames while input is
+                // locked.
+                self.pending_emotion_bubble = Some(EmotionBubbleState {
+                    npc_id: String::new(), // resolved by index below
+                    emotion: "exclamation".to_string(),
+                    frames_remaining: 32,
+                });
+                // TrainerWalkUpToPlayer_Bank0: the trainer closes the sight
+                // line to face the player. Compute the straight path.
+                let npc = &self.npc_states[sighting.npc_index as usize];
+                let mut path: Vec<(u8, u8)> = Vec::new();
+                let (mut x, mut y) = (npc.x, npc.y);
+                let (dx, dy) = (
+                    self.state.player.x as i32 - npc.x as i32,
+                    self.state.player.y as i32 - npc.y as i32,
+                );
+                // Walk along the dominant axis first (the original walks the
+                // sight line: one axis), stopping one tile short of the player.
+                let step_x = dx.signum();
+                let step_y = dy.signum();
+                let dist = (dx.abs() + dy.abs()).saturating_sub(1); // keep 1 tile gap
+                for _ in 0..dist {
+                    if dx.abs() >= dy.abs() {
+                        x = (x as i32 + step_x) as u16;
+                    } else {
+                        y = (y as i32 + step_y) as u16;
+                    }
+                    path.push((x as u8, y as u8));
+                }
+                let npc_index = sighting.npc_index as usize;
+                if !path.is_empty() {
+                    npc_movement::start_scripted_move(
+                        &mut self.npc_states[npc_index],
+                        &path,
+                    );
+                }
+                self.trainer_encounter_intro = Some(TrainerEncounterIntro {
                     trainer_id,
                     npc_index: sighting.npc_index,
                     end_battle_text,
                     rival_triplet_base: None,
                 });
+            }
+        }
+
+        // Advance the engage-intro: once the "!" bubble is gone AND the
+        // walk-up finished, hand over to the actual pending battle.
+        if let Some(intro) = self.trainer_encounter_intro.take() {
+            let bubble_done = self
+                .pending_emotion_bubble
+                .as_ref()
+                .map_or(true, |b| b.frames_remaining == 0);
+            let walk_done = self
+                .npc_states
+                .get(intro.npc_index as usize)
+                .map_or(true, |n| npc_movement::is_scripted_move_done(n));
+            if bubble_done && walk_done {
+                self.pending_trainer_battle = Some(PendingTrainerBattle {
+                    trainer_id: intro.trainer_id,
+                    npc_index: intro.npc_index,
+                    end_battle_text: intro.end_battle_text,
+                    rival_triplet_base: intro.rival_triplet_base,
+                });
+            } else {
+                self.trainer_encounter_intro = Some(intro);
             }
         }
 
@@ -1169,34 +1246,45 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                 self.state.player.y,
             );
 
-            // Spinner / arrow tiles (Facility & Gym tilesets, e.g. Viridian Gym,
-            // Silph Co, Rocket Hideout): standing on a spin tile forces continuous
-            // movement — the player can't stop. Each step rotates facing per
-            // SPINNER_FACING_CYCLE and slides one tile, until they land on a
-            // non-spinner tile. Implemented by overriding the player's input with
-            // the rotated direction while idle on a spin tile (no script needed).
+            // Spinner / arrow tiles (Facility & Gym tilesets, e.g. Viridian
+            // Gym, Rocket Hideout). The original is TABLE-driven: each map's
+            // script maps (x, y) → an RLE "dir × steps" list
+            // (<Map>ArrowTilePlayerMovement + DecodeArrowMovementRLE,
+            // map_objects.asm:5-27) which is fed as simulated input — the
+            // player travels a STRAIGHT line per run while the sprite spins
+            // (LoadSpinnerArrowTiles), plus SFX_ARROW_TILES on trigger.
+            // B1F/B4F arrow tiles have no table (decorative only).
             let movement_input = if self.state.player.movement_state == MovementState::Idle
                 && self.active_script_effect.is_none()
                 && self.pending_warp.is_none()
                 && self.scripted_player_path.is_empty()
                 && special_terrain::is_spinner_tile(map.tileset, standing_tile)
             {
-                match special_terrain::handle_spinner_rotation(map.tileset, self.state.player.facing) {
-                    Some(res) => {
-                        self.state.player.facing = res.new_facing;
-                        MovementInput {
-                            up: res.new_facing == Direction::Up,
-                            down: res.new_facing == Direction::Down,
-                            left: res.new_facing == Direction::Left,
-                            right: res.new_facing == Direction::Right,
-                            a_button: false,
-                            b_button: false,
-                            start: false,
-                            select: false,
+                let map_name = crate::overworld::script_bridge::map_id_to_script_key(map.id)
+                    .to_string();
+                let entry = spinner_paths(&map_name).iter().find(|&&(sx, sy, _)| {
+                    sx as u16 == self.state.player.x && sy as u16 == self.state.player.y
+                });
+                if let Some(&(_, _, steps)) = entry {
+                    // Build the straight-line tile path from the RLE steps.
+                    let (mut x, mut y) = (self.state.player.x, self.state.player.y);
+                    let mut path: Vec<(u16, u16)> = Vec::new();
+                    for st in steps {
+                        let (dx, dy) = player_movement::direction_delta(st.dir);
+                        for _ in 0..st.steps {
+                            x = (x as i32 + dx as i32).max(0) as u16;
+                            y = (y as i32 + dy as i32).max(0) as u16;
+                            path.push((x, y));
                         }
                     }
-                    None => movement_input,
+                    if !path.is_empty() {
+                        self.sfx_event = OverworldSfxEvent::ArrowTiles;
+                        for p in &path {
+                            self.scripted_player_path.push_back(*p);
+                        }
+                    }
                 }
+                movement_input // no direction override: the path drives movement
             } else {
                 movement_input
             };

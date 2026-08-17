@@ -74,6 +74,9 @@ pub enum OverworldSfxEvent {
     Collision,
     /// SFX_LEDGE — jumped a ledge. engine/overworld/ledges.asm:53
     Ledge,
+    /// SFX_ARROW_TILES — stepped onto a spinner pad (the RLE table trigger,
+    /// scripts/RocketHideoutB2F.asm:30 / ViridianGym.asm).
+    ArrowTiles,
     /// SFX_PRESS_AB — advance dialogue page. Matches Oak's speech behavior.
     TextAdvance,
 }
@@ -162,6 +165,17 @@ pub struct PendingWildEncounter {
     /// item_effects.asm:1872-1873): the battle intro shows "The hooked X
     /// attacked!" (HookedMonAttackedText) instead of "Wild X appeared!".
     pub hooked: bool,
+}
+
+/// The engage-intro state (CheckFightingMapTrainers, home/trainers.asm:
+/// 129-159): "!" bubble + MEET_* music + the trainer's walk-up, before the
+/// battle itself is pended. Same payload as [`PendingTrainerBattle`].
+#[derive(Debug, Clone)]
+pub struct TrainerEncounterIntro {
+    pub trainer_id: String,
+    pub npc_index: u8,
+    pub end_battle_text: Option<String>,
+    pub rival_triplet_base: Option<u8>,
 }
 
 /// Trainer battle data ready to be passed to BattleScreen.
@@ -584,6 +598,9 @@ pub struct OverworldScreen<G: GameData = pokered_data::impl_traits::PokemonRedDa
     pub connection_npc_preview: Option<ConnectionNpcPreview>,
     pub pending_wild_encounter: Option<PendingWildEncounter>,
     pub pending_trainer_battle: Option<PendingTrainerBattle>,
+    /// Active engage-intro ("!" bubble + music + walk-up) — completes into
+    /// `pending_trainer_battle`.
+    pub(crate) trainer_encounter_intro: Option<TrainerEncounterIntro>,
     pub pending_give_pokemon: Option<PendingGivePokemon>,
     pub sfx_event: OverworldSfxEvent,
     pub bump_anim_counter: u8,
@@ -945,6 +962,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
             connection_npc_preview: None,
             pending_wild_encounter: None,
             pending_trainer_battle: None,
+            trainer_encounter_intro: None,
             pending_give_pokemon: None,
             sfx_event: OverworldSfxEvent::None,
             bump_anim_counter: 0,

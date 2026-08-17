@@ -10,6 +10,7 @@ pub mod link_battle_driver;
 pub mod menu;
 pub mod move_execution;
 pub mod obedience;
+pub mod trainer_encounter;
 pub mod residual;
 pub mod special_moves;
 pub mod settlement;
