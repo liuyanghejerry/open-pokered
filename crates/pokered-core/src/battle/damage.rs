@@ -131,6 +131,16 @@ pub fn calculate_damage(params: &DamageParams) -> DamageResult {
         defense = (defense as u16).wrapping_mul(2) as u32;
     }
 
+    // A critical hit resets the defensive stat to its base value AFTER the
+    // Reflect/Light Screen doubling (core.asm:4044-4103 — the crit branch at
+    // `.physicalAttackCritCheck` / `.specialAttackCritCheck` re-loads the raw
+    // stat, DISCARDING the screen doubling). The crit path above already
+    // recomputed attack/defense from the raw stats; undo the doubling so the
+    // result matches the asm's overwrite.
+    if params.is_critical && params.has_reflect_or_light_screen {
+        defense = (defense / 2).max(1);
+    }
+
     if params.is_explode_effect {
         defense = (defense / 2).max(1);
     }

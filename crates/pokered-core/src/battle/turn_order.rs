@@ -54,6 +54,13 @@ fn move_priority(move_id: MoveId) -> i8 {
     }
 }
 
+/// Effective battle speed of a battler: badge-boosted working copy (player
+/// side), stat-stage-scaled, paralysis-quartered — the `wBattleMonSpeed`
+/// semantic. Shared by the turn-order comparison and the RUN check.
+pub fn effective_speed_for(battler: &BattlerState) -> u16 {
+    effective_speed(battler)
+}
+
 fn effective_speed(battler: &BattlerState) -> u16 {
     use super::stat_stages::apply_stage;
     // Badge stat boosts: the player side's working Speed is the boosted

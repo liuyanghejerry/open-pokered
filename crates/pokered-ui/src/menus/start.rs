@@ -6,6 +6,15 @@ use pokered_data::ui_layout::schema::{Justify, SizeMode, StartDefaultLayout};
 use crate::engine::{InkColor, Painter, TileRect, Ui};
 
 pub fn draw<P: Painter>(state: &StartMenuState, player_name: &str, layout: &StartDefaultLayout, ui: &mut Ui<P>, lang: Lang) {
+    // PrintSafariZoneSteps (player_state.asm:219-255): inside the Safari Zone
+    // a small box at (0,0) shows "NNN/500" and "BALL×× NN" before the menu.
+    if let Some(info) = state.safari_info {
+        ui.text_box(TileRect::new(0, 0, 7, 4), InkColor::Black, true, |frame| {
+            frame.label(1, 1, &format!("{:03}/500", info.steps), InkColor::Black);
+            frame.label(1, 3, &format!("BALL×{:02}", info.balls), InkColor::Black);
+        });
+    }
+
     let labels = state.item_labels(player_name);
     let num_items = labels.len() as u32;
     if num_items == 0 {

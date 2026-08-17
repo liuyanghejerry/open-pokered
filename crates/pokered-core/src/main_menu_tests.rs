@@ -9,6 +9,7 @@ fn make_save() -> SaveFileSummary {
         play_time_hours: 12,
         play_time_minutes: 34,
         play_time_seconds: 56,
+        player_id: 0,
     }
 }
 
@@ -236,6 +237,7 @@ fn badge_count_uses_popcount() {
         play_time_hours: 0,
         play_time_minutes: 0,
         play_time_seconds: 0,
+        player_id: 0,
     };
     assert_eq!(save.badge_count(), 8);
 }

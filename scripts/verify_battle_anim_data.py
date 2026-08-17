@@ -36,6 +36,9 @@ import sys
 from pathlib import Path
 
 DEFAULT_ASM_REPO = "/Users/liuyanghe02/develop/pokered-worktree"
+# The Rust table lives in the dotzuki engine checkout. Default: the historical
+# in-repo path (or a symlink); override with the DOTZUKI_RENDERER env var or a
+# second CLI argument pointing at the engine workspace/crate root.
 RUST_DATA_RS = Path(__file__).resolve().parent.parent / \
     "crates/dotzuki-renderer/src/battle_anim/data.rs"
 
@@ -300,6 +303,11 @@ class Reporter:
 
 def main():
     asm_repo = Path(sys.argv[1] if len(sys.argv) > 1 else DEFAULT_ASM_REPO)
+    global RUST_DATA_RS
+    import os
+    override = os.environ.get("DOTZUKI_RENDERER") or (sys.argv[2] if len(sys.argv) > 2 else None)
+    if override:
+        RUST_DATA_RS = Path(override) / "src/battle_anim/data.rs"
     for rel in ("data/battle_anims/base_coords.asm",
                 "data/battle_anims/frame_blocks.asm",
                 "data/battle_anims/subanimations.asm",

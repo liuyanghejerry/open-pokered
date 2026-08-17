@@ -180,3 +180,95 @@ fn recalculate_stats_on_fresh_pokemon_is_idempotent() {
     assert_eq!(mon.special, original.special);
     assert_eq!(mon.hp, original.hp);
 }
+
+// ---------------------------------------------------------------------------
+// Gen-1 WriteMonMoves parity (evos_moves.asm:383-470) + DV sourcing
+// ---------------------------------------------------------------------------
+
+#[test]
+fn create_pokemon_applies_learnset_up_to_level() {
+    // Rattata: L1 Tackle/Tail Whip, then QuickAttack(7), HyperFang(14),
+    // FocusEnergy(23), SuperFang(34) — the header's "level 1 learnset" is the
+    // front of the same list WriteMonMoves continues (rattata.asm:13).
+    let lv20 = create_pokemon(Species::Rattata, 20, MAX_DVS).unwrap();
+    assert_eq!(
+        lv20.moves,
+        [
+            MoveId::Tackle,
+            MoveId::TailWhip,
+            MoveId::QuickAttack,
+            MoveId::HyperFang,
+        ]
+    );
+    // PP matches the FINAL move list, not the L1 list (AddPartyMon_WriteMovePP
+    // runs after WriteMonMoves).
+    assert_eq!(
+        lv20.pp,
+        [
+            crate::pokemon::move_learning::get_move_max_pp(MoveId::Tackle),
+            crate::pokemon::move_learning::get_move_max_pp(MoveId::TailWhip),
+            crate::pokemon::move_learning::get_move_max_pp(MoveId::QuickAttack),
+            crate::pokemon::move_learning::get_move_max_pp(MoveId::HyperFang),
+        ]
+    );
+}
+
+#[test]
+fn create_pokemon_shifts_moves_when_learnset_exceeds_slots() {
+    // Lv34 Rattata knows 6 learnable moves; slots shift left, keeping the last 4:
+    // start [Tackle, TailWhip, -, -]
+    // 7:  [Tackle, TailWhip, QuickAttack, -]
+    // 14: [Tackle, TailWhip, QuickAttack, HyperFang]
+    // 23: full → shift → [TailWhip, QuickAttack, HyperFang, FocusEnergy]
+    // 34: full → shift → [QuickAttack, HyperFang, FocusEnergy, SuperFang]
+    let lv34 = create_pokemon(Species::Rattata, 34, MAX_DVS).unwrap();
+    assert_eq!(
+        lv34.moves,
+        [
+            MoveId::QuickAttack,
+            MoveId::HyperFang,
+            MoveId::FocusEnergy,
+            MoveId::SuperFang,
+        ]
+    );
+}
+
+#[test]
+fn create_pokemon_high_level_boss_has_lategame_moves() {
+    // The audit found Lance's Lv62 Dragonite stuck at its L1 moves — the
+    // marquee case for WriteMonMoves. L1 = [Wrap, Leer, ThunderWave, Agility]
+    // (base_stats header), then learnset 10/20/35/45/60 applies on top:
+    // 10 ThunderWave already known; 20 Agility already known;
+    // 35 Slam: full → shift → [Leer, ThunderWave, Agility, Slam]
+    // 45 DragonRage: full → shift → [ThunderWave, Agility, Slam, DragonRage]
+    // 60 HyperBeam: full → shift → [Agility, Slam, DragonRage, HyperBeam]
+    let dn = create_pokemon(Species::Dragonite, 62, MAX_DVS).unwrap();
+    assert_eq!(
+        dn.moves,
+        [
+            MoveId::Agility,
+            MoveId::Slam,
+            MoveId::DragonRage,
+            MoveId::HyperBeam,
+        ]
+    );
+}
+
+#[test]
+fn trainer_dv_constant_matches_asm() {
+    // ATKDEFDV_TRAINER / SPDSPCDV_TRAINER = $98 / $88.
+    assert_eq!(TRAINER_DV_BYTES, [0x98, 0x88]);
+}
+
+#[test]
+fn random_dvs_vary_across_rolls() {
+    let a = roll_random_dvs();
+    let mut differs = false;
+    for _ in 0..64 {
+        if roll_random_dvs() != a {
+            differs = true;
+            break;
+        }
+    }
+    assert!(differs, "random DV rolls should differ at least once in 64");
+}

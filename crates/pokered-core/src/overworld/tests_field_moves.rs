@@ -137,6 +137,7 @@ fn make_boulder(x: u16, y: u16) -> NpcRuntimeState {
         facing: Direction::Down,
         scripted_frame: None,
         movement_type: NpcMovementType::Stationary,
+        wander_axis: dotzuki_engine::overworld::NpcWanderAxis::Any,
         range: 0,
         walk_counter: 0,
         delay_counter: 0,

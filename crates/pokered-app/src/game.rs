@@ -224,6 +224,7 @@ fn save_summary_from_data(save: &SaveData) -> SaveFileSummary {
         play_time_hours: save.game_data.play_time.hours as u16,
         play_time_minutes: save.game_data.play_time.minutes,
         play_time_seconds: save.game_data.play_time.seconds,
+        player_id: save.game_data.player_id,
     }
 }
 
@@ -482,6 +483,35 @@ pub fn parse_warp_arg(s: &str) -> Result<(MapId, Option<u16>, Option<u16>), Stri
     };
 
     Ok((map_id, x, y))
+}
+
+/// Screens that must NOT re-enter the MainMenu Continue/NewGame re-entry
+/// arms: everything that lives INSIDE a play session (the overworld plus every
+/// overlay opened from it). Re-entering would rebuild the overworld from the
+/// save and teleport the player (the "shop exit warps you home" bug — carried
+/// variants like `Shop(_)`/`PokemonStatsScreen(_)` can't be compared with `!=`,
+/// which is how they were missed).
+fn is_ingame_session_screen(s: &GameScreen) -> bool {
+    matches!(
+        s,
+        GameScreen::Overworld
+            | GameScreen::Battle
+            | GameScreen::Shop(_)
+            | GameScreen::StartMenu
+            | GameScreen::OptionsMenu
+            | GameScreen::SaveMenu
+            | GameScreen::PartyScreen
+            | GameScreen::PokemonStatsScreen(_)
+            | GameScreen::Bag
+            | GameScreen::TownMap
+            | GameScreen::Slots
+            | GameScreen::Elevator
+            | GameScreen::FilterBag
+            | GameScreen::Diploma
+            | GameScreen::PC
+            | GameScreen::Pokedex
+            | GameScreen::TrainerCard
+    )
 }
 
 impl PokemonGame {
@@ -1324,8 +1354,7 @@ impl PokemonGame {
         // added…" entry then opens instead of the overworld
         // (engine/items/item_effects.asm:521-546).
         let mut post_catch_species: Option<pokered_data::species::Species> = None;
-        match screen {
-            GameScreen::IntroScene => {
+        match screen {            GameScreen::IntroScene => {
                 self.intro_scene.reset();
                 if let Some(ref audio) = self.audio {
                     audio.play_music(MusicId::INTRO_BATTLE);
@@ -1365,21 +1394,7 @@ impl PokemonGame {
                 // fix from the same finding).
                 match self.main_menu.last_choice {
                     Some(MainMenuChoice::Continue)
-                        if self.state.screen != GameScreen::Overworld
-                            && self.state.screen != GameScreen::StartMenu
-                            && self.state.screen != GameScreen::OptionsMenu
-                            && self.state.screen != GameScreen::SaveMenu
-                            && self.state.screen != GameScreen::Bag
-                            && self.state.screen != GameScreen::PartyScreen
-                            && self.state.screen != GameScreen::TownMap
-                            && self.state.screen != GameScreen::Slots
-                            && self.state.screen != GameScreen::Elevator
-                            && self.state.screen != GameScreen::FilterBag
-                            && self.state.screen != GameScreen::Diploma
-                            && self.state.screen != GameScreen::PC
-                            && self.state.screen != GameScreen::Pokedex
-                            && self.state.screen != GameScreen::TrainerCard
-                            && self.state.screen != GameScreen::Battle =>
+                        if !is_ingame_session_screen(&self.state.screen) =>
                     {
                         let (map_id, px, py, facing) =
                             if let Some((warp_map, warp_x, warp_y)) = self.startup_warp.take() {
@@ -1467,18 +1482,7 @@ impl PokemonGame {
                         }
                     }
                     Some(MainMenuChoice::NewGame)
-                        if self.state.screen != GameScreen::Overworld
-                            && self.state.screen != GameScreen::StartMenu
-                            && self.state.screen != GameScreen::OptionsMenu
-                            && self.state.screen != GameScreen::SaveMenu
-                            && self.state.screen != GameScreen::Slots
-                            && self.state.screen != GameScreen::Elevator
-                            && self.state.screen != GameScreen::FilterBag
-                            && self.state.screen != GameScreen::Diploma
-                            && self.state.screen != GameScreen::PC
-                            && self.state.screen != GameScreen::Pokedex
-                            && self.state.screen != GameScreen::TrainerCard
-                            && self.state.screen != GameScreen::Battle =>
+                        if !is_ingame_session_screen(&self.state.screen) =>
                     {
                         // InitOptions (engine/menus/main_menu.asm): a NEW GAME
                         // resets wOptions to defaults (medium text, animation
@@ -1614,6 +1618,16 @@ impl PokemonGame {
                 let has_pokedex = self.overworld.unified_flags().get_flag("EVENT_GOT_POKEDEX");
                 let has_pokemon = self.save_data.party.count() > 0;
                 self.start_menu.open(has_pokedex, has_pokemon, false);
+                // PrintSafariZoneSteps (player_state.asm:219-255): while a
+                // Safari run is live, the START menu shows steps/balls.
+                self.start_menu.safari_info = if self.overworld.is_safari_game_active() {
+                    Some(pokered_core::start_menu::SafariZoneInfo {
+                        steps: self.overworld.safari_steps_remaining(),
+                        balls: self.overworld.safari_balls_remaining(),
+                    })
+                } else {
+                    None
+                };
                 if let Some(ref audio) = self.audio {
                     audio.play_sfx(SfxId::StartMenu);
                 }
@@ -1642,6 +1656,16 @@ impl PokemonGame {
             }
             GameScreen::SaveMenu => {
                 let has_previous = self.state.has_save_file();
+                // CheckPreviousSaveFile (engine/menus/save.asm:156-164,
+                // 622-653): when the stored file belongs to a DIFFERENT
+                // trainer ID, saving first asks "The older file will be
+                // erased. Is that okay?" — compare the disk summary's ID
+                // against the in-memory one.
+                let is_different_player = self
+                    .state
+                    .save_summary
+                    .as_ref()
+                    .map_or(false, |s| s.player_id != 0 && s.player_id != self.save_data.game_data.player_id);
                 self.save_menu = SaveMenuState::new(
                     SaveScreenInfo {
                         player_name: self.player_name.clone(),
@@ -1651,7 +1675,7 @@ impl PokemonGame {
                         play_time_minutes: self.save_data.game_data.play_time.minutes,
                     },
                     has_previous,
-                    false,
+                    is_different_player,
                 );
             }
             GameScreen::PartyScreen => {
@@ -1774,13 +1798,28 @@ impl PokemonGame {
     }
 
     fn game_timer_active(&self) -> bool {
-        self.state.screen == GameScreen::Overworld && self.black_screen_frames == 0
+        // TrackPlayTime runs from the VBlank interrupt every frame
+        // (home/vblank.asm:75); its only gate is BIT_GAME_TIMER_COUNTING,
+        // set once at SpecialEnterMap (main_menu.asm:333-334) and never
+        // cleared anywhere in the original — so the clock keeps running in
+        // battles, menus, and dialogs.
+        let counting_started = !matches!(
+            self.state.screen,
+            GameScreen::GameFreakSplash
+                | GameScreen::CopyrightSplash
+                | GameScreen::TitleScreen
+                | GameScreen::MainMenu
+                | GameScreen::OakSpeech
+                | GameScreen::LanguageSelect
+        );
+        counting_started
     }
 
     fn start_wild_battle(&mut self, species: pokered_data::species::Species, level: u8) {
-        use pokered_core::pokemon::stats::create_pokemon;
+        use pokered_core::pokemon::stats::{create_pokemon, roll_random_dvs};
 
-        let enemy_mon = create_pokemon(species, level, [0x9A, 0x78]);
+        // Wild DVs are two random bytes (core.asm:6012-6019).
+        let enemy_mon = create_pokemon(species, level, roll_random_dvs());
         let player_party = self.save_data.party.to_vec();
 
         if let Some(enemy) = enemy_mon {
@@ -2004,6 +2043,15 @@ impl PokemonGame {
         }
     }
 
+    /// ReadTrainer's special-move pass — delegates to the CORE implementation
+    /// (battle::special_moves, shared with the TUI).
+    fn apply_trainer_special_moves(
+        class: pokered_data::trainer_data::TrainerClass,
+        party: &mut [pokered_core::battle::state::Pokemon],
+    ) {
+        pokered_core::battle::special_moves::apply_trainer_special_moves(class, party);
+    }
+
     fn start_trainer_battle(&mut self, trainer_id: &str, rival_triplet_base: Option<u8>) {
         use pokered_core::pokemon::stats::create_pokemon;
         use pokered_data::trainer_data::{get_trainer_party, parse_trainer_id, TrainerClass};
@@ -2030,11 +2078,15 @@ impl PokemonGame {
             };
 
             if let Some(party) = get_trainer_party(class, party_index) {
-                party
+                let mut mons: Vec<_> = party
                     .pokemon
                     .iter()
-                    .filter_map(|mon| create_pokemon(mon.species, mon.level, [0x9A, 0x78]))
-                    .collect::<Vec<_>>()
+                    .filter_map(|mon| {
+                        create_pokemon(mon.species, mon.level, pokered_core::pokemon::stats::TRAINER_DV_BYTES)
+                    })
+                    .collect();
+                Self::apply_trainer_special_moves(class, &mut mons);
+                mons
             } else {
                 vec![]
             }
@@ -2194,8 +2246,8 @@ impl PokemonGame {
             self.soft_reset_frames = 0;
         }
 
-        // Tick play time: matches original BIT_GAME_TIMER_COUNTING behavior.
-        // Timer runs only during overworld gameplay, paused during battles/menus.
+        // Tick play time every frame once the game proper has started
+        // (TrackPlayTime from VBlank — see game_timer_active).
         if self.game_timer_active() {
             self.save_data.game_data.play_time.tick();
         }
@@ -2547,7 +2599,17 @@ impl PokemonGame {
                         self.rival_name = name;
                         ScreenAction::Continue
                     }
-                    OakSpeechResult::Finished => ScreenAction::Transition(GameScreen::Overworld),
+                    OakSpeechResult::Finished => {
+                        // GenRandomTrainerID (oak_speech65.asm): a NEW GAME
+                        // rolls the player's trainer ID — the save-overwrite
+                        // "different player?" check compares against it.
+                        if self.save_data.game_data.player_id == 0 {
+                            let dvs = pokered_core::pokemon::stats::roll_random_dvs();
+                            self.save_data.game_data.player_id =
+                                dvs[0] as u16 | ((dvs[1] as u16) << 8);
+                        }
+                        ScreenAction::Transition(GameScreen::Overworld)
+                    }
                     OakSpeechResult::Active => ScreenAction::Continue,
                 }
             }
@@ -2906,6 +2968,7 @@ impl PokemonGame {
                             OverworldSfxEvent::GoOutside => audio.play_sfx(SfxId::GoOutside),
                             OverworldSfxEvent::Collision => audio.play_sfx(SfxId::Collision),
                             OverworldSfxEvent::Ledge => audio.play_sfx(SfxId::Ledge),
+                            OverworldSfxEvent::ArrowTiles => audio.play_sfx(SfxId::ArrowTiles),
                             OverworldSfxEvent::TextAdvance => audio.play_sfx(SfxId::PressAB),
                             OverworldSfxEvent::None => {}
                         }
@@ -2989,10 +3052,12 @@ impl PokemonGame {
                     }
 
                     if let Some(pending) = self.overworld.pending_give_pokemon.take() {
+                        // Gifted mons get random DVs (AddPartyMon Random ×2,
+                        // add_mon.asm:95-101).
                         if let Some(mut pokemon) = pokered_core::pokemon::stats::create_pokemon(
                             pending.species,
                             pending.level,
-                            [0x9A, 0x78],
+                            pokered_core::pokemon::stats::roll_random_dvs(),
                         ) {
                             if let Some(nick) = pending.nickname {
                                 pokemon.set_nickname(&nick);
@@ -3747,6 +3812,7 @@ impl PokemonGame {
                     right: input.is_just_pressed(GbButton::Right),
                     a: input.is_just_pressed(GbButton::A),
                     b: input.is_just_pressed(GbButton::B),
+                    select: input.is_just_pressed(GbButton::Select),
                 };
                 match self.bag_screen.update_frame(bag_input) {
                     BagScreenAction::Cancelled => {
@@ -3920,8 +3986,19 @@ impl PokemonGame {
                     let prev_phase = slots.phase;
                     result = slots.update_frame(slots_input);
                     coins_out = Some(slots.coins);
+                    // The slots' own cues (slot_machine.asm: :120 spin start,
+                    // :842 each reel stop, :694 payout).
+                    let sfx = slots.take_sfx();
                     if let Some(ref audio) = self.audio {
-                        use pokered_core::slots_screen::SlotsPhase;
+                        use pokered_core::slots_screen::{SlotsPhase, SlotsSfx};
+                        for cue in sfx {
+                            let id = match cue {
+                                SlotsSfx::NewSpin => SfxId::SlotsNewSpin,
+                                SlotsSfx::StopWheel => SfxId::SlotsStopWheel,
+                                SlotsSfx::Reward => SfxId::SlotsReward,
+                            };
+                            audio.play_sfx(id);
+                        }
                         // Reel-stop / spin start feedback.
                         if prev_phase == SlotsPhase::BetSelect
                             && slots.phase == SlotsPhase::Spinning
@@ -4063,6 +4140,10 @@ impl PokemonGame {
                     // (bit 7 = "has changed boxes", wCurrentBoxNum).
                     self.save_data.game_data.current_box_num =
                         self.save_data.pc_storage.current_box_index() as u8 | 0x80;
+                    // Keep the sCurBoxData mirror (the bank-1 copy of the
+                    // active box the original rewrites on every save,
+                    // save.asm:229-233) in sync with the storage.
+                    self.save_data.current_box = self.save_data.pc_storage.current_box().clone();
                     self.save_to_file();
                 }
                 // Party membership may have changed (deposit/withdraw) — keep
@@ -5244,4 +5325,73 @@ fn draw_language_select(fb: &mut FrameBuffer, current: pokered_core::game_state:
     let zh_line = format!("{}中文", zh_pre);
     draw_text(&en_line, 16, 72, en_color, fb);
     draw_text(&zh_line, 16, 90, zh_color, fb);
+}
+
+#[cfg(test)]
+mod session_guard_tests {
+    use super::*;
+
+    /// The shop-exit teleport bug: `GameScreen::Shop(_)` (a carried variant
+    /// that cannot be compared with `!=`) was missing from the Continue/NewGame
+    /// re-entry guards, so exiting a mart rebuilt the overworld from the save
+    /// and teleported the player. The helper must classify EVERY in-session
+    /// screen — including the carried ones — as in-session.
+    #[test]
+    fn shop_and_carried_screens_are_in_session() {
+        assert!(is_ingame_session_screen(&GameScreen::Overworld));
+        assert!(is_ingame_session_screen(&GameScreen::Shop(
+            pokered_core::items::MartState::new(
+                pokered_core::items::ShopInventory::new(vec![pokered_data::items::ItemId::Potion]),
+            )
+        )));
+        assert!(is_ingame_session_screen(&GameScreen::PokemonStatsScreen(0)));
+        assert!(is_ingame_session_screen(&GameScreen::Bag));
+        assert!(is_ingame_session_screen(&GameScreen::PartyScreen));
+        assert!(is_ingame_session_screen(&GameScreen::TownMap));
+        // A NEW GAME session using the bag/fly must not be treated as
+        // "outside a session" either (the NewGame arm's old table missed these).
+        assert!(is_ingame_session_screen(&GameScreen::PC));
+    }
+
+    #[test]
+    fn pre_session_screens_are_not_in_session() {
+        assert!(!is_ingame_session_screen(&GameScreen::MainMenu));
+        assert!(!is_ingame_session_screen(&GameScreen::TitleScreen));
+        assert!(!is_ingame_session_screen(&GameScreen::OakSpeech));
+    }
+}
+
+#[cfg(test)]
+mod save_overwrite_tests {
+    use pokered_core::game_state::SaveFileSummary;
+
+    fn summary_with(id: u16) -> SaveFileSummary {
+        SaveFileSummary {
+            player_name: vec![0x50; 11],
+            badges: 0,
+            pokedex_owned: 0,
+            play_time_hours: 0,
+            play_time_minutes: 0,
+            play_time_seconds: 0,
+            player_id: id,
+        }
+    }
+
+    /// CheckPreviousSaveFile (engine/menus/save.asm:622-653): overwriting a
+    /// file from a DIFFERENT trainer ID must prompt first. The predicate the
+    /// SaveMenu arm computes: different (non-zero) disk ID vs in-memory ID.
+    #[test]
+    fn different_disk_player_id_demands_confirmation() {
+        let disk = summary_with(0x1234);
+        let memory_id: u16 = 0xBEEF;
+        let different = disk.player_id != 0 && disk.player_id != memory_id;
+        assert!(different, "a foreign ID is a different player");
+
+        let same = summary_with(memory_id);
+        assert!(!(same.player_id != 0 && same.player_id != memory_id));
+
+        // Legacy summaries (pre-field) carry 0 and never trigger the prompt.
+        let legacy = summary_with(0);
+        assert!(!(legacy.player_id != 0 && legacy.player_id != memory_id));
+    }
 }

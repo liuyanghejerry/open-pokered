@@ -32,7 +32,23 @@ pub fn import_sram(data: &[u8]) -> Result<SaveData, SaveError> {
     }
 
     let bank0 = &data[0..SRAM_BANK_SIZE_LAYOUT];
-    let bank1 = &data[SRAM_BANK_SIZE_LAYOUT..SRAM_BANK_SIZE_LAYOUT * 2];
+    let mut bank1_owned;
+    let bank1: &[u8] = {
+        let b = &data[SRAM_BANK_SIZE_LAYOUT..SRAM_BANK_SIZE_LAYOUT * 2];
+        if validate_canonical_bank1(b).is_err() {
+            // Legacy (pre-2026-08) Rust format: transform to canonical.
+            bank1_owned = migrate_legacy_bank1(b).ok_or(SaveError::BadChecksum)?;
+            // Fix the transformed bank's checksum at the canonical spot so
+            // the standard validation below passes.
+            let blank_save = SaveData::new();
+            let canonical_len = blank_save.serialize_checksummed_region().len();
+            let region = &bank1_owned[GAME_DATA_OFFSET..GAME_DATA_OFFSET + canonical_len];
+            bank1_owned[GAME_DATA_OFFSET + canonical_len] = crate::save_menu::calc_checksum(region);
+            &bank1_owned
+        } else {
+            b
+        }
+    };
     let bank2 = &data[SRAM_BANK_SIZE_LAYOUT * 2..SRAM_BANK_SIZE_LAYOUT * 3];
     let bank3 = &data[SRAM_BANK_SIZE_LAYOUT * 3..SRAM_BANK_SIZE_LAYOUT * 4];
 
@@ -45,6 +61,13 @@ pub fn import_sram(data: &[u8]) -> Result<SaveData, SaveError> {
     let mut pc_storage = PcStorage::new();
     parse_box_bank(bank2, &mut pc_storage, 0)?;
     parse_box_bank(bank3, &mut pc_storage, 6)?;
+    // wCurrentBoxNum (save.asm:382-384: menu index | $80; GetBoxSRAMLocation
+    // masks with BOX_NUM_MASK) — restore the trainer's last-open box so a
+    // save→load round-trip keeps Bill's PC where it was left.
+    let saved_box = (game_data.current_box_num & 0x7F) as usize;
+    if saved_box < 12 {
+        let _ = pc_storage.change_box(saved_box);
+    }
 
     let mut save = SaveData {
         player_name,
@@ -80,14 +103,35 @@ fn derive_traded_flags(save: &mut SaveData) {
     }
 }
 
-// Checksum covers sGameData ($598) to sGameDataEnd (byte before last)
+// Checksum covers sGameData from $598 to sGameDataEnd; sMainDataCheckSum
+// sits DIRECTLY after the region (ram/sram.asm "Save Data" — no trailing
+// alignment). The region length is re-derived from the serializer so the
+// two can never drift.
 fn validate_bank1_checksum(bank1: &[u8]) -> Result<(), SaveError> {
-    let checksum_offset = SRAM_BANK_SIZE_LAYOUT - 1;
-    let stored_checksum = bank1[checksum_offset];
-    let game_data_region = &bank1[GAME_DATA_OFFSET..checksum_offset];
-    let computed = calc_checksum(game_data_region);
+    validate_canonical_bank1(bank1).or_else(|_| {
+        // Legacy fallback: pre-2026-08 Rust saves stored the checksum at the
+        // bank's last byte over a 367-byte-shorter region. Recognizing them
+        // here lets callers route through the migration before parsing.
+        let legacy_offset = SRAM_BANK_SIZE_LAYOUT - 1;
+        let legacy = &bank1[GAME_DATA_OFFSET..legacy_offset];
+        if calc_checksum(legacy) == bank1[legacy_offset] {
+            Ok(())
+        } else {
+            Err(SaveError::BadChecksum)
+        }
+    })
+}
 
-    if computed != stored_checksum {
+fn validate_canonical_bank1(bank1: &[u8]) -> Result<(), SaveError> {
+    // The canonical region = name(11) + main + sprite + party + box + tile(1).
+    let blank_save = SaveData::new();
+    let canonical_len = blank_save.serialize_checksummed_region().len();
+    let checksum_offset = GAME_DATA_OFFSET + canonical_len;
+    if bank1.len() <= checksum_offset {
+        return Err(SaveError::DataTooShort);
+    }
+    let region = &bank1[GAME_DATA_OFFSET..checksum_offset];
+    if calc_checksum(region) != bank1[checksum_offset] {
         return Err(SaveError::BadChecksum);
     }
     Ok(())
@@ -294,4 +338,83 @@ pub fn import_sram_no_checksum(data: &[u8]) -> Result<SaveData, SaveError> {
     };
     derive_traded_flags(&mut save);
     Ok(save)
+}
+
+// ── Legacy (pre-2026-08) Rust-format migration ────────────────────
+//
+// Older saves from this port serialized a 48-byte union region (no link-data
+// padding), a 43-byte Day Care struct (with stat exp), and the checksum at
+// the bank's last byte. The canonical layout now matches the original .sav
+// byte-for-byte. A legacy file is transformed IN MEMORY to the canonical
+// layout before parsing: +377 union bytes after the water table, −10 Day
+// Care stat-exp bytes, and the checksum recomputed at the canonical spot.
+
+/// Transform a legacy bank-1 slice into the canonical layout. Returns the
+/// rebuilt bank or `None` when `bank1` does not look like the legacy shape.
+fn migrate_legacy_bank1(bank1: &[u8]) -> Option<Vec<u8>> {
+    use super::ser_game_data::serialize_game_data_into;
+
+    // GATE: only a byte-exact LEGACY checksum validates as legacy — a
+    // corrupted canonical file must fail loudly, never be "healed".
+    let legacy_offset = SRAM_BANK_SIZE_LAYOUT - 1;
+    if calc_checksum(&bank1[GAME_DATA_OFFSET..legacy_offset]) != bank1[legacy_offset] {
+        return None;
+    }
+
+    // Probe: serialize a blank GameData to find the fixed offsets.
+    let blank = super::game_data::GameData::new();
+    let mut probe = Vec::<u8>::new();
+    serialize_game_data_into(&blank, &mut probe);
+    // The canonical main-data length; legacy = canonical − 367.
+    let canonical_main = probe.len();
+    let legacy_main = canonical_main.checked_sub(367)?;
+    // Offsets of the two edit points inside MAIN data (both after event
+    // flags, so they are identical in legacy and canonical probing):
+    //   union_insert = right after the water table (where the 377 pad goes)
+    //   daycare_delete = start of the Day Care box struct's stat-exp block
+    let water_end = blank_offset_after_water(&probe);
+    let daycare_exp = water_end + 377 + (2 + 6) + (1 + 1 + 7) + 5 + 2 + 1 + 11 + 11 + 18;
+
+    let mut out = bank1.to_vec();
+    // Work inside the game-data slice starting at GAME_DATA_OFFSET.
+    let base = GAME_DATA_OFFSET;
+    if out.len() < base + legacy_main {
+        return None;
+    }
+    // Delete the 10 stat-exp bytes first (they sit AFTER the insert point —
+    // do the later edit first so indices stay valid).
+    let del_at = base + daycare_exp;
+    if del_at + 10 > out.len() {
+        return None;
+    }
+    out.drain(del_at..del_at + 10);
+    // Insert the union padding.
+    let ins_at = base + water_end;
+    out.splice(ins_at..ins_at, std::iter::repeat(0u8).take(377));
+
+    // Recompute + store the canonical checksum.
+    let region: Vec<u8> = out[base..base + canonical_main].to_vec();
+    // NOTE: the region includes name+sprite+party+box+tile in the caller's
+    // full checksummed layout; this function only rebuilds MAIN data, so the
+    // caller recomputes the checksum after the full parse.
+    let _ = region;
+    Some(out)
+}
+
+/// Byte offset (inside serialized MAIN data) just past the water-encounter
+/// table — located by pattern: the blank probe's grass/water rates are 0 and
+/// the tables are zero, so instead count from the event-flags length.
+fn blank_offset_after_water(probe: &[u8]) -> usize {
+    use super::game_data::{NUM_EVENTS_BYTES, WILDDATA_LENGTH};
+    // event_flags end position: everything before them is version-stable.
+    // Find it by the probe: serialize GameData with a sentinel event flag.
+    let mut marked = super::game_data::GameData::default();
+    marked.event_flags = vec![0xA5; NUM_EVENTS_BYTES];
+    let mut buf = Vec::new();
+    super::ser_game_data::serialize_game_data_into(&marked, &mut buf);
+    let flags_at = buf
+        .windows(NUM_EVENTS_BYTES)
+        .position(|w| w.iter().all(|&b| b == 0xA5))
+        .expect("sentinel event flags must serialize contiguously");
+    flags_at + NUM_EVENTS_BYTES + (WILDDATA_LENGTH + 8) + WILDDATA_LENGTH
 }

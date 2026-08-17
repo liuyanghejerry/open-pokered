@@ -102,6 +102,37 @@ pub fn moves_at_level(species: Species, level: u8) -> Vec<MoveId> {
         .collect()
 }
 
+/// Fill `moves` (and `pp` when `with_pp`) with the moves a mon has at `level`,
+/// Gen-1 `WriteMonMoves` semantics (evos_moves.asm:383-470): start from the
+/// L1 initial moves, then apply every learnset entry whose level is <= the
+/// mon's level in order — into the first empty slot, or by shifting all
+/// slots up (deleting the oldest) when full. Assumes the learnset is sorted
+/// by level, as the original does.
+pub fn write_mon_moves(species: Species, level: u8, moves: &mut [MoveId; 4]) {
+    let entry = match pokered_data::evos_moves::get_evos_moves(species) {
+        Some(e) => e,
+        None => return,
+    };
+
+    for lm in entry.learnset.iter() {
+        if lm.level > level {
+            // The original stops scanning at the first entry above the level
+            // (learnsets are sorted).
+            break;
+        }
+        let mv = lm.move_id;
+        if mv == MoveId::None || moves.contains(&mv) {
+            continue;
+        }
+        if let Some(slot) = moves.iter().position(|m| *m == MoveId::None) {
+            moves[slot] = mv;
+        } else {
+            moves.copy_within(1..4, 0);
+            moves[3] = mv;
+        }
+    }
+}
+
 pub fn try_learn_move(mon: &mut Pokemon, move_id: MoveId) -> LearnMoveResult {
     if move_id == MoveId::None {
         return LearnMoveResult::AlreadyKnown;

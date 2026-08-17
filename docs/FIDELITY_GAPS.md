@@ -517,10 +517,13 @@ no baseline/CI gate (manual). `visual-verify` skill covers only the heal machine
     Elite Four finally heal, cure, boost, Guard-Spec, and switch. **The key insight: no new engine /
     `jrpg-rules` seam is needed** — "the enemy does Nothing this turn" makes the whole action a
     pre-turn mutation the existing adapter already round-trips (HP/status/stat-stages/Mist/active
-    mon). `wAICount` follows Gen-1's PER-CONSULTATION cadence: one charge spent every turn the AI is
-    consulted (count > 0) regardless of whether the routine acted — a DoNothing roll or a rolled-but-
-    impossible switch still spends it, so a routine may only act within the first `count` turns a mon
-    is out. Conservative guards: skip the AI (spending NO charge) while the enemy is locked
+    mon). ~~`wAICount` follows Gen-1's PER-CONSULTATION cadence~~ **CORRECTED
+    (2026-08-17, second audit):** trainer_ai.asm:289-322's wrapper never
+    decrements — the decrement lives in `DecrementAICount` (:453), called only
+    from the item/switch/stat-boost ACTION paths (:552/:725/:730). wAICount is
+    therefore PER-ACTION (a DoNothing roll spends nothing; the budget is
+    "N cumulative uses", not "first N turns out"). The implementation and
+    tests now follow the asm (see `bruno_idle_spends_no_charge`). Conservative guards: skip the AI (spending NO charge) while the enemy is locked
     (`move_is_locked`) or recharging. 16 tests (per-routine apply: Brock Full-Heal cure, CooltrainerF /
     Full-Restore heal, Bruno X-Defend stage, Giovanni Guard-Spec Mist, Juggler switch + budget reset,
     the per-turn budget cadence, canonical-species narration, the count / wild / locked guards, the
@@ -531,8 +534,9 @@ no baseline/CI gate (manual). `visual-verify` skill covers only the heal machine
   - **Adversarial review (3-lens × verify workflow, 12 agents).** Cleared two suspected regressions
     (the switch-target scan MATCHES Gen-1 `EnemySendOut` — first alive non-active from slot 0; the
     extra RNG byte on non-firing turns is inert vs the unseeded live `ThreadRng`). Fixed three
-    confirmed findings: **per-turn `wAICount` cadence** (was per-action → trainers acted too often /
-    too late), **failed-switch charge stays spent** (was refunded), and **canonical species narration**
+    confirmed findings: ~~**per-turn `wAICount` cadence** (was per-action → trainers acted too often /
+    too late)~~ *(reverted by the 2026-08 correction above — per-action is the asm behavior)*,
+    **failed-switch charge stays spent** (was refunded), and **canonical species narration**
     (`species_name`, not the strum variant — "MR.MIME" not "MRMIME").
   - **Speed-ordered placement DONE** (the review's #1, the medium finding — now fixed, not just
     documented). `decide_enemy_ai_action` (spends the budget, no mutation) is split from

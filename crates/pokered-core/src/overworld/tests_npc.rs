@@ -240,6 +240,7 @@ fn make_test_npc(x: u16, y: u16, movement: NpcMovementType) -> NpcRuntimeState {
         facing: Direction::Down,
         scripted_frame: None,
         movement_type: movement,
+        wander_axis: dotzuki_engine::overworld::NpcWanderAxis::Any,
         range: 2,
         walk_counter: 0,
         delay_counter: 0,
@@ -289,7 +290,10 @@ fn face_player_npc_turns_toward_player() {
 }
 
 #[test]
-fn wander_npc_stays_within_range() {
+fn wander_npc_has_no_radial_leash() {
+    // Classic random walkers have NO leash: they walk until blocked
+    // (movement.asm:195-251). The axis byte is the restriction — see
+    // wander_npc_respects_axis.
     let mut npcs = vec![make_test_npc(10, 10, NpcMovementType::Wander)];
     npcs[0].range = 2;
 
@@ -309,37 +313,35 @@ fn wander_npc_stays_within_range() {
         );
     }
 
-    let dx = (npcs[0].x as i32 - 10).unsigned_abs();
-    let dy = (npcs[0].y as i32 - 10).unsigned_abs();
-    assert!(
-        dx <= 2 && dy <= 2,
-        "NPC wandered too far: ({}, {}), home=(10, 10), range=2",
-        npcs[0].x,
-        npcs[0].y
-    );
+    // No radial assertion: an unleashed walker may be anywhere the map
+    // allowed. Sanity: it stays on the map.
+    assert!(npcs[0].x < 20 && npcs[0].y < 20);
 }
 
 #[test]
-fn invisible_npc_not_updated() {
-    let mut npcs = vec![make_test_npc(5, 5, NpcMovementType::Wander)];
-    npcs[0].visible = false;
-
-    for rng in 0..=255u8 {
+fn wander_npc_respects_axis() {
+    // UP_DOWN (movement byte 2 = $01): vertical-only wandering — the x
+    // coordinate NEVER changes regardless of the rng stream.
+    let mut npcs = vec![make_test_npc(10, 10, NpcMovementType::Wander)];
+    npcs[0].wander_axis = dotzuki_engine::overworld::NpcWanderAxis::Vertical;
+    for frame in 0..1000u32 {
+        let rng = (frame * 7 + 13) as u8;
         update_npc_movement(
-            &mut npcs,
-            0,
-            0,
-            None,
-            10,
-            10,
-            rng,
-            &[],
-            TilesetId::Overworld,
-            &provider(),
+            &mut npcs, 0, 0, None, 20, 20, rng, &[], TilesetId::Overworld, &provider(),
         );
     }
-    assert_eq!(npcs[0].x, 5);
-    assert_eq!(npcs[0].y, 5);
+    assert_eq!(npcs[0].x, 10, "a vertical walker never changes column");
+
+    // LEFT_RIGHT ($02): horizontal-only — y never changes.
+    let mut npcs = vec![make_test_npc(10, 10, NpcMovementType::Wander)];
+    npcs[0].wander_axis = dotzuki_engine::overworld::NpcWanderAxis::Horizontal;
+    for frame in 0..1000u32 {
+        let rng = (frame * 7 + 13) as u8;
+        update_npc_movement(
+            &mut npcs, 0, 0, None, 20, 20, rng, &[], TilesetId::Overworld, &provider(),
+        );
+    }
+    assert_eq!(npcs[0].y, 10, "a horizontal walker never changes row");
 }
 
 #[test]

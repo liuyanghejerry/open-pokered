@@ -128,12 +128,8 @@ fn run_overflow_guarantees_escape() {
     assert_eq!(try_run_from_battle(&mut state, 255), RunResult::Escaped);
 }
 
-#[test]
-fn run_divisor_zero_escapes() {
-    // enemy_speed=1024: (1024/4)%256 = 256%256 = 0 → always escape
-    let mut state = make_state(50, 1024);
-    assert_eq!(try_run_from_battle(&mut state, 255), RunResult::Escaped);
-}
+// (No divisor-zero case: wEnemyMonSpeed is capped at 999 by the stat clamps,
+// so (speed/4)&0xFF == 0 is unreachable — in the original AND here.)
 
 #[test]
 fn run_quotient_overflow_escapes() {

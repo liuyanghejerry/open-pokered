@@ -218,6 +218,24 @@ pub fn draw_bag(state: &BagScreenState, fb: &mut FrameBuffer, lang: Lang) {
     menus::bag::draw(&items_u8, state.cursor(), &BAG_DEFAULT_LAYOUT, &mut ui, &rd);
 
     match state.phase() {
+        BagPhase::SwapFrom { row } => {
+            // ▷ marker on the swap row (SwapItemsInMenu's select cursor),
+            // drawn through a borderless overlay box at the list's left edge.
+            let y = row.saturating_sub(state.scroll()) as u32;
+            ui.text_box(
+                TileRect::new(
+                    BAG_DEFAULT_LAYOUT.list.rect.tx.saturating_sub(1),
+                    BAG_DEFAULT_LAYOUT.list.rect.ty + 1 + y,
+                    1,
+                    1,
+                ),
+                InkColor::White,
+                false,
+                |frame| {
+                    frame.label(0, 0, "▷", InkColor::Black);
+                },
+            );
+        }
         BagPhase::ActionMenu { cursor } => {
             ui.text_box(TileRect::new(11, 10, 9, 8), InkColor::Black, true, |frame| {
                 for (i, opt) in ["USE", "TOSS", "CANCEL"].iter().enumerate() {

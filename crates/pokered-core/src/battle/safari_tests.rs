@@ -132,7 +132,9 @@ fn throw_ball_consumes_a_ball_and_uses_the_live_catch_rate() {
     assert_eq!(s.catch_rate, 6);
     let before = s.balls;
     // A high-HP full mon at a tiny catch rate almost never catches; assert the ball spend.
-    let _ = s.throw_ball(200, 200, StatusCondition::None, CaptureRandoms { rand1: 254, rand2: 254 });
+    // Rand1 rolls through the rejection sampler — an in-window byte (150 is the
+    // Safari window's inclusive edge) with catch_rate 6 → Failed, ball consumed.
+    let _ = s.throw_ball(200, 200, StatusCondition::None, 254, &mut || 150);
     assert_eq!(s.balls, before - 1, "a thrown Safari Ball is consumed");
 }
 

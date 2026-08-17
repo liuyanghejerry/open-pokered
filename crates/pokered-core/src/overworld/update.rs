@@ -7,6 +7,7 @@ use super::screen::{
     self, BedroomDialogue, ConnectionNpcPreview, EmotionBubbleState, HealingMachineState,
     MapData, OverworldAudioRequest, OverworldGameDataRequest, OverworldScreen, OverworldSfxEvent,
     PendingConnection, PendingTrainerBattle, PendingWarp, PendingWildEncounter,
+    TrainerEncounterIntro,
     PokedexEntryState, WARP_FADE_IN_FRAMES, WARP_FADE_OUT_FRAMES, WARP_FADE_OUT_WHITE_FRAMES,
     WarpFadeState, build_npc_runtime_states,
 };
@@ -16,6 +17,7 @@ use crate::overworld::{
     script_bridge, special_terrain, wild_encounters,
 };
 use crate::overworld::script_bridge::HealingMachinePhase;
+use crate::overworld::spinner_paths::spinner_paths;
 use dotzuki_engine::overworld::{
     Direction, MovementState, OverworldInput, PlayerState, TransportMode,
 };
@@ -856,8 +858,12 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
         }
 
         // Trainer line-of-sight detection: runs every frame during normal gameplay.
-        // When a trainer spots the player, set up a pending battle.
-        if self.pending_trainer_battle.is_none() {
+        // When a trainer spots the player, run the ENGAGE INTRO first
+        // (CheckFightingMapTrainers, home/trainers.asm:129-159): "!" bubble →
+        // trainer walks up to the player → THEN the battle. The intro state
+        // replaces the instant-battle path; `pending_trainer_battle` is set
+        // when the intro completes.
+        if self.pending_trainer_battle.is_none() && self.trainer_encounter_intro.is_none() {
             if let Some(sighting) = npc_interaction::check_trainer_line_of_sight(
                 &self.npc_states,
                 &self.npc_pokemon_data,
@@ -871,12 +877,83 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                     .npc_pokemon_data
                     .get(sighting.npc_index as usize)
                     .and_then(|d| d.end_battle_text.clone());
-                self.pending_trainer_battle = Some(PendingTrainerBattle {
+                // PlayTrainerMusic (home/trainers.asm:390-443): RIVAL1/2/3
+                // keep the current music; gym leaders keep theirs too
+                // (wGymLeaderNo — identified by class here); everyone else
+                // gets MEET_EVIL / MEET_FEMALE / MEET_MALE by the lists in
+                // data/trainers/encounter_types.asm.
+                let music = crate::battle::trainer_encounter::encounter_music(tc);
+                if let Some(id) = music {
+                    let name = format!("{:?}", id); // enum Debug → name
+                    self.audio_requests
+                        .push(OverworldAudioRequest::PlayMusic { music_id: name });
+                }
+                // EXCLAMATION_BUBBLE over the trainer (predef EmotionBubble,
+                // trainers.asm:132-135), held for 32 frames while input is
+                // locked.
+                self.pending_emotion_bubble = Some(EmotionBubbleState {
+                    npc_id: String::new(), // resolved by index below
+                    emotion: "exclamation".to_string(),
+                    frames_remaining: 32,
+                });
+                // TrainerWalkUpToPlayer_Bank0: the trainer closes the sight
+                // line to face the player. Compute the straight path.
+                let npc = &self.npc_states[sighting.npc_index as usize];
+                let mut path: Vec<(u8, u8)> = Vec::new();
+                let (mut x, mut y) = (npc.x, npc.y);
+                let (dx, dy) = (
+                    self.state.player.x as i32 - npc.x as i32,
+                    self.state.player.y as i32 - npc.y as i32,
+                );
+                // Walk along the dominant axis first (the original walks the
+                // sight line: one axis), stopping one tile short of the player.
+                let step_x = dx.signum();
+                let step_y = dy.signum();
+                let dist = (dx.abs() + dy.abs()).saturating_sub(1); // keep 1 tile gap
+                for _ in 0..dist {
+                    if dx.abs() >= dy.abs() {
+                        x = (x as i32 + step_x) as u16;
+                    } else {
+                        y = (y as i32 + step_y) as u16;
+                    }
+                    path.push((x as u8, y as u8));
+                }
+                let npc_index = sighting.npc_index as usize;
+                if !path.is_empty() {
+                    npc_movement::start_scripted_move(
+                        &mut self.npc_states[npc_index],
+                        &path,
+                    );
+                }
+                self.trainer_encounter_intro = Some(TrainerEncounterIntro {
                     trainer_id,
                     npc_index: sighting.npc_index,
                     end_battle_text,
                     rival_triplet_base: None,
                 });
+            }
+        }
+
+        // Advance the engage-intro: once the "!" bubble is gone AND the
+        // walk-up finished, hand over to the actual pending battle.
+        if let Some(intro) = self.trainer_encounter_intro.take() {
+            let bubble_done = self
+                .pending_emotion_bubble
+                .as_ref()
+                .map_or(true, |b| b.frames_remaining == 0);
+            let walk_done = self
+                .npc_states
+                .get(intro.npc_index as usize)
+                .map_or(true, |n| npc_movement::is_scripted_move_done(n));
+            if bubble_done && walk_done {
+                self.pending_trainer_battle = Some(PendingTrainerBattle {
+                    trainer_id: intro.trainer_id,
+                    npc_index: intro.npc_index,
+                    end_battle_text: intro.end_battle_text,
+                    rival_triplet_base: intro.rival_triplet_base,
+                });
+            } else {
+                self.trainer_encounter_intro = Some(intro);
             }
         }
 
@@ -1169,34 +1246,45 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                 self.state.player.y,
             );
 
-            // Spinner / arrow tiles (Facility & Gym tilesets, e.g. Viridian Gym,
-            // Silph Co, Rocket Hideout): standing on a spin tile forces continuous
-            // movement — the player can't stop. Each step rotates facing per
-            // SPINNER_FACING_CYCLE and slides one tile, until they land on a
-            // non-spinner tile. Implemented by overriding the player's input with
-            // the rotated direction while idle on a spin tile (no script needed).
+            // Spinner / arrow tiles (Facility & Gym tilesets, e.g. Viridian
+            // Gym, Rocket Hideout). The original is TABLE-driven: each map's
+            // script maps (x, y) → an RLE "dir × steps" list
+            // (<Map>ArrowTilePlayerMovement + DecodeArrowMovementRLE,
+            // map_objects.asm:5-27) which is fed as simulated input — the
+            // player travels a STRAIGHT line per run while the sprite spins
+            // (LoadSpinnerArrowTiles), plus SFX_ARROW_TILES on trigger.
+            // B1F/B4F arrow tiles have no table (decorative only).
             let movement_input = if self.state.player.movement_state == MovementState::Idle
                 && self.active_script_effect.is_none()
                 && self.pending_warp.is_none()
                 && self.scripted_player_path.is_empty()
                 && special_terrain::is_spinner_tile(map.tileset, standing_tile)
             {
-                match special_terrain::handle_spinner_rotation(map.tileset, self.state.player.facing) {
-                    Some(res) => {
-                        self.state.player.facing = res.new_facing;
-                        MovementInput {
-                            up: res.new_facing == Direction::Up,
-                            down: res.new_facing == Direction::Down,
-                            left: res.new_facing == Direction::Left,
-                            right: res.new_facing == Direction::Right,
-                            a_button: false,
-                            b_button: false,
-                            start: false,
-                            select: false,
+                let map_name = crate::overworld::script_bridge::map_id_to_script_key(map.id)
+                    .to_string();
+                let entry = spinner_paths(&map_name).iter().find(|&&(sx, sy, _)| {
+                    sx as u16 == self.state.player.x && sy as u16 == self.state.player.y
+                });
+                if let Some(&(_, _, steps)) = entry {
+                    // Build the straight-line tile path from the RLE steps.
+                    let (mut x, mut y) = (self.state.player.x, self.state.player.y);
+                    let mut path: Vec<(u16, u16)> = Vec::new();
+                    for st in steps {
+                        let (dx, dy) = player_movement::direction_delta(st.dir);
+                        for _ in 0..st.steps {
+                            x = (x as i32 + dx as i32).max(0) as u16;
+                            y = (y as i32 + dy as i32).max(0) as u16;
+                            path.push((x, y));
                         }
                     }
-                    None => movement_input,
+                    if !path.is_empty() {
+                        self.sfx_event = OverworldSfxEvent::ArrowTiles;
+                        for p in &path {
+                            self.scripted_player_path.push_back(*p);
+                        }
+                    }
                 }
+                movement_input // no direction override: the path drives movement
             } else {
                 movement_input
             };
@@ -1267,7 +1355,6 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
 
             let movement_before = self.state.player.movement_state;
             let transport_before = self.state.player.transport;
-            let repel_before = self.state.repel_steps;
 
             let result = player_movement::process_frame(
                 &mut self.state,
@@ -1290,28 +1377,51 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                     .push(OverworldAudioRequest::PlayMapMusic { map: current_map });
             }
 
-            let step_completed = movement_before == MovementState::Walking
-                && self.state.player.movement_state == MovementState::Idle;
+            let mut turn_encounter_check: Option<(MapId, G::Tileset, u8, u8)> = None;
+            // A step completes when the engine returns to Idle OR when the
+            // position advanced — the engine chains straight into the next
+            // step on the same frame when the direction stays held (no Idle
+            // frame in between; process_frame's step-done branch calls
+            // try_move immediately). Both cases must roll the encounter
+            // check exactly once per TILE entered.
+            let pos_changed = self.state.player.x != prev_x || self.state.player.y != prev_y;
+            let step_completed = (movement_before == MovementState::Walking
+                && self.state.player.movement_state == MovementState::Idle)
+                || (movement_before == MovementState::Walking && pos_changed);
 
-            // Gen-1: on the last REPEL step the "wore off" text replaces this
-            // step's encounter roll (wild_encounters.asm .lastRepelStep). The
-            // counter only moves when a step completes inside `process_frame`,
-            // so a >0 → 0 transition pinpoints that step even when the walk
-            // chains straight into the next tile (movement_state never reads
-            // Idle while a direction is held). Pure check here (map is still
-            // borrowed); the message is queued below, right before the roll.
-            let repel_wore_off = self.repel_wore_off(repel_before);
+            // REPEL wore-off is detected where the counter now ticks — inside
+            // check_wild_encounter_on_step's gate (the classic
+            // TryDoWildEncounter placement, wild_encounters.asm:19-25 +
+            // .lastRepelStep): the roll path consumes the step and reports the
+            // >0 → 0 transition, whose "wore off" text REPLACES that step's
+            // encounter roll. Steps that never reach the roll (warp tile,
+            // script, cooldown, chained steps into another tile) never tick
+            // repel and never wear it off.
+            let mut repel_wore_off = false;
 
             let encounter_check_data = if step_completed
                 && self.pending_wild_encounter.is_none()
-                && !repel_wore_off
             {
                 let new_standing_tile = collision_provider.get_tile_at_position(
                     map.tileset, &map.blocks, map.width,
                     self.state.player.x,
                     self.state.player.y,
                 );
-                Some((map.id, map.tileset, new_standing_tile))
+                // The RATE anchor is the tile right of the standing tile
+                // (screen (9,9), wild_encounters.asm:28-47). Off-map right:
+                // the original still reads a BG tile (the map edge row) —
+                // approximate with the standing tile so the roll (and the
+                // REPEL tick inside its gate) still happens.
+                let right_tile = if self.state.player.x + 1 < map.width as u16 {
+                    collision_provider.get_tile_at_position(
+                        map.tileset, &map.blocks, map.width,
+                        self.state.player.x + 1,
+                        self.state.player.y,
+                    )
+                } else {
+                    new_standing_tile
+                };
+                Some((map.id, map.tileset, new_standing_tile, right_tile))
             } else {
                 None
             };
@@ -1400,6 +1510,33 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                         }
                     }
                 }
+                MoveResult::TurnedOnly => {
+                    // holdIntermediateDirectionLoop → call NewBattle
+                    // (home/overworld.asm:224-234): a completed 180° turn-in-
+                    // place ROLLS the wild-encounter check (and burns a repel
+                    // step) exactly like a completed step. Record it; the
+                    // roll runs after the map borrow ends (same queue as the
+                    // on-step check below).
+                    self.bump_anim_counter = 0;
+                    if self.pending_wild_encounter.is_none() && turn_encounter_check.is_none() {
+                        turn_encounter_check = Some((
+                            map.id,
+                            map.tileset,
+                            standing_tile,
+                            if self.state.player.x + 1 < map.width as u16 {
+                                collision_provider.get_tile_at_position(
+                                    map.tileset,
+                                    &map.blocks,
+                                    map.width,
+                                    self.state.player.x + 1,
+                                    self.state.player.y,
+                                )
+                            } else {
+                                standing_tile
+                            },
+                        ));
+                    }
+                }
                 MoveResult::Blocked(_) => {
                     self.sfx_event = OverworldSfxEvent::Collision;
                     self.bump_anim_counter = self.bump_anim_counter.wrapping_add(1);
@@ -1479,11 +1616,27 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                 self.show_repel_wore_off_message();
             }
 
-            if let Some((map_id, tileset, standing_tile)) = encounter_check_data {
+            if let Some((map_id, tileset, standing_tile, right_tile)) = encounter_check_data {
+                if self.check_wild_encounter_on_step(
+                    map_id,
+                    tileset,
+                    standing_tile,
+                    right_tile,
+                    self.state.standing_on_warp,
+                    self.active_script_effect.is_some(),
+                ) {
+                    repel_wore_off = true;
+                }
+            }
+
+            // A completed 180° turn-in-place rolls too (NewBattle after the
+            // intermediate-direction loop, home/overworld.asm:224-234).
+            if let Some((map_id, tileset, standing_tile, right_tile)) = turn_encounter_check {
                 self.check_wild_encounter_on_step(
                     map_id,
                     tileset,
                     standing_tile,
+                    right_tile,
                     self.state.standing_on_warp,
                     self.active_script_effect.is_some(),
                 );
@@ -2956,10 +3109,10 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
         map_id: MapId,
         tileset: G::Tileset,
         standing_tile: u8,
+        right_tile: u8,
         standing_on_warp: bool,
         has_script_effect: bool,
-    ) {
-        use crate::battle::wild::{EncounterContext, WildEncounterRandoms};
+    ) -> bool {        use crate::battle::wild::{EncounterContext, WildEncounterRandoms};
         use pokered_data::event_flags::EventFlag;
         use pokered_data::wild_data::GameVersion;
         use rand::Rng;
@@ -2973,10 +3126,31 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
             && EventFlag::from_name("EVENT_BEAT_MT_MOON_EXIT_SUPER_NERD")
                 .map_or(false, |f| self.unified_flags.check(f))
         {
-            return;
+            return false;
         }
 
         let version = GameVersion::Red;
+
+        // The encounter-check gate (the classic TryDoWildEncounter call
+        // conditions): only steps that may actually roll consume a REPEL
+        // tick (wild_encounters.asm:19-25). The >0 → 0 transition is
+        // returned so the caller replaces this step's roll with the
+        // "wore off" text (.lastRepelStep).
+        let roll_gated =
+            !standing_on_warp && !has_script_effect && self.state.encounter_cooldown == 0;
+        let mut wore_off = false;
+        if roll_gated {
+            if self.state.repel_steps > 0 {
+                self.state.repel_steps -= 1;
+                if self.state.repel_steps == 0 {
+                    wore_off = true;
+                }
+            }
+        }
+        if wore_off {
+            // .lastRepelStep: the "wore off" step never rolls an encounter.
+            return true;
+        }
 
         let encounter_roll = self.rng.gen_range(0u8..=255);
         let slot_roll = self.rng.gen_range(0u8..=255);
@@ -2998,6 +3172,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
             map_id,
             tileset,
             standing_tile,
+            right_tile,
             version,
             &randoms,
             &context,
@@ -3009,6 +3184,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
         if let crate::battle::wild::WildEncounterResult::Encounter { level, species } = result {
             self.pending_wild_encounter = Some(PendingWildEncounter { species, level, old_man: false, hooked: false });
         }
+        wore_off
     }
 
     pub(crate) fn sync_flags_from_engine(&mut self) {
