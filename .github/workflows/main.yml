@@ -34,9 +34,16 @@ jobs:
       changes-list: ${{ steps.build-changes-list.outputs.list }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          # Full history for paths-filter's local diff (list-files: none).
+          fetch-depth: 0
       - uses: dorny/paths-filter@v3
         id: filter
         with:
+          # Local git diff instead of the pulls.listFiles REST call — the
+          # endpoint has been flapping (429/503 → "Resource not accessible")
+          # today; the local mode is equivalent for same-repo PRs.
+          list-files: 'none'
           filters: |
             pokered-data:
               - 'Cargo.lock'
