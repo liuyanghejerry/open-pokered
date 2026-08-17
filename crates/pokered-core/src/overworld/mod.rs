@@ -22,6 +22,7 @@ pub mod player_movement;
 pub mod presentation;
 pub mod script_bridge;
 pub mod special_terrain;
+pub mod spinner_paths;
 pub mod sprites;
 pub mod trainer_engine;
 pub mod wild_encounters;

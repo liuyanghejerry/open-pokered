@@ -1921,6 +1921,7 @@ impl PokemonGame {
                             OverworldSfxEvent::GoOutside => audio.play_sfx(SfxId::GoOutside),
                             OverworldSfxEvent::Collision => audio.play_sfx(SfxId::Collision),
                             OverworldSfxEvent::Ledge => audio.play_sfx(SfxId::Ledge),
+                            OverworldSfxEvent::ArrowTiles => audio.play_sfx(SfxId::ArrowTiles),
                             OverworldSfxEvent::TextAdvance => audio.play_sfx(SfxId::PressAB),
                             OverworldSfxEvent::None => {}
                         }
