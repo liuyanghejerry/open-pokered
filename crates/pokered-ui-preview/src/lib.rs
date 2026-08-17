@@ -572,6 +572,7 @@ fn render_main(mock_state_id: u32, layout_json: &str) -> Vec<u8> {
             play_time_hours: 5,
             play_time_minutes: 15,
             play_time_seconds: 0,
+            player_id: 0x1234,
         })),
         _ => return render_main(0, layout_json),
     };

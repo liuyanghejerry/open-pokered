@@ -134,18 +134,18 @@ fn ai_cooltrainer_m(rand_val: u8) -> AiAction {
     }
 }
 
-/// BUG: The 25% random-check-for-switch never early-returns (ret nc is missing).
-/// Execution always falls through:
-///   - If HP < 20% → Hyper Potion (200 HP).
-///   - Else if rand < 51 (~20%) → switch.
-///   - Else → do nothing.
-fn ai_cooltrainer_f(enemy: &BattlerState, rand_val: u8) -> AiAction {
-    // NOTE: The initial `call Random; cp 25% + 1; ret nc` is commented out in ASM,
-    // so we skip it entirely — matching the bug.
+/// CooltrainerF (trainer_ai.asm:344-356). The intended 25% random-check gate is
+/// commented out in the original (`ret nc` missing) — execution always falls
+/// through, with NO random switch roll:
+///   * HP < 1/10 → Hyper Potion (200 HP);
+///   * else HP < 1/5 → switch;
+///   * else → do nothing.
+/// (`AICheckIfHPBelowFraction` is a strict below compare.)
+fn ai_cooltrainer_f(enemy: &BattlerState, _rand_val: u8) -> AiAction {
     let mon = enemy.active_mon();
-    if hp_below_fraction(mon, 5) {
+    if hp_below_fraction(mon, 10) {
         AiAction::UsePotion { heal_amount: 200 }
-    } else if rand_val < 51 {
+    } else if hp_below_fraction(mon, 5) {
         AiAction::SwitchPokemon
     } else {
         AiAction::DoNothing

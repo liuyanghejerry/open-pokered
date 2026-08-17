@@ -210,6 +210,9 @@ pub fn deserialize_game_data(reader: &mut SramReader) -> Result<GameData, SaveEr
     data.water_rate = reader.read_u8()?;
     let water_data = reader.read_bytes(WILDDATA_LENGTH - 1)?;
     data.water_mons.copy_from_slice(water_data);
+    // The UNION's remaining bytes (425 − 48; link-battle branch, see
+    // ser_game_data.rs) — skip to the original post-union offsets.
+    reader.skip(377)?;
 
     data.trainer_header_ptr = reader.read_u16_be()?;
     reader.skip(6)?;
@@ -253,11 +256,13 @@ fn deserialize_daycare_box_struct(
     }
     dc.ot_id = reader.read_u16_be()?;
     dc.exp = reader.read_exp24()?;
-    dc.hp_exp = reader.read_u16_be()?;
-    dc.attack_exp = reader.read_u16_be()?;
-    dc.defense_exp = reader.read_u16_be()?;
-    dc.speed_exp = reader.read_u16_be()?;
-    dc.special_exp = reader.read_u16_be()?;
+    // box_struct has no stat-exp fields — they never round-trip SRAM (the
+    // gameplay model zeroes them on withdraw; see daycare's EV wipe).
+    dc.hp_exp = 0;
+    dc.attack_exp = 0;
+    dc.defense_exp = 0;
+    dc.speed_exp = 0;
+    dc.special_exp = 0;
     dc.dvs = reader.read_u16_be()?;
     for i in 0..4 {
         dc.pp[i] = reader.read_u8()?;

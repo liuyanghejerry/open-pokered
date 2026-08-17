@@ -32,6 +32,7 @@ fn render_continue_info_panel() {
         play_time_hours: 25,
         play_time_minutes: 30,
         play_time_seconds: 0,
+        player_id: 0,
     };
     let mut menu = MainMenuState::new(Some(summary));
     while !menu.init_delay_done {

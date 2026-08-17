@@ -95,6 +95,11 @@ pub struct SaveFileSummary {
     pub play_time_hours: u16,
     pub play_time_minutes: u8,
     pub play_time_seconds: u8,
+    /// The stored file's wPlayerID — the save-overwrite "different player?"
+    /// check (CheckPreviousSaveFile, engine/menus/save.asm:622-653) compares
+    /// it against the in-memory ID. `0` for summaries built before the field
+    /// existed.
+    pub player_id: u16,
 }
 
 impl SaveFileSummary {

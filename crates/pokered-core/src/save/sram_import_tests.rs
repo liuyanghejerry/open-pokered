@@ -10,7 +10,10 @@ fn make_empty_sram() -> Vec<u8> {
 
 fn write_bank1_checksum(sram: &mut [u8]) {
     let bank1_start = SRAM_BANK_SIZE_LAYOUT;
-    let checksum_offset = bank1_start + SRAM_BANK_SIZE_LAYOUT - 1;
+    // Canonical layout: the checksum sits DIRECTLY after sGameDataEnd.
+    let blank = crate::save::SaveData::new();
+    let region_len = blank.serialize_checksummed_region().len();
+    let checksum_offset = bank1_start + GAME_DATA_OFFSET + region_len;
     let game_data_region = &sram[bank1_start + GAME_DATA_OFFSET..checksum_offset];
     let cksum = calc_checksum(game_data_region);
     sram[checksum_offset] = cksum;
@@ -59,7 +62,20 @@ fn test_import_empty_sram_valid_checksums() {
 #[test]
 fn test_import_bad_bank1_checksum() {
     let mut sram = make_valid_sram();
-    let checksum_offset = SRAM_BANK_SIZE_LAYOUT + SRAM_BANK_SIZE_LAYOUT - 1;
+    // Distinctive data so a flipped checksum cannot accidentally validate
+    // against the legacy fallback (all-zero data is ambiguous — both
+    // checksums pass over zeros and the migration path heals it).
+    let name_off = SRAM_BANK_SIZE_LAYOUT + GAME_DATA_OFFSET;
+    for i in 0..11 {
+        sram[name_off + i] = 0x41 + i as u8;
+    }
+    let blank = crate::save::SaveData::new();
+    let region_len = blank.serialize_checksummed_region().len();
+    let checksum_offset = SRAM_BANK_SIZE_LAYOUT + GAME_DATA_OFFSET + region_len;
+    // Recompute the valid canonical checksum first…
+    let region = sram[SRAM_BANK_SIZE_LAYOUT + GAME_DATA_OFFSET..checksum_offset].to_vec();
+    sram[checksum_offset] = calc_checksum(&region);
+    // …then corrupt it: neither canonical nor legacy validates.
     sram[checksum_offset] ^= 0xFF;
     assert!(matches!(import_sram(&sram), Err(SaveError::BadChecksum)));
 }
@@ -197,4 +213,126 @@ fn test_import_box_data_size() {
 fn test_import_party_data_size() {
     let expected = 1 + 7 + 6 * PARTY_STRUCT_SIZE + 6 * 11 + 6 * 11;
     assert_eq!(PARTY_DATA_SIZE, expected);
+}
+
+#[cfg(test)]
+mod legacy_layout_migration_tests {
+    use super::*;
+
+    /// The canonical layout now matches the original .sav byte-for-byte:
+    /// the UNION region occupies 425 bytes (link-data branch), the Day Care
+    /// box struct is 33 bytes (no stat exp), and the checksum sits directly
+    /// after sGameDataEnd (ram/sram.asm "Save Data").
+    #[test]
+    fn canonical_region_length_matches_original() {
+        use crate::save::sram_layout::{
+            BOX_DATA_SIZE, GAME_DATA_OFFSET, PARTY_DATA_SIZE, SPRITE_DATA_REGION_SIZE,
+            SRAM_BANK_SIZE_LAYOUT,
+        };
+        let blank = crate::save::SaveData::new();
+        let region = blank.serialize_checksummed_region();
+        // region = name(11) + main + sprite + party + box + tile(1)
+        let mut probe = Vec::new();
+        crate::save::ser_game_data::serialize_game_data_into(&blank.game_data, &mut probe);
+        assert_eq!(
+            region.len(),
+            11 + probe.len() + SPRITE_DATA_REGION_SIZE + PARTY_DATA_SIZE + BOX_DATA_SIZE + 1
+        );
+        // The whole checksummed region fits in bank 1 after the $598 pad,
+        // with the checksum byte DIRECTLY after it (canonical position).
+        assert!(GAME_DATA_OFFSET + region.len() < SRAM_BANK_SIZE_LAYOUT);
+    }
+
+    /// A legacy-format file (48-byte union, 43-byte daycare, checksum at the
+    /// bank end) migrates transparently: data parses identically after the
+    /// transform and re-exports in the canonical layout.
+    #[test]
+    fn legacy_file_migrates_to_canonical() {
+        // Build a canonical export, then INVERT the migration transform to
+        // synthesize a legacy file: drop the 377-byte union pad and re-insert
+        // the 10 Day Care stat-exp bytes; move the checksum to the bank end.
+        let mut save = crate::save::SaveData::new();
+        save.player_name = vec![0x91, 0x82, 0x50];
+        let canonical = crate::save::sram_export::export_sram(&save);
+        let bank1_start = SRAM_BANK_SIZE_LAYOUT;
+
+        let water_end = {
+            use crate::save::game_data::{NUM_EVENTS_BYTES, WILDDATA_LENGTH};
+            let mut marked = crate::save::game_data::GameData::new();
+            marked.event_flags = vec![0xA5; NUM_EVENTS_BYTES];
+            let mut buf = Vec::new();
+            crate::save::ser_game_data::serialize_game_data_into(&marked, &mut buf);
+            let at = buf
+                .windows(NUM_EVENTS_BYTES)
+                .position(|w| w.iter().all(|&b| b == 0xA5))
+                .unwrap();
+            at + NUM_EVENTS_BYTES + (WILDDATA_LENGTH + 8) + WILDDATA_LENGTH
+        };
+        let daycare_exp = water_end + 377 + (2 + 6) + (1 + 1 + 7) + 5 + 2 + 1 + 11 + 11 + 18;
+
+        let blank = crate::save::SaveData::new();
+        let region_len = blank.serialize_checksummed_region().len();
+        let canonical_ck = bank1_start + GAME_DATA_OFFSET + region_len;
+
+        // Transform BANK 1 only: everything after the main-data region
+        // (sprite/party/box/tile) shifts −367 within the bank; the freed
+        // tail becomes zeros. Banks 0/2/3 keep their canonical bytes.
+        let mut bank1: Vec<u8> =
+            canonical[bank1_start..bank1_start + SRAM_BANK_SIZE_LAYOUT].to_vec();
+        let region_start = GAME_DATA_OFFSET;
+        // Insert the daycare stat-exp zeros first (later offset).
+        bank1.splice(
+            region_start + 11 + daycare_exp..region_start + 11 + daycare_exp,
+            std::iter::repeat(0u8).take(10),
+        );
+        // Then drop the union pad (earlier offset).
+        bank1.drain(region_start + 11 + water_end..region_start + 11 + water_end + 377);
+        // Zero the shifted tail, pad the bank back to its full size, and
+        // place the legacy checksum at the bank's last byte. (canonical_ck
+        // is an ABSOLUTE file offset; the bank-local region end is
+        // canonical_ck − bank1_start − 367.)
+        bank1.resize(SRAM_BANK_SIZE_LAYOUT, 0);
+        let legacy_ck = SRAM_BANK_SIZE_LAYOUT - 1;
+        let bank_local_end = canonical_ck - bank1_start - 367;
+        for b in bank1[bank_local_end..legacy_ck].iter_mut() {
+            *b = 0;
+        }
+        let span = bank1[region_start..legacy_ck].to_vec();
+        bank1[legacy_ck] = calc_checksum(&span);
+
+        let mut legacy = canonical.clone();
+        legacy[bank1_start..bank1_start + SRAM_BANK_SIZE_LAYOUT].copy_from_slice(&bank1);
+
+        let back = import_sram(&legacy).expect("legacy file migrates");
+        assert!(
+            back.player_name.starts_with(&[0x91, 0x82]),
+            "name preserved through the migration: {:?}",
+            back.player_name
+        );
+
+        // Re-export lands on the canonical layout again (round-trip).
+        let re = crate::save::sram_export::export_sram(&back);
+        let re_ck = bank1_start + GAME_DATA_OFFSET + region_len;
+        assert_eq!(
+            re[re_ck],
+            calc_checksum(&re[bank1_start + GAME_DATA_OFFSET..re_ck]),
+            "re-export carries a valid canonical checksum"
+        );
+    }
+
+    /// A corrupted canonical file is NEVER healed by the legacy path.
+    #[test]
+    fn corrupted_canonical_rejected() {
+        let mut sram = make_valid_sram();
+        let name_off = SRAM_BANK_SIZE_LAYOUT + GAME_DATA_OFFSET;
+        for i in 0..11 {
+            sram[name_off + i] = 0x61 + i as u8;
+        }
+        let blank = crate::save::SaveData::new();
+        let region_len = blank.serialize_checksummed_region().len();
+        let ck = SRAM_BANK_SIZE_LAYOUT + GAME_DATA_OFFSET + region_len;
+        let region = sram[SRAM_BANK_SIZE_LAYOUT + GAME_DATA_OFFSET..ck].to_vec();
+        sram[ck] = calc_checksum(&region) ^ 0xFF;
+        assert!(matches!(import_sram(&sram), Err(SaveError::BadChecksum)));
+    }
 }
