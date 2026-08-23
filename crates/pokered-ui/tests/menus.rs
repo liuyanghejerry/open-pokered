@@ -618,13 +618,14 @@ fn naming_player_screen_renders_title_box_underscores_and_keyboard() {
         _ => None,
     }).collect();
     // Box is 20×13 (rows 5..=17): tall enough to also contain the zh pinyin
-    // buffer (row 13) and candidate (row 15) lines, matching naming.gui.
+    // buffer/candidate lines, matching naming.gui.
     assert_eq!(boxes, vec![TileRect::new(0, 5, 20, 13)]);
 
     let texts = collect_texts(&rec.ops);
-    assert!(texts.contains(&(1, 1, "YOUR NAME?".into())));
-    assert!(texts.contains(&(10, 3, "".into())));
-    assert!(texts.contains(&(2, 11, "lower case".into())));
+    // Title and name box are centered on the 20-column screen.
+    assert!(texts.contains(&(5, 1, "YOUR NAME?".into())));
+    assert!(texts.contains(&(6, 3, "".into())));
+    assert!(texts.contains(&(2, 16, "lower case".into())));
 
     let tiles = collect_gb_tiles(&rec.ops);
     let underscore_tiles: Vec<_> = tiles.iter().filter(|(_, ty, _, _)| *ty == 4).collect();
@@ -632,7 +633,8 @@ fn naming_player_screen_renders_title_box_underscores_and_keyboard() {
     let raised_count = underscore_tiles.iter().filter(|(_, _, id, _)| *id == naming_tiles::RAISED_UNDERSCORE).count();
     assert_eq!(raised_count, 1, "Empty name → first slot is raised underscore");
 
-    let keyboard_tiles: Vec<_> = tiles.iter().filter(|(_, ty, _, _)| *ty >= 6 && *ty <= 10).collect();
+    // Alphabet rows are spaced 2 rows apart (6,8,10,12,14) in alphabet mode.
+    let keyboard_tiles: Vec<_> = tiles.iter().filter(|(_, ty, _, _)| *ty >= 6 && *ty <= 14 && *ty % 2 == 0).collect();
     let cursor_tiles: Vec<_> = keyboard_tiles.iter().filter(|(_, _, id, _)| *id == naming_tiles::CURSOR_ARROW).collect();
     assert_eq!(cursor_tiles.len(), 1);
     assert_eq!((cursor_tiles[0].0, cursor_tiles[0].1), (1, 6), "Initial cursor at (1,6) = KEYBOARD_X-1, KEYBOARD_Y");
@@ -649,7 +651,7 @@ fn naming_pinyin_rows_stay_inside_keyboard_box() {
     menus::naming::draw(&state, &NAMING_DEFAULT_LAYOUT, &mut Ui::new(&mut rec), true);
 
     // The keyboard box (0,5,20,13) has its interior on rows 6..=16; the pinyin
-    // buffer (row 13) and candidates (row 15) must land inside it.
+    // buffer (row 12) and candidates (rows 14/16) must land inside it.
     let interior_max_ty = 5 + 13 - 2;
     for op in &rec.ops {
         let ty = match op {
@@ -661,8 +663,8 @@ fn naming_pinyin_rows_stay_inside_keyboard_box() {
         }
     }
     let texts = collect_texts(&rec.ops);
-    assert!(texts.iter().any(|(_, ty, t)| *ty == 13 && t.starts_with("拼音")));
-    assert!(texts.iter().any(|(_, ty, t)| *ty == 15 && t.contains('你')));
+    assert!(texts.iter().any(|(_, ty, t)| *ty == 12 && t.starts_with("拼音")));
+    assert!(texts.iter().any(|(_, ty, t)| (*ty == 14 || *ty == 16) && t.contains('你')));
 }
 
 #[test]
@@ -671,7 +673,7 @@ fn naming_rival_screen_uses_rival_title() {
     let mut rec = Recorder::default();
     menus::naming::draw(&state, &NAMING_DEFAULT_LAYOUT, &mut Ui::new(&mut rec), false);
     let texts = collect_texts(&rec.ops);
-    assert!(texts.contains(&(1, 1, "RIVAL's NAME?".into())));
+    assert!(texts.contains(&(3, 1, "RIVAL's NAME?".into())));
 }
 
 #[test]
@@ -680,7 +682,7 @@ fn naming_pokemon_screen_uses_nickname_title() {
     let mut rec = Recorder::default();
     menus::naming::draw(&state, &NAMING_DEFAULT_LAYOUT, &mut Ui::new(&mut rec), false);
     let texts = collect_texts(&rec.ops);
-    assert!(texts.contains(&(1, 1, "NICKNAME?".into())));
+    assert!(texts.contains(&(5, 1, "NICKNAME?".into())));
 }
 
 #[test]
@@ -693,7 +695,7 @@ fn naming_lowercase_toggle_shows_upper_case_label_when_in_lowercase() {
     let mut rec = Recorder::default();
     menus::naming::draw(&state, &NAMING_DEFAULT_LAYOUT, &mut Ui::new(&mut rec), false);
     let texts = collect_texts(&rec.ops);
-    let case_label = texts.iter().find(|(tx, ty, _)| *tx == 2 && *ty == 11);
+    let case_label = texts.iter().find(|(tx, ty, _)| *tx == 2 && *ty == 16);
     assert!(case_label.is_some());
     assert!(case_label.unwrap().2 == "UPPER CASE" || case_label.unwrap().2 == "lower case",
         "case row label must toggle between cases, got {:?}", case_label);
@@ -709,9 +711,9 @@ fn naming_cursor_on_case_row_renders_arrow_at_keyboard_x_minus_one() {
     menus::naming::draw(&state, &NAMING_DEFAULT_LAYOUT, &mut Ui::new(&mut rec), false);
     let tiles = collect_gb_tiles(&rec.ops);
     let case_row_arrows: Vec<_> = tiles.iter()
-        .filter(|(tx, ty, id, _)| *ty == 11 && *tx == 1 && *id == naming_tiles::CURSOR_ARROW)
+        .filter(|(tx, ty, id, _)| *ty == 16 && *tx == 1 && *id == naming_tiles::CURSOR_ARROW)
         .collect();
-    assert_eq!(case_row_arrows.len(), 1, "case row cursor must be at (1, 11)");
+    assert_eq!(case_row_arrows.len(), 1, "case row cursor must be at (1, 16)");
 }
 
 // ── Battle menu tests ──
