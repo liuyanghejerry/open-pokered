@@ -1,6 +1,54 @@
 # Pokémon Red/Blue — Rust Reimplementation
 
-A faithful reimplementation of Pokémon Red and Blue in Rust, based on the [pret/pokered](https://github.com/pret/pokered) disassembly. This repo is **game-only**: the generic **JRPG engine** lives in a separate repository and is consumed here as a Cargo **git dependency** (`dotzuki-engine`, `dotzuki-engine-dsl`, `dotzuki-engine-script`, `dotzuki-rules`, `dotzuki-renderer`, `dotzuki-ui`, `dotzuki-audio`, `dotzuki-app`, `dotzuki-tui` — see `Cargo.toml`, all pinned to a `v0.5.2` tag of the engine repo).
+<p align="center">
+  <img src="docs/screenshots/readme/title.png" alt="Title screen" width="480">
+</p>
+
+A faithful reimplementation of **Pokémon Red and Blue** in **Rust**, built from the [pret/pokered](https://github.com/pret/pokered) disassembly — playable on **desktop, web, Android, and iOS** from a single codebase, and shipping with a full **visual editor suite** for maps, data, UI layouts, and saves.
+
+This repo is **game-only**: the generic **JRPG engine** lives in a separate repository and is consumed here as a Cargo **git dependency** (`dotzuki-engine`, `dotzuki-engine-dsl`, `dotzuki-engine-script`, `dotzuki-rules`, `dotzuki-renderer`, `dotzuki-ui`, `dotzuki-audio`, `dotzuki-app`, `dotzuki-tui` — see `Cargo.toml`, all pinned to a `v0.5.2` tag of the engine repo).
+
+## Screenshots
+
+<p align="center">
+  <img src="docs/screenshots/readme/overworld.png" alt="Overworld" width="360">
+  <img src="docs/screenshots/readme/battle.png" alt="Battle" width="360">
+</p>
+<p align="center">
+  <img src="docs/screenshots/readme/town-map.png" alt="Town map" width="360">
+  <img src="docs/screenshots/readme/oak.png" alt="Professor Oak" width="360">
+</p>
+
+## Highlights
+
+- **Faithful to the original** — all 248 maps, 151 species, moves, items, and game logic rebuilt from the disassembly, with ongoing fidelity audits (`docs/FIDELITY_GAPS.md`)
+- **Cross-platform** — native desktop app, WASM web build, Android and iOS shells
+- **Authentic audio** — Game Boy APU emulation (`pokered-audio`)
+- **Hackable by design** — per-map JavaScript scripts, a DSL for UI layouts, and JSON-driven game data
+- **Full editor suite** — map editor, Pokémon/move/trainer data editors, UI layout editor with live preview, save editor, sprite tools, and an AI assistant
+
+## Editor Suite
+
+`tools/pokered-editor/` is a Vue/Vite application (with an Electron shell) for editing every aspect of the game.
+
+<p align="center">
+  <img src="docs/screenshots/readme/editor-map.png" alt="Map editor" width="720">
+</p>
+<p align="center">
+  <img src="docs/screenshots/readme/editor-pokemon.png" alt="Pokémon editor" width="720">
+</p>
+<p align="center">
+  <img src="docs/screenshots/readme/editor-layout.png" alt="Layout editor" width="720">
+</p>
+<p align="center">
+  <img src="docs/screenshots/readme/editor-playtest.png" alt="Live playtest inside the editor" width="720">
+</p>
+
+```bash
+cd tools/pokered-editor
+pnpm install
+pnpm dev        # or: pnpm electron:dev
+```
 
 ## Getting started
 
