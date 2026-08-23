@@ -13,22 +13,22 @@ pub fn draw<P: Painter>(state: &SaveMenuState, layout: &SaveDefaultLayout, ask_l
         // Each static label is followed by its dynamic value to preserve
         // operation order (verified by save test suite).
         frame.label(labels[0].tx, labels[0].ty, lang_data::ui_label(&labels[0].text, is_zh), labels[0].color);
-        frame.label(7, 1, &state.info.player_name, InkColor::Black);
+        frame.label(4, 1, &state.info.player_name, InkColor::Black);
 
         frame.label(labels[1].tx, labels[1].ty, lang_data::ui_label(&labels[1].text, is_zh), labels[1].color);
         let badges = format!("{}", state.info.num_badges);
-        frame.label(12, 3, &badges, InkColor::Black);
+        frame.label(8, 3, &badges, InkColor::Black);
 
         frame.label(labels[2].tx, labels[2].ty, lang_data::ui_label(&labels[2].text, is_zh), labels[2].color);
         let dex = format!("{}", state.info.pokedex_owned);
-        frame.label(11, 5, &dex, InkColor::Black);
+        frame.label(7, 5, &dex, InkColor::Black);
 
         frame.label(labels[3].tx, labels[3].ty, lang_data::ui_label(&labels[3].text, is_zh), labels[3].color);
         let time = format!(
             "{:>3}:{:02}",
             state.info.play_time_hours, state.info.play_time_minutes
         );
-        frame.label(8, 7, &time, InkColor::Black);
+        frame.label(3, 7, &time, InkColor::Black);
     });
 
     // ── Phase-specific drawing ────────────────────────────────────

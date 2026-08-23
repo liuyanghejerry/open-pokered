@@ -1944,11 +1944,11 @@ mod tests {
     const GOLDEN_POKEDEX: u64              = 0xa57ba6970d36f9ed;
     const GOLDEN_YES_NO: u64               = 0x1e909ba6b5d931c5;
     const GOLDEN_OAK_SPEECH: u64           = 0x7a144f18ff89940c;
-    const GOLDEN_SAVE: u64                 = 0xb7155169d0120a44;
+    const GOLDEN_SAVE: u64                 = 0xa62187784cbe4dc5;
     const GOLDEN_OPTIONS: u64              = 0xcb4d404c05f57d94;
     const GOLDEN_NAMING: u64               = 0xbb00f08b6b7ebb65;
     const GOLDEN_BATTLE_MAIN: u64          = 0xf3505dc326671255;
-    const GOLDEN_BATTLE_PARTY: u64         = 0xb4d0d35185567b6c;
+    const GOLDEN_BATTLE_PARTY: u64         = 0xda6a7ef34b8a8574;
 
     macro_rules! assert_golden {
         ($name:expr, $mock:expr, $golden:ident) => {

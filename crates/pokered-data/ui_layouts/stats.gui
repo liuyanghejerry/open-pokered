@@ -1,9 +1,9 @@
 screen Stats {
   text("{name}") {
-    rect = {tx: 10, ty: 1, tw: 9, th: 1}
+    rect = {tx: 5, ty: 1, tw: 10, th: 1}
   }
   text(":L{level}") {
-    rect = {tx: 15, ty: 2, tw: 4, th: 1}
+    rect = {tx: 15, ty: 1, tw: 4, th: 1}
   }
   text(@t("HP:", "HP：")) {
     rect = {tx: 9, ty: 3, tw: 3, th: 1}
