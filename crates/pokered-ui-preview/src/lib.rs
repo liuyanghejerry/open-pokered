@@ -1931,6 +1931,10 @@ mod tests {
     // is now RgbaIndexedFrameBuffer<GbColor> (2bpp indexed with RGBA facade),
     // which changed the output bytes. Frames were dumped and visually verified
     // (main/options/dialog/bag/save/naming/battle_*) before locking these in.
+    // NOTE: naming re-recorded after the naming-screen layout tuning (centered
+    // title/name box, letter rows spaced 2 apart, pinyin buffer/candidate rows
+    // reflowed) plus the underscore-tile rendering fix in
+    // pokered-ui::backends::framebuffer — output verified by eye.
     const GOLDEN_MAIN: u64                 = 0x555c2241622d304c;
     const GOLDEN_START: u64                = 0xc6b47deb954abba5;
     const GOLDEN_DIALOG: u64               = 0x70fcd165c797e06c;
@@ -1942,7 +1946,7 @@ mod tests {
     const GOLDEN_OAK_SPEECH: u64           = 0x7a144f18ff89940c;
     const GOLDEN_SAVE: u64                 = 0xb7155169d0120a44;
     const GOLDEN_OPTIONS: u64              = 0xcb4d404c05f57d94;
-    const GOLDEN_NAMING: u64               = 0x89ad8c5c5fd0be84;
+    const GOLDEN_NAMING: u64               = 0xbb00f08b6b7ebb65;
     const GOLDEN_BATTLE_MAIN: u64          = 0xf3505dc326671255;
     const GOLDEN_BATTLE_PARTY: u64         = 0xb4d0d35185567b6c;
 

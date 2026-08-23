@@ -121,6 +121,15 @@ impl<'fb> Painter for FrameBufferPainter<'fb> {
             0x7D => draw_box_tile(&box_tiles::BOTTOM_LEFT, &box_tiles::outside::BOTTOM_LEFT, px, py, ink, bg, self.fb),
             0x7E => draw_box_tile(&box_tiles::BOTTOM_RIGHT, &box_tiles::outside::BOTTOM_RIGHT, px, py, ink, bg, self.fb),
             0x7F => fill_tile(px, py, bg, self.fb),
+            // Naming-screen underscore tiles. The BDF fallback glyph for '_'
+            // is drawn below the 8×8 tile grid (10px cell, y_off -1), so it
+            // would land on the row below; draw a crisp full-width underline
+            // instead. 0x76 = normal slot, 0x77 = raised (current editing slot).
+            0x76 | 0x77 => {
+                fill_tile(px, py, bg, self.fb);
+                let line_y = if tile_id == 0x77 { py + 4 } else { py + 6 };
+                self.fb.fill_rect(px, line_y, TILE_SIZE_PX, 1, ink);
+            }
             // Unknown tile id — fall back to the placeholder text glyph.
             _ => draw_text(fallback, px, py, ink, self.fb),
         }

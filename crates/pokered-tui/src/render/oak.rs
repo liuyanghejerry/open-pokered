@@ -5,7 +5,6 @@ use pokered_core::oak_speech::{
     INTRO_PIC_SLID_X, SHRINK_BEAT_CLEARED_END, SHRINK_BEAT_PIC1_END, SHRINK_BEAT_PIC2_END,
     SHRINK_BEAT_RED_END,
 };
-use pokered_data::charmap::naming_tiles;
 use pokered_renderer::embedded_font::draw_text;
 use pokered_renderer::palette::GRAYSCALE_PALETTE;
 use pokered_renderer::resource::{AssetCategory, ResourceManager};
@@ -280,10 +279,13 @@ pub fn draw_oak_speech(
     }
 }
 
-const NAME_BOX_X: u32 = 10;
 const NAME_BOX_Y: u32 = 3;
 const KEYBOARD_X: u32 = 2;
 const KEYBOARD_Y: u32 = 6;
+/// Letter rows are spaced 2 rows (6,8,10,12,14) so the panel interior is
+/// filled edge to edge; the case label sits on the last interior row (16).
+const ROW_STEP: u32 = 2;
+const CASE_ROW_GAP: u32 = 2;
 
 pub fn draw_naming_screen(
     naming: &NamingScreenState,
@@ -291,21 +293,24 @@ pub fn draw_naming_screen(
 ) {
     fb.clear(Rgba::WHITE);
 
-    draw_text_box(fb, 0, 5 * TILE_SIZE, 18, 9, Rgba::BLACK);
+    // 20×13 tile box: border on rows 5 and 17, interior rows 6..=16.
+    draw_text_box(fb, 0, 5 * TILE_SIZE, 18, 11, Rgba::BLACK);
 
     let title = match naming.screen_type() {
         pokered_core::naming_screen::NamingScreenType::Player => "YOUR NAME?",
         pokered_core::naming_screen::NamingScreenType::Rival => "RIVAL's NAME?",
         pokered_core::naming_screen::NamingScreenType::Pokemon => "NICKNAME?",
     };
-    draw_text(title, TILE_SIZE, TILE_SIZE, Rgba::BLACK, fb);
+    let title_x = (20 - title.chars().count() as u32) / 2;
+    draw_text(title, title_x * TILE_SIZE, TILE_SIZE, Rgba::BLACK, fb);
 
     let name = naming.name();
     let max_len = naming.max_length();
 
+    let name_box_x = (20 - max_len as u32) / 2;
     draw_text(
         name,
-        NAME_BOX_X * TILE_SIZE,
+        name_box_x * TILE_SIZE,
         NAME_BOX_Y * TILE_SIZE,
         Rgba::BLACK,
         fb,
@@ -318,21 +323,15 @@ pub fn draw_naming_screen(
         let is_filled = i < name_len;
         let is_current = i == name_len;
 
-        let underscore_tile_id = if is_current && !is_filled {
-            naming_tiles::RAISED_UNDERSCORE
+        // Draw a crisp full-width underline: the BDF '_' glyph sits below the
+        // 8×8 tile grid (10px cell, y_off -1) and would land on the row below.
+        // 0x76 = normal slot, 0x77 = raised (current editing slot).
+        let line_y = if is_current && !is_filled {
+            underscore_y + 4
         } else {
-            naming_tiles::UNDERSCORE
+            underscore_y + 6
         };
-
-        if let Some(ch) = pokered_data::charmap::decode_char(underscore_tile_id) {
-            draw_text(
-                ch,
-                (NAME_BOX_X + i) * TILE_SIZE,
-                underscore_y,
-                Rgba::BLACK,
-                fb,
-            );
-        }
+        fb.fill_rect((name_box_x + i) * TILE_SIZE, line_y, TILE_SIZE, 1, Rgba::BLACK);
     }
 
     let alphabet = naming.current_alphabet();
@@ -340,7 +339,7 @@ pub fn draw_naming_screen(
     let cursor_col = naming.cursor_col();
 
     for (row_i, row) in alphabet.iter().enumerate() {
-        let y = (KEYBOARD_Y + row_i as u32) * TILE_SIZE;
+        let y = (KEYBOARD_Y + row_i as u32 * ROW_STEP) * TILE_SIZE;
         for (col_i, &tile_id) in row.iter().enumerate() {
             let x = (KEYBOARD_X + col_i as u32 * 2) * TILE_SIZE;
 
@@ -353,7 +352,7 @@ pub fn draw_naming_screen(
         }
     }
 
-    let case_row_y = (KEYBOARD_Y + GRID_ROWS as u32) * TILE_SIZE;
+    let case_row_y = (KEYBOARD_Y + (GRID_ROWS as u32 - 1) * ROW_STEP + CASE_ROW_GAP) * TILE_SIZE;
     if cursor_row == GRID_ROWS {
         draw_text(
             "▶",

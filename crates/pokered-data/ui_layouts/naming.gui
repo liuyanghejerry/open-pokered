@@ -1,33 +1,40 @@
 screen Naming {
+  // Title is centered by its own width (10 tiles for "YOUR NAME?").
   text("{prompt_text}") {
-    rect = {tx: 1, ty: 1, tw: 12, th: 1}
+    rect = {tx: 5, ty: 1, tw: 10, th: 1}
   }
+  // Name entry box centered by max length (7 player/rival, 10 nickname).
   text("{entered_name}") {
-    rect = {tx: 9, ty: 3, tw: 10, th: 1}
+    rect = {tx: 6, ty: 3, tw: 7, th: 1}
   }
   panel {
     rect = {tx: 0, ty: 5, tw: 20, th: 13}
     style = "default"
   }
+  // Alphabet rows step 2 apart (6,8,10,12,14): even rhythm, no dead space.
   text("A B C D E F G H I") {
-    rect = {tx: 2, ty: 7, tw: 17, th: 1}
+    rect = {tx: 2, ty: 6, tw: 17, th: 1}
   }
   text("J K L M N O P Q R") {
-    rect = {tx: 2, ty: 9, tw: 17, th: 1}
+    rect = {tx: 2, ty: 8, tw: 17, th: 1}
   }
   text("S T U V W X Y Z") {
-    rect = {tx: 2, ty: 11, tw: 17, th: 1}
+    rect = {tx: 2, ty: 10, tw: 17, th: 1}
   }
   text("* ( ) : ; [ ] - ?") {
-    rect = {tx: 2, ty: 13, tw: 17, th: 1}
+    rect = {tx: 2, ty: 12, tw: 17, th: 1}
   }
+  text("- ? ! ♂ ♀ / . , ED") {
+    rect = {tx: 2, ty: 14, tw: 17, th: 1}
+  }
+  // Case toggle is the last interior row (16).
   text(@t("lower case", "小写")) {
-    rect = {tx: 2, ty: 15, tw: 12, th: 1}
+    rect = {tx: 2, ty: 16, tw: 12, th: 1}
   }
-  text(@t("END", "结束")) {
-    rect = {tx: 14, ty: 15, tw: 4, th: 1}
-  }
+  // Cursor arrow sits one column left of the focused letter.
   tile(223) {
-    rect = {tx: 1, ty: 7, tw: 1, th: 1}
+    rect = {tx: 1, ty: 6, tw: 1, th: 1}
   }
+  // In pinyin mode (zh) the letter rows collapse to 6..=10 and the bottom
+  // rows hold the pinyin buffer (12) and candidate lines (14/16).
 }
