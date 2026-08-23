@@ -10,7 +10,9 @@ import os
 import re
 from pathlib import Path
 
-BASE_DIR = Path("/Users/liuyanghejerry/develop/pokered/workspace/crates/pokered-data/src")
+# Resolved relative to this script so the tool works from any checkout.
+REPO_ROOT = Path(__file__).resolve().parent.parent
+BASE_DIR = REPO_ROOT / "crates/pokered-data/src"
 
 def snake_case(name):
     """Convert PascalCase to snake_case"""

@@ -1,8 +1,8 @@
 # Content parity audit — items · moves · pokemon · hidden events · text
 
 Date: 2026-08-14 · Audit only, no fixes applied.
-Reference: pret/pokered master (`/Users/liuyanghejerry/develop/pokered`, abbreviated **REF**).
-Remake: open-pokered dotzuki engine (`/Users/liuyanghejerry/develop/open-pokered`, abbreviated **RMK**).
+Reference: pret/pokered master (`<pret/pokered checkout>`, abbreviated **REF**).
+Remake: open-pokered dotzuki engine (`<this repo checkout>`, abbreviated **RMK**).
 Method: standalone comparators for items/moves/pokemon; hidden events seeded from
 `tools/audit_parity.py --domain maps` (`[no-sign]` lines) and cross-checked per map against
 `script.scene` / `script_config.json` / `hidden_items.rs`; text compared per-map from

@@ -1,6 +1,6 @@
 # Text-domain parity audit — open-pokered (dotzuki) vs pret/pokered
 
-Date: 2026-08-14. Reference: `/Users/liuyanghejerry/develop/pokered` (master). Remake: `/Users/liuyanghejerry/develop/open-pokered`.
+Date: 2026-08-14. Reference: `<pret/pokered checkout>` (master). Remake: `<this repo checkout>`.
 Audit only — no fixes made. `tools/audit_parity.py` untouched; standalone comparators and raw extracts under `/tmp/audit_text/`.
 Excluded per scope: fonts/glyphs, Chinese translation content (English presence/structure audited), battle ANIMATION data (already 100% via `scripts/verify_battle_anim_data.py`), cries, and intentional adaptations already documented in `docs/fidelity-audit-2026-08.md`.
 

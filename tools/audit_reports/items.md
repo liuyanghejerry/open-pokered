@@ -1,7 +1,7 @@
 # Content Parity Audit — items / moves / pokemon / hidden_events / text
 
-Reference: pret/pokered master (`/Users/liuyanghejerry/develop/pokered`).
-Remake: open-pokered (`/Users/liuyanghejerry/develop/open-pokered`).
+Reference: pret/pokered master (`<pret/pokered checkout>`).
+Remake: open-pokered (`<this repo checkout>`).
 Audit scripts: `/tmp/parity/{items,moves,pokemon,objects,hidden_classify}.py`, `/tmp/parity/text.py` (full text list: `/tmp/parity/text_report.md`).
 
 ## Summary counts

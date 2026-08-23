@@ -6,7 +6,7 @@ text/{Map}.asm (text_far targets). The remake stores the defeat line on the
 npc's `endBattleText` field (line breaks as \\n).
 
 Usage:
-    python3 tools/fill_trainer_texts.py --ref /Users/liuyanghejerry/develop/pokered [--apply]
+    python3 tools/fill_trainer_texts.py --ref <pret/pokered checkout> [--apply]
 """
 import argparse
 import json

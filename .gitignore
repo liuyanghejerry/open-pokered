@@ -108,3 +108,7 @@ crates/pokered-app/heal_machine_frame_*.png
 crates/pokered-app/party_screen_*.png
 crates/pokered-app/stats_page1_*.png
 crates/pokered-app/stats_page2_*.png
+# game-frame captures of copyrighted Pokemon graphics — never commit
+crates/pokered-app/evolution_*.png
+crates/pokered-app/fishing_*.png
+crates/pokered-app/ss_anne_*.png

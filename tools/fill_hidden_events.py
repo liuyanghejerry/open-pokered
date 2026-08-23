@@ -7,7 +7,7 @@ triggered by facing the tile), plus scene wiring for gym statues / PCs / slot
 machines. Chinese translations are left empty — the English source is canonical.
 
 Usage:
-    python3 tools/fill_hidden_events.py --ref /Users/liuyanghejerry/develop/pokered [--apply] [--dry-run]
+    python3 tools/fill_hidden_events.py --ref <pret/pokered checkout> [--apply] [--dry-run]
 """
 import argparse
 import json
