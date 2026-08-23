@@ -348,26 +348,26 @@ fn save_menu_ask_phase_draws_info_box_prompt_box_and_yes_no_box() {
     let mut ui = Ui::new(&mut rec);
     menus::save::draw(&state, &SAVE_DEFAULT_LAYOUT, &SAVE_ASK_PROMPT_LAYOUT, &mut ui, Lang::default());
 
-    // Three boxes: info (4,0,15,10), prompt (0,11,20,6), yes/no (13,7,6,4).
+    // Three boxes: info (1,0,12,10), prompt (0,11,20,6), yes/no (13,7,6,4).
     assert_eq!(collect_boxes(&rec.ops), vec![
-        TileRect::new(4, 0, 15, 10),
+        TileRect::new(1, 0, 12, 10),
         TileRect::new(0, 11, 20, 6),
         TileRect::new(13, 7, 6, 4),
     ]);
 
-    // Info labels at exact original tile positions: PLAYER (5,2), name (12,2),
-    // BADGES (5,4), num (17,4), #DEX (5,6), dex (16,6), TIME (5,8), time (13,8).
+    // Info labels at exact original tile positions: PLAYER (2,2), name (6,2),
+    // BADGES (2,4), num (10,4), #DEX (2,6), dex (9,6), TIME (2,8), time (5,8).
     // Prompt: "Would you like to" (1,12), "SAVE the game?" (1,14).
     // YES/NO: "YES" (15,8), "NO" (15,9).
     assert_eq!(collect_texts(&rec.ops), vec![
-        (5, 2, "PLAYER".into()),
-        (12, 2, "RED".into()),
-        (5, 4, "BADGES".into()),
-        (17, 4, "3".into()),
-        (5, 6, "#DEX".into()),
-        (16, 6, "42".into()),
-        (5, 8, "TIME".into()),
-        (13, 8, " 12:34".into()),
+        (2, 2, "PLAYER".into()),
+        (6, 2, "RED".into()),
+        (2, 4, "BADGES".into()),
+        (10, 4, "3".into()),
+        (2, 6, "#DEX".into()),
+        (9, 6, "42".into()),
+        (2, 8, "TIME".into()),
+        (5, 8, " 12:34".into()),
         (1, 12, "Would you like to".into()),
         (1, 14, "SAVE the game?".into()),
         (15, 8, "YES".into()),
@@ -404,7 +404,7 @@ fn save_menu_confirm_overwrite_uses_same_layout_as_ask() {
     // ConfirmOverwrite reuses AskSave's three boxes and prompt — original
     // game uses the identical layout for both phases.
     assert_eq!(collect_boxes(&rec.ops), vec![
-        TileRect::new(4, 0, 15, 10),
+        TileRect::new(1, 0, 12, 10),
         TileRect::new(0, 11, 20, 6),
         TileRect::new(13, 7, 6, 4),
     ]);
@@ -424,7 +424,7 @@ fn save_menu_saving_phase_shows_only_now_saving_in_prompt_box() {
 
     // Two boxes only — info box + prompt box; no YES/NO during saving.
     assert_eq!(collect_boxes(&rec.ops), vec![
-        TileRect::new(4, 0, 15, 10),
+        TileRect::new(1, 0, 12, 10),
         TileRect::new(0, 11, 18, 4),
     ]);
     assert_eq!(collect_glyphs(&rec.ops), Vec::<(u32,u32,char)>::new());
@@ -450,7 +450,7 @@ fn save_menu_complete_phase_shows_player_saved_the_game() {
 
     // Same layout as Saving — info box + prompt box, no cursor.
     assert_eq!(collect_boxes(&rec.ops), vec![
-        TileRect::new(4, 0, 15, 10),
+        TileRect::new(1, 0, 12, 10),
         TileRect::new(0, 11, 18, 4),
     ]);
     assert_eq!(collect_glyphs(&rec.ops), Vec::<(u32,u32,char)>::new());
@@ -953,13 +953,13 @@ fn battle_party_single_pokemon_renders_name_and_hp() {
     let mut ui = Ui::new(&mut rec);
     battle_party::draw(&[mon], 0, &BATTLE_PARTY_DEFAULT_LAYOUT, &mut ui, false);
 
-    assert_eq!(collect_boxes(&rec.ops), vec![TileRect::new(1, 13, 18, 5)]);
+    assert_eq!(collect_boxes(&rec.ops), vec![TileRect::new(1, 12, 18, 6)]);
 
     let texts = collect_texts(&rec.ops);
-    assert!(texts.contains(&(3, 15, "CHARIZARD 150/200".into())),
+    assert!(texts.contains(&(3, 13, "CHARIZARD 150/200".into())),
         "expected CHARIZARD 150/200, got {:?}", texts);
 
-    assert_eq!(collect_glyphs(&rec.ops), vec![(2, 15, '\u{25B6}')]);
+    assert_eq!(collect_glyphs(&rec.ops), vec![(2, 13, '\u{25B6}')]);
 }
 
 #[test]
@@ -969,7 +969,7 @@ fn battle_party_fainted_shows_fnt() {
     let mut ui = Ui::new(&mut rec);
     battle_party::draw(&[mon], 0, &BATTLE_PARTY_DEFAULT_LAYOUT, &mut ui, false);
 
-    assert!(collect_texts(&rec.ops).contains(&(3, 15, "SNORLAX FNT".into())),
+    assert!(collect_texts(&rec.ops).contains(&(3, 13, "SNORLAX FNT".into())),
         "fainted mon should show FNT");
 }
 
@@ -985,7 +985,7 @@ fn battle_party_cursor_follows_selection() {
     let mut ui = Ui::new(&mut rec);
     battle_party::draw(&party, 1, &BATTLE_PARTY_DEFAULT_LAYOUT, &mut ui, false);
 
-    assert_eq!(collect_glyphs(&rec.ops), vec![(2, 16, '\u{25B6}')]);
+    assert_eq!(collect_glyphs(&rec.ops), vec![(2, 14, '\u{25B6}')]);
 }
 
 #[test]
@@ -1004,13 +1004,13 @@ fn battle_party_scrolls_when_more_than_four_pokemon() {
     battle_party::draw(&party, 5, &BATTLE_PARTY_DEFAULT_LAYOUT, &mut ui, false);
 
     let texts = collect_texts(&rec.ops);
-    assert!(texts.contains(&(3, 15, "VENUSAUR 100/200".into())));
-    assert!(texts.contains(&(3, 16, "PIKACHU 100/200".into())));
-    assert!(texts.contains(&(3, 17, "SNORLAX 100/200".into())));
-    assert!(texts.contains(&(3, 18, "MEWTWO 100/200".into())));
+    assert!(texts.contains(&(3, 13, "VENUSAUR 100/200".into())));
+    assert!(texts.contains(&(3, 14, "PIKACHU 100/200".into())));
+    assert!(texts.contains(&(3, 15, "SNORLAX 100/200".into())));
+    assert!(texts.contains(&(3, 16, "MEWTWO 100/200".into())));
 
-    // Cursor at index 5 → visual row 4 → abs(2, 18)
-    assert_eq!(collect_glyphs(&rec.ops), vec![(2, 18, '\u{25B6}')]);
+    // Cursor at index 5 → visual row 4 → abs(2, 16)
+    assert_eq!(collect_glyphs(&rec.ops), vec![(2, 16, '\u{25B6}')]);
 }
 
 #[test]
