@@ -20,9 +20,11 @@ use dotzuki_renderer::layout_engine::renderer::render_layout as render_screen;
 
 mod mock_data;
 mod preview_elements;
+mod preview_painter;
 
 use dotzuki_ui::FrameBufferPainter;
 use dotzuki_engine::render::{Painter, Rgba};
+use preview_painter::PreviewPainter;
 
 /// Log a warning message (goes to stderr; in WASM this reaches the browser
 /// console when using `wasm-bindgen` test runner or `console_log`).
@@ -37,11 +39,11 @@ fn log_error(msg: &str) {
 
 fn render_with<F>(draw_fn: F) -> Vec<u8>
 where
-    F: FnOnce(&mut FrameBufferPainter),
+    F: FnOnce(&mut PreviewPainter),
 {
     let mut fb = FrameBuffer::new(RenderConfig::new(160, 144), Rgba::WHITE);
     {
-        let mut painter = FrameBufferPainter::new(&mut fb);
+        let mut painter = PreviewPainter::new(FrameBufferPainter::new(&mut fb));
         painter.clear(Rgba::INK_WHITE);
         draw_fn(&mut painter);
     }
