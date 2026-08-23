@@ -6,7 +6,7 @@
     "default": {
       "cursor": {
         "tx": 0,
-        "base_ty": 1,
+        "base_ty": 0,
         "row_step": 1,
         "glyph": "\u25b6",
         "color": "Black"
@@ -16,9 +16,9 @@
           "id": "box_0",
           "rect": {
             "tx": 1,
-            "ty": 13,
+            "ty": 12,
             "tw": 18,
-            "th": 5
+            "th": 6
           },
           "color": "Black"
         }

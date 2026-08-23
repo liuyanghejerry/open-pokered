@@ -26,7 +26,7 @@ pub fn draw<P: Painter>(party: &[Pokemon], cursor: usize, layout: &BattlePartyDe
                 break;
             }
             let mon = &party[party_idx];
-            let row = 1 + i as u32;
+            let row = i as u32;
 
             let mut name_buf = [0u8; pokered_core::battle::state::NAME_TEXT_BUF];
             let name = mon.display_name(&mut name_buf);
