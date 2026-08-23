@@ -2,7 +2,7 @@
 """Parity audit tool: compare open-pokered content data vs the pret/pokered reference.
 
 Usage:
-    python3 tools/audit_parity.py --ref /Users/liuyanghejerry/develop/pokered \
+    python3 tools/audit_parity.py --ref <pret/pokered checkout> \
         [--domain maps|rods|trainers|shops] [--only-map PalletTown] [--json out.json]
 
 Domains:

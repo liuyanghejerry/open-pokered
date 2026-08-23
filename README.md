@@ -1,6 +1,6 @@
 # Pokémon Red/Blue — Rust Reimplementation
 
-A faithful reimplementation of Pokémon Red and Blue in Rust, based on the [pret/pokered](https://github.com/pret/pokered) disassembly. This repo is **game-only**: the generic **JRPG engine** lives in a separate repository and is consumed here as a Cargo **git dependency** (`dotzuki-engine`, `dotzuki-engine-dsl`, `dotzuki-engine-script`, `dotzuki-rules`, `dotzuki-renderer`, `dotzuki-ui`, `dotzuki-audio`, `dotzuki-app`, `dotzuki-tui` — see `Cargo.toml`, all pinned to a `v0.1.0` tag of the engine repo).
+A faithful reimplementation of Pokémon Red and Blue in Rust, based on the [pret/pokered](https://github.com/pret/pokered) disassembly. This repo is **game-only**: the generic **JRPG engine** lives in a separate repository and is consumed here as a Cargo **git dependency** (`dotzuki-engine`, `dotzuki-engine-dsl`, `dotzuki-engine-script`, `dotzuki-rules`, `dotzuki-renderer`, `dotzuki-ui`, `dotzuki-audio`, `dotzuki-app`, `dotzuki-tui` — see `Cargo.toml`, all pinned to a `v0.5.2` tag of the engine repo).
 
 ## Getting started
 
@@ -15,7 +15,7 @@ cargo run --release --bin pokered-app
 cargo test
 ```
 
-The engine is consumed as a Cargo git dependency: `https://github.com/liuyanghejerry/dotzuki`, pinned to tag `v0.5.1` (see the `Cargo.toml` of each crate). After pulling a new engine tag, bump the `tag` and run `cargo update`.
+The engine is consumed as a Cargo git dependency: `https://github.com/liuyanghejerry/dotzuki`, pinned to tag `v0.5.2` (see the `Cargo.toml` of each crate). After pulling a new engine tag, bump the `tag` and run `cargo update`.
 
 ## What this repo contains
 

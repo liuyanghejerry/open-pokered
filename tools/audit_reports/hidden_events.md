@@ -1,6 +1,6 @@
 # hidden_events parity audit — pret/pokered vs open-pokered (dotzuki)
 
-Audit-only report. Ref: `/Users/liuyanghejerry/develop/pokered` (pret/pokered master). Remake: this repo.
+Audit-only report. Ref: `<pret/pokered checkout>` (pret/pokered master). Remake: this repo.
 Scope: items, moves, pokemon, hidden events/map triggers, dialogue text. Excluded: fonts/glyphs,
 Chinese translation content, battle animation ids (already verified by `scripts/verify_battle_anim_data.py`),
 intentional adaptations already documented in `docs/fidelity-audit-2026-08.md` (marked `[documented]` /
@@ -182,7 +182,7 @@ Structural notes (no value impact):
 
 # 4. Hidden events / map triggers
 
-Seed: `python3 tools/audit_parity.py --ref /Users/liuyanghejerry/develop/pokered --domain maps`
+Seed: `python3 tools/audit_parity.py --ref <pret/pokered checkout> --domain maps`
 (119 `[no-sign]` lines).
 
 ## 4a. Missing hidden events (ref `data/events/hidden_events.asm`)

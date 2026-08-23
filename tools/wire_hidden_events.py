@@ -6,7 +6,7 @@
 - slot machines-> one openSlots() storyline covering every machine sign
 
 Usage:
-    python3 tools/wire_hidden_events.py --ref /Users/liuyanghejerry/develop/pokered [--apply]
+    python3 tools/wire_hidden_events.py --ref <pret/pokered checkout> [--apply]
 """
 import argparse
 import json

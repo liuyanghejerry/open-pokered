@@ -1,6 +1,6 @@
 # Pokémon Content Parity Audit — items / moves / pokemon / hidden_events / text
 
-Date: 2026-08-14. Reference: pret/pokered master (`/Users/liuyanghejerry/develop/pokered`). Remake: open-pokered (this repo). Method: per-domain comparator scripts under `/tmp/pokemon_audit/<domain>/` (audit only; no files in either repo were modified). Excluded per scope: fonts/glyphs, Chinese text content, battle animation data (already verified 100%), and engine-architecture adaptations documented in `docs/fidelity-audit-2026-08.md`.
+Date: 2026-08-14. Reference: pret/pokered master (`<pret/pokered checkout>`). Remake: open-pokered (this repo). Method: per-domain comparator scripts under `/tmp/pokemon_audit/<domain>/` (audit only; no files in either repo were modified). Excluded per scope: fonts/glyphs, Chinese text content, battle animation data (already verified 100%), and engine-architecture adaptations documented in `docs/fidelity-audit-2026-08.md`.
 
 ## Summary counts
 
