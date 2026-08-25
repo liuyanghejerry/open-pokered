@@ -19,7 +19,7 @@
 
 use pokered_core::gamefreak_splash::{GameFreakSplashState, SplashPhase};
 use pokered_data::layout_constants;
-use pokered_renderer::embedded_font::draw_text;
+use pokered_renderer::embedded_font::{draw_text, measure_text};
 use pokered_renderer::palette::{PaletteState, GRAYSCALE_PALETTE};
 use pokered_renderer::resource::ResourceManager;
 use pokered_renderer::tile::TileSet;
@@ -41,11 +41,12 @@ pub fn draw_gamefreak_splash(
     fb.clear(Rgba::WHITE);
 
     if state.phase == SplashPhase::BlackDelay {
-        // `LoadCopyrightTiles` (engine/movie/title.asm:375-387): hlcoord 2,7
-        // → px (16,56), one `next` (8 px) per line.
+        // Copyright lines, left-aligned at x=16 (hlcoord 2,7 in the original);
+        // the 10-px font needs 10-px line spacing (the old 8-px tile font
+        // used 8-px spacing and would overlap now).
         draw_text("©'95.'96.'98 Nintendo", 16, 56, Rgba::BLACK, fb);
-        draw_text("©'95.'96.'98 Creatures inc.", 16, 64, Rgba::BLACK, fb);
-        draw_text("©'95.'96.'98 GAME FREAK inc.", 16, 72, Rgba::BLACK, fb);
+        draw_text("©'95.'96.'98 Creatures inc.", 16, 66, Rgba::BLACK, fb);
+        draw_text("©'95.'96.'98 GAME FREAK inc.", 16, 76, Rgba::BLACK, fb);
         return;
     }
 
@@ -61,8 +62,9 @@ pub fn draw_gamefreak_splash(
             let ts = logo.tileset.clone();
             blit_tileset(fb, &ts, LOGO_SCREEN_X, LOGO_SCREEN_Y, 2, &logo_pal);
         }
-        // "GAME FREAK" wordmark (10 tiles → 80 px wide, centered).
-        draw_text("GAME FREAK", 40, WORDMARK_SCREEN_Y, Rgba::BLACK, fb);
+        // "GAME FREAK" wordmark, centered on the screen width.
+        let wordmark_x = (fb.width() - measure_text("GAME FREAK")) / 2;
+        draw_text("GAME FREAK", wordmark_x, WORDMARK_SCREEN_Y, Rgba::BLACK, fb);
 
         if let Some((oam_x, oam_y)) = state.big_star_oam() {
             if let Ok(star) = rm.load_splash("falling_star") {
@@ -101,7 +103,8 @@ pub fn draw_gamefreak_splash(
             }
         }
     } else {
-        draw_text("GAME FREAK", 40, WORDMARK_SCREEN_Y, Rgba::BLACK, fb);
+        let wordmark_x = (fb.width() - measure_text("GAME FREAK")) / 2;
+        draw_text("GAME FREAK", wordmark_x, WORDMARK_SCREEN_Y, Rgba::BLACK, fb);
     }
 }
 
