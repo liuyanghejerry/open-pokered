@@ -54,10 +54,13 @@ pub fn draw<P: Painter>(state: &NamingScreenState, layout: &NamingDefaultLayout,
         let max_len = state.max_length() as u32;
         let name_tx = (SCREEN_TW - max_len) / 2;
 
-        let name_len = state.name().len() as u32;
+        // Fill one underscore slot per width unit (ASCII 1, CJK 2) — NOT one
+        // per byte or per char: a 3-CJK name fills 6 of 7 slots and shows the
+        // raised cursor on the last free one.
+        let name_units = state.used_units() as u32;
         for i in 0..max_len {
-            let is_filled = i < name_len;
-            let is_current = i == name_len;
+            let is_filled = i < name_units;
+            let is_current = i == name_units;
             let tile_id = if is_current && !is_filled {
                 naming_tiles::RAISED_UNDERSCORE
             } else {

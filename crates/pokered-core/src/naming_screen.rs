@@ -22,8 +22,14 @@
 //! pinyin buffer and refreshes the candidates; d-pad into the strip and
 //! A commits the highlighted candidate to the name. After a commit the
 //! cursor returns to the last typed letter, ready for the next syllable.
-//! Length limits count characters (`chars().count()`), not bytes — CJK
-//! names get the same 7/10-character budget as ASCII ones.
+//!
+//! # Name length is a width budget, not a character count
+//!
+//! `max_length()` (7/10) counts width units: an ASCII character costs 1
+//! (5px glyph in an 8px slot), a CJK character costs 2 (10px full-width
+//! glyph — two slots). A player name therefore holds up to 7 ASCII or 3
+//! CJK characters, a nickname 10 ASCII or 5 CJK — mirroring how the
+//! original's byte-sized NAME_LENGTH behaves under a DBCS encoding.
 
 use pokered_data::charmap::naming_tiles;
 use pokered_data::pinyin_dict;
@@ -35,11 +41,33 @@ pub enum InputMode {
     Pinyin,
 }
 
-/// Max name length for player/rival (excluding terminator).
+/// Max name length for player/rival (excluding terminator), in width
+/// units — see the module docs. 7 units = 7 ASCII or 3 CJK characters.
 pub const PLAYER_NAME_MAX: usize = 7;
 
-/// Max name length for Pokémon nickname (excluding terminator).
+/// Max name length for Pokémon nickname (excluding terminator), in width
+/// units — see the module docs. 10 units = 10 ASCII or 5 CJK characters.
 pub const MON_NAME_MAX: usize = 10;
+
+/// Width units a CJK character costs against the name budget.
+pub const CJK_UNITS: usize = 2;
+
+/// Width units `ch` costs against the name budget: 2 for CJK-block
+/// characters (radicals U+2E80 and up — ideographs, kana, Hangul — which
+/// render 10px full-width), 1 for everything else (ASCII and the Latin-1
+/// punctuation the alphabet grid offers, which render 5px half-width).
+pub fn char_units(ch: char) -> usize {
+    if (ch as u32) >= 0x2E80 {
+        CJK_UNITS
+    } else {
+        1
+    }
+}
+
+/// Total width units of `name`.
+pub fn name_units(name: &str) -> usize {
+    name.chars().map(char_units).sum()
+}
 
 /// Alphabet grid dimensions.
 pub const GRID_ROWS: usize = 5;
@@ -220,6 +248,12 @@ impl NamingScreenState {
         self.screen_type.max_length()
     }
 
+    /// Width units the name currently occupies (ASCII 1, CJK 2) — the
+    /// renderer fills this many underscore slots.
+    pub fn used_units(&self) -> usize {
+        name_units(&self.name)
+    }
+
     pub fn is_lowercase(&self) -> bool {
         self.lowercase
     }
@@ -352,19 +386,22 @@ impl NamingScreenState {
     /// letter to the pinyin buffer.
     fn pinyin_a_press(&mut self) -> NamingScreenResult {
         if self.cursor_row >= PINYIN_GRID_ROWS {
-            // Candidate strip: commit the highlighted character.
+            // Candidate strip: commit the highlighted character. A CJK
+            // candidate costs 2 width units; it is only appended when the
+            // budget still covers it.
             let idx = (self.cursor_row - PINYIN_GRID_ROWS) * CANDIDATES_PER_LINE + self.cursor_col;
             let Some(&ch) = self.pinyin_candidates.get(idx) else {
                 return NamingScreenResult::Editing;
             };
-            if self.name.chars().count() < self.max_length() {
+            if self.used_units() + char_units(ch) <= self.max_length() {
                 self.name.push(ch);
             }
             self.pinyin_buf.clear();
             self.pinyin_candidates.clear();
-            if self.name.chars().count() >= self.max_length() {
-                // Name full: behave like the alphabet path — leave pinyin
-                // mode with the cursor on the ED tile.
+            if self.max_length().saturating_sub(self.used_units()) < CJK_UNITS {
+                // No room left for another CJK character — the same
+                // contract as the alphabet path filling every slot: leave
+                // pinyin mode with the cursor on the ED tile.
                 self.input_mode = InputMode::Alphabet;
                 self.cursor_row = 4;
                 self.cursor_col = 8;
@@ -451,17 +488,18 @@ impl NamingScreenState {
             return self.submit_result();
         }
 
-        // Normal character — add to name if space remains
+        // Normal character — add to name if space remains (grid characters
+        // cost 1 width unit each).
         let tile_id = self.current_alphabet()[self.cursor_row][self.cursor_col];
 
         // Convert tile ID to char and add to name
         if let Some(c) = pokered_data::charmap::decode_char(tile_id) {
             let ch = c.chars().next().unwrap_or(' ');
-            if self.name.chars().count() < self.max_length() {
+            if self.used_units() < self.max_length() {
                 self.name.push(ch);
 
                 // Per ASM: when all spaces filled, force cursor to ED tile
-                if self.name.chars().count() >= self.max_length() {
+                if self.used_units() >= self.max_length() {
                     self.cursor_row = 4;
                     self.cursor_col = 8;
                 }
