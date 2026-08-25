@@ -395,3 +395,39 @@ fn pinyin_letter_does_not_auto_submit_or_touch_name() {
     // A letter press must not submit or alter the name; it only fills the buffer.
     assert_eq!(state.name(), "");
 }
+
+#[test]
+fn pinyin_left_right_moves_cursor_without_candidates() {
+    let mut state = NamingScreenState::new(NamingScreenType::Player);
+    state.update_frame(input_select(), true); // → Pinyin
+    assert_eq!(state.cursor_row(), 0);
+    assert_eq!(state.cursor_col(), 0);
+    // With no candidates, right moves the grid cursor (previously swallowed).
+    state.update_frame(input_right(), true);
+    assert_eq!(state.cursor_col(), 1);
+    state.update_frame(input_left(), true);
+    assert_eq!(state.cursor_col(), 0);
+    // Left wraps to the last column.
+    state.update_frame(input_left(), true);
+    assert_eq!(state.cursor_col(), GRID_COLS - 1);
+}
+
+#[test]
+fn pinyin_left_right_cycles_candidates_when_present() {
+    let mut state = NamingScreenState::new(NamingScreenType::Player);
+    state.update_frame(input_select(), true); // → Pinyin
+    state.update_frame(input_right(), true); // no candidates → move to col1 'B'
+    assert_eq!(state.cursor_col(), 1);
+    state.update_frame(input_a(), true); // type 'b' → multiple candidates
+    assert!(!state.pinyin_candidates.is_empty());
+    assert!(state.pinyin_candidates.len() >= 2, "lookup('b') should have multiple candidates");
+    assert_eq!(state.candidate_idx, 0);
+    assert_eq!(state.cursor_col(), 1);
+    // With candidates present, right cycles candidate_idx and leaves the cursor alone.
+    state.update_frame(input_right(), true);
+    assert_eq!(state.candidate_idx, 1);
+    assert_eq!(state.cursor_col(), 1);
+    state.update_frame(input_left(), true);
+    assert_eq!(state.candidate_idx, 0);
+    assert_eq!(state.cursor_col(), 1);
+}

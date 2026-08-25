@@ -277,14 +277,24 @@ impl NamingScreenState {
             return NamingScreenResult::Editing;
         }
         if input.left {
-            if has_candidates && self.candidate_idx > 0 {
-                self.candidate_idx -= 1;
+            if has_candidates {
+                if self.candidate_idx > 0 {
+                    self.candidate_idx -= 1;
+                }
+            } else {
+                // No candidates yet: left/right move the grid cursor to pick a
+                // different letter rather than being swallowed.
+                self.move_left();
             }
             return NamingScreenResult::Editing;
         }
         if input.right {
-            if has_candidates && self.candidate_idx + 1 < self.pinyin_candidates.len() {
-                self.candidate_idx += 1;
+            if has_candidates {
+                if self.candidate_idx + 1 < self.pinyin_candidates.len() {
+                    self.candidate_idx += 1;
+                }
+            } else {
+                self.move_right();
             }
             return NamingScreenResult::Editing;
         }
