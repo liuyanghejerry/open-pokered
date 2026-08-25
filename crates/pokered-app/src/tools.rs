@@ -24,9 +24,10 @@ pub fn cmd_screenshot(target: &ScreenTarget, output: &PathBuf, frames: u32) {
     let version = GameVersion::Red;
     let mut game = PokemonGame::new(version);
     let screen = screen_target_to_game_screen(target);
+    let label = if matches!(target, ScreenTarget::Naming) { "naming" } else { screen_name(&screen) };
     println!(
         "Capturing screen: {} ({} frames)...",
-        screen_name(&screen),
+        label,
         frames
     );
     if matches!(target, ScreenTarget::Pc) {
@@ -79,9 +80,67 @@ pub fn cmd_screenshot(target: &ScreenTarget, output: &PathBuf, frames: u32) {
         println!("Saved: {}", output.display());
         return;
     }
+    if matches!(target, ScreenTarget::Naming) {
+        // The pinyin naming screen only exists mid-oak-speech with the
+        // Chinese language selected. Seed the config, drop into the
+        // player-naming phase, and drive the IME into a representative
+        // state. This branch runs its own transition→seed→update→draw loop
+        // because capture_screen() would handle_transition() — which resets
+        // the oak speech — after the seeding.
+        use pokered_core::game_state::Lang;
+        use pokered_core::oak_speech::OakSpeechPhase;
+
+        game.handle_transition(GameScreen::OakSpeech);
+        game.state.config.language = Lang::Zh;
+        game.oak_speech.phase = OakSpeechPhase::PlayerNaming;
+        game.oak_speech.naming_screen = Some(seed_naming_screen());
+        let input = InputState::new();
+        for _ in 0..frames {
+            game.update(&input);
+        }
+        let mut fb = FrameBuffer::new(RenderConfig::new(160, 144), Rgba::WHITE);
+        game.draw(&mut fb);
+        fb.save_png(output).expect("Failed to save PNG");
+        println!("Saved: {}", output.display());
+        return;
+    }
     let fb = capture_screen(&mut game, screen, frames);
     fb.save_png(output).expect("Failed to save PNG");
     println!("Saved: {}", output.display());
+}
+
+/// Seed the naming screen state machine into a representative pinyin-IME
+/// frame: name "阿阿" (two committed candidates), buffer "zh" with its
+/// candidate strip, cursor resting on the H tile.
+fn seed_naming_screen() -> pokered_core::naming_screen::NamingScreenState {
+    use pokered_core::naming_screen::{NamingInput, NamingScreenState, NamingScreenType};
+
+    let a = NamingInput { a: true, ..NamingInput::none() };
+    let select = NamingInput { select: true, ..NamingInput::none() };
+    let down = NamingInput { down: true, ..NamingInput::none() };
+    let up = NamingInput { up: true, ..NamingInput::none() };
+    let right = NamingInput { right: true, ..NamingInput::none() };
+
+    let mut ns = NamingScreenState::new(NamingScreenType::Player);
+    ns.update_frame(select, true); // → pinyin mode
+    for _ in 0..2 {
+        ns.update_frame(a, true); // type 'a' at (0,0)
+        for _ in 0..3 {
+            ns.update_frame(down, true); // rows 0→1→2→candidate strip
+        }
+        ns.update_frame(a, true); // commit 阿
+    }
+    // Type "zh": after each commit the cursor returns to (0,0).
+    ns.update_frame(down, true); // (1,0)
+    ns.update_frame(down, true); // (2,0)
+    for _ in 0..7 {
+        ns.update_frame(right, true); // (2,7) = Z
+    }
+    ns.update_frame(a, true); // 'z'
+    ns.update_frame(up, true); // (1,7)
+    ns.update_frame(up, true); // (0,7) = H
+    ns.update_frame(a, true); // 'h'
+    ns
 }
 
 pub fn cmd_screenshot_all(output_dir: &PathBuf, frames: u32) {
