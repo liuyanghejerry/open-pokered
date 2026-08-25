@@ -49,7 +49,6 @@ pub fn draw<P: Painter>(state: &NamingScreenState, layout: &NamingDefaultLayout,
         // Name box centered by max length (7 for player/rival, 10 for nick).
         let max_len = state.max_length() as u32;
         let name_tx = (SCREEN_TW - max_len) / 2;
-        frame.label(name_tx, NAME_BOX_TY, state.name(), InkColor::Black);
 
         let name_len = state.name().len() as u32;
         for i in 0..max_len {
@@ -63,6 +62,12 @@ pub fn draw<P: Painter>(state: &NamingScreenState, layout: &NamingDefaultLayout,
             let fallback = decode_char(tile_id).unwrap_or("_");
             frame.gb_tile(name_tx + i, UNDERSCORE_TY, tile_id, fallback, InkColor::Black);
         }
+
+        // Draw the name AFTER the underscore slots. The Fusion Pixel glyphs
+        // are 10px tall (one 8px tile row plus a couple of pixels below), so
+        // they extend into the underscore row; drawing them last keeps the
+        // underscore slots' background fill from clipping the glyph bottoms.
+        frame.label(name_tx, NAME_BOX_TY, state.name(), InkColor::Black);
 
         let alphabet = state.current_alphabet();
         let cursor_row = state.cursor_row();
