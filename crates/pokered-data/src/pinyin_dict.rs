@@ -1,18 +1,28 @@
 //! Pinyin → Chinese character lookup table for the naming screen.
 //! Maps pinyin romanization (without tone marks) to CJK characters
 //! available in the Fusion Pixel 10px font.
+//!
+//! 377 syllable entries covering 1097 distinct characters (1105 readings —
+//! a few characters have multiple syllables, e.g. 长 chang/zhang). The
+//! `ü` syllables are stored as their keyboard-typable forms `lv`/`nv`
+//! (the naming screen has no way to type `ü`).
 
 /// Maximum candidates to show at once.
 pub const MAX_CANDIDATES: usize = 9;
 
 /// Search the pinyin dictionary for characters matching a romanization prefix.
-/// Returns up to `MAX_CANDIDATES` matches.
+/// Returns up to `MAX_CANDIDATES` matches, in table order (syllables are
+/// sorted alphabetically, so shorter/more-common spellings surface first).
 pub fn lookup_pinyin(prefix: &str) -> Vec<char> {
+    // An empty prefix matches every entry; the state machine must never
+    // surface candidates for an empty buffer.
+    if prefix.is_empty() {
+        return Vec::new();
+    }
     let prefix = prefix.to_lowercase();
     PINYIN_TABLE
         .iter()
         .filter(|(py, _)| py.starts_with(&prefix))
-        .take(MAX_CANDIDATES * 3)
         .flat_map(|(_, chars)| chars.chars())
         .take(MAX_CANDIDATES)
         .collect()
@@ -33,12 +43,12 @@ const PINYIN_TABLE: &[(&str, &str)] = &[
     ("bao", "宝暴爆抱"),
     ("bei", "北被贝"),
     ("ben", "本"),
-    ("bi", "比比必闭壁避笔"),
+    ("bi", "比必闭壁避笔"),
     ("bian", "边变"),
     ("biao", "表"),
     ("bie", "别"),
     ("bing", "冰兵"),
-    ("bo", "波伯博博士"),
+    ("bo", "波伯博士"),
     ("bu", "不布步"),
     ("cai", "才彩"),
     ("can", "参蚕"),
@@ -185,10 +195,10 @@ const PINYIN_TABLE: &[(&str, &str)] = &[
     ("long", "龙隆"),
     ("lou", "楼"),
     ("lu", "路陆录鹿露"),
-    ("lü", "绿"),
     ("luan", "乱"),
     ("lun", "论轮"),
     ("luo", "罗落螺"),
+    ("lv", "绿"),
     ("ma", "马吗麻码"),
     ("mai", "买麦"),
     ("man", "满慢漫蔓"),
@@ -226,8 +236,8 @@ const PINYIN_TABLE: &[(&str, &str)] = &[
     ("nong", "农浓"),
     ("nu", "怒"),
     ("nuan", "暖"),
-    ("nü", "女"),
     ("nuo", "诺"),
+    ("nv", "女"),
     ("o", "哦"),
     ("ou", "偶"),
     ("pa", "怕爬"),
@@ -356,7 +366,7 @@ const PINYIN_TABLE: &[(&str, &str)] = &[
     ("yi", "一已以亿义艺忆议异易意翼衣医"),
     ("yin", "引阴音银隐印饮"),
     ("ying", "应英影迎硬映"),
-    ("yong", "用永泳勇涌泳"),
+    ("yong", "用永泳勇涌"),
     ("you", "由有又右油游优"),
     ("yu", "于与予余鱼雨语玉育预域遇御愈"),
     ("yuan", "元员原圆援远愿院源"),
@@ -399,3 +409,93 @@ const PINYIN_TABLE: &[(&str, &str)] = &[
     ("zun", "尊"),
     ("zuo", "左作坐座做"),
 ];
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn lookup_exact_syllable() {
+        assert_eq!(lookup_pinyin("a"), vec!['阿', '爱', '安', '暗', '昂', '奥']);
+        assert_eq!(lookup_pinyin("zhong"), vec!['中', '终', '种', '重', '众']);
+    }
+
+    #[test]
+    fn lookup_prefix_matches_sorted_syllables() {
+        // Prefix "zh" flattens the zh* entries in table order, capped at 9.
+        assert_eq!(
+            lookup_pinyin("zh"),
+            vec!['扎', '炸', '摘', '占', '战', '站', '展', '张', '章']
+        );
+    }
+
+    #[test]
+    fn lookup_is_case_insensitive() {
+        assert_eq!(lookup_pinyin("ZHONG"), lookup_pinyin("zhong"));
+    }
+
+    #[test]
+    fn lookup_caps_at_max_candidates() {
+        for prefix in ["", "z", "zh", "y", "s"] {
+            assert!(
+                lookup_pinyin(prefix).len() <= MAX_CANDIDATES,
+                "prefix {prefix:?} exceeded the candidate cap"
+            );
+        }
+    }
+
+    #[test]
+    fn lookup_returns_no_duplicates() {
+        // The candidate strip is cursor-navigated; a repeated char would waste
+        // a slot. Cross-syllable repeats (长 in chang+zhang) must not collide
+        // within one prefix result.
+        for prefix in ["l", "n", "z", "zh", "sh", "yi", "yu"] {
+            let result = lookup_pinyin(prefix);
+            let mut seen = std::collections::HashSet::new();
+            assert!(
+                result.iter().all(|ch| seen.insert(*ch)),
+                "prefix {prefix:?} yielded duplicate candidates: {result:?}"
+            );
+        }
+    }
+
+    #[test]
+    fn lookup_empty_for_unknown_prefix() {
+        assert!(lookup_pinyin("").is_empty());
+        assert!(lookup_pinyin("xy").is_empty());
+        assert!(lookup_pinyin("q0").is_empty());
+    }
+
+    #[test]
+    fn lv_nv_aliases_reachable() {
+        // The naming screen cannot type ü; 绿/女 must be reachable via the
+        // keyboard-typable lv/nv spellings.
+        assert_eq!(lookup_pinyin("lv"), vec!['绿']);
+        assert_eq!(lookup_pinyin("nv"), vec!['女']);
+    }
+
+    #[test]
+    fn table_entries_are_sorted_and_ascii() {
+        // Sorted order is what makes prefix lookups surface common
+        // syllables first; non-ASCII keys would be untypable.
+        for pair in PINYIN_TABLE.windows(2) {
+            assert!(pair[0].0 < pair[1].0, "table not sorted at {}", pair[0].0);
+            assert!(
+                pair[0].0.is_ascii(),
+                "non-ASCII syllable key {:?}",
+                pair[0].0
+            );
+        }
+    }
+
+    #[test]
+    fn table_entries_have_no_duplicate_chars() {
+        for (py, chars) in PINYIN_TABLE {
+            let mut seen = std::collections::HashSet::new();
+            assert!(
+                chars.chars().all(|ch| seen.insert(ch)),
+                "entry {py:?} lists a character twice: {chars}"
+            );
+        }
+    }
+}

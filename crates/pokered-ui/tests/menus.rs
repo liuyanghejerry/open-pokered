@@ -651,7 +651,7 @@ fn naming_pinyin_rows_stay_inside_keyboard_box() {
     menus::naming::draw(&state, &NAMING_DEFAULT_LAYOUT, &mut Ui::new(&mut rec), true);
 
     // The keyboard box (0,5,20,13) has its interior on rows 6..=16; the pinyin
-    // buffer (row 12) and candidates (rows 14/16) must land inside it.
+    // buffer (row 10) and candidates (rows 12/14) must land inside it.
     let interior_max_ty = 5 + 13 - 2;
     for op in &rec.ops {
         let ty = match op {
@@ -663,8 +663,8 @@ fn naming_pinyin_rows_stay_inside_keyboard_box() {
         }
     }
     let texts = collect_texts(&rec.ops);
-    assert!(texts.iter().any(|(_, ty, t)| *ty == 12 && t.starts_with("拼音")));
-    assert!(texts.iter().any(|(_, ty, t)| (*ty == 14 || *ty == 16) && t.contains('你')));
+    assert!(texts.iter().any(|(_, ty, t)| *ty == 10 && t.starts_with("拼音")));
+    assert!(texts.iter().any(|(_, ty, t)| (*ty == 12 || *ty == 14) && t.contains('你')));
 }
 
 #[test]
