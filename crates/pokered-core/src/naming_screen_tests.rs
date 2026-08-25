@@ -518,36 +518,93 @@ fn pinyin_b_pops_name_when_buffer_empty() {
 }
 
 #[test]
-fn pinyin_full_cjk_name_reaches_char_limit_not_byte_limit() {
-    // Regression: the limit used name.len() (bytes), capping CJK names at
-    // 7/3 ≈ 2-3 characters. It must count characters.
+fn pinyin_cjk_name_fits_three_chars_in_seven_units() {
+    // A CJK character costs 2 width units against the 7-unit player budget:
+    // three CJK characters fill 6/7, and the 4th cannot fit — the IME exits
+    // to the ED tile like the alphabet path does when every slot fills.
     let mut state = pinyin_state(NamingScreenType::Player);
-    for _ in 0..7 {
-        state.update_frame(input_a(), true); // type 'a' (cursor back at A)
+    for _ in 0..3 {
+        state.update_frame(input_a(), true); // type 'a'
         enter_strip(&mut state);
         state.update_frame(input_a(), true); // commit 阿
     }
-    assert_eq!(state.name().chars().count(), PLAYER_NAME_MAX);
-    assert_eq!(state.name().len(), 21, "7 CJK chars are 21 UTF-8 bytes");
-    // Like the alphabet path: name full → leave pinyin, cursor on the ED tile.
+    assert_eq!(state.name(), "阿阿阿");
+    assert_eq!(state.used_units(), 6);
     assert_eq!(state.input_mode, InputMode::Alphabet);
     assert_eq!((state.cursor_row(), state.cursor_col()), (4, 8));
-    // A now submits the completed name.
+    // A on the ED tile submits the 3-character name.
     let result = state.update_frame(input_a(), true);
-    assert_eq!(result, NamingScreenResult::Submitted("阿阿阿阿阿阿阿".to_string()));
+    assert_eq!(result, NamingScreenResult::Submitted("阿阿阿".to_string()));
 }
 
 #[test]
-fn pinyin_pokemon_limit_is_ten_chars() {
+fn pinyin_pokemon_fits_five_cjk_chars() {
     let mut state = pinyin_state(NamingScreenType::Pokemon);
-    for _ in 0..MON_NAME_MAX {
+    for _ in 0..5 {
         state.update_frame(input_a(), true);
         enter_strip(&mut state);
         state.update_frame(input_a(), true);
     }
-    assert_eq!(state.name().chars().count(), MON_NAME_MAX);
-    assert_eq!(state.name().len(), 30, "10 CJK chars are 30 UTF-8 bytes");
+    assert_eq!(state.name().chars().count(), 5);
+    assert_eq!(state.used_units(), MON_NAME_MAX);
     assert_eq!(state.input_mode, InputMode::Alphabet);
+    assert_eq!((state.cursor_row(), state.cursor_col()), (4, 8));
+}
+
+#[test]
+fn pinyin_cjk_rejected_when_one_unit_remains() {
+    // 2 CJK (4 units) + 2 ASCII (2 units) = 6/7; one unit remains, which
+    // cannot hold a 2-unit CJK character — the commit is dropped and the
+    // IME exits to ED with the name unchanged.
+    let mut state = pinyin_state(NamingScreenType::Player);
+    for _ in 0..2 {
+        state.update_frame(input_a(), true);
+        enter_strip(&mut state);
+        state.update_frame(input_a(), true); // 阿
+    }
+    state.update_frame(input_select(), true); // → alphabet
+    for _ in 0..2 {
+        state.update_frame(input_a(), true); // 'A' ×2 (cursor stays at A)
+    }
+    assert_eq!(state.name(), "阿阿AA");
+    state.update_frame(input_select(), true); // → pinyin again
+    state.update_frame(input_a(), true); // type 'a'
+    enter_strip(&mut state);
+    let result = state.update_frame(input_a(), true); // attempt 阿
+    assert_eq!(result, NamingScreenResult::Editing);
+    assert_eq!(state.name(), "阿阿AA", "one unit cannot hold a CJK char");
+    assert_eq!(state.input_mode, InputMode::Alphabet);
+    assert_eq!((state.cursor_row(), state.cursor_col()), (4, 8));
+}
+
+#[test]
+fn mixed_width_name_fills_exact_units_and_forces_ed() {
+    // 1 CJK (2 units) + 5 ASCII = 7/7 exactly: the alphabet path must force
+    // the cursor onto the ED tile, same as 7 ASCII characters.
+    let mut state = pinyin_state(NamingScreenType::Player);
+    state.update_frame(input_a(), true);
+    enter_strip(&mut state);
+    state.update_frame(input_a(), true); // 阿 (2 units)
+    state.update_frame(input_select(), true); // → alphabet (cursor on A)
+    for _ in 0..5 {
+        state.update_frame(input_a(), true); // 'A' ×5
+    }
+    assert_eq!(state.name(), "阿AAAAA");
+    assert_eq!(state.used_units(), PLAYER_NAME_MAX);
+    assert_eq!((state.cursor_row(), state.cursor_col()), (4, 8));
+}
+
+#[test]
+fn char_units_classifies_widths() {
+    assert_eq!(char_units('A'), 1);
+    assert_eq!(char_units('z'), 1);
+    assert_eq!(char_units('é'), 1, "Latin-1 specials are half-width");
+    assert_eq!(char_units('♂'), 1, "GB symbol tiles are half-width");
+    assert_eq!(char_units('阿'), CJK_UNITS);
+    assert_eq!(char_units('中'), CJK_UNITS);
+    assert_eq!(name_units("Red"), 3);
+    assert_eq!(name_units("小明"), 4);
+    assert_eq!(name_units("小M明"), 5);
 }
 
 #[test]

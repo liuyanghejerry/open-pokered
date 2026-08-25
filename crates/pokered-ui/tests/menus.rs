@@ -668,6 +668,36 @@ fn naming_pinyin_rows_stay_inside_keyboard_box() {
 }
 
 #[test]
+fn naming_cjk_name_fills_underscore_slots_by_width_units() {
+    // Regression: the filled-slot count used name.len() (bytes — 2 CJK chars
+    // lit 6 slots). It must use width units: 2 CJK chars = 4 slots, so the
+    // raised cursor sits on slot 4 (tx = name_tx 6 + 4).
+    let mut state = NamingScreenState::new(NamingScreenType::Player);
+    state.update_frame(NamingInput { select: true, ..NamingInput::none() }, true);
+    for _ in 0..2 {
+        state.update_frame(NamingInput { a: true, ..NamingInput::none() }, true); // type 'a'
+        for _ in 0..3 {
+            state.update_frame(NamingInput { down: true, ..NamingInput::none() }, true); // rows 0→1→2→strip
+        }
+        state.update_frame(NamingInput { a: true, ..NamingInput::none() }, true); // commit 阿
+    }
+    assert_eq!(state.name(), "阿阿");
+
+    let mut rec = Recorder::default();
+    menus::naming::draw(&state, &NAMING_DEFAULT_LAYOUT, &mut Ui::new(&mut rec), true);
+
+    let tiles = collect_gb_tiles(&rec.ops);
+    let underscore_tiles: Vec<_> = tiles.iter().filter(|(_, ty, _, _)| *ty == 4).collect();
+    assert_eq!(underscore_tiles.len(), 7);
+    let raised: Vec<_> = underscore_tiles
+        .iter()
+        .filter(|(_, _, id, _)| *id == naming_tiles::RAISED_UNDERSCORE)
+        .collect();
+    assert_eq!(raised.len(), 1);
+    assert_eq!(raised[0].0, 10, "raised slot at name_tx(6) + 4 units, not bytes(6) or chars(2)");
+}
+
+#[test]
 fn naming_rival_screen_uses_rival_title() {
     let state = NamingScreenState::new(NamingScreenType::Rival);
     let mut rec = Recorder::default();
