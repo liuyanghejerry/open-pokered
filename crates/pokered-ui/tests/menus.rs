@@ -716,6 +716,34 @@ fn naming_cursor_on_case_row_renders_arrow_at_keyboard_x_minus_one() {
     assert_eq!(case_row_arrows.len(), 1, "case row cursor must be at (1, 16)");
 }
 
+#[test]
+fn naming_name_text_is_drawn_after_underscores() {
+    // Regression: the Fusion Pixel glyphs are 10px tall — one 8px tile row
+    // plus a couple of pixels below — so the name bleeds into the underscore
+    // row. If the underscore slots were drawn after the name, their background
+    // fill would clip the bottom of the name. `draw()` must emit the name text
+    // op AFTER the underscore tile ops so the name renders on top.
+    let mut state = NamingScreenState::new(NamingScreenType::Player);
+    state.update_frame(NamingInput { a: true, ..NamingInput::none() }, false); // 'A'
+    state.update_frame(NamingInput { right: true, ..NamingInput::none() }, false);
+    state.update_frame(NamingInput { a: true, ..NamingInput::none() }, false); // 'B'
+    assert_eq!(state.name(), "AB");
+
+    let mut rec = Recorder::default();
+    menus::naming::draw(&state, &NAMING_DEFAULT_LAYOUT, &mut Ui::new(&mut rec), false);
+
+    let name_text_index = rec.ops.iter().position(|op| {
+        matches!(op, Op::Text(pos, s, _) if pos.ty == 3 && s == "AB")
+    }).expect("name text op at row 3");
+    let last_underscore_index = rec.ops.iter().rposition(|op| {
+        matches!(op, Op::GbTile(pos, id, _, _)
+            if pos.ty == 4 && (*id == naming_tiles::UNDERSCORE || *id == naming_tiles::RAISED_UNDERSCORE))
+    }).expect("underscore tile op at row 4");
+
+    assert!(name_text_index > last_underscore_index,
+        "name text (op {name_text_index}) must be drawn after the underscores (op {last_underscore_index}) so the underscore fill does not clip the glyph bottoms");
+}
+
 // ── Battle menu tests ──
 
 use pokered_core::battle::menu::{
