@@ -352,3 +352,46 @@ fn type_red_and_submit() {
     let result = state.update_frame(input_start(), false);
     assert_eq!(result, NamingScreenResult::Submitted("RED".to_string()));
 }
+
+// --- Pinyin input ---
+
+#[test]
+fn pinyin_type_letter_into_buffer() {
+    let mut state = NamingScreenState::new(NamingScreenType::Player);
+    state.update_frame(input_select(), true); // is_zh → Pinyin mode
+    assert_eq!(state.input_mode, InputMode::Pinyin);
+    // Cursor starts at (0,0) = 'A'; pressing A must append 'a' to the buffer
+    // (previously the letter-typing branch was unreachable, so nothing happened).
+    let result = state.update_frame(input_a(), true);
+    assert_eq!(result, NamingScreenResult::Editing);
+    assert_eq!(state.pinyin_buf, "a");
+    assert!(!state.pinyin_candidates.is_empty(), "lookup('a') should yield 阿");
+    assert_eq!(state.candidate_idx, 0);
+    assert_eq!(state.name(), "");
+}
+
+#[test]
+fn pinyin_select_candidate_after_typing() {
+    let mut state = NamingScreenState::new(NamingScreenType::Player);
+    state.update_frame(input_select(), true); // → Pinyin
+    // Cursor at (0,0) = 'A'; press A to append 'a' to the buffer.
+    state.update_frame(input_a(), true);
+    assert_eq!(state.pinyin_buf, "a");
+    assert!(!state.pinyin_candidates.is_empty(), "lookup('a') should yield candidates");
+    // Press A again → select the first candidate, add it to the name, clear the buffer.
+    let result = state.update_frame(input_a(), true);
+    assert_eq!(result, NamingScreenResult::Editing);
+    assert_eq!(state.name().chars().count(), 1);
+    assert!(state.pinyin_buf.is_empty());
+    assert!(state.pinyin_candidates.is_empty());
+}
+
+#[test]
+fn pinyin_letter_does_not_auto_submit_or_touch_name() {
+    let mut state = NamingScreenState::new(NamingScreenType::Player);
+    state.update_frame(input_select(), true); // → Pinyin
+    let result = state.update_frame(input_a(), true);
+    assert_eq!(result, NamingScreenResult::Editing);
+    // A letter press must not submit or alter the name; it only fills the buffer.
+    assert_eq!(state.name(), "");
+}
