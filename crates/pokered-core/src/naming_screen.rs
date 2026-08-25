@@ -288,23 +288,23 @@ impl NamingScreenState {
             }
             return NamingScreenResult::Editing;
         }
-        if input.a {
-            if has_candidates {
-                let ch = self.pinyin_candidates[self.candidate_idx];
-                if self.name.len() < self.max_length() {
-                    self.name.push(ch);
-                }
-                self.pinyin_buf.clear();
-                self.pinyin_candidates.clear();
-                self.candidate_idx = 0;
-                if self.name.len() >= self.max_length() {
-                    self.input_mode = InputMode::Alphabet;
-                }
-                return NamingScreenResult::Editing;
+        if input.a && has_candidates {
+            let ch = self.pinyin_candidates[self.candidate_idx];
+            if self.name.len() < self.max_length() {
+                self.name.push(ch);
+            }
+            self.pinyin_buf.clear();
+            self.pinyin_candidates.clear();
+            self.candidate_idx = 0;
+            if self.name.len() >= self.max_length() {
+                self.input_mode = InputMode::Alphabet;
             }
             return NamingScreenResult::Editing;
         }
-        // Type letters into pinyin buffer via d-pad selection
+        // Type letters into pinyin buffer via d-pad selection. This also runs
+        // when A is pressed with no candidates — the branch below appends the
+        // selected letter to the buffer (the old code returned early above,
+        // making it impossible to type a pinyin letter at all).
         let tile_id = if self.cursor_row < GRID_ROWS {
             let alphabet = if self.lowercase { &LOWER_ALPHABET } else { &UPPER_ALPHABET };
             Some(alphabet[self.cursor_row][self.cursor_col])
