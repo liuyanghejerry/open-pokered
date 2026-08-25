@@ -354,80 +354,336 @@ fn type_red_and_submit() {
 }
 
 // --- Pinyin input ---
+// Cursor space in pinyin mode: letter rows 0..=2 (A-Z only) followed by up
+// to two candidate-strip rows. See the naming_screen module docs.
+
+/// Letter (row, col) coordinates on the uppercase grid rows 0..=2.
+const A: (usize, usize) = (0, 0);
+const G: (usize, usize) = (0, 6);
+const H: (usize, usize) = (0, 7);
+const I: (usize, usize) = (0, 8);
+const N: (usize, usize) = (1, 4);
+const O: (usize, usize) = (1, 5);
+const Z: (usize, usize) = (2, 7);
+const SPACE: (usize, usize) = (2, 8);
+
+fn pinyin_state(screen_type: NamingScreenType) -> NamingScreenState {
+    let mut state = NamingScreenState::new(screen_type);
+    state.update_frame(input_select(), true); // is_zh → Pinyin mode
+    assert_eq!(state.input_mode, InputMode::Pinyin);
+    state
+}
+
+/// Navigate the pinyin cursor to a letter-row (row, col). Rows and columns
+/// wrap, so pressing up/right repeatedly always reaches the target.
+fn nav_to_letter(state: &mut NamingScreenState, (row, col): (usize, usize)) {
+    for _ in 0..TOTAL_ROWS {
+        if state.cursor_row() == row {
+            break;
+        }
+        state.update_frame(input_up(), true);
+    }
+    assert_eq!(state.cursor_row(), row, "row navigation failed");
+    for _ in 0..GRID_COLS {
+        if state.cursor_col() == col {
+            break;
+        }
+        state.update_frame(input_right(), true);
+    }
+    assert_eq!(state.cursor_col(), col, "col navigation failed");
+}
+
+fn type_letters(state: &mut NamingScreenState, letters: &[(usize, usize)]) {
+    for &pos in letters {
+        nav_to_letter(state, pos);
+        state.update_frame(input_a(), true);
+    }
+}
+
+/// Move the cursor down into the candidate strip (from any letter row).
+fn enter_strip(state: &mut NamingScreenState) {
+    for _ in 0..TOTAL_ROWS {
+        if state.cursor_row() >= PINYIN_GRID_ROWS {
+            return;
+        }
+        state.update_frame(input_down(), true);
+    }
+    panic!("cursor never reached the candidate strip");
+}
 
 #[test]
 fn pinyin_type_letter_into_buffer() {
-    let mut state = NamingScreenState::new(NamingScreenType::Player);
-    state.update_frame(input_select(), true); // is_zh → Pinyin mode
-    assert_eq!(state.input_mode, InputMode::Pinyin);
-    // Cursor starts at (0,0) = 'A'; pressing A must append 'a' to the buffer
-    // (previously the letter-typing branch was unreachable, so nothing happened).
+    let mut state = pinyin_state(NamingScreenType::Player);
+    // Cursor at (0,0) = 'A'; pressing A must append 'a' to the buffer and
+    // list the candidates without touching the name.
     let result = state.update_frame(input_a(), true);
     assert_eq!(result, NamingScreenResult::Editing);
     assert_eq!(state.pinyin_buf, "a");
-    assert!(!state.pinyin_candidates.is_empty(), "lookup('a') should yield 阿");
-    assert_eq!(state.candidate_idx, 0);
+    assert_eq!(state.pinyin_candidates.first(), Some(&'阿'));
     assert_eq!(state.name(), "");
+    assert_eq!((state.cursor_row(), state.cursor_col()), A, "typing keeps the cursor on the letter");
 }
 
 #[test]
-fn pinyin_select_candidate_after_typing() {
-    let mut state = NamingScreenState::new(NamingScreenType::Player);
-    state.update_frame(input_select(), true); // → Pinyin
-    // Cursor at (0,0) = 'A'; press A to append 'a' to the buffer.
-    state.update_frame(input_a(), true);
-    assert_eq!(state.pinyin_buf, "a");
-    assert!(!state.pinyin_candidates.is_empty(), "lookup('a') should yield candidates");
-    // Press A again → select the first candidate, add it to the name, clear the buffer.
-    let result = state.update_frame(input_a(), true);
-    assert_eq!(result, NamingScreenResult::Editing);
-    assert_eq!(state.name().chars().count(), 1);
-    assert!(state.pinyin_buf.is_empty());
-    assert!(state.pinyin_candidates.is_empty());
-}
-
-#[test]
-fn pinyin_letter_does_not_auto_submit_or_touch_name() {
-    let mut state = NamingScreenState::new(NamingScreenType::Player);
-    state.update_frame(input_select(), true); // → Pinyin
-    let result = state.update_frame(input_a(), true);
-    assert_eq!(result, NamingScreenResult::Editing);
-    // A letter press must not submit or alter the name; it only fills the buffer.
-    assert_eq!(state.name(), "");
-}
-
-#[test]
-fn pinyin_left_right_moves_cursor_without_candidates() {
-    let mut state = NamingScreenState::new(NamingScreenType::Player);
-    state.update_frame(input_select(), true); // → Pinyin
-    assert_eq!(state.cursor_row(), 0);
-    assert_eq!(state.cursor_col(), 0);
-    // With no candidates, right moves the grid cursor (previously swallowed).
+fn pinyin_left_right_moves_letter_cursor_without_candidates() {
+    // Regression from PR #13, restated for the unified-cursor model: with no
+    // candidates, left/right move the letter cursor (and wrap) instead of
+    // being swallowed.
+    let mut state = pinyin_state(NamingScreenType::Player);
+    assert_eq!((state.cursor_row(), state.cursor_col()), (0, 0));
     state.update_frame(input_right(), true);
     assert_eq!(state.cursor_col(), 1);
     state.update_frame(input_left(), true);
     assert_eq!(state.cursor_col(), 0);
-    // Left wraps to the last column.
-    state.update_frame(input_left(), true);
+    state.update_frame(input_left(), true); // wraps to the last column
     assert_eq!(state.cursor_col(), GRID_COLS - 1);
 }
 
 #[test]
-fn pinyin_left_right_cycles_candidates_when_present() {
-    let mut state = NamingScreenState::new(NamingScreenType::Player);
-    state.update_frame(input_select(), true); // → Pinyin
-    state.update_frame(input_right(), true); // no candidates → move to col1 'B'
-    assert_eq!(state.cursor_col(), 1);
-    state.update_frame(input_a(), true); // type 'b' → multiple candidates
+fn pinyin_multiletter_syllable() {
+    let mut state = pinyin_state(NamingScreenType::Player);
+    type_letters(&mut state, &[N, I]);
+    assert_eq!(state.pinyin_buf, "ni");
+    assert_eq!(&state.pinyin_candidates[..4], &['你', '尼', '泥', '逆']);
+    assert_eq!(state.name(), "");
+}
+
+#[test]
+fn pinyin_letter_does_not_auto_submit_or_touch_name() {
+    let mut state = pinyin_state(NamingScreenType::Player);
+    let result = state.update_frame(input_a(), true);
+    assert_eq!(result, NamingScreenResult::Editing);
+    assert_eq!(state.name(), "");
+}
+
+#[test]
+fn pinyin_non_letter_tile_is_ignored() {
+    let mut state = pinyin_state(NamingScreenType::Player);
+    type_letters(&mut state, &[Z, H, O, N, G, SPACE]);
+    assert_eq!(state.pinyin_buf, "zhong", "space must not enter the buffer");
+}
+
+#[test]
+fn pinyin_commit_candidate_from_strip() {
+    let mut state = pinyin_state(NamingScreenType::Player);
+    type_letters(&mut state, &[N, I]);
+    enter_strip(&mut state);
+    assert_eq!(state.cursor_row(), PINYIN_GRID_ROWS);
+    assert_eq!(state.cursor_col(), 0);
+    let result = state.update_frame(input_a(), true);
+    assert_eq!(result, NamingScreenResult::Editing);
+    assert_eq!(state.name(), "你");
+    assert!(state.pinyin_buf.is_empty());
+    assert!(state.pinyin_candidates.is_empty());
+    // Cursor returns to the last typed letter, ready for the next syllable.
+    assert_eq!((state.cursor_row(), state.cursor_col()), I);
+}
+
+#[test]
+fn pinyin_commit_candidate_moved_within_strip() {
+    let mut state = pinyin_state(NamingScreenType::Player);
+    type_letters(&mut state, &[Z, H]); // 9 candidates → two strip lines
+    assert_eq!(state.pinyin_candidates.len(), 9);
+    enter_strip(&mut state);
+    state.update_frame(input_right(), true); // second candidate
+    state.update_frame(input_a(), true);
+    assert_eq!(state.name(), "炸");
+
+    // Second line: candidates 6..=8 (展张章) live on strip row 1.
+    let mut state = pinyin_state(NamingScreenType::Player);
+    type_letters(&mut state, &[Z, H]);
+    enter_strip(&mut state);
+    state.update_frame(input_down(), true); // strip line 1, col 0 → 展
+    assert_eq!(state.cursor_row(), PINYIN_GRID_ROWS + 1);
+    state.update_frame(input_a(), true);
+    assert_eq!(state.name(), "展");
+}
+
+#[test]
+fn pinyin_strip_columns_clamp_to_populated_slots() {
+    let mut state = pinyin_state(NamingScreenType::Player);
+    state.update_frame(input_a(), true); // "a" → 6 candidates, one line
+    enter_strip(&mut state);
+    for _ in 0..GRID_COLS {
+        state.update_frame(input_right(), true);
+    }
+    // 9 rights wrap within the 6 populated slots → col 3.
+    assert_eq!(state.cursor_col(), 3);
+}
+
+#[test]
+fn pinyin_b_pops_buffer_letter_and_clears_candidates() {
+    let mut state = pinyin_state(NamingScreenType::Player);
+    type_letters(&mut state, &[N]);
     assert!(!state.pinyin_candidates.is_empty());
-    assert!(state.pinyin_candidates.len() >= 2, "lookup('b') should have multiple candidates");
-    assert_eq!(state.candidate_idx, 0);
-    assert_eq!(state.cursor_col(), 1);
-    // With candidates present, right cycles candidate_idx and leaves the cursor alone.
-    state.update_frame(input_right(), true);
-    assert_eq!(state.candidate_idx, 1);
-    assert_eq!(state.cursor_col(), 1);
-    state.update_frame(input_left(), true);
-    assert_eq!(state.candidate_idx, 0);
-    assert_eq!(state.cursor_col(), 1);
+    state.update_frame(input_b(), true);
+    assert!(state.pinyin_buf.is_empty());
+    assert!(state.pinyin_candidates.is_empty(), "empty buffer must list no candidates");
+}
+
+#[test]
+fn pinyin_b_pops_name_when_buffer_empty() {
+    let mut state = pinyin_state(NamingScreenType::Player);
+    type_letters(&mut state, &[A]);
+    enter_strip(&mut state);
+    state.update_frame(input_a(), true); // commit 阿
+    assert_eq!(state.name(), "阿");
+    state.update_frame(input_b(), true); // buffer empty → pop the name
+    assert_eq!(state.name(), "");
+}
+
+#[test]
+fn pinyin_cjk_name_fits_three_chars_in_seven_units() {
+    // A CJK character costs 2 width units against the 7-unit player budget:
+    // three CJK characters fill 6/7, and the 4th cannot fit — the IME exits
+    // to the ED tile like the alphabet path does when every slot fills.
+    let mut state = pinyin_state(NamingScreenType::Player);
+    for _ in 0..3 {
+        state.update_frame(input_a(), true); // type 'a'
+        enter_strip(&mut state);
+        state.update_frame(input_a(), true); // commit 阿
+    }
+    assert_eq!(state.name(), "阿阿阿");
+    assert_eq!(state.used_units(), 6);
+    assert_eq!(state.input_mode, InputMode::Alphabet);
+    assert_eq!((state.cursor_row(), state.cursor_col()), (4, 8));
+    // A on the ED tile submits the 3-character name.
+    let result = state.update_frame(input_a(), true);
+    assert_eq!(result, NamingScreenResult::Submitted("阿阿阿".to_string()));
+}
+
+#[test]
+fn pinyin_pokemon_fits_five_cjk_chars() {
+    let mut state = pinyin_state(NamingScreenType::Pokemon);
+    for _ in 0..5 {
+        state.update_frame(input_a(), true);
+        enter_strip(&mut state);
+        state.update_frame(input_a(), true);
+    }
+    assert_eq!(state.name().chars().count(), 5);
+    assert_eq!(state.used_units(), MON_NAME_MAX);
+    assert_eq!(state.input_mode, InputMode::Alphabet);
+    assert_eq!((state.cursor_row(), state.cursor_col()), (4, 8));
+}
+
+#[test]
+fn pinyin_cjk_rejected_when_one_unit_remains() {
+    // 2 CJK (4 units) + 2 ASCII (2 units) = 6/7; one unit remains, which
+    // cannot hold a 2-unit CJK character — the commit is dropped and the
+    // IME exits to ED with the name unchanged.
+    let mut state = pinyin_state(NamingScreenType::Player);
+    for _ in 0..2 {
+        state.update_frame(input_a(), true);
+        enter_strip(&mut state);
+        state.update_frame(input_a(), true); // 阿
+    }
+    state.update_frame(input_select(), true); // → alphabet
+    for _ in 0..2 {
+        state.update_frame(input_a(), true); // 'A' ×2 (cursor stays at A)
+    }
+    assert_eq!(state.name(), "阿阿AA");
+    state.update_frame(input_select(), true); // → pinyin again
+    state.update_frame(input_a(), true); // type 'a'
+    enter_strip(&mut state);
+    let result = state.update_frame(input_a(), true); // attempt 阿
+    assert_eq!(result, NamingScreenResult::Editing);
+    assert_eq!(state.name(), "阿阿AA", "one unit cannot hold a CJK char");
+    assert_eq!(state.input_mode, InputMode::Alphabet);
+    assert_eq!((state.cursor_row(), state.cursor_col()), (4, 8));
+}
+
+#[test]
+fn mixed_width_name_fills_exact_units_and_forces_ed() {
+    // 1 CJK (2 units) + 5 ASCII = 7/7 exactly: the alphabet path must force
+    // the cursor onto the ED tile, same as 7 ASCII characters.
+    let mut state = pinyin_state(NamingScreenType::Player);
+    state.update_frame(input_a(), true);
+    enter_strip(&mut state);
+    state.update_frame(input_a(), true); // 阿 (2 units)
+    state.update_frame(input_select(), true); // → alphabet (cursor on A)
+    for _ in 0..5 {
+        state.update_frame(input_a(), true); // 'A' ×5
+    }
+    assert_eq!(state.name(), "阿AAAAA");
+    assert_eq!(state.used_units(), PLAYER_NAME_MAX);
+    assert_eq!((state.cursor_row(), state.cursor_col()), (4, 8));
+}
+
+#[test]
+fn char_units_classifies_widths() {
+    assert_eq!(char_units('A'), 1);
+    assert_eq!(char_units('z'), 1);
+    assert_eq!(char_units('é'), 1, "Latin-1 specials are half-width");
+    assert_eq!(char_units('♂'), 1, "GB symbol tiles are half-width");
+    assert_eq!(char_units('阿'), CJK_UNITS);
+    assert_eq!(char_units('中'), CJK_UNITS);
+    assert_eq!(name_units("Red"), 3);
+    assert_eq!(name_units("小明"), 4);
+    assert_eq!(name_units("小M明"), 5);
+}
+
+#[test]
+fn pinyin_buffer_caps_at_longest_syllable() {
+    let mut state = pinyin_state(NamingScreenType::Player);
+    for _ in 0..8 {
+        state.update_frame(input_a(), true);
+    }
+    assert_eq!(state.pinyin_buf.len(), 6, "buffer must cap at the longest syllable");
+}
+
+#[test]
+fn pinyin_ed_tile_not_reachable() {
+    // The ED tile and the specials/case rows do not exist in the pinyin
+    // cursor space; the cursor never leaves rows 0..=PINYIN_GRID_ROWS+1.
+    let mut state = pinyin_state(NamingScreenType::Player);
+    type_letters(&mut state, &[Z, H, O, N, G]); // "zhong" → candidates exist
+    for _ in 0..TOTAL_ROWS + 2 {
+        state.update_frame(input_down(), true);
+        assert!(state.cursor_row() <= PINYIN_GRID_ROWS + 1);
+    }
+    // A on whatever the cursor points at (letter or candidate) never submits.
+    let result = state.update_frame(input_a(), true);
+    assert_eq!(result, NamingScreenResult::Editing);
+}
+
+#[test]
+fn pinyin_start_submits_from_pinyin_mode() {
+    let mut state = pinyin_state(NamingScreenType::Player);
+    type_letters(&mut state, &[A]);
+    enter_strip(&mut state);
+    state.update_frame(input_a(), true); // commit 阿
+    let result = state.update_frame(input_start(), true);
+    assert_eq!(result, NamingScreenResult::Submitted("阿".to_string()));
+}
+
+#[test]
+fn pinyin_select_returns_cursor_to_last_typed_letter() {
+    let mut state = pinyin_state(NamingScreenType::Player);
+    type_letters(&mut state, &[N]);
+    enter_strip(&mut state);
+    assert_eq!(state.cursor_row(), PINYIN_GRID_ROWS);
+    state.update_frame(input_select(), true); // back to alphabet
+    assert_eq!(state.input_mode, InputMode::Alphabet);
+    assert_eq!((state.cursor_row(), state.cursor_col()), N);
+}
+
+#[test]
+fn pinyin_entering_from_lower_alphabet_row_resets_cursor() {
+    let mut state = NamingScreenState::new(NamingScreenType::Player);
+    // Move to the case row (row 5), which doesn't exist in pinyin mode.
+    state.update_frame(input_up(), true);
+    assert_eq!(state.cursor_row(), TOTAL_ROWS - 1);
+    state.update_frame(input_select(), true); // → pinyin
+    assert_eq!((state.cursor_row(), state.cursor_col()), (0, 0));
+}
+
+#[test]
+fn pinyin_stale_strip_cursor_returns_to_letters() {
+    // Cursor sits in the strip; B empties the buffer → the strip vanishes
+    // and the cursor must fall back to the last typed letter.
+    let mut state = pinyin_state(NamingScreenType::Player);
+    type_letters(&mut state, &[A]);
+    enter_strip(&mut state);
+    state.update_frame(input_b(), true);
+    assert_eq!((state.cursor_row(), state.cursor_col()), A);
 }

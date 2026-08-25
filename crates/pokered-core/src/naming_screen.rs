@@ -13,6 +13,23 @@
 //! The ASM uses wCurrentMenuItem (1-based rows 1-6, with 6=case row)
 //! and wTopMenuItemX (odd values 1-17 for 9 columns).
 //! We simplify to 0-based row/col.
+//!
+//! # Pinyin mode (Chinese only, toggled with Select)
+//!
+//! The cursor covers one unified space: letter rows 0..=2 (A-Z only —
+//! the specials/ED rows and the case row are alphabet-mode only) followed
+//! by up to two candidate-strip rows. A on a letter appends it to the
+//! pinyin buffer and refreshes the candidates; d-pad into the strip and
+//! A commits the highlighted candidate to the name. After a commit the
+//! cursor returns to the last typed letter, ready for the next syllable.
+//!
+//! # Name length is a width budget, not a character count
+//!
+//! `max_length()` (7/10) counts width units: an ASCII character costs 1
+//! (5px glyph in an 8px slot), a CJK character costs 2 (10px full-width
+//! glyph — two slots). A player name therefore holds up to 7 ASCII or 3
+//! CJK characters, a nickname 10 ASCII or 5 CJK — mirroring how the
+//! original's byte-sized NAME_LENGTH behaves under a DBCS encoding.
 
 use pokered_data::charmap::naming_tiles;
 use pokered_data::pinyin_dict;
@@ -24,11 +41,33 @@ pub enum InputMode {
     Pinyin,
 }
 
-/// Max name length for player/rival (excluding terminator).
+/// Max name length for player/rival (excluding terminator), in width
+/// units — see the module docs. 7 units = 7 ASCII or 3 CJK characters.
 pub const PLAYER_NAME_MAX: usize = 7;
 
-/// Max name length for Pokémon nickname (excluding terminator).
+/// Max name length for Pokémon nickname (excluding terminator), in width
+/// units — see the module docs. 10 units = 10 ASCII or 5 CJK characters.
 pub const MON_NAME_MAX: usize = 10;
+
+/// Width units a CJK character costs against the name budget.
+pub const CJK_UNITS: usize = 2;
+
+/// Width units `ch` costs against the name budget: 2 for CJK-block
+/// characters (radicals U+2E80 and up — ideographs, kana, Hangul — which
+/// render 10px full-width), 1 for everything else (ASCII and the Latin-1
+/// punctuation the alphabet grid offers, which render 5px half-width).
+pub fn char_units(ch: char) -> usize {
+    if (ch as u32) >= 0x2E80 {
+        CJK_UNITS
+    } else {
+        1
+    }
+}
+
+/// Total width units of `name`.
+pub fn name_units(name: &str) -> usize {
+    name.chars().map(char_units).sum()
+}
 
 /// Alphabet grid dimensions.
 pub const GRID_ROWS: usize = 5;
@@ -36,6 +75,17 @@ pub const GRID_COLS: usize = 9;
 
 /// Total cursor rows: 5 grid rows + 1 case toggle row = 6.
 pub const TOTAL_ROWS: usize = 6;
+
+/// Letter rows used in pinyin mode: rows 0..=2 of the alphabet grid (A-Z).
+/// The specials/ED rows and the case row are alphabet-mode only.
+pub const PINYIN_GRID_ROWS: usize = 3;
+
+/// Candidate slots per candidate-strip line (matches the 6×3-tile slots the
+/// naming screen renderer draws).
+pub const CANDIDATES_PER_LINE: usize = 6;
+
+/// Pinyin buffer cap: the longest syllables ("zhuang"/"chuang") are 6 letters.
+const PINYIN_BUF_MAX: usize = 6;
 
 /// Frames of the white flash when the naming screen opens and after it
 /// submits (`GBPalWhiteOutWithDelay3`: instant all-white palettes + Delay3,
@@ -159,10 +209,15 @@ pub struct NamingScreenState {
     cursor_row: usize,
     cursor_col: usize,
     submitted: bool,
+    /// Read by the renderers to draw the pinyin buffer/candidate strip.
     pub input_mode: InputMode,
+    /// Read by the renderers to draw the pinyin buffer/candidate strip.
     pub pinyin_buf: String,
+    /// Read by the renderers to draw the pinyin buffer/candidate strip.
     pub pinyin_candidates: Vec<char>,
-    pub candidate_idx: usize,
+    /// Grid position of the last letter typed in pinyin mode; the cursor
+    /// returns here when leaving the candidate strip.
+    pinyin_last_typed: (usize, usize),
 }
 
 impl NamingScreenState {
@@ -177,7 +232,7 @@ impl NamingScreenState {
             input_mode: InputMode::Alphabet,
             pinyin_buf: String::new(),
             pinyin_candidates: Vec::new(),
-            candidate_idx: 0,
+            pinyin_last_typed: (0, 0),
         }
     }
 
@@ -191,6 +246,12 @@ impl NamingScreenState {
 
     pub fn max_length(&self) -> usize {
         self.screen_type.max_length()
+    }
+
+    /// Width units the name currently occupies (ASCII 1, CJK 2) — the
+    /// renderer fills this many underscore slots.
+    pub fn used_units(&self) -> usize {
+        name_units(&self.name)
     }
 
     pub fn is_lowercase(&self) -> bool {
@@ -228,13 +289,25 @@ impl NamingScreenState {
 
         // Select toggles mode (only in Chinese)
         if input.select && is_zh {
+            let entering_pinyin = self.input_mode == InputMode::Alphabet;
             self.input_mode = match self.input_mode {
                 InputMode::Alphabet => InputMode::Pinyin,
                 InputMode::Pinyin => InputMode::Alphabet,
             };
             self.pinyin_buf.clear();
             self.pinyin_candidates.clear();
-            self.candidate_idx = 0;
+            if self.cursor_row >= PINYIN_GRID_ROWS {
+                if entering_pinyin {
+                    // Alphabet rows 3-5 (specials/ED/case) don't exist in
+                    // pinyin mode.
+                    self.cursor_row = 0;
+                    self.cursor_col = 0;
+                } else {
+                    // Leaving the candidate strip: return to the letter the
+                    // user last typed.
+                    (self.cursor_row, self.cursor_col) = self.pinyin_last_typed;
+                }
+            }
             return NamingScreenResult::Editing;
         }
 
@@ -263,86 +336,142 @@ impl NamingScreenState {
         NamingScreenResult::Editing
     }
 
+    /// One pinyin-mode frame. The cursor space is the 3 letter rows followed
+    /// by up to 2 candidate-strip lines; see the module docs.
     fn update_pinyin(&mut self, input: NamingInput) -> NamingScreenResult {
-        let has_candidates = !self.pinyin_candidates.is_empty();
         if input.b {
-            if has_candidates {
-                self.pinyin_candidates.clear();
-                self.candidate_idx = 0;
-            } else if !self.pinyin_buf.is_empty() {
+            if !self.pinyin_buf.is_empty() {
                 self.pinyin_buf.pop();
+                self.refresh_pinyin_candidates();
             } else {
                 self.name.pop();
             }
             return NamingScreenResult::Editing;
         }
-        if input.left {
-            if has_candidates {
-                if self.candidate_idx > 0 {
-                    self.candidate_idx -= 1;
-                }
-            } else {
-                // No candidates yet: left/right move the grid cursor to pick a
-                // different letter rather than being swallowed.
-                self.move_left();
-            }
-            return NamingScreenResult::Editing;
+        if input.a {
+            return self.pinyin_a_press();
         }
-        if input.right {
-            if has_candidates {
-                if self.candidate_idx + 1 < self.pinyin_candidates.len() {
-                    self.candidate_idx += 1;
-                }
-            } else {
-                self.move_right();
+        if input.down {
+            let old_row = self.cursor_row;
+            self.cursor_row += 1;
+            if self.cursor_row >= self.pinyin_cursor_rows() {
+                self.cursor_row = 0;
             }
-            return NamingScreenResult::Editing;
+            if old_row < PINYIN_GRID_ROWS && self.cursor_row >= PINYIN_GRID_ROWS {
+                // Entering the strip from the letters: start at its first
+                // slot, not wherever the letter column happened to be.
+                self.cursor_col = 0;
+            }
+        } else if input.up {
+            let old_row = self.cursor_row;
+            if self.cursor_row == 0 {
+                self.cursor_row = self.pinyin_cursor_rows() - 1;
+            } else {
+                self.cursor_row -= 1;
+            }
+            if old_row < PINYIN_GRID_ROWS && self.cursor_row >= PINYIN_GRID_ROWS {
+                self.cursor_col = 0;
+            }
+        } else if input.right {
+            self.cursor_col = (self.cursor_col + 1) % self.pinyin_row_cols();
+        } else if input.left {
+            let cols = self.pinyin_row_cols();
+            self.cursor_col = if self.cursor_col == 0 { cols - 1 } else { self.cursor_col - 1 };
         }
-        if input.a && has_candidates {
-            let ch = self.pinyin_candidates[self.candidate_idx];
-            if self.name.len() < self.max_length() {
+        self.clamp_pinyin_col();
+        NamingScreenResult::Editing
+    }
+
+    /// A press in pinyin mode: commit a candidate, or append the selected
+    /// letter to the pinyin buffer.
+    fn pinyin_a_press(&mut self) -> NamingScreenResult {
+        if self.cursor_row >= PINYIN_GRID_ROWS {
+            // Candidate strip: commit the highlighted character. A CJK
+            // candidate costs 2 width units; it is only appended when the
+            // budget still covers it.
+            let idx = (self.cursor_row - PINYIN_GRID_ROWS) * CANDIDATES_PER_LINE + self.cursor_col;
+            let Some(&ch) = self.pinyin_candidates.get(idx) else {
+                return NamingScreenResult::Editing;
+            };
+            if self.used_units() + char_units(ch) <= self.max_length() {
                 self.name.push(ch);
             }
             self.pinyin_buf.clear();
             self.pinyin_candidates.clear();
-            self.candidate_idx = 0;
-            if self.name.len() >= self.max_length() {
+            if self.max_length().saturating_sub(self.used_units()) < CJK_UNITS {
+                // No room left for another CJK character — the same
+                // contract as the alphabet path filling every slot: leave
+                // pinyin mode with the cursor on the ED tile.
                 self.input_mode = InputMode::Alphabet;
+                self.cursor_row = 4;
+                self.cursor_col = 8;
+            } else {
+                (self.cursor_row, self.cursor_col) = self.pinyin_last_typed;
             }
             return NamingScreenResult::Editing;
         }
-        // Type letters into pinyin buffer via d-pad selection. This also runs
-        // when A is pressed with no candidates — the branch below appends the
-        // selected letter to the buffer (the old code returned early above,
-        // making it impossible to type a pinyin letter at all).
-        let tile_id = if self.cursor_row < GRID_ROWS {
-            let alphabet = if self.lowercase { &LOWER_ALPHABET } else { &UPPER_ALPHABET };
-            Some(alphabet[self.cursor_row][self.cursor_col])
-        } else {
-            None
-        };
-        if input.a && !has_candidates {
-            if let Some(tile_id) = tile_id {
-                if let Some(c) = pokered_data::charmap::decode_char(tile_id) {
-                    let ch = c.chars().next().unwrap_or(' ');
-                    if ch.is_ascii_alphabetic() {
-                        self.pinyin_buf.push(ch.to_ascii_lowercase());
-                        // Search candidates
-                        if self.pinyin_buf.len() >= 1 {
-                            self.pinyin_candidates = pinyin_dict::lookup_pinyin(&self.pinyin_buf);
-                            self.candidate_idx = 0;
-                        }
-                        return NamingScreenResult::Editing;
-                    }
-                }
+
+        // Letter row: append the tile's letter to the pinyin buffer.
+        let tile_id = self.current_alphabet()[self.cursor_row][self.cursor_col];
+        if let Some(c) = pokered_data::charmap::decode_char(tile_id) {
+            let ch = c.chars().next().unwrap_or(' ');
+            if ch.is_ascii_alphabetic() && self.pinyin_buf.len() < PINYIN_BUF_MAX {
+                self.pinyin_buf.push(ch.to_ascii_lowercase());
+                self.pinyin_last_typed = (self.cursor_row, self.cursor_col);
+                self.refresh_pinyin_candidates();
             }
-            return NamingScreenResult::Editing;
         }
-        if input.down { self.move_down(); }
-        else if input.up { self.move_up(); }
-        else if input.right { self.move_right(); }
-        else if input.left { self.move_left(); }
         NamingScreenResult::Editing
+    }
+
+    /// Re-run the dictionary lookup after the buffer changed, keeping the
+    /// cursor on a valid slot.
+    fn refresh_pinyin_candidates(&mut self) {
+        self.pinyin_candidates = pinyin_dict::lookup_pinyin(&self.pinyin_buf);
+        if self.cursor_row >= PINYIN_GRID_ROWS {
+            let line = self.cursor_row - PINYIN_GRID_ROWS;
+            if line >= self.candidate_lines() {
+                // The strip vanished or shrank: return to the last typed
+                // letter.
+                (self.cursor_row, self.cursor_col) = self.pinyin_last_typed;
+            } else {
+                self.clamp_pinyin_col();
+            }
+        }
+    }
+
+    /// Total cursor rows in pinyin mode: letter rows + candidate lines.
+    fn pinyin_cursor_rows(&self) -> usize {
+        PINYIN_GRID_ROWS + self.candidate_lines()
+    }
+
+    fn candidate_lines(&self) -> usize {
+        self.pinyin_candidates.len().div_ceil(CANDIDATES_PER_LINE)
+    }
+
+    /// Valid columns on the current cursor row (9 for letter rows, the
+    /// populated slot count for candidate lines). Never returns 0 — the
+    /// value is used as a modulo divisor.
+    fn pinyin_row_cols(&self) -> usize {
+        if self.cursor_row < PINYIN_GRID_ROWS {
+            GRID_COLS
+        } else {
+            let line = self.cursor_row - PINYIN_GRID_ROWS;
+            let len = self.pinyin_candidates.len();
+            if line == 0 {
+                len.min(CANDIDATES_PER_LINE).max(1)
+            } else {
+                len.saturating_sub(CANDIDATES_PER_LINE).max(1)
+            }
+        }
+    }
+
+    /// Keep the column valid after a row change.
+    fn clamp_pinyin_col(&mut self) {
+        let cols = self.pinyin_row_cols();
+        if cols > 0 && self.cursor_col >= cols {
+            self.cursor_col = cols - 1;
+        }
     }
 
     fn handle_a_press(&mut self) -> NamingScreenResult {
@@ -359,17 +488,18 @@ impl NamingScreenState {
             return self.submit_result();
         }
 
-        // Normal character — add to name if space remains
+        // Normal character — add to name if space remains (grid characters
+        // cost 1 width unit each).
         let tile_id = self.current_alphabet()[self.cursor_row][self.cursor_col];
 
         // Convert tile ID to char and add to name
         if let Some(c) = pokered_data::charmap::decode_char(tile_id) {
             let ch = c.chars().next().unwrap_or(' ');
-            if self.name.len() < self.max_length() {
+            if self.used_units() < self.max_length() {
                 self.name.push(ch);
 
                 // Per ASM: when all spaces filled, force cursor to ED tile
-                if self.name.len() >= self.max_length() {
+                if self.used_units() >= self.max_length() {
                     self.cursor_row = 4;
                     self.cursor_col = 8;
                 }

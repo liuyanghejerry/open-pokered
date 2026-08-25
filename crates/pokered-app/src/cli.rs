@@ -154,6 +154,7 @@ pub enum ScreenTarget {
     Pokedex,
     TrainerCard,
     Pc,
+    Naming,
 }
 
 pub fn screen_target_to_game_screen(target: &ScreenTarget) -> pokered_core::game_state::GameScreen {
@@ -179,6 +180,7 @@ pub fn screen_target_to_game_screen(target: &ScreenTarget) -> pokered_core::game
         Pokedex => GameScreen::Pokedex,
         TrainerCard => GameScreen::TrainerCard,
         Pc => GameScreen::PC,
+        Naming => GameScreen::OakSpeech,
     }
 }
 

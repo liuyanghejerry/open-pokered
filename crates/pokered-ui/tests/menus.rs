@@ -651,7 +651,7 @@ fn naming_pinyin_rows_stay_inside_keyboard_box() {
     menus::naming::draw(&state, &NAMING_DEFAULT_LAYOUT, &mut Ui::new(&mut rec), true);
 
     // The keyboard box (0,5,20,13) has its interior on rows 6..=16; the pinyin
-    // buffer (row 12) and candidates (rows 14/16) must land inside it.
+    // buffer (row 10) and candidates (rows 12/14) must land inside it.
     let interior_max_ty = 5 + 13 - 2;
     for op in &rec.ops {
         let ty = match op {
@@ -663,8 +663,38 @@ fn naming_pinyin_rows_stay_inside_keyboard_box() {
         }
     }
     let texts = collect_texts(&rec.ops);
-    assert!(texts.iter().any(|(_, ty, t)| *ty == 12 && t.starts_with("拼音")));
-    assert!(texts.iter().any(|(_, ty, t)| (*ty == 14 || *ty == 16) && t.contains('你')));
+    assert!(texts.iter().any(|(_, ty, t)| *ty == 10 && t.starts_with("拼音")));
+    assert!(texts.iter().any(|(_, ty, t)| (*ty == 12 || *ty == 14) && t.contains('你')));
+}
+
+#[test]
+fn naming_cjk_name_fills_underscore_slots_by_width_units() {
+    // Regression: the filled-slot count used name.len() (bytes — 2 CJK chars
+    // lit 6 slots). It must use width units: 2 CJK chars = 4 slots, so the
+    // raised cursor sits on slot 4 (tx = name_tx 6 + 4).
+    let mut state = NamingScreenState::new(NamingScreenType::Player);
+    state.update_frame(NamingInput { select: true, ..NamingInput::none() }, true);
+    for _ in 0..2 {
+        state.update_frame(NamingInput { a: true, ..NamingInput::none() }, true); // type 'a'
+        for _ in 0..3 {
+            state.update_frame(NamingInput { down: true, ..NamingInput::none() }, true); // rows 0→1→2→strip
+        }
+        state.update_frame(NamingInput { a: true, ..NamingInput::none() }, true); // commit 阿
+    }
+    assert_eq!(state.name(), "阿阿");
+
+    let mut rec = Recorder::default();
+    menus::naming::draw(&state, &NAMING_DEFAULT_LAYOUT, &mut Ui::new(&mut rec), true);
+
+    let tiles = collect_gb_tiles(&rec.ops);
+    let underscore_tiles: Vec<_> = tiles.iter().filter(|(_, ty, _, _)| *ty == 4).collect();
+    assert_eq!(underscore_tiles.len(), 7);
+    let raised: Vec<_> = underscore_tiles
+        .iter()
+        .filter(|(_, _, id, _)| *id == naming_tiles::RAISED_UNDERSCORE)
+        .collect();
+    assert_eq!(raised.len(), 1);
+    assert_eq!(raised[0].0, 10, "raised slot at name_tx(6) + 4 units, not bytes(6) or chars(2)");
 }
 
 #[test]
