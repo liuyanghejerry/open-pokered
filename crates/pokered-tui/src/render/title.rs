@@ -1,7 +1,7 @@
 use pokered_core::data::wild_data::GameVersion;
 use pokered_core::title_screen::TitleScreenState;
 use pokered_data::layout_constants;
-use pokered_renderer::embedded_font::draw_text;
+use pokered_renderer::embedded_font::{draw_text, measure_text};
 use pokered_renderer::layout;
 use pokered_renderer::palette::{Palette, PaletteState, GRAYSCALE_PALETTE};
 use pokered_renderer::resource::ResourceManager;
@@ -38,7 +38,14 @@ pub fn draw_title_screen(
 
     if let Some(ref mut rm) = res {
         if is_copyright {
-            draw_text("©1995 GAME FREAK", 24, 64, Rgba::BLACK, fb);
+            let copyright_w = measure_text("©1995 GAME FREAK");
+            draw_text(
+                "©1995 GAME FREAK",
+                (fb.width() - copyright_w) / 2,
+                64,
+                Rgba::BLACK,
+                fb,
+            );
             return;
         }
 
@@ -78,7 +85,7 @@ pub fn draw_title_screen(
                     GameVersion::Red => "Red Version",
                     GameVersion::Blue => "Blue Version",
                 };
-                let text_width = version_text.len() as u32 * TILE_SIZE;
+                let text_width = measure_text(version_text);
                 let final_vx = layout_constants::title_screen::version_centered_x(text_width);
                 let offscreen_right_x = fb.width();
                 let current_vx = if state.version_scroll_progress < 1.0 {
