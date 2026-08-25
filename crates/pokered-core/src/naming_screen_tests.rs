@@ -425,6 +425,21 @@ fn pinyin_type_letter_into_buffer() {
 }
 
 #[test]
+fn pinyin_left_right_moves_letter_cursor_without_candidates() {
+    // Regression from PR #13, restated for the unified-cursor model: with no
+    // candidates, left/right move the letter cursor (and wrap) instead of
+    // being swallowed.
+    let mut state = pinyin_state(NamingScreenType::Player);
+    assert_eq!((state.cursor_row(), state.cursor_col()), (0, 0));
+    state.update_frame(input_right(), true);
+    assert_eq!(state.cursor_col(), 1);
+    state.update_frame(input_left(), true);
+    assert_eq!(state.cursor_col(), 0);
+    state.update_frame(input_left(), true); // wraps to the last column
+    assert_eq!(state.cursor_col(), GRID_COLS - 1);
+}
+
+#[test]
 fn pinyin_multiletter_syllable() {
     let mut state = pinyin_state(NamingScreenType::Player);
     type_letters(&mut state, &[N, I]);
