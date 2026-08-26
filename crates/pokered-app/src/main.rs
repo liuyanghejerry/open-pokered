@@ -213,14 +213,16 @@ fn main() {
             ref screen,
             ref output,
             frames,
+            ref lang,
         }) => {
-            cmd_screenshot(screen, output, frames);
+            cmd_screenshot(screen, output, frames, lang.to_lang());
         }
         Some(crate::cli::Commands::ScreenshotAll {
             ref output_dir,
             frames,
+            ref lang,
         }) => {
-            cmd_screenshot_all(output_dir, frames);
+            cmd_screenshot_all(output_dir, frames, lang.to_lang());
         }
         Some(crate::cli::Commands::DumpState { ref screen, frames }) => {
             cmd_dump_state(screen, frames);
@@ -229,6 +231,7 @@ fn main() {
             ref config,
             ref screenshot,
             frames,
+            ref lang,
         }) => {
             let battle_config = match BattleConfig::load(config) {
                 Ok(c) => c,
@@ -250,6 +253,7 @@ fn main() {
                 enemy_party,
                 battle_config.trainer_class,
             );
+            game.set_lang(lang.to_lang());
 
             if let Some(ref output_path) = screenshot {
                 let input = InputState::new();

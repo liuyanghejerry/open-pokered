@@ -2,7 +2,7 @@ use pokered_audio::music_data::MusicId;
 use pokered_audio::sfx_data::SfxId;
 use pokered_core::battle::state::{BattleType, Pokemon};
 use pokered_core::battle::{BattleInput, BattlePhase, BattleScreen};
-use pokered_core::game_state::{GameScreen, ScreenAction};
+use pokered_core::game_state::{GameScreen, Lang, ScreenAction};
 use pokered_data::species::Species;
 use pokered_data::trainer_data::TrainerClass;
 use pokered_renderer::input::{GbButton, InputState};
@@ -43,6 +43,8 @@ pub struct DirectBattleGame {
     pub resources: Option<ResourceManager>,
     pub battle_vfx: BattleVisualEffects,
     pub exit_requested: bool,
+    /// Text language for battle menus/messages (see `--lang`).
+    lang: Lang,
 
     #[cfg(not(target_arch = "wasm32"))]
     audio: Option<AudioOutput>,
@@ -101,6 +103,7 @@ impl DirectBattleGame {
             resources,
             battle_vfx: BattleVisualEffects::default(),
             exit_requested: false,
+            lang: Lang::default(),
             #[cfg(not(target_arch = "wasm32"))]
             audio,
             prev_message: None,
@@ -112,6 +115,11 @@ impl DirectBattleGame {
             cry_played_for_msg: false,
             faint_thud_pending: false,
         }
+    }
+
+    /// Set the text language used by the battle renderer (`--lang`).
+    pub fn set_lang(&mut self, lang: Lang) {
+        self.lang = lang;
     }
 
     #[cfg(not(target_arch = "wasm32"))]
@@ -362,7 +370,7 @@ impl GameLoop for DirectBattleGame {
             &mut self.resources,
             frame_buffer,
             &mut self.battle_vfx,
-            pokered_core::game_state::Lang::default(),
+            self.lang,
         );
     }
 
