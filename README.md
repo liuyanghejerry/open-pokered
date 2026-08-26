@@ -45,14 +45,52 @@ Screenshots are regenerated with `scripts/capture_readme_screenshots.sh` (headle
 
 ## Built for hacking — and for AI collaboration
 
-Splitting the game from the engine is deliberate: everything that makes the game *inspectable*, *drivable*, and *rebuildable* lives in data rather than in Rust, so both humans and AI agents can understand and change the game without touching engine code.
+Splitting the game from the engine is deliberate. Everything that makes the game *inspectable*, *drivable*, and *rebuildable* lives in data rather than in Rust — which opens the whole game up to customization, and makes it unusually approachable for AI agents: no hidden state, no realtime loop you can't control, no behavior you can't trace back to a file.
 
-- **Debug protocol** — a JSON-line TCP protocol (`--debug-port`) exposes the whole running game: `get_state` / `get_party` / `get_flags` to see, `warp` / `press_sequence` / `set_flag` / `start_wild_battle` to act, and `step_frames` for synchronous, deterministic frame control (`scripts/debug_drive.py` is a minimal client)
-- **Headless & deterministic** — `screenshot`, `screenshot-all`, `dump-state` and `--headless` mode render any screen without a window: machine-readable state in, verifiable pixels out. Every screenshot on this page is produced this way (`scripts/capture_readme_screenshots.sh`)
-- **Data-constructed content** — maps, NPCs, warps and wild encounters are JSON (`crates/pokered-data/maps/`), species, moves and trainers are JSON too, per-map behavior is JavaScript, and a battle is a JSON config (`sample_battle.json`). New content is a file edit, not a logic rewrite
-- **A DSL for UI** — menus and screens are declared in a `.gui` layout DSL (`crates/pokered-data/ui_layouts/`) with a compile bridge and live preview in the editor, instead of hand-placed renderer code
+### See and drive the running game
 
-That loop — read state, drive inputs deterministically, verify pixels — is what makes AI-assisted development practical here.
+A JSON-line TCP debug protocol (`run --headless --debug-port 9000`, `debug-server` feature) exposes the entire running game: `get_state`, `get_position`, `get_party`, `get_bag`, `get_flags`, `get_npcs` to *see* (state includes the active script effect, the current dialogue text, and the battle phase/message), and `warp`, `press`, `press_sequence`, `set_flag`, `give_item`, `give_pokemon`, `start_wild_battle`, `save` to *act*. `step_frames` advances the game synchronously — deterministic, frame-exact control with no realtime flakiness. `scripts/debug_drive.py` is a minimal client:
+
+```python
+from debug_drive import DebugClient
+
+d = DebugClient(9000)
+d.cmd(cmd="warp", map="PalletTown", x=10, y=5)
+d.cmd(cmd="press_sequence", buttons=["up"] * 40)
+d.cmd(cmd="step_frames", count=40)      # returns when the frames are done
+print(d.cmd(cmd="get_state")["data"])   # position, party, flags, dialogue, ...
+```
+
+### Machine-readable state in, verifiable pixels out
+
+`screenshot`, `screenshot-all`, `dump-state` and `--headless` mode render any screen without a window — every screenshot on this page is produced this way (`scripts/capture_readme_screenshots.sh`). This repo's own PR policy (`AGENTS.md`) requires before/after captures for any visual change: the capture loop isn't a demo, it's the development workflow.
+
+### Content is data, not code
+
+- **Maps** — all 248 maps are JSON (`crates/pokered-data/maps/`): warps, NPCs, signs, wild encounters, map connections, per-map text
+- **Game data** — species, moves and trainers are JSON files too (`pokemon/`, `moves/`, `trainers/`)
+- **Behavior** — per-event logic is JavaScript (`assets/scripts/events/`), with bilingual dialogue inline (`@t("english", "中文")`)
+- **Battles** — a battle is a JSON config (`sample_battle.json`): parties, levels, movesets, trainer class
+
+A romhack — new maps, new NPCs, re-scripted events, rebalanced data — is a directory of file edits, not an engine fork.
+
+### UI is a DSL, not renderer code
+
+Menus and screens are declared in a `.gui` layout DSL (28 files in `crates/pokered-data/ui_layouts/`, reference in `docs/GAME_UI_DSL.md`) with a compile bridge and live preview in the editor — excerpt from `bag.gui`:
+
+```gui
+screen Bag {
+  text(@t("ITEM", "道具")) { rect = {tx: 7, ty: 1, tw: 6, th: 1} }
+  flex_list("{bag_items}") {
+    rect = {tx: 1, ty: 4, tw: 18, th: 13}
+    cursor = {tile: 223, position: "left"}
+  }
+}
+```
+
+### Why AI agents work well here
+
+Read state → drive inputs deterministically → verify the pixels. That loop maps one-to-one onto an agent's working cycle, and the repo ships agent-facing tooling built on it (debug and visual-verification skills under `.claude/skills/`). Fidelity audits (`docs/FIDELITY_GAPS.md`) and the screenshots above are products of the same loop: features get implemented, driven, and visually verified end to end — by humans or by agents.
 
 ## Editor Suite
 
