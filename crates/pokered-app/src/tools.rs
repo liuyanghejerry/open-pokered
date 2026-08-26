@@ -2,6 +2,7 @@ use std::path::PathBuf;
 
 use pokered_core::data::wild_data::GameVersion;
 use pokered_core::game_state::{GameScreen, Lang};
+use pokered_data::maps::MapId;
 use dotzuki_app::InputState;
 use pokered_renderer::{FrameBuffer, Rgba};
 use dotzuki_engine::render_config::RenderConfig;
@@ -20,6 +21,18 @@ fn apply_lang(game: &mut PokemonGame, lang: Lang) {
     });
 }
 
+/// Overworld captures run on a fresh game whose player position was never
+/// set (engine default (0,0), the map's top-left corner). Put the player on
+/// the doorstep of their Pallet Town house — the walk-out tile just below
+/// the door mat at (5,5) — so the shot opens on home ground.
+fn seed_overworld_spawn(game: &mut PokemonGame) {
+    let (px, py) = game
+        .overworld
+        .resolve_editor_warp_position(MapId::PalletTown, Some((5, 6)));
+    game.overworld.state.player.x = px as u16;
+    game.overworld.state.player.y = py as u16;
+}
+
 pub fn capture_screen(game: &mut PokemonGame, target: GameScreen, frames: u32) -> FrameBuffer {
     game.handle_transition(target);
     let input = InputState::new();
@@ -35,6 +48,9 @@ pub fn cmd_screenshot(target: &ScreenTarget, output: &PathBuf, frames: u32, lang
     let version = GameVersion::Red;
     let mut game = PokemonGame::new(version);
     apply_lang(&mut game, lang);
+    if matches!(target, ScreenTarget::Overworld) {
+        seed_overworld_spawn(&mut game);
+    }
     let screen = screen_target_to_game_screen(target);
     let label = if matches!(target, ScreenTarget::Naming) { "naming" } else { screen_name(&screen) };
     println!(
@@ -164,6 +180,9 @@ pub fn cmd_screenshot_all(output_dir: &PathBuf, frames: u32, lang: Lang) {
         let name = screen_name(screen);
         let path = output_dir.join(format!("{}.png", name));
         println!("Capturing: {}...", name);
+        if matches!(screen, GameScreen::Overworld) {
+            seed_overworld_spawn(&mut game);
+        }
         let fb = capture_screen(&mut game, screen.clone(), frames);
         fb.save_png(&path).expect("Failed to save PNG");
         println!("  -> {}", path.display());
