@@ -1,13 +1,24 @@
 use std::path::PathBuf;
 
 use pokered_core::data::wild_data::GameVersion;
-use pokered_core::game_state::GameScreen;
+use pokered_core::game_state::{GameScreen, Lang};
 use dotzuki_app::InputState;
 use pokered_renderer::{FrameBuffer, Rgba};
 use dotzuki_engine::render_config::RenderConfig;
 
 use crate::cli::{screen_name, screen_target_to_game_screen, ScreenTarget, ALL_SCREENS};
 use crate::game::PokemonGame;
+
+/// Apply a capture language to a freshly constructed game: set the config
+/// language (menus / screen text) and keep the overworld script engine in
+/// sync, so `@t("english", "中文")` dialogue resolves to the right side.
+fn apply_lang(game: &mut PokemonGame, lang: Lang) {
+    game.state.config.language = lang;
+    game.overworld.set_script_lang(match lang {
+        Lang::En => "en",
+        Lang::Zh => "zh",
+    });
+}
 
 pub fn capture_screen(game: &mut PokemonGame, target: GameScreen, frames: u32) -> FrameBuffer {
     game.handle_transition(target);
@@ -20,15 +31,17 @@ pub fn capture_screen(game: &mut PokemonGame, target: GameScreen, frames: u32) -
     fb
 }
 
-pub fn cmd_screenshot(target: &ScreenTarget, output: &PathBuf, frames: u32) {
+pub fn cmd_screenshot(target: &ScreenTarget, output: &PathBuf, frames: u32, lang: Lang) {
     let version = GameVersion::Red;
     let mut game = PokemonGame::new(version);
+    apply_lang(&mut game, lang);
     let screen = screen_target_to_game_screen(target);
     let label = if matches!(target, ScreenTarget::Naming) { "naming" } else { screen_name(&screen) };
     println!(
-        "Capturing screen: {} ({} frames)...",
+        "Capturing screen: {} ({} frames, lang={:?})...",
         label,
-        frames
+        frames,
+        lang
     );
     if matches!(target, ScreenTarget::Pc) {
         // The PC screen only exists once a script opens it; seed a demo
@@ -87,7 +100,6 @@ pub fn cmd_screenshot(target: &ScreenTarget, output: &PathBuf, frames: u32) {
         // state. This branch runs its own transition→seed→update→draw loop
         // because capture_screen() would handle_transition() — which resets
         // the oak speech — after the seeding.
-        use pokered_core::game_state::Lang;
         use pokered_core::oak_speech::OakSpeechPhase;
 
         game.handle_transition(GameScreen::OakSpeech);
@@ -143,10 +155,11 @@ fn seed_naming_screen() -> pokered_core::naming_screen::NamingScreenState {
     ns
 }
 
-pub fn cmd_screenshot_all(output_dir: &PathBuf, frames: u32) {
+pub fn cmd_screenshot_all(output_dir: &PathBuf, frames: u32, lang: Lang) {
     std::fs::create_dir_all(output_dir).expect("Failed to create output directory");
     let version = GameVersion::Red;
     let mut game = PokemonGame::new(version);
+    apply_lang(&mut game, lang);
     for screen in ALL_SCREENS {
         let name = screen_name(screen);
         let path = output_dir.join(format!("{}.png", name));

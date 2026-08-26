@@ -46,6 +46,24 @@ pub struct Cli {
     pub link_connect: Option<String>,
 }
 
+/// Language selector for the capture commands (screenshots/battle). Maps to
+/// `pokered_core::game_state::Lang` and additionally syncs the overworld
+/// script engine ("en" / "zh") so `@t` dialogue renders bilingually.
+#[derive(Clone, Copy, ValueEnum)]
+pub enum CliLang {
+    En,
+    Zh,
+}
+
+impl CliLang {
+    pub fn to_lang(self) -> pokered_core::game_state::Lang {
+        match self {
+            CliLang::En => pokered_core::game_state::Lang::En,
+            CliLang::Zh => pokered_core::game_state::Lang::Zh,
+        }
+    }
+}
+
 #[derive(Subcommand)]
 pub enum Commands {
     /// Run the game in windowed mode (default)
@@ -98,9 +116,14 @@ pub enum Commands {
         /// Output PNG file path
         #[arg(short, long, default_value = "screenshot.png")]
         output: PathBuf,
-        /// Number of frames to advance before capturing (for animation)
+        /// Number of frames to advance before capturing (for animation).
+        /// Keep this generous: several screens typewriter their text or
+        /// animate in, and too few frames captures a half-loaded picture.
         #[arg(short, long, default_value_t = 5)]
         frames: u32,
+        /// Text language for the capture (dialogue, menus)
+        #[arg(long, value_enum, default_value_t = CliLang::En)]
+        lang: CliLang,
     },
     /// Capture screenshots of all game screens
     ScreenshotAll {
@@ -110,6 +133,9 @@ pub enum Commands {
         /// Number of frames to advance before capturing each screen
         #[arg(short, long, default_value_t = 5)]
         frames: u32,
+        /// Text language for the capture (dialogue, menus)
+        #[arg(long, value_enum, default_value_t = CliLang::En)]
+        lang: CliLang,
     },
     /// Dump game state as JSON to stdout (for comparison with PyBoy WRAM reads)
     DumpState {
@@ -131,6 +157,9 @@ pub enum Commands {
         /// Number of frames to advance before capturing the screenshot (default: 5)
         #[arg(long, default_value_t = 5)]
         frames: u32,
+        /// Text language for the capture (menus, messages)
+        #[arg(long, value_enum, default_value_t = CliLang::En)]
+        lang: CliLang,
     },
 }
 
