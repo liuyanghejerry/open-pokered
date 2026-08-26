@@ -43,6 +43,17 @@ Screenshots are regenerated with `scripts/capture_readme_screenshots.sh` (headle
 - **Hackable by design** — per-map JavaScript scripts, a DSL for UI layouts, and JSON-driven game data
 - **Full editor suite** — map editor, Pokémon/move/trainer data editors, UI layout editor with live preview, save editor, sprite tools, and an AI assistant
 
+## Built for hacking — and for AI collaboration
+
+Splitting the game from the engine is deliberate: everything that makes the game *inspectable*, *drivable*, and *rebuildable* lives in data rather than in Rust, so both humans and AI agents can understand and change the game without touching engine code.
+
+- **Debug protocol** — a JSON-line TCP protocol (`--debug-port`) exposes the whole running game: `get_state` / `get_party` / `get_flags` to see, `warp` / `press_sequence` / `set_flag` / `start_wild_battle` to act, and `step_frames` for synchronous, deterministic frame control (`scripts/debug_drive.py` is a minimal client)
+- **Headless & deterministic** — `screenshot`, `screenshot-all`, `dump-state` and `--headless` mode render any screen without a window: machine-readable state in, verifiable pixels out. Every screenshot on this page is produced this way (`scripts/capture_readme_screenshots.sh`)
+- **Data-constructed content** — maps, NPCs, warps and wild encounters are JSON (`crates/pokered-data/maps/`), species, moves and trainers are JSON too, per-map behavior is JavaScript, and a battle is a JSON config (`sample_battle.json`). New content is a file edit, not a logic rewrite
+- **A DSL for UI** — menus and screens are declared in a `.gui` layout DSL (`crates/pokered-data/ui_layouts/`) with a compile bridge and live preview in the editor, instead of hand-placed renderer code
+
+That loop — read state, drive inputs deterministically, verify pixels — is what makes AI-assisted development practical here.
+
 ## Editor Suite
 
 `tools/pokered-editor/` is a Vue/Vite application (with an Electron shell) for editing every aspect of the game.
