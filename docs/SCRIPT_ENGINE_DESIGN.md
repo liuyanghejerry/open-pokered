@@ -46,5 +46,5 @@ protocol types live there.
   compiled out of default builds.
 - The single `@run` block (Vermilion Gym trash-can puzzle) is hand-ported
   to a native handler (see the `native_script.rs` file-header comment).
-- `assets/scripts/` is JS-era demo residue with no consumers — a cleanup
-  candidate.
+- A minimal example of the JS cutscene API (the old `assets/scripts`
+  demo) is kept at `docs/examples/oaks_lab_intro.js`.

@@ -1,8 +1,11 @@
-// oaks_lab_intro.js — Oak's Lab starter Pokémon selection cutscene
+// oaks_lab_intro.js — example cutscene for the `script-boa` JS fallback
 //
-// This is an async cutscene script that expresses the Oak's Lab intro event
-// as a JS function using the existing game.* API. It demonstrates the
-// cutscene system: fade → warp → dialog → choice → givePokemon → flag.
+// The canonical scripting path is the `.scene` DSL on the native AST
+// interpreter (see docs/SCRIPT_ENGINE_DESIGN.md); the Boa JS engine remains
+// behind pokered-core's `script-boa` feature as a lower-barrier option for
+// custom scripts. This file shows what a cutscene looks like on that path:
+// an async function driving the game.* API — fade → warp → dialog →
+// choice → givePokemon → flag.
 
 export async function oaksLabIntro() {
   // Fade out, warp into the lab, fade in.
