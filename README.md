@@ -40,7 +40,7 @@ Screenshots are regenerated with `scripts/capture_readme_screenshots.sh` (headle
 - **Cross-platform** — native desktop app, WASM web build, Android and iOS shells
 - **Bilingual** — every screen and line of dialogue in English and 中文, switchable in-game
 - **Authentic audio** — Game Boy APU emulation (`pokered-audio`)
-- **Hackable by design** — per-map JavaScript scripts, a DSL for UI layouts, and JSON-driven game data
+- **Hackable by design** — per-map `.scene` event scripts on a native DSL interpreter, a DSL for UI layouts, and JSON-driven game data
 - **Full editor suite** — map editor, Pokémon/move/trainer data editors, UI layout editor with live preview, save editor, sprite tools, and an AI assistant
 
 ## Built for hacking — and for AI collaboration
@@ -69,7 +69,7 @@ print(d.cmd(cmd="get_state")["data"])   # position, party, flags, dialogue, ...
 
 - **Maps** — all 248 maps are JSON (`crates/pokered-data/maps/`): warps, NPCs, signs, wild encounters, map connections, per-map text
 - **Game data** — species, moves and trainers are JSON files too (`pokemon/`, `moves/`, `trainers/`)
-- **Behavior** — per-event logic is JavaScript (`assets/scripts/events/`), with bilingual dialogue inline (`@t("english", "中文")`)
+- **Behavior** — per-event logic is a `.scene` DSL (`crates/pokered-data/maps/*/script.scene`), compiled to an AST at build time and run on the engine's native interpreter, with bilingual dialogue inline (`@t("english", "中文")`). A Boa JS engine remains as a dev fallback behind the `script-boa` feature
 - **Battles** — a battle is a JSON config (`sample_battle.json`): parties, levels, movesets, trainer class
 
 A romhack — new maps, new NPCs, re-scripted events, rebalanced data — is a directory of file edits, not an engine fork.
