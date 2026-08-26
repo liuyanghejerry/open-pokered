@@ -50,11 +50,16 @@ pub fn draw_town_map(
         }
 
         // 2. Selection reticle (16×16) centered on the highlighted landmark.
+        // Entry coords are NOT screen tiles: the original converts them via
+        // TownMapCoordsToOAMCoords (OAM x/y = v*8+24), WriteTownMapSpriteOAM
+        // (net x−4, y−3) and the hardware OAM offset (x−8, y−16), so a 16×16
+        // sprite's top-left lands at (x*8+12, y*8+5) — centered on the town
+        // square baked into the tilemap at tile (x+2, y+1).
         if let Some((sx, sy, _)) = town_map_position(state.selected_map()) {
             if let Ok(cursor) = rm.load_town_map("town_map_cursor") {
                 let cts = cursor.tileset.clone();
-                let bx = ((sx as u32) * TILE_SIZE).saturating_sub(TILE_SIZE / 2);
-                let by = ((sy as u32) * TILE_SIZE).saturating_sub(TILE_SIZE / 2);
+                let bx = (sx as u32) * TILE_SIZE + 12;
+                let by = (sy as u32) * TILE_SIZE + 5;
                 blit_single_tile(fb, &cts, 0, bx, by, &cursor_pal);
                 blit_single_tile(fb, &cts, 1, bx + TILE_SIZE, by, &cursor_pal);
                 blit_single_tile(fb, &cts, 2, bx, by + TILE_SIZE, &cursor_pal);
@@ -80,10 +85,9 @@ pub fn draw_town_map(
 
             // 4. The Pidgey bird sprite over the selected landmark — the
             // first 16×16 frame of gfx/sprites/bird.png (`BirdSprite` +
-            // BIRD_BASE_TILE $04, engine/items/town_map.asm:146-149). Like
-            // the player marker it is centered on the landmark (OAM
-            // coords x*8+24/y*8+24 minus the 4px 16×16 offset →
-            // top-left at x*8+4, y*8+4). White pixels stay transparent.
+            // BIRD_BASE_TILE $04, engine/items/town_map.asm:146-149). It
+            // shares the reticle's OAM-derived anchor (top-left at
+            // x*8+12, y*8+5). White pixels stay transparent.
             if let Ok(bird) = rm.load_sprite("bird") {
                 let bts = bird.tileset.clone();
                 let bird_pal = Palette::new(&[
@@ -93,8 +97,8 @@ pub fn draw_town_map(
                     GRAYSCALE_PALETTE.colors[3],
                 ]);
                 if let Some((sx, sy, _)) = town_map_position(state.selected_map()) {
-                    let bx = (sx as u32) * TILE_SIZE + TILE_SIZE / 2;
-                    let by = (sy as u32) * TILE_SIZE + TILE_SIZE / 2;
+                    let bx = (sx as u32) * TILE_SIZE + 12;
+                    let by = (sy as u32) * TILE_SIZE + 5;
                     blit_single_tile(fb, &bts, 0, bx, by, &bird_pal);
                     blit_single_tile(fb, &bts, 1, bx + TILE_SIZE, by, &bird_pal);
                     blit_single_tile(fb, &bts, 2, bx, by + TILE_SIZE, &bird_pal);
@@ -104,10 +108,11 @@ pub fn draw_town_map(
         }
     }
 
-    // 5. Flashing "you are here" marker at the player's current location.
+    // 5. Flashing "you are here" marker at the player's current location,
+    // over the town square baked into the tilemap at tile (x+2, y+1).
     if (frame_counter / 16) % 2 == 0 {
         if let Some((px, py, _)) = town_map_position(state.current_map()) {
-            fill_tile((px as u32) * TILE_SIZE, (py as u32) * TILE_SIZE, Rgba::BLACK, fb);
+            fill_tile((px as u32) * TILE_SIZE + 16, (py as u32) * TILE_SIZE + 8, Rgba::BLACK, fb);
         }
     }
 
@@ -166,12 +171,13 @@ mod tests {
         assert!(up_ink, "the ▲ cursor marker is drawn at (18,0)");
         assert!(down_ink, "the ▼ cursor marker is drawn at (19,0)");
 
-        // The bird sprite centered on the selected landmark (Pallet Town at
-        // (3,15)-ish in the 20×18 map): ink in the 16×16 window around it
-        // that is NOT the plain map tile — the bird adds pixels.
+        // The bird sprite centered on the selected landmark's town square
+        // (16×16 top-left at x*8+12, y*8+5 — see draw_town_map): ink in the
+        // 16×16 window around it that is NOT the plain map tile — the bird
+        // adds pixels.
         if let Some((sx, sy, _)) = town_map_position(state.selected_map()) {
-            let bx = (sx as u32) * TILE_SIZE + TILE_SIZE / 2;
-            let by = (sy as u32) * TILE_SIZE + TILE_SIZE / 2;
+            let bx = (sx as u32) * TILE_SIZE + 12;
+            let by = (sy as u32) * TILE_SIZE + 5;
             let bird_ink = (0..2 * TILE_SIZE).any(|dy| {
                 (0..2 * TILE_SIZE).any(|dx| {
                     fb.get_pixel(bx + dx, by + dy).is_some_and(|c| c != Rgba::WHITE)
