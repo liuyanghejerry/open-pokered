@@ -18,6 +18,7 @@
 // ───────────────────────────────────────────────────────────────────────────
 import { tool } from 'ai'
 import { z } from 'zod'
+import { listStaticSkills, readStaticSkill, staticSkillsPromptSection } from './assistantSkills'
 import { dataFetch } from './dataAdapter'
 import type { DiffOp } from './useProposals'
 import type { ProviderProfile } from '../types/ai'
@@ -161,6 +162,7 @@ export function buildStaticSystem(uiContext?: { activity?: string; route?: strin
     'For .scene scripts: read the map\'s script_config.json and script.scene first, keep existing functions,',
     'and match the existing DSL style (@trigger / @say / @t bilingual lines).',
     'Answer in the user\'s language.',
+    staticSkillsPromptSection(),
     where,
     mem,
   ]
@@ -313,6 +315,19 @@ export async function buildStaticTools(emit: StaticAiEmit): Promise<Record<strin
     read_item: tool({ description: 'Read an item\'s data (price, category, effect).', inputSchema: z.object({ id: z.string() }), execute: read.read_item }),
     list_layouts: tool({ description: 'List UI layout names (bag, battle_main, dialog, start, …).', inputSchema: z.object({}), execute: read.list_layouts }),
     read_layout: tool({ description: 'Read a `.gui` layout source by name.', inputSchema: z.object({ name: z.string() }), execute: read.read_layout }),
+    list_skills: tool({
+      description: 'List the loadable skill playbooks (name + description) — e.g. authoring maps, trainers, Pokémon, saves.',
+      inputSchema: z.object({}),
+      execute: async () => JSON.stringify(listStaticSkills(), null, 2),
+    }),
+    read_skill: tool({
+      description: 'Load the full playbook of one skill by name (from list_skills or the system-prompt skill index). Call this BEFORE starting a task that matches a skill, and follow its workflow.',
+      inputSchema: z.object({ name: z.string() }),
+      execute: async ({ name }: { name: string }) => {
+        const doc = readStaticSkill(String(name ?? ''))
+        return doc ? `# Skill: ${doc.name}\n\n${doc.body}` : 'ERROR: unknown skill — call list_skills for the available names'
+      },
+    }),
     // PROPOSE
     propose_pokemon_edit: tool({
       description: 'Propose replacing a Pokémon\'s full data record. `content` = the COMPLETE new record as a JSON string (read it first with read_pokemon).' + NOTE,

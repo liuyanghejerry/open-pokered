@@ -162,6 +162,10 @@
           "type": "integer",
           "minimum": 0,
           "description": "Item ID for PokeBall pickups"
+        },
+        "endBattleText": {
+          "type": "string",
+          "description": "Post-battle dialogue for trainer NPCs (used when isTrainer=true)"
         }
       },
       "additionalProperties": false,

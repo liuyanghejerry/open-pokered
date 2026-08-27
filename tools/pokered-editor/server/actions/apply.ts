@@ -92,6 +92,19 @@ function mapDirAbs(project: ProjectContext, name: string): string {
   return abs
 }
 
+/** Files inside a map dir the assistant may write (keep in sync with the
+ *  propose_map_file tool — never a free-form path). */
+const MAP_FILE_ALLOWLIST = new Set(['map.json', 'script_config.json'])
+
+/** Absolute path of an allowlisted file inside a map dir (map-file target). */
+function mapFileAbs(project: ProjectContext, t: ChangeTarget): string {
+  if (!t.map) throw new Error('map-file target needs map')
+  if (!t.file || !MAP_FILE_ALLOWLIST.has(t.file)) {
+    throw new Error(`map-file target needs file to be one of: ${[...MAP_FILE_ALLOWLIST].join(', ')}`)
+  }
+  return path.join(mapDirAbs(project, t.map), t.file)
+}
+
 /**
  * Recursively delete a directory THIS apply path created (revert of a
  * scaffold/map-create). Guards against becoming a generic rm -rf: the dir must
@@ -131,6 +144,8 @@ function resolveTargetPath(project: ProjectContext, t: ChangeTarget): string {
     case 'map':
       if (!t.map) throw new Error('map target needs map')
       return project.mapObjectsPath(t.map)
+    case 'map-file':
+      return mapFileAbs(project, t)
     case 'project-config':
       return project.configFile()
     case 'project-scaffold':
@@ -215,6 +230,10 @@ function applyMapCreate(project: ProjectContext, abs: string, req: ApplyChangeRe
   if (!req.force && req.expect === null && fs.existsSync(path.join(abs, 'map.json'))) {
     return { ok: false, conflict: true, backup: null, path: path.relative(project.root, abs) }
   }
-  createMap(project, { name: path.basename(abs) })
+  // `after` carries the creation params as JSON ({name, tileset?, width?, …}).
+  // Older proposals carry just {name} — extra fields default inside createMap.
+  let params: Record<string, unknown> = {}
+  try { params = JSON.parse(req.after || '{}') } catch { /* tolerate */ }
+  createMap(project, { ...params, name: path.basename(abs) } as Parameters<typeof createMap>[1])
   return { ok: true, backup: null, path: path.relative(project.root, abs) }
 }

@@ -52,6 +52,21 @@
       "config": { "mapsDir": "maps", "tileSize": 8, "blockSize": 4, "screen": { "width": 160, "height": 144 } }
     },
     {
+      "id": "data",
+      "type": "data",
+      "label": "Game Data",
+      "icon": "database",
+      "enabled": true,
+      "config": {
+        "tables": [
+          { "id": "pokemon", "label": "Pokémon", "dir": "pokemon", "idField": "species" },
+          { "id": "moves", "label": "Moves", "dir": "moves", "idField": "id" },
+          { "id": "trainers", "label": "Trainers", "dir": "trainers", "idField": "class" },
+          { "id": "items", "label": "Items", "dir": "data/items", "idField": "id" }
+        ]
+      }
+    },
+    {
       "id": "settings",
       "type": "settings",
       "label": "Config",

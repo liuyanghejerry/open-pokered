@@ -19,6 +19,7 @@ import { appendMemory } from './memory'
 import { lintScene } from '../sceneLint'
 import { lintGui } from '../guiLint'
 import { checkScene } from '../sceneCheck'
+import { listSkills, readSkillByName } from './skills'
 import { PROJECT_TEMPLATES, activitiesFor, slugify } from '../scaffold'
 
 const CAP = 9000
@@ -63,6 +64,13 @@ export function readToolImpls(ctx: ActionContext) {
     compile_gui: async ({ content }: { content: string }) => {
       if (typeof content !== 'string') return 'ERROR: content must be a string'
       return fmtFindings(lintGui(content), 'OK: structure looks valid (note: structural pre-check only; the editor runs the full WASM compile on apply).')
+    },
+    // ── Skills: loadable task playbooks (see server/actions/skills.ts). ──
+    list_skills: async () =>
+      j(listSkills(ctx.project).map(s => ({ name: s.name, description: s.description, source: s.source }))),
+    read_skill: async ({ name }: { name: string }) => {
+      const doc = readSkillByName(String(name ?? ''), ctx.project)
+      return doc ? `# Skill: ${doc.name}\n\n${doc.body}`.slice(0, CAP * 3) : 'ERROR: unknown skill — call list_skills for the available names'
     },
   }
 }
@@ -139,6 +147,19 @@ export function proposeToolImpls(ctx: ActionContext, cs: ChangeSet) {
       const pr = cs.add({ target: { kind: 'map', map, path: `maps/${map}/objects.json` }, title: `${before ? 'Edit' : 'Create'} objects.json for map "${map}"`, rationale, before, after: norm.text })
       emit(pr); return { ok: true, proposalId: pr.id }
     },
+    propose_map_file: async ({ map, file, content, rationale }: { map: string; file: string; content: unknown; rationale?: string }) => {
+      if (!map || typeof map !== 'string') return 'ERROR: map (the map directory name, e.g. "PalletTown") is required'
+      // Same pattern as the apply-side guard: no traversal, no leading digit/dash.
+      if (!/^[A-Za-z][A-Za-z0-9_]*$/.test(map)) return 'ERROR: map must be a valid directory name (a letter first; A–Z, 0–9, _)'
+      if (file !== 'map.json' && file !== 'script_config.json') return 'ERROR: file must be "map.json" or "script_config.json"'
+      const norm = normalizeJson(content)
+      if (norm.error) return 'ERROR: ' + norm.error
+      const mapsDir = ((p.activity('map')?.config ?? {}) as { mapsDir?: string }).mapsDir ?? 'maps'
+      const before = p.readDataFileOrNull(path.join(mapsDir, map, file))
+      if (file === 'map.json' && before === null) return `ERROR: map "${map}" has no map.json — create the map first with propose_map_create`
+      const pr = cs.add({ target: { kind: 'map-file', map, file, path: `${mapsDir}/${map}/${file}` }, title: `${before ? 'Edit' : 'Create'} ${file} for map "${map}"`, rationale, before, after: norm.text })
+      emit(pr); return { ok: true, proposalId: pr.id }
+    },
     // ── Project-level proposals (project creation / config / new maps) ──
     draft_project_scaffold: async ({ name, dir, templateId, summary }: { name: string; dir?: string; templateId: string; summary?: string }) => {
       if (!name || !String(name).trim()) return 'ERROR: name is required'
@@ -173,14 +194,21 @@ export function proposeToolImpls(ctx: ActionContext, cs: ChangeSet) {
       const pr = cs.add({ target: { kind: 'project-config', path: '.dotzuki-editor.json' }, title: `${before ? 'Edit' : 'Create'} project config (.dotzuki-editor.json)`, rationale, before, after })
       emit(pr); return { ok: true, proposalId: pr.id }
     },
-    propose_map_create: async ({ name, rationale }: { name: string; rationale?: string }) => {
+    propose_map_create: async (args: { name: string; tileset?: string; width?: number; height?: number; music?: string; borderBlock?: number; displayName?: string; townMap?: { x: number; y: number }; rationale?: string }) => {
       if (!p) return 'ERROR: no project is open'
-      if (!name || !/^[A-Za-z0-9_-]+$/.test(String(name))) return 'ERROR: a valid map name (A–Z, 0–9, _-) is required'
+      const { name, rationale, ...rest } = args
+      // Same pattern as the editor's own POST /api/maps: a letter first, no dashes.
+      if (!name || !/^[A-Za-z][A-Za-z0-9_]*$/.test(String(name))) return 'ERROR: a valid map name (a letter first; A–Z, 0–9, _; e.g. "CinnabarLab") is required'
       const mapsDir = ((p.activity('map')?.config ?? {}) as { mapsDir?: string }).mapsDir ?? 'maps'
       if (p.readDataFileOrNull(path.join(mapsDir, name, 'map.json'))) {
-        return `ERROR: map "${name}" already exists — use propose_map_edit to change its objects.json`
+        return `ERROR: map "${name}" already exists — use propose_map_file to edit its map.json / script_config.json`
       }
-      const after = JSON.stringify({ name }, null, 2)
+      // The creation params ride in `after`; applyChange hands them to createMap.
+      const payload: Record<string, unknown> = { name }
+      for (const k of ['tileset', 'width', 'height', 'music', 'borderBlock', 'displayName', 'townMap'] as const) {
+        if (rest[k] !== undefined) payload[k] = rest[k]
+      }
+      const after = JSON.stringify(payload, null, 2)
       const pr = cs.add({ target: { kind: 'map-create', map: name, path: `${mapsDir}/${name}/` }, title: `Create map "${name}"`, rationale, before: null, after })
       emit(pr); return { ok: true, proposalId: pr.id }
     },
@@ -263,6 +291,8 @@ export async function buildReadTools(ctx: ActionContext): Promise<Record<string,
     validate_scene: tool({ description: 'Lint a draft `.scene` buffer: dangling/orphan EVENT_ flags and hallucinated game.* calls. A quick pre-check; for the full gate use check_scene.', inputSchema: z.object({ content: z.string() }), execute: impl.validate_scene }),
     check_scene: tool({ description: 'Compile-check a DRAFT `.scene` buffer WITHOUT saving it: runs the project scene compiler when configured (real errors), else the deterministic lint. The response starts with `[compile] PASS/FAIL` or `[lint] PASS/FAIL`. Run this on your draft and FIX every FAIL/error, iterating until it PASSES, BEFORE calling propose_scene_write. `scene` = the target stem (used only for messages).', inputSchema: z.object({ scene: z.string().optional(), content: z.string() }), execute: impl.check_scene }),
     compile_gui: tool({ description: 'Structural pre-check of a draft `.gui` buffer: unbalanced { } [ ] ( ) and missing top-level block. Run this on your draft BEFORE propose_gui_write to catch truncated/broken output.', inputSchema: z.object({ content: z.string() }), execute: impl.compile_gui }),
+    list_skills: tool({ description: 'List the loadable skill playbooks (name + description) available for this project — e.g. authoring maps, trainers, Pokémon, saves.', inputSchema: z.object({}), execute: impl.list_skills }),
+    read_skill: tool({ description: 'Load the full playbook of one skill by name (from list_skills or the system-prompt skill index). Call this BEFORE starting a task that matches a skill, and follow its workflow.', inputSchema: z.object({ name: z.string() }), execute: impl.read_skill }),
   }
   // Story tools only exist when the project declares a story activity —
   // otherwise their impls throw "No story activity / storiesDir configured",
@@ -307,9 +337,19 @@ export async function buildProposeTools(ctx: ActionContext, cs: ChangeSet): Prom
       execute: impl.propose_gui_write,
     }),
     propose_map_edit: tool({
-      description: 'Propose editing a map\'s `objects.json` (NPC placements, warps, collision). `map` = the map directory name (see list_maps); `content` = the COMPLETE new objects.json as a JSON string.' + note,
+      description: 'Propose editing a map\'s `objects.json` (NPC placements, warps, collision) — for generic dotzuki projects. NOTE: pokered maps keep NPCs/warps/signs/wild encounters in `map.json` instead — use propose_map_file for those.' + note,
       inputSchema: z.object({ map: z.string(), content: z.string(), rationale: z.string().optional() }),
       execute: impl.propose_map_edit,
+    }),
+    propose_map_file: tool({
+      description: 'Propose writing an allowlisted file inside a map directory: `file` = "map.json" (header/connections/warps/npcs/signs/text/wild — the COMPLETE new JSON) or "script_config.json" (npc/sign talk-handler bindings + coordEvents). `map` = the map directory name from list_maps. The map must already exist (use propose_map_create first for a new one).' + note,
+      inputSchema: z.object({
+        map: z.string().describe('Map directory name, e.g. "PalletTown"'),
+        file: z.enum(['map.json', 'script_config.json']),
+        content: z.string().describe('The COMPLETE new file content as a JSON string'),
+        rationale: z.string().optional(),
+      }),
+      execute: impl.propose_map_file,
     }),
     draft_project_scaffold: scaffoldTool(tool, z, impl, note),
     propose_project_config: tool({
@@ -318,8 +358,18 @@ export async function buildProposeTools(ctx: ActionContext, cs: ChangeSet): Prom
       execute: impl.propose_project_config,
     }),
     propose_map_create: tool({
-      description: 'Propose creating a NEW map directory (map.json with default size, empty warps/npcs). `name` = the new map directory name (A–Z, 0–9, _-). For an existing map use propose_map_edit instead.' + note,
-      inputSchema: z.object({ name: z.string(), rationale: z.string().optional() }),
+      description: 'Propose creating a NEW map directory. In a pokered project this scaffolds the full game shape (map.json with the next free id + header, map.blk, script_config.json, empty script.scene); pass `tileset`, `width`, `height` (in 2×2-tile blocks), `music`, `borderBlock` and optionally `townMap` {x,y} + `displayName` to control it. For an existing map use propose_map_file instead.' + note,
+      inputSchema: z.object({
+        name: z.string().describe('New map directory name (a letter first; A–Z, 0–9, _; PascalCase by convention, e.g. "CinnabarLab")'),
+        tileset: z.string().optional(),
+        width: z.number().int().min(1).max(255).optional(),
+        height: z.number().int().min(1).max(255).optional(),
+        music: z.string().optional(),
+        borderBlock: z.number().int().min(0).max(255).optional(),
+        displayName: z.string().optional(),
+        townMap: z.object({ x: z.number().int(), y: z.number().int() }).optional(),
+        rationale: z.string().optional(),
+      }),
       execute: impl.propose_map_create,
     }),
   }

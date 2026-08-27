@@ -195,3 +195,79 @@ describe('applyChange — project kinds', () => {
     expect(() => applyChange(p, { target: { kind: 'map-create', map: '../evil', path: '' }, after: '{}' })).toThrow()
   })
 })
+
+// ── map-file targets + pokered-shaped map-create ────────────────────────────
+
+describe('applyChange — map-file', () => {
+  it('writes an allowlisted file inside the map dir and rejects others', () => {
+    const p = createProjectContext(ROOT)
+    write('data/maps/Town/map.json', '{"id":9,"name":"Town"}')
+    const res = applyChange(p, {
+      target: { kind: 'map-file', map: 'Town', file: 'map.json', path: 'data/maps/Town/map.json' },
+      after: '{"id":9,"name":"Town","warps":[]}',
+    })
+    expect(res.ok).toBe(true)
+    expect(JSON.parse(read('data/maps/Town/map.json')).warps).toEqual([])
+
+    expect(() => applyChange(p, {
+      target: { kind: 'map-file', map: 'Town', file: '../../evil.json', path: '' }, after: '{}',
+    })).toThrow(/one of/)
+    expect(() => applyChange(p, {
+      target: { kind: 'map-file', map: 'Town', file: 'script.scene', path: '' }, after: '{}',
+    })).toThrow(/one of/)
+  })
+})
+
+describe('applyChange — map-create (pokered shape)', () => {
+  it('scaffolds the full pokered map dir when existing maps carry a header', () => {
+    const p = createProjectContext(ROOT)
+    // The pokered-shape sniff: an existing map.json with a `header` block.
+    write('data/maps/OldTown/map.json', JSON.stringify({ id: 5, name: 'OldTown', header: { tileset: 'Overworld', width: 10, height: 9 } }))
+
+    const res = applyChange(p, {
+      target: { kind: 'map-create', map: 'CinnabarLab', path: 'data/maps/CinnabarLab/' },
+      after: JSON.stringify({ name: 'CinnabarLab', tileset: 'Lab', width: 12, height: 10, music: 'Cinnabar', borderBlock: 3, townMap: { x: 2, y: 6 }, displayName: 'Cinnabar Lab' }),
+      expect: null,
+    })
+    expect(res.ok).toBe(true)
+
+    const mapJson = JSON.parse(read('data/maps/CinnabarLab/map.json'))
+    expect(mapJson).toMatchObject({
+      id: 10,                      // next free id (the map-file test wrote Town with id 9; OldTown has 5)
+      name: 'CinnabarLab',
+      header: { tileset: 'Lab', music: 'Cinnabar', width: 12, height: 10, borderBlock: 3, connectionFlags: 0 },
+      connections: {}, warps: [], npcs: [], signs: [],
+      text: { npc: {}, sign: {} }, wild: null,
+    })
+    // map.blk is width*height bytes filled with the border block.
+    const blk = fs.readFileSync(path.join(ROOT, 'data/maps/CinnabarLab/map.blk'))
+    expect(blk.length).toBe(120)
+    expect(blk.every(b => b === 3)).toBe(true)
+    // script_config.json + empty script.scene land alongside.
+    expect(JSON.parse(read('data/maps/CinnabarLab/script_config.json'))).toEqual({ npcs: [], signs: [], coordEvents: [] })
+    expect(read('data/maps/CinnabarLab/script.scene')).toBe('')
+    // town-map placement recorded in the dataRoot sidecar.
+    expect(JSON.parse(read('town_map_extras.json'))).toMatchObject({ CinnabarLab: { x: 2, y: 6, displayName: 'CINNABAR LAB' } })
+  })
+
+  it('keeps the legacy minimal shape for projects without pokered maps', () => {
+    const bare = fs.mkdtempSync(path.join(os.tmpdir(), 'dotzuki-apply-bare-'))
+    try {
+      fs.writeFileSync(path.join(bare, '.dotzuki-editor.json'), JSON.stringify({
+        name: 'B', dataRoot: '.', activities: [{ id: 'map', type: 'map', config: { mapsDir: 'maps' } }],
+      }))
+      const p = createProjectContext(bare)
+      const res = applyChange(p, {
+        target: { kind: 'map-create', map: 'Town', path: 'maps/Town/' },
+        after: JSON.stringify({ name: 'Town' }), expect: null,
+      })
+      expect(res.ok).toBe(true)
+      const mapJson = JSON.parse(fs.readFileSync(path.join(bare, 'maps/Town/map.json'), 'utf-8'))
+      expect(mapJson.header).toBeUndefined()
+      expect(mapJson.name).toBe('Town')
+      expect(fs.existsSync(path.join(bare, 'maps/Town/map.blk'))).toBe(false)
+    } finally {
+      fs.rmSync(bare, { recursive: true, force: true })
+    }
+  })
+})

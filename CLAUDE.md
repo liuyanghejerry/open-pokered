@@ -137,7 +137,7 @@ This repo ships Claude Code skills under `.claude/skills/` — invoke them when 
 
 ## Tooling outside Cargo
 
-- `tools/pokered-editor/` — Pokémon-specific Vue 3/Vite editor suite (`pnpm install && pnpm dev`, http://localhost:5173): map editor, save editor, trainer/Pokémon/move data editors, UI layout editor (WASM-backed WYSIWYG preview, understands `.gui` DSL), map script editor, pixel editor. Also includes an **AI assistant** (chat with read/propose tools, reviewable change proposals, scene/gui/data generation, AI sprite generation) and an **Electron shell** (`pnpm electron:dev`, `pnpm electron:pack`).
+- `tools/pokered-editor/` — Pokémon-specific Vue 3/Vite editor suite (`pnpm install && pnpm dev`, http://localhost:5173): map editor, save editor, trainer/Pokémon/move data editors, UI layout editor (WASM-backed WYSIWYG preview, understands `.gui` DSL), map script editor, pixel editor. Also includes an **AI assistant** (chat with read/propose tools, reviewable change proposals, scene/gui/data generation, AI sprite generation) with **loadable task skills** — playbooks under `tools/pokered-editor/skills/` (new map / new trainer / new Pokémon / save construction) that the agent pulls via its `read_skill` tool; drop a `<projectRoot>/skills/` dir in to add project-local ones — and an **Electron shell** (`pnpm electron:dev`, `pnpm electron:pack`).
   - The layout-preview WASM bridge is the in-repo `crates/pokered-layout-preview` crate, built by `pnpm build:wasm` (wasm-pack → `crates/pokered-layout-preview/pkg`).
 - `tools/asm2music.py` / `tools/asm2sfx.py` — convert pokered `audio/music|sfx/*.asm` to Rust byte tables.
 - `tools/dsl_migration/` — historical scripts that converted legacy `script.js` map scripts to `.scene` DSL.
