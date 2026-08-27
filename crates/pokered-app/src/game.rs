@@ -4625,6 +4625,145 @@ impl PokemonGame {
         });
     }
 
+    /// Full structured state snapshot for the debug protocol's `get_state`
+    /// (and the payload of `wait_until` / `skip_dialogue` responses).
+    #[cfg(feature = "debug-server")]
+    fn debug_state_snapshot(&self) -> serde_json::Value {
+        let map_id = self.overworld.state.current_map;
+        // Current overworld dialogue text (script @speaker / talk), so a
+        // driver can observe interactions that don't change `screen`.
+        let dialogue = self
+            .overworld
+            .pending_dialogue
+            .as_ref()
+            .and_then(|d| d.get_display_text())
+            .map(|(a, b)| format!("{} {}", a, b).trim().to_string());
+        // Structured dialogue-machine state: page progress, typewriter
+        // position, and whether the current page is fully revealed and
+        // waiting for A — the driver can align A presses exactly.
+        let dialogue_state = self
+            .overworld
+            .pending_dialogue
+            .as_ref()
+            .map(|d| {
+                let (a, b) = d.get_display_text().unwrap_or_default();
+                serde_json::json!({
+                    "text": format!("{} {}", a, b).trim(),
+                    "page": d.current_page() + 1,
+                    "total_pages": d.pages().len(),
+                    "char_index": d.char_index(),
+                    "total_chars": d.total_chars(),
+                    "waiting_for_input": d.waiting_for_input(),
+                    "holding_open": d.holding_open(),
+                    "done": d.is_done(),
+                })
+            });
+        // Choice-menu cursor (script `@choice`), so a driver can move the
+        // highlighted option without guessing.
+        let choice = self
+            .overworld
+            .pending_choice
+            .as_ref()
+            .map(|c| serde_json::json!({ "options": c.options, "selected": c.selected }));
+        serde_json::json!({
+            "screen": crate::cli::screen_name(&self.state.screen).to_string(),
+            "map_id": map_id as u8,
+            "map_name": format!("{:?}", map_id),
+            "player_x": self.overworld.state.player.x,
+            "player_y": self.overworld.state.player.y,
+            "player_facing": format!("{:?}", self.overworld.state.player.facing),
+            "player_name": self.player_name.clone(),
+            "frame_count": self.frame_count,
+            "party_count": self.overworld.party_count,
+            "dialogue": dialogue,
+            "dialogue_state": dialogue_state,
+            "choice": choice,
+            // True while a storyline script owns the game (cutscene in
+            // progress), false once control is back with the player.
+            "script_running": !self.overworld.script_engine_idle(),
+            // Current battle text box message (e.g. the post-victory
+            // EndBattleText quip), so a driver can observe battle flow.
+            "battle_message": self.battle.current_message.clone(),
+            // Current battle phase (Debug form), e.g. "PlayerMenu",
+            // "BagSelect", so a driver knows when a menu is ready.
+            "battle_phase": format!("{:?}", self.battle.phase),
+            "money": self.save_data.game_data.player_money,
+            "coins": self.save_data.game_data.player_coins,
+            // Current PC-screen phase (Debug form), so a driver can
+            // observe storage-system navigation.
+            "pc_phase": self
+                .pc_screen
+                .as_ref()
+                .map(|pc| format!("{:?}", pc.phase())),
+            // Script-effect currently being processed (e.g.
+            // "ShowDialogue", "FollowNpc"), null when idle — lets a
+            // driver follow cutscene progress deterministically.
+            "active_script_effect": self.overworld.active_script_effect_label(),
+            // Full script-effect payload with progress fields (Delay
+            // countdown, move-path state, FollowNpc phase, choice
+            // cursor, …), or null when idle.
+            "script_effect": self.overworld.active_script_effect_value(),
+            // True while a storyline is suspended on startBattle/
+            // startWildBattle — a driver must play out the battle
+            // before the script resumes.
+            "script_awaiting_battle": self.overworld.script_awaiting_battle,
+            "player_movement_state": format!("{:?}", self.overworld.state.player.movement_state),
+            // Configured typewriter speed (chars-per-frame pacing), so a
+            // driver can estimate text reveal time offline.
+            "text_speed_delay_frames": self.state.config.text_speed.delay_frames(),
+            // Warp transition state ("Idle"/"FadingOut { .. }"/…), so a
+            // driver knows when a warp is still settling.
+            "warp_fade": format!("{:?}", self.overworld.warp_fade_state),
+        })
+    }
+
+    /// Predicate used by the debug `wait_until` command. Returns whether
+    /// the named condition currently holds. Named conditions are the
+    /// driver-facing vocabulary; `screen=` / `battle_phase=` /
+    /// `script_effect=` compare against Debug variant names.
+    #[cfg(feature = "debug-server")]
+    fn debug_condition_met(&self, condition: &str) -> bool {
+        match condition {
+            "dialogue_done" => self.overworld.pending_dialogue.is_none(),
+            "dialogue_ready" => self
+                .overworld
+                .pending_dialogue
+                .as_ref()
+                .map_or(false, |d| d.waiting_for_input()),
+            "choice_open" => self.overworld.pending_choice.is_some(),
+            "choice_closed" => self.overworld.pending_choice.is_none(),
+            "script_idle" => self.overworld.script_engine_idle(),
+            "not_battle" => self.state.screen != pokered_core::game_state::GameScreen::Battle,
+            // Player control back after a cutscene: overworld, no dialogue /
+            // choice / script effect, script engine idle, warp settled,
+            // and no battle suspended on the script.
+            "control_ready" => {
+                crate::cli::screen_name(&self.state.screen) == "overworld"
+                    && self.overworld.pending_dialogue.is_none()
+                    && self.overworld.pending_choice.is_none()
+                    && self.overworld.active_script_effect_value().is_none()
+                    && self.overworld.script_engine_idle()
+                    && self.overworld.pending_warp.is_none()
+                    && matches!(
+                        self.overworld.warp_fade_state,
+                        pokered_core::overworld::WarpFadeState::Idle
+                    )
+                    && !self.overworld.script_awaiting_battle
+            }
+            other => {
+                if let Some(name) = other.strip_prefix("screen=") {
+                    crate::cli::screen_name(&self.state.screen) == name
+                } else if let Some(name) = other.strip_prefix("battle_phase=") {
+                    format!("{:?}", self.battle.phase) == name
+                } else if let Some(name) = other.strip_prefix("script_effect=") {
+                    self.overworld.active_script_effect_label().as_deref() == Some(name)
+                } else {
+                    false
+                }
+            }
+        }
+    }
+
     #[cfg(feature = "debug-server")]
     fn handle_debug_command(
         &mut self,
@@ -4633,52 +4772,57 @@ impl PokemonGame {
         use pokered_debug_server::{DebugCommand, DebugResponse};
 
         match cmd {
-            DebugCommand::GetState => {
-                let map_id = self.overworld.state.current_map;
-                // Current overworld dialogue text (script @speaker / talk), so a
-                // driver can observe interactions that don't change `screen`.
-                let dialogue = self
-                    .overworld
-                    .pending_dialogue
-                    .as_ref()
-                    .and_then(|d| d.get_display_text())
-                    .map(|(a, b)| format!("{} {}", a, b).trim().to_string());
-                let data = serde_json::json!({
-                    "screen": crate::cli::screen_name(&self.state.screen).to_string(),
-                    "map_id": map_id as u8,
-                    "map_name": format!("{:?}", map_id),
-                    "player_x": self.overworld.state.player.x,
-                    "player_y": self.overworld.state.player.y,
-                    "player_facing": format!("{:?}", self.overworld.state.player.facing),
-                    "player_name": self.player_name.clone(),
-                    "frame_count": self.frame_count,
-                    "party_count": self.overworld.party_count,
-                    "dialogue": dialogue,
-                    // Current battle text box message (e.g. the post-victory
-                    // EndBattleText quip), so a driver can observe battle flow.
-                    "battle_message": self.battle.current_message.clone(),
-                    // Current battle phase (Debug form), e.g. "PlayerMenu",
-                    // "BagSelect", so a driver knows when a menu is ready.
-                    "battle_phase": format!("{:?}", self.battle.phase),
-                    "money": self.save_data.game_data.player_money,
-                    "coins": self.save_data.game_data.player_coins,
-                    // Current PC-screen phase (Debug form), so a driver can
-                    // observe storage-system navigation.
-                    "pc_phase": self
-                        .pc_screen
-                        .as_ref()
-                        .map(|pc| format!("{:?}", pc.phase())),
-                    // Script-effect currently being processed (e.g.
-                    // "ShowDialogue", "FollowNpc"), null when idle — lets a
-                    // driver follow cutscene progress deterministically.
-                    "active_script_effect": self.overworld.active_script_effect_label(),
-                    // True while a storyline is suspended on startBattle/
-                    // startWildBattle — a driver must play out the battle
-                    // before the script resumes.
-                    "script_awaiting_battle": self.overworld.script_awaiting_battle,
-                    "player_movement_state": format!("{:?}", self.overworld.state.player.movement_state),
-                });
-                DebugResponse::ok_with_data(data)
+            DebugCommand::GetState => DebugResponse::ok_with_data(self.debug_state_snapshot()),
+            DebugCommand::WaitUntil {
+                ref condition,
+                max_frames,
+            } => {
+                // Synchronous condition-driven stepping: drive update() until
+                // the predicate holds (checked after every frame), or the
+                // budget elapses. One round trip replaces the driver's
+                // poll-every-N-frames loop.
+                let mut stepped: u32 = 0;
+                while stepped < max_frames && !self.debug_condition_met(condition) {
+                    let input = InputState::new();
+                    self.update(&input);
+                    stepped += 1;
+                }
+                let reached = self.debug_condition_met(condition);
+                DebugResponse::ok_with_data(serde_json::json!({
+                    "condition": condition,
+                    "reached": reached,
+                    "stepped": stepped,
+                    "state": self.debug_state_snapshot(),
+                }))
+            }
+            DebugCommand::SkipDialogue => {
+                // Engine-internal A taps: skip typing, advance every page,
+                // and close the box exactly like a player pressing A through
+                // it (a last-page tap starts holding-open; a release frame
+                // closes it), so a script suspended on ShowDialogue resumes.
+                // Release/tap frames alternate on purpose: the overworld
+                // tracks `prev_a_pressed` across frames
+                // (update.rs `a_just_pressed`), so consecutive tap frames
+                // would read as a held button and never advance.
+                let mut stepped: u32 = 0;
+                const MAX_SKIP_FRAMES: u32 = 900;
+                // First frame is a release so the very first tap is a
+                // rising edge regardless of the preceding frame.
+                let mut release = true;
+                while self.overworld.pending_dialogue.is_some() && stepped < MAX_SKIP_FRAMES {
+                    let mut input = InputState::new();
+                    if !release {
+                        input.press(GbButton::A);
+                    }
+                    self.update(&input);
+                    stepped += 1;
+                    release = !release;
+                }
+                DebugResponse::ok_with_data(serde_json::json!({
+                    "stepped": stepped,
+                    "dialogue_closed": self.overworld.pending_dialogue.is_none(),
+                    "state": self.debug_state_snapshot(),
+                }))
             }
             DebugCommand::GetPosition => {
                 let map_id = self.overworld.state.current_map;
