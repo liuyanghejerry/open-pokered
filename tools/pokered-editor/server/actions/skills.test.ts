@@ -24,7 +24,7 @@ beforeAll(() => {
   }))
   // A project-local skill, plus one that overrides a builtin by name.
   write('skills/fest-quests/SKILL.md', '---\nname: fest-quests\ndescription: Author festival quest lines.\n---\n\n# Fest quests\n\nBody here.\n')
-  write('skills/pokered-new-map/SKILL.md', '---\nname: pokered-new-map\ndescription: Project-local override of the map playbook.\n---\n\nOverride body.\n')
+  write('skills/new-map/SKILL.md', '---\nname: new-map\ndescription: Project-local override of the map playbook.\n---\n\nOverride body.\n')
 })
 afterAll(() => { try { fs.rmSync(ROOT, { recursive: true, force: true }) } catch { /* ignore */ } })
 
@@ -47,7 +47,7 @@ describe('parseSkillFile', () => {
 describe('discovery', () => {
   it('lists <dir>/<name>/SKILL.md entries, skipping non-skill dirs', () => {
     const list = listSkillsInDir(path.join(ROOT, 'skills'), 'project')
-    expect(list.map(s => s.name).sort()).toEqual(['fest-quests', 'pokered-new-map'])
+    expect(list.map(s => s.name).sort()).toEqual(['fest-quests', 'new-map'])
     expect(list[0].source).toBe('project')
   })
 
@@ -59,13 +59,13 @@ describe('discovery', () => {
     const project = createProjectContext(ROOT)
     const list = listSkills(project)
     // The four shipped pokered skills are present…
-    for (const name of ['pokered-new-map', 'pokered-new-trainer', 'pokered-new-pokemon', 'pokered-save-construction']) {
+    for (const name of ['new-map', 'new-trainer', 'new-pokemon', 'save-construction']) {
       expect(list.some(s => s.name === name)).toBe(true)
     }
     // …plus the project-local one…
     expect(list.some(s => s.name === 'fest-quests' && s.source === 'project')).toBe(true)
     // …and the project override shadows the builtin map skill.
-    const map = list.find(s => s.name === 'pokered-new-map')!
+    const map = list.find(s => s.name === 'new-map')!
     expect(map.source).toBe('project')
     expect(map.description).toContain('override')
   })
@@ -82,7 +82,7 @@ describe('skillsPromptSection', () => {
   it('renders the index with read_skill usage instructions', () => {
     const section = skillsPromptSection(createProjectContext(ROOT))
     expect(section).toContain('read_skill')
-    expect(section).toContain('pokered-new-map')
+    expect(section).toContain('new-map')
     expect(section).toContain('fest-quests')
   })
 })
@@ -91,7 +91,7 @@ describe('shipped builtin skills', () => {
   it('the four pokered playbooks exist with descriptions and bodies', () => {
     const list = listSkillsInDir(builtinSkillsDir(), 'builtin')
     expect(list.map(s => s.name).sort()).toEqual([
-      'pokered-new-map', 'pokered-new-pokemon', 'pokered-new-trainer', 'pokered-save-construction',
+      'new-map', 'new-pokemon', 'new-trainer', 'save-construction',
     ])
     for (const s of list) {
       const doc = readSkillByName(s.name, null)!

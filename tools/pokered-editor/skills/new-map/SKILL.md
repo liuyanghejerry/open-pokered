@@ -1,9 +1,9 @@
 ---
-name: pokered-new-map
+name: new-map
 description: Add a new map to the Pokémon Red/Blue reimplementation — create the map directory (map.json / map.blk / script.scene / script_config.json), place warps/NPCs/signs/wild encounters, wire map connections, script events in the .scene DSL, and register the map in the Rust tables. Use when the user wants to create, extend, or connect a map, route, city, building, or dungeon.
 ---
 
-# pokered-new-map — Adding a New Map
+# new-map — Adding a New Map
 
 A map in this project is a directory under `crates/pokered-data/maps/<MapName>/` with four files. `pokered-data/build.rs` scans that directory at compile time and embeds every `map.json` + compiled `script.scene`, so **data work is file work** — no engine fork.
 
@@ -18,7 +18,7 @@ A map in this project is a directory under `crates/pokered-data/maps/<MapName>/`
 
 Publish a plan with `update_plan` first — this is a multi-step task. Then:
 
-1. **Create the directory** — call `propose_map_create` with `name` (PascalCase, e.g. `"CinnabarLab"`) plus `tileset`, `width`, `height` (in 4×4-tile blocks), `music`, `borderBlock`, and optionally `townMap: {x, y}` + `displayName`. This scaffolds a valid map dir: `map.json` with the next free numeric `id`, a `map.blk` filled with the border block, an empty `script.scene`, and an empty `script_config.json`.
+1. **Create the directory** — call `propose_map_create` with `name` (PascalCase, e.g. `"CinnabarLab"`) plus `tileset`, `width`, `height` (in 2×2-tile blocks), `music`, `borderBlock`, and optionally `townMap: {x, y}` + `displayName`. This scaffolds a valid map dir: `map.json` with the next free numeric `id`, a `map.blk` filled with the border block, an empty `script.scene`, and an empty `script_config.json`.
 2. **Flesh out `map.json`** — `read_file` the new `crates/pokered-data/maps/<Name>/map.json`, then `propose_map_file` (file `map.json`) with the complete JSON: warps, npcs, signs, text, wild, connections.
 3. **Script the events** — draft `script.scene` following the DSL rules below, run `check_scene` on the draft and fix every FAIL, then `propose_scene_write`. Mirror the handler bindings in `script_config.json` via `propose_map_file` (file `script_config.json`).
 4. **Connect to the world** — connections and warps are two-sided; edit the *other* map's `map.json` too (its `connections` entry and/or a return warp).
@@ -27,20 +27,31 @@ Publish a plan with `update_plan` first — this is a multi-step task. Then:
 
 ## map.json reference
 
+Field invariants you must respect (the example below is clean JSON — copy it, then fill in):
+
+- `id` — auto-assigned by map creation (max existing id + 1); never reuse an id.
+- `name` — MUST equal the directory name.
+- `header.width` / `header.height` — in 2×2-tile blocks (the screen is 10×9 blocks = 20×18 tiles).
+- `header.connectionFlags` — bit0=East, bit1=West, bit2=South, bit3=North (e.g. 12 = N+S). The `connections` object below is what the engine reads — keep the two in sync.
+- `header.borderBlock` — block id used to pad around the map; also the map.blk fill.
+- `connections` — omit empty directions.
+- NPC `spriteName` — from `crates/pokered-data/src/sprites.rs`. `x`,`y` are TILE coordinates (2×2 tiles per block step). `movement`: Stationary | Wander | FixedPath | FacePlayer; `facing`: Down|Up|Left|Right; `range` = wander radius (sight range for trainers). `textId` is 1-based and matches `text.npc["1"]` and `script_config.json` `npcs[].id`. Set `isTrainer: true` for trainer NPCs (see the new-trainer skill).
+- `wild` — `null` when the map has no encounters (shape below).
+
 ```json
 {
   "$schema": "../../schemas/map.schema.json",
-  "id": 248,                      // auto-assigned by map creation (max existing id + 1); never reuse an id
-  "name": "CinnabarLab",          // MUST equal the directory name
+  "id": 248,
+  "name": "CinnabarLab",
   "header": {
-    "tileset": "Lab",             // see tileset list below
-    "music": "Cinnabar",          // see music list below
-    "connectionFlags": 0,         // bit0=East 1=West 2=South 3=North (e.g. 12 = N+S); the `connections` object below is what the engine reads — keep the two in sync
-    "width": 10,                  // in 4x4-tile blocks; screen is 5x4 blocks
+    "tileset": "Lab",
+    "music": "Cinnabar",
+    "connectionFlags": 0,
+    "width": 10,
     "height": 9,
-    "borderBlock": 3              // block id used to pad around the map; also the map.blk fill
+    "borderBlock": 3
   },
-  "connections": {                // omit empty directions
+  "connections": {
     "north": { "targetMap": "Route21", "offset": 0 }
   },
   "warps": [
@@ -48,12 +59,15 @@ Publish a plan with `update_plan` first — this is a multi-step task. Then:
   ],
   "npcs": [
     {
-      "spriteId": 3, "spriteName": "Oak",   // sprite list: crates/pokered-data/src/sprites.rs
-      "x": 8, "y": 5,                        // TILE coordinates (2x2 tiles per block step)
-      "movement": "Stationary",              // Stationary | Wander | FixedPath | FacePlayer
-      "facing": "Down", "range": 0,          // Down|Up|Left|Right; range = wander radius
-      "textId": 1,                           // 1-based; matches text.npc["1"] and script_config npcs[].id
-      "isTrainer": false                     // trainers: see the pokered-new-trainer skill
+      "spriteId": 3,
+      "spriteName": "Oak",
+      "x": 8,
+      "y": 5,
+      "movement": "Stationary",
+      "facing": "Down",
+      "range": 0,
+      "textId": 1,
+      "isTrainer": false
     }
   ],
   "signs": [ { "x": 13, "y": 13, "textId": 1 } ],
@@ -61,7 +75,7 @@ Publish a plan with `update_plan` first — this is a multi-step task. Then:
     "npc":  { "1": [ { "line1": "...", "line2": "..." } ] },
     "sign": { "1": [ { "line1": "...", "line2": "..." } ] }
   },
-  "wild": null                    // or the encounters object — see below
+  "wild": null
 }
 ```
 
@@ -71,17 +85,20 @@ Publish a plan with `update_plan` first — this is a multi-step task. Then:
 
 **Connections are reciprocal.** A north connection here needs a south connection on the target map; `offset` shifts the alignment in blocks. Keep widths/heights compatible along the connected edge, and update `connectionFlags` on both maps.
 
-**Wild encounters** (routes/dungeons only; `null` for towns and most interiors):
+**Wild encounters** (routes/dungeons only; `null` for towns and most interiors). Provide BOTH `red` and `blue` — each with a `grass` and a `water` habitat, and exactly 10 mon slots per habitat (slot order is the encounter-probability table; early slots are most common). Species names are PascalCase and must exist in `crates/pokered-data/pokemon/`.
 
 ```json
-"wild": {
-  "red":  { "grass": { "encounterRate": 25, "mons": [ {"level": 3, "species": "Pidgey"}, ... 10 slots ... ] },
-            "water": { "encounterRate": 0,  "mons": [] } },
-  "blue": { "grass": { ... }, "water": { ... } }
+{
+  "red": {
+    "grass": { "encounterRate": 25, "mons": [ { "level": 3, "species": "Pidgey" } ] },
+    "water": { "encounterRate": 4, "mons": [ { "level": 15, "species": "Psyduck" } ] }
+  },
+  "blue": {
+    "grass": { "encounterRate": 25, "mons": [ { "level": 3, "species": "Pidgey" } ] },
+    "water": { "encounterRate": 0, "mons": [] }
+  }
 }
 ```
-
-Provide BOTH `red` and `blue`. Exactly 10 mon slots per habitat — slot order is the encounter-probability table (early slots are most common). Species names are PascalCase and must exist in `crates/pokered-data/pokemon/`.
 
 **Tilesets** (`header.tileset`): `Overworld`, `RedsHouse1`, `Mart`, `Forest`, `RedsHouse2`, `Dojo`, `Pokecenter`, `Gym`, `House`, `ForestGate`, `Museum`, `Underground`, `Gate`, `Ship`, `ShipPort`, `Cemetery`, `Interior`, `Cavern`, `Lobby`, `Mansion`, `Lab`, `Club`, `Facility`, `Plateau`. Pick the one whose blockset gives you the walls/floors you need (`Overworld` for outdoor, `House`/`Interior` for homes, `Cavern` for caves, `Gym` for gyms…).
 
@@ -105,7 +122,7 @@ Rules that matter here (full reference: `docs/DSL_TRANSLATION_GUIDE.md`; API typ
 - Every line of player-facing text is bilingual: `@t("english", "中文")`. Gen-1 dialogue uses `@speaker("")` (no name prefix; the name goes in the text).
 - `@trigger(map = "<Map>", npc = <textId>)` binds a handler to an NPC; `sign = <textId>` for signs; `@load { }` runs on map entry.
 - No `let` — assign with `result = startBattle("OPP_BROCK1")`. Flags are `"EVENT_*"` string literals; check with `getFlag`, set with `setFlag`, and reuse existing flags (`scan_flags`) or follow the `EVENT_*` naming conventions when inventing new ones.
-- Useful calls: `giveItem("POTION", 1)`, `givePokemon("EEVEE", 25)`, `startBattle(...)`, `warpTo(map, x, y)`, `heal()`, `showObject(i)` / `hideObject(i)`, `replaceTileBlock(x, y, blockId)`.
+- Useful calls: `giveItem("POTION", 1)`, `givePokemon("EEVEE", 25)`, `startBattle(...)`, `warpTo(map, x, y)`, `heal()`, `showObject(i)` / `hideObject(i)`, `replaceTileBlock(x, y, blockId)` (BLOCK coordinates, X first — not tile coords).
 - **Always run `check_scene` on your draft and iterate to PASS before `propose_scene_write`.** Then write `script_config.json` binding every NPC/sign `textId` to its `@storyline` name (`"talk": "talkScientist"`); coord events go in `coordEvents` with a `name` + tile `position` + `trigger`.
 
 ## Rust registration (hand-off to the developer — propose tools cannot edit `.rs`)
@@ -116,7 +133,7 @@ A new map dir alone is enough for the **editor** (the Map tab lists it; the Play
 2. `crates/pokered-data/src/map_data_loader.rs` — add `("CinnabarLab", include_bytes!("../maps/CinnabarLab/map.blk"))` to `embedded_blk_sources()`.
 3. `crates/pokered-data/src/map_names.rs` — add a `map_to_name_id` arm. For a brand-new location name also add a `MapNameId` variant + entries in `MAP_NAME_STRINGS` and `MAP_NAME_STRINGS_ZH`; an indoor map can reuse its parent location's name id.
 
-Optional: `fly_warp_data.rs` (Fly destination), `town_map_data.rs` / `crates/pokered-data/town_map_extras.json` (town-map dot — the editor's New Map dialog can write this for you via `townMap`).
+Optional: `fly_warp_data.rs` (Fly destination) and `town_map_data.rs` (town-map dot). The editor also maintains `crates/pokered-data/town_map_extras.json` for the town-map dot — an editor-side sidecar created on demand (via the New Map dialog or the `townMap` param); it is not read by the Rust build.
 
 ## Verification
 

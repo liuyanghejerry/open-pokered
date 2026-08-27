@@ -99,7 +99,9 @@ pub enum Commands {
         #[arg(short, long, default_value = "snapshot.json")]
         output: PathBuf,
     },
-    /// Convert a .sav file to a JSON snapshot (reverse of export-snapshot)
+    /// Dump a .sav file to a JSON snapshot (same output as `export-snapshot`,
+    /// input required). The binary has no JSON→.sav write-back — load a
+    /// snapshot with `run --snapshot`.
     ImportSnapshot {
         /// Input .sav file path
         #[arg(short, long)]

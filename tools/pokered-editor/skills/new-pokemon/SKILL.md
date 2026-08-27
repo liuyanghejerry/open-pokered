@@ -1,9 +1,9 @@
 ---
-name: pokered-new-pokemon
+name: new-pokemon
 description: Add a new Pokémon species to the Pokémon Red/Blue reimplementation — create the species JSON (base stats, types, growth, moves, TM/HM flags, Pokédex entry, evolutions, learnset), understand the auto-assigned species id, handle sprites/cries/names, and make the species obtainable via wild encounters, gifts, or trainers. Use when the user wants to add, rebalance, or evolve a Pokémon.
 ---
 
-# pokered-new-pokemon — Adding a New Pokémon
+# new-pokemon — Adding a New Pokémon
 
 One species = one file: `crates/pokered-data/pokemon/<Species>.json`. At build time `pokered-data/build.rs::generate_species_enum` regenerates the `Species` enum from these files: the canonical 151 keep dex ids 1–151 and **new species are appended as id 152+ in filename order**. No table edits are needed for the data to build — but see "Names, sprites, cries" for the presentation layer.
 
@@ -15,23 +15,35 @@ One species = one file: `crates/pokered-data/pokemon/<Species>.json`. At build t
 
 ## Species JSON — full field guide
 
+Invariants to respect (the example below is clean JSON — copy it, then fill in):
+
+- `baseStats` — hp/attack/defense/speed/special.
+- Single-typed species repeat `type1` in `type2` (matches the ROM layout).
+- `catchRate` — 0 = uncatchable … 255 = easiest; `baseExp` = EXP yield when defeated.
+- `growthRate` — MediumFast | SlightlyFast | SlightlySlow | MediumSlow | Fast | Slow.
+- `initialMoves` — EXACTLY 4 entries; `"None"` pads empty slots.
+- `tmHmFlags` — 7 bytes (see below).
+- `pokedex` — `category` ≤ 11 chars, uppercase ASCII (the label box width); `heightFeet`/`heightInches`; `weightDecipounds` = tenths of a pound (190 = 19.0 lbs); `flavorTextPages` 0–4 pages, `'\n'` = line break.
+- `evolutions` — method `level` (with `level`) / `item` (with `item` + `minLevel`) / `trade`.
+
 ```json
 {
   "$schema": "../schemas/pokemon.schema.json",
   "species": "Newmon",
   "baseStats": { "hp": 60, "attack": 65, "defense": 55, "speed": 70, "special": 60 },
   "type1": "Water",
-  "type2": "Water",                       // single-typed: repeat type1 (matches the ROM layout)
-  "catchRate": 190,                       // 0 = uncatchable … 255 = easiest
-  "baseExp": 80,                          // EXP yield when defeated
-  "growthRate": "MediumFast",             // MediumFast | SlightlyFast | SlightlySlow | MediumSlow | Fast | Slow
-  "initialMoves": ["Tackle", "TailWhip", "None", "None"],   // EXACTLY 4, "None" pads empty slots
+  "type2": "Water",
+  "catchRate": 190,
+  "baseExp": 80,
+  "growthRate": "MediumFast",
+  "initialMoves": ["Tackle", "TailWhip", "None", "None"],
   "tmHmFlags": [164, 3, 56, 192, 3, 8, 6],
   "pokedex": {
-    "category": "NEWT",                   // ≤ 11 chars, uppercase ASCII (the label box width)
-    "heightFeet": 2, "heightInches": 0,
-    "weightDecipounds": 190,              // tenths of a pound: 190 = 19.0 lbs
-    "flavorTextPages": [ "A strange seed\nthat grows with\nlove.", "..." ]   // 0–4 pages, '\n' = line break
+    "category": "NEWT",
+    "heightFeet": 2,
+    "heightInches": 0,
+    "weightDecipounds": 190,
+    "flavorTextPages": [ "A strange seed\nthat grows with\nlove." ]
   },
   "evolutions": [
     { "method": "level", "species": "Newtitan", "level": 20 },
@@ -59,7 +71,7 @@ One species = one file: `crates/pokered-data/pokemon/<Species>.json`. At build t
 Data builds without these, but the game shows fallbacks until they land:
 
 - **Display name** — `crates/pokered-data/src/lang_data.rs`: add the English name to the `species_name_en` match and the Chinese name to `SPECIES_ZH` (indexed by species id). Fallback: `???`. (Rust edit — hand off.)
-- **Battle sprites** — `gfx/pokemon/front/<name>.png` and `gfx/pokemon/back/<name>b.png`, where `<name>` is the species name lowercased with spaces/dashes/apostrophes stripped (`MrMime` → `mr.mime`). Missing files degrade gracefully (blank sprite), but ship them: draw in the editor's Pixel tab or use AI sprite generation.
+- **Battle sprites** — `gfx/pokemon/front/<name>.png` and `gfx/pokemon/back/<name>b.png`, where `<name>` is the species name lowercased with spaces/dashes/apostrophes stripped (with a special case: `MrMime` → `mr.mime`). Missing files degrade gracefully (blank sprite), but ship them: draw in the editor's Pixel tab or use AI sprite generation.
 - **Cry** — `crates/pokered-data/src/cries.rs` has a `_ =>` default, so new species get a generic cry; optionally add a `CryData` row (Rust edit).
 - **Party icon** — `mon_party_icons.rs` fallback applies automatically.
 
@@ -67,9 +79,9 @@ Data builds without these, but the game shows fallbacks until they land:
 
 A species file alone changes nothing in-game. Wire at least one of:
 
-- **Wild encounters** — add it to a map's `wild.red`/`wild.blue` grass/water slots in `map.json` (see the pokered-new-map skill).
+- **Wild encounters** — add it to a map's `wild.red`/`wild.blue` grass/water slots in `map.json` (see the new-map skill).
 - **Gift / event** — `givePokemon("NEWMON", 15)` in a `.scene` storyline.
-- **Trainers** — add it to rosters in `trainers/*.json` (see the pokered-new-trainer skill).
+- **Trainers** — add it to rosters in `trainers/*.json` (see the new-trainer skill).
 - **Evolution** — listed in a base species' `evolutions`.
 - **Debug** — `give_pokemon` over the TCP debug server for quick testing.
 

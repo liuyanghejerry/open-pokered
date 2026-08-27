@@ -302,8 +302,8 @@ describe('skills tools', () => {
   it('list_skills returns the shipped pokered playbooks; read_skill loads a body', async () => {
     const r = readToolImpls(makeCtx().ctx)
     const list = JSON.parse(await r.list_skills())
-    expect(list.some((s: any) => s.name === 'pokered-new-map')).toBe(true)
-    expect(await r.read_skill({ name: 'pokered-new-map' })).toContain('map.blk')
+    expect(list.some((s: any) => s.name === 'new-map')).toBe(true)
+    expect(await r.read_skill({ name: 'new-map' })).toContain('map.blk')
     expect(await r.read_skill({ name: 'no-such-skill' })).toMatch(/ERROR: unknown skill/)
   })
 })

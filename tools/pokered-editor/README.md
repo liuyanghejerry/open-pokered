@@ -528,15 +528,15 @@ AI 助手内置了一套**可加载的任务手册**（skills）：系统提示�
 `SKILL.md` 文件（frontmatter 写 `name` / `description`），按目录扫描发现，无需注册表：
 
 - **内置技能**在 `tools/pokered-editor/skills/<name>/SKILL.md`，随编辑器发布：
-  - `pokered-new-map` —— 新增地图：建目录（map.json/map.blk/script.scene/script_config.json）、
+  - `new-map` —— 新增地图：建目录（map.json/map.blk/script.scene/script_config.json）、
     摆放 NPC/warp/sign、配置野遇与地图连接、编写事件脚本，以及 Rust 侧注册清单（MapId /
     MAP_DIMENSIONS / embedded_blk_sources / map_names）
-  - `pokered-new-trainer` —— 新增训练师：给既有职业加阵容（`OPP_<CLASS><N>` 引用），或新建
+  - `new-trainer` —— 新增训练师：给既有职业加阵容（`OPP_<CLASS><N>` 引用），或新建
     职业（JSON + TrainerClass/build.rs/贴图/中文名的完整清单），含道馆主（对话驱动）与路上
     训练师（视线触发）两种布阵模式
-  - `pokered-new-pokemon` —— 新增宝可梦：物种 JSON 全字段指南（种族值/属性/努力曲线/初始招式/
+  - `new-pokemon` —— 新增宝可梦：物种 JSON 全字段指南（种族值/属性/努力曲线/初始招式/
     TM-HM 位标志/图鉴/进化/升级招）、自动编号规则、贴图与本地化补全、以及如何让它可被获得
-  - `pokered-save-construction` —— 存档构造：Save 页签、完整 JSON 快照格式（队伍/背包/徽章/
+  - `save-construction` —— 存档构造：Save 页签、完整 JSON 快照格式（队伍/背包/徽章/
     320 字节事件旗标位集）、export/import-snapshot CLI 与 debug server 实时修改
 - **项目级技能**放在项目根目录的 `skills/` 下，同名时覆盖内置技能（可用于项目自定义流程）。
 

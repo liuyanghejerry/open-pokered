@@ -149,6 +149,8 @@ export function proposeToolImpls(ctx: ActionContext, cs: ChangeSet) {
     },
     propose_map_file: async ({ map, file, content, rationale }: { map: string; file: string; content: unknown; rationale?: string }) => {
       if (!map || typeof map !== 'string') return 'ERROR: map (the map directory name, e.g. "PalletTown") is required'
+      // Same pattern as the apply-side guard: no traversal, no leading digit/dash.
+      if (!/^[A-Za-z][A-Za-z0-9_]*$/.test(map)) return 'ERROR: map must be a valid directory name (a letter first; A–Z, 0–9, _)'
       if (file !== 'map.json' && file !== 'script_config.json') return 'ERROR: file must be "map.json" or "script_config.json"'
       const norm = normalizeJson(content)
       if (norm.error) return 'ERROR: ' + norm.error
@@ -195,7 +197,8 @@ export function proposeToolImpls(ctx: ActionContext, cs: ChangeSet) {
     propose_map_create: async (args: { name: string; tileset?: string; width?: number; height?: number; music?: string; borderBlock?: number; displayName?: string; townMap?: { x: number; y: number }; rationale?: string }) => {
       if (!p) return 'ERROR: no project is open'
       const { name, rationale, ...rest } = args
-      if (!name || !/^[A-Za-z0-9_-]+$/.test(String(name))) return 'ERROR: a valid map name (A–Z, 0–9, _-) is required'
+      // Same pattern as the editor's own POST /api/maps: a letter first, no dashes.
+      if (!name || !/^[A-Za-z][A-Za-z0-9_]*$/.test(String(name))) return 'ERROR: a valid map name (a letter first; A–Z, 0–9, _; e.g. "CinnabarLab") is required'
       const mapsDir = ((p.activity('map')?.config ?? {}) as { mapsDir?: string }).mapsDir ?? 'maps'
       if (p.readDataFileOrNull(path.join(mapsDir, name, 'map.json'))) {
         return `ERROR: map "${name}" already exists — use propose_map_file to edit its map.json / script_config.json`
@@ -355,9 +358,9 @@ export async function buildProposeTools(ctx: ActionContext, cs: ChangeSet): Prom
       execute: impl.propose_project_config,
     }),
     propose_map_create: tool({
-      description: 'Propose creating a NEW map directory. In a pokered project this scaffolds the full game shape (map.json with the next free id + header, map.blk, script_config.json, empty script.scene); pass `tileset`, `width`, `height` (in 4x4-tile blocks), `music`, `borderBlock` and optionally `townMap` {x,y} + `displayName` to control it. For an existing map use propose_map_file instead.' + note,
+      description: 'Propose creating a NEW map directory. In a pokered project this scaffolds the full game shape (map.json with the next free id + header, map.blk, script_config.json, empty script.scene); pass `tileset`, `width`, `height` (in 2×2-tile blocks), `music`, `borderBlock` and optionally `townMap` {x,y} + `displayName` to control it. For an existing map use propose_map_file instead.' + note,
       inputSchema: z.object({
-        name: z.string().describe('New map directory name (A–Z, 0–9, _-; PascalCase by convention, e.g. "CinnabarLab")'),
+        name: z.string().describe('New map directory name (a letter first; A–Z, 0–9, _; PascalCase by convention, e.g. "CinnabarLab")'),
         tileset: z.string().optional(),
         width: z.number().int().min(1).max(255).optional(),
         height: z.number().int().min(1).max(255).optional(),

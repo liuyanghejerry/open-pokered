@@ -1,9 +1,9 @@
 ---
-name: pokered-new-trainer
+name: new-trainer
 description: Add or extend trainers in the Pokémon Red/Blue reimplementation — add a party roster to an existing trainer class, create a brand-new trainer class, place trainer NPCs on a map (sight-engaged or talk-driven like gym leaders), and wire battle dialogue in the .scene DSL. Use when the user wants to add a trainer, gym battle, rival fight, or edit a trainer's team.
 ---
 
-# pokered-new-trainer — Adding Trainers
+# new-trainer — Adding Trainers
 
 Trainer data lives in `crates/pokered-data/trainers/<Class>.json` — one file per trainer **class** (`Youngster`, `Brock`, `Rocket`, …), holding an ordered list of **party rosters**. A trainer NPC on a map references one roster by class + 1-based index.
 
@@ -15,13 +15,16 @@ Trainer data lives in `crates/pokered-data/trainers/<Class>.json` — one file p
 ## Case A: add a roster to an existing class
 
 1. `read_record(table: "trainers", id: "<Class>")` to get the current file.
-2. Append a party to `parties` (1–6 Pokémon, each `{ "level": 1-100, "species": "PascalCase" }` — species must exist in `crates/pokered-data/pokemon/`):
+2. Append a party to `parties` (1–6 Pokémon, each `{ "level": 1-100, "species": "PascalCase" }` — species must exist in `crates/pokered-data/pokemon/`). The `content` you propose must be the COMPLETE new class JSON — keep the existing `parties` entries and append this one:
    ```json
    {
      "$schema": "../schemas/trainer.schema.json",
      "class": "BugCatcher",
      "constName": "BUG_CATCHER",
-     "parties": [ ...existing parties..., { "pokemon": [ { "level": 9, "species": "Weedle" }, { "level": 9, "species": "Kakuna" } ] } ]
+     "parties": [
+       { "pokemon": [ { "level": 4, "species": "Caterpie" } ] },
+       { "pokemon": [ { "level": 9, "species": "Weedle" }, { "level": 9, "species": "Kakuna" } ] }
+     ]
    }
    ```
 3. `propose_data_edit(table: "trainers", id: "<Class>", content: <COMPLETE JSON>)` — the new roster's battle id is `OPP_<CONSTNAME><N>` where `N` is its **1-based** position in `parties` (e.g. the 3rd Bug Catcher roster → `OPP_BUG_CATCHER3`).

@@ -1,9 +1,9 @@
 ---
-name: pokered-save-construction
+name: save-construction
 description: Construct, inspect, and manipulate Pokémon Red/Blue save states — the editor's Save tab, the full JSON snapshot schema (party, bag, badges, event-flag bitset), headless save construction via pokered-app export/import-snapshot, and live save surgery through the TCP debug server. Use when the user wants a save at a specific story point, a test save for new content, party/item/flag edits, or save debugging.
 ---
 
-# pokered-save-construction — Building Save States
+# save-construction — Building Save States
 
 Three layers, pick per goal:
 
@@ -24,10 +24,10 @@ The Save activity edits a simplified snapshot (`SaveDataSnapshot`): `player` (na
 The game binary's own format (mirrors `SaveData` in `crates/pokered-core/src/save/`):
 
 ```bash
-# .sav → editable JSON, and back
+# .sav → editable JSON
 cargo run --release --bin pokered-app -- export-snapshot --input pokered.sav -o snapshot.json
-cargo run --release --bin pokered-app -- import-snapshot --input pokered.sav          # writes back into the .sav
-# launch on it
+# import-snapshot dumps a .sav the same way (input required); there is no
+# JSON → .sav write-back — load the JSON with `run --snapshot` below.
 cargo run --release --bin pokered-app -- run --snapshot snapshot.json --skip-intro --warp PalletTown,10,14
 ```
 
@@ -35,8 +35,8 @@ Key fields:
 
 - **`game_data.position`** — `{map_id, x, y, x_block, y_block}`; **`player_direction`** 0=Down 4=Up 8=Left 12=Right.
 - **`game_data.obtained_badges`** — u8 bitfield, bit0=Boulder … bit7=Earth. (Badges are NOT event flags.)
-- **`game_data.player_money`** (≤999999), **`player_coins`**, **`game_data.bag.items`** as `[[item_id, qty], …]` — numeric item ids from `crates/pokered-data/src/items.rs` (1=Master Ball, 15=Ultra Ball, 20=Rare Candy, 68=Bicycle…).
-- **`party`** — up to 6 full Pokémon records: `species` (PascalCase), `level`, `hp`/`max_hp`/`attack`/`defense`/`speed`/`special`, `type1`/`type2`, `moves` (4 MoveId names, pad with a repeat), `pp[4]`, `dv_bytes[2]` (Atk/Spd high nybbles, Def/Spc low), `stat_exp[5]`, `total_exp`, `status`, `ot_id` (0 = own), plus charmap-encoded `nickname`/`ot_name` byte arrays (`0x50` = padding; see `pokered_data::charmap`).
+- **`game_data.player_money`** (≤999999), **`player_coins`**, **`game_data.bag.items`** as `[[itemId, qty], …]` where `itemId` is the ItemId **name string** (`"MasterBall"`, `"RareCandy"`, … — the same ids as `crates/pokered-data/data/items/*.json`; the numeric byte order in `data/items/item_list.json` is 1=MasterBall, 2=UltraBall, 6=Bicycle, 40=RareCandy, with TMs at 0xC9+ and HMs at 0xC4+).
+- **`party`** — up to 6 full Pokémon records: `species` (PascalCase), `level`, `hp`/`max_hp`/`attack`/`defense`/`speed`/`special`, `type1`/`type2`, `moves` (4 MoveId names — empty slots are `"None"`), `pp[4]`, `dv_bytes[2]` (Atk/Spd high nybbles, Def/Spc low), `stat_exp[5]`, `total_exp`, `status`, `ot_id` (0 = own), plus charmap-encoded `nickname`/`ot_name` byte arrays (`0x50` = padding; see `pokered_data::charmap`).
 - **`game_data.event_flags`** — the story flags: a **320-byte bitset** (507 named flags in `crates/pokered-data/src/event_flags.rs`; the enum value IS the bit index). Flip bits, don't append:
 
 ```python
@@ -75,7 +75,7 @@ print(d.cmd(cmd="get_state")["data"])  # position, party, flags, dialogue, battl
 To test-drive a new map / species / trainer (the other skills):
 
 1. Export a template snapshot (or take one from a playthrough near the target).
-2. Set `position` to a map adjacent to the new one (or warp in-game with `--warp <NewMap>,x,y` — the new map needs its Rust registration done, see the pokered-new-map skill; in the editor Playtest the runtime override covers it without a rebuild).
+2. Set `position` to a map adjacent to the new one (or warp in-game with `--warp <NewMap>,x,y` — the new map needs its Rust registration done, see the new-map skill; in the editor Playtest the runtime override covers it without a rebuild).
 3. Put the new species in `party` (or plan to `give_pokemon` it live) with coherent stats: recompute `max_hp`/stats for its level from its `baseStats`, set `total_exp` on its `growthRate` curve, `pp` from the moves' base PP.
 4. Set only the event flags your test needs — prefer the debug server's `set_flag` for iteration speed.
 
