@@ -521,6 +521,31 @@ Pokemon / Move / Item 编辑器支持**新建**记录：侧边栏顶部的 **＋
 | GET | `/api/moves/:id` | 单个 move 的 JSON 数据 |
 | PUT | `/api/moves/:id` | 保存（写回 `<MoveId>.json`，2 空格缩进 + 末尾换行；`id` 字段必须与文件名一致） |
 
+## AI 助手技能（Skills）
+
+AI 助手内置了一套**可加载的任务手册**（skills）：系统提示词里只有技能名 + 一句话描述的索引，
+当请求命中某个技能时，助手先调用 `read_skill` 工具加载完整手册，再按其流程执行。技能是
+`SKILL.md` 文件（frontmatter 写 `name` / `description`），按目录扫描发现，无需注册表：
+
+- **内置技能**在 `tools/pokered-editor/skills/<name>/SKILL.md`，随编辑器发布：
+  - `pokered-new-map` —— 新增地图：建目录（map.json/map.blk/script.scene/script_config.json）、
+    摆放 NPC/warp/sign、配置野遇与地图连接、编写事件脚本，以及 Rust 侧注册清单（MapId /
+    MAP_DIMENSIONS / embedded_blk_sources / map_names）
+  - `pokered-new-trainer` —— 新增训练师：给既有职业加阵容（`OPP_<CLASS><N>` 引用），或新建
+    职业（JSON + TrainerClass/build.rs/贴图/中文名的完整清单），含道馆主（对话驱动）与路上
+    训练师（视线触发）两种布阵模式
+  - `pokered-new-pokemon` —— 新增宝可梦：物种 JSON 全字段指南（种族值/属性/努力曲线/初始招式/
+    TM-HM 位标志/图鉴/进化/升级招）、自动编号规则、贴图与本地化补全、以及如何让它可被获得
+  - `pokered-save-construction` —— 存档构造：Save 页签、完整 JSON 快照格式（队伍/背包/徽章/
+    320 字节事件旗标位集）、export/import-snapshot CLI 与 debug server 实时修改
+- **项目级技能**放在项目根目录的 `skills/` 下，同名时覆盖内置技能（可用于项目自定义流程）。
+
+配套的工具面调整：`list_skills` / `read_skill` 两个读取工具（开发服务器与静态托管的编辑器
+助手均可用；静态构建会把 SKILL.md 内联进 bundle）；`propose_map_file`（写地图目录内的
+`map.json` / `script_config.json`，走提案审查托盘）；`propose_map_create` 接受 `tileset` / `width` /
+`height` / `music` / `borderBlock` / `townMap` 参数，在 pokered 项目里生成完整可构建的地图目录。
+打包 Electron 应用内可用环境变量 `DOTZUKI_SKILLS_DIR` 指定内置技能目录。
+
 ## 数据目录结构
 
 ```
