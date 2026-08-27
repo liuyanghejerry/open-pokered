@@ -295,3 +295,68 @@ describe('story-tool gating (no story activity configured)', () => {
     expect(propose.propose_story_edit).toBeDefined()
   })
 })
+
+// ── Skills tools + pokered map tools ────────────────────────────────────────
+
+describe('skills tools', () => {
+  it('list_skills returns the shipped pokered playbooks; read_skill loads a body', async () => {
+    const r = readToolImpls(makeCtx().ctx)
+    const list = JSON.parse(await r.list_skills())
+    expect(list.some((s: any) => s.name === 'pokered-new-map')).toBe(true)
+    expect(await r.read_skill({ name: 'pokered-new-map' })).toContain('map.blk')
+    expect(await r.read_skill({ name: 'no-such-skill' })).toMatch(/ERROR: unknown skill/)
+  })
+})
+
+describe('propose_map_file', () => {
+  it('stages a map.json edit with the current file as before', async () => {
+    const { ctx } = makeCtx()
+    write('data/maps/Town/map.json', JSON.stringify({ id: 9, name: 'Town', header: { tileset: 'Overworld' }, warps: [] }))
+    const cs = new ChangeSet()
+    const res = await proposeToolImpls(ctx, cs).propose_map_file({
+      map: 'Town', file: 'map.json',
+      content: JSON.stringify({ id: 9, name: 'Town', header: { tileset: 'Overworld' }, warps: [{ x: 1, y: 1, destMap: 'Town', destWarpId: 0 }] }),
+    })
+    expect(res).toMatchObject({ ok: true })
+    const prop = cs.proposals[0]
+    expect(prop.target).toMatchObject({ kind: 'map-file', map: 'Town', file: 'map.json', path: 'data/maps/Town/map.json' })
+    expect(prop.before).toContain('"id":9')
+    expect(prop.after).toContain('destWarpId')
+  })
+
+  it('rejects a disallowed file and a map.json edit on a map that has none', async () => {
+    const { ctx } = makeCtx()
+    const cs = new ChangeSet()
+    expect(String(await proposeToolImpls(ctx, cs).propose_map_file({ map: 'Town', file: 'script.js', content: '{}' }))).toMatch(/ERROR: file must be/)
+    expect(String(await proposeToolImpls(ctx, cs).propose_map_file({ map: 'NoMap', file: 'map.json', content: '{}' }))).toMatch(/no map\.json/)
+    expect(cs.proposals.length).toBe(0)
+  })
+
+  it('allows creating a missing script_config.json (before=null)', async () => {
+    const { ctx } = makeCtx()
+    const cs = new ChangeSet()
+    const res = await proposeToolImpls(ctx, cs).propose_map_file({
+      map: 'Town', file: 'script_config.json', content: JSON.stringify({ npcs: [], signs: [], coordEvents: [] }),
+    })
+    expect(res).toMatchObject({ ok: true })
+    expect(cs.proposals[0].before).toBeNull()
+  })
+})
+
+describe('propose_map_create params', () => {
+  it('carries the pokered creation params in the staged payload', async () => {
+    const { ctx } = makeCtx()
+    const cs = new ChangeSet()
+    const res = await proposeToolImpls(ctx, cs).propose_map_create({
+      name: 'CinnabarLab', tileset: 'Lab', width: 12, height: 10, music: 'Cinnabar', borderBlock: 3,
+      townMap: { x: 2, y: 6 }, displayName: 'Cinnabar Lab',
+    })
+    expect(res).toMatchObject({ ok: true })
+    const payload = JSON.parse(cs.proposals[0].after)
+    expect(payload).toMatchObject({
+      name: 'CinnabarLab', tileset: 'Lab', width: 12, height: 10, music: 'Cinnabar', borderBlock: 3,
+      townMap: { x: 2, y: 6 }, displayName: 'Cinnabar Lab',
+    })
+    expect(cs.proposals[0].target).toMatchObject({ kind: 'map-create', map: 'CinnabarLab' })
+  })
+})
