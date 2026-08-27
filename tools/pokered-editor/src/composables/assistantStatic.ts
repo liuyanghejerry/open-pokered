@@ -366,7 +366,7 @@ export async function buildStaticTools(emit: StaticAiEmit): Promise<Record<strin
     }),
     // PLAN (UI-only)
     update_plan: tool({
-      description: 'Publish or update your working plan for a MULTI-STEP task so the user can watch progress. Call it once when you begin a task with several steps, and AGAIN each time a step starts or finishes. Keep 2–6 concise steps; mark exactly the one in progress as "active", finished ones "done". Mutates nothing.',
+      description: 'Publish or update your working plan for a MULTI-STEP task so the user can watch progress. Call it once when you begin a task with several steps, and AGAIN each time a step starts or finishes. Keep 2–6 concise steps. Mutates nothing.',
       inputSchema: z.object({
         steps: z.array(z.object({ title: z.string(), status: z.enum(['pending', 'active', 'done']).optional() })).min(1).max(12),
       }),
@@ -378,3 +378,4 @@ export async function buildStaticTools(emit: StaticAiEmit): Promise<Record<strin
     }),
   }
 }
+
