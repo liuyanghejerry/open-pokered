@@ -14,7 +14,7 @@ export interface DiffOp { type: DiffOpType; text: string }
 /** What a proposal targets — enough for the client to apply it via the matching
  *  existing mutation endpoint, and to label/group it in the review tray. */
 export interface ChangeTarget {
-  kind: 'story' | 'data' | 'scene' | 'gui' | 'map' | 'project-config' | 'project-scaffold' | 'map-create'
+  kind: 'story' | 'data' | 'scene' | 'gui' | 'map' | 'map-file' | 'project-config' | 'project-scaffold' | 'map-create'
   /** story: the kind (characters/quests/arcs). */
   storyKind?: string
   /** data: the table id. */
@@ -25,8 +25,10 @@ export interface ChangeTarget {
   scene?: string
   /** gui: the layout name. */
   name?: string
-  /** map / map-create: the map directory name. */
+  /** map / map-create / map-file: the map directory name. */
   map?: string
+  /** map-file: the allowlisted file inside the map dir ("map.json" | "script_config.json"). */
+  file?: string
   /** project-scaffold: target directory (slug under the editor root, or absolute). */
   dir?: string
   /** Human-readable path/label for the review tray. */
