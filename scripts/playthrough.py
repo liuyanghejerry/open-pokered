@@ -85,6 +85,65 @@ def bfs(map_name, start, goal, blocked=frozenset()):
     return None
 
 
+_CONN_DIR = {"up": "north", "down": "south", "left": "west", "right": "east"}
+
+
+def cross_step(map_name, x, y, d):
+    """One tile step that may cross a map connection. Mirrors
+    dotzuki map_transitions: arrival coords shift by -2*offset (blocks)."""
+    dx, dy = DELTA[d]
+    nx, ny = x + dx, y + dy
+    m = MAPS[map_name]
+    w2, h2 = m["width"] * 2, m["height"] * 2
+    if 0 <= nx < w2 and 0 <= ny < h2:
+        return (map_name, nx, ny) if walkable(map_name, nx, ny) else None
+    conn = CONNS[map_name].get(_CONN_DIR[d])
+    if conn is None:
+        return None
+    tgt, off = conn["targetMap"], conn["offset"] * 2
+    tm = MAPS[tgt]
+    if d == "up":
+        tn = (max(x - off, 0), tm["height"] * 2 - 1)
+    elif d == "down":
+        tn = (max(x - off, 0), 0)
+    elif d == "left":
+        tn = (tm["width"] * 2 - 1, max(y - off, 0))
+    else:
+        tn = (0, max(y - off, 0))
+    return (tgt, *tn) if walkable(tgt, *tn) else None
+
+
+def bfs_cross(map_name, start, goal_map, goal, blocked_maps=None):
+    """BFS across map connections; nodes are (map, x, y). `blocked_maps`
+    maps map_name -> set of NPC-occupied tiles (only for the live map)."""
+    blocked_maps = blocked_maps or {}
+    s = (map_name, *start)
+    t = (goal_map, *goal)
+    if s == t:
+        return [s]
+    q = deque([s])
+    prev = {s: None}
+    while q:
+        cm, cx, cy = q.popleft()
+        for d in DELTA:
+            n = cross_step(cm, cx, cy, d)
+            if n is None or n in prev:
+                continue
+            if n[0] == cm and (n[1], n[2]) in blocked_maps.get(cm, ()):
+                continue
+            prev[n] = ((cm, cx, cy), d)
+            if n == t:
+                out = []
+                c = n
+                while prev[c] is not None:
+                    p, dd = prev[c]
+                    out.append((c, dd))
+                    c = p
+                return [s] + out[::-1]
+            q.append(n)
+    return None
+
+
 class NavError(RuntimeError):
     pass
 
@@ -175,6 +234,42 @@ class Game:
         """Turn in place: one held frame turns, walking needs more."""
         self.d.drive([direction], frames=1 + 12)
 
+    def nav_to_map(self, x, y, map_name, tries=80):
+        """Cross-map closed-loop walk (connections included). Wild
+        encounters hijack control mid-drive; recover by running from the
+        battle, then re-localize and continue. Segments stay short so a
+        battle can only ever consume a tile or two of drift."""
+        for _ in range(tries):
+            if self.st()["screen"] == "battle":
+                self.battle_loop(prefer="run")
+                self.cutscene()
+            cm, cx, cy = self.pos()
+            if cm == map_name and (cx, cy) == (x, y):
+                return
+            path = bfs_cross(cm, (cx, cy), map_name, (x, y),
+                             blocked_maps={cm: self.npc_blocked(cm)})
+            if not path:
+                raise NavError(f"no cross path: {cm}({cx},{cy}) "
+                               f"-> {map_name}({x},{y})")
+            dirs = [d for _, d in path[1:]]
+            # walk at most 3 tiles per segment, then re-check (a wild
+            # battle may interrupt; queued frames left over from the
+            # interrupted segment get absorbed harmlessly)
+            i = 0
+            while i < len(dirs):
+                j = i
+                while (j + 1 < len(dirs) and dirs[j + 1] == dirs[i]
+                       and j + 1 - i < 3):
+                    j += 1
+                tiles = j - i + 1
+                self.d.drive([dirs[i]] * (tiles * FRAMES_PER_TILE),
+                             frames=tiles * FRAMES_PER_TILE + 4)
+                i = j + 1
+                if self.st()["screen"] == "battle":
+                    break
+            self.step(6)
+        raise NavError(f"nav_to_map({map_name},{x},{y}) did not converge")
+
     def nav_warp(self, x, y, from_map, to_map=None, tries=30,
                  approach="walk"):
         """Walk onto the warp tile at (x, y) and wait for the map change.
@@ -194,7 +289,9 @@ class Game:
             if cm != from_map:
                 if to_map is not None:
                     assert cm == to_map, f"unexpected warp target {cm}"
-                self.wait("control_ready", 600)
+                # Arrival may kick off an @load cutscene (e.g. the Mart
+                # parcel hand-off) — settle it before returning control.
+                assert self.cutscene(), f"{cm} on-enter cutscene stalled"
                 return cm
             self.step(10)
         raise NavError(f"warp at ({x},{y}) never fired ({from_map})")
@@ -266,19 +363,37 @@ class Game:
             self.cutscene()
 
     # ── battle ──────────────────────────────────────────────────────────
-    def battle_loop(self, max_iters=400):
-        """Generic battle driver: FIGHT + first move, A through text.
-        Assumes control starts at (or before) the battle's PlayerMenu."""
-        for _ in range(max_iters):
+    def battle_loop(self, prefer="fight", max_iters=400):
+        """Generic battle driver. prefer="run" picks RUN from the menu
+        (wild encounters); falls back to FIGHT if escape keeps failing.
+        The 2x2 menu clamps cursor movement, so up+left always lands on
+        FIGHT and down+right on RUN regardless of saved cursor state."""
+        fight = prefer == "fight"
+        iters_in_mode = 0
+        import os
+        dbg = os.environ.get("PT_DEBUG")
+        for it in range(max_iters):
             s = self.st()
+            if dbg and (it < 8 or it % 25 == 0):
+                print(f"   [battle it={it} fight={fight} mode_iters="
+                      f"{iters_in_mode}] phase={s['battle_phase']!r} "
+                      f"msg={s['battle_message']!r}", flush=True)
             if s["screen"] != "battle":
                 break
             ph = s["battle_phase"]
             if ph == "PlayerMenu":
-                self.tap("a", 4)               # FIGHT (cursor 0, untouched)
-                if not self._await_phase("MoveSelect", 120):
-                    continue                    # text popped up first
-                self.tap("a", 4)               # first move
+                if not fight and iters_in_mode > 12:
+                    fight = True          # escape keeps failing: brawl
+                iters_in_mode += 1
+                if fight:
+                    self.d.drive(["up", "left"], frames=10)   # -> FIGHT
+                    self.tap("a", 4)                          # open FIGHT
+                    if not self._await_phase("MoveSelect", 120):
+                        continue               # text ate the press; retry
+                    self.tap("a", 4)                          # first move
+                else:
+                    self.d.drive(["down", "right"], frames=10)  # -> RUN
+                    self.tap("a", 4)                            # try escape
                 self.step(30)
             elif ph == "MoveSelect":
                 self.tap("a", 4)
@@ -385,6 +500,35 @@ def m06_rival_battle(g):
     g.evidence("m06")
 
 
+def m07_mart_parcel(g):
+    """Exit the lab, cross Route 1 to Viridian, collect Oak's parcel."""
+    g.nav_warp(5, 11, "OaksLab", "PalletTown", approach="down")   # lab door
+    g.nav_to_map(29, 20, "ViridianCity")                          # below mart
+    g.nav_warp(29, 19, "ViridianCity", "ViridianMart")            # @load: parcel
+    g.evidence("m07-in-mart")
+    g.nav_warp(4, 7, "ViridianMart", "ViridianCity", approach="down")
+    g.evidence("m07-back-outside")
+
+
+def m08_deliver_parcel(g):
+    """Back to Pallet Town, hand the parcel to Oak, receive the POKéDEX."""
+    g.nav_to_map(12, 12, "PalletTown")                            # below lab door
+    g.nav_warp(12, 11, "PalletTown", "OaksLab")
+    g.nav_to(5, 3, map_name="OaksLab")
+    g.face("up")
+    g.tap("a", 20)
+    assert g.cutscene(), "parcel delivery cutscene never finished"
+    g.evidence("m08-delivered")
+    # Post-delivery, Oak's talk flips to the POKéDEX rating branch —
+    # sample one line as evidence the flag actually flipped.
+    g.tap("a", 30)
+    g.d.cmd(cmd="wait_until", condition="dialogue_ready", max_frames=300)
+    s = g.st()
+    print(f"[m08] oak-after-delivery: {s.get('dialogue') or s['dialogue_state']}")
+    g.skip()
+    g.cutscene()
+
+
 MILESTONES = [
     ("m01", "boot to NEW GAME / Oak speech", m01_boot),
     ("m02", "Oak speech + default names → bedroom", m02_oak_speech),
@@ -392,6 +536,8 @@ MILESTONES = [
     ("m04", "Oak interception → OaksLab", m04_oak_intercept),
     ("m05", "take starter (bulbasaur)", m05_take_starter),
     ("m06", "first rival battle", m06_rival_battle),
+    ("m07", "Route 1 → Viridian Mart parcel", m07_mart_parcel),
+    ("m08", "deliver parcel → POKéDEX", m08_deliver_parcel),
 ]
 
 
