@@ -7,7 +7,11 @@ use crate::protocol::{DebugCommand, DebugResponse};
 use log::{error, info, warn};
 
 /// Maximum time to wait for a response from the game loop before timing out.
-const RESPONSE_TIMEOUT: Duration = Duration::from_secs(5);
+/// Long synchronous commands (e.g. wait_until with a 1800-frame budget) can
+/// legitimately run for several seconds in debug builds, so this must be
+/// generous — see the stale-response drain below for why timeouts are still
+/// dangerous even when handled.
+const RESPONSE_TIMEOUT: Duration = Duration::from_secs(30);
 
 /// The debug server listens for TCP connections and forwards commands to the game loop.
 pub struct DebugServer {
@@ -116,6 +120,15 @@ impl DebugServer {
                     if line.is_empty() {
                         continue;
                     }
+
+                    // Stale-response drain: requests and responses are
+                    // correlated only by FIFO order on this shared channel.
+                    // If an earlier command timed out, its late response
+                    // would otherwise be delivered as the answer to THIS
+                    // command and permanently skew the stream (the driver
+                    // then reads a frozen world while the game runs on).
+                    // Discard anything already queued before forwarding.
+                    while let Ok(_) = self.response_receiver.try_recv() {}
 
                     match serde_json::from_str::<DebugCommand>(&line) {
                         Ok(cmd) => {

@@ -27,6 +27,10 @@ class DebugClient:
                 if time.time() > deadline:
                     raise
                 time.sleep(0.5)
+        # Long synchronous commands (wait_until with a big frame budget)
+        # legitimately take tens of seconds server-side; the connect
+        # timeout must not apply to command round trips.
+        self.sock.settimeout(120.0)
         self.f = self.sock.makefile("rw")
 
     def cmd(self, **kw):

@@ -107,9 +107,9 @@ fn main() {
                 height: 144,
             };
             #[cfg(feature = "debug-server")]
-            let mut game = PokemonGame::new_with_options(version, None, None, cli.scripts_dir, false, None, cli.watch, debug_handle);
+            let mut game = PokemonGame::new_with_options(version, None, None, cli.scripts_dir, false, None, cli.watch, false, debug_handle);
             #[cfg(not(feature = "debug-server"))]
-            let mut game = PokemonGame::new_with_options(version, None, None, cli.scripts_dir, false, None, cli.watch);
+            let mut game = PokemonGame::new_with_options(version, None, None, cli.scripts_dir, false, None, cli.watch, false);
             attach_link(&mut game, cli.link_listen, cli.link_connect.clone());
             match run(config, game) {
                 Ok(()) => println!("Game exited normally"),
@@ -123,6 +123,7 @@ fn main() {
             warp,
             ref debug_port,
             headless,
+            no_audio,
         }) => {
             // Merge debug_port from the Run subcommand with the global flag.
             let effective_debug_port = debug_port.or(cli.debug_port);
@@ -166,9 +167,9 @@ fn main() {
                 height: 144,
             };
             #[cfg(feature = "debug-server")]
-            let mut game = PokemonGame::new_with_options(version, save, snapshot, cli.scripts_dir, skip_intro, warp, cli.watch, debug_handle);
+            let mut game = PokemonGame::new_with_options(version, save, snapshot, cli.scripts_dir, skip_intro, warp, cli.watch, no_audio, debug_handle);
             #[cfg(not(feature = "debug-server"))]
-            let mut game = PokemonGame::new_with_options(version, save, snapshot, cli.scripts_dir, skip_intro, warp, cli.watch);
+            let mut game = PokemonGame::new_with_options(version, save, snapshot, cli.scripts_dir, skip_intro, warp, cli.watch, no_audio);
             attach_link(&mut game, cli.link_listen, cli.link_connect.clone());
             if headless {
                 // No window: drive the same update loop at the GB frame rate

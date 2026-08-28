@@ -59,6 +59,12 @@ def walkable(map_name, x, y):
     return tile in m["passable_tiles"]
 
 
+def warp_tiles(map_name):
+    """All warp tiles on a map — stepping onto any of them warps, so
+    pathfinding treats them as walls unless explicitly targeted."""
+    return {(w["x"], w["y"]) for w in MAPS[map_name]["warps"]}
+
+
 def bfs(map_name, start, goal, blocked=frozenset()):
     """BFS over one map; `blocked` is a set of (x, y) tiles NPCs occupy.
     Returns [(tile, direction-of-arrival), …] from start to goal."""
@@ -88,15 +94,56 @@ def bfs(map_name, start, goal, blocked=frozenset()):
 _CONN_DIR = {"up": "north", "down": "south", "left": "west", "right": "east"}
 
 
+def warp_edges_from(map_name, x, y):
+    """Static warp edges for stepping onto tile (x, y) on map_name.
+
+    Explicit-dest warps (dest_map set) resolve directly. Exit-mat warps
+    (dest_map null) resolve against every PARENT map — a map with an
+    entry warp into this building — because in-game they target the map
+    the player entered from (last_map). For gate houses the parent is
+    unique, so this recovers both sides exactly."""
+    out = []
+    for w in MAPS[map_name]["warps"]:
+        if w["x"] != x or w["y"] != y:
+            continue
+        if w.get("dest_map_name"):
+            d = MAPS[w["dest_map_name"]]["warps"][w["dest_warp_id"]]
+            out.append((w["dest_map_name"], d["x"], d["y"]))
+        else:
+            for parent in PARENTS.get(map_name, ()):
+                pm = MAPS[parent]
+                if w["dest_warp_id"] < len(pm["warps"]):
+                    d = pm["warps"][w["dest_warp_id"]]
+                    out.append((parent, d["x"], d["y"]))
+    return out
+
+
+def _build_parents():
+    """building name -> maps that have an entry warp into it."""
+    parents = {}
+    for m in MAPS.values():
+        for w in m["warps"]:
+            if w.get("dest_map_name"):
+                parents.setdefault(w["dest_map_name"], set()).add(m["name"])
+    return parents
+
+
+PARENTS = _build_parents()
+
+
 def cross_step(map_name, x, y, d):
-    """One tile step that may cross a map connection. Mirrors
-    dotzuki map_transitions: arrival coords shift by -2*offset (blocks)."""
+    """One tile step, geometry only: the landed tile (may be a warp tile
+    — taking the warp is modeled by bfs_cross expanding warp_edges_from
+    for it). Mirrors dotzuki map_transitions for connection crossings:
+    arrival coords shift by -2*offset (blocks)."""
     dx, dy = DELTA[d]
     nx, ny = x + dx, y + dy
     m = MAPS[map_name]
     w2, h2 = m["width"] * 2, m["height"] * 2
     if 0 <= nx < w2 and 0 <= ny < h2:
-        return (map_name, nx, ny) if walkable(map_name, nx, ny) else None
+        if not walkable(map_name, nx, ny):
+            return None
+        return (map_name, nx, ny)
     conn = CONNS[map_name].get(_CONN_DIR[d])
     if conn is None:
         return None
@@ -114,8 +161,10 @@ def cross_step(map_name, x, y, d):
 
 
 def bfs_cross(map_name, start, goal_map, goal, blocked_maps=None):
-    """BFS across map connections; nodes are (map, x, y). `blocked_maps`
-    maps map_name -> set of NPC-occupied tiles (only for the live map)."""
+    """BFS whose steps are plain directions. Stepping onto a warp tile
+    takes the warp: the expansion replaces the landed tile with its warp
+    destinations (doors fire immediately; bottom-edge exit mats fire via
+    the extra edge-check). Nodes are (map, x, y)."""
     blocked_maps = blocked_maps or {}
     s = (map_name, *start)
     t = (goal_map, *goal)
@@ -126,21 +175,30 @@ def bfs_cross(map_name, start, goal_map, goal, blocked_maps=None):
     while q:
         cm, cx, cy = q.popleft()
         for d in DELTA:
-            n = cross_step(cm, cx, cy, d)
-            if n is None or n in prev:
+            landed = cross_step(cm, cx, cy, d)
+            if landed is None:
                 continue
-            if n[0] == cm and (n[1], n[2]) in blocked_maps.get(cm, ()):
-                continue
-            prev[n] = ((cm, cx, cy), d)
-            if n == t:
-                out = []
-                c = n
-                while prev[c] is not None:
-                    p, dd = prev[c]
-                    out.append((c, dd))
-                    c = p
-                return [s] + out[::-1]
-            q.append(n)
+            key = (landed[1], landed[2])
+            if key in warp_tiles(landed[0]):
+                cands = [n for n in warp_edges_from(*landed)
+                         if n != (cm, cx, cy)]
+            else:
+                cands = [landed]
+            for n in cands:
+                if n in prev:
+                    continue
+                if n[0] == cm and (n[1], n[2]) in blocked_maps.get(cm, ()):
+                    continue
+                prev[n] = ((cm, cx, cy), d)
+                if n == t:
+                    out = []
+                    c = n
+                    while prev[c] is not None:
+                        p, dd = prev[c]
+                        out.append((c, dd))
+                        c = p
+                    return [s] + out[::-1]
+                q.append(n)
     return None
 
 
@@ -154,7 +212,7 @@ class Game:
         self.log = open(self.run_dir / "game.log", "w")
         self.proc = subprocess.Popen(
             [str(BIN), "run", "--headless", "--debug-port", str(port),
-             "--save", str(self.run_dir / "play.sav")],
+             "--no-audio", "--save", str(self.run_dir / "play.sav")],
             cwd=str(ROOT), stdout=subprocess.DEVNULL, stderr=self.log)
         self.d = DebugClient(port)
         self.frame0 = None
@@ -214,7 +272,8 @@ class Game:
                 raise NavError(f"warped out of {map_name} -> {cm}")
             if (cx, cy) == (x, y):
                 return
-            path = bfs(cm, (cx, cy), (x, y), blocked=self.npc_blocked(cm))
+            blocked = self.npc_blocked(cm) | (warp_tiles(cm) - {(x, y)})
+            path = bfs(cm, (cx, cy), (x, y), blocked=blocked)
             if not path:
                 raise NavError(f"no path in {cm}: ({cx},{cy})->({x},{y})")
             dirs = [d for _, d in path[1:]]
@@ -241,28 +300,33 @@ class Game:
         battle can only ever consume a tile or two of drift."""
         for _ in range(tries):
             if self.st()["screen"] == "battle":
-                self.battle_loop(prefer="run")
+                s = self.st()
+                prefer = ("fight" if s["script_awaiting_battle"]
+                          else "run")
+                self.battle_loop(prefer=prefer)
                 self.cutscene()
             cm, cx, cy = self.pos()
             if cm == map_name and (cx, cy) == (x, y):
                 return
+            blocked = {cm: self.npc_blocked(cm)}
             path = bfs_cross(cm, (cx, cy), map_name, (x, y),
-                             blocked_maps={cm: self.npc_blocked(cm)})
+                             blocked_maps=blocked)
             if not path:
                 raise NavError(f"no cross path: {cm}({cx},{cy}) "
-                               f"-> {map_name}({x},{y})")
-            dirs = [d for _, d in path[1:]]
+                               f"-> {map_name}({x},{y}) "
+                               f"blocked={sorted(blocked.get(cm, set()))}")
+            steps = [how for _, how in path[1:]]
             # walk at most 3 tiles per segment, then re-check (a wild
-            # battle may interrupt; queued frames left over from the
-            # interrupted segment get absorbed harmlessly)
+            # battle or an unplanned warp may interrupt; the closed loop
+            # re-localizes and re-plans either way)
             i = 0
-            while i < len(dirs):
+            while i < len(steps):
                 j = i
-                while (j + 1 < len(dirs) and dirs[j + 1] == dirs[i]
+                while (j + 1 < len(steps) and steps[j + 1] == steps[i]
                        and j + 1 - i < 3):
                     j += 1
                 tiles = j - i + 1
-                self.d.drive([dirs[i]] * (tiles * FRAMES_PER_TILE),
+                self.d.drive([steps[i]] * (tiles * FRAMES_PER_TILE),
                              frames=tiles * FRAMES_PER_TILE + 4)
                 i = j + 1
                 if self.st()["screen"] == "battle":
@@ -374,15 +438,20 @@ class Game:
         dbg = os.environ.get("PT_DEBUG")
         for it in range(max_iters):
             s = self.st()
-            if dbg and (it < 8 or it % 25 == 0):
+            if dbg:
                 print(f"   [battle it={it} fight={fight} mode_iters="
                       f"{iters_in_mode}] phase={s['battle_phase']!r} "
                       f"msg={s['battle_message']!r}", flush=True)
+            # LOS trainer battles are not script-suspended, so the
+            # caller's wild/run heuristic can't see them — detect the
+            # trainer marker in the phase and commit to fighting.
+            if not fight and "Trainer" in s["battle_phase"]:
+                fight = True
             if s["screen"] != "battle":
                 break
             ph = s["battle_phase"]
             if ph == "PlayerMenu":
-                if not fight and iters_in_mode > 12:
+                if not fight and iters_in_mode > 3:
                     fight = True          # escape keeps failing: brawl
                 iters_in_mode += 1
                 if fight:
@@ -529,6 +598,15 @@ def m08_deliver_parcel(g):
     g.cutscene()
 
 
+def m09_to_pewter(g):
+    """North through Route 2, Viridian Forest (trainer LOS fights), to
+    Pewter City — the first gym town. Gate houses are traversed by the
+    warp-aware BFS automatically."""
+    g.nav_warp(5, 11, "OaksLab", "PalletTown", approach="down")
+    g.nav_to_map(16, 29, "PewterCity")
+    g.evidence("m09")
+
+
 MILESTONES = [
     ("m01", "boot to NEW GAME / Oak speech", m01_boot),
     ("m02", "Oak speech + default names → bedroom", m02_oak_speech),
@@ -538,6 +616,7 @@ MILESTONES = [
     ("m06", "first rival battle", m06_rival_battle),
     ("m07", "Route 1 → Viridian Mart parcel", m07_mart_parcel),
     ("m08", "deliver parcel → POKéDEX", m08_deliver_parcel),
+    ("m09", "Viridian Forest → Pewter City", m09_to_pewter),
 ]
 
 

@@ -77,6 +77,11 @@ pub enum Commands {
         /// Skip intro sequence (Copyright→Title→MainMenu→OakSpeech) and start at Overworld
         #[arg(long)]
         skip_intro: bool,
+        /// Disable audio output. Recommended for headless/debug-server
+        /// driving: synchronous step_frames bursts otherwise pace against
+        /// the real-time audio stream, slowing scripted runs enormously.
+        #[arg(long)]
+        no_audio: bool,
         /// Warp to a specific map and coordinates on startup. Format: "MapName[,x,y]"
         /// e.g. --warp PalletTown,10,14 or --warp CeruleanCity,14,8
         #[arg(long)]

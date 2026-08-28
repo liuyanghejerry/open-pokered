@@ -553,9 +553,9 @@ impl PokemonGame {
     #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
     pub fn new(version: GameVersion) -> Self {
         #[cfg(feature = "debug-server")]
-        return Self::new_with_options(version, None, None, None, false, None, false, None);
+        return Self::new_with_options(version, None, None, None, false, None, false, false, None);
         #[cfg(not(feature = "debug-server"))]
-        return Self::new_with_options(version, None, None, None, false, None, false);
+        return Self::new_with_options(version, None, None, None, false, None, false, false);
     }
 
     /// Creates a new game with optional save file, snapshot, and scripts directory.
@@ -570,6 +570,7 @@ impl PokemonGame {
         skip_intro: bool,
         warp: Option<String>,
         watch: bool,
+        no_audio: bool,
         #[cfg(feature = "debug-server")] debug_handle: Option<pokered_debug_server::DebugServerHandle>,
     ) -> Self {
         let (save_data, save_summary) = if let Some(ref path) = snapshot_path {
@@ -702,14 +703,19 @@ impl PokemonGame {
             }
         };
 
-        let audio = match AudioOutput::new() {
-            Some(ao) => {
-                eprintln!("Audio output initialized (cpal 44100 Hz stereo)");
-                Some(ao)
-            }
-            None => {
-                eprintln!("Warning: Could not initialize audio output.");
-                None
+        let audio = if no_audio {
+            eprintln!("Audio output disabled (--no-audio).");
+            None
+        } else {
+            match AudioOutput::new() {
+                Some(ao) => {
+                    eprintln!("Audio output initialized (cpal 44100 Hz stereo)");
+                    Some(ao)
+                }
+                None => {
+                    eprintln!("Warning: Could not initialize audio output.");
+                    None
+                }
             }
         };
 
