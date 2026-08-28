@@ -33,7 +33,10 @@ pub enum DebugCommand {
     /// after each frame), or until `max_frames` elapse. Collapses the
     /// driver's poll-every-N-frames loop into a single round trip. The
     /// response carries `reached`, the number of frames stepped, and the
-    /// final state snapshot so a timeout is still inspectable.
+    /// final state snapshot so a timeout is still inspectable. Unknown
+    /// condition names are rejected with an error before any frame is
+    /// stepped. Queued Press/PressSequence inputs are consumed one per
+    /// stepped frame, as with `step_frames`.
     ///
     /// Conditions (see `DebugCommand::WaitUntil` docs in the app):
     /// `dialogue_done`, `dialogue_ready`, `choice_open`, `choice_closed`,
@@ -46,7 +49,8 @@ pub enum DebugCommand {
     /// closed exactly as if a player pressed A through all of it, so a
     /// script suspended on `ShowDialogue` resumes normally. Returns the
     /// number of frames stepped plus a state snapshot. No-op when no
-    /// dialogue is showing.
+    /// dialogue is showing. Queued (unconsumed) Press/PressSequence inputs
+    /// are dropped first — they would override the internal taps.
     SkipDialogue,
     /// Get all NPC runtime states on the current map (position,
     /// visibility, facing, scripted-move progress).

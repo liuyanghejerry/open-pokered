@@ -4764,6 +4764,26 @@ impl PokemonGame {
         }
     }
 
+    /// Whether `condition` is a recognized `wait_until` condition (named
+    /// predicate or a known `key=value` prefix form). Unknown names are
+    /// rejected up front so a typo fails fast instead of silently burning
+    /// the whole frame budget and reporting `reached: false`.
+    #[cfg(feature = "debug-server")]
+    fn debug_condition_known(condition: &str) -> bool {
+        matches!(
+            condition,
+            "dialogue_done"
+                | "dialogue_ready"
+                | "choice_open"
+                | "choice_closed"
+                | "script_idle"
+                | "not_battle"
+                | "control_ready"
+        ) || condition.starts_with("screen=")
+            || condition.starts_with("battle_phase=")
+            || condition.starts_with("script_effect=")
+    }
+
     #[cfg(feature = "debug-server")]
     fn handle_debug_command(
         &mut self,
@@ -4777,10 +4797,21 @@ impl PokemonGame {
                 ref condition,
                 max_frames,
             } => {
+                // Reject unknown condition names up front (same treatment as
+                // `press` with an unknown button) — otherwise a typo would
+                // silently burn the whole budget and report reached=false.
+                if !Self::debug_condition_known(condition) {
+                    return DebugResponse::err(format!(
+                        "unknown condition: '{}' (see wait_until docs in protocol.rs)",
+                        condition
+                    ));
+                }
                 // Synchronous condition-driven stepping: drive update() until
                 // the predicate holds (checked after every frame), or the
                 // budget elapses. One round trip replaces the driver's
-                // poll-every-N-frames loop.
+                // poll-every-N-frames loop. Queued press/press_sequence
+                // inputs are consumed one per stepped frame, as with
+                // step_frames.
                 let mut stepped: u32 = 0;
                 while stepped < max_frames && !self.debug_condition_met(condition) {
                     let input = InputState::new();
@@ -4803,7 +4834,11 @@ impl PokemonGame {
                 // Release/tap frames alternate on purpose: the overworld
                 // tracks `prev_a_pressed` across frames
                 // (update.rs `a_just_pressed`), so consecutive tap frames
-                // would read as a held button and never advance.
+                // would read as a held button and never advance. Queued
+                // press/press_sequence inputs are dropped first — inside
+                // update() they override the passed-in frame and would
+                // break the alternation.
+                self.pending_debug_inputs.clear();
                 let mut stepped: u32 = 0;
                 const MAX_SKIP_FRAMES: u32 = 900;
                 // First frame is a release so the very first tap is a

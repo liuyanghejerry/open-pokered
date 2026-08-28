@@ -1480,9 +1480,8 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
             .map(|e| e.to_debug_json())
     }
 
-    /// True while the storyline script engine has a script loaded/running
-    /// (i.e. a cutscene still owns the game); `false` means the player has
-    /// control back.
+    /// True when the storyline script engine is idle — no script loaded or
+    /// running, so no cutscene owns the game and the player has control.
     pub fn script_engine_idle(&self) -> bool {
         self.script_engine.is_idle()
     }
