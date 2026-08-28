@@ -4681,6 +4681,26 @@ impl PokemonGame {
             "player_name": self.player_name.clone(),
             "frame_count": self.frame_count,
             "party_count": self.overworld.party_count,
+            // Full party roster (species/level/HP/moves/PP) so a driver
+            // can plan healing, training and switch strategy offline.
+            "party": self
+                .save_data
+                .party
+                .iter()
+                .map(|mon| {
+                    serde_json::json!({
+                        "species": format!("{:?}", mon.species),
+                        "level": mon.level,
+                        "hp": mon.hp,
+                        "max_hp": mon.max_hp,
+                        "status": format!("{:?}", mon.status),
+                        "moves": mon.moves.iter()
+                            .map(|m| format!("{:?}", m))
+                            .collect::<Vec<_>>(),
+                        "pp": mon.pp,
+                    })
+                })
+                .collect::<Vec<_>>(),
             "dialogue": dialogue,
             "dialogue_state": dialogue_state,
             "choice": choice,

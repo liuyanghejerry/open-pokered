@@ -47,22 +47,63 @@ for _p in sorted((ROOT / "crates/pokered-data/maps").iterdir()):
 DELTA = {"up": (0, -1), "down": (0, 1), "left": (-1, 0), "right": (1, 0)}
 
 
+def tile_at(map_name, x, y):
+    """Sample the blockset tile id at tile coordinates (blockset_data
+    half-block sampling, mirrors pokered-core collision.rs)."""
+    m = MAPS[map_name]
+    if not (0 <= x < m["width"] * 2 and 0 <= y < m["height"] * 2):
+        return None
+    block = m["blocks"][(y // 2) * m["width"] + (x // 2)]
+    tiles = BLOCKSETS[m["tileset_id"]][block]
+    return tiles[((y % 2) * 2 + 1) * 4 + (x % 2) * 2]
+
+
 def walkable(map_name, x, y):
     """Tile-resolution passability: blockset tile whitelist (see
     pokered-data/src/collision.rs — anything not whitelisted blocks)."""
     m = MAPS[map_name]
     if not (0 <= x < m["width"] * 2 and 0 <= y < m["height"] * 2):
         return False
-    block = m["blocks"][(y // 2) * m["width"] + (x // 2)]
-    tiles = BLOCKSETS[m["tileset_id"]][block]
-    tile = tiles[((y % 2) * 2 + 1) * 4 + (x % 2) * 2]
-    return tile in m["passable_tiles"]
+    return tile_at(map_name, x, y) in m["passable_tiles"]
+
+
+# data/tilesets/tileset_headers.asm grass tiles per tileset name.
+GRASS_TILES = {"Overworld": 0x52}
+
+# special_terrain::is_outside_map (engine): only these tilesets flip last_map.
+OUTSIDE_MAP_TILESETS = ("overworld", "plateau")
+
+
+def is_grass(map_name, x, y):
+    t = tile_at(map_name, x, y)
+    return t is not None and t == GRASS_TILES.get(MAPS[map_name]["tileset_name"])
+
+
+def find_grass(map_name, x0, y0, radius=12):
+    """Nearest wild-encounter grass tile to (x0, y0)."""
+    best = None
+    for r in range(radius):
+        for dy in range(-r, r + 1):
+            for dx in range(-r, r + 1):
+                if max(abs(dx), abs(dy)) != r:
+                    continue
+                x, y = x0 + dx, y0 + dy
+                if is_grass(map_name, x, y):
+                    return x, y
+    return best
 
 
 def warp_tiles(map_name):
     """All warp tiles on a map — stepping onto any of them warps, so
     pathfinding treats them as walls unless explicitly targeted."""
     return {(w["x"], w["y"]) for w in MAPS[map_name]["warps"]}
+
+
+def grass_tiles(map_name):
+    return {(x, y)
+            for y in range(MAPS[map_name]["height"] * 2)
+            for x in range(MAPS[map_name]["width"] * 2)
+            if is_grass(map_name, x, y)}
 
 
 def bfs(map_name, start, goal, blocked=frozenset()):
@@ -94,14 +135,16 @@ def bfs(map_name, start, goal, blocked=frozenset()):
 _CONN_DIR = {"up": "north", "down": "south", "left": "west", "right": "east"}
 
 
-def warp_edges_from(map_name, x, y):
+def warp_edges_from(map_name, x, y, last_map=None):
     """Static warp edges for stepping onto tile (x, y) on map_name.
 
     Explicit-dest warps (dest_map set) resolve directly. Exit-mat warps
-    (dest_map null) resolve against every PARENT map — a map with an
-    entry warp into this building — because in-game they target the map
-    the player entered from (last_map). For gate houses the parent is
-    unique, so this recovers both sides exactly."""
+    (dest_map null) fire dynamically: in-game they warp to the map the
+    player entered from (last_map — engine semantics: updated only when
+    arriving at an outside tileset, see special_terrain
+    is_outside_map). With faithful driving-side tracking there is
+    exactly ONE candidate; parents are only a fallback before the first
+    real transition."""
     out = []
     for w in MAPS[map_name]["warps"]:
         if w["x"] != x or w["y"] != y:
@@ -110,7 +153,9 @@ def warp_edges_from(map_name, x, y):
             d = MAPS[w["dest_map_name"]]["warps"][w["dest_warp_id"]]
             out.append((w["dest_map_name"], d["x"], d["y"]))
         else:
-            for parent in PARENTS.get(map_name, ()):
+            candidates = ([last_map] if last_map is not None
+                          else PARENTS.get(map_name, ()))
+            for parent in sorted(candidates):
                 pm = MAPS[parent]
                 if w["dest_warp_id"] < len(pm["warps"]):
                     d = pm["warps"][w["dest_warp_id"]]
@@ -129,6 +174,20 @@ def _build_parents():
 
 
 PARENTS = _build_parents()
+
+
+def warps_at(map_name, x, y):
+    return [w for w in MAPS[map_name]["warps"] if w["x"] == x and w["y"] == y]
+
+
+def outward_dir(map_name, x, y, d):
+    """True when walking direction `d` from (x, y) faces off the map edge
+    — the engine's extra_warp_check (FacingEdge) for bottom/top/left/right
+    exit mats: they only fire when the player steps toward the edge."""
+    m = MAPS[map_name]
+    dx, dy = DELTA[d]
+    return ((dy < 0 and y == 0) or (dy > 0 and y == m["height"] * 2 - 1)
+            or (dx < 0 and x == 0) or (dx > 0 and x == m["width"] * 2 - 1))
 
 
 def cross_step(map_name, x, y, d):
@@ -160,11 +219,24 @@ def cross_step(map_name, x, y, d):
     return (tgt, *tn) if walkable(tgt, *tn) else None
 
 
-def bfs_cross(map_name, start, goal_map, goal, blocked_maps=None):
+def _path_of(prev, start, goal):
+    out = []
+    c = goal
+    while prev[c] is not None:
+        par, d = prev[c]
+        out.append((c, d))
+        c = par
+    return [start] + out[::-1]
+
+
+def bfs_cross(map_name, start, goal_map, goal, blocked_maps=None,
+              last_map=None):
     """BFS whose steps are plain directions. Stepping onto a warp tile
     takes the warp: the expansion replaces the landed tile with its warp
     destinations (doors fire immediately; bottom-edge exit mats fire via
-    the extra edge-check). Nodes are (map, x, y)."""
+    the extra edge-check). Exit mats resolve against `last_map` — the
+    driver tracks it from real transitions, so the plan matches what the
+    engine will actually do. Nodes are (map, x, y)."""
     blocked_maps = blocked_maps or {}
     s = (map_name, *start)
     t = (goal_map, *goal)
@@ -180,24 +252,26 @@ def bfs_cross(map_name, start, goal_map, goal, blocked_maps=None):
                 continue
             key = (landed[1], landed[2])
             if key in warp_tiles(landed[0]):
-                cands = [n for n in warp_edges_from(*landed)
-                         if n != (cm, cx, cy)]
+                mats = warps_at(*landed)
+                # Exit mats (no dest_map) fire only when stepping TOWARD
+                # the map edge — sideways steps onto them are plain tiles,
+                # otherwise plans ping-pong on the mat (school house bug).
+                if (all(not w.get("dest_map_name") for w in mats)
+                        and not outward_dir(*landed, d)):
+                    cands = [landed]
+                else:
+                    cands = [n for n in warp_edges_from(*landed, last_map)
+                             if n != (cm, cx, cy)]
             else:
                 cands = [landed]
             for n in cands:
-                if n in prev:
+                if n == s or n in prev:
                     continue
                 if n[0] == cm and (n[1], n[2]) in blocked_maps.get(cm, ()):
                     continue
                 prev[n] = ((cm, cx, cy), d)
                 if n == t:
-                    out = []
-                    c = n
-                    while prev[c] is not None:
-                        p, dd = prev[c]
-                        out.append((c, dd))
-                        c = p
-                    return [s] + out[::-1]
+                    return _path_of(prev, s, n)
                 q.append(n)
     return None
 
@@ -216,6 +290,21 @@ class Game:
             cwd=str(ROOT), stdout=subprocess.DEVNULL, stderr=self.log)
         self.d = DebugClient(port)
         self.frame0 = None
+        # Engine default at new game (screen.rs OverworldScreen::new).
+        self.last_map = "PalletTown"
+
+    def track_last_map(self, current_map):
+        """Engine-faithful last_map tracking (screen.rs' PendingWarp
+        save_last_map): updated only when the player arrives at a map
+        with an outside tileset ("overworld" / "plateau" — see
+        special_terrain::is_outside_map). Interior maps leave it as is,
+        which is what makes the forest gate corridor work: last_map
+        stays Route2 through SouthGate → Forest → NorthGate."""
+        prev = getattr(self, "_prev_map", None)
+        if prev is not None and current_map != prev:
+            if MAPS[current_map]["tileset_name"] in OUTSIDE_MAP_TILESETS:
+                self.last_map = current_map
+        self._prev_map = current_map
 
     # ── protocol helpers ────────────────────────────────────────────────
     def st(self):
@@ -293,12 +382,13 @@ class Game:
         """Turn in place: one held frame turns, walking needs more."""
         self.d.drive([direction], frames=1 + 12)
 
-    def nav_to_map(self, x, y, map_name, tries=80):
-        """Cross-map closed-loop walk (connections included). Wild
-        encounters hijack control mid-drive; recover by running from the
-        battle, then re-localize and continue. Segments stay short so a
-        battle can only ever consume a tile or two of drift."""
-        for _ in range(tries):
+    def nav_to_map(self, x, y, map_name, tries=150, avoid_grass=True):
+        """Cross-map closed-loop walk (connections included). Prefers a
+        route that avoids wild-encounter grass when one exists (wilds
+        interrupt the walk — sometimes fatally at low HP); falls back
+        to any walkable path. Wild encounters that still happen are run
+        from (or fought for trainers) and the walk re-localizes."""
+        for attempt in range(tries):
             if self.st()["screen"] == "battle":
                 s = self.st()
                 prefer = ("fight" if s["script_awaiting_battle"]
@@ -306,16 +396,49 @@ class Game:
                 self.battle_loop(prefer=prefer)
                 self.cutscene()
             cm, cx, cy = self.pos()
+            self.track_last_map(cm)
+            import os
+            if os.environ.get("PT_DEBUG") and attempt % 10 == 0:
+                print(f"   [nav {map_name}({x},{y}) try={attempt} "
+                      f"at {cm}({cx},{cy}) last={self.last_map}]", flush=True)
             if cm == map_name and (cx, cy) == (x, y):
                 return
             blocked = {cm: self.npc_blocked(cm)}
-            path = bfs_cross(cm, (cx, cy), map_name, (x, y),
-                             blocked_maps=blocked)
+            path = None
+            if avoid_grass:
+                path = bfs_cross(cm, (cx, cy), map_name, (x, y),
+                                 blocked_maps={
+                                     cm: blocked[cm] | grass_tiles(cm)},
+                                 last_map=self.last_map)
+            if path is None:
+                path = bfs_cross(cm, (cx, cy), map_name, (x, y),
+                                 blocked_maps=blocked,
+                                 last_map=self.last_map)
             if not path:
                 raise NavError(f"no cross path: {cm}({cx},{cy}) "
                                f"-> {map_name}({x},{y}) "
                                f"blocked={sorted(blocked.get(cm, set()))}")
+            import os as _os
+            if _os.environ.get("PT_DEBUG") and attempt % 10 == 0:
+                plan = []
+                cur = None
+                for node, how in path[1:10]:
+                    m, px, py = node
+                    if m != cur:
+                        plan.append(f"[{m}]")
+                        cur = m
+                    plan.append(f"{how or 'START'}({px},{py})")
+                print(f"   [navplan] {' '.join(plan)}", flush=True)
             steps = [how for _, how in path[1:]]
+            # Block warp tiles of the current map for the walking phase,
+            # except tiles the plan deliberately steps onto (sideways mat
+            # steps) — otherwise straight drives can drift onto a door and
+            # teleport into a building.
+            plain_warp = {n[1:3] for n, how in path[1:]
+                          if n[0] == cm and how in DELTA
+                          and (n[1], n[2]) in warp_tiles(cm)}
+            if cm in blocked:
+                blocked[cm] |= (warp_tiles(cm) - plain_warp)
             # walk at most 3 tiles per segment, then re-check (a wild
             # battle or an unplanned warp may interrupt; the closed loop
             # re-localizes and re-plans either way)
@@ -326,8 +449,17 @@ class Game:
                        and j + 1 - i < 3):
                     j += 1
                 tiles = j - i + 1
-                self.d.drive([steps[i]] * (tiles * FRAMES_PER_TILE),
-                             frames=tiles * FRAMES_PER_TILE + 4)
+                held = tiles * FRAMES_PER_TILE
+                frames = held + 4
+                # A step whose plan lands on another map (warp/connection
+                # firing) needs the direction HELD at the completion frame
+                # (extra_warp_check for mats); pad held frames — the fade
+                # absorbs the surplus. Map changes mid-drive anyway.
+                idx_after = i + tiles
+                if idx_after < len(path) and path[idx_after][0][0] != cm:
+                    held += 8
+                    frames = held + 8
+                self.d.drive([steps[i]] * held, frames=frames)
                 i = j + 1
                 if self.st()["screen"] == "battle":
                     break
@@ -404,10 +536,14 @@ class Game:
 
     def choose(self, label):
         """Move the cursor to `label` in the open choice menu, press A.
+        Matches case-insensitively (scripts use both YES/NO and Yes/No).
         The menu wraps both ways, so take the shorter arc."""
         ch = self.st()["choice"]
         assert ch is not None, "no choice open"
-        idx = ch["options"].index(label)
+        opts = ch["options"]
+        if label not in opts:
+            label = next(o for o in opts if o.lower() == label.lower())
+        idx = opts.index(label)
         n = len(ch["options"])
         delta = (idx - ch["selected"]) % n
         if delta:
@@ -425,6 +561,106 @@ class Game:
             self.wait("choice_open", budget)
         else:
             self.cutscene()
+
+    # ── party / training ────────────────────────────────────────────────
+    def leader(self):
+        return self.st()["party"][0]
+
+    def heal_pokecenter(self, door, city, pc):
+        """Enter the Pokecenter, heal at the nurse (YES), verify full HP,
+        walk back out. `door` is the city-side warp tile."""
+        dx, dy = door
+        self.nav_to_map(dx, dy + 1, city)
+        self.nav_warp(dx, dy, city, pc)
+        self.nav_to(3, 3, map_name=pc)         # across the counter from
+        self.face("up")                        # the nurse (3,1); the
+        self.tap("a", 20)                      # counter row is solid
+        for _ in range(40):
+            s = self.st()
+            if s["choice"] is not None:
+                self.choose("YES")
+                break
+            if s["dialogue_state"] is not None:
+                self.skip()
+            else:
+                self.step(20)
+        assert self.cutscene(), "heal cutscene never finished"
+        s = self.st()
+        assert all(m["hp"] == m["max_hp"] for m in s["party"]), s["party"]
+        self.nav_warp(3, 7, pc, city, approach="down")
+
+    PREFERRED_MOVES = ["VineWhip", "Ember", "Bubble", "WaterGun",
+                       "ThunderShock", "Absorb", "RazorLeaf", "Tackle",
+                       "Scratch", "Pound"]
+
+    def _pick_move_index(self):
+        """Best move slot for the battle leader, by simple preference
+        order (STAB/typed damage first)."""
+        moves = self.leader()["moves"]
+        for want in self.PREFERRED_MOVES:
+            if want in moves:
+                return moves.index(want)
+        return 0
+
+    def leave_grass(self, map_name):
+        """Step out of the grass patch the player stands in (one tile
+        toward the nearest solid ground), so subsequent grass-avoiding
+        navigation has a non-grass start instead of being trapped."""
+        cm, cx, cy = self.pos()
+        if cm != map_name or not is_grass(cm, cx, cy):
+            return
+        for d, (dx, dy) in DELTA.items():
+            n = (cx + dx, cy + dy)
+            if walkable(cm, *n) and not is_grass(cm, *n):
+                self.d.drive([d] * FRAMES_PER_TILE, frames=12)
+                self.step(6)
+                return
+        raise NavError(f"no solid ground next to grass at {cm}({cx},{cy})")
+
+    def train_until(self, level, map_name, spot, heal, max_cycles=400):
+        """Wander over wild-encounter grass near `spot` fighting battles
+        until the leader reaches `level`. Heals at `heal` (pokecenter
+        door, city, pc) when HP drops below 40%; blackout self-heals and
+        the loop re-navigates."""
+        import time
+        t0 = time.time()
+        x, y = find_grass(map_name, *spot) or spot
+        battles = 0
+        print(f"[train] grass spot {map_name} ({x},{y}), "
+              f"target L{level}", flush=True)
+        for cyc in range(max_cycles):
+            s = self.st()
+            if s["screen"] == "battle":
+                battles += 1
+                self.battle_loop(prefer="fight")
+                self.cutscene()
+                continue
+            mon = s["party"][0]
+            if cyc % 25 == 0:
+                print(f"[train] cyc={cyc} battles={battles} "
+                      f"L{mon['level']} hp={mon['hp']}/{mon['max_hp']} "
+                      f"({time.time()-t0:.0f}s)", flush=True)
+            if mon["level"] >= level:
+                print(f"[train] level {mon['level']} reached "
+                      f"({time.time()-t0:.0f}s, {battles} battles)")
+                return True
+            if mon["hp"] < mon["max_hp"] * 0.6:
+                print(f"[train] hp {mon['hp']}/{mon['max_hp']} -> heal",
+                      flush=True)
+                self.leave_grass(map_name)
+                self.heal_pokecenter(*heal)
+                self.nav_to_map(x, y, map_name)
+                continue
+            # wander: a vertical shuttle over the grass; wilds interrupt
+            cm, cx, cy = self.pos()
+            if cm != map_name:
+                self.nav_to_map(x, y, map_name)
+                continue
+            dy = 4 if cy <= y else -4
+            self.d.drive(["down" if dy > 0 else "up"] * 32, frames=36)
+            if self.st()["screen"] != "battle":
+                self.d.drive(["up" if dy > 0 else "down"] * 32, frames=36)
+        return False
 
     # ── battle ──────────────────────────────────────────────────────────
     def battle_loop(self, prefer="fight", max_iters=400):
@@ -459,12 +695,22 @@ class Game:
                     self.tap("a", 4)                          # open FIGHT
                     if not self._await_phase("MoveSelect", 120):
                         continue               # text ate the press; retry
-                    self.tap("a", 4)                          # first move
+                    want = self._pick_move_index()
+                    if want:                   # cursor 0 -> slot `want`
+                        self.d.drive(["up"] * 4, frames=8)    # clamp to 0
+                        for _ in range(want):
+                            self.d.drive(["down"], frames=12)
+                    self.tap("a", 4)                          # use move
                 else:
                     self.d.drive(["down", "right"], frames=10)  # -> RUN
                     self.tap("a", 4)                            # try escape
                 self.step(30)
             elif ph == "MoveSelect":
+                want = self._pick_move_index()
+                if want:
+                    self.d.drive(["up"] * 4, frames=8)
+                    for _ in range(want):
+                        self.d.drive(["down"], frames=12)
                 self.tap("a", 4)
                 self.step(30)
             elif ph == "ShiftPrompt":
@@ -601,10 +847,35 @@ def m08_deliver_parcel(g):
 def m09_to_pewter(g):
     """North through Route 2, Viridian Forest (trainer LOS fights), to
     Pewter City — the first gym town. Gate houses are traversed by the
-    warp-aware BFS automatically."""
+    warp-aware BFS automatically. Heal at Viridian's Pokecenter first so
+    the forest trainers are faced at full HP (a loss means a blackout
+    home and a full-journey retry)."""
     g.nav_warp(5, 11, "OaksLab", "PalletTown", approach="down")
+    g.heal_pokecenter((23, 25), "ViridianCity", "ViridianPokecenter")
     g.nav_to_map(16, 29, "PewterCity")
     g.evidence("m09")
+
+
+def m10_brock(g):
+    """Grind to Vine Whip (L13) in Route 2 grass, heal, then beat Brock
+    for the BOULDERBADGE."""
+    g.evidence("m10-arrived")
+    heal = ((13, 25), "PewterCity", "PewterPokecenter")
+    g.heal_pokecenter(*heal)                 # register pokecenter for blackouts
+    assert g.train_until(13, "Route2", (10, 50), heal), "training stalled"
+    g.evidence("m10-trained")
+    g.heal_pokecenter(*heal)
+    g.nav_to_map(16, 18, "PewterCity")       # below the gym door (16,17)
+    g.nav_warp(16, 17, "PewterCity", "PewterGym")
+    g.nav_to(4, 2, map_name="PewterGym")     # below Brock (4,1)
+    g.face("up")
+    g.tap("a", 20)                           # Brock's challenge speech
+    assert g.cutscene(), "Brock challenge cutscene never finished"
+    g.wait("screen=battle", 900)
+    g.battle_loop(prefer="fight")
+    g.wait("not_battle", 1800)
+    assert g.cutscene(), "badge ceremony never finished"
+    g.evidence("m10")
 
 
 MILESTONES = [
@@ -617,6 +888,7 @@ MILESTONES = [
     ("m07", "Route 1 → Viridian Mart parcel", m07_mart_parcel),
     ("m08", "deliver parcel → POKéDEX", m08_deliver_parcel),
     ("m09", "Viridian Forest → Pewter City", m09_to_pewter),
+    ("m10", "train + Boulder Badge (Brock)", m10_brock),
 ]
 
 
