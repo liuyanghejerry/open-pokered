@@ -449,16 +449,11 @@ class Game:
                        and j + 1 - i < 3):
                     j += 1
                 tiles = j - i + 1
-                held = tiles * FRAMES_PER_TILE
+                held = tiles * FRAMES_PER_TILE + 8
+                # +8 held tail: the warp/mat extra check needs the
+                # direction held at the exact step-completion frame (the
+                # completion tick lands past the nominal walk window).
                 frames = held + 4
-                # A step whose plan lands on another map (warp/connection
-                # firing) needs the direction HELD at the completion frame
-                # (extra_warp_check for mats); pad held frames — the fade
-                # absorbs the surplus. Map changes mid-drive anyway.
-                idx_after = i + tiles
-                if idx_after < len(path) and path[idx_after][0][0] != cm:
-                    held += 8
-                    frames = held + 8
                 self.d.drive([steps[i]] * held, frames=frames)
                 i = j + 1
                 if self.st()["screen"] == "battle":
