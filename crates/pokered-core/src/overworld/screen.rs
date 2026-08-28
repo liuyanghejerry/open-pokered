@@ -428,6 +428,11 @@ impl BedroomDialogue {
         self.current_page + 1 >= self.pages.len()
     }
 
+    /// 0-based index of the page currently being displayed.
+    pub fn current_page(&self) -> usize {
+        self.current_page
+    }
+
     pub fn start_holding_open(&mut self) {
         self.holding_open = true;
     }
@@ -1464,6 +1469,21 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
             let dbg = format!("{:?}", e);
             dbg.split([' ', '(']).next().unwrap_or(&dbg).to_string()
         })
+    }
+
+    /// Structured JSON form of the active script effect (progress fields
+    /// included, e.g. Delay countdown / move-path state / choice cursor),
+    /// or `None` when no storyline command is being processed.
+    pub fn active_script_effect_value(&self) -> Option<serde_json::Value> {
+        self.active_script_effect
+            .as_ref()
+            .map(|e| e.to_debug_json())
+    }
+
+    /// True when the storyline script engine is idle — no script loaded or
+    /// running, so no cutscene owns the game and the player has control.
+    pub fn script_engine_idle(&self) -> bool {
+        self.script_engine.is_idle()
     }
 
     pub fn set_script_flags(&mut self, flags: std::collections::HashMap<String, bool>) {

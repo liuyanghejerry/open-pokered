@@ -309,6 +309,307 @@ pub enum HealingMachinePhase {
     Done,
 }
 
+impl ScriptEffect {
+    /// Structured JSON form of an active script effect, for debug protocol
+    /// observability: the driver sees effect progress fields (Delay
+    /// countdown, move-path state, FollowNpc phase, choice cursor, …)
+    /// instead of an opaque variant label. Every arm is a mechanical
+    /// field→JSON mapping; new variants must be added here too.
+    pub fn to_debug_json(&self) -> serde_json::Value {
+        use serde_json::json;
+        match self {
+            ScriptEffect::OpenPc { kind } => json!({ "effect": "OpenPc", "kind": kind }),
+            ScriptEffect::ShowDiploma => json!({ "effect": "ShowDiploma" }),
+            ScriptEffect::LinkStart => json!({ "effect": "LinkStart" }),
+            ScriptEffect::HallOfFameCeremony => json!({ "effect": "HallOfFameCeremony" }),
+            ScriptEffect::ShowDialogue { text } => {
+                json!({ "effect": "ShowDialogue", "text": text })
+            }
+            ScriptEffect::ShowChoice {
+                options,
+                started,
+                selected,
+            } => json!({
+                "effect": "ShowChoice",
+                "options": options,
+                "started": started,
+                "selected": selected,
+            }),
+            ScriptEffect::GiveItem { item_id, quantity } => {
+                json!({ "effect": "GiveItem", "item_id": item_id, "quantity": quantity })
+            }
+            ScriptEffect::TakeItem { item_id, quantity } => {
+                json!({ "effect": "TakeItem", "item_id": item_id, "quantity": quantity })
+            }
+            ScriptEffect::GivePokemon {
+                species,
+                nickname,
+                level,
+            } => json!({
+                "effect": "GivePokemon",
+                "species": species,
+                "nickname": nickname,
+                "level": level,
+            }),
+            ScriptEffect::ShowObject { object_index } => {
+                json!({ "effect": "ShowObject", "object_index": object_index })
+            }
+            ScriptEffect::HideObject { object_index } => {
+                json!({ "effect": "HideObject", "object_index": object_index })
+            }
+            ScriptEffect::ShowObjectByName { toggle_id } => {
+                json!({ "effect": "ShowObjectByName", "toggle_id": toggle_id })
+            }
+            ScriptEffect::HideObjectByName { toggle_id } => {
+                json!({ "effect": "HideObjectByName", "toggle_id": toggle_id })
+            }
+            ScriptEffect::MoveNpc { npc_id, path, started } => json!({
+                "effect": "MoveNpc",
+                "npc_id": npc_id,
+                "path": path,
+                "started": started,
+            }),
+            ScriptEffect::StartNpcMove { npc_id, path } => {
+                json!({ "effect": "StartNpcMove", "npc_id": npc_id, "path": path })
+            }
+            ScriptEffect::AwaitNpcMove { npc_id } => {
+                json!({ "effect": "AwaitNpcMove", "npc_id": npc_id })
+            }
+            ScriptEffect::MovePlayer { path, started } => {
+                json!({ "effect": "MovePlayer", "path": path, "started": started })
+            }
+            ScriptEffect::MovePlayerRelative { steps, started } => json!({
+                "effect": "MovePlayerRelative",
+                "steps": steps,
+                "started": started,
+            }),
+            ScriptEffect::MoveNpcTo {
+                npc_id,
+                x,
+                y,
+                started,
+            } => json!({
+                "effect": "MoveNpcTo",
+                "npc_id": npc_id,
+                "x": x,
+                "y": y,
+                "started": started,
+            }),
+            ScriptEffect::StartNpcMoveTo { npc_id, x, y } => {
+                json!({ "effect": "StartNpcMoveTo", "npc_id": npc_id, "x": x, "y": y })
+            }
+            ScriptEffect::MovePlayerTo { x, y, started } => {
+                json!({ "effect": "MovePlayerTo", "x": x, "y": y, "started": started })
+            }
+            ScriptEffect::FaceNpc { npc_id, direction } => {
+                json!({ "effect": "FaceNpc", "npc_id": npc_id, "direction": format!("{:?}", direction) })
+            }
+            ScriptEffect::FacePlayer { direction } => {
+                json!({ "effect": "FacePlayer", "direction": format!("{:?}", direction) })
+            }
+            ScriptEffect::PlayMusic { music_id } => {
+                json!({ "effect": "PlayMusic", "music_id": music_id })
+            }
+            ScriptEffect::PlaySound { sound_id } => {
+                json!({ "effect": "PlaySound", "sound_id": sound_id })
+            }
+            ScriptEffect::StartBattle {
+                trainer_id,
+                rival_triplet_base,
+            } => json!({
+                "effect": "StartBattle",
+                "trainer_id": trainer_id,
+                "rival_triplet_base": rival_triplet_base,
+            }),
+            ScriptEffect::StartWildBattle { species, level } => {
+                json!({ "effect": "StartWildBattle", "species": species, "level": level })
+            }
+            ScriptEffect::TradePokemon {
+                offered,
+                received,
+                nickname,
+            } => json!({
+                "effect": "TradePokemon",
+                "offered": offered,
+                "received": received,
+                "nickname": nickname,
+            }),
+            ScriptEffect::Delay {
+                frames,
+                frames_remaining,
+            } => json!({
+                "effect": "Delay",
+                "frames": frames,
+                "frames_remaining": frames_remaining,
+            }),
+            ScriptEffect::WarpTo { map, x, y } => {
+                json!({ "effect": "WarpTo", "map": map, "x": x, "y": y })
+            }
+            ScriptEffect::AnimateHealingMachine {
+                phase,
+                frames_remaining,
+            } => json!({
+                "effect": "AnimateHealingMachine",
+                "phase": healing_phase_json(phase),
+                "frames_remaining": frames_remaining,
+            }),
+            ScriptEffect::FadeScreen { fade_type } => {
+                json!({ "effect": "FadeScreen", "fade_type": fade_type })
+            }
+            ScriptEffect::SetJoyIgnore { mask } => {
+                json!({ "effect": "SetJoyIgnore", "mask": mask })
+            }
+            ScriptEffect::ClearJoyIgnore => json!({ "effect": "ClearJoyIgnore" }),
+            ScriptEffect::FollowNpc {
+                npc_id,
+                target_x,
+                target_y,
+                phase,
+            } => json!({
+                "effect": "FollowNpc",
+                "npc_id": npc_id,
+                "target_x": target_x,
+                "target_y": target_y,
+                "phase": follow_phase_json(phase),
+            }),
+            ScriptEffect::ShowPokedexEntry { species, started } => {
+                json!({ "effect": "ShowPokedexEntry", "species": species, "started": started })
+            }
+            ScriptEffect::NamingScreen {
+                species,
+                naming_state,
+                started,
+                result_name,
+            } => json!({
+                "effect": "NamingScreen",
+                "species": species,
+                "naming_state": naming_state.as_ref().map(|s| format!("{:?}", s)),
+                "started": started,
+                "result_name": result_name,
+            }),
+            ScriptEffect::ChoosePartyPokemon { started, result_index } => {
+                json!({ "effect": "ChoosePartyPokemon", "started": started, "result_index": result_index })
+            }
+            ScriptEffect::SetPartyNickname { index, nickname } => {
+                json!({ "effect": "SetPartyNickname", "index": index, "nickname": nickname })
+            }
+            ScriptEffect::Immediate { result } => json!({
+                "effect": "Immediate",
+                "result": match result {
+                    dotzuki_engine_script::CommandResult::Void => json!(null),
+                    dotzuki_engine_script::CommandResult::Bool(b) => json!(b),
+                    dotzuki_engine_script::CommandResult::Number(n) => json!(n),
+                    dotzuki_engine_script::CommandResult::Text(t) => json!(t),
+                },
+            }),
+            ScriptEffect::OpenShop { items } => {
+                json!({ "effect": "OpenShop", "items": items })
+            }
+            ScriptEffect::OpenSlots { lucky } => {
+                json!({ "effect": "OpenSlots", "lucky": lucky })
+            }
+            ScriptEffect::ElevatorMenu { floors } => {
+                json!({ "effect": "ElevatorMenu", "floors": floors })
+            }
+            ScriptEffect::FilterBag { item_ids } => {
+                json!({ "effect": "FilterBag", "item_ids": item_ids })
+            }
+            ScriptEffect::ShowEmotionBubble {
+                npc_id,
+                emotion,
+                frames_remaining,
+                started,
+            } => json!({
+                "effect": "ShowEmotionBubble",
+                "npc_id": npc_id,
+                "emotion": emotion,
+                "frames_remaining": frames_remaining,
+                "started": started,
+            }),
+            ScriptEffect::SetNpcPosition { npc_id, x, y } => {
+                json!({ "effect": "SetNpcPosition", "npc_id": npc_id, "x": x, "y": y })
+            }
+            ScriptEffect::SetNpcFrame { npc_id, frame } => {
+                json!({ "effect": "SetNpcFrame", "npc_id": npc_id, "frame": frame })
+            }
+            ScriptEffect::GiveMoney { amount } => {
+                json!({ "effect": "GiveMoney", "amount": amount })
+            }
+            ScriptEffect::TakeMoney { amount } => {
+                json!({ "effect": "TakeMoney", "amount": amount })
+            }
+            ScriptEffect::GiveCoins { amount } => {
+                json!({ "effect": "GiveCoins", "amount": amount })
+            }
+            ScriptEffect::TakeCoins { amount } => {
+                json!({ "effect": "TakeCoins", "amount": amount })
+            }
+            ScriptEffect::DepositDaycare { index } => {
+                json!({ "effect": "DepositDaycare", "index": index })
+            }
+            ScriptEffect::WithdrawDaycare => json!({ "effect": "WithdrawDaycare" }),
+            ScriptEffect::PlayCry { species } => {
+                json!({ "effect": "PlayCry", "species": species })
+            }
+            ScriptEffect::GiveBadge { badge } => {
+                json!({ "effect": "GiveBadge", "badge": badge })
+            }
+            ScriptEffect::ReplaceTileBlock { x, y, block_id } => {
+                json!({ "effect": "ReplaceTileBlock", "x": x, "y": y, "block_id": block_id })
+            }
+            ScriptEffect::PlayShipDeparture { started } => {
+                json!({ "effect": "PlayShipDeparture", "started": started })
+            }
+            // Unit variants.
+            ScriptEffect::Heal => json!({ "effect": "Heal" }),
+            ScriptEffect::StopMusic => json!({ "effect": "StopMusic" }),
+            ScriptEffect::FadeOutMusic => json!({ "effect": "FadeOutMusic" }),
+            ScriptEffect::OldManTutorial => json!({ "effect": "OldManTutorial" }),
+        }
+    }
+}
+
+fn follow_phase_json(phase: &FollowNpcPhase) -> serde_json::Value {
+    use serde_json::json;
+    match phase {
+        FollowNpcPhase::StartNpc => json!({ "phase": "StartNpc" }),
+        FollowNpcPhase::Following {
+            last_npc_x,
+            last_npc_y,
+            final_push_done,
+        } => json!({
+            "phase": "Following",
+            "last_npc_x": last_npc_x,
+            "last_npc_y": last_npc_y,
+            "final_push_done": final_push_done,
+        }),
+        FollowNpcPhase::Done => json!({ "phase": "Done" }),
+    }
+}
+
+fn healing_phase_json(phase: &HealingMachinePhase) -> serde_json::Value {
+    use serde_json::json;
+    match phase {
+        HealingMachinePhase::FadeOutMusic => json!({ "phase": "FadeOutMusic" }),
+        HealingMachinePhase::WaitForFadeOut => json!({ "phase": "WaitForFadeOut" }),
+        HealingMachinePhase::HealPartyMember {
+            member_index,
+            total_members,
+        } => json!({
+            "phase": "HealPartyMember",
+            "member_index": member_index,
+            "total_members": total_members,
+        }),
+        HealingMachinePhase::PlayHealedMusic => json!({ "phase": "PlayHealedMusic" }),
+        HealingMachinePhase::FlashSprite { flashes_remaining } => json!({
+            "phase": "FlashSprite",
+            "flashes_remaining": flashes_remaining,
+        }),
+        HealingMachinePhase::WaitForMusic => json!({ "phase": "WaitForMusic" }),
+        HealingMachinePhase::Done => json!({ "phase": "Done" }),
+    }
+}
+
 pub fn parse_direction(s: &str) -> Option<Direction> {
     match s.to_lowercase().as_str() {
         "up" | "north" => Some(Direction::Up),
@@ -686,5 +987,58 @@ mod name_rater_tests {
             }
             other => panic!("expected SetPartyNickname, got {other:?}"),
         }
+    }
+}
+
+#[cfg(test)]
+mod script_effect_json_tests {
+    use super::*;
+
+    #[test]
+    fn effect_json_includes_progress_fields() {
+        // Delay countdown is the key driver-facing field for cutscene waits.
+        let j = ScriptEffect::Delay {
+            frames: 60,
+            frames_remaining: 12,
+        }
+        .to_debug_json();
+        assert_eq!(j["effect"], "Delay");
+        assert_eq!(j["frames"], 60);
+        assert_eq!(j["frames_remaining"], 12);
+
+        // Choice menu exposes the cursor so a driver can navigate blindly.
+        let j = ScriptEffect::ShowChoice {
+            options: vec!["YES".to_string(), "NO".to_string()],
+            started: true,
+            selected: 1,
+        }
+        .to_debug_json();
+        assert_eq!(j["effect"], "ShowChoice");
+        assert_eq!(j["selected"], 1);
+        assert_eq!(j["options"].as_array().unwrap().len(), 2);
+    }
+
+    #[test]
+    fn effect_json_follow_phase_and_immediate_result() {
+        let j = ScriptEffect::FollowNpc {
+            npc_id: "PALLET_TOWN_OBJ_1".to_string(),
+            target_x: 11,
+            target_y: 2,
+            phase: FollowNpcPhase::Following {
+                last_npc_x: 10,
+                last_npc_y: 3,
+                final_push_done: true,
+            },
+        }
+        .to_debug_json();
+        assert_eq!(j["effect"], "FollowNpc");
+        assert_eq!(j["phase"]["phase"], "Following");
+        assert_eq!(j["phase"]["final_push_done"], true);
+
+        let j = ScriptEffect::Immediate {
+            result: dotzuki_engine_script::CommandResult::Bool(true),
+        }
+        .to_debug_json();
+        assert_eq!(j["result"], true);
     }
 }

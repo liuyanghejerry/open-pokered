@@ -29,6 +29,29 @@ pub enum DebugCommand {
     /// when the response arrives. Queued Press/PressSequence inputs are
     /// consumed one per stepped frame.
     StepFrames { count: u32 },
+    /// Synchronously step the game until a named condition holds (checked
+    /// after each frame), or until `max_frames` elapse. Collapses the
+    /// driver's poll-every-N-frames loop into a single round trip. The
+    /// response carries `reached`, the number of frames stepped, and the
+    /// final state snapshot so a timeout is still inspectable. Unknown
+    /// condition names are rejected with an error before any frame is
+    /// stepped. Queued Press/PressSequence inputs are consumed one per
+    /// stepped frame, as with `step_frames`.
+    ///
+    /// Conditions (see `DebugCommand::WaitUntil` docs in the app):
+    /// `dialogue_done`, `dialogue_ready`, `choice_open`, `choice_closed`,
+    /// `script_idle`, `control_ready`, `not_battle`, plus the generic
+    /// `screen=<name>` / `battle_phase=<name>` / `script_effect=<name>`
+    /// forms (name compared against the Debug variant name).
+    WaitUntil { condition: String, max_frames: u32 },
+    /// Advance the active dialogue box to completion with engine-internal
+    /// A taps — typing is skipped, every page is advanced, and the box is
+    /// closed exactly as if a player pressed A through all of it, so a
+    /// script suspended on `ShowDialogue` resumes normally. Returns the
+    /// number of frames stepped plus a state snapshot. No-op when no
+    /// dialogue is showing. Queued (unconsumed) Press/PressSequence inputs
+    /// are dropped first — they would override the internal taps.
+    SkipDialogue,
     /// Get all NPC runtime states on the current map (position,
     /// visibility, facing, scripted-move progress).
     GetNpcs,

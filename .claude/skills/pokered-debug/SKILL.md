@@ -188,11 +188,20 @@ Commands are JSON lines over TCP (`{"cmd": "..."}`). Key commands for testing:
 |---------|---------|
 | `step_frames {count}` | **Synchronously** advance N frames before responding — deterministic frame control. Queued `press`/`press_sequence` inputs are consumed one per stepped frame |
 | `run_frames {count}` | Schedule N frames on the real-time loop (legacy; window throttling makes it unreliable for tests) |
-| `get_state` | Screen, map, player pos/facing, `active_script_effect`, `script_awaiting_battle`, `player_movement_state`, current `dialogue`, battle phase/message, money |
+| `wait_until {condition,max_frames}` | **Synchronously** step frames until a condition holds (checked after every frame) or the budget elapses — one round trip replaces a poll-every-N-frames loop. Response: `{reached, stepped, state}`. Conditions: `dialogue_done`, `dialogue_ready`, `choice_open`, `choice_closed`, `script_idle`, `control_ready` (control back after a cutscene), `not_battle`, and the generic `screen=<name>` / `battle_phase=<name>` / `script_effect=<name>` forms (Debug variant names). Unknown conditions error immediately |
+| `skip_dialogue` | Advance the active dialogue box to completion with engine-internal A taps (skip typing, advance all pages, close) so a script suspended on the text resumes; no-op when no dialogue is showing. Queued `press` inputs are dropped first. Response: `{stepped, dialogue_closed, state}` |
+| `get_state` | Screen, map, player pos/facing, `active_script_effect` (label), full `script_effect` payload, `dialogue_state` (page/total/char progress/waiting-for-input), `choice` (menu options+cursor), `script_running`, `script_awaiting_battle`, `player_movement_state`, `battle_phase`/`battle_message`, money/coins, `pc_phase`, `text_speed_delay_frames`, `warp_fade` |
 | `get_npcs` | Every NPC on the map: position, home, visibility, facing, `scripted_path_remaining`, walk counter |
 | `press` / `press_sequence` | Inject button input (one button per frame) |
 | `warp {map,x,y}` | Warp through the real warp path (reloads scripts/triggers) |
 | `set_flag` / `give_item` / `give_pokemon` / `start_wild_battle` | State seeding |
+
+**Driving dialogue/cutscenes deterministically:** `dialogue_state.waiting_for_input` tells
+you exactly when the current page is fully revealed (press A once per page), and
+`script_effect` carries progress fields (e.g. `Delay.frames_remaining`,
+`FollowNpc.phase`, `ShowChoice.selected`). For long flavor text, `skip_dialogue`
+collapses whole conversations into one round trip; `wait_until("control_ready")`
+returns once the cutscene has finished and the player has control again.
 
 Recommended driving pattern (deterministic):
 
