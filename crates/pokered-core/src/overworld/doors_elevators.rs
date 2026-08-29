@@ -86,11 +86,7 @@ pub fn resolve_link_warp(warp_type: LinkWarpType) -> SpecialWarpEntry {
     link_warp(warp_type)
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub struct ElevatorShakeParams {
-    pub iterations: u8,
-    pub pixel_offset: u8,
-}
+pub use dotzuki_engine::overworld::presentation::ElevatorShakeParams;
 
 pub const fn elevator_shake_params() -> ElevatorShakeParams {
     ElevatorShakeParams {

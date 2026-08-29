@@ -218,13 +218,13 @@ fn shop_inventory_empty() {
 }
 
 #[test]
-fn from_item_id_strings_success() {
+fn from_strings_success() {
     let items: Vec<String> = vec![
         "PokeBall".to_string(),
         "Potion".to_string(),
         "Antidote".to_string(),
     ];
-    let shop = ShopInventory::from_item_id_strings(&items).unwrap();
+    let shop = ShopInventory::from_strings(&items).unwrap();
     assert_eq!(shop.len(), 3);
     assert_eq!(shop.get(0), Some(ItemId::PokeBall));
     assert_eq!(shop.get(1), Some(ItemId::Potion));
@@ -232,16 +232,16 @@ fn from_item_id_strings_success() {
 }
 
 #[test]
-fn from_item_id_strings_empty() {
+fn from_strings_empty() {
     let items: Vec<String> = vec![];
-    let shop = ShopInventory::from_item_id_strings(&items).unwrap();
+    let shop = ShopInventory::from_strings(&items).unwrap();
     assert!(shop.is_empty());
 }
 
 #[test]
-fn from_item_id_strings_unknown_item() {
+fn from_strings_unknown_item() {
     let items: Vec<String> = vec!["PokeBall".to_string(), "NotAnItem".to_string()];
-    let err = ShopInventory::from_item_id_strings(&items).unwrap_err();
+    let err = ShopInventory::from_strings(&items).unwrap_err();
     assert_eq!(err, "NotAnItem");
 }
 

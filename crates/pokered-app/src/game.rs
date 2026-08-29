@@ -531,7 +531,11 @@ impl PokemonGame {
         role: LinkRole,
     ) {
         self.link_role = role;
-        self.link_session = Some(LinkSession::new(transport));
+        self.link_session = Some(LinkSession::new(
+            transport,
+            crate::link::link_activity,
+            NetworkMessage::Disconnect,
+        ));
         self.link_status = LinkStatus::Connecting;
     }
 
@@ -1172,9 +1176,9 @@ impl PokemonGame {
         // on save. It carries the current tileset's animation byte
         // (TILEANIM_*); map loads refresh it from the tileset header.
         save.tile_animations = match self.overworld.tile_anim.kind() {
-            pokered_data::tileset_data::TileAnimation::None => 0,
-            pokered_data::tileset_data::TileAnimation::Water => 1,
-            pokered_data::tileset_data::TileAnimation::WaterFlower => 2,
+            pokered_core::overworld::presentation::TileAnimKind::None => 0,
+            pokered_core::overworld::presentation::TileAnimKind::Water => 1,
+            pokered_core::overworld::presentation::TileAnimKind::WaterFlower => 2,
         };
 
         // The event-flag bitset serializes directly into the original
@@ -3084,7 +3088,7 @@ impl PokemonGame {
                     }
 
                     if let Some(shop_items) = self.overworld.pending_shop.take() {
-                        match ShopInventory::from_item_id_strings(&shop_items) {
+                        match ShopInventory::from_strings(&shop_items) {
                             Ok(inv) => {
                                 let mart = pokered_core::items::MartState::new(inv);
                                 ScreenAction::Transition(GameScreen::Shop(mart))
@@ -4247,7 +4251,11 @@ impl PokemonGame {
                     // core Hello/HelloAck exchange is asymmetric (initiator
                     // sends Hello, receiver auto-acks from its Idle state), so
                     // only the `--link-connect` client starts it (below).
-                    self.link_session = Some(LinkSession::new(Box::new(transport)));
+                    self.link_session = Some(LinkSession::new(
+                        Box::new(transport),
+                        crate::link::link_activity,
+                        NetworkMessage::Disconnect,
+                    ));
                     self.link_status = LinkStatus::Connecting;
                 }
                 Ok(None) => {
@@ -4820,14 +4828,18 @@ impl PokemonGame {
         &mut self,
         cmd: pokered_debug_server::DebugCommand,
     ) -> pokered_debug_server::DebugResponse {
-        use pokered_debug_server::{DebugCommand, DebugResponse};
+        use pokered_debug_server::{
+            CoreDebugCommand, DebugCommand, DebugResponse, GameDebugCommand,
+        };
 
         match cmd {
-            DebugCommand::GetState => DebugResponse::ok_with_data(self.debug_state_snapshot()),
-            DebugCommand::WaitUntil {
+            DebugCommand::Core(CoreDebugCommand::GetState) => {
+                DebugResponse::ok_with_data(self.debug_state_snapshot())
+            }
+            DebugCommand::Game(GameDebugCommand::WaitUntil {
                 ref condition,
                 max_frames,
-            } => {
+            }) => {
                 // Reject unknown condition names up front (same treatment as
                 // `press` with an unknown button) — otherwise a typo would
                 // silently burn the whole budget and report reached=false.
@@ -4857,7 +4869,7 @@ impl PokemonGame {
                     "state": self.debug_state_snapshot(),
                 }))
             }
-            DebugCommand::SkipDialogue => {
+            DebugCommand::Game(GameDebugCommand::SkipDialogue) => {
                 // Engine-internal A taps: skip typing, advance every page,
                 // and close the box exactly like a player pressing A through
                 // it (a last-page tap starts holding-open; a release frame
@@ -4890,7 +4902,7 @@ impl PokemonGame {
                     "state": self.debug_state_snapshot(),
                 }))
             }
-            DebugCommand::GetPosition => {
+            DebugCommand::Core(CoreDebugCommand::GetPosition) => {
                 let map_id = self.overworld.state.current_map;
                 let data = serde_json::json!({
                     "map_id": map_id as u8,
@@ -4901,7 +4913,7 @@ impl PokemonGame {
                 });
                 DebugResponse::ok_with_data(data)
             }
-            DebugCommand::GetParty => {
+            DebugCommand::Game(GameDebugCommand::GetParty) => {
                 let party: Vec<serde_json::Value> = self
                     .save_data
                     .party
@@ -4921,7 +4933,7 @@ impl PokemonGame {
                     .collect();
                 DebugResponse::ok_with_data(serde_json::json!(party))
             }
-            DebugCommand::GetBag => {
+            DebugCommand::Core(CoreDebugCommand::GetBag) => {
                 let items: Vec<serde_json::Value> = self
                     .save_data
                     .game_data
@@ -4937,7 +4949,7 @@ impl PokemonGame {
                     .collect();
                 DebugResponse::ok_with_data(serde_json::json!(items))
             }
-            DebugCommand::GetFlags => {
+            DebugCommand::Core(CoreDebugCommand::GetFlags) => {
                 // Read the LIVE overworld flag store (unified_flags), not the
                 // `save_data` snapshot which is only synced at save time — so
                 // flags flipped this session (e.g. via `set_flag_live`) show up.
@@ -4945,7 +4957,7 @@ impl PokemonGame {
                     serde_json::to_value(self.overworld.script_flags()).unwrap_or_default();
                 DebugResponse::ok_with_data(flags)
             }
-            DebugCommand::Warp { ref map, x, y } => {
+            DebugCommand::Core(CoreDebugCommand::Warp { ref map, x, y }) => {
                 match parse_warp_arg(map) {
                     Ok((map_id, _, _)) => {
                         // Go through the real warp commit path so the destination
@@ -4968,7 +4980,7 @@ impl PokemonGame {
                     Err(e) => DebugResponse::err(e),
                 }
             }
-            DebugCommand::Press { ref button } => {
+            DebugCommand::Core(CoreDebugCommand::Press { ref button }) => {
                 let gb_button = match button.to_lowercase().as_str() {
                     "a" => GbButton::A,
                     "b" => GbButton::B,
@@ -4985,7 +4997,7 @@ impl PokemonGame {
                 self.pending_debug_inputs.push(gb_button);
                 DebugResponse::ok()
             }
-            DebugCommand::PressSequence { ref buttons } => {
+            DebugCommand::Core(CoreDebugCommand::PressSequence { ref buttons }) => {
                 for b in buttons {
                     let gb_button = match b.to_lowercase().as_str() {
                         "a" => GbButton::A,
@@ -5004,11 +5016,11 @@ impl PokemonGame {
                 }
                 DebugResponse::ok()
             }
-            DebugCommand::RunFrames { count } => {
+            DebugCommand::Core(CoreDebugCommand::RunFrames { count }) => {
                 self.pending_debug_frames += count;
                 DebugResponse::ok()
             }
-            DebugCommand::StepFrames { count } => {
+            DebugCommand::Core(CoreDebugCommand::StepFrames { count }) => {
                 // Synchronous stepping: drive update() in a tight loop so the
                 // game state is fully advanced when the response arrives.
                 // Queued Press/PressSequence inputs are consumed one per
@@ -5023,7 +5035,7 @@ impl PokemonGame {
                     "frame_count": self.frame_count,
                 }))
             }
-            DebugCommand::GetNpcs => {
+            DebugCommand::Core(CoreDebugCommand::GetNpcs) => {
                 let npcs: Vec<serde_json::Value> = self
                     .overworld
                     .npc_states
@@ -5046,18 +5058,18 @@ impl PokemonGame {
                     .collect();
                 DebugResponse::ok_with_data(serde_json::json!(npcs))
             }
-            DebugCommand::Save => {
+            DebugCommand::Core(CoreDebugCommand::Save) => {
                 #[cfg(not(target_arch = "wasm32"))]
                 self.save_to_file();
                 DebugResponse::ok()
             }
-            DebugCommand::SetFlag { ref name, value } => {
+            DebugCommand::Core(CoreDebugCommand::SetFlag { ref name, value }) => {
                 // Set on the live overworld store; the next save-to-file
                 // persists it (named bits → SRAM, extras → companion file).
                 self.overworld.set_flag_live(name, value);
                 DebugResponse::ok()
             }
-            DebugCommand::GiveItem { ref item, qty } => {
+            DebugCommand::Core(CoreDebugCommand::GiveItem { ref item, qty }) => {
                 match pokered_data::items::ItemId::from_const_name(item) {
                     Some(id) => {
                         let _ = self.save_data.game_data.bag.add_item(id, qty as u8);
@@ -5066,7 +5078,7 @@ impl PokemonGame {
                     None => DebugResponse::err(format!("unknown item: '{}'", item)),
                 }
             }
-            DebugCommand::GivePokemon { ref species, level } => {
+            DebugCommand::Game(GameDebugCommand::GivePokemon { ref species, level }) => {
                 let normalized = species
                     .chars()
                     .enumerate()
@@ -5097,7 +5109,7 @@ impl PokemonGame {
                     Err(_) => DebugResponse::err(format!("unknown species: '{}'", species)),
                 }
             }
-            DebugCommand::StartWildBattle { ref species, level } => {
+            DebugCommand::Game(GameDebugCommand::StartWildBattle { ref species, level }) => {
                 let normalized = species
                     .chars()
                     .enumerate()

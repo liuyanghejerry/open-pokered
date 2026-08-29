@@ -312,7 +312,9 @@ pub fn draw_overworld(
         // the current flower frame (flower1/2/3) on WATER_FLOWER tilesets.
         let tile_anim_kind = screen.tile_anim.kind();
         let water_shift = screen.tile_anim.water_shift() as i32;
-        let flower_ts = if tile_anim_kind == pokered_data::tileset_data::TileAnimation::WaterFlower {
+        let flower_ts = if tile_anim_kind
+            == pokered_core::overworld::presentation::TileAnimKind::WaterFlower
+        {
             screen.tile_anim.flower_frame().and_then(|f| {
                 rm.load_asset(AssetCategory::Tileset, &format!("flower/flower{}.png", f))
                     .ok()
@@ -1437,7 +1439,7 @@ mod tests {
         s.state.player.y = 15;
         assert_eq!(
             s.tile_anim.kind(),
-            pokered_data::tileset_data::TileAnimation::WaterFlower
+            pokered_core::overworld::presentation::TileAnimKind::WaterFlower
         );
         let mut res = pokered_renderer::resource::AssetRoot::auto_detect().ok().map(pokered_renderer::resource::ResourceManager::new);
         let mut fb_a = FrameBuffer::new(
@@ -1483,7 +1485,9 @@ mod elevator_edge_tests {
         let mut screen = OverworldScreen::new(map, None, PokemonRedData);
         screen.state.player.x = x;
         screen.state.player.y = y;
-        let mut shake = ElevatorShakeState::new();
+        let mut shake = ElevatorShakeState::new(
+            pokered_core::overworld::doors_elevators::elevator_shake_params(),
+        );
         for _ in 0..offset_frame {
             shake.tick();
         }
@@ -1496,7 +1500,9 @@ mod elevator_edge_tests {
         // Player in the open field so the viewport sits over real map tiles.
         screen.state.player.x = 12;
         screen.state.player.y = 12;
-        let mut shake = ElevatorShakeState::new();
+        let mut shake = ElevatorShakeState::new(
+            pokered_core::overworld::doors_elevators::elevator_shake_params(),
+        );
         for _ in 0..offset_frame {
             shake.tick();
         }
@@ -1614,7 +1620,9 @@ mod elevator_edge_tests {
         let mut edge_screen = OverworldScreen::new(MapId::PalletTown, None, PokemonRedData);
         edge_screen.state.player.x = 12;
         edge_screen.state.player.y = 1;
-        let mut shake = ElevatorShakeState::new();
+        let mut shake = ElevatorShakeState::new(
+            pokered_core::overworld::doors_elevators::elevator_shake_params(),
+        );
         shake.tick(); // offset -1
         edge_screen.elevator_shake = Some(shake);
         let edge_fb = render_screen(&mut edge_screen);

@@ -1,18 +1,22 @@
 //! Link play (Cable Club) — real network transport + app-level session.
 //!
-//! The session/router, the Cable Club flow and the framing codec are
-//! platform-neutral (pure mpsc/serde); only the transports differ per
-//! target:
-//! - Native: plain `std::net` TCP with newline-framed JSON
-//!   ([`TcpTransport`]/[`LinkServer`], `--link-listen` / `--link-connect`).
+//! The session/router, the native TCP transport and the framing codec are
+//! generic engine/platform-layer machinery, bound here to pokered's wire
+//! protocol ([`NetworkMessage`]):
+//! - [`LinkSession`] / [`Activity`] — `dotzuki_app::link`: owns the
+//!   transport and routes incoming messages by type into per-activity
+//!   sub-queues (battle / trade), classified by [`link_activity`].
+//! - [`TcpTransport`] / [`LinkServer`] — `dotzuki_app::link` (native only):
+//!   plain `std::net` TCP with newline-framed JSON (`--link-listen` /
+//!   `--link-connect`).
 //! - wasm: `BroadcastChannel` between two browser tabs on the same origin
 //!   ([`broadcast_channel::BroadcastChannelTransport`], `?link=<channel>`
 //!   in the URL).
 //!
-//! Both transports speak the same JSON-line protocol (`NetworkMessage`),
-//! encoded by the shared [`codec`]. [`LinkSession`] owns the transport and
-//! routes messages into the per-activity sub-transports consumed by the
-//! CORE drivers (`pokered_core::battle::link_battle_driver::LinkBattleDriver`
+//! Both transports speak the same JSON-line protocol, encoded by the shared
+//! engine codec (see [`codec`]). The sub-transports handed out by
+//! [`LinkSession`] feed the CORE drivers
+//! (`pokered_core::battle::link_battle_driver::LinkBattleDriver`
 //! / `pokered_core::link::link_trade::LinkTradeDriver`), which are the
 //! canonical battle/trade state machines. The game (`game.rs`) owns the
 //! drivers, refreshes their party snapshots at the cable-club table and
@@ -25,16 +29,57 @@
 //! render.
 
 mod codec;
-mod session;
-#[cfg(not(target_arch = "wasm32"))]
-mod transport;
+pub mod cable_club;
 #[cfg(target_arch = "wasm32")]
 pub mod broadcast_channel;
 
 pub use cable_club::{CableClubFlow, CableClubPhase, FlowNeed, LinkKind};
-pub use session::LinkSession;
+
+use pokered_core::link::protocol::NetworkMessage;
+
+pub use dotzuki_app::link::Activity;
+
+/// App-level link session (transport owner + message router), bound to
+/// pokered's [`NetworkMessage`] wire protocol. Construct it with
+/// [`link_activity`] as the classification table and
+/// `NetworkMessage::Disconnect` as the disconnect message.
+pub type LinkSession = dotzuki_app::link::LinkSession<NetworkMessage>;
+
+/// Native TCP link transport, bound to [`NetworkMessage`].
 #[cfg(not(target_arch = "wasm32"))]
-pub use transport::{LinkServer, TcpTransport};
+pub type TcpTransport = dotzuki_app::link::TcpTransport<NetworkMessage>;
+
+/// Native TCP link listener (the `--link-listen` host), bound to
+/// [`NetworkMessage`].
+#[cfg(not(target_arch = "wasm32"))]
+pub type LinkServer = dotzuki_app::link::LinkServer<NetworkMessage>;
+
+/// The routing classification table for the generic session router: which
+/// activity queue each [`NetworkMessage`] belongs to. Battle traffic
+/// (handshake, battle requests, party data, turns, results) goes to the
+/// battle queue; trade traffic (requests, selection, completion) goes to
+/// the trade queue; `Disconnect` broadcasts to both and closes the session.
+pub fn link_activity(msg: &NetworkMessage) -> Activity {
+    match msg {
+        NetworkMessage::Hello { .. }
+        | NetworkMessage::HelloAck { .. }
+        | NetworkMessage::RequestBattle
+        | NetworkMessage::AcceptBattle
+        | NetworkMessage::DeclineBattle
+        | NetworkMessage::PartyData(_)
+        | NetworkMessage::TurnAction(_)
+        // Battle results (protocol v2+) belong to the battle driver.
+        | NetworkMessage::BattleResult(_) => Activity::Battle,
+        NetworkMessage::RequestTrade
+        | NetworkMessage::AcceptTrade
+        | NetworkMessage::DeclineTrade
+        | NetworkMessage::SelectMon(_)
+        | NetworkMessage::ConfirmTrade
+        | NetworkMessage::CancelTrade
+        | NetworkMessage::TradeComplete(_) => Activity::Trade,
+        NetworkMessage::Disconnect => Activity::Both,
+    }
+}
 
 #[cfg(not(target_arch = "wasm32"))]
 use std::net::SocketAddr;
@@ -80,4 +125,3 @@ pub fn parse_link_addr(s: &str) -> Result<SocketAddr, String> {
         .next()
         .ok_or_else(|| format!("no addresses found for '{}'", s))
 }
-pub mod cable_club;

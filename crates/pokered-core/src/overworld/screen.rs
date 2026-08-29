@@ -932,9 +932,9 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
         // LoadTilesetHeader: hTileAnimations follows the start map's tileset.
         let mut tile_anim = presentation::TileAnimState::new();
         if let Some(ref md) = map_data {
-            tile_anim.set_tileset(
+            tile_anim.set_tileset(presentation::tile_anim_kind(
                 pokered_data::tileset_data::get_tileset_header(md.tileset).animation,
-            );
+            ));
         }
         let mut game_data_requests = Vec::new();
         if is_city_map(start_map) {
@@ -1625,6 +1625,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                     self.warp_fade_to_white = true;
                     self.teleport_spin = Some(presentation::TeleportSpinState::new(
                         self.state.player.facing,
+                        presentation::TELEPORT_SPIN_FACINGS,
                     ));
                     consumed = true;
                     None
@@ -2067,9 +2068,9 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
             self.npc_pokemon_data = npc_pokemon_data;
             // LoadTilesetHeader: hTileAnimations follows the new tileset.
             if let Some(ref md) = self.map_data {
-                self.tile_anim.set_tileset(
+                self.tile_anim.set_tileset(presentation::tile_anim_kind(
                     pokered_data::tileset_data::get_tileset_header(md.tileset).animation,
-                );
+                ));
             }
             self.load_map_script(warp.dest_map);
             self.audio_requests
@@ -2128,6 +2129,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                     .unwrap_or(true);
                 self.enter_map_anim = Some(presentation::EnterMapSpinState::new(
                     self.state.player.facing,
+                    presentation::TELEPORT_SPIN_FACINGS,
                     spin_in_place,
                 ));
             }

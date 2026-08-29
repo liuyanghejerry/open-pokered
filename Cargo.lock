@@ -1136,37 +1136,46 @@ dependencies = [
 
 [[package]]
 name = "dotzuki-app"
-version = "0.1.1"
-source = "git+https://github.com/liuyanghejerry/dotzuki?tag=v0.5.3#488b2fe42d25cd3793a8195490091e3923fe4b65"
+version = "0.5.4"
+source = "git+https://github.com/liuyanghejerry/dotzuki?tag=v0.5.4#f22ee0ff7fd10a17bec2b41c2a5d869c9be7701d"
 dependencies = [
+ "dotzuki-engine",
  "dotzuki-renderer",
+ "log",
  "notify",
-]
-
-[[package]]
-name = "dotzuki-audio"
-version = "0.1.1"
-source = "git+https://github.com/liuyanghejerry/dotzuki?tag=v0.5.3#488b2fe42d25cd3793a8195490091e3923fe4b65"
-dependencies = [
- "bitflags 2.13.1",
  "serde",
  "serde_json",
 ]
 
 [[package]]
+name = "dotzuki-audio"
+version = "0.5.4"
+source = "git+https://github.com/liuyanghejerry/dotzuki?tag=v0.5.4#f22ee0ff7fd10a17bec2b41c2a5d869c9be7701d"
+dependencies = [
+ "bitflags 2.13.1",
+ "cpal",
+ "log",
+ "serde",
+ "serde_json",
+ "wasm-bindgen",
+ "web-sys",
+]
+
+[[package]]
 name = "dotzuki-engine"
-version = "0.1.1"
-source = "git+https://github.com/liuyanghejerry/dotzuki?tag=v0.5.3#488b2fe42d25cd3793a8195490091e3923fe4b65"
+version = "0.5.4"
+source = "git+https://github.com/liuyanghejerry/dotzuki?tag=v0.5.4#f22ee0ff7fd10a17bec2b41c2a5d869c9be7701d"
 dependencies = [
  "image",
  "serde",
+ "serde_json",
  "thiserror 2.0.20",
 ]
 
 [[package]]
 name = "dotzuki-engine-dsl"
-version = "0.1.1"
-source = "git+https://github.com/liuyanghejerry/dotzuki?tag=v0.5.3#488b2fe42d25cd3793a8195490091e3923fe4b65"
+version = "0.5.4"
+source = "git+https://github.com/liuyanghejerry/dotzuki?tag=v0.5.4#f22ee0ff7fd10a17bec2b41c2a5d869c9be7701d"
 dependencies = [
  "dotzuki-engine-script",
  "miette",
@@ -1178,8 +1187,8 @@ dependencies = [
 
 [[package]]
 name = "dotzuki-engine-script"
-version = "0.1.1"
-source = "git+https://github.com/liuyanghejerry/dotzuki?tag=v0.5.3#488b2fe42d25cd3793a8195490091e3923fe4b65"
+version = "0.5.4"
+source = "git+https://github.com/liuyanghejerry/dotzuki?tag=v0.5.4#f22ee0ff7fd10a17bec2b41c2a5d869c9be7701d"
 dependencies = [
  "boa_engine",
  "log",
@@ -1190,8 +1199,8 @@ dependencies = [
 
 [[package]]
 name = "dotzuki-renderer"
-version = "0.1.1"
-source = "git+https://github.com/liuyanghejerry/dotzuki?tag=v0.5.3#488b2fe42d25cd3793a8195490091e3923fe4b65"
+version = "0.5.4"
+source = "git+https://github.com/liuyanghejerry/dotzuki?tag=v0.5.4#f22ee0ff7fd10a17bec2b41c2a5d869c9be7701d"
 dependencies = [
  "dotzuki-engine",
  "error-iter",
@@ -1208,8 +1217,8 @@ dependencies = [
 
 [[package]]
 name = "dotzuki-rules"
-version = "0.1.1"
-source = "git+https://github.com/liuyanghejerry/dotzuki?tag=v0.5.3#488b2fe42d25cd3793a8195490091e3923fe4b65"
+version = "0.5.4"
+source = "git+https://github.com/liuyanghejerry/dotzuki?tag=v0.5.4#f22ee0ff7fd10a17bec2b41c2a5d869c9be7701d"
 dependencies = [
  "dotzuki-engine",
  "notify",
@@ -1220,8 +1229,8 @@ dependencies = [
 
 [[package]]
 name = "dotzuki-tui"
-version = "0.1.1"
-source = "git+https://github.com/liuyanghejerry/dotzuki?tag=v0.5.3#488b2fe42d25cd3793a8195490091e3923fe4b65"
+version = "0.5.4"
+source = "git+https://github.com/liuyanghejerry/dotzuki?tag=v0.5.4#f22ee0ff7fd10a17bec2b41c2a5d869c9be7701d"
 dependencies = [
  "crossterm",
  "dotzuki-renderer",
@@ -1230,11 +1239,32 @@ dependencies = [
 
 [[package]]
 name = "dotzuki-ui"
-version = "0.1.1"
-source = "git+https://github.com/liuyanghejerry/dotzuki?tag=v0.5.3#488b2fe42d25cd3793a8195490091e3923fe4b65"
+version = "0.5.4"
+source = "git+https://github.com/liuyanghejerry/dotzuki?tag=v0.5.4#f22ee0ff7fd10a17bec2b41c2a5d869c9be7701d"
 dependencies = [
  "dotzuki-engine",
  "dotzuki-renderer",
+]
+
+[[package]]
+name = "dotzuki-web"
+version = "0.5.4"
+source = "git+https://github.com/liuyanghejerry/dotzuki?tag=v0.5.4#f22ee0ff7fd10a17bec2b41c2a5d869c9be7701d"
+dependencies = [
+ "dotzuki-audio",
+ "dotzuki-engine",
+ "dotzuki-engine-dsl",
+ "dotzuki-renderer",
+ "dotzuki-ui",
+ "error-iter",
+ "js-sys",
+ "log",
+ "pixels",
+ "serde",
+ "serde_json",
+ "wasm-bindgen",
+ "web-sys",
+ "winit",
 ]
 
 [[package]]
@@ -3084,6 +3114,7 @@ dependencies = [
  "dotzuki-engine",
  "dotzuki-engine-dsl",
  "dotzuki-renderer",
+ "dotzuki-web",
  "image",
  "js-sys",
  "log",
@@ -3152,9 +3183,7 @@ dependencies = [
 name = "pokered-debug-server"
 version = "0.1.0"
 dependencies = [
- "log",
- "pokered-core",
- "pokered-data",
+ "dotzuki-app",
  "serde",
  "serde_json",
 ]
@@ -3223,7 +3252,6 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "clap",
- "cpal",
  "crossterm",
  "dotzuki-engine",
  "dotzuki-renderer",
@@ -3275,21 +3303,17 @@ dependencies = [
  "cargo-run-wasm",
  "console_error_panic_hook",
  "console_log",
+ "dotzuki-web",
  "env_logger",
- "error-iter",
  "getrandom 0.2.17",
  "log",
- "pixels",
  "pokered-app",
- "pokered-audio",
  "pokered-core",
- "pokered-data",
  "pokered-renderer",
  "pollster 0.3.0",
  "wasm-bindgen",
  "wasm-bindgen-futures",
  "web-sys",
- "winit",
 ]
 
 [[package]]

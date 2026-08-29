@@ -1997,7 +1997,7 @@ impl PokemonGame {
                         self.battle.end_battle_text = trainer.end_battle_text;
                         ScreenAction::Transition(GameScreen::Battle)
                     } else if let Some(shop_items) = self.overworld.pending_shop.take() {
-                        match ShopInventory::from_item_id_strings(&shop_items) {
+                        match ShopInventory::from_strings(&shop_items) {
                             Ok(inv) => {
                                 let mart = pokered_core::items::MartState::new(inv);
                                 ScreenAction::Transition(GameScreen::Shop(mart))

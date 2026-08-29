@@ -1,34 +1,20 @@
 use serde::{Deserialize, Serialize};
 
-/// Commands that can be sent to the debug server via JSON-line protocol.
+// The generic JRPG debug protocol (command set + ok/error/data response
+// envelope) lives in the engine's platform layer; this crate re-exports it
+// and adds only the game-specific commands.
+pub use dotzuki_app::debug_server::{CoreDebugCommand, DebugResponse};
+
+/// Game-side debug commands — pokered's extension of the generic JRPG debug
+/// protocol ([`CoreDebugCommand`]). Holds the Pokémon-specific commands plus
+/// the deterministic dialogue/cutscene stepping commands (`wait_until` /
+/// `skip_dialogue`): their concepts are generic, but they drive the game's
+/// own overworld/dialogue state, so they live on the game side.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(tag = "cmd", rename_all = "snake_case")]
-pub enum DebugCommand {
-    /// Get a full game state snapshot.
-    GetState,
-    /// Get the player's current position (map, coordinates, facing).
-    GetPosition,
+pub enum GameDebugCommand {
     /// Get the player's party Pokémon data.
     GetParty,
-    /// Get the player's bag items with quantities.
-    GetBag,
-    /// Get all script flags.
-    GetFlags,
-    /// Warp to a specific map and coordinates.
-    Warp { map: String, x: u16, y: u16 },
-    /// Press a single button for one frame.
-    Press { button: String },
-    /// Press a sequence of buttons, one per frame.
-    PressSequence { buttons: Vec<String> },
-    /// Run the game for N frames without processing player input.
-    RunFrames { count: u32 },
-    /// Synchronously step the game forward N frames before responding.
-    /// Unlike `RunFrames` (which only schedules frames on the real-time
-    /// loop), this drives `update()` in a tight loop inside the command
-    /// handler, so the game state is fully advanced (and deterministic)
-    /// when the response arrives. Queued Press/PressSequence inputs are
-    /// consumed one per stepped frame.
-    StepFrames { count: u32 },
     /// Synchronously step the game until a named condition holds (checked
     /// after each frame), or until `max_frames` elapse. Collapses the
     /// driver's poll-every-N-frames loop into a single round trip. The
@@ -38,7 +24,7 @@ pub enum DebugCommand {
     /// stepped. Queued Press/PressSequence inputs are consumed one per
     /// stepped frame, as with `step_frames`.
     ///
-    /// Conditions (see `DebugCommand::WaitUntil` docs in the app):
+    /// Conditions (see the `wait_until` handler docs in the app):
     /// `dialogue_done`, `dialogue_ready`, `choice_open`, `choice_closed`,
     /// `script_idle`, `control_ready`, `not_battle`, plus the generic
     /// `screen=<name>` / `battle_phase=<name>` / `script_effect=<name>`
@@ -52,15 +38,6 @@ pub enum DebugCommand {
     /// dialogue is showing. Queued (unconsumed) Press/PressSequence inputs
     /// are dropped first — they would override the internal taps.
     SkipDialogue,
-    /// Get all NPC runtime states on the current map (position,
-    /// visibility, facing, scripted-move progress).
-    GetNpcs,
-    /// Save the game to file.
-    Save,
-    /// Set a script flag value.
-    SetFlag { name: String, value: bool },
-    /// Give an item to the player's bag.
-    GiveItem { item: String, qty: u32 },
     /// Give a Pokémon to the player's party.
     GivePokemon { species: String, level: u8 },
     /// Start a wild battle against the given species/level (for testing catch
@@ -68,43 +45,18 @@ pub enum DebugCommand {
     StartWildBattle { species: String, level: u8 },
 }
 
-/// Response to a debug command.
+/// Commands that can be sent to the debug server via JSON-line protocol:
+/// the engine's generic JRPG set plus the game-side extension.
+///
+/// serde internally-tagged enums cannot be extended, so the composition is
+/// an untagged wrapper — the wire format stays exactly
+/// `{"cmd": "<snake_case>", ...}` either way (core variants are tried
+/// first, so a core command can never fall through to the game set).
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct DebugResponse {
-    /// Whether the command succeeded.
-    pub ok: bool,
-    /// Error message if the command failed.
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub error: Option<String>,
-    /// Optional JSON data payload.
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub data: Option<serde_json::Value>,
-}
-
-impl DebugResponse {
-    pub fn ok() -> Self {
-        Self {
-            ok: true,
-            error: None,
-            data: None,
-        }
-    }
-
-    pub fn ok_with_data(data: serde_json::Value) -> Self {
-        Self {
-            ok: true,
-            error: None,
-            data: Some(data),
-        }
-    }
-
-    pub fn err(msg: String) -> Self {
-        Self {
-            ok: false,
-            error: Some(msg),
-            data: None,
-        }
-    }
+#[serde(untagged)]
+pub enum DebugCommand {
+    Core(CoreDebugCommand),
+    Game(GameDebugCommand),
 }
 
 /// Snapshot of the current game state (returned by GetState).
@@ -118,4 +70,114 @@ pub struct GameStateSnapshot {
     pub player_facing: String,
     pub player_name: String,
     pub frame_count: u64,
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// Wire compat guard: the exact JSON lines scripts/debug_drive.py sends
+    /// must keep parsing, core and game commands alike.
+    #[test]
+    fn wire_json_parses_into_core_and_game_commands() {
+        let cmd: DebugCommand = serde_json::from_str(r#"{"cmd":"get_state"}"#).unwrap();
+        assert!(matches!(cmd, DebugCommand::Core(CoreDebugCommand::GetState)));
+
+        let cmd: DebugCommand =
+            serde_json::from_str(r#"{"cmd":"press_sequence","buttons":["up","a"]}"#).unwrap();
+        assert!(matches!(
+            cmd,
+            DebugCommand::Core(CoreDebugCommand::PressSequence { .. })
+        ));
+
+        let cmd: DebugCommand =
+            serde_json::from_str(r#"{"cmd":"step_frames","count":40}"#).unwrap();
+        assert!(matches!(
+            cmd,
+            DebugCommand::Core(CoreDebugCommand::StepFrames { count: 40 })
+        ));
+
+        let cmd: DebugCommand =
+            serde_json::from_str(r#"{"cmd":"warp","map":"pallet_town","x":3,"y":4}"#).unwrap();
+        assert!(matches!(
+            cmd,
+            DebugCommand::Core(CoreDebugCommand::Warp { x: 3, y: 4, .. })
+        ));
+
+        let cmd: DebugCommand = serde_json::from_str(r#"{"cmd":"get_party"}"#).unwrap();
+        assert!(matches!(cmd, DebugCommand::Game(GameDebugCommand::GetParty)));
+
+        let cmd: DebugCommand =
+            serde_json::from_str(r#"{"cmd":"give_pokemon","species":"Pikachu","level":5}"#)
+                .unwrap();
+        assert!(matches!(
+            cmd,
+            DebugCommand::Game(GameDebugCommand::GivePokemon { level: 5, .. })
+        ));
+
+        let cmd: DebugCommand =
+            serde_json::from_str(r#"{"cmd":"start_wild_battle","species":"Rattata","level":3}"#)
+                .unwrap();
+        assert!(matches!(
+            cmd,
+            DebugCommand::Game(GameDebugCommand::StartWildBattle { level: 3, .. })
+        ));
+    }
+
+    /// The game-side dialogue/cutscene stepping commands (wait_until /
+    /// skip_dialogue) keep their wire format from before the protocol split.
+    #[test]
+    fn wire_json_parses_stepping_commands() {
+        let cmd: DebugCommand = serde_json::from_str(
+            r#"{"cmd":"wait_until","condition":"dialogue_done","max_frames":600}"#,
+        )
+        .unwrap();
+        assert!(matches!(
+            cmd,
+            DebugCommand::Game(GameDebugCommand::WaitUntil {
+                ref condition,
+                max_frames: 600
+            }) if condition == "dialogue_done"
+        ));
+
+        let cmd: DebugCommand = serde_json::from_str(r#"{"cmd":"skip_dialogue"}"#).unwrap();
+        assert!(matches!(
+            cmd,
+            DebugCommand::Game(GameDebugCommand::SkipDialogue)
+        ));
+    }
+
+    /// Serialization must reproduce the same `{"cmd": ...}` documents (the
+    /// server logs and may round-trip commands).
+    #[test]
+    fn commands_serialize_back_to_wire_json() {
+        let json = serde_json::to_string(&DebugCommand::Core(CoreDebugCommand::Press {
+            button: "a".into(),
+        }))
+        .unwrap();
+        assert_eq!(json, r#"{"cmd":"press","button":"a"}"#);
+
+        let json = serde_json::to_string(&DebugCommand::Game(GameDebugCommand::GivePokemon {
+            species: "Pikachu".into(),
+            level: 5,
+        }))
+        .unwrap();
+        assert_eq!(json, r#"{"cmd":"give_pokemon","species":"Pikachu","level":5}"#);
+
+        let json = serde_json::to_string(&DebugCommand::Game(GameDebugCommand::WaitUntil {
+            condition: "control_ready".into(),
+            max_frames: 120,
+        }))
+        .unwrap();
+        assert_eq!(
+            json,
+            r#"{"cmd":"wait_until","condition":"control_ready","max_frames":120}"#
+        );
+    }
+
+    /// An unknown command string is an error (not silently misparsed).
+    #[test]
+    fn unknown_command_is_an_error() {
+        assert!(serde_json::from_str::<DebugCommand>(r#"{"cmd":"fly_to_moon"}"#).is_err());
+    }
 }
