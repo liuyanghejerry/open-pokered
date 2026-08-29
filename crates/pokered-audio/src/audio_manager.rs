@@ -1,14 +1,43 @@
-use std::collections::HashMap;
+//! pokered's audio manager: a thin game-specific layer over the generic
+//! [`dotzuki_audio::manager::AudioManager`] (fade state machine, NR50 master
+//! volume, cross-track resume states, VBlank orchestration — all sunk into
+//! the engine).
+//!
+//! What stays here is the Pokémon wiring: the music/SFX track tables, the
+//! 19 noise-instrument registrations, the cry pitch/tempo modifiers
+//! (`wFrequencyModifier`/`wTempoModifier`), the low-health alarm with its
+//! direct NR11–NR14 tone writes, and the alternate tempo/start routines
+//! (audio/alternate_tempo.asm, audio/poke_flute.asm).
+
+use std::ops::{Deref, DerefMut};
 
 use crate::music_data::{self, MusicId};
 use crate::sfx_data::{self, SfxId};
-use dotzuki_audio::apu::Apu;
-use dotzuki_audio::sequencer::Sequencer;
+use dotzuki_audio::manager::TrackData;
+use dotzuki_audio::sequencer::{CHAN1, CHAN2, CHAN3, CHAN5, CHAN6, CHAN7};
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum FadeState {
-    None,
-    FadingOut,
+pub use dotzuki_audio::manager::FadeState;
+
+/// The generic engine manager (fade/master volume/resume states) this
+/// wrapper delegates to — also reachable directly via `Deref`/`DerefMut`.
+pub type EngineManager = dotzuki_audio::manager::AudioManager<MusicId, SfxId>;
+
+fn music_track(id: MusicId) -> TrackData {
+    let track = music_data::get_music_track(id);
+    TrackData {
+        sound_id: id as u8,
+        channels: track.channels,
+        tempo: track.tempo,
+    }
+}
+
+fn sfx_track(id: SfxId) -> TrackData {
+    let track = sfx_data::get_sfx_track(id);
+    TrackData {
+        sound_id: id as u8,
+        channels: track.channels,
+        tempo: 0, // SFX tempos are set per play call, not from the track.
+    }
 }
 
 // ── Low-health alarm (audio/low_health_alarm.asm) ───────────────────────
@@ -25,25 +54,11 @@ const ALARM_TONE_LO: [u8; 4] = [0xB0, 0xE2, 0xEE, 0x86];
 const ALARM_TONE_SILENCE: [u8; 4] = [0x00, 0x00, 0x00, 0x80];
 
 pub struct AudioManager {
-    pub sequencer: Sequencer,
-    pub apu: Apu,
-
-    master_volume_left: u8,
-    master_volume_right: u8,
-
-    pub(crate) fade_state: FadeState,
-    pub(crate) fade_counter: u8,
-    pub(crate) fade_counter_reload: u8,
-    pub(crate) fade_queued_music: Option<MusicId>,
-    /// CHAN1 stream to poke in after a fade-queued music restart
-    /// (`Music_Cities1AlternateTempo`, audio/alternate_tempo.asm:48-50).
-    pub(crate) fade_queued_ch1_override: Option<&'static [u8]>,
-
-    no_audio_fade_out: bool,
-
-    last_music_id: Option<MusicId>,
-
-    saved_music_states: HashMap<MusicId, Sequencer>,
+    /// The generic engine manager: fade state machine, NR50 master volume,
+    /// saved/resume music states, SFX playback with cry modifiers. All the
+    /// engine methods and the `sequencer`/`apu` fields are reachable
+    /// directly through `Deref`.
+    pub engine: EngineManager,
 
     /// `wLowHealthAlarm` bit 7 (`BIT_LOW_HEALTH_ALARM`): alarm enabled.
     low_health_alarm_enabled: bool,
@@ -51,13 +66,27 @@ pub struct AudioManager {
     low_health_timer: u8,
 }
 
+impl Deref for AudioManager {
+    type Target = EngineManager;
+
+    fn deref(&self) -> &EngineManager {
+        &self.engine
+    }
+}
+
+impl DerefMut for AudioManager {
+    fn deref_mut(&mut self) -> &mut EngineManager {
+        &mut self.engine
+    }
+}
+
 impl AudioManager {
     pub fn new() -> Self {
-        let mut sequencer = Sequencer::new();
+        let mut engine = EngineManager::new(music_track, sfx_track);
         // Register the 19 noise-instrument (drum) streams with the sequencer
         // so music `drum_note` commands can trigger them on CHAN8
         // (audio/engine_1.asm:673-688). Instrument N (1-19) → SfxId N-1.
-        sequencer.register_noise_instruments(
+        engine.sequencer.register_noise_instruments(
             (0..19)
                 .filter_map(sfx_data::SfxId::from_u8)
                 .filter_map(|id| sfx_data::get_sfx_track(id).channels[3])
@@ -65,123 +94,17 @@ impl AudioManager {
                 .collect(),
         );
         Self {
-            sequencer,
-            apu: Apu::new(),
-            master_volume_left: 7,
-            master_volume_right: 7,
-            fade_state: FadeState::None,
-            fade_counter: 0,
-            fade_counter_reload: 0,
-            fade_queued_music: None,
-            fade_queued_ch1_override: None,
-            no_audio_fade_out: false,
-            last_music_id: None,
-            saved_music_states: HashMap::new(),
+            engine,
             low_health_alarm_enabled: false,
             low_health_timer: 0,
         }
     }
 
-    pub fn master_volume_left(&self) -> u8 {
-        self.master_volume_left
-    }
-
-    pub fn master_volume_right(&self) -> u8 {
-        self.master_volume_right
-    }
-
-    pub fn set_master_volume(&mut self, left: u8, right: u8) {
-        self.master_volume_left = left.min(7);
-        self.master_volume_right = right.min(7);
-        self.apply_master_volume();
-    }
-
-    pub fn fade_state(&self) -> FadeState {
-        self.fade_state
-    }
-
-    pub fn last_music_id(&self) -> Option<MusicId> {
-        self.last_music_id
-    }
-
-    pub fn set_no_audio_fade_out(&mut self, val: bool) {
-        self.no_audio_fade_out = val;
-    }
-
-    pub fn no_audio_fade_out(&self) -> bool {
-        self.no_audio_fade_out
-    }
-
-    pub fn play_music(&mut self, id: MusicId) {
-        // If switching away from a different playing track, save its state
-        if self.sequencer.music_playing {
-            if let Some(last_id) = self.last_music_id {
-                if last_id != id {
-                    self.saved_music_states
-                        .insert(last_id, self.sequencer.clone());
-                }
-            }
-        }
-
-        // If we have a saved resume state for this track, restore it
-        if let Some(saved) = self.saved_music_states.remove(&id) {
-            self.sequencer.restore_music_from(&saved);
-            self.last_music_id = Some(id);
-            self.fade_state = FadeState::None;
-            self.fade_queued_music = None;
-            self.master_volume_left = 7;
-            self.master_volume_right = 7;
-            self.apply_master_volume();
-            return;
-        }
-
-        self.fade_state = FadeState::None;
-        self.fade_queued_music = None;
-        self.last_music_id = Some(id);
-
-        let track = music_data::get_music_track(id);
-        let mut channel_data = Vec::new();
-        for ch_opt in &track.channels {
-            if let Some(data) = ch_opt {
-                channel_data.push(data.to_vec());
-            }
-        }
-        self.sequencer
-            .play_music(id as u8, &channel_data, track.tempo);
-        self.master_volume_left = 7;
-        self.master_volume_right = 7;
-        self.apply_master_volume();
-    }
-
-    pub fn play_music_with_fade(&mut self, id: MusicId, fade_speed: u8) {
-        if self.last_music_id == Some(id) {
-            return;
-        }
-
-        if !self.sequencer.music_playing {
-            self.play_music(id);
-            return;
-        }
-
-        self.fade_state = FadeState::FadingOut;
-        self.fade_counter = fade_speed;
-        self.fade_counter_reload = fade_speed;
-        self.fade_queued_music = Some(id);
-    }
-
-    pub fn fade_out(&mut self, fade_speed: u8) {
-        if !self.sequencer.music_playing {
-            return;
-        }
-
-        self.fade_state = FadeState::FadingOut;
-        self.fade_counter = fade_speed;
-        self.fade_counter_reload = fade_speed;
-        self.fade_queued_music = None;
-    }
-
     pub fn play_sfx(&mut self, id: SfxId) {
-        self.play_sfx_internal(id, 0, 0x0100);
+        if self.alarm_suppresses_sfx(id) {
+            return;
+        }
+        self.engine.play_sfx(id);
     }
 
     /// Play a cry with the original engine's cry modifiers
@@ -193,37 +116,21 @@ impl AudioManager {
     /// always run at `0x0100`) and `pitch_mod` is added to every note
     /// frequency.
     pub fn play_cry(&mut self, id: SfxId, pitch_mod: u8, tempo_mod: u8) {
-        self.play_sfx_internal(id, pitch_mod, 0x0080u16.wrapping_add(tempo_mod as u16));
-    }
-
-    fn play_sfx_internal(&mut self, id: SfxId, pitch_mod: u8, tempo: u16) {
-        let track = sfx_data::get_sfx_track(id);
-        let mut channel_data = Vec::new();
-        let mut start_channel = 0usize;
-        let mut found_first = false;
-
-        for (hw_idx, ch_opt) in track.channels.iter().enumerate() {
-            if let Some(data) = ch_opt {
-                if !found_first {
-                    start_channel = hw_idx;
-                    found_first = true;
-                }
-                channel_data.push(data.to_vec());
-            }
-        }
-
-        // While the low-health alarm is active, SFX channel 5 (pulse 1)
-        // processing is suppressed so it cannot fight the alarm's direct
-        // register writes (audio/engine_2.asm:162-170).
-        if self.low_health_alarm_enabled && start_channel == 0 {
+        if self.alarm_suppresses_sfx(id) {
             return;
         }
+        self.engine.play_sfx_with_modifiers(
+            id,
+            pitch_mod as i16,
+            0x0080u16.wrapping_add(tempo_mod as u16),
+        );
+    }
 
-        if !channel_data.is_empty() {
-            self.sequencer.frequency_modifier = pitch_mod as i16;
-            self.sequencer
-                .play_sfx(id as u8, &channel_data, start_channel, tempo);
-        }
+    /// While the low-health alarm is active, SFX channel 5 (pulse 1)
+    /// processing is suppressed so it cannot fight the alarm's direct
+    /// register writes (audio/engine_2.asm:162-170).
+    fn alarm_suppresses_sfx(&self, id: SfxId) -> bool {
+        self.low_health_alarm_enabled && self.engine.sfx_start_channel(id) == Some(0)
     }
 
     /// `Music_PokeFluteInBattle` (audio/poke_flute.asm:1-12): begin playing
@@ -242,18 +149,12 @@ impl AudioManager {
             return;
         }
         self.play_sfx(SfxId::CaughtMon);
-        self.sequencer.override_channel_stream(
-            dotzuki_audio::sequencer::CHAN5,
-            sfx_data::POKEFLUTE_IN_BATTLE_CH5,
-        );
-        self.sequencer.override_channel_stream(
-            dotzuki_audio::sequencer::CHAN6,
-            sfx_data::POKEFLUTE_IN_BATTLE_CH6,
-        );
-        self.sequencer.override_channel_stream(
-            dotzuki_audio::sequencer::CHAN7,
-            sfx_data::POKEFLUTE_IN_BATTLE_CH7,
-        );
+        self.sequencer
+            .override_channel_stream(CHAN5, sfx_data::POKEFLUTE_IN_BATTLE_CH5);
+        self.sequencer
+            .override_channel_stream(CHAN6, sfx_data::POKEFLUTE_IN_BATTLE_CH6);
+        self.sequencer
+            .override_channel_stream(CHAN7, sfx_data::POKEFLUTE_IN_BATTLE_CH7);
     }
 
     /// `Music_RivalAlternateStart` (audio/alternate_tempo.asm:2-12): play
@@ -267,20 +168,14 @@ impl AudioManager {
     /// `PlayMusic` always restarts the song, and the whole point of the
     /// alternate start is its opening measure.
     pub fn play_meet_rival_alternate_start(&mut self) {
-        self.saved_music_states.remove(&MusicId::MEET_RIVAL);
+        self.discard_saved_music_state(MusicId::MEET_RIVAL);
         self.play_music(MusicId::MEET_RIVAL);
-        self.sequencer.override_channel_stream(
-            dotzuki_audio::sequencer::CHAN1,
-            music_data::MEETRIVAL_CH1_ALTERNATE_START,
-        );
-        self.sequencer.override_channel_stream(
-            dotzuki_audio::sequencer::CHAN2,
-            music_data::MEETRIVAL_CH2_ALTERNATE_START,
-        );
-        self.sequencer.override_channel_stream(
-            dotzuki_audio::sequencer::CHAN3,
-            music_data::MEETRIVAL_CH3_ALTERNATE_START,
-        );
+        self.sequencer
+            .override_channel_stream(CHAN1, music_data::MEETRIVAL_CH1_ALTERNATE_START);
+        self.sequencer
+            .override_channel_stream(CHAN2, music_data::MEETRIVAL_CH2_ALTERNATE_START);
+        self.sequencer
+            .override_channel_stream(CHAN3, music_data::MEETRIVAL_CH3_ALTERNATE_START);
     }
 
     /// `Music_RivalAlternateTempo` (audio/alternate_tempo.asm:21-27): play
@@ -288,12 +183,10 @@ impl AudioManager {
     /// alternate-tempo stream (tempo 100 instead of 112). Used for the second
     /// Route22 rival battle approach (scripts/Route22.asm:252).
     pub fn play_meet_rival_alternate_tempo(&mut self) {
-        self.saved_music_states.remove(&MusicId::MEET_RIVAL);
+        self.discard_saved_music_state(MusicId::MEET_RIVAL);
         self.play_music(MusicId::MEET_RIVAL);
-        self.sequencer.override_channel_stream(
-            dotzuki_audio::sequencer::CHAN1,
-            music_data::MEETRIVAL_CH1_ALTERNATE_TEMPO,
-        );
+        self.sequencer
+            .override_channel_stream(CHAN1, music_data::MEETRIVAL_CH1_ALTERNATE_TEMPO);
     }
 
     /// `Music_RivalAlternateStartAndTempo` (audio/alternate_tempo.asm:30-34):
@@ -303,7 +196,7 @@ impl AudioManager {
     pub fn play_meet_rival_alternate_start_and_tempo(&mut self) {
         self.play_meet_rival_alternate_start();
         self.sequencer.override_channel_stream(
-            dotzuki_audio::sequencer::CHAN1,
+            CHAN1,
             music_data::MEETRIVAL_CH1_ALTERNATE_START_AND_TEMPO,
         );
     }
@@ -315,26 +208,18 @@ impl AudioManager {
     /// 144). Used when Prof. Oak enters the Hall of Fame room
     /// (scripts/ChampionsRoom.asm:112).
     ///
-    /// The original blocks for 100 frames with `DelayFrames`; here the fade
-    /// machinery queues the restart, and `fade_complete` pokes the channel-1
-    /// override right after the new song starts.
+    /// The original blocks for 100 frames with `DelayFrames`; here the
+    /// engine's fade machinery queues the restart, and the fade-complete hook
+    /// pokes the channel-1 override right after the new song starts.
     pub fn play_cities1_alternate_tempo(&mut self) {
-        if !self.sequencer.music_playing {
-            // Nothing to fade out: play the alternate-tempo song directly.
-            self.saved_music_states.remove(&MusicId::CITIES1);
-            self.play_music(MusicId::CITIES1);
-            self.sequencer.override_channel_stream(
-                dotzuki_audio::sequencer::CHAN1,
-                music_data::CITIES1_CH1_ALTERNATE_TEMPO,
-            );
-            return;
-        }
-        self.saved_music_states.remove(&MusicId::CITIES1);
-        self.fade_state = FadeState::FadingOut;
-        self.fade_counter = 10;
-        self.fade_counter_reload = 10;
-        self.fade_queued_music = Some(MusicId::CITIES1);
-        self.fade_queued_ch1_override = Some(music_data::CITIES1_CH1_ALTERNATE_TEMPO);
+        self.discard_saved_music_state(MusicId::CITIES1);
+        self.fade_out_then_play(
+            MusicId::CITIES1,
+            10,
+            Some(Box::new(|seq| {
+                seq.override_channel_stream(CHAN1, music_data::CITIES1_CH1_ALTERNATE_TEMPO);
+            })),
+        );
     }
 
     /// Handle a script `playMusic(...)` string for the alternate tempo/start
@@ -358,46 +243,12 @@ impl AudioManager {
         true
     }
 
-    pub fn stop_music(&mut self) {
-        self.sequencer.stop_music();
-        self.last_music_id = None;
-        self.fade_state = FadeState::None;
-        self.fade_queued_music = None;
-        self.saved_music_states.clear();
-    }
-
-    /// Clear saved music resume states. Called on map transitions,
-    /// so the new map's BGM starts fresh rather than resuming a
-    /// previously-saved position.
-    pub fn clear_saved_music_states(&mut self) {
-        self.saved_music_states.clear();
-    }
-
-    pub fn stop_sfx(&mut self) {
-        self.sequencer.stop_sfx();
-    }
-
-    pub fn stop_all(&mut self) {
-        self.sequencer.stop_all();
-        self.last_music_id = None;
-        self.fade_state = FadeState::None;
-        self.fade_queued_music = None;
-        self.saved_music_states.clear();
-    }
-
-    /// Call once per VBlank (~60 Hz). Ticks sequencer, processes fade, applies to APU.
+    /// Call once per VBlank (~60 Hz). The engine advances fade → master
+    /// volume → sequencer; the alarm then writes pulse-1 registers *after*
+    /// the sequencer so it overrides channel 1, exactly as the original's
+    /// direct hardware writes override whatever the sound engine put there.
     pub fn update_frame(&mut self) {
-        self.process_fade();
-        // Apply the fade/master volume *before* the sequencer tick, matching
-        // the original VBlank order (home/vblank.asm:53 `call FadeOutAudio`
-        // runs before home/vblank.asm:62 `call Audio1_UpdateMusic`). This
-        // lets an in-song `volume` ($F0) command override NR50 for the rest
-        // of the frame; the fade machinery re-owns NR50 on the next frame.
-        self.apply_master_volume();
-        self.sequencer.update_frame(&mut self.apu);
-        // The alarm writes pulse-1 registers after the sequencer so it
-        // overrides channel 1, exactly as the original's direct hardware
-        // writes override whatever the sound engine put there.
+        self.engine.update_frame();
         if self.low_health_alarm_enabled {
             self.tick_low_health_alarm();
         }
@@ -451,71 +302,6 @@ impl AudioManager {
         for (i, &b) in tone.iter().enumerate() {
             self.apu.write_register(0xFF11 + i as u16, b);
         }
-    }
-
-    fn process_fade(&mut self) {
-        if self.fade_state != FadeState::FadingOut {
-            if !self.no_audio_fade_out {
-                self.apply_master_volume();
-            }
-            return;
-        }
-
-        if self.fade_counter > 0 {
-            self.fade_counter -= 1;
-            return;
-        }
-
-        self.fade_counter = self.fade_counter_reload;
-
-        if self.master_volume_left == 0 && self.master_volume_right == 0 {
-            self.fade_complete();
-            return;
-        }
-
-        self.master_volume_left = self.master_volume_left.saturating_sub(1);
-        self.master_volume_right = self.master_volume_right.saturating_sub(1);
-        self.apply_master_volume();
-    }
-
-    fn fade_complete(&mut self) {
-        self.fade_state = FadeState::None;
-
-        self.sequencer.stop_all();
-
-        if let Some(next_id) = self.fade_queued_music.take() {
-            self.play_music(next_id);
-            // Music_Cities1AlternateTempo (audio/alternate_tempo.asm:48-50):
-            // after the fade-out + restart, overwrite channel 1's pointer
-            // with the queued alternate-tempo stream.
-            if let Some(stream) = self.fade_queued_ch1_override.take() {
-                self.sequencer
-                    .override_channel_stream(dotzuki_audio::sequencer::CHAN1, stream);
-            }
-        } else {
-            self.fade_queued_ch1_override = None;
-        }
-    }
-
-    fn apply_master_volume(&mut self) {
-        let nr50 = (self.master_volume_left << 4) | self.master_volume_right;
-        self.apu.nr50 = nr50;
-    }
-
-    pub fn is_fading(&self) -> bool {
-        self.fade_state == FadeState::FadingOut
-    }
-
-    pub fn is_music_playing(&self) -> bool {
-        self.sequencer.music_playing
-    }
-
-    pub fn is_sfx_playing(&self) -> bool {
-        self.sequencer.sfx_playing
-    }
-
-    pub fn nr50(&self) -> u8 {
-        self.apu.nr50
     }
 }
 

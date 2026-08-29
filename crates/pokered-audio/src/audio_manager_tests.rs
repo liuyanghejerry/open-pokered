@@ -163,7 +163,7 @@ fn test_fade_with_no_queued_music_just_stops() {
 
     mgr.fade_state = FadeState::FadingOut;
     mgr.fade_queued_music = None;
-    mgr.fade_counter = 0;
+    mgr.sequencer.fade_counter = 0;
     mgr.fade_counter_reload = 0;
 
     for _ in 0..8 {
@@ -598,7 +598,7 @@ fn test_play_cities1_alternate_tempo_fades_then_restarts() {
 
     // Fade started with reload 10; the restart is queued.
     assert_eq!(mgr.fade_state(), FadeState::FadingOut);
-    assert_eq!(mgr.fade_counter, 10);
+    assert_eq!(mgr.sequencer.fade_counter, 10);
     assert_eq!(mgr.fade_counter_reload, 10);
     assert_eq!(mgr.fade_queued_music, Some(MusicId::CITIES1));
     assert!(mgr.is_music_playing(), "old song still playing during fade");

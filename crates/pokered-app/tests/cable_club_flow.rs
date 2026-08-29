@@ -12,13 +12,14 @@
 use pokered_app::link::cable_club::{
     CableClubFlow, CableClubPhase, FlowNeed, LinkKind, TEXT_LINK_CANCELED, TEXT_TRADE_CANCELED,
 };
-use pokered_app::link::LinkSession;
+use pokered_app::link::{LinkSession, link_activity};
 use pokered_core::battle::link_battle_driver::{
     LinkBattleDriver, LinkDriverEvent, LinkDriverPhase,
 };
 use pokered_core::battle::state::{Pokemon, StatusCondition};
 use pokered_core::link::LinkRole;
 use pokered_core::link::link_trade::{LinkTradeDriver, LinkTradePollResult};
+use pokered_core::link::protocol::NetworkMessage;
 use pokered_core::link::transport::ChannelTransport;
 use pokered_core::party_screen::PartyScreenInput;
 use pokered_core::pokemon::party::Party;
@@ -82,8 +83,8 @@ struct Pair {
 
 fn pair() -> Pair {
     let (t_a, t_b) = ChannelTransport::new_pair();
-    let mut host_session = LinkSession::new(Box::new(t_a));
-    let mut guest_session = LinkSession::new(Box::new(t_b));
+    let mut host_session = LinkSession::new(Box::new(t_a), link_activity, NetworkMessage::Disconnect);
+    let mut guest_session = LinkSession::new(Box::new(t_b), link_activity, NetworkMessage::Disconnect);
     let host_battle = LinkBattleDriver::new(host_session.battle_transport(), party(), "HOST".into())
         .with_role(LinkRole::Host)
         .with_host_random_list(HOST_LIST);

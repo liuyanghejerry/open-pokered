@@ -8,7 +8,7 @@ use std::io::Write;
 use std::net::{TcpListener, TcpStream};
 use std::time::{Duration, Instant};
 
-use pokered_app::link::{LinkServer, LinkSession, TcpTransport};
+use pokered_app::link::{LinkServer, LinkSession, TcpTransport, link_activity};
 use pokered_core::battle::state::{Pokemon, StatusCondition};
 use pokered_core::link::link_battle::{LinkBattleManager, LinkBattlePollResult, LinkBattleState};
 use pokered_core::link::protocol::{LinkAction, NetworkMessage, PartyExchangeData};
@@ -206,8 +206,16 @@ fn link_session_over_tcp_handshake_trade_battle_disconnect() {
     use pokered_core::link::link_trade::{LinkTradeDriver, LinkTradePollResult};
 
     let (client_transport, server_transport) = tcp_pair();
-    let mut client = LinkSession::new(Box::new(client_transport));
-    let mut server = LinkSession::new(Box::new(server_transport));
+    let mut client = LinkSession::new(
+        Box::new(client_transport),
+        link_activity,
+        NetworkMessage::Disconnect,
+    );
+    let mut server = LinkSession::new(
+        Box::new(server_transport),
+        link_activity,
+        NetworkMessage::Disconnect,
+    );
 
     // The CORE drivers wired through the session routers — the production
     // seam (`game.rs` does exactly this).

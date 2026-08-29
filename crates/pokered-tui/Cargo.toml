@@ -10,11 +10,13 @@ embedded-map-data = ["pokered-core/embedded-map-data"]
 [dependencies]
 pokered-core = { path = "../pokered-core" }
 pokered-data = { path = "../pokered-data" }
-dotzuki-engine = { git = "https://github.com/liuyanghejerry/dotzuki", tag = "v0.5.3" }
+dotzuki-engine = { git = "https://github.com/liuyanghejerry/dotzuki", branch = "feat/sink-pokered-first-tier" }
 pokered-renderer = { path = "../pokered-renderer" }
-dotzuki-renderer = { git = "https://github.com/liuyanghejerry/dotzuki", tag = "v0.5.3" }
-dotzuki-tui = { git = "https://github.com/liuyanghejerry/dotzuki", tag = "v0.5.3" }
-pokered-audio = { path = "../pokered-audio" }
+dotzuki-renderer = { git = "https://github.com/liuyanghejerry/dotzuki", branch = "feat/sink-pokered-first-tier" }
+dotzuki-tui = { git = "https://github.com/liuyanghejerry/dotzuki", branch = "feat/sink-pokered-first-tier" }
+# Device output comes from pokered-audio's `cpal` feature (the shared
+# `output::AudioOutput`, built on dotzuki-audio's cpal backend).
+pokered-audio = { path = "../pokered-audio", features = ["cpal"] }
 pokered-ui = { path = "../pokered-ui" }
 anyhow = { workspace = true }
 serde = { workspace = true }
@@ -22,5 +24,4 @@ serde_json = { workspace = true }
 log = "0.4"
 ratatui = "0.29"
 crossterm = "0.28"
-cpal = "0.15"
 clap = { version = "4", features = ["derive"] }
