@@ -436,6 +436,8 @@ class Game:
         interrupt the walk — sometimes fatally at low HP); falls back
         to any walkable path. Wild encounters that still happen are run
         from (or fought for trainers) and the walk re-localizes."""
+        self.last_pinch = None
+        self.pinch_count = 0
         for attempt in range(tries):
             if self.st()["screen"] == "battle":
                 s = self.st()
@@ -467,7 +469,7 @@ class Game:
                                f"-> {map_name}({x},{y}) "
                                f"blocked={sorted(blocked.get(cm, set()))}")
             import os as _os
-            if _os.environ.get("PT_DEBUG") and attempt % 10 == 0:
+            if _os.environ.get("PT_DEBUG") and attempt % 5 == 0:
                 plan = []
                 cur = None
                 for node, how in path[1:10]:
@@ -532,6 +534,17 @@ class Game:
                             (n.get("text_id"), n["x"], n["y"])
                             for n in npcs if n.get("visible", True)],
                             flush=True)
+                        if self.pinch_count >= 3:
+                            full = self.st()
+                            print("   [pinch!]", {k: full[k] for k in (
+                                "screen", "map_name", "player_x",
+                                "player_y", "warp_fade", "script_running",
+                                "player_movement_state")}, flush=True)
+                    if self.last_pinch == (cm, cx, cy):
+                        self.pinch_count += 1
+                    else:
+                        self.last_pinch = (cm, cx, cy)
+                        self.pinch_count = 0
                     free = None
                     for d2 in ("left", "right", "up", "down"):
                         dx, dy = DELTA[d2]
@@ -541,7 +554,29 @@ class Game:
                                 and n not in warp_tiles(cm)):
                             free = d2
                             break
-                    if free:
+                    if self.pinch_count >= 3:
+                        # Stuck at the same spot: flee along a long open
+                        # corridor so the next plan cannot immediately
+                        # drag the loop back (e.g. 5 tiles west of the
+                        # Viridian fence band opens the south exit).
+                        flee = None
+                        for d2, (dx, dy) in DELTA.items():
+                            ok = True
+                            for k in range(1, 6):
+                                n = (px0 + dx * k, py0 + dy * k)
+                                if not walkable(cm, *n):
+                                    ok = False
+                                    break
+                            if ok:
+                                flee = d2
+                                break
+                        if flee:
+                            self.d.drive([flee] * (5 * FRAMES_PER_TILE),
+                                         frames=5 * FRAMES_PER_TILE + 8)
+                            self.step(8)
+                        else:
+                            self.step(200)
+                    elif free:
                         self.d.drive([free] * FRAMES_PER_TILE,
                                      frames=FRAMES_PER_TILE + 8)
                         self.step(6)
@@ -909,7 +944,9 @@ def m06_rival_battle(g):
 def m07_mart_parcel(g):
     """Exit the lab, cross Route 1 to Viridian, collect Oak's parcel."""
     g.nav_warp(5, 11, "OaksLab", "PalletTown", approach="down")   # lab door
-    g.nav_to_map(29, 20, "ViridianCity")                          # below mart
+    g.nav_to_map(20, 26, "ViridianCity")         # west avenue (patrol-free)
+    g.nav_to(20, 32, map_name="ViridianCity")    # south lane x=20-21
+    g.nav_to_map(29, 20, "ViridianCity")         # below mart
     g.nav_warp(29, 19, "ViridianCity", "ViridianMart")            # @load: parcel
     g.evidence("m07-in-mart")
     g.nav_warp(4, 7, "ViridianMart", "ViridianCity", approach="down")
@@ -917,8 +954,12 @@ def m07_mart_parcel(g):
 
 
 def m08_deliver_parcel(g):
-    """Back to Pallet Town, hand the parcel to Oak, receive the POKéDEX."""
-    g.nav_to_map(12, 12, "PalletTown")                            # below lab door
+    """Back to Pallet Town, hand the parcel to Oak, receive the POKéDEX.
+    The Viridian return leg is staged through the patrol-free x=23
+    corridor — the BFS-shortest route crosses the wandering youngster's
+    patrol band and pinches indefinitely."""
+    g.nav_to(20, 32, map_name="ViridianCity")    # south lane x=20-21
+    g.nav_to_map(12, 12, "PalletTown")           # Route1 crossing
     g.nav_warp(12, 11, "PalletTown", "OaksLab")
     g.nav_to(5, 3, map_name="OaksLab")
     g.face("up")
