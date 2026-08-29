@@ -821,12 +821,29 @@ class Game:
                       flush=True)
                 self.leave_grass(map_name)
                 self.heal_pokecenter(*heal)
-                self.nav_to_map(x, y, map_name)
+                # Return leg staged through the patrol-free city lane
+                # (same drift-resistance as m09's gate chain).
+                if heal[1] == "ViridianCity":
+                    self.nav_to(20, 32, map_name="ViridianCity")
+                    self.nav_to(18, 1, map_name="ViridianCity")
+                # Return leg: generous budget (crossing + Route2 shuffle
+                # under learned NPC-avoid set; retries absorb NPC timing).
+                try:
+                    self.nav_to_map(x, y, map_name, tries=450)
+                except NavError:
+                    self.step(300)
+                    self.nav_to_map(x, y, map_name, tries=450)
                 continue
             # wander: a vertical shuttle over the grass; wilds interrupt
             cm, cx, cy = self.pos()
             if cm != map_name:
-                self.nav_to_map(x, y, map_name)
+                # Return leg: generous budget (crossing + Route2 shuffle
+                # under learned NPC-avoid set; retries absorb NPC timing).
+                try:
+                    self.nav_to_map(x, y, map_name, tries=450)
+                except NavError:
+                    self.step(300)
+                    self.nav_to_map(x, y, map_name, tries=450)
                 continue
             dy = 4 if cy <= y else -4
             self.d.drive(["down" if dy > 0 else "up"] * 32, frames=36)
