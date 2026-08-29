@@ -182,7 +182,13 @@ PARENTS = _build_parents()
 # contradicts a static model, and the resulting plan-vs-engine mismatch
 # creates an infinite city↔schoolhouse travel loop. Gameplay is
 # unaffected; the driver simply treats it as a dead zone.
-NO_THROUGH = {"ViridianSchoolHouse"}
+# The school house and the pokecenters are also excluded: the model's
+# exit-mat edge (resolved via last_map) disagrees with the engine's
+# runtime resolution often enough that the shortcut plan diverges and
+# loops. Explicit nav_warp still enters them; cross-planning just never
+# routes through.
+NO_THROUGH = {"ViridianSchoolHouse", "ViridianPokecenter",
+              "PewterPokecenter", "ViridianMart"}
 
 
 def warps_at(map_name, x, y):
@@ -317,6 +323,7 @@ class Game:
         self.frame0 = None
         # Engine default at new game (screen.rs OverworldScreen::new).
         self.last_map = "PalletTown"
+        self.observed_npcs = {}
 
     def checkpoint(self, mid):
         """Persist SaveData and record the completed milestone id. Only
@@ -388,8 +395,13 @@ class Game:
     def npc_blocked(self, map_name):
         data = self.d.cmd(cmd="get_npcs")["data"]
         npcs = data.get("npcs", data) if isinstance(data, dict) else data
-        return {(n["x"], n["y"]) for n in npcs
+        live = {(n["x"], n["y"]) for n in npcs
                 if n.get("visible", True) and (n["x"], n["y"]) != (-1, -1)}
+        # Remember every observed NPC tile: wandering NPCs patrol a
+        # small band, and plans that thread it pinch indefinitely at
+        # drive time. Learned bands are avoided from then on.
+        self.observed_npcs.setdefault(map_name, set()).update(live)
+        return live | self.observed_npcs[map_name]
 
     def evidence(self, tag):
         s = self.st()
@@ -959,7 +971,9 @@ def m08_deliver_parcel(g):
     corridor — the BFS-shortest route crosses the wandering youngster's
     patrol band and pinches indefinitely."""
     g.nav_to(20, 32, map_name="ViridianCity")    # south lane x=20-21
+    g.evidence("m08-southlane")
     g.nav_to_map(12, 12, "PalletTown")           # Route1 crossing
+    g.evidence("m08-back-home")
     g.nav_warp(12, 11, "PalletTown", "OaksLab")
     g.nav_to(5, 3, map_name="OaksLab")
     g.face("up")
@@ -1064,7 +1078,8 @@ def main():
             else:
                 fn(g)
             print(f"   done ({time.time()-t0:.1f}s wall)")
-            g.checkpoint(mid)
+            if g.persistent:
+                g.checkpoint(mid)
             if args.until == mid:
                 break
         print("PLAYTHROUGH REACHED REQUESTED MILESTONE")
