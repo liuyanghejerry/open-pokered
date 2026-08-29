@@ -11,7 +11,11 @@ use log::{error, info, warn};
 /// legitimately run for several seconds in debug builds, so this must be
 /// generous — see the stale-response drain below for why timeouts are still
 /// dangerous even when handled.
-const RESPONSE_TIMEOUT: Duration = Duration::from_secs(30);
+// Slow phases in debug builds make synchronous wait_until/step_frames
+// legitimately run for a minute or more; if the timeout fires, the late
+// response skews the FIFO reply stream (the driver then reads impossible
+// map/coord pairs). A generous timeout makes skew practically impossible.
+const RESPONSE_TIMEOUT: Duration = Duration::from_secs(300);
 
 /// The debug server listens for TCP connections and forwards commands to the game loop.
 pub struct DebugServer {
