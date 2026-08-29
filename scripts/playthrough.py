@@ -175,6 +175,14 @@ def _build_parents():
 
 PARENTS = _build_parents()
 
+# Buildings the driver refuses to route through. The school house's mats
+# are pair-collision/warp-tile mixups in the engine's warp semantics —
+# entering it from the city is fine, but the exit's last_map resolution
+# contradicts a static model, and the resulting plan-vs-engine mismatch
+# creates an infinite city↔schoolhouse travel loop. Gameplay is
+# unaffected; the driver simply treats it as a dead zone.
+NO_THROUGH = {"ViridianSchoolHouse"}
+
 
 def warps_at(map_name, x, y):
     return [w for w in MAPS[map_name]["warps"] if w["x"] == x and w["y"] == y]
@@ -261,7 +269,8 @@ def bfs_cross(map_name, start, goal_map, goal, blocked_maps=None,
                     cands = [landed]
                 else:
                     cands = [n for n in warp_edges_from(*landed, last_map)
-                             if n != (cm, cx, cy)]
+                             if n != (cm, cx, cy)
+                             and n[0] not in NO_THROUGH]
             else:
                 cands = [landed]
             for n in cands:
@@ -281,17 +290,43 @@ class NavError(RuntimeError):
 
 
 class Game:
-    def __init__(self, port):
+    def __init__(self, port, save_path=None):
         self.run_dir = Path(tempfile.mkdtemp(prefix="pokered-run-"))
         self.log = open(self.run_dir / "game.log", "w")
+        # Persistent save: checkpointable across driver runs (--resume),
+        # gitignored, lives next to the script.
+        if save_path is None:
+            save_path = ROOT / "scripts" / ".playthrough.sav"
+        self.save_path = save_path
         self.proc = subprocess.Popen(
             [str(BIN), "run", "--headless", "--debug-port", str(port),
-             "--no-audio", "--save", str(self.run_dir / "play.sav")],
+             "--no-audio", "--save", str(save_path)],
             cwd=str(ROOT), stdout=subprocess.DEVNULL, stderr=self.log)
         self.d = DebugClient(port)
         self.frame0 = None
         # Engine default at new game (screen.rs OverworldScreen::new).
         self.last_map = "PalletTown"
+
+    def checkpoint(self, mid):
+        """Persist SaveData and record the completed milestone id."""
+        r = self.d.cmd(cmd="save")
+        assert r["ok"], r
+        (ROOT / "scripts" / ".playthrough.marker").write_text(mid)
+
+    def marker_at_least(self, mid):
+        """True when the completed-milestone marker is >= `mid`."""
+        m = (ROOT / "scripts" / ".playthrough.marker")
+        if not m.exists():
+            return False
+        return self.milestone_index(m.read_text().strip()) >= \
+            self.milestone_index(mid)
+
+    @staticmethod
+    def milestone_index(mid):
+        for i, (m, _, _) in enumerate(MILESTONES):
+            if m == mid:
+                return i
+        return -1
 
     def track_last_map(self, current_map):
         """Engine-faithful last_map tracking (screen.rs' PendingWarp
@@ -449,14 +484,34 @@ class Game:
                        and j + 1 - i < 3):
                     j += 1
                 tiles = j - i + 1
-                held = tiles * FRAMES_PER_TILE + 8
-                # +8 held tail: the warp/mat extra check needs the
-                # direction held at the exact step-completion frame (the
-                # completion tick lands past the nominal walk window).
-                frames = held + 4
+                held = tiles * FRAMES_PER_TILE
+                # Warp/connection-firing steps need the direction held at
+                # the exact step-completion frame; pad those only — a
+                # blanket tail turns 1-tile segments into 2-tile strides
+                # and 1-wide gaps become impassable oscillations.
+                idx_after = i + tiles
+                if idx_after < len(path) and (path[idx_after][0][0] != cm):
+                    # Warp/mat firing needs the direction held at the
+                    # step-completion frame; empirically a LONG hold is
+                    # needed (32+ held frames) — the fade absorbs the
+                    # surplus, and connection crossings drift ≤1 tile
+                    # (closed loop re-localizes).
+                    held += 32
+                frames = held + 8
+                px0, py0 = self.pos()[1:]
+                if _os.environ.get("PT_DEBUG"):
+                    print(f"   [seg] {cm}({px0},{py0}) {steps[i]}x{tiles} "
+                          f"held={held}", flush=True)
                 self.d.drive([steps[i]] * held, frames=frames)
                 i = j + 1
-                if self.st()["screen"] == "battle":
+                s = self.st()
+                if s["screen"] == "battle":
+                    break
+                # Pinch: the segment made no progress (an NPC wandered
+                # into the plan at drive time). Let NPCs walk a beat,
+                # then re-plan — they wander off eventually.
+                if (s["player_x"], s["player_y"]) == (px0, py0):
+                    self.step(45)
                     break
             self.step(6)
         raise NavError(f"nav_to_map({map_name},{x},{y}) did not converge")
@@ -887,6 +942,14 @@ MILESTONES = [
 ]
 
 
+def state_done(mid, g):
+    """Replay-safety: the checkpoint marker is the single authority —
+    after a preserved save the game resumes mid-run, and state predicates
+    (overworld+RED, OaksLab...) are satisfied by ANY later stage, so only
+    the marker decides what already happened."""
+    return g.marker_at_least(mid)
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--port", type=int, default=9020)
@@ -894,6 +957,9 @@ def main():
     ap.add_argument("--starter", default="bulbasaur",
                     choices=["bulbasaur", "squirtle", "charmander"])
     ap.add_argument("--list", action="store_true")
+    ap.add_argument("--resume", action="store_true",
+                    help="use the persistent .playthrough.sav + marker: "
+                         "skip milestones already satisfied")
     args = ap.parse_args()
 
     if args.list:
@@ -905,12 +971,17 @@ def main():
     t0 = time.time()
     try:
         for mid, desc, fn in MILESTONES:
+            if args.resume and state_done(mid, g):
+                print(f"== {mid}: {desc}")
+                print(f"   skipped (state/marker already satisfied)")
+                continue
             print(f"== {mid}: {desc}")
             if mid == "m05":
                 fn(g, args.starter)
             else:
                 fn(g)
             print(f"   done ({time.time()-t0:.1f}s wall)")
+            g.checkpoint(mid)
             if args.until == mid:
                 break
         print("PLAYTHROUGH REACHED REQUESTED MILESTONE")

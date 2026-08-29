@@ -1258,7 +1258,12 @@ impl PokemonGame {
     fn save_to_file(&mut self) {
         let save = self.build_save_data();
         let sram = export_sram(&save);
-        let path = save_file_path();
+        // Explicit --save path wins (headless/driver runs); normal play
+        // falls back to the default location next to the executable.
+        let path = self
+            .save_path
+            .clone()
+            .unwrap_or_else(save_file_path);
         match std::fs::write(&path, &sram) {
             Ok(()) => {
                 pokered_core::log_save!("game saved to {:?} ({} bytes)", path, sram.len());
