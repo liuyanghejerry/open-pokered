@@ -383,7 +383,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
         if let Some(mut spin) = self.teleport_spin.take() {
             if let Some(sfx) = spin.tick() {
                 self.audio_requests.push(OverworldAudioRequest::PlaySound {
-                    sound_id: sfx.to_string(),
+                    sound_id: presentation::teleport_spin_sfx(sfx).to_string(),
                 });
             }
             if spin.is_done() {
@@ -400,7 +400,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
         if let Some(mut shake) = self.elevator_shake.take() {
             if let Some(sfx) = shake.tick() {
                 self.audio_requests.push(OverworldAudioRequest::PlaySound {
-                    sound_id: sfx.to_string(),
+                    sound_id: presentation::elevator_shake_sfx(sfx).to_string(),
                 });
             }
             if !shake.is_done() {
@@ -419,7 +419,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
             let prev_phase = dep.phase();
             if let Some(sfx) = dep.tick() {
                 self.audio_requests.push(OverworldAudioRequest::PlaySound {
-                    sound_id: sfx.to_string(),
+                    sound_id: presentation::ship_departure_sfx(sfx).to_string(),
                 });
             }
             if dep.phase() == presentation::ShipDeparturePhase::Erase
@@ -474,7 +474,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
         if let Some(mut anim) = self.enter_map_anim.take() {
             if let Some(sfx) = anim.tick() {
                 self.audio_requests.push(OverworldAudioRequest::PlaySound {
-                    sound_id: sfx.to_string(),
+                    sound_id: presentation::enter_map_spin_sfx(sfx).to_string(),
                 });
             }
             if !anim.is_done() {
@@ -491,7 +491,9 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
             && self.active_script_effect.is_none()
         {
             self.elevator_shake_pending = false;
-            self.elevator_shake = Some(presentation::ElevatorShakeState::new());
+            self.elevator_shake = Some(presentation::ElevatorShakeState::new(
+                doors_elevators::elevator_shake_params(),
+            ));
             return ScreenAction::Continue;
         }
 
@@ -844,6 +846,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
             self.warp_fade_to_white = true;
             self.teleport_spin = Some(presentation::TeleportSpinState::new(
                 self.state.player.facing,
+                presentation::TELEPORT_SPIN_FACINGS,
             ));
             return ScreenAction::Continue;
         }
@@ -1161,9 +1164,9 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                     self.npc_pokemon_data = npc_pokemon_data;
                     // LoadTilesetHeader: hTileAnimations follows the new tileset.
                     if let Some(ref md) = self.map_data {
-                        self.tile_anim.set_tileset(
+                        self.tile_anim.set_tileset(presentation::tile_anim_kind(
                             pokered_data::tileset_data::get_tileset_header(md.tileset).animation,
-                        );
+                        ));
                     }
                     self.load_map_script(new_map);
                     self.audio_requests

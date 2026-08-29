@@ -7,6 +7,14 @@ pub mod audio_manager;
 pub mod music_data;
 pub mod sfx_data;
 
+/// Shared device output (`AudioOutput`) for the native (`cpal` feature) and
+/// WASM (`web-audio` feature) frontends.
+#[cfg(any(
+    all(not(target_arch = "wasm32"), feature = "cpal"),
+    all(target_arch = "wasm32", feature = "web-audio"),
+))]
+pub mod output;
+
 #[cfg(test)]
 mod music_data_tests;
 
