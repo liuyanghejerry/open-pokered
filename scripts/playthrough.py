@@ -18,6 +18,7 @@ Usage:
 import argparse
 import json
 import shutil
+import socket
 import subprocess
 import sys
 import tempfile
@@ -290,14 +291,24 @@ class NavError(RuntimeError):
 
 
 class Game:
-    def __init__(self, port, save_path=None):
+    def __init__(self, port=None, save_path=None):
         self.run_dir = Path(tempfile.mkdtemp(prefix="pokered-run-"))
         self.log = open(self.run_dir / "game.log", "w")
-        # Persistent save: checkpointable across driver runs (--resume),
-        # gitignored, lives next to the script.
+        # Persistent save ONLY for --resume (Game(..., save_path=...));
+        # a plain run must boot clean or the main menu offers CONTINUE.
+        self.persistent = save_path is not None
         if save_path is None:
-            save_path = ROOT / "scripts" / ".playthrough.sav"
+            save_path = self.run_dir / "play.sav"
         self.save_path = save_path
+        # Port collisions with unrelated listening daemons (e.g. a proxy
+        # bound to a wide range) silently answer TCP and then drop the
+        # connection — which the driver reads as a game crash. Probe for
+        # a free port instead of trusting a hardcoded number.
+        if port is None:
+            s = socket.socket()
+            s.bind(("127.0.0.1", 0))
+            port = s.getsockname()[1]
+            s.close()
         self.proc = subprocess.Popen(
             [str(BIN), "run", "--headless", "--debug-port", str(port),
              "--no-audio", "--save", str(save_path)],
@@ -308,7 +319,9 @@ class Game:
         self.last_map = "PalletTown"
 
     def checkpoint(self, mid):
-        """Persist SaveData and record the completed milestone id."""
+        """Persist SaveData and record the completed milestone id. Only
+        meaningful for resume runs; fresh runs keep throwaway saves."""
+        assert self.persistent, "checkpoint outside a --resume run"
         r = self.d.cmd(cmd="save")
         assert r["ok"], r
         (ROOT / "scripts" / ".playthrough.marker").write_text(mid)
@@ -507,11 +520,35 @@ class Game:
                 s = self.st()
                 if s["screen"] == "battle":
                     break
-                # Pinch: the segment made no progress (an NPC wandered
-                # into the plan at drive time). Let NPCs walk a beat,
-                # then re-plan — they wander off eventually.
+                # Pinch: the segment made no progress (a wandering NPC
+                # holds the plan's next tile). Sidestep onto a free
+                # perpendicular tile and re-plan — waiting alone does
+                # not work when the NPC patrols inside the pinch column.
                 if (s["player_x"], s["player_y"]) == (px0, py0):
-                    self.step(45)
+                    if _os.environ.get("PT_DEBUG"):
+                        data = self.d.cmd(cmd="get_npcs")["data"]
+                        npcs = data.get("npcs", data) if isinstance(data, dict) else data
+                        print("   [pinch] npcs:", [
+                            (n.get("text_id"), n["x"], n["y"])
+                            for n in npcs if n.get("visible", True)],
+                            flush=True)
+                    free = None
+                    for d2 in ("left", "right", "up", "down"):
+                        dx, dy = DELTA[d2]
+                        n = (px0 + dx, py0 + dy)
+                        if (walkable(cm, *n) and n not in
+                                self.npc_blocked(cm)
+                                and n not in warp_tiles(cm)):
+                            free = d2
+                            break
+                    if free:
+                        self.d.drive([free] * FRAMES_PER_TILE,
+                                     frames=FRAMES_PER_TILE + 8)
+                        self.step(6)
+                    else:
+                        # A wandering NPC pauses for hundreds of frames
+                        # between steps; a short wait catches it mid-pause.
+                        self.step(200)
                     break
             self.step(6)
         raise NavError(f"nav_to_map({map_name},{x},{y}) did not converge")
@@ -786,7 +823,11 @@ class Game:
             self.d.close()
         finally:
             self.proc.terminate()
-            self.proc.wait(timeout=10)
+            try:
+                self.proc.wait(timeout=10)
+            except subprocess.TimeoutExpired:
+                self.proc.kill()
+                self.proc.wait(timeout=5)
             self.log.close()
             shutil.rmtree(self.run_dir, ignore_errors=True)
 
@@ -795,8 +836,8 @@ class Game:
 def m01_boot(g):
     """Power-on → main menu → NEW GAME → Oak speech starts."""
     g.wait("screen=language-select", 1800)
-    g.tap("a", 10)
-    for _ in range(60):                      # intro auto-plays to title
+    for _ in range(40):                      # A has an accept window; the
+        g.tap("a", 30)                       # first press may be swallowed
         r = g.d.cmd(cmd="wait_until", condition="screen=title",
                     max_frames=120)
         if r["data"]["reached"]:
@@ -967,7 +1008,8 @@ def main():
             print(f"{mid}: {desc}")
         return
 
-    g = Game(args.port)
+    g = Game(args.port, save_path=(ROOT / "scripts" / ".playthrough.sav")
+             if args.resume else None)
     t0 = time.time()
     try:
         for mid, desc, fn in MILESTONES:
