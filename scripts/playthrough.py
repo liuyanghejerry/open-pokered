@@ -392,16 +392,19 @@ class Game:
         s = self.st()
         return s["map_name"], s["player_x"], s["player_y"]
 
-    def npc_blocked(self, map_name):
+    def live_npcs(self, map_name):
         data = self.d.cmd(cmd="get_npcs")["data"]
         npcs = data.get("npcs", data) if isinstance(data, dict) else data
         live = {(n["x"], n["y"]) for n in npcs
                 if n.get("visible", True) and (n["x"], n["y"]) != (-1, -1)}
         # Remember every observed NPC tile: wandering NPCs patrol a
         # small band, and plans that thread it pinch indefinitely at
-        # drive time. Learned bands are avoided from then on.
+        # drive time. Learned bands are avoided by PREFERRED routes.
         self.observed_npcs.setdefault(map_name, set()).update(live)
-        return live | self.observed_npcs[map_name]
+        return live
+
+    def npc_blocked(self, map_name):
+        return self.live_npcs(map_name) | self.observed_npcs.get(map_name, set())
 
     def evidence(self, tag):
         s = self.st()
@@ -412,10 +415,17 @@ class Game:
         return s
 
     # ── movement ────────────────────────────────────────────────────────
-    def nav_to(self, x, y, map_name=None, tries=30):
+    def nav_to(self, x, y, map_name=None, tries=80):
         """Closed-loop BFS walk: re-localize after each straight segment so
-        drift, ledges and NPC shuffles self-correct."""
+        drift, ledges and NPC shuffles self-correct. Wild battles on the
+        way (grass routes) are run from and the walk resumes."""
         for _ in range(tries):
+            if self.st()["screen"] == "battle":
+                s = self.st()
+                prefer = ("fight" if s["script_awaiting_battle"]
+                          else "run")
+                self.battle_loop(prefer=prefer)
+                self.cutscene()
             cm, cx, cy = self.pos()
             if map_name is not None and cm != map_name:
                 raise NavError(f"warped out of {map_name} -> {cm}")
@@ -473,8 +483,10 @@ class Game:
                                      cm: blocked[cm] | grass_tiles(cm)},
                                  last_map=self.last_map)
             if path is None:
+                # Fallback: live NPC positions only — the learned bands
+                # must never seal off a whole map (they patrol wide).
                 path = bfs_cross(cm, (cx, cy), map_name, (x, y),
-                                 blocked_maps=blocked,
+                                 blocked_maps={cm: self.live_npcs(cm)},
                                  last_map=self.last_map)
             if not path:
                 raise NavError(f"no cross path: {cm}({cx},{cy}) "
@@ -610,10 +622,31 @@ class Game:
         first and walk down through the mat."""
         if approach == "down":
             self.nav_to(x, y - 1, map_name=from_map, tries=tries)
-            self.d.drive(["down"] * (2 * FRAMES_PER_TILE),
-                         frames=2 * FRAMES_PER_TILE + 8)
+            self.d.drive(["down"] * (2 * FRAMES_PER_TILE + 32),
+                         frames=2 * FRAMES_PER_TILE + 40)
         else:
-            self.nav_to(x, y, map_name=from_map, tries=tries)
+            try:
+                self.nav_to(x, y, map_name=from_map, tries=tries)
+            except NavError:
+                # Model blocked (e.g. an NPC patrol sealed the single
+                # approach): walk to an inward neighbor and long-hold
+                # onto the warp instead.
+                for d, (dx, dy) in DELTA.items():
+                    inner = (x - dx, y - dy)
+                    if walkable(from_map, *inner):
+                        self.nav_to(*inner, map_name=from_map,
+                                    tries=tries)
+                        self.d.drive([d] * 40, frames=48)
+                        break
+                else:
+                    raise
+            # Landing on a warp tile fires only while a step completes
+            # with the direction held (extra_warp_check); retry with a
+            # long hold toward the map edge.
+            for d, (dx, dy) in DELTA.items():
+                if outward_dir(from_map, x, y, d):
+                    self.d.drive([d] * 40, frames=48)
+                    break
         for _ in range(40):
             cm, _, _ = self.pos()
             if cm != from_map:
@@ -722,6 +755,11 @@ class Game:
         s = self.st()
         assert all(m["hp"] == m["max_hp"] for m in s["party"]), s["party"]
         self.nav_warp(3, 7, pc, city, approach="down")
+        # Step out of the door pocket; the city fence band can seal it.
+        try:
+            self.nav_to(26, 26, map_name=city)
+        except NavError:
+            pass
 
     PREFERRED_MOVES = ["VineWhip", "Ember", "Bubble", "WaterGun",
                        "ThunderShock", "Absorb", "RazorLeaf", "Tackle",
@@ -997,7 +1035,18 @@ def m09_to_pewter(g):
     the forest trainers are faced at full HP (a loss means a blackout
     home and a full-journey retry)."""
     g.nav_warp(5, 11, "OaksLab", "PalletTown", approach="down")
-    g.heal_pokecenter((23, 25), "ViridianCity", "ViridianPokecenter")
+    # Explicit gate chain: cross-BFS routing through the forest depends on
+    # a last_map that drifts from the engine's, which can detour the plan
+    # back through Pallet Town (no path to Pewter). Staged nav_warp calls
+    # execute the verified corridor deterministically instead.
+    g.nav_to_map(3, 44, "Route2")                     # below south gate
+    g.nav_warp(3, 43, "Route2", "ViridianForestSouthGate")
+    g.nav_to(5, 1, map_name="ViridianForestSouthGate")
+    g.nav_warp(5, 0, "ViridianForestSouthGate", "ViridianForest")
+    g.nav_to(1, 1, map_name="ViridianForest")
+    g.nav_warp(1, 0, "ViridianForest", "ViridianForestNorthGate")
+    g.nav_to(5, 1, map_name="ViridianForestNorthGate")
+    g.nav_warp(5, 0, "ViridianForestNorthGate", "Route2")
     g.nav_to_map(16, 29, "PewterCity")
     g.evidence("m09")
 
