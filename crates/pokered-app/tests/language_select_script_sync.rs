@@ -14,7 +14,7 @@ use pokered_renderer::input::{GbButton, InputState};
 #[test]
 fn language_select_syncs_script_lang() {
     let mut game =
-        PokemonGame::new_with_options(GameVersion::Red, None, None, None, false, None, false);
+        PokemonGame::new_with_options(GameVersion::Red, None, None, None, false, None, false, false);
     game.state.screen = GameScreen::LanguageSelect;
 
     // Boot default: English everywhere.
