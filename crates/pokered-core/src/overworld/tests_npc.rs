@@ -576,3 +576,39 @@ fn sign_interaction_no_sign() {
     let signs: Vec<(u8, u8, u8)> = vec![];
     assert_eq!(check_sign_interaction(&signs, 5, 5, Direction::Up), None);
 }
+
+// ── Real-map trainer sight regression ──────────────────────────────
+
+/// Regression: the trainer-LOS engage path creates the "!" emotion bubble
+/// without a script effect, and the bubble countdown used to tick only
+/// inside tick_active_effect — so it never moved, the engage intro waited
+/// on `frames_remaining == 0` forever, and no battle ever started.
+#[test]
+fn viridian_forest_trainer_engages_on_sight_line() {
+    use super::screen::OverworldScreen;
+    use pokered_data::impl_traits::PokemonRedData;
+
+    let mut screen = OverworldScreen::new(MapId::ViridianForest, None, PokemonRedData);
+    // Bug Catcher (textId 2) stands at (30,33) facing Left with range 2:
+    // his sight line covers (28,33) and (29,33).
+    screen.state.player.x = 29;
+    screen.state.player.y = 33;
+    for _ in 0..120 {
+        screen.update_frame(super::OverworldInput::new(
+            false, false, false, false, false, false, false, false,
+        ));
+        if let Some(ref pending) = screen.pending_trainer_battle {
+            assert_eq!(pending.trainer_id, "OPP_BUG_CATCHER1");
+            // The intro is done: bubble fully counted down (cleared to None
+            // on the following frame, same as the script-effect path), and
+            // the engage state consumed.
+            assert!(screen
+                .pending_emotion_bubble
+                .as_ref()
+                .map_or(true, |b| b.frames_remaining == 0));
+            assert!(screen.trainer_encounter_intro.is_none());
+            return;
+        }
+    }
+    panic!("trainer never engaged on sight tile (29,33)");
+}
