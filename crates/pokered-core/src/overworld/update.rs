@@ -860,6 +860,19 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
             return ScreenAction::Continue;
         }
 
+        // Tick down a trainer-engage "!" bubble. Bubbles raised by script
+        // effects (ShowEmotionBubble) are ticked by tick_active_effect, but
+        // the trainer-LOS path below creates the bubble WITHOUT a script
+        // effect — without this tick its countdown never moves and the
+        // engage intro would wait on `frames_remaining == 0` forever.
+        if let Some(ref mut bubble) = self.pending_emotion_bubble {
+            if bubble.frames_remaining == 0 {
+                self.pending_emotion_bubble = None;
+            } else {
+                bubble.frames_remaining -= 1;
+            }
+        }
+
         // Trainer line-of-sight detection: runs every frame during normal gameplay.
         // When a trainer spots the player, run the ENGAGE INTRO first
         // (CheckFightingMapTrainers, home/trainers.asm:129-159): "!" bubble →
