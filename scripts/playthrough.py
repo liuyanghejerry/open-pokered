@@ -297,7 +297,8 @@ class NavError(RuntimeError):
 
 
 class Game:
-    def __init__(self, port=None, save_path=None, record_dir=None):
+    def __init__(self, port=None, save_path=None, record_dir=None,
+                 record_video=None):
         self.run_dir = Path(tempfile.mkdtemp(prefix="pokered-run-"))
         self.log = open(self.run_dir / "game.log", "w")
         # Persistent save ONLY for --resume (Game(..., save_path=...));
@@ -320,6 +321,8 @@ class Game:
         if record_dir is not None:
             Path(record_dir).mkdir(parents=True, exist_ok=True)
             cmd += ["--record-frames", str(record_dir)]
+        if record_video is not None:
+            cmd += ["--record-video", str(record_video)]
         self.proc = subprocess.Popen(
             cmd, cwd=str(ROOT), stdout=subprocess.DEVNULL, stderr=self.log)
         self.d = DebugClient(port)
@@ -1366,7 +1369,12 @@ def main():
     ap.add_argument("--record", default=None, metavar="DIR",
                     help="record every rendered frame to DIR (passes "
                          "--record-frames to the game); assemble with e.g. "
-                         "ffmpeg -framerate 240 -i frame-%%06d.png -r 60 out.mp4")
+                         "ffmpeg -framerate 240 -i frame-%%06d.png -r 60 out.mp4. "
+                         "For full-run video prefer --record-video instead")
+    ap.add_argument("--record-video", default=None, metavar="FILE",
+                    help="record straight to FILE as H.264 mp4 (passes "
+                         "--record-video to the game, which pipes raw frames "
+                         "into ffmpeg — no intermediate PNGs)")
     args = ap.parse_args()
 
     if args.list:
@@ -1375,7 +1383,8 @@ def main():
         return
 
     g = Game(args.port, save_path=(ROOT / "scripts" / ".playthrough.sav")
-             if args.resume else None, record_dir=args.record)
+             if args.resume else None, record_dir=args.record,
+             record_video=args.record_video)
     t0 = time.time()
     try:
         for mid, desc, fn in MILESTONES:
