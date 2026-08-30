@@ -94,6 +94,16 @@ pub enum Commands {
         /// --debug-port and the step_frames command.
         #[arg(long)]
         headless: bool,
+        /// Render the state after startup (honoring --save/--snapshot/
+        /// --skip-intro/--warp) to a PNG and exit, without opening a window.
+        /// This is how driven/saved states get before/after captures —
+        /// `screenshot --screen` only reaches fixed boot screens.
+        #[arg(long)]
+        screenshot: Option<PathBuf>,
+        /// Frames to advance (neutral input) before the --screenshot
+        /// capture, letting warp fades and arrival animations settle.
+        #[arg(long, default_value = "30")]
+        screenshot_frames: u32,
     },
     /// Export the current save file (or a specified .sav) as a JSON snapshot
     ExportSnapshot {
