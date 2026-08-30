@@ -1606,11 +1606,16 @@ impl PokemonGame {
                             // In a dark cave the original uses LoadGBPal instead
                             // (instant dark palette) — the renderer's dark-cave
                             // priority reproduces that without a special case here.
-                            self.overworld.warp_fade_state =
-                                pokered_core::overworld::screen::WarpFadeState::FadingIn {
-                                    frames_remaining:
-                                        pokered_core::overworld::screen::WARP_FADE_IN_FRAMES,
-                                };
+                            // A queued blackout warp (battle loss) already started
+                            // its own fade-out; don't clobber it or the warp would
+                            // never commit.
+                            if self.overworld.pending_warp.is_none() {
+                                self.overworld.warp_fade_state =
+                                    pokered_core::overworld::screen::WarpFadeState::FadingIn {
+                                        frames_remaining:
+                                            pokered_core::overworld::screen::WARP_FADE_IN_FRAMES,
+                                    };
+                            }
                         }
                     }
                 }
