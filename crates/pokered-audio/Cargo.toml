@@ -14,7 +14,7 @@ cpal = ["dotzuki-audio/cpal"]
 web-audio = ["dotzuki-audio/web-audio"]
 
 [dependencies]
-dotzuki-audio = { git = "https://github.com/liuyanghejerry/dotzuki", tag = "v0.5.4" }
+dotzuki-audio = { git = "https://github.com/liuyanghejerry/dotzuki", tag = "v0.5.5" }
 bitflags = "2"
 
 # The generated music/SFX tables are the game runtime's source of truth, so the
@@ -22,5 +22,5 @@ bitflags = "2"
 # `export_audio` example opt into the file-based `format`/`library` API — dev
 # feature activation only affects those targets, not `cargo build`.
 [dev-dependencies]
-dotzuki-audio = { git = "https://github.com/liuyanghejerry/dotzuki", tag = "v0.5.4", features = ["serde"] }
+dotzuki-audio = { git = "https://github.com/liuyanghejerry/dotzuki", tag = "v0.5.5", features = ["serde"] }
 serde_json = "1"
