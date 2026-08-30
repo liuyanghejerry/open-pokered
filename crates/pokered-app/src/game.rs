@@ -281,6 +281,37 @@ struct PendingTrade {
     nickname: String,
 }
 
+/// Writes each rendered frame to `dir/frame-NNNNNN.png` — the capture half
+/// of `run --record-frames`. The buffer is reused across frames; PNG
+/// encoding is the only per-frame cost.
+#[cfg(not(target_arch = "wasm32"))]
+pub struct FrameRecorder {
+    dir: PathBuf,
+    next: u64,
+    fb: FrameBuffer,
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+impl FrameRecorder {
+    pub fn new(dir: PathBuf) -> std::io::Result<Self> {
+        std::fs::create_dir_all(&dir)?;
+        Ok(Self {
+            dir,
+            next: 0,
+            fb: FrameBuffer::new(RenderConfig::new(160, 144), Rgba::WHITE),
+        })
+    }
+
+    fn capture(&mut self, game: &mut PokemonGame) {
+  game.draw(&mut self.fb);
+        let path = self.dir.join(format!("frame-{:06}.png", self.next));
+        if let Err(e) = self.fb.save_png(&path) {
+            log::warn!("frame recorder: failed to write {}: {}", path.display(), e);
+        }
+        self.next += 1;
+    }
+}
+
 pub struct PokemonGame {
     pub state: GameState,
     pub title_screen: TitleScreenState,
@@ -372,6 +403,11 @@ pub struct PokemonGame {
     /// read as HELD across consecutive frames (fresh `InputState` per frame
     /// looks like repeated taps, so d-pad walking never starts).
     debug_input: InputState,
+    /// Per-frame PNG recorder (`--record-frames`): captures every update —
+    /// real-time loop and synchronous step_frames bursts alike — so driven
+    /// runs can be assembled into video offline.
+    #[cfg(not(target_arch = "wasm32"))]
+    pub frame_recorder: Option<FrameRecorder>,
     /// Consecutive frames A+B+Start+Select have all been held — the original's
     /// soft-reset combo (engine/joypad.asm `_Joypad`/`TrySoftReset`, 16 frames
     /// of PAD_BUTTONS held → `SoftReset`).
@@ -827,6 +863,8 @@ impl PokemonGame {
             pending_debug_inputs: Vec::new(),
             pending_debug_frames: 0,
             debug_input: InputState::new(),
+            #[cfg(not(target_arch = "wasm32"))]
+            frame_recorder: None,
             soft_reset_frames: 0,
             save_path,
             #[cfg(not(target_arch = "wasm32"))]
@@ -935,6 +973,8 @@ impl PokemonGame {
             pending_debug_inputs: Vec::new(),
             pending_debug_frames: 0,
             debug_input: InputState::new(),
+            #[cfg(not(target_arch = "wasm32"))]
+            frame_recorder: None,
             startup_warp: None,
             soft_reset_frames: 0,
             save_path: None,
@@ -2153,6 +2193,19 @@ impl PokemonGame {
     }
 
     pub fn update(&mut self, input: &InputState) {
+        self.update_inner(input);
+        // Per-frame recorder (`--record-frames`): capture AFTER the frame's
+        // logic ran, and do it here rather than inside the update body so
+        // every frame lands — early returns, real-time loop and synchronous
+        // step_frames bursts alike.
+        #[cfg(not(target_arch = "wasm32"))]
+        if let Some(mut rec) = self.frame_recorder.take() {
+            rec.capture(self);
+            self.frame_recorder = Some(rec);
+        }
+    }
+
+    fn update_inner(&mut self, input: &InputState) {
         use pokered_core::game_state::Lang;
         self.frame_count += 1;
 

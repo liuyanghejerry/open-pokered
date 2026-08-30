@@ -104,6 +104,12 @@ pub enum Commands {
         /// capture, letting warp fades and arrival animations settle.
         #[arg(long, default_value = "30")]
         screenshot_frames: u32,
+        /// Record every frame to DIR/frame-NNNNNN.png (headless or windowed).
+        /// Driven runs (debug-server step_frames bursts included) can then be
+        /// assembled into video offline, e.g.:
+        /// `ffmpeg -framerate 240 -i frame-%06d.png -r 60 out.mp4`.
+        #[arg(long)]
+        record_frames: Option<PathBuf>,
     },
     /// Export the current save file (or a specified .sav) as a JSON snapshot
     ExportSnapshot {

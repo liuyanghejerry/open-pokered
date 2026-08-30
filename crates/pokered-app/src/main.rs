@@ -126,6 +126,7 @@ fn main() {
             no_audio,
             ref screenshot,
             screenshot_frames,
+            ref record_frames,
         }) => {
             // Merge debug_port from the Run subcommand with the global flag.
             let effective_debug_port = debug_port.or(cli.debug_port);
@@ -189,6 +190,19 @@ fn main() {
                 fb.save_png(shot).expect("Failed to save PNG");
                 println!("Saved: {}", shot.display());
                 return;
+            }
+            #[cfg(not(target_arch = "wasm32"))]
+            if let Some(ref dir) = record_frames {
+                match crate::game::FrameRecorder::new(dir.clone()) {
+                    Ok(rec) => {
+                        eprintln!("Recording frames to {}", dir.display());
+                        game.frame_recorder = Some(rec);
+                    }
+                    Err(e) => {
+                        eprintln!("Error: cannot create frame dir {}: {}", dir.display(), e);
+                        std::process::exit(1);
+                    }
+                }
             }
             if headless {
                 // No window: drive the same update loop at the GB frame rate

@@ -297,7 +297,7 @@ class NavError(RuntimeError):
 
 
 class Game:
-    def __init__(self, port=None, save_path=None):
+    def __init__(self, port=None, save_path=None, record_dir=None):
         self.run_dir = Path(tempfile.mkdtemp(prefix="pokered-run-"))
         self.log = open(self.run_dir / "game.log", "w")
         # Persistent save ONLY for --resume (Game(..., save_path=...));
@@ -315,10 +315,13 @@ class Game:
             s.bind(("127.0.0.1", 0))
             port = s.getsockname()[1]
             s.close()
+        cmd = [str(BIN), "run", "--headless", "--debug-port", str(port),
+               "--no-audio", "--save", str(save_path)]
+        if record_dir is not None:
+            Path(record_dir).mkdir(parents=True, exist_ok=True)
+            cmd += ["--record-frames", str(record_dir)]
         self.proc = subprocess.Popen(
-            [str(BIN), "run", "--headless", "--debug-port", str(port),
-             "--no-audio", "--save", str(save_path)],
-            cwd=str(ROOT), stdout=subprocess.DEVNULL, stderr=self.log)
+            cmd, cwd=str(ROOT), stdout=subprocess.DEVNULL, stderr=self.log)
         self.d = DebugClient(port)
         self.frame0 = None
         # Engine default at new game (screen.rs OverworldScreen::new).
@@ -1360,6 +1363,10 @@ def main():
     ap.add_argument("--resume", action="store_true",
                     help="use the persistent .playthrough.sav + marker: "
                          "skip milestones already satisfied")
+    ap.add_argument("--record", default=None, metavar="DIR",
+                    help="record every rendered frame to DIR (passes "
+                         "--record-frames to the game); assemble with e.g. "
+                         "ffmpeg -framerate 240 -i frame-%%06d.png -r 60 out.mp4")
     args = ap.parse_args()
 
     if args.list:
@@ -1368,7 +1375,7 @@ def main():
         return
 
     g = Game(args.port, save_path=(ROOT / "scripts" / ".playthrough.sav")
-             if args.resume else None)
+             if args.resume else None, record_dir=args.record)
     t0 = time.time()
     try:
         for mid, desc, fn in MILESTONES:
