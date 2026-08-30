@@ -113,6 +113,17 @@ pub fn settle_battle_into_save(
                         // without EnterMapAnim.
                         arrival_spin: false,
                     });
+                    // Start the fade-out in the same breath: the update loop
+                    // only commits a queued warp from the BlackScreen fade
+                    // phase, and every other pending_warp producer pairs the
+                    // queue with its fade. Without this the blackout warp
+                    // hangs forever with the fade Idle — and warp triggers
+                    // bail while a warp is pending, so the player is
+                    // soft-locked on the battle map.
+                    overworld.warp_fade_to_white = true;
+                    overworld.warp_fade_state = crate::overworld::WarpFadeState::FadingOut {
+                        frames_remaining: crate::overworld::WARP_FADE_OUT_WHITE_FRAMES,
+                    };
                     // DisplayPlayerBlackedOutText (home/text_script.asm:200-202)
                     // and the loss path (engine/battle/core.asm:1160-1162) reset
                     // BIT_ALWAYS_ON_BIKE — a blackout on the Cycling Road

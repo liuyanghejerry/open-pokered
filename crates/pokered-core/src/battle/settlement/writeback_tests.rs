@@ -66,6 +66,15 @@ fn loss_triggers_blackout() {
     assert_eq!(save.game_data.player_money, 500, "blackout money penalty applied");
     assert!(ow.heal_requested, "party heal requested on blackout");
     assert!(ow.pending_warp.is_some(), "warped to the last Poké Center");
+    assert!(
+        matches!(
+            ow.warp_fade_state,
+            crate::overworld::WarpFadeState::FadingOut { .. }
+        ),
+        "blackout must start the fade-out — the update loop only commits a queued \
+         warp from the BlackScreen phase; queueing without the fade soft-locks \
+         (warp triggers bail while pending_warp.is_some())"
+    );
 }
 
 /// The blackout warp lands at `wLastBlackoutMap`'s FLY point — outside the
@@ -105,6 +114,39 @@ fn blackout_defaults_to_pallet_town() {
     let warp = ow.pending_warp.expect("blackout warp");
     assert_eq!(warp.dest_map, MapId::PalletTown);
     assert_eq!((warp.dest_x, warp.dest_y), (5, 6), "Pallet Town fly point");
+}
+
+/// The blackout warp actually commits when the overworld update loop runs:
+/// fade-out → BlackScreen → commit → fade-in, landing at the fly point.
+/// Regression test for the soft-lock where the queued warp never fired.
+#[test]
+fn blackout_warp_commits_through_the_update_loop() {
+    let player = vec![mon(Species::Charmander, 10)];
+    let enemy = vec![mon(Species::Onix, 12)];
+    let mut battle = BattleScreen::from_parties(false, &player, &enemy, Some(TrainerClass::Brock));
+    battle.map_id = MapId::PewterGym as u8;
+    battle.settlement = Some(settlement(BattleOutcome::Loss, 0, 0));
+    let mut save = SaveData::new();
+    let mut ow = overworld();
+
+    settle_battle_into_save(&mut battle, &mut save, &mut ow);
+    let input = crate::overworld::OverworldInput::new(
+        false, false, false, false, false, false, false, false,
+    );
+    for _ in 0..(24 + 1 + 24 + 20) {
+        ow.update_frame(input);
+    }
+    assert!(ow.pending_warp.is_none(), "blackout warp committed");
+    assert!(matches!(
+        ow.warp_fade_state,
+        crate::overworld::WarpFadeState::Idle
+    ));
+    assert_eq!(ow.state.current_map, MapId::PalletTown);
+    assert_eq!(
+        (ow.state.player.x, ow.state.player.y),
+        (5, 6),
+        "Pallet Town fly point"
+    );
 }
 
 /// The Oak's-Lab Rival1 loss is the original's no-blackout special case.

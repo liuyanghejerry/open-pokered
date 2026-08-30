@@ -77,6 +77,11 @@ pub enum Commands {
         /// Skip intro sequence (Copyright→Title→MainMenu→OakSpeech) and start at Overworld
         #[arg(long)]
         skip_intro: bool,
+        /// Disable audio output. Recommended for headless/debug-server
+        /// driving: synchronous step_frames bursts otherwise pace against
+        /// the real-time audio stream, slowing scripted runs enormously.
+        #[arg(long)]
+        no_audio: bool,
         /// Warp to a specific map and coordinates on startup. Format: "MapName[,x,y]"
         /// e.g. --warp PalletTown,10,14 or --warp CeruleanCity,14,8
         #[arg(long)]
@@ -89,6 +94,22 @@ pub enum Commands {
         /// --debug-port and the step_frames command.
         #[arg(long)]
         headless: bool,
+        /// Render the state after startup (honoring --save/--snapshot/
+        /// --skip-intro/--warp) to a PNG and exit, without opening a window.
+        /// This is how driven/saved states get before/after captures —
+        /// `screenshot --screen` only reaches fixed boot screens.
+        #[arg(long)]
+        screenshot: Option<PathBuf>,
+        /// Frames to advance (neutral input) before the --screenshot
+        /// capture, letting warp fades and arrival animations settle.
+        #[arg(long, default_value = "30")]
+        screenshot_frames: u32,
+        /// Record every frame to DIR/frame-NNNNNN.png (headless or windowed).
+        /// Driven runs (debug-server step_frames bursts included) can then be
+        /// assembled into video offline, e.g.:
+        /// `ffmpeg -framerate 240 -i frame-%06d.png -r 60 out.mp4`.
+        #[arg(long)]
+        record_frames: Option<PathBuf>,
     },
     /// Export the current save file (or a specified .sav) as a JSON snapshot
     ExportSnapshot {

@@ -18,22 +18,62 @@ import time
 
 class DebugClient:
     def __init__(self, port=9000, host="127.0.0.1", connect_timeout=15.0):
+        self.host, self.port = host, port
+        self.sock = None
+        self.f = None
+        self._connect(connect_timeout)
+        # Long synchronous commands (wait_until with a big frame budget)
+        # legitimately take tens of seconds server-side; the connect
+        # timeout must not apply to command round trips.
+        self.sock.settimeout(120.0)
+        self.f = self.sock.makefile("rw")
+
+    def _connect(self, connect_timeout=15.0):
         deadline = time.time() + connect_timeout
         while True:
             try:
-                self.sock = socket.create_connection((host, port), timeout=5)
-                break
+                self.sock = socket.create_connection(
+                    (self.host, self.port), timeout=5)
+                return
             except OSError:
                 if time.time() > deadline:
                     raise
                 time.sleep(0.5)
+
+    def _reconnect(self):
+        """Drop the (possibly wedged) connection and re-open one. The
+        server reads requests one line at a time, so closing our side
+        makes its reader hit EOF and accept the new connection fast."""
+        try:
+            if self.sock:
+                self.sock.close()
+        except OSError:
+            pass
+        self._connect(60)
+        self.sock.settimeout(120.0)
         self.f = self.sock.makefile("rw")
 
     def cmd(self, **kw):
-        """Send one JSON-line command, return the parsed response."""
-        self.f.write(json.dumps(kw) + "\n")
-        self.f.flush()
-        return json.loads(self.f.readline())
+        """Send one JSON-line command, return the parsed response.
+        Retries once on a transport stall (deadlocked round trip):
+        commands are effectively idempotent for a closed-loop driver —
+        a doubled queue entry or extra stepped frames self-correct."""
+        line = json.dumps(kw) + "\n"
+        for attempt in range(2):
+            try:
+                self.f.write(line)
+                self.f.flush()
+                resp = self.f.readline()
+                if not resp:
+                    raise OSError("connection closed by peer")
+                return json.loads(resp)
+            except OSError as e:
+                if attempt:
+                    raise
+                print(f"[debug-drive] transport stall ({e!r}), "
+                      f"reconnecting and retrying: {kw.get('cmd')}",
+                      flush=True)
+                self._reconnect()
 
     def close(self):
         self.f.close()

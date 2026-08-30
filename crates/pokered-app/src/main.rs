@@ -107,9 +107,9 @@ fn main() {
                 height: 144,
             };
             #[cfg(feature = "debug-server")]
-            let mut game = PokemonGame::new_with_options(version, None, None, cli.scripts_dir, false, None, cli.watch, debug_handle);
+            let mut game = PokemonGame::new_with_options(version, None, None, cli.scripts_dir, false, None, cli.watch, false, debug_handle);
             #[cfg(not(feature = "debug-server"))]
-            let mut game = PokemonGame::new_with_options(version, None, None, cli.scripts_dir, false, None, cli.watch);
+            let mut game = PokemonGame::new_with_options(version, None, None, cli.scripts_dir, false, None, cli.watch, false);
             attach_link(&mut game, cli.link_listen, cli.link_connect.clone());
             match run(config, game) {
                 Ok(()) => println!("Game exited normally"),
@@ -123,6 +123,10 @@ fn main() {
             warp,
             ref debug_port,
             headless,
+            no_audio,
+            ref screenshot,
+            screenshot_frames,
+            ref record_frames,
         }) => {
             // Merge debug_port from the Run subcommand with the global flag.
             let effective_debug_port = debug_port.or(cli.debug_port);
@@ -166,10 +170,40 @@ fn main() {
                 height: 144,
             };
             #[cfg(feature = "debug-server")]
-            let mut game = PokemonGame::new_with_options(version, save, snapshot, cli.scripts_dir, skip_intro, warp, cli.watch, debug_handle);
+            let mut game = PokemonGame::new_with_options(version, save, snapshot, cli.scripts_dir, skip_intro, warp, cli.watch, no_audio, debug_handle);
             #[cfg(not(feature = "debug-server"))]
-            let mut game = PokemonGame::new_with_options(version, save, snapshot, cli.scripts_dir, skip_intro, warp, cli.watch);
+            let mut game = PokemonGame::new_with_options(version, save, snapshot, cli.scripts_dir, skip_intro, warp, cli.watch, no_audio);
             attach_link(&mut game, cli.link_listen, cli.link_connect.clone());
+            if let Some(ref shot) = screenshot {
+                // Offscreen capture of the startup state (--save/--snapshot/
+                // --skip-intro/--warp all apply): advance neutral frames so
+                // fades/arrival animations settle, draw once, write the PNG.
+                let input = InputState::new();
+                for _ in 0..screenshot_frames {
+                    game.update(&input);
+                }
+                let mut fb = pokered_renderer::FrameBuffer::new(
+                    dotzuki_engine::render_config::RenderConfig::new(160, 144),
+                    pokered_renderer::Rgba::WHITE,
+                );
+                game.draw(&mut fb);
+                fb.save_png(shot).expect("Failed to save PNG");
+                println!("Saved: {}", shot.display());
+                return;
+            }
+            #[cfg(not(target_arch = "wasm32"))]
+            if let Some(ref dir) = record_frames {
+                match crate::game::FrameRecorder::new(dir.clone()) {
+                    Ok(rec) => {
+                        eprintln!("Recording frames to {}", dir.display());
+                        game.frame_recorder = Some(rec);
+                    }
+                    Err(e) => {
+                        eprintln!("Error: cannot create frame dir {}: {}", dir.display(), e);
+                        std::process::exit(1);
+                    }
+                }
+            }
             if headless {
                 // No window: drive the same update loop at the GB frame rate
                 // without rendering. The debug server (polled inside update)

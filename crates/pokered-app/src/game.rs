@@ -281,6 +281,37 @@ struct PendingTrade {
     nickname: String,
 }
 
+/// Writes each rendered frame to `dir/frame-NNNNNN.png` — the capture half
+/// of `run --record-frames`. The buffer is reused across frames; PNG
+/// encoding is the only per-frame cost.
+#[cfg(not(target_arch = "wasm32"))]
+pub struct FrameRecorder {
+    dir: PathBuf,
+    next: u64,
+    fb: FrameBuffer,
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+impl FrameRecorder {
+    pub fn new(dir: PathBuf) -> std::io::Result<Self> {
+        std::fs::create_dir_all(&dir)?;
+        Ok(Self {
+            dir,
+            next: 0,
+            fb: FrameBuffer::new(RenderConfig::new(160, 144), Rgba::WHITE),
+        })
+    }
+
+    fn capture(&mut self, game: &mut PokemonGame) {
+  game.draw(&mut self.fb);
+        let path = self.dir.join(format!("frame-{:06}.png", self.next));
+        if let Err(e) = self.fb.save_png(&path) {
+            log::warn!("frame recorder: failed to write {}: {}", path.display(), e);
+        }
+        self.next += 1;
+    }
+}
+
 pub struct PokemonGame {
     pub state: GameState,
     pub title_screen: TitleScreenState,
@@ -372,6 +403,11 @@ pub struct PokemonGame {
     /// read as HELD across consecutive frames (fresh `InputState` per frame
     /// looks like repeated taps, so d-pad walking never starts).
     debug_input: InputState,
+    /// Per-frame PNG recorder (`--record-frames`): captures every update —
+    /// real-time loop and synchronous step_frames bursts alike — so driven
+    /// runs can be assembled into video offline.
+    #[cfg(not(target_arch = "wasm32"))]
+    pub frame_recorder: Option<FrameRecorder>,
     /// Consecutive frames A+B+Start+Select have all been held — the original's
     /// soft-reset combo (engine/joypad.asm `_Joypad`/`TrySoftReset`, 16 frames
     /// of PAD_BUTTONS held → `SoftReset`).
@@ -557,9 +593,9 @@ impl PokemonGame {
     #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
     pub fn new(version: GameVersion) -> Self {
         #[cfg(feature = "debug-server")]
-        return Self::new_with_options(version, None, None, None, false, None, false, None);
+        return Self::new_with_options(version, None, None, None, false, None, false, false, None);
         #[cfg(not(feature = "debug-server"))]
-        return Self::new_with_options(version, None, None, None, false, None, false);
+        return Self::new_with_options(version, None, None, None, false, None, false, false);
     }
 
     /// Creates a new game with optional save file, snapshot, and scripts directory.
@@ -574,6 +610,7 @@ impl PokemonGame {
         skip_intro: bool,
         warp: Option<String>,
         watch: bool,
+        no_audio: bool,
         #[cfg(feature = "debug-server")] debug_handle: Option<pokered_debug_server::DebugServerHandle>,
     ) -> Self {
         let (save_data, save_summary) = if let Some(ref path) = snapshot_path {
@@ -706,14 +743,19 @@ impl PokemonGame {
             }
         };
 
-        let audio = match AudioOutput::new() {
-            Some(ao) => {
-                eprintln!("Audio output initialized (cpal 44100 Hz stereo)");
-                Some(ao)
-            }
-            None => {
-                eprintln!("Warning: Could not initialize audio output.");
-                None
+        let audio = if no_audio {
+            eprintln!("Audio output disabled (--no-audio).");
+            None
+        } else {
+            match AudioOutput::new() {
+                Some(ao) => {
+                    eprintln!("Audio output initialized (cpal 44100 Hz stereo)");
+                    Some(ao)
+                }
+                None => {
+                    eprintln!("Warning: Could not initialize audio output.");
+                    None
+                }
             }
         };
 
@@ -821,6 +863,8 @@ impl PokemonGame {
             pending_debug_inputs: Vec::new(),
             pending_debug_frames: 0,
             debug_input: InputState::new(),
+            #[cfg(not(target_arch = "wasm32"))]
+            frame_recorder: None,
             soft_reset_frames: 0,
             save_path,
             #[cfg(not(target_arch = "wasm32"))]
@@ -929,6 +973,8 @@ impl PokemonGame {
             pending_debug_inputs: Vec::new(),
             pending_debug_frames: 0,
             debug_input: InputState::new(),
+            #[cfg(not(target_arch = "wasm32"))]
+            frame_recorder: None,
             startup_warp: None,
             soft_reset_frames: 0,
             save_path: None,
@@ -1256,7 +1302,12 @@ impl PokemonGame {
     fn save_to_file(&mut self) {
         let save = self.build_save_data();
         let sram = export_sram(&save);
-        let path = save_file_path();
+        // Explicit --save path wins (headless/driver runs); normal play
+        // falls back to the default location next to the executable.
+        let path = self
+            .save_path
+            .clone()
+            .unwrap_or_else(save_file_path);
         match std::fs::write(&path, &sram) {
             Ok(()) => {
                 pokered_core::log_save!("game saved to {:?} ({} bytes)", path, sram.len());
@@ -1595,11 +1646,16 @@ impl PokemonGame {
                             // In a dark cave the original uses LoadGBPal instead
                             // (instant dark palette) — the renderer's dark-cave
                             // priority reproduces that without a special case here.
-                            self.overworld.warp_fade_state =
-                                pokered_core::overworld::screen::WarpFadeState::FadingIn {
-                                    frames_remaining:
-                                        pokered_core::overworld::screen::WARP_FADE_IN_FRAMES,
-                                };
+                            // A queued blackout warp (battle loss) already started
+                            // its own fade-out; don't clobber it or the warp would
+                            // never commit.
+                            if self.overworld.pending_warp.is_none() {
+                                self.overworld.warp_fade_state =
+                                    pokered_core::overworld::screen::WarpFadeState::FadingIn {
+                                        frames_remaining:
+                                            pokered_core::overworld::screen::WARP_FADE_IN_FRAMES,
+                                    };
+                            }
                         }
                     }
                 }
@@ -2137,6 +2193,19 @@ impl PokemonGame {
     }
 
     pub fn update(&mut self, input: &InputState) {
+        self.update_inner(input);
+        // Per-frame recorder (`--record-frames`): capture AFTER the frame's
+        // logic ran, and do it here rather than inside the update body so
+        // every frame lands — early returns, real-time loop and synchronous
+        // step_frames bursts alike.
+        #[cfg(not(target_arch = "wasm32"))]
+        if let Some(mut rec) = self.frame_recorder.take() {
+            rec.capture(self);
+            self.frame_recorder = Some(rec);
+        }
+    }
+
+    fn update_inner(&mut self, input: &InputState) {
         use pokered_core::game_state::Lang;
         self.frame_count += 1;
 
@@ -4683,6 +4752,26 @@ impl PokemonGame {
             "player_name": self.player_name.clone(),
             "frame_count": self.frame_count,
             "party_count": self.overworld.party_count,
+            // Full party roster (species/level/HP/moves/PP) so a driver
+            // can plan healing, training and switch strategy offline.
+            "party": self
+                .save_data
+                .party
+                .iter()
+                .map(|mon| {
+                    serde_json::json!({
+                        "species": format!("{:?}", mon.species),
+                        "level": mon.level,
+                        "hp": mon.hp,
+                        "max_hp": mon.max_hp,
+                        "status": format!("{:?}", mon.status),
+                        "moves": mon.moves.iter()
+                            .map(|m| format!("{:?}", m))
+                            .collect::<Vec<_>>(),
+                        "pp": mon.pp,
+                    })
+                })
+                .collect::<Vec<_>>(),
             "dialogue": dialogue,
             "dialogue_state": dialogue_state,
             "choice": choice,
@@ -4695,6 +4784,22 @@ impl PokemonGame {
             // Current battle phase (Debug form), e.g. "PlayerMenu",
             // "BagSelect", so a driver knows when a menu is ready.
             "battle_phase": format!("{:?}", self.battle.phase),
+            // Live move menu while it is open (FIGHT selection): cursor and
+            // per-slot PP. The save-data party is a battle-start snapshot —
+            // mid-battle PP drain only exists here, so a closed-loop driver
+            // must read PP (and the cursor) from this menu.
+            "battle_moves": self.battle.move_menu.as_ref().map(|mm| {
+                serde_json::json!({
+                    "cursor": mm.cursor(),
+                    "moves": mm.moves().iter().map(|m| {
+                        serde_json::json!({
+                            "move": format!("{:?}", m.move_id),
+                            "pp": m.current_pp,
+                            "disabled": m.is_disabled,
+                        })
+                    }).collect::<Vec<_>>(),
+                })
+            }),
             "money": self.save_data.game_data.player_money,
             "coins": self.save_data.game_data.player_coins,
             // Current PC-screen phase (Debug form), so a driver can
