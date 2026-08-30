@@ -4731,6 +4731,22 @@ impl PokemonGame {
             // Current battle phase (Debug form), e.g. "PlayerMenu",
             // "BagSelect", so a driver knows when a menu is ready.
             "battle_phase": format!("{:?}", self.battle.phase),
+            // Live move menu while it is open (FIGHT selection): cursor and
+            // per-slot PP. The save-data party is a battle-start snapshot —
+            // mid-battle PP drain only exists here, so a closed-loop driver
+            // must read PP (and the cursor) from this menu.
+            "battle_moves": self.battle.move_menu.as_ref().map(|mm| {
+                serde_json::json!({
+                    "cursor": mm.cursor(),
+                    "moves": mm.moves().iter().map(|m| {
+                        serde_json::json!({
+                            "move": format!("{:?}", m.move_id),
+                            "pp": m.current_pp,
+                            "disabled": m.is_disabled,
+                        })
+                    }).collect::<Vec<_>>(),
+                })
+            }),
             "money": self.save_data.game_data.player_money,
             "coins": self.save_data.game_data.player_coins,
             // Current PC-screen phase (Debug form), so a driver can

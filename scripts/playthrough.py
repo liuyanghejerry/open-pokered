@@ -434,17 +434,32 @@ class Game:
             blocked = self.npc_blocked(cm) | (warp_tiles(cm) - {(x, y)})
             path = bfs(cm, (cx, cy), (x, y), blocked=blocked)
             if not path:
+                # Learned NPC bands must never seal a map: retry with
+                # live positions only.
+                path = bfs(cm, (cx, cy), (x, y),
+                           blocked=self.live_npcs(cm)
+                           | (warp_tiles(cm) - {(x, y)}))
+            if not path:
                 raise NavError(f"no path in {cm}: ({cx},{cy})->({x},{y})")
             dirs = [d for _, d in path[1:]]
             i = 0
+            import os as _os2
             while i < len(dirs):
                 j = i
                 while j + 1 < len(dirs) and dirs[j + 1] == dirs[i]:
                     j += 1
                 tiles = j - i + 1
+                if _os2.environ.get("PT_DEBUG"):
+                    print(f"   [nto] {cm}({cx},{cy}) {dirs[i]}x{tiles} "
+                          f"[-> {x},{y}]", flush=True)
+                px0, py0 = self.pos()[1:]
                 self.d.drive([dirs[i]] * (tiles * FRAMES_PER_TILE),
                              frames=tiles * FRAMES_PER_TILE + 4)
                 i = j + 1
+                s2 = self.st()
+                if (s2["player_x"], s2["player_y"]) == (px0, py0):
+                    print(f"   [ntoPINCH] at {cm}({px0},{py0})", flush=True)
+                    self.step(60)
             self.step(8)
         raise NavError(f"nav_to({x},{y}) did not converge")
 
@@ -524,19 +539,31 @@ class Game:
                     j += 1
                 tiles = j - i + 1
                 held = tiles * FRAMES_PER_TILE
-                # Warp/connection-firing steps need the direction held at
-                # the exact step-completion frame; pad those only — a
-                # blanket tail turns 1-tile segments into 2-tile strides
-                # and 1-wide gaps become impassable oscillations.
-                idx_after = i + tiles
-                if idx_after < len(path) and (path[idx_after][0][0] != cm):
-                    # Warp/mat firing needs the direction held at the
-                    # step-completion frame; empirically a LONG hold is
-                    # needed (32+ held frames) — the fade absorbs the
-                    # surplus, and connection crossings drift ≤1 tile
-                    # (closed loop re-localizes).
-                    held += 32
-                frames = held + 8
+                # A blanket held tail turns 1-tile segments into 2-tile
+                # strides: near doors that over-runs onto the warp tile
+                # and re-warps (passing the Pewter PC door westbound did
+                # exactly that). Idle-heavy tail instead when any tile of
+                # the segment is adjacent to a warp tile.
+                # path[0] is the bare start node; the rest are
+                # (node, direction) pairs.
+                seg_start = path[i] if i == 0 else path[i][0]
+                seg_end = path[i + tiles][0]
+                near_warp = False
+                # n may be a (x, y) or (map, x, y) node depending on the
+                # BFS flavour — coordinates are always the last two.
+                for n in (seg_start, seg_end):
+                    for w in warp_tiles(cm):
+                        if abs(w[0] - n[-2]) <= 1 and abs(w[1] - n[-1]) <= 1:
+                            near_warp = True
+                if near_warp:
+                    frames = held + 16          # all-idle tail: drift-safe
+                else:
+                    # Warp/connection-firing steps need the direction held
+                    # at the step-completion frame; pad those only.
+                    idx_after = i + tiles
+                    if idx_after < len(path) and path[idx_after][0][0] != cm:
+                        held += 32
+                    frames = held + 8
                 px0, py0 = self.pos()[1:]
                 if _os.environ.get("PT_DEBUG"):
                     print(f"   [seg] {cm}({px0},{py0}) {steps[i]}x{tiles} "
@@ -754,40 +781,127 @@ class Game:
         assert self.cutscene(), "heal cutscene never finished"
         s = self.st()
         assert all(m["hp"] == m["max_hp"] for m in s["party"]), s["party"]
+        if city == "PewterCity":
+            # Go-out staged in reverse (the forest is the only link).
+            self.nav_to(18, 34, map_name="PewterCity")
+            self.d.drive(["down"] * 24, frames=28)
+            self.step(8)
+            self.nav_warp(3, 11, "Route2",
+                          "ViridianForestNorthGate", approach="down")
+            self.nav_to(5, 6, map_name="ViridianForestNorthGate")
+            self.nav_warp(5, 7, "ViridianForestNorthGate",
+                          "ViridianForest", approach="down")
+            self.nav_to(17, 46, map_name="ViridianForest")
+            self.nav_warp(17, 47, "ViridianForest",
+                          "ViridianForestSouthGate")
+            self.nav_to(4, 6, map_name="ViridianForestSouthGate")
+            self.nav_warp(4, 7, "ViridianForestSouthGate",
+                          "Route2", approach="down")
+            self.nav_to(9, 49, map_name="Route2")
         self.nav_warp(3, 7, pc, city, approach="down")
+        # We are standing ON the city door tile. Step EAST with a tail of
+        # idle frames only (any held tail would drift back onto the door
+        # and re-warp), then let normal navigation take over.
+        self.d.drive(["right"] * FRAMES_PER_TILE, frames=24)
+        self.step(6)
         # Step out of the door pocket; the city fence band can seal it.
-        try:
-            self.nav_to(26, 26, map_name=city)
-        except NavError:
-            pass
+        for _ in range(3):
+            try:
+                self.nav_to(26, 26, map_name=city)
+                break
+            except NavError:
+                self.nav_warp(3, 7, pc, city, approach="down")
+        else:
+            self.nav_to(23, 26, map_name=city)
 
     PREFERRED_MOVES = ["VineWhip", "Ember", "Bubble", "WaterGun",
                        "ThunderShock", "Absorb", "RazorLeaf", "Tackle",
                        "Scratch", "Pound"]
 
-    def _pick_move_index(self):
-        """Best move slot for the battle leader, by simple preference
-        order (STAB/typed damage first)."""
-        moves = self.leader()["moves"]
+    def _preferred_slot(self, moves):
+        """Best usable slot in the LIVE fight menu, by preference order
+        (STAB/typed damage first). Menu entries carry live PP — the
+        save-data party is a battle-start snapshot, so mid-battle PP
+        exists only here."""
         for want in self.PREFERRED_MOVES:
-            if want in moves:
-                return moves.index(want)
-        return 0
+            for i, m in enumerate(moves):
+                if m["move"] == want and m["pp"] > 0 and not m["disabled"]:
+                    return i
+        for i, m in enumerate(moves):
+            if m["pp"] > 0 and not m["disabled"]:
+                return i
+        return None
+
+    def _select_move(self):
+        """Closed-loop FIGHT-menu selection: read the live menu (cursor +
+        per-slot PP), walk the cursor to the best usable slot, press A.
+        Re-reads after every cursor step, so a stale position or a
+        rejected slot (No PP) self-corrects. Returns once the menu closes
+        (turn executing) or the battle leaves MoveSelect."""
+        for _ in range(24):
+            s = self.st()
+            if s["screen"] != "battle" or s["battle_phase"] != "MoveSelect":
+                return
+            menu = s.get("battle_moves")
+            if not menu:
+                self.step(4)
+                continue
+            moves = menu["moves"]
+            want = self._preferred_slot(moves)
+            if want is None:
+                # No usable slot: the engine refuses to open this menu
+                # (forced Struggle), so this is only a defensive exit.
+                self.tap("b", 8)
+                self.step(10)
+                return
+            n = len(moves)
+            cur = menu["cursor"]
+            if cur != want:
+                delta = (want - cur) % n
+                up = delta * 2 > n    # shorter arc; the menu wraps
+                for _ in range(n - delta if up else delta):
+                    self.d.drive(["up" if up else "down"], frames=10)
+                continue
+            self.tap("a", 4)
+            self.step(10)
 
     def leave_grass(self, map_name):
-        """Step out of the grass patch the player stands in (one tile
-        toward the nearest solid ground), so subsequent grass-avoiding
-        navigation has a non-grass start instead of being trapped."""
+        """BFS out of the grass patch to the nearest solid ground, then
+        walk the short path (wandering NPCs and wild fights may occur
+        mid-way; the caller's loop re-enters if the map changes)."""
         cm, cx, cy = self.pos()
         if cm != map_name or not is_grass(cm, cx, cy):
             return
-        for d, (dx, dy) in DELTA.items():
-            n = (cx + dx, cy + dy)
-            if walkable(cm, *n) and not is_grass(cm, *n):
-                self.d.drive([d] * FRAMES_PER_TILE, frames=12)
-                self.step(6)
-                return
-        raise NavError(f"no solid ground next to grass at {cm}({cx},{cy})")
+        path = bfs(cm, (cx, cy), None) if False else None
+        # nearest non-grass via BFS
+        from collections import deque as _dq
+        q = _dq([(cx, cy)])
+        prev = {(cx, cy): None}
+        goal = None
+        while q:
+            x0, y0 = q.popleft()
+            for d, (dx, dy) in DELTA.items():
+                n = (x0 + dx, y0 + dy)
+                if n in prev or not walkable(cm, *n):
+                    continue
+                prev[n] = ((x0, y0), d)
+                if not is_grass(cm, *n):
+                    goal = n
+                    q.clear()
+                    break
+                q.append(n)
+        if goal is None:
+            raise NavError(f"could not leave grass at {cm}({cx},{cy})")
+        dirs = []
+        cur = goal
+        while prev[cur] is not None:
+            p0, dd = prev[cur]
+            dirs.append(dd)
+            cur = p0
+        dirs.reverse()
+        for d in dirs:
+            self.d.drive([d] * FRAMES_PER_TILE, frames=16)
+        self.step(6)
 
     def train_until(self, level, map_name, spot, heal, max_cycles=400):
         """Wander over wild-encounter grass near `spot` fighting battles
@@ -820,30 +934,102 @@ class Game:
                 print(f"[train] hp {mon['hp']}/{mon['max_hp']} -> heal",
                       flush=True)
                 self.leave_grass(map_name)
+                if map_name == "Route1":
+                    # Outbound: grass -> Route1 north crossing -> city
+                    # south lane -> PC door (proven m08 corridor).
+                    self.nav_to(10, 1, map_name="Route1")
+                    self.d.drive(["up"] * 24, frames=28)
+                    self.step(8)
+                    self.nav_to(23, 26, map_name="ViridianCity")
+                elif heal[1] == "ViridianCity":
+                    # Outbound staged: grass -> Route2 south edge ->
+                    # crossing -> city north lane -> PC door.
+                    self.nav_to(8, 70, map_name="Route2")
+                    self.d.drive(["down"] * 24, frames=28)
+                    self.step(8)
+                    self.nav_to(20, 32, map_name="ViridianCity")
                 self.heal_pokecenter(*heal)
                 # Return leg staged through the patrol-free city lane
                 # (same drift-resistance as m09's gate chain).
-                if heal[1] == "ViridianCity":
+                if map_name == "Route1":
+                    # Return: city south lane -> crossing -> grass.
+                    self.nav_to(20, 32, map_name="ViridianCity")
+                    self.nav_to(20, 33, map_name="ViridianCity")
+                    self.d.drive(["down"] * 24, frames=28)
+                    self.step(8)
+                    self.nav_to(x, y, map_name, tries=120)
+                elif heal[1] == "PewterCity":
+                    # Return through the forest corridor in reverse — the
+                    # only link between Route 2's sections. Staged gates
+                    # (mirror of m09) instead of cross-BFS: the engine's
+                    # last_map stays Route2 through the whole chain, so
+                    # every mat fires deterministically.
+                    self.nav_to(18, 34, map_name="PewterCity")
+                    self.d.drive(["down"] * 24, frames=28)   # S connection
+                    self.step(8)
+                    self.nav_warp(3, 11, "Route2",
+                                  "ViridianForestNorthGate",
+                                  approach="down")
+                    self.nav_to(5, 6, map_name="ViridianForestNorthGate")
+                    self.nav_warp(5, 7, "ViridianForestNorthGate",
+                                  "ViridianForest", approach="down")
+                    self.nav_to(17, 46, map_name="ViridianForest")
+                    self.nav_warp(17, 47, "ViridianForest",
+                                  "ViridianForestSouthGate")
+                    self.nav_to(4, 6, map_name="ViridianForestSouthGate")
+                    self.nav_warp(4, 7, "ViridianForestSouthGate",
+                                  "Route2", approach="down")
+                    self.nav_to(x, y, map_name, tries=120)
+                elif heal[1] == "ViridianCity":
                     self.nav_to(20, 32, map_name="ViridianCity")
                     self.nav_to(18, 1, map_name="ViridianCity")
-                # Return leg: generous budget (crossing + Route2 shuffle
-                # under learned NPC-avoid set; retries absorb NPC timing).
-                try:
-                    self.nav_to_map(x, y, map_name, tries=450)
-                except NavError:
-                    self.step(300)
-                    self.nav_to_map(x, y, map_name, tries=450)
+                    self.d.drive(["up"] * 24, frames=28)   # N connection
+                    self.step(8)
+                    self.nav_to(x, y, map_name, tries=120)
+                else:
+                    try:
+                        self.nav_to_map(x, y, map_name, tries=450)
+                    except NavError:
+                        self.step(300)
+                        self.nav_to_map(x, y, map_name, tries=450)
                 continue
             # wander: a vertical shuttle over the grass; wilds interrupt
             cm, cx, cy = self.pos()
             if cm != map_name:
-                # Return leg: generous budget (crossing + Route2 shuffle
-                # under learned NPC-avoid set; retries absorb NPC timing).
-                try:
-                    self.nav_to_map(x, y, map_name, tries=450)
-                except NavError:
-                    self.step(300)
-                    self.nav_to_map(x, y, map_name, tries=450)
+                # Lost the map (blackout or a battle drift): stage the
+                # return from wherever we are, same drift-proof pattern.
+                if cm == "PewterCity":
+                    self.nav_to(18, 34, map_name="PewterCity")
+                    self.d.drive(["down"] * 24, frames=28)
+                    self.step(8)
+                    self.nav_warp(3, 11, "Route2",
+                                  "ViridianForestNorthGate",
+                                  approach="down")
+                    self.nav_to(5, 6, map_name="ViridianForestNorthGate")
+                    self.nav_warp(5, 7, "ViridianForestNorthGate",
+                                  "ViridianForest", approach="down")
+                    self.nav_to(17, 46, map_name="ViridianForest")
+                    self.nav_warp(17, 47, "ViridianForest",
+                                  "ViridianForestSouthGate")
+                    self.nav_to(4, 6, map_name="ViridianForestSouthGate")
+                    self.nav_warp(4, 7, "ViridianForestSouthGate",
+                                  "Route2", approach="down")
+                    self.nav_to(x, y, map_name, tries=120)
+                elif cm == "ViridianCity":
+                    self.nav_to(20, 32, map_name="ViridianCity")
+                    self.nav_to(18, 1, map_name="ViridianCity")
+                    self.d.drive(["up"] * 24, frames=28)
+                    self.step(8)
+                    self.nav_to(x, y, map_name, tries=120)
+                else:
+                    # Blackout at home / elsewhere: generic re-route with
+                    # a generous budget (rare path; the closed loop wins
+                    # eventually via the staged city legs).
+                    try:
+                        self.nav_to_map(x, y, map_name, tries=450)
+                    except NavError:
+                        self.step(300)
+                        self.nav_to_map(x, y, map_name, tries=450)
                 continue
             dy = 4 if cy <= y else -4
             self.d.drive(["down" if dy > 0 else "up"] * 32, frames=36)
@@ -884,23 +1070,13 @@ class Game:
                     self.tap("a", 4)                          # open FIGHT
                     if not self._await_phase("MoveSelect", 120):
                         continue               # text ate the press; retry
-                    want = self._pick_move_index()
-                    if want:                   # cursor 0 -> slot `want`
-                        self.d.drive(["up"] * 4, frames=8)    # clamp to 0
-                        for _ in range(want):
-                            self.d.drive(["down"], frames=12)
-                    self.tap("a", 4)                          # use move
+                    self._select_move()
                 else:
                     self.d.drive(["down", "right"], frames=10)  # -> RUN
                     self.tap("a", 4)                            # try escape
                 self.step(30)
             elif ph == "MoveSelect":
-                want = self._pick_move_index()
-                if want:
-                    self.d.drive(["up"] * 4, frames=8)
-                    for _ in range(want):
-                        self.d.drive(["down"], frames=12)
-                self.tap("a", 4)
+                self._select_move()
                 self.step(30)
             elif ph == "ShiftPrompt":
                 self.tap("a", 8)               # default = switch in
@@ -1072,22 +1248,84 @@ def m10_brock(g):
     """Grind to Vine Whip (L13) in Route 2 grass, heal, then beat Brock
     for the BOULDERBADGE."""
     g.evidence("m10-arrived")
-    heal = ((13, 25), "PewterCity", "PewterPokecenter")
-    g.heal_pokecenter(*heal)                 # register pokecenter for blackouts
-    assert g.train_until(13, "Route2", (10, 50), heal), "training stalled"
+    # Heal at VIRIDIAN, not Pewter: Route 2's south section connects
+    # straight to Viridian City (proven corridor, no forest gates), so
+    # the training round trip stays short and deterministic.
+    heal = ((23, 25), "ViridianCity", "ViridianPokecenter")
+    # Relocate to the Route 1 training grass next to Viridian: the only
+    # long walk is the reverse forest chain; training/heal round trips
+    # stay on the proven Viridian corridor.
+    forest_corridor_back(g)
+    g.nav_to(8, 70, map_name="Route2")
+    g.d.drive(["down"] * 24, frames=28)   # -> city north border (18,0)
+    g.step(8)
+    g.nav_to(18, 1, map_name="ViridianCity")
+    g.nav_to(20, 32, map_name="ViridianCity")
+    g.nav_to(20, 33, map_name="ViridianCity")
+    g.d.drive(["down"] * 24, frames=28)
+    g.step(8)
+    g.nav_to(12, 7, map_name="Route1")
+    assert g.train_until(13, "Route1", (12, 7), heal), "training stalled"
     g.evidence("m10-trained")
-    g.heal_pokecenter(*heal)
-    g.nav_to_map(16, 18, "PewterCity")       # below the gym door (16,17)
-    g.nav_warp(16, 17, "PewterCity", "PewterGym")
-    g.nav_to(4, 2, map_name="PewterGym")     # below Brock (4,1)
-    g.face("up")
-    g.tap("a", 20)                           # Brock's challenge speech
-    assert g.cutscene(), "Brock challenge cutscene never finished"
-    g.wait("screen=battle", 900)
-    g.battle_loop(prefer="fight")
-    g.wait("not_battle", 1800)
-    assert g.cutscene(), "badge ceremony never finished"
-    g.evidence("m10")
+    # Gym attempts: a loss blacks out to the Viridian fly point (the last
+    # heal), so each retry is the same heal -> corridor -> gym chain. The
+    # badge flag — not the battle outcome — is the success check.
+    for attempt in range(3):
+        g.heal_pokecenter(*heal)
+        # Stage the town hop: city north crossing -> forest corridor (m09
+        # outbound chain) -> Pewter. Cross-BFS town hops drift; the chain
+        # is the verified path.
+        g.nav_to(20, 32, map_name="ViridianCity")
+        g.nav_to(18, 1, map_name="ViridianCity")
+        g.d.drive(["up"] * 24, frames=28)    # N connection -> Route2 (8,71)
+        g.step(8)
+        forest_corridor_out(g)
+        g.nav_to_map(16, 18, "PewterCity")   # below the gym door (16,17)
+        g.nav_warp(16, 17, "PewterCity", "PewterGym")
+        g.nav_to(4, 2, map_name="PewterGym")  # below Brock (4,1)
+        g.face("up")
+        g.tap("a", 20)                        # Brock's challenge speech
+        assert g.cutscene(), "Brock challenge cutscene never finished"
+        g.wait("screen=battle", 900)
+        g.battle_loop(prefer="fight")
+        g.wait("not_battle", 1800)
+        assert g.cutscene(), "badge ceremony never finished"
+        flags = g.d.cmd(cmd="get_flags")["data"]
+        if flags.get("EVENT_BEAT_BROCK"):
+            g.evidence("m10")
+            return
+        print(f"[m10] attempt {attempt + 1} lost — blacked out, retrying",
+              flush=True)
+    raise NavError("Brock never beaten in 3 attempts")
+
+
+def forest_corridor_out(g):
+    """Overworld Route2-south -> forest gates -> Route2-north (m09's
+    verified chain, shared by the m10 heal round trips)."""
+    g.nav_to_map(3, 44, "Route2")
+    g.nav_warp(3, 43, "Route2", "ViridianForestSouthGate")
+    g.nav_to(5, 1, map_name="ViridianForestSouthGate")
+    g.nav_warp(5, 0, "ViridianForestSouthGate", "ViridianForest")
+    g.nav_to(1, 1, map_name="ViridianForest")
+    g.nav_warp(1, 0, "ViridianForest", "ViridianForestNorthGate")
+    g.nav_to(5, 1, map_name="ViridianForestNorthGate")
+    g.nav_warp(5, 0, "ViridianForestNorthGate", "Route2")
+
+
+def forest_corridor_back(g):
+    """PewterCity -> south crossing -> NorthGate -> forest -> SouthGate ->
+    Route2 south (the m09 chain in reverse; used by m10's relocation)."""
+    g.nav_to(18, 34, map_name="PewterCity")
+    g.d.drive(["down"] * 24, frames=28)
+    g.step(8)
+    g.nav_warp(3, 11, "Route2", "ViridianForestNorthGate", approach="down")
+    g.nav_to(5, 6, map_name="ViridianForestNorthGate")
+    g.nav_warp(5, 7, "ViridianForestNorthGate", "ViridianForest",
+               approach="down")
+    g.nav_to(17, 46, map_name="ViridianForest")
+    g.nav_warp(17, 47, "ViridianForest", "ViridianForestSouthGate")
+    g.nav_to(4, 6, map_name="ViridianForestSouthGate")
+    g.nav_warp(4, 7, "ViridianForestSouthGate", "Route2", approach="down")
 
 
 MILESTONES = [
