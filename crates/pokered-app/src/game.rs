@@ -283,7 +283,9 @@ struct PendingTrade {
 
 /// Writes each rendered frame to `dir/frame-NNNNNN.png` — the capture half
 /// of `run --record-frames`. The buffer is reused across frames; PNG
-/// encoding is the only per-frame cost.
+/// encoding is the only per-frame cost. For full-run video prefer
+/// `--record-video`, which streams raw frames to ffmpeg and leaves no
+/// intermediate files behind.
 #[cfg(not(target_arch = "wasm32"))]
 pub struct FrameRecorder {
     dir: PathBuf,
@@ -309,6 +311,123 @@ impl FrameRecorder {
             log::warn!("frame recorder: failed to write {}: {}", path.display(), e);
         }
         self.next += 1;
+    }
+}
+
+/// Streams raw RGBA frames into a spawned `ffmpeg` process — the capture
+/// half of `run --record-video`. Same every-update cadence as
+/// `FrameRecorder`, but skips the per-frame PNG encode and the thousands of
+/// intermediate files: ffmpeg reads `pipe:0` and encodes H.264 as the game
+/// runs, so the .mp4 is finished when the game exits. ffmpeg's stderr is
+/// inherited at `-loglevel error`, so only real errors surface.
+#[cfg(not(target_arch = "wasm32"))]
+pub struct VideoRecorder {
+    child: std::process::Child,
+    /// Option solely so Drop can close the pipe before waiting on ffmpeg.
+    stdin: Option<std::process::ChildStdin>,
+    fb: FrameBuffer,
+    /// Scratch for the display-palette RGBA expansion (`to_rgba`), reused
+    /// across frames.
+    rgba: Vec<u8>,
+    frames: u64,
+    /// Set once the pipe breaks (ffmpeg died): recording stops but the game
+    /// keeps running.
+    broken: bool,
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+impl VideoRecorder {
+    pub fn new(path: &Path, fps: u32) -> std::io::Result<Self> {
+        if fps == 0 {
+            return Err(std::io::Error::new(
+                std::io::ErrorKind::InvalidInput,
+                "--record-video-fps must be > 0",
+            ));
+        }
+        if let Some(parent) = path.parent() {
+            std::fs::create_dir_all(parent)?;
+        }
+        let mut child = std::process::Command::new("ffmpeg")
+            .args([
+                "-y",
+                "-loglevel",
+                "error",
+                "-f",
+                "rawvideo",
+                "-pix_fmt",
+                "rgba",
+                "-s",
+                "160x144",
+                "-framerate",
+                &fps.to_string(),
+                "-i",
+                "pipe:0",
+                "-an",
+                "-r",
+                "60",
+                "-c:v",
+                "libx264",
+                "-pix_fmt",
+                "yuv420p",
+                "-crf",
+                "20",
+                "-movflags",
+                "+faststart",
+            ])
+            .arg(path)
+            .stdin(std::process::Stdio::piped())
+            .spawn()?;
+        let stdin = child
+            .stdin
+            .take()
+            .ok_or_else(|| std::io::Error::other("failed to open ffmpeg stdin"))?;
+        Ok(Self {
+            child,
+            stdin: Some(stdin),
+            fb: FrameBuffer::new(RenderConfig::new(160, 144), Rgba::WHITE),
+            rgba: vec![0; 160 * 144 * 4],
+            frames: 0,
+            broken: false,
+        })
+    }
+
+    fn capture(&mut self, game: &mut PokemonGame) {
+        if self.broken {
+            return;
+        }
+        game.draw(&mut self.fb);
+        self.fb.to_rgba(&mut self.rgba);
+        use std::io::Write;
+        let stdin = self.stdin.as_mut().expect("stdin open until Drop");
+        if let Err(e) = stdin.write_all(&self.rgba) {
+            eprintln!(
+                "VideoRecorder: ffmpeg pipe broke after {} frames: {}; recording stopped",
+                self.frames, e
+            );
+            self.broken = true;
+            return;
+        }
+        self.frames += 1;
+    }
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+impl Drop for VideoRecorder {
+    fn drop(&mut self) {
+        // Closing stdin signals EOF; ffmpeg then flushes the encoder and
+        // rewrites the moov atom (faststart) before exiting.
+        drop(self.stdin.take());
+        match self.child.wait() {
+            Ok(status) if status.success() => eprintln!(
+                "VideoRecorder: finalized video ({} frames written)",
+                self.frames
+            ),
+            Ok(status) => eprintln!(
+                "VideoRecorder: ffmpeg exited with {} after {} frames",
+                status, self.frames
+            ),
+            Err(e) => eprintln!("VideoRecorder: failed to wait on ffmpeg: {}", e),
+        }
     }
 }
 
@@ -408,6 +527,11 @@ pub struct PokemonGame {
     /// runs can be assembled into video offline.
     #[cfg(not(target_arch = "wasm32"))]
     pub frame_recorder: Option<FrameRecorder>,
+    /// Per-frame video recorder (`--record-video`): same capture cadence as
+    /// `frame_recorder`, but streams raw RGBA into a spawned ffmpeg process
+    /// instead of writing one PNG per frame.
+    #[cfg(not(target_arch = "wasm32"))]
+    pub video_recorder: Option<VideoRecorder>,
     /// Consecutive frames A+B+Start+Select have all been held — the original's
     /// soft-reset combo (engine/joypad.asm `_Joypad`/`TrySoftReset`, 16 frames
     /// of PAD_BUTTONS held → `SoftReset`).
@@ -865,6 +989,8 @@ impl PokemonGame {
             debug_input: InputState::new(),
             #[cfg(not(target_arch = "wasm32"))]
             frame_recorder: None,
+            #[cfg(not(target_arch = "wasm32"))]
+            video_recorder: None,
             soft_reset_frames: 0,
             save_path,
             #[cfg(not(target_arch = "wasm32"))]
@@ -975,6 +1101,8 @@ impl PokemonGame {
             debug_input: InputState::new(),
             #[cfg(not(target_arch = "wasm32"))]
             frame_recorder: None,
+            #[cfg(not(target_arch = "wasm32"))]
+            video_recorder: None,
             startup_warp: None,
             soft_reset_frames: 0,
             save_path: None,
@@ -2194,14 +2322,19 @@ impl PokemonGame {
 
     pub fn update(&mut self, input: &InputState) {
         self.update_inner(input);
-        // Per-frame recorder (`--record-frames`): capture AFTER the frame's
-        // logic ran, and do it here rather than inside the update body so
-        // every frame lands — early returns, real-time loop and synchronous
-        // step_frames bursts alike.
+        // Per-frame recorders (`--record-frames` / `--record-video`):
+        // capture AFTER the frame's logic ran, and do it here rather than
+        // inside the update body so every frame lands — early returns,
+        // real-time loop and synchronous step_frames bursts alike.
         #[cfg(not(target_arch = "wasm32"))]
         if let Some(mut rec) = self.frame_recorder.take() {
             rec.capture(self);
             self.frame_recorder = Some(rec);
+        }
+        #[cfg(not(target_arch = "wasm32"))]
+        if let Some(mut rec) = self.video_recorder.take() {
+            rec.capture(self);
+            self.video_recorder = Some(rec);
         }
     }
 

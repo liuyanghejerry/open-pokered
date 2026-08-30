@@ -108,8 +108,22 @@ pub enum Commands {
         /// Driven runs (debug-server step_frames bursts included) can then be
         /// assembled into video offline, e.g.:
         /// `ffmpeg -framerate 240 -i frame-%06d.png -r 60 out.mp4`.
+        /// For full-run video prefer --record-video, which needs no
+        /// intermediate files.
         #[arg(long)]
         record_frames: Option<PathBuf>,
+        /// Record every frame to FILE as H.264 video by streaming raw frames
+        /// into a spawned ffmpeg process (must be on PATH). Same capture
+        /// cadence as --record-frames but without the per-frame PNG encode
+        /// or the thousands of intermediate files: the .mp4 is finalized
+        /// when the game exits.
+        #[arg(long, conflicts_with = "record_frames")]
+        record_video: Option<PathBuf>,
+        /// Game frames per second of --record-video playback time. The game
+        /// runs at 60 fps, so 240 plays back at 4× real-time; the output is
+        /// resampled to 60 fps.
+        #[arg(long, default_value = "240", requires = "record_video")]
+        record_video_fps: u32,
     },
     /// Export the current save file (or a specified .sav) as a JSON snapshot
     ExportSnapshot {

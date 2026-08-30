@@ -127,6 +127,8 @@ fn main() {
             ref screenshot,
             screenshot_frames,
             ref record_frames,
+            ref record_video,
+            record_video_fps,
         }) => {
             // Merge debug_port from the Run subcommand with the global flag.
             let effective_debug_port = debug_port.or(cli.debug_port);
@@ -200,6 +202,27 @@ fn main() {
                     }
                     Err(e) => {
                         eprintln!("Error: cannot create frame dir {}: {}", dir.display(), e);
+                        std::process::exit(1);
+                    }
+                }
+            }
+            #[cfg(not(target_arch = "wasm32"))]
+            if let Some(ref path) = record_video {
+                match crate::game::VideoRecorder::new(path, record_video_fps) {
+                    Ok(rec) => {
+                        eprintln!(
+                            "Recording video to {} ({} game frames per video second)",
+                            path.display(),
+                            record_video_fps
+                        );
+                        game.video_recorder = Some(rec);
+                    }
+                    Err(e) => {
+                        eprintln!(
+                            "Error: cannot start ffmpeg for --record-video {}: {}",
+                            path.display(),
+                            e
+                        );
                         std::process::exit(1);
                     }
                 }
