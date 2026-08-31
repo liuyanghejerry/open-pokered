@@ -8,6 +8,7 @@
 use pokered_core::game_state::Lang;
 use pokered_core::slots_screen::{symbol_label, SlotsPhase, SlotsScreen};
 use pokered_data::lang_data;
+use pokered_data::ui_text::{zh_slot_symbol, zh_slots_message};
 use pokered_renderer::embedded_font::{draw_text, draw_text_scaled, measure_text};
 use pokered_renderer::{FrameBuffer, Rgba};
 
@@ -31,46 +32,6 @@ fn outline_rect(fb: &mut FrameBuffer, x: u32, y: u32, w: u32, h: u32, color: Rgb
     fill_rect(fb, x + w.saturating_sub(1), y, 1, h, color);
 }
 
-/// Display label for a reel symbol (core symbols stay as-is; names get a
-/// Chinese label). The core `symbol_label` strings are state-machine data —
-/// this render-layer mapping only affects what the player sees.
-fn zh_slot_symbol(label: &str) -> String {
-    match label {
-        "  7 " | "BAR " => label.to_string(),
-        "CHER" => "樱桃".to_string(),
-        "FISH" => "鱼".to_string(),
-        "BIRD" => "鸟".to_string(),
-        "MOUS" => "老鼠".to_string(),
-        _ => label.to_string(),
-    }
-}
-
-/// Status-line translation for the messages produced by
-/// `pokered_core::slots_screen` (display-layer only — the core strings are
-/// untouched).
-fn zh_slots_message(msg: &str, is_zh: bool) -> String {
-    if !is_zh {
-        return msg.to_string();
-    }
-    match msg {
-        "BET 1-3 COINS" => "下注1-3个代币".to_string(),
-        "OUT OF COINS!" => "代币用完了！".to_string(),
-        "STOP THE REELS!" => "停止转轮！".to_string(),
-        "NO MATCH..." => "没有中奖……".to_string(),
-        _ => {
-            if let Some(n) = msg.strip_prefix("WIN! ").and_then(|s| s.strip_suffix(" COINS")) {
-                return format!("中了！{}个代币", n);
-            }
-            if let Some(n) = msg
-                .strip_prefix("BET ")
-                .and_then(|s| s.strip_suffix(" COINS").or_else(|| s.strip_suffix(" COIN")))
-            {
-                return format!("下注{}个代币", n);
-            }
-            msg.to_string()
-        }
-    }
-}
 
 /// Draw the whole slots screen to the 160x144 framebuffer.
 pub fn draw_slots(slots: &SlotsScreen, fb: &mut FrameBuffer, lang: Lang) {
