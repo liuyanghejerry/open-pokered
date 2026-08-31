@@ -21,7 +21,7 @@ use pokered_renderer::sprite::SpriteLayer;
 use pokered_renderer::text_renderer::{write_tiles_at, ScreenTileBuffer};
 use pokered_renderer::textbox::TextBoxFrame;
 use pokered_renderer::tile::{Tile, TileSet, TILE_PIXELS};
-use pokered_renderer::embedded_font::{draw_text, measure_text};
+use pokered_renderer::embedded_font::draw_text;
 use pokered_renderer::{FrameBuffer, Rgba, TILE_SIZE};
 use pokered_ui::backends::FrameBufferPainter;
 use pokered_ui::{menus, Ui};
@@ -2524,18 +2524,22 @@ pub fn draw_battle(
 
         // Chinese HUD names: the tile-based HUD cannot render CJK glyphs, so
         // the names are drawn with the pixel font here, after the tilemap and
-        // sprite/panel re-blits, centered in each HUD box.
+        // sprite/panel re-blits. Left-aligned at the HUD name origin — centering
+        // pushes 3+ char names right onto the "Lv" column below (CJK glyphs are
+        // 10px tall and their lower edge grazes the level row).
         if is_zh {
             let text_color = Rgba::new(0, 0, 0, 255);
             if !hide_enemy_hud {
-                let w = measure_text(&enemy_name);
-                let x = ((12 * TILE_SIZE).saturating_sub(w)) / 2;
-                draw_text(&enemy_name, x, 0, text_color, fb);
+                draw_text(&enemy_name, EnemyHud::NAME_X * TILE_SIZE, 0, text_color, fb);
             }
             if !hide_player_hud {
-                let w = measure_text(&player_name);
-                let x = 9 * TILE_SIZE + ((11 * TILE_SIZE).saturating_sub(w)) / 2;
-                draw_text(&player_name, x, 7 * TILE_SIZE, text_color, fb);
+                draw_text(
+                    &player_name,
+                    PlayerHud::NAME_X * TILE_SIZE,
+                    PlayerHud::NAME_Y * TILE_SIZE,
+                    text_color,
+                    fb,
+                );
             }
         }
 
