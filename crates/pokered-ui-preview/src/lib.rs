@@ -1935,20 +1935,23 @@ mod tests {
     // title/name box, letter rows spaced 2 apart, pinyin buffer/candidate rows
     // reflowed) plus the underscore-tile rendering fix in
     // pokered-ui::backends::framebuffer — output verified by eye.
-    const GOLDEN_MAIN: u64                 = 0x555c2241622d304c;
-    const GOLDEN_START: u64                = 0xc6b47deb954abba5;
+    // NOTE: all cursor-bearing screens re-recorded after the dotzuki-renderer
+    // v0.5.6 bump — the ▶ fallback bitmap moved to the text ink center
+    // (dotzuki#57). dialog/pokedex/oak_speech have no ▶ and are unchanged.
+    const GOLDEN_MAIN: u64                 = 0x6d264a1f2185a9e4;
+    const GOLDEN_START: u64                = 0x14141abf1066dced;
     const GOLDEN_DIALOG: u64               = 0x70fcd165c797e06c;
-    const GOLDEN_BATTLE_MOVE: u64          = 0x056c79ac4b7cba74;
-    const GOLDEN_BAG: u64                  = 0x7bf0b1c7855dd23d;
-    const GOLDEN_BATTLE_BAG: u64           = 0xcbae1996d0bdd27c;
+    const GOLDEN_BATTLE_MOVE: u64          = 0xe4fd67084d932d0c;
+    const GOLDEN_BAG: u64                  = 0xbc4c4e5e4871a905;
+    const GOLDEN_BATTLE_BAG: u64           = 0x4faac6aa8e169e94;
     const GOLDEN_POKEDEX: u64              = 0xa57ba6970d36f9ed;
-    const GOLDEN_YES_NO: u64               = 0x1e909ba6b5d931c5;
+    const GOLDEN_YES_NO: u64               = 0x8d281b17ab10370d;
     const GOLDEN_OAK_SPEECH: u64           = 0x7a144f18ff89940c;
-    const GOLDEN_SAVE: u64                 = 0xa62187784cbe4dc5;
-    const GOLDEN_OPTIONS: u64              = 0xcb4d404c05f57d94;
-    const GOLDEN_NAMING: u64               = 0xbb00f08b6b7ebb65;
-    const GOLDEN_BATTLE_MAIN: u64          = 0xf3505dc326671255;
-    const GOLDEN_BATTLE_PARTY: u64         = 0xda6a7ef34b8a8574;
+    const GOLDEN_SAVE: u64                 = 0x8221fed84c678b5d;
+    const GOLDEN_OPTIONS: u64              = 0x68f3c06ddf787f3c;
+    const GOLDEN_NAMING: u64               = 0x685ded37c5a7bd5d;
+    const GOLDEN_BATTLE_MAIN: u64          = 0x321da02cc038553d;
+    const GOLDEN_BATTLE_PARTY: u64         = 0x957e7c99f7c6b3bc;
 
     macro_rules! assert_golden {
         ($name:expr, $mock:expr, $golden:ident) => {
