@@ -82,7 +82,7 @@ POKeMON.", "好的，请把宝可梦交给我。")
   @storyline("talkClerk") {
     @trigger(map = "IndigoPlateauLobby", npc = 4)
     @say("") { @t("Hi there!\n\nMay I help you?", "你好！\n\n需要帮忙吗？") }
-    openShop(["Ultra Ball", "Great Ball", "Full Restore", "Max Potion", "Full Heal", "Revive", "Max Repel"])
+    openShop(["ULTRA_BALL", "GREAT_BALL", "FULL_RESTORE", "MAX_POTION", "FULL_HEAL", "REVIVE", "MAX_REPEL"])
   }
 
   // ── Link Receptionist (npc 5) — script_cable_club_receptionist ───────────

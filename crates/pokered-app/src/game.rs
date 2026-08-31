@@ -23,7 +23,7 @@ use pokered_core::data::wild_data::GameVersion;
 use pokered_core::game_state::{GameScreen, GameState, SaveFileSummary, ScreenAction};
 use pokered_core::gamefreak_splash::{GameFreakSplashState, SplashInput};
 use pokered_core::intro_scene::IntroSceneState;
-use pokered_core::items::{MartUpdate, PlayerData, ShopInventory, SoundId};
+use pokered_core::items::{MartUpdate, PlayerData, SoundId};
 use pokered_core::intro_scene::IntroSfxEvent;
 use pokered_core::main_menu::{MainMenuState, MenuInput};
 use pokered_core::naming_screen::NamingInput;
@@ -3279,7 +3279,7 @@ impl PokemonGame {
                     }
 
                     if let Some(shop_items) = self.overworld.pending_shop.take() {
-                        match ShopInventory::from_strings(&shop_items) {
+                        match pokered_core::items::shop_stock_from_script_names(&shop_items) {
                             Ok(inv) => {
                                 let mart = pokered_core::items::MartState::new(inv);
                                 ScreenAction::Transition(GameScreen::Shop(mart))

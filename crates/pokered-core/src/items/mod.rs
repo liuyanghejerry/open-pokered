@@ -9,8 +9,8 @@ pub mod use_engine;
 pub mod vitamins;
 
 pub use shop::{
-    BuyMenuState, BuyResult, ConfirmChoice, MartPhase, MartState, MartTopChoice, MartUpdate,
-    PlayerData, SellMenuState, SellResult, ShopInventory, SoundId,
+    shop_stock_from_script_names, BuyMenuState, BuyResult, ConfirmChoice, MartPhase, MartState,
+    MartTopChoice, MartUpdate, PlayerData, SellMenuState, SellResult, ShopInventory, SoundId,
 };
 
 #[cfg(test)]

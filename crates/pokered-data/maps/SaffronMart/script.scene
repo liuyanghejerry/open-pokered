@@ -10,7 +10,7 @@ game_scene SaffronMart {
   @storyline("talkClerk") {
     @trigger(map = "SaffronMart", npc = 1)
     @say("") { @t("Hi there!\n\nMay I help you?", "你好！\n\n需要帮忙吗？") }
-    openShop(["GreatBall", "HyperPotion", "MaxRepel", "EscapeRope", "FullHeal", "Revive"])
+    openShop(["GREAT_BALL", "HYPER_POTION", "MAX_REPEL", "ESCAPE_ROPE", "FULL_HEAL", "REVIVE"])
   }
 
   // ── Super Nerd (npc 2) — dialogue only ───────────────────────────────────

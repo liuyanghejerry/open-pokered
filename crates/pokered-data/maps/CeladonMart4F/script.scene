@@ -9,7 +9,7 @@ game_scene CeladonMart4F {
   @storyline("talkClerk") {
     @trigger(map = "CeladonMart4F", npc = 1)
     @say("") { @t("Hi there!\n\nMay I help you?", "你好！\n\n需要帮忙吗？") }
-    openShop(["PokeDoll", "FireStone", "ThunderStone", "WaterStone", "LeafStone"])
+    openShop(["POKE_DOLL", "FIRE_STONE", "THUNDER_STONE", "WATER_STONE", "LEAF_STONE"])
   }
 
   // ── SuperNerd (npc 2) ──────────────────────────────────────────────────
