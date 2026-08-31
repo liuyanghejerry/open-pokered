@@ -465,3 +465,92 @@ fn elevator_shake_params_values() {
     assert_eq!(params.iterations, 100);
     assert_eq!(params.pixel_offset, 1);
 }
+
+// ── Door-mat exit after warp arrival (e2e) ──────────────────────────
+
+use super::screen::{OverworldScreen, WarpFadeState};
+use super::OverworldInput;
+use pokered_data::impl_traits::PokemonRedData;
+
+fn no_input() -> OverworldInput {
+    OverworldInput::new(false, false, false, false, false, false, false, false)
+}
+
+fn held_up() -> OverworldInput {
+    OverworldInput::new(true, false, false, false, false, false, false, false)
+}
+
+fn held_down() -> OverworldInput {
+    OverworldInput::new(false, true, false, false, false, false, false, false)
+}
+
+/// Regression: a warp ARRIVAL that lands the player on a warp tile (door
+/// mat / exit carpet) must keep the about-face exit armed.
+/// `commit_pending_warp` used to clear `standing_on_warp`, and the flag is
+/// otherwise only set when a step completes onto a warp position — so
+/// pressing toward the map edge on the arrival mat never fired
+/// CheckWarpsCollision and the player was stuck until stepping off the mat
+/// and back onto it.
+#[test]
+fn e2e_door_mat_aboutface_exit_after_warp_arrival() {
+    let mut screen = OverworldScreen::new(MapId::PalletTown, None, PokemonRedData);
+    screen.state.player.x = 5;
+    screen.state.player.y = 6;
+    screen.state.player.facing = Direction::Up;
+
+    // Walk up through the door, then ride out the fade with no input.
+    for _ in 0..8 {
+        screen.update_frame(held_up());
+    }
+    for _ in 0..120 {
+        screen.update_frame(no_input());
+        if screen.state.current_map == MapId::RedsHouse1F
+            && matches!(screen.warp_fade_state, WarpFadeState::Idle)
+        {
+            break;
+        }
+    }
+    assert_eq!(screen.state.current_map, MapId::RedsHouse1F);
+    assert_eq!(
+        (screen.state.player.x, screen.state.player.y),
+        (2, 7),
+        "entry warp lands on the exit mat"
+    );
+
+    // About-face: hold DOWN toward the map edge — must warp back out.
+    for _ in 0..120 {
+        screen.update_frame(held_down());
+        if screen.state.current_map == MapId::PalletTown {
+            break;
+        }
+    }
+    assert_eq!(
+        screen.state.current_map,
+        MapId::PalletTown,
+        "about-face exit must fire from the arrival mat"
+    );
+}
+
+/// Control: arriving on a non-warp tile must leave `standing_on_warp` clear,
+/// so no stale collision-warp can fire from a neighbouring tile.
+#[test]
+fn e2e_warp_arrival_off_mat_does_not_arm_exit() {
+    let mut screen = OverworldScreen::new(MapId::PalletTown, None, PokemonRedData);
+    // The new-game spawn in RedsHouse2F (3,6) is not a warp tile.
+    screen.pending_warp = Some(super::screen::PendingWarp {
+        dest_map: MapId::RedsHouse2F,
+        dest_x: 3,
+        dest_y: 6,
+        save_last_map: false,
+        arrival_spin: false,
+    });
+    screen.warp_fade_state = WarpFadeState::BlackScreen;
+
+    screen.update_frame(no_input()); // commits the warp, starts the fade-in
+
+    assert_eq!(screen.state.current_map, MapId::RedsHouse2F);
+    assert!(
+        !screen.state.standing_on_warp,
+        "arrival off the warp tile must not arm the exit"
+    );
+}
