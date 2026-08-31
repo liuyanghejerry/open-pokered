@@ -2101,6 +2101,22 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                 }
             }
 
+            // Re-arm standing_on_warp for the arrival tile. The flag is only
+            // (re)set when a step completes onto a warp position, but a warp
+            // ARRIVAL can also land the player on one (door mats / exit
+            // carpets) — and CheckWarpsCollision's push-against-the-edge exit
+            // only fires while the flag is set. Without this, arriving on a
+            // mat and pressing toward the exit never warps: the player is
+            // stuck until they step off the mat and back onto it.
+            if let Some(map) = &self.map_data {
+                self.state.standing_on_warp = collision::check_warp_at_position(
+                    self.state.player.x,
+                    self.state.player.y,
+                    map,
+                )
+                .is_some();
+            }
+
             // EnterMapAnim (player_animations.asm:1-91): FLY / TELEPORT /
             // DIG / ESCAPE ROPE / dungeon-warp arrivals spin the player in
             // from off the top of the screen after the fade-in-from-white.
