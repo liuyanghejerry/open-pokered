@@ -129,6 +129,7 @@ fn main() {
             ref record_frames,
             ref record_video,
             record_video_fps,
+            lang,
         }) => {
             // Merge debug_port from the Run subcommand with the global flag.
             let effective_debug_port = debug_port.or(cli.debug_port);
@@ -175,6 +176,8 @@ fn main() {
             let mut game = PokemonGame::new_with_options(version, save, snapshot, cli.scripts_dir, skip_intro, warp, cli.watch, no_audio, debug_handle);
             #[cfg(not(feature = "debug-server"))]
             let mut game = PokemonGame::new_with_options(version, save, snapshot, cli.scripts_dir, skip_intro, warp, cli.watch, no_audio);
+            // Text language for this run (menus / battle text / scene dialogue).
+            crate::tools::apply_lang(&mut game, lang.to_lang());
             attach_link(&mut game, cli.link_listen, cli.link_connect.clone());
             if let Some(ref shot) = screenshot {
                 // Offscreen capture of the startup state (--save/--snapshot/

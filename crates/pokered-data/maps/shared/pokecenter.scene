@@ -7,31 +7,32 @@
 // `talkNurse` / `talkLinkReceptionist` resolve for any map whose own
 // `script.scene` does not define them.
 //
-// Text is byte-for-byte the original English module — do not localize here
-// without also updating `pokecenter.js` (the Boa path) to keep both paths
-// identical.
+// The English side of every `@t(...)` is byte-for-byte the original English
+// module (checked by scripts/verify_scene_translations.py). The Chinese side
+// is the in-game localization. The dormant `pokecenter.js` Boa fallback is
+// English-only and is not updated by the localization.
 game_scene pokecenter {
   @storyline("talkNurse") {
-    @speaker("") { "Welcome to our\n#MON CENTER!\n\nWe heal your\n#MON back to\nperfect health!" }
-    @speaker("") { "Shall we heal\nyour #MON?" }
+    @speaker("") { @t("Welcome to our\n#MON CENTER!\n\nWe heal your\n#MON back to\nperfect health!", "欢迎来到我们的\n宝可梦中心！\n\n我们把您的宝可梦\n恢复得\n健健康康！") }
+    @speaker("") { @t("Shall we heal\nyour #MON?", "要为您的宝可梦\n恢复吗？") }
     @choice {
-      @option("Yes") {
-        @speaker("") { "OK. We'll need\nyour #MON." }
+      @option(@t("Yes", "是")) {
+        @speaker("") { @t("OK. We'll need\nyour #MON.", "好的。\n请把宝可梦\n交给我们。") }
         faceNpc("1", "right")
         delay(8)
         heal()
         animateHealingMachine()
         faceNpc("1", "down")
         delay(8)
-        @speaker("") { "Thank you!\nYour #MON are\nfighting fit!" }
+        @speaker("") { @t("Thank you!\nYour #MON are\nfighting fit!", "谢谢！\n您的宝可梦\n已经精神饱满！") }
       }
-      @option("No") {
+      @option(@t("No", "否")) {
       }
     }
-    @speaker("") { "We hope to see\nyou again!" }
+    @speaker("") { @t("We hope to see\nyou again!", "欢迎再次\n光临！") }
   }
 
   @storyline("talkLinkReceptionist") {
-    @speaker("") { "Welcome to the\nCable Club!" }
+    @speaker("") { @t("Welcome to the\nCable Club!", "欢迎来到\n连接俱乐部！") }
   }
 }

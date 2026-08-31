@@ -38,7 +38,7 @@ pub fn draw_pokedex_screen(
         PokedexScreenMode::Entry => {
             let sp = state.cursor_species();
             let owned = state.is_owned(state.cursor());
-            draw_entry_for_species(sp, state.entry_page(), owned, res, fb);
+            draw_entry_for_species(sp, state.entry_page(), owned, is_zh, res, fb);
         }
         PokedexScreenMode::Area => draw_dex_area(state, current_map, is_zh, res, fb),
     }
@@ -78,9 +78,13 @@ fn draw_dex_list(state: &PokedexScreenState, is_zh: bool, fb: &mut FrameBuffer) 
             if state.is_owned(n) {
                 draw_pokeball_mark(t * 4, y, fb);
             }
-            let name =
+            let name = if is_zh {
+                pokered_data::lang_data::species_name(Species::from_index_id(n as u8), true)
+                    .to_string()
+            } else {
                 pokered_data::lang_data::species_name(Species::from_index_id(n as u8), false)
-                    .to_uppercase();
+                    .to_uppercase()
+            };
             draw_text(&name, name_x, y, fg, fb);
         } else {
             draw_text("----------", name_x, y, fg, fb);
@@ -131,7 +135,11 @@ pub fn draw_dex_area(
     let t = TILE_SIZE;
 
     let areas = state.area_maps();
-    let name = pokered_data::lang_data::species_name(state.cursor_species(), false).to_uppercase();
+    let name = if is_zh {
+        pokered_data::lang_data::species_name(state.cursor_species(), true).to_string()
+    } else {
+        pokered_data::lang_data::species_name(state.cursor_species(), false).to_uppercase()
+    };
 
     if let Some(ref mut rm) = res {
         // 1. The 20×18 town map (border baked into the RLE tilemap).
@@ -259,6 +267,7 @@ pub fn draw_entry_for_species(
     sp: Species,
     page: usize,
     owned: bool,
+    is_zh: bool,
     res: &mut Option<ResourceManager>,
     fb: &mut FrameBuffer,
 ) -> usize {
@@ -271,7 +280,11 @@ pub fn draw_entry_for_species(
         return 1;
     };
 
-    let display_name = pokered_data::lang_data::species_name(sp, false).to_uppercase();
+    let display_name = if is_zh {
+        pokered_data::lang_data::species_name(sp, true).to_string()
+    } else {
+        pokered_data::lang_data::species_name(sp, false).to_uppercase()
+    };
     let weight = format!("{:.1}", entry.weight_pounds());
     let lines = flavor_lines(entry);
     let line_refs: Vec<&str> = lines.iter().map(String::as_str).collect();

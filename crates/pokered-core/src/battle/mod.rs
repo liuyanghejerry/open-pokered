@@ -471,6 +471,29 @@ const BATTLE_TEXT_LINE_WIDTH: usize = 18;
 const BATTLE_TEXT_LINES_PER_PAGE: usize = 2;
 const BATTLE_TEXT_PAGE_WAIT_FRAMES: u16 = 10;
 
+/// Display width of a char in half-width tiles: CJK glyphs render full-width
+/// (2 tiles) in the Fusion Pixel font, everything else 1. Range-based mirror of
+/// the renderer's glyph-table classification (`embedded_font::is_cjk`) — core
+/// must not depend on the renderer. Unknown chars are counted wide (over-estimating
+/// width only wraps a line earlier; under-estimating would overflow the box).
+fn char_tile_width(c: char) -> usize {
+    let cp = c as u32;
+    let wide = (0x1100..=0x115F).contains(&cp)
+        || (0x2010..=0x2027).contains(&cp) // …, quotes, dashes as full-width punct
+        || (0x2E80..=0xA4CF).contains(&cp) // CJK radicals, punct, kana, CJK unified
+        || (0xAC00..=0xD7A3).contains(&cp) // Hangul
+        || (0xF900..=0xFAFF).contains(&cp) // CJK compat ideographs
+        || (0xFE30..=0xFE4F).contains(&cp) // CJK compat forms
+        || (0xFF00..=0xFF60).contains(&cp) // full-width forms
+        || (0xFFE0..=0xFFE6).contains(&cp)
+        || (0x20000..=0x3FFFD).contains(&cp);
+    if wide {
+        2
+    } else {
+        1
+    }
+}
+
 fn hard_wrap_word(word: &str, width: usize) -> Vec<String> {
     if width == 0 {
         return vec![];
@@ -482,11 +505,16 @@ fn hard_wrap_word(word: &str, width: usize) -> Vec<String> {
 
     let mut out = Vec::new();
     let mut start = 0;
-    while start < chars.len() {
-        let end = (start + width).min(chars.len());
-        out.push(chars[start..end].iter().collect());
-        start = end;
+    let mut acc = 0usize;
+    for (i, c) in chars.iter().enumerate() {
+        if acc >= width && i > start {
+            out.push(chars[start..i].iter().collect());
+            start = i;
+            acc = 0;
+        }
+        acc += char_tile_width(*c);
     }
+    out.push(chars[start..].iter().collect());
     out
 }
 
@@ -500,21 +528,25 @@ fn wrap_battle_text_lines(text: &str, width: usize) -> Vec<String> {
         }
 
         let mut current = String::new();
+        let mut current_width = 0usize;
         for word in raw_line.split_whitespace() {
             let parts = hard_wrap_word(word, width);
             for part in parts {
+                let part_width: usize = part.chars().map(char_tile_width).sum();
                 if current.is_empty() {
                     current.push_str(&part);
+                    current_width = part_width;
                     continue;
                 }
 
-                let candidate_len = current.chars().count() + 1 + part.chars().count();
-                if candidate_len <= width {
+                if current_width + 1 + part_width <= width {
                     current.push(' ');
                     current.push_str(&part);
+                    current_width += 1 + part_width;
                 } else {
                     out.push(current);
                     current = part;
+                    current_width = part_width;
                 }
             }
         }
@@ -988,6 +1020,11 @@ pub struct BattleScreen {
     /// layer polls this with [`Self::take_poke_flute_sfx_pending`] and plays
     /// `AudioManager::play_flute_in_battle`.
     pub poke_flute_sfx_pending: bool,
+    /// Localize battle messages to Chinese before pagination (Gen-1 Chinese
+    /// fan-translation behavior). Set by the app from the language selection at
+    /// battle start; default `false` keeps every message in the original
+    /// English so text-parity tests are unaffected.
+    pub is_zh: bool,
     /// Pending non-move battle animation requests (ball throws, X-stat
     /// items — see [`BattleAnimEvent`]). Queued by the ball / X-stat flows;
     /// drained by the frontend every frame via [`Self::take_anim_event`]
@@ -1162,6 +1199,7 @@ impl BattleScreen {
             battle_state: None,
             move_menu: None,
             current_message: None,
+            is_zh: false,
             party_cursor: 0,
             settlement: None,
             player_money: 0,
@@ -1255,6 +1293,7 @@ impl BattleScreen {
             battle_state: Some(bs),
             move_menu: None,
             current_message: None,
+            is_zh: false,
             party_cursor: 0,
             settlement: None,
             player_money: 0,
@@ -1744,7 +1783,9 @@ impl BattleScreen {
                     IntroPhase::PlayerSendOut => {
                         self.show_player_pokeballs = true;
                         let species_name = format!("{}", self.player_species).to_uppercase();
-                        self.current_message = Some(format!("Go! {}!", species_name));
+                        let msg = format!("Go! {}!", species_name);
+                        self.current_message =
+                            Some(pokered_data::battle_text::localize(&msg, self.is_zh));
                         BattlePhase::PlayerMenu
                     }
                     // FlashScreen strobe (Circle/DoubleCircle only) plays
@@ -1906,10 +1947,16 @@ impl BattleScreen {
                                 self.phase = BattlePhase::PlayerMenu;
                             }
                             MoveMenuResult::NoPP(_) => {
-                                self.current_message = Some("No PP left!".to_string());
+                                self.current_message = Some(pokered_data::battle_text::localize(
+                                    "No PP left!",
+                                    self.is_zh,
+                                ));
                             }
                             MoveMenuResult::Disabled(_) => {
-                                self.current_message = Some("Move is disabled!".to_string());
+                                self.current_message = Some(pokered_data::battle_text::localize(
+                                    "Move is disabled!",
+                                    self.is_zh,
+                                ));
                             }
                         }
                     }
@@ -2048,21 +2095,27 @@ impl BattleScreen {
                                         let name =
                                             format!("{}", bs.player.party[selected_index].species)
                                                 .to_uppercase();
-                                        self.show_text_then(
-                                            vec![
-                                                format!("{} is", name),
-                                                "already out!".to_string(),
-                                            ],
-                                            BattlePhase::PartySelect,
-                                        );
+                                        // EN keeps the original two-page split;
+                                        // zh recombines so the template can match.
+                                        let msgs: Vec<String> = if self.is_zh {
+                                            vec![pokered_data::battle_text::localize(
+                                                &format!("{} is already out!", name),
+                                                true,
+                                            )]
+                                        } else {
+                                            vec![format!("{} is", name), "already out!".to_string()]
+                                        };
+                                        self.show_text_then(msgs, BattlePhase::PartySelect);
                                     } else if bs.player.party[selected_index].hp == 0 {
-                                        self.show_text_then(
-                                            vec![
-                                                "There's no will".to_string(),
-                                                "to fight!".to_string(),
-                                            ],
-                                            BattlePhase::PartySelect,
-                                        );
+                                        let msgs: Vec<String> = if self.is_zh {
+                                            vec![pokered_data::battle_text::localize(
+                                                "There's no will to fight!",
+                                                true,
+                                            )]
+                                        } else {
+                                            vec!["There's no will".to_string(), "to fight!".to_string()]
+                                        };
+                                        self.show_text_then(msgs, BattlePhase::PartySelect);
                                     } else {
                                         self.party_submenu = None;
                                         self.switch_player_pokemon(selected_index);
@@ -2176,15 +2229,25 @@ impl BattleScreen {
                         if chosen == active {
                             let name = format!("{}", bs.player.party[chosen].species)
                                 .to_uppercase();
-                            self.show_text_then(
-                                vec![format!("{} is", name), "already out!".to_string()],
-                                BattlePhase::ShiftSwitchSelect,
-                            );
+                            let msgs: Vec<String> = if self.is_zh {
+                                vec![pokered_data::battle_text::localize(
+                                    &format!("{} is already out!", name),
+                                    true,
+                                )]
+                            } else {
+                                vec![format!("{} is", name), "already out!".to_string()]
+                            };
+                            self.show_text_then(msgs, BattlePhase::ShiftSwitchSelect);
                         } else if bs.player.party[chosen].hp == 0 {
-                            self.show_text_then(
-                                vec!["There's no will".to_string(), "to fight!".to_string()],
-                                BattlePhase::ShiftSwitchSelect,
-                            );
+                            let msgs: Vec<String> = if self.is_zh {
+                                vec![pokered_data::battle_text::localize(
+                                    "There's no will to fight!",
+                                    true,
+                                )]
+                            } else {
+                                vec!["There's no will".to_string(), "to fight!".to_string()]
+                            };
+                            self.show_text_then(msgs, BattlePhase::ShiftSwitchSelect);
                         } else {
                             // Defer the actual switch until the enemy's next mon
                             // has been sent out (EnemySendingNext completion).
@@ -2211,10 +2274,15 @@ impl BattleScreen {
                     if input.a {
                         let chosen = self.party_cursor;
                         if bs.player.party[chosen].hp == 0 {
-                            self.show_text_then(
-                                vec!["There's no will".to_string(), "to fight!".to_string()],
-                                BattlePhase::PlayerFaintSwitch,
-                            );
+                            let msgs: Vec<String> = if self.is_zh {
+                                vec![pokered_data::battle_text::localize(
+                                    "There's no will to fight!",
+                                    true,
+                                )]
+                            } else {
+                                vec!["There's no will".to_string(), "to fight!".to_string()]
+                            };
+                            self.show_text_then(msgs, BattlePhase::PlayerFaintSwitch);
                         } else {
                             self.force_switch_player(chosen);
                         }
@@ -2412,9 +2480,14 @@ impl BattleScreen {
             return;
         }
 
+        // Localize BEFORE pagination so template matching sees whole (English)
+        // messages and the paginator re-wraps the localized text (Gen-1
+        // Chinese fan-translation behavior; `is_zh` defaults to false and the
+        // localize call passes English through unchanged).
         let expanded: Vec<String> = messages
             .iter()
-            .flat_map(|m| paginate_battle_text(m))
+            .map(|m| pokered_data::battle_text::localize(m, self.is_zh))
+            .flat_map(|m| paginate_battle_text(&m))
             .collect();
 
         if expanded.is_empty() {
@@ -4121,7 +4194,9 @@ impl BattleScreen {
             BattlePhase::ShiftPrompt => {
                 // Cursor defaults to NO (original `ld a, 1 / ld [wCurrentMenuItem], a`).
                 self.shift_prompt_yes = false;
-                self.current_message = Some(self.shift_prompt_message());
+                let msg = self.shift_prompt_message();
+                self.current_message =
+                    Some(pokered_data::battle_text::localize(&msg, self.is_zh));
             }
             _ => {}
         }
@@ -6654,3 +6729,59 @@ mod hp_bar_anim_tests {
             );
         }
     }
+
+#[cfg(test)]
+mod i18n_tests {
+    use super::*;
+
+    /// show_text_then localizes BEFORE pagination: whole-template matching
+    /// works even when the message spans pages, and the stored page text is
+    /// already Chinese.
+    #[test]
+    fn show_text_then_localizes_before_pagination() {
+        let mut s = BattleScreen::new(true);
+        s.is_zh = true;
+        // 21 chars: the EN side paginates ("It's super\neffective!") — the
+        // localized zh must not be broken by the EN wrap.
+        s.show_text_then(
+            vec!["It's super effective!".to_string()],
+            BattlePhase::PlayerMenu,
+        );
+        assert_eq!(s.current_message.as_deref(), Some("效果拔群！"));
+    }
+
+    #[test]
+    fn show_text_then_keeps_english_when_not_zh() {
+        let mut s = BattleScreen::new(true);
+        s.show_text_then(
+            vec!["It's super effective!".to_string()],
+            BattlePhase::PlayerMenu,
+        );
+        assert_eq!(
+            s.current_message.as_deref(),
+            Some("It's super\neffective!")
+        );
+    }
+
+    #[test]
+    fn multi_page_zh_messages_paginate() {
+        let mut s = BattleScreen::new(true);
+        s.is_zh = true;
+        // Paralysis text (3 EN lines) + name → several zh pages.
+        s.show_text_then(
+            vec!["Enemy PIDGEY is paralyzed!\nIt may be unable\nto move!".to_string()],
+            BattlePhase::PlayerMenu,
+        );
+        assert!(s.current_message.as_deref().unwrap_or("").contains("对方的波波"));
+        assert!(!s.current_message.as_deref().unwrap_or("").contains("paralyzed"));
+    }
+
+    #[test]
+    fn cjk_wraps_at_tile_width() {
+        // 10 CJK chars = 20 tiles > 18 → wraps at ≤9 chars per line.
+        let pages = paginate_battle_text("皮卡丘使用了十万伏特!");
+        let lines: Vec<&str> = pages[0].split('\n').collect();
+        assert!(lines.iter().all(|l| l.chars().count() <= 9));
+    }
+
+}

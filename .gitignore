@@ -113,3 +113,6 @@ crates/pokered-app/evolution_*.png
 crates/pokered-app/fishing_*.png
 crates/pokered-app/ss_anne_*.png
 scripts/.playthrough.marker
+
+# parallel-branch worktrees (git worktree add .worktrees/<name>)
+.worktrees/

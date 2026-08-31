@@ -120,6 +120,7 @@ impl DirectBattleGame {
     /// Set the text language used by the battle renderer (`--lang`).
     pub fn set_lang(&mut self, lang: Lang) {
         self.lang = lang;
+        self.battle.is_zh = lang == Lang::Zh;
     }
 
     #[cfg(not(target_arch = "wasm32"))]
