@@ -241,6 +241,55 @@ fn options_menu_no_cursor_on_inactive_rows() {
     assert_eq!(glyphs, vec![(10, 8, pt)]);
 }
 
+#[test]
+fn options_menu_zh_cursor_tracks_zh_label_positions() {
+    // The zh labels in options.gui (" 快  中  慢") pack tighter than the EN
+    // strings the v1 enum_position_map was measured against. The ▶ must sit
+    // one tile left of each zh word; with EN offsets it lands on 慢 for
+    // Medium and past the last label for Slow.
+    let pt = '\u{25B6}';
+    for (speed, expected_tx) in [
+        (TextSpeed::Fast, 1_u32),
+        (TextSpeed::Medium, 4),
+        (TextSpeed::Slow, 7),
+    ] {
+        let state = OptionsMenuState::new(GameOptions {
+            text_speed: speed,
+            ..GameOptions::default()
+        });
+        let mut rec = Recorder::default();
+        let mut ui = Ui::new(&mut rec);
+        menus::options::draw(&state, &OPTIONS_DEFAULT_LAYOUT, &mut ui, Lang::Zh);
+        assert_eq!(
+            collect_cursor_glyphs(&rec.ops),
+            vec![(expected_tx, 3, pt)],
+            "text_speed={speed:?}"
+        );
+    }
+}
+
+#[test]
+fn options_menu_zh_cursor_on_toggle_rows() {
+    let mut state = OptionsMenuState::new(GameOptions {
+        text_speed: TextSpeed::Medium,
+        battle_animation: BattleAnimation::Off,
+        battle_style: BattleStyle::Set,
+    });
+    let pt = '\u{25B6}';
+
+    state.row = OptionsRow::BattleAnimation;
+    let mut rec = Recorder::default();
+    let mut ui = Ui::new(&mut rec);
+    menus::options::draw(&state, &OPTIONS_DEFAULT_LAYOUT, &mut ui, Lang::Zh);
+    assert_eq!(collect_cursor_glyphs(&rec.ops), vec![(9, 8, pt)]);
+
+    state.row = OptionsRow::BattleStyle;
+    let mut rec = Recorder::default();
+    let mut ui = Ui::new(&mut rec);
+    menus::options::draw(&state, &OPTIONS_DEFAULT_LAYOUT, &mut ui, Lang::Zh);
+    assert_eq!(collect_cursor_glyphs(&rec.ops), vec![(7, 13, pt)]);
+}
+
 fn fixture_save_info() -> SaveScreenInfo {
     SaveScreenInfo {
         player_name: "RED".to_string(),
