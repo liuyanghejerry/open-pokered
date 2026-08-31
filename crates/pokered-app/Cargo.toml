@@ -11,11 +11,11 @@ debug-server = ["pokered-debug-server"]
 [dependencies]
 pokered-core = { path = "../pokered-core" }
 pokered-data = { path = "../pokered-data" }
-dotzuki-engine = { git = "https://github.com/liuyanghejerry/dotzuki", tag = "v0.5.5" }
-dotzuki-engine-dsl = { git = "https://github.com/liuyanghejerry/dotzuki", tag = "v0.5.5" }
+dotzuki-engine = { git = "https://github.com/liuyanghejerry/dotzuki", tag = "v0.5.6" }
+dotzuki-engine-dsl = { git = "https://github.com/liuyanghejerry/dotzuki", tag = "v0.5.6" }
 pokered-renderer = { path = "../pokered-renderer" }
-dotzuki-renderer = { git = "https://github.com/liuyanghejerry/dotzuki", tag = "v0.5.5" }
-dotzuki-app = { git = "https://github.com/liuyanghejerry/dotzuki", tag = "v0.5.5" }
+dotzuki-renderer = { git = "https://github.com/liuyanghejerry/dotzuki", tag = "v0.5.6" }
+dotzuki-app = { git = "https://github.com/liuyanghejerry/dotzuki", tag = "v0.5.6" }
 pokered-ui = { path = "../pokered-ui" }
 pokered-audio = { path = "../pokered-audio" }
 pokered-debug-server = { path = "../pokered-debug-server", optional = true }
@@ -56,5 +56,5 @@ web-sys = { version = "0.3", features = [
 # dependencies section above untouched.
 [target.'cfg(target_arch = "wasm32")'.dependencies.dotzuki-web]
 git = "https://github.com/liuyanghejerry/dotzuki"
-tag = "v0.5.5"
+tag = "v0.5.6"
 features = ["link"]
