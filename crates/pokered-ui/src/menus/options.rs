@@ -17,6 +17,29 @@ fn enum_offset(layout: &OptionsDefaultLayout, key: &str) -> u32 {
         .unwrap_or(0)
 }
 
+/// Cursor x-offsets for the zh option labels in `options.gui`. The v1
+/// `enum_position_map` is measured against the EN strings (" FAST  MEDIUM
+/// SLOW" …); the zh strings (" 快  中  慢" …) pack the words tighter, so
+/// reusing the EN offsets lands the ▶ on the wrong option — or past the
+/// last one, looking like a phantom extra position.
+fn zh_enum_offset(key: &str) -> u32 {
+    match key {
+        "Medium" => 3,
+        "Slow" => 6,
+        "Off" => 8,
+        "Set" => 6,
+        // Fast / On / Shift and unknown keys all sit at offset 0.
+        _ => 0,
+    }
+}
+
+fn lang_enum_offset(layout: &OptionsDefaultLayout, key: &str, lang: Lang) -> u32 {
+    match lang {
+        Lang::Zh => zh_enum_offset(key),
+        Lang::En => enum_offset(layout, key),
+    }
+}
+
 fn text_speed_key(state: &OptionsMenuState) -> &'static str {
     match state.options.text_speed {
         TextSpeed::Fast => "Fast",
@@ -68,13 +91,13 @@ pub fn draw<P: Painter>(
     // Rows 0..2 sit in bordered boxes (1-tile inset); the x-offset selects the
     // current enum value's column. Absolute = cursor.tx + 1 + offset, ty + 1.
     let c0 = &cursors[0];
-    ctx.set("r0_tx", (c0.tx + 1 + enum_offset(v1, text_speed_key(state))) as i64);
+    ctx.set("r0_tx", (c0.tx + 1 + lang_enum_offset(v1, text_speed_key(state), lang)) as i64);
     ctx.set("r0_ty", (c0.base_ty + 1) as i64);
     let c1 = &cursors[1];
-    ctx.set("r1_tx", (c1.tx + 1 + enum_offset(v1, battle_animation_key(state))) as i64);
+    ctx.set("r1_tx", (c1.tx + 1 + lang_enum_offset(v1, battle_animation_key(state), lang)) as i64);
     ctx.set("r1_ty", (c1.base_ty + 1) as i64);
     let c2 = &cursors[2];
-    ctx.set("r2_tx", (c2.tx + 1 + enum_offset(v1, battle_style_key(state))) as i64);
+    ctx.set("r2_tx", (c2.tx + 1 + lang_enum_offset(v1, battle_style_key(state), lang)) as i64);
     ctx.set("r2_ty", (c2.base_ty + 1) as i64);
     // Cancel sits in a borderless region (no inset, no enum offset).
     let c3 = &cursors[3];
