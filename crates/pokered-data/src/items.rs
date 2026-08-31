@@ -54,12 +54,19 @@ impl ItemId {
     /// Inverse of [`const_name`](Self::const_name): find the item whose
     /// `const_name()` equals `name`. Returns `None` for unknown names or `NoItem`.
     ///
-    /// Matching is underscore-insensitive, so both `"TM_34"` (the canonical
-    /// `const_name`) and `"TM34"` resolve to `ItemId::Tm34` (likewise `HM01`,
-    /// `X_ACCURACY`/`XACCURACY`). Scripts authored from the asm constants use the
-    /// underscore-free `TM`/`HM` spelling, so accept it.
+    /// Matching is case-, underscore- and whitespace-insensitive, so the
+    /// canonical `"POKE_BALL"`, the PascalCase variant spelling `"PokeBall"`,
+    /// the display spelling `"Ultra Ball"`, and the underscore-free `"TM34"`
+    /// (scripts authored from asm constants drop the case-boundary `_`) all
+    /// resolve. `MartStock::from_strings` goes through strum's `EnumString`
+    /// (exact variant name only), so script-facing resolution must use this
+    /// tolerant form.
     pub fn from_const_name(name: &str) -> Option<Self> {
-        let want: String = name.chars().filter(|c| *c != '_').collect();
+        let want: String = name
+            .chars()
+            .filter(|c| *c != '_' && !c.is_whitespace())
+            .map(|c| c.to_ascii_uppercase())
+            .collect();
         (0u8..=MAX_ITEM_ID).map(Self::from_id).find(|i| {
             *i != ItemId::NoItem
                 && i.const_name().chars().filter(|c| *c != '_').collect::<String>() == want

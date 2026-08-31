@@ -25,6 +25,25 @@ pub use dotzuki_engine::items::mart::{
 /// Items the shop stocks (engine `MartStock` over pokered's [`ItemId`]).
 pub type ShopInventory = MartStock<ItemId>;
 
+/// Build a shop stock from script-facing item names.
+///
+/// `MartStock::from_strings` parses via strum's `EnumString` (exact
+/// PascalCase variant names only), which silently rejects the asm-style
+/// SCREAMING_SNAKE const names (`"POKE_BALL"`) that `openShop` calls in
+/// `maps/*/script.scene` use — the frontend then logs "unknown item id" and
+/// never opens the shop. Resolve through [`ItemId::from_const_name`]
+/// instead (case/underscore/whitespace-insensitive).
+pub fn shop_stock_from_script_names<S: AsRef<str>>(items: &[S]) -> Result<ShopInventory, String> {
+    let mut parsed = Vec::with_capacity(items.len());
+    for s in items {
+        match ItemId::from_const_name(s.as_ref()) {
+            Some(id) => parsed.push(id),
+            None => return Err(s.as_ref().to_string()),
+        }
+    }
+    Ok(ShopInventory::new(parsed))
+}
+
 /// Bundled player data consumed by mart transactions.
 #[derive(Debug, Clone)]
 pub struct PlayerData {
