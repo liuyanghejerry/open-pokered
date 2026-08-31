@@ -29,18 +29,51 @@ game_scene SilphCo11F {
     }
   }
 
-  // Door solve: coord triggers at the door tiles (block (3,6) → tiles (6,12)/
-  // (6,13)) — gated by hasItem("CARD_KEY").
+  // Door solve: coord trigger at the door traffic tile (block (3,6) → first
+  // traffic tile (6,12)) — gated by hasItem("CARD_KEY"). The original's card
+  // key door opens via UseCardKey on any Silph door; the walk-into-door flow
+  // is the port's approximation. Post-open re-crossing is silent.
   @storyline("cardKeyDoor") {
-    @trigger(map = "SilphCo11F", name = "cardKeyDoor1")
-    @if (hasItem("CARD_KEY") && !getFlag("EVENT_SILPH_CO_11_UNLOCKED_DOOR")) {
-      @speaker("") { @t("Bingo!", "猜中了！") }
-      @speaker("") { @t("The CARD KEY opened the\ndoor!", "磁卡钥匙打开了门！") }
-      setFlag("EVENT_SILPH_CO_11_UNLOCKED_DOOR")
-      replaceTileBlock(3, 6, 14)
-      playSound("SFX_GO_INSIDE")
-    } @else {
-      @speaker("") { @t("Darn! It needs a CARD KEY!", "可恶！需要磁卡钥匙！") }
+    @trigger(map = "SilphCo11F", name = "cardKeyDoor1", coords = [[6, 12]])
+    @if (!getFlag("EVENT_SILPH_CO_11_UNLOCKED_DOOR")) {
+      @if (hasItem("CARD_KEY")) {
+        @speaker("") { @t("Bingo!", "猜中了！") }
+        @speaker("") { @t("The CARD KEY opened the\ndoor!", "磁卡钥匙打开了门！") }
+        setFlag("EVENT_SILPH_CO_11_UNLOCKED_DOOR")
+        replaceTileBlock(3, 6, 14)
+        playSound("SFX_GO_INSIDE")
+      } @else {
+        @speaker("") { @t("Darn! It needs a CARD KEY!", "可恶！需要磁卡钥匙！") }
+      }
+    }
+  }
+
+  // ── On-step Giovanni interception (coords (6,13)/(7,12)) ────────────────
+  // Original SilphCo11FDefaultScript: while EVENT_BEAT_SILPH_CO_GIOVANNI is
+  // unset, stepping onto either tile runs Giovanni's talk handler (his text +
+  // scripted battle, same as pressing A on him; Giovanni also walks down three
+  // tiles in the original — the player stays put, only the sprite movement is
+  // omitted). Post-beat the DefaultScript returns early, so this is gated on
+  // !EVENT_BEAT_SILPH_CO_GIOVANNI.
+  @storyline("giovanniStep") {
+    @trigger(map = "SilphCo11F", name = "giovanniStep1", coords = [[6, 13], [7, 12]])
+    @if (!getFlag("EVENT_BEAT_SILPH_CO_GIOVANNI")) {
+      @speaker("") {
+        @t("Ah <PLAYER>! So we meet\nagain!\n\nThe PRESIDENT and I are\ndiscussing a vital business\nproposition.\n\nKeep your nose out of\ngrown-up matters...\n\nOr, experience a world of\npain!", "啊，<PLAYER>！我们又见面了！\n\n我和社长正在商讨一个重要的商\n业提案。\n\n大人的事情小孩子不要插手……\n\n否则的话，让你尝尝苦头！")
+      }
+      result = startBattle("OPP_GIOVANNI3")
+      @if (result == "win") {
+        @speaker("") {
+          @t("Arrgh!! I lost again!?", "啊！！我又输了！？")
+        }
+        @speaker("") {
+          @t("Blast it all! You ruined our\nplans for SILPH!\n\nBut, TEAM ROCKET will never\nfall!\n\n<PLAYER>! Never forget that\nall POKeMON exist for TEAM\nROCKET!\n\nI must go, but I shall\nreturn!", "可恶！你毁了我们西尔佛的计\n划！\n\n但是，火箭队永远打不倒！\n\n<PLAYER>！永远不要忘记，所有\n宝可梦都归火箭队所有！\n\n我该走了，还会再回来！")
+        }
+        setFlag("EVENT_BEAT_SILPH_CO_GIOVANNI")
+        hideObjectByName("SILPH_CO_11F_OBJ_3")
+        hideObjectByName("SILPH_CO_11F_OBJ_4")
+        hideObjectByName("SILPH_CO_11F_OBJ_5")
+      }
     }
   }
 

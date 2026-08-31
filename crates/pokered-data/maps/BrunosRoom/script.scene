@@ -26,17 +26,19 @@ game_scene BrunosRoom {
     }
   }
 
-  // ── Exit guard: "Don't run away!" until Bruno is beaten ─────────────────
+  // ── Exit guard: "Don't run away!" (runs before AND after Bruno is beaten) ─
   // Original BrunosRoomDefaultScript stops the player from stepping onto the
   // exit tiles (4,10/5,10/4,11/5,11) and shoves them back up with the voice
-  // text until EVENT_BEAT_BRUNOS_ROOM_TRAINER_0 is set. Approximated as a coord
-  // trigger that shows the line and walks the player back up one tile.
+  // text. Approximated on the (4,10)/(5,10) row: the entrance-row tiles
+  // (4,11)/(5,11) are the exit warps themselves — the port's warp check runs
+  // before the coord check on the same step, so trigger tiles there can never
+  // fire; the shove keeps the player from ever stepping onto the warp. No beat
+  // gate in the original: the E4 gauntlet only allows forward. (The entrance-row
+  // autowalk lives in @load.)
   @storyline("dontRunAway") {
     @trigger(map = "BrunosRoom", name = "dontRunAway1")
-    @if (!getFlag("EVENT_BEAT_BRUNOS_ROOM_TRAINER_0")) {
-      @speaker("") { @t("Someone's voice: Don't run\naway!", "某人的声音：别想逃走！") }
-      movePlayer([[0, -1]])
-    }
+    @speaker("") { @t("Someone's voice: Don't run\naway!", "某人的声音：别想逃走！") }
+    movePlayerRelative([[0, -1]])
   }
 
   // ── Bruno (npc 1) — sight-engaged by the runtime; dialogue only ─────────

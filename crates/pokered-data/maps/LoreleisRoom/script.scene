@@ -11,9 +11,10 @@
 //
 // Stubbed mechanics: trying to leave early shows "Someone's voice: Don't run
 // away!" and shoves the player back — a single-step PAD_UP push-back wired via
-// coordEvents on the entrance tiles (4,10)/(5,10) + movePlayerRelative. The
-// exit warp tiles (4,11)/(5,11) are handled by the warp system; the (5,11)
-// tile is left passable, matching the original's coordIndex<3 check.
+// coordEvents on ALL FOUR entrance tiles (4,10)/(5,10)/(4,11)/(5,11) +
+// movePlayerRelative, running before and after Lorelei is beaten (the original
+// DefaultScript has no beat gate). The exit warp tiles (4,11)/(5,11) are
+// covered by the same guard, so the player cannot walk back out of the room.
 
 game_scene LoreleisRoom {
   // ── On entry: auto-walk the player up into the room ────────────────────
@@ -39,8 +40,14 @@ game_scene LoreleisRoom {
 
   // ── "Don't run away!" push-back (coord (4,10)/(5,10)) ──────────────────
   // Original LoreleiEntranceCoords + StopPlayerFromLeaving: stepping back
-  // toward the exit before beating Lorelei shows the voice line and shoves
-  // the player up one tile (PAD_UP).
+  // toward the exit (the rows above the warp) shows the voice line and shoves
+  // the player up one tile (PAD_UP). NOTE: the entrance-row tiles (4,11)/(5,11)
+  // are the exit warps themselves — the port's warp check runs before the coord
+  // check on the same step, so trigger tiles there can never fire; the shove on
+  // the (4,10)/(5,10) row is what keeps the player from ever stepping onto the
+  // warp. (In the original the DefaultScript runs pre-movement, so the shove at
+  // y=10 pre-empts the down-step with simulated joypad; the warp-row coords
+  // there serve only the arrival/walk-in cases, which the @load autowalk covers.)
   @storyline("coordDontRunAway") {
     @trigger(map = "LoreleisRoom", name = "dontRunAway")
     @speaker("") { @t("Someone's voice: Don't run\naway!", "有个声音：别想逃！") }
