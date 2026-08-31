@@ -3,6 +3,36 @@ use pokered_data::TILE_SIZE_PX;
 
 use crate::engine::{InkColor, Painter, Ui};
 
+/// Display width of a char in half-width tiles: CJK glyphs render full-width
+/// (2 tiles) in the Fusion Pixel font, everything else 1. Range-based mirror
+/// of the renderer's glyph-table classification (same convention as the
+/// battle-text wrapping in core).
+fn char_tile_width(c: char) -> usize {
+    let cp = c as u32;
+    let wide = (0x1100..=0x115F).contains(&cp)
+        || (0x2010..=0x2027).contains(&cp)
+        || (0x2E80..=0xA4CF).contains(&cp)
+        || (0xAC00..=0xD7A3).contains(&cp)
+        || (0xF900..=0xFAFF).contains(&cp)
+        || (0xFE30..=0xFE4F).contains(&cp)
+        || (0xFF00..=0xFF60).contains(&cp)
+        || (0xFFE0..=0xFFE6).contains(&cp)
+        || (0x20000..=0x3FFFD).contains(&cp);
+    usize::from(wide) + 1
+}
+
+/// Interior x for the category label: the asm prints it at (8,3); wide CJK
+/// categories (e.g. 毛毛虫宝可梦) shift left just enough to end at the
+/// interior's right edge (18 tiles) instead of clipping.
+fn category_x(category: &str) -> u32 {
+    let w: usize = category.chars().map(char_tile_width).sum();
+    if 8 + w <= 18 {
+        8
+    } else {
+        (18 - w).max(0) as u32
+    }
+}
+
 /// Borrowed view of a Pokédex entry consumed by [`draw`]. The native renderer
 /// builds this from its internal `DexEntry`; the wasm preview can supply mock
 /// data without depending on `pokered-app` internals.
@@ -49,7 +79,7 @@ pub fn draw<P: Painter>(entry: &PokedexEntryView<'_>, page: usize, layout: &Poke
         // /(2,8)/(11,8)/(12,6)/(15,6)/(17,6) positions documented in the JSON's labels list
         // for HT/WT and in the legacy ShowPokedexDataInternal layout for everything else.
         frame.label(8, 1, entry.display_name, InkColor::Black);
-        frame.label(8, 3, entry.category, InkColor::Black);
+        frame.label(category_x(entry.category), 3, entry.category, InkColor::Black);
 
         if entry.owned {
             let feet_str = format!("{}", entry.height_ft);
@@ -95,4 +125,19 @@ pub fn draw<P: Painter>(entry: &PokedexEntryView<'_>, page: usize, layout: &Poke
     });
 
     total_pages
+}
+
+#[cfg(test)]
+mod tests {
+    use super::category_x;
+
+    #[test]
+    fn category_stays_at_asm_position_unless_too_wide() {
+        // Short EN categories keep the original (8,3) label position.
+        assert_eq!(category_x("SEED"), 8);
+        assert_eq!(category_x("POISON BEE"), 8); // 10 tiles: exactly fits
+        // Wide CJK categories shift left to end at the interior's right edge.
+        assert_eq!(category_x("毛毛虫宝可梦"), 6); // 12 tiles
+        assert_eq!(category_x("百万吨宝可梦"), 6); // 12 tiles
+    }
 }
