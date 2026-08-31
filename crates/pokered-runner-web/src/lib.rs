@@ -470,6 +470,25 @@ impl PokeredRunner {
     pub fn set_text_delay_frames(&mut self, frames: u16) {
         self.game.overworld.set_text_delay_frames(frames);
     }
+
+    /// Switch the game language (`"en"` / `"zh"`). The editor boots straight
+    /// into the overworld, so the in-game LanguageSelect screen never runs —
+    /// this bridge applies the same sync it would: `config.language`, the
+    /// overworld script engine (`@t` dialogue), and the battle message
+    /// language. Unknown codes fail with a readable error.
+    pub fn set_lang(&mut self, lang: &str) -> Result<(), JsValue> {
+        let lang = match lang {
+            "en" => Lang::En,
+            "zh" => Lang::Zh,
+            other => return Err(JsValue::from_str(&format!("unknown lang '{other}'"))),
+        };
+        self.game.state.config.language = lang;
+        self.game
+            .overworld
+            .set_script_lang(if lang == Lang::Zh { "zh" } else { "en" });
+        self.game.battle.is_zh = lang == Lang::Zh;
+        Ok(())
+    }
 }
 
 impl PokeredRunner {
@@ -651,6 +670,27 @@ mod tests {
             runner.game.battle.trainer_class,
             Some(pokered_data::trainer_data::TrainerClass::Brock)
         );
+    }
+
+    #[test]
+    fn set_lang_syncs_script_engine_and_battle() {
+        // The editor boots straight into the overworld (LanguageSelect never
+        // runs), so the setLang bridge must apply the same sync itself:
+        // config.language + overworld script engine + battle message lang.
+        let mut runner = PokeredRunner::new(None).unwrap();
+        runner.set_lang("zh").unwrap();
+        assert_eq!(runner.game.state.config.language, Lang::Zh);
+        assert_eq!(runner.game.overworld.script_lang(), Some("zh"));
+        assert!(runner.game.battle.is_zh);
+        // A battle started after the switch stays localized.
+        runner.start_wild_battle("Pikachu", 5).unwrap();
+        assert!(runner.game.battle.is_zh);
+
+        runner.set_lang("en").unwrap();
+        assert_eq!(runner.game.overworld.script_lang(), Some("en"));
+        assert!(!runner.game.battle.is_zh);
+        // The unknown-code error branch builds a `JsValue`, which is
+        // wasm-only (panics on native), so it is not exercised here.
     }
 
     #[test]
