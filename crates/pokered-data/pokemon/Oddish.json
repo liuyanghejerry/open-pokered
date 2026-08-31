@@ -30,12 +30,17 @@
   ],
   "pokedex": {
     "category": "WEED",
+    "categoryZh": "杂草宝可梦",
     "heightFeet": 1,
     "heightInches": 8,
     "weightDecipounds": 120,
     "flavorTextPages": [
       "During the day,\nit keeps its face\nburied in the",
       "ground. At night,\nit wanders around\nsowing its seeds"
+    ],
+    "flavorTextPagesZh": [
+      "白天把脸埋进土里。夜里四处游荡，",
+      "播撒自己的种子。"
     ]
   },
   "evolutions": [

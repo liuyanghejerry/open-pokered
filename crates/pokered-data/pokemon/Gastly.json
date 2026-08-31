@@ -30,12 +30,17 @@
   ],
   "pokedex": {
     "category": "GAS",
+    "categoryZh": "气体宝可梦",
     "heightFeet": 4,
     "heightInches": 3,
     "weightDecipounds": 2,
     "flavorTextPages": [
       "Almost invisible,\nthis gaseous\n#MON cloaks",
       "the target and\nputs it to sleep\nwithout notice"
+    ],
+    "flavorTextPagesZh": [
+      "这种气状宝可梦几乎隐形，会悄悄",
+      "裹住对手让它不知不觉睡着。"
     ]
   },
   "evolutions": [

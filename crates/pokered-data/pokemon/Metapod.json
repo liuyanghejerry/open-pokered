@@ -30,12 +30,17 @@
   ],
   "pokedex": {
     "category": "COCOON",
+    "categoryZh": "蛹宝可梦",
     "heightFeet": 2,
     "heightInches": 4,
     "weightDecipounds": 220,
     "flavorTextPages": [
       "This #MON is\nvulnerable to\nattack while its",
       "shell is soft,\nexposing its weak\nand tender body"
+    ],
+    "flavorTextPagesZh": [
+      "外壳还软的时候，柔弱的身体",
+      "暴露在外，最怕受到攻击。"
     ]
   },
   "evolutions": [

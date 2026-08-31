@@ -30,12 +30,17 @@
   ],
   "pokedex": {
     "category": "MYSTERIOUS",
+    "categoryZh": "神秘宝可梦",
     "heightFeet": 3,
     "heightInches": 7,
     "weightDecipounds": 1760,
     "flavorTextPages": [
       "Its central core\nglows with the\nseven colors of",
       "the rainbow. Some\npeople value the\ncore as a gem"
+    ],
+    "flavorTextPagesZh": [
+      "中心的核心闪烁着彩虹七色。",
+      "有人把它当作宝石看待。"
     ]
   },
   "evolutions": [],

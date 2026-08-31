@@ -30,12 +30,17 @@
   ],
   "pokedex": {
     "category": "GOLDFISH",
+    "categoryZh": "金鱼宝可梦",
     "heightFeet": 4,
     "heightInches": 3,
     "weightDecipounds": 860,
     "flavorTextPages": [
       "In the autumn\nspawning season,\nthey can be seen",
       "swimming power-\nfully up rivers\nand creeks"
+    ],
+    "flavorTextPagesZh": [
+      "秋天的产卵季，能看到它们奋力",
+      "溯流而上的身影。"
     ]
   },
   "evolutions": [],

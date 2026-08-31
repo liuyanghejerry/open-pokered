@@ -30,12 +30,17 @@
   ],
   "pokedex": {
     "category": "DRAGON",
+    "categoryZh": "龙宝可梦",
     "heightFeet": 5,
     "heightInches": 11,
     "weightDecipounds": 70,
     "flavorTextPages": [
       "Long considered a\nmythical #MON\nuntil recently",
       "when a small\ncolony was found\nliving underwater"
+    ],
+    "flavorTextPagesZh": [
+      "长期以来被视为梦幻般的宝可梦，",
+      "直到最近才发现水下栖息着一小群。"
     ]
   },
   "evolutions": [

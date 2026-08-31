@@ -30,12 +30,17 @@
   ],
   "pokedex": {
     "category": "EGG",
+    "categoryZh": "蛋宝可梦",
     "heightFeet": 1,
     "heightInches": 4,
     "weightDecipounds": 60,
     "flavorTextPages": [
       "Often mistaken\nfor eggs.\nWhen disturbed,",
       "they quickly\ngather and attack\nin swarms"
+    ],
+    "flavorTextPagesZh": [
+      "常被误认为是蛋。受到惊扰时会",
+      "迅速聚集起来蜂拥攻击。"
     ]
   },
   "evolutions": [

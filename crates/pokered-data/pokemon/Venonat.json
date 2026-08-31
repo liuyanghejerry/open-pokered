@@ -30,12 +30,17 @@
   ],
   "pokedex": {
     "category": "INSECT",
+    "categoryZh": "昆虫宝可梦",
     "heightFeet": 3,
     "heightInches": 3,
     "weightDecipounds": 660,
     "flavorTextPages": [
       "Lives in the\nshadows of tall\ntrees where it",
       "eats insects. It\nis attracted by\nlight at night"
+    ],
+    "flavorTextPagesZh": [
+      "住在高大树木的树荫下，捕食虫子。",
+      "夜里会被灯光吸引。"
     ]
   },
   "evolutions": [

@@ -30,12 +30,17 @@
   ],
   "pokedex": {
     "category": "FLYCATCHER",
+    "categoryZh": "捕蝇草宝可梦",
     "heightFeet": 5,
     "heightInches": 7,
     "weightDecipounds": 340,
     "flavorTextPages": [
       "Said to live in\nhuge colonies\ndeep in jungles,",
       "although no one\nhas ever returned\nfrom there"
+    ],
+    "flavorTextPagesZh": [
+      "据说栖息在丛林深处的大群落里。",
+      "但从没有人从那里活着回来。"
     ]
   },
   "evolutions": [],

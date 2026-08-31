@@ -30,12 +30,17 @@
   ],
   "pokedex": {
     "category": "BAT",
+    "categoryZh": "蝙蝠宝可梦",
     "heightFeet": 5,
     "heightInches": 3,
     "weightDecipounds": 1210,
     "flavorTextPages": [
       "Once it strikes,\nit will not stop\ndraining energy",
       "from the victim\neven if it gets\ntoo heavy to fly"
+    ],
+    "flavorTextPagesZh": [
+      "一旦开始吸食，就算重得飞不起来，",
+      "也不会停止吸取猎物的能量。"
     ]
   },
   "evolutions": [],

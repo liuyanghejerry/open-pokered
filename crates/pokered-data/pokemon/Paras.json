@@ -30,12 +30,17 @@
   ],
   "pokedex": {
     "category": "MUSHROOM",
+    "categoryZh": "蘑菇宝可梦",
     "heightFeet": 1,
     "heightInches": 0,
     "weightDecipounds": 120,
     "flavorTextPages": [
       "Burrows to suck\ntree roots. The\nmushrooms on its",
       "back grow by draw-\ning nutrients from\nthe bug host"
+    ],
+    "flavorTextPagesZh": [
+      "钻进土里吸食树根。背上的蘑菇靠着",
+      "吸取宿主虫子的养分生长。"
     ]
   },
   "evolutions": [

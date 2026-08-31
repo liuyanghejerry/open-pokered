@@ -30,12 +30,17 @@
   ],
   "pokedex": {
     "category": "FLOWER",
+    "categoryZh": "花宝可梦",
     "heightFeet": 3,
     "heightInches": 11,
     "weightDecipounds": 410,
     "flavorTextPages": [
       "The larger its\npetals, the more\ntoxic pollen it",
       "contains. Its big\nhead is heavy and\nhard to hold up"
+    ],
+    "flavorTextPagesZh": [
+      "花瓣越大，花粉的毒性就越强。",
+      "大脑袋沉甸甸的，抬起来很吃力。"
     ]
   },
   "evolutions": [],

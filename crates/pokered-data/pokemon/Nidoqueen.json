@@ -30,12 +30,17 @@
   ],
   "pokedex": {
     "category": "DRILL",
+    "categoryZh": "钻鼬宝可梦",
     "heightFeet": 4,
     "heightInches": 3,
     "weightDecipounds": 1320,
     "flavorTextPages": [
       "Its hard scales\nprovide strong\nprotection. It",
       "uses its hefty\nbulk to execute\npowerful moves"
+    ],
+    "flavorTextPagesZh": [
+      "坚硬的鳞片提供强有力的防护。",
+      "凭借厚重的身躯施展出强力招式。"
     ]
   },
   "evolutions": [],

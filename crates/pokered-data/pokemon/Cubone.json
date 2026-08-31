@@ -30,12 +30,17 @@
   ],
   "pokedex": {
     "category": "LONELY",
+    "categoryZh": "孤独宝可梦",
     "heightFeet": 1,
     "heightInches": 4,
     "weightDecipounds": 140,
     "flavorTextPages": [
       "Because it never\nremoves its skull\nhelmet, no one",
       "has ever seen\nthis #MON's\nreal face"
+    ],
+    "flavorTextPagesZh": [
+      "它从不摘下头骨头盔，所以谁也没见过",
+      "这张真面目。"
     ]
   },
   "evolutions": [

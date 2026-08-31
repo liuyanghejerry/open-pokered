@@ -30,12 +30,17 @@
   ],
   "pokedex": {
     "category": "SPIRAL",
+    "categoryZh": "螺旋宝可梦",
     "heightFeet": 1,
     "heightInches": 4,
     "weightDecipounds": 170,
     "flavorTextPages": [
       "Although long\nextinct, in rare\ncases, it can be",
       "genetically\nresurrected from\nfossils"
+    ],
+    "flavorTextPagesZh": [
+      "早已灭绝，但在极少数情况下，",
+      "能从化石中基因复活。"
     ]
   },
   "evolutions": [

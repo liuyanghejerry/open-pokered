@@ -30,12 +30,17 @@
   ],
   "pokedex": {
     "category": "DRAGON",
+    "categoryZh": "龙宝可梦",
     "heightFeet": 7,
     "heightInches": 3,
     "weightDecipounds": 4630,
     "flavorTextPages": [
       "An extremely\nrarely seen\nmarine #MON.",
       "Its intelligence\nis said to match\nthat of humans"
+    ],
+    "flavorTextPagesZh": [
+      "极其罕见的海中宝可梦。",
+      "据说智慧不输给人类。"
     ]
   },
   "evolutions": [],

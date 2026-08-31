@@ -30,12 +30,17 @@
   ],
   "pokedex": {
     "category": "NEW SPECIE",
+    "categoryZh": "新种宝可梦",
     "heightFeet": 1,
     "heightInches": 4,
     "weightDecipounds": 90,
     "flavorTextPages": [
       "So rare that it\nis still said to\nbe a mirage by",
       "many experts. Only\na few people have\nseen it worldwide"
+    ],
+    "flavorTextPagesZh": [
+      "太过稀有，许多专家仍说它只是幻影。",
+      "全世界亲眼见过它的人寥寥无几。"
     ]
   },
   "evolutions": [],

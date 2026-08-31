@@ -30,12 +30,17 @@
   ],
   "pokedex": {
     "category": "MUSHROOM",
+    "categoryZh": "蘑菇宝可梦",
     "heightFeet": 3,
     "heightInches": 3,
     "weightDecipounds": 650,
     "flavorTextPages": [
       "A host-parasite\npair in which the\nparasite mushroom",
       "has taken over the\nhost bug. Prefers\ndamp places"
+    ],
+    "flavorTextPagesZh": [
+      "宿主与寄生者的组合，寄生蘑菇已经",
+      "控制了宿主虫子。喜欢潮湿的地方。"
     ]
   },
   "evolutions": [],

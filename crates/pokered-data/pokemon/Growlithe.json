@@ -30,12 +30,17 @@
   ],
   "pokedex": {
     "category": "PUPPY",
+    "categoryZh": "小狗宝可梦",
     "heightFeet": 2,
     "heightInches": 4,
     "weightDecipounds": 420,
     "flavorTextPages": [
       "Very protective\nof its territory.\nIt will bark and",
       "bite to repel\nintruders from\nits space"
+    ],
+    "flavorTextPagesZh": [
+      "领地意识很强。会对入侵自己地盘的",
+      "家伙又咬又叫，毫不留情。"
     ]
   },
   "evolutions": [

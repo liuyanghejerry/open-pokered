@@ -30,12 +30,17 @@
   ],
   "pokedex": {
     "category": "DRAGON",
+    "categoryZh": "龙宝可梦",
     "heightFeet": 1,
     "heightInches": 4,
     "weightDecipounds": 180,
     "flavorTextPages": [
       "Known to shoot\ndown flying bugs\nwith precision",
       "blasts of ink\nfrom the surface\nof the water"
+    ],
+    "flavorTextPagesZh": [
+      "据说能在水面上精准地喷出墨汁，",
+      "击落飞行中的虫子。"
     ]
   },
   "evolutions": [

@@ -30,12 +30,17 @@
   ],
   "pokedex": {
     "category": "LEGENDARY",
+    "categoryZh": "传说宝可梦",
     "heightFeet": 6,
     "heightInches": 3,
     "weightDecipounds": 3420,
     "flavorTextPages": [
       "A #MON that\nhas been admired\nsince the past",
       "for its beauty.\nIt runs agilely\nas if on wings"
+    ],
+    "flavorTextPagesZh": [
+      "从古代起就因美丽而受人喜爱的宝可梦。",
+      "奔跑起来轻盈敏捷，仿佛长了翅膀。"
     ]
   },
   "evolutions": [],

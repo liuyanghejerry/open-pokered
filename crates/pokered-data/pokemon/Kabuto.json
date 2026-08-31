@@ -30,12 +30,17 @@
   ],
   "pokedex": {
     "category": "SHELLFISH",
+    "categoryZh": "贝壳宝可梦",
     "heightFeet": 1,
     "heightInches": 8,
     "weightDecipounds": 250,
     "flavorTextPages": [
       "A #MON that\nwas resurrected\nfrom a fossil",
       "found in what was\nonce the ocean\nfloor eons ago"
+    ],
+    "flavorTextPagesZh": [
+      "从远古海底地层出土的化石中",
+      "复活的宝可梦。"
     ]
   },
   "evolutions": [

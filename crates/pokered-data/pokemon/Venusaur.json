@@ -30,12 +30,17 @@
   ],
   "pokedex": {
     "category": "SEED",
+    "categoryZh": "种子宝可梦",
     "heightFeet": 6,
     "heightInches": 7,
     "weightDecipounds": 2210,
     "flavorTextPages": [
       "The plant blooms\nwhen it is\nabsorbing solar",
       "energy. It stays\non the move to\nseek sunlight"
+    ],
+    "flavorTextPagesZh": [
+      "吸收太阳能时背上的花会绽放。",
+      "为了寻找阳光而不断迁徙。"
     ]
   },
   "evolutions": [],

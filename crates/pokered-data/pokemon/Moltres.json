@@ -30,12 +30,17 @@
   ],
   "pokedex": {
     "category": "FLAME",
+    "categoryZh": "火焰宝可梦",
     "heightFeet": 6,
     "heightInches": 7,
     "weightDecipounds": 1320,
     "flavorTextPages": [
       "Known as the\nlegendary bird of\nfire. Every flap",
       "of its wings\ncreates a dazzling\nflash of flames"
+    ],
+    "flavorTextPagesZh": [
+      "传说中的火之鸟。每次扇动翅膀，",
+      "都会迸发出耀眼的火焰。"
     ]
   },
   "evolutions": [],

@@ -30,12 +30,17 @@
   ],
   "pokedex": {
     "category": "ROCK SNAKE",
+    "categoryZh": "岩蛇宝可梦",
     "heightFeet": 28,
     "heightInches": 10,
     "weightDecipounds": 4630,
     "flavorTextPages": [
       "As it grows, the\nstone portions of\nits body harden",
       "to become similar\nto a diamond, but\ncolored black"
+    ],
+    "flavorTextPagesZh": [
+      "随着成长，身体的岩石部分会越来越硬，",
+      "变得如钻石一般，只是呈黑色。"
     ]
   },
   "evolutions": [],

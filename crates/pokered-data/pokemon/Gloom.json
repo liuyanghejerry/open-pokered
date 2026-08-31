@@ -30,12 +30,17 @@
   ],
   "pokedex": {
     "category": "WEED",
+    "categoryZh": "杂草宝可梦",
     "heightFeet": 2,
     "heightInches": 7,
     "weightDecipounds": 190,
     "flavorTextPages": [
       "The fluid that\noozes from its\nmouth isn't drool.",
       "It is a nectar\nthat is used to\nattract prey"
+    ],
+    "flavorTextPagesZh": [
+      "从嘴里流出的液体不是口水。",
+      "是用来引诱猎物的蜜汁。"
     ]
   },
   "evolutions": [

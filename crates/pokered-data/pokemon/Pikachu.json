@@ -30,12 +30,17 @@
   ],
   "pokedex": {
     "category": "MOUSE",
+    "categoryZh": "鼠宝可梦",
     "heightFeet": 1,
     "heightInches": 4,
     "weightDecipounds": 130,
     "flavorTextPages": [
       "When several of\nthese #MON\ngather, their",
       "electricity could\nbuild and cause\nlightning storms"
+    ],
+    "flavorTextPagesZh": [
+      "几只皮卡丘聚在一起时，电荷会",
+      "积蓄起来，引发雷电交加的风暴。"
     ]
   },
   "evolutions": [

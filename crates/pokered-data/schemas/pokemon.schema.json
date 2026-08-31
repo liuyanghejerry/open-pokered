@@ -87,6 +87,11 @@
           "maxLength": 11,
           "description": "Species classification (e.g. 'SEED', 'MOUSE'). ROM uses GB charmap so practical input is uppercase ASCII letters and spaces, max 11 chars (the width of the in-game label box)."
         },
+        "categoryZh": {
+          "type": "string",
+          "maxLength": 5,
+          "description": "Simplified-Chinese classification including the 宝可梦 suffix (e.g. '种子宝可梦'). Max 5 full-width chars so it fits the entry label box at tile x=8. Optional; falls back to 'category'."
+        },
         "heightFeet": {
           "type": "integer",
           "minimum": 0,
@@ -112,6 +117,15 @@
           "items": {
             "type": "string",
             "description": "One Pokedex page. Lines within a page are separated by '\\n'; in-game each page is shown on its own screen. Embed in-game tokens literally (e.g. '#MON' renders as 'POKéMON')."
+          }
+        },
+        "flavorTextPagesZh": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 4,
+          "items": {
+            "type": "string",
+            "description": "Simplified-Chinese translation of the matching flavorTextPages entry (same page order). Stored as one continuous string per page — the renderer wraps CJK text to the entry box width. Optional; falls back to 'flavorTextPages'."
           }
         }
       },

@@ -30,12 +30,17 @@
   ],
   "pokedex": {
     "category": "SEED",
+    "categoryZh": "种子宝可梦",
     "heightFeet": 3,
     "heightInches": 3,
     "weightDecipounds": 290,
     "flavorTextPages": [
       "When the bulb on\nits back grows\nlarge, it appears",
       "to lose the\nability to stand\non its hind legs"
+    ],
+    "flavorTextPagesZh": [
+      "当背上的花苞长大后，",
+      "似乎就无法用后腿站立了。"
     ]
   },
   "evolutions": [

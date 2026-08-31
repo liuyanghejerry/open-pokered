@@ -30,12 +30,17 @@
   ],
   "pokedex": {
     "category": "MOUSE",
+    "categoryZh": "鼠宝可梦",
     "heightFeet": 3,
     "heightInches": 3,
     "weightDecipounds": 650,
     "flavorTextPages": [
       "Curls up into a\nspiny ball when\nthreatened. It",
       "can roll while\ncurled up to\nattack or escape"
+    ],
+    "flavorTextPagesZh": [
+      "遇到危险就蜷成刺球。还能保持着",
+      "蜷缩的姿态滚动，攻击或逃跑。"
     ]
   },
   "evolutions": [],

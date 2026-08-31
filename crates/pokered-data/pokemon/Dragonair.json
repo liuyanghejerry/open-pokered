@@ -30,12 +30,17 @@
   ],
   "pokedex": {
     "category": "DRAGON",
+    "categoryZh": "龙宝可梦",
     "heightFeet": 13,
     "heightInches": 1,
     "weightDecipounds": 360,
     "flavorTextPages": [
       "A mystical #MON\nthat exudes a\ngentle aura.",
       "Has the ability\nto change climate\nconditions"
+    ],
+    "flavorTextPagesZh": [
+      "浑身散发着温柔气息的神秘宝可梦。",
+      "拥有改变天气的能力。"
     ]
   },
   "evolutions": [

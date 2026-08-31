@@ -30,12 +30,17 @@
   ],
   "pokedex": {
     "category": "SEA LION",
+    "categoryZh": "海狮宝可梦",
     "heightFeet": 3,
     "heightInches": 7,
     "weightDecipounds": 1980,
     "flavorTextPages": [
       "The protruding\nhorn on its head\nis very hard.",
       "It is used for\nbashing through\nthick ice"
+    ],
+    "flavorTextPagesZh": [
+      "头上突出的角非常坚硬，",
+      "用来撞穿厚厚的冰层。"
     ]
   },
   "evolutions": [

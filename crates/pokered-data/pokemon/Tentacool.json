@@ -30,12 +30,17 @@
   ],
   "pokedex": {
     "category": "JELLYFISH",
+    "categoryZh": "水母宝可梦",
     "heightFeet": 2,
     "heightInches": 11,
     "weightDecipounds": 1000,
     "flavorTextPages": [
       "Drifts in shallow\nseas. Anglers who\nhook them by",
       "accident are\noften punished by\nits stinging acid"
+    ],
+    "flavorTextPagesZh": [
+      "漂流在浅海。不小心钓到它的钓鱼人，",
+      "常被它刺人的毒液惩罚。"
     ]
   },
   "evolutions": [

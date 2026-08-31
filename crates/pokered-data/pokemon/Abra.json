@@ -30,12 +30,17 @@
   ],
   "pokedex": {
     "category": "PSI",
+    "categoryZh": "念力宝可梦",
     "heightFeet": 2,
     "heightInches": 11,
     "weightDecipounds": 430,
     "flavorTextPages": [
       "Using its ability\nto read minds, it\nwill identify",
       "impending danger\nand TELEPORT to\nsafety"
+    ],
+    "flavorTextPagesZh": [
+      "拥有读取心声的能力，能察觉迫近的危险。",
+      "一旦感到危险，就会用瞬间移动逃到安全的地方。"
     ]
   },
   "evolutions": [

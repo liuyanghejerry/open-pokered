@@ -30,12 +30,17 @@
   ],
   "pokedex": {
     "category": "PARENT",
+    "categoryZh": "亲子宝可梦",
     "heightFeet": 7,
     "heightInches": 3,
     "weightDecipounds": 1760,
     "flavorTextPages": [
       "The infant rarely\nventures out of\nits mother's",
       "protective pouch\nuntil it is 3\nyears old"
+    ],
+    "flavorTextPagesZh": [
+      "幼崽在3岁之前，几乎从不离开",
+      "妈妈温暖的育儿袋。"
     ]
   },
   "evolutions": [],

@@ -30,12 +30,17 @@
   ],
   "pokedex": {
     "category": "POISON GAS",
+    "categoryZh": "毒气宝可梦",
     "heightFeet": 3,
     "heightInches": 11,
     "weightDecipounds": 210,
     "flavorTextPages": [
       "Where two kinds\nof poison gases\nmeet, 2 KOFFINGs",
       "can fuse into a\nWEEZING over many\nyears"
+    ],
+    "flavorTextPagesZh": [
+      "两种毒气相遇的地方，两只瓦斯弹",
+      "经过长年累月会融合成双弹瓦斯。"
     ]
   },
   "evolutions": [],

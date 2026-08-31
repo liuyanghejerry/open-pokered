@@ -30,12 +30,17 @@
   ],
   "pokedex": {
     "category": "DUCK",
+    "categoryZh": "鸭宝可梦",
     "heightFeet": 5,
     "heightInches": 7,
     "weightDecipounds": 1690,
     "flavorTextPages": [
       "Often seen swim-\nming elegantly by\nlake shores. It",
       "is often mistaken\nfor the Japanese\nmonster, Kappa"
+    ],
+    "flavorTextPagesZh": [
+      "常在湖边优雅地游泳，",
+      "经常被误认成河童。"
     ]
   },
   "evolutions": [],

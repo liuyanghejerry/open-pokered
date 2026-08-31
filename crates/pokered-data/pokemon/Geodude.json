@@ -30,12 +30,17 @@
   ],
   "pokedex": {
     "category": "ROCK",
+    "categoryZh": "岩石宝可梦",
     "heightFeet": 1,
     "heightInches": 4,
     "weightDecipounds": 440,
     "flavorTextPages": [
       "Found in fields\nand mountains.\nMistaking them",
       "for boulders,\npeople often step\nor trip on them"
+    ],
+    "flavorTextPagesZh": [
+      "栖息在原野和山地。常被误认为是石块，",
+      "被人踩到或绊倒。"
     ]
   },
   "evolutions": [

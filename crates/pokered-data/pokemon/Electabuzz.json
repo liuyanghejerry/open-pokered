@@ -30,12 +30,17 @@
   ],
   "pokedex": {
     "category": "ELECTRIC",
+    "categoryZh": "电气宝可梦",
     "heightFeet": 3,
     "heightInches": 7,
     "weightDecipounds": 660,
     "flavorTextPages": [
       "Normally found\nnear power plants,\nthey can wander",
       "away and cause\nmajor blackouts\nin cities"
+    ],
+    "flavorTextPagesZh": [
+      "通常在发电厂附近活动，一旦走失",
+      "就会造成城市大停电。"
     ]
   },
   "evolutions": [],

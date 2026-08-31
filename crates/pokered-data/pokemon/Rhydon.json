@@ -30,12 +30,17 @@
   ],
   "pokedex": {
     "category": "DRILL",
+    "categoryZh": "钻角宝可梦",
     "heightFeet": 6,
     "heightInches": 3,
     "weightDecipounds": 2650,
     "flavorTextPages": [
       "Protected by an\narmor-like hide,\nit is capable of",
       "living in molten\nlava of 3,600\ndegrees"
+    ],
+    "flavorTextPagesZh": [
+      "表皮如铠甲般坚固，",
+      "能栖身在3600度的熔岩里。"
     ]
   },
   "evolutions": [],

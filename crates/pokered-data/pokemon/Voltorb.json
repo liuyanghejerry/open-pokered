@@ -30,12 +30,17 @@
   ],
   "pokedex": {
     "category": "BALL",
+    "categoryZh": "圆球宝可梦",
     "heightFeet": 1,
     "heightInches": 8,
     "weightDecipounds": 230,
     "flavorTextPages": [
       "Usually found in\npower plants.\nEasily mistaken",
       "for a # BALL,\nthey have zapped\nmany people"
+    ],
+    "flavorTextPagesZh": [
+      "通常出现在发电厂。常被误认为",
+      "精灵球，电到过许多人。"
     ]
   },
   "evolutions": [

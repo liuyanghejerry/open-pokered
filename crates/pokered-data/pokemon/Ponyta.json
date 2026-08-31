@@ -30,12 +30,17 @@
   ],
   "pokedex": {
     "category": "FIRE HORSE",
+    "categoryZh": "火马宝可梦",
     "heightFeet": 3,
     "heightInches": 3,
     "weightDecipounds": 660,
     "flavorTextPages": [
       "Its hooves are 10\ntimes harder than\ndiamonds. It can",
       "trample anything\ncompletely flat\nin little time"
+    ],
+    "flavorTextPagesZh": [
+      "蹄子的硬度是钻石的10倍，",
+      "眨眼间就能把任何东西踩扁。"
     ]
   },
   "evolutions": [

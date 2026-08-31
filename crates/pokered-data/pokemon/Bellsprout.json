@@ -30,12 +30,17 @@
   ],
   "pokedex": {
     "category": "FLOWER",
+    "categoryZh": "花宝可梦",
     "heightFeet": 2,
     "heightInches": 4,
     "weightDecipounds": 90,
     "flavorTextPages": [
       "A carnivorous\n#MON that traps\nand eats bugs.",
       "It uses its root\nfeet to soak up\nneeded moisture"
+    ],
+    "flavorTextPagesZh": [
+      "会设陷阱捕食虫子的肉食宝可梦。",
+      "用根一样的脚吸取生长所需的水分。"
     ]
   },
   "evolutions": [

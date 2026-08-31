@@ -30,12 +30,17 @@
   ],
   "pokedex": {
     "category": "POISONMOTH",
+    "categoryZh": "毒蛾宝可梦",
     "heightFeet": 4,
     "heightInches": 11,
     "weightDecipounds": 280,
     "flavorTextPages": [
       "The dust-like\nscales covering\nits wings are",
       "color coded to\nindicate the kinds\nof poison it has"
+    ],
+    "flavorTextPagesZh": [
+      "翅膀上覆盖的鳞粉颜色不同，",
+      "代表的毒性也不同。"
     ]
   },
   "evolutions": [],

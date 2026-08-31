@@ -30,12 +30,17 @@
   ],
   "pokedex": {
     "category": "MOLE",
+    "categoryZh": "鼹鼠宝可梦",
     "heightFeet": 2,
     "heightInches": 4,
     "weightDecipounds": 730,
     "flavorTextPages": [
       "A team of DIGLETT\ntriplets.\nIt triggers huge",
       "earthquakes by\nburrowing 60 miles\nunderground"
+    ],
+    "flavorTextPagesZh": [
+      "三只地鼠组成的小队。钻到地下100公里",
+      "深处时会引发大地震。"
     ]
   },
   "evolutions": [],

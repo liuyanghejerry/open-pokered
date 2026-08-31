@@ -30,12 +30,17 @@
   ],
   "pokedex": {
     "category": "ATROCIOUS",
+    "categoryZh": "凶恶宝可梦",
     "heightFeet": 21,
     "heightInches": 4,
     "weightDecipounds": 5180,
     "flavorTextPages": [
       "Rarely seen in\nthe wild. Huge\nand vicious, it",
       "is capable of\ndestroying entire\ncities in a rage"
+    ],
+    "flavorTextPagesZh": [
+      "很少出现在野外。巨大而凶暴，",
+      "暴怒时能将整个城市夷为平地。"
     ]
   },
   "evolutions": [],

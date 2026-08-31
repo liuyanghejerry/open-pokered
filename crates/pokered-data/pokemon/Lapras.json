@@ -30,12 +30,17 @@
   ],
   "pokedex": {
     "category": "TRANSPORT",
+    "categoryZh": "搭载宝可梦",
     "heightFeet": 8,
     "heightInches": 2,
     "weightDecipounds": 4850,
     "flavorTextPages": [
       "A #MON that\nhas been over-\nhunted almost to",
       "extinction. It\ncan ferry people\nacross the water"
+    ],
+    "flavorTextPagesZh": [
+      "因被滥捕而濒临灭绝的宝可梦。",
+      "它能载着人渡过水面。"
     ]
   },
   "evolutions": [],

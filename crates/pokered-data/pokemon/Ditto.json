@@ -30,12 +30,17 @@
   ],
   "pokedex": {
     "category": "TRANSFORM",
+    "categoryZh": "变身宝可梦",
     "heightFeet": 1,
     "heightInches": 0,
     "weightDecipounds": 90,
     "flavorTextPages": [
       "Capable of copying\nan enemy's genetic\ncode to instantly",
       "transform itself\ninto a duplicate\nof the enemy"
+    ],
+    "flavorTextPagesZh": [
+      "能复制敌人的基因信息，瞬间变身成",
+      "和敌人一模一样的样子。"
     ]
   },
   "evolutions": [],

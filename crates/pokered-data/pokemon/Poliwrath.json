@@ -30,12 +30,17 @@
   ],
   "pokedex": {
     "category": "TADPOLE",
+    "categoryZh": "蝌蚪宝可梦",
     "heightFeet": 4,
     "heightInches": 3,
     "weightDecipounds": 1190,
     "flavorTextPages": [
       "An adept swimmer\nat both the front\ncrawl and breast",
       "stroke. Easily\novertakes the best\nhuman swimmers"
+    ],
+    "flavorTextPagesZh": [
+      "自由泳和蛙泳都很在行，",
+      "轻松超越人类顶尖游泳选手。"
     ]
   },
   "evolutions": [],

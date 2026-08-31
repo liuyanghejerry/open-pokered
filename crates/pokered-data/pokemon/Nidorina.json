@@ -30,12 +30,17 @@
   ],
   "pokedex": {
     "category": "POISON PIN",
+    "categoryZh": "毒针宝可梦",
     "heightFeet": 2,
     "heightInches": 7,
     "weightDecipounds": 440,
     "flavorTextPages": [
       "The female's horn\ndevelops slowly.\nPrefers physical",
       "attacks such as\nclawing and\nbiting"
+    ],
+    "flavorTextPagesZh": [
+      "雌性的角长得慢。更擅长爪击和",
+      "撕咬这样的物理攻击。"
     ]
   },
   "evolutions": [

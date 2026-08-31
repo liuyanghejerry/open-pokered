@@ -30,12 +30,17 @@
   ],
   "pokedex": {
     "category": "FLAME",
+    "categoryZh": "火焰宝可梦",
     "heightFeet": 2,
     "heightInches": 11,
     "weightDecipounds": 550,
     "flavorTextPages": [
       "When storing\nthermal energy in\nits body, its",
       "temperature could\nsoar to over 1600\ndegrees"
+    ],
+    "flavorTextPagesZh": [
+      "在体内储存热量时，体温可以",
+      "飙升到1600度以上。"
     ]
   },
   "evolutions": [],

@@ -30,12 +30,17 @@
   ],
   "pokedex": {
     "category": "FREEZE",
+    "categoryZh": "急冻宝可梦",
     "heightFeet": 5,
     "heightInches": 7,
     "weightDecipounds": 1220,
     "flavorTextPages": [
       "A legendary bird\n#MON that is\nsaid to appear to",
       "doomed people who\nare lost in icy\nmountains"
+    ],
+    "flavorTextPagesZh": [
+      "传说中的鸟宝可梦，据说会在冰封的山中迷路、",
+      "濒临绝境的人面前出现。"
     ]
   },
   "evolutions": [],

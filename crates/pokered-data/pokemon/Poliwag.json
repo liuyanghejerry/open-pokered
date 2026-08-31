@@ -30,12 +30,17 @@
   ],
   "pokedex": {
     "category": "TADPOLE",
+    "categoryZh": "蝌蚪宝可梦",
     "heightFeet": 2,
     "heightInches": 0,
     "weightDecipounds": 270,
     "flavorTextPages": [
       "Its newly grown\nlegs prevent it\nfrom running. It",
       "appears to prefer\nswimming than\ntrying to stand"
+    ],
+    "flavorTextPagesZh": [
+      "刚长出的腿还跑不快。比起站立，",
+      "它似乎更喜欢游泳。"
     ]
   },
   "evolutions": [

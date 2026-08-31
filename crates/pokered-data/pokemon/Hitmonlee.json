@@ -30,12 +30,17 @@
   ],
   "pokedex": {
     "category": "KICKING",
+    "categoryZh": "踢腿宝可梦",
     "heightFeet": 4,
     "heightInches": 11,
     "weightDecipounds": 1100,
     "flavorTextPages": [
       "When in a hurry,\nits legs lengthen\nprogressively.",
       "It runs smoothly\nwith extra long,\nloping strides"
+    ],
+    "flavorTextPagesZh": [
+      "着急时腿会不断伸长，迈开超长的",
+      "步伐轻快地奔跑。"
     ]
   },
   "evolutions": [],

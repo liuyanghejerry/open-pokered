@@ -30,12 +30,17 @@
   ],
   "pokedex": {
     "category": "SHELLFISH",
+    "categoryZh": "贝壳宝可梦",
     "heightFeet": 5,
     "heightInches": 3,
     "weightDecipounds": 1890,
     "flavorTextPages": [
       "A brutal #MON\nwith pressurized\nwater jets on its",
       "shell. They are\nused for high\nspeed tackles"
+    ],
+    "flavorTextPagesZh": [
+      "性情凶暴的宝可梦，甲壳上装有加压水炮。",
+      "它会借着水炮的推力发起高速撞击。"
     ]
   },
   "evolutions": [],

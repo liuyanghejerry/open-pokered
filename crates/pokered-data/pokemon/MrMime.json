@@ -30,12 +30,17 @@
   ],
   "pokedex": {
     "category": "BARRIER",
+    "categoryZh": "屏障宝可梦",
     "heightFeet": 4,
     "heightInches": 3,
     "weightDecipounds": 1200,
     "flavorTextPages": [
       "If interrupted\nwhile it is\nmiming, it will",
       "slap around the\noffender with its\nbroad hands"
+    ],
+    "flavorTextPagesZh": [
+      "演哑剧时被打断的话，",
+      "会用宽大的手掌猛扇打扰者。"
     ]
   },
   "evolutions": [],
