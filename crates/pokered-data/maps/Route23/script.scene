@@ -7,12 +7,14 @@
 //   npc1 EARTHBADGE, npc2 VOLCANOBADGE, npc3 MARSHBADGE, npc4 SOULBADGE,
 //   npc5 RAINBOWBADGE, npc6 THUNDERBADGE, npc7 CASCADEBADGE.
 //
-// There is no badge-query API, so "has badge X" is approximated by the
-// gym-beaten event flag the corresponding gym scene already sets
-// (e.g. CASCADEBADGE <- EVENT_BEAT_MISTY). Passing a checkpoint sets the
-// original EVENT_PASSED_*_CHECK flag. The original's forced push-back on a
-// failed check is a fixed single-step DOWN push, reproduced with
-// movePlayerRelative (DENIED sound + refusal text included).
+// There is a badge-query API now (hasBadge); the talk handlers below predate it
+// and approximate "has badge X" with the gym-beaten event flag the corresponding
+// gym scene already sets (e.g. CASCADEBADGE <- EVENT_BEAT_MISTY). The on-step
+// row checks (guardRow* storylines, added after the sign) use hasBadge directly.
+// Passing a checkpoint sets the original EVENT_PASSED_*_CHECK flag. The
+// original's forced push-back on a failed check is a fixed single-step DOWN
+// push, reproduced with movePlayerRelative (DENIED sound + refusal text
+// included).
 
 game_scene Route23 {
   // ── Checkpoint 1: Guard (npc 1) — EARTHBADGE ─────────────────────────────
@@ -194,5 +196,142 @@ game_scene Route23 {
   @storyline("sign1") {
     @trigger(map = "Route23", sign = 1)
     @speaker("") { @t("VICTORY ROAD GATE - POKeMON\nLEAGUE", "冠军之路大门 - 宝可梦联盟") }
+  }
+
+  // ── On-step badge row checks (coord events) ─────────────────────────────
+  // Original Route23DefaultScript: while a checkpoint's EVENT_PASSED_*_CHECK is
+  // unset, stepping onto that guard's map row runs the same badge check as the
+  // talk handler — the guards stand BESIDE the corridor, so without this row
+  // check the player can simply walk past them. The trigger tiles enumerate
+  // every reachable (walkable / surfable) tile of each guard row, matching the
+  // original's whole-row check; row 35 additionally stops at x<14 like the
+  // original (the x>=14 plateau is past the checkpoint). Badge ownership is
+  // queried directly with hasBadge (wObtainedBadges), exactly like the
+  // original's wObtainedBadges bit test.
+  @storyline("guardRowEarth") {
+    @trigger(map = "Route23", name = "guardRowEarth1", coords = [[0, 35], [1, 35], [2, 35], [3, 35], [4, 35], [5, 35], [6, 35], [7, 35]])
+    @if (!getFlag("EVENT_PASSED_EARTHBADGE_CHECK")) {
+      @if (hasBadge("EARTHBADGE")) {
+        playSound("SFX_GET_ITEM_1")
+        @speaker("") { @t("Oh! That is the EARTHBADGE!", "哦！那是绿色徽章！") }
+        @speaker("") { @t("OK then! Please, go right\nahead!", "那好！请吧，尽管往前走吧！") }
+        setFlag("EVENT_PASSED_EARTHBADGE_CHECK")
+      } @else {
+        playSound("SFX_DENIED")
+        @speaker("") {
+          @t("You don't have the\nEARTHBADGE yet!\n\nYou have to have it to get\nto POKeMON LEAGUE!", "你还没有绿色徽章！\n\n没有它就无法前往宝可梦联盟！")
+        }
+        // Original Route23MovePlayerDownScript: one-step PAD_DOWN push-back.
+        movePlayerRelative(["down"])
+      }
+    }
+  }
+
+  @storyline("guardRowVolcano") {
+    @trigger(map = "Route23", name = "guardRowVolcano1", coords = [[6, 56], [7, 56], [8, 56], [9, 56], [10, 56], [11, 56], [12, 56], [13, 56]])
+    @if (!getFlag("EVENT_PASSED_VOLCANOBADGE_CHECK")) {
+      @if (hasBadge("VOLCANOBADGE")) {
+        playSound("SFX_GET_ITEM_1")
+        @speaker("") { @t("Oh! That is the\nVOLCANOBADGE!", "哦！那是深红徽章！") }
+        @speaker("") { @t("OK then! Please, go right\nahead!", "那好！请吧，尽管往前走吧！") }
+        setFlag("EVENT_PASSED_VOLCANOBADGE_CHECK")
+      } @else {
+        playSound("SFX_DENIED")
+        @speaker("") {
+          @t("You don't have the\nVOLCANOBADGE yet!\n\nYou have to have it to get\nto POKeMON LEAGUE!", "你还没有深红徽章！\n\n没有它就无法前往宝可梦联盟！")
+        }
+        movePlayerRelative(["down"])
+      }
+    }
+  }
+
+  @storyline("guardRowMarsh") {
+    @trigger(map = "Route23", name = "guardRowMarsh1", coords = [[4, 85], [5, 85], [6, 85], [7, 85], [8, 85], [9, 85], [10, 85], [11, 85], [12, 85], [13, 85]])
+    @if (!getFlag("EVENT_PASSED_MARSHBADGE_CHECK")) {
+      @if (hasBadge("MARSHBADGE")) {
+        playSound("SFX_GET_ITEM_1")
+        @speaker("") { @t("Oh! That is the MARSHBADGE!", "哦！那是粉色徽章！") }
+        @speaker("") { @t("OK then! Please, go right\nahead!", "那好！请吧，尽管往前走吧！") }
+        setFlag("EVENT_PASSED_MARSHBADGE_CHECK")
+      } @else {
+        playSound("SFX_DENIED")
+        @speaker("") {
+          @t("You don't have the\nMARSHBADGE yet!\n\nYou have to have it to get\nto POKeMON LEAGUE!", "你还没有粉色徽章！\n\n没有它就无法前往宝可梦联盟！")
+        }
+        movePlayerRelative(["down"])
+      }
+    }
+  }
+
+  @storyline("guardRowSoul") {
+    @trigger(map = "Route23", name = "guardRowSoul1", coords = [[8, 96], [9, 96], [10, 96], [11, 96], [12, 96], [13, 96]])
+    @if (!getFlag("EVENT_PASSED_SOULBADGE_CHECK")) {
+      @if (hasBadge("SOULBADGE")) {
+        playSound("SFX_GET_ITEM_1")
+        @speaker("") { @t("Oh! That is the SOULBADGE!", "哦！那是灵魂徽章！") }
+        @speaker("") { @t("OK then! Please, go right\nahead!", "那好！请吧，尽管往前走吧！") }
+        setFlag("EVENT_PASSED_SOULBADGE_CHECK")
+      } @else {
+        playSound("SFX_DENIED")
+        @speaker("") {
+          @t("You don't have the SOULBADGE\nyet!\n\nYou have to have it to get\nto POKeMON LEAGUE!", "你还没有灵魂徽章！\n\n没有它就无法前往宝可梦联盟！")
+        }
+        movePlayerRelative(["down"])
+      }
+    }
+  }
+
+  @storyline("guardRowRainbow") {
+    @trigger(map = "Route23", name = "guardRowRainbow1", coords = [[10, 105], [11, 105], [12, 105], [13, 105], [14, 105], [15, 105]])
+    @if (!getFlag("EVENT_PASSED_RAINBOWBADGE_CHECK")) {
+      @if (hasBadge("RAINBOWBADGE")) {
+        playSound("SFX_GET_ITEM_1")
+        @speaker("") { @t("Oh! That is the\nRAINBOWBADGE!", "哦！那是彩虹徽章！") }
+        @speaker("") { @t("OK then! Please, go right\nahead!", "那好！请吧，尽管往前走吧！") }
+        setFlag("EVENT_PASSED_RAINBOWBADGE_CHECK")
+      } @else {
+        playSound("SFX_DENIED")
+        @speaker("") {
+          @t("You don't have the\nRAINBOWBADGE yet!\n\nYou have to have it to get\nto POKeMON LEAGUE!", "你还没有彩虹徽章！\n\n没有它就无法前往宝可梦联盟！")
+        }
+        movePlayerRelative(["down"])
+      }
+    }
+  }
+
+  @storyline("guardRowThunder") {
+    @trigger(map = "Route23", name = "guardRowThunder1", coords = [[1, 119], [2, 119], [3, 119], [4, 119], [5, 119], [6, 119], [8, 119], [9, 119], [11, 119], [12, 119], [13, 119], [14, 119], [16, 119], [17, 119], [18, 119]])
+    @if (!getFlag("EVENT_PASSED_THUNDERBADGE_CHECK")) {
+      @if (hasBadge("THUNDERBADGE")) {
+        playSound("SFX_GET_ITEM_1")
+        @speaker("") { @t("Oh! That is the\nTHUNDERBADGE!", "哦！那是橙色徽章！") }
+        @speaker("") { @t("OK then! Please, go right\nahead!", "那好！请吧，尽管往前走吧！") }
+        setFlag("EVENT_PASSED_THUNDERBADGE_CHECK")
+      } @else {
+        playSound("SFX_DENIED")
+        @speaker("") {
+          @t("You don't have the\nTHUNDERBADGE yet!\n\nYou have to have it to get\nto POKeMON LEAGUE!", "你还没有橙色徽章！\n\n没有它就无法前往宝可梦联盟！")
+        }
+        movePlayerRelative(["down"])
+      }
+    }
+  }
+
+  @storyline("guardRowCascade") {
+    @trigger(map = "Route23", name = "guardRowCascade1", coords = [[6, 136], [7, 136], [8, 136], [9, 136]])
+    @if (!getFlag("EVENT_PASSED_CASCADEBADGE_CHECK")) {
+      @if (hasBadge("CASCADEBADGE")) {
+        playSound("SFX_GET_ITEM_1")
+        @speaker("") { @t("Oh! That is the\nCASCADEBADGE!", "哦！那是蓝色徽章！") }
+        @speaker("") { @t("OK then! Please, go right\nahead!", "那好！请吧，尽管往前走吧！") }
+        setFlag("EVENT_PASSED_CASCADEBADGE_CHECK")
+      } @else {
+        playSound("SFX_DENIED")
+        @speaker("") {
+          @t("You don't have the\nCASCADEBADGE yet!\n\nYou have to have it to get\nto POKeMON LEAGUE!", "你还没有蓝色徽章！\n\n没有它就无法前往宝可梦联盟！")
+        }
+        movePlayerRelative(["down"])
+      }
+    }
   }
 }

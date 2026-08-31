@@ -4,8 +4,10 @@
 // Safari ZONE timing and ball handling are built into the engine: warping into
 // a safari map auto-arms the 500-step / 30-ball hunt, each throw decrements the
 // ball count, and at 0 steps / 0 balls the engine PA-calls the player and
-// bounces them back to the gate. The scene only reproduces the gate dialogue
-// (join fee, leaving-early return) with real primitives; the remaining gap is a
+// bounces them back to the gate. The scene reproduces the gate dialogue
+// (join fee, leaving-early return) with real primitives, plus the on-step
+// interception at the gate row (coords 3,2 / 4,2) so the player can't walk
+// into the ZONE past the counter without paying; the remaining gap is a
 // script-side query/control API for the hunt state (tracked in the completion
 // plan).
 
@@ -86,6 +88,82 @@ game_scene SafariZoneGate {
       @option("NO") {
         @speaker("") {
           @t("Sorry, you're a regular\nhere!", "抱歉，你是这里的常客了！")
+        }
+      }
+    }
+  }
+
+  // ── Gate-row interception (coords 3,2 / 4,2) ─────────────────────────────
+  // Original SafariZoneGateDefaultScript fires when the player steps onto the
+  // gate row. Walking in: the worker pitches the hunt and only a paid join lets
+  // the player through the north door into the ZONE (a refusal or an empty
+  // purse shoves the player back down). Walking back out of the ZONE: the
+  // worker asks "Leaving early?" — YES ends the hunt and sends the player
+  // toward the door, NO sends them back in.
+  @storyline("gateRow") {
+    @trigger(map = "SafariZoneGate", name = "gateRow1", coords = [[3, 2], [4, 2]])
+    @if (getFlag("EVENT_IN_SAFARI_ZONE")) {
+      // Player is inside the Safari Zone and walked back toward the exit.
+      @speaker("") { @t("Leaving early?", "要提前离开吗？") }
+      @choice {
+        @option(@t("YES", "是")) {
+          @speaker("") {
+            @t("Please return any SAFARI\nBALLs you have left.", "请把剩下的狩猎球还给我。")
+          }
+          // Same hand-back as the talk handler: the engine-side safari_balls
+          // counter decrements per throw and is not refunded on early exit.
+          takeItem("SAFARI_BALL", 30)
+          resetFlag("EVENT_SAFARI_GAME_OVER")
+          resetFlag("EVENT_IN_SAFARI_ZONE")
+          // Original auto-walks the player down out of the gate (PAD_DOWN x3);
+          // one step down off the gate row is the safe approximation (a longer
+          // scripted walk would park the player on the door warp tile).
+          movePlayerRelative(["down"])
+        }
+        @option(@t("NO", "否")) {
+          @speaker("") { @t("Good Luck!", "祝你好运！") }
+          // Keep hunting — one step back up toward the ZONE door (original:
+          // PAD_UP x1, then the LEAVING script resumes).
+          movePlayerRelative(["up"])
+        }
+      }
+    } @else {
+      // Walking in — pitch the hunt (original auto-walks the player right to
+      // the counter from (3,2); that positioning step is cosmetic and omitted).
+      @speaker("") {
+        @t("For just ¥500, you can catch\nall the POKeMON you want in\nthe park!\n\nWould you like to join the\nhunt?", "只需500日元，你就能在公园里\n抓到所有想要的宝可梦！\n\n要加入狩猎吗？")
+      }
+      @choice {
+        @option(@t("YES", "是")) {
+          @if (hasMoney(500)) {
+            takeMoney(500)
+            @speaker("") {
+              @t("That'll be ¥500 please!\n\nWe only use a special POKe\nBALL here.\n\n<PLAYER> received 30 SAFARI\nBALLs!", "请交 500日元！\n\n我们这里只使用特制的精灵球。\n\n<PLAYER>获得了 30个狩猎球！")
+            }
+            // The engine auto-sets the 500-step / 30-ball Safari timer on warp
+            // into the zone; the 30 bag SAFARI BALLs are what this scene grants.
+            giveItem("SAFARI_BALL", 30)
+            @speaker("") {
+              @t("We'll call you on the PA\nwhen you run out of time or\nSAFARI BALLs!", "当你时间用完或狩猎球用完时，\n我们会用广播呼叫你！")
+            }
+            setFlag("EVENT_IN_SAFARI_ZONE")
+            resetFlag("EVENT_SAFARI_GAME_OVER")
+            // The original auto-walks the player up through the gate; warp in.
+            warpTo("SafariZoneCenter", 14, 25)
+          } @else {
+            @speaker("") {
+              @t("Oops! Not enough money!", "哎呀！钱不够！")
+            }
+            // Original CantPayWalkDown: PAD_DOWN x1 shove off the gate row.
+            movePlayerRelative(["down"])
+          }
+        }
+        @option(@t("NO", "否")) {
+          @speaker("") {
+            @t("OK! Please come again!", "OK！欢迎再次光临！")
+          }
+          // Same CantPayWalkDown shove as the original.
+          movePlayerRelative(["down"])
         }
       }
     }

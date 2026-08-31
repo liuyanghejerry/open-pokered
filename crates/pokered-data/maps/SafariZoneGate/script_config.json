@@ -1,6 +1,23 @@
 {
   "$schema": "../../schemas/script_config.schema.json",
-  "coordEvents": [],
+  "coordEvents": [
+    {
+      "name": "gateRow1",
+      "position": [
+        3,
+        2
+      ],
+      "trigger": "gateRow"
+    },
+    {
+      "name": "gateRow2",
+      "position": [
+        4,
+        2
+      ],
+      "trigger": "gateRow"
+    }
+  ],
   "npcs": [
     {
       "id": 1,

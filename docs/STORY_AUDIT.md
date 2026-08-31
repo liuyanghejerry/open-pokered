@@ -405,10 +405,13 @@ mechanics (the audit agents read scenes, not `overworld/special_terrain.rs`):
   `SPINNER_TILESETS = [Facility, Gym]`). Covers **ViridianGym**, Rocket Hideout B2F/B3F, Silph Co —
   map-tile-driven, needs no scene code. (Scene TODO comments there are now stale.)
 - ✅ **Teleport pads** — `teleport_spin_direction` exists (SaffronGym maze).
-- ✔ **Gate push-backs** (Route5/6/7/8 Gate, Route16/18 Gate, Route22Gate, Route23) and
+- ✔ **Gate push-backs** (Route16/18 Gate, Route22Gate) and
   **escort/cutscene walks** (Pewter guides, Lance's/Lorelei's Rooms, Vermilion/SS-Anne dock,
   Giovanni walk-up, Bill's House) — functional `movePlayer`/`moveNpc` approximations; only exact
   simulated-joypad RLE fidelity is missing (cosmetic).
+  ⚠️→✅ This line over-claimed: Route5/6/7Gate, Route23 and SafariZoneGate had **no coord
+  interception at all** (only Route8Gate did) — the guards never stopped the player. Fixed in
+  the 2026-09 blocking-NPC pass below.
 - Seafoam forced-surf current is the one genuine remaining piece (bundled with Phase 5 boulders).
 
 ### Phase 4 — In-game trade primitive  ✅ done
@@ -454,3 +457,35 @@ fidelity. Each is a major standalone build; deferred rather than rushed:
   already open in `map.blk`), RNG flavor-text pools (CeruleanCity, SSAnneKitchen), DisplayDiploma,
   DisplayDexRating, Name Rater rename, numeric/starter text tokens, Jigglypuff song/spin,
   per-trainer EndBattleText (needs bulk data), and **cable-club/link** multiplayer.
+
+## ✅ 2026-09 — Missing "block-the-player" coord interceptions (Route5/6/7Gate, Route23, SafariZoneGate)
+
+Live playtesting found several NPCs that should stop the player from passing never fired:
+the original maps run the interception from a `DefaultScript` coord check
+(`ArePlayerCoordsInArray` / the Route23 guard-row scan), but the ports only had the guard's
+*talk* handler — walking past did nothing. Route8Gate was the one correct reference port.
+
+- **Route5Gate / Route6Gate / Route7Gate** — added the `gateBlock` coord storyline on the
+  original trigger tiles ((3,3)/(4,3), (3,2)/(4,2), (3,3)/(3,4) respectively): while
+  `EVENT_GAVE_SAFFRON_GUARDS_DRINK` is unset, stepping onto the gate row takes a carried
+  drink (FRESH_WATER→SODA_POP→LEMONADE) and sets the shared flag, else shows the thirsty
+  line and shoves the player back (original PAD_UP / PAD_DOWN / PAD_LEFT directions).
+- **Route23** — added the seven `guardRow*` on-step badge checks (CASCADE→EARTH, south to
+  north) the original `Route23DefaultScript` runs: the guards stand *beside* the corridor,
+  so without the row check every checkpoint was bypassable (live-verified sidestep exploit).
+  Trigger tiles enumerate exactly the reachable tiles of each guard row (derived from the
+  real blockset collision data; rows 85/96 are surf-only tiles; row 35 stops at x<14 like
+  the original). Uses the real `hasBadge()` API (the old "no badge-query API" comment was
+  stale). DENIED/SFX + one-step `movePlayerRelative(["down"])` on failure; sets the original
+  `EVENT_PASSED_*_CHECK` flags on success.
+- **SafariZoneGate** — added the `gateRow` coord storyline at (3,2)/(4,2): walking in runs
+  the join pitch (pay ¥500 → 30 SAFARI BALLs + `warpTo` into the ZONE; refuse/no money →
+  one-step shove down), walking back out of the ZONE runs "Leaving early?" (YES returns the
+  balls + clears `EVENT_IN_SAFARI_ZONE`/`EVENT_SAFARI_GAME_OVER` + shove down; NO →
+  "Good Luck!" + one step back up toward the door).
+
+All verified live over the debug server (fresh state and a money/all-badges snapshot):
+blocked without drink/badge/money (incl. sidestep probes), correct pass-through with
+drink/badge/payment, the shared gate flag opening all Saffron gates, and both
+leaving-Safari branches. `pokered-core` + `pokered-data` suites green (incl. the
+`.scene`↔config round-trip).
