@@ -15,7 +15,10 @@
 //! front/back pics keep the reimpl's native sprite sizes (the mon front pics
 //! are 40×40 here vs the original's 7×7-tile 56×56).
 
+use pokered_core::game_state::Lang;
 use pokered_core::hof_ceremony::{HofCeremonyState, HofPhase, HofScrollStage};
+use pokered_data::lang_data;
+use pokered_data::ui_text::zh_pc_line;
 use pokered_renderer::embedded_font::draw_text;
 use pokered_renderer::palette::GRAYSCALE_SPRITE_PALETTE;
 use pokered_renderer::resource::{AssetCategory, ResourceManager};
@@ -40,7 +43,9 @@ pub fn draw_hof_ceremony(
     hof: &HofCeremonyState,
     resources: &mut Option<ResourceManager>,
     fb: &mut FrameBuffer,
+    lang: Lang,
 ) {
+    let is_zh = lang == Lang::Zh;
     fb.clear(Rgba::WHITE);
     match hof.phase() {
         HofPhase::FadeOut | HofPhase::Opening | HofPhase::FinalFade | HofPhase::Done => {}
@@ -58,11 +63,11 @@ pub fn draw_hof_ceremony(
         HofPhase::MonInfo | HofPhase::MonText | HofPhase::MonFade => {
             if let Some(entry) = hof.current_entry() {
                 draw_mon_front(entry.species, FRONT_REST_X, FRONT_REST_Y, resources, fb);
-                draw_mon_info(entry, fb);
+                draw_mon_info(entry, fb, is_zh);
                 if hof.phase() == HofPhase::MonText {
                     // hlcoord 2, 13 / "HALL OF FAME" (hall_of_fame.asm:96-99).
                     draw_text_box(fb, 2 * T, 13 * T, 14, 2, FG);
-                    draw_text("HALL OF FAME", 4 * T, 14 * T, FG, fb);
+                    draw_text(lang_data::ui_label("HALL OF FAME", is_zh), 4 * T, 14 * T, FG, fb);
                 }
             }
         }
@@ -79,7 +84,7 @@ pub fn draw_hof_ceremony(
             // The player's front pic stays on screen (HoFShowMonOrPlayer left
             // it at hlcoord 12,5; HoFDisplayPlayerStats does not clear).
             draw_player_front(FRONT_REST_X, FRONT_REST_Y, resources, fb);
-            draw_player_stats(hof, fb);
+            draw_player_stats(hof, fb, is_zh);
         }
     }
 }
@@ -186,15 +191,15 @@ fn blit_scaled(fb: &mut FrameBuffer, cached: &pokered_renderer::resource::Cached
 
 /// `HoFMonInfoText` box (hall_of_fame.asm:178-200): nickname, LEVEL/, TYPE1/,
 /// TYPE2/.
-fn draw_mon_info(entry: &pokered_core::hof_ceremony::HofEntry, fb: &mut FrameBuffer) {
+fn draw_mon_info(entry: &pokered_core::hof_ceremony::HofEntry, fb: &mut FrameBuffer, is_zh: bool) {
     draw_text_box(fb, 0, 2 * T, 10, 8, FG);
     draw_text(&entry.nickname, T, 4 * T, FG, fb);
-    draw_text("LEVEL/", 2 * T, 6 * T, FG, fb);
+    draw_text(lang_data::ui_label("LEVEL/", is_zh), 2 * T, 6 * T, FG, fb);
     draw_text(&format!(":L{}", entry.level), 8 * T, 7 * T, FG, fb);
-    draw_text("TYPE1/", 2 * T, 8 * T, FG, fb);
+    draw_text(lang_data::ui_label("TYPE1/", is_zh), 2 * T, 8 * T, FG, fb);
     if let Some(stats) = pokered_data::pokemon_data::get_base_stats(entry.species) {
         draw_text(
-            pokered_data::lang_data::type_name(stats.type1, false),
+            lang_data::type_name(stats.type1, is_zh),
             3 * T,
             9 * T,
             FG,
@@ -202,9 +207,9 @@ fn draw_mon_info(entry: &pokered_core::hof_ceremony::HofEntry, fb: &mut FrameBuf
         );
         // The original only prints TYPE2 when it differs (PrintMonType).
         if stats.type1 != stats.type2 {
-            draw_text("TYPE2/", 2 * T, 10 * T, FG, fb);
+            draw_text(lang_data::ui_label("TYPE2/", is_zh), 2 * T, 10 * T, FG, fb);
             draw_text(
-                pokered_data::lang_data::type_name(stats.type2, false),
+                lang_data::type_name(stats.type2, is_zh),
                 3 * T,
                 11 * T,
                 FG,
@@ -216,13 +221,13 @@ fn draw_mon_info(entry: &pokered_core::hof_ceremony::HofEntry, fb: &mut FrameBuf
 
 /// `HoFDisplayPlayerStats` (hall_of_fame.asm:203-228): player name, PLAY
 /// TIME, MONEY, #DEX seen/owned, rating.
-fn draw_player_stats(hof: &HofCeremonyState, fb: &mut FrameBuffer) {
+fn draw_player_stats(hof: &HofCeremonyState, fb: &mut FrameBuffer, is_zh: bool) {
     let stats = hof.stats();
     // Name box (hlcoord 5,0) + stats box (hlcoord 0,4).
     draw_text_box(fb, 5 * T, 0, 9, 2, FG);
     draw_text(&stats.name, 7 * T, 2 * T, FG, fb);
     draw_text_box(fb, 0, 4 * T, 10, 6, FG);
-    draw_text("PLAY TIME", T, 6 * T, FG, fb);
+    draw_text(lang_data::ui_label("PLAY TIME", is_zh), T, 6 * T, FG, fb);
     draw_text(
         &format!("{}:{:02}", stats.play_time_hours, stats.play_time_minutes),
         5 * T,
@@ -230,24 +235,23 @@ fn draw_player_stats(hof: &HofCeremonyState, fb: &mut FrameBuffer) {
         FG,
         fb,
     );
-    draw_text("MONEY", T, 9 * T, FG, fb);
+    draw_text(lang_data::ui_label("MONEY", is_zh), T, 9 * T, FG, fb);
     draw_text(&format!("${}", stats.money), 4 * T, 10 * T, FG, fb);
     // DexSeenOwnedText / DexRatingText equivalents.
-    draw_text(
-        &format!("#DEX SEEN {:>3}", stats.dex_seen),
-        T,
-        12 * T,
-        FG,
-        fb,
-    );
-    draw_text(
-        &format!("     OWNED {:>3}", stats.dex_owned),
-        T,
-        13 * T,
-        FG,
-        fb,
-    );
+    let seen = if is_zh {
+        format!("图鉴已见{:>3}", stats.dex_seen)
+    } else {
+        format!("#DEX SEEN {:>3}", stats.dex_seen)
+    };
+    draw_text(&seen, T, 12 * T, FG, fb);
+    let owned = if is_zh {
+        format!("拥有     {:>3}", stats.dex_owned)
+    } else {
+        format!("     OWNED {:>3}", stats.dex_owned)
+    };
+    draw_text(&owned, T, 13 * T, FG, fb);
     for (i, line) in stats.rating.split('\n').take(2).enumerate() {
-        draw_text(line, T, (14 + i as u32) * T, FG, fb);
+        let shown = if is_zh { zh_pc_line(line) } else { line.to_string() };
+        draw_text(&shown, T, (14 + i as u32) * T, FG, fb);
     }
 }
