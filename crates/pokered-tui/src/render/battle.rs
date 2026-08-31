@@ -13,7 +13,7 @@ use pokered_renderer::battle_anim::{
     AnimEffect, AnimTickResult, AnimationPlayer, AnimationType, BattleEffects, MonRect, MonSide,
     ANIM_BASE_TILE_ID,
 };
-use pokered_renderer::embedded_font::{draw_text, measure_text};
+use pokered_renderer::embedded_font::draw_text;
 use pokered_renderer::battle_scene::{
     EnemyHud, PlayerHud, BallIndicators, BallStatus, StatusCondition,
 };
@@ -2529,15 +2529,20 @@ pub fn draw_battle(
         // tilemap/sprite blits (mirrors the app's zh HUD overlay).
         if is_zh {
             let text_color = Rgba::new(0, 0, 0, 255);
+            // Left-aligned at the HUD name origin — centering pushes 3+ char
+            // names right onto the "Lv" column below (CJK glyphs are 10px tall
+            // and their lower edge grazes the level row).
             if !hide_enemy_hud {
-                let w = measure_text(&enemy_name);
-                let x = ((12 * TILE_SIZE).saturating_sub(w)) / 2;
-                draw_text(&enemy_name, x, 0, text_color, fb);
+                draw_text(&enemy_name, EnemyHud::NAME_X * TILE_SIZE, 0, text_color, fb);
             }
             if !hide_player_hud {
-                let w = measure_text(&player_name);
-                let x = 9 * TILE_SIZE + ((11 * TILE_SIZE).saturating_sub(w)) / 2;
-                draw_text(&player_name, x, 7 * TILE_SIZE, text_color, fb);
+                draw_text(
+                    &player_name,
+                    PlayerHud::NAME_X * TILE_SIZE,
+                    PlayerHud::NAME_Y * TILE_SIZE,
+                    text_color,
+                    fb,
+                );
             }
             if matches!(screen.phase, BattlePhase::ShiftPrompt) {
                 // 是/否 replaces the YES/NO tiles (same box, hlcoord(2,9)/(2,11)).
