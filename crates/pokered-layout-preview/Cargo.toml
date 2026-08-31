@@ -9,10 +9,10 @@ edition.workspace = true
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
-dotzuki-renderer = { git = "https://github.com/liuyanghejerry/dotzuki", tag = "v0.5.5" }
-dotzuki-engine = { git = "https://github.com/liuyanghejerry/dotzuki", tag = "v0.5.5" }
-dotzuki-ui = { git = "https://github.com/liuyanghejerry/dotzuki", tag = "v0.5.5" }
-dotzuki-engine-dsl = { git = "https://github.com/liuyanghejerry/dotzuki", tag = "v0.5.5" }
+dotzuki-renderer = { git = "https://github.com/liuyanghejerry/dotzuki", tag = "v0.5.6" }
+dotzuki-engine = { git = "https://github.com/liuyanghejerry/dotzuki", tag = "v0.5.6" }
+dotzuki-ui = { git = "https://github.com/liuyanghejerry/dotzuki", tag = "v0.5.6" }
+dotzuki-engine-dsl = { git = "https://github.com/liuyanghejerry/dotzuki", tag = "v0.5.6" }
 wasm-bindgen = "0.2"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
