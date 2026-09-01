@@ -6,8 +6,11 @@
 //! popups. All logic lives in `pokered_core::pc_screen`.
 
 use pokered_core::battle::state::Pokemon;
+use pokered_core::game_state::Lang;
 use pokered_core::pc_screen::{ItemListMode, MonListMode, PcPhase, PcScreen, PC_LIST_VISIBLE_ROWS};
 use pokered_core::save::SaveData;
+use pokered_data::lang_data;
+use pokered_data::ui_text::{zh_main_menu_label, zh_pc_line};
 use pokered_renderer::embedded_font::draw_text;
 use pokered_renderer::palette::GRAYSCALE_SPRITE_PALETTE;
 use pokered_renderer::resource::ResourceManager;
@@ -20,10 +23,14 @@ const FG: Rgba = Rgba::BLACK;
 
 const T: u32 = 8; // tile size in pixels
 
-fn item_name(id: pokered_data::items::ItemId) -> String {
-    pokered_data::item_data::get_item_data(id)
-        .map(|d| d.name.to_string())
-        .unwrap_or_else(|| "???".to_string())
+fn item_name(id: pokered_data::items::ItemId, is_zh: bool) -> String {
+    if is_zh {
+        lang_data::item_name(id, true).to_string()
+    } else {
+        pokered_data::item_data::get_item_data(id)
+            .map(|d| d.name.to_string())
+            .unwrap_or_else(|| "???".to_string())
+    }
 }
 
 fn mon_row(mon: &Pokemon) -> String {
@@ -33,25 +40,26 @@ fn mon_row(mon: &Pokemon) -> String {
 
 /// Bottom text box holding up to `lines` lines (max 5), plus the current
 /// message page of the Message phase.
-fn draw_message(lines: &[String], fb: &mut FrameBuffer) {
+fn draw_message(lines: &[String], fb: &mut FrameBuffer, is_zh: bool) {
     let rows = lines.len().clamp(1, 5) as u32;
     let bh = rows + 1; // interior tiles: lines at 8px pitch
     let by = 144 - (bh + 2) * T;
     draw_text_box(fb, 0, by, 18, bh, FG);
     for (i, line) in lines.iter().take(5).enumerate() {
-        draw_text(line, T, by + (1 + i as u32) * T, FG, fb);
+        let shown = if is_zh { zh_pc_line(line) } else { line.clone() };
+        draw_text(&shown, T, by + (1 + i as u32) * T, FG, fb);
     }
 }
 
 /// YES/NO popup on the right side (original: TWO_OPTION_MENU at hlcoord 14,7).
-fn draw_yes_no(selected_yes: bool, fb: &mut FrameBuffer) {
+fn draw_yes_no(selected_yes: bool, fb: &mut FrameBuffer, is_zh: bool) {
     let bx = 14 * T;
     let by = 7 * T;
     draw_text_box(fb, bx, by, 4, 4, FG);
     let cy = if selected_yes { 1 } else { 3 };
     draw_text(">", bx + T, by + cy * T, FG, fb);
-    draw_text("YES", bx + 2 * T, by + T, FG, fb);
-    draw_text("NO", bx + 2 * T, by + 3 * T, FG, fb);
+    draw_text(lang_data::ui_label("YES", is_zh), bx + 2 * T, by + T, FG, fb);
+    draw_text(lang_data::ui_label("NO", is_zh), bx + 2 * T, by + 3 * T, FG, fb);
 }
 
 /// A boxed, scrollable selection list. `rows` are the label lines; `cancel`
@@ -93,7 +101,7 @@ fn follow_scroll(cursor: usize, rows: usize, visible: usize) -> usize {
 }
 
 /// Current mon list (party for DEPOSIT, current box otherwise) + CANCEL.
-fn mon_rows(pc: &PcScreen, save: &SaveData) -> Vec<String> {
+fn mon_rows(pc: &PcScreen, save: &SaveData, is_zh: bool) -> Vec<String> {
     let mut rows: Vec<String> = match pc.mon_mode() {
         MonListMode::Deposit => save.party.iter().map(mon_row).collect(),
         MonListMode::Withdraw | MonListMode::Release => save
@@ -103,12 +111,12 @@ fn mon_rows(pc: &PcScreen, save: &SaveData) -> Vec<String> {
             .map(mon_row)
             .collect(),
     };
-    rows.push("CANCEL".to_string());
+    rows.push(lang_data::ui_label("CANCEL", is_zh).to_string());
     rows
 }
 
 /// Current item list (bag for DEPOSIT, PC storage otherwise) + CANCEL.
-fn item_rows(pc: &PcScreen, save: &SaveData) -> Vec<String> {
+fn item_rows(pc: &PcScreen, save: &SaveData, is_zh: bool) -> Vec<String> {
     let src: Vec<(pokered_data::items::ItemId, u32)> = match pc.item_mode() {
         ItemListMode::Deposit => save.game_data.bag.items(),
         ItemListMode::Withdraw | ItemListMode::Toss => save.game_data.pc_items.items(),
@@ -117,13 +125,13 @@ fn item_rows(pc: &PcScreen, save: &SaveData) -> Vec<String> {
         .iter()
         .map(|(id, qty)| {
             if id.is_key_item() {
-                item_name(*id)
+                item_name(*id, is_zh)
             } else {
-                format!("{} x{:02}", item_name(*id), qty)
+                format!("{} x{:02}", item_name(*id, is_zh), qty)
             }
         })
         .collect();
-    rows.push("CANCEL".to_string());
+    rows.push(lang_data::ui_label("CANCEL", is_zh).to_string());
     rows
 }
 
@@ -149,12 +157,17 @@ fn draw_menu(bx: u32, by: u32, bw: u32, labels: &[String], cursor: usize, fb: &m
 }
 
 /// "BOX No.N" indicator (bills_pc.asm:149-169).
-fn draw_box_no(save: &SaveData, fb: &mut FrameBuffer) {
+fn draw_box_no(save: &SaveData, fb: &mut FrameBuffer, is_zh: bool) {
     let bx = 9 * T;
     let by = 14 * T;
     draw_text_box(fb, bx, by, 8, 1, FG);
     let n = save.pc_storage.current_box_index() + 1;
-    draw_text(&format!("BOX No.{}", n), bx + T, by + T, FG, fb);
+    let text = if is_zh {
+        format!("盒子{}号", n)
+    } else {
+        format!("BOX No.{}", n)
+    };
+    draw_text(&text, bx + T, by + T, FG, fb);
 }
 
 pub fn draw_pc(
@@ -162,7 +175,9 @@ pub fn draw_pc(
     save: &SaveData,
     resources: &mut Option<ResourceManager>,
     fb: &mut FrameBuffer,
+    lang: Lang,
 ) {
+    let is_zh = lang == Lang::Zh;
     fb.clear(BG);
     match pc.phase() {
         PcPhase::Message => {
@@ -174,19 +189,26 @@ pub fn draw_pc(
                 .take(4)
                 .cloned()
                 .collect();
-            draw_message(&page, fb);
+            draw_message(&page, fb, is_zh);
         }
         PcPhase::MainMenu => {
-            let labels = pc.main_menu_labels();
+            let labels: Vec<String> = pc
+                .main_menu_labels()
+                .iter()
+                .map(|s| if is_zh { zh_main_menu_label(s) } else { s.clone() })
+                .collect();
             draw_menu(0, 0, 13, &labels, pc.main_menu().cursor(), fb);
         }
         PcPhase::BillsMenu => {
-            let labels: Vec<String> = BILLS_LABELS.iter().map(|s| s.to_string()).collect();
+            let labels: Vec<String> = BILLS_LABELS
+                .iter()
+                .map(|s| lang_data::ui_label(s, is_zh).to_string())
+                .collect();
             draw_menu(0, 0, 12, &labels, pc.bills_menu().cursor(), fb);
-            draw_box_no(save, fb);
+            draw_box_no(save, fb, is_zh);
         }
         PcPhase::MonList | PcPhase::MonAction | PcPhase::ReleaseConfirm => {
-            let rows = mon_rows(pc, save);
+            let rows = mon_rows(pc, save, is_zh);
             let cursor = pc.mon_cursor();
             let scroll = follow_scroll(cursor, rows.len(), 8);
             draw_list(0, 0, 18, 8, &rows, cursor, scroll, fb);
@@ -199,7 +221,7 @@ pub fn draw_pc(
                     };
                     let labels: Vec<String> = [first, "STATS", "CANCEL"]
                         .iter()
-                        .map(|s| s.to_string())
+                        .map(|s| lang_data::ui_label(s, is_zh).to_string())
                         .collect();
                     draw_menu(10 * T, 8 * T, 8, &labels, pc.mon_action_cursor(), fb);
                 }
@@ -215,15 +237,28 @@ pub fn draw_pc(
                         .unwrap_or_default();
                     // "Once released, {NAME} is gone forever. OK?"
                     // (_OnceReleasedText)
-                    draw_message(
-                        &[
-                            "Once released,".to_string(),
-                            format!("{} is", name),
-                            "gone forever. OK?".to_string(),
-                        ],
-                        fb,
-                    );
-                    draw_yes_no(pc.yes_selected(), fb);
+                    if is_zh {
+                        draw_message(
+                            &[
+                                format!("一旦放生，{}就", name),
+                                "永远消失了。".to_string(),
+                                "可以吗？".to_string(),
+                            ],
+                            fb,
+                            is_zh,
+                        );
+                    } else {
+                        draw_message(
+                            &[
+                                "Once released,".to_string(),
+                                format!("{} is", name),
+                                "gone forever. OK?".to_string(),
+                            ],
+                            fb,
+                            is_zh,
+                        );
+                    }
+                    draw_yes_no(pc.yes_selected(), fb, is_zh);
                 }
                 _ => {}
             }
@@ -240,22 +275,34 @@ pub fn draw_pc(
                     "Is that okay?".to_string(),
                 ],
                 fb,
+                is_zh,
             );
-            draw_yes_no(pc.yes_selected(), fb);
+            draw_yes_no(pc.yes_selected(), fb, is_zh);
         }
         PcPhase::BoxList => {
             // "Choose a #MON BOX." header + the 12 box names; a filled
             // marker stands in for the original's pokeball tile next to
             // non-empty boxes (save.asm DisplayChangeBoxMenu:487-498).
             draw_text_box(fb, 0, 0, 9, 3, FG);
-            draw_text("Choose a", T, T, FG, fb);
-            draw_text("#MON BOX.", T, 3 * T, FG, fb);
+            let (h1, h2) = if is_zh {
+                ("选择盒子。", "")
+            } else {
+                ("Choose a", "#MON BOX.")
+            };
+            draw_text(h1, T, T, FG, fb);
+            if !h2.is_empty() {
+                draw_text(h2, T, 3 * T, FG, fb);
+            }
             let bx = 11 * T;
             draw_text_box(fb, bx, 0, 7, 12, FG);
             for i in 0..12usize {
                 let y = (1 + i as u32) * T;
                 let marker = if i == pc.box_cursor() { ">" } else { " " };
-                let name = format!("BOX{:>2}", i + 1);
+                let name = if is_zh {
+                    format!("盒子{:>2}", i + 1)
+                } else {
+                    format!("BOX{:>2}", i + 1)
+                };
                 draw_text(&format!("{}{}", marker, name), bx + T, y, FG, fb);
                 let non_empty = save
                     .pc_storage
@@ -273,11 +320,14 @@ pub fn draw_pc(
             }
         }
         PcPhase::ItemMenu => {
-            let labels: Vec<String> = PLAYERS_LABELS.iter().map(|s| s.to_string()).collect();
+            let labels: Vec<String> = PLAYERS_LABELS
+                .iter()
+                .map(|s| lang_data::ui_label(s, is_zh).to_string())
+                .collect();
             draw_menu(0, 0, 13, &labels, pc.players_menu().cursor(), fb);
         }
         PcPhase::ItemList | PcPhase::ItemQuantity | PcPhase::TossConfirm => {
-            let rows = item_rows(pc, save);
+            let rows = item_rows(pc, save, is_zh);
             let cursor = pc.item_list_cursor();
             let scroll = follow_scroll(cursor, rows.len(), PC_LIST_VISIBLE_ROWS.max(8));
             draw_list(0, 0, 18, 8, &rows, cursor, scroll, fb);
@@ -286,7 +336,8 @@ pub fn draw_pc(
                     // "How many?" + the running quantity (players_pc.asm
                     // DisplayChooseQuantityMenu).
                     let name = rows.get(cursor).cloned().unwrap_or_default();
-                    draw_message(&["How many?".to_string()], fb);
+                    let prompt = if is_zh { "几个？" } else { "How many?" };
+                    draw_message(&[prompt.to_string()], fb, is_zh);
                     let bx = 13 * T;
                     let by = 10 * T;
                     draw_text_box(fb, bx, by, 6, 1, FG);
@@ -299,16 +350,21 @@ pub fn draw_pc(
                         .game_data
                         .pc_items
                         .get(cursor)
-                        .map(|(id, _)| item_name(id))
+                        .map(|(id, _)| item_name(id, is_zh))
                         .unwrap_or_default();
-                    draw_message(
-                        &[
-                            "Is it OK to toss".to_string(),
-                            format!("{}?", name),
-                        ],
-                        fb,
-                    );
-                    draw_yes_no(pc.yes_selected(), fb);
+                    if is_zh {
+                        draw_message(&[format!("要扔掉{}吗？", name)], fb, is_zh);
+                    } else {
+                        draw_message(
+                            &[
+                                "Is it OK to toss".to_string(),
+                                format!("{}?", name),
+                            ],
+                            fb,
+                            is_zh,
+                        );
+                    }
+                    draw_yes_no(pc.yes_selected(), fb, is_zh);
                 }
                 _ => {}
             }
@@ -321,11 +377,12 @@ pub fn draw_pc(
                     "#DEX rated?".to_string(),
                 ],
                 fb,
+                is_zh,
             );
-            draw_yes_no(pc.yes_selected(), fb);
+            draw_yes_no(pc.yes_selected(), fb, is_zh);
         }
         PcPhase::LeagueHoF => {
-            draw_league_hof(pc, resources, fb);
+            draw_league_hof(pc, resources, fb, is_zh);
         }
     }
 }
@@ -333,7 +390,12 @@ pub fn draw_pc(
 /// #MON LEAGUE HoF viewer (LeaguePCShowMon, engine/menus/league_pc.asm:
 /// 78-113): the recorded mon's front pic, "HALL OF FAME No. X" and the
 /// nickname / LEVEL / TYPE1 / TYPE2 info (`HoFDisplayMonInfo`).
-fn draw_league_hof(pc: &PcScreen, resources: &mut Option<ResourceManager>, fb: &mut FrameBuffer) {
+fn draw_league_hof(
+    pc: &PcScreen,
+    resources: &mut Option<ResourceManager>,
+    fb: &mut FrameBuffer,
+    is_zh: bool,
+) {
     let Some((team_no, view)) = pc.league_hof_mon() else {
         return;
     };
@@ -346,14 +408,20 @@ fn draw_league_hof(pc: &PcScreen, resources: &mut Option<ResourceManager>, fb: &
             blit_tileset(fb, &ts, 12 * T, 5 * T, w_tiles, &GRAYSCALE_SPRITE_PALETTE);
         }
     }
-    draw_text(&format!("HALL OF FAME No.{:>3}", team_no), T, 15 * T, FG, fb);
+    let hof_no = if is_zh {
+        format!("名人堂第{:>3}号", team_no)
+    } else {
+        format!("HALL OF FAME No.{:>3}", team_no)
+    };
+    draw_text(&hof_no, T, 15 * T, FG, fb);
     draw_text(&view.nickname, T, T, FG, fb);
-    draw_text(&format!("LEVEL/ :L{}", view.level), T, 3 * T, FG, fb);
+    draw_text(&format!("{} :L{}", lang_data::ui_label("LEVEL/", is_zh), view.level), T, 3 * T, FG, fb);
     if let Some(stats) = pokered_data::pokemon_data::get_base_stats(view.species) {
         draw_text(
             &format!(
-                "TYPE1/ {}",
-                pokered_data::lang_data::type_name(stats.type1, false)
+                "{} {}",
+                lang_data::ui_label("TYPE1/", is_zh),
+                lang_data::type_name(stats.type1, is_zh)
             ),
             T,
             5 * T,
@@ -363,8 +431,9 @@ fn draw_league_hof(pc: &PcScreen, resources: &mut Option<ResourceManager>, fb: &
         if stats.type1 != stats.type2 {
             draw_text(
                 &format!(
-                    "TYPE2/ {}",
-                    pokered_data::lang_data::type_name(stats.type2, false)
+                    "{} {}",
+                    lang_data::ui_label("TYPE2/", is_zh),
+                    lang_data::type_name(stats.type2, is_zh)
                 ),
                 T,
                 7 * T,

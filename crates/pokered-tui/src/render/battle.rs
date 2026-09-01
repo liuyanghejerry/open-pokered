@@ -8,10 +8,12 @@ use pokered_audio::sfx_data::SfxId;
 use pokered_data::items::ItemId;
 use pokered_data::move_data::MoveData;
 use pokered_data::moves::{MoveEffect, MoveId};
+use pokered_data::ui_layout::schema::BATTLE_TEXT_DEFAULT_LAYOUT;
 use pokered_renderer::battle_anim::{
     AnimEffect, AnimTickResult, AnimationPlayer, AnimationType, BattleEffects, MonRect, MonSide,
     ANIM_BASE_TILE_ID,
 };
+use pokered_renderer::embedded_font::draw_text;
 use pokered_renderer::battle_scene::{
     EnemyHud, PlayerHud, BallIndicators, BallStatus, StatusCondition,
 };
@@ -1979,7 +1981,9 @@ pub fn draw_battle(
     res: &mut Option<ResourceManager>,
     fb: &mut FrameBuffer,
     effects: &mut BattleVisualEffects,
+    language: pokered_core::game_state::Lang,
 ) {
+    let is_zh = language == pokered_core::game_state::Lang::Zh;
     fb.clear(Rgba::WHITE);
 
     // During BattleTransitionWipe and TransitionFlash, skip all battle rendering
@@ -2015,14 +2019,18 @@ pub fn draw_battle(
     // A Pokémon-Tower GHOST (no Silph Scope) shows as "GHOST", not the real species.
     // The ghost-Marowak battle (with scope) is "GHOST" until the unveil completes.
     let enemy_name = if screen.is_ghost || (screen.ghost_marowak_reveal && !screen.ghost_marowak_unveiled) {
-        "GHOST".to_string()
+        if is_zh { "幽灵".to_string() } else { "GHOST".to_string() }
+    } else if is_zh {
+        pokered_data::lang_data::species_name(screen.enemy_species, true).to_string()
     } else {
         format!("{}", screen.enemy_species).to_uppercase()
     };
     // The catch tutorial shows the player as "OLD MAN" (Gen-1
     // BATTLE_TYPE_OLD_MAN), mirroring the native renderer.
     let player_name = if screen.is_old_man {
-        "OLD MAN".to_string()
+        if is_zh { "老头".to_string() } else { "OLD MAN".to_string() }
+    } else if is_zh {
+        pokered_data::lang_data::species_name(screen.player_species, true).to_string()
     } else {
         format!("{}", screen.player_species).to_uppercase()
     };
@@ -2081,7 +2089,13 @@ pub fn draw_battle(
         );
 
         if !hide_enemy_hud {
-            let enemy_name_tiles = ascii_to_tiles(&enemy_name);
+            // The tile HUD only renders charmap glyphs; CJK names are blanked
+            // here and drawn with the pixel font after the tilemap blit.
+            let enemy_name_tiles = if is_zh {
+                Vec::new()
+            } else {
+                ascii_to_tiles(&enemy_name)
+            };
             let enemy_status_tiles = core_status_to_tiles(&screen.enemy_status).map(|s| s.tiles());
             let _enemy_hp_color = EnemyHud::draw(
                 &mut tile_buf,
@@ -2094,7 +2108,11 @@ pub fn draw_battle(
         }
 
         if !hide_player_hud {
-            let player_name_tiles = ascii_to_tiles(&player_name);
+            let player_name_tiles = if is_zh {
+                Vec::new()
+            } else {
+                ascii_to_tiles(&player_name)
+            };
             let player_status_tiles =
                 core_status_to_tiles(&screen.player_status).map(|s| s.tiles());
             let _player_hp_color = PlayerHud::draw(
@@ -2120,7 +2138,11 @@ pub fn draw_battle(
         }
 
         // ── Bottom area (text box + menu or message) ─────────────────
-        // Standard dialog box: full width, bottom 6 rows
+        // Standard dialog box: full width, bottom 6 rows.
+        // `zh_dialog`: a message page deferred to the pixel-font overlay —
+        // the tile font has no CJK glyphs, so zh pages are drawn after the
+        // tilemap blit (see the end of this function).
+        let mut zh_dialog: Option<(String, bool)> = None;
         let dialog_box = TextBoxFrame::standard_dialog();
         dialog_box.draw_frame(&mut tile_buf);
 
@@ -2157,12 +2179,18 @@ pub fn draw_battle(
             // "Will you change #MON?" — prompt text + YES/NO box (original
             // TWO_OPTION_MENU at hlcoord(0,7), cursor default NO).
             if let Some(ref text) = screen.current_message {
-                draw_battle_text(&mut tile_buf, text);
+                if is_zh {
+                    zh_dialog = Some((pokered_data::battle_text::localize(text, true), false));
+                } else {
+                    draw_battle_text(&mut tile_buf, text);
+                }
             }
             let yn_box = TextBoxFrame::new(0, 7, 7, 5);
             yn_box.draw_frame(&mut tile_buf);
-            write_tiles_at(&mut tile_buf, 2, 9, &ascii_to_tiles("YES"));
-            write_tiles_at(&mut tile_buf, 2, 11, &ascii_to_tiles("NO"));
+            if !is_zh {
+                write_tiles_at(&mut tile_buf, 2, 9, &ascii_to_tiles("YES"));
+                write_tiles_at(&mut tile_buf, 2, 11, &ascii_to_tiles("NO"));
+            }
             let cursor_y = if screen.shift_prompt_yes { 9 } else { 11 };
             tile_buf.set(1, cursor_y, 0xED);
         } else {
@@ -2214,40 +2242,39 @@ pub fn draw_battle(
                 }
                 _ => screen.current_message.clone(),
             };
-            if let Some(ref text) = phase_text {
-                draw_battle_text(&mut tile_buf, text);
-            }
-
-            // Show down-arrow when waiting for user input
-            if let BattlePhase::Intro {
-                phase: ref intro_p,
-                wait_frames,
-            } = &screen.phase
-            {
-                let needs_input = matches!(
-                    intro_p,
-                    IntroPhase::WildReveal
-                        | IntroPhase::GhostCantID
-                        | IntroPhase::GhostUnveil
-                        | IntroPhase::TrainerReveal
-                        | IntroPhase::TrainerSendOut
-                        | IntroPhase::PlayerSendOut
-                );
-                if needs_input && *wait_frames == 0 {
-                    dialog_box.show_down_arrow(&mut tile_buf);
+            // Down-arrow while waiting for user input / the next page —
+            // shared by the tile path and the zh pixel-font overlay below.
+            let dialog_arrow = match &screen.phase {
+                BattlePhase::Intro {
+                    phase: ref intro_p,
+                    wait_frames,
+                } => {
+                    matches!(
+                        intro_p,
+                        IntroPhase::WildReveal
+                            | IntroPhase::GhostCantID
+                            | IntroPhase::GhostUnveil
+                            | IntroPhase::TrainerReveal
+                            | IntroPhase::TrainerSendOut
+                            | IntroPhase::PlayerSendOut
+                    ) && *wait_frames == 0
                 }
+                BattlePhase::ShowingText {
+                    messages,
+                    current,
+                    wait_frames,
+                    ..
+                } => *current + 1 < messages.len() && *wait_frames == 0,
+                _ => false,
+            };
+            if dialog_arrow {
+                dialog_box.show_down_arrow(&mut tile_buf);
             }
-
-            if let BattlePhase::ShowingText {
-                messages,
-                current,
-                wait_frames,
-                ..
-            } = &screen.phase
-            {
-                let has_next_page = *current + 1 < messages.len();
-                if has_next_page && *wait_frames == 0 {
-                    dialog_box.show_down_arrow(&mut tile_buf);
+            if let Some(ref text) = phase_text {
+                if is_zh {
+                    zh_dialog = Some((pokered_data::battle_text::localize(text, true), dialog_arrow));
+                } else {
+                    draw_battle_text(&mut tile_buf, text);
                 }
             }
         }
@@ -2497,10 +2524,117 @@ pub fn draw_battle(
         // Keep the bottom dialog/menu box in front of sprites and animation overlays.
         tile_buf.render_region(fb, &battle_ts, pal, 0, 12, 20, 6);
 
+        // Chinese overlays: the tile font has no CJK glyphs, so zh HUD names
+        // and message pages are drawn with the embedded pixel font after the
+        // tilemap/sprite blits (mirrors the app's zh HUD overlay).
+        if is_zh {
+            let text_color = Rgba::new(0, 0, 0, 255);
+            // Left-aligned at the HUD name origin — centering pushes 3+ char
+            // names right onto the "Lv" column below (CJK glyphs are 10px tall
+            // and their lower edge grazes the level row).
+            if !hide_enemy_hud {
+                draw_text(&enemy_name, EnemyHud::NAME_X * TILE_SIZE, 0, text_color, fb);
+            }
+            if !hide_player_hud {
+                draw_text(
+                    &player_name,
+                    PlayerHud::NAME_X * TILE_SIZE,
+                    PlayerHud::NAME_Y * TILE_SIZE,
+                    text_color,
+                    fb,
+                );
+            }
+            if matches!(screen.phase, BattlePhase::ShiftPrompt) {
+                // 是/否 replaces the YES/NO tiles (same box, hlcoord(2,9)/(2,11)).
+                draw_text("是", 2 * TILE_SIZE, 9 * TILE_SIZE, text_color, fb);
+                draw_text("否", 2 * TILE_SIZE, 11 * TILE_SIZE, text_color, fb);
+            }
+        }
+        if let Some((text, arrow)) = zh_dialog {
+            let mut painter =
+                pokered_ui::backends::framebuffer::FrameBufferPainter::new(fb).with_lang(language);
+            let mut ui = pokered_ui::Ui::new(&mut painter);
+            pokered_ui::menus::battle_text::draw(
+                &text,
+                arrow,
+                &BATTLE_TEXT_DEFAULT_LAYOUT,
+                &mut ui,
+                language,
+            );
+        }
+
         effects.apply_post_effects(fb);
     } else {
         // No resources — fallback: render tile buffer with blank tileset
         let blank_ts = TileSet::blank(256);
         tile_buf.render(fb, &blank_ts, pal);
+    }
+}
+
+#[cfg(test)]
+mod zh_render_tests {
+    use super::*;
+    use pokered_core::game_state::Lang;
+    use pokered_renderer::resource::{AssetRoot, ResourceManager};
+
+    /// Offscreen zh-HUD regression: with `is_zh` the tile HUD name rows are
+    /// blanked, so dark pixels in those rows can only come from the
+    /// pixel-font overlay. Renders the same frame in zh and en, asserts both
+    /// carry name ink in the HUD rows, and (with
+    /// `POKERED_TUI_DEBUG_SHOTS=1`) drops both frames into `target/` as
+    /// PNGs for eyeballing.
+    #[test]
+    fn zh_battle_hud_overlays_cjk_names() {
+        let root = match AssetRoot::auto_detect() {
+            Ok(root) => root,
+            Err(e) => panic!("gfx assets unavailable for render test: {e}"),
+        };
+        let mut res = Some(ResourceManager::new(root));
+
+        let mut screen = BattleScreen::new(true);
+        // Stable phase: both HUDs visible plus the FIGHT/PKMN menu box.
+        screen.phase = BattlePhase::PlayerMenu;
+
+        let mut render = |lang: Lang| {
+            let mut fb = FrameBuffer::new(
+                dotzuki_engine::render_config::RenderConfig::new(160, 144),
+                Rgba::BLACK,
+            );
+            let mut effects = BattleVisualEffects::default();
+            draw_battle(&screen, &mut res, &mut fb, &mut effects, lang);
+            fb
+        };
+        let fb_zh = render(Lang::Zh);
+        let fb_en = render(Lang::En);
+
+        let band_has_ink = |fb: &FrameBuffer, x0: u32, x1: u32, y0: u32, y1: u32| {
+            (y0..y1).any(|y| (x0..x1).any(|x| fb.get_pixel(x, y).map_or(false, |p| p.r < 128)))
+        };
+        // Enemy name row (EnemyHud NAME at tile (1,0), left of the front
+        // sprite at tile 12): the zh overlay centers the CJK name there.
+        assert!(
+            band_has_ink(&fb_zh, 8, 88, 0, 8),
+            "zh enemy HUD name row must be drawn by the pixel-font overlay"
+        );
+        assert!(
+            band_has_ink(&fb_en, 8, 88, 0, 8),
+            "en enemy HUD name row must show the tiled species name"
+        );
+        // The two languages must produce visibly different frames
+        // (CJK overlay vs tiled ASCII names + ASCII message pages).
+        let differs = (0..160 * 144usize).any(|i| {
+            let (x, y) = ((i % 160) as u32, (i / 160) as u32);
+            fb_zh.get_pixel(x, y) != fb_en.get_pixel(x, y)
+        });
+        assert!(differs, "zh and en battle frames must differ");
+
+        if std::env::var("POKERED_TUI_DEBUG_SHOTS").as_deref() == Ok("1") {
+            let out = |name: &str| {
+                std::path::Path::new(concat!(env!("CARGO_MANIFEST_DIR"), "/../../target/"))
+                    .join(name)
+            };
+            let _ = fb_zh.save_png(&out("tui-battle-zh.png"));
+            let _ = fb_en.save_png(&out("tui-battle-en.png"));
+        }
     }
 }
