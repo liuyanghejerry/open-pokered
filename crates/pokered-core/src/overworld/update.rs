@@ -288,6 +288,23 @@ pub(crate) fn execute_warp(
 // ── OverworldScreen game-loop methods ─────────────────────────────
 
 impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
+    /// Re-baseline the button edge detectors (`prev_*_pressed`) to the
+    /// buttons currently held. Frontends must call this whenever control
+    /// returns to the overworld from a sub-screen (START menu, bag, save…):
+    /// those screens consumed the button press while the overworld was
+    /// suspended, leaving `prev_*` stale — without the re-baseline the
+    /// still-held press reads as a fresh edge on the first frame back (e.g.
+    /// A on START-menu EXIT instantly talks to the facing NPC). The original
+    /// avoids this structurally: home/joypad.asm recomputes hJoyPressed
+    /// against hJoyReleased every frame, so a press consumed by one loop can
+    /// never re-fire in another.
+    pub fn sync_prev_input(&mut self, a: bool, b: bool, up: bool, down: bool) {
+        self.prev_a_pressed = a;
+        self.prev_b_pressed = b;
+        self.prev_up_pressed = up;
+        self.prev_down_pressed = down;
+    }
+
     pub fn update_frame(&mut self, input: OverworldInput) -> ScreenAction {
         self.frame_counter = self.frame_counter.wrapping_add(1);
         self.sfx_event = OverworldSfxEvent::None;

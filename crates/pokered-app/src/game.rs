@@ -536,6 +536,13 @@ pub struct PokemonGame {
     /// soft-reset combo (engine/joypad.asm `_Joypad`/`TrySoftReset`, 16 frames
     /// of PAD_BUTTONS held → `SoftReset`).
     soft_reset_frames: u8,
+    /// Whether `overworld.update_frame` ran on the previous frame. The
+    /// overworld owns per-button edge detectors (`prev_*_pressed` in
+    /// update.rs); any frame it doesn't run — sub-screens, naming screen,
+    /// party select, link modals, cutscenes, black-screen fades — leaves them
+    /// stale. The first overworld frame after such a gap re-baselines them
+    /// (see `sync_overworld_input_edges`).
+    ow_ran_last_frame: bool,
     /// Save file the game was started with, kept so a soft reset can reload
     /// it from disk (the original re-reads SRAM on reset).
     save_path: Option<PathBuf>,
@@ -992,6 +999,7 @@ impl PokemonGame {
             #[cfg(not(target_arch = "wasm32"))]
             video_recorder: None,
             soft_reset_frames: 0,
+            ow_ran_last_frame: false,
             save_path,
             #[cfg(not(target_arch = "wasm32"))]
             link_server: None,
@@ -1105,6 +1113,7 @@ impl PokemonGame {
             video_recorder: None,
             startup_warp: None,
             soft_reset_frames: 0,
+            ow_ran_last_frame: false,
             save_path: None,
             #[cfg(not(target_arch = "wasm32"))]
             link_server: None,
@@ -1966,6 +1975,25 @@ impl PokemonGame {
         self.state.transition_to(screen);
     }
 
+    /// Re-baseline the overworld's button edge detectors against the buttons
+    /// currently held. Called by the update loop before the first
+    /// `overworld.update_frame` after any frame that skipped it (sub-screens,
+    /// naming screen, cutscenes…): the press that drove whatever ran in
+    /// between may still be down, and without the re-baseline the overworld's
+    /// own edge detection (`update.rs a_just_pressed`) re-detects it as a
+    /// fresh press on the first frame back — instantly talking to a facing
+    /// NPC. The original is immune: home/joypad.asm recomputes hJoyPressed
+    /// against hJoyReleased every frame, so a press consumed by one loop can
+    /// never re-fire in another.
+    fn sync_overworld_input_edges(&mut self, input: &InputState) {
+        self.overworld.sync_prev_input(
+            input.is_held(GbButton::A),
+            input.is_held(GbButton::B),
+            input.is_held(GbButton::Up),
+            input.is_held(GbButton::Down),
+        );
+    }
+
     /// A+B+Start+Select held for 16 frames — the original's soft reset
     /// (engine/joypad.asm `TrySoftReset` → home/init.asm `SoftReset`): stop
     /// all sounds, reload the save from disk (unsaved progress is lost, as on
@@ -2356,6 +2384,10 @@ impl PokemonGame {
     fn update_inner(&mut self, input: &InputState) {
         use pokered_core::game_state::Lang;
         self.frame_count += 1;
+        // Snapshot whether the overworld ran on the previous frame, before
+        // this frame's state overwrites it (see the update_frame call site).
+        let ow_gapped_last_frame = !self.ow_ran_last_frame;
+        self.ow_ran_last_frame = false;
 
         #[cfg(feature = "debug-server")]
         {
@@ -3045,6 +3077,16 @@ impl PokemonGame {
                     // typewriter honors the configured TEXT SPEED.
                     self.overworld
                         .set_text_delay_frames(self.state.config.text_speed.delay_frames());
+                    // First overworld frame after a gap (sub-screen, naming
+                    // screen, cutscene…): `update_frame` didn't run in between,
+                    // so its per-button edge detectors are stale. Re-baseline
+                    // them — the press that drove whatever ran in between is
+                    // still held and must not re-fire here (e.g. A on
+                    // START-menu EXIT instantly talking to a facing NPC).
+                    if ow_gapped_last_frame {
+                        self.sync_overworld_input_edges(input);
+                    }
+                    self.ow_ran_last_frame = true;
                     let action = self.overworld.update_frame(ow_input);
 
                     // Drain script-requested bag/money mutations and apply them
