@@ -9,15 +9,40 @@ use crate::species::Species;
 pub struct PokedexEntry {
     pub species: Species,
     pub category: &'static str,
+    /// Simplified-Chinese classification (e.g. 种子宝可梦). Falls back to the
+    /// English `category` at build time when a species has no `categoryZh`.
+    pub category_zh: &'static str,
     pub height_feet: u8,
     pub height_inches: u8,
     pub weight_decipounds: u16,
     pub flavor_text_pages: &'static [&'static str],
+    /// Simplified-Chinese flavor text, one string per `flavorTextPages`
+    /// entry (same order). Falls back to the English pages at build time.
+    pub flavor_text_pages_zh: &'static [&'static str],
 }
 
 impl PokedexEntry {
     pub fn weight_pounds(&self) -> f32 {
         self.weight_decipounds as f32 / 10.0
+    }
+
+    /// Category text for the display language (`is_zh` = Simplified Chinese).
+    pub fn category_for(&self, is_zh: bool) -> &'static str {
+        if is_zh {
+            self.category_zh
+        } else {
+            self.category
+        }
+    }
+
+    /// Flavor-text pages for the display language (`is_zh` = Simplified
+    /// Chinese). Pages keep EN/ZH parity one-to-one.
+    pub fn flavor_text_pages_for(&self, is_zh: bool) -> &'static [&'static str] {
+        if is_zh {
+            self.flavor_text_pages_zh
+        } else {
+            self.flavor_text_pages
+        }
     }
 }
 
@@ -70,5 +95,57 @@ mod tests {
         assert_eq!(mewtwo.weight_decipounds, 2690);
 
         assert!(get_pokedex_entry(Species::None).is_none());
+    }
+
+    /// Every canonical species carries Simplified-Chinese dex data
+    /// (`tools/gen_pokedex_zh.py` injects `categoryZh`/`flavorTextPagesZh`
+    /// with a 151/151 coverage check). Categories are at most 7 CJK chars so
+    /// they fit the 18-tile entry box when the label is shifted left from
+    /// the fixed x=8 position (7 × 2 = 14 tiles).
+    #[test]
+    fn canonical_151_have_chinese_dex_text() {
+        assert!(POKEDEX_ENTRIES.len() >= 151);
+        for entry in &POKEDEX_ENTRIES[..151] {
+            let name = format!("{:?}", entry.species);
+            assert!(
+                entry.category_zh.chars().any(|c| c as u32 > 0x2E80),
+                "{}: zh category is not Chinese: {:?}",
+                name,
+                entry.category_zh
+            );
+            assert!(
+                entry.category_zh.chars().count() <= 7,
+                "{}: zh category {} too wide for the entry box",
+                name,
+                entry.category_zh
+            );
+            assert_eq!(
+                entry.flavor_text_pages_zh.len(),
+                entry.flavor_text_pages.len(),
+                "{}: zh/en flavor page count mismatch",
+                name
+            );
+            for (i, page) in entry.flavor_text_pages_zh.iter().enumerate() {
+                assert!(
+                    !page.trim().is_empty() && page.chars().any(|c| c as u32 > 0x2E80),
+                    "{}: zh flavor page {} is empty or not Chinese",
+                    name,
+                    i
+                );
+            }
+        }
+    }
+
+    /// Bulbasaur's zh data spot check: 种子宝可梦, two translated pages.
+    #[test]
+    fn spot_check_chinese_bulbasaur() {
+        let bulb = get_pokedex_entry(Species::Bulbasaur).unwrap();
+        assert_eq!(bulb.category_for(true), "种子宝可梦");
+        assert_eq!(bulb.category_for(false), "SEED");
+        assert_eq!(
+            bulb.flavor_text_pages_for(true).len(),
+            bulb.flavor_text_pages_for(false).len()
+        );
+        assert!(bulb.flavor_text_pages_for(true)[0].contains("种子"));
     }
 }

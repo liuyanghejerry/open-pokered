@@ -30,12 +30,17 @@
   ],
   "pokedex": {
     "category": "LIZARD",
+    "categoryZh": "蜥蜴宝可梦",
     "heightFeet": 2,
     "heightInches": 0,
     "weightDecipounds": 190,
     "flavorTextPages": [
       "Obviously prefers\nhot places. When\nit rains, steam",
       "is said to spout\nfrom the tip of\nits tail"
+    ],
+    "flavorTextPagesZh": [
+      "显然喜欢炎热的地方。据说下雨时，",
+      "它的尾巴尖端会喷出热气。"
     ]
   },
   "evolutions": [

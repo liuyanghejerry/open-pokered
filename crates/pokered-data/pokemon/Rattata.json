@@ -30,12 +30,17 @@
   ],
   "pokedex": {
     "category": "RAT",
+    "categoryZh": "鼠宝可梦",
     "heightFeet": 1,
     "heightInches": 0,
     "weightDecipounds": 80,
     "flavorTextPages": [
       "Bites anything\nwhen it attacks.\nSmall and very",
       "quick, it is a\ncommon sight in\nmany places"
+    ],
+    "flavorTextPagesZh": [
+      "攻击时逮什么咬什么。体型小、速度",
+      "快，在许多地方都很常见。"
     ]
   },
   "evolutions": [

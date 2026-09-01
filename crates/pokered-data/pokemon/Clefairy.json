@@ -30,12 +30,17 @@
   ],
   "pokedex": {
     "category": "FAIRY",
+    "categoryZh": "妖精宝可梦",
     "heightFeet": 2,
     "heightInches": 0,
     "weightDecipounds": 170,
     "flavorTextPages": [
       "Its magical and\ncute appeal has\nmany admirers.",
       "It is rare and\nfound only in\ncertain areas"
+    ],
+    "flavorTextPagesZh": [
+      "既神奇又可爱，仰慕者众多。",
+      "非常稀有，只在特定的地方栖息。"
     ]
   },
   "evolutions": [

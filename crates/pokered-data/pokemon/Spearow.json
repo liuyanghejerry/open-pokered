@@ -30,12 +30,17 @@
   ],
   "pokedex": {
     "category": "TINY BIRD",
+    "categoryZh": "小鸟宝可梦",
     "heightFeet": 1,
     "heightInches": 0,
     "weightDecipounds": 40,
     "flavorTextPages": [
       "Eats bugs in\ngrassy areas. It\nhas to flap its",
       "short wings at\nhigh speed to\nstay airborne"
+    ],
+    "flavorTextPagesZh": [
+      "在草丛里捕食虫子。翅膀短小，",
+      "必须高速扇动才能待在空中。"
     ]
   },
   "evolutions": [

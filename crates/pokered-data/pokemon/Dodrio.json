@@ -30,12 +30,17 @@
   ],
   "pokedex": {
     "category": "TRIPLEBIRD",
+    "categoryZh": "三头鸟宝可梦",
     "heightFeet": 5,
     "heightInches": 11,
     "weightDecipounds": 1880,
     "flavorTextPages": [
       "Uses its three\nbrains to execute\ncomplex plans.",
       "While two heads\nsleep, one head\nstays awake"
+    ],
+    "flavorTextPagesZh": [
+      "用三个脑袋执行复杂的计划。",
+      "两个头睡觉时，另一个头保持清醒。"
     ]
   },
   "evolutions": [],

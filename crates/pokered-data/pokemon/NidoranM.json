@@ -30,12 +30,17 @@
   ],
   "pokedex": {
     "category": "POISON PIN",
+    "categoryZh": "毒针宝可梦",
     "heightFeet": 1,
     "heightInches": 8,
     "weightDecipounds": 200,
     "flavorTextPages": [
       "Stiffens its ears\nto sense danger.\nThe larger its",
       "horns, the more\npowerful its\nsecreted venom"
+    ],
+    "flavorTextPagesZh": [
+      "竖起耳朵监听危险。角越大，",
+      "分泌的毒液就越强。"
     ]
   },
   "evolutions": [

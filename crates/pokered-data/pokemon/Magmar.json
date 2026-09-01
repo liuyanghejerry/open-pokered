@@ -30,12 +30,17 @@
   ],
   "pokedex": {
     "category": "SPITFIRE",
+    "categoryZh": "喷火宝可梦",
     "heightFeet": 4,
     "heightInches": 3,
     "weightDecipounds": 980,
     "flavorTextPages": [
       "Its body always\nburns with an\norange glow that",
       "enables it to\nhide perfectly\namong flames"
+    ],
+    "flavorTextPagesZh": [
+      "全身总是燃烧着橙色的光，",
+      "藏身火焰中时完全无法分辨。"
     ]
   },
   "evolutions": [],

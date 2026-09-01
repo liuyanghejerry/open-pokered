@@ -30,12 +30,17 @@
   ],
   "pokedex": {
     "category": "GAS",
+    "categoryZh": "气体宝可梦",
     "heightFeet": 5,
     "heightInches": 3,
     "weightDecipounds": 2,
     "flavorTextPages": [
       "Because of its\nability to slip\nthrough block",
       "walls, it is said\nto be from an-\nother dimension"
+    ],
+    "flavorTextPagesZh": [
+      "能穿墙而过，据说它是来自",
+      "异次元的存在。"
     ]
   },
   "evolutions": [

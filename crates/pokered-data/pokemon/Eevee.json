@@ -30,12 +30,17 @@
   ],
   "pokedex": {
     "category": "EVOLUTION",
+    "categoryZh": "进化宝可梦",
     "heightFeet": 1,
     "heightInches": 0,
     "weightDecipounds": 140,
     "flavorTextPages": [
       "Its genetic code\nis irregular.\nIt may mutate if",
       "it is exposed to\nradiation from\nelement STONEs"
+    ],
+    "flavorTextPagesZh": [
+      "基因构成不稳定。受到进化之石的",
+      "辐射影响时可能会变异。"
     ]
   },
   "evolutions": [

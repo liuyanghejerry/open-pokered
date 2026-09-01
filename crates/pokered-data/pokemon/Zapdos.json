@@ -30,12 +30,17 @@
   ],
   "pokedex": {
     "category": "ELECTRIC",
+    "categoryZh": "电气宝可梦",
     "heightFeet": 5,
     "heightInches": 3,
     "weightDecipounds": 1160,
     "flavorTextPages": [
       "A legendary bird\n#MON that is\nsaid to appear",
       "from clouds while\ndropping enormous\nlightning bolts"
+    ],
+    "flavorTextPagesZh": [
+      "传说中的鸟宝可梦，据说会伴随",
+      "巨大的落雷从云中出现。"
     ]
   },
   "evolutions": [],

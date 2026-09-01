@@ -30,12 +30,17 @@
   ],
   "pokedex": {
     "category": "PUNCHING",
+    "categoryZh": "拳击宝可梦",
     "heightFeet": 4,
     "heightInches": 7,
     "weightDecipounds": 1110,
     "flavorTextPages": [
       "While apparently\ndoing nothing, it\nfires punches in",
       "lightning fast\nvolleys that are\nimpossible to see"
+    ],
+    "flavorTextPagesZh": [
+      "看似一动不动，实则打出了肉眼",
+      "无法看清的闪电般连环拳。"
     ]
   },
   "evolutions": [],

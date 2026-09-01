@@ -30,12 +30,17 @@
   ],
   "pokedex": {
     "category": "DRILL",
+    "categoryZh": "钻鼬宝可梦",
     "heightFeet": 4,
     "heightInches": 7,
     "weightDecipounds": 1370,
     "flavorTextPages": [
       "It uses its\npowerful tail in\nbattle to smash,",
       "constrict, then\nbreak the prey's\nbones"
+    ],
+    "flavorTextPagesZh": [
+      "战斗时用有力的尾巴猛击、缠住猎物，",
+      "再将其骨头折断。"
     ]
   },
   "evolutions": [],

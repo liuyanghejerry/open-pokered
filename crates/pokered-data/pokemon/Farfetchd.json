@@ -30,12 +30,17 @@
   ],
   "pokedex": {
     "category": "WILD DUCK",
+    "categoryZh": "野鸭宝可梦",
     "heightFeet": 2,
     "heightInches": 7,
     "weightDecipounds": 330,
     "flavorTextPages": [
       "The sprig of\ngreen onions it\nholds is its",
       "weapon. It is\nused much like a\nmetal sword"
+    ],
+    "flavorTextPagesZh": [
+      "手里拿着的大葱是它的武器。",
+      "用法和铁剑一样。"
     ]
   },
   "evolutions": [],

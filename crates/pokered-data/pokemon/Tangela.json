@@ -30,12 +30,17 @@
   ],
   "pokedex": {
     "category": "VINE",
+    "categoryZh": "藤蔓宝可梦",
     "heightFeet": 3,
     "heightInches": 3,
     "weightDecipounds": 770,
     "flavorTextPages": [
       "The whole body is\nswathed with wide\nvines that are",
       "similar to sea-\nweed. Its vines\nshake as it walks"
+    ],
+    "flavorTextPagesZh": [
+      "全身缠满海带般宽大的藤蔓。",
+      "走动时藤蔓会随之摇动。"
     ]
   },
   "evolutions": [],

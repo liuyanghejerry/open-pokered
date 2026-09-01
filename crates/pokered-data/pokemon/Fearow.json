@@ -30,12 +30,17 @@
   ],
   "pokedex": {
     "category": "BEAK",
+    "categoryZh": "嘴巴宝可梦",
     "heightFeet": 3,
     "heightInches": 11,
     "weightDecipounds": 840,
     "flavorTextPages": [
       "With its huge and\nmagnificent wings,\nit can keep aloft",
       "without ever\nhaving to land\nfor rest"
+    ],
+    "flavorTextPagesZh": [
+      "用巨大而华美的翅膀，能够一直",
+      "停在空中，不需要落地休息。"
     ]
   },
   "evolutions": [],

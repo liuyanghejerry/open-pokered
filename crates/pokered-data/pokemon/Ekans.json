@@ -30,12 +30,17 @@
   ],
   "pokedex": {
     "category": "SNAKE",
+    "categoryZh": "蛇宝可梦",
     "heightFeet": 6,
     "heightInches": 7,
     "weightDecipounds": 150,
     "flavorTextPages": [
       "Moves silently\nand stealthily.\nEats the eggs of",
       "birds, such as\nPIDGEY and\nSPEAROW, whole"
+    ],
+    "flavorTextPagesZh": [
+      "悄无声息地悄悄移动。会把波波和烈雀",
+      "这样的鸟蛋整个吞下。"
     ]
   },
   "evolutions": [

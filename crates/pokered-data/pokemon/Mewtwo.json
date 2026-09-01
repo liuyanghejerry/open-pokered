@@ -30,12 +30,17 @@
   ],
   "pokedex": {
     "category": "GENETIC",
+    "categoryZh": "遗传宝可梦",
     "heightFeet": 6,
     "heightInches": 7,
     "weightDecipounds": 2690,
     "flavorTextPages": [
       "It was created by\na scientist after\nyears of horrific",
       "gene splicing and\nDNA engineering\nexperiments"
+    ],
+    "flavorTextPagesZh": [
+      "科学家经过多年可怕的基因重组",
+      "和DNA改造实验创造出的宝可梦。"
     ]
   },
   "evolutions": [],

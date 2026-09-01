@@ -30,12 +30,17 @@
   ],
   "pokedex": {
     "category": "COBRA",
+    "categoryZh": "眼镜蛇宝可梦",
     "heightFeet": 11,
     "heightInches": 6,
     "weightDecipounds": 1430,
     "flavorTextPages": [
       "It is rumored that\nthe ferocious\nwarning markings",
       "on its belly\ndiffer from area\nto area"
+    ],
+    "flavorTextPagesZh": [
+      "据说它腹部吓人的警告花纹，",
+      "因地区不同而各不相同。"
     ]
   },
   "evolutions": [],

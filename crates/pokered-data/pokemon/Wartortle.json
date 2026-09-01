@@ -30,12 +30,17 @@
   ],
   "pokedex": {
     "category": "TURTLE",
+    "categoryZh": "海龟宝可梦",
     "heightFeet": 3,
     "heightInches": 3,
     "weightDecipounds": 500,
     "flavorTextPages": [
       "Often hides in\nwater to stalk\nunwary prey. For",
       "swimming fast, it\nmoves its ears to\nmaintain balance"
+    ],
+    "flavorTextPagesZh": [
+      "常藏在水里偷袭大意的猎物。",
+      "游泳时会摆动耳朵来保持平衡。"
     ]
   },
   "evolutions": [

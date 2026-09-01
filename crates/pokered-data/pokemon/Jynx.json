@@ -30,12 +30,17 @@
   ],
   "pokedex": {
     "category": "HUMANSHAPE",
+    "categoryZh": "人形宝可梦",
     "heightFeet": 4,
     "heightInches": 7,
     "weightDecipounds": 900,
     "flavorTextPages": [
       "It seductively\nwiggles its hips\nas it walks. It",
       "can cause people\nto dance in\nunison with it"
+    ],
+    "flavorTextPagesZh": [
+      "走路时妖艳地扭动腰肢，",
+      "能让人不由自主地和它共舞。"
     ]
   },
   "evolutions": [],

@@ -30,12 +30,17 @@
   ],
   "pokedex": {
     "category": "PINCER",
+    "categoryZh": "铁钳宝可梦",
     "heightFeet": 4,
     "heightInches": 3,
     "weightDecipounds": 1320,
     "flavorTextPages": [
       "The large pincer\nhas 10000 hp of\ncrushing power.",
       "However, its huge\nsize makes it\nunwieldy to use"
+    ],
+    "flavorTextPagesZh": [
+      "大钳子有1万马力的夹碎力。",
+      "不过太大太重，用起来并不灵活。"
     ]
   },
   "evolutions": [],

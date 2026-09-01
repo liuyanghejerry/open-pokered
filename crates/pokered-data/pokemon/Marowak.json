@@ -30,12 +30,17 @@
   ],
   "pokedex": {
     "category": "BONEKEEPER",
+    "categoryZh": "爱护宝可梦",
     "heightFeet": 3,
     "heightInches": 3,
     "weightDecipounds": 990,
     "flavorTextPages": [
       "The bone it holds\nis its key weapon.\nIt throws the",
       "bone skillfully\nlike a boomerang\nto KO targets"
+    ],
+    "flavorTextPagesZh": [
+      "手中的骨头是它的主武器。它会像",
+      "回力镖一样娴熟地掷出击倒对手。"
     ]
   },
   "evolutions": [],

@@ -30,12 +30,17 @@
   ],
   "pokedex": {
     "category": "FOX",
+    "categoryZh": "狐狸宝可梦",
     "heightFeet": 2,
     "heightInches": 0,
     "weightDecipounds": 220,
     "flavorTextPages": [
       "At the time of\nbirth, it has\njust one tail.",
       "The tail splits\nfrom its tip as\nit grows older"
+    ],
+    "flavorTextPagesZh": [
+      "刚出生时只有一条尾巴。随着长大，",
+      "尾巴会从尖端开始分叉。"
     ]
   },
   "evolutions": [

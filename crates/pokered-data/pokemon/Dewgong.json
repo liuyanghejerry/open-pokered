@@ -30,12 +30,17 @@
   ],
   "pokedex": {
     "category": "SEA LION",
+    "categoryZh": "海狮宝可梦",
     "heightFeet": 5,
     "heightInches": 7,
     "weightDecipounds": 2650,
     "flavorTextPages": [
       "Stores thermal\nenergy in its\nbody. Swims at a",
       "steady 8 knots\neven in intensely\ncold waters"
+    ],
+    "flavorTextPagesZh": [
+      "体内储存着热量。即使在寒冷的海里，",
+      "也能以8节的速度稳定地游动。"
     ]
   },
   "evolutions": [],

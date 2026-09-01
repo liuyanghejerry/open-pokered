@@ -30,12 +30,17 @@
   ],
   "pokedex": {
     "category": "SPIRAL",
+    "categoryZh": "螺旋宝可梦",
     "heightFeet": 3,
     "heightInches": 3,
     "weightDecipounds": 770,
     "flavorTextPages": [
       "A prehistoric\n#MON that died\nout when its",
       "heavy shell made\nit impossible to\ncatch prey"
+    ],
+    "flavorTextPagesZh": [
+      "史前宝可梦，因沉重的壳让它",
+      "抓不到猎物而灭绝。"
     ]
   },
   "evolutions": [],

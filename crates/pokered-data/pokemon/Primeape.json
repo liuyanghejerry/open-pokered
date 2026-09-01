@@ -30,12 +30,17 @@
   ],
   "pokedex": {
     "category": "PIG MONKEY",
+    "categoryZh": "猪猴宝可梦",
     "heightFeet": 3,
     "heightInches": 3,
     "weightDecipounds": 710,
     "flavorTextPages": [
       "Always furious\nand tenacious to\nboot. It will not",
       "abandon chasing\nits quarry until\nit is caught"
+    ],
+    "flavorTextPagesZh": [
+      "永远怒气冲冲，而且异常执着。",
+      "不追到猎物绝不罢休。"
     ]
   },
   "evolutions": [],

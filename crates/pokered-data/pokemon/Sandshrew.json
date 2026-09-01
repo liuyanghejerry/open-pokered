@@ -30,12 +30,17 @@
   ],
   "pokedex": {
     "category": "MOUSE",
+    "categoryZh": "鼠宝可梦",
     "heightFeet": 2,
     "heightInches": 0,
     "weightDecipounds": 260,
     "flavorTextPages": [
       "Burrows deep\nunderground in\narid locations",
       "far from water.\nIt only emerges\nto hunt for food"
+    ],
+    "flavorTextPagesZh": [
+      "在远离水源的干旱地带深挖地洞。",
+      "只有觅食时才会钻出地面。"
     ]
   },
   "evolutions": [

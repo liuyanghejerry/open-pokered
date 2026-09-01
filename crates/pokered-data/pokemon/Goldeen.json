@@ -30,12 +30,17 @@
   ],
   "pokedex": {
     "category": "GOLDFISH",
+    "categoryZh": "金鱼宝可梦",
     "heightFeet": 2,
     "heightInches": 0,
     "weightDecipounds": 330,
     "flavorTextPages": [
       "Its tail fin\nbillows like an\nelegant ballroom",
       "dress, giving it\nthe nickname of\nthe Water Queen"
+    ],
+    "flavorTextPagesZh": [
+      "尾鳍舒展如优雅的舞裙，",
+      "因此被称为水中女王。"
     ]
   },
   "evolutions": [

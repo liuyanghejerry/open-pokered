@@ -30,12 +30,17 @@
   ],
   "pokedex": {
     "category": "STARSHAPE",
+    "categoryZh": "星形宝可梦",
     "heightFeet": 2,
     "heightInches": 7,
     "weightDecipounds": 760,
     "flavorTextPages": [
       "An enigmatic\n#MON that can\neffortlessly",
       "regenerate any\nappendage it\nloses in battle"
+    ],
+    "flavorTextPagesZh": [
+      "充满谜团的宝可梦。战斗中失去的",
+      "肢体能毫不费力地再生。"
     ]
   },
   "evolutions": [

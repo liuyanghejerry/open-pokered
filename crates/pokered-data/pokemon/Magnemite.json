@@ -30,12 +30,17 @@
   ],
   "pokedex": {
     "category": "MAGNET",
+    "categoryZh": "磁铁宝可梦",
     "heightFeet": 1,
     "heightInches": 0,
     "weightDecipounds": 130,
     "flavorTextPages": [
       "Uses anti-gravity\nto stay suspended.\nAppears without",
       "warning and uses\nTHUNDER WAVE and\nsimilar moves"
+    ],
+    "flavorTextPagesZh": [
+      "靠反重力悬浮在空中。会突然出现，",
+      "使用电磁波之类的招式。"
     ]
   },
   "evolutions": [

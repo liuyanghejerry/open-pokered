@@ -30,12 +30,17 @@
   ],
   "pokedex": {
     "category": "BIVALVE",
+    "categoryZh": "双壳贝宝可梦",
     "heightFeet": 1,
     "heightInches": 0,
     "weightDecipounds": 90,
     "flavorTextPages": [
       "Its hard shell\nrepels any kind\nof attack.",
       "It is vulnerable\nonly when its\nshell is open"
+    ],
+    "flavorTextPagesZh": [
+      "坚硬的外壳能弹开任何攻击。",
+      "只有张壳的瞬间才有破绽。"
     ]
   },
   "evolutions": [

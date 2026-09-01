@@ -30,12 +30,17 @@
   ],
   "pokedex": {
     "category": "FOSSIL",
+    "categoryZh": "化石宝可梦",
     "heightFeet": 5,
     "heightInches": 11,
     "weightDecipounds": 1300,
     "flavorTextPages": [
       "A ferocious, pre-\nhistoric #MON\nthat goes for the",
       "enemy's throat\nwith its serrated\nsaw-like fangs"
+    ],
+    "flavorTextPagesZh": [
+      "性格凶暴的远古宝可梦，会用锯齿般的利牙",
+      "直取敌人的咽喉。"
     ]
   },
   "evolutions": [],

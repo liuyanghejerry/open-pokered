@@ -30,12 +30,17 @@
   ],
   "pokedex": {
     "category": "LICKING",
+    "categoryZh": "舔舐宝可梦",
     "heightFeet": 3,
     "heightInches": 11,
     "weightDecipounds": 1440,
     "flavorTextPages": [
       "Its tongue can be\nextended like a\nchameleon's. It",
       "leaves a tingling\nsensation when it\nlicks enemies"
+    ],
+    "flavorTextPagesZh": [
+      "舌头能像变色龙一样伸长。",
+      "被它舔到会又麻又痒。"
     ]
   },
   "evolutions": [],

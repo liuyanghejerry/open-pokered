@@ -30,12 +30,17 @@
   ],
   "pokedex": {
     "category": "HYPNOSIS",
+    "categoryZh": "催眠宝可梦",
     "heightFeet": 3,
     "heightInches": 3,
     "weightDecipounds": 710,
     "flavorTextPages": [
       "Puts enemies to\nsleep then eats\ntheir dreams.",
       "Occasionally gets\nsick from eating\nbad dreams"
+    ],
+    "flavorTextPagesZh": [
+      "先让敌人睡着，然后吃掉它的梦。",
+      "有时吃了噩梦会闹肚子。"
     ]
   },
   "evolutions": [

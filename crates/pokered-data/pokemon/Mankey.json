@@ -30,12 +30,17 @@
   ],
   "pokedex": {
     "category": "PIG MONKEY",
+    "categoryZh": "猪猴宝可梦",
     "heightFeet": 1,
     "heightInches": 8,
     "weightDecipounds": 620,
     "flavorTextPages": [
       "Extremely quick to\nanger. It could\nbe docile one",
       "moment then\nthrashing away\nthe next instant"
+    ],
+    "flavorTextPagesZh": [
+      "极易发怒。前一秒还温顺得很，",
+      "下一秒就暴跳如雷。"
     ]
   },
   "evolutions": [

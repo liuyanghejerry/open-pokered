@@ -30,12 +30,17 @@
   ],
   "pokedex": {
     "category": "ROCK",
+    "categoryZh": "岩石宝可梦",
     "heightFeet": 3,
     "heightInches": 3,
     "weightDecipounds": 2320,
     "flavorTextPages": [
       "Rolls down slopes\nto move. It rolls\nover any obstacle",
       "without slowing\nor changing its\ndirection"
+    ],
+    "flavorTextPagesZh": [
+      "靠滚下斜坡来移动。不管遇到什么障碍",
+      "都不会减速或改变方向，径直碾过。"
     ]
   },
   "evolutions": [

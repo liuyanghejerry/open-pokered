@@ -30,12 +30,17 @@
   ],
   "pokedex": {
     "category": "SHELLFISH",
+    "categoryZh": "贝壳宝可梦",
     "heightFeet": 4,
     "heightInches": 3,
     "weightDecipounds": 890,
     "flavorTextPages": [
       "Its sleek shape is\nperfect for swim-\nming. It slashes",
       "prey with its\nclaws and drains\nthe body fluids"
+    ],
+    "flavorTextPagesZh": [
+      "流线型的身体非常适合游泳。",
+      "用利爪撕裂猎物，吸食体液。"
     ]
   },
   "evolutions": [],

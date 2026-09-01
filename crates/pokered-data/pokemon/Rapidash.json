@@ -30,12 +30,17 @@
   ],
   "pokedex": {
     "category": "FIRE HORSE",
+    "categoryZh": "火马宝可梦",
     "heightFeet": 5,
     "heightInches": 7,
     "weightDecipounds": 2090,
     "flavorTextPages": [
       "Very competitive,\nthis #MON will\nchase anything",
       "that moves fast\nin the hopes of\nracing it"
+    ],
+    "flavorTextPagesZh": [
+      "胜负心极强，只要看到跑得快的东西",
+      "就会追上去，想和它比个高低。"
     ]
   },
   "evolutions": [],

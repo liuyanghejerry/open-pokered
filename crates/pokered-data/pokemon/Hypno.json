@@ -30,12 +30,17 @@
   ],
   "pokedex": {
     "category": "HYPNOSIS",
+    "categoryZh": "催眠宝可梦",
     "heightFeet": 5,
     "heightInches": 3,
     "weightDecipounds": 1670,
     "flavorTextPages": [
       "When it locks eyes\nwith an enemy, it\nwill use a mix of",
       "PSI moves such as\nHYPNOSIS and\nCONFUSION"
+    ],
+    "flavorTextPagesZh": [
+      "和敌人四目相对时，会混合使用",
+      "催眠术和念力等超能力招式。"
     ]
   },
   "evolutions": [],

@@ -30,12 +30,17 @@
   ],
   "pokedex": {
     "category": "SLUDGE",
+    "categoryZh": "污泥宝可梦",
     "heightFeet": 3,
     "heightInches": 11,
     "weightDecipounds": 660,
     "flavorTextPages": [
       "Thickly covered\nwith a filthy,\nvile sludge. It",
       "is so toxic, even\nits footprints\ncontain poison"
+    ],
+    "flavorTextPagesZh": [
+      "全身裹着肮脏恶心的浓稠污泥，",
+      "毒性极强，连脚印都带毒。"
     ]
   },
   "evolutions": [],

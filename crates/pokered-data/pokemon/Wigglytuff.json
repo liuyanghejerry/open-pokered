@@ -30,12 +30,17 @@
   ],
   "pokedex": {
     "category": "BALLOON",
+    "categoryZh": "气球宝可梦",
     "heightFeet": 3,
     "heightInches": 3,
     "weightDecipounds": 260,
     "flavorTextPages": [
       "The body is soft\nand rubbery. When\nangered, it will",
       "suck in air and\ninflate itself to\nan enormous size"
+    ],
+    "flavorTextPagesZh": [
+      "身体柔软富有弹性。一旦被惹怒，",
+      "就会吸气把自己胀得巨大。"
     ]
   },
   "evolutions": [],

@@ -30,12 +30,17 @@
   ],
   "pokedex": {
     "category": "BAT",
+    "categoryZh": "蝙蝠宝可梦",
     "heightFeet": 2,
     "heightInches": 7,
     "weightDecipounds": 170,
     "flavorTextPages": [
       "Forms colonies in\nperpetually dark\nplaces. Uses",
       "ultrasonic waves\nto identify and\napproach targets"
+    ],
+    "flavorTextPagesZh": [
+      "在常年黑暗的地方群居。用超声波",
+      "锁定并接近目标。"
     ]
   },
   "evolutions": [

@@ -30,12 +30,17 @@
   ],
   "pokedex": {
     "category": "LIGHTNING",
+    "categoryZh": "闪电宝可梦",
     "heightFeet": 2,
     "heightInches": 7,
     "weightDecipounds": 540,
     "flavorTextPages": [
       "It accumulates\nnegative ions in\nthe atmosphere to",
       "blast out 10000-\nvolt lightning\nbolts"
+    ],
+    "flavorTextPagesZh": [
+      "聚集大气中的负离子，",
+      "放出1万伏的雷电。"
     ]
   },
   "evolutions": [],

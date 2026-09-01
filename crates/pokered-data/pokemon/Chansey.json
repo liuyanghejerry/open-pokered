@@ -30,12 +30,17 @@
   ],
   "pokedex": {
     "category": "EGG",
+    "categoryZh": "蛋宝可梦",
     "heightFeet": 3,
     "heightInches": 7,
     "weightDecipounds": 760,
     "flavorTextPages": [
       "A rare and elusive\n#MON that is\nsaid to bring",
       "happiness to those\nwho manage to get\nit"
+    ],
+    "flavorTextPagesZh": [
+      "非常罕见的宝可梦，据说能得到它的人",
+      "就能获得幸福。"
     ]
   },
   "evolutions": [],
