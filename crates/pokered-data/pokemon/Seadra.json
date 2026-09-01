@@ -30,12 +30,17 @@
   ],
   "pokedex": {
     "category": "DRAGON",
+    "categoryZh": "龙宝可梦",
     "heightFeet": 3,
     "heightInches": 11,
     "weightDecipounds": 550,
     "flavorTextPages": [
       "Capable of swim-\nming backwards by\nrapidly flapping",
       "its wing-like\npectoral fins and\nstout tail"
+    ],
+    "flavorTextPagesZh": [
+      "高速扇动翅膀般的胸鳍和粗壮的尾巴，",
+      "能够倒退着游泳。"
     ]
   },
   "evolutions": [],

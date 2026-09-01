@@ -89,7 +89,8 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
     }
 
     fn field_message(&mut self, text: &str) -> FieldMoveOutcome {
-        self.pending_dialogue = Some(BedroomDialogue::from_message(text));
+        self.pending_dialogue =
+            Some(BedroomDialogue::from_message(&self.localize_message(text)));
         FieldMoveOutcome::Done
     }
 

@@ -24,7 +24,7 @@ use pokered_renderer::resource::{AssetCategory, ResourceManager};
 use pokered_renderer::{FrameBuffer, Rgba, TILE_SIZE};
 
 use super::battle::scale_sprite_by_two;
-use super::pc::zh_pc_line;
+use pokered_data::ui_text::zh_pc_line;
 use super::{blit_tileset, draw_text_box, species_to_sprite_name};
 
 const FG: Rgba = Rgba::BLACK;

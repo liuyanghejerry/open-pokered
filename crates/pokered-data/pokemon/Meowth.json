@@ -30,12 +30,17 @@
   ],
   "pokedex": {
     "category": "SCRATCHCAT",
+    "categoryZh": "妖怪猫宝可梦",
     "heightFeet": 1,
     "heightInches": 4,
     "weightDecipounds": 90,
     "flavorTextPages": [
       "Adores circular\nobjects. Wanders\nthe streets on a",
       "nightly basis to\nlook for dropped\nloose change"
+    ],
+    "flavorTextPagesZh": [
+      "痴迷圆形的东西。每晚在街上",
+      "游荡，寻找掉落的硬币。"
     ]
   },
   "evolutions": [

@@ -30,12 +30,17 @@
   ],
   "pokedex": {
     "category": "MOUSE",
+    "categoryZh": "鼠宝可梦",
     "heightFeet": 2,
     "heightInches": 7,
     "weightDecipounds": 660,
     "flavorTextPages": [
       "Its long tail\nserves as a\nground to protect",
       "itself from its\nown high voltage\npower"
+    ],
+    "flavorTextPagesZh": [
+      "长尾巴充当接地线，",
+      "防止被自己的高压电所伤。"
     ]
   },
   "evolutions": [],

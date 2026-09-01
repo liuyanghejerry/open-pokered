@@ -30,12 +30,17 @@
   ],
   "pokedex": {
     "category": "SUPERPOWER",
+    "categoryZh": "怪力宝可梦",
     "heightFeet": 2,
     "heightInches": 7,
     "weightDecipounds": 430,
     "flavorTextPages": [
       "Loves to build\nits muscles.\nIt trains in all",
       "styles of martial\narts to become\neven stronger"
+    ],
+    "flavorTextPagesZh": [
+      "热衷于锻炼肌肉。为了变得更强，",
+      "修习各种流派的武术。"
     ]
   },
   "evolutions": [

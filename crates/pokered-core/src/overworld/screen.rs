@@ -1106,6 +1106,47 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
         self.script_engine.script_lang()
     }
 
+    /// Core-generated English overworld messages, localized to Chinese at
+    /// dialogue construction when `set_script_lang("zh")` is active. Scene
+    /// (`@t`) text already resolves upstream and passes through unchanged.
+    pub(crate) fn localize_message(&self, text: &str) -> String {
+        if self.script_lang() == Some("zh") {
+            pokered_data::dialog_text::localize(text)
+        } else {
+            text.to_string()
+        }
+    }
+
+    /// Localize raw map.json text pages (full-dialog English → Chinese)
+    /// before placeholder resolution and the 2-line page split, so template
+    /// matching sees whole dialogs rather than wrapped fragments.
+    pub(crate) fn localize_text_pages(
+        &self,
+        pages: &[pokered_data::map_json::TextPageJson],
+    ) -> Vec<pokered_data::map_json::TextPageJson> {
+        if self.script_lang() != Some("zh") {
+            return pages.to_vec();
+        }
+        let joined = pages
+            .iter()
+            .map(|p| format!("{}\n{}", p.line1, p.line2))
+            .collect::<Vec<_>>()
+            .join("\n");
+        let localized = pokered_data::dialog_text::localize(&joined);
+        let lines: Vec<String> = localized.split('\n').map(str::to_string).collect();
+        let mut out: Vec<pokered_data::map_json::TextPageJson> = lines
+            .chunks(2)
+            .map(|c| pokered_data::map_json::TextPageJson {
+                line1: c.first().cloned().unwrap_or_default(),
+                line2: c.get(1).cloned().unwrap_or_default(),
+            })
+            .collect();
+        while matches!(out.last(), Some(p) if p.line1.is_empty() && p.line2.is_empty()) {
+            out.pop();
+        }
+        out
+    }
+
     /// Resolve the scene AST for `map_key` (native interpreter path). In
     /// disk mode (`--scripts-dir`) the provider shadows the embedded ASTs
     /// entirely, mirroring the JS loader's all-or-nothing convention. In
@@ -1692,6 +1733,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
             _ => Some("This isn't the\ntime to use that!".to_string()),
         };
         if let Some(text) = msg {
+            let text = self.localize_message(&text);
             self.pending_dialogue = Some(BedroomDialogue::from_message(&text));
         }
         consumed
@@ -1715,7 +1757,9 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
     pub(crate) fn show_repel_wore_off_message(&mut self) {
         if self.pending_dialogue.is_none() {
             self.pending_dialogue =
-                Some(BedroomDialogue::from_message("REPEL's effect\nwore off."));
+                Some(BedroomDialogue::from_message(
+                    &self.localize_message("REPEL's effect\nwore off."),
+                ));
         }
     }
 
@@ -1819,6 +1863,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                     text.push_str("\n\n");
                     text.push_str(&hi::dropped_coins_message());
                 }
+                let text = self.localize_message(&text);
                 self.pending_dialogue = Some(BedroomDialogue::from_message(&text));
                 return true;
             }
@@ -1866,6 +1911,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                         sound_id: "SFX_GET_ITEM_2".to_string(),
                     });
                 }
+                let text = self.localize_message(&text);
                 self.pending_dialogue = Some(BedroomDialogue::from_message(&text));
             }
         }
@@ -1947,7 +1993,12 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
 
     /// Queue the new-game bedroom SNES dialogue.
     pub fn start_bedroom_dialogue(&mut self, player_name: &str) {
-        self.pending_dialogue = Some(BedroomDialogue::new(player_name));
+        let msg = format!(
+            "{} is\nplaying the SNES!\n...Okay!\nIt's time to go!",
+            player_name
+        );
+        self.pending_dialogue =
+            Some(BedroomDialogue::from_message(&self.localize_message(&msg)));
     }
 
     /// Returns the current warp fade darkness level (0.0 = fully visible, 1.0 = fully black).
@@ -2367,8 +2418,7 @@ mod typewriter_tests {
 }
 
 #[cfg(test)]
-mod connection_arrival_tests {
-    use super::*;
+mod connection_arrival_tests {    use super::*;
     use pokered_data::impl_traits::PokemonRedData;
 
     fn make_screen(map: MapId) -> OverworldScreen {
@@ -2407,5 +2457,49 @@ mod connection_arrival_tests {
         screen.state.player.transport = TransportMode::Walking;
         screen.dismount_surf_if_on_land();
         assert_eq!(screen.state.player.transport, TransportMode::Walking);
+    }
+}
+
+#[cfg(test)]
+mod dialogue_localization_tests {
+    use super::*;
+    use pokered_data::impl_traits::PokemonRedData;
+    use pokered_data::map_json::TextPageJson;
+
+    #[test]
+    fn text_pages_localize_when_zh() {
+        let mut screen = OverworldScreen::new(MapId::PalletTown, None, PokemonRedData);
+        screen.set_script_lang("zh");
+        let pages = vec![TextPageJson {
+            line1: "A shiny new".to_string(),
+            line2: "BICYCLE!".to_string(),
+        }];
+        let out = screen.localize_text_pages(&pages);
+        assert_eq!(out.len(), 1);
+        assert_eq!(out[0].line1, "崭新闪亮的");
+        assert_eq!(out[0].line2, "自行车！");
+    }
+
+    #[test]
+    fn text_pages_pass_through_when_en() {
+        let mut screen = OverworldScreen::new(MapId::PalletTown, None, PokemonRedData);
+        screen.set_script_lang("en");
+        let pages = vec![TextPageJson {
+            line1: "A shiny new".to_string(),
+            line2: "BICYCLE!".to_string(),
+        }];
+        let out = screen.localize_text_pages(&pages);
+        assert_eq!(out[0].line1, "A shiny new");
+        assert_eq!(out[0].line2, "BICYCLE!");
+    }
+
+    #[test]
+    fn messages_localize_when_zh() {
+        let mut screen = OverworldScreen::new(MapId::PalletTown, None, PokemonRedData);
+        screen.set_script_lang("zh");
+        assert_eq!(
+            screen.localize_message("No! A new BADGE\nis required."),
+            "不行！需要新的\n徽章。"
+        );
     }
 }

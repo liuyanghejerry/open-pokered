@@ -30,12 +30,17 @@
   ],
   "pokedex": {
     "category": "TADPOLE",
+    "categoryZh": "蝌蚪宝可梦",
     "heightFeet": 3,
     "heightInches": 3,
     "weightDecipounds": 440,
     "flavorTextPages": [
       "Capable of living\nin or out of\nwater. When out",
       "of water, it\nsweats to keep\nits body slimy"
+    ],
+    "flavorTextPagesZh": [
+      "既能在水里也能在陆地生活。",
+      "在陆地上时会出汗保持身体湿润。"
     ]
   },
   "evolutions": [

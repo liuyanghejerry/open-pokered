@@ -30,12 +30,17 @@
   ],
   "pokedex": {
     "category": "SEED",
+    "categoryZh": "种子宝可梦",
     "heightFeet": 2,
     "heightInches": 4,
     "weightDecipounds": 150,
     "flavorTextPages": [
       "A strange seed was\nplanted on its\nback at birth.",
       "The plant sprouts\nand grows with\nthis #MON"
+    ],
+    "flavorTextPagesZh": [
+      "出生时，背上就种着一颗奇妙的种子。",
+      "种子发芽长大，和它一起成长。"
     ]
   },
   "evolutions": [

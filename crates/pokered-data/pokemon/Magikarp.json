@@ -30,12 +30,17 @@
   ],
   "pokedex": {
     "category": "FISH",
+    "categoryZh": "鱼宝可梦",
     "heightFeet": 2,
     "heightInches": 11,
     "weightDecipounds": 220,
     "flavorTextPages": [
       "In the distant\npast, it was\nsomewhat stronger",
       "than the horribly\nweak descendants\nthat exist today"
+    ],
+    "flavorTextPagesZh": [
+      "在遥远的过去，它比如今这些弱得",
+      "不像话的后代要强一些。"
     ]
   },
   "evolutions": [

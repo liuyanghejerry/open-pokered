@@ -30,12 +30,17 @@
   ],
   "pokedex": {
     "category": "COCOON",
+    "categoryZh": "蛹宝可梦",
     "heightFeet": 2,
     "heightInches": 0,
     "weightDecipounds": 220,
     "flavorTextPages": [
       "Almost incapable\nof moving, this\n#MON can only",
       "harden its shell\nto protect itself\nfrom predators"
+    ],
+    "flavorTextPagesZh": [
+      "几乎无法动弹的宝可梦，只能",
+      "硬壳自保，躲避天敌。"
     ]
   },
   "evolutions": [

@@ -30,12 +30,17 @@
   ],
   "pokedex": {
     "category": "COCONUT",
+    "categoryZh": "椰子宝可梦",
     "heightFeet": 6,
     "heightInches": 7,
     "weightDecipounds": 2650,
     "flavorTextPages": [
       "Legend has it that\non rare occasions,\none of its heads",
       "will drop off and\ncontinue on as an\nEXEGGCUTE"
+    ],
+    "flavorTextPagesZh": [
+      "传说偶尔会有脑袋掉下来，",
+      "变成蛋蛋继续活下去。"
     ]
   },
   "evolutions": [],

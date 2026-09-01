@@ -30,12 +30,17 @@
   ],
   "pokedex": {
     "category": "WILD BULL",
+    "categoryZh": "野牛宝可梦",
     "heightFeet": 4,
     "heightInches": 7,
     "weightDecipounds": 1950,
     "flavorTextPages": [
       "When it targets\nan enemy, it\ncharges furiously",
       "while whipping its\nbody with its\nlong tails"
+    ],
+    "flavorTextPagesZh": [
+      "锁定敌人后就狂暴冲锋，",
+      "同时用长鞭似的尾巴抽打自己。"
     ]
   },
   "evolutions": [],

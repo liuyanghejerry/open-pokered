@@ -30,12 +30,17 @@
   ],
   "pokedex": {
     "category": "SLEEPING",
+    "categoryZh": "摄眠宝可梦",
     "heightFeet": 6,
     "heightInches": 11,
     "weightDecipounds": 10140,
     "flavorTextPages": [
       "Very lazy. Just\neats and sleeps.\nAs its rotund",
       "bulk builds, it\nbecomes steadily\nmore slothful"
+    ],
+    "flavorTextPagesZh": [
+      "非常懒惰，只知道吃和睡。肚子越",
+      "大，就变得越不爱动。"
     ]
   },
   "evolutions": [],

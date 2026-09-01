@@ -30,12 +30,17 @@
   ],
   "pokedex": {
     "category": "PSI",
+    "categoryZh": "念力宝可梦",
     "heightFeet": 4,
     "heightInches": 11,
     "weightDecipounds": 1060,
     "flavorTextPages": [
       "Its brain can out-\nperform a super-\ncomputer.",
       "Its intelligence\nquotient is said\nto be 5,000"
+    ],
+    "flavorTextPagesZh": [
+      "它的大脑比超级计算机还要出色。",
+      "据说智商高达5000。"
     ]
   },
   "evolutions": [],

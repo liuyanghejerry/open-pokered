@@ -30,12 +30,17 @@
   ],
   "pokedex": {
     "category": "BIVALVE",
+    "categoryZh": "双壳贝宝可梦",
     "heightFeet": 4,
     "heightInches": 11,
     "weightDecipounds": 2920,
     "flavorTextPages": [
       "When attacked, it\nlaunches its\nhorns in quick",
       "volleys. Its\ninnards have\nnever been seen"
+    ],
+    "flavorTextPagesZh": [
+      "受到攻击时，会把尖刺快速连发射出。",
+      "谁也没见过它身体的内部。"
     ]
   },
   "evolutions": [],

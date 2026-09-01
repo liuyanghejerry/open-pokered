@@ -30,12 +30,17 @@
   ],
   "pokedex": {
     "category": "RIVER CRAB",
+    "categoryZh": "河蟹宝可梦",
     "heightFeet": 1,
     "heightInches": 4,
     "weightDecipounds": 140,
     "flavorTextPages": [
       "Its pincers are\nnot only powerful\nweapons, they are",
       "used for balance\nwhen walking\nsideways"
+    ],
+    "flavorTextPagesZh": [
+      "钳子不仅是强力武器，",
+      "横着走路时还能用来保持平衡。"
     ]
   },
   "evolutions": [

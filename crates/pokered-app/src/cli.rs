@@ -124,6 +124,10 @@ pub enum Commands {
         /// resampled to 60 fps.
         #[arg(long, default_value = "240", requires = "record_video")]
         record_video_fps: u32,
+        /// Text language (menus, battle text, scene dialogue). Defaults to
+        /// the language-select screen flow; explicit values skip choosing.
+        #[arg(long, value_enum, default_value_t = CliLang::En)]
+        lang: CliLang,
     },
     /// Export the current save file (or a specified .sav) as a JSON snapshot
     ExportSnapshot {

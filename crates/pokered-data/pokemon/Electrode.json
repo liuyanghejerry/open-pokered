@@ -30,12 +30,17 @@
   ],
   "pokedex": {
     "category": "BALL",
+    "categoryZh": "圆球宝可梦",
     "heightFeet": 3,
     "heightInches": 11,
     "weightDecipounds": 1470,
     "flavorTextPages": [
       "It stores electric\nenergy under very\nhigh pressure.",
       "It often explodes\nwith little or no\nprovocation"
+    ],
+    "flavorTextPagesZh": [
+      "在体内以极高的压力储存电能。",
+      "稍受刺激就会爆炸。"
     ]
   },
   "evolutions": [],

@@ -1993,14 +1993,19 @@ pub fn draw_battle(
     // A Pokémon-Tower GHOST (no Silph Scope) shows as "GHOST", not the real species.
     // The ghost-Marowak battle (with scope) is also "GHOST" until the unveil phase
     // completes and the SILPH SCOPE reveals the Marowak.
+    let is_zh = language == pokered_core::game_state::Lang::Zh;
     let enemy_name = if screen.is_ghost || (screen.ghost_marowak_reveal && !screen.ghost_marowak_unveiled) {
-        "GHOST".to_string()
+        if is_zh { "幽灵".to_string() } else { "GHOST".to_string() }
+    } else if is_zh {
+        pokered_data::lang_data::species_name(screen.enemy_species, true).to_string()
     } else {
         format!("{}", screen.enemy_species).to_uppercase()
     };
     // The catch tutorial shows the player as "OLD MAN" (Gen-1 BATTLE_TYPE_OLD_MAN).
     let player_name = if screen.is_old_man {
-        "OLD MAN".to_string()
+        if is_zh { "老头".to_string() } else { "OLD MAN".to_string() }
+    } else if is_zh {
+        pokered_data::lang_data::species_name(screen.player_species, true).to_string()
     } else {
         format!("{}", screen.player_species).to_uppercase()
     };
@@ -2073,7 +2078,13 @@ pub fn draw_battle(
         );
 
         if !hide_enemy_hud {
-            let enemy_name_tiles = ascii_to_tiles(&enemy_name);
+            // The tile HUD only renders charmap glyphs; CJK names are blanked
+            // here and drawn with the pixel font after the tilemap blit.
+            let enemy_name_tiles = if is_zh {
+                Vec::new()
+            } else {
+                ascii_to_tiles(&enemy_name)
+            };
             let enemy_status_tiles = core_status_to_tiles(&screen.enemy_status).map(|s| s.tiles());
             let _enemy_hp_color = EnemyHud::draw(
                 &mut tile_buf,
@@ -2086,7 +2097,11 @@ pub fn draw_battle(
         }
 
         if !hide_player_hud {
-            let player_name_tiles = ascii_to_tiles(&player_name);
+            let player_name_tiles = if is_zh {
+                Vec::new()
+            } else {
+                ascii_to_tiles(&player_name)
+            };
             let player_status_tiles =
                 core_status_to_tiles(&screen.player_status).map(|s| s.tiles());
             let _player_hp_color = PlayerHud::draw(
@@ -2507,6 +2522,27 @@ pub fn draw_battle(
             tile_buf.render_region(fb, &battle_ts, pal, 0, 12, 20, 6);
         }
 
+        // Chinese HUD names: the tile-based HUD cannot render CJK glyphs, so
+        // the names are drawn with the pixel font here, after the tilemap and
+        // sprite/panel re-blits. Left-aligned at the HUD name origin — centering
+        // pushes 3+ char names right onto the "Lv" column below (CJK glyphs are
+        // 10px tall and their lower edge grazes the level row).
+        if is_zh {
+            let text_color = Rgba::new(0, 0, 0, 255);
+            if !hide_enemy_hud {
+                draw_text(&enemy_name, EnemyHud::NAME_X * TILE_SIZE, 0, text_color, fb);
+            }
+            if !hide_player_hud {
+                draw_text(
+                    &player_name,
+                    PlayerHud::NAME_X * TILE_SIZE,
+                    PlayerHud::NAME_Y * TILE_SIZE,
+                    text_color,
+                    fb,
+                );
+            }
+        }
+
         // Unified UI render: draw battle dialog/menus directly to framebuffer
         // using the same code path the editor preview uses. Must run AFTER sprites
         // and animation overlays so the menu box stays on top.
@@ -2552,7 +2588,7 @@ pub fn draw_battle(
                 // "Will you change #MON?" — prompt text + YES/NO box
                 // (TWO_OPTION_MENU, cursor default NO).
                 if let Some(ref text) = dialog_text {
-                    let shown = if language == Lang::Zh { crate::render::zh_battle_dialog(text) } else { text.clone() };
+                    let shown = if language == Lang::Zh { crate::render::zh_battle_dialog(text, true) } else { text.clone() };
                     menus::battle_text::draw(&shown, false, &BATTLE_TEXT_DEFAULT_LAYOUT, &mut ui, language);
                 }
                 let (yes, no) = if language == Lang::Zh { ("是".to_string(), "否".to_string()) } else { ("YES".to_string(), "NO".to_string()) };
@@ -2560,7 +2596,7 @@ pub fn draw_battle(
                 let selected = if screen.shift_prompt_yes { 0 } else { 1 };
                 menus::yes_no::draw(&opts, selected, &YES_NO_DEFAULT_LAYOUT, &mut ui);
             } else if let Some(ref text) = dialog_text {
-                let shown = if language == Lang::Zh { crate::render::zh_battle_dialog(text) } else { text.clone() };
+                let shown = if language == Lang::Zh { crate::render::zh_battle_dialog(text, true) } else { text.clone() };
                 menus::battle_text::draw(&shown, dialog_show_arrow, &BATTLE_TEXT_DEFAULT_LAYOUT, &mut ui, language);
             }
         }

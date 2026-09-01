@@ -30,12 +30,17 @@
   ],
   "pokedex": {
     "category": "HAIRY BUG",
+    "categoryZh": "毛毛虫宝可梦",
     "heightFeet": 1,
     "heightInches": 0,
     "weightDecipounds": 70,
     "flavorTextPages": [
       "Often found in\nforests, eating\nleaves.",
       "It has a sharp\nvenomous stinger\non its head"
+    ],
+    "flavorTextPagesZh": [
+      "常在森林里啃食树叶。",
+      "头顶的毒针尖锐有毒。"
     ]
   },
   "evolutions": [

@@ -30,12 +30,17 @@
   ],
   "pokedex": {
     "category": "BIRD",
+    "categoryZh": "鸟宝可梦",
     "heightFeet": 4,
     "heightInches": 11,
     "weightDecipounds": 870,
     "flavorTextPages": [
       "When hunting, it\nskims the surface\nof water at high",
       "speed to pick off\nunwary prey such\nas MAGIKARP"
+    ],
+    "flavorTextPagesZh": [
+      "捕猎时高速掠过水面，",
+      "叼走大意的鲤鱼王等猎物。"
     ]
   },
   "evolutions": [],

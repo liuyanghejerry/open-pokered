@@ -767,9 +767,8 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
             if anim.is_done() {
                 if let Some(pf) = self.pending_fishing.take() {
                     use crate::overworld::fishing::{response_text, RodResponse};
-                    self.pending_dialogue = Some(BedroomDialogue::from_message(
-                        response_text(pf.response),
-                    ));
+                    let text = self.localize_message(response_text(pf.response));
+                    self.pending_dialogue = Some(BedroomDialogue::from_message(&text));
                     if let RodResponse::Bite { species, level } = pf.response {
                         self.post_dialogue_battle = Some(PendingWildEncounter {
                             species,
@@ -1049,8 +1048,9 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                         get_sign_text_from_json(self.state.current_map, sign_text_id)
                     {
                         if !text_pages.is_empty() {
+                            let pages = self.localize_text_pages(&text_pages);
                             self.pending_dialogue = Some(BedroomDialogue::from_text_pages(
-                                &text_pages,
+                                &pages,
                                 &self.player_name,
                                 &self.rival_name,
                                 &self.starter_display_name(),
@@ -3108,8 +3108,9 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
     fn try_show_npc_json_text(&mut self, text_id: u8) -> bool {
         if let Some(text_pages) = get_npc_text_from_json(self.state.current_map, text_id) {
             if !text_pages.is_empty() {
+                let pages = self.localize_text_pages(&text_pages);
                 self.pending_dialogue = Some(BedroomDialogue::from_text_pages(
-                    &text_pages,
+                    &pages,
                     &self.player_name,
                     &self.rival_name,
                     &self.starter_display_name(),
@@ -3238,11 +3239,9 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
     /// eject warp back to the gate (fired once the message is dismissed).
     fn trigger_safari_game_over(&mut self) {
         self.end_safari_game();
-        let page = screen::DialoguePage {
-            line1: "PA: Ding-ding!",
-            line2: "Your SAFARI GAME is over!",
-        };
-        self.pending_dialogue = Some(screen::BedroomDialogue::from_pages(vec![page]));
+        let msg = "PA: Ding-ding!\nYour SAFARI GAME is over!";
+        self.pending_dialogue =
+            Some(screen::BedroomDialogue::from_message(&self.localize_message(msg)));
         self.safari_eject_pending = Some(PendingWarp {
             dest_map: MapId::SafariZoneGate,
             dest_x: screen::SAFARI_GATE_RETURN_X,

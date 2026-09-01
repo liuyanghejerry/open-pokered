@@ -30,12 +30,17 @@
   ],
   "pokedex": {
     "category": "BALLOON",
+    "categoryZh": "气球宝可梦",
     "heightFeet": 1,
     "heightInches": 8,
     "weightDecipounds": 120,
     "flavorTextPages": [
       "When its huge eyes\nlight up, it sings\na mysteriously",
       "soothing melody\nthat lulls its\nenemies to sleep"
+    ],
+    "flavorTextPagesZh": [
+      "大眼睛一亮，就会唱起不可思议的",
+      "摇篮曲，让敌人沉沉睡去。"
     ]
   },
   "evolutions": [

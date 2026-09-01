@@ -30,12 +30,17 @@
   ],
   "pokedex": {
     "category": "SLUDGE",
+    "categoryZh": "污泥宝可梦",
     "heightFeet": 2,
     "heightInches": 11,
     "weightDecipounds": 660,
     "flavorTextPages": [
       "Appears in filthy\nareas. Thrives by\nsucking up",
       "polluted sludge\nthat is pumped\nout of factories"
+    ],
+    "flavorTextPagesZh": [
+      "出现在肮脏的地方，靠吸食工厂",
+      "排出的污染污泥为生。"
     ]
   },
   "evolutions": [

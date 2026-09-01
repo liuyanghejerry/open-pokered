@@ -30,12 +30,17 @@
   ],
   "pokedex": {
     "category": "FLYCATCHER",
+    "categoryZh": "捕蝇草宝可梦",
     "heightFeet": 3,
     "heightInches": 3,
     "weightDecipounds": 140,
     "flavorTextPages": [
       "It spits out\nPOISONPOWDER to\nimmobilize the",
       "enemy and then\nfinishes it with\na spray of ACID"
+    ],
+    "flavorTextPagesZh": [
+      "先喷出毒粉让敌人动弹不得，",
+      "再用溶解液收尾。"
     ]
   },
   "evolutions": [

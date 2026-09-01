@@ -30,12 +30,17 @@
   ],
   "pokedex": {
     "category": "PSI",
+    "categoryZh": "念力宝可梦",
     "heightFeet": 4,
     "heightInches": 3,
     "weightDecipounds": 1250,
     "flavorTextPages": [
       "It emits special\nalpha waves from\nits body that",
       "induce headaches\njust by being\nclose by"
+    ],
+    "flavorTextPagesZh": [
+      "身体会发出特殊的阿尔法波，",
+      "靠近它就会头痛。"
     ]
   },
   "evolutions": [

@@ -30,12 +30,17 @@
   ],
   "pokedex": {
     "category": "MOLE",
+    "categoryZh": "鼹鼠宝可梦",
     "heightFeet": 0,
     "heightInches": 8,
     "weightDecipounds": 20,
     "flavorTextPages": [
       "Lives about one\nyard underground\nwhere it feeds on",
       "plant roots. It\nsometimes appears\nabove ground"
+    ],
+    "flavorTextPagesZh": [
+      "住在地下约1米深处，以植物根为食。",
+      "有时会钻出地面。"
     ]
   },
   "evolutions": [

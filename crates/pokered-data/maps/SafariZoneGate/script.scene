@@ -80,12 +80,12 @@ game_scene SafariZoneGate {
       @t("Hi! Is it your first time\nhere?", "嗨！你是第一次来吗？")
     }
     @choice {
-      @option("YES") {
+      @option(@t("YES", "是")) {
         @speaker("") {
           @t("SAFARI ZONE has 4 zones in\nit.\n\nEach zone has different\nkinds of POKeMON. Use SAFARI\nBALLs to catch them!\n\nWhen you run out of time or\nSAFARI BALLs, it's game over\nfor you!\n\nBefore you go, open an\nunused POKeMON BOX so\nthere's room for new\nPOKeMON!", "狩猎地带里有 4个区域。\n\n每个区域有不同种类的宝可梦。\n使用狩猎球来捕捉它们！\n\n当你用完时间或狩猎球时，游戏\n就结束了！\n\n出发之前，打开一个空闲的宝可\n梦箱腾出空间给新的宝可梦！")
         }
       }
-      @option("NO") {
+      @option(@t("NO", "否")) {
         @speaker("") {
           @t("Sorry, you're a regular\nhere!", "抱歉，你是这里的常客了！")
         }

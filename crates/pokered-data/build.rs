@@ -924,9 +924,18 @@ fn generate_pokemon_and_evos_data(manifest_dir: &Path, out_dir: &str) {
             .and_then(|x| x.as_array())
             .unwrap_or_else(|| panic!("{}: pokedex.flavorTextPages missing", path.display()));
 
+        // Simplified-Chinese dex text is optional per species; entries without
+        // it (editor-appended species 152+) fall back to the English fields.
+        let dex_category_zh = dex.get("categoryZh").and_then(|x| x.as_str()).unwrap_or(dex_category);
+        let dex_pages_zh = dex
+            .get("flavorTextPagesZh")
+            .and_then(|x| x.as_array())
+            .unwrap_or(dex_pages);
+
         writeln!(pokedex, "    PokedexEntry {{").unwrap();
         writeln!(pokedex, "        species: Species::{},", species_name).unwrap();
         writeln!(pokedex, "        category: {:?},", dex_category).unwrap();
+        writeln!(pokedex, "        category_zh: {:?},", dex_category_zh).unwrap();
         writeln!(pokedex, "        height_feet: {},", dex_height_feet).unwrap();
         writeln!(pokedex, "        height_inches: {},", dex_height_inches).unwrap();
         writeln!(pokedex, "        weight_decipounds: {},", dex_weight).unwrap();
@@ -938,6 +947,21 @@ fn generate_pokemon_and_evos_data(manifest_dir: &Path, out_dir: &str) {
             let s = page
                 .as_str()
                 .unwrap_or_else(|| panic!("{}: flavorTextPages[{}] not string", path.display(), i));
+            write!(pokedex, "{:?}", s).unwrap();
+        }
+        writeln!(pokedex, "],").unwrap();
+        write!(pokedex, "        flavor_text_pages_zh: &[").unwrap();
+        for (i, page) in dex_pages_zh.iter().enumerate() {
+            if i > 0 {
+                write!(pokedex, ", ").unwrap();
+            }
+            let s = page.as_str().unwrap_or_else(|| {
+                panic!(
+                    "{}: flavorTextPagesZh[{}] not string",
+                    path.display(),
+                    i
+                )
+            });
             write!(pokedex, "{:?}", s).unwrap();
         }
         writeln!(pokedex, "],").unwrap();

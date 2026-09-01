@@ -30,12 +30,17 @@
   ],
   "pokedex": {
     "category": "POISON PIN",
+    "categoryZh": "毒针宝可梦",
     "heightFeet": 1,
     "heightInches": 4,
     "weightDecipounds": 150,
     "flavorTextPages": [
       "Although small,\nits venomous\nbarbs render this",
       "#MON dangerous.\nThe female has\nsmaller horns"
+    ],
+    "flavorTextPagesZh": [
+      "体型虽小，但带毒的棘刺让它十分危险。",
+      "雌性的角比较小。"
     ]
   },
   "evolutions": [

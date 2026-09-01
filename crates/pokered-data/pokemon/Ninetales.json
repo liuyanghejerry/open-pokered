@@ -30,12 +30,17 @@
   ],
   "pokedex": {
     "category": "FOX",
+    "categoryZh": "狐狸宝可梦",
     "heightFeet": 3,
     "heightInches": 7,
     "weightDecipounds": 440,
     "flavorTextPages": [
       "Very smart and\nvery vengeful.\nGrabbing one of",
       "its many tails\ncould result in a\n1000-year curse"
+    ],
+    "flavorTextPagesZh": [
+      "非常聪明，而且记仇。要是抓住它的",
+      "尾巴，可能会被诅咒1000年。"
     ]
   },
   "evolutions": [],

@@ -1791,6 +1791,8 @@ impl PokemonGame {
             GameScreen::Battle => {
                 if self.battle.battle_state.is_none() {
                     self.battle = BattleScreen::new(true);
+                    self.battle.is_zh =
+                        self.state.config.language == pokered_core::game_state::Lang::Zh;
                     self.battle.player_money = self.save_data.game_data.player_money;
                     self.battle_vfx = BattleVisualEffects::default();
                     self.battle_prev_message = None;
@@ -2003,6 +2005,17 @@ impl PokemonGame {
         counting_started
     }
 
+    /// Localize a core-generated English message before queuing it as an
+    /// overworld dialogue (Chinese selected via the language screen). The
+    /// overworld's own scene text is already bilingual and passes through.
+    fn localize_dialogue(&self, text: &str) -> String {
+        if self.state.config.language == pokered_core::game_state::Lang::Zh {
+            pokered_data::dialog_text::localize(text)
+        } else {
+            text.to_string()
+        }
+    }
+
     fn start_wild_battle(&mut self, species: pokered_data::species::Species, level: u8) {
         use pokered_core::pokemon::stats::{create_pokemon, roll_random_dvs};
 
@@ -2020,6 +2033,7 @@ impl PokemonGame {
         } else {
             self.battle = pokered_core::battle::BattleScreen::new(true);
         }
+        self.battle.is_zh = self.state.config.language == pokered_core::game_state::Lang::Zh;
         self.battle.player_money = self.save_data.game_data.player_money;
         // Badge stat boosts + traded-mon obedience context (wObtainedBadges /
         // wPlayerID) — the battle reads them from these fields every turn.
@@ -2301,6 +2315,7 @@ impl PokemonGame {
         } else {
             self.battle = pokered_core::battle::BattleScreen::new(false);
         }
+        self.battle.is_zh = self.state.config.language == pokered_core::game_state::Lang::Zh;
         self.battle.player_money = self.save_data.game_data.player_money;
         // Badge stat boosts + traded-mon obedience context (wObtainedBadges /
         // wPlayerID) — the battle reads them from these fields every turn.
@@ -2676,12 +2691,14 @@ impl PokemonGame {
                     ScreenAction::Continue
                 };
                 // Keep the overworld script engine in sync with the chosen
-                // language so NPC dialogue (`@t` literals) renders in it.
+                // language so NPC dialogue (`@t` literals) renders in it, and
+                // localize battle messages the same way.
                 self.overworld.set_script_lang(if self.state.config.language == Lang::Zh {
                     "zh"
                 } else {
                     "en"
                 });
+                self.battle.is_zh = self.state.config.language == Lang::Zh;
                 action
             }
             GameScreen::IntroScene => {
@@ -2854,7 +2871,7 @@ impl PokemonGame {
                         // happens — the room has no cable partner.
                         self.overworld.pending_dialogue = Some(
                             pokered_core::overworld::BedroomDialogue::from_message(
-                                crate::link::cable_club::TEXT_JUST_A_MOMENT,
+                                &self.localize_dialogue(crate::link::cable_club::TEXT_JUST_A_MOMENT),
                             ),
                         );
                     }
@@ -3802,14 +3819,20 @@ impl PokemonGame {
                                         // the lead's level (repel checks it).
                                         self.overworld.party_lead_level =
                                             self.save_data.party.leader_level();
-                                        self.overworld.pending_dialogue =
-                                            Some(BedroomDialogue::from_message(&message));
+                                        self.overworld.pending_dialogue = Some(
+                                            BedroomDialogue::from_message(
+                                                &self.localize_dialogue(&message),
+                                            ),
+                                        );
                                         self.pending_bag_item = None;
                                         ScreenAction::Transition(GameScreen::Overworld)
                                     }
                                     ItemApplyOutcome::NoEffect { message } => {
-                                        self.overworld.pending_dialogue =
-                                            Some(BedroomDialogue::from_message(&message));
+                                        self.overworld.pending_dialogue = Some(
+                                            BedroomDialogue::from_message(
+                                                &self.localize_dialogue(&message),
+                                            ),
+                                        );
                                         self.pending_bag_item = None;
                                         ScreenAction::Transition(GameScreen::Overworld)
                                     }
@@ -3892,6 +3915,7 @@ impl PokemonGame {
                                 }
                                 None => bag_use::NO_EFFECT_MESSAGE.to_string(),
                             };
+                            let message = self.localize_dialogue(&message);
                             self.overworld.pending_dialogue =
                                 Some(BedroomDialogue::from_message(&message));
                             ScreenAction::Transition(GameScreen::Overworld)
@@ -3923,6 +3947,7 @@ impl PokemonGame {
                                 if consume {
                                     let _ = self.save_data.game_data.bag.remove_item(item, 1);
                                 }
+                                let message = self.localize_dialogue(&message);
                                 self.overworld.pending_dialogue =
                                     Some(BedroomDialogue::from_message(&message));
                                 self.pending_bag_item = None;
@@ -4003,6 +4028,7 @@ impl PokemonGame {
                             // an evolution.
                             _ => pokered_core::items::bag_use::NO_EFFECT_MESSAGE.to_string(),
                         };
+                        let message = self.localize_dialogue(&message);
                         self.overworld.pending_dialogue =
                             Some(BedroomDialogue::from_message(&message));
                         ScreenAction::Transition(GameScreen::Overworld)
@@ -4039,7 +4065,9 @@ impl PokemonGame {
                             ScreenAction::Continue
                         } else {
                             self.overworld.pending_dialogue = Some(
-                                BedroomDialogue::from_message("That's too impor-\ntant to toss!"),
+                                BedroomDialogue::from_message(&self.localize_dialogue(
+                                    "That's too impor-\ntant to toss!",
+                                )),
                             );
                             ScreenAction::Transition(GameScreen::Overworld)
                         }

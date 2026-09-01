@@ -30,12 +30,17 @@
   ],
   "pokedex": {
     "category": "SUPERPOWER",
+    "categoryZh": "怪力宝可梦",
     "heightFeet": 4,
     "heightInches": 11,
     "weightDecipounds": 1550,
     "flavorTextPages": [
       "Its muscular body\nis so powerful, it\nmust wear a power",
       "save belt to be\nable to regulate\nits motions"
+    ],
+    "flavorTextPagesZh": [
+      "肌肉发达得惊人，必须戴着力量腰带",
+      "才能控制自己的动作。"
     ]
   },
   "evolutions": [

@@ -30,12 +30,17 @@
   ],
   "pokedex": {
     "category": "POISON GAS",
+    "categoryZh": "毒气宝可梦",
     "heightFeet": 2,
     "heightInches": 0,
     "weightDecipounds": 20,
     "flavorTextPages": [
       "Because it stores\nseveral kinds of\ntoxic gases in",
       "its body, it is\nprone to exploding\nwithout warning"
+    ],
+    "flavorTextPagesZh": [
+      "体内储存着好几种毒气，",
+      "随时可能毫无预兆地爆炸。"
     ]
   },
   "evolutions": [

@@ -30,12 +30,17 @@
   ],
   "pokedex": {
     "category": "WORM",
+    "categoryZh": "毛毛虫宝可梦",
     "heightFeet": 1,
     "heightInches": 0,
     "weightDecipounds": 60,
     "flavorTextPages": [
       "Its short feet\nare tipped with\nsuction pads that",
       "enable it to\ntirelessly climb\nslopes and walls"
+    ],
+    "flavorTextPagesZh": [
+      "短脚的尖端有吸盘，能不知疲倦地",
+      "爬上陡坡和墙壁。"
     ]
   },
   "evolutions": [

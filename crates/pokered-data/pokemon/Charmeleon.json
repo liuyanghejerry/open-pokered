@@ -30,12 +30,17 @@
   ],
   "pokedex": {
     "category": "FLAME",
+    "categoryZh": "火焰宝可梦",
     "heightFeet": 3,
     "heightInches": 7,
     "weightDecipounds": 420,
     "flavorTextPages": [
       "When it swings\nits burning tail,\nit elevates the",
       "temperature to\nunbearably high\nlevels"
+    ],
+    "flavorTextPagesZh": [
+      "当它甩动燃烧的尾巴时，",
+      "周围的温度会高得让人难以忍受。"
     ]
   },
   "evolutions": [

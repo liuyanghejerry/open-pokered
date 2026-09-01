@@ -30,12 +30,17 @@
   ],
   "pokedex": {
     "category": "STAGBEETLE",
+    "categoryZh": "锹形虫宝可梦",
     "heightFeet": 4,
     "heightInches": 11,
     "weightDecipounds": 1210,
     "flavorTextPages": [
       "If it fails to\ncrush the victim\nin its pincers,",
       "it will swing it\naround and toss\nit hard"
+    ],
+    "flavorTextPagesZh": [
+      "如果没能用大颚夹碎猎物，",
+      "就会把它抡起来狠狠摔出去。"
     ]
   },
   "evolutions": [],

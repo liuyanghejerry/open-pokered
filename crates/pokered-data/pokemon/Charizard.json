@@ -30,12 +30,17 @@
   ],
   "pokedex": {
     "category": "FLAME",
+    "categoryZh": "火焰宝可梦",
     "heightFeet": 5,
     "heightInches": 7,
     "weightDecipounds": 2000,
     "flavorTextPages": [
       "Spits fire that\nis hot enough to\nmelt boulders.",
       "Known to cause\nforest fires\nunintentionally"
+    ],
+    "flavorTextPagesZh": [
+      "喷出的火焰炽热得能熔化岩石。",
+      "据说有时会无意间引发森林火灾。"
     ]
   },
   "evolutions": [],

@@ -30,12 +30,17 @@
   ],
   "pokedex": {
     "category": "FAIRY",
+    "categoryZh": "妖精宝可梦",
     "heightFeet": 4,
     "heightInches": 3,
     "weightDecipounds": 880,
     "flavorTextPages": [
       "A timid fairy\n#MON that is\nrarely seen. It",
       "will run and hide\nthe moment it\nsenses people"
+    ],
+    "flavorTextPagesZh": [
+      "胆小的妖精宝可梦，很少露面。",
+      "一察觉到人的气息就会逃走躲起来。"
     ]
   },
   "evolutions": [],

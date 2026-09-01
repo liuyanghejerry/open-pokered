@@ -6,8 +6,11 @@
 //! in `pokered_core::slots_screen` (shared with the native app; this is a
 //! pixel-for-pixel mirror of the app's `render/slots.rs`).
 
+use pokered_core::game_state::Lang;
 use pokered_core::slots_screen::{symbol_label, SlotsPhase, SlotsScreen};
-use pokered_renderer::embedded_font::{draw_text, draw_text_scaled};
+use pokered_data::lang_data;
+use pokered_data::ui_text::{zh_slot_symbol, zh_slots_message};
+use pokered_renderer::embedded_font::{draw_text, draw_text_scaled, measure_text};
 use pokered_renderer::{FrameBuffer, Rgba};
 
 use super::draw_text_box;
@@ -31,11 +34,13 @@ fn outline_rect(fb: &mut FrameBuffer, x: u32, y: u32, w: u32, h: u32, color: Rgb
 }
 
 /// Draw the whole slots screen to the 160x144 framebuffer.
-pub fn draw_slots(slots: &SlotsScreen, fb: &mut FrameBuffer) {
+pub fn draw_slots(slots: &SlotsScreen, fb: &mut FrameBuffer, lang: Lang) {
+    let is_zh = lang == Lang::Zh;
     fb.clear(BG);
 
     // Title.
-    draw_text("SLOT MACHINE", 40, 6, FG, fb);
+    let title = lang_data::ui_label("SLOT MACHINE", is_zh);
+    draw_text(title, (fb.width().saturating_sub(measure_text(title))) / 2, 6, FG, fb);
 
     // Three reel windows. Each shows top / middle / bottom symbols. The middle
     // row is the 1-coin payline, so highlight it.
@@ -55,9 +60,9 @@ pub fn draw_slots(slots: &SlotsScreen, fb: &mut FrameBuffer) {
 
         // Rows: top, middle (payline), bottom.
         let row_labels = [
-            symbol_label(view.top),
-            symbol_label(view.middle),
-            symbol_label(view.bottom),
+            zh_slot_symbol(symbol_label(view.top)),
+            zh_slot_symbol(symbol_label(view.middle)),
+            zh_slot_symbol(symbol_label(view.bottom)),
         ];
         for (r, label) in row_labels.iter().enumerate() {
             let ty = reel_y + 6 + r as u32 * 16;
@@ -75,20 +80,26 @@ pub fn draw_slots(slots: &SlotsScreen, fb: &mut FrameBuffer) {
 
     // HUD: coins + current bet.
     let hud_y = reel_y + reel_h + 6;
-    draw_text(&format!("COINS {:>4}", slots.coins), 8, hud_y, FG, fb);
-    let bet_text = format!("BET  {}", slots.bet);
+    draw_text(&format!("{} {:>4}", lang_data::ui_label("COINS", is_zh), slots.coins), 8, hud_y, FG, fb);
+    let bet_text = format!("{}  {}", lang_data::ui_label("BET", is_zh), slots.bet);
     draw_text(&bet_text, 108, hud_y, FG, fb);
 
     // Status message box near the bottom.
     let box_y = 118;
     draw_text_box(fb, 0, box_y, 17, 1, FG);
-    draw_text(&slots.message, 10, box_y + 10, FG, fb);
+    draw_text(&zh_slots_message(&slots.message, is_zh), 10, box_y + 10, FG, fb);
 
     // Contextual hint line just under the reels.
     let hint = match slots.phase {
-        SlotsPhase::BetSelect => "UP/DN:BET  A:SPIN  B:EXIT",
-        SlotsPhase::Spinning => "A: STOP REEL",
-        SlotsPhase::Result => "A: CONTINUE",
+        SlotsPhase::BetSelect => {
+            if is_zh { "上/下：下注  A：开始  B：退出" } else { "UP/DN:BET  A:SPIN  B:EXIT" }
+        }
+        SlotsPhase::Spinning => {
+            if is_zh { "A：停止转轮" } else { "A: STOP REEL" }
+        }
+        SlotsPhase::Result => {
+            if is_zh { "A：继续" } else { "A: CONTINUE" }
+        }
     };
     draw_text(hint, 8, hud_y + 14, FG, fb);
 
@@ -112,17 +123,25 @@ mod tests {
     /// under/overflow in the manual rect drawing).
     #[test]
     fn draw_slots_does_not_panic_in_all_phases() {
+        use pokered_core::game_state::Lang;
         let mut fb = FrameBuffer::new(RenderConfig::new(160, 144), Rgba::BLACK);
         let mut s = SlotsScreen::new(false, 100, 1);
-        draw_slots(&s, &mut fb); // BetSelect
+        draw_slots(&s, &mut fb, Lang::En); // BetSelect
         s.update_frame(SlotsInput { a: true, ..SlotsInput::none() });
-        draw_slots(&s, &mut fb); // Spinning
+        draw_slots(&s, &mut fb, Lang::En); // Spinning
         for _ in 0..2000 {
             if s.phase != SlotsPhase::Spinning {
                 break;
             }
             s.update_frame(SlotsInput { a: true, ..SlotsInput::none() });
         }
-        draw_slots(&s, &mut fb); // Result
+        draw_slots(&s, &mut fb, Lang::En); // Result
+        draw_slots(&s, &mut fb, Lang::Zh); // zh must render without panic too
+        if std::env::var("POKERED_TUI_DEBUG_SHOTS").as_deref() == Ok("1") {
+            let _ = fb.save_png(std::path::Path::new(concat!(
+                env!("CARGO_MANIFEST_DIR"),
+                "/../../target/tui-slots-zh.png"
+            )));
+        }
     }
 }

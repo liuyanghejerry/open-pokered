@@ -30,12 +30,17 @@
   ],
   "pokedex": {
     "category": "POISON PIN",
+    "categoryZh": "毒针宝可梦",
     "heightFeet": 2,
     "heightInches": 11,
     "weightDecipounds": 430,
     "flavorTextPages": [
       "An aggressive\n#MON that is\nquick to attack.",
       "The horn on its\nhead secretes a\npowerful venom"
+    ],
+    "flavorTextPagesZh": [
+      "好斗的宝可梦，出手迅捷。",
+      "头上的角分泌着剧毒。"
     ]
   },
   "evolutions": [

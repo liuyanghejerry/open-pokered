@@ -30,12 +30,17 @@
   ],
   "pokedex": {
     "category": "BUBBLE JET",
+    "categoryZh": "泡沫宝可梦",
     "heightFeet": 3,
     "heightInches": 3,
     "weightDecipounds": 640,
     "flavorTextPages": [
       "Lives close to\nwater. Its long\ntail is ridged",
       "with a fin which\nis often mistaken\nfor a mermaid's"
+    ],
+    "flavorTextPagesZh": [
+      "栖息在水边。长尾巴上长着鳍状的",
+      "突起，常被误认为美人鱼。"
     ]
   },
   "evolutions": [],

@@ -30,12 +30,17 @@
   ],
   "pokedex": {
     "category": "DOPEY",
+    "categoryZh": "迟钝宝可梦",
     "heightFeet": 3,
     "heightInches": 11,
     "weightDecipounds": 790,
     "flavorTextPages": [
       "Incredibly slow\nand dopey. It\ntakes 5 seconds",
       "for it to feel\npain when under\nattack"
+    ],
+    "flavorTextPagesZh": [
+      "迟钝得不可思议。受到攻击后，",
+      "要过5秒才感觉到疼。"
     ]
   },
   "evolutions": [

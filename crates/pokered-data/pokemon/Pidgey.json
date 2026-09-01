@@ -30,12 +30,17 @@
   ],
   "pokedex": {
     "category": "TINY BIRD",
+    "categoryZh": "小鸟宝可梦",
     "heightFeet": 1,
     "heightInches": 0,
     "weightDecipounds": 40,
     "flavorTextPages": [
       "A common sight in\nforests and woods.\nIt flaps its",
       "wings at ground\nlevel to kick up\nblinding sand"
+    ],
+    "flavorTextPagesZh": [
+      "森林里常见的鸟。会贴着地面扇动",
+      "翅膀，掀起迷眼的沙尘。"
     ]
   },
   "evolutions": [

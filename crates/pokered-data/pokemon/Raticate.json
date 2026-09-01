@@ -30,12 +30,17 @@
   ],
   "pokedex": {
     "category": "RAT",
+    "categoryZh": "鼠宝可梦",
     "heightFeet": 2,
     "heightInches": 4,
     "weightDecipounds": 410,
     "flavorTextPages": [
       "It uses its whis-\nkers to maintain\nits balance.",
       "It apparently\nslows down if\nthey are cut off"
+    ],
+    "flavorTextPagesZh": [
+      "靠胡须保持平衡。据说胡须被剪掉",
+      "后速度就会变慢。"
     ]
   },
   "evolutions": [],

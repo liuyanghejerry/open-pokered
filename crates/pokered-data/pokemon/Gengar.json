@@ -30,12 +30,17 @@
   ],
   "pokedex": {
     "category": "SHADOW",
+    "categoryZh": "影子宝可梦",
     "heightFeet": 4,
     "heightInches": 11,
     "weightDecipounds": 890,
     "flavorTextPages": [
       "Under a full moon,\nthis #MON\nlikes to mimic",
       "the shadows of\npeople and laugh\nat their fright"
+    ],
+    "flavorTextPagesZh": [
+      "在满月之夜，它喜欢模仿人的影子，",
+      "看到人吓坏的样子就发笑。"
     ]
   },
   "evolutions": [],

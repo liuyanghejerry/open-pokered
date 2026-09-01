@@ -10,10 +10,10 @@ use dotzuki_engine::render_config::RenderConfig;
 use crate::cli::{screen_name, screen_target_to_game_screen, ScreenTarget, ALL_SCREENS};
 use crate::game::PokemonGame;
 
-/// Apply a capture language to a freshly constructed game: set the config
+/// Apply a capture/run language to a freshly constructed game: set the config
 /// language (menus / screen text) and keep the overworld script engine in
 /// sync, so `@t("english", "中文")` dialogue resolves to the right side.
-fn apply_lang(game: &mut PokemonGame, lang: Lang) {
+pub fn apply_lang(game: &mut PokemonGame, lang: Lang) {
     game.state.config.language = lang;
     game.overworld.set_script_lang(match lang {
         Lang::En => "en",

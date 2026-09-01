@@ -30,12 +30,17 @@
   ],
   "pokedex": {
     "category": "BUTTERFLY",
+    "categoryZh": "蝴蝶宝可梦",
     "heightFeet": 3,
     "heightInches": 7,
     "weightDecipounds": 710,
     "flavorTextPages": [
       "In battle, it\nflaps its wings\nat high speed to",
       "release highly\ntoxic dust into\nthe air"
+    ],
+    "flavorTextPagesZh": [
+      "战斗时高速扇动翅膀，",
+      "向空中撒布剧毒的鳞粉。"
     ]
   },
   "evolutions": [],

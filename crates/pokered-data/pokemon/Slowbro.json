@@ -30,12 +30,17 @@
   ],
   "pokedex": {
     "category": "HERMITCRAB",
+    "categoryZh": "寄居蟹宝可梦",
     "heightFeet": 5,
     "heightInches": 3,
     "weightDecipounds": 1730,
     "flavorTextPages": [
       "The SHELLDER that\nis latched onto\nSLOWPOKE's tail",
       "is said to feed\non the host's left\nover scraps"
+    ],
+    "flavorTextPagesZh": [
+      "咬住呆呆兽尾巴的刺甲贝，据说靠",
+      "吸食宿主吃剩的食物为生。"
     ]
   },
   "evolutions": [],

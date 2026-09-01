@@ -30,12 +30,17 @@
   ],
   "pokedex": {
     "category": "MANTIS",
+    "categoryZh": "螳螂宝可梦",
     "heightFeet": 4,
     "heightInches": 11,
     "weightDecipounds": 1230,
     "flavorTextPages": [
       "With ninja-like\nagility and speed,\nit can create the",
       "illusion that\nthere is more\nthan one"
+    ],
+    "flavorTextPagesZh": [
+      "身手如忍者般敏捷，能让人产生",
+      "它分身有术的错觉。"
     ]
   },
   "evolutions": [],

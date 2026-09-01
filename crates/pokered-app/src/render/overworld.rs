@@ -119,9 +119,10 @@ fn draw_pokedex_entry(
     page: usize,
     res: &mut Option<ResourceManager>,
     fb: &mut FrameBuffer,
+    is_zh: bool,
 ) -> usize {
     match pokered_data::species::Species::from_scene_name(species) {
-        Some(sp) => super::pokedex::draw_entry_for_species(sp, page, true, res, fb),
+        Some(sp) => super::pokedex::draw_entry_for_species(sp, page, true, is_zh, res, fb),
         None => {
             fb.clear(Rgba::WHITE);
             let t = TILE_SIZE;
@@ -1196,7 +1197,13 @@ pub fn draw_overworld(
 
     // Fullscreen Pokédex entry overlay — takes over the entire screen.
     if let Some(ref mut dex_state) = screen.pending_pokedex_entry {
-        let total = draw_pokedex_entry(&dex_state.species, dex_state.page, res, fb);
+        let total = draw_pokedex_entry(
+            &dex_state.species,
+            dex_state.page,
+            res,
+            fb,
+            language == pokered_core::game_state::Lang::Zh,
+        );
         dex_state.total_pages = total;
         return;
     }

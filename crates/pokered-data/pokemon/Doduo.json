@@ -30,12 +30,17 @@
   ],
   "pokedex": {
     "category": "TWIN BIRD",
+    "categoryZh": "双头鸟宝可梦",
     "heightFeet": 4,
     "heightInches": 7,
     "weightDecipounds": 860,
     "flavorTextPages": [
       "A bird that makes\nup for its poor\nflying with its",
       "fast foot speed.\nLeaves giant\nfootprints"
+    ],
+    "flavorTextPagesZh": [
+      "不擅长飞，却跑得飞快来弥补的鸟。",
+      "它留下的脚印非常巨大。"
     ]
   },
   "evolutions": [

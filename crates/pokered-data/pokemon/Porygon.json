@@ -30,12 +30,17 @@
   ],
   "pokedex": {
     "category": "VIRTUAL",
+    "categoryZh": "虚拟宝可梦",
     "heightFeet": 2,
     "heightInches": 7,
     "weightDecipounds": 800,
     "flavorTextPages": [
       "A #MON that\nconsists entirely\nof programming",
       "code. Capable of\nmoving freely in\ncyberspace"
+    ],
+    "flavorTextPagesZh": [
+      "完全由程序代码构成的宝可梦，",
+      "能在赛博空间里自由移动。"
     ]
   },
   "evolutions": [],

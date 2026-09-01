@@ -30,12 +30,17 @@
   ],
   "pokedex": {
     "category": "MEGATON",
+    "categoryZh": "百万吨宝可梦",
     "heightFeet": 4,
     "heightInches": 7,
     "weightDecipounds": 6620,
     "flavorTextPages": [
       "Its boulder-like\nbody is extremely\nhard. It can",
       "easily withstand\ndynamite blasts\nwithout damage"
+    ],
+    "flavorTextPagesZh": [
+      "岩石般的身体极其坚硬，",
+      "就算被炸药爆破也毫发无伤。"
     ]
   },
   "evolutions": [],

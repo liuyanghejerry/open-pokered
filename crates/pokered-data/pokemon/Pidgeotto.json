@@ -30,12 +30,17 @@
   ],
   "pokedex": {
     "category": "BIRD",
+    "categoryZh": "鸟宝可梦",
     "heightFeet": 3,
     "heightInches": 7,
     "weightDecipounds": 660,
     "flavorTextPages": [
       "Very protective\nof its sprawling\nterritorial area,",
       "this #MON will\nfiercely peck at\nany intruder"
+    ],
+    "flavorTextPagesZh": [
+      "领地意识极强，对闯入领地的",
+      "家伙会毫不留情地猛啄。"
     ]
   },
   "evolutions": [

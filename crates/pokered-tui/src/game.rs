@@ -326,7 +326,15 @@ impl PokemonGame {
         let title_screen = TitleScreenState::new(version);
         let main_menu = MainMenuState::new(save_summary);
         let oak_speech = OakSpeechState::new();
-        let overworld = OverworldScreen::new(MapId::PalletTown, scripts_dir.clone(), PokemonRedData);
+        let mut overworld =
+            OverworldScreen::new(MapId::PalletTown, scripts_dir.clone(), PokemonRedData);
+        // The script engine language starts from the saved/default config;
+        // the LanguageSelect screen re-syncs it whenever the choice changes.
+        overworld.set_script_lang(if state.config.language == pokered_core::game_state::Lang::Zh {
+            "zh"
+        } else {
+            "en"
+        });
         let battle = BattleScreen::new(true);
         let battle_vfx = BattleVisualEffects::default();
         let start_menu = StartMenuState::new(false, false, false);
@@ -429,7 +437,14 @@ impl PokemonGame {
         let title_screen = TitleScreenState::new(version);
         let main_menu = MainMenuState::new(save_summary);
         let oak_speech = OakSpeechState::new();
-        let overworld = OverworldScreen::new(MapId::PalletTown, None, PokemonRedData);
+        let mut overworld = OverworldScreen::new(MapId::PalletTown, None, PokemonRedData);
+        // The script engine language starts from the default config; the
+        // LanguageSelect screen re-syncs it whenever the choice changes.
+        overworld.set_script_lang(if state.config.language == pokered_core::game_state::Lang::Zh {
+            "zh"
+        } else {
+            "en"
+        });
         let battle = BattleScreen::new(true);
         let battle_vfx = BattleVisualEffects::default();
         let start_menu = StartMenuState::new(false, false, false);
@@ -881,6 +896,11 @@ impl PokemonGame {
                         overworld.player_name = self.player_name.clone();
                         overworld.rival_name = self.rival_name.clone();
                         overworld.run_on_load();
+                        overworld.set_script_lang(if self.state.config.language == pokered_core::game_state::Lang::Zh {
+                            "zh"
+                        } else {
+                            "en"
+                        });
                         self.overworld = overworld;
                         pokered_core::log_save!(
                             "continue: overworld created: player x={}, y={}, map={:?}",
@@ -909,6 +929,11 @@ impl PokemonGame {
                         overworld.state.player.y = NEW_GAME_WARP.coords.y as u16;
                         overworld.player_name = self.player_name.clone();
                         overworld.rival_name = self.rival_name.clone();
+                        overworld.set_script_lang(if self.state.config.language == pokered_core::game_state::Lang::Zh {
+                            "zh"
+                        } else {
+                            "en"
+                        });
                         self.overworld = overworld;
                         if let Some(ref audio) = self.audio {
                             audio.play_music(MusicId::PALLET_TOWN);
@@ -964,6 +989,8 @@ impl PokemonGame {
             GameScreen::Battle => {
                 if self.battle.battle_state.is_none() {
                     self.battle = BattleScreen::new(true);
+                    self.battle.is_zh =
+                        self.state.config.language == pokered_core::game_state::Lang::Zh;
                     self.battle.player_money = self.save_data.game_data.player_money;
                     self.battle_vfx = BattleVisualEffects::default();
                     self.battle_prev_message = None;
@@ -1197,6 +1224,7 @@ impl PokemonGame {
         } else {
             self.battle = pokered_core::battle::BattleScreen::new(true);
         }
+        self.battle.is_zh = self.state.config.language == pokered_core::game_state::Lang::Zh;
         self.battle_prev_message = None;
         self.faint_thud_pending = false;
         // Pre-battle setup mirroring the native app — REQUIRED so the post-battle
@@ -1324,6 +1352,7 @@ impl PokemonGame {
         } else {
             self.battle = pokered_core::battle::BattleScreen::new(false);
         }
+        self.battle.is_zh = self.state.config.language == pokered_core::game_state::Lang::Zh;
         // Pre-battle setup mirroring the native app (REQUIRED — see start_wild_battle):
         // carry the map id + bag into the battle and register the enemy team as seen.
         self.battle.map_id = self.overworld.state.current_map as u8;
@@ -1501,9 +1530,9 @@ impl PokemonGame {
 
         let action = match self.state.screen {
             GameScreen::GameFreakSplash => {
-                // PlayShootingStar (engine/movie/intro.asm:305-341). TUI's
-                // boot flow skips LanguageSelect (like its CopyrightSplash
-                // arm), so map the splash's exit there.
+                // PlayShootingStar (engine/movie/intro.asm:305-341): input
+                // skips it like the original's CheckForUserInterruption; the
+                // core's exit action is Transition(LanguageSelect).
                 let splash_input = SplashInput {
                     a: input.is_just_pressed(GbButton::A),
                     b: input.is_held(GbButton::B),
@@ -1519,11 +1548,7 @@ impl PokemonGame {
                         audio.play_sfx(SfxId::ShootingStar);
                     }
                 }
-                if action == ScreenAction::Transition(GameScreen::LanguageSelect) {
-                    ScreenAction::Transition(GameScreen::IntroScene)
-                } else {
-                    action
-                }
+                action
             }
             GameScreen::LanguageSelect => {
                 if input.is_just_pressed(GbButton::Up) || input.is_just_pressed(GbButton::Down) {
@@ -1532,17 +1557,29 @@ impl PokemonGame {
                         Lang::Zh => Lang::En,
                     };
                 }
-                if input.is_just_pressed(GbButton::A) || input.is_just_pressed(GbButton::Start) {
+                let action = if input.is_just_pressed(GbButton::A)
+                    || input.is_just_pressed(GbButton::Start)
+                {
                     ScreenAction::Transition(GameScreen::IntroScene)
                 } else {
                     ScreenAction::Continue
-                }
+                };
+                // Keep the overworld script engine in sync with the chosen
+                // language so NPC dialogue (`@t` literals) renders in it, and
+                // localize battle messages the same way (mirrors pokered-app).
+                self.overworld.set_script_lang(if self.state.config.language == Lang::Zh {
+                    "zh"
+                } else {
+                    "en"
+                });
+                self.battle.is_zh = self.state.config.language == Lang::Zh;
+                action
             }
             GameScreen::CopyrightSplash => {
                 let any_pressed = input.any_just_pressed();
                 let action = self.title_screen.update_frame(any_pressed);
                 if self.title_screen.phase == TitlePhase::Init {
-                    ScreenAction::Transition(GameScreen::IntroScene)
+                    ScreenAction::Transition(GameScreen::LanguageSelect)
                 } else {
                     action
                 }
@@ -3120,7 +3157,7 @@ impl PokemonGame {
         // The Hall of Fame roll call and the end credits take over the whole
         // screen while they play.
         if let Some(ref hof) = self.hof_ceremony {
-            draw_hof_ceremony(hof, &mut self.resources, frame_buffer);
+            draw_hof_ceremony(hof, &mut self.resources, frame_buffer, self.state.config.language);
             return;
         }
         if let Some(ref roll) = self.credits {
@@ -3131,7 +3168,9 @@ impl PokemonGame {
         frame_buffer.clear(Rgba::WHITE);
 
         match self.state.screen {
-            GameScreen::LanguageSelect => {},
+            GameScreen::LanguageSelect => {
+                draw_language_select(frame_buffer, self.state.config.language);
+            }
             GameScreen::GameFreakSplash => {
                 draw_gamefreak_splash(&self.gamefreak_splash, &mut self.resources, frame_buffer);
             }
@@ -3169,6 +3208,7 @@ impl PokemonGame {
                     &mut self.resources,
                     frame_buffer,
                     &mut self.battle_vfx,
+                    self.state.config.language,
                 );
                 if !self.battle_vfx.has_transition() {
                     self.battle_vfx.clear_snapshot();
@@ -3200,7 +3240,7 @@ impl PokemonGame {
             }
             GameScreen::PC => {
                 if let Some(ref pc) = self.pc_screen {
-                    draw_pc(pc, &self.save_data, &mut self.resources, frame_buffer);
+                    draw_pc(pc, &self.save_data, &mut self.resources, frame_buffer, self.state.config.language);
                 }
             }
             GameScreen::Bag => {
@@ -3216,17 +3256,17 @@ impl PokemonGame {
             }
             GameScreen::Slots => {
                 if let Some(ref slots) = self.slots_screen {
-                    draw_slots(slots, frame_buffer);
+                    draw_slots(slots, frame_buffer, self.state.config.language);
                 }
             }
             GameScreen::Elevator => {
                 if let Some(ref elevator) = self.elevator_screen {
-                    draw_elevator(elevator, frame_buffer);
+                    draw_elevator(elevator, frame_buffer, self.state.config.language);
                 }
             }
             GameScreen::FilterBag => {
                 if let Some(ref filter) = self.elevator_screen {
-                    draw_filter_bag(filter, frame_buffer);
+                    draw_filter_bag(filter, frame_buffer, self.state.config.language);
                 }
             }
             GameScreen::Diploma => {
@@ -3267,6 +3307,20 @@ const BLACK_SCREEN_DURATION: u32 = 30;
 /// Frames A+B+Start+Select must be held to trigger a soft reset
 /// (`hSoftReset` starts at 16 in home/init.asm).
 const SOFT_RESET_HOLD_FRAMES: u8 = 16;
+
+/// Language-select screen (the app's `draw_language_select`): Up/Down toggles,
+/// A/Start confirms. Drawn with the embedded pixel font so CJK renders.
+fn draw_language_select(fb: &mut FrameBuffer, current: pokered_core::game_state::Lang) {
+    use pokered_core::game_state::Lang;
+    use pokered_renderer::embedded_font::draw_text;
+    fb.clear(Rgba::WHITE);
+    draw_text("Select Language / 选择语言", 16, 48, Rgba::BLACK, fb);
+    let gray = Rgba::rgb(0x80, 0x80, 0x80);
+    let (en_pre, en_color) = if current == Lang::En { ("> ", Rgba::BLACK) } else { ("  ", gray) };
+    let (zh_pre, zh_color) = if current == Lang::Zh { ("> ", Rgba::BLACK) } else { ("  ", gray) };
+    draw_text(&format!("{}English", en_pre), 16, 72, en_color, fb);
+    draw_text(&format!("{}中文", zh_pre), 16, 90, zh_color, fb);
+}
 
 impl dotzuki_tui::TuiGame for PokemonGame {
     type Button = GbButton;
@@ -3340,7 +3394,7 @@ fn parse_sfx_id(name: &str) -> Option<SfxId> {
 mod tests {
     use super::*;
     use dotzuki_tui::InputState;
-    use pokered_core::game_state::MainMenuChoice;
+    use pokered_core::game_state::{Lang, MainMenuChoice};
 
     /// A game standing in the overworld as if a save was loaded via CONTINUE:
     /// save-file position (5,5) on Viridian City, live overworld position
@@ -3583,5 +3637,87 @@ mod tests {
         }
         assert_eq!(game2.soft_reset_frames, 15);
         assert_ne!(game2.state.screen, GameScreen::TitleScreen);
+    }
+    // ── Language pipeline sync ───────────────────────────────────────────
+    // The LanguageSelect screen re-syncs the overworld script engine and the
+    // battle message language (mirrors pokered-app); the boot flow now stops
+    // there instead of skipping it.
+
+    #[test]
+    fn language_select_toggles_language_and_syncs_pipelines() {
+        let mut game = PokemonGame::new(pokered_core::data::wild_data::GameVersion::Red);
+        // The boot flow must STOP at LanguageSelect now (splash exit is no
+        // longer remapped to the intro): run the ~500-frame splash out.
+        for _ in 0..600 {
+            game.update(&InputState::new());
+            if game.state.screen == GameScreen::LanguageSelect {
+                break;
+            }
+        }
+        assert_eq!(
+            game.state.screen,
+            GameScreen::LanguageSelect,
+            "boot flow must land on the language-select screen"
+        );
+        assert_eq!(game.state.config.language, Lang::En);
+
+        // Up toggles En → Zh and re-syncs the script engine + battle messages.
+        game.update(&press(GbButton::Up));
+        assert_eq!(game.state.config.language, Lang::Zh);
+        assert_eq!(game.state.screen, GameScreen::LanguageSelect);
+        assert_eq!(game.overworld.script_lang(), Some("zh"));
+        assert!(game.battle.is_zh);
+
+        // A confirms → intro scene; the choice persists.
+        game.update(&press(GbButton::A));
+        assert_eq!(game.state.screen, GameScreen::IntroScene);
+        assert_eq!(game.overworld.script_lang(), Some("zh"));
+        assert!(game.battle.is_zh);
+
+        // Toggling back must restore English everywhere too.
+        game.state.screen = GameScreen::LanguageSelect;
+        game.update(&press(GbButton::Down));
+        assert_eq!(game.state.config.language, Lang::En);
+        assert_eq!(game.overworld.script_lang(), Some("en"));
+        assert!(!game.battle.is_zh);
+    }
+
+    #[test]
+    fn overworld_rebuilds_keep_script_lang_in_sync() {
+        let mut game = game_at_overworld();
+        game.state.config.language = Lang::Zh;
+
+        // Continue path: re-entering the overworld from the main menu
+        // rebuilds the overworld; the script engine must come up Chinese.
+        game.main_menu.last_choice = Some(MainMenuChoice::Continue);
+        game.state.screen = GameScreen::MainMenu;
+        game.handle_transition(GameScreen::Overworld);
+        assert_eq!(game.overworld.script_lang(), Some("zh"));
+
+        // NewGame path likewise.
+        game.main_menu.last_choice = Some(MainMenuChoice::NewGame);
+        game.state.screen = GameScreen::MainMenu;
+        game.handle_transition(GameScreen::Overworld);
+        assert_eq!(game.overworld.script_lang(), Some("zh"));
+
+        // Default construction stays English.
+        let fresh = PokemonGame::new(pokered_core::data::wild_data::GameVersion::Red);
+        assert_eq!(fresh.overworld.script_lang(), Some("en"));
+    }
+
+    #[test]
+    fn battle_starts_carry_language() {
+        let mut game = game_at_overworld();
+
+        game.state.config.language = Lang::Zh;
+        game.start_wild_battle(pokered_data::species::Species::Rattata, 5);
+        assert!(game.battle.is_zh, "wild battle must localize messages");
+
+        game.start_trainer_battle("youngster1", None);
+        assert!(game.battle.is_zh, "trainer battle must localize messages");
+
+        game.state.config.language = Lang::En;
+        game.start_wild_battle(pokered_data::species::Species::Rattata, 5);
+        assert!(!game.battle.is_zh);
     }
 }

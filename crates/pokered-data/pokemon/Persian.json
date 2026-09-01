@@ -30,12 +30,17 @@
   ],
   "pokedex": {
     "category": "CLASSY CAT",
+    "categoryZh": "高贵猫宝可梦",
     "heightFeet": 3,
     "heightInches": 3,
     "weightDecipounds": 710,
     "flavorTextPages": [
       "Although its fur\nhas many admirers,\nit is tough to",
       "raise as a pet\nbecause of its\nfickle meanness"
+    ],
+    "flavorTextPagesZh": [
+      "皮毛仰慕者众多，但它任性又记仇，",
+      "想当宠物养可不容易。"
     ]
   },
   "evolutions": [],

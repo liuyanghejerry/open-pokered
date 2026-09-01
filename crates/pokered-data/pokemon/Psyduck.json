@@ -30,12 +30,17 @@
   ],
   "pokedex": {
     "category": "DUCK",
+    "categoryZh": "鸭宝可梦",
     "heightFeet": 2,
     "heightInches": 7,
     "weightDecipounds": 430,
     "flavorTextPages": [
       "While lulling its\nenemies with its\nvacant look, this",
       "wily #MON will\nuse psychokinetic\npowers"
+    ],
+    "flavorTextPagesZh": [
+      "用呆滞的眼神让敌人放松警惕，",
+      "趁机使出意念力。"
     ]
   },
   "evolutions": [

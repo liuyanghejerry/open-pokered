@@ -30,12 +30,17 @@
   ],
   "pokedex": {
     "category": "TINYTURTLE",
+    "categoryZh": "小龟宝可梦",
     "heightFeet": 1,
     "heightInches": 8,
     "weightDecipounds": 200,
     "flavorTextPages": [
       "After birth, its\nback swells and\nhardens into a",
       "shell. Powerfully\nsprays foam from\nits mouth"
+    ],
+    "flavorTextPagesZh": [
+      "出生后背部隆起变硬，形成龟壳。",
+      "能从嘴里有力地喷出泡沫。"
     ]
   },
   "evolutions": [
