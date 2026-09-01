@@ -5,6 +5,9 @@
 // in that priority) and sets the GAVE_SAFFRON_GUARDS_DRINK status bit; we
 // approximate with hasItem/takeItem + an EVENT flag, and approximate the forced
 // "push the player back up" with movePlayer.
+//
+// EVENT_GAVE_SAFFRON_GUARDS_DRINK mirrors the original BIT_GAVE_SAFFRON_GUARDS_DRINK
+// status bit (shared across all Saffron gates).
 
 game_scene Route5Gate {
   // ── Saffron gate guard (npc 1) ─────────────────────────────────────────
@@ -42,6 +45,62 @@ game_scene Route5Gate {
         // Original simulates a forced UP press to push the player back into the
         // gate (from the doorway coords 3,3 / 4,3). Approximate with movePlayer.
         movePlayerRelative([[0, -1]])
+      }
+    }
+  }
+
+  // ── Gate-blocking cutscene at the Saffron-side row (coords 3,3 / 4,3) ────
+  // Original Route5GateDefaultScript fires when the player steps onto the gate
+  // row while BIT_GAVE_SAFFRON_GUARDS_DRINK is unset. If the player is carrying
+  // a guard drink it is taken and the road opens; otherwise the guard turns the
+  // player back (scripted PAD_UP shove).
+  @storyline("gateBlock") {
+    @trigger(map = "Route5Gate", name = "gateBlock1", coords = [[3, 3], [4, 3]])
+    @if (!getFlag("EVENT_GAVE_SAFFRON_GUARDS_DRINK")) {
+      @if (hasItem("FRESH_WATER")) {
+        takeItem("FRESH_WATER", 1)
+        setFlag("EVENT_GAVE_SAFFRON_GUARDS_DRINK")
+        // SaffronGateGuardGiveDrinkText (ImParched -> get-item jingle -> GoOnThrough).
+        @speaker("") {
+          @t("Whoa, boy! I'm parched! ...\nHuh? I can have this drink?\nGee, thanks!", "哇，小伙子！我渴死了！……这\n饮料真的可以给我吗？嘿，谢\n谢！")
+        }
+        playSound("SFX_GET_KEY_ITEM")
+        @speaker("") {
+          @t("... Glug glug... ... Gulp...\nIf you want to go to SAFFRON\nCITY... ... You can go on\nthrough. I'll share this\nwith the other guards!", "……咕嘟咕嘟…………咕嘟……\n如果你想去金黄市…………那就\n过去吧。我会把这个分给其他的\n守卫们！")
+        }
+      } @else {
+        @if (hasItem("SODA_POP")) {
+          takeItem("SODA_POP", 1)
+          setFlag("EVENT_GAVE_SAFFRON_GUARDS_DRINK")
+          @speaker("") {
+            @t("Whoa, boy! I'm parched! ...\nHuh? I can have this drink?\nGee, thanks!", "哇，小伙子！我渴死了！……这\n饮料真的可以给我吗？嘿，谢\n谢！")
+          }
+          playSound("SFX_GET_KEY_ITEM")
+          @speaker("") {
+            @t("... Glug glug... ... Gulp...\nIf you want to go to SAFFRON\nCITY... ... You can go on\nthrough. I'll share this\nwith the other guards!", "……咕嘟咕嘟…………咕嘟……\n如果你想去金黄市…………那就\n过去吧。我会把这个分给其他的\n守卫们！")
+          }
+        } @else {
+          @if (hasItem("LEMONADE")) {
+            takeItem("LEMONADE", 1)
+            setFlag("EVENT_GAVE_SAFFRON_GUARDS_DRINK")
+            @speaker("") {
+              @t("Whoa, boy! I'm parched! ...\nHuh? I can have this drink?\nGee, thanks!", "哇，小伙子！我渴死了！……这\n饮料真的可以给我吗？嘿，谢\n谢！")
+            }
+            playSound("SFX_GET_KEY_ITEM")
+            @speaker("") {
+              @t("... Glug glug... ... Gulp...\nIf you want to go to SAFFRON\nCITY... ... You can go on\nthrough. I'll share this\nwith the other guards!", "……咕嘟咕嘟…………咕嘟……\n如果你想去金黄市…………那就\n过去吧。我会把这个分给其他的\n守卫们！")
+            }
+          } @else {
+            // No drink: thirsty message, then turn the player back.
+            @speaker("") {
+              @t("I'm on guard duty. Gee, I'm\nthirsty, though!\n\nOh wait there, the road's\nclosed.", "我在站岗。唉，我渴得不行！\n\n哎呀，等一下，这条路不通行。")
+            }
+            // Original shoves the player one tile up (PAD_UP x1) back into the
+            // gate: from trigger tiles (3,3)/(4,3) the player ends at
+            // (3,2)/(4,2). A relative step up matches both trigger tiles.
+            movePlayerRelative([[0, -1]])
+          }
+        }
       }
     }
   }
