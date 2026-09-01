@@ -2875,7 +2875,12 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
         // Resolve the scene ASTs before mutating the engine (native path).
         let shared_ast = self.shared_scene_ast();
         let map_ast = self.map_scene_ast(&map_key);
+        // The engine is recreated per map; carry the selected script language
+        // ("en"/"zh") over so a LanguageSelect choice survives map transitions
+        // (bedroom → downstairs: mom's `@t` dialogue must stay Chinese).
+        let script_lang = self.script_engine.script_lang().unwrap_or("en").to_string();
         self.script_engine = super::native_script::OverworldScriptEngine::new();
+        self.script_engine.set_lang(&script_lang);
 
         match &mut self.script_engine {
             #[cfg(feature = "script-boa")]

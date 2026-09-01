@@ -335,3 +335,23 @@ fn oak_dialogue_is_chinese_in_zh_mode() {
     }
     panic!("zh-mode Oak dialogue never appeared");
 }
+
+/// Regression: the script engine is recreated on every map load
+/// (`load_map_script`), and a fresh engine defaults to English. The language
+/// picked on the LanguageSelect screen must carry over, or the first map
+/// transition (bedroom → downstairs) drops back to English: mom's `@t`
+/// dialogue then renders as "MOM: Right. All boys leave home some day…".
+#[test]
+fn load_map_script_keeps_selected_language() {
+    let mut screen = OverworldScreen::new(MapId::RedsHouse2F, Some(maps_dir()), PokemonRedData);
+    screen.set_script_lang("zh");
+    assert_eq!(screen.script_lang(), Some("zh"));
+
+    // Walk downstairs: RedsHouse2F → RedsHouse1F reloads the map script.
+    screen.load_map_script(MapId::RedsHouse1F);
+    assert_eq!(
+        screen.script_lang(),
+        Some("zh"),
+        "selected language must survive a map-script reload"
+    );
+}
