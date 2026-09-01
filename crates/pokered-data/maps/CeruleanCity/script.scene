@@ -154,6 +154,39 @@ game_scene CeruleanCity {
     }
   }
 
+  // ── On-step Rocket interception (coords (30,7)/(30,9)) ───────────────────
+  // Original CeruleanCityDefaultScript: while EVENT_BEAT_CERULEAN_ROCKET_THIEF
+  // is unset, stepping onto either tile beside the Rocket turns him toward the
+  // player and runs his talk handler — same text + scripted battle as pressing
+  // A on him (pre-beat branch of talkRocket). Post-beat the DefaultScript
+  // skips the check entirely, so this is gated on !EVENT_BEAT_CERULEAN_ROCKET_THIEF.
+  @storyline("rocketStep") {
+    @trigger(map = "CeruleanCity", name = "rocketStep1", coords = [[30, 7], [30, 9]])
+    @if (!getFlag("EVENT_BEAT_CERULEAN_ROCKET_THIEF")) {
+      @speaker("") {
+        @t("Hey! Stay out! It's not your\nyard! Huh? Me?\n\nI'm an innocent bystander!\nDon't you believe me?", "嘿！别进来！这里不是你的院\n子！嗯？我？\n\n我是个无辜的路人！难道你不相\n信我吗？")
+      }
+      result = startBattle("OPP_ROCKET5")
+      @if (result == "win") {
+        @speaker("") {
+          @t("Stop! I give up! I'll leave\nquietly!", "住手！我认输！我会安静地离\n开！")
+        }
+        setFlag("EVENT_BEAT_CERULEAN_ROCKET_THIEF")
+        @speaker("") {
+          @t("OK! I'll return the TM I\nstole!", "好！我会把偷来的TM还回去！")
+        }
+        giveItem("TM_28", 1)
+        @speaker("") {
+          @t("<PLAYER> recovered TM28!", "<PLAYER>找回了 TM28！")
+        }
+        @speaker("") {
+          @t("I better get moving! Bye!", "我最好赶快离开！再见！")
+        }
+        hideObjectByName("CERULEAN_ROCKET")
+      }
+    }
+  }
+
   // ── CooltrainerM (npc 3) ──────────────────────────────────────────────────
   @storyline("talkCooltrainerM") {
     @trigger(map = "CeruleanCity", npc = 3)

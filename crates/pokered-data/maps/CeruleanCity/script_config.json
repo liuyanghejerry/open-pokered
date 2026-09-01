@@ -16,6 +16,22 @@
         6
       ],
       "trigger": "coordRivalBattle"
+    },
+    {
+      "name": "rocketStep1",
+      "position": [
+        30,
+        7
+      ],
+      "trigger": "rocketStep"
+    },
+    {
+      "name": "rocketStep2",
+      "position": [
+        30,
+        9
+      ],
+      "trigger": "rocketStep"
     }
   ],
   "npcs": [

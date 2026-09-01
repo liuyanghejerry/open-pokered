@@ -22,20 +22,59 @@ game_scene LancesRoom {
       replaceTileBlock(2, 6, 49)
       replaceTileBlock(3, 6, 50)
     }
+    // Entrance nudge (original WalkToLance, 12-frame RLE chunks: PAD_UP x12 /
+    // PAD_LEFT x12 / PAD_DOWN x7 / PAD_LEFT x6 — the room's maze walls bump the
+    // simulated walk short; the live port of the same sequence from the (24,16)
+    // arrival ends ~(22,15)). Reproduced as an explicit short path; anything
+    // longer would need the wall-bumping walk semantics. Runs every entry
+    // before Lance is beaten — the original gate is CheckEvent EVENT_BEAT_LANCE.
+    @if (!getFlag("EVENT_BEAT_LANCE")) {
+      movePlayerRelative([[0, -1], [-1, 0], [-1, 0]])
+    }
   }
 
   // ── Entrance trigger: crossing in seals the room behind the player ───────
-  // Original LancesRoomDefaultScript: stepping onto the entrance trigger coord
+  // Original LancesRoomDefaultScript: stepping onto the entrance trigger coords
   // (not next to Lance / not on the staircase) does CheckAndSetEvent
   // EVENT_LANCES_ROOM_LOCK_DOOR, plays SFX_GO_INSIDE, then closes the entrance
-  // blocks. Coord index 3 = dbmapcoord 6,11. Only fires before Lance is beaten.
+  // blocks. Coord indices 3 & 4 = dbmapcoord (5,11) and (6,11). Only fires
+  // before Lance is beaten.
   @storyline("lockEntrance") {
-    @trigger(map = "LancesRoom", name = "lockEntrance")
+    @trigger(map = "LancesRoom", name = "lockEntrance", coords = [[5, 11], [6, 11]])
     @if (!getFlag("EVENT_BEAT_LANCE") && !getFlag("EVENT_LANCES_ROOM_LOCK_DOOR")) {
       setFlag("EVENT_LANCES_ROOM_LOCK_DOOR")
       playSound("SFX_GO_INSIDE")
       replaceTileBlock(2, 6, 114)
       replaceTileBlock(3, 6, 115)
+    }
+  }
+
+  // ── Standing next to Lance auto-triggers his text (coords (5,1)/(6,2)) ───
+  // Original LancesRoomDefaultScript: coord indexes 1 & 2 ("standing next to
+  // Lance's sprite") show TEXT_LANCESROOM_LANCE — the same trainer-text battle
+  // as talking to him. Post-beat the DefaultScript returns early, so the
+  // trigger is gated on !EVENT_BEAT_LANCE.
+  @storyline("lanceStep") {
+    @trigger(map = "LancesRoom", name = "lanceStep1", coords = [[5, 1], [6, 2]])
+    @if (!getFlag("EVENT_BEAT_LANCE")) {
+      @speaker("") {
+        @t("Ah! I heard about you\n<PLAYER>!\n\nI lead the ELITE FOUR! You\ncan call me LANCE the dragon\ntrainer!\n\nYou know that dragons are\nmythical POKeMON!\n\nThey're hard to catch and\nraise, but their powers are\nsuperior!\n\nThey're virtually\nindestructible!\n\nWell, are you ready to lose?\n\nYour LEAGUE challenge ends\nwith me, <PLAYER>!", "啊！我听说了你的事，\n<PLAYER>！\n\n我是四天王的首领！你可以叫我\n龙之训练家阿渡！\n\n你知道吗，龙是传说中的宝可\n梦！\n\n它们很难捕捉和培育，但力量却\n非常强大！\n\n它们几乎无坚不摧！\n\n好了，你准备好输了吗？\n\n你的联盟挑战就到此为止了，\n<PLAYER>！")
+      }
+      result = startBattle("OPP_LANCE1")
+      @if (result == "win") {
+        @speaker("") {
+          @t("That's it!\n\nI hate to admit it, but you\nare a POKeMON master!", "就是这样！\n\n虽然我不想承认，但你确实是宝\n可梦大师！")
+        }
+        @speaker("") {
+          @t("I still can't believe my\ndragons lost to you,\n<PLAYER>!\n\nYou are now the POKeMON\nLEAGUE champion!\n\n...Or, you would have been,\nbut you have one more\nchallenge ahead.\n\nYou have to face another\ntrainer! His name is...\n\n<RIVAL>! He beat the ELITE\nFOUR before you!\n\nHe is the real POKeMON\nLEAGUE champion!", "我还是无法相信我的龙竟然输给\n了你， <PLAYER>！\n\n你现在已经是宝可梦联盟的冠军\n了！\n\n……或者说，你本来是的，但还\n有一个挑战等着你。\n\n你还必须面对另一个训练家！他\n的名字是……\n\n<RIVAL>！他先你一步打败了四\n天王！\n\n他才是真正的宝可梦联盟冠军！")
+        }
+        setFlag("EVENT_BEAT_LANCE")
+        setFlag("EVENT_BEAT_LANCES_ROOM_TRAINER_0")
+        // Unlock the entrance once Lance is beaten (same as the talk handler).
+        resetFlag("EVENT_LANCES_ROOM_LOCK_DOOR")
+        replaceTileBlock(2, 6, 49)
+        replaceTileBlock(3, 6, 50)
+      }
     }
   }
 

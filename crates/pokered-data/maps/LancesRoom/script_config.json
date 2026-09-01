@@ -8,6 +8,30 @@
         11
       ],
       "trigger": "lockEntrance"
+    },
+    {
+      "name": "lockEntrance2",
+      "position": [
+        5,
+        11
+      ],
+      "trigger": "lockEntrance"
+    },
+    {
+      "name": "lanceStep1",
+      "position": [
+        5,
+        1
+      ],
+      "trigger": "lanceStep"
+    },
+    {
+      "name": "lanceStep2",
+      "position": [
+        6,
+        2
+      ],
+      "trigger": "lanceStep"
     }
   ],
   "npcs": [

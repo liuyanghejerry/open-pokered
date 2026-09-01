@@ -10,12 +10,20 @@
       "trigger": "cardKeyDoor"
     },
     {
-      "name": "cardKeyDoor2",
+      "name": "giovanniStep1",
       "position": [
         6,
         13
       ],
-      "trigger": "cardKeyDoor"
+      "trigger": "giovanniStep"
+    },
+    {
+      "name": "giovanniStep2",
+      "position": [
+        7,
+        12
+      ],
+      "trigger": "giovanniStep"
     }
   ],
   "npcs": [

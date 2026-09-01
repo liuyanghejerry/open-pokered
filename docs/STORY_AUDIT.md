@@ -489,3 +489,41 @@ blocked without drink/badge/money (incl. sidestep probes), correct pass-through 
 drink/badge/payment, the shared gate flag opening all Saffron gates, and both
 leaving-Safari branches. `pokered-core` + `pokered-data` suites green (incl. the
 `.scene`↔config round-trip).
+## ✅ 2026-09 — Remaining cutscene/interception fidelity gaps (LancesRoom, CeruleanCity, SilphCo11F, Bruno)
+
+Follow-up to the blocking-NPC pass: a full sweep of the maps whose original
+`DefaultScript` runs coord checks but whose ports had fewer coord events at — or
+different — tiles. What was genuinely missing (each verified live over the debug
+server where the flow is reachable):
+
+- **LancesRoom** — (a) the entrance seal now covers BOTH original tiles
+  `(5,11)/(6,11)` (was (6,11) only); (b) standing next to Lance (`(5,1)/(6,2)`)
+  now auto-triggers his trainer text + scripted battle — `lanceStep` storyline
+  gated on `!EVENT_BEAT_LANCE` (the original's `coordIndex<3` case; the talk
+  handler still works as before); (c) the arrival nudge at `(24,16)` replicates
+  the original `WalkToLance` RLE as a short movePlayerRelative path (the maze
+  walls bump the simulated-walk short — the live port of the original RLE
+  sequence ends ~(22,15)). Note: `lanceStep`'s win flow was verified only by
+  construction (identical binding + pipeline to the verified Cerulean/Silph
+  intercepts) — the room's maze makes the (5,1) approach impractical to drive
+  blind.
+- **CeruleanCity** — the Rocket-thief on-step interception at `(30,7)/(30,9)`
+  (`rocketStep`: his text + auto-battle + TM28 return, gated on
+  `!EVENT_BEAT_CERULEAN_ROCKET_THIEF`). Verified live: full win flow + post-beat
+  silence.
+- **SilphCo11F** — the Giovanni on-step interception at `(6,13)/(7,12)`
+  (`giovanniStep`, gated on `!EVENT_BEAT_SILPH_CO_GIOVANNI`); the card-key door
+  story collapsed to the single traffic tile `(6,12)` (the door block
+  (3,6)'s second traffic tile is Giovanni's intercept tile) and its "Darn!"
+  branch now only fires while the door is still locked. Verified live: door
+  open → walk-on intercept → win → post-beat silence.
+- **BrunosRoom** — its "Don't run away!" shove used `movePlayer([[0,-1]])`,
+  which is an ABSOLUTE position (→ (0,-1), a no-op): the room could actually be
+  escaped. Now `movePlayerRelative`, matching Lorelei/Agatha; the beat gate was
+  removed so the guard is unconditional like the original.
+- **LoreleisRoom / AgathasRoom / the (4,11),(5,11) question** — investigated,
+  no change needed: those two tiles ARE the exit warps, and the port's warp
+  check runs before the coord check on the same step, so coord events there can
+  never fire; the (4,10)/(5,10) shove is what keeps the player off the warp
+  (the original's DefaultScript runs pre-movement so its y=10 shove pre-empts
+  the down-step — same gameplay result). Documented in the scenes.

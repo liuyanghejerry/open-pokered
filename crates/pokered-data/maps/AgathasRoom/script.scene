@@ -30,12 +30,16 @@ game_scene AgathasRoom {
     // is set by the battle outcome; the door opens on the next @load re-apply.
   }
 
-  // ── "Don't run away!" push-back (coord (4,10)/(5,10)) ──────────────────
+  // ── "Don't run away!" push-back (coords (4,10)/(5,10)/(4,11)/(5,11)) ────
   // Original AgathaEntranceCoords + StopPlayerFromLeaving: stepping back
-  // toward the exit before beating Agatha shows the voice line and shoves
-  // the player up one tile (PAD_UP).
+  // toward the exit — the trigger covers BOTH the row above the exit and the
+  // entrance row (the original's coordIndex<3 / >=3 Autowalk-vs-shove split
+  // collapses here: the entrance-row autowalk lives in @load) — shows the
+  // voice line and shoves the player up one tile (PAD_UP). Runs before AND
+  // after Agatha is beaten: the original DefaultScript has no beat gate, the
+  // E4 gauntlet only allows forward.
   @storyline("coordDontRunAway") {
-    @trigger(map = "AgathasRoom", name = "dontRunAway")
+    @trigger(map = "AgathasRoom", name = "dontRunAway", coords = [[4, 10], [5, 10], [4, 11], [5, 11]])
     @speaker("") { @t("Someone's voice: Don't run\naway!", "某人的声音：别想逃走！") }
     movePlayerRelative(["up"])
   }
