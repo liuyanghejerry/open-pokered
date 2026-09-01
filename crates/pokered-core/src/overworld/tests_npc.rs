@@ -612,3 +612,62 @@ fn viridian_forest_trainer_engages_on_sight_line() {
     }
     panic!("trainer never engaged on sight tile (29,33)");
 }
+
+// ── Stale edge detection on re-entry from a sub-screen ─────────────
+
+/// Regression: returning to the overworld from the START menu with the A
+/// button still held (the press that confirmed EXIT) used to re-fire as a
+/// fresh A press on the first frame back — instantly talking to the facing
+/// NPC. The original never does this: home/joypad.asm recomputes hJoyPressed
+/// against hJoyReleased every frame, so a press consumed by the menu loop
+/// can't re-fire in the overworld loop. Frontends now call `sync_prev_input`
+/// on re-entry to re-baseline the overworld's edge detectors.
+#[test]
+fn reentry_with_a_still_held_does_not_talk_to_facing_npc() {
+    use super::screen::OverworldScreen;
+    use pokered_data::impl_traits::PokemonRedData;
+
+    let a_input = super::OverworldInput::new(
+        false, false, false, false, true, false, false, false,
+    );
+    let neutral = super::OverworldInput::new(
+        false, false, false, false, false, false, false, false,
+    );
+
+    // Daisy sits at (2,3); stand beside her facing her.
+    let mut screen = OverworldScreen::new(MapId::BluesHouse, None, PokemonRedData);
+    screen.state.player.x = 1;
+    screen.state.player.y = 3;
+    screen.state.player.facing = Direction::Right;
+
+    // Let the map settle (load effects, NPC ticks) — the overworld ran for a
+    // while before the START menu was opened.
+    for _ in 0..10 {
+        screen.update_frame(neutral);
+    }
+    assert!(screen.pending_dialogue.is_none());
+    assert!(screen.active_script_effect.is_none());
+
+    // The START menu consumed the A press; on re-entry the frontend
+    // re-baselines the edge detectors to the still-held A...
+    screen.sync_prev_input(true, false, false, false);
+
+    // ...so the first overworld frame with A held must not talk.
+    screen.update_frame(a_input);
+    assert!(
+        screen.pending_dialogue.is_none(),
+        "held A re-fired after menu close and talked to the facing NPC"
+    );
+    assert!(
+        screen.active_script_effect.is_none(),
+        "held A re-fired after menu close and started a script"
+    );
+
+    // Release, then a genuine press → talks to Daisy as usual.
+    screen.update_frame(neutral);
+    screen.update_frame(a_input);
+    assert!(
+        screen.pending_dialogue.is_some() || screen.active_script_effect.is_some(),
+        "a genuine A press must still talk to the facing NPC"
+    );
+}
