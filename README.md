@@ -16,7 +16,7 @@
 
 A faithful reimplementation of **Pokémon Red and Blue** in **Rust**, built from the [pret/pokered](https://github.com/pret/pokered) disassembly — playable on **desktop, web, Android, and iOS** from a single codebase, fully playable in **English and 中文**, and shipping with a full **visual editor suite** for maps, data, UI layouts, and saves.
 
-This repo is **game-only**: the generic **JRPG engine** lives in a separate repository and is consumed here as a Cargo **git dependency** (`dotzuki-engine`, `dotzuki-engine-dsl`, `dotzuki-engine-script`, `dotzuki-rules`, `dotzuki-renderer`, `dotzuki-ui`, `dotzuki-audio`, `dotzuki-app`, `dotzuki-tui` — see `Cargo.toml`, all pinned to a `v0.5.2` tag of the engine repo).
+This repo is **game-only**: the generic **JRPG engine** lives in a separate repository and is consumed here as a Cargo **git dependency** (`dotzuki-engine`, `dotzuki-engine-dsl`, `dotzuki-engine-script`, `dotzuki-rules`, `dotzuki-renderer`, `dotzuki-ui`, `dotzuki-audio`, `dotzuki-app`, `dotzuki-tui` — see `crates/*/Cargo.toml`, all pinned to the `v0.6.0` tag of the engine repo).
 
 ## Try it in your browser
 
@@ -119,7 +119,7 @@ Read state → drive inputs deterministically → verify the pixels. That loop m
 
 **Try it online: [https://liuyanghejerry.github.io/open-pokered/editor/](https://liuyanghejerry.github.io/open-pokered/editor/)**
 
-`tools/pokered-editor/` is a Vue/Vite application (with an Electron shell) for editing every aspect of the game. The hosted web version is ideal for exploring the data and layouts; local and Electron builds are available for the complete development workflow.
+`tools/pokered-editor/` is a Vue/Vite application (with an Electron shell) for editing every aspect of the game. The hosted web version is ideal for exploring the data and layouts; local and Electron builds are available for the complete development workflow. Edits made on the hosted version are stored in your browser, and the **🚀 Publish game** action bundles the game engine plus all your edits into a single self-contained HTML file — download it and anyone can play your hack in a browser, no installation required.
 
 <p align="center">
   <img src="docs/screenshots/readme/editor-map.png" alt="Map editor" width="720">
@@ -155,7 +155,7 @@ cargo run --release --bin pokered-app
 cargo test
 ```
 
-The engine is consumed as a Cargo git dependency: `https://github.com/liuyanghejerry/dotzuki`, pinned to tag `v0.5.2` (see the `Cargo.toml` of each crate). After pulling a new engine tag, bump the `tag` and run `cargo update`.
+The engine is consumed as a Cargo git dependency: `https://github.com/liuyanghejerry/dotzuki`, pinned to tag `v0.6.0` (see the `Cargo.toml` of each crate). After pulling a new engine tag, bump the `tag` and run `cargo update`.
 
 ## What this repo contains
 

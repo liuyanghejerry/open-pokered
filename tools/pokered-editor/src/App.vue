@@ -15,6 +15,7 @@ import { exportDeltasJson, importDeltasJson, clearDeltas } from './composables/u
 import { staticMode } from './composables/useStaticMode'
 import { loadPokeredRunnerModule } from './composables/usePokeredRunner'
 import { loadLayoutPreviewModule } from './composables/useWasmPreview'
+import { publishGame } from './publish/publish'
 import { storeToRefs } from 'pinia'
 import ActivityBar from './components/ActivityBar.vue'
 import StatusBar from './components/StatusBar.vue'
@@ -341,6 +342,29 @@ function resetEdits() {
   clearDeltas().then(() => location.reload())
 }
 
+// ── Static-hosting game publish ───────────────────────────────────────────
+
+/** Build + download the self-contained published game (runner wasm + local
+ *  edits in one playable HTML file) — works with no /api backend at all. */
+const publishing = ref(false)
+async function publishStaticGame() {
+  const title = prompt('Published game title:', 'My Pokémon Red')
+  if (title === null) return
+  publishing.value = true
+  try {
+    const r = await publishGame(title)
+    alert(
+      `Published ${r.fileName} (${(r.sizeBytes / 1024 / 1024).toFixed(1)} MB) — ` +
+        `${r.deltaCount} local edit(s) embedded. Open the file in any browser to play; ` +
+        `progress auto-saves in that browser.`,
+    )
+  } catch (e) {
+    alert(`Publish failed: ${(e as Error).message}`)
+  } finally {
+    publishing.value = false
+  }
+}
+
 onMounted(() => {
   // Legacy deep link straight into the old full-screen playtest: open the
   // floating overlay and fall back to the map editor.
@@ -536,6 +560,14 @@ function handlePixelSelect() {
         @click="importEdits()"
       >
         📂 Import edits
+      </button>
+      <button
+        class="px-2 py-0.5 rounded text-[10px] font-bold cursor-pointer bg-bg-inset text-warning border border-[#e6b422]/40 hover:border-warning"
+        :disabled="publishing"
+        title="Download the edited game as one playable HTML file (game engine + your edits embedded)"
+        @click="publishStaticGame()"
+      >
+        🚀 {{ publishing ? 'Publishing…' : 'Publish game' }}
       </button>
       <button
         class="px-2 py-0.5 rounded text-[10px] font-bold cursor-pointer bg-bg-inset text-danger border border-danger/40 hover:border-danger"
