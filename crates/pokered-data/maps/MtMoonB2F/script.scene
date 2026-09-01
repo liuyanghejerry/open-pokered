@@ -4,6 +4,10 @@
 // Content types:
 //  - SuperNerd (npc 1): talk/scripted-battle "boss" guarding the fossils. Set
 //    isTrainer=false in map.json so the script owns the battle->reward flow.
+//    The nerd is also the (13,8) on-step interception — the fossils sit in a
+//    walled alcove whose only southern entrances are (12,8) (nerd sprite) and
+//    (13,8) (`stepNerd` coord event, MtMoonB2FDefaultScript), so a fossil can't
+//    be grabbed without fighting him first.
 //  - Team Rocket grunts (npc 2-5): sight-engaged trainers; .scene handlers are
 //    dialogue only (runtime drives the battle).
 //  - Dome/Helix Fossils (npc 6/7): item gate — pick one; the SuperNerd "takes"
@@ -25,6 +29,27 @@ game_scene MtMoonB2F {
         }
       }
     } @else {
+      @speaker("") {
+        @t("Hey, stop!\n\nI found these fossils!\nThey're both mine!", "嘿，站住！\n\n这些化石是我发现的！都是我\n的！")
+      }
+      result = startBattle("OPP_SUPER_NERD2")
+      @if (result == "win") {
+        @speaker("") {
+          @t("OK! I'll share!", "好吧！我分你一份！")
+        }
+        setFlag("EVENT_BEAT_MT_MOON_EXIT_SUPER_NERD")
+      }
+    }
+  }
+
+  // ── (13,8) on-step interception — the fossil alcove's east entrance ──────
+  // Original MtMoonB2FDefaultScript: pre-beat, stepping onto (13,8) shows the
+  // Super Nerd's "Hey, stop!" text (same as talking to him) and runs the same
+  // scripted battle. The nerd's own sprite blocks the west entrance (12,8), so
+  // this tile is the only way into the fossils without fighting him.
+  @storyline("stepNerd") {
+    @trigger(map = "MtMoonB2F", name = "nerdIntercept1", coords = [[13, 8]])
+    @if (!getFlag("EVENT_BEAT_MT_MOON_EXIT_SUPER_NERD")) {
       @speaker("") {
         @t("Hey, stop!\n\nI found these fossils!\nThey're both mine!", "嘿，站住！\n\n这些化石是我发现的！都是我\n的！")
       }

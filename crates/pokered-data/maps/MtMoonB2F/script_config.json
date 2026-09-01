@@ -1,6 +1,15 @@
 {
   "$schema": "../../schemas/script_config.schema.json",
-  "coordEvents": [],
+  "coordEvents": [
+    {
+      "name": "nerdIntercept1",
+      "position": [
+        13,
+        8
+      ],
+      "trigger": "stepNerd"
+    }
+  ],
   "npcs": [
     {
       "id": 1,
