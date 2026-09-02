@@ -118,3 +118,4 @@ scripts/.playthrough.marker
 
 # parallel-branch worktrees (git worktree add .worktrees/<name>)
 .worktrees/
+scripts/.playthrough.sav

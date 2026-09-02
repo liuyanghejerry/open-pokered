@@ -134,6 +134,7 @@ This repo ships Claude Code skills under `.claude/skills/` — invoke them when 
 - **pokered-debug** — full reference for the debug CLI above.
 - **pokered-save-editor** — JSON snapshot format + the Save Editor GUI.
 - **visual-verify** — render-correctness verification (e.g. the Pokémon Center heal machine); OAM→screen coordinate reference.
+- **playthrough-regression** — milestone playthrough (m01–m10) as an end-to-end engine regression test: scoping by surface, failure triage, checkpoint/resume semantics.
 
 ## Tooling outside Cargo
 
