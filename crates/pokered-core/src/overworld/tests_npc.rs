@@ -671,3 +671,65 @@ fn reentry_with_a_still_held_does_not_talk_to_facing_npc() {
         "a genuine A press must still talk to the facing NPC"
     );
 }
+
+/// Regression guard for map switches: every in-game warp (doors, script
+/// WarpTo, blackout, debug/editor warp) commits through `pending_warp`
+/// inside `update_frame`, whose edge detectors run at the top of the frame
+/// — before the fade early-returns — so a button held across the whole
+/// transition never re-fires as a fresh press in the destination map (the
+/// map-switch analog of the START-menu re-entry leak above). If a future
+/// change recreates the screen or resets `prev_*` at warp commit, this
+/// catches it.
+#[test]
+fn held_a_across_map_warp_does_not_talk_to_facing_npc() {
+    use super::screen::OverworldScreen;
+    use pokered_data::impl_traits::PokemonRedData;
+
+    let a_input = super::OverworldInput::new(
+        false, false, false, false, true, false, false, false,
+    );
+    let neutral = super::OverworldInput::new(
+        false, false, false, false, false, false, false, false,
+    );
+
+    // Start in PalletTown at the top-left corner facing up: the tile in
+    // front is outside the map, so the initial held-A frame below can never
+    // talk to an NPC or sign there (wandering NPCs cannot leave bounds).
+    let mut screen = OverworldScreen::new(MapId::PalletTown, None, PokemonRedData);
+    screen.state.player.x = 0;
+    screen.state.player.y = 0;
+    screen.state.player.facing = Direction::Up;
+    for _ in 0..10 {
+        screen.update_frame(neutral);
+    }
+    assert!(screen.pending_dialogue.is_none());
+    assert!(screen.active_script_effect.is_none());
+
+    // Press A and keep it held: prev_a_pressed becomes true, and the player
+    // then warps into BluesHouse at (1,3) facing Right — Daisy sits at
+    // (2,3), directly in front of the landing spot.
+    screen.update_frame(a_input);
+    screen.warp_to_map(MapId::BluesHouse, 1, 3);
+    screen.state.player.facing = Direction::Right;
+
+    // Hold A across fade-out, black screen, commit, fade-in and the first
+    // settled frames of the new map (~57 fade frames in total).
+    for _ in 0..90 {
+        screen.update_frame(a_input);
+        assert!(
+            screen.pending_dialogue.is_none() && screen.active_script_effect.is_none(),
+            "held A re-fired after the warp and talked to the facing NPC"
+        );
+    }
+    assert_eq!(screen.state.current_map, MapId::BluesHouse);
+    assert_eq!(screen.state.player.x, 1);
+    assert_eq!(screen.state.player.y, 3);
+
+    // Release, then a genuine press → talks to Daisy as usual.
+    screen.update_frame(neutral);
+    screen.update_frame(a_input);
+    assert!(
+        screen.pending_dialogue.is_some() || screen.active_script_effect.is_some(),
+        "a genuine A press must still talk to the facing NPC after a warp"
+    );
+}
