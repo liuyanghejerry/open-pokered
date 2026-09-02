@@ -108,17 +108,33 @@ the pokered-debug skill) and drive the scenario with
   loop after an engine fix is simply a fresh scoped run.
 - **`--resume`**: uses `scripts/.playthrough.sav` +
   `scripts/.playthrough.marker`; milestones the marker marks complete are
-  skipped, each newly completed milestone checkpoints the save, and the
-  driver taps the restored game through CONTINUE back into the saved
-  overworld before the first executed milestone (`resume_reentry`).
-  **Known limitation (verified 2026-09-02):** mid-chain continuation into
-  m04 currently diverges — on a CONTINUE-restored PalletTown the player
-  cannot step off the checkpoint tile (no script running, no NPC at the
-  blocking tile), while the identical step works in a fresh run. That
-  restore-vs-walk-in collision divergence is an open engine finding, not a
-  driver bug to work around. Until it is fixed, treat `--resume` as
-  checkpoint-recording only; don't gate a verdict on a resumed run.
+  skipped, each newly completed milestone checkpoints the save, and
+  `resume_reentry` taps the restored game through CONTINUE back into the
+  saved overworld before the first executed milestone. `--until mNN` also
+  stops at a milestone that is merely *already satisfied*, so resuming
+  past a fixed point stays cheap.
 - Reset the chain with `rm scripts/.playthrough.sav scripts/.playthrough.marker`.
+- Never report a resumed run as the final verdict — it replays against a
+  save written by an older binary. Finish with a fresh run.
+
+## Driver footguns (learned the hard way)
+
+- **Stale games hijack fixed ports.** The driver spawns
+  `pokered-app --debug-port …`; a leaked instance from a previous crashed
+  run keeps that port busy and the next run silently "plays" the old
+  game, failing in ways that look like engine bugs. The driver probes a
+  free port by default (`--port` is an override) and kills the spawned
+  game if connecting fails. If you suspect a hijack:
+  `ps aux | grep pokered-app`.
+- **The headless game keeps simulating in real time between commands.**
+  Extra driver round trips can shift frame timing by a frame or two, and
+  some transitions are frame-exact — e.g. arriving from the RedsHouse2F
+  stairs occasionally bounces straight back to 2F when the timing lands
+  wrong. Don't add polling or settlements inside `nav_to`'s loop to fix
+  one milestone; handle the script in that milestone (see
+  `m04_oak_intercept`) where the perturbation is scoped and expected.
+- A single flaky failure is often one of the above, not a regression: see
+  the flake policy below before blaming the engine.
 
 ## Flakes vs regressions
 
