@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 A native **Rust reimplementation** of Pokémon Red/Blue. It is *not* a Game Boy emulator and *not* byte-identical to the original ROM — it reproduces the game *logic* (battles, overworld, events, menus, audio) as portable Rust.
 
-This repo is **game-only**: the generic **JRPG engine** （the `dotzuki-*` crates) lives in a separate repository and is consumed here as a **Cargo git dependency** (see `Cargo.toml` — `dotzuki-engine`, `dotzuki-engine-dsl`, `dotzuki-renderer`, `dotzuki-app`, etc. are `{ git = ..., tag = "v0.5.2" }` deps). To iterate on engine code, work in the engine repo and bump the tag + `cargo update` here.
+This repo is **game-only**: the generic **JRPG engine** （the `dotzuki-*` crates) lives in a separate repository and is consumed here as a **Cargo git dependency** (see `crates/*/Cargo.toml` — the `dotzuki-*` deps are `{ git = ..., tag = "v0.6.0" }` deps). To iterate on engine code, work in the engine repo and bump the tag + `cargo update` here.
 
 The original RGBDS assembly disassembly has been **removed**. `ANALYSIS.md` at the repo root is kept as a historical reference to the original assembly codebase.
 
@@ -139,6 +139,7 @@ This repo ships Claude Code skills under `.claude/skills/` — invoke them when 
 
 - `tools/pokered-editor/` — Pokémon-specific Vue 3/Vite editor suite (`pnpm install && pnpm dev`, http://localhost:5173): map editor, save editor, trainer/Pokémon/move data editors, UI layout editor (WASM-backed WYSIWYG preview, understands `.gui` DSL), map script editor, pixel editor. Also includes an **AI assistant** (chat with read/propose tools, reviewable change proposals, scene/gui/data generation, AI sprite generation) with **loadable task skills** — playbooks under `tools/pokered-editor/skills/` (new map / new trainer / new Pokémon / save construction) that the agent pulls via its `read_skill` tool; drop a `<projectRoot>/skills/` dir in to add project-local ones — and an **Electron shell** (`pnpm electron:dev`, `pnpm electron:pack`).
   - The layout-preview WASM bridge is the in-repo `crates/pokered-layout-preview` crate, built by `pnpm build:wasm` (wasm-pack → `crates/pokered-layout-preview/pkg`).
+  - **Game publish** (static hosting): the "🚀 Publish game" action (static-mode banner) assembles one self-contained playable HTML — the deploy-bundled runner wasm + the local edit set (IndexedDB deltas) replayed at boot — no `/api` backend or CLI involved (`src/publish/`, adapted from the engine's `dotzuki export --web`; binary `gfx/` deltas are skipped, same limitation as the playtest).
 - `tools/asm2music.py` / `tools/asm2sfx.py` — convert pokered `audio/music|sfx/*.asm` to Rust byte tables.
 - `tools/dsl_migration/` — historical scripts that converted legacy `script.js` map scripts to `.scene` DSL.
 - `scripts/verify_battle_anim_data.py` / `verify_move_sfx_data.py` / `verify_cry_data.py` — byte-exact auditors that diff the battle-animation tables, the move SFX table, and the cry table against a local pret/pokered disassembly checkout (path is a CLI arg). Run them after touching any of these data files; all must report 0 diffs.
