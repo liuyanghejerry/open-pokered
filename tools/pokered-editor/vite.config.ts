@@ -12,6 +12,10 @@ import { registerSprites } from './server/api/routes/sprites'
 // so the Electron production api-server (electron/api-server.ts) mounts the
 // exact same handlers.
 import { registerPokeredRoutes } from './server/pokeredRoutes'
+// Game publish (backend hosting): POST /api/publish writes the multi-file web
+// export, GET /published/ serves it for instant play. The static-hosting
+// publish path is client-only and never hits these routes.
+import { registerPublishRoutes } from './server/publishRoute'
 
 // ──────────────────────────────────────────────────────────────
 // Pokered data routes — registered BEFORE the AI plugin so the middleware
@@ -25,6 +29,7 @@ function pokeredRoutesPlugin(): Plugin {
     name: 'pokered-editor-data-api',
     configureServer(server: ViteDevServer) {
       registerPokeredRoutes(server)
+      registerPublishRoutes(server)
     },
   }
 }

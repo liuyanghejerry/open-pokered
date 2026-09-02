@@ -22,6 +22,7 @@ import sirv from 'sirv'
 
 import { registerBuiltinActions } from '../server/actions'
 import { registerPokeredRoutes } from '../server/pokeredRoutes'
+import { registerPublishRoutes } from '../server/publishRoute'
 import { registerProject } from '../server/api/routes/project'
 import { registerAi } from '../server/api/routes/ai'
 import { registerSprites } from '../server/api/routes/sprites'
@@ -84,6 +85,7 @@ export async function startApiServer(opts: StartOptions = {}): Promise<RunningSe
   // ── Domain routes — pokered data routes first, then the AI cluster, same
   //    relative order as the dev server's plugin array. ──
   registerPokeredRoutes(server)
+  registerPublishRoutes(server)
   registerProject(server)
   registerAi(server)
   registerSprites(server)

@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vitest'
 import { transformSync } from 'esbuild'
-import { publishedSaveKey, renderPlayerHtml } from './playerTemplate'
+import {
+  publishedSaveKey,
+  renderPlayerHtml,
+  renderWebDirPlayerHtml,
+} from './playerTemplate'
 import { slugifyTitle } from './publish'
 
 // Minimal structurally-valid wasm module (magic + version header only) —
@@ -67,6 +71,27 @@ describe('renderPlayerHtml', () => {
     expect(module).toContain('class PokeredRunner') // from the glue stub
     expect(module).toContain('new PokeredRunner') // from the player runtime
     // esbuild throws on syntax errors; transformSync failing fails the test.
+    transformSync(module, { loader: 'js', format: 'esm' })
+  })
+})
+
+describe('renderWebDirPlayerHtml', () => {
+  it('loads glue, wasm and data.json from sibling files', () => {
+    const html = renderWebDirPlayerHtml({ title: 'My Hack' })
+    expect(html).toContain('<title>My Hack</title>')
+    expect(html).toContain("import('./wasm/pokered_runner_web.js')")
+    expect(html).toContain("fetch('./wasm/pokered_runner_web_bg.wasm')")
+    expect(html).toContain("fetch('./data.json')")
+    expect(html).toContain('"pokered-save:My Hack"')
+    // No embedded payloads in the web-dir flavor.
+    expect(html).not.toContain('embedded-wasm')
+    expect(html).not.toContain('embedded-edits')
+  })
+
+  it('emits a syntactically valid module script', () => {
+    const html = renderWebDirPlayerHtml({ title: 'My Hack' })
+    const module = extract(html, /<script type="module">([\s\S]*?)<\/script>/)
+    expect(module).toContain('new mod.PokeredRunner')
     transformSync(module, { loader: 'js', format: 'esm' })
   })
 })

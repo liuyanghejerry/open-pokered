@@ -14,7 +14,7 @@
 // ───────────────────────────────────────────────────────────────────────────
 
 import { exportDeltasJson } from '../composables/useDataStore'
-import { renderPlayerHtml } from './playerTemplate'
+import { renderPlayerHtml, renderWebDirPlayerHtml } from './playerTemplate'
 
 export interface PublishResult {
   fileName: string
@@ -95,4 +95,35 @@ export async function publishGame(title: string): Promise<PublishResult> {
   // Keep the URL alive past the click handler; revoke on a later tick.
   setTimeout(() => URL.revokeObjectURL(url), 10_000)
   return { fileName, sizeBytes: blob.size, deltaCount }
+}
+
+export interface BackendPublishResult {
+  ok: boolean
+  /** Absolute export directory on disk. */
+  out: string
+  /** Same-origin URL the export is served under ("/published/"). */
+  url: string
+  /** Data files bundled into data.json. */
+  fileCount: number
+  bytes: number
+}
+
+/**
+ * Backend-hosting publish (dev / Electron): the player page is rendered
+ * client-side, the local backend assembles the export — it collects the FULL
+ * replayable data set from crates/pokered-data, copies the prebuilt runner
+ * pkg and serves the result under /published/ for instant play. Unlike the
+ * static path, the artifact always matches the edited repo even when the
+ * runner wasm predates the latest edits.
+ */
+export async function publishViaBackend(title: string): Promise<BackendPublishResult> {
+  const res = await fetch('/api/publish', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    // The title lives inside indexHtml (rendered here); the server only
+    // assembles files around it.
+    body: JSON.stringify({ indexHtml: renderWebDirPlayerHtml({ title }) }),
+  })
+  if (!res.ok) throw new Error(`HTTP ${res.status} — ${await res.text()}`)
+  return res.json() as Promise<BackendPublishResult>
 }
