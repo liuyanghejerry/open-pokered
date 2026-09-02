@@ -325,7 +325,20 @@ class Game:
             cmd += ["--record-video", str(record_video)]
         self.proc = subprocess.Popen(
             cmd, cwd=str(ROOT), stdout=subprocess.DEVNULL, stderr=self.log)
-        self.d = DebugClient(port)
+        # A connect failure must not orphan the just-spawned game: the
+        # first crash of this driver leaked a headless instance that kept
+        # port 9020 busy and hijacked every later run's connection.
+        try:
+            self.d = DebugClient(port)
+        except BaseException:
+            self.proc.terminate()
+            try:
+                self.proc.wait(timeout=10)
+            except subprocess.TimeoutExpired:
+                self.proc.kill()
+            self.log.close()
+            shutil.rmtree(self.run_dir, ignore_errors=True)
+            raise
         self.frame0 = None
         # Engine default at new game (screen.rs OverworldScreen::new).
         self.last_map = "PalletTown"
@@ -426,13 +439,20 @@ class Game:
         drift, ledges and NPC shuffles self-correct. Wild battles on the
         way (grass routes) are run from and the walk resumes."""
         for _ in range(tries):
-            if self.st()["screen"] == "battle":
-                s = self.st()
+            # ONE state snapshot for both the battle check and the map
+            # check: the engine keeps simulating between our commands, and
+            # two back-to-back polls can straddle a battle transition —
+            # get_state on a battle screen reports the battle's default
+            # map (PalletTown), which the map check then misreads as
+            # "warped out" (observed in Viridian Forest trainer LOS).
+            s = self.st()
+            if s["screen"] == "battle":
                 prefer = ("fight" if s["script_awaiting_battle"]
                           else "run")
                 self.battle_loop(prefer=prefer)
                 self.cutscene()
-            cm, cx, cy = self.pos()
+                s = self.st()
+            cm, cx, cy = s["map_name"], s["player_x"], s["player_y"]
             if map_name is not None and cm != map_name:
                 raise NavError(f"warped out of {map_name} -> {cm}")
             if (cx, cy) == (x, y):
@@ -482,13 +502,15 @@ class Game:
         self.last_pinch = None
         self.pinch_count = 0
         for attempt in range(tries):
-            if self.st()["screen"] == "battle":
-                s = self.st()
+            # Single snapshot for battle + position, same race as nav_to.
+            s = self.st()
+            if s["screen"] == "battle":
                 prefer = ("fight" if s["script_awaiting_battle"]
                           else "run")
                 self.battle_loop(prefer=prefer)
                 self.cutscene()
-            cm, cx, cy = self.pos()
+                s = self.st()
+            cm, cx, cy = s["map_name"], s["player_x"], s["player_y"]
             self.track_last_map(cm)
             import os
             if os.environ.get("PT_DEBUG") and attempt % 10 == 0:
@@ -768,7 +790,10 @@ class Game:
 
     def heal_pokecenter(self, door, city, pc):
         """Enter the Pokecenter, heal at the nurse (YES), verify full HP,
-        walk back out. `door` is the city-side warp tile."""
+        walk back out. `door` is the city-side warp tile. The post-exit
+        door-pocket escape drives Viridian's south lane; for any other
+        city the caller finds the player on the door tile and routes
+        from there."""
         dx, dy = door
         self.nav_to_map(dx, dy + 1, city)
         self.nav_warp(dx, dy, city, pc)
@@ -787,24 +812,9 @@ class Game:
         assert self.cutscene(), "heal cutscene never finished"
         s = self.st()
         assert all(m["hp"] == m["max_hp"] for m in s["party"]), s["party"]
-        if city == "PewterCity":
-            # Go-out staged in reverse (the forest is the only link).
-            self.nav_to(18, 34, map_name="PewterCity")
-            self.d.drive(["down"] * 24, frames=28)
-            self.step(8)
-            self.nav_warp(3, 11, "Route2",
-                          "ViridianForestNorthGate", approach="down")
-            self.nav_to(5, 6, map_name="ViridianForestNorthGate")
-            self.nav_warp(5, 7, "ViridianForestNorthGate",
-                          "ViridianForest", approach="down")
-            self.nav_to(17, 46, map_name="ViridianForest")
-            self.nav_warp(17, 47, "ViridianForest",
-                          "ViridianForestSouthGate")
-            self.nav_to(4, 6, map_name="ViridianForestSouthGate")
-            self.nav_warp(4, 7, "ViridianForestSouthGate",
-                          "Route2", approach="down")
-            self.nav_to(9, 49, map_name="Route2")
         self.nav_warp(3, 7, pc, city, approach="down")
+        if city != "ViridianCity":
+            return
         # We are standing ON the city door tile. Step EAST with a tail of
         # idle frames only (any held tail would drift back onto the door
         # and re-warp), then let normal navigation take over.
@@ -1158,8 +1168,31 @@ def m03_leave_house(g):
 
 
 def m04_oak_intercept(g):
-    """North edge of Pallet Town → Oak interception → into the lab."""
-    g.nav_to(11, 1, "PalletTown")
+    """North edge of Pallet Town → Oak interception → into the lab.
+
+    The (10,1)/(11,1) coord trigger opens Oak's dialogue the moment the
+    walk touches the north row, and from then on the script owns the
+    player (its follow-Oak hand-off warps into the lab). nav_to has no A
+    to give, so when it stalls with the interception dialogue open we
+    settle the cutscene HERE — where the hijack is expected — instead of
+    teaching nav_to to settle scripts mid-route (global settlements step
+    extra frames inside every nav, and frame-timing shifts around warp
+    landings bounce fragile transitions like the RedsHouse stairs)."""
+    for _ in range(3):
+        try:
+            g.nav_to(11, 1, "PalletTown")
+        except NavError as e:
+            if "OaksLab" in str(e):
+                break          # the interception carried us into the lab
+            s = g.st()
+            if (s["map_name"] == "PalletTown"
+                    and (s["dialogue_state"] is not None
+                         or s["script_running"])):
+                g.cutscene()   # settle; the follow hands off into OaksLab
+            else:
+                raise
+        else:
+            break
     assert g.cutscene(), "oak interception cutscene never finished"
     s = g.st()
     assert s["map_name"] == "OaksLab", s["map_name"]
@@ -1227,13 +1260,10 @@ def m08_deliver_parcel(g):
     g.cutscene()
 
 
-def m09_to_pewter(g):
-    """North through Route 2, Viridian Forest (trainer LOS fights), to
-    Pewter City — the first gym town. Gate houses are traversed by the
-    warp-aware BFS automatically. Heal at Viridian's Pokecenter first so
-    the forest trainers are faced at full HP (a loss means a blackout
-    home and a full-journey retry)."""
-    g.nav_warp(5, 11, "OaksLab", "PalletTown", approach="down")
+def walk_pallet_to_pewter(g):
+    """Pallet Town -> Route 2 -> forest gate chain -> Pewter City: the
+    m09 verified corridor. Also the whiteout recovery walk for m10's
+    relocation (a forest fight loss blacks out to the player's house)."""
     # Explicit gate chain: cross-BFS routing through the forest depends on
     # a last_map that drifts from the engine's, which can detour the plan
     # back through Pallet Town (no path to Pewter). Staged nav_warp calls
@@ -1247,7 +1277,31 @@ def m09_to_pewter(g):
     g.nav_to(5, 1, map_name="ViridianForestNorthGate")
     g.nav_warp(5, 0, "ViridianForestNorthGate", "Route2")
     g.nav_to_map(16, 29, "PewterCity")
+
+
+def m09_to_pewter(g):
+    """North through Route 2, Viridian Forest (trainer LOS fights), to
+    Pewter City — the first gym town. Gate houses are traversed by the
+    warp-aware BFS automatically."""
+    g.nav_warp(5, 11, "OaksLab", "PalletTown", approach="down")
+    walk_pallet_to_pewter(g)
     g.evidence("m09")
+
+
+def forest_corridor_back(g):
+    """PewterCity -> Route2 north -> NorthGate -> forest -> SouthGate ->
+    Route2 south: the m09 chain in reverse, Pewter-ward traffic only."""
+    g.nav_to(18, 34, map_name="PewterCity")
+    g.d.drive(["down"] * 24, frames=28)
+    g.step(8)
+    g.nav_warp(3, 11, "Route2", "ViridianForestNorthGate", approach="down")
+    g.nav_to(5, 6, map_name="ViridianForestNorthGate")
+    g.nav_warp(5, 7, "ViridianForestNorthGate", "ViridianForest",
+               approach="down")
+    g.nav_to(17, 46, map_name="ViridianForest")
+    g.nav_warp(17, 47, "ViridianForest", "ViridianForestSouthGate")
+    g.nav_to(4, 6, map_name="ViridianForestSouthGate")
+    g.nav_warp(4, 7, "ViridianForestSouthGate", "Route2", approach="down")
 
 
 def m10_brock(g):
@@ -1258,10 +1312,23 @@ def m10_brock(g):
     # straight to Viridian City (proven corridor, no forest gates), so
     # the training round trip stays short and deterministic.
     heal = ((23, 25), "ViridianCity", "ViridianPokecenter")
-    # Relocate to the Route 1 training grass next to Viridian: the only
-    # long walk is the reverse forest chain; training/heal round trips
-    # stay on the proven Viridian corridor.
-    forest_corridor_back(g)
+    # Relocate to the Route 1 training grass next to Viridian. Heal at
+    # the Pewter PC first: heal_pokecenter's PewterCity exit path stages
+    # the exact Pewter -> forest -> Route2-south chain (same tiles as the
+    # old forest_corridor_back), and a full-HP party survives the forest
+    # fights that a loss would turn into a blackout home. On a whiteout
+    # anyway (NavError landing in Pallet Town) the blackout already healed
+    # the party — re-walk the proven m09 chain and retry the crossing.
+    for attempt in range(3):
+        try:
+            g.heal_pokecenter((13, 25), "PewterCity", "PewterPokecenter")
+            forest_corridor_back(g)
+            break
+        except NavError as e:
+            if attempt == 2 or "-> PalletTown" not in str(e):
+                raise
+            g.evidence(f"m10-whiteout-{attempt}")
+            walk_pallet_to_pewter(g)
     g.nav_to(8, 70, map_name="Route2")
     g.d.drive(["down"] * 24, frames=28)   # -> city north border (18,0)
     g.step(8)
@@ -1318,22 +1385,6 @@ def forest_corridor_out(g):
     g.nav_warp(5, 0, "ViridianForestNorthGate", "Route2")
 
 
-def forest_corridor_back(g):
-    """PewterCity -> south crossing -> NorthGate -> forest -> SouthGate ->
-    Route2 south (the m09 chain in reverse; used by m10's relocation)."""
-    g.nav_to(18, 34, map_name="PewterCity")
-    g.d.drive(["down"] * 24, frames=28)
-    g.step(8)
-    g.nav_warp(3, 11, "Route2", "ViridianForestNorthGate", approach="down")
-    g.nav_to(5, 6, map_name="ViridianForestNorthGate")
-    g.nav_warp(5, 7, "ViridianForestNorthGate", "ViridianForest",
-               approach="down")
-    g.nav_to(17, 46, map_name="ViridianForest")
-    g.nav_warp(17, 47, "ViridianForest", "ViridianForestSouthGate")
-    g.nav_to(4, 6, map_name="ViridianForestSouthGate")
-    g.nav_warp(4, 7, "ViridianForestSouthGate", "Route2", approach="down")
-
-
 MILESTONES = [
     ("m01", "boot to NEW GAME / Oak speech", m01_boot),
     ("m02", "Oak speech + default names → bedroom", m02_oak_speech),
@@ -1381,7 +1432,12 @@ def resume_reentry(g):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--port", type=int, default=9020)
+    # Default port=None: Game probes a free port instead of trusting 9020.
+    # A hardcoded default turns any leaked/stale game on that port into a
+    # silent hijack — the driver then "plays" the old instance and fails
+    # in ways that look like engine bugs.
+    ap.add_argument("--port", type=int, default=None,
+                    help="debug port (default: probe a free port)")
     ap.add_argument("--until", default=None, help="stop after this milestone")
     ap.add_argument("--starter", default="bulbasaur",
                     choices=["bulbasaur", "squirtle", "charmander"])
@@ -1416,6 +1472,8 @@ def main():
             if args.resume and state_done(mid, g):
                 print(f"== {mid}: {desc}")
                 print(f"   skipped (state/marker already satisfied)")
+                if args.until == mid:
+                    break
                 continue
             print(f"== {mid}: {desc}")
             if mid == "m05":
