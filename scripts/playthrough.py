@@ -1356,6 +1356,29 @@ def state_done(mid, g):
     return g.marker_at_least(mid)
 
 
+def resume_reentry(g):
+    """Bring a resumed game back into the checkpointed overworld.
+
+    --save does NOT short-circuit boot: the game still plays the intro and
+    parks on the main menu, where a save present makes CONTINUE the default
+    cursor. Milestones m01+ are skipped under --resume, so nobody would tap
+    through — without this the first executed milestone reads pos (0,0) on
+    a menu screen and BFS dies with 'no path'. A on CONTINUE restores the
+    saved overworld directly (no Oak speech to sit through)."""
+    for _ in range(40):                      # language-select / title
+        s = g.st()
+        if s["screen"] in ("main-menu", "overworld"):
+            break
+        g.tap("a", 30)
+    for _ in range(20):                      # main menu: A = CONTINUE
+        if g.st()["screen"] in ("overworld",):
+            break
+        g.tap("a", 30)
+    g.wait("screen=overworld", 600)
+    s = g.evidence("resume-reentry")
+    assert s["screen"] == "overworld", s["screen"]
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--port", type=int, default=9020)
@@ -1385,6 +1408,8 @@ def main():
     g = Game(args.port, save_path=(ROOT / "scripts" / ".playthrough.sav")
              if args.resume else None, record_dir=args.record,
              record_video=args.record_video)
+    if args.resume and g.marker_at_least("m01"):
+        resume_reentry(g)
     t0 = time.time()
     try:
         for mid, desc, fn in MILESTONES:
