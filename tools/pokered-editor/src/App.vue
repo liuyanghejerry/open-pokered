@@ -15,7 +15,7 @@ import { exportDeltasJson, importDeltasJson, clearDeltas } from './composables/u
 import { staticMode } from './composables/useStaticMode'
 import { loadPokeredRunnerModule } from './composables/usePokeredRunner'
 import { loadLayoutPreviewModule } from './composables/useWasmPreview'
-import { publishGame } from './publish/publish'
+import { publishGame, publishViaBackend } from './publish/publish'
 import { storeToRefs } from 'pinia'
 import ActivityBar from './components/ActivityBar.vue'
 import StatusBar from './components/StatusBar.vue'
@@ -365,6 +365,28 @@ async function publishStaticGame() {
   }
 }
 
+// ── Backend-hosting game publish ──────────────────────────────────────────
+
+/** Local-backend publish: writes the multi-file web export under
+ *  <repo>/dist/publish (full data set + runner wasm) and serves it at
+ *  /published/ for instant play. */
+const publishOut = ref('')
+const publishUrl = ref('')
+async function publishLocalGame() {
+  const title = prompt('Published game title:', 'My Pokémon Red')
+  if (title === null) return
+  publishing.value = true
+  try {
+    const r = await publishViaBackend(title)
+    publishOut.value = r.out
+    publishUrl.value = r.url
+  } catch (e) {
+    alert(`Publish failed: ${(e as Error).message}`)
+  } finally {
+    publishing.value = false
+  }
+}
+
 onMounted(() => {
   // Legacy deep link straight into the old full-screen playtest: open the
   // floating overlay and fall back to the map editor.
@@ -576,6 +598,28 @@ function handlePixelSelect() {
         🗑 Reset edits
       </button>
       <span class="text-text-muted">AI 助手在静态模式可用（浏览器直连，需在助手设置中配置 API Key）；精灵图生成仍需要本地后端。</span>
+    </div>
+    <div
+      v-else
+      class="px-3 py-1.5 text-[11px] bg-bg-panel border-b border-[rgba(255,255,255,0.06)] text-text-muted shrink-0 flex items-center gap-3 flex-wrap"
+    >
+      <span>Local backend: edits write straight to the repo.</span>
+      <button
+        class="px-2 py-0.5 rounded text-[10px] font-bold cursor-pointer bg-bg-inset text-text border border-[rgba(255,255,255,0.1)] hover:border-accent"
+        :disabled="publishing"
+        title="Export the edited game to dist/publish (multi-file web dir) and serve it at /published/"
+        @click="publishLocalGame()"
+      >
+        🚀 {{ publishing ? 'Publishing…' : 'Publish game' }}
+      </button>
+      <span v-if="publishOut" class="font-mono text-text">
+        Exported to {{ publishOut }} —
+        <a
+          :href="publishUrl"
+          target="_blank"
+          class="text-accent underline"
+        >▶ play the published build</a>
+      </span>
     </div>
     <div class="flex-1 flex min-h-0">
       <!-- Activity Bar -->

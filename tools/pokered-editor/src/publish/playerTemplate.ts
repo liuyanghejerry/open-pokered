@@ -1,21 +1,23 @@
 // ───────────────────────────────────────────────────────────────────────────
-// Single-file published-game player template.
+// Published-game player templates — two flavors over one shared runtime.
 //
-// The static-hosting "publish" path (no /api backend, no local CLI): the
-// editor assembles ONE self-contained HTML file that embeds
-//   · the wasm-pack web glue (pokered_runner_web.js) as an inline module,
-//   · the runner binary (pokered_runner_web_bg.wasm) as base64,
-//   · the user's edit set (exportDeltasJson payload) as JSON,
-// and appends a small player script that boots the shared PokeredRunner with
-// the edits replayed — the same contract as the in-editor playtest
-// (composables/usePokeredRunner.ts + useGameSession.ts).
+// 1. renderPlayerHtml (single file, static hosting): ONE self-contained HTML
+//    embedding the wasm-pack web glue, the runner binary (base64) and the
+//    edit set — no server, no other files. Download-and-play.
+// 2. renderWebDirPlayerHtml (web dir, backend hosting): a small index.html
+//    that loads `./wasm/pokered_runner_web.js`, `./wasm/…_bg.wasm` and
+//    `./data.json` from sibling files — the standard multi-file layout of
+//    `dotzuki export --web`, written to disk by POST /api/publish and served
+//    under /published/.
 //
-// page structure follows the engine's `dotzuki export --web` player
+// The player runtime mirrors the in-editor playtest contract
+// (composables/usePokeredRunner.ts + useGameSession.ts): input bitmask,
+// fixed-step rAF loop, localStorage save with a per-title save key, delta
+// replay. Page structure follows the engine's `dotzuki export --web` player
 // (dotzuki-cli templates/web-player.html): status line, pixelated canvas,
-// keyboard bitmask input, localStorage save with a per-title save key, and
-// auto-boot on load. Unlike dotzuki's runner, pokered's runner-web drives
-// its own Web Audio output internally — the context stays suspended until
-// the first user gesture (autoplay policy), which the page resumes on.
+// auto-boot on load. Unlike dotzuki's runner, pokered's runner-web drives its
+// own Web Audio output internally — the context stays suspended until the
+// first user gesture (autoplay policy), which the page resumes on.
 // ───────────────────────────────────────────────────────────────────────────
 
 export interface PlayerTemplateInput {
@@ -27,6 +29,11 @@ export interface PlayerTemplateInput {
   wasmBase64: string
   /** Edit-set JSON (exportDeltasJson() output): [{path, content}, …]. */
   editsJson: string
+}
+
+export interface WebDirPlayerTemplateInput {
+  /** Game title shown in the tab and the page header. */
+  title: string
 }
 
 /** Save key namespace mirrors dotzuki's `dotzuki-save:<title>` convention. */
@@ -56,13 +63,40 @@ function jsonForScriptTag(s: string): string {
   return s.replace(/</g, '\\u003c')
 }
 
-// The player runtime, appended after the wasm-bindgen glue inside one
-// <script type="module"> — the glue's module-scope bindings (`__wbg_init`,
-// `PokeredRunner`) are directly visible to this code. String.raw keeps the
-// regex backslashes intact. Input bitmask + fixed-step loop + save cadence
-// mirror the editor session (useGameSession.ts); delta replay mirrors
-// replayDataDeltas() extended with per-map script.scene/script_config.json.
-const PLAYER_MAIN_JS = String.raw`
+// Boot sequence up to "the runner is constructed and the edits are known" —
+// the only part that differs between the two flavors. `__POKERED_BOOT__` must
+// set `runner` and `gameEdits`; the shared runtime takes it from there.
+const BOOT_SINGLE_FILE = String.raw`
+  try {
+    say('Decoding game engine…')
+    const wasmB64 = document.getElementById('embedded-wasm').textContent.replace(/\s+/g, '')
+    await __wbg_init(decodeBase64(wasmB64))
+    say('Starting game…')
+    runner = new PokeredRunner(localStorage.getItem(SAVE_KEY))
+    gameEdits = JSON.parse(document.getElementById('embedded-edits').textContent)
+  } catch (e) {
+    say('Failed to start: ' + ((e && e.message) || String(e)))
+  }
+`
+
+const BOOT_WEB_DIR = String.raw`
+  try {
+    say('Loading game engine…')
+    const mod = await import('./wasm/pokered_runner_web.js')
+    await mod.default(await (await fetch('./wasm/pokered_runner_web_bg.wasm')).arrayBuffer())
+    say('Starting game…')
+    runner = new mod.PokeredRunner(localStorage.getItem(SAVE_KEY))
+    gameEdits = await (await fetch('./data.json')).json()
+  } catch (e) {
+    say('Failed to start: ' + ((e && e.message) || String(e)))
+  }
+`
+
+// The flavor-agnostic player runtime. In the single-file flavor it is appended
+// after the wasm-bindgen glue inside one <script type="module"> — the glue's
+// module-scope bindings (`__wbg_init`, `PokeredRunner`) are directly visible.
+// String.raw keeps the regex backslashes intact.
+const PLAYER_RUNTIME_JS = String.raw`
 const SAVE_KEY = __POKERED_SAVE_KEY__
 const WIDTH = 160
 const HEIGHT = 144
@@ -77,6 +111,7 @@ const KEY_BITS = { ArrowUp: 64, ArrowDown: 128, ArrowLeft: 32, ArrowRight: 16,
   KeyZ: 1, KeyX: 2, Space: 8, ShiftRight: 4 }
 let input = 0
 let runner = null
+let gameEdits = []
 let muted = false
 let rafId = 0
 let lastTime = 0
@@ -112,20 +147,15 @@ function decodeBase64(b64) {
   return bytes
 }
 
-// Replay the embedded edit set into the live runner. Delta paths and fallback
+// Replay the edit set into the live runner. Delta paths and fallback
 // semantics are the editor's IndexedDB delta store; binary (data:-URL) deltas
 // are skipped — gfx is compiled into the wasm binary and can't be overridden
-// at runtime (same limitation as the in-editor playtest).
+// at runtime (same limitation as the in-editor playtest). map.blk entries are
+// number-array JSON, the same shape /api/maps/<map>/map.blk serves.
 function applyEdits() {
-  let edits = []
-  try {
-    edits = JSON.parse(document.getElementById('embedded-edits').textContent)
-  } catch (e) {
-    edits = []
-  }
   const scenes = {}
   const configs = {}
-  for (const d of edits) {
+  for (const d of gameEdits) {
     if (!d || typeof d.content !== 'string' || d.content.startsWith('data:')) continue
     const p = d.path || ''
     if (p.startsWith('maps/')) {
@@ -175,26 +205,24 @@ function frame(now) {
   }
 }
 
+function startGame() {
+  runner.resume_audio()
+  canvas.hidden = false
+  statusEl.hidden = true
+  document.getElementById('toolbar').hidden = false
+  setInterval(persistSave, 2000)
+  addEventListener('pagehide', persistSave)
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'hidden') persistSave()
+  })
+  rafId = requestAnimationFrame(frame)
+}
+
 async function boot() {
-  try {
-    say('Decoding game engine…')
-    const wasmB64 = document.getElementById('embedded-wasm').textContent.replace(/\s+/g, '')
-    await __wbg_init(decodeBase64(wasmB64))
-    say('Starting game…')
-    runner = new PokeredRunner(localStorage.getItem(SAVE_KEY))
+__POKERED_BOOT__
+  if (runner) {
     applyEdits()
-    runner.resume_audio()
-    canvas.hidden = false
-    statusEl.hidden = true
-    document.getElementById('toolbar').hidden = false
-    setInterval(persistSave, 2000)
-    addEventListener('pagehide', persistSave)
-    document.addEventListener('visibilitychange', () => {
-      if (document.visibilityState === 'hidden') persistSave()
-    })
-    rafId = requestAnimationFrame(frame)
-  } catch (e) {
-    say('Failed to start: ' + ((e && e.message) || String(e)))
+    startGame()
   }
 }
 
@@ -220,10 +248,17 @@ document.getElementById('btn-reset').addEventListener('click', () => {
 })
 `
 
-export function renderPlayerHtml(input: PlayerTemplateInput): string {
-  const title = htmlEscape(input.title)
-  const saveKey = jsonForScriptTag(JSON.stringify(publishedSaveKey(input.title)))
-  const playerJs = PLAYER_MAIN_JS.replace('__POKERED_SAVE_KEY__', saveKey)
+/** Build the player runtime for a flavor by filling the two placeholders and
+ *  escaping for inline use in a <script type="module">. */
+function buildPlayerJs(flavorBoot: string, title: string): string {
+  const saveKey = jsonForScriptTag(JSON.stringify(publishedSaveKey(title)))
+  return jsForScriptTag(
+    PLAYER_RUNTIME_JS.replace('__POKERED_SAVE_KEY__', saveKey).replace('__POKERED_BOOT__', flavorBoot.trimEnd()),
+  )
+}
+
+/** Shared page chrome (head/CSS/body scaffolding around the game widgets). */
+function pageShell(title: string, body: string): string {
   return `<!doctype html>
 <html lang="en">
 <head>
@@ -255,13 +290,38 @@ export function renderPlayerHtml(input: PlayerTemplateInput): string {
   <button id="btn-reset">Reset</button>
 </div>
 <div id="hint">Arrows / WASD move · Z = A · X = B · Enter = Start · Backspace = Select · progress auto-saves · click once to enable sound</div>
-<script type="application/base64" id="embedded-wasm">${input.wasmBase64}</script>
-<script type="application/json" id="embedded-edits">${jsonForScriptTag(input.editsJson)}</script>
-<script type="module">
-${jsForScriptTag(input.runnerGlueJs)}
-${jsForScriptTag(playerJs)}
-</script>
+${body}
 </body>
 </html>
 `
+}
+
+/** Single-file flavor: everything embedded, works offline from file://. */
+export function renderPlayerHtml(input: PlayerTemplateInput): string {
+  const title = htmlEscape(input.title)
+  const playerJs = buildPlayerJs(BOOT_SINGLE_FILE, input.title)
+  return pageShell(
+    title,
+    `<script type="application/base64" id="embedded-wasm">${input.wasmBase64}</script>
+<script type="application/json" id="embedded-edits">${jsonForScriptTag(input.editsJson)}</script>
+<script type="module">
+${jsForScriptTag(input.runnerGlueJs)}
+${playerJs}
+</script>
+`,
+  )
+}
+
+/** Web-dir flavor: loads glue/wasm/edits from sibling files (served over
+ *  HTTP by the publishing backend — module import + fetch need http(s)). */
+export function renderWebDirPlayerHtml(input: WebDirPlayerTemplateInput): string {
+  const title = htmlEscape(input.title)
+  const playerJs = buildPlayerJs(BOOT_WEB_DIR, input.title)
+  return pageShell(
+    title,
+    `<script type="module">
+${playerJs}
+</script>
+`,
+  )
 }
