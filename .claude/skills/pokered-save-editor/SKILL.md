@@ -4,6 +4,15 @@ Use this skill to construct, inspect, and manipulate Pokémon Red/Blue save stat
 
 ## Quick Start
 
+### Constructing saves from Python tests
+
+For test-state construction (the playthrough/BDD stack), prefer
+`scripts/save_builder.py` over hand-editing JSON: it exports a canonical
+template from a freshly booted game, computes Gen-1 party stats with the
+engine's own formula, and parses flag/item/map tables from this repo's
+data files. See the playthrough-regression skill, "Constructed saves".
+The GUI/CLI flows below remain the way to inspect and hand-tune saves.
+
 ### Launch the Save Editor (GUI)
 
 ```bash
