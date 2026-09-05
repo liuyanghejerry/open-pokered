@@ -26,6 +26,7 @@ Usage (CLI):
     python3 scripts/save_builder.py -o /tmp/state.json \
         --party Charizard:36 --money 65000 \
         --flag EVENT_BEAT_BROCK --item POKE_BALL:20 --map PalletTown:5,6
+    python3 scripts/save_builder.py -o /tmp/champion.json --preset champion
 """
 import argparse
 import copy
@@ -111,6 +112,93 @@ def item_id(name):
     got = order.index(name) + 1
     assert order.index("MasterBall") + 1 == 1 and order.index("PokeBall") + 1 == 4
     return got
+
+
+# ── the champion preset ─────────────────────────────────────────────────
+# Story-completion flags for a finished first playthrough. Sources: every
+# `@if (!getFlag(...))` gate across maps/*/script.scene (a negated gate is
+# the "story not done → intercept/block" branch), plus positively-tested
+# story beats (rival fights, follower hand-offs). Deliberately NOT set:
+#   - EVENT_LANCES_ROOM_LOCK_DOOR — @load replaces the door tiles with a
+#     closed block when set; post-Lance the door must stay open
+#   - EVENT_IN_PURIFIED_ZONE — dedupe latch for Pokémon Tower's heal
+#     zone; setting it would disable the heal
+#   - EVENT_DAISY_WALKING — cosmetic NPC position
+#   - EVENT_BEAT_ARTICUNO/ZAPDOS/MOLTRES/MEWTWO, POWER_PLANT_VOLTORB_* —
+#     optional legendaries stay catchable post-game
+#   - overworld GOT_TM*/GOT_*_POTION/... item pickups — 通关 ≠ 100%,
+#     pickups remain collectable (story gifts like SS_TICKET are set)
+#   - EVENT_BEAT_SS_ANNE_RIVAL / EVENT_GOT_EEVEE / EVENT_GOT_LAPRAS /
+#     EVENT_GAVE_SAFFRON_GUARDS_DRINK — runtime sidecar flags, NOT part
+#     of the SRAM bitset a snapshot can carry; their gates (gift
+#     re-offers, the Saffron gate guards' drink check) stay in the
+#     "not done" state until set live via the set_flag debug command
+CHAMPION_FLAGS = [
+    # Pallet / Oak intro chain — FOLLOWED_OAK_INTO_LAB is what stops the
+    # "Hey! Wait! Don't go out!" grass interception at the north exit
+    "EVENT_OAK_ASKED_TO_CHOOSE_MON", "EVENT_GOT_STARTER",
+    "EVENT_BATTLED_RIVAL_IN_OAKS_LAB", "EVENT_FOLLOWED_OAK_INTO_LAB",
+    "EVENT_FOLLOWED_OAK_INTO_LAB_2", "EVENT_GOT_POKEDEX",
+    "EVENT_GOT_POKEBALLS_FROM_OAK", "EVENT_GOT_TOWN_MAP",
+    "EVENT_ENTERED_BLUES_HOUSE",
+    # Rival
+    "EVENT_BEAT_ROUTE22_RIVAL_1ST_BATTLE", "EVENT_BEAT_CERULEAN_RIVAL",
+    "EVENT_BEAT_POKEMON_TOWER_RIVAL", "EVENT_BEAT_SILPH_CO_RIVAL",
+    # SS Anne
+    "EVENT_GOT_SS_TICKET", "EVENT_SS_ANNE_LEFT", "EVENT_WALKED_OUT_OF_DOCK",
+    # Mt Moon / Cerulean / Rocket hideout
+    "EVENT_BEAT_MT_MOON_EXIT_SUPER_NERD", "EVENT_GOT_HELIX_FOSSIL",
+    "EVENT_GAVE_FOSSIL_TO_LAB", "EVENT_BEAT_CERULEAN_ROCKET_THIEF",
+    "EVENT_ENTERED_ROCKET_HIDEOUT", "EVENT_ROCKET_DROPPED_LIFT_KEY",
+    # Gym leaders + their badge-check gates
+    "EVENT_BEAT_BROCK", "EVENT_BEAT_MISTY", "EVENT_BEAT_LT_SURGE",
+    "EVENT_BEAT_ERIKA", "EVENT_BEAT_KOGA", "EVENT_BEAT_SABRINA",
+    "EVENT_BEAT_BLAINE", "EVENT_BEAT_VIRIDIAN_GYM_GIOVANNI",
+    "EVENT_PASSED_CASCADEBADGE_CHECK", "EVENT_PASSED_THUNDERBADGE_CHECK",
+    "EVENT_PASSED_RAINBOWBADGE_CHECK", "EVENT_PASSED_SOULBADGE_CHECK",
+    "EVENT_PASSED_MARSHBADGE_CHECK", "EVENT_PASSED_VOLCANOBADGE_CHECK",
+    "EVENT_PASSED_EARTHBADGE_CHECK",
+    # Routes / towns
+    "EVENT_FIGHT_ROUTE16_SNORLAX", "EVENT_FIGHT_ROUTE12_SNORLAX",
+    "EVENT_BOUGHT_MUSEUM_TICKET",
+    # Pokémon Tower / Silph / Mansion
+    "EVENT_BEAT_GHOST_MAROWAK", "EVENT_RESCUED_MR_FUJI",
+    "EVENT_BEAT_SILPH_CO_GIOVANNI",
+    "EVENT_SILPH_CO_RECEPTIONIST_AT_DESK", "EVENT_MANSION_SWITCH_ON",
+    # Silph card-key doors — leave the building traversable post-game
+    "EVENT_SILPH_CO_2_UNLOCKED_DOOR1", "EVENT_SILPH_CO_2_UNLOCKED_DOOR2",
+    "EVENT_SILPH_CO_3_UNLOCKED_DOOR1", "EVENT_SILPH_CO_3_UNLOCKED_DOOR2",
+    "EVENT_SILPH_CO_4_UNLOCKED_DOOR1", "EVENT_SILPH_CO_4_UNLOCKED_DOOR2",
+    "EVENT_SILPH_CO_5_UNLOCKED_DOOR1", "EVENT_SILPH_CO_5_UNLOCKED_DOOR2",
+    "EVENT_SILPH_CO_5_UNLOCKED_DOOR3", "EVENT_SILPH_CO_6_UNLOCKED_DOOR",
+    "EVENT_SILPH_CO_7_UNLOCKED_DOOR1", "EVENT_SILPH_CO_7_UNLOCKED_DOOR2",
+    "EVENT_SILPH_CO_7_UNLOCKED_DOOR3", "EVENT_SILPH_CO_8_UNLOCKED_DOOR",
+    "EVENT_SILPH_CO_9_UNLOCKED_DOOR1", "EVENT_SILPH_CO_9_UNLOCKED_DOOR2",
+    "EVENT_SILPH_CO_9_UNLOCKED_DOOR3", "EVENT_SILPH_CO_9_UNLOCKED_DOOR4",
+    "EVENT_SILPH_CO_10_UNLOCKED_DOOR", "EVENT_SILPH_CO_11_UNLOCKED_DOOR",
+    # Seafoam / Victory Road passage boulders
+    "EVENT_SEAFOAM3_BOULDER1_DOWN_HOLE", "EVENT_SEAFOAM3_BOULDER2_DOWN_HOLE",
+    "EVENT_SEAFOAM4_BOULDER1_DOWN_HOLE", "EVENT_SEAFOAM4_BOULDER2_DOWN_HOLE",
+    "EVENT_VICTORY_ROAD_2_BOULDER_ON_SWITCH1",
+    "EVENT_VICTORY_ROAD_2_BOULDER_ON_SWITCH2",
+    "EVENT_VICTORY_ROAD_3_BOULDER_ON_SWITCH1",
+    # Elite Four + champion (BEAT_LANCE is separate from the room trainer
+    # flag; AUTOWALKED skips the entry cutscenes on re-entry)
+    "EVENT_BEAT_LORELEIS_ROOM_TRAINER_0", "EVENT_AUTOWALKED_INTO_LORELEIS_ROOM",
+    "EVENT_BEAT_BRUNOS_ROOM_TRAINER_0", "EVENT_AUTOWALKED_INTO_BRUNOS_ROOM",
+    "EVENT_BEAT_AGATHAS_ROOM_TRAINER_0", "EVENT_AUTOWALKED_INTO_AGATHAS_ROOM",
+    "EVENT_BEAT_LANCES_ROOM_TRAINER_0", "EVENT_BEAT_LANCE",
+    "EVENT_BEAT_CHAMPION_RIVAL", "EVENT_HALL_OF_FAME_DEX_RATING",
+]
+
+CHAMPION_TEAM = [
+    ("Charizard", 62, ["Flamethrower", "Slash", "Earthquake", "FireBlast"]),
+    ("Lapras", 58, ["Surf", "IceBeam", "BodySlam", "Thunderbolt"]),
+    ("Snorlax", 56, ["BodySlam", "Earthquake", "HyperBeam", "Rest"]),
+    ("Jolteon", 57, ["Thunderbolt", "PinMissile", "ThunderWave", "DoubleKick"]),
+    ("Dugtrio", 53, ["Earthquake", "Slash", "Dig", "SandAttack"]),
+    ("Nidoking", 55, ["Earthquake", "IceBeam", "Thunderbolt", "HornDrill"]),
+]
 
 
 # ── Gen-1 stat math (verified against create_pokemon output) ───────────
@@ -290,6 +378,38 @@ class SaveBuilder:
             dex[key] = list(bits)
         return self
 
+    def dex_complete(self):
+        """Fill the whole dex (151/151 seen+owned; the trailing bits of
+        the 19-byte bitsets beyond dex 151 stay zero)."""
+        dex = self.data["game_data"]["pokedex"]
+        for key in ("seen", "owned"):
+            bits = bytearray(dex[key])
+            for sid in range(1, 152):
+                bits[sid >> 3] |= 1 << (sid & 7)
+            dex[key] = list(bits)
+        return self
+
+    # ── presets ──
+    def champion(self, team=CHAMPION_TEAM):
+        """A finished first playthrough: champion team, all 8 badges,
+        story-complete flags (see CHAMPION_FLAGS), full dex, home spawn.
+        Legendaries and overworld pickups are deliberately left for
+        post-game play."""
+        for sp, lv, mv in team:
+            self.party_add(sp, lv, moves=mv)
+        self.money(483700)
+        self.badges(0xFF)
+        for f in CHAMPION_FLAGS:
+            self.flag(f)
+        self.dex_complete()
+        self.position("RedsHouse2F", 3, 6)
+        self.data["game_data"]["play_time"] = {
+            "hours": 39, "minutes": 24, "seconds": 17,
+            "frames": 0, "maxed": False}
+        self.data["game_data"]["player_starter"] = 4   # Charmander
+        self.data["game_data"]["rival_starter"] = 7    # Squirtle
+        return self
+
     def write(self, path):
         Path(path).write_text(json.dumps(self.data))
         return path
@@ -300,6 +420,9 @@ def main():
     ap = argparse.ArgumentParser(
         description="Construct a bootable game snapshot JSON.")
     ap.add_argument("-o", "--out", required=True, help="output .json path")
+    ap.add_argument("--preset", choices=["champion"],
+                    help="start from a built-in preset (champion = story "
+                         "complete, post-game roam)")
     ap.add_argument("--party", action="append", default=[],
                     metavar="SPECIES:LEVEL",
                     help="add a party member (repeatable)")
@@ -318,6 +441,8 @@ def main():
     args = ap.parse_args()
 
     sb = SaveBuilder()
+    if args.preset == "champion":
+        sb.champion()
     pending_moves = None
     for spec in args.party:
         species, _, level = spec.partition(":")

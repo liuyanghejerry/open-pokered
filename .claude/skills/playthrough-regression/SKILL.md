@@ -160,9 +160,12 @@ python3 scripts/save_builder.py -o /tmp/state.json \
     --party Charizard:36 --money 65000 --flag EVENT_BEAT_BROCK \
     --item POKE_BALL:20 --map PalletTown:5,6 --badges 0x0F
 
+# finished-first-playthrough preset (champion team, 8 badges,
+# story-complete flags, full dex, home spawn)
+python3 scripts/save_builder.py -o /tmp/champion.json --preset champion
+
 # module
-sb = SaveBuilder(); sb.party_add("Squirtle", 7); sb.flag("EVENT_BEAT_BROCK")
-sb.write("/tmp/state.json")
+sb = SaveBuilder(); sb.champion(); sb.write("/tmp/champion.json")
 ```
 
 The builder parses the repo's own data sources (build.rs SPECIES_ORDER,
@@ -171,25 +174,35 @@ map.json ids, event_flags.rs bit indexes) and computes Gen-1 stats with
 the same formula as the engine's create_pokemon — Bulbasaur L5 comes
 out 20/10/10/10/12 and Charizard L36 has 109 max HP, field-for-field.
 
-In BDD features, the `constructed save` vocabulary covers the flow:
+**Flag names must come from `event_flags.rs`** — the builder rejects
+unknown names. Some script-gated flags (`EVENT_BEAT_SS_ANNE_RIVAL`,
+`EVENT_GOT_EEVEE`, `EVENT_GOT_LAPRAS`,
+`EVENT_GAVE_SAFFRON_GUARDS_DRINK`) are runtime sidecar flags, NOT part
+of the SRAM bitset a snapshot can carry; set those live with `set_flag`
+after boot if a test needs them. The champion preset documents its
+deliberate exclusions inline (see `CHAMPION_FLAGS` in save_builder.py):
+legendaries stay catchable, item pickups stay collectable, and flags
+that would break the world when set (`EVENT_LANCES_ROOM_LOCK_DOOR`
+closes Lance's door, `EVENT_IN_PURIFIED_ZONE` disables the heal zone)
+are left clear.
+
+In BDD features, the `constructed save` / `champion save` vocabulary
+covers the flow:
 
 ```gherkin
-Given a constructed save
-And the save has a Charizard at level 36
-And the save has 65000 money
-And the save has the flag EVENT_BEAT_BROCK
-And the save starts on PalletTown at (5,6)
+Given a champion save
 When the game boots from the save
-Then the player has 65000 money
-And the party leader has 109 max hp
+And the player walks north out of Pallet Town
+Then the player is on Route1
+And no story script intercepts the player
 ```
 
 Boot from a snapshot goes through the same intro → CONTINUE path as a
 saved game (`resume_reentry`), and constructed event flags reach the
 live flag store (visible to `get_flags`). See
-`features/construct.feature` for the executable spec. Runtime-only
-extras (`__OBJ_HIDDEN_*`) are NOT part of a snapshot — set those with
-`set_flag` after boot.
+`features/construct.feature` and `features/champion.feature` for the
+executable specs. Runtime-only extras (`__OBJ_HIDDEN_*`) are NOT part
+of a snapshot — set those with `set_flag` after boot.
 
 ### Adding a scenario (s11+)
 
