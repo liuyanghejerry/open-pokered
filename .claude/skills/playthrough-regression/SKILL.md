@@ -6,7 +6,10 @@ power-on through story milestones m01–m10 using button input plus
 debug-server observation only** — no `--skip-intro`, no `--warp`, no state
 seeding. A green run proves the real engine paths (intro flow, warps, map
 scripts, battles, story flags) still work after a change; a red run localizes
-the regression to the surface a milestone exercises.
+the regression to the surface a milestone exercises. Its sibling
+`scripts/scenarios.py` tests subsystems **outside** the linear chain
+(battle/items/save/menus) by seeding state through the debug protocol —
+see "Beyond the chain: the scenario suite".
 
 ## Quick Start
 
@@ -52,6 +55,152 @@ milestones are cheap; the m09 forest and the m10 grind dominate wall time.
 
 Rule of thumb: pure data edits (moves, stats, text) → m05/m06/m10 suffice;
 anything in warp/collision/script/flag code → run the full chain.
+
+## Beyond the chain: the scenario suite
+
+`scripts/scenarios.py` is the non-linear sibling of the milestone chain.
+Each scenario **seeds** a minimal state through the debug protocol's write
+commands (`give_pokemon`, `give_item`, `start_wild_battle`, `warp`,
+`save`) and drives ONE subsystem with real button input, asserting only
+what the protocol reads back. A milestone proves "the game can be played
+this far"; a scenario proves "this subsystem behaves as specified" — in
+seconds, with no walk to get there.
+
+```bash
+python3 scripts/scenarios.py --list
+python3 scripts/scenarios.py                 # full suite, ~1 min
+python3 scripts/scenarios.py --only s05      # one scenario (id prefix ok)
+python3 scripts/scenarios.py --skip s05      # all but the RNG-heavy one
+```
+
+| Scenario | Asserts |
+|----------|---------|
+| s01-bag-seed | `give_item` lands in `get_bag` with quantities; unknown items are rejected |
+| s02-party-seed | `give_pokemon` appends in order; `party_count`; leader is first |
+| s03-wild-run | `start_wild_battle` + RUN → overworld, player tile unmoved |
+| s04-wild-win | winning a wild battle grants experience (`get_party` delta) |
+| s05-wild-catch | battle BAG → Poké Ball → catch: party+1, correct species, balls spent |
+| s06-blackout | total party KO → whiteout to the home fly point, party fully healed |
+| s07-save-roundtrip | `save` cmd → separate fresh boot → CONTINUE restores map/pos/party/bag/money exactly |
+| s08-start-menu | START menu opens; first entry opens the party screen; EXIT returns control |
+| s09-options | OPTIONS text-speed toggle changes `text_speed_delay_frames` and persists across menu reopen |
+| s10-npcs | `get_npcs` reports live, field-sane NPCs on the entered map |
+
+Engine quirks the scenarios encode (same contract as the milestone
+comments — don't weaken them without an engine change):
+
+- **Battle menu is 2x2: FIGHT TL / PKMN TR / BAG BL / RUN BR** — BAG is
+  `down,left` (`battle_loop` pins the other two corners with
+  `up+left`/`down+right`).
+- **A catch parks the dex-registration screen** over the overworld;
+  dismiss with b/a taps before asserting `screen=overworld`.
+- **New games start at ¥0** in this engine, so the blackout money
+  penalty is not assertable headless yet.
+- **Whiteout lands on PalletTown (5,6)** — the home fly point — not the
+  bedroom.
+- The battle BAG menu has no protocol snapshot (unlike FIGHT's
+  `battle_moves`), so BagSelect is driven blind against
+  `battle_phase == "BagSelect"`.
+
+s05 is the only RNG scenario (catch rolls; ~0.03% all-miss with 20
+balls). The chain's flake policy applies unchanged.
+
+### BDD form: the same tests as acceptance specs
+
+`scripts/bdd.py` runs the same kind of seeded subsystem tests written as
+**Gherkin feature files** under `scripts/features/` — for when you want
+the acceptance behavior readable (and writable) without reading driver
+code:
+
+```bash
+python3 scripts/bdd.py --list            # parse + list all scenarios
+python3 scripts/bdd.py                   # full suite (~1 min)
+python3 scripts/bdd.py --only catch      # substring filter on names
+```
+
+The runner is stdlib-only and understands English Gherkin keywords plus
+zh-CN (`功能/场景/假如/当/那么/而且/但是` — see
+`features/blackout.zh.feature`). Scenarios from other languages or
+constructs (Outline, tables, Background) fail the parse loudly instead
+of being silently ignored.
+
+The three layers stay strictly separated:
+
+- **features/*.feature** — the acceptance specs (what must hold).
+- **scripts/bdd_steps.py** — the step vocabulary: regex-matched
+  Given/When/Then bodies that call the validated primitives. A new BDD
+  test is usually *only* a new .feature file; add a step only when the
+  vocabulary genuinely lacks the concept.
+- **scripts/scenarios.py / playthrough.py** — the primitives
+  (`boot_starter`, `throw_balls_until_caught`, `battle_loop`, …). The
+  BDD layer never re-implements driver behavior.
+
+Gotchas learned from the first suite: `And`/`But` inherit the previous
+keyword (a driving step after a `Then` must be written as `When`);
+free text under a title is a description only until the block's first
+step, after which unparseable lines are errors; step text starting
+with a keyword (`Then are written…`) will be parsed as a step. Each
+scenario runs against its own fresh game — same isolation, same flake
+policy as scenarios.py.
+
+### Constructed saves: boot straight into an arbitrary state
+
+Protocol seeding (give_*/start_wild_battle) needs a running game and
+can't reach money, badges, event flags, the Pokédex, or exact party
+movesets. `scripts/save_builder.py` builds **snapshot JSONs** offline —
+`SaveBuilder` mutates a canonical template (a real save exported from a
+freshly booted game, because SaveData fields carry no serde defaults —
+partial snapshots don't deserialize), and the engine boots it via
+`run --snapshot` (`Game(save_path=…, snapshot=…)` in playthrough.py;
+the save file remains the in-session write target):
+
+```bash
+# CLI one-shot
+python3 scripts/save_builder.py -o /tmp/state.json \
+    --party Charizard:36 --money 65000 --flag EVENT_BEAT_BROCK \
+    --item POKE_BALL:20 --map PalletTown:5,6 --badges 0x0F
+
+# module
+sb = SaveBuilder(); sb.party_add("Squirtle", 7); sb.flag("EVENT_BEAT_BROCK")
+sb.write("/tmp/state.json")
+```
+
+The builder parses the repo's own data sources (build.rs SPECIES_ORDER,
+pokemon/*.json base stats, moves/*.json PP, item_list.json, maps/*/
+map.json ids, event_flags.rs bit indexes) and computes Gen-1 stats with
+the same formula as the engine's create_pokemon — Bulbasaur L5 comes
+out 20/10/10/10/12 and Charizard L36 has 109 max HP, field-for-field.
+
+In BDD features, the `constructed save` vocabulary covers the flow:
+
+```gherkin
+Given a constructed save
+And the save has a Charizard at level 36
+And the save has 65000 money
+And the save has the flag EVENT_BEAT_BROCK
+And the save starts on PalletTown at (5,6)
+When the game boots from the save
+Then the player has 65000 money
+And the party leader has 109 max hp
+```
+
+Boot from a snapshot goes through the same intro → CONTINUE path as a
+saved game (`resume_reentry`), and constructed event flags reach the
+live flag store (visible to `get_flags`). See
+`features/construct.feature` for the executable spec. Runtime-only
+extras (`__OBJ_HIDDEN_*`) are NOT part of a snapshot — set those with
+`set_flag` after boot.
+
+### Adding a scenario (s11+)
+
+Seed with the protocol's write commands, drive with `g.d.drive` taps,
+assert against `get_state` / `get_party` / `get_bag` / `get_flags` /
+`get_npcs`. Register with `@scenario("s11-name", "one-line contract")`
+and add a row to the table above. Never assert on engine internals: if
+the protocol cannot observe it, extend the debug server first — the
+scenario layer is deliberately black-box. If the test reads like an
+acceptance rule ("given X, when Y, then Z"), prefer a BDD feature file
+(`scripts/bdd.py`) over another s-scenario.
 
 ## Reading the output
 
@@ -172,6 +321,7 @@ retry, m10 takes 3 gym attempts). Policy:
 - Rendering/audio correctness — use the screenshot CLI and the
   visual-verify skill; remember the AGENTS.md before/after screenshot rule
   for visual PRs.
-- Save-format round trips — use `export-snapshot` / `import-snapshot` and
-  the pokered-save-editor skill.
+- Save-format *tooling* interop — use `export-snapshot` /
+  `import-snapshot` and the pokered-save-editor skill; the in-engine
+  save → CONTINUE round trip itself is covered by s07.
 - Fine-grained battle math — covered by `pokered-core` unit tests instead.

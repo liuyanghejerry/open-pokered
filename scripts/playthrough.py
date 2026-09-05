@@ -298,7 +298,7 @@ class NavError(RuntimeError):
 
 class Game:
     def __init__(self, port=None, save_path=None, record_dir=None,
-                 record_video=None):
+                 record_video=None, snapshot=None):
         self.run_dir = Path(tempfile.mkdtemp(prefix="pokered-run-"))
         self.log = open(self.run_dir / "game.log", "w")
         # Persistent save ONLY for --resume (Game(..., save_path=...));
@@ -318,6 +318,11 @@ class Game:
             s.close()
         cmd = [str(BIN), "run", "--headless", "--debug-port", str(port),
                "--no-audio", "--save", str(save_path)]
+        if snapshot is not None:
+            # Load path priority: --snapshot beats --save (see
+            # Game::new_with_options); the save file remains the write
+            # target once the game saves in-session.
+            cmd += ["--snapshot", str(snapshot)]
         if record_dir is not None:
             Path(record_dir).mkdir(parents=True, exist_ok=True)
             cmd += ["--record-frames", str(record_dir)]
