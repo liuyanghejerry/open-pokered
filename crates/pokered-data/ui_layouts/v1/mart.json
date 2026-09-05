@@ -1,270 +1,270 @@
 {
-  "$schema": "/schemas/layout.schema.json",
-  "schema_version": 1,
-  "screen": "mart",
-  "variants": {
-    "main_menu": {
-      "cursor": {
-        "tx": 0,
-        "base_ty": 1,
-        "row_step": 2,
-        "glyph": "\u25b6",
-        "color": "Black"
-      },
-      "dynamic_labels": {
-        "money_value": {
-          "parent": "money_box",
-          "tx": 0,
-          "ty": 0,
-          "color": "Black"
-        }
-      },
-      "children": [
-        {
-          "id": "menu_box",
-          "rect": {
-            "tx": 0,
-            "ty": 0,
-            "tw": 7,
-            "th": 8
-          },
-          "color": "Black",
-          "labels": [
-            {
-              "tx": 1,
-              "ty": 1,
-              "text": "BUY",
-              "color": "Black"
-            },
-            {
-              "tx": 1,
-              "ty": 3,
-              "text": "SELL",
-              "color": "Black"
-            },
-            {
-              "tx": 1,
-              "ty": 5,
-              "text": "QUIT",
-              "color": "Black"
-            }
-          ]
-        },
-        {
-          "id": "money_box",
-          "rect": {
-            "tx": 6,
-            "ty": 0,
-            "tw": 14,
-            "th": 3
-          },
-          "color": "Black",
-          "labels": []
-        }
-      ]
-    },
-    "result_dialog": {
-      "dynamic_labels": {
-        "message_line": {
-          "parent": "result_box",
-          "tx": 1,
-          "ty": 0,
-          "color": "Black"
-        }
-      },
-      "children": [
-        {
-          "id": "result_box",
-          "rect": {
-            "tx": 0,
-            "ty": 13,
-            "tw": 20,
-            "th": 5
-          },
-          "color": "Black",
-          "labels": []
-        }
-      ]
-    },
-    "confirm": {
-      "cursor": {
-        "tx": 0,
-        "base_ty": 1,
-        "row_step": 1,
-        "glyph": "\u25b6",
-        "color": "Black"
-      },
-      "children": [
-        {
-          "id": "choice_box",
-          "rect": {
-            "tx": 14,
-            "ty": 7,
-            "tw": 6,
-            "th": 5
-          },
-          "color": "Black",
-          "labels": [
-            {
-              "tx": 1,
-              "ty": 1,
-              "text": "YES",
-              "color": "Black"
-            },
-            {
-              "tx": 1,
-              "ty": 2,
-              "text": "NO",
-              "color": "Black"
-            }
-          ]
-        },
-        {
-          "id": "message_region",
-          "rect": {
-            "tx": 0,
-            "ty": 0,
-            "tw": 18,
-            "th": 8
-          },
-          "border": false,
-          "color": "Black"
-        }
-      ]
-    },
-    "quantity": {
-      "dynamic_labels": {
-        "item_name": {
-          "parent": "detail_box",
-          "tx": 1,
-          "ty": 1,
-          "color": "Black"
-        },
-        "qty_value": {
-          "parent": "detail_box",
-          "tx": 1,
-          "ty": 3,
-          "color": "Black"
-        },
-        "cost_value": {
-          "parent": "detail_box",
-          "tx": 5,
-          "ty": 3,
-          "color": "Black"
-        },
-        "money_value": {
-          "parent": "money_box",
-          "tx": 1,
-          "ty": 1,
-          "color": "Black"
-        }
-      },
-      "children": [
-        {
-          "id": "detail_box",
-          "rect": {
-            "tx": 0,
-            "ty": 0,
-            "tw": 10,
-            "th": 6
-          },
-          "color": "Black",
-          "labels": []
-        },
-        {
-          "id": "money_box",
-          "rect": {
-            "tx": 10,
-            "ty": 0,
-            "tw": 8,
-            "th": 3
-          },
-          "color": "Black",
-          "labels": []
-        }
-      ]
-    },
-    "buy_items_with_money": {
-      "cursor": {
-        "tx": 1,
-        "base_ty": 1,
-        "row_step": 2,
-        "glyph": "\u25b6",
-        "color": "Black"
-      },
-      "dynamic_labels": {
-        "money_value": {
-          "parent": "money_box",
-          "tx": 1,
-          "ty": 1,
-          "color": "Black"
-        }
-      },
-      "children": [
-        {
-          "id": "list_box",
-          "rect": {
-            "tx": 0,
-            "ty": 0,
-            "tw": 18,
-            "th": 14
-          },
-          "color": "Black",
-          "labels": []
-        },
-        {
-          "id": "money_box",
-          "rect": {
-            "tx": 0,
-            "ty": 14,
-            "tw": 18,
-            "th": 3
-          },
-          "color": "Black",
-          "labels": []
-        }
-      ]
-    },
-    "sell_items_with_money": {
-      "cursor": {
-        "tx": 1,
-        "base_ty": 1,
-        "row_step": 2,
-        "glyph": "\u25b6",
-        "color": "Black"
-      },
-      "dynamic_labels": {
-        "money_value": {
-          "parent": "money_box",
-          "tx": 1,
-          "ty": 1,
-          "color": "Black"
-        }
-      },
-      "children": [
-        {
-          "id": "list_box",
-          "rect": {
-            "tx": 0,
-            "ty": 0,
-            "tw": 18,
-            "th": 14
-          },
-          "color": "Black",
-          "labels": []
-        },
-        {
-          "id": "money_box",
-          "rect": {
-            "tx": 0,
-            "ty": 14,
-            "tw": 18,
-            "th": 3
-          },
-          "color": "Black",
-          "labels": []
-        }
-      ]
+ "$schema": "/schemas/layout.schema.json",
+ "schema_version": 1,
+ "screen": "mart",
+ "variants": {
+  "main_menu": {
+   "cursor": {
+    "tx": 0,
+    "base_ty": 1,
+    "row_step": 2,
+    "glyph": "▶",
+    "color": "Black"
+   },
+   "dynamic_labels": {
+    "money_value": {
+     "parent": "money_box",
+     "tx": 0,
+     "ty": 0,
+     "color": "Black"
     }
+   },
+   "children": [
+    {
+     "id": "menu_box",
+     "rect": {
+      "tx": 0,
+      "ty": 0,
+      "tw": 7,
+      "th": 8
+     },
+     "color": "Black",
+     "labels": [
+      {
+       "tx": 1,
+       "ty": 1,
+       "text": "BUY",
+       "color": "Black"
+      },
+      {
+       "tx": 1,
+       "ty": 3,
+       "text": "SELL",
+       "color": "Black"
+      },
+      {
+       "tx": 1,
+       "ty": 5,
+       "text": "QUIT",
+       "color": "Black"
+      }
+     ]
+    },
+    {
+     "id": "money_box",
+     "rect": {
+      "tx": 6,
+      "ty": 0,
+      "tw": 14,
+      "th": 3
+     },
+     "color": "Black",
+     "labels": []
+    }
+   ]
+  },
+  "result_dialog": {
+   "dynamic_labels": {
+    "message_line": {
+     "parent": "result_box",
+     "tx": 1,
+     "ty": 0,
+     "color": "Black"
+    }
+   },
+   "children": [
+    {
+     "id": "result_box",
+     "rect": {
+      "tx": 0,
+      "ty": 13,
+      "tw": 20,
+      "th": 5
+     },
+     "color": "Black",
+     "labels": []
+    }
+   ]
+  },
+  "confirm": {
+   "cursor": {
+    "tx": 0,
+    "base_ty": 1,
+    "row_step": 1,
+    "glyph": "▶",
+    "color": "Black"
+   },
+   "children": [
+    {
+     "id": "choice_box",
+     "rect": {
+      "tx": 14,
+      "ty": 7,
+      "tw": 6,
+      "th": 5
+     },
+     "color": "Black",
+     "labels": [
+      {
+       "tx": 1,
+       "ty": 1,
+       "text": "YES",
+       "color": "Black"
+      },
+      {
+       "tx": 1,
+       "ty": 2,
+       "text": "NO",
+       "color": "Black"
+      }
+     ]
+    },
+    {
+     "id": "message_region",
+     "rect": {
+      "tx": 0,
+      "ty": 0,
+      "tw": 18,
+      "th": 8
+     },
+     "border": false,
+     "color": "Black"
+    }
+   ]
+  },
+  "quantity": {
+   "dynamic_labels": {
+    "item_name": {
+     "parent": "detail_box",
+     "tx": 1,
+     "ty": 1,
+     "color": "Black"
+    },
+    "qty_value": {
+     "parent": "detail_box",
+     "tx": 1,
+     "ty": 3,
+     "color": "Black"
+    },
+    "cost_value": {
+     "parent": "detail_box",
+     "tx": 5,
+     "ty": 3,
+     "color": "Black"
+    },
+    "money_value": {
+     "parent": "money_box",
+     "tx": 1,
+     "ty": 1,
+     "color": "Black"
+    }
+   },
+   "children": [
+    {
+     "id": "detail_box",
+     "rect": {
+      "tx": 0,
+      "ty": 0,
+      "tw": 10,
+      "th": 6
+     },
+     "color": "Black",
+     "labels": []
+    },
+    {
+     "id": "money_box",
+     "rect": {
+      "tx": 10,
+      "ty": 0,
+      "tw": 8,
+      "th": 3
+     },
+     "color": "Black",
+     "labels": []
+    }
+   ]
+  },
+  "buy_items_with_money": {
+   "cursor": {
+    "tx": 1,
+    "base_ty": 1,
+    "row_step": 2,
+    "glyph": "▶",
+    "color": "Black"
+   },
+   "dynamic_labels": {
+    "money_value": {
+     "parent": "money_box",
+     "tx": 0,
+     "ty": 0,
+     "color": "Black"
+    }
+   },
+   "children": [
+    {
+     "id": "list_box",
+     "rect": {
+      "tx": 0,
+      "ty": 2,
+      "tw": 18,
+      "th": 12
+     },
+     "color": "Black",
+     "labels": []
+    },
+    {
+     "id": "money_box",
+     "rect": {
+      "tx": 10,
+      "ty": 0,
+      "tw": 10,
+      "th": 3
+     },
+     "color": "Black",
+     "labels": []
+    }
+   ]
+  },
+  "sell_items_with_money": {
+   "cursor": {
+    "tx": 1,
+    "base_ty": 1,
+    "row_step": 2,
+    "glyph": "▶",
+    "color": "Black"
+   },
+   "dynamic_labels": {
+    "money_value": {
+     "parent": "money_box",
+     "tx": 0,
+     "ty": 0,
+     "color": "Black"
+    }
+   },
+   "children": [
+    {
+     "id": "list_box",
+     "rect": {
+      "tx": 0,
+      "ty": 2,
+      "tw": 18,
+      "th": 12
+     },
+     "color": "Black",
+     "labels": []
+    },
+    {
+     "id": "money_box",
+     "rect": {
+      "tx": 10,
+      "ty": 0,
+      "tw": 10,
+      "th": 3
+     },
+     "color": "Black",
+     "labels": []
+    }
+   ]
   }
+ }
 }
