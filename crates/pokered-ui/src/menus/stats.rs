@@ -77,6 +77,15 @@ fn draw_page1_v2<P: Painter>(
             ""
         },
     );
+    // Trainer ID № / OT name for the right column.
+    ctx.set("id", mon.ot_id as i64);
+    let mut ot_buf = [0u8; pokered_core::battle::state::NAME_TEXT_BUF];
+    ctx.set("ot", pokered_core::battle::state::decode_name(&mon.ot_name, &mut ot_buf));
+    // Visibility keys the layout uses to pick the right-column arrangement:
+    // CJK glyphs are taller than one tile row, so the zh variant cannot stack
+    // values under labels the way the Latin layout does.
+    ctx.set("is_zh", is_zh);
+    ctx.set("is_en", !is_zh);
     ctx.set("__lang", v2::lang_code(lang));
 
     v2::render_screen(&layout, &ctx, ui.painter());
@@ -110,8 +119,11 @@ fn draw_page2<P: Painter>(
     // ── Moves box ──────────────────────────────────────────────────
     ui.text_box(layout.box_0.rect, layout.box_0.color, true, |frame| {
         for slot in 0..4 {
-            let name_row = (slot * 2 + 1) as u32;
-            let pp_row = (slot * 2 + 2) as u32;
+            // Each move takes two interior rows — name on top, PP below —
+            // filling the box's 8 interior rows exactly. (One row lower and
+            // the last PP line would sit on the bottom border.)
+            let name_row = (slot * 2) as u32;
+            let pp_row = (slot * 2 + 1) as u32;
             let move_id = mon.moves[slot];
             if move_id == MoveId::None {
                 frame.label(1, name_row, "-", InkColor::DarkGray);

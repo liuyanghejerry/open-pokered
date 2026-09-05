@@ -49,26 +49,30 @@ pub fn draw<P: Painter>(
     v2::render_screen(&layout, &ctx, ui.painter());
 
     // CONTINUE save-info panel — `DisplayContinueGameInfo`
-    // (engine/menus/main_menu.asm:357-379): border at hlcoord 4,7 and the
-    // PLAYER/BADGES/#DEX/TIME rows from `SaveScreenInfoText`. A loads the
-    // game, B returns to the menu (handled in `MainMenuState`).
+    // (engine/menus/main_menu.asm:357-379): the box's top edge joins the menu
+    // box's bottom edge (the original's interlocked look), the right edge
+    // reaches the last screen column, and the PLAYER/BADGES/#DEX/TIME rows
+    // come from `SaveScreenInfoText`. A loads the game, B returns to the menu
+    // (handled in `MainMenuState`).
     if state.is_showing_continue_info() {
-        let rect = TileRect::new(4, 7, 14, 10);
+        let rect = TileRect::new(4, 8, 16, 10);
+        let mut value_rows: Vec<(u32, String)> = Vec::new();
         ui.text_box(rect, InkColor::Black, true, |frame| {
             for (i, (label, value)) in state.continue_info_lines().iter().enumerate() {
                 let ty = 1 + i as u32 * 2;
                 frame.label(0, ty, lang_data::ui_label(label, is_zh), InkColor::Black);
-                // Values are right-aligned-ish under the original's absolute
-                // coords (name 12,9 / badges 17,11 / #dex 16,13 / time 13,15
-                // relative to the box inner origin (5,8)).
-                let tx = match i {
-                    0 => 7,
-                    1 => 12,
-                    2 => 11,
-                    _ => 8,
-                };
-                frame.label(tx, ty, value, InkColor::Black);
+                value_rows.push((ty, value.clone()));
             }
         });
+        // Values share one right-aligned ink edge at pixel precision: the
+        // tile-grid `label` API cannot flush 5 px proportional glyphs against
+        // the border, so each value is drawn through the painter's pixel path
+        // anchored so its ink ends at abs px 148 (3 px in from the interior's
+        // 151 px edge).
+        for (ty, value) in &value_rows {
+            let painter = ui.painter();
+            let px = (4 + 15) * 8 - 3 - painter.measure_text_px(value);
+            painter.draw_text_px(px, (9 + ty) * 8, value, InkColor::Black.into());
+        }
     }
 }
