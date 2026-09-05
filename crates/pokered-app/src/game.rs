@@ -3338,6 +3338,11 @@ impl PokemonGame {
                     }
 
                     if let Some(shop_items) = self.overworld.pending_shop.take() {
+                        // The clerk's greeting box is dismissed once the mart
+                        // menus take over (pokemart.asm redraws the screen for
+                        // MONEY_BOX + BUY_SELL_QUIT_MENU) — drop it so the
+                        // map-only backdrop doesn't render it underneath.
+                        self.overworld.pending_dialogue = None;
                         match pokered_core::items::shop_stock_from_script_names(&shop_items) {
                             Ok(inv) => {
                                 let mart = pokered_core::items::MartState::new(inv);
@@ -5664,6 +5669,10 @@ impl PokemonGame {
                 }
             }
             GameScreen::Shop(ref mart_state) => {
+                // The mart is an overworld overlay sequence: pokemart.asm
+                // saves and restores the screen tiles around every menu, so
+                // the live map (clerk included) stays visible as the backdrop.
+                draw_overworld(&mut self.overworld, &mut self.resources, frame_buffer, self.state.config.language);
                 let money = self.save_data.game_data.player_money;
                 let bag_slice = self.save_data.game_data.bag.items();
                 draw_mart(mart_state, money, &bag_slice[..], frame_buffer, self.state.config.language);

@@ -101,7 +101,7 @@
             "tx": 14,
             "ty": 7,
             "tw": 6,
-            "th": 8
+            "th": 5
           },
           "color": "Black",
           "labels": [
@@ -125,7 +125,7 @@
             "tx": 0,
             "ty": 0,
             "tw": 18,
-            "th": 7
+            "th": 8
           },
           "border": false,
           "color": "Black"

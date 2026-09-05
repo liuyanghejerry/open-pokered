@@ -1258,8 +1258,11 @@ fn draw_confirm_box_rect_is_exact() {
     let mut ui = Ui::new(&mut rec);
     mart::draw_confirm(Lang::En, "Buy item for $300?", ConfirmChoice::Yes, &MART_CONFIRM_LAYOUT, &mut ui);
 
+    // The message is framed (it draws over the live-map backdrop — a
+    // borderless region reads as stray glyphs on the scene), then the
+    // yes/no box.
     let boxes = collect_boxes(&rec.ops);
-    assert_eq!(boxes, vec![TileRect::new(14, 7, 6, 8)]);
+    assert_eq!(boxes, vec![TileRect::new(0, 0, 18, 8), TileRect::new(14, 7, 6, 5)]);
 }
 
 #[test]
@@ -1291,7 +1294,8 @@ fn draw_confirm_message_rendered_above_box() {
     mart::draw_confirm(Lang::En, "Buy for $300?", ConfirmChoice::Yes, &MART_CONFIRM_LAYOUT, &mut ui);
 
     let texts = collect_texts(&rec.ops);
-    assert!(texts.contains(&(1, 0, "Buy for $300?".into())));
+    // Framed message box: interior origin (1,1) + label (1,0) → (2,1).
+    assert!(texts.contains(&(2, 1, "Buy for $300?".into())));
 }
 
 #[test]
