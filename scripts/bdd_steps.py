@@ -155,6 +155,13 @@ def _(ctx):
     ctx.builder = SaveBuilder()
 
 
+@given(r"a champion save")
+def _(ctx):
+    """The finished-first-playthrough preset: champion team, 8 badges,
+    story-complete flags, full dex, home spawn (see CHAMPION_FLAGS)."""
+    ctx.builder = SaveBuilder().champion()
+
+
 @given(r"the save has an? (?P<species>[A-Za-z]+) at level (?P<level>\d+)")
 def _(ctx, species, level):
     ctx.builder.party_add(species, int(level))
@@ -231,6 +238,21 @@ def _(ctx):
 @when(r"the player walks out of the house")
 def _(ctx):
     m03_leave_house(ctx.g())
+
+
+@when(r"the player walks north out of Pallet Town")
+def _(ctx):
+    """The exact route Oak's grass interception used to hijack: leave
+    home, walk to the north-edge trigger tile (11,1), step up into
+    Route 1. Asserts NO interception on the trigger tile itself."""
+    g = ctx.g()
+    m03_leave_house(g)
+    g.nav_to(11, 1, "PalletTown")
+    s = g.st()
+    assert not s["script_running"] and s["dialogue_state"] is None, \
+        "intercepted at the north exit"
+    g.d.drive(["up"] * 12, frames=16)
+    g.step(10)
 
 
 @when(r"the player presses (?P<keys>[A-Za-z, ]+)")
@@ -365,6 +387,13 @@ def _(ctx, name):
     if isinstance(flags, dict) and "flags" in flags:
         flags = flags["flags"]
     assert flags.get(name) is True, f"{name} not set"
+
+
+@then(r"no story script intercepts the player")
+def _(ctx):
+    s = ctx.g().st()
+    assert not s["script_running"], s["active_script_effect"]
+    assert s["dialogue_state"] is None, s["dialogue_state"]
 
 
 @then(r"the party has (?P<n>\d+) Pok[eé]mon")
