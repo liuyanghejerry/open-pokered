@@ -1,9 +1,10 @@
 screen Stats {
+  // ── Top area (sprite composited over cols 1-7 by the renderer) ──
   text("{name}") {
-    rect = {tx: 5, ty: 1, tw: 10, th: 1}
+    rect = {tx: 9, ty: 1, tw: 10, th: 1}
   }
   text(":L{level}") {
-    rect = {tx: 15, ty: 1, tw: 4, th: 1}
+    rect = {tx: 14, ty: 2, tw: 5, th: 1}
   }
   text(@t("HP:", "HP：")) {
     rect = {tx: 9, ty: 3, tw: 3, th: 1}
@@ -14,7 +15,7 @@ screen Stats {
     max = "{max_hp}"
   }
   text("{hp}/{max_hp}") {
-    rect = {tx: 14, ty: 4, tw: 5, th: 1}
+    rect = {tx: 12, ty: 4, tw: 7, th: 1}
   }
   text(@t("STATUS/", "状态/")) {
     rect = {tx: 9, ty: 6, tw: 7, th: 1}
@@ -24,8 +25,9 @@ screen Stats {
     rect = {tx: 16, ty: 6, tw: 3, th: 1}
   }
   text("№{dex_num:03}") {
-    rect = {tx: 2, ty: 7, tw: 5, th: 1}
+    rect = {tx: 2, ty: 7, tw: 6, th: 1}
   }
+  // ── Left stats box: labels are shared; values are per-language ──
   panel {
     rect = {tx: 0, ty: 8, tw: 10, th: 10}
     style = "default"
@@ -33,51 +35,101 @@ screen Stats {
   text(@t("ATTACK", "攻击")) {
     rect = {tx: 1, ty: 9, tw: 8, th: 1}
   }
-  text("{attack}") {
-    rect = {tx: 7, ty: 10, tw: 3, th: 1}
-    align = "right"
-  }
   text(@t("DEFENSE", "防御")) {
     rect = {tx: 1, ty: 11, tw: 8, th: 1}
-  }
-  text("{defense}") {
-    rect = {tx: 7, ty: 12, tw: 3, th: 1}
-    align = "right"
   }
   text(@t("SPEED", "速度")) {
     rect = {tx: 1, ty: 13, tw: 8, th: 1}
   }
-  text("{speed}") {
-    rect = {tx: 7, ty: 14, tw: 3, th: 1}
-    align = "right"
-  }
   text(@t("SPECIAL", "特殊")) {
     rect = {tx: 1, ty: 15, tw: 8, th: 1}
   }
-  text("{special}") {
-    rect = {tx: 7, ty: 16, tw: 3, th: 1}
-    align = "right"
+  // ── Right column: type / ID № / OT ──
+  //
+  // Latin labels are single-tile tall, so the en variant stacks each value on
+  // the row below its label. CJK glyphs are ~10 px tall on an 8 px row pitch —
+  // stacking a value under a Chinese label makes the rows collide, so the zh
+  // variant keeps them on the label's own row.
+  //
+  // Neither variant draws its numbers through this tile path: it advances one
+  // full 8 px tile per character, so tile-snapped `align = "right"` leaves
+  // CJK and ASCII values with ragged right edges. menus::stats draws the zh
+  // values through the painter's pixel path instead, flush against one shared
+  // right edge; the en layout keeps the tile path (original-game look).
+  container {
+    rect = {tx: 0, ty: 0, tw: 20, th: 18}
+    layout = {gap: 0}
+    clip = false
+    visible = "{is_en}"
+    text("{attack}") {
+      rect = {tx: 6, ty: 10, tw: 3, th: 1}
+      align = "right"
+    }
+    text("{defense}") {
+      rect = {tx: 6, ty: 12, tw: 3, th: 1}
+      align = "right"
+    }
+    text("{speed}") {
+      rect = {tx: 6, ty: 14, tw: 3, th: 1}
+      align = "right"
+    }
+    text("{special}") {
+      rect = {tx: 6, ty: 16, tw: 3, th: 1}
+      align = "right"
+    }
+    text(@t("TYPE1/", "属性1/")) {
+      rect = {tx: 11, ty: 9, tw: 6, th: 1}
+      color = "DarkGray"
+    }
+    text("{type1}") {
+      rect = {tx: 11, ty: 10, tw: 8, th: 1}
+      align = "right"
+    }
+    text(@t("TYPE2/", "属性2/")) {
+      rect = {tx: 11, ty: 11, tw: 6, th: 1}
+      color = "DarkGray"
+    }
+    text("{type2}") {
+      rect = {tx: 11, ty: 12, tw: 8, th: 1}
+      align = "right"
+    }
+    text(@t("ID №/", "编号/")) {
+      rect = {tx: 11, ty: 13, tw: 6, th: 1}
+      color = "DarkGray"
+    }
+    text("{id:05}") {
+      rect = {tx: 11, ty: 14, tw: 8, th: 1}
+      align = "right"
+    }
+    text(@t("OT/", "主人/")) {
+      rect = {tx: 11, ty: 15, tw: 6, th: 1}
+      color = "DarkGray"
+    }
+    text("{ot}") {
+      rect = {tx: 11, ty: 16, tw: 8, th: 1}
+      align = "right"
+    }
   }
-  text(@t("TYPE1/", "属性1/")) {
-    rect = {tx: 11, ty: 9, tw: 6, th: 1}
-    color = "DarkGray"
-  }
-  text("{type1}") {
-    rect = {tx: 12, ty: 10, tw: 8, th: 1}
-  }
-  text(@t("TYPE2/", "属性2/")) {
-    rect = {tx: 11, ty: 11, tw: 6, th: 1}
-    color = "DarkGray"
-  }
-  text("{type2}") {
-    rect = {tx: 12, ty: 12, tw: 8, th: 1}
-  }
-  text(@t("ID №/", "编号/")) {
-    rect = {tx: 11, ty: 13, tw: 6, th: 1}
-    color = "DarkGray"
-  }
-  text(@t("OT/", "主人/")) {
-    rect = {tx: 11, ty: 15, tw: 4, th: 1}
-    color = "DarkGray"
+  container {
+    rect = {tx: 0, ty: 0, tw: 20, th: 18}
+    layout = {gap: 0}
+    clip = false
+    visible = "{is_zh}"
+    text(@t("TYPE1/", "属性1/")) {
+      rect = {tx: 11, ty: 9, tw: 6, th: 1}
+      color = "DarkGray"
+    }
+    text(@t("TYPE2/", "属性2/")) {
+      rect = {tx: 11, ty: 11, tw: 6, th: 1}
+      color = "DarkGray"
+    }
+    text(@t("ID №/", "编号/")) {
+      rect = {tx: 11, ty: 13, tw: 6, th: 1}
+      color = "DarkGray"
+    }
+    text(@t("OT/", "主人/")) {
+      rect = {tx: 11, ty: 15, tw: 6, th: 1}
+      color = "DarkGray"
+    }
   }
 }

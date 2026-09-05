@@ -67,19 +67,63 @@ fn draw_page1_v2<P: Painter>(
     ctx.set("defense", mon.defense as i64);
     ctx.set("speed", mon.speed as i64);
     ctx.set("special", mon.special as i64);
-    ctx.set("type1", lang_data::type_name(mon.type1, is_zh));
+    let type1_name = lang_data::type_name(mon.type1, is_zh);
+    ctx.set("type1", type1_name);
     // The original only shows TYPE2 when it differs from TYPE1.
-    ctx.set(
-        "type2",
-        if mon.type1 != mon.type2 {
-            lang_data::type_name(mon.type2, is_zh)
-        } else {
-            ""
-        },
-    );
+    let type2_name = if mon.type1 != mon.type2 {
+        lang_data::type_name(mon.type2, is_zh)
+    } else {
+        ""
+    };
+    ctx.set("type2", type2_name);
+    // Trainer ID № / OT name for the right column.
+    ctx.set("id", mon.ot_id as i64);
+    let mut ot_buf = [0u8; pokered_core::battle::state::NAME_TEXT_BUF];
+    let ot_name = pokered_core::battle::state::decode_name(&mon.ot_name, &mut ot_buf);
+    ctx.set("ot", ot_name);
+    // Visibility keys the layout uses to pick the right-column arrangement:
+    // CJK glyphs are taller than one tile row, so the zh variant cannot stack
+    // values under labels the way the Latin layout does.
+    ctx.set("is_zh", is_zh);
+    ctx.set("is_en", !is_zh);
     ctx.set("__lang", v2::lang_code(lang));
 
     v2::render_screen(&layout, &ctx, ui.painter());
+
+    // zh page-1 numbers bypass the v2 tile path: it advances one full 8 px
+    // tile per character, so tile-snapped `align = "right"` leaves CJK type
+    // names, the 5-digit ID and the OT name with ragged right edges. The
+    // painter's pixel path gives them all one flush edge (same technique as
+    // the CONTINUE box in menus/main.rs).
+    if is_zh {
+        let rows: [(u32, u32, String); 8] = [
+            (9, ZH_STATS_RIGHT_PX, mon.attack.to_string()),
+            (11, ZH_STATS_RIGHT_PX, mon.defense.to_string()),
+            (13, ZH_STATS_RIGHT_PX, mon.speed.to_string()),
+            (15, ZH_STATS_RIGHT_PX, mon.special.to_string()),
+            (9, ZH_RIGHT_COL_RIGHT_PX, type1_name.to_string()),
+            (11, ZH_RIGHT_COL_RIGHT_PX, type2_name.to_string()),
+            (13, ZH_RIGHT_COL_RIGHT_PX, format!("{:05}", mon.ot_id)),
+            (15, ZH_RIGHT_COL_RIGHT_PX, ot_name.to_string()),
+        ];
+        draw_values_flush_right(ui.painter(), &rows);
+    }
+}
+
+/// zh page-1 right-alignment targets (ink right edge in px): the left stats
+/// box's border tile starts at px 72, and the open right column ends one
+/// tile short of the screen edge at px 152.
+pub const ZH_STATS_RIGHT_PX: u32 = 74;
+pub const ZH_RIGHT_COL_RIGHT_PX: u32 = 152;
+
+/// Draws each `(tile row, right-edge px, text)` value through the painter's
+/// pixel path so its ink ends exactly at `right_px`. Public for the
+/// alignment regression test.
+pub fn draw_values_flush_right<P: Painter>(painter: &mut P, rows: &[(u32, u32, String)]) {
+    for (ty, right_px, text) in rows {
+        let px = right_px.saturating_sub(painter.measure_text_px(text));
+        painter.draw_text_px(px, ty * 8, text, InkColor::Black.into());
+    }
 }
 
 fn draw_page2<P: Painter>(
@@ -110,8 +154,11 @@ fn draw_page2<P: Painter>(
     // ── Moves box ──────────────────────────────────────────────────
     ui.text_box(layout.box_0.rect, layout.box_0.color, true, |frame| {
         for slot in 0..4 {
-            let name_row = (slot * 2 + 1) as u32;
-            let pp_row = (slot * 2 + 2) as u32;
+            // Each move takes two interior rows — name on top, PP below —
+            // filling the box's 8 interior rows exactly. (One row lower and
+            // the last PP line would sit on the bottom border.)
+            let name_row = (slot * 2) as u32;
+            let pp_row = (slot * 2 + 1) as u32;
             let move_id = mon.moves[slot];
             if move_id == MoveId::None {
                 frame.label(1, name_row, "-", InkColor::DarkGray);
