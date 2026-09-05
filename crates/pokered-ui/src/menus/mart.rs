@@ -60,12 +60,15 @@ pub fn draw_buy_items_with_money<P: Painter>(
     lang: Lang,
     render_data: &dyn RenderData<Move = MoveId, Item = ItemId, Species = Species>,
 ) {
-    ui.clear(InkColor::White);
+    // No `ui.clear` — the mart draws over the live overworld map (see the
+    // GameScreen::Shop dispatch in pokered-app's game.rs).
     let lb = &layout.list_box;
     ui.text_box(lb.rect, lb.color, true, |frame| {
         for (i, item_id) in items.iter().skip(scroll_offset).enumerate() {
             let row = 1 + (i as u32 * 2);
-            if row >= lb.rect.th.saturating_sub(1) {
+            // Interior rows run 0..=th-3; item rows are odd, so the last
+            // visible row is th-3 (th-1 would let a row land on the border).
+            if row >= lb.rect.th.saturating_sub(2) {
                 break;
             }
             if let Some(data) = get_item_data(*item_id) {
@@ -100,10 +103,11 @@ pub fn draw_sell_items_with_money<P: Painter>(
     lang: Lang,
     render_data: &dyn RenderData<Move = MoveId, Item = ItemId, Species = Species>,
 ) {
-    ui.clear(InkColor::White);
+    // No `ui.clear` — the mart draws over the live overworld map (see the
+    // GameScreen::Shop dispatch in pokered-app's game.rs).
     let lb = &layout.list_box;
     ui.text_box(lb.rect, lb.color, true, |frame| {
-        let max_row = lb.rect.th.saturating_sub(1);
+        let max_row = lb.rect.th.saturating_sub(2);
         for (i, (item_id, qty)) in owned_items.iter().skip(scroll_offset).enumerate() {
             let row = 1 + (i as u32 * 2);
             if row >= max_row {
@@ -175,7 +179,10 @@ pub fn draw_quantity<P: Painter>(
 
 pub fn draw_confirm<P: Painter>(lang: Lang,message: &str, selected: ConfirmChoice, layout: &MartConfirmLayout, ui: &mut Ui<P>) {
     let is_zh = lang == Lang::Zh;
-    ui.text_box(layout.message_region.rect, layout.message_region.color, false, |frame| {
+    // Bordered message box: over the live-map backdrop a borderless region
+    // reads as stray glyphs floating on the scene (the original prints this
+    // in a standard framed textbox at the top of the screen).
+    ui.text_box(layout.message_region.rect, layout.message_region.color, true, |frame| {
         for (i, line) in message.lines().enumerate() {
             frame.label(1, (i as u32) * 2, line, InkColor::Black);
         }

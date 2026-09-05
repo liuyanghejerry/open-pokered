@@ -160,6 +160,13 @@ pub fn draw_stats_screen(
 pub fn draw_mart(state: &MartState, player_money: u32, bag_items: &[(pokered_data::items::ItemId, u32)], fb: &mut FrameBuffer, lang: Lang) {
     let mut painter = FrameBufferPainter::new(fb).with_lang(lang);
     let mut ui = Ui::new(&mut painter);
+    // The buy/sell list boxes show 5 entries at the 2-row CJK pitch
+    // (interior rows 1/3/5/7/9 of a 12-tall box). The core tracks a bare
+    // cursor, so window the scroll offset here to keep it on-screen.
+    const LIST_VISIBLE: usize = 5;
+    let list_scroll = |cursor: usize, count: usize| -> usize {
+        cursor.saturating_sub(LIST_VISIBLE - 1).min(count.saturating_sub(LIST_VISIBLE))
+    };
     match &state.phase {
         MartPhase::MainMenu { cursor } => {
             menus::mart::draw_main_with_money(cursor.position(), player_money, &MART_MAIN_MENU_LAYOUT, &mut ui, lang);
@@ -169,7 +176,7 @@ pub fn draw_mart(state: &MartState, player_money: u32, bag_items: &[(pokered_dat
                 menus::mart::draw_buy_items_with_money(
                     state.inventory.items(),
                     *cursor,
-                    0,
+                    list_scroll(*cursor, state.inventory.items().len()),
                     player_money,
                     &pokered_data::ui_layout::schema::MART_BUY_ITEMS_WITH_MONEY_LAYOUT,
                     &mut ui,
@@ -219,10 +226,12 @@ pub fn draw_mart(state: &MartState, player_money: u32, bag_items: &[(pokered_dat
         },
         MartPhase::Sell(ss) => match ss {
             SellMenuState::SelectItem { cursor } => {
+                // CANCEL is the entry after the last bag item.
+                let entries = bag_items.len() + 1;
                 menus::mart::draw_sell_items_with_money(
                     bag_items,
                     *cursor,
-                    0,
+                    list_scroll(*cursor, entries),
                     player_money,
                     &pokered_data::ui_layout::schema::MART_SELL_ITEMS_WITH_MONEY_LAYOUT,
                     &mut ui,
