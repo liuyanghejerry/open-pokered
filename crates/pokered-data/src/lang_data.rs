@@ -399,6 +399,7 @@ pub fn ui_label<'a>(key: &'a str, is_zh: bool) -> &'a str {
         "SEE YA!" => "再见！",
         "LOG OFF" => "退出登录",
         "STATS" => "状态",
+        "SWITCH" => "交换",
         "WITHDRAW #MON" => "取出宝可梦",
         "DEPOSIT #MON" => "存放宝可梦",
         "RELEASE #MON" => "放生宝可梦",

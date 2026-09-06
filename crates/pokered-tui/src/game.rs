@@ -837,6 +837,9 @@ impl PokemonGame {
                 self.main_menu = MainMenuState::new(self.state.save_summary.clone());
             }
             GameScreen::OakSpeech => {
+                // NEW GAME starts a fresh in-memory save before choosing a starter.
+                // Keep the disk save/summary for Continue and overwrite confirmation.
+                self.save_data = SaveData::new();
                 self.oak_speech = OakSpeechState::new();
                 if let Some(ref audio) = self.audio {
                     audio.stop_all();
@@ -3450,6 +3453,17 @@ mod tests {
         let mut input = InputState::new();
         input.press(button);
         input
+    }
+
+    #[test]
+    fn new_game_clears_loaded_party() {
+        let mut game = game_at_overworld();
+        let mon = pokered_core::pokemon::stats::create_pokemon(
+            pokered_data::species::Species::Bulbasaur, 7, [0x9a, 0x78],
+        ).unwrap();
+        game.save_data.party.add(mon).unwrap();
+        game.handle_transition(GameScreen::OakSpeech);
+        assert!(game.save_data.party.is_empty());
     }
 
     #[test]

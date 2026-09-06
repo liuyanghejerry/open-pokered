@@ -1565,6 +1565,9 @@ impl PokemonGame {
                 self.main_menu = MainMenuState::new(self.state.save_summary.clone());
             }
             GameScreen::OakSpeech => {
+                // NEW GAME starts a fresh in-memory save before choosing a starter.
+                // Keep the disk save/summary for Continue and overwrite confirmation.
+                self.save_data = SaveData::new();
                 self.oak_speech = OakSpeechState::new();
                 if let Some(ref audio) = self.audio {
                     audio.stop_all();

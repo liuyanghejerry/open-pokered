@@ -48,14 +48,14 @@
         {
           "tx": 0,
           "base_ty": 0,
-          "row_step": 2,
+          "row_step": 3,
           "glyph": "\u25b6",
           "color": "Black"
         },
         {
           "tx": 0,
           "base_ty": 0,
-          "row_step": 2,
+          "row_step": 3,
           "glyph": "\u25c6",
           "color": "DarkGray"
         }
@@ -69,19 +69,25 @@
         },
         "level": {
           "parent": "screen",
-          "tx": 14,
+          "tx": 15,
           "ty": 0,
           "color": "Black"
         },
         "status": {
           "parent": "screen",
-          "tx": 17,
+          "tx": 12,
           "ty": 0,
           "color": "Black"
         },
         "hp_value": {
           "parent": "screen",
-          "tx": 14,
+          "tx": 13,
+          "ty": 1,
+          "color": "Black"
+        },
+        "hp_bar": {
+          "parent": "screen",
+          "tx": 3,
           "ty": 1,
           "color": "Black"
         }
@@ -91,7 +97,7 @@
       "dynamic_labels": {
         "hp_value": {
           "parent": "screen",
-          "tx": 14,
+          "tx": 13,
           "ty": 1,
           "color": "Black"
         }
@@ -104,8 +110,8 @@
           "rect": {
             "tx": 11,
             "ty": 11,
-            "tw": 7,
-            "th": 5
+            "tw": 9,
+            "th": 7
           },
           "color": "Black"
         }

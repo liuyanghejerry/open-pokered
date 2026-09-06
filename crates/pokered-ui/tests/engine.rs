@@ -7,6 +7,7 @@ enum Op {
     Text(TilePos, String, Rgba),
     Glyph(TilePos, char, Rgba),
     PixelRect(u32, u32, u32, u32, Rgba),
+    PixelText(u32, u32, String, Rgba),
 }
 
 #[derive(Default)]
@@ -23,6 +24,12 @@ impl Painter for Recorder {
     }
     fn draw_text(&mut self, pos: TilePos, text: &str, color: Rgba) {
         self.ops.push(Op::Text(pos, text.to_string(), color));
+    }
+    fn draw_text_px(&mut self, px: u32, py: u32, text: &str, color: Rgba) {
+        self.ops.push(Op::PixelText(px, py, text.into(), color));
+    }
+    fn measure_text_px(&self, text: &str) -> u32 {
+        pokered_renderer::embedded_font::measure_text(text)
     }
     fn draw_glyph(&mut self, pos: TilePos, glyph: char, color: Rgba) {
         self.ops.push(Op::Glyph(pos, glyph, color));
@@ -108,4 +115,74 @@ fn pixel_rect_offsets_from_frame_origin_in_pixels() {
         _ => None,
     }).collect();
     assert_eq!(rects, vec![(29, 19, 40, 8, Rgba::INK_DARK_GRAY)]);
+}
+
+#[test]
+fn party_menus_keep_every_option_inside_the_border() {
+    use pokered_core::{game_state::Lang, party_screen::{PartyScreenInput, PartyScreenState}, pokemon::stats::create_pokemon_with_moves};
+    use pokered_data::{moves::MoveId, species::Species, ui_layout::schema::PARTY_DEFAULT_LAYOUT};
+    for lang in [Lang::En, Lang::Zh] {
+        for moves in [
+            [MoveId::Tackle, MoveId::Growl, MoveId::None, MoveId::None],
+            [MoveId::Cut, MoveId::Surf, MoveId::Strength, MoveId::Teleport],
+            [MoveId::Thunderbolt, MoveId::Doubleslap, MoveId::Solarbeam, MoveId::QuickAttack],
+        ] {
+            let mon = create_pokemon_with_moves(Species::Bulbasaur, 7, [0x9a, 0x78], moves).unwrap();
+            for forget in [false, true] {
+                let mut state = if forget {
+                    PartyScreenState::new_for_move_choice(vec![mon.clone()], 0)
+                } else {
+                    let mut state = PartyScreenState::new(vec![mon.clone()]);
+                    state.update_frame(PartyScreenInput { a: true, ..PartyScreenInput::none() });
+                    state
+                };
+                // Exercise every cursor position, including the final CANCEL.
+                let count = if forget { state.selected_known_moves().len() + 1 } else { state.selected_field_moves().len() + 3 };
+                for _ in 0..count {
+                    let mut rec = Recorder::default();
+                    pokered_ui::menus::party::draw(&state, &PARTY_DEFAULT_LAYOUT, &mut Ui::new(&mut rec), lang);
+                    let start = rec.ops.iter().rposition(|op| matches!(op, Op::Box(..))).unwrap();
+                    let Op::Box(rect, _) = rec.ops[start] else { unreachable!() };
+                    assert!(rect.tx + rect.tw <= 20 && rect.ty + rect.th <= 18, "{rect:?}");
+                    for op in &rec.ops[start + 1..] {
+                        let (pos, width) = match op {
+                            Op::Text(pos, text, _) => (pos, text.chars().count() as u32),
+                            Op::Glyph(pos, _, _) => (pos, 1),
+                            _ => continue,
+                        };
+                        assert!(pos.tx > rect.tx && pos.tx + width <= rect.tx + rect.tw - 1, "{op:?} outside {rect:?}");
+                        assert!(pos.ty > rect.ty && pos.ty < rect.ty + rect.th - 1, "{op:?} outside {rect:?}");
+                    }
+                    state.update_frame(PartyScreenInput { down: true, ..PartyScreenInput::none() });
+                }
+            }
+        }
+    }
+}
+
+#[test]
+fn full_party_numbers_and_status_have_room_for_tall_glyphs() {
+    use pokered_core::{battle::state::StatusCondition, game_state::Lang,
+        party_screen::PartyScreenState, pokemon::stats::create_pokemon};
+    use pokered_data::{species::Species, ui_layout::schema::PARTY_DEFAULT_LAYOUT};
+    let mut mon = create_pokemon(Species::Chansey, 100, [0xff, 0xff]).unwrap();
+    mon.status = StatusCondition::Poison;
+    let state = PartyScreenState::new(vec![mon; 6]);
+    let mut rec = Recorder::default();
+    pokered_ui::menus::party::draw(&state, &PARTY_DEFAULT_LAYOUT, &mut Ui::new(&mut rec), Lang::En);
+    let labels: Vec<_> = rec.ops.iter().filter_map(|op| match op {
+        Op::PixelText(x, y, text, _) => Some((*x, *y, text)),
+        _ => None,
+    }).collect();
+    assert_eq!(labels.len(), 24);
+    for (i, (x, y, text)) in labels.iter().enumerate() {
+        let right = x + pokered_renderer::embedded_font::measure_text(text);
+        assert!(right <= 152 && y + 10 <= 144, "{text} outside screen");
+        if text.starts_with("Lv") || text.contains('/') { assert_eq!(right, 152); }
+        for (other_x, other_y, other) in &labels[i + 1..] {
+            let other_right = other_x + pokered_renderer::embedded_font::measure_text(other);
+            assert!(right <= *other_x || other_right <= *x || y + 10 <= *other_y || other_y + 10 <= *y,
+                "{text} overlaps {other}");
+        }
+    }
 }
