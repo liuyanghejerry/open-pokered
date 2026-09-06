@@ -573,13 +573,13 @@ fn party_menu_single_pokemon_full_hp_no_status() {
     assert_eq!(collect_glyphs(&rec.ops), vec![(0, 0, '▶')]);
 
     let texts = collect_texts(&rec.ops);
-    // Name at (4,0), level marker at (14,0), no status code.
+    // Name at (4,0), level right-aligned with an 8px screen margin.
     // HP label ("HP:") moved to app layer; UI layer only renders the number.
-    // HP numeric readout at column 14.
+    // The recorder snaps pixel positions to tiles (7 characters → column 12).
     assert!(texts.iter().any(|(tx, ty, _)| *tx == 4 && *ty == 0), "name missing at (4,0): {:?}", texts);
-    assert!(texts.contains(&(14, 0, ":L36".into())));
-    let hp_text = texts.iter().find(|(tx, ty, _)| *tx == 14 && *ty == 1);
-    assert!(hp_text.is_some(), "HP numeric readout must be at tile column 14, got texts: {:?}", texts);
+    assert!(texts.contains(&(15, 0, "Lv36".into())));
+    let hp_text = texts.iter().find(|(tx, ty, _)| *tx == 12 && *ty == 1);
+    assert!(hp_text.is_some(), "HP numeric readout must be at tile column 12, got texts: {:?}", texts);
 
     // No pixel rects — HP bar is drawn at app layer.
     assert_eq!(collect_pixel_rects(&rec.ops).len(), 0);
@@ -595,9 +595,9 @@ fn party_menu_zero_hp_skips_filled_rect() {
     // No pixel rects — HP bar is drawn at app layer.
     assert_eq!(collect_pixel_rects(&rec.ops).len(), 0);
 
-    // Status code SLP is rendered at column 17.
+    // Status code SLP is rendered at column 12.
     let texts = collect_texts(&rec.ops);
-    assert!(texts.contains(&(17, 0, "SLP".into())));
+    assert!(texts.contains(&(12, 0, "SLP".into())));
 }
 
 #[test]
@@ -616,8 +616,8 @@ fn party_menu_status_codes_map_correctly() {
         menus::party::draw(&state, &PARTY_DEFAULT_LAYOUT, &mut Ui::new(&mut rec), Lang::default());
         let texts = collect_texts(&rec.ops);
         assert!(
-            texts.contains(&(17, 0, expected_code.into())),
-            "status {:?} should render code {:?} at (17, 0), got texts: {:?}",
+            texts.contains(&(12, 0, expected_code.into())),
+            "status {:?} should render code {:?} at (12, 0), got texts: {:?}",
             status, expected_code, texts
         );
     }
@@ -640,8 +640,8 @@ fn party_menu_cursor_follows_selection() {
 
     let mut rec = Recorder::default();
     menus::party::draw(&state, &PARTY_DEFAULT_LAYOUT, &mut Ui::new(&mut rec), Lang::default());
-    // Cursor on row 2 (entry index 1, two tile rows per entry).
-    assert_eq!(collect_glyphs(&rec.ops), vec![(0, 2, '▶')]);
+    // Cursor on row 3 (entry index 1, three tile rows per entry).
+    assert_eq!(collect_glyphs(&rec.ops), vec![(0, 3, '▶')]);
 }
 
 use pokered_core::naming_screen::{NamingInput, NamingScreenState, NamingScreenType};

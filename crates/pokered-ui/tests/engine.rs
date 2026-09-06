@@ -7,6 +7,7 @@ enum Op {
     Text(TilePos, String, Rgba),
     Glyph(TilePos, char, Rgba),
     PixelRect(u32, u32, u32, u32, Rgba),
+    PixelText(u32, u32, String, Rgba),
 }
 
 #[derive(Default)]
@@ -23,6 +24,12 @@ impl Painter for Recorder {
     }
     fn draw_text(&mut self, pos: TilePos, text: &str, color: Rgba) {
         self.ops.push(Op::Text(pos, text.to_string(), color));
+    }
+    fn draw_text_px(&mut self, px: u32, py: u32, text: &str, color: Rgba) {
+        self.ops.push(Op::PixelText(px, py, text.into(), color));
+    }
+    fn measure_text_px(&self, text: &str) -> u32 {
+        pokered_renderer::embedded_font::measure_text(text)
     }
     fn draw_glyph(&mut self, pos: TilePos, glyph: char, color: Rgba) {
         self.ops.push(Op::Glyph(pos, glyph, color));
@@ -149,6 +156,33 @@ fn party_menus_keep_every_option_inside_the_border() {
                     state.update_frame(PartyScreenInput { down: true, ..PartyScreenInput::none() });
                 }
             }
+        }
+    }
+}
+
+#[test]
+fn full_party_numbers_and_status_have_room_for_tall_glyphs() {
+    use pokered_core::{battle::state::StatusCondition, game_state::Lang,
+        party_screen::PartyScreenState, pokemon::stats::create_pokemon};
+    use pokered_data::{species::Species, ui_layout::schema::PARTY_DEFAULT_LAYOUT};
+    let mut mon = create_pokemon(Species::Chansey, 100, [0xff, 0xff]).unwrap();
+    mon.status = StatusCondition::Poison;
+    let state = PartyScreenState::new(vec![mon; 6]);
+    let mut rec = Recorder::default();
+    pokered_ui::menus::party::draw(&state, &PARTY_DEFAULT_LAYOUT, &mut Ui::new(&mut rec), Lang::En);
+    let labels: Vec<_> = rec.ops.iter().filter_map(|op| match op {
+        Op::PixelText(x, y, text, _) => Some((*x, *y, text)),
+        _ => None,
+    }).collect();
+    assert_eq!(labels.len(), 24);
+    for (i, (x, y, text)) in labels.iter().enumerate() {
+        let right = x + pokered_renderer::embedded_font::measure_text(text);
+        assert!(right <= 152 && y + 10 <= 144, "{text} outside screen");
+        if text.starts_with("Lv") || text.contains('/') { assert_eq!(right, 152); }
+        for (other_x, other_y, other) in &labels[i + 1..] {
+            let other_right = other_x + pokered_renderer::embedded_font::measure_text(other);
+            assert!(right <= *other_x || other_right <= *x || y + 10 <= *other_y || other_y + 10 <= *y,
+                "{text} overlaps {other}");
         }
     }
 }

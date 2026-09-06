@@ -30,15 +30,37 @@ fn main() {
         create_pokemon(Species::Bulbasaur, 7, [0x9a, 0x78]).unwrap(),
         create_pokemon(Species::Charmander, 5, [0x9a, 0x78]).unwrap(),
     ];
+    let mut full_party = vec![];
+    for species in [
+        Species::Charizard,
+        Species::Blastoise,
+        Species::Venusaur,
+        Species::Pikachu,
+        Species::Snorlax,
+        Species::Chansey,
+    ] {
+        full_party.push(create_pokemon(species, 100, [0xff, 0xff]).unwrap());
+    }
+    full_party[0].status = pokered_core::battle::state::StatusCondition::Poison;
+    full_party[1].hp = 9;
+    full_party[2].hp = 0;
     for (lang, name) in [(Lang::En, "en"), (Lang::Zh, "zh")] {
-        let mut state = PartyScreenState::new(party.clone());
-        state.update_frame(PartyScreenInput {
-            a: true,
-            ..PartyScreenInput::none()
-        });
-        let mut fb = FrameBuffer::new(RenderConfig::new(160, 144), Rgba::WHITE);
-        draw_party_screen(&state, game.resources.as_mut(), 10, &mut fb, lang);
-        fb.save_png(&out.join(format!("party-menu-{name}.png")))
-            .unwrap();
+        for (label, members, action) in [
+            ("menu", &party, true),
+            ("full", &full_party, false),
+            ("full-menu", &full_party, true),
+        ] {
+            let mut state = PartyScreenState::new(members.clone());
+            if action {
+                state.update_frame(PartyScreenInput {
+                    a: true,
+                    ..PartyScreenInput::none()
+                });
+            }
+            let mut fb = FrameBuffer::new(RenderConfig::new(160, 144), Rgba::WHITE);
+            draw_party_screen(&state, game.resources.as_mut(), 10, &mut fb, lang);
+            fb.save_png(&out.join(format!("party-{label}-{name}.png")))
+                .unwrap();
+        }
     }
 }

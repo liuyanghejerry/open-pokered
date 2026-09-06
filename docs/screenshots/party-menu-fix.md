@@ -18,3 +18,21 @@ cargo run -p pokered-app --example party_menu_capture -- /tmp/party-menu-capture
 The frame now includes all three rows and the full English labels. Menus with
 field moves and move-forgetting options also reserve space for the longest label,
 the cursor, and both borders. Chinese SWITCH is translated as 交换.
+
+## Level and HP spacing
+
+Entries now occupy 24px each (six entries fit the 144px screen). The name,
+status and level share the header; HP uses a second baseline 12px below it,
+leaving space for Fusion Pixel's taller glyphs. Numeric values align to the
+same right edge using measured pixel widths, with an 8px screen margin.
+Icons and HP bars follow the same row spacing, and menus are composited last.
+
+The full-party fixture exercises level 100, three-digit HP, low/zero HP,
+and poison. Its before capture uses `903ccd1`, whose list layout is the same
+as master at `a952ebf`; the two-member before captures above remain unchanged.
+
+| Before | After |
+| --- | --- |
+| ![前](party-full-en-before.png) | ![后](party-full-en-after.png) |
+
+![Full party with action menu](party-full-menu-en-after.png)

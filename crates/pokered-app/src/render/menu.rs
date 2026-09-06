@@ -65,49 +65,61 @@ pub fn draw_party_screen(
     {
         let mut painter = FrameBufferPainter::new(fb).with_lang(lang);
         let mut ui = Ui::new(&mut painter);
-        menus::party::draw(state, &PARTY_DEFAULT_LAYOUT, &mut ui, lang);
+        menus::party::draw_entries(state, &PARTY_DEFAULT_LAYOUT, &mut ui, lang);
     }
 
-    let Some(rm) = resources else {
-        return;
-    };
+    if let Some(rm) = resources {
+        let cursor = state.cursor();
+        const ICON_X_PX: u32 = 8;
+        let layout = &pokered_data::ui_layout::schema::PARTY_ENTRY_LAYOUT;
+        let row_height = layout.cursors[0].row_step * TILE_SIZE;
+        let hp_bar = layout
+            .dynamic_labels
+            .iter()
+            .find(|(key, _)| *key == "hp_bar")
+            .map(|(_, label)| label)
+            .expect("party layout has an HP bar anchor");
 
-    let cursor = state.cursor();
-    const ICON_X_PX: u32 = 8;
-    const HP_BAR_X_PX: u32 = 32;
-
-    for (i, pokemon) in state.party().iter().enumerate() {
-        let kind = icon_for_species(pokemon.species);
-        let frame = if i == cursor {
-            IconFrame::from_counter(frame_counter, 16)
-        } else {
-            IconFrame::Frame1
-        };
-        match load_mon_icon_tiles(rm, kind, frame) {
-            Ok(tiles) => {
-                let y = (i as u32) * 16;
-                draw_mon_icon(fb, tiles, ICON_X_PX, y, &GRAYSCALE_SPRITE_PALETTE);
+        for (i, pokemon) in state.party().iter().enumerate() {
+            let kind = icon_for_species(pokemon.species);
+            let frame = if i == cursor {
+                IconFrame::from_counter(frame_counter, 16)
+            } else {
+                IconFrame::Frame1
+            };
+            match load_mon_icon_tiles(rm, kind, frame) {
+                Ok(tiles) => {
+                    let y = (i as u32) * row_height;
+                    draw_mon_icon(fb, tiles, ICON_X_PX, y, &GRAYSCALE_SPRITE_PALETTE);
+                }
+                Err(e) => {
+                    tracing::warn!(
+                        "party screen: failed to load icon for {:?}: {}",
+                        pokemon.species,
+                        e
+                    );
+                }
             }
-            Err(e) => {
+
+            let hp_bar_y = (i as u32) * row_height + hp_bar.ty * TILE_SIZE + 4;
+            if let Err(e) = draw_party_hp_bar(
+                fb,
+                rm,
+                hp_bar.tx * TILE_SIZE,
+                hp_bar_y,
+                pokemon.hp,
+                pokemon.max_hp,
+            ) {
                 tracing::warn!(
-                    "party screen: failed to load icon for {:?}: {}",
+                    "party screen: failed to draw HP bar for {:?}: {}",
                     pokemon.species,
                     e
                 );
             }
         }
-
-        let hp_bar_y = (i as u32) * 16 + 8;
-        if let Err(e) =
-            draw_party_hp_bar(fb, rm, HP_BAR_X_PX, hp_bar_y, pokemon.hp, pokemon.max_hp)
-        {
-            tracing::warn!(
-                "party screen: failed to draw HP bar for {:?}: {}",
-                pokemon.species,
-                e
-            );
-        }
     }
+    let mut painter = FrameBufferPainter::new(fb).with_lang(lang);
+    menus::party::draw_overlay(state, &mut Ui::new(&mut painter), lang);
 }
 
 /// Draw the stats/details screen. Renders the text UI (name, level, HP

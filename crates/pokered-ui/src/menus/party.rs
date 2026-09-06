@@ -8,7 +8,7 @@ use pokered_data::ui_layout::schema::{
     PARTY_SWITCH_HINT_LAYOUT,
 };
 
-use crate::engine::{Frame, InkColor, Painter, TileRect, Ui};
+use crate::engine::{InkColor, Painter, TileRect, Ui};
 
 const NAME_MAX_LEN: usize = 10;
 
@@ -23,7 +23,23 @@ fn status_code(status: &StatusCondition) -> &'static str {
     }
 }
 
-pub fn draw<P: Painter>(state: &PartyScreenState, layout: &PartyDefaultLayout, ui: &mut Ui<P>, lang: Lang) {
+pub fn draw<P: Painter>(
+    state: &PartyScreenState,
+    layout: &PartyDefaultLayout,
+    ui: &mut Ui<P>,
+    lang: Lang,
+) {
+    draw_entries(state, layout, ui, lang);
+    draw_overlay(state, ui, lang);
+}
+
+/// Draw the list before a frontend composites its party icons and HP bars.
+pub fn draw_entries<P: Painter>(
+    state: &PartyScreenState,
+    layout: &PartyDefaultLayout,
+    ui: &mut Ui<P>,
+    lang: Lang,
+) {
     let is_zh = lang == Lang::Zh;
     ui.clear(InkColor::White);
 
@@ -32,7 +48,12 @@ pub fn draw<P: Painter>(state: &PartyScreenState, layout: &PartyDefaultLayout, u
         let default_region = &layout.region_0;
         ui.text_box(default_region.rect, default_region.color, false, |frame| {
             for label in default_region.labels.iter() {
-                frame.label(label.tx, label.ty, lang_data::ui_label(&label.text, is_zh), label.color);
+                frame.label(
+                    label.tx,
+                    label.ty,
+                    lang_data::ui_label(&label.text, is_zh),
+                    label.color,
+                );
             }
         });
         return;
@@ -48,75 +69,128 @@ pub fn draw<P: Painter>(state: &PartyScreenState, layout: &PartyDefaultLayout, u
         _ => None,
     };
 
-    ui.text_box(layout.region_1.rect, layout.region_1.color, false, |frame| {
-        for (i, pokemon) in party.iter().enumerate() {
-            let row = i as u32 * cursors[0].row_step;
-            let is_cursor = i == cursor;
-            let is_source = source_index == Some(i);
+    ui.text_box(
+        layout.region_1.rect,
+        layout.region_1.color,
+        false,
+        |frame| {
+            for (i, _) in party.iter().enumerate() {
+                let row = i as u32 * cursors[0].row_step;
+                let is_cursor = i == cursor;
+                let is_source = source_index == Some(i);
 
-            if is_cursor {
-                let c = &cursors[0];
-                let cy = c.base_ty + row;
-                frame.cursor_glyph_at(c.tx, cy, c.glyph, c.color);
-            } else if is_source {
-                let c = &cursors[1];
-                let cy = c.base_ty + row;
-                frame.cursor_glyph_at(c.tx, cy, c.glyph, c.color);
+                if is_cursor {
+                    let c = &cursors[0];
+                    let cy = c.base_ty + row;
+                    frame.cursor_glyph_at(c.tx, cy, c.glyph, c.color);
+                } else if is_source {
+                    let c = &cursors[1];
+                    let cy = c.base_ty + row;
+                    frame.cursor_glyph_at(c.tx, cy, c.glyph, c.color);
+                }
             }
+        },
+    );
+    for (i, pokemon) in party.iter().enumerate() {
+        draw_entry(
+            ui.painter(),
+            pokemon,
+            i as u32 * cursors[0].row_step,
+            entry_layout,
+        );
+    }
+}
 
-            draw_entry(frame, pokemon, row, entry_layout);
-        }
-    });
-
-    match phase {
+/// Draw menus last so they cover entries, including frontend-rendered sprites.
+pub fn draw_overlay<P: Painter>(state: &PartyScreenState, ui: &mut Ui<P>, lang: Lang) {
+    let is_zh = lang == Lang::Zh;
+    match state.phase() {
         PartyScreenPhase::Browsing => {}
-        PartyScreenPhase::ActionMenu { cursor: menu_cursor } => {
+        PartyScreenPhase::ActionMenu {
+            cursor: menu_cursor,
+        } => {
             draw_action_menu(ui, state, menu_cursor, is_zh);
         }
         PartyScreenPhase::SwitchTarget { .. } => {
             draw_switch_hint(ui, is_zh);
         }
-        PartyScreenPhase::ChooseMove { cursor: move_cursor } => {
+        PartyScreenPhase::ChooseMove {
+            cursor: move_cursor,
+        } => {
             draw_move_choice(ui, state, move_cursor, is_zh);
         }
     }
 }
 
 fn draw_entry<P: Painter>(
-    frame: &mut Frame<'_, P>,
+    painter: &mut P,
     pokemon: &Pokemon,
     row: u32,
     layout: &pokered_data::ui_layout::schema::PartyEntryLayout,
 ) {
     let dl = layout.dynamic_labels.as_ref();
 
-    let name_dl = dl.iter().find_map(|(k, v)| if k == "name" { Some(v) } else { None });
-    let level_dl = dl.iter().find_map(|(k, v)| if k == "level" { Some(v) } else { None });
-    let status_dl = dl.iter().find_map(|(k, v)| if k == "status" { Some(v) } else { None });
-    let hp_val_dl = dl.iter().find_map(|(k, v)| if k == "hp_value" { Some(v) } else { None });
+    let name_dl = dl
+        .iter()
+        .find_map(|(k, v)| if k == "name" { Some(v) } else { None });
+    let level_dl = dl
+        .iter()
+        .find_map(|(k, v)| if k == "level" { Some(v) } else { None });
+    let status_dl = dl
+        .iter()
+        .find_map(|(k, v)| if k == "status" { Some(v) } else { None });
+    let hp_val_dl = dl
+        .iter()
+        .find_map(|(k, v)| if k == "hp_value" { Some(v) } else { None });
 
     let mut name_buf = [0u8; pokered_core::battle::state::NAME_TEXT_BUF];
     let name = pokemon.display_name(&mut name_buf);
-    let display_name: &str = if name.len() > NAME_MAX_LEN { &name[..NAME_MAX_LEN] } else { &name };
     if let Some(dl) = name_dl {
-        frame.label(dl.tx, dl.ty + row, display_name, dl.color);
+        // Leave a full tile before status/level, including for wide nicknames.
+        let name_right = if pokemon.status != StatusCondition::None {
+            88
+        } else {
+            120
+        };
+        let mut display_name = String::new();
+        for ch in name.chars().take(NAME_MAX_LEN) {
+            let next = format!("{display_name}{ch}");
+            if dl.tx * 8 + painter.measure_text_px(&next) > name_right {
+                break;
+            }
+            display_name.push(ch);
+        }
+        painter.draw_text_px(dl.tx * 8, (dl.ty + row) * 8, &display_name, dl.color.into());
     }
 
-    let lvl_str = format!(":L{}", pokemon.level);
+    let lvl_str = format!("Lv{}", pokemon.level);
     if let Some(dl) = level_dl {
-        frame.label(dl.tx, dl.ty + row, &lvl_str, dl.color);
+        let right = (dl.tx + 5) * 8 - 8;
+        painter.draw_text_px(
+            right - painter.measure_text_px(&lvl_str),
+            (dl.ty + row) * 8,
+            &lvl_str,
+            dl.color.into(),
+        );
     }
 
     let code = status_code(&pokemon.status);
     if !code.is_empty() {
         if let Some(dl) = status_dl {
-            frame.label(dl.tx, dl.ty + row, code, dl.color);
+            painter.draw_text_px(dl.tx * 8, (dl.ty + row) * 8, code, dl.color.into());
         }
     }
 
     let hp_str = format!("{}/{}", pokemon.hp, pokemon.max_hp);
     if let Some(dl) = hp_val_dl {
-        frame.label(dl.tx, dl.ty + row, &hp_str, dl.color);
+        let right = (dl.tx + 7) * 8 - 8;
+        // Fusion Pixel ink is taller than 8px: use 12px between text baselines.
+        painter.draw_text_px(
+            right - painter.measure_text_px(&hp_str),
+            (dl.ty + row) * 8 + 4,
+            &hp_str,
+            dl.color.into(),
+        );
     }
 }
 
