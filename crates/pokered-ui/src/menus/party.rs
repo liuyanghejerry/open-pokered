@@ -152,10 +152,11 @@ fn draw_action_menu<P: Painter>(ui: &mut Ui<P>, state: &PartyScreenState, menu_c
         .min()
         .unwrap_or(0x0C) as u32;
     let base = &PARTY_ACTION_MENU_LAYOUT.box_0.rect;
+    let width = menu_width(&items).max(base.tx + base.tw - (leftmost - 1));
     let rect = TileRect::new(
-        leftmost - 1,
+        base.tx + base.tw - width,
         base.ty - 2 * n,
-        8,
+        width,
         base.th + 2 * n,
     );
     ui.text_box(rect, InkColor::Black, true, |frame| {
@@ -185,13 +186,19 @@ fn draw_move_choice<P: Painter>(ui: &mut Ui<P>, state: &PartyScreenState, move_c
 
     let extra_rows = (items.len() as u32).saturating_sub(3);
     let base = &PARTY_ACTION_MENU_LAYOUT.box_0.rect;
+    let width = menu_width(&items).max(base.tw);
     let rect = TileRect::new(
-        base.tx,
+        base.tx + base.tw - width,
         base.ty - 2 * extra_rows,
-        base.tw,
+        width,
         base.th + 2 * extra_rows,
     );
     ui.text_box(rect, InkColor::Black, true, |frame| {
         frame.menu_list(0, 0, &items, move_cursor as usize, 2, InkColor::Black);
     });
+}
+
+// One tile per glyph, plus the cursor column and both borders.
+fn menu_width(items: &[&str]) -> u32 {
+    items.iter().map(|text| text.chars().count() as u32).max().unwrap_or(0) + 3
 }

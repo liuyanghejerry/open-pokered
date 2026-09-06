@@ -109,3 +109,46 @@ fn pixel_rect_offsets_from_frame_origin_in_pixels() {
     }).collect();
     assert_eq!(rects, vec![(29, 19, 40, 8, Rgba::INK_DARK_GRAY)]);
 }
+
+#[test]
+fn party_menus_keep_every_option_inside_the_border() {
+    use pokered_core::{game_state::Lang, party_screen::{PartyScreenInput, PartyScreenState}, pokemon::stats::create_pokemon_with_moves};
+    use pokered_data::{moves::MoveId, species::Species, ui_layout::schema::PARTY_DEFAULT_LAYOUT};
+    for lang in [Lang::En, Lang::Zh] {
+        for moves in [
+            [MoveId::Tackle, MoveId::Growl, MoveId::None, MoveId::None],
+            [MoveId::Cut, MoveId::Surf, MoveId::Strength, MoveId::Teleport],
+            [MoveId::Thunderbolt, MoveId::Doubleslap, MoveId::Solarbeam, MoveId::QuickAttack],
+        ] {
+            let mon = create_pokemon_with_moves(Species::Bulbasaur, 7, [0x9a, 0x78], moves).unwrap();
+            for forget in [false, true] {
+                let mut state = if forget {
+                    PartyScreenState::new_for_move_choice(vec![mon.clone()], 0)
+                } else {
+                    let mut state = PartyScreenState::new(vec![mon.clone()]);
+                    state.update_frame(PartyScreenInput { a: true, ..PartyScreenInput::none() });
+                    state
+                };
+                // Exercise every cursor position, including the final CANCEL.
+                let count = if forget { state.selected_known_moves().len() + 1 } else { state.selected_field_moves().len() + 3 };
+                for _ in 0..count {
+                    let mut rec = Recorder::default();
+                    pokered_ui::menus::party::draw(&state, &PARTY_DEFAULT_LAYOUT, &mut Ui::new(&mut rec), lang);
+                    let start = rec.ops.iter().rposition(|op| matches!(op, Op::Box(..))).unwrap();
+                    let Op::Box(rect, _) = rec.ops[start] else { unreachable!() };
+                    assert!(rect.tx + rect.tw <= 20 && rect.ty + rect.th <= 18, "{rect:?}");
+                    for op in &rec.ops[start + 1..] {
+                        let (pos, width) = match op {
+                            Op::Text(pos, text, _) => (pos, text.chars().count() as u32),
+                            Op::Glyph(pos, _, _) => (pos, 1),
+                            _ => continue,
+                        };
+                        assert!(pos.tx > rect.tx && pos.tx + width <= rect.tx + rect.tw - 1, "{op:?} outside {rect:?}");
+                        assert!(pos.ty > rect.ty && pos.ty < rect.ty + rect.th - 1, "{op:?} outside {rect:?}");
+                    }
+                    state.update_frame(PartyScreenInput { down: true, ..PartyScreenInput::none() });
+                }
+            }
+        }
+    }
+}
