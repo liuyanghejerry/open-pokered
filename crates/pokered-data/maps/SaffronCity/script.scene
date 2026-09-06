@@ -14,9 +14,30 @@ game_scene SaffronCity {
   // approach tile (18,22), so this unblocks the Silph Co. warp — required before
   // Giovanni can be challenged. (The remaining Rockets clear on beating Silph.)
   @load {
-    @if (getFlag("EVENT_RESCUED_MR_FUJI")) {
+    // Rescue (PokemonTower7F rescue text: HideObject _E / ShowObject _F):
+    // the Silph door guard leaves and the sleeping rocket takes his post.
+    @if (getFlag("EVENT_RESCUED_MR_FUJI") && !getFlag("EVENT_BEAT_SILPH_CO_GIOVANNI")) {
+      hideObjectByName("SAFFRON_CITY_OBJ_14")
+      showObjectByName("SAFFRON_CITY_OBJ_15")
+    }
+    // Liberation (SilphCo11FTeamRocketLeavesScript, after Giovanni):
+    // every rocket clears and the liberated citizens return.
+    @if (getFlag("EVENT_BEAT_SILPH_CO_GIOVANNI")) {
+      hideObjectByName("SAFFRON_CITY_OBJ_1")
+      hideObjectByName("SAFFRON_CITY_OBJ_2")
+      hideObjectByName("SAFFRON_CITY_OBJ_3")
+      hideObjectByName("SAFFRON_CITY_OBJ_4")
+      hideObjectByName("SAFFRON_CITY_OBJ_5")
+      hideObjectByName("SAFFRON_CITY_OBJ_6")
+      hideObjectByName("SAFFRON_CITY_OBJ_7")
       hideObjectByName("SAFFRON_CITY_OBJ_14")
       hideObjectByName("SAFFRON_CITY_OBJ_15")
+      showObjectByName("SAFFRON_CITY_OBJ_8")
+      showObjectByName("SAFFRON_CITY_OBJ_9")
+      showObjectByName("SAFFRON_CITY_OBJ_10")
+      showObjectByName("SAFFRON_CITY_OBJ_11")
+      showObjectByName("SAFFRON_CITY_OBJ_12")
+      showObjectByName("SAFFRON_CITY_OBJ_13")
     }
   }
 

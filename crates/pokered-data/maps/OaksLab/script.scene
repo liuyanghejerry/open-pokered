@@ -441,6 +441,9 @@ game_scene OaksLab {
       setFlag("EVENT_1ST_ROUTE22_RIVAL_BATTLE")
       resetFlag("EVENT_2ND_ROUTE22_RIVAL_BATTLE")
       setFlag("EVENT_ROUTE22_RIVAL_WANTS_BATTLE")
+      // Original: ShowObject TOGGLE_ROUTE_22_RIVAL_1 — the rival waits on
+      // Route 22 for the coord-triggered fight.
+      showObjectByName("ROUTE_22_RIVAL_1")
       // Route22's coordRivalBattle storyline gates on these flags, which is
       // functionally equivalent to the original TOGGLE_ROUTE_22_RIVAL_1 show.
       // TOGGLE_LYING_OLD_MAN hide / TOGGLE_OLD_MAN show (the PalletTown

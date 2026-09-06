@@ -48,7 +48,7 @@ game_scene MrFujisHouse {
 
   // ── MR.FUJI (npc 5) — gives the POKe FLUTE the first time ────────────────
   @storyline("talkMrFuji") {
-    @trigger(map = "MrFujisHouse", npc = 5)
+    @trigger(map = "MrFujisHouse", npc = 5, toggle = "MRFUJISHOUSE_MR_FUJI")
     @if (getFlag("EVENT_GOT_POKE_FLUTE")) {
       @speaker("") {
         @t("MR.FUJI: Has my FLUTE helped\nyou?", "富士老人：我的宝可梦之笛帮到\n你了吗？")
