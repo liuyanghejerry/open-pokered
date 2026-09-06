@@ -43,18 +43,19 @@ fn draw_page1_v2<P: Painter>(
         ui.clear(InkColor::White);
         return;
     };
-    let Some(layout) = v2::parse_screen(json) else {
+    let Some(mut layout) = v2::parse_screen(json) else {
         ui.clear(InkColor::White);
         return;
     };
 
     let is_zh = lang == Lang::Zh;
+    if is_zh {
+        // Chinese glyphs advance 10 px; the legacy 8 px tile path overlaps
+        // adjacent characters. Keep the original tile layout for English.
+        layout.theme.text_mode = dotzuki_renderer::layout_engine::types::TextMode::Proportional;
+    }
     let name = display_name(mon, render_data);
-    let name = if name.len() > NAME_MAX_LEN {
-        name[..NAME_MAX_LEN].to_string()
-    } else {
-        name
-    };
+    let name: String = name.chars().take(NAME_MAX_LEN).collect();
 
     let mut ctx = DataContext::new();
     ctx.set("name", name);
@@ -90,11 +91,8 @@ fn draw_page1_v2<P: Painter>(
 
     v2::render_screen(&layout, &ctx, ui.painter());
 
-    // zh page-1 numbers bypass the v2 tile path: it advances one full 8 px
-    // tile per character, so tile-snapped `align = "right"` leaves CJK type
-    // names, the 5-digit ID and the OT name with ragged right edges. The
-    // painter's pixel path gives them all one flush edge (same technique as
-    // the CONTINUE box in menus/main.rs).
+    // Keep value columns anchored to exact pixel edges independently of
+    // label width, with padding inside the left stats box.
     if is_zh {
         let rows: [(u32, u32, String); 8] = [
             (9, ZH_STATS_RIGHT_PX, mon.attack.to_string()),
@@ -111,9 +109,9 @@ fn draw_page1_v2<P: Painter>(
 }
 
 /// zh page-1 right-alignment targets (ink right edge in px): the left stats
-/// box's border tile starts at px 72, and the open right column ends one
-/// tile short of the screen edge at px 152.
-pub const ZH_STATS_RIGHT_PX: u32 = 74;
+/// box's border tile starts at px 72 (leave 4 px of padding), and the open
+/// right column ends one tile short of the screen edge at px 152.
+pub const ZH_STATS_RIGHT_PX: u32 = 68;
 pub const ZH_RIGHT_COL_RIGHT_PX: u32 = 152;
 
 /// Draws each `(tile row, right-edge px, text)` value through the painter's
@@ -138,8 +136,8 @@ fn draw_page2<P: Painter>(
         }
 
         let name = display_name(mon, render_data);
-        let name_display: &str = if name.len() > NAME_MAX_LEN { &name[..NAME_MAX_LEN] } else { &name };
-        frame.label(9, 1, name_display, InkColor::Black);
+        let name_display: String = name.chars().take(NAME_MAX_LEN).collect();
+        frame.label(9, 1, &name_display, InkColor::Black);
 
         frame.pixel_rect(19 * 8, 3 * 8, 1, 8, InkColor::Black);
 
