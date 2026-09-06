@@ -2067,6 +2067,8 @@ impl PokemonGame {
         // wPlayerID) — the battle reads them from these fields every turn.
         self.battle.player_badges = self.save_data.game_data.obtained_badges;
         self.battle.player_id = self.save_data.game_data.player_id;
+        // BoxFullCannotThrowBall guard context (app-side snapshot).
+        self.battle.player_box_full = self.save_data.current_box.is_full();
         self.battle.map_id = self.overworld.state.current_map as u8;
         // Give the battle a copy of the bag so balls/items are usable in-battle;
         // synced back afterwards so consumed items are deducted from the save.
@@ -2349,6 +2351,8 @@ impl PokemonGame {
         // wPlayerID) — the battle reads them from these fields every turn.
         self.battle.player_badges = self.save_data.game_data.obtained_badges;
         self.battle.player_id = self.save_data.game_data.player_id;
+        // BoxFullCannotThrowBall guard context (app-side snapshot).
+        self.battle.player_box_full = self.save_data.current_box.is_full();
         self.battle.map_id = self.overworld.state.current_map as u8;
         // Copy of the bag so items are usable in-battle (synced back afterwards).
         self.battle.player_bag = self.save_data.game_data.bag.clone();

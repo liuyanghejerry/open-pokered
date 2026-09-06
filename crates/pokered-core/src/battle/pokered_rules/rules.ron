@@ -279,7 +279,8 @@ Ruleset(
                 ]),
             ]),
         // ── CONFUSION side-effect (~10% = 26/256): a damaging move + confuse
-        //    rider (Confusion move / Psybeam / Dizzy Punch).
+        //    rider (Confusion move / Psybeam; Dizzy Punch is pure damage in
+        //    Gen 1 — NO_ADDITIONAL_EFFECT).
         Effect(id: "side.confuse", kind: Move, power: 50, type: "Psychic", accuracy: 100,
             hooks: [
                 Hook(on: "ModifyDamage",  do: [ DealMoveDamage ]),

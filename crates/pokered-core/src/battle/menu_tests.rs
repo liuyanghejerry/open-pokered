@@ -771,17 +771,28 @@ fn item_category_is_usable_in_battle() {
     assert!(ItemCategory::StatusCure.is_usable_in_battle());
     assert!(ItemCategory::Revive.is_usable_in_battle());
     assert!(ItemCategory::BattleStat.is_usable_in_battle());
+    // ItemUsePPRestore (item_effects.asm:1954) has no wIsInBattle guard.
+    assert!(ItemCategory::PpRestore.is_usable_in_battle());
     assert!(ItemCategory::UsableInBattle.is_usable_in_battle());
     assert!(!ItemCategory::NotUsableInBattle.is_usable_in_battle());
+    // PP Up is the one PP item refused in battle (ItemUsePPUp checks
+    // wIsInBattle → ItemUseNotTime).
+    assert_eq!(
+        ItemCategory::from_item(ItemId::PpUp),
+        ItemCategory::NotUsableInBattle
+    );
 }
 
 #[test]
 fn item_category_is_usable_in_trainer_battle() {
-    assert!(!ItemCategory::Ball.is_usable_in_trainer_battle());
+    // Balls are offered in trainer battles too — the throw is blocked by
+    // ThrowBallAtTrainerMon but consumes the ball.
+    assert!(ItemCategory::Ball.is_usable_in_trainer_battle());
     assert!(ItemCategory::Healing.is_usable_in_trainer_battle());
     assert!(ItemCategory::StatusCure.is_usable_in_trainer_battle());
     assert!(ItemCategory::Revive.is_usable_in_trainer_battle());
     assert!(ItemCategory::BattleStat.is_usable_in_trainer_battle());
+    assert!(ItemCategory::PpRestore.is_usable_in_trainer_battle());
     assert!(ItemCategory::UsableInBattle.is_usable_in_trainer_battle());
     assert!(!ItemCategory::NotUsableInBattle.is_usable_in_trainer_battle());
 }

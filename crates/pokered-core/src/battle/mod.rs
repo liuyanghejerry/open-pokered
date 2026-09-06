@@ -27,6 +27,7 @@ use dotzuki_engine::battle::rng::BattleRng as _;
 
 #[cfg(test)]
 mod menu_tests;
+mod item_fidelity_tests;
 #[cfg(test)]
 mod link_battle_driver_tests;
 #[cfg(test)]
@@ -383,6 +384,11 @@ pub enum BattlePhase {
     BagSelect,
     /// Player selects a party member to use item on (for healing/status items).
     ItemTargetSelect { item_id: ItemId },
+    /// `ItemUsePPRestore`'s MoveSelectionMenu (wMoveMenuType $02): picking
+    /// WHICH move of the chosen party member receives the (Max) Ether.
+    /// B returns to the party pick (the original's `.chooseMon` loop).
+    /// Elixirs skip this phase (they restore every move).
+    ItemMoveSelect { item_id: ItemId, party_index: usize },
     /// Displaying sequential text messages (turn results, status, etc.).
     /// Advances on A press. After all messages → next phase.
     ShowingText {
@@ -1008,6 +1014,14 @@ pub struct BattleScreen {
     /// shown as "OLD MAN" and the battle AUTO-PLAYS a scripted, guaranteed catch of the
     /// wild WEEDLE (which is a demo — not kept). Default `false`.
     pub is_old_man: bool,
+    /// The current PC box is FULL (app-side snapshot at battle start). With a
+    /// full party AND a full box, throwing a ball is refused before anything
+    /// is consumed — `BoxFullCannotThrowBall`
+    /// (engine/items/item_effects.asm:127-137, "The #MON BOX is full!").
+    /// Without this flag the port can't know box occupancy (core is I/O-free),
+    /// and a catch on a full box would silently discard the mon. Default
+    /// `false` (= box has room).
+    pub player_box_full: bool,
     /// A fishing-rod encounter (Gen-1 `wMoveMissed = 1`, set by `RodResponse` on a
     /// bite — item_effects.asm:1872-1873): `PrintBeginningBattleText`
     /// (engine/battle/common_text.asm:13-18) shows "The hooked X attacked!"
@@ -1216,6 +1230,7 @@ impl BattleScreen {
             safari: None,
             safari_menu: menu::SafariBattleMenuState::new(0),
             is_old_man: false,
+            player_box_full: false,
             hooked: false,
             poke_flute_sfx_pending: false,
             pending_anim_events: std::collections::VecDeque::new(),
@@ -1312,6 +1327,7 @@ impl BattleScreen {
             safari: None,
             safari_menu: menu::SafariBattleMenuState::new(0),
             is_old_man: false,
+            player_box_full: false,
             hooked: false,
             poke_flute_sfx_pending: false,
             pending_anim_events: std::collections::VecDeque::new(),
@@ -1574,6 +1590,39 @@ impl BattleScreen {
             })
             .collect();
         MoveMenuState::new(slots)
+    }
+
+    /// The ItemUsePPRestore move menu (wMoveMenuType $02): the chosen party
+    /// member's moves — same rows as the FIGHT menu, but no disable markers
+    /// (the item menu doesn't consult wDisabledMove).
+    fn build_move_menu_for_mon(mon: &state::Pokemon) -> MoveMenuState {
+        let slots: Vec<MoveSlot> = mon
+            .moves
+            .iter()
+            .enumerate()
+            .filter(|(_, m)| **m != MoveId::None)
+            .map(|(i, m)| {
+                let max_pp = MoveData::get(*m).map_or(0, |d| d.pp);
+                MoveSlot {
+                    move_id: *m,
+                    current_pp: mon.pp[i],
+                    max_pp,
+                    is_disabled: false,
+                }
+            })
+            .collect();
+        MoveMenuState::new(slots)
+    }
+
+    /// Menu-cursor row → the mon's move-slot index (both skip `None` slots;
+    /// Gen-1 movesets are contiguous, this is just belt-and-braces).
+    fn move_menu_row_to_slot(mon: &state::Pokemon, row: usize) -> Option<usize> {
+        mon.moves
+            .iter()
+            .enumerate()
+            .filter(|(_, m)| **m != MoveId::None)
+            .nth(row)
+            .map(|(i, _)| i)
     }
 
     /// AnyMoveToSelect (core.asm:2715-2762): is any move usable? `false` means
@@ -2009,6 +2058,41 @@ impl BattleScreen {
                     if input.a {
                         self.apply_item_to_pokemon(item_id, self.party_cursor);
                     }
+                }
+                ScreenAction::Continue
+            }
+            // MoveSelectionMenu for (Max) Ether: A applies to the highlighted
+            // move, B loops back to the party pick (`.chooseMon`). Selecting a
+            // 0-PP (or "disabled"-flagged) row is NOT vetoed here — the item
+            // menu has no such guard, and a 0-PP row is exactly what wants
+            // restoring — so all three select results act on that row.
+            BattlePhase::ItemMoveSelect {
+                item_id,
+                party_index,
+            } => {
+                if input.b {
+                    self.move_menu = None;
+                    self.phase = BattlePhase::ItemTargetSelect { item_id };
+                    return ScreenAction::Continue;
+                }
+                let menu_input = MenuInput {
+                    up: input.up,
+                    down: input.down,
+                    a: input.a,
+                    b: input.b,
+                };
+                let selected_row = self.move_menu.as_mut().and_then(|mm| {
+                    mm.update_frame(menu_input)
+                        .map(|r| match r {
+                            MoveMenuResult::Selected(row)
+                            | MoveMenuResult::NoPP(row)
+                            | MoveMenuResult::Disabled(row) => Some(row),
+                            MoveMenuResult::Cancelled => None,
+                        })
+                        .flatten()
+                });
+                if let Some(row) = selected_row {
+                    self.apply_pp_restore(item_id, party_index, Some(row));
                 }
                 ScreenAction::Continue
             }
@@ -2509,8 +2593,24 @@ impl BattleScreen {
         match category {
             ItemCategory::Ball => {
                 if !self.is_wild {
+                    // ThrowBallAtTrainerMon (engine/items/item_effects.asm:
+                    // 2292-2306): the TOSS_ANIM plays, the trainer blocks the
+                    // ball, and the ball IS consumed (jr RemoveUsedItem). No
+                    // "used ITEM!" line — that prints only on the wild-catch
+                    // path (after ItemUseBall's early checks).
+                    self.pending_anim_events.push_back(BattleAnimEvent::Ball {
+                        ball: item_id,
+                        shakes: 0,
+                        // $10: toss-only choreography (same as TOSS_ANIM).
+                        outcome: BallAnimOutcome::Dodged,
+                    });
+                    self.consume_selected_item();
+                    self.bag_menu = None;
                     self.show_text_then(
-                        vec!["No! There's no running from a trainer battle!".to_string()],
+                        vec![
+                            "The trainer\nblocked the BALL!".to_string(),
+                            "Don't be a thief!".to_string(),
+                        ],
                         BattlePhase::PlayerMenu,
                     );
                     return;
@@ -2518,6 +2618,11 @@ impl BattleScreen {
                 self.use_ball(item_id);
             }
             ItemCategory::Healing | ItemCategory::StatusCure | ItemCategory::Revive => {
+                self.phase = BattlePhase::ItemTargetSelect { item_id };
+            }
+            // ItemUsePPRestore (item_effects.asm:1954) enters the same party
+            // pick; (Max) Ether then adds a per-move selection phase.
+            ItemCategory::PpRestore => {
                 self.phase = BattlePhase::ItemTargetSelect { item_id };
             }
             ItemCategory::BattleStat => {
@@ -2545,12 +2650,42 @@ impl BattleScreen {
     }
 
     fn apply_item_to_pokemon(&mut self, item_id: ItemId, pokemon_index: usize) {
-        if pokemon_index == 0 && item_id != ItemId::Revive && item_id != ItemId::MaxRevive {
+        // PP restore works on a fainted mon too (ItemUsePPRestore has no HP
+        // check), so it is exempt from the fainted-active-mon guard.
+        let is_pp_restore = ItemCategory::from_item(item_id) == ItemCategory::PpRestore;
+        if pokemon_index == 0
+            && !is_pp_restore
+            && item_id != ItemId::Revive
+            && item_id != ItemId::MaxRevive
+        {
             let active_hp = self.player_hp;
             if active_hp == 0 && item_id != ItemId::Revive && item_id != ItemId::MaxRevive {
                 self.show_text_then(vec!["No effect!".to_string()], BattlePhase::PlayerMenu);
                 return;
             }
+        }
+
+        // ItemUsePPRestore (item_effects.asm:1954): an Elixir restores every
+        // move directly (`.useElixir` skips MoveSelectionMenu); an Ether asks
+        // "Restore PP of which technique?" and waits on the move menu
+        // (`.chooseMove`; B there loops back to the party pick).
+        if is_pp_restore {
+            match item_id {
+                ItemId::Elixer | ItemId::MaxElixer => {
+                    self.apply_pp_restore(item_id, pokemon_index, None);
+                }
+                _ => {
+                    if let Some(ref bs) = self.battle_state {
+                        let mon = &bs.player.party[pokemon_index];
+                        self.move_menu = Some(Self::build_move_menu_for_mon(mon));
+                        self.phase = BattlePhase::ItemMoveSelect {
+                            item_id,
+                            party_index: pokemon_index,
+                        };
+                    }
+                }
+            }
+            return;
         }
 
         let category = ItemCategory::from_item(item_id);
@@ -2603,6 +2738,43 @@ impl BattleScreen {
         self.sync_display_from_state();
         self.bag_menu = None;
         self.show_text_then(vec![result_msg], BattlePhase::PlayerMenu);
+    }
+
+    /// Apply a PP-restore item chosen in battle (ItemUsePPRestore's
+    /// `.useEther` / `.useElixir` tails, item_effects.asm:2025-2117):
+    /// `move_index = None` for Elixirs (all moves), `Some(row)` for
+    /// (Max) Ether after the move menu. Success prints "PP was restored."
+    /// and consumes the item; a zero-restore prints "It won't have any
+    /// effect." and keeps it (`.noEffect`). Restoring the ACTIVE mon's PP
+    /// is live immediately — `bs.player.party` is the battle's source of
+    /// truth (the original copies party PP into wBattleMonPP instead).
+    fn apply_pp_restore(&mut self, item_id: ItemId, pokemon_index: usize, move_row: Option<usize>) {
+        use crate::items::pp_restore::{use_pp_restore, PpRestoreResult};
+
+        let result = if let Some(ref mut bs) = self.battle_state {
+            let mon = &mut bs.player.party[pokemon_index];
+            let slot = match move_row {
+                Some(row) => Self::move_menu_row_to_slot(mon, row).unwrap_or(0),
+                None => 0, // Elixirs ignore the index
+            };
+            use_pp_restore(mon, item_id, slot)
+        } else {
+            PpRestoreResult::NotApplicable
+        };
+
+        let msg = match result {
+            PpRestoreResult::Restored { .. } | PpRestoreResult::AllRestored { .. } => {
+                self.consume_selected_item();
+                // _PPRestoredText (data/text/text_6.asm:152).
+                "PP was restored.".to_string()
+            }
+            // ItemUseNoEffect — the item is NOT used (`.noEffect`).
+            _ => "It won't have any effect.".to_string(),
+        };
+        self.move_menu = None;
+        self.bag_menu = None;
+        self.sync_display_from_state();
+        self.show_text_then(vec![msg], BattlePhase::PlayerMenu);
     }
 
     fn consume_selected_item(&mut self) {
@@ -2666,6 +2838,20 @@ impl BattleScreen {
         let mut caught = false;
         match action {
             SafariMenuAction::Ball => {
+                // BoxFullCannotThrowBall runs BEFORE the safari branch in
+                // ItemUseBall (item_effects.asm:118-137): a full party + full
+                // box refuses even a Safari Ball.
+                let party_full = self
+                    .battle_state
+                    .as_ref()
+                    .is_some_and(|bs| bs.player.party.len() >= 6);
+                if party_full && self.player_box_full {
+                    self.show_text_then(
+                        vec!["The #MON BOX\nis full! Can't\nuse that item!".to_string()],
+                        BattlePhase::PlayerMenu,
+                    );
+                    return;
+                }
                 // Rand1 rejection-sampled inside throw_ball (the `.loop`).
                 let result = self
                     .safari
@@ -2816,6 +3002,23 @@ impl BattleScreen {
             });
             self.show_text_then(
                 vec![used_msg, "The GHOST is dodging\nyour POKé BALLs!".to_string()],
+                BattlePhase::PlayerMenu,
+            );
+            return;
+        }
+        // BoxFullCannotThrowBall (item_effects.asm:118-137): with a FULL party
+        // AND a full box the throw is refused before anything is consumed
+        // ("The #MON BOX is full! Can't use that item!"). The old-man demo
+        // skips this check in the original — it has no item menu anyway.
+        // Box occupancy is I/O state the core can't read: the app snapshots
+        // it into `player_box_full` at battle start.
+        let party_full = self
+            .battle_state
+            .as_ref()
+            .is_some_and(|bs| bs.player.party.len() >= 6);
+        if party_full && self.player_box_full {
+            self.show_text_then(
+                vec!["The #MON BOX\nis full! Can't\nuse that item!".to_string()],
                 BattlePhase::PlayerMenu,
             );
             return;

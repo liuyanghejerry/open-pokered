@@ -481,7 +481,8 @@ impl BagMenuState {
 /// Used to determine which items are usable during battle.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ItemCategory {
-    /// Poké Balls (can be used in wild battles only).
+    /// Poké Balls. Wild battles throw them; in a trainer battle the throw is
+    /// blocked (`ThrowBallAtTrainerMon`) but the ball IS offered and consumed.
     Ball,
     /// Healing items (Potions, Fresh Water, etc.).
     Healing,
@@ -491,6 +492,10 @@ pub enum ItemCategory {
     Revive,
     /// Battle stat boost items (X Attack, X Defend, etc.).
     BattleStat,
+    /// PP restore items (Ether, Max Ether, Elixir, Max Elixir) — usable in
+    /// battle too: `ItemUsePPRestore` (item_effects.asm:1954) has no
+    /// `wIsInBattle` guard (PP Up is the one refused in battle).
+    PpRestore,
     /// Items usable both in and out of battle.
     UsableInBattle,
     /// Items only usable out of battle (Key items, etc.).
@@ -534,6 +539,10 @@ impl ItemCategory {
 
             ItemId::PokeDoll | ItemId::PokeFlute => ItemCategory::UsableInBattle,
 
+            ItemId::Ether | ItemId::MaxEther | ItemId::Elixer | ItemId::MaxElixer => {
+                ItemCategory::PpRestore
+            }
+
             _ => ItemCategory::NotUsableInBattle,
         }
     }
@@ -546,17 +555,23 @@ impl ItemCategory {
                 | ItemCategory::StatusCure
                 | ItemCategory::Revive
                 | ItemCategory::BattleStat
+                | ItemCategory::PpRestore
                 | ItemCategory::UsableInBattle
         )
     }
 
     pub fn is_usable_in_trainer_battle(self) -> bool {
+        // Balls are listed in trainer battles too: the original's item menu
+        // doesn't filter them — selecting one plays ThrowBallAtTrainerMon
+        // ("The trainer blocked the BALL!", ball consumed).
         matches!(
             self,
-            ItemCategory::Healing
+            ItemCategory::Ball
+                | ItemCategory::Healing
                 | ItemCategory::StatusCure
                 | ItemCategory::Revive
                 | ItemCategory::BattleStat
+                | ItemCategory::PpRestore
                 | ItemCategory::UsableInBattle
         )
     }

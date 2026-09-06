@@ -18,6 +18,8 @@ fn phase_tag(phase: &BattlePhase) -> u8 {
         BattlePhase::Intro { .. } => 1,
         BattlePhase::PlayerMenu => 2,
         BattlePhase::MoveSelect => 3,
+        // Ether's per-move pick renders through the move-menu path (tag 3).
+        BattlePhase::ItemMoveSelect { .. } => 3,
         BattlePhase::BagSelect => 11,
         BattlePhase::ItemTargetSelect { .. } => 12,
         BattlePhase::ShowingText { .. } => 4,

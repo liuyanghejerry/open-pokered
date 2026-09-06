@@ -446,6 +446,8 @@ impl BattleVisualEffects {
             BattlePhase::Intro { .. } => BattlePhaseKind::Intro,
             BattlePhase::PlayerMenu => BattlePhaseKind::PlayerMenu,
             BattlePhase::MoveSelect => BattlePhaseKind::MoveSelect,
+            // Ether's per-move pick reuses the FIGHT move-menu view.
+            BattlePhase::ItemMoveSelect { .. } => BattlePhaseKind::MoveSelect,
             BattlePhase::BagSelect => BattlePhaseKind::BagSelect,
             BattlePhase::ItemTargetSelect { .. } => BattlePhaseKind::ItemTargetSelect,
             BattlePhase::ShowingText { .. } => BattlePhaseKind::ShowingText,
@@ -2164,7 +2166,10 @@ pub fn draw_battle(
                     screen.battle_menu.col(),
                 );
             }
-        } else if matches!(screen.phase, BattlePhase::MoveSelect) {
+        } else if matches!(
+            screen.phase,
+            BattlePhase::MoveSelect | BattlePhase::ItemMoveSelect { .. }
+        ) {
             draw_move_menu(&mut tile_buf, screen);
         } else if matches!(screen.phase, BattlePhase::BagSelect) {
             draw_bag_menu(&mut tile_buf, screen);
@@ -2517,7 +2522,10 @@ pub fn draw_battle(
         // In Gen1 move-select, the TYPE/PP panel overlays the player sprite.
         // Our sprite blit happens after tilemap rendering, so redraw this panel
         // region last to keep it in the foreground.
-        if matches!(screen.phase, BattlePhase::MoveSelect) {
+        if matches!(
+            screen.phase,
+            BattlePhase::MoveSelect | BattlePhase::ItemMoveSelect { .. }
+        ) {
             tile_buf.render_region(fb, &battle_ts, pal, 0, 8, 11, 5);
         }
 

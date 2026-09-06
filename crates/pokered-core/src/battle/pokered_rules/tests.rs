@@ -5075,3 +5075,44 @@ fn haze_cure_narrates_eliminated_text_not_defrost() {
         "no per-stat lines for Haze's stage reset: {joined}"
     );
 }
+
+/// DIZZY_PUNCH is NO_ADDITIONAL_EFFECT in data/moves/moves.asm — pure damage
+/// with NO confusion rider (that would be a Gen-2-ism). All-zero rng would
+/// trigger any 26/256 DamagingHit rider, so this pins the rider's absence
+/// while confirming the damage itself lands.
+#[test]
+fn dizzy_punch_is_pure_damage_no_confusion_rider() {
+    install_canonical();
+    set_active_move(real_move(MoveId::DizzyPunch));
+    let player_mon = Mon::new(Species::Rattata, 120, 100);
+    let enemy_hp = 300u16;
+    let mut state = EngineState::new(
+        vec![engine_battler(&player_mon, MoveId::DizzyPunch)],
+        vec![engine_battler(&Mon::new(Species::Kangaskhan, enemy_hp, 40), MoveId::Tackle)],
+    );
+    let mut effects: Vec<EffectState<PokeredRules>> = Vec::new();
+    let actions = [
+        BattleAction::<PokeredRules>::Fight {
+            move_: MoveId::DizzyPunch,
+        },
+        BattleAction::<PokeredRules>::Nothing,
+    ];
+    let mut rng = ScriptedRng::new(vec![0u8; 64]);
+    let _ = StackDriver::execute_turn_logged(
+        &PokeredRules,
+        &mut state,
+        &mut effects,
+        actions,
+        &mut rng,
+    );
+    assert!(
+        !effects
+            .iter()
+            .any(|e| matches!(e.kind, PokeVolatile::Confused { .. })),
+        "DizzyPunch must not inflict confusion (Gen-1 pure damage)"
+    );
+    assert!(
+        state.opponent_battlers[0].hp < enemy_hp,
+        "DizzyPunch still deals its 70-power damage"
+    );
+}

@@ -1263,6 +1263,8 @@ impl PokemonGame {
         // Badge stat boosts + traded-mon obedience context (wObtainedBadges / wPlayerID).
         self.battle.player_badges = self.save_data.game_data.obtained_badges;
         self.battle.player_id = self.save_data.game_data.player_id;
+        // BoxFullCannotThrowBall guard context (app-side snapshot).
+        self.battle.player_box_full = self.save_data.current_box.is_full();
         // Pokémon Tower ghost handling, mirroring the native app's start_wild_battle:
         // no scope → unidentified uncatchable GHOST; the 6F Marowak WITH the scope
         // gets the SILPH SCOPE unveil intro.
@@ -1388,6 +1390,8 @@ impl PokemonGame {
         // Badge stat boosts + traded-mon obedience context (wObtainedBadges / wPlayerID).
         self.battle.player_badges = self.save_data.game_data.obtained_badges;
         self.battle.player_id = self.save_data.game_data.player_id;
+        // BoxFullCannotThrowBall guard context (app-side snapshot).
+        self.battle.player_box_full = self.save_data.current_box.is_full();
         for mon in &enemy_party {
             self.save_data.game_data.pokedex.set_seen(mon.species);
         }
