@@ -4,7 +4,7 @@ export async function talkNurse() {
   var choice = await game.showChoice(["Yes", "No"]);
   if (choice == 0) {
     await game.showText("OK. We'll need\nyour #MON.");
-    await game.faceNpc("1", "right");
+    await game.faceNpc("1", "left");
     await game.delay(8);
     await game.heal();
     await game.animateHealingMachine();
