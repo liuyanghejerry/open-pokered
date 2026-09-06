@@ -71,10 +71,17 @@ fn draw_ask_prompt<P: Painter>(cursor: YesNoChoice, layout: &SaveAskPromptLayout
         }
     });
 
+    // Chinese choices need two tile rows per line; keep the bottom at row 11.
+    let mut choice_rect = layout.box_1.rect;
+    if is_zh {
+        choice_rect.ty = 5;
+        choice_rect.th = 6;
+    }
+
     // YES/NO box: border + labels + cursor
-    ui.text_box(layout.box_1.rect, layout.box_1.color, true, |frame| {
+    ui.text_box(choice_rect, layout.box_1.color, true, |frame| {
         for label in layout.box_1.labels.iter() {
-            frame.label(label.tx, label.ty, lang_data::ui_label(&label.text, is_zh), label.color);
+            frame.label(label.tx, if is_zh { 1 + label.ty * 2 } else { label.ty }, lang_data::ui_label(&label.text, is_zh), label.color);
         }
 
         // Look up cursor offset from enum_position_map
@@ -88,10 +95,8 @@ fn draw_ask_prompt<P: Painter>(cursor: YesNoChoice, layout: &SaveAskPromptLayout
             .find_map(|(key, val)| if key == cursor_key { Some(*val as u32) } else { None })
             .unwrap_or(0);
 
-        // Cursor is at screen-absolute position (col 15 = box_1 left border edge).
-        // Since frame origin is (16,8) for this bordered box, a frame-relative tx
-        // would be -1 → inexpressible as u32. Use abs_glyph instead.
-        let abs_ty = layout.cursor.base_ty + offset * layout.cursor.row_step;
+        // Keep the cursor in the same row as its translated choice.
+        let abs_ty = if is_zh { 7 + offset * 2 } else { layout.cursor.base_ty + offset * layout.cursor.row_step };
         frame.abs_glyph(layout.cursor.tx, abs_ty, layout.cursor.glyph, layout.cursor.color);
     });
 }

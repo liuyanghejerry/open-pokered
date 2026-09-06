@@ -17,11 +17,8 @@ fn enum_offset(layout: &OptionsDefaultLayout, key: &str) -> u32 {
         .unwrap_or(0)
 }
 
-/// Cursor x-offsets for the zh option labels in `options.gui`. The v1
-/// `enum_position_map` is measured against the EN strings (" FAST  MEDIUM
-/// SLOW" …); the zh strings (" 快  中  慢" …) pack the words tighter, so
-/// reusing the EN offsets lands the ▶ on the wrong option — or past the
-/// last one, looking like a phantom extra position.
+/// Cursor x-offsets for the individually positioned Chinese choices in
+/// `options.gui`. Each cursor sits one tile to the left of its label.
 fn zh_enum_offset(key: &str) -> u32 {
     match key {
         "Medium" => 3,
@@ -78,13 +75,18 @@ pub fn draw<P: Painter>(
     let Some(json) = get_screen_v2_json("options") else {
         return;
     };
-    let Some(layout) = v2::parse_screen(json) else {
+    let Some(mut layout) = v2::parse_screen(json) else {
         return;
     };
 
     // Reuse the v1 cursor coordinates + enum-position map for pixel parity.
     let v1 = &OPTIONS_DEFAULT_LAYOUT;
     let cursors = v1.cursors.as_ref();
+
+    // The Chinese font advances 10 px, wider than the legacy 8 px tile grid.
+    if lang == Lang::Zh {
+        layout.theme.text_mode = dotzuki_renderer::layout_engine::types::TextMode::Proportional;
+    }
 
     let mut ctx = DataContext::new();
 
@@ -109,6 +111,8 @@ pub fn draw<P: Painter>(
     ctx.set("r2_active", state.row == OptionsRow::BattleStyle);
     ctx.set("r3_active", state.row == OptionsRow::Cancel);
     ctx.set("__lang", v2::lang_code(lang));
+    ctx.set("is_zh", lang == Lang::Zh);
+    ctx.set("is_en", lang == Lang::En);
 
     v2::render_screen(&layout, &ctx, ui.painter());
 }

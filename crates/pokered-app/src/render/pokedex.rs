@@ -97,19 +97,20 @@ fn draw_dex_list(state: &PokedexScreenState, is_zh: bool, fb: &mut FrameBuffer) 
 
     // Right column: SEEN/OWN totals (asm prints at hlcoord 16,2-6).
     draw_text(ui_label("SEEN", is_zh), 16 * t, 2 * t, fg, fb);
-    draw_text(&format!("{:3}", state.seen_count()), 16 * t, 3 * t, fg, fb);
+    draw_text(&format!("{:3}", state.seen_count()), 16 * t, 3 * t + if is_zh { 4 } else { 0 }, fg, fb);
     draw_text(ui_label("OWN", is_zh), 16 * t, 5 * t, fg, fb);
-    draw_text(&format!("{:3}", state.owned_count()), 16 * t, 6 * t, fg, fb);
+    draw_text(&format!("{:3}", state.owned_count()), 16 * t, 6 * t + if is_zh { 4 } else { 0 }, fg, fb);
 
     // Side menu items (PokedexMenuItemsText): DATA/CRY/AREA/QUIT at (16,10..13).
+    let row_step = if is_zh { 2 } else { 1 };
     let items = ["DATA", "CRY", "AREA", "QUIT"];
     for (i, item) in items.iter().enumerate() {
-        draw_text(ui_label(item, is_zh), 16 * t, (10 + i) as u32 * t, fg, fb);
+        draw_text(ui_label(item, is_zh), 16 * t, (10 + i * row_step) as u32 * t, fg, fb);
     }
 
     // The side-menu cursor arrow, at (15, 10+item) (wTopMenuItemX=15, Y=10).
     if state.mode() == PokedexScreenMode::SideMenu {
-        draw_text("▶", 15 * t, (10 + state.side_menu_cursor() as u32) * t, fg, fb);
+        draw_text("▶", 15 * t, (10 + state.side_menu_cursor() as u32 * row_step as u32) * t, fg, fb);
     }
 }
 

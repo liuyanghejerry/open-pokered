@@ -10,7 +10,7 @@ use pokered_core::game_state::Lang;
 use pokered_core::pc_screen::{ItemListMode, MonListMode, PcPhase, PcScreen, PC_LIST_VISIBLE_ROWS};
 use pokered_core::save::SaveData;
 use pokered_data::lang_data;
-use pokered_renderer::embedded_font::draw_text;
+use pokered_renderer::embedded_font::{draw_text, measure_text};
 use pokered_renderer::palette::GRAYSCALE_SPRITE_PALETTE;
 use pokered_renderer::resource::ResourceManager;
 use pokered_renderer::{FrameBuffer, Rgba, TILE_SIZE};
@@ -44,20 +44,42 @@ fn mon_row(mon: &Pokemon) -> String {
 /// [`zh_pc_line`] so the English messages produced by `pokered_core::pc_screen`
 /// are translated at display time only.
 fn draw_message(lines: &[String], fb: &mut FrameBuffer, is_zh: bool) {
-    let rows = lines.len().clamp(1, 5) as u32;
-    let bh = rows + 1; // interior tiles: lines at 8px pitch
-    let by = 144 - (bh + 2) * T;
-    draw_text_box(fb, 0, by, 18, bh, FG);
-    for (i, line) in lines.iter().take(5).enumerate() {
-        let shown = if is_zh { zh_pc_line(line) } else { line.clone() };
-        draw_text(&shown, T, by + (1 + i as u32) * T, FG, fb);
+    let shown: Vec<String> = lines.iter().take(5)
+        .flat_map(|line| {
+            let text = if is_zh { zh_pc_line(line) } else { line.clone() };
+            if is_zh { wrap_message(&text) } else { vec![text] }
+        }).collect();
+    let pitch = if is_zh { 12 } else { T };
+    let height = if is_zh {
+        (shown.len().max(1) as u32 * pitch).div_ceil(T)
+    } else { shown.len().max(1) as u32 + 1 };
+    let by = 144u32.saturating_sub((height + 2) * T);
+    draw_text_box(fb, 0, by, 18, height, FG);
+    for (i, line) in shown.iter().enumerate() {
+        draw_text(line, T, by + T + i as u32 * pitch, FG, fb);
     }
+}
+
+// Wrap translated lines by glyph width, including mixed Chinese/Latin names.
+fn wrap_message(text: &str) -> Vec<String> {
+    let mut lines = Vec::new();
+    let mut line = String::new();
+    for ch in text.chars() {
+        let mut next = line.clone();
+        next.push(ch);
+        if !line.is_empty() && measure_text(&next) > 18 * T {
+            lines.push(std::mem::take(&mut line));
+        }
+        line.push(ch);
+    }
+    lines.push(line);
+    lines
 }
 
 /// YES/NO popup on the right side (original: TWO_OPTION_MENU at hlcoord 14,7).
 fn draw_yes_no(selected_yes: bool, fb: &mut FrameBuffer, is_zh: bool) {
     let bx = 14 * T;
-    let by = 7 * T;
+    let by = if is_zh { T } else { 7 * T };
     draw_text_box(fb, bx, by, 4, 4, FG);
     let cy = if selected_yes { 1 } else { 3 };
     draw_text(">", bx + T, by + cy * T, FG, fb);
@@ -75,9 +97,11 @@ fn draw_list(
     rows: &[String],
     cursor: usize,
     scroll: usize,
+    is_zh: bool,
     fb: &mut FrameBuffer,
 ) {
-    let bh = visible as u32 + 1;
+    let pitch = if is_zh { 12 } else { T };
+    let bh = if is_zh { (visible as u32 * pitch).div_ceil(T) } else { visible as u32 + 1 };
     draw_text_box(fb, bx, by, bw, bh, FG);
     for (row, (i, label)) in rows
         .iter()
@@ -86,7 +110,7 @@ fn draw_list(
         .take(visible)
         .enumerate()
     {
-        let y = by + (1 + row as u32) * T;
+        let y = by + T + row as u32 * pitch;
         let marker = if i == cursor { ">" } else { " " };
         draw_text(&format!("{} {}", marker, label), bx + T, y, FG, fb);
     }
@@ -217,7 +241,7 @@ pub fn draw_pc(
             let rows = mon_rows(pc, save, is_zh);
             let cursor = pc.mon_cursor();
             let scroll = follow_scroll(cursor, rows.len(), 8);
-            draw_list(0, 0, 18, 8, &rows, cursor, scroll, fb);
+            draw_list(0, 0, 18, 8, &rows, cursor, scroll, is_zh, fb);
             match pc.phase() {
                 PcPhase::MonAction => {
                     let first = match pc.mon_mode() {
@@ -297,24 +321,22 @@ pub fn draw_pc(
             if !h2.is_empty() {
                 draw_text(h2, T, 3 * T, FG, fb);
             }
-            let bx = 11 * T;
-            draw_text_box(fb, bx, 0, 7, 12, FG);
+            if is_zh {
+                for col in 0..2 {
+                    draw_text_box(fb, col * 10 * T, 4 * T, 8, 12, FG);
+                }
+            } else {
+                draw_text_box(fb, 11 * T, 0, 7, 12, FG);
+            }
             for i in 0..12usize {
-                let y = (1 + i as u32) * T;
+                let (bx, y) = if is_zh {
+                    ((i / 6) as u32 * 10 * T, (5 + (i % 6) as u32 * 2) * T)
+                } else { (11 * T, (1 + i as u32) * T) };
                 let marker = if i == pc.box_cursor() { ">" } else { " " };
-                let name = if is_zh {
-                    format!("盒子{:>2}", i + 1)
-                } else {
-                    format!("BOX{:>2}", i + 1)
-                };
+                let name = if is_zh { format!("盒子{:>2}", i + 1) }
+                    else { format!("BOX{:>2}", i + 1) };
                 draw_text(&format!("{}{}", marker, name), bx + T, y, FG, fb);
-                let non_empty = save
-                    .pc_storage
-                    .get_box(i)
-                    .map(|b| !b.is_empty())
-                    .unwrap_or(false);
-                if non_empty {
-                    // pokeball-ish marker dot at the row's right edge
+                if save.pc_storage.get_box(i).is_ok_and(|b| !b.is_empty()) {
                     for dy in 0..4u32 {
                         for dx in 0..4u32 {
                             fb.set_pixel(bx + 7 * T + 2 + dx, y + 2 + dy, FG);
@@ -334,7 +356,7 @@ pub fn draw_pc(
             let rows = item_rows(pc, save, is_zh);
             let cursor = pc.item_list_cursor();
             let scroll = follow_scroll(cursor, rows.len(), PC_LIST_VISIBLE_ROWS.max(8));
-            draw_list(0, 0, 18, 8, &rows, cursor, scroll, fb);
+            draw_list(0, 0, 18, 8, &rows, cursor, scroll, is_zh, fb);
             match pc.phase() {
                 PcPhase::ItemQuantity => {
                     // "How many?" + the running quantity (players_pc.asm
@@ -342,7 +364,7 @@ pub fn draw_pc(
                     let name = rows.get(cursor).cloned().unwrap_or_default();
                     let prompt = if is_zh { "几个？" } else { "How many?" };
                     draw_message(&[prompt.to_string()], fb, is_zh);
-                    let bx = 13 * T;
+                    let bx = 12 * T;
                     let by = 10 * T;
                     draw_text_box(fb, bx, by, 6, 1, FG);
                     draw_text(&format!("x{:02}", pc.item_qty()), bx + T, by + T, FG, fb);
@@ -445,3 +467,32 @@ fn draw_league_hof(pc: &PcScreen, resources: &mut Option<ResourceManager>, fb: &
 
 // The exact `PC_LINE_ZH` table and `zh_pc_line` moved to `pokered_data::ui_text`
 // (shared with the TUI); imported at the top of this file.
+
+#[cfg(test)]
+mod layout_tests {
+    use super::*;
+    use dotzuki_engine::render_config::RenderConfig;
+
+    #[test]
+    fn translated_message_wrap_preserves_text_and_fits_box() {
+        for text in ["一旦放生，CHARMANDER就永远消失了。可以吗？", "更换宝可梦盒子时，数据会被保存。", ""] {
+            let lines = wrap_message(text);
+            assert_eq!(lines.concat(), text);
+            assert!(lines.iter().all(|line| measure_text(line) <= 144));
+        }
+    }
+
+    #[test]
+    fn chinese_list_leaves_clear_pixels_between_rows() {
+        let mut fb = FrameBuffer::new(RenderConfig::new(160, 144), BG);
+        let rows = vec!["精灵球 x03".into(), "好伤药 x12".into()];
+        draw_list(0, 0, 18, 8, &rows, 0, 0, true, &mut fb);
+        // CJK ink includes the font baseline offset: the second row
+        // begins at y=22, with clear scanlines after the first row.
+        for y in 20..22 {
+            for x in 8..152 {
+                assert_eq!(fb.get_pixel(x, y), Some(BG), "rows touch at {x},{y}");
+            }
+        }
+    }
+}
