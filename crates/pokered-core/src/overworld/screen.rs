@@ -1535,6 +1535,9 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
     /// `wEventFlags` region). Runtime-only extras are left untouched.
     pub fn set_event_flags_bytes(&mut self, bytes: &[u8]) {
         self.unified_flags.load_event_bytes(bytes);
+        // Flags arrived after NPC spawn (save load): re-seed trainer
+        // defeated state for the current map.
+        self.restore_trainer_defeated_flags(self.state.current_map);
     }
 
     /// Set a script flag on BOTH the persistent `unified_flags` and the live
@@ -1544,6 +1547,16 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
     pub fn set_flag_live(&mut self, name: &str, value: bool) {
         self.unified_flags.set_flag(name, value);
         self.script_engine.set_flag(name, value);
+    }
+
+    /// Typed variant of `set_flag_live`: sets an `EventFlag` bit in BOTH
+    /// the persistent `unified_flags` and the live script engine's flag
+    /// store, so a running scene's `getFlag(...)` observes the change
+    /// immediately (e.g. the after-battle talk text of a trainer that was
+    /// just beaten through the sight/talk path).
+    pub fn set_event_flag_live(&mut self, flag: pokered_data::event_flags::EventFlag) {
+        self.unified_flags.set(flag);
+        self.script_engine.set_flag(flag.name(), true);
     }
 
     /// Use a bag item from the overworld ITEM menu. Applies the field effect and
@@ -1917,6 +1930,21 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
         }
     }
 
+    /// Restore trainer `defeated` state from the `EVENT_BEAT_*` trainer
+    /// flags after NPC states were rebuilt (map load / warp / save load).
+    /// The original's `CheckForEngagingTrainers` tests wEventFlags every
+    /// frame; our LOS check reads `npc.defeated`, so it must be seeded
+    /// from the flags whenever NPCs respawn.
+    pub fn restore_trainer_defeated_flags(&mut self, map: MapId) {
+        let headers = pokered_data::trainer_headers::get_trainer_headers(map);
+        crate::overworld::trainer_engine::apply_trainer_defeated_flags(
+            &mut self.npc_states,
+            &self.npc_pokemon_data,
+            headers,
+            &self.unified_flags,
+        );
+    }
+
     pub fn apply_hidden_object_flags(&mut self) {
         use pokered_data::toggleable_objects::{is_object_hidden, toggle_id_to_bit_index};
 
@@ -2133,6 +2161,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                 .map(|md| build_npc_runtime_states(&md.npcs, &self.npc_pokemon_data, &hidden_npc_ids))
                 .unwrap_or_default();
             self.apply_hidden_object_flags();
+            self.restore_trainer_defeated_flags(warp.dest_map);
 
             // PlayerStepOutFromDoor: if the player landed on a door tile,
             // flag it so update_frame will auto-walk one step down.

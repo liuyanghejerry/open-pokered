@@ -1,7 +1,10 @@
 use pokered_data::event_flags::EventFlag;
 use pokered_data::maps::MapId;
+use pokered_data::trainer_headers::TrainerHeaderData;
 
 use super::event_flags::EventFlags;
+use super::npc_movement::NpcRuntimeState;
+use super::PokemonNpcData;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct TrainerHeader {
@@ -123,6 +126,55 @@ pub struct TrainerPosition {
     pub y: u8,
     pub facing_dx: i8,
     pub facing_dy: i8,
+}
+
+// ── Trainer-header ↔ NPC mapping ───────────────────────────────────
+//
+// The original `def_trainers N` writes the map object index into header
+// byte 0 and increments it per entry, so the k-th trainer header belongs
+// to the k-th trainer NPC in object order (verified against every map's
+// object table; the only "gap" is VictoryRoad2F's Moltres header, whose
+// view range is 0 and whose port NPC is intentionally not a trainer).
+
+/// Position of the trainer NPC at `npc_index` within the map's trainer
+/// header table (0-based). `None` if that NPC is not a trainer.
+pub fn trainer_ordinal(pokemon_data: &[PokemonNpcData], npc_index: u8) -> Option<usize> {
+    if !pokemon_data.get(npc_index as usize).map_or(false, |d| d.is_trainer) {
+        return None;
+    }
+    pokemon_data
+        .iter()
+        .take(npc_index as usize + 1)
+        .filter(|d| d.is_trainer)
+        .count()
+        .checked_sub(1)
+}
+
+/// Seed `npc.defeated` from the map's `EVENT_BEAT_*` trainer flags.
+///
+/// `CheckForEngagingTrainers` (home/trainers.asm:264-297) tests the
+/// wEventFlags bit for every header on each frame. Our line-of-sight
+/// check reads `npc.defeated` instead, so it must be restored from the
+/// flags whenever NPC states are rebuilt: map load, warp arrival, and
+/// save-game flag load.
+pub fn apply_trainer_defeated_flags(
+    npc_states: &mut [NpcRuntimeState],
+    pokemon_data: &[PokemonNpcData],
+    headers: &[TrainerHeaderData],
+    flags: &EventFlags,
+) {
+    let mut k = 0usize;
+    for (npc, data) in npc_states.iter_mut().zip(pokemon_data.iter()) {
+        if !data.is_trainer {
+            continue;
+        }
+        if let Some(header) = headers.get(k) {
+            if flags.check(header.event_flag) {
+                npc.defeated = true;
+            }
+        }
+        k += 1;
+    }
 }
 
 pub fn check_all_trainers(

@@ -70,6 +70,23 @@ pub fn settle_battle_into_save(
                         &mut overworld.npc_states,
                         npc_index,
                     );
+                    // EndTrainerBattle (home/trainers.asm:169-186) also sets
+                    // the trainer's wEventFlags bit (TrainerFlagAction
+                    // FLAG_SET) so CheckForEngagingTrainers skips them after
+                    // re-entering the map; our LOS check tests the same
+                    // flag. The k-th header belongs to the k-th trainer NPC
+                    // in object order.
+                    if let Some(map) = crate::data::maps::MapId::from_u8(battle.map_id) {
+                        let headers = pokered_data::trainer_headers::get_trainer_headers(map);
+                        if let Some(k) = crate::overworld::trainer_engine::trainer_ordinal(
+                            &overworld.npc_pokemon_data,
+                            npc_index,
+                        ) {
+                            if let Some(header) = headers.get(k) {
+                                overworld.set_event_flag_live(header.event_flag);
+                            }
+                        }
+                    }
                 }
             }
             BattleOutcome::Loss => {

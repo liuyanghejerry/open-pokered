@@ -496,15 +496,30 @@ fn mark_trainer_defeated_test() {
 }
 
 // ── Trainer Line of Sight Tests ────────────────────────────────────
+// The engage distance comes from the trainer-header table (original
+// `def_trainers` view range), not the NPC's map range byte.
+
+fn los_headers(views: &[u8]) -> Vec<pokered_data::trainer_headers::TrainerHeaderData> {
+    use pokered_data::event_flags::EventFlag;
+    views
+        .iter()
+        .map(|&v| pokered_data::trainer_headers::TrainerHeaderData {
+            event_flag: EventFlag::EVENT_BEAT_PEWTER_GYM_TRAINER_0,
+            sight_range: v,
+        })
+        .collect()
+}
 
 #[test]
 fn trainer_sees_player_in_range() {
     let mut npcs = vec![make_test_npc(5, 2, NpcMovementType::Stationary)];
     npcs[0].facing = Direction::Down;
-    npcs[0].range = 4;
+    npcs[0].range = 0; // STAY trainer: map range byte is NOT the sight range
     let data = vec![make_trainer_extra()];
 
-    let result = check_trainer_line_of_sight(&npcs, &data, 5, 5);
+    let result = check_trainer_line_of_sight(
+        &npcs, &data, &los_headers(&[4]), &Default::default(), 5, 5,
+    );
     assert!(result.is_some());
     let sighting = result.unwrap();
     assert_eq!(sighting.distance, 3);
@@ -515,10 +530,11 @@ fn trainer_sees_player_in_range() {
 fn trainer_does_not_see_behind() {
     let mut npcs = vec![make_test_npc(5, 5, NpcMovementType::Stationary)];
     npcs[0].facing = Direction::Down;
-    npcs[0].range = 4;
     let data = vec![make_trainer_extra()];
 
-    let result = check_trainer_line_of_sight(&npcs, &data, 5, 2);
+    let result = check_trainer_line_of_sight(
+        &npcs, &data, &los_headers(&[4]), &Default::default(), 5, 2,
+    );
     assert!(
         result.is_none(),
         "Trainer facing down should not see player above"
@@ -529,32 +545,93 @@ fn trainer_does_not_see_behind() {
 fn trainer_does_not_see_out_of_range() {
     let mut npcs = vec![make_test_npc(5, 2, NpcMovementType::Stationary)];
     npcs[0].facing = Direction::Down;
-    npcs[0].range = 2;
     let data = vec![make_trainer_extra()];
 
-    let result = check_trainer_line_of_sight(&npcs, &data, 5, 8);
-    assert!(result.is_none(), "Player at distance 6 exceeds range 2");
+    let result = check_trainer_line_of_sight(
+        &npcs, &data, &los_headers(&[2]), &Default::default(), 5, 8,
+    );
+    assert!(result.is_none(), "Player at distance 6 exceeds view range 2");
 }
 
 #[test]
 fn defeated_trainer_does_not_see() {
     let mut npcs = vec![make_test_npc(5, 2, NpcMovementType::Stationary)];
     npcs[0].facing = Direction::Down;
-    npcs[0].range = 4;
     npcs[0].defeated = true;
     let data = vec![make_trainer_extra()];
 
-    assert!(check_trainer_line_of_sight(&npcs, &data, 5, 5).is_none());
+    assert!(check_trainer_line_of_sight(
+        &npcs, &data, &los_headers(&[4]), &Default::default(), 5, 5
+    )
+    .is_none());
 }
 
 #[test]
-fn trainer_range_zero_never_triggers() {
+fn trainer_view_zero_never_triggers() {
+    // View range 0 = talk-only trainer (e.g. PokemonMansion scientists):
+    // never engages by sight, even though the map range byte says 2.
     let mut npcs = vec![make_test_npc(5, 4, NpcMovementType::Stationary)];
     npcs[0].facing = Direction::Down;
-    npcs[0].range = 0;
+    npcs[0].range = 2;
     let data = vec![make_trainer_extra()];
 
-    assert!(check_trainer_line_of_sight(&npcs, &data, 5, 5).is_none());
+    assert!(check_trainer_line_of_sight(
+        &npcs, &data, &los_headers(&[0]), &Default::default(), 5, 5
+    )
+    .is_none());
+}
+
+#[test]
+fn beaten_trainer_flag_blocks_sight() {
+    // CheckForEngagingTrainers skips trainers whose EVENT_BEAT_* flag is
+    // set — our LOS must test the same flag, not just npc.defeated.
+    use pokered_data::event_flags::EventFlag;
+    let mut npcs = vec![make_test_npc(5, 2, NpcMovementType::Stationary)];
+    npcs[0].facing = Direction::Down;
+    let data = vec![make_trainer_extra()];
+
+    let mut flags = super::event_flags::EventFlags::new();
+    flags.set(EventFlag::EVENT_BEAT_PEWTER_GYM_TRAINER_0);
+    assert!(check_trainer_line_of_sight(
+        &npcs, &data, &los_headers(&[4]), &flags, 5, 5
+    )
+    .is_none());
+}
+
+#[test]
+fn header_matches_kth_trainer_npc() {
+    // The k-th header belongs to the k-th trainer NPC in object order:
+    // npc 0 is a plain talker, npc 1 a short-sight trainer, npc 2 the
+    // header-1 trainer (view 5). Player stands 3 tiles under npc 2 —
+    // beyond npc 1's view but within npc 2's.
+    let mut talker = make_test_npc(5, 2, NpcMovementType::Stationary);
+    talker.facing = Direction::Down;
+    talker.npc_index = 0;
+    let mut a = make_test_npc(5, 7, NpcMovementType::Stationary);
+    a.facing = Direction::Down;
+    a.npc_index = 1;
+    let mut b = make_test_npc(5, 9, NpcMovementType::Stationary);
+    b.facing = Direction::Down;
+    b.npc_index = 2;
+    let npcs = vec![talker, a, b];
+    let data = vec![
+        PokemonNpcData {
+            is_trainer: false,
+            trainer_class: 0,
+            trainer_set: 0,
+            item_id: 0,
+            end_battle_text: None,
+        },
+        make_trainer_extra(),
+        make_trainer_extra(),
+    ];
+
+    let result = check_trainer_line_of_sight(
+        &npcs, &data, &los_headers(&[1, 5]), &Default::default(), 5, 12,
+    );
+    let sighting = result.expect("npc 2 (header 1, view 5) sees the player");
+    assert_eq!(sighting.npc_index, 2);
+    assert_eq!(sighting.distance, 3);
 }
 
 // ── Sign Interaction Tests ─────────────────────────────────────────

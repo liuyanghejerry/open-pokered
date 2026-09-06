@@ -899,9 +899,13 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
         // replaces the instant-battle path; `pending_trainer_battle` is set
         // when the intro completes.
         if self.pending_trainer_battle.is_none() && self.trainer_encounter_intro.is_none() {
+            let trainer_headers =
+                pokered_data::trainer_headers::get_trainer_headers(self.state.current_map);
             if let Some(sighting) = npc_interaction::check_trainer_line_of_sight(
                 &self.npc_states,
                 &self.npc_pokemon_data,
+                trainer_headers,
+                &self.unified_flags,
                 self.state.player.x,
                 self.state.player.y,
             ) {
@@ -1211,6 +1215,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                         .map(|md| build_npc_runtime_states(&md.npcs, &self.npc_pokemon_data, &hidden_npc_ids))
                         .unwrap_or_default();
                     self.apply_hidden_object_flags();
+                    self.restore_trainer_defeated_flags(new_map);
                     self.state.player.x = pc.transition.new_x;
                     self.state.player.y = pc.transition.new_y;
                     // EnterMap: CheckForceBikeOrSurf — walking across the
@@ -1536,8 +1541,14 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                                 .get_config(&dest_key)
                                 .map(|c| c.hidden_npc_ids())
                                 .unwrap_or_default();
-                            let preview_npcs =
+                            let mut preview_npcs =
                                 build_npc_runtime_states(&dest_map.npcs, &dest_pokemon_data, &hidden);
+                            crate::overworld::trainer_engine::apply_trainer_defeated_flags(
+                                &mut preview_npcs,
+                                &dest_pokemon_data,
+                                pokered_data::trainer_headers::get_trainer_headers(transition.new_map),
+                                &self.unified_flags,
+                            );
                             self.connection_npc_preview = Some(ConnectionNpcPreview {
                                 npcs: preview_npcs,
                                 step_offset_x,
