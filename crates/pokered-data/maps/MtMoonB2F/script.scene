@@ -122,7 +122,7 @@ game_scene MtMoonB2F {
   // ── Dome Fossil (npc 6) — only takeable after beating the Super Nerd; pick
   //    one fossil, then the Super Nerd "takes" the other (we hide it). ──────
   @storyline("talkDomeFossil") {
-    @trigger(map = "MtMoonB2F", npc = 6)
+    @trigger(map = "MtMoonB2F", npc = 6, toggle = "MTMOONB2F_DOME_FOSSIL")
     @if (getFlag("EVENT_GOT_DOME_FOSSIL") || getFlag("EVENT_GOT_HELIX_FOSSIL")) {
       // A fossil was already taken; nothing left to grab here.
       return
@@ -157,7 +157,7 @@ game_scene MtMoonB2F {
 
   // ── Helix Fossil (npc 7) ────────────────────────────────────────────────
   @storyline("talkHelixFossil") {
-    @trigger(map = "MtMoonB2F", npc = 7)
+    @trigger(map = "MtMoonB2F", npc = 7, toggle = "MTMOONB2F_HELIX_FOSSIL")
     @if (getFlag("EVENT_GOT_DOME_FOSSIL") || getFlag("EVENT_GOT_HELIX_FOSSIL")) {
       return
     }

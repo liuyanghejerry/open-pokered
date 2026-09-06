@@ -115,7 +115,7 @@ game_scene ChampionsRoom {
   // ── Rival (npc 1) talk handler — orig ChampionsRoomRivalText branches on
   //    EVENT_BEAT_CHAMPION_RIVAL: intro boast before, lament after. ──────────
   @storyline("talkBlue") {
-    @trigger(map = "ChampionsRoom", npc = 1)
+    @trigger(map = "ChampionsRoom", npc = 1, toggle = "CHAMPIONS_ROOM_OBJ_1")
     @if (getFlag("EVENT_BEAT_CHAMPION_RIVAL")) {
       @speaker("") {
         @t("Why? Why did I lose?\n\nI never made any mistakes\nraising my POKeMON...\n\nDarn it! You're the new\nPOKeMON LEAGUE champion!\n\nAlthough I don't like to\nadmit it.", "为什么？我为什么会输？\n\n我培育宝可梦从来没有犯过任何\n错误……\n\n可恶！你成了新的宝可梦联盟冠\n军！\n\n虽然我不愿意承认这一点。")

@@ -9,7 +9,7 @@
 game_scene ViridianGym {
   // ── Giovanni, the Gym Leader (npc 1) ───────────────────────────────────
   @storyline("talkGiovanni") {
-    @trigger(map = "ViridianGym", npc = 1)
+    @trigger(map = "ViridianGym", npc = 1, toggle = "VIRIDIAN_GYM_GIOVANNI")
     @if (getFlag("EVENT_BEAT_VIRIDIAN_GYM_GIOVANNI")) {
       @if (!getFlag("EVENT_GOT_TM27")) {
         // Beat Giovanni previously but the bag was full — hand over the TM now.
