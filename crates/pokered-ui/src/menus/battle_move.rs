@@ -5,27 +5,17 @@ use pokered_data::ui_layout::schema::BattleMoveDefaultLayout;
 
 use crate::engine::{InkColor, Painter, TileRect, Ui};
 
-fn move_display_name(move_id: MoveId) -> String {
-    let raw = format!("{:?}", move_id);
-    let mut result = String::with_capacity(raw.len() + 4);
-    for (i, c) in raw.chars().enumerate() {
-        if c.is_uppercase() && i > 0 {
-            let prev = raw.as_bytes()[i - 1] as char;
-            if prev.is_lowercase() {
-                result.push(' ');
-            }
-        }
-        result.push(c);
-    }
-    result.to_uppercase()
-}
-
 pub fn draw<P: Painter>(
     state: &MoveMenuState,
     layout: &BattleMoveDefaultLayout,
     ui: &mut Ui<P>,
+    lang: pokered_core::game_state::Lang,
     render_data: &dyn RenderData<Move = MoveId, Item = pokered_data::items::ItemId, Species = pokered_data::species::Species>,
 ) {
+    if lang == pokered_core::game_state::Lang::Zh {
+        draw_zh(state, ui, render_data);
+        return;
+    }
     let moves = state.moves();
     let cursor = state.cursor();
 
@@ -39,7 +29,7 @@ pub fn draw<P: Painter>(
     // → interior origin (5, 13); native draws move names at screen (6, 13+i) → frame (1, i).
     ui.text_box(layout.box_0.rect, layout.box_0.color, true, |frame| {
         for (i, slot) in moves.iter().enumerate() {
-            let name = move_display_name(slot.move_id);
+            let name = render_data.move_name(slot.move_id);
             let truncated: String = name.chars().take(12).collect();
             frame.label(1, i as u32, &truncated, InkColor::Black);
         }
@@ -100,5 +90,28 @@ fn move_type_display_name(type_id: u8) -> String {
         names[idx].to_string()
     } else {
         "???".to_string()
+    }
+}
+
+// Four 10px CJK rows need a 40px interior; the English box only has 32px.
+fn draw_zh<P: Painter>(
+    state: &MoveMenuState,
+    ui: &mut Ui<P>,
+    data: &dyn RenderData<Move = MoveId, Item = pokered_data::items::ItemId, Species = pokered_data::species::Species>,
+) {
+    ui.text_box(TileRect::new(0, 8, 11, 4), InkColor::Black, true, |_| {});
+    ui.text_box(TileRect::new(0, 11, 20, 7), InkColor::Black, true, |_| {});
+    let painter = ui.painter();
+    if let Some(slot) = state.current_move() {
+        let kind = pokered_data::types::PokemonType::from_id(data.move_type(slot.move_id));
+        painter.draw_text_px(8, 72, &format!("属性/{}", pokered_data::lang_data::type_name(kind, true)), InkColor::Black.into());
+    }
+    for (i, slot) in state.moves().iter().enumerate() {
+        let y = 96 + i as u32 * 10;
+        painter.draw_text_px(16, y, data.move_name(slot.move_id), InkColor::Black.into());
+        painter.draw_text_px(104, y, &format!("PP {:>2}/{:>2}", slot.current_pp.min(99), slot.max_pp.min(99)), InkColor::Black.into());
+        if i == state.cursor() {
+            painter.draw_text_px(8, y, "▶", InkColor::Black.into());
+        }
     }
 }

@@ -50,11 +50,7 @@ fn draw_page1_v2<P: Painter>(
 
     let is_zh = lang == Lang::Zh;
     let name = display_name(mon, render_data);
-    let name = if name.len() > NAME_MAX_LEN {
-        name[..NAME_MAX_LEN].to_string()
-    } else {
-        name
-    };
+    let name: String = name.chars().take(NAME_MAX_LEN).collect();
 
     let mut ctx = DataContext::new();
     ctx.set("name", name);
@@ -138,8 +134,8 @@ fn draw_page2<P: Painter>(
         }
 
         let name = display_name(mon, render_data);
-        let name_display: &str = if name.len() > NAME_MAX_LEN { &name[..NAME_MAX_LEN] } else { &name };
-        frame.label(9, 1, name_display, InkColor::Black);
+        let name_display: String = name.chars().take(NAME_MAX_LEN).collect();
+        frame.label(9, 1, &name_display, InkColor::Black);
 
         frame.pixel_rect(19 * 8, 3 * 8, 1, 8, InkColor::Black);
 

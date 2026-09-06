@@ -2558,6 +2558,13 @@ pub fn draw_battle(
                 draw_text("否", 2 * TILE_SIZE, 11 * TILE_SIZE, text_color, fb);
             }
         }
+        if is_zh && matches!(screen.phase, BattlePhase::MoveSelect | BattlePhase::ItemMoveSelect { .. }) {
+            if let Some(mm) = &screen.move_menu {
+                let mut painter = pokered_ui::backends::framebuffer::FrameBufferPainter::new(fb).with_lang(language);
+                let mut ui = pokered_ui::Ui::new(&mut painter);
+                pokered_ui::menus::battle_move::draw(mm, &pokered_data::ui_layout::schema::BATTLE_MOVE_DEFAULT_LAYOUT, &mut ui, language, &pokered_data::impl_traits::PokemonRenderData::new(true));
+            }
+        }
         if let Some((text, arrow)) = zh_dialog {
             let mut painter =
                 pokered_ui::backends::framebuffer::FrameBufferPainter::new(fb).with_lang(language);

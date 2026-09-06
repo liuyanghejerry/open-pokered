@@ -584,25 +584,6 @@ fn paginate_battle_text(text: &str) -> Vec<String> {
     pages
 }
 
-/// Convert a PascalCase MoveId Debug name to game-style uppercase with spaces.
-/// e.g. "QuickAttack" → "QUICK ATTACK", "Thunderbolt" → "THUNDERBOLT",
-///      "HiJumpKick" → "HI JUMP KICK", "ThunderWave" → "THUNDER WAVE"
-fn move_display_name(move_id: MoveId) -> String {
-    let raw = format!("{:?}", move_id);
-    let mut result = String::with_capacity(raw.len() + 4);
-    for (i, c) in raw.chars().enumerate() {
-        if c.is_uppercase() && i > 0 {
-            // Insert space before uppercase letter unless previous char was also uppercase
-            let prev = raw.as_bytes()[i - 1] as char;
-            if prev.is_lowercase() {
-                result.push(' ');
-            }
-        }
-        result.push(c);
-    }
-    result.to_uppercase()
-}
-
 /// True when the mon is locked into re-issuing its previously-selected move (charge
 /// mid-flight, rampage) — the menu is ignored and the continuation re-uses
 /// `selected_move`. Mirrors `PokeredRules::forced_action`; extended as Bide / trapping
@@ -4641,7 +4622,7 @@ impl BattleScreen {
                 msgs.push(format!(
                     "{} learned {}!",
                     mon.display_name(&mut name_buf),
-                    move_display_name(move_id)
+                    pokered_data::lang_data::move_name(move_id, false)
                 ));
             }
         }

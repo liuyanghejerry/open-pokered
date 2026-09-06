@@ -928,7 +928,7 @@ fn battle_move_renders_move_list_with_type_pp_box() {
     let mut rec = Recorder::default();
     let mut ui = Ui::new(&mut rec);
     let rd = PokemonRenderData::new(false);
-    battle_move::draw(&state, &BATTLE_MOVE_DEFAULT_LAYOUT, &mut ui, &rd);
+    battle_move::draw(&state, &BATTLE_MOVE_DEFAULT_LAYOUT, &mut ui, Lang::En, &rd);
 
     let boxes = collect_boxes(&rec.ops);
     assert_eq!(boxes.len(), 3, "expect three boxes: base + move list + TYPE/PP");
@@ -964,7 +964,7 @@ fn battle_move_cursor_follows_selection() {
     let mut rec = Recorder::default();
     let mut ui = Ui::new(&mut rec);
     let rd = PokemonRenderData::new(false);
-    battle_move::draw(&state, &BATTLE_MOVE_DEFAULT_LAYOUT, &mut ui, &rd);
+    battle_move::draw(&state, &BATTLE_MOVE_DEFAULT_LAYOUT, &mut ui, Lang::En, &rd);
 
     assert_eq!(collect_glyphs(&rec.ops), vec![(5, 14, '\u{25B6}')]);
 
@@ -980,7 +980,7 @@ fn battle_move_no_type_pp_box_when_cursor_out_of_bounds() {
     let mut rec = Recorder::default();
     let mut ui = Ui::new(&mut rec);
     let rd = PokemonRenderData::new(false);
-    battle_move::draw(&state, &BATTLE_MOVE_DEFAULT_LAYOUT, &mut ui, &rd);
+    battle_move::draw(&state, &BATTLE_MOVE_DEFAULT_LAYOUT, &mut ui, Lang::En, &rd);
 
     let boxes = collect_boxes(&rec.ops);
     assert_eq!(boxes.len(), 2, "empty moves → base + move-list box only");
