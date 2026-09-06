@@ -1,15 +1,16 @@
 //! Pokémon-specific NPC interaction system.
 //!
-//! Generic interaction logic (talk, sign, line-of-sight) is provided by
+//! Generic interaction logic (talk, sign) is provided by
 //! `dotzuki_engine::overworld::npc_interaction`. This module adds Pokémon-specific
-//! handling for trainer battles and item pickups.
+//! handling for trainer battles and item pickups, plus the trainer
+//! line-of-sight check driven by the per-map trainer-header tables
+//! (original `CheckForEngagingTrainers` semantics).
 
 use crate::overworld::collision::PokemonCollisionProvider;
 use crate::overworld::npc_movement::NpcRuntimeState;
 use crate::overworld::PokemonNpcData;
 
 use dotzuki_engine::overworld::Direction;
-use dotzuki_engine::overworld::npc_interaction as engine;
 
 use super::npc_movement::npc_in_front_of_player;
 
@@ -104,30 +105,75 @@ pub struct TrainerSighting {
     pub distance: u8,
 }
 
+/// Facing direction → tile delta.
+fn facing_delta(facing: Direction) -> (i8, i8) {
+    match facing {
+        Direction::Up => (0, -1),
+        Direction::Down => (0, 1),
+        Direction::Left => (-1, 0),
+        Direction::Right => (1, 0),
+    }
+}
+
 /// Check if any trainer NPC can see the player.
 ///
-/// Uses the engine's generic line-of-sight algorithm, filtering only
-/// trainer-type NPCs and enriching the result with trainer data.
+/// Reproduces `CheckForEngagingTrainers` + `TrainerEngage`
+/// (home/trainers.asm:264, engine/overworld/trainer_sight.asm:164): the
+/// engage distance comes from the map's trainer-header table
+/// (`db view_range << 4` — NOT the map object's range byte, which for
+/// STAY trainers encodes the facing direction), the facing is read live
+/// from the NPC, and trainers whose `EVENT_BEAT_*` flag is set (already
+/// defeated) are skipped. The k-th header belongs to the k-th trainer
+/// NPC in object order; headers with `sight_range == 0` are talk-only
+/// trainers that never engage by sight in the original.
 pub fn check_trainer_line_of_sight(
     npcs: &[NpcRuntimeState],
     pokemon_data: &[PokemonNpcData],
+    headers: &[pokered_data::trainer_headers::TrainerHeaderData],
+    flags: &super::event_flags::EventFlags,
     player_x: u16,
     player_y: u16,
 ) -> Option<TrainerSighting> {
-    // Generic LOS check returns the first NPC that can see the player.
-    let sighting = engine::check_line_of_sight(npcs, player_x, player_y)?;
-
-    let extra = pokemon_data.get(sighting.npc_index as usize)?;
-    if !extra.is_trainer {
-        return None;
+    let mut k = 0usize;
+    for (npc, extra) in npcs.iter().zip(pokemon_data.iter()) {
+        if !extra.is_trainer {
+            continue;
+        }
+        let header = headers.get(k);
+        k += 1;
+        let Some(header) = header else { break };
+        if header.sight_range == 0 {
+            continue; // talk-only trainer (view range 0)
+        }
+        if npc.defeated || !npc.visible {
+            continue;
+        }
+        if flags.check(header.event_flag) {
+            continue;
+        }
+        let (fdx, fdy) = facing_delta(npc.facing);
+        if super::trainer_engine::can_trainer_see_player(
+            npc.x as u8,
+            npc.y as u8,
+            fdx,
+            fdy,
+            player_x as u8,
+            player_y as u8,
+            header.sight_range,
+        ) {
+            // Aligned on one axis, so the max delta IS the sight distance.
+            let distance = (player_x as i16 - npc.x as i16)
+                .abs()
+                .max((player_y as i16 - npc.y as i16).abs()) as u8;
+            return Some(TrainerSighting {
+                npc_index: npc.npc_index,
+                trainer_class: extra.trainer_class,
+                trainer_set: extra.trainer_set,
+                distance,
+            });
+        }
     }
-
-    Some(TrainerSighting {
-        npc_index: sighting.npc_index,
-        trainer_class: extra.trainer_class,
-        trainer_set: extra.trainer_set,
-        distance: sighting.distance,
-    })
+    None
 }
 
 // ── Item & Trainer Helpers ─────────────────────────────────────────
