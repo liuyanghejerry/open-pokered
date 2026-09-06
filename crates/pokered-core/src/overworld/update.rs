@@ -898,7 +898,10 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
         // trainer walks up to the player → THEN the battle. The intro state
         // replaces the instant-battle path; `pending_trainer_battle` is set
         // when the intro completes.
-        if self.pending_trainer_battle.is_none() && self.trainer_encounter_intro.is_none() {
+        if self.pending_trainer_battle.is_none()
+            && self.trainer_encounter_intro.is_none()
+            && self.trainer_intro_text_pending.is_none()
+        {
             let trainer_headers =
                 pokered_data::trainer_headers::get_trainer_headers(self.state.current_map);
             if let Some(sighting) = npc_interaction::check_trainer_line_of_sight(
@@ -974,7 +977,12 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
         }
 
         // Advance the engage-intro: once the "!" bubble is gone AND the
-        // walk-up finished, hand over to the actual pending battle.
+        // walk-up finished, show the trainer's before-battle text
+        // (DisplayEnemyTrainerTextAndStartBattle, home/trainers.asm:141-158:
+        // DisplayTextID with the trainer's text, then StartTrainerBattle when
+        // it closes). The text reuses the talk pipeline — the map's scene
+        // storyline first, map.json npc text as fallback — so sight and talk
+        // show the same line, localized.
         if let Some(intro) = self.trainer_encounter_intro.take() {
             let bubble_done = self
                 .pending_emotion_bubble
@@ -985,19 +993,80 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                 .get(intro.npc_index as usize)
                 .map_or(true, |n| npc_movement::is_scripted_move_done(n));
             if bubble_done && walk_done {
-                self.pending_trainer_battle = Some(PendingTrainerBattle {
-                    trainer_id: intro.trainer_id,
-                    npc_index: intro.npc_index,
-                    end_battle_text: intro.end_battle_text,
-                    rival_triplet_base: intro.rival_triplet_base,
-                });
+                let text_id = self
+                    .npc_states
+                    .get(intro.npc_index as usize)
+                    .map(|n| n.text_id)
+                    .unwrap_or(0);
+                let showed_text = text_id > 0
+                    && (self.try_call_script_npc_talk(text_id)
+                        || self.try_show_npc_json_text(text_id));
+                if showed_text {
+                    // Park the intro; promote to pending_trainer_battle when
+                    // the text (and its storyline, if any) winds down.
+                    self.trainer_intro_text_pending = Some(intro);
+                } else {
+                    // No before-battle text exists anywhere: straight to the
+                    // battle (previous behavior).
+                    self.pending_trainer_battle = Some(PendingTrainerBattle {
+                        trainer_id: intro.trainer_id,
+                        npc_index: intro.npc_index,
+                        end_battle_text: intro.end_battle_text,
+                        rival_triplet_base: intro.rival_triplet_base,
+                    });
+                }
             } else {
                 self.trainer_encounter_intro = Some(intro);
             }
         }
 
+        // Promote the text phase: when the before-battle dialogue and its
+        // storyline have fully wound down, pend the battle. If the storyline
+        // started a battle itself (startBattle inside the script), stand
+        // down — the script machinery owns it.
+        if let Some(intro) = self.trainer_intro_text_pending.take() {
+            if self.script_awaiting_battle
+                || self.pending_trainer_battle.is_some()
+                || self.post_dialogue_battle.is_some()
+                || self.pending_wild_encounter.is_some()
+            {
+                // battle owned elsewhere — drop the intro
+            } else {
+                let text_done = self.pending_dialogue.is_none()
+                    && self.pending_choice.is_none()
+                    && self.active_script_effect.is_none()
+                    && self.script_engine_idle();
+                if text_done {
+                    self.pending_trainer_battle = Some(PendingTrainerBattle {
+                        trainer_id: intro.trainer_id,
+                        npc_index: intro.npc_index,
+                        end_battle_text: intro.end_battle_text,
+                        rival_triplet_base: intro.rival_triplet_base,
+                    });
+                } else {
+                    self.trainer_intro_text_pending = Some(intro);
+                }
+            }
+        }
+
+        // CheckForEngagingTrainers sets wJoyIgnore (all input held) from the
+        // moment of engagement until the battle starts: the player can't walk
+        // off or interact while the "!" bubble shows, the trainer walks up,
+        // and the before-battle text is on screen. (An open dialogue's own
+        // early-return below already holds the text phase; this covers the
+        // bubble/walk phase and the frames between text close and battle.)
+        if self.trainer_encounter_intro.is_some() || self.trainer_intro_text_pending.is_some() {
+            self.run_npc_movement_tick();
+            return ScreenAction::Continue;
+        }
+
         // A-button: check signs first, then NPCs (matches original game priority).
-        if a_just_pressed && self.state.player.movement_state == MovementState::Idle {
+        // Held during a trainer engage intro (wJoyIgnore).
+        if a_just_pressed
+            && self.state.player.movement_state == MovementState::Idle
+            && self.trainer_encounter_intro.is_none()
+            && self.trainer_intro_text_pending.is_none()
+        {
             // Check tile-based OnInteract triggers first
             {
                 let (dx, dy) = player_movement::direction_delta(self.state.player.facing);
@@ -1238,19 +1307,27 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
             return ScreenAction::Continue;
         }
 
-        if input.start {
+        // Start menu is held during a trainer engage intro (wJoyIgnore).
+        if input.start
+            && self.trainer_encounter_intro.is_none()
+            && self.trainer_intro_text_pending.is_none()
+        {
             return ScreenAction::Transition(GameScreen::StartMenu);
         }
 
+        // wJoyIgnore during a trainer engage intro: d-pad/A/B ignored while
+        // the "!" bubble shows and the trainer walks up.
+        let intro_holding_input =
+            self.trainer_encounter_intro.is_some() || self.trainer_intro_text_pending.is_some();
         let movement_input = MovementInput {
-            up: input.up,
-            down: input.down,
-            left: input.left,
-            right: input.right,
-            a_button: input.a,
-            b_button: input.b,
-            start: input.start,
-            select: input.select,
+            up: input.up && !intro_holding_input,
+            down: input.down && !intro_holding_input,
+            left: input.left && !intro_holding_input,
+            right: input.right && !intro_holding_input,
+            a_button: input.a && !intro_holding_input,
+            b_button: input.b && !intro_holding_input,
+            start: input.start && !intro_holding_input,
+            select: input.select && !intro_holding_input,
         };
 
         let get_tile_id_at_position =
@@ -1766,7 +1843,8 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
             let frozen = self.active_script_effect.is_some()
                 || self.cutscene_manager.is_blocking()
                 || !self.scripted_player_path.is_empty()
-                || self.trainer_encounter_intro.is_some();
+                || self.trainer_encounter_intro.is_some()
+                || self.trainer_intro_text_pending.is_some();
             let mut frozen_slots: Vec<usize> = Vec::new();
             if frozen {
                 for (i, n) in self.npc_states.iter_mut().enumerate() {

@@ -606,6 +606,11 @@ pub struct OverworldScreen<G: GameData = pokered_data::impl_traits::PokemonRedDa
     /// Active engage-intro ("!" bubble + music + walk-up) — completes into
     /// `pending_trainer_battle`.
     pub(crate) trainer_encounter_intro: Option<TrainerEncounterIntro>,
+    /// Engage-intro phase 2 (DisplayEnemyTrainerTextAndStartBattle,
+    /// home/trainers.asm:141-158): the walk-up finished and the trainer's
+    /// before-battle text is on screen; the battle is pended once the
+    /// dialogue (and its storyline, if any) fully winds down.
+    pub(crate) trainer_intro_text_pending: Option<TrainerEncounterIntro>,
     pub pending_give_pokemon: Option<PendingGivePokemon>,
     pub sfx_event: OverworldSfxEvent,
     pub bump_anim_counter: u8,
@@ -968,6 +973,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
             pending_wild_encounter: None,
             pending_trainer_battle: None,
             trainer_encounter_intro: None,
+            trainer_intro_text_pending: None,
             pending_give_pokemon: None,
             sfx_event: OverworldSfxEvent::None,
             bump_anim_counter: 0,
