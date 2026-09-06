@@ -76,6 +76,12 @@ impl ToggleableObject {
     // POKEMON_TOWER_2F
     pub const POKEMON_TOWER_2F_RIVAL: ToggleableObject = ToggleableObject(0x38);
 
+    // POKEMON_TOWER_7F
+    pub const POKEMON_TOWER_7F_ROCKET_1: ToggleableObject = ToggleableObject(0x40);
+    pub const POKEMON_TOWER_7F_ROCKET_2: ToggleableObject = ToggleableObject(0x41);
+    pub const POKEMON_TOWER_7F_ROCKET_3: ToggleableObject = ToggleableObject(0x42);
+    pub const POKEMON_TOWER_7F_MR_FUJI: ToggleableObject = ToggleableObject(0x43);
+
     // FIGHTING_DOJO
     pub const HITMONLEE_POKE_BALL: ToggleableObject = ToggleableObject(0x4A);
     pub const HITMONCHAN_POKE_BALL: ToggleableObject = ToggleableObject(0x4B);
@@ -301,6 +307,22 @@ pub fn toggle_id_to_bit_index(toggle_id: &str) -> Option<u16> {
         "POKEMON_TOWER_4F_OBJ_4" => Some(0x3A), // TOGGLE_POKEMON_TOWER_4F_ITEM_1 (ELIXER)
         "POKEMON_TOWER_4F_OBJ_5" => Some(0x3B), // TOGGLE_POKEMON_TOWER_4F_ITEM_2 (AWAKENING)
         "POKEMON_TOWER_4F_OBJ_6" => Some(0x3C), // TOGGLE_POKEMON_TOWER_4F_ITEM_3 (HP_UP)
+
+        // POKEMON_TOWER_7F (original TOGGLE_POKEMON_TOWER_7F_ROCKET_1..3 and
+        // _MR_FUJI; the rockets are hidden by the post-battle walk-off, Fuji
+        // by the rescue warp)
+        "POKEMONTOWER7F_ROCKET_1" | "POKEMON_TOWER_7F_ROCKET_1" => {
+            Some(ToggleableObject::POKEMON_TOWER_7F_ROCKET_1.bit_index())
+        }
+        "POKEMONTOWER7F_ROCKET_2" | "POKEMON_TOWER_7F_ROCKET_2" => {
+            Some(ToggleableObject::POKEMON_TOWER_7F_ROCKET_2.bit_index())
+        }
+        "POKEMONTOWER7F_ROCKET_3" | "POKEMON_TOWER_7F_ROCKET_3" => {
+            Some(ToggleableObject::POKEMON_TOWER_7F_ROCKET_3.bit_index())
+        }
+        "POKEMONTOWER7F_MR_FUJI" | "POKEMON_TOWER_7F_MR_FUJI" => {
+            Some(ToggleableObject::POKEMON_TOWER_7F_MR_FUJI.bit_index())
+        }
 
         // POKEMON_TOWER_5F
         "POKEMON_TOWER_5F_OBJ_6" => Some(0x3D), // TOGGLE_POKEMON_TOWER_5F_ITEM (NUGGET)

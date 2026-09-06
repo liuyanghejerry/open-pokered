@@ -77,10 +77,18 @@ game_scene PokemonFanClub {
           @speaker("") {
             @t("Good! Then listen up!\n\nMy favorite RAPIDASH...\n\nIt...cute...\nlovely...smart...\nplus...amazing... you think\nso?... oh yes...it...\nstunning... kindly... love\nit!\n\nHug it...when...\nsleeping...warm and\ncuddly... spectacular...\nravishing... ...Oops! Look\nat the time! I kept you too\nlong!\n\nThanks for hearing me out! I\nwant you to have this!", "好！那你听好了！\n\n我最喜欢的烈焰马……\n\n它……可爱……伶俐……聪\n明……外加……惊人……你也这\n么觉得吧？……哦对……它……\n迷人……温柔……让人爱不释\n手！\n\n抱着它……睡觉时……又暖又舒\n服……华丽……惊艳…………哎\n呀！看时间！我耽误你太久了！\n\n谢谢你听我说完！我想把这个给\n你！")
           }
-          giveItem("BIKE_VOUCHER", 1)
-          setFlag("EVENT_GOT_BIKE_VOUCHER")
-          @speaker("") {
-            @t("<PLAYER> received a BIKE\nVOUCHER!\n\nExchange that for a BICYCLE!\n\nDon't worry, my FEAROW will\nFLY me anywhere!\n\nSo, I don't need a BICYCLE!\n\nI hope you like cycling!", "<PLAYER>得到了自行车兑换券！\n\n用它去换自行车吧！\n\n别担心，我的大嘴雀会带我飞往\n任何地方！\n\n所以，我不需要自行车！\n\n希望你喜欢骑自行车！")
+          // Original: GiveItem; on bag-full print BagFullText and keep the
+          // voucher obtainable (no EVENT_GOT_BIKE_VOUCHER).
+          given = giveItem("BIKE_VOUCHER", 1)
+          @if (given) {
+            setFlag("EVENT_GOT_BIKE_VOUCHER")
+            @speaker("") {
+              @t("<PLAYER> received a BIKE\nVOUCHER!\n\nExchange that for a BICYCLE!\n\nDon't worry, my FEAROW will\nFLY me anywhere!\n\nSo, I don't need a BICYCLE!\n\nI hope you like cycling!", "<PLAYER>得到了自行车兑换券！\n\n用它去换自行车吧！\n\n别担心，我的大嘴雀会带我飞往\n任何地方！\n\n所以，我不需要自行车！\n\n希望你喜欢骑自行车！")
+            }
+          } @else {
+            @speaker("") {
+              @t("Make room for this!", "请给这个腾点地方！")
+            }
           }
         }
         @option(@t("NO", "否")) {

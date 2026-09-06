@@ -874,3 +874,40 @@ fn held_a_across_map_warp_does_not_talk_to_facing_npc() {
         "a genuine A press must still talk to the facing NPC after a warp"
     );
 }
+
+// ── ViridianCity old-man swap wiring ───────────────────────────────
+
+/// OaksLab.asm:602-605 — on receiving the Pokédex the sleepy old man leaves
+/// the Viridian road (toggle hide) and the wide-awake one (defaultHidden)
+/// appears in his place.
+#[test]
+fn viridian_old_man_swap_applies_on_load() {
+    use super::screen::OverworldScreen;
+    use pokered_data::impl_traits::PokemonRedData;
+
+    let mut screen = OverworldScreen::new(MapId::ViridianCity, None, PokemonRedData);
+    screen.state.player.x = 10;
+    screen.state.player.y = 10;
+    let by_text = |s: &OverworldScreen| -> std::collections::HashMap<u8, bool> {
+        s.npc_states
+            .iter()
+            .map(|n| (n.text_id, n.visible))
+            .collect()
+    };
+    let before = by_text(&screen);
+    assert!(before[&5], "sleepy old man starts visible");
+    assert!(!before[&7], "wide-awake old man starts hidden (defaultHidden)");
+
+    // Simulate the dex-scene effects (same channels HideObject/ShowObject use).
+    screen
+        .unified_flags_mut()
+        .set_flag("__OBJ_HIDDEN_VIRIDIANCITY_OLD_MAN_SLEEPY", true);
+    screen
+        .unified_flags_mut()
+        .set_flag("__OBJ_SHOWN_VIRIDIANCITY_OLD_MAN", true);
+    screen.apply_hidden_object_flags();
+
+    let after = by_text(&screen);
+    assert!(!after[&5], "sleepy old man should be hidden by the swap");
+    assert!(after[&7], "wide-awake old man should be shown by the swap");
+}

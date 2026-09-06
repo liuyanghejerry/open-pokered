@@ -132,11 +132,19 @@ game_scene VermilionGym {
         @speaker("") {
           @t("The THUNDERBADGE cranks up\nyour POKeMON's SPEED!\n\nIt also lets your POKeMON\nFLY any time, kid!\n\nYou're special, kid! Take\nthis!", "橙色徽章能提升你的宝可梦速\n度！\n\n还能让你的宝可梦随时飞翔，小\n子！\n\n你很特别，小子！收下吧！")
         }
-        giveItem("TM24", 1)
-        setFlag("EVENT_GOT_TM24")
-        @speaker("") { @t("<PLAYER> received TM24!", "<PLAYER>得到了 TM24！") }
-        @speaker("") {
-          @t("TM24 contains THUNDERBOLT!\n\nTeach it to an electric\nPOKeMON!", "TM24 里含有十万伏特！\n\n教给电系宝可梦吧！")
+        // Original: GiveItem; on bag-full print TM24NoRoomText and keep the
+        // TM obtainable (no EVENT_GOT_TM24).
+        given = giveItem("TM24", 1)
+        @if (given) {
+          setFlag("EVENT_GOT_TM24")
+          @speaker("") { @t("<PLAYER> received TM24!", "<PLAYER>得到了 TM24！") }
+          @speaker("") {
+            @t("TM24 contains THUNDERBOLT!\n\nTeach it to an electric\nPOKeMON!", "TM24 里含有十万伏特！\n\n教给电系宝可梦吧！")
+          }
+        } @else {
+          @speaker("") {
+            @t("Yo kid, make room\nin your pack!", "喂，小子，把背包腾出点空来！")
+          }
         }
       } @else {
         @speaker("") {
@@ -157,11 +165,19 @@ game_scene VermilionGym {
         @speaker("") {
           @t("The THUNDERBADGE cranks up\nyour POKeMON's SPEED!\n\nIt also lets your POKeMON\nFLY any time, kid!\n\nYou're special, kid! Take\nthis!", "橙色徽章能提升你的宝可梦速\n度！\n\n还能让你的宝可梦随时飞翔，小\n子！\n\n你很特别，小子！收下吧！")
         }
-        giveItem("TM24", 1)
-        setFlag("EVENT_GOT_TM24")
-        @speaker("") { @t("<PLAYER> received TM24!", "<PLAYER>得到了 TM24！") }
-        @speaker("") {
-          @t("TM24 contains THUNDERBOLT!\n\nTeach it to an electric\nPOKeMON!", "TM24 里含有十万伏特！\n\n教给电系宝可梦吧！")
+        // Original: GiveItem; on bag-full print TM24NoRoomText and keep the
+        // TM obtainable (no EVENT_GOT_TM24).
+        given = giveItem("TM24", 1)
+        @if (given) {
+          setFlag("EVENT_GOT_TM24")
+          @speaker("") { @t("<PLAYER> received TM24!", "<PLAYER>得到了 TM24！") }
+          @speaker("") {
+            @t("TM24 contains THUNDERBOLT!\n\nTeach it to an electric\nPOKeMON!", "TM24 里含有十万伏特！\n\n教给电系宝可梦吧！")
+          }
+        } @else {
+          @speaker("") {
+            @t("Yo kid, make room\nin your pack!", "喂，小子，把背包腾出点空来！")
+          }
         }
         // Deactivate the gym trainers (original SetEventRange in the after-battle).
         setFlag("EVENT_BEAT_VERMILION_GYM_TRAINER_0")
