@@ -4268,36 +4268,23 @@ impl PokemonGame {
                 let mut result = SlotsAction::Continue;
                 let mut coins_out = None;
                 if let Some(ref mut slots) = self.slots_screen {
-                    let prev_phase = slots.phase;
                     result = slots.update_frame(slots_input);
                     coins_out = Some(slots.coins);
                     // The slots' own cues (slot_machine.asm: :120 spin start,
-                    // :842 each reel stop, :694 payout).
+                    // :842 each reel stop, :694 per-coin payout tick, :588
+                    // bar stinger, :599 seven stinger).
                     let sfx = slots.take_sfx();
                     if let Some(ref audio) = self.audio {
-                        use pokered_core::slots_screen::{SlotsPhase, SlotsSfx};
+                        use pokered_core::slots_screen::SlotsSfx;
                         for cue in sfx {
                             let id = match cue {
                                 SlotsSfx::NewSpin => SfxId::SlotsNewSpin,
                                 SlotsSfx::StopWheel => SfxId::SlotsStopWheel,
                                 SlotsSfx::Reward => SfxId::SlotsReward,
+                                SlotsSfx::GetKeyItem => SfxId::GetKeyItem,
+                                SlotsSfx::GetItem2 => SfxId::GetItem2,
                             };
                             audio.play_sfx(id);
-                        }
-                        // Reel-stop / spin start feedback.
-                        if prev_phase == SlotsPhase::BetSelect
-                            && slots.phase == SlotsPhase::Spinning
-                        {
-                            audio.play_sfx(SfxId::PressAB);
-                        }
-                        if prev_phase == SlotsPhase::Spinning
-                            && slots.phase == SlotsPhase::Result
-                        {
-                            if slots.last_payout > 0 {
-                                audio.play_sfx(SfxId::GetItem1);
-                            } else {
-                                audio.play_sfx(SfxId::Denied);
-                            }
                         }
                     }
                 }
