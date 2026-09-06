@@ -73,6 +73,24 @@ game_scene SilphCo11F {
         hideObjectByName("SILPH_CO_11F_OBJ_3")
         hideObjectByName("SILPH_CO_11F_OBJ_4")
         hideObjectByName("SILPH_CO_11F_OBJ_5")
+        // SilphCo11FTeamRocketLeavesScript: the occupation ends — every
+        // Saffron City rocket clears and the liberated citizens return
+        // (cross-map toggle bits, applied on SaffronCity entry).
+        hideObjectByName("SAFFRON_CITY_OBJ_1")
+        hideObjectByName("SAFFRON_CITY_OBJ_2")
+        hideObjectByName("SAFFRON_CITY_OBJ_3")
+        hideObjectByName("SAFFRON_CITY_OBJ_4")
+        hideObjectByName("SAFFRON_CITY_OBJ_5")
+        hideObjectByName("SAFFRON_CITY_OBJ_6")
+        hideObjectByName("SAFFRON_CITY_OBJ_7")
+        hideObjectByName("SAFFRON_CITY_OBJ_14")
+        hideObjectByName("SAFFRON_CITY_OBJ_15")
+        showObjectByName("SAFFRON_CITY_OBJ_8")
+        showObjectByName("SAFFRON_CITY_OBJ_9")
+        showObjectByName("SAFFRON_CITY_OBJ_10")
+        showObjectByName("SAFFRON_CITY_OBJ_11")
+        showObjectByName("SAFFRON_CITY_OBJ_12")
+        showObjectByName("SAFFRON_CITY_OBJ_13")
       }
     }
   }
@@ -134,6 +152,22 @@ game_scene SilphCo11F {
         hideObjectByName("SILPH_CO_11F_OBJ_3")
         hideObjectByName("SILPH_CO_11F_OBJ_4")
         hideObjectByName("SILPH_CO_11F_OBJ_5")
+        // SilphCo11FTeamRocketLeavesScript: the Saffron City occupation ends.
+        hideObjectByName("SAFFRON_CITY_OBJ_1")
+        hideObjectByName("SAFFRON_CITY_OBJ_2")
+        hideObjectByName("SAFFRON_CITY_OBJ_3")
+        hideObjectByName("SAFFRON_CITY_OBJ_4")
+        hideObjectByName("SAFFRON_CITY_OBJ_5")
+        hideObjectByName("SAFFRON_CITY_OBJ_6")
+        hideObjectByName("SAFFRON_CITY_OBJ_7")
+        hideObjectByName("SAFFRON_CITY_OBJ_14")
+        hideObjectByName("SAFFRON_CITY_OBJ_15")
+        showObjectByName("SAFFRON_CITY_OBJ_8")
+        showObjectByName("SAFFRON_CITY_OBJ_9")
+        showObjectByName("SAFFRON_CITY_OBJ_10")
+        showObjectByName("SAFFRON_CITY_OBJ_11")
+        showObjectByName("SAFFRON_CITY_OBJ_12")
+        showObjectByName("SAFFRON_CITY_OBJ_13")
       }
     }
   }

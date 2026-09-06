@@ -137,6 +137,61 @@ impl ToggleableObject {
 /// Size of the toggleable_object_flags array in bytes.
 pub const TOGGLEABLE_OBJECT_FLAGS_SIZE: usize = 32;
 
+/// Toggle bits that start SET (object hidden) on a NEW GAME.
+///
+/// The original `InitializeToggleableObjectsFlags`
+/// (engine/overworld/toggleable_objects.asm:68-92) walks the per-map
+/// `toggle_object_state` table (data/maps/toggleable_objects.asm) and sets the
+/// flag bit of every `..., OFF` entry, so story-gated NPCs/items (Oak before
+/// the parcel, the wide-awake Viridian old man, the Saffron City Silph
+/// occupants, the Route 22 rival, ...) do not exist until their scene shows
+/// them. Indices are the original `TOGGLE_*` constants (toggle_constants.asm).
+pub const DEFAULT_HIDDEN_TOGGLES: &[u8] = &[
+    0x00, // PALLET_TOWN: Oak (appears for the parcel cutscene)
+    0x02, // VIRIDIAN_CITY: wide-awake old man (until the Pokédex)
+    0x05, // CERULEAN_CITY: rival
+    0x07, // CERULEAN_CITY: guard 1 (SilphCo. gate)
+    0x11, // SAFFRON_CITY: scientist
+    0x12, // SAFFRON_CITY: Silph worker M
+    0x13, // SAFFRON_CITY: Silph worker F
+    0x14, // SAFFRON_CITY: gentleman
+    0x15, // SAFFRON_CITY: Pidgeot
+    0x16, // SAFFRON_CITY: rocker
+    0x18, // SAFFRON_CITY: rocket 9
+    0x22, // ROUTE_22: rival 1
+    0x23, // ROUTE_22: rival 2
+    0x28, // BLUES_HOUSE: walking Daisy
+    0x2E, // OAKS_LAB: Oak 1
+    0x31, // OAKS_LAB: Oak 2
+    0x44, // MR_FUJIS_HOUSE: Mr.Fuji
+    0x4C, // SILPH_CO_1F: link receptionist
+    0x62, // BILLS_HOUSE: Bill 1
+    0x63, // BILLS_HOUSE: Bill 2
+    0x71, // SS_ANNE_2F: rival
+    0x87, // ROCKET_HIDEOUT_B4F: Silph Scope
+    0x88, // ROCKET_HIDEOUT_B4F: Lift Key
+    0xD6, // CHAMPIONS_ROOM: Oak
+    0xD9, 0xDA, // SEAFOAM_ISLANDS_B1F: boulders 1/2
+    0xDB, 0xDC, // SEAFOAM_ISLANDS_B2F: boulders 1/2
+    0xDF, 0xE0, // SEAFOAM_ISLANDS_B3F: boulders 5/6
+    0xE1, 0xE2, // SEAFOAM_ISLANDS_B4F: boulders 1/2
+];
+
+/// Initial `toggleable_object_flags` for a NEW GAME: every
+/// [`DEFAULT_HIDDEN_TOGGLES`] bit set (bit set = object hidden). Save-game
+/// loads read the SRAM bytes directly instead, exactly like the original
+/// (the flags are seeded once at New Game and persist in the save).
+pub fn initial_toggle_flags() -> [u8; TOGGLEABLE_OBJECT_FLAGS_SIZE] {
+    let mut flags = [0u8; TOGGLEABLE_OBJECT_FLAGS_SIZE];
+    for &bit in DEFAULT_HIDDEN_TOGGLES {
+        let byte = bit as usize / 8;
+        if byte < flags.len() {
+            flags[byte] |= 1 << (bit % 8);
+        }
+    }
+    flags
+}
+
 /// Lookup toggle_id string to get ToggleableObject bit index.
 /// Returns None if the toggle_id is not recognized.
 ///

@@ -1987,14 +1987,28 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
             }
         }
 
-        // Third: handle default_hidden NPCs that may have been shown by script
+        // Third: handle default_hidden NPCs that may have been shown. Two
+        // show channels: the runtime __OBJ_SHOWN_<toggle> flag, and a CLEARED
+        // SRAM toggle bit — new game seeds the bit SET (hidden,
+        // initial_toggle_flags) and showObject clears it, so the cleared bit
+        // persists the shown state across save/reload.
         for npc_cfg in &self.map_script_config.npcs {
             if !npc_cfg.default_hidden {
                 continue;
             }
             if let Some(ref toggle_id) = npc_cfg.toggle_id {
                 let shown_key = format!("__OBJ_SHOWN_{}", toggle_id);
-                if self.unified_flags.get_flag(&shown_key) {
+                let extras_shown = self.unified_flags.get_flag(&shown_key);
+                let bit_cleared =
+                    pokered_data::toggleable_objects::toggle_id_to_bit_index(toggle_id)
+                        .map(|bit| {
+                            !pokered_data::toggleable_objects::is_object_hidden(
+                                &self.toggleable_object_flags,
+                                bit,
+                            )
+                        })
+                        .unwrap_or(false);
+                if extras_shown || bit_cleared {
                     if let Some(npc) = self.npc_states.iter_mut().find(|n| n.text_id == npc_cfg.id)
                     {
                         npc.visible = true;

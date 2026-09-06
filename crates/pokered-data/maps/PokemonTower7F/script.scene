@@ -69,6 +69,8 @@ game_scene PokemonTower7F {
     // Original hides TOGGLE_POKEMON_TOWER_7F_MR_FUJI before the warp
     // (PokemonTower7FWarpToMrFujiHouseScript) — he now waits at his house.
     hideObject("POKEMONTOWER7F_MR_FUJI")
+    // ShowObject TOGGLE_MR_FUJIS_HOUSE_MR_FUJI — he now waits at home.
+    showObject("MRFUJISHOUSE_MR_FUJI")
     warpTo("MrFujisHouse", 3, 7)
   }
 

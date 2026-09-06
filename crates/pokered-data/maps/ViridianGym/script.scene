@@ -65,6 +65,7 @@ game_scene ViridianGym {
         setFlag("EVENT_BEAT_VIRIDIAN_GYM_TRAINER_7")
         // Re-enable the Route 22 rival rematch (original ShowObject +
         // EVENT_2ND_ROUTE22_RIVAL_BATTLE / EVENT_ROUTE22_RIVAL_WANTS_BATTLE).
+        showObjectByName("ROUTE_22_RIVAL_2")
         setFlag("EVENT_2ND_ROUTE22_RIVAL_BATTLE")
         setFlag("EVENT_ROUTE22_RIVAL_WANTS_BATTLE")
       }
