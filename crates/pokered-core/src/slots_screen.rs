@@ -167,8 +167,14 @@ impl SlotsScreen {
     /// Create a fresh slots screen. `lucky` selects the higher-odds machine,
     /// `coins` is the player's current balance, `seed` seeds the RNG.
     pub fn new(lucky: bool, coins: u16, seed: u32) -> Self {
+        // LoadSlotMachineTiles draws each wheel once at $1c, leaving the
+        // offset at $1d (the next byte). The first screen is fully aligned.
+        let mut machine = SlotMachineState::new(lucky);
+        for idx in 0..3 {
+            machine.advance_wheel(idx);
+        }
         Self {
-            machine: SlotMachineState::new(lucky),
+            machine,
             coins: coins.min(MAX_COINS),
             phase: SlotsPhase::BetSelect,
             pending_sfx: std::collections::VecDeque::new(),
