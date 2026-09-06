@@ -66,6 +66,8 @@ mod tests_oak_event;
 #[cfg(test)]
 mod tests_oaks_lab;
 #[cfg(test)]
+mod tests_pokecenter_heal;
+#[cfg(test)]
 mod tests_scripts;
 #[cfg(test)]
 mod tests_toggle_objects;

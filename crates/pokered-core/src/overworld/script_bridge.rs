@@ -945,9 +945,13 @@ pub fn map_id_to_script_key(map_id: MapId) -> String {
     format!("{:?}", map_id)
 }
 
+/// Numeric ids are the NPC's text id (map.json `textId` == script_config.json
+/// `npcs[].id`, the same number `@trigger(npc = N)` binds), NOT the 0-based
+/// object index — the Pokécenter nurse is the first object on her map but the
+/// scripts face her with `faceNpc("1", ...)`.
 pub fn find_npc_index_by_id(npcs: &[NpcRuntimeState], npc_id: &str) -> Option<usize> {
-    if let Ok(idx) = npc_id.parse::<u8>() {
-        return npcs.iter().position(|n| n.npc_index == idx);
+    if let Ok(text_id) = npc_id.parse::<u8>() {
+        return npcs.iter().position(|n| n.text_id == text_id);
     }
     None
 }
