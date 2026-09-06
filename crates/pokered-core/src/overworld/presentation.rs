@@ -96,3 +96,69 @@ pub fn ship_departure_sfx(sfx: ShipDepartureSfx) -> &'static str {
         ShipDepartureSfx::Horn => "SFX_SS_ANNE_HORN",
     }
 }
+
+// Re-export the engine's per-tile NPC walk duration: classic GB walkers take
+// $10 frames per tile (movement.asm) — double the player's 8-frame/tile pace
+// in this port. Renderers must normalize by this, not by the player's step.
+pub use dotzuki_engine::overworld::npc_movement::NPC_WALK_FRAMES;
+
+/// Pixel offset (0..=15 px) of a walking NPC along its facing, for smooth
+/// rendering. Classic GB walkers advance 1px/frame over their 16-frame step
+/// (16px/tile); the tile commit lands only the final pixel. `walk_counter`
+/// counts remaining frames (`NPC_WALK_FRAMES` at step start, 0 when idle).
+pub fn npc_walk_pixel_offset(walk_counter: u8) -> i32 {
+    if walk_counter == 0 {
+        0 // Idle — the step has already been committed to the tile grid
+    } else {
+        (NPC_WALK_FRAMES.saturating_sub(walk_counter)) as i32
+    }
+}
+
+/// Walking-animation phase (0..=3) of a walking NPC: 0/2 stand, 1 step,
+/// 3 step (mirrored). The four phases spread evenly across the 16-frame
+/// step — 4 frames each — matching the player's 4-phase cycle compressed
+/// to 2 frames per phase at its 8-frame pace.
+pub fn npc_walk_anim_phase(walk_counter: u8) -> u8 {
+    if walk_counter == 0 {
+        0 // Idle
+    } else if walk_counter > NPC_WALK_FRAMES - 4 {
+        0 // 13..=16: stand
+    } else if walk_counter > NPC_WALK_FRAMES - 8 {
+        1 // 9..=12: step
+    } else if walk_counter > NPC_WALK_FRAMES - 12 {
+        2 // 5..=8: stand
+    } else {
+        3 // 1..=4: step (mirrored)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn npc_walk_pixel_offset_covers_the_full_tile() {
+        assert_eq!(npc_walk_pixel_offset(0), 0); // idle
+        assert_eq!(npc_walk_pixel_offset(NPC_WALK_FRAMES), 0); // step start
+        assert_eq!(npc_walk_pixel_offset(NPC_WALK_FRAMES - 1), 1);
+        assert_eq!(npc_walk_pixel_offset(1), 15); // commit lands the last px
+    }
+
+    #[test]
+    fn npc_walk_anim_phase_cycles_evenly_over_16_frames() {
+        // Step start stands, then step/stand/step in 4-frame quarters.
+        assert_eq!(npc_walk_anim_phase(0), 0); // idle
+        for wc in 13..=16 {
+            assert_eq!(npc_walk_anim_phase(wc), 0, "wc={wc}");
+        }
+        for wc in 9..=12 {
+            assert_eq!(npc_walk_anim_phase(wc), 1, "wc={wc}");
+        }
+        for wc in 5..=8 {
+            assert_eq!(npc_walk_anim_phase(wc), 2, "wc={wc}");
+        }
+        for wc in 1..=4 {
+            assert_eq!(npc_walk_anim_phase(wc), 3, "wc={wc}");
+        }
+    }
+}

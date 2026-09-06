@@ -3,6 +3,7 @@ use pokered_core::data::map_data_loader::{get_block_data, get_map_json, resolve_
 use pokered_core::data::maps::MapId;
 use pokered_core::data::sprites::SpriteId;
 use pokered_core::data::tileset_data;
+use pokered_core::overworld::presentation::{npc_walk_anim_phase, npc_walk_pixel_offset};
 use pokered_core::overworld::{Direction, MovementState, OverworldScreen};
 use pokered_data::impl_traits::PokemonTilesetData;
 use dotzuki_engine::overworld::types::TransportMode;
@@ -744,19 +745,9 @@ pub fn draw_overworld(
                 let (frame, flip_h) = if let Some(sf) = npc.scripted_frame {
                     (sf as usize, false)
                 } else if num_frames >= 6 {
-                    // 4-frame cycle with even timing: each frame 2 walk_counter units
-                    // AnimFrame 0-3: 0/2=stand, 1=walk, 3=walk+flip
-                    let anim_frame = if npc.walk_counter == 0 {
-                        0 // Idle
-                    } else if npc.walk_counter > 6 {
-                        0 // 7,8: stand
-                    } else if npc.walk_counter > 4 {
-                        1 // 5,6: walk
-                    } else if npc.walk_counter > 2 {
-                        2 // 3,4: stand
-                    } else {
-                        3 // 1,2: walk+flip
-                    };
+                    // AnimFrame 0-3: 0/2=stand, 1=walk, 3=walk+flip — phases
+                    // spread evenly over the NPC's 16-frame step (4 each).
+                    let anim_frame = npc_walk_anim_phase(npc.walk_counter);
 
                     match npc_facing {
                         Direction::Down => {
@@ -809,11 +800,11 @@ pub fn draw_overworld(
                 let npc_screen_tx = npc.x as i32 * 2 - view_origin_tx;
                 let npc_screen_ty = npc.y as i32 * 2 - view_origin_ty;
 
-                // Smooth pixel interpolation during movement.
-                // Original GB moves sprites 2px/frame (16px/tile ÷ 8 frames).
+                // Smooth pixel interpolation during movement. Classic GB
+                // walkers advance 1px/frame over their 16-frame step
+                // (16px/tile) — unlike the player's 2px/frame over 8.
                 let (walk_dx, walk_dy) = if npc.walk_counter > 0 {
-                    let elapsed = (8u8.saturating_sub(npc.walk_counter)) as i32;
-                    let px = elapsed * 2;
+                    let px = npc_walk_pixel_offset(npc.walk_counter);
                     match npc.facing {
                         Direction::Down => (0i32, px),
                         Direction::Up => (0, -px),
@@ -923,8 +914,7 @@ pub fn draw_overworld(
                     let npc_screen_tx = npc.x as i32 * 2 - view_origin_tx;
                     let npc_screen_ty = npc.y as i32 * 2 - view_origin_ty;
                     let (walk_dx, walk_dy) = if npc.walk_counter > 0 {
-                        let elapsed = (8u8.saturating_sub(npc.walk_counter)) as i32;
-                        let px = elapsed * 2;
+                        let px = npc_walk_pixel_offset(npc.walk_counter);
                         match npc.facing {
                             Direction::Down => (0i32, px),
                             Direction::Up => (0, -px),
