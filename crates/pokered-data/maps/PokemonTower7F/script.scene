@@ -66,6 +66,33 @@ game_scene PokemonTower7F {
     // The Saffron City guards are unblocked by SaffronCity's @load gating on
     // EVENT_RESCUED_MR_FUJI (hideObjectByName SAFFRON_CITY_OBJ_14/15), which is
     // functionally equivalent to the original TOGGLE_SAFFRON_CITY_E/F.
+    // Original hides TOGGLE_POKEMON_TOWER_7F_MR_FUJI before the warp
+    // (PokemonTower7FWarpToMrFujiHouseScript) — he now waits at his house.
+    hideObject("POKEMONTOWER7F_MR_FUJI")
     warpTo("MrFujisHouse", 3, 7)
+  }
+
+  // ── Rocket walk-off (PokemonTower7FEndBattleScript → RocketLeaveMovement
+  //    + HideNPCScript, scripts/PokemonTower7F.asm:38-100): after each
+  //    rocket's battle the rocket walks its coord-table path down the tower
+  //    and is hidden for good. LOS battles end without a per-map hook, so
+  //    the choreography replays once on the next entry (same walk, same
+  //    permanent hide).
+  @load {
+    @if (getFlag("EVENT_BEAT_POKEMONTOWER_7_TRAINER_0") && !getFlag("EVENT_TOWER7_ROCKET_0_LEFT")) {
+      setFlag("EVENT_TOWER7_ROCKET_0_LEFT")
+      moveNpc("POKEMONTOWER7F_ROCKET_1", [[9, 12], [9, 13]])
+      hideObject("POKEMONTOWER7F_ROCKET_1")
+    }
+    @if (getFlag("EVENT_BEAT_POKEMONTOWER_7_TRAINER_1") && !getFlag("EVENT_TOWER7_ROCKET_1_LEFT")) {
+      setFlag("EVENT_TOWER7_ROCKET_1_LEFT")
+      moveNpc("POKEMONTOWER7F_ROCKET_2", [[12, 10], [12, 11], [12, 12]])
+      hideObject("POKEMONTOWER7F_ROCKET_2")
+    }
+    @if (getFlag("EVENT_BEAT_POKEMONTOWER_7_TRAINER_2") && !getFlag("EVENT_TOWER7_ROCKET_2_LEFT")) {
+      setFlag("EVENT_TOWER7_ROCKET_2_LEFT")
+      moveNpc("POKEMONTOWER7F_ROCKET_3", [[9, 8], [9, 9], [9, 10], [9, 11]])
+      hideObject("POKEMONTOWER7F_ROCKET_3")
+    }
   }
 }
