@@ -5,7 +5,7 @@ use pokered_core::options_menu::OptionsMenuState;
 use pokered_core::party_screen::PartyScreenState;
 use pokered_core::save_menu::SaveMenuState;
 use pokered_core::start_menu::StartMenuState;
-use pokered_core::stats_screen::StatsScreenState;
+use pokered_core::stats_screen::{StatsPage, StatsScreenState};
 use pokered_data::mon_party_icons::{icon_for_species, IconKind};
 use pokered_data::impl_traits::PokemonRenderData;
 use pokered_data::lang_data;
@@ -149,12 +149,16 @@ pub fn draw_stats_screen(
     let drew_front = if let Ok(cached) = rm.load_pokemon_front(&sprite_name) {
         let ts = cached.tileset.clone();
         let w_tiles = cached.source_size.0 / TILE_SIZE;
-        let h_tiles = cached.source_size.1 / TILE_SIZE;
-        let _ = h_tiles;
         let max_w = 7u32;
         let x_off = ((max_w.saturating_sub(w_tiles)) / 2) * TILE_SIZE;
         let px = TILE_SIZE + x_off;
-        let py = TILE_SIZE / 2;
+        // A full-size front sprite is 56 px tall. Start it at y=0 so it
+        // stays above the dex-number row (y=56); the old 4 px offset
+        // let its bottom tiles overwrite the number drawn by the UI.
+        let py = match state.page() {
+            StatsPage::Stats => 0,
+            StatsPage::Moves => TILE_SIZE / 2,
+        };
         blit_tileset(fb, &ts, px, py, w_tiles, &GRAYSCALE_SPRITE_PALETTE);
         true
     } else {
