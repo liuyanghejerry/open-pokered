@@ -4,7 +4,8 @@
   "npcs": [
     {
       "id": 1,
-      "talk": "talkGiovanni"
+      "talk": "talkGiovanni",
+      "toggleId": "VIRIDIAN_GYM_GIOVANNI"
     },
     {
       "id": 2,

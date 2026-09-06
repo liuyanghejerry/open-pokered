@@ -76,6 +76,10 @@ game_scene ChampionsRoom {
         // OAK congratulates the player (orig _ChampionsRoomOakCongratulatesPlayerText).
         // The original embeds the player's starter name after "left with"
         // (text_ram wNameBuffer) — resolved via the <STARTER> placeholder.
+        // ChampionsRoomOakCongratulatesPlayerScript also turns the player and
+        // the rival LEFT before Oak speaks.
+        facePlayer("left")
+        faceNpc("CHAMPIONS_ROOM_OBJ_1", "left")
         faceNpc("CHAMPIONS_ROOM_OBJ_2", "down")
         @say("") {
           @t("OAK: So, you won!\nCongratulations! You're the\nnew POKeMON LEAGUE champion!\n\nYou've grown up so much\nsince you first left with\n<STARTER>!\n\n<PLAYER>, you have come of\nage!", "大木博士：你赢了！恭喜！你是\n新的宝可梦联盟冠军！\n\n你成长了许多，比起当初带着\n<STARTER>！\n\n<PLAYER>，你已经长大成人了！")

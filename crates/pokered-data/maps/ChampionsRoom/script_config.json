@@ -4,7 +4,8 @@
   "npcs": [
     {
       "id": 1,
-      "talk": "talkBlue"
+      "talk": "talkBlue",
+      "toggleId": "CHAMPIONS_ROOM_OBJ_1"
     },
     {
       "defaultHidden": true,
