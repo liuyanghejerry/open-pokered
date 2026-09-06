@@ -456,6 +456,10 @@ impl BattleVisualEffects {
             BattlePhase::PartyStats { .. } => BattlePhaseKind::PartyStats,
             BattlePhase::EnemySendingNext { .. } => BattlePhaseKind::EnemySendingNext,
             BattlePhase::ShiftPrompt => BattlePhaseKind::ShiftPrompt,
+            BattlePhase::LearnMoveAsk { .. } | BattlePhase::LearnMoveGiveUpConfirm { .. } => {
+                BattlePhaseKind::ShiftPrompt
+            }
+            BattlePhase::LearnMoveChoose { .. } => BattlePhaseKind::MoveSelect,
             BattlePhase::ShiftSwitchSelect => BattlePhaseKind::ShiftSwitchSelect,
             BattlePhase::ForcedStruggle { .. } => BattlePhaseKind::ShowingText,
             BattlePhase::PlayerFaintSwitch => BattlePhaseKind::PlayerFaintSwitch,

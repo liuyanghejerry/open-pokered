@@ -243,8 +243,9 @@ fn p5_leech_seed_scales_with_toxic_counter() {
     assert_eq!(counter, Some(2), "counter incremented twice in one turn");
 }
 
-/// Haze: legacy resets ALL stages + volatiles + status both sides. Native does the
-/// same (the ResetAll broadcast).
+/// Haze: legacy + native both reset ALL stages both sides, wipe the masked
+/// volatiles both sides, and cure ONLY the side opposite the user's
+/// non-volatile status (haze.asm .cureStatuses).
 #[test]
 fn p5_haze_parity() {
     reset_p5_scratch();
@@ -261,7 +262,8 @@ fn p5_haze_parity() {
     assert_eq!(ls.enemy.stat_stages.defense, 0);
     assert!(!ls.player.has_status1(status1::CONFUSED));
     assert!(!ls.enemy.has_status2(status2::SEEDED));
-    assert!(ls.player.active_mon().status.is_none());
+    // Only the DEFENDER (enemy, opposite the Haze user) is status-cured.
+    assert_eq!(ls.player.active_mon().status, StatusCondition::Burn);
     assert!(ls.enemy.active_mon().status.is_none());
 
     // Native: matching setup.
@@ -279,9 +281,10 @@ fn p5_haze_parity() {
     fire_p5(&mut es, &mut effects, haze_effect(), Event::Custom(EV_HAZE), OPP, PLAYER, RelayVar::Unit, vec![]);
     assert_eq!(es.player_battlers[0].stat_stages.get(StatIndex::Attack).copied().unwrap_or(0), 0, "haze cleared player Attack stage");
     assert_eq!(es.opponent_battlers[0].stat_stages.get(StatIndex::Defense).copied().unwrap_or(0), 0, "haze cleared enemy Defense stage");
-    assert!(es.player_battlers[0].status.is_none(), "haze cleared player status");
-    assert!(es.opponent_battlers[0].status.is_none(), "haze cleared enemy status");
-    assert!(effects.is_empty(), "haze cleared ALL volatiles both sides");
+    // source=PLAYER fires → only the OPPONENT's status is cured.
+    assert_eq!(es.player_battlers[0].status, Some(StatusCondition::Burn), "the Haze USER keeps its status");
+    assert!(es.opponent_battlers[0].status.is_none(), "haze cleared the TARGET's status");
+    assert!(effects.is_empty(), "haze cleared the masked volatiles both sides");
 }
 
 /// Substitute (#28): legacy costs max/4, and HP == cost succeeds at 0 HP (bug).

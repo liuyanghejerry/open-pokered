@@ -13,8 +13,8 @@ use super::screen::{
 };
 use crate::game_state::{GameScreen, ScreenAction};
 use crate::overworld::{
-    collision, doors_elevators, npc_interaction, npc_movement, player_movement, presentation,
-    script_bridge, special_terrain, wild_encounters,
+    bookshelf, collision, doors_elevators, npc_interaction, npc_movement, player_movement,
+    presentation, script_bridge, special_terrain, wild_encounters,
 };
 use crate::overworld::script_bridge::HealingMachinePhase;
 use crate::overworld::spinner_paths::spinner_paths;
@@ -483,6 +483,23 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
             WarpFadeState::Idle => {}
         }
 
+        // EnterMapAnim .flyAnimation (player_animations.asm:53-70): the FLY
+        // arrival bird — flaps every step (Delay3) along
+        // FlyAnimationEnterScreenCoords while the player sprite is swapped
+        // for the bird; gameplay stays frozen like the spin-in.
+        if let Some(mut fly) = self.enter_map_fly_anim.take() {
+            if fly.frame == 0 {
+                self.audio_requests.push(OverworldAudioRequest::PlaySound {
+                    sound_id: "SFX_FLY".to_string(),
+                });
+            }
+            fly.tick();
+            if !fly.is_done() {
+                self.enter_map_fly_anim = Some(fly);
+            }
+            return ScreenAction::Continue;
+        }
+
         // EnterMapAnim arrival spin-in (player_animations.asm:1-91): once
         // the fade-in-from-white completes, the player descends from off the
         // top of the screen and spins in place (FLY / TELEPORT / DIG / ESCAPE
@@ -567,6 +584,11 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                     script_bridge::ScriptEffect::GiveItem { item_id, .. } => Some(item_id.clone()),
                     _ => None,
                 };
+                // `givePokemon` must report whether the mon was handed over (the
+                // original _GivePokemon carry flag): party room OR current PC box
+                // room — the box counts as success ("sent to BOX!").
+                let is_give_pokemon =
+                    matches!(effect, script_bridge::ScriptEffect::GivePokemon { .. });
                 let base_result = Self::finish_effect(effect);
                 // StartBattle must SUSPEND the script (not resume it now): the
                 // battle hasn't run yet, so the `await game.startBattle(...)`
@@ -607,6 +629,12 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                     let has_room = held
                         || self.script_bag_names.len() < crate::items::inventory::BAG_ITEM_CAPACITY;
                     CommandResult::Bool(has_room)
+                } else if is_give_pokemon {
+                    // Mirrors _GivePokemon: party first, else the current PC box;
+                    // failure only when BOTH are full (engine/events/give_pokemon.asm).
+                    CommandResult::Bool(
+                        self.party_count < 6 || (self.box_count as usize) < crate::pokemon::pc_box::MONS_PER_BOX,
+                    )
                 } else {
                     base_result
                 };
@@ -898,7 +926,13 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
         // trainer walks up to the player → THEN the battle. The intro state
         // replaces the instant-battle path; `pending_trainer_battle` is set
         // when the intro completes.
-        if self.pending_trainer_battle.is_none() && self.trainer_encounter_intro.is_none() {
+        // The engage guard mirrors BIT_SEEN_BY_TRAINER (trainers.asm): while a
+        // spotted trainer's before-battle text is showing, the sight check must
+        // not re-fire for it (or any other trainer) — the player is frozen.
+        if self.pending_trainer_battle.is_none()
+            && self.trainer_encounter_intro.is_none()
+            && self.pending_trainer_engage.is_none()
+        {
             let trainer_headers =
                 pokered_data::trainer_headers::get_trainer_headers(self.state.current_map);
             if let Some(sighting) = npc_interaction::check_trainer_line_of_sight(
@@ -985,15 +1019,44 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                 .get(intro.npc_index as usize)
                 .map_or(true, |n| npc_movement::is_scripted_move_done(n));
             if bubble_done && walk_done {
-                self.pending_trainer_battle = Some(PendingTrainerBattle {
+                // DisplayEnemyTrainerTextAndStartBattle (home/trainers.asm:163-174):
+                // after the walk-up, the trainer's BEFORE-battle text displays and
+                // then the fight starts. The text comes from the map json (the
+                // same body talking to the trainer shows); the battle is queued
+                // via `pending_trainer_engage` once the box closes.
+                let text_id = self
+                    .npc_states
+                    .get(intro.npc_index as usize)
+                    .map(|n| n.text_id)
+                    .unwrap_or(0);
+                let engage = PendingTrainerBattle {
                     trainer_id: intro.trainer_id,
                     npc_index: intro.npc_index,
                     end_battle_text: intro.end_battle_text,
                     rival_triplet_base: intro.rival_triplet_base,
-                });
+                };
+                if self.try_show_npc_json_text(text_id) {
+                    self.pending_trainer_engage = Some(engage);
+                } else {
+                    self.pending_trainer_battle = Some(engage);
+                }
             } else {
                 self.trainer_encounter_intro = Some(intro);
             }
+        }
+
+        // TalkToTrainer engagement (home/trainers.asm:107-123): a trainer's
+        // before-battle text finished — start the fight. Scenes that start
+        // their own battle cancel the engage when they set
+        // `pending_trainer_battle`; anything still busy keeps it waiting.
+        if self.pending_trainer_engage.is_some()
+            && self.pending_trainer_battle.is_none()
+            && self.pending_wild_encounter.is_none()
+            && self.active_script_effect.is_none()
+            && self.pending_dialogue.is_none()
+            && self.trainer_encounter_intro.is_none()
+        {
+            self.pending_trainer_battle = self.pending_trainer_engage.take();
         }
 
         // A-button: check signs first, then NPCs (matches original game priority).
@@ -1048,6 +1111,45 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                     // Hidden coins (Game Corner floor spots) — the ref checks
                     // them in the same hidden-event pass.
                     if self.handle_hidden_coin(fx, fy) {
+                        return ScreenAction::Continue;
+                    }
+                }
+            }
+
+            // PrintBookshelfText (engine/events/hidden_events/bookshelves.asm):
+            // facing UP, the faced tile matched against BookshelfTileIDs —
+            // bookshelves, the wall TOWN MAP, elevators, #MON stuff shelves,
+            // and the INDIGO PLATEAU statues (runs before sign/NPC checks,
+            // like the original's hidden-event pass).
+            if self.state.player.facing == Direction::Up {
+                if let Some(map) = &self.map_data {
+                    let (dx, dy) = player_movement::direction_delta(self.state.player.facing);
+                    let fx = (self.state.player.x as i32 + dx as i32).max(0) as u8;
+                    let fy = (self.state.player.y as i32 + dy as i32).max(0) as u8;
+                    let concrete = pokered_data::tilesets::resolve_concrete(&map.tileset);
+                    let tile = bookshelf::faced_tile_id(
+                        &map.blocks,
+                        map.width,
+                        concrete,
+                        fx,
+                        fy,
+                    );
+                    if let Some(mut kind) = bookshelf::lookup(map.tileset.name(), tile) {
+                        // BookOrSculptureText: the MANSION tileset's (8,6) tile
+                        // $38 is the DIGLETT sculpture variant.
+                        if kind == bookshelf::BookshelfText::PokemonBooks
+                            && map.tileset.name() == "Mansion"
+                            && tile == 0x38
+                            && fx == 8
+                            && fy == 6
+                        {
+                            kind = bookshelf::BookshelfText::DiglettSculpture;
+                        }
+                        let text = bookshelf::text_for(kind, self.state.player.x as u8);
+                        self.pending_dialogue = Some(crate::overworld::screen::BedroomDialogue::from_message(&self.localize_message(&text)));
+                        if kind == bookshelf::BookshelfText::TownMap {
+                            self.pending_town_map = true;
+                        }
                         return ScreenAction::Continue;
                     }
                 }
@@ -1110,23 +1212,14 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                         trainer_class,
                         trainer_set,
                     } => {
+                        // TalkToTrainer (home/trainers.asm:89-123): talking to an
+                        // undefeated trainer shows its before-battle text and then
+                        // ALWAYS starts the fight (EngageMapTrainer +
+                        // StartTrainerBattle). The battle is queued as an engage
+                        // that fires once the text closes — unless the scene
+                        // starts its own battle (gym leaders), which cancels it.
                         let face_dir =
                             player_movement::opposite_direction(self.state.player.facing);
-                        if let Some(npc) = self
-                            .npc_states
-                            .iter_mut()
-                            .find(|n| n.npc_index == npc_index)
-                        {
-                            npc.facing = face_dir;
-                            let text_id = npc.text_id;
-                            if self.try_call_script_npc_talk(text_id) {
-                                return ScreenAction::Continue;
-                            }
-                            if self.try_show_npc_json_text(text_id) {
-                                return ScreenAction::Continue;
-                            }
-                        }
-                        // Start a trainer battle via pending_trainer_battle
                         let tc = pokered_data::trainer_data::TrainerClass::from_u8(trainer_class);
                         let trainer_id =
                             pokered_data::trainer_data::make_trainer_id(tc, trainer_set);
@@ -1134,12 +1227,33 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                             .npc_pokemon_data
                             .get(npc_index as usize)
                             .and_then(|d| d.end_battle_text.clone());
-                        self.pending_trainer_battle = Some(PendingTrainerBattle {
+                        let engage = PendingTrainerBattle {
                             trainer_id,
                             npc_index,
                             end_battle_text,
                             rival_triplet_base: None,
-                        });
+                        };
+                        let text_id = self
+                            .npc_states
+                            .iter()
+                            .find(|n| n.npc_index == npc_index)
+                            .map(|n| n.text_id)
+                            .unwrap_or(0);
+                        if let Some(npc) = self
+                            .npc_states
+                            .iter_mut()
+                            .find(|n| n.npc_index == npc_index)
+                        {
+                            npc.facing = face_dir;
+                        }
+                        if self.try_call_script_npc_talk(text_id)
+                            || self.try_show_npc_json_text(text_id)
+                        {
+                            self.pending_trainer_engage = Some(engage);
+                            return ScreenAction::Continue;
+                        }
+                        // No scene, no text: start immediately.
+                        self.pending_trainer_battle = Some(engage);
                     }
                     npc_interaction::InteractionResult::ItemPickup { npc_index, .. } => {
                         self.npc_face_player(npc_index);
@@ -1698,6 +1812,23 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                 // SaveData, so defer the increment to the app layer.
                 self.game_data_requests
                     .push(OverworldGameDataRequest::TickDaycareExp);
+                // Poison: every fourth step the poisoned party takes 1 HP of
+                // damage (ApplyOutOfBattlePoisonDamage, poison.asm:1-17 — the
+                // asm skips ticks while a scripted walk is playing; the port
+                // equivalently skips steps that happen mid-script/warp/dialogue
+                // or right as a wild battle fires).
+                if step_completed {
+                    self.poison_step_counter = self.poison_step_counter.wrapping_add(1);
+                    if self.poison_step_counter % 4 == 0
+                        && self.active_script_effect.is_none()
+                        && self.pending_dialogue.is_none()
+                        && self.pending_wild_encounter.is_none()
+                        && self.pending_warp.is_none()
+                    {
+                        self.game_data_requests
+                            .push(OverworldGameDataRequest::PoisonStep);
+                    }
+                }
             }
         } else {
             if let Some(dir) = movement_input.direction_pressed() {
@@ -2726,6 +2857,10 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                         .push(OverworldAudioRequest::FadeOutMusic);
                 }
                 script_bridge::ScriptEffect::StartBattle { trainer_id, rival_triplet_base } => {
+                    // The scene runs its own battle flow (gym leaders, rivals):
+                    // cancel any queued talk-to-trainer engage so the fight does
+                    // not double-fire when the scene's text closes.
+                    self.pending_trainer_engage = None;
                     self.pending_trainer_battle = Some(PendingTrainerBattle {
                         trainer_id,
                         npc_index: u8::MAX,

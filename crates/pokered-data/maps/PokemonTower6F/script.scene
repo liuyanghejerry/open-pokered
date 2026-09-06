@@ -13,13 +13,18 @@
 //     ghost is unveiled (SILPH SCOPE text + MarowakAnim reveal) and fightable;
 //     without it the battle stays an unwinnable ghost fight (moves fail,
 //     "too scared to move", escape always allowed) and the player must return
-//     with the scope. On win it sets EVENT_BEAT_GHOST_MAROWAK, plays the
-//     Marowak cry and shows the "calmed" text. The encounter is implemented
-//     with startWildBattle("MAROWAK", 30): the battle layer derives the ghost /
-//     ghost-reveal state from the map + bag (see start_wild_battle), then the
-//     fight resolves once (on flee/lose the ghost stays and re-triggers at the
-//     stairs) and the faithful departed sequence runs. (The original also
-//     nudges the player one tile right on flee; that push is not reproduced.)
+//     with the scope. After the fight the original branches on
+//     wBattleResult == 0: a win AND a Poké-Doll escape (which never writes
+//     wBattleResult — the famous Poké Doll skip) both count as defeating the
+//     ghost, so EVENT_BEAT_GHOST_MAROWAK is set and the "calmed" sequence
+//     plays; a loss or a Run-menu escape (wBattleResult = $1/$2) leaves the
+//     ghost in place and nudges the player one tile right with a simulated
+//     PAD_RIGHT. The encounter is implemented with startWildBattle("MAROWAK",
+//     30): the battle layer derives the ghost / ghost-reveal state from the
+//     map + bag (see start_wild_battle), then the fight resolves once (the
+//     outcome arrives as "win" / "caught" / "fled" (= Poké-Doll escape) /
+//     "ran" (= menu run) / "lose") and either the departed sequence or the
+//     one-tile right nudge runs.
 
 game_scene PokemonTower6F {
   // ── Channeler #1 (npc 1) — sight-engaged; dialogue only ──────────────────
@@ -92,20 +97,30 @@ game_scene PokemonTower6F {
   // starts the fight. On win the original sets the flag, prints "GHOST was
   // CUBONE's mother", plays the Marowak cry, then "soul was calmed / departed".
   @storyline("coordGhostMarowak") {
-    @trigger(map = "PokemonTower6F", name = "ghostMarowak")
+    @trigger(map = "PokemonTower6F", name = "ghostMarowak", coords = [[10, 16]])
     @if (!getFlag("EVENT_BEAT_GHOST_MAROWAK")) {
       @speaker("") { @t("Be gone... Intruders...", "离开……入侵者……") }
-      // Scripted wild battle vs the RESTLESS_SOUL (Marowak) Lv 30. On win/catch
-      // (only possible with the SILPH_SCOPE) the ghost is calmed; on flee/lose
-      // it stays and re-triggers at the stairs.
+      // Scripted wild battle vs the RESTLESS_SOUL (Marowak) Lv 30. The
+      // original treats wBattleResult == 0 as defeat — and only a WIN or a
+      // Poké-Doll escape lands there: a menu run writes wBattleResult=$2
+      // (core.asm:1600-1602), a capture writes $2 as well (core.asm:2293),
+      // and the doll's escape never touches it. So the Doll skip calms the
+      // ghost, but running away or catching it does NOT: the ghost stays and
+      // the player is nudged one tile right (.did_not_defeat's simulated
+      // PAD_RIGHT).
       result = startWildBattle("MAROWAK", 30)
-      @if (result == "win" || result == "caught") {
+      @if (result == "win" || result == "fled") {
         setFlag("EVENT_BEAT_GHOST_MAROWAK")
         @speaker("") { @t("The GHOST was the restless\nsoul of CUBONE's mother!", "这个幽灵是卡拉卡拉的母亲未安\n息的灵魂！") }
         playCry("MAROWAK")
         @speaker("") {
           @t("The mother's soul was\ncalmed.\n\nIt departed to the\nafterlife!", "母亲的灵魂得到了安息。\n\n她去了另一个世界！")
         }
+      }
+      @if (result == "lose" || result == "ran" || result == "caught") {
+        // Original .did_not_defeat branch: one-tile simulated PAD_RIGHT push;
+        // the ghost remains and re-triggers at the stairs.
+        movePlayerRelative([[1, 0]])
       }
     }
   }

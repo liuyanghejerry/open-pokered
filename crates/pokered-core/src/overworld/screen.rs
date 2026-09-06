@@ -139,6 +139,10 @@ pub enum OverworldGameDataRequest {
     /// Advance the deposited Day Care Pokémon's experience by one overworld
     /// step (no-op if nothing is deposited).
     TickDaycareExp,
+    /// Run one out-of-battle poison-damage tick (every 4th overworld step —
+    /// `ApplyOutOfBattlePoisonDamage`, engine/events/poison.asm). The frontend
+    /// consumer calls `overworld::poison::apply_out_of_battle_poison_damage`.
+    PoisonStep,
     /// Mark a city map as visited in `town_visited_flags` (gates the FLY
     /// destination list). Pushed on map load for maps below FIRST_ROUTE_MAP,
     /// mirroring MarkTownVisitedAndLoadToggleableObjects.
@@ -606,6 +610,11 @@ pub struct OverworldScreen<G: GameData = pokered_data::impl_traits::PokemonRedDa
     /// Active engage-intro ("!" bubble + music + walk-up) — completes into
     /// `pending_trainer_battle`.
     pub(crate) trainer_encounter_intro: Option<TrainerEncounterIntro>,
+    /// A trainer engagement whose before-battle text is showing (TalkToTrainer /
+    /// DisplayEnemyTrainerTextAndStartBattle, home/trainers.asm): once the text
+    /// closes and no script or battle took over, this promotes into
+    /// `pending_trainer_battle`. A scene that starts its own battle cancels it.
+    pub(crate) pending_trainer_engage: Option<PendingTrainerBattle>,
     pub pending_give_pokemon: Option<PendingGivePokemon>,
     pub sfx_event: OverworldSfxEvent,
     pub bump_anim_counter: u8,
@@ -678,12 +687,24 @@ pub struct OverworldScreen<G: GameData = pokered_data::impl_traits::PokemonRedDa
     /// storage screen ("center" / "items" / "bills"). Instant effect — the
     /// script has already run on, so no resume call is needed.
     pub pending_pc: Option<String>,
+    /// The wall TOWN MAP (bookshelf table `House` $3D) was interacted with:
+    /// after the "A TOWN MAP." text closes, the app opens the TownMap screen
+    /// (the original's TownMapText → DisplayTownMap).
+    pub pending_town_map: bool,
     /// Set by `game.enterHallOfFame()`; the app records the party in the
     /// Hall of Fame, plays the roll-call movie + credits, saves, and resets
     /// to the title screen. Instant effect — no resume call is needed.
     pub pending_hof_ceremony: bool,
     pub heal_requested: bool,
     pub party_count: u8,
+    /// Count of the CURRENT PC box, seeded by the app layer alongside
+    /// `party_count`. `givePokemon` reports success while either the party or
+    /// this box has room (the original's _GivePokemon carry flag).
+    pub box_count: u8,
+    /// Completed-step counter for the out-of-battle poison tick
+    /// (`wStepCounter & 3` in ApplyOutOfBattlePoisonDamage — damage every
+    /// fourth step).
+    pub poison_step_counter: u32,
     /// Level of the lead (first) party Pokémon, kept in sync by the app layer.
     /// Used for the Gen-1 repel check, which blocks wild encounters whose level
     /// is below the lead party member's level. The OverworldScreen does not own
@@ -765,6 +786,14 @@ pub struct OverworldScreen<G: GameData = pokered_data::impl_traits::PokemonRedDa
     /// once the fade-in-from-white completes. The player stays hidden during
     /// the fade (`Y=$ec`) and descends while this is active.
     pub enter_map_anim: Option<presentation::EnterMapSpinState>,
+    /// FLY arrival bird animation (EnterMapAnim `.flyAnimation`) — replaces
+    /// the spin-in for FLY-warp arrivals only. Mutually exclusive with
+    /// `enter_map_anim`.
+    pub enter_map_fly_anim: Option<presentation::EnterMapFlyState>,
+    /// The pending warp was queued by the FLY field move: its arrival plays
+    /// the bird animation instead of the spin-in (BIT_USED_FLY,
+    /// player_animations.asm:55-70).
+    pub(crate) pending_fly_arrival: bool,
     /// Active `ShakeElevator` animation (screen BG shake after riding an
     /// elevator). While `Some`, player input is frozen.
     pub elevator_shake: Option<presentation::ElevatorShakeState>,
@@ -968,6 +997,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
             pending_wild_encounter: None,
             pending_trainer_battle: None,
             trainer_encounter_intro: None,
+            pending_trainer_engage: None,
             pending_give_pokemon: None,
             sfx_event: OverworldSfxEvent::None,
             bump_anim_counter: 0,
@@ -1006,9 +1036,12 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
             pending_filter_bag: None,
             pending_diploma: false,
             pending_pc: None,
+            pending_town_map: false,
             pending_hof_ceremony: false,
             heal_requested: false,
             party_count: 0,
+            box_count: 0,
+            poison_step_counter: 0,
             party_lead_level: 0,
             unified_flags: event_flags::EventFlags::new(),
             toggleable_object_flags: [0u8;
@@ -1033,6 +1066,8 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
             warp_fade_to_white: false,
             teleport_spin: None,
             enter_map_anim: None,
+            enter_map_fly_anim: None,
+            pending_fly_arrival: false,
             elevator_shake: None,
             elevator_shake_pending: false,
             fishing_cast_delay: 0,
@@ -2223,11 +2258,18 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                             == pokered_data::tileset_data::WarpPadOrHoleType::None
                     })
                     .unwrap_or(true);
-                self.enter_map_anim = Some(presentation::EnterMapSpinState::new(
-                    self.state.player.facing,
-                    presentation::TELEPORT_SPIN_FACINGS,
-                    spin_in_place,
-                ));
+                if self.pending_fly_arrival {
+                    // BIT_USED_FLY (player_animations.asm:55-70): the bird
+                    // flies the player in — no spin, no descend.
+                    self.pending_fly_arrival = false;
+                    self.enter_map_fly_anim = Some(presentation::EnterMapFlyState::new());
+                } else {
+                    self.enter_map_anim = Some(presentation::EnterMapSpinState::new(
+                        self.state.player.facing,
+                        presentation::TELEPORT_SPIN_FACINGS,
+                        spin_in_place,
+                    ));
+                }
             }
         }
     }

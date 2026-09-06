@@ -94,4 +94,24 @@ mod tests {
         // Should not re-learn LeechSeed
         assert!(!result.learned_moves.contains(&MoveId::LeechSeed));
     }
+
+/// A FULL moveset does NOT silently overwrite the 4th move: the move lands in
+/// `blocked_moves` for the in-battle forget/replace prompt
+/// (learnmove.asm `TryingToLearn`).
+#[test]
+fn full_moveset_blocks_the_move_instead_of_overwriting() {
+    // 300 exp: MediumSlow level 7 = 236 — levels 5→7, and level 7's learnset
+    // move is LEECH SEED.
+    let mut mon = make_mon_at(Species::Bulbasaur, 5, 300);
+    mon.moves =
+        [MoveId::Tackle, MoveId::Growl, MoveId::VineWhip, MoveId::SleepPowder];
+    let before = mon.moves;
+    let result = process_level_up(&mut mon);
+    assert!(result.leveled_up);
+    assert_eq!(
+        mon.moves, before,
+        "level-up must not overwrite a full moveset"
+    );
+    assert_eq!(result.blocked_moves.len() + result.learned_moves.len(), 1);
+}
 }

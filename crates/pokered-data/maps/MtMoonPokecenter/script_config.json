@@ -1,6 +1,6 @@
 {
   "$schema": "../../schemas/script_config.schema.json",
-  "onLoad": "enterMap",
+  "coordEvents": [],
   "npcs": [
     {
       "id": 1,
@@ -31,7 +31,10 @@
     {
       "id": 1,
       "talk": "pcStorage"
+    },
+    {
+      "id": 2,
+      "talk": "benchGuy"
     }
-  ],
-  "coordEvents": []
+  ]
 }

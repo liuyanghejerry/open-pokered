@@ -27,5 +27,18 @@
       "talk": "talkPokedex"
     }
   ],
-  "signs": []
+  "signs": [
+    {
+      "id": 1,
+      "talk": "magazines"
+    },
+    {
+      "id": 2,
+      "talk": "magazines"
+    },
+    {
+      "id": 3,
+      "talk": "magazines"
+    }
+  ]
 }

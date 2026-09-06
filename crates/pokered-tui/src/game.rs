@@ -1495,6 +1495,7 @@ impl PokemonGame {
                     }
                 }
                 self.overworld.party_count = self.save_data.party.count() as u8;
+                self.overworld.box_count = self.save_data.current_box.count() as u8;
                 self.overworld.party_lead_level = self.save_data.party.leader_level();
                 // A full-moveset level-up move couldn't be learned: open the
                 // party screen's forget-a-move prompt, exactly where the
@@ -1874,7 +1875,9 @@ impl PokemonGame {
                     // Trade outcomes resume the suspended script AFTER the
                     // drain (the drain borrows self.overworld).
                     let mut trade_results: Vec<bool> = Vec::new();
-                    for req in self.overworld.game_data_requests.drain(..) {
+                    let game_data_requests: Vec<_> =
+                        self.overworld.game_data_requests.drain(..).collect();
+                    for req in game_data_requests {
                         match req {
                             OverworldGameDataRequest::GiveItem { item, quantity } => {
                                 if let Some(id) = pokered_data::items::ItemId::from_const_name(&item)
@@ -1967,6 +1970,7 @@ impl PokemonGame {
                                     }
                                 }
                                 self.overworld.party_count = self.save_data.party.count() as u8;
+                                self.overworld.box_count = self.save_data.current_box.count() as u8;
                                 self.overworld.party_lead_level =
                                     self.save_data.party.leader_level();
                                 trade_results.push(traded);
@@ -1980,15 +1984,23 @@ impl PokemonGame {
                             OverworldGameDataRequest::TickDaycareExp => {
                                 self.save_data.game_data.tick_daycare_exp();
                             }
+                            OverworldGameDataRequest::PoisonStep => {
+                                pokered_core::overworld::poison::apply_out_of_battle_poison_damage(
+                                    &mut self.save_data,
+                                    &mut self.overworld,
+                                );
+                            }
                             OverworldGameDataRequest::DepositDaycare { index } => {
                                 self.save_data.deposit_daycare(index);
                                 self.overworld.party_count = self.save_data.party.count() as u8;
+                                self.overworld.box_count = self.save_data.current_box.count() as u8;
                                 self.overworld.party_lead_level =
                                     self.save_data.party.leader_level();
                             }
                             OverworldGameDataRequest::WithdrawDaycare => {
                                 self.save_data.withdraw_daycare();
                                 self.overworld.party_count = self.save_data.party.count() as u8;
+                                self.overworld.box_count = self.save_data.current_box.count() as u8;
                                 self.overworld.party_lead_level =
                                     self.save_data.party.leader_level();
                             }
@@ -2079,6 +2091,32 @@ impl PokemonGame {
                         }
                         self.battle.end_battle_text = trainer.end_battle_text;
                         ScreenAction::Transition(GameScreen::Battle)
+                    } else if let Some(pending) = self.overworld.pending_give_pokemon.take() {
+                        // Gifted mons get random DVs (AddPartyMon Random ×2);
+                        // party first, else the current PC box (_GivePokemon).
+                        if let Some(mut pokemon) = pokered_core::pokemon::stats::create_pokemon(
+                            pending.species,
+                            pending.level,
+                            pokered_core::pokemon::stats::roll_random_dvs(),
+                        ) {
+                            if let Some(nick) = pending.nickname {
+                                pokemon.set_nickname(&nick);
+                            }
+                            if self.save_data.party.count() < 6 {
+                                let _ = self.save_data.party.add(pokemon);
+                            } else {
+                                let _ = self.save_data.pc_storage.deposit_to_current(pokemon);
+                                self.save_data.current_box =
+                                    self.save_data.pc_storage.current_box().clone();
+                            }
+                            self.save_data.game_data.pokedex.set_seen(pending.species);
+                            self.save_data.game_data.pokedex.set_owned(pending.species);
+                            self.overworld.party_count = self.save_data.party.count() as u8;
+                            self.overworld.box_count = self.save_data.current_box.count() as u8;
+                            self.overworld.party_lead_level =
+                                self.save_data.party.leader_level();
+                        }
+                        ScreenAction::Continue
                     } else if let Some(shop_items) = self.overworld.pending_shop.take() {
                         match pokered_core::items::shop_stock_from_script_names(&shop_items) {
                             Ok(inv) => {
@@ -3011,6 +3049,7 @@ impl PokemonGame {
                         self.save_to_file();
                     }
                     self.overworld.party_count = self.save_data.party.count() as u8;
+                    self.overworld.box_count = self.save_data.current_box.count() as u8;
                     self.overworld.party_lead_level = self.save_data.party.leader_level();
                     match pc_action {
                         PcScreenAction::Continue => ScreenAction::Continue,

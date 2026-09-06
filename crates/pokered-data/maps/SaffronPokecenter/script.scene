@@ -57,4 +57,30 @@ fighting fit!", "谢谢你的等待。\n\n你的宝可梦已完全恢复了！")
     @trigger(map = "SaffronPokecenter", sign = 1)
     openPC()
   }
+
+
+  // ── Bench guy (sign 2 at (0,4)) — PrintBenchGuyText ────────────────────
+  // data/events/bench_guys.asm + hidden_events.asm: A on the (0,4) bench
+  // tile while facing it; BenchGuyTextPointers requires SPRITE_FACING_LEFT,
+  // so gate on the player's facing (getPlayerFacing() -> down/up/left/right).
+  @storyline("benchGuy") {
+    @trigger(map = "SaffronPokecenter", sign = 2)
+    @if (getPlayerFacing() == "left") {
+      @if (getFlag("EVENT_BEAT_SILPH_CO_GIOVANNI")) {
+        @speaker("") {
+          @t("TEAM ROCKET took
+off! We can go
+out safely again!
+That's great!", "火箭队逃走了！我们\n终于可以放心出门了！\n太好了！")
+        }
+      } @else {
+        @speaker("") {
+          @t("It would be great
+if the ELITE FOUR
+came and stomped
+TEAM ROCKET!", "要是四天王能来\n把火箭队踩扁，\n那该多好啊！")
+        }
+      }
+    }
+  }
 }

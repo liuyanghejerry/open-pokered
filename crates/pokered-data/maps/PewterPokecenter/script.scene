@@ -91,4 +91,25 @@ fighting fit!", "谢谢你的等待。\n\n你的宝可梦已完全恢复了！")
     @trigger(map = "PewterPokecenter", sign = 1)
     openPC()
   }
+
+
+  // ── Bench guy (sign 2 at (0,4)) — PrintBenchGuyText ────────────────────
+  // data/events/bench_guys.asm + hidden_events.asm: A on the (0,4) bench
+  // tile while facing it; BenchGuyTextPointers requires SPRITE_FACING_LEFT,
+  // so gate on the player's facing (getPlayerFacing() -> down/up/left/right).
+  @storyline("benchGuy") {
+    @trigger(map = "PewterPokecenter", sign = 2)
+    @if (getPlayerFacing() == "left") {
+      @speaker("") {
+        @t("Yawn!
+
+When JIGGLYPUFF
+sings, #MON
+get drowsy...
+
+...Me too...
+Snore...", "哈欠！\n\n胖丁一唱歌，\n宝可梦就犯困了……\n\n我也是……\n呼噜……")
+      }
+    }
+  }
 }

@@ -1730,7 +1730,7 @@ fn haze_handler(
     ctx: &mut BattleCtx<'_, PocData>,
     _relay: RelayVar,
     _target: BattlerRef,
-    _source: BattlerRef,
+    source: BattlerRef,
     _eff: EffectId,
 ) -> HandlerResult {
     // Reset both sides' stat stages (Attack/Defense/Special/Accuracy/Evasion).
@@ -1741,9 +1741,12 @@ fn haze_handler(
         b.stat_stages.set(Stat::Special, 0);
         b.stat_stages.set(Stat::Accuracy, 0);
         b.stat_stages.set(Stat::Evasion, 0);
-        // Haze cures all non-volatile status in Gen-1 (legacy `field_effects.rs:86`).
-        b.status = None;
     }
+    // .cureStatuses (haze.asm:15-25): ONLY the side opposite the user loses its
+    // non-volatile status; a cured sleep/freeze also forfeits its move ($ff —
+    // modeled in the production rules engine, not in this POC).
+    let defender = if source.side == 0 { BattlerRef::OPPONENT } else { BattlerRef::PLAYER };
+    ctx.battler_mut(defender).status = None;
     // Clear the volatiles Haze wipes: confusion, seeded, toxic, focus energy.
     ctx.effects.retain(|e| {
         !matches!(

@@ -231,6 +231,7 @@ fn bag_is_written_back_not_wiped() {
     let enemy = vec![mon(Species::Rattata, 8)];
     let mut battle = BattleScreen::from_parties(true, &player, &enemy, None);
     battle.settlement = Some(settlement(BattleOutcome::Escaped, 0, 0));
+    battle.escaped_via_poke_doll = true;
     // The battle carried a bag with 3 Potions (as the frontend's pre-battle copy-in does).
     battle.player_bag.add_item(ItemId::Potion, 3).unwrap();
     let mut save = SaveData::new();

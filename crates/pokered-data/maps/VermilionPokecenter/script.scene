@@ -57,4 +57,30 @@ fighting fit!", "谢谢你的等待。\n\n你的宝可梦已完全恢复了！")
     @trigger(map = "VermilionPokecenter", sign = 1)
     openPC()
   }
+
+
+  // ── Bench guy (sign 2 at (0,4)) — PrintBenchGuyText ────────────────────
+  // data/events/bench_guys.asm + hidden_events.asm: A on the (0,4) bench
+  // tile while facing it; BenchGuyTextPointers requires SPRITE_FACING_LEFT,
+  // so gate on the player's facing (getPlayerFacing() -> down/up/left/right).
+  @storyline("benchGuy") {
+    @trigger(map = "VermilionPokecenter", sign = 2)
+    @if (getPlayerFacing() == "left") {
+      @speaker("") {
+        @t("It is true that a
+higher level
+#MON will be
+more powerful...
+
+But, all #MON
+will have weak
+points against
+specific types.
+
+So, there is no
+universally
+strong #MON.", "等级更高的宝可梦\n确实更强……\n\n但是，所有宝可梦\n都有被特定属性克制\n的弱点。\n\n所以，不存在\n任何场合都强的\n宝可梦。")
+      }
+    }
+  }
 }
