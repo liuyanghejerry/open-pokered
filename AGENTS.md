@@ -38,6 +38,28 @@ scripting, save format), tooling, docs, tests, audio.
 4. Commit the captures under `docs/screenshots/` (existing convention) and
    embed both images in the PR body, labeled `前` / `后` (before / after).
    For regression fixes, the "before" shot doubles as the bug evidence.
+5. **Embed the images with absolute raw URLs — never relative paths.**
+   GitHub does **not** resolve relative image paths in a PR body against the
+   PR branch: while the PNG only exists on the PR (not yet on `master`),
+   `![前](docs/screenshots/x.png)` renders as a broken image in the PR
+   conversation. Reference the raw URL pinned to your branch instead:
+
+   ```markdown
+   ![前](https://raw.githubusercontent.com/liuyanghejerry/open-pokered/<branch>/docs/screenshots/x-before.png)
+   ```
+
+   When drafting the body with `gh pr create --body`, rewrite the paths
+   mechanically before submitting (and re-check after any `gh pr edit`):
+
+   ```bash
+   BRANCH=$(git branch --show-current)
+   perl -pe "s{\]\(docs/screenshots/}{](https://raw.githubusercontent.com/liuyanghejerry/open-pokered/$BRANCH/docs/screenshots/}g" body.draft.md > body.md
+   gh pr create --body-file body.md
+   ```
+
+   Branch-pinned links are the review-time source of truth; the merged
+   copies under `docs/screenshots/` on `master` remain the long-term
+   archive even if the branch (and its pinned URLs) is later deleted.
 
 If a changed surface genuinely cannot be captured headless, say so explicitly
 in the PR description instead of skipping the rule silently.
