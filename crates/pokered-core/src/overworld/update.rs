@@ -3015,6 +3015,10 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                     self.pending_shop = Some(items);
                 }
                 script_bridge::ScriptEffect::OpenSlots { lucky } => {
+                    // No explicit argument → the machine is lucky when the
+                    // sign that fired this script is the per-map-entry lucky
+                    // roll (GameCornerSelectLuckySlotMachine).
+                    let lucky = lucky.unwrap_or_else(|| self.resolve_default_lucky_slots());
                     self.pending_slots = Some(lucky);
                 }
                 script_bridge::ScriptEffect::ElevatorMenu { floors } => {
@@ -3227,6 +3231,9 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
             log::info!(target: "pokered::overworld", "[Script] NPC talk: text_id={}, fn_name={}", text_id, fn_name);
             if self.script_engine.has_function(fn_name) {
                 log::info!(target: "pokered::overworld", "[Script] Calling {}", fn_name);
+                // NPC scripts never run on a sign: clear any stale sign
+                // context so `openSlots()` cannot inherit a lucky mapping.
+                self.active_sign_text_id = None;
                 self.script_engine
                     .set_player_position(self.state.player.x as u8, self.state.player.y as u8);
                 if let Ok(Some(cmd)) = self.script_engine.call_function_no_args(fn_name) {
@@ -3254,6 +3261,9 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
     fn try_call_script_sign_talk(&mut self, text_id: u8) -> bool {
         if let Some(fn_name) = self.map_script_config.sign_talk_fn(text_id) {
             if self.script_engine.has_function(fn_name) {
+                // Remember which sign fired so `openSlots()` (no explicit
+                // argument) can resolve against the lucky-machine roll.
+                self.active_sign_text_id = Some(text_id);
                 self.script_engine
                     .set_player_position(self.state.player.x as u8, self.state.player.y as u8);
                 if let Ok(Some(cmd)) = self.script_engine.call_function_no_args(fn_name) {
@@ -3270,6 +3280,14 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
             }
         }
         false
+    }
+
+    /// Resolve `openSlots()` without an explicit lucky flag: the machine is
+    /// lucky when the sign that fired the script is the one rolled for this
+    /// map visit (`lucky_slot_machine_sign`).
+    pub(crate) fn resolve_default_lucky_slots(&self) -> bool {
+        self.active_sign_text_id.is_some()
+            && self.active_sign_text_id == self.lucky_slot_machine_sign
     }
 
     fn npc_face_player(&mut self, npc_index: u8) {

@@ -2725,34 +2725,20 @@ impl PokemonGame {
                 let mut result = SlotsAction::Continue;
                 let mut coins_out = None;
                 if let Some(ref mut slots) = self.slots_screen {
-                    let prev_phase = slots.phase;
                     result = slots.update_frame(slots_input);
                     coins_out = Some(slots.coins);
                     let sfx = slots.take_sfx();
                     if let Some(ref audio) = self.audio {
-                        use pokered_core::slots_screen::{SlotsPhase, SlotsSfx};
+                        use pokered_core::slots_screen::SlotsSfx;
                         for cue in sfx {
                             let id = match cue {
                                 SlotsSfx::NewSpin => SfxId::SlotsNewSpin,
                                 SlotsSfx::StopWheel => SfxId::SlotsStopWheel,
                                 SlotsSfx::Reward => SfxId::SlotsReward,
+                                SlotsSfx::GetKeyItem => SfxId::GetKeyItem,
+                                SlotsSfx::GetItem2 => SfxId::GetItem2,
                             };
                             audio.play_sfx(id);
-                        }
-                        // Reel-stop / spin-start feedback (app mirror).
-                        if prev_phase == SlotsPhase::BetSelect
-                            && slots.phase == SlotsPhase::Spinning
-                        {
-                            audio.play_sfx(SfxId::PressAB);
-                        }
-                        if prev_phase == SlotsPhase::Spinning
-                            && slots.phase == SlotsPhase::Result
-                        {
-                            if slots.last_payout > 0 {
-                                audio.play_sfx(SfxId::GetItem1);
-                            } else {
-                                audio.play_sfx(SfxId::Denied);
-                            }
                         }
                     }
                 }
@@ -3569,11 +3555,13 @@ mod tests {
             "running coin balance must persist to the save every frame"
         );
 
-        // Keep A held: each reel stops when aligned; all stop → Result.
-        for _ in 0..2000 {
+        // Keep A held: warm-up runs, each reel stops when allowed, a win pays
+        // out one coin at a time, then all is done → Result.
+        for _ in 0..20000 {
             game.update(&press(GbButton::A));
-            if game.slots_screen.as_ref().unwrap().phase
-                == pokered_core::slots_screen::SlotsPhase::Result
+            let phase = game.slots_screen.as_ref().unwrap().phase;
+            if phase != pokered_core::slots_screen::SlotsPhase::Spinning
+                && phase != pokered_core::slots_screen::SlotsPhase::Payout
             {
                 break;
             }
@@ -3581,6 +3569,7 @@ mod tests {
         let slots = game.slots_screen.as_ref().unwrap();
         assert_eq!(slots.phase, pokered_core::slots_screen::SlotsPhase::Result);
         assert!(slots.reels_stopped.iter().all(|&s| s));
+        assert_eq!(slots.payout_remaining, 0);
         assert_eq!(game.save_data.game_data.player_coins, slots.coins);
 
         // A on the result screen → bet selection again; B → exit to the

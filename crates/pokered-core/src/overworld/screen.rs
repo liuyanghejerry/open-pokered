@@ -660,6 +660,17 @@ pub struct OverworldScreen<G: GameData = pokered_data::impl_traits::PokemonRedDa
     pub pending_shop: Option<Vec<String>>,
     /// Set by `game.openSlots(lucky)`; the app opens the slot-machine screen.
     pub pending_slots: Option<bool>,
+    /// Sign textId that fired the currently-running sign script, if any.
+    /// `openSlots()` with no explicit argument resolves its lucky flag against
+    /// this (only slot-machine signs play the minigame).
+    pub(crate) active_sign_text_id: Option<u8>,
+    /// Sign textId of this visit's lucky slot machine, rolled once per
+    /// Game Corner map entry (`GameCornerSelectLuckySlotMachine`,
+    /// scripts/GameCorner.asm:8-22). The roll covers hidden event indices
+    /// 0..7; 0 means no lucky machine this visit, and the original's index 5
+    /// ("Someone's keys" broken machine) has no script here, matching the
+    /// original where it can never be played. `None` = no lucky machine.
+    pub(crate) lucky_slot_machine_sign: Option<u8>,
     /// Set by `game.elevatorMenu(floors)`; the app opens the elevator floor
     /// menu. The script stays suspended until the app calls
     /// `resume_script_after_elevator` with the chosen floor index.
@@ -1008,6 +1019,8 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
             player_starter: 0,
             pending_shop: None,
             pending_slots: None,
+            active_sign_text_id: None,
+            lucky_slot_machine_sign: None,
             pending_elevator: None,
             pending_filter_bag: None,
             pending_diploma: false,
@@ -2021,6 +2034,17 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
     pub fn run_on_load(&mut self) {
         self.script_engine
             .seed_flags(&self.unified_flags.to_hashmap());
+
+        // GameCornerSelectLuckySlotMachine (scripts/GameCorner.asm:8-22): on
+        // every Game Corner map load, roll one of hidden event indices 0..7;
+        // index+1 == roll makes that machine lucky (250 vs 253 odds). A roll
+        // of 0 never matches → no lucky machine this visit. Hidden event
+        // index h maps to sign textId h+2 in this port's data (the map.json
+        // signs share the original hidden-event coordinates).
+        if self.state.current_map == MapId::GameCorner {
+            let roll: u8 = { use rand::Rng; self.rng.gen_range(0..8) };
+            self.lucky_slot_machine_sign = if roll == 0 { None } else { Some(roll + 1) };
+        }
 
         if let Some(fn_name) = self.map_script_config.on_load() {
             if self.script_engine.has_function(fn_name) {
