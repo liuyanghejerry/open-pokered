@@ -355,3 +355,99 @@ fn load_map_script_keeps_selected_language() {
         "selected language must survive a map-script reload"
     );
 }
+
+/// FollowNpc lockstep: the followed NPC must walk at the player's pace.
+/// The engine paces scripted NPC steps at 16 frames/tile while the player
+/// covers a tile in 8 — before the in-tick hastening the follower drained
+/// each vacated tile in half the leader's stride and idled for the rest,
+/// so the two never moved in step. The hastened cadence must (a) commit
+/// Oak's tiles every exactly 8 frames while the follow is under way and
+/// (b) keep the player from idling longer than the 1-frame waypoint
+/// alignment gap. The escort must still land the player in OaksLab.
+#[test]
+fn follow_npc_keeps_leader_and_player_in_lockstep() {
+    let mut screen = OverworldScreen::new(MapId::PalletTown, None, PokemonRedData);
+    screen.state.player.x = 10;
+    screen.state.player.y = 3;
+    screen.state.player.facing = Direction::Up;
+
+    let a_input = || OverworldInput::new(false, false, false, false, true, false, false, false);
+
+    let mut last_oak_tile: Option<(u16, u16)> = None;
+    let mut last_commit_frame: Option<u32> = None;
+    let mut oak_commit_intervals: Vec<u32> = Vec::new();
+    let mut idle_streak = 0u32;
+    let mut max_idle_streak = 0u32;
+    let mut measured = false;
+    let mut frames = 0;
+    for frame in 0..6000u32 {
+        frames = frame;
+        let input = if screen.active_script_effect.is_some() {
+            // During cutscene: tap A periodically to advance dialogue.
+            if frame % 40 == 0 {
+                a_input()
+            } else {
+                neutral_input()
+            }
+        } else {
+            up_input()
+        };
+        screen.update_frame(input);
+
+        if screen.state.current_map != MapId::PalletTown {
+            break;
+        }
+        let following = matches!(
+            &screen.active_script_effect,
+            Some(super::script_bridge::ScriptEffect::FollowNpc {
+                phase: super::script_bridge::FollowNpcPhase::Following {
+                    final_push_done: false,
+                    ..
+                },
+                ..
+            })
+        );
+        if !following {
+            continue;
+        }
+        measured = true;
+
+        let oak_tile = (screen.npc_states[0].x, screen.npc_states[0].y);
+        if last_oak_tile != Some(oak_tile) {
+            if let Some(prev) = last_commit_frame {
+                oak_commit_intervals.push(frame - prev);
+            }
+            last_commit_frame = Some(frame);
+            last_oak_tile = Some(oak_tile);
+        }
+
+        if screen.state.player.movement_state == super::MovementState::Idle {
+            idle_streak += 1;
+            max_idle_streak = max_idle_streak.max(idle_streak);
+        } else {
+            idle_streak = 0;
+        }
+    }
+
+    assert!(
+        measured,
+        "FollowNpc Following phase never observed during the escort"
+    );
+    assert_eq!(
+        screen.state.current_map,
+        MapId::OaksLab,
+        "escort must still complete (stopped after {frames} frames)"
+    );
+    assert!(
+        !oak_commit_intervals.is_empty(),
+        "Oak never committed a follow step"
+    );
+    assert!(
+        oak_commit_intervals.iter().all(|&dt| dt == 8),
+        "Oak's follow-step commits must land every 8 frames (player pace), got: {oak_commit_intervals:?}"
+    );
+    assert!(
+        max_idle_streak <= 2,
+        "player idled {max_idle_streak} frames in a row mid-follow: stop-and-go desync is back"
+    );
+}

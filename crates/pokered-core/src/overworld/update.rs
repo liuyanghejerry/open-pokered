@@ -1780,6 +1780,40 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
             for &i in &frozen_slots {
                 self.npc_states[i].movement_type = NpcMovementType::Wander;
             }
+            self.hasten_followed_npc();
+        }
+    }
+
+    /// FollowNpc lockstep: the engine paces scripted NPC steps at
+    /// NPC_WALK_FRAMES (16f/tile) while the player covers a tile in 8 —
+    /// the follower drained each vacated tile in half the leader's stride
+    /// and then idled for the remainder (stop-and-go hops, never in step
+    /// with Oak). An extra counter decrement per frame halves the followed
+    /// NPC's step to 8 frames. The counter still spans 16→0, so the
+    /// renderers' 16-unit normalization keeps mapping it onto the full
+    /// 16px tile — the sprite simply advances 2px/frame, exactly the
+    /// player's pace and walk-animation cadence.
+    ///
+    /// Only counters still ≥ 2 are decremented: reaching 0 inside the
+    /// engine's own tick is what commits the tile and chains the next
+    /// step, so an external decrement to 0 would skip the commit.
+    fn hasten_followed_npc(&mut self) {
+        let mut followed: Option<String> = None;
+        if let Some(script_bridge::ScriptEffect::FollowNpc { npc_id, phase, .. }) =
+            &self.active_script_effect
+        {
+            if matches!(phase, script_bridge::FollowNpcPhase::Following { .. }) {
+                followed = Some(npc_id.clone());
+            }
+        }
+        let Some(npc_id) = followed else {
+            return;
+        };
+        if let Some(idx) = resolve_npc_index(&npc_id, &self.npc_states, &self.map_script_config) {
+            let npc = &mut self.npc_states[idx];
+            if npc.walk_counter >= 2 {
+                npc.walk_counter -= 1;
+            }
         }
     }
 
