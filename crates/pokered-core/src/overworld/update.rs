@@ -19,7 +19,7 @@ use crate::overworld::{
 use crate::overworld::script_bridge::HealingMachinePhase;
 use crate::overworld::spinner_paths::spinner_paths;
 use dotzuki_engine::overworld::{
-    Direction, MovementState, OverworldInput, PlayerState, TransportMode,
+    Direction, MovementState, NpcMovementType, OverworldInput, PlayerState, TransportMode,
 };
 use dotzuki_engine::overworld::collision::CollisionProvider;
 use dotzuki_engine::overworld::map_transitions::{
@@ -641,15 +641,15 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                 }
                 self.sync_flags_from_engine();
             }
-            // NPC movement must continue during script effects so that
-            // MoveNpc / StartNpcMove / AwaitNpcMove effects can complete.
-            self.run_npc_movement_tick();
-
             // Scripted player path must also advance during script effects so
             // that MovePlayer can observe the path draining. Without this, the
             // MovePlayer effect waits for scripted_player_path to empty, but
             // the standalone path-following block (below) is unreachable while
             // active_script_effect is Some — causing a deadlock.
+            // It advances BEFORE the NPC tick (same order as the standalone
+            // path-following block below): the tick must see the player
+            // already Walking toward its next tile, not a stale Idle player,
+            // or an NPC could start a step onto that tile in the gap.
             let pos_before = (self.state.player.x, self.state.player.y);
             self.advance_scripted_player_path();
             // Only check warps when a step actually completed and the position
@@ -662,6 +662,9 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                 self.try_trigger_warp_at_player_position();
             }
 
+            // NPC movement must continue during script effects so that
+            // MoveNpc / StartNpcMove / AwaitNpcMove effects can complete.
+            self.run_npc_movement_tick();
             return ScreenAction::Continue;
         }
         if let Some(cmd) = self.script_engine.tick() {
@@ -1727,14 +1730,41 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                 .wrapping_add(12345)
                 >> 16) as u8;
             let player_dest = if self.state.player.movement_state != MovementState::Idle {
+                // A ledge jump (Jumping) crosses TWO tiles: the landing tile
+                // is where the player will be, so that — not the ledge tile
+                // one step out — is the destination NPCs must yield to.
+                let span = if self.state.player.movement_state == MovementState::Jumping {
+                    2
+                } else {
+                    1
+                };
                 let (dx, dy) = player_movement::direction_delta(self.state.player.facing);
                 Some((
-                    (self.state.player.x as i32 + dx as i32).max(0) as u16,
-                    (self.state.player.y as i32 + dy as i32).max(0) as u16,
+                    (self.state.player.x as i32 + dx as i32 * span).max(0) as u16,
+                    (self.state.player.y as i32 + dy as i32 * span).max(0) as u16,
                 ))
             } else {
                 None
             };
+            // The original runs map scripts with random sprite updates
+            // halted (UpdateNPCSprite's movement roll only happens while no
+            // script owns the frame) — only applymovement-style scripted
+            // paths advance. Letting wander NPCs roll during cutscenes let
+            // them stroll onto tiles a scripted player walk was about to
+            // enter, overlapping the player.
+            let frozen = self.active_script_effect.is_some()
+                || self.cutscene_manager.is_blocking()
+                || !self.scripted_player_path.is_empty()
+                || self.trainer_encounter_intro.is_some();
+            let mut frozen_slots: Vec<usize> = Vec::new();
+            if frozen {
+                for (i, n) in self.npc_states.iter_mut().enumerate() {
+                    if n.movement_type == NpcMovementType::Wander {
+                        n.movement_type = NpcMovementType::Stationary;
+                        frozen_slots.push(i);
+                    }
+                }
+            }
             npc_movement::update_npc_movement(
                 &mut self.npc_states,
                 self.state.player.x,
@@ -1747,6 +1777,9 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                 map.tileset,
                 &collision::PokemonCollisionProvider::new(self.state.current_map, map.tileset),
             );
+            for &i in &frozen_slots {
+                self.npc_states[i].movement_type = NpcMovementType::Wander;
+            }
         }
     }
 
