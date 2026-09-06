@@ -33,11 +33,13 @@
     },
     {
       "id": 6,
-      "talk": "talkDomeFossil"
+      "talk": "talkDomeFossil",
+      "toggleId": "MTMOONB2F_DOME_FOSSIL"
     },
     {
       "id": 7,
-      "talk": "talkHelixFossil"
+      "talk": "talkHelixFossil",
+      "toggleId": "MTMOONB2F_HELIX_FOSSIL"
     },
     {
       "id": 8,
