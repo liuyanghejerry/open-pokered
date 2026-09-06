@@ -905,7 +905,9 @@ fn record_id_for_move(m: MoveId) -> &'static str {
         MoveId::Hypnosis | MoveId::Sing | MoveId::SleepPowder | MoveId::LovelyKiss
         | MoveId::Spore => "status.sleep",
         MoveId::ConfuseRay | MoveId::Supersonic => "status.confuse",
-        MoveId::Confusion | MoveId::Psybeam | MoveId::DizzyPunch => "side.confuse",
+        // DIZZY_PUNCH is NO_ADDITIONAL_EFFECT in data/moves/moves.asm — pure
+        // damage, NO confusion rider (that would be a Gen-2-ism).
+        MoveId::Confusion | MoveId::Psybeam => "side.confuse",
         MoveId::LeechSeed => "status.leechseed",
         MoveId::Bite | MoveId::BoneClub | MoveId::HyperFang => "side.flinch_1",
         MoveId::Stomp | MoveId::RollingKick | MoveId::Headbutt | MoveId::LowKick => "side.flinch_2",

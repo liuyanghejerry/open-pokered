@@ -493,6 +493,8 @@ impl BattleVisualEffects {
             BattlePhase::Intro { .. } => BattlePhaseKind::Intro,
             BattlePhase::PlayerMenu => BattlePhaseKind::PlayerMenu,
             BattlePhase::MoveSelect => BattlePhaseKind::MoveSelect,
+            // Ether's per-move pick reuses the FIGHT move-menu layout.
+            BattlePhase::ItemMoveSelect { .. } => BattlePhaseKind::MoveSelect,
             BattlePhase::BagSelect => BattlePhaseKind::BagSelect,
             BattlePhase::ItemTargetSelect { .. } => BattlePhaseKind::ItemTargetSelect,
             BattlePhase::ShowingText { .. } => BattlePhaseKind::ShowingText,
@@ -2143,6 +2145,7 @@ pub fn draw_battle(
             screen.phase,
             BattlePhase::PlayerMenu
                 | BattlePhase::MoveSelect
+                | BattlePhase::ItemMoveSelect { .. }
                 | BattlePhase::BagSelect
                 | BattlePhase::ItemTargetSelect { .. }
         ) || matches!(
@@ -2246,6 +2249,7 @@ pub fn draw_battle(
             screen.phase,
             BattlePhase::PlayerMenu
                 | BattlePhase::MoveSelect
+                | BattlePhase::ItemMoveSelect { .. }
                 | BattlePhase::BagSelect
                 | BattlePhase::ItemTargetSelect { .. }
                 | BattlePhase::PartySelect
@@ -2512,7 +2516,12 @@ pub fn draw_battle(
         // region last to keep it in the foreground.
         // (Skipped when `use_unified_ui` — pokered-ui renders this panel directly
         // to the framebuffer below, after sprites, so no tile_buf overlay is needed.)
-        if !use_unified_ui && matches!(screen.phase, BattlePhase::MoveSelect) {
+        if !use_unified_ui
+            && matches!(
+                screen.phase,
+                BattlePhase::MoveSelect | BattlePhase::ItemMoveSelect { .. }
+            )
+        {
             tile_buf.render_region(fb, &battle_ts, pal, 0, 8, 11, 5);
         }
 
@@ -2566,7 +2575,10 @@ pub fn draw_battle(
                 } else {
                     menus::battle_main::draw(&screen.battle_menu, &BATTLE_MAIN_DEFAULT_LAYOUT, &mut ui, language);
                 }
-            } else if matches!(screen.phase, BattlePhase::MoveSelect) {
+            } else if matches!(
+                screen.phase,
+                BattlePhase::MoveSelect | BattlePhase::ItemMoveSelect { .. }
+            ) {
                 if let Some(ref mm) = screen.move_menu {
                     menus::battle_move::draw(mm, &BATTLE_MOVE_DEFAULT_LAYOUT, &mut ui, &rd);
                 }
