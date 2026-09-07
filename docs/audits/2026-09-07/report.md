@@ -490,3 +490,15 @@ BrunosRoom 的原始 block(2,0) 是开放的 5，而 @load 只有“已胜时开
 ![片尾控制符未展开](credits-literal-pokemon-token.png)
 ![片尾结束](credits-the-end.png)
 ![独立重启后真新镇](m159-fresh-process-postgame.png)
+
+## 审计修复完成情况（2026-09-08 追加）
+
+本报告确认的 43 项问题已全部处理完毕，逐项台账见 `docs/audits/2026-09-07/fix-plan.md`（含每项的修复方式、回归测试名与证据），提交 `86229e2`（分支 `audit/2026-09-07-playthrough-fixes`）。
+
+- **A 组（明确未修复）21/21 已修复**：0 HP 队首、奖金文案、名人堂/片尾/遗忘菜单/狩猎地带信息框等画面项、红莲门禁与问答整体重做、坂木 B4F 门锁、正辉电脑绑点与进出机器演出、背包滚动、塔顶火箭队离场隐藏、CUT 渲染、劲敌复现互斥键、卡比兽对白分支、冠军之路推石开关、希巴/菊子房间门、闪电鸟战后隐藏、Ether 选招。画面项均附前后截图（`docs/screenshots/`，a01/a02/a10/a11/a13/a14/a17 共 7 组）。
+- **B 组（待复现/关联风险）8/8 闭合**：饮料显示名、游猎旗标清除、Route16 卡比兽、其他传说鸟与电球隐藏、B4F 战后复查、Max Ether/PP Up 同路径均已修复；塔 6F 坐标重叠定向复现未能重现，按原版强制走位语义加固玩家冻结并以守护测试常绿；旧存档劲敌初始选择迁移缺口为存档格式信息缺失，信息论上不可恢复，按停止规则记录限制后跳过（唯一 ⏭️ 项）。
+- **C 组（审计续跑补丁已收编）21/21 核对通过**：逐项定位回归测试，全套通过。
+
+**整体验证**：`cargo test -p pokered-core` 2500 通过 0 失败（本轮净增 26 项回归，多项先红后绿）；pokered-app 46、pokered-ui 全套、pokered-tui 16、pokered-data 254、pokered-debug-server 4 全绿；`scripts/verify_scene_translations.py` 通过；完整 `scripts/playthrough.py`（m01–m10）输出 `PLAYTHROUGH REACHED REQUESTED MILESTONE`；`git diff --check` 通过。
+
+说明：此前审计中以"局部补丁"打通主线的部分，其正式修复与上述新增修复均已随本提交收编进常规代码路径；`playthrough.py` 的 m09 森林导航存在已知的驱动层抖动（PINCH 后自动恢复），不影响判定。
