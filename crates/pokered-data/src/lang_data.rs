@@ -114,19 +114,20 @@ pub fn type_name(t: PokemonType, is_zh: bool) -> &'static str {
 }
 
 pub fn move_name(m: MoveId, is_zh: bool) -> &'static str {
+    if m == MoveId::None { return "---"; }
     if is_zh {
         match m {
             MoveId::Pound=>"拍击",MoveId::KarateChop=>"空手劈",MoveId::Doubleslap=>"连环巴掌",
-            MoveId::CometPunch=>"连续拳",MoveId::MegaPunch=>"百万吨拳击",MoveId::PayDay=>"聚宝功",
+            MoveId::CometPunch=>"连续拳",MoveId::MegaPunch=>"百万吨重拳",MoveId::PayDay=>"聚宝功",
             MoveId::FirePunch=>"火焰拳",MoveId::IcePunch=>"冰冻拳",MoveId::Thunderpunch=>"雷电拳",
             MoveId::Scratch=>"抓",MoveId::Vicegrip=>"夹住",MoveId::Guillotine=>"断头钳",
             MoveId::RazorWind=>"旋风刀",MoveId::SwordsDance=>"剑舞",MoveId::Cut=>"居合斩",
             MoveId::Gust=>"起风",MoveId::WingAttack=>"翅膀攻击",MoveId::Whirlwind=>"吹飞",
             MoveId::Fly=>"飞翔",MoveId::Bind=>"绑紧",MoveId::Slam=>"摔打",MoveId::VineWhip=>"藤鞭",
-            MoveId::Stomp=>"踩踏",MoveId::DoubleKick=>"二连踢",MoveId::MegaKick=>"百万吨踢击",
+            MoveId::Stomp=>"踩踏",MoveId::DoubleKick=>"二连踢",MoveId::MegaKick=>"百万吨重踢",
             MoveId::JumpKick=>"飞踢",MoveId::RollingKick=>"回旋踢",MoveId::SandAttack=>"泼沙",
             MoveId::Headbutt=>"头锤",MoveId::HornAttack=>"角撞",MoveId::FuryAttack=>"乱击",
-            MoveId::HornDrill=>"独角钻",MoveId::Tackle=>"撞击",MoveId::BodySlam=>"泰山压顶",
+            MoveId::HornDrill=>"角钻",MoveId::Tackle=>"撞击",MoveId::BodySlam=>"泰山压顶",
             MoveId::Wrap=>"紧束",MoveId::TakeDown=>"猛撞",MoveId::Thrash=>"大闹一番",
             MoveId::DoubleEdge=>"舍身冲撞",MoveId::TailWhip=>"摇尾巴",MoveId::PoisonSting=>"毒针",
             MoveId::Twineedle=>"双针",MoveId::PinMissile=>"飞弹针",MoveId::Leer=>"瞪眼",
@@ -165,7 +166,7 @@ pub fn move_name(m: MoveId, is_zh: bool) -> &'static str {
             MoveId::LeechLife=>"吸血",MoveId::LovelyKiss=>"恶魔之吻",MoveId::SkyAttack=>"神鸟猛击",
             MoveId::Transform=>"变身",MoveId::Bubble=>"泡沫",MoveId::DizzyPunch=>"迷昏拳",
             MoveId::Spore=>"蘑菇孢子",MoveId::Flash=>"闪光",MoveId::Psywave=>"精神波",
-            MoveId::Splash=>"水溅跃",MoveId::AcidArmor=>"溶化",MoveId::Crabhammer=>"蟹钳锤",
+            MoveId::Splash=>"跃起",MoveId::AcidArmor=>"溶化",MoveId::Crabhammer=>"蟹钳锤",
             MoveId::Explosion=>"大爆炸",MoveId::FurySwipes=>"乱抓",MoveId::Bonemerang=>"骨头回力镖",
             MoveId::Rest=>"睡觉",MoveId::RockSlide=>"岩崩",MoveId::HyperFang=>"必杀门牙",
             MoveId::Sharpen=>"棱角化",MoveId::Conversion=>"纹理",MoveId::TriAttack=>"三重攻击",
@@ -421,5 +422,28 @@ pub fn ui_label<'a>(key: &'a str, is_zh: bool) -> &'a str {
         "B BACK" => "B：返回",
         "Diploma" => "文凭",
         _ => key,
+    }
+}
+
+#[cfg(test)]
+mod move_translation_tests {
+    use super::*;
+
+    #[test]
+    fn every_gen1_move_has_a_chinese_name_and_translates_in_messages() {
+        for id in 1..=165 {
+            let m = MoveId::from_id(id);
+            let en = move_name(m, false);
+            let zh = move_name(m, true);
+            assert!(zh.chars().all(|c| ('\u{4e00}'..='\u{9fff}').contains(&c)), "{m:?}: {zh}");
+            assert_eq!(crate::battle_text::localize(&format!("PIKACHU used {en}!"), true), format!("皮卡丘使用了{zh}！"));
+            assert_eq!(crate::battle_text::localize(&format!("PIKACHU learned {en}!"), true), format!("皮卡丘学会了{zh}！"));
+            assert_eq!(crate::dialog_text::localize(&format!("PIKACHU learned\n{en}!")), format!("皮卡丘学会了{zh}！"));
+        }
+        assert_eq!(move_name(MoveId::None, true), "---");
+        assert_eq!(move_name(MoveId::MegaPunch, true), "百万吨重拳");
+        assert_eq!(move_name(MoveId::MegaKick, true), "百万吨重踢");
+        assert_eq!(move_name(MoveId::HornDrill, true), "角钻");
+        assert_eq!(move_name(MoveId::Splash, true), "跃起");
     }
 }

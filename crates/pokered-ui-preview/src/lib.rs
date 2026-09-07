@@ -341,8 +341,8 @@ fn render_battle_move(mock_state_id: u32, layout_json: &str) -> Vec<u8> {
     let layout = resolve_battle_move_layout(layout_json);
     let state = MoveMenuState::new(moves);
     render_with(|ui| {
-        let rd = PokemonRenderData::new(false);
-        pokered_ui::menus::battle_move::draw(&state, &layout, ui, &rd);
+        let rd = PokemonRenderData::new(Lang::default() == Lang::Zh);
+        pokered_ui::menus::battle_move::draw(&state, &layout, ui, Lang::default(), &rd);
     }, Lang::default())
 }
 
@@ -1208,7 +1208,7 @@ fn render_stats(mock_state_id: u32, layout_json: &str) -> Vec<u8> {
     let (page1, page2) = resolve_stats_layouts(layout_json);
 
     render_with(|ui| {
-        let rd = PokemonRenderData::new(false);
+        let rd = PokemonRenderData::new(Lang::default() == Lang::Zh);
         pokered_ui::menus::stats::draw(&state, &page1, &page2, ui, pokered_core::game_state::Lang::default(), &rd);
     }, Lang::default())
 }
