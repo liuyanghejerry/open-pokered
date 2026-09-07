@@ -467,14 +467,13 @@ pub fn draw_overworld(
         // Player sprite: 16×96 sheet = 6 frames of 16×16
         // Frame layout: DownStand=0, UpStand=1, LeftStand=2, DownWalk=3, UpWalk=4, LeftWalk=5
         // Right uses Left frames with horizontal flip
-        // Biking swaps the sheet to red_bike.png (same 6-frame layout) — the
-        // original's LoadBikePlayerSpriteGraphics loads RedBikeSprite
-        // (gfx/sprites.asm:34) while wWalkBikeSurfState == 1; the frame and
-        // flip selection below is shared by both sheets.
-        let player_sprite = if screen.state.player.transport == TransportMode::Biking {
-            "red_bike"
-        } else {
-            "red"
+        // LoadPlayerSpriteGraphics selects RedSprite / RedBikeSprite /
+        // SeelSprite for walking / biking / surfing (home/overworld.asm).
+        // All three sheets share the facing and animation layout below.
+        let player_sprite = match screen.state.player.transport {
+            TransportMode::Walking => "red",
+            TransportMode::Biking => "red_bike",
+            TransportMode::Surfing => "seel",
         };
         if let Ok(cached) = rm.load_sprite(player_sprite) {
             let ts = cached.tileset.clone();

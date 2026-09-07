@@ -879,3 +879,6 @@ Safari 场景注释过时等），保留会误导后续会话。当前唯一的�
   模拟摇杆逆序消费 RLE 缓冲区，三处入口按逆序路径汇入 (20,17)，避免右侧入口撞墙。
 - 野外中毒全灭经 HandleBlackOut 调用 ResetStatusAndHalveMoneyOnBlackout，
   与战败一样扣掉一半金钱（余额向下取整）。
+
+- 冲浪绘制按 LoadSurfingPlayerSpriteGraphics 切换到 SeelSprite（seel.png），
+  原生与终端共用原版六帧朝向/运动布局，上岸后恢复 RedSprite；不叠加步行主角。
