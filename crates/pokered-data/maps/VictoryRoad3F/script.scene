@@ -37,6 +37,12 @@ game_scene VictoryRoad3F {
     }
   }
 
+  // Original IsPlayerOnDungeonWarp + DungeonWarpData: hole -> 2F (22,16).
+  @storyline("coordHole") {
+    @trigger(map = "VictoryRoad3F", name = "hole")
+    warpTo("VictoryRoad2F", 22, 16)
+  }
+
   // ── Cooltrainer♂ (npc 1) — sight-engaged; dialogue only ─────────────────
   @storyline("talkCooltrainerM1") {
     @trigger(map = "VictoryRoad3F", npc = 1)

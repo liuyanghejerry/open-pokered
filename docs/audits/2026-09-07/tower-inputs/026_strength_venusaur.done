@@ -1,0 +1,4 @@
+g.tap('a',12);snap('strength-forget-menu')
+for _ in range(3):g.tap('down',8)
+g.tap('a',12);g.cutscene();g.step(40);snap('venusaur-strength-learned')
+assert g.st()['party'][0]['moves'][3]=='Strength',g.st()

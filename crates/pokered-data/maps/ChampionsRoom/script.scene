@@ -38,16 +38,7 @@ game_scene ChampionsRoom {
       }
 
       // Championship battle vs OPP_RIVAL3 (party-by-starter resolved by class).
-      s = getRivalStarter()
-      @if (s == 0) {
-        result = startBattle("OPP_RIVAL3")
-      } @else {
-        @if (s == 1) {
-          result = startBattle("OPP_RIVAL3")
-        } @else {
-          result = startBattle("OPP_RIVAL3")
-        }
-      }
+      result = startBattle("OPP_RIVAL3")
 
       @if (result == "win") {
         // Rival loses, then his post-battle lament (orig _RivalDefeatedText then,

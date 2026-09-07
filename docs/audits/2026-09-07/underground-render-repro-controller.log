@@ -1,0 +1,123 @@
+[resume-reentry] frame=636 screen=overworld map=VermilionCity pos=(11,4) party=1 money=5452 effect=None
+CHECKPOINT north-resumed VermilionCity 11 4 [{'hp': 83, 'level': 30, 'max_hp': 83, 'moves': ['Tackle', 'Cut', 'LeechSeed', 'RazorLeaf'], 'pp': [35, 30, 10, 25], 'species': 'Ivysaur', 'status': 'None'}]
+GAME_LOG /var/folders/d2/2fv86m890m34_13rn_t3d79w0000gn/T/pokered-run-75gfy0y0/game.log
+READY
+RUN 001_healing.py
+CHECKPOINT ship-prepared VermilionCity 11 4 [{'hp': 83, 'level': 30, 'max_hp': 83, 'moves': ['Tackle', 'Cut', 'LeechSeed', 'RazorLeaf'], 'pp': [35, 30, 10, 25], 'species': 'Ivysaur', 'status': 'None'}]
+DONE 001_healing.py
+RUN 002_north.py
+[debug-drive] transport stall (OSError('connection closed by peer')), reconnecting and retrying: capture_frame
+Traceback (most recent call last):
+  File "/tmp/pokered-completion-20260907-north/controller.py", line 72, in <module>
+    exec(compile(__task_path.read_text(),str(__task_path),'exec'),globals())
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/pokered-completion-20260907-north/inbox/002_north.py", line 5, in <module>
+    g.nav_warp(4,4,'UndergroundPathRoute6','UndergroundPathNorthSouth')
+    ~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/liuyanghe02/develop/open-pokered-3/scripts/playthrough.py", line 711, in nav_warp
+    cm, _, _ = self.pos()
+               ~~~~~~~~^^
+  File "/Users/liuyanghe02/develop/open-pokered-3/scripts/playthrough.py", line 416, in pos
+    s = self.st()
+  File "/Users/liuyanghe02/develop/open-pokered-3/scripts/playthrough.py", line 390, in st
+    return self.d.cmd(cmd="get_state")["data"]
+           ~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "/tmp/pokered-completion-20260907-north/controller.py", line 27, in cmd
+    cr=orig(cmd='capture_frame',path=str(p));assert cr['ok'],cr
+  File "/Users/liuyanghe02/develop/open-pokered-3/scripts/debug_drive.py", line 66, in cmd
+    resp = self.f.readline()
+  File "/opt/homebrew/Cellar/python@3.13/3.13.7/Frameworks/Python.framework/Versions/3.13/lib/python3.13/socket.py", line 719, in readinto
+    return self._sock.recv_into(b)
+           ~~~~~~~~~~~~~~~~~~~~^^^
+ConnectionResetError: [Errno 54] Connection reset by peer
+[debug-drive] transport stall (BrokenPipeError(32, 'Broken pipe')), reconnecting and retrying: get_state
+Traceback (most recent call last):
+  File "/tmp/pokered-completion-20260907-north/controller.py", line 72, in <module>
+    exec(compile(__task_path.read_text(),str(__task_path),'exec'),globals())
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/pokered-completion-20260907-north/inbox/002_north.py", line 5, in <module>
+    g.nav_warp(4,4,'UndergroundPathRoute6','UndergroundPathNorthSouth')
+    ~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/liuyanghe02/develop/open-pokered-3/scripts/playthrough.py", line 711, in nav_warp
+    cm, _, _ = self.pos()
+               ~~~~~~~~^^
+  File "/Users/liuyanghe02/develop/open-pokered-3/scripts/playthrough.py", line 416, in pos
+    s = self.st()
+  File "/Users/liuyanghe02/develop/open-pokered-3/scripts/playthrough.py", line 390, in st
+    return self.d.cmd(cmd="get_state")["data"]
+           ~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "/tmp/pokered-completion-20260907-north/controller.py", line 27, in cmd
+    cr=orig(cmd='capture_frame',path=str(p));assert cr['ok'],cr
+  File "/Users/liuyanghe02/develop/open-pokered-3/scripts/debug_drive.py", line 66, in cmd
+    resp = self.f.readline()
+  File "/opt/homebrew/Cellar/python@3.13/3.13.7/Frameworks/Python.framework/Versions/3.13/lib/python3.13/socket.py", line 719, in readinto
+    return self._sock.recv_into(b)
+           ~~~~~~~~~~~~~~~~~~~~^^^
+ConnectionResetError: [Errno 54] Connection reset by peer
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/Users/liuyanghe02/develop/open-pokered-3/scripts/debug_drive.py", line 65, in cmd
+    self.f.flush()
+    ~~~~~~~~~~~~^^
+  File "/opt/homebrew/Cellar/python@3.13/3.13.7/Frameworks/Python.framework/Versions/3.13/lib/python3.13/socket.py", line 737, in write
+    return self._sock.send(b)
+           ~~~~~~~~~~~~~~~^^^
+BrokenPipeError: [Errno 32] Broken pipe
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/tmp/pokered-completion-20260907-north/controller.py", line 75, in <module>
+    traceback.print_exc();snap(__task_path.stem+'-failed');print('FAILED',__task_path.name,flush=True)
+                          ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/pokered-completion-20260907-north/controller.py", line 33, in snap
+    s=g.st();d={'state':s,'flags':g.d.cmd(cmd='get_flags'),'bag':g.d.cmd(cmd='get_bag'),'party':g.d.cmd(cmd='get_party'),'npcs':g.d.cmd(cmd='get_npcs')}
+  File "/Users/liuyanghe02/develop/open-pokered-3/scripts/playthrough.py", line 390, in st
+    return self.d.cmd(cmd="get_state")["data"]
+           ~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "/tmp/pokered-completion-20260907-north/controller.py", line 20, in cmd
+    r=orig(**kw)
+  File "/Users/liuyanghe02/develop/open-pokered-3/scripts/debug_drive.py", line 76, in cmd
+    self._reconnect()
+    ~~~~~~~~~~~~~~~^^
+  File "/Users/liuyanghe02/develop/open-pokered-3/scripts/debug_drive.py", line 52, in _reconnect
+    self._connect(60)
+    ~~~~~~~~~~~~~^^^^
+  File "/Users/liuyanghe02/develop/open-pokered-3/scripts/debug_drive.py", line 35, in _connect
+    self.sock = socket.create_connection(
+                ~~~~~~~~~~~~~~~~~~~~~~~~^
+        (self.host, self.port), timeout=5)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.13/3.13.7/Frameworks/Python.framework/Versions/3.13/lib/python3.13/socket.py", line 864, in create_connection
+    raise exceptions[0]
+  File "/opt/homebrew/Cellar/python@3.13/3.13.7/Frameworks/Python.framework/Versions/3.13/lib/python3.13/socket.py", line 849, in create_connection
+    sock.connect(sa)
+    ~~~~~~~~~~~~^^^^
+ConnectionRefusedError: [Errno 61] Connection refused
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/opt/homebrew/Cellar/python@3.13/3.13.7/Frameworks/Python.framework/Versions/3.13/lib/python3.13/socket.py", line 737, in write
+    return self._sock.send(b)
+           ~~~~~~~~~~~~~~~^^^
+BrokenPipeError: [Errno 32] Broken pipe
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/tmp/pokered-completion-20260907-north/controller.py", line 79, in <module>
+    g.close()
+    ~~~~~~~^^
+  File "/Users/liuyanghe02/develop/open-pokered-3/scripts/playthrough.py", line 1122, in close
+    self.d.close()
+    ~~~~~~~~~~~~^^
+  File "/Users/liuyanghe02/develop/open-pokered-3/scripts/debug_drive.py", line 79, in close
+    self.f.close()
+    ~~~~~~~~~~~~^^
+  File "/opt/homebrew/Cellar/python@3.13/3.13.7/Frameworks/Python.framework/Versions/3.13/lib/python3.13/socket.py", line 737, in write
+    return self._sock.send(b)
+           ~~~~~~~~~~~~~~~^^^
+BrokenPipeError: [Errno 32] Broken pipe

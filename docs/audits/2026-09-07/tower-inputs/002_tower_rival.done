@@ -1,0 +1,6 @@
+g.nav_warp(14,5,'LavenderTown','PokemonTower1F');g.nav_warp(18,9,'PokemonTower1F','PokemonTower2F');snap('tower-stair-fixed')
+g.nav_to(15,5,'PokemonTower2F');g.cutscene();g.step(80);g.cutscene();snap('tower-rival-correct-battle')
+assert g.st()['screen']=='battle'
+g.battle_loop(prefer='fight');g.cutscene();g.step(60);snap('tower-rival-fixed-result')
+assert g.d.cmd(cmd='get_flags')['data'].get('EVENT_BEAT_POKEMON_TOWER_RIVAL')
+checkpoint('m33-tower-rival')

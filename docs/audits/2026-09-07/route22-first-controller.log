@@ -1,0 +1,25 @@
+[resume-reentry] frame=636 screen=overworld map=ViridianCity pos=(23,26) party=5 money=1542 effect=None
+CHECKPOINT league-resumed ViridianCity 23 26 [{'hp': 158, 'level': 51, 'max_hp': 158, 'moves': ['Thunderbolt', 'DrillPeck', 'Thunder', 'Fly'], 'pp': [15, 20, 10, 15], 'species': 'Zapdos', 'status': 'None'}, {'hp': 137, 'level': 30, 'max_hp': 137, 'moves': ['IceBeam', 'Surf', 'Rest', 'Strength'], 'pp': [10, 15, 10, 15], 'species': 'Snorlax', 'status': 'None'}, {'hp': 52, 'level': 24, 'max_hp': 52, 'moves': ['Peck', 'Growl', 'FuryAttack', 'Fly'], 'pp': [35, 40, 20, 15], 'species': 'Doduo', 'status': 'None'}, {'hp': 64, 'level': 15, 'max_hp': 64, 'moves': ['WaterGun', 'Growl', 'None', 'None'], 'pp': [25, 40, 0, 0], 'species': 'Lapras', 'status': 'None'}, {'hp': 161, 'level': 51, 'max_hp': 161, 'moves': ['MegaDrain', 'Cut', 'LeechSeed', 'Growth'], 'pp': [10, 30, 10, 40], 'species': 'Venusaur', 'status': 'None'}]
+GAME_LOG /var/folders/d2/2fv86m890m34_13rn_t3d79w0000gn/T/pokered-run-yth3b1mz/game.log
+READY
+RUN 001_helpers.py
+DONE 001_helpers.py
+RUN 002_route22.py
+Traceback (most recent call last):
+  File "/tmp/pokered-completion-20260907-league/controller.py", line 82, in <module>
+    exec(compile(__task_path.read_text(),str(__task_path),'exec'),globals())
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/pokered-completion-20260907-league/inbox/002_route22.py", line 1, in <module>
+    g.nav_to(0,18,'ViridianCity');g.d.drive(['left']*16,frames=32);g.cutscene();g.step(30)
+    ~~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/pokered-completion-20260907-league/inbox/001_helpers.py", line 107, in live_map_nav
+  File "/Users/liuyanghe02/develop/open-pokered-3/docs/audits/2026-09-06/playthrough/navigation.py", line 60, in nav_to
+    if not path:raise NavError(f'no path {cm} {(px,py)} -> {(x,y)}')
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+playthrough.NavError: no path ViridianCity (23, 26) -> (0, 18)
+FAILED 002_route22.py
+RUN 003_route22.py
+CHECKPOINT m94-route22-entry Route22 38 8 [{'hp': 158, 'level': 51, 'max_hp': 158, 'moves': ['Thunderbolt', 'DrillPeck', 'Thunder', 'Fly'], 'pp': [15, 20, 10, 15], 'species': 'Zapdos', 'status': 'None'}, {'hp': 137, 'level': 30, 'max_hp': 137, 'moves': ['IceBeam', 'Surf', 'Rest', 'Strength'], 'pp': [10, 15, 10, 15], 'species': 'Snorlax', 'status': 'None'}, {'hp': 52, 'level': 24, 'max_hp': 52, 'moves': ['Peck', 'Growl', 'FuryAttack', 'Fly'], 'pp': [35, 40, 20, 15], 'species': 'Doduo', 'status': 'None'}, {'hp': 64, 'level': 15, 'max_hp': 64, 'moves': ['WaterGun', 'Growl', 'None', 'None'], 'pp': [25, 40, 0, 0], 'species': 'Lapras', 'status': 'None'}, {'hp': 161, 'level': 51, 'max_hp': 161, 'moves': ['MegaDrain', 'Cut', 'LeechSeed', 'Growth'], 'pp': [10, 30, 10, 40], 'species': 'Venusaur', 'status': 'None'}]
+CHECKPOINT m94-route22-rival-ready Route22 30 4 [{'hp': 158, 'level': 51, 'max_hp': 158, 'moves': ['Thunderbolt', 'DrillPeck', 'Thunder', 'Fly'], 'pp': [15, 20, 10, 15], 'species': 'Zapdos', 'status': 'None'}, {'hp': 137, 'level': 30, 'max_hp': 137, 'moves': ['IceBeam', 'Surf', 'Rest', 'Strength'], 'pp': [10, 15, 10, 15], 'species': 'Snorlax', 'status': 'None'}, {'hp': 52, 'level': 24, 'max_hp': 52, 'moves': ['Peck', 'Growl', 'FuryAttack', 'Fly'], 'pp': [35, 40, 20, 15], 'species': 'Doduo', 'status': 'None'}, {'hp': 64, 'level': 15, 'max_hp': 64, 'moves': ['WaterGun', 'Growl', 'None', 'None'], 'pp': [25, 40, 0, 0], 'species': 'Lapras', 'status': 'None'}, {'hp': 161, 'level': 51, 'max_hp': 161, 'moves': ['MegaDrain', 'Cut', 'LeechSeed', 'Growth'], 'pp': [10, 30, 10, 40], 'species': 'Venusaur', 'status': 'None'}]
+DONE 003_route22.py
+RUN 004_preserve_wrong_stage.py

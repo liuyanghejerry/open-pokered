@@ -1,0 +1,39 @@
+assert g.st()['pc_phase']=='ItemList',g.st()
+for _ in range(3):g.tap('down',8)
+g.tap('a',8)
+if g.st()['pc_phase']=='ItemQuantity':g.tap('a',8)
+for _ in range(8):
+ if g.st()['pc_phase']!='Message':break
+ g.tap('a',8)
+assert any(i['item']=='Tm24' for i in g.d.cmd(cmd='get_bag')['data']),g.st()
+g.tap('b',8);assert g.st()['pc_phase']=='ItemMenu';g.tap('down',8);g.tap('a',12)
+for item in ['SecretKey','Tm46','Tm38','Tm27']:
+ idx=next(i for i,v in enumerate(g.d.cmd(cmd='get_bag')['data']) if v['item']==item)
+ for _ in range(20):g.tap('up',4)
+ for _ in range(idx):g.tap('down',4)
+ g.tap('a',8)
+ if g.st()['pc_phase']=='ItemQuantity':g.tap('a',8)
+ for _ in range(8):
+  if g.st()['pc_phase']!='Message':break
+  g.tap('a',8)
+ assert not any(i['item']==item for i in g.d.cmd(cmd='get_bag')['data']),g.st()
+for _ in range(10):
+ if g.st()['screen']=='overworld':break
+ g.tap('b',8)
+g.nav_warp(3,7,'ViridianPokecenter','ViridianCity',approach='down');g.cutscene();g.step(40)
+g.tap('start',8);g.tap('down',8);g.tap('a',8)
+idx=next(i for i,v in enumerate(g.d.cmd(cmd='get_bag')['data']) if v['item']=='Hm02')
+for _ in range(idx):g.tap('down',8)
+g.tap('a',8);g.tap('a',8)
+for _ in range(4):g.tap('down',8)
+g.tap('a',8);g.cutscene();g.step(60)
+snap('zapdos-fly-learned');assert 'Fly' in g.st()['party'][4]['moves'],g.st()
+g.tap('start',8);g.tap('a',8)
+idx=next(i for i,v in enumerate(g.d.cmd(cmd='get_bag')['data']) if v['item']=='Tm24')
+for _ in range(idx):g.tap('down',8)
+g.tap('a',8);g.tap('a',8)
+for _ in range(4):g.tap('down',8)
+g.tap('a',8);g.step(30);snap('zapdos-thunderbolt-forget-menu')
+g.tap('a',8);g.cutscene();g.step(60)
+snap('zapdos-thunderbolt-learned');assert g.st()['party'][4]['moves'][0]=='Thunderbolt',g.st()
+checkpoint('m92-thunderbolt-ready')

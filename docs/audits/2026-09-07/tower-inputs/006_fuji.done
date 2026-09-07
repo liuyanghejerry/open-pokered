@@ -1,0 +1,7 @@
+g.nav_to(10,4,'PokemonTower7F');g.cutscene();g.step(60)
+if g.st()['screen']=='battle':g.battle_loop(prefer='fight');g.cutscene()
+snap('tower-rockets-path')
+g.face('up');g.tap('a',20);g.cutscene();g.step(60)
+snap('fuji-rescued')
+assert g.st()['map_name']=='MrFujisHouse',g.st()
+checkpoint('m35-fuji-rescued')

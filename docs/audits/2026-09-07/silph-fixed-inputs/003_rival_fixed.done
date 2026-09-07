@@ -1,0 +1,9 @@
+g.nav_warp(11,11,'SilphCo3F','SilphCo7F')
+checkpoint('m54-silph-rival-ready-fixed')
+g.nav_to(3,3,'SilphCo7F');g.cutscene();g.step(60)
+s=snap('silph-rival-correct-party')
+assert s['screen']=='battle' and s['battle_live']['enemy_party'][0]['species']=='Pidgeot' and s['battle_live']['enemy_party'][0]['level']==37,s
+assert s['battle_live']['enemy_party'][-1]['species']=='Charizard' and s['battle_live']['enemy_party'][-1]['level']==40,s
+g.battle_loop(prefer='fight');g.cutscene();g.step(60)
+snap('silph-rival-correct-result');assert g.d.cmd(cmd='get_flags')['data'].get('EVENT_BEAT_SILPH_CO_RIVAL'),g.st()
+checkpoint('m55-silph-rival-won')

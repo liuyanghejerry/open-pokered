@@ -1,0 +1,3 @@
+g.nav_to(5,16,'VictoryRoad1F');g.face('up');checkpoint('m103-victory-road-boulder-ready')
+snap('victory-road-boulder-before');g.tap('a',12);snap('victory-road-boulder-dialogue');g.cutscene();g.step(60)
+snap('victory-road-boulder-after');checkpoint('m104-victory-road-first-switch')

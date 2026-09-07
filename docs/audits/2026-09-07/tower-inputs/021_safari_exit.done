@@ -1,0 +1,7 @@
+try:
+ g.nav_warp(20,35,'SafariZoneNorth','SafariZoneCenter',approach='down')
+ g.nav_warp(14,25,'SafariZoneCenter','SafariZoneGate',approach='down')
+except (NavError,AssertionError):
+ s=snap('safari-exit-transition')
+ if s['map_name']!='SafariZoneGate':raise
+g.cutscene();g.step(40);snap('safari-gate-return')

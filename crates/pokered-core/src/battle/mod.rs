@@ -2779,8 +2779,10 @@ impl BattleScreen {
 
     fn consume_selected_item(&mut self) {
         if let Some(ref bm) = self.bag_menu {
-            let cursor = bm.cursor();
-            if self.player_bag.remove_item_at(cursor, 1).is_ok() {
+            // The battle menu excludes unusable bag entries. Its cursor is
+            // therefore not an index into the complete inventory.
+            let Some(&(item_id, _)) = bm.items().get(bm.cursor()) else { return };
+            if self.player_bag.remove_item(item_id, 1).is_ok() {
                 let remaining_items: Vec<(ItemId, u8)> = self
                     .player_bag
                     .items()

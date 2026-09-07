@@ -1110,23 +1110,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                         trainer_class,
                         trainer_set,
                     } => {
-                        let face_dir =
-                            player_movement::opposite_direction(self.state.player.facing);
-                        if let Some(npc) = self
-                            .npc_states
-                            .iter_mut()
-                            .find(|n| n.npc_index == npc_index)
-                        {
-                            npc.facing = face_dir;
-                            let text_id = npc.text_id;
-                            if self.try_call_script_npc_talk(text_id) {
-                                return ScreenAction::Continue;
-                            }
-                            if self.try_show_npc_json_text(text_id) {
-                                return ScreenAction::Continue;
-                            }
-                        }
-                        // Start a trainer battle via pending_trainer_battle
+                        self.npc_face_player(npc_index);
                         let tc = pokered_data::trainer_data::TrainerClass::from_u8(trainer_class);
                         let trainer_id =
                             pokered_data::trainer_data::make_trainer_id(tc, trainer_set);
@@ -1134,12 +1118,25 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                             .npc_pokemon_data
                             .get(npc_index as usize)
                             .and_then(|d| d.end_battle_text.clone());
-                        self.pending_trainer_battle = Some(PendingTrainerBattle {
+                        // The dialogue is only the pre-battle introduction for
+                        // isTrainer NPCs, including trainers with no sight range.
+                        // Reuse the deferred encounter handoff: dialogue/script
+                        // processing holds it until the introduction finishes.
+                        self.trainer_encounter_intro = Some(TrainerEncounterIntro {
                             trainer_id,
                             npc_index,
                             end_battle_text,
                             rival_triplet_base: None,
                         });
+                        let text_id = self.npc_states.iter()
+                            .find(|n| n.npc_index == npc_index).map(|n| n.text_id);
+                        if let Some(text_id) = text_id {
+                            if self.try_call_script_npc_talk(text_id)
+                                || self.try_show_npc_json_text(text_id)
+                            {
+                                return ScreenAction::Continue;
+                            }
+                        }
                     }
                     npc_interaction::InteractionResult::ItemPickup { npc_index, .. } => {
                         self.npc_face_player(npc_index);
@@ -1277,7 +1274,8 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
             let prev_x = self.state.player.x;
             let prev_y = self.state.player.y;
 
-            let collision_provider = collision::PokemonCollisionProvider::new(map.id, map.tileset);
+            let collision_provider = collision::PokemonCollisionProvider::new(map.id, map.tileset)
+                .with_warp_border_probe(map.tileset, self.state.player.x, self.state.player.y, self.state.player.facing);
 
             let standing_tile = get_tile_id_at_position(
                 &map.blocks,
@@ -3064,7 +3062,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
     /// The existing script system (`load_map_script`, `coord_event_fn`,
     /// `npc_talk_fn`, `on_load`) continues to work unchanged — the trigger
     /// manager runs in parallel as an additional unified dispatch layer.
-    fn setup_triggers_for_map(&mut self, map_id: MapId) {
+    pub(super) fn setup_triggers_for_map(&mut self, map_id: MapId) {
         use dotzuki_engine::metatile::TriggerType;
         use dotzuki_engine::trigger_manager::Trigger;
 
@@ -3088,6 +3086,41 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
             }
         }
 
+        // A locked door cannot receive OnStep; Card Key interactions target
+        // its solid tiles from the adjoining corridor.
+        let card_key_doors: &[(u32, u32, &str)] = match self.state.current_map {
+            MapId::SilphCo3F => &[(4, 4, "cardKeyDoor1"), (8, 4, "cardKeyDoor2")],
+            MapId::SilphCo11F => &[(3, 6, "cardKeyDoor")],
+            _ => &[],
+        };
+        for &(bx, by, handler) in card_key_doors {
+            if !self.script_engine.has_function(handler) { continue; }
+            for (x, y) in [(bx * 2, by * 2), (bx * 2 + 1, by * 2),
+                           (bx * 2, by * 2 + 1), (bx * 2 + 1, by * 2 + 1)] {
+                self.trigger_manager.add_trigger(Trigger::single_tile(
+                    format!("card_key_door_{x}_{y}"), map_key.clone(),
+                    TriggerType::OnInteract, x, y, handler.to_string(), false,
+                ));
+            }
+        }
+
+        // Mansion hidden events are statue interactions, not walkable floor
+        // triggers. Keep the original coordinates as the facing target.
+        let mansion_statues: &[(u32, u32, &str)] = match self.state.current_map {
+            MapId::PokemonMansion1F => &[(2, 5, "coordSwitch")],
+            MapId::PokemonMansion3F => &[(10, 5, "secretSwitch")],
+            MapId::PokemonMansionB1F => &[(20, 3, "coordSwitchA"), (18, 25, "coordSwitchB")],
+            _ => &[],
+        };
+        for &(x, y, handler) in mansion_statues {
+            if self.script_engine.has_function(handler) {
+                self.trigger_manager.add_trigger(Trigger::single_tile(
+                    format!("mansion_statue_{x}_{y}"), map_key.clone(),
+                    TriggerType::OnInteract, x, y, handler.to_string(), false,
+                ));
+            }
+        }
+
         // 2. on_load / enterMap → OnEnter trigger at player position
         if let Some(fn_name) = self.map_script_config.on_load() {
             if self.script_engine.has_function(fn_name) {
@@ -3103,24 +3136,9 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
             }
         }
 
-        // 3. NPC talk functions → OnInteract triggers at NPC positions
-        for npc_cfg in &self.map_script_config.npcs {
-            if let Some(ref talk_fn) = npc_cfg.talk {
-                if self.script_engine.has_function(talk_fn) {
-                    if let Some(npc) = self.npc_states.iter().find(|n| n.text_id == npc_cfg.id) {
-                        self.trigger_manager.add_trigger(Trigger::single_tile(
-                            format!("npc_talk_{}", npc_cfg.id),
-                            map_key.clone(),
-                            TriggerType::OnInteract,
-                            npc.x as u32,
-                            npc.y as u32,
-                            talk_fn.clone(),
-                            false,
-                        ));
-                    }
-                }
-            }
-        }
+        // NPC dialogue is dispatched by try_interact at the NPC's live position.
+        // Fixed coordinate triggers would bypass trainer battle handoff and still
+        // talk to NPCs after they move away or become hidden.
 
         // 4. Sign talk functions → OnInteract triggers at sign positions
         for sign_cfg in &self.map_script_config.signs {

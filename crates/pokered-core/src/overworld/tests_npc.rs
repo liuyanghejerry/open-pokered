@@ -692,6 +692,159 @@ fn viridian_forest_trainer_engages_on_sight_line() {
 
 // ── Stale edge detection on re-entry from a sub-screen ─────────────
 
+#[test]
+fn rocket_hideout_talk_only_guard_battles_after_scene_dialogue() {
+    use super::screen::OverworldScreen;
+    use pokered_data::impl_traits::PokemonRedData;
+    let mut screen = OverworldScreen::new(MapId::RocketHideoutB4F, None, PokemonRedData);
+    screen.run_on_load();
+    screen.state.player.x = 26;
+    screen.state.player.y = 13;
+    screen.state.player.facing = Direction::Up;
+    let input = |a| super::OverworldInput::new(false, false, false, false, a, false, false, false);
+    for _ in 0..20 { screen.update_frame(input(false)); }
+    screen.update_frame(input(true));
+    let mut saw_dialogue = false;
+    for frame in 0..600 {
+        if let Some(dialogue) = screen.pending_dialogue.as_mut() {
+            saw_dialogue = true;
+            dialogue.skip_to_full_page();
+            assert!(screen.pending_trainer_battle.is_none(), "battle must await the dialogue");
+        }
+        screen.update_frame(input(frame % 2 == 1));
+        if let Some(pending) = &screen.pending_trainer_battle {
+            assert!(saw_dialogue);
+            assert_eq!(pending.trainer_id, "OPP_ROCKET17");
+            assert_eq!(pending.npc_index, 2);
+            return;
+        }
+    }
+    panic!("talk-only guard never started battle after dialogue");
+}
+
+#[test]
+fn silph_boardroom_door_opens_from_corridor_only_with_card_key() {
+    use pokered_data::impl_traits::PokemonRedData;
+    for has_key in [false, true] {
+        for x in [6, 7] {
+            let mut screen = OverworldScreen::new(MapId::PalletTown, None, PokemonRedData);
+            screen.warp_to_map(MapId::SilphCo11F, x, 14);
+            let bag = if has_key { vec!["CARD_KEY".into()] } else { vec![] };
+            screen.seed_script_query_state(0, &bag, 0, 0, 0, 0, &[], 0, 0, 0);
+            let input = |a| super::OverworldInput::new(false, false, false, false, a, false, false, false);
+            for _ in 0..100 {
+                screen.seed_script_query_state(0, &bag, 0, 0, 0, 0, &[], 0, 0, 0);
+                screen.update_frame(input(false));
+            }
+            screen.state.player.facing = Direction::Up;
+            let door = 6 * screen.map_data.as_ref().unwrap().width as usize + 3;
+            assert_eq!(screen.map_data.as_ref().unwrap().blocks[door], 32);
+            screen.update_frame(input(true));
+            for frame in 0..180 {
+                if let Some(dialogue) = screen.pending_dialogue.as_mut() {
+                    dialogue.skip_to_full_page();
+                }
+                screen.update_frame(input(frame % 2 == 1));
+            }
+            assert_eq!(screen.script_flags().get("EVENT_SILPH_CO_11_UNLOCKED_DOOR").copied().unwrap_or(false), has_key);
+            assert_eq!(screen.map_data.as_ref().unwrap().blocks[door], if has_key { 3 } else { 32 });
+        }
+    }
+}
+
+#[test]
+fn silph_third_floor_door_requires_key_and_stays_open_after_reentry() {
+    use pokered_data::impl_traits::PokemonRedData;
+    for has_key in [false, true] {
+        let mut screen = OverworldScreen::new(MapId::PalletTown, None, PokemonRedData);
+        screen.warp_to_map(MapId::SilphCo3F, 18, 9);
+        let bag = if has_key { vec!["CARD_KEY".into()] } else { vec![] };
+        let input = |a| super::OverworldInput::new(false, false, false, false, a, false, false, false);
+        for _ in 0..100 {
+            screen.seed_script_query_state(0, &bag, 0, 0, 0, 0, &[], 0, 0, 0);
+            screen.update_frame(input(false));
+        }
+        let door = 4 * screen.map_data.as_ref().unwrap().width as usize + 8;
+        assert_eq!(screen.map_data.as_ref().unwrap().blocks[door], 95);
+        screen.state.player.facing = Direction::Left;
+        screen.update_frame(input(true));
+        for frame in 0..180 {
+            if let Some(dialogue) = screen.pending_dialogue.as_mut() {
+                dialogue.skip_to_full_page();
+            }
+            screen.update_frame(input(frame % 2 == 1));
+        }
+        assert_eq!(screen.script_flags().get("EVENT_SILPH_CO_3_UNLOCKED_DOOR2").copied().unwrap_or(false), has_key);
+        assert_eq!(screen.map_data.as_ref().unwrap().blocks[door], if has_key { 14 } else { 95 });
+        screen.warp_to_map(MapId::PalletTown, 5, 6);
+        screen.warp_to_map(MapId::SilphCo3F, 18, 9);
+        for _ in 0..100 { screen.update_frame(input(false)); }
+        assert_eq!(screen.map_data.as_ref().unwrap().blocks[door], if has_key { 14 } else { 95 });
+    }
+}
+
+#[test]
+fn saffron_liberation_clears_gym_guard_and_restores_citizens() {
+    use pokered_data::impl_traits::PokemonRedData;
+    for liberated in [false, true] {
+        let mut screen = OverworldScreen::new(MapId::PalletTown, None, PokemonRedData);
+        screen.set_flag_live("EVENT_RESCUED_MR_FUJI", true);
+        screen.set_flag_live("EVENT_BEAT_SILPH_CO_GIOVANNI", liberated);
+        screen.warp_to_map(MapId::SaffronCity, 35, 4);
+        for _ in 0..120 {
+            screen.update_frame(super::OverworldInput::new(false, false, false, false, false, false, false, false));
+        }
+        for npc in &screen.npc_states {
+            let expected = match npc.text_id {
+                1..=7 => !liberated,
+                8..=13 => liberated,
+                14..=15 => false,
+                _ => continue,
+            };
+            assert_eq!(npc.visible, expected, "NPC {} with liberated={liberated}", npc.text_id);
+        }
+    }
+}
+
+#[test]
+fn mansion_statues_offer_and_apply_switch_from_adjacent_floor() {
+    use pokered_data::impl_traits::PokemonRedData;
+    for restored in [true, false] {
+    for (map, x, y) in [(MapId::PokemonMansion3F, 10, 6),
+                        (MapId::PokemonMansion1F, 2, 6),
+                        (MapId::PokemonMansionB1F, 20, 4),
+                        (MapId::PokemonMansionB1F, 18, 26)] {
+        let mut screen = OverworldScreen::new(if restored { map } else { MapId::PalletTown }, None, PokemonRedData);
+        if restored {
+            screen.state.player.x = x as u16;
+            screen.state.player.y = y as u16;
+            screen.run_on_load();
+        } else {
+            screen.warp_to_map(map, x, y);
+        }
+        let input = |a| super::OverworldInput::new(false, false, false, false, a, false, false, false);
+        for _ in 0..100 { screen.update_frame(input(false)); }
+        screen.state.player.facing = Direction::Up;
+        screen.seed_script_query_state(0, &[], 0, 0, 0, 0, &[], 0, 0, 0);
+        screen.update_frame(input(true));
+        for frame in 0..180 {
+            if screen.pending_choice.is_some() { break; }
+            if let Some(dialogue) = screen.pending_dialogue.as_mut() { dialogue.skip_to_full_page(); }
+            screen.update_frame(input(frame % 2 == 1));
+        }
+        assert!(screen.pending_choice.is_some(), "statue on {map:?} above ({x},{y}) must offer YES/NO");
+        screen.update_frame(input(false));
+        screen.update_frame(input(true));
+        for frame in 0..180 {
+            if screen.script_flags().get("EVENT_MANSION_SWITCH_ON") == Some(&true) { break; }
+            if let Some(dialogue) = screen.pending_dialogue.as_mut() { dialogue.skip_to_full_page(); }
+            screen.update_frame(input(frame % 2 == 1));
+        }
+        assert_eq!(screen.script_flags().get("EVENT_MANSION_SWITCH_ON"), Some(&true));
+    }
+    }
+}
+
 /// Regression: returning to the overworld from the START menu with the A
 /// button still held (the press that confirmed EXIT) used to re-fire as a
 /// fresh A press on the first frame back — instantly talking to the facing
@@ -809,4 +962,36 @@ fn held_a_across_map_warp_does_not_talk_to_facing_npc() {
         screen.pending_dialogue.is_some() || screen.active_script_effect.is_some(),
         "a genuine A press must still talk to the facing NPC after a warp"
     );
+}
+
+#[test]
+fn elite_four_talk_triggers_battle_after_map_trigger_setup() {
+    use super::screen::OverworldScreen;
+    use pokered_data::impl_traits::PokemonRedData;
+    for (map, trainer_id, entered) in [
+        (MapId::BrunosRoom, "OPP_BRUNO1", "EVENT_AUTOWALKED_INTO_BRUNOS_ROOM"),
+        (MapId::AgathasRoom, "OPP_AGATHA1", "EVENT_AUTOWALKED_INTO_AGATHAS_ROOM"),
+    ] {
+        let mut screen = OverworldScreen::new(map, None, PokemonRedData);
+        screen.script_engine.set_flag(entered, true);
+        screen.sync_flags_from_engine();
+        screen.run_on_load();
+        screen.state.player.x = 5;
+        screen.state.player.y = 3;
+        screen.state.player.facing = Direction::Up;
+        let input = |a| super::OverworldInput::new(false, false, false, false, a, false, false, false);
+        for _ in 0..20 { screen.update_frame(input(false)); }
+        screen.update_frame(input(true));
+        let mut saw_dialogue = false;
+        for frame in 0..1800 {
+            if let Some(dialogue) = screen.pending_dialogue.as_mut() {
+                saw_dialogue = true;
+                dialogue.skip_to_full_page();
+            }
+            screen.update_frame(input(frame % 2 == 1));
+            if screen.pending_trainer_battle.is_some() { break; }
+        }
+        assert!(saw_dialogue, "{map:?}");
+        assert_eq!(screen.pending_trainer_battle.as_ref().map(|t| t.trainer_id.as_str()), Some(trainer_id), "{map:?}");
+    }
 }

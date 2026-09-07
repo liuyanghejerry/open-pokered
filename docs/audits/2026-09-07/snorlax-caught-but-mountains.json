@@ -1,0 +1,158 @@
+{
+  "active_script_effect": "ShowDialogue",
+  "battle_bag": null,
+  "battle_inventory": [
+    {
+      "item": "PokeBall",
+      "qty": 5
+    },
+    {
+      "item": "OldRod",
+      "qty": 1
+    },
+    {
+      "item": "Hm01",
+      "qty": 1
+    },
+    {
+      "item": "Bicycle",
+      "qty": 1
+    },
+    {
+      "item": "SuperPotion",
+      "qty": 3
+    },
+    {
+      "item": "ParlyzHeal",
+      "qty": 3
+    },
+    {
+      "item": "Awakening",
+      "qty": 3
+    },
+    {
+      "item": "BurnHeal",
+      "qty": 2
+    },
+    {
+      "item": "Tm13",
+      "qty": 1
+    },
+    {
+      "item": "SilphScope",
+      "qty": 1
+    },
+    {
+      "item": "GreatBall",
+      "qty": 8
+    },
+    {
+      "item": "RareCandy",
+      "qty": 1
+    },
+    {
+      "item": "PokeFlute",
+      "qty": 1
+    }
+  ],
+  "battle_live": {
+    "enemy": {
+      "hp": 55,
+      "level": 30,
+      "max_hp": 136,
+      "species": "Snorlax",
+      "status": "None"
+    },
+    "enemy_party": [
+      {
+        "hp": 55,
+        "level": 30,
+        "species": "Snorlax"
+      }
+    ],
+    "player": {
+      "hp": 133,
+      "level": 42,
+      "max_hp": 133,
+      "species": "Venusaur",
+      "status": "None"
+    }
+  },
+  "battle_message": null,
+  "battle_moves": null,
+  "battle_phase": "BattleOver { won: true, escaped: false, wait_frames: 17 }",
+  "choice": null,
+  "coins": 0,
+  "dialogue": "SNORLAX calmed down! With a big yawn, it returned to the",
+  "dialogue_state": {
+    "char_index": 55,
+    "done": false,
+    "holding_open": false,
+    "page": 1,
+    "text": "SNORLAX calmed down! With a big yawn, it returned to the",
+    "total_chars": 55,
+    "total_pages": 2,
+    "waiting_for_input": true
+  },
+  "frame_count": 2509,
+  "map_id": 23,
+  "map_name": "Route12",
+  "money": 18209,
+  "party": [
+    {
+      "hp": 133,
+      "level": 42,
+      "max_hp": 133,
+      "moves": [
+        "MegaDrain",
+        "Cut",
+        "LeechSeed",
+        "RazorLeaf"
+      ],
+      "pp": [
+        4,
+        30,
+        10,
+        18
+      ],
+      "species": "Venusaur",
+      "status": "None"
+    },
+    {
+      "hp": 55,
+      "level": 30,
+      "max_hp": 136,
+      "moves": [
+        "Headbutt",
+        "Amnesia",
+        "Rest",
+        "None"
+      ],
+      "pp": [
+        15,
+        20,
+        10,
+        0
+      ],
+      "species": "Snorlax",
+      "status": "None"
+    }
+  ],
+  "party_count": 2,
+  "pc_phase": null,
+  "player_facing": "Down",
+  "player_movement_state": "Idle",
+  "player_name": "RED",
+  "player_x": 10,
+  "player_y": 61,
+  "screen": "overworld",
+  "script_awaiting_battle": false,
+  "script_effect": {
+    "effect": "ShowDialogue",
+    "text": "SNORLAX calmed down! With a\nbig yawn, it returned to the\nmountains!"
+  },
+  "script_running": true,
+  "shop_phase": null,
+  "text_speed_delay_frames": 3,
+  "warp_fade": "Idle"
+}

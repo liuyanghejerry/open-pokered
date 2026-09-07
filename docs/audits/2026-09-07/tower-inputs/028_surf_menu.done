@@ -1,0 +1,5 @@
+g.tap('start',12);g.tap('a',12)
+bag=g.d.cmd(cmd='get_bag')['data'];idx=next(i for i,v in enumerate(bag) if v['item']=='Hm03')
+for _ in range(idx):g.tap('down',8)
+snap('bag-hm03-offscreen');g.tap('a',12);g.tap('a',12);g.tap('down',8);g.tap('a',12)
+snap('surf-forget-menu')

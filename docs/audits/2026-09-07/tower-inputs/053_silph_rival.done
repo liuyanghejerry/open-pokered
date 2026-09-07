@@ -1,0 +1,7 @@
+g.nav_warp(11,11,'SilphCo3F','SilphCo7F')
+snap('silph-rival-before');checkpoint('m54-silph-rival-pre')
+g.nav_to(3,3,'SilphCo7F');g.cutscene();g.step(60)
+snap('silph-rival-battle');assert g.st()['screen']=='battle',g.st()
+g.battle_loop(prefer='fight');g.cutscene();g.step(60)
+snap('silph-rival-result')
+assert g.d.cmd(cmd='get_flags')['data'].get('EVENT_BEAT_SILPH_CO_RIVAL'),g.st()

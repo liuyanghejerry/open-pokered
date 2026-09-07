@@ -1,0 +1,1762 @@
+{
+  "player_name": [
+    145,
+    132,
+    131
+  ],
+  "game_data": {
+    "pokedex": {
+      "seen": [
+        255,
+        190,
+        255,
+        255,
+        71,
+        191,
+        143,
+        206,
+        255,
+        246,
+        207,
+        255,
+        249,
+        247,
+        175,
+        11,
+        6,
+        96,
+        25
+      ],
+      "owned": [
+        7,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        8,
+        0,
+        0,
+        0,
+        0,
+        0,
+        4,
+        64,
+        1
+      ]
+    },
+    "bag": {
+      "items": [
+        [
+          "Bicycle",
+          1
+        ],
+        [
+          "ParlyzHeal",
+          3
+        ],
+        [
+          "Awakening",
+          3
+        ],
+        [
+          "BurnHeal",
+          2
+        ],
+        [
+          "RareCandy",
+          1
+        ],
+        [
+          "PokeFlute",
+          1
+        ],
+        [
+          "Hm03",
+          1
+        ],
+        [
+          "Hm04",
+          1
+        ],
+        [
+          "Revive",
+          4
+        ],
+        [
+          "FullHeal",
+          4
+        ],
+        [
+          "GreatBall",
+          13
+        ],
+        [
+          "Hm02",
+          1
+        ],
+        [
+          "FullRestore",
+          3
+        ],
+        [
+          "HyperPotion",
+          4
+        ]
+      ],
+      "capacity": 20
+    },
+    "player_money": 31210,
+    "rival_name": [
+      129,
+      139,
+      148,
+      132
+    ],
+    "options": {
+      "text_speed": "Medium",
+      "battle_animation": "On",
+      "battle_style": "Shift"
+    },
+    "obtained_badges": 255,
+    "letter_printing_delay_flags": 0,
+    "player_id": 813,
+    "map_music_sound_id": 0,
+    "map_music_rom_bank": 0,
+    "map_pal_offset": 0,
+    "position": {
+      "map_id": 0,
+      "y": 6,
+      "x": 5,
+      "y_block": 0,
+      "x_block": 1
+    },
+    "last_map": 9,
+    "map_header": {
+      "tileset": 7,
+      "height": 4,
+      "width": 5,
+      "data_ptr": 0,
+      "text_ptr": 0,
+      "script_ptr": 0,
+      "connections": 0
+    },
+    "connections": [
+      {
+        "connected_map": 0,
+        "strip_src": 0,
+        "strip_dest": 0,
+        "strip_length": 0,
+        "connected_width": 0,
+        "y_alignment": 0,
+        "x_alignment": 0,
+        "view_pointer": 0
+      },
+      {
+        "connected_map": 0,
+        "strip_src": 0,
+        "strip_dest": 0,
+        "strip_length": 0,
+        "connected_width": 0,
+        "y_alignment": 0,
+        "x_alignment": 0,
+        "view_pointer": 0
+      },
+      {
+        "connected_map": 0,
+        "strip_src": 0,
+        "strip_dest": 0,
+        "strip_length": 0,
+        "connected_width": 0,
+        "y_alignment": 0,
+        "x_alignment": 0,
+        "view_pointer": 0
+      },
+      {
+        "connected_map": 0,
+        "strip_src": 0,
+        "strip_dest": 0,
+        "strip_length": 0,
+        "connected_width": 0,
+        "y_alignment": 0,
+        "x_alignment": 0,
+        "view_pointer": 0
+      }
+    ],
+    "sprite_set": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    "sprite_set_id": 0,
+    "map_background_tile": 0,
+    "num_warps": 0,
+    "warp_entries": [
+      {
+        "y": 0,
+        "x": 0,
+        "warp_id": 0,
+        "map_id": 0
+      },
+      {
+        "y": 0,
+        "x": 0,
+        "warp_id": 0,
+        "map_id": 0
+      },
+      {
+        "y": 0,
+        "x": 0,
+        "warp_id": 0,
+        "map_id": 0
+      },
+      {
+        "y": 0,
+        "x": 0,
+        "warp_id": 0,
+        "map_id": 0
+      },
+      {
+        "y": 0,
+        "x": 0,
+        "warp_id": 0,
+        "map_id": 0
+      },
+      {
+        "y": 0,
+        "x": 0,
+        "warp_id": 0,
+        "map_id": 0
+      },
+      {
+        "y": 0,
+        "x": 0,
+        "warp_id": 0,
+        "map_id": 0
+      },
+      {
+        "y": 0,
+        "x": 0,
+        "warp_id": 0,
+        "map_id": 0
+      },
+      {
+        "y": 0,
+        "x": 0,
+        "warp_id": 0,
+        "map_id": 0
+      },
+      {
+        "y": 0,
+        "x": 0,
+        "warp_id": 0,
+        "map_id": 0
+      },
+      {
+        "y": 0,
+        "x": 0,
+        "warp_id": 0,
+        "map_id": 0
+      },
+      {
+        "y": 0,
+        "x": 0,
+        "warp_id": 0,
+        "map_id": 0
+      },
+      {
+        "y": 0,
+        "x": 0,
+        "warp_id": 0,
+        "map_id": 0
+      },
+      {
+        "y": 0,
+        "x": 0,
+        "warp_id": 0,
+        "map_id": 0
+      },
+      {
+        "y": 0,
+        "x": 0,
+        "warp_id": 0,
+        "map_id": 0
+      },
+      {
+        "y": 0,
+        "x": 0,
+        "warp_id": 0,
+        "map_id": 0
+      },
+      {
+        "y": 0,
+        "x": 0,
+        "warp_id": 0,
+        "map_id": 0
+      },
+      {
+        "y": 0,
+        "x": 0,
+        "warp_id": 0,
+        "map_id": 0
+      },
+      {
+        "y": 0,
+        "x": 0,
+        "warp_id": 0,
+        "map_id": 0
+      },
+      {
+        "y": 0,
+        "x": 0,
+        "warp_id": 0,
+        "map_id": 0
+      },
+      {
+        "y": 0,
+        "x": 0,
+        "warp_id": 0,
+        "map_id": 0
+      },
+      {
+        "y": 0,
+        "x": 0,
+        "warp_id": 0,
+        "map_id": 0
+      },
+      {
+        "y": 0,
+        "x": 0,
+        "warp_id": 0,
+        "map_id": 0
+      },
+      {
+        "y": 0,
+        "x": 0,
+        "warp_id": 0,
+        "map_id": 0
+      },
+      {
+        "y": 0,
+        "x": 0,
+        "warp_id": 0,
+        "map_id": 0
+      },
+      {
+        "y": 0,
+        "x": 0,
+        "warp_id": 0,
+        "map_id": 0
+      },
+      {
+        "y": 0,
+        "x": 0,
+        "warp_id": 0,
+        "map_id": 0
+      },
+      {
+        "y": 0,
+        "x": 0,
+        "warp_id": 0,
+        "map_id": 0
+      },
+      {
+        "y": 0,
+        "x": 0,
+        "warp_id": 0,
+        "map_id": 0
+      },
+      {
+        "y": 0,
+        "x": 0,
+        "warp_id": 0,
+        "map_id": 0
+      },
+      {
+        "y": 0,
+        "x": 0,
+        "warp_id": 0,
+        "map_id": 0
+      },
+      {
+        "y": 0,
+        "x": 0,
+        "warp_id": 0,
+        "map_id": 0
+      }
+    ],
+    "destination_warp_id": 0,
+    "num_signs": 0,
+    "sign_coords": [
+      [
+        0,
+        0
+      ],
+      [
+        0,
+        0
+      ],
+      [
+        0,
+        0
+      ],
+      [
+        0,
+        0
+      ],
+      [
+        0,
+        0
+      ],
+      [
+        0,
+        0
+      ],
+      [
+        0,
+        0
+      ],
+      [
+        0,
+        0
+      ],
+      [
+        0,
+        0
+      ],
+      [
+        0,
+        0
+      ],
+      [
+        0,
+        0
+      ],
+      [
+        0,
+        0
+      ],
+      [
+        0,
+        0
+      ],
+      [
+        0,
+        0
+      ],
+      [
+        0,
+        0
+      ],
+      [
+        0,
+        0
+      ]
+    ],
+    "sign_text_ids": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    "num_sprites": 0,
+    "map_sprite_data": [
+      [
+        0,
+        0
+      ],
+      [
+        0,
+        0
+      ],
+      [
+        0,
+        0
+      ],
+      [
+        0,
+        0
+      ],
+      [
+        0,
+        0
+      ],
+      [
+        0,
+        0
+      ],
+      [
+        0,
+        0
+      ],
+      [
+        0,
+        0
+      ],
+      [
+        0,
+        0
+      ],
+      [
+        0,
+        0
+      ],
+      [
+        0,
+        0
+      ],
+      [
+        0,
+        0
+      ],
+      [
+        0,
+        0
+      ],
+      [
+        0,
+        0
+      ],
+      [
+        0,
+        0
+      ],
+      [
+        0,
+        0
+      ]
+    ],
+    "map_sprite_extra_data": [
+      [
+        0,
+        0
+      ],
+      [
+        0,
+        0
+      ],
+      [
+        0,
+        0
+      ],
+      [
+        0,
+        0
+      ],
+      [
+        0,
+        0
+      ],
+      [
+        0,
+        0
+      ],
+      [
+        0,
+        0
+      ],
+      [
+        0,
+        0
+      ],
+      [
+        0,
+        0
+      ],
+      [
+        0,
+        0
+      ],
+      [
+        0,
+        0
+      ],
+      [
+        0,
+        0
+      ],
+      [
+        0,
+        0
+      ],
+      [
+        0,
+        0
+      ],
+      [
+        0,
+        0
+      ],
+      [
+        0,
+        0
+      ]
+    ],
+    "current_map_height2": 18,
+    "current_map_width2": 20,
+    "player_moving_direction": 0,
+    "player_last_stop_direction": 0,
+    "player_direction": 0,
+    "tileset_bank": 0,
+    "tileset_blocks_ptr": 0,
+    "tileset_gfx_ptr": 0,
+    "tileset_collision_ptr": 0,
+    "tileset_talking_over_tiles": [
+      0,
+      0,
+      0
+    ],
+    "grass_tile": 0,
+    "pc_items": {
+      "items": [
+        [
+          "HelixFossil",
+          1
+        ],
+        [
+          "SsTicket",
+          1
+        ],
+        [
+          "Tm28",
+          1
+        ],
+        [
+          "LiftKey",
+          1
+        ],
+        [
+          "OldRod",
+          1
+        ],
+        [
+          "SilphScope",
+          1
+        ],
+        [
+          "CardKey",
+          1
+        ],
+        [
+          "Tm06",
+          1
+        ],
+        [
+          "Hm01",
+          1
+        ],
+        [
+          "SecretKey",
+          1
+        ],
+        [
+          "Tm46",
+          1
+        ],
+        [
+          "Tm38",
+          1
+        ],
+        [
+          "Tm27",
+          1
+        ]
+      ],
+      "capacity": 50
+    },
+    "current_box_num": 0,
+    "num_hof_teams": 1,
+    "player_coins": 0,
+    "toggleable_object_flags": [
+      97,
+      254,
+      129,
+      33,
+      14,
+      172,
+      3,
+      65,
+      64,
+      0,
+      0,
+      0,
+      2,
+      96,
+      2,
+      0,
+      8,
+      0,
+      0,
+      32,
+      128,
+      0,
+      128,
+      3,
+      4,
+      0,
+      64,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    "game_progress_flags": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    "obtained_hidden_items": [
+      8,
+      0,
+      4,
+      0,
+      2,
+      0,
+      1,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    "obtained_hidden_coins": [
+      0,
+      0
+    ],
+    "walk_bike_surf_state": 0,
+    "town_visited_flags": [
+      255,
+      7
+    ],
+    "safari_steps": 0,
+    "fossil_item": 0,
+    "fossil_mon": 0,
+    "enemy_mon_or_trainer_class": 0,
+    "rival_starter": 4,
+    "player_starter": 1,
+    "last_blackout_map": 0,
+    "destination_map": 0,
+    "tile_in_front_of_boulder": 0,
+    "dungeon_warp_dest_map": 0,
+    "which_dungeon_warp": 0,
+    "status_flags": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    "completed_in_game_trade_flags": 0,
+    "warped_from_warp": 0,
+    "warped_from_map": 0,
+    "card_key_door_y": 0,
+    "card_key_door_x": 0,
+    "first_lock_trash_can": 0,
+    "second_lock_trash_can": 0,
+    "event_flags": [
+      9,
+      0,
+      0,
+      0,
+      175,
+      0,
+      0,
+      3,
+      0,
+      0,
+      255,
+      3,
+      0,
+      0,
+      196,
+      0,
+      0,
+      0,
+      0,
+      1,
+      128,
+      0,
+      0,
+      204,
+      1,
+      0,
+      0,
+      0,
+      0,
+      128,
+      8,
+      4,
+      128,
+      142,
+      142,
+      0,
+      0,
+      1,
+      0,
+      0,
+      0,
+      0,
+      2,
+      0,
+      223,
+      0,
+      0,
+      0,
+      0,
+      16,
+      0,
+      0,
+      0,
+      255,
+      1,
+      2,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      3,
+      0,
+      0,
+      0,
+      255,
+      0,
+      0,
+      0,
+      1,
+      0,
+      2,
+      0,
+      255,
+      1,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      255,
+      1,
+      0,
+      0,
+      0,
+      0,
+      128,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      92,
+      3,
+      0,
+      0,
+      0,
+      0,
+      48,
+      0,
+      0,
+      0,
+      128,
+      2,
+      18,
+      2,
+      24,
+      242,
+      0,
+      2,
+      0,
+      0,
+      188,
+      192,
+      142,
+      2,
+      100,
+      2,
+      0,
+      0,
+      8,
+      195,
+      0,
+      2,
+      8,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      64,
+      0,
+      127,
+      129,
+      251,
+      0,
+      223,
+      121,
+      16,
+      0,
+      8,
+      134,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      23,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      1,
+      0,
+      34,
+      0,
+      0,
+      0,
+      0,
+      0,
+      220,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      4,
+      2,
+      0,
+      0,
+      12,
+      0,
+      0,
+      0,
+      1,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      16,
+      161,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      1,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      4,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      118,
+      1,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    "grass_rate": 0,
+    "grass_mons": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    "water_rate": 0,
+    "water_mons": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    "trainer_header_ptr": 0,
+    "opponent_after_wrong_answer": 0,
+    "cur_map_script": 0,
+    "play_time": {
+      "hours": 12,
+      "maxed": false,
+      "minutes": 50,
+      "seconds": 25,
+      "frames": 24
+    },
+    "safari_zone_game_over": 0,
+    "num_safari_balls": 0,
+    "daycare": {
+      "in_use": false,
+      "species": 0,
+      "hp": 0,
+      "box_level": 0,
+      "status": 0,
+      "type1": 0,
+      "type2": 0,
+      "catch_rate": 0,
+      "moves": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "ot_id": 0,
+      "exp": 0,
+      "hp_exp": 0,
+      "attack_exp": 0,
+      "defense_exp": 0,
+      "speed_exp": 0,
+      "special_exp": 0,
+      "dvs": 0,
+      "pp": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    "daycare_mon_name": [],
+    "daycare_mon_ot": []
+  },
+  "party": [
+    {
+      "species": "Zapdos",
+      "nickname": [
+        80,
+        80,
+        80,
+        80,
+        80,
+        80,
+        80,
+        80,
+        80,
+        80,
+        80
+      ],
+      "level": 60,
+      "hp": 107,
+      "max_hp": 191,
+      "attack": 132,
+      "defense": 119,
+      "speed": 141,
+      "special": 167,
+      "type1": "Electric",
+      "type2": "Flying",
+      "moves": [
+        "Thunderbolt",
+        "DrillPeck",
+        "Thunder",
+        "LightScreen"
+      ],
+      "pp": [
+        10,
+        7,
+        10,
+        30
+      ],
+      "pp_ups": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "status": "None",
+      "dv_bytes": [
+        130,
+        81
+      ],
+      "stat_exp": [
+        4460,
+        4917,
+        4782,
+        5218,
+        5402
+      ],
+      "total_exp": 271689,
+      "is_traded": false,
+      "ot_id": 813,
+      "ot_name": [
+        145,
+        132,
+        131,
+        80,
+        80,
+        80,
+        80,
+        80,
+        80,
+        80,
+        80
+      ]
+    },
+    {
+      "species": "Snorlax",
+      "nickname": [
+        80,
+        80,
+        80,
+        80,
+        80,
+        80,
+        80,
+        80,
+        80,
+        80,
+        80
+      ],
+      "level": 31,
+      "hp": 142,
+      "max_hp": 142,
+      "attack": 76,
+      "defense": 55,
+      "speed": 31,
+      "special": 49,
+      "type1": "Normal",
+      "type2": "Normal",
+      "moves": [
+        "IceBeam",
+        "Surf",
+        "Rest",
+        "Strength"
+      ],
+      "pp": [
+        10,
+        14,
+        10,
+        15
+      ],
+      "pp_ups": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "status": "None",
+      "dv_bytes": [
+        78,
+        182
+      ],
+      "stat_exp": [
+        240,
+        296,
+        233,
+        223,
+        167
+      ],
+      "total_exp": 38240,
+      "is_traded": false,
+      "ot_id": 813,
+      "ot_name": [
+        145,
+        132,
+        131,
+        80,
+        80,
+        80,
+        80,
+        80,
+        80,
+        80,
+        80
+      ]
+    },
+    {
+      "species": "Doduo",
+      "nickname": [
+        80,
+        80,
+        80,
+        80,
+        80,
+        80,
+        80,
+        80,
+        80,
+        80,
+        80
+      ],
+      "level": 24,
+      "hp": 52,
+      "max_hp": 52,
+      "attack": 45,
+      "defense": 33,
+      "speed": 46,
+      "special": 29,
+      "type1": "Normal",
+      "type2": "Flying",
+      "moves": [
+        "Peck",
+        "Growl",
+        "FuryAttack",
+        "Fly"
+      ],
+      "pp": [
+        35,
+        40,
+        20,
+        15
+      ],
+      "pp_ups": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "status": "None",
+      "dv_bytes": [
+        14,
+        191
+      ],
+      "stat_exp": [
+        26,
+        28,
+        31,
+        8,
+        10
+      ],
+      "total_exp": 14179,
+      "is_traded": false,
+      "ot_id": 813,
+      "ot_name": [
+        145,
+        132,
+        131,
+        80,
+        80,
+        80,
+        80,
+        80,
+        80,
+        80,
+        80
+      ]
+    },
+    {
+      "species": "Lapras",
+      "nickname": [
+        80,
+        80,
+        80,
+        80,
+        80,
+        80,
+        80,
+        80,
+        80,
+        80,
+        80
+      ],
+      "level": 15,
+      "hp": 64,
+      "max_hp": 64,
+      "attack": 31,
+      "defense": 30,
+      "speed": 23,
+      "special": 33,
+      "type1": "Water",
+      "type2": "Ice",
+      "moves": [
+        "WaterGun",
+        "Growl",
+        "None",
+        "None"
+      ],
+      "pp": [
+        25,
+        40,
+        0,
+        0
+      ],
+      "pp_ups": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "status": "None",
+      "dv_bytes": [
+        70,
+        0
+      ],
+      "stat_exp": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "total_exp": 4218,
+      "is_traded": false,
+      "ot_id": 0,
+      "ot_name": [
+        80,
+        80,
+        80,
+        80,
+        80,
+        80,
+        80,
+        80,
+        80,
+        80,
+        80
+      ]
+    },
+    {
+      "species": "Venusaur",
+      "nickname": [
+        80,
+        80,
+        80,
+        80,
+        80,
+        80,
+        80,
+        80,
+        80,
+        80,
+        80
+      ],
+      "level": 54,
+      "hp": 171,
+      "max_hp": 171,
+      "attack": 114,
+      "defense": 117,
+      "speed": 118,
+      "special": 131,
+      "type1": "Grass",
+      "type2": "Poison",
+      "moves": [
+        "MegaDrain",
+        "Cut",
+        "LeechSeed",
+        "Growth"
+      ],
+      "pp": [
+        9,
+        28,
+        7,
+        40
+      ],
+      "pp_ups": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "status": "None",
+      "dv_bytes": [
+        37,
+        130
+      ],
+      "stat_exp": [
+        15595,
+        19191,
+        17534,
+        19155,
+        15938
+      ],
+      "total_exp": 151022,
+      "is_traded": false,
+      "ot_id": 0,
+      "ot_name": [
+        80,
+        80,
+        80,
+        80,
+        80,
+        80,
+        80,
+        80,
+        80,
+        80,
+        80
+      ]
+    }
+  ],
+  "current_box": [],
+  "pc_storage": {
+    "boxes": [
+      [],
+      [],
+      [],
+      [],
+      [],
+      [],
+      [],
+      [],
+      [],
+      [],
+      [],
+      []
+    ],
+    "current_box": 0
+  },
+  "hall_of_fame": [
+    [
+      {
+        "species": 145,
+        "level": 60,
+        "nickname": [
+          153,
+          128,
+          143,
+          131,
+          142,
+          146
+        ]
+      },
+      {
+        "species": 143,
+        "level": 31,
+        "nickname": [
+          146,
+          141,
+          142,
+          145,
+          139,
+          128,
+          151
+        ]
+      },
+      {
+        "species": 84,
+        "level": 24,
+        "nickname": [
+          131,
+          142,
+          131,
+          148,
+          142
+        ]
+      },
+      {
+        "species": 131,
+        "level": 15,
+        "nickname": [
+          139,
+          128,
+          143,
+          145,
+          128,
+          146
+        ]
+      },
+      {
+        "species": 3,
+        "level": 54,
+        "nickname": [
+          149,
+          132,
+          141,
+          148,
+          146,
+          128,
+          148,
+          145
+        ]
+      }
+    ]
+  ],
+  "tile_animations": 2
+}

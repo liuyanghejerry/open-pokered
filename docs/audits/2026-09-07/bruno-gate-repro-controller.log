@@ -1,0 +1,5 @@
+[resume-reentry] frame=636 screen=overworld map=BrunosRoom pos=(5,3) party=5 money=6001 effect=None
+CHECKPOINT league-resumed BrunosRoom 5 3 [{'hp': 170, 'level': 54, 'max_hp': 170, 'moves': ['Thunderbolt', 'DrillPeck', 'Thunder', 'Fly'], 'pp': [10, 18, 10, 15], 'species': 'Zapdos', 'status': 'None'}, {'hp': 137, 'level': 30, 'max_hp': 137, 'moves': ['IceBeam', 'Surf', 'Rest', 'Strength'], 'pp': [10, 15, 10, 15], 'species': 'Snorlax', 'status': 'None'}, {'hp': 52, 'level': 24, 'max_hp': 52, 'moves': ['Peck', 'Growl', 'FuryAttack', 'Fly'], 'pp': [35, 40, 20, 15], 'species': 'Doduo', 'status': 'None'}, {'hp': 64, 'level': 15, 'max_hp': 64, 'moves': ['WaterGun', 'Growl', 'None', 'None'], 'pp': [25, 40, 0, 0], 'species': 'Lapras', 'status': 'None'}, {'hp': 164, 'level': 52, 'max_hp': 164, 'moves': ['MegaDrain', 'Cut', 'LeechSeed', 'Growth'], 'pp': [10, 30, 10, 40], 'species': 'Venusaur', 'status': 'None'}]
+GAME_LOG /var/folders/d2/2fv86m890m34_13rn_t3d79w0000gn/T/pokered-run-wevv5aa_/game.log
+READY
+RUN 001_repro.py

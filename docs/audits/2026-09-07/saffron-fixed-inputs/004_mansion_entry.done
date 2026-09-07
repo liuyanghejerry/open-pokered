@@ -1,0 +1,5 @@
+g.nav_to(18,4,'CinnabarIsland');g.d.drive(['up']*8,frames=24);g.cutscene();g.step(40)
+s=snap('cinnabar-gym-without-key');assert s['map_name']=='CinnabarIsland',s
+g.nav_warp(6,3,'CinnabarIsland','PokemonMansion1F');checkpoint('m73-mansion-entry')
+g.nav_warp(5,10,'PokemonMansion1F','PokemonMansion2F');g.cutscene();g.step(60)
+checkpoint('m74-mansion-2f')

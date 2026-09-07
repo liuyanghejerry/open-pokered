@@ -33,28 +33,30 @@ game_scene PokemonMansion3F {
   // Shares the 2F switch text/logic (PokemonMansion2FSwitchText): prompt to
   // press, on YES play SFX_GO_INSIDE and CheckAndSetEvent/ResetEvent toggles
   // EVENT_MANSION_SWITCH_ON, then re-applies the door blocks. The original is a
-  // facing-up tile interaction with no npc/sign; bound here as a coords trigger.
+  // facing-up tile interaction with no npc/sign; bound to OnInteract at the statue tile by overworld setup.
   @storyline("secretSwitch") {
     @trigger(map = "PokemonMansion3F", name = "secretSwitch")
-    @speaker("") { @t("A secret switch!\n\nPress it?", "有秘密开关！\n\n要按下吗？") }
-    @choice {
-      @option(@t("YES", "是")) {
-        @speaker("") { @t("Who wouldn't?", "谁会不想呢？") }
-        playSound("SFX_GO_INSIDE")
-        @if (getFlag("EVENT_MANSION_SWITCH_ON")) {
-          // Toggle OFF.
-          resetFlag("EVENT_MANSION_SWITCH_ON")
-          replaceTileBlock(7, 2, 14)
-          replaceTileBlock(7, 5, 95)
-        } @else {
-          // Toggle ON.
-          setFlag("EVENT_MANSION_SWITCH_ON")
-          replaceTileBlock(7, 2, 95)
-          replaceTileBlock(7, 5, 14)
+    @if (getPlayerFacing() == "up") {
+      @speaker("") { @t("A secret switch!\n\nPress it?", "有秘密开关！\n\n要按下吗？") }
+      @choice {
+        @option(@t("YES", "是")) {
+          @speaker("") { @t("Who wouldn't?", "谁会不想呢？") }
+          playSound("SFX_GO_INSIDE")
+          @if (getFlag("EVENT_MANSION_SWITCH_ON")) {
+            // Toggle OFF.
+            resetFlag("EVENT_MANSION_SWITCH_ON")
+            replaceTileBlock(7, 2, 14)
+            replaceTileBlock(7, 5, 95)
+          } @else {
+            // Toggle ON.
+            setFlag("EVENT_MANSION_SWITCH_ON")
+            replaceTileBlock(7, 2, 95)
+            replaceTileBlock(7, 5, 14)
+          }
         }
-      }
-      @option(@t("NO", "否")) {
-        @speaker("") { @t("Not quite yet!", "还不是时候！") }
+        @option(@t("NO", "否")) {
+          @speaker("") { @t("Not quite yet!", "还不是时候！") }
+        }
       }
     }
   }

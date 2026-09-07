@@ -86,7 +86,7 @@ struct Mon {
     defense: u16,
     special: u16,
     focus_energy: bool,
-    /// The mon's level (P3 `battler_level` / OHKO `LevelGE` / level `SetDamage`).
+    /// The mon's level (P3 `battler_level` / level `SetDamage`).
     /// Defaults to 50 (the P1/P2 fixed level).
     level: u16,
 }
@@ -4414,37 +4414,56 @@ fn special_damage_psywave_draws_one_byte() {
     assert_eq!(consumed, 4, "two movers × (accuracy + psywave byte)");
 }
 
-/// OHKO connects when user level ≥ target, and is IMMUNE when target level > user
-/// (bug #19). Oracle = standalone `apply_ohko`. The stack uses distinct species so
-/// the level map keys cleanly.
+/// Gen I compares current Speed, independently of either combatant's level.
 #[test]
-fn ohko_level_gate_bug_19() {
-    // CONNECTS: user (Machamp, level 50) ≥ foe (Snorlax, level 50). Equal connects.
-    let mut connect = Scenario::base("OHKO connects (user >= foe)", MoveId::HornDrill);
-    connect.player = Mon::lvl(Species::Machamp, 250, 100, 50);
-    connect.enemy = Mon::lvl(Species::Snorlax, 250, 50, 50);
-    let mut cleg = p3_legacy_state(&connect);
-    let cr = apply_ohko(&mut cleg);
-    assert_eq!(cr, crate::battle::effects::EffectResult::OhkoSuccess);
-    assert_eq!(cleg.enemy.active_mon().hp, 0, "standalone OHKO connects (equal level)");
-    let (cstack, cconsumed) = p3_special_stack(&connect, vec![0]);
-    assert_eq!(cstack.opponent_battlers[0].hp, 0, "stack OHKO connects (user 50 >= foe 50)");
-    // The player's OHKO faints the enemy ⇒ the reply is cancelled ⇒ only the
-    // player's single accuracy byte is drawn (the faint short-circuit).
-    assert_eq!(cconsumed, 1, "OHKO faints the foe ⇒ reply cancelled ⇒ 1 accuracy byte");
+fn ohko_speed_gate_ignores_level() {
+    for move_id in [MoveId::HornDrill, MoveId::Guillotine, MoveId::Fissure] {
+        let mut s = Scenario::base("OHKO faster low-level user", move_id);
+        s.player = Mon::lvl(Species::Diglett, 250, 100, 30);
+        s.enemy = Mon::lvl(Species::Snorlax, 250, 50, 61);
+        let (stack, _) = p3_special_stack(&s, vec![0; 16]);
+        assert_eq!(stack.opponent_battlers[0].hp, 0, "{move_id:?}: faster lower-level user connects");
+        let mut legacy = p3_legacy_state(&s);
+        assert_eq!(apply_ohko(&mut legacy), crate::battle::effects::EffectResult::OhkoSuccess);
 
-    // IMMUNE: user (Diglett, level 30) < foe (Snorlax, level 50). Bug #19.
-    let mut immune = Scenario::base("OHKO immune (foe higher level)", MoveId::HornDrill);
-    immune.player = Mon::lvl(Species::Diglett, 100, 100, 30);
-    immune.enemy = Mon::lvl(Species::Snorlax, 250, 50, 50);
-    let mut ileg = p3_legacy_state(&immune);
-    let ir = apply_ohko(&mut ileg);
-    assert_eq!(ir, crate::battle::effects::EffectResult::OhkoFailed);
-    assert_eq!(ileg.enemy.active_mon().hp, 250, "standalone OHKO immune (foe higher level)");
-    // Stack: the player's OHKO must NOT KO the higher-level enemy (the LevelGE gate
-    // fails). The enemy stays at full hp (no SetHp applied).
-    let (istack, _ic) = p3_special_stack(&immune, vec![0, 0]);
-    assert_eq!(istack.opponent_battlers[0].hp, 250, "stack OHKO IMMUNE: foe level > user (bug #19)");
+        s.player = Mon::lvl(Species::Rhydon, 250, 50, 61);
+        s.enemy = Mon::lvl(Species::Venusaur, 250, 100, 52);
+        let mut legacy = p3_legacy_state(&s);
+        assert_eq!(apply_ohko(&mut legacy), crate::battle::effects::EffectResult::OhkoFailed);
+        let (stack, _) = p3_special_stack(&s, vec![0; 16]);
+        assert_eq!(stack.opponent_battlers[0].hp, 250, "{move_id:?}: faster target survives");
+    }
+}
+
+#[test]
+fn ohko_uses_current_speed_including_stages_and_paralysis() {
+    // (user base Speed, stage, status, foe Speed, should connect)
+    for (speed, stage, status, foe_speed, connects) in [
+        (50, 0, None, 100, false),
+        (100, 0, None, 100, true),
+        (60, 2, None, 100, true),
+        (160, 0, Some(LegacyStatus::Paralysis), 100, false),
+    ] {
+        install_canonical();
+        super::clear_current_moves();
+        super::set_current_move(BattlerRef::PLAYER, real_move(MoveId::HornDrill));
+        super::set_current_move(BattlerRef::OPPONENT, real_move(MoveId::Splash));
+        let mut user = engine_battler(&Mon::new(Species::Rhydon, 250, speed), MoveId::HornDrill);
+        user.stat_stages.set(StatIndex::Speed, stage);
+        user.status = status;
+        let foe = engine_battler(&Mon::new(Species::Venusaur, 250, foe_speed), MoveId::Splash);
+        let mut state = EngineState::new(vec![user], vec![foe]);
+        let mut effects = Vec::new();
+        let mut bytes = vec![0; 8];
+        if status.is_some() { bytes[0] = 128; } // pass full-paralysis roll
+        let mut rng = ScriptedRng::new(bytes);
+        StackDriver::execute_turn(&PokeredRules, &mut state, &mut effects, [
+            BattleAction::Fight { move_: MoveId::HornDrill },
+            BattleAction::Fight { move_: MoveId::Splash },
+        ], &mut rng);
+        assert_eq!(state.opponent_battlers[0].hp == 0, connects,
+            "Speed={speed}, stage={stage}, status={status:?}, foe={foe_speed}");
+    }
 }
 
 // ── FOE STAT-DOWN nested-veto: applies / Mist-veto / Substitute-veto ──────────
@@ -4661,9 +4680,9 @@ fn foe_stat_down_floor_at_minus_6() {
 #[test]
 fn p3_authored_as_data() {
     install_canonical();
-    use dotzuki_rules::{DamageValue, Op, Predicate, Selector};
+    use dotzuki_rules::{DamageValue, Op, Selector};
     // Special damage: SetDamage(UserLevel) / Const(40) / RngScaledLevel; SuperFang;
-    // OHKO SetHp+LevelGE.
+    // OHKO SetHp after the native current-Speed check.
     assert!(super::record_has_op("special.user_level", &Op::SetDamage {
         value: DamageValue::UserLevel, of: Selector::Source
     }), "seismic toss is SetDamage(UserLevel)");
@@ -4677,8 +4696,8 @@ fn p3_authored_as_data() {
         num: 1, den: 2, target: Selector::Target
     }), "super fang is DamageCurrentHpFraction(1/2, Target)");
     assert!(super::record_has_op("special.ohko", &Op::SetHp {
-        target: Selector::Target, value: 0, when: vec![Predicate::LevelGE]
-    }), "ohko is SetHp(Target, 0, when:[LevelGE])");
+        target: Selector::Target, value: 0, when: vec![]
+    }), "ohko is SetHp(Target, 0) after Accuracy");
     // Foe stat-down: Boost(stat, -N, Target) routed through the nested-veto driver.
     assert!(super::record_has_op("foedown.attack_1", &Op::Boost {
         stat: "Attack".into(), stages: -1, target: Selector::Target
@@ -5115,4 +5134,31 @@ fn dizzy_punch_is_pure_damage_no_confusion_rider() {
         state.opponent_battlers[0].hp < enemy_hp,
         "DizzyPunch still deals its 70-power damage"
     );
+}
+
+#[test]
+fn seeded_attacker_knockout_cannot_revive_the_seeder_or_allow_its_move() {
+    install_canonical();
+    clear_current_moves();
+    set_current_move(BattlerRef::PLAYER, real_move(MoveId::Thunderbolt));
+    set_current_move(BattlerRef::OPPONENT, real_move(MoveId::Solarbeam));
+    let mut state = EngineState::new(
+        vec![engine_battler(&Mon::new(Species::Zapdos, 160, 200), MoveId::Thunderbolt)],
+        vec![engine_battler(&Mon::new(Species::Exeggcute, 1, 10), MoveId::Solarbeam)],
+    );
+    let mut effects = vec![EffectState {
+        id: EffectId(0x9701), host: BattlerRef::PLAYER, effect_order: 999,
+        kind: PokeVolatile::LeechSeed,
+    }];
+    let actions = [
+        BattleAction::<PokeredRules>::Fight { move_: MoveId::Thunderbolt },
+        BattleAction::<PokeredRules>::Fight { move_: MoveId::Solarbeam },
+    ];
+    let mut rng = ScriptedRng::new(vec![0u8; 64]);
+    let (_, log) = StackDriver::execute_turn_logged(&PokeredRules, &mut state, &mut effects, actions, &mut rng);
+    let text = super::runtime::translate_turn(&log, &state, &effects);
+    assert_eq!(state.opponent_battlers[0].hp, 0);
+    assert_eq!(state.player_battlers[0].hp, 160);
+    assert!(text.iter().any(|line| line.contains("fainted!")), "{text:?}");
+    assert!(!text.iter().any(|line| line.contains("SOLARBEAM") || line.contains("LEECH SEED")), "{text:?}");
 }

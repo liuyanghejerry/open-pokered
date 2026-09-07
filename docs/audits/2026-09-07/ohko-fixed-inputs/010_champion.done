@@ -1,0 +1,86 @@
+def healing_battle(self,prefer='fight',max_iters=1000,initial_party_cursor=0):
+ fight=prefer=='fight';run_tries=0;seeded=set()
+ self.audit_party_cursor=initial_party_cursor
+ self.audit_exhausted=set()
+ self.audit_fainted={p['species'] for p in self.st()['party'] if p['hp']==0}
+ for iteration in range(max_iters):
+  state=self.st()
+  self.audit_party_cursor=state['battle_party_cursor']
+  self.audit_fainted={p['species'] for p in state.get('battle_live',{}).get('player_party',[]) if p['hp']==0}
+  if state['screen']!='battle':break
+  phase=state['battle_phase']
+  live=state.get('battle_live',{}).get('player',{})
+  enemy=state.get('battle_live',{}).get('enemy',{})
+  if live.get('hp')==0:self.audit_fainted.add(live.get('species'))
+  alive=next((i for i,p in enumerate(state.get('battle_live',{}).get('enemy_party',[])) if p['hp']>0),0)
+  seedkey=(alive,enemy.get('species'))
+  try_seed=live.get('species')=='Venusaur' and seedkey not in seeded
+  if live.get('species')=='Zapdos':
+   self.PREFERRED_MOVES=['Thunderbolt','Thunder','DrillPeck'] if enemy.get('species') in ['Slowpoke','Slowbro','Seel','Dewgong','Cloyster','Lapras','Gyarados','Golbat','Pidgeot','Pidgeotto','Charizard','Aerodactyl'] else ['DrillPeck','Thunderbolt','Thunder']
+  elif live.get('species')=='Snorlax':
+   self.PREFERRED_MOVES=['Rest','Strength','IceBeam','Surf'] if live['hp']<live['max_hp']*.55 and live.get('status')=='None' else (['IceBeam','Surf','Strength'] if enemy.get('species') in ['Gastly','Haunter','Gengar','Fearow','Pidgeot','Pidgeotto','Spearow','Golbat','Dragonair','Dragonite'] else (['Surf','IceBeam','Strength'] if enemy.get('species') in ['Rhyhorn','Rhydon','Onix','Graveler','Golem','Geodude','Nidoqueen','Nidoking','Growlithe','Arcanine','Ponyta','Rapidash'] else ['Strength','Surf','IceBeam']))
+  else:self.PREFERRED_MOVES=['LeechSeed','MegaDrain','Cut'] if try_seed else ['MegaDrain','Cut']
+  if not fight and 'Trainer' in phase:fight=True
+  if phase=='PlayerMenu':
+   live=state['battle_live']['player']
+   desired=None
+   if live['species']=='Zapdos' and enemy.get('species') in ['Rhyhorn','Rhydon','Onix','Geodude','Graveler','Golem','Dugtrio']:desired='Venusaur'
+   if live['species']=='Venusaur' and enemy.get('species') in ['Alakazam','Kadabra','Pidgeot','Gyarados','Charizard','Exeggcute','Exeggutor','Hitmonlee','Hitmonchan','Machop','Machoke','Machamp']:desired='Zapdos'
+   target=next((i for i,p in enumerate(state['battle_live']['player_party']) if p['species']==desired and p['hp']>0 and p['species'] not in self.audit_exhausted),None)
+   if fight and target is not None:
+    self.d.drive(['up','right'],frames=10);self.tap('a',4);assert self._await_phase('PartySelect',120)
+    for _ in range(target):self.tap('down',8)
+    self.tap('a',8);self.tap('a',8);self.step(30)
+    continue
+   counts={i['item']:i['qty'] for i in state['battle_inventory']}
+   medicine=next((i for i in ['HyperPotion','FullRestore','SuperPotion','Potion'] if counts.get(i,0)>0),'Potion')
+   qty=counts.get(medicine,0)
+   cure=live.get('status') not in ['None',None] and not (live.get('species')=='Snorlax' and 'Sleep' in live.get('status','')) and counts.get('FullHeal',0)>0
+   if cure:medicine='FullHeal';qty=counts[medicine]
+   if fight and (live['hp']<live['max_hp']*.55 or cure) and qty:
+    self.d.drive(['down','left'],frames=10);self.tap('a',4)
+    assert self._await_phase('BagSelect',120)
+    for _ in range(30):
+     menu=self.st()['battle_bag'];target=next(i for i,v in enumerate(menu['items']) if v['item']==medicine)
+     if menu['cursor']==target:break
+     self.tap('down',4)
+    self.tap('a',4);self.step(10)
+    assert self.st()['battle_phase'].startswith('ItemTargetSelect'),self.st()
+    target_index=next(i for i,p in enumerate(state['party']) if p['species']==live['species'])
+    for _ in range((target_index-self.audit_party_cursor)%len(state['party'])):self.tap('down',8)
+    self.audit_party_cursor=target_index
+    self.tap('a',10);self.step(30)
+    print(medicine,live['hp'],'/',live['max_hp'],'remaining before',qty,flush=True)
+   elif fight:
+    self.d.drive(['up','left'],frames=10);self.tap('a',4)
+    if self._await_phase('MoveSelect',120):
+     self._select_move()
+     if try_seed:seeded.add(seedkey)
+    self.step(30)
+   else:
+    self.d.drive(['down','right'],frames=10);self.tap('a',4);self.step(30)
+    run_tries+=1
+    if run_tries>3:fight=True
+  elif phase=='MoveSelect':self._select_move();self.step(30)
+  elif phase=='PlayerFaintSwitch':
+   if state['map_name']=='ChampionsRoom' and 'Zapdos' in self.audit_fainted:raise NavError('Champion: pause for a deliberate Revive strategy')
+   target_index=next((i for i,p in enumerate(state['party']) if p['species'] not in self.audit_fainted and p['species'] not in self.audit_exhausted),None)
+   if target_index is None:raise NavError('No known viable replacement; inspect party before continuing')
+   for _ in range((target_index-self.audit_party_cursor)%len(state['party'])):self.tap('down',8)
+   self.audit_party_cursor=target_index
+   self.tap('a',10);self.step(30)
+  elif phase=='ShiftPrompt':self.tap('b',8);self.step(30)
+  else:self.tap('a',10)
+ self.wait('not_battle',1800)
+g.battle_loop=types.MethodType(healing_battle,g)
+
+
+g.nav_warp(5,0,'LancesRoom','ChampionsRoom');g.cutscene();g.step(90);g.cutscene();snap('retry-champion-battle')
+assert g.st()['screen']=='battle',g.st()
+for _ in range(100):
+ if g.st()['battle_phase']=='PlayerMenu':break
+ g.tap('a',10)
+assert g.st()['battle_phase']=='PlayerMenu',g.st()
+g.d.drive(['up','left'],frames=10);g.tap('a',4);assert g._await_phase('MoveSelect',120)
+g.PREFERRED_MOVES=['Agility'];g._select_move();g.step(30);snap('retry-champion-agility')
+g.battle_loop(prefer='fight');snap('m151-retry-champion-result')

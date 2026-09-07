@@ -12,7 +12,7 @@
 //    Giovanni walks down 3 tiles, talks, battles). We translate it to the
 //    talk-driven scripted-boss pattern (map.json isTrainer=false so the script
 //    owns the battle->reward flow), which reproduces the dialogue and the
-//    OPP_GIOVANNI3 battle faithfully within the DSL surface. On victory we set
+//    OPP_GIOVANNI2 battle faithfully within the DSL surface. On victory we set
 //    EVENT_BEAT_SILPH_CO_GIOVANNI and hide Giovanni and the two Rocket guards
 //    (the original's "Team Rocket leaves SILPH" sequence).
 //  - Rocket guards (npc 4, 5): sight-engaged trainers; handlers are dialogue
@@ -22,17 +22,18 @@ game_scene SilphCo11F {
   // ── Card-Key gate door (SilphCo11FGateCallbackScript) ────────────────────
   // Original: on load the callback writes the LOCKED wall block $20 (32) at
   // block (X=3, Y=6) unless EVENT_SILPH_CO_11_UNLOCKED_DOOR is already set;
-  // using the CARD KEY on the door opens it (block $e = 14).
+  // using the CARD KEY on the door opens it (block $03).
   @load {
-    @if (!getFlag("EVENT_SILPH_CO_11_UNLOCKED_DOOR")) {
+    @if (getFlag("EVENT_SILPH_CO_11_UNLOCKED_DOOR")) {
+      replaceTileBlock(3, 6, 3)
+    } @else {
       replaceTileBlock(3, 6, 32)
     }
   }
 
-  // Door solve: coord trigger at the door traffic tile (block (3,6) → first
-  // traffic tile (6,12)) — gated by hasItem("CARD_KEY"). The original's card
-  // key door opens via UseCardKey on any Silph door; the walk-into-door flow
-  // is the port's approximation. Post-open re-crossing is silent.
+  // The four door tiles also have OnInteract bindings in overworld setup.
+  // A from the corridor reaches this handler while the door is still solid.
+  // PrintCardKeyText uses open block 3 for this floor's SilphCo tileset.
   @storyline("cardKeyDoor") {
     @trigger(map = "SilphCo11F", name = "cardKeyDoor1", coords = [[6, 12]])
     @if (!getFlag("EVENT_SILPH_CO_11_UNLOCKED_DOOR")) {
@@ -40,7 +41,7 @@ game_scene SilphCo11F {
         @speaker("") { @t("Bingo!", "猜中了！") }
         @speaker("") { @t("The CARD KEY opened the\ndoor!", "磁卡钥匙打开了门！") }
         setFlag("EVENT_SILPH_CO_11_UNLOCKED_DOOR")
-        replaceTileBlock(3, 6, 14)
+        replaceTileBlock(3, 6, 3)
         playSound("SFX_GO_INSIDE")
       } @else {
         @speaker("") { @t("Darn! It needs a CARD KEY!", "可恶！需要磁卡钥匙！") }
@@ -61,7 +62,7 @@ game_scene SilphCo11F {
       @speaker("") {
         @t("Ah <PLAYER>! So we meet\nagain!\n\nThe PRESIDENT and I are\ndiscussing a vital business\nproposition.\n\nKeep your nose out of\ngrown-up matters...\n\nOr, experience a world of\npain!", "啊，<PLAYER>！我们又见面了！\n\n我和社长正在商讨一个重要的商\n业提案。\n\n大人的事情小孩子不要插手……\n\n否则的话，让你尝尝苦头！")
       }
-      result = startBattle("OPP_GIOVANNI3")
+      result = startBattle("OPP_GIOVANNI2")
       @if (result == "win") {
         @speaker("") {
           @t("Arrgh!! I lost again!?", "啊！！我又输了！？")
@@ -117,7 +118,7 @@ game_scene SilphCo11F {
       @speaker("") {
         @t("Ah <PLAYER>! So we meet\nagain!\n\nThe PRESIDENT and I are\ndiscussing a vital business\nproposition.\n\nKeep your nose out of\ngrown-up matters...\n\nOr, experience a world of\npain!", "啊，<PLAYER>！我们又见面了！\n\n我和社长正在商讨一个重要的商\n业提案。\n\n大人的事情小孩子不要插手……\n\n否则的话，让你尝尝苦头！")
       }
-      result = startBattle("OPP_GIOVANNI3")
+      result = startBattle("OPP_GIOVANNI2")
       @if (result == "win") {
         @speaker("") {
           @t("Arrgh!! I lost again!?", "啊！！我又输了！？")

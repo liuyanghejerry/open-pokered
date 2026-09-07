@@ -1,0 +1,8 @@
+g.tap('down',8);g.tap('a',12);g.cutscene();g.step(40)
+assert g.st()['party'][1]['moves'][1]=='Surf',g.st()
+g.tap('start',12);g.tap('a',12)
+bag=g.d.cmd(cmd='get_bag')['data'];idx=next(i for i,v in enumerate(bag) if v['item']=='Tm13')
+for _ in range(idx):g.tap('down',8)
+snap('bag-tm13-offscreen');g.tap('a',12);g.tap('a',12);g.tap('down',8);g.tap('a',12);snap('ice-beam-forget-menu');g.tap('a',12);g.cutscene();g.step(40)
+assert g.st()['party'][1]['moves']==['IceBeam','Surf','Rest','Strength'],g.st()
+checkpoint('m43-hm-trained')

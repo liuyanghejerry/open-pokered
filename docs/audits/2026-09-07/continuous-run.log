@@ -1,0 +1,133 @@
+[resume-reentry] frame=638 screen=overworld map=Route24 pos=(10,33) party=1 money=2827 effect=None
+CHECKPOINT m14-resumed Route24 10 33 [{'hp': 65, 'level': 23, 'max_hp': 65, 'moves': ['Tackle', 'Growl', 'LeechSeed', 'Poisonpowder'], 'pp': [35, 40, 10, 35], 'species': 'Ivysaur', 'status': 'None'}]
+READY
+RUN 001_bridge.py
+CHECKPOINT bridge-five-attempted CeruleanCity 19 17 [{'hp': 68, 'level': 24, 'max_hp': 68, 'moves': ['Tackle', 'Growl', 'LeechSeed', 'Poisonpowder'], 'pp': [35, 40, 10, 35], 'species': 'Ivysaur', 'status': 'None'}]
+CHECKPOINT m16-nugget-bridge Route24 10 15 [{'hp': 63, 'level': 25, 'max_hp': 70, 'moves': ['Tackle', 'Growl', 'LeechSeed', 'Poisonpowder'], 'pp': [29, 40, 10, 35], 'species': 'Ivysaur', 'status': 'None'}]
+DONE 001_bridge.py
+RUN 002_bill_route.py
+Traceback (most recent call last):
+  File "/tmp/pokered-completion-20260907-live/controller.py", line 71, in <module>
+    exec(compile(__task_path.read_text(),str(__task_path),'exec'),globals())
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/pokered-completion-20260907-live/inbox/002_bill_route.py", line 1, in <module>
+    g.nav_to_map(44,4,'Route25')
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^
+  File "/Users/liuyanghe02/develop/open-pokered-3/scripts/playthrough.py", line 673, in nav_to_map
+    raise NavError(f"nav_to_map({map_name},{x},{y}) did not converge")
+playthrough.NavError: nav_to_map(Route25,44,4) did not converge
+FAILED 002_bill_route.py
+RUN 003_smarter_route.py
+Traceback (most recent call last):
+  File "/tmp/pokered-completion-20260907-live/controller.py", line 71, in <module>
+    exec(compile(__task_path.read_text(),str(__task_path),'exec'),globals())
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/pokered-completion-20260907-live/inbox/003_smarter_route.py", line 26, in <module>
+    g.nav_to(12,5,'Route25');g.step(60);g.cutscene()
+    ~~~~~~~~^^^^^^^^^^^^^^^^
+  File "/Users/liuyanghe02/develop/open-pokered-3/docs/audits/2026-09-06/playthrough/navigation.py", line 49, in nav_to
+    if not path:raise NavError(f'no path {cm} {(px,py)} -> {(x,y)}')
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+playthrough.NavError: no path Route25 (1, 8) -> (12, 5)
+FAILED 003_smarter_route.py
+RUN 004_route25.py
+Traceback (most recent call last):
+  File "/tmp/pokered-completion-20260907-live/controller.py", line 71, in <module>
+    exec(compile(__task_path.read_text(),str(__task_path),'exec'),globals())
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/pokered-completion-20260907-live/inbox/004_route25.py", line 2, in <module>
+    g.nav_to(x,y,'Route25');g.step(60);g.cutscene()
+    ~~~~~~~~^^^^^^^^^^^^^^^
+  File "/Users/liuyanghe02/develop/open-pokered-3/docs/audits/2026-09-06/playthrough/navigation.py", line 44, in nav_to
+    raise NavError(f'changed map {initial}->{cm}')
+playthrough.NavError: changed map Route25->CeruleanCity
+FAILED 004_route25.py
+RUN 005_route25_retry.py
+CHECKPOINT m17-bill-door Route25 44 4 [{'hp': 61, 'level': 26, 'max_hp': 73, 'moves': ['Tackle', 'Growl', 'LeechSeed', 'Poisonpowder'], 'pp': [29, 40, 7, 35], 'species': 'Ivysaur', 'status': 'None'}]
+DONE 005_route25_retry.py
+RUN 006_bill.py
+Traceback (most recent call last):
+  File "/tmp/pokered-completion-20260907-live/controller.py", line 71, in <module>
+    exec(compile(__task_path.read_text(),str(__task_path),'exec'),globals())
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/pokered-completion-20260907-live/inbox/006_bill.py", line 10, in <module>
+    assert g.d.cmd(cmd='get_flags')['data'].get('EVENT_MET_BILL_2')
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^
+AssertionError
+FAILED 006_bill.py
+RUN 007_bill_pc.py
+CHECKPOINT m17-bill-ticket BillsHouse 4 5 [{'hp': 61, 'level': 26, 'max_hp': 73, 'moves': ['Tackle', 'Growl', 'LeechSeed', 'Poisonpowder'], 'pp': [29, 40, 7, 35], 'species': 'Ivysaur', 'status': 'None'}]
+DONE 007_bill_pc.py
+RUN 008_thief.py
+Traceback (most recent call last):
+  File "/tmp/pokered-completion-20260907-live/controller.py", line 71, in <module>
+    exec(compile(__task_path.read_text(),str(__task_path),'exec'),globals())
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/pokered-completion-20260907-live/inbox/008_thief.py", line 13, in <module>
+    assert g.d.cmd(cmd='get_flags')['data'].get('EVENT_BEAT_CERULEAN_ROCKET_THIEF')
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError
+FAILED 008_thief.py
+RUN 009_thief_retry.py
+CHECKPOINT m18-dig-thief CeruleanCity 30 9 [{'hp': 31, 'level': 27, 'max_hp': 75, 'moves': ['Tackle', 'Growl', 'LeechSeed', 'Poisonpowder'], 'pp': [28, 40, 10, 35], 'species': 'Ivysaur', 'status': 'None'}]
+DONE 009_thief_retry.py
+RUN 010_visibility_and_south.py
+Traceback (most recent call last):
+  File "/tmp/pokered-completion-20260907-live/controller.py", line 71, in <module>
+    exec(compile(__task_path.read_text(),str(__task_path),'exec'),globals())
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/pokered-completion-20260907-live/inbox/010_visibility_and_south.py", line 1, in <module>
+    g.heal_pokecenter((19,17),'CeruleanCity','CeruleanPokecenter')
+    ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/liuyanghe02/develop/open-pokered-3/scripts/playthrough.py", line 803, in heal_pokecenter
+    self.nav_to_map(dx, dy + 1, city)
+    ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+  File "/Users/liuyanghe02/develop/open-pokered-3/scripts/playthrough.py", line 540, in nav_to_map
+    raise NavError(f"no cross path: {cm}({cx},{cy}) "
+                   f"-> {map_name}({x},{y}) "
+                   f"blocked={sorted(blocked.get(cm, set()))}")
+playthrough.NavError: no cross path: CeruleanCity(30,9) -> CeruleanCity(19,18) blocked=[(4, 12), (5, 20), (5, 21), (5, 27), (8, 21), (8, 27), (9, 21), (9, 27), (10, 5), (10, 21), (10, 22), (10, 27), (10, 28), (11, 15), (11, 19), (11, 21), (11, 25), (11, 27), (11, 31), (12, 21), (12, 27), (15, 16), (15, 17), (15, 18), (15, 19), (15, 20), (15, 21), (15, 27), (20, 2), (21, 21), (21, 27), (22, 21), (22, 27), (23, 21), (23, 27), (27, 12), (28, 12), (28, 26), (29, 26), (30, 8), (31, 20)]
+FAILED 010_visibility_and_south.py
+RUN 011_south.py
+Traceback (most recent call last):
+  File "/tmp/pokered-completion-20260907-live/controller.py", line 71, in <module>
+    exec(compile(__task_path.read_text(),str(__task_path),'exec'),globals())
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/pokered-completion-20260907-live/inbox/011_south.py", line 1, in <module>
+    g.nav_warp(27,9,'CeruleanCity','CeruleanTrashedHouse')
+    ~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/liuyanghe02/develop/open-pokered-3/scripts/playthrough.py", line 720, in nav_warp
+    raise NavError(f"warp at ({x},{y}) never fired ({from_map})")
+playthrough.NavError: warp at (27,9) never fired (CeruleanCity)
+FAILED 011_south.py
+RUN 012_south.py
+Traceback (most recent call last):
+  File "/tmp/pokered-completion-20260907-live/controller.py", line 71, in <module>
+    exec(compile(__task_path.read_text(),str(__task_path),'exec'),globals())
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/pokered-completion-20260907-live/inbox/012_south.py", line 11, in <module>
+    g.nav_to_map(17,28,'Route5')
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^
+  File "/Users/liuyanghe02/develop/open-pokered-3/scripts/playthrough.py", line 540, in nav_to_map
+    raise NavError(f"no cross path: {cm}({cx},{cy}) "
+                   f"-> {map_name}({x},{y}) "
+                   f"blocked={sorted(blocked.get(cm, set()))}")
+playthrough.NavError: no cross path: CeruleanCity(20,4) -> Route5(17,28) blocked=[(4, 12), (5, 20), (5, 21), (5, 27), (8, 21), (8, 27), (9, 21), (9, 27), (10, 5), (10, 21), (10, 22), (10, 27), (10, 28), (11, 15), (11, 19), (11, 21), (11, 25), (11, 27), (11, 31), (12, 21), (12, 27), (13, 21), (13, 27), (15, 16), (15, 17), (15, 18), (15, 19), (15, 20), (15, 21), (15, 27), (20, 2), (21, 21), (21, 27), (22, 21), (22, 27), (23, 21), (23, 27), (27, 12), (28, 12), (28, 26), (29, 26), (30, 8), (31, 20)]
+FAILED 012_south.py
+RUN 013_south_backyard.py
+CHECKPOINT m19-route5 Route5 17 28 [{'hp': 75, 'level': 27, 'max_hp': 75, 'moves': ['Tackle', 'Growl', 'LeechSeed', 'Poisonpowder'], 'pp': [35, 40, 10, 35], 'species': 'Ivysaur', 'status': 'None'}]
+Traceback (most recent call last):
+  File "/tmp/pokered-completion-20260907-live/controller.py", line 71, in <module>
+    exec(compile(__task_path.read_text(),str(__task_path),'exec'),globals())
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/pokered-completion-20260907-live/inbox/013_south_backyard.py", line 11, in <module>
+    g.nav_warp(3,7,'UndergroundPathRoute6','Route6',approach='down')
+    ~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/liuyanghe02/develop/open-pokered-3/scripts/playthrough.py", line 714, in nav_warp
+    assert cm == to_map, f"unexpected warp target {cm}"
+           ^^^^^^^^^^^^
+AssertionError: unexpected warp target Route5
+FAILED 013_south_backyard.py
+RUN 014_underground_repro.py
+CHECKPOINT underground-blocked Route5 17 27 [{'hp': 75, 'level': 27, 'max_hp': 75, 'moves': ['Tackle', 'Growl', 'LeechSeed', 'Poisonpowder'], 'pp': [35, 40, 10, 35], 'species': 'Ivysaur', 'status': 'None'}]
+DONE 014_underground_repro.py

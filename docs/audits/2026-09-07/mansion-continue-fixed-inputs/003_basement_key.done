@@ -1,0 +1,20 @@
+def press_statue(name,x,y,expected_on):
+ g.nav_to(x,y,name);g.face('up');snap(f'mansion-statue-{name}-{x}-{y}-before');g.tap('a',20)
+ for _ in range(60):
+  s=g.st()
+  if s['choice'] is not None:
+   snap(f'mansion-statue-{name}-{x}-{y}-choice');g.choose('YES');break
+  if s['dialogue_state'] is not None:g.skip()
+  else:g.step(20)
+ else:raise NavError('statue did not offer choice')
+ g.cutscene();g.step(60)
+ assert bool(g.d.cmd(cmd='get_flags')['data'].get('EVENT_MANSION_SWITCH_ON'))==expected_on,g.st()
+ snap(f'mansion-statue-{name}-{x}-{y}-after')
+press_statue('PokemonMansionB1F',18,26,False)
+checkpoint('m78-mansion-basement-switch-off')
+press_statue('PokemonMansionB1F',20,4,True)
+checkpoint('m79-mansion-basement-switch-on')
+g.nav_to(5,14,'PokemonMansionB1F');g.face('up');g.tap('a',20);g.cutscene();g.step(60)
+snap('mansion-secret-key-picked')
+assert any(i['item']=='SecretKey' for i in g.d.cmd(cmd='get_bag')['data']),g.st()
+checkpoint('m80-secret-key')

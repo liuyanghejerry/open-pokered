@@ -53,6 +53,27 @@ fn current_message(battle: &BattleScreen) -> String {
     battle.current_message.clone().unwrap_or_default()
 }
 
+#[test]
+fn potion_from_filtered_battle_bag_preserves_key_items() {
+    for is_wild in [false, true] {
+        let mut mon = create_pokemon(Species::Bulbasaur, 20, [0x9A, 0x78]).unwrap();
+        mon.hp -= 10;
+        let player = vec![mon];
+        let enemy = vec![create_pokemon(Species::Rattata, 5, [0x9A, 0x78]).unwrap()];
+        let mut battle = BattleScreen::from_parties(is_wild, &player, &enemy, None);
+        battle.player_bag.add_item(ItemId::HelixFossil, 1).unwrap();
+        battle.player_bag.add_item(ItemId::Hm01, 1).unwrap();
+        battle.player_bag.add_item(ItemId::Potion, 2).unwrap();
+        battle.phase = BattlePhase::PlayerMenu;
+        use_first_bag_item(&mut battle);
+        assert!(matches!(battle.phase, BattlePhase::ItemTargetSelect { item_id: ItemId::Potion }));
+        battle.update_frame(input(false, true));
+        assert_eq!(bag_quantity(&battle, ItemId::HelixFossil), 1);
+        assert_eq!(bag_quantity(&battle, ItemId::Hm01), 1);
+        assert_eq!(bag_quantity(&battle, ItemId::Potion), 1);
+    }
+}
+
 // ── ThrowBallAtTrainerMon (item_effects.asm:2292-2306) ─────────────────────
 
 /// In a trainer battle, throwing a ball plays the toss-only animation, prints
@@ -62,6 +83,7 @@ fn trainer_ball_is_blocked_consumes_ball_and_animates() {
     let player = vec![create_pokemon(Species::Rattata, 10, [0x9A, 0x78]).unwrap()];
     let enemy = vec![create_pokemon(Species::Pidgey, 5, [0x9A, 0x78]).unwrap()];
     let mut battle = BattleScreen::from_parties(false, &player, &enemy, None);
+    battle.player_bag.add_item(ItemId::HelixFossil, 1).unwrap();
     battle.player_bag.add_item(ItemId::PokeBall, 2).unwrap();
     battle.phase = BattlePhase::PlayerMenu;
 
@@ -69,6 +91,7 @@ fn trainer_ball_is_blocked_consumes_ball_and_animates() {
 
     // The ball is spent: 2 → 1.
     assert_eq!(bag_quantity(&battle, ItemId::PokeBall), 1);
+    assert_eq!(bag_quantity(&battle, ItemId::HelixFossil), 1);
     // TOSS_ANIM: the $10 toss-only choreography, no shakes.
     assert!(matches!(
         battle.take_anim_event(),

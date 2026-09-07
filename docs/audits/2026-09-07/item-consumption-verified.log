@@ -1,0 +1,4 @@
+[resume-reentry] frame=631 screen=overworld map=CeruleanCity pos=(25,25) party=1 money=1806 effect=None
+VERIFIED 0 Potion used; HelixFossil preserved; Potion quantity 12 -> 11
+[resume-reentry] frame=642 screen=overworld map=CeruleanCity pos=(25,25) party=1 money=1806 effect=None
+VERIFIED 1 Potion used; HelixFossil preserved; Potion quantity 12 -> 11

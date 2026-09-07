@@ -1,0 +1,6 @@
+[Debug] No --debug-modules flag provided
+Debug server started on port 50726
+Save file loaded: "/tmp/pokered-completion-20260907-silph-door-fixed/active.sav"
+Asset root found: "/Users/liuyanghe02/develop/open-pokered-3/crates/pokered-renderer/../../gfx"
+Audio output disabled (--no-audio).
+Running headless (no window). Press Ctrl-C to exit.

@@ -21,6 +21,7 @@ pub struct PokemonCollisionProvider {
     map_id: MapId,
     warp_front_check: bool,
     is_ssanne_bow: bool,
+    warp_border_probe: Option<(u8, u8)>,
 }
 
 /// Match `dotzuki_engine::overworld::map_transitions::apply_offset`: arrival
@@ -48,7 +49,31 @@ impl PokemonCollisionProvider {
             map_id,
             warp_front_check,
             is_ssanne_bow: map_id == MapId::SSAnneBow,
+            warp_border_probe: None,
         }
+    }
+
+    /// The engine clamps negative target coordinates to zero. For an exit
+    /// facing outside the map, sample the original padded border block instead.
+    pub fn with_warp_border_probe(mut self, tileset: TilesetId, x: u16, y: u16, facing: Direction) -> Self {
+        let (width, height) = self.map_id.dimensions();
+        if !self.warp_front_check || !is_facing_map_edge(x, y, facing, width, height) {
+            return self;
+        }
+        if let Some(map) = pokered_data::map_data_loader::get_map_json(self.map_id) {
+            if let Some(tiles) = blockset_data::block_tiles(tileset, map.header.border_block) {
+                let (dx, dy, index) = match facing {
+                    Direction::Down => (0, 1, 0),
+                    Direction::Up => (0, -1, 1),
+                    Direction::Left => (-1, 0, 2),
+                    Direction::Right => (1, 0, 3),
+                };
+                let sub_x = (x as i32 + dx).rem_euclid(2) as usize;
+                let sub_y = (y as i32 + dy).rem_euclid(2) as usize;
+                self.warp_border_probe = Some((index, tiles[(sub_y * 2 + 1) * 4 + sub_x * 2]));
+            }
+        }
+        self
     }
 }
 
@@ -197,6 +222,13 @@ impl CollisionProviderTrait<TilesetId> for PokemonCollisionProvider {
     }
 
     fn check_extra_warp_special(&self, _tileset: TilesetId, tile_in_front: u8) -> Option<bool> {
+        if let Some((facing, tile)) = self.warp_border_probe {
+            return Some(if self.is_ssanne_bow {
+                tile == 0x15
+            } else {
+                tileset_data::is_warp_carpet_tile_in_front(facing, tile)
+            });
+        }
         if self.is_ssanne_bow {
             Some(tile_in_front == 0x15)
         } else {

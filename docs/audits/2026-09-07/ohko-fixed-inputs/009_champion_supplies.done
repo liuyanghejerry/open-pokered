@@ -1,0 +1,10 @@
+for number,item in enumerate(['Revive','HyperPotion','Elixer']):
+ g.tap('start',8)
+ if number==0:g.tap('down',8)
+ g.tap('a',8)
+ idx=next(i for i,v in enumerate(g.d.cmd(cmd='get_bag')['data']) if v['item']==item)
+ for _ in range(idx):g.tap('down',8)
+ g.tap('a',8);g.tap('a',8);g.tap('a',8);g.cutscene();g.step(60);snap('retry-champion-'+item)
+checkpoint('m150-retry-champion-ready')
+assert g.st()['party'][0]['hp']==g.st()['party'][0]['max_hp'],g.st()
+assert g.st()['party'][0]['pp'][1]>=10,g.st()

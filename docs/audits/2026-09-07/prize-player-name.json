@@ -1,0 +1,48 @@
+{
+  "active_script_effect": null,
+  "battle_message": "Player got $210\nfor",
+  "battle_moves": null,
+  "battle_phase": "ShowingText { messages: [\"How could I\\nlose?\", \"LASS wants to\", \"give you a tip!\", \"Player got $210\\nfor\", \"winning!\", \"Total: $210!\"], current: 3, wait_frames: 0, next_phase: TrainerVictory { phase: EndBattleText, wait_frames: 0, player_won: true } }",
+  "choice": null,
+  "coins": 0,
+  "dialogue": null,
+  "dialogue_state": null,
+  "frame_count": 6580,
+  "map_id": 35,
+  "map_name": "Route24",
+  "money": 2967,
+  "party": [
+    {
+      "hp": 65,
+      "level": 23,
+      "max_hp": 65,
+      "moves": [
+        "Tackle",
+        "Growl",
+        "LeechSeed",
+        "Poisonpowder"
+      ],
+      "pp": [
+        35,
+        40,
+        10,
+        35
+      ],
+      "species": "Ivysaur",
+      "status": "None"
+    }
+  ],
+  "party_count": 1,
+  "pc_phase": null,
+  "player_facing": "Left",
+  "player_movement_state": "Idle",
+  "player_name": "RED",
+  "player_x": 10,
+  "player_y": 27,
+  "screen": "battle",
+  "script_awaiting_battle": false,
+  "script_effect": null,
+  "script_running": false,
+  "text_speed_delay_frames": 3,
+  "warp_fade": "Idle"
+}

@@ -143,7 +143,10 @@ fn resolve_block_with_connections(
     by: i32,
 ) -> u8 {
     if bx >= 0 && by >= 0 && (bx as u8) < map_w && (by as u8) < map_h && !blk.is_empty() {
-        return blk[by as usize * map_w as usize + bx as usize];
+        // The original north/south underground path declares 24 rows but
+        // ships only 23. The viewport margin can sample that absent row.
+        return blk.get(by as usize * map_w as usize + bx as usize)
+            .copied().unwrap_or(border_block);
     }
 
     let map_json = match get_map_json(current_map) {
@@ -165,7 +168,8 @@ fn resolve_block_with_connections(
                     && (target_by as u8) < th
                     && !target_blk.is_empty()
                 {
-                    return target_blk[target_by as usize * tw as usize + target_bx as usize];
+                    return target_blk.get(target_by as usize * tw as usize + target_bx as usize)
+                        .copied().unwrap_or(border_block);
                 }
             }
         }
@@ -208,7 +212,8 @@ fn resolve_block_with_connections(
                     && (target_by as u8) < th
                     && !target_blk.is_empty()
                 {
-                    return target_blk[target_by as usize * tw as usize + target_bx as usize];
+                    return target_blk.get(target_by as usize * tw as usize + target_bx as usize)
+                        .copied().unwrap_or(border_block);
                 }
             }
         }
@@ -228,7 +233,8 @@ fn resolve_block_with_connections(
                     && (target_by as u8) < th
                     && !target_blk.is_empty()
                 {
-                    return target_blk[target_by as usize * tw as usize + target_bx as usize];
+                    return target_blk.get(target_by as usize * tw as usize + target_bx as usize)
+                        .copied().unwrap_or(border_block);
                 }
             }
         }
@@ -1296,6 +1302,20 @@ mod tests {
 
     fn screen() -> OverworldScreen<PokemonRedData> {
         OverworldScreen::new(MapId::PalletTown, None, PokemonRedData)
+    }
+
+    #[test]
+    fn underground_south_arrival_renders_short_original_block_data() {
+        let mut s = OverworldScreen::new(MapId::UndergroundPathNorthSouth, None, PokemonRedData);
+        s.state.player.x = 2;
+        s.state.player.y = 41;
+        let root = pokered_renderer::resource::AssetRoot::auto_detect().expect("test graphics");
+        let mut resources = Some(ResourceManager::new(root));
+        let mut frame = FrameBuffer::new(
+            dotzuki_engine::render_config::RenderConfig::new(160, 144), Rgba::WHITE,
+        );
+        draw_overworld(&mut s, &mut resources, &mut frame, pokered_core::game_state::Lang::En);
+        assert_eq!(frame.width(), 160);
     }
 
     #[cfg(not(target_arch = "wasm32"))]

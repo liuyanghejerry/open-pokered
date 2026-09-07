@@ -1,0 +1,4 @@
+g.nav_to(35,4,'SaffronCity');g.face('left');g.tap('a',20);snap('saffron-gym-rocket-after-giovanni');g.cutscene();g.step(40)
+g.d.drive(['left']*24,frames=24);g.cutscene();g.step(40);snap('saffron-gym-still-blocked')
+assert g.st()['map_name']=='SaffronCity' and g.st()['player_x']==35,g.st()
+checkpoint('m67-saffron-gym-blocked')

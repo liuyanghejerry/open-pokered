@@ -1,0 +1,114 @@
+[resume-reentry] frame=637 screen=overworld map=SilphCo3F pos=(18,9) party=4 money=978 effect=None
+CHECKPOINT tower-resumed SilphCo3F 18 9 [{'hp': 155, 'level': 49, 'max_hp': 155, 'moves': ['MegaDrain', 'Cut', 'LeechSeed', 'Growth'], 'pp': [10, 30, 10, 40], 'species': 'Venusaur', 'status': 'None'}, {'hp': 137, 'level': 30, 'max_hp': 137, 'moves': ['IceBeam', 'Surf', 'Rest', 'Strength'], 'pp': [10, 15, 10, 15], 'species': 'Snorlax', 'status': 'None'}, {'hp': 52, 'level': 24, 'max_hp': 52, 'moves': ['Peck', 'Growl', 'FuryAttack', 'Fly'], 'pp': [35, 40, 20, 15], 'species': 'Doduo', 'status': 'None'}, {'hp': 64, 'level': 15, 'max_hp': 64, 'moves': ['WaterGun', 'Growl', 'None', 'None'], 'pp': [25, 40, 0, 0], 'species': 'Lapras', 'status': 'None'}]
+GAME_LOG /var/folders/d2/2fv86m890m34_13rn_t3d79w0000gn/T/pokered-run-9aj0o2t2/game.log
+READY
+RUN 001_helpers.py
+DONE 001_helpers.py
+RUN 002_retry_giovanni.py
+CHECKPOINT m58-giovanni-retry-ready SilphCo11F 6 14 [{'hp': 155, 'level': 49, 'max_hp': 155, 'moves': ['MegaDrain', 'Cut', 'LeechSeed', 'Growth'], 'pp': [10, 30, 10, 40], 'species': 'Venusaur', 'status': 'None'}, {'hp': 137, 'level': 30, 'max_hp': 137, 'moves': ['IceBeam', 'Surf', 'Rest', 'Strength'], 'pp': [10, 15, 10, 15], 'species': 'Snorlax', 'status': 'None'}, {'hp': 52, 'level': 24, 'max_hp': 52, 'moves': ['Peck', 'Growl', 'FuryAttack', 'Fly'], 'pp': [35, 40, 20, 15], 'species': 'Doduo', 'status': 'None'}, {'hp': 64, 'level': 15, 'max_hp': 64, 'moves': ['WaterGun', 'Growl', 'None', 'None'], 'pp': [25, 40, 0, 0], 'species': 'Lapras', 'status': 'None'}]
+HyperPotion 8 / 159 remaining before 3
+CHECKPOINT m58-silph-giovanni SilphCo11F 6 13 [{'hp': 159, 'level': 50, 'max_hp': 159, 'moves': ['MegaDrain', 'Cut', 'LeechSeed', 'Growth'], 'pp': [0, 30, 6, 40], 'species': 'Venusaur', 'status': 'None'}, {'hp': 137, 'level': 30, 'max_hp': 137, 'moves': ['IceBeam', 'Surf', 'Rest', 'Strength'], 'pp': [10, 15, 10, 15], 'species': 'Snorlax', 'status': 'None'}, {'hp': 52, 'level': 24, 'max_hp': 52, 'moves': ['Peck', 'Growl', 'FuryAttack', 'Fly'], 'pp': [35, 40, 20, 15], 'species': 'Doduo', 'status': 'None'}, {'hp': 64, 'level': 15, 'max_hp': 64, 'moves': ['WaterGun', 'Growl', 'None', 'None'], 'pp': [25, 40, 0, 0], 'species': 'Lapras', 'status': 'None'}]
+Traceback (most recent call last):
+  File "/tmp/pokered-completion-20260907-silph-retry/controller.py", line 82, in <module>
+    exec(compile(__task_path.read_text(),str(__task_path),'exec'),globals())
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/pokered-completion-20260907-silph-retry/inbox/002_retry_giovanni.py", line 11, in <module>
+    g.nav_to(7,6,'SilphCo11F');g.face('up');g.tap('a',20);g.cutscene();g.step(60)
+    ~~~~~~~~^^^^^^^^^^^^^^^^^^
+  File "/Users/liuyanghe02/develop/open-pokered-3/docs/audits/2026-09-06/playthrough/navigation.py", line 60, in nav_to
+    if not path:raise NavError(f'no path {cm} {(px,py)} -> {(x,y)}')
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+playthrough.NavError: no path SilphCo11F (6, 13) -> (7, 6)
+FAILED 002_retry_giovanni.py
+RUN 003_president.py
+Traceback (most recent call last):
+  File "/tmp/pokered-completion-20260907-silph-retry/controller.py", line 82, in <module>
+    exec(compile(__task_path.read_text(),str(__task_path),'exec'),globals())
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/pokered-completion-20260907-silph-retry/inbox/003_president.py", line 4, in <module>
+    g.nav_to(7,6,'SilphCo11F');g.face('up');g.tap('a',20);g.cutscene();g.step(60)
+    ~~~~~~~~^^^^^^^^^^^^^^^^^^
+  File "/Users/liuyanghe02/develop/open-pokered-3/docs/audits/2026-09-06/playthrough/navigation.py", line 60, in nav_to
+    if not path:raise NavError(f'no path {cm} {(px,py)} -> {(x,y)}')
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+playthrough.NavError: no path SilphCo11F (6, 10) -> (7, 6)
+FAILED 003_president.py
+RUN 004_president_side.py
+CHECKPOINT m59-master-ball SilphCo11F 6 5 [{'hp': 159, 'level': 50, 'max_hp': 159, 'moves': ['MegaDrain', 'Cut', 'LeechSeed', 'Growth'], 'pp': [0, 30, 6, 40], 'species': 'Venusaur', 'status': 'None'}, {'hp': 137, 'level': 30, 'max_hp': 137, 'moves': ['IceBeam', 'Surf', 'Rest', 'Strength'], 'pp': [10, 15, 10, 15], 'species': 'Snorlax', 'status': 'None'}, {'hp': 52, 'level': 24, 'max_hp': 52, 'moves': ['Peck', 'Growl', 'FuryAttack', 'Fly'], 'pp': [35, 40, 20, 15], 'species': 'Doduo', 'status': 'None'}, {'hp': 64, 'level': 15, 'max_hp': 64, 'moves': ['WaterGun', 'Growl', 'None', 'None'], 'pp': [25, 40, 0, 0], 'species': 'Lapras', 'status': 'None'}]
+CHECKPOINT m60-silph-liberated SaffronCity 9 30 [{'hp': 159, 'level': 50, 'max_hp': 159, 'moves': ['MegaDrain', 'Cut', 'LeechSeed', 'Growth'], 'pp': [0, 30, 6, 40], 'species': 'Venusaur', 'status': 'None'}, {'hp': 137, 'level': 30, 'max_hp': 137, 'moves': ['IceBeam', 'Surf', 'Rest', 'Strength'], 'pp': [10, 15, 10, 15], 'species': 'Snorlax', 'status': 'None'}, {'hp': 52, 'level': 24, 'max_hp': 52, 'moves': ['Peck', 'Growl', 'FuryAttack', 'Fly'], 'pp': [35, 40, 20, 15], 'species': 'Doduo', 'status': 'None'}, {'hp': 64, 'level': 15, 'max_hp': 64, 'moves': ['WaterGun', 'Growl', 'None', 'None'], 'pp': [25, 40, 0, 0], 'species': 'Lapras', 'status': 'None'}]
+CHECKPOINT m60-saffron-healed SaffronCity 9 29 [{'hp': 159, 'level': 50, 'max_hp': 159, 'moves': ['MegaDrain', 'Cut', 'LeechSeed', 'Growth'], 'pp': [10, 30, 10, 40], 'species': 'Venusaur', 'status': 'None'}, {'hp': 137, 'level': 30, 'max_hp': 137, 'moves': ['IceBeam', 'Surf', 'Rest', 'Strength'], 'pp': [10, 15, 10, 15], 'species': 'Snorlax', 'status': 'None'}, {'hp': 52, 'level': 24, 'max_hp': 52, 'moves': ['Peck', 'Growl', 'FuryAttack', 'Fly'], 'pp': [35, 40, 20, 15], 'species': 'Doduo', 'status': 'None'}, {'hp': 64, 'level': 15, 'max_hp': 64, 'moves': ['WaterGun', 'Growl', 'None', 'None'], 'pp': [25, 40, 0, 0], 'species': 'Lapras', 'status': 'None'}]
+DONE 004_president_side.py
+RUN 005_store_fly.py
+Traceback (most recent call last):
+  File "/tmp/pokered-completion-20260907-silph-retry/controller.py", line 82, in <module>
+    exec(compile(__task_path.read_text(),str(__task_path),'exec'),globals())
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/pokered-completion-20260907-silph-retry/inbox/005_store_fly.py", line 1, in <module>
+    g.nav_warp(9,29,'SaffronCity','SaffronPokecenter');g.nav_to(13,4,'SaffronPokecenter');g.face('up');g.tap('a',20);g.cutscene()
+    ~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/liuyanghe02/develop/open-pokered-3/scripts/playthrough.py", line 720, in nav_warp
+    raise NavError(f"warp at ({x},{y}) never fired ({from_map})")
+playthrough.NavError: warp at (9,29) never fired (SaffronCity)
+FAILED 005_store_fly.py
+RUN 006_store_fly_retry.py
+CHECKPOINT m60-saffron-items-stored SaffronCity 9 29 [{'hp': 159, 'level': 50, 'max_hp': 159, 'moves': ['MegaDrain', 'Cut', 'LeechSeed', 'Growth'], 'pp': [10, 30, 10, 40], 'species': 'Venusaur', 'status': 'None'}, {'hp': 137, 'level': 30, 'max_hp': 137, 'moves': ['IceBeam', 'Surf', 'Rest', 'Strength'], 'pp': [10, 15, 10, 15], 'species': 'Snorlax', 'status': 'None'}, {'hp': 52, 'level': 24, 'max_hp': 52, 'moves': ['Peck', 'Growl', 'FuryAttack', 'Fly'], 'pp': [35, 40, 20, 15], 'species': 'Doduo', 'status': 'None'}, {'hp': 64, 'level': 15, 'max_hp': 64, 'moves': ['WaterGun', 'Growl', 'None', 'None'], 'pp': [25, 40, 0, 0], 'species': 'Lapras', 'status': 'None'}]
+CHECKPOINT m61-cerulean-power-plant-route CeruleanCity 19 18 [{'hp': 159, 'level': 50, 'max_hp': 159, 'moves': ['MegaDrain', 'Cut', 'LeechSeed', 'Growth'], 'pp': [10, 30, 10, 40], 'species': 'Venusaur', 'status': 'None'}, {'hp': 137, 'level': 30, 'max_hp': 137, 'moves': ['IceBeam', 'Surf', 'Rest', 'Strength'], 'pp': [10, 15, 10, 15], 'species': 'Snorlax', 'status': 'None'}, {'hp': 52, 'level': 24, 'max_hp': 52, 'moves': ['Peck', 'Growl', 'FuryAttack', 'Fly'], 'pp': [35, 40, 20, 15], 'species': 'Doduo', 'status': 'None'}, {'hp': 64, 'level': 15, 'max_hp': 64, 'moves': ['WaterGun', 'Growl', 'None', 'None'], 'pp': [25, 40, 0, 0], 'species': 'Lapras', 'status': 'None'}]
+DONE 006_store_fly_retry.py
+RUN 007_route9_cut.py
+CHECKPOINT m62-route10-surf-bank Route10 3 4 [{'hp': 159, 'level': 50, 'max_hp': 159, 'moves': ['MegaDrain', 'Cut', 'LeechSeed', 'Growth'], 'pp': [10, 30, 10, 40], 'species': 'Venusaur', 'status': 'None'}, {'hp': 137, 'level': 30, 'max_hp': 137, 'moves': ['IceBeam', 'Surf', 'Rest', 'Strength'], 'pp': [10, 15, 10, 15], 'species': 'Snorlax', 'status': 'None'}, {'hp': 52, 'level': 24, 'max_hp': 52, 'moves': ['Peck', 'Growl', 'FuryAttack', 'Fly'], 'pp': [35, 40, 20, 15], 'species': 'Doduo', 'status': 'None'}, {'hp': 64, 'level': 15, 'max_hp': 64, 'moves': ['WaterGun', 'Growl', 'None', 'None'], 'pp': [25, 40, 0, 0], 'species': 'Lapras', 'status': 'None'}]
+DONE 007_route9_cut.py
+RUN 008_surf_power_plant.py
+CHECKPOINT m63-power-plant PowerPlant 4 35 [{'hp': 159, 'level': 50, 'max_hp': 159, 'moves': ['MegaDrain', 'Cut', 'LeechSeed', 'Growth'], 'pp': [10, 30, 10, 40], 'species': 'Venusaur', 'status': 'None'}, {'hp': 137, 'level': 30, 'max_hp': 137, 'moves': ['IceBeam', 'Surf', 'Rest', 'Strength'], 'pp': [10, 15, 10, 15], 'species': 'Snorlax', 'status': 'None'}, {'hp': 52, 'level': 24, 'max_hp': 52, 'moves': ['Peck', 'Growl', 'FuryAttack', 'Fly'], 'pp': [35, 40, 20, 15], 'species': 'Doduo', 'status': 'None'}, {'hp': 64, 'level': 15, 'max_hp': 64, 'moves': ['WaterGun', 'Growl', 'None', 'None'], 'pp': [25, 40, 0, 0], 'species': 'Lapras', 'status': 'None'}]
+CHECKPOINT m64-zapdos-ready PowerPlant 4 10 [{'hp': 159, 'level': 50, 'max_hp': 159, 'moves': ['MegaDrain', 'Cut', 'LeechSeed', 'Growth'], 'pp': [10, 30, 10, 40], 'species': 'Venusaur', 'status': 'None'}, {'hp': 137, 'level': 30, 'max_hp': 137, 'moves': ['IceBeam', 'Surf', 'Rest', 'Strength'], 'pp': [10, 15, 10, 15], 'species': 'Snorlax', 'status': 'None'}, {'hp': 52, 'level': 24, 'max_hp': 52, 'moves': ['Peck', 'Growl', 'FuryAttack', 'Fly'], 'pp': [35, 40, 20, 15], 'species': 'Doduo', 'status': 'None'}, {'hp': 64, 'level': 15, 'max_hp': 64, 'moves': ['WaterGun', 'Growl', 'None', 'None'], 'pp': [25, 40, 0, 0], 'species': 'Lapras', 'status': 'None'}]
+CHECKPOINT m65-zapdos-caught PowerPlant 4 10 [{'hp': 159, 'level': 50, 'max_hp': 159, 'moves': ['MegaDrain', 'Cut', 'LeechSeed', 'Growth'], 'pp': [10, 30, 10, 40], 'species': 'Venusaur', 'status': 'None'}, {'hp': 137, 'level': 30, 'max_hp': 137, 'moves': ['IceBeam', 'Surf', 'Rest', 'Strength'], 'pp': [10, 15, 10, 15], 'species': 'Snorlax', 'status': 'None'}, {'hp': 52, 'level': 24, 'max_hp': 52, 'moves': ['Peck', 'Growl', 'FuryAttack', 'Fly'], 'pp': [35, 40, 20, 15], 'species': 'Doduo', 'status': 'None'}, {'hp': 64, 'level': 15, 'max_hp': 64, 'moves': ['WaterGun', 'Growl', 'None', 'None'], 'pp': [25, 40, 0, 0], 'species': 'Lapras', 'status': 'None'}, {'hp': 153, 'level': 50, 'max_hp': 153, 'moves': ['Thundershock', 'DrillPeck', 'None', 'None'], 'pp': [30, 20, 0, 0], 'species': 'Zapdos', 'status': 'None'}]
+DONE 008_surf_power_plant.py
+RUN 009_zapdos_after_capture.py
+CHECKPOINT m66-power-plant-exit Route10 6 40 [{'hp': 159, 'level': 50, 'max_hp': 159, 'moves': ['MegaDrain', 'Cut', 'LeechSeed', 'Growth'], 'pp': [10, 30, 10, 40], 'species': 'Venusaur', 'status': 'None'}, {'hp': 137, 'level': 30, 'max_hp': 137, 'moves': ['IceBeam', 'Surf', 'Rest', 'Strength'], 'pp': [10, 15, 10, 15], 'species': 'Snorlax', 'status': 'None'}, {'hp': 52, 'level': 24, 'max_hp': 52, 'moves': ['Peck', 'Growl', 'FuryAttack', 'Fly'], 'pp': [35, 40, 20, 15], 'species': 'Doduo', 'status': 'None'}, {'hp': 64, 'level': 15, 'max_hp': 64, 'moves': ['WaterGun', 'Growl', 'None', 'None'], 'pp': [25, 40, 0, 0], 'species': 'Lapras', 'status': 'None'}, {'hp': 153, 'level': 50, 'max_hp': 153, 'moves': ['Thundershock', 'DrillPeck', 'None', 'None'], 'pp': [30, 20, 0, 0], 'species': 'Zapdos', 'status': 'None'}]
+CHECKPOINT m66-saffron-with-zapdos SaffronCity 9 30 [{'hp': 159, 'level': 50, 'max_hp': 159, 'moves': ['MegaDrain', 'Cut', 'LeechSeed', 'Growth'], 'pp': [10, 30, 10, 40], 'species': 'Venusaur', 'status': 'None'}, {'hp': 137, 'level': 30, 'max_hp': 137, 'moves': ['IceBeam', 'Surf', 'Rest', 'Strength'], 'pp': [10, 15, 10, 15], 'species': 'Snorlax', 'status': 'None'}, {'hp': 52, 'level': 24, 'max_hp': 52, 'moves': ['Peck', 'Growl', 'FuryAttack', 'Fly'], 'pp': [35, 40, 20, 15], 'species': 'Doduo', 'status': 'None'}, {'hp': 64, 'level': 15, 'max_hp': 64, 'moves': ['WaterGun', 'Growl', 'None', 'None'], 'pp': [25, 40, 0, 0], 'species': 'Lapras', 'status': 'None'}, {'hp': 153, 'level': 50, 'max_hp': 153, 'moves': ['Thundershock', 'DrillPeck', 'None', 'None'], 'pp': [30, 20, 0, 0], 'species': 'Zapdos', 'status': 'None'}]
+DONE 009_zapdos_after_capture.py
+RUN 010_sabrina.py
+Traceback (most recent call last):
+  File "/Users/liuyanghe02/develop/open-pokered-3/scripts/playthrough.py", line 689, in nav_warp
+    self.nav_to(x, y, map_name=from_map, tries=tries)
+    ~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/liuyanghe02/develop/open-pokered-3/docs/audits/2026-09-06/playthrough/navigation.py", line 60, in nav_to
+    if not path:raise NavError(f'no path {cm} {(px,py)} -> {(x,y)}')
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+playthrough.NavError: no path SaffronCity (9, 30) -> (34, 3)
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/tmp/pokered-completion-20260907-silph-retry/controller.py", line 82, in <module>
+    exec(compile(__task_path.read_text(),str(__task_path),'exec'),globals())
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/pokered-completion-20260907-silph-retry/inbox/010_sabrina.py", line 79, in <module>
+    g.nav_warp(34,3,'SaffronCity','SaffronGym');checkpoint('m67-saffron-gym')
+    ~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/liuyanghe02/develop/open-pokered-3/scripts/playthrough.py", line 697, in nav_warp
+    self.nav_to(*inner, map_name=from_map,
+    ~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                tries=tries)
+                ^^^^^^^^^^^^
+  File "/Users/liuyanghe02/develop/open-pokered-3/docs/audits/2026-09-06/playthrough/navigation.py", line 60, in nav_to
+    if not path:raise NavError(f'no path {cm} {(px,py)} -> {(x,y)}')
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+playthrough.NavError: no path SaffronCity (9, 30) -> (34, 4)
+FAILED 010_sabrina.py
+RUN 011_gym_guard.py
+Traceback (most recent call last):
+  File "/tmp/pokered-completion-20260907-silph-retry/controller.py", line 82, in <module>
+    exec(compile(__task_path.read_text(),str(__task_path),'exec'),globals())
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/pokered-completion-20260907-silph-retry/inbox/011_gym_guard.py", line 1, in <module>
+    g.nav_to(34,5,'SaffronCity');g.face('up');g.tap('a',20);snap('saffron-gym-rocket-after-giovanni');g.cutscene();g.step(40)
+    ~~~~~~~~^^^^^^^^^^^^^^^^^^^^
+  File "/Users/liuyanghe02/develop/open-pokered-3/docs/audits/2026-09-06/playthrough/navigation.py", line 60, in nav_to
+    if not path:raise NavError(f'no path {cm} {(px,py)} -> {(x,y)}')
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+playthrough.NavError: no path SaffronCity (9, 30) -> (34, 5)
+FAILED 011_gym_guard.py
+RUN 012_gym_guard_side.py
+CHECKPOINT m67-saffron-gym-blocked SaffronCity 35 4 [{'hp': 153, 'level': 50, 'max_hp': 153, 'moves': ['Thundershock', 'DrillPeck', 'None', 'None'], 'pp': [30, 20, 0, 0], 'species': 'Zapdos', 'status': 'None'}, {'hp': 137, 'level': 30, 'max_hp': 137, 'moves': ['IceBeam', 'Surf', 'Rest', 'Strength'], 'pp': [10, 15, 10, 15], 'species': 'Snorlax', 'status': 'None'}, {'hp': 52, 'level': 24, 'max_hp': 52, 'moves': ['Peck', 'Growl', 'FuryAttack', 'Fly'], 'pp': [35, 40, 20, 15], 'species': 'Doduo', 'status': 'None'}, {'hp': 64, 'level': 15, 'max_hp': 64, 'moves': ['WaterGun', 'Growl', 'None', 'None'], 'pp': [25, 40, 0, 0], 'species': 'Lapras', 'status': 'None'}, {'hp': 159, 'level': 50, 'max_hp': 159, 'moves': ['MegaDrain', 'Cut', 'LeechSeed', 'Growth'], 'pp': [10, 30, 10, 40], 'species': 'Venusaur', 'status': 'None'}]
+DONE 012_gym_guard_side.py
+RUN 099_stop.py

@@ -1,0 +1,4 @@
+[resume-reentry] frame=635 screen=overworld map=CeruleanCity pos=(19,18) party=1 money=1924 effect=None
+DIAGNOSTIC SEED: bag filled to 20 distinct stacks
+[fullbag-misty] frame=5701 screen=overworld map=CeruleanGym pos=(4,3) party=1 money=4463 effect=None
+TM11_FLAG True BAG {'ok': True, 'data': [{'item': 'Tm34', 'qty': 1}, {'item': 'HelixFossil', 'qty': 1}, {'item': 'Antidote', 'qty': 1}, {'item': 'BurnHeal', 'qty': 1}, {'item': 'IceHeal', 'qty': 1}, {'item': 'Awakening', 'qty': 1}, {'item': 'ParlyzHeal', 'qty': 1}, {'item': 'FullRestore', 'qty': 1}, {'item': 'MaxPotion', 'qty': 1}, {'item': 'HyperPotion', 'qty': 1}, {'item': 'SuperPotion', 'qty': 1}, {'item': 'Potion', 'qty': 1}, {'item': 'EscapeRope', 'qty': 1}, {'item': 'Repel', 'qty': 1}, {'item': 'MaxElixer', 'qty': 1}, {'item': 'MaxEther', 'qty': 1}, {'item': 'Elixer', 'qty': 1}, {'item': 'Ether', 'qty': 1}, {'item': 'Revive', 'qty': 1}, {'item': 'MaxRevive', 'qty': 1}]}

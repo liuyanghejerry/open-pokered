@@ -1,0 +1,4 @@
+g.nav_to(23,10,'VictoryRoad3F');g.face('right');snap('victory3f-east-boulder-before')
+g.tap('start',8);g.tap('a',8);g.tap('down',8);g.tap('a',8);g.tap('down',8);g.tap('a',8);g.cutscene();g.step(60)
+snap('victory3f-strength-enabled')
+g.d.drive(['right']*8,frames=48);g.cutscene();g.step(60);snap('victory3f-east-boulder-pushed')

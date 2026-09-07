@@ -1,0 +1,261 @@
+{
+  "active_script_effect": null,
+  "battle_bag": null,
+  "battle_inventory": [
+    {
+      "item": "Bicycle",
+      "qty": 1
+    },
+    {
+      "item": "ParlyzHeal",
+      "qty": 3
+    },
+    {
+      "item": "Awakening",
+      "qty": 3
+    },
+    {
+      "item": "BurnHeal",
+      "qty": 2
+    },
+    {
+      "item": "RareCandy",
+      "qty": 1
+    },
+    {
+      "item": "PokeFlute",
+      "qty": 1
+    },
+    {
+      "item": "Hm03",
+      "qty": 1
+    },
+    {
+      "item": "Hm04",
+      "qty": 1
+    },
+    {
+      "item": "Revive",
+      "qty": 5
+    },
+    {
+      "item": "FullHeal",
+      "qty": 6
+    },
+    {
+      "item": "GreatBall",
+      "qty": 13
+    },
+    {
+      "item": "Hm02",
+      "qty": 1
+    },
+    {
+      "item": "HyperPotion",
+      "qty": 12
+    }
+  ],
+  "battle_live": {
+    "enemy": {
+      "hp": 10,
+      "level": 45,
+      "max_hp": 116,
+      "species": "Exeggcute",
+      "status": "None"
+    },
+    "enemy_party": [
+      {
+        "hp": 0,
+        "level": 47,
+        "species": "Pidgeot"
+      },
+      {
+        "hp": 0,
+        "level": 45,
+        "species": "Rhyhorn"
+      },
+      {
+        "hp": 10,
+        "level": 45,
+        "species": "Exeggcute"
+      },
+      {
+        "hp": 153,
+        "level": 47,
+        "species": "Gyarados"
+      },
+      {
+        "hp": 123,
+        "level": 50,
+        "species": "Alakazam"
+      },
+      {
+        "hp": 154,
+        "level": 53,
+        "species": "Charizard"
+      }
+    ],
+    "player": {
+      "hp": 121,
+      "level": 52,
+      "max_hp": 162,
+      "species": "Zapdos",
+      "status": "Poison"
+    },
+    "player_party": [
+      {
+        "hp": 121,
+        "level": 52,
+        "max_hp": 162,
+        "species": "Zapdos"
+      },
+      {
+        "hp": 137,
+        "level": 30,
+        "max_hp": 137,
+        "species": "Snorlax"
+      },
+      {
+        "hp": 52,
+        "level": 24,
+        "max_hp": 52,
+        "species": "Doduo"
+      },
+      {
+        "hp": 64,
+        "level": 15,
+        "max_hp": 64,
+        "species": "Lapras"
+      },
+      {
+        "hp": 164,
+        "level": 52,
+        "max_hp": 164,
+        "species": "Venusaur"
+      }
+    ]
+  },
+  "battle_message": "Enemy EXEGGCUTE\nfainted!",
+  "battle_moves": null,
+  "battle_party_cursor": 0,
+  "battle_phase": "ShowingText { messages: [\"ZAPDOS used DRILL\\nPECK!\", \"Critical hit!\", \"It's super\\neffective!\", \"Enemy EXEGGCUTE\\nfainted!\", \"ZAPDOS's\\nHEALTH is sapped\", \"by LEECH SEED!\", \"Enemy EXEGGCUTE\\nused POISONPOWDER!\", \"ZAPDOS was\\npoisoned!\"], current: 3, wait_frames: 0, next_phase: PlayerMenu }",
+  "choice": null,
+  "coins": 0,
+  "dialogue": null,
+  "dialogue_state": null,
+  "frame_count": 2513,
+  "map_id": 33,
+  "map_name": "Route22",
+  "money": 1542,
+  "party": [
+    {
+      "hp": 158,
+      "level": 51,
+      "max_hp": 158,
+      "moves": [
+        "Thunderbolt",
+        "DrillPeck",
+        "Thunder",
+        "Fly"
+      ],
+      "pp": [
+        15,
+        20,
+        10,
+        15
+      ],
+      "species": "Zapdos",
+      "status": "None"
+    },
+    {
+      "hp": 137,
+      "level": 30,
+      "max_hp": 137,
+      "moves": [
+        "IceBeam",
+        "Surf",
+        "Rest",
+        "Strength"
+      ],
+      "pp": [
+        10,
+        15,
+        10,
+        15
+      ],
+      "species": "Snorlax",
+      "status": "None"
+    },
+    {
+      "hp": 52,
+      "level": 24,
+      "max_hp": 52,
+      "moves": [
+        "Peck",
+        "Growl",
+        "FuryAttack",
+        "Fly"
+      ],
+      "pp": [
+        35,
+        40,
+        20,
+        15
+      ],
+      "species": "Doduo",
+      "status": "None"
+    },
+    {
+      "hp": 64,
+      "level": 15,
+      "max_hp": 64,
+      "moves": [
+        "WaterGun",
+        "Growl",
+        "None",
+        "None"
+      ],
+      "pp": [
+        25,
+        40,
+        0,
+        0
+      ],
+      "species": "Lapras",
+      "status": "None"
+    },
+    {
+      "hp": 161,
+      "level": 51,
+      "max_hp": 161,
+      "moves": [
+        "MegaDrain",
+        "Cut",
+        "LeechSeed",
+        "Growth"
+      ],
+      "pp": [
+        10,
+        30,
+        10,
+        40
+      ],
+      "species": "Venusaur",
+      "status": "None"
+    }
+  ],
+  "party_count": 5,
+  "pc_phase": null,
+  "player_facing": "Down",
+  "player_movement_state": "Idle",
+  "player_name": "RED",
+  "player_x": 29,
+  "player_y": 4,
+  "screen": "battle",
+  "script_awaiting_battle": true,
+  "script_effect": null,
+  "script_running": true,
+  "shop_phase": null,
+  "text_speed_delay_frames": 3,
+  "warp_fade": "Idle"
+}

@@ -1,0 +1,3 @@
+s=snap('champion-won-before-oak');assert s['screen']=='overworld' and 'player_won: true' in s['battle_phase'],s
+g.cutscene();g.step(60);g.cutscene();snap('m152-hall-of-fame-entry')
+print('CEREMONY_STATE',g.st(),flush=True)

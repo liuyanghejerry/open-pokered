@@ -368,6 +368,11 @@ impl ScriptHost for NativeHost {
                 let trainer_id = args::text(v.first().ok_or("startBattle: missing trainer")?, "startBattle")?;
                 Ok(HostCall::Command(ScriptCommand::StartBattle { trainer_id }))
             }
+            "startBattleSet" => {
+                let trainer_id = args::text(v.first().ok_or("startBattleSet: missing trainer")?, "startBattleSet")?;
+                let base = args::u8(v.get(1).ok_or("startBattleSet: missing base")?, "startBattleSet")?;
+                Ok(HostCall::Command(custom("startBattleSet", vec![json!(trainer_id), json!(base)])))
+            }
             "startWildBattle" => {
                 let species = args::text(v.first().ok_or("startWildBattle: missing species")?, "startWildBattle")?;
                 let level = args::u8(v.get(1).ok_or("startWildBattle: missing level")?, "startWildBattle")?;
@@ -1426,6 +1431,262 @@ mod tests {
         let mut host = NativeHost::new();
         let err = host.call("noSuchFunction", &[]).unwrap_err();
         assert!(err.contains("unknown game function"));
+    }
+
+    #[test]
+    fn rival_battle_set_resumes_scene_with_battle_result() {
+        let scene = dotzuki_engine_dsl::compiler::compile_scene_to_ast(
+            r#"game_scene Test {
+  @storyline("rival") {
+    result = startBattleSet("OPP_RIVAL1", 6)
+    @if (result == "win") { setFlag("RIVAL_WON") }
+  }
+}"#,
+            "Test",
+        ).expect("scene compiles");
+        for won in [false, true] {
+            let mut engine = NativeScriptEngine::new();
+            engine.load_map("Test", &scene);
+            assert_eq!(engine.call_function_no_args("rival").unwrap(),
+                Some(custom("startBattleSet", vec![json!("OPP_RIVAL1"), json!(6)])));
+            assert!(!engine.get_flag("RIVAL_WON"));
+            engine.signal_done(CommandResult::Text(if won { "win" } else { "loss" }.into())).unwrap();
+            assert_eq!(engine.get_flag("RIVAL_WON"), won);
+        }
+    }
+
+    #[test]
+    fn cerulean_rival_scene_completes_after_victory() {
+        let scene = pokered_data::embedded_scenes::get_scene_ast("CeruleanCity").unwrap();
+        let mut engine = NativeScriptEngine::new();
+        engine.load_map("CeruleanCity", &scene);
+        engine.set_player_position(20, 6);
+        let mut next = engine.call_function_no_args("coordRivalBattle").unwrap();
+        let mut battles = 0;
+        for _ in 0..100 {
+            let Some(cmd) = next else { break };
+            let result = if cmd == custom("startBattleSet", vec![json!("OPP_RIVAL1"), json!(6)]) {
+                battles += 1;
+                CommandResult::Text("win".into())
+            } else { CommandResult::Void };
+            next = engine.signal_done(result).unwrap();
+        }
+        assert_eq!(battles, 1);
+        assert!(engine.get_flag("EVENT_BEAT_CERULEAN_RIVAL"));
+    }
+
+    #[test]
+    fn ship_gate_recognizes_the_inventory_ticket_name() {
+        let scene = pokered_data::embedded_scenes::get_scene_ast("VermilionCity").unwrap();
+        for has_ticket in [false, true] {
+            let mut engine = NativeScriptEngine::new();
+            engine.load_map("VermilionCity", &scene);
+            let bag = if has_ticket { vec![pokered_data::items::ItemId::SsTicket.const_name()] } else { vec![] };
+            engine.seed_set("bag", &bag);
+            let mut next = engine.call_function_no_args("coordSailorGate").unwrap();
+            let mut welcomed = false;
+            let mut pushed_back = false;
+            for _ in 0..20 {
+                let Some(cmd) = next else { break };
+                if let ScriptCommand::ShowText { text } = &cmd {
+                    welcomed |= text.contains("flashed");
+                }
+                pushed_back |= matches!(cmd, ScriptCommand::MovePlayerRelative { .. });
+                next = engine.signal_done(CommandResult::Void).unwrap();
+            }
+            assert_eq!(welcomed, has_ticket);
+            assert_eq!(pushed_back, !has_ticket);
+        }
+    }
+
+    #[test]
+    fn ss_anne_rival_scene_completes_after_victory() {
+        let scene = pokered_data::embedded_scenes::get_scene_ast("SSAnne2F").unwrap();
+        let mut engine = NativeScriptEngine::new();
+        engine.load_map("SSAnne2F", &scene);
+        engine.set_player_position(36, 8);
+        let mut next = engine.call_function_no_args("coordRivalBattle").unwrap();
+        let mut battles = 0;
+        for _ in 0..100 {
+            let Some(cmd) = next else { break };
+            let result = if matches!(cmd, ScriptCommand::StartBattle { .. }) {
+                battles += 1;
+                CommandResult::Text("win".into())
+            } else { CommandResult::Void };
+            next = engine.signal_done(result).unwrap();
+        }
+        assert_eq!(battles, 1);
+        assert!(engine.get_flag("EVENT_BEAT_SS_ANNE_RIVAL"));
+    }
+
+    #[test]
+    fn tower_rival_scene_completes_after_victory() {
+        let scene = pokered_data::embedded_scenes::get_scene_ast("PokemonTower2F").unwrap();
+        let mut engine = NativeScriptEngine::new();
+        engine.load_map("PokemonTower2F", &scene);
+        engine.set_player_position(15, 5);
+        let mut next = engine.call_function_no_args("coordRivalBattle").unwrap();
+        let mut battles = 0;
+        for _ in 0..100 {
+            let Some(cmd) = next else { break };
+            let result = if cmd == custom("startBattleSet", vec![json!("OPP_RIVAL2"), json!(3)]) {
+                battles += 1;
+                CommandResult::Text("win".into())
+            } else { CommandResult::Void };
+            next = engine.signal_done(result).unwrap();
+        }
+        assert_eq!(battles, 1);
+        assert!(engine.get_flag("EVENT_BEAT_POKEMON_TOWER_RIVAL"));
+    }
+
+    #[test]
+    fn silph_rival_scene_uses_silph_party_and_only_completes_on_victory() {
+        let scene = pokered_data::embedded_scenes::get_scene_ast("SilphCo7F").unwrap();
+        for outcome in ["win", "lose"] {
+            let mut engine = NativeScriptEngine::new();
+            engine.load_map("SilphCo7F", &scene);
+            engine.set_player_position(3, 3);
+            let mut next = engine.call_function_no_args("coordRivalBattle").unwrap();
+            let mut battles = Vec::new();
+            for _ in 0..100 {
+                let Some(cmd) = next else { break };
+                let is_battle = matches!(&cmd, ScriptCommand::StartBattle { .. })
+                    || matches!(&cmd, ScriptCommand::Custom { name, .. } if name == "startBattleSet");
+                let result = if is_battle {
+                    battles.push(cmd);
+                    CommandResult::Text(outcome.into())
+                } else { CommandResult::Void };
+                next = engine.signal_done(result).unwrap();
+            }
+            assert_eq!(engine.get_flag("EVENT_BEAT_SILPH_CO_RIVAL"), outcome == "win");
+            assert_eq!(battles, vec![custom("startBattleSet", vec![json!("OPP_RIVAL2"), json!(6)])]);
+        }
+    }
+
+    #[test]
+    fn silph_giovanni_scene_uses_second_party_for_both_triggers() {
+        let scene = pokered_data::embedded_scenes::get_scene_ast("SilphCo11F").unwrap();
+        for trigger in ["giovanniStep", "talkGiovanni"] {
+            let mut engine = NativeScriptEngine::new();
+            engine.load_map("SilphCo11F", &scene);
+            engine.set_player_position(6, 13);
+            let mut next = engine.call_function_no_args(trigger).unwrap();
+            let mut battles = Vec::new();
+            for _ in 0..100 {
+                let Some(cmd) = next else { break };
+                let result = if let ScriptCommand::StartBattle { trainer_id } = cmd {
+                    battles.push(trainer_id);
+                    CommandResult::Text("win".into())
+                } else { CommandResult::Void };
+                next = engine.signal_done(result).unwrap();
+            }
+            assert_eq!(battles, ["OPP_GIOVANNI2"]);
+            assert!(engine.get_flag("EVENT_BEAT_SILPH_CO_GIOVANNI"));
+        }
+    }
+
+    #[test]
+    fn brock_victory_expires_the_optional_route22_battle() {
+        let scene = pokered_data::embedded_scenes::get_scene_ast("PewterGym").unwrap();
+        for outcome in ["win", "lose"] {
+            let mut engine = NativeScriptEngine::new();
+            engine.load_map("PewterGym", &scene);
+            engine.set_flag("EVENT_1ST_ROUTE22_RIVAL_BATTLE", true);
+            engine.set_flag("EVENT_ROUTE22_RIVAL_WANTS_BATTLE", true);
+            let mut next = engine.call_function_no_args("talkBrock").unwrap();
+            for _ in 0..100 {
+                let Some(cmd) = next else { break };
+                let result = if matches!(cmd, ScriptCommand::StartBattle { .. }) {
+                    CommandResult::Text(outcome.into())
+                } else { CommandResult::Void };
+                next = engine.signal_done(result).unwrap();
+            }
+            assert_eq!(engine.get_flag("EVENT_1ST_ROUTE22_RIVAL_BATTLE"), outcome != "win");
+            assert_eq!(engine.get_flag("EVENT_ROUTE22_RIVAL_WANTS_BATTLE"), outcome != "win");
+        }
+    }
+
+    #[test]
+    fn route22_entry_repairs_expired_early_encounter_without_clearing_final_encounter() {
+        let scene = pokered_data::embedded_scenes::get_scene_ast("Route22").unwrap();
+        for final_encounter in [false, true] {
+            let mut engine = NativeScriptEngine::new();
+            engine.load_map("Route22", &scene);
+            engine.set_flag("EVENT_BEAT_BROCK", true);
+            engine.set_flag("EVENT_1ST_ROUTE22_RIVAL_BATTLE", true);
+            engine.set_flag("EVENT_2ND_ROUTE22_RIVAL_BATTLE", final_encounter);
+            engine.set_flag("EVENT_ROUTE22_RIVAL_WANTS_BATTLE", true);
+            let mut next = engine.call_function_no_args("Route22OnLoad").unwrap();
+            for _ in 0..30 {
+                if next.is_none() { break; }
+                next = engine.signal_done(CommandResult::Void).unwrap();
+            }
+            assert!(!engine.get_flag("EVENT_1ST_ROUTE22_RIVAL_BATTLE"));
+            assert_eq!(engine.get_flag("EVENT_ROUTE22_RIVAL_WANTS_BATTLE"), final_encounter);
+            if final_encounter {
+                engine.set_player_position(29, 4);
+                next = engine.call_function_no_args("coordRivalBattle").unwrap();
+                let mut battle = None;
+                for _ in 0..100 {
+                    let Some(cmd) = next else { break };
+                    if matches!(&cmd, ScriptCommand::Custom { name, .. } if name == "startBattleSet") {
+                        battle = Some(cmd);
+                        break;
+                    }
+                    next = engine.signal_done(CommandResult::Void).unwrap();
+                }
+                assert_eq!(battle, Some(custom("startBattleSet", vec![json!("OPP_RIVAL2"), json!(9)])));
+            }
+        }
+    }
+
+    #[test]
+    fn route22_rivals_complete_only_after_winning_the_correct_stage() {
+        let scene = pokered_data::embedded_scenes::get_scene_ast("Route22").unwrap();
+        for (stage, class, base) in [("1ST", "OPP_RIVAL1", 3), ("2ND", "OPP_RIVAL2", 9)] {
+            for outcome in ["win", "lose"] {
+                let mut engine = NativeScriptEngine::new();
+                engine.load_map("Route22", &scene);
+                engine.set_player_position(29, 4);
+                engine.set_flag("EVENT_ROUTE22_RIVAL_WANTS_BATTLE", true);
+                engine.set_flag(&format!("EVENT_{stage}_ROUTE22_RIVAL_BATTLE"), true);
+                let mut next = engine.call_function_no_args("coordRivalBattle").unwrap();
+                let mut battles = Vec::new();
+                for _ in 0..150 {
+                    let Some(cmd) = next else { break };
+                    let result = if matches!(&cmd, ScriptCommand::Custom { name, .. } if name == "startBattleSet") {
+                        battles.push(cmd);
+                        CommandResult::Text(outcome.into())
+                    } else { CommandResult::Void };
+                    next = engine.signal_done(result).unwrap();
+                }
+                assert_eq!(battles, vec![custom("startBattleSet", vec![json!(class), json!(base)])]);
+                assert_eq!(engine.get_flag(&format!("EVENT_BEAT_ROUTE22_RIVAL_{stage}_BATTLE")), outcome == "win");
+                assert_eq!(engine.get_flag("EVENT_ROUTE22_RIVAL_WANTS_BATTLE"), outcome != "win");
+            }
+        }
+    }
+
+    #[test]
+    fn champion_scene_completes_only_after_victory() {
+        let scene = pokered_data::embedded_scenes::get_scene_ast("ChampionsRoom").unwrap();
+        for outcome in ["win", "lose"] {
+            let mut engine = NativeScriptEngine::new();
+            engine.load_map("ChampionsRoom", &scene);
+            let mut next = engine.call_function_no_args("ChampionsRoomOnLoad").unwrap();
+            let mut battles = 0;
+            for _ in 0..150 {
+                let Some(cmd) = next else { break };
+                let result = if let ScriptCommand::StartBattle { trainer_id } = cmd {
+                    assert_eq!(trainer_id, "OPP_RIVAL3");
+                    battles += 1;
+                    CommandResult::Text(outcome.into())
+                } else { CommandResult::Void };
+                next = engine.signal_done(result).unwrap();
+            }
+            assert_eq!(battles, 1);
+            assert_eq!(engine.get_flag("EVENT_BEAT_CHAMPION_RIVAL"), outcome == "win");
+        }
     }
 
     #[test]

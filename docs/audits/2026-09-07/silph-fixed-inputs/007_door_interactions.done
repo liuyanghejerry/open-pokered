@@ -1,0 +1,3 @@
+g.face('up');g.tap('a',20);g.cutscene();g.step(40);snap('boardroom-door-a-attempt')
+g.nav_to(7,14,'SilphCo11F');g.d.drive(['up']*24,frames=24);g.tap('a',20);g.cutscene();g.step(40);snap('boardroom-door-second-column')
+checkpoint('m57-boardroom-blocked')

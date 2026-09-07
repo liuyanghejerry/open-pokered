@@ -1,0 +1,37 @@
+fly_species={'Pidgey','Pidgeotto','Pidgeot','Spearow','Fearow','Doduo','Dodrio'}
+def bird_catcher(self,prefer='fight',max_iters=1000):
+ trainer=False
+ for _ in range(100):
+  ss=self.st();phase=ss.get('battle_phase') or ''
+  if 'Trainer' in phase:trainer=True
+  if ss['screen']!='battle' or phase=='PlayerMenu':break
+  self.tap('a',8)
+ s=self.st();enemy=(s.get('battle_live') or {}).get('enemy',{})
+ have=any(p['species'] in fly_species for p in self.d.cmd(cmd='get_party')['data'])
+ if trainer or prefer=='fight' or have or enemy.get('species') not in fly_species:return old_battle('fight' if trainer else prefer,max_iters)
+ for _ in range(250):
+  s=self.st()
+  if s['screen']!='battle':break
+  if s['battle_phase']=='PlayerMenu':
+   counts={i['item']:i['qty'] for i in s['battle_inventory']};item='GreatBall' if counts.get('GreatBall',0) else 'PokeBall'
+   if not counts.get(item,0):return old_battle('run',max_iters)
+   self.d.drive(['down','left'],frames=10);self.tap('a',4)
+   assert self._await_phase('BagSelect',120)
+   for _ in range(40):
+    menu=self.st()['battle_bag'];idx=next(i for i,v in enumerate(menu['items']) if v['item']==item)
+    if menu['cursor']==idx:break
+    self.tap('down',4)
+   print('WILD_BIRD_BALL',enemy.get('species'),item,counts[item],flush=True)
+   self.tap('a',10);self.step(30)
+  else:self.tap('a',10)
+ from scenarios import dismiss_dex_screen
+ snap('fly-bird-catch');dismiss_dex_screen(self);self.cutscene();self.step(40)
+g.battle_loop=types.MethodType(bird_catcher,g)
+
+g.nav_to(0,17,'FuchsiaCity');g.d.drive(['left']*8,frames=20);g.step(40)
+g.nav_to(41,12,'Route18')
+for _ in range(70):
+ if any(p['species'] in fly_species for p in g.d.cmd(cmd='get_party')['data']):break
+ g.nav_to(41,14,'Route18');g.nav_to(41,12,'Route18')
+assert any(p['species'] in fly_species for p in g.d.cmd(cmd='get_party')['data'])
+checkpoint('m47-fly-bird')

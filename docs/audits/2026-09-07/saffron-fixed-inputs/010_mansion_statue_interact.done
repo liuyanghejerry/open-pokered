@@ -1,0 +1,6 @@
+for attempt in range(2):
+ g.face('up');g.tap('a',20);g.step(60);snap('mansion-statue-interact-'+str(attempt))
+ s=g.st()
+ if s['dialogue_state'] is not None or s['choice'] is not None:break
+ g.d.drive(['down']*8,frames=16);g.d.drive(['up']*8,frames=16)
+snap('mansion-statue-interaction-result')

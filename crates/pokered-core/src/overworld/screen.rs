@@ -959,7 +959,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
             pending_set_nickname: None,
             pending_emotion_bubble: None,
             pending_healing_machine: None,
-            last_map: Some(MapId::PalletTown),
+            last_map: super::map_loading::scripted_last_map(start_map).or(Some(MapId::PalletTown)),
             last_map_entry: None,
             warp_fade_state: WarpFadeState::Idle,
             pending_warp: None,
@@ -1182,6 +1182,14 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
     /// 1/3/5) into any active dialogue. Called by the frontend every frame.
     pub fn set_text_delay_frames(&mut self, frames: u16) {
         self.text_delay_frames = frames.max(1);
+    }
+
+    /// Restore SRAM's wLastMap so exits still lead outside after CONTINUE.
+    /// Underground entrance scripts own their exit map and take precedence.
+    pub fn restore_saved_last_map(&mut self, saved_map_id: u8) {
+        self.last_map = super::map_loading::scripted_last_map(self.state.current_map)
+            .or_else(|| MapId::from_u8(saved_map_id))
+            .or(self.last_map);
     }
 
     /// Seed the script engine's synchronous query state from the persistent
@@ -2017,6 +2025,9 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                 self.sync_flags_from_engine();
             }
         }
+        // CONTINUE and skip-intro construct the screen directly, without a
+        // warp's load_map_script call. Install the same interaction bindings.
+        self.setup_triggers_for_map(self.state.current_map);
     }
 
     /// Queue the new-game bedroom SNES dialogue.
@@ -2116,6 +2127,9 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                     Some((self.state.player.x as u8, self.state.player.y as u8));
             }
             self.state.current_map = warp.dest_map;
+            if let Some(outside) = super::map_loading::scripted_last_map(warp.dest_map) {
+                self.last_map = Some(outside);
+            }
             self.state.player.x = warp.dest_x as u16;
             self.state.player.y = warp.dest_y as u16;
 

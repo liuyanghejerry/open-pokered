@@ -1,0 +1,3 @@
+g.nav_warp(18,3,'FuchsiaCity','SafariZoneGate')
+g.nav_to(3,2,'SafariZoneGate');g.dialogue_then_choice();snap('safari-entry-price');g.choose('YES');g.cutscene();g.step(40)
+snap('safari-start');assert g.st()['map_name']=='SafariZoneCenter',g.st()

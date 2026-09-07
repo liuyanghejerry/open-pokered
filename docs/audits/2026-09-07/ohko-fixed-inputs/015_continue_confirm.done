@@ -1,0 +1,3 @@
+g.tap('a',8);g.step(180);g.cutscene();snap('m157-postgame-pallet')
+assert g.st()['screen']=='overworld' and g.st()['map_name']=='PalletTown',g.st()
+checkpoint('m158-postgame-pallet-saved')

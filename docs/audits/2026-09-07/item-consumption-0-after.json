@@ -1,0 +1,86 @@
+{
+  "active_script_effect": null,
+  "battle_bag": null,
+  "battle_inventory": [
+    {
+      "item": "Tm11",
+      "qty": 1
+    },
+    {
+      "item": "SsTicket",
+      "qty": 1
+    },
+    {
+      "item": "Tm28",
+      "qty": 1
+    },
+    {
+      "item": "Potion",
+      "qty": 12
+    },
+    {
+      "item": "PokeBall",
+      "qty": 5
+    }
+  ],
+  "battle_live": {
+    "enemy": {
+      "hp": 19,
+      "max_hp": 19,
+      "species": "Rattata",
+      "status": "None"
+    },
+    "player": {
+      "hp": 75,
+      "max_hp": 75,
+      "species": "Ivysaur",
+      "status": "None"
+    }
+  },
+  "battle_message": null,
+  "battle_moves": null,
+  "battle_phase": "PlayerMenu",
+  "choice": null,
+  "coins": 0,
+  "dialogue": null,
+  "dialogue_state": null,
+  "frame_count": 1138,
+  "map_id": 3,
+  "map_name": "CeruleanCity",
+  "money": 1806,
+  "party": [
+    {
+      "hp": 75,
+      "level": 27,
+      "max_hp": 75,
+      "moves": [
+        "Tackle",
+        "Growl",
+        "LeechSeed",
+        "Poisonpowder"
+      ],
+      "pp": [
+        35,
+        40,
+        10,
+        35
+      ],
+      "species": "Ivysaur",
+      "status": "None"
+    }
+  ],
+  "party_count": 1,
+  "pc_phase": null,
+  "player_facing": "Down",
+  "player_movement_state": "Idle",
+  "player_name": "RED",
+  "player_x": 25,
+  "player_y": 25,
+  "screen": "battle",
+  "script_awaiting_battle": false,
+  "script_effect": null,
+  "script_running": false,
+  "shop_phase": null,
+  "text_speed_delay_frames": 3,
+  "warp_fade": "Idle"
+}

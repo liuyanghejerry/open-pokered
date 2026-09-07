@@ -1,0 +1,4 @@
+[resume-reentry] frame=640 screen=overworld map=MtMoonB2F pos=(13,7) party=1 money=1924 effect=None
+ASSIST: restore previously reached Route4 east exit, due to confirmed save last_map bug
+{'ok': True}
+[m13-cerulean] frame=3979 screen=overworld map=CeruleanCity pos=(19,18) party=1 money=1924 effect=None

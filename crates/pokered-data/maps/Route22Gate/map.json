@@ -15,22 +15,26 @@
     {
       "x": 4,
       "y": 7,
-      "destWarpId": 0
+      "destWarpId": 0,
+      "destMap": "Route22"
     },
     {
       "x": 5,
       "y": 7,
-      "destWarpId": 0
+      "destWarpId": 0,
+      "destMap": "Route22"
     },
     {
       "x": 4,
       "y": 0,
-      "destWarpId": 0
+      "destWarpId": 0,
+      "destMap": "Route23"
     },
     {
       "x": 5,
       "y": 0,
-      "destWarpId": 1
+      "destWarpId": 1,
+      "destMap": "Route23"
     }
   ],
   "npcs": [

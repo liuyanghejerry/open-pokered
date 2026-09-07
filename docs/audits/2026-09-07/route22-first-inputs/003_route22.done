@@ -1,0 +1,5 @@
+g.nav_to(0,16,'ViridianCity');g.d.drive(['left']*16,frames=32);g.cutscene();g.step(30)
+s=snap('route22-entry');assert s['map_name']=='Route22',s
+checkpoint('m94-route22-entry')
+g.nav_to(30,4,'Route22');checkpoint('m94-route22-rival-ready')
+g.d.drive(['left']*8,frames=16);g.cutscene();g.step(30);snap('route22-rival-battle')

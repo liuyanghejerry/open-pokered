@@ -2,21 +2,32 @@
 // text/SaffronCity.asm) to the real Game DSL API surface. SaffronCity is a
 // dialogue-only city map. It has two NPC states keyed on EVENT_BEAT_SILPH_CO_GIOVANNI:
 // the Rocket occupation (rockets visible) and the liberated city (citizens visible).
-// The show/hide of each NPC object is driven by the runtime's toggleable-objects
-// table (set when Giovanni is beaten in SilphCo11F), so each NPC keeps its single
-// static line and there is no @load / state machine here (the original only calls
-// EnableAutoTextBoxDrawing).
+// SilphCo11F's original global toggle lists are restored here on city entry.
 
 game_scene SaffronCity {
-  // ── On-enter: after the Mr.Fuji rescue (PokemonTower7F sets
-  // EVENT_RESCUED_MR_FUJI), the Rocket guards blocking the Silph Co. entrance
-  // leave (original TOGGLE_SAFFRON_CITY_E/F). OBJ_14 sits on the Silph door's
-  // approach tile (18,22), so this unblocks the Silph Co. warp — required before
-  // Giovanni can be challenged. (The remaining Rockets clear on beating Silph.)
   @load {
-    @if (getFlag("EVENT_RESCUED_MR_FUJI")) {
+    @if (getFlag("EVENT_BEAT_SILPH_CO_GIOVANNI")) {
+      hideObjectByName("SAFFRON_CITY_OBJ_1")
+      hideObjectByName("SAFFRON_CITY_OBJ_2")
+      hideObjectByName("SAFFRON_CITY_OBJ_3")
+      hideObjectByName("SAFFRON_CITY_OBJ_4")
+      hideObjectByName("SAFFRON_CITY_OBJ_5")
+      hideObjectByName("SAFFRON_CITY_OBJ_6")
+      hideObjectByName("SAFFRON_CITY_OBJ_7")
       hideObjectByName("SAFFRON_CITY_OBJ_14")
       hideObjectByName("SAFFRON_CITY_OBJ_15")
+      showObjectByName("SAFFRON_CITY_OBJ_8")
+      showObjectByName("SAFFRON_CITY_OBJ_9")
+      showObjectByName("SAFFRON_CITY_OBJ_10")
+      showObjectByName("SAFFRON_CITY_OBJ_11")
+      showObjectByName("SAFFRON_CITY_OBJ_12")
+      showObjectByName("SAFFRON_CITY_OBJ_13")
+    } @else {
+      // Fuji's rescue clears the Silph entrance before the boss is defeated.
+      @if (getFlag("EVENT_RESCUED_MR_FUJI")) {
+        hideObjectByName("SAFFRON_CITY_OBJ_14")
+        hideObjectByName("SAFFRON_CITY_OBJ_15")
+      }
     }
   }
 

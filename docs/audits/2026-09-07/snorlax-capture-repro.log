@@ -1,0 +1,6 @@
+[resume-reentry] frame=636 screen=overworld map=Route12 pos=(10,61) party=1 money=18209 effect=None
+CHECKPOINT tower-resumed Route12 10 61 [{'hp': 126, 'level': 42, 'max_hp': 133, 'moves': ['MegaDrain', 'Cut', 'LeechSeed', 'RazorLeaf'], 'pp': [7, 30, 10, 18], 'species': 'Venusaur', 'status': 'None'}]
+GAME_LOG /var/folders/d2/2fv86m890m34_13rn_t3d79w0000gn/T/pokered-run-sm_candx/game.log
+CATCH_ACTION GreatBall HP 133 enemy 55 qty 10
+CATCH_ACTION GreatBall HP 133 enemy 55 qty 9
+CHECKPOINT m38-snorlax-caught Route12 10 61 [{'hp': 133, 'level': 42, 'max_hp': 133, 'moves': ['MegaDrain', 'Cut', 'LeechSeed', 'RazorLeaf'], 'pp': [4, 30, 10, 18], 'species': 'Venusaur', 'status': 'None'}, {'hp': 55, 'level': 30, 'max_hp': 136, 'moves': ['Headbutt', 'Amnesia', 'Rest', 'None'], 'pp': [15, 20, 10, 0], 'species': 'Snorlax', 'status': 'None'}]

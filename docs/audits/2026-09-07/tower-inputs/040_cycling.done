@@ -1,0 +1,16 @@
+g.battle_loop=old_battle
+g.nav_to(41,9,'Route18');g.d.drive(['left']*16,frames=24);g.step(40)
+assert g.st()['map_name']=='Route18Gate1F',g.st()
+g.nav_warp(0,5,'Route18Gate1F','Route18')
+g.nav_to(8,0,'Route18');g.d.drive(['up']*8,frames=16)
+assert g.st()['map_name']=='Route17',g.st()
+snap('cycling-road-south-entry')
+base_drive=g.d.drive
+def brake_drive(buttons,frames=None):
+ s=g.st()
+ if s['map_name']=='Route17' and s['screen']=='overworld' and frames is not None and frames>len(buttons):buttons=list(buttons)+['b']*(frames-len(buttons))
+ return base_drive(buttons,frames)
+g.d.drive=brake_drive
+g.nav_to(8,0,'Route17');g.d.drive(['up']*8,frames=16);g.step(40)
+assert g.st()['map_name']=='Route16',g.st()
+checkpoint('m48-cycling-north')

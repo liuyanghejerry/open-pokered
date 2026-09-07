@@ -1,0 +1,29 @@
+assert g.d.cmd(cmd='get_flags')['data'].get('EVENT_BEAT_SABRINA'),g.st()
+for edge in [(11,11,1,5),(1,3,15,5),(19,3,15,15),(19,17,11,15)]:same_map_warp(*edge,'SaffronGym')
+g.nav_warp(8,17,'SaffronGym','SaffronCity',approach='down');g.cutscene();g.step(40)
+checkpoint('m70-saffron-six-badges')
+g.tap('start',8);g.tap('down',8);g.tap('a',8);g.tap('down',8);g.tap('down',8);g.tap('a',8);g.tap('a',8)
+snap('fly-pallet-selected');g.tap('a',8);g.cutscene();g.step(180);g.cutscene()
+assert g.st()['map_name']=='PalletTown',g.st()
+g.nav_to(8,16,'PalletTown');g.face('left');checkpoint('m71-pallet-surf-bank')
+g.tap('start',8);g.tap('a',8);g.tap('down',8);g.tap('a',8);g.tap('a',8);g.cutscene();g.step(60)
+snap('pallet-surf-start')
+def straight_to(x,y,map_name):
+ for _ in range(160):
+  s=g.st()
+  assert s['map_name']==map_name,s
+  if s['screen']=='battle':g.battle_loop(prefer='run');g.cutscene();continue
+  if s['script_running'] or s['dialogue_state']:g.cutscene();continue
+  if (s['player_x'],s['player_y'])==(x,y):return
+  direction='right' if s['player_x']<x else 'left' if s['player_x']>x else 'down' if s['player_y']<y else 'up'
+  g.d.drive([direction]*8,frames=16)
+ raise NavError('straight navigation exhausted')
+straight_to(7,17,'PalletTown');g.d.drive(['down']*16,frames=32);g.cutscene();g.step(40)
+assert g.st()['map_name']=='Route21',g.st()
+straight_to(7,15,'Route21');straight_to(2,15,'Route21');straight_to(2,89,'Route21')
+g.d.drive(['down']*16,frames=32);g.cutscene();g.step(40)
+assert g.st()['map_name']=='CinnabarIsland',g.st()
+straight_to(2,4,'CinnabarIsland');straight_to(4,4,'CinnabarIsland')
+checkpoint('m72-cinnabar-arrived')
+g.heal_pokecenter((11,11),'CinnabarIsland','CinnabarPokecenter');g.cutscene();g.step(60)
+checkpoint('m72-cinnabar-healed')

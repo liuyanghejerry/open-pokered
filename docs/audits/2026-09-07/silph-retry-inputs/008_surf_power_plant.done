@@ -1,0 +1,39 @@
+g.tap('start',8);g.tap('a',8);g.tap('down',8);g.tap('a',8);g.tap('a',8);g.cutscene();g.step(60)
+snap('route10-surf-start')
+def straight_to(x,y,map_name):
+ for _ in range(160):
+  s=g.st()
+  assert s['map_name']==map_name,s
+  if s['screen']=='battle':g.battle_loop(prefer='run');g.cutscene();continue
+  if s['script_running'] or s['dialogue_state']:g.cutscene();continue
+  if (s['player_x'],s['player_y'])==(x,y):return
+  direction='right' if s['player_x']<x else 'left' if s['player_x']>x else 'down' if s['player_y']<y else 'up'
+  g.d.drive([direction]*8,frames=16)
+ raise NavError('straight navigation exhausted')
+straight_to(3,3,'Route10');straight_to(17,3,'Route10');straight_to(17,46,'Route10');straight_to(3,46,'Route10');straight_to(3,45,'Route10')
+snap('route10-surf-landed');g.nav_warp(6,39,'Route10','PowerPlant')
+checkpoint('m63-power-plant')
+g.nav_to(4,10,'PowerPlant');g.face('up');checkpoint('m64-zapdos-ready')
+g.tap('a',20);g.cutscene();g.step(60)
+s=snap('zapdos-battle');assert s['screen']=='battle' and s['battle_live']['enemy']['species']=='Zapdos' and s['battle_live']['enemy']['level']==50,s
+for _ in range(150):
+ if g.st()['battle_phase']=='PlayerMenu':break
+ g.tap('a',10)
+assert g.st()['battle_phase']=='PlayerMenu',g.st()
+g.d.drive(['down','left'],frames=10);g.tap('a',4);assert g._await_phase('BagSelect',120)
+for _ in range(30):
+ menu=g.st()['battle_bag'];target=next(i for i,v in enumerate(menu['items']) if v['item']=='MasterBall')
+ if menu['cursor']==target:break
+ g.tap('down',4)
+snap('zapdos-master-ball-selected');g.tap('a',8)
+for _ in range(400):
+ s=g.st()
+ if s['screen']!='battle':break
+ g.tap('a',10)
+if g.st()['screen']=='pokedex':
+ from scenarios import dismiss_dex_screen
+ dismiss_dex_screen(g)
+g.cutscene();g.step(60)
+snap('zapdos-capture-result')
+assert any(p['species']=='Zapdos' for p in g.d.cmd(cmd='get_party')['data']),g.st()
+checkpoint('m65-zapdos-caught')

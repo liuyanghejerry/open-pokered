@@ -1,0 +1,12 @@
+for _ in range(200):
+ if g.st()['battle_phase']=='PlayerMenu':break
+ g.tap('a',10)
+assert g.st()['battle_phase']=='PlayerMenu',g.st()
+g.d.drive(['up','right'],frames=10);g.tap('a',4)
+assert g._await_phase('PartySelect',120)
+g.tap('down',8);g.tap('a',8);g.tap('a',8);g.step(30)
+snap('giovanni-snorlax-switch')
+g.battle_loop(prefer='fight');g.cutscene();g.step(60)
+snap('giovanni-silph-result')
+assert g.d.cmd(cmd='get_flags')['data'].get('EVENT_BEAT_SILPH_CO_GIOVANNI'),g.st()
+checkpoint('m58-silph-giovanni')

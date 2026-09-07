@@ -1,0 +1,6 @@
+g.d.drive(['down']*8,frames=16);g.cutscene();g.step(90)
+s=snap('victory-road-hole-fixed');assert s['map_name']=='VictoryRoad2F' and (s['player_x'],s['player_y'])==(22,16),s
+checkpoint('m115-victory-road-hole-landed')
+g.nav_to(9,16,'VictoryRoad2F');g.cutscene();g.step(60);checkpoint('m116-victory-road-final-switch')
+g.nav_warp(25,14,'VictoryRoad2F','VictoryRoad3F');checkpoint('m117-victory-road-east-stairs')
+g.nav_warp(26,8,'VictoryRoad3F','VictoryRoad2F');checkpoint('m118-victory-road-exit-ready')

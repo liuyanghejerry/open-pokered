@@ -1,0 +1,114 @@
+[resume-reentry] frame=635 screen=overworld map=Route22 pos=(8,5) party=5 money=4987 effect=None
+CHECKPOINT league-resumed Route22 8 5 [{'hp': 94, 'level': 52, 'max_hp': 162, 'moves': ['Thunderbolt', 'DrillPeck', 'Thunder', 'Fly'], 'pp': [12, 17, 10, 15], 'species': 'Zapdos', 'status': 'None'}, {'hp': 137, 'level': 30, 'max_hp': 137, 'moves': ['IceBeam', 'Surf', 'Rest', 'Strength'], 'pp': [10, 15, 10, 15], 'species': 'Snorlax', 'status': 'None'}, {'hp': 52, 'level': 24, 'max_hp': 52, 'moves': ['Peck', 'Growl', 'FuryAttack', 'Fly'], 'pp': [35, 40, 20, 15], 'species': 'Doduo', 'status': 'None'}, {'hp': 64, 'level': 15, 'max_hp': 64, 'moves': ['WaterGun', 'Growl', 'None', 'None'], 'pp': [25, 40, 0, 0], 'species': 'Lapras', 'status': 'None'}, {'hp': 164, 'level': 52, 'max_hp': 164, 'moves': ['MegaDrain', 'Cut', 'LeechSeed', 'Growth'], 'pp': [9, 30, 9, 40], 'species': 'Venusaur', 'status': 'None'}]
+GAME_LOG /var/folders/d2/2fv86m890m34_13rn_t3d79w0000gn/T/pokered-run-zpe_zqfw/game.log
+READY
+RUN 001_helpers.py
+DONE 001_helpers.py
+RUN 002_route23.py
+CHECKPOINT m97-route23-entered Route23 7 139 [{'hp': 94, 'level': 52, 'max_hp': 162, 'moves': ['Thunderbolt', 'DrillPeck', 'Thunder', 'Fly'], 'pp': [12, 17, 10, 15], 'species': 'Zapdos', 'status': 'None'}, {'hp': 137, 'level': 30, 'max_hp': 137, 'moves': ['IceBeam', 'Surf', 'Rest', 'Strength'], 'pp': [10, 15, 10, 15], 'species': 'Snorlax', 'status': 'None'}, {'hp': 52, 'level': 24, 'max_hp': 52, 'moves': ['Peck', 'Growl', 'FuryAttack', 'Fly'], 'pp': [35, 40, 20, 15], 'species': 'Doduo', 'status': 'None'}, {'hp': 64, 'level': 15, 'max_hp': 64, 'moves': ['WaterGun', 'Growl', 'None', 'None'], 'pp': [25, 40, 0, 0], 'species': 'Lapras', 'status': 'None'}, {'hp': 164, 'level': 52, 'max_hp': 164, 'moves': ['MegaDrain', 'Cut', 'LeechSeed', 'Growth'], 'pp': [9, 30, 9, 40], 'species': 'Venusaur', 'status': 'None'}]
+CHECKPOINT m98-route23-rainbow-check Route23 10 105 [{'hp': 94, 'level': 52, 'max_hp': 162, 'moves': ['Thunderbolt', 'DrillPeck', 'Thunder', 'Fly'], 'pp': [12, 17, 10, 15], 'species': 'Zapdos', 'status': 'None'}, {'hp': 137, 'level': 30, 'max_hp': 137, 'moves': ['IceBeam', 'Surf', 'Rest', 'Strength'], 'pp': [10, 15, 10, 15], 'species': 'Snorlax', 'status': 'None'}, {'hp': 52, 'level': 24, 'max_hp': 52, 'moves': ['Peck', 'Growl', 'FuryAttack', 'Fly'], 'pp': [35, 40, 20, 15], 'species': 'Doduo', 'status': 'None'}, {'hp': 64, 'level': 15, 'max_hp': 64, 'moves': ['WaterGun', 'Growl', 'None', 'None'], 'pp': [25, 40, 0, 0], 'species': 'Lapras', 'status': 'None'}, {'hp': 164, 'level': 52, 'max_hp': 164, 'moves': ['MegaDrain', 'Cut', 'LeechSeed', 'Growth'], 'pp': [9, 30, 9, 40], 'species': 'Venusaur', 'status': 'None'}]
+DONE 002_route23.py
+RUN 003_route23_surf.py
+CHECKPOINT m99-route23-marsh-check Route23 12 84 [{'hp': 94, 'level': 52, 'max_hp': 162, 'moves': ['Thunderbolt', 'DrillPeck', 'Thunder', 'Fly'], 'pp': [12, 17, 10, 15], 'species': 'Zapdos', 'status': 'None'}, {'hp': 137, 'level': 30, 'max_hp': 137, 'moves': ['IceBeam', 'Surf', 'Rest', 'Strength'], 'pp': [10, 15, 10, 15], 'species': 'Snorlax', 'status': 'None'}, {'hp': 52, 'level': 24, 'max_hp': 52, 'moves': ['Peck', 'Growl', 'FuryAttack', 'Fly'], 'pp': [35, 40, 20, 15], 'species': 'Doduo', 'status': 'None'}, {'hp': 64, 'level': 15, 'max_hp': 64, 'moves': ['WaterGun', 'Growl', 'None', 'None'], 'pp': [25, 40, 0, 0], 'species': 'Lapras', 'status': 'None'}, {'hp': 164, 'level': 52, 'max_hp': 164, 'moves': ['MegaDrain', 'Cut', 'LeechSeed', 'Growth'], 'pp': [9, 30, 9, 40], 'species': 'Venusaur', 'status': 'None'}]
+CHECKPOINT m100-route23-surf-completed Route23 10 71 [{'hp': 94, 'level': 52, 'max_hp': 162, 'moves': ['Thunderbolt', 'DrillPeck', 'Thunder', 'Fly'], 'pp': [12, 17, 10, 15], 'species': 'Zapdos', 'status': 'None'}, {'hp': 137, 'level': 30, 'max_hp': 137, 'moves': ['IceBeam', 'Surf', 'Rest', 'Strength'], 'pp': [10, 15, 10, 15], 'species': 'Snorlax', 'status': 'None'}, {'hp': 52, 'level': 24, 'max_hp': 52, 'moves': ['Peck', 'Growl', 'FuryAttack', 'Fly'], 'pp': [35, 40, 20, 15], 'species': 'Doduo', 'status': 'None'}, {'hp': 64, 'level': 15, 'max_hp': 64, 'moves': ['WaterGun', 'Growl', 'None', 'None'], 'pp': [25, 40, 0, 0], 'species': 'Lapras', 'status': 'None'}, {'hp': 164, 'level': 52, 'max_hp': 164, 'moves': ['MegaDrain', 'Cut', 'LeechSeed', 'Growth'], 'pp': [9, 30, 9, 40], 'species': 'Venusaur', 'status': 'None'}]
+CHECKPOINT m101-route23-earth-check-ready Route23 6 36 [{'hp': 94, 'level': 52, 'max_hp': 162, 'moves': ['Thunderbolt', 'DrillPeck', 'Thunder', 'Fly'], 'pp': [12, 17, 10, 15], 'species': 'Zapdos', 'status': 'None'}, {'hp': 137, 'level': 30, 'max_hp': 137, 'moves': ['IceBeam', 'Surf', 'Rest', 'Strength'], 'pp': [10, 15, 10, 15], 'species': 'Snorlax', 'status': 'None'}, {'hp': 52, 'level': 24, 'max_hp': 52, 'moves': ['Peck', 'Growl', 'FuryAttack', 'Fly'], 'pp': [35, 40, 20, 15], 'species': 'Doduo', 'status': 'None'}, {'hp': 64, 'level': 15, 'max_hp': 64, 'moves': ['WaterGun', 'Growl', 'None', 'None'], 'pp': [25, 40, 0, 0], 'species': 'Lapras', 'status': 'None'}, {'hp': 164, 'level': 52, 'max_hp': 164, 'moves': ['MegaDrain', 'Cut', 'LeechSeed', 'Growth'], 'pp': [9, 30, 9, 40], 'species': 'Venusaur', 'status': 'None'}]
+DONE 003_route23_surf.py
+RUN 004_victory_road.py
+CHECKPOINT m102-victory-road-entry VictoryRoad1F 8 17 [{'hp': 94, 'level': 52, 'max_hp': 162, 'moves': ['Thunderbolt', 'DrillPeck', 'Thunder', 'Fly'], 'pp': [12, 17, 10, 15], 'species': 'Zapdos', 'status': 'None'}, {'hp': 137, 'level': 30, 'max_hp': 137, 'moves': ['IceBeam', 'Surf', 'Rest', 'Strength'], 'pp': [10, 15, 10, 15], 'species': 'Snorlax', 'status': 'None'}, {'hp': 52, 'level': 24, 'max_hp': 52, 'moves': ['Peck', 'Growl', 'FuryAttack', 'Fly'], 'pp': [35, 40, 20, 15], 'species': 'Doduo', 'status': 'None'}, {'hp': 64, 'level': 15, 'max_hp': 64, 'moves': ['WaterGun', 'Growl', 'None', 'None'], 'pp': [25, 40, 0, 0], 'species': 'Lapras', 'status': 'None'}, {'hp': 164, 'level': 52, 'max_hp': 164, 'moves': ['MegaDrain', 'Cut', 'LeechSeed', 'Growth'], 'pp': [9, 30, 9, 40], 'species': 'Venusaur', 'status': 'None'}]
+VICTORY_ROAD_NPCS {'ok': True, 'data': [{'facing': 'Right', 'home_x': 7, 'home_y': 5, 'npc_index': 0, 'scripted_path_remaining': 0, 'sprite_id': 6, 'text_id': 1, 'visible': True, 'walk_counter': 0, 'x': 7, 'y': 5}, {'facing': 'Down', 'home_x': 3, 'home_y': 2, 'npc_index': 1, 'scripted_path_remaining': 0, 'sprite_id': 7, 'text_id': 2, 'visible': True, 'walk_counter': 0, 'x': 3, 'y': 2}, {'facing': 'Down', 'home_x': 11, 'home_y': 0, 'npc_index': 2, 'scripted_path_remaining': 0, 'sprite_id': 61, 'text_id': 3, 'visible': True, 'walk_counter': 0, 'x': 11, 'y': 0}, {'facing': 'Down', 'home_x': 9, 'home_y': 2, 'npc_index': 3, 'scripted_path_remaining': 0, 'sprite_id': 61, 'text_id': 4, 'visible': True, 'walk_counter': 0, 'x': 9, 'y': 2}, {'facing': 'Down', 'home_x': 5, 'home_y': 15, 'npc_index': 4, 'scripted_path_remaining': 0, 'sprite_id': 63, 'text_id': 5, 'visible': True, 'walk_counter': 0, 'x': 5, 'y': 15}, {'facing': 'Down', 'home_x': 14, 'home_y': 2, 'npc_index': 5, 'scripted_path_remaining': 0, 'sprite_id': 63, 'text_id': 6, 'visible': True, 'walk_counter': 0, 'x': 14, 'y': 2}, {'facing': 'Down', 'home_x': 2, 'home_y': 10, 'npc_index': 6, 'scripted_path_remaining': 0, 'sprite_id': 63, 'text_id': 7, 'visible': True, 'walk_counter': 0, 'x': 2, 'y': 10}]}
+DONE 004_victory_road.py
+RUN 005_boulder_interaction.py
+Traceback (most recent call last):
+  File "/tmp/pokered-completion-20260907-league-gate-fixed/controller.py", line 82, in <module>
+    exec(compile(__task_path.read_text(),str(__task_path),'exec'),globals())
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/pokered-completion-20260907-league-gate-fixed/inbox/005_boulder_interaction.py", line 1, in <module>
+    g.nav_to(5,16,'VictoryRoad1F');g.face('up');checkpoint('m103-victory-road-boulder-ready')
+                                                ~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/pokered-completion-20260907-league-gate-fixed/controller.py", line 45, in checkpoint
+    assert s['screen']=='overworld' and not s['script_running'],s
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: {'active_script_effect': None, 'battle_bag': None, 'battle_inventory': [{'item': 'Bicycle', 'qty': 1}, {'item': 'ParlyzHeal', 'qty': 3}, {'item': 'Awakening', 'qty': 3}, {'item': 'BurnHeal', 'qty': 2}, {'item': 'RareCandy', 'qty': 1}, {'item': 'PokeFlute', 'qty': 1}, {'item': 'Hm03', 'qty': 1}, {'item': 'Hm04', 'qty': 1}, {'item': 'Revive', 'qty': 5}, {'item': 'FullHeal', 'qty': 5}, {'item': 'GreatBall', 'qty': 13}, {'item': 'Hm02', 'qty': 1}, {'item': 'HyperPotion', 'qty': 12}], 'battle_live': {'enemy': {'hp': 107, 'level': 41, 'max_hp': 107, 'species': 'Graveler', 'status': 'None'}, 'enemy_party': [{'hp': 107, 'level': 41, 'species': 'Graveler'}], 'player': {'hp': 94, 'level': 52, 'max_hp': 162, 'species': 'Zapdos', 'status': 'None'}, 'player_party': [{'hp': 94, 'level': 52, 'max_hp': 162, 'species': 'Zapdos'}, {'hp': 137, 'level': 30, 'max_hp': 137, 'species': 'Snorlax'}, {'hp': 52, 'level': 24, 'max_hp': 52, 'species': 'Doduo'}, {'hp': 64, 'level': 15, 'max_hp': 64, 'species': 'Lapras'}, {'hp': 164, 'level': 52, 'max_hp': 164, 'species': 'Venusaur'}]}, 'battle_message': None, 'battle_moves': None, 'battle_party_cursor': 0, 'battle_phase': 'Intro { phase: WildReveal, wait_frames: 0 }', 'choice': None, 'coins': 0, 'dialogue': None, 'dialogue_state': None, 'frame_count': 12481, 'map_id': 108, 'map_name': 'VictoryRoad1F', 'money': 4987, 'party': [{'hp': 94, 'level': 52, 'max_hp': 162, 'moves': ['Thunderbolt', 'DrillPeck', 'Thunder', 'Fly'], 'pp': [12, 17, 10, 15], 'species': 'Zapdos', 'status': 'None'}, {'hp': 137, 'level': 30, 'max_hp': 137, 'moves': ['IceBeam', 'Surf', 'Rest', 'Strength'], 'pp': [10, 15, 10, 15], 'species': 'Snorlax', 'status': 'None'}, {'hp': 52, 'level': 24, 'max_hp': 52, 'moves': ['Peck', 'Growl', 'FuryAttack', 'Fly'], 'pp': [35, 40, 20, 15], 'species': 'Doduo', 'status': 'None'}, {'hp': 64, 'level': 15, 'max_hp': 64, 'moves': ['WaterGun', 'Growl', 'None', 'None'], 'pp': [25, 40, 0, 0], 'species': 'Lapras', 'status': 'None'}, {'hp': 164, 'level': 52, 'max_hp': 164, 'moves': ['MegaDrain', 'Cut', 'LeechSeed', 'Growth'], 'pp': [9, 30, 9, 40], 'species': 'Venusaur', 'status': 'None'}], 'party_count': 5, 'pc_phase': None, 'player_facing': 'Up', 'player_movement_state': 'Idle', 'player_name': 'RED', 'player_x': 5, 'player_y': 16, 'screen': 'battle', 'script_awaiting_battle': False, 'script_effect': None, 'script_running': False, 'shop_phase': None, 'text_speed_delay_frames': 3, 'warp_fade': 'Idle'}
+FAILED 005_boulder_interaction.py
+RUN 006_boulder_retry.py
+CHECKPOINT m103-victory-road-boulder-ready VictoryRoad1F 5 16 [{'hp': 94, 'level': 52, 'max_hp': 162, 'moves': ['Thunderbolt', 'DrillPeck', 'Thunder', 'Fly'], 'pp': [12, 17, 10, 15], 'species': 'Zapdos', 'status': 'None'}, {'hp': 137, 'level': 30, 'max_hp': 137, 'moves': ['IceBeam', 'Surf', 'Rest', 'Strength'], 'pp': [10, 15, 10, 15], 'species': 'Snorlax', 'status': 'None'}, {'hp': 52, 'level': 24, 'max_hp': 52, 'moves': ['Peck', 'Growl', 'FuryAttack', 'Fly'], 'pp': [35, 40, 20, 15], 'species': 'Doduo', 'status': 'None'}, {'hp': 64, 'level': 15, 'max_hp': 64, 'moves': ['WaterGun', 'Growl', 'None', 'None'], 'pp': [25, 40, 0, 0], 'species': 'Lapras', 'status': 'None'}, {'hp': 164, 'level': 52, 'max_hp': 164, 'moves': ['MegaDrain', 'Cut', 'LeechSeed', 'Growth'], 'pp': [9, 30, 9, 40], 'species': 'Venusaur', 'status': 'None'}]
+CHECKPOINT m104-victory-road-first-switch VictoryRoad1F 5 16 [{'hp': 94, 'level': 52, 'max_hp': 162, 'moves': ['Thunderbolt', 'DrillPeck', 'Thunder', 'Fly'], 'pp': [12, 17, 10, 15], 'species': 'Zapdos', 'status': 'None'}, {'hp': 137, 'level': 30, 'max_hp': 137, 'moves': ['IceBeam', 'Surf', 'Rest', 'Strength'], 'pp': [10, 15, 10, 15], 'species': 'Snorlax', 'status': 'None'}, {'hp': 52, 'level': 24, 'max_hp': 52, 'moves': ['Peck', 'Growl', 'FuryAttack', 'Fly'], 'pp': [35, 40, 20, 15], 'species': 'Doduo', 'status': 'None'}, {'hp': 64, 'level': 15, 'max_hp': 64, 'moves': ['WaterGun', 'Growl', 'None', 'None'], 'pp': [25, 40, 0, 0], 'species': 'Lapras', 'status': 'None'}, {'hp': 164, 'level': 52, 'max_hp': 164, 'moves': ['MegaDrain', 'Cut', 'LeechSeed', 'Growth'], 'pp': [9, 30, 9, 40], 'species': 'Venusaur', 'status': 'None'}]
+DONE 006_boulder_retry.py
+RUN 007_victory2f.py
+CHECKPOINT m105-victory-road-2f VictoryRoad2F 0 8 [{'hp': 98, 'level': 53, 'max_hp': 166, 'moves': ['Thunderbolt', 'DrillPeck', 'Thunder', 'Fly'], 'pp': [11, 13, 10, 15], 'species': 'Zapdos', 'status': 'None'}, {'hp': 137, 'level': 30, 'max_hp': 137, 'moves': ['IceBeam', 'Surf', 'Rest', 'Strength'], 'pp': [10, 15, 10, 15], 'species': 'Snorlax', 'status': 'None'}, {'hp': 52, 'level': 24, 'max_hp': 52, 'moves': ['Peck', 'Growl', 'FuryAttack', 'Fly'], 'pp': [35, 40, 20, 15], 'species': 'Doduo', 'status': 'None'}, {'hp': 64, 'level': 15, 'max_hp': 64, 'moves': ['WaterGun', 'Growl', 'None', 'None'], 'pp': [25, 40, 0, 0], 'species': 'Lapras', 'status': 'None'}, {'hp': 164, 'level': 52, 'max_hp': 164, 'moves': ['MegaDrain', 'Cut', 'LeechSeed', 'Growth'], 'pp': [9, 30, 9, 40], 'species': 'Venusaur', 'status': 'None'}]
+DONE 007_victory2f.py
+RUN 008_victory_switch2f.py
+CHECKPOINT m106-victory-road-2f-switch1 VictoryRoad2F 1 16 [{'hp': 98, 'level': 53, 'max_hp': 166, 'moves': ['Thunderbolt', 'DrillPeck', 'Thunder', 'Fly'], 'pp': [11, 13, 10, 15], 'species': 'Zapdos', 'status': 'None'}, {'hp': 137, 'level': 30, 'max_hp': 137, 'moves': ['IceBeam', 'Surf', 'Rest', 'Strength'], 'pp': [10, 15, 10, 15], 'species': 'Snorlax', 'status': 'None'}, {'hp': 52, 'level': 24, 'max_hp': 52, 'moves': ['Peck', 'Growl', 'FuryAttack', 'Fly'], 'pp': [35, 40, 20, 15], 'species': 'Doduo', 'status': 'None'}, {'hp': 64, 'level': 15, 'max_hp': 64, 'moves': ['WaterGun', 'Growl', 'None', 'None'], 'pp': [25, 40, 0, 0], 'species': 'Lapras', 'status': 'None'}, {'hp': 164, 'level': 52, 'max_hp': 164, 'moves': ['MegaDrain', 'Cut', 'LeechSeed', 'Growth'], 'pp': [9, 30, 9, 40], 'species': 'Venusaur', 'status': 'None'}]
+CHECKPOINT m107-victory-road-3f VictoryRoad3F 23 7 [{'hp': 98, 'level': 53, 'max_hp': 166, 'moves': ['Thunderbolt', 'DrillPeck', 'Thunder', 'Fly'], 'pp': [11, 13, 10, 15], 'species': 'Zapdos', 'status': 'None'}, {'hp': 137, 'level': 30, 'max_hp': 137, 'moves': ['IceBeam', 'Surf', 'Rest', 'Strength'], 'pp': [10, 15, 10, 15], 'species': 'Snorlax', 'status': 'None'}, {'hp': 52, 'level': 24, 'max_hp': 52, 'moves': ['Peck', 'Growl', 'FuryAttack', 'Fly'], 'pp': [35, 40, 20, 15], 'species': 'Doduo', 'status': 'None'}, {'hp': 64, 'level': 15, 'max_hp': 64, 'moves': ['WaterGun', 'Growl', 'None', 'None'], 'pp': [25, 40, 0, 0], 'species': 'Lapras', 'status': 'None'}, {'hp': 164, 'level': 52, 'max_hp': 164, 'moves': ['MegaDrain', 'Cut', 'LeechSeed', 'Growth'], 'pp': [9, 30, 9, 40], 'species': 'Venusaur', 'status': 'None'}]
+DONE 008_victory_switch2f.py
+RUN 009_victory3f_switch.py
+CHECKPOINT m108-victory-road-3f-switch VictoryRoad3F 3 5 [{'hp': 98, 'level': 53, 'max_hp': 166, 'moves': ['Thunderbolt', 'DrillPeck', 'Thunder', 'Fly'], 'pp': [11, 13, 10, 15], 'species': 'Zapdos', 'status': 'None'}, {'hp': 137, 'level': 30, 'max_hp': 137, 'moves': ['IceBeam', 'Surf', 'Rest', 'Strength'], 'pp': [10, 15, 10, 15], 'species': 'Snorlax', 'status': 'None'}, {'hp': 52, 'level': 24, 'max_hp': 52, 'moves': ['Peck', 'Growl', 'FuryAttack', 'Fly'], 'pp': [35, 40, 20, 15], 'species': 'Doduo', 'status': 'None'}, {'hp': 64, 'level': 15, 'max_hp': 64, 'moves': ['WaterGun', 'Growl', 'None', 'None'], 'pp': [25, 40, 0, 0], 'species': 'Lapras', 'status': 'None'}, {'hp': 164, 'level': 52, 'max_hp': 164, 'moves': ['MegaDrain', 'Cut', 'LeechSeed', 'Growth'], 'pp': [9, 30, 9, 40], 'species': 'Venusaur', 'status': 'None'}]
+CHECKPOINT m109-victory-road-hole-ready VictoryRoad3F 23 14 [{'hp': 98, 'level': 53, 'max_hp': 166, 'moves': ['Thunderbolt', 'DrillPeck', 'Thunder', 'Fly'], 'pp': [11, 13, 10, 15], 'species': 'Zapdos', 'status': 'None'}, {'hp': 137, 'level': 30, 'max_hp': 137, 'moves': ['IceBeam', 'Surf', 'Rest', 'Strength'], 'pp': [10, 15, 10, 15], 'species': 'Snorlax', 'status': 'None'}, {'hp': 52, 'level': 24, 'max_hp': 52, 'moves': ['Peck', 'Growl', 'FuryAttack', 'Fly'], 'pp': [35, 40, 20, 15], 'species': 'Doduo', 'status': 'None'}, {'hp': 64, 'level': 15, 'max_hp': 64, 'moves': ['WaterGun', 'Growl', 'None', 'None'], 'pp': [25, 40, 0, 0], 'species': 'Lapras', 'status': 'None'}, {'hp': 164, 'level': 52, 'max_hp': 164, 'moves': ['MegaDrain', 'Cut', 'LeechSeed', 'Growth'], 'pp': [9, 30, 9, 40], 'species': 'Venusaur', 'status': 'None'}]
+DONE 009_victory3f_switch.py
+RUN 010_victory_hole_repeat.py
+CHECKPOINT m110-victory-road-hole-blocked VictoryRoad3F 23 15 [{'hp': 98, 'level': 53, 'max_hp': 166, 'moves': ['Thunderbolt', 'DrillPeck', 'Thunder', 'Fly'], 'pp': [11, 13, 10, 15], 'species': 'Zapdos', 'status': 'None'}, {'hp': 137, 'level': 30, 'max_hp': 137, 'moves': ['IceBeam', 'Surf', 'Rest', 'Strength'], 'pp': [10, 15, 10, 15], 'species': 'Snorlax', 'status': 'None'}, {'hp': 52, 'level': 24, 'max_hp': 52, 'moves': ['Peck', 'Growl', 'FuryAttack', 'Fly'], 'pp': [35, 40, 20, 15], 'species': 'Doduo', 'status': 'None'}, {'hp': 64, 'level': 15, 'max_hp': 64, 'moves': ['WaterGun', 'Growl', 'None', 'None'], 'pp': [25, 40, 0, 0], 'species': 'Lapras', 'status': 'None'}, {'hp': 164, 'level': 52, 'max_hp': 164, 'moves': ['MegaDrain', 'Cut', 'LeechSeed', 'Growth'], 'pp': [9, 30, 9, 40], 'species': 'Venusaur', 'status': 'None'}]
+Traceback (most recent call last):
+  File "/Users/liuyanghe02/develop/open-pokered-3/scripts/playthrough.py", line 689, in nav_warp
+    self.nav_to(x, y, map_name=from_map, tries=tries)
+    ~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/pokered-completion-20260907-league-gate-fixed/inbox/001_helpers.py", line 107, in live_map_nav
+  File "/Users/liuyanghe02/develop/open-pokered-3/docs/audits/2026-09-06/playthrough/navigation.py", line 60, in nav_to
+    if not path:raise NavError(f'no path {cm} {(px,py)} -> {(x,y)}')
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+playthrough.NavError: no path VictoryRoad3F (23, 15) -> (27, 15)
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/tmp/pokered-completion-20260907-league-gate-fixed/controller.py", line 82, in <module>
+    exec(compile(__task_path.read_text(),str(__task_path),'exec'),globals())
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/pokered-completion-20260907-league-gate-fixed/inbox/010_victory_hole_repeat.py", line 6, in <module>
+    g.nav_warp(27,15,'VictoryRoad3F','VictoryRoad2F');checkpoint('m111-victory-road-2f-east')
+    ~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/liuyanghe02/develop/open-pokered-3/scripts/playthrough.py", line 697, in nav_warp
+    self.nav_to(*inner, map_name=from_map,
+    ~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                tries=tries)
+                ^^^^^^^^^^^^
+  File "/tmp/pokered-completion-20260907-league-gate-fixed/inbox/001_helpers.py", line 107, in live_map_nav
+  File "/Users/liuyanghe02/develop/open-pokered-3/docs/audits/2026-09-06/playthrough/navigation.py", line 60, in nav_to
+    if not path:raise NavError(f'no path {cm} {(px,py)} -> {(x,y)}')
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+playthrough.NavError: no path VictoryRoad3F (23, 15) -> (27, 16)
+FAILED 010_victory_hole_repeat.py
+RUN 011_strength_passage.py
+DONE 011_strength_passage.py
+RUN 012_victory_exit.py
+Traceback (most recent call last):
+  File "/Users/liuyanghe02/develop/open-pokered-3/scripts/playthrough.py", line 689, in nav_warp
+    self.nav_to(x, y, map_name=from_map, tries=tries)
+    ~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/pokered-completion-20260907-league-gate-fixed/inbox/001_helpers.py", line 107, in live_map_nav
+  File "/Users/liuyanghe02/develop/open-pokered-3/docs/audits/2026-09-06/playthrough/navigation.py", line 60, in nav_to
+    if not path:raise NavError(f'no path {cm} {(px,py)} -> {(x,y)}')
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+playthrough.NavError: no path VictoryRoad3F (24, 10) -> (26, 8)
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/tmp/pokered-completion-20260907-league-gate-fixed/controller.py", line 82, in <module>
+    exec(compile(__task_path.read_text(),str(__task_path),'exec'),globals())
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/pokered-completion-20260907-league-gate-fixed/inbox/012_victory_exit.py", line 1, in <module>
+    g.nav_warp(26,8,'VictoryRoad3F','VictoryRoad2F');checkpoint('m111-victory-road-exit-stairs')
+    ~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/liuyanghe02/develop/open-pokered-3/scripts/playthrough.py", line 697, in nav_warp
+    self.nav_to(*inner, map_name=from_map,
+    ~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                tries=tries)
+                ^^^^^^^^^^^^
+  File "/tmp/pokered-completion-20260907-league-gate-fixed/inbox/001_helpers.py", line 107, in live_map_nav
+  File "/Users/liuyanghe02/develop/open-pokered-3/docs/audits/2026-09-06/playthrough/navigation.py", line 60, in nav_to
+    if not path:raise NavError(f'no path {cm} {(px,py)} -> {(x,y)}')
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+playthrough.NavError: no path VictoryRoad3F (24, 10) -> (26, 9)
+FAILED 012_victory_exit.py
+RUN 013_hole_checkpoint.py
+CHECKPOINT m114-victory-road-hole-retry VictoryRoad3F 23 14 [{'hp': 98, 'level': 53, 'max_hp': 166, 'moves': ['Thunderbolt', 'DrillPeck', 'Thunder', 'Fly'], 'pp': [11, 13, 10, 15], 'species': 'Zapdos', 'status': 'None'}, {'hp': 137, 'level': 30, 'max_hp': 137, 'moves': ['IceBeam', 'Surf', 'Rest', 'Strength'], 'pp': [10, 15, 10, 15], 'species': 'Snorlax', 'status': 'None'}, {'hp': 52, 'level': 24, 'max_hp': 52, 'moves': ['Peck', 'Growl', 'FuryAttack', 'Fly'], 'pp': [35, 40, 20, 15], 'species': 'Doduo', 'status': 'None'}, {'hp': 64, 'level': 15, 'max_hp': 64, 'moves': ['WaterGun', 'Growl', 'None', 'None'], 'pp': [25, 40, 0, 0], 'species': 'Lapras', 'status': 'None'}, {'hp': 164, 'level': 52, 'max_hp': 164, 'moves': ['MegaDrain', 'Cut', 'LeechSeed', 'Growth'], 'pp': [9, 30, 9, 40], 'species': 'Venusaur', 'status': 'None'}]

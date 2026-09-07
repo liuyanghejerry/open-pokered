@@ -1,0 +1,6 @@
+assert g.st()['map_name']=='VictoryRoad3F',g.st()
+g.d.drive(['up']*8,frames=16);g.cutscene();g.step(30)
+if g.st()['screen']=='battle':g.battle_loop(prefer='run');g.cutscene()
+g.d.drive(['down']*8,frames=16);g.cutscene();g.step(90);snap('victory-road-hole-second')
+checkpoint('m110-victory-road-hole-blocked')
+g.nav_warp(27,15,'VictoryRoad3F','VictoryRoad2F');checkpoint('m111-victory-road-2f-east')

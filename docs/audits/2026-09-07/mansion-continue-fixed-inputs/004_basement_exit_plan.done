@@ -1,0 +1,6 @@
+from navigation import bfs,warp_tiles,MAPS
+m=g.d.cmd(cmd='get_map')['data'];MAPS[m['map_name']]['blocks']=m['blocks']
+for target in [(23,22),(18,26),(20,4)]:
+ route=bfs(m['map_name'],(5,14),target,g.live_npcs(m['map_name'])| (warp_tiles(m['map_name'])-{target}))
+ print('BASEMENT_RETURN_ROUTE',target,len(route) if route else None,flush=True)
+snap('mansion-return-route-state')

@@ -1,0 +1,5 @@
+g.nav_warp(9,15,'SilphCo5F','SilphCo9F')
+g.nav_to(17,14,'SilphCo9F');g.nav_warp(17,15,'SilphCo9F','SilphCo5F')
+g.nav_to(20,16,'SilphCo5F');g.face('right');g.tap('a',20);g.cutscene();g.step(40)
+snap('silph-card-key-picked');assert any(i['item']=='CardKey' for i in g.d.cmd(cmd='get_bag')['data']),g.st()
+checkpoint('m52-card-key')

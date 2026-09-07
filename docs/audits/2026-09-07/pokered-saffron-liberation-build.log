@@ -1,0 +1,493 @@
+error: invalid character `{` in package name: `{{project-name}}`, the first character must be a Unicode XID start character (most letters or `_`)
+ --> ../../.cargo/git/checkouts/dotzuki-10858e612e941535/88f1fcc/workspace/dotzuki-template/Cargo.toml:4:8
+  |
+4 | name = "{{project-name}}"
+  |        ^^^^^^^^^^^^^^^^^^
+warning: function `emit_flex_container` is never used
+    --> crates/pokered-data/build.rs:2138:4
+     |
+2138 | fn emit_flex_container(out: &mut String, flex: &serde_json::Value) {
+     |    ^^^^^^^^^^^^^^^^^^^
+     |
+     = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: function `emit_list_params` is never used
+    --> crates/pokered-data/build.rs:2390:4
+     |
+2390 | fn emit_list_params(out: &mut String, list: &serde_json::Value) {
+     |    ^^^^^^^^^^^^^^^^
+
+warning: `pokered-data` (build script) generated 2 warnings
+   Compiling pokered-data v0.1.0 (/Users/liuyanghe02/develop/open-pokered-3/crates/pokered-data)
+warning: pokered-renderer@0.1.0: CJK glyphs generated: 519 chars (95 ASCII + 562 CJK)
+warning: unused imports: `Display`, `EnumCount`, `EnumIter`, and `EnumString`
+ --> crates/pokered-data/src/items.rs:3:20
+  |
+3 | use strum_macros::{Display, EnumCount, EnumIter, EnumString};
+  |                    ^^^^^^^  ^^^^^^^^^  ^^^^^^^^  ^^^^^^^^^^
+  |
+  = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused import: `PaletteTrait`
+   --> crates/pokered-data/src/impl_traits.rs:264:48
+    |
+264 | use dotzuki_engine::palette::{PaletteProvider, PaletteTrait, SgbPaletteEntry};
+    |                                                ^^^^^^^^^^^^
+
+warning: unreachable pattern
+  --> crates/pokered-data/src/lang_data.rs:90:9
+   |
+90 |         _ => "???", // species added through the editor (no localized name yet)
+   |         ^ no value can reach this
+   |
+note: multiple earlier patterns match some of the same values
+  --> crates/pokered-data/src/lang_data.rs:90:9
+   |
+38 |         Species::None=>"---",
+   |         ------------- matches some of the same values
+39 |         Species::Bulbasaur=>"BULBASAUR",Species::Ivysaur=>"IVYSAUR",Species::Venusaur=>"VENUSAUR",
+   |         ------------------              ----------------            ----------------- matches some of the same values
+   |         |                               |
+   |         |                               matches some of the same values
+   |         matches some of the same values
+...
+90 |         _ => "???", // species added through the editor (no localized name yet)
+   |         ^ ...and 148 other patterns collectively make this unreachable
+   = note: `#[warn(unreachable_patterns)]` (part of `#[warn(unused)]`) on by default
+
+warning: unreachable pattern
+   --> crates/pokered-data/src/lang_data.rs:233:13
+    |
+233 |             _ => "---",
+    |             ^ no value can reach this
+    |
+note: multiple earlier patterns match some of the same values
+   --> crates/pokered-data/src/lang_data.rs:233:13
+    |
+178 |             MoveId::None=>"---",MoveId::Pound=>"POUND",MoveId::KarateChop=>"KARATE CHOP",
+    |             ------------        -------------          ------------------ matches some of the same values
+    |             |                   |
+    |             |                   matches some of the same values
+    |             matches some of the same values
+179 |             MoveId::Doubleslap=>"DOUBLESLAP",MoveId::CometPunch=>"COMET PUNCH",MoveId::MegaPunch=>"MEGA PUNCH",
+    |             ------------------ matches some of the same values
+...
+233 |             _ => "---",
+    |             ^ ...and 162 other patterns collectively make this unreachable
+
+warning: unreachable pattern
+   --> crates/pokered-data/src/lang_data.rs:368:9
+    |
+345 |         "BADGES" => "徽章",
+    |         -------- matches all the relevant values
+...
+368 |         "BADGES" => "徽章",
+    |         ^^^^^^^^ no value can reach this
+
+warning: unreachable pattern
+   --> crates/pokered-data/src/lang_data.rs:388:9
+    |
+361 |         "EXIT" => "退出",
+    |         ------ matches all the relevant values
+...
+388 |         "EXIT" => "退出",
+    |         ^^^^^^ no value can reach this
+
+   Compiling pokered-core v0.1.0 (/Users/liuyanghe02/develop/open-pokered-3/crates/pokered-core)
+warning: `pokered-data` (lib) generated 6 warnings (run `cargo fix --lib -p pokered-data` to apply 1 suggestion)
+warning: unused import: `BattlePhase`
+  --> crates/pokered-core/src/battle/item_fidelity_tests.rs:7:26
+   |
+ 7 | use super::{BattleInput, BattlePhase, BattleScreen};
+   |                          ^^^^^^^^^^^
+   |
+help: if this is a test module, consider adding a `#[cfg(test)]` to the containing module
+  --> crates/pokered-core/src/battle/mod.rs:30:1
+   |
+30 | mod item_fidelity_tests;
+   | ^^^^^^^^^^^^^^^^^^^^^^^^
+   = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused import: `crate::battle::BallAnimOutcome`
+  --> crates/pokered-core/src/battle/item_fidelity_tests.rs:8:5
+   |
+ 8 | use crate::battle::BallAnimOutcome;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+help: if this is a test module, consider adding a `#[cfg(test)]` to the containing module
+  --> crates/pokered-core/src/battle/mod.rs:30:1
+   |
+30 | mod item_fidelity_tests;
+   | ^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::battle::BattleAnimEvent`
+  --> crates/pokered-core/src/battle/item_fidelity_tests.rs:9:5
+   |
+ 9 | use crate::battle::BattleAnimEvent;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+help: if this is a test module, consider adding a `#[cfg(test)]` to the containing module
+  --> crates/pokered-core/src/battle/mod.rs:30:1
+   |
+30 | mod item_fidelity_tests;
+   | ^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `create_pokemon`
+  --> crates/pokered-core/src/battle/item_fidelity_tests.rs:10:29
+   |
+10 | use crate::pokemon::stats::{create_pokemon, create_pokemon_with_moves};
+   |                             ^^^^^^^^^^^^^^
+   |
+help: if this is a test module, consider adding a `#[cfg(test)]` to the containing module
+  --> crates/pokered-core/src/battle/mod.rs:30:1
+   |
+30 | mod item_fidelity_tests;
+   | ^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `CaptureRandoms`
+    --> crates/pokered-core/src/battle/mod.rs:2814:38
+     |
+2814 |         use crate::battle::capture::{CaptureRandoms, CaptureResult};
+     |                                      ^^^^^^^^^^^^^^
+
+warning: unused import: `crate::battle::state::status1`
+    --> crates/pokered-core/src/battle/mod.rs:6834:13
+     |
+6834 |         use crate::battle::state::status1;
+     |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: if this is a test module, consider adding a `#[cfg(test)]` to the containing module
+    --> crates/pokered-core/src/battle/mod.rs:6832:5
+     |
+6832 |     mod pp_lifecycle_tests {
+     |     ^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `pokered_data::tilesets::TilesetId`
+  --> crates/pokered-core/src/overworld/doors_elevators.rs:11:5
+   |
+11 | use pokered_data::tilesets::TilesetId;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `pokered_data::tilesets::TilesetId`
+ --> crates/pokered-core/src/overworld/player_movement.rs:9:5
+  |
+9 | use pokered_data::tilesets::TilesetId;
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `pokered_data::tilesets::TilesetId`
+ --> crates/pokered-core/src/overworld/special_terrain.rs:7:5
+  |
+7 | use pokered_data::tilesets::TilesetId;
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unnecessary parentheses around pattern
+    --> crates/pokered-core/src/overworld/screen.rs:1485:21
+     |
+1485 |                 for (y) in [cy - r, cy + r] {
+     |                     ^ ^
+     |
+     = note: `#[warn(unused_parens)]` (part of `#[warn(unused)]`) on by default
+help: remove these parentheses
+     |
+1485 -                 for (y) in [cy - r, cy + r] {
+1485 +                 for y in [cy - r, cy + r] {
+     |
+
+warning: unused import: `max_exp`
+  --> crates/pokered-core/src/pokemon/engine_adapter.rs:41:56
+   |
+41 | use crate::battle::experience::growth::{exp_for_level, max_exp};
+   |                                                        ^^^^^^^
+
+warning: unused import: `crate::battle::experience::level_up::process_level_up`
+  --> crates/pokered-core/src/pokemon/engine_adapter.rs:42:5
+   |
+42 | use crate::battle::experience::level_up::process_level_up;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused variable: `randoms`
+   --> crates/pokered-core/src/battle/capture.rs:113:9
+    |
+113 |     let randoms = CaptureRandoms { rand1, rand2 };
+    |         ^^^^^^^ help: if this is intentional, prefix it with an underscore: `_randoms`
+    |
+    = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: variable does not need to be mutable
+    --> crates/pokered-core/src/battle/mod.rs:2384:17
+     |
+2384 |                 mut wait_frames,
+     |                 ----^^^^^^^^^^^
+     |                 |
+     |                 help: remove this `mut`
+     |
+     = note: `#[warn(unused_mut)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `pokemon_index`
+    --> crates/pokered-core/src/battle/mod.rs:2223:39
+     |
+2223 |             BattlePhase::PartyStats { pokemon_index } => {
+     |                                       ^^^^^^^^^^^^^ help: try ignoring the field: `pokemon_index: _`
+
+warning: unused variable: `tileset`
+   --> crates/pokered-core/src/overworld/collision.rs:165:9
+    |
+165 |         tileset: TilesetId,
+    |         ^^^^^^^ help: if this is intentional, prefix it with an underscore: `_tileset`
+
+warning: unused variable: `tileset`
+   --> crates/pokered-core/src/overworld/collision.rs:213:9
+    |
+213 |         tileset: TilesetId,
+    |         ^^^^^^^ help: if this is intentional, prefix it with an underscore: `_tileset`
+
+warning: value assigned to `repel_wore_off` is never read
+    --> crates/pokered-core/src/overworld/update.rs:1673:21
+     |
+1673 |                     repel_wore_off = true;
+     |                     ^^^^^^^^^^^^^^^^^^^^^
+     |
+     = help: maybe it is overwritten before being read?
+     = note: `#[warn(unused_assignments)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `probe`
+   --> crates/pokered-core/src/save/sram_import.rs:407:29
+    |
+407 | fn blank_offset_after_water(probe: &[u8]) -> usize {
+    |                             ^^^^^ help: if this is intentional, prefix it with an underscore: `_probe`
+
+warning: function `format_cannot_move` is never used
+   --> crates/pokered-core/src/battle/mod.rs:710:4
+    |
+710 | fn format_cannot_move(reason: &CannotMoveReason) -> &'static str {
+    |    ^^^^^^^^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: associated functions `generate_move_randoms` and `format_move_outcome` are never used
+    --> crates/pokered-core/src/battle/mod.rs:1520:8
+     |
+1185 | impl BattleScreen {
+     | ----------------- associated functions in this implementation
+...
+1520 |     fn generate_move_randoms() -> MoveRandoms {
+     |        ^^^^^^^^^^^^^^^^^^^^^
+...
+1683 |     fn format_move_outcome(
+     |        ^^^^^^^^^^^^^^^^^^^
+
+warning: function `input` is never used
+  --> crates/pokered-core/src/battle/item_fidelity_tests.rs:15:4
+   |
+15 | fn input(down: bool, a: bool) -> BattleInput {
+   |    ^^^^^
+
+warning: function `back_input` is never used
+  --> crates/pokered-core/src/battle/item_fidelity_tests.rs:23:4
+   |
+23 | fn back_input() -> BattleInput {
+   |    ^^^^^^^^^^
+
+warning: function `press_b` is never used
+  --> crates/pokered-core/src/battle/item_fidelity_tests.rs:30:4
+   |
+30 | fn press_b(battle: &mut BattleScreen) {
+   |    ^^^^^^^
+
+warning: function `use_first_bag_item` is never used
+  --> crates/pokered-core/src/battle/item_fidelity_tests.rs:36:4
+   |
+36 | fn use_first_bag_item(battle: &mut BattleScreen) {
+   |    ^^^^^^^^^^^^^^^^^^
+
+warning: function `bag_quantity` is never used
+  --> crates/pokered-core/src/battle/item_fidelity_tests.rs:42:4
+   |
+42 | fn bag_quantity(battle: &BattleScreen, item: ItemId) -> u32 {
+   |    ^^^^^^^^^^^^
+
+warning: function `current_message` is never used
+  --> crates/pokered-core/src/battle/item_fidelity_tests.rs:52:4
+   |
+52 | fn current_message(battle: &BattleScreen) -> String {
+   |    ^^^^^^^^^^^^^^^
+
+warning: function `pp_mon` is never used
+   --> crates/pokered-core/src/battle/item_fidelity_tests.rs:193:4
+    |
+193 | fn pp_mon() -> crate::battle::state::Pokemon {
+    |    ^^^^^^
+
+warning: function `mk` is never used
+    --> crates/pokered-core/src/battle/mod.rs:6838:12
+     |
+6838 |         fn mk(sp: Species, lvl: u8, moves: [MoveId; 4]) -> crate::battle::state::Pokemon {
+     |            ^^
+
+warning: method `text_pages` is never used
+   --> crates/pokered-core/src/oak_speech.rs:313:8
+    |
+312 | impl OakSpeechPhase {
+    | ------------------- method in this implementation
+313 |     fn text_pages(&self) -> Option<&'static [TextPage]> {
+    |        ^^^^^^^^^^
+
+warning: fields `scene_script_provider` and `scripts_dir` are never read
+   --> crates/pokered-core/src/overworld/screen.rs:627:16
+    |
+560 | pub struct OverworldScreen<G: GameData = pokered_data::impl_traits::PokemonRedData> {
+    |            --------------- fields in this struct
+...
+627 |     pub(crate) scene_script_provider: pokered_data::scene_loader::SceneScriptProvider,
+    |                ^^^^^^^^^^^^^^^^^^^^^
+...
+634 |     pub(crate) scripts_dir: Option<std::path::PathBuf>,
+    |                ^^^^^^^^^^^
+
+warning: method `repel_wore_off` is never used
+    --> crates/pokered-core/src/overworld/screen.rs:1771:19
+     |
+ 816 | impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
+     | --------------------------------------------------------- method in this implementation
+...
+1771 |     pub(crate) fn repel_wore_off(&self, repel_before: u16) -> bool {
+     |                   ^^^^^^^^^^^^^^
+
+   Compiling pokered-renderer v0.1.0 (/Users/liuyanghe02/develop/open-pokered-3/crates/pokered-renderer)
+   Compiling pokered-ui v0.1.0 (/Users/liuyanghe02/develop/open-pokered-3/crates/pokered-ui)
+warning: `pokered-core` (lib) generated 32 warnings (run `cargo fix --lib -p pokered-core` to apply 18 suggestions)
+   Compiling pokered-app v0.1.0 (/Users/liuyanghe02/develop/open-pokered-3/crates/pokered-app)
+warning: unused import: `write_tiles_at`
+  --> crates/pokered-app/src/render/battle.rs:21:39
+   |
+21 | use pokered_renderer::text_renderer::{write_tiles_at, ScreenTileBuffer};
+   |                                       ^^^^^^^^^^^^^^
+   |
+   = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused import: `pokered_renderer::textbox::TextBoxFrame`
+  --> crates/pokered-app/src/render/battle.rs:22:5
+   |
+22 | use pokered_renderer::textbox::TextBoxFrame;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `pokered_renderer::layout`
+ --> crates/pokered-app/src/render/intro.rs:4:5
+  |
+4 | use pokered_renderer::layout;
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `IconKind`
+ --> crates/pokered-app/src/render/menu.rs:9:55
+  |
+9 | use pokered_data::mon_party_icons::{icon_for_species, IconKind};
+  |                                                       ^^^^^^^^
+
+warning: unused import: `crate::render::battle_i18n::zh_name`
+  --> crates/pokered-app/src/render/pc.rs:19:5
+   |
+19 | use crate::render::battle_i18n::zh_name;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `pokered_renderer::layout`
+ --> crates/pokered-app/src/render/title.rs:5:5
+  |
+5 | use pokered_renderer::layout;
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `pokered_core::items::inventory::Inventory`
+  --> crates/pokered-app/src/save_editor.rs:13:5
+   |
+13 | use pokered_core::items::inventory::Inventory;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused variable: `skip_battle_render`
+    --> crates/pokered-app/src/render/battle.rs:2043:9
+     |
+2043 |     let skip_battle_render = matches!(
+     |         ^^^^^^^^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_skip_battle_render`
+     |
+     = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: variant `BattleTransition` is never constructed
+   --> crates/pokered-app/src/render/battle.rs:250:5
+    |
+247 | enum IntroAnimState {
+    |      -------------- variant in this enum
+...
+250 |     BattleTransition { step: u8 },
+    |     ^^^^^^^^^^^^^^^^
+    |
+    = note: `IntroAnimState` has derived impls for the traits `Clone` and `Debug`, but these are intentionally ignored during dead code analysis
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `pokered-app` (lib) generated 9 warnings (run `cargo fix --lib -p pokered-app` to apply 8 suggestions)
+warning: unused import: `trainer_class_zh`
+  --> crates/pokered-app/src/render/mod.rs:23:23
+   |
+23 | pub use battle_i18n::{trainer_class_zh, zh_battle_dialog};
+   |                       ^^^^^^^^^^^^^^^^
+
+warning: unused import: `std::io::BufRead`
+   --> crates/pokered-app/src/demo.rs:104:9
+    |
+104 |     use std::io::BufRead;
+    |         ^^^^^^^^^^^^^^^^
+
+warning: multiple methods are never used
+    --> crates/pokered-app/src/game.rs:714:12
+     |
+ 684 | impl PokemonGame {
+     | ---------------- methods in this implementation
+...
+ 714 |     pub fn detach_link(&mut self) {
+     |            ^^^^^^^^^^^
+...
+1525 |     pub fn save_to_path(&mut self, path: &Path) -> Result<(), String> {
+     |            ^^^^^^^^^^^^
+...
+2140 |     pub fn debug_start_wild_battle(&mut self, species: pokered_data::species::Species, level: u8) {
+     |            ^^^^^^^^^^^^^^^^^^^^^^^
+...
+2156 |     pub fn debug_open_pokedex(&mut self, species: pokered_data::species::Species) {
+     |            ^^^^^^^^^^^^^^^^^^
+...
+2174 |     pub fn debug_start_trainer_battle(
+     |            ^^^^^^^^^^^^^^^^^^^^^^^^^^
+...
+2191 |     pub fn debug_start_move_test(&mut self, move_id: pokered_data::moves::MoveId) {
+     |            ^^^^^^^^^^^^^^^^^^^^^
+...
+2219 |     pub fn debug_play_evolution(&mut self, from: pokered_data::species::Species, to: pokered_data::species::Species) {
+     |            ^^^^^^^^^^^^^^^^^^^^
+...
+2256 |     pub fn debug_full_heal(&mut self) {
+     |            ^^^^^^^^^^^^^^^
+...
+4921 |     pub fn warp_to_cable_room(&mut self, map: MapId) {
+     |            ^^^^^^^^^^^^^^^^^^
+     |
+     = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: method `kind` is never used
+   --> crates/pokered-app/src/link/cable_club.rs:199:12
+    |
+173 | impl CableClubFlow {
+    | ------------------ method in this implementation
+...
+199 |     pub fn kind(&self) -> Option<LinkKind> {
+    |            ^^^^
+
+warning: variant `BattleTransition` is never constructed
+   --> crates/pokered-app/src/render/battle.rs:250:5
+    |
+247 | enum IntroAnimState {
+    |      -------------- variant in this enum
+...
+250 |     BattleTransition { step: u8 },
+    |     ^^^^^^^^^^^^^^^^
+    |
+    = note: `IntroAnimState` has derived impls for the traits `Clone` and `Debug`, but these are intentionally ignored during dead code analysis
+
+warning: `pokered-app` (bin "pokered-app") generated 12 warnings (7 duplicates) (run `cargo fix --bin "pokered-app" -p pokered-app` to apply 1 suggestion)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 6.72s

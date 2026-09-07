@@ -1,0 +1,6 @@
+g.tap('start',12);g.tap('a',12)
+assert g.st()['screen']=='bag',g.st()
+bag=g.d.cmd(cmd='get_bag')['data'];idx=next(i for i,v in enumerate(bag) if v['item']=='Hm04')
+for _ in range(idx):g.tap('down',8)
+g.tap('a',12);g.tap('a',12);g.tap('down',8);g.tap('a',12);g.cutscene();g.step(40)
+snap('snorlax-strength-learned');assert 'Strength' in g.st()['party'][1]['moves'],g.st()

@@ -1,0 +1,123 @@
+[resume-reentry] frame=636 screen=overworld map=SaffronCity pos=(9,29) party=3 money=5366 effect=None
+CHECKPOINT tower-resumed SaffronCity 9 29 [{'hp': 149, 'level': 47, 'max_hp': 149, 'moves': ['MegaDrain', 'Cut', 'LeechSeed', 'Growth'], 'pp': [10, 30, 10, 40], 'species': 'Venusaur', 'status': 'None'}, {'hp': 137, 'level': 30, 'max_hp': 137, 'moves': ['IceBeam', 'Surf', 'Rest', 'Strength'], 'pp': [10, 15, 10, 15], 'species': 'Snorlax', 'status': 'None'}, {'hp': 52, 'level': 24, 'max_hp': 52, 'moves': ['Peck', 'Growl', 'FuryAttack', 'Fly'], 'pp': [35, 40, 20, 15], 'species': 'Doduo', 'status': 'None'}]
+GAME_LOG /var/folders/d2/2fv86m890m34_13rn_t3d79w0000gn/T/pokered-run-_go4s9mo/game.log
+READY
+RUN 001_helpers.py
+DONE 001_helpers.py
+RUN 002_replay_card_key.py
+FullHeal 149 / 149 remaining before 5
+CHECKPOINT m52-card-key SilphCo5F 20 16 [{'hp': 149, 'level': 47, 'max_hp': 149, 'moves': ['MegaDrain', 'Cut', 'LeechSeed', 'Growth'], 'pp': [7, 30, 9, 40], 'species': 'Venusaur', 'status': 'None'}, {'hp': 137, 'level': 30, 'max_hp': 137, 'moves': ['IceBeam', 'Surf', 'Rest', 'Strength'], 'pp': [10, 15, 10, 15], 'species': 'Snorlax', 'status': 'None'}, {'hp': 52, 'level': 24, 'max_hp': 52, 'moves': ['Peck', 'Growl', 'FuryAttack', 'Fly'], 'pp': [35, 40, 20, 15], 'species': 'Doduo', 'status': 'None'}]
+CHECKPOINT m53-silph-3f-door SilphCo3F 15 9 [{'hp': 147, 'level': 48, 'max_hp': 152, 'moves': ['MegaDrain', 'Cut', 'LeechSeed', 'Growth'], 'pp': [0, 25, 2, 40], 'species': 'Venusaur', 'status': 'None'}, {'hp': 137, 'level': 30, 'max_hp': 137, 'moves': ['IceBeam', 'Surf', 'Rest', 'Strength'], 'pp': [10, 15, 10, 15], 'species': 'Snorlax', 'status': 'None'}, {'hp': 52, 'level': 24, 'max_hp': 52, 'moves': ['Peck', 'Growl', 'FuryAttack', 'Fly'], 'pp': [35, 40, 20, 15], 'species': 'Doduo', 'status': 'None'}]
+DONE 002_replay_card_key.py
+RUN 003_rival_fixed.py
+CHECKPOINT m54-silph-rival-ready-fixed SilphCo7F 5 3 [{'hp': 147, 'level': 48, 'max_hp': 152, 'moves': ['MegaDrain', 'Cut', 'LeechSeed', 'Growth'], 'pp': [0, 25, 2, 40], 'species': 'Venusaur', 'status': 'None'}, {'hp': 137, 'level': 30, 'max_hp': 137, 'moves': ['IceBeam', 'Surf', 'Rest', 'Strength'], 'pp': [10, 15, 10, 15], 'species': 'Snorlax', 'status': 'None'}, {'hp': 52, 'level': 24, 'max_hp': 52, 'moves': ['Peck', 'Growl', 'FuryAttack', 'Fly'], 'pp': [35, 40, 20, 15], 'species': 'Doduo', 'status': 'None'}]
+SuperPotion 48 / 152 remaining before 9
+SuperPotion 82 / 152 remaining before 8
+SuperPotion 81 / 155 remaining before 7
+SuperPotion 45 / 155 remaining before 6
+CHECKPOINT m55-silph-rival-won SilphCo7F 3 3 [{'hp': 95, 'level': 49, 'max_hp': 155, 'moves': ['MegaDrain', 'Cut', 'LeechSeed', 'Growth'], 'pp': [0, 11, 0, 40], 'species': 'Venusaur', 'status': 'None'}, {'hp': 137, 'level': 30, 'max_hp': 137, 'moves': ['IceBeam', 'Surf', 'Rest', 'Strength'], 'pp': [10, 15, 10, 15], 'species': 'Snorlax', 'status': 'None'}, {'hp': 52, 'level': 24, 'max_hp': 52, 'moves': ['Peck', 'Growl', 'FuryAttack', 'Fly'], 'pp': [35, 40, 20, 15], 'species': 'Doduo', 'status': 'None'}]
+DONE 003_rival_fixed.py
+RUN 004_lapras.py
+CHECKPOINT m56-lapras SilphCo7F 2 5 [{'hp': 95, 'level': 49, 'max_hp': 155, 'moves': ['MegaDrain', 'Cut', 'LeechSeed', 'Growth'], 'pp': [0, 11, 0, 40], 'species': 'Venusaur', 'status': 'None'}, {'hp': 137, 'level': 30, 'max_hp': 137, 'moves': ['IceBeam', 'Surf', 'Rest', 'Strength'], 'pp': [10, 15, 10, 15], 'species': 'Snorlax', 'status': 'None'}, {'hp': 52, 'level': 24, 'max_hp': 52, 'moves': ['Peck', 'Growl', 'FuryAttack', 'Fly'], 'pp': [35, 40, 20, 15], 'species': 'Doduo', 'status': 'None'}, {'hp': 64, 'level': 15, 'max_hp': 64, 'moves': ['WaterGun', 'Growl', 'None', 'None'], 'pp': [25, 40, 0, 0], 'species': 'Lapras', 'status': 'None'}]
+DONE 004_lapras.py
+RUN 005_boardroom_door.py
+SuperPotion 70 / 155 remaining before 5
+SuperPotion 61 / 155 remaining before 4
+SuperPotion 78 / 155 remaining before 3
+SuperPotion 85 / 155 remaining before 2
+SuperPotion 66 / 155 remaining before 1
+DONE 005_boardroom_door.py
+RUN 006_open_door.py
+CHECKPOINT m57-boardroom-before-fixed SilphCo11F 6 14 [{'hp': 0, 'level': 49, 'max_hp': 155, 'moves': ['MegaDrain', 'Cut', 'LeechSeed', 'Growth'], 'pp': [0, 0, 0, 0], 'species': 'Venusaur', 'status': 'None'}, {'hp': 137, 'level': 30, 'max_hp': 137, 'moves': ['IceBeam', 'Surf', 'Rest', 'Strength'], 'pp': [10, 15, 10, 15], 'species': 'Snorlax', 'status': 'None'}, {'hp': 52, 'level': 24, 'max_hp': 52, 'moves': ['Peck', 'Growl', 'FuryAttack', 'Fly'], 'pp': [35, 40, 20, 15], 'species': 'Doduo', 'status': 'None'}, {'hp': 64, 'level': 15, 'max_hp': 64, 'moves': ['WaterGun', 'Growl', 'None', 'None'], 'pp': [25, 40, 0, 0], 'species': 'Lapras', 'status': 'None'}]
+Traceback (most recent call last):
+  File "/tmp/pokered-completion-20260907-silph-door-fixed/controller.py", line 82, in <module>
+    exec(compile(__task_path.read_text(),str(__task_path),'exec'),globals())
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/pokered-completion-20260907-silph-door-fixed/inbox/006_open_door.py", line 10, in <module>
+    assert g._await_phase('PlayerMenu',1000)
+           ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^
+AssertionError
+FAILED 006_open_door.py
+RUN 007_giovanni_battle.py
+Traceback (most recent call last):
+  File "/tmp/pokered-completion-20260907-silph-door-fixed/controller.py", line 82, in <module>
+    exec(compile(__task_path.read_text(),str(__task_path),'exec'),globals())
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/pokered-completion-20260907-silph-door-fixed/inbox/007_giovanni_battle.py", line 9, in <module>
+    g.battle_loop(prefer='fight');g.cutscene();g.step(60)
+    ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^
+  File "/tmp/pokered-completion-20260907-silph-door-fixed/inbox/001_helpers.py", line 51, in healing_battle
+  File "/Users/liuyanghe02/develop/open-pokered-3/scripts/playthrough.py", line 397, in wait
+    assert r["data"]["reached"], (
+           ~~~~~~~~~^^^^^^^^^^^
+AssertionError: condition 'not_battle' not reached in 1800 frames
+FAILED 007_giovanni_battle.py
+RUN 008_pp_guard.py
+DONE 008_pp_guard.py
+RUN 009_recover_battle.py
+Traceback (most recent call last):
+  File "/tmp/pokered-completion-20260907-silph-door-fixed/controller.py", line 82, in <module>
+    exec(compile(__task_path.read_text(),str(__task_path),'exec'),globals())
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/pokered-completion-20260907-silph-door-fixed/inbox/009_recover_battle.py", line 2, in <module>
+    if g.st()['battle_phase']=='PlayerFaintSwitch':break
+       ~~~~^^
+  File "/Users/liuyanghe02/develop/open-pokered-3/scripts/playthrough.py", line 390, in st
+    return self.d.cmd(cmd="get_state")["data"]
+           ~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "/tmp/pokered-completion-20260907-silph-door-fixed/controller.py", line 23, in cmd
+    raise NavError("audit cancelled at protocol boundary")
+playthrough.NavError: audit cancelled at protocol boundary
+FAILED 009_recover_battle.py
+RUN 010_recover_battle.py
+Traceback (most recent call last):
+  File "/tmp/pokered-completion-20260907-silph-door-fixed/controller.py", line 82, in <module>
+    exec(compile(__task_path.read_text(),str(__task_path),'exec'),globals())
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/pokered-completion-20260907-silph-door-fixed/inbox/010_recover_battle.py", line 31, in <module>
+    g.battle_loop(prefer='fight');g.cutscene();g.step(60)
+    ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^
+  File "/tmp/pokered-completion-20260907-silph-door-fixed/inbox/008_pp_guard.py", line 59, in healing_battle
+    if s['choice'] is not None:raise NavError(f"choice requires decision {s['choice']}")
+         ^^^^^^^^^^^^^^^^
+  File "/Users/liuyanghe02/develop/open-pokered-3/scripts/playthrough.py", line 404, in tap
+    self.d.drive([btn], frames=1 + gap)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/liuyanghe02/develop/open-pokered-3/scripts/debug_drive.py", line 95, in drive
+    self.press_sequence(buttons)
+    ~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "/Users/liuyanghe02/develop/open-pokered-3/scripts/debug_drive.py", line 87, in press_sequence
+    return self.cmd(cmd="press_sequence", buttons=list(buttons))
+           ~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/pokered-completion-20260907-silph-door-fixed/controller.py", line 23, in cmd
+    raise NavError("audit cancelled at protocol boundary")
+playthrough.NavError: audit cancelled at protocol boundary
+FAILED 010_recover_battle.py
+RUN 011_revive_cursor.py
+Traceback (most recent call last):
+  File "/tmp/pokered-completion-20260907-silph-door-fixed/controller.py", line 82, in <module>
+    exec(compile(__task_path.read_text(),str(__task_path),'exec'),globals())
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/pokered-completion-20260907-silph-door-fixed/inbox/011_revive_cursor.py", line 91, in <module>
+    assert g.d.cmd(cmd='get_flags')['data'].get('EVENT_BEAT_SILPH_CO_GIOVANNI'),g.st()
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: {'active_script_effect': None, 'battle_bag': None, 'battle_inventory': [{'item': 'OldRod', 'qty': 1}, {'item': 'Hm01', 'qty': 1}, {'item': 'Bicycle', 'qty': 1}, {'item': 'ParlyzHeal', 'qty': 3}, {'item': 'Awakening', 'qty': 3}, {'item': 'BurnHeal', 'qty': 2}, {'item': 'SilphScope', 'qty': 1}, {'item': 'RareCandy', 'qty': 1}, {'item': 'PokeFlute', 'qty': 1}, {'item': 'Hm03', 'qty': 1}, {'item': 'Hm04', 'qty': 1}, {'item': 'Revive', 'qty': 2}, {'item': 'FullHeal', 'qty': 4}, {'item': 'Tm06', 'qty': 1}, {'item': 'GreatBall', 'qty': 13}, {'item': 'Hm02', 'qty': 1}, {'item': 'CardKey', 'qty': 1}], 'battle_live': {'enemy': {'hp': 27, 'level': 41, 'max_hp': 131, 'species': 'Nidoqueen', 'status': 'None'}, 'enemy_party': [{'hp': 0, 'level': 37, 'species': 'Nidorino'}, {'hp': 0, 'level': 35, 'species': 'Kangaskhan'}, {'hp': 0, 'level': 37, 'species': 'Rhyhorn'}, {'hp': 27, 'level': 41, 'species': 'Nidoqueen'}], 'player': {'hp': 0, 'level': 15, 'max_hp': 64, 'species': 'Lapras', 'status': 'None'}}, 'battle_message': None, 'battle_moves': None, 'battle_phase': 'TrainerVictory { phase: EndBattleText, wait_frames: 0, player_won: false }', 'choice': None, 'coins': 0, 'dialogue': None, 'dialogue_state': None, 'frame_count': 80377, 'map_id': 10, 'map_name': 'SaffronCity', 'money': 6028, 'party': [{'hp': 155, 'level': 49, 'max_hp': 155, 'moves': ['MegaDrain', 'Cut', 'LeechSeed', 'Growth'], 'pp': [10, 30, 10, 40], 'species': 'Venusaur', 'status': 'None'}, {'hp': 137, 'level': 30, 'max_hp': 137, 'moves': ['IceBeam', 'Surf', 'Rest', 'Strength'], 'pp': [10, 15, 10, 15], 'species': 'Snorlax', 'status': 'None'}, {'hp': 52, 'level': 24, 'max_hp': 52, 'moves': ['Peck', 'Growl', 'FuryAttack', 'Fly'], 'pp': [35, 40, 20, 15], 'species': 'Doduo', 'status': 'None'}, {'hp': 64, 'level': 15, 'max_hp': 64, 'moves': ['WaterGun', 'Growl', 'None', 'None'], 'pp': [25, 40, 0, 0], 'species': 'Lapras', 'status': 'None'}], 'party_count': 4, 'pc_phase': None, 'player_facing': 'Up', 'player_movement_state': 'Idle', 'player_name': 'RED', 'player_x': 9, 'player_y': 30, 'screen': 'overworld', 'script_awaiting_battle': False, 'script_effect': None, 'script_running': False, 'shop_phase': None, 'text_speed_delay_frames': 3, 'warp_fade': 'Idle'}
+FAILED 011_revive_cursor.py
+RUN 012_president_exit.py
+Traceback (most recent call last):
+  File "/tmp/pokered-completion-20260907-silph-door-fixed/controller.py", line 82, in <module>
+    exec(compile(__task_path.read_text(),str(__task_path),'exec'),globals())
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/pokered-completion-20260907-silph-door-fixed/inbox/012_president_exit.py", line 1, in <module>
+    assert g.d.cmd(cmd='get_flags')['data'].get('EVENT_BEAT_SILPH_CO_GIOVANNI'),g.st()
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: {'active_script_effect': None, 'battle_bag': None, 'battle_inventory': [{'item': 'OldRod', 'qty': 1}, {'item': 'Hm01', 'qty': 1}, {'item': 'Bicycle', 'qty': 1}, {'item': 'ParlyzHeal', 'qty': 3}, {'item': 'Awakening', 'qty': 3}, {'item': 'BurnHeal', 'qty': 2}, {'item': 'SilphScope', 'qty': 1}, {'item': 'RareCandy', 'qty': 1}, {'item': 'PokeFlute', 'qty': 1}, {'item': 'Hm03', 'qty': 1}, {'item': 'Hm04', 'qty': 1}, {'item': 'Revive', 'qty': 2}, {'item': 'FullHeal', 'qty': 4}, {'item': 'Tm06', 'qty': 1}, {'item': 'GreatBall', 'qty': 13}, {'item': 'Hm02', 'qty': 1}, {'item': 'CardKey', 'qty': 1}], 'battle_live': {'enemy': {'hp': 27, 'level': 41, 'max_hp': 131, 'species': 'Nidoqueen', 'status': 'None'}, 'enemy_party': [{'hp': 0, 'level': 37, 'species': 'Nidorino'}, {'hp': 0, 'level': 35, 'species': 'Kangaskhan'}, {'hp': 0, 'level': 37, 'species': 'Rhyhorn'}, {'hp': 27, 'level': 41, 'species': 'Nidoqueen'}], 'player': {'hp': 0, 'level': 15, 'max_hp': 64, 'species': 'Lapras', 'status': 'None'}}, 'battle_message': None, 'battle_moves': None, 'battle_phase': 'TrainerVictory { phase: EndBattleText, wait_frames: 0, player_won: false }', 'choice': None, 'coins': 0, 'dialogue': None, 'dialogue_state': None, 'frame_count': 81128, 'map_id': 10, 'map_name': 'SaffronCity', 'money': 6028, 'party': [{'hp': 155, 'level': 49, 'max_hp': 155, 'moves': ['MegaDrain', 'Cut', 'LeechSeed', 'Growth'], 'pp': [10, 30, 10, 40], 'species': 'Venusaur', 'status': 'None'}, {'hp': 137, 'level': 30, 'max_hp': 137, 'moves': ['IceBeam', 'Surf', 'Rest', 'Strength'], 'pp': [10, 15, 10, 15], 'species': 'Snorlax', 'status': 'None'}, {'hp': 52, 'level': 24, 'max_hp': 52, 'moves': ['Peck', 'Growl', 'FuryAttack', 'Fly'], 'pp': [35, 40, 20, 15], 'species': 'Doduo', 'status': 'None'}, {'hp': 64, 'level': 15, 'max_hp': 64, 'moves': ['WaterGun', 'Growl', 'None', 'None'], 'pp': [25, 40, 0, 0], 'species': 'Lapras', 'status': 'None'}], 'party_count': 4, 'pc_phase': None, 'player_facing': 'Up', 'player_movement_state': 'Idle', 'player_name': 'RED', 'player_x': 9, 'player_y': 30, 'screen': 'overworld', 'script_awaiting_battle': False, 'script_effect': None, 'script_running': False, 'shop_phase': None, 'text_speed_delay_frames': 3, 'warp_fade': 'Idle'}
+FAILED 012_president_exit.py
+RUN 013_resupply.py
+CHECKPOINT m58-loss-saffron-recovered SaffronCity 9 30 [{'hp': 155, 'level': 49, 'max_hp': 155, 'moves': ['MegaDrain', 'Cut', 'LeechSeed', 'Growth'], 'pp': [10, 30, 10, 40], 'species': 'Venusaur', 'status': 'None'}, {'hp': 137, 'level': 30, 'max_hp': 137, 'moves': ['IceBeam', 'Surf', 'Rest', 'Strength'], 'pp': [10, 15, 10, 15], 'species': 'Snorlax', 'status': 'None'}, {'hp': 52, 'level': 24, 'max_hp': 52, 'moves': ['Peck', 'Growl', 'FuryAttack', 'Fly'], 'pp': [35, 40, 20, 15], 'species': 'Doduo', 'status': 'None'}, {'hp': 64, 'level': 15, 'max_hp': 64, 'moves': ['WaterGun', 'Growl', 'None', 'None'], 'pp': [25, 40, 0, 0], 'species': 'Lapras', 'status': 'None'}]
+DONE 013_resupply.py
+RUN 014_buy_reenter.py
+CHECKPOINT m58-saffron-retry-supplied SaffronCity 25 11 [{'hp': 155, 'level': 49, 'max_hp': 155, 'moves': ['MegaDrain', 'Cut', 'LeechSeed', 'Growth'], 'pp': [10, 30, 10, 40], 'species': 'Venusaur', 'status': 'None'}, {'hp': 137, 'level': 30, 'max_hp': 137, 'moves': ['IceBeam', 'Surf', 'Rest', 'Strength'], 'pp': [10, 15, 10, 15], 'species': 'Snorlax', 'status': 'None'}, {'hp': 52, 'level': 24, 'max_hp': 52, 'moves': ['Peck', 'Growl', 'FuryAttack', 'Fly'], 'pp': [35, 40, 20, 15], 'species': 'Doduo', 'status': 'None'}, {'hp': 64, 'level': 15, 'max_hp': 64, 'moves': ['WaterGun', 'Growl', 'None', 'None'], 'pp': [25, 40, 0, 0], 'species': 'Lapras', 'status': 'None'}]
+CHECKPOINT m58-silph-3f-return-blocked SilphCo3F 18 9 [{'hp': 155, 'level': 49, 'max_hp': 155, 'moves': ['MegaDrain', 'Cut', 'LeechSeed', 'Growth'], 'pp': [10, 30, 10, 40], 'species': 'Venusaur', 'status': 'None'}, {'hp': 137, 'level': 30, 'max_hp': 137, 'moves': ['IceBeam', 'Surf', 'Rest', 'Strength'], 'pp': [10, 15, 10, 15], 'species': 'Snorlax', 'status': 'None'}, {'hp': 52, 'level': 24, 'max_hp': 52, 'moves': ['Peck', 'Growl', 'FuryAttack', 'Fly'], 'pp': [35, 40, 20, 15], 'species': 'Doduo', 'status': 'None'}, {'hp': 64, 'level': 15, 'max_hp': 64, 'moves': ['WaterGun', 'Growl', 'None', 'None'], 'pp': [25, 40, 0, 0], 'species': 'Lapras', 'status': 'None'}]
+DONE 014_buy_reenter.py
+RUN 099_stop.py

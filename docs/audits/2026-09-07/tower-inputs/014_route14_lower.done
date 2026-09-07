@@ -1,0 +1,5 @@
+g.nav_to(19,6,'Route14');g.d.drive(['right']*8,frames=20);g.step(40)
+assert g.st()['map_name']=='Route13'
+g.nav_to(0,8,'Route13');g.d.drive(['left']*8,frames=20);g.step(40)
+assert g.st()['map_name']=='Route14'
+exec("g.nav_to(0,45,'Route14')"+(OUT/'inbox/013_route14_pass.done').read_text().split("g.nav_to(0,45,'Route14')",1)[1])

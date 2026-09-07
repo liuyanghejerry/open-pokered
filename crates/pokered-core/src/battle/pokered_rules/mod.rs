@@ -719,7 +719,7 @@ impl RuleBindings<PokeredRules> for PokeredBindings {
         b.status.is_some()
     }
 
-    /// `battler_level` (P3): the per-battler level the OHKO `LevelGE` gate + the
+    /// `battler_level` (P3): the per-battler level the
     /// level-based `SetDamage` sources (Seismic Toss / Night Shade / Psywave) read.
     /// The engine [`BattlerState`] carries no level field (the engine is
     /// level-agnostic), so the harness records each species' level in a thread-local
@@ -1284,8 +1284,8 @@ fn hook_for(source_effect: EffectId, event: Event) -> Option<CompiledHook> {
 }
 
 thread_local! {
-    /// Per-species level the P3 `battler_level` binding reads (the OHKO `LevelGE`
-    /// gate + level-based `SetDamage`). The harness records each species' level;
+    /// Per-species level the P3 `battler_level` binding reads (level-based
+    /// `SetDamage`). The harness records each species' level;
     /// an unrecorded species defaults to 50 (the P1/P2 fixed level). Keyed by
     /// species so the player and opponent can differ when they use distinct species
     /// (the OHKO / Seismic Toss differential scenarios). Thread-local so the
@@ -1496,6 +1496,13 @@ fn pokered_accuracy(
     let eva_stage = ctx.battler(target).stat_stages.get(StatIndex::Evasion).copied().unwrap_or(0);
     let scaled = scaled_accuracy(pm.accuracy, acc_stage, eva_stage);
     let byte = ctx.rng.next_u8();
+    // OneHitKOEffect_ compares the current battle Speed words, not levels.
+    // Retain the ordinary accuracy roll; a slower user always misses.
+    if pm.effect == MoveEffect::OhkoEffect
+        && effective_speed(ctx.battler(source)) < effective_speed(ctx.battler(target))
+    {
+        return HandlerResult::Set(RelayVar::Bool(false));
+    }
     if byte < scaled {
         HandlerResult::Unchanged
     } else {

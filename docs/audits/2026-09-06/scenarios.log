@@ -1,0 +1,47 @@
+== s01-bag-seed: give_item lands in the bag; unknown items rejected
+[s01] frame=30 screen=gamefreak-splash map=PalletTown pos=(0,0) party=0 money=0 effect=None
+   PASS (0.6s)
+== s02-party-seed: give_pokemon appends in order; leader is first
+[s02] frame=31 screen=gamefreak-splash map=PalletTown pos=(0,0) party=3 money=0 effect=None
+   PASS (0.6s)
+== s03-wild-run: wild battle: RUN escapes without moving the player
+[m02] frame=1921 screen=overworld map=RedsHouse2F pos=(3,6) party=0 money=0 effect=None
+[s03] frame=2303 screen=overworld map=RedsHouse2F pos=(3,6) party=1 money=0 effect=None
+   PASS (5.9s)
+== s04-wild-win: wild battle: winning grants experience
+[m02] frame=1921 screen=overworld map=RedsHouse2F pos=(3,6) party=0 money=0 effect=None
+[s04] frame=2808 screen=overworld map=RedsHouse2F pos=(3,6) party=1 money=0 effect=None
+   PASS (7.9s)
+== s05-wild-catch: throwing Poké Balls from the battle bag catches
+[m02] frame=1921 screen=overworld map=RedsHouse2F pos=(3,6) party=0 money=0 effect=None
+[s05] frame=2409 screen=overworld map=RedsHouse2F pos=(3,6) party=2 money=0 effect=None
+   PASS (6.2s)
+== s06-blackout: total party KO: whiteout respawns at home, party healed
+[m02] frame=1921 screen=overworld map=RedsHouse2F pos=(3,6) party=0 money=0 effect=None
+   blackout: money 0 -> 0, respawn PalletTown (5,6)
+[s06] frame=2376 screen=overworld map=PalletTown pos=(5,6) party=1 money=0 effect=None
+   PASS (6.2s)
+== s07-save-roundtrip: save → fresh boot → CONTINUE restores everything
+[m02] frame=1921 screen=overworld map=RedsHouse2F pos=(3,6) party=0 money=0 effect=None
+[resume-reentry] frame=641 screen=overworld map=RedsHouse2F pos=(3,6) party=1 money=0 effect=None
+   roundtrip restored RedsHouse2F (3,6) party=1 bag=1
+   PASS (6.2s)
+== s08-start-menu: START menu: party submenu opens; EXIT returns control
+[m02] frame=1921 screen=overworld map=RedsHouse2F pos=(3,6) party=0 money=0 effect=None
+   pause menu screen: start-menu
+   first-entry screen: party
+[s08] frame=2423 screen=overworld map=RedsHouse2F pos=(3,6) party=1 money=0 effect=None
+   PASS (5.6s)
+== s09-options: OPTIONS: text speed toggle takes effect and persists
+[m02] frame=1921 screen=overworld map=RedsHouse2F pos=(3,6) party=0 money=0 effect=None
+   options screen: options text_speed 3
+   text_speed 3 -> 1 (persisted)
+[s09] frame=2222 screen=overworld map=RedsHouse2F pos=(3,6) party=1 money=0 effect=None
+   PASS (5.4s)
+== s10-npcs: get_npcs: live NPCs report sane fields on the current map
+[m02] frame=1921 screen=overworld map=RedsHouse2F pos=(3,6) party=0 money=0 effect=None
+[m03] frame=2251 screen=overworld map=PalletTown pos=(5,5) party=1 money=0 effect=None
+   PalletTown NPCs: [(3, 8), (11, 14)]
+[s10] frame=2253 screen=overworld map=PalletTown pos=(5,5) party=1 money=0 effect=None
+   PASS (5.1s)
+SCENARIOS 10/10 PASS

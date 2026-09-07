@@ -1,0 +1,25 @@
+g.d.cmd(cmd='skip_dialogue')
+queue_end_frame=0
+previous_cmd=g.d.cmd
+def tracked_queue_cmd(**kw):
+ global queue_end_frame
+ r=previous_cmd(**kw)
+ if kw.get('cmd')=='skip_dialogue':queue_end_frame=0
+ return r
+g.d.cmd=tracked_queue_cmd
+def continuous_brake_drive(buttons,frames=None):
+ global queue_end_frame
+ s=g.st();buttons=list(buttons);count=frames if frames is not None else len(buttons)
+ pending=max(0,queue_end_frame-s['frame_count'])
+ if len(buttons)==8 and len(set(buttons))==1 and buttons[0] in ['up','down','left','right'] and frames==16:buttons=buttons[:4]
+ brake=s['screen']=='overworld' and (s['map_name']=='Route17' or (s['map_name']=='Route18' and s['player_y']==0 and 'up' in buttons))
+ if brake:buttons+=['b']*(max(0,count-len(buttons))+180)
+ queue_end_frame=s['frame_count']+pending+len(buttons)
+ g.d.press_sequence(buttons);return g.d.step(pending+count)
+g.d.drive=continuous_brake_drive
+if g.st()['map_name']=='Route18':
+ g.nav_to(10,0,'Route18');g.d.drive(['up']*24,frames=24)
+assert g.st()['map_name']=='Route17',g.st()
+g.nav_to(8,0,'Route17');g.d.drive(['up']*24,frames=24);g.step(40)
+assert g.st()['map_name']=='Route16',g.st()
+checkpoint('m48-cycling-north')

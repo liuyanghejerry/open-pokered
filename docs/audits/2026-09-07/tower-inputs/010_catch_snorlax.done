@@ -1,0 +1,41 @@
+assert g.st()['map_name']=='Route12' and (g.st()['player_x'],g.st()['player_y'])==(10,61),g.st()
+g.face('down');g.tap('a',20);g.cutscene();g.step(40)
+snap('snorlax-woken')
+assert g.st()['screen']=='battle',g.st()
+g.PREFERRED_MOVES=['MegaDrain','Cut']
+for _ in range(800):
+ s=g.st()
+ if s['screen']!='battle':break
+ phase=s['battle_phase']
+ if phase=='PlayerMenu':
+  live=s['battle_live'];p=live['player'];enemy=live['enemy'];counts={i['item']:i['qty'] for i in s['battle_inventory']}
+  assert enemy['species']=='Snorlax',enemy
+  medicine='SuperPotion' if p['hp']<p['max_hp']*.55 and counts.get('SuperPotion',0) else None
+  if enemy['hp']>enemy['max_hp']*.48 and not medicine:
+   g.d.drive(['up','left'],frames=10);g.tap('a',4)
+   if g._await_phase('MoveSelect',120):g._select_move()
+   g.step(30)
+  else:
+   item=medicine or ('GreatBall' if counts.get('GreatBall',0) else 'PokeBall')
+   assert counts.get(item,0)>0,counts
+   g.d.drive(['down','left'],frames=10);g.tap('a',4)
+   assert g._await_phase('BagSelect',120)
+   for _ in range(40):
+    menu=g.st()['battle_bag'];want=next(i for i,v in enumerate(menu['items']) if v['item']==item)
+    if menu['cursor']==want:break
+    g.tap('down',4)
+   print('CATCH_ACTION',item,'HP',p['hp'],'enemy',enemy['hp'],'qty',counts[item],flush=True)
+   g.tap('a',8);g.step(10)
+   if medicine:
+    assert g.st()['battle_phase'].startswith('ItemTargetSelect'),g.st()
+    g.tap('a',10)
+   g.step(30)
+ elif phase=='MoveSelect':g._select_move();g.step(30)
+ else:g.tap('a',10)
+snap('snorlax-capture-result')
+from scenarios import dismiss_dex_screen
+dismiss_dex_screen(g);g.cutscene();g.step(40)
+snap('snorlax-after-catch')
+assert any(p['species']=='Snorlax' for p in g.d.cmd(cmd='get_party')['data']),g.st()
+checkpoint('m38-snorlax-caught')
+g.PREFERRED_MOVES=['RazorLeaf','MegaDrain','Cut']

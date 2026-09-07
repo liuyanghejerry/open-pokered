@@ -1,0 +1,7 @@
+g.nav_to(2,5,'SilphCo7F');g.face('left');g.tap('a',20);g.cutscene();g.step(40)
+snap('lapras-gift')
+if g.st()['screen']=='pokedex':
+ from scenarios import dismiss_dex_screen
+ dismiss_dex_screen(g);g.cutscene()
+assert any(p['species']=='Lapras' for p in g.d.cmd(cmd='get_party')['data']),g.st()
+checkpoint('m56-lapras')

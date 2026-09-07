@@ -1,0 +1,1 @@
+g.tap('down',8);g.tap('down',8);g.tap('a',8);g.tap('a',8);snap('supply-fly-map');g.tap('up',8);snap('supply-fly-viridian')

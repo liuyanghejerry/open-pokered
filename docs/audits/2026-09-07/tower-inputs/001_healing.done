@@ -1,0 +1,41 @@
+def healing_battle(self,prefer='fight',max_iters=1000):
+ fight=prefer=='fight';run_tries=0
+ for iteration in range(max_iters):
+  state=self.st()
+  if state['screen']!='battle':break
+  phase=state['battle_phase']
+  if not fight and 'Trainer' in phase:fight=True
+  if phase=='PlayerMenu':
+   live=state['battle_live']['player']
+   counts={i['item']:i['qty'] for i in state['battle_inventory']}
+   medicine='SuperPotion' if live['max_hp']-live['hp']>=35 and counts.get('SuperPotion',0) else 'Potion'
+   qty=counts.get(medicine,0)
+   if fight and live['hp']<live['max_hp']*.55 and qty:
+    self.d.drive(['down','left'],frames=10);self.tap('a',4)
+    assert self._await_phase('BagSelect',120)
+    for _ in range(30):
+     menu=self.st()['battle_bag'];target=next(i for i,v in enumerate(menu['items']) if v['item']==medicine)
+     if menu['cursor']==target:break
+     self.tap('down',4)
+    self.tap('a',4);self.step(10)
+    assert self.st()['battle_phase'].startswith('ItemTargetSelect'),self.st()
+    self.tap('a',10);self.step(30)
+    print(medicine,live['hp'],'/',live['max_hp'],'remaining before',qty,flush=True)
+   elif fight:
+    self.d.drive(['up','left'],frames=10);self.tap('a',4)
+    if self._await_phase('MoveSelect',120):self._select_move()
+    self.step(30)
+   else:
+    self.d.drive(['down','right'],frames=10);self.tap('a',4);self.step(30)
+    run_tries+=1
+    if run_tries>3:fight=True
+  elif phase=='MoveSelect':self._select_move();self.step(30)
+  elif phase=='ShiftPrompt':self.tap('b',8);self.step(30)
+  else:self.tap('a',10)
+ self.wait('not_battle',1800)
+g.battle_loop=types.MethodType(healing_battle,g)
+checkpoint('ship-prepared')
+
+g.PREFERRED_MOVES=['RazorLeaf','Cut','Tackle']
+
+g.PREFERRED_MOVES=['RazorLeaf','MegaDrain','Cut']

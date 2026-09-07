@@ -1,0 +1,6 @@
+g.nav_warp(3,7,'SafariZoneSecretHouse','SafariZoneWest',approach='down')
+g.nav_to(19,8,'SafariZoneWest');g.face('up');g.tap('a',20);g.cutscene();g.step(40)
+snap('gold-teeth-picked');assert any(i['item']=='GoldTeeth' for i in g.d.cmd(cmd='get_bag')['data'])
+g.tap('start',12);snap('safari-remaining-after-prizes');g.tap('b',12)
+g.nav_warp(20,0,'SafariZoneWest','SafariZoneNorth')
+snap('safari-return-north')

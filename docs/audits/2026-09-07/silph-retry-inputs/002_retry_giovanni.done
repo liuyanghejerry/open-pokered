@@ -1,0 +1,13 @@
+g.nav_to(15,9,'SilphCo3F');g.cutscene();g.step(40);snap('silph-3f-reentry-door-passed-fixed')
+g.nav_warp(11,11,'SilphCo3F','SilphCo7F');g.cutscene();g.step(60)
+g.nav_warp(5,7,'SilphCo7F','SilphCo11F');g.cutscene();g.step(60)
+g.nav_to(6,14,'SilphCo11F');checkpoint('m58-giovanni-retry-ready')
+g.d.drive(['up']*8,frames=24);g.cutscene();g.step(60)
+s=snap('giovanni-retry-correct-party');assert s['screen']=='battle',s
+assert s['battle_live']['enemy_party'][0]['species']=='Nidorino',s
+g.battle_loop(prefer='fight');g.cutscene();g.step(60)
+snap('giovanni-retry-result');assert g.d.cmd(cmd='get_flags')['data'].get('EVENT_BEAT_SILPH_CO_GIOVANNI'),g.st()
+checkpoint('m58-silph-giovanni')
+g.nav_to(7,6,'SilphCo11F');g.face('up');g.tap('a',20);g.cutscene();g.step(60)
+snap('master-ball-received');assert any(i['item']=='MasterBall' for i in g.d.cmd(cmd='get_bag')['data']),g.st()
+checkpoint('m59-master-ball')
