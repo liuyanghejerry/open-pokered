@@ -258,6 +258,10 @@ impl MoveMenuState {
         }
     }
 
+    pub fn set_cursor(&mut self, cursor: usize) {
+        self.cursor = cursor;
+    }
+
     pub fn update_frame(&mut self, input: MenuInput) -> Option<MoveMenuResult> {
         if input.b && self.can_cancel {
             return Some(MoveMenuResult::Cancelled);

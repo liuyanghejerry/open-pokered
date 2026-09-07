@@ -2172,7 +2172,9 @@ pub fn draw_battle(
             }
         } else if matches!(
             screen.phase,
-            BattlePhase::MoveSelect | BattlePhase::ItemMoveSelect { .. }
+            BattlePhase::MoveSelect
+                | BattlePhase::ItemMoveSelect { .. }
+                | BattlePhase::LearnMoveChoose { .. }
         ) {
             draw_move_menu(&mut tile_buf, screen);
         } else if matches!(screen.phase, BattlePhase::BagSelect) {
@@ -2528,7 +2530,9 @@ pub fn draw_battle(
         // region last to keep it in the foreground.
         if matches!(
             screen.phase,
-            BattlePhase::MoveSelect | BattlePhase::ItemMoveSelect { .. }
+            BattlePhase::MoveSelect
+                | BattlePhase::ItemMoveSelect { .. }
+                | BattlePhase::LearnMoveChoose { .. }
         ) {
             tile_buf.render_region(fb, &battle_ts, pal, 0, 8, 11, 5);
         }

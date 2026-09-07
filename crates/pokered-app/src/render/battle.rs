@@ -2150,6 +2150,7 @@ pub fn draw_battle(
             BattlePhase::PlayerMenu
                 | BattlePhase::MoveSelect
                 | BattlePhase::ItemMoveSelect { .. }
+                | BattlePhase::LearnMoveChoose { .. }
                 | BattlePhase::BagSelect
                 | BattlePhase::ItemTargetSelect { .. }
         ) || matches!(
@@ -2254,6 +2255,7 @@ pub fn draw_battle(
             BattlePhase::PlayerMenu
                 | BattlePhase::MoveSelect
                 | BattlePhase::ItemMoveSelect { .. }
+                | BattlePhase::LearnMoveChoose { .. }
                 | BattlePhase::BagSelect
                 | BattlePhase::ItemTargetSelect { .. }
                 | BattlePhase::PartySelect
@@ -2581,7 +2583,9 @@ pub fn draw_battle(
                 }
             } else if matches!(
                 screen.phase,
-                BattlePhase::MoveSelect | BattlePhase::ItemMoveSelect { .. }
+                BattlePhase::MoveSelect
+                    | BattlePhase::ItemMoveSelect { .. }
+                    | BattlePhase::LearnMoveChoose { .. }
             ) {
                 if let Some(ref mm) = screen.move_menu {
                     menus::battle_move::draw(mm, &BATTLE_MOVE_DEFAULT_LAYOUT, &mut ui, &rd);

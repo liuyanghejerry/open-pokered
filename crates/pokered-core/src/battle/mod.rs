@@ -1095,7 +1095,7 @@ pub struct BattleScreen {
     pub shift_prompt_yes: bool,
     /// Full-slot level-up learn prompts waiting for the forget/replace chain
     /// (learnmove.asm). Drained front-to-back by the `LearnMove*` phases.
-    pub(crate) pending_learn_moves: Vec<(usize, pokered_data::moves::MoveId)>,
+    pub pending_learn_moves: Vec<(usize, pokered_data::moves::MoveId)>,
     /// Party index chosen in [`BattlePhase::ShiftSwitchSelect`], applied after
     /// the enemy's next mon has been sent out (original `ReplaceFaintedEnemyMon`
     /// sends the enemy out first, then runs `SwitchPlayerMon`).
@@ -2395,12 +2395,21 @@ impl BattleScreen {
                 let answered_no = input.b || (input.a && !self.shift_prompt_yes);
                 if answered_yes {
                     self.current_message = None;
+                    if let Some(ref bs) = self.battle_state {
+                        // The forget list renders through the shared move-menu
+                        // view; populate it with the LEARNER's moves.
+                        self.move_menu =
+                            Some(Self::build_move_menu_for_mon(&bs.player.party[party_index]));
+                    }
                     self.phase = BattlePhase::LearnMoveChoose {
                         party_index,
                         move_id,
                         cursor: 0,
                         resume,
                     };
+                    // "Which move should be forgotten?" stays on screen above
+                    // the list (learn_move.asm prints it with the menu).
+                    self.post_text_transition();
                 } else if answered_no {
                     self.current_message = None;
                     self.phase = BattlePhase::LearnMoveGiveUpConfirm {
@@ -2428,6 +2437,11 @@ impl BattleScreen {
                         } else {
                             (cursor + slot_count - 1) % slot_count
                         };
+                        // Keep the shared move-menu view in sync (it draws the
+                        // forget list).
+                        if let Some(mm) = self.move_menu.as_mut() {
+                            mm.set_cursor(next_cursor);
+                        }
                         self.phase = BattlePhase::LearnMoveChoose {
                             party_index,
                             move_id,
@@ -4595,7 +4609,7 @@ learn {learn_name}!")];
         }
     }
 
-    fn post_text_transition(&mut self) {
+    pub fn post_text_transition(&mut self) {
         match &self.phase {
             BattlePhase::PlayerMenu => {
                 self.battle_menu = BattleMenuState::new();
@@ -4890,7 +4904,7 @@ learn {learn_name}!")];
     /// when a level-up tried to teach a move to a FULL moveset. The
     /// TryingToLearn text joins the current page queue; the YES/NO chain runs
     /// as phases and finally resumes `next`.
-    fn wrap_learn_prompt(&mut self, msgs: &mut Vec<String>, next: BattlePhase) -> BattlePhase {
+    pub fn wrap_learn_prompt(&mut self, msgs: &mut Vec<String>, next: BattlePhase) -> BattlePhase {
         if self.link_mode || self.pending_learn_moves.is_empty() {
             return next;
         }
