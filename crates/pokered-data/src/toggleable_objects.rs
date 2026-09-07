@@ -343,11 +343,22 @@ pub fn toggle_id_to_bit_index(toggle_id: &str) -> Option<u16> {
             Some(ToggleableObject::VIRIDIAN_GYM_GIOVANNI.bit_index())
         }
 
+        "POWER_PLANT_OBJ_1" => Some(0x4D),
+        "POWER_PLANT_OBJ_2" => Some(0x4E),
+        "POWER_PLANT_OBJ_3" => Some(0x4F),
+        "POWER_PLANT_OBJ_4" => Some(0x50),
+        "POWER_PLANT_OBJ_5" => Some(0x51),
+        "POWER_PLANT_OBJ_6" => Some(0x52),
+        "POWER_PLANT_OBJ_7" => Some(0x53),
+        "POWER_PLANT_OBJ_8" => Some(0x54),
+        "SEAFOAM_ISLANDS_B4F_OBJ_3" => Some(ToggleableObject::ARTICUNO.bit_index()),
+        "VICTORY_ROAD_2F_OBJ_13" => Some(0x60),
+        "VICTORY_ROAD_3F_OBJ_10" => Some(0x7A),
         // POWER_PLANT
-        "POWERPLANT_ZAPDOS" | "ZAPDOS" => Some(ToggleableObject::ZAPDOS.bit_index()),
+        "POWER_PLANT_OBJ_9" | "POWERPLANT_ZAPDOS" | "ZAPDOS" => Some(ToggleableObject::ZAPDOS.bit_index()),
 
         // VICTORY_ROAD_2F
-        "VICTORYROAD2F_MOLTRES" | "MOLTRES" => Some(ToggleableObject::MOLTRES.bit_index()),
+        "VICTORY_ROAD_2F_OBJ_6" | "VICTORYROAD2F_MOLTRES" | "MOLTRES" => Some(ToggleableObject::MOLTRES.bit_index()),
         "VICTORY_ROAD_2F_OBJ_7" => Some(0x5C),  // TOGGLE_VICTORY_ROAD_2F_ITEM_1 (TM_SUBMISSION)
         "VICTORY_ROAD_2F_OBJ_8" => Some(0x5D),  // TOGGLE_VICTORY_ROAD_2F_ITEM_2 (FULL_HEAL)
         "VICTORY_ROAD_2F_OBJ_9" => Some(0x5E),  // TOGGLE_VICTORY_ROAD_2F_ITEM_3 (TM_MEGA_KICK)

@@ -8,7 +8,7 @@
 //    facing-up hidden interaction at its original coordinate
 //    (hidden_events.asm CINNABAR_GYM), bound to OnInteract by overworld setup.
 //    Machines and gates use independent flags: answering correctly only opens
-//    that machine's gate (EVENT_CINNABAR_GYM_GATE0..5_UNLOCKED); the trainers
+//    that machine's gate (EVENT_CINNABAR_GYM_GATE1..6_UNLOCKED); the trainers
 //    stay challengeable.
 //  - Answering WRONG plays SFX_DENIED and, unless that gate's trainer is
 //    already beaten, pits you against the gate-linked trainer
@@ -20,38 +20,38 @@
 //  - The seven trainers are talk-driven (original headers are talk-engaged in
 //    this port): talking battles them directly; their persistent post-defeat
 //    texts survive from the original. Defeated trainers remain visible.
-//  - Quiz machine 6's upstream answer bit decodes past GATE5; the six machines
-//    are mapped to GATE0..5 in listed order, matching the six-gate audit note.
+//  - Gate indexes are 1..6. GATE0 belongs to the optional first trainer and
+//    has no physical gate. Answer bytes are YES/NO menu indexes (0/1).
 
 game_scene CinnabarGym {
   // ── Gate initialization (UpdateCinnabarGymGateTileBlocks_) ──────────────
   @load {
-    @if (getFlag("EVENT_CINNABAR_GYM_GATE0_UNLOCKED")) {
+    @if (getFlag("EVENT_CINNABAR_GYM_GATE1_UNLOCKED")) {
       replaceTileBlock(9, 3, 14)
     } @else {
       replaceTileBlock(9, 3, 84)
     }
-    @if (getFlag("EVENT_CINNABAR_GYM_GATE1_UNLOCKED")) {
+    @if (getFlag("EVENT_CINNABAR_GYM_GATE2_UNLOCKED")) {
       replaceTileBlock(6, 3, 14)
     } @else {
       replaceTileBlock(6, 3, 84)
     }
-    @if (getFlag("EVENT_CINNABAR_GYM_GATE2_UNLOCKED")) {
+    @if (getFlag("EVENT_CINNABAR_GYM_GATE3_UNLOCKED")) {
       replaceTileBlock(6, 6, 14)
     } @else {
       replaceTileBlock(6, 6, 84)
     }
-    @if (getFlag("EVENT_CINNABAR_GYM_GATE3_UNLOCKED")) {
+    @if (getFlag("EVENT_CINNABAR_GYM_GATE4_UNLOCKED")) {
       replaceTileBlock(3, 8, 14)
     } @else {
       replaceTileBlock(3, 8, 95)
     }
-    @if (getFlag("EVENT_CINNABAR_GYM_GATE4_UNLOCKED")) {
+    @if (getFlag("EVENT_CINNABAR_GYM_GATE5_UNLOCKED")) {
       replaceTileBlock(2, 6, 14)
     } @else {
       replaceTileBlock(2, 6, 84)
     }
-    @if (getFlag("EVENT_CINNABAR_GYM_GATE5_UNLOCKED")) {
+    @if (getFlag("EVENT_CINNABAR_GYM_GATE6_UNLOCKED")) {
       replaceTileBlock(2, 3, 14)
     } @else {
       replaceTileBlock(2, 3, 84)
@@ -108,29 +108,31 @@ game_scene CinnabarGym {
     }
   }
 
-  // ── Quiz machine 1 (tile 15,7 → gate 1 at block 9,3; answer NO) ─────────
+  // ── Quiz machine 1 (tile 15,7 → gate 1 at block 9,3; answer YES) ─────────
   @storyline("quizMachine1") {
     @trigger(map = "CinnabarGym", name = "quizMachine1")
     @if (getPlayerFacing() == "up") {
-      @speaker("") { @t("#MON Quiz!\n\nGet it right and the door\nopens to the next room!\n\nGet it wrong and face a\ntrainer!\n\nIf you want to conserve\nyour #MON for the GYM\nLEADER...\n\nThen get it right! Here we\ngo!", "宝可梦问答！\n\n答对了，通往下一个房间的大\n门就会打开！\n\n答错了，就要面对训练家！\n\n如果想为挑战馆主保存宝可梦\n的实力……\n\n那就答对吧！开始！") }
+      @speaker("") { @t("POKéMON Quiz!\n\nGet it right and the door\nopens to the next room!\n\nGet it wrong and face a\ntrainer!\n\nIf you want to conserve\nyour POKéMON for the GYM\nLEADER...\n\nThen get it right! Here we\ngo!", "宝可梦问答！\n\n答对了，通往下一个房间的大\n门就会打开！\n\n答错了，就要面对训练家！\n\n如果想为挑战馆主保存宝可梦\n的实力……\n\n那就答对吧！开始！") }
       @speaker("") { @t("CATERPIE evolves into\nBUTTERFREE?", "绿毛虫会进化成巴大蝶？") }
       @choice {
         @option(@t("YES", "是")) {
+          playSound("SFX_GO_INSIDE")
+          @speaker("") { @t("You're absolutely correct!\n\nGo on through!", "完全正确！\n\n请通过吧！") }
+          setFlag("EVENT_CINNABAR_GYM_GATE1_UNLOCKED")
+          replaceTileBlock(9, 3, 14)
+        }
+        @option(@t("NO", "否")) {
           playSound("SFX_DENIED")
           @speaker("") { @t("Sorry! Bad call!", "抱歉，答错了！") }
           @if (!getFlag("EVENT_BEAT_CINNABAR_GYM_TRAINER_1")) {
             result = startBattle("OPP_BURGLAR4")
             @if (result == "win") {
               setFlag("EVENT_BEAT_CINNABAR_GYM_TRAINER_1")
+              setFlag("EVENT_CINNABAR_GYM_GATE1_UNLOCKED")
+              replaceTileBlock(9, 3, 14)
               @speaker("") { @t("I can't help stealing other\npeople's POKeMON!", "我忍不住想偷别人的宝可梦！") }
             }
           }
-        }
-        @option(@t("NO", "否")) {
-          playSound("SFX_GO_INSIDE")
-          @speaker("") { @t("You're absolutely correct!\n\nGo on through!", "完全正确！\n\n请通过吧！") }
-          setFlag("EVENT_CINNABAR_GYM_GATE0_UNLOCKED")
-          replaceTileBlock(9, 3, 14)
         }
       }
     }
@@ -140,8 +142,8 @@ game_scene CinnabarGym {
   @storyline("quizMachine2") {
     @trigger(map = "CinnabarGym", name = "quizMachine2")
     @if (getPlayerFacing() == "up") {
-      @speaker("") { @t("#MON Quiz!\n\nGet it right and the door\nopens to the next room!\n\nGet it wrong and face a\ntrainer!\n\nIf you want to conserve\nyour #MON for the GYM\nLEADER...\n\nThen get it right! Here we\ngo!", "宝可梦问答！\n\n答对了，通往下一个房间的大\n门就会打开！\n\n答错了，就要面对训练家！\n\n如果想为挑战馆主保存宝可梦\n的实力……\n\n那就答对吧！开始！") }
-      @speaker("") { @t("There are 9 certified #MON\nLEAGUE BADGEs?", "宝可梦联盟的认证徽章有 9枚？") }
+      @speaker("") { @t("POKéMON Quiz!\n\nGet it right and the door\nopens to the next room!\n\nGet it wrong and face a\ntrainer!\n\nIf you want to conserve\nyour POKéMON for the GYM\nLEADER...\n\nThen get it right! Here we\ngo!", "宝可梦问答！\n\n答对了，通往下一个房间的大\n门就会打开！\n\n答错了，就要面对训练家！\n\n如果想为挑战馆主保存宝可梦\n的实力……\n\n那就答对吧！开始！") }
+      @speaker("") { @t("There are 9 certified POKéMON\nLEAGUE BADGEs?", "宝可梦联盟的认证徽章有 9枚？") }
       @choice {
         @option(@t("YES", "是")) {
           playSound("SFX_DENIED")
@@ -150,6 +152,8 @@ game_scene CinnabarGym {
             result = startBattle("OPP_SUPER_NERD10")
             @if (result == "win") {
               setFlag("EVENT_BEAT_CINNABAR_GYM_TRAINER_2")
+              setFlag("EVENT_CINNABAR_GYM_GATE2_UNLOCKED")
+              replaceTileBlock(6, 3, 14)
               @speaker("") { @t("My theories are too\ncomplicated for you!", "我的理论太复杂，你听不懂！") }
             }
           }
@@ -157,7 +161,7 @@ game_scene CinnabarGym {
         @option(@t("NO", "否")) {
           playSound("SFX_GO_INSIDE")
           @speaker("") { @t("You're absolutely correct!\n\nGo on through!", "完全正确！\n\n请通过吧！") }
-          setFlag("EVENT_CINNABAR_GYM_GATE1_UNLOCKED")
+          setFlag("EVENT_CINNABAR_GYM_GATE2_UNLOCKED")
           replaceTileBlock(6, 3, 14)
         }
       }
@@ -168,7 +172,7 @@ game_scene CinnabarGym {
   @storyline("quizMachine3") {
     @trigger(map = "CinnabarGym", name = "quizMachine3")
     @if (getPlayerFacing() == "up") {
-      @speaker("") { @t("#MON Quiz!\n\nGet it right and the door\nopens to the next room!\n\nGet it wrong and face a\ntrainer!\n\nIf you want to conserve\nyour #MON for the GYM\nLEADER...\n\nThen get it right! Here we\ngo!", "宝可梦问答！\n\n答对了，通往下一个房间的大\n门就会打开！\n\n答错了，就要面对训练家！\n\n如果想为挑战馆主保存宝可梦\n的实力……\n\n那就答对吧！开始！") }
+      @speaker("") { @t("POKéMON Quiz!\n\nGet it right and the door\nopens to the next room!\n\nGet it wrong and face a\ntrainer!\n\nIf you want to conserve\nyour POKéMON for the GYM\nLEADER...\n\nThen get it right! Here we\ngo!", "宝可梦问答！\n\n答对了，通往下一个房间的大\n门就会打开！\n\n答错了，就要面对训练家！\n\n如果想为挑战馆主保存宝可梦\n的实力……\n\n那就答对吧！开始！") }
       @speaker("") { @t("POLIWAG evolves 3 times?", "蚊香蝌蚪会进化 3次？") }
       @choice {
         @option(@t("YES", "是")) {
@@ -178,6 +182,8 @@ game_scene CinnabarGym {
             result = startBattle("OPP_BURGLAR5")
             @if (result == "win") {
               setFlag("EVENT_BEAT_CINNABAR_GYM_TRAINER_3")
+              setFlag("EVENT_CINNABAR_GYM_GATE3_UNLOCKED")
+              replaceTileBlock(6, 6, 14)
               @speaker("") { @t("I wish there was a thief\nPOKeMON! I'd use that!", "真希望有小偷宝可梦！我一定\n用！") }
             }
           }
@@ -185,7 +191,7 @@ game_scene CinnabarGym {
         @option(@t("NO", "否")) {
           playSound("SFX_GO_INSIDE")
           @speaker("") { @t("You're absolutely correct!\n\nGo on through!", "完全正确！\n\n请通过吧！") }
-          setFlag("EVENT_CINNABAR_GYM_GATE2_UNLOCKED")
+          setFlag("EVENT_CINNABAR_GYM_GATE3_UNLOCKED")
           replaceTileBlock(6, 6, 14)
         }
       }
@@ -196,8 +202,8 @@ game_scene CinnabarGym {
   @storyline("quizMachine4") {
     @trigger(map = "CinnabarGym", name = "quizMachine4")
     @if (getPlayerFacing() == "up") {
-      @speaker("") { @t("#MON Quiz!\n\nGet it right and the door\nopens to the next room!\n\nGet it wrong and face a\ntrainer!\n\nIf you want to conserve\nyour #MON for the GYM\nLEADER...\n\nThen get it right! Here we\ngo!", "宝可梦问答！\n\n答对了，通往下一个房间的大\n门就会打开！\n\n答错了，就要面对训练家！\n\n如果想为挑战馆主保存宝可梦\n的实力……\n\n那就答对吧！开始！") }
-      @speaker("") { @t("Are thunder moves effective\nagainst ground element-\ntype #MON?", "电系招式对地面系宝可梦有效\n吗？") }
+      @speaker("") { @t("POKéMON Quiz!\n\nGet it right and the door\nopens to the next room!\n\nGet it wrong and face a\ntrainer!\n\nIf you want to conserve\nyour POKéMON for the GYM\nLEADER...\n\nThen get it right! Here we\ngo!", "宝可梦问答！\n\n答对了，通往下一个房间的大\n门就会打开！\n\n答错了，就要面对训练家！\n\n如果想为挑战馆主保存宝可梦\n的实力……\n\n那就答对吧！开始！") }
+      @speaker("") { @t("Are thunder moves effective\nagainst ground element-\ntype POKéMON?", "电系招式对地面系宝可梦有效\n吗？") }
       @choice {
         @option(@t("YES", "是")) {
           playSound("SFX_DENIED")
@@ -206,6 +212,8 @@ game_scene CinnabarGym {
             result = startBattle("OPP_SUPER_NERD11")
             @if (result == "win") {
               setFlag("EVENT_BEAT_CINNABAR_GYM_TRAINER_4")
+              setFlag("EVENT_CINNABAR_GYM_GATE4_UNLOCKED")
+              replaceTileBlock(3, 8, 14)
               @speaker("") { @t("BLAINE was lost in the\nmountains when a fiery bird\nPOKeMON appeared.\n\nIts light enabled BLAINE to\nfind his way down!", "夏伯在山上迷了路，这时一只火\n鸟宝可梦出现了。\n\n它的光芒指引夏伯下了山！") }
             }
           }
@@ -213,7 +221,7 @@ game_scene CinnabarGym {
         @option(@t("NO", "否")) {
           playSound("SFX_GO_INSIDE")
           @speaker("") { @t("You're absolutely correct!\n\nGo on through!", "完全正确！\n\n请通过吧！") }
-          setFlag("EVENT_CINNABAR_GYM_GATE3_UNLOCKED")
+          setFlag("EVENT_CINNABAR_GYM_GATE4_UNLOCKED")
           replaceTileBlock(3, 8, 14)
         }
       }
@@ -224,13 +232,13 @@ game_scene CinnabarGym {
   @storyline("quizMachine5") {
     @trigger(map = "CinnabarGym", name = "quizMachine5")
     @if (getPlayerFacing() == "up") {
-      @speaker("") { @t("#MON Quiz!\n\nGet it right and the door\nopens to the next room!\n\nGet it wrong and face a\ntrainer!\n\nIf you want to conserve\nyour #MON for the GYM\nLEADER...\n\nThen get it right! Here we\ngo!", "宝可梦问答！\n\n答对了，通往下一个房间的大\n门就会打开！\n\n答错了，就要面对训练家！\n\n如果想为挑战馆主保存宝可梦\n的实力……\n\n那就答对吧！开始！") }
-      @speaker("") { @t("#MON of the same kind and\nlevel are not identical?", "同种类同等级的宝可梦并不完\n全相同？") }
+      @speaker("") { @t("POKéMON Quiz!\n\nGet it right and the door\nopens to the next room!\n\nGet it wrong and face a\ntrainer!\n\nIf you want to conserve\nyour POKéMON for the GYM\nLEADER...\n\nThen get it right! Here we\ngo!", "宝可梦问答！\n\n答对了，通往下一个房间的大\n门就会打开！\n\n答错了，就要面对训练家！\n\n如果想为挑战馆主保存宝可梦\n的实力……\n\n那就答对吧！开始！") }
+      @speaker("") { @t("POKéMON of the same kind and\nlevel are not identical?", "同种类同等级的宝可梦并不完\n全相同？") }
       @choice {
         @option(@t("YES", "是")) {
           playSound("SFX_GO_INSIDE")
           @speaker("") { @t("You're absolutely correct!\n\nGo on through!", "完全正确！\n\n请通过吧！") }
-          setFlag("EVENT_CINNABAR_GYM_GATE4_UNLOCKED")
+          setFlag("EVENT_CINNABAR_GYM_GATE5_UNLOCKED")
           replaceTileBlock(2, 6, 14)
         }
         @option(@t("NO", "否")) {
@@ -240,6 +248,8 @@ game_scene CinnabarGym {
             result = startBattle("OPP_BURGLAR6")
             @if (result == "win") {
               setFlag("EVENT_BEAT_CINNABAR_GYM_TRAINER_5")
+              setFlag("EVENT_CINNABAR_GYM_GATE5_UNLOCKED")
+              replaceTileBlock(2, 6, 14)
               @speaker("") { @t("Us fire POKeMON fans like\nPONYTA and NINETALES!", "我们火系宝可梦迷喜欢小火马和\n九尾！") }
             }
           }
@@ -252,7 +262,7 @@ game_scene CinnabarGym {
   @storyline("quizMachine6") {
     @trigger(map = "CinnabarGym", name = "quizMachine6")
     @if (getPlayerFacing() == "up") {
-      @speaker("") { @t("#MON Quiz!\n\nGet it right and the door\nopens to the next room!\n\nGet it wrong and face a\ntrainer!\n\nIf you want to conserve\nyour #MON for the GYM\nLEADER...\n\nThen get it right! Here we\ngo!", "宝可梦问答！\n\n答对了，通往下一个房间的大\n门就会打开！\n\n答错了，就要面对训练家！\n\n如果想为挑战馆主保存宝可梦\n的实力……\n\n那就答对吧！开始！") }
+      @speaker("") { @t("POKéMON Quiz!\n\nGet it right and the door\nopens to the next room!\n\nGet it wrong and face a\ntrainer!\n\nIf you want to conserve\nyour POKéMON for the GYM\nLEADER...\n\nThen get it right! Here we\ngo!", "宝可梦问答！\n\n答对了，通往下一个房间的大\n门就会打开！\n\n答错了，就要面对训练家！\n\n如果想为挑战馆主保存宝可梦\n的实力……\n\n那就答对吧！开始！") }
       @speaker("") { @t("TM28 contains TOMBSTONER?", "TM28里装的是大坟墓？") }
       @choice {
         @option(@t("YES", "是")) {
@@ -262,6 +272,8 @@ game_scene CinnabarGym {
             result = startBattle("OPP_SUPER_NERD12")
             @if (result == "win") {
               setFlag("EVENT_BEAT_CINNABAR_GYM_TRAINER_6")
+              setFlag("EVENT_CINNABAR_GYM_GATE6_UNLOCKED")
+              replaceTileBlock(2, 3, 14)
               @speaker("") { @t("Water beats fire! But, fire\nmelts ice POKeMON!", "水能克火！但火能融化冰系宝可\n梦！") }
             }
           }
@@ -269,7 +281,7 @@ game_scene CinnabarGym {
         @option(@t("NO", "否")) {
           playSound("SFX_GO_INSIDE")
           @speaker("") { @t("You're absolutely correct!\n\nGo on through!", "完全正确！\n\n请通过吧！") }
-          setFlag("EVENT_CINNABAR_GYM_GATE5_UNLOCKED")
+          setFlag("EVENT_CINNABAR_GYM_GATE6_UNLOCKED")
           replaceTileBlock(2, 3, 14)
         }
       }
@@ -290,6 +302,7 @@ game_scene CinnabarGym {
       result = startBattle("OPP_SUPER_NERD9")
       @if (result == "win") {
         setFlag("EVENT_BEAT_CINNABAR_GYM_TRAINER_0")
+        setFlag("EVENT_CINNABAR_GYM_GATE0_UNLOCKED")
         @speaker("") {
           @t("Fire, or to be more precise,\ncombustion...\n\nBlah, blah, blah, blah...", "火，或者说更准确地说，燃\n烧……\n\n啰嗦，啰嗦，啰嗦……")
         }
@@ -311,6 +324,8 @@ game_scene CinnabarGym {
       result = startBattle("OPP_BURGLAR4")
       @if (result == "win") {
         setFlag("EVENT_BEAT_CINNABAR_GYM_TRAINER_1")
+        setFlag("EVENT_CINNABAR_GYM_GATE1_UNLOCKED")
+        replaceTileBlock(9, 3, 14)
         @speaker("") {
           @t("I can't help stealing other\npeople's POKeMON!", "我忍不住想偷别人的宝可梦！")
         }
@@ -332,6 +347,8 @@ game_scene CinnabarGym {
       result = startBattle("OPP_SUPER_NERD10")
       @if (result == "win") {
         setFlag("EVENT_BEAT_CINNABAR_GYM_TRAINER_2")
+        setFlag("EVENT_CINNABAR_GYM_GATE2_UNLOCKED")
+        replaceTileBlock(6, 3, 14)
         @speaker("") {
           @t("My theories are too\ncomplicated for you!", "我的理论太复杂，你听不懂！")
         }
@@ -353,6 +370,8 @@ game_scene CinnabarGym {
       result = startBattle("OPP_BURGLAR5")
       @if (result == "win") {
         setFlag("EVENT_BEAT_CINNABAR_GYM_TRAINER_3")
+        setFlag("EVENT_CINNABAR_GYM_GATE3_UNLOCKED")
+        replaceTileBlock(6, 6, 14)
         @speaker("") {
           @t("I wish there was a thief\nPOKeMON! I'd use that!", "真希望有小偷宝可梦！我一定\n用！")
         }
@@ -374,6 +393,8 @@ game_scene CinnabarGym {
       result = startBattle("OPP_SUPER_NERD11")
       @if (result == "win") {
         setFlag("EVENT_BEAT_CINNABAR_GYM_TRAINER_4")
+        setFlag("EVENT_CINNABAR_GYM_GATE4_UNLOCKED")
+        replaceTileBlock(3, 8, 14)
         @speaker("") {
           @t("BLAINE was lost in the\nmountains when a fiery bird\nPOKeMON appeared.\n\nIts light enabled BLAINE to\nfind his way down!", "夏伯在山上迷了路，这时一只火\n鸟宝可梦出现了。\n\n它的光芒指引夏伯下了山！")
         }
@@ -395,6 +416,8 @@ game_scene CinnabarGym {
       result = startBattle("OPP_BURGLAR6")
       @if (result == "win") {
         setFlag("EVENT_BEAT_CINNABAR_GYM_TRAINER_5")
+        setFlag("EVENT_CINNABAR_GYM_GATE5_UNLOCKED")
+        replaceTileBlock(2, 6, 14)
         @speaker("") {
           @t("Us fire POKeMON fans like\nPONYTA and NINETALES!", "我们火系宝可梦迷喜欢小火马和\n九尾！")
         }
@@ -416,6 +439,8 @@ game_scene CinnabarGym {
       result = startBattle("OPP_SUPER_NERD12")
       @if (result == "win") {
         setFlag("EVENT_BEAT_CINNABAR_GYM_TRAINER_6")
+        setFlag("EVENT_CINNABAR_GYM_GATE6_UNLOCKED")
+        replaceTileBlock(2, 3, 14)
         @speaker("") {
           @t("Water beats fire! But, fire\nmelts ice POKeMON!", "水能克火！但火能融化冰系宝可\n梦！")
         }

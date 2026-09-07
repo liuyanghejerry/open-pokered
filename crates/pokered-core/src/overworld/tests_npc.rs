@@ -1177,12 +1177,12 @@ fn cinnabar_gym_gates_initialized_per_quiz_flags() {
         );
     }
     for flag in [
-        EventFlag::EVENT_CINNABAR_GYM_GATE0_UNLOCKED,
         EventFlag::EVENT_CINNABAR_GYM_GATE1_UNLOCKED,
         EventFlag::EVENT_CINNABAR_GYM_GATE2_UNLOCKED,
         EventFlag::EVENT_CINNABAR_GYM_GATE3_UNLOCKED,
         EventFlag::EVENT_CINNABAR_GYM_GATE4_UNLOCKED,
         EventFlag::EVENT_CINNABAR_GYM_GATE5_UNLOCKED,
+        EventFlag::EVENT_CINNABAR_GYM_GATE6_UNLOCKED,
     ] {
         screen.set_event_flag_live(flag);
     }
@@ -1210,9 +1210,11 @@ fn cinnabar_gym_gates_initialized_per_quiz_flags() {
 fn cinnabar_quiz_machine_correct_answer_opens_gate_only() {
     use super::screen::OverworldScreen;
     use pokered_data::impl_traits::PokemonRedData;
+    for (machine, x, y, bx, by, no) in [(1,15,7,9,3,false),(2,10,1,6,3,true),(3,9,7,6,6,true),(4,9,13,3,8,true),(5,1,13,2,6,false),(6,1,7,2,3,true)] {
+    let flag = format!("EVENT_CINNABAR_GYM_GATE{machine}_UNLOCKED");
     let mut screen = OverworldScreen::new(MapId::CinnabarGym, None, PokemonRedData);
-    screen.state.player.x = 15;
-    screen.state.player.y = 8;
+    screen.state.player.x = x;
+    screen.state.player.y = y + 1;
     screen.run_on_load();
     let input = |a: bool| super::OverworldInput::new(false, false, false, false, a, false, false, false);
     for _ in 0..100 {
@@ -1231,13 +1233,16 @@ fn cinnabar_quiz_machine_correct_answer_opens_gate_only() {
         screen.update_frame(input(frame % 2 == 1));
     }
     assert!(screen.pending_choice.is_some(), "machine 1 must offer YES/NO");
-    // Correct answer is NO — move down to the second option, then confirm.
+    if no {
+        screen.update_frame(input(false));
+        screen.update_frame(super::OverworldInput::new(false,true,false,false,false,false,false,false));
+    }
+    // Original answer byte is 0: YES (FALSE is the menu index, not the answer).
     screen.update_frame(input(false));
-    screen.update_frame(super::OverworldInput::new(false, true, false, false, false, false, false, false));
     screen.update_frame(input(false));
     screen.update_frame(input(true));
     for frame in 0..300 {
-        if screen.script_flags().get("EVENT_CINNABAR_GYM_GATE0_UNLOCKED") == Some(&true) {
+        if screen.script_flags().get(&flag) == Some(&true) {
             break;
         }
         if let Some(dialogue) = screen.pending_dialogue.as_mut() {
@@ -1246,7 +1251,7 @@ fn cinnabar_quiz_machine_correct_answer_opens_gate_only() {
         screen.update_frame(input(frame % 2 == 1));
     }
     assert_eq!(
-        screen.script_flags().get("EVENT_CINNABAR_GYM_GATE0_UNLOCKED"),
+        screen.script_flags().get(&flag),
         Some(&true),
         "correct answer sets the gate flag"
     );
@@ -1256,13 +1261,14 @@ fn cinnabar_quiz_machine_correct_answer_opens_gate_only() {
     }
     let width = screen.map_data.as_ref().unwrap().width as usize;
     assert_eq!(
-        screen.map_data.as_ref().unwrap().blocks[3 * width + 9],
+        screen.map_data.as_ref().unwrap().blocks[by * width + bx],
         14,
         "gate 1 re-applied open right after the correct answer"
     );
     for f in 0..=6 {
         assert_neq_trainer_flag(&screen, f);
     }
+}
 }
 
 fn assert_neq_trainer_flag(screen: &super::screen::OverworldScreen<pokered_data::impl_traits::PokemonRedData>, f: usize) {
@@ -1300,7 +1306,8 @@ fn cinnabar_quiz_wrong_answer_sends_gate_trainer() {
         screen.update_frame(input(frame % 2 == 1));
     }
     assert!(screen.pending_choice.is_some());
-    // YES is the first option: confirm directly.
+    // NO is wrong: choose the second row.
+    screen.update_frame(super::OverworldInput::new(false, true, false, false, false, false, false, false));
     screen.update_frame(input(false));
     screen.update_frame(input(true));
     for frame in 0..300 {
@@ -1318,10 +1325,20 @@ fn cinnabar_quiz_wrong_answer_sends_gate_trainer() {
         .expect("wrong answer must pit the gate-linked trainer against the player");
     assert_eq!(pending.trainer_id, "OPP_BURGLAR4", "gate 1 links to trainer npc 3");
     assert_ne!(
-        screen.script_flags().get("EVENT_CINNABAR_GYM_GATE0_UNLOCKED"),
+        screen.script_flags().get("EVENT_CINNABAR_GYM_GATE1_UNLOCKED"),
         Some(&true),
         "a wrong answer never opens the gate"
     );
+    screen.pending_trainer_battle = None;
+    screen.resume_script_after_battle("win");
+    for frame in 0..300 {
+        if let Some(dialogue) = screen.pending_dialogue.as_mut() { dialogue.skip_to_full_page(); }
+        screen.update_frame(input(frame % 2 == 1));
+    }
+    assert_eq!(screen.script_flags().get("EVENT_CINNABAR_GYM_GATE1_UNLOCKED"), Some(&true), "winning the wrong-answer battle opens the gate immediately");
+    let map = screen.map_data.as_ref().unwrap();
+    assert_eq!(map.blocks[3 * map.width as usize + 9], 14);
+
 }
 
 /// Interacting with ZAPDOS queues the real wild battle; the scripted outcome
@@ -1733,4 +1750,56 @@ fn trainer_approach_freezes_player_no_overlap() {
         screen.pending_trainer_battle.is_some() || screen.script_awaiting_battle,
         "the sight approach still hands off to the battle"
     );
+}
+
+/// Reload only persistent event bytes, without the runtime sidecar flags.
+#[test]
+fn completed_static_encounters_hidden_from_persistent_events() {
+    use pokered_data::{event_flags::EventFlag, impl_traits::PokemonRedData};
+    for (map, id, flag) in [
+        (MapId::PowerPlant, 9, "EVENT_BEAT_ZAPDOS"),
+        (MapId::SeafoamIslandsB4F, 3, "EVENT_BEAT_ARTICUNO"),
+        (MapId::VictoryRoad2F, 6, "EVENT_BEAT_MOLTRES"),
+    ].into_iter().chain((0..8).map(|i| (MapId::PowerPlant, i+1, [
+        "EVENT_BEAT_POWER_PLANT_VOLTORB_0", "EVENT_BEAT_POWER_PLANT_VOLTORB_1",
+        "EVENT_BEAT_POWER_PLANT_VOLTORB_2", "EVENT_BEAT_POWER_PLANT_VOLTORB_3",
+        "EVENT_BEAT_POWER_PLANT_VOLTORB_4", "EVENT_BEAT_POWER_PLANT_VOLTORB_5",
+        "EVENT_BEAT_POWER_PLANT_VOLTORB_6", "EVENT_BEAT_POWER_PLANT_VOLTORB_7",
+    ][i as usize]))) {
+        let mut screen = super::screen::OverworldScreen::new(map, None, PokemonRedData);
+        screen.set_event_flag_live(EventFlag::from_name(flag).unwrap());
+        screen.run_on_load();
+        for _ in 0..120 { screen.update_frame(super::OverworldInput::new(false,false,false,false,false,false,false,false)); }
+        assert!(!screen.npc_states.iter().find(|n| n.text_id == id).unwrap().visible, "{map:?} NPC {id}");
+        let cfg = screen.map_script_config.npcs.iter().find(|n| n.id == id).unwrap();
+        let bit = pokered_data::toggleable_objects::toggle_id_to_bit_index(cfg.toggle_id.as_ref().unwrap()).expect("must persist in SRAM");
+        assert!(pokered_data::toggleable_objects::is_object_hidden(&screen.toggleable_object_flags, bit));
+    }
+}
+
+#[test]
+fn victory_road_boulder_drops_and_reappears_downstairs() {
+    use pokered_data::impl_traits::PokemonRedData;
+    let idle = super::OverworldInput::new(false,false,false,false,false,false,false,false);
+    let mut screen = super::screen::OverworldScreen::new(MapId::VictoryRoad2F, None, PokemonRedData);
+    screen.run_on_load();
+    for _ in 0..60 { screen.update_frame(idle); }
+    assert!(!screen.npc_states.iter().find(|n| n.text_id == 13).unwrap().visible, "downstairs stone starts hidden");
+    screen.warp_to_map(MapId::VictoryRoad3F, 21, 15);
+    for _ in 0..100 { screen.update_frame(idle); }
+    screen.state.player.x = 21;
+    screen.state.player.y = 15;
+    screen.state.player.facing = Direction::Right;
+    screen.strength_active = true;
+    screen.tick_boulder_push(Some(Direction::Right));
+    screen.tick_boulder_push(Some(Direction::Right));
+    assert!(!screen.npc_states.iter().find(|n| n.text_id == 10).unwrap().visible, "stone falls into the hole");
+    let bytes = screen.unified_flags.to_event_bytes();
+    let mut restored = super::screen::OverworldScreen::new(MapId::VictoryRoad2F, None, PokemonRedData);
+    restored.set_event_flags_bytes(&bytes);
+    restored.run_on_load();
+    for _ in 0..120 { restored.update_frame(idle); }
+    let boulder = restored.npc_states.iter().find(|n| n.text_id == 13).unwrap();
+    assert!(boulder.visible);
+    assert_eq!((boulder.x,boulder.y), (23,16));
 }

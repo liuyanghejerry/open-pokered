@@ -15,6 +15,9 @@ game_scene VictoryRoad3F {
   // No CLOSED block id in the asm (the .blk ships with the path closed, no re-close),
   // and the original plays no SFX for this swap.
   @load {
+    @if (getFlag("EVENT_VICTORY_ROAD_3_BOULDER_ON_SWITCH2")) {
+      hideObject("VICTORY_ROAD_3F_OBJ_10")
+    }
     @if (getFlag("EVENT_VICTORY_ROAD_3_BOULDER_ON_SWITCH1")) {
       replaceTileBlock(3, 5, 29)
     }

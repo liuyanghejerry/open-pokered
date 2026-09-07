@@ -16,6 +16,35 @@
 // Articuno handling (cry + text + obtained once + EVENT_BEAT_ZAPDOS).
 
 game_scene PowerPlant {
+  @load {
+    @if (getFlag("EVENT_BEAT_POWER_PLANT_VOLTORB_0")) {
+      hideObjectByName("POWER_PLANT_OBJ_1")
+    }
+    @if (getFlag("EVENT_BEAT_POWER_PLANT_VOLTORB_1")) {
+      hideObjectByName("POWER_PLANT_OBJ_2")
+    }
+    @if (getFlag("EVENT_BEAT_POWER_PLANT_VOLTORB_2")) {
+      hideObjectByName("POWER_PLANT_OBJ_3")
+    }
+    @if (getFlag("EVENT_BEAT_POWER_PLANT_VOLTORB_3")) {
+      hideObjectByName("POWER_PLANT_OBJ_4")
+    }
+    @if (getFlag("EVENT_BEAT_POWER_PLANT_VOLTORB_4")) {
+      hideObjectByName("POWER_PLANT_OBJ_5")
+    }
+    @if (getFlag("EVENT_BEAT_POWER_PLANT_VOLTORB_5")) {
+      hideObjectByName("POWER_PLANT_OBJ_6")
+    }
+    @if (getFlag("EVENT_BEAT_POWER_PLANT_VOLTORB_6")) {
+      hideObjectByName("POWER_PLANT_OBJ_7")
+    }
+    @if (getFlag("EVENT_BEAT_POWER_PLANT_VOLTORB_7")) {
+      hideObjectByName("POWER_PLANT_OBJ_8")
+    }
+    @if (getFlag("EVENT_BEAT_ZAPDOS")) {
+      hideObjectByName("POWER_PLANT_OBJ_9")
+    }
+  }
   // ── VOLTORB #1 (npc 1, EVENT_BEAT_POWER_PLANT_VOLTORB_0) ────────────────
   @storyline("talkVoltorb1") {
     @trigger(map = "PowerPlant", npc = 1)

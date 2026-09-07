@@ -1340,9 +1340,18 @@ impl PokemonGame {
             // supplies the triplet base (scripts/{Map}.asm StarterTable).
             let party_index = if is_rival {
                 let base = rival_triplet_base.unwrap_or(0) as usize;
-                player_party.first().map_or(default_index, |starter| {
-                    base + pokered_data::trainer_data::rival_starter_offset(starter.species)
-                })
+                let starter = pokered_data::trainer_data::resolve_player_starter(
+                    self.save_data.game_data.player_starter,
+                    player_party.first().map(|mon| mon.species),
+                );
+                let offset = starter.map(pokered_data::trainer_data::rival_starter_offset).unwrap_or(0);
+                if self.save_data.game_data.player_starter == 0 {
+                    if let Some(starter) = starter {
+                        self.save_data.game_data.player_starter = starter as u8;
+                        self.save_data.game_data.rival_starter = [Species::Squirtle, Species::Bulbasaur, Species::Charmander][offset] as u8;
+                    }
+                }
+                base + offset
             } else {
                 default_index
             };
@@ -2580,7 +2589,7 @@ impl PokemonGame {
                             None => ScreenAction::Continue,
                             Some(item) => {
                                 let outcome = match self.save_data.party.get_mut(party_index) {
-                                    Some(mon) => bag_use::finish_tm_hm_replace(item, mon, slot),
+                                    Some(mon) => bag_use::finish_move_choice(item, mon, slot),
                                     None => ItemApplyOutcome::NoEffect {
                                         message: bag_use::NO_EFFECT_MESSAGE.to_string(),
                                     },
@@ -3464,6 +3473,26 @@ mod tests {
         let mut input = InputState::new();
         input.press(button);
         input
+    }
+
+    #[test]
+    fn pp_items_apply_selected_slot_through_game_flow() {
+        use pokered_data::{items::ItemId, species::Species};
+        for item in [ItemId::Ether, ItemId::MaxEther, ItemId::PpUp] {
+            let mut game = game_at_overworld();
+            let mut mon = pokered_core::pokemon::stats::create_pokemon(Species::Venusaur, 50, [255,255]).unwrap();
+            mon.pp[1] = 0;
+            let first = mon.pp[0];
+            game.save_data.party.add(mon).unwrap();
+            game.save_data.game_data.bag.add_item(item, 1).unwrap();
+            game.handle_transition(GameScreen::Bag);
+            for button in [GbButton::A, GbButton::A, GbButton::A, GbButton::Down, GbButton::A] {
+                game.update(&press(button));
+            }
+            assert!(game.save_data.party.get(0).unwrap().pp[1] > 0, "{item:?} must affect selected slot");
+            assert_eq!(game.save_data.party.get(0).unwrap().pp[0], first);
+            assert_eq!(game.save_data.game_data.bag.item_quantity(item), 0);
+        }
     }
 
     #[test]

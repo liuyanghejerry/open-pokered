@@ -20,6 +20,9 @@
 
 game_scene SeafoamIslandsB4F {
   @load {
+    @if (getFlag("EVENT_BEAT_ARTICUNO")) {
+      hideObjectByName("SEAFOAM_ISLANDS_B4F_OBJ_3")
+    }
     // These boulders are the ones pushed into the B3F holes: each appears here
     // only once the corresponding boulder has landed (orig ShowObject of
     // TOGGLE_SEAFOAM_ISLANDS_B4F_BOULDER_{1,2}). They are defaultHidden in

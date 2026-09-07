@@ -48,5 +48,6 @@
       "toggleId": "POWER_PLANT_OBJ_9"
     }
   ],
-  "signs": []
+  "signs": [],
+  "onLoad": "PowerPlantOnLoad"
 }

@@ -796,8 +796,15 @@ mod tests {
 /// menu (item_effects.asm:1968-1988 MoveSelectionMenu): apply the PP effect
 /// to that slot. Elixirs never reach this — they restore every move at once
 /// and skip the menu.
+pub fn finish_move_choice(item: ItemId, mon: &mut Pokemon, slot: usize) -> ItemApplyOutcome {
+    if matches!(item, ItemId::Ether | ItemId::MaxEther | ItemId::PpUp) {
+        finish_pp_restore(item, mon, slot)
+    } else {
+        finish_tm_hm_replace(item, mon, slot)
+    }
+}
+
 pub fn finish_pp_restore(item: ItemId, mon: &mut Pokemon, move_index: usize) -> ItemApplyOutcome {
-    let mut name_buf = [0u8; crate::battle::state::NAME_TEXT_BUF];
     match use_pp_restore(mon, item, move_index) {
         PpRestoreResult::Restored { .. } | PpRestoreResult::AllRestored { .. } => {
             used("PP was\nrestored!".to_string(), true)

@@ -57,7 +57,9 @@
     },
     {
       "id": 13,
-      "talk": "talkBoulder3"
+      "talk": "talkBoulder3",
+      "toggleId": "VICTORY_ROAD_2F_OBJ_13",
+      "defaultHidden": true
     }
   ],
   "onLoad": "VictoryRoad2FOnLoad",

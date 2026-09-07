@@ -20,6 +20,12 @@ game_scene VictoryRoad2F {
   //   SWITCH2 -> ld a,$1d (block 29); lb bc, 7, 11 => replaceTileBlock(X=11, Y=7,  29)
   // (asm lb bc, B, C = Y,X; our API is replaceTileBlock(X, Y, id) X-first.)
   @load {
+    @if (getFlag("EVENT_VICTORY_ROAD_3_BOULDER_ON_SWITCH2")) {
+      showObject("VICTORY_ROAD_2F_OBJ_13")
+    }
+    @if (getFlag("EVENT_BEAT_MOLTRES")) {
+      hideObjectByName("VICTORY_ROAD_2F_OBJ_6")
+    }
     @if (getFlag("EVENT_VICTORY_ROAD_2_BOULDER_ON_SWITCH1")) {
       replaceTileBlock(3, 4, 21)
     }

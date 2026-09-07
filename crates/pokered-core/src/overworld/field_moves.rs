@@ -509,6 +509,12 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                         self.unified_flags.set(flag);
                     }
                 }
+                if self.state.current_map == MapId::VictoryRoad3F && (npc.x, npc.y) == (23, 15) {
+                    npc.visible = false;
+                    self.unified_flags.set(pokered_data::event_flags::EventFlag::EVENT_VICTORY_ROAD_3_BOULDER_ON_SWITCH2);
+                    pokered_data::toggleable_objects::set_object_hidden(&mut self.toggleable_object_flags, 0x7A);
+                    pokered_data::toggleable_objects::set_object_shown(&mut self.toggleable_object_flags, 0x60);
+                }
                 // VictoryRoad boulder-on-switch detection (CheckBoulderCoords +
                 // SetEvent in VictoryRoad1F/2F/3F DefaultScript): a boulder
                 // pushed onto the floor switch sets the floor's ON_SWITCH event

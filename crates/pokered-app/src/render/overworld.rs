@@ -348,7 +348,7 @@ pub fn draw_overworld(
         // changes, so reading it kept rendering pre-swap trees (audit:
         // gym-tree-after identical SHA1 to gym-tree-before).
         let blk: &[u8] = match screen.map_data.as_ref() {
-            Some(live) if live.width == current_map.dimensions().0 => &live.blocks,
+            Some(live) if live.width == map_w && live.height == map_h => &live.blocks,
             _ => get_block_data(current_map),
         };
 
