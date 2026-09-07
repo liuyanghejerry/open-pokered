@@ -243,10 +243,7 @@ fn options_menu_no_cursor_on_inactive_rows() {
 
 #[test]
 fn options_menu_zh_cursor_tracks_zh_label_positions() {
-    // The zh labels in options.gui (" 快  中  慢") pack tighter than the EN
-    // strings the v1 enum_position_map was measured against. The ▶ must sit
-    // one tile left of each zh word; with EN offsets it lands on 慢 for
-    // Medium and past the last label for Slow.
+    // Each individually positioned Chinese option has a cursor one tile left.
     let pt = '\u{25B6}';
     for (speed, expected_tx) in [
         (TextSpeed::Fast, 1_u32),
@@ -1241,15 +1238,15 @@ fn draw_quantity_shows_item_name_qty_cost_and_money() {
 
     let boxes = collect_boxes(&rec.ops);
     assert_eq!(boxes, vec![
-        TileRect::new(0, 0, 10, 6),
-        TileRect::new(10, 0, 8, 3),
+        TileRect::new(0, 3, 20, 6),
+        TileRect::new(6, 0, 14, 3),
     ]);
 
     let texts = collect_texts(&rec.ops);
-    assert!(texts.contains(&(2, 2, "POTION".into())));
-    assert!(texts.contains(&(2, 4, "× 5".into())));
-    assert!(texts.contains(&(6, 4, "$1500".into())));
-    assert!(texts.contains(&(12, 2, "MONEY $5000".into())));
+    assert!(texts.contains(&(2, 5, "POTION".into())));
+    assert!(texts.contains(&(2, 7, "× 5".into())));
+    assert!(texts.contains(&(11, 7, "$1500".into())));
+    assert!(texts.contains(&(7, 1, "MONEY $5000".into())));
 }
 
 #[test]

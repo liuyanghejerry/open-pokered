@@ -148,14 +148,14 @@
     },
     "cost_value": {
      "parent": "detail_box",
-     "tx": 5,
+     "tx": 10,
      "ty": 3,
      "color": "Black"
     },
     "money_value": {
      "parent": "money_box",
-     "tx": 1,
-     "ty": 1,
+     "tx": 0,
+     "ty": 0,
      "color": "Black"
     }
    },
@@ -164,8 +164,8 @@
      "id": "detail_box",
      "rect": {
       "tx": 0,
-      "ty": 0,
-      "tw": 10,
+      "ty": 3,
+      "tw": 20,
       "th": 6
      },
      "color": "Black",
@@ -174,9 +174,9 @@
     {
      "id": "money_box",
      "rect": {
-      "tx": 10,
+      "tx": 6,
       "ty": 0,
-      "tw": 8,
+      "tw": 14,
       "th": 3
      },
      "color": "Black",

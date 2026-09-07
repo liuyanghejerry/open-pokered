@@ -383,10 +383,10 @@ pub fn draw_bag(state: &BagScreenState, fb: &mut FrameBuffer, lang: Lang) {
             });
         }
         BagPhase::TossQuantity { qty } => {
-            ui.text_box(TileRect::new(4, 12, 15, 4), InkColor::Black, true, |frame| {
+            ui.text_box(TileRect::new(4, 11, 15, 7), InkColor::Black, true, |frame| {
                 let prompt = if lang == Lang::Zh { "扔掉几个？" } else { "TOSS HOW MANY?" };
                 frame.label(2, 1, prompt, InkColor::Black);
-                frame.label(2, 2, &format!("x{:02}", qty), InkColor::Black);
+                frame.label(2, 3, &format!("x{:02}", qty), InkColor::Black);
             });
         }
         BagPhase::Browsing => {}

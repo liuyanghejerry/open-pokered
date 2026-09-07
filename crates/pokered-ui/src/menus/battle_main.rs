@@ -20,9 +20,14 @@ pub fn draw<P: Painter>(
     let Some(json) = get_screen_v2_json("battle_main") else {
         return;
     };
-    let Some(layout) = v2::parse_screen(json) else {
+    let Some(mut layout) = v2::parse_screen(json) else {
         return;
     };
+
+    // The Chinese font advances 10 px, wider than the legacy 8 px tile grid.
+    if lang == Lang::Zh {
+        layout.theme.text_mode = dotzuki_renderer::layout_engine::types::TextMode::Proportional;
+    }
 
     let mut ctx = DataContext::new();
     ctx.set("bcol", state.col() as i64);
