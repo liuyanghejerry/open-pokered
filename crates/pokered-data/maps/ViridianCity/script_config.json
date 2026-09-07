@@ -2,6 +2,14 @@
  "$schema": "../../schemas/script_config.schema.json",
  "coordEvents": [
   {
+   "name": "gymDoorLocked",
+   "position": [
+    32,
+    7
+   ],
+   "trigger": "coordGymLocked"
+  },
+  {
    "name": "privateProperty",
    "position": [
     19,
