@@ -52,4 +52,37 @@ game_scene ViridianSchoolHouse {
     }
   }
 
+  // ── Notebook (sign 1 at (3,4)) — school_notebooks.asm::ViridianSchoolNotebook
+  // A page-turn chain: pages 1-3 each prompt "Turn the page?" (Yes/No);
+  // page 4 flows straight into page 5 (the girl's shout, text_waitbutton).
+  @storyline("schoolNotebook") {
+    @trigger(map = "ViridianSchoolHouse", sign = 1)
+    @speaker("") { @t("Looked at the notebook!\n\nFirst page...\n\n# BALLs are\nused to catch\n#MON.\n\nUp to 6 #MON\ncan be carried.\n\nPeople who raise\nand make #MON\nfight are called\n#MON trainers.", "看了笔记！\n\n第一页……\n\n精灵球用来捕捉宝可梦。\n最多可以携带6只宝可梦。\n培养宝可梦并让它们对战的人，被称为宝可梦训练家。") }
+    @speaker("") { @t("Turn the page?", "要翻页吗？") }
+    @choice {
+      @option(@t("Yes", "是")) {
+        @speaker("") { @t("Second page...\n\nA healthy #MON\nmay be hard to\ncatch, so weaken\nit first!\n\nPoison, burns and\nother damage are\neffective!", "第二页……\n\n健康的宝可梦可能很难捕捉，所以要先削弱它！\n中毒、灼伤等异常状态伤害很有效！") }
+        @speaker("") { @t("Turn the page?", "要翻页吗？") }
+        @choice {
+          @option(@t("Yes", "是")) {
+            @speaker("") { @t("Third page...\n\n#MON trainers\nseek others to\nengage in #MON\nfights.\n\nBattles are\nconstantly fought\nat #MON GYMs.", "第三页……\n\n宝可梦训练家会互相切磋，进行宝可梦对战。\n宝可梦道馆里时刻都在进行对战。") }
+            @speaker("") { @t("Turn the page?", "要翻页吗？") }
+            @choice {
+              @option(@t("Yes", "是")) {
+                @speaker("") { @t("Fourth page...\n\nThe goal for\n#MON trainers\nis to beat the\ntop 8 #MON\nGYM LEADERs.\n\nDo so to earn the\nright to face...\n\nThe ELITE FOUR of\n#MON LEAGUE!", "第四页……\n\n宝可梦训练家的目标是击败8位道馆馆主。\n做到这一点，就有资格挑战……\n宝可梦联盟的四天王！") }
+                @speaker("") { @t("GIRL: Hey! Don't\nlook at my notes!", "女孩：喂！不许看我的笔记！") }
+              }
+              @option(@t("No", "否")) {
+              }
+            }
+          }
+          @option(@t("No", "否")) {
+          }
+        }
+      }
+      @option(@t("No", "否")) {
+      }
+    }
+  }
+
 }

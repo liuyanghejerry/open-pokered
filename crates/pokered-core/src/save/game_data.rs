@@ -411,7 +411,11 @@ impl GameData {
             current_box_num: 0,
             num_hof_teams: 0,
             player_coins: 0,
-            toggleable_object_flags: [0; TOGGLEABLE_OBJECT_BYTES],
+            // New Game seeds the toggle flags exactly like the original's
+            // InitializeToggleableObjectsFlags: story-gated objects (Oak,
+            // the Viridian old men, the Saffron City occupants, ...) start
+            // hidden until their scene shows them.
+            toggleable_object_flags: pokered_data::toggleable_objects::initial_toggle_flags(),
             game_progress_flags: vec![0; GAME_PROGRESS_FLAGS_SIZE],
             obtained_hidden_items: [0; HIDDEN_ITEMS_BYTES],
             obtained_hidden_coins: [0; HIDDEN_COINS_BYTES],

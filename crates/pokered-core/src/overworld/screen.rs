@@ -139,6 +139,10 @@ pub enum OverworldGameDataRequest {
     /// Advance the deposited Day Care Pokémon's experience by one overworld
     /// step (no-op if nothing is deposited).
     TickDaycareExp,
+    /// Run one out-of-battle poison-damage tick (every 4th overworld step —
+    /// `ApplyOutOfBattlePoisonDamage`, engine/events/poison.asm). The frontend
+    /// consumer calls `overworld::poison::apply_out_of_battle_poison_damage`.
+    PoisonStep,
     /// Mark a city map as visited in `town_visited_flags` (gates the FLY
     /// destination list). Pushed on map load for maps below FIRST_ROUTE_MAP,
     /// mirroring MarkTownVisitedAndLoadToggleableObjects.
@@ -606,6 +610,14 @@ pub struct OverworldScreen<G: GameData = pokered_data::impl_traits::PokemonRedDa
     /// Active engage-intro ("!" bubble + music + walk-up) — completes into
     /// `pending_trainer_battle`.
     pub(crate) trainer_encounter_intro: Option<TrainerEncounterIntro>,
+    /// Engage-intro phase 2 (DisplayEnemyTrainerTextAndStartBattle,
+    /// home/trainers.asm:141-158): the walk-up finished and the trainer's
+    /// before-battle text is on screen; the battle is pended once the
+    /// dialogue (and its storyline, if any) fully winds down. Also parked by
+    /// the direct TalkToTrainer path (home/trainers.asm:107-123) so json-only
+    /// trainers start their fight when the text closes; a scene that starts
+    /// its own battle drops it.
+    pub(crate) trainer_intro_text_pending: Option<TrainerEncounterIntro>,
     pub pending_give_pokemon: Option<PendingGivePokemon>,
     pub sfx_event: OverworldSfxEvent,
     pub bump_anim_counter: u8,
@@ -655,6 +667,17 @@ pub struct OverworldScreen<G: GameData = pokered_data::impl_traits::PokemonRedDa
     pub pending_shop: Option<Vec<String>>,
     /// Set by `game.openSlots(lucky)`; the app opens the slot-machine screen.
     pub pending_slots: Option<bool>,
+    /// Sign textId that fired the currently-running sign script, if any.
+    /// `openSlots()` with no explicit argument resolves its lucky flag against
+    /// this (only slot-machine signs play the minigame).
+    pub(crate) active_sign_text_id: Option<u8>,
+    /// Sign textId of this visit's lucky slot machine, rolled once per
+    /// Game Corner map entry (`GameCornerSelectLuckySlotMachine`,
+    /// scripts/GameCorner.asm:8-22). The roll covers hidden event indices
+    /// 0..7; 0 means no lucky machine this visit, and the original's index 5
+    /// ("Someone's keys" broken machine) has no script here, matching the
+    /// original where it can never be played. `None` = no lucky machine.
+    pub(crate) lucky_slot_machine_sign: Option<u8>,
     /// Set by `game.elevatorMenu(floors)`; the app opens the elevator floor
     /// menu. The script stays suspended until the app calls
     /// `resume_script_after_elevator` with the chosen floor index.
@@ -678,12 +701,24 @@ pub struct OverworldScreen<G: GameData = pokered_data::impl_traits::PokemonRedDa
     /// storage screen ("center" / "items" / "bills"). Instant effect — the
     /// script has already run on, so no resume call is needed.
     pub pending_pc: Option<String>,
+    /// The wall TOWN MAP (bookshelf table `House` $3D) was interacted with:
+    /// after the "A TOWN MAP." text closes, the app opens the TownMap screen
+    /// (the original's TownMapText → DisplayTownMap).
+    pub pending_town_map: bool,
     /// Set by `game.enterHallOfFame()`; the app records the party in the
     /// Hall of Fame, plays the roll-call movie + credits, saves, and resets
     /// to the title screen. Instant effect — no resume call is needed.
     pub pending_hof_ceremony: bool,
     pub heal_requested: bool,
     pub party_count: u8,
+    /// Count of the CURRENT PC box, seeded by the app layer alongside
+    /// `party_count`. `givePokemon` reports success while either the party or
+    /// this box has room (the original's _GivePokemon carry flag).
+    pub box_count: u8,
+    /// Completed-step counter for the out-of-battle poison tick
+    /// (`wStepCounter & 3` in ApplyOutOfBattlePoisonDamage — damage every
+    /// fourth step).
+    pub poison_step_counter: u32,
     /// Level of the lead (first) party Pokémon, kept in sync by the app layer.
     /// Used for the Gen-1 repel check, which blocks wild encounters whose level
     /// is below the lead party member's level. The OverworldScreen does not own
@@ -765,6 +800,14 @@ pub struct OverworldScreen<G: GameData = pokered_data::impl_traits::PokemonRedDa
     /// once the fade-in-from-white completes. The player stays hidden during
     /// the fade (`Y=$ec`) and descends while this is active.
     pub enter_map_anim: Option<presentation::EnterMapSpinState>,
+    /// FLY arrival bird animation (EnterMapAnim `.flyAnimation`) — replaces
+    /// the spin-in for FLY-warp arrivals only. Mutually exclusive with
+    /// `enter_map_anim`.
+    pub enter_map_fly_anim: Option<presentation::EnterMapFlyState>,
+    /// The pending warp was queued by the FLY field move: its arrival plays
+    /// the bird animation instead of the spin-in (BIT_USED_FLY,
+    /// player_animations.asm:55-70).
+    pub(crate) pending_fly_arrival: bool,
     /// Active `ShakeElevator` animation (screen BG shake after riding an
     /// elevator). While `Some`, player input is frozen.
     pub elevator_shake: Option<presentation::ElevatorShakeState>,
@@ -968,6 +1011,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
             pending_wild_encounter: None,
             pending_trainer_battle: None,
             trainer_encounter_intro: None,
+            trainer_intro_text_pending: None,
             pending_give_pokemon: None,
             sfx_event: OverworldSfxEvent::None,
             bump_anim_counter: 0,
@@ -1002,13 +1046,18 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
             player_starter: 0,
             pending_shop: None,
             pending_slots: None,
+            active_sign_text_id: None,
+            lucky_slot_machine_sign: None,
             pending_elevator: None,
             pending_filter_bag: None,
             pending_diploma: false,
             pending_pc: None,
+            pending_town_map: false,
             pending_hof_ceremony: false,
             heal_requested: false,
             party_count: 0,
+            box_count: 0,
+            poison_step_counter: 0,
             party_lead_level: 0,
             unified_flags: event_flags::EventFlags::new(),
             toggleable_object_flags: [0u8;
@@ -1033,6 +1082,8 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
             warp_fade_to_white: false,
             teleport_spin: None,
             enter_map_anim: None,
+            enter_map_fly_anim: None,
+            pending_fly_arrival: false,
             elevator_shake: None,
             elevator_shake_pending: false,
             fishing_cast_delay: 0,
@@ -1989,10 +2040,11 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
             }
         }
 
-        // Third: handle default_hidden NPCs that may have been shown by script.
-        // A stale `__OBJ_SHOWN_*` (merged back from the runner's pre-battle
-        // state) must never resurrect an object whose `__OBJ_HIDDEN_*` is set
-        // — that re-show was the audit's reappearing-rival bug: HIDDEN wins.
+        // Third: handle default_hidden NPCs that may have been shown. Two
+        // show channels: the runtime __OBJ_SHOWN_<toggle> flag, and a CLEARED
+        // SRAM toggle bit — new game seeds the bit SET (hidden,
+        // initial_toggle_flags) and showObject clears it, so the cleared bit
+        // persists the shown state across save/reload.
         for npc_cfg in &self.map_script_config.npcs {
             if !npc_cfg.default_hidden {
                 continue;
@@ -2003,7 +2055,17 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                     continue;
                 }
                 let shown_key = format!("__OBJ_SHOWN_{}", toggle_id);
-                if self.unified_flags.get_flag(&shown_key) {
+                let extras_shown = self.unified_flags.get_flag(&shown_key);
+                let bit_cleared =
+                    pokered_data::toggleable_objects::toggle_id_to_bit_index(toggle_id)
+                        .map(|bit| {
+                            !pokered_data::toggleable_objects::is_object_hidden(
+                                &self.toggleable_object_flags,
+                                bit,
+                            )
+                        })
+                        .unwrap_or(false);
+                if extras_shown || bit_cleared {
                     if let Some(npc) = self.npc_states.iter_mut().find(|n| n.text_id == npc_cfg.id)
                     {
                         npc.visible = true;
@@ -2016,6 +2078,17 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
     pub fn run_on_load(&mut self) {
         self.script_engine
             .seed_flags(&self.unified_flags.to_hashmap());
+
+        // GameCornerSelectLuckySlotMachine (scripts/GameCorner.asm:8-22): on
+        // every Game Corner map load, roll one of hidden event indices 0..7;
+        // index+1 == roll makes that machine lucky (250 vs 253 odds). A roll
+        // of 0 never matches → no lucky machine this visit. Hidden event
+        // index h maps to sign textId h+2 in this port's data (the map.json
+        // signs share the original hidden-event coordinates).
+        if self.state.current_map == MapId::GameCorner {
+            let roll: u8 = { use rand::Rng; self.rng.gen_range(0..8) };
+            self.lucky_slot_machine_sign = if roll == 0 { None } else { Some(roll + 1) };
+        }
 
         if let Some(fn_name) = self.map_script_config.on_load() {
             if self.script_engine.has_function(fn_name) {
@@ -2283,11 +2356,18 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                             == pokered_data::tileset_data::WarpPadOrHoleType::None
                     })
                     .unwrap_or(true);
-                self.enter_map_anim = Some(presentation::EnterMapSpinState::new(
-                    self.state.player.facing,
-                    presentation::TELEPORT_SPIN_FACINGS,
-                    spin_in_place,
-                ));
+                if self.pending_fly_arrival {
+                    // BIT_USED_FLY (player_animations.asm:55-70): the bird
+                    // flies the player in — no spin, no descend.
+                    self.pending_fly_arrival = false;
+                    self.enter_map_fly_anim = Some(presentation::EnterMapFlyState::new());
+                } else {
+                    self.enter_map_anim = Some(presentation::EnterMapSpinState::new(
+                        self.state.player.facing,
+                        presentation::TELEPORT_SPIN_FACINGS,
+                        spin_in_place,
+                    ));
+                }
             }
         }
     }
@@ -2296,7 +2376,12 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
         self.pending_naming_screen.is_some()
     }
 
-    /// True while a script-driven party selection (Name Rater) is on screen.
+    /// True while a sight-trainer engage intro ("!" bubble + walk-up) or the
+    /// post-walk-up / talk before-battle text is in flight.
+    pub fn trainer_engagement_active(&self) -> bool {
+        self.trainer_encounter_intro.is_some() || self.trainer_intro_text_pending.is_some()
+    }
+
     pub fn is_party_select_active(&self) -> bool {
         self.pending_party_select.is_some()
     }

@@ -412,6 +412,10 @@ game_scene OaksLab {
       setFlag("EVENT_GOT_POKEDEX")
       hideObjectByName("OAKS_LAB_OBJ_6")
       hideObjectByName("OAKS_LAB_OBJ_7")
+      // OaksLab.asm:602-605 — the sleepy old man leaves the Viridian road and
+      // the wide-awake one takes over (offering the catch tutorial).
+      hideObjectByName("VIRIDIANCITY_OLD_MAN_SLEEPY")
+      showObjectByName("VIRIDIANCITY_OLD_MAN")
       @speaker("") {
         @t("To make a complete guide on\nall the POKeMON in the\nworld...\n\nThat was my dream!\n\nBut, I'm too old! I can't do\nit!\n\nSo, I want you two to\nfulfill my dream for me!\n\nGet moving, you two!\n\nThis is a great undertaking\nin POKeMON history!", "要编写一部收录世界上所有宝可\n梦的完整图鉴……\n\n那是我的梦想！\n\n但是，我太老了！我做不到了！\n\n所以，我想请你们俩替我实现梦\n想！\n\n快行动起来，你们俩！\n\n这在宝可梦历史上是伟大的壮\n举！")
       }
@@ -437,6 +441,9 @@ game_scene OaksLab {
       setFlag("EVENT_1ST_ROUTE22_RIVAL_BATTLE")
       resetFlag("EVENT_2ND_ROUTE22_RIVAL_BATTLE")
       setFlag("EVENT_ROUTE22_RIVAL_WANTS_BATTLE")
+      // Original: ShowObject TOGGLE_ROUTE_22_RIVAL_1 — the rival waits on
+      // Route 22 for the coord-triggered fight.
+      showObjectByName("ROUTE_22_RIVAL_1")
       // Route22's coordRivalBattle storyline gates on these flags, which is
       // functionally equivalent to the original TOGGLE_ROUTE_22_RIVAL_1 show.
       // TOGGLE_LYING_OLD_MAN hide / TOGGLE_OLD_MAN show (the PalletTown
@@ -488,6 +495,76 @@ game_scene OaksLab {
     @trigger(map = "OaksLab", npc = 11)
     @speaker("") {
       @t("I study POKeMON as\nPROF.OAK's AIDE.", "我是大木博士的助手，研究宝可\n梦。")
+    }
+  }
+
+  // ── Hidden events (data/events/hidden_events.asm HiddenEventsFor_OAKS_LAB)
+  // Left poster (sign 1 at (4,0)) — DisplayOakLabLeftPoster / PushStartText.
+  // The original posters sit on the top wall, reached facing up.
+  @storyline("leftPoster") {
+    @trigger(map = "OaksLab", sign = 1)
+    @if (getPlayerFacing() == "up") {
+      @speaker("") {
+        @t("Push START to
+open the MENU!", "按 START 键\n打开菜单！")
+      }
+    }
+  }
+
+  // Right poster (sign 2 at (5,0)) — DisplayOakLabRightPoster: branches on
+  // the POKeDEX owned count (>= 2 owned shows the type-hint poster).
+  @storyline("rightPoster") {
+    @trigger(map = "OaksLab", sign = 2)
+    @if (getPlayerFacing() == "up") {
+      @if (getPokedexOwnedCount() >= 2) {
+        @speaker("") {
+          @t("All #MON types
+have strong and
+weak points
+against others.", "所有属性的宝可梦，\n都有各自的强点\n与弱点。")
+        }
+      } @else {
+        @speaker("") {
+          @t("The SAVE option is
+on the MENU
+screen.", "保存选项在\n菜单画面里。")
+        }
+      }
+    }
+  }
+
+  // E-mail on the lab PC (signs 3/4 at (0,1)/(1,1)) —
+  // DisplayOakLabEmailText / _OakLabEmailText (text_2.asm), facing up.
+  @storyline("labEmail") {
+    @trigger(map = "OaksLab", sign = 3)
+    @trigger(map = "OaksLab", sign = 4)
+    @if (getPlayerFacing() == "up") {
+      @speaker("") {
+        @t("There's an e-mail
+message here!
+
+...
+
+Calling all
+#MON trainers!
+
+The elite trainers
+of #MON LEAGUE
+are ready to take
+on all comers!
+
+Bring your best
+#MON and see
+how you rate as a
+trainer!
+
+#MON LEAGUE HQ
+INDIGO PLATEAU
+
+PS: PROF.OAK,
+please visit us!
+...", "这里有一封电子邮件！\n\n……\n\n召集所有宝可梦训练家！\n宝可梦联盟的精英训练家\n随时恭候各位挑战者！\n带上你最强的宝可梦，\n来看看你有几斤几两吧！\n\n宝可梦联盟总部\n石英高原\n\n又及：大木博士，\n请来我们这里做客！\n……")
+      }
     }
   }
 }

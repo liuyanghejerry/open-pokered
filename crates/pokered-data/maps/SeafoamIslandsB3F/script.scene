@@ -7,36 +7,97 @@
 // pushing a boulder onto a hole (Seafoam4HolesCoords (3,16)/(6,16)) drops it to
 // B4F (engine-side check in tick_boulder_push sets EVENT_SEAFOAM4_BOULDER{n}_
 // DOWN_HOLE), and the player can fall through the holes to B4F via the coord
-// warps below (DungeonWarpData: (4,14)/(5,14)). The original's forced-surfing
-// current (simulated joypad after both boulders are down) is not reproduced.
+// warps below (DungeonWarpData: (4,14)/(5,14)).
+//
+// Boulder visibility follows data/maps/toggleable_objects.asm:398-419: the west
+// pair npc2/npc3 (orig BOULDER2/3 at (3,15)/(8,14)) is toggleable and starts
+// visible; the east pair npc5/npc6 (orig BOULDER5/6 at (18,6)/(19,6)) starts
+// hidden and appears only when the matching B2F boulder lands (SEAFOAM3_*).
+//
+// Until BOTH B2F boulders are down (EVENT_SEAFOAM3_BOULDER{1,2}_DOWN_HOLE), the
+// strong current is active (scripts/SeafoamIslandsB3F.asm): a surfing player on
+// (15,8) is swept down the middle channel to the (20,17) stairs, and falling
+// through the B2F holes lands at (18,7)/(19,7) inside the same current. The
+// sweeps replay the original's simulated-joypad RLEs as absolute movePlayer
+// paths (same approach as the B4F current sweeps).
 
 game_scene SeafoamIslandsB3F {
   // ── On-enter logic ──────────────────────────────────────────────────────
   @load {
-    // Keep a boulder hidden once it has fallen through its hole.
+    // West pair: npc2 (3,15) / npc3 (8,14) are the floor's own toggleable
+    // boulders (orig TOGGLE_SEAFOAM_ISLANDS_B3F_BOULDER_{1,2}, initial ON).
+    // Each stays hidden once pushed through its hole: the original script's
+    // HideObject targets for hole (3,16) / (6,16) are TOGGLE_..._B3F_BOULDER_
+    // 1 / _2, i.e. object 2 / object 3 (npc2 / npc3), keyed by the
+    // EVENT_SEAFOAM4_BOULDER{1,2}_DOWN_HOLE flags set engine-side.
     @if (getFlag("EVENT_SEAFOAM4_BOULDER1_DOWN_HOLE")) {
-      hideObjectByName("SEAFOAM_ISLANDS_B3F_OBJ_1")
+      hideObjectByName("SEAFOAM_ISLANDS_B3F_OBJ_2")
     }
     @if (getFlag("EVENT_SEAFOAM4_BOULDER2_DOWN_HOLE")) {
-      hideObjectByName("SEAFOAM_ISLANDS_B3F_OBJ_2")
+      hideObjectByName("SEAFOAM_ISLANDS_B3F_OBJ_3")
+    }
+    // East pair: npc5/npc6 ((18,6)/(19,6), orig BOULDER5/6) are defaultHidden
+    // (TOGGLE_..._B3F_BOULDER_{3,4} initial OFF) and each appears only once
+    // the matching B2F boulder has landed (orig ShowObject of
+    // TOGGLE_..._B3F_BOULDER_{3,4} in scripts/SeafoamIslandsB2F.asm).
+    @if (getFlag("EVENT_SEAFOAM3_BOULDER1_DOWN_HOLE")) {
+      showObjectByName("SEAFOAM_ISLANDS_B3F_OBJ_5")
+    }
+    @if (getFlag("EVENT_SEAFOAM3_BOULDER2_DOWN_HOLE")) {
+      showObjectByName("SEAFOAM_ISLANDS_B3F_OBJ_6")
     }
   }
 
   // ── Falling through the holes to B4F ───────────────────────────────────
   @storyline("coordHole1") {
-    @trigger(map = "SeafoamIslandsB3F", name = "hole1")
+    @trigger(map = "SeafoamIslandsB3F", name = "hole1", coords = [[3, 16]])
     warpTo("SeafoamIslandsB4F", 4, 14)
   }
   @storyline("coordHole2") {
-    @trigger(map = "SeafoamIslandsB3F", name = "hole2")
+    @trigger(map = "SeafoamIslandsB3F", name = "hole2", coords = [[6, 16]])
     warpTo("SeafoamIslandsB4F", 5, 14)
+  }
+
+  // CheckBothEventsSet sets Z when BOTH are set; the original ret z stops
+  // the current after the puzzle is solved (unlike ordinary CheckEvent).
+  // ── Forced-surfing current, middle channel (orig DefaultScript) ────────
+  // Until BOTH B2F boulders are down, a surfing player who ends up on (15,8)
+  // is swept down the channel to the (20,17) stairs: the original simulates
+  // DOWN x3 → RIGHT x5 → DOWN x6 (the joypad buffer is consumed backwards)
+  // (RLEList_ForcedSurfingStrongCurrentNearSteps).
+  @storyline("coordCurrentNear") {
+    @trigger(map = "SeafoamIslandsB3F", name = "currentNear", coords = [[15, 8]])
+    @if (!getFlag("EVENT_SEAFOAM3_BOULDER1_DOWN_HOLE") || !getFlag("EVENT_SEAFOAM3_BOULDER2_DOWN_HOLE")) {
+      movePlayer([[15, 9], [15, 10], [15, 11], [16, 11], [17, 11], [18, 11], [19, 11], [20, 11], [20, 12], [20, 13], [20, 14], [20, 15], [20, 16], [20, 17]])
+    }
+  }
+
+  // ── Forced-surfing current, hole-fall sweeps (orig MoveObjectScript) ───
+  // The B2F hole warps land at (18,7)/(19,7), inside the strong current:
+  // while either B2F boulder is missing, arriving there sweeps the player down
+  // the channel as well. DecodeRLEList writes forwards, but the simulated
+  // joypad reads from the last entry down to the first: x==18 takes DOWN x4
+  // → RIGHT x2 → DOWN x6; x==19 first takes LEFT x1, then the same path.
+  // Both reach (20,17). Reading the RLE forwards sends x==19 into a wall.
+  @storyline("coordCurrentChannel") {
+    @trigger(map = "SeafoamIslandsB3F", name = "currentChannel", coords = [[18, 7], [19, 7]])
+    @if (!getFlag("EVENT_SEAFOAM3_BOULDER1_DOWN_HOLE") || !getFlag("EVENT_SEAFOAM3_BOULDER2_DOWN_HOLE")) {
+      @if (getPlayerX() == 18) {
+        movePlayer([[18, 8], [18, 9], [18, 10], [18, 11], [19, 11], [20, 11], [20, 12], [20, 13], [20, 14], [20, 15], [20, 16], [20, 17]])
+      } @else {
+        movePlayer([[18, 7], [18, 8], [18, 9], [18, 10], [18, 11], [19, 11], [20, 11], [20, 12], [20, 13], [20, 14], [20, 15], [20, 16], [20, 17]])
+      }
+    }
   }
 
   // ── STRENGTH boulders (npc 1-6) ─────────────────────────────────────────
   // All six share the engine-shared BoulderText. The actual pushing is the
-  // engine's STRENGTH field move; talking just shows the prompt.
+  // engine's STRENGTH field move; talking just shows the prompt. Only the
+  // west pair npc2/npc3 and the east pair npc5/npc6 are toggleable in the
+  // original (npc1/npc4 are plain, always-visible boulders); the toggle ids
+  // here name the map object (OBJ_N = npc N).
   @storyline("talkBoulder1") {
-    @trigger(map = "SeafoamIslandsB3F", npc = 1, toggle = "SEAFOAM_ISLANDS_B3F_OBJ_1")
+    @trigger(map = "SeafoamIslandsB3F", npc = 1)
     @speaker("") { @t("This requires STRENGTH to\nmove!", "要移动它需要怪力！") }
   }
 
@@ -46,7 +107,7 @@ game_scene SeafoamIslandsB3F {
   }
 
   @storyline("talkBoulder3") {
-    @trigger(map = "SeafoamIslandsB3F", npc = 3)
+    @trigger(map = "SeafoamIslandsB3F", npc = 3, toggle = "SEAFOAM_ISLANDS_B3F_OBJ_3")
     @speaker("") { @t("This requires STRENGTH to\nmove!", "要移动它需要怪力！") }
   }
 
@@ -55,13 +116,15 @@ game_scene SeafoamIslandsB3F {
     @speaker("") { @t("This requires STRENGTH to\nmove!", "要移动它需要怪力！") }
   }
 
+  // npc5/npc6 = orig BOULDER5/6, the fallen-through pair from B2F: they start
+  // hidden and are shown on entry (see @load above).
   @storyline("talkBoulder5") {
-    @trigger(map = "SeafoamIslandsB3F", npc = 5)
+    @trigger(map = "SeafoamIslandsB3F", npc = 5, toggle = "SEAFOAM_ISLANDS_B3F_OBJ_5", hidden = true)
     @speaker("") { @t("This requires STRENGTH to\nmove!", "要移动它需要怪力！") }
   }
 
   @storyline("talkBoulder6") {
-    @trigger(map = "SeafoamIslandsB3F", npc = 6)
+    @trigger(map = "SeafoamIslandsB3F", npc = 6, toggle = "SEAFOAM_ISLANDS_B3F_OBJ_6", hidden = true)
     @speaker("") { @t("This requires STRENGTH to\nmove!", "要移动它需要怪力！") }
   }
 }

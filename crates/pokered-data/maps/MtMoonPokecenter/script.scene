@@ -99,4 +99,21 @@ fighting fit!", "谢谢你等候。\n\n你的宝可梦已经全部痊愈！")
     @trigger(map = "MtMoonPokecenter", sign = 1)
     openPC()
   }
+
+
+  // ── Bench guy (sign 2 at (0,4)) — PrintBenchGuyText ────────────────────
+  // data/events/bench_guys.asm + hidden_events.asm: A on the (0,4) bench
+  // tile while facing it; BenchGuyTextPointers requires SPRITE_FACING_LEFT,
+  // so gate on the player's facing (getPlayerFacing() -> down/up/left/right).
+  @storyline("benchGuy") {
+    @trigger(map = "MtMoonPokecenter", sign = 2)
+    @if (getPlayerFacing() == "left") {
+      @speaker("") {
+        @t("If you have too
+many #MON, you
+should store them
+via PC!", "如果宝可梦太多了，\n就应该通过电脑\n存放起来！")
+      }
+    }
+  }
 }

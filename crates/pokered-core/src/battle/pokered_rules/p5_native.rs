@@ -313,28 +313,44 @@ fn leech_seed_set(
     HandlerResult::Unchanged
 }
 
-/// Haze: reset ALL stat stages + volatiles + non-volatile status on BOTH sides
-/// (legacy `apply_haze`). Game-agnostic reach? No — this is the one effect with
-/// no selector (blueprint §2 "ResetAll broadcast"), so it is a native broadcast.
+/// Haze — faithful port of `HazeEffect_` (engine/battle/move_effects/haze.asm):
+/// BOTH sides' stat stages reset (and badge-boost wipes via `ResetStats`); BOTH
+/// sides lose the masked volatiles (confusion, X Accuracy, Mist, Focus Energy,
+/// Leech Seed, Toxic, Light Screen, Reflect) while Substitute / Recharge / Rage
+/// / lock-ins are PRESERVED; only the side OPPOSITE the user loses its
+/// non-volatile status (haze.asm:15-25).
 fn haze_reset(
     ctx: &mut BattleCtx<'_, PokeredRules>,
     _relay: RelayVar,
     _target: BattlerRef,
-    _source: BattlerRef,
+    source: BattlerRef,
     _eff: EffectId,
 ) -> HandlerResult {
     for who in [BattlerRef::PLAYER, BattlerRef::OPPONENT] {
         let b = ctx.battler_mut(who);
         b.stat_stages = dotzuki_engine::battle::EnumMap::new();
-        b.status = None;
         // Haze copies the UNMODIFIED stats over the battle stats
         // (engine/battle/move_effects/haze.asm `ResetStats`) WITHOUT re-applying
         // badge boosts — wiping the accumulated stat-up-glitch boosts on the
         // player (inert without the seeded badge context).
         crate::battle::badge_boosts::wipe_boosts(b);
     }
-    // Clear EVERY volatile both sides (Confused/Seeded/Toxic/FocusEnergy/Disable/…).
-    ctx.effects.clear();
+    // .cureStatuses: the side opposite the user loses its non-volatile status.
+    let defender = if source.side == 0 { BattlerRef::OPPONENT } else { BattlerRef::PLAYER };
+    ctx.battler_mut(defender).status = None;
+    // CureVolatileStatuses (haze.asm:33-48) — the asm's masks only.
+    ctx.effects.retain(|e| {
+        !matches!(
+            e.kind,
+            PokeVolatile::Confused { .. }
+                | PokeVolatile::LeechSeed
+                | PokeVolatile::Toxic { .. }
+                | PokeVolatile::FocusEnergy
+                | PokeVolatile::Mist
+                | PokeVolatile::LightScreen
+                | PokeVolatile::Reflect
+        )
+    });
     HandlerResult::Unchanged
 }
 

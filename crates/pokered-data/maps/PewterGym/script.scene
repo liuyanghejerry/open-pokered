@@ -56,6 +56,9 @@ game_scene PewterGym {
         } @else {
           @speaker("") { @t("You don't have room for\nthis!", "已经没有空位了！") }
         }
+        // Original PewterGym.asm:72-74 — the Route 22 rival stands down
+        // once Brock is beaten.
+        hideObjectByName("ROUTE_22_RIVAL_1")
         // Deactivate the gym trainers (original sets this in Brock's post-battle).
         setFlag("EVENT_BEAT_PEWTER_GYM_TRAINER_0")
       }

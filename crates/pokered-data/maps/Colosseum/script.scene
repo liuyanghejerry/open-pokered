@@ -6,8 +6,11 @@
 // sprite based on the serial connection — there is no single-player content.
 // The lone opponent NPC's text is literally "!" (_ColosseumOpponentText).
 //
-// Cable-club link battles are not reproduced (no link/serial API); this is a
-// local placeholder: talking to the opponent shows the original "!" dialogue.
+// Link battles ARE reproduced via the link stack (crates/pokered-core/src/link/ +
+// pokered-app src/link/): the desks call game.linkStart() and CableClubFlow drives
+// the session; offline, talking to the opponent shows the original "!" dialogue.
+// NOTE: the in-game ENTRY from a Poké Center receptionist (LinkMenu) is not wired
+// yet — entering requires the debug warp.
 
 game_scene Colosseum {
   // ── Link opponent (npc 1) ──────────────────────────────────────────────

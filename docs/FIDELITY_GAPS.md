@@ -155,8 +155,11 @@ tutorial catch is a dialogue stub. Ghost Marowak has no "?"/uncatchable state.
   (`last_blackout_map`/`EVENT_STARTED_ELITE_4` never set in play → League restart broken).
   Continue-screen save-info panel is dead code (CORE/main_menu.rs:81,144-147,197).
 - **Safari bait/rock** + Old-Man tutorial + true Ghost reveal (also touches 1B).
-- **Cable club / link** — only an in-process mpsc mock (CORE/link/transport.rs); real
-  networking is genuinely large / out of single-player scope — defer unless requested.
+- ~~**Cable club / link** — only an in-process mpsc mock~~ **OBSOLETE (2026-08-03)**:
+  real link battle + trade shipped (TCP transport, wasm BroadcastChannel, LinkRng,
+  CableClubFlow — see `fidelity-audit-2026-08.md` 联机波). Remaining known gap: the
+  in-game ENTRy from a Poké Center receptionist (LinkMenu TRADE CENTER/COLOSSEUM) is
+  not wired — `warp_to_cable_room` exists but has no in-game caller (debug warp only).
 
 ---
 
@@ -806,3 +809,76 @@ no baseline/CI gate (manual). `visual-verify` skill covers only the heal machine
   two-mon mutation). Tests: 12 (table/badge/leftmost, party-menu listing +
   target-pick flow, screen-level refusal texts, heal math incl. the 99/5
   truncation and the max-HP cap).
+
+---
+
+## ✅ 2026-09 — 对照原版补齐差距 (分支 feat/fidelity-gaps-2026-09)
+
+全面对拍（场景/战斗/野外/联机/通关）后的补齐批次，原版依据逐条核对
+`/Users/liuyanghe02/develop/pokered-worktree`（pret/pokered）。**本轮之前的
+STORY_AUDIT.md 与 pokered-gap-completion-plan.md 已删除**——其 "deferred/占位"
+结论早已过时（AfterBattleText 实际 308/308 由场景旗标分支实现；联机本体已交付；
+Safari 场景注释过时等），保留会误导后续会话。当前唯一的最新遗留清单即本节。
+
+本轮补齐：
+- **野外毒步进**（poison.asm `ApplyOutOfBattlePoisonDamage`）: 每 4 步全队中毒怪
+  −1 HP、倒下文本、SFX_POISONED、全灭金钱减半并回中心（core `overworld/poison.rs` +
+  `PoisonStep` request，双前端消费）。
+- **训练家视线战前台词 + 主动对话开战**（trainers.asm `TalkToTrainer` /
+  `DisplayEnemyTrainerTextAndStartBattle`）: 视线/对话触发先显示战前文本再开战；
+  `pending_trainer_engage` 在文本关闭后晋升为战斗，场景自带的 startBattle 会取消
+  engage（道馆主无双开）；视线检测在 engage 期间被抑制（对应 BIT_SEEN_BY_TRAINER）。
+- **战斗内满招学招提示**（learnmove.asm）: 升级满 4 招不再静默覆盖第 4 招——
+  `LearnMoveAsk`（TryingToLearn+YES/NO）→ `LearnMoveChoose`（遗忘哪招，HM 不可删）
+  → `LearnMoveGiveUpConfirm`（Abandon learning?）完整链路，渲染复用 YES/NO 菜单
+  与招式菜单，新招当回合即可使用（与原版一致）。
+- **Haze 保真**（haze.asm `HazeEffect_`）: 只清除目标方的非挥发性状态（不再双方
+  都清）；补齐原版 wipe 掩码——X Accuracy/Mist/Focus Energy/Leech Seed/Toxic/
+  光墙/反射（Substitute/Recharge/Rage/锁定类保留）；睡眠/冰冻被治愈的目标本回合
+  失去出招（$ff selected move，`HazeCuredMove` per-turn scratch + BeforeMove 门）。
+  三套引擎（legacy oracle / stack POC / 生产 rules）+ 全部 parity 测试同步修正。
+- **幽灵卡拉卡拉逃跑推进**（PokemonTower6F.asm）: 逃逸结果细分——Doll 逃跑
+  （wEscapedFromBattle，wBattleResult 保持 0）= 击败 → 剧情推进（Poké Doll skip ✓）；
+  菜单逃跑/捕获（wBattleResult=$2）与战败 → 右推一格、鬼魂留下。战斗结果字符串
+  新增 `"ran"`（菜单逃跑），`"fled"` 现在专指 Doll。
+- **Poké Doll 野生战限定**（item_effects.asm `ItemUsePokeDoll`）: 训练家战使用被拒
+  （OAK 文本）且不消耗。
+- **givePokemon 结果 + 箱回退**（give_pokemon.asm `_GivePokemon`）: 场景可
+  `given = givePokemon(...)` 分支；队伍满进当前箱子；仅队+箱全满失败（伊布等）。
+- **tx_pre 隐藏文本事件**（hidden_events）: 长椅男 ×12 图（面朝左，Saffron 双分支）、
+  大木研究所邮件+双海报（owned≥2 分支）、真新镇学校多页笔记本（翻页 YES/NO 链）、
+  彩虹楼顶 TM 手册+黑板、富士老家杂志。
+- **书架瓦片通用系统**（bookshelves.asm + bookshelf_tile_ids.asm）: `overworld/
+  bookshelf.rs` 引擎表——书架/地鼠雕塑（Mansion (8,6) 变体）/墙上城镇地图（显示
+  文本后打开 TownMap 屏）/电梯/#MON 周边/石英高原雕像（按 X 奇偶双文本）。
+- **Seafoam B3F 强制水流**（B3F DefaultScript/MoveObjectScript）: (15,8) 踩格 +
+  (18,7)/(19,7) 入水道的模拟摇杆清扫路径（两颗 B2F 巨石全部落洞后停止水流）。
+- **海泡沫巨石链式可见性**（toggleable_objects.asm）: B1F/B2F/B3F BOULDER5/6
+  defaultHidden，按上层落洞旗标 showObjectByName（B3F 的 toggle 对象实为 npc2/3，
+  原考据勘误已在 scene 注释记录）。
+- **FLY 鸟飞抵达动画**（player_animations.asm `.flyAnimation`）: FLY 专用的鸟精灵
+  沿 FlyAnimationEnterScreenCoords（12 步 ×Delay3, SFX_FLY, 扑翼交替）滑入，
+  替换此前的旋转进入；TELEPORT/DIG/穿洞绳仍走 spin-in（与原版一致）。
+- 零散：Museum1F 售票员方位分支（"Please go to the other side!"）、PokemonFanClub
+  背包满分支、Eevee 箱满文本、BattleCenter/TradeCenter 过时注释清理。
+
+遗留（真实、已核实，按优先级）：
+1. **Cable Club 游戏内入口**——宝可梦中心联机接待员的 TRADE CENTER/COLOSSEUM
+   菜单 + 传送进房未接线（联机本体完整、有测试，仅入口断）。
+2. 撤下宝可梦文本无 HP 分档变体（统一 "come back!"；common_text.asm RetreatMon）。
+3. TUI 的 FLY 鸟动画仅做玩家隐藏近似（app 有完整鸟精灵动画）。
+4. Haze 睡眠/冰冻同回合失去行动的"文本旁白"未建模（机制已实现：该目标本回合
+   确实无法出招）。
+
+### PR #62 审查修正
+
+- FLY 抵达使用 BirdSprite 侧面站立/运动帧（PNG 第 2/5 帧），飞行期间
+  隐藏主角；坐标表以最终 ($40,$3c) 对齐当前渲染器的主角位置，避免重复
+  应用 OAM 偏移。终端前端同步修正主角可见性。
+- B3F 的 CheckBothEventsSet 在两旗标均成立时置 Z；ret z 表示停止水流。
+  模拟摇杆逆序消费 RLE 缓冲区，三处入口按逆序路径汇入 (20,17)，避免右侧入口撞墙。
+- 野外中毒全灭经 HandleBlackOut 调用 ResetStatusAndHalveMoneyOnBlackout，
+  与战败一样扣掉一半金钱（余额向下取整）。
+
+- 冲浪绘制按 LoadSurfingPlayerSpriteGraphics 切换到 SeelSprite（seel.png），
+  原生与终端共用原版六帧朝向/运动布局，上岸后恢复 RedSprite；不叠加步行主角。

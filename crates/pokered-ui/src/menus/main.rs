@@ -41,6 +41,11 @@ pub fn draw<P: Painter>(
     // 1 border + 1 pad + (items spaced 2 rows) + 1 pad + 1 border = 2n + 3.
     v2::set_panel_height(&mut layout, 2 * num_items + 3);
 
+    // The Chinese font advances 10 px, wider than the legacy 8 px tile grid.
+    if lang == Lang::Zh {
+        layout.theme.text_mode = dotzuki_renderer::layout_engine::types::TextMode::Proportional;
+    }
+
     let mut ctx = DataContext::new();
     ctx.set("items", DataValue::List(labels));
     ctx.set("cursor", state.cursor as i64);

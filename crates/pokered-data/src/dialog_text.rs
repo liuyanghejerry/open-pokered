@@ -24,6 +24,14 @@ const EXACT: &[(&str, &str)] = &[
     ("A blinding FLASH\nlights the area!", "耀眼的闪光\n照亮了四周！"),
     ("Warp to the last\n#MON CENTER.", "传送回最后的\n宝可梦中心。"),
     ("Not healthy\nenough.", "体力不够。"),
+    // ── Bookshelf / wall objects (overworld/bookshelf.rs) ───────────
+    ("A TOWN MAP.", "是城镇地图。"),
+    ("INDIGO PLATEAU\n\nThe ultimate goal\nof trainers!\n#MON LEAGUE HQ", "石英高原\n\n训练家的终极目标！\n宝可梦联盟总部"),
+    ("INDIGO PLATEAU\n\nThe highest\n#MON authority\n#MON LEAGUE HQ", "石英高原\n\n最高宝可梦权威机构\n宝可梦联盟总部"),
+    ("Crammed full of\n#MON books!", "塞满了宝可梦\n书籍！"),
+    ("It's a sculpture\nof DIGLETT.", "是地鼠的雕塑。"),
+    ("This is an\nelevator.", "这是电梯。"),
+    ("Wow! Tons of\n#MON stuff!", "哇！好多宝可梦\n周边啊！"),
     // ── Field items (overworld/screen.rs use_field_item) ────────────
     ("You played the\nPOKe FLUTE!\n\nThe SNORLAX\nwoke up!", "你吹响了宝可梦笛！\n\n卡比兽\n醒了过来！"),
     ("You played the\nPOKe FLUTE.\n\nNothing happened.", "你吹响了宝可梦笛。\n\n什么都没有发生。"),

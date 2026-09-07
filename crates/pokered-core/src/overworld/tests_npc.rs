@@ -664,34 +664,144 @@ fn sign_interaction_no_sign() {
 /// without a script effect, and the bubble countdown used to tick only
 /// inside tick_active_effect — so it never moved, the engage intro waited
 /// on `frames_remaining == 0` forever, and no battle ever started.
+///
+/// Updated for DisplayEnemyTrainerTextAndStartBattle parity: after the
+/// bubble + walk-up, the trainer's before-battle line is shown (the map's
+/// talk storyline) and only THEN is the battle pended.
 #[test]
 fn viridian_forest_trainer_engages_on_sight_line() {
     use super::screen::OverworldScreen;
     use pokered_data::impl_traits::PokemonRedData;
 
     let mut screen = OverworldScreen::new(MapId::ViridianForest, None, PokemonRedData);
-    // Bug Catcher (textId 2) stands at (30,33) facing Left with range 2:
-    // his sight line covers (28,33) and (29,33).
+    // Bug Catcher (textId 2) stands at (30,33) facing Left with header view
+    // 2: his sight line covers (28,33) and (29,33).
     screen.state.player.x = 29;
     screen.state.player.y = 33;
-    for _ in 0..120 {
-        screen.update_frame(super::OverworldInput::new(
-            false, false, false, false, false, false, false, false,
-        ));
-        if let Some(ref pending) = screen.pending_trainer_battle {
-            assert_eq!(pending.trainer_id, "OPP_BUG_CATCHER1");
-            // The intro is done: bubble fully counted down (cleared to None
-            // on the following frame, same as the script-effect path), and
-            // the engage state consumed.
-            assert!(screen
-                .pending_emotion_bubble
-                .as_ref()
-                .map_or(true, |b| b.frames_remaining == 0));
-            assert!(screen.trainer_encounter_intro.is_none());
-            return;
+    let neutral = super::OverworldInput::new(false, false, false, false, false, false, false, false);
+    let a_press = super::OverworldInput::new(false, false, false, false, true, false, false, false);
+
+    // Phase 1: bubble + walk-up, then the before-battle text appears.
+    let mut text_seen = false;
+    for _ in 0..240 {
+        screen.update_frame(neutral);
+        if screen.pending_dialogue.is_some() || screen.active_script_effect.is_some() {
+            assert!(
+                screen.pending_trainer_battle.is_none(),
+                "battle must not start before the before-battle text is shown"
+            );
+            text_seen = true;
+            break;
         }
     }
-    panic!("trainer never engaged on sight tile (29,33)");
+    assert!(text_seen, "before-battle text never appeared after engage");
+
+    // Phase 2: A through the dialogue → script winds down → battle pends.
+    for _ in 0..600 {
+        if screen.pending_trainer_battle.is_some() {
+            break;
+        }
+        screen.update_frame(a_press);
+        if screen.pending_trainer_battle.is_some() {
+            break;
+        }
+        screen.update_frame(neutral);
+    }
+    let pending = screen
+        .pending_trainer_battle
+        .expect("battle never started after before-battle text was dismissed");
+    assert_eq!(pending.trainer_id, "OPP_BUG_CATCHER1");
+    assert!(screen.trainer_encounter_intro.is_none());
+    assert!(screen.trainer_intro_text_pending.is_none());
+}
+
+/// The engage intro holds input (wJoyIgnore, CheckForEngagingTrainers):
+/// while the "!" bubble shows and the trainer walks up, the player cannot
+/// move — and the before-battle text is shown before the battle, not skipped.
+#[test]
+fn engage_intro_locks_player_input_until_text() {
+    use super::screen::OverworldScreen;
+    use pokered_data::impl_traits::PokemonRedData;
+
+    let mut screen = OverworldScreen::new(MapId::ViridianForest, None, PokemonRedData);
+    screen.state.player.x = 29;
+    screen.state.player.y = 33;
+    let neutral = super::OverworldInput::new(false, false, false, false, false, false, false, false);
+    let hold_up = super::OverworldInput::new(true, false, false, false, false, false, false, false);
+
+    // Walk into the sight line.
+    for _ in 0..60 {
+        screen.update_frame(neutral);
+        if screen.trainer_encounter_intro.is_some() {
+            break;
+        }
+    }
+    assert!(
+        screen.trainer_encounter_intro.is_some(),
+        "trainer never engaged"
+    );
+
+    // Hammer Up for the whole intro: the player must not move a single tile.
+    for _ in 0..120 {
+        screen.update_frame(hold_up);
+        assert_eq!(
+            (screen.state.player.x, screen.state.player.y),
+            (29, 33),
+            "player moved during engage intro — input lock missing"
+        );
+    }
+    assert!(
+        screen.pending_dialogue.is_some()
+            || screen.active_script_effect.is_some()
+            || screen.trainer_intro_text_pending.is_some(),
+        "before-battle text should be on screen after the walk-up"
+    );
+}
+
+/// TalkToTrainer (home/trainers.asm:89-123): pressing A on an UNDEFEATED
+/// sight trainer shows its before-battle text and then ALWAYS starts the
+/// fight — the port used to stop at the text, so sight trainers could only
+/// ever be fought via their sight line.
+#[test]
+fn talking_to_undefeated_trainer_battles_after_text() {
+    use super::screen::OverworldScreen;
+    use pokered_data::impl_traits::PokemonRedData;
+
+    let mut screen = OverworldScreen::new(MapId::ViridianForest, None, PokemonRedData);
+    // Stand one tile below the Bug Catcher at (30,33), facing UP at him.
+    screen.state.player.x = 30;
+    screen.state.player.y = 34;
+    screen.state.player.facing = super::Direction::Up;
+    // Talk: A press (edge) then a neutral frame.
+    screen.update_frame(super::OverworldInput::new(
+        false, false, false, false, true, false, false, false,
+    ));
+    screen.update_frame(super::OverworldInput::new(
+        false, false, false, false, false, false, false, false,
+    ));
+    // The before-battle text shows (via the scene or the map json) and the
+    // engagement is queued — the battle must fire once the text closes.
+    let mut saw_text_or_battle = false;
+    let mut pressed = false;
+    for _ in 0..120 {
+        if screen.pending_trainer_battle.is_some() || screen.trainer_intro_text_pending.is_some() {
+            saw_text_or_battle = true;
+        }
+        if screen.pending_trainer_battle.is_some() {
+            assert_eq!(
+                screen.pending_trainer_battle.as_ref().unwrap().trainer_id,
+                "OPP_BUG_CATCHER1"
+            );
+            return;
+        }
+        let a = !pressed;
+        pressed = !pressed;
+        screen.update_frame(super::OverworldInput::new(
+            false, false, false, false, a, false, false, false,
+        ));
+    }
+    assert!(saw_text_or_battle, "talking to the trainer showed no text");
+    panic!("talking to an undefeated trainer never started the battle");
 }
 
 // ── Stale edge detection on re-entry from a sub-screen ─────────────
@@ -1802,4 +1912,41 @@ fn victory_road_boulder_drops_and_reappears_downstairs() {
     let boulder = restored.npc_states.iter().find(|n| n.text_id == 13).unwrap();
     assert!(boulder.visible);
     assert_eq!((boulder.x,boulder.y), (23,16));
+}
+
+// ── ViridianCity old-man swap wiring ───────────────────────────────
+
+/// OaksLab.asm:602-605 — on receiving the Pokédex the sleepy old man leaves
+/// the Viridian road (toggle hide) and the wide-awake one (defaultHidden)
+/// appears in his place.
+#[test]
+fn viridian_old_man_swap_applies_on_load() {
+    use super::screen::OverworldScreen;
+    use pokered_data::impl_traits::PokemonRedData;
+
+    let mut screen = OverworldScreen::new(MapId::ViridianCity, None, PokemonRedData);
+    screen.state.player.x = 10;
+    screen.state.player.y = 10;
+    let by_text = |s: &OverworldScreen| -> std::collections::HashMap<u8, bool> {
+        s.npc_states
+            .iter()
+            .map(|n| (n.text_id, n.visible))
+            .collect()
+    };
+    let before = by_text(&screen);
+    assert!(before[&5], "sleepy old man starts visible");
+    assert!(!before[&7], "wide-awake old man starts hidden (defaultHidden)");
+
+    // Simulate the dex-scene effects (same channels HideObject/ShowObject use).
+    screen
+        .unified_flags_mut()
+        .set_flag("__OBJ_HIDDEN_VIRIDIANCITY_OLD_MAN_SLEEPY", true);
+    screen
+        .unified_flags_mut()
+        .set_flag("__OBJ_SHOWN_VIRIDIANCITY_OLD_MAN", true);
+    screen.apply_hidden_object_flags();
+
+    let after = by_text(&screen);
+    assert!(!after[&5], "sleepy old man should be hidden by the swap");
+    assert!(after[&7], "wide-awake old man should be shown by the swap");
 }

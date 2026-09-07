@@ -837,6 +837,9 @@ impl PokemonGame {
                 self.main_menu = MainMenuState::new(self.state.save_summary.clone());
             }
             GameScreen::OakSpeech => {
+                // NEW GAME starts a fresh in-memory save before choosing a starter.
+                // Keep the disk save/summary for Continue and overwrite confirmation.
+                self.save_data = SaveData::new();
                 self.oak_speech = OakSpeechState::new();
                 if let Some(ref audio) = self.audio {
                     audio.stop_all();
@@ -1504,6 +1507,7 @@ impl PokemonGame {
                     }
                 }
                 self.overworld.party_count = self.save_data.party.count() as u8;
+                self.overworld.box_count = self.save_data.current_box.count() as u8;
                 self.overworld.party_lead_level = self.save_data.party.leader_level();
                 // A full-moveset level-up move couldn't be learned: open the
                 // party screen's forget-a-move prompt, exactly where the
@@ -1883,7 +1887,9 @@ impl PokemonGame {
                     // Trade outcomes resume the suspended script AFTER the
                     // drain (the drain borrows self.overworld).
                     let mut trade_results: Vec<bool> = Vec::new();
-                    for req in self.overworld.game_data_requests.drain(..) {
+                    let game_data_requests: Vec<_> =
+                        self.overworld.game_data_requests.drain(..).collect();
+                    for req in game_data_requests {
                         match req {
                             OverworldGameDataRequest::GiveItem { item, quantity } => {
                                 if let Some(id) = pokered_data::items::ItemId::from_const_name(&item)
@@ -1976,6 +1982,7 @@ impl PokemonGame {
                                     }
                                 }
                                 self.overworld.party_count = self.save_data.party.count() as u8;
+                                self.overworld.box_count = self.save_data.current_box.count() as u8;
                                 self.overworld.party_lead_level =
                                     self.save_data.party.leader_level();
                                 trade_results.push(traded);
@@ -1989,15 +1996,23 @@ impl PokemonGame {
                             OverworldGameDataRequest::TickDaycareExp => {
                                 self.save_data.game_data.tick_daycare_exp();
                             }
+                            OverworldGameDataRequest::PoisonStep => {
+                                pokered_core::overworld::poison::apply_out_of_battle_poison_damage(
+                                    &mut self.save_data,
+                                    &mut self.overworld,
+                                );
+                            }
                             OverworldGameDataRequest::DepositDaycare { index } => {
                                 self.save_data.deposit_daycare(index);
                                 self.overworld.party_count = self.save_data.party.count() as u8;
+                                self.overworld.box_count = self.save_data.current_box.count() as u8;
                                 self.overworld.party_lead_level =
                                     self.save_data.party.leader_level();
                             }
                             OverworldGameDataRequest::WithdrawDaycare => {
                                 self.save_data.withdraw_daycare();
                                 self.overworld.party_count = self.save_data.party.count() as u8;
+                                self.overworld.box_count = self.save_data.current_box.count() as u8;
                                 self.overworld.party_lead_level =
                                     self.save_data.party.leader_level();
                             }
@@ -2088,6 +2103,32 @@ impl PokemonGame {
                         }
                         self.battle.end_battle_text = trainer.end_battle_text;
                         ScreenAction::Transition(GameScreen::Battle)
+                    } else if let Some(pending) = self.overworld.pending_give_pokemon.take() {
+                        // Gifted mons get random DVs (AddPartyMon Random ×2);
+                        // party first, else the current PC box (_GivePokemon).
+                        if let Some(mut pokemon) = pokered_core::pokemon::stats::create_pokemon(
+                            pending.species,
+                            pending.level,
+                            pokered_core::pokemon::stats::roll_random_dvs(),
+                        ) {
+                            if let Some(nick) = pending.nickname {
+                                pokemon.set_nickname(&nick);
+                            }
+                            if self.save_data.party.count() < 6 {
+                                let _ = self.save_data.party.add(pokemon);
+                            } else {
+                                let _ = self.save_data.pc_storage.deposit_to_current(pokemon);
+                                self.save_data.current_box =
+                                    self.save_data.pc_storage.current_box().clone();
+                            }
+                            self.save_data.game_data.pokedex.set_seen(pending.species);
+                            self.save_data.game_data.pokedex.set_owned(pending.species);
+                            self.overworld.party_count = self.save_data.party.count() as u8;
+                            self.overworld.box_count = self.save_data.current_box.count() as u8;
+                            self.overworld.party_lead_level =
+                                self.save_data.party.leader_level();
+                        }
+                        ScreenAction::Continue
                     } else if let Some(shop_items) = self.overworld.pending_shop.take() {
                         match pokered_core::items::shop_stock_from_script_names(&shop_items) {
                             Ok(inv) => {
@@ -2734,34 +2775,20 @@ impl PokemonGame {
                 let mut result = SlotsAction::Continue;
                 let mut coins_out = None;
                 if let Some(ref mut slots) = self.slots_screen {
-                    let prev_phase = slots.phase;
                     result = slots.update_frame(slots_input);
                     coins_out = Some(slots.coins);
                     let sfx = slots.take_sfx();
                     if let Some(ref audio) = self.audio {
-                        use pokered_core::slots_screen::{SlotsPhase, SlotsSfx};
+                        use pokered_core::slots_screen::SlotsSfx;
                         for cue in sfx {
                             let id = match cue {
                                 SlotsSfx::NewSpin => SfxId::SlotsNewSpin,
                                 SlotsSfx::StopWheel => SfxId::SlotsStopWheel,
                                 SlotsSfx::Reward => SfxId::SlotsReward,
+                                SlotsSfx::GetKeyItem => SfxId::GetKeyItem,
+                                SlotsSfx::GetItem2 => SfxId::GetItem2,
                             };
                             audio.play_sfx(id);
-                        }
-                        // Reel-stop / spin-start feedback (app mirror).
-                        if prev_phase == SlotsPhase::BetSelect
-                            && slots.phase == SlotsPhase::Spinning
-                        {
-                            audio.play_sfx(SfxId::PressAB);
-                        }
-                        if prev_phase == SlotsPhase::Spinning
-                            && slots.phase == SlotsPhase::Result
-                        {
-                            if slots.last_payout > 0 {
-                                audio.play_sfx(SfxId::GetItem1);
-                            } else {
-                                audio.play_sfx(SfxId::Denied);
-                            }
                         }
                     }
                 }
@@ -3020,6 +3047,7 @@ impl PokemonGame {
                         self.save_to_file();
                     }
                     self.overworld.party_count = self.save_data.party.count() as u8;
+                    self.overworld.box_count = self.save_data.current_box.count() as u8;
                     self.overworld.party_lead_level = self.save_data.party.leader_level();
                     match pc_action {
                         PcScreenAction::Continue => ScreenAction::Continue,
@@ -3496,6 +3524,17 @@ mod tests {
     }
 
     #[test]
+    fn new_game_clears_loaded_party() {
+        let mut game = game_at_overworld();
+        let mon = pokered_core::pokemon::stats::create_pokemon(
+            pokered_data::species::Species::Bulbasaur, 7, [0x9a, 0x78],
+        ).unwrap();
+        game.save_data.party.add(mon).unwrap();
+        game.handle_transition(GameScreen::OakSpeech);
+        assert!(game.save_data.party.is_empty());
+    }
+
+    #[test]
     fn bag_field_item_use_returns_to_overworld_without_rebuild() {
         let mut game = game_at_overworld();
         let _ = game
@@ -3598,11 +3637,13 @@ mod tests {
             "running coin balance must persist to the save every frame"
         );
 
-        // Keep A held: each reel stops when aligned; all stop → Result.
-        for _ in 0..2000 {
+        // Keep A held: warm-up runs, each reel stops when allowed, a win pays
+        // out one coin at a time, then all is done → Result.
+        for _ in 0..20000 {
             game.update(&press(GbButton::A));
-            if game.slots_screen.as_ref().unwrap().phase
-                == pokered_core::slots_screen::SlotsPhase::Result
+            let phase = game.slots_screen.as_ref().unwrap().phase;
+            if phase != pokered_core::slots_screen::SlotsPhase::Spinning
+                && phase != pokered_core::slots_screen::SlotsPhase::Payout
             {
                 break;
             }
@@ -3610,6 +3651,7 @@ mod tests {
         let slots = game.slots_screen.as_ref().unwrap();
         assert_eq!(slots.phase, pokered_core::slots_screen::SlotsPhase::Result);
         assert!(slots.reels_stopped.iter().all(|&s| s));
+        assert_eq!(slots.payout_remaining, 0);
         assert_eq!(game.save_data.game_data.player_coins, slots.coins);
 
         // A on the result screen → bet selection again; B → exit to the

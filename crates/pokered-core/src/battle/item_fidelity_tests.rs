@@ -12,6 +12,9 @@ use pokered_data::items::ItemId;
 use pokered_data::moves::MoveId;
 use pokered_data::species::Species;
 
+// ── In-battle full-slot learn prompt (learnmove.asm) ────────────────────────
+
+
 fn input(down: bool, a: bool) -> BattleInput {
     BattleInput {
         down,
@@ -47,6 +50,14 @@ fn bag_quantity(battle: &BattleScreen, item: ItemId) -> u32 {
         .find(|(id, _)| *id == item)
         .map(|(_, q)| *q)
         .unwrap_or(0)
+}
+
+fn staged_messages(battle: &BattleScreen) -> Vec<String> {
+    if let BattlePhase::ShowingText { messages, .. } = &battle.phase {
+        messages.clone()
+    } else {
+        battle.current_message.clone().map(|m| vec![m]).unwrap_or_default()
+    }
 }
 
 fn current_message(battle: &BattleScreen) -> String {
@@ -329,5 +340,142 @@ fn ether_move_menu_b_returns_to_party_select() {
     );
     assert_eq!(bag_quantity(&battle, ItemId::Ether), 1, "item untouched");
     press_b(&mut battle);
+    assert_eq!(battle.phase, BattlePhase::PlayerMenu);
+}
+
+// ── ItemUsePokeDoll (item_effects.asm:1597-1602) ───────────────────────────
+
+/// The Poké Doll flees a WILD battle ("Got away safely!", doll consumed).
+#[test]
+fn poke_doll_flees_wild_battle() {
+    let player = vec![create_pokemon(Species::Rattata, 10, [0x9A, 0x78]).unwrap()];
+    let enemy = vec![create_pokemon(Species::Pidgey, 5, [0x9A, 0x78]).unwrap()];
+    let mut battle = BattleScreen::from_parties(true, &player, &enemy, None);
+    battle.player_bag.add_item(ItemId::PokeDoll, 1).unwrap();
+    battle.phase = BattlePhase::PlayerMenu;
+
+    use_first_bag_item(&mut battle);
+
+    assert_eq!(bag_quantity(&battle, ItemId::PokeDoll), 0, "doll consumed");
+    assert!(
+        staged_messages(&battle).join(" ").contains("Got away safely"),
+        "expected the flee text, got {:?}",
+        staged_messages(&battle)
+    );
+    // Dismiss the flee text (press edges alternate with release frames); the
+    // battle then ends as an escape.
+    for _ in 0..8 {
+        battle.update_frame(input(false, true));
+        battle.update_frame(BattleInput::none());
+    }
+    assert!(
+        matches!(battle.phase, BattlePhase::BattleOver { escaped: true, .. }),
+        "expected a battle escape, got {:?}",
+        battle.phase
+    );
+}
+
+/// In a TRAINER battle the doll falls through to ItemUseNotTime: the OAK
+/// refusal text shows and the doll is NOT consumed.
+#[test]
+fn poke_doll_refused_in_trainer_battle() {
+    let player = vec![create_pokemon(Species::Rattata, 10, [0x9A, 0x78]).unwrap()];
+    let enemy = vec![create_pokemon(Species::Pidgey, 5, [0x9A, 0x78]).unwrap()];
+    let mut battle = BattleScreen::from_parties(false, &player, &enemy, None);
+    battle.player_name = Some("RED".to_string());
+    battle.player_bag.add_item(ItemId::PokeDoll, 1).unwrap();
+    battle.phase = BattlePhase::PlayerMenu;
+
+    use_first_bag_item(&mut battle);
+
+    assert_eq!(
+        bag_quantity(&battle, ItemId::PokeDoll),
+        1,
+        "doll must NOT be consumed in a trainer battle"
+    );
+    assert!(
+        staged_messages(&battle).join(" ").contains("the time to use"),
+        "expected the OAK refusal, got {:?}",
+        staged_messages(&battle)
+    );
+    // Dismiss the refusal with B (A would re-engage the main menu); play then
+    // returns to the menu with the doll intact.
+    for _ in 0..20 {
+        press_b(&mut battle);
+        battle.update_frame(BattleInput::none());
+    }
+    assert_eq!(battle.phase, BattlePhase::PlayerMenu);
+}
+/// wrap_learn_prompt turns a queued blocked move into the TryingToLearn text +
+/// a LearnMoveAsk phase; YES → the forget list; A on slot 0 replaces it and
+/// the chain resumes into the wrapped phase. The old move is NOT silently
+/// lost without the prompt.
+#[test]
+fn learn_move_chain_replaces_a_chosen_move() {
+    use super::BattlePhase;
+    let player = vec![create_pokemon_with_moves(
+        Species::Pikachu,
+        20,
+        [0x9A, 0x78],
+        [MoveId::Thundershock, MoveId::Growl, MoveId::TailWhip, MoveId::QuickAttack],
+    )
+    .unwrap()];
+    let enemy = vec![create_pokemon(Species::Pidgey, 5, [0x9A, 0x78]).unwrap()];
+    let mut battle = BattleScreen::from_parties(true, &player, &enemy, None);
+    battle.pending_learn_moves = vec![(0, MoveId::Thunderbolt)];
+
+    let mut msgs = vec!["PIKACHU grew to level 21!".to_string()];
+    let next = battle.wrap_learn_prompt(&mut msgs, BattlePhase::PlayerMenu);
+    assert!(
+        matches!(next, BattlePhase::LearnMoveAsk { .. }),
+        "expected the learn prompt phase, got {:?}",
+        next
+    );
+    assert!(
+        msgs.iter().any(|m| m.contains("trying to learn")),
+        "TryingToLearn text appended: {:?}",
+        msgs
+    );
+    battle.phase = next;
+    battle.post_text_transition();
+
+    // NO first (default) → the abandon confirm; YES there → did-not-learn text
+    // and resume into PlayerMenu with the moveset unchanged.
+    battle.update_frame(input(false, true)); // A on default NO
+    assert!(
+        matches!(battle.phase, BattlePhase::LearnMoveGiveUpConfirm { .. }),
+        "NO goes to the abandon confirm, got {:?}",
+        battle.phase
+    );
+    battle.update_frame(input(false, true)); // A on default NO → back to ask
+    assert!(matches!(battle.phase, BattlePhase::LearnMoveAsk { .. }));
+    battle.update_frame(input(true, false)); // UP toggles to YES
+    battle.update_frame(input(false, true)); // A on YES → the forget list
+    assert!(matches!(battle.phase, BattlePhase::LearnMoveChoose { .. }));
+
+    // Choose slot 0 (ThunderShock): "1, 2 and... Poof!" texts, then resume.
+    battle.update_frame(input(false, true));
+    assert!(
+        matches!(battle.phase, BattlePhase::ShowingText { .. }),
+        "expected replacement texts, got {:?}",
+        battle.phase
+    );
+    if let Some(bs) = battle.battle_state.as_ref() {
+        assert_eq!(bs.player.party[0].moves[0], MoveId::Thunderbolt);
+        assert_eq!(bs.player.party[0].moves[3], MoveId::QuickAttack);
+    }
+    // Dismiss the texts (4 pages × wait+press); the battle resumes at the
+    // wrapped phase. Stop at the FIRST neutral frame — further A presses
+    // would fight with the freshly learned move.
+    for _ in 0..40 {
+        if battle.phase == BattlePhase::PlayerMenu {
+            return;
+        }
+        battle.update_frame(input(false, true));
+        if battle.phase == BattlePhase::PlayerMenu {
+            return;
+        }
+        battle.update_frame(super::BattleInput::none());
+    }
     assert_eq!(battle.phase, BattlePhase::PlayerMenu);
 }

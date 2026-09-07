@@ -99,7 +99,7 @@ game_scene ViridianCity {
   // Original prints this then force-walks the player one step down. We keep the
   // faithful push-down approximation.
   @storyline("talkGamblerAsleep") {
-    @trigger(map = "ViridianCity", npc = 5)
+    @trigger(map = "ViridianCity", npc = 5, toggle = "VIRIDIANCITY_OLD_MAN_SLEEPY")
     @speaker("") {
       @t("You can't go through here!\n\nThis is private property!", "你不能从这里过去！\n\n这里是私人领地！")
     }
@@ -129,7 +129,7 @@ game_scene ViridianCity {
   // "Are you in a hurry?" YES → he waves you on; NO → he runs the catch
   // tutorial: the auto-played BATTLE_TYPE_OLD_MAN demo battle (game.oldManTutorial()).
   @storyline("talkOldMan") {
-    @trigger(map = "ViridianCity", npc = 7)
+    @trigger(map = "ViridianCity", npc = 7, toggle = "VIRIDIANCITY_OLD_MAN", hidden = true)
     @speaker("") {
       @t("Ahh, I've had my coffee now\nand I feel great!\n\nSure you can go through!\n\nAre you in a hurry?", "啊，我已经喝过咖啡了，感觉真\n好！\n\n当然可以过去！\n\n你有什么急事吗？")
     }

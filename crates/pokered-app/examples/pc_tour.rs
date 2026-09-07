@@ -1,27 +1,55 @@
-//! Temporary visual-tour harness for the PC screens: drives a `PcScreen`
+//! Visual-tour harness for the PC screens: drives a `PcScreen`
 //! through its phases and dumps a PNG of each. Run with:
-//!   cargo run --release -p pokered-app --example pc_tour
+//!   cargo run --release -p pokered-app --example pc_tour -- <directory> zh
 
+use dotzuki_engine::render_config::RenderConfig;
 use pokered_app::render::draw_pc;
 use pokered_core::game_state::Lang;
 use pokered_core::main_menu::MenuInput;
 use pokered_core::pc_screen::{PcContext, PcEntry, PcOpenContext, PcPhase, PcScreen};
+use pokered_core::pokemon::stats::create_pokemon;
 use pokered_core::save::SaveData;
 use pokered_data::items::ItemId;
 use pokered_data::species::Species;
-use pokered_core::pokemon::stats::create_pokemon;
 use pokered_renderer::{FrameBuffer, Rgba};
-use dotzuki_engine::render_config::RenderConfig;
 
-const A: MenuInput = MenuInput { up: false, down: false, a: true, b: false };
-const B: MenuInput = MenuInput { up: false, down: false, a: false, b: true };
-const UP: MenuInput = MenuInput { up: true, down: false, a: false, b: false };
-const DOWN: MenuInput = MenuInput { up: false, down: true, a: false, b: false };
+const A: MenuInput = MenuInput {
+    up: false,
+    down: false,
+    a: true,
+    b: false,
+};
+const B: MenuInput = MenuInput {
+    up: false,
+    down: false,
+    a: false,
+    b: true,
+};
+const UP: MenuInput = MenuInput {
+    up: true,
+    down: false,
+    a: false,
+    b: false,
+};
+const DOWN: MenuInput = MenuInput {
+    up: false,
+    down: true,
+    a: false,
+    b: false,
+};
 
 fn shot(pc: &PcScreen, save: &SaveData, name: &str) {
     let mut fb = FrameBuffer::new(RenderConfig::new(160, 144), Rgba::WHITE);
-    draw_pc(pc, save, &mut None, &mut fb, Lang::En);
-    let path = format!("/tmp/pc_tour_{}.png", name);
+    let lang = if std::env::args().nth(2).as_deref() == Some("zh") {
+        Lang::Zh
+    } else {
+        Lang::En
+    };
+    draw_pc(pc, save, &mut None, &mut fb, lang);
+    let path = match std::env::args().nth(1) {
+        Some(dir) => format!("{dir}/{name}.png"),
+        None => format!("/tmp/pc_tour_{name}.png"),
+    };
     fb.save_png(std::path::Path::new(&path)).unwrap();
     println!("saved {} (phase {:?})", path, pc.phase());
 }
@@ -74,19 +102,39 @@ fn fresh_at_bills_menu(save: &SaveData) -> (PcScreen, SaveData) {
 }
 
 fn main() {
+    if let Some(dir) = std::env::args().nth(1) {
+        std::fs::create_dir_all(dir).unwrap();
+    }
     let mut save = SaveData::new();
-    save.party.add(create_pokemon(Species::Pikachu, 12, [0x9A, 0x78]).unwrap()).unwrap();
-    save.party.add(create_pokemon(Species::Bulbasaur, 7, [0x9A, 0x78]).unwrap()).unwrap();
-    save.pc_storage.current_box_mut()
-        .deposit(create_pokemon(Species::Charmander, 9, [0x9A, 0x78]).unwrap()).unwrap();
-    save.pc_storage.current_box_mut()
-        .deposit(create_pokemon(Species::Squirtle, 8, [0x9A, 0x78]).unwrap()).unwrap();
-    save.pc_storage.get_box_mut(3).unwrap()
-        .deposit(create_pokemon(Species::Abra, 6, [0x9A, 0x78]).unwrap()).unwrap();
+    save.party
+        .add(create_pokemon(Species::Pikachu, 12, [0x9A, 0x78]).unwrap())
+        .unwrap();
+    save.party
+        .add(create_pokemon(Species::Bulbasaur, 7, [0x9A, 0x78]).unwrap())
+        .unwrap();
+    save.pc_storage
+        .current_box_mut()
+        .deposit(create_pokemon(Species::Charmander, 9, [0x9A, 0x78]).unwrap())
+        .unwrap();
+    save.pc_storage
+        .current_box_mut()
+        .deposit(create_pokemon(Species::Squirtle, 8, [0x9A, 0x78]).unwrap())
+        .unwrap();
+    save.pc_storage
+        .get_box_mut(3)
+        .unwrap()
+        .deposit(create_pokemon(Species::Abra, 6, [0x9A, 0x78]).unwrap())
+        .unwrap();
     save.game_data.bag.add_item(ItemId::Potion, 5).unwrap();
     save.game_data.bag.add_item(ItemId::Bicycle, 1).unwrap();
-    save.game_data.pc_items.add_item(ItemId::PokeBall, 3).unwrap();
-    save.game_data.pc_items.add_item(ItemId::SuperPotion, 12).unwrap();
+    save.game_data
+        .pc_items
+        .add_item(ItemId::PokeBall, 3)
+        .unwrap();
+    save.game_data
+        .pc_items
+        .add_item(ItemId::SuperPotion, 12)
+        .unwrap();
     for i in 1..=25u8 {
         let s = Species::from_index_id(i);
         save.game_data.pokedex.set_seen(s);
@@ -186,6 +234,29 @@ fn main() {
         shot(&pc, &save, "20_rating_page2");
         step(&mut pc, &mut save, A);
         shot(&pc, &save, "21_rating_text");
+    }
+    // Last box and a scrolled full storage list remain visible.
+    {
+        let (mut pc, mut save) = fresh_at_bills_menu(&save);
+        press(&mut pc, &mut save, DOWN, 3);
+        step(&mut pc, &mut save, A);
+        step(&mut pc, &mut save, UP);
+        step(&mut pc, &mut save, A);
+        press(&mut pc, &mut save, DOWN, 11);
+        shot(&pc, &save, "22_box12_cursor");
+    }
+    {
+        let mut full = save.clone();
+        while full
+            .pc_storage
+            .current_box_mut()
+            .deposit(create_pokemon(Species::Venusaur, 100, [255, 255]).unwrap())
+            .is_ok()
+        {}
+        let (mut pc, mut full) = fresh_at_bills_menu(&full);
+        step(&mut pc, &mut full, A);
+        press(&mut pc, &mut full, DOWN, 20);
+        shot(&pc, &full, "23_full_box_cancel");
     }
     println!("done");
 }

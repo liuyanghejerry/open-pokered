@@ -480,14 +480,13 @@ pub fn draw_overworld(
         // Player sprite: 16×96 sheet = 6 frames of 16×16
         // Frame layout: DownStand=0, UpStand=1, LeftStand=2, DownWalk=3, UpWalk=4, LeftWalk=5
         // Right uses Left frames with horizontal flip
-        // Biking swaps the sheet to red_bike.png (same 6-frame layout) — the
-        // original's LoadBikePlayerSpriteGraphics loads RedBikeSprite
-        // (gfx/sprites.asm:34) while wWalkBikeSurfState == 1; the frame and
-        // flip selection below is shared by both sheets.
-        let player_sprite = if screen.state.player.transport == TransportMode::Biking {
-            "red_bike"
-        } else {
-            "red"
+        // LoadPlayerSpriteGraphics selects RedSprite / RedBikeSprite /
+        // SeelSprite for walking / biking / surfing (home/overworld.asm).
+        // All three sheets share the facing and animation layout below.
+        let player_sprite = match screen.state.player.transport {
+            TransportMode::Walking => "red",
+            TransportMode::Biking => "red_bike",
+            TransportMode::Surfing => "seel",
         };
         if let Ok(cached) = rm.load_sprite(player_sprite) {
             let ts = cached.tileset.clone();
@@ -514,6 +513,11 @@ pub fn draw_overworld(
             let fishing_shake_offset = fishing.map_or(0, |f| f.player_shake_offset());
             let player_visible = spin.map_or(true, |s| s.player_visible());
             let player_visible = enter.map_or(player_visible, |s| s.player_visible());
+            // FLY arrival (EnterMapAnim .flyAnimation): the BIRD replaces the
+            // player sprite while it glides in; the player reappears when it
+            // lands.
+            let fly = screen.enter_map_fly_anim.as_ref();
+            let player_visible = player_visible && fly.is_none_or(|s| s.is_done());
             let fishing_pose = fishing.map_or(false, |f| f.pose_active());
 
             let (frame, flip_h) = if screen.state.player.movement_state == MovementState::Walking
@@ -916,6 +920,46 @@ pub fn draw_overworld(
                                 &sprite_pal,
                                 false,
                             );
+                        }
+                    }
+                }
+            }
+        }
+
+        // The player owns the first OAM entries: the arriving bird must
+        // cover NPCs it crosses, even though NPCs are drawn later above.
+        // BirdSprite uses the same six-frame sheet as walking sprites:
+        // image indexes $8/$9 select LeftStand/LeftWalk (frames 2/5).
+        // FlyAnimationEnterScreenCoords contains sprite-state coordinates,
+        // not OAM coordinates. Anchor its final ($40,$3c) at our player
+        // position; PrepareOAMData's hardware bias is not a screen offset.
+        if let Some(fly) = screen.enter_map_fly_anim.as_ref() {
+            if !fly.is_done() {
+                if let Ok(bird) = rm.load_sprite("bird") {
+                    let bts = bird.tileset.clone();
+                    let bird_pal = Palette::new(&[
+                        Rgba::TRANSPARENT,
+                        GRAYSCALE_PALETTE.colors[1],
+                        GRAYSCALE_PALETTE.colors[2],
+                        GRAYSCALE_PALETTE.colors[3],
+                    ]);
+                    let (oy, ox) = fly.bird_pos();
+                    let bx = screen_center_tx * TILE_SIZE as i32 + ox as i32 - 0x40;
+                    let by = screen_center_ty * TILE_SIZE as i32 + oy as i32 - 0x3c;
+                    let base_tile = [2, 5][fly.flap_frame() as usize] * 4;
+                    for r in 0..2u32 {
+                        for c in 0..2u32 {
+                            let tile_idx = base_tile + (r * 2 + c) as usize;
+                            if tile_idx < bts.len() {
+                                blit_tile_clipped(
+                                    fb,
+                                    &bts,
+                                    tile_idx,
+                                    bx + (c * TILE_SIZE) as i32,
+                                    by + (r * TILE_SIZE) as i32,
+                                    &bird_pal,
+                                );
+                            }
                         }
                     }
                 }

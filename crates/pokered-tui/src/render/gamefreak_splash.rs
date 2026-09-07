@@ -56,6 +56,10 @@ pub fn draw_gamefreak_splash(
     let mut palette_state = PaletteState::new(GRAYSCALE_PALETTE);
     palette_state.obp0 = state.logo_obp0();
     let logo_pal = palette_state.obj_palette0();
+    // Stars use the identity shade mapping, but OBJ color 0 must stay
+    // transparent so their tile backgrounds do not erase the black bars.
+    palette_state.obp1 = 0b11100100;
+    let star_pal = palette_state.obj_palette1();
 
     if let Some(ref mut rm) = res {
         if let Ok(logo) = rm.load_splash("gamefreak_logo") {
@@ -80,7 +84,7 @@ pub fn draw_gamefreak_splash(
                             0,
                             sx + dx * TILE_SIZE as i32,
                             sy + dy * TILE_SIZE as i32,
-                            &GRAYSCALE_PALETTE,
+                            &star_pal,
                         );
                     }
                 }
@@ -91,14 +95,7 @@ pub fn draw_gamefreak_splash(
             if let Ok(star) = rm.load_splash("falling_star") {
                 let ts = star.tileset.clone();
                 for (oam_x, oam_y) in state.small_stars_oam() {
-                    blit_tile_clipped(
-                        fb,
-                        &ts,
-                        0,
-                        oam_x - 8,
-                        oam_y - 16,
-                        &GRAYSCALE_PALETTE,
-                    );
+                    blit_tile_clipped(fb, &ts, 0, oam_x - 8, oam_y - 16, &star_pal);
                 }
             }
         }

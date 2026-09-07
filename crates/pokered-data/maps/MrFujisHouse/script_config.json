@@ -20,12 +20,26 @@
     },
     {
       "id": 5,
-      "talk": "talkMrFuji"
+      "talk": "talkMrFuji",
+      "toggleId": "MRFUJISHOUSE_MR_FUJI"
     },
     {
       "id": 6,
       "talk": "talkPokedex"
     }
   ],
-  "signs": []
+  "signs": [
+    {
+      "id": 1,
+      "talk": "magazines"
+    },
+    {
+      "id": 2,
+      "talk": "magazines"
+    },
+    {
+      "id": 3,
+      "talk": "magazines"
+    }
+  ]
 }

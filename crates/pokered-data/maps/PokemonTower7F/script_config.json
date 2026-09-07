@@ -1,27 +1,28 @@
 {
-  "$schema": "../../schemas/script_config.schema.json",
-  "coordEvents": [],
-  "npcs": [
-    {
-      "id": 1,
-      "talk": "talkRocket1",
-      "toggleId": "POKEMONTOWER_7_OBJ_1"
-    },
-    {
-      "id": 2,
-      "talk": "talkRocket2",
-      "toggleId": "POKEMONTOWER_7_OBJ_2"
-    },
-    {
-      "id": 3,
-      "talk": "talkRocket3",
-      "toggleId": "POKEMONTOWER_7_OBJ_3"
-    },
-    {
-      "id": 4,
-      "talk": "talkMrFuji"
-    }
-  ],
-  "signs": [],
-  "onLoad": "PokemonTower7FOnLoad"
+ "$schema": "../../schemas/script_config.schema.json",
+ "coordEvents": [],
+ "npcs": [
+  {
+   "id": 1,
+   "talk": "talkRocket1",
+   "toggleId": "POKEMONTOWER7F_ROCKET_1"
+  },
+  {
+   "id": 2,
+   "talk": "talkRocket2",
+   "toggleId": "POKEMONTOWER7F_ROCKET_2"
+  },
+  {
+   "id": 3,
+   "talk": "talkRocket3",
+   "toggleId": "POKEMONTOWER7F_ROCKET_3"
+  },
+  {
+   "id": 4,
+   "talk": "talkMrFuji",
+   "toggleId": "POKEMONTOWER7F_MR_FUJI"
+  }
+ ],
+ "signs": [],
+ "onLoad": "PokemonTower7FOnLoad"
 }

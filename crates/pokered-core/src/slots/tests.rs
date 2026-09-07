@@ -302,3 +302,136 @@ fn resolve_spin_match_with_can_win() {
     assert_eq!(sym, SlotSymbol::Cherry);
     assert_eq!(payout, 8);
 }
+
+// ── Wheel 2 early-stop direction (SlotMachine_StopWheel2Early) ──────────
+// Regression guards for the inverted condition that used to make wins
+// structurally impossible: the ASM stops wheel 2 early when the first two
+// wheels ARE lined up, and keeps it spinning otherwise.
+
+/// w1 offset 1 → bottom Seven, middle Mouse, top Fish (sym_idx 0).
+const W1_ALIGNED: u8 = 1;
+
+#[test]
+fn wheel2_stops_when_wheels_are_aligned_in_normal_mode() {
+    let mut sm = SlotMachineState::new(false);
+    sm.place_bet(1);
+    sm.flags = 0;
+    sm.wheel_offsets[0] = W1_ALIGNED;
+    // w2 offset 7 (odd → stoppable) → sym_idx 3: bottom Bird, middle Mouse,
+    // top Bar — the middle pair (Mouse/Mouse) lines up with wheel 1.
+    sm.wheel_offsets[1] = 7;
+    sm.wheel_slip_counters[1] = 4;
+    assert!(sm.try_stop_wheel(1), "aligned wheels must stop wheel 2");
+    assert_eq!(sm.wheel_slip_counters[1], 0, "stop zeroes the slip counter");
+}
+
+#[test]
+fn wheel2_keeps_spinning_when_unaligned_in_normal_mode() {
+    let mut sm = SlotMachineState::new(false);
+    sm.place_bet(1);
+    sm.flags = 0;
+    sm.wheel_offsets[0] = W1_ALIGNED;
+    // w2 offset 3 (odd → stoppable) → sym_idx 1: bottom Fish, middle Cherry,
+    // top Bird — no pair matches wheel 1's Seven/Mouse/Fish.
+    sm.wheel_offsets[1] = 3;
+    sm.wheel_slip_counters[1] = 4;
+    assert!(
+        !sm.try_stop_wheel(1),
+        "unaligned wheels must not stop wheel 2 yet"
+    );
+    assert_eq!(sm.wheel_slip_counters[1], 3, "a failed attempt burns one slip");
+}
+
+#[test]
+fn wheel2_7bar_mode_stops_only_on_bottom_seven_or_bar() {
+    let mut sm = SlotMachineState::new(false);
+    sm.place_bet(1);
+    sm.flags = SLOTS_CAN_WIN_WITH_7_OR_BAR;
+    sm.wheel_offsets[0] = W1_ALIGNED;
+    // Aligned position (as in the normal-mode test) but wheel 2's bottom is
+    // Bird: in 7/bar mode the alignment must NOT stop the wheel — the ASM's
+    // match result is clobbered by the bottom-tile comparison.
+    sm.wheel_offsets[1] = 7;
+    sm.wheel_slip_counters[1] = 4;
+    assert!(!sm.try_stop_wheel(1), "alignment alone must not stop in 7/bar mode");
+    assert_eq!(sm.wheel_slip_counters[1], 3, "the rejected stop burns one slip");
+    // Bottom slot Seven (sym_idx 0 → offset 1): stops even unaligned.
+    sm.wheel_offsets[1] = 1;
+    assert!(sm.try_stop_wheel(1), "bottom 7 must stop wheel 2 in 7/bar mode");
+    // Bottom slot Bar: offset 11 (odd) → sym_idx 5.
+    sm.wheel_offsets[1] = 11;
+    sm.wheel_slip_counters[1] = 4;
+    assert!(sm.try_stop_wheel(1), "bottom bar must stop wheel 2 in 7/bar mode");
+}
+
+// ── Post-reward effects / reroll counter bookkeeping ────────────────────
+
+#[test]
+fn resolve_spin_does_not_apply_reward_effects() {
+    // The ASM reward funcs run the side effects once; the caller owns them
+    // (post_reward_effects_with_rng). resolve_spin must leave all of it alone.
+    let mut sm = SlotMachineState::new(false);
+    sm.place_bet(1);
+    sm.flags = SLOTS_CAN_WIN;
+    sm.allow_matches_counter = 3;
+    sm.reroll_counter = 7;
+    sm.wheel_offsets = [6, 10, 12]; // cherry middle-row match
+    let result = sm.resolve_spin();
+    assert_eq!(result, Some((SlotSymbol::Cherry, 8)));
+    assert_eq!(sm.flags, SLOTS_CAN_WIN, "flags untouched");
+    assert_eq!(sm.allow_matches_counter, 3, "counter untouched");
+    assert_eq!(sm.reroll_counter, 7, "no rerolls happened for an instant match");
+}
+
+#[test]
+fn place_bet_preserves_reroll_counter() {
+    let mut sm = SlotMachineState::new(false);
+    sm.reroll_counter = 200;
+    sm.place_bet(3);
+    assert_eq!(sm.reroll_counter, 200, "the ASM only zeroes it per session");
+}
+
+#[test]
+fn reroll_counter_wraps_from_zero_and_persists() {
+    let mut sm = SlotMachineState::new(false);
+    sm.place_bet(1);
+    sm.flags = SLOTS_CAN_WIN;
+    // No completable line (wheel 2 shares no symbol with wheel 1 on any of
+    // the five pairs), so every reroll fails: the counter wraps 0 → 255 and
+    // runs down to 0 before giving up.
+    sm.wheel_offsets = [1, 2, 4];
+    assert_eq!(sm.resolve_spin(), None);
+    assert_eq!(sm.reroll_counter, 0);
+}
+
+#[test]
+fn can_win_spins_win_via_wheel3_reroll_when_wheels_align() {
+    // The core original mechanic: wheels 1+2 aligned + CAN_WIN → wheel 3
+    // rerolls onto the match and the spin pays out. With a 3-coin bet every
+    // payline is active, so any alignment can be completed.
+    for w1 in [1u8, 3, 5, 7, 9] {
+        let mut sm = SlotMachineState::new(false);
+        sm.place_bet(3);
+        sm.flags = SLOTS_CAN_WIN;
+        sm.wheel_offsets[0] = w1;
+        // Find a wheel-2 offset where some pair lines up; the wheel-3 offset
+        // is irrelevant — the reroll scans it.
+        let mut aligned = false;
+        for w2 in (0..30).step_by(2) {
+            sm.wheel_offsets[1] = w2 + 1;
+            if sm.find_wheel1_wheel2_match() {
+                aligned = true;
+                break;
+            }
+        }
+        if !aligned {
+            continue;
+        }
+        sm.wheel_offsets[2] = 1;
+        let result = sm.resolve_spin();
+        assert!(
+            result.is_some(),
+            "aligned + CAN_WIN must resolve to a win (w1={w1})"
+        );
+    }
+}

@@ -27,14 +27,22 @@ game_scene BluesHouse {
       @speaker("") {
         @t("Grandpa asked you to run an\nerrand? Here, this will help\nyou!", "爷爷让你去跑腿办事？给你，这\n个会帮到你！")
       }
-      giveItem("TOWN_MAP", 1)
-      // Hide the TOWN MAP object on the table (TOGGLE_TOWN_MAP = npc 3).
-      hideObjectByName("BLUESHOUSE_TOWN_MAP")
-      @speaker("") {
-        @t("<PLAYER> got a TOWN MAP!", "<PLAYER>得到了城镇地图！")
+      // Original: GiveItem; on bag-full print DaisyBagFullText — the table
+      // map stays and EVENT_GOT_TOWN_MAP is not set (retry on re-talk).
+      given = giveItem("TOWN_MAP", 1)
+      @if (given) {
+        // Hide the TOWN MAP object on the table (TOGGLE_TOWN_MAP = npc 3).
+        hideObjectByName("BLUESHOUSE_TOWN_MAP")
+        @speaker("") {
+          @t("<PLAYER> got a TOWN MAP!", "<PLAYER>得到了城镇地图！")
+        }
+        playSound("SFX_GET_KEY_ITEM")
+        setFlag("EVENT_GOT_TOWN_MAP")
+      } @else {
+        @speaker("") {
+          @t("You have too much stuff\nwith you.", "你带的东西太多了。")
+        }
       }
-      playSound("SFX_GET_KEY_ITEM")
-      setFlag("EVENT_GOT_TOWN_MAP")
     } @else {
       // No POKeDEX yet — just chit-chat.
       @speaker("") {

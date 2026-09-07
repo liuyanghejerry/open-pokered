@@ -5,6 +5,7 @@
 //! loading functions, collision detection, and player movement for
 //! the game's overworld map system.
 
+pub mod bookshelf;
 pub mod collision;
 pub mod doors_elevators;
 pub mod event_flags;
@@ -19,6 +20,7 @@ pub mod native_script;
 pub mod npc_interaction;
 pub mod npc_movement;
 pub mod player_movement;
+pub mod poison;
 pub mod presentation;
 pub mod script_bridge;
 pub mod special_terrain;
@@ -33,6 +35,8 @@ pub mod update;
 mod tests;
 #[cfg(test)]
 mod tests_collision;
+#[cfg(test)]
+mod tests_slots_lucky;
 #[cfg(test)]
 mod tests_cutscene_movement;
 #[cfg(test)]

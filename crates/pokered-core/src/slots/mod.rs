@@ -59,11 +59,15 @@ impl SlotMachineState {
     }
 
     /// Place a bet (1-3 coins). Returns false if bet is invalid.
+    ///
+    /// The reroll counter is deliberately NOT reset here: in the ASM it is
+    /// zeroed once per machine session (`PromptUserToPlaySlots`) and then
+    /// persists across spins, wrapping to 255 on its first decrement
+    /// (slot_machine.asm:17-19, :407-409).
     pub fn place_bet(&mut self, bet: u8) -> bool {
         if bet >= 1 && bet <= 3 {
             self.bet = bet;
             self.payout_coins = 0;
-            self.reroll_counter = 0;
             self.wheel_slip_counters = [INITIAL_SLIP_COUNTER; 3];
             self.stopping_wheel = 0;
             true
@@ -214,27 +218,29 @@ impl SlotMachineState {
         }
     }
 
-    /// Wheel 2 early stop logic (SlotMachine_StopWheel2Early).
+    /// Wheel 2 early stop logic (SlotMachine_StopWheel2Early, slot_machine.asm:318-339).
     fn try_stop_wheel2(&mut self) -> bool {
         if self.wheel_slip_counters[1] == 0 {
             return true;
         }
         self.wheel_slip_counters[1] -= 1;
 
-        let _view2 = self.get_wheel_view(1);
         if self.flags & SLOTS_CAN_WIN_WITH_7_OR_BAR != 0 {
-            // In 7/bar mode: stop if wheels 1&2 match OR if bottom of wheel2
-            // is 7 or bar (high_byte <= HIGH(SLOTSBAR))
-            let has_match = self.find_wheel1_wheel2_match();
-            let view2 = self.get_wheel_view(1);
-            if has_match || view2.bottom.high_byte() <= SlotSymbol::Bar.high_byte() {
+            // Seven-and-bar mode: stop early only when wheel 2's bottom slot
+            // holds a 7 or bar symbol (high byte < HIGH(SLOTSBAR) + 1). The
+            // ASM also calls FindWheel1Wheel2Matches here, but its result is
+            // clobbered by the bottom-tile `cp` — only its `de` pointer
+            // side effect is used — so the match state must not gate the stop.
+            if self.get_wheel_view(1).bottom.high_byte() <= SlotSymbol::Bar.high_byte() {
                 self.wheel_slip_counters[1] = 0;
                 return true;
             }
             false
         } else {
-            // Normal mode: stop if NO symbols line up between wheels 1 and 2
-            if !self.find_wheel1_wheel2_match() {
+            // Normal mode: stop early when symbols ARE lined up across the
+            // first two wheels (giving wheel 3 a match to land on); otherwise
+            // keep spinning until the slip counter runs out.
+            if self.find_wheel1_wheel2_match() {
                 self.wheel_slip_counters[1] = 0;
                 return true;
             }
@@ -314,52 +320,64 @@ impl SlotMachineState {
     /// 3. If match found and can win but it's 7/bar and 7/bar mode isn't on, reroll
     /// 4. Otherwise accept the match and calculate payout
     ///
+    /// Does NOT apply the winning symbol's post-reward side effects (flag /
+    /// allow-matches-counter mutations) — the caller must invoke
+    /// [`Self::post_reward_effects_with_rng`] exactly once with RNG, mirroring
+    /// the ASM where each SlotReward*Func runs those effects a single time.
+    ///
     /// Returns the winning symbol and payout, or None.
     pub fn resolve_spin(&mut self) -> Option<(SlotSymbol, u16)> {
-        let max_rerolls = WHEEL_SIZE as u8 * 2;
-        self.reroll_counter = max_rerolls;
-
         loop {
             if let Some(symbol) = self.check_for_matches() {
                 let can_win = self.flags & (SLOTS_CAN_WIN | SLOTS_CAN_WIN_WITH_7_OR_BAR) != 0;
                 if !can_win {
                     // Player can't win — try reroll
-                    if self.reroll_counter == 0 {
+                    if !self.reroll_wheel3() {
                         return None;
                     }
-                    self.reroll_counter -= 1;
-                    self.advance_wheel(2);
-                    self.advance_wheel(2);
                     continue;
                 }
                 // Can win, but check 7/bar restriction
                 let has_7bar_mode = self.flags & SLOTS_CAN_WIN_WITH_7_OR_BAR != 0;
                 if !has_7bar_mode && Self::is_seven_or_bar(symbol) {
                     // 7/bar match but not in 7/bar mode — reroll
-                    if self.reroll_counter == 0 {
+                    if !self.reroll_wheel3() {
                         return None;
                     }
-                    self.reroll_counter -= 1;
-                    self.advance_wheel(2);
-                    self.advance_wheel(2);
                     continue;
                 }
                 // Accept match
                 let payout = self.calculate_payout(symbol);
                 self.payout_coins = payout;
-                self.post_reward_effects(symbol);
                 return Some((symbol, payout));
             } else {
-                // No match found — check if we should reroll
+                // No match found — reroll only when the player is allowed to
+                // win (ASM: flags zero jumps straight to .noMatch).
                 let can_win = self.flags & (SLOTS_CAN_WIN | SLOTS_CAN_WIN_WITH_7_OR_BAR) != 0;
-                if !can_win || self.reroll_counter == 0 {
+                if !can_win {
                     return None;
                 }
-                self.reroll_counter -= 1;
-                self.advance_wheel(2);
-                self.advance_wheel(2);
+                if !self.reroll_wheel3() {
+                    return None;
+                }
             }
         }
+    }
+
+    /// Roll wheel 3 down by one symbol for another match check.
+    ///
+    /// Matches the ASM's `dec [hl]; jr nz, .rollWheel3DownByOneSymbol`
+    /// (slot_machine.asm:407-409): the counter is zeroed once per session and
+    /// wraps to 255 on its first decrement, persisting across spins. Returns
+    /// false when the counter just hit zero (give up: "Not this time!").
+    fn reroll_wheel3(&mut self) -> bool {
+        self.reroll_counter = self.reroll_counter.wrapping_sub(1);
+        if self.reroll_counter == 0 {
+            return false;
+        }
+        self.advance_wheel(2);
+        self.advance_wheel(2);
+        true
     }
 
     /// Calculate payout for a winning symbol.
@@ -367,32 +385,13 @@ impl SlotMachineState {
         reward_for_symbol(symbol).payout
     }
 
-    /// Apply post-reward effects matching the ASM reward functions.
+    /// Apply post-reward effects matching the ASM reward functions
+    /// (slot_machine.asm:565-610). Must run exactly once per accepted win.
     ///
     /// - Cherry/Fish/Bird/Mouse: decrement allow_matches_counter
     /// - Bar: clear all flags
-    /// - Seven: 50% chance to clear flags, always clear allow_matches_counter
-    fn post_reward_effects(&mut self, symbol: SlotSymbol) {
-        match symbol {
-            SlotSymbol::Cherry | SlotSymbol::Fish | SlotSymbol::Bird | SlotSymbol::Mouse => {
-                if self.allow_matches_counter > 0 {
-                    self.allow_matches_counter -= 1;
-                }
-            }
-            SlotSymbol::Bar => {
-                self.flags = 0;
-            }
-            SlotSymbol::Seven => {
-                // In ASM: `Random; cp $80; jr c, .skip; ld [wSlotMachineFlags], a`
-                // 50% chance to clear flags. We model this deterministically here;
-                // caller should handle RNG. For now, always clear on Seven.
-                self.flags = 0;
-                self.allow_matches_counter = 0;
-            }
-        }
-    }
-
-    /// Post-reward effects with explicit RNG for Seven (50% chance to keep flags).
+    /// - Seven: print "Yeah!", play SFX (frontend), 50% chance to clear flags
+    ///   (`Random; cp $80`), always clear allow_matches_counter
     pub fn post_reward_effects_with_rng(&mut self, symbol: SlotSymbol, random_byte: u8) {
         match symbol {
             SlotSymbol::Cherry | SlotSymbol::Fish | SlotSymbol::Bird | SlotSymbol::Mouse => {

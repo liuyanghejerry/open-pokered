@@ -12,6 +12,10 @@ pub struct LevelUpResult {
     pub old_level: u8,
     pub new_level: u8,
     pub learned_moves: Vec<MoveId>,
+    /// Moves whose learn attempt hit a FULL move-slot set (learnmove.asm):
+    /// the mon is "trying to learn" them and the game prompts the player to
+    /// forget a move — NOT silently overwritten.
+    pub blocked_moves: Vec<MoveId>,
 }
 
 pub fn process_level_up(mon: &mut Pokemon) -> LevelUpResult {
@@ -23,6 +27,7 @@ pub fn process_level_up(mon: &mut Pokemon) -> LevelUpResult {
                 old_level: mon.level,
                 new_level: mon.level,
                 learned_moves: vec![],
+                blocked_moves: vec![],
             }
         }
     };
@@ -34,6 +39,7 @@ pub fn process_level_up(mon: &mut Pokemon) -> LevelUpResult {
             old_level: mon.level,
             new_level: mon.level,
             learned_moves: vec![],
+            blocked_moves: vec![],
         };
     }
 
@@ -53,9 +59,12 @@ pub fn process_level_up(mon: &mut Pokemon) -> LevelUpResult {
     mon.level = new_level;
 
     let mut learned = vec![];
+    let mut blocked = vec![];
     for lv in (old_level + 1)..=new_level {
-        if let Some(move_id) = learn_move_at_level(mon, lv) {
-            learned.push(move_id);
+        match learn_move_at_level(mon, lv) {
+            LearnMoveAtLevel::Learned(move_id) => learned.push(move_id),
+            LearnMoveAtLevel::AlreadyKnown => {}
+            LearnMoveAtLevel::SlotsFull(move_id) => blocked.push(move_id),
         }
     }
 
@@ -64,32 +73,45 @@ pub fn process_level_up(mon: &mut Pokemon) -> LevelUpResult {
         old_level,
         new_level,
         learned_moves: learned,
+        blocked_moves: blocked,
     }
 }
 
-fn learn_move_at_level(mon: &mut Pokemon, level: u8) -> Option<MoveId> {
+/// Outcome of a level-up learn attempt (`learnmove.asm`): a free slot learns
+/// immediately; a move already known is skipped; a FULL moveset leaves the
+/// move "pending" for the forget/replace prompt.
+enum LearnMoveAtLevel {
+    Learned(MoveId),
+    AlreadyKnown,
+    SlotsFull(MoveId),
+}
+
+fn learn_move_at_level(mon: &mut Pokemon, level: u8) -> LearnMoveAtLevel {
     let all_data = evos_moves_data();
-    let entry = all_data.iter().find(|e| e.species == mon.species)?;
-    let move_to_learn = entry.learnset.iter().find(|lm| lm.level == level)?;
+    let Some(entry) = all_data.iter().find(|e| e.species == mon.species) else {
+        return LearnMoveAtLevel::AlreadyKnown;
+    };
+    let Some(move_to_learn) = entry.learnset.iter().find(|lm| lm.level == level) else {
+        return LearnMoveAtLevel::AlreadyKnown;
+    };
 
     let move_id = move_to_learn.move_id;
 
     if mon.moves.contains(&move_id) {
-        return None;
+        return LearnMoveAtLevel::AlreadyKnown;
     }
 
     for i in 0..4 {
         if mon.moves[i] == MoveId::None {
             mon.moves[i] = move_id;
             mon.pp[i] = get_move_max_pp(move_id);
-            return Some(move_id);
+            return LearnMoveAtLevel::Learned(move_id);
         }
     }
 
-    // All slots full — replace last slot (real game prompts player)
-    mon.moves[3] = move_id;
-    mon.pp[3] = get_move_max_pp(move_id);
-    Some(move_id)
+    // All slots full — the game prompts the player to forget a move
+    // (learnmove.asm); the mon does NOT silently lose its 4th move.
+    LearnMoveAtLevel::SlotsFull(move_id)
 }
 
 fn get_move_max_pp(move_id: MoveId) -> u8 {

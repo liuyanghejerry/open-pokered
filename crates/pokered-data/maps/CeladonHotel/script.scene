@@ -33,4 +33,19 @@ game_scene CeladonHotel {
     @trigger(map = "CeladonHotel", sign = 1)
     openPC()
   }
+
+
+  // ── Bench guy (sign 2 at (0,4)) — PrintBenchGuyText ────────────────────
+  // data/events/bench_guys.asm + hidden_events.asm: A on the (0,4) bench
+  // tile while facing it; BenchGuyTextPointers requires SPRITE_FACING_LEFT,
+  // so gate on the player's facing (getPlayerFacing() -> down/up/left/right).
+  @storyline("benchGuy") {
+    @trigger(map = "CeladonHotel", sign = 2)
+    @if (getPlayerFacing() == "left") {
+      @speaker("") {
+        @t("My sis brought me
+on this vacation!", "这次度假，是我姐姐\n带我来的！")
+      }
+    }
+  }
 }

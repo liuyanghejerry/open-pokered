@@ -6,6 +6,14 @@
 
 game_scene SaffronCity {
   @load {
+    // Rescue (PokemonTower7F rescue text: HideObject _E / ShowObject _F):
+    // the Silph door guard leaves and the sleeping rocket takes his post.
+    @if (getFlag("EVENT_RESCUED_MR_FUJI") && !getFlag("EVENT_BEAT_SILPH_CO_GIOVANNI")) {
+      hideObjectByName("SAFFRON_CITY_OBJ_14")
+      showObjectByName("SAFFRON_CITY_OBJ_15")
+    }
+    // Liberation (SilphCo11FTeamRocketLeavesScript, after Giovanni):
+    // every rocket clears and the liberated citizens return.
     @if (getFlag("EVENT_BEAT_SILPH_CO_GIOVANNI")) {
       hideObjectByName("SAFFRON_CITY_OBJ_1")
       hideObjectByName("SAFFRON_CITY_OBJ_2")
@@ -22,12 +30,6 @@ game_scene SaffronCity {
       showObjectByName("SAFFRON_CITY_OBJ_11")
       showObjectByName("SAFFRON_CITY_OBJ_12")
       showObjectByName("SAFFRON_CITY_OBJ_13")
-    } @else {
-      // Fuji's rescue clears the Silph entrance before the boss is defeated.
-      @if (getFlag("EVENT_RESCUED_MR_FUJI")) {
-        hideObjectByName("SAFFRON_CITY_OBJ_14")
-        hideObjectByName("SAFFRON_CITY_OBJ_15")
-      }
     }
   }
 

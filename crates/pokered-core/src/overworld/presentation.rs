@@ -162,3 +162,133 @@ mod tests {
         }
     }
 }
+
+// ── FLY arrival (bird) ─────────────────────────────────────────────
+
+/// FLY arrival animation — `EnterMapAnim`'s `.flyAnimation`
+/// (engine/overworld/player_animations.asm:53-70): the player sprite is
+/// replaced by the BIRD sprite, which flies in from the top-right along
+/// `FlyAnimationEnterScreenCoords`, flapping every step (`DoFlyAnimation`:
+/// 12 iterations × Delay3 = 36 frames), with SFX_FLY. Game-specific (the
+/// coordinate list and sprite are Pokémon's), so it lives here rather than
+/// in the engine crate.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct EnterMapFlyState {
+    /// Elapsed frames; each coordinate step lasts [`FLY_ANIM_STEP_FRAMES`].
+    pub frame: u16,
+}
+
+/// `wFlyAnimCounter` initial value (player_animations.asm:61).
+pub const FLY_ANIM_STEPS: u16 = 12;
+/// `DoFlyAnimation`'s Delay3 per step.
+pub const FLY_ANIM_STEP_FRAMES: u16 = 3;
+pub const FLY_ANIM_FRAMES: u16 = FLY_ANIM_STEPS * FLY_ANIM_STEP_FRAMES;
+
+/// `FlyAnimationEnterScreenCoords` (player_animations.asm:66-79): (y, x)
+/// screen-pixel pairs — the bird enters off the top-right and glides down to
+/// the landing spot at (0x3C, 0x40).
+pub const FLY_ANIM_COORDS: [(u16, u16); FLY_ANIM_STEPS as usize] = [
+    (0x05, 0x98),
+    (0x0F, 0x90),
+    (0x18, 0x88),
+    (0x20, 0x80),
+    (0x27, 0x78),
+    (0x2D, 0x70),
+    (0x32, 0x68),
+    (0x36, 0x60),
+    (0x39, 0x58),
+    (0x3B, 0x50),
+    (0x3C, 0x48),
+    (0x3C, 0x40),
+];
+
+impl EnterMapFlyState {
+    pub fn new() -> Self {
+        Self { frame: 0 }
+    }
+
+    pub fn tick(&mut self) {
+        if self.frame < FLY_ANIM_FRAMES {
+            self.frame += 1;
+        }
+    }
+
+    pub fn is_done(&self) -> bool {
+        self.frame >= FLY_ANIM_FRAMES
+    }
+
+    /// Bird sprite screen position (y, x) in pixels for the current frame.
+    pub fn bird_pos(&self) -> (u16, u16) {
+        let step = (self.frame / FLY_ANIM_STEP_FRAMES) as usize;
+        FLY_ANIM_COORDS[step.min(FLY_ANIM_STEPS as usize - 1)]
+    }
+
+    /// Wing flap toggles once per step (`DoFlyAnimation` XORs the sprite
+    /// image index each iteration).
+    pub fn flap_frame(&self) -> u8 {
+        ((self.frame / FLY_ANIM_STEP_FRAMES) & 1) as u8
+    }
+}
+
+impl Default for EnterMapFlyState {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+#[cfg(test)]
+mod fly_tests {
+    use super::*;
+
+    #[test]
+    fn fly_anim_matches_asm_frame_count_and_coords() {
+        // DoFlyAnimation: 12 iterations × Delay3 = 36 frames.
+        assert_eq!(FLY_ANIM_FRAMES, 36);
+        let mut fly = EnterMapFlyState::new();
+        assert!(!fly.is_done());
+        // First coord pair: (5, 0x98) — off the top-right.
+        assert_eq!(fly.bird_pos(), (0x05, 0x98));
+        for _ in 0..FLY_ANIM_FRAMES {
+            fly.tick();
+        }
+        assert!(fly.is_done());
+        // Last coord pair: (0x3C, 0x40) — the landing spot.
+        assert_eq!(fly.bird_pos(), (0x3C, 0x40));
+    }
+
+    #[test]
+    fn fly_anim_flap_toggles_per_step() {
+        let mut fly = EnterMapFlyState::new();
+        assert_eq!(fly.flap_frame(), 0);
+        for _ in 0..FLY_ANIM_STEP_FRAMES {
+            fly.tick();
+        }
+        assert_eq!(fly.flap_frame(), 1, "wing flips after each Delay3 step");
+        for _ in 0..FLY_ANIM_STEP_FRAMES {
+            fly.tick();
+        }
+        assert_eq!(fly.flap_frame(), 0);
+    }
+
+    #[test]
+    fn fly_coord_list_matches_fly_animation_enter_screen_coords() {
+        // player_animations.asm:66-79 — byte-for-byte.
+        assert_eq!(
+            FLY_ANIM_COORDS,
+            [
+                (0x05, 0x98),
+                (0x0F, 0x90),
+                (0x18, 0x88),
+                (0x20, 0x80),
+                (0x27, 0x78),
+                (0x2D, 0x70),
+                (0x32, 0x68),
+                (0x36, 0x60),
+                (0x39, 0x58),
+                (0x3B, 0x50),
+                (0x3C, 0x48),
+                (0x3C, 0x40),
+            ]
+        );
+    }
+}

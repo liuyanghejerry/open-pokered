@@ -1,7 +1,7 @@
 //! Regression: the stats page-1 right column (types / ID № / OT) renders in
 //! both languages, and the zh values share one flush right edge.
 //!
-//! Locks three behaviors at once:
+//! Locks four behaviors at once:
 //!
 //! 1. v2 `container` elements must declare `layout` + `clip` — `ElementParams`
 //!    is an untagged enum and a group without those fields deserializes as
@@ -14,6 +14,8 @@
 //!    pixel path instead.
 //! 3. `draw_values_flush_right` anchors each value's ink right edge exactly
 //!    on its target px.
+//! 4. The live Chinese layout uses proportional labels with a visible gap
+//!    before each value.
 
 use pokered_core::game_state::Lang;
 use pokered_data::ui_layout::schema::get_screen_v2_json;
@@ -57,8 +59,13 @@ impl Painter for PxRecorder {
     fn draw_glyph(&mut self, _pos: TilePos, _glyph: char, _color: Rgba) {}
     fn draw_pixel_rect(&mut self, _px: u32, _py: u32, _pw: u32, _ph: u32, _color: Rgba) {}
     fn draw_gb_tile(&mut self, _pos: TilePos, _tile_id: u8, _fallback: &str, _color: Rgba) {}
+    fn supports_proportional(&self) -> bool {
+        true
+    }
     fn measure_text_px(&self, text: &str) -> u32 {
-        text.chars().map(|c| if c.is_ascii() { 5 } else { 10 }).sum()
+        text.chars()
+            .map(|c| if c.is_ascii() { 5 } else { 10 })
+            .sum()
     }
     fn draw_text_px(&mut self, px: u32, py: u32, text: &str, _color: Rgba) {
         self.placed.push((px, py, text.to_string()));
@@ -108,8 +115,14 @@ fn zh_right_column_renders_labels_via_tile_path_only() {
     assert!(text.contains('主'), "主人/ label missing: {text}");
     // Values left the tile path — they are pixel-drawn by menus::stats, and a
     // tile-path value here would double-draw over them.
-    assert!(!text.contains('地'), "type value must not use the tile path: {text}");
-    assert!(!text.contains('0'), "id digits must not use the tile path: {text}");
+    assert!(
+        !text.contains('地'),
+        "type value must not use the tile path: {text}"
+    );
+    assert!(
+        !text.contains('0'),
+        "id digits must not use the tile path: {text}"
+    );
 }
 
 #[test]
@@ -142,5 +155,48 @@ fn zh_values_anchor_flush_on_their_right_edges() {
             *right_px,
             "value {placed:?} ink must end at px {right_px}"
         );
+    }
+}
+
+/// Exercise the live stats renderer: Chinese labels must arrive as whole
+/// strings so the backend can advance each glyph by its actual width.
+#[test]
+fn zh_stats_labels_use_font_metrics_and_leave_room_for_values() {
+    use pokered_core::{pokemon::stats::create_pokemon, stats_screen::StatsScreenState};
+    use pokered_data::{
+        species::Species,
+        ui_layout::schema::{STATS_PAGE1_LAYOUT, STATS_PAGE2_LAYOUT},
+    };
+    use pokered_ui::{menus::stats, Ui};
+    let mut mon = create_pokemon(Species::Venusaur, 100, [0xff, 0xff]).unwrap();
+    mon.ot_id = 65535;
+    mon.ot_name = pokered_core::battle::state::encode_name("ABCDEFG");
+    let state = StatsScreenState::new(mon);
+    let mut rec = PxRecorder::default();
+    stats::draw(
+        &state,
+        &STATS_PAGE1_LAYOUT,
+        &STATS_PAGE2_LAYOUT,
+        &mut Ui::new(&mut rec),
+        Lang::Zh,
+        &pokered_data::impl_traits::PokemonRenderData::new(false),
+    );
+    for label in [
+        "攻击", "防御", "速度", "特殊", "属性1/", "属性2/", "编号/", "主人/",
+    ] {
+        let (x, y, _) = rec
+            .placed
+            .iter()
+            .find(|(_, _, text)| text == label)
+            .unwrap_or_else(|| panic!("label {label} did not use proportional text"));
+        let label_end = x + rec.measure_text_px(label);
+        let value_x = rec
+            .placed
+            .iter()
+            .filter(|(vx, vy, text)| vy == y && vx > x && text != label)
+            .map(|(vx, _, _)| *vx)
+            .min()
+            .expect("value beside label");
+        assert!(label_end + 4 <= value_x, "{label} collides with its value");
     }
 }

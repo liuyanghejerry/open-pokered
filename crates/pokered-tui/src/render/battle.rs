@@ -456,6 +456,10 @@ impl BattleVisualEffects {
             BattlePhase::PartyStats { .. } => BattlePhaseKind::PartyStats,
             BattlePhase::EnemySendingNext { .. } => BattlePhaseKind::EnemySendingNext,
             BattlePhase::ShiftPrompt => BattlePhaseKind::ShiftPrompt,
+            BattlePhase::LearnMoveAsk { .. } | BattlePhase::LearnMoveGiveUpConfirm { .. } => {
+                BattlePhaseKind::ShiftPrompt
+            }
+            BattlePhase::LearnMoveChoose { .. } => BattlePhaseKind::MoveSelect,
             BattlePhase::ShiftSwitchSelect => BattlePhaseKind::ShiftSwitchSelect,
             BattlePhase::ForcedStruggle { .. } => BattlePhaseKind::ShowingText,
             BattlePhase::PlayerFaintSwitch => BattlePhaseKind::PlayerFaintSwitch,
@@ -2168,7 +2172,9 @@ pub fn draw_battle(
             }
         } else if matches!(
             screen.phase,
-            BattlePhase::MoveSelect | BattlePhase::ItemMoveSelect { .. }
+            BattlePhase::MoveSelect
+                | BattlePhase::ItemMoveSelect { .. }
+                | BattlePhase::LearnMoveChoose { .. }
         ) {
             draw_move_menu(&mut tile_buf, screen);
         } else if matches!(screen.phase, BattlePhase::BagSelect) {
@@ -2524,7 +2530,9 @@ pub fn draw_battle(
         // region last to keep it in the foreground.
         if matches!(
             screen.phase,
-            BattlePhase::MoveSelect | BattlePhase::ItemMoveSelect { .. }
+            BattlePhase::MoveSelect
+                | BattlePhase::ItemMoveSelect { .. }
+                | BattlePhase::LearnMoveChoose { .. }
         ) {
             tile_buf.render_region(fb, &battle_ts, pal, 0, 8, 11, 5);
         }
@@ -2556,6 +2564,13 @@ pub fn draw_battle(
                 // 是/否 replaces the YES/NO tiles (same box, hlcoord(2,9)/(2,11)).
                 draw_text("是", 2 * TILE_SIZE, 9 * TILE_SIZE, text_color, fb);
                 draw_text("否", 2 * TILE_SIZE, 11 * TILE_SIZE, text_color, fb);
+            }
+        }
+        if is_zh && matches!(screen.phase, BattlePhase::MoveSelect | BattlePhase::ItemMoveSelect { .. }) {
+            if let Some(mm) = &screen.move_menu {
+                let mut painter = pokered_ui::backends::framebuffer::FrameBufferPainter::new(fb).with_lang(language);
+                let mut ui = pokered_ui::Ui::new(&mut painter);
+                pokered_ui::menus::battle_move::draw(mm, &pokered_data::ui_layout::schema::BATTLE_MOVE_DEFAULT_LAYOUT, &mut ui, language, &pokered_data::impl_traits::PokemonRenderData::new(true));
             }
         }
         if let Some((text, arrow)) = zh_dialog {

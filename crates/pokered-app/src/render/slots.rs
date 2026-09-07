@@ -1,118 +1,178 @@
-//! Renderer for the Game Corner slot-machine screen.
-//!
-//! A readable text/tile presentation (per the task's guidance that a simpler
-//! layout is acceptable): three reel windows showing the visible symbols, the
-//! coin/bet HUD, and a status line. The reel/flag/payout logic lives entirely
-//! in `pokered_core::slots_screen`.
+//! Game Corner cabinet, using the original Red tilemap and reel tiles.
+use std::sync::OnceLock;
 
 use pokered_core::game_state::Lang;
-use pokered_core::slots_screen::{symbol_label, SlotsPhase, SlotsScreen};
-use pokered_data::lang_data;
-use pokered_data::ui_text::{zh_slot_symbol, zh_slots_message};
-use pokered_renderer::embedded_font::{draw_text, draw_text_scaled, measure_text};
+use pokered_core::slots_screen::{PayoutStage, SlotsPhase, SlotsScreen};
+use pokered_data::slot_machine::{SLOT_MACHINE_WHEEL1, SLOT_MACHINE_WHEEL2, SLOT_MACHINE_WHEEL3};
+use pokered_data::ui_text::zh_slots_message;
+use pokered_renderer::embedded_font::{draw_text, measure_text};
 use pokered_renderer::{FrameBuffer, Rgba};
 
 use super::draw_text_box;
 
-const BG: Rgba = Rgba::WHITE;
-const FG: Rgba = Rgba::BLACK;
+const MAP: &[u8] = include_bytes!("../../../../gfx/slots/slots.tilemap");
 
-fn fill_rect(fb: &mut FrameBuffer, x: u32, y: u32, w: u32, h: u32, color: Rgba) {
-    for py in y..(y + h).min(fb.height()) {
-        for px in x..(x + w).min(fb.width()) {
-            fb.set_pixel(px, py, color);
+fn tiles() -> &'static (image::RgbImage, image::RgbImage) {
+    static TILES: OnceLock<(image::RgbImage, image::RgbImage)> = OnceLock::new();
+    TILES.get_or_init(|| {
+        let decode = |bytes| {
+            image::load_from_memory(bytes)
+                .expect("embedded slots PNG")
+                .to_rgb8()
+        };
+        (
+            decode(include_bytes!("../../../../gfx/slots/red_slots_1.png")),
+            decode(include_bytes!("../../../../gfx/slots/red_slots_2.png")),
+        )
+    })
+}
+
+fn tile(fb: &mut FrameBuffer, sheet: &image::RgbImage, id: u8, x: u32, y: u32, flash: bool) {
+    let tx = (id as u32 % (sheet.width() / 8)) * 8;
+    let ty = (id as u32 / (sheet.width() / 8)) * 8;
+    for dy in 0..8 {
+        for dx in 0..8 {
+            let [r, g, b] = sheet.get_pixel(tx + dx, ty + dy).0;
+            // The original XORs BGP with $40: only color 3 changes to 2.
+            // Reel sprites use OBP0 and are unaffected by the background flash.
+            let color = if flash && r == 0 && g == 0 && b == 0 {
+                Rgba::new(85, 85, 85, 255)
+            } else {
+                Rgba::new(r, g, b, 255)
+            };
+            fb.set_pixel(x + dx, y + dy, color);
         }
     }
 }
 
-fn outline_rect(fb: &mut FrameBuffer, x: u32, y: u32, w: u32, h: u32, color: Rgba) {
-    fill_rect(fb, x, y, w, 1, color);
-    fill_rect(fb, x, y + h.saturating_sub(1), w, 1, color);
-    fill_rect(fb, x, y, 1, h, color);
-    fill_rect(fb, x + w.saturating_sub(1), y, 1, h, color);
+/// Wrap by measured glyph width so both English and Chinese stay in the box.
+fn message_lines(text: &str, width: u32) -> Vec<String> {
+    let mut lines = Vec::new();
+    let mut line = String::new();
+    for ch in text.chars() {
+        let candidate = format!("{line}{ch}");
+        if measure_text(&candidate) > width && !line.is_empty() {
+            // Prefer word boundaries in English, retaining the partial word.
+            if let Some(space) = line.rfind(' ') {
+                let rest = line[space + 1..].to_owned();
+                lines.push(line[..space].to_owned());
+                line = rest;
+            } else {
+                lines.push(std::mem::take(&mut line));
+            }
+        }
+        if ch != ' ' || !line.is_empty() {
+            line.push(ch);
+        }
+    }
+    if !line.is_empty() {
+        lines.push(line);
+    }
+    lines
 }
 
-
-/// Draw the whole slots screen to the 160x144 framebuffer.
+/// Draw the original 20×12-tile cabinet above the dialogue box.
 pub fn draw_slots(slots: &SlotsScreen, fb: &mut FrameBuffer, lang: Lang) {
-    let is_zh = lang == Lang::Zh;
-    fb.clear(BG);
+    let (background, symbols) = tiles();
+    let flash = slots.phase == SlotsPhase::Payout
+        && slots.payout_stage == PayoutStage::Flash
+        && slots.flash_on;
+    let fg = if flash {
+        Rgba::new(85, 85, 85, 255)
+    } else {
+        Rgba::BLACK
+    };
+    fb.clear(Rgba::WHITE);
+    for (i, &id) in MAP.iter().enumerate() {
+        tile(
+            fb,
+            background,
+            id,
+            (i % 20) as u32 * 8,
+            (i / 20) as u32 * 8,
+            flash,
+        );
+    }
 
-    // Title.
-    let title = lang_data::ui_label("SLOT MACHINE", is_zh);
-    draw_text(title, (fb.width().saturating_sub(measure_text(title))) / 2, 6, FG, fb);
-
-    // Three reel windows. Each shows top / middle / bottom symbols. The middle
-    // row is the 1-coin payline, so highlight it.
-    let reel_w = 40;
-    let reel_h = 54;
-    let gap = 4;
-    let total_w = reel_w * 3 + gap * 2;
-    let start_x = (fb.width() - total_w) / 2;
-    let reel_y = 22;
-
-    for i in 0..3usize {
-        let rx = start_x + i as u32 * (reel_w + gap);
-        outline_rect(fb, rx, reel_y, reel_w, reel_h, FG);
-
-        let view = slots.machine.get_wheel_view(i);
-        let spinning = matches!(slots.phase, SlotsPhase::Spinning) && !slots.reels_stopped[i];
-
-        // Rows: top, middle (payline), bottom.
-        let row_labels = [
-            zh_slot_symbol(symbol_label(view.top)),
-            zh_slot_symbol(symbol_label(view.middle)),
-            zh_slot_symbol(symbol_label(view.bottom)),
-        ];
-        for (r, label) in row_labels.iter().enumerate() {
-            let ty = reel_y + 6 + r as u32 * 16;
-            if r == 1 {
-                // Highlight the center payline.
-                fill_rect(fb, rx + 1, ty - 2, reel_w - 2, 13, FG);
-                let text = if spinning { "----" } else { label.as_str() };
-                draw_text(text, rx + 6, ty, BG, fb);
+    // AnimWheel emits six pairs of 8×8 sprites, bottom to top, at OAM
+    // ($30/$50/$70, $58). Offsets point one byte past the displayed tiles.
+    // An odd offset therefore displays three complete symbols; an even one
+    // displays two complete symbols between two half symbols.
+    for (i, wheel) in [
+        SLOT_MACHINE_WHEEL1,
+        SLOT_MACHINE_WHEEL2,
+        SLOT_MACHINE_WHEEL3,
+    ]
+    .iter()
+    .enumerate()
+    {
+        let offset = (slots.machine.wheel_offsets[i] as usize + 29) % 30;
+        for row in 0..6 {
+            let byte = offset + row;
+            let symbol = wheel[byte / 2];
+            let id = if byte % 2 == 0 {
+                symbol.low_byte()
             } else {
-                let text = if spinning { "----" } else { label.as_str() };
-                draw_text(text, rx + 6, ty, FG, fb);
+                symbol.high_byte()
+            };
+            let x = 40 + i as u32 * 32;
+            let y = 72 - row as u32 * 8;
+            tile(fb, symbols, id, x, y, false);
+            tile(fb, symbols, id + 1, x + 8, y, false);
+        }
+    }
+    // Light the center line for one coin, outer horizontal lines for two,
+    // and diagonals for three (SlotMachine_LightBalls).
+    if slots.phase != SlotsPhase::BetSelect {
+        for (row, required) in [(2, 3), (4, 2), (6, 1), (8, 2), (10, 3)] {
+            if slots.bet >= required {
+                for x in [24, 128] {
+                    tile(fb, background, 0x14, x, row * 8, flash);
+                    tile(fb, background, 0x15, x, (row + 1) * 8, flash);
+                }
             }
         }
     }
+    // Original credit / payout fields: (5,1) and (11,1), four digits.
+    for (value, x) in [(slots.coins, 40), (slots.payout_remaining, 88)] {
+        for (i, digit) in format!("{value:04}").chars().enumerate() {
+            draw_text(&digit.to_string(), x + i as u32 * 8, 8, fg, fb);
+        }
+    }
 
-    // HUD: coins + current bet.
-    let hud_y = reel_y + reel_h + 6;
-    draw_text(&format!("{} {:>4}", lang_data::ui_label("COINS", is_zh), slots.coins), 8, hud_y, FG, fb);
-    let bet_text = match slots.phase {
-        SlotsPhase::BetSelect => format!("{}  {}", lang_data::ui_label("BET", is_zh), slots.bet),
-        _ => format!("{}  {}", lang_data::ui_label("BET", is_zh), slots.bet),
+    draw_text_box(fb, 0, 96, 18, 4, fg);
+    let is_zh = lang == Lang::Zh;
+    let text = zh_slots_message(&slots.message, is_zh);
+    let width = if slots.phase == SlotsPhase::BetSelect {
+        96
+    } else {
+        144
     };
-    draw_text(&bet_text, 108, hud_y, FG, fb);
-
-    // Status message box near the bottom.
-    let box_y = 118;
-    draw_text_box(fb, 0, box_y, 17, 1, FG);
-    draw_text(&zh_slots_message(&slots.message, is_zh), 10, box_y + 10, FG, fb);
-
-    // Contextual hint line just under the reels.
-    let hint = match slots.phase {
-        SlotsPhase::BetSelect => {
-            if is_zh { "上/下：下注  A：开始  B：退出" } else { "UP/DN:BET  A:SPIN  B:EXIT" }
+    for (i, line) in message_lines(&text, width).iter().take(3).enumerate() {
+        draw_text(line, 8, 104 + i as u32 * 10, fg, fb);
+    }
+    if slots.phase == SlotsPhase::Result && slots.coins > 0 {
+        draw_text(
+            if is_zh {
+                "A：继续  B：退出"
+            } else {
+                "A: YES  B: NO"
+            },
+            8,
+            124,
+            fg,
+            fb,
+        );
+    }
+    if slots.phase == SlotsPhase::BetSelect {
+        draw_text_box(fb, 112, 88, 4, 5, fg);
+        for (i, bet) in [3, 2, 1].iter().enumerate() {
+            let y = 96 + i as u32 * 16;
+            draw_text(&format!("×{bet}"), 128, y, fg, fb);
+            if slots.bet == *bet {
+                draw_text(">", 120, y, fg, fb);
+            }
         }
-        SlotsPhase::Spinning => {
-            if is_zh { "A：停止转轮" } else { "A: STOP REEL" }
-        }
-        SlotsPhase::Result => {
-            if is_zh { "A：继续" } else { "A: CONTINUE" }
-        }
-    };
-    draw_text(hint, 8, hud_y + 14, FG, fb);
-
-    // On a win, flash the payout large in the center for readability.
-    if matches!(slots.phase, SlotsPhase::Result) && slots.last_payout > 0 {
-        let txt = format!("+{}", slots.last_payout);
-        let scale = 2;
-        let approx_w = txt.len() as u32 * 6 * scale;
-        let x = (fb.width().saturating_sub(approx_w)) / 2;
-        draw_text_scaled(&txt, x, reel_y + reel_h / 2 - 8, scale, FG, fb);
     }
 }
 
@@ -122,6 +182,61 @@ mod tests {
     use dotzuki_engine::render_config::RenderConfig;
     use pokered_core::slots_screen::SlotsInput;
 
+    fn render(s: &SlotsScreen) -> FrameBuffer {
+        let mut fb = FrameBuffer::new(RenderConfig::new(160, 144), Rgba::WHITE);
+        draw_slots(s, &mut fb, Lang::En);
+        fb
+    }
+
+    fn region(fb: &FrameBuffer, x: u32, y: u32, w: u32, h: u32) -> Vec<[u8; 4]> {
+        (y..y + h)
+            .flat_map(|py| (x..x + w).map(move |px| fb.get_pixel(px, py).unwrap().to_array()))
+            .collect()
+    }
+
+    #[test]
+    fn reel_motion_and_flash_preserve_stopped_symbols() {
+        let mut s = SlotsScreen::new(false, 100, 42);
+        assert_eq!(s.machine.wheel_offsets, [29; 3]);
+        s.phase = SlotsPhase::Spinning;
+        s.reels_stopped[0] = true;
+        let before = render(&s);
+        s.update_frame(SlotsInput::none());
+        let after = render(&s);
+        assert_eq!(
+            region(&before, 40, 32, 16, 48),
+            region(&after, 40, 32, 16, 48)
+        );
+        assert_ne!(
+            region(&before, 72, 32, 16, 48),
+            region(&after, 72, 32, 16, 48)
+        );
+        s.phase = SlotsPhase::Payout;
+        s.payout_stage = PayoutStage::Flash;
+        s.flash_on = false;
+        let normal = render(&s);
+        s.flash_on = true;
+        let flash = render(&s);
+        assert_eq!(
+            region(&normal, 40, 32, 16, 48),
+            region(&flash, 40, 32, 16, 48)
+        );
+        assert_ne!(
+            region(&normal, 0, 16, 24, 80),
+            region(&flash, 0, 16, 24, 80)
+        );
+    }
+
+    #[test]
+    fn localized_win_messages_fit_dialogue_box() {
+        for lang in [false, true] {
+            let text = zh_slots_message("CHERRY lined up! Scored 300 coins!", lang);
+            let lines = message_lines(&text, 144);
+            assert!(lines.len() <= 3);
+            assert!(lines.iter().all(|line| measure_text(line) <= 144));
+        }
+    }
+
     /// Rendering must not panic in any phase (guards against coordinate
     /// under/overflow in the manual rect drawing).
     #[test]
@@ -129,13 +244,20 @@ mod tests {
         let mut fb = FrameBuffer::new(RenderConfig::new(160, 144), Rgba::BLACK);
         let mut s = SlotsScreen::new(false, 100, 1);
         draw_slots(&s, &mut fb, Lang::En); // BetSelect
-        s.update_frame(SlotsInput { a: true, ..SlotsInput::none() });
-        draw_slots(&s, &mut fb, Lang::En); // Spinning
-        for _ in 0..2000 {
-            if s.phase != SlotsPhase::Spinning {
+        s.update_frame(SlotsInput {
+            a: true,
+            ..SlotsInput::none()
+        });
+        draw_slots(&s, &mut fb, Lang::En); // Spinning (warm-up)
+        for _ in 0..20000 {
+            if s.phase != SlotsPhase::Spinning && s.phase != SlotsPhase::Payout {
                 break;
             }
-            s.update_frame(SlotsInput { a: true, ..SlotsInput::none() });
+            s.update_frame(SlotsInput {
+                a: true,
+                ..SlotsInput::none()
+            });
+            draw_slots(&s, &mut fb, Lang::En); // covers Spinning + Payout frames
         }
         draw_slots(&s, &mut fb, Lang::En); // Result
     }

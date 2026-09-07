@@ -812,6 +812,7 @@ impl PokemonGame {
 
             // Load save-related data into overworld
             overworld.party_count = save_data.party.count() as u8;
+            overworld.box_count = save_data.current_box.count() as u8;
             overworld.party_lead_level = save_data.party.leader_level();
             player_name = pokered_data::charmap::decode_string(&save_data.player_name);
             rival_name = pokered_data::charmap::decode_string(&save_data.game_data.rival_name);
@@ -1571,6 +1572,9 @@ impl PokemonGame {
                 self.main_menu = MainMenuState::new(self.state.save_summary.clone());
             }
             GameScreen::OakSpeech => {
+                // NEW GAME starts a fresh in-memory save before choosing a starter.
+                // Keep the disk save/summary for Continue and overwrite confirmation.
+                self.save_data = SaveData::new();
                 self.oak_speech = OakSpeechState::new();
                 if let Some(ref audio) = self.audio {
                     audio.stop_all();
@@ -2627,6 +2631,7 @@ impl PokemonGame {
                     }
                 }
                 self.overworld.party_count = self.save_data.party.count() as u8;
+                self.overworld.box_count = self.save_data.current_box.count() as u8;
                 self.overworld.party_lead_level = self.save_data.party.leader_level();
                 // A full-moveset level-up move couldn't be learned: open the
                 // party screen's forget-a-move prompt, exactly where the
@@ -3115,7 +3120,12 @@ impl PokemonGame {
                     // A failed tradePokemon resumes the suspended script AFTER
                     // the drain (the drain borrows self.overworld).
                     let mut trade_rejected = false;
-                    for req in self.overworld.game_data_requests.drain(..) {
+                    // Drained into a local first so request handlers can take
+                    // `&mut self.overworld` (the poison tick mutates the
+                    // screen's pending dialogue / warp state).
+                    let game_data_requests: Vec<_> =
+                        self.overworld.game_data_requests.drain(..).collect();
+                    for req in game_data_requests {
                         match req {
                             OverworldGameDataRequest::GiveItem { item, quantity } => {
                                 if let Some(id) =
@@ -3226,6 +3236,12 @@ impl PokemonGame {
                             }
                             OverworldGameDataRequest::TickDaycareExp => {
                                 self.save_data.game_data.tick_daycare_exp();
+                            }
+                            OverworldGameDataRequest::PoisonStep => {
+                                pokered_core::overworld::poison::apply_out_of_battle_poison_damage(
+                                    &mut self.save_data,
+                                    &mut self.overworld,
+                                );
                             }
                             OverworldGameDataRequest::DepositDaycare { index } => {
                                 self.save_data.deposit_daycare(index);
@@ -3347,11 +3363,21 @@ impl PokemonGame {
                             if let Some(nick) = pending.nickname {
                                 pokemon.set_nickname(&nick);
                             }
-                            let _ = self.save_data.party.add(pokemon);
+                            // _GivePokemon: party first, else the CURRENT PC box
+                            // ("sent to BOX!"); failure was already reported to the
+                            // scene via the givePokemon result (both full).
+                            if self.save_data.party.count() < 6 {
+                                let _ = self.save_data.party.add(pokemon);
+                            } else {
+                                let _ = self.save_data.pc_storage.deposit_to_current(pokemon);
+                                self.save_data.current_box =
+                                    self.save_data.pc_storage.current_box().clone();
+                            }
                             // A received Pokémon enters the Pokédex as seen + owned.
                             self.save_data.game_data.pokedex.set_seen(pending.species);
                             self.save_data.game_data.pokedex.set_owned(pending.species);
                             self.overworld.party_count = self.save_data.party.count() as u8;
+                            self.overworld.box_count = self.save_data.current_box.count() as u8;
                             self.overworld.party_lead_level =
                                 self.save_data.party.leader_level();
                         }
@@ -4284,36 +4310,23 @@ impl PokemonGame {
                 let mut result = SlotsAction::Continue;
                 let mut coins_out = None;
                 if let Some(ref mut slots) = self.slots_screen {
-                    let prev_phase = slots.phase;
                     result = slots.update_frame(slots_input);
                     coins_out = Some(slots.coins);
                     // The slots' own cues (slot_machine.asm: :120 spin start,
-                    // :842 each reel stop, :694 payout).
+                    // :842 each reel stop, :694 per-coin payout tick, :588
+                    // bar stinger, :599 seven stinger).
                     let sfx = slots.take_sfx();
                     if let Some(ref audio) = self.audio {
-                        use pokered_core::slots_screen::{SlotsPhase, SlotsSfx};
+                        use pokered_core::slots_screen::SlotsSfx;
                         for cue in sfx {
                             let id = match cue {
                                 SlotsSfx::NewSpin => SfxId::SlotsNewSpin,
                                 SlotsSfx::StopWheel => SfxId::SlotsStopWheel,
                                 SlotsSfx::Reward => SfxId::SlotsReward,
+                                SlotsSfx::GetKeyItem => SfxId::GetKeyItem,
+                                SlotsSfx::GetItem2 => SfxId::GetItem2,
                             };
                             audio.play_sfx(id);
-                        }
-                        // Reel-stop / spin start feedback.
-                        if prev_phase == SlotsPhase::BetSelect
-                            && slots.phase == SlotsPhase::Spinning
-                        {
-                            audio.play_sfx(SfxId::PressAB);
-                        }
-                        if prev_phase == SlotsPhase::Spinning
-                            && slots.phase == SlotsPhase::Result
-                        {
-                            if slots.last_payout > 0 {
-                                audio.play_sfx(SfxId::GetItem1);
-                            } else {
-                                audio.play_sfx(SfxId::Denied);
-                            }
                         }
                     }
                 }
@@ -4450,6 +4463,7 @@ impl PokemonGame {
                 // Party membership may have changed (deposit/withdraw) — keep
                 // the overworld mirrors in sync (repel checks, scripts).
                 self.overworld.party_count = self.save_data.party.count() as u8;
+                self.overworld.box_count = self.save_data.current_box.count() as u8;
                 self.overworld.party_lead_level = self.save_data.party.leader_level();
                 match pc_action {
                     PcScreenAction::Continue => ScreenAction::Continue,
@@ -4911,6 +4925,7 @@ impl PokemonGame {
             driver.reset_for_new_trade();
         }
         self.overworld.party_count = self.save_data.party.count() as u8;
+        self.overworld.box_count = self.save_data.current_box.count() as u8;
         self.overworld.party_lead_level = self.save_data.party.leader_level();
         self.link_cable.on_trade_anim_done();
     }
@@ -5527,6 +5542,7 @@ impl PokemonGame {
             }
         }
         self.overworld.party_count = self.save_data.party.count() as u8;
+        self.overworld.box_count = self.save_data.current_box.count() as u8;
         self.overworld.party_lead_level = self.save_data.party.leader_level();
     }
 

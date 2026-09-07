@@ -51,7 +51,7 @@ pub fn draw_party_screen(
 
 pub fn draw_stats_screen(state: &StatsScreenState, fb: &mut FrameBuffer, lang: Lang) {
     let mut painter = FrameBufferPainter::new(fb).with_lang(lang);
-    menus::stats::draw(state, &STATS_PAGE1_LAYOUT, &STATS_PAGE2_LAYOUT, &mut Ui::new(&mut painter), lang, &PokemonRenderData::new(false));
+    menus::stats::draw(state, &STATS_PAGE1_LAYOUT, &STATS_PAGE2_LAYOUT, &mut Ui::new(&mut painter), lang, &PokemonRenderData::new(lang == Lang::Zh));
 }
 
 pub fn draw_mart(state: &MartState, player_money: u32, bag_items: &[(pokered_data::items::ItemId, u32)], fb: &mut FrameBuffer, lang: Lang) {
