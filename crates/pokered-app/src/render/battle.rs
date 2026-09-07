@@ -2562,9 +2562,9 @@ pub fn draw_battle(
         // using the same code path the editor preview uses. Must run AFTER sprites
         // and animation overlays so the menu box stays on top.
             if !skip_dialog && use_unified_ui {
-            let mut painter = FrameBufferPainter::new(fb);
+            let mut painter = FrameBufferPainter::new(fb).with_lang(language);
             let mut ui = Ui::new(&mut painter);
-            let rd = PokemonRenderData::new(false);
+            let rd = PokemonRenderData::new(is_zh);
             if matches!(screen.phase, BattlePhase::PlayerMenu) {
                 if screen.is_safari {
                     menus::battle_safari::draw(&screen.safari_menu, &mut ui, language);
@@ -2588,7 +2588,7 @@ pub fn draw_battle(
                     | BattlePhase::LearnMoveChoose { .. }
             ) {
                 if let Some(ref mm) = screen.move_menu {
-                    menus::battle_move::draw(mm, &BATTLE_MOVE_DEFAULT_LAYOUT, &mut ui, &rd);
+                    menus::battle_move::draw(mm, &BATTLE_MOVE_DEFAULT_LAYOUT, &mut ui, language, &rd);
                 }
             } else if matches!(screen.phase, BattlePhase::BagSelect) {
                 if let Some(ref bm) = screen.bag_menu {

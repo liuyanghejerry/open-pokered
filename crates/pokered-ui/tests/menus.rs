@@ -243,10 +243,7 @@ fn options_menu_no_cursor_on_inactive_rows() {
 
 #[test]
 fn options_menu_zh_cursor_tracks_zh_label_positions() {
-    // The zh labels in options.gui (" 快  中  慢") pack tighter than the EN
-    // strings the v1 enum_position_map was measured against. The ▶ must sit
-    // one tile left of each zh word; with EN offsets it lands on 慢 for
-    // Medium and past the last label for Slow.
+    // Each individually positioned Chinese option has a cursor one tile left.
     let pt = '\u{25B6}';
     for (speed, expected_tx) in [
         (TextSpeed::Fast, 1_u32),
@@ -573,13 +570,13 @@ fn party_menu_single_pokemon_full_hp_no_status() {
     assert_eq!(collect_glyphs(&rec.ops), vec![(0, 0, '▶')]);
 
     let texts = collect_texts(&rec.ops);
-    // Name at (4,0), level marker at (14,0), no status code.
+    // Name at (4,0), level right-aligned with an 8px screen margin.
     // HP label ("HP:") moved to app layer; UI layer only renders the number.
-    // HP numeric readout at column 14.
+    // The recorder snaps pixel positions to tiles (7 characters → column 12).
     assert!(texts.iter().any(|(tx, ty, _)| *tx == 4 && *ty == 0), "name missing at (4,0): {:?}", texts);
-    assert!(texts.contains(&(14, 0, ":L36".into())));
-    let hp_text = texts.iter().find(|(tx, ty, _)| *tx == 14 && *ty == 1);
-    assert!(hp_text.is_some(), "HP numeric readout must be at tile column 14, got texts: {:?}", texts);
+    assert!(texts.contains(&(15, 0, "Lv36".into())));
+    let hp_text = texts.iter().find(|(tx, ty, _)| *tx == 12 && *ty == 1);
+    assert!(hp_text.is_some(), "HP numeric readout must be at tile column 12, got texts: {:?}", texts);
 
     // No pixel rects — HP bar is drawn at app layer.
     assert_eq!(collect_pixel_rects(&rec.ops).len(), 0);
@@ -595,9 +592,9 @@ fn party_menu_zero_hp_skips_filled_rect() {
     // No pixel rects — HP bar is drawn at app layer.
     assert_eq!(collect_pixel_rects(&rec.ops).len(), 0);
 
-    // Status code SLP is rendered at column 17.
+    // Status code SLP is rendered at column 12.
     let texts = collect_texts(&rec.ops);
-    assert!(texts.contains(&(17, 0, "SLP".into())));
+    assert!(texts.contains(&(12, 0, "SLP".into())));
 }
 
 #[test]
@@ -616,8 +613,8 @@ fn party_menu_status_codes_map_correctly() {
         menus::party::draw(&state, &PARTY_DEFAULT_LAYOUT, &mut Ui::new(&mut rec), Lang::default());
         let texts = collect_texts(&rec.ops);
         assert!(
-            texts.contains(&(17, 0, expected_code.into())),
-            "status {:?} should render code {:?} at (17, 0), got texts: {:?}",
+            texts.contains(&(12, 0, expected_code.into())),
+            "status {:?} should render code {:?} at (12, 0), got texts: {:?}",
             status, expected_code, texts
         );
     }
@@ -640,8 +637,8 @@ fn party_menu_cursor_follows_selection() {
 
     let mut rec = Recorder::default();
     menus::party::draw(&state, &PARTY_DEFAULT_LAYOUT, &mut Ui::new(&mut rec), Lang::default());
-    // Cursor on row 2 (entry index 1, two tile rows per entry).
-    assert_eq!(collect_glyphs(&rec.ops), vec![(0, 2, '▶')]);
+    // Cursor on row 3 (entry index 1, three tile rows per entry).
+    assert_eq!(collect_glyphs(&rec.ops), vec![(0, 3, '▶')]);
 }
 
 use pokered_core::naming_screen::{NamingInput, NamingScreenState, NamingScreenType};
@@ -928,7 +925,7 @@ fn battle_move_renders_move_list_with_type_pp_box() {
     let mut rec = Recorder::default();
     let mut ui = Ui::new(&mut rec);
     let rd = PokemonRenderData::new(false);
-    battle_move::draw(&state, &BATTLE_MOVE_DEFAULT_LAYOUT, &mut ui, &rd);
+    battle_move::draw(&state, &BATTLE_MOVE_DEFAULT_LAYOUT, &mut ui, Lang::En, &rd);
 
     let boxes = collect_boxes(&rec.ops);
     assert_eq!(boxes.len(), 3, "expect three boxes: base + move list + TYPE/PP");
@@ -964,7 +961,7 @@ fn battle_move_cursor_follows_selection() {
     let mut rec = Recorder::default();
     let mut ui = Ui::new(&mut rec);
     let rd = PokemonRenderData::new(false);
-    battle_move::draw(&state, &BATTLE_MOVE_DEFAULT_LAYOUT, &mut ui, &rd);
+    battle_move::draw(&state, &BATTLE_MOVE_DEFAULT_LAYOUT, &mut ui, Lang::En, &rd);
 
     assert_eq!(collect_glyphs(&rec.ops), vec![(5, 14, '\u{25B6}')]);
 
@@ -980,7 +977,7 @@ fn battle_move_no_type_pp_box_when_cursor_out_of_bounds() {
     let mut rec = Recorder::default();
     let mut ui = Ui::new(&mut rec);
     let rd = PokemonRenderData::new(false);
-    battle_move::draw(&state, &BATTLE_MOVE_DEFAULT_LAYOUT, &mut ui, &rd);
+    battle_move::draw(&state, &BATTLE_MOVE_DEFAULT_LAYOUT, &mut ui, Lang::En, &rd);
 
     let boxes = collect_boxes(&rec.ops);
     assert_eq!(boxes.len(), 2, "empty moves → base + move-list box only");
@@ -1241,15 +1238,15 @@ fn draw_quantity_shows_item_name_qty_cost_and_money() {
 
     let boxes = collect_boxes(&rec.ops);
     assert_eq!(boxes, vec![
-        TileRect::new(0, 0, 10, 6),
-        TileRect::new(10, 0, 8, 3),
+        TileRect::new(0, 3, 20, 6),
+        TileRect::new(6, 0, 14, 3),
     ]);
 
     let texts = collect_texts(&rec.ops);
-    assert!(texts.contains(&(2, 2, "POTION".into())));
-    assert!(texts.contains(&(2, 4, "× 5".into())));
-    assert!(texts.contains(&(6, 4, "$1500".into())));
-    assert!(texts.contains(&(12, 2, "MONEY $5000".into())));
+    assert!(texts.contains(&(2, 5, "POTION".into())));
+    assert!(texts.contains(&(2, 7, "× 5".into())));
+    assert!(texts.contains(&(11, 7, "$1500".into())));
+    assert!(texts.contains(&(7, 1, "MONEY $5000".into())));
 }
 
 #[test]

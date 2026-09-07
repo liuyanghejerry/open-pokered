@@ -931,7 +931,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
         // not re-fire for it (or any other trainer) — the player is frozen.
         if self.pending_trainer_battle.is_none()
             && self.trainer_encounter_intro.is_none()
-            && self.pending_trainer_engage.is_none()
+            && self.trainer_intro_text_pending.is_none()
         {
             let trainer_headers =
                 pokered_data::trainer_headers::get_trainer_headers(self.state.current_map);
@@ -1008,7 +1008,12 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
         }
 
         // Advance the engage-intro: once the "!" bubble is gone AND the
-        // walk-up finished, hand over to the actual pending battle.
+        // walk-up finished, show the trainer's before-battle text
+        // (DisplayEnemyTrainerTextAndStartBattle, home/trainers.asm:141-158:
+        // DisplayTextID with the trainer's text, then StartTrainerBattle when
+        // it closes). The text reuses the talk pipeline — the map's scene
+        // storyline first, map.json npc text as fallback — so sight and talk
+        // show the same line, localized.
         if let Some(intro) = self.trainer_encounter_intro.take() {
             let bubble_done = self
                 .pending_emotion_bubble
@@ -1019,48 +1024,80 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                 .get(intro.npc_index as usize)
                 .map_or(true, |n| npc_movement::is_scripted_move_done(n));
             if bubble_done && walk_done {
-                // DisplayEnemyTrainerTextAndStartBattle (home/trainers.asm:163-174):
-                // after the walk-up, the trainer's BEFORE-battle text displays and
-                // then the fight starts. The text comes from the map json (the
-                // same body talking to the trainer shows); the battle is queued
-                // via `pending_trainer_engage` once the box closes.
                 let text_id = self
                     .npc_states
                     .get(intro.npc_index as usize)
                     .map(|n| n.text_id)
                     .unwrap_or(0);
-                let engage = PendingTrainerBattle {
-                    trainer_id: intro.trainer_id,
-                    npc_index: intro.npc_index,
-                    end_battle_text: intro.end_battle_text,
-                    rival_triplet_base: intro.rival_triplet_base,
-                };
-                if self.try_show_npc_json_text(text_id) {
-                    self.pending_trainer_engage = Some(engage);
+                let showed_text = text_id > 0
+                    && (self.try_call_script_npc_talk(text_id)
+                        || self.try_show_npc_json_text(text_id));
+                if showed_text {
+                    // Park the intro; promote to pending_trainer_battle when
+                    // the text (and its storyline, if any) winds down.
+                    self.trainer_intro_text_pending = Some(intro);
                 } else {
-                    self.pending_trainer_battle = Some(engage);
+                    // No before-battle text exists anywhere: straight to the
+                    // battle (previous behavior).
+                    self.pending_trainer_battle = Some(PendingTrainerBattle {
+                        trainer_id: intro.trainer_id,
+                        npc_index: intro.npc_index,
+                        end_battle_text: intro.end_battle_text,
+                        rival_triplet_base: intro.rival_triplet_base,
+                    });
                 }
             } else {
                 self.trainer_encounter_intro = Some(intro);
             }
         }
 
-        // TalkToTrainer engagement (home/trainers.asm:107-123): a trainer's
-        // before-battle text finished — start the fight. Scenes that start
-        // their own battle cancel the engage when they set
-        // `pending_trainer_battle`; anything still busy keeps it waiting.
-        if self.pending_trainer_engage.is_some()
-            && self.pending_trainer_battle.is_none()
-            && self.pending_wild_encounter.is_none()
-            && self.active_script_effect.is_none()
-            && self.pending_dialogue.is_none()
-            && self.trainer_encounter_intro.is_none()
-        {
-            self.pending_trainer_battle = self.pending_trainer_engage.take();
+        // Promote the text phase: when the before-battle dialogue and its
+        // storyline have fully wound down, pend the battle. If the storyline
+        // started a battle itself (startBattle inside the script), stand
+        // down — the script machinery owns it.
+        if let Some(intro) = self.trainer_intro_text_pending.take() {
+            if self.script_awaiting_battle
+                || self.pending_trainer_battle.is_some()
+                || self.post_dialogue_battle.is_some()
+                || self.pending_wild_encounter.is_some()
+            {
+                // battle owned elsewhere — drop the intro
+            } else {
+                let text_done = self.pending_dialogue.is_none()
+                    && self.pending_choice.is_none()
+                    && self.active_script_effect.is_none()
+                    && self.script_engine_idle();
+                if text_done {
+                    self.pending_trainer_battle = Some(PendingTrainerBattle {
+                        trainer_id: intro.trainer_id,
+                        npc_index: intro.npc_index,
+                        end_battle_text: intro.end_battle_text,
+                        rival_triplet_base: intro.rival_triplet_base,
+                    });
+                } else {
+                    self.trainer_intro_text_pending = Some(intro);
+                }
+            }
+        }
+
+        // CheckForEngagingTrainers sets wJoyIgnore (all input held) from the
+        // moment of engagement until the battle starts: the player can't walk
+        // off or interact while the "!" bubble shows, the trainer walks up,
+        // and the before-battle text is on screen. (An open dialogue's own
+        // early-return below already holds the text phase; this covers the
+        // bubble/walk phase and the frames between text close and battle.)
+        if self.trainer_encounter_intro.is_some() || self.trainer_intro_text_pending.is_some() {
+            self.run_npc_movement_tick();
+            return ScreenAction::Continue;
         }
 
         // A-button: check signs first, then NPCs (matches original game priority).
-        if a_just_pressed && self.state.player.movement_state == MovementState::Idle {
+        // Held during a trainer engage intro (wJoyIgnore).
+        if a_just_pressed
+            && self.state.player.movement_state == MovementState::Idle
+            && self.trainer_encounter_intro.is_none()
+            && self.trainer_intro_text_pending.is_none()
+        {
             // Check tile-based OnInteract triggers first
             {
                 let (dx, dy) = player_movement::direction_delta(self.state.player.facing);
@@ -1216,9 +1253,11 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                         // TalkToTrainer (home/trainers.asm:89-123): talking to an
                         // undefeated trainer shows its before-battle text and then
                         // ALWAYS starts the fight (EngageMapTrainer +
-                        // StartTrainerBattle). The battle is queued as an engage
-                        // that fires once the text closes — unless the scene
-                        // starts its own battle (gym leaders), which cancels it.
+                        // StartTrainerBattle). The intro is parked as the text
+                        // phase; the promotion pass fires the battle once the
+                        // text (and its storyline, if any) winds down — and
+                        // stands down when the scene starts its own battle
+                        // (gym leaders).
                         let face_dir =
                             player_movement::opposite_direction(self.state.player.facing);
                         let tc = pokered_data::trainer_data::TrainerClass::from_u8(trainer_class);
@@ -1228,7 +1267,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                             .npc_pokemon_data
                             .get(npc_index as usize)
                             .and_then(|d| d.end_battle_text.clone());
-                        let engage = PendingTrainerBattle {
+                        let intro = TrainerEncounterIntro {
                             trainer_id,
                             npc_index,
                             end_battle_text,
@@ -1250,11 +1289,16 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                         if self.try_call_script_npc_talk(text_id)
                             || self.try_show_npc_json_text(text_id)
                         {
-                            self.pending_trainer_engage = Some(engage);
+                            self.trainer_intro_text_pending = Some(intro);
                             return ScreenAction::Continue;
                         }
                         // No scene, no text: start immediately.
-                        self.pending_trainer_battle = Some(engage);
+                        self.pending_trainer_battle = Some(PendingTrainerBattle {
+                            trainer_id: intro.trainer_id,
+                            npc_index: intro.npc_index,
+                            end_battle_text: intro.end_battle_text,
+                            rival_triplet_base: intro.rival_triplet_base,
+                        });
                     }
                     npc_interaction::InteractionResult::ItemPickup { npc_index, .. } => {
                         self.npc_face_player(npc_index);
@@ -1353,19 +1397,27 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
             return ScreenAction::Continue;
         }
 
-        if input.start {
+        // Start menu is held during a trainer engage intro (wJoyIgnore).
+        if input.start
+            && self.trainer_encounter_intro.is_none()
+            && self.trainer_intro_text_pending.is_none()
+        {
             return ScreenAction::Transition(GameScreen::StartMenu);
         }
 
+        // wJoyIgnore during a trainer engage intro: d-pad/A/B ignored while
+        // the "!" bubble shows and the trainer walks up.
+        let intro_holding_input =
+            self.trainer_encounter_intro.is_some() || self.trainer_intro_text_pending.is_some();
         let movement_input = MovementInput {
-            up: input.up,
-            down: input.down,
-            left: input.left,
-            right: input.right,
-            a_button: input.a,
-            b_button: input.b,
-            start: input.start,
-            select: input.select,
+            up: input.up && !intro_holding_input,
+            down: input.down && !intro_holding_input,
+            left: input.left && !intro_holding_input,
+            right: input.right && !intro_holding_input,
+            a_button: input.a && !intro_holding_input,
+            b_button: input.b && !intro_holding_input,
+            start: input.start && !intro_holding_input,
+            select: input.select && !intro_holding_input,
         };
 
         let get_tile_id_at_position =
@@ -1898,7 +1950,8 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
             let frozen = self.active_script_effect.is_some()
                 || self.cutscene_manager.is_blocking()
                 || !self.scripted_player_path.is_empty()
-                || self.trainer_encounter_intro.is_some();
+                || self.trainer_encounter_intro.is_some()
+                || self.trainer_intro_text_pending.is_some();
             let mut frozen_slots: Vec<usize> = Vec::new();
             if frozen {
                 for (i, n) in self.npc_states.iter_mut().enumerate() {
@@ -2859,9 +2912,9 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                 }
                 script_bridge::ScriptEffect::StartBattle { trainer_id, rival_triplet_base } => {
                     // The scene runs its own battle flow (gym leaders, rivals):
-                    // cancel any queued talk-to-trainer engage so the fight does
-                    // not double-fire when the scene's text closes.
-                    self.pending_trainer_engage = None;
+                    // cancel any parked before-battle text phase so the fight
+                    // does not double-fire when the scene's text closes.
+                    self.trainer_intro_text_pending = None;
                     self.pending_trainer_battle = Some(PendingTrainerBattle {
                         trainer_id,
                         npc_index: u8::MAX,
@@ -3073,6 +3126,10 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                     self.pending_shop = Some(items);
                 }
                 script_bridge::ScriptEffect::OpenSlots { lucky } => {
+                    // No explicit argument → the machine is lucky when the
+                    // sign that fired this script is the per-map-entry lucky
+                    // roll (GameCornerSelectLuckySlotMachine).
+                    let lucky = lucky.unwrap_or_else(|| self.resolve_default_lucky_slots());
                     self.pending_slots = Some(lucky);
                 }
                 script_bridge::ScriptEffect::ElevatorMenu { floors } => {
@@ -3285,6 +3342,9 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
             log::info!(target: "pokered::overworld", "[Script] NPC talk: text_id={}, fn_name={}", text_id, fn_name);
             if self.script_engine.has_function(fn_name) {
                 log::info!(target: "pokered::overworld", "[Script] Calling {}", fn_name);
+                // NPC scripts never run on a sign: clear any stale sign
+                // context so `openSlots()` cannot inherit a lucky mapping.
+                self.active_sign_text_id = None;
                 self.script_engine
                     .set_player_position(self.state.player.x as u8, self.state.player.y as u8);
                 if let Ok(Some(cmd)) = self.script_engine.call_function_no_args(fn_name) {
@@ -3312,6 +3372,9 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
     fn try_call_script_sign_talk(&mut self, text_id: u8) -> bool {
         if let Some(fn_name) = self.map_script_config.sign_talk_fn(text_id) {
             if self.script_engine.has_function(fn_name) {
+                // Remember which sign fired so `openSlots()` (no explicit
+                // argument) can resolve against the lucky-machine roll.
+                self.active_sign_text_id = Some(text_id);
                 self.script_engine
                     .set_player_position(self.state.player.x as u8, self.state.player.y as u8);
                 if let Ok(Some(cmd)) = self.script_engine.call_function_no_args(fn_name) {
@@ -3328,6 +3391,14 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
             }
         }
         false
+    }
+
+    /// Resolve `openSlots()` without an explicit lucky flag: the machine is
+    /// lucky when the sign that fired the script is the one rolled for this
+    /// map visit (`lucky_slot_machine_sign`).
+    pub(crate) fn resolve_default_lucky_slots(&self) -> bool {
+        self.active_sign_text_id.is_some()
+            && self.active_sign_text_id == self.lucky_slot_machine_sign
     }
 
     fn npc_face_player(&mut self, npc_index: u8) {

@@ -39,7 +39,7 @@ pub fn draw_main_menu<P: Painter>(state: &ShopMenuState, layout: &MartMainMenuLa
 pub fn draw_main_with_money<P: Painter>(cursor: usize, player_money: u32, layout: &MartMainMenuLayout, ui: &mut Ui<P>, lang: Lang) {
     let is_zh = lang == Lang::Zh;
     draw_main_menu_box(cursor, layout, ui, is_zh);
-    let money_label = if lang == Lang::Zh { format!("金钱${}元", player_money) } else { format!("MONEY ${}", player_money) };
+    let money_label = if lang == Lang::Zh { format!("金钱 ${}", player_money) } else { format!("MONEY ${}", player_money) };
     let money_pos = layout
         .dynamic_labels
         .iter()
@@ -86,7 +86,7 @@ pub fn draw_buy_items_with_money<P: Painter>(
         .iter()
         .find_map(|(k, v)| if k == "money_value" { Some((v.tx, v.ty, v.color)) } else { None })
         .unwrap_or((1, 1, InkColor::Black));
-    let money_label = if lang == Lang::Zh { format!("金钱${}元", player_money) } else { format!("MONEY ${}", player_money) };
+    let money_label = if lang == Lang::Zh { format!("金钱 ${}", player_money) } else { format!("MONEY ${}", player_money) };
     let m = &layout.money_box;
     ui.text_box(m.rect, m.color, true, |frame| {
         frame.label(money_pos.0, money_pos.1, &money_label, money_pos.2);
@@ -132,7 +132,7 @@ pub fn draw_sell_items_with_money<P: Painter>(
         .iter()
         .find_map(|(k, v)| if k == "money_value" { Some((v.tx, v.ty, v.color)) } else { None })
         .unwrap_or((1, 1, InkColor::Black));
-    let money_label = if lang == Lang::Zh { format!("金钱${}元", player_money) } else { format!("MONEY ${}", player_money) };
+    let money_label = if lang == Lang::Zh { format!("金钱 ${}", player_money) } else { format!("MONEY ${}", player_money) };
     let m = &layout.money_box;
     ui.text_box(m.rect, m.color, true, |frame| {
         frame.label(money_pos.0, money_pos.1, &money_label, money_pos.2);
@@ -169,7 +169,7 @@ pub fn draw_quantity<P: Painter>(
         let cost_label = format!("${}", total_cost);
         frame.label(cost_pos.0, cost_pos.1, &cost_label, cost_pos.2);
     });
-    let money_label = if lang == Lang::Zh { format!("金钱${}元", player_money) } else { format!("MONEY ${}", player_money) };
+    let money_label = if lang == Lang::Zh { format!("金钱 ${}", player_money) } else { format!("MONEY ${}", player_money) };
     let m = &layout.money_box;
     ui.text_box(m.rect, m.color, true, |frame| {
         frame.label(money_pos.0, money_pos.1, &money_label, money_pos.2);
@@ -188,14 +188,16 @@ pub fn draw_confirm<P: Painter>(lang: Lang,message: &str, selected: ConfirmChoic
         }
     });
     let b = &layout.choice_box;
-    ui.text_box(b.rect, b.color, true, |frame| {
+    let mut rect = b.rect;
+    if is_zh { rect.th = 6; }
+    ui.text_box(rect, b.color, true, |frame| {
         for label in b.labels.iter() {
-            frame.label(label.tx, label.ty, lang_data::ui_label(&label.text, is_zh), label.color);
+            frame.label(label.tx, if is_zh { 1 + (label.ty - 1) * 2 } else { label.ty }, lang_data::ui_label(&label.text, is_zh), label.color);
         }
         let cursor_row = layout.cursor.base_ty + (match selected {
             ConfirmChoice::Yes => 0,
             ConfirmChoice::No => 1,
-        } as u32 * layout.cursor.row_step);
+        } as u32 * if is_zh { 2 } else { layout.cursor.row_step });
         frame.cursor_at(layout.cursor.tx, cursor_row, layout.cursor.color);
     });
 }

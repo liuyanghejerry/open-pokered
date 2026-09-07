@@ -610,11 +610,14 @@ pub struct OverworldScreen<G: GameData = pokered_data::impl_traits::PokemonRedDa
     /// Active engage-intro ("!" bubble + music + walk-up) — completes into
     /// `pending_trainer_battle`.
     pub(crate) trainer_encounter_intro: Option<TrainerEncounterIntro>,
-    /// A trainer engagement whose before-battle text is showing (TalkToTrainer /
-    /// DisplayEnemyTrainerTextAndStartBattle, home/trainers.asm): once the text
-    /// closes and no script or battle took over, this promotes into
-    /// `pending_trainer_battle`. A scene that starts its own battle cancels it.
-    pub(crate) pending_trainer_engage: Option<PendingTrainerBattle>,
+    /// Engage-intro phase 2 (DisplayEnemyTrainerTextAndStartBattle,
+    /// home/trainers.asm:141-158): the walk-up finished and the trainer's
+    /// before-battle text is on screen; the battle is pended once the
+    /// dialogue (and its storyline, if any) fully winds down. Also parked by
+    /// the direct TalkToTrainer path (home/trainers.asm:107-123) so json-only
+    /// trainers start their fight when the text closes; a scene that starts
+    /// its own battle drops it.
+    pub(crate) trainer_intro_text_pending: Option<TrainerEncounterIntro>,
     pub pending_give_pokemon: Option<PendingGivePokemon>,
     pub sfx_event: OverworldSfxEvent,
     pub bump_anim_counter: u8,
@@ -664,6 +667,17 @@ pub struct OverworldScreen<G: GameData = pokered_data::impl_traits::PokemonRedDa
     pub pending_shop: Option<Vec<String>>,
     /// Set by `game.openSlots(lucky)`; the app opens the slot-machine screen.
     pub pending_slots: Option<bool>,
+    /// Sign textId that fired the currently-running sign script, if any.
+    /// `openSlots()` with no explicit argument resolves its lucky flag against
+    /// this (only slot-machine signs play the minigame).
+    pub(crate) active_sign_text_id: Option<u8>,
+    /// Sign textId of this visit's lucky slot machine, rolled once per
+    /// Game Corner map entry (`GameCornerSelectLuckySlotMachine`,
+    /// scripts/GameCorner.asm:8-22). The roll covers hidden event indices
+    /// 0..7; 0 means no lucky machine this visit, and the original's index 5
+    /// ("Someone's keys" broken machine) has no script here, matching the
+    /// original where it can never be played. `None` = no lucky machine.
+    pub(crate) lucky_slot_machine_sign: Option<u8>,
     /// Set by `game.elevatorMenu(floors)`; the app opens the elevator floor
     /// menu. The script stays suspended until the app calls
     /// `resume_script_after_elevator` with the chosen floor index.
@@ -997,7 +1011,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
             pending_wild_encounter: None,
             pending_trainer_battle: None,
             trainer_encounter_intro: None,
-            pending_trainer_engage: None,
+            trainer_intro_text_pending: None,
             pending_give_pokemon: None,
             sfx_event: OverworldSfxEvent::None,
             bump_anim_counter: 0,
@@ -1032,6 +1046,8 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
             player_starter: 0,
             pending_shop: None,
             pending_slots: None,
+            active_sign_text_id: None,
+            lucky_slot_machine_sign: None,
             pending_elevator: None,
             pending_filter_bag: None,
             pending_diploma: false,
@@ -2016,14 +2032,28 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
             }
         }
 
-        // Third: handle default_hidden NPCs that may have been shown by script
+        // Third: handle default_hidden NPCs that may have been shown. Two
+        // show channels: the runtime __OBJ_SHOWN_<toggle> flag, and a CLEARED
+        // SRAM toggle bit — new game seeds the bit SET (hidden,
+        // initial_toggle_flags) and showObject clears it, so the cleared bit
+        // persists the shown state across save/reload.
         for npc_cfg in &self.map_script_config.npcs {
             if !npc_cfg.default_hidden {
                 continue;
             }
             if let Some(ref toggle_id) = npc_cfg.toggle_id {
                 let shown_key = format!("__OBJ_SHOWN_{}", toggle_id);
-                if self.unified_flags.get_flag(&shown_key) {
+                let extras_shown = self.unified_flags.get_flag(&shown_key);
+                let bit_cleared =
+                    pokered_data::toggleable_objects::toggle_id_to_bit_index(toggle_id)
+                        .map(|bit| {
+                            !pokered_data::toggleable_objects::is_object_hidden(
+                                &self.toggleable_object_flags,
+                                bit,
+                            )
+                        })
+                        .unwrap_or(false);
+                if extras_shown || bit_cleared {
                     if let Some(npc) = self.npc_states.iter_mut().find(|n| n.text_id == npc_cfg.id)
                     {
                         npc.visible = true;
@@ -2036,6 +2066,17 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
     pub fn run_on_load(&mut self) {
         self.script_engine
             .seed_flags(&self.unified_flags.to_hashmap());
+
+        // GameCornerSelectLuckySlotMachine (scripts/GameCorner.asm:8-22): on
+        // every Game Corner map load, roll one of hidden event indices 0..7;
+        // index+1 == roll makes that machine lucky (250 vs 253 odds). A roll
+        // of 0 never matches → no lucky machine this visit. Hidden event
+        // index h maps to sign textId h+2 in this port's data (the map.json
+        // signs share the original hidden-event coordinates).
+        if self.state.current_map == MapId::GameCorner {
+            let roll: u8 = { use rand::Rng; self.rng.gen_range(0..8) };
+            self.lucky_slot_machine_sign = if roll == 0 { None } else { Some(roll + 1) };
+        }
 
         if let Some(fn_name) = self.map_script_config.on_load() {
             if self.script_engine.has_function(fn_name) {
@@ -2278,11 +2319,10 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
         self.pending_naming_screen.is_some()
     }
 
-    /// True while a script-driven party selection (Name Rater) is on screen.
     /// True while a sight-trainer engage intro ("!" bubble + walk-up) or the
-    /// post-walk-up before-battle text is in flight.
+    /// post-walk-up / talk before-battle text is in flight.
     pub fn trainer_engagement_active(&self) -> bool {
-        self.trainer_encounter_intro.is_some() || self.pending_trainer_engage.is_some()
+        self.trainer_encounter_intro.is_some() || self.trainer_intro_text_pending.is_some()
     }
 
     pub fn is_party_select_active(&self) -> bool {

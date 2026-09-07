@@ -13,7 +13,7 @@
 game_scene PokemonTower7F {
   // ── Team Rocket grunt (npc 1) — sight-engaged; dialogue only ──────────────
   @storyline("talkRocket1") {
-    @trigger(map = "PokemonTower7F", npc = 1)
+    @trigger(map = "PokemonTower7F", npc = 1, toggle = "POKEMONTOWER7F_ROCKET_1")
     @if (getFlag("EVENT_BEAT_POKEMONTOWER_7_TRAINER_0")) {
       @speaker("") {
         @t("I'm not going to forget\nthis!", "我绝不会忘记这件事！")
@@ -27,7 +27,7 @@ game_scene PokemonTower7F {
 
   // ── Team Rocket grunt (npc 2) — sight-engaged; dialogue only ──────────────
   @storyline("talkRocket2") {
-    @trigger(map = "PokemonTower7F", npc = 2)
+    @trigger(map = "PokemonTower7F", npc = 2, toggle = "POKEMONTOWER7F_ROCKET_2")
     @if (getFlag("EVENT_BEAT_POKEMONTOWER_7_TRAINER_1")) {
       @speaker("") {
         @t("POKeMON are only good for\nmaking money!\n\nStay out of our business!", "宝可梦不过是用来赚钱的工具！\n\n别来管我们的闲事！")
@@ -41,7 +41,7 @@ game_scene PokemonTower7F {
 
   // ── Team Rocket grunt (npc 3) — sight-engaged; dialogue only ──────────────
   @storyline("talkRocket3") {
-    @trigger(map = "PokemonTower7F", npc = 3)
+    @trigger(map = "PokemonTower7F", npc = 3, toggle = "POKEMONTOWER7F_ROCKET_3")
     @if (getFlag("EVENT_BEAT_POKEMONTOWER_7_TRAINER_2")) {
       @speaker("") {
         @t("You're not getting away with\nthis!", "你别想轻易逃掉！")
@@ -55,7 +55,7 @@ game_scene PokemonTower7F {
 
   // ── Mr.Fuji (npc 4) — rescue cutscene, then warp to his house ─────────────
   @storyline("talkMrFuji") {
-    @trigger(map = "PokemonTower7F", npc = 4)
+    @trigger(map = "PokemonTower7F", npc = 4, toggle = "POKEMONTOWER7F_MR_FUJI")
     @speaker("") {
       @t("MR.FUJI: Heh? You came to\nsave me?\n\nThank you. But, I came here\nof my own free will.\n\nI came to calm the soul of\nCUBONE's mother.\n\nI think MAROWAK's spirit has\ngone to the afterlife.\n\nI must thank you for your\nkind concern!\n\nFollow me to my home,\nPOKeMON HOUSE at the foot of\nthis tower.", "富士老人：嗯？你是来救我的\n吗？\n\n谢谢你。但我是自愿来到这里\n的。\n\n我来此是为了安抚卡拉卡拉母亲\n的灵魂。\n\n我想嘎拉嘎拉的灵魂已经升入天\n国了。\n\n我必须感谢你对我的善意和关\n心！\n\n跟我来我家，位于塔脚下的宝可\n梦之家吧！")
     }
@@ -66,6 +66,35 @@ game_scene PokemonTower7F {
     // The Saffron City guards are unblocked by SaffronCity's @load gating on
     // EVENT_RESCUED_MR_FUJI (hideObjectByName SAFFRON_CITY_OBJ_14/15), which is
     // functionally equivalent to the original TOGGLE_SAFFRON_CITY_E/F.
+    // Original hides TOGGLE_POKEMON_TOWER_7F_MR_FUJI before the warp
+    // (PokemonTower7FWarpToMrFujiHouseScript) — he now waits at his house.
+    hideObject("POKEMONTOWER7F_MR_FUJI")
+    // ShowObject TOGGLE_MR_FUJIS_HOUSE_MR_FUJI — he now waits at home.
+    showObject("MRFUJISHOUSE_MR_FUJI")
     warpTo("MrFujisHouse", 3, 7)
+  }
+
+  // ── Rocket walk-off (PokemonTower7FEndBattleScript → RocketLeaveMovement
+  //    + HideNPCScript, scripts/PokemonTower7F.asm:38-100): after each
+  //    rocket's battle the rocket walks its coord-table path down the tower
+  //    and is hidden for good. LOS battles end without a per-map hook, so
+  //    the choreography replays once on the next entry (same walk, same
+  //    permanent hide).
+  @load {
+    @if (getFlag("EVENT_BEAT_POKEMONTOWER_7_TRAINER_0") && !getFlag("EVENT_TOWER7_ROCKET_0_LEFT")) {
+      setFlag("EVENT_TOWER7_ROCKET_0_LEFT")
+      moveNpc("POKEMONTOWER7F_ROCKET_1", [[9, 12], [9, 13]])
+      hideObject("POKEMONTOWER7F_ROCKET_1")
+    }
+    @if (getFlag("EVENT_BEAT_POKEMONTOWER_7_TRAINER_1") && !getFlag("EVENT_TOWER7_ROCKET_1_LEFT")) {
+      setFlag("EVENT_TOWER7_ROCKET_1_LEFT")
+      moveNpc("POKEMONTOWER7F_ROCKET_2", [[12, 10], [12, 11], [12, 12]])
+      hideObject("POKEMONTOWER7F_ROCKET_2")
+    }
+    @if (getFlag("EVENT_BEAT_POKEMONTOWER_7_TRAINER_2") && !getFlag("EVENT_TOWER7_ROCKET_2_LEFT")) {
+      setFlag("EVENT_TOWER7_ROCKET_2_LEFT")
+      moveNpc("POKEMONTOWER7F_ROCKET_3", [[9, 8], [9, 9], [9, 10], [9, 11]])
+      hideObject("POKEMONTOWER7F_ROCKET_3")
+    }
   }
 }

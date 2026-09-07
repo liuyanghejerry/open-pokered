@@ -82,9 +82,8 @@ impl<'fb> Painter for FrameBufferPainter<'fb> {
     // Pixel-precise text: proportional ASCII glyphs (5 px advance) cannot
     // share a flush right edge when snapped to the 8 px tile grid, so callers
     // that need exact alignment (e.g. the CONTINUE info values) draw through
-    // this path. Note `supports_proportional` stays `false` — the v2 layout
-    // engine must keep its byte-stable tile path; only explicit
-    // `draw_text_px` callers land here.
+    // this path. Layouts must also opt in through their theme; ordinary
+    // Game Boy layouts continue to use the tile path.
     fn draw_text_px(&mut self, px: u32, py: u32, text: &str, color: EngineRgba) {
         let py = if self.lang == Lang::Zh {
             py.saturating_sub(1)
@@ -92,6 +91,10 @@ impl<'fb> Painter for FrameBufferPainter<'fb> {
             py
         };
         draw_text(text, px, py, color, self.fb);
+    }
+
+    fn supports_proportional(&self) -> bool {
+        true
     }
 
     fn measure_text_px(&self, text: &str) -> u32 {

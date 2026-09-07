@@ -412,6 +412,10 @@ game_scene OaksLab {
       setFlag("EVENT_GOT_POKEDEX")
       hideObjectByName("OAKS_LAB_OBJ_6")
       hideObjectByName("OAKS_LAB_OBJ_7")
+      // OaksLab.asm:602-605 — the sleepy old man leaves the Viridian road and
+      // the wide-awake one takes over (offering the catch tutorial).
+      hideObjectByName("VIRIDIANCITY_OLD_MAN_SLEEPY")
+      showObjectByName("VIRIDIANCITY_OLD_MAN")
       @speaker("") {
         @t("To make a complete guide on\nall the POKeMON in the\nworld...\n\nThat was my dream!\n\nBut, I'm too old! I can't do\nit!\n\nSo, I want you two to\nfulfill my dream for me!\n\nGet moving, you two!\n\nThis is a great undertaking\nin POKeMON history!", "要编写一部收录世界上所有宝可\n梦的完整图鉴……\n\n那是我的梦想！\n\n但是，我太老了！我做不到了！\n\n所以，我想请你们俩替我实现梦\n想！\n\n快行动起来，你们俩！\n\n这在宝可梦历史上是伟大的壮\n举！")
       }
@@ -437,6 +441,9 @@ game_scene OaksLab {
       setFlag("EVENT_1ST_ROUTE22_RIVAL_BATTLE")
       resetFlag("EVENT_2ND_ROUTE22_RIVAL_BATTLE")
       setFlag("EVENT_ROUTE22_RIVAL_WANTS_BATTLE")
+      // Original: ShowObject TOGGLE_ROUTE_22_RIVAL_1 — the rival waits on
+      // Route 22 for the coord-triggered fight.
+      showObjectByName("ROUTE_22_RIVAL_1")
       // Route22's coordRivalBattle storyline gates on these flags, which is
       // functionally equivalent to the original TOGGLE_ROUTE_22_RIVAL_1 show.
       // TOGGLE_LYING_OLD_MAN hide / TOGGLE_OLD_MAN show (the PalletTown

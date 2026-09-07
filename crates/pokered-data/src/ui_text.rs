@@ -195,28 +195,55 @@ pub fn zh_slot_symbol(label: &str) -> String {
 
 /// Status-line translation for the messages produced by
 /// `pokered_core::slots_screen` (display-layer only — the core strings are
-/// untouched).
+/// untouched). The strings mirror the original's texts
+/// (data/text/text_2.asm: _BetHowManySlotMachineText, _StartSlotMachineText,
+/// _NotEnoughCoinsSlotMachineText, _NotThisTimeText, _OneMoreGoSlotMachineText,
+/// _OutOfCoinsSlotMachineText, _YeahText, _LinedUpText).
 pub fn zh_slots_message(msg: &str, is_zh: bool) -> String {
     if !is_zh {
         return msg.to_string();
     }
     match msg {
-        "BET 1-3 COINS" => "下注1-3个代币".to_string(),
+        "BET HOW MANY COINS?" => "要下注几个代币？".to_string(),
+        "NOT ENOUGH COINS!" => "代币不够！".to_string(),
+        "START!" => "开始！".to_string(),
+        "NOT THIS TIME!" => "这次没中！".to_string(),
+        "ONE MORE GO?" => "再来一次？".to_string(),
         "OUT OF COINS!" => "代币用完了！".to_string(),
-        "STOP THE REELS!" => "停止转轮！".to_string(),
-        "NO MATCH..." => "没有中奖……".to_string(),
+        "YEAH!" => "好耶！".to_string(),
         _ => {
-            if let Some(n) = msg.strip_prefix("WIN! ").and_then(|s| s.strip_suffix(" COINS")) {
-                return format!("中了！{}个代币", n);
-            }
             if let Some(n) = msg
                 .strip_prefix("BET ")
                 .and_then(|s| s.strip_suffix(" COINS").or_else(|| s.strip_suffix(" COIN")))
             {
                 return format!("下注{}个代币", n);
             }
+            // " lined up! Scored N coins!" (_LinedUpText + reward text).
+            if let Some(idx) = msg.find(" lined up! Scored ") {
+                let sym = &msg[..idx];
+                let n = &msg[idx + " lined up! Scored ".len()..];
+                let n = n.strip_suffix(" coins!").unwrap_or(n);
+                return format!(
+                    "{}连线了！得到{}个代币！",
+                    zh_slot_symbol_name(sym),
+                    n
+                );
+            }
             msg.to_string()
         }
+    }
+}
+
+/// Chinese name for the full symbol names used in win messages.
+fn zh_slot_symbol_name(name: &str) -> &'static str {
+    match name {
+        "7" => "7",
+        "BAR" => "BAR",
+        "CHERRY" => "樱桃",
+        "FISH" => "鱼",
+        "BIRD" => "鸟",
+        "MOUSE" => "老鼠",
+        _ => "",
     }
 }
 
@@ -243,9 +270,21 @@ mod tests {
 
     #[test]
     fn slots_messages_and_symbols_translate() {
-        assert_eq!(zh_slots_message("BET 1-3 COINS", true), "下注1-3个代币");
-        assert_eq!(zh_slots_message("WIN! 300 COINS", true), "中了！300个代币");
-        assert_eq!(zh_slots_message("BET 1-3 COINS", false), "BET 1-3 COINS");
+        assert_eq!(zh_slots_message("BET HOW MANY COINS?", true), "要下注几个代币？");
+        assert_eq!(zh_slots_message("NOT THIS TIME!", true), "这次没中！");
+        assert_eq!(zh_slots_message("ONE MORE GO?", true), "再来一次？");
+        assert_eq!(
+            zh_slots_message("CHERRY lined up! Scored 8 coins!", true),
+            "樱桃连线了！得到8个代币！"
+        );
+        assert_eq!(
+            zh_slots_message("7 lined up! Scored 300 coins!", true),
+            "7连线了！得到300个代币！"
+        );
+        assert_eq!(
+            zh_slots_message("BET HOW MANY COINS?", false),
+            "BET HOW MANY COINS?"
+        );
         assert_eq!(zh_slot_symbol("CHER"), "樱桃");
         assert_eq!(zh_slot_symbol("BAR "), "BAR ");
     }

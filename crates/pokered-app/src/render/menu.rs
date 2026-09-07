@@ -5,7 +5,7 @@ use pokered_core::options_menu::OptionsMenuState;
 use pokered_core::party_screen::PartyScreenState;
 use pokered_core::save_menu::SaveMenuState;
 use pokered_core::start_menu::StartMenuState;
-use pokered_core::stats_screen::StatsScreenState;
+use pokered_core::stats_screen::{StatsPage, StatsScreenState};
 use pokered_data::mon_party_icons::{icon_for_species, IconKind};
 use pokered_data::impl_traits::PokemonRenderData;
 use pokered_data::lang_data;
@@ -65,49 +65,61 @@ pub fn draw_party_screen(
     {
         let mut painter = FrameBufferPainter::new(fb).with_lang(lang);
         let mut ui = Ui::new(&mut painter);
-        menus::party::draw(state, &PARTY_DEFAULT_LAYOUT, &mut ui, lang);
+        menus::party::draw_entries(state, &PARTY_DEFAULT_LAYOUT, &mut ui, lang);
     }
 
-    let Some(rm) = resources else {
-        return;
-    };
+    if let Some(rm) = resources {
+        let cursor = state.cursor();
+        const ICON_X_PX: u32 = 8;
+        let layout = &pokered_data::ui_layout::schema::PARTY_ENTRY_LAYOUT;
+        let row_height = layout.cursors[0].row_step * TILE_SIZE;
+        let hp_bar = layout
+            .dynamic_labels
+            .iter()
+            .find(|(key, _)| *key == "hp_bar")
+            .map(|(_, label)| label)
+            .expect("party layout has an HP bar anchor");
 
-    let cursor = state.cursor();
-    const ICON_X_PX: u32 = 8;
-    const HP_BAR_X_PX: u32 = 32;
-
-    for (i, pokemon) in state.party().iter().enumerate() {
-        let kind = icon_for_species(pokemon.species);
-        let frame = if i == cursor {
-            IconFrame::from_counter(frame_counter, 16)
-        } else {
-            IconFrame::Frame1
-        };
-        match load_mon_icon_tiles(rm, kind, frame) {
-            Ok(tiles) => {
-                let y = (i as u32) * 16;
-                draw_mon_icon(fb, tiles, ICON_X_PX, y, &GRAYSCALE_SPRITE_PALETTE);
+        for (i, pokemon) in state.party().iter().enumerate() {
+            let kind = icon_for_species(pokemon.species);
+            let frame = if i == cursor {
+                IconFrame::from_counter(frame_counter, 16)
+            } else {
+                IconFrame::Frame1
+            };
+            match load_mon_icon_tiles(rm, kind, frame) {
+                Ok(tiles) => {
+                    let y = (i as u32) * row_height;
+                    draw_mon_icon(fb, tiles, ICON_X_PX, y, &GRAYSCALE_SPRITE_PALETTE);
+                }
+                Err(e) => {
+                    tracing::warn!(
+                        "party screen: failed to load icon for {:?}: {}",
+                        pokemon.species,
+                        e
+                    );
+                }
             }
-            Err(e) => {
+
+            let hp_bar_y = (i as u32) * row_height + hp_bar.ty * TILE_SIZE + 4;
+            if let Err(e) = draw_party_hp_bar(
+                fb,
+                rm,
+                hp_bar.tx * TILE_SIZE,
+                hp_bar_y,
+                pokemon.hp,
+                pokemon.max_hp,
+            ) {
                 tracing::warn!(
-                    "party screen: failed to load icon for {:?}: {}",
+                    "party screen: failed to draw HP bar for {:?}: {}",
                     pokemon.species,
                     e
                 );
             }
         }
-
-        let hp_bar_y = (i as u32) * 16 + 8;
-        if let Err(e) =
-            draw_party_hp_bar(fb, rm, HP_BAR_X_PX, hp_bar_y, pokemon.hp, pokemon.max_hp)
-        {
-            tracing::warn!(
-                "party screen: failed to draw HP bar for {:?}: {}",
-                pokemon.species,
-                e
-            );
-        }
     }
+    let mut painter = FrameBufferPainter::new(fb).with_lang(lang);
+    menus::party::draw_overlay(state, &mut Ui::new(&mut painter), lang);
 }
 
 /// Draw the stats/details screen. Renders the text UI (name, level, HP
@@ -123,7 +135,7 @@ pub fn draw_stats_screen(
     {
         let mut painter = FrameBufferPainter::new(fb).with_lang(lang);
         let mut ui = Ui::new(&mut painter);
-        menus::stats::draw(state, &STATS_PAGE1_LAYOUT, &STATS_PAGE2_LAYOUT, &mut ui, lang, &PokemonRenderData::new(false));
+        menus::stats::draw(state, &STATS_PAGE1_LAYOUT, &STATS_PAGE2_LAYOUT, &mut ui, lang, &PokemonRenderData::new(lang == Lang::Zh));
     }
 
     let Some(rm) = resources else {
@@ -137,12 +149,16 @@ pub fn draw_stats_screen(
     let drew_front = if let Ok(cached) = rm.load_pokemon_front(&sprite_name) {
         let ts = cached.tileset.clone();
         let w_tiles = cached.source_size.0 / TILE_SIZE;
-        let h_tiles = cached.source_size.1 / TILE_SIZE;
-        let _ = h_tiles;
         let max_w = 7u32;
         let x_off = ((max_w.saturating_sub(w_tiles)) / 2) * TILE_SIZE;
         let px = TILE_SIZE + x_off;
-        let py = TILE_SIZE / 2;
+        // A full-size front sprite is 56 px tall. Start it at y=0 so it
+        // stays above the dex-number row (y=56); the old 4 px offset
+        // let its bottom tiles overwrite the number drawn by the UI.
+        let py = match state.page() {
+            StatsPage::Stats => 0,
+            StatsPage::Moves => TILE_SIZE / 2,
+        };
         blit_tileset(fb, &ts, px, py, w_tiles, &GRAYSCALE_SPRITE_PALETTE);
         true
     } else {
@@ -367,10 +383,10 @@ pub fn draw_bag(state: &BagScreenState, fb: &mut FrameBuffer, lang: Lang) {
             });
         }
         BagPhase::TossQuantity { qty } => {
-            ui.text_box(TileRect::new(4, 12, 15, 4), InkColor::Black, true, |frame| {
+            ui.text_box(TileRect::new(4, 11, 15, 7), InkColor::Black, true, |frame| {
                 let prompt = if lang == Lang::Zh { "扔掉几个？" } else { "TOSS HOW MANY?" };
                 frame.label(2, 1, prompt, InkColor::Black);
-                frame.label(2, 2, &format!("x{:02}", qty), InkColor::Black);
+                frame.label(2, 3, &format!("x{:02}", qty), InkColor::Black);
             });
         }
         BagPhase::Browsing => {}

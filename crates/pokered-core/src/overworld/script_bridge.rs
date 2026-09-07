@@ -199,9 +199,14 @@ pub enum ScriptEffect {
     OpenShop {
         items: Vec<String>,
     },
-    /// Open the Game Corner slot-machine minigame (`lucky` = higher-odds).
+    /// Open the Game Corner slot-machine minigame.
+    ///
+    /// `Some(true)` = the high-odds lucky machine (explicit `openSlots(true)`);
+    /// `None` = no explicit argument: the machine is lucky when the sign that
+    /// fired the script matches the per-map-entry lucky roll
+    /// (`GameCornerSelectLuckySlotMachine`).
     OpenSlots {
-        lucky: bool,
+        lucky: Option<bool>,
     },
     /// Open the elevator floor-selection menu; the script resumes with the
     /// chosen floor index (0-based) when the app returns it.
@@ -507,8 +512,7 @@ impl ScriptEffect {
             }
             ScriptEffect::OpenSlots { lucky } => {
                 json!({ "effect": "OpenSlots", "lucky": lucky })
-            }
-            ScriptEffect::ElevatorMenu { floors } => {
+            }            ScriptEffect::ElevatorMenu { floors } => {
                 json!({ "effect": "ElevatorMenu", "floors": floors })
             }
             ScriptEffect::FilterBag { item_ids } => {
@@ -836,7 +840,9 @@ fn dispatch_custom(name: &str, args: &[Value]) -> ScriptEffect {
             rival_triplet_base: Some(custom_u64(args, 1) as u8),
         },
         "openSlots" => ScriptEffect::OpenSlots {
-            lucky: custom_bool(args, 0),
+            // None (no explicit argument) → resolve against the per-map-entry
+            // lucky-machine roll at dispatch time.
+            lucky: args.get(0).and_then(|v| v.as_bool()),
         },
         "elevatorMenu" => ScriptEffect::ElevatorMenu {
             floors: json_string_vec(args.first()),
@@ -892,10 +898,6 @@ fn custom_u64(args: &[Value], i: usize) -> u64 {
 
 /// Read the `i`-th `Custom` argument as a boolean (false when missing or not
 /// a boolean).
-fn custom_bool(args: &[Value], i: usize) -> bool {
-    args.get(i).and_then(|v| v.as_bool()).unwrap_or(false)
-}
-
 /// Convert a `Custom` array argument into a `Vec<String>` (empty when absent
 /// or not an array of strings).
 fn json_string_vec(arg: Option<&Value>) -> Vec<String> {

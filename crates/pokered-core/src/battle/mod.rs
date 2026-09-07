@@ -608,25 +608,6 @@ fn paginate_battle_text(text: &str) -> Vec<String> {
     pages
 }
 
-/// Convert a PascalCase MoveId Debug name to game-style uppercase with spaces.
-/// e.g. "QuickAttack" → "QUICK ATTACK", "Thunderbolt" → "THUNDERBOLT",
-///      "HiJumpKick" → "HI JUMP KICK", "ThunderWave" → "THUNDER WAVE"
-fn move_display_name(move_id: MoveId) -> String {
-    let raw = format!("{:?}", move_id);
-    let mut result = String::with_capacity(raw.len() + 4);
-    for (i, c) in raw.chars().enumerate() {
-        if c.is_uppercase() && i > 0 {
-            // Insert space before uppercase letter unless previous char was also uppercase
-            let prev = raw.as_bytes()[i - 1] as char;
-            if prev.is_lowercase() {
-                result.push(' ');
-            }
-        }
-        result.push(c);
-    }
-    result.to_uppercase()
-}
-
 /// True when the mon is locked into re-issuing its previously-selected move (charge
 /// mid-flight, rampage) — the menu is ignored and the continuation re-uses
 /// `selected_move`. Mirrors `PokeredRules::forced_action`; extended as Bide / trapping
@@ -2479,7 +2460,7 @@ can't be deleted!".to_string()],
                         // The replacement: PP = the new move's max PP.
                         let bs = self.battle_state.as_mut().unwrap();
                         let mon = &mut bs.player.party[party_index];
-                        let old_name = move_display_name(forgotten);
+                        let old_name = pokered_data::lang_data::move_name(forgotten, false);
                         mon.moves[cursor] = move_id;
                         mon.pp[cursor] = {
                             use pokered_data::move_data::MOVES;
@@ -2490,7 +2471,7 @@ can't be deleted!".to_string()],
                                 .unwrap_or(0)
                         };
                         let mon_name = self.learn_move_mon_name(party_index);
-                        let learn_name = move_display_name(move_id);
+                        let learn_name = pokered_data::lang_data::move_name(move_id, false);
                         let mut texts = vec![
                             "1, 2 and... Poof!".to_string(),
                             format!("{mon_name} forgot
@@ -2523,7 +2504,7 @@ can't be deleted!".to_string()],
                 let answered_no = input.b || (input.a && !self.shift_prompt_yes);
                 if answered_yes {
                     let mon_name = self.learn_move_mon_name(party_index);
-                    let learn_name = move_display_name(move_id);
+                    let learn_name = pokered_data::lang_data::move_name(move_id, false);
                     self.current_message = None;
                     let mut texts =
                         vec![format!("{mon_name} did not
@@ -4645,7 +4626,7 @@ learn {learn_name}!")];
                 ..
             } => {
                 self.shift_prompt_yes = false;
-                let learn_name = move_display_name(*move_id);
+                let learn_name = pokered_data::lang_data::move_name(*move_id, false);
                 self.current_message =
                     Some(format!("Abandon learning\n{learn_name}?"));
             }
@@ -4889,7 +4870,7 @@ learn {learn_name}!")];
                 msgs.push(format!(
                     "{} learned {}!",
                     mon.display_name(&mut name_buf),
-                    move_display_name(move_id)
+                    pokered_data::lang_data::move_name(move_id, false)
                 ));
             }
         }
@@ -4925,8 +4906,8 @@ learn {learn_name}!")];
             let name = mon.display_name(&mut name_buf);
             return format!(
                 "{name} is\ntrying to learn\n{}!\n\nBut, {name} can't learn\nmore than 4 moves!\n\nDelete an older\nmove to make room\nfor {}?",
-                move_display_name(move_id),
-                move_display_name(move_id)
+                pokered_data::lang_data::move_name(move_id, false),
+                pokered_data::lang_data::move_name(move_id, false)
             );
         }
         String::new()

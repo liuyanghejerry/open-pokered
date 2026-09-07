@@ -36,6 +36,8 @@ mod tests;
 #[cfg(test)]
 mod tests_collision;
 #[cfg(test)]
+mod tests_slots_lucky;
+#[cfg(test)]
 mod tests_cutscene_movement;
 #[cfg(test)]
 mod tests_connections;

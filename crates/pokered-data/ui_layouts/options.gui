@@ -6,8 +6,21 @@ screen Options {
   text(@t("TEXT SPEED", "文字速度")) {
     rect = {tx: 1, ty: 1, tw: 16, th: 1}
   }
-  text(@t(" FAST  MEDIUM SLOW", " 快  中  慢")) {
+  text(" FAST  MEDIUM SLOW") {
     rect = {tx: 1, ty: 3, tw: 18, th: 1}
+    visible = "{is_en}"
+  }
+  text("快") {
+    rect = {tx: 2, ty: 3, tw: 4, th: 1}
+    visible = "{is_zh}"
+  }
+  text("中") {
+    rect = {tx: 5, ty: 3, tw: 4, th: 1}
+    visible = "{is_zh}"
+  }
+  text("慢") {
+    rect = {tx: 8, ty: 3, tw: 4, th: 1}
+    visible = "{is_zh}"
   }
   panel {
     rect = {tx: 0, ty: 5, tw: 20, th: 5}
@@ -16,8 +29,17 @@ screen Options {
   text(@t("BATTLE ANIMATION", "战斗动画")) {
     rect = {tx: 1, ty: 6, tw: 16, th: 1}
   }
-  text(@t(" ON       OFF", " 开       关")) {
+  text(" ON       OFF") {
     rect = {tx: 1, ty: 8, tw: 18, th: 1}
+    visible = "{is_en}"
+  }
+  text("开") {
+    rect = {tx: 2, ty: 8, tw: 4, th: 1}
+    visible = "{is_zh}"
+  }
+  text("关") {
+    rect = {tx: 10, ty: 8, tw: 4, th: 1}
+    visible = "{is_zh}"
   }
   panel {
     rect = {tx: 0, ty: 10, tw: 20, th: 5}
@@ -26,8 +48,17 @@ screen Options {
   text(@t("BATTLE STYLE", "战斗模式")) {
     rect = {tx: 1, ty: 11, tw: 16, th: 1}
   }
-  text(@t(" SHIFT    SET", " 替换    固定")) {
+  text(" SHIFT    SET") {
     rect = {tx: 1, ty: 13, tw: 18, th: 1}
+    visible = "{is_en}"
+  }
+  text("替换") {
+    rect = {tx: 2, ty: 13, tw: 4, th: 1}
+    visible = "{is_zh}"
+  }
+  text("固定") {
+    rect = {tx: 8, ty: 13, tw: 4, th: 1}
+    visible = "{is_zh}"
   }
   text(@t("CANCEL", "取消")) {
     rect = {tx: 2, ty: 16, tw: 8, th: 1}

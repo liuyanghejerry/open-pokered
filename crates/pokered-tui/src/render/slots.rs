@@ -7,7 +7,7 @@
 //! pixel-for-pixel mirror of the app's `render/slots.rs`).
 
 use pokered_core::game_state::Lang;
-use pokered_core::slots_screen::{symbol_label, SlotsPhase, SlotsScreen};
+use pokered_core::slots_screen::{symbol_label, PayoutStage, SlotsPhase, SlotsScreen};
 use pokered_data::lang_data;
 use pokered_data::ui_text::{zh_slot_symbol, zh_slots_message};
 use pokered_renderer::embedded_font::{draw_text, draw_text_scaled, measure_text};
@@ -97,15 +97,27 @@ pub fn draw_slots(slots: &SlotsScreen, fb: &mut FrameBuffer, lang: Lang) {
         SlotsPhase::Spinning => {
             if is_zh { "A：停止转轮" } else { "A: STOP REEL" }
         }
+        SlotsPhase::Payout => {
+            if is_zh { "派奖中……" } else { "PAYING OUT..." }
+        }
         SlotsPhase::Result => {
-            if is_zh { "A：继续" } else { "A: CONTINUE" }
+            if is_zh { "A：继续  B：退出" } else { "A: CONTINUE  B: EXIT" }
         }
     };
     draw_text(hint, 8, hud_y + 14, FG, fb);
 
-    // On a win, flash the payout large in the center for readability.
-    if matches!(slots.phase, SlotsPhase::Result) && slots.last_payout > 0 {
-        let txt = format!("+{}", slots.last_payout);
+    // On a win, blink/count the payout large in the center: the winning total
+    // once resolved, the not-yet-credited remainder while ticking (the ASM
+    // counts wPayoutCoins down as each coin lands). During the flash stage the
+    // number blinks with the fanfare.
+    let payout_display = match slots.phase {
+        SlotsPhase::Payout => Some(slots.payout_remaining),
+        SlotsPhase::Result => Some(slots.last_payout),
+        _ => None,
+    };
+    let flashing_dark = slots.payout_stage == PayoutStage::Flash && !slots.flash_on;
+    if let Some(payout) = payout_display.filter(|p| *p > 0 && !flashing_dark) {
+        let txt = format!("+{}", payout);
         let scale = 2;
         let approx_w = txt.len() as u32 * 6 * scale;
         let x = (fb.width().saturating_sub(approx_w)) / 2;
@@ -128,12 +140,13 @@ mod tests {
         let mut s = SlotsScreen::new(false, 100, 1);
         draw_slots(&s, &mut fb, Lang::En); // BetSelect
         s.update_frame(SlotsInput { a: true, ..SlotsInput::none() });
-        draw_slots(&s, &mut fb, Lang::En); // Spinning
-        for _ in 0..2000 {
-            if s.phase != SlotsPhase::Spinning {
+        draw_slots(&s, &mut fb, Lang::En); // Spinning (warm-up)
+        for _ in 0..20000 {
+            if s.phase != SlotsPhase::Spinning && s.phase != SlotsPhase::Payout {
                 break;
             }
             s.update_frame(SlotsInput { a: true, ..SlotsInput::none() });
+            draw_slots(&s, &mut fb, Lang::En); // covers Spinning + Payout frames
         }
         draw_slots(&s, &mut fb, Lang::En); // Result
         draw_slots(&s, &mut fb, Lang::Zh); // zh must render without panic too
