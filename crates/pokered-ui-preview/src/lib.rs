@@ -1947,7 +1947,8 @@ mod tests {
     const GOLDEN_POKEDEX: u64              = 0xa57ba6970d36f9ed;
     const GOLDEN_YES_NO: u64               = 0x8d281b17ab10370d;
     const GOLDEN_OAK_SPEECH: u64           = 0x7a144f18ff89940c;
-    const GOLDEN_SAVE: u64                 = 0x8221fed84c678b5d;
+    // Save: full-width v2 information card with integrated confirmation.
+    const GOLDEN_SAVE: u64                 = 0x0af4f280dd3dd6dc;
     const GOLDEN_OPTIONS: u64              = 0x68f3c06ddf787f3c;
     const GOLDEN_NAMING: u64               = 0x685ded37c5a7bd5d;
     const GOLDEN_BATTLE_MAIN: u64          = 0x321da02cc038553d;
@@ -2046,17 +2047,16 @@ mod tests {
     }
 
     #[test]
-    fn pixel_save_ask_prompt_box_shift_differs() {
+    fn pixel_save_uses_canonical_v2_layout() {
+        // The save screen now uses save.gui, like options: legacy v1 JSON
+        // overrides must not move a frame away from its v2 text and cursor.
         let canonical = pokered_data::ui_layout::schema::get_layout_json("save").unwrap();
         let mut json_val: serde_json::Value = serde_json::from_str(&canonical).unwrap();
-        let children = &mut json_val["variants"]["ask_prompt"]["children"];
-        children[0]["rect"]["tx"] = serde_json::Value::Number(2.into());
-        children[0]["rect"]["ty"] = serde_json::Value::Number(13.into());
-        let mutated = serde_json::to_string(&json_val).unwrap();
+        json_val["variants"]["ask_prompt"]["children"][0]["rect"]["tx"] = 2.into();
         let a = render_layout("save", "", 0, 0);
-        let b = render_layout("save", &mutated, 0, 0);
-        assert_valid_framebuffer(&b, "save ask_prompt shifted");
-        assert_ne!(framebuffer_hash(&a), framebuffer_hash(&b), "ask_prompt box shift must change pixels");
+        let b = render_layout("save", &json_val.to_string(), 0, 0);
+        assert_valid_framebuffer(&b, "save v2");
+        assert_eq!(a, b, "legacy layout overrides must not split the v2 screen");
     }
 
     // ── pixel-diff tests: non-flex (children-only) menus ────────────────
@@ -2098,15 +2098,11 @@ mod tests {
     }
 
     #[test]
-    fn pixel_save_label_text_change_differs() {
-        let canonical = pokered_data::ui_layout::schema::get_layout_json("save").unwrap();
-        let mut json_val: serde_json::Value = serde_json::from_str(&canonical).unwrap();
-        let labels = &mut json_val["variants"]["default"]["children"][0]["labels"];
-        labels[0]["text"] = serde_json::Value::String("XYZ".into());
+    fn pixel_save_info_changes_with_state() {
         let a = render_layout("save", "", 0, 0);
-        let b = render_layout("save", &serde_json::to_string(&json_val).unwrap(), 0, 0);
-        assert_valid_framebuffer(&b, "save label=XYZ");
-        assert_ne!(framebuffer_hash(&a), framebuffer_hash(&b), "label text change must change pixels");
+        let b = render_layout("save", "", 2, 0);
+        assert_valid_framebuffer(&b, "save different player");
+        assert_ne!(framebuffer_hash(&a), framebuffer_hash(&b), "save info must reflect state");
     }
 
     #[test]

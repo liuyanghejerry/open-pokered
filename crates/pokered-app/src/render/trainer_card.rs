@@ -6,17 +6,16 @@
 
 use pokered_core::game_state::Lang;
 use pokered_data::lang_data::ui_label;
-use pokered_renderer::embedded_font::draw_text;
+use pokered_renderer::embedded_font::{draw_text, measure_text};
 use pokered_renderer::palette::GRAYSCALE_PALETTE;
 use pokered_renderer::resource::{AssetCategory, ResourceManager};
 use pokered_renderer::{FrameBuffer, Rgba, TILE_SIZE};
 
 use super::draw_text_box;
 
-/// Badge slot layout from `DrawBadges`: number tiles at (2+i*4, 11) / (2+i*4,
-/// 14), 2×2-tile face/badge graphics directly below each number.
-const BADGE_ROW_Y: [u32; 2] = [11, 14];
-const BADGE_ROW_X: [u32; 4] = [2, 6, 10, 14];
+/// Four equal-width cells inside the frame, with the number beside the icon.
+const BADGE_ROW_Y: [u32; 2] = [92, 118];
+const BADGE_ROW_X: [u32; 4] = [13, 49, 85, 121];
 
 #[allow(clippy::too_many_arguments)]
 pub fn draw_trainer_card(
@@ -34,10 +33,10 @@ pub fn draw_trainer_card(
     let fg = Rgba::BLACK;
     let t = TILE_SIZE;
 
-    // Card frames (TrainerInfo_DrawTextBox: 18-wide top box, 16-wide badge
-    // box, both 6 interior rows tall).
-    draw_text_box(fb, 0, 0, 18, 6, fg);
-    draw_text_box(fb, t, 10 * t, 16, 6, fg);
+    // Matching full-width frames. Seven interior rows keep the 56px trainer
+    // sprite clear of the top card's bottom border.
+    draw_text_box(fb, 0, 0, 18, 7, fg);
+    draw_text_box(fb, 0, 10 * t, 18, 6, fg);
 
     // Red front sprite, upper right (DisplayPicCenteredOrUpperRight), unflipped.
     if let Some(ref mut rm) = res {
@@ -53,26 +52,38 @@ pub fn draw_trainer_card(
     }
 
     let is_zh = lang == Lang::Zh;
-    draw_text(ui_label("NAME/", is_zh), 2 * t, 2 * t, fg, fb);
-    draw_text(&player_name.to_uppercase(), 7 * t, 2 * t, fg, fb);
-    draw_text(ui_label("MONEY/", is_zh), 2 * t, 4 * t, fg, fb);
-    draw_text(&format!("${}", money), 8 * t, 4 * t, fg, fb);
-    draw_text(ui_label("TIME/", is_zh), 2 * t, 6 * t, fg, fb);
-    draw_text(
-        &format!("{}:{:02}", play_time_hours, play_time_minutes),
-        9 * t,
-        6 * t,
-        fg,
-        fb,
-    );
+    for (label, value, y) in [
+        ("NAME/", player_name.to_uppercase(), 14),
+        ("MONEY/", format!("${}", money), 32),
+        (
+            "TIME/",
+            format!("{}:{:02}", play_time_hours, play_time_minutes),
+            50,
+        ),
+    ] {
+        draw_text(ui_label(label, is_zh), 12, y, fg, fb);
+        draw_text(
+            &value,
+            96u32.saturating_sub(measure_text(&value)),
+            y,
+            fg,
+            fb,
+        );
+    }
 
-    // "●BADGES●" header (asm uses circle tile $76 around the word).
-    draw_circle(6 * t, 9 * t, fb);
-    draw_text(ui_label("BADGES", is_zh), 6 * t + 10, 9 * t, fg, fb);
-    draw_circle(6 * t + 48, 9 * t, fb);
+    // Center the localized heading in a cutout in the badge frame's top edge.
+    let heading = ui_label("BADGES", is_zh);
+    let heading_width = measure_text(heading);
+    let heading_x = (fb.width() - heading_width) / 2;
+    for y in 78..88 {
+        for x in heading_x - 6..heading_x + heading_width + 6 {
+            fb.set_pixel(x, y, Rgba::WHITE);
+        }
+    }
+    draw_text(heading, heading_x, 78, fg, fb);
 
-    // Badge rows: number tile, then the 2×2 face (unowned) or badge (owned)
-    // graphic below it (GymLeaderFaceAndBadgeTileGraphics layout: face i at
+    // Badge rows: number tile beside the 2×2 face (unowned) or badge (owned)
+    // graphic (GymLeaderFaceAndBadgeTileGraphics layout: face i at
     // tile i*8, its badge at +4).
     if let Some(ref mut rm) = res {
         let numbers = rm
@@ -84,10 +95,10 @@ pub fn draw_trainer_card(
         for i in 0..8u32 {
             let row = (i / 4) as usize;
             let col = (i % 4) as usize;
-            let x = BADGE_ROW_X[col] * t;
-            let y = BADGE_ROW_Y[row] * t;
+            let x = BADGE_ROW_X[col];
+            let y = BADGE_ROW_Y[row];
             if let Ok(ref ts) = numbers {
-                blit_tile(fb, ts, i as usize, x, y, pal);
+                blit_tile(fb, ts, i as usize, x, y + 4, pal);
             }
             if let Ok(ref ts) = faces {
                 let owned = obtained_badges & (1 << i) != 0;
@@ -95,7 +106,7 @@ pub fn draw_trainer_card(
                 for k in 0..4u32 {
                     let dx = (k % 2) * t;
                     let dy = (k / 2) * t;
-                    blit_tile(fb, ts, (base + k) as usize, x + dx, y + t + dy, pal);
+                    blit_tile(fb, ts, (base + k) as usize, x + 10 + dx, y + dy, pal);
                 }
             }
         }
@@ -121,31 +132,6 @@ fn blit_tile(
             let c = rgba_row[col as usize];
             if c != Rgba::TRANSPARENT && x + col < fb.width() && y + row < fb.height() {
                 fb.set_pixel(x + col, y + row, c);
-            }
-        }
-    }
-}
-
-/// Small filled circle (the original's $76 circle tile around "BADGES").
-fn draw_circle(x: u32, y: u32, fb: &mut FrameBuffer) {
-    const CIRCLE: [u8; 8] = [
-        0b0011_1100,
-        0b0111_1110,
-        0b1111_1111,
-        0b1111_1111,
-        0b1111_1111,
-        0b1111_1111,
-        0b0111_1110,
-        0b0011_1100,
-    ];
-    for (dy, bits) in CIRCLE.iter().enumerate() {
-        for dx in 0..8u32 {
-            if bits & (0x80 >> dx) != 0 {
-                let px = x + dx;
-                let py = y + dy as u32;
-                if px < fb.width() && py < fb.height() {
-                    fb.set_pixel(px, py, Rgba::BLACK);
-                }
             }
         }
     }
