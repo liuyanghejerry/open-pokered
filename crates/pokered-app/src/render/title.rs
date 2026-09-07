@@ -1,10 +1,10 @@
 use pokered_core::data::wild_data::GameVersion;
-use pokered_core::title_screen::TitleScreenState;
+use pokered_core::title_screen::{TitlePhase, TitleScreenState, FADE_OUT_FRAMES};
 use pokered_data::layout_constants;
 use pokered_renderer::embedded_font::{draw_text, measure_text};
-use pokered_renderer::layout;
 use pokered_renderer::palette::{Palette, PaletteState, GRAYSCALE_PALETTE};
 use pokered_renderer::resource::ResourceManager;
+use pokered_renderer::screen_fade::apply_white_fade;
 use pokered_renderer::{FrameBuffer, Rgba, TILE_SIZE};
 
 use super::{blit_tileset, species_to_sprite_name};
@@ -15,17 +15,10 @@ pub fn draw_title_screen(
     res: &mut Option<ResourceManager>,
     fb: &mut FrameBuffer,
 ) {
-    let fade = state.fade_progress();
-    let bg_color = if fade > 0.0 {
-        let v = (255.0 * (1.0 - fade)) as u8;
-        Rgba::rgb(v, v, v)
-    } else {
-        Rgba::WHITE
-    };
-    fb.clear(bg_color);
+    fb.clear(Rgba::WHITE);
 
     let bg_pal = &GRAYSCALE_PALETTE;
-    // Color 0 = transparent so fb.clear(bg_color) shows through during fade
+    // Preserve the background beneath the logo and version overlay.
     let transparent_bg_pal = Palette::new(&[
         Rgba::TRANSPARENT,
         GRAYSCALE_PALETTE.colors[1],
@@ -54,7 +47,8 @@ pub fn draw_title_screen(
             let tiles_per_row = lw / TILE_SIZE;
             let logo_ts = logo.tileset.clone();
             let lx = layout_constants::title_screen::LOGO_PIXEL_X;
-            let logo_y = (layout_constants::title_screen::LOGO_PIXEL_Y as i32 - state.scroll_y).max(0) as u32;
+            let logo_y = (layout_constants::title_screen::LOGO_PIXEL_Y as i32 - state.scroll_y)
+                .max(0) as u32;
             blit_tileset(fb, &logo_ts, lx, logo_y, tiles_per_row, &transparent_bg_pal);
         }
 
@@ -165,5 +159,8 @@ pub fn draw_title_screen(
         let phase_text = format!("Title Screen: {:?}", state.phase);
         draw_text(&phase_text, 10, 10, Rgba::BLACK, fb);
         draw_text("Press any button to continue", 10, 100, Rgba::BLACK, fb);
+    }
+    if state.phase == TitlePhase::FadeOut {
+        apply_white_fade(fb, state.frame_counter, FADE_OUT_FRAMES);
     }
 }

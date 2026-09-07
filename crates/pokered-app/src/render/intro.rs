@@ -1,9 +1,9 @@
-use pokered_core::intro_scene::{GengarPose, IntroSceneState};
+use pokered_core::intro_scene::{GengarPose, IntroPhase, IntroSceneState, FADE_OUT_FRAMES};
 use pokered_data::layout_constants;
 use pokered_renderer::embedded_font::draw_text;
-use pokered_renderer::layout;
 use pokered_renderer::palette::{PaletteState, GRAYSCALE_PALETTE};
 use pokered_renderer::resource::{AssetCategory, ResourceManager};
+use pokered_renderer::screen_fade::apply_white_fade;
 use pokered_renderer::{FrameBuffer, Rgba, TILE_SIZE};
 
 pub fn draw_intro_scene(
@@ -11,14 +11,7 @@ pub fn draw_intro_scene(
     res: &mut Option<ResourceManager>,
     fb: &mut FrameBuffer,
 ) {
-    let fade = state.fade_progress();
-    let bg_color = if fade > 0.0 {
-        let v = (255.0 * (1.0 - fade)) as u8;
-        Rgba::rgb(v, v, v)
-    } else {
-        Rgba::WHITE
-    };
-    fb.clear(bg_color);
+    fb.clear(Rgba::WHITE);
 
     let bg_pal = &GRAYSCALE_PALETTE;
     let mut palette_state = PaletteState::new(GRAYSCALE_PALETTE);
@@ -41,6 +34,9 @@ pub fn draw_intro_scene(
         );
         draw_text(&pos_text, 10, 50, Rgba::BLACK, fb);
         draw_text("Press any button to skip", 10, 100, Rgba::BLACK, fb);
+    }
+    if state.phase == IntroPhase::FadeOut {
+        apply_white_fade(fb, state.frame_counter, FADE_OUT_FRAMES);
     }
 }
 
