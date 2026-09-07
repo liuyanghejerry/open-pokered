@@ -348,7 +348,7 @@ fn render_seafoam_b3f_first_visit() {
     );
 }
 
-/// 8. Seafoam B3F forced current: with both B2F boulders down, standing on
+/// 8. Seafoam B3F forced current: before both B2F boulders fall, standing on
 /// (15,8) sweeps the player DOWN→RIGHT→DOWN (MoveObject RLE). Master left
 /// the player standing. Before-side renders the same map without the sweep.
 #[test]
@@ -356,8 +356,8 @@ fn render_seafoam_b3f_current_sweep() {
     let mut rm = new_rm();
     let mut screen =
         OverworldScreen::new(MapId::SeafoamIslandsB3F, Some(maps_dir()), PokemonRedData);
-    screen.set_flag_live("EVENT_SEAFOAM3_BOULDER1_DOWN_HOLE", true);
-    screen.set_flag_live("EVENT_SEAFOAM3_BOULDER2_DOWN_HOLE", true);
+    screen.set_flag_live("EVENT_SEAFOAM3_BOULDER1_DOWN_HOLE", false);
+    screen.set_flag_live("EVENT_SEAFOAM3_BOULDER2_DOWN_HOLE", false);
     // Re-enter through the real warp path so the @load showObject runs, then
     // land above the trigger tile and step onto (15,8).
     screen.pending_warp = Some(PendingWarp {

@@ -822,7 +822,7 @@ Safari 场景注释过时等），保留会误导后续会话。当前唯一的�
 
 本轮补齐：
 - **野外毒步进**（poison.asm `ApplyOutOfBattlePoisonDamage`）: 每 4 步全队中毒怪
-  −1 HP、倒下文本、SFX_POISONED、全灭黑屏回中心（core `overworld/poison.rs` +
+  −1 HP、倒下文本、SFX_POISONED、全灭金钱减半并回中心（core `overworld/poison.rs` +
   `PoisonStep` request，双前端消费）。
 - **训练家视线战前台词 + 主动对话开战**（trainers.asm `TalkToTrainer` /
   `DisplayEnemyTrainerTextAndStartBattle`）: 视线/对话触发先显示战前文本再开战；
@@ -852,7 +852,7 @@ Safari 场景注释过时等），保留会误导后续会话。当前唯一的�
   bookshelf.rs` 引擎表——书架/地鼠雕塑（Mansion (8,6) 变体）/墙上城镇地图（显示
   文本后打开 TownMap 屏）/电梯/#MON 周边/石英高原雕像（按 X 奇偶双文本）。
 - **Seafoam B3F 强制水流**（B3F DefaultScript/MoveObjectScript）: (15,8) 踩格 +
-  (18,7)/(19,7) 入水道的模拟摇杆清扫路径（两颗 B2F 巨石落洞后）。
+  (18,7)/(19,7) 入水道的模拟摇杆清扫路径（两颗 B2F 巨石全部落洞后停止水流）。
 - **海泡沫巨石链式可见性**（toggleable_objects.asm）: B1F/B2F/B3F BOULDER5/6
   defaultHidden，按上层落洞旗标 showObjectByName（B3F 的 toggle 对象实为 npc2/3，
   原考据勘误已在 scene 注释记录）。
@@ -869,3 +869,16 @@ Safari 场景注释过时等），保留会误导后续会话。当前唯一的�
 3. TUI 的 FLY 鸟动画仅做玩家隐藏近似（app 有完整鸟精灵动画）。
 4. Haze 睡眠/冰冻同回合失去行动的"文本旁白"未建模（机制已实现：该目标本回合
    确实无法出招）。
+
+### PR #62 审查修正
+
+- FLY 抵达使用 BirdSprite 侧面站立/运动帧（PNG 第 2/5 帧），飞行期间
+  隐藏主角；坐标表以最终 ($40,$3c) 对齐当前渲染器的主角位置，避免重复
+  应用 OAM 偏移。终端前端同步修正主角可见性。
+- B3F 的 CheckBothEventsSet 在两旗标均成立时置 Z；ret z 表示停止水流。
+  模拟摇杆逆序消费 RLE 缓冲区，三处入口按逆序路径汇入 (20,17)，避免右侧入口撞墙。
+- 野外中毒全灭经 HandleBlackOut 调用 ResetStatusAndHalveMoneyOnBlackout，
+  与战败一样扣掉一半金钱（余额向下取整）。
+
+- 冲浪绘制按 LoadSurfingPlayerSpriteGraphics 切换到 SeelSprite（seel.png），
+  原生与终端共用原版六帧朝向/运动布局，上岸后恢复 RedSprite；不叠加步行主角。

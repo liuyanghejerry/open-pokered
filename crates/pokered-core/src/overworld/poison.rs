@@ -68,9 +68,10 @@ pub fn apply_out_of_battle_poison_damage(save: &mut SaveData, overworld: &mut Ov
 /// The blackout shared with the battle-loss path: full heal, warp to the fly
 /// point of `wLastBlackoutMap` (Pallet Town before any heal), fade to white,
 /// release the Cycling-Road forced bike. Mirrors `BattleOutcome::Loss` in
-/// `battle/settlement/writeback.rs` minus the money penalty (walking blackout
-/// never touches money — `black_out.asm` has no money subtraction).
+/// `battle/settlement/writeback.rs`: HandleBlackOut calls
+/// ResetStatusAndHalveMoneyOnBlackout for field and battle blackouts alike.
 fn field_blackout(save: &mut SaveData, overworld: &mut OverworldScreen) {
+    save.game_data.player_money /= 2;
     overworld.heal_requested = true;
     let blackout_map =
         crate::data::maps::MapId::from_u8(save.game_data.last_blackout_map)
@@ -184,7 +185,7 @@ mod tests {
 
     /// A party wiped by the tick blacks out: full heal queued, warp to the
     /// last-healed map's fly point with a white fade — the battle-loss flow
-    /// (black_out.asm). No money is lost on a field blackout.
+    /// (black_out.asm), including the halved money.
     #[test]
     fn full_party_faint_blacks_out_to_last_center() {
         let mut a = poisoned(mon(Species::Rattata, 10));
@@ -203,9 +204,22 @@ mod tests {
         assert!(!warp.arrival_spin, "blackout arrivals skip EnterMapAnim");
         assert!(matches!(ow.warp_fade_state, WarpFadeState::FadingOut { .. }));
         assert_eq!(
-            save.game_data.player_money, 3000,
-            "field blackout never touches money"
+            save.game_data.player_money, 1500,
+            "field blackout halves money like a battle loss"
         );
+    }
+
+    #[test]
+    fn field_blackout_halves_money_rounding_down() {
+        for money in [0, 1, 3, 3001, 999999] {
+            let mut m = poisoned(mon(Species::Rattata, 10));
+            m.hp = 1;
+            let mut save = save_with(vec![m]);
+            save.game_data.player_money = money;
+            let mut ow = OverworldScreen::new(MapId::Route1, None, PokemonRedData);
+            apply_out_of_battle_poison_damage(&mut save, &mut ow);
+            assert_eq!(save.game_data.player_money, money / 2);
+        }
     }
 
     /// Fainted-but-not-poisoned party members do not trigger a blackout on
@@ -216,10 +230,12 @@ mod tests {
         a.hp = 1;
         let b = mon(Species::Pidgey, 10);
         let mut save = save_with(vec![a, b]);
+        save.game_data.player_money = 3001;
         let mut ow = OverworldScreen::new(MapId::Route1, None, PokemonRedData);
         apply_out_of_battle_poison_damage(&mut save, &mut ow);
 
         assert!(save.party.get(0).unwrap().hp == 0);
         assert!(ow.pending_warp.is_none(), "one survivor → no blackout");
+        assert_eq!(save.game_data.player_money, 3001, "no penalty with a survivor");
     }
 }
