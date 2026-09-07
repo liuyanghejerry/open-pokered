@@ -3991,8 +3991,24 @@ impl PokemonGame {
                             match self.pending_bag_item {
                             None => ScreenAction::Continue,
                             Some(item) => {
+                                // Ether / Max Ether / PP Up reached this
+                                // move-pick through their own MoveSelectionMenu
+                                // (item_effects.asm:1968-1988): apply the PP
+                                // effect to the chosen slot instead of a
+                                // TM/HM replace.
+                                let pp_item = matches!(
+                                    item,
+                                    pokered_data::items::ItemId::Ether
+                                        | pokered_data::items::ItemId::MaxEther
+                                        | pokered_data::items::ItemId::PpUp
+                                );
                                 let outcome = match self.save_data.party.get_mut(party_index) {
-                                    Some(mon) => bag_use::finish_tm_hm_replace(item, mon, slot),
+                                    Some(mon) if pp_item => {
+                                        bag_use::finish_pp_restore(item, mon, slot)
+                                    }
+                                    Some(mon) => {
+                                        bag_use::finish_tm_hm_replace(item, mon, slot)
+                                    }
                                     None => ItemApplyOutcome::NoEffect {
                                         message: bag_use::NO_EFFECT_MESSAGE.to_string(),
                                     },

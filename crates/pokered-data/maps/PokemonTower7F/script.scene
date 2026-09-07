@@ -11,6 +11,39 @@
 //    by the rescue dialogue + flag set + warp (see TODO at the bottom).
 
 game_scene PokemonTower7F {
+  // ── Post-battle leave choreography (PokemonTower7FEndBattleScript →
+  //    PokemonTower7FRocketLeaveMovementScript → HideNPCScript) ─────────────
+  // After each Rocket is beaten the original walks it to the down-stairs and
+  // hides it. The writeback's post-battle OnLoad re-run plays this exactly
+  // once per rocket (the LEFT latch guards replays on later re-entries, where
+  // the hidden state alone persists).
+  @load {
+    @if (getFlag("EVENT_BEAT_POKEMONTOWER_7_TRAINER_0")) {
+      @if (!getFlag("EVENT_POKEMONTOWER_7_ROCKET_LEFT_0")) {
+        setFlag("EVENT_POKEMONTOWER_7_ROCKET_LEFT_0")
+        moveNpcTo("POKEMONTOWER_7_OBJ_1", 9, 16)
+      }
+      hideObject("POKEMONTOWER_7_OBJ_1")
+    }
+    @if (getFlag("EVENT_BEAT_POKEMONTOWER_7_TRAINER_1")) {
+      @if (!getFlag("EVENT_POKEMONTOWER_7_ROCKET_LEFT_1")) {
+        setFlag("EVENT_POKEMONTOWER_7_ROCKET_LEFT_1")
+        moveNpcTo("POKEMONTOWER_7_OBJ_2", 9, 16)
+      }
+      hideObject("POKEMONTOWER_7_OBJ_2")
+    }
+    @if (getFlag("EVENT_BEAT_POKEMONTOWER_7_TRAINER_2")) {
+      @if (!getFlag("EVENT_POKEMONTOWER_7_ROCKET_LEFT_2")) {
+        setFlag("EVENT_POKEMONTOWER_7_ROCKET_LEFT_2")
+        // Rocket 3 spawns inside the upper alcove; its surrounding tiles are
+        // solid in this port, so only a one-step step-down is walkable before
+        // the hide (rockets 1/2 walk the full descent to the stairs).
+        moveNpcTo("POKEMONTOWER_7_OBJ_3", 9, 8)
+      }
+      hideObject("POKEMONTOWER_7_OBJ_3")
+    }
+  }
+
   // ── Team Rocket grunt (npc 1) — sight-engaged; dialogue only ──────────────
   @storyline("talkRocket1") {
     @trigger(map = "PokemonTower7F", npc = 1)

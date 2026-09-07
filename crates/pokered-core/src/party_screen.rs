@@ -200,7 +200,19 @@ impl PartyScreenState {
             match self.mode {
                 // Bag item use: A applies the pending item directly (Gen-1
                 // medicine/stone/TM-HM party menu has no STATS/SWITCH submenu).
-                PartyScreenMode::UseItem(_) => {
+                PartyScreenMode::UseItem(item) => {
+                    // Ether / Max Ether / PP Up pick WHICH move to affect
+                    // (item_effects.asm:1968-1988 MoveSelectionMenu) — only
+                    // the Elixirs restore every move and skip the menu.
+                    if matches!(
+                        item,
+                        pokered_data::items::ItemId::Ether
+                            | pokered_data::items::ItemId::MaxEther
+                            | pokered_data::items::ItemId::PpUp
+                    ) {
+                        self.enter_move_choice();
+                        return PartyScreenAction::Active;
+                    }
                     return PartyScreenAction::ApplyItem {
                         party_index: self.cursor,
                     };
@@ -361,15 +373,15 @@ impl PartyScreenState {
 }
 
 #[cfg(test)]
-mod tests {
+pub(crate) mod tests {
     use super::*;
     use pokered_data::species::Species;
 
-    fn make_test_pokemon(species: Species) -> Pokemon {
+    pub(crate) fn make_test_pokemon(species: Species) -> Pokemon {
         crate::pokemon::stats::create_pokemon(species, 5, [0xFF, 0xFF]).unwrap()
     }
 
-    fn party_of(n: usize) -> Vec<Pokemon> {
+    pub(crate) fn party_of(n: usize) -> Vec<Pokemon> {
         let species = [Species::Bulbasaur, Species::Charmander, Species::Squirtle];
         species
             .iter()
@@ -1127,6 +1139,44 @@ mod tests {
             ..PartyScreenInput::none()
         });
         assert_eq!(result, PartyScreenAction::Active);
+        assert_eq!(screen.phase(), PartyScreenPhase::Browsing);
+    }
+}
+
+#[cfg(test)]
+mod ether_move_choice_tests {
+    use super::*;
+    use super::tests::{make_test_pokemon, party_of};
+    use pokered_data::items::ItemId;
+
+    /// Ether / Max Ether / PP Up open the MoveSelectionMenu after the mon is
+    /// chosen (item_effects.asm:1968-1988) — only Elixirs skip it. The old
+    /// flow applied to move slot 0 immediately (audit: ether-move-selection).
+    #[test]
+    fn ether_item_enters_move_choice_instead_of_applying() {
+        let party = party_of(1);
+        let mut screen = PartyScreenState::new_for_item(party, ItemId::Ether);
+        let result = screen.update_frame(PartyScreenInput {
+            a: true,
+            ..PartyScreenInput::none()
+        });
+        assert_eq!(result, PartyScreenAction::Active, "no immediate apply");
+        assert_eq!(
+            screen.phase(),
+            PartyScreenPhase::ChooseMove { cursor: 0 },
+            "Ether opens the move-selection menu"
+        );
+    }
+
+    #[test]
+    fn elixir_item_still_applies_without_move_choice() {
+        let party = party_of(1);
+        let mut screen = PartyScreenState::new_for_item(party, ItemId::Elixer);
+        let result = screen.update_frame(PartyScreenInput {
+            a: true,
+            ..PartyScreenInput::none()
+        });
+        assert_eq!(result, PartyScreenAction::ApplyItem { party_index: 0 });
         assert_eq!(screen.phase(), PartyScreenPhase::Browsing);
     }
 }

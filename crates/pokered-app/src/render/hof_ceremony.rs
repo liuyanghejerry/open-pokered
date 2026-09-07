@@ -198,7 +198,9 @@ fn blit_scaled(fb: &mut FrameBuffer, cached: &pokered_renderer::resource::Cached
 /// `HoFMonInfoText` box (hall_of_fame.asm:178-200): nickname, LEVEL/, TYPE1/,
 /// TYPE2/.
 fn draw_mon_info(entry: &pokered_core::hof_ceremony::HofEntry, fb: &mut FrameBuffer, is_zh: bool) {
-    draw_text_box(fb, 0, 2 * T, 10, 8, FG);
+    // Inner height 9 (hall_of_fame.asm:159-176): TYPE2's value sits on the
+    // last interior row — height 8 pushed it onto the bottom border.
+    draw_text_box(fb, 0, 2 * T, 10, 9, FG);
     draw_text(&entry.nickname, T, 4 * T, FG, fb);
     draw_text(lang_data::ui_label("LEVEL/", is_zh), 2 * T, 6 * T, FG, fb);
     draw_text(&format!(":L{}", entry.level), 8 * T, 7 * T, FG, fb);

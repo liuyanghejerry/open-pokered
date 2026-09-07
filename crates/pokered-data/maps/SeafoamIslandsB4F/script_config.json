@@ -65,7 +65,8 @@
     },
     {
       "id": 3,
-      "talk": "talkArticuno"
+      "talk": "talkArticuno",
+      "toggleId": "SEAFOAM_ISLANDS_B4F_OBJ_3"
     }
   ],
   "onLoad": "SeafoamIslandsB4FOnLoad",

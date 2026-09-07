@@ -87,6 +87,13 @@ pub fn settle_battle_into_save(
                             }
                         }
                     }
+                    // The original's per-frame map script re-applies door/exit
+                    // blocks the moment the trainer flag flips (EndTrainerBattle
+                    // hands back to the map script — BrunosRoom.asm:11-26,
+                    // AgathasRoom.asm:11-26). Re-run the port's `@load` (idempotent
+                    // by design) so post-battle block writes land immediately
+                    // instead of on the next map re-entry.
+                    overworld.rerun_map_on_load_script();
                 }
             }
             BattleOutcome::Loss => {

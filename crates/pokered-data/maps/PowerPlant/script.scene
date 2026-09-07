@@ -24,6 +24,7 @@ game_scene PowerPlant {
       result = startWildBattle("VOLTORB", 40)
       @if (result == "win" || result == "caught") {
         setFlag("EVENT_BEAT_POWER_PLANT_VOLTORB_0")
+        hideObjectByName("POWER_PLANT_OBJ_1")
       }
     }
   }
@@ -36,6 +37,7 @@ game_scene PowerPlant {
       result = startWildBattle("VOLTORB", 40)
       @if (result == "win" || result == "caught") {
         setFlag("EVENT_BEAT_POWER_PLANT_VOLTORB_1")
+        hideObjectByName("POWER_PLANT_OBJ_2")
       }
     }
   }
@@ -48,6 +50,7 @@ game_scene PowerPlant {
       result = startWildBattle("VOLTORB", 40)
       @if (result == "win" || result == "caught") {
         setFlag("EVENT_BEAT_POWER_PLANT_VOLTORB_2")
+        hideObjectByName("POWER_PLANT_OBJ_3")
       }
     }
   }
@@ -60,6 +63,7 @@ game_scene PowerPlant {
       result = startWildBattle("ELECTRODE", 43)
       @if (result == "win" || result == "caught") {
         setFlag("EVENT_BEAT_POWER_PLANT_VOLTORB_3")
+        hideObjectByName("POWER_PLANT_OBJ_4")
       }
     }
   }
@@ -72,6 +76,7 @@ game_scene PowerPlant {
       result = startWildBattle("VOLTORB", 40)
       @if (result == "win" || result == "caught") {
         setFlag("EVENT_BEAT_POWER_PLANT_VOLTORB_4")
+        hideObjectByName("POWER_PLANT_OBJ_5")
       }
     }
   }
@@ -84,6 +89,7 @@ game_scene PowerPlant {
       result = startWildBattle("VOLTORB", 40)
       @if (result == "win" || result == "caught") {
         setFlag("EVENT_BEAT_POWER_PLANT_VOLTORB_5")
+        hideObjectByName("POWER_PLANT_OBJ_6")
       }
     }
   }
@@ -96,6 +102,7 @@ game_scene PowerPlant {
       result = startWildBattle("ELECTRODE", 43)
       @if (result == "win" || result == "caught") {
         setFlag("EVENT_BEAT_POWER_PLANT_VOLTORB_6")
+        hideObjectByName("POWER_PLANT_OBJ_7")
       }
     }
   }
@@ -108,6 +115,7 @@ game_scene PowerPlant {
       result = startWildBattle("VOLTORB", 40)
       @if (result == "win" || result == "caught") {
         setFlag("EVENT_BEAT_POWER_PLANT_VOLTORB_7")
+        hideObjectByName("POWER_PLANT_OBJ_8")
       }
     }
   }
@@ -126,10 +134,10 @@ game_scene PowerPlant {
       result = startWildBattle("ZAPDOS", 50)
       @if (result == "win" || result == "caught") {
         setFlag("EVENT_BEAT_ZAPDOS")
+        // EndTrainerBattle hides the defeated/captured static legendary
+        // (home/trainers.asm:185-212) — no post-capture cry remains.
+        hideObjectByName("POWER_PLANT_OBJ_9")
       }
-    } @else {
-      playCry("ZAPDOS")
-      @speaker("") { @t("Gyaoo!", "嘎嗷！") }
     }
   }
 

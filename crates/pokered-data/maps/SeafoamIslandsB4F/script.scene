@@ -96,11 +96,7 @@ game_scene SeafoamIslandsB4F {
       result = startWildBattle("ARTICUNO", 50)
       @if (result == "win" || result == "caught") {
         setFlag("EVENT_BEAT_ARTICUNO")
-      }
-    } @else {
-      playCry("ARTICUNO")
-      @speaker("") {
-        @t("Gyaoo!", "嘎呜！")
+        hideObjectByName("SEAFOAM_ISLANDS_B4F_OBJ_3")
       }
     }
   }

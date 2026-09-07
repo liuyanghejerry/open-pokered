@@ -21,6 +21,45 @@ pub fn apply_lang(game: &mut PokemonGame, lang: Lang) {
     });
 }
 
+/// Seed the movie takeovers (Hall of Fame roll call / credits roll) — neither
+/// is reachable from a boot screen, both render from their takeover fields.
+fn seed_movie_takeover(game: &mut PokemonGame, target: &ScreenTarget) {
+    match target {
+        ScreenTarget::Hof => {
+            use pokered_core::hof_ceremony::{HofCeremonyState, HofEntry, HofPlayerStats};
+            use pokered_data::species::Species;
+            // Doduo/Lapras: the two dual-type captures from the audit
+            // (FLYING/ICE overflow evidence, report §名人堂).
+            let entries = vec![
+                HofEntry {
+                    species: Species::Doduo,
+                    level: 24,
+                    nickname: "DODUO".to_string(),
+                },
+                HofEntry {
+                    species: Species::Lapras,
+                    level: 15,
+                    nickname: "LAPRAS".to_string(),
+                },
+            ];
+            let stats = HofPlayerStats {
+                name: "RED".to_string(),
+                play_time_hours: 3,
+                play_time_minutes: 7,
+                money: 31210,
+                dex_seen: 100,
+                dex_owned: 80,
+                rating: "80",
+            };
+            game.hof_ceremony = Some(HofCeremonyState::new(entries, stats));
+        }
+        ScreenTarget::Credits => {
+            game.credits = Some(pokered_core::credits::CreditsState::new(GameVersion::Red));
+        }
+        _ => unreachable!("seed_movie_takeover only handles Hof/Credits"),
+    }
+}
+
 /// Overworld captures run on a fresh game whose player position was never
 /// set (engine default (0,0), the map's top-left corner). Put the player on
 /// the doorstep of their Pallet Town house — the walk-out tile just below
@@ -50,6 +89,47 @@ pub fn cmd_screenshot(target: &ScreenTarget, output: &PathBuf, frames: u32, lang
     apply_lang(&mut game, lang);
     if matches!(target, ScreenTarget::Overworld) {
         seed_overworld_spawn(&mut game);
+    }
+    if matches!(target, ScreenTarget::Hof | ScreenTarget::Credits) {
+        // Movie takeovers: seed the core state directly, roll frames with
+        // neutral input, and draw — same shape as the Pc/Naming branches.
+        println!(
+            "Capturing screen: {} ({} frames, lang={:?})...",
+            if matches!(target, ScreenTarget::Hof) { "hof" } else { "credits" },
+            frames,
+            lang
+        );
+        seed_movie_takeover(&mut game, target);
+        let input = InputState::new();
+        for _ in 0..frames {
+            game.update(&input);
+        }
+        let mut fb = FrameBuffer::new(RenderConfig::new(160, 144), Rgba::WHITE);
+        game.draw(&mut fb);
+        fb.save_png(output).expect("Failed to save PNG");
+        println!("Saved: {}", output.display());
+        return;
+    }
+    if matches!(target, ScreenTarget::SafariStart) {
+        // Safari Zone START info box: seed the live menu state the way
+        // `is_safari_game_active()` would fill it inside the zone, then draw
+        // the real START-menu screen. (Reaching a live Safari run headless
+        // requires the gate flow, which the debug warp skips.)
+        println!("Capturing screen: safari-start ({} frames, lang={:?})...", frames, lang);
+        game.handle_transition(GameScreen::StartMenu);
+        game.start_menu.safari_info = Some(pokered_core::start_menu::SafariZoneInfo {
+            steps: 181,
+            balls: 30,
+        });
+        let input = InputState::new();
+        for _ in 0..frames {
+            game.update(&input);
+        }
+        let mut fb = FrameBuffer::new(RenderConfig::new(160, 144), Rgba::WHITE);
+        game.draw(&mut fb);
+        fb.save_png(output).expect("Failed to save PNG");
+        println!("Saved: {}", output.display());
+        return;
     }
     let screen = screen_target_to_game_screen(target);
     let label = if matches!(target, ScreenTarget::Naming) { "naming" } else { screen_name(&screen) };

@@ -22,12 +22,8 @@
   ],
   "signs": [
     {
-      "id": 1,
-      "talk": "pcMachine"
-    },
-    {
       "id": 2,
-      "talk": "billsPc"
+      "talk": "pcMachine"
     }
   ]
 }

@@ -109,3 +109,39 @@ fn pixel_rect_offsets_from_frame_origin_in_pixels() {
     }).collect();
     assert_eq!(rects, vec![(29, 19, 40, 8, Rgba::INK_DARK_GRAY)]);
 }
+
+/// Safari Zone START info box (PrintSafariZoneSteps, player_state.asm:225):
+/// interior 7×3 at (0,0) — labels at screen (1,1) and (1,3). The earlier
+/// 7×4 TOTAL box had only 2 interior rows, pushing the BALL×NN row onto the
+/// bottom border (audit: safari-remaining-*.png).
+#[test]
+fn safari_zone_start_info_box_matches_original_layout() {
+    use pokered_core::game_state::Lang;
+    use pokered_core::start_menu::StartMenuState;
+    use pokered_data::ui_layout::schema::START_DEFAULT_LAYOUT;
+
+    let mut state = StartMenuState::new(true, true, false);
+    state.safari_info = Some(pokered_core::start_menu::SafariZoneInfo { steps: 10, balls: 7 });
+    let mut rec = Recorder::default();
+    let mut ui = Ui::new(&mut rec);
+    pokered_ui::menus::start::draw(&state, "RED", &START_DEFAULT_LAYOUT, &mut ui, Lang::En);
+
+    assert!(
+        rec.ops.iter().any(|op| matches!(op, Op::Box(r, _) if *r == TileRect::new(0, 0, 9, 5))),
+        "info box = interior 7×3 plus its borders"
+    );
+    assert!(
+        rec.ops.iter().any(|op| matches!(
+            op,
+            Op::Text(p, t, _) if *p == TilePos::new(1, 1) && t == "010/500"
+        )),
+        "steps label at screen (1,1)"
+    );
+    assert!(
+        rec.ops.iter().any(|op| matches!(
+            op,
+            Op::Text(p, t, _) if *p == TilePos::new(1, 3) && t == "BALL×07"
+        )),
+        "ball label at screen (1,3)"
+    );
+}

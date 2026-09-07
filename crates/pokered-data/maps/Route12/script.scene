@@ -33,7 +33,13 @@ game_scene Route12 {
       // Static wild Lv30 SNORLAX battle (catchable). On win/catch it is cleared;
       // on flee/lose it stays woken (EVENT_FIGHT set) and re-fights on next talk.
       result = startWildBattle("SNORLAX", 30)
-      @if (result == "win" || result == "caught") {
+      // Caught (wBattleResult == 2, scripts/Route12.asm:50): the original
+      // SKIPS the "returned to the mountains" line — the Snorlax joined the
+      // party. Only a defeated Snorlax returns to the mountains.
+      @if (result == "caught") {
+        setFlag("EVENT_BEAT_ROUTE12_SNORLAX")
+        hideObjectByName("ROUTE_12_OBJ_1")
+      } @else @if (result == "win") {
         @speaker("") { @t("SNORLAX calmed down! With a\nbig yawn, it returned to the\nmountains!", "卡比兽安静下来了！它打了个大\n哈欠，然后回到了山里！") }
         setFlag("EVENT_BEAT_ROUTE12_SNORLAX")
         hideObjectByName("ROUTE_12_OBJ_1")

@@ -1989,12 +1989,19 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
             }
         }
 
-        // Third: handle default_hidden NPCs that may have been shown by script
+        // Third: handle default_hidden NPCs that may have been shown by script.
+        // A stale `__OBJ_SHOWN_*` (merged back from the runner's pre-battle
+        // state) must never resurrect an object whose `__OBJ_HIDDEN_*` is set
+        // — that re-show was the audit's reappearing-rival bug: HIDDEN wins.
         for npc_cfg in &self.map_script_config.npcs {
             if !npc_cfg.default_hidden {
                 continue;
             }
             if let Some(ref toggle_id) = npc_cfg.toggle_id {
+                let hidden_key = format!("__OBJ_HIDDEN_{}", toggle_id);
+                if self.unified_flags.get_flag(&hidden_key) {
+                    continue;
+                }
                 let shown_key = format!("__OBJ_SHOWN_{}", toggle_id);
                 if self.unified_flags.get_flag(&shown_key) {
                     if let Some(npc) = self.npc_states.iter_mut().find(|n| n.text_id == npc_cfg.id)
@@ -2028,6 +2035,41 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
         // CONTINUE and skip-intro construct the screen directly, without a
         // warp's load_map_script call. Install the same interaction bindings.
         self.setup_triggers_for_map(self.state.current_map);
+    }
+
+    /// Re-run the map's `@load` function WITHOUT reinstalling triggers.
+    /// Post-battle stand-in for the original's per-frame map script
+    /// (`EndTrainerBattle` hands control back to the map script, which
+    /// re-applies door/exit blocks from the fresh flag — BrunosRoom.asm:11-26,
+    /// AgathasRoom.asm:11-26). `@load` bodies are idempotent by construction —
+    /// they re-run on every map entry — so re-running them here lands
+    /// flag-gated block writes without a map re-entry.
+    ///
+    /// Skipped while a script is suspended awaiting a battle result
+    /// (`await game.startBattle`): restarting the OnLoad function mid-suspension
+    /// would clobber the pending storyline; script-owned battles re-apply their
+    /// blocks in the victory branch themselves.
+    pub fn rerun_map_on_load_script(&mut self) {
+        if self.script_awaiting_battle {
+            return;
+        }
+        self.script_engine
+            .seed_flags(&self.unified_flags.to_hashmap());
+        if let Some(fn_name) = self.map_script_config.on_load() {
+            if self.script_engine.has_function(fn_name) {
+                self.script_engine
+                    .set_player_position(self.state.player.x as u8, self.state.player.y as u8);
+                if let Ok(Some(cmd)) = self.script_engine.call_function_no_args(fn_name) {
+                    self.active_script_effect = Some(crate::overworld::script_bridge::dispatch_command_with_names(
+                        &cmd,
+                        &self.player_name,
+                        &self.rival_name,
+                        &self.starter_display_name(),
+                    ));
+                }
+                self.sync_flags_from_engine();
+            }
+        }
     }
 
     /// Queue the new-game bedroom SNES dialogue.
@@ -2083,6 +2125,10 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
         self.safari_game_active = false;
         self.safari_steps = 0;
         self.safari_balls = 0;
+        // The gate scene's "Leaving early?" branch keys off EVENT_IN_SAFARI_ZONE
+        // — a timeout eject must clear it too, or re-entry wrongly asks the
+        // player whether they are leaving early (audit: §狩猎地带 START).
+        self.unified_flags.remove_flag("EVENT_IN_SAFARI_ZONE");
     }
 
     /// Consume one Safari Ball (called by the battle layer on a ball throw).

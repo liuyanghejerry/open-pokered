@@ -36,6 +36,17 @@ fn silhouette_palette() -> Palette {
     p
 }
 
+/// Expand the original `$54` "POKé insertion" control char (`#`,
+/// constants/charmap.asm:16, pokered-data charmap CHAR_POKE) into its display
+/// form before drawing.
+fn expand_poke(text: &str) -> String {
+    if text.contains('#') {
+        text.replace('#', "POKé")
+    } else {
+        text.to_string()
+    }
+}
+
 /// Draw the credits roll to the 160x144 framebuffer.
 pub fn draw_credits(
     roll: &CreditsState,
@@ -107,7 +118,12 @@ fn draw_scrolling_band(
     for (i, line) in screen.lines.iter().enumerate() {
         let tx = (9i32 + line.x_off as i32).max(0) as i32;
         let y = (6 + 2 * i as u32) * T;
-        let text_w = line.text.len() as i32 * 8;
+        // Original charmap: '#' is the $54 POKé insertion control
+        // (constants/charmap.asm:16, charmap.rs CHAR_POKE) — expand to its
+        // display form before measuring/clipping; clip math is char-based
+        // because 'é' is multi-byte in UTF-8.
+        let glyphs: Vec<char> = expand_poke(line.text).chars().collect();
+        let text_w = glyphs.len() as i32 * 8;
         for k in 0..=2 {
             let x = tx * 8 - b + 160 * k;
             if x >= erase_edge || x >= fb.width() as i32 || x + text_w <= 0 {
@@ -115,11 +131,11 @@ fn draw_scrolling_band(
             }
             // Left-edge clip: drop whole glyphs that start off-screen.
             let skip = if x < 0 { ((-x) as usize).div_ceil(8) } else { 0 };
-            let visible = &line.text[skip.min(line.text.len())..];
+            let visible: String = glyphs[skip.min(glyphs.len())..].iter().collect();
             if visible.is_empty() {
                 continue;
             }
-            draw_text(visible, x.max(0) as u32, y, ink, fb);
+            draw_text(&visible, x.max(0) as u32, y, ink, fb);
         }
     }
 

@@ -9,9 +9,12 @@ pub fn draw<P: Painter>(state: &StartMenuState, player_name: &str, layout: &Star
     // PrintSafariZoneSteps (player_state.asm:219-255): inside the Safari Zone
     // a small box at (0,0) shows "NNN/500" and "BALL×× NN" before the menu.
     if let Some(info) = state.safari_info {
-        ui.text_box(TileRect::new(0, 0, 7, 4), InkColor::Black, true, |frame| {
-            frame.label(1, 1, &format!("{:03}/500", info.steps), InkColor::Black);
-            frame.label(1, 3, &format!("BALL×{:02}", info.balls), InkColor::Black);
+        // Interior 7×3 plus its borders (player_state.asm:225): the labels
+        // land at screen (1,1) and (1,3). The earlier 7×4 TOTAL box had only
+        // two interior rows, pushing the ball row onto the bottom border.
+        ui.text_box(TileRect::new(0, 0, 9, 5), InkColor::Black, true, |frame| {
+            frame.label(0, 0, &format!("{:03}/500", info.steps), InkColor::Black);
+            frame.label(0, 2, &format!("BALL×{:02}", info.balls), InkColor::Black);
         });
     }
 

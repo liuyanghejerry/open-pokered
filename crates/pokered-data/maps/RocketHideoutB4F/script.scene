@@ -148,11 +148,13 @@ game_scene RocketHideoutB4F {
   // ── Door callback (RocketHideoutB4FDoorCallbackScript) ───────────────────
   // The original re-runs this on every map load. It opens the locked door once
   // Rocket grunts 0 & 1 are beaten: ReplaceTileBlock at asm `lb bc, 5, 12`
-  // (Y=5, X=12 -> replaceTileBlock(12, 5, ...)) swapping the door block ($2d=45,
-  // already in map.blk) for the floor block ($e=14). On the load that first sees
-  // both trainers beaten it plays SFX_GO_INSIDE and latches
-  // EVENT_ROCKET_HIDEOUT_4_DOOR_UNLOCKED. The door never re-closes, so we only
-  // ever draw the open (floor) block.
+  // (Y=5, X=12 -> replaceTileBlock(12, 5, ...)) swapping the door block ($2d=45)
+  // for the floor block ($e=14). On the load that first sees both trainers
+  // beaten it plays SFX_GO_INSIDE and latches EVENT_ROCKET_HIDEOUT_4_DOOR_UNLOCKED.
+  // The map.blk ships this tile as OPEN floor ($0e) — the original writes the
+  // closed door block ($2d=45) whenever the unlock condition is unmet
+  // (RocketHideoutB4F.asm:11-35), so the @else must too, or an unbeaten player
+  // walks straight through (audit: door-passed-0/1).
   @load {
     @if (getFlag("EVENT_ROCKET_HIDEOUT_4_DOOR_UNLOCKED")) {
       // Already solved on a prior visit -> keep the door open.
@@ -163,6 +165,8 @@ game_scene RocketHideoutB4F {
         playSound("SFX_GO_INSIDE")
         setFlag("EVENT_ROCKET_HIDEOUT_4_DOOR_UNLOCKED")
         replaceTileBlock(12, 5, 14)
+      } @else {
+        replaceTileBlock(12, 5, 45)
       }
     }
   }

@@ -28,30 +28,6 @@ game_scene VictoryRoad2F {
     }
   }
 
-  // ── Floor switch 1 (boulder-on-switch coord 1,16) ─────────────────────────
-  // VictoryRoad2FDefaultScript checks .SwitchCoords (dbmapcoord 1,16 / 9,16)
-  // and SetEvent the matching BOULDER_ON_SWITCH flag, which then opens the
-  // floor via the @load ReplaceTileBlock above. The original requires a
-  // STRENGTH boulder pushed onto the tile; there is no boulder-push API, so we
-  // approximate faithfully: reaching the switch coord solves it and opens the
-  // door immediately (same flag + same tile swap as the asm).
-  @storyline("switch1") {
-    @trigger(map = "VictoryRoad2F", name = "switch1")
-    @if (!getFlag("EVENT_VICTORY_ROAD_2_BOULDER_ON_SWITCH1")) {
-      setFlag("EVENT_VICTORY_ROAD_2_BOULDER_ON_SWITCH1")
-      replaceTileBlock(3, 4, 21)
-    }
-  }
-
-  // ── Floor switch 2 (boulder-on-switch coord 9,16) ─────────────────────────
-  @storyline("switch2") {
-    @trigger(map = "VictoryRoad2F", name = "switch2")
-    @if (!getFlag("EVENT_VICTORY_ROAD_2_BOULDER_ON_SWITCH2")) {
-      setFlag("EVENT_VICTORY_ROAD_2_BOULDER_ON_SWITCH2")
-      replaceTileBlock(11, 7, 29)
-    }
-  }
-
   // ── Hiker / Blackbelt (npc 1) — sight-engaged trainer; dialogue only ──────
   @storyline("talkHiker") {
     @trigger(map = "VictoryRoad2F", npc = 1)
@@ -138,11 +114,7 @@ game_scene VictoryRoad2F {
       result = startWildBattle("MOLTRES", 50)
       @if (result == "win" || result == "caught") {
         setFlag("EVENT_BEAT_MOLTRES")
-      }
-    } @else {
-      playCry("MOLTRES")
-      @speaker("") {
-        @t("Gyaoo!", "嘎嗷！")
+        hideObjectByName("VICTORY_ROAD_2F_OBJ_6")
       }
     }
   }

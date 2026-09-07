@@ -2,14 +2,6 @@
   "$schema": "../../schemas/script_config.schema.json",
   "coordEvents": [
     {
-      "name": "switch1",
-      "position": [
-        3,
-        5
-      ],
-      "trigger": "switch1"
-    },
-    {
       "name": "hole",
       "position": [
         23,

@@ -509,6 +509,23 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                         self.unified_flags.set(flag);
                     }
                 }
+                // VictoryRoad boulder-on-switch detection (CheckBoulderCoords +
+                // SetEvent in VictoryRoad1F/2F/3F DefaultScript): a boulder
+                // pushed onto the floor switch sets the floor's ON_SWITCH event
+                // and opens the path block (ReplaceTileBlock) — the audit's
+                // talk/step approximations bypassed this check.
+                if let Some((flag_name, block_x, block_y, open_block)) =
+                    victory_road_switch_for(self.state.current_map, npc.x, npc.y)
+                {
+                    if let Some(flag) =
+                        pokered_data::event_flags::EventFlag::from_name(flag_name)
+                    {
+                        self.unified_flags.set(flag);
+                    }
+                    if let Some(map) = self.map_data.as_mut() {
+                        map.set_block(block_x, block_y, open_block);
+                    }
+                }
             }
             BoulderPushResult::NeedPushAgain => {
                 // First contact — set BIT_TRIED_PUSH_BOULDER; the next frame
@@ -578,6 +595,36 @@ pub(crate) const BOULDER_DUST_FRAMES: u8 = 16;
 /// EVENT_SEAFOAM{n}_BOULDER{m}_DOWN_HOLE flag, if that tile is one of the
 /// floor's holes (Seafoam{n}HolesCoords). When a Strength boulder is pushed
 /// onto a hole it falls through to the floor below.
+/// VictoryRoad floor-switch coordinates and the block swap each one performs
+/// when a Strength boulder rests on it (VictoryRoad1F/2F/3F DefaultScript
+/// .SwitchCoords + the matching ReplaceTileBlock in the load scripts).
+pub(crate) fn victory_road_switch_for(
+    map_id: MapId,
+    x: u16,
+    y: u16,
+) -> Option<(&'static str, u8, u8, u8)> {
+    let switches: &[(u16, u16, &'static str, u8, u8, u8)] = match map_id {
+        // dbmapcoord 17,13 -> block X=4, Y=6, open id $1d
+        MapId::VictoryRoad1F => {
+            &[(17, 13, "EVENT_VICTORY_ROAD_1_BOULDER_ON_SWITCH", 4, 6, 29)]
+        }
+        // dbmapcoord 1,16 -> block X=3, Y=4, open id $15; 9,16 -> X=11, Y=7, $1d
+        MapId::VictoryRoad2F => &[
+            (1, 16, "EVENT_VICTORY_ROAD_2_BOULDER_ON_SWITCH1", 3, 4, 21),
+            (9, 16, "EVENT_VICTORY_ROAD_2_BOULDER_ON_SWITCH2", 11, 7, 29),
+        ],
+        // dbmapcoord 3,5 -> block X=3, Y=5, open id $1d
+        MapId::VictoryRoad3F => {
+            &[(3, 5, "EVENT_VICTORY_ROAD_3_BOULDER_ON_SWITCH1", 3, 5, 29)]
+        }
+        _ => &[],
+    };
+    switches
+        .iter()
+        .find(|(sx, sy, _, _, _, _)| *sx == x && *sy == y)
+        .map(|(_, _, flag, bx, by, id)| (*flag, *bx, *by, *id))
+}
+
 pub(crate) fn seafoam_hole_flag_for(map_id: MapId, x: u16, y: u16) -> Option<&'static str> {
     let holes: &[(u16, u16, &'static str)] = match map_id {
         // SeafoamIslands1F (Seafoam1HolesCoords 17,6 / 24,6)

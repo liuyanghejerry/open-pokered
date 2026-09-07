@@ -19,10 +19,12 @@ game_scene BrunosRoom {
     // Exit door tile-swap (BrunoShowOrHideExitBlock / ReplaceTileBlock).
     // Original: CheckEvent EVENT_BEAT_BRUNOS_ROOM_TRAINER_0 → beaten = open
     // block $5 (=5), not-beaten = closed block $24 (=36); lb bc, 0, 2 → Y=0, X=2.
-    // The map.blk already has the door closed, so on re-entry we only need to
-    // re-apply the OPEN block once Bruno has been beaten.
+    // The map.blk ships the door OPEN, so both branches must be applied here:
+    // without the @else write an unbeaten player can walk straight out.
     @if (getFlag("EVENT_BEAT_BRUNOS_ROOM_TRAINER_0")) {
       replaceTileBlock(2, 0, 5)
+    } @else {
+      replaceTileBlock(2, 0, 36)
     }
   }
 

@@ -343,7 +343,14 @@ pub fn draw_overworld(
         let departure_active = screen.ship_departure.is_some();
 
         let (map_w, map_h) = current_map.dimensions();
-        let blk = get_block_data(current_map);
+        // Read the LIVE block grid: scripted tile swaps (CUT trees, gym gates,
+        // hideout doors) mutate screen.map_data — the static .blk never
+        // changes, so reading it kept rendering pre-swap trees (audit:
+        // gym-tree-after identical SHA1 to gym-tree-before).
+        let blk: &[u8] = match screen.map_data.as_ref() {
+            Some(live) if live.width == current_map.dimensions().0 => &live.blocks,
+            _ => get_block_data(current_map),
+        };
 
         if let Ok(cached) = rm.load_tileset(tileset_name) {
             let ts = cached.tileset.clone();

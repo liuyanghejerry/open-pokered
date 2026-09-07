@@ -269,3 +269,77 @@ fn win_queues_pending_evolutions() {
     assert_eq!(save.party.get(0).unwrap().species, Species::Bulbasaur);
     assert!(!save.game_data.pokedex.is_owned(Species::Ivysaur));
 }
+
+/// Beating a trainer re-runs the map `@load`, which re-applies flag-gated
+/// door/exit blocks immediately — the port's stand-in for the original's
+/// per-frame map script after EndTrainerBattle. Regression for the audit's
+/// Agatha door (blocked until an extra re-talk).
+#[test]
+fn trainer_win_reruns_map_on_load_door_blocks() {
+    let player = vec![mon(Species::Mewtwo, 60)];
+    let enemy = vec![mon(Species::Rattata, 5)];
+    let mut battle = BattleScreen::from_parties(false, &player, &enemy, Some(TrainerClass::Agatha));
+    battle.map_id = MapId::AgathasRoom as u8;
+    battle.settlement = Some(settlement(BattleOutcome::Win, 0, 0));
+    battle.trainer_npc_index = Some(0); // Agatha is the map's only NPC
+    let mut save = SaveData::new();
+    let mut ow = OverworldScreen::new(MapId::AgathasRoom, None, PokemonRedData);
+    ow.run_on_load();
+    let door = 2; // replaceTileBlock(2, 0, …) → block (x=2, y=0)
+    // Drain the @load autowalk first (the door write lands after it).
+    let input = crate::overworld::OverworldInput::new(
+        false, false, false, false, false, false, false, false,
+    );
+    for _ in 0..200 {
+        ow.update_frame(input);
+    }
+    assert_eq!(ow.map_data.as_ref().unwrap().blocks[door], 59, "unbeaten exit starts closed");
+
+    settle_battle_into_save(&mut battle, &mut save, &mut ow);
+    for _ in 0..30 {
+        ow.update_frame(input);
+    }
+    assert_eq!(
+        ow.map_data.as_ref().unwrap().blocks[door],
+        14,
+        "exit re-applied open immediately after the victory"
+    );
+}
+
+/// Beating the SECOND Rocket guard on B4F unlocks the boss door in the same
+/// settle — the writeback re-runs the map `@load`, covering the original's
+/// post-EndTrainerBattle door recheck (home/trainers.asm:187) that the audit
+/// flagged as a static risk (report §坂木门锁).
+#[test]
+fn rocket_hideout_door_unlocks_on_second_guard_win_without_reentry() {
+    let player = vec![mon(Species::Mewtwo, 60)];
+    let enemy = vec![mon(Species::Rattata, 5)];
+    let mut battle = BattleScreen::from_parties(false, &player, &enemy, Some(TrainerClass::Rocket));
+    battle.map_id = MapId::RocketHideoutB4F as u8;
+    battle.settlement = Some(settlement(BattleOutcome::Win, 0, 0));
+    battle.trainer_npc_index = Some(2); // array index 2 = guard trainer_1
+    let mut save = SaveData::new();
+    let mut ow = OverworldScreen::new(MapId::RocketHideoutB4F, None, PokemonRedData);
+    ow.run_on_load();
+    ow.set_event_flag_live(pokered_data::event_flags::EventFlag::EVENT_BEAT_ROCKET_HIDEOUT_4_TRAINER_0);
+    let width = ow.map_data.as_ref().unwrap().width as usize;
+    let door = 5 * width + 12;
+    for _ in 0..30 {
+        ow.update_frame(crate::overworld::OverworldInput::new(
+            false, false, false, false, false, false, false, false,
+        ));
+    }
+    assert_eq!(ow.map_data.as_ref().unwrap().blocks[door], 45, "door closed with one guard down");
+
+    settle_battle_into_save(&mut battle, &mut save, &mut ow);
+    for _ in 0..30 {
+        ow.update_frame(crate::overworld::OverworldInput::new(
+            false, false, false, false, false, false, false, false,
+        ));
+    }
+    assert_eq!(
+        ow.map_data.as_ref().unwrap().blocks[door],
+        14,
+        "second guard win unlocks the door without a map re-entry"
+    );
+}

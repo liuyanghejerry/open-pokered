@@ -68,21 +68,18 @@ game_scene VictoryRoad1F {
   }
 
   // ── STRENGTH boulder (npc 5) — the switch-puzzle boulder ─────────────────
-  // In the original, EVENT_VICTORY_ROAD_1_BOULDER_ON_SWITCH is set when a STRENGTH
-  // boulder is detected resting on the pressure switch at block (17,13); the map
-  // script then swaps the tile block to open the path (replaceTileBlock(4, 6, 29)).
-  // note: boulder-push + on-switch detection has no DSL primitive, so we approximate
-  // faithfully — inspecting this puzzle boulder solves the switch: set the flag and
-  // open the door immediately via the same block swap the asm uses. The @load block
-  // re-applies it on re-entry. (The original plays no SFX for this swap.)
+  // EVENT_VICTORY_ROAD_1_BOULDER_ON_SWITCH is set ONLY when a STRENGTH boulder
+  // actually rests on the switch at tile (17,13) — the detection lives in the
+  // boulder-push handler (field_moves::victory_road_switch_for), mirroring the
+  // original CheckBoulderCoords + SetEvent (VictoryRoad1F.asm:28-41). The
+  // earlier approximation (talking to the boulder solved the puzzle) was the
+  // audit's "对话直接解开机关" bug.
   @storyline("talkBoulder1") {
     @trigger(map = "VictoryRoad1F", npc = 5)
     @if (getFlag("EVENT_VICTORY_ROAD_1_BOULDER_ON_SWITCH")) {
       @speaker("") { @t("It looks like the boulder is\nsettled on the switch.", "看起来这块巨石已经压住了开\n关。") }
     } @else {
       @speaker("") { @t("This requires STRENGTH to\nmove!", "这块巨石需要用怪力才能推动！") }
-      setFlag("EVENT_VICTORY_ROAD_1_BOULDER_ON_SWITCH")
-      replaceTileBlock(4, 6, 29)
     }
   }
 

@@ -1239,11 +1239,17 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
             return ScreenAction::Transition(GameScreen::StartMenu);
         }
 
+        // While a sighted trainer is approaching (engage walk to the player),
+        // the d-pad is ignored: the original runs the approach as a forced
+        // walk (TrainerEngage → MoveSprite, player control suspended). Letting
+        // the player walk into the approaching trainer's stop tile overlapped
+        // the two sprites (audit: tower-trainer-player-overlap).
+        let player_frozen = self.trainer_encounter_intro.is_some();
         let movement_input = MovementInput {
-            up: input.up,
-            down: input.down,
-            left: input.left,
-            right: input.right,
+            up: input.up && !player_frozen,
+            down: input.down && !player_frozen,
+            left: input.left && !player_frozen,
+            right: input.right && !player_frozen,
             a_button: input.a,
             b_button: input.b,
             start: input.start,
@@ -3116,6 +3122,29 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
             if self.script_engine.has_function(handler) {
                 self.trigger_manager.add_trigger(Trigger::single_tile(
                     format!("mansion_statue_{x}_{y}"), map_key.clone(),
+                    TriggerType::OnInteract, x, y, handler.to_string(), false,
+                ));
+            }
+        }
+
+        // Cinnabar Gym quiz machines are facing-up hidden interactions
+        // (hidden_events.asm CINNABAR_GYM: PrintCinnabarQuiz), not walkable
+        // floor and not NPCs — bind OnInteract at the machine tiles.
+        let cinnabar_quiz_machines: &[(u32, u32, &str)] = match self.state.current_map {
+            MapId::CinnabarGym => &[
+                (15, 7, "quizMachine1"),
+                (10, 1, "quizMachine2"),
+                (9, 7, "quizMachine3"),
+                (9, 13, "quizMachine4"),
+                (1, 13, "quizMachine5"),
+                (1, 7, "quizMachine6"),
+            ],
+            _ => &[],
+        };
+        for &(x, y, handler) in cinnabar_quiz_machines {
+            if self.script_engine.has_function(handler) {
+                self.trigger_manager.add_trigger(Trigger::single_tile(
+                    format!("cinnabar_quiz_{x}_{y}"), map_key.clone(),
                     TriggerType::OnInteract, x, y, handler.to_string(), false,
                 ));
             }
