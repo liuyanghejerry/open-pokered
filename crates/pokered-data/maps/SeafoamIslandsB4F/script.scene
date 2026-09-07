@@ -89,7 +89,7 @@ game_scene SeafoamIslandsB4F {
 
   // ── Articuno (npc 3) — unreachable across the current until boulders down ──
   @storyline("talkArticuno") {
-    @trigger(map = "SeafoamIslandsB4F", npc = 3)
+    @trigger(map = "SeafoamIslandsB4F", npc = 3, toggle = "SEAFOAM_ISLANDS_B4F_OBJ_3")
     @if (!getFlag("EVENT_BEAT_ARTICUNO")) {
       playCry("ARTICUNO")
       @speaker("") {

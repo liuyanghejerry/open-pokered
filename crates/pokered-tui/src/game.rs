@@ -3504,6 +3504,18 @@ mod tests {
     }
 
     #[test]
+    fn rival_team_uses_saved_starter_after_lead_changes() {
+        use pokered_data::species::Species;
+        let mut game = game_at_overworld();
+        game.save_data.game_data.player_starter = Species::Bulbasaur as u8;
+        game.save_data.party.add(pokered_core::pokemon::stats::create_pokemon(Species::Pikachu,30,[255,255]).unwrap()).unwrap();
+        game.start_trainer_battle("OPP_RIVAL2", Some(3));
+        let battle = game.battle.battle_state.as_ref().unwrap();
+        assert_eq!(battle.enemy.party.last().unwrap().species, Species::Charmeleon);
+        assert_eq!(battle.enemy.party.len(), 5);
+    }
+
+    #[test]
     fn pp_items_apply_selected_slot_through_game_flow() {
         use pokered_data::{items::ItemId, species::Species};
         for item in [ItemId::Ether, ItemId::MaxEther, ItemId::PpUp] {

@@ -1586,6 +1586,31 @@ mod tests {
     }
 
     #[test]
+    fn cinnabar_trainer_victories_unlock_only_the_matching_gate() {
+        let scene = pokered_data::embedded_scenes::get_scene_ast("CinnabarGym").unwrap();
+        for n in 0..7 {
+            for won in [false, true] {
+                let mut engine = NativeScriptEngine::new();
+                engine.load_map("CinnabarGym", &scene);
+                let mut next = engine.call_function_no_args(&format!("talkSuperNerd{}", n+1)).unwrap();
+                let mut battles = 0;
+                for _ in 0..100 {
+                    let Some(cmd) = next else { break };
+                    let result = if matches!(cmd, ScriptCommand::StartBattle { .. }) {
+                        battles += 1;
+                        CommandResult::Text(if won { "win" } else { "loss" }.into())
+                    } else { CommandResult::Void };
+                    next = engine.signal_done(result).unwrap();
+                }
+                assert_eq!(battles, 1);
+                for gate in 0..7 {
+                    assert_eq!(engine.get_flag(&format!("EVENT_CINNABAR_GYM_GATE{gate}_UNLOCKED")), won && gate == n);
+                }
+            }
+        }
+    }
+
+    #[test]
     fn brock_victory_expires_the_optional_route22_battle() {
         let scene = pokered_data::embedded_scenes::get_scene_ast("PewterGym").unwrap();
         for outcome in ["win", "lose"] {

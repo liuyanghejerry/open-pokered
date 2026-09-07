@@ -2870,8 +2870,10 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                     // Clear the hidden flag in unified_flags
                     let flag_key = format!("__OBJ_HIDDEN_{}", toggle_id);
                     self.unified_flags.remove_flag(&flag_key);
+                    self.script_engine.set_flag(&flag_key, false);
                     let shown_key = format!("__OBJ_SHOWN_{}", toggle_id);
                     self.unified_flags.set_flag(&shown_key, true);
+                    self.script_engine.set_flag(&shown_key, true);
                     // Also update toggleable_object_flags for SRAM persistence
                     if let Some(bit_index) = toggle_id_to_bit_index(&toggle_id) {
                         set_object_shown(&mut self.toggleable_object_flags, bit_index);
@@ -2890,8 +2892,10 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                     // Set the hidden flag in unified_flags
                     let flag_key = format!("__OBJ_HIDDEN_{}", toggle_id);
                     self.unified_flags.set_flag(&flag_key, true);
+                    self.script_engine.set_flag(&flag_key, true);
                     let shown_key = format!("__OBJ_SHOWN_{}", toggle_id);
                     self.unified_flags.remove_flag(&shown_key);
+                    self.script_engine.set_flag(&shown_key, false);
                     // Also update toggleable_object_flags for SRAM persistence
                     if let Some(bit_index) = toggle_id_to_bit_index(&toggle_id) {
                         set_object_hidden(&mut self.toggleable_object_flags, bit_index);
@@ -3692,5 +3696,29 @@ mod safari_timer_tests {
         let before = ow.safari_steps_remaining();
         ow.tick_safari_steps();
         assert_eq!(ow.safari_steps_remaining(), before);
+    }
+}
+
+#[cfg(test)]
+mod object_visibility_tests {
+    use super::*;
+    #[test]
+    fn latest_object_visibility_survives_engine_merge_and_reentry() {
+        let mut screen = OverworldScreen::new(MapId::CeruleanCity, None, pokered_data::impl_traits::PokemonRedData);
+        let toggle = "CERULEAN_RIVAL";
+        for visible in [true, false, true, false] {
+            let effect = if visible {
+                script_bridge::ScriptEffect::ShowObjectByName { toggle_id: toggle.into() }
+            } else {
+                script_bridge::ScriptEffect::HideObjectByName { toggle_id: toggle.into() }
+            };
+            screen.apply_finished_effect(Some(effect));
+            screen.sync_flags_from_engine();
+            screen.apply_hidden_object_flags();
+            assert_eq!(screen.unified_flags.get_flag(&format!("__OBJ_SHOWN_{toggle}")), visible);
+            assert_eq!(screen.unified_flags.get_flag(&format!("__OBJ_HIDDEN_{toggle}")), !visible);
+            let id = screen.map_script_config.npc_id_by_toggle(toggle).unwrap();
+            assert_eq!(screen.npc_states.iter().find(|n| n.text_id == id).unwrap().visible, visible);
+        }
     }
 }

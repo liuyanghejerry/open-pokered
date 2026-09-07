@@ -47,7 +47,7 @@ game_scene PowerPlant {
   }
   // ── VOLTORB #1 (npc 1, EVENT_BEAT_POWER_PLANT_VOLTORB_0) ────────────────
   @storyline("talkVoltorb1") {
-    @trigger(map = "PowerPlant", npc = 1)
+    @trigger(map = "PowerPlant", npc = 1, toggle = "POWER_PLANT_OBJ_1")
     @if (!getFlag("EVENT_BEAT_POWER_PLANT_VOLTORB_0")) {
       @speaker("") { @t("Bzzzt!", "滋滋！") }
       result = startWildBattle("VOLTORB", 40)
@@ -60,7 +60,7 @@ game_scene PowerPlant {
 
   // ── VOLTORB #2 (npc 2, EVENT_BEAT_POWER_PLANT_VOLTORB_1) ────────────────
   @storyline("talkVoltorb2") {
-    @trigger(map = "PowerPlant", npc = 2)
+    @trigger(map = "PowerPlant", npc = 2, toggle = "POWER_PLANT_OBJ_2")
     @if (!getFlag("EVENT_BEAT_POWER_PLANT_VOLTORB_1")) {
       @speaker("") { @t("Bzzzt!", "滋滋！") }
       result = startWildBattle("VOLTORB", 40)
@@ -73,7 +73,7 @@ game_scene PowerPlant {
 
   // ── VOLTORB #3 (npc 3, EVENT_BEAT_POWER_PLANT_VOLTORB_2) ────────────────
   @storyline("talkVoltorb3") {
-    @trigger(map = "PowerPlant", npc = 3)
+    @trigger(map = "PowerPlant", npc = 3, toggle = "POWER_PLANT_OBJ_3")
     @if (!getFlag("EVENT_BEAT_POWER_PLANT_VOLTORB_2")) {
       @speaker("") { @t("Bzzzt!", "滋滋！") }
       result = startWildBattle("VOLTORB", 40)
@@ -86,7 +86,7 @@ game_scene PowerPlant {
 
   // ── ELECTRODE #1 (npc 4, EVENT_BEAT_POWER_PLANT_VOLTORB_3) ──────────────
   @storyline("talkElectrode1") {
-    @trigger(map = "PowerPlant", npc = 4)
+    @trigger(map = "PowerPlant", npc = 4, toggle = "POWER_PLANT_OBJ_4")
     @if (!getFlag("EVENT_BEAT_POWER_PLANT_VOLTORB_3")) {
       @speaker("") { @t("Bzzzt!", "滋滋！") }
       result = startWildBattle("ELECTRODE", 43)
@@ -99,7 +99,7 @@ game_scene PowerPlant {
 
   // ── VOLTORB #4 (npc 5, EVENT_BEAT_POWER_PLANT_VOLTORB_4) ────────────────
   @storyline("talkVoltorb4") {
-    @trigger(map = "PowerPlant", npc = 5)
+    @trigger(map = "PowerPlant", npc = 5, toggle = "POWER_PLANT_OBJ_5")
     @if (!getFlag("EVENT_BEAT_POWER_PLANT_VOLTORB_4")) {
       @speaker("") { @t("Bzzzt!", "滋滋！") }
       result = startWildBattle("VOLTORB", 40)
@@ -112,7 +112,7 @@ game_scene PowerPlant {
 
   // ── VOLTORB #5 (npc 6, EVENT_BEAT_POWER_PLANT_VOLTORB_5) ────────────────
   @storyline("talkVoltorb5") {
-    @trigger(map = "PowerPlant", npc = 6)
+    @trigger(map = "PowerPlant", npc = 6, toggle = "POWER_PLANT_OBJ_6")
     @if (!getFlag("EVENT_BEAT_POWER_PLANT_VOLTORB_5")) {
       @speaker("") { @t("Bzzzt!", "滋滋！") }
       result = startWildBattle("VOLTORB", 40)
@@ -125,7 +125,7 @@ game_scene PowerPlant {
 
   // ── ELECTRODE #2 (npc 7, EVENT_BEAT_POWER_PLANT_VOLTORB_6) ──────────────
   @storyline("talkElectrode2") {
-    @trigger(map = "PowerPlant", npc = 7)
+    @trigger(map = "PowerPlant", npc = 7, toggle = "POWER_PLANT_OBJ_7")
     @if (!getFlag("EVENT_BEAT_POWER_PLANT_VOLTORB_6")) {
       @speaker("") { @t("Bzzzt!", "滋滋！") }
       result = startWildBattle("ELECTRODE", 43)
@@ -138,7 +138,7 @@ game_scene PowerPlant {
 
   // ── VOLTORB #6 (npc 8, EVENT_BEAT_POWER_PLANT_VOLTORB_7) ────────────────
   @storyline("talkVoltorb6") {
-    @trigger(map = "PowerPlant", npc = 8)
+    @trigger(map = "PowerPlant", npc = 8, toggle = "POWER_PLANT_OBJ_8")
     @if (!getFlag("EVENT_BEAT_POWER_PLANT_VOLTORB_7")) {
       @speaker("") { @t("Bzzzt!", "滋滋！") }
       result = startWildBattle("VOLTORB", 40)
@@ -155,7 +155,7 @@ game_scene PowerPlant {
   // Implemented as a static wild battle via startWildBattle (Lv 50); the cry +
   // text match the original, matching SeafoamIslandsB4F.
   @storyline("talkZapdos") {
-    @trigger(map = "PowerPlant", npc = 9)
+    @trigger(map = "PowerPlant", npc = 9, toggle = "POWER_PLANT_OBJ_9")
     @if (!getFlag("EVENT_BEAT_ZAPDOS")) {
       playCry("ZAPDOS")
       @speaker("") { @t("Gyaoo!", "嘎嗷！") }

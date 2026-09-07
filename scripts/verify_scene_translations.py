@@ -28,7 +28,7 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-MAPS = ROOT / "examples" / "pokered" / "crates" / "pokered-data" / "maps"
+MAPS = ROOT / "crates" / "pokered-data" / "maps"
 
 # Match a @say("Name") { ... } or @speaker("Name") { ... } block.
 BLOCK_RE = re.compile(
@@ -171,6 +171,9 @@ def main():
                 paths.extend(sorted(p.glob("*/script.scene")))
         elif p.is_file():
             paths.append(p)
+    if not paths:
+        print("FAIL: no scene files found; check the requested paths", file=sys.stderr)
+        sys.exit(1)
     all_problems = []
     for p in paths:
         all_problems.extend(check_file(p))

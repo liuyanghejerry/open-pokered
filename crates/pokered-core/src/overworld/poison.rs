@@ -21,6 +21,11 @@ use crate::save::SaveData;
 /// Mirrors the asm ordering: damage (+ per-mon faint text) first, then the
 /// poisoned jingle, then the blackout check.
 pub fn apply_out_of_battle_poison_damage(save: &mut SaveData, overworld: &mut OverworldScreen) {
+    // Before Oak gives the starter, an empty party is not a defeated party.
+    if save.party.is_empty() {
+        return;
+    }
+
     // Damage pass: one HP per poisoned, still-alive mon; collect faint texts.
     let mut faint_texts: Vec<String> = Vec::new();
     for mon in save.party.iter_mut() {
@@ -123,6 +128,18 @@ mod tests {
             let _ = save.party.add(m);
         }
         save
+    }
+
+    #[test]
+    fn empty_party_before_starter_never_blacks_out() {
+        let mut save = SaveData::new();
+        save.game_data.player_money = 3000;
+        let mut ow = OverworldScreen::new(MapId::RedsHouse2F, None, PokemonRedData);
+        apply_out_of_battle_poison_damage(&mut save, &mut ow);
+        assert!(ow.pending_warp.is_none());
+        assert!(!ow.heal_requested);
+        assert!(ow.pending_dialogue.is_none());
+        assert_eq!(save.game_data.player_money, 3000);
     }
 
     /// Every poisoned, alive mon loses exactly 1 HP per tick (poison.asm

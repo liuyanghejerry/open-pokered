@@ -110,7 +110,7 @@ game_scene VictoryRoad2F {
   // Implemented as a static wild battle via startWildBattle; the cry + text
   // match the original.
   @storyline("talkMoltres") {
-    @trigger(map = "VictoryRoad2F", npc = 6)
+    @trigger(map = "VictoryRoad2F", npc = 6, toggle = "VICTORY_ROAD_2F_OBJ_6")
     @if (!getFlag("EVENT_BEAT_MOLTRES")) {
       playCry("MOLTRES")
       @speaker("") {
@@ -195,7 +195,7 @@ game_scene VictoryRoad2F {
 
   // ── Strength boulder (npc 13) — shared BoulderText ────────────────────────
   @storyline("talkBoulder3") {
-    @trigger(map = "VictoryRoad2F", npc = 13)
+    @trigger(map = "VictoryRoad2F", npc = 13, toggle = "VICTORY_ROAD_2F_OBJ_13", hidden = true)
     @speaker("") {
       @t("This requires STRENGTH to\nmove!", "这个巨石需要怪力才能推动！")
     }

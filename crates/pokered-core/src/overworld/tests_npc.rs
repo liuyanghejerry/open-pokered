@@ -991,6 +991,7 @@ fn saffron_liberation_clears_gym_guard_and_restores_citizens() {
     use pokered_data::impl_traits::PokemonRedData;
     for liberated in [false, true] {
         let mut screen = OverworldScreen::new(MapId::PalletTown, None, PokemonRedData);
+        screen.toggleable_object_flags = pokered_data::toggleable_objects::initial_toggle_flags();
         screen.set_flag_live("EVENT_RESCUED_MR_FUJI", true);
         screen.set_flag_live("EVENT_BEAT_SILPH_CO_GIOVANNI", liberated);
         screen.warp_to_map(MapId::SaffronCity, 35, 4);
@@ -1001,7 +1002,8 @@ fn saffron_liberation_clears_gym_guard_and_restores_citizens() {
             let expected = match npc.text_id {
                 1..=7 => !liberated,
                 8..=13 => liberated,
-                14..=15 => false,
+                14 => false,
+                15 => !liberated,
                 _ => continue,
             };
             assert_eq!(npc.visible, expected, "NPC {} with liberated={liberated}", npc.text_id);
@@ -1532,8 +1534,8 @@ fn tower_rockets_leave_and_hide_after_victory() {
     for (i, rocket) in screen.npc_states.iter().take(3).enumerate() {
         assert!(!rocket.visible, "beaten rocket {} must be hidden", i + 1);
     }
-    for rocket in screen.npc_states.iter().take(2) {
-        assert_eq!((rocket.x, rocket.y), (9, 16), "rockets 1/2 leave down the stairs");
+    for (rocket, expected) in screen.npc_states.iter().take(3).zip([(9,13),(12,12),(9,11)]) {
+        assert_eq!((rocket.x, rocket.y), expected, "original per-rocket departure path");
     }
     // Latch: another load must not replay the walk (rockets stay hidden).
     screen.warp_to_map(MapId::PalletTown, 5, 6);
@@ -1855,6 +1857,12 @@ fn trainer_approach_freezes_player_no_overlap() {
             i + 1,
             player
         );
+    }
+    // The current baseline correctly waits for the pre-battle dialogue.
+    for frame in 0..300 {
+        if let Some(dialogue) = screen.pending_dialogue.as_mut() { dialogue.skip_to_full_page(); }
+        screen.update_frame(super::OverworldInput::new(false,false,false,false,frame % 2 == 1,false,false,false));
+        if screen.pending_trainer_battle.is_some() { break; }
     }
     assert!(
         screen.pending_trainer_battle.is_some() || screen.script_awaiting_battle,

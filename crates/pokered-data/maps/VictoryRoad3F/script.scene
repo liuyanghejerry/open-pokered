@@ -102,7 +102,7 @@ game_scene VictoryRoad3F {
   }
 
   @storyline("talkBoulder4") {
-    @trigger(map = "VictoryRoad3F", npc = 10)
+    @trigger(map = "VictoryRoad3F", npc = 10, toggle = "VICTORY_ROAD_3F_OBJ_10")
     @speaker("") { @t("This requires STRENGTH to\nmove!", "这需要怪力才能推动！") }
   }
 }
