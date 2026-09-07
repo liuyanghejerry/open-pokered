@@ -1134,11 +1134,12 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                         fx,
                         fy,
                     );
-                    if let Some(mut kind) = bookshelf::lookup(map.tileset.name(), tile) {
+                    let tileset_id = dotzuki_engine::tileset::TilesetTrait::id(&map.tileset);
+                    if let Some(mut kind) = bookshelf::lookup(tileset_id, tile) {
                         // BookOrSculptureText: the MANSION tileset's (8,6) tile
                         // $38 is the DIGLETT sculpture variant.
                         if kind == bookshelf::BookshelfText::PokemonBooks
-                            && map.tileset.name() == "Mansion"
+                            && tileset_id == bookshelf::TS_MANSION
                             && tile == 0x38
                             && fx == 8
                             && fy == 6

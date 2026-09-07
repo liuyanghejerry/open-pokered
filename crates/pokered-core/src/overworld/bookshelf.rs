@@ -31,41 +31,61 @@ pub enum BookshelfText {
     PokemonStuff,
 }
 
-type Entry = (&'static str, &'static [(u8, BookshelfText)]);
+// Original GB tileset ids (constants/tileset_constants.asm order — the same
+// values `TilesetId::to_u8` returns).
+pub const TS_REDS_HOUSE_1: u8 = 1;
+pub const TS_MART: u8 = 2;
+pub const TS_DOJO: u8 = 5;
+pub const TS_POKECENTER: u8 = 6;
+pub const TS_GYM: u8 = 7;
+pub const TS_HOUSE: u8 = 8;
+pub const TS_GATE: u8 = 12;
+pub const TS_SHIP: u8 = 13;
+pub const TS_LOBBY: u8 = 18;
+pub const TS_MANSION: u8 = 19;
+pub const TS_LAB: u8 = 20;
+pub const TS_PLATEAU: u8 = 23;
 
-/// `BookshelfTileIDs` keyed on the tileset NAME as used in map.json headers.
+type Entry = (u8, &'static [(u8, BookshelfText)]);
+
+/// `BookshelfTileIDs` (data/tilesets/bookshelf_tile_ids.asm) keyed on the GB
+/// tileset id — Gym/Dojo and Mart/Pokecenter share blocksets but the original
+/// keys them separately, so the id (not the blockset name) is the faithful key.
 const TABLE: &[Entry] = &[
+    (TS_PLATEAU, &[(0x30, BookshelfText::IndigoPlateauStatues)]),
     (
-        "Plateau",
-        &[(0x30, BookshelfText::IndigoPlateauStatues)],
+        TS_HOUSE,
+        &[(0x3D, BookshelfText::TownMap), (0x1E, BookshelfText::PokemonBooks)],
     ),
-    ("House", &[(0x3D, BookshelfText::TownMap), (0x1E, BookshelfText::PokemonBooks)]),
-    ("Mansion", &[(0x32, BookshelfText::PokemonBooks)]),
-    ("RedsHouse1", &[(0x32, BookshelfText::PokemonBooks)]),
-    ("Lab", &[(0x28, BookshelfText::PokemonBooks)]),
+    (TS_MANSION, &[(0x32, BookshelfText::PokemonBooks)]),
+    (TS_REDS_HOUSE_1, &[(0x32, BookshelfText::PokemonBooks)]),
+    (TS_LAB, &[(0x28, BookshelfText::PokemonBooks)]),
     (
-        "Lobby",
+        TS_LOBBY,
         &[
             (0x16, BookshelfText::Elevator),
             (0x50, BookshelfText::PokemonStuff),
             (0x52, BookshelfText::PokemonStuff),
         ],
     ),
-    ("Gym", &[(0x1D, BookshelfText::PokemonBooks)]),
-    ("Dojo", &[(0x1D, BookshelfText::PokemonBooks)]),
-    ("Gate", &[(0x22, BookshelfText::PokemonBooks)]),
-    ("Mart", &[(0x54, BookshelfText::PokemonStuff), (0x55, BookshelfText::PokemonStuff)]),
+    (TS_GYM, &[(0x1D, BookshelfText::PokemonBooks)]),
+    (TS_DOJO, &[(0x1D, BookshelfText::PokemonBooks)]),
+    (TS_GATE, &[(0x22, BookshelfText::PokemonBooks)]),
     (
-        "Pokecenter",
+        TS_MART,
         &[(0x54, BookshelfText::PokemonStuff), (0x55, BookshelfText::PokemonStuff)],
     ),
-    ("Ship", &[(0x36, BookshelfText::PokemonBooks)]),
+    (
+        TS_POKECENTER,
+        &[(0x54, BookshelfText::PokemonStuff), (0x55, BookshelfText::PokemonStuff)],
+    ),
+    (TS_SHIP, &[(0x36, BookshelfText::PokemonBooks)]),
 ];
 
-/// Match a faced tile against the bookshelf table. `tileset_name` is the
-/// map header's tileset name (e.g. "Gym", "House").
-pub fn lookup(tileset_name: &str, tile: u8) -> Option<BookshelfText> {
-    let (_, entries) = TABLE.iter().find(|(name, _)| *name == tileset_name)?;
+/// Match a faced tile against the bookshelf table. `tileset_id` is the GB
+/// tileset id (`TilesetTrait::id()`, 0..=23).
+pub fn lookup(tileset_id: u8, tile: u8) -> Option<BookshelfText> {
+    let (_, entries) = TABLE.iter().find(|(id, _)| *id == tileset_id)?;
     entries
         .iter()
         .find(|(t, _)| *t == tile)
@@ -127,22 +147,22 @@ mod tests {
     #[test]
     fn table_matches_bookshelf_tile_ids() {
         // data/tilesets/bookshelf_tile_ids.asm spot checks.
-        assert_eq!(lookup("Plateau", 0x30), Some(BookshelfText::IndigoPlateauStatues));
-        assert_eq!(lookup("House", 0x3D), Some(BookshelfText::TownMap));
-        assert_eq!(lookup("House", 0x1E), Some(BookshelfText::PokemonBooks));
-        assert_eq!(lookup("Mansion", 0x32), Some(BookshelfText::PokemonBooks));
-        assert_eq!(lookup("RedsHouse1", 0x32), Some(BookshelfText::PokemonBooks));
-        assert_eq!(lookup("Lab", 0x28), Some(BookshelfText::PokemonBooks));
-        assert_eq!(lookup("Lobby", 0x16), Some(BookshelfText::Elevator));
-        assert_eq!(lookup("Gym", 0x1D), Some(BookshelfText::PokemonBooks));
-        assert_eq!(lookup("Dojo", 0x1D), Some(BookshelfText::PokemonBooks));
-        assert_eq!(lookup("Gate", 0x22), Some(BookshelfText::PokemonBooks));
-        assert_eq!(lookup("Mart", 0x54), Some(BookshelfText::PokemonStuff));
-        assert_eq!(lookup("Pokecenter", 0x55), Some(BookshelfText::PokemonStuff));
-        assert_eq!(lookup("Ship", 0x36), Some(BookshelfText::PokemonBooks));
+        assert_eq!(lookup(TS_PLATEAU, 0x30), Some(BookshelfText::IndigoPlateauStatues));
+        assert_eq!(lookup(TS_HOUSE, 0x3D), Some(BookshelfText::TownMap));
+        assert_eq!(lookup(TS_HOUSE, 0x1E), Some(BookshelfText::PokemonBooks));
+        assert_eq!(lookup(TS_MANSION, 0x32), Some(BookshelfText::PokemonBooks));
+        assert_eq!(lookup(TS_REDS_HOUSE_1, 0x32), Some(BookshelfText::PokemonBooks));
+        assert_eq!(lookup(TS_LAB, 0x28), Some(BookshelfText::PokemonBooks));
+        assert_eq!(lookup(TS_LOBBY, 0x16), Some(BookshelfText::Elevator));
+        assert_eq!(lookup(TS_GYM, 0x1D), Some(BookshelfText::PokemonBooks));
+        assert_eq!(lookup(TS_DOJO, 0x1D), Some(BookshelfText::PokemonBooks));
+        assert_eq!(lookup(TS_GATE, 0x22), Some(BookshelfText::PokemonBooks));
+        assert_eq!(lookup(TS_MART, 0x54), Some(BookshelfText::PokemonStuff));
+        assert_eq!(lookup(TS_POKECENTER, 0x55), Some(BookshelfText::PokemonStuff));
+        assert_eq!(lookup(TS_SHIP, 0x36), Some(BookshelfText::PokemonBooks));
         // Wrong tile / tileset → nothing.
-        assert_eq!(lookup("House", 0x30), None);
-        assert_eq!(lookup("Overworld", 0x30), None);
+        assert_eq!(lookup(TS_HOUSE, 0x30), None);
+        assert_eq!(lookup(0, 0x30), None);
     }
 
     #[test]

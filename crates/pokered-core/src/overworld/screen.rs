@@ -2279,6 +2279,12 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
     }
 
     /// True while a script-driven party selection (Name Rater) is on screen.
+    /// True while a sight-trainer engage intro ("!" bubble + walk-up) or the
+    /// post-walk-up before-battle text is in flight.
+    pub fn trainer_engagement_active(&self) -> bool {
+        self.trainer_encounter_intro.is_some() || self.pending_trainer_engage.is_some()
+    }
+
     pub fn is_party_select_active(&self) -> bool {
         self.pending_party_select.is_some()
     }
