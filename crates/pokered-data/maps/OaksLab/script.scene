@@ -497,4 +497,74 @@ game_scene OaksLab {
       @t("I study POKeMON as\nPROF.OAK's AIDE.", "我是大木博士的助手，研究宝可\n梦。")
     }
   }
+
+  // ── Hidden events (data/events/hidden_events.asm HiddenEventsFor_OAKS_LAB)
+  // Left poster (sign 1 at (4,0)) — DisplayOakLabLeftPoster / PushStartText.
+  // The original posters sit on the top wall, reached facing up.
+  @storyline("leftPoster") {
+    @trigger(map = "OaksLab", sign = 1)
+    @if (getPlayerFacing() == "up") {
+      @speaker("") {
+        @t("Push START to
+open the MENU!", "按 START 键\n打开菜单！")
+      }
+    }
+  }
+
+  // Right poster (sign 2 at (5,0)) — DisplayOakLabRightPoster: branches on
+  // the POKeDEX owned count (>= 2 owned shows the type-hint poster).
+  @storyline("rightPoster") {
+    @trigger(map = "OaksLab", sign = 2)
+    @if (getPlayerFacing() == "up") {
+      @if (getPokedexOwnedCount() >= 2) {
+        @speaker("") {
+          @t("All #MON types
+have strong and
+weak points
+against others.", "所有属性的宝可梦，\n都有各自的强点\n与弱点。")
+        }
+      } @else {
+        @speaker("") {
+          @t("The SAVE option is
+on the MENU
+screen.", "保存选项在\n菜单画面里。")
+        }
+      }
+    }
+  }
+
+  // E-mail on the lab PC (signs 3/4 at (0,1)/(1,1)) —
+  // DisplayOakLabEmailText / _OakLabEmailText (text_2.asm), facing up.
+  @storyline("labEmail") {
+    @trigger(map = "OaksLab", sign = 3)
+    @trigger(map = "OaksLab", sign = 4)
+    @if (getPlayerFacing() == "up") {
+      @speaker("") {
+        @t("There's an e-mail
+message here!
+
+...
+
+Calling all
+#MON trainers!
+
+The elite trainers
+of #MON LEAGUE
+are ready to take
+on all comers!
+
+Bring your best
+#MON and see
+how you rate as a
+trainer!
+
+#MON LEAGUE HQ
+INDIGO PLATEAU
+
+PS: PROF.OAK,
+please visit us!
+...", "这里有一封电子邮件！\n\n……\n\n召集所有宝可梦训练家！\n宝可梦联盟的精英训练家\n随时恭候各位挑战者！\n带上你最强的宝可梦，\n来看看你有几斤几两吧！\n\n宝可梦联盟总部\n石英高原\n\n又及：大木博士，\n请来我们这里做客！\n……")
+      }
+    }
+  }
 }

@@ -13,6 +13,10 @@
   ],
   "signs": [
     {
+      "id": 1,
+      "talk": "schoolNotebook"
+    },
+    {
       "id": 2,
       "talk": "statusBlackboard"
     }

@@ -754,6 +754,52 @@ fn engage_intro_locks_player_input_until_text() {
     );
 }
 
+/// TalkToTrainer (home/trainers.asm:89-123): pressing A on an UNDEFEATED
+/// sight trainer shows its before-battle text and then ALWAYS starts the
+/// fight — the port used to stop at the text, so sight trainers could only
+/// ever be fought via their sight line.
+#[test]
+fn talking_to_undefeated_trainer_battles_after_text() {
+    use super::screen::OverworldScreen;
+    use pokered_data::impl_traits::PokemonRedData;
+
+    let mut screen = OverworldScreen::new(MapId::ViridianForest, None, PokemonRedData);
+    // Stand one tile below the Bug Catcher at (30,33), facing UP at him.
+    screen.state.player.x = 30;
+    screen.state.player.y = 34;
+    screen.state.player.facing = super::Direction::Up;
+    // Talk: A press (edge) then a neutral frame.
+    screen.update_frame(super::OverworldInput::new(
+        false, false, false, false, true, false, false, false,
+    ));
+    screen.update_frame(super::OverworldInput::new(
+        false, false, false, false, false, false, false, false,
+    ));
+    // The before-battle text shows (via the scene or the map json) and the
+    // engagement is queued — the battle must fire once the text closes.
+    let mut saw_text_or_battle = false;
+    let mut pressed = false;
+    for _ in 0..120 {
+        if screen.pending_trainer_battle.is_some() || screen.trainer_intro_text_pending.is_some() {
+            saw_text_or_battle = true;
+        }
+        if screen.pending_trainer_battle.is_some() {
+            assert_eq!(
+                screen.pending_trainer_battle.as_ref().unwrap().trainer_id,
+                "OPP_BUG_CATCHER1"
+            );
+            return;
+        }
+        let a = !pressed;
+        pressed = !pressed;
+        screen.update_frame(super::OverworldInput::new(
+            false, false, false, false, a, false, false, false,
+        ));
+    }
+    assert!(saw_text_or_battle, "talking to the trainer showed no text");
+    panic!("talking to an undefeated trainer never started the battle");
+}
+
 // ── Stale edge detection on re-entry from a sub-screen ─────────────
 
 /// Regression: returning to the overworld from the START menu with the A

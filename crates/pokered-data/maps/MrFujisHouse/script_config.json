@@ -1,32 +1,45 @@
 {
- "$schema": "../../schemas/script_config.schema.json",
- "coordEvents": [],
- "npcs": [
-  {
-   "id": 1,
-   "talk": "talkSuperNerd"
-  },
-  {
-   "id": 2,
-   "talk": "talkLittleGirl"
-  },
-  {
-   "id": 3,
-   "talk": "talkPsyduck"
-  },
-  {
-   "id": 4,
-   "talk": "talkNidorino"
-  },
-  {
-   "id": 5,
-   "talk": "talkMrFuji",
-   "toggleId": "MRFUJISHOUSE_MR_FUJI"
-  },
-  {
-   "id": 6,
-   "talk": "talkPokedex"
-  }
- ],
- "signs": []
+  "$schema": "../../schemas/script_config.schema.json",
+  "coordEvents": [],
+  "npcs": [
+    {
+      "id": 1,
+      "talk": "talkSuperNerd"
+    },
+    {
+      "id": 2,
+      "talk": "talkLittleGirl"
+    },
+    {
+      "id": 3,
+      "talk": "talkPsyduck"
+    },
+    {
+      "id": 4,
+      "talk": "talkNidorino"
+    },
+    {
+      "id": 5,
+      "talk": "talkMrFuji",
+      "toggleId": "MRFUJISHOUSE_MR_FUJI"
+    },
+    {
+      "id": 6,
+      "talk": "talkPokedex"
+    }
+  ],
+  "signs": [
+    {
+      "id": 1,
+      "talk": "magazines"
+    },
+    {
+      "id": 2,
+      "talk": "magazines"
+    },
+    {
+      "id": 3,
+      "talk": "magazines"
+    }
+  ]
 }

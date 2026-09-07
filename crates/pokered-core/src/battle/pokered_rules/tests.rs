@@ -2838,10 +2838,10 @@ fn jump_kick_crashes_the_user_on_miss() {
     assert_eq!(state.opponent_battlers[0].hp, 1000, "the missed Jump Kick dealt no damage");
 }
 
-/// Haze resets both sides' stat stages + clears confusion, but PRESERVES the screens
-/// (Reflect) — the selective-reset guarantee.
+/// Haze resets both sides' stat stages + clears confusion AND the screens
+/// (Reflect is in the asm's status3 wipe mask, haze.asm:44-46).
 #[test]
-fn haze_resets_stages_but_preserves_reflect() {
+fn haze_resets_stages_and_clears_reflect() {
     install_canonical();
     clear_current_moves();
     set_current_move(BattlerRef::PLAYER, real_move(MoveId::Haze));
@@ -2873,8 +2873,8 @@ fn haze_resets_stages_but_preserves_reflect() {
         "Haze cleared confusion"
     );
     assert!(
-        effects.iter().any(|e| matches!(e.kind, PokeVolatile::Reflect)),
-        "Haze PRESERVED Reflect (selective reset)"
+        !effects.iter().any(|e| matches!(e.kind, PokeVolatile::Reflect)),
+        "Haze cleared Reflect (status3 wipe mask)"
     );
 }
 

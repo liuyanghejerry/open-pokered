@@ -20,11 +20,13 @@
   ],
   "npcs": [
     {
+      "defaultHidden": true,
       "id": 1,
       "talk": "talkBoulder",
       "toggleId": "SEAFOAM_ISLANDS_B1F_OBJ_1"
     },
     {
+      "defaultHidden": true,
       "id": 2,
       "talk": "talkBoulder1",
       "toggleId": "SEAFOAM_ISLANDS_B1F_OBJ_2"

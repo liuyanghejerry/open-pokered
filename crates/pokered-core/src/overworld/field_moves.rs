@@ -391,13 +391,16 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
     /// screen fades out (to white — `_LeaveMapAnim` ends in GBFadeOutToWhite)
     /// and the player lands at the map's fly point.
     pub fn fly_warp_to(&mut self, dest_map: MapId, dest_x: u8, dest_y: u8) {
+        // BIT_USED_FLY (player_animations.asm:55-70): the arrival plays the
+        // BIRD animation instead of the spin-in.
+        self.pending_fly_arrival = true;
         self.pending_warp = Some(PendingWarp {
             dest_map,
             dest_x,
             dest_y,
             save_last_map: false,
             // The fly picker sets BIT_FLY_WARP (town_map.asm:214) → the
-            // arrival plays EnterMapAnim's spin-in.
+            // arrival plays EnterMapAnim.
             arrival_spin: true,
         });
         self.warp_fade_to_white = true;

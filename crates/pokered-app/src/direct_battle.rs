@@ -28,6 +28,10 @@ fn phase_tag(phase: &BattlePhase) -> u8 {
         BattlePhase::PartyStats { .. } => 10,
         BattlePhase::EnemySendingNext { .. } => 6,
         BattlePhase::ShiftPrompt => 14,
+        // The learn-move chain renders through the shift-prompt (YES/NO) and
+        // move-menu (forget list) paths.
+        BattlePhase::LearnMoveAsk { .. } | BattlePhase::LearnMoveGiveUpConfirm { .. } => 14,
+        BattlePhase::LearnMoveChoose { .. } => 3,
         BattlePhase::ShiftSwitchSelect => 15,
         // Forced-struggle countdown behaves like a text wait (enemy still visible).
         BattlePhase::ForcedStruggle { .. } => 17,

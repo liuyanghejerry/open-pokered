@@ -29,6 +29,10 @@ pub fn add_stat_exp(mon: &mut Pokemon, enemy_base: &BaseStats) {
 pub struct GainExpResult {
     pub leveled_up: Vec<usize>,
     pub new_moves: Vec<(usize, pokered_data::moves::MoveId)>,
+    /// (party index, move) pairs whose learn attempt hit a FULL moveset — the
+    /// battle prompts the player to forget a move (learnmove.asm) instead of
+    /// silently overwriting.
+    pub blocked_moves: Vec<(usize, pokered_data::moves::MoveId)>,
 }
 
 pub fn gain_experience(
@@ -43,6 +47,7 @@ pub fn gain_experience(
             return GainExpResult {
                 leveled_up: vec![],
                 new_moves: vec![],
+                blocked_moves: vec![],
             }
         }
     };
@@ -54,11 +59,13 @@ pub fn gain_experience(
         return GainExpResult {
             leveled_up: vec![],
             new_moves: vec![],
+            blocked_moves: vec![],
         };
     }
 
     let mut leveled_up = vec![];
     let mut new_moves = vec![];
+    let mut blocked_moves = vec![];
 
     // Original structure (core.asm:818-857 + experience.asm
     // DivideExpDataByNumMonsGainingExp): the enemy's base stats AND base exp are
@@ -83,6 +90,7 @@ pub fn gain_experience(
         }
         gain_one(
             state, i, &data, defeated_level, is_trainer, &mut leveled_up, &mut new_moves,
+            &mut blocked_moves,
         );
     }
 
@@ -96,6 +104,7 @@ pub fn gain_experience(
         for i in 0..state.player.party.len() {
             gain_one(
                 state, i, &data, defeated_level, is_trainer, &mut leveled_up, &mut new_moves,
+                &mut blocked_moves,
             );
         }
     }
@@ -103,6 +112,7 @@ pub fn gain_experience(
     GainExpResult {
         leveled_up,
         new_moves,
+        blocked_moves,
     }
 }
 
@@ -118,6 +128,7 @@ fn gain_one(
     is_trainer: bool,
     leveled_up: &mut Vec<usize>,
     new_moves: &mut Vec<(usize, pokered_data::moves::MoveId)>,
+    blocked_moves: &mut Vec<(usize, pokered_data::moves::MoveId)>,
 ) {
     let mon = &mut state.player.party[i];
     if mon.hp == 0 {
@@ -135,6 +146,9 @@ fn gain_one(
     }
     for m in result.learned_moves {
         new_moves.push((i, m));
+    }
+    for m in result.blocked_moves {
+        blocked_moves.push((i, m));
     }
 }
 

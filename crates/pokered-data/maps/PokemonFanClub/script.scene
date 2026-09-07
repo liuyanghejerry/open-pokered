@@ -61,7 +61,9 @@ game_scene PokemonFanClub {
   // ── Chairman / Gentleman (npc 5) ────────────────────────────────────────
   // Original PokemonFanClub_CheckBikeInBag: skip to the "final" greeting if the
   // player already has the voucher, a BICYCLE, or the BIKE_VOUCHER in the bag.
-  // Otherwise offer to tell the story; after the story give the BIKE_VOUCHER.
+  // Otherwise offer to tell the story; after the story GiveItem the
+  // BIKE_VOUCHER — on failure (bag full) the original prints .BagFullText and
+  // does NOT set EVENT_GOT_BIKE_VOUCHER.
   @storyline("talkChairman") {
     @trigger(map = "PokemonFanClub", npc = 5)
     @if (getFlag("EVENT_GOT_BIKE_VOUCHER") || hasItem("BICYCLE") || hasItem("BIKE_VOUCHER")) {

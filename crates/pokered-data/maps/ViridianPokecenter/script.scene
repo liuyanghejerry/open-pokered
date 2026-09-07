@@ -57,4 +57,21 @@ fighting fit!", "谢谢你的等待。\n\n你的宝可梦已完全恢复了！")
     @trigger(map = "ViridianPokecenter", sign = 1)
     openPC()
   }
+
+
+  // ── Bench guy (sign 2 at (0,4)) — PrintBenchGuyText ────────────────────
+  // data/events/bench_guys.asm + hidden_events.asm: A on the (0,4) bench
+  // tile while facing it; BenchGuyTextPointers requires SPRITE_FACING_LEFT,
+  // so gate on the player's facing (getPlayerFacing() -> down/up/left/right).
+  @storyline("benchGuy") {
+    @trigger(map = "ViridianPokecenter", sign = 2)
+    @if (getPlayerFacing() == "left") {
+      @speaker("") {
+        @t("#MON CENTERs
+heal your tired,
+hurt or fainted
+#MON!", "宝可梦中心能治愈\n你疲惫、受伤或失去\n战斗能力的宝可梦！")
+      }
+    }
+  }
 }

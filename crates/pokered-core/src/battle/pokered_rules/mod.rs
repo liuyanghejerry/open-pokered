@@ -203,6 +203,12 @@ pub enum PokeVolatile {
     /// Ground/Rock/etc., bug #20). Opaque to the engine like every other kind.
     DamageTaken { amount: u16, counterable: bool },
 
+    /// **Haze-cured move forfeit** — the target whose sleep/freeze a (faster)
+    /// Haze cured loses its move this turn (the original writes $ff into the
+    /// target's selected move, haze.asm:24-27). Per-turn scratch with no
+    /// legacy backing: it vanishes with the arena rebuild, like DamageTaken.
+    HazeCuredMove,
+
     /// **Must-recharge** (Hyper Beam, legacy `status2::NEEDS_TO_RECHARGE`). Set on the
     /// user the turn Hyper Beam connects (unless the target faints — the Gen-1 quirk),
     /// it makes [`PokeredRules::forced_action`] return `Nothing` next turn so the mon
@@ -1038,6 +1044,7 @@ fn rebuild_move_index() {
         //    on the first Fail makes a confusion self-hit stop before the paralysis
         //    gate fires.
         for (order, call) in [
+            (5u32, haze_cured_gate as dotzuki_engine::battle::stack::HandlerFn<PokeredRules>),
             (10u32, p5_native::sleep_gate as dotzuki_engine::battle::stack::HandlerFn<PokeredRules>),
             (20, p5_native::freeze_gate),
             (30, p5_native::flinch_gate),
@@ -2184,10 +2191,18 @@ fn jump_kick_crash(
     HandlerResult::Unchanged
 }
 
-/// `DamagingHit` hook (every record): Haze. Resets BOTH sides' stat stages to 0 and
-/// cures their status, and clears the volatiles Gen-1 Haze wipes (confusion, Leech
-/// Seed, Toxic, Focus Energy) — SELECTIVELY: Light Screen / Reflect / Mist /
-/// Substitute / lock-ins are PRESERVED (apply_haze keeps them). Keyed on HazeEffect.
+/// `DamagingHit` hook (every record): Haze — a faithful port of `HazeEffect_`
+/// (engine/battle/move_effects/haze.asm). BOTH sides' stat stages reset to
+/// neutral; BOTH sides lose the volatiles the asm wipes — confusion
+/// (status1 CONFUSED), Mist / Focus Energy / Leech Seed (status2 mask),
+/// Toxic / Light Screen / Reflect (status3 low nibble) — while Substitute,
+/// Recharge, Rage and the lock-ins are PRESERVED (outside the asm's masks).
+/// The TARGET's (defender's) non-volatile status ALONE is cured
+/// (haze.asm:15-25 heals the side opposite the user); if the cured status was
+/// sleep or freeze, the original also blanks the target's selected move ($ff)
+/// so it loses its turn — reproduced with the per-turn `HazeCuredMove` scratch
+/// + a BeforeMove gate (same inherently-per-turn pattern as `DamageTaken`).
+/// Keyed on HazeEffect.
 fn haze_reset(
     ctx: &mut BattleCtx<'_, PokeredRules>,
     _relay: RelayVar,
@@ -2201,7 +2216,34 @@ fn haze_reset(
     for who in [BattlerRef::PLAYER, BattlerRef::OPPONENT] {
         let b = ctx.battler_mut(who);
         b.stat_stages = EnumMap::new();
-        b.status = None;
+        // ResetStats copies unmodified stats over the battle stats WITHOUT
+        // re-applying badge boosts — wipe the accumulated stat-up-glitch
+        // boosts (haze.asm `ResetStats`).
+        crate::battle::badge_boosts::wipe_boosts(b);
+    }
+    // .cureStatuses: the side OPPOSITE the user loses its non-volatile status;
+    // a cured sleep/freeze also forfeits its move this turn ($ff selected move).
+    let defender = if source.side == 0 {
+        BattlerRef::OPPONENT
+    } else {
+        BattlerRef::PLAYER
+    };
+    let was_frozen_or_asleep = matches!(
+        ctx.battler(defender).status,
+        Some(LegacyStatus::Freeze) | Some(LegacyStatus::Sleep(_))
+    );
+    ctx.battler_mut(defender).status = None;
+    if was_frozen_or_asleep {
+        let id = EffectId(
+            0x50_090 + if defender.side == 0 { 0 } else { 1 },
+        );
+        ctx.effects.retain(|e| e.id != id || e.host != defender);
+        ctx.effects.push(EffectState {
+            id,
+            host: defender,
+            effect_order: 996,
+            kind: PokeVolatile::HazeCuredMove,
+        });
     }
     ctx.effects.retain(|e| {
         !matches!(
@@ -2210,9 +2252,35 @@ fn haze_reset(
                 | PokeVolatile::LeechSeed
                 | PokeVolatile::Toxic { .. }
                 | PokeVolatile::FocusEnergy
+                | PokeVolatile::Mist
+                | PokeVolatile::LightScreen
+                | PokeVolatile::Reflect
         )
     });
     HandlerResult::Unchanged
+}
+
+/// `BeforeMove` gate (order 5, before the sleep gate): a mover whose sleep/
+/// freeze was cured by a faster Haze this turn loses its move — the original
+/// blanks the target's selected move (haze.asm:24-27). The `HazeCuredMove`
+/// scratch has no legacy backing, so it vanishes with the per-turn arena
+/// rebuild (same lifecycle as `DamageTaken`).
+fn haze_cured_gate(
+    ctx: &mut BattleCtx<'_, PokeredRules>,
+    _relay: RelayVar,
+    _target: BattlerRef,
+    source: BattlerRef,
+    _eff: EffectId,
+) -> HandlerResult {
+    if ctx
+        .effects
+        .iter()
+        .any(|e| e.host == source && matches!(e.kind, PokeVolatile::HazeCuredMove))
+    {
+        HandlerResult::Fail
+    } else {
+        HandlerResult::Unchanged
+    }
 }
 
 /// `DamagingHit` hook (every record): Substitute creation. Re-homes legacy

@@ -3,8 +3,11 @@
 // This is the Cable Club Trade Center: a link map. The original on-enter script only
 // positions the link opponent's sprite (Sprite01) to face the player based on the
 // serial-connection internal/external clock; the opponent's only text is "!".
-// Link/cable-club has no API here, so this stays a local placeholder with the
-// faithful "!" dialogue (no live trading).
+// The link stack IS implemented (crates/pokered-core/src/link/ + pokered-app
+// src/link/: TCP/BroadcastChannel transport, link battle/trade drivers,
+// CableClubFlow) — the desks call game.linkStart(); offline it shows the
+// faithful "!" dialogue. NOTE: the in-game ENTRY from a Poké Center
+// receptionist (LinkMenu) is not wired yet — entering requires the debug warp.
 
 game_scene TradeCenter {
   // ── Link opponent (npc 1) — the other player's avatar ───────────────────

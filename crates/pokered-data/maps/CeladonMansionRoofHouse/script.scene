@@ -2,9 +2,10 @@
 // (scripts/CeladonMansionRoofHouse.asm, text/CeladonMansionRoofHouse.asm) to the
 // real Game DSL API surface. A tiny 4x4 house with two NPCs: a Hiker who gives
 // trade/link advice (dialogue only), and a Poké Ball that is the famous gift
-// EEVEE (Lv 25). The original calls GivePokemon then HideObject on the toggle
-// when the party isn't full; here the gift is gated by a guard flag and the
-// object is hidden by name (matching the FightingDojo gift-mon pattern).
+// EEVEE (Lv 25). The original calls GivePokemon — success (party has room OR
+// the current BOX has room: the mon goes to the BOX when the party is full)
+// hides the ball object; only when both are full does it fail and the engine
+// prints _BoxIsFullText without hiding anything.
 
 game_scene CeladonMansionRoofHouse {
   // ── Hiker (npc 1) — dialogue only ───────────────────────────────────────
@@ -16,15 +17,22 @@ game_scene CeladonMansionRoofHouse {
   }
 
   // ── Gift EEVEE Poké Ball (npc 2) ────────────────────────────────────────
-  // Original: GivePokemon EEVEE Lv 25; on success (party not full) HideObject
-  // via TOGGLE_CELADON_MANSION_EEVEE_GIFT. No on-screen text in the original —
-  // GivePokemon shows the standard "received POKeMON" message itself.
+  // Original: GivePokemon EEVEE Lv 25 — true (added to party, or to the BOX
+  // when the party is full) → HideObject via TOGGLE_CELADON_MANSION_EEVEE_GIFT;
+  // false (BOX also full) → the engine prints _BoxIsFullText and the ball
+  // stays. Contract: givePokemon returns true when the POKeMON was handed
+  // over, false when party AND BOX are both full. (Until the engine lands the
+  // return value it resolves undefined=falsy — an expected intermediate state.)
   @storyline("talkPokeBall") {
     @trigger(map = "CeladonMansionRoofHouse", npc = 2, toggle = "CELADON_MANSION_ROOF_HOUSE_OBJ_2")
     @if (!getFlag("EVENT_GOT_EEVEE")) {
-      givePokemon("EEVEE", 25)
-      hideObjectByName("CELADON_MANSION_ROOF_HOUSE_OBJ_2")
-      setFlag("EVENT_GOT_EEVEE")
+      given = givePokemon("EEVEE", 25)
+      @if (given) {
+        hideObjectByName("CELADON_MANSION_ROOF_HOUSE_OBJ_2")
+        setFlag("EVENT_GOT_EEVEE")
+      } @else {
+        @speaker("") { @t("The BOX is FULL!", "箱子满了！") }
+      }
     }
   }
   // ── Blackboard (signs 2/3 at (3,0)/(4,0)) — LinkCableHelp ──────────────
@@ -82,6 +90,13 @@ game_scene CeladonMansionRoofHouse {
       @option(@t("STOP READING", "停止阅读")) {
       }
     }
+  }
+
+  // ── TM notebook (sign 1 at (3,4)) — school_notebooks.asm::TMNotebook ────
+  // Single-page pamphlet (text_waitbutton in the original).
+  @storyline("tmNotebook") {
+    @trigger(map = "CeladonMansionRoofHouse", sign = 1)
+    @speaker("") { @t("It's a pamphlet\non TMs.\n\n...\n\nThere are 50 TMs\nin all.\n\nThere are also 5\nHMs that can be\nused repeatedly.\n\nSILPH CO.", "这是一本招式学习器手册。\n\n……\n\n招式学习器共有50种。\n\n另外还有5种可以反复使用的秘传学习器。\n\n西尔佛公司") }
   }
 
 }

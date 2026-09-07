@@ -418,6 +418,30 @@ pub enum BattlePhase {
     /// (free switch — the fainted enemy cannot attack). B proceeds without
     /// switching, exactly like the original party menu here.
     ShiftSwitchSelect,
+    /// Full-slot level-up learn prompt (learnmove.asm `TryingToLearn`): the
+    /// TryingToLearn text already showed; wait on "Delete an older move to
+    /// make room for <MOVE>?" YES/NO. `resume` is the battle flow to continue
+    /// with once the chain (or the give-up) completes.
+    LearnMoveAsk {
+        party_index: usize,
+        move_id: pokered_data::moves::MoveId,
+        resume: Box<BattlePhase>,
+    },
+    /// The 4-move forget list (learnmove.asm `WhichMoveToForgetText` + menu).
+    /// A picks the move to replace; B goes to the abandon confirm.
+    LearnMoveChoose {
+        party_index: usize,
+        move_id: pokered_data::moves::MoveId,
+        cursor: usize,
+        resume: Box<BattlePhase>,
+    },
+    /// "Abandon learning <MOVE>?" YES/NO (learnmove.asm `AbandonLearning`).
+    /// YES = keep the old moveset ("did not learn"); NO = back to the list.
+    LearnMoveGiveUpConfirm {
+        party_index: usize,
+        move_id: pokered_data::moves::MoveId,
+        resume: Box<BattlePhase>,
+    },
     /// Forced Struggle turn: every move is at 0 PP (AnyMoveToSelect returned
     /// "nothing selectable", core.asm:2715-2762). After "X has no moves left!"
     /// + DelayFrames(60), the turn executes as Struggle. `wait_frames` counts
@@ -957,6 +981,13 @@ pub struct BattleScreen {
     /// its current battle state (HP/status/level/moves). The app layer moves it
     /// into the party (or a PC box if full) and registers it in the Pokédex.
     pub captured_mon: Option<state::Pokemon>,
+    /// True when the battle was escaped with a POKé DOLL (`wEscapedFromBattle`
+    /// in the original, set ONLY by ItemUsePokeDoll). The original keeps
+    /// `wBattleResult` at 0 for a Doll escape but writes $2 for a menu run
+    /// (core.asm:1600-1602) and for a capture (core.asm:2293) — scripts that
+    /// branch on `wBattleResult` (the Pokémon Tower ghost) treat a Doll skip
+    /// as a defeat but a menu run / capture as NOT defeating it.
+    pub escaped_via_poke_doll: bool,
     /// Current map ID (for dungeon transition detection)
     pub map_id: u8,
     /// Selected battle transition type
@@ -1043,6 +1074,9 @@ pub struct BattleScreen {
     /// `false` (NO) each time the prompt opens, matching the original's
     /// `ld a, 1; ld [wCurrentMenuItem], a` (cursor on NO).
     pub shift_prompt_yes: bool,
+    /// Full-slot level-up learn prompts waiting for the forget/replace chain
+    /// (learnmove.asm). Drained front-to-back by the `LearnMove*` phases.
+    pub pending_learn_moves: Vec<(usize, pokered_data::moves::MoveId)>,
     /// Party index chosen in [`BattlePhase::ShiftSwitchSelect`], applied after
     /// the enemy's next mon has been sent out (original `ReplaceFaintedEnemyMon`
     /// sends the enemy out first, then runs `SwitchPlayerMon`).
@@ -1201,6 +1235,8 @@ impl BattleScreen {
             trainer_npc_index: None,
             end_battle_text: None,
             captured_mon: None,
+            escaped_via_poke_doll: false,
+            pending_learn_moves: Vec::new(),
             map_id: 0,
             battle_transition: transition,
             enemy_ai_count: 0,
@@ -1296,6 +1332,8 @@ impl BattleScreen {
             trainer_npc_index: None,
             end_battle_text: None,
             captured_mon: None,
+            escaped_via_poke_doll: false,
+            pending_learn_moves: Vec::new(),
             map_id: 0,
             battle_transition: transition,
             enemy_ai_count: trainer_class
@@ -2324,6 +2362,167 @@ impl BattleScreen {
                 }
                 ScreenAction::Continue
             }
+            BattlePhase::LearnMoveAsk {
+                party_index,
+                move_id,
+                resume,
+            } => {
+                // YES/NO on "Delete an older move to make room for <MOVE>?"
+                // (cursor defaults to NO, like TWO_OPTION_MENU).
+                if input.up || input.down {
+                    self.shift_prompt_yes = !self.shift_prompt_yes;
+                }
+                let answered_yes = input.a && self.shift_prompt_yes;
+                let answered_no = input.b || (input.a && !self.shift_prompt_yes);
+                if answered_yes {
+                    self.current_message = None;
+                    if let Some(ref bs) = self.battle_state {
+                        // The forget list renders through the shared move-menu
+                        // view; populate it with the LEARNER's moves.
+                        self.move_menu =
+                            Some(Self::build_move_menu_for_mon(&bs.player.party[party_index]));
+                    }
+                    self.phase = BattlePhase::LearnMoveChoose {
+                        party_index,
+                        move_id,
+                        cursor: 0,
+                        resume,
+                    };
+                    // "Which move should be forgotten?" stays on screen above
+                    // the list (learn_move.asm prints it with the menu).
+                    self.post_text_transition();
+                } else if answered_no {
+                    self.current_message = None;
+                    self.phase = BattlePhase::LearnMoveGiveUpConfirm {
+                        party_index,
+                        move_id,
+                        resume,
+                    };
+                    self.post_text_transition();
+                }
+                ScreenAction::Continue
+            }
+            BattlePhase::LearnMoveChoose {
+                party_index,
+                move_id,
+                cursor,
+                resume,
+            } => {
+                // The 4-move forget list (WhichMoveToForgetText + menu input,
+                // learn_move.asm:120-150). B abandons learning.
+                if let Some(ref bs) = self.battle_state {
+                    let slot_count = bs.player.party[party_index].moves.len();
+                    if input.down || input.up {
+                        let next_cursor = if input.down {
+                            (cursor + 1) % slot_count
+                        } else {
+                            (cursor + slot_count - 1) % slot_count
+                        };
+                        // Keep the shared move-menu view in sync (it draws the
+                        // forget list).
+                        if let Some(mm) = self.move_menu.as_mut() {
+                            mm.set_cursor(next_cursor);
+                        }
+                        self.phase = BattlePhase::LearnMoveChoose {
+                            party_index,
+                            move_id,
+                            cursor: next_cursor,
+                            resume,
+                        };
+                        return ScreenAction::Continue;
+                    }
+                    if input.b {
+                        self.current_message = None;
+                        self.phase = BattlePhase::LearnMoveGiveUpConfirm {
+                            party_index,
+                            move_id,
+                            resume,
+                        };
+                        self.post_text_transition();
+                        return ScreenAction::Continue;
+                    }
+                    if input.a {
+                        let forgotten = bs.player.party[party_index].moves[cursor];
+                        if pokered_data::items::HM_MOVES.contains(&forgotten) {
+                            // HMCantDeleteText: HM moves can't be forgotten.
+                            self.show_text_then(
+                                vec!["HM techniques
+can't be deleted!".to_string()],
+                                BattlePhase::LearnMoveChoose {
+                                    party_index,
+                                    move_id,
+                                    cursor,
+                                    resume,
+                                },
+                            );
+                            return ScreenAction::Continue;
+                        }
+                        // The replacement: PP = the new move's max PP.
+                        let bs = self.battle_state.as_mut().unwrap();
+                        let mon = &mut bs.player.party[party_index];
+                        let old_name = pokered_data::lang_data::move_name(forgotten, false);
+                        mon.moves[cursor] = move_id;
+                        mon.pp[cursor] = {
+                            use pokered_data::move_data::MOVES;
+                            MOVES
+                                .iter()
+                                .find(|m| m.id == move_id)
+                                .map(|m| m.pp)
+                                .unwrap_or(0)
+                        };
+                        let mon_name = self.learn_move_mon_name(party_index);
+                        let learn_name = pokered_data::lang_data::move_name(move_id, false);
+                        let mut texts = vec![
+                            "1, 2 and... Poof!".to_string(),
+                            format!("{mon_name} forgot
+{old_name}!"),
+                            String::new(),
+                            format!("And..."),
+                            format!("{mon_name} learned
+{learn_name}!"),
+                        ];
+                        texts.retain(|t| !t.is_empty());
+                        let (phase, more) = self.build_learn_chain(*resume);
+                        texts.extend(more);
+                        self.show_text_then(texts, phase);
+                        return ScreenAction::Continue;
+                    }
+                }
+                ScreenAction::Continue
+            }
+            BattlePhase::LearnMoveGiveUpConfirm {
+                party_index,
+                move_id,
+                resume,
+            } => {
+                // "Abandon learning <MOVE>?" YES = give up ("did not learn"),
+                // NO = back to the forget list (learn_move.asm:76-89).
+                if input.up || input.down {
+                    self.shift_prompt_yes = !self.shift_prompt_yes;
+                }
+                let answered_yes = input.a && self.shift_prompt_yes;
+                let answered_no = input.b || (input.a && !self.shift_prompt_yes);
+                if answered_yes {
+                    let mon_name = self.learn_move_mon_name(party_index);
+                    let learn_name = pokered_data::lang_data::move_name(move_id, false);
+                    self.current_message = None;
+                    let mut texts =
+                        vec![format!("{mon_name} did not
+learn {learn_name}!")];
+                    let (phase, more) = self.build_learn_chain(*resume);
+                    texts.extend(more);
+                    self.show_text_then(texts, phase);
+                } else if answered_no {
+                    self.current_message = None;
+                    self.phase = BattlePhase::LearnMoveAsk {
+                        party_index,
+                        move_id,
+                        resume,
+                    };
+                    self.post_text_transition();
+                }
+                ScreenAction::Continue
+            }
             BattlePhase::PlayerFaintSwitch => {
                 if let Some(ref bs) = self.battle_state {
                     let party_len = bs.player.party.len();
@@ -2611,7 +2810,26 @@ impl BattleScreen {
             }
             ItemCategory::UsableInBattle => {
                 if item_id == ItemId::PokeDoll {
-                    self.use_poke_doll();
+                    // ItemUsePokeDoll (item_effects.asm:1597-1602): `wIsInBattle`
+                    // must be 1 (WILD battle); in a trainer battle the doll falls
+                    // through to ItemUseNotTime — and is NOT consumed.
+                    if self
+                        .battle_state
+                        .as_ref()
+                        .map(|bs| bs.battle_type == BattleType::Trainer)
+                        .unwrap_or(false)
+                    {
+                        let player = self
+                            .player_name
+                            .clone()
+                            .unwrap_or_else(|| "RED".to_string());
+                        self.show_text_then(
+                            vec![format!("OAK: {player}! This isn't\nthe time to use that!")],
+                            BattlePhase::PlayerMenu,
+                        );
+                    } else {
+                        self.use_poke_doll();
+                    }
                 } else if item_id == ItemId::PokeFlute {
                     self.use_poke_flute();
                 } else {
@@ -3141,6 +3359,9 @@ impl BattleScreen {
 
     fn use_poke_doll(&mut self) {
         self.consume_selected_item();
+        // ItemUsePokeDoll sets wEscapedFromBattle but never wBattleResult —
+        // recorded so escape outcomes can be told apart from a menu run.
+        self.escaped_via_poke_doll = true;
         self.bag_menu = None;
         self.show_text_then(
             vec!["Got away safely!".to_string()],
@@ -3437,6 +3658,7 @@ impl BattleScreen {
             self.check_faint_after_turn()
         };
         self.append_exp_messages(&mut msgs);
+        let next = self.wrap_learn_prompt(&mut msgs, next);
         self.show_text_then(msgs, next);
     }
 
@@ -4242,6 +4464,7 @@ impl BattleScreen {
                 self.check_faint_after_turn()
             };
             self.append_exp_messages(&mut msgs);
+            let next = self.wrap_learn_prompt(&mut msgs, next);
             // Link mode: lead the turn text with narration set by
             // resolve_link_turn (e.g. the remote's switch "sent out" line).
             if !self.link_turn_prefix_msgs.is_empty() {
@@ -4367,7 +4590,7 @@ impl BattleScreen {
         }
     }
 
-    fn post_text_transition(&mut self) {
+    pub fn post_text_transition(&mut self) {
         match &self.phase {
             BattlePhase::PlayerMenu => {
                 self.battle_menu = BattleMenuState::new();
@@ -4381,6 +4604,31 @@ impl BattleScreen {
                 let msg = self.shift_prompt_message();
                 self.current_message =
                     Some(pokered_data::battle_text::localize(&msg, self.is_zh));
+            }
+            BattlePhase::LearnMoveAsk {
+                party_index,
+                move_id,
+                ..
+            } => {
+                // The TryingToLearn text stays on screen above the YES/NO menu
+                // (learn_move.asm prints the text, then the TWO_OPTION_MENU).
+                self.shift_prompt_yes = false;
+                let msg = self.learn_move_trying_text(*party_index, *move_id);
+                self.current_message =
+                    Some(pokered_data::battle_text::localize(&msg, self.is_zh));
+            }
+            BattlePhase::LearnMoveChoose { .. } => {
+                self.current_message =
+                    Some("Which move should\nbe forgotten?".to_string());
+            }
+            BattlePhase::LearnMoveGiveUpConfirm {
+                move_id,
+                ..
+            } => {
+                self.shift_prompt_yes = false;
+                let learn_name = pokered_data::lang_data::move_name(*move_id, false);
+                self.current_message =
+                    Some(format!("Abandon learning\n{learn_name}?"));
             }
             _ => {}
         }
@@ -4626,8 +4874,72 @@ impl BattleScreen {
                 ));
             }
         }
+        // Full moveset: queue the forget/replace prompt (learnmove.asm) — the
+        // mon does NOT silently lose its 4th move.
+        self.pending_learn_moves.extend(result.blocked_moves.iter().copied());
 
         msgs
+    }
+
+    /// Wrap the post-turn phase with the in-battle learn-move prompt chain
+    /// when a level-up tried to teach a move to a FULL moveset. The
+    /// TryingToLearn text joins the current page queue; the YES/NO chain runs
+    /// as phases and finally resumes `next`.
+    pub fn wrap_learn_prompt(&mut self, msgs: &mut Vec<String>, next: BattlePhase) -> BattlePhase {
+        if self.link_mode || self.pending_learn_moves.is_empty() {
+            return next;
+        }
+        let (idx, move_id) = self.pending_learn_moves.remove(0);
+        let trying = self.learn_move_trying_text(idx, move_id);
+        msgs.push(trying);
+        BattlePhase::LearnMoveAsk {
+            party_index: idx,
+            move_id,
+            resume: Box::new(next),
+        }
+    }
+
+    fn learn_move_trying_text(&self, party_index: usize, move_id: pokered_data::moves::MoveId) -> String {
+        if let Some(ref bs) = self.battle_state {
+            let mon = &bs.player.party[party_index];
+            let mut name_buf = [0u8; crate::battle::state::NAME_TEXT_BUF];
+            let name = mon.display_name(&mut name_buf);
+            return format!(
+                "{name} is\ntrying to learn\n{}!\n\nBut, {name} can't learn\nmore than 4 moves!\n\nDelete an older\nmove to make room\nfor {}?",
+                pokered_data::lang_data::move_name(move_id, false),
+                pokered_data::lang_data::move_name(move_id, false)
+            );
+        }
+        String::new()
+    }
+
+    /// After one prompt entry resolves (learned or abandoned): build the chain
+    /// for the NEXT queued prompt (if any) that ends at `resume`, plus the
+    /// TryingToLearn text pages to show before it. The caller shows `texts`
+    /// via `show_text_then(texts, phase)`.
+    fn build_learn_chain(&mut self, resume: BattlePhase) -> (BattlePhase, Vec<String>) {
+        if self.pending_learn_moves.is_empty() {
+            return (resume, vec![]);
+        }
+        let (idx, move_id) = self.pending_learn_moves.remove(0);
+        let trying = self.learn_move_trying_text(idx, move_id);
+        let ask = BattlePhase::LearnMoveAsk {
+            party_index: idx,
+            move_id,
+            resume: Box::new(resume),
+        };
+        (ask, vec![trying])
+    }
+
+    fn learn_move_mon_name(&self, party_index: usize) -> String {
+        self.battle_state
+            .as_ref()
+            .map(|bs| {
+                let mon = &bs.player.party[party_index];
+                let mut name_buf = [0u8; crate::battle::state::NAME_TEXT_BUF];
+                mon.display_name(&mut name_buf).to_string()
+            })
+            .unwrap_or_default()
     }
 
     fn calc_prize_money(&self) -> u32 {

@@ -503,6 +503,10 @@ impl BattleVisualEffects {
             BattlePhase::PartyStats { .. } => BattlePhaseKind::PartyStats,
             BattlePhase::EnemySendingNext { .. } => BattlePhaseKind::EnemySendingNext,
             BattlePhase::ShiftPrompt => BattlePhaseKind::ShiftPrompt,
+            BattlePhase::LearnMoveAsk { .. } | BattlePhase::LearnMoveGiveUpConfirm { .. } => {
+                BattlePhaseKind::ShiftPrompt
+            }
+            BattlePhase::LearnMoveChoose { .. } => BattlePhaseKind::MoveSelect,
             BattlePhase::ShiftSwitchSelect => BattlePhaseKind::ShiftSwitchSelect,
             BattlePhase::ForcedStruggle { .. } => BattlePhaseKind::ShowingText,
             BattlePhase::PlayerFaintSwitch => BattlePhaseKind::PlayerFaintSwitch,
@@ -2146,6 +2150,7 @@ pub fn draw_battle(
             BattlePhase::PlayerMenu
                 | BattlePhase::MoveSelect
                 | BattlePhase::ItemMoveSelect { .. }
+                | BattlePhase::LearnMoveChoose { .. }
                 | BattlePhase::BagSelect
                 | BattlePhase::ItemTargetSelect { .. }
         ) || matches!(
@@ -2250,6 +2255,7 @@ pub fn draw_battle(
             BattlePhase::PlayerMenu
                 | BattlePhase::MoveSelect
                 | BattlePhase::ItemMoveSelect { .. }
+                | BattlePhase::LearnMoveChoose { .. }
                 | BattlePhase::BagSelect
                 | BattlePhase::ItemTargetSelect { .. }
                 | BattlePhase::PartySelect
@@ -2577,7 +2583,9 @@ pub fn draw_battle(
                 }
             } else if matches!(
                 screen.phase,
-                BattlePhase::MoveSelect | BattlePhase::ItemMoveSelect { .. }
+                BattlePhase::MoveSelect
+                    | BattlePhase::ItemMoveSelect { .. }
+                    | BattlePhase::LearnMoveChoose { .. }
             ) {
                 if let Some(ref mm) = screen.move_menu {
                     menus::battle_move::draw(mm, &BATTLE_MOVE_DEFAULT_LAYOUT, &mut ui, language, &rd);
@@ -2596,9 +2604,15 @@ pub fn draw_battle(
                 if let Some(ref bs) = screen.battle_state {
                     menus::battle_party::draw(&bs.player.party, screen.party_cursor, &BATTLE_PARTY_DEFAULT_LAYOUT, &mut ui, language == Lang::Zh);
                 }
-            } else if matches!(screen.phase, BattlePhase::ShiftPrompt) {
+            } else if matches!(
+                screen.phase,
+                BattlePhase::ShiftPrompt
+                    | BattlePhase::LearnMoveAsk { .. }
+                    | BattlePhase::LearnMoveGiveUpConfirm { .. }
+            ) {
                 // "Will you change #MON?" — prompt text + YES/NO box
-                // (TWO_OPTION_MENU, cursor default NO).
+                // (TWO_OPTION_MENU, cursor default NO). The learn-move chain
+                // reuses the same TWO_OPTION_MENU rendering.
                 if let Some(ref text) = dialog_text {
                     let shown = if language == Lang::Zh { crate::render::zh_battle_dialog(text, true) } else { text.clone() };
                     menus::battle_text::draw(&shown, false, &BATTLE_TEXT_DEFAULT_LAYOUT, &mut ui, language);

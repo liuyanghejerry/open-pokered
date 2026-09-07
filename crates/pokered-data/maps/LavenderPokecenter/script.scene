@@ -57,4 +57,22 @@ fighting fit!", "感谢您的耐心等待。\n\n你的宝可梦已完全治愈�
     @trigger(map = "LavenderPokecenter", sign = 1)
     openPC()
   }
+
+
+  // ── Bench guy (sign 2 at (0,4)) — PrintBenchGuyText ────────────────────
+  // data/events/bench_guys.asm + hidden_events.asm: A on the (0,4) bench
+  // tile while facing it; BenchGuyTextPointers requires SPRITE_FACING_LEFT,
+  // so gate on the player's facing (getPlayerFacing() -> down/up/left/right).
+  @storyline("benchGuy") {
+    @trigger(map = "LavenderPokecenter", sign = 2)
+    @if (getPlayerFacing() == "left") {
+      @speaker("") {
+        @t("CUBONEs wear
+skulls, right?
+
+People will pay a
+lot for one!", "卡拉卡拉戴的\n是头骨，对吧？\n\n有人会出大价钱\n买一个呢！")
+      }
+    }
+  }
 }

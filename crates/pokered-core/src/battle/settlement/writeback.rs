@@ -18,9 +18,10 @@ use dotzuki_engine::overworld::types::TransportMode;
 
 /// What [`settle_battle_into_save`] produced.
 pub struct SettleWriteback {
-    /// The outcome string (`"win"` / `"lose"` / `"caught"` / `"fled"` /
-    /// `"draw"`) for resuming a script suspended on `await
-    /// game.startBattle(...)`, or `None` if there was no settlement.
+    /// The outcome string (`"win"` / `"lose"` / `"caught"` / `"fled"` =
+    /// Poké-Doll escape / `"ran"` = menu run / `"draw"`) for resuming a
+    /// script suspended on `await game.startBattle(...)`, or `None` if there
+    /// was no settlement.
     pub outcome: Option<&'static str>,
     /// Level-up evolutions detected at battle end
     /// (`BattleSettlement::evolutions`) — NOT yet applied. The frontend plays
@@ -51,7 +52,12 @@ pub fn settle_battle_into_save(
             BattleOutcome::Win => "win",
             BattleOutcome::Loss => "lose",
             BattleOutcome::Captured => "caught",
-            BattleOutcome::Escaped => "fled",
+            // Escape kinds are distinct in the original: a Poké DOLL escape
+            // never writes wBattleResult (reads as a win to scripts), while a
+            // menu run writes $2 (core.asm:1600-1602). "fled" = Doll skip,
+            // "ran" = menu run.
+            BattleOutcome::Escaped if battle.escaped_via_poke_doll => "fled",
+            BattleOutcome::Escaped => "ran",
             _ => "draw",
         });
         pending_evolutions = settlement.evolutions.clone();

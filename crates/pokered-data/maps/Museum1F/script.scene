@@ -9,7 +9,7 @@ game_scene Museum1F {
   // tiles in front of the ticket counter) auto-fires the Scientist1 ticket
   // dialogue. Once a ticket is bought the original sets the script to NOOP.
   @storyline("ticketGate") {
-    @trigger(map = "Museum1F", name = "ticketGate1")
+    @trigger(map = "Museum1F", coords = [[9, 4], [10, 4]], name = "ticketGate1")
     @if (!getFlag("EVENT_BOUGHT_MUSEUM_TICKET")) {
       @speaker("") {
         @t("It's ¥50 for a child's\nticket.\n\nWould you like to come in?", "儿童票是 50日元。\n\n你想进来看看吗？")
@@ -36,44 +36,77 @@ game_scene Museum1F {
   }
 
   // ── Scientist1 — the ticket clerk at the counter (npc 1) ───────────────
-  // Talking from the front: gate on the ticket. (The original also branches
-  // on player coords for a behind-the-counter chat; that is handled below by
-  // the `behindCounter` coord trigger.)
+  // Original Museum1FScientist1Text branches on the player's coords:
+  //   y=4 x=13, or y=3 x=12 → behind-the-counter AMBER chat;
+  //   y=4 (any other x)     → the ticket gate (buy flow below);
+  //   anywhere else         → not bought: "Please go to the other side!"
+  //                           bought: "Take plenty of time to look!".
   @storyline("talkScientist") {
     @trigger(map = "Museum1F", npc = 1)
-    @if (getFlag("EVENT_BOUGHT_MUSEUM_TICKET")) {
-      @speaker("") { @t("Take plenty of time to look!", "请慢慢欣赏吧！") }
-    } @else {
+    @if ((getPlayerY() == 4 && getPlayerX() == 13) || (getPlayerY() == 3 && getPlayerX() == 12)) {
+      // Behind the counter: same chat as the `behindCounter` coord trigger
+      // (the original text handler serves both entry paths).
       @speaker("") {
-        @t("It's ¥50 for a child's\nticket.\n\nWould you like to come in?", "儿童票是 50日元。\n\n你想进来看看吗？")
+        @t("You can't sneak in the back\nway!\n\nOh, whatever! Do you know\nwhat AMBER is?", "你不能从后门溜进来！\n\n算了，算了！你知道琥珀是什么\n吗？")
       }
       @choice {
         @option(@t("YES", "是")) {
-          @if (hasMoney(50)) {
-            takeMoney(50)
-            setFlag("EVENT_BOUGHT_MUSEUM_TICKET")
-            playSound("SFX_PURCHASE")
-            @speaker("") { @t("Right, ¥50! Thank you!", "好的，50日元！谢谢！") }
-          } @else {
-            @speaker("") { @t("You don't have enough money.", "你的钱不够。") }
+          @speaker("") {
+            @t("There's a lab somewhere\ntrying to resurrect ancient\nPOKeMON from AMBER.", "有一间实验室正在尝试用琥珀复\n活古代的宝可梦。")
+          }
+        }
+        @option(@t("NO", "否")) {
+          @speaker("") {
+            @t("AMBER is fossil- ized tree\nsap.", "琥珀是树脂的化石。")
+          }
+        }
+      }
+    } @else @if (getPlayerY() == 4) {
+      // In front of the counter: the ticket gate (kept from the previous
+      // translation verbatim).
+      @if (getFlag("EVENT_BOUGHT_MUSEUM_TICKET")) {
+        @speaker("") { @t("Take plenty of time to look!", "请慢慢欣赏吧！") }
+      } @else {
+        @speaker("") {
+          @t("It's ¥50 for a child's\nticket.\n\nWould you like to come in?", "儿童票是 50日元。\n\n你想进来看看吗？")
+        }
+        @choice {
+          @option(@t("YES", "是")) {
+            @if (hasMoney(50)) {
+              takeMoney(50)
+              setFlag("EVENT_BOUGHT_MUSEUM_TICKET")
+              playSound("SFX_PURCHASE")
+              @speaker("") { @t("Right, ¥50! Thank you!", "好的，50日元！谢谢！") }
+            } @else {
+              @speaker("") { @t("You don't have enough money.", "你的钱不够。") }
+              @speaker("") { @t("Come again!", "欢迎再来！") }
+              movePlayerRelative(["down"])
+            }
+          }
+          @option(@t("NO", "否")) {
             @speaker("") { @t("Come again!", "欢迎再来！") }
             movePlayerRelative(["down"])
           }
         }
-        @option(@t("NO", "否")) {
-          @speaker("") { @t("Come again!", "欢迎再来！") }
-          movePlayerRelative(["down"])
-        }
+      }
+    } @else {
+      // Anywhere else: send the player around to the ticket counter unless
+      // they already bought a ticket.
+      @if (!getFlag("EVENT_BOUGHT_MUSEUM_TICKET")) {
+        @speaker("") { @t("Please go to the\nother side!", "请到对面去吧！") }
+      } @else {
+        @speaker("") { @t("Take plenty of time to look!", "请慢慢欣赏吧！") }
       }
     }
   }
 
   // ── Behind-the-counter AMBER chat (player on the back tiles) ────────────
   // Original: talking to Scientist1 while standing at Y=4,X=13 or Y=3,X=12
-  // runs this "you can't sneak in" / "do you know AMBER?" branch. Approximated
-  // with a coord trigger on those back-room tiles.
+  // runs this "you can't sneak in" / "do you know AMBER?" branch. Kept as a
+  // coord trigger on those back-room tiles (talkScientist serves the same chat
+  // when the NPC is talked to from there).
   @storyline("behindCounter") {
-    @trigger(map = "Museum1F", name = "behindCounter1")
+    @trigger(map = "Museum1F", coords = [[13, 4], [12, 3]], name = "behindCounter1")
     @speaker("") {
       @t("You can't sneak in the back\nway!\n\nOh, whatever! Do you know\nwhat AMBER is?", "你不能从后门溜进来！\n\n算了，算了！你知道琥珀是什么\n吗？")
     }

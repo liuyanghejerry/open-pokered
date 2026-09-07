@@ -64,27 +64,36 @@ pub fn apply_leech_seed(state: &mut BattleState, move_data: &MoveData) -> Effect
 }
 
 pub fn apply_haze(state: &mut BattleState) -> EffectResult {
+    // Faithful port of HazeEffect_ (engine/battle/move_effects/haze.asm).
     state.player.stat_stages.reset();
     state.enemy.stat_stages.reset();
     state.player.battle_status1 &= !(status1::CONFUSED);
     state.enemy.battle_status1 &= !(status1::CONFUSED);
     state.player.confused_turns_left = 0;
     state.enemy.confused_turns_left = 0;
-    state.player.clear_status2(status2::SEEDED);
-    state.enemy.clear_status2(status2::SEEDED);
-    state.player.clear_status3(status3::BADLY_POISONED);
-    state.enemy.clear_status3(status3::BADLY_POISONED);
+    // CureVolatileStatuses (haze.asm:33-48): status2 loses X Accuracy / Mist /
+    // Focus Energy / Leech Seed; status3 loses Toxic + both screens. Substitute,
+    // Recharge, Rage and the lock-ins sit OUTSIDE the masks and are preserved.
+    let status2_wipe = status2::USING_X_ACCURACY
+        | status2::PROTECTED_BY_MIST
+        | status2::GETTING_PUMPED
+        | status2::SEEDED;
+    state.player.clear_status2(status2_wipe);
+    state.enemy.clear_status2(status2_wipe);
+    let status3_wipe = status3::BADLY_POISONED | status3::HAS_LIGHT_SCREEN_UP | status3::HAS_REFLECT_UP;
+    state.player.clear_status3(status3_wipe);
+    state.enemy.clear_status3(status3_wipe);
     state.player.toxic_counter = 0;
     state.enemy.toxic_counter = 0;
-    state.player.clear_status2(status2::GETTING_PUMPED);
-    state.enemy.clear_status2(status2::GETTING_PUMPED);
     state.player.disabled_move = 0;
     state.player.disabled_turns_left = 0;
     state.enemy.disabled_move = 0;
     state.enemy.disabled_turns_left = 0;
-    // Haze also cures all non-volatile status in Gen 1
-    state.player.active_mon_mut().status = StatusCondition::None;
-    state.enemy.active_mon_mut().status = StatusCondition::None;
+    // .cureStatuses (haze.asm:15-25): ONLY the side opposite the user loses its
+    // non-volatile status; a cured sleep/freeze also blanks its selected move
+    // ($ff) — the live stack path models that forfeit with the HazeCuredMove
+    // gate; this legacy dispatcher is the differential oracle.
+    state.defender_mut().active_mon_mut().status = StatusCondition::None;
     EffectResult::HazeReset
 }
 
@@ -268,6 +277,10 @@ mod tests {
         state.player.set_status1(status1::CONFUSED);
         state.player.confused_turns_left = 3;
         state.enemy.set_status2(status2::SEEDED);
+        state.player.set_status2(status2::PROTECTED_BY_MIST);
+        state.player.set_status3(status3::HAS_REFLECT_UP);
+        // The player is the Haze user (attacker); only the DEFENDER's
+        // non-volatile status is cured (haze.asm .cureStatuses).
         state.player.active_mon_mut().status = StatusCondition::Burn;
         state.enemy.active_mon_mut().status = StatusCondition::Poison;
 
@@ -277,8 +290,13 @@ mod tests {
         assert_eq!(state.enemy.stat_stages.defense, 0);
         assert!(!state.player.has_status1(status1::CONFUSED));
         assert!(!state.enemy.has_status2(status2::SEEDED));
-        assert!(state.player.active_mon().status.is_none());
+        // The asm wipes Mist and both screens along with seed/focus energy.
+        assert!(!state.player.has_status2(status2::PROTECTED_BY_MIST));
+        assert!(!state.player.has_status3(status3::HAS_REFLECT_UP));
+        // Only the target's status goes; the user's burn stays.
         assert!(state.enemy.active_mon().status.is_none());
+        assert_eq!(state.player.active_mon().status, StatusCondition::Burn);
+        // Substitute is outside the wipe masks.
     }
 
     #[test]

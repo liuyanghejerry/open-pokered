@@ -402,7 +402,13 @@ mod slice7_tests {
         assert_eq!(stack_atk_stage(&stack, BattlerRef::PLAYER), 0, "player Attack reset");
         assert_eq!(stack_spc_stage(&stack, BattlerRef::OPPONENT), 0, "enemy Special reset");
         assert_eq!(stack_atk_stage(&stack, BattlerRef::OPPONENT), 0, "enemy Attack reset");
-        assert_eq!(stack.player_battlers[0].status, None, "player status cured");
+        // Only the side OPPOSITE the Haze user (the enemy) is status-cured —
+        // the player's Burn survives (haze.asm .cureStatuses).
+        assert_eq!(
+            stack.player_battlers[0].status,
+            Some(S::Burn),
+            "the Haze USER keeps its status"
+        );
         assert_eq!(stack.opponent_battlers[0].status, None, "enemy status cured");
     }
 

@@ -1,51 +1,79 @@
 {
- "$schema": "../../schemas/script_config.schema.json",
- "coordEvents": [
-  {
-   "name": "hole1",
-   "position": [
-    3,
-    16
-   ],
-   "trigger": "coordHole1"
-  },
-  {
-   "name": "hole2",
-   "position": [
-    6,
-    16
-   ],
-   "trigger": "coordHole2"
-  }
- ],
- "npcs": [
-  {
-   "id": 1,
-   "talk": "talkBoulder1",
-   "toggleId": "SEAFOAM_ISLANDS_B3F_OBJ_1"
-  },
-  {
-   "id": 2,
-   "talk": "talkBoulder2",
-   "toggleId": "SEAFOAM_ISLANDS_B3F_OBJ_2"
-  },
-  {
-   "id": 3,
-   "talk": "talkBoulder3"
-  },
-  {
-   "id": 4,
-   "talk": "talkBoulder4"
-  },
-  {
-   "id": 5,
-   "talk": "talkBoulder5"
-  },
-  {
-   "id": 6,
-   "talk": "talkBoulder6"
-  }
- ],
- "onLoad": "SeafoamIslandsB3FOnLoad",
- "signs": []
+  "$schema": "../../schemas/script_config.schema.json",
+  "coordEvents": [
+    {
+      "name": "hole1",
+      "position": [
+        3,
+        16
+      ],
+      "trigger": "coordHole1"
+    },
+    {
+      "name": "hole2",
+      "position": [
+        6,
+        16
+      ],
+      "trigger": "coordHole2"
+    },
+    {
+      "name": "currentNear",
+      "position": [
+        15,
+        8
+      ],
+      "trigger": "coordCurrentNear"
+    },
+    {
+      "name": "currentChannel",
+      "position": [
+        18,
+        7
+      ],
+      "trigger": "coordCurrentChannel"
+    },
+    {
+      "name": "currentChannel2",
+      "position": [
+        19,
+        7
+      ],
+      "trigger": "coordCurrentChannel"
+    }
+  ],
+  "npcs": [
+    {
+      "id": 1,
+      "talk": "talkBoulder1"
+    },
+    {
+      "id": 2,
+      "talk": "talkBoulder2",
+      "toggleId": "SEAFOAM_ISLANDS_B3F_OBJ_2"
+    },
+    {
+      "id": 3,
+      "talk": "talkBoulder3",
+      "toggleId": "SEAFOAM_ISLANDS_B3F_OBJ_3"
+    },
+    {
+      "id": 4,
+      "talk": "talkBoulder4"
+    },
+    {
+      "defaultHidden": true,
+      "id": 5,
+      "talk": "talkBoulder5",
+      "toggleId": "SEAFOAM_ISLANDS_B3F_OBJ_5"
+    },
+    {
+      "defaultHidden": true,
+      "id": 6,
+      "talk": "talkBoulder6",
+      "toggleId": "SEAFOAM_ISLANDS_B3F_OBJ_6"
+    }
+  ],
+  "onLoad": "SeafoamIslandsB3FOnLoad",
+  "signs": []
 }

@@ -57,4 +57,25 @@ fighting fit!", "感谢您的耐心等待。\n\n你的宝可梦已完全治愈�
     @trigger(map = "CinnabarPokecenter", sign = 1)
     openPC()
   }
+
+
+  // ── Bench guy (sign 2 at (0,4)) — PrintBenchGuyText ────────────────────
+  // data/events/bench_guys.asm + hidden_events.asm: A on the (0,4) bench
+  // tile while facing it; BenchGuyTextPointers requires SPRITE_FACING_LEFT,
+  // so gate on the player's facing (getPlayerFacing() -> down/up/left/right).
+  @storyline("benchGuy") {
+    @trigger(map = "CinnabarPokecenter", sign = 2)
+    @if (getPlayerFacing() == "left") {
+      @speaker("") {
+        @t("#MON can still
+learn techniques
+after canceling
+evolution.
+
+Evolution can wait
+until new moves
+have been learned.", "即使中途取消进化，\n宝可梦也依然可以\n学习招式。\n\n进化可以等学会\n新的招式之后再进行。")
+      }
+    }
+  }
 }
