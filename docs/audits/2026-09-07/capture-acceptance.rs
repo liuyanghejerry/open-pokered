@@ -30,6 +30,12 @@ fn main() {
         capture_overworld(&mut screen,&mut res,&mut fb);
         fb.save_png(&out.join(format!("{name}.png"))).unwrap();
     }
+    let mut empty=OverworldScreen::new(MapId::RedsHouse2F,None,PokemonRedData);
+    empty.state.player.x=4; empty.state.player.y=3;
+    let mut save=pokered_core::save::SaveData::new();
+    pokered_core::overworld::poison::apply_out_of_battle_poison_damage(&mut save,&mut empty);
+    for _ in 0..120 { empty.update_frame(idle); }
+    capture_overworld(&mut empty,&mut res,&mut fb); fb.save_png(&out.join("empty-party.png")).unwrap();
     let mut cut=OverworldScreen::new(MapId::VermilionCity,None,PokemonRedData);
     cut.state.player.x=15; cut.state.player.y=19;
     cut.run_on_load(); for _ in 0..120 { cut.update_frame(idle); }

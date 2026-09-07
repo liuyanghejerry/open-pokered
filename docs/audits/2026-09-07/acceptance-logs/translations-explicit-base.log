@@ -1,0 +1,278 @@
+FAIL: 93 problem(s)
+/Users/liuyanghe02/develop/open-pokered-3/crates/pokered-data/maps/CinnabarGym/script.scene: block count changed 55 -> 64
+/Users/liuyanghe02/develop/open-pokered-3/crates/pokered-data/maps/CinnabarGym/script.scene: block 9 EN mismatch
+  origin/master: 'Fire, or to be more precise,\ncombustion...\n\nBlah, blah, blah, blah...'
+  NOW : 'POKéMON Quiz!\n\nGet it right and the door\nopens to the next room!\n\nGet it wrong and face a\ntrainer!\n\nIf you want to conserve\nyour POKéMON for the GYM\nLEADER...\n\nThen get it right! Here we\ngo!'
+/Users/liuyanghe02/develop/open-pokered-3/crates/pokered-data/maps/CinnabarGym/script.scene: block 10 EN mismatch
+  origin/master: "Do you know how hot POKeMON\nfire breath can get?\n\nCINNABAR GYM's QUIZ! Answer\nto open the gate!"
+  NOW : 'CATERPIE evolves into\nBUTTERFREE?'
+/Users/liuyanghe02/develop/open-pokered-3/crates/pokered-data/maps/CinnabarGym/script.scene: block 11 EN mismatch
+  origin/master: 'A CATERPIE evolves straight\ninto BUTTERFREE!\n\nYES or NO?'
+  NOW : "You're absolutely correct!\n\nGo on through!"
+/Users/liuyanghe02/develop/open-pokered-3/crates/pokered-data/maps/CinnabarGym/script.scene: block 12 EN mismatch
+  origin/master: 'Yow! Wrong! METAPOD comes\nfirst!'
+  NOW : 'Sorry! Bad call!'
+/Users/liuyanghe02/develop/open-pokered-3/crates/pokered-data/maps/CinnabarGym/script.scene: block 13 EN mismatch
+  origin/master: 'Yow!\nHot, hot, hot!'
+  NOW : "I can't help stealing other\npeople's POKeMON!"
+/Users/liuyanghe02/develop/open-pokered-3/crates/pokered-data/maps/CinnabarGym/script.scene: block 14 EN mismatch
+  origin/master: 'Correct! It goes CATERPIE,\nMETAPOD, then BUTTERFREE!\n\nThe gate is open!'
+  NOW : 'POKéMON Quiz!\n\nGet it right and the door\nopens to the next room!\n\nGet it wrong and face a\ntrainer!\n\nIf you want to conserve\nyour POKéMON for the GYM\nLEADER...\n\nThen get it right! Here we\ngo!'
+/Users/liuyanghe02/develop/open-pokered-3/crates/pokered-data/maps/CinnabarGym/script.scene: block 15 EN mismatch
+  origin/master: "I can't help stealing other\npeople's POKeMON!"
+  NOW : 'There are 9 certified POKéMON\nLEAGUE BADGEs?'
+/Users/liuyanghe02/develop/open-pokered-3/crates/pokered-data/maps/CinnabarGym/script.scene: block 16 EN mismatch
+  origin/master: 'I was a thief, but I became\nstraight as a trainer!\n\nQUIZ! Answer to open the\ngate!'
+  NOW : 'Sorry! Bad call!'
+/Users/liuyanghe02/develop/open-pokered-3/crates/pokered-data/maps/CinnabarGym/script.scene: block 17 EN mismatch
+  origin/master: 'There are 8 official POKeMON\nLEAGUE BADGES!\n\nYES or NO?'
+  NOW : 'My theories are too\ncomplicated for you!'
+/Users/liuyanghe02/develop/open-pokered-3/crates/pokered-data/maps/CinnabarGym/script.scene: block 18 EN mismatch
+  origin/master: 'Correct! Collect all 8 to\nreach the LEAGUE!\n\nThe gate is open!'
+  NOW : "You're absolutely correct!\n\nGo on through!"
+/Users/liuyanghe02/develop/open-pokered-3/crates/pokered-data/maps/CinnabarGym/script.scene: block 19 EN mismatch
+  origin/master: "Wrong! There are 8! I'll\nteach you!"
+  NOW : 'POKéMON Quiz!\n\nGet it right and the door\nopens to the next room!\n\nGet it wrong and face a\ntrainer!\n\nIf you want to conserve\nyour POKéMON for the GYM\nLEADER...\n\nThen get it right! Here we\ngo!'
+/Users/liuyanghe02/develop/open-pokered-3/crates/pokered-data/maps/CinnabarGym/script.scene: block 20 EN mismatch
+  origin/master: 'I\nsurrender!'
+  NOW : 'POLIWAG evolves 3 times?'
+/Users/liuyanghe02/develop/open-pokered-3/crates/pokered-data/maps/CinnabarGym/script.scene: block 21 EN mismatch
+  origin/master: 'My theories are too\ncomplicated for you!'
+  NOW : 'Sorry! Bad call!'
+/Users/liuyanghe02/develop/open-pokered-3/crates/pokered-data/maps/CinnabarGym/script.scene: block 22 EN mismatch
+  origin/master: "You can't win! I have\nstudied POKeMON totally!\n\nQUIZ! Answer to open the\ngate!"
+  NOW : "I wish there was a thief\nPOKeMON! I'd use that!"
+/Users/liuyanghe02/develop/open-pokered-3/crates/pokered-data/maps/CinnabarGym/script.scene: block 23 EN mismatch
+  origin/master: 'POLIWAG evolves into\nPOLIWHIRL, then POLIWRATH!\n\nYES or NO?'
+  NOW : "You're absolutely correct!\n\nGo on through!"
+/Users/liuyanghe02/develop/open-pokered-3/crates/pokered-data/maps/CinnabarGym/script.scene: block 24 EN mismatch
+  origin/master: 'Correct! A perfect answer!\n\nThe gate is open!'
+  NOW : 'POKéMON Quiz!\n\nGet it right and the door\nopens to the next room!\n\nGet it wrong and face a\ntrainer!\n\nIf you want to conserve\nyour POKéMON for the GYM\nLEADER...\n\nThen get it right! Here we\ngo!'
+/Users/liuyanghe02/develop/open-pokered-3/crates/pokered-data/maps/CinnabarGym/script.scene: block 25 EN mismatch
+  origin/master: 'Wrong! You need more study!'
+  NOW : 'Are thunder moves effective\nagainst ground element-\ntype POKéMON?'
+/Users/liuyanghe02/develop/open-pokered-3/crates/pokered-data/maps/CinnabarGym/script.scene: block 26 EN mismatch
+  origin/master: 'Waah!\nMy studies!'
+  NOW : 'Sorry! Bad call!'
+/Users/liuyanghe02/develop/open-pokered-3/crates/pokered-data/maps/CinnabarGym/script.scene: block 27 EN mismatch
+  origin/master: "I wish there was a thief\nPOKeMON! I'd use that!"
+  NOW : 'BLAINE was lost in the\nmountains when a fiery bird\nPOKeMON appeared.\n\nIts light enabled BLAINE to\nfind his way down!'
+/Users/liuyanghe02/develop/open-pokered-3/crates/pokered-data/maps/CinnabarGym/script.scene: block 28 EN mismatch
+  origin/master: 'I just like using fire\nPOKeMON!\n\nQUIZ! Answer to open the\ngate!'
+  NOW : "You're absolutely correct!\n\nGo on through!"
+/Users/liuyanghe02/develop/open-pokered-3/crates/pokered-data/maps/CinnabarGym/script.scene: block 29 EN mismatch
+  origin/master: 'Are WATER moves effective\nagainst FIRE POKeMON?\n\nYES or NO?'
+  NOW : 'POKéMON Quiz!\n\nGet it right and the door\nopens to the next room!\n\nGet it wrong and face a\ntrainer!\n\nIf you want to conserve\nyour POKéMON for the GYM\nLEADER...\n\nThen get it right! Here we\ngo!'
+/Users/liuyanghe02/develop/open-pokered-3/crates/pokered-data/maps/CinnabarGym/script.scene: block 30 EN mismatch
+  origin/master: 'Correct! WATER douses fire!\n\nThe gate is open!'
+  NOW : 'POKéMON of the same kind and\nlevel are not identical?'
+/Users/liuyanghe02/develop/open-pokered-3/crates/pokered-data/maps/CinnabarGym/script.scene: block 31 EN mismatch
+  origin/master: 'Wrong! WATER puts out fire!\nBattle me!'
+  NOW : "You're absolutely correct!\n\nGo on through!"
+/Users/liuyanghe02/develop/open-pokered-3/crates/pokered-data/maps/CinnabarGym/script.scene: block 32 EN mismatch
+  origin/master: 'Too hot\nto handle!'
+  NOW : 'Sorry! Bad call!'
+/Users/liuyanghe02/develop/open-pokered-3/crates/pokered-data/maps/CinnabarGym/script.scene: block 33 EN mismatch
+  origin/master: 'BLAINE was lost in the\nmountains when a fiery bird\nPOKeMON appeared.\n\nIts light enabled BLAINE to\nfind his way down!'
+  NOW : 'Us fire POKeMON fans like\nPONYTA and NINETALES!'
+/Users/liuyanghe02/develop/open-pokered-3/crates/pokered-data/maps/CinnabarGym/script.scene: block 34 EN mismatch
+  origin/master: 'I know why BLAINE became a\ntrainer!\n\nQUIZ! Answer to open the\ngate!'
+  NOW : 'POKéMON Quiz!\n\nGet it right and the door\nopens to the next room!\n\nGet it wrong and face a\ntrainer!\n\nIf you want to conserve\nyour POKéMON for the GYM\nLEADER...\n\nThen get it right! Here we\ngo!'
+/Users/liuyanghe02/develop/open-pokered-3/crates/pokered-data/maps/CinnabarGym/script.scene: block 35 EN mismatch
+  origin/master: 'MOLTRES is a FIRE and FLYING\ntype POKeMON!\n\nYES or NO?'
+  NOW : 'TM28 contains TOMBSTONER?'
+/Users/liuyanghe02/develop/open-pokered-3/crates/pokered-data/maps/CinnabarGym/script.scene: block 36 EN mismatch
+  origin/master: 'Correct! The fiery bird\nitself!\n\nThe gate is open!'
+  NOW : 'Sorry! Bad call!'
+/Users/liuyanghe02/develop/open-pokered-3/crates/pokered-data/maps/CinnabarGym/script.scene: block 37 EN mismatch
+  origin/master: "Wrong! It's FIRE and FLYING!"
+  NOW : 'Water beats fire! But, fire\nmelts ice POKeMON!'
+/Users/liuyanghe02/develop/open-pokered-3/crates/pokered-data/maps/CinnabarGym/script.scene: block 38 EN mismatch
+  origin/master: 'Ow!'
+  NOW : "You're absolutely correct!\n\nGo on through!"
+/Users/liuyanghe02/develop/open-pokered-3/crates/pokered-data/maps/CinnabarGym/script.scene: block 39 EN mismatch
+  origin/master: 'Us fire POKeMON fans like\nPONYTA and NINETALES!'
+  NOW : 'Fire, or to be more precise,\ncombustion...\n\nBlah, blah, blah, blah...'
+/Users/liuyanghe02/develop/open-pokered-3/crates/pokered-data/maps/CinnabarGym/script.scene: block 40 EN mismatch
+  origin/master: "I've been to many GYMs, but\nthis is my favorite!\n\nQUIZ! Answer to open the\ngate!"
+  NOW : 'Do you know how hot POKeMON\nfire breath can get?'
+/Users/liuyanghe02/develop/open-pokered-3/crates/pokered-data/maps/CinnabarGym/script.scene: block 41 EN mismatch
+  origin/master: 'GRASS POKeMON RESIST\nfire-type moves!\n\nYES or NO?'
+  NOW : 'Fire, or to be more precise,\ncombustion...\n\nBlah, blah, blah, blah...'
+/Users/liuyanghe02/develop/open-pokered-3/crates/pokered-data/maps/CinnabarGym/script.scene: block 42 EN mismatch
+  origin/master: 'Wrong! Fire BURNS grass!\nBattle me!'
+  NOW : "I can't help stealing other\npeople's POKeMON!"
+/Users/liuyanghe02/develop/open-pokered-3/crates/pokered-data/maps/CinnabarGym/script.scene: block 43 EN mismatch
+  origin/master: 'Yowza!\nToo hot!'
+  NOW : 'I was a thief, but I became\nstraight as a trainer!'
+/Users/liuyanghe02/develop/open-pokered-3/crates/pokered-data/maps/CinnabarGym/script.scene: block 44 EN mismatch
+  origin/master: 'Correct! Fire roasts grass!\n\nThe gate is open!'
+  NOW : "I can't help stealing other\npeople's POKeMON!"
+/Users/liuyanghe02/develop/open-pokered-3/crates/pokered-data/maps/CinnabarGym/script.scene: block 45 EN mismatch
+  origin/master: 'Water beats fire! But, fire\nmelts ice POKeMON!'
+  NOW : 'My theories are too\ncomplicated for you!'
+/Users/liuyanghe02/develop/open-pokered-3/crates/pokered-data/maps/CinnabarGym/script.scene: block 46 EN mismatch
+  origin/master: 'Fire is weak against H2O!\n\nQUIZ! Answer to open the\ngate!'
+  NOW : "You can't win! I have\nstudied POKeMON totally!"
+/Users/liuyanghe02/develop/open-pokered-3/crates/pokered-data/maps/CinnabarGym/script.scene: block 47 EN mismatch
+  origin/master: 'Fire is weak to WATER, but\nit melts ICE POKeMON!\n\nYES or NO?'
+  NOW : 'My theories are too\ncomplicated for you!'
+/Users/liuyanghe02/develop/open-pokered-3/crates/pokered-data/maps/CinnabarGym/script.scene: block 48 EN mismatch
+  origin/master: 'Correct! You know your\ntypes!\n\nThe gate is open!'
+  NOW : "I wish there was a thief\nPOKeMON! I'd use that!"
+/Users/liuyanghe02/develop/open-pokered-3/crates/pokered-data/maps/CinnabarGym/script.scene: block 49 EN mismatch
+  origin/master: 'Wrong! Fire melts ice!\nBattle me!'
+  NOW : 'I just like using fire\nPOKeMON!'
+/Users/liuyanghe02/develop/open-pokered-3/crates/pokered-data/maps/CinnabarGym/script.scene: block 50 EN mismatch
+  origin/master: 'Oh!\nSnuffed out!'
+  NOW : "I wish there was a thief\nPOKeMON! I'd use that!"
+/Users/liuyanghe02/develop/open-pokered-3/crates/pokered-data/maps/CinnabarGym/script.scene: block 51 EN mismatch
+  origin/master: '<PLAYER>! You beat that fire\nbrand!'
+  NOW : 'BLAINE was lost in the\nmountains when a fiery bird\nPOKeMON appeared.\n\nIts light enabled BLAINE to\nfind his way down!'
+/Users/liuyanghe02/develop/open-pokered-3/crates/pokered-data/maps/CinnabarGym/script.scene: block 52 EN mismatch
+  origin/master: 'Yo! Champ in making!\n\nThe hot-headed BLAINE is a\nfire POKeMON pro!\n\nDouse his spirits with\nwater!\n\nYou better take some BURN\nHEALs!'
+  NOW : 'I know why BLAINE became a\ntrainer!'
+/Users/liuyanghe02/develop/open-pokered-3/crates/pokered-data/maps/CinnabarGym/script.scene: block 53 EN mismatch
+  origin/master: 'CINNABAR ISLAND\nPOKeMON GYM\nLEADER: BLAINE\n\nWINNING TRAINERS:\n<RIVAL>\n<PLAYER>'
+  NOW : 'BLAINE was lost in the\nmountains when a fiery bird\nPOKeMON appeared.\n\nIts light enabled BLAINE to\nfind his way down!'
+/Users/liuyanghe02/develop/open-pokered-3/crates/pokered-data/maps/CinnabarGym/script.scene: block 54 EN mismatch
+  origin/master: 'CINNABAR ISLAND\nPOKeMON GYM\nLEADER: BLAINE\n\nWINNING TRAINERS:\n<RIVAL>'
+  NOW : 'Us fire POKeMON fans like\nPONYTA and NINETALES!'
+/Users/liuyanghe02/develop/open-pokered-3/crates/pokered-data/maps/CinnabarGym/script.scene: block 9 ZH character sequence changed
+  origin/master: '火，或者说更准确地说，燃\n烧……\n\n啰嗦，啰嗦，啰嗦……'
+  NOW : '宝可梦问答！\n\n答对了，通往下一个房间的大\n门就会打开！\n\n答错了，就要面对训练家！\n\n如果想为挑战馆主保存宝可梦\n的实力……\n\n那就答对吧！开始！'
+/Users/liuyanghe02/develop/open-pokered-3/crates/pokered-data/maps/CinnabarGym/script.scene: block 10 ZH character sequence changed
+  origin/master: '你知道宝可梦的火焰温度有多高\n吗？\n\n红莲道馆的猜谜！答对就能开\n门！'
+  NOW : '绿毛虫会进化成巴大蝶？'
+/Users/liuyanghe02/develop/open-pokered-3/crates/pokered-data/maps/CinnabarGym/script.scene: block 11 ZH character sequence changed
+  origin/master: '绿毛虫会直接进化成巴大蝶吗？\n\n是或否？'
+  NOW : '完全正确！\n\n请通过吧！'
+/Users/liuyanghe02/develop/open-pokered-3/crates/pokered-data/maps/CinnabarGym/script.scene: block 12 ZH character sequence changed
+  origin/master: '哎哟！答错了！铁甲蛹才是第一\n步！'
+  NOW : '抱歉，答错了！'
+/Users/liuyanghe02/develop/open-pokered-3/crates/pokered-data/maps/CinnabarGym/script.scene: block 13 ZH character sequence changed
+  origin/master: '哎哟！\n好烫，好烫，好烫！'
+  NOW : '我忍不住想偷别人的宝可梦！'
+/Users/liuyanghe02/develop/open-pokered-3/crates/pokered-data/maps/CinnabarGym/script.scene: block 14 ZH character sequence changed
+  origin/master: '答对了！顺序是绿毛虫、铁甲\n蛹，然后巴大蝶！\n\n大门打开了！'
+  NOW : '宝可梦问答！\n\n答对了，通往下一个房间的大\n门就会打开！\n\n答错了，就要面对训练家！\n\n如果想为挑战馆主保存宝可梦\n的实力……\n\n那就答对吧！开始！'
+/Users/liuyanghe02/develop/open-pokered-3/crates/pokered-data/maps/CinnabarGym/script.scene: block 15 ZH character sequence changed
+  origin/master: '我忍不住想偷别人的宝可梦！'
+  NOW : '宝可梦联盟的认证徽章有 9枚？'
+/Users/liuyanghe02/develop/open-pokered-3/crates/pokered-data/maps/CinnabarGym/script.scene: block 16 ZH character sequence changed
+  origin/master: '我以前是小偷，但现在改邪归正\n了！\n\n猜谜！答对就能开门！'
+  NOW : '抱歉，答错了！'
+/Users/liuyanghe02/develop/open-pokered-3/crates/pokered-data/maps/CinnabarGym/script.scene: block 17 ZH character sequence changed
+  origin/master: '宝可梦联盟有官方认可的 8枚徽\n章！\n\n是或否？'
+  NOW : '我的理论太复杂，你听不懂！'
+/Users/liuyanghe02/develop/open-pokered-3/crates/pokered-data/maps/CinnabarGym/script.scene: block 18 ZH character sequence changed
+  origin/master: '答对了！集齐 8枚就能到达联\n盟！\n\n大门打开了！'
+  NOW : '完全正确！\n\n请通过吧！'
+/Users/liuyanghe02/develop/open-pokered-3/crates/pokered-data/maps/CinnabarGym/script.scene: block 19 ZH character sequence changed
+  origin/master: '错了！有8枚！我要教训你！'
+  NOW : '宝可梦问答！\n\n答对了，通往下一个房间的大\n门就会打开！\n\n答错了，就要面对训练家！\n\n如果想为挑战馆主保存宝可梦\n的实力……\n\n那就答对吧！开始！'
+/Users/liuyanghe02/develop/open-pokered-3/crates/pokered-data/maps/CinnabarGym/script.scene: block 20 ZH character sequence changed
+  origin/master: '我\n投降了！'
+  NOW : '蚊香蝌蚪会进化 3次？'
+/Users/liuyanghe02/develop/open-pokered-3/crates/pokered-data/maps/CinnabarGym/script.scene: block 21 ZH character sequence changed
+  origin/master: '我的理论太复杂，你听不懂！'
+  NOW : '抱歉，答错了！'
+/Users/liuyanghe02/develop/open-pokered-3/crates/pokered-data/maps/CinnabarGym/script.scene: block 22 ZH character sequence changed
+  origin/master: '你赢不了的！我已经把宝可梦研\n究透了！\n\n猜谜！答对就能开门！'
+  NOW : '真希望有小偷宝可梦！我一定\n用！'
+/Users/liuyanghe02/develop/open-pokered-3/crates/pokered-data/maps/CinnabarGym/script.scene: block 23 ZH character sequence changed
+  origin/master: '蚊香蝌蚪进化成蚊香君，再成蚊\n香泳士！\n\n是或否？'
+  NOW : '完全正确！\n\n请通过吧！'
+/Users/liuyanghe02/develop/open-pokered-3/crates/pokered-data/maps/CinnabarGym/script.scene: block 24 ZH character sequence changed
+  origin/master: '答对了！完美的答案！\n\n大门打开了！'
+  NOW : '宝可梦问答！\n\n答对了，通往下一个房间的大\n门就会打开！\n\n答错了，就要面对训练家！\n\n如果想为挑战馆主保存宝可梦\n的实力……\n\n那就答对吧！开始！'
+/Users/liuyanghe02/develop/open-pokered-3/crates/pokered-data/maps/CinnabarGym/script.scene: block 25 ZH character sequence changed
+  origin/master: '错了！你还得多学习！'
+  NOW : '电系招式对地面系宝可梦有效\n吗？'
+/Users/liuyanghe02/develop/open-pokered-3/crates/pokered-data/maps/CinnabarGym/script.scene: block 26 ZH character sequence changed
+  origin/master: '哇！\n我的研究啊！'
+  NOW : '抱歉，答错了！'
+/Users/liuyanghe02/develop/open-pokered-3/crates/pokered-data/maps/CinnabarGym/script.scene: block 27 ZH character sequence changed
+  origin/master: '真希望有小偷宝可梦！我一定\n用！'
+  NOW : '夏伯在山上迷了路，这时一只火\n鸟宝可梦出现了。\n\n它的光芒指引夏伯下了山！'
+/Users/liuyanghe02/develop/open-pokered-3/crates/pokered-data/maps/CinnabarGym/script.scene: block 28 ZH character sequence changed
+  origin/master: '我就是喜欢用火系宝可梦！\n\n猜谜！答对就能开门！'
+  NOW : '完全正确！\n\n请通过吧！'
+/Users/liuyanghe02/develop/open-pokered-3/crates/pokered-data/maps/CinnabarGym/script.scene: block 29 ZH character sequence changed
+  origin/master: '水系招式对火系宝可梦有效吗？\n\n是或否？'
+  NOW : '宝可梦问答！\n\n答对了，通往下一个房间的大\n门就会打开！\n\n答错了，就要面对训练家！\n\n如果想为挑战馆主保存宝可梦\n的实力……\n\n那就答对吧！开始！'
+/Users/liuyanghe02/develop/open-pokered-3/crates/pokered-data/maps/CinnabarGym/script.scene: block 30 ZH character sequence changed
+  origin/master: '答对了！水能浇灭火！\n\n大门打开了！'
+  NOW : '同种类同等级的宝可梦并不完\n全相同？'
+/Users/liuyanghe02/develop/open-pokered-3/crates/pokered-data/maps/CinnabarGym/script.scene: block 31 ZH character sequence changed
+  origin/master: '错了！水能浇灭火！跟我打一\n场！'
+  NOW : '完全正确！\n\n请通过吧！'
+/Users/liuyanghe02/develop/open-pokered-3/crates/pokered-data/maps/CinnabarGym/script.scene: block 32 ZH character sequence changed
+  origin/master: '烫得\n受不了！'
+  NOW : '抱歉，答错了！'
+/Users/liuyanghe02/develop/open-pokered-3/crates/pokered-data/maps/CinnabarGym/script.scene: block 33 ZH character sequence changed
+  origin/master: '夏伯在山上迷了路，这时一只火\n鸟宝可梦出现了。\n\n它的光芒指引夏伯下了山！'
+  NOW : '我们火系宝可梦迷喜欢小火马和\n九尾！'
+/Users/liuyanghe02/develop/open-pokered-3/crates/pokered-data/maps/CinnabarGym/script.scene: block 34 ZH character sequence changed
+  origin/master: '我知道夏伯为何成为训练家！\n\n猜谜！答对就能开门！'
+  NOW : '宝可梦问答！\n\n答对了，通往下一个房间的大\n门就会打开！\n\n答错了，就要面对训练家！\n\n如果想为挑战馆主保存宝可梦\n的实力……\n\n那就答对吧！开始！'
+/Users/liuyanghe02/develop/open-pokered-3/crates/pokered-data/maps/CinnabarGym/script.scene: block 35 ZH character sequence changed
+  origin/master: '火焰鸟是火加飞行的宝可梦！\n\n是或否？'
+  NOW : 'TM28里装的是大坟墓？'
+/Users/liuyanghe02/develop/open-pokered-3/crates/pokered-data/maps/CinnabarGym/script.scene: block 36 ZH character sequence changed
+  origin/master: '答对了！就是那只火鸟！\n\n大门打开了！'
+  NOW : '抱歉，答错了！'
+/Users/liuyanghe02/develop/open-pokered-3/crates/pokered-data/maps/CinnabarGym/script.scene: block 37 ZH character sequence changed
+  origin/master: '错了！它是火加飞行系！'
+  NOW : '水能克火！但火能融化冰系宝可\n梦！'
+/Users/liuyanghe02/develop/open-pokered-3/crates/pokered-data/maps/CinnabarGym/script.scene: block 38 ZH character sequence changed
+  origin/master: '痛！'
+  NOW : '完全正确！\n\n请通过吧！'
+/Users/liuyanghe02/develop/open-pokered-3/crates/pokered-data/maps/CinnabarGym/script.scene: block 39 ZH character sequence changed
+  origin/master: '我们火系宝可梦迷喜欢小火马和\n九尾！'
+  NOW : '火，或者说更准确地说，燃\n烧……\n\n啰嗦，啰嗦，啰嗦……'
+/Users/liuyanghe02/develop/open-pokered-3/crates/pokered-data/maps/CinnabarGym/script.scene: block 40 ZH character sequence changed
+  origin/master: '我去过很多道馆，这里最棒！\n\n猜谜！答对就能开门！'
+  NOW : '你知道宝可梦的火焰温度有多高\n吗？'
+/Users/liuyanghe02/develop/open-pokered-3/crates/pokered-data/maps/CinnabarGym/script.scene: block 41 ZH character sequence changed
+  origin/master: '草系宝可梦抵抗火系招式！\n\n是或否？'
+  NOW : '火，或者说更准确地说，燃\n烧……\n\n啰嗦，啰嗦，啰嗦……'
+/Users/liuyanghe02/develop/open-pokered-3/crates/pokered-data/maps/CinnabarGym/script.scene: block 42 ZH character sequence changed
+  origin/master: '错了！火会烧草！跟我打！'
+  NOW : '我忍不住想偷别人的宝可梦！'
+/Users/liuyanghe02/develop/open-pokered-3/crates/pokered-data/maps/CinnabarGym/script.scene: block 43 ZH character sequence changed
+  origin/master: '哎哟喂！\n太烫了！'
+  NOW : '我以前是小偷，但现在改邪归正\n了！'
+/Users/liuyanghe02/develop/open-pokered-3/crates/pokered-data/maps/CinnabarGym/script.scene: block 44 ZH character sequence changed
+  origin/master: '答对了！火会烤焦草！\n\n大门打开了！'
+  NOW : '我忍不住想偷别人的宝可梦！'
+/Users/liuyanghe02/develop/open-pokered-3/crates/pokered-data/maps/CinnabarGym/script.scene: block 45 ZH character sequence changed
+  origin/master: '水能克火！但火能融化冰系宝可\n梦！'
+  NOW : '我的理论太复杂，你听不懂！'
+/Users/liuyanghe02/develop/open-pokered-3/crates/pokered-data/maps/CinnabarGym/script.scene: block 46 ZH character sequence changed
+  origin/master: '火怕水，就是H2O！\n\n猜谜！答对就能开门！'
+  NOW : '你赢不了的！我已经把宝可梦研\n究透了！'
+/Users/liuyanghe02/develop/open-pokered-3/crates/pokered-data/maps/CinnabarGym/script.scene: block 47 ZH character sequence changed
+  origin/master: '火怕水，但能融化冰系宝可梦！\n\n是或否？'
+  NOW : '我的理论太复杂，你听不懂！'
+/Users/liuyanghe02/develop/open-pokered-3/crates/pokered-data/maps/CinnabarGym/script.scene: block 48 ZH character sequence changed
+  origin/master: '答对了！你很懂属性！\n\n大门打开了！'
+  NOW : '真希望有小偷宝可梦！我一定\n用！'
+/Users/liuyanghe02/develop/open-pokered-3/crates/pokered-data/maps/CinnabarGym/script.scene: block 49 ZH character sequence changed
+  origin/master: '错了！火会化冰！跟我打！'
+  NOW : '我就是喜欢用火系宝可梦！'
+/Users/liuyanghe02/develop/open-pokered-3/crates/pokered-data/maps/CinnabarGym/script.scene: block 50 ZH character sequence changed
+  origin/master: '哦！\n被扑灭了！'
+  NOW : '真希望有小偷宝可梦！我一定\n用！'
+/Users/liuyanghe02/develop/open-pokered-3/crates/pokered-data/maps/CinnabarGym/script.scene: block 51 ZH character sequence changed
+  origin/master: '<PLAYER>！你打败了那火霸王！'
+  NOW : '夏伯在山上迷了路，这时一只火\n鸟宝可梦出现了。\n\n它的光芒指引夏伯下了山！'
+/Users/liuyanghe02/develop/open-pokered-3/crates/pokered-data/maps/CinnabarGym/script.scene: block 52 ZH character sequence changed
+  origin/master: '哟！未来的冠军！\n\n急性子的夏伯是火系宝可梦专\n家！\n\n用水浇灭他的气焰！\n\n你最好带上些灼伤药！'
+  NOW : '我知道夏伯为何成为训练家！'
+/Users/liuyanghe02/develop/open-pokered-3/crates/pokered-data/maps/CinnabarGym/script.scene: block 53 ZH character sequence changed
+  origin/master: '红莲岛宝可梦道馆\n馆主：夏伯\n\n获胜训练家：\n劲敌\n玩家'
+  NOW : '夏伯在山上迷了路，这时一只火\n鸟宝可梦出现了。\n\n它的光芒指引夏伯下了山！'
+/Users/liuyanghe02/develop/open-pokered-3/crates/pokered-data/maps/CinnabarGym/script.scene: block 54 ZH character sequence changed
+  origin/master: '红莲岛宝可梦道馆\n馆主：夏伯\n\n获胜训练家：\n劲敌'
+  NOW : '我们火系宝可梦迷喜欢小火马和\n九尾！'

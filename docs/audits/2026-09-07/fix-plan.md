@@ -1,5 +1,7 @@
 # 审计修复计划：2026-09-07
 
+> **最新复验（2026-09-08）**：此前完成总结存在漏修与验证缺口，已补修。当前结论、测试范围及 B03/B08 限制以 [acceptance.md](acceptance.md) 为准；下文保留历史记录。
+
 对照 `docs/audits/2026-09-07/report.md`（完整通关审计，43 项确认问题）的遗留项修复队列。
 本文件只新增、不改写报告历史记录。
 
@@ -109,3 +111,5 @@ python3 scripts/playthrough.py      # 完整 m01–m10，输出 PLAYTHROUGH REAC
 - 2026-09-07：A10 闭合。bag.rs：Auto 高度封顶布局 th＋条目窗口化滚动（offset 保证光标可见，CANCEL 行按窗口渲染）；测试 2 项绿（20 项列表五档光标位置全部框内；CANCEL 可达）。审计 hm03/hm04 截图为红证据；前后截图对下一轮经 give_item+START/ITEM 菜单驱动补齐。
 - 2026-09-07：A11 闭合。信息框内 7×3＋边框（总 9×5），标签 (1,1)/(1,3)；几何单测先红后绿；`--screen safari-start` 新截图目标（debug warp 不经过门流程、无法激活游猎运行态，故种子注入 safari_info 走真实 draw）；前后截图 a11-safari-start-before/after.png；pokered-ui 全绿。
 - 2026-09-07：A18 闭合。`field_moves::victory_road_switch_for` 挂进推石 Pushed 分支（照 seafoam_hole 先例）：落点命中三层开关坐标才置 ON_SWITCH 旗标并直接开门块；1F talk 解锁、2F/3F 踏坐标解锁三处近似全部删除（scene+config）。测试 `victory_road_switch_requires_boulder_pushed_onto_it` 端到端绿（摆石→按住怪力推→落点压开关→旗标+块 29；未推石旗标 unset）；core 2492 全绿；diff-check 通过。
+
+- 2026-09-08 补充复验：前述闭合记录以 [acceptance.md](acceptance.md) 的最新结论为准。A03/A04、A05/B05、A15、A18/C20、A21/B07、A13/B01、C17 的漏修已补齐；A12 合并采用 master 原版离场路径。新增空队伍误全灭回归修复、真实 248 场景翻译检查及战前对白导航支持。B03/B08 保留验证与旧档限制。前后截图重新对照 master，日志集中在 `acceptance-logs/`。

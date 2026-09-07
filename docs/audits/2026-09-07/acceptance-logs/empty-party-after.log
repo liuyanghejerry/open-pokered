@@ -1,0 +1,2 @@
+[m02] frame=1921 screen=overworld map=RedsHouse2F pos=(3,6) party=0 money=0 effect=None
+{'map_name': 'RedsHouse2F', 'player_x': 4, 'player_y': 3, 'party_count': 0}

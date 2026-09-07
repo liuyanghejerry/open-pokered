@@ -1,0 +1,298 @@
+[
+  {
+    "file": "app-articuno-reload-after.png",
+    "sha256": "3b3d8ce618e87dd3d297e52a5e2b237baa48b858b82d272c170b29b61facc8f9"
+  },
+  {
+    "file": "app-articuno-reload-before.png",
+    "sha256": "0c5ef72d79da13a3ea91e65a34fd69d23bd3438b39be4d076aa3f3c5fd1132b0"
+  },
+  {
+    "file": "app-bag-after.png",
+    "sha256": "7ac5deab4044d436de5d65d6b9ce32927cf1936585028a94abc6358cbd46b804"
+  },
+  {
+    "file": "app-bag-before.png",
+    "sha256": "1e2eef81918076ab8c4dd498afac521c66e50dd587391afa8b9e86e833972413"
+  },
+  {
+    "file": "app-bill-machine-after.png",
+    "sha256": "6254d9b7c8bc867243a982c79e89e91e695adb4f729c1ac2792c81ec843c7c54"
+  },
+  {
+    "file": "app-bill-machine-before.png",
+    "sha256": "bb96ed2137a3cb48d2b812e2643a44e14949a1ce73c42551f305414c8e27d47f"
+  },
+  {
+    "file": "app-boulder-after-drop-after.png",
+    "sha256": "37b5a31cef0ec67d8784bf6a564d2901f2ed86716472f483a91ff5ca235ba875"
+  },
+  {
+    "file": "app-boulder-after-drop-before.png",
+    "sha256": "ec30f5e5417e0ca29398f8b8eeb8bba080838a282d5c5ff870fee1acc89ce051"
+  },
+  {
+    "file": "app-boulder-before-drop-after.png",
+    "sha256": "b082f55628a95c5f57bb0bc2102f961a22b6885eee095d62efeedf39945342bf"
+  },
+  {
+    "file": "app-boulder-before-drop-before.png",
+    "sha256": "da98112b19acb96863aeab18c346fb9868e627192ec03c0c0f2b8c8bd7ef6110"
+  },
+  {
+    "file": "app-bruno-door-after.png",
+    "sha256": "1a059d51918645ae3cc60ce63cbeb4db9a95c4550807e6ccd46cdf28c2a53274"
+  },
+  {
+    "file": "app-bruno-door-before.png",
+    "sha256": "a03a05ed069a1e430ff00f6f3f4ae5bd3102f5d30f97f3061cf20b7d83f09f55"
+  },
+  {
+    "file": "app-credits-after.png",
+    "sha256": "64f311b21456cf595e177187e3a2693dd9e51fc10b6cda947cf96474cf8b489c"
+  },
+  {
+    "file": "app-credits-before.png",
+    "sha256": "6e08e100c0408fd4352c2022da92dec1c25ff44515dfc309fca84fdedb54f376"
+  },
+  {
+    "file": "app-cut-tree-after.png",
+    "sha256": "435e957f3a0847491fd7ddc80099728750d16f8a3b152e7d41d9c0624144a221"
+  },
+  {
+    "file": "app-cut-tree-before.png",
+    "sha256": "80d0e0a8a6110a3037a9222ddb4e3d4ce7402ade37765066f3fe836e4bdc65b3"
+  },
+  {
+    "file": "app-drinks-after.png",
+    "sha256": "ee4b71b17dffbdb1dcda69fd90069a9e58a055982ba8d0d42ddf7150b8141cf1"
+  },
+  {
+    "file": "app-drinks-before.png",
+    "sha256": "c2d3ec3cda3b2ee3e8acd8444c07a0f5ee98513816aec50941cf17e1ff965729"
+  },
+  {
+    "file": "app-empty-party-after.png",
+    "sha256": "b223b4184afad304dda193a13dacc64d692329f3af45284d61c2ca59977d20b4"
+  },
+  {
+    "file": "app-empty-party-before.png",
+    "sha256": "c5bf073611010b38c5be5bda253e994814063bed7f9bc6b79a302a08b31a8589"
+  },
+  {
+    "file": "app-gates-after.png",
+    "sha256": "5f2df0aa029c4339198cd5ca69a1a570c34194b9dca51db98590307032947a14"
+  },
+  {
+    "file": "app-gates-before.png",
+    "sha256": "68f0107f1067aca7c25a512f276f9fc090b9af9f1afd4730bb72a579831d70ec"
+  },
+  {
+    "file": "app-hof-Doduo-after.png",
+    "sha256": "a6dba6466d1ab6553226b9548fc67e1b71afcb02ba2a56ca59e32f02d294eda6"
+  },
+  {
+    "file": "app-hof-Doduo-before.png",
+    "sha256": "508ce1e20625dfb369f15ad9499de9e2da3577149b9d5120f892ec4d14433855"
+  },
+  {
+    "file": "app-hof-Lapras-after.png",
+    "sha256": "fce05b69490b2faee266247e178a3913e062b843e10dcb1a1fe22a7c582a0256"
+  },
+  {
+    "file": "app-hof-Lapras-before.png",
+    "sha256": "2b8841a22d514ace698ad4f36b91da21824bc6ea47bc835d7104351993bda41d"
+  },
+  {
+    "file": "app-moltres-reload-after.png",
+    "sha256": "f7f5ecebfae8ad583c435919b0ccfab2d98f77764881a5c5256f0b4d39c38e1c"
+  },
+  {
+    "file": "app-moltres-reload-before.png",
+    "sha256": "5489a6c542f3339d1475e55ecdecabb1e047e4b23e3a8ce7b01c4b4590c1bfa7"
+  },
+  {
+    "file": "app-move-choice-after.png",
+    "sha256": "5722b2113f303dcc591aa765c6e6343a75fb07e2de9ffcffae6b305c2f5b115b"
+  },
+  {
+    "file": "app-move-choice-before.png",
+    "sha256": "88f4cfa11dda3712b7d0fff82225e402c0ad00e224ff98e753f9a47aff77dbec"
+  },
+  {
+    "file": "app-quiz-solved-after.png",
+    "sha256": "6dbe2b7c0a42c6e91173d0e4c0f0456bf0820477de7044bd21c04195aef0fdfc"
+  },
+  {
+    "file": "app-quiz-solved-before.png",
+    "sha256": "68f0107f1067aca7c25a512f276f9fc090b9af9f1afd4730bb72a579831d70ec"
+  },
+  {
+    "file": "app-safari-after.png",
+    "sha256": "b7b68aba1b15e55bfc93b2efa11dbcd2e59b3a67a14830ed8a8b834151f1dff9"
+  },
+  {
+    "file": "app-safari-before.png",
+    "sha256": "1d34aa77fc39911a8afe41612711997f472800f87203c1bf266762c47590608e"
+  },
+  {
+    "file": "app-zapdos-reload-after.png",
+    "sha256": "82d15917e9374158721459e0d95cc4dc4753cb7304b616f9875b92ccafff2886"
+  },
+  {
+    "file": "app-zapdos-reload-before.png",
+    "sha256": "8707847fc342b1338632a8fb0b68ee2194fb48b3d00eac206636b2e8b19d179c"
+  },
+  {
+    "file": "empty-party-after.png",
+    "sha256": "ad596be7157c928714f6d95b0e26050493186bd0ab44575689a911a21cef7cfe"
+  },
+  {
+    "file": "empty-party-before.png",
+    "sha256": "6c94c200b5c7b03696d997411cde2d025d86aa67421b84498a0c9839e80b5ab2"
+  },
+  {
+    "file": "tui-articuno-reload-after.png",
+    "sha256": "3b3d8ce618e87dd3d297e52a5e2b237baa48b858b82d272c170b29b61facc8f9"
+  },
+  {
+    "file": "tui-articuno-reload-before.png",
+    "sha256": "0c5ef72d79da13a3ea91e65a34fd69d23bd3438b39be4d076aa3f3c5fd1132b0"
+  },
+  {
+    "file": "tui-bag-after.png",
+    "sha256": "7ac5deab4044d436de5d65d6b9ce32927cf1936585028a94abc6358cbd46b804"
+  },
+  {
+    "file": "tui-bag-before.png",
+    "sha256": "1e2eef81918076ab8c4dd498afac521c66e50dd587391afa8b9e86e833972413"
+  },
+  {
+    "file": "tui-bill-machine-after.png",
+    "sha256": "6254d9b7c8bc867243a982c79e89e91e695adb4f729c1ac2792c81ec843c7c54"
+  },
+  {
+    "file": "tui-bill-machine-before.png",
+    "sha256": "bb96ed2137a3cb48d2b812e2643a44e14949a1ce73c42551f305414c8e27d47f"
+  },
+  {
+    "file": "tui-boulder-after-drop-after.png",
+    "sha256": "37b5a31cef0ec67d8784bf6a564d2901f2ed86716472f483a91ff5ca235ba875"
+  },
+  {
+    "file": "tui-boulder-after-drop-before.png",
+    "sha256": "ec30f5e5417e0ca29398f8b8eeb8bba080838a282d5c5ff870fee1acc89ce051"
+  },
+  {
+    "file": "tui-boulder-before-drop-after.png",
+    "sha256": "b082f55628a95c5f57bb0bc2102f961a22b6885eee095d62efeedf39945342bf"
+  },
+  {
+    "file": "tui-boulder-before-drop-before.png",
+    "sha256": "da98112b19acb96863aeab18c346fb9868e627192ec03c0c0f2b8c8bd7ef6110"
+  },
+  {
+    "file": "tui-bruno-door-after.png",
+    "sha256": "1a059d51918645ae3cc60ce63cbeb4db9a95c4550807e6ccd46cdf28c2a53274"
+  },
+  {
+    "file": "tui-bruno-door-before.png",
+    "sha256": "a03a05ed069a1e430ff00f6f3f4ae5bd3102f5d30f97f3061cf20b7d83f09f55"
+  },
+  {
+    "file": "tui-credits-after.png",
+    "sha256": "64f311b21456cf595e177187e3a2693dd9e51fc10b6cda947cf96474cf8b489c"
+  },
+  {
+    "file": "tui-credits-before.png",
+    "sha256": "6e08e100c0408fd4352c2022da92dec1c25ff44515dfc309fca84fdedb54f376"
+  },
+  {
+    "file": "tui-cut-tree-after.png",
+    "sha256": "0ce9beb08e3c37f1afb80496708b7a6171ec1c3940422f1e7a874a6528de573e"
+  },
+  {
+    "file": "tui-cut-tree-before.png",
+    "sha256": "8bf4735f3811cdc9b0eb9d3ffb31de40333aa44fb216314f4a94ce58ba3b5408"
+  },
+  {
+    "file": "tui-drinks-after.png",
+    "sha256": "ee4b71b17dffbdb1dcda69fd90069a9e58a055982ba8d0d42ddf7150b8141cf1"
+  },
+  {
+    "file": "tui-drinks-before.png",
+    "sha256": "c2d3ec3cda3b2ee3e8acd8444c07a0f5ee98513816aec50941cf17e1ff965729"
+  },
+  {
+    "file": "tui-empty-party-after.png",
+    "sha256": "b223b4184afad304dda193a13dacc64d692329f3af45284d61c2ca59977d20b4"
+  },
+  {
+    "file": "tui-empty-party-before.png",
+    "sha256": "d4565ae557bca5ef61676006e591bd26022e910ef652a3d92194af2367d5963f"
+  },
+  {
+    "file": "tui-gates-after.png",
+    "sha256": "5f2df0aa029c4339198cd5ca69a1a570c34194b9dca51db98590307032947a14"
+  },
+  {
+    "file": "tui-gates-before.png",
+    "sha256": "68f0107f1067aca7c25a512f276f9fc090b9af9f1afd4730bb72a579831d70ec"
+  },
+  {
+    "file": "tui-hof-Doduo-after.png",
+    "sha256": "a6dba6466d1ab6553226b9548fc67e1b71afcb02ba2a56ca59e32f02d294eda6"
+  },
+  {
+    "file": "tui-hof-Doduo-before.png",
+    "sha256": "508ce1e20625dfb369f15ad9499de9e2da3577149b9d5120f892ec4d14433855"
+  },
+  {
+    "file": "tui-hof-Lapras-after.png",
+    "sha256": "fce05b69490b2faee266247e178a3913e062b843e10dcb1a1fe22a7c582a0256"
+  },
+  {
+    "file": "tui-hof-Lapras-before.png",
+    "sha256": "2b8841a22d514ace698ad4f36b91da21824bc6ea47bc835d7104351993bda41d"
+  },
+  {
+    "file": "tui-moltres-reload-after.png",
+    "sha256": "f7f5ecebfae8ad583c435919b0ccfab2d98f77764881a5c5256f0b4d39c38e1c"
+  },
+  {
+    "file": "tui-moltres-reload-before.png",
+    "sha256": "5489a6c542f3339d1475e55ecdecabb1e047e4b23e3a8ce7b01c4b4590c1bfa7"
+  },
+  {
+    "file": "tui-move-choice-after.png",
+    "sha256": "000db0c9494f1d4d99c301e4308054e9d6ee020fb3c8ac8451651bb1ac156b72"
+  },
+  {
+    "file": "tui-move-choice-before.png",
+    "sha256": "0137d7bb587deb0b9c41bb530878b455d08704cf17074a0c13e66b9c766122cc"
+  },
+  {
+    "file": "tui-quiz-solved-after.png",
+    "sha256": "6dbe2b7c0a42c6e91173d0e4c0f0456bf0820477de7044bd21c04195aef0fdfc"
+  },
+  {
+    "file": "tui-quiz-solved-before.png",
+    "sha256": "68f0107f1067aca7c25a512f276f9fc090b9af9f1afd4730bb72a579831d70ec"
+  },
+  {
+    "file": "tui-safari-after.png",
+    "sha256": "0e8e47fb891672c20f9ecc29bd11a9468995d3ff273cf2ee4a8f79ef31665730"
+  },
+  {
+    "file": "tui-safari-before.png",
+    "sha256": "72dbfb9ca09e82ac59dcc7e3517cec571c50d11f986afd1a01b09192ec4790b5"
+  },
+  {
+    "file": "tui-zapdos-reload-after.png",
+    "sha256": "82d15917e9374158721459e0d95cc4dc4753cb7304b616f9875b92ccafff2886"
+  },
+  {
+    "file": "tui-zapdos-reload-before.png",
+    "sha256": "8707847fc342b1338632a8fb0b68ee2194fb48b3d00eac206636b2e8b19d179c"
+  }
+]

@@ -1,0 +1,176 @@
+== m01: boot to NEW GAME / Oak speech
+   done (1.1s wall)
+== m02: Oak speech + default names → bedroom
+[m02] frame=1921 screen=overworld map=RedsHouse2F pos=(3,6) party=0 money=0 effect=None
+   done (4.3s wall)
+== m03: leave home → Pallet Town
+[m03] frame=2249 screen=overworld map=PalletTown pos=(5,5) party=0 money=0 effect=None
+   done (5.1s wall)
+== m04: Oak interception → OaksLab
+[m04] frame=4196 screen=overworld map=OaksLab pos=(5,3) party=0 money=0 effect=None
+   done (6.3s wall)
+== m05: take starter (bulbasaur)
+[m05] frame=5312 screen=overworld map=OaksLab pos=(8,4) party=1 money=0 effect=None
+   done (7.1s wall)
+== m06: first rival battle
+[battle-start] OaksLab [{'hp': 20, 'level': 5, 'max_hp': 20, 'moves': ['Tackle', 'Growl', 'None', 'None'], 'pp': [35, 40, 0, 0], 'species': 'Bulbasaur', 'status': 'None'}] Intro { phase: TrainerReveal, wait_frames: 17 }
+[battle-end] OaksLab [{'hp': 6, 'level': 6, 'max_hp': 22, 'moves': ['Tackle', 'Growl', 'None', 'None'], 'pp': [23, 40, 0, 0], 'species': 'Bulbasaur', 'status': 'None'}] TrainerVictory { phase: EndBattleText, wait_frames: 0, player_won: true }
+[m06] frame=7950 screen=overworld map=OaksLab pos=(5,6) party=1 money=175 effect=None
+   done (14.0s wall)
+== m07: Route 1 → Viridian Mart parcel
+[battle-start] Route1 [{'hp': 22, 'level': 6, 'max_hp': 22, 'moves': ['Tackle', 'Growl', 'None', 'None'], 'pp': [35, 40, 0, 0], 'species': 'Bulbasaur', 'status': 'None'}] Intro { phase: TransitionFlash, wait_frames: 46 }
+[battle-end] Route1 [{'hp': 22, 'level': 6, 'max_hp': 22, 'moves': ['Tackle', 'Growl', 'None', 'None'], 'pp': [35, 40, 0, 0], 'species': 'Bulbasaur', 'status': 'None'}] BattleOver { won: false, escaped: true, wait_frames: 17 }
+[m07-in-mart] frame=11512 screen=overworld map=ViridianMart pos=(3,5) party=1 money=175 effect=None
+[m07-back-outside] frame=11624 screen=overworld map=ViridianCity pos=(29,19) party=1 money=175 effect=None
+   done (22.3s wall)
+== m08: deliver parcel → POKéDEX
+[m08-southlane] frame=11869 screen=overworld map=ViridianCity pos=(20,32) party=1 money=175 effect=None
+[m08-back-home] frame=13080 screen=overworld map=PalletTown pos=(12,12) party=1 money=175 effect=None
+[m08-delivered] frame=15824 screen=overworld map=OaksLab pos=(5,3) party=1 money=175 effect=None
+[m08] oak-after-delivery: POKeMON around the world wait for you, RED!
+   done (27.3s wall)
+== m09: Viridian Forest → Pewter City
+[battle-start] Route1 [{'hp': 22, 'level': 6, 'max_hp': 22, 'moves': ['Tackle', 'Growl', 'None', 'None'], 'pp': [35, 40, 0, 0], 'species': 'Bulbasaur', 'status': 'None'}] Intro { phase: TransitionFlash, wait_frames: 54 }
+[battle-end] Route1 [{'hp': 22, 'level': 6, 'max_hp': 22, 'moves': ['Tackle', 'Growl', 'None', 'None'], 'pp': [35, 40, 0, 0], 'species': 'Bulbasaur', 'status': 'None'}] BattleOver { won: false, escaped: true, wait_frames: 17 }
+[battle-start] ViridianForest [{'hp': 22, 'level': 6, 'max_hp': 22, 'moves': ['Tackle', 'Growl', 'None', 'None'], 'pp': [35, 40, 0, 0], 'species': 'Bulbasaur', 'status': 'None'}] Intro { phase: TransitionFlash, wait_frames: 24 }
+[battle-end] ViridianForest [{'hp': 22, 'level': 6, 'max_hp': 22, 'moves': ['Tackle', 'Growl', 'None', 'None'], 'pp': [35, 40, 0, 0], 'species': 'Bulbasaur', 'status': 'None'}] BattleOver { won: false, escaped: true, wait_frames: 17 }
+[battle-start] ViridianForest [{'hp': 22, 'level': 6, 'max_hp': 22, 'moves': ['Tackle', 'Growl', 'None', 'None'], 'pp': [35, 40, 0, 0], 'species': 'Bulbasaur', 'status': 'None'}] Intro { phase: BattleTransitionWipe(DoubleCircle), wait_frames: 113 }
+[battle-end] ViridianForest [{'hp': 22, 'level': 6, 'max_hp': 22, 'moves': ['Tackle', 'Growl', 'None', 'None'], 'pp': [35, 40, 0, 0], 'species': 'Bulbasaur', 'status': 'None'}] BattleOver { won: false, escaped: true, wait_frames: 17 }
+   [ntoPINCH] at ViridianForest(11,4)
+   [ntoPINCH] at ViridianForest(11,19)
+   [ntoPINCH] at ViridianForest(11,16)
+[battle-start] ViridianForest [{'hp': 22, 'level': 6, 'max_hp': 22, 'moves': ['Tackle', 'Growl', 'None', 'None'], 'pp': [35, 40, 0, 0], 'species': 'Bulbasaur', 'status': 'None'}] Intro { phase: TrainerReveal, wait_frames: 0 }
+[battle-end] ViridianForest [{'hp': 9, 'level': 7, 'max_hp': 24, 'moves': ['Tackle', 'Growl', 'LeechSeed', 'None'], 'pp': [27, 40, 10, 0], 'species': 'Bulbasaur', 'status': 'None'}] TrainerVictory { phase: EndBattleText, wait_frames: 0, player_won: true }
+[m09] frame=25380 screen=overworld map=PewterCity pos=(16,29) party=1 money=265 effect=None
+   done (49.8s wall)
+== m10: train + Boulder Badge (Brock)
+[m10-arrived] frame=25381 screen=overworld map=PewterCity pos=(16,29) party=1 money=265 effect=None
+[battle-start] ViridianForest [{'hp': 24, 'level': 7, 'max_hp': 24, 'moves': ['Tackle', 'Growl', 'LeechSeed', 'None'], 'pp': [35, 40, 10, 0], 'species': 'Bulbasaur', 'status': 'None'}] Intro { phase: TransitionFlash, wait_frames: 32 }
+[battle-end] ViridianForest [{'hp': 24, 'level': 7, 'max_hp': 24, 'moves': ['Tackle', 'Growl', 'LeechSeed', 'None'], 'pp': [35, 40, 10, 0], 'species': 'Bulbasaur', 'status': 'None'}] BattleOver { won: false, escaped: true, wait_frames: 17 }
+[battle-start] ViridianForest [{'hp': 24, 'level': 7, 'max_hp': 24, 'moves': ['Tackle', 'Growl', 'LeechSeed', 'None'], 'pp': [35, 40, 10, 0], 'species': 'Bulbasaur', 'status': 'None'}] Intro { phase: TransitionFlash, wait_frames: 32 }
+[battle-end] ViridianForest [{'hp': 24, 'level': 7, 'max_hp': 24, 'moves': ['Tackle', 'Growl', 'LeechSeed', 'None'], 'pp': [35, 40, 10, 0], 'species': 'Bulbasaur', 'status': 'None'}] BattleOver { won: false, escaped: true, wait_frames: 17 }
+   [ntoPINCH] at ViridianForest(26,10)
+[battle-start] Route2 [{'hp': 24, 'level': 7, 'max_hp': 24, 'moves': ['Tackle', 'Growl', 'LeechSeed', 'None'], 'pp': [35, 40, 10, 0], 'species': 'Bulbasaur', 'status': 'None'}] Intro { phase: TransitionFlash, wait_frames: 61 }
+[battle-end] Route2 [{'hp': 24, 'level': 7, 'max_hp': 24, 'moves': ['Tackle', 'Growl', 'LeechSeed', 'None'], 'pp': [35, 40, 10, 0], 'species': 'Bulbasaur', 'status': 'None'}] BattleOver { won: false, escaped: true, wait_frames: 17 }
+[train] grass spot Route1 (12,7), target L13
+[train] cyc=0 battles=0 L7 hp=24/24 (0s)
+[battle-start] Route1 [{'hp': 24, 'level': 7, 'max_hp': 24, 'moves': ['Tackle', 'Growl', 'LeechSeed', 'None'], 'pp': [35, 40, 10, 0], 'species': 'Bulbasaur', 'status': 'None'}] Intro { phase: TransitionFlash, wait_frames: 49 }
+[battle-end] Route1 [{'hp': 23, 'level': 8, 'max_hp': 26, 'moves': ['Tackle', 'Growl', 'LeechSeed', 'None'], 'pp': [31, 40, 10, 0], 'species': 'Bulbasaur', 'status': 'None'}] BattleOver { won: true, escaped: false, wait_frames: 47 }
+[battle-start] Route1 [{'hp': 23, 'level': 8, 'max_hp': 26, 'moves': ['Tackle', 'Growl', 'LeechSeed', 'None'], 'pp': [31, 40, 10, 0], 'species': 'Bulbasaur', 'status': 'None'}] Intro { phase: TransitionFlash, wait_frames: 49 }
+[battle-end] Route1 [{'hp': 17, 'level': 8, 'max_hp': 26, 'moves': ['Tackle', 'Growl', 'LeechSeed', 'None'], 'pp': [28, 40, 10, 0], 'species': 'Bulbasaur', 'status': 'None'}] BattleOver { won: true, escaped: false, wait_frames: 47 }
+[battle-start] Route1 [{'hp': 17, 'level': 8, 'max_hp': 26, 'moves': ['Tackle', 'Growl', 'LeechSeed', 'None'], 'pp': [28, 40, 10, 0], 'species': 'Bulbasaur', 'status': 'None'}] Intro { phase: TransitionFlash, wait_frames: 58 }
+[battle-end] Route1 [{'hp': 12, 'level': 8, 'max_hp': 26, 'moves': ['Tackle', 'Growl', 'LeechSeed', 'None'], 'pp': [25, 40, 10, 0], 'species': 'Bulbasaur', 'status': 'None'}] BattleOver { won: true, escaped: false, wait_frames: 47 }
+[train] hp 12/26 -> heal
+[battle-start] Route1 [{'hp': 12, 'level': 8, 'max_hp': 26, 'moves': ['Tackle', 'Growl', 'LeechSeed', 'None'], 'pp': [25, 40, 10, 0], 'species': 'Bulbasaur', 'status': 'None'}] Intro { phase: TransitionFlash, wait_frames: 40 }
+[battle-end] Route1 [{'hp': 12, 'level': 8, 'max_hp': 26, 'moves': ['Tackle', 'Growl', 'LeechSeed', 'None'], 'pp': [25, 40, 10, 0], 'species': 'Bulbasaur', 'status': 'None'}] BattleOver { won: false, escaped: true, wait_frames: 17 }
+[battle-start] Route1 [{'hp': 26, 'level': 8, 'max_hp': 26, 'moves': ['Tackle', 'Growl', 'LeechSeed', 'None'], 'pp': [35, 40, 10, 0], 'species': 'Bulbasaur', 'status': 'None'}] Intro { phase: TransitionFlash, wait_frames: 48 }
+[battle-end] Route1 [{'hp': 26, 'level': 8, 'max_hp': 26, 'moves': ['Tackle', 'Growl', 'LeechSeed', 'None'], 'pp': [35, 40, 10, 0], 'species': 'Bulbasaur', 'status': 'None'}] BattleOver { won: false, escaped: true, wait_frames: 17 }
+[battle-start] Route1 [{'hp': 26, 'level': 8, 'max_hp': 26, 'moves': ['Tackle', 'Growl', 'LeechSeed', 'None'], 'pp': [35, 40, 10, 0], 'species': 'Bulbasaur', 'status': 'None'}] Intro { phase: TransitionFlash, wait_frames: 50 }
+[battle-end] Route1 [{'hp': 23, 'level': 8, 'max_hp': 26, 'moves': ['Tackle', 'Growl', 'LeechSeed', 'None'], 'pp': [32, 40, 10, 0], 'species': 'Bulbasaur', 'status': 'None'}] BattleOver { won: true, escaped: false, wait_frames: 47 }
+[battle-start] Route1 [{'hp': 23, 'level': 8, 'max_hp': 26, 'moves': ['Tackle', 'Growl', 'LeechSeed', 'None'], 'pp': [32, 40, 10, 0], 'species': 'Bulbasaur', 'status': 'None'}] Intro { phase: TransitionFlash, wait_frames: 41 }
+[battle-end] Route1 [{'hp': 23, 'level': 9, 'max_hp': 28, 'moves': ['Tackle', 'Growl', 'LeechSeed', 'None'], 'pp': [30, 40, 10, 0], 'species': 'Bulbasaur', 'status': 'None'}] BattleOver { won: true, escaped: false, wait_frames: 47 }
+[battle-start] Route1 [{'hp': 23, 'level': 9, 'max_hp': 28, 'moves': ['Tackle', 'Growl', 'LeechSeed', 'None'], 'pp': [30, 40, 10, 0], 'species': 'Bulbasaur', 'status': 'None'}] Intro { phase: TransitionFlash, wait_frames: 42 }
+[battle-end] Route1 [{'hp': 20, 'level': 9, 'max_hp': 28, 'moves': ['Tackle', 'Growl', 'LeechSeed', 'None'], 'pp': [28, 40, 10, 0], 'species': 'Bulbasaur', 'status': 'None'}] BattleOver { won: true, escaped: false, wait_frames: 47 }
+[battle-start] Route1 [{'hp': 20, 'level': 9, 'max_hp': 28, 'moves': ['Tackle', 'Growl', 'LeechSeed', 'None'], 'pp': [28, 40, 10, 0], 'species': 'Bulbasaur', 'status': 'None'}] Intro { phase: TransitionFlash, wait_frames: 50 }
+[battle-end] Route1 [{'hp': 14, 'level': 9, 'max_hp': 28, 'moves': ['Tackle', 'Growl', 'LeechSeed', 'None'], 'pp': [25, 40, 10, 0], 'species': 'Bulbasaur', 'status': 'None'}] BattleOver { won: true, escaped: false, wait_frames: 47 }
+[train] hp 14/28 -> heal
+[battle-start] Route1 [{'hp': 14, 'level': 9, 'max_hp': 28, 'moves': ['Tackle', 'Growl', 'LeechSeed', 'None'], 'pp': [25, 40, 10, 0], 'species': 'Bulbasaur', 'status': 'None'}] Intro { phase: TransitionFlash, wait_frames: 40 }
+[battle-end] Route1 [{'hp': 14, 'level': 9, 'max_hp': 28, 'moves': ['Tackle', 'Growl', 'LeechSeed', 'None'], 'pp': [25, 40, 10, 0], 'species': 'Bulbasaur', 'status': 'None'}] BattleOver { won: false, escaped: true, wait_frames: 17 }
+[battle-start] Route1 [{'hp': 28, 'level': 9, 'max_hp': 28, 'moves': ['Tackle', 'Growl', 'LeechSeed', 'None'], 'pp': [35, 40, 10, 0], 'species': 'Bulbasaur', 'status': 'None'}] Intro { phase: TransitionFlash, wait_frames: 49 }
+[battle-end] Route1 [{'hp': 26, 'level': 9, 'max_hp': 28, 'moves': ['Tackle', 'Growl', 'LeechSeed', 'None'], 'pp': [33, 40, 10, 0], 'species': 'Bulbasaur', 'status': 'None'}] BattleOver { won: true, escaped: false, wait_frames: 47 }
+[battle-start] Route1 [{'hp': 26, 'level': 9, 'max_hp': 28, 'moves': ['Tackle', 'Growl', 'LeechSeed', 'None'], 'pp': [33, 40, 10, 0], 'species': 'Bulbasaur', 'status': 'None'}] Intro { phase: TransitionFlash, wait_frames: 50 }
+[battle-end] Route1 [{'hp': 24, 'level': 9, 'max_hp': 28, 'moves': ['Tackle', 'Growl', 'LeechSeed', 'None'], 'pp': [31, 40, 10, 0], 'species': 'Bulbasaur', 'status': 'None'}] BattleOver { won: true, escaped: false, wait_frames: 47 }
+[battle-start] Route1 [{'hp': 24, 'level': 9, 'max_hp': 28, 'moves': ['Tackle', 'Growl', 'LeechSeed', 'None'], 'pp': [31, 40, 10, 0], 'species': 'Bulbasaur', 'status': 'None'}] Intro { phase: TransitionFlash, wait_frames: 42 }
+[battle-end] Route1 [{'hp': 21, 'level': 9, 'max_hp': 28, 'moves': ['Tackle', 'Growl', 'LeechSeed', 'None'], 'pp': [28, 40, 10, 0], 'species': 'Bulbasaur', 'status': 'None'}] BattleOver { won: true, escaped: false, wait_frames: 47 }
+[battle-start] Route1 [{'hp': 21, 'level': 9, 'max_hp': 28, 'moves': ['Tackle', 'Growl', 'LeechSeed', 'None'], 'pp': [28, 40, 10, 0], 'species': 'Bulbasaur', 'status': 'None'}] Intro { phase: TransitionFlash, wait_frames: 50 }
+[battle-end] Route1 [{'hp': 17, 'level': 10, 'max_hp': 30, 'moves': ['Tackle', 'Growl', 'LeechSeed', 'None'], 'pp': [25, 40, 10, 0], 'species': 'Bulbasaur', 'status': 'None'}] BattleOver { won: true, escaped: false, wait_frames: 47 }
+[train] hp 17/30 -> heal
+[battle-start] Route1 [{'hp': 30, 'level': 10, 'max_hp': 30, 'moves': ['Tackle', 'Growl', 'LeechSeed', 'None'], 'pp': [35, 40, 10, 0], 'species': 'Bulbasaur', 'status': 'None'}] Intro { phase: TransitionFlash, wait_frames: 58 }
+[battle-end] Route1 [{'hp': 24, 'level': 10, 'max_hp': 30, 'moves': ['Tackle', 'Growl', 'LeechSeed', 'None'], 'pp': [32, 40, 10, 0], 'species': 'Bulbasaur', 'status': 'None'}] BattleOver { won: true, escaped: false, wait_frames: 47 }
+[battle-start] Route1 [{'hp': 24, 'level': 10, 'max_hp': 30, 'moves': ['Tackle', 'Growl', 'LeechSeed', 'None'], 'pp': [32, 40, 10, 0], 'species': 'Bulbasaur', 'status': 'None'}] Intro { phase: TransitionFlash, wait_frames: 65 }
+[battle-end] Route1 [{'hp': 24, 'level': 10, 'max_hp': 30, 'moves': ['Tackle', 'Growl', 'LeechSeed', 'None'], 'pp': [30, 40, 10, 0], 'species': 'Bulbasaur', 'status': 'None'}] BattleOver { won: true, escaped: false, wait_frames: 47 }
+[train] cyc=50 battles=13 L10 hp=24/30 (59s)
+[battle-start] Route1 [{'hp': 24, 'level': 10, 'max_hp': 30, 'moves': ['Tackle', 'Growl', 'LeechSeed', 'None'], 'pp': [30, 40, 10, 0], 'species': 'Bulbasaur', 'status': 'None'}] Intro { phase: TransitionFlash, wait_frames: 41 }
+[battle-end] Route1 [{'hp': 24, 'level': 10, 'max_hp': 30, 'moves': ['Tackle', 'Growl', 'LeechSeed', 'None'], 'pp': [28, 40, 10, 0], 'species': 'Bulbasaur', 'status': 'None'}] BattleOver { won: true, escaped: false, wait_frames: 47 }
+[battle-start] Route1 [{'hp': 24, 'level': 10, 'max_hp': 30, 'moves': ['Tackle', 'Growl', 'LeechSeed', 'None'], 'pp': [28, 40, 10, 0], 'species': 'Bulbasaur', 'status': 'None'}] Intro { phase: TransitionFlash, wait_frames: 57 }
+[battle-end] Route1 [{'hp': 20, 'level': 10, 'max_hp': 30, 'moves': ['Tackle', 'Growl', 'LeechSeed', 'None'], 'pp': [25, 40, 10, 0], 'species': 'Bulbasaur', 'status': 'None'}] BattleOver { won: true, escaped: false, wait_frames: 47 }
+[battle-start] Route1 [{'hp': 20, 'level': 10, 'max_hp': 30, 'moves': ['Tackle', 'Growl', 'LeechSeed', 'None'], 'pp': [25, 40, 10, 0], 'species': 'Bulbasaur', 'status': 'None'}] Intro { phase: TransitionFlash, wait_frames: 50 }
+[battle-end] Route1 [{'hp': 20, 'level': 10, 'max_hp': 30, 'moves': ['Tackle', 'Growl', 'LeechSeed', 'None'], 'pp': [24, 40, 10, 0], 'species': 'Bulbasaur', 'status': 'None'}] BattleOver { won: true, escaped: false, wait_frames: 47 }
+[battle-start] Route1 [{'hp': 20, 'level': 10, 'max_hp': 30, 'moves': ['Tackle', 'Growl', 'LeechSeed', 'None'], 'pp': [24, 40, 10, 0], 'species': 'Bulbasaur', 'status': 'None'}] Intro { phase: TransitionFlash, wait_frames: 42 }
+[battle-end] Route1 [{'hp': 17, 'level': 10, 'max_hp': 30, 'moves': ['Tackle', 'Growl', 'LeechSeed', 'None'], 'pp': [22, 40, 10, 0], 'species': 'Bulbasaur', 'status': 'None'}] BattleOver { won: true, escaped: false, wait_frames: 47 }
+[train] hp 17/30 -> heal
+[battle-start] Route1 [{'hp': 30, 'level': 10, 'max_hp': 30, 'moves': ['Tackle', 'Growl', 'LeechSeed', 'None'], 'pp': [35, 40, 10, 0], 'species': 'Bulbasaur', 'status': 'None'}] Intro { phase: TransitionFlash, wait_frames: 49 }
+[battle-end] Route1 [{'hp': 27, 'level': 10, 'max_hp': 30, 'moves': ['Tackle', 'Growl', 'LeechSeed', 'None'], 'pp': [32, 40, 10, 0], 'species': 'Bulbasaur', 'status': 'None'}] BattleOver { won: true, escaped: false, wait_frames: 47 }
+[battle-start] Route1 [{'hp': 27, 'level': 10, 'max_hp': 30, 'moves': ['Tackle', 'Growl', 'LeechSeed', 'None'], 'pp': [32, 40, 10, 0], 'species': 'Bulbasaur', 'status': 'None'}] Intro { phase: TransitionFlash, wait_frames: 65 }
+[battle-end] Route1 [{'hp': 25, 'level': 10, 'max_hp': 30, 'moves': ['Tackle', 'Growl', 'LeechSeed', 'None'], 'pp': [30, 40, 10, 0], 'species': 'Bulbasaur', 'status': 'None'}] BattleOver { won: true, escaped: false, wait_frames: 47 }
+[battle-start] Route1 [{'hp': 25, 'level': 10, 'max_hp': 30, 'moves': ['Tackle', 'Growl', 'LeechSeed', 'None'], 'pp': [30, 40, 10, 0], 'species': 'Bulbasaur', 'status': 'None'}] Intro { phase: TransitionFlash, wait_frames: 57 }
+[battle-end] Route1 [{'hp': 25, 'level': 11, 'max_hp': 32, 'moves': ['Tackle', 'Growl', 'LeechSeed', 'None'], 'pp': [28, 40, 10, 0], 'species': 'Bulbasaur', 'status': 'None'}] BattleOver { won: true, escaped: false, wait_frames: 47 }
+[battle-start] Route1 [{'hp': 25, 'level': 11, 'max_hp': 32, 'moves': ['Tackle', 'Growl', 'LeechSeed', 'None'], 'pp': [28, 40, 10, 0], 'species': 'Bulbasaur', 'status': 'None'}] Intro { phase: TransitionFlash, wait_frames: 49 }
+[battle-end] Route1 [{'hp': 23, 'level': 11, 'max_hp': 32, 'moves': ['Tackle', 'Growl', 'LeechSeed', 'None'], 'pp': [26, 40, 10, 0], 'species': 'Bulbasaur', 'status': 'None'}] BattleOver { won: true, escaped: false, wait_frames: 47 }
+[battle-start] Route1 [{'hp': 23, 'level': 11, 'max_hp': 32, 'moves': ['Tackle', 'Growl', 'LeechSeed', 'None'], 'pp': [26, 40, 10, 0], 'species': 'Bulbasaur', 'status': 'None'}] Intro { phase: TransitionFlash, wait_frames: 58 }
+[battle-end] Route1 [{'hp': 23, 'level': 11, 'max_hp': 32, 'moves': ['Tackle', 'Growl', 'LeechSeed', 'None'], 'pp': [24, 40, 10, 0], 'species': 'Bulbasaur', 'status': 'None'}] BattleOver { won: true, escaped: false, wait_frames: 47 }
+[battle-start] Route1 [{'hp': 23, 'level': 11, 'max_hp': 32, 'moves': ['Tackle', 'Growl', 'LeechSeed', 'None'], 'pp': [24, 40, 10, 0], 'species': 'Bulbasaur', 'status': 'None'}] Intro { phase: TransitionFlash, wait_frames: 61 }
+[battle-end] Route1 [{'hp': 21, 'level': 11, 'max_hp': 32, 'moves': ['Tackle', 'Growl', 'LeechSeed', 'None'], 'pp': [22, 40, 10, 0], 'species': 'Bulbasaur', 'status': 'None'}] BattleOver { won: true, escaped: false, wait_frames: 47 }
+[battle-start] Route1 [{'hp': 21, 'level': 11, 'max_hp': 32, 'moves': ['Tackle', 'Growl', 'LeechSeed', 'None'], 'pp': [22, 40, 10, 0], 'species': 'Bulbasaur', 'status': 'None'}] Intro { phase: TransitionFlash, wait_frames: 42 }
+[battle-end] Route1 [{'hp': 18, 'level': 11, 'max_hp': 32, 'moves': ['Tackle', 'Growl', 'LeechSeed', 'None'], 'pp': [20, 40, 10, 0], 'species': 'Bulbasaur', 'status': 'None'}] BattleOver { won: true, escaped: false, wait_frames: 47 }
+[train] hp 18/32 -> heal
+[battle-start] Route1 [{'hp': 32, 'level': 11, 'max_hp': 32, 'moves': ['Tackle', 'Growl', 'LeechSeed', 'None'], 'pp': [35, 40, 10, 0], 'species': 'Bulbasaur', 'status': 'None'}] Intro { phase: TransitionFlash, wait_frames: 49 }
+[battle-end] Route1 [{'hp': 28, 'level': 11, 'max_hp': 32, 'moves': ['Tackle', 'Growl', 'LeechSeed', 'None'], 'pp': [32, 40, 10, 0], 'species': 'Bulbasaur', 'status': 'None'}] BattleOver { won: true, escaped: false, wait_frames: 47 }
+[battle-start] Route1 [{'hp': 28, 'level': 11, 'max_hp': 32, 'moves': ['Tackle', 'Growl', 'LeechSeed', 'None'], 'pp': [32, 40, 10, 0], 'species': 'Bulbasaur', 'status': 'None'}] Intro { phase: TransitionFlash, wait_frames: 42 }
+[battle-end] Route1 [{'hp': 25, 'level': 11, 'max_hp': 32, 'moves': ['Tackle', 'Growl', 'LeechSeed', 'None'], 'pp': [30, 40, 10, 0], 'species': 'Bulbasaur', 'status': 'None'}] BattleOver { won: true, escaped: false, wait_frames: 47 }
+[train] cyc=100 battles=26 L11 hp=25/32 (105s)
+[battle-start] Route1 [{'hp': 25, 'level': 11, 'max_hp': 32, 'moves': ['Tackle', 'Growl', 'LeechSeed', 'None'], 'pp': [30, 40, 10, 0], 'species': 'Bulbasaur', 'status': 'None'}] Intro { phase: TransitionFlash, wait_frames: 50 }
+[battle-end] Route1 [{'hp': 23, 'level': 11, 'max_hp': 32, 'moves': ['Tackle', 'Growl', 'LeechSeed', 'None'], 'pp': [28, 40, 10, 0], 'species': 'Bulbasaur', 'status': 'None'}] BattleOver { won: true, escaped: false, wait_frames: 47 }
+[battle-start] Route1 [{'hp': 23, 'level': 11, 'max_hp': 32, 'moves': ['Tackle', 'Growl', 'LeechSeed', 'None'], 'pp': [28, 40, 10, 0], 'species': 'Bulbasaur', 'status': 'None'}] Intro { phase: TransitionFlash, wait_frames: 42 }
+[battle-end] Route1 [{'hp': 21, 'level': 11, 'max_hp': 32, 'moves': ['Tackle', 'Growl', 'LeechSeed', 'None'], 'pp': [26, 40, 10, 0], 'species': 'Bulbasaur', 'status': 'None'}] BattleOver { won: true, escaped: false, wait_frames: 47 }
+[battle-start] Route1 [{'hp': 21, 'level': 11, 'max_hp': 32, 'moves': ['Tackle', 'Growl', 'LeechSeed', 'None'], 'pp': [26, 40, 10, 0], 'species': 'Bulbasaur', 'status': 'None'}] Intro { phase: TransitionFlash, wait_frames: 49 }
+[battle-end] Route1 [{'hp': 18, 'level': 11, 'max_hp': 32, 'moves': ['Tackle', 'Growl', 'LeechSeed', 'None'], 'pp': [24, 40, 10, 0], 'species': 'Bulbasaur', 'status': 'None'}] BattleOver { won: true, escaped: false, wait_frames: 47 }
+[train] hp 18/32 -> heal
+[battle-start] Route1 [{'hp': 32, 'level': 11, 'max_hp': 32, 'moves': ['Tackle', 'Growl', 'LeechSeed', 'None'], 'pp': [35, 40, 10, 0], 'species': 'Bulbasaur', 'status': 'None'}] Intro { phase: TransitionFlash, wait_frames: 49 }
+[battle-end] Route1 [{'hp': 31, 'level': 12, 'max_hp': 34, 'moves': ['Tackle', 'Growl', 'LeechSeed', 'None'], 'pp': [33, 40, 10, 0], 'species': 'Bulbasaur', 'status': 'None'}] BattleOver { won: true, escaped: false, wait_frames: 47 }
+[battle-start] Route1 [{'hp': 31, 'level': 12, 'max_hp': 34, 'moves': ['Tackle', 'Growl', 'LeechSeed', 'None'], 'pp': [33, 40, 10, 0], 'species': 'Bulbasaur', 'status': 'None'}] Intro { phase: TransitionFlash, wait_frames: 42 }
+[battle-end] Route1 [{'hp': 28, 'level': 12, 'max_hp': 34, 'moves': ['Tackle', 'Growl', 'LeechSeed', 'None'], 'pp': [31, 40, 10, 0], 'species': 'Bulbasaur', 'status': 'None'}] BattleOver { won: true, escaped: false, wait_frames: 47 }
+[battle-start] Route1 [{'hp': 28, 'level': 12, 'max_hp': 34, 'moves': ['Tackle', 'Growl', 'LeechSeed', 'None'], 'pp': [31, 40, 10, 0], 'species': 'Bulbasaur', 'status': 'None'}] Intro { phase: TransitionFlash, wait_frames: 42 }
+[battle-end] Route1 [{'hp': 28, 'level': 12, 'max_hp': 34, 'moves': ['Tackle', 'Growl', 'LeechSeed', 'None'], 'pp': [29, 40, 10, 0], 'species': 'Bulbasaur', 'status': 'None'}] BattleOver { won: true, escaped: false, wait_frames: 47 }
+[battle-start] Route1 [{'hp': 28, 'level': 12, 'max_hp': 34, 'moves': ['Tackle', 'Growl', 'LeechSeed', 'None'], 'pp': [29, 40, 10, 0], 'species': 'Bulbasaur', 'status': 'None'}] Intro { phase: TransitionFlash, wait_frames: 58 }
+[battle-end] Route1 [{'hp': 28, 'level': 12, 'max_hp': 34, 'moves': ['Tackle', 'Growl', 'LeechSeed', 'None'], 'pp': [27, 40, 10, 0], 'species': 'Bulbasaur', 'status': 'None'}] BattleOver { won: true, escaped: false, wait_frames: 47 }
+[battle-start] Route1 [{'hp': 28, 'level': 12, 'max_hp': 34, 'moves': ['Tackle', 'Growl', 'LeechSeed', 'None'], 'pp': [27, 40, 10, 0], 'species': 'Bulbasaur', 'status': 'None'}] Intro { phase: TransitionFlash, wait_frames: 41 }
+[battle-end] Route1 [{'hp': 26, 'level': 12, 'max_hp': 34, 'moves': ['Tackle', 'Growl', 'LeechSeed', 'None'], 'pp': [25, 40, 10, 0], 'species': 'Bulbasaur', 'status': 'None'}] BattleOver { won: true, escaped: false, wait_frames: 47 }
+[battle-start] Route1 [{'hp': 26, 'level': 12, 'max_hp': 34, 'moves': ['Tackle', 'Growl', 'LeechSeed', 'None'], 'pp': [25, 40, 10, 0], 'species': 'Bulbasaur', 'status': 'None'}] Intro { phase: TransitionFlash, wait_frames: 65 }
+[battle-end] Route1 [{'hp': 24, 'level': 12, 'max_hp': 34, 'moves': ['Tackle', 'Growl', 'LeechSeed', 'None'], 'pp': [23, 40, 10, 0], 'species': 'Bulbasaur', 'status': 'None'}] BattleOver { won: true, escaped: false, wait_frames: 47 }
+[battle-start] Route1 [{'hp': 24, 'level': 12, 'max_hp': 34, 'moves': ['Tackle', 'Growl', 'LeechSeed', 'None'], 'pp': [23, 40, 10, 0], 'species': 'Bulbasaur', 'status': 'None'}] Intro { phase: TransitionFlash, wait_frames: 58 }
+[battle-end] Route1 [{'hp': 22, 'level': 12, 'max_hp': 34, 'moves': ['Tackle', 'Growl', 'LeechSeed', 'None'], 'pp': [21, 40, 10, 0], 'species': 'Bulbasaur', 'status': 'None'}] BattleOver { won: true, escaped: false, wait_frames: 47 }
+[battle-start] Route1 [{'hp': 22, 'level': 12, 'max_hp': 34, 'moves': ['Tackle', 'Growl', 'LeechSeed', 'None'], 'pp': [21, 40, 10, 0], 'species': 'Bulbasaur', 'status': 'None'}] Intro { phase: TransitionFlash, wait_frames: 61 }
+[battle-end] Route1 [{'hp': 20, 'level': 12, 'max_hp': 34, 'moves': ['Tackle', 'Growl', 'LeechSeed', 'None'], 'pp': [19, 40, 10, 0], 'species': 'Bulbasaur', 'status': 'None'}] BattleOver { won: true, escaped: false, wait_frames: 47 }
+[train] hp 20/34 -> heal
+[battle-start] Route1 [{'hp': 34, 'level': 12, 'max_hp': 34, 'moves': ['Tackle', 'Growl', 'LeechSeed', 'None'], 'pp': [35, 40, 10, 0], 'species': 'Bulbasaur', 'status': 'None'}] Intro { phase: TransitionFlash, wait_frames: 58 }
+[battle-end] Route1 [{'hp': 31, 'level': 12, 'max_hp': 34, 'moves': ['Tackle', 'Growl', 'LeechSeed', 'None'], 'pp': [33, 40, 10, 0], 'species': 'Bulbasaur', 'status': 'None'}] BattleOver { won: true, escaped: false, wait_frames: 47 }
+[battle-start] Route1 [{'hp': 31, 'level': 12, 'max_hp': 34, 'moves': ['Tackle', 'Growl', 'LeechSeed', 'None'], 'pp': [33, 40, 10, 0], 'species': 'Bulbasaur', 'status': 'None'}] Intro { phase: TransitionFlash, wait_frames: 58 }
+[battle-end] Route1 [{'hp': 29, 'level': 12, 'max_hp': 34, 'moves': ['Tackle', 'Growl', 'LeechSeed', 'None'], 'pp': [31, 40, 10, 0], 'species': 'Bulbasaur', 'status': 'None'}] BattleOver { won: true, escaped: false, wait_frames: 47 }
+[train] cyc=150 battles=39 L12 hp=29/34 (150s)
+[battle-start] Route1 [{'hp': 29, 'level': 12, 'max_hp': 34, 'moves': ['Tackle', 'Growl', 'LeechSeed', 'None'], 'pp': [31, 40, 10, 0], 'species': 'Bulbasaur', 'status': 'None'}] Intro { phase: TransitionFlash, wait_frames: 57 }
+[battle-end] Route1 [{'hp': 27, 'level': 12, 'max_hp': 34, 'moves': ['Tackle', 'Growl', 'LeechSeed', 'None'], 'pp': [29, 40, 10, 0], 'species': 'Bulbasaur', 'status': 'None'}] BattleOver { won: true, escaped: false, wait_frames: 47 }
+[battle-start] Route1 [{'hp': 27, 'level': 12, 'max_hp': 34, 'moves': ['Tackle', 'Growl', 'LeechSeed', 'None'], 'pp': [29, 40, 10, 0], 'species': 'Bulbasaur', 'status': 'None'}] Intro { phase: TransitionFlash, wait_frames: 58 }
+[battle-end] Route1 [{'hp': 25, 'level': 12, 'max_hp': 34, 'moves': ['Tackle', 'Growl', 'LeechSeed', 'None'], 'pp': [27, 40, 10, 0], 'species': 'Bulbasaur', 'status': 'None'}] BattleOver { won: true, escaped: false, wait_frames: 47 }
+[battle-start] Route1 [{'hp': 25, 'level': 12, 'max_hp': 34, 'moves': ['Tackle', 'Growl', 'LeechSeed', 'None'], 'pp': [27, 40, 10, 0], 'species': 'Bulbasaur', 'status': 'None'}] Intro { phase: TransitionFlash, wait_frames: 41 }
+[battle-end] Route1 [{'hp': 25, 'level': 13, 'max_hp': 37, 'moves': ['Tackle', 'Growl', 'LeechSeed', 'VineWhip'], 'pp': [25, 40, 10, 10], 'species': 'Bulbasaur', 'status': 'None'}] BattleOver { won: true, escaped: false, wait_frames: 47 }
+[train] level 13 reached (159s, 42 battles)
+[m10-trained] frame=78814 screen=overworld map=Route1 pos=(12,7) party=1 money=265 effect=None
+[battle-start] ViridianForest [{'hp': 37, 'level': 13, 'max_hp': 37, 'moves': ['Tackle', 'Growl', 'LeechSeed', 'VineWhip'], 'pp': [35, 40, 10, 10], 'species': 'Bulbasaur', 'status': 'None'}] Intro { phase: SilhouetteSlide, wait_frames: 34 }
+[battle-end] ViridianForest [{'hp': 37, 'level': 13, 'max_hp': 37, 'moves': ['Tackle', 'Growl', 'LeechSeed', 'VineWhip'], 'pp': [35, 40, 10, 10], 'species': 'Bulbasaur', 'status': 'None'}] BattleOver { won: false, escaped: true, wait_frames: 17 }
+[battle-start] ViridianForest [{'hp': 37, 'level': 13, 'max_hp': 37, 'moves': ['Tackle', 'Growl', 'LeechSeed', 'VineWhip'], 'pp': [35, 40, 10, 10], 'species': 'Bulbasaur', 'status': 'None'}] Intro { phase: TransitionFlash, wait_frames: 32 }
+[battle-end] ViridianForest [{'hp': 37, 'level': 13, 'max_hp': 37, 'moves': ['Tackle', 'Growl', 'LeechSeed', 'VineWhip'], 'pp': [35, 40, 10, 10], 'species': 'Bulbasaur', 'status': 'None'}] BattleOver { won: false, escaped: true, wait_frames: 17 }
+[battle-start] ViridianForest [{'hp': 37, 'level': 13, 'max_hp': 37, 'moves': ['Tackle', 'Growl', 'LeechSeed', 'VineWhip'], 'pp': [35, 40, 10, 10], 'species': 'Bulbasaur', 'status': 'None'}] Intro { phase: TransitionFlash, wait_frames: 32 }
+[battle-end] ViridianForest [{'hp': 37, 'level': 13, 'max_hp': 37, 'moves': ['Tackle', 'Growl', 'LeechSeed', 'VineWhip'], 'pp': [35, 40, 10, 10], 'species': 'Bulbasaur', 'status': 'None'}] BattleOver { won: false, escaped: true, wait_frames: 17 }
+[battle-start] ViridianForest [{'hp': 37, 'level': 13, 'max_hp': 37, 'moves': ['Tackle', 'Growl', 'LeechSeed', 'VineWhip'], 'pp': [35, 40, 10, 10], 'species': 'Bulbasaur', 'status': 'None'}] Intro { phase: TransitionFlash, wait_frames: 16 }
+[battle-end] ViridianForest [{'hp': 37, 'level': 13, 'max_hp': 37, 'moves': ['Tackle', 'Growl', 'LeechSeed', 'VineWhip'], 'pp': [35, 40, 10, 10], 'species': 'Bulbasaur', 'status': 'None'}] BattleOver { won: false, escaped: true, wait_frames: 17 }
+   [ntoPINCH] at ViridianForest(1,19)
+[battle-start] ViridianForest [{'hp': 37, 'level': 13, 'max_hp': 37, 'moves': ['Tackle', 'Growl', 'LeechSeed', 'VineWhip'], 'pp': [35, 40, 10, 10], 'species': 'Bulbasaur', 'status': 'None'}] Intro { phase: BattleTransitionWipe(DoubleCircle), wait_frames: 89 }
+[battle-end] ViridianForest [{'hp': 37, 'level': 13, 'max_hp': 37, 'moves': ['Tackle', 'Growl', 'LeechSeed', 'VineWhip'], 'pp': [35, 40, 10, 10], 'species': 'Bulbasaur', 'status': 'None'}] BattleOver { won: false, escaped: true, wait_frames: 17 }
+[battle-start] PewterGym [{'hp': 37, 'level': 13, 'max_hp': 37, 'moves': ['Tackle', 'Growl', 'LeechSeed', 'VineWhip'], 'pp': [35, 40, 10, 10], 'species': 'Bulbasaur', 'status': 'None'}] Intro { phase: TrainerReveal, wait_frames: 0 }
+[battle-end] PewterGym [{'hp': 34, 'level': 14, 'max_hp': 39, 'moves': ['Tackle', 'Growl', 'LeechSeed', 'VineWhip'], 'pp': [34, 40, 10, 9], 'species': 'Bulbasaur', 'status': 'None'}] TrainerVictory { phase: EndBattleText, wait_frames: 0, player_won: true }
+[battle-start] PewterGym [{'hp': 34, 'level': 14, 'max_hp': 39, 'moves': ['Tackle', 'Growl', 'LeechSeed', 'VineWhip'], 'pp': [34, 40, 10, 9], 'species': 'Bulbasaur', 'status': 'None'}] Intro { phase: TrainerReveal, wait_frames: 0 }
+[battle-end] PewterGym [{'hp': 31, 'level': 15, 'max_hp': 41, 'moves': ['Tackle', 'Growl', 'LeechSeed', 'VineWhip'], 'pp': [33, 40, 10, 8], 'species': 'Bulbasaur', 'status': 'None'}] TrainerVictory { phase: EndBattleText, wait_frames: 0, player_won: true }
+[m10] frame=90332 screen=overworld map=PewterGym pos=(4,2) party=1 money=1871 effect=None
+   done (247.7s wall)
+PLAYTHROUGH REACHED REQUESTED MILESTONE
