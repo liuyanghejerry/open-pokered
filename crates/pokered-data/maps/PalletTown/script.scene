@@ -14,6 +14,11 @@
 
 game_scene PalletTown {
   @load {
+    // Repair stale shown state from saves made before the escort cleanup
+    // was fixed. Once Oak has led us inside, he belongs in the lab.
+    @if (getFlag("EVENT_FOLLOWED_OAK_INTO_LAB") || getFlag("EVENT_GOT_STARTER")) {
+      hideObject("PALLET_TOWN_OBJ_1")
+    }
     @if (getFlag("EVENT_GOT_POKEBALLS_FROM_OAK")) {
       setFlag("EVENT_PALLET_AFTER_GETTING_POKEBALLS")
     }
