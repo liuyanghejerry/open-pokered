@@ -14,8 +14,8 @@
 // visible; the east pair npc5/npc6 (orig BOULDER5/6 at (18,6)/(19,6)) starts
 // hidden and appears only when the matching B2F boulder lands (SEAFOAM3_*).
 //
-// Once BOTH B2F boulders are down (EVENT_SEAFOAM3_BOULDER{1,2}_DOWN_HOLE), the
-// strong current activates (scripts/SeafoamIslandsB3F.asm): a surfing player on
+// Until BOTH B2F boulders are down (EVENT_SEAFOAM3_BOULDER{1,2}_DOWN_HOLE), the
+// strong current is active (scripts/SeafoamIslandsB3F.asm): a surfing player on
 // (15,8) is swept down the middle channel to the (20,17) stairs, and falling
 // through the B2F holes lands at (18,7)/(19,7) inside the same current. The
 // sweeps replay the original's simulated-joypad RLEs as absolute movePlayer
@@ -58,33 +58,34 @@ game_scene SeafoamIslandsB3F {
     warpTo("SeafoamIslandsB4F", 5, 14)
   }
 
+  // CheckBothEventsSet sets Z when BOTH are set; the original ret z stops
+  // the current after the puzzle is solved (unlike ordinary CheckEvent).
   // ── Forced-surfing current, middle channel (orig DefaultScript) ────────
-  // Once BOTH B2F boulders are down, a surfing player who ends up on (15,8)
+  // Until BOTH B2F boulders are down, a surfing player who ends up on (15,8)
   // is swept down the channel to the (20,17) stairs: the original simulates
-  // DOWN x6 → RIGHT x5 → DOWN x3
+  // DOWN x3 → RIGHT x5 → DOWN x6 (the joypad buffer is consumed backwards)
   // (RLEList_ForcedSurfingStrongCurrentNearSteps).
   @storyline("coordCurrentNear") {
     @trigger(map = "SeafoamIslandsB3F", name = "currentNear", coords = [[15, 8]])
-    @if (getFlag("EVENT_SEAFOAM3_BOULDER1_DOWN_HOLE") && getFlag("EVENT_SEAFOAM3_BOULDER2_DOWN_HOLE")) {
-      movePlayer([[15, 9], [15, 10], [15, 11], [15, 12], [15, 13], [15, 14], [16, 14], [17, 14], [18, 14], [19, 14], [20, 14], [20, 15], [20, 16], [20, 17]])
+    @if (!getFlag("EVENT_SEAFOAM3_BOULDER1_DOWN_HOLE") || !getFlag("EVENT_SEAFOAM3_BOULDER2_DOWN_HOLE")) {
+      movePlayer([[15, 9], [15, 10], [15, 11], [16, 11], [17, 11], [18, 11], [19, 11], [20, 11], [20, 12], [20, 13], [20, 14], [20, 15], [20, 16], [20, 17]])
     }
   }
 
   // ── Forced-surfing current, hole-fall sweeps (orig MoveObjectScript) ───
   // The B2F hole warps land at (18,7)/(19,7), inside the strong current:
-  // once both B2F boulders are down, arriving there sweeps the player down
-  // the channel as well. x==18 (left hole) takes DOWN x6 → RIGHT x2 →
-  // DOWN x4 (.RLEList_StrongCurrentNearLeftBoulder); x==19 (right hole)
-  // takes the same list plus one final LEFT (.RLEList_StrongCurrentNearRight
-  // Boulder — the original's list names are swapped vs intuition); both end
-  // at (20,17).
+  // while either B2F boulder is missing, arriving there sweeps the player down
+  // the channel as well. DecodeRLEList writes forwards, but the simulated
+  // joypad reads from the last entry down to the first: x==18 takes DOWN x4
+  // → RIGHT x2 → DOWN x6; x==19 first takes LEFT x1, then the same path.
+  // Both reach (20,17). Reading the RLE forwards sends x==19 into a wall.
   @storyline("coordCurrentChannel") {
     @trigger(map = "SeafoamIslandsB3F", name = "currentChannel", coords = [[18, 7], [19, 7]])
-    @if (getFlag("EVENT_SEAFOAM3_BOULDER1_DOWN_HOLE") && getFlag("EVENT_SEAFOAM3_BOULDER2_DOWN_HOLE")) {
+    @if (!getFlag("EVENT_SEAFOAM3_BOULDER1_DOWN_HOLE") || !getFlag("EVENT_SEAFOAM3_BOULDER2_DOWN_HOLE")) {
       @if (getPlayerX() == 18) {
-        movePlayer([[18, 8], [18, 9], [18, 10], [18, 11], [18, 12], [18, 13], [19, 13], [20, 13], [20, 14], [20, 15], [20, 16], [20, 17]])
+        movePlayer([[18, 8], [18, 9], [18, 10], [18, 11], [19, 11], [20, 11], [20, 12], [20, 13], [20, 14], [20, 15], [20, 16], [20, 17]])
       } @else {
-        movePlayer([[19, 8], [19, 9], [19, 10], [19, 11], [19, 12], [19, 13], [20, 13], [21, 13], [21, 14], [21, 15], [21, 16], [21, 17], [20, 17]])
+        movePlayer([[18, 7], [18, 8], [18, 9], [18, 10], [18, 11], [19, 11], [20, 11], [20, 12], [20, 13], [20, 14], [20, 15], [20, 16], [20, 17]])
       }
     }
   }

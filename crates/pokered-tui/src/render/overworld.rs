@@ -530,7 +530,7 @@ pub fn draw_overworld(
             // FLY arrival bird: the TUI approximates by hiding the player
             // while the bird glides in (no bird sprite in the text view).
             let fly = screen.enter_map_fly_anim.as_ref();
-            let player_visible = fly.map_or(player_visible, |s| !s.is_done());
+            let player_visible = player_visible && fly.is_none_or(|s| s.is_done());
             let fishing_shake_offset = fishing.map_or(0, |f| f.player_shake_offset());
             let fishing_pose = fishing.map_or(false, |f| f.pose_active());
 

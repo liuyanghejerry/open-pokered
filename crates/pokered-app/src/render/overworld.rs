@@ -27,7 +27,7 @@ use pokered_ui::{menus, Ui};
 use pokered_data::ui_layout::schema::{DIALOG_DEFAULT_LAYOUT, YES_NO_DEFAULT_LAYOUT};
 
 use super::apply_gb_palette;
-use super::{blit_single_tile, blit_single_tile_flipped};
+use super::blit_single_tile_flipped;
 
 fn blit_tile_clipped(
     fb: &mut FrameBuffer,
@@ -505,7 +505,7 @@ pub fn draw_overworld(
             // player sprite while it glides in; the player reappears when it
             // lands.
             let fly = screen.enter_map_fly_anim.as_ref();
-            let player_visible = fly.map_or(player_visible, |s| !s.is_done());
+            let player_visible = player_visible && fly.is_none_or(|s| s.is_done());
             let fishing_pose = fishing.map_or(false, |f| f.pose_active());
 
             let (frame, flip_h) = if screen.state.player.movement_state == MovementState::Walking
@@ -690,44 +690,6 @@ pub fn draw_overworld(
                     );
                 }
             }
-            }
-
-            // The BIRD sprite (gfx/sprites/bird.png, 16×96 = six 16×16
-            // frames stacked vertically; LoadBirdSpriteGraphics) glides in
-            // along FlyAnimationEnterScreenCoords. OAM coords are biased
-            // (Y-16/X-8), so screen position = (x-8, y+16) — the landing
-            // spot lands on the player's tile.
-            if let Some(fly) = screen.enter_map_fly_anim.as_ref() {
-                if !fly.is_done() {
-                    if let Ok(bird) = rm.load_sprite("bird") {
-                        let bts = bird.tileset.clone();
-                        let bird_pal = Palette::new(&[
-                            Rgba::TRANSPARENT,
-                            GRAYSCALE_PALETTE.colors[1],
-                            GRAYSCALE_PALETTE.colors[2],
-                            GRAYSCALE_PALETTE.colors[3],
-                        ]);
-                        let (oy, ox) = fly.bird_pos();
-                        let bx = ox.saturating_sub(8) as u32;
-                        let by = (oy + 16) as u32;
-                        let base_tile = (fly.flap_frame() as usize % 2) * 4;
-                        for r in 0..2u32 {
-                            for c in 0..2u32 {
-                                let tile_idx = base_tile + (r * 2 + c) as usize;
-                                if tile_idx < bts.len() {
-                                    blit_single_tile(
-                                        fb,
-                                        &bts,
-                                        tile_idx,
-                                        bx + c * TILE_SIZE,
-                                        by + r * TILE_SIZE,
-                                        &bird_pal,
-                                    );
-                                }
-                            }
-                        }
-                    }
-                }
             }
         }
 
@@ -946,6 +908,46 @@ pub fn draw_overworld(
                                 &sprite_pal,
                                 false,
                             );
+                        }
+                    }
+                }
+            }
+        }
+
+        // The player owns the first OAM entries: the arriving bird must
+        // cover NPCs it crosses, even though NPCs are drawn later above.
+        // BirdSprite uses the same six-frame sheet as walking sprites:
+        // image indexes $8/$9 select LeftStand/LeftWalk (frames 2/5).
+        // FlyAnimationEnterScreenCoords contains sprite-state coordinates,
+        // not OAM coordinates. Anchor its final ($40,$3c) at our player
+        // position; PrepareOAMData's hardware bias is not a screen offset.
+        if let Some(fly) = screen.enter_map_fly_anim.as_ref() {
+            if !fly.is_done() {
+                if let Ok(bird) = rm.load_sprite("bird") {
+                    let bts = bird.tileset.clone();
+                    let bird_pal = Palette::new(&[
+                        Rgba::TRANSPARENT,
+                        GRAYSCALE_PALETTE.colors[1],
+                        GRAYSCALE_PALETTE.colors[2],
+                        GRAYSCALE_PALETTE.colors[3],
+                    ]);
+                    let (oy, ox) = fly.bird_pos();
+                    let bx = screen_center_tx * TILE_SIZE as i32 + ox as i32 - 0x40;
+                    let by = screen_center_ty * TILE_SIZE as i32 + oy as i32 - 0x3c;
+                    let base_tile = [2, 5][fly.flap_frame() as usize] * 4;
+                    for r in 0..2u32 {
+                        for c in 0..2u32 {
+                            let tile_idx = base_tile + (r * 2 + c) as usize;
+                            if tile_idx < bts.len() {
+                                blit_tile_clipped(
+                                    fb,
+                                    &bts,
+                                    tile_idx,
+                                    bx + (c * TILE_SIZE) as i32,
+                                    by + (r * TILE_SIZE) as i32,
+                                    &bird_pal,
+                                );
+                            }
                         }
                     }
                 }
