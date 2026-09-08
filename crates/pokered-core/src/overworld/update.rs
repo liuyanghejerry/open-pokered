@@ -2867,9 +2867,9 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                     }
                     // Clear the hidden flag in unified_flags
                     let flag_key = format!("__OBJ_HIDDEN_{}", toggle_id);
-                    self.unified_flags.remove_flag(&flag_key);
+                    self.set_flag_live(&flag_key, false);
                     let shown_key = format!("__OBJ_SHOWN_{}", toggle_id);
-                    self.unified_flags.set_flag(&shown_key, true);
+                    self.set_flag_live(&shown_key, true);
                     // Also update toggleable_object_flags for SRAM persistence
                     if let Some(bit_index) = toggle_id_to_bit_index(&toggle_id) {
                         set_object_shown(&mut self.toggleable_object_flags, bit_index);
@@ -2885,11 +2885,12 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                             npc.visible = false;
                         }
                     }
-                    // Set the hidden flag in unified_flags
+                    // Update both stores so a later engine sync cannot restore
+                    // a stale shown flag loaded from a save or previous map.
                     let flag_key = format!("__OBJ_HIDDEN_{}", toggle_id);
-                    self.unified_flags.set_flag(&flag_key, true);
+                    self.set_flag_live(&flag_key, true);
                     let shown_key = format!("__OBJ_SHOWN_{}", toggle_id);
-                    self.unified_flags.remove_flag(&shown_key);
+                    self.set_flag_live(&shown_key, false);
                     // Also update toggleable_object_flags for SRAM persistence
                     if let Some(bit_index) = toggle_id_to_bit_index(&toggle_id) {
                         set_object_hidden(&mut self.toggleable_object_flags, bit_index);
