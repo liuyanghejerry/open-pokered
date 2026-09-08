@@ -113,7 +113,7 @@ screen Bag {
 
 ### Why AI agents work well here
 
-Read state → drive inputs deterministically → verify the pixels. That loop maps one-to-one onto an agent's working cycle, and the repo ships agent-facing tooling built on it (debug and visual-verification skills under `.claude/skills/`). Fidelity audits (`docs/FIDELITY_GAPS.md`) and the screenshots above are products of the same loop: features get implemented, driven, and visually verified end to end — by humans or by agents.
+Read state → drive inputs deterministically → verify the pixels. That loop maps one-to-one onto an agent's working cycle, and the repo ships agent-facing tooling built on it (debug and visual-verification skills under `.agents/skills/`). Fidelity audits (`docs/FIDELITY_GAPS.md`) and the screenshots above are products of the same loop: features get implemented, driven, and visually verified end to end — by humans or by agents.
 
 ## Editor Suite
 

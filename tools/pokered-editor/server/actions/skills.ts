@@ -3,7 +3,7 @@
 //
 // A skill is a directory containing a `SKILL.md` with a tiny YAML frontmatter
 // (`name` + `description`) followed by the playbook body — the same convention
-// as this repo's `.claude/skills/`. Discovery is by directory scan; no index
+// as this repo's `.agents/skills/`. Discovery is by directory scan; no index
 // file to keep in sync.
 //
 // Two sources, merged by name (project wins):

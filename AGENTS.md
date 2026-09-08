@@ -34,7 +34,7 @@ scripting, save format), tooling, docs, tests, audio.
    Screen targets: `copyright title main-menu oak overworld battle
    start-menu options save`. For input-dependent states, drive with the debug
    server (`run --headless --debug-port` + `press_sequence` / `step_frames`;
-   see `.claude/skills/pokered-debug`).
+   see `.agents/skills/pokered-debug`).
 4. Commit the captures under `docs/screenshots/` (existing convention) and
    embed both images in the PR body, labeled `前` / `后` (before / after).
    For regression fixes, the "before" shot doubles as the bug evidence.
