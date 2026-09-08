@@ -156,8 +156,13 @@ fn fill_mock_save(ctx: &mut DataContext) {
     ctx.set("player_name", "ASH");
     ctx.set("play_time", "12:34");
     ctx.set("badges", 4i64);
-    ctx.set("seen_count", 50i64);
+    ctx.set("owned_count", 50i64);
     ctx.set("save_message", "Save completed!");
+    ctx.set("asking", true);
+    ctx.set("show_status", false);
+    ctx.set("cursor_ty", 13i64);
+    ctx.set("message_line_1", "Save your");
+    ctx.set("message_line_2", "progress?");
 }
 
 fn fill_mock_options(ctx: &mut DataContext) {

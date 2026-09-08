@@ -1,102 +1,83 @@
 use pokered_core::game_state::Lang;
 use pokered_core::save_menu::{SaveMenuState, SavePhase, YesNoChoice};
-use pokered_data::lang_data;
-use pokered_data::ui_layout::schema::{SaveAskPromptLayout, SaveDefaultLayout};
+use pokered_data::ui_layout::schema::{get_screen_v2_json, SaveAskPromptLayout, SaveDefaultLayout};
 
-use crate::engine::{InkColor, Painter, Ui};
+use crate::engine::{Painter, Ui};
+use crate::v2::{self, DataContext};
 
-pub fn draw<P: Painter>(state: &SaveMenuState, layout: &SaveDefaultLayout, ask_layout: &SaveAskPromptLayout, ui: &mut Ui<P>, lang: Lang) {
+/// Save screen, with phase-specific content in the shared `save.gui` layout.
+/// Legacy layout arguments remain for compatibility with existing frontends.
+pub fn draw<P: Painter>(
+    state: &SaveMenuState,
+    _layout: &SaveDefaultLayout,
+    _ask_layout: &SaveAskPromptLayout,
+    ui: &mut Ui<P>,
+    lang: Lang,
+) {
+    let Some(json) = get_screen_v2_json("save") else {
+        return;
+    };
+    let Some(mut layout) = v2::parse_screen(json) else {
+        return;
+    };
+    // Use measured glyph widths in both languages for flush right value edges
+    // and enough room for the prompt beside its choices.
+    layout.theme.text_mode = dotzuki_renderer::layout_engine::types::TextMode::Proportional;
+
     let is_zh = lang == Lang::Zh;
-    let info = &layout.box_0;
-    ui.text_box(info.rect, info.color, true, |frame| {
-        let labels = info.labels.as_ref();
-        // Each static label is followed by its dynamic value to preserve
-        // operation order (verified by save test suite).
-        frame.label(labels[0].tx, labels[0].ty, lang_data::ui_label(&labels[0].text, is_zh), labels[0].color);
-        frame.label(4, 1, &state.info.player_name, InkColor::Black);
-
-        frame.label(labels[1].tx, labels[1].ty, lang_data::ui_label(&labels[1].text, is_zh), labels[1].color);
-        let badges = format!("{}", state.info.num_badges);
-        frame.label(8, 3, &badges, InkColor::Black);
-
-        frame.label(labels[2].tx, labels[2].ty, lang_data::ui_label(&labels[2].text, is_zh), labels[2].color);
-        let dex = format!("{}", state.info.pokedex_owned);
-        frame.label(7, 5, &dex, InkColor::Black);
-
-        frame.label(labels[3].tx, labels[3].ty, lang_data::ui_label(&labels[3].text, is_zh), labels[3].color);
-        let time = format!(
-            "{:>3}:{:02}",
-            state.info.play_time_hours, state.info.play_time_minutes
-        );
-        frame.label(3, 7, &time, InkColor::Black);
-    });
-
-    // ── Phase-specific drawing ────────────────────────────────────
-    match &state.phase {
+    let asking = matches!(
+        state.phase,
+        SavePhase::AskSave | SavePhase::ConfirmOverwrite
+    );
+    let (line_1, line_2) = match state.phase {
         SavePhase::AskSave | SavePhase::ConfirmOverwrite => {
-            draw_ask_prompt(state.cursor, ask_layout, ui, is_zh);
+            if is_zh {
+                ("是否要".into(), "保存游戏？")
+            } else {
+                ("Save your".into(), "progress?")
+            }
         }
-        SavePhase::Saving { .. } => {
-            let saving_box = &layout.box_1;
-            ui.text_box(saving_box.rect, saving_box.color, true, |frame| {
-                for label in saving_box.labels.iter() {
-                    frame.label(label.tx, label.ty, lang_data::ui_label(&label.text, is_zh), label.color);
-                }
-            });
-        }
+        SavePhase::Saving { .. } => (
+            (if is_zh {
+                "正在保存……"
+            } else {
+                "Now saving..."
+            })
+            .into(),
+            "",
+        ),
         SavePhase::SaveComplete | SavePhase::WaitAfterSave { .. } => {
-            let done_box = &layout.box_2;
-            ui.text_box(done_box.rect, done_box.color, true, |frame| {
-                // Dynamic "X saved" text (computed from state)
-                let msg = if is_zh {
-                    format!("{}已保存", state.info.player_name)
-                } else {
-                    format!("{} saved", state.info.player_name)
-                };
-                frame.label(0, 0, &msg, InkColor::Black);
-                for label in done_box.labels.iter() {
-                    frame.label(label.tx, label.ty, lang_data::ui_label(&label.text, is_zh), label.color);
-                }
-            });
+            if is_zh {
+                (format!("{}已保存", state.info.player_name), "游戏！")
+            } else {
+                (format!("{} saved", state.info.player_name), "the game!")
+            }
         }
-    }
-}
+    };
 
-fn draw_ask_prompt<P: Painter>(cursor: YesNoChoice, layout: &SaveAskPromptLayout, ui: &mut Ui<P>, is_zh: bool) {
-
-    // Prompt box with labels
-    ui.text_box(layout.box_0.rect, layout.box_0.color, true, |frame| {
-        for label in layout.box_0.labels.iter() {
-            frame.label(label.tx, label.ty, lang_data::ui_label(&label.text, is_zh), label.color);
-        }
-    });
-
-    // Chinese choices need two tile rows per line; keep the bottom at row 11.
-    let mut choice_rect = layout.box_1.rect;
-    if is_zh {
-        choice_rect.ty = 5;
-        choice_rect.th = 6;
-    }
-
-    // YES/NO box: border + labels + cursor
-    ui.text_box(choice_rect, layout.box_1.color, true, |frame| {
-        for label in layout.box_1.labels.iter() {
-            frame.label(label.tx, if is_zh { 1 + label.ty * 2 } else { label.ty }, lang_data::ui_label(&label.text, is_zh), label.color);
-        }
-
-        // Look up cursor offset from enum_position_map
-        let cursor_key = match cursor {
-            YesNoChoice::Yes => "Yes",
-            YesNoChoice::No => "No",
-        };
-        let offset = layout
-            .enum_position_map
-            .iter()
-            .find_map(|(key, val)| if key == cursor_key { Some(*val as u32) } else { None })
-            .unwrap_or(0);
-
-        // Keep the cursor in the same row as its translated choice.
-        let abs_ty = if is_zh { 7 + offset * 2 } else { layout.cursor.base_ty + offset * layout.cursor.row_step };
-        frame.abs_glyph(layout.cursor.tx, abs_ty, layout.cursor.glyph, layout.cursor.color);
-    });
+    let mut ctx = DataContext::new();
+    ctx.set("__lang", v2::lang_code(lang));
+    ctx.set("player_name", state.info.player_name.clone());
+    ctx.set("badges", state.info.num_badges.to_string());
+    ctx.set("owned_count", state.info.pokedex_owned.to_string());
+    ctx.set(
+        "play_time",
+        format!(
+            "{}:{:02}",
+            state.info.play_time_hours, state.info.play_time_minutes
+        ),
+    );
+    ctx.set("message_line_1", line_1);
+    ctx.set("message_line_2", line_2);
+    ctx.set("asking", asking);
+    ctx.set("show_status", !asking);
+    ctx.set(
+        "cursor_ty",
+        if state.cursor == YesNoChoice::Yes {
+            13_i64
+        } else {
+            15_i64
+        },
+    );
+    v2::render_screen(&layout, &ctx, ui.painter());
 }

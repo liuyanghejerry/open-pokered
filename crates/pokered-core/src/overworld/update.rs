@@ -1464,7 +1464,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
             // player travels a STRAIGHT line per run while the sprite spins
             // (LoadSpinnerArrowTiles), plus SFX_ARROW_TILES on trigger.
             // B1F/B4F arrow tiles have no table (decorative only).
-            let movement_input = if self.state.player.movement_state == MovementState::Idle
+            if self.state.player.movement_state == MovementState::Idle
                 && self.active_script_effect.is_none()
                 && self.pending_warp.is_none()
                 && self.scripted_player_path.is_empty()
@@ -1489,15 +1489,14 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                     }
                     if !path.is_empty() {
                         self.sfx_event = OverworldSfxEvent::ArrowTiles;
-                        for p in &path {
-                            self.scripted_player_path.push_back(*p);
-                        }
+                        self.scripted_player_path.extend(path);
+                        // The arrow owns this frame too: do not let held input
+                        // start an extra step before the queued path takes over.
+                        self.advance_scripted_player_path();
+                        return ScreenAction::Continue;
                     }
                 }
-                movement_input // no direction override: the path drives movement
-            } else {
-                movement_input
-            };
+            }
 
             // Route 17 (Cycling Road) slope: JoypadOverworld
             // (home/overworld.asm:1826-1835) simulates a PAD_DOWN press every
@@ -1565,6 +1564,36 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
 
             let movement_before = self.state.player.movement_state;
             let transport_before = self.state.player.transport;
+
+            // process_frame normally chains held input straight into the next
+            // step. Land idle at the gym lock / arrow pads so their handlers
+            // can take control before another walk is started. Other scripts
+            // (notably Oak's escort) rely on uninterrupted step chaining.
+            let movement_input = if movement_before == MovementState::Walking {
+                let (dx, dy) = player_movement::direction_delta(self.state.player.facing);
+                let x = (self.state.player.x as i32 + dx as i32).max(0) as u16;
+                let y = (self.state.player.y as i32 + dy as i32).max(0) as u16;
+                let map_key = script_bridge::map_id_to_script_key(map.id);
+                let gym_gate = map.id == MapId::ViridianCity
+                    && self.map_script_config.coord_event_fn(x, y) == Some("coordGymLocked");
+                let scripted_landing = gym_gate
+                    || spinner_paths(&map_key).iter().any(|&(sx, sy, _)| {
+                        (x, y) == (sx as u16, sy as u16)
+                    });
+                if scripted_landing {
+                    MovementInput {
+                        up: false,
+                        down: false,
+                        left: false,
+                        right: false,
+                        ..movement_input
+                    }
+                } else {
+                    movement_input
+                }
+            } else {
+                movement_input
+            };
 
             let result = player_movement::process_frame(
                 &mut self.state,
@@ -1642,6 +1671,32 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
             match result {
                 MoveResult::Warped { warp_index: _ } => {
                     warped_or_edge = true;
+                    // A coordinate gate on the door itself must run before
+                    // the warp, including approaches that bypass its doorstep.
+                    if let Some(fn_name) = self.map_script_config.coord_event_fn(
+                        self.state.player.x,
+                        self.state.player.y,
+                    ) {
+                        let fn_name = fn_name.to_string();
+                        if self.script_engine.has_function(&fn_name) {
+                            self.script_engine.set_player_position(
+                                self.state.player.x as u8,
+                                self.state.player.y as u8,
+                            );
+                            if let Ok(Some(cmd)) = self.script_engine.call_function_no_args(&fn_name) {
+                                self.active_script_effect = Some(
+                                    script_bridge::dispatch_command_with_names(
+                                        &cmd,
+                                        &self.player_name,
+                                        &self.rival_name,
+                                        &self.starter_display_name(),
+                                    ),
+                                );
+                                self.sync_flags_from_engine();
+                                return ScreenAction::Continue;
+                            }
+                        }
+                    }
                     if let Some((dest_map, warp_x, warp_y)) = execute_warp(
                         map,
                         self.state.player.x as u8,
@@ -2869,11 +2924,9 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                     }
                     // Clear the hidden flag in unified_flags
                     let flag_key = format!("__OBJ_HIDDEN_{}", toggle_id);
-                    self.unified_flags.remove_flag(&flag_key);
-                    self.script_engine.set_flag(&flag_key, false);
+                    self.set_flag_live(&flag_key, false);
                     let shown_key = format!("__OBJ_SHOWN_{}", toggle_id);
-                    self.unified_flags.set_flag(&shown_key, true);
-                    self.script_engine.set_flag(&shown_key, true);
+                    self.set_flag_live(&shown_key, true);
                     // Also update toggleable_object_flags for SRAM persistence
                     if let Some(bit_index) = toggle_id_to_bit_index(&toggle_id) {
                         set_object_shown(&mut self.toggleable_object_flags, bit_index);
@@ -2889,13 +2942,12 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                             npc.visible = false;
                         }
                     }
-                    // Set the hidden flag in unified_flags
+                    // Update both stores so a later engine sync cannot restore
+                    // a stale shown flag loaded from a save or previous map.
                     let flag_key = format!("__OBJ_HIDDEN_{}", toggle_id);
-                    self.unified_flags.set_flag(&flag_key, true);
-                    self.script_engine.set_flag(&flag_key, true);
+                    self.set_flag_live(&flag_key, true);
                     let shown_key = format!("__OBJ_SHOWN_{}", toggle_id);
-                    self.unified_flags.remove_flag(&shown_key);
-                    self.script_engine.set_flag(&shown_key, false);
+                    self.set_flag_live(&shown_key, false);
                     // Also update toggleable_object_flags for SRAM persistence
                     if let Some(bit_index) = toggle_id_to_bit_index(&toggle_id) {
                         set_object_hidden(&mut self.toggleable_object_flags, bit_index);

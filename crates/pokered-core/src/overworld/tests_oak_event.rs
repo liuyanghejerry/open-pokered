@@ -27,6 +27,77 @@ fn flag_set(screen: &OverworldScreen<PokemonRedData>, name: &str) -> bool {
     screen.script_flags().get(name).copied().unwrap_or(false)
 }
 
+/// Old saves can retain Oak's shown bit after the escort. Map loading must
+/// reconcile both SRAM and runtime visibility with the completed story.
+#[test]
+fn pallet_load_hides_stale_oak_after_intro() {
+    use pokered_data::toggleable_objects::{
+        is_object_hidden, set_object_shown, toggle_id_to_bit_index,
+    };
+    let bit = toggle_id_to_bit_index("PALLET_TOWN_OBJ_1").unwrap();
+    for scripts_dir in [None, Some(maps_dir())] {
+        for completed_flag in ["EVENT_FOLLOWED_OAK_INTO_LAB", "EVENT_GOT_STARTER"] {
+            for runtime_shown in [false, true] {
+                let mut screen =
+                    OverworldScreen::new(MapId::PalletTown, scripts_dir.clone(), PokemonRedData);
+                let mut toggles = *screen.toggleable_object_flags();
+                set_object_shown(&mut toggles, bit);
+                screen.set_toggleable_object_flags(toggles);
+                screen.set_flag_live("__OBJ_SHOWN_PALLET_TOWN_OBJ_1", runtime_shown);
+                screen.set_flag_live(completed_flag, true);
+                screen.apply_hidden_object_flags();
+                assert!(
+                    screen.npc_states[0].visible,
+                    "fixture must reproduce stale Oak"
+                );
+
+                screen.run_on_load();
+                for _ in 0..30 {
+                    screen.update_frame(neutral_input());
+                }
+                screen.apply_hidden_object_flags();
+                assert!(
+                    !screen.npc_states[0].visible,
+                    "Oak remains visible after {completed_flag}"
+                );
+                assert!(is_object_hidden(screen.toggleable_object_flags(), bit));
+                assert!(!flag_set(&screen, "__OBJ_SHOWN_PALLET_TOWN_OBJ_1"));
+                assert!(screen.npc_states[1..].iter().all(|npc| npc.visible));
+
+                let mut reload = OverworldScreen::new(MapId::PalletTown, None, PokemonRedData);
+                reload.set_toggleable_object_flags(*screen.toggleable_object_flags());
+                reload.apply_hidden_object_flags();
+                assert!(!reload.npc_states[0].visible, "repair must persist in SRAM");
+            }
+        }
+    }
+}
+
+#[test]
+fn pallet_load_preserves_oak_visibility_before_intro_completes() {
+    use pokered_data::toggleable_objects::{set_object_shown, toggle_id_to_bit_index};
+    for appeared in [false, true] {
+        let mut screen = OverworldScreen::new(MapId::PalletTown, None, PokemonRedData);
+        screen
+            .set_toggleable_object_flags(pokered_data::toggleable_objects::initial_toggle_flags());
+        if appeared {
+            let mut toggles = *screen.toggleable_object_flags();
+            set_object_shown(
+                &mut toggles,
+                toggle_id_to_bit_index("PALLET_TOWN_OBJ_1").unwrap(),
+            );
+            screen.set_toggleable_object_flags(toggles);
+            screen.set_flag_live("EVENT_OAK_APPEARED_IN_PALLET", true);
+        }
+        screen.apply_hidden_object_flags();
+        screen.run_on_load();
+        for _ in 0..30 {
+            screen.update_frame(neutral_input());
+        }
+        assert_eq!(screen.npc_states[0].visible, appeared);
+    }
+}
+
 /// Sanity: with an explicit scripts dir the PalletTown `.scene` compiles and
 /// registers, so the coord-event function actually exists.
 #[test]

@@ -22,7 +22,8 @@ game_scene ViridianCity {
     }
   }
 
-  // ── Viridian Gym door gate (coord (32,8)) ───────────────────────────────
+  // ── Viridian Gym door gate (coords (32,8) and door (32,7)) ───────────────
+  // The door coordinate also guards side approaches before the warp fires.
   // Original ViridianCityCheckGymOpenScript: while the player lacks any of the
   // seven non-EARTH badges, stepping in front of the gym shows "The GYM's doors
   // are locked..." and shoves the player back down one tile. Once all seven are

@@ -40,6 +40,8 @@ mod tests_slots_lucky;
 #[cfg(test)]
 mod tests_cutscene_movement;
 #[cfg(test)]
+mod tests_gym_movement;
+#[cfg(test)]
 mod tests_connections;
 #[cfg(test)]
 mod tests_doors_elevators;
