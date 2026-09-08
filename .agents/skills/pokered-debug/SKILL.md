@@ -1,3 +1,8 @@
+---
+name: pokered-debug
+description: Test and debug the game with the pokered-app CLI and TCP debug server. Use to inspect game state, drive input, warp maps, run battles, or capture headless screenshots.
+---
+
 # pokered-debug — Headless Debug & Testing CLI
 
 Use this skill to rapidly test and debug the workspace game engine via the command line. Covers all CLI subcommands including warp-to-map, skip-intro, save/snapshot manipulation, direct battles, screenshots, and state dumping.
