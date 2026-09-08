@@ -129,7 +129,8 @@ Screen targets: `copyright title main-menu oak overworld battle start-menu optio
 
 ## Project skills
 
-This repo ships Claude Code skills under `.claude/skills/` — invoke them when relevant:
+This repo ships shared agent skills under `.agents/skills/` — invoke them when relevant.
+`.claude/skills` is a symlink to `../.agents/skills` for Claude Code compatibility:
 
 - **pokered-debug** — full reference for the debug CLI above.
 - **pokered-save-editor** — JSON snapshot format + the Save Editor GUI.
