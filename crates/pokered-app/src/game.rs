@@ -3418,6 +3418,15 @@ impl PokemonGame {
                     } else if self.overworld.pending_diploma {
                         self.overworld.pending_diploma = false;
                         ScreenAction::Transition(GameScreen::Diploma)
+                    } else if self.overworld.pending_town_map
+                        && self.overworld.pending_dialogue.is_none()
+                    {
+                        // Wall TOWN MAP (bookshelf table House $3D): the
+                        // "A TOWN MAP." text closed → open the map screen
+                        // (TownMapText → DisplayTownMap).
+                        self.overworld.pending_town_map = false;
+                        self.pending_fly_map = false;
+                        ScreenAction::Transition(GameScreen::TownMap)
                     } else if let Some(pc_kind) = self.overworld.pending_pc.take() {
                         // game.openPC() / game.openItemPC() — engine/menus/
                         // pc.asm (Pokémon Center) / players_pc.asm (bedroom).
@@ -5997,5 +6006,94 @@ mod save_overwrite_tests {
         // Legacy summaries (pre-field) carry 0 and never trigger the prompt.
         let legacy = summary_with(0);
         assert!(!(legacy.player_id != 0 && legacy.player_id != memory_id));
+    }
+}
+
+#[cfg(test)]
+mod wall_town_map_tests {
+    use super::*;
+    use pokered_core::overworld::Direction;
+
+    #[test]
+    fn wall_town_map_opens_after_dialogue_and_returns_in_place() {
+        let mut game = PokemonGame::new_with_options(
+            GameVersion::Red,
+            None,
+            None,
+            None,
+            false,
+            None,
+            false,
+            true,
+            #[cfg(feature = "debug-server")]
+            None,
+        );
+        game.state.screen = GameScreen::Overworld;
+        game.overworld = OverworldScreen::new(MapId::BluesHouse, None, PokemonRedData);
+        game.overworld.state.player.x = 3;
+        game.overworld.state.player.y = 1;
+        game.overworld.state.player.facing = Direction::Up;
+        game.main_menu.last_choice = Some(pokered_core::game_state::MainMenuChoice::Continue);
+        let idle = InputState::new();
+        let mut a = InputState::new();
+        a.press(GbButton::A);
+        let mut b = InputState::new();
+        b.press(GbButton::B);
+
+        for _ in 0..40 {
+            game.update(&idle);
+        }
+        game.update(&a);
+        assert!(game.overworld.pending_town_map);
+        assert!(game.overworld.pending_dialogue.is_some());
+        assert_eq!(game.state.screen, GameScreen::Overworld);
+        for _ in 0..80 {
+            game.update(&idle);
+        }
+        assert_eq!(
+            game.state.screen,
+            GameScreen::Overworld,
+            "wait for dialogue dismissal"
+        );
+        game.update(&b);
+        for _ in 0..20 {
+            game.update(&idle);
+        }
+        // Optional deterministic frame capture; also works on the unfixed base.
+        if let Ok(path) = std::env::var("WALL_MAP_SCREENSHOT") {
+            let mut fb = FrameBuffer::new(
+                dotzuki_engine::render_config::RenderConfig::new(160, 144),
+                pokered_renderer::Rgba::WHITE,
+            );
+            game.draw(&mut fb);
+            let img = image::RgbaImage::from_fn(160, 144, |x, y| {
+                image::Rgba(fb.get_pixel(x, y).unwrap().to_array())
+            });
+            img.save(path).unwrap();
+        }
+        assert_eq!(game.state.screen, GameScreen::TownMap);
+        assert!(!game.overworld.pending_town_map);
+        assert!(game.overworld.pending_dialogue.is_none());
+        assert_eq!(
+            game.town_map_screen.mode(),
+            pokered_core::town_map_screen::TownMapMode::View
+        );
+
+        game.update(&b);
+        for _ in 0..20 {
+            game.update(&idle);
+        }
+        assert_eq!(game.state.screen, GameScreen::Overworld);
+        assert_eq!(game.overworld.state.current_map, MapId::BluesHouse);
+        assert_eq!(
+            (game.overworld.state.player.x, game.overworld.state.player.y),
+            (3, 1)
+        );
+        assert_eq!(game.overworld.state.player.facing, Direction::Up);
+        game.update(&a);
+        assert!(
+            game.overworld.pending_town_map,
+            "wall map can be inspected again"
+        );
     }
 }
