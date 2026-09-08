@@ -1,3 +1,8 @@
+---
+name: visual-verify
+description: Verify Pokemon Center healing machine rendering with the visual test harness, expected layout, and OAM-to-screen coordinate reference. Use when diagnosing healing overlay placement or animation rendering.
+---
+
 # Visual Verification Skill — workspace Healing Machine
 
 Use this skill to verify the Pokemon Center healing machine animation rendering

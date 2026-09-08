@@ -1,3 +1,8 @@
+---
+name: pokered-save-editor
+description: Construct, inspect, and edit Pokemon Red/Blue save states and JSON snapshots using the Save Editor GUI and headless tools. Use when preparing test saves or changing saved game state.
+---
+
 # pokered-save-editor — Save State Construction & Manipulation
 
 Use this skill to construct, inspect, and manipulate Pokémon Red/Blue save states programmatically. Covers the JSON snapshot format, the Save Editor GUI, and headless save construction workflows.

@@ -1,3 +1,8 @@
+---
+name: playthrough-regression
+description: Run end-to-end game engine regression checks using milestone playthroughs, seeded subsystem scenarios, and BDD tests. Use when selecting regression coverage or diagnosing playthrough failures.
+---
+
 # playthrough-regression — Milestone Playthrough as E2E Regression Test
 
 Use this skill to regression-test the game engine end-to-end.
