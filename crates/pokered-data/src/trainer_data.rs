@@ -283,6 +283,15 @@ pub fn parse_trainer_id(trainer_id: &str) -> Option<(TrainerClass, usize)> {
 
     let name = &trainer_id[4..];
 
+    // The digit is part of these class names; any following digits are the
+    // 1-based party number emitted by make_trainer_id.
+    for (prefix, class) in [("RIVAL1", TrainerClass::Rival1), ("RIVAL2", TrainerClass::Rival2), ("RIVAL3", TrainerClass::Rival3)] {
+        if let Some(suffix) = name.strip_prefix(prefix) {
+            let index = if suffix.is_empty() { 0 } else { suffix.parse::<usize>().ok()?.saturating_sub(1) };
+            return Some((class, index));
+        }
+    }
+
     let digit_count = name
         .chars()
         .rev()
@@ -377,6 +386,21 @@ pub fn rival_starter_offset(player_starter: crate::species::Species) -> usize {
         Species::Charmander => 0,
         Species::Squirtle => 1,
         _ => 0,
+    }
+}
+
+/// Prefer the saved starter choice; recover older saves from the starter's
+/// evolution line only when that choice was never recorded.
+pub fn resolve_player_starter(saved: u8, lead: Option<crate::species::Species>) -> Option<crate::species::Species> {
+    use crate::species::Species;
+    if saved != 0 {
+        return Some(Species::from_index_id(saved));
+    }
+    match lead? {
+        Species::Bulbasaur | Species::Ivysaur | Species::Venusaur => Some(Species::Bulbasaur),
+        Species::Charmander | Species::Charmeleon | Species::Charizard => Some(Species::Charmander),
+        Species::Squirtle | Species::Wartortle | Species::Blastoise => Some(Species::Squirtle),
+        _ => None,
     }
 }
 
@@ -487,6 +511,25 @@ pub fn team_move(class: TrainerClass) -> Option<MoveId> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn numbered_rival_classes_and_party_sets_round_trip() {
+        for class in [TrainerClass::Rival1, TrainerClass::Rival2, TrainerClass::Rival3] {
+            let bare = format!("OPP_{}", trainer_class_name(class));
+            assert_eq!(parse_trainer_id(&bare), Some((class, 0)));
+            for set in [1, 3, 6, 9] {
+                assert_eq!(parse_trainer_id(&make_trainer_id(class, set)), Some((class, set as usize - 1)));
+            }
+        }
+    }
+
+    #[test]
+    fn starter_choice_survives_evolution_and_lead_changes() {
+        use crate::species::Species;
+        assert_eq!(resolve_player_starter(0, Some(Species::Ivysaur)), Some(Species::Bulbasaur));
+        assert_eq!(resolve_player_starter(Species::Charmander as u8, Some(Species::Venusaur)), Some(Species::Charmander));
+        assert_eq!(resolve_player_starter(0, Some(Species::Pidgey)), None);
+    }
 
     /// map.json `trainerSet` stores the reference's 1-based set number verbatim
     /// (`data/maps/objects/*.asm` 8th object_event arg). `make_trainer_id` must

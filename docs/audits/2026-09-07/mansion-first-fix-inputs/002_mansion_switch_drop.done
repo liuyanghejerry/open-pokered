@@ -1,0 +1,14 @@
+g.face('up');g.tap('a',20)
+for _ in range(60):
+ s=g.st()
+ if s['choice'] is not None:
+  snap('mansion-switch-choice-fixed');g.choose('YES');break
+ if s['dialogue_state'] is not None:g.skip()
+ else:g.step(20)
+else:raise NavError('mansion switch did not offer choice')
+g.cutscene();g.step(60);snap('mansion-3f-switch-on-fixed')
+assert g.d.cmd(cmd='get_flags')['data'].get('EVENT_MANSION_SWITCH_ON'),g.st()
+g.nav_to(16,13,'PokemonMansion3F');g.d.drive(['down']*8,frames=16);g.cutscene();g.step(90)
+s=snap('mansion-third-floor-fall');assert s['map_name']=='PokemonMansion1F',s
+checkpoint('m76-mansion-drop-1f')
+g.nav_warp(21,23,'PokemonMansion1F','PokemonMansionB1F');checkpoint('m77-mansion-basement')

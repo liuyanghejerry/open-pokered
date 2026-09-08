@@ -1,0 +1,6 @@
+g.tap('start',12);snap('safari-remaining-second');g.tap('b',12)
+for _ in range(90):
+ if g.st()['map_name']!='SafariZoneCenter':break
+ g.nav_to(14,2,'SafariZoneCenter');g.nav_to(14,3,'SafariZoneCenter');g.cutscene()
+snap('safari-time-expired')
+assert g.st()['map_name']=='SafariZoneGate',g.st()

@@ -1,0 +1,6 @@
+[resume-reentry] frame=638 screen=overworld map=PalletTown pos=(5,6) party=5 money=31210 effect=None
+CHECKPOINT league-resumed PalletTown 5 6 [{'hp': 107, 'level': 60, 'max_hp': 191, 'moves': ['Thunderbolt', 'DrillPeck', 'Thunder', 'LightScreen'], 'pp': [10, 7, 10, 30], 'species': 'Zapdos', 'status': 'None'}, {'hp': 142, 'level': 31, 'max_hp': 142, 'moves': ['IceBeam', 'Surf', 'Rest', 'Strength'], 'pp': [10, 14, 10, 15], 'species': 'Snorlax', 'status': 'None'}, {'hp': 52, 'level': 24, 'max_hp': 52, 'moves': ['Peck', 'Growl', 'FuryAttack', 'Fly'], 'pp': [35, 40, 20, 15], 'species': 'Doduo', 'status': 'None'}, {'hp': 64, 'level': 15, 'max_hp': 64, 'moves': ['WaterGun', 'Growl', 'None', 'None'], 'pp': [25, 40, 0, 0], 'species': 'Lapras', 'status': 'None'}, {'hp': 171, 'level': 54, 'max_hp': 171, 'moves': ['MegaDrain', 'Cut', 'LeechSeed', 'Growth'], 'pp': [9, 28, 7, 40], 'species': 'Venusaur', 'status': 'None'}]
+GAME_LOG /var/folders/d2/2fv86m890m34_13rn_t3d79w0000gn/T/pokered-run-0bmuqcnf/game.log
+READY
+RUN 001_verify.py
+FRESH_PROCESS_POSTGAME_VERIFIED

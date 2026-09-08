@@ -1,0 +1,17 @@
+def straight_to(x,y,map_name):
+ for _ in range(300):
+  s=g.st()
+  if s['screen']=='battle':g.battle_loop(prefer='run');g.cutscene();continue
+  if s['script_running'] or s['dialogue_state']:g.cutscene();continue
+  assert s['map_name']==map_name,s
+  if (s['player_x'],s['player_y'])==(x,y):return
+  direction=('right' if s['player_x']<x else 'left') if s['player_x']!=x else ('down' if s['player_y']<y else 'up')
+  g.d.drive([direction]*8,frames=16)
+ raise NavError('straight route did not converge')
+g.nav_to(10,104,'Route23');g.face('up')
+g.tap('start',8);g.tap('down',8);g.tap('a',8);g.tap('down',8);g.tap('a',8);g.tap('a',8);g.cutscene();g.step(60)
+snap('route23-surf-start');assert g.d.cmd(cmd='get_map')['data']['transport']=='Surfing',g.st()
+straight_to(12,103,'Route23');straight_to(12,84,'Route23');checkpoint('m99-route23-marsh-check')
+straight_to(6,84,'Route23');straight_to(6,78,'Route23');straight_to(10,78,'Route23');straight_to(10,71,'Route23')
+checkpoint('m100-route23-surf-completed')
+g.nav_to(6,36,'Route23');checkpoint('m101-route23-earth-check-ready')

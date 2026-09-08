@@ -2,17 +2,9 @@
 // text/SaffronCity.asm) to the real Game DSL API surface. SaffronCity is a
 // dialogue-only city map. It has two NPC states keyed on EVENT_BEAT_SILPH_CO_GIOVANNI:
 // the Rocket occupation (rockets visible) and the liberated city (citizens visible).
-// The show/hide of each NPC object is driven by the runtime's toggleable-objects
-// table (set when Giovanni is beaten in SilphCo11F), so each NPC keeps its single
-// static line and there is no @load / state machine here (the original only calls
-// EnableAutoTextBoxDrawing).
+// SilphCo11F's original global toggle lists are restored here on city entry.
 
 game_scene SaffronCity {
-  // ── On-enter: after the Mr.Fuji rescue (PokemonTower7F sets
-  // EVENT_RESCUED_MR_FUJI), the Rocket guards blocking the Silph Co. entrance
-  // leave (original TOGGLE_SAFFRON_CITY_E/F). OBJ_14 sits on the Silph door's
-  // approach tile (18,22), so this unblocks the Silph Co. warp — required before
-  // Giovanni can be challenged. (The remaining Rockets clear on beating Silph.)
   @load {
     // Rescue (PokemonTower7F rescue text: HideObject _E / ShowObject _F):
     // the Silph door guard leaves and the sleeping rocket takes his post.

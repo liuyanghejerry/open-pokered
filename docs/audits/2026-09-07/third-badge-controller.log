@@ -1,0 +1,209 @@
+[resume-reentry] frame=638 screen=overworld map=VermilionCity pos=(23,13) party=1 money=646 effect=None
+CHECKPOINT ship-resumed VermilionCity 23 13 [{'hp': 78, 'level': 28, 'max_hp': 78, 'moves': ['Tackle', 'Growl', 'LeechSeed', 'Poisonpowder'], 'pp': [35, 40, 10, 35], 'species': 'Ivysaur', 'status': 'None'}]
+READY
+RUN 001_healing.py
+CHECKPOINT ship-prepared VermilionCity 23 13 [{'hp': 78, 'level': 28, 'max_hp': 78, 'moves': ['Tackle', 'Growl', 'LeechSeed', 'Poisonpowder'], 'pp': [35, 40, 10, 35], 'species': 'Ivysaur', 'status': 'None'}]
+DONE 001_healing.py
+RUN 002_rival.py
+CHECKPOINT m21-ss-anne-entry SSAnne1F 27 0 [{'hp': 78, 'level': 28, 'max_hp': 78, 'moves': ['Tackle', 'Growl', 'LeechSeed', 'Poisonpowder'], 'pp': [35, 40, 10, 35], 'species': 'Ivysaur', 'status': 'None'}]
+SuperPotion 32 / 78 remaining before 4
+SuperPotion 37 / 78 remaining before 3
+SuperPotion 17 / 78 remaining before 2
+SuperPotion 32 / 81 remaining before 1
+Potion 39 / 81 remaining before 10
+Potion 38 / 81 remaining before 9
+Potion 26 / 81 remaining before 8
+CHECKPOINT m21-ss-anne-rival SSAnne2F 36 8 [{'hp': 41, 'level': 29, 'max_hp': 81, 'moves': ['Tackle', 'Growl', 'LeechSeed', 'Poisonpowder'], 'pp': [7, 40, 10, 35], 'species': 'Ivysaur', 'status': 'Burn'}]
+DONE 002_rival.py
+RUN 003_captain.py
+CHECKPOINT m22-cut-hm SSAnneCaptainsRoom 4 3 [{'hp': 41, 'level': 29, 'max_hp': 81, 'moves': ['Tackle', 'Growl', 'LeechSeed', 'Poisonpowder'], 'pp': [7, 40, 10, 35], 'species': 'Ivysaur', 'status': 'Burn'}]
+CHECKPOINT m22-ship-departed VermilionCity 18 31 [{'hp': 41, 'level': 29, 'max_hp': 81, 'moves': ['Tackle', 'Growl', 'LeechSeed', 'Poisonpowder'], 'pp': [7, 40, 10, 35], 'species': 'Ivysaur', 'status': 'Burn'}]
+DONE 003_captain.py
+RUN 004_heal.py
+Traceback (most recent call last):
+  File "/tmp/pokered-completion-20260907-ship-exit-patched/controller.py", line 71, in <module>
+    exec(compile(__task_path.read_text(),str(__task_path),'exec'),globals())
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/pokered-completion-20260907-ship-exit-patched/inbox/004_heal.py", line 1, in <module>
+    g.heal_pokecenter((11,3),'VermilionCity','VermilionPokecenter')
+    ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/liuyanghe02/develop/open-pokered-3/scripts/playthrough.py", line 803, in heal_pokecenter
+    self.nav_to_map(dx, dy + 1, city)
+    ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+  File "/Users/liuyanghe02/develop/open-pokered-3/scripts/playthrough.py", line 673, in nav_to_map
+    raise NavError(f"nav_to_map({map_name},{x},{y}) did not converge")
+playthrough.NavError: nav_to_map(VermilionCity,11,4) did not converge
+FAILED 004_heal.py
+RUN 005_heal.py
+CHECKPOINT m22-vermilion-healed VermilionCity 11 3 [{'hp': 81, 'level': 29, 'max_hp': 81, 'moves': ['Tackle', 'Growl', 'LeechSeed', 'Poisonpowder'], 'pp': [35, 40, 10, 35], 'species': 'Ivysaur', 'status': 'None'}]
+DONE 005_heal.py
+RUN 006_cut_menu.py
+DONE 006_cut_menu.py
+RUN 007_teach_cut.py
+CHECKPOINT m23-cut-learned VermilionCity 11 4 [{'hp': 81, 'level': 29, 'max_hp': 81, 'moves': ['Tackle', 'Cut', 'LeechSeed', 'Poisonpowder'], 'pp': [35, 30, 10, 35], 'species': 'Ivysaur', 'status': 'None'}]
+Traceback (most recent call last):
+  File "/tmp/pokered-completion-20260907-ship-exit-patched/controller.py", line 71, in <module>
+    exec(compile(__task_path.read_text(),str(__task_path),'exec'),globals())
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/pokered-completion-20260907-ship-exit-patched/inbox/007_teach_cut.py", line 8, in <module>
+    g.nav_to(15,18,'VermilionCity');snap('gym-tree-approach')
+    ~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/liuyanghe02/develop/open-pokered-3/docs/audits/2026-09-06/playthrough/navigation.py", line 49, in nav_to
+    if not path:raise NavError(f'no path {cm} {(px,py)} -> {(x,y)}')
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+playthrough.NavError: no path VermilionCity (11, 4) -> (15, 18)
+FAILED 007_teach_cut.py
+RUN 008_use_cut.py
+DONE 008_use_cut.py
+RUN 009_enter_gym.py
+DONE 009_enter_gym.py
+RUN 010_trash.py
+DONE 010_trash.py
+RUN 011_trash.py
+Potion 26 / 81 remaining before 7
+Potion 42 / 81 remaining before 6
+Traceback (most recent call last):
+  File "/tmp/pokered-completion-20260907-ship-exit-patched/controller.py", line 71, in <module>
+    exec(compile(__task_path.read_text(),str(__task_path),'exec'),globals())
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/pokered-completion-20260907-ship-exit-patched/inbox/011_trash.py", line 10, in <module>
+    ff=inspect_can(i)
+  File "/tmp/pokered-completion-20260907-ship-exit-patched/inbox/011_trash.py", line 4, in inspect_can
+    g.nav_to(x,y+1,'VermilionGym');g.face('up');g.tap('a',16)
+    ~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/liuyanghe02/develop/open-pokered-3/docs/audits/2026-09-06/playthrough/navigation.py", line 49, in nav_to
+    if not path:raise NavError(f'no path {cm} {(px,py)} -> {(x,y)}')
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+playthrough.NavError: no path VermilionGym (1, 8) -> (1, 10)
+FAILED 011_trash.py
+RUN 012_trash.py
+TRASH_ATTEMPT 0 solved True
+CHECKPOINT m23-gym-locks-open VermilionGym 0 9 [{'hp': 56, 'level': 30, 'max_hp': 83, 'moves': ['Tackle', 'Cut', 'LeechSeed', 'RazorLeaf'], 'pp': [17, 30, 10, 25], 'species': 'Ivysaur', 'status': 'None'}]
+DONE 012_trash.py
+RUN 013_surge.py
+CHECKPOINT m24-thunderbadge VermilionGym 5 2 [{'hp': 56, 'level': 30, 'max_hp': 83, 'moves': ['Tackle', 'Cut', 'LeechSeed', 'RazorLeaf'], 'pp': [16, 30, 10, 22], 'species': 'Ivysaur', 'status': 'None'}]
+DONE 013_surge.py
+RUN 014_visual_repro.py
+DONE 014_visual_repro.py
+RUN 015_tm28.py
+DONE 015_tm28.py
+RUN 016_exit_gym.py
+CHECKPOINT m24-vermilion-third-badge VermilionCity 12 20 [{'hp': 56, 'level': 30, 'max_hp': 83, 'moves': ['Tackle', 'Cut', 'LeechSeed', 'RazorLeaf'], 'pp': [16, 30, 10, 22], 'species': 'Ivysaur', 'status': 'None'}]
+CHECKPOINT m24-ready-north VermilionCity 11 4 [{'hp': 83, 'level': 30, 'max_hp': 83, 'moves': ['Tackle', 'Cut', 'LeechSeed', 'RazorLeaf'], 'pp': [35, 30, 10, 25], 'species': 'Ivysaur', 'status': 'None'}]
+DONE 016_exit_gym.py
+RUN 017_north.py
+[debug-drive] transport stall (OSError('connection closed by peer')), reconnecting and retrying: capture_frame
+Traceback (most recent call last):
+  File "/tmp/pokered-completion-20260907-ship-exit-patched/controller.py", line 71, in <module>
+    exec(compile(__task_path.read_text(),str(__task_path),'exec'),globals())
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/pokered-completion-20260907-ship-exit-patched/inbox/017_north.py", line 5, in <module>
+    g.nav_warp(4,4,'UndergroundPathRoute6','UndergroundPathNorthSouth')
+    ~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/liuyanghe02/develop/open-pokered-3/scripts/playthrough.py", line 711, in nav_warp
+    cm, _, _ = self.pos()
+               ~~~~~~~~^^
+  File "/Users/liuyanghe02/develop/open-pokered-3/scripts/playthrough.py", line 416, in pos
+    s = self.st()
+  File "/Users/liuyanghe02/develop/open-pokered-3/scripts/playthrough.py", line 390, in st
+    return self.d.cmd(cmd="get_state")["data"]
+           ~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "/tmp/pokered-completion-20260907-ship-exit-patched/controller.py", line 27, in cmd
+    cr=orig(cmd='capture_frame',path=str(p));assert cr['ok'],cr
+  File "/Users/liuyanghe02/develop/open-pokered-3/scripts/debug_drive.py", line 66, in cmd
+    resp = self.f.readline()
+  File "/opt/homebrew/Cellar/python@3.13/3.13.7/Frameworks/Python.framework/Versions/3.13/lib/python3.13/socket.py", line 719, in readinto
+    return self._sock.recv_into(b)
+           ~~~~~~~~~~~~~~~~~~~~^^^
+ConnectionResetError: [Errno 54] Connection reset by peer
+[debug-drive] transport stall (BrokenPipeError(32, 'Broken pipe')), reconnecting and retrying: get_state
+Traceback (most recent call last):
+  File "/tmp/pokered-completion-20260907-ship-exit-patched/controller.py", line 71, in <module>
+    exec(compile(__task_path.read_text(),str(__task_path),'exec'),globals())
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/pokered-completion-20260907-ship-exit-patched/inbox/017_north.py", line 5, in <module>
+    g.nav_warp(4,4,'UndergroundPathRoute6','UndergroundPathNorthSouth')
+    ~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/liuyanghe02/develop/open-pokered-3/scripts/playthrough.py", line 711, in nav_warp
+    cm, _, _ = self.pos()
+               ~~~~~~~~^^
+  File "/Users/liuyanghe02/develop/open-pokered-3/scripts/playthrough.py", line 416, in pos
+    s = self.st()
+  File "/Users/liuyanghe02/develop/open-pokered-3/scripts/playthrough.py", line 390, in st
+    return self.d.cmd(cmd="get_state")["data"]
+           ~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "/tmp/pokered-completion-20260907-ship-exit-patched/controller.py", line 27, in cmd
+    cr=orig(cmd='capture_frame',path=str(p));assert cr['ok'],cr
+  File "/Users/liuyanghe02/develop/open-pokered-3/scripts/debug_drive.py", line 66, in cmd
+    resp = self.f.readline()
+  File "/opt/homebrew/Cellar/python@3.13/3.13.7/Frameworks/Python.framework/Versions/3.13/lib/python3.13/socket.py", line 719, in readinto
+    return self._sock.recv_into(b)
+           ~~~~~~~~~~~~~~~~~~~~^^^
+ConnectionResetError: [Errno 54] Connection reset by peer
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/Users/liuyanghe02/develop/open-pokered-3/scripts/debug_drive.py", line 65, in cmd
+    self.f.flush()
+    ~~~~~~~~~~~~^^
+  File "/opt/homebrew/Cellar/python@3.13/3.13.7/Frameworks/Python.framework/Versions/3.13/lib/python3.13/socket.py", line 737, in write
+    return self._sock.send(b)
+           ~~~~~~~~~~~~~~~^^^
+BrokenPipeError: [Errno 32] Broken pipe
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/tmp/pokered-completion-20260907-ship-exit-patched/controller.py", line 74, in <module>
+    traceback.print_exc();snap(__task_path.stem+'-failed');print('FAILED',__task_path.name,flush=True)
+                          ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/pokered-completion-20260907-ship-exit-patched/controller.py", line 33, in snap
+    s=g.st();d={'state':s,'flags':g.d.cmd(cmd='get_flags'),'bag':g.d.cmd(cmd='get_bag'),'party':g.d.cmd(cmd='get_party'),'npcs':g.d.cmd(cmd='get_npcs')}
+  File "/Users/liuyanghe02/develop/open-pokered-3/scripts/playthrough.py", line 390, in st
+    return self.d.cmd(cmd="get_state")["data"]
+           ~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "/tmp/pokered-completion-20260907-ship-exit-patched/controller.py", line 20, in cmd
+    r=orig(**kw)
+  File "/Users/liuyanghe02/develop/open-pokered-3/scripts/debug_drive.py", line 76, in cmd
+    self._reconnect()
+    ~~~~~~~~~~~~~~~^^
+  File "/Users/liuyanghe02/develop/open-pokered-3/scripts/debug_drive.py", line 52, in _reconnect
+    self._connect(60)
+    ~~~~~~~~~~~~~^^^^
+  File "/Users/liuyanghe02/develop/open-pokered-3/scripts/debug_drive.py", line 35, in _connect
+    self.sock = socket.create_connection(
+                ~~~~~~~~~~~~~~~~~~~~~~~~^
+        (self.host, self.port), timeout=5)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.13/3.13.7/Frameworks/Python.framework/Versions/3.13/lib/python3.13/socket.py", line 864, in create_connection
+    raise exceptions[0]
+  File "/opt/homebrew/Cellar/python@3.13/3.13.7/Frameworks/Python.framework/Versions/3.13/lib/python3.13/socket.py", line 849, in create_connection
+    sock.connect(sa)
+    ~~~~~~~~~~~~^^^^
+ConnectionRefusedError: [Errno 61] Connection refused
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/opt/homebrew/Cellar/python@3.13/3.13.7/Frameworks/Python.framework/Versions/3.13/lib/python3.13/socket.py", line 737, in write
+    return self._sock.send(b)
+           ~~~~~~~~~~~~~~~^^^
+BrokenPipeError: [Errno 32] Broken pipe
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/tmp/pokered-completion-20260907-ship-exit-patched/controller.py", line 76, in <module>
+    finally:g.close()
+            ~~~~~~~^^
+  File "/Users/liuyanghe02/develop/open-pokered-3/scripts/playthrough.py", line 1122, in close
+    self.d.close()
+    ~~~~~~~~~~~~^^
+  File "/Users/liuyanghe02/develop/open-pokered-3/scripts/debug_drive.py", line 79, in close
+    self.f.close()
+    ~~~~~~~~~~~~^^
+  File "/opt/homebrew/Cellar/python@3.13/3.13.7/Frameworks/Python.framework/Versions/3.13/lib/python3.13/socket.py", line 737, in write
+    return self._sock.send(b)
+           ~~~~~~~~~~~~~~~^^^
+BrokenPipeError: [Errno 32] Broken pipe

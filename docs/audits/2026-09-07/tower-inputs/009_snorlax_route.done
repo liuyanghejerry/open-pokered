@@ -1,0 +1,7 @@
+g.nav_to(8,17,'LavenderTown');g.d.drive(['down']*8,frames=20);g.step(40)
+assert g.st()['map_name']=='Route12',g.st()
+g.nav_warp(10,15,'Route12','Route12Gate1F',approach='down')
+g.nav_warp(4,7,'Route12Gate1F','Route12',approach='down')
+g.nav_to(10,61,'Route12');g.cutscene();g.step(60)
+if g.st()['screen']=='battle':g.battle_loop(prefer='fight');g.cutscene()
+checkpoint('m37-snorlax-ready')

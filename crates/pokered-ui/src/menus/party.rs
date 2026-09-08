@@ -260,16 +260,102 @@ fn draw_move_choice<P: Painter>(ui: &mut Ui<P>, state: &PartyScreenState, move_c
 
     let extra_rows = (items.len() as u32).saturating_sub(3);
     let base = &PARTY_ACTION_MENU_LAYOUT.box_0.rect;
-    let width = menu_width(&items).max(base.tw);
+    // Original learn_move.asm:123: the move-choice menu is its OWN box at
+    // column 4 with an interior 14 tiles wide — the narrow action-menu box
+    // truncated LEECH SEED / POISONPOWDER past the border (audit:
+    // cut-forget-menu.png).
     let rect = TileRect::new(
-        base.tx + base.tw - width,
+        4,
         base.ty - 2 * extra_rows,
-        width,
+        16,
         base.th + 2 * extra_rows,
     );
     ui.text_box(rect, InkColor::Black, true, |frame| {
         frame.menu_list(0, 0, &items, move_cursor as usize, 2, InkColor::Black);
     });
+}
+
+#[cfg(test)]
+mod move_choice_tests {
+    use super::*;
+    use crate::engine::{TilePos, Rgba};
+    use pokered_core::pokemon::stats::create_pokemon_with_moves;
+    use pokered_data::moves::MoveId;
+    use pokered_data::species::Species;
+
+    #[derive(Debug, Default)]
+    struct Rec {
+        ops: Vec<Op>,
+    }
+
+    #[derive(Debug, PartialEq, Eq)]
+    enum Op {
+        Box(TileRect, Rgba),
+        Text(TilePos, String),
+        Cursor(TilePos),
+    }
+
+    impl Painter for Rec {
+        fn clear(&mut self, _color: Rgba) {}
+        fn draw_text_box(&mut self, rect: TileRect, color: Rgba) {
+            self.ops.push(Op::Box(rect, color));
+        }
+        fn draw_text(&mut self, pos: TilePos, text: &str, _color: Rgba) {
+            self.ops.push(Op::Text(pos, text.to_string()));
+        }
+        fn draw_glyph(&mut self, pos: TilePos, _glyph: char, _color: Rgba) {
+            self.ops.push(Op::Cursor(pos));
+        }
+        fn draw_pixel_rect(&mut self, _x: u32, _y: u32, _w: u32, _h: u32, _c: Rgba) {}
+        fn draw_gb_tile(&mut self, _pos: TilePos, _tile_id: u8, _fallback: &str, _color: Rgba) {}
+    }
+
+    /// The forget-menu box matches the original (learn_move.asm:123): column 4,
+    /// interior 14 wide — and every move name fits inside it.
+    #[test]
+    fn forget_menu_box_wide_enough_for_long_move_names() {
+        let mon = create_pokemon_with_moves(
+            Species::Venusaur,
+            50,
+            [0xFF, 0xFF],
+            [
+                MoveId::LeechSeed,
+                MoveId::Poisonpowder,
+                MoveId::SleepPowder,
+                MoveId::RazorLeaf,
+            ],
+        )
+        .unwrap();
+        let state = PartyScreenState::new(vec![mon]);
+        let mut rec = Rec::default();
+        let mut ui = Ui::new(&mut rec);
+        draw_move_choice(&mut ui, &state, 0, false);
+
+        let rect = rec
+            .ops
+            .iter()
+            .find_map(|op| match op {
+                Op::Box(r, _) => Some(*r),
+                _ => None,
+            })
+            .expect("forget menu box drawn");
+        assert_eq!(rect.tx, 4, "box starts at column 4");
+        assert_eq!(rect.tw, 16, "interior 14 + two borders");
+        assert!(rect.ty + rect.th <= 18, "box bottom stays on screen");
+
+        // No rendered text may cross the right border of the interior.
+        let interior_right = rect.tx + rect.tw - 1;
+        for op in &rec.ops {
+            if let Op::Text(pos, text) = op {
+                assert!(
+                    pos.tx + text.chars().count() as u32 <= interior_right,
+                    "text {text:?} at {} crosses the interior right edge {}",
+                    pos.tx,
+                    interior_right
+                );
+            }
+        }
+    }
 }
 
 // One tile per glyph, plus the cursor column and both borders.

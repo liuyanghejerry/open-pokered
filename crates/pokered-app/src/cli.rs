@@ -225,6 +225,9 @@ pub enum ScreenTarget {
     TrainerCard,
     Pc,
     Naming,
+    Hof,
+    Credits,
+    SafariStart,
 }
 
 pub fn screen_target_to_game_screen(target: &ScreenTarget) -> pokered_core::game_state::GameScreen {
@@ -251,6 +254,13 @@ pub fn screen_target_to_game_screen(target: &ScreenTarget) -> pokered_core::game
         TrainerCard => GameScreen::TrainerCard,
         Pc => GameScreen::PC,
         Naming => GameScreen::OakSpeech,
+        // Movie takeovers have no GameScreen variant — they render from the
+        // seeded `hof_ceremony`/`credits` fields; cmd_screenshot early-returns
+        // before this mapping is consulted.
+        Hof | Credits => GameScreen::Overworld,
+        // SafariStart draws the real START-menu screen; the safari info box is
+        // seeded onto `start_menu` (tools.rs) — see the Hof/Credits note.
+        SafariStart => GameScreen::StartMenu,
     }
 }
 

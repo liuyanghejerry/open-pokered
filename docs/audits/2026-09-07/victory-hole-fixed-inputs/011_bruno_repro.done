@@ -1,0 +1,1 @@
+g.tap('a',12);snap('bruno-second-talk-start');g.cutscene();g.step(180);snap('bruno-second-talk-end');checkpoint('m129-bruno-blocked')

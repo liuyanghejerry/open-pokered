@@ -1,0 +1,11 @@
+assert g.st()['map_name']=='Route23',g.st();checkpoint('m119-victory-road-completed')
+g.nav_to(10,0,'Route23');g.d.drive(['up']*16,frames=32);g.cutscene();g.step(60)
+assert g.st()['map_name']=='IndigoPlateau',g.st();checkpoint('m120-indigo-plateau')
+g.nav_warp(9,5,'IndigoPlateau','IndigoPlateauLobby');g.nav_to(7,6,'IndigoPlateauLobby');g.face('up');g.tap('a',12)
+for _ in range(100):
+ s=g.st()
+ if s['choice'] is not None:g.tap('a',12)
+ elif s['dialogue_state'] is not None:g.skip()
+ elif s['script_running']:g.step(120)
+ else:break
+g.step(60);checkpoint('m121-indigo-healed')

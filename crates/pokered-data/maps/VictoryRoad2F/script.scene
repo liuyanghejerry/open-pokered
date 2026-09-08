@@ -20,34 +20,16 @@ game_scene VictoryRoad2F {
   //   SWITCH2 -> ld a,$1d (block 29); lb bc, 7, 11 => replaceTileBlock(X=11, Y=7,  29)
   // (asm lb bc, B, C = Y,X; our API is replaceTileBlock(X, Y, id) X-first.)
   @load {
+    @if (getFlag("EVENT_VICTORY_ROAD_3_BOULDER_ON_SWITCH2")) {
+      showObject("VICTORY_ROAD_2F_OBJ_13")
+    }
+    @if (getFlag("EVENT_BEAT_MOLTRES")) {
+      hideObjectByName("VICTORY_ROAD_2F_OBJ_6")
+    }
     @if (getFlag("EVENT_VICTORY_ROAD_2_BOULDER_ON_SWITCH1")) {
       replaceTileBlock(3, 4, 21)
     }
     @if (getFlag("EVENT_VICTORY_ROAD_2_BOULDER_ON_SWITCH2")) {
-      replaceTileBlock(11, 7, 29)
-    }
-  }
-
-  // ── Floor switch 1 (boulder-on-switch coord 1,16) ─────────────────────────
-  // VictoryRoad2FDefaultScript checks .SwitchCoords (dbmapcoord 1,16 / 9,16)
-  // and SetEvent the matching BOULDER_ON_SWITCH flag, which then opens the
-  // floor via the @load ReplaceTileBlock above. The original requires a
-  // STRENGTH boulder pushed onto the tile; there is no boulder-push API, so we
-  // approximate faithfully: reaching the switch coord solves it and opens the
-  // door immediately (same flag + same tile swap as the asm).
-  @storyline("switch1") {
-    @trigger(map = "VictoryRoad2F", name = "switch1")
-    @if (!getFlag("EVENT_VICTORY_ROAD_2_BOULDER_ON_SWITCH1")) {
-      setFlag("EVENT_VICTORY_ROAD_2_BOULDER_ON_SWITCH1")
-      replaceTileBlock(3, 4, 21)
-    }
-  }
-
-  // ── Floor switch 2 (boulder-on-switch coord 9,16) ─────────────────────────
-  @storyline("switch2") {
-    @trigger(map = "VictoryRoad2F", name = "switch2")
-    @if (!getFlag("EVENT_VICTORY_ROAD_2_BOULDER_ON_SWITCH2")) {
-      setFlag("EVENT_VICTORY_ROAD_2_BOULDER_ON_SWITCH2")
       replaceTileBlock(11, 7, 29)
     }
   }
@@ -128,7 +110,7 @@ game_scene VictoryRoad2F {
   // Implemented as a static wild battle via startWildBattle; the cry + text
   // match the original.
   @storyline("talkMoltres") {
-    @trigger(map = "VictoryRoad2F", npc = 6)
+    @trigger(map = "VictoryRoad2F", npc = 6, toggle = "VICTORY_ROAD_2F_OBJ_6")
     @if (!getFlag("EVENT_BEAT_MOLTRES")) {
       playCry("MOLTRES")
       @speaker("") {
@@ -138,11 +120,7 @@ game_scene VictoryRoad2F {
       result = startWildBattle("MOLTRES", 50)
       @if (result == "win" || result == "caught") {
         setFlag("EVENT_BEAT_MOLTRES")
-      }
-    } @else {
-      playCry("MOLTRES")
-      @speaker("") {
-        @t("Gyaoo!", "嘎嗷！")
+        hideObjectByName("VICTORY_ROAD_2F_OBJ_6")
       }
     }
   }
@@ -217,7 +195,7 @@ game_scene VictoryRoad2F {
 
   // ── Strength boulder (npc 13) — shared BoulderText ────────────────────────
   @storyline("talkBoulder3") {
-    @trigger(map = "VictoryRoad2F", npc = 13)
+    @trigger(map = "VictoryRoad2F", npc = 13, toggle = "VICTORY_ROAD_2F_OBJ_13", hidden = true)
     @speaker("") {
       @t("This requires STRENGTH to\nmove!", "这个巨石需要怪力才能推动！")
     }

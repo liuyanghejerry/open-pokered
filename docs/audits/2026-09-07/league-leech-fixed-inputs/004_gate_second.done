@@ -1,0 +1,4 @@
+assert g.st()['map_name']=='Route22',g.st()
+g.nav_to(8,7,'Route22');g.nav_warp(8,5,'Route22','Route22Gate');g.nav_to(4,1,'Route22Gate')
+g.d.drive(['up']*8,frames=16);g.cutscene();g.step(60);snap('league-gate-north-second')
+checkpoint('m96-league-gate-blocked')

@@ -1,0 +1,8 @@
+g.nav_to(16,11,'Route16');g.d.drive(['right']*16,frames=24);g.step(40)
+assert g.st()['map_name']=='Route16Gate1F',g.st()
+g.nav_warp(7,9,'Route16Gate1F','Route16')
+g.nav_to(25,10,'Route16');g.face('right');g.tap('a',20);g.cutscene();g.step(40)
+snap('route16-snorlax-woken');assert g.st()['screen']=='battle',g.st()
+g.battle_loop(prefer='fight');g.cutscene();g.step(40)
+assert g.d.cmd(cmd='get_flags')['data'].get('EVENT_BEAT_ROUTE16_SNORLAX'),g.st()
+checkpoint('m49-route16-open')

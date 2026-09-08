@@ -535,6 +535,12 @@ fn toxic_residual(
     _source: BattlerRef,
     _eff: EffectId,
 ) -> HandlerResult {
+    // core.asm checks the move's KO before HandlePoisonBurnLeechSeed.
+    // In particular, a fainted seeder must never be healed back into battle.
+    if ctx.battler(target).hp == 0 || ctx.battler(opposing(target)).hp == 0 {
+        return HandlerResult::Unchanged;
+    }
+
     // Find the Toxic volatile by HOST (it is the arena entry hosted on the
     // residual's `target`, NOT keyed by `source_effect` — the driver passes the
     // residual EFFECT's id, not the arena entry's). Increment + read the counter.
@@ -577,9 +583,12 @@ fn leech_residual(
     _source: BattlerRef,
     _eff: EffectId,
 ) -> HandlerResult {
-    if ctx.battler(target).hp == 0 {
-        return HandlerResult::Unchanged; // dead host (legacy early-return)
+    // core.asm checks the move's KO before HandlePoisonBurnLeechSeed.
+    // In particular, a fainted seeder must never be healed back into battle.
+    if ctx.battler(target).hp == 0 || ctx.battler(opposing(target)).hp == 0 {
+        return HandlerResult::Unchanged;
     }
+
     let max = ctx.battler(target).max_hp;
     let base = (max / 16).max(1);
     // Badly-poisoned host → the shared-routine bug: bump the Toxic counter and
@@ -620,9 +629,12 @@ fn burn_residual(
     _source: BattlerRef,
     _eff: EffectId,
 ) -> HandlerResult {
-    if ctx.battler(target).hp == 0 {
+    // core.asm checks the move's KO before HandlePoisonBurnLeechSeed.
+    // In particular, a fainted seeder must never be healed back into battle.
+    if ctx.battler(target).hp == 0 || ctx.battler(opposing(target)).hp == 0 {
         return HandlerResult::Unchanged;
     }
+
     let dmg = (ctx.battler(target).max_hp / 16).max(1);
     ctx.battler_mut(target).take_damage(dmg);
     HandlerResult::Unchanged
@@ -640,9 +652,12 @@ fn poison_residual(
     _source: BattlerRef,
     _eff: EffectId,
 ) -> HandlerResult {
-    if ctx.battler(target).hp == 0 {
+    // core.asm checks the move's KO before HandlePoisonBurnLeechSeed.
+    // In particular, a fainted seeder must never be healed back into battle.
+    if ctx.battler(target).hp == 0 || ctx.battler(opposing(target)).hp == 0 {
         return HandlerResult::Unchanged;
     }
+
     // Badly-poisoned → the Toxic volatile ramp owns the tick (avoid double-chip).
     let badly = ctx
         .effects

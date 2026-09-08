@@ -451,6 +451,18 @@ class Game:
             # map (PalletTown), which the map check then misreads as
             # "warped out" (observed in Viridian Forest trainer LOS).
             s = self.st()
+            # A caller owns scripted events at the requested destination
+            # (notably m06's rival challenge); don't consume that battle here.
+            if (s["screen"] == "overworld" and (map_name is None or s["map_name"] == map_name)
+                    and (s["player_x"], s["player_y"]) == (x, y)):
+                return
+            # Sighted trainers now speak before opening the battle screen.
+            # A direction-only navigator would keep walking into that dialogue
+            # forever. Use the existing dialogue driver; choices still fail.
+            if s["screen"] == "overworld" and s.get("dialogue_state") is not None:
+                if not self.cutscene():
+                    raise NavError("navigation dialogue did not finish")
+                s = self.st()
             if s["screen"] == "battle":
                 prefer = ("fight" if s["script_awaiting_battle"]
                           else "run")
@@ -488,6 +500,8 @@ class Game:
                              frames=tiles * FRAMES_PER_TILE + 4)
                 i = j + 1
                 s2 = self.st()
+                if s2["screen"] == "battle" or s2.get("dialogue_state") is not None:
+                    break
                 if (s2["player_x"], s2["player_y"]) == (px0, py0):
                     print(f"   [ntoPINCH] at {cm}({px0},{py0})", flush=True)
                     self.step(60)
@@ -509,6 +523,16 @@ class Game:
         for attempt in range(tries):
             # Single snapshot for battle + position, same race as nav_to.
             s = self.st()
+            if (s["screen"] == "overworld" and s["map_name"] == map_name
+                    and (s["player_x"], s["player_y"]) == (x, y)):
+                return
+            # Sighted trainers now speak before opening the battle screen.
+            # A direction-only navigator would keep walking into that dialogue
+            # forever. Use the existing dialogue driver; choices still fail.
+            if s["screen"] == "overworld" and s.get("dialogue_state") is not None:
+                if not self.cutscene():
+                    raise NavError("navigation dialogue did not finish")
+                s = self.st()
             if s["screen"] == "battle":
                 prefer = ("fight" if s["script_awaiting_battle"]
                           else "run")

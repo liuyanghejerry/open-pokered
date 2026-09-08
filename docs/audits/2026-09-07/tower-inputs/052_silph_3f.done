@@ -1,0 +1,10 @@
+try:g.nav_to(26,0,'SilphCo5F')
+except NavError:
+ g.nav_warp(9,15,'SilphCo5F','SilphCo9F');g.nav_to(17,14,'SilphCo9F');g.nav_warp(17,15,'SilphCo9F','SilphCo5F')
+ g.nav_to(9,14,'SilphCo5F');g.nav_to(26,0,'SilphCo5F')
+if g.st()['map_name']=='SilphCo5F':g.nav_warp(26,0,'SilphCo5F','SilphCo4F')
+g.nav_warp(24,0,'SilphCo4F','SilphCo3F')
+snap('silph-door-before-key')
+g.nav_to(15,9,'SilphCo3F');g.cutscene();g.step(40)
+snap('silph-door-opened')
+checkpoint('m53-silph-3f-door')

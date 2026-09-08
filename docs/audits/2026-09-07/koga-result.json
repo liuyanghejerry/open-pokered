@@ -1,0 +1,567 @@
+{
+  "state": {
+    "active_script_effect": null,
+    "battle_bag": null,
+    "battle_inventory": [
+      {
+        "item": "PokeBall",
+        "qty": 5
+      },
+      {
+        "item": "OldRod",
+        "qty": 1
+      },
+      {
+        "item": "Hm01",
+        "qty": 1
+      },
+      {
+        "item": "Bicycle",
+        "qty": 1
+      },
+      {
+        "item": "ParlyzHeal",
+        "qty": 3
+      },
+      {
+        "item": "Awakening",
+        "qty": 3
+      },
+      {
+        "item": "BurnHeal",
+        "qty": 2
+      },
+      {
+        "item": "SilphScope",
+        "qty": 1
+      },
+      {
+        "item": "GreatBall",
+        "qty": 9
+      },
+      {
+        "item": "RareCandy",
+        "qty": 1
+      },
+      {
+        "item": "PokeFlute",
+        "qty": 1
+      },
+      {
+        "item": "Hm03",
+        "qty": 1
+      },
+      {
+        "item": "Hm04",
+        "qty": 1
+      },
+      {
+        "item": "SuperPotion",
+        "qty": 9
+      },
+      {
+        "item": "Revive",
+        "qty": 3
+      },
+      {
+        "item": "FullHeal",
+        "qty": 5
+      }
+    ],
+    "battle_live": {
+      "enemy": {
+        "hp": 0,
+        "level": 43,
+        "max_hp": 115,
+        "species": "Weezing",
+        "status": "None"
+      },
+      "enemy_party": [
+        {
+          "hp": 0,
+          "level": 37,
+          "species": "Koffing"
+        },
+        {
+          "hp": 0,
+          "level": 39,
+          "species": "Muk"
+        },
+        {
+          "hp": 0,
+          "level": 37,
+          "species": "Koffing"
+        },
+        {
+          "hp": 0,
+          "level": 43,
+          "species": "Weezing"
+        }
+      ],
+      "player": {
+        "hp": 39,
+        "level": 46,
+        "max_hp": 145,
+        "species": "Venusaur",
+        "status": "None"
+      }
+    },
+    "battle_message": null,
+    "battle_moves": null,
+    "battle_phase": "TrainerVictory { phase: EndBattleText, wait_frames: 0, player_won: true }",
+    "choice": null,
+    "coins": 0,
+    "dialogue": null,
+    "dialogue_state": null,
+    "frame_count": 167069,
+    "map_id": 157,
+    "map_name": "FuchsiaGym",
+    "money": 12411,
+    "party": [
+      {
+        "hp": 39,
+        "level": 46,
+        "max_hp": 145,
+        "moves": [
+          "MegaDrain",
+          "Cut",
+          "LeechSeed",
+          "Growth"
+        ],
+        "pp": [
+          0,
+          7,
+          0,
+          32
+        ],
+        "species": "Venusaur",
+        "status": "None"
+      },
+      {
+        "hp": 137,
+        "level": 30,
+        "max_hp": 137,
+        "moves": [
+          "IceBeam",
+          "Surf",
+          "Rest",
+          "Strength"
+        ],
+        "pp": [
+          10,
+          15,
+          10,
+          15
+        ],
+        "species": "Snorlax",
+        "status": "None"
+      }
+    ],
+    "party_count": 2,
+    "pc_phase": null,
+    "player_facing": "Up",
+    "player_movement_state": "Idle",
+    "player_name": "RED",
+    "player_x": 4,
+    "player_y": 11,
+    "screen": "overworld",
+    "script_awaiting_battle": false,
+    "script_effect": null,
+    "script_running": false,
+    "shop_phase": null,
+    "text_speed_delay_frames": 3,
+    "warp_fade": "Idle"
+  },
+  "flags": {
+    "ok": true,
+    "data": {
+      "EVENT_1ST_LOCK_OPENED": true,
+      "EVENT_1ST_ROUTE22_RIVAL_BATTLE": true,
+      "EVENT_2ND_LOCK_OPENED": true,
+      "EVENT_BATTLED_RIVAL_IN_OAKS_LAB": true,
+      "EVENT_BEAT_BROCK": true,
+      "EVENT_BEAT_CELADON_GYM_TRAINER_0": true,
+      "EVENT_BEAT_CELADON_GYM_TRAINER_1": true,
+      "EVENT_BEAT_CELADON_GYM_TRAINER_2": true,
+      "EVENT_BEAT_CELADON_GYM_TRAINER_3": true,
+      "EVENT_BEAT_CELADON_GYM_TRAINER_4": true,
+      "EVENT_BEAT_CELADON_GYM_TRAINER_5": true,
+      "EVENT_BEAT_CELADON_GYM_TRAINER_6": true,
+      "EVENT_BEAT_CERULEAN_GYM_TRAINER_0": true,
+      "EVENT_BEAT_CERULEAN_GYM_TRAINER_1": true,
+      "EVENT_BEAT_CERULEAN_RIVAL": true,
+      "EVENT_BEAT_CERULEAN_ROCKET_THIEF": true,
+      "EVENT_BEAT_ERIKA": true,
+      "EVENT_BEAT_FUCHSIA_GYM_TRAINER_0": true,
+      "EVENT_BEAT_FUCHSIA_GYM_TRAINER_1": true,
+      "EVENT_BEAT_FUCHSIA_GYM_TRAINER_2": true,
+      "EVENT_BEAT_FUCHSIA_GYM_TRAINER_3": true,
+      "EVENT_BEAT_FUCHSIA_GYM_TRAINER_4": true,
+      "EVENT_BEAT_FUCHSIA_GYM_TRAINER_5": true,
+      "EVENT_BEAT_GAME_CORNER_ROCKET": true,
+      "EVENT_BEAT_GHOST_MAROWAK": true,
+      "EVENT_BEAT_KOGA": true,
+      "EVENT_BEAT_LT_SURGE": true,
+      "EVENT_BEAT_MISTY": true,
+      "EVENT_BEAT_MT_MOON_1_TRAINER_2": true,
+      "EVENT_BEAT_MT_MOON_3_TRAINER_0": true,
+      "EVENT_BEAT_MT_MOON_EXIT_SUPER_NERD": true,
+      "EVENT_BEAT_PEWTER_GYM_TRAINER_0": true,
+      "EVENT_BEAT_POKEMONTOWER_3_TRAINER_2": true,
+      "EVENT_BEAT_POKEMONTOWER_4_TRAINER_1": true,
+      "EVENT_BEAT_POKEMONTOWER_6_TRAINER_0": true,
+      "EVENT_BEAT_POKEMONTOWER_6_TRAINER_1": true,
+      "EVENT_BEAT_POKEMONTOWER_6_TRAINER_2": true,
+      "EVENT_BEAT_POKEMONTOWER_7_TRAINER_0": true,
+      "EVENT_BEAT_POKEMONTOWER_7_TRAINER_1": true,
+      "EVENT_BEAT_POKEMONTOWER_7_TRAINER_2": true,
+      "EVENT_BEAT_POKEMON_TOWER_RIVAL": true,
+      "EVENT_BEAT_ROCKET_HIDEOUT_1_TRAINER_0": true,
+      "EVENT_BEAT_ROCKET_HIDEOUT_1_TRAINER_4": true,
+      "EVENT_BEAT_ROCKET_HIDEOUT_4_TRAINER_0": true,
+      "EVENT_BEAT_ROCKET_HIDEOUT_4_TRAINER_1": true,
+      "EVENT_BEAT_ROCKET_HIDEOUT_4_TRAINER_2": true,
+      "EVENT_BEAT_ROCKET_HIDEOUT_GIOVANNI": true,
+      "EVENT_BEAT_ROCK_TUNNEL_1_TRAINER_0": true,
+      "EVENT_BEAT_ROCK_TUNNEL_1_TRAINER_3": true,
+      "EVENT_BEAT_ROCK_TUNNEL_1_TRAINER_4": true,
+      "EVENT_BEAT_ROCK_TUNNEL_1_TRAINER_5": true,
+      "EVENT_BEAT_ROCK_TUNNEL_1_TRAINER_6": true,
+      "EVENT_BEAT_ROCK_TUNNEL_2_TRAINER_0": true,
+      "EVENT_BEAT_ROCK_TUNNEL_2_TRAINER_1": true,
+      "EVENT_BEAT_ROCK_TUNNEL_2_TRAINER_3": true,
+      "EVENT_BEAT_ROCK_TUNNEL_2_TRAINER_4": true,
+      "EVENT_BEAT_ROCK_TUNNEL_2_TRAINER_5": true,
+      "EVENT_BEAT_ROCK_TUNNEL_2_TRAINER_7": true,
+      "EVENT_BEAT_ROUTE12_SNORLAX": true,
+      "EVENT_BEAT_ROUTE24_ROCKET": true,
+      "EVENT_BEAT_ROUTE_10_TRAINER_2": true,
+      "EVENT_BEAT_ROUTE_10_TRAINER_3": true,
+      "EVENT_BEAT_ROUTE_12_TRAINER_0": true,
+      "EVENT_BEAT_ROUTE_12_TRAINER_1": true,
+      "EVENT_BEAT_ROUTE_12_TRAINER_2": true,
+      "EVENT_BEAT_ROUTE_12_TRAINER_3": true,
+      "EVENT_BEAT_ROUTE_12_TRAINER_5": true,
+      "EVENT_BEAT_ROUTE_13_TRAINER_0": true,
+      "EVENT_BEAT_ROUTE_13_TRAINER_1": true,
+      "EVENT_BEAT_ROUTE_13_TRAINER_2": true,
+      "EVENT_BEAT_ROUTE_13_TRAINER_6": true,
+      "EVENT_BEAT_ROUTE_13_TRAINER_8": true,
+      "EVENT_BEAT_ROUTE_14_TRAINER_1": true,
+      "EVENT_BEAT_ROUTE_14_TRAINER_4": true,
+      "EVENT_BEAT_ROUTE_14_TRAINER_5": true,
+      "EVENT_BEAT_ROUTE_14_TRAINER_8": true,
+      "EVENT_BEAT_ROUTE_24_TRAINER_1": true,
+      "EVENT_BEAT_ROUTE_24_TRAINER_2": true,
+      "EVENT_BEAT_ROUTE_24_TRAINER_3": true,
+      "EVENT_BEAT_ROUTE_24_TRAINER_4": true,
+      "EVENT_BEAT_ROUTE_24_TRAINER_5": true,
+      "EVENT_BEAT_ROUTE_25_TRAINER_0": true,
+      "EVENT_BEAT_ROUTE_25_TRAINER_1": true,
+      "EVENT_BEAT_ROUTE_25_TRAINER_2": true,
+      "EVENT_BEAT_ROUTE_25_TRAINER_3": true,
+      "EVENT_BEAT_ROUTE_25_TRAINER_5": true,
+      "EVENT_BEAT_ROUTE_25_TRAINER_6": true,
+      "EVENT_BEAT_ROUTE_25_TRAINER_7": true,
+      "EVENT_BEAT_ROUTE_3_TRAINER_0": true,
+      "EVENT_BEAT_ROUTE_3_TRAINER_1": true,
+      "EVENT_BEAT_ROUTE_3_TRAINER_2": true,
+      "EVENT_BEAT_ROUTE_3_TRAINER_4": true,
+      "EVENT_BEAT_ROUTE_3_TRAINER_6": true,
+      "EVENT_BEAT_ROUTE_3_TRAINER_7": true,
+      "EVENT_BEAT_ROUTE_6_TRAINER_3": true,
+      "EVENT_BEAT_ROUTE_6_TRAINER_4": true,
+      "EVENT_BEAT_ROUTE_8_TRAINER_6": true,
+      "EVENT_BEAT_ROUTE_8_TRAINER_8": true,
+      "EVENT_BEAT_ROUTE_9_TRAINER_0": true,
+      "EVENT_BEAT_ROUTE_9_TRAINER_3": true,
+      "EVENT_BEAT_ROUTE_9_TRAINER_8": true,
+      "EVENT_BEAT_SS_ANNE_RIVAL": true,
+      "EVENT_BEAT_VERMILION_GYM_TRAINER_0": true,
+      "EVENT_BEAT_VERMILION_GYM_TRAINER_1": true,
+      "EVENT_BEAT_VERMILION_GYM_TRAINER_2": true,
+      "EVENT_BEAT_VIRIDIAN_FOREST_TRAINER_2": true,
+      "EVENT_BILL_SAID_USE_CELL_SEPARATOR": true,
+      "EVENT_FIGHT_ROUTE12_SNORLAX": true,
+      "EVENT_FOLLOWED_OAK_INTO_LAB": true,
+      "EVENT_FOLLOWED_OAK_INTO_LAB_2": true,
+      "EVENT_FOUND_ROCKET_HIDEOUT": true,
+      "EVENT_GAVE_GOLD_TEETH": true,
+      "EVENT_GAVE_SAFFRON_GUARDS_DRINK": true,
+      "EVENT_GOT_BICYCLE": true,
+      "EVENT_GOT_BIKE_VOUCHER": true,
+      "EVENT_GOT_HELIX_FOSSIL": true,
+      "EVENT_GOT_HM01": true,
+      "EVENT_GOT_HM03": true,
+      "EVENT_GOT_HM04": true,
+      "EVENT_GOT_NUGGET": true,
+      "EVENT_GOT_OAKS_PARCEL": true,
+      "EVENT_GOT_OLD_ROD": true,
+      "EVENT_GOT_POKEDEX": true,
+      "EVENT_GOT_POKE_FLUTE": true,
+      "EVENT_GOT_RARE_CANDY_POKEMON_TOWER_6F": true,
+      "EVENT_GOT_SS_TICKET": true,
+      "EVENT_GOT_STARTER": true,
+      "EVENT_GOT_TM06": true,
+      "EVENT_GOT_TM11": true,
+      "EVENT_GOT_TM13": true,
+      "EVENT_GOT_TM21": true,
+      "EVENT_GOT_TM24": true,
+      "EVENT_GOT_TM34": true,
+      "EVENT_IN_PURIFIED_ZONE": true,
+      "EVENT_MET_BILL": true,
+      "EVENT_MET_BILL_2": true,
+      "EVENT_OAK_APPEARED_IN_PALLET": true,
+      "EVENT_OAK_ASKED_TO_CHOOSE_MON": true,
+      "EVENT_OAK_GOT_PARCEL": true,
+      "EVENT_RESCUED_MR_FUJI": true,
+      "EVENT_RESCUED_MR_FUJI_2": true,
+      "EVENT_ROCKET_DROPPED_LIFT_KEY": true,
+      "EVENT_ROUTE22_RIVAL_WANTS_BATTLE": true,
+      "EVENT_RUBBED_CAPTAINS_BACK": true,
+      "EVENT_SS_ANNE_LEFT": true,
+      "EVENT_STARTED_WALKING_OUT_OF_DOCK": true,
+      "EVENT_USED_CELL_SEPARATOR_ON_BILL": true,
+      "__OBJ_HIDDEN_BILLS_HOUSE_OBJ_1": true,
+      "__OBJ_HIDDEN_CERULEAN_GUARD_2": true,
+      "__OBJ_HIDDEN_CERULEAN_RIVAL": true,
+      "__OBJ_HIDDEN_CERULEAN_ROCKET": true,
+      "__OBJ_HIDDEN_GAME_CORNER_OBJ_11": true,
+      "__OBJ_HIDDEN_MTMOONB2F_DOME_FOSSIL": true,
+      "__OBJ_HIDDEN_MTMOONB2F_HELIX_FOSSIL": true,
+      "__OBJ_HIDDEN_OAKS_LAB_OBJ_1": true,
+      "__OBJ_HIDDEN_OAKS_LAB_OBJ_2": true,
+      "__OBJ_HIDDEN_OAKS_LAB_OBJ_4": true,
+      "__OBJ_HIDDEN_OAKS_LAB_OBJ_6": true,
+      "__OBJ_HIDDEN_OAKS_LAB_OBJ_7": true,
+      "__OBJ_HIDDEN_OAKS_LAB_OBJ_8": true,
+      "__OBJ_HIDDEN_PALLET_TOWN_OBJ_1": true,
+      "__OBJ_HIDDEN_POKEMON_TOWER_2F_RIVAL": true,
+      "__OBJ_HIDDEN_POKEMON_TOWER_6F_OBJ_4": true,
+      "__OBJ_HIDDEN_ROCKET_HIDEOUT_B4F_OBJ_1": true,
+      "__OBJ_HIDDEN_ROUTE_12_OBJ_1": true,
+      "__OBJ_HIDDEN_SS_ANNE_2F_RIVAL": true,
+      "__OBJ_SHOWN_BILLS_HOUSE_OBJ_2": true,
+      "__OBJ_SHOWN_CERULEAN_GUARD_1": true,
+      "__OBJ_SHOWN_CERULEAN_RIVAL": true,
+      "__OBJ_SHOWN_OAKS_LAB_OBJ_5": true,
+      "__OBJ_SHOWN_ROCKET_HIDEOUT_B4F_OBJ_8": true,
+      "__OBJ_SHOWN_ROCKET_HIDEOUT_B4F_OBJ_9": true
+    }
+  },
+  "bag": {
+    "ok": true,
+    "data": [
+      {
+        "item": "PokeBall",
+        "qty": 5
+      },
+      {
+        "item": "OldRod",
+        "qty": 1
+      },
+      {
+        "item": "Hm01",
+        "qty": 1
+      },
+      {
+        "item": "Bicycle",
+        "qty": 1
+      },
+      {
+        "item": "ParlyzHeal",
+        "qty": 3
+      },
+      {
+        "item": "Awakening",
+        "qty": 3
+      },
+      {
+        "item": "BurnHeal",
+        "qty": 2
+      },
+      {
+        "item": "SilphScope",
+        "qty": 1
+      },
+      {
+        "item": "GreatBall",
+        "qty": 9
+      },
+      {
+        "item": "RareCandy",
+        "qty": 1
+      },
+      {
+        "item": "PokeFlute",
+        "qty": 1
+      },
+      {
+        "item": "Hm03",
+        "qty": 1
+      },
+      {
+        "item": "Hm04",
+        "qty": 1
+      },
+      {
+        "item": "SuperPotion",
+        "qty": 9
+      },
+      {
+        "item": "Revive",
+        "qty": 3
+      },
+      {
+        "item": "FullHeal",
+        "qty": 5
+      },
+      {
+        "item": "Tm06",
+        "qty": 1
+      }
+    ]
+  },
+  "party": {
+    "ok": true,
+    "data": [
+      {
+        "current_hp": 39,
+        "experience": 94706,
+        "level": 46,
+        "max_hp": 145,
+        "moves": [
+          "MegaDrain",
+          "Cut",
+          "LeechSeed",
+          "Growth"
+        ],
+        "species": "Venusaur",
+        "status": "None"
+      },
+      {
+        "current_hp": 137,
+        "experience": 34432,
+        "level": 30,
+        "max_hp": 137,
+        "moves": [
+          "IceBeam",
+          "Surf",
+          "Rest",
+          "Strength"
+        ],
+        "species": "Snorlax",
+        "status": "None"
+      }
+    ]
+  },
+  "npcs": {
+    "ok": true,
+    "data": [
+      {
+        "facing": "Down",
+        "home_x": 4,
+        "home_y": 10,
+        "npc_index": 0,
+        "scripted_path_remaining": 0,
+        "sprite_id": 48,
+        "text_id": 1,
+        "visible": true,
+        "walk_counter": 0,
+        "x": 4,
+        "y": 10
+      },
+      {
+        "facing": "Down",
+        "home_x": 8,
+        "home_y": 13,
+        "npc_index": 1,
+        "scripted_path_remaining": 0,
+        "sprite_id": 33,
+        "text_id": 2,
+        "visible": true,
+        "walk_counter": 0,
+        "x": 8,
+        "y": 14
+      },
+      {
+        "facing": "Right",
+        "home_x": 7,
+        "home_y": 8,
+        "npc_index": 2,
+        "scripted_path_remaining": 0,
+        "sprite_id": 33,
+        "text_id": 3,
+        "visible": true,
+        "walk_counter": 0,
+        "x": 8,
+        "y": 8
+      },
+      {
+        "facing": "Down",
+        "home_x": 1,
+        "home_y": 12,
+        "npc_index": 3,
+        "scripted_path_remaining": 0,
+        "sprite_id": 33,
+        "text_id": 4,
+        "visible": true,
+        "walk_counter": 0,
+        "x": 1,
+        "y": 12
+      },
+      {
+        "facing": "Up",
+        "home_x": 3,
+        "home_y": 5,
+        "npc_index": 4,
+        "scripted_path_remaining": 0,
+        "sprite_id": 33,
+        "text_id": 5,
+        "visible": true,
+        "walk_counter": 0,
+        "x": 3,
+        "y": 5
+      },
+      {
+        "facing": "Down",
+        "home_x": 8,
+        "home_y": 2,
+        "npc_index": 5,
+        "scripted_path_remaining": 0,
+        "sprite_id": 33,
+        "text_id": 6,
+        "visible": true,
+        "walk_counter": 0,
+        "x": 8,
+        "y": 2
+      },
+      {
+        "facing": "Left",
+        "home_x": 2,
+        "home_y": 7,
+        "npc_index": 6,
+        "scripted_path_remaining": 0,
+        "sprite_id": 33,
+        "text_id": 7,
+        "visible": true,
+        "walk_counter": 0,
+        "x": 2,
+        "y": 7
+      },
+      {
+        "facing": "Down",
+        "home_x": 7,
+        "home_y": 15,
+        "npc_index": 7,
+        "scripted_path_remaining": 0,
+        "sprite_id": 36,
+        "text_id": 8,
+        "visible": true,
+        "walk_counter": 0,
+        "x": 7,
+        "y": 15
+      }
+    ]
+  }
+}

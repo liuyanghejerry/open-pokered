@@ -15,26 +15,18 @@ game_scene VictoryRoad3F {
   // No CLOSED block id in the asm (the .blk ships with the path closed, no re-close),
   // and the original plays no SFX for this swap.
   @load {
+    @if (getFlag("EVENT_VICTORY_ROAD_3_BOULDER_ON_SWITCH2")) {
+      hideObject("VICTORY_ROAD_3F_OBJ_10")
+    }
     @if (getFlag("EVENT_VICTORY_ROAD_3_BOULDER_ON_SWITCH1")) {
       replaceTileBlock(3, 5, 29)
     }
   }
 
-  // ── Floor switch (boulder-on-switch coord 3,5) ──────────────────────────
-  // VictoryRoad3FDefaultScript checks .SwitchOrHoleCoords (dbmapcoord 3,5 = the
-  // switch, coord index 1) and SetEvent EVENT_VICTORY_ROAD_3_BOULDER_ON_SWITCH1,
-  // which then opens the path via the @load ReplaceTileBlock above. The original
-  // requires a STRENGTH boulder pushed onto the switch tile; there is no
-  // boulder-push API, so we approximate faithfully — reaching the switch coord
-  // solves it and opens the door immediately (same flag + same tile swap as the
-  // asm). The second .SwitchOrHoleCoords entry (23,15) is a dungeon-warp hole, not
-  // a tile-block door, so it is not a replaceTileBlock target.
-  @storyline("switch1") {
-    @trigger(map = "VictoryRoad3F", name = "switch1")
-    @if (!getFlag("EVENT_VICTORY_ROAD_3_BOULDER_ON_SWITCH1")) {
-      setFlag("EVENT_VICTORY_ROAD_3_BOULDER_ON_SWITCH1")
-      replaceTileBlock(3, 5, 29)
-    }
+  // Original IsPlayerOnDungeonWarp + DungeonWarpData: hole -> 2F (22,16).
+  @storyline("coordHole") {
+    @trigger(map = "VictoryRoad3F", name = "hole")
+    warpTo("VictoryRoad2F", 22, 16)
   }
 
   // ── Cooltrainer♂ (npc 1) — sight-engaged; dialogue only ─────────────────
@@ -110,7 +102,7 @@ game_scene VictoryRoad3F {
   }
 
   @storyline("talkBoulder4") {
-    @trigger(map = "VictoryRoad3F", npc = 10)
+    @trigger(map = "VictoryRoad3F", npc = 10, toggle = "VICTORY_ROAD_3F_OBJ_10")
     @speaker("") { @t("This requires STRENGTH to\nmove!", "这需要怪力才能推动！") }
   }
 }

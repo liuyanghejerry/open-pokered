@@ -1,0 +1,21 @@
+def press_statue(name,x,y,expected_on):
+ g.nav_to(x,y,name);g.face('up');snap(f'mansion-statue-{name}-{x}-{y}-{expected_on}-before');g.tap('a',20)
+ for _ in range(60):
+  s=g.st()
+  if s['choice'] is not None:
+   snap(f'mansion-statue-{name}-{x}-{y}-{expected_on}-choice');g.choose('YES');break
+  if s['dialogue_state'] is not None:g.skip()
+  else:g.step(20)
+ else:raise NavError('statue did not offer choice')
+ g.cutscene();g.step(60)
+ assert bool(g.d.cmd(cmd='get_flags')['data'].get('EVENT_MANSION_SWITCH_ON'))==expected_on,g.st()
+ snap(f'mansion-statue-{name}-{x}-{y}-{expected_on}-after')
+press_statue('PokemonMansionB1F',20,4,False)
+press_statue('PokemonMansionB1F',18,26,True)
+g.nav_warp(23,22,'PokemonMansionB1F','PokemonMansion1F');g.cutscene();g.step(60)
+g.nav_warp(26,27,'PokemonMansion1F','CinnabarIsland',approach='down');g.cutscene();g.step(60)
+checkpoint('m81-mansion-completed')
+g.heal_pokecenter((11,11),'CinnabarIsland','CinnabarPokecenter');g.cutscene();g.step(60)
+checkpoint('m81-cinnabar-key-ready')
+g.nav_warp(18,3,'CinnabarIsland','CinnabarGym');g.cutscene();g.step(60)
+checkpoint('m82-cinnabar-gym-entry')

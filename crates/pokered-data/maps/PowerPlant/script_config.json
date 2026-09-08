@@ -4,40 +4,50 @@
   "npcs": [
     {
       "id": 1,
-      "talk": "talkVoltorb1"
+      "talk": "talkVoltorb1",
+      "toggleId": "POWER_PLANT_OBJ_1"
     },
     {
       "id": 2,
-      "talk": "talkVoltorb2"
+      "talk": "talkVoltorb2",
+      "toggleId": "POWER_PLANT_OBJ_2"
     },
     {
       "id": 3,
-      "talk": "talkVoltorb3"
+      "talk": "talkVoltorb3",
+      "toggleId": "POWER_PLANT_OBJ_3"
     },
     {
       "id": 4,
-      "talk": "talkElectrode1"
+      "talk": "talkElectrode1",
+      "toggleId": "POWER_PLANT_OBJ_4"
     },
     {
       "id": 5,
-      "talk": "talkVoltorb4"
+      "talk": "talkVoltorb4",
+      "toggleId": "POWER_PLANT_OBJ_5"
     },
     {
       "id": 6,
-      "talk": "talkVoltorb5"
+      "talk": "talkVoltorb5",
+      "toggleId": "POWER_PLANT_OBJ_6"
     },
     {
       "id": 7,
-      "talk": "talkElectrode2"
+      "talk": "talkElectrode2",
+      "toggleId": "POWER_PLANT_OBJ_7"
     },
     {
       "id": 8,
-      "talk": "talkVoltorb6"
+      "talk": "talkVoltorb6",
+      "toggleId": "POWER_PLANT_OBJ_8"
     },
     {
       "id": 9,
-      "talk": "talkZapdos"
+      "talk": "talkZapdos",
+      "toggleId": "POWER_PLANT_OBJ_9"
     }
   ],
-  "signs": []
+  "signs": [],
+  "onLoad": "PowerPlantOnLoad"
 }

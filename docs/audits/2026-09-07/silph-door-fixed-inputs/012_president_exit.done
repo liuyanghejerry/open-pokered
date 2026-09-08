@@ -1,0 +1,12 @@
+assert g.d.cmd(cmd='get_flags')['data'].get('EVENT_BEAT_SILPH_CO_GIOVANNI'),g.st()
+g.nav_to(7,6,'SilphCo11F');g.face('up');g.tap('a',20);g.cutscene();g.step(60)
+snap('master-ball-received')
+assert any(i['item']=='MasterBall' for i in g.d.cmd(cmd='get_bag')['data']),g.st()
+checkpoint('m59-master-ball')
+g.nav_warp(9,0,'SilphCo11F','SilphCo10F')
+for floor,x in [(10,8),(9,16),(8,14),(7,22),(6,14),(5,26),(4,24),(3,26),(2,24)]:
+ g.nav_warp(x,0,f'SilphCo{floor}F',f'SilphCo{floor-1}F')
+g.nav_warp(11,17,'SilphCo1F','SaffronCity',approach='down')
+checkpoint('m60-silph-liberated')
+g.heal_pokecenter((9,29),'SaffronCity','SaffronPokecenter');g.cutscene();g.step(60)
+checkpoint('m60-saffron-healed')

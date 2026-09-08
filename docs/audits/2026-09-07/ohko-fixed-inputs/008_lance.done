@@ -1,0 +1,7 @@
+g.nav_warp(4,0,'AgathasRoom','LancesRoom');g.cutscene();g.step(60)
+g.nav_to(6,3,'LancesRoom');g.cutscene();g.step(60);checkpoint('m148-retry-lance-ready')
+g.nav_to(6,2,'LancesRoom');g.cutscene();g.step(90);g.cutscene();snap('retry-lance-battle')
+assert g.st()['screen']=='battle',g.st()
+g.battle_loop(prefer='fight');g.cutscene();g.step(60);g.cutscene()
+assert g.d.cmd(cmd='get_flags')['data'].get('EVENT_BEAT_LANCE'),g.st()
+checkpoint('m149-retry-lance-won')

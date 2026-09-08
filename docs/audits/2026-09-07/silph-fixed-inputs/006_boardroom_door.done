@@ -1,0 +1,5 @@
+g.nav_warp(5,7,'SilphCo7F','SilphCo11F')
+g.nav_to(6,14,'SilphCo11F');g.cutscene();g.step(60)
+if g.st()['screen']=='battle':g.battle_loop(prefer='fight');g.cutscene()
+snap('boardroom-door-before')
+g.d.drive(['up']*24,frames=24);g.cutscene();g.step(40);snap('boardroom-door-first-attempt')

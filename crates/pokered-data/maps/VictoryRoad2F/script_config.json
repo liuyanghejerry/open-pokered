@@ -1,23 +1,6 @@
 {
   "$schema": "../../schemas/script_config.schema.json",
-  "coordEvents": [
-    {
-      "name": "switch1",
-      "position": [
-        1,
-        16
-      ],
-      "trigger": "switch1"
-    },
-    {
-      "name": "switch2",
-      "position": [
-        9,
-        16
-      ],
-      "trigger": "switch2"
-    }
-  ],
+  "coordEvents": [],
   "npcs": [
     {
       "id": 1,
@@ -41,7 +24,8 @@
     },
     {
       "id": 6,
-      "talk": "talkMoltres"
+      "talk": "talkMoltres",
+      "toggleId": "VICTORY_ROAD_2F_OBJ_6"
     },
     {
       "id": 7,
@@ -73,7 +57,9 @@
     },
     {
       "id": 13,
-      "talk": "talkBoulder3"
+      "talk": "talkBoulder3",
+      "toggleId": "VICTORY_ROAD_2F_OBJ_13",
+      "defaultHidden": true
     }
   ],
   "onLoad": "VictoryRoad2FOnLoad",

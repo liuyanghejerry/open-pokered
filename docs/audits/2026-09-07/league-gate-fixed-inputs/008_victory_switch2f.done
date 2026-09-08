@@ -1,0 +1,3 @@
+snap('victory2f-switch-before');g.nav_to(1,16,'VictoryRoad2F');g.cutscene();g.step(60)
+snap('victory2f-switch-after');checkpoint('m106-victory-road-2f-switch1')
+g.nav_warp(23,7,'VictoryRoad2F','VictoryRoad3F');checkpoint('m107-victory-road-3f')

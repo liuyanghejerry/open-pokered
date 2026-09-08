@@ -37,7 +37,7 @@ game_scene VermilionCity {
     @if (getFlag("EVENT_SS_ANNE_LEFT")) {
       @speaker("") { @t("The ship set sail.", "船已经起航了。") }
     } @else {
-      @if (hasItem("S_S_TICKET")) {
+      @if (hasItem("SS_TICKET")) {
         @speaker("") {
           @t("Welcome to S.S. ANNE!\n\nExcuse me, do you have a\nticket?", "欢迎来到圣安奴号！\n\n请问，你有船票吗？")
         }
@@ -65,7 +65,7 @@ game_scene VermilionCity {
       @speaker("") { @t("The ship set sail.", "船已经起航了。") }
       movePlayerRelative(["up"])
     } @else {
-      @if (hasItem("S_S_TICKET")) {
+      @if (hasItem("SS_TICKET")) {
         @speaker("") {
           @t("Welcome to S.S. ANNE!\n\nExcuse me, do you have a\nticket?", "欢迎来到圣安奴号！\n\n请问，你有船票吗？")
         }

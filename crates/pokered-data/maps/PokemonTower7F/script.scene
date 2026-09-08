@@ -78,8 +78,7 @@ game_scene PokemonTower7F {
   //    + HideNPCScript, scripts/PokemonTower7F.asm:38-100): after each
   //    rocket's battle the rocket walks its coord-table path down the tower
   //    and is hidden for good. LOS battles end without a per-map hook, so
-  //    the choreography replays once on the next entry (same walk, same
-  //    permanent hide).
+  //    the post-battle OnLoad callback plays the walk immediately.
   @load {
     @if (getFlag("EVENT_BEAT_POKEMONTOWER_7_TRAINER_0") && !getFlag("EVENT_TOWER7_ROCKET_0_LEFT")) {
       setFlag("EVENT_TOWER7_ROCKET_0_LEFT")

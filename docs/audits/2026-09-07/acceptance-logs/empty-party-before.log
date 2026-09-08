@@ -1,0 +1,2 @@
+[m02] frame=1921 screen=overworld map=RedsHouse2F pos=(3,6) party=0 money=0 effect=None
+{'map_name': 'PalletTown', 'player_x': 5, 'player_y': 6, 'party_count': 0}

@@ -1,0 +1,6 @@
+g.nav_to(3,2,'MrFujisHouse');g.face('up');g.tap('a',20);g.cutscene();g.step(40)
+snap('poke-flute-received')
+assert g.d.cmd(cmd='get_flags')['data'].get('EVENT_GOT_POKE_FLUTE')
+g.nav_warp(3,7,'MrFujisHouse','LavenderTown',approach='down')
+g.heal_pokecenter((3,5),'LavenderTown','LavenderPokecenter')
+checkpoint('m36-poke-flute')

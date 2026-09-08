@@ -1,0 +1,26 @@
+for attempt in range(2):
+ g.nav_to(18,8,'CinnabarGym');g.cutscene();g.step(30);snap('cinnabar-gate-before-'+str(attempt))
+ flags=g.d.cmd(cmd='get_flags')['data'];assert not any(v for k,v in flags.items() if k.startswith('EVENT_BEAT_CINNABAR_GYM_TRAINER') or k.startswith('EVENT_CINNABAR_GYM_GATE'))
+ for _ in range(3):g.d.drive(['up']*8,frames=16)
+ s=snap('cinnabar-gate-without-quiz-'+str(attempt));assert s['player_y']==5,s
+# Complete the port's seven quiz conversations before challenging the leader.
+for npc,x,y,answer in [(3,17,9,'YES'),(2,17,3,'NO'),(4,11,5,'YES'),(5,11,9,'YES'),(6,11,15,'YES'),(7,3,15,'NO'),(8,3,9,'YES')]:
+ g.nav_to(x,y,'CinnabarGym');g.face('up');g.tap('a',20)
+ for _ in range(80):
+  s=g.st()
+  if s['choice'] is not None:
+   snap('cinnabar-quiz-'+str(npc));g.choose(answer);break
+  if s['dialogue_state'] is not None:g.skip()
+  else:g.step(20)
+ else:raise NavError('quiz did not appear')
+ g.cutscene();g.step(40);snap('cinnabar-quiz-cleared-'+str(npc))
+ assert g.d.cmd(cmd='get_flags')['data'].get('EVENT_BEAT_CINNABAR_GYM_TRAINER_'+str(npc-2)),g.st()
+checkpoint('m83-cinnabar-quizzes')
+g.nav_to(3,4,'CinnabarGym');g.face('up');checkpoint('m84-blaine-ready')
+g.tap('a',20);g.cutscene();g.step(60);s=snap('blaine-battle');assert s['screen']=='battle',s
+g.battle_loop(prefer='fight');g.cutscene();g.step(60)
+snap('blaine-result');assert g.d.cmd(cmd='get_flags')['data'].get('EVENT_BEAT_BLAINE'),g.st()
+checkpoint('m85-volcano-badge')
+g.nav_warp(16,17,'CinnabarGym','CinnabarIsland',approach='down');g.cutscene();g.step(40)
+g.heal_pokecenter((11,11),'CinnabarIsland','CinnabarPokecenter');g.cutscene();g.step(60)
+checkpoint('m86-cinnabar-seven-badges')

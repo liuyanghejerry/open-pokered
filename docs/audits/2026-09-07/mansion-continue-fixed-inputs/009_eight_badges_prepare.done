@@ -1,0 +1,16 @@
+assert g.d.cmd(cmd='get_flags')['data'].get('EVENT_BEAT_VIRIDIAN_GYM_GIOVANNI'),g.st()
+assert any(i['item']=='Tm27' for i in g.d.cmd(cmd='get_bag')['data']),g.st()
+g.nav_warp(16,17,'ViridianGym','ViridianCity',approach='down');g.cutscene();g.step(40)
+g.heal_pokecenter((23,25),'ViridianCity','ViridianPokecenter');g.cutscene();g.step(60)
+checkpoint('m91-eight-badges-healed')
+g.nav_warp(23,25,'ViridianCity','ViridianPokecenter');g.nav_to(13,4,'ViridianPokecenter');g.face('up');g.tap('a',20);g.cutscene()
+for _ in range(10):
+ if g.st()['pc_phase']!='Message':break
+ g.tap('a',8)
+assert g.st()['pc_phase']=='MainMenu',g.st()
+g.tap('down',8);g.tap('a',12)
+for _ in range(8):
+ if g.st()['pc_phase']!='Message':break
+ g.tap('a',8)
+assert g.st()['pc_phase']=='ItemMenu',g.st()
+g.tap('a',12);snap('pc-withdraw-list')

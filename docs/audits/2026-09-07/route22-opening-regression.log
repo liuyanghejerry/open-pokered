@@ -1,0 +1,54 @@
+== m01: boot to NEW GAME / Oak speech
+   done (1.1s wall)
+== m02: Oak speech + default names → bedroom
+[m02] frame=1921 screen=overworld map=RedsHouse2F pos=(3,6) party=0 money=0 effect=None
+   done (4.2s wall)
+== m03: leave home → Pallet Town
+[m03] frame=2249 screen=overworld map=PalletTown pos=(5,5) party=0 money=0 effect=None
+   done (5.0s wall)
+== m04: Oak interception → OaksLab
+[m04] frame=4196 screen=overworld map=OaksLab pos=(5,3) party=0 money=0 effect=None
+   done (6.2s wall)
+== m05: take starter (bulbasaur)
+[m05] frame=5312 screen=overworld map=OaksLab pos=(8,4) party=1 money=0 effect=None
+   done (7.0s wall)
+== m06: first rival battle
+[m06] frame=7606 screen=overworld map=OaksLab pos=(5,6) party=1 money=0 effect=None
+   done (12.5s wall)
+== m07: Route 1 → Viridian Mart parcel
+[m07-in-mart] frame=11587 screen=overworld map=ViridianMart pos=(3,5) party=1 money=0 effect=None
+[m07-back-outside] frame=11699 screen=overworld map=ViridianCity pos=(29,19) party=1 money=0 effect=None
+   done (22.7s wall)
+== m08: deliver parcel → POKéDEX
+[m08-southlane] frame=12051 screen=overworld map=ViridianCity pos=(20,32) party=1 money=0 effect=None
+[m08-back-home] frame=13727 screen=overworld map=PalletTown pos=(12,12) party=1 money=0 effect=None
+[m08-delivered] frame=16471 screen=overworld map=OaksLab pos=(5,3) party=1 money=0 effect=None
+[m08] oak-after-delivery: POKeMON around the world wait for you, RED!
+   done (30.2s wall)
+== m09: Viridian Forest → Pewter City
+   [ntoPINCH] at ViridianForest(20,9)
+   [ntoPINCH] at ViridianForest(20,9)
+   [ntoPINCH] at ViridianForest(20,9)
+   [ntoPINCH] at ViridianForest(20,9)
+   [ntoPINCH] at ViridianForest(20,9)
+   [ntoPINCH] at ViridianForest(20,9)
+   [ntoPINCH] at ViridianForest(20,9)
+   [ntoPINCH] at ViridianForest(20,9)
+   [ntoPINCH] at ViridianForest(20,9)
+   [ntoPINCH] at ViridianForest(1,19)
+Traceback (most recent call last):
+  File "/Users/liuyanghe02/develop/open-pokered-3/scripts/playthrough.py", line 1499, in <module>
+    main()
+    ~~~~^^
+  File "/Users/liuyanghe02/develop/open-pokered-3/scripts/playthrough.py", line 1487, in main
+    fn(g)
+    ~~^^^
+  File "/Users/liuyanghe02/develop/open-pokered-3/scripts/playthrough.py", line 1292, in m09_to_pewter
+    walk_pallet_to_pewter(g)
+    ~~~~~~~~~~~~~~~~~~~~~^^^
+  File "/Users/liuyanghe02/develop/open-pokered-3/scripts/playthrough.py", line 1280, in walk_pallet_to_pewter
+    g.nav_to(1, 1, map_name="ViridianForest")
+    ~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/liuyanghe02/develop/open-pokered-3/scripts/playthrough.py", line 462, in nav_to
+    raise NavError(f"warped out of {map_name} -> {cm}")
+NavError: warped out of ViridianForest -> PalletTown

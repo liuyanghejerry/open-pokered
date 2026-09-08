@@ -1,0 +1,5 @@
+g.tap('down',8);g.tap('down',8);g.tap('a',12)
+assert g.st()['screen']=='bag',g.st()
+bag=g.d.cmd(cmd='get_bag')['data'];idx=next(i for i,v in enumerate(bag) if v['item']=='Hm04')
+for _ in range(idx):g.tap('down',8)
+snap('hm04-selected');g.tap('a',12);g.tap('a',12);snap('hm04-target-menu')

@@ -465,7 +465,8 @@ pub fn is_warp_tile(tileset: TilesetId, standing_tile: u8) -> bool {
         TilesetId::ForestGate | TilesetId::Museum | TilesetId::Gate => &[0x3B, 0x1A, 0x1C],
         TilesetId::Ship => &[0x37, 0x39, 0x1E, 0x4A],
         TilesetId::ShipPort => &[],
-        TilesetId::Cemetery => &[0x1B],
+        // Cemetery falls through to UndergroundWarpTileIDs in the original.
+        TilesetId::Cemetery => &[0x1B, 0x13],
         TilesetId::Interior => &[0x15, 0x55, 0x04],
         TilesetId::Underground => &[0x13],
         TilesetId::Cavern => &[0x18, 0x1A, 0x22],

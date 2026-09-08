@@ -1,0 +1,2 @@
+g.nav_warp(4,31,'Route23','VictoryRoad1F');checkpoint('m102-victory-road-entry')
+print('VICTORY_ROAD_NPCS',g.d.cmd(cmd='get_npcs'),flush=True)

@@ -485,11 +485,9 @@ Ruleset(
         //       /256, ONE byte drawn at the ModifyDamage ordinal).
         //   • SuperFangEffect → DamageCurrentHpFraction(1/2, Target) on DamagingHit
         //       (half the target's CURRENT hp, floored at 1).
-        //   • OhkoEffect → SetHp(Foe, 0, when:[LevelGE]) on DamagingHit — the KO
-        //       lands only when the user's level ≥ the foe's (bug #19: a
-        //       higher-level foe is IMMUNE). `Foe` of the DamagingHit target
-        //       (the defender) resolves to the attacker; we author `Target` so the
-        //       SetHp hits the defender, and `LevelGE` compares source≥target.
+        //   • OhkoEffect → SetHp(Target, 0) on DamagingHit. The native Accuracy
+        //       hook rejects users slower than their target (current Speed).
+
 
         // Seismic Toss / Night Shade: damage = user's level.
         Effect(id: "special.user_level", kind: Move, power: 0, type: "Normal", accuracy: 100,
@@ -517,10 +515,10 @@ Ruleset(
                 Hook(on: "DamagingHit", do: [ DamageCurrentHpFraction(num: 1, den: 2, target: Target) ]),
             ]),
         // OHKO (Horn Drill / Guillotine / Fissure): set the defender's hp to 0,
-        // gated by LevelGE (user ≥ foe). A higher-level foe is immune (bug #19).
+        // after the Accuracy hook has checked current Speed and the hit roll.
         Effect(id: "special.ohko", kind: Move, power: 0, type: "Normal", accuracy: 30,
             hooks: [
-                Hook(on: "DamagingHit", do: [ SetHp(target: Target, value: 0, when: [ LevelGE ]) ]),
+                Hook(on: "DamagingHit", do: [ SetHp(target: Target, value: 0, when: []) ]),
             ]),
 
         // JUMP KICK / HI JUMP KICK (JumpKickEffect): the DAMAGE half is a plain

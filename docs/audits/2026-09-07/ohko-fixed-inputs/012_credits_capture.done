@@ -1,0 +1,3 @@
+for i in range(60):
+ g.step(120);snap(f'endgame-film-{i:03d}')
+print('ENDGAME_FILM_CAPTURED',g.st()['screen'],flush=True)

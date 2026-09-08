@@ -1,0 +1,33 @@
+g.nav_warp(9,29,'SaffronCity','SaffronPokecenter');g.nav_to(13,4,'SaffronPokecenter');g.face('up');g.tap('a',20);g.cutscene()
+for _ in range(10):
+ if g.st()['pc_phase']!='Message':break
+ g.tap('a',8)
+snap('saffron-pc-main');assert g.st()['pc_phase']=='MainMenu',g.st()
+g.tap('down',8);g.tap('a',12)
+for _ in range(8):
+ if g.st()['pc_phase']!='Message':break
+ g.tap('a',8)
+assert g.st()['pc_phase']=='ItemMenu',g.st()
+g.tap('down',8);g.tap('a',12);assert g.st()['pc_phase']=='ItemList'
+for item in ['OldRod','SilphScope','CardKey','Tm06','Hm01']:
+ bag=g.d.cmd(cmd='get_bag')['data'];idx=next(i for i,v in enumerate(bag) if v['item']==item)
+ for _ in range(20):g.tap('up',4)
+ for _ in range(idx):g.tap('down',4)
+ g.tap('a',8)
+ if g.st()['pc_phase']=='ItemQuantity':g.tap('a',8)
+ for _ in range(8):
+  if g.st()['pc_phase']!='Message':break
+  g.tap('a',8)
+ assert g.st()['pc_phase']=='ItemList',g.st()
+ assert not any(v['item']==item for v in g.d.cmd(cmd='get_bag')['data'])
+for _ in range(10):
+ if g.st()['screen']=='overworld':break
+ g.tap('b',8)
+g.nav_warp(3,7,'SaffronPokecenter','SaffronCity',approach='down');g.step(40)
+checkpoint('m60-saffron-items-stored')
+g.tap('start',8);g.tap('up',8);g.tap('a',8);g.tap('down',8);g.tap('down',8);g.tap('a',8);g.tap('a',8)
+snap('fly-menu-cerulean-before')
+for _ in range(3):g.tap('up',8)
+snap('fly-menu-cerulean-selected');g.tap('a',8);g.cutscene();g.step(180);g.cutscene()
+assert g.st()['map_name']=='CeruleanCity',g.st()
+checkpoint('m61-cerulean-power-plant-route')

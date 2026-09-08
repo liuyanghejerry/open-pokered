@@ -160,7 +160,7 @@ mod pokered_rules;
 // ── BattleScreen (frame-loop adapter) ─────────────────────────────
 
 use crate::battle::experience::gain::{calc_exp_gain, gain_experience};
-use crate::battle::settlement::money::{calc_prize_money, calc_total_winnings};
+use crate::battle::settlement::money::{calc_prize_money, calc_total_winnings, trainer_winnings_messages};
 use crate::battle::settlement::settle::settle_battle;
 use crate::battle::settlement::{BattleOutcome, BattleSettlement};
 use crate::game_state::{BattleStyle, GameScreen, ScreenAction};
@@ -1274,8 +1274,16 @@ impl BattleScreen {
         enemy_party: &[state::Pokemon],
         trainer_class: Option<TrainerClass>,
     ) -> Self {
-        let player = &player_party[0];
-        let enemy = &enemy_party[0];
+        // Mirror the first ALIVE mon on each side as the sent-out Pokémon
+        // (core.asm:216) — a fainted party lead is skipped.
+        let player = player_party
+            .iter()
+            .find(|m| m.hp > 0)
+            .unwrap_or(&player_party[0]);
+        let enemy = enemy_party
+            .iter()
+            .find(|m| m.hp > 0)
+            .unwrap_or(&enemy_party[0]);
         let battle_type = if is_wild {
             BattleType::Wild
         } else {
@@ -1283,19 +1291,9 @@ impl BattleScreen {
         };
         let mut bs =
             state::new_battle_state(battle_type, player_party.to_vec(), enemy_party.to_vec());
-        bs.party_gain_exp_flags[0] = true;
+        bs.party_gain_exp_flags[bs.player.active_pokemon_index] = true;
 
-        let player_first_alive_level = player_party
-            .iter()
-            .find(|m| m.hp > 0)
-            .map(|m| m.level)
-            .unwrap_or(player.level);
-        let transition = BattleTransition::select(
-            !is_wild,
-            enemy.level,
-            player_first_alive_level,
-            0,
-        );
+        let transition = BattleTransition::select(!is_wild, enemy.level, player.level, 0);
 
         Self {
             phase: intro_start_phase(transition),
@@ -2642,24 +2640,12 @@ learn {learn_name}!")];
                                     .map(|bs| bs.total_payday_money)
                                     .unwrap_or(0);
                                 let total = calc_total_winnings(prize, payday);
-                                let trainer_name = self
-                                    .trainer_name
+                                let player_name = self
+                                    .player_name
                                     .clone()
-                                    .unwrap_or_else(|| "TRAINER".to_string());
-                                let mut money_msgs = vec![
-                                    format!("{} wants to", trainer_name),
-                                    "give you a tip!".to_string(),
-                                ];
-                                if prize > 0 {
-                                    money_msgs.push(format!("Player got ${} for", prize));
-                                    money_msgs.push("winning!".to_string());
-                                }
-                                if payday > 0 {
-                                    money_msgs.push(format!("Plus ${} from Pay Day!", payday));
-                                }
-                                if total > 0 {
-                                    money_msgs.push(format!("Total: ${}!", total));
-                                }
+                                    .unwrap_or_else(|| "RED".to_string());
+                                let money_msgs =
+                                    trainer_winnings_messages(&player_name, total);
                                 // Prepend the trainer's one-shot victory quip
                                 // (original PrintEndBattleText, shown before the
                                 // prize-money text) for sight/talk battles.
@@ -2978,8 +2964,10 @@ learn {learn_name}!")];
 
     fn consume_selected_item(&mut self) {
         if let Some(ref bm) = self.bag_menu {
-            let cursor = bm.cursor();
-            if self.player_bag.remove_item_at(cursor, 1).is_ok() {
+            // The battle menu excludes unusable bag entries. Its cursor is
+            // therefore not an index into the complete inventory.
+            let Some(&(item_id, _)) = bm.items().get(bm.cursor()) else { return };
+            if self.player_bag.remove_item(item_id, 1).is_ok() {
                 let remaining_items: Vec<(ItemId, u8)> = self
                     .player_bag
                     .items()
@@ -5713,6 +5701,29 @@ mod trainer_ai_action_tests {
     }
     fn enemy_hp(s: &BattleScreen) -> u16 {
         s.battle_state.as_ref().unwrap().enemy.active_mon().hp
+    }
+
+    /// Battle start mirrors the first ALIVE mon into the screen state
+    /// (core.asm:216) — a fainted lead must not appear as the sent-out Pokémon.
+    #[test]
+    fn from_parties_mirrors_first_alive_mon() {
+        let mut fainted = mk(
+            Species::Venusaur,
+            47,
+            [MoveId::Tackle, MoveId::None, MoveId::None, MoveId::None],
+        );
+        fainted.hp = 0;
+        let backup = mk(
+            Species::Snorlax,
+            30,
+            [MoveId::Tackle, MoveId::None, MoveId::None, MoveId::None],
+        );
+        let enemy = tackler();
+        let screen = BattleScreen::from_parties(true, &[fainted, backup.clone()], &enemy, None);
+        assert_eq!(screen.player_species, Species::Snorlax, "sent-out mon shown");
+        assert_eq!(screen.player_hp, backup.hp, "sent-out mon HP shown");
+        let bs = screen.battle_state.as_ref().unwrap();
+        assert_eq!(bs.player.active_pokemon_index, 1, "battle state skips fainted lead");
     }
     fn enemy_def_stage(s: &BattleScreen) -> i8 {
         s.battle_state.as_ref().unwrap().enemy.stat_stages.get(StatIndex::Defense)

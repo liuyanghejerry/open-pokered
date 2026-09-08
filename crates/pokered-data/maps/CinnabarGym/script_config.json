@@ -1,6 +1,37 @@
 {
   "$schema": "../../schemas/script_config.schema.json",
-  "coordEvents": [],
+  "coordEvents": [
+    {
+      "name": "quizMachine1",
+      "position": [15, 7],
+      "trigger": "quizMachine1"
+    },
+    {
+      "name": "quizMachine2",
+      "position": [10, 1],
+      "trigger": "quizMachine2"
+    },
+    {
+      "name": "quizMachine3",
+      "position": [9, 7],
+      "trigger": "quizMachine3"
+    },
+    {
+      "name": "quizMachine4",
+      "position": [9, 13],
+      "trigger": "quizMachine4"
+    },
+    {
+      "name": "quizMachine5",
+      "position": [1, 13],
+      "trigger": "quizMachine5"
+    },
+    {
+      "name": "quizMachine6",
+      "position": [1, 7],
+      "trigger": "quizMachine6"
+    }
+  ],
   "npcs": [
     {
       "id": 1,
@@ -8,38 +39,31 @@
     },
     {
       "id": 2,
-      "talk": "talkSuperNerd1",
-      "toggleId": "CINNABAR_GYM_OBJ_2"
+      "talk": "talkSuperNerd1"
     },
     {
       "id": 3,
-      "talk": "talkSuperNerd2",
-      "toggleId": "CINNABAR_GYM_OBJ_3"
+      "talk": "talkSuperNerd2"
     },
     {
       "id": 4,
-      "talk": "talkSuperNerd3",
-      "toggleId": "CINNABAR_GYM_OBJ_4"
+      "talk": "talkSuperNerd3"
     },
     {
       "id": 5,
-      "talk": "talkSuperNerd4",
-      "toggleId": "CINNABAR_GYM_OBJ_5"
+      "talk": "talkSuperNerd4"
     },
     {
       "id": 6,
-      "talk": "talkSuperNerd5",
-      "toggleId": "CINNABAR_GYM_OBJ_6"
+      "talk": "talkSuperNerd5"
     },
     {
       "id": 7,
-      "talk": "talkSuperNerd6",
-      "toggleId": "CINNABAR_GYM_OBJ_7"
+      "talk": "talkSuperNerd6"
     },
     {
       "id": 8,
-      "talk": "talkSuperNerd7",
-      "toggleId": "CINNABAR_GYM_OBJ_8"
+      "talk": "talkSuperNerd7"
     },
     {
       "id": 9,
@@ -51,5 +75,6 @@
       "id": 1,
       "talk": "gymStatue1"
     }
-  ]
+  ],
+  "onLoad": "CinnabarGymOnLoad"
 }

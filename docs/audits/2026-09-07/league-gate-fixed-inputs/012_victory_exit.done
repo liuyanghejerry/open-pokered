@@ -1,0 +1,7 @@
+g.nav_warp(26,8,'VictoryRoad3F','VictoryRoad2F');checkpoint('m111-victory-road-exit-stairs')
+g.nav_to(28,7,'VictoryRoad2F');g.d.drive(['right']*8,frames=16);g.cutscene();g.step(90)
+s=snap('victory-road-exited');assert s['map_name']=='Route23',s
+checkpoint('m112-victory-road-completed')
+g.nav_to(10,0,'Route23');g.d.drive(['up']*16,frames=32);g.cutscene();g.step(60)
+s=snap('indigo-plateau-arrived');assert s['map_name']=='IndigoPlateau',s
+checkpoint('m113-indigo-plateau')

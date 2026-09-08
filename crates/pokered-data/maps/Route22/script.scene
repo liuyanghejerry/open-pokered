@@ -20,6 +20,26 @@
 // on the higher-tier rival parties.
 
 game_scene Route22 {
+  @load {
+    // Reconcile saves made before Brock's encounter cleanup was ported.
+    @if (getFlag("EVENT_BEAT_BROCK")) {
+      resetFlag("EVENT_1ST_ROUTE22_RIVAL_BATTLE")
+      @if (!getFlag("EVENT_2ND_ROUTE22_RIVAL_BATTLE")) {
+        resetFlag("EVENT_ROUTE22_RIVAL_WANTS_BATTLE")
+      }
+    }
+    @if (getFlag("EVENT_1ST_ROUTE22_RIVAL_BATTLE") && getFlag("EVENT_ROUTE22_RIVAL_WANTS_BATTLE")) {
+      showObjectByName("ROUTE_22_RIVAL_1")
+    } @else {
+      hideObjectByName("ROUTE_22_RIVAL_1")
+    }
+    @if (getFlag("EVENT_2ND_ROUTE22_RIVAL_BATTLE") && getFlag("EVENT_ROUTE22_RIVAL_WANTS_BATTLE")) {
+      showObjectByName("ROUTE_22_RIVAL_2")
+    } @else {
+      hideObjectByName("ROUTE_22_RIVAL_2")
+    }
+  }
+
   // ── Scripted rival encounter at the battle coords (orig dbmapcoord 29,4/29,5) ──
   @storyline("coordRivalBattle") {
     @trigger(map = "Route22", name = "rivalBattle1")
@@ -52,16 +72,7 @@ game_scene Route22 {
       // Rival party-by-starter (orig StarterTable: Squirtle->4, Bulbasaur->5,
       // Charmander->6). The engine resolves the starter-advantage party from
       // the rival class, so we keep one valid class id per branch.
-      s = getRivalStarter()
-      @if (s == 0) {
-        result = startBattleSet("OPP_RIVAL1", 3)
-      } @else {
-        @if (s == 1) {
-          result = startBattleSet("OPP_RIVAL1", 3)
-        } @else {
-          result = startBattleSet("OPP_RIVAL1", 3)
-        }
-      }
+      result = startBattleSet("OPP_RIVAL1", 3)
 
       @if (result == "win") {
         @say("") {
@@ -73,30 +84,32 @@ game_scene Route22 {
         }
       }
 
-      setFlag("EVENT_BEAT_ROUTE22_RIVAL_1ST_BATTLE")
-      @say("") {
-        @t("I heard POKeMON LEAGUE has\nmany tough trainers!\n\nI have to figure out how to\nget past them!\n\nYou should quit dawdling and\nget a move on!", "我听说宝可梦联盟里有很多厉害\n的训练家！\n\n我得想办法打败他们才行！\n\n你也别磨蹭了，快点出发吧！")
-      }
+      @if (result == "win") {
+        setFlag("EVENT_BEAT_ROUTE22_RIVAL_1ST_BATTLE")
+        @say("") {
+          @t("I heard POKeMON LEAGUE has\nmany tough trainers!\n\nI have to figure out how to\nget past them!\n\nYou should quit dawdling and\nget a move on!", "我听说宝可梦联盟里有很多厉害\n的训练家！\n\n我得想办法打败他们才行！\n\n你也别磨蹭了，快点出发吧！")
+        }
 
-      // Rival exits and the encounter trigger is cleared (orig
-      // Route22Rival1ExitMovementData1/2, both ending at (31,10)).
-      playSound("SFX_STOP_ALL_MUSIC")
-      // Orig Route22.asm:174: Music_RivalAlternateStart — the rival theme
-      // restarts with a different first measure as he walks off.
-      playMusic("MUSIC_MEET_RIVAL_ALTERNATE_START")
-      setJoyIgnore(0xF0)
-      @if (getPlayerY() == 4) {
-        // From (29,5): RIGHT x2, DOWN x5.
-        moveNpc("ROUTE_22_RIVAL_1", [[30, 5], [31, 5], [31, 6], [31, 7], [31, 8], [31, 9], [31, 10]])
-      } @else {
-        // From (28,5): UP, RIGHT x3, DOWN x6.
-        moveNpc("ROUTE_22_RIVAL_1", [[28, 4], [29, 4], [30, 4], [31, 4], [31, 5], [31, 6], [31, 7], [31, 8], [31, 9], [31, 10]])
+        // Rival exits and the encounter trigger is cleared (orig
+        // Route22Rival1ExitMovementData1/2, both ending at (31,10)).
+        playSound("SFX_STOP_ALL_MUSIC")
+        // Orig Route22.asm:174: Music_RivalAlternateStart — the rival theme
+        // restarts with a different first measure as he walks off.
+        playMusic("MUSIC_MEET_RIVAL_ALTERNATE_START")
+        setJoyIgnore(0xF0)
+        @if (getPlayerY() == 4) {
+          // From (29,5): RIGHT x2, DOWN x5.
+          moveNpc("ROUTE_22_RIVAL_1", [[30, 5], [31, 5], [31, 6], [31, 7], [31, 8], [31, 9], [31, 10]])
+        } @else {
+          // From (28,5): UP, RIGHT x3, DOWN x6.
+          moveNpc("ROUTE_22_RIVAL_1", [[28, 4], [29, 4], [30, 4], [31, 4], [31, 5], [31, 6], [31, 7], [31, 8], [31, 9], [31, 10]])
+        }
+        hideObjectByName("ROUTE_22_RIVAL_1")
+        playMusic("MUSIC_ROUTES3")
+        resetFlag("EVENT_1ST_ROUTE22_RIVAL_BATTLE")
+        resetFlag("EVENT_ROUTE22_RIVAL_WANTS_BATTLE")
+        clearJoyIgnore()
       }
-      hideObjectByName("ROUTE_22_RIVAL_1")
-      playMusic("MUSIC_ROUTES3")
-      resetFlag("EVENT_1ST_ROUTE22_RIVAL_BATTLE")
-      resetFlag("EVENT_ROUTE22_RIVAL_WANTS_BATTLE")
-      clearJoyIgnore()
     }
 
     // ---- 2nd rival battle ----
@@ -123,16 +136,7 @@ game_scene Route22 {
         @t("<RIVAL>: What? <PLAYER>!\nWhat a surprise to see you\nhere!\n\nSo you're going to POKeMON\nLEAGUE?\n\nYou collected all the BADGEs\ntoo? That's cool!\n\nThen I'll whip you <PLAYER>\nas a warm up for POKeMON\nLEAGUE!\n\nCome on!", "劲敌：什么？ <PLAYER>！真没\n想到会在这里见到你！\n\n你也要去宝可梦联盟吗？\n\n你收集齐了所有的徽章吗？真了\n不起！\n\n那我拿你 <PLAYER>来热身，为\n宝可梦联盟做准备！\n\n来吧！")
       }
 
-      s = getRivalStarter()
-      @if (s == 0) {
-        result = startBattleSet("OPP_RIVAL2", 9)
-      } @else {
-        @if (s == 1) {
-          result = startBattleSet("OPP_RIVAL2", 9)
-        } @else {
-          result = startBattleSet("OPP_RIVAL2", 9)
-        }
-      }
+      result = startBattleSet("OPP_RIVAL2", 9)
 
       @if (result == "win") {
         @say("") {
@@ -144,29 +148,31 @@ game_scene Route22 {
         }
       }
 
-      setFlag("EVENT_BEAT_ROUTE22_RIVAL_2ND_BATTLE")
-      @say("") {
-        @t("That loosened me up! I'm\nready for POKeMON LEAGUE!\n\n<PLAYER>, you need more\npractice!\n\nBut hey, you know that! I'm\nout of here. Smell ya!", "这让我热身完毕！我已准备好挑\n战宝可梦联盟！\n\n<PLAYER>，你还需要多练习！\n\n不过你也知道吧！我走了，再\n见！")
-      }
+      @if (result == "win") {
+        setFlag("EVENT_BEAT_ROUTE22_RIVAL_2ND_BATTLE")
+        @say("") {
+          @t("That loosened me up! I'm\nready for POKeMON LEAGUE!\n\n<PLAYER>, you need more\npractice!\n\nBut hey, you know that! I'm\nout of here. Smell ya!", "这让我热身完毕！我已准备好挑\n战宝可梦联盟！\n\n<PLAYER>，你还需要多练习！\n\n不过你也知道吧！我走了，再\n见！")
+        }
 
-      playSound("SFX_STOP_ALL_MUSIC")
-      // Orig Route22.asm:333: Music_RivalAlternateStartAndTempo — alternate
-      // first measure AND slower tempo as the rival walks off.
-      playMusic("MUSIC_MEET_RIVAL_ALTERNATE_START_AND_TEMPO")
-      setJoyIgnore(0xF0)
-      // Orig Route22Rival2ExitMovementData1/2 (overlapping lists): the
-      // rival always returns to his spawn (25,5) — LEFT x4 from (29,5)
-      // on the upper trigger, LEFT x3 from (28,5) on the lower one.
-      @if (getPlayerY() == 4) {
-        moveNpc("ROUTE_22_RIVAL_2", [[28, 5], [27, 5], [26, 5], [25, 5]])
-      } @else {
-        moveNpc("ROUTE_22_RIVAL_2", [[27, 5], [26, 5], [25, 5]])
+        playSound("SFX_STOP_ALL_MUSIC")
+        // Orig Route22.asm:333: Music_RivalAlternateStartAndTempo — alternate
+        // first measure AND slower tempo as the rival walks off.
+        playMusic("MUSIC_MEET_RIVAL_ALTERNATE_START_AND_TEMPO")
+        setJoyIgnore(0xF0)
+        // Orig Route22Rival2ExitMovementData1/2 (overlapping lists): the
+        // rival always returns to his spawn (25,5) — LEFT x4 from (29,5)
+        // on the upper trigger, LEFT x3 from (28,5) on the lower one.
+        @if (getPlayerY() == 4) {
+          moveNpc("ROUTE_22_RIVAL_2", [[28, 5], [27, 5], [26, 5], [25, 5]])
+        } @else {
+          moveNpc("ROUTE_22_RIVAL_2", [[27, 5], [26, 5], [25, 5]])
+        }
+        hideObjectByName("ROUTE_22_RIVAL_2")
+        playMusic("MUSIC_ROUTES3")
+        resetFlag("EVENT_2ND_ROUTE22_RIVAL_BATTLE")
+        resetFlag("EVENT_ROUTE22_RIVAL_WANTS_BATTLE")
+        clearJoyIgnore()
       }
-      hideObjectByName("ROUTE_22_RIVAL_2")
-      playMusic("MUSIC_ROUTES3")
-      resetFlag("EVENT_2ND_ROUTE22_RIVAL_BATTLE")
-      resetFlag("EVENT_ROUTE22_RIVAL_WANTS_BATTLE")
-      clearJoyIgnore()
     }
   }
 

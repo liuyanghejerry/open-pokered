@@ -41,6 +41,18 @@ pub fn draw_elevator(elevator: &ElevatorScreen, fb: &mut FrameBuffer, lang: Lang
     draw_text(lang_data::ui_label("B BACK", is_zh), 88, 128, FG, fb);
 }
 
+/// Label for one filter-bag row. The drink flow passes internal item
+/// constants (FRESH_WATER) — render display names in both languages (the
+/// audit saw the raw constant in English mode). Floor labels ("1F") fall
+/// through unchanged.
+pub(crate) fn filter_label(item: &str, is_zh: bool) -> String {
+    match pokered_data::items::ItemId::from_const_name(item) {
+        Some(id) => lang_data::item_name(id, is_zh).to_string(),
+        None if is_zh => zh_name(item),
+        None => item.to_string(),
+    }
+}
+
 /// Draw the filtered-bag menu ("WHICH ONE?" + carried item list).
 pub fn draw_filter_bag(filter: &ElevatorScreen, fb: &mut FrameBuffer, lang: Lang) {
     let is_zh = lang == Lang::Zh;
@@ -58,10 +70,27 @@ pub fn draw_filter_bag(filter: &ElevatorScreen, fb: &mut FrameBuffer, lang: Lang
     for (row, (i, item)) in items.iter().enumerate().skip(offset).take(max_visible).enumerate() {
         let y = start_y + row as u32 * row_h;
         let marker = if i == sel { ">" } else { " " };
-        let label = if is_zh { zh_name(item) } else { item.clone() };
+        let label = filter_label(item, is_zh);
         draw_text(&format!("{} {}", marker, label), 44, y, FG, fb);
     }
 
     draw_text(lang_data::ui_label("A SELECT", is_zh), 28, 128, FG, fb);
     draw_text(lang_data::ui_label("B BACK", is_zh), 88, 128, FG, fb);
+}
+
+#[cfg(test)]
+mod filter_label_tests {
+    use super::filter_label;
+
+    /// The drink list carries internal item constants; English mode must show
+    /// display names, not the raw constants (audit: drink-filter-first.png).
+    #[test]
+    fn filter_label_maps_item_constants_to_display_names() {
+        assert_eq!(filter_label("FRESH_WATER", false), "FRESH WATER");
+        assert_eq!(filter_label("SODA_POP", false), "SODA POP");
+        assert_eq!(filter_label("FRESH_WATER", true), "新鲜水");
+        // Elevator floors are not items: unchanged.
+        assert_eq!(filter_label("1F", false), "1F");
+        assert_eq!(filter_label("B1F", true), "B1F");
+    }
 }

@@ -791,3 +791,80 @@ mod tests {
         );
     }
 }
+
+/// Ether / Max Ether / PP Up picked a move slot through the move-selection
+/// menu (item_effects.asm:1968-1988 MoveSelectionMenu): apply the PP effect
+/// to that slot. Elixirs never reach this — they restore every move at once
+/// and skip the menu.
+pub fn finish_move_choice(item: ItemId, mon: &mut Pokemon, slot: usize) -> ItemApplyOutcome {
+    if matches!(item, ItemId::Ether | ItemId::MaxEther | ItemId::PpUp) {
+        finish_pp_restore(item, mon, slot)
+    } else {
+        finish_tm_hm_replace(item, mon, slot)
+    }
+}
+
+pub fn finish_pp_restore(item: ItemId, mon: &mut Pokemon, move_index: usize) -> ItemApplyOutcome {
+    match use_pp_restore(mon, item, move_index) {
+        PpRestoreResult::Restored { .. } | PpRestoreResult::AllRestored { .. } => {
+            used("PP was\nrestored!".to_string(), true)
+        }
+        PpRestoreResult::PpUpApplied { move_index, .. } => used(
+            format!("{}'s PP\nincreased!", move_display(mon.moves[move_index])),
+            true,
+        ),
+        PpRestoreResult::NoEffect => no_effect(),
+        PpRestoreResult::NotApplicable => no_effect(),
+    }
+}
+
+#[cfg(test)]
+mod pp_move_choice_tests {
+    use super::*;
+    use crate::items::pp_restore::get_max_pp_with_ups;
+    use pokered_data::moves::MoveId;
+    use pokered_data::species::Species;
+
+    fn four_move_mon() -> Pokemon {
+        crate::pokemon::stats::create_pokemon_with_moves(
+            Species::Venusaur,
+            50,
+            [0xFF, 0xFF],
+            [
+                MoveId::LeechSeed,
+                MoveId::Poisonpowder,
+                MoveId::SleepPowder,
+                MoveId::RazorLeaf,
+            ],
+        )
+        .unwrap()
+    }
+
+    /// Ether applies to the CHOSEN slot (item_effects.asm:1968-1988
+    /// MoveSelectionMenu) — the audit's bug restored slot 0 no matter what.
+    #[test]
+    fn ether_restores_the_chosen_move_slot() {
+        let mut mon = four_move_mon();
+        let max1 = get_max_pp_with_ups(mon.moves[1], mon.pp_ups[1]);
+        mon.pp[1] = mon.pp[1].saturating_sub(10);
+        let before0 = mon.pp[0];
+
+        let outcome = finish_pp_restore(ItemId::Ether, &mut mon, 1);
+        assert!(matches!(outcome, ItemApplyOutcome::Used { .. }));
+        assert_eq!(mon.pp[1], max1, "slot 1 back to full (+10 over the drained 25)");
+        assert_eq!(mon.pp[0], before0, "slot 0 untouched");
+    }
+
+    /// Elixirs restore EVERY move and skip the menu entirely.
+    #[test]
+    fn elixer_restores_all_moves_without_menu() {
+        let mut mon = four_move_mon();
+        mon.pp = [0, 0, 0, 0];
+        let outcome = finish_pp_restore(ItemId::Elixer, &mut mon, 0);
+        assert!(matches!(outcome, ItemApplyOutcome::Used { .. }));
+        assert!(
+            mon.pp[0] > 0 && mon.pp[1] > 0 && mon.pp[2] > 0 && mon.pp[3] > 0,
+            "elixir refills all four moves"
+        );
+    }
+}

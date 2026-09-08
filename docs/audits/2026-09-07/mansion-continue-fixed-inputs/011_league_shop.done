@@ -1,0 +1,7 @@
+g.tap('start',8);g.tap('up',8);g.tap('a',8)
+for _ in range(2):g.tap('down',8)
+g.tap('a',8);g.tap('a',8)
+for _ in range(9):g.tap('up',8)
+snap('fly-saffron-league-supply');g.tap('a',8);g.cutscene();g.step(180);g.cutscene()
+assert g.st()['map_name']=='SaffronCity',g.st()
+g.nav_warp(25,11,'SaffronCity','SaffronMart');g.nav_to(2,5,'SaffronMart');g.face('left');g.tap('a',8);g.cutscene();snap('league-shop-menu')

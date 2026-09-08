@@ -38,6 +38,10 @@ game_scene PewterGym {
         }
         giveBadge("BOULDERBADGE")
         setFlag("EVENT_BEAT_BROCK")
+        // The optional Route22 encounter expires with the first badge.
+        resetFlag("EVENT_1ST_ROUTE22_RIVAL_BATTLE")
+        resetFlag("EVENT_ROUTE22_RIVAL_WANTS_BATTLE")
+        hideObjectByName("ROUTE_22_RIVAL_1")
         @speaker("") {
           @t("That's an official POKeMON\nLEAGUE BADGE!\n\nIts bearer's POKeMON become\nmore powerful!\n\nThe technique FLASH can now\nbe used any time!", "这是宝可梦联盟公认的徽章！\n\n持有它的宝可梦会变得更强大！\n\n现在随时都可以使用闪光了！")
         }

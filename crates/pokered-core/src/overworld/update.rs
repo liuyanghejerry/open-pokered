@@ -1299,6 +1299,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                             end_battle_text: intro.end_battle_text,
                             rival_triplet_base: intro.rival_triplet_base,
                         });
+
                     }
                     npc_interaction::InteractionResult::ItemPickup { npc_index, .. } => {
                         self.npc_face_player(npc_index);
@@ -1444,7 +1445,8 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
             let prev_x = self.state.player.x;
             let prev_y = self.state.player.y;
 
-            let collision_provider = collision::PokemonCollisionProvider::new(map.id, map.tileset);
+            let collision_provider = collision::PokemonCollisionProvider::new(map.id, map.tileset)
+                .with_warp_border_probe(map.tileset, self.state.player.x, self.state.player.y, self.state.player.facing);
 
             let standing_tile = get_tile_id_at_position(
                 &map.blocks,
@@ -3313,7 +3315,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
     /// The existing script system (`load_map_script`, `coord_event_fn`,
     /// `npc_talk_fn`, `on_load`) continues to work unchanged — the trigger
     /// manager runs in parallel as an additional unified dispatch layer.
-    fn setup_triggers_for_map(&mut self, map_id: MapId) {
+    pub(super) fn setup_triggers_for_map(&mut self, map_id: MapId) {
         use dotzuki_engine::metatile::TriggerType;
         use dotzuki_engine::trigger_manager::Trigger;
 
@@ -3337,6 +3339,64 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
             }
         }
 
+        // A locked door cannot receive OnStep; Card Key interactions target
+        // its solid tiles from the adjoining corridor.
+        let card_key_doors: &[(u32, u32, &str)] = match self.state.current_map {
+            MapId::SilphCo3F => &[(4, 4, "cardKeyDoor1"), (8, 4, "cardKeyDoor2")],
+            MapId::SilphCo11F => &[(3, 6, "cardKeyDoor")],
+            _ => &[],
+        };
+        for &(bx, by, handler) in card_key_doors {
+            if !self.script_engine.has_function(handler) { continue; }
+            for (x, y) in [(bx * 2, by * 2), (bx * 2 + 1, by * 2),
+                           (bx * 2, by * 2 + 1), (bx * 2 + 1, by * 2 + 1)] {
+                self.trigger_manager.add_trigger(Trigger::single_tile(
+                    format!("card_key_door_{x}_{y}"), map_key.clone(),
+                    TriggerType::OnInteract, x, y, handler.to_string(), false,
+                ));
+            }
+        }
+
+        // Mansion hidden events are statue interactions, not walkable floor
+        // triggers. Keep the original coordinates as the facing target.
+        let mansion_statues: &[(u32, u32, &str)] = match self.state.current_map {
+            MapId::PokemonMansion1F => &[(2, 5, "coordSwitch")],
+            MapId::PokemonMansion3F => &[(10, 5, "secretSwitch")],
+            MapId::PokemonMansionB1F => &[(20, 3, "coordSwitchA"), (18, 25, "coordSwitchB")],
+            _ => &[],
+        };
+        for &(x, y, handler) in mansion_statues {
+            if self.script_engine.has_function(handler) {
+                self.trigger_manager.add_trigger(Trigger::single_tile(
+                    format!("mansion_statue_{x}_{y}"), map_key.clone(),
+                    TriggerType::OnInteract, x, y, handler.to_string(), false,
+                ));
+            }
+        }
+
+        // Cinnabar Gym quiz machines are facing-up hidden interactions
+        // (hidden_events.asm CINNABAR_GYM: PrintCinnabarQuiz), not walkable
+        // floor and not NPCs — bind OnInteract at the machine tiles.
+        let cinnabar_quiz_machines: &[(u32, u32, &str)] = match self.state.current_map {
+            MapId::CinnabarGym => &[
+                (15, 7, "quizMachine1"),
+                (10, 1, "quizMachine2"),
+                (9, 7, "quizMachine3"),
+                (9, 13, "quizMachine4"),
+                (1, 13, "quizMachine5"),
+                (1, 7, "quizMachine6"),
+            ],
+            _ => &[],
+        };
+        for &(x, y, handler) in cinnabar_quiz_machines {
+            if self.script_engine.has_function(handler) {
+                self.trigger_manager.add_trigger(Trigger::single_tile(
+                    format!("cinnabar_quiz_{x}_{y}"), map_key.clone(),
+                    TriggerType::OnInteract, x, y, handler.to_string(), false,
+                ));
+            }
+        }
+
         // 2. on_load / enterMap → OnEnter trigger at player position
         if let Some(fn_name) = self.map_script_config.on_load() {
             if self.script_engine.has_function(fn_name) {
@@ -3352,24 +3412,9 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
             }
         }
 
-        // 3. NPC talk functions → OnInteract triggers at NPC positions
-        for npc_cfg in &self.map_script_config.npcs {
-            if let Some(ref talk_fn) = npc_cfg.talk {
-                if self.script_engine.has_function(talk_fn) {
-                    if let Some(npc) = self.npc_states.iter().find(|n| n.text_id == npc_cfg.id) {
-                        self.trigger_manager.add_trigger(Trigger::single_tile(
-                            format!("npc_talk_{}", npc_cfg.id),
-                            map_key.clone(),
-                            TriggerType::OnInteract,
-                            npc.x as u32,
-                            npc.y as u32,
-                            talk_fn.clone(),
-                            false,
-                        ));
-                    }
-                }
-            }
-        }
+        // NPC dialogue is dispatched by try_interact at the NPC's live position.
+        // Fixed coordinate triggers would bypass trainer battle handoff and still
+        // talk to NPCs after they move away or become hidden.
 
         // 4. Sign talk functions → OnInteract triggers at sign positions
         for sign_cfg in &self.map_script_config.signs {
@@ -3703,5 +3748,29 @@ mod safari_timer_tests {
         let before = ow.safari_steps_remaining();
         ow.tick_safari_steps();
         assert_eq!(ow.safari_steps_remaining(), before);
+    }
+}
+
+#[cfg(test)]
+mod object_visibility_tests {
+    use super::*;
+    #[test]
+    fn latest_object_visibility_survives_engine_merge_and_reentry() {
+        let mut screen = OverworldScreen::new(MapId::CeruleanCity, None, pokered_data::impl_traits::PokemonRedData);
+        let toggle = "CERULEAN_RIVAL";
+        for visible in [true, false, true, false] {
+            let effect = if visible {
+                script_bridge::ScriptEffect::ShowObjectByName { toggle_id: toggle.into() }
+            } else {
+                script_bridge::ScriptEffect::HideObjectByName { toggle_id: toggle.into() }
+            };
+            screen.apply_finished_effect(Some(effect));
+            screen.sync_flags_from_engine();
+            screen.apply_hidden_object_flags();
+            assert_eq!(screen.unified_flags.get_flag(&format!("__OBJ_SHOWN_{toggle}")), visible);
+            assert_eq!(screen.unified_flags.get_flag(&format!("__OBJ_HIDDEN_{toggle}")), !visible);
+            let id = screen.map_script_config.npc_id_by_toggle(toggle).unwrap();
+            assert_eq!(screen.npc_states.iter().find(|n| n.text_id == id).unwrap().visible, visible);
+        }
     }
 }

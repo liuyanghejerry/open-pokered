@@ -797,6 +797,9 @@ impl PokemonGame {
             };
 
             overworld = OverworldScreen::new(map_id, scripts_dir.clone(), PokemonRedData);
+            if startup_warp.is_none() {
+                overworld.restore_saved_last_map(save_data.game_data.last_map);
+            }
             // Resolve a walkable landing spot: a valid requested position is
             // honored unchanged, a blocked/out-of-bounds one snaps to the
             // nearest walkable tile, and no request picks the map's warp
@@ -1318,6 +1321,9 @@ impl PokemonGame {
         save.game_data.position.y = player.y as u8;
         save.game_data.position.x_block = (player.x % 2) as u8;
         save.game_data.position.y_block = (player.y % 2) as u8;
+        if let Some(last_map) = self.overworld.last_map {
+            save.game_data.last_map = last_map as u8;
+        }
 
         let facing = match player.facing {
             pokered_core::overworld::Direction::Down => 0u8,
@@ -1631,6 +1637,7 @@ impl PokemonGame {
                                 )
                             };
                         let mut overworld = OverworldScreen::new(map_id, self.scripts_dir.clone(), PokemonRedData);
+                        overworld.restore_saved_last_map(self.save_data.game_data.last_map);
                         overworld.state.player.x = px;
                         overworld.state.player.y = py;
                         overworld.state.player.facing = facing;
@@ -2306,9 +2313,18 @@ impl PokemonGame {
             // supplies the triplet base (scripts/{Map}.asm StarterTable).
             let party_index = if is_rival {
                 let base = rival_triplet_base.unwrap_or(0) as usize;
-                player_party.first().map_or(default_index, |starter| {
-                    base + pokered_data::trainer_data::rival_starter_offset(starter.species)
-                })
+                let starter = pokered_data::trainer_data::resolve_player_starter(
+                    self.save_data.game_data.player_starter,
+                    player_party.first().map(|mon| mon.species),
+                );
+                let offset = starter.map(pokered_data::trainer_data::rival_starter_offset).unwrap_or(0);
+                if self.save_data.game_data.player_starter == 0 {
+                    if let Some(starter) = starter {
+                        self.save_data.game_data.player_starter = starter as u8;
+                        self.save_data.game_data.rival_starter = [Species::Squirtle, Species::Bulbasaur, Species::Charmander][offset] as u8;
+                    }
+                }
+                base + offset
             } else {
                 default_index
             };
@@ -4002,7 +4018,7 @@ impl PokemonGame {
                             None => ScreenAction::Continue,
                             Some(item) => {
                                 let outcome = match self.save_data.party.get_mut(party_index) {
-                                    Some(mon) => bag_use::finish_tm_hm_replace(item, mon, slot),
+                                    Some(mon) => bag_use::finish_move_choice(item, mon, slot),
                                     None => ItemApplyOutcome::NoEffect {
                                         message: bag_use::NO_EFFECT_MESSAGE.to_string(),
                                     },
@@ -5011,6 +5027,38 @@ impl PokemonGame {
             // Current battle phase (Debug form), e.g. "PlayerMenu",
             // "BagSelect", so a driver knows when a menu is ready.
             "battle_phase": format!("{:?}", self.battle.phase),
+            "battle_party_cursor": self.battle.party_cursor,
+            // Simulation HP, rather than the save snapshot or animated HUD.
+            "battle_live": self.battle.battle_state.as_ref().map(|bs| {
+                let player = bs.player.active_mon();
+                let enemy = bs.enemy.active_mon();
+                serde_json::json!({
+                    "player_party": bs.player.party.iter().map(|mon| serde_json::json!({
+                        "species": format!("{:?}", mon.species), "level": mon.level,
+                        "hp": mon.hp, "max_hp": mon.max_hp,
+                    })).collect::<Vec<_>>(),
+                    "player": { "species": format!("{:?}", player.species), "level": player.level, "hp": player.hp,
+                        "max_hp": player.max_hp, "status": format!("{:?}", player.status) },
+                    "enemy": { "species": format!("{:?}", enemy.species), "level": enemy.level, "hp": enemy.hp,
+                        "max_hp": enemy.max_hp, "status": format!("{:?}", enemy.status) },
+                    "enemy_party": bs.enemy.party.iter().map(|mon| serde_json::json!({
+                        "species": format!("{:?}", mon.species), "level": mon.level, "hp": mon.hp,
+                    })).collect::<Vec<_>>(),
+                })
+            }),
+            "battle_bag": self.battle.bag_menu.as_ref().map(|bag| serde_json::json!({
+                "cursor": bag.cursor(),
+                "items": bag.items().iter().map(|(id, qty)| serde_json::json!({
+                    "item": format!("{:?}", id), "qty": qty,
+                })).collect::<Vec<_>>(),
+            })),
+            "battle_inventory": self.battle.player_bag.items().iter().map(|(id, qty)| {
+                serde_json::json!({ "item": format!("{:?}", id), "qty": qty })
+            }).collect::<Vec<_>>(),
+            "shop_phase": match &self.state.screen {
+                GameScreen::Shop(mart) => Some(format!("{:?}", mart.phase)),
+                _ => None,
+            },
             // Live move menu while it is open (FIGHT selection): cursor and
             // per-slot PP. The save-data party is a battle-start snapshot —
             // mid-battle PP drain only exists here, so a closed-loop driver
@@ -5213,6 +5261,34 @@ impl PokemonGame {
                     "facing": format!("{:?}", self.overworld.state.player.facing),
                 });
                 DebugResponse::ok_with_data(data)
+            }
+            DebugCommand::Game(GameDebugCommand::GetMap) => {
+                let map = self.overworld.map_data.as_ref().map(|m| serde_json::json!({
+                    "map_name": format!("{:?}", self.overworld.state.current_map),
+                    "width": m.width, "height": m.height,
+                    "tileset": format!("{:?}", m.tileset), "blocks": m.blocks,
+                    "transport": format!("{:?}", self.overworld.state.player.transport),
+                }));
+                DebugResponse::ok_with_data(serde_json::json!(map))
+            }
+            DebugCommand::Game(GameDebugCommand::CaptureFrame { ref path }) => {
+                #[cfg(not(target_arch = "wasm32"))]
+                {
+                    let mut fb = FrameBuffer::new(RenderConfig::new(160, 144), Rgba::WHITE);
+                    self.draw(&mut fb);
+                    match fb.save_png(std::path::Path::new(path)) {
+                        Ok(()) => DebugResponse::ok_with_data(serde_json::json!({
+                            "path": path,
+                            "state": self.debug_state_snapshot(),
+                        })),
+                        Err(err) => DebugResponse::err(format!("capture failed: {err}")),
+                    }
+                }
+                #[cfg(target_arch = "wasm32")]
+                {
+                    let _ = path;
+                    DebugResponse::err("capture_frame requires a native frontend".to_string())
+                }
             }
             DebugCommand::Game(GameDebugCommand::GetParty) => {
                 let party: Vec<serde_json::Value> = self

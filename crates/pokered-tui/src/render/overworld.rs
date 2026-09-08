@@ -439,7 +439,11 @@ pub fn draw_overworld(
         let tileset_name = tileset_id.tileset_name();
 
         let (map_w, map_h) = current_map.dimensions();
-        let blk = get_block_data(current_map);
+        // CUT and script gates replace the runtime blocks immediately.
+        let blk: &[u8] = match screen.map_data.as_ref() {
+            Some(live) if live.width == map_w && live.height == map_h => &live.blocks,
+            _ => get_block_data(current_map),
+        };
 
         // S.S. Anne departure (VermilionDockSSAnneLeavesScript): the view
         // scrolls east up to 16 tiles while the ship sails away — the map

@@ -49,19 +49,9 @@ game_scene SSAnne2F {
         @t("<RIVAL>: Bonjour! <PLAYER>!\n\nImagine seeing you here!\n\n<PLAYER>, were you really\ninvited?\n\nSo how's your POKeDEX\ncoming?\n\nI already caught 40 kinds,\npal!\n\nDifferent kinds are\neverywhere!\n\nCrawl around in grassy\nareas!", "<RIVAL>：你好！ <PLAYER>！\n\n没想到会在这里见到你！\n\n<PLAYER>，你真的是被邀请来的\n吗？\n\n你的宝可梦图鉴收集得怎么样\n了？\n\n我已经抓到 40种了，伙计！\n\n不同种类的宝可梦到处都是！\n\n在草丛里到处走走吧！")
       }
 
-      // Rival party-by-starter (orig StarterTable -> wTrainerNo 1/2/3). The
-      // engine derives the starter-advantage party from the rival class id, so
-      // each branch passes OPP_RIVAL2.
-      s = getRivalStarter()
-      @if (s == 0) {
-        result = startBattle("OPP_RIVAL2")
-      } @else {
-        @if (s == 1) {
-          result = startBattle("OPP_RIVAL2")
-        } @else {
-          result = startBattle("OPP_RIVAL2")
-        }
-      }
+      // The runtime selects the starter-advantage party from this class.
+      // Keep the awaited result in the same scope as the outcome branch.
+      result = startBattle("OPP_RIVAL2")
 
       @if (result == "win") {
         @say("") {

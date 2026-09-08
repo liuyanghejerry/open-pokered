@@ -1,0 +1,1227 @@
+error: invalid character `{` in package name: `{{project-name}}`, the first character must be a Unicode XID start character (most letters or `_`)
+ --> ../../.cargo/git/checkouts/dotzuki-10858e612e941535/88f1fcc/workspace/dotzuki-template/Cargo.toml:4:8
+  |
+4 | name = "{{project-name}}"
+  |        ^^^^^^^^^^^^^^^^^^
+warning: function `emit_flex_container` is never used
+    --> crates/pokered-data/build.rs:2138:4
+     |
+2138 | fn emit_flex_container(out: &mut String, flex: &serde_json::Value) {
+     |    ^^^^^^^^^^^^^^^^^^^
+     |
+     = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: function `emit_list_params` is never used
+    --> crates/pokered-data/build.rs:2390:4
+     |
+2390 | fn emit_list_params(out: &mut String, list: &serde_json::Value) {
+     |    ^^^^^^^^^^^^^^^^
+
+warning: `pokered-data` (build script) generated 2 warnings
+   Compiling pokered-data v0.1.0 (/Users/liuyanghe02/develop/open-pokered-3/crates/pokered-data)
+warning: pokered-renderer@0.1.0: CJK glyphs generated: 519 chars (95 ASCII + 562 CJK)
+warning: unused imports: `Display`, `EnumCount`, `EnumIter`, and `EnumString`
+ --> crates/pokered-data/src/items.rs:3:20
+  |
+3 | use strum_macros::{Display, EnumCount, EnumIter, EnumString};
+  |                    ^^^^^^^  ^^^^^^^^^  ^^^^^^^^  ^^^^^^^^^^
+  |
+  = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused import: `PaletteTrait`
+   --> crates/pokered-data/src/impl_traits.rs:264:48
+    |
+264 | use dotzuki_engine::palette::{PaletteProvider, PaletteTrait, SgbPaletteEntry};
+    |                                                ^^^^^^^^^^^^
+
+warning: unreachable pattern
+  --> crates/pokered-data/src/lang_data.rs:90:9
+   |
+90 |         _ => "???", // species added through the editor (no localized name yet)
+   |         ^ no value can reach this
+   |
+note: multiple earlier patterns match some of the same values
+  --> crates/pokered-data/src/lang_data.rs:90:9
+   |
+38 |         Species::None=>"---",
+   |         ------------- matches some of the same values
+39 |         Species::Bulbasaur=>"BULBASAUR",Species::Ivysaur=>"IVYSAUR",Species::Venusaur=>"VENUSAUR",
+   |         ------------------              ----------------            ----------------- matches some of the same values
+   |         |                               |
+   |         |                               matches some of the same values
+   |         matches some of the same values
+...
+90 |         _ => "???", // species added through the editor (no localized name yet)
+   |         ^ ...and 148 other patterns collectively make this unreachable
+   = note: `#[warn(unreachable_patterns)]` (part of `#[warn(unused)]`) on by default
+
+warning: unreachable pattern
+   --> crates/pokered-data/src/lang_data.rs:234:13
+    |
+234 |             _ => "---",
+    |             ^ no value can reach this
+    |
+note: multiple earlier patterns match some of the same values
+   --> crates/pokered-data/src/lang_data.rs:234:13
+    |
+179 |             MoveId::None=>"---",MoveId::Pound=>"POUND",MoveId::KarateChop=>"KARATE CHOP",
+    |             ------------        -------------          ------------------ matches some of the same values
+    |             |                   |
+    |             |                   matches some of the same values
+    |             matches some of the same values
+180 |             MoveId::Doubleslap=>"DOUBLESLAP",MoveId::CometPunch=>"COMET PUNCH",MoveId::MegaPunch=>"MEGA PUNCH",
+    |             ------------------ matches some of the same values
+...
+234 |             _ => "---",
+    |             ^ ...and 162 other patterns collectively make this unreachable
+
+warning: unreachable pattern
+   --> crates/pokered-data/src/lang_data.rs:369:9
+    |
+346 |         "BADGES" => "徽章",
+    |         -------- matches all the relevant values
+...
+369 |         "BADGES" => "徽章",
+    |         ^^^^^^^^ no value can reach this
+
+warning: unreachable pattern
+   --> crates/pokered-data/src/lang_data.rs:389:9
+    |
+362 |         "EXIT" => "退出",
+    |         ------ matches all the relevant values
+...
+389 |         "EXIT" => "退出",
+    |         ^^^^^^ no value can reach this
+
+warning: function `default_true` is never used
+   --> crates/pokered-data/src/ui_layout/schema.rs:111:4
+    |
+111 | fn default_true() -> bool { true }
+    |    ^^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: function `default_gap` is never used
+   --> crates/pokered-data/src/ui_layout/schema.rs:112:4
+    |
+112 | fn default_gap() -> u32 { 1 }
+    |    ^^^^^^^^^^^
+
+warning: function `default_item_name_width` is never used
+   --> crates/pokered-data/src/ui_layout/schema.rs:113:4
+    |
+113 | fn default_item_name_width() -> u32 { 14 }
+    |    ^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: function `default_qty_width` is never used
+   --> crates/pokered-data/src/ui_layout/schema.rs:114:4
+    |
+114 | fn default_qty_width() -> u32 { 2 }
+    |    ^^^^^^^^^^^^^^^^^
+
+warning: function `one` is never used
+   --> crates/pokered-data/src/ui_layout/schema.rs:223:4
+    |
+223 | fn one() -> u32 { 1 }
+    |    ^^^
+
+   Compiling pokered-core v0.1.0 (/Users/liuyanghe02/develop/open-pokered-3/crates/pokered-core)
+warning: unused import: `crate::battle::BallAnimOutcome`
+  --> crates/pokered-core/src/battle/item_fidelity_tests.rs:8:5
+   |
+ 8 | use crate::battle::BallAnimOutcome;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+help: if this is a test module, consider adding a `#[cfg(test)]` to the containing module
+  --> crates/pokered-core/src/battle/mod.rs:30:1
+   |
+30 | mod item_fidelity_tests;
+   | ^^^^^^^^^^^^^^^^^^^^^^^^
+   = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused import: `crate::battle::BattleAnimEvent`
+  --> crates/pokered-core/src/battle/item_fidelity_tests.rs:9:5
+   |
+ 9 | use crate::battle::BattleAnimEvent;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+help: if this is a test module, consider adding a `#[cfg(test)]` to the containing module
+  --> crates/pokered-core/src/battle/mod.rs:30:1
+   |
+30 | mod item_fidelity_tests;
+   | ^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `create_pokemon`
+  --> crates/pokered-core/src/battle/item_fidelity_tests.rs:10:29
+   |
+10 | use crate::pokemon::stats::{create_pokemon, create_pokemon_with_moves};
+   |                             ^^^^^^^^^^^^^^
+   |
+help: if this is a test module, consider adding a `#[cfg(test)]` to the containing module
+  --> crates/pokered-core/src/battle/mod.rs:30:1
+   |
+30 | mod item_fidelity_tests;
+   | ^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `CaptureRandoms`
+    --> crates/pokered-core/src/battle/mod.rs:2999:38
+     |
+2999 |         use crate::battle::capture::{CaptureRandoms, CaptureResult};
+     |                                      ^^^^^^^^^^^^^^
+
+warning: unused import: `crate::battle::state::status1`
+    --> crates/pokered-core/src/battle/mod.rs:7136:13
+     |
+7136 |         use crate::battle::state::status1;
+     |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: if this is a test module, consider adding a `#[cfg(test)]` to the containing module
+    --> crates/pokered-core/src/battle/mod.rs:7134:5
+     |
+7134 |     mod pp_lifecycle_tests {
+     |     ^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `pokered_data::tilesets::TilesetId`
+  --> crates/pokered-core/src/overworld/doors_elevators.rs:11:5
+   |
+11 | use pokered_data::tilesets::TilesetId;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `pokered_data::tilesets::TilesetId`
+ --> crates/pokered-core/src/overworld/player_movement.rs:9:5
+  |
+9 | use pokered_data::tilesets::TilesetId;
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `pokered_data::tilesets::TilesetId`
+ --> crates/pokered-core/src/overworld/special_terrain.rs:7:5
+  |
+7 | use pokered_data::tilesets::TilesetId;
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unnecessary parentheses around pattern
+    --> crates/pokered-core/src/overworld/screen.rs:1536:21
+     |
+1536 |                 for (y) in [cy - r, cy + r] {
+     |                     ^ ^
+     |
+     = note: `#[warn(unused_parens)]` (part of `#[warn(unused)]`) on by default
+help: remove these parentheses
+     |
+1536 -                 for (y) in [cy - r, cy + r] {
+1536 +                 for y in [cy - r, cy + r] {
+     |
+
+warning: unused import: `max_exp`
+  --> crates/pokered-core/src/pokemon/engine_adapter.rs:41:56
+   |
+41 | use crate::battle::experience::growth::{exp_for_level, max_exp};
+   |                                                        ^^^^^^^
+
+warning: unused import: `crate::battle::experience::level_up::process_level_up`
+  --> crates/pokered-core/src/pokemon/engine_adapter.rs:42:5
+   |
+42 | use crate::battle::experience::level_up::process_level_up;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: `pokered-data` (lib) generated 11 warnings (run `cargo fix --lib -p pokered-data` to apply 1 suggestion)
+warning: unused variable: `randoms`
+   --> crates/pokered-core/src/battle/capture.rs:113:9
+    |
+113 |     let randoms = CaptureRandoms { rand1, rand2 };
+    |         ^^^^^^^ help: if this is intentional, prefix it with an underscore: `_randoms`
+    |
+    = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: variable does not need to be mutable
+    --> crates/pokered-core/src/battle/mod.rs:2562:17
+     |
+2562 |                 mut wait_frames,
+     |                 ----^^^^^^^^^^^
+     |                 |
+     |                 help: remove this `mut`
+     |
+     = note: `#[warn(unused_mut)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `pokemon_index`
+    --> crates/pokered-core/src/battle/mod.rs:2240:39
+     |
+2240 |             BattlePhase::PartyStats { pokemon_index } => {
+     |                                       ^^^^^^^^^^^^^ help: try ignoring the field: `pokemon_index: _`
+
+warning: unused variable: `tileset`
+   --> crates/pokered-core/src/overworld/collision.rs:165:9
+    |
+165 |         tileset: TilesetId,
+    |         ^^^^^^^ help: if this is intentional, prefix it with an underscore: `_tileset`
+
+warning: unused variable: `tileset`
+   --> crates/pokered-core/src/overworld/collision.rs:213:9
+    |
+213 |         tileset: TilesetId,
+    |         ^^^^^^^ help: if this is intentional, prefix it with an underscore: `_tileset`
+
+warning: value assigned to `repel_wore_off` is never read
+    --> crates/pokered-core/src/overworld/update.rs:1844:21
+     |
+1844 |                     repel_wore_off = true;
+     |                     ^^^^^^^^^^^^^^^^^^^^^
+     |
+     = help: maybe it is overwritten before being read?
+     = note: `#[warn(unused_assignments)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `probe`
+   --> crates/pokered-core/src/save/sram_import.rs:407:29
+    |
+407 | fn blank_offset_after_water(probe: &[u8]) -> usize {
+    |                             ^^^^^ help: if this is intentional, prefix it with an underscore: `_probe`
+
+warning: function `format_cannot_move` is never used
+   --> crates/pokered-core/src/battle/mod.rs:715:4
+    |
+715 | fn format_cannot_move(reason: &CannotMoveReason) -> &'static str {
+    |    ^^^^^^^^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: associated functions `generate_move_randoms` and `format_move_outcome` are never used
+    --> crates/pokered-core/src/battle/mod.rs:1537:8
+     |
+1200 | impl BattleScreen {
+     | ----------------- associated functions in this implementation
+...
+1537 |     fn generate_move_randoms() -> MoveRandoms {
+     |        ^^^^^^^^^^^^^^^^^^^^^
+...
+1700 |     fn format_move_outcome(
+     |        ^^^^^^^^^^^^^^^^^^^
+
+warning: function `input` is never used
+  --> crates/pokered-core/src/battle/item_fidelity_tests.rs:18:4
+   |
+18 | fn input(down: bool, a: bool) -> BattleInput {
+   |    ^^^^^
+
+warning: function `back_input` is never used
+  --> crates/pokered-core/src/battle/item_fidelity_tests.rs:26:4
+   |
+26 | fn back_input() -> BattleInput {
+   |    ^^^^^^^^^^
+
+warning: function `press_b` is never used
+  --> crates/pokered-core/src/battle/item_fidelity_tests.rs:33:4
+   |
+33 | fn press_b(battle: &mut BattleScreen) {
+   |    ^^^^^^^
+
+warning: function `use_first_bag_item` is never used
+  --> crates/pokered-core/src/battle/item_fidelity_tests.rs:39:4
+   |
+39 | fn use_first_bag_item(battle: &mut BattleScreen) {
+   |    ^^^^^^^^^^^^^^^^^^
+
+warning: function `bag_quantity` is never used
+  --> crates/pokered-core/src/battle/item_fidelity_tests.rs:45:4
+   |
+45 | fn bag_quantity(battle: &BattleScreen, item: ItemId) -> u32 {
+   |    ^^^^^^^^^^^^
+
+warning: function `staged_messages` is never used
+  --> crates/pokered-core/src/battle/item_fidelity_tests.rs:55:4
+   |
+55 | fn staged_messages(battle: &BattleScreen) -> Vec<String> {
+   |    ^^^^^^^^^^^^^^^
+
+warning: function `current_message` is never used
+  --> crates/pokered-core/src/battle/item_fidelity_tests.rs:63:4
+   |
+63 | fn current_message(battle: &BattleScreen) -> String {
+   |    ^^^^^^^^^^^^^^^
+
+warning: function `pp_mon` is never used
+   --> crates/pokered-core/src/battle/item_fidelity_tests.rs:204:4
+    |
+204 | fn pp_mon() -> crate::battle::state::Pokemon {
+    |    ^^^^^^
+
+warning: function `mk` is never used
+    --> crates/pokered-core/src/battle/mod.rs:7140:12
+     |
+7140 |         fn mk(sp: Species, lvl: u8, moves: [MoveId; 4]) -> crate::battle::state::Pokemon {
+     |            ^^
+
+warning: method `text_pages` is never used
+   --> crates/pokered-core/src/oak_speech.rs:313:8
+    |
+312 | impl OakSpeechPhase {
+    | ------------------- method in this implementation
+313 |     fn text_pages(&self) -> Option<&'static [TextPage]> {
+    |        ^^^^^^^^^^
+
+warning: fields `scene_script_provider` and `scripts_dir` are never read
+   --> crates/pokered-core/src/overworld/screen.rs:639:16
+    |
+564 | pub struct OverworldScreen<G: GameData = pokered_data::impl_traits::PokemonRedData> {
+    |            --------------- fields in this struct
+...
+639 |     pub(crate) scene_script_provider: pokered_data::scene_loader::SceneScriptProvider,
+    |                ^^^^^^^^^^^^^^^^^^^^^
+...
+646 |     pub(crate) scripts_dir: Option<std::path::PathBuf>,
+    |                ^^^^^^^^^^^
+
+warning: method `repel_wore_off` is never used
+    --> crates/pokered-core/src/overworld/screen.rs:1822:19
+     |
+ 859 | impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
+     | --------------------------------------------------------- method in this implementation
+...
+1822 |     pub(crate) fn repel_wore_off(&self, repel_before: u16) -> bool {
+     |                   ^^^^^^^^^^^^^^
+
+   Compiling pokered-renderer v0.1.0 (/Users/liuyanghe02/develop/open-pokered-3/crates/pokered-renderer)
+   Compiling pokered-ui v0.1.0 (/Users/liuyanghe02/develop/open-pokered-3/crates/pokered-ui)
+warning: `pokered-core` (lib) generated 32 warnings (run `cargo fix --lib -p pokered-core` to apply 17 suggestions)
+   Compiling pokered-tui v0.1.0 (/Users/liuyanghe02/develop/open-pokered-3/crates/pokered-tui)
+warning: unused imports: `BattleVisualEffects` and `draw_battle`
+  --> crates/pokered-tui/examples/../src/render/mod.rs:18:18
+   |
+18 | pub use battle::{draw_battle, BattleVisualEffects};
+   |                  ^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^
+   |
+   = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused import: `diploma::draw_diploma`
+  --> crates/pokered-tui/examples/../src/render/mod.rs:20:9
+   |
+20 | pub use diploma::draw_diploma;
+   |         ^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `draw_elevator`
+  --> crates/pokered-tui/examples/../src/render/mod.rs:21:20
+   |
+21 | pub use elevator::{draw_elevator, draw_filter_bag};
+   |                    ^^^^^^^^^^^^^
+
+warning: unused import: `evolution::draw_evolution`
+  --> crates/pokered-tui/examples/../src/render/mod.rs:22:9
+   |
+22 | pub use evolution::draw_evolution;
+   |         ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `gamefreak_splash::draw_gamefreak_splash`
+  --> crates/pokered-tui/examples/../src/render/mod.rs:24:9
+   |
+24 | pub use gamefreak_splash::draw_gamefreak_splash;
+   |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `intro::draw_intro_scene`
+  --> crates/pokered-tui/examples/../src/render/mod.rs:25:9
+   |
+25 | pub use intro::draw_intro_scene;
+   |         ^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused imports: `draw_main_menu`, `draw_mart`, `draw_options_menu`, `draw_save_menu`, and `draw_stats_screen`
+  --> crates/pokered-tui/examples/../src/render/mod.rs:26:26
+   |
+26 | ...w_bag, draw_main_menu, draw_mart, draw_options_menu, draw_party_screen, draw_save_menu, draw_start_menu, draw_stats_screen};
+   |           ^^^^^^^^^^^^^^  ^^^^^^^^^  ^^^^^^^^^^^^^^^^^                     ^^^^^^^^^^^^^^                   ^^^^^^^^^^^^^^^^^
+
+warning: unused import: `draw_oak_speech`
+  --> crates/pokered-tui/examples/../src/render/mod.rs:27:35
+   |
+27 | pub use oak::{draw_naming_screen, draw_oak_speech};
+   |                                   ^^^^^^^^^^^^^^^
+
+warning: unused import: `pc::draw_pc`
+  --> crates/pokered-tui/examples/../src/render/mod.rs:29:9
+   |
+29 | pub use pc::draw_pc;
+   |         ^^^^^^^^^^^
+
+warning: unused imports: `draw_pokedex_screen` and `draw_trainer_card`
+  --> crates/pokered-tui/examples/../src/render/mod.rs:30:19
+   |
+30 | pub use pokedex::{draw_pokedex_screen, draw_trainer_card};
+   |                   ^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^
+
+warning: unused import: `slots::draw_slots`
+  --> crates/pokered-tui/examples/../src/render/mod.rs:31:9
+   |
+31 | pub use slots::draw_slots;
+   |         ^^^^^^^^^^^^^^^^^
+
+warning: unused import: `title::draw_title_screen`
+  --> crates/pokered-tui/examples/../src/render/mod.rs:32:9
+   |
+32 | pub use title::draw_title_screen;
+   |         ^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `town_map::draw_town_map`
+  --> crates/pokered-tui/examples/../src/render/mod.rs:33:9
+   |
+33 | pub use town_map::draw_town_map;
+   |         ^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: function `draw_centered_sprite` is never used
+   --> crates/pokered-tui/examples/../src/render/mod.rs:130:8
+    |
+130 | pub fn draw_centered_sprite(
+    |        ^^^^^^^^^^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: function `apply_gb_palette` is never used
+   --> crates/pokered-tui/examples/../src/render/mod.rs:145:15
+    |
+145 | pub(crate) fn apply_gb_palette(fb: &mut FrameBuffer, pal: &dotzuki_renderer::transition::FadePalette) {
+    |               ^^^^^^^^^^^^^^^^
+
+warning: function `blit_single_tile` is never used
+   --> crates/pokered-tui/examples/../src/render/mod.rs:149:8
+    |
+149 | pub fn blit_single_tile(
+    |        ^^^^^^^^^^^^^^^^
+
+warning: struct `AttackLunge` is never constructed
+  --> crates/pokered-tui/examples/../src/render/battle.rs:32:8
+   |
+32 | struct AttackLunge {
+   |        ^^^^^^^^^^^
+
+warning: struct `MoveMonH` is never constructed
+  --> crates/pokered-tui/examples/../src/render/battle.rs:40:8
+   |
+40 | struct MoveMonH {
+   |        ^^^^^^^^
+
+warning: enum `SlideKind` is never used
+  --> crates/pokered-tui/examples/../src/render/battle.rs:50:6
+   |
+50 | enum SlideKind {
+   |      ^^^^^^^^^
+
+warning: struct `SlideAnim` is never constructed
+  --> crates/pokered-tui/examples/../src/render/battle.rs:67:8
+   |
+67 | struct SlideAnim {
+   |        ^^^^^^^^^
+
+warning: struct `PendingApplying` is never constructed
+  --> crates/pokered-tui/examples/../src/render/battle.rs:73:8
+   |
+73 | struct PendingApplying {
+   |        ^^^^^^^^^^^^^^^
+
+warning: struct `AnimSfxRequest` is never constructed
+  --> crates/pokered-tui/examples/../src/render/battle.rs:82:12
+   |
+82 | pub struct AnimSfxRequest {
+   |            ^^^^^^^^^^^^^^
+
+warning: enum `IntroAnimState` is never used
+  --> crates/pokered-tui/examples/../src/render/battle.rs:92:6
+   |
+92 | enum IntroAnimState {
+   |      ^^^^^^^^^^^^^^
+
+warning: struct `BallStep` is never constructed
+   --> crates/pokered-tui/examples/../src/render/battle.rs:142:8
+    |
+142 | struct BallStep {
+    |        ^^^^^^^^
+
+warning: struct `BallChoreo` is never constructed
+   --> crates/pokered-tui/examples/../src/render/battle.rs:152:8
+    |
+152 | struct BallChoreo {
+    |        ^^^^^^^^^^
+
+warning: function `build_ball_choreo` is never used
+   --> crates/pokered-tui/examples/../src/render/battle.rs:166:4
+    |
+166 | fn build_ball_choreo(ball: ItemId, shakes: u8, outcome: BallAnimOutcome) -> BallChoreo {
+    |    ^^^^^^^^^^^^^^^^^
+
+warning: enum `BattlePhaseKind` is never used
+   --> crates/pokered-tui/examples/../src/render/battle.rs:233:6
+    |
+233 | enum BattlePhaseKind {
+    |      ^^^^^^^^^^^^^^^
+
+warning: struct `BattleVisualEffects` is never constructed
+   --> crates/pokered-tui/examples/../src/render/battle.rs:254:12
+    |
+254 | pub struct BattleVisualEffects {
+    |            ^^^^^^^^^^^^^^^^^^^
+
+warning: multiple methods are never used
+   --> crates/pokered-tui/examples/../src/render/battle.rs:328:12
+    |
+327 | impl BattleVisualEffects {
+    | ------------------------ methods in this implementation
+328 |     pub fn take_cry_pending(&mut self) -> Option<pokered_data::species::Species> {
+    |            ^^^^^^^^^^^^^^^^
+...
+333 |     pub fn take_move_sfx(&mut self) -> Option<AnimSfxRequest> {
+    |            ^^^^^^^^^^^^^
+...
+339 |     pub fn take_trainer_appear_sfx_pending(&mut self) -> bool {
+    |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+...
+344 |     pub fn take_ball_sfx(&mut self) -> Option<SfxId> {
+    |            ^^^^^^^^^^^^^
+...
+349 |     pub fn has_transition(&self) -> bool {
+    |            ^^^^^^^^^^^^^^
+...
+355 |     pub fn render_transition(&self, source: &FrameBuffer, dest: &mut FrameBuffer) -> bool {
+    |            ^^^^^^^^^^^^^^^^^
+...
+364 |     pub fn clear_snapshot(&mut self) {
+    |            ^^^^^^^^^^^^^^
+...
+372 |     pub fn on_anim_event(&mut self, event: BattleAnimEvent) {
+    |            ^^^^^^^^^^^^^
+...
+389 |     fn start_non_move_anim(&mut self, anim_index: usize, player_is_attacker: bool) {
+    |        ^^^^^^^^^^^^^^^^^^^
+
+warning: multiple associated items are never used
+    --> crates/pokered-tui/examples/../src/render/battle.rs:444:8
+     |
+ 443 | impl BattleVisualEffects {
+     | ------------------------ associated items in this implementation
+ 444 |     fn phase_kind(phase: &BattlePhase) -> BattlePhaseKind {
+     |        ^^^^^^^^^^
+...
+ 472 |     fn on_phase_change(&mut self, phase: &BattlePhase) {
+     |        ^^^^^^^^^^^^^^^
+...
+ 495 |     fn on_intro_phase_change(
+     |        ^^^^^^^^^^^^^^^^^^^^^
+...
+ 597 |     fn resolve_message_move(screen: &BattleScreen, message: &str) -> Option<(usize, bool, MoveId)> {
+     |        ^^^^^^^^^^^^^^^^^^^^
+...
+ 622 |     fn classify_applying_attack(move_id: MoveId, attacker_is_player: bool) -> AnimationType {
+     |        ^^^^^^^^^^^^^^^^^^^^^^^^
+...
+ 648 |     fn run_applying_attack_feedback(&mut self, anim_type: AnimationType, attacker_is_player: bool) {
+     |        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+...
+ 693 |     fn is_no_hit_feedback_message(message: &str) -> bool {
+     |        ^^^^^^^^^^^^^^^^^^^^^^^^^^
+...
+ 708 |     fn used_item_id(message: &str) -> Option<ItemId> {
+     |        ^^^^^^^^^^^^
+...
+ 721 |     fn is_charge_message(message: &str) -> bool {
+     |        ^^^^^^^^^^^^^^^^^
+...
+ 731 |     fn trigger_from_message(&mut self, screen: &BattleScreen, message: &str) {
+     |        ^^^^^^^^^^^^^^^^^^^^
+...
+ 844 |     fn attacker_side(&self) -> MonSide {
+     |        ^^^^^^^^^^^^^
+...
+ 852 |     fn slide_slot(&mut self, side: MonSide, entry: bool) -> &mut Option<SlideAnim> {
+     |        ^^^^^^^^^^
+...
+ 861 |     fn set_visible(&mut self, side: MonSide, visible: bool) {
+     |        ^^^^^^^^^^^
+...
+ 868 |     fn apply_anim_effect(&mut self, effect: AnimEffect) {
+     |        ^^^^^^^^^^^^^^^^^
+...
+ 970 |     fn emit_move_sfx(&mut self, sound_move: u8) {
+     |        ^^^^^^^^^^^^^
+...
+ 978 |     fn advance_move_animation(&mut self) {
+     |        ^^^^^^^^^^^^^^^^^^^^^^
+...
+1073 |     fn advance_ball_choreo(&mut self) {
+     |        ^^^^^^^^^^^^^^^^^^^
+...
+1109 |     fn slide_frames(kind: SlideKind, entry: bool) -> u8 {
+     |        ^^^^^^^^^^^^
+...
+1134 |     fn exit_slide_offset(kind: SlideKind, frame: u8, is_player: bool) -> (i32, i32) {
+     |        ^^^^^^^^^^^^^^^^^
+...
+1161 |     pub fn update(&mut self, screen: &BattleScreen) {
+     |            ^^^^^^
+...
+1346 |     fn player_offset(&self) -> (i32, i32) {
+     |        ^^^^^^^^^^^^^
+...
+1396 |     fn enemy_offset(&self) -> (i32, i32) {
+     |        ^^^^^^^^^^^^
+...
+1446 |     fn player_visible_now(&self) -> bool {
+     |        ^^^^^^^^^^^^^^^^^^
+...
+1450 |     fn enemy_visible_now(&self) -> bool {
+     |        ^^^^^^^^^^^^^^^^^
+...
+1454 |     fn apply_post_effects(&self, fb: &mut FrameBuffer) {
+     |        ^^^^^^^^^^^^^^^^^^
+...
+1459 |     fn apply_intro_effects(&self, fb: &mut FrameBuffer) {
+     |        ^^^^^^^^^^^^^^^^^^^
+
+warning: function `apply_offset` is never used
+    --> crates/pokered-tui/examples/../src/render/battle.rs:1476:4
+     |
+1476 | fn apply_offset(base: u32, delta: i32) -> u32 {
+     |    ^^^^^^^^^^^^
+
+warning: function `downscale_mon_tiles` is never used
+    --> crates/pokered-tui/examples/../src/render/battle.rs:1547:4
+     |
+1547 | fn downscale_mon_tiles(src: &TileSet, src_tiles: usize, dst_tiles: usize) -> TileSet {
+     |    ^^^^^^^^^^^^^^^^^^^
+
+warning: function `ascii_to_tiles` is never used
+    --> crates/pokered-tui/examples/../src/render/battle.rs:1580:4
+     |
+1580 | fn ascii_to_tiles(s: &str) -> Vec<u8> {
+     |    ^^^^^^^^^^^^^^
+
+warning: function `core_status_to_tiles` is never used
+    --> crates/pokered-tui/examples/../src/render/battle.rs:1603:4
+     |
+1603 | fn core_status_to_tiles(status: &CoreStatus) -> Option<StatusCondition> {
+     |    ^^^^^^^^^^^^^^^^^^^^
+
+warning: function `slot_status_to_pokeball` is never used
+    --> crates/pokered-tui/examples/../src/render/battle.rs:1614:4
+     |
+1614 | fn slot_status_to_pokeball(slot: pokered_core::battle::PokeballSlotStatus) -> BallStatus {
+     |    ^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: function `build_battle_tileset` is never used
+    --> crates/pokered-tui/examples/../src/render/battle.rs:1637:4
+     |
+1637 | fn build_battle_tileset(rm: &mut ResourceManager) -> TileSet {
+     |    ^^^^^^^^^^^^^^^^^^^^
+
+warning: function `draw_battle_menu` is never used
+    --> crates/pokered-tui/examples/../src/render/battle.rs:1717:4
+     |
+1717 | fn draw_battle_menu(buf: &mut ScreenTileBuffer, selected_row: usize, selected_col: usize) {
+     |    ^^^^^^^^^^^^^^^^
+
+warning: function `draw_safari_menu` is never used
+    --> crates/pokered-tui/examples/../src/render/battle.rs:1747:4
+     |
+1747 | fn draw_safari_menu(buf: &mut ScreenTileBuffer, selected_row: usize, selected_col: usize, balls: u8) {
+     |    ^^^^^^^^^^^^^^^^
+
+warning: function `draw_battle_text` is never used
+    --> crates/pokered-tui/examples/../src/render/battle.rs:1766:4
+     |
+1766 | fn draw_battle_text(buf: &mut ScreenTileBuffer, text: &str) {
+     |    ^^^^^^^^^^^^^^^^
+
+warning: function `move_display_name` is never used
+    --> crates/pokered-tui/examples/../src/render/battle.rs:1813:4
+     |
+1813 | fn move_display_name(move_id: pokered_data::moves::MoveId) -> String {
+     |    ^^^^^^^^^^^^^^^^^
+
+warning: function `draw_move_menu` is never used
+    --> crates/pokered-tui/examples/../src/render/battle.rs:1828:4
+     |
+1828 | fn draw_move_menu(buf: &mut ScreenTileBuffer, screen: &BattleScreen) {
+     |    ^^^^^^^^^^^^^^
+
+warning: function `draw_bag_menu` is never used
+    --> crates/pokered-tui/examples/../src/render/battle.rs:1885:4
+     |
+1885 | fn draw_bag_menu(buf: &mut ScreenTileBuffer, screen: &BattleScreen) {
+     |    ^^^^^^^^^^^^^
+
+warning: function `draw_party_menu` is never used
+    --> crates/pokered-tui/examples/../src/render/battle.rs:1918:4
+     |
+1918 | fn draw_party_menu(buf: &mut ScreenTileBuffer, screen: &BattleScreen) {
+     |    ^^^^^^^^^^^^^^^
+
+warning: function `draw_pokeball_tile` is never used
+    --> crates/pokered-tui/examples/../src/render/battle.rs:1941:4
+     |
+1941 | fn draw_pokeball_tile(
+     |    ^^^^^^^^^^^^^^^^^^
+
+warning: function `draw_battle` is never used
+    --> crates/pokered-tui/examples/../src/render/battle.rs:1985:8
+     |
+1985 | pub fn draw_battle(
+     |        ^^^^^^^^^^^
+
+warning: constant `SHOWPIC` is never used
+   --> crates/pokered-tui/examples/../src/render/battle.rs:106:15
+    |
+106 |     pub const SHOWPIC: usize = 0xA5;
+    |               ^^^^^^^
+
+warning: constant `STATUS_AFFECTED` is never used
+   --> crates/pokered-tui/examples/../src/render/battle.rs:112:15
+    |
+112 |     pub const STATUS_AFFECTED: usize = 0xA6;
+    |               ^^^^^^^^^^^^^^^
+
+warning: constant `XSTATITEM` is never used
+   --> crates/pokered-tui/examples/../src/render/battle.rs:114:15
+    |
+114 |     pub const XSTATITEM: usize = 0xAD;
+    |               ^^^^^^^^^
+
+warning: constant `XSTATITEM_DUP` is never used
+   --> crates/pokered-tui/examples/../src/render/battle.rs:117:15
+    |
+117 |     pub const XSTATITEM_DUP: usize = 0xAE;
+    |               ^^^^^^^^^^^^^
+
+warning: constant `BALL_TOSS` is never used
+   --> crates/pokered-tui/examples/../src/render/battle.rs:119:15
+    |
+119 |     pub const BALL_TOSS: usize = 0xC0;
+    |               ^^^^^^^^^
+
+warning: constant `BALL_SHAKE` is never used
+   --> crates/pokered-tui/examples/../src/render/battle.rs:121:15
+    |
+121 |     pub const BALL_SHAKE: usize = 0xC1;
+    |               ^^^^^^^^^^
+
+warning: constant `BALL_POOF` is never used
+   --> crates/pokered-tui/examples/../src/render/battle.rs:123:15
+    |
+123 |     pub const BALL_POOF: usize = 0xC2;
+    |               ^^^^^^^^^
+
+warning: constant `GREAT_TOSS` is never used
+   --> crates/pokered-tui/examples/../src/render/battle.rs:125:15
+    |
+125 |     pub const GREAT_TOSS: usize = 0xC4;
+    |               ^^^^^^^^^^
+
+warning: constant `ULTRA_TOSS` is never used
+   --> crates/pokered-tui/examples/../src/render/battle.rs:127:15
+    |
+127 |     pub const ULTRA_TOSS: usize = 0xC5;
+    |               ^^^^^^^^^^
+
+warning: constant `HIDEPIC` is never used
+   --> crates/pokered-tui/examples/../src/render/battle.rs:129:15
+    |
+129 |     pub const HIDEPIC: usize = 0xC7;
+    |               ^^^^^^^
+
+warning: constant `SAFARI_ROCK` is never used
+   --> crates/pokered-tui/examples/../src/render/battle.rs:131:15
+    |
+131 |     pub const SAFARI_ROCK: usize = 0xC8;
+    |               ^^^^^^^^^^^
+
+warning: constant `SAFARI_BAIT` is never used
+   --> crates/pokered-tui/examples/../src/render/battle.rs:133:15
+    |
+133 |     pub const SAFARI_BAIT: usize = 0xC9;
+    |               ^^^^^^^^^^^
+
+warning: constant `BG` is never used
+  --> crates/pokered-tui/examples/../src/render/diploma.rs:11:7
+   |
+11 | const BG: Rgba = Rgba::WHITE;
+   |       ^^
+
+warning: constant `FG` is never used
+  --> crates/pokered-tui/examples/../src/render/diploma.rs:12:7
+   |
+12 | const FG: Rgba = Rgba::BLACK;
+   |       ^^
+
+warning: function `draw_diploma` is never used
+  --> crates/pokered-tui/examples/../src/render/diploma.rs:15:8
+   |
+15 | pub fn draw_diploma(player_name: &str, fb: &mut FrameBuffer) {
+   |        ^^^^^^^^^^^^
+
+warning: function `draw_elevator` is never used
+  --> crates/pokered-tui/examples/../src/render/elevator.rs:19:8
+   |
+19 | pub fn draw_elevator(elevator: &ElevatorScreen, fb: &mut FrameBuffer, lang: Lang) {
+   |        ^^^^^^^^^^^^^
+
+warning: function `morph_flash_palette` is never used
+  --> crates/pokered-tui/examples/../src/render/evolution.rs:19:4
+   |
+19 | fn morph_flash_palette() -> Palette {
+   |    ^^^^^^^^^^^^^^^^^^^
+
+warning: function `draw_evolution` is never used
+  --> crates/pokered-tui/examples/../src/render/evolution.rs:28:8
+   |
+28 | pub fn draw_evolution(
+   |        ^^^^^^^^^^^^^^
+
+warning: constant `LOGO_SCREEN_X` is never used
+  --> crates/pokered-tui/examples/../src/render/gamefreak_splash.rs:31:7
+   |
+31 | const LOGO_SCREEN_X: u32 = 10 * 8 - 8;
+   |       ^^^^^^^^^^^^^
+
+warning: constant `LOGO_SCREEN_Y` is never used
+  --> crates/pokered-tui/examples/../src/render/gamefreak_splash.rs:32:7
+   |
+32 | const LOGO_SCREEN_Y: u32 = 9 * 8 - 16;
+   |       ^^^^^^^^^^^^^
+
+warning: constant `WORDMARK_SCREEN_Y` is never used
+  --> crates/pokered-tui/examples/../src/render/gamefreak_splash.rs:34:7
+   |
+34 | const WORDMARK_SCREEN_Y: u32 = 12 * 8 - 16;
+   |       ^^^^^^^^^^^^^^^^^
+
+warning: function `draw_gamefreak_splash` is never used
+  --> crates/pokered-tui/examples/../src/render/gamefreak_splash.rs:36:8
+   |
+36 | pub fn draw_gamefreak_splash(
+   |        ^^^^^^^^^^^^^^^^^^^^^
+
+warning: function `draw_black_bars` is never used
+   --> crates/pokered-tui/examples/../src/render/gamefreak_splash.rs:109:4
+    |
+109 | fn draw_black_bars(fb: &mut FrameBuffer) {
+    |    ^^^^^^^^^^^^^^^
+
+warning: function `blit_tile_clipped` is never used
+   --> crates/pokered-tui/examples/../src/render/gamefreak_splash.rs:128:4
+    |
+128 | fn blit_tile_clipped(
+    |    ^^^^^^^^^^^^^^^^^
+
+warning: function `draw_intro_scene` is never used
+ --> crates/pokered-tui/examples/../src/render/intro.rs:9:8
+  |
+9 | pub fn draw_intro_scene(
+  |        ^^^^^^^^^^^^^^^^
+
+warning: function `gengar_tilemap_name` is never used
+  --> crates/pokered-tui/examples/../src/render/intro.rs:43:4
+   |
+43 | fn gengar_tilemap_name(pose: GengarPose) -> &'static str {
+   |    ^^^^^^^^^^^^^^^^^^^
+
+warning: constant `GENGAR_TILE_REMAP` is never used
+  --> crates/pokered-tui/examples/../src/render/intro.rs:55:7
+   |
+55 | const GENGAR_TILE_REMAP: [usize; 95] = [
+   |       ^^^^^^^^^^^^^^^^^
+
+warning: function `draw_gengar` is never used
+  --> crates/pokered-tui/examples/../src/render/intro.rs:64:4
+   |
+64 | fn draw_gengar(
+   |    ^^^^^^^^^^^
+
+warning: function `load_intro_tilemap` is never used
+   --> crates/pokered-tui/examples/../src/render/intro.rs:134:4
+    |
+134 | fn load_intro_tilemap(rm: &ResourceManager, filename: &str) -> Option<Vec<u8>> {
+    |    ^^^^^^^^^^^^^^^^^^
+
+warning: function `nidorino_asset_name` is never used
+   --> crates/pokered-tui/examples/../src/render/intro.rs:139:4
+    |
+139 | fn nidorino_asset_name(sprite_set: u8) -> &'static str {
+    |    ^^^^^^^^^^^^^^^^^^^
+
+warning: function `draw_nidorino` is never used
+   --> crates/pokered-tui/examples/../src/render/intro.rs:147:4
+    |
+147 | fn draw_nidorino(
+    |    ^^^^^^^^^^^^^
+
+warning: function `draw_black_bars` is never used
+   --> crates/pokered-tui/examples/../src/render/intro.rs:205:4
+    |
+205 | fn draw_black_bars(fb: &mut FrameBuffer) {
+    |    ^^^^^^^^^^^^^^^
+
+warning: function `draw_main_menu` is never used
+  --> crates/pokered-tui/examples/../src/render/menu.rs:17:8
+   |
+17 | pub fn draw_main_menu(state: &MainMenuState, fb: &mut FrameBuffer, lang: Lang) {
+   |        ^^^^^^^^^^^^^^
+
+warning: function `draw_options_menu` is never used
+  --> crates/pokered-tui/examples/../src/render/menu.rs:27:8
+   |
+27 | pub fn draw_options_menu(state: &OptionsMenuState, fb: &mut FrameBuffer, lang: Lang) {
+   |        ^^^^^^^^^^^^^^^^^
+
+warning: function `draw_save_menu` is never used
+  --> crates/pokered-tui/examples/../src/render/menu.rs:32:8
+   |
+32 | pub fn draw_save_menu(state: &SaveMenuState, fb: &mut FrameBuffer, lang: Lang) {
+   |        ^^^^^^^^^^^^^^
+
+warning: function `draw_stats_screen` is never used
+  --> crates/pokered-tui/examples/../src/render/menu.rs:52:8
+   |
+52 | pub fn draw_stats_screen(state: &StatsScreenState, fb: &mut FrameBuffer, lang: Lang) {
+   |        ^^^^^^^^^^^^^^^^^
+
+warning: function `draw_mart` is never used
+  --> crates/pokered-tui/examples/../src/render/menu.rs:57:8
+   |
+57 | pub fn draw_mart(state: &MartState, player_money: u32, bag_items: &[(pokered_data::items::ItemId, u32)], fb: &mut FrameBuffer, lang:...
+   |        ^^^^^^^^^
+
+warning: constant `TEXT_BOX_X` is never used
+  --> crates/pokered-tui/examples/../src/render/oak.rs:16:7
+   |
+16 | const TEXT_BOX_X: u32 = 0;
+   |       ^^^^^^^^^^
+
+warning: constant `TEXT_BOX_Y` is never used
+  --> crates/pokered-tui/examples/../src/render/oak.rs:17:7
+   |
+17 | const TEXT_BOX_Y: u32 = 12 * 8;
+   |       ^^^^^^^^^^
+
+warning: constant `TEXT_BOX_W` is never used
+  --> crates/pokered-tui/examples/../src/render/oak.rs:18:7
+   |
+18 | const TEXT_BOX_W: u32 = 18;
+   |       ^^^^^^^^^^
+
+warning: constant `TEXT_BOX_H` is never used
+  --> crates/pokered-tui/examples/../src/render/oak.rs:19:7
+   |
+19 | const TEXT_BOX_H: u32 = 4;
+   |       ^^^^^^^^^^
+
+warning: function `draw_oak_speech` is never used
+  --> crates/pokered-tui/examples/../src/render/oak.rs:21:8
+   |
+21 | pub fn draw_oak_speech(
+   |        ^^^^^^^^^^^^^^^
+
+warning: constant `BG` is never used
+  --> crates/pokered-tui/examples/../src/render/pc.rs:21:7
+   |
+21 | const BG: Rgba = Rgba::WHITE;
+   |       ^^
+
+warning: constant `FG` is never used
+  --> crates/pokered-tui/examples/../src/render/pc.rs:22:7
+   |
+22 | const FG: Rgba = Rgba::BLACK;
+   |       ^^
+
+warning: constant `T` is never used
+  --> crates/pokered-tui/examples/../src/render/pc.rs:24:7
+   |
+24 | const T: u32 = 8; // tile size in pixels
+   |       ^
+
+warning: function `item_name` is never used
+  --> crates/pokered-tui/examples/../src/render/pc.rs:26:4
+   |
+26 | fn item_name(id: pokered_data::items::ItemId, is_zh: bool) -> String {
+   |    ^^^^^^^^^
+
+warning: function `mon_row` is never used
+  --> crates/pokered-tui/examples/../src/render/pc.rs:36:4
+   |
+36 | fn mon_row(mon: &Pokemon) -> String {
+   |    ^^^^^^^
+
+warning: function `draw_message` is never used
+  --> crates/pokered-tui/examples/../src/render/pc.rs:43:4
+   |
+43 | fn draw_message(lines: &[String], fb: &mut FrameBuffer, is_zh: bool) {
+   |    ^^^^^^^^^^^^
+
+warning: function `draw_yes_no` is never used
+  --> crates/pokered-tui/examples/../src/render/pc.rs:55:4
+   |
+55 | fn draw_yes_no(selected_yes: bool, fb: &mut FrameBuffer, is_zh: bool) {
+   |    ^^^^^^^^^^^
+
+warning: function `draw_list` is never used
+  --> crates/pokered-tui/examples/../src/render/pc.rs:67:4
+   |
+67 | fn draw_list(
+   |    ^^^^^^^^^
+
+warning: function `follow_scroll` is never used
+  --> crates/pokered-tui/examples/../src/render/pc.rs:94:4
+   |
+94 | fn follow_scroll(cursor: usize, rows: usize, visible: usize) -> usize {
+   |    ^^^^^^^^^^^^^
+
+warning: function `mon_rows` is never used
+   --> crates/pokered-tui/examples/../src/render/pc.rs:104:4
+    |
+104 | fn mon_rows(pc: &PcScreen, save: &SaveData, is_zh: bool) -> Vec<String> {
+    |    ^^^^^^^^
+
+warning: function `item_rows` is never used
+   --> crates/pokered-tui/examples/../src/render/pc.rs:119:4
+    |
+119 | fn item_rows(pc: &PcScreen, save: &SaveData, is_zh: bool) -> Vec<String> {
+    |    ^^^^^^^^^
+
+warning: constant `BILLS_LABELS` is never used
+   --> crates/pokered-tui/examples/../src/render/pc.rs:138:7
+    |
+138 | const BILLS_LABELS: [&str; 5] = [
+    |       ^^^^^^^^^^^^
+
+warning: constant `PLAYERS_LABELS` is never used
+   --> crates/pokered-tui/examples/../src/render/pc.rs:146:7
+    |
+146 | const PLAYERS_LABELS: [&str; 4] = ["WITHDRAW ITEM", "DEPOSIT ITEM", "TOSS ITEM", "LOG OFF"];
+    |       ^^^^^^^^^^^^^^
+
+warning: function `draw_menu` is never used
+   --> crates/pokered-tui/examples/../src/render/pc.rs:149:4
+    |
+149 | fn draw_menu(bx: u32, by: u32, bw: u32, labels: &[String], cursor: usize, fb: &mut FrameBuffer) {
+    |    ^^^^^^^^^
+
+warning: function `draw_box_no` is never used
+   --> crates/pokered-tui/examples/../src/render/pc.rs:160:4
+    |
+160 | fn draw_box_no(save: &SaveData, fb: &mut FrameBuffer, is_zh: bool) {
+    |    ^^^^^^^^^^^
+
+warning: function `draw_pc` is never used
+   --> crates/pokered-tui/examples/../src/render/pc.rs:173:8
+    |
+173 | pub fn draw_pc(
+    |        ^^^^^^^
+
+warning: function `draw_league_hof` is never used
+   --> crates/pokered-tui/examples/../src/render/pc.rs:393:4
+    |
+393 | fn draw_league_hof(
+    |    ^^^^^^^^^^^^^^^
+
+warning: function `draw_pokedex_screen` is never used
+  --> crates/pokered-tui/examples/../src/render/pokedex.rs:17:8
+   |
+17 | pub fn draw_pokedex_screen(
+   |        ^^^^^^^^^^^^^^^^^^^
+
+warning: function `draw_list` is never used
+  --> crates/pokered-tui/examples/../src/render/pokedex.rs:30:4
+   |
+30 | fn draw_list(state: &PokedexScreenState, is_zh: bool, fb: &mut FrameBuffer) {
+   |    ^^^^^^^^^
+
+warning: function `draw_area` is never used
+  --> crates/pokered-tui/examples/../src/render/pokedex.rs:88:4
+   |
+88 | fn draw_area(state: &PokedexScreenState, is_zh: bool, fb: &mut FrameBuffer) {
+   |    ^^^^^^^^^
+
+warning: function `draw_entry` is never used
+   --> crates/pokered-tui/examples/../src/render/pokedex.rs:113:4
+    |
+113 | fn draw_entry(state: &PokedexScreenState, res: &mut Option<ResourceManager>, fb: &mut FrameBuffer) {
+    |    ^^^^^^^^^^
+
+warning: function `draw_trainer_card` is never used
+   --> crates/pokered-tui/examples/../src/render/pokedex.rs:189:8
+    |
+189 | pub fn draw_trainer_card(
+    |        ^^^^^^^^^^^^^^^^^
+
+warning: constant `BG` is never used
+  --> crates/pokered-tui/examples/../src/render/slots.rs:18:7
+   |
+18 | const BG: Rgba = Rgba::WHITE;
+   |       ^^
+
+warning: constant `FG` is never used
+  --> crates/pokered-tui/examples/../src/render/slots.rs:19:7
+   |
+19 | const FG: Rgba = Rgba::BLACK;
+   |       ^^
+
+warning: function `fill_rect` is never used
+  --> crates/pokered-tui/examples/../src/render/slots.rs:21:4
+   |
+21 | fn fill_rect(fb: &mut FrameBuffer, x: u32, y: u32, w: u32, h: u32, color: Rgba) {
+   |    ^^^^^^^^^
+
+warning: function `outline_rect` is never used
+  --> crates/pokered-tui/examples/../src/render/slots.rs:29:4
+   |
+29 | fn outline_rect(fb: &mut FrameBuffer, x: u32, y: u32, w: u32, h: u32, color: Rgba) {
+   |    ^^^^^^^^^^^^
+
+warning: function `draw_slots` is never used
+  --> crates/pokered-tui/examples/../src/render/slots.rs:37:8
+   |
+37 | pub fn draw_slots(slots: &SlotsScreen, fb: &mut FrameBuffer, lang: Lang) {
+   |        ^^^^^^^^^^
+
+warning: function `draw_title_screen` is never used
+  --> crates/pokered-tui/examples/../src/render/title.rs:12:8
+   |
+12 | pub fn draw_title_screen(
+   |        ^^^^^^^^^^^^^^^^^
+
+warning: function `draw_town_map` is never used
+  --> crates/pokered-tui/examples/../src/render/town_map.rs:19:8
+   |
+19 | pub fn draw_town_map(
+   |        ^^^^^^^^^^^^^
+
+warning: associated function `export_snapshot_from_sav` is never used
+   --> crates/pokered-tui/src/game.rs:645:12
+    |
+303 | impl PokemonGame {
+    | ---------------- associated function in this implementation
+...
+645 |     pub fn export_snapshot_from_sav(
+    |            ^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `pokered-tui` (example "capture_audit_acceptance") generated 116 warnings (run `cargo fix --example "capture_audit_acceptance" -p pokered-tui` to apply 13 suggestions)
+warning: `pokered-tui` (bin "pokered-tui" test) generated 1 warning
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 12.86s
+     Running unittests src/main.rs (target/debug/deps/pokered_tui-e7085a58577d4d5c)
+
+running 20 tests
+test game::tests::filter_bag_select_returns_to_overworld_with_item ... ok
+test game::tests::language_select_toggles_language_and_syncs_pipelines ... ok
+test game::tests::elevator_b_cancels_back_to_overworld ... ok
+test game::tests::bag_field_item_use_returns_to_overworld_without_rebuild ... ok
+test game::tests::new_game_clears_loaded_party ... ok
+test game::tests::fly_picks_destination_and_warps_without_overworld_rebuild ... ok
+test game::tests::bag_cancel_returns_to_start_menu ... ok
+test game::tests::diploma_a_closes_to_overworld ... ok
+test render::tests::mr_mime_keeps_dot ... ok
+test render::tests::other_special_names_strip_punctuation ... ok
+test game::tests::elevator_selects_floor_and_returns_to_overworld ... ok
+test render::elevator::filter_label_tests::filter_label_maps_item_constants_to_display_names ... ok
+test game::tests::battle_starts_carry_language ... ok
+test game::tests::rival_team_uses_saved_starter_after_lead_changes ... ok
+test render::battle::zh_render_tests::zh_battle_hud_overlays_cjk_names ... ok
+test game::tests::overworld_rebuilds_keep_script_lang_in_sync ... ok
+test game::tests::slots_full_lifecycle_persists_coins_and_exits ... ok
+test game::tests::pp_items_apply_selected_slot_through_game_flow ... ok
+test game::tests::soft_reset_needs_16_frame_hold_then_title ... ok
+test render::slots::tests::draw_slots_does_not_panic_in_all_phases ... ok
+
+test result: ok. 20 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.76s

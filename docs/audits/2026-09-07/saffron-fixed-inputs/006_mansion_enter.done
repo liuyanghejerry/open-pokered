@@ -1,0 +1,4 @@
+g.cutscene();g.step(40);snap('cinnabar-gym-correctly-locked')
+g.nav_warp(6,3,'CinnabarIsland','PokemonMansion1F');checkpoint('m73-mansion-entry')
+g.nav_warp(5,10,'PokemonMansion1F','PokemonMansion2F');g.cutscene();g.step(60)
+checkpoint('m74-mansion-2f')

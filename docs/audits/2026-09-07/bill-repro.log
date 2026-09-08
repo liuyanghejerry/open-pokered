@@ -1,0 +1,2 @@
+[resume-reentry] frame=632 screen=overworld map=Route25 pos=(44,4) party=1 money=1972 effect=None
+REPRODUCED: visible PC fails to convert; empty floor succeeds

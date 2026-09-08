@@ -110,19 +110,9 @@ game_scene SilphCo7F {
         @t("<RIVAL>: Hahaha! I thought\nyou'd turn up if I waited\nhere!\n\nI guess TEAM ROCKET slowed\nyou down! Not that I care!\n\nI saw you in SAFFRON, so I\ndecided to see if you got\nbetter!", "<RIVAL>：哈哈！我还以为你会\n在我等着的时候出现！\n\n一定是火箭队拖慢了你的脚步不\n过我不在乎！\n\n我在金黄市看到你了，所以想看\n看你有没有变得更强！")
       }
 
-      // Rival party-by-starter (orig wTrainerNo 7/8/9 from wRivalStarter). The
-      // engine derives the starter-advantage party from the rival class id, so
-      // each branch passes OPP_RIVAL2.
-      s = getRivalStarter()
-      @if (s == 0) {
-        result = startBattle("OPP_RIVAL2")
-      } @else {
-        @if (s == 1) {
-          result = startBattle("OPP_RIVAL2")
-        } @else {
-          result = startBattle("OPP_RIVAL2")
-        }
-      }
+      // Silph uses RIVAL2 parties 7/8/9 (zero-based set offset 6).
+      // Keep the result in this scope for the post-battle branches.
+      result = startBattleSet("OPP_RIVAL2", 6)
 
       @if (result == "win") {
         // SilphCo7FRivalDefeatedText
@@ -136,33 +126,35 @@ game_scene SilphCo7F {
         }
       }
 
-      setFlag("EVENT_BEAT_SILPH_CO_RIVAL")
+      @if (result == "win") {
+        setFlag("EVENT_BEAT_SILPH_CO_RIVAL")
 
-      // Orig SilphCo7FRivalAfterBattleScript: rival faces UP, player faces
-      // DOWN, then the good-luck text (SilphCo7FRivalGoodLuckToYouText).
-      faceNpc("SILPH_CO_7F_RIVAL", "up")
-      facePlayer("down")
-      @say("") {
-        @t("Well, <PLAYER>!\n\nI'm moving on up and ahead!\n\nBy checking my POKeDEX, I'm\nstarting to see what's\nstrong and how they evolve!\n\nI'm going to the POKeMON\nLEAGUE to boot out the ELITE\nFOUR!\n\nI'll become the world's most\npowerful trainer!\n\n<PLAYER>, well good luck to\nyou! Don't sweat it! Smell\nya!", "<PLAYER>，好啊！\n\n我要继续一路向前！\n\n靠我的图鉴，我开始了解什么样\n的宝可梦很强，以及如何进化！\n\n我要去宝可梦联盟把四天王赶下\n台！\n\n我会成为世界上最强的训练家！\n\n<PLAYER>，祝你好运！别担心！\n后会有期！")
-      }
+        // Orig SilphCo7FRivalAfterBattleScript: rival faces UP, player faces
+        // DOWN, then the good-luck text (SilphCo7FRivalGoodLuckToYouText).
+        faceNpc("SILPH_CO_7F_RIVAL", "up")
+        facePlayer("down")
+        @say("") {
+          @t("Well, <PLAYER>!\n\nI'm moving on up and ahead!\n\nBy checking my POKeDEX, I'm\nstarting to see what's\nstrong and how they evolve!\n\nI'm going to the POKeMON\nLEAGUE to boot out the ELITE\nFOUR!\n\nI'll become the world's most\npowerful trainer!\n\n<PLAYER>, well good luck to\nyou! Don't sweat it! Smell\nya!", "<PLAYER>，好啊！\n\n我要继续一路向前！\n\n靠我的图鉴，我开始了解什么样\n的宝可梦很强，以及如何进化！\n\n我要去宝可梦联盟把四天王赶下\n台！\n\n我会成为世界上最强的训练家！\n\n<PLAYER>，祝你好运！别担心！\n后会有期！")
+        }
 
-      // Orig exit movement (branch on the saved coord index): player at (3,2)
-      // -> rival (at (3,3)) walks RIGHT x2 to (5,3) (RivalExitRightMovement);
-      // player at (3,3) -> rival (at (3,4)) walks LEFT, UP x2, RIGHT x3, DOWN
-      // around the player to (5,3) (RivalWalkAroundPlayerMovement).
-      playSound("SFX_STOP_ALL_MUSIC")
-      // Orig SilphCo7F.asm:226: Music_RivalAlternateStart — the rival theme
-      // restarts with a different first measure as he walks off.
-      playMusic("MUSIC_MEET_RIVAL_ALTERNATE_START")
-      setJoyIgnore(0xF0)
-      @if (getPlayerY() == 2) {
-        moveNpc("SILPH_CO_7F_RIVAL", [[4, 3], [5, 3]])
-      } @else {
-        moveNpc("SILPH_CO_7F_RIVAL", [[2, 4], [2, 3], [2, 2], [3, 2], [4, 2], [5, 2], [5, 3]])
+        // Orig exit movement (branch on the saved coord index): player at (3,2)
+        // -> rival (at (3,3)) walks RIGHT x2 to (5,3) (RivalExitRightMovement);
+        // player at (3,3) -> rival (at (3,4)) walks LEFT, UP x2, RIGHT x3, DOWN
+        // around the player to (5,3) (RivalWalkAroundPlayerMovement).
+        playSound("SFX_STOP_ALL_MUSIC")
+        // Orig SilphCo7F.asm:226: Music_RivalAlternateStart — the rival theme
+        // restarts with a different first measure as he walks off.
+        playMusic("MUSIC_MEET_RIVAL_ALTERNATE_START")
+        setJoyIgnore(0xF0)
+        @if (getPlayerY() == 2) {
+          moveNpc("SILPH_CO_7F_RIVAL", [[4, 3], [5, 3]])
+        } @else {
+          moveNpc("SILPH_CO_7F_RIVAL", [[2, 4], [2, 3], [2, 2], [3, 2], [4, 2], [5, 2], [5, 3]])
+        }
+        hideObjectByName("SILPH_CO_7F_RIVAL")
+        playMusic("MUSIC_SILPH_CO")
+        clearJoyIgnore()
       }
-      hideObjectByName("SILPH_CO_7F_RIVAL")
-      playMusic("MUSIC_SILPH_CO")
-      clearJoyIgnore()
     }
   }
 

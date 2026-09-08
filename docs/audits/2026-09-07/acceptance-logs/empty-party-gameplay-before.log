@@ -1,0 +1,45 @@
+[m02] frame=1921 screen=overworld map=RedsHouse2F pos=(3,6) party=0 money=0 effect=None
+{'frame_count': 1922, 'map_name': 'RedsHouse2F', 'player_x': 3, 'player_y': 6, 'player_facing': 'Down', 'screen': 'overworld', 'active_script_effect': None, 'warp_fade': 'Idle'}
+{'cmd': 'get_npcs'}
+{'frame_count': 1924, 'map_name': 'RedsHouse2F', 'player_x': 3, 'player_y': 6, 'player_facing': 'Down', 'screen': 'overworld', 'active_script_effect': None, 'warp_fade': 'Idle'}
+{'cmd': 'press_sequence', 'buttons': ['right', 'right', 'right', 'right', 'right', 'right', 'right', 'right']}
+{'cmd': 'step_frames', 'count': 12}
+{'frame_count': 1939, 'map_name': 'RedsHouse2F', 'player_x': 4, 'player_y': 6, 'player_facing': 'Right', 'screen': 'overworld', 'active_script_effect': None, 'warp_fade': 'Idle'}
+{'frame_count': 1940, 'map_name': 'RedsHouse2F', 'player_x': 4, 'player_y': 6, 'player_facing': 'Right', 'screen': 'overworld', 'active_script_effect': None, 'warp_fade': 'Idle'}
+{'cmd': 'press_sequence', 'buttons': ['up', 'up', 'up', 'up', 'up', 'up', 'up', 'up', 'up', 'up', 'up', 'up', 'up', 'up', 'up', 'up', 'up', 'up', 'up', 'up', 'up', 'up', 'up', 'up', 'up', 'up', 'up', 'up', 'up', 'up', 'up', 'up', 'up', 'up', 'up', 'up', 'up', 'up', 'up', 'up']}
+{'cmd': 'step_frames', 'count': 44}
+{'frame_count': 1987, 'map_name': 'RedsHouse2F', 'player_x': 4, 'player_y': 3, 'player_facing': 'Up', 'screen': 'overworld', 'active_script_effect': None, 'warp_fade': 'FadingOut { frames_remaining: 3 }'}
+{'frame_count': 1988, 'map_name': 'RedsHouse2F', 'player_x': 4, 'player_y': 3, 'player_facing': 'Up', 'screen': 'overworld', 'active_script_effect': None, 'warp_fade': 'FadingOut { frames_remaining: 2 }'}
+{'cmd': 'press_sequence', 'buttons': ['right', 'right', 'right', 'right', 'right', 'right', 'right', 'right', 'right', 'right', 'right', 'right', 'right', 'right', 'right', 'right', 'right', 'right', 'right', 'right', 'right', 'right', 'right', 'right']}
+{'cmd': 'step_frames', 'count': 28}
+{'frame_count': 2019, 'map_name': 'PalletTown', 'player_x': 5, 'player_y': 6, 'player_facing': 'Up', 'screen': 'overworld', 'active_script_effect': None, 'warp_fade': 'Idle'}
+{'cmd': 'step_frames', 'count': 8}
+{'frame_count': 2029, 'map_name': 'PalletTown', 'player_x': 5, 'player_y': 6, 'player_facing': 'Up', 'screen': 'overworld', 'active_script_effect': None, 'warp_fade': 'Idle'}
+{'frame_count': 2030, 'map_name': 'PalletTown', 'player_x': 5, 'player_y': 6, 'player_facing': 'Up', 'screen': 'overworld', 'active_script_effect': None, 'warp_fade': 'Idle'}
+Traceback (most recent call last):
+  File "/Users/liuyanghe02/develop/open-pokered-3/scripts/playthrough.py", line 689, in nav_warp
+    self.nav_to(x, y, map_name=from_map, tries=tries)
+    ~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/liuyanghe02/develop/open-pokered-3/scripts/playthrough.py", line 462, in nav_to
+    raise NavError(f"warped out of {map_name} -> {cm}")
+playthrough.NavError: warped out of RedsHouse2F -> PalletTown
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/tmp/audit-m03-repro.py", line 17, in <module>
+    pt.m03_leave_house(g)
+    ~~~~~~~~~~~~~~~~~~^^^
+  File "/Users/liuyanghe02/develop/open-pokered-3/scripts/playthrough.py", line 1169, in m03_leave_house
+    g.nav_warp(7, 1, "RedsHouse2F", "RedsHouse1F")   # stairs down
+    ~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/liuyanghe02/develop/open-pokered-3/scripts/playthrough.py", line 697, in nav_warp
+    self.nav_to(*inner, map_name=from_map,
+    ~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                tries=tries)
+                ^^^^^^^^^^^^
+  File "/Users/liuyanghe02/develop/open-pokered-3/scripts/playthrough.py", line 462, in nav_to
+    raise NavError(f"warped out of {map_name} -> {cm}")
+playthrough.NavError: warped out of RedsHouse2F -> PalletTown
+{'frame_count': 2031, 'map_name': 'PalletTown', 'player_x': 5, 'player_y': 6, 'player_facing': 'Up', 'screen': 'overworld', 'active_script_effect': None, 'warp_fade': 'Idle'}
+{'active_script_effect': None, 'battle_bag': None, 'battle_inventory': [], 'battle_live': None, 'battle_message': None, 'battle_moves': None, 'battle_party_cursor': 0, 'battle_phase': 'Intro { phase: TransitionFlash, wait_frames: 72 }', 'choice': None, 'coins': 0, 'dialogue': None, 'dialogue_state': None, 'frame_count': 2031, 'map_id': 0, 'map_name': 'PalletTown', 'money': 0, 'party': [], 'party_count': 0, 'pc_phase': None, 'player_facing': 'Up', 'player_movement_state': 'Idle', 'player_name': 'RED', 'player_x': 5, 'player_y': 6, 'screen': 'overworld', 'script_awaiting_battle': False, 'script_effect': None, 'script_running': False, 'shop_phase': None, 'text_speed_delay_frames': 3, 'warp_fade': 'Idle'}

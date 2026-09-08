@@ -1,0 +1,5 @@
+g.nav_to(41,12,'Route18')
+for _ in range(90):
+ if any(p['species'] in fly_species for p in g.d.cmd(cmd='get_party')['data']):break
+ g.nav_to(41,14,'Route18');g.nav_to(41,12,'Route18')
+checkpoint('m46-route18-party')

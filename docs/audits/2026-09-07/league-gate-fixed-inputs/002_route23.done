@@ -1,0 +1,5 @@
+g.nav_to(8,7,'Route22');g.nav_warp(8,5,'Route22','Route22Gate')
+g.nav_to(4,1,'Route22Gate');g.d.drive(['up']*8,frames=16);g.cutscene();g.step(60)
+assert g.st()['map_name']=='Route23',g.st()
+checkpoint('m97-route23-entered')
+g.nav_to(10,105,'Route23');g.cutscene();checkpoint('m98-route23-rainbow-check')

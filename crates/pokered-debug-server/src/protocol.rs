@@ -13,6 +13,11 @@ pub use dotzuki_app::debug_server::{CoreDebugCommand, DebugResponse};
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(tag = "cmd", rename_all = "snake_case")]
 pub enum GameDebugCommand {
+    /// Render the current screen to a PNG without advancing simulation.
+    /// Native debug harness only; the parent directory must already exist.
+    CaptureFrame { path: String },
+    /// Read the live overworld blocks, including script and field-move edits.
+    GetMap,
     /// Get the player's party Pokémon data.
     GetParty,
     /// Synchronously step the game until a named condition holds (checked

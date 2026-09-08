@@ -35,5 +35,6 @@
       "id": 1,
       "talk": "signLeagueGate"
     }
-  ]
+  ],
+  "onLoad": "Route22OnLoad"
 }

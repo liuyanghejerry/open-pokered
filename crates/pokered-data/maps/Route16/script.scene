@@ -92,7 +92,12 @@ game_scene Route16 {
       // Static wild Lv30 SNORLAX battle (catchable). On win/catch it is cleared;
       // on flee/lose it stays woken (EVENT_FIGHT set) and re-fights on next talk.
       result = startWildBattle("SNORLAX", 30)
-      @if (result == "win" || result == "caught") {
+      // Caught: skip the mountains line (same wBattleResult == 2 rule as
+      // Route12.asm:50 — the report's Route16 linkage).
+      @if (result == "caught") {
+        setFlag("EVENT_BEAT_ROUTE16_SNORLAX")
+        hideObjectByName("ROUTE_16_OBJ_7")
+      } @else @if (result == "win") {
         @speaker("") { @t("With a big yawn, SNORLAX\nreturned to the mountains!", "卡比兽打个大哈欠，回到了山\n里！") }
         setFlag("EVENT_BEAT_ROUTE16_SNORLAX")
         hideObjectByName("ROUTE_16_OBJ_7")

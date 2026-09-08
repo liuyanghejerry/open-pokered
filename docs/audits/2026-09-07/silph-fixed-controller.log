@@ -1,0 +1,43 @@
+[resume-reentry] frame=640 screen=overworld map=SaffronCity pos=(9,29) party=3 money=5366 effect=None
+CHECKPOINT tower-resumed SaffronCity 9 29 [{'hp': 149, 'level': 47, 'max_hp': 149, 'moves': ['MegaDrain', 'Cut', 'LeechSeed', 'Growth'], 'pp': [10, 30, 10, 40], 'species': 'Venusaur', 'status': 'None'}, {'hp': 137, 'level': 30, 'max_hp': 137, 'moves': ['IceBeam', 'Surf', 'Rest', 'Strength'], 'pp': [10, 15, 10, 15], 'species': 'Snorlax', 'status': 'None'}, {'hp': 52, 'level': 24, 'max_hp': 52, 'moves': ['Peck', 'Growl', 'FuryAttack', 'Fly'], 'pp': [35, 40, 20, 15], 'species': 'Doduo', 'status': 'None'}]
+GAME_LOG /var/folders/d2/2fv86m890m34_13rn_t3d79w0000gn/T/pokered-run-a5k2rejj/game.log
+READY
+RUN 001_helpers.py
+DONE 001_helpers.py
+RUN 002_replay_card_key.py
+CHECKPOINT m52-card-key SilphCo5F 20 16 [{'hp': 149, 'level': 47, 'max_hp': 149, 'moves': ['MegaDrain', 'Cut', 'LeechSeed', 'Growth'], 'pp': [7, 30, 9, 40], 'species': 'Venusaur', 'status': 'None'}, {'hp': 137, 'level': 30, 'max_hp': 137, 'moves': ['IceBeam', 'Surf', 'Rest', 'Strength'], 'pp': [10, 15, 10, 15], 'species': 'Snorlax', 'status': 'None'}, {'hp': 52, 'level': 24, 'max_hp': 52, 'moves': ['Peck', 'Growl', 'FuryAttack', 'Fly'], 'pp': [35, 40, 20, 15], 'species': 'Doduo', 'status': 'None'}]
+CHECKPOINT m53-silph-3f-door SilphCo3F 15 9 [{'hp': 115, 'level': 48, 'max_hp': 152, 'moves': ['MegaDrain', 'Cut', 'LeechSeed', 'Growth'], 'pp': [0, 26, 2, 40], 'species': 'Venusaur', 'status': 'None'}, {'hp': 137, 'level': 30, 'max_hp': 137, 'moves': ['IceBeam', 'Surf', 'Rest', 'Strength'], 'pp': [10, 15, 10, 15], 'species': 'Snorlax', 'status': 'None'}, {'hp': 52, 'level': 24, 'max_hp': 52, 'moves': ['Peck', 'Growl', 'FuryAttack', 'Fly'], 'pp': [35, 40, 20, 15], 'species': 'Doduo', 'status': 'None'}]
+DONE 002_replay_card_key.py
+RUN 003_rival_fixed.py
+Traceback (most recent call last):
+  File "/tmp/pokered-completion-20260907-silph-fixed/controller.py", line 81, in <module>
+    exec(compile(__task_path.read_text(),str(__task_path),'exec'),globals())
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/pokered-completion-20260907-silph-fixed/inbox/003_rival_fixed.py", line 2, in <module>
+    checkpoint('m54-silph-rival-ready-fixed')
+    ~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/pokered-completion-20260907-silph-fixed/controller.py", line 44, in checkpoint
+    assert s['screen']=='overworld' and not s['script_running'],s
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: {'active_script_effect': 'ReplaceTileBlock', 'battle_bag': None, 'battle_inventory': [{'item': 'OldRod', 'qty': 1}, {'item': 'Hm01', 'qty': 1}, {'item': 'Bicycle', 'qty': 1}, {'item': 'ParlyzHeal', 'qty': 3}, {'item': 'Awakening', 'qty': 3}, {'item': 'BurnHeal', 'qty': 2}, {'item': 'SilphScope', 'qty': 1}, {'item': 'RareCandy', 'qty': 1}, {'item': 'PokeFlute', 'qty': 1}, {'item': 'Hm03', 'qty': 1}, {'item': 'Hm04', 'qty': 1}, {'item': 'SuperPotion', 'qty': 9}, {'item': 'Revive', 'qty': 3}, {'item': 'FullHeal', 'qty': 5}, {'item': 'Tm06', 'qty': 1}, {'item': 'GreatBall', 'qty': 13}, {'item': 'Hm02', 'qty': 1}, {'item': 'CardKey', 'qty': 1}], 'battle_live': {'enemy': {'hp': 0, 'level': 28, 'max_hp': 73, 'species': 'Raticate', 'status': 'None'}, 'enemy_party': [{'hp': 0, 'level': 28, 'species': 'Raticate'}, {'hp': 0, 'level': 28, 'species': 'Hypno'}, {'hp': 0, 'level': 28, 'species': 'Raticate'}], 'player': {'hp': 115, 'level': 48, 'max_hp': 152, 'species': 'Venusaur', 'status': 'None'}}, 'battle_message': None, 'battle_moves': None, 'battle_phase': 'TrainerVictory { phase: EndBattleText, wait_frames: 0, player_won: true }', 'choice': None, 'coins': 0, 'dialogue': None, 'dialogue_state': None, 'frame_count': 11394, 'map_id': 212, 'map_name': 'SilphCo7F', 'money': 8496, 'party': [{'hp': 115, 'level': 48, 'max_hp': 152, 'moves': ['MegaDrain', 'Cut', 'LeechSeed', 'Growth'], 'pp': [0, 26, 2, 40], 'species': 'Venusaur', 'status': 'None'}, {'hp': 137, 'level': 30, 'max_hp': 137, 'moves': ['IceBeam', 'Surf', 'Rest', 'Strength'], 'pp': [10, 15, 10, 15], 'species': 'Snorlax', 'status': 'None'}, {'hp': 52, 'level': 24, 'max_hp': 52, 'moves': ['Peck', 'Growl', 'FuryAttack', 'Fly'], 'pp': [35, 40, 20, 15], 'species': 'Doduo', 'status': 'None'}], 'party_count': 3, 'pc_phase': None, 'player_facing': 'Left', 'player_movement_state': 'Idle', 'player_name': 'RED', 'player_x': 5, 'player_y': 3, 'screen': 'overworld', 'script_awaiting_battle': False, 'script_effect': {'block_id': 84, 'effect': 'ReplaceTileBlock', 'x': 5, 'y': 3}, 'script_running': True, 'shop_phase': None, 'text_speed_delay_frames': 3, 'warp_fade': 'Idle'}
+FAILED 003_rival_fixed.py
+RUN 004_rival_settle.py
+CHECKPOINT m54-silph-rival-ready-fixed SilphCo7F 5 3 [{'hp': 115, 'level': 48, 'max_hp': 152, 'moves': ['MegaDrain', 'Cut', 'LeechSeed', 'Growth'], 'pp': [0, 26, 2, 40], 'species': 'Venusaur', 'status': 'None'}, {'hp': 137, 'level': 30, 'max_hp': 137, 'moves': ['IceBeam', 'Surf', 'Rest', 'Strength'], 'pp': [10, 15, 10, 15], 'species': 'Snorlax', 'status': 'None'}, {'hp': 52, 'level': 24, 'max_hp': 52, 'moves': ['Peck', 'Growl', 'FuryAttack', 'Fly'], 'pp': [35, 40, 20, 15], 'species': 'Doduo', 'status': 'None'}]
+SuperPotion 69 / 152 remaining before 9
+SuperPotion 79 / 152 remaining before 8
+SuperPotion 40 / 155 remaining before 7
+SuperPotion 63 / 155 remaining before 6
+FullHeal 83 / 155 remaining before 5
+SuperPotion 83 / 155 remaining before 5
+CHECKPOINT m55-silph-rival-won SilphCo7F 3 3 [{'hp': 106, 'level': 49, 'max_hp': 155, 'moves': ['MegaDrain', 'Cut', 'LeechSeed', 'Growth'], 'pp': [0, 9, 0, 40], 'species': 'Venusaur', 'status': 'None'}, {'hp': 137, 'level': 30, 'max_hp': 137, 'moves': ['IceBeam', 'Surf', 'Rest', 'Strength'], 'pp': [10, 15, 10, 15], 'species': 'Snorlax', 'status': 'None'}, {'hp': 52, 'level': 24, 'max_hp': 52, 'moves': ['Peck', 'Growl', 'FuryAttack', 'Fly'], 'pp': [35, 40, 20, 15], 'species': 'Doduo', 'status': 'None'}]
+DONE 004_rival_settle.py
+RUN 005_lapras.py
+CHECKPOINT m56-lapras SilphCo7F 2 5 [{'hp': 106, 'level': 49, 'max_hp': 155, 'moves': ['MegaDrain', 'Cut', 'LeechSeed', 'Growth'], 'pp': [0, 9, 0, 40], 'species': 'Venusaur', 'status': 'None'}, {'hp': 137, 'level': 30, 'max_hp': 137, 'moves': ['IceBeam', 'Surf', 'Rest', 'Strength'], 'pp': [10, 15, 10, 15], 'species': 'Snorlax', 'status': 'None'}, {'hp': 52, 'level': 24, 'max_hp': 52, 'moves': ['Peck', 'Growl', 'FuryAttack', 'Fly'], 'pp': [35, 40, 20, 15], 'species': 'Doduo', 'status': 'None'}, {'hp': 66, 'level': 15, 'max_hp': 66, 'moves': ['WaterGun', 'Growl', 'None', 'None'], 'pp': [25, 40, 0, 0], 'species': 'Lapras', 'status': 'None'}]
+DONE 005_lapras.py
+RUN 006_boardroom_door.py
+SuperPotion 82 / 155 remaining before 4
+DONE 006_boardroom_door.py
+RUN 007_door_interactions.py
+CHECKPOINT m57-boardroom-blocked SilphCo11F 7 14 [{'hp': 132, 'level': 49, 'max_hp': 155, 'moves': ['MegaDrain', 'Cut', 'LeechSeed', 'Growth'], 'pp': [0, 5, 0, 40], 'species': 'Venusaur', 'status': 'None'}, {'hp': 137, 'level': 30, 'max_hp': 137, 'moves': ['IceBeam', 'Surf', 'Rest', 'Strength'], 'pp': [10, 15, 10, 15], 'species': 'Snorlax', 'status': 'None'}, {'hp': 52, 'level': 24, 'max_hp': 52, 'moves': ['Peck', 'Growl', 'FuryAttack', 'Fly'], 'pp': [35, 40, 20, 15], 'species': 'Doduo', 'status': 'None'}, {'hp': 66, 'level': 15, 'max_hp': 66, 'moves': ['WaterGun', 'Growl', 'None', 'None'], 'pp': [25, 40, 0, 0], 'species': 'Lapras', 'status': 'None'}]
+DONE 007_door_interactions.py
+RUN 099_stop.py

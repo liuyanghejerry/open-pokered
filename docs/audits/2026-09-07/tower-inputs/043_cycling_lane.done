@@ -1,0 +1,6 @@
+g.nav_to(10,0,'Route18');g.d.drive(['up']*24,frames=24)
+assert g.st()['map_name']=='Route17',g.st()
+snap('cycling-road-south-entry')
+g.nav_to(8,0,'Route17');g.d.drive(['up']*24,frames=24);g.step(40)
+assert g.st()['map_name']=='Route16',g.st()
+checkpoint('m48-cycling-north')

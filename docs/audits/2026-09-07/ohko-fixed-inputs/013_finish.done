@@ -1,0 +1,4 @@
+snap('m153-the-end');g.tap('a',8);g.step(120);snap('m154-title-after-credits')
+assert g.st()['screen']=='title',g.st()
+shutil.copy2(OUT/'active.sav',OUT/'m154-auto-saved.sav')
+shutil.copy2(OUT/'bin/pokered.script_flags.json',OUT/'m154-auto-saved.script_flags.json')

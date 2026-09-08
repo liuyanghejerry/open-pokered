@@ -1,0 +1,3 @@
+g.nav_warp(8,5,'Route22','Route22Gate');checkpoint('m96-route22-gate')
+g.nav_to(4,1,'Route22Gate');snap('league-gate-north-before')
+g.d.drive(['up']*8,frames=16);g.cutscene();g.step(60);snap('league-gate-north-after')

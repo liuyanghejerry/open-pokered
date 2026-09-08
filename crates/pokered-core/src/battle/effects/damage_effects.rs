@@ -119,9 +119,9 @@ pub fn apply_special_damage(
 }
 
 pub fn apply_ohko(state: &mut BattleState) -> EffectResult {
-    let attacker_level = state.attacker().active_mon().level;
-    let defender_level = state.defender().active_mon().level;
-    if attacker_level < defender_level {
+    let attacker_speed = crate::battle::turn_order::effective_speed_for(state.attacker());
+    let defender_speed = crate::battle::turn_order::effective_speed_for(state.defender());
+    if attacker_speed < defender_speed {
         state.critical_or_ohko = 0xFF;
         return EffectResult::OhkoFailed;
     }
@@ -253,20 +253,24 @@ mod tests {
     }
 
     #[test]
-    fn ohko_fails_if_lower_level() {
+    fn ohko_fails_if_slower_despite_higher_level() {
         let mut state = make_state();
-        state.player.active_mon_mut().level = 30;
-        state.enemy.active_mon_mut().level = 50;
+        state.player.active_mon_mut().level = 61;
+        state.enemy.active_mon_mut().level = 52;
+        state.player.active_mon_mut().speed = 50;
+        state.enemy.active_mon_mut().speed = 100;
         let result = apply_ohko(&mut state);
         assert_eq!(result, EffectResult::OhkoFailed);
         assert_eq!(state.critical_or_ohko, 0xFF);
     }
 
     #[test]
-    fn ohko_succeeds_if_higher_level() {
+    fn ohko_succeeds_if_faster_despite_lower_level() {
         let mut state = make_state();
-        state.player.active_mon_mut().level = 50;
-        state.enemy.active_mon_mut().level = 30;
+        state.player.active_mon_mut().level = 30;
+        state.enemy.active_mon_mut().level = 61;
+        state.player.active_mon_mut().speed = 100;
+        state.enemy.active_mon_mut().speed = 50;
         let result = apply_ohko(&mut state);
         assert_eq!(result, EffectResult::OhkoSuccess);
         assert_eq!(state.enemy.active_mon().hp, 0);

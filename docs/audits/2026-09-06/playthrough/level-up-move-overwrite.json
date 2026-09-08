@@ -1,0 +1,149 @@
+[
+  {
+    "active_script_effect": null,
+    "battle_message": null,
+    "battle_moves": null,
+    "battle_phase": "Intro { phase: TransitionFlash, wait_frames: 72 }",
+    "choice": null,
+    "coins": 0,
+    "dialogue": null,
+    "dialogue_state": null,
+    "frame_count": 20,
+    "map_id": 0,
+    "map_name": "PalletTown",
+    "money": 1924,
+    "party": [
+      {
+        "hp": 58,
+        "level": 20,
+        "max_hp": 58,
+        "moves": [
+          "Tackle",
+          "Growl",
+          "LeechSeed",
+          "VineWhip"
+        ],
+        "pp": [
+          35,
+          40,
+          10,
+          10
+        ],
+        "species": "Ivysaur",
+        "status": "None"
+      }
+    ],
+    "party_count": 0,
+    "pc_phase": null,
+    "player_facing": "Down",
+    "player_movement_state": "Idle",
+    "player_name": "RED",
+    "player_x": 0,
+    "player_y": 0,
+    "screen": "gamefreak-splash",
+    "script_awaiting_battle": false,
+    "script_effect": null,
+    "script_running": false,
+    "text_speed_delay_frames": 3,
+    "warp_fade": "Idle"
+  },
+  {
+    "active_script_effect": null,
+    "battle_message": null,
+    "battle_moves": null,
+    "battle_phase": "TrainerVictory { phase: EndBattleText, wait_frames: 0, player_won: true }",
+    "choice": null,
+    "coins": 0,
+    "dialogue": null,
+    "dialogue_state": null,
+    "frame_count": 2828,
+    "map_id": 65,
+    "map_name": "CeruleanGym",
+    "money": 2384,
+    "party": [
+      {
+        "hp": 58,
+        "level": 21,
+        "max_hp": 60,
+        "moves": [
+          "Tackle",
+          "Growl",
+          "LeechSeed",
+          "VineWhip"
+        ],
+        "pp": [
+          33,
+          40,
+          10,
+          8
+        ],
+        "species": "Ivysaur",
+        "status": "None"
+      }
+    ],
+    "party_count": 1,
+    "pc_phase": null,
+    "player_facing": "Left",
+    "player_movement_state": "Idle",
+    "player_name": "RED",
+    "player_x": 4,
+    "player_y": 3,
+    "screen": "overworld",
+    "script_awaiting_battle": false,
+    "script_effect": null,
+    "script_running": false,
+    "text_speed_delay_frames": 3,
+    "warp_fade": "FadingIn { frames_remaining: 13 }"
+  },
+  {
+    "active_script_effect": "ShowDialogue",
+    "battle_message": null,
+    "battle_moves": null,
+    "battle_phase": "TrainerVictory { phase: EndBattleText, wait_frames: 0, player_won: true }",
+    "choice": null,
+    "coins": 0,
+    "dialogue": null,
+    "dialogue_state": null,
+    "frame_count": 4403,
+    "map_id": 65,
+    "map_name": "CeruleanGym",
+    "money": 4463,
+    "party": [
+      {
+        "hp": 39,
+        "level": 22,
+        "max_hp": 63,
+        "moves": [
+          "Tackle",
+          "Growl",
+          "LeechSeed",
+          "Poisonpowder"
+        ],
+        "pp": [
+          32,
+          40,
+          10,
+          35
+        ],
+        "species": "Ivysaur",
+        "status": "None"
+      }
+    ],
+    "party_count": 1,
+    "pc_phase": null,
+    "player_facing": "Up",
+    "player_movement_state": "Idle",
+    "player_name": "RED",
+    "player_x": 4,
+    "player_y": 3,
+    "screen": "overworld",
+    "script_awaiting_battle": false,
+    "script_effect": {
+      "effect": "ShowDialogue",
+      "text": "Wow! You're too much!\n\nAll right!\n\nYou can have the\nCASCADEBADGE to show you\nbeat me!"
+    },
+    "script_running": true,
+    "text_speed_delay_frames": 3,
+    "warp_fade": "FadingIn { frames_remaining: 13 }"
+  }
+]

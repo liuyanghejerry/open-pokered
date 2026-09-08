@@ -1,0 +1,9 @@
+assert not g.d.cmd(cmd='get_flags')['data'].get('EVENT_1ST_ROUTE22_RIVAL_BATTLE'),g.st()
+snap('route22-stage-flags-fixed')
+g.d.drive(['left']*8,frames=16);g.cutscene();g.step(30)
+s=snap('route22-final-rival-correct-party')
+assert s['screen']=='battle' and s['battle_live']['enemy']['species']=='Pidgeot',s
+g.battle_loop(prefer='fight');g.cutscene();g.step(60);g.cutscene()
+snap('route22-final-rival-result')
+assert g.d.cmd(cmd='get_flags')['data'].get('EVENT_BEAT_ROUTE22_RIVAL_2ND_BATTLE'),g.st()
+checkpoint('m95-final-route22-rival-won')

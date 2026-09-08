@@ -1,0 +1,34 @@
+for _ in range(50):
+ if g.st()['battle_phase']=='PlayerFaintSwitch':break
+ g.tap('a',10)
+assert g.st()['battle_phase']=='PlayerFaintSwitch',g.st()
+# Last selected battle-party index is Snorlax (1); choose Doduo (2).
+g.tap('down',8);g.tap('a',10);g.step(30)
+for _ in range(100):
+ if g.st()['battle_phase']=='PlayerMenu':break
+ g.tap('a',10)
+assert g.st()['battle_live']['player']['species']=='Doduo',g.st()
+g.d.drive(['down','left'],frames=10);g.tap('a',4);assert g._await_phase('BagSelect',120)
+for _ in range(30):
+ menu=g.st()['battle_bag'];target=next(i for i,v in enumerate(menu['items']) if v['item']=='Revive')
+ if menu['cursor']==target:break
+ g.tap('down',4)
+g.tap('a',4);g.step(10);assert g.st()['battle_phase'].startswith('ItemTargetSelect'),g.st()
+g.tap('down',8);g.tap('a',10);g.step(30)
+snap('giovanni-revive-snorlax')
+# Continue manually until we can switch back or a replacement is required.
+for _ in range(150):
+ if g.st()['battle_phase'] in ['PlayerMenu','PlayerFaintSwitch']:break
+ g.tap('a',10)
+s=g.st()
+if s['battle_phase']=='PlayerMenu':
+ g.d.drive(['up','right'],frames=10);g.tap('a',4);assert g._await_phase('PartySelect',120)
+ g.tap('down',8);g.tap('a',8);g.tap('a',8)
+else:
+ # Item target menu left its cursor on Snorlax (1).
+ g.tap('a',10)
+g.step(30);snap('giovanni-snorlax-revived-active')
+g.battle_loop(prefer='fight');g.cutscene();g.step(60)
+snap('giovanni-silph-result')
+assert g.d.cmd(cmd='get_flags')['data'].get('EVENT_BEAT_SILPH_CO_GIOVANNI'),g.st()
+checkpoint('m58-silph-giovanni')

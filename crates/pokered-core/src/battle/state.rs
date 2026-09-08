@@ -503,13 +503,16 @@ impl BattleState {
 }
 
 pub fn new_battler_state(party: Vec<Pokemon>) -> BattlerState {
-    let mon = &party[0];
+    // Send out the first mon with HP remaining (core.asm:216); an all-fainted
+    // party falls back to the lead.
+    let active_index = party.iter().position(|m| m.hp > 0).unwrap_or(0);
+    let mon = &party[active_index];
     let attack = mon.attack;
     let defense = mon.defense;
     let speed = mon.speed;
     let special = mon.special;
     BattlerState {
-        active_pokemon_index: 0,
+        active_pokemon_index: active_index,
         party,
         stat_stages: StatStages::default(),
         battle_status1: 0,
@@ -649,6 +652,29 @@ mod tests {
         let battler = new_battler_state(party);
         assert_eq!(battler.active_mon().species, Species::Pikachu);
         assert_eq!(battler.active_mon().level, 25);
+    }
+
+    /// Battle start sends out the first mon with HP remaining (core.asm:216),
+    /// never a fainted party lead.
+    #[test]
+    fn battle_start_skips_fainted_lead() {
+        let mut fainted = make_test_pokemon();
+        fainted.hp = 0;
+        let backup = make_test_pokemon();
+
+        let battler = new_battler_state(vec![fainted, backup.clone()]);
+        assert_eq!(battler.active_pokemon_index, 1, "first alive mon is sent out");
+        assert_eq!(battler.active_mon().species, Species::Pikachu);
+        assert_eq!(
+            battler.unmodified_speed, backup.speed,
+            "working stats come from the sent-out mon"
+        );
+
+        // Everyone fainted: fall back to index 0 instead of panicking.
+        let mut dead = make_test_pokemon();
+        dead.hp = 0;
+        let battler = new_battler_state(vec![dead]);
+        assert_eq!(battler.active_pokemon_index, 0);
     }
 
     #[test]

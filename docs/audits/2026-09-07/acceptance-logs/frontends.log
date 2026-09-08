@@ -1,0 +1,1547 @@
+error: invalid character `{` in package name: `{{project-name}}`, the first character must be a Unicode XID start character (most letters or `_`)
+ --> ../../.cargo/git/checkouts/dotzuki-10858e612e941535/88f1fcc/workspace/dotzuki-template/Cargo.toml:4:8
+  |
+4 | name = "{{project-name}}"
+  |        ^^^^^^^^^^^^^^^^^^
+warning: pokered-renderer@0.1.0: CJK glyphs generated: 519 chars (95 ASCII + 562 CJK)
+warning: function `emit_flex_container` is never used
+    --> crates/pokered-data/build.rs:2138:4
+     |
+2138 | fn emit_flex_container(out: &mut String, flex: &serde_json::Value) {
+     |    ^^^^^^^^^^^^^^^^^^^
+     |
+     = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: function `emit_list_params` is never used
+    --> crates/pokered-data/build.rs:2390:4
+     |
+2390 | fn emit_list_params(out: &mut String, list: &serde_json::Value) {
+     |    ^^^^^^^^^^^^^^^^
+
+warning: `pokered-data` (build script) generated 2 warnings
+   Compiling pokered-data v0.1.0 (/Users/liuyanghe02/develop/open-pokered-3/crates/pokered-data)
+   Compiling pokered-debug-server v0.1.0 (/Users/liuyanghe02/develop/open-pokered-3/crates/pokered-debug-server)
+warning: unused imports: `Display`, `EnumCount`, `EnumIter`, and `EnumString`
+ --> crates/pokered-data/src/items.rs:3:20
+  |
+3 | use strum_macros::{Display, EnumCount, EnumIter, EnumString};
+  |                    ^^^^^^^  ^^^^^^^^^  ^^^^^^^^  ^^^^^^^^^^
+  |
+  = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused import: `PaletteTrait`
+   --> crates/pokered-data/src/impl_traits.rs:264:48
+    |
+264 | use dotzuki_engine::palette::{PaletteProvider, PaletteTrait, SgbPaletteEntry};
+    |                                                ^^^^^^^^^^^^
+
+warning: unreachable pattern
+  --> crates/pokered-data/src/lang_data.rs:90:9
+   |
+90 |         _ => "???", // species added through the editor (no localized name yet)
+   |         ^ no value can reach this
+   |
+note: multiple earlier patterns match some of the same values
+  --> crates/pokered-data/src/lang_data.rs:90:9
+   |
+38 |         Species::None=>"---",
+   |         ------------- matches some of the same values
+39 |         Species::Bulbasaur=>"BULBASAUR",Species::Ivysaur=>"IVYSAUR",Species::Venusaur=>"VENUSAUR",
+   |         ------------------              ----------------            ----------------- matches some of the same values
+   |         |                               |
+   |         |                               matches some of the same values
+   |         matches some of the same values
+...
+90 |         _ => "???", // species added through the editor (no localized name yet)
+   |         ^ ...and 148 other patterns collectively make this unreachable
+   = note: `#[warn(unreachable_patterns)]` (part of `#[warn(unused)]`) on by default
+
+warning: unreachable pattern
+   --> crates/pokered-data/src/lang_data.rs:234:13
+    |
+234 |             _ => "---",
+    |             ^ no value can reach this
+    |
+note: multiple earlier patterns match some of the same values
+   --> crates/pokered-data/src/lang_data.rs:234:13
+    |
+179 |             MoveId::None=>"---",MoveId::Pound=>"POUND",MoveId::KarateChop=>"KARATE CHOP",
+    |             ------------        -------------          ------------------ matches some of the same values
+    |             |                   |
+    |             |                   matches some of the same values
+    |             matches some of the same values
+180 |             MoveId::Doubleslap=>"DOUBLESLAP",MoveId::CometPunch=>"COMET PUNCH",MoveId::MegaPunch=>"MEGA PUNCH",
+    |             ------------------ matches some of the same values
+...
+234 |             _ => "---",
+    |             ^ ...and 162 other patterns collectively make this unreachable
+
+warning: unreachable pattern
+   --> crates/pokered-data/src/lang_data.rs:369:9
+    |
+346 |         "BADGES" => "徽章",
+    |         -------- matches all the relevant values
+...
+369 |         "BADGES" => "徽章",
+    |         ^^^^^^^^ no value can reach this
+
+warning: unreachable pattern
+   --> crates/pokered-data/src/lang_data.rs:389:9
+    |
+362 |         "EXIT" => "退出",
+    |         ------ matches all the relevant values
+...
+389 |         "EXIT" => "退出",
+    |         ^^^^^^ no value can reach this
+
+warning: function `default_true` is never used
+   --> crates/pokered-data/src/ui_layout/schema.rs:111:4
+    |
+111 | fn default_true() -> bool { true }
+    |    ^^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: function `default_gap` is never used
+   --> crates/pokered-data/src/ui_layout/schema.rs:112:4
+    |
+112 | fn default_gap() -> u32 { 1 }
+    |    ^^^^^^^^^^^
+
+warning: function `default_item_name_width` is never used
+   --> crates/pokered-data/src/ui_layout/schema.rs:113:4
+    |
+113 | fn default_item_name_width() -> u32 { 14 }
+    |    ^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: function `default_qty_width` is never used
+   --> crates/pokered-data/src/ui_layout/schema.rs:114:4
+    |
+114 | fn default_qty_width() -> u32 { 2 }
+    |    ^^^^^^^^^^^^^^^^^
+
+warning: function `one` is never used
+   --> crates/pokered-data/src/ui_layout/schema.rs:223:4
+    |
+223 | fn one() -> u32 { 1 }
+    |    ^^^
+
+   Compiling pokered-core v0.1.0 (/Users/liuyanghe02/develop/open-pokered-3/crates/pokered-core)
+warning: unused import: `crate::battle::BallAnimOutcome`
+  --> crates/pokered-core/src/battle/item_fidelity_tests.rs:8:5
+   |
+ 8 | use crate::battle::BallAnimOutcome;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+help: if this is a test module, consider adding a `#[cfg(test)]` to the containing module
+  --> crates/pokered-core/src/battle/mod.rs:30:1
+   |
+30 | mod item_fidelity_tests;
+   | ^^^^^^^^^^^^^^^^^^^^^^^^
+   = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused import: `crate::battle::BattleAnimEvent`
+  --> crates/pokered-core/src/battle/item_fidelity_tests.rs:9:5
+   |
+ 9 | use crate::battle::BattleAnimEvent;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+help: if this is a test module, consider adding a `#[cfg(test)]` to the containing module
+  --> crates/pokered-core/src/battle/mod.rs:30:1
+   |
+30 | mod item_fidelity_tests;
+   | ^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `create_pokemon`
+  --> crates/pokered-core/src/battle/item_fidelity_tests.rs:10:29
+   |
+10 | use crate::pokemon::stats::{create_pokemon, create_pokemon_with_moves};
+   |                             ^^^^^^^^^^^^^^
+   |
+help: if this is a test module, consider adding a `#[cfg(test)]` to the containing module
+  --> crates/pokered-core/src/battle/mod.rs:30:1
+   |
+30 | mod item_fidelity_tests;
+   | ^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `CaptureRandoms`
+    --> crates/pokered-core/src/battle/mod.rs:2999:38
+     |
+2999 |         use crate::battle::capture::{CaptureRandoms, CaptureResult};
+     |                                      ^^^^^^^^^^^^^^
+
+warning: unused import: `crate::battle::state::status1`
+    --> crates/pokered-core/src/battle/mod.rs:7136:13
+     |
+7136 |         use crate::battle::state::status1;
+     |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: if this is a test module, consider adding a `#[cfg(test)]` to the containing module
+    --> crates/pokered-core/src/battle/mod.rs:7134:5
+     |
+7134 |     mod pp_lifecycle_tests {
+     |     ^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `pokered_data::tilesets::TilesetId`
+  --> crates/pokered-core/src/overworld/doors_elevators.rs:11:5
+   |
+11 | use pokered_data::tilesets::TilesetId;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `pokered_data::tilesets::TilesetId`
+ --> crates/pokered-core/src/overworld/player_movement.rs:9:5
+  |
+9 | use pokered_data::tilesets::TilesetId;
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `pokered_data::tilesets::TilesetId`
+ --> crates/pokered-core/src/overworld/special_terrain.rs:7:5
+  |
+7 | use pokered_data::tilesets::TilesetId;
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unnecessary parentheses around pattern
+    --> crates/pokered-core/src/overworld/screen.rs:1536:21
+     |
+1536 |                 for (y) in [cy - r, cy + r] {
+     |                     ^ ^
+     |
+     = note: `#[warn(unused_parens)]` (part of `#[warn(unused)]`) on by default
+help: remove these parentheses
+     |
+1536 -                 for (y) in [cy - r, cy + r] {
+1536 +                 for y in [cy - r, cy + r] {
+     |
+
+warning: unused import: `max_exp`
+  --> crates/pokered-core/src/pokemon/engine_adapter.rs:41:56
+   |
+41 | use crate::battle::experience::growth::{exp_for_level, max_exp};
+   |                                                        ^^^^^^^
+
+warning: unused import: `crate::battle::experience::level_up::process_level_up`
+  --> crates/pokered-core/src/pokemon/engine_adapter.rs:42:5
+   |
+42 | use crate::battle::experience::level_up::process_level_up;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: `pokered-data` (lib) generated 11 warnings (run `cargo fix --lib -p pokered-data` to apply 1 suggestion)
+warning: `pokered-data` (lib test) generated 10 warnings (10 duplicates)
+warning: unused variable: `randoms`
+   --> crates/pokered-core/src/battle/capture.rs:113:9
+    |
+113 |     let randoms = CaptureRandoms { rand1, rand2 };
+    |         ^^^^^^^ help: if this is intentional, prefix it with an underscore: `_randoms`
+    |
+    = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: variable does not need to be mutable
+    --> crates/pokered-core/src/battle/mod.rs:2562:17
+     |
+2562 |                 mut wait_frames,
+     |                 ----^^^^^^^^^^^
+     |                 |
+     |                 help: remove this `mut`
+     |
+     = note: `#[warn(unused_mut)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `pokemon_index`
+    --> crates/pokered-core/src/battle/mod.rs:2240:39
+     |
+2240 |             BattlePhase::PartyStats { pokemon_index } => {
+     |                                       ^^^^^^^^^^^^^ help: try ignoring the field: `pokemon_index: _`
+
+warning: unused variable: `tileset`
+   --> crates/pokered-core/src/overworld/collision.rs:165:9
+    |
+165 |         tileset: TilesetId,
+    |         ^^^^^^^ help: if this is intentional, prefix it with an underscore: `_tileset`
+
+warning: unused variable: `tileset`
+   --> crates/pokered-core/src/overworld/collision.rs:213:9
+    |
+213 |         tileset: TilesetId,
+    |         ^^^^^^^ help: if this is intentional, prefix it with an underscore: `_tileset`
+
+warning: value assigned to `repel_wore_off` is never read
+    --> crates/pokered-core/src/overworld/update.rs:1844:21
+     |
+1844 |                     repel_wore_off = true;
+     |                     ^^^^^^^^^^^^^^^^^^^^^
+     |
+     = help: maybe it is overwritten before being read?
+     = note: `#[warn(unused_assignments)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `probe`
+   --> crates/pokered-core/src/save/sram_import.rs:407:29
+    |
+407 | fn blank_offset_after_water(probe: &[u8]) -> usize {
+    |                             ^^^^^ help: if this is intentional, prefix it with an underscore: `_probe`
+
+warning: function `format_cannot_move` is never used
+   --> crates/pokered-core/src/battle/mod.rs:715:4
+    |
+715 | fn format_cannot_move(reason: &CannotMoveReason) -> &'static str {
+    |    ^^^^^^^^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: associated functions `generate_move_randoms` and `format_move_outcome` are never used
+    --> crates/pokered-core/src/battle/mod.rs:1537:8
+     |
+1200 | impl BattleScreen {
+     | ----------------- associated functions in this implementation
+...
+1537 |     fn generate_move_randoms() -> MoveRandoms {
+     |        ^^^^^^^^^^^^^^^^^^^^^
+...
+1700 |     fn format_move_outcome(
+     |        ^^^^^^^^^^^^^^^^^^^
+
+warning: function `input` is never used
+  --> crates/pokered-core/src/battle/item_fidelity_tests.rs:18:4
+   |
+18 | fn input(down: bool, a: bool) -> BattleInput {
+   |    ^^^^^
+
+warning: function `back_input` is never used
+  --> crates/pokered-core/src/battle/item_fidelity_tests.rs:26:4
+   |
+26 | fn back_input() -> BattleInput {
+   |    ^^^^^^^^^^
+
+warning: function `press_b` is never used
+  --> crates/pokered-core/src/battle/item_fidelity_tests.rs:33:4
+   |
+33 | fn press_b(battle: &mut BattleScreen) {
+   |    ^^^^^^^
+
+warning: function `use_first_bag_item` is never used
+  --> crates/pokered-core/src/battle/item_fidelity_tests.rs:39:4
+   |
+39 | fn use_first_bag_item(battle: &mut BattleScreen) {
+   |    ^^^^^^^^^^^^^^^^^^
+
+warning: function `bag_quantity` is never used
+  --> crates/pokered-core/src/battle/item_fidelity_tests.rs:45:4
+   |
+45 | fn bag_quantity(battle: &BattleScreen, item: ItemId) -> u32 {
+   |    ^^^^^^^^^^^^
+
+warning: function `staged_messages` is never used
+  --> crates/pokered-core/src/battle/item_fidelity_tests.rs:55:4
+   |
+55 | fn staged_messages(battle: &BattleScreen) -> Vec<String> {
+   |    ^^^^^^^^^^^^^^^
+
+warning: function `current_message` is never used
+  --> crates/pokered-core/src/battle/item_fidelity_tests.rs:63:4
+   |
+63 | fn current_message(battle: &BattleScreen) -> String {
+   |    ^^^^^^^^^^^^^^^
+
+warning: function `pp_mon` is never used
+   --> crates/pokered-core/src/battle/item_fidelity_tests.rs:204:4
+    |
+204 | fn pp_mon() -> crate::battle::state::Pokemon {
+    |    ^^^^^^
+
+warning: function `mk` is never used
+    --> crates/pokered-core/src/battle/mod.rs:7140:12
+     |
+7140 |         fn mk(sp: Species, lvl: u8, moves: [MoveId; 4]) -> crate::battle::state::Pokemon {
+     |            ^^
+
+warning: method `text_pages` is never used
+   --> crates/pokered-core/src/oak_speech.rs:313:8
+    |
+312 | impl OakSpeechPhase {
+    | ------------------- method in this implementation
+313 |     fn text_pages(&self) -> Option<&'static [TextPage]> {
+    |        ^^^^^^^^^^
+
+warning: fields `scene_script_provider` and `scripts_dir` are never read
+   --> crates/pokered-core/src/overworld/screen.rs:639:16
+    |
+564 | pub struct OverworldScreen<G: GameData = pokered_data::impl_traits::PokemonRedData> {
+    |            --------------- fields in this struct
+...
+639 |     pub(crate) scene_script_provider: pokered_data::scene_loader::SceneScriptProvider,
+    |                ^^^^^^^^^^^^^^^^^^^^^
+...
+646 |     pub(crate) scripts_dir: Option<std::path::PathBuf>,
+    |                ^^^^^^^^^^^
+
+warning: method `repel_wore_off` is never used
+    --> crates/pokered-core/src/overworld/screen.rs:1822:19
+     |
+ 859 | impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
+     | --------------------------------------------------------- method in this implementation
+...
+1822 |     pub(crate) fn repel_wore_off(&self, repel_before: u16) -> bool {
+     |                   ^^^^^^^^^^^^^^
+
+   Compiling pokered-renderer v0.1.0 (/Users/liuyanghe02/develop/open-pokered-3/crates/pokered-renderer)
+   Compiling pokered-ui v0.1.0 (/Users/liuyanghe02/develop/open-pokered-3/crates/pokered-ui)
+warning: `pokered-core` (lib) generated 32 warnings (run `cargo fix --lib -p pokered-core` to apply 17 suggestions)
+   Compiling pokered-app v0.1.0 (/Users/liuyanghe02/develop/open-pokered-3/crates/pokered-app)
+warning: unused import: `write_tiles_at`
+  --> crates/pokered-app/src/render/battle.rs:21:39
+   |
+21 | use pokered_renderer::text_renderer::{write_tiles_at, ScreenTileBuffer};
+   |                                       ^^^^^^^^^^^^^^
+   |
+   = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused import: `pokered_renderer::textbox::TextBoxFrame`
+  --> crates/pokered-app/src/render/battle.rs:22:5
+   |
+22 | use pokered_renderer::textbox::TextBoxFrame;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `IconKind`
+ --> crates/pokered-app/src/render/menu.rs:9:55
+  |
+9 | use pokered_data::mon_party_icons::{icon_for_species, IconKind};
+  |                                                       ^^^^^^^^
+
+warning: unused import: `crate::render::battle_i18n::zh_name`
+  --> crates/pokered-app/src/render/pc.rs:19:5
+   |
+19 | use crate::render::battle_i18n::zh_name;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `pokered_core::items::inventory::Inventory`
+  --> crates/pokered-app/src/save_editor.rs:13:5
+   |
+13 | use pokered_core::items::inventory::Inventory;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused variable: `expected_h`
+   --> crates/pokered-ui/tests/menus.rs:123:9
+    |
+123 |     let expected_h = (labels.len() as u32) * 2;
+    |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_expected_h`
+    |
+    = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `skip_battle_render`
+    --> crates/pokered-app/src/render/battle.rs:2047:9
+     |
+2047 |     let skip_battle_render = matches!(
+     |         ^^^^^^^^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_skip_battle_render`
+     |
+     = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: variant `BattleTransition` is never constructed
+   --> crates/pokered-app/src/render/battle.rs:250:5
+    |
+247 | enum IntroAnimState {
+    |      -------------- variant in this enum
+...
+250 |     BattleTransition { step: u8 },
+    |     ^^^^^^^^^^^^^^^^
+    |
+    = note: `IntroAnimState` has derived impls for the traits `Clone` and `Debug`, but these are intentionally ignored during dead code analysis
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `pokered-ui` (test "menus") generated 1 warning (run `cargo fix --test "menus" -p pokered-ui` to apply 1 suggestion)
+warning: unused variable: `en_pages`
+   --> crates/pokered-app/src/render/pokedex.rs:645:13
+    |
+645 |         let en_pages =
+    |             ^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_en_pages`
+
+warning: unused variable: `have_gfx`
+   --> crates/pokered-app/src/render/trade.rs:286:13
+    |
+286 |         let have_gfx = resources.is_some();
+    |             ^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_have_gfx`
+
+warning: `pokered-app` (lib) generated 7 warnings (run `cargo fix --lib -p pokered-app` to apply 6 suggestions)
+warning: `pokered-app` (lib test) generated 9 warnings (7 duplicates) (run `cargo fix --lib -p pokered-app --tests` to apply 2 suggestions)
+warning: unused import: `OverworldGameDataRequest`
+   --> crates/pokered-app/tests/visual_verify_gap_batch.rs:213:39
+    |
+213 | use pokered_core::overworld::screen::{OverworldGameDataRequest, PendingWarp, WarpFadeState};
+    |                                       ^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused import: `trainer_class_zh`
+  --> crates/pokered-app/src/render/mod.rs:23:23
+   |
+23 | pub use battle_i18n::{trainer_class_zh, zh_battle_dialog};
+   |                       ^^^^^^^^^^^^^^^^
+
+warning: `pokered-app` (test "visual_verify_gap_batch") generated 1 warning (run `cargo fix --test "visual_verify_gap_batch" -p pokered-app` to apply 1 suggestion)
+warning: unused import: `std::io::BufRead`
+   --> crates/pokered-app/src/demo.rs:104:9
+    |
+104 |     use std::io::BufRead;
+    |         ^^^^^^^^^^^^^^^^
+
+warning: multiple methods are never used
+    --> crates/pokered-app/src/game.rs:714:12
+     |
+ 684 | impl PokemonGame {
+     | ---------------- methods in this implementation
+...
+ 714 |     pub fn detach_link(&mut self) {
+     |            ^^^^^^^^^^^
+...
+1526 |     pub fn save_to_path(&mut self, path: &Path) -> Result<(), String> {
+     |            ^^^^^^^^^^^^
+...
+2144 |     pub fn debug_start_wild_battle(&mut self, species: pokered_data::species::Species, level: u8) {
+     |            ^^^^^^^^^^^^^^^^^^^^^^^
+...
+2160 |     pub fn debug_open_pokedex(&mut self, species: pokered_data::species::Species) {
+     |            ^^^^^^^^^^^^^^^^^^
+...
+2178 |     pub fn debug_start_trainer_battle(
+     |            ^^^^^^^^^^^^^^^^^^^^^^^^^^
+...
+2195 |     pub fn debug_start_move_test(&mut self, move_id: pokered_data::moves::MoveId) {
+     |            ^^^^^^^^^^^^^^^^^^^^^
+...
+2223 |     pub fn debug_play_evolution(&mut self, from: pokered_data::species::Species, to: pokered_data::species::Species) {
+     |            ^^^^^^^^^^^^^^^^^^^^
+...
+2260 |     pub fn debug_full_heal(&mut self) {
+     |            ^^^^^^^^^^^^^^^
+...
+4936 |     pub fn warp_to_cable_room(&mut self, map: MapId) {
+     |            ^^^^^^^^^^^^^^^^^^
+     |
+     = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: method `kind` is never used
+   --> crates/pokered-app/src/link/cable_club.rs:199:12
+    |
+173 | impl CableClubFlow {
+    | ------------------ method in this implementation
+...
+199 |     pub fn kind(&self) -> Option<LinkKind> {
+    |            ^^^^
+
+warning: variant `BattleTransition` is never constructed
+   --> crates/pokered-app/src/render/battle.rs:250:5
+    |
+247 | enum IntroAnimState {
+    |      -------------- variant in this enum
+...
+250 |     BattleTransition { step: u8 },
+    |     ^^^^^^^^^^^^^^^^
+    |
+    = note: `IntroAnimState` has derived impls for the traits `Clone` and `Debug`, but these are intentionally ignored during dead code analysis
+
+warning: unused import: `LinkDriverEvent`
+  --> crates/pokered-app/tests/cable_club_flow.rs:17:23
+   |
+17 |     LinkBattleDriver, LinkDriverEvent, LinkDriverPhase,
+   |                       ^^^^^^^^^^^^^^^
+   |
+   = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused import: `LinkTradePollResult`
+  --> crates/pokered-app/tests/cable_club_flow.rs:21:55
+   |
+21 | use pokered_core::link::link_trade::{LinkTradeDriver, LinkTradePollResult};
+   |                                                       ^^^^^^^^^^^^^^^^^^^
+
+warning: variable does not need to be mutable
+  --> crates/pokered-app/tests/cable_club_flow.rs:86:9
+   |
+86 |     let mut host_session = LinkSession::new(Box::new(t_a), link_activity, NetworkMessage::Disconnect);
+   |         ----^^^^^^^^^^^^
+   |         |
+   |         help: remove this `mut`
+   |
+   = note: `#[warn(unused_mut)]` (part of `#[warn(unused)]`) on by default
+
+warning: variable does not need to be mutable
+  --> crates/pokered-app/tests/cable_club_flow.rs:87:9
+   |
+87 |     let mut guest_session = LinkSession::new(Box::new(t_b), link_activity, NetworkMessage::Disconnect);
+   |         ----^^^^^^^^^^^^^
+   |         |
+   |         help: remove this `mut`
+
+warning: `pokered-app` (test "cable_club_flow") generated 4 warnings (run `cargo fix --test "cable_club_flow" -p pokered-app` to apply 4 suggestions)
+warning: `pokered-app` (bin "pokered-app" test) generated 12 warnings (12 duplicates)
+warning: `pokered-app` (bin "pokered-app") generated 10 warnings (5 duplicates) (run `cargo fix --bin "pokered-app" -p pokered-app` to apply 1 suggestion)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 28.58s
+     Running unittests src/lib.rs (target/debug/deps/pokered_app-ef887e801fd88411)
+
+running 50 tests
+test game::session_guard_tests::pre_session_screens_are_not_in_session ... ok
+test game::save_overwrite_tests::different_disk_player_id_demands_confirmation ... ok
+test game::session_guard_tests::shop_and_carried_screens_are_in_session ... ok
+test render::battle::tests::charge_messages_match_status_affected_trigger ... ok
+test render::battle::tests::ball_choreo_broke_free_reopens_and_shows_mon ... ok
+test render::battle::tests::ball_choreo_miss_and_dodge_are_toss_only_variants ... ok
+test render::credits::tests::poke_control_char_expands_to_display_form ... ok
+test render::battle::tests::ball_choreo_caught_is_toss_poof_hide_shake3 ... ok
+test render::battle::tests::caught_choreo_hides_enemy_and_plays_all_sfx ... ok
+test render::battle::tests::broke_free_choreo_reshows_enemy ... ok
+test render::battle::tests::item_use_messages_are_not_move_uses ... ok
+test render::overworld::tests::apply_gb_palette_maps_shades ... ok
+test render::overworld::tests::dark_cave_palette_is_fadepal2 ... ok
+test render::elevator::filter_label_tests::filter_label_maps_item_constants_to_display_names ... ok
+test render::oak::tests::naming_flash_renders_white_then_screen ... ok
+test render::oak::tests::intro_animations_render_key_frames ... ok
+test render::pc::layout_tests::chinese_list_leaves_clear_pixels_between_rows ... ok
+test render::pc::layout_tests::translated_message_wrap_preserves_text_and_fits_box ... ok
+test render::pokedex::area_marker_visual::area_page_draws_player_sprite_marker ... ok
+test render::pokedex::tests::all_zh_pages_wrap_within_three_rows ... ok
+test render::pokedex::tests::area_page_draws_nest_fallback_text ... ok
+test render::pokedex::tests::entry_screen_draws_owned_and_unowned ... ok
+test render::pokedex::tests::list_screen_draws_rows_counts_and_side_menu ... ok
+test render::pokedex::tests::side_menu_draws_arrow_on_selected_option ... ok
+test render::pokedex::tests::zh_entry_draws_chinese_text ... ok
+test render::pokedex::tests::zh_wrap_respects_width_and_kinsoku ... ok
+test render::slots::tests::draw_slots_does_not_panic_in_all_phases ... ok
+test render::slots::tests::localized_win_messages_fit_dialogue_box ... ok
+test render::overworld::tests::warp_fade_out_to_white_sequence ... ok
+test render::overworld::tests::warp_fade_in_from_white_sequence ... ok
+test render::tests::mr_mime_keeps_dot ... ok
+test render::tests::other_special_names_strip_punctuation ... ok
+test render::overworld::tests::warp_fade_out_to_black_sequence ... ok
+test render::slots::tests::reel_motion_and_flash_preserve_stopped_symbols ... ok
+test render::trade::tests::slide_in_panel_offsets_pic ... ok
+test render::town_map::tests::fly_mode_draws_to_prompt_bird_and_arrows ... ok
+test save_editor::tests::applies_snapshot_fields ... ok
+test save_editor::tests::rejects_unknown_map ... ok
+test save_editor::tests::skips_unknown_records ... ok
+test render::overworld::tests::underground_south_arrival_renders_short_original_block_data ... ok
+test render::trade::tests::text_box_slide_shifts_frame ... ok
+test render::overworld::tests::water_tile_animation_changes_pixels ... ok
+test render::trade::tests::ball_sub_anims_draw_frame_blocks ... ok
+test render::overworld::tests::rock_tunnel_renders_dark_until_flash ... ok
+test render::overworld::elevator_edge_tests::biking_renders_red_bike_sheet_not_red ... ok
+test render::overworld::elevator_edge_tests::boulder_push_draws_dust_pixels_at_the_boulder ... ok
+test render::overworld::elevator_edge_tests::celadon_mansion_shake_wraps_past_short_map_edges ... ok
+test render::overworld::elevator_edge_tests::silph_co_shake_edges_show_adjacent_rows ... ok
+test render::overworld::elevator_edge_tests::shake_edges_show_adjacent_map_rows_not_gaps ... ok
+test render::trade::tests::cutscene_renders_every_phase ... ok
+
+test result: ok. 50 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.56s
+
+     Running unittests src/main.rs (target/debug/deps/pokered_app-6653fddd7c79569b)
+
+running 47 tests
+test game::session_guard_tests::pre_session_screens_are_not_in_session ... ok
+test game::save_overwrite_tests::different_disk_player_id_demands_confirmation ... ok
+test game::session_guard_tests::shop_and_carried_screens_are_in_session ... ok
+test render::battle::tests::ball_choreo_miss_and_dodge_are_toss_only_variants ... ok
+test render::battle::tests::ball_choreo_broke_free_reopens_and_shows_mon ... ok
+test render::battle::tests::ball_choreo_caught_is_toss_poof_hide_shake3 ... ok
+test render::battle::tests::charge_messages_match_status_affected_trigger ... ok
+test render::battle::tests::broke_free_choreo_reshows_enemy ... ok
+test render::battle::tests::caught_choreo_hides_enemy_and_plays_all_sfx ... ok
+test render::credits::tests::poke_control_char_expands_to_display_form ... ok
+test render::battle::tests::item_use_messages_are_not_move_uses ... ok
+test render::overworld::tests::apply_gb_palette_maps_shades ... ok
+test render::overworld::tests::dark_cave_palette_is_fadepal2 ... ok
+test render::elevator::filter_label_tests::filter_label_maps_item_constants_to_display_names ... ok
+test render::oak::tests::naming_flash_renders_white_then_screen ... ok
+test render::oak::tests::intro_animations_render_key_frames ... ok
+test render::pc::layout_tests::chinese_list_leaves_clear_pixels_between_rows ... ok
+test render::pc::layout_tests::translated_message_wrap_preserves_text_and_fits_box ... ok
+test render::pokedex::area_marker_visual::area_page_draws_player_sprite_marker ... ok
+test render::pokedex::tests::all_zh_pages_wrap_within_three_rows ... ok
+test render::pokedex::tests::area_page_draws_nest_fallback_text ... ok
+test render::overworld::tests::warp_fade_in_from_white_sequence ... ok
+test render::overworld::tests::warp_fade_out_to_white_sequence ... ok
+test render::overworld::tests::warp_fade_out_to_black_sequence ... ok
+test render::pokedex::tests::zh_entry_draws_chinese_text ... ok
+test render::pokedex::tests::zh_wrap_respects_width_and_kinsoku ... ok
+test render::overworld::tests::underground_south_arrival_renders_short_original_block_data ... ok
+test render::pokedex::tests::list_screen_draws_rows_counts_and_side_menu ... ok
+test render::slots::tests::localized_win_messages_fit_dialogue_box ... ok
+test render::tests::mr_mime_keeps_dot ... ok
+test render::tests::other_special_names_strip_punctuation ... ok
+test render::pokedex::tests::entry_screen_draws_owned_and_unowned ... ok
+test render::pokedex::tests::side_menu_draws_arrow_on_selected_option ... ok
+test render::slots::tests::reel_motion_and_flash_preserve_stopped_symbols ... ok
+test render::overworld::tests::water_tile_animation_changes_pixels ... ok
+test render::town_map::tests::fly_mode_draws_to_prompt_bird_and_arrows ... ok
+test render::overworld::elevator_edge_tests::boulder_push_draws_dust_pixels_at_the_boulder ... ok
+test render::trade::tests::slide_in_panel_offsets_pic ... ok
+test render::overworld::tests::rock_tunnel_renders_dark_until_flash ... ok
+test render::overworld::elevator_edge_tests::biking_renders_red_bike_sheet_not_red ... ok
+test render::trade::tests::text_box_slide_shifts_frame ... ok
+test render::trade::tests::ball_sub_anims_draw_frame_blocks ... ok
+test render::overworld::elevator_edge_tests::silph_co_shake_edges_show_adjacent_rows ... ok
+test render::overworld::elevator_edge_tests::celadon_mansion_shake_wraps_past_short_map_edges ... ok
+test render::overworld::elevator_edge_tests::shake_edges_show_adjacent_map_rows_not_gaps ... ok
+test render::trade::tests::cutscene_renders_every_phase ... ok
+test render::slots::tests::draw_slots_does_not_panic_in_all_phases ... ok
+
+test result: ok. 47 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.32s
+
+     Running tests/cable_club_flow.rs (target/debug/deps/cable_club_flow-15cc8d826443090a)
+
+running 8 tests
+test disconnect_mid_trade_shows_error_then_inactive ... ok
+test leaving_room_deactivates_flow ... ok
+test both_cancel_returns_to_room ... ok
+test battle_declined_shows_link_canceled ... ok
+test trade_flow_select_confirm_execute ... ok
+test trade_cancel_shows_canceled_text ... ok
+test battle_flow_gameboy_to_battle_setup ... ok
+test simultaneous_gameboy_host_wins ... ok
+
+test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/intro_fades.rs (target/debug/deps/intro_fades-e17256dc06f01f73)
+
+running 2 tests
+test intro_fades_gengar_nidorino_and_bars_to_white ... ok
+test title_fades_pokemon_copyright_and_logo_to_white ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.03s
+
+     Running tests/language_select_script_sync.rs (target/debug/deps/language_select_script_sync-90d4e944147088d1)
+
+running 1 test
+test language_select_syncs_script_lang ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 3.62s
+
+     Running tests/link_network.rs (target/debug/deps/link_network-348e929a1bce3385)
+
+running 4 tests
+test fragmented_write_reassembled_across_sockets ... ok
+test transport_handshake_through_link_server_accept ... ok
+test link_battle_over_tcp_to_battling ... ok
+test link_session_over_tcp_handshake_trade_battle_disconnect ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
+
+     Running tests/pr62_regressions.rs (target/debug/deps/pr62_regressions-143c9e52d7f90e1b)
+
+running 4 tests
+test capture_comparisons ... ignored, explicit screenshot capture
+test fly_lifecycle_freezes_input_then_restores_player ... ok
+test b3f_current_stops_only_when_both_boulders_are_down ... ok
+test fly_uses_side_wings_and_lands_at_the_player ... ok
+
+test result: ok. 3 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 0.21s
+
+     Running tests/starter_selection.rs (target/debug/deps/starter_selection-00b2c1e4f23a4c37)
+
+running 2 tests
+test new_game_discards_previous_party_before_starter_selection ... ok
+test declining_bulbasaur_then_accepting_charmander_gives_only_charmander ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.12s
+
+     Running tests/surf_rendering.rs (target/debug/deps/surf_rendering-57826184df80d19b)
+
+running 3 tests
+test capture_surf_comparisons ... ignored, explicit screenshot capture
+test leaving_surf_restores_red_and_biking_keeps_its_sprite ... ok
+test surfing_uses_seel_in_all_facings_and_animation_phases ... ok
+
+test result: ok. 2 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 0.39s
+
+     Running tests/visual_verify_continue_info.rs (target/debug/deps/visual_verify_continue_info-4a7ce9115744014a)
+
+running 1 test
+test render_continue_info_panel ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
+
+     Running tests/visual_verify_evolution.rs (target/debug/deps/visual_verify_evolution-9e2ad1cd94dd5b02)
+
+running 1 test
+test render_evolution_phases ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.04s
+
+     Running tests/visual_verify_fishing.rs (target/debug/deps/visual_verify_fishing-929fecf013ae170b)
+
+running 1 test
+test render_fishing_anim_full_sequence ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.25s
+
+     Running tests/visual_verify_gap_batch.rs (target/debug/deps/visual_verify_gap_batch-5fce399db9952517)
+
+running 11 tests
+test render_learn_move_silent_before ... ok
+test render_poke_doll_refusal ... ok
+test render_learn_move_ask_menu ... ok
+test render_learn_move_forget_list ... ok
+test render_seafoam_b3f_current_sweep ... ok
+test render_poison_faint_text ... ok
+test render_wall_town_map_text ... ok
+test render_bench_guy_text ... ok
+test render_seafoam_b3f_first_visit ... ok
+test render_fly_bird_mid_arrival ... ok
+test render_trainer_prebattle_text ... ok
+
+test result: ok. 11 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.66s
+
+     Running tests/visual_verify_heal_machine.rs (target/debug/deps/visual_verify_heal_machine-a22a402ffdc03285)
+
+running 1 test
+test render_healing_machine_full_sequence ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.22s
+
+     Running tests/visual_verify_hof_credits.rs (target/debug/deps/visual_verify_hof_credits-09f535232d5d20a7)
+
+running 2 tests
+test render_credits_phases ... ok
+test render_hof_ceremony_phases ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.04s
+
+     Running tests/visual_verify_move_localization.rs (target/debug/deps/visual_verify_move_localization-602aaf30d96656ca)
+
+running 3 tests
+test every_chinese_move_name_has_renderable_glyphs ... ok
+test stats_handles_long_chinese_species_names_on_both_pages ... ok
+test capture_move_localization ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
+
+     Running tests/visual_verify_nurse_turn.rs (target/debug/deps/visual_verify_nurse_turn-e77111fa381c69b5)
+
+running 1 test
+test render_nurse_facing_machine_during_heal ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.42s
+
+     Running tests/visual_verify_party_screen.rs (target/debug/deps/visual_verify_party_screen-7c8750241675afd7)
+
+running 5 tests
+test render_party_screen_single_pokemon ... ok
+test render_party_screen_empty ... ok
+test render_party_screen_full_hp ... ok
+test render_party_screen_low_hp ... ok
+test render_party_screen_various_states ... ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.06s
+
+     Running tests/visual_verify_pokedex_zh.rs (target/debug/deps/visual_verify_pokedex_zh-95e9de24ed2cb73c)
+
+running 1 test
+test render_pokedex_entry_zh_bulbasaur_and_caterpie ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.03s
+
+     Running tests/visual_verify_slots.rs (target/debug/deps/visual_verify_slots-a971caff5700e1a7)
+
+running 1 test
+test capture_slots ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/visual_verify_ss_anne_departure.rs (target/debug/deps/visual_verify_ss_anne_departure-49b6e6dd93af7b91)
+
+running 1 test
+test render_ss_anne_departure_full_sequence ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.21s
+
+     Running tests/visual_verify_stats_screen.rs (target/debug/deps/visual_verify_stats_screen-aa0d11a0b0251ebd)
+
+running 7 tests
+test render_stats_page2_bulbasaur_partial_moves ... ok
+test render_stats_page1_bulbasaur_full_hp ... ok
+test render_stats_page1_pikachu ... ok
+test render_stats_page2_mewtwo_high_level ... ok
+test render_stats_page2_charizard_full_moveset ... ok
+test render_stats_page1_charizard_high_level ... ok
+test render_stats_page1_mewtwo_low_hp ... ok
+
+test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
+
+     Running tests/visual_verify_story_fixes.rs (target/debug/deps/visual_verify_story_fixes-cd08f49f7c0054ef)
+
+running 3 tests
+test render_giovanni_hidden_after_farewell ... ok
+test render_fossils_hidden_after_pickup ... ok
+test render_jigglypuff_mid_spin ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.46s
+
+     Running unittests src/lib.rs (target/debug/deps/pokered_data-b30d153b30381e2a)
+
+running 255 tests
+test battle_text::tests::passthrough_when_not_zh ... ok
+test battle_text::tests::static_messages ... ok
+test battle_text::tests::trainer_classes ... ok
+test battle_text::tests::trainer_quips_translate_exactly ... ok
+test battle_text::tests::items_and_money ... ok
+test cries::tests::spot_check_cries ... ok
+test cries::tests::invalid_species_returns_silence ... ok
+test dialog_text::tests::exact_passes_through_unknown ... ok
+test dialog_text::tests::safari_and_map_fallbacks ... ok
+test embedded_scenes::tests::all_maps_have_embedded_scene_and_config ... ok
+test battle_text::tests::charge_and_substitute ... ok
+test battle_text::tests::stat_lines ... ok
+test embedded_scenes::tests::pallet_town_scene_exports_coord_event ... ok
+test hidden_coins::tests::finds_spot_by_tile ... ok
+test hidden_coins::tests::twelve_spots_in_asm_order ... ok
+test battle_text::tests::dynamic_messages ... ok
+test dialog_text::tests::hidden_items_and_bag ... ok
+test dialog_text::tests::field_items_and_fishing ... ok
+test dialog_text::tests::field_moves ... ok
+test battle_text::tests::switch_prompts ... ok
+test battle_text::tests::ball_throw_and_capture ... ok
+test hidden_items::tests::itemfinder_window_is_asymmetric ... ok
+test hidden_items::tests::find_hidden_item_returns_table_index ... ok
+test hidden_items::tests::spot_check_entries_against_asm ... ok
+test hidden_items::tests::table_count_matches_hidden_item_coords ... ok
+test impl_traits::battle_trait_tests::ai_select_move_works ... ok
+test impl_traits::battle_trait_tests::ai_should_use_item_when_low_hp ... ok
+test impl_traits::battle_trait_tests::ai_should_switch_when_low_hp ... ok
+test impl_traits::battle_trait_tests::apply_move_effect_damage ... ok
+test impl_traits::battle_trait_tests::apply_move_effect_heal ... ok
+test impl_traits::battle_trait_tests::battle_state_new_and_active ... ok
+test impl_traits::battle_trait_tests::battler_state_heal ... ok
+test impl_traits::battle_trait_tests::battler_state_heal_caps_at_max ... ok
+test impl_traits::battle_trait_tests::battler_state_take_damage ... ok
+test embedded_scenes::tests::shared_pokecenter_scene_embedded_as_ast ... ok
+test impl_traits::battle_trait_tests::calculate_damage_base_case ... ok
+test impl_traits::battle_trait_tests::calculate_damage_none_move_returns_miss ... ok
+test impl_traits::battle_trait_tests::check_faint_detects_zero ... ok
+test impl_traits::battle_trait_tests::create_monster_bulbasaur_level_5 ... ok
+test impl_traits::battle_trait_tests::create_monster_none_species_has_defaults ... ok
+test impl_traits::battle_trait_tests::effect_handler_damage_works ... ok
+test impl_traits::battle_trait_tests::effect_handler_status_fails_when_already_afflicted ... ok
+test impl_traits::battle_trait_tests::effect_handler_status_infliction ... ok
+test impl_traits::battle_trait_tests::provider_can_be_constructed ... ok
+test impl_traits::battle_trait_tests::select_move_returns_first_available ... ok
+test impl_traits::battle_trait_tests::type_chart_dual_type ... ok
+test impl_traits::battle_trait_tests::type_chart_empty_defending_is_neutral ... ok
+test impl_traits::battle_trait_tests::type_chart_immune_normal_vs_ghost ... ok
+test impl_traits::battle_trait_tests::type_chart_neutral_normal_vs_normal ... ok
+test impl_traits::battle_trait_tests::type_chart_not_very_effective_fire_vs_water ... ok
+test impl_traits::battle_trait_tests::type_chart_super_effective_water_vs_fire ... ok
+test impl_traits::game_data_tests::test_map_provider ... ok
+test impl_traits::game_data_tests::test_palette_provider ... ok
+test impl_traits::game_data_tests::test_render_data ... ok
+test impl_traits::game_data_tests::test_tile_metadata ... ok
+test embedded_scenes::tests::all_scenes_have_embedded_asts ... ok
+test impl_traits::game_data_tests::test_tileset_provider ... ok
+test impl_traits::game_data_tests::test_type_inference ... ok
+test impl_traits::item_provider_tests::badge_is_not_consumed ... ok
+test impl_traits::item_provider_tests::can_use_in_battle ... ok
+test impl_traits::item_provider_tests::can_use_outside_battle ... ok
+test impl_traits::item_provider_tests::full_restore_effect ... ok
+test impl_traits::item_provider_tests::key_item_is_not_consumed ... ok
+test impl_traits::item_provider_tests::master_ball_price_is_zero ... ok
+test impl_traits::item_provider_tests::potion_effect_is_heal_20 ... ok
+test impl_traits::item_provider_tests::potion_name_and_price ... ok
+test impl_traits::item_provider_tests::regular_item_is_consumed ... ok
+test impl_traits::item_provider_tests::unused_item_has_no_effect ... ok
+test impl_traits::item_provider_tests::use_on_monster_returns_not_usable_for_no_item ... ok
+test impl_traits::item_provider_tests::use_on_monster_returns_used_for_valid_item ... ok
+test impl_traits::palette_tests::test_bg_palette_identity ... ok
+test impl_traits::palette_tests::test_monster_palette_bulbasaur ... ok
+test impl_traits::palette_tests::test_monster_palette_charmander ... ok
+test impl_traits::palette_tests::test_monster_palette_out_of_bounds ... ok
+test impl_traits::palette_tests::test_monster_palette_squirtle ... ok
+test impl_traits::palette_tests::test_obj_palette0_identity ... ok
+test impl_traits::palette_tests::test_obj_palette1_identity ... ok
+test impl_traits::palette_tests::test_overworld_palette_blue_version ... ok
+test impl_traits::palette_tests::test_overworld_palette_bruno ... ok
+test impl_traits::palette_tests::test_overworld_palette_cavern ... ok
+test impl_traits::palette_tests::test_overworld_palette_cemetery ... ok
+test impl_traits::palette_tests::test_overworld_palette_lorelei ... ok
+test impl_traits::palette_tests::test_overworld_palette_outdoor_route ... ok
+test impl_traits::palette_tests::test_overworld_palette_town ... ok
+test impl_traits::palette_tests::test_sgb_palette_id_is_palette_trait ... ok
+test impl_traits::render_data_tests::all_defined_items_have_nonempty_names ... ok
+test impl_traits::render_data_tests::all_valid_moves_have_positive_pp ... ok
+test impl_traits::render_data_tests::item_name_bicycle ... ok
+test impl_traits::render_data_tests::item_name_master_ball ... ok
+test impl_traits::render_data_tests::item_name_no_item_fallback ... ok
+test impl_traits::render_data_tests::item_name_potion ... ok
+test impl_traits::render_data_tests::move_name_en_spot_checks ... ok
+test impl_traits::render_data_tests::move_name_zh_spot_checks ... ok
+test impl_traits::render_data_tests::move_pp_hydro_pump_is_5 ... ok
+test impl_traits::render_data_tests::move_pp_none_is_zero ... ok
+test impl_traits::render_data_tests::move_pp_tackle_is_35 ... ok
+test impl_traits::render_data_tests::move_pp_thunder_is_10 ... ok
+test impl_traits::render_data_tests::move_type_surf_is_water ... ok
+test impl_traits::render_data_tests::move_type_tackle_is_normal ... ok
+test impl_traits::render_data_tests::move_type_thunder_is_electric ... ok
+test impl_traits::render_data_tests::species_name_en_spot_checks ... ok
+test impl_traits::render_data_tests::species_name_zh_spot_checks ... ok
+test impl_traits::save_data_tests::test_from_bytes_into_bytes ... ok
+test impl_traits::save_data_tests::test_pokemon_save_data_save_size ... ok
+test impl_traits::save_data_tests::test_pokemon_save_data_roundtrip_bytes ... ok
+test impl_traits::save_data_tests::test_save_manager_empty_slot_error ... ok
+test impl_traits::save_data_tests::test_pokemon_save_data_new_is_zero_filled ... ok
+test impl_traits::shop_provider_tests::celadon_4f_sells_stones ... ok
+test impl_traits::shop_provider_tests::shop_names_are_non_empty ... ok
+test impl_traits::shop_provider_tests::indigo_plateau_sells_endgame_items ... ok
+test impl_traits::shop_provider_tests::viridian_mart_inventory ... ok
+test impl_traits::tests::block_size_constant ... ok
+test impl_traits::tests::all_builtin_ids_resolve_by_variant_name ... ok
+test impl_traits::tests::blockset_for_overworld_is_non_empty ... ok
+test impl_traits::tests::map_trait_is_implemented ... ok
+test impl_traits::tests::map_trait_satisfies_bounds ... ok
+test impl_traits::tests::provider_dimensions ... ok
+test impl_traits::tests::tiles_per_block_dims ... ok
+test impl_traits::tests::tileset_by_id_0_returns_overworld ... ok
+test impl_traits::tests::tileset_by_id_23_returns_plateau ... ok
+test impl_traits::tests::tileset_by_id_255_returns_none ... ok
+test impl_traits::tests::tileset_by_name_not_found_returns_none ... ok
+test impl_traits::tests::tileset_by_name_overworld_matches ... ok
+test impl_traits::tests::tileset_count_matches_expected ... ok
+test impl_traits::tile_meta_tests::collision_type_counter ... ok
+test impl_traits::tile_meta_tests::collision_type_grass ... ok
+test impl_traits::tile_meta_tests::collision_type_impassable_wall ... ok
+test impl_traits::tile_meta_tests::collision_type_passable_floor ... ok
+test impl_traits::tile_meta_tests::collision_type_ledge ... ok
+test impl_traits::save_data_tests::test_delete_slot ... ok
+test impl_traits::tile_meta_tests::collision_type_plateau_grass ... ok
+test impl_traits::save_data_tests::test_list_slots ... ok
+test impl_traits::tile_meta_tests::custom_tileset_delegates_to_base_for_counter ... ok
+test impl_traits::tile_meta_tests::custom_tileset_delegates_to_base_for_grass ... ok
+test impl_traits::tile_meta_tests::get_grass_tile_mart_has_none ... ok
+test impl_traits::tile_meta_tests::get_grass_tile_overworld ... ok
+test impl_traits::tile_meta_tests::is_counter_mart_counter_tiles ... ok
+test impl_traits::tile_meta_tests::is_counter_non_counter_tile ... ok
+test impl_traits::tile_meta_tests::is_grass_no_grass_in_mart ... ok
+test impl_traits::tile_meta_tests::is_grass_overworld_grass_tile ... ok
+test impl_traits::tile_meta_tests::is_ledge_known_ledge_tiles ... ok
+test impl_traits::tile_meta_tests::is_ledge_non_ledge_tiles ... ok
+test impl_traits::tile_meta_tests::is_passable_known_impassable_overworld ... ok
+test impl_traits::tile_meta_tests::is_passable_known_passable_overworld ... ok
+test impl_traits::tile_meta_tests::is_passable_mart_tiles ... ok
+test impl_traits::tile_meta_tests::tileset_id_is_tile_meta_trait ... ok
+test impl_traits::tile_meta_tests::tileset_id_satisfies_trait_bounds ... ok
+test items::const_name_tests::const_name_key_items ... ok
+test items::const_name_tests::from_const_name_is_underscore_insensitive ... ok
+test items::const_name_tests::tm_item_kind_is_custom ... ok
+test items::item_kind_tests::badge_is_key_item ... ok
+test items::item_kind_tests::bicycle_is_key_item ... ok
+test items::item_kind_tests::coin_case_is_key_item ... ok
+test items::const_name_tests::from_const_name_unknown_is_none ... ok
+test items::item_kind_tests::elixer_is_consumable ... ok
+test items::item_kind_tests::escape_rope_is_consumable ... ok
+test items::item_kind_tests::full_restore_is_consumable ... ok
+test items::item_kind_tests::great_ball_is_custom_ball ... ok
+test items::item_kind_tests::guard_spec_is_consumable ... ok
+test items::item_kind_tests::master_ball_is_custom ... ok
+test items::item_kind_tests::moon_stone_is_evolution ... ok
+test items::item_kind_tests::nugget_is_currency ... ok
+test items::item_kind_tests::potion_is_consumable ... ok
+test items::const_name_tests::from_const_name_round_trips ... ok
+test items::item_kind_tests::protein_is_stat_boost ... ok
+test items::item_kind_tests::rare_candy_is_stat_boost ... ok
+test layout_constants::tests::test_title_screen_positions ... ok
+test impl_traits::save_data_tests::test_save_manager_corrupted_checksum ... ok
+test menu_layouts::tests::all_18_menus_are_found ... ok
+test menu_layouts::tests::bordered_menus_have_inset_content ... ok
+test menu_layouts::tests::borderless_menus_have_matching_area_and_content ... ok
+test menu_layouts::tests::unknown_menu_returns_none ... ok
+test mon_party_icons::tests::none_falls_back_to_mon ... ok
+test mon_party_icons::tests::known_mappings ... ok
+test items::const_name_tests::tms_and_hms_resolve_from_const_name ... ok
+test mon_party_icons::tests::table_full ... ok
+test map_data_loader::tests::test_name_to_map_id_roundtrip ... ok
+test move_sfx::tests::get_move_sound_cry_moves ... ok
+test move_sfx::tests::get_move_sound_table_lookup ... ok
+test map_data_loader::tests::test_resolve_map_id ... ok
+test move_sfx::tests::spot_check_entries ... ok
+test move_sfx::tests::table_length_matches_num_attacks_plus_tail ... ok
+test pinyin_dict::tests::lookup_empty_for_unknown_prefix ... ok
+test pinyin_dict::tests::lookup_caps_at_max_candidates ... ok
+test pinyin_dict::tests::lookup_exact_syllable ... ok
+test pinyin_dict::tests::lookup_prefix_matches_sorted_syllables ... ok
+test pinyin_dict::tests::lookup_is_case_insensitive ... ok
+test pinyin_dict::tests::lv_nv_aliases_reachable ... ok
+test pinyin_dict::tests::lookup_returns_no_duplicates ... ok
+test pokedex::tests::all_entries_present_in_dex_order ... ok
+test pokedex::tests::spot_check_bulbasaur_and_mewtwo ... ok
+test pinyin_dict::tests::table_entries_are_sorted_and_ascii ... ok
+test pokedex::tests::spot_check_chinese_bulbasaur ... ok
+test pokedex::tests::canonical_151_have_chinese_dex_text ... ok
+test runtime_overrides::tests::blk_override_round_trips ... ok
+test runtime_overrides::tests::base_stats_override_round_trips ... ok
+test runtime_overrides::tests::item_override_round_trips ... ok
+test runtime_overrides::tests::move_override_rejects_bad_json ... ok
+test runtime_overrides::tests::trainer_override_round_trips ... ok
+test pinyin_dict::tests::table_entries_have_no_duplicate_chars ... ok
+test runtime_overrides::tests::move_override_shadows_baseline ... ok
+test runtime_overrides::tests::map_override_round_trips ... ok
+test lang_data::move_translation_tests::every_gen1_move_has_a_chinese_name_and_translates_in_messages ... ok
+test impl_traits::save_data_tests::test_save_manager_roundtrip ... ok
+test script_api::tests::has_badge_rejects_unknown_name ... ok
+test script_api::tests::badge_queries_read_seeded_bitmask ... ok
+test script_api::tests::elevator_menu_suspends_until_floor_then_resumes ... ok
+test script_api::tests::show_diploma_yields_command ... ok
+test script_api::tests::start_battle_suspends_until_outcome_then_resumes ... ok
+test script_api::tests::filter_bag_suspends_until_item_then_resumes ... ok
+test species::scene_name_tests::from_scene_name_parses_trade_species ... ok
+test species::scene_name_tests::scene_species_to_pascal_handles_multiword_and_single ... ok
+test tilesets::tests::builtin_round_trip_to_u8 ... ok
+test tilesets::tests::custom_tilesets_have_valid_base_and_round_trip_name ... ok
+test tilesets::tests::from_name_unknown_returns_none_for_unregistered ... ok
+test tilesets::tests::name_round_trip_builtin ... ok
+test tilesets::tests::unregistered_custom_slot_falls_back_to_overworld ... ok
+test toggleable_objects::tests::test_byte_offset_and_mask ... ok
+test toggleable_objects::tests::test_hide_show_flags ... ok
+test toggleable_objects::tests::test_extended_map_object_mappings ... ok
+test toggleable_objects::tests::test_starter_ball_indices ... ok
+test toggleable_objects::tests::test_toggle_id_mapping ... ok
+test town_map_data::tests::resolves_indoor_dungeon_to_parent_landmark ... ok
+test impl_traits::save_data_tests::test_save_manager_multi_slot ... ok
+test town_map_data::tests::resolves_outdoor_city ... ok
+test town_map_data::tests::tilemap_decodes_to_full_screen ... ok
+test trades::tests::find_npc_trade_resolves_every_used_trade ... ok
+test trades::tests::table_matches_asm_trade_mons ... ok
+test trainer_data::tests::display_names_match_reference_trainer_names ... ok
+test trades::tests::rb_trades_never_trigger_trade_evolution ... ok
+test trainer_data::tests::make_trainer_id_round_trips_ref_set_numbers ... ok
+test trainer_data::tests::numbered_rival_classes_and_party_sets_round_trip ... ok
+test trainer_data::tests::starter_choice_survives_evolution_and_lead_changes ... ok
+test ui_layout::v2_registry_tests::v2_registry_covers_gui_only_screens ... ok
+test ui_layout::v2_registry_tests::v2_registry_serves_element_format_for_v1_covered_screen ... ok
+test ui_text::tests::pc_lines_translate_and_pass_unknown_through ... ok
+test ui_text::tests::pc_main_menu_labels_translate ... ok
+test ui_text::tests::slots_messages_and_symbols_translate ... ok
+test wild_data::tests::all_wild_table_names_resolve_to_map_ids ... ok
+test wild_data::tests::good_rod_table_matches_asm ... ok
+test wild_data::tests::super_rod_group7_matches_asm ... ok
+test wild_data::tests::area_locations_spot_checks ... ok
+test wild_data::tests::super_rod_group9_matches_asm ... ok
+test wild_data::tests::super_rod_group_index_matches_name_keyed_table ... ok
+test wild_data::tests::super_rod_group_index_none_for_unlisted_maps ... ok
+test wild_data::tests::super_rod_group_index_spot_checks ... ok
+test script_api::tests::sync_queries_gate_negative ... ok
+test wild_data::tests::area_locations_matches_asm_for_all_red_species ... ok
+test script_api::tests::sync_queries_read_seeded_state ... ok
+test wild_data::tests::area_locations_are_sorted_unique_and_exclude_cerulean_cave ... ok
+test impl_traits::tests::provider_block_data ... ok
+test impl_traits::tests::provider_border_block ... ok
+test impl_traits::tests::provider_tileset ... ok
+test impl_traits::tests::provider_connections ... ok
+test scene_loader::ast_provider_tests::disk_provider_compiles_scenes_to_asts ... ok
+
+test result: ok. 255 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.15s
+
+     Running tests/config_roundtrip.rs (target/debug/deps/config_roundtrip-aea6812296ef8afd)
+
+running 2 tests
+test scene_onload_resolves_at_runtime ... ok
+test scene_regenerates_committed_bindings ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.17s
+
+     Running tests/test_custom_tilesets.rs (target/debug/deps/test_custom_tilesets-fd8bb3646980d8d2)
+
+running 3 tests
+test map_header_string_resolves_to_custom_when_registered ... ok
+test unregistered_custom_slot_safely_falls_back ... ok
+test registered_custom_tilesets_delegate_correctly ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/test_evos_moves.rs (target/debug/deps/test_evos_moves-75679228cfd9e0ce)
+
+running 11 tests
+test every_species_has_evos_moves ... ok
+test evolution_targets_valid ... ok
+test evos_moves_ordered_by_dex ... ok
+test evos_moves_has_151_entries ... ok
+test learnset_levels_ascending ... ok
+test spot_check_bulbasaur_evo ... ok
+test spot_check_kadabra_trade_evo ... ok
+test spot_check_pikachu_evo ... ok
+test species_with_learnsets_count ... ok
+test species_with_evolutions_count ... ok
+test spot_check_mew_no_evolution ... ok
+
+test result: ok. 11 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/test_item_data.rs (target/debug/deps/test_item_data-a9a0f7189ef05dd3)
+
+running 12 tests
+test hm_moves_has_5_entries ... ok
+test every_item_has_data ... ok
+test item_data_has_83_entries ... ok
+test item_data_ordered ... ok
+test item_names_nonempty ... ok
+test key_items_consistency ... ok
+test spot_check_master_ball ... ok
+test spot_check_poke_ball_price ... ok
+test tm_hm_names_and_prices_are_synthesized ... ok
+test tm_moves_has_50_entries ... ok
+test tm_prices_all_positive ... ok
+test tm_prices_has_50_entries ... ok
+
+test result: ok. 12 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/test_map_metadata.rs (target/debug/deps/test_map_metadata-2664c6ebc80a0b76)
+
+running 21 tests
+test all_53_map_names_present ... ok
+test all_8_badges_mapped ... ok
+test each_sprite_set_has_11_entries ... ok
+test indoor_entries_count ... ok
+test indoor_map_inherits_parent_name ... ok
+test name_id_round_trip ... ok
+test non_gym_no_badge ... ok
+test outdoor_entries_count ... ok
+test pallet_town_in_outdoor_entries ... ok
+test map_sprite_sets_count ... ok
+test pallet_town_name ... ok
+test mt_moon_is_dungeon ... ok
+test pallet_town_not_dungeon ... ok
+test pewter_gym_badge ... ok
+test rock_tunnel_is_dungeon ... ok
+test route_names ... ok
+test safari_rest_houses ... ok
+test split_map_sprite_sets_count ... ok
+test sprite_sets_count ... ok
+test town_map_order_count ... ok
+test viridian_forest_is_dungeon ... ok
+
+test result: ok. 21 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/test_move_data.rs (target/debug/deps/test_move_data-5f595a86856a4741)
+
+running 9 tests
+test move_accuracy_in_range ... ok
+test every_move_id_has_data ... ok
+test move_pp_nonzero ... ok
+test moves_has_165_entries ... ok
+test move_type_is_valid ... ok
+test moves_ordered_by_id ... ok
+test spot_check_psychic ... ok
+test spot_check_tackle ... ok
+test spot_check_thunder ... ok
+
+test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/test_pokemon_data.rs (target/debug/deps/test_pokemon_data-642eafcf4807132c)
+
+running 9 tests
+test base_stats_catch_rate_valid ... ok
+test base_stats_has_151_entries ... ok
+test base_stats_hp_nonzero ... ok
+test base_stats_ordered_by_dex_number ... ok
+test spot_check_mew ... ok
+test spot_check_bulbasaur ... ok
+test every_species_has_base_stats ... ok
+test spot_check_mewtwo ... ok
+test spot_check_pikachu ... ok
+
+test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/test_scene_shop_items.rs (target/debug/deps/test_scene_shop_items-485deec4244b1faf)
+
+running 1 test
+test all_scene_open_shop_items_resolve ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.06s
+
+     Running tests/test_slot_machine.rs (target/debug/deps/test_slot_machine-2e78d6db06faa3c4)
+
+running 19 tests
+test from_high_byte_invalid ... ok
+test constants_values ... ok
+test bit_flag_values ... ok
+test from_high_byte_roundtrip ... ok
+test machine_status_constants ... ok
+test reward_flash_counts ... ok
+test reward_payouts ... ok
+test symbol_high_bytes ... ok
+test symbol_low_bytes ... ok
+test wheel1_bar_count ... ok
+test wheel1_cherry_count ... ok
+test wheel1_has_18_symbols ... ok
+test wheel1_seven_count ... ok
+test wheel1_starts_with_seven ... ok
+test wheel2_has_18_symbols ... ok
+test wheel2_starts_with_seven ... ok
+test wheel3_bar_count ... ok
+test wheel3_has_18_symbols ... ok
+test wheel3_starts_with_seven ... ok
+
+test result: ok. 19 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/test_sprites.rs (target/debug/deps/test_sprites-4894a57c2a378422)
+
+running 15 tests
+test facing_direction_constants ... ok
+test facing_table_index_directional ... ok
+test facing_table_index_immobile ... ok
+test movement_constants ... ok
+test flipped_oam_template_structure ... ok
+test normal_oam_template_structure ... ok
+test oam_bit_flags ... ok
+test oam_constants_values ... ok
+test people_event_flags ... ok
+test sprite_facing_table_directional_entries ... ok
+test sprite_facing_table_immobile_entries ... ok
+test sprite_facing_table_length ... ok
+test sprite_state_constants_field_offsets ... ok
+test sprite_tile_base_offset_four_tile_b ... ok
+test sprite_tile_base_offset_standard ... ok
+
+test result: ok. 15 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/test_text.rs (target/debug/deps/test_text-aa8ea0e142e05520)
+
+running 30 tests
+test charmap_char_space_constant ... ok
+test charmap_char_terminator_constant ... ok
+test charmap_decode_0x80_is_a ... ok
+test charmap_encode_space ... ok
+test charmap_decode_terminator ... ok
+test charmap_decode_string_stops_at_terminator ... ok
+test charmap_encode_string_with_terminator ... ok
+test charmap_encode_uppercase_a ... ok
+test charmap_encode_zero ... ok
+test charmap_roundtrip_encode_decode ... ok
+test inline_control_done_is_0x57 ... ok
+test inline_control_is_control_false_for_printable ... ok
+test inline_control_is_control_true ... ok
+test inline_control_next_is_0x4e ... ok
+test text_command_count_is_24 ... ok
+test text_command_from_byte_out_of_range ... ok
+test text_command_from_byte_tx_far ... ok
+test text_command_from_byte_tx_start ... ok
+test text_command_param_counts ... ok
+test text_command_sound_commands_flagged ... ok
+test text_command_to_byte_roundtrip ... ok
+test text_script_count_is_8 ... ok
+test text_script_mart ... ok
+test text_script_out_of_range_returns_none ... ok
+test text_script_pokecenter_nurse ... ok
+test text_script_roundtrip ... ok
+test text_script_unused_gaps_return_none ... ok
+test text_script_vending_machine ... ok
+test tx_end_is_0x50 ... ok
+test tx_sound_level_up_aliases_get_item_1 ... ok
+
+test result: ok. 30 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/test_trainer_data.rs (target/debug/deps/test_trainer_data-476daa345f5a8e53)
+
+running 9 tests
+test trainer_class_count ... ok
+test all_parties_nonempty ... ok
+test spot_check_brock ... ok
+test spot_check_lance ... ok
+test party_sizes_max_six ... ok
+test trainer_data_covers_all_classes ... ok
+test all_species_valid ... ok
+test total_party_count ... ok
+test all_levels_valid ... ok
+
+test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/test_type_chart.rs (target/debug/deps/test_type_chart-92122518af7786df)
+
+running 10 tests
+test fire_beats_grass ... ok
+test electric_no_effect_on_ground ... ok
+test ghost_no_effect_on_normal ... ok
+test grass_beats_water ... ok
+test ground_no_effect_on_flying ... ok
+test no_normal_effectiveness_in_chart ... ok
+test normal_no_effect_on_ghost ... ok
+test type_chart_has_82_entries ... ok
+test water_beats_fire ... ok
+test no_duplicate_matchups ... ok
+
+test result: ok. 10 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/test_ui_layout.rs (target/debug/deps/test_ui_layout-18f2af57fcac0950)
+
+running 3 tests
+test cow_smoke_all_statics_are_borrowed ... ok
+test cow_smoke_dialog_default_layout_addressable ... ok
+test get_layout_json_covers_all_files ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/test_wild_data.rs (target/debug/deps/test_wild_data-fff39c67eac072a7)
+
+running 11 tests
+test encounter_slot_chances_has_10_slots ... ok
+test good_rod_data_valid ... ok
+test super_rod_groups_valid ... ok
+test grass_encounters_have_10_mons ... ok
+test blue_wild_data_nonempty ... ok
+test all_wild_species_valid ... ok
+test encounter_slot_chances_sum ... ok
+test super_rod_map_entries_valid ... ok
+test red_blue_have_differences ... ok
+test water_encounters_have_10_mons_or_empty ... ok
+test red_wild_data_nonempty ... ok
+
+test result: ok. 11 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src/lib.rs (target/debug/deps/pokered_debug_server-f96387d66e0c321f)
+
+running 4 tests
+test protocol::tests::unknown_command_is_an_error ... ok
+test protocol::tests::commands_serialize_back_to_wire_json ... ok
+test protocol::tests::wire_json_parses_stepping_commands ... ok
+test protocol::tests::wire_json_parses_into_core_and_game_commands ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src/lib.rs (target/debug/deps/pokered_ui-dda485593038be93)
+
+running 4 tests
+test menus::pokedex::tests::category_stays_at_asm_position_unless_too_wide ... ok
+test menus::bag::tests::long_bag_list_scrolls_and_stays_in_the_box ... ok
+test menus::bag::tests::cancel_row_visible_when_cursor_on_it ... ok
+test menus::party::move_choice_tests::forget_menu_box_wide_enough_for_long_move_names ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/custom_elements.rs (target/debug/deps/custom_elements-61f176fd5a2eb93b)
+
+running 5 tests
+test parse_screen_rejects_schema_violations ... ok
+test hp_bar_zero_max_draws_no_fill ... ok
+test hp_bar_low_health_renders_critical_shade ... ok
+test hp_bar_full_health_renders_full_fill ... ok
+test compiled_stats_layout_uses_custom_hp_bar_and_validates ... ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/dialog_layout.rs (target/debug/deps/dialog_layout-2bc418c03cfafccf)
+
+running 4 tests
+test en_dialog_line_fills_box ... ok
+test zh_dialog_wraps_long_unbroken_text ... ok
+test en_dialog_stays_inside_box ... ok
+test zh_dialog_stays_inside_box ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
+
+     Running tests/engine.rs (target/debug/deps/engine-7d56d5b7f8a87cb4)
+
+running 7 tests
+test pixel_rect_offsets_from_frame_origin_in_pixels ... ok
+test nested_text_boxes_compose_origins_additively ... ok
+test text_box_draws_outer_rect_and_invokes_body_with_inset_origin ... ok
+test menu_list_draws_items_and_cursor_only_at_selected_row ... ok
+test safari_zone_start_info_box_matches_original_layout ... ok
+test full_party_numbers_and_status_have_room_for_tall_glyphs ... ok
+test party_menus_keep_every_option_inside_the_border ... ok
+
+test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/menus.rs (target/debug/deps/menus-607830852d5deb56)
+
+running 57 tests
+test battle_party_empty_party_draws_nothing ... ok
+test battle_move_no_type_pp_box_when_cursor_out_of_bounds ... ok
+test battle_bag_empty_items_renders_only_cancel ... ok
+test battle_bag_renders_items_with_quantity_and_cancel ... ok
+test battle_bag_cursor_tracks_selection ... ok
+test battle_party_cursor_follows_selection ... ok
+test battle_party_scrolls_when_more_than_four_pokemon ... ok
+test battle_party_fainted_shows_fnt ... ok
+test battle_move_renders_move_list_with_type_pp_box ... ok
+test battle_party_single_pokemon_renders_name_and_hp ... ok
+test battle_move_cursor_follows_selection ... ok
+test battle_text_arrow_suppressed_when_show_arrow_false ... ok
+test battle_text_preserves_blank_lines ... ok
+test battle_text_no_wrap_for_short_text ... ok
+test battle_text_shows_arrow_when_show_arrow_true ... ok
+test battle_text_wraps_long_text_to_two_lines ... ok
+test draw_confirm_box_rect_is_exact ... ok
+test draw_confirm_message_rendered_above_box ... ok
+test draw_confirm_no_cursor_on_row_9 ... ok
+test draw_confirm_yes_cursor_on_row_8 ... ok
+test draw_main_menu_uses_layout_static ... ok
+test draw_main_with_money_cursor_follows_selection ... ok
+test draw_main_with_money_shows_buy_sell_quit_and_money_box ... ok
+test battle_main_default_grid_labels_and_cursor ... ok
+test draw_quantity_shows_item_name_qty_cost_and_money ... ok
+test draw_result_dialog_shows_lines_in_bottom_box ... ok
+test draw_result_dialog_single_line ... ok
+test naming_cjk_name_fills_underscore_slots_by_width_units ... ok
+test main_menu_no_save_uses_short_box_and_filled_triangle_cursor ... ok
+test naming_cursor_on_case_row_renders_arrow_at_keyboard_x_minus_one ... ok
+test main_menu_with_save_uses_taller_box ... ok
+test naming_lowercase_toggle_shows_upper_case_label_when_in_lowercase ... ok
+test naming_name_text_is_drawn_after_underscores ... ok
+test naming_pinyin_rows_stay_inside_keyboard_box ... ok
+test naming_player_screen_renders_title_box_underscores_and_keyboard ... ok
+test naming_pokemon_screen_uses_nickname_title ... ok
+test naming_rival_screen_uses_rival_title ... ok
+test battle_main_cursor_tracks_row_and_col ... ok
+test save_menu_ask_phase_draws_info_box_prompt_box_and_yes_no_box ... ok
+test party_menu_empty_party_shows_no_mon_message ... ok
+test party_menu_single_pokemon_full_hp_no_status ... ok
+test party_menu_cursor_follows_selection ... ok
+test options_menu_cursor_moves_to_battle_animation_row ... ok
+test options_menu_cursor_x_tracks_setting_value_on_active_row ... ok
+test options_menu_no_cursor_on_inactive_rows ... ok
+test party_menu_zero_hp_skips_filled_rect ... ok
+test party_menu_status_codes_map_correctly ... ok
+test options_menu_three_setting_boxes_and_cancel_outside ... ok
+test save_menu_ask_phase_no_cursor_moves_to_row_9 ... ok
+test save_menu_complete_phase_shows_player_saved_the_game ... ok
+test save_menu_confirm_overwrite_uses_same_layout_as_ask ... ok
+test save_menu_saving_phase_shows_only_now_saving_in_prompt_box ... ok
+test save_menu_wait_after_save_phase_renders_identically_to_complete ... ok
+test start_menu_box_anchored_top_right_with_caret_cursor ... ok
+test yes_no_cursor_sits_one_tile_left_of_options ... ok
+test options_menu_zh_cursor_on_toggle_rows ... ok
+test options_menu_zh_cursor_tracks_zh_label_positions ... ok
+
+test result: ok. 57 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/stats_right_column.rs (target/debug/deps/stats_right_column-d5b0f9f5f1786c06)
+
+running 4 tests
+test zh_values_anchor_flush_on_their_right_edges ... ok
+test zh_right_column_renders_labels_via_tile_path_only ... ok
+test zh_stats_labels_use_font_metrics_and_leave_room_for_values ... ok
+test en_right_column_renders_labels_and_values ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/textbox_transparency.rs (target/debug/deps/textbox_transparency-fa1807d9db2884d6)
+
+running 1 test
+test border_outside_is_transparent ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests pokered_app
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests pokered_data
+
+running 2 tests
+test crates/pokered-data/src/script_api.rs - script_api::PokemonScriptApi (line 21) ... ignored
+test crates/pokered-data/src/wild_data.rs - wild_data::wild_data_for_map (line 542) ... ok
+
+test result: ok. 1 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 0.66s
+
+   Doc-tests pokered_debug_server
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests pokered_ui
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s

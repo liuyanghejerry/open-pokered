@@ -1,0 +1,5 @@
+g.nav_warp(18,21,'SaffronCity','SilphCo1F')
+for floor,x in [(1,26),(2,26),(3,24),(4,26)]:g.nav_warp(x,0,f'SilphCo{floor}F',f'SilphCo{floor+1}F');g.cutscene()
+g.nav_to(12,4,'SilphCo5F');g.face('up');g.tap('a',12);g.cutscene();g.step(30);snap('retry-silph-elixer')
+assert any(i['item']=='Elixer' for i in g.d.cmd(cmd='get_bag')['data']),g.st()
+checkpoint('m143-retry-elixer')

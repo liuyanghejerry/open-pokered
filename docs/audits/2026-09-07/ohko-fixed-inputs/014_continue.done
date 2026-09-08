@@ -1,0 +1,5 @@
+g.tap('a',8);g.step(120);snap('m155-postgame-continue-menu')
+assert g.st()['screen']=='main-menu',g.st()
+g.tap('a',8);g.step(180);g.cutscene();snap('m156-postgame-continued')
+assert g.st()['screen']=='overworld' and g.st()['map_name']=='PalletTown',g.st()
+checkpoint('m157-postgame-pallet-saved')

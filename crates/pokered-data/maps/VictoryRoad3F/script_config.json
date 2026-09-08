@@ -2,12 +2,12 @@
   "$schema": "../../schemas/script_config.schema.json",
   "coordEvents": [
     {
-      "name": "switch1",
+      "name": "hole",
       "position": [
-        3,
-        5
+        23,
+        15
       ],
-      "trigger": "switch1"
+      "trigger": "coordHole"
     }
   ],
   "npcs": [
@@ -51,7 +51,9 @@
     },
     {
       "id": 10,
-      "talk": "talkBoulder4"
+      "talk": "talkBoulder4",
+      "toggleId": "VICTORY_ROAD_3F_OBJ_10",
+      "defaultHidden": false
     }
   ],
   "onLoad": "VictoryRoad3FOnLoad",

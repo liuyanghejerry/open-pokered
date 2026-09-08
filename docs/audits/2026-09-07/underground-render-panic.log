@@ -1,0 +1,10 @@
+[Debug] No --debug-modules flag provided
+Debug server started on port 63242
+Save file loaded: "/tmp/pokered-completion-20260907-north/active.sav"
+Asset root found: "/Users/liuyanghe02/develop/open-pokered-3/crates/pokered-renderer/../../gfx"
+Audio output disabled (--no-audio).
+Running headless (no window). Press Ctrl-C to exit.
+
+thread 'main' (24301915) panicked at crates/pokered-app/src/render/overworld.rs:146:16:
+index out of bounds: the len is 92 but the index is 92
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace

@@ -1,0 +1,268 @@
+error: invalid character `{` in package name: `{{project-name}}`, the first character must be a Unicode XID start character (most letters or `_`)
+ --> ../../.cargo/git/checkouts/dotzuki-10858e612e941535/88f1fcc/workspace/dotzuki-template/Cargo.toml:4:8
+  |
+4 | name = "{{project-name}}"
+  |        ^^^^^^^^^^^^^^^^^^
+   Compiling serde_core v1.0.229
+   Compiling serde v1.0.229
+   Compiling rand_chacha v0.3.1
+   Compiling either v1.17.0
+   Compiling itertools v0.13.0
+   Compiling rand v0.8.7
+   Compiling phf_generator v0.11.3
+   Compiling phf_macros v0.11.3
+   Compiling bitflags v2.13.1
+   Compiling serde_json v1.0.151
+   Compiling phf v0.11.3
+   Compiling metal v0.27.0
+   Compiling naga v0.19.2
+   Compiling wgpu-types v0.19.2
+   Compiling objc2-foundation v0.2.2
+   Compiling png v0.18.1
+   Compiling rustix v1.1.4
+   Compiling boa_interner v0.20.0
+   Compiling num-bigint v0.4.8
+   Compiling debugid v0.8.0
+   Compiling ron v0.8.1
+   Compiling sourcemap v9.3.2
+   Compiling terminal_size v0.4.4
+   Compiling miette v7.6.0
+   Compiling image v0.25.10
+   Compiling boa_ast v0.20.0
+   Compiling dotzuki-engine-dsl v0.6.0 (https://github.com/liuyanghejerry/dotzuki?tag=v0.6.0#88f1fccd)
+   Compiling dotzuki-engine v0.6.0 (https://github.com/liuyanghejerry/dotzuki?tag=v0.6.0#88f1fccd)
+   Compiling objc2-app-kit v0.2.2
+   Compiling boa_parser v0.20.0
+   Compiling wgpu-hal v0.19.5
+   Compiling boa_engine v0.20.0
+   Compiling wgpu-core v0.19.4
+   Compiling winit v0.30.13
+   Compiling winit_input_helper v0.17.0
+   Compiling dotzuki-engine-script v0.6.0 (https://github.com/liuyanghejerry/dotzuki?tag=v0.6.0#88f1fccd)
+   Compiling wgpu v0.19.4
+   Compiling pixels v0.15.0
+   Compiling dotzuki-renderer v0.6.0 (https://github.com/liuyanghejerry/dotzuki?tag=v0.6.0#88f1fccd)
+   Compiling pokered-data v0.1.0 (/Users/liuyanghe02/develop/open-pokered-3/crates/pokered-data)
+warning: function `emit_flex_container` is never used
+    --> crates/pokered-data/build.rs:2138:4
+     |
+2138 | fn emit_flex_container(out: &mut String, flex: &serde_json::Value) {
+     |    ^^^^^^^^^^^^^^^^^^^
+     |
+     = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: function `emit_list_params` is never used
+    --> crates/pokered-data/build.rs:2390:4
+     |
+2390 | fn emit_list_params(out: &mut String, list: &serde_json::Value) {
+     |    ^^^^^^^^^^^^^^^^
+
+warning: `pokered-data` (build script) generated 2 warnings
+warning: unused imports: `Display`, `EnumCount`, `EnumIter`, and `EnumString`
+ --> crates/pokered-data/src/items.rs:3:20
+  |
+3 | use strum_macros::{Display, EnumCount, EnumIter, EnumString};
+  |                    ^^^^^^^  ^^^^^^^^^  ^^^^^^^^  ^^^^^^^^^^
+  |
+  = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused import: `PaletteTrait`
+   --> crates/pokered-data/src/impl_traits.rs:264:48
+    |
+264 | use dotzuki_engine::palette::{PaletteProvider, PaletteTrait, SgbPaletteEntry};
+    |                                                ^^^^^^^^^^^^
+
+warning: unreachable pattern
+  --> crates/pokered-data/src/lang_data.rs:90:9
+   |
+90 |         _ => "???", // species added through the editor (no localized name yet)
+   |         ^ no value can reach this
+   |
+note: multiple earlier patterns match some of the same values
+  --> crates/pokered-data/src/lang_data.rs:90:9
+   |
+38 |         Species::None=>"---",
+   |         ------------- matches some of the same values
+39 |         Species::Bulbasaur=>"BULBASAUR",Species::Ivysaur=>"IVYSAUR",Species::Venusaur=>"VENUSAUR",
+   |         ------------------              ----------------            ----------------- matches some of the same values
+   |         |                               |
+   |         |                               matches some of the same values
+   |         matches some of the same values
+...
+90 |         _ => "???", // species added through the editor (no localized name yet)
+   |         ^ ...and 148 other patterns collectively make this unreachable
+   = note: `#[warn(unreachable_patterns)]` (part of `#[warn(unused)]`) on by default
+
+warning: unreachable pattern
+   --> crates/pokered-data/src/lang_data.rs:233:13
+    |
+233 |             _ => "---",
+    |             ^ no value can reach this
+    |
+note: multiple earlier patterns match some of the same values
+   --> crates/pokered-data/src/lang_data.rs:233:13
+    |
+178 |             MoveId::None=>"---",MoveId::Pound=>"POUND",MoveId::KarateChop=>"KARATE CHOP",
+    |             ------------        -------------          ------------------ matches some of the same values
+    |             |                   |
+    |             |                   matches some of the same values
+    |             matches some of the same values
+179 |             MoveId::Doubleslap=>"DOUBLESLAP",MoveId::CometPunch=>"COMET PUNCH",MoveId::MegaPunch=>"MEGA PUNCH",
+    |             ------------------ matches some of the same values
+...
+233 |             _ => "---",
+    |             ^ ...and 162 other patterns collectively make this unreachable
+
+warning: unreachable pattern
+   --> crates/pokered-data/src/lang_data.rs:368:9
+    |
+345 |         "BADGES" => "徽章",
+    |         -------- matches all the relevant values
+...
+368 |         "BADGES" => "徽章",
+    |         ^^^^^^^^ no value can reach this
+
+warning: unreachable pattern
+   --> crates/pokered-data/src/lang_data.rs:388:9
+    |
+361 |         "EXIT" => "退出",
+    |         ------ matches all the relevant values
+...
+388 |         "EXIT" => "退出",
+    |         ^^^^^^ no value can reach this
+
+warning: function `default_true` is never used
+   --> crates/pokered-data/src/ui_layout/schema.rs:111:4
+    |
+111 | fn default_true() -> bool { true }
+    |    ^^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: function `default_gap` is never used
+   --> crates/pokered-data/src/ui_layout/schema.rs:112:4
+    |
+112 | fn default_gap() -> u32 { 1 }
+    |    ^^^^^^^^^^^
+
+warning: function `default_item_name_width` is never used
+   --> crates/pokered-data/src/ui_layout/schema.rs:113:4
+    |
+113 | fn default_item_name_width() -> u32 { 14 }
+    |    ^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: function `default_qty_width` is never used
+   --> crates/pokered-data/src/ui_layout/schema.rs:114:4
+    |
+114 | fn default_qty_width() -> u32 { 2 }
+    |    ^^^^^^^^^^^^^^^^^
+
+warning: function `one` is never used
+   --> crates/pokered-data/src/ui_layout/schema.rs:223:4
+    |
+223 | fn one() -> u32 { 1 }
+    |    ^^^
+
+warning: `pokered-data` (lib) generated 11 warnings (run `cargo fix --lib -p pokered-data` to apply 1 suggestion)
+warning: `pokered-data` (lib test) generated 10 warnings (10 duplicates)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 33.82s
+     Running unittests src/lib.rs (target/debug/deps/pokered_data-340887250b7d3361)
+
+running 4 tests
+test trainer_data::tests::display_names_match_reference_trainer_names ... ok
+test trainer_data::tests::starter_choice_survives_evolution_and_lead_changes ... ok
+test trainer_data::tests::numbered_rival_classes_and_party_sets_round_trip ... ok
+test trainer_data::tests::make_trainer_id_round_trips_ref_set_numbers ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 250 filtered out; finished in 0.00s
+
+     Running tests/config_roundtrip.rs (target/debug/deps/config_roundtrip-75e6e44d7cb5ddc5)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 2 filtered out; finished in 0.00s
+
+     Running tests/test_custom_tilesets.rs (target/debug/deps/test_custom_tilesets-07ba4fd96bc6417c)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 3 filtered out; finished in 0.00s
+
+     Running tests/test_evos_moves.rs (target/debug/deps/test_evos_moves-5820e57a6659e54d)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 11 filtered out; finished in 0.00s
+
+     Running tests/test_item_data.rs (target/debug/deps/test_item_data-d3a0f8aad2a56b66)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 12 filtered out; finished in 0.00s
+
+     Running tests/test_map_metadata.rs (target/debug/deps/test_map_metadata-0f353b5904441222)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 21 filtered out; finished in 0.00s
+
+     Running tests/test_move_data.rs (target/debug/deps/test_move_data-b9c1714803aaf930)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 9 filtered out; finished in 0.00s
+
+     Running tests/test_pokemon_data.rs (target/debug/deps/test_pokemon_data-f0d76c0af7156d94)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 9 filtered out; finished in 0.00s
+
+     Running tests/test_scene_shop_items.rs (target/debug/deps/test_scene_shop_items-e666dda3ad80792d)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.00s
+
+     Running tests/test_slot_machine.rs (target/debug/deps/test_slot_machine-3e38306c84e5a9a0)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 19 filtered out; finished in 0.00s
+
+     Running tests/test_sprites.rs (target/debug/deps/test_sprites-7b4fa6a4b66045de)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 15 filtered out; finished in 0.00s
+
+     Running tests/test_text.rs (target/debug/deps/test_text-b38f91e892bce719)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 30 filtered out; finished in 0.00s
+
+     Running tests/test_trainer_data.rs (target/debug/deps/test_trainer_data-e1b027dd7a6b9ee7)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 9 filtered out; finished in 0.00s
+
+     Running tests/test_type_chart.rs (target/debug/deps/test_type_chart-c3467c2b468ffa17)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 10 filtered out; finished in 0.00s
+
+     Running tests/test_ui_layout.rs (target/debug/deps/test_ui_layout-3fb846fec8f87355)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 3 filtered out; finished in 0.00s
+
+     Running tests/test_wild_data.rs (target/debug/deps/test_wild_data-c132cf82d099c420)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 11 filtered out; finished in 0.00s
+

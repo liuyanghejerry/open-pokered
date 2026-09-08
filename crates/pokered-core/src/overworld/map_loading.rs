@@ -7,6 +7,18 @@ use pokered_data::maps::{MapId, NUM_MAPS};
 use pokered_data::music::MusicId;
 use pokered_data::tilesets::TilesetId;
 
+/// Underground entrance scripts explicitly set wLastMap even when entered
+/// from the indoor tunnel (scripts/UndergroundPathRoute{5,6,7,8}.asm).
+pub(crate) fn scripted_last_map(map: MapId) -> Option<MapId> {
+    match map {
+        MapId::UndergroundPathRoute5 => Some(MapId::Route5),
+        MapId::UndergroundPathRoute6 => Some(MapId::Route6),
+        MapId::UndergroundPathRoute7 => Some(MapId::Route7),
+        MapId::UndergroundPathRoute8 => Some(MapId::Route8),
+        _ => None,
+    }
+}
+
 pub fn get_map_dimensions(map: MapId) -> (u8, u8) {
     map.dimensions()
 }

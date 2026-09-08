@@ -28,31 +28,42 @@ game_scene BillsHouse {
     @speaker("") {
       @t("When I'm in the TELEPORTER,\ngo to my PC and run the Cell\nSeparation System!", "当我在传送机里的时候，去我的\n电脑运行细胞分离系统！")
     }
-    // Original then plays a walk-to-machine cutscene and the player runs the
-    // Cell Separation System at the PC (BillsHousePCScript -> script_bills_pc).
-    // The cutscene movement is approximated by skipping it; the machine
-    // conversion happens at the pcMachine sign below.
+    // BillsHousePokemonWalkToMachineScript (+EntersMachineScript): Bill's
+    // monster form walks UP into the machine (around the player when the
+    // player faces down) and is hidden inside it, which latches
+    // EVENT_BILL_SAID_USE_CELL_SEPARATOR.
+    moveNpc("BILLS_HOUSE_OBJ_1", [[6, 4], [6, 3], [6, 2]])
+    hideObjectByName("BILLS_HOUSE_OBJ_1")
     setFlag("EVENT_BILL_SAID_USE_CELL_SEPARATOR")
   }
 
-  // ── The PC / teleporter machine (sign 1) — Cell Separation System ──────
-  // Original BillsHousePCScript: after Bill asks for help, running the PC
-  // activates the Cell Separation System and Bill exits the machine in human
-  // form (the game plays the separation cutscene). We reproduce the dialogue
-  // + the object swap.
+  // ── The PC / teleporter (sign 2 at tile 1,4) — Cell Separation System ──
+  // The original has ONE interaction point: the hidden event at tile (1,4)
+  // facing up (hidden_events.asm BILLS_HOUSE -> BillsHousePC). The earlier
+  // binding put the separation on a bogus (5,4) sign — the audit had to use
+  // that empty tile to advance. Branches, per BillsHousePCScript:
+  //   - help agreed, separation not run: run it — human Bill appears inside
+  //     the machine and walks out (BillsHouseBillExitsMachineScript), then
+  //     EVENT_MET_BILL_2 / EVENT_MET_BILL;
+  //   - Bill restored (EVENT_USED_CELL_SEPARATOR_ON_BILL): his PC;
+  //   - otherwise: the teleporter monitor text.
   @storyline("pcMachine") {
-    @trigger(map = "BillsHouse", sign = 1)
-    @if (getFlag("EVENT_BILL_SAID_USE_CELL_SEPARATOR") && !getFlag("EVENT_MET_BILL_2")) {
+    @trigger(map = "BillsHouse", sign = 2)
+    @if (getFlag("EVENT_BILL_SAID_USE_CELL_SEPARATOR") && !getFlag("EVENT_USED_CELL_SEPARATOR_ON_BILL")) {
       @speaker("") {
         @t("The Cell Separation System\nis running...\n\n... ... ...\n\nBILL is back to normal!", "细胞分离系统正在运行……\n\n…… …… ……\n\n正辉恢复了正常！")
       }
       setFlag("EVENT_USED_CELL_SEPARATOR_ON_BILL")
+      setNpcPosition("BILLS_HOUSE_OBJ_2", 6, 2)
+      showObjectByName("BILLS_HOUSE_OBJ_2")
+      // .BillExitMachineMovement: out of the machine, over to his PC.
+      moveNpc("BILLS_HOUSE_OBJ_2", [[6, 3], [5, 3], [4, 3], [4, 4]])
       setFlag("EVENT_MET_BILL_2")
       setFlag("EVENT_MET_BILL")
-      hideObjectByName("BILLS_HOUSE_OBJ_1")
-      showObjectByName("BILLS_HOUSE_OBJ_2")
+    } @else @if (getFlag("EVENT_USED_CELL_SEPARATOR_ON_BILL") || getFlag("EVENT_MET_BILL")) {
+      openBillsPC()
     } @else {
-      @speaker("") { @t("It's a PC! ...It's a PC set\nup for Bill.", "这是一台电脑！……是正辉用的\n电脑。") }
+      @speaker("") { @t("TELEPORTER is displayed on\nthe PC monitor.", "传送机显示在电脑显示器上。") }
     }
   }
 
@@ -95,22 +106,4 @@ game_scene BillsHouse {
     }
   }
 
-  // ── Bill's PC (sign 2 at 1,4) — direct BillsPc entry ───────────────────
-  // Original hidden event at (1,4) facing up (data/events/hidden_events.asm
-  // hidden_events_for BILLS_HOUSE -> BillsHousePC). Before the Bill subplot
-  // the monitor just shows the teleporter (_BillsHouseMonitorText); once Bill
-  // is back in human form (EVENT_MET_BILL, set by the pcMachine flow) the
-  // original's BillsPc entry (scripts/BillsHouse.asm BillsHousePCScript ->
-  // script_bills_pc, home/map_objects.asm TextScript_BillsPC) takes over:
-  // "Switch on!" then straight into Bill's #MON storage.
-  @storyline("billsPc") {
-    @trigger(map = "BillsHouse", sign = 2)
-    @if (getFlag("EVENT_MET_BILL")) {
-      openBillsPC()
-    } @else {
-      @speaker("") {
-        @t("TELEPORTER is displayed on\nthe PC monitor.", "传送机显示在电脑显示器上。")
-      }
-    }
-  }
 }

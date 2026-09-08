@@ -5,33 +5,19 @@
 // Scientist; the runtime drives those battles, so their handlers are dialogue
 // only), and one PokeBall ground item (HYPER POTION).
 //
-// CARD KEY doors are now wired via replaceTileBlock:
-//   SilphCo3FGateCallbackScript swaps two locked-door blocks to their OPEN block
-//   ($5f = 95 decimal) once the matching CARD KEY door has been opened.
-//     Door 1: EVENT_SILPH_CO_3_UNLOCKED_DOOR1, asm lb bc, 4, 4 → Y=4,X=4 →
-//             replaceTileBlock(4, 4, 95)
-//     Door 2: EVENT_SILPH_CO_3_UNLOCKED_DOOR2, asm lb bc, 4, 8 → Y=4,X=8 →
-//             replaceTileBlock(8, 4, 95)
-//   The doors only ever open (the gate callback never re-applies a CLOSED block),
-//   so @load only re-applies OPEN from the flags.
-//   The actual solve in the original is the CARD KEY item used on the door tile
-//   (engine/events/card_key.asm: checks CARD_KEY in bag, plays SFX_GO_INSIDE,
-//   swaps the block, sets wCardKeyDoorY/X which the gate callback turns into the
-//   EVENT_SILPH_CO_3_UNLOCKED_DOOR* flags). There is no "use item on facing tile"
-//   primitive, so we approximate faithfully with a coord trigger on each door
-//   block's walkable tiles gated by hasItem("CARD_KEY"): stepping onto the door
-//   with the CARD KEY opens it (flag + replaceTileBlock + SFX_GO_INSIDE + the
-//   original CARD KEY success text); without it, the CARD KEY fail text.
-
+// CARD KEY doors: original gate callbacks close locked doors with block $5f;
+// PrintCardKeyText opens Facility doors with block $0e. OnInteract bindings
+// let the player use the key while standing beside the solid door.
 game_scene SilphCo3F {
-  // ── On-enter: re-apply OPEN CARD KEY door blocks from their flags ────────
-  // Original SilphCo3FGateCallbackScript re-runs on map load and re-opens any
-  // already-unlocked door. map.blk ships them closed, so we only re-apply OPEN.
   @load {
     @if (getFlag("EVENT_SILPH_CO_3_UNLOCKED_DOOR1")) {
+      replaceTileBlock(4, 4, 14)
+    } @else {
       replaceTileBlock(4, 4, 95)
     }
     @if (getFlag("EVENT_SILPH_CO_3_UNLOCKED_DOOR2")) {
+      replaceTileBlock(8, 4, 14)
+    } @else {
       replaceTileBlock(8, 4, 95)
     }
   }
@@ -45,7 +31,7 @@ game_scene SilphCo3F {
         @speaker("") { @t("Bingo!", "猜中了！") }
         @speaker("") { @t("The CARD KEY opened the\ndoor!", "磁卡钥匙打开了门！") }
         setFlag("EVENT_SILPH_CO_3_UNLOCKED_DOOR1")
-        replaceTileBlock(4, 4, 95)
+        replaceTileBlock(4, 4, 14)
         playSound("SFX_GO_INSIDE")
       } @else {
         // CardKeyFailText.
@@ -62,7 +48,7 @@ game_scene SilphCo3F {
         @speaker("") { @t("Bingo!", "猜中了！") }
         @speaker("") { @t("The CARD KEY opened the\ndoor!", "磁卡钥匙打开了门！") }
         setFlag("EVENT_SILPH_CO_3_UNLOCKED_DOOR2")
-        replaceTileBlock(8, 4, 95)
+        replaceTileBlock(8, 4, 14)
         playSound("SFX_GO_INSIDE")
       } @else {
         @speaker("") { @t("Darn! It needs a CARD KEY!", "可恶！需要磁卡钥匙！") }

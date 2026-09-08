@@ -1,0 +1,104 @@
+[resume-reentry] frame=636 screen=overworld map=SaffronCity pos=(35,4) party=5 money=5037 effect=HideObjectByName
+CHECKPOINT tower-resumed SaffronCity 35 4 [{'hp': 153, 'level': 50, 'max_hp': 153, 'moves': ['Thundershock', 'DrillPeck', 'None', 'None'], 'pp': [30, 20, 0, 0], 'species': 'Zapdos', 'status': 'None'}, {'hp': 137, 'level': 30, 'max_hp': 137, 'moves': ['IceBeam', 'Surf', 'Rest', 'Strength'], 'pp': [10, 15, 10, 15], 'species': 'Snorlax', 'status': 'None'}, {'hp': 52, 'level': 24, 'max_hp': 52, 'moves': ['Peck', 'Growl', 'FuryAttack', 'Fly'], 'pp': [35, 40, 20, 15], 'species': 'Doduo', 'status': 'None'}, {'hp': 64, 'level': 15, 'max_hp': 64, 'moves': ['WaterGun', 'Growl', 'None', 'None'], 'pp': [25, 40, 0, 0], 'species': 'Lapras', 'status': 'None'}, {'hp': 159, 'level': 50, 'max_hp': 159, 'moves': ['MegaDrain', 'Cut', 'LeechSeed', 'Growth'], 'pp': [10, 30, 10, 40], 'species': 'Venusaur', 'status': 'None'}]
+GAME_LOG /var/folders/d2/2fv86m890m34_13rn_t3d79w0000gn/T/pokered-run-vzlzj121/game.log
+READY
+RUN 001_helpers.py
+DONE 001_helpers.py
+RUN 002_sabrina.py
+CHECKPOINT m67-saffron-gym SaffronGym 8 17 [{'hp': 153, 'level': 50, 'max_hp': 153, 'moves': ['Thundershock', 'DrillPeck', 'None', 'None'], 'pp': [30, 20, 0, 0], 'species': 'Zapdos', 'status': 'None'}, {'hp': 137, 'level': 30, 'max_hp': 137, 'moves': ['IceBeam', 'Surf', 'Rest', 'Strength'], 'pp': [10, 15, 10, 15], 'species': 'Snorlax', 'status': 'None'}, {'hp': 52, 'level': 24, 'max_hp': 52, 'moves': ['Peck', 'Growl', 'FuryAttack', 'Fly'], 'pp': [35, 40, 20, 15], 'species': 'Doduo', 'status': 'None'}, {'hp': 64, 'level': 15, 'max_hp': 64, 'moves': ['WaterGun', 'Growl', 'None', 'None'], 'pp': [25, 40, 0, 0], 'species': 'Lapras', 'status': 'None'}, {'hp': 159, 'level': 50, 'max_hp': 159, 'moves': ['MegaDrain', 'Cut', 'LeechSeed', 'Growth'], 'pp': [10, 30, 10, 40], 'species': 'Venusaur', 'status': 'None'}]
+CHECKPOINT m68-sabrina-ready SaffronGym 9 9 [{'hp': 153, 'level': 50, 'max_hp': 153, 'moves': ['Thundershock', 'DrillPeck', 'None', 'None'], 'pp': [25, 18, 0, 0], 'species': 'Zapdos', 'status': 'None'}, {'hp': 137, 'level': 30, 'max_hp': 137, 'moves': ['IceBeam', 'Surf', 'Rest', 'Strength'], 'pp': [10, 15, 10, 15], 'species': 'Snorlax', 'status': 'None'}, {'hp': 52, 'level': 24, 'max_hp': 52, 'moves': ['Peck', 'Growl', 'FuryAttack', 'Fly'], 'pp': [35, 40, 20, 15], 'species': 'Doduo', 'status': 'None'}, {'hp': 64, 'level': 15, 'max_hp': 64, 'moves': ['WaterGun', 'Growl', 'None', 'None'], 'pp': [25, 40, 0, 0], 'species': 'Lapras', 'status': 'None'}, {'hp': 159, 'level': 50, 'max_hp': 159, 'moves': ['MegaDrain', 'Cut', 'LeechSeed', 'Growth'], 'pp': [10, 30, 10, 40], 'species': 'Venusaur', 'status': 'None'}]
+CHECKPOINT m69-marsh-badge SaffronGym 9 9 [{'hp': 158, 'level': 51, 'max_hp': 158, 'moves': ['Thundershock', 'DrillPeck', 'Thunder', 'None'], 'pp': [24, 15, 10, 0], 'species': 'Zapdos', 'status': 'None'}, {'hp': 137, 'level': 30, 'max_hp': 137, 'moves': ['IceBeam', 'Surf', 'Rest', 'Strength'], 'pp': [10, 15, 10, 15], 'species': 'Snorlax', 'status': 'None'}, {'hp': 52, 'level': 24, 'max_hp': 52, 'moves': ['Peck', 'Growl', 'FuryAttack', 'Fly'], 'pp': [35, 40, 20, 15], 'species': 'Doduo', 'status': 'None'}, {'hp': 64, 'level': 15, 'max_hp': 64, 'moves': ['WaterGun', 'Growl', 'None', 'None'], 'pp': [25, 40, 0, 0], 'species': 'Lapras', 'status': 'None'}, {'hp': 159, 'level': 50, 'max_hp': 159, 'moves': ['MegaDrain', 'Cut', 'LeechSeed', 'Growth'], 'pp': [10, 30, 10, 40], 'species': 'Venusaur', 'status': 'None'}]
+DONE 002_sabrina.py
+RUN 003_cinnabar.py
+CHECKPOINT m70-saffron-six-badges SaffronCity 34 3 [{'hp': 158, 'level': 51, 'max_hp': 158, 'moves': ['Thundershock', 'DrillPeck', 'Thunder', 'None'], 'pp': [24, 15, 10, 0], 'species': 'Zapdos', 'status': 'None'}, {'hp': 137, 'level': 30, 'max_hp': 137, 'moves': ['IceBeam', 'Surf', 'Rest', 'Strength'], 'pp': [10, 15, 10, 15], 'species': 'Snorlax', 'status': 'None'}, {'hp': 52, 'level': 24, 'max_hp': 52, 'moves': ['Peck', 'Growl', 'FuryAttack', 'Fly'], 'pp': [35, 40, 20, 15], 'species': 'Doduo', 'status': 'None'}, {'hp': 64, 'level': 15, 'max_hp': 64, 'moves': ['WaterGun', 'Growl', 'None', 'None'], 'pp': [25, 40, 0, 0], 'species': 'Lapras', 'status': 'None'}, {'hp': 159, 'level': 50, 'max_hp': 159, 'moves': ['MegaDrain', 'Cut', 'LeechSeed', 'Growth'], 'pp': [10, 30, 10, 40], 'species': 'Venusaur', 'status': 'None'}]
+CHECKPOINT m71-pallet-surf-bank PalletTown 8 16 [{'hp': 158, 'level': 51, 'max_hp': 158, 'moves': ['Thundershock', 'DrillPeck', 'Thunder', 'None'], 'pp': [24, 15, 10, 0], 'species': 'Zapdos', 'status': 'None'}, {'hp': 137, 'level': 30, 'max_hp': 137, 'moves': ['IceBeam', 'Surf', 'Rest', 'Strength'], 'pp': [10, 15, 10, 15], 'species': 'Snorlax', 'status': 'None'}, {'hp': 52, 'level': 24, 'max_hp': 52, 'moves': ['Peck', 'Growl', 'FuryAttack', 'Fly'], 'pp': [35, 40, 20, 15], 'species': 'Doduo', 'status': 'None'}, {'hp': 64, 'level': 15, 'max_hp': 64, 'moves': ['WaterGun', 'Growl', 'None', 'None'], 'pp': [25, 40, 0, 0], 'species': 'Lapras', 'status': 'None'}, {'hp': 159, 'level': 50, 'max_hp': 159, 'moves': ['MegaDrain', 'Cut', 'LeechSeed', 'Growth'], 'pp': [10, 30, 10, 40], 'species': 'Venusaur', 'status': 'None'}]
+CHECKPOINT m72-cinnabar-arrived CinnabarIsland 4 4 [{'hp': 158, 'level': 51, 'max_hp': 158, 'moves': ['Thundershock', 'DrillPeck', 'Thunder', 'None'], 'pp': [24, 15, 10, 0], 'species': 'Zapdos', 'status': 'None'}, {'hp': 137, 'level': 30, 'max_hp': 137, 'moves': ['IceBeam', 'Surf', 'Rest', 'Strength'], 'pp': [10, 15, 10, 15], 'species': 'Snorlax', 'status': 'None'}, {'hp': 52, 'level': 24, 'max_hp': 52, 'moves': ['Peck', 'Growl', 'FuryAttack', 'Fly'], 'pp': [35, 40, 20, 15], 'species': 'Doduo', 'status': 'None'}, {'hp': 64, 'level': 15, 'max_hp': 64, 'moves': ['WaterGun', 'Growl', 'None', 'None'], 'pp': [25, 40, 0, 0], 'species': 'Lapras', 'status': 'None'}, {'hp': 159, 'level': 50, 'max_hp': 159, 'moves': ['MegaDrain', 'Cut', 'LeechSeed', 'Growth'], 'pp': [10, 30, 10, 40], 'species': 'Venusaur', 'status': 'None'}]
+CHECKPOINT m72-cinnabar-healed CinnabarIsland 11 12 [{'hp': 158, 'level': 51, 'max_hp': 158, 'moves': ['Thundershock', 'DrillPeck', 'Thunder', 'None'], 'pp': [30, 20, 10, 0], 'species': 'Zapdos', 'status': 'None'}, {'hp': 137, 'level': 30, 'max_hp': 137, 'moves': ['IceBeam', 'Surf', 'Rest', 'Strength'], 'pp': [10, 15, 10, 15], 'species': 'Snorlax', 'status': 'None'}, {'hp': 52, 'level': 24, 'max_hp': 52, 'moves': ['Peck', 'Growl', 'FuryAttack', 'Fly'], 'pp': [35, 40, 20, 15], 'species': 'Doduo', 'status': 'None'}, {'hp': 64, 'level': 15, 'max_hp': 64, 'moves': ['WaterGun', 'Growl', 'None', 'None'], 'pp': [25, 40, 0, 0], 'species': 'Lapras', 'status': 'None'}, {'hp': 159, 'level': 50, 'max_hp': 159, 'moves': ['MegaDrain', 'Cut', 'LeechSeed', 'Growth'], 'pp': [10, 30, 10, 40], 'species': 'Venusaur', 'status': 'None'}]
+DONE 003_cinnabar.py
+RUN 004_mansion_entry.py
+Traceback (most recent call last):
+  File "/Users/liuyanghe02/develop/open-pokered-3/scripts/playthrough.py", line 689, in nav_warp
+    self.nav_to(x, y, map_name=from_map, tries=tries)
+    ~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/liuyanghe02/develop/open-pokered-3/docs/audits/2026-09-06/playthrough/navigation.py", line 67, in nav_to
+    raise NavError(f'single-step navigation budget exhausted {initial} {(x,y)}')
+playthrough.NavError: single-step navigation budget exhausted CinnabarIsland (6, 3)
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/tmp/pokered-completion-20260907-saffron-fixed/controller.py", line 82, in <module>
+    exec(compile(__task_path.read_text(),str(__task_path),'exec'),globals())
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/pokered-completion-20260907-saffron-fixed/inbox/004_mansion_entry.py", line 3, in <module>
+    g.nav_warp(6,3,'CinnabarIsland','PokemonMansion1F');checkpoint('m73-mansion-entry')
+    ~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/liuyanghe02/develop/open-pokered-3/scripts/playthrough.py", line 697, in nav_warp
+    self.nav_to(*inner, map_name=from_map,
+    ~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                tries=tries)
+                ^^^^^^^^^^^^
+  File "/Users/liuyanghe02/develop/open-pokered-3/docs/audits/2026-09-06/playthrough/navigation.py", line 59, in nav_to
+    path=bfs(cm,(px,py),(x,y),blocked=self.live_npcs(cm)|(warp_tiles(cm)-{(x,y)}))
+                                      ~~~~~~~~~~~~~~^^^^
+  File "/Users/liuyanghe02/develop/open-pokered-3/scripts/playthrough.py", line 420, in live_npcs
+    data = self.d.cmd(cmd="get_npcs")["data"]
+           ~~~~~~~~~~^^^^^^^^^^^^^^^^
+  File "/tmp/pokered-completion-20260907-saffron-fixed/controller.py", line 23, in cmd
+    raise NavError("audit cancelled at protocol boundary")
+playthrough.NavError: audit cancelled at protocol boundary
+FAILED 004_mansion_entry.py
+RUN 006_mansion_enter.py
+Traceback (most recent call last):
+  File "/Users/liuyanghe02/develop/open-pokered-3/scripts/playthrough.py", line 689, in nav_warp
+    self.nav_to(x, y, map_name=from_map, tries=tries)
+    ~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/liuyanghe02/develop/open-pokered-3/docs/audits/2026-09-06/playthrough/navigation.py", line 67, in nav_to
+    raise NavError(f'single-step navigation budget exhausted {initial} {(x,y)}')
+playthrough.NavError: single-step navigation budget exhausted CinnabarIsland (6, 3)
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/tmp/pokered-completion-20260907-saffron-fixed/controller.py", line 82, in <module>
+    exec(compile(__task_path.read_text(),str(__task_path),'exec'),globals())
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/pokered-completion-20260907-saffron-fixed/inbox/006_mansion_enter.py", line 2, in <module>
+    g.nav_warp(6,3,'CinnabarIsland','PokemonMansion1F');checkpoint('m73-mansion-entry')
+    ~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/liuyanghe02/develop/open-pokered-3/scripts/playthrough.py", line 697, in nav_warp
+    self.nav_to(*inner, map_name=from_map,
+    ~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                tries=tries)
+                ^^^^^^^^^^^^
+  File "/Users/liuyanghe02/develop/open-pokered-3/docs/audits/2026-09-06/playthrough/navigation.py", line 58, in nav_to
+    self.cutscene();continue
+    ~~~~~~~~~~~~~^^
+  File "/tmp/pokered-completion-20260907-saffron-fixed/controller.py", line 60, in advance_cutscene
+    if s['dialogue_state'] is not None:self.skip()
+                                       ~~~~~~~~~^^
+  File "/Users/liuyanghe02/develop/open-pokered-3/scripts/playthrough.py", line 407, in skip
+    r = self.d.cmd(cmd="skip_dialogue")
+  File "/tmp/pokered-completion-20260907-saffron-fixed/controller.py", line 23, in cmd
+    raise NavError("audit cancelled at protocol boundary")
+playthrough.NavError: audit cancelled at protocol boundary
+FAILED 006_mansion_enter.py
+RUN 008_mansion_entry_detour.py
+CHECKPOINT m73-mansion-entry PokemonMansion1F 5 27 [{'hp': 158, 'level': 51, 'max_hp': 158, 'moves': ['Thundershock', 'DrillPeck', 'Thunder', 'None'], 'pp': [30, 20, 10, 0], 'species': 'Zapdos', 'status': 'None'}, {'hp': 137, 'level': 30, 'max_hp': 137, 'moves': ['IceBeam', 'Surf', 'Rest', 'Strength'], 'pp': [10, 15, 10, 15], 'species': 'Snorlax', 'status': 'None'}, {'hp': 52, 'level': 24, 'max_hp': 52, 'moves': ['Peck', 'Growl', 'FuryAttack', 'Fly'], 'pp': [35, 40, 20, 15], 'species': 'Doduo', 'status': 'None'}, {'hp': 64, 'level': 15, 'max_hp': 64, 'moves': ['WaterGun', 'Growl', 'None', 'None'], 'pp': [25, 40, 0, 0], 'species': 'Lapras', 'status': 'None'}, {'hp': 159, 'level': 50, 'max_hp': 159, 'moves': ['MegaDrain', 'Cut', 'LeechSeed', 'Growth'], 'pp': [10, 30, 10, 40], 'species': 'Venusaur', 'status': 'None'}]
+CHECKPOINT m74-mansion-2f PokemonMansion2F 5 10 [{'hp': 158, 'level': 51, 'max_hp': 158, 'moves': ['Thundershock', 'DrillPeck', 'Thunder', 'None'], 'pp': [30, 20, 10, 0], 'species': 'Zapdos', 'status': 'None'}, {'hp': 137, 'level': 30, 'max_hp': 137, 'moves': ['IceBeam', 'Surf', 'Rest', 'Strength'], 'pp': [10, 15, 10, 15], 'species': 'Snorlax', 'status': 'None'}, {'hp': 52, 'level': 24, 'max_hp': 52, 'moves': ['Peck', 'Growl', 'FuryAttack', 'Fly'], 'pp': [35, 40, 20, 15], 'species': 'Doduo', 'status': 'None'}, {'hp': 64, 'level': 15, 'max_hp': 64, 'moves': ['WaterGun', 'Growl', 'None', 'None'], 'pp': [25, 40, 0, 0], 'species': 'Lapras', 'status': 'None'}, {'hp': 159, 'level': 50, 'max_hp': 159, 'moves': ['MegaDrain', 'Cut', 'LeechSeed', 'Growth'], 'pp': [10, 30, 10, 40], 'species': 'Venusaur', 'status': 'None'}]
+DONE 008_mansion_entry_detour.py
+RUN 009_mansion_switch_drop.py
+CHECKPOINT m75-mansion-3f PokemonMansion3F 6 1 [{'hp': 158, 'level': 51, 'max_hp': 158, 'moves': ['Thundershock', 'DrillPeck', 'Thunder', 'None'], 'pp': [30, 20, 10, 0], 'species': 'Zapdos', 'status': 'None'}, {'hp': 137, 'level': 30, 'max_hp': 137, 'moves': ['IceBeam', 'Surf', 'Rest', 'Strength'], 'pp': [10, 15, 10, 15], 'species': 'Snorlax', 'status': 'None'}, {'hp': 52, 'level': 24, 'max_hp': 52, 'moves': ['Peck', 'Growl', 'FuryAttack', 'Fly'], 'pp': [35, 40, 20, 15], 'species': 'Doduo', 'status': 'None'}, {'hp': 64, 'level': 15, 'max_hp': 64, 'moves': ['WaterGun', 'Growl', 'None', 'None'], 'pp': [25, 40, 0, 0], 'species': 'Lapras', 'status': 'None'}, {'hp': 159, 'level': 50, 'max_hp': 159, 'moves': ['MegaDrain', 'Cut', 'LeechSeed', 'Growth'], 'pp': [10, 30, 10, 40], 'species': 'Venusaur', 'status': 'None'}]
+Traceback (most recent call last):
+  File "/tmp/pokered-completion-20260907-saffron-fixed/controller.py", line 82, in <module>
+    exec(compile(__task_path.read_text(),str(__task_path),'exec'),globals())
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/pokered-completion-20260907-saffron-fixed/inbox/009_mansion_switch_drop.py", line 10, in <module>
+    else:raise NavError('mansion switch did not offer choice')
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+playthrough.NavError: mansion switch did not offer choice
+FAILED 009_mansion_switch_drop.py
+RUN 010_mansion_statue_interact.py
+DONE 010_mansion_statue_interact.py
+RUN 099_stop.py
+CHECKPOINT m75-mansion-statue-blocked PokemonMansion3F 10 6 [{'hp': 158, 'level': 51, 'max_hp': 158, 'moves': ['Thundershock', 'DrillPeck', 'Thunder', 'None'], 'pp': [30, 20, 10, 0], 'species': 'Zapdos', 'status': 'None'}, {'hp': 137, 'level': 30, 'max_hp': 137, 'moves': ['IceBeam', 'Surf', 'Rest', 'Strength'], 'pp': [10, 15, 10, 15], 'species': 'Snorlax', 'status': 'None'}, {'hp': 52, 'level': 24, 'max_hp': 52, 'moves': ['Peck', 'Growl', 'FuryAttack', 'Fly'], 'pp': [35, 40, 20, 15], 'species': 'Doduo', 'status': 'None'}, {'hp': 64, 'level': 15, 'max_hp': 64, 'moves': ['WaterGun', 'Growl', 'None', 'None'], 'pp': [25, 40, 0, 0], 'species': 'Lapras', 'status': 'None'}, {'hp': 159, 'level': 50, 'max_hp': 159, 'moves': ['MegaDrain', 'Cut', 'LeechSeed', 'Growth'], 'pp': [10, 30, 10, 40], 'species': 'Venusaur', 'status': 'None'}]

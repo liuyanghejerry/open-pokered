@@ -22,13 +22,14 @@ Usage:
 Defaults to checking every maps/*/script.scene against git HEAD.
 Exit 0 = all EN/ZH text preserved; 1 = mismatches found.
 """
+import argparse
 import re
 import subprocess
 import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-MAPS = ROOT / "examples" / "pokered" / "crates" / "pokered-data" / "maps"
+MAPS = ROOT / "crates" / "pokered-data" / "maps"
 
 # Match a @say("Name") { ... } or @speaker("Name") { ... } block.
 BLOCK_RE = re.compile(
@@ -107,19 +108,15 @@ def translated_zh(blocks):
     return out
 
 
-def check_file(path: Path) -> list:
+def check_file(path: Path, baseline: str = "HEAD") -> list:
     new_src = path.read_text(encoding="utf-8")
     rel = path.relative_to(ROOT).as_posix() if path.is_relative_to(ROOT) else str(path)
-    # Baseline = the pre-translation upstream text. `HEAD` is the (already
-    # committed) translated version on this branch, so fall back to
-    # origin/master when the branch is ahead of it.
-    for ref in ("origin/master", "HEAD"):
-        old_src = subprocess.run(
-            ["git", "show", f"{ref}:{rel}"],
-            capture_output=True, text=True, cwd=ROOT,
-        ).stdout
-        if old_src:
-            break
+    # The documented default protects uncommitted translation/reflow edits.
+    # Use --base to audit committed changes against an explicit revision.
+    old_src = subprocess.run(
+        ["git", "show", f"{baseline}:{rel}"],
+        capture_output=True, text=True, cwd=ROOT,
+    ).stdout
     if not old_src:
         return [f"{path}: no git baseline (new file?)"]
     problems = []
@@ -133,7 +130,7 @@ def check_file(path: Path) -> list:
         if normalized(old_en) != normalized(new_en):
             problems.append(
                 f"{path}: block {i} EN mismatch\n"
-                f"  HEAD: {old_en!r}\n"
+                f"  {baseline}: {old_en!r}\n"
                 f"  NOW : {new_en!r}"
             )
     # ZH conservation: when the baseline is already @t-form, the re-flow may
@@ -143,7 +140,7 @@ def check_file(path: Path) -> list:
         if old_zh is not None and new_zh is not None and normalized(old_zh) != normalized(new_zh):
             problems.append(
                 f"{path}: block {i} ZH character sequence changed\n"
-                f"  HEAD: {old_zh!r}\n"
+                f"  {baseline}: {old_zh!r}\n"
                 f"  NOW : {new_zh!r}"
             )
     # Every block must be fully localized (no leftover plain strings) —
@@ -159,10 +156,14 @@ def check_file(path: Path) -> list:
 
 
 def main():
-    targets = sys.argv[1:] or [str(MAPS)]
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--base", default="HEAD", help="Git revision to compare (default: HEAD)")
+    parser.add_argument("paths", nargs="*")
+    args = parser.parse_args()
+    targets = args.paths or [str(MAPS)]
     paths = []
     for t in targets:
-        p = Path(t)
+        p = Path(t).resolve()
         if p.is_dir():
             direct = p / "script.scene"
             if direct.exists():
@@ -171,9 +172,12 @@ def main():
                 paths.extend(sorted(p.glob("*/script.scene")))
         elif p.is_file():
             paths.append(p)
+    if not paths:
+        print("FAIL: no scene files found; check the requested paths", file=sys.stderr)
+        sys.exit(1)
     all_problems = []
     for p in paths:
-        all_problems.extend(check_file(p))
+        all_problems.extend(check_file(p, args.base))
     if all_problems:
         print(f"FAIL: {len(all_problems)} problem(s)")
         for pr in all_problems:

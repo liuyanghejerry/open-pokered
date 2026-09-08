@@ -765,3 +765,25 @@ fn synthetic_oracle_note() {
     let taken: u16 = 40;
     assert_eq!(taken * 2, 80, "Counter reflects damage_taken*2 (#20) — synthetic-oracle-only");
 }
+
+#[test]
+fn residuals_stop_after_either_battler_faints() {
+    for target in [PLAYER, OPP] {
+        for (player_hp, enemy_hp) in [(0, 100), (100, 0)] {
+            for effect in [leech_residual_effect(), poison_residual_effect(), burn_residual_effect(), toxic_residual_effect()] {
+                reset_p5_scratch();
+                let mut es = EngineState::new(
+                    vec![engine_battler(Species::Zapdos, player_hp, 160)],
+                    vec![engine_battler(Species::Exeggcute, enemy_hp, 160)],
+                );
+                let mut effects = vec![EffectState {
+                    id: dotzuki_engine::battle::stack::EffectId(0x50_999),
+                    host: target, effect_order: 0,
+                    kind: PokeVolatile::Toxic { counter: 0 },
+                }];
+                fire_p5(&mut es, &mut effects, effect, Event::Residual, target, target, RelayVar::Unit, vec![]);
+                assert_eq!((es.player_battlers[0].hp, es.opponent_battlers[0].hp), (player_hp, enemy_hp));
+            }
+        }
+    }
+}

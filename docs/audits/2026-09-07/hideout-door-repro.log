@@ -1,0 +1,3 @@
+Evidence: /var/folders/d2/2fv86m890m34_13rn_t3d79w0000gn/T/pokered-hideout-door-repro-quug7dfk
+[resume-reentry] frame=631 screen=overworld map=RocketHideoutB4F pos=(26,13) party=1 money=4687 effect=None
+REPRODUCED TWICE: guards unbeaten, closed-door condition bypassed by normal walking

@@ -1,0 +1,428 @@
+[
+  {
+    "active_script_effect": null,
+    "battle_bag": null,
+    "battle_inventory": [
+      {
+        "item": "PokeBall",
+        "qty": 5
+      },
+      {
+        "item": "OldRod",
+        "qty": 1
+      },
+      {
+        "item": "Hm01",
+        "qty": 1
+      },
+      {
+        "item": "Bicycle",
+        "qty": 1
+      },
+      {
+        "item": "ParlyzHeal",
+        "qty": 3
+      },
+      {
+        "item": "Awakening",
+        "qty": 3
+      },
+      {
+        "item": "BurnHeal",
+        "qty": 2
+      },
+      {
+        "item": "Tm13",
+        "qty": 1
+      },
+      {
+        "item": "SilphScope",
+        "qty": 1
+      },
+      {
+        "item": "GreatBall",
+        "qty": 9
+      },
+      {
+        "item": "RareCandy",
+        "qty": 1
+      },
+      {
+        "item": "PokeFlute",
+        "qty": 1
+      }
+    ],
+    "battle_live": {
+      "enemy": {
+        "hp": 78,
+        "level": 28,
+        "max_hp": 78,
+        "species": "Pidgeotto",
+        "status": "None"
+      },
+      "enemy_party": [
+        {
+          "hp": 78,
+          "level": 28,
+          "species": "Pidgeotto"
+        }
+      ],
+      "player": {
+        "hp": 0,
+        "level": 45,
+        "max_hp": 142,
+        "species": "Venusaur",
+        "status": "None"
+      }
+    },
+    "battle_message": null,
+    "battle_moves": null,
+    "battle_phase": "Intro { phase: TransitionFlash, wait_frames: 63 }",
+    "choice": null,
+    "coins": 0,
+    "dialogue": null,
+    "dialogue_state": null,
+    "frame_count": 98887,
+    "map_id": 26,
+    "map_name": "Route15",
+    "money": 26549,
+    "party": [
+      {
+        "hp": 0,
+        "level": 45,
+        "max_hp": 142,
+        "moves": [
+          "MegaDrain",
+          "Cut",
+          "LeechSeed",
+          "Growth"
+        ],
+        "pp": [
+          0,
+          0,
+          0,
+          7
+        ],
+        "species": "Venusaur",
+        "status": "None"
+      },
+      {
+        "hp": 98,
+        "level": 30,
+        "max_hp": 137,
+        "moves": [
+          "Headbutt",
+          "Amnesia",
+          "Rest",
+          "None"
+        ],
+        "pp": [
+          6,
+          20,
+          8,
+          0
+        ],
+        "species": "Snorlax",
+        "status": "None"
+      }
+    ],
+    "party_count": 2,
+    "pc_phase": null,
+    "player_facing": "Left",
+    "player_movement_state": "Idle",
+    "player_name": "RED",
+    "player_x": 57,
+    "player_y": 8,
+    "screen": "battle",
+    "script_awaiting_battle": false,
+    "script_effect": null,
+    "script_running": false,
+    "shop_phase": null,
+    "text_speed_delay_frames": 3,
+    "warp_fade": "Idle"
+  },
+  {
+    "active_script_effect": null,
+    "battle_bag": null,
+    "battle_inventory": [
+      {
+        "item": "PokeBall",
+        "qty": 5
+      },
+      {
+        "item": "OldRod",
+        "qty": 1
+      },
+      {
+        "item": "Hm01",
+        "qty": 1
+      },
+      {
+        "item": "Bicycle",
+        "qty": 1
+      },
+      {
+        "item": "ParlyzHeal",
+        "qty": 3
+      },
+      {
+        "item": "Awakening",
+        "qty": 3
+      },
+      {
+        "item": "BurnHeal",
+        "qty": 2
+      },
+      {
+        "item": "Tm13",
+        "qty": 1
+      },
+      {
+        "item": "SilphScope",
+        "qty": 1
+      },
+      {
+        "item": "GreatBall",
+        "qty": 9
+      },
+      {
+        "item": "RareCandy",
+        "qty": 1
+      },
+      {
+        "item": "PokeFlute",
+        "qty": 1
+      }
+    ],
+    "battle_live": {
+      "enemy": {
+        "hp": 51,
+        "level": 23,
+        "max_hp": 51,
+        "species": "Pidgey",
+        "status": "None"
+      },
+      "enemy_party": [
+        {
+          "hp": 51,
+          "level": 23,
+          "species": "Pidgey"
+        }
+      ],
+      "player": {
+        "hp": 0,
+        "level": 45,
+        "max_hp": 142,
+        "species": "Venusaur",
+        "status": "None"
+      }
+    },
+    "battle_message": null,
+    "battle_moves": null,
+    "battle_phase": "Intro { phase: TransitionFlash, wait_frames: 63 }",
+    "choice": null,
+    "coins": 0,
+    "dialogue": null,
+    "dialogue_state": null,
+    "frame_count": 99757,
+    "map_id": 26,
+    "map_name": "Route15",
+    "money": 26549,
+    "party": [
+      {
+        "hp": 0,
+        "level": 45,
+        "max_hp": 142,
+        "moves": [
+          "MegaDrain",
+          "Cut",
+          "LeechSeed",
+          "Growth"
+        ],
+        "pp": [
+          0,
+          0,
+          0,
+          7
+        ],
+        "species": "Venusaur",
+        "status": "None"
+      },
+      {
+        "hp": 98,
+        "level": 30,
+        "max_hp": 137,
+        "moves": [
+          "Headbutt",
+          "Amnesia",
+          "Rest",
+          "None"
+        ],
+        "pp": [
+          6,
+          20,
+          8,
+          0
+        ],
+        "species": "Snorlax",
+        "status": "None"
+      }
+    ],
+    "party_count": 2,
+    "pc_phase": null,
+    "player_facing": "Left",
+    "player_movement_state": "Idle",
+    "player_name": "RED",
+    "player_x": 34,
+    "player_y": 9,
+    "screen": "battle",
+    "script_awaiting_battle": false,
+    "script_effect": null,
+    "script_running": false,
+    "shop_phase": null,
+    "text_speed_delay_frames": 3,
+    "warp_fade": "Idle"
+  },
+  {
+    "active_script_effect": null,
+    "battle_bag": null,
+    "battle_inventory": [
+      {
+        "item": "PokeBall",
+        "qty": 5
+      },
+      {
+        "item": "OldRod",
+        "qty": 1
+      },
+      {
+        "item": "Hm01",
+        "qty": 1
+      },
+      {
+        "item": "Bicycle",
+        "qty": 1
+      },
+      {
+        "item": "ParlyzHeal",
+        "qty": 3
+      },
+      {
+        "item": "Awakening",
+        "qty": 3
+      },
+      {
+        "item": "BurnHeal",
+        "qty": 2
+      },
+      {
+        "item": "Tm13",
+        "qty": 1
+      },
+      {
+        "item": "SilphScope",
+        "qty": 1
+      },
+      {
+        "item": "GreatBall",
+        "qty": 9
+      },
+      {
+        "item": "RareCandy",
+        "qty": 1
+      },
+      {
+        "item": "PokeFlute",
+        "qty": 1
+      }
+    ],
+    "battle_live": {
+      "enemy": {
+        "hp": 54,
+        "level": 23,
+        "max_hp": 54,
+        "species": "Pidgey",
+        "status": "None"
+      },
+      "enemy_party": [
+        {
+          "hp": 54,
+          "level": 23,
+          "species": "Pidgey"
+        }
+      ],
+      "player": {
+        "hp": 0,
+        "level": 45,
+        "max_hp": 142,
+        "species": "Venusaur",
+        "status": "None"
+      }
+    },
+    "battle_message": null,
+    "battle_moves": null,
+    "battle_phase": "Intro { phase: TransitionFlash, wait_frames: 63 }",
+    "choice": null,
+    "coins": 0,
+    "dialogue": null,
+    "dialogue_state": null,
+    "frame_count": 100204,
+    "map_id": 26,
+    "map_name": "Route15",
+    "money": 26549,
+    "party": [
+      {
+        "hp": 0,
+        "level": 45,
+        "max_hp": 142,
+        "moves": [
+          "MegaDrain",
+          "Cut",
+          "LeechSeed",
+          "Growth"
+        ],
+        "pp": [
+          0,
+          0,
+          0,
+          7
+        ],
+        "species": "Venusaur",
+        "status": "None"
+      },
+      {
+        "hp": 98,
+        "level": 30,
+        "max_hp": 137,
+        "moves": [
+          "Headbutt",
+          "Amnesia",
+          "Rest",
+          "None"
+        ],
+        "pp": [
+          6,
+          20,
+          8,
+          0
+        ],
+        "species": "Snorlax",
+        "status": "None"
+      }
+    ],
+    "party_count": 2,
+    "pc_phase": null,
+    "player_facing": "Left",
+    "player_movement_state": "Idle",
+    "player_name": "RED",
+    "player_x": 31,
+    "player_y": 9,
+    "screen": "battle",
+    "script_awaiting_battle": false,
+    "script_effect": null,
+    "script_running": false,
+    "shop_phase": null,
+    "text_speed_delay_frames": 3,
+    "warp_fade": "Idle"
+  }
+]

@@ -20,6 +20,9 @@
 
 game_scene SeafoamIslandsB4F {
   @load {
+    @if (getFlag("EVENT_BEAT_ARTICUNO")) {
+      hideObjectByName("SEAFOAM_ISLANDS_B4F_OBJ_3")
+    }
     // These boulders are the ones pushed into the B3F holes: each appears here
     // only once the corresponding boulder has landed (orig ShowObject of
     // TOGGLE_SEAFOAM_ISLANDS_B4F_BOULDER_{1,2}). They are defaultHidden in
@@ -86,7 +89,7 @@ game_scene SeafoamIslandsB4F {
 
   // ── Articuno (npc 3) — unreachable across the current until boulders down ──
   @storyline("talkArticuno") {
-    @trigger(map = "SeafoamIslandsB4F", npc = 3)
+    @trigger(map = "SeafoamIslandsB4F", npc = 3, toggle = "SEAFOAM_ISLANDS_B4F_OBJ_3")
     @if (!getFlag("EVENT_BEAT_ARTICUNO")) {
       playCry("ARTICUNO")
       @speaker("") {
@@ -96,11 +99,7 @@ game_scene SeafoamIslandsB4F {
       result = startWildBattle("ARTICUNO", 50)
       @if (result == "win" || result == "caught") {
         setFlag("EVENT_BEAT_ARTICUNO")
-      }
-    } @else {
-      playCry("ARTICUNO")
-      @speaker("") {
-        @t("Gyaoo!", "嘎呜！")
+        hideObjectByName("SEAFOAM_ISLANDS_B4F_OBJ_3")
       }
     }
   }

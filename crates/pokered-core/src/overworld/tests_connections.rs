@@ -57,6 +57,48 @@ fn make_map_data(map_id: MapId) -> MapData<MapId, TilesetId, MusicId> {
 // ── Connection Data Integrity Tests ─────────────────────────────────
 
 #[test]
+fn underground_exit_uses_its_own_route_after_crossing_tunnel() {
+    use super::screen::{OverworldScreen, PendingWarp};
+    use pokered_data::impl_traits::PokemonRedData;
+
+    for (entrance, route, tunnel, previous_route) in [
+        (MapId::UndergroundPathRoute5, MapId::Route5, MapId::UndergroundPathNorthSouth, MapId::Route6),
+        (MapId::UndergroundPathRoute6, MapId::Route6, MapId::UndergroundPathNorthSouth, MapId::Route5),
+        (MapId::UndergroundPathRoute7, MapId::Route7, MapId::UndergroundPathWestEast, MapId::Route8),
+        (MapId::UndergroundPathRoute8, MapId::Route8, MapId::UndergroundPathWestEast, MapId::Route7),
+    ] {
+        let mut screen = OverworldScreen::new(tunnel, None, PokemonRedData);
+        screen.last_map = Some(previous_route);
+        screen.pending_warp = Some(PendingWarp {
+            dest_map: entrance, dest_x: 4, dest_y: 4,
+            save_last_map: false, arrival_spin: false,
+        });
+        screen.commit_pending_warp();
+        let destination = execute_warp(screen.map_data.as_ref().unwrap(), 3, 7, screen.last_map).unwrap();
+        assert_eq!(destination.0, route, "exit from {entrance:?}");
+        let restored = OverworldScreen::new(entrance, None, PokemonRedData);
+        assert_eq!(restored.last_map, Some(route), "entry after Continue");
+    }
+}
+
+#[test]
+fn ss_anne_top_exits_read_the_border_warp_tile() {
+    use super::screen::OverworldScreen;
+    use pokered_data::impl_traits::PokemonRedData;
+    for x in [26, 27] {
+        let mut screen = OverworldScreen::new(MapId::SSAnne1F, None, PokemonRedData);
+        screen.state.player.x = x;
+        screen.state.player.y = 1;
+        screen.state.player.facing = Direction::Up;
+        for _ in 0..120 {
+            screen.update_frame(up_input());
+            if screen.state.current_map != MapId::SSAnne1F { break; }
+        }
+        assert_eq!(screen.state.current_map, MapId::VermilionDock, "exit column {x}");
+    }
+}
+
+#[test]
 fn test_pallet_town_connections() {
     let conns = get_map_connections(MapId::PalletTown);
     assert!(
@@ -711,4 +753,87 @@ fn e2e_pallet_north_edge_up_crosses_to_route1() {
         (2, MapId::Route1.height() as u16 * 2 - 1),
         "should arrive at Route1's bottom edge"
     );
+}
+
+#[test]
+fn pokemon_tower_stair_uses_cemetery_warp_table_fallthrough() {
+    let mut screen = OverworldScreen::new(MapId::PokemonTower1F, None, PokemonRedData);
+    screen.state.player.x = 18;
+    screen.state.player.y = 10;
+    screen.state.player.facing = Direction::Up;
+    for _ in 0..120 {
+        screen.update_frame(up_input());
+        if screen.state.current_map == MapId::PokemonTower2F { break; }
+    }
+    assert_eq!(screen.state.current_map, MapId::PokemonTower2F);
+}
+
+#[test]
+fn restored_indoor_exit_uses_saved_outside_map() {
+    let mut screen = OverworldScreen::new(MapId::SilphCo1F, None, PokemonRedData);
+    screen.restore_saved_last_map(MapId::SaffronCity as u8);
+    screen.state.player.x = 10;
+    screen.state.player.y = 16;
+    screen.state.player.facing = Direction::Down;
+    for _ in 0..120 {
+        screen.update_frame(down_input());
+        if screen.state.current_map != MapId::SilphCo1F { break; }
+    }
+    assert_eq!(screen.state.current_map, MapId::SaffronCity);
+}
+
+#[test]
+fn scripted_underground_exit_overrides_stale_saved_last_map() {
+    let mut screen = OverworldScreen::new(MapId::UndergroundPathRoute6, None, PokemonRedData);
+    screen.restore_saved_last_map(MapId::PalletTown as u8);
+    screen.state.player.x = 3;
+    screen.state.player.y = 6;
+    screen.state.player.facing = Direction::Down;
+    for _ in 0..120 {
+        screen.update_frame(down_input());
+        if screen.state.current_map != MapId::UndergroundPathRoute6 { break; }
+    }
+    assert_eq!(screen.state.current_map, MapId::Route6);
+}
+
+#[test]
+fn league_gate_exits_reach_the_route_on_that_side() {
+    use super::screen::OverworldScreen;
+    use pokered_data::impl_traits::PokemonRedData;
+    for previous in [MapId::Route22, MapId::Route23] {
+        for x in [4, 5] {
+            for north in [false, true] {
+                let mut screen = OverworldScreen::new(MapId::Route22Gate, None, PokemonRedData);
+                screen.last_map = Some(previous);
+                screen.state.player.x = x;
+                screen.state.player.y = if north { 1 } else { 6 };
+                for _ in 0..120 {
+                    screen.update_frame(if north { up_input() } else { down_input() });
+                    if screen.state.current_map != MapId::Route22Gate { break; }
+                }
+                assert_eq!(screen.state.current_map, if north { MapId::Route23 } else { MapId::Route22 }, "x={x}, north={north}, previous={previous:?}");
+                if north {
+                    assert_eq!((screen.state.player.x, screen.state.player.y), (x + 3, 139));
+                } else {
+                    assert_eq!((screen.state.player.x, screen.state.player.y), (8, 5));
+                }
+            }
+        }
+    }
+}
+
+#[test]
+fn victory_road_third_floor_hole_drops_to_second_floor() {
+    use super::screen::OverworldScreen;
+    use pokered_data::impl_traits::PokemonRedData;
+    let mut screen = OverworldScreen::new(MapId::VictoryRoad3F, None, PokemonRedData);
+    screen.run_on_load();
+    screen.state.player.x = 23;
+    screen.state.player.y = 14;
+    for _ in 0..240 {
+        screen.update_frame(down_input());
+        if screen.state.current_map != MapId::VictoryRoad3F { break; }
+    }
+    assert_eq!(screen.state.current_map, MapId::VictoryRoad2F);
+    assert_eq!((screen.state.player.x, screen.state.player.y), (22, 16));
 }

@@ -1,0 +1,10 @@
+g.nav_warp(8,0,'IndigoPlateauLobby','LoreleisRoom');g.cutscene();g.step(60)
+for room,flag,num in [('LoreleisRoom','EVENT_BEAT_LORELEIS_ROOM_TRAINER_0',145),('BrunosRoom','EVENT_BEAT_BRUNOS_ROOM_TRAINER_0',146),('AgathasRoom','EVENT_BEAT_AGATHAS_ROOM_TRAINER_0',147)]:
+ assert g.st()['map_name']==room,g.st()
+ g.nav_to(5,3,room);g.face('up');g.tap('a',12);g.cutscene();g.step(90);g.cutscene();snap('retry-'+room+'-battle')
+ assert g.st()['screen']=='battle',g.st()
+ g.battle_loop(prefer='fight');g.cutscene();g.step(60);g.cutscene()
+ assert g.d.cmd(cmd='get_flags')['data'].get(flag),g.st()
+ checkpoint(f'm{num}-retry-'+room+'-won')
+ g.tap('a',12);g.cutscene();g.step(60)
+ if room!='AgathasRoom':g.nav_warp(4,0,room,'BrunosRoom' if room=='LoreleisRoom' else 'AgathasRoom');g.cutscene();g.step(60)

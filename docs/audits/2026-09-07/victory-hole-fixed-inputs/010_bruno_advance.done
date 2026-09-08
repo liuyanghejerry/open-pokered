@@ -1,0 +1,5 @@
+g.step(90);g.cutscene();snap('bruno-battle-entered')
+if g.st()['screen']=='battle':g.battle_loop(prefer='fight');g.cutscene();g.step(60);g.cutscene()
+assert g.d.cmd(cmd='get_flags')['data'].get('EVENT_BEAT_BRUNOS_ROOM_TRAINER_0'),g.st()
+checkpoint('m128-bruno-won')
+g.tap('a',12);g.cutscene();g.step(60);snap('bruno-door-after-talk')

@@ -1002,7 +1002,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
             pending_set_nickname: None,
             pending_emotion_bubble: None,
             pending_healing_machine: None,
-            last_map: Some(MapId::PalletTown),
+            last_map: super::map_loading::scripted_last_map(start_map).or(Some(MapId::PalletTown)),
             last_map_entry: None,
             warp_fade_state: WarpFadeState::Idle,
             pending_warp: None,
@@ -1233,6 +1233,14 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
     /// 1/3/5) into any active dialogue. Called by the frontend every frame.
     pub fn set_text_delay_frames(&mut self, frames: u16) {
         self.text_delay_frames = frames.max(1);
+    }
+
+    /// Restore SRAM's wLastMap so exits still lead outside after CONTINUE.
+    /// Underground entrance scripts own their exit map and take precedence.
+    pub fn restore_saved_last_map(&mut self, saved_map_id: u8) {
+        self.last_map = super::map_loading::scripted_last_map(self.state.current_map)
+            .or_else(|| MapId::from_u8(saved_map_id))
+            .or(self.last_map);
     }
 
     /// Seed the script engine's synchronous query state from the persistent
@@ -2042,6 +2050,10 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                 continue;
             }
             if let Some(ref toggle_id) = npc_cfg.toggle_id {
+                let hidden_key = format!("__OBJ_HIDDEN_{}", toggle_id);
+                if self.unified_flags.get_flag(&hidden_key) {
+                    continue;
+                }
                 let shown_key = format!("__OBJ_SHOWN_{}", toggle_id);
                 let extras_shown = self.unified_flags.get_flag(&shown_key);
                 let bit_cleared =
@@ -2078,6 +2090,44 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
             self.lucky_slot_machine_sign = if roll == 0 { None } else { Some(roll + 1) };
         }
 
+        if let Some(fn_name) = self.map_script_config.on_load() {
+            if self.script_engine.has_function(fn_name) {
+                self.script_engine
+                    .set_player_position(self.state.player.x as u8, self.state.player.y as u8);
+                if let Ok(Some(cmd)) = self.script_engine.call_function_no_args(fn_name) {
+                    self.active_script_effect = Some(crate::overworld::script_bridge::dispatch_command_with_names(
+                        &cmd,
+                        &self.player_name,
+                        &self.rival_name,
+                        &self.starter_display_name(),
+                    ));
+                }
+                self.sync_flags_from_engine();
+            }
+        }
+        // CONTINUE and skip-intro construct the screen directly, without a
+        // warp's load_map_script call. Install the same interaction bindings.
+        self.setup_triggers_for_map(self.state.current_map);
+    }
+
+    /// Re-run the map's `@load` function WITHOUT reinstalling triggers.
+    /// Post-battle stand-in for the original's per-frame map script
+    /// (`EndTrainerBattle` hands control back to the map script, which
+    /// re-applies door/exit blocks from the fresh flag — BrunosRoom.asm:11-26,
+    /// AgathasRoom.asm:11-26). `@load` bodies are idempotent by construction —
+    /// they re-run on every map entry — so re-running them here lands
+    /// flag-gated block writes without a map re-entry.
+    ///
+    /// Skipped while a script is suspended awaiting a battle result
+    /// (`await game.startBattle`): restarting the OnLoad function mid-suspension
+    /// would clobber the pending storyline; script-owned battles re-apply their
+    /// blocks in the victory branch themselves.
+    pub fn rerun_map_on_load_script(&mut self) {
+        if self.script_awaiting_battle {
+            return;
+        }
+        self.script_engine
+            .seed_flags(&self.unified_flags.to_hashmap());
         if let Some(fn_name) = self.map_script_config.on_load() {
             if self.script_engine.has_function(fn_name) {
                 self.script_engine
@@ -2148,6 +2198,10 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
         self.safari_game_active = false;
         self.safari_steps = 0;
         self.safari_balls = 0;
+        // The gate scene's "Leaving early?" branch keys off EVENT_IN_SAFARI_ZONE
+        // — a timeout eject must clear it too, or re-entry wrongly asks the
+        // player whether they are leaving early (audit: §狩猎地带 START).
+        self.unified_flags.remove_flag("EVENT_IN_SAFARI_ZONE");
     }
 
     /// Consume one Safari Ball (called by the battle layer on a ball throw).
@@ -2192,6 +2246,9 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                     Some((self.state.player.x as u8, self.state.player.y as u8));
             }
             self.state.current_map = warp.dest_map;
+            if let Some(outside) = super::map_loading::scripted_last_map(warp.dest_map) {
+                self.last_map = Some(outside);
+            }
             self.state.player.x = warp.dest_x as u16;
             self.state.player.y = warp.dest_y as u16;
 

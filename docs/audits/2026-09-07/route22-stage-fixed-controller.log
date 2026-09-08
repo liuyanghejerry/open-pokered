@@ -1,0 +1,46 @@
+[resume-reentry] frame=636 screen=overworld map=Route22 pos=(30,4) party=5 money=1542 effect=None
+CHECKPOINT league-resumed Route22 30 4 [{'hp': 158, 'level': 51, 'max_hp': 158, 'moves': ['Thunderbolt', 'DrillPeck', 'Thunder', 'Fly'], 'pp': [15, 20, 10, 15], 'species': 'Zapdos', 'status': 'None'}, {'hp': 137, 'level': 30, 'max_hp': 137, 'moves': ['IceBeam', 'Surf', 'Rest', 'Strength'], 'pp': [10, 15, 10, 15], 'species': 'Snorlax', 'status': 'None'}, {'hp': 52, 'level': 24, 'max_hp': 52, 'moves': ['Peck', 'Growl', 'FuryAttack', 'Fly'], 'pp': [35, 40, 20, 15], 'species': 'Doduo', 'status': 'None'}, {'hp': 64, 'level': 15, 'max_hp': 64, 'moves': ['WaterGun', 'Growl', 'None', 'None'], 'pp': [25, 40, 0, 0], 'species': 'Lapras', 'status': 'None'}, {'hp': 161, 'level': 51, 'max_hp': 161, 'moves': ['MegaDrain', 'Cut', 'LeechSeed', 'Growth'], 'pp': [10, 30, 10, 40], 'species': 'Venusaur', 'status': 'None'}]
+GAME_LOG /var/folders/d2/2fv86m890m34_13rn_t3d79w0000gn/T/pokered-run-wf5xs498/game.log
+READY
+RUN 001_helpers.py
+DONE 001_helpers.py
+RUN 002_final_rival.py
+FullHeal 121 / 162 remaining before 6
+FullHeal 101 / 162 remaining before 5
+FullHeal 81 / 162 remaining before 4
+HyperPotion 81 / 162 remaining before 12
+FullHeal 87 / 162 remaining before 3
+HyperPotion 87 / 162 remaining before 11
+FullHeal 108 / 162 remaining before 2
+HyperPotion 88 / 162 remaining before 10
+FullHeal 127 / 162 remaining before 1
+HyperPotion 72 / 162 remaining before 9
+HyperPotion 89 / 162 remaining before 8
+HyperPotion 67 / 162 remaining before 7
+HyperPotion 67 / 162 remaining before 6
+HyperPotion 89 / 162 remaining before 5
+HyperPotion 69 / 162 remaining before 4
+HyperPotion 82 / 162 remaining before 3
+HyperPotion 82 / 162 remaining before 2
+HyperPotion 82 / 162 remaining before 1
+Traceback (most recent call last):
+  File "/tmp/pokered-completion-20260907-league-stage-fixed/controller.py", line 82, in <module>
+    exec(compile(__task_path.read_text(),str(__task_path),'exec'),globals())
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/pokered-completion-20260907-league-stage-fixed/inbox/002_final_rival.py", line 6, in <module>
+    g.battle_loop(prefer='fight');g.cutscene();g.step(60);g.cutscene()
+    ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^
+  File "/tmp/pokered-completion-20260907-league-stage-fixed/inbox/001_helpers.py", line 55, in healing_battle
+    r=self.d.cmd(cmd='wait_until',condition='control_ready',max_frames=240)
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/liuyanghe02/develop/open-pokered-3/scripts/debug_drive.py", line 96, in drive
+    return self.step(frames if frames is not None else len(buttons))
+           ~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/liuyanghe02/develop/open-pokered-3/scripts/debug_drive.py", line 91, in step
+    return self.cmd(cmd="step_frames", count=count)
+           ~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/pokered-completion-20260907-league-stage-fixed/controller.py", line 23, in cmd
+    raise NavError("audit cancelled at protocol boundary")
+playthrough.NavError: audit cancelled at protocol boundary
+FAILED 002_final_rival.py
+RUN 003_seed_evidence.py

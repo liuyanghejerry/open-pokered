@@ -1,0 +1,476 @@
+[resume-reentry] frame=636 screen=overworld map=LavenderTown pos=(3,6) party=1 money=8569 effect=None
+CHECKPOINT tower-resumed LavenderTown 3 6 [{'hp': 123, 'level': 39, 'max_hp': 123, 'moves': ['MegaDrain', 'Cut', 'LeechSeed', 'RazorLeaf'], 'pp': [10, 30, 10, 25], 'species': 'Venusaur', 'status': 'None'}]
+GAME_LOG /var/folders/d2/2fv86m890m34_13rn_t3d79w0000gn/T/pokered-run-04qplaas/game.log
+READY
+RUN 001_healing.py
+CHECKPOINT ship-prepared LavenderTown 3 6 [{'hp': 123, 'level': 39, 'max_hp': 123, 'moves': ['MegaDrain', 'Cut', 'LeechSeed', 'RazorLeaf'], 'pp': [10, 30, 10, 25], 'species': 'Venusaur', 'status': 'None'}]
+DONE 001_healing.py
+RUN 002_tower_rival.py
+CHECKPOINT m33-tower-rival PokemonTower2F 15 5 [{'hp': 105, 'level': 40, 'max_hp': 126, 'moves': ['MegaDrain', 'Cut', 'LeechSeed', 'RazorLeaf'], 'pp': [9, 30, 10, 17], 'species': 'Venusaur', 'status': 'None'}]
+DONE 002_tower_rival.py
+RUN 003_upper_tower.py
+SuperPotion 55 / 126 remaining before 11
+SuperPotion 55 / 126 remaining before 10
+SuperPotion 55 / 126 remaining before 9
+Traceback (most recent call last):
+  File "/tmp/pokered-completion-20260907-tower/controller.py", line 81, in <module>
+    exec(compile(__task_path.read_text(),str(__task_path),'exec'),globals())
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/pokered-completion-20260907-tower/inbox/003_upper_tower.py", line 6, in <module>
+    g.nav_to(10,16,'PokemonTower6F');g.cutscene();g.step(60);g.cutscene();snap('marowak-ghost-battle')
+    ~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/liuyanghe02/develop/open-pokered-3/docs/audits/2026-09-06/playthrough/navigation.py", line 60, in nav_to
+    if not path:raise NavError(f'no path {cm} {(px,py)} -> {(x,y)}')
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+playthrough.NavError: no path PokemonTower6F (18, 9) -> (10, 16)
+FAILED 003_upper_tower.py
+RUN 004_marowak.py
+Traceback (most recent call last):
+  File "/tmp/pokered-completion-20260907-tower/controller.py", line 81, in <module>
+    exec(compile(__task_path.read_text(),str(__task_path),'exec'),globals())
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/pokered-completion-20260907-tower/inbox/004_marowak.py", line 3, in <module>
+    g.nav_to(10,16,'PokemonTower6F');g.cutscene();g.step(60);g.cutscene();snap('marowak-ghost-battle')
+    ~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/liuyanghe02/develop/open-pokered-3/docs/audits/2026-09-06/playthrough/navigation.py", line 60, in nav_to
+    if not path:raise NavError(f'no path {cm} {(px,py)} -> {(x,y)}')
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+playthrough.NavError: no path PokemonTower6F (14, 10) -> (10, 16)
+FAILED 004_marowak.py
+RUN 005_tower_candy.py
+SuperPotion 44 / 126 remaining before 8
+SuperPotion 44 / 126 remaining before 7
+SuperPotion 44 / 126 remaining before 6
+CHECKPOINT m34-ghost-calmed PokemonTower7F 9 16 [{'hp': 97, 'level': 41, 'max_hp': 129, 'moves': ['MegaDrain', 'Cut', 'LeechSeed', 'RazorLeaf'], 'pp': [6, 30, 10, 15], 'species': 'Venusaur', 'status': 'None'}]
+DONE 005_tower_candy.py
+RUN 006_fuji.py
+SuperPotion 67 / 129 remaining before 5
+SuperPotion 65 / 129 remaining before 4
+CHECKPOINT m35-fuji-rescued MrFujisHouse 3 7 [{'hp': 115, 'level': 41, 'max_hp': 129, 'moves': ['MegaDrain', 'Cut', 'LeechSeed', 'RazorLeaf'], 'pp': [3, 30, 10, 1], 'species': 'Venusaur', 'status': 'None'}]
+DONE 006_fuji.py
+RUN 007_flute.py
+CHECKPOINT m36-poke-flute LavenderTown 3 5 [{'hp': 129, 'level': 41, 'max_hp': 129, 'moves': ['MegaDrain', 'Cut', 'LeechSeed', 'RazorLeaf'], 'pp': [10, 30, 10, 25], 'species': 'Venusaur', 'status': 'None'}]
+DONE 007_flute.py
+RUN 008_snorlax_route.py
+Traceback (most recent call last):
+  File "/tmp/pokered-completion-20260907-tower/controller.py", line 81, in <module>
+    exec(compile(__task_path.read_text(),str(__task_path),'exec'),globals())
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/pokered-completion-20260907-tower/inbox/008_snorlax_route.py", line 1, in <module>
+    g.nav_to(10,17,'LavenderTown');g.d.drive(['down']*8,frames=20);g.step(40)
+    ~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/liuyanghe02/develop/open-pokered-3/docs/audits/2026-09-06/playthrough/navigation.py", line 60, in nav_to
+    if not path:raise NavError(f'no path {cm} {(px,py)} -> {(x,y)}')
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+playthrough.NavError: no path LavenderTown (3, 6) -> (10, 17)
+FAILED 008_snorlax_route.py
+RUN 009_snorlax_route.py
+CHECKPOINT m37-snorlax-ready Route12 10 61 [{'hp': 126, 'level': 42, 'max_hp': 133, 'moves': ['MegaDrain', 'Cut', 'LeechSeed', 'RazorLeaf'], 'pp': [7, 30, 10, 18], 'species': 'Venusaur', 'status': 'None'}]
+DONE 009_snorlax_route.py
+RUN 010_catch_snorlax.py
+CATCH_ACTION GreatBall HP 133 enemy 48 qty 10
+CHECKPOINT m38-snorlax-caught Route12 10 61 [{'hp': 133, 'level': 42, 'max_hp': 133, 'moves': ['MegaDrain', 'Cut', 'LeechSeed', 'RazorLeaf'], 'pp': [4, 30, 10, 18], 'species': 'Venusaur', 'status': 'None'}, {'hp': 48, 'level': 30, 'max_hp': 137, 'moves': ['Headbutt', 'Amnesia', 'Rest', 'None'], 'pp': [15, 20, 10, 0], 'species': 'Snorlax', 'status': 'None'}]
+DONE 010_catch_snorlax.py
+RUN 011_fuchsia.py
+CHECKPOINT m39-route13 Route13 50 0 [{'hp': 136, 'level': 43, 'max_hp': 136, 'moves': ['MegaDrain', 'Cut', 'LeechSeed', 'Growth'], 'pp': [0, 30, 10, 39], 'species': 'Venusaur', 'status': 'None'}, {'hp': 48, 'level': 30, 'max_hp': 137, 'moves': ['Headbutt', 'Amnesia', 'Rest', 'None'], 'pp': [15, 20, 10, 0], 'species': 'Snorlax', 'status': 'None'}]
+Traceback (most recent call last):
+  File "/tmp/pokered-completion-20260907-tower/controller.py", line 81, in <module>
+    exec(compile(__task_path.read_text(),str(__task_path),'exec'),globals())
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/pokered-completion-20260907-tower/inbox/011_fuchsia.py", line 5, in <module>
+    g.nav_to(0,4,'Route13');g.d.drive(['left']*8,frames=20);g.step(40)
+    ~~~~~~~~^^^^^^^^^^^^^^^
+  File "/Users/liuyanghe02/develop/open-pokered-3/docs/audits/2026-09-06/playthrough/navigation.py", line 60, in nav_to
+    if not path:raise NavError(f'no path {cm} {(px,py)} -> {(x,y)}')
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+playthrough.NavError: no path Route13 (50, 0) -> (0, 4)
+FAILED 011_fuchsia.py
+RUN 012_fuchsia.py
+Traceback (most recent call last):
+  File "/tmp/pokered-completion-20260907-tower/controller.py", line 81, in <module>
+    exec(compile(__task_path.read_text(),str(__task_path),'exec'),globals())
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/pokered-completion-20260907-tower/inbox/012_fuchsia.py", line 3, in <module>
+    g.nav_to(0,45,'Route14');g.d.drive(['left']*8,frames=20);g.step(40)
+    ~~~~~~~~^^^^^^^^^^^^^^^^
+  File "/Users/liuyanghe02/develop/open-pokered-3/docs/audits/2026-09-06/playthrough/navigation.py", line 60, in nav_to
+    if not path:raise NavError(f'no path {cm} {(px,py)} -> {(x,y)}')
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+playthrough.NavError: no path Route14 (19, 6) -> (0, 45)
+FAILED 012_fuchsia.py
+RUN 013_route14_pass.py
+Traceback (most recent call last):
+  File "/tmp/pokered-completion-20260907-tower/controller.py", line 81, in <module>
+    exec(compile(__task_path.read_text(),str(__task_path),'exec'),globals())
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/pokered-completion-20260907-tower/inbox/013_route14_pass.py", line 5, in <module>
+    g.nav_to(0,45,'Route14');g.d.drive(['left']*8,frames=20);g.step(40)
+    ~~~~~~~~^^^^^^^^^^^^^^^^
+  File "/Users/liuyanghe02/develop/open-pokered-3/docs/audits/2026-09-06/playthrough/navigation.py", line 60, in nav_to
+    if not path:raise NavError(f'no path {cm} {(px,py)} -> {(x,y)}')
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+playthrough.NavError: no path Route14 (17, 6) -> (0, 45)
+FAILED 013_route14_pass.py
+RUN 014_route14_lower.py
+Traceback (most recent call last):
+  File "/tmp/pokered-completion-20260907-tower/controller.py", line 81, in <module>
+    exec(compile(__task_path.read_text(),str(__task_path),'exec'),globals())
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/pokered-completion-20260907-tower/inbox/014_route14_lower.py", line 5, in <module>
+    exec("g.nav_to(0,45,'Route14')"+(OUT/'inbox/013_route14_pass.done').read_text().split("g.nav_to(0,45,'Route14')",1)[1])
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<string>", line 1
+    g.nav_to(0,45,'Route14')",1)[0] if False else "")
+                                                   ^
+SyntaxError: unterminated string literal (detected at line 1)
+FAILED 014_route14_lower.py
+RUN 015_fuchsia.py
+SuperPotion 73 / 139 remaining before 3
+SuperPotion 61 / 139 remaining before 2
+SuperPotion 17 / 139 remaining before 1
+Traceback (most recent call last):
+  File "/tmp/pokered-completion-20260907-tower/controller.py", line 81, in <module>
+    exec(compile(__task_path.read_text(),str(__task_path),'exec'),globals())
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/pokered-completion-20260907-tower/inbox/015_fuchsia.py", line 1, in <module>
+    g.nav_to(0,45,'Route14');g.d.drive(['left']*8,frames=20);g.step(40)
+    ~~~~~~~~^^^^^^^^^^^^^^^^
+  File "/Users/liuyanghe02/develop/open-pokered-3/docs/audits/2026-09-06/playthrough/navigation.py", line 50, in nav_to
+    self.battle_loop(prefer='fight' if s['script_awaiting_battle'] else 'run');self.cutscene();continue
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/pokered-completion-20260907-tower/inbox/001_healing.py", line 34, in healing_battle
+    g.d.cmd=cmd
+           ^^^^
+  File "/Users/liuyanghe02/develop/open-pokered-3/scripts/playthrough.py", line 404, in tap
+    self.d.drive([btn], frames=1 + gap)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/liuyanghe02/develop/open-pokered-3/scripts/debug_drive.py", line 95, in drive
+    self.press_sequence(buttons)
+    ~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "/Users/liuyanghe02/develop/open-pokered-3/scripts/debug_drive.py", line 87, in press_sequence
+    return self.cmd(cmd="press_sequence", buttons=list(buttons))
+           ~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/pokered-completion-20260907-tower/controller.py", line 23, in cmd
+    raise NavError("audit cancelled at protocol boundary")
+playthrough.NavError: audit cancelled at protocol boundary
+FAILED 015_fuchsia.py
+RUN 016_low_pp.py
+DONE 016_low_pp.py
+RUN 017_snorlax_lead.py
+CHECKPOINT m40-fuchsia-arrived FuchsiaCity 19 27 [{'hp': 142, 'level': 45, 'max_hp': 142, 'moves': ['MegaDrain', 'Cut', 'LeechSeed', 'Growth'], 'pp': [10, 30, 10, 40], 'species': 'Venusaur', 'status': 'None'}, {'hp': 137, 'level': 30, 'max_hp': 137, 'moves': ['Headbutt', 'Amnesia', 'Rest', 'None'], 'pp': [15, 20, 10, 0], 'species': 'Snorlax', 'status': 'None'}]
+DONE 017_snorlax_lead.py
+RUN 018_safari.py
+DONE 018_safari.py
+RUN 019_surf.py
+DONE 019_surf.py
+RUN 020_gold_teeth.py
+DONE 020_gold_teeth.py
+RUN 021_safari_exit.py
+Traceback (most recent call last):
+  File "/tmp/pokered-completion-20260907-tower/controller.py", line 81, in <module>
+    exec(compile(__task_path.read_text(),str(__task_path),'exec'),globals())
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/pokered-completion-20260907-tower/inbox/021_safari_exit.py", line 3, in <module>
+    g.nav_warp(14,25,'SafariZoneCenter','SafariZoneGate',approach='down')
+    ~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/liuyanghe02/develop/open-pokered-3/scripts/playthrough.py", line 684, in nav_warp
+    self.nav_to(x, y - 1, map_name=from_map, tries=tries)
+    ~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/liuyanghe02/develop/open-pokered-3/docs/audits/2026-09-06/playthrough/navigation.py", line 60, in nav_to
+    if not path:raise NavError(f'no path {cm} {(px,py)} -> {(x,y)}')
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+playthrough.NavError: no path SafariZoneCenter (14, 0) -> (14, 24)
+FAILED 021_safari_exit.py
+RUN 022_safari_timeout.py
+Traceback (most recent call last):
+  File "/tmp/pokered-completion-20260907-tower/controller.py", line 81, in <module>
+    exec(compile(__task_path.read_text(),str(__task_path),'exec'),globals())
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/pokered-completion-20260907-tower/inbox/022_safari_timeout.py", line 4, in <module>
+    g.nav_to(14,2,'SafariZoneCenter');g.nav_to(14,3,'SafariZoneCenter');g.cutscene()
+                                      ~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/liuyanghe02/develop/open-pokered-3/docs/audits/2026-09-06/playthrough/navigation.py", line 55, in nav_to
+    raise NavError(f'changed map {initial}->{cm}')
+playthrough.NavError: changed map SafariZoneCenter->SafariZoneGate
+FAILED 022_safari_timeout.py
+RUN 023_warden.py
+CHECKPOINT m41-safari-prizes FuchsiaCity 18 3 [{'hp': 142, 'level': 45, 'max_hp': 142, 'moves': ['MegaDrain', 'Cut', 'LeechSeed', 'Growth'], 'pp': [10, 30, 10, 40], 'species': 'Venusaur', 'status': 'None'}, {'hp': 137, 'level': 30, 'max_hp': 137, 'moves': ['Headbutt', 'Amnesia', 'Rest', 'None'], 'pp': [15, 20, 10, 0], 'species': 'Snorlax', 'status': 'None'}]
+CHECKPOINT m42-strength FuchsiaCity 27 27 [{'hp': 142, 'level': 45, 'max_hp': 142, 'moves': ['MegaDrain', 'Cut', 'LeechSeed', 'Growth'], 'pp': [10, 30, 10, 40], 'species': 'Venusaur', 'status': 'None'}, {'hp': 137, 'level': 30, 'max_hp': 137, 'moves': ['Headbutt', 'Amnesia', 'Rest', 'None'], 'pp': [15, 20, 10, 0], 'species': 'Snorlax', 'status': 'None'}]
+DONE 023_warden.py
+RUN 024_hm_menu.py
+DONE 024_hm_menu.py
+RUN 025_strength_menu.py
+DONE 025_strength_menu.py
+RUN 026_strength_venusaur.py
+Traceback (most recent call last):
+  File "/tmp/pokered-completion-20260907-tower/controller.py", line 81, in <module>
+    exec(compile(__task_path.read_text(),str(__task_path),'exec'),globals())
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/pokered-completion-20260907-tower/inbox/026_strength_venusaur.py", line 4, in <module>
+    assert g.st()['party'][0]['moves'][3]=='Strength',g.st()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: {'active_script_effect': None, 'battle_bag': None, 'battle_inventory': [{'item': 'PokeBall', 'qty': 5}, {'item': 'OldRod', 'qty': 1}, {'item': 'Hm01', 'qty': 1}, {'item': 'Bicycle', 'qty': 1}, {'item': 'ParlyzHeal', 'qty': 3}, {'item': 'Awakening', 'qty': 3}, {'item': 'BurnHeal', 'qty': 2}, {'item': 'Tm13', 'qty': 1}, {'item': 'SilphScope', 'qty': 1}, {'item': 'GreatBall', 'qty': 9}, {'item': 'RareCandy', 'qty': 1}, {'item': 'PokeFlute', 'qty': 1}, {'item': 'SafariBall', 'qty': 30}, {'item': 'Hm03', 'qty': 1}, {'item': 'GoldTeeth', 'qty': 1}], 'battle_live': {'enemy': {'hp': 87, 'level': 30, 'max_hp': 87, 'species': 'Nidorina', 'status': 'None'}, 'enemy_party': [{'hp': 87, 'level': 30, 'species': 'Nidorina'}], 'player': {'hp': 142, 'level': 45, 'max_hp': 142, 'species': 'Venusaur', 'status': 'None'}}, 'battle_message': None, 'battle_moves': None, 'battle_phase': 'BattleOver { won: false, escaped: true, wait_frames: 17 }', 'choice': None, 'coins': 0, 'dialogue': None, 'dialogue_state': None, 'frame_count': 135043, 'map_id': 7, 'map_name': 'FuchsiaCity', 'money': 26049, 'party': [{'hp': 142, 'level': 45, 'max_hp': 142, 'moves': ['MegaDrain', 'Cut', 'LeechSeed', 'Growth'], 'pp': [10, 30, 10, 40], 'species': 'Venusaur', 'status': 'None'}, {'hp': 137, 'level': 30, 'max_hp': 137, 'moves': ['Headbutt', 'Amnesia', 'Rest', 'None'], 'pp': [15, 20, 10, 0], 'species': 'Snorlax', 'status': 'None'}], 'party_count': 2, 'pc_phase': None, 'player_facing': 'Down', 'player_movement_state': 'Idle', 'player_name': 'RED', 'player_x': 27, 'player_y': 28, 'screen': 'overworld', 'script_awaiting_battle': False, 'script_effect': None, 'script_running': False, 'shop_phase': None, 'text_speed_delay_frames': 3, 'warp_fade': 'Idle'}
+FAILED 026_strength_venusaur.py
+RUN 027_snorlax_strength.py
+DONE 027_snorlax_strength.py
+RUN 028_surf_menu.py
+DONE 028_surf_menu.py
+RUN 029_ice_beam.py
+CHECKPOINT m43-hm-trained FuchsiaCity 27 28 [{'hp': 142, 'level': 45, 'max_hp': 142, 'moves': ['MegaDrain', 'Cut', 'LeechSeed', 'Growth'], 'pp': [10, 30, 10, 40], 'species': 'Venusaur', 'status': 'None'}, {'hp': 137, 'level': 30, 'max_hp': 137, 'moves': ['IceBeam', 'Surf', 'Rest', 'Strength'], 'pp': [10, 15, 10, 15], 'species': 'Snorlax', 'status': 'None'}]
+DONE 029_ice_beam.py
+RUN 030_buy_medicine.py
+Traceback (most recent call last):
+  File "/tmp/pokered-completion-20260907-tower/controller.py", line 81, in <module>
+    exec(compile(__task_path.read_text(),str(__task_path),'exec'),globals())
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/pokered-completion-20260907-tower/inbox/030_buy_medicine.py", line 3, in <module>
+    snap('fuchsia-shop-open');assert g.st()['screen']=='shop',g.st()
+                                     ^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: {'active_script_effect': None, 'battle_bag': None, 'battle_inventory': [{'item': 'PokeBall', 'qty': 5}, {'item': 'OldRod', 'qty': 1}, {'item': 'Hm01', 'qty': 1}, {'item': 'Bicycle', 'qty': 1}, {'item': 'ParlyzHeal', 'qty': 3}, {'item': 'Awakening', 'qty': 3}, {'item': 'BurnHeal', 'qty': 2}, {'item': 'Tm13', 'qty': 1}, {'item': 'SilphScope', 'qty': 1}, {'item': 'GreatBall', 'qty': 9}, {'item': 'RareCandy', 'qty': 1}, {'item': 'PokeFlute', 'qty': 1}, {'item': 'SafariBall', 'qty': 30}, {'item': 'Hm03', 'qty': 1}, {'item': 'GoldTeeth', 'qty': 1}], 'battle_live': {'enemy': {'hp': 87, 'level': 30, 'max_hp': 87, 'species': 'Nidorina', 'status': 'None'}, 'enemy_party': [{'hp': 87, 'level': 30, 'species': 'Nidorina'}], 'player': {'hp': 142, 'level': 45, 'max_hp': 142, 'species': 'Venusaur', 'status': 'None'}}, 'battle_message': None, 'battle_moves': None, 'battle_phase': 'BattleOver { won: false, escaped: true, wait_frames: 17 }', 'choice': None, 'coins': 0, 'dialogue': None, 'dialogue_state': None, 'frame_count': 146291, 'map_id': 152, 'map_name': 'FuchsiaMart', 'money': 26049, 'party': [{'hp': 142, 'level': 45, 'max_hp': 142, 'moves': ['MegaDrain', 'Cut', 'LeechSeed', 'Growth'], 'pp': [10, 30, 10, 40], 'species': 'Venusaur', 'status': 'None'}, {'hp': 137, 'level': 30, 'max_hp': 137, 'moves': ['IceBeam', 'Surf', 'Rest', 'Strength'], 'pp': [10, 15, 10, 15], 'species': 'Snorlax', 'status': 'None'}], 'party_count': 2, 'pc_phase': None, 'player_facing': 'Up', 'player_movement_state': 'Idle', 'player_name': 'RED', 'player_x': 2, 'player_y': 2, 'screen': 'overworld', 'script_awaiting_battle': False, 'script_effect': None, 'script_running': False, 'shop_phase': None, 'text_speed_delay_frames': 3, 'warp_fade': 'Idle'}
+FAILED 030_buy_medicine.py
+RUN 031_buy_medicine.py
+CHECKPOINT m44-koga-supplies FuchsiaCity 5 13 [{'hp': 142, 'level': 45, 'max_hp': 142, 'moves': ['MegaDrain', 'Cut', 'LeechSeed', 'Growth'], 'pp': [10, 30, 10, 40], 'species': 'Venusaur', 'status': 'None'}, {'hp': 137, 'level': 30, 'max_hp': 137, 'moves': ['IceBeam', 'Surf', 'Rest', 'Strength'], 'pp': [10, 15, 10, 15], 'species': 'Snorlax', 'status': 'None'}]
+DONE 031_buy_medicine.py
+RUN 032_battle_upgrade.py
+DONE 032_battle_upgrade.py
+RUN 033_koga.py
+SuperPotion 11 / 142 remaining before 20
+SuperPotion 61 / 142 remaining before 19
+SuperPotion 69 / 142 remaining before 18
+SuperPotion 21 / 142 remaining before 17
+SuperPotion 71 / 142 remaining before 16
+SuperPotion 67 / 142 remaining before 15
+SuperPotion 55 / 142 remaining before 14
+SuperPotion 47 / 142 remaining before 13
+SuperPotion 40 / 142 remaining before 12
+SuperPotion 50 / 142 remaining before 11
+SuperPotion 62 / 142 remaining before 10
+CHECKPOINT m45-soul-badge FuchsiaCity 19 27 [{'hp': 145, 'level': 46, 'max_hp': 145, 'moves': ['MegaDrain', 'Cut', 'LeechSeed', 'Growth'], 'pp': [10, 30, 10, 40], 'species': 'Venusaur', 'status': 'None'}, {'hp': 137, 'level': 30, 'max_hp': 137, 'moves': ['IceBeam', 'Surf', 'Rest', 'Strength'], 'pp': [10, 15, 10, 15], 'species': 'Snorlax', 'status': 'None'}]
+DONE 033_koga.py
+RUN 034_fly_bird.py
+Traceback (most recent call last):
+  File "/tmp/pokered-completion-20260907-tower/controller.py", line 81, in <module>
+    exec(compile(__task_path.read_text(),str(__task_path),'exec'),globals())
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/pokered-completion-20260907-tower/inbox/034_fly_bird.py", line 26, in <module>
+    g.nav_to(43,12,'Route18')
+    ~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "/Users/liuyanghe02/develop/open-pokered-3/docs/audits/2026-09-06/playthrough/navigation.py", line 60, in nav_to
+    if not path:raise NavError(f'no path {cm} {(px,py)} -> {(x,y)}')
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+playthrough.NavError: no path Route18 (49, 9) -> (43, 12)
+FAILED 034_fly_bird.py
+RUN 035_bird_grass.py
+Traceback (most recent call last):
+  File "/tmp/pokered-completion-20260907-tower/controller.py", line 81, in <module>
+    exec(compile(__task_path.read_text(),str(__task_path),'exec'),globals())
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/pokered-completion-20260907-tower/inbox/035_bird_grass.py", line 4, in <module>
+    g.nav_to(41,14,'Route18');g.nav_to(41,12,'Route18')
+                              ~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "/Users/liuyanghe02/develop/open-pokered-3/docs/audits/2026-09-06/playthrough/navigation.py", line 50, in nav_to
+    self.battle_loop(prefer='fight' if s['script_awaiting_battle'] else 'run');self.cutscene();continue
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/pokered-completion-20260907-tower/inbox/034_fly_bird.py", line 6, in bird_catcher
+  File "/tmp/pokered-completion-20260907-tower/inbox/032_battle_upgrade.py", line 4, in healing_battle
+    OUT=Path('/tmp/pokered-completion-20260907-tower')
+            ^^^^^^^^^
+  File "/Users/liuyanghe02/develop/open-pokered-3/scripts/playthrough.py", line 390, in st
+    return self.d.cmd(cmd="get_state")["data"]
+           ~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "/tmp/pokered-completion-20260907-tower/controller.py", line 23, in cmd
+    raise NavError("audit cancelled at protocol boundary")
+playthrough.NavError: audit cancelled at protocol boundary
+FAILED 035_bird_grass.py
+RUN 036_bird_retry.py
+Traceback (most recent call last):
+  File "/tmp/pokered-completion-20260907-tower/controller.py", line 81, in <module>
+    exec(compile(__task_path.read_text(),str(__task_path),'exec'),globals())
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/pokered-completion-20260907-tower/inbox/036_bird_retry.py", line 28, in <module>
+    g.nav_to(41,14,'Route18');g.nav_to(41,12,'Route18')
+                              ~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "/Users/liuyanghe02/develop/open-pokered-3/docs/audits/2026-09-06/playthrough/navigation.py", line 63, in nav_to
+    self.d.drive([direction]*8,frames=48 if jump else 16)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/liuyanghe02/develop/open-pokered-3/scripts/debug_drive.py", line 96, in drive
+    return self.step(frames if frames is not None else len(buttons))
+           ~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/liuyanghe02/develop/open-pokered-3/scripts/debug_drive.py", line 91, in step
+    return self.cmd(cmd="step_frames", count=count)
+           ~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/pokered-completion-20260907-tower/controller.py", line 23, in cmd
+    raise NavError("audit cancelled at protocol boundary")
+playthrough.NavError: audit cancelled at protocol boundary
+FAILED 036_bird_retry.py
+RUN 037_bird_observe.py
+BIRD_DECISION run False {'hp': 54, 'level': 22, 'max_hp': 54, 'species': 'Spearow', 'status': 'None'} battle
+BIRD_DECISION run False {'hp': 84, 'level': 29, 'max_hp': 84, 'species': 'Fearow', 'status': 'None'} battle
+BIRD_DECISION run False {'hp': 50, 'level': 20, 'max_hp': 50, 'species': 'Spearow', 'status': 'None'} battle
+BIRD_DECISION run False {'hp': 48, 'level': 20, 'max_hp': 48, 'species': 'Spearow', 'status': 'None'} battle
+BIRD_DECISION run False {'hp': 73, 'level': 29, 'max_hp': 73, 'species': 'Raticate', 'status': 'None'} battle
+BIRD_DECISION run False {'hp': 62, 'level': 25, 'max_hp': 62, 'species': 'Raticate', 'status': 'None'} battle
+BIRD_DECISION run False {'hp': 46, 'level': 20, 'max_hp': 46, 'species': 'Spearow', 'status': 'None'} battle
+BIRD_DECISION run False {'hp': 52, 'level': 24, 'max_hp': 52, 'species': 'Doduo', 'status': 'None'} battle
+BIRD_DECISION run False {'hp': 55, 'level': 22, 'max_hp': 55, 'species': 'Spearow', 'status': 'None'} battle
+BIRD_DECISION run False {'hp': 61, 'level': 26, 'max_hp': 61, 'species': 'Doduo', 'status': 'None'} battle
+BIRD_DECISION run False {'hp': 58, 'level': 28, 'max_hp': 58, 'species': 'Doduo', 'status': 'None'} battle
+BIRD_DECISION run False {'hp': 50, 'level': 22, 'max_hp': 50, 'species': 'Spearow', 'status': 'None'} battle
+BIRD_DECISION run False {'hp': 62, 'level': 28, 'max_hp': 62, 'species': 'Doduo', 'status': 'None'} battle
+BIRD_DECISION run False {'hp': 67, 'level': 25, 'max_hp': 67, 'species': 'Raticate', 'status': 'None'} battle
+BIRD_DECISION run False {'hp': 62, 'level': 26, 'max_hp': 62, 'species': 'Doduo', 'status': 'None'} battle
+BIRD_DECISION run False {'hp': 79, 'level': 27, 'max_hp': 79, 'species': 'Fearow', 'status': 'None'} battle
+BIRD_DECISION run False {'hp': 55, 'level': 24, 'max_hp': 55, 'species': 'Doduo', 'status': 'None'} battle
+BIRD_DECISION run False {'hp': 55, 'level': 24, 'max_hp': 55, 'species': 'Doduo', 'status': 'None'} battle
+BIRD_DECISION run False {'hp': 65, 'level': 25, 'max_hp': 65, 'species': 'Raticate', 'status': 'None'} battle
+BIRD_DECISION run False {'hp': 54, 'level': 22, 'max_hp': 54, 'species': 'Spearow', 'status': 'None'} battle
+BIRD_DECISION run False {'hp': 69, 'level': 25, 'max_hp': 69, 'species': 'Fearow', 'status': 'None'} battle
+BIRD_DECISION run False {'hp': 75, 'level': 25, 'max_hp': 75, 'species': 'Fearow', 'status': 'None'} battle
+BIRD_DECISION run False {'hp': 63, 'level': 25, 'max_hp': 63, 'species': 'Raticate', 'status': 'None'} battle
+BIRD_DECISION run False {'hp': 57, 'level': 24, 'max_hp': 57, 'species': 'Doduo', 'status': 'None'} battle
+BIRD_DECISION run False {'hp': 53, 'level': 22, 'max_hp': 53, 'species': 'Spearow', 'status': 'None'} battle
+BIRD_DECISION run False {'hp': 78, 'level': 29, 'max_hp': 78, 'species': 'Raticate', 'status': 'None'} battle
+BIRD_DECISION run False {'hp': 54, 'level': 24, 'max_hp': 54, 'species': 'Doduo', 'status': 'None'} battle
+BIRD_DECISION run False {'hp': 72, 'level': 29, 'max_hp': 72, 'species': 'Raticate', 'status': 'None'} battle
+BIRD_DECISION run False {'hp': 50, 'level': 22, 'max_hp': 50, 'species': 'Spearow', 'status': 'None'} battle
+BIRD_DECISION run False {'hp': 52, 'level': 22, 'max_hp': 52, 'species': 'Spearow', 'status': 'None'} battle
+BIRD_DECISION run False {'hp': 54, 'level': 22, 'max_hp': 54, 'species': 'Spearow', 'status': 'None'} battle
+Traceback (most recent call last):
+  File "/tmp/pokered-completion-20260907-tower/controller.py", line 81, in <module>
+    exec(compile(__task_path.read_text(),str(__task_path),'exec'),globals())
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/pokered-completion-20260907-tower/inbox/037_bird_observe.py", line 29, in <module>
+    g.nav_to(41,14,'Route18');g.nav_to(41,12,'Route18')
+    ~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "/Users/liuyanghe02/develop/open-pokered-3/docs/audits/2026-09-06/playthrough/navigation.py", line 63, in nav_to
+    self.d.drive([direction]*8,frames=48 if jump else 16)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/liuyanghe02/develop/open-pokered-3/scripts/debug_drive.py", line 95, in drive
+    self.press_sequence(buttons)
+    ~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "/Users/liuyanghe02/develop/open-pokered-3/scripts/debug_drive.py", line 87, in press_sequence
+    return self.cmd(cmd="press_sequence", buttons=list(buttons))
+           ~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/pokered-completion-20260907-tower/controller.py", line 23, in cmd
+    raise NavError("audit cancelled at protocol boundary")
+playthrough.NavError: audit cancelled at protocol boundary
+FAILED 037_bird_observe.py
+RUN 038_restock_balls.py
+CHECKPOINT m46-balls-restocked FuchsiaCity 5 13 [{'hp': 149, 'level': 47, 'max_hp': 149, 'moves': ['MegaDrain', 'Cut', 'LeechSeed', 'Growth'], 'pp': [2, 30, 6, 40], 'species': 'Venusaur', 'status': 'None'}, {'hp': 137, 'level': 30, 'max_hp': 137, 'moves': ['IceBeam', 'Surf', 'Rest', 'Strength'], 'pp': [10, 15, 10, 15], 'species': 'Snorlax', 'status': 'None'}]
+DONE 038_restock_balls.py
+RUN 039_bird_capture_fixed.py
+WILD_BIRD_BALL Doduo GreatBall 15
+WILD_BIRD_BALL Doduo GreatBall 14
+CHECKPOINT m47-fly-bird Route18 41 12 [{'hp': 149, 'level': 47, 'max_hp': 149, 'moves': ['MegaDrain', 'Cut', 'LeechSeed', 'Growth'], 'pp': [2, 30, 6, 40], 'species': 'Venusaur', 'status': 'None'}, {'hp': 137, 'level': 30, 'max_hp': 137, 'moves': ['IceBeam', 'Surf', 'Rest', 'Strength'], 'pp': [10, 15, 10, 15], 'species': 'Snorlax', 'status': 'None'}, {'hp': 52, 'level': 24, 'max_hp': 52, 'moves': ['Peck', 'Growl', 'FuryAttack', 'None'], 'pp': [35, 40, 20, 0], 'species': 'Doduo', 'status': 'None'}]
+DONE 039_bird_capture_fixed.py
+RUN 040_cycling.py
+Traceback (most recent call last):
+  File "/tmp/pokered-completion-20260907-tower/controller.py", line 81, in <module>
+    exec(compile(__task_path.read_text(),str(__task_path),'exec'),globals())
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/pokered-completion-20260907-tower/inbox/040_cycling.py", line 5, in <module>
+    g.nav_to(8,0,'Route18');g.d.drive(['up']*8,frames=16)
+    ~~~~~~~~^^^^^^^^^^^^^^^
+  File "/Users/liuyanghe02/develop/open-pokered-3/docs/audits/2026-09-06/playthrough/navigation.py", line 67, in nav_to
+    raise NavError(f'single-step navigation budget exhausted {initial} {(x,y)}')
+playthrough.NavError: single-step navigation budget exhausted Route18 (8, 0)
+FAILED 040_cycling.py
+RUN 041_bike_navigation.py
+Traceback (most recent call last):
+  File "/tmp/pokered-completion-20260907-tower/controller.py", line 81, in <module>
+    exec(compile(__task_path.read_text(),str(__task_path),'exec'),globals())
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/pokered-completion-20260907-tower/inbox/041_bike_navigation.py", line 9, in <module>
+    assert g.st()['map_name']=='Route17',g.st()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: {'active_script_effect': None, 'battle_bag': None, 'battle_inventory': [{'item': 'OldRod', 'qty': 1}, {'item': 'Hm01', 'qty': 1}, {'item': 'Bicycle', 'qty': 1}, {'item': 'ParlyzHeal', 'qty': 3}, {'item': 'Awakening', 'qty': 3}, {'item': 'BurnHeal', 'qty': 2}, {'item': 'SilphScope', 'qty': 1}, {'item': 'RareCandy', 'qty': 1}, {'item': 'PokeFlute', 'qty': 1}, {'item': 'Hm03', 'qty': 1}, {'item': 'Hm04', 'qty': 1}, {'item': 'SuperPotion', 'qty': 9}, {'item': 'Revive', 'qty': 3}, {'item': 'FullHeal', 'qty': 5}, {'item': 'Tm06', 'qty': 1}, {'item': 'GreatBall', 'qty': 13}], 'battle_live': {'enemy': {'hp': 52, 'level': 24, 'max_hp': 52, 'species': 'Doduo', 'status': 'None'}, 'enemy_party': [{'hp': 52, 'level': 24, 'species': 'Doduo'}], 'player': {'hp': 149, 'level': 47, 'max_hp': 149, 'species': 'Venusaur', 'status': 'None'}}, 'battle_message': None, 'battle_moves': None, 'battle_phase': 'BattleOver { won: true, escaped: false, wait_frames: 17 }', 'choice': None, 'coins': 0, 'dialogue': None, 'dialogue_state': None, 'frame_count': 242173, 'map_id': 29, 'map_name': 'Route18', 'money': 4061, 'party': [{'hp': 149, 'level': 47, 'max_hp': 149, 'moves': ['MegaDrain', 'Cut', 'LeechSeed', 'Growth'], 'pp': [2, 30, 6, 40], 'species': 'Venusaur', 'status': 'None'}, {'hp': 137, 'level': 30, 'max_hp': 137, 'moves': ['IceBeam', 'Surf', 'Rest', 'Strength'], 'pp': [10, 15, 10, 15], 'species': 'Snorlax', 'status': 'None'}, {'hp': 52, 'level': 24, 'max_hp': 52, 'moves': ['Peck', 'Growl', 'FuryAttack', 'None'], 'pp': [35, 40, 20, 0], 'species': 'Doduo', 'status': 'None'}], 'party_count': 3, 'pc_phase': None, 'player_facing': 'Up', 'player_movement_state': 'Idle', 'player_name': 'RED', 'player_x': 8, 'player_y': 0, 'screen': 'overworld', 'script_awaiting_battle': False, 'script_effect': None, 'script_running': False, 'shop_phase': None, 'text_speed_delay_frames': 3, 'warp_fade': 'Idle'}
+FAILED 041_bike_navigation.py
+RUN 042_cycling_hold.py
+Traceback (most recent call last):
+  File "/tmp/pokered-completion-20260907-tower/controller.py", line 81, in <module>
+    exec(compile(__task_path.read_text(),str(__task_path),'exec'),globals())
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/pokered-completion-20260907-tower/inbox/042_cycling_hold.py", line 2, in <module>
+    assert g.st()['map_name']=='Route17',g.st()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: {'active_script_effect': None, 'battle_bag': None, 'battle_inventory': [{'item': 'OldRod', 'qty': 1}, {'item': 'Hm01', 'qty': 1}, {'item': 'Bicycle', 'qty': 1}, {'item': 'ParlyzHeal', 'qty': 3}, {'item': 'Awakening', 'qty': 3}, {'item': 'BurnHeal', 'qty': 2}, {'item': 'SilphScope', 'qty': 1}, {'item': 'RareCandy', 'qty': 1}, {'item': 'PokeFlute', 'qty': 1}, {'item': 'Hm03', 'qty': 1}, {'item': 'Hm04', 'qty': 1}, {'item': 'SuperPotion', 'qty': 9}, {'item': 'Revive', 'qty': 3}, {'item': 'FullHeal', 'qty': 5}, {'item': 'Tm06', 'qty': 1}, {'item': 'GreatBall', 'qty': 13}], 'battle_live': {'enemy': {'hp': 52, 'level': 24, 'max_hp': 52, 'species': 'Doduo', 'status': 'None'}, 'enemy_party': [{'hp': 52, 'level': 24, 'species': 'Doduo'}], 'player': {'hp': 149, 'level': 47, 'max_hp': 149, 'species': 'Venusaur', 'status': 'None'}}, 'battle_message': None, 'battle_moves': None, 'battle_phase': 'BattleOver { won: true, escaped: false, wait_frames: 17 }', 'choice': None, 'coins': 0, 'dialogue': None, 'dialogue_state': None, 'frame_count': 243296, 'map_id': 29, 'map_name': 'Route18', 'money': 4061, 'party': [{'hp': 149, 'level': 47, 'max_hp': 149, 'moves': ['MegaDrain', 'Cut', 'LeechSeed', 'Growth'], 'pp': [2, 30, 6, 40], 'species': 'Venusaur', 'status': 'None'}, {'hp': 137, 'level': 30, 'max_hp': 137, 'moves': ['IceBeam', 'Surf', 'Rest', 'Strength'], 'pp': [10, 15, 10, 15], 'species': 'Snorlax', 'status': 'None'}, {'hp': 52, 'level': 24, 'max_hp': 52, 'moves': ['Peck', 'Growl', 'FuryAttack', 'None'], 'pp': [35, 40, 20, 0], 'species': 'Doduo', 'status': 'None'}], 'party_count': 3, 'pc_phase': None, 'player_facing': 'Up', 'player_movement_state': 'Idle', 'player_name': 'RED', 'player_x': 8, 'player_y': 0, 'screen': 'overworld', 'script_awaiting_battle': False, 'script_effect': None, 'script_running': False, 'shop_phase': None, 'text_speed_delay_frames': 3, 'warp_fade': 'Idle'}
+FAILED 042_cycling_hold.py
+RUN 043_cycling_lane.py
+Traceback (most recent call last):
+  File "/tmp/pokered-completion-20260907-tower/controller.py", line 81, in <module>
+    exec(compile(__task_path.read_text(),str(__task_path),'exec'),globals())
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/pokered-completion-20260907-tower/inbox/043_cycling_lane.py", line 4, in <module>
+    g.nav_to(8,0,'Route17');g.d.drive(['up']*24,frames=24);g.step(40)
+    ~~~~~~~~^^^^^^^^^^^^^^^
+  File "/Users/liuyanghe02/develop/open-pokered-3/docs/audits/2026-09-06/playthrough/navigation.py", line 55, in nav_to
+    raise NavError(f'changed map {initial}->{cm}')
+playthrough.NavError: changed map Route17->Route18
+FAILED 043_cycling_lane.py
+RUN 044_brake_hold.py
+Traceback (most recent call last):
+  File "/tmp/pokered-completion-20260907-tower/controller.py", line 81, in <module>
+    exec(compile(__task_path.read_text(),str(__task_path),'exec'),globals())
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/pokered-completion-20260907-tower/inbox/044_brake_hold.py", line 18, in <module>
+    g.nav_to(8,0,'Route17');g.d.drive(['up']*24,frames=24);g.step(40)
+    ~~~~~~~~^^^^^^^^^^^^^^^
+  File "/Users/liuyanghe02/develop/open-pokered-3/docs/audits/2026-09-06/playthrough/navigation.py", line 63, in nav_to
+    self.d.drive([direction]*8,frames=48 if jump else 16)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/pokered-completion-20260907-tower/inbox/044_brake_hold.py", line 12, in slope_drive
+    g.d.press_sequence(buttons);return g.d.step(count)
+                                       ~~~~~~~~^^^^^^^
+  File "/Users/liuyanghe02/develop/open-pokered-3/scripts/debug_drive.py", line 91, in step
+    return self.cmd(cmd="step_frames", count=count)
+           ~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/pokered-completion-20260907-tower/controller.py", line 23, in cmd
+    raise NavError("audit cancelled at protocol boundary")
+playthrough.NavError: audit cancelled at protocol boundary
+FAILED 044_brake_hold.py
+RUN 045_continuous_brake.py
+CHECKPOINT m48-cycling-north Route16 8 13 [{'hp': 132, 'level': 47, 'max_hp': 149, 'moves': ['MegaDrain', 'Cut', 'LeechSeed', 'Growth'], 'pp': [0, 28, 4, 40], 'species': 'Venusaur', 'status': 'None'}, {'hp': 137, 'level': 30, 'max_hp': 137, 'moves': ['IceBeam', 'Surf', 'Rest', 'Strength'], 'pp': [10, 15, 10, 15], 'species': 'Snorlax', 'status': 'None'}, {'hp': 52, 'level': 24, 'max_hp': 52, 'moves': ['Peck', 'Growl', 'FuryAttack', 'None'], 'pp': [35, 40, 20, 0], 'species': 'Doduo', 'status': 'None'}]
+DONE 045_continuous_brake.py
+RUN 046_route16_snorlax.py
+CHECKPOINT m49-route16-open Route16 25 10 [{'hp': 149, 'level': 47, 'max_hp': 149, 'moves': ['MegaDrain', 'Cut', 'LeechSeed', 'Growth'], 'pp': [0, 22, 1, 40], 'species': 'Venusaur', 'status': 'None'}, {'hp': 137, 'level': 30, 'max_hp': 137, 'moves': ['IceBeam', 'Surf', 'Rest', 'Strength'], 'pp': [10, 15, 10, 15], 'species': 'Snorlax', 'status': 'None'}, {'hp': 52, 'level': 24, 'max_hp': 52, 'moves': ['Peck', 'Growl', 'FuryAttack', 'None'], 'pp': [35, 40, 20, 0], 'species': 'Doduo', 'status': 'None'}]
+DONE 046_route16_snorlax.py
+RUN 047_fly_house.py
+CHECKPOINT m50-fly-hm Route16 7 5 [{'hp': 149, 'level': 47, 'max_hp': 149, 'moves': ['MegaDrain', 'Cut', 'LeechSeed', 'Growth'], 'pp': [0, 22, 1, 40], 'species': 'Venusaur', 'status': 'None'}, {'hp': 137, 'level': 30, 'max_hp': 137, 'moves': ['IceBeam', 'Surf', 'Rest', 'Strength'], 'pp': [10, 15, 10, 15], 'species': 'Snorlax', 'status': 'None'}, {'hp': 52, 'level': 24, 'max_hp': 52, 'moves': ['Peck', 'Growl', 'FuryAttack', 'None'], 'pp': [35, 40, 20, 0], 'species': 'Doduo', 'status': 'None'}]
+DONE 047_fly_house.py
+RUN 048_teach_fly.py
+DONE 048_teach_fly.py
+RUN 049_saffron.py
+Traceback (most recent call last):
+  File "/tmp/pokered-completion-20260907-tower/controller.py", line 81, in <module>
+    exec(compile(__task_path.read_text(),str(__task_path),'exec'),globals())
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/pokered-completion-20260907-tower/inbox/049_saffron.py", line 4, in <module>
+    checkpoint('m51-saffron-fly')
+    ~~~~~~~~~~^^^^^^^^^^^^^^^^^^^
+  File "/tmp/pokered-completion-20260907-tower/controller.py", line 44, in checkpoint
+    assert s['screen']=='overworld' and not s['script_running'],s
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: {'active_script_effect': 'HideObjectByName', 'battle_bag': None, 'battle_inventory': [{'item': 'OldRod', 'qty': 1}, {'item': 'Hm01', 'qty': 1}, {'item': 'Bicycle', 'qty': 1}, {'item': 'ParlyzHeal', 'qty': 3}, {'item': 'Awakening', 'qty': 3}, {'item': 'BurnHeal', 'qty': 2}, {'item': 'SilphScope', 'qty': 1}, {'item': 'RareCandy', 'qty': 1}, {'item': 'PokeFlute', 'qty': 1}, {'item': 'Hm03', 'qty': 1}, {'item': 'Hm04', 'qty': 1}, {'item': 'SuperPotion', 'qty': 9}, {'item': 'Revive', 'qty': 3}, {'item': 'FullHeal', 'qty': 5}, {'item': 'Tm06', 'qty': 1}, {'item': 'GreatBall', 'qty': 13}], 'battle_live': {'enemy': {'hp': 50, 'level': 22, 'max_hp': 50, 'species': 'Spearow', 'status': 'None'}, 'enemy_party': [{'hp': 50, 'level': 22, 'species': 'Spearow'}], 'player': {'hp': 149, 'level': 47, 'max_hp': 149, 'species': 'Venusaur', 'status': 'None'}}, 'battle_message': None, 'battle_moves': None, 'battle_phase': 'BattleOver { won: false, escaped: true, wait_frames: 16 }', 'choice': None, 'coins': 0, 'dialogue': None, 'dialogue_state': None, 'frame_count': 312626, 'map_id': 10, 'map_name': 'SaffronCity', 'money': 5366, 'party': [{'hp': 149, 'level': 47, 'max_hp': 149, 'moves': ['MegaDrain', 'Cut', 'LeechSeed', 'Growth'], 'pp': [10, 30, 10, 40], 'species': 'Venusaur', 'status': 'None'}, {'hp': 137, 'level': 30, 'max_hp': 137, 'moves': ['IceBeam', 'Surf', 'Rest', 'Strength'], 'pp': [10, 15, 10, 15], 'species': 'Snorlax', 'status': 'None'}, {'hp': 52, 'level': 24, 'max_hp': 52, 'moves': ['Peck', 'Growl', 'FuryAttack', 'Fly'], 'pp': [35, 40, 20, 15], 'species': 'Doduo', 'status': 'None'}], 'party_count': 3, 'pc_phase': None, 'player_facing': 'Down', 'player_movement_state': 'Idle', 'player_name': 'RED', 'player_x': 9, 'player_y': 29, 'screen': 'overworld', 'script_awaiting_battle': False, 'script_effect': {'effect': 'HideObjectByName', 'toggle_id': 'SAFFRON_CITY_OBJ_14'}, 'script_running': True, 'shop_phase': None, 'text_speed_delay_frames': 3, 'warp_fade': 'Idle'}
+FAILED 049_saffron.py
+RUN 050_silph_entry.py
+CHECKPOINT m51-saffron-fly SaffronCity 9 29 [{'hp': 149, 'level': 47, 'max_hp': 149, 'moves': ['MegaDrain', 'Cut', 'LeechSeed', 'Growth'], 'pp': [10, 30, 10, 40], 'species': 'Venusaur', 'status': 'None'}, {'hp': 137, 'level': 30, 'max_hp': 137, 'moves': ['IceBeam', 'Surf', 'Rest', 'Strength'], 'pp': [10, 15, 10, 15], 'species': 'Snorlax', 'status': 'None'}, {'hp': 52, 'level': 24, 'max_hp': 52, 'moves': ['Peck', 'Growl', 'FuryAttack', 'Fly'], 'pp': [35, 40, 20, 15], 'species': 'Doduo', 'status': 'None'}]
+DONE 050_silph_entry.py
+RUN 051_card_key.py
+CHECKPOINT m52-card-key SilphCo5F 20 16 [{'hp': 149, 'level': 47, 'max_hp': 149, 'moves': ['MegaDrain', 'Cut', 'LeechSeed', 'Growth'], 'pp': [7, 30, 9, 40], 'species': 'Venusaur', 'status': 'None'}, {'hp': 137, 'level': 30, 'max_hp': 137, 'moves': ['IceBeam', 'Surf', 'Rest', 'Strength'], 'pp': [10, 15, 10, 15], 'species': 'Snorlax', 'status': 'None'}, {'hp': 52, 'level': 24, 'max_hp': 52, 'moves': ['Peck', 'Growl', 'FuryAttack', 'Fly'], 'pp': [35, 40, 20, 15], 'species': 'Doduo', 'status': 'None'}]
+DONE 051_card_key.py
+RUN 052_silph_3f.py
+CHECKPOINT m53-silph-3f-door SilphCo3F 15 9 [{'hp': 123, 'level': 48, 'max_hp': 152, 'moves': ['MegaDrain', 'Cut', 'LeechSeed', 'Growth'], 'pp': [0, 25, 4, 40], 'species': 'Venusaur', 'status': 'None'}, {'hp': 137, 'level': 30, 'max_hp': 137, 'moves': ['IceBeam', 'Surf', 'Rest', 'Strength'], 'pp': [10, 15, 10, 15], 'species': 'Snorlax', 'status': 'None'}, {'hp': 52, 'level': 24, 'max_hp': 52, 'moves': ['Peck', 'Growl', 'FuryAttack', 'Fly'], 'pp': [35, 40, 20, 15], 'species': 'Doduo', 'status': 'None'}]
+DONE 052_silph_3f.py
+RUN 053_silph_rival.py
+CHECKPOINT m54-silph-rival-pre SilphCo7F 5 3 [{'hp': 123, 'level': 48, 'max_hp': 152, 'moves': ['MegaDrain', 'Cut', 'LeechSeed', 'Growth'], 'pp': [0, 25, 4, 40], 'species': 'Venusaur', 'status': 'None'}, {'hp': 137, 'level': 30, 'max_hp': 137, 'moves': ['IceBeam', 'Surf', 'Rest', 'Strength'], 'pp': [10, 15, 10, 15], 'species': 'Snorlax', 'status': 'None'}, {'hp': 52, 'level': 24, 'max_hp': 52, 'moves': ['Peck', 'Growl', 'FuryAttack', 'Fly'], 'pp': [35, 40, 20, 15], 'species': 'Doduo', 'status': 'None'}]
+SuperPotion 82 / 152 remaining before 9
+Traceback (most recent call last):
+  File "/tmp/pokered-completion-20260907-tower/controller.py", line 81, in <module>
+    exec(compile(__task_path.read_text(),str(__task_path),'exec'),globals())
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/pokered-completion-20260907-tower/inbox/053_silph_rival.py", line 7, in <module>
+    assert g.d.cmd(cmd='get_flags')['data'].get('EVENT_BEAT_SILPH_CO_RIVAL'),g.st()
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: {'active_script_effect': None, 'battle_bag': None, 'battle_inventory': [{'item': 'OldRod', 'qty': 1}, {'item': 'Hm01', 'qty': 1}, {'item': 'Bicycle', 'qty': 1}, {'item': 'ParlyzHeal', 'qty': 3}, {'item': 'Awakening', 'qty': 3}, {'item': 'BurnHeal', 'qty': 2}, {'item': 'SilphScope', 'qty': 1}, {'item': 'RareCandy', 'qty': 1}, {'item': 'PokeFlute', 'qty': 1}, {'item': 'Hm03', 'qty': 1}, {'item': 'Hm04', 'qty': 1}, {'item': 'SuperPotion', 'qty': 8}, {'item': 'Revive', 'qty': 3}, {'item': 'FullHeal', 'qty': 5}, {'item': 'Tm06', 'qty': 1}, {'item': 'GreatBall', 'qty': 13}, {'item': 'Hm02', 'qty': 1}, {'item': 'CardKey', 'qty': 1}], 'battle_live': {'enemy': {'hp': 55, 'level': 19, 'max_hp': 55, 'species': 'Pidgeotto', 'status': 'None'}, 'enemy_party': [{'hp': 55, 'level': 19, 'species': 'Pidgeotto'}, {'hp': 46, 'level': 16, 'species': 'Raticate'}, {'hp': 45, 'level': 18, 'species': 'Kadabra'}, {'hp': 56, 'level': 20, 'species': 'Charmeleon'}], 'player': {'hp': 121, 'level': 48, 'max_hp': 152, 'species': 'Venusaur', 'status': 'None'}}, 'battle_message': None, 'battle_moves': None, 'battle_phase': 'Intro { phase: TrainerReveal, wait_frames: 0 }', 'choice': None, 'coins': 0, 'dialogue': None, 'dialogue_state': None, 'frame_count': 336770, 'map_id': 212, 'map_name': 'SilphCo7F', 'money': 9796, 'party': [{'hp': 121, 'level': 48, 'max_hp': 152, 'moves': ['MegaDrain', 'Cut', 'LeechSeed', 'Growth'], 'pp': [0, 20, 0, 40], 'species': 'Venusaur', 'status': 'None'}, {'hp': 137, 'level': 30, 'max_hp': 137, 'moves': ['IceBeam', 'Surf', 'Rest', 'Strength'], 'pp': [10, 15, 10, 15], 'species': 'Snorlax', 'status': 'None'}, {'hp': 52, 'level': 24, 'max_hp': 52, 'moves': ['Peck', 'Growl', 'FuryAttack', 'Fly'], 'pp': [35, 40, 20, 15], 'species': 'Doduo', 'status': 'None'}], 'party_count': 3, 'pc_phase': None, 'player_facing': 'Down', 'player_movement_state': 'Idle', 'player_name': 'RED', 'player_x': 3, 'player_y': 3, 'screen': 'battle', 'script_awaiting_battle': True, 'script_effect': None, 'script_running': True, 'shop_phase': None, 'text_speed_delay_frames': 3, 'warp_fade': 'Idle'}
+FAILED 053_silph_rival.py
+RUN 054_stop_for_silph_fix.py

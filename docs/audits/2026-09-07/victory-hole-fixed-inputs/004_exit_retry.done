@@ -1,0 +1,1 @@
+g.d.drive(['right']*16,frames=60);g.cutscene();g.step(90);snap('victory-exit-border-attempt')

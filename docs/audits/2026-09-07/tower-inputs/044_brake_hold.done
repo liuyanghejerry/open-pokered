@@ -1,0 +1,20 @@
+raw_drive=base_drive
+brake_pending=False
+def slope_drive(buttons,frames=None):
+ global brake_pending
+ if brake_pending:
+  g.d.cmd(cmd='skip_dialogue');brake_pending=False
+ s=g.st();buttons=list(buttons);count=frames if frames is not None else len(buttons)
+ if len(buttons)==8 and len(set(buttons))==1 and buttons[0] in ['up','down','left','right'] and frames==16:buttons=buttons[:4]
+ brake=s['screen']=='overworld' and (s['map_name']=='Route17' or (s['map_name']=='Route18' and s['player_y']==0 and 'up' in buttons))
+ if brake:
+  buttons+=['b']*(max(0,count-len(buttons))+180);brake_pending=True
+  g.d.press_sequence(buttons);return g.d.step(count)
+ return raw_drive(buttons,count)
+g.d.drive=slope_drive
+g.nav_to(10,0,'Route18');g.d.drive(['up']*24,frames=24)
+assert g.st()['map_name']=='Route17',g.st()
+snap('cycling-road-south-entry')
+g.nav_to(8,0,'Route17');g.d.drive(['up']*24,frames=24);g.step(40)
+assert g.st()['map_name']=='Route16',g.st()
+checkpoint('m48-cycling-north')

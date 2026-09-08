@@ -1,0 +1,32 @@
+[resume-reentry] frame=632 screen=overworld map=PewterGym pos=(4,2) party=1 money=1696 effect=None
+[resume-reentry] frame=642 screen=overworld map=OaksLab pos=(5,3) party=0 money=0 effect=None
+[resume-reentry] frame=642 screen=overworld map=OaksLab pos=(5,3) party=0 money=0 effect=None
+{
+  "gym_exit": {
+    "expected_map": "PewterCity",
+    "observed": {
+      "map": "PalletTown",
+      "position": [
+        12,
+        12
+      ]
+    }
+  },
+  "same_save_different_sidecar": {
+    "expected_both": {
+      "2": true,
+      "3": true,
+      "4": true
+    },
+    "without_sidecar": {
+      "2": true,
+      "3": true,
+      "4": true
+    },
+    "with_later_save_sidecar": {
+      "2": false,
+      "3": true,
+      "4": false
+    }
+  }
+}

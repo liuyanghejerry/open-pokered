@@ -1,0 +1,8 @@
+ATTEMPT 1
+[resume-reentry] frame=638 screen=overworld map=SilphCo11F pos=(7,14) party=4 money=12056 effect=None
+GAME_LOG /var/folders/d2/2fv86m890m34_13rn_t3d79w0000gn/T/pokered-run-f4rlch53/game.log
+GIOVANNI_PARTY [{'hp': 134, 'level': 45, 'species': 'Rhyhorn'}, {'hp': 88, 'level': 42, 'species': 'Dugtrio'}, {'hp': 140, 'level': 44, 'species': 'Nidoqueen'}, {'hp': 135, 'level': 45, 'species': 'Nidoking'}, {'hp': 173, 'level': 50, 'species': 'Rhydon'}]
+ATTEMPT 2
+[resume-reentry] frame=637 screen=overworld map=SilphCo11F pos=(7,14) party=4 money=12056 effect=None
+GAME_LOG /var/folders/d2/2fv86m890m34_13rn_t3d79w0000gn/T/pokered-run-o2z1408d/game.log
+GIOVANNI_PARTY [{'hp': 134, 'level': 45, 'species': 'Rhyhorn'}, {'hp': 88, 'level': 42, 'species': 'Dugtrio'}, {'hp': 140, 'level': 44, 'species': 'Nidoqueen'}, {'hp': 135, 'level': 45, 'species': 'Nidoking'}, {'hp': 173, 'level': 50, 'species': 'Rhydon'}]

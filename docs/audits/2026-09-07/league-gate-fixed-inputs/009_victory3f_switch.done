@@ -1,0 +1,4 @@
+snap('victory3f-switch-before');g.nav_to(3,5,'VictoryRoad3F');g.cutscene();g.step(60)
+snap('victory3f-switch-after');checkpoint('m108-victory-road-3f-switch')
+g.nav_to(23,14,'VictoryRoad3F');checkpoint('m109-victory-road-hole-ready')
+g.d.drive(['down']*8,frames=16);g.cutscene();g.step(90);snap('victory-road-hole-result')

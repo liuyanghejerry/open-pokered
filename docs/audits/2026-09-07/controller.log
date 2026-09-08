@@ -1,0 +1,26 @@
+[resume-reentry] frame=638 screen=overworld map=CeruleanCity pos=(19,18) party=1 money=4463 effect=None
+CHECKPOINT m14-resumed CeruleanCity 19 18 [{'hp': 63, 'level': 22, 'max_hp': 63, 'moves': ['Tackle', 'Growl', 'LeechSeed', 'Poisonpowder'], 'pp': [35, 40, 10, 35], 'species': 'Ivysaur', 'status': 'None'}]
+READY
+RUN 001_rival.py
+Traceback (most recent call last):
+  File "/tmp/pokered-completion-20260907/controller.py", line 55, in <module>
+    exec(compile(p.read_text(),str(p),'exec'),globals())
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/pokered-completion-20260907/inbox/001_rival.py", line 5, in <module>
+    checkpoint('m15-cerulean-rival')
+    ~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/pokered-completion-20260907/controller.py", line 40, in checkpoint
+    assert s['screen']=='overworld' and not s['script_running'],s
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: {'active_script_effect': None, 'battle_message': None, 'battle_moves': None, 'battle_phase': 'Intro { phase: TransitionFlash, wait_frames: 72 }', 'choice': None, 'coins': 0, 'dialogue': None, 'dialogue_state': None, 'frame_count': 73677, 'map_id': 3, 'map_name': 'CeruleanCity', 'money': 4463, 'party': [{'hp': 63, 'level': 22, 'max_hp': 63, 'moves': ['Tackle', 'Growl', 'LeechSeed', 'Poisonpowder'], 'pp': [35, 40, 10, 35], 'species': 'Ivysaur', 'status': 'None'}], 'party_count': 1, 'pc_phase': None, 'player_facing': 'Up', 'player_movement_state': 'Idle', 'player_name': 'RED', 'player_x': 20, 'player_y': 6, 'screen': 'overworld', 'script_awaiting_battle': False, 'script_effect': None, 'script_running': True, 'text_speed_delay_frames': 3, 'warp_fade': 'Idle'}
+FAILED 001_rival.py
+RUN 002_probe_rival.py
+DONE 002_probe_rival.py
+RUN 003_resume_rival.py
+CHECKPOINT m15-cerulean-rival CeruleanCity 20 6 [{'hp': 63, 'level': 22, 'max_hp': 63, 'moves': ['Tackle', 'Growl', 'LeechSeed', 'Poisonpowder'], 'pp': [35, 40, 10, 35], 'species': 'Ivysaur', 'status': 'None'}]
+DONE 003_resume_rival.py
+RUN 004_repro_rival_abort.py
+SCRIPT_INPUT_WAIT CeruleanCity 20 6
+REPRODUCED rival script ended without battle; flag remains false
+DONE 004_repro_rival_abort.py
+RUN 005_stop.py

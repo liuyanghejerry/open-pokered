@@ -1,0 +1,12 @@
+g.battle_loop=old_battle
+if g.st()['screen']=='battle':g.battle_loop(prefer='run');g.cutscene()
+g.nav_to(49,9,'Route18');g.d.drive(['right']*8,frames=20);g.step(40)
+assert g.st()['map_name']=='FuchsiaCity'
+g.nav_warp(5,13,'FuchsiaCity','FuchsiaMart');g.nav_to(2,5,'FuchsiaMart');g.face('left');g.tap('a',20);g.cutscene();g.step(30)
+assert g.st()['screen']=='shop',g.st()
+g.tap('a',12);g.tap('down',8);g.tap('a',12)
+for _ in range(14):g.tap('up',8)
+g.tap('a',12);g.tap('a',12);g.step(45)
+g.tap('b',12);g.tap('b',12);g.cutscene();g.step(40)
+g.nav_warp(3,7,'FuchsiaMart','FuchsiaCity',approach='down')
+checkpoint('m46-balls-restocked')

@@ -1,0 +1,107 @@
+[
+  {
+    "first_frame": 2382,
+    "last_frame": 2571,
+    "hp": 10
+  },
+  {
+    "first_frame": 2780,
+    "last_frame": 3095,
+    "hp": 10
+  },
+  {
+    "first_frame": 3302,
+    "last_frame": 3602,
+    "hp": 10
+  },
+  {
+    "first_frame": 3979,
+    "last_frame": 5018,
+    "hp": 10
+  },
+  {
+    "first_frame": 5395,
+    "last_frame": 6092,
+    "hp": 10
+  },
+  {
+    "first_frame": 6299,
+    "last_frame": 6613,
+    "hp": 10
+  },
+  {
+    "first_frame": 6851,
+    "last_frame": 7151,
+    "hp": 10
+  },
+  {
+    "first_frame": 7358,
+    "last_frame": 8014,
+    "hp": 10
+  },
+  {
+    "first_frame": 8231,
+    "last_frame": 8917,
+    "hp": 10
+  },
+  {
+    "first_frame": 9134,
+    "last_frame": 9833,
+    "hp": 10
+  },
+  {
+    "first_frame": 10064,
+    "last_frame": 10821,
+    "hp": 10
+  },
+  {
+    "first_frame": 11076,
+    "last_frame": 11628,
+    "hp": 10
+  },
+  {
+    "first_frame": 12066,
+    "last_frame": 12630,
+    "hp": 10
+  },
+  {
+    "first_frame": 12886,
+    "last_frame": 13604,
+    "hp": 10
+  },
+  {
+    "first_frame": 14048,
+    "last_frame": 14164,
+    "hp": 10
+  },
+  {
+    "first_frame": 14430,
+    "last_frame": 14560,
+    "hp": 10
+  },
+  {
+    "first_frame": 14987,
+    "last_frame": 15103,
+    "hp": 10
+  },
+  {
+    "first_frame": 15369,
+    "last_frame": 15499,
+    "hp": 10
+  },
+  {
+    "first_frame": 15926,
+    "last_frame": 16070,
+    "hp": 10
+  },
+  {
+    "first_frame": 16336,
+    "last_frame": 16466,
+    "hp": 10
+  },
+  {
+    "first_frame": 16732,
+    "last_frame": 16862,
+    "hp": 10
+  }
+]

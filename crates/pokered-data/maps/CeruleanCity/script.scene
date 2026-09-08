@@ -52,20 +52,9 @@ game_scene CeruleanCity {
         @t("<RIVAL>: Yo! <PLAYER>!\n\nYou're still struggling\nalong back here?\n\nI'm doing great! I caught a\nbunch of strong and smart\nPOKeMON!\n\nHere, let me see what you\ncaught, <PLAYER>!", "<RIVAL>：哟！ <PLAYER>！\n\n你现在还在这里苦苦挣扎吗？\n\n我可过得很好！我抓到了一群又\n强又聪明的宝可梦！\n\n来，让我看看你抓到了什么，\n<PLAYER>！")
       }
 
-      // Rival party-by-starter (orig StarterTable: Squirtle->$7, Bulbasaur->$9,
-      // Charmander->$8). The engine resolves the starter-advantage party from the
-      // rival class, so we branch on getRivalStarter() for fidelity and pass the
-      // rival class id OPP_RIVAL1 in each branch.
-      s = getRivalStarter()
-      @if (s == 0) {
-        result = startBattleSet("OPP_RIVAL1", 6)
-      } @else {
-        @if (s == 1) {
-          result = startBattleSet("OPP_RIVAL1", 6)
-        } @else {
-          result = startBattleSet("OPP_RIVAL1", 6)
-        }
-      }
+      // The runtime selects the starter-advantage party from this triplet.
+      // Keep the awaited result in the same scope as its win/loss branch.
+      result = startBattleSet("OPP_RIVAL1", 6)
 
       @if (result == "win") {
         @say("") {
