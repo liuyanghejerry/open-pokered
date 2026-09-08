@@ -1,0 +1,102 @@
+{
+  "repository": "https://github.com/pret/pokered",
+  "commit": "fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c",
+  "files": [
+    {
+      "path": "scripts/Route1.asm",
+      "fixture": "scripts_Route1.asm",
+      "sha256": "ae79d24e5180ef5723078eb7e4ae1cdbc59173554fdd0074047a347b44104e73"
+    },
+    {
+      "path": "data/maps/objects/Route1.asm",
+      "fixture": "data_maps_objects_Route1.asm",
+      "sha256": "ec8fce208c628b4e2c3a97d6acecc7c1caf9def2008568f2e9756804ebf52d6e"
+    },
+    {
+      "path": "data/maps/objects/ViridianForest.asm",
+      "fixture": "data_maps_objects_ViridianForest.asm",
+      "sha256": "9e1e23ac1f52f797464b8aabd4efa14e90caddf67910ad441fe8a815db7aa627"
+    },
+    {
+      "path": "text/ViridianForest.asm",
+      "fixture": "text_ViridianForest.asm",
+      "sha256": "f1f67ab70f8a1e9ba74fae66fe3a51e0b104671746752756dac8b0e6cbd71676"
+    },
+    {
+      "path": "engine/events/pick_up_item.asm",
+      "fixture": "engine_events_pick_up_item.asm",
+      "sha256": "8fc66f26679af548c850da55e71eb2c66cb2b985d49b3bebff4b6807d6bb8f7a"
+    },
+    {
+      "path": "engine/events/hidden_items.asm",
+      "fixture": "engine_events_hidden_items.asm",
+      "sha256": "0489317c55b1488c02a58f1518f221df6b6b0eda79dd9b4828852a8fd55809a3"
+    },
+    {
+      "path": "data/events/hidden_events.asm",
+      "fixture": "data_events_hidden_events.asm",
+      "sha256": "1ca366dcbba1be0f4b19696be8aeb9eed8158e75bd852d4faf2119231a836877"
+    },
+    {
+      "path": "data/events/hidden_item_coords.asm",
+      "fixture": "data_events_hidden_item_coords.asm",
+      "sha256": "baa4d7c094c5d1b00d9971b130d93e6d89915299b4f3d2fcf2bc1d8ca6018ea4"
+    },
+    {
+      "path": "text/Route1.asm",
+      "fixture": "text_Route1.asm",
+      "sha256": "6a82503d414f57abd7782fa7efe4d5b8dacde69be5346b978c273dc1448b7571"
+    }
+  ],
+  "case_contracts": {
+    "route1-sample-once-reload": {
+      "sources": [
+        "scripts/Route1.asm",
+        "data/maps/objects/Route1.asm",
+        "text/Route1.asm"
+      ],
+      "expected": "NPC1 home (5,24); first interaction gives POTION x1; later and reloaded interaction use AlsoGotPokeballsText with no duplicate."
+    },
+    "route1-full-bag-consumes-offer": {
+      "sources": [
+        "scripts/Route1.asm",
+        "text/Route1.asm"
+      ],
+      "expected": "CheckAndSetEvent precedes GiveItem: with 20 other stacks, NoRoomText and no Potion, offer still consumed including after reload."
+    },
+    "forest-npc-position-dialogue": {
+      "sources": [
+        "data/maps/objects/ViridianForest.asm",
+        "text/ViridianForest.asm"
+      ],
+      "expected": "Youngster1 stationary at (16,43), visible; text talks about friends seeking Pokemon fights; no inventory reward."
+    },
+    "forest-visible-antidote-once-reload": {
+      "sources": [
+        "data/maps/objects/ViridianForest.asm",
+        "engine/events/pick_up_item.asm"
+      ],
+      "expected": "Object5 at (25,11) grants ANTIDOTE x1 then hides. State persists on map reentry and save/restart."
+    },
+    "forest-visible-full-bag-keeps-object": {
+      "sources": [
+        "engine/events/pick_up_item.asm"
+      ],
+      "expected": "GiveItem carry clear goes to BagFull before HideObject; no reward and original object stays visible."
+    },
+    "forest-hidden-antidote-once-reload": {
+      "sources": [
+        "data/events/hidden_events.asm",
+        "data/events/hidden_item_coords.asm",
+        "engine/events/hidden_items.asm"
+      ],
+      "expected": "Hidden ANTIDOTE at (16,42) grants x1 once; flag prevents duplication including after save/restart."
+    },
+    "forest-hidden-full-bag-repeatable": {
+      "sources": [
+        "engine/events/hidden_items.asm"
+      ],
+      "expected": "On full bag, FoundHiddenItemText followed by HiddenItemBagFullText; FLAG_SET bypassed so subsequent interaction still discovers item."
+    }
+  }
+}

@@ -1,0 +1,1997 @@
+[
+  {
+    "case": "daisy-town-map-errand",
+    "attempt": 1,
+    "label": "before errand: no Town Map",
+    "state": {
+      "map_name": "BluesHouse",
+      "player_x": 2,
+      "player_y": 4,
+      "screen": "overworld",
+      "player_facing": "Up"
+    },
+    "bag": [],
+    "dialogue": null,
+    "reward_flags": {},
+    "visible_objects": [
+      {
+        "text_id": 1,
+        "x": 2,
+        "y": 3,
+        "visible": true
+      },
+      {
+        "text_id": 2,
+        "x": 6,
+        "y": 4,
+        "visible": true
+      },
+      {
+        "text_id": 3,
+        "x": 3,
+        "y": 3,
+        "visible": true
+      }
+    ]
+  },
+  {
+    "case": "daisy-town-map-errand",
+    "attempt": 1,
+    "label": "Daisy reward after real parcel delivery",
+    "state": {
+      "map_name": "BluesHouse",
+      "player_x": 2,
+      "player_y": 4,
+      "screen": "overworld",
+      "player_facing": "Up"
+    },
+    "bag": [
+      {
+        "item": "TownMap",
+        "qty": 1
+      }
+    ],
+    "dialogue": null,
+    "reward_flags": {
+      "EVENT_GOT_POKEDEX": true,
+      "EVENT_GOT_TOWN_MAP": true
+    },
+    "visible_objects": [
+      {
+        "text_id": 1,
+        "x": 2,
+        "y": 3,
+        "visible": true
+      },
+      {
+        "text_id": 2,
+        "x": 6,
+        "y": 4,
+        "visible": true
+      },
+      {
+        "text_id": 3,
+        "x": 3,
+        "y": 3,
+        "visible": false
+      }
+    ]
+  },
+  {
+    "case": "daisy-town-map-errand",
+    "attempt": 1,
+    "label": "completed",
+    "state": {
+      "map_name": "BluesHouse",
+      "player_x": 2,
+      "player_y": 4,
+      "screen": "overworld",
+      "player_facing": "Up"
+    },
+    "bag": [
+      {
+        "item": "TownMap",
+        "qty": 1
+      }
+    ],
+    "dialogue": null,
+    "reward_flags": {
+      "EVENT_GOT_POKEDEX": true,
+      "EVENT_GOT_TOWN_MAP": true
+    },
+    "visible_objects": [
+      {
+        "text_id": 1,
+        "x": 2,
+        "y": 3,
+        "visible": true
+      },
+      {
+        "text_id": 2,
+        "x": 6,
+        "y": 4,
+        "visible": true
+      },
+      {
+        "text_id": 3,
+        "x": 3,
+        "y": 3,
+        "visible": false
+      }
+    ]
+  },
+  {
+    "case": "viridian-hidden-potion-walk",
+    "attempt": 1,
+    "label": "ViridianCity (13, 4) right: Potion",
+    "state": {
+      "map_name": "ViridianCity",
+      "player_x": 13,
+      "player_y": 4,
+      "screen": "overworld",
+      "player_facing": "Right"
+    },
+    "bag": [
+      {
+        "item": "Potion",
+        "qty": 1
+      }
+    ],
+    "dialogue": null,
+    "reward_flags": {},
+    "visible_objects": [
+      {
+        "text_id": 1,
+        "x": 11,
+        "y": 21,
+        "visible": true
+      },
+      {
+        "text_id": 2,
+        "x": 30,
+        "y": 8,
+        "visible": true
+      },
+      {
+        "text_id": 3,
+        "x": 29,
+        "y": 26,
+        "visible": true
+      },
+      {
+        "text_id": 4,
+        "x": 17,
+        "y": 9,
+        "visible": true
+      },
+      {
+        "text_id": 5,
+        "x": 18,
+        "y": 9,
+        "visible": true
+      },
+      {
+        "text_id": 6,
+        "x": 6,
+        "y": 23,
+        "visible": true
+      },
+      {
+        "text_id": 7,
+        "x": 17,
+        "y": 5,
+        "visible": true
+      }
+    ]
+  },
+  {
+    "case": "viridian-hidden-potion-walk",
+    "attempt": 1,
+    "label": "completed",
+    "state": {
+      "map_name": "ViridianCity",
+      "player_x": 13,
+      "player_y": 4,
+      "screen": "overworld",
+      "player_facing": "Right"
+    },
+    "bag": [
+      {
+        "item": "Potion",
+        "qty": 1
+      }
+    ],
+    "dialogue": null,
+    "reward_flags": {},
+    "visible_objects": [
+      {
+        "text_id": 1,
+        "x": 10,
+        "y": 18,
+        "visible": true
+      },
+      {
+        "text_id": 2,
+        "x": 30,
+        "y": 8,
+        "visible": true
+      },
+      {
+        "text_id": 3,
+        "x": 30,
+        "y": 25,
+        "visible": true
+      },
+      {
+        "text_id": 4,
+        "x": 17,
+        "y": 9,
+        "visible": true
+      },
+      {
+        "text_id": 5,
+        "x": 18,
+        "y": 9,
+        "visible": true
+      },
+      {
+        "text_id": 6,
+        "x": 6,
+        "y": 23,
+        "visible": true
+      },
+      {
+        "text_id": 7,
+        "x": 17,
+        "y": 5,
+        "visible": true
+      }
+    ]
+  },
+  {
+    "case": "forest-five-item-tour",
+    "attempt": 1,
+    "label": "ViridianForest (15, 42) right: Antidote",
+    "state": {
+      "map_name": "ViridianForest",
+      "player_x": 15,
+      "player_y": 42,
+      "screen": "overworld",
+      "player_facing": "Right"
+    },
+    "bag": [
+      {
+        "item": "Antidote",
+        "qty": 1
+      }
+    ],
+    "dialogue": null,
+    "reward_flags": {},
+    "visible_objects": [
+      {
+        "text_id": 1,
+        "x": 16,
+        "y": 43,
+        "visible": true
+      },
+      {
+        "text_id": 2,
+        "x": 30,
+        "y": 33,
+        "visible": true
+      },
+      {
+        "text_id": 3,
+        "x": 30,
+        "y": 19,
+        "visible": true
+      },
+      {
+        "text_id": 4,
+        "x": 2,
+        "y": 18,
+        "visible": true
+      },
+      {
+        "text_id": 5,
+        "x": 25,
+        "y": 11,
+        "visible": true
+      },
+      {
+        "text_id": 6,
+        "x": 12,
+        "y": 29,
+        "visible": true
+      },
+      {
+        "text_id": 7,
+        "x": 1,
+        "y": 31,
+        "visible": true
+      },
+      {
+        "text_id": 8,
+        "x": 27,
+        "y": 40,
+        "visible": true
+      }
+    ]
+  },
+  {
+    "case": "forest-five-item-tour",
+    "attempt": 1,
+    "label": "ViridianForest (2, 31) left: PokeBall",
+    "state": {
+      "map_name": "ViridianForest",
+      "player_x": 2,
+      "player_y": 31,
+      "screen": "overworld",
+      "player_facing": "Left"
+    },
+    "bag": [
+      {
+        "item": "Antidote",
+        "qty": 1
+      },
+      {
+        "item": "PokeBall",
+        "qty": 1
+      }
+    ],
+    "dialogue": null,
+    "reward_flags": {},
+    "visible_objects": [
+      {
+        "text_id": 1,
+        "x": 16,
+        "y": 43,
+        "visible": true
+      },
+      {
+        "text_id": 2,
+        "x": 30,
+        "y": 33,
+        "visible": true
+      },
+      {
+        "text_id": 3,
+        "x": 30,
+        "y": 19,
+        "visible": true
+      },
+      {
+        "text_id": 4,
+        "x": 2,
+        "y": 18,
+        "visible": true
+      },
+      {
+        "text_id": 5,
+        "x": 25,
+        "y": 11,
+        "visible": true
+      },
+      {
+        "text_id": 6,
+        "x": 12,
+        "y": 29,
+        "visible": true
+      },
+      {
+        "text_id": 7,
+        "x": 1,
+        "y": 31,
+        "visible": false
+      },
+      {
+        "text_id": 8,
+        "x": 27,
+        "y": 40,
+        "visible": true
+      }
+    ]
+  },
+  {
+    "case": "forest-five-item-tour",
+    "attempt": 1,
+    "label": "ViridianForest (25, 12) up: Antidote",
+    "state": {
+      "map_name": "ViridianForest",
+      "player_x": 25,
+      "player_y": 12,
+      "screen": "overworld",
+      "player_facing": "Up"
+    },
+    "bag": [
+      {
+        "item": "Antidote",
+        "qty": 2
+      },
+      {
+        "item": "PokeBall",
+        "qty": 1
+      }
+    ],
+    "dialogue": null,
+    "reward_flags": {},
+    "visible_objects": [
+      {
+        "text_id": 1,
+        "x": 16,
+        "y": 43,
+        "visible": true
+      },
+      {
+        "text_id": 2,
+        "x": 30,
+        "y": 33,
+        "visible": true
+      },
+      {
+        "text_id": 3,
+        "x": 30,
+        "y": 19,
+        "visible": true
+      },
+      {
+        "text_id": 4,
+        "x": 2,
+        "y": 18,
+        "visible": true
+      },
+      {
+        "text_id": 5,
+        "x": 25,
+        "y": 11,
+        "visible": false
+      },
+      {
+        "text_id": 6,
+        "x": 12,
+        "y": 29,
+        "visible": true
+      },
+      {
+        "text_id": 7,
+        "x": 1,
+        "y": 31,
+        "visible": false
+      },
+      {
+        "text_id": 8,
+        "x": 27,
+        "y": 40,
+        "visible": true
+      }
+    ]
+  },
+  {
+    "case": "forest-five-item-tour",
+    "attempt": 1,
+    "label": "ViridianForest (12, 28) down: Potion",
+    "state": {
+      "map_name": "ViridianForest",
+      "player_x": 12,
+      "player_y": 28,
+      "screen": "overworld",
+      "player_facing": "Down"
+    },
+    "bag": [
+      {
+        "item": "Antidote",
+        "qty": 2
+      },
+      {
+        "item": "PokeBall",
+        "qty": 1
+      },
+      {
+        "item": "Potion",
+        "qty": 1
+      }
+    ],
+    "dialogue": null,
+    "reward_flags": {},
+    "visible_objects": [
+      {
+        "text_id": 1,
+        "x": 16,
+        "y": 43,
+        "visible": true
+      },
+      {
+        "text_id": 2,
+        "x": 30,
+        "y": 33,
+        "visible": true
+      },
+      {
+        "text_id": 3,
+        "x": 30,
+        "y": 19,
+        "visible": true
+      },
+      {
+        "text_id": 4,
+        "x": 2,
+        "y": 18,
+        "visible": true
+      },
+      {
+        "text_id": 5,
+        "x": 25,
+        "y": 11,
+        "visible": false
+      },
+      {
+        "text_id": 6,
+        "x": 12,
+        "y": 29,
+        "visible": false
+      },
+      {
+        "text_id": 7,
+        "x": 1,
+        "y": 31,
+        "visible": false
+      },
+      {
+        "text_id": 8,
+        "x": 27,
+        "y": 40,
+        "visible": true
+      }
+    ]
+  },
+  {
+    "case": "forest-five-item-tour",
+    "attempt": 1,
+    "label": "ViridianForest (1, 19) up: Potion",
+    "state": {
+      "map_name": "ViridianForest",
+      "player_x": 1,
+      "player_y": 19,
+      "screen": "overworld",
+      "player_facing": "Up"
+    },
+    "bag": [
+      {
+        "item": "Antidote",
+        "qty": 2
+      },
+      {
+        "item": "PokeBall",
+        "qty": 1
+      },
+      {
+        "item": "Potion",
+        "qty": 2
+      }
+    ],
+    "dialogue": null,
+    "reward_flags": {},
+    "visible_objects": [
+      {
+        "text_id": 1,
+        "x": 16,
+        "y": 43,
+        "visible": true
+      },
+      {
+        "text_id": 2,
+        "x": 30,
+        "y": 33,
+        "visible": true
+      },
+      {
+        "text_id": 3,
+        "x": 30,
+        "y": 19,
+        "visible": true
+      },
+      {
+        "text_id": 4,
+        "x": 2,
+        "y": 18,
+        "visible": true
+      },
+      {
+        "text_id": 5,
+        "x": 25,
+        "y": 11,
+        "visible": false
+      },
+      {
+        "text_id": 6,
+        "x": 12,
+        "y": 29,
+        "visible": false
+      },
+      {
+        "text_id": 7,
+        "x": 1,
+        "y": 31,
+        "visible": false
+      },
+      {
+        "text_id": 8,
+        "x": 27,
+        "y": 40,
+        "visible": true
+      }
+    ]
+  },
+  {
+    "case": "forest-five-item-tour",
+    "attempt": 1,
+    "label": "completed",
+    "state": {
+      "map_name": "ViridianForestNorthGate",
+      "player_x": 4,
+      "player_y": 6,
+      "screen": "overworld",
+      "player_facing": "Up"
+    },
+    "bag": [
+      {
+        "item": "Antidote",
+        "qty": 2
+      },
+      {
+        "item": "PokeBall",
+        "qty": 1
+      },
+      {
+        "item": "Potion",
+        "qty": 2
+      }
+    ],
+    "dialogue": null,
+    "reward_flags": {},
+    "visible_objects": [
+      {
+        "text_id": 1,
+        "x": 3,
+        "y": 2,
+        "visible": true
+      },
+      {
+        "text_id": 2,
+        "x": 2,
+        "y": 5,
+        "visible": true
+      }
+    ]
+  },
+  {
+    "case": "daisy-town-map-errand",
+    "attempt": 2,
+    "label": "before errand: no Town Map",
+    "state": {
+      "map_name": "BluesHouse",
+      "player_x": 2,
+      "player_y": 4,
+      "screen": "overworld",
+      "player_facing": "Up"
+    },
+    "bag": [],
+    "dialogue": null,
+    "reward_flags": {},
+    "visible_objects": [
+      {
+        "text_id": 1,
+        "x": 2,
+        "y": 3,
+        "visible": true
+      },
+      {
+        "text_id": 2,
+        "x": 6,
+        "y": 4,
+        "visible": true
+      },
+      {
+        "text_id": 3,
+        "x": 3,
+        "y": 3,
+        "visible": true
+      }
+    ]
+  },
+  {
+    "case": "daisy-town-map-errand",
+    "attempt": 2,
+    "label": "Daisy reward after real parcel delivery",
+    "state": {
+      "map_name": "BluesHouse",
+      "player_x": 2,
+      "player_y": 4,
+      "screen": "overworld",
+      "player_facing": "Up"
+    },
+    "bag": [
+      {
+        "item": "TownMap",
+        "qty": 1
+      }
+    ],
+    "dialogue": null,
+    "reward_flags": {
+      "EVENT_GOT_POKEDEX": true,
+      "EVENT_GOT_TOWN_MAP": true
+    },
+    "visible_objects": [
+      {
+        "text_id": 1,
+        "x": 2,
+        "y": 3,
+        "visible": true
+      },
+      {
+        "text_id": 2,
+        "x": 6,
+        "y": 4,
+        "visible": true
+      },
+      {
+        "text_id": 3,
+        "x": 3,
+        "y": 3,
+        "visible": false
+      }
+    ]
+  },
+  {
+    "case": "daisy-town-map-errand",
+    "attempt": 2,
+    "label": "completed",
+    "state": {
+      "map_name": "BluesHouse",
+      "player_x": 2,
+      "player_y": 4,
+      "screen": "overworld",
+      "player_facing": "Up"
+    },
+    "bag": [
+      {
+        "item": "TownMap",
+        "qty": 1
+      }
+    ],
+    "dialogue": null,
+    "reward_flags": {
+      "EVENT_GOT_POKEDEX": true,
+      "EVENT_GOT_TOWN_MAP": true
+    },
+    "visible_objects": [
+      {
+        "text_id": 1,
+        "x": 2,
+        "y": 3,
+        "visible": true
+      },
+      {
+        "text_id": 2,
+        "x": 6,
+        "y": 4,
+        "visible": true
+      },
+      {
+        "text_id": 3,
+        "x": 3,
+        "y": 3,
+        "visible": false
+      }
+    ]
+  },
+  {
+    "case": "viridian-hidden-potion-walk",
+    "attempt": 2,
+    "label": "ViridianCity (13, 4) right: Potion",
+    "state": {
+      "map_name": "ViridianCity",
+      "player_x": 13,
+      "player_y": 4,
+      "screen": "overworld",
+      "player_facing": "Right"
+    },
+    "bag": [
+      {
+        "item": "Potion",
+        "qty": 1
+      }
+    ],
+    "dialogue": null,
+    "reward_flags": {},
+    "visible_objects": [
+      {
+        "text_id": 1,
+        "x": 11,
+        "y": 21,
+        "visible": true
+      },
+      {
+        "text_id": 2,
+        "x": 30,
+        "y": 8,
+        "visible": true
+      },
+      {
+        "text_id": 3,
+        "x": 29,
+        "y": 26,
+        "visible": true
+      },
+      {
+        "text_id": 4,
+        "x": 17,
+        "y": 9,
+        "visible": true
+      },
+      {
+        "text_id": 5,
+        "x": 18,
+        "y": 9,
+        "visible": true
+      },
+      {
+        "text_id": 6,
+        "x": 6,
+        "y": 23,
+        "visible": true
+      },
+      {
+        "text_id": 7,
+        "x": 17,
+        "y": 5,
+        "visible": true
+      }
+    ]
+  },
+  {
+    "case": "viridian-hidden-potion-walk",
+    "attempt": 2,
+    "label": "completed",
+    "state": {
+      "map_name": "ViridianCity",
+      "player_x": 13,
+      "player_y": 4,
+      "screen": "overworld",
+      "player_facing": "Right"
+    },
+    "bag": [
+      {
+        "item": "Potion",
+        "qty": 1
+      }
+    ],
+    "dialogue": null,
+    "reward_flags": {},
+    "visible_objects": [
+      {
+        "text_id": 1,
+        "x": 10,
+        "y": 18,
+        "visible": true
+      },
+      {
+        "text_id": 2,
+        "x": 30,
+        "y": 8,
+        "visible": true
+      },
+      {
+        "text_id": 3,
+        "x": 30,
+        "y": 25,
+        "visible": true
+      },
+      {
+        "text_id": 4,
+        "x": 17,
+        "y": 9,
+        "visible": true
+      },
+      {
+        "text_id": 5,
+        "x": 18,
+        "y": 9,
+        "visible": true
+      },
+      {
+        "text_id": 6,
+        "x": 6,
+        "y": 23,
+        "visible": true
+      },
+      {
+        "text_id": 7,
+        "x": 17,
+        "y": 5,
+        "visible": true
+      }
+    ]
+  },
+  {
+    "case": "forest-five-item-tour",
+    "attempt": 2,
+    "label": "ViridianForest (15, 42) right: Antidote",
+    "state": {
+      "map_name": "ViridianForest",
+      "player_x": 15,
+      "player_y": 42,
+      "screen": "overworld",
+      "player_facing": "Right"
+    },
+    "bag": [
+      {
+        "item": "Antidote",
+        "qty": 1
+      }
+    ],
+    "dialogue": null,
+    "reward_flags": {},
+    "visible_objects": [
+      {
+        "text_id": 1,
+        "x": 16,
+        "y": 43,
+        "visible": true
+      },
+      {
+        "text_id": 2,
+        "x": 30,
+        "y": 33,
+        "visible": true
+      },
+      {
+        "text_id": 3,
+        "x": 30,
+        "y": 19,
+        "visible": true
+      },
+      {
+        "text_id": 4,
+        "x": 2,
+        "y": 18,
+        "visible": true
+      },
+      {
+        "text_id": 5,
+        "x": 25,
+        "y": 11,
+        "visible": true
+      },
+      {
+        "text_id": 6,
+        "x": 12,
+        "y": 29,
+        "visible": true
+      },
+      {
+        "text_id": 7,
+        "x": 1,
+        "y": 31,
+        "visible": true
+      },
+      {
+        "text_id": 8,
+        "x": 27,
+        "y": 40,
+        "visible": true
+      }
+    ]
+  },
+  {
+    "case": "forest-five-item-tour",
+    "attempt": 2,
+    "label": "ViridianForest (2, 31) left: PokeBall",
+    "state": {
+      "map_name": "ViridianForest",
+      "player_x": 2,
+      "player_y": 31,
+      "screen": "overworld",
+      "player_facing": "Left"
+    },
+    "bag": [
+      {
+        "item": "Antidote",
+        "qty": 1
+      },
+      {
+        "item": "PokeBall",
+        "qty": 1
+      }
+    ],
+    "dialogue": null,
+    "reward_flags": {},
+    "visible_objects": [
+      {
+        "text_id": 1,
+        "x": 16,
+        "y": 43,
+        "visible": true
+      },
+      {
+        "text_id": 2,
+        "x": 30,
+        "y": 33,
+        "visible": true
+      },
+      {
+        "text_id": 3,
+        "x": 30,
+        "y": 19,
+        "visible": true
+      },
+      {
+        "text_id": 4,
+        "x": 2,
+        "y": 18,
+        "visible": true
+      },
+      {
+        "text_id": 5,
+        "x": 25,
+        "y": 11,
+        "visible": true
+      },
+      {
+        "text_id": 6,
+        "x": 12,
+        "y": 29,
+        "visible": true
+      },
+      {
+        "text_id": 7,
+        "x": 1,
+        "y": 31,
+        "visible": false
+      },
+      {
+        "text_id": 8,
+        "x": 27,
+        "y": 40,
+        "visible": true
+      }
+    ]
+  },
+  {
+    "case": "forest-five-item-tour",
+    "attempt": 2,
+    "label": "ViridianForest (25, 12) up: Antidote",
+    "state": {
+      "map_name": "ViridianForest",
+      "player_x": 25,
+      "player_y": 12,
+      "screen": "overworld",
+      "player_facing": "Up"
+    },
+    "bag": [
+      {
+        "item": "Antidote",
+        "qty": 2
+      },
+      {
+        "item": "PokeBall",
+        "qty": 1
+      }
+    ],
+    "dialogue": null,
+    "reward_flags": {},
+    "visible_objects": [
+      {
+        "text_id": 1,
+        "x": 16,
+        "y": 43,
+        "visible": true
+      },
+      {
+        "text_id": 2,
+        "x": 30,
+        "y": 33,
+        "visible": true
+      },
+      {
+        "text_id": 3,
+        "x": 30,
+        "y": 19,
+        "visible": true
+      },
+      {
+        "text_id": 4,
+        "x": 2,
+        "y": 18,
+        "visible": true
+      },
+      {
+        "text_id": 5,
+        "x": 25,
+        "y": 11,
+        "visible": false
+      },
+      {
+        "text_id": 6,
+        "x": 12,
+        "y": 29,
+        "visible": true
+      },
+      {
+        "text_id": 7,
+        "x": 1,
+        "y": 31,
+        "visible": false
+      },
+      {
+        "text_id": 8,
+        "x": 27,
+        "y": 40,
+        "visible": true
+      }
+    ]
+  },
+  {
+    "case": "forest-five-item-tour",
+    "attempt": 2,
+    "label": "ViridianForest (12, 28) down: Potion",
+    "state": {
+      "map_name": "ViridianForest",
+      "player_x": 12,
+      "player_y": 28,
+      "screen": "overworld",
+      "player_facing": "Down"
+    },
+    "bag": [
+      {
+        "item": "Antidote",
+        "qty": 2
+      },
+      {
+        "item": "PokeBall",
+        "qty": 1
+      },
+      {
+        "item": "Potion",
+        "qty": 1
+      }
+    ],
+    "dialogue": null,
+    "reward_flags": {},
+    "visible_objects": [
+      {
+        "text_id": 1,
+        "x": 16,
+        "y": 43,
+        "visible": true
+      },
+      {
+        "text_id": 2,
+        "x": 30,
+        "y": 33,
+        "visible": true
+      },
+      {
+        "text_id": 3,
+        "x": 30,
+        "y": 19,
+        "visible": true
+      },
+      {
+        "text_id": 4,
+        "x": 2,
+        "y": 18,
+        "visible": true
+      },
+      {
+        "text_id": 5,
+        "x": 25,
+        "y": 11,
+        "visible": false
+      },
+      {
+        "text_id": 6,
+        "x": 12,
+        "y": 29,
+        "visible": false
+      },
+      {
+        "text_id": 7,
+        "x": 1,
+        "y": 31,
+        "visible": false
+      },
+      {
+        "text_id": 8,
+        "x": 27,
+        "y": 40,
+        "visible": true
+      }
+    ]
+  },
+  {
+    "case": "forest-five-item-tour",
+    "attempt": 2,
+    "label": "ViridianForest (1, 19) up: Potion",
+    "state": {
+      "map_name": "ViridianForest",
+      "player_x": 1,
+      "player_y": 19,
+      "screen": "overworld",
+      "player_facing": "Up"
+    },
+    "bag": [
+      {
+        "item": "Antidote",
+        "qty": 2
+      },
+      {
+        "item": "PokeBall",
+        "qty": 1
+      },
+      {
+        "item": "Potion",
+        "qty": 2
+      }
+    ],
+    "dialogue": null,
+    "reward_flags": {},
+    "visible_objects": [
+      {
+        "text_id": 1,
+        "x": 16,
+        "y": 43,
+        "visible": true
+      },
+      {
+        "text_id": 2,
+        "x": 30,
+        "y": 33,
+        "visible": true
+      },
+      {
+        "text_id": 3,
+        "x": 30,
+        "y": 19,
+        "visible": true
+      },
+      {
+        "text_id": 4,
+        "x": 2,
+        "y": 18,
+        "visible": true
+      },
+      {
+        "text_id": 5,
+        "x": 25,
+        "y": 11,
+        "visible": false
+      },
+      {
+        "text_id": 6,
+        "x": 12,
+        "y": 29,
+        "visible": false
+      },
+      {
+        "text_id": 7,
+        "x": 1,
+        "y": 31,
+        "visible": false
+      },
+      {
+        "text_id": 8,
+        "x": 27,
+        "y": 40,
+        "visible": true
+      }
+    ]
+  },
+  {
+    "case": "forest-five-item-tour",
+    "attempt": 2,
+    "label": "completed",
+    "state": {
+      "map_name": "ViridianForestNorthGate",
+      "player_x": 4,
+      "player_y": 6,
+      "screen": "overworld",
+      "player_facing": "Up"
+    },
+    "bag": [
+      {
+        "item": "Antidote",
+        "qty": 2
+      },
+      {
+        "item": "PokeBall",
+        "qty": 1
+      },
+      {
+        "item": "Potion",
+        "qty": 2
+      }
+    ],
+    "dialogue": null,
+    "reward_flags": {},
+    "visible_objects": [
+      {
+        "text_id": 1,
+        "x": 3,
+        "y": 2,
+        "visible": true
+      },
+      {
+        "text_id": 2,
+        "x": 2,
+        "y": 5,
+        "visible": true
+      }
+    ]
+  },
+  {
+    "case": "daisy-town-map-errand",
+    "attempt": 3,
+    "label": "before errand: no Town Map",
+    "state": {
+      "map_name": "BluesHouse",
+      "player_x": 2,
+      "player_y": 4,
+      "screen": "overworld",
+      "player_facing": "Up"
+    },
+    "bag": [],
+    "dialogue": null,
+    "reward_flags": {},
+    "visible_objects": [
+      {
+        "text_id": 1,
+        "x": 2,
+        "y": 3,
+        "visible": true
+      },
+      {
+        "text_id": 2,
+        "x": 6,
+        "y": 4,
+        "visible": true
+      },
+      {
+        "text_id": 3,
+        "x": 3,
+        "y": 3,
+        "visible": true
+      }
+    ]
+  },
+  {
+    "case": "daisy-town-map-errand",
+    "attempt": 3,
+    "label": "Daisy reward after real parcel delivery",
+    "state": {
+      "map_name": "BluesHouse",
+      "player_x": 2,
+      "player_y": 4,
+      "screen": "overworld",
+      "player_facing": "Up"
+    },
+    "bag": [
+      {
+        "item": "TownMap",
+        "qty": 1
+      }
+    ],
+    "dialogue": null,
+    "reward_flags": {
+      "EVENT_GOT_POKEDEX": true,
+      "EVENT_GOT_TOWN_MAP": true
+    },
+    "visible_objects": [
+      {
+        "text_id": 1,
+        "x": 2,
+        "y": 3,
+        "visible": true
+      },
+      {
+        "text_id": 2,
+        "x": 6,
+        "y": 4,
+        "visible": true
+      },
+      {
+        "text_id": 3,
+        "x": 3,
+        "y": 3,
+        "visible": false
+      }
+    ]
+  },
+  {
+    "case": "daisy-town-map-errand",
+    "attempt": 3,
+    "label": "completed",
+    "state": {
+      "map_name": "BluesHouse",
+      "player_x": 2,
+      "player_y": 4,
+      "screen": "overworld",
+      "player_facing": "Up"
+    },
+    "bag": [
+      {
+        "item": "TownMap",
+        "qty": 1
+      }
+    ],
+    "dialogue": null,
+    "reward_flags": {
+      "EVENT_GOT_POKEDEX": true,
+      "EVENT_GOT_TOWN_MAP": true
+    },
+    "visible_objects": [
+      {
+        "text_id": 1,
+        "x": 2,
+        "y": 3,
+        "visible": true
+      },
+      {
+        "text_id": 2,
+        "x": 6,
+        "y": 4,
+        "visible": true
+      },
+      {
+        "text_id": 3,
+        "x": 3,
+        "y": 3,
+        "visible": false
+      }
+    ]
+  },
+  {
+    "case": "viridian-hidden-potion-walk",
+    "attempt": 3,
+    "label": "ViridianCity (13, 4) right: Potion",
+    "state": {
+      "map_name": "ViridianCity",
+      "player_x": 13,
+      "player_y": 4,
+      "screen": "overworld",
+      "player_facing": "Right"
+    },
+    "bag": [
+      {
+        "item": "Potion",
+        "qty": 1
+      }
+    ],
+    "dialogue": null,
+    "reward_flags": {},
+    "visible_objects": [
+      {
+        "text_id": 1,
+        "x": 11,
+        "y": 21,
+        "visible": true
+      },
+      {
+        "text_id": 2,
+        "x": 30,
+        "y": 8,
+        "visible": true
+      },
+      {
+        "text_id": 3,
+        "x": 29,
+        "y": 26,
+        "visible": true
+      },
+      {
+        "text_id": 4,
+        "x": 17,
+        "y": 9,
+        "visible": true
+      },
+      {
+        "text_id": 5,
+        "x": 18,
+        "y": 9,
+        "visible": true
+      },
+      {
+        "text_id": 6,
+        "x": 6,
+        "y": 23,
+        "visible": true
+      },
+      {
+        "text_id": 7,
+        "x": 17,
+        "y": 5,
+        "visible": true
+      }
+    ]
+  },
+  {
+    "case": "viridian-hidden-potion-walk",
+    "attempt": 3,
+    "label": "completed",
+    "state": {
+      "map_name": "ViridianCity",
+      "player_x": 13,
+      "player_y": 4,
+      "screen": "overworld",
+      "player_facing": "Right"
+    },
+    "bag": [
+      {
+        "item": "Potion",
+        "qty": 1
+      }
+    ],
+    "dialogue": null,
+    "reward_flags": {},
+    "visible_objects": [
+      {
+        "text_id": 1,
+        "x": 10,
+        "y": 18,
+        "visible": true
+      },
+      {
+        "text_id": 2,
+        "x": 30,
+        "y": 8,
+        "visible": true
+      },
+      {
+        "text_id": 3,
+        "x": 30,
+        "y": 25,
+        "visible": true
+      },
+      {
+        "text_id": 4,
+        "x": 17,
+        "y": 9,
+        "visible": true
+      },
+      {
+        "text_id": 5,
+        "x": 18,
+        "y": 9,
+        "visible": true
+      },
+      {
+        "text_id": 6,
+        "x": 6,
+        "y": 23,
+        "visible": true
+      },
+      {
+        "text_id": 7,
+        "x": 17,
+        "y": 5,
+        "visible": true
+      }
+    ]
+  },
+  {
+    "case": "forest-five-item-tour",
+    "attempt": 3,
+    "label": "ViridianForest (15, 42) right: Antidote",
+    "state": {
+      "map_name": "ViridianForest",
+      "player_x": 15,
+      "player_y": 42,
+      "screen": "overworld",
+      "player_facing": "Right"
+    },
+    "bag": [
+      {
+        "item": "Antidote",
+        "qty": 1
+      }
+    ],
+    "dialogue": null,
+    "reward_flags": {},
+    "visible_objects": [
+      {
+        "text_id": 1,
+        "x": 16,
+        "y": 43,
+        "visible": true
+      },
+      {
+        "text_id": 2,
+        "x": 30,
+        "y": 33,
+        "visible": true
+      },
+      {
+        "text_id": 3,
+        "x": 30,
+        "y": 19,
+        "visible": true
+      },
+      {
+        "text_id": 4,
+        "x": 2,
+        "y": 18,
+        "visible": true
+      },
+      {
+        "text_id": 5,
+        "x": 25,
+        "y": 11,
+        "visible": true
+      },
+      {
+        "text_id": 6,
+        "x": 12,
+        "y": 29,
+        "visible": true
+      },
+      {
+        "text_id": 7,
+        "x": 1,
+        "y": 31,
+        "visible": true
+      },
+      {
+        "text_id": 8,
+        "x": 27,
+        "y": 40,
+        "visible": true
+      }
+    ]
+  },
+  {
+    "case": "forest-five-item-tour",
+    "attempt": 3,
+    "label": "ViridianForest (2, 31) left: PokeBall",
+    "state": {
+      "map_name": "ViridianForest",
+      "player_x": 2,
+      "player_y": 31,
+      "screen": "overworld",
+      "player_facing": "Left"
+    },
+    "bag": [
+      {
+        "item": "Antidote",
+        "qty": 1
+      },
+      {
+        "item": "PokeBall",
+        "qty": 1
+      }
+    ],
+    "dialogue": null,
+    "reward_flags": {},
+    "visible_objects": [
+      {
+        "text_id": 1,
+        "x": 16,
+        "y": 43,
+        "visible": true
+      },
+      {
+        "text_id": 2,
+        "x": 30,
+        "y": 33,
+        "visible": true
+      },
+      {
+        "text_id": 3,
+        "x": 30,
+        "y": 19,
+        "visible": true
+      },
+      {
+        "text_id": 4,
+        "x": 2,
+        "y": 18,
+        "visible": true
+      },
+      {
+        "text_id": 5,
+        "x": 25,
+        "y": 11,
+        "visible": true
+      },
+      {
+        "text_id": 6,
+        "x": 12,
+        "y": 29,
+        "visible": true
+      },
+      {
+        "text_id": 7,
+        "x": 1,
+        "y": 31,
+        "visible": false
+      },
+      {
+        "text_id": 8,
+        "x": 27,
+        "y": 40,
+        "visible": true
+      }
+    ]
+  },
+  {
+    "case": "forest-five-item-tour",
+    "attempt": 3,
+    "label": "ViridianForest (25, 12) up: Antidote",
+    "state": {
+      "map_name": "ViridianForest",
+      "player_x": 25,
+      "player_y": 12,
+      "screen": "overworld",
+      "player_facing": "Up"
+    },
+    "bag": [
+      {
+        "item": "Antidote",
+        "qty": 2
+      },
+      {
+        "item": "PokeBall",
+        "qty": 1
+      }
+    ],
+    "dialogue": null,
+    "reward_flags": {},
+    "visible_objects": [
+      {
+        "text_id": 1,
+        "x": 16,
+        "y": 43,
+        "visible": true
+      },
+      {
+        "text_id": 2,
+        "x": 30,
+        "y": 33,
+        "visible": true
+      },
+      {
+        "text_id": 3,
+        "x": 30,
+        "y": 19,
+        "visible": true
+      },
+      {
+        "text_id": 4,
+        "x": 2,
+        "y": 18,
+        "visible": true
+      },
+      {
+        "text_id": 5,
+        "x": 25,
+        "y": 11,
+        "visible": false
+      },
+      {
+        "text_id": 6,
+        "x": 12,
+        "y": 29,
+        "visible": true
+      },
+      {
+        "text_id": 7,
+        "x": 1,
+        "y": 31,
+        "visible": false
+      },
+      {
+        "text_id": 8,
+        "x": 27,
+        "y": 40,
+        "visible": true
+      }
+    ]
+  },
+  {
+    "case": "forest-five-item-tour",
+    "attempt": 3,
+    "label": "ViridianForest (12, 28) down: Potion",
+    "state": {
+      "map_name": "ViridianForest",
+      "player_x": 12,
+      "player_y": 28,
+      "screen": "overworld",
+      "player_facing": "Down"
+    },
+    "bag": [
+      {
+        "item": "Antidote",
+        "qty": 2
+      },
+      {
+        "item": "PokeBall",
+        "qty": 1
+      },
+      {
+        "item": "Potion",
+        "qty": 1
+      }
+    ],
+    "dialogue": null,
+    "reward_flags": {},
+    "visible_objects": [
+      {
+        "text_id": 1,
+        "x": 16,
+        "y": 43,
+        "visible": true
+      },
+      {
+        "text_id": 2,
+        "x": 30,
+        "y": 33,
+        "visible": true
+      },
+      {
+        "text_id": 3,
+        "x": 30,
+        "y": 19,
+        "visible": true
+      },
+      {
+        "text_id": 4,
+        "x": 2,
+        "y": 18,
+        "visible": true
+      },
+      {
+        "text_id": 5,
+        "x": 25,
+        "y": 11,
+        "visible": false
+      },
+      {
+        "text_id": 6,
+        "x": 12,
+        "y": 29,
+        "visible": false
+      },
+      {
+        "text_id": 7,
+        "x": 1,
+        "y": 31,
+        "visible": false
+      },
+      {
+        "text_id": 8,
+        "x": 27,
+        "y": 40,
+        "visible": true
+      }
+    ]
+  },
+  {
+    "case": "forest-five-item-tour",
+    "attempt": 3,
+    "label": "ViridianForest (1, 19) up: Potion",
+    "state": {
+      "map_name": "ViridianForest",
+      "player_x": 1,
+      "player_y": 19,
+      "screen": "overworld",
+      "player_facing": "Up"
+    },
+    "bag": [
+      {
+        "item": "Antidote",
+        "qty": 2
+      },
+      {
+        "item": "PokeBall",
+        "qty": 1
+      },
+      {
+        "item": "Potion",
+        "qty": 2
+      }
+    ],
+    "dialogue": null,
+    "reward_flags": {},
+    "visible_objects": [
+      {
+        "text_id": 1,
+        "x": 16,
+        "y": 43,
+        "visible": true
+      },
+      {
+        "text_id": 2,
+        "x": 30,
+        "y": 33,
+        "visible": true
+      },
+      {
+        "text_id": 3,
+        "x": 30,
+        "y": 19,
+        "visible": true
+      },
+      {
+        "text_id": 4,
+        "x": 2,
+        "y": 18,
+        "visible": true
+      },
+      {
+        "text_id": 5,
+        "x": 25,
+        "y": 11,
+        "visible": false
+      },
+      {
+        "text_id": 6,
+        "x": 12,
+        "y": 29,
+        "visible": false
+      },
+      {
+        "text_id": 7,
+        "x": 1,
+        "y": 31,
+        "visible": false
+      },
+      {
+        "text_id": 8,
+        "x": 27,
+        "y": 40,
+        "visible": true
+      }
+    ]
+  },
+  {
+    "case": "forest-five-item-tour",
+    "attempt": 3,
+    "label": "completed",
+    "state": {
+      "map_name": "ViridianForestNorthGate",
+      "player_x": 4,
+      "player_y": 6,
+      "screen": "overworld",
+      "player_facing": "Up"
+    },
+    "bag": [
+      {
+        "item": "Antidote",
+        "qty": 2
+      },
+      {
+        "item": "PokeBall",
+        "qty": 1
+      },
+      {
+        "item": "Potion",
+        "qty": 2
+      }
+    ],
+    "dialogue": null,
+    "reward_flags": {},
+    "visible_objects": [
+      {
+        "text_id": 1,
+        "x": 3,
+        "y": 2,
+        "visible": true
+      },
+      {
+        "text_id": 2,
+        "x": 2,
+        "y": 5,
+        "visible": true
+      }
+    ]
+  }
+]
