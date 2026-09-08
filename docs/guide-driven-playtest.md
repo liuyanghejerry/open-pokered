@@ -63,7 +63,50 @@ python3 scripts/guided_playtest.py --only forest-five-item-tour --repeat 3
 
 ## 已收集但未执行
 
-Route22 对手战及满足条件后回 Oak 领取精灵球、博物馆门票与参观、森林区域宝可梦捕获。
-捕获任务需独立的随机探索预算；预算耗尽不能证明某宝可梦不存在。
+下述扩展批次继续处理 Route22 对手战/Oak 赠球、博物馆和自然遇敌捕获。
 古老琥珀和 TM42 的后期前置条件超出本轮范围。
 目前是攻略指导 AI 编写并调试的固定任务集，不是运行时自主读取网页并无限探索的代理。
+
+## 扩展批次：门票、自然捕获和 Route22
+
+新增入口仍为 `scripts/guided_playtest.py --only <case>`，场景来源仍为上面的初代攻略。
+博物馆精确门票分支、移动退回行为和二楼 NPC 坐标/文本辅以固定 pret 的
+`scripts/Museum1F.asm`、`data/maps/objects/Museum2F.asm`、`text/Museum2F.asm` 核实。
+
+| 场景 | 准备与验证 |
+|---|---|
+| `museum-insufficient-money` | SaveBuilder 构造49元，传送到馆外；真实进入、选YES，钱不减少、无票、退回一格 |
+| `museum-exact-ticket-visit` | 构造50元，真实进入购票；扣到0元、获得票、步行上二楼并与太空展览NPC对话 |
+| `museum-decline-ticket` | 构造100元，真实进入选NO；金额不变、无票、退回一格 |
+| `museum-reentry-ticket-reset` | 构造100元购票参观，出馆后票标志清除，再次进馆需再付50元（原版PewterCity脚本补充依据） |
+| `forest-natural-encounter-catch` | 森林入口、Lv20妙蛙种子和20球；步行自然遇敌、实际投球，验证种类/等级与保存恢复 |
+| `forest-pikachu-search-catch` | 同样准备，在草地自然搜索Pikachu，遇其他种类逃跑；最多500段行走，耗尽预算单列inconclusive |
+| `route22-rival-oak-balls` | 从新游戏完成包裹，真实训练到Lv13、治疗，触发对手战并返回Oak；不注入胜利标志或奖励 |
+
+博物馆金额快照保存在场景输出目录，票与剧情标志不预置。三项门票测试各跑三次均通过，
+分别耗时25.490、27.615、25.478秒（含一次模板准备成本）。
+自然遇敌捕获三次通过，共38.575秒；初版仅等待帧停在 WildReveal，已补实际A键推进开场。
+这些测试不检验区域概率分布，不要求三次覆盖每一种宝可梦。
+
+Pikachu首轮500段预算只观察到12次搜索遇敌（Kakuna10、Weedle2），结果为inconclusive；
+不能据此报告缺失Pikachu。Route22首轮触发正确队伍但战败，属于赠球前置条件未达成，
+不计为内容bug。已将该支线的操作策略改为优先撞击（公共Brock驱动优先藤鞭，遭两只对手抵抗），
+保留最多三次真实再战机会；若仍败则inconclusive，不宣称Oak未发奖励。
+早期尝试与确认结果保存在 [扩展证据目录](audits/guided-playtest-expansion/)。
+
+### 扩展批次最终核验（2026-09-09）
+
+- 博物馆四项各三次通过，合计12次通过。重入测试最初停在外部门格无法再次触发，
+  已在新驱动中先走到门外再重新进入；没有修改游戏或放宽票价断言。
+- 自然遇敌捕获三次通过，加入定向搜索后的当前代码又独立通过一次。
+- Pikachu定向搜索三次：一次成功自然捕获并保存恢复（21.759秒），两次预算耗尽。
+  保留所有结果，不将两次inconclusive当成缺失内容，也不宣称统计验证了攻略的5%。
+- Route22→Oak赠球使用撞击策略，从新游戏完整通过一次（257.756秒），训练本身190秒。
+  首次藤鞭策略的败北证据保留；没有声称这条长链已经三轮稳定。
+  协议确认没有warp、give_pokemon、give_item、set_flag或start_wild_battle命令。
+  实际对手为Lv9 Pidgey和Lv8 Charmander，击败后获得5球，重复对话和存档恢复不复制。
+
+当前共10个攻略场景（原3项、新7项）。新场景覆盖博物馆、Route22/Oak以及森林自然捕获，
+不表示m10内所有NPC或所有区域宝可梦均已穷尽。随机预算耗尽返回非零退出码并标记
+`inconclusive`，与确定性断言失败的`fail`区分；不宜直接将包含稀有搜索的整套作为无条件CI门禁。
+本批未确认新的产品缺陷。

@@ -1,0 +1,115 @@
+{
+  "engine_commit": "7b857c8605adce9d19b1d5cf75f71a75982680f0",
+  "binary_sha256": "33544521c87f6733c5e21305d8f2ab434a77d751264f666a7ae66f2d0f8de821",
+  "driver_sha256": "b136e8e833be6cf0cd31a0c3c8b7a3957f26d698d974e9696016c52c141fd8a4",
+  "manifest_sha256": "6780e67ec42b7749f70550959d68c55a6d945f7123dc4f5c0ec9dfbcc789d36b",
+  "sources": {
+    "bp2": {
+      "title": "Bulbapedia Red/Blue walkthrough Part 2",
+      "url": "https://bulbapedia.bulbagarden.net/wiki/Walkthrough:Pok%C3%A9mon_Red_and_Blue/Part_2",
+      "revision_url": "https://bulbapedia.bulbagarden.net/w/index.php?title=Walkthrough:Pok%C3%A9mon_Red_and_Blue/Part_2&oldid=4423421",
+      "notes": "送包裹获得图鉴后回访Daisy领取地图；常青市有隐藏药水；Route22对手战可选；满足条件后Oak可赠精灵球。"
+    },
+    "bp3": {
+      "title": "Bulbapedia Red/Blue walkthrough Part 3",
+      "url": "https://bulbapedia.bulbagarden.net/wiki/Walkthrough:Pok%C3%A9mon_Red_and_Blue/Part_3",
+      "revision_url": "https://bulbapedia.bulbagarden.net/w/index.php?title=Walkthrough:Pok%C3%A9mon_Red_and_Blue/Part_3&oldid=4617635",
+      "notes": "森林有精灵球一件、解毒药两件、药水两件，包含两件隐藏物；博物馆门票50；古老琥珀需之后有Cut才能取得。"
+    },
+    "gf-viridian": {
+      "title": "GameFAQs Red Version guide 64175 — Viridian City",
+      "url": "https://gamefaqs.gamespot.com/gameboy/367023-pokemon-red-version/faqs/64175/viridian-city",
+      "notes": "精灵中心西北灌木旁有可步行绕行的小路，沿路检查树获得隐藏药水；返乡送包裹之后可领取地图。"
+    }
+  },
+  "results": [
+    {
+      "id": "museum-reentry-ticket-reset",
+      "attempt": 1,
+      "status": "pass",
+      "contract": {
+        "goal": "参观后出馆再入馆，验证门票按次购买",
+        "sources": [
+          "bp3"
+        ],
+        "setup": "100元snapshot，馆外一次warp，其余真实步行购票和楼层进出",
+        "guide_expectation": "博物馆入场费50",
+        "additional_assertions": [
+          "原版PewterCity.asm退出重置票标志",
+          "第二次重新支付50元"
+        ]
+      },
+      "protocol_command_counts": {
+        "wait_until": 16,
+        "press_sequence": 103,
+        "step_frames": 118,
+        "get_state": 158,
+        "warp": 1,
+        "get_npcs": 16,
+        "skip_dialogue": 4,
+        "get_bag": 6,
+        "get_flags": 9
+      },
+      "wall_seconds": 15.735
+    },
+    {
+      "id": "museum-reentry-ticket-reset",
+      "attempt": 2,
+      "status": "pass",
+      "contract": {
+        "goal": "参观后出馆再入馆，验证门票按次购买",
+        "sources": [
+          "bp3"
+        ],
+        "setup": "100元snapshot，馆外一次warp，其余真实步行购票和楼层进出",
+        "guide_expectation": "博物馆入场费50",
+        "additional_assertions": [
+          "原版PewterCity.asm退出重置票标志",
+          "第二次重新支付50元"
+        ]
+      },
+      "protocol_command_counts": {
+        "wait_until": 16,
+        "press_sequence": 103,
+        "step_frames": 118,
+        "get_state": 158,
+        "warp": 1,
+        "get_npcs": 16,
+        "skip_dialogue": 4,
+        "get_bag": 6,
+        "get_flags": 9
+      },
+      "wall_seconds": 10.766
+    },
+    {
+      "id": "museum-reentry-ticket-reset",
+      "attempt": 3,
+      "status": "pass",
+      "contract": {
+        "goal": "参观后出馆再入馆，验证门票按次购买",
+        "sources": [
+          "bp3"
+        ],
+        "setup": "100元snapshot，馆外一次warp，其余真实步行购票和楼层进出",
+        "guide_expectation": "博物馆入场费50",
+        "additional_assertions": [
+          "原版PewterCity.asm退出重置票标志",
+          "第二次重新支付50元"
+        ]
+      },
+      "protocol_command_counts": {
+        "wait_until": 16,
+        "press_sequence": 103,
+        "step_frames": 118,
+        "get_state": 158,
+        "warp": 1,
+        "get_npcs": 16,
+        "skip_dialogue": 4,
+        "get_bag": 6,
+        "get_flags": 9
+      },
+      "wall_seconds": 10.882
+    }
+  ],
+  "wall_seconds": 37.387
+}

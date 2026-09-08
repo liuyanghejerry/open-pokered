@@ -34,8 +34,7 @@
       "data/maps/objects/Museum2F.asm",
       "text/Museum2F.asm",
       "scripts/OaksLab.asm",
-      "scripts/Route22.asm",
-      "scripts/PewterCity.asm"
+      "scripts/Route22.asm"
     ],
     "sha256": {
       "data/maps/objects/PalletTown.asm": "e52943e730034b1bc7ead35cc9e9827db7fc9d4e55d97a2aa483c6dc715cc381",
@@ -47,8 +46,7 @@
       "data/maps/objects/Museum2F.asm": "4aa39525d7a9cde94543d8206ddec325bc78b4dbdee7ed407789edf8aa488d41",
       "text/Museum2F.asm": "d1093b08bd5444a4e7f966ebb4ad8b72cae2c47396074c20e8faf5d45ed91d13",
       "scripts/OaksLab.asm": "32208a4410db74ada74661f22a2058538617076da79e9c2af5f598131e879882",
-      "scripts/Route22.asm": "ce9394f5b4f80171e762fd7d1f306190e78ec01f3d08b7041dcdc21e76d389d4",
-      "scripts/PewterCity.asm": "24d6d17f5d0668a6ef2c66e27796ae6c8b5dca049ff0e04381f42749670f3db4"
+      "scripts/Route22.asm": "ce9394f5b4f80171e762fd7d1f306190e78ec01f3d08b7041dcdc21e76d389d4"
     }
   },
   "cases": {
@@ -236,21 +234,21 @@
       "sources": [
         "bp2"
       ],
-      "status": "verified: fresh real progression/training/battle/Oak reward and restart, 257.756s; no warp or state seeding"
+      "status": "implemented real progression and training; first attempt lost battle, revised player strategy under verification"
     },
     {
       "goal": "博物馆50元门票与参观",
       "sources": [
         "bp3"
       ],
-      "status": "verified: four ticket/visit/reentry cases, three independent passes each"
+      "status": "implemented: three ticket/visit cases, each passed three independent runs"
     },
     {
       "goal": "森林捕获Pikachu等区域宝可梦",
       "sources": [
         "bp3"
       ],
-      "status": "natural catch passed three repeats plus final-code smoke; targeted Pikachu one success and two budget-inconclusive searches; not all-species coverage or probability verification"
+      "status": "natural catch verified; targeted Pikachu search running, budgets report inconclusive separately"
     },
     {
       "goal": "古老琥珀、常青市TM42",

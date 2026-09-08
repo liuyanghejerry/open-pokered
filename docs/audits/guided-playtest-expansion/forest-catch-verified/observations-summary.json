@@ -1,0 +1,656 @@
+[
+  {
+    "id": "forest-natural-encounter-catch",
+    "attempt": 1,
+    "label": "naturally encountered forest Pokemon",
+    "map": "ViridianForest",
+    "position": [
+      2,
+      30
+    ],
+    "money": 0,
+    "party": [
+      {
+        "hp": 52,
+        "level": 20,
+        "max_hp": 52,
+        "moves": [
+          "Growl",
+          "LeechSeed",
+          "VineWhip",
+          "Poisonpowder"
+        ],
+        "pp": [
+          40,
+          10,
+          10,
+          35
+        ],
+        "species": "Bulbasaur",
+        "status": "None"
+      }
+    ],
+    "bag": [
+      {
+        "item": "PokeBall",
+        "qty": 20
+      }
+    ],
+    "battle_live": {
+      "enemy": {
+        "hp": 15,
+        "level": 3,
+        "max_hp": 15,
+        "species": "Weedle",
+        "status": "None"
+      },
+      "enemy_party": [
+        {
+          "hp": 15,
+          "level": 3,
+          "species": "Weedle"
+        }
+      ],
+      "player": {
+        "hp": 52,
+        "level": 20,
+        "max_hp": 52,
+        "species": "Bulbasaur",
+        "status": "None"
+      },
+      "player_party": [
+        {
+          "hp": 52,
+          "level": 20,
+          "max_hp": 52,
+          "species": "Bulbasaur"
+        }
+      ]
+    },
+    "flags": {}
+  },
+  {
+    "id": "forest-natural-encounter-catch",
+    "attempt": 1,
+    "label": "caught natural forest Pokemon",
+    "map": "ViridianForest",
+    "position": [
+      2,
+      30
+    ],
+    "money": 0,
+    "party": [
+      {
+        "hp": 52,
+        "level": 20,
+        "max_hp": 52,
+        "moves": [
+          "Growl",
+          "LeechSeed",
+          "VineWhip",
+          "Poisonpowder"
+        ],
+        "pp": [
+          40,
+          10,
+          10,
+          35
+        ],
+        "species": "Bulbasaur",
+        "status": "None"
+      },
+      {
+        "hp": 15,
+        "level": 3,
+        "max_hp": 15,
+        "moves": [
+          "PoisonSting",
+          "StringShot",
+          "None",
+          "None"
+        ],
+        "pp": [
+          35,
+          40,
+          0,
+          0
+        ],
+        "species": "Weedle",
+        "status": "None"
+      }
+    ],
+    "bag": [
+      {
+        "item": "PokeBall",
+        "qty": 14
+      }
+    ],
+    "battle_live": {
+      "enemy": {
+        "hp": 15,
+        "level": 3,
+        "max_hp": 15,
+        "species": "Weedle",
+        "status": "None"
+      },
+      "enemy_party": [
+        {
+          "hp": 15,
+          "level": 3,
+          "species": "Weedle"
+        }
+      ],
+      "player": {
+        "hp": 52,
+        "level": 20,
+        "max_hp": 52,
+        "species": "Bulbasaur",
+        "status": "None"
+      },
+      "player_party": [
+        {
+          "hp": 52,
+          "level": 20,
+          "max_hp": 52,
+          "species": "Bulbasaur"
+        }
+      ]
+    },
+    "flags": {}
+  },
+  {
+    "id": "forest-natural-encounter-catch",
+    "attempt": 1,
+    "label": "completed",
+    "map": "ViridianForest",
+    "position": [
+      2,
+      30
+    ],
+    "money": 0,
+    "party": [
+      {
+        "hp": 52,
+        "level": 20,
+        "max_hp": 52,
+        "moves": [
+          "Growl",
+          "LeechSeed",
+          "VineWhip",
+          "Poisonpowder"
+        ],
+        "pp": [
+          40,
+          10,
+          10,
+          35
+        ],
+        "species": "Bulbasaur",
+        "status": "None"
+      },
+      {
+        "hp": 15,
+        "level": 3,
+        "max_hp": 15,
+        "moves": [
+          "PoisonSting",
+          "StringShot",
+          "None",
+          "None"
+        ],
+        "pp": [
+          35,
+          40,
+          0,
+          0
+        ],
+        "species": "Weedle",
+        "status": "None"
+      }
+    ],
+    "bag": [
+      {
+        "item": "PokeBall",
+        "qty": 14
+      }
+    ],
+    "battle_live": null,
+    "flags": {}
+  },
+  {
+    "id": "forest-natural-encounter-catch",
+    "attempt": 2,
+    "label": "naturally encountered forest Pokemon",
+    "map": "ViridianForest",
+    "position": [
+      3,
+      30
+    ],
+    "money": 0,
+    "party": [
+      {
+        "hp": 52,
+        "level": 20,
+        "max_hp": 52,
+        "moves": [
+          "Growl",
+          "LeechSeed",
+          "VineWhip",
+          "Poisonpowder"
+        ],
+        "pp": [
+          40,
+          10,
+          10,
+          35
+        ],
+        "species": "Bulbasaur",
+        "status": "None"
+      }
+    ],
+    "bag": [
+      {
+        "item": "PokeBall",
+        "qty": 20
+      }
+    ],
+    "battle_live": {
+      "enemy": {
+        "hp": 15,
+        "level": 3,
+        "max_hp": 15,
+        "species": "Weedle",
+        "status": "None"
+      },
+      "enemy_party": [
+        {
+          "hp": 15,
+          "level": 3,
+          "species": "Weedle"
+        }
+      ],
+      "player": {
+        "hp": 52,
+        "level": 20,
+        "max_hp": 52,
+        "species": "Bulbasaur",
+        "status": "None"
+      },
+      "player_party": [
+        {
+          "hp": 52,
+          "level": 20,
+          "max_hp": 52,
+          "species": "Bulbasaur"
+        }
+      ]
+    },
+    "flags": {}
+  },
+  {
+    "id": "forest-natural-encounter-catch",
+    "attempt": 2,
+    "label": "caught natural forest Pokemon",
+    "map": "ViridianForest",
+    "position": [
+      3,
+      30
+    ],
+    "money": 0,
+    "party": [
+      {
+        "hp": 52,
+        "level": 20,
+        "max_hp": 52,
+        "moves": [
+          "Growl",
+          "LeechSeed",
+          "VineWhip",
+          "Poisonpowder"
+        ],
+        "pp": [
+          40,
+          10,
+          10,
+          35
+        ],
+        "species": "Bulbasaur",
+        "status": "None"
+      },
+      {
+        "hp": 15,
+        "level": 3,
+        "max_hp": 15,
+        "moves": [
+          "PoisonSting",
+          "StringShot",
+          "None",
+          "None"
+        ],
+        "pp": [
+          35,
+          40,
+          0,
+          0
+        ],
+        "species": "Weedle",
+        "status": "None"
+      }
+    ],
+    "bag": [
+      {
+        "item": "PokeBall",
+        "qty": 17
+      }
+    ],
+    "battle_live": {
+      "enemy": {
+        "hp": 15,
+        "level": 3,
+        "max_hp": 15,
+        "species": "Weedle",
+        "status": "None"
+      },
+      "enemy_party": [
+        {
+          "hp": 15,
+          "level": 3,
+          "species": "Weedle"
+        }
+      ],
+      "player": {
+        "hp": 52,
+        "level": 20,
+        "max_hp": 52,
+        "species": "Bulbasaur",
+        "status": "None"
+      },
+      "player_party": [
+        {
+          "hp": 52,
+          "level": 20,
+          "max_hp": 52,
+          "species": "Bulbasaur"
+        }
+      ]
+    },
+    "flags": {}
+  },
+  {
+    "id": "forest-natural-encounter-catch",
+    "attempt": 2,
+    "label": "completed",
+    "map": "ViridianForest",
+    "position": [
+      3,
+      30
+    ],
+    "money": 0,
+    "party": [
+      {
+        "hp": 52,
+        "level": 20,
+        "max_hp": 52,
+        "moves": [
+          "Growl",
+          "LeechSeed",
+          "VineWhip",
+          "Poisonpowder"
+        ],
+        "pp": [
+          40,
+          10,
+          10,
+          35
+        ],
+        "species": "Bulbasaur",
+        "status": "None"
+      },
+      {
+        "hp": 15,
+        "level": 3,
+        "max_hp": 15,
+        "moves": [
+          "PoisonSting",
+          "StringShot",
+          "None",
+          "None"
+        ],
+        "pp": [
+          35,
+          40,
+          0,
+          0
+        ],
+        "species": "Weedle",
+        "status": "None"
+      }
+    ],
+    "bag": [
+      {
+        "item": "PokeBall",
+        "qty": 17
+      }
+    ],
+    "battle_live": null,
+    "flags": {}
+  },
+  {
+    "id": "forest-natural-encounter-catch",
+    "attempt": 3,
+    "label": "naturally encountered forest Pokemon",
+    "map": "ViridianForest",
+    "position": [
+      2,
+      30
+    ],
+    "money": 0,
+    "party": [
+      {
+        "hp": 52,
+        "level": 20,
+        "max_hp": 52,
+        "moves": [
+          "Growl",
+          "LeechSeed",
+          "VineWhip",
+          "Poisonpowder"
+        ],
+        "pp": [
+          40,
+          10,
+          10,
+          35
+        ],
+        "species": "Bulbasaur",
+        "status": "None"
+      }
+    ],
+    "bag": [
+      {
+        "item": "PokeBall",
+        "qty": 20
+      }
+    ],
+    "battle_live": {
+      "enemy": {
+        "hp": 16,
+        "level": 3,
+        "max_hp": 16,
+        "species": "Weedle",
+        "status": "None"
+      },
+      "enemy_party": [
+        {
+          "hp": 16,
+          "level": 3,
+          "species": "Weedle"
+        }
+      ],
+      "player": {
+        "hp": 52,
+        "level": 20,
+        "max_hp": 52,
+        "species": "Bulbasaur",
+        "status": "None"
+      },
+      "player_party": [
+        {
+          "hp": 52,
+          "level": 20,
+          "max_hp": 52,
+          "species": "Bulbasaur"
+        }
+      ]
+    },
+    "flags": {}
+  },
+  {
+    "id": "forest-natural-encounter-catch",
+    "attempt": 3,
+    "label": "caught natural forest Pokemon",
+    "map": "ViridianForest",
+    "position": [
+      2,
+      30
+    ],
+    "money": 0,
+    "party": [
+      {
+        "hp": 52,
+        "level": 20,
+        "max_hp": 52,
+        "moves": [
+          "Growl",
+          "LeechSeed",
+          "VineWhip",
+          "Poisonpowder"
+        ],
+        "pp": [
+          40,
+          10,
+          10,
+          35
+        ],
+        "species": "Bulbasaur",
+        "status": "None"
+      },
+      {
+        "hp": 16,
+        "level": 3,
+        "max_hp": 16,
+        "moves": [
+          "PoisonSting",
+          "StringShot",
+          "None",
+          "None"
+        ],
+        "pp": [
+          35,
+          40,
+          0,
+          0
+        ],
+        "species": "Weedle",
+        "status": "None"
+      }
+    ],
+    "bag": [
+      {
+        "item": "PokeBall",
+        "qty": 16
+      }
+    ],
+    "battle_live": {
+      "enemy": {
+        "hp": 16,
+        "level": 3,
+        "max_hp": 16,
+        "species": "Weedle",
+        "status": "None"
+      },
+      "enemy_party": [
+        {
+          "hp": 16,
+          "level": 3,
+          "species": "Weedle"
+        }
+      ],
+      "player": {
+        "hp": 52,
+        "level": 20,
+        "max_hp": 52,
+        "species": "Bulbasaur",
+        "status": "None"
+      },
+      "player_party": [
+        {
+          "hp": 52,
+          "level": 20,
+          "max_hp": 52,
+          "species": "Bulbasaur"
+        }
+      ]
+    },
+    "flags": {}
+  },
+  {
+    "id": "forest-natural-encounter-catch",
+    "attempt": 3,
+    "label": "completed",
+    "map": "ViridianForest",
+    "position": [
+      2,
+      30
+    ],
+    "money": 0,
+    "party": [
+      {
+        "hp": 52,
+        "level": 20,
+        "max_hp": 52,
+        "moves": [
+          "Growl",
+          "LeechSeed",
+          "VineWhip",
+          "Poisonpowder"
+        ],
+        "pp": [
+          40,
+          10,
+          10,
+          35
+        ],
+        "species": "Bulbasaur",
+        "status": "None"
+      },
+      {
+        "hp": 16,
+        "level": 3,
+        "max_hp": 16,
+        "moves": [
+          "PoisonSting",
+          "StringShot",
+          "None",
+          "None"
+        ],
+        "pp": [
+          35,
+          40,
+          0,
+          0
+        ],
+        "species": "Weedle",
+        "status": "None"
+      }
+    ],
+    "bag": [
+      {
+        "item": "PokeBall",
+        "qty": 16
+      }
+    ],
+    "battle_live": null,
+    "flags": {}
+  }
+]

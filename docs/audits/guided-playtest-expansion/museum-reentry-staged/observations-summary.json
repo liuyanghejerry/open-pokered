@@ -1,0 +1,296 @@
+[
+  {
+    "id": "museum-reentry-ticket-reset",
+    "attempt": 1,
+    "label": "ticket offer",
+    "map": "Museum1F",
+    "position": [
+      10,
+      4
+    ],
+    "money": 100,
+    "party": [],
+    "bag": [],
+    "battle_live": null,
+    "flags": {}
+  },
+  {
+    "id": "museum-reentry-ticket-reset",
+    "attempt": 1,
+    "label": "ticket decision",
+    "map": "Museum1F",
+    "position": [
+      10,
+      4
+    ],
+    "money": 50,
+    "party": [],
+    "bag": [],
+    "battle_live": null,
+    "flags": {
+      "EVENT_BOUGHT_MUSEUM_TICKET": true
+    }
+  },
+  {
+    "id": "museum-reentry-ticket-reset",
+    "attempt": 1,
+    "label": "upstairs exhibit conversation",
+    "map": "Museum2F",
+    "position": [
+      7,
+      6
+    ],
+    "money": 50,
+    "party": [],
+    "bag": [],
+    "battle_live": null,
+    "flags": {
+      "EVENT_BOUGHT_MUSEUM_TICKET": true
+    }
+  },
+  {
+    "id": "museum-reentry-ticket-reset",
+    "attempt": 1,
+    "label": "left museum",
+    "map": "PewterCity",
+    "position": [
+      14,
+      7
+    ],
+    "money": 50,
+    "party": [],
+    "bag": [],
+    "battle_live": null,
+    "flags": {}
+  },
+  {
+    "id": "museum-reentry-ticket-reset",
+    "attempt": 1,
+    "label": "second museum admission",
+    "map": "Museum1F",
+    "position": [
+      10,
+      4
+    ],
+    "money": 0,
+    "party": [],
+    "bag": [],
+    "battle_live": null,
+    "flags": {
+      "EVENT_BOUGHT_MUSEUM_TICKET": true
+    }
+  },
+  {
+    "id": "museum-reentry-ticket-reset",
+    "attempt": 1,
+    "label": "completed",
+    "map": "Museum1F",
+    "position": [
+      10,
+      4
+    ],
+    "money": 0,
+    "party": [],
+    "bag": [],
+    "battle_live": null,
+    "flags": {
+      "EVENT_BOUGHT_MUSEUM_TICKET": true
+    }
+  },
+  {
+    "id": "museum-reentry-ticket-reset",
+    "attempt": 2,
+    "label": "ticket offer",
+    "map": "Museum1F",
+    "position": [
+      10,
+      4
+    ],
+    "money": 100,
+    "party": [],
+    "bag": [],
+    "battle_live": null,
+    "flags": {}
+  },
+  {
+    "id": "museum-reentry-ticket-reset",
+    "attempt": 2,
+    "label": "ticket decision",
+    "map": "Museum1F",
+    "position": [
+      10,
+      4
+    ],
+    "money": 50,
+    "party": [],
+    "bag": [],
+    "battle_live": null,
+    "flags": {
+      "EVENT_BOUGHT_MUSEUM_TICKET": true
+    }
+  },
+  {
+    "id": "museum-reentry-ticket-reset",
+    "attempt": 2,
+    "label": "upstairs exhibit conversation",
+    "map": "Museum2F",
+    "position": [
+      7,
+      6
+    ],
+    "money": 50,
+    "party": [],
+    "bag": [],
+    "battle_live": null,
+    "flags": {
+      "EVENT_BOUGHT_MUSEUM_TICKET": true
+    }
+  },
+  {
+    "id": "museum-reentry-ticket-reset",
+    "attempt": 2,
+    "label": "left museum",
+    "map": "PewterCity",
+    "position": [
+      14,
+      7
+    ],
+    "money": 50,
+    "party": [],
+    "bag": [],
+    "battle_live": null,
+    "flags": {}
+  },
+  {
+    "id": "museum-reentry-ticket-reset",
+    "attempt": 2,
+    "label": "second museum admission",
+    "map": "Museum1F",
+    "position": [
+      10,
+      4
+    ],
+    "money": 0,
+    "party": [],
+    "bag": [],
+    "battle_live": null,
+    "flags": {
+      "EVENT_BOUGHT_MUSEUM_TICKET": true
+    }
+  },
+  {
+    "id": "museum-reentry-ticket-reset",
+    "attempt": 2,
+    "label": "completed",
+    "map": "Museum1F",
+    "position": [
+      10,
+      4
+    ],
+    "money": 0,
+    "party": [],
+    "bag": [],
+    "battle_live": null,
+    "flags": {
+      "EVENT_BOUGHT_MUSEUM_TICKET": true
+    }
+  },
+  {
+    "id": "museum-reentry-ticket-reset",
+    "attempt": 3,
+    "label": "ticket offer",
+    "map": "Museum1F",
+    "position": [
+      10,
+      4
+    ],
+    "money": 100,
+    "party": [],
+    "bag": [],
+    "battle_live": null,
+    "flags": {}
+  },
+  {
+    "id": "museum-reentry-ticket-reset",
+    "attempt": 3,
+    "label": "ticket decision",
+    "map": "Museum1F",
+    "position": [
+      10,
+      4
+    ],
+    "money": 50,
+    "party": [],
+    "bag": [],
+    "battle_live": null,
+    "flags": {
+      "EVENT_BOUGHT_MUSEUM_TICKET": true
+    }
+  },
+  {
+    "id": "museum-reentry-ticket-reset",
+    "attempt": 3,
+    "label": "upstairs exhibit conversation",
+    "map": "Museum2F",
+    "position": [
+      7,
+      6
+    ],
+    "money": 50,
+    "party": [],
+    "bag": [],
+    "battle_live": null,
+    "flags": {
+      "EVENT_BOUGHT_MUSEUM_TICKET": true
+    }
+  },
+  {
+    "id": "museum-reentry-ticket-reset",
+    "attempt": 3,
+    "label": "left museum",
+    "map": "PewterCity",
+    "position": [
+      14,
+      7
+    ],
+    "money": 50,
+    "party": [],
+    "bag": [],
+    "battle_live": null,
+    "flags": {}
+  },
+  {
+    "id": "museum-reentry-ticket-reset",
+    "attempt": 3,
+    "label": "second museum admission",
+    "map": "Museum1F",
+    "position": [
+      10,
+      4
+    ],
+    "money": 0,
+    "party": [],
+    "bag": [],
+    "battle_live": null,
+    "flags": {
+      "EVENT_BOUGHT_MUSEUM_TICKET": true
+    }
+  },
+  {
+    "id": "museum-reentry-ticket-reset",
+    "attempt": 3,
+    "label": "completed",
+    "map": "Museum1F",
+    "position": [
+      10,
+      4
+    ],
+    "money": 0,
+    "party": [],
+    "bag": [],
+    "battle_live": null,
+    "flags": {
+      "EVENT_BOUGHT_MUSEUM_TICKET": true
+    }
+  }
+]

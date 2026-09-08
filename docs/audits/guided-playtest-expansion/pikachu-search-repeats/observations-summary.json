@@ -1,0 +1,434 @@
+[
+  {
+    "label": "encounter search",
+    "walking_segment": 1,
+    "species": "Kakuna",
+    "level": 6
+  },
+  {
+    "label": "encounter search",
+    "walking_segment": 48,
+    "species": "Kakuna",
+    "level": 4
+  },
+  {
+    "label": "encounter search",
+    "walking_segment": 125,
+    "species": "Weedle",
+    "level": 4
+  },
+  {
+    "label": "encounter search",
+    "walking_segment": 140,
+    "species": "Pikachu",
+    "level": 3
+  },
+  {
+    "id": "forest-pikachu-search-catch",
+    "attempt": 1,
+    "label": "naturally encountered forest Pokemon",
+    "map": "ViridianForest",
+    "position": [
+      3,
+      30
+    ],
+    "money": 0,
+    "party": [
+      {
+        "hp": 52,
+        "level": 20,
+        "max_hp": 52,
+        "moves": [
+          "Growl",
+          "LeechSeed",
+          "VineWhip",
+          "Poisonpowder"
+        ],
+        "pp": [
+          40,
+          10,
+          10,
+          35
+        ],
+        "species": "Bulbasaur",
+        "status": "None"
+      }
+    ],
+    "bag": [
+      {
+        "item": "PokeBall",
+        "qty": 20
+      }
+    ],
+    "battle_live": {
+      "enemy": {
+        "hp": 15,
+        "level": 3,
+        "max_hp": 15,
+        "species": "Pikachu",
+        "status": "None"
+      },
+      "enemy_party": [
+        {
+          "hp": 15,
+          "level": 3,
+          "species": "Pikachu"
+        }
+      ],
+      "player": {
+        "hp": 52,
+        "level": 20,
+        "max_hp": 52,
+        "species": "Bulbasaur",
+        "status": "None"
+      },
+      "player_party": [
+        {
+          "hp": 52,
+          "level": 20,
+          "max_hp": 52,
+          "species": "Bulbasaur"
+        }
+      ]
+    },
+    "flags": {}
+  },
+  {
+    "id": "forest-pikachu-search-catch",
+    "attempt": 1,
+    "label": "caught natural forest Pokemon",
+    "map": "ViridianForest",
+    "position": [
+      3,
+      30
+    ],
+    "money": 0,
+    "party": [
+      {
+        "hp": 52,
+        "level": 20,
+        "max_hp": 52,
+        "moves": [
+          "Growl",
+          "LeechSeed",
+          "VineWhip",
+          "Poisonpowder"
+        ],
+        "pp": [
+          40,
+          10,
+          10,
+          35
+        ],
+        "species": "Bulbasaur",
+        "status": "None"
+      },
+      {
+        "hp": 15,
+        "level": 3,
+        "max_hp": 15,
+        "moves": [
+          "Thundershock",
+          "Growl",
+          "None",
+          "None"
+        ],
+        "pp": [
+          30,
+          40,
+          0,
+          0
+        ],
+        "species": "Pikachu",
+        "status": "None"
+      }
+    ],
+    "bag": [
+      {
+        "item": "PokeBall",
+        "qty": 18
+      }
+    ],
+    "battle_live": {
+      "enemy": {
+        "hp": 15,
+        "level": 3,
+        "max_hp": 15,
+        "species": "Pikachu",
+        "status": "None"
+      },
+      "enemy_party": [
+        {
+          "hp": 15,
+          "level": 3,
+          "species": "Pikachu"
+        }
+      ],
+      "player": {
+        "hp": 52,
+        "level": 20,
+        "max_hp": 52,
+        "species": "Bulbasaur",
+        "status": "None"
+      },
+      "player_party": [
+        {
+          "hp": 52,
+          "level": 20,
+          "max_hp": 52,
+          "species": "Bulbasaur"
+        }
+      ]
+    },
+    "flags": {}
+  },
+  {
+    "id": "forest-pikachu-search-catch",
+    "attempt": 1,
+    "label": "completed",
+    "map": "ViridianForest",
+    "position": [
+      3,
+      30
+    ],
+    "money": 0,
+    "party": [
+      {
+        "hp": 52,
+        "level": 20,
+        "max_hp": 52,
+        "moves": [
+          "Growl",
+          "LeechSeed",
+          "VineWhip",
+          "Poisonpowder"
+        ],
+        "pp": [
+          40,
+          10,
+          10,
+          35
+        ],
+        "species": "Bulbasaur",
+        "status": "None"
+      },
+      {
+        "hp": 15,
+        "level": 3,
+        "max_hp": 15,
+        "moves": [
+          "Thundershock",
+          "Growl",
+          "None",
+          "None"
+        ],
+        "pp": [
+          30,
+          40,
+          0,
+          0
+        ],
+        "species": "Pikachu",
+        "status": "None"
+      }
+    ],
+    "bag": [
+      {
+        "item": "PokeBall",
+        "qty": 18
+      }
+    ],
+    "battle_live": null,
+    "flags": {}
+  },
+  {
+    "label": "encounter search",
+    "walking_segment": 102,
+    "species": "Weedle",
+    "level": 5
+  },
+  {
+    "label": "encounter search",
+    "walking_segment": 107,
+    "species": "Kakuna",
+    "level": 5
+  },
+  {
+    "label": "encounter search",
+    "walking_segment": 118,
+    "species": "Weedle",
+    "level": 4
+  },
+  {
+    "label": "encounter search",
+    "walking_segment": 140,
+    "species": "Weedle",
+    "level": 3
+  },
+  {
+    "label": "encounter search",
+    "walking_segment": 172,
+    "species": "Kakuna",
+    "level": 6
+  },
+  {
+    "label": "encounter search",
+    "walking_segment": 197,
+    "species": "Kakuna",
+    "level": 5
+  },
+  {
+    "label": "encounter search",
+    "walking_segment": 220,
+    "species": "Kakuna",
+    "level": 6
+  },
+  {
+    "label": "encounter search",
+    "walking_segment": 236,
+    "species": "Kakuna",
+    "level": 5
+  },
+  {
+    "label": "encounter search",
+    "walking_segment": 298,
+    "species": "Weedle",
+    "level": 5
+  },
+  {
+    "label": "encounter search",
+    "walking_segment": 302,
+    "species": "Kakuna",
+    "level": 4
+  },
+  {
+    "label": "encounter search",
+    "walking_segment": 314,
+    "species": "Kakuna",
+    "level": 5
+  },
+  {
+    "label": "encounter search",
+    "walking_segment": 321,
+    "species": "Weedle",
+    "level": 5
+  },
+  {
+    "label": "encounter search",
+    "walking_segment": 327,
+    "species": "Kakuna",
+    "level": 4
+  },
+  {
+    "label": "encounter search",
+    "walking_segment": 364,
+    "species": "Weedle",
+    "level": 4
+  },
+  {
+    "label": "encounter search",
+    "walking_segment": 371,
+    "species": "Weedle",
+    "level": 5
+  },
+  {
+    "label": "encounter search",
+    "walking_segment": 387,
+    "species": "Kakuna",
+    "level": 4
+  },
+  {
+    "label": "encounter search",
+    "walking_segment": 403,
+    "species": "Kakuna",
+    "level": 5
+  },
+  {
+    "label": "encounter search",
+    "walking_segment": 412,
+    "species": "Kakuna",
+    "level": 6
+  },
+  {
+    "label": "encounter search",
+    "walking_segment": 421,
+    "species": "Kakuna",
+    "level": 6
+  },
+  {
+    "label": "encounter search",
+    "walking_segment": 487,
+    "species": "Weedle",
+    "level": 4
+  },
+  {
+    "id": "forest-pikachu-search-catch",
+    "attempt": 2,
+    "label": "failure",
+    "map": "ViridianForest",
+    "position": [
+      3,
+      30
+    ],
+    "money": 0,
+    "party": [
+      {
+        "hp": 52,
+        "level": 20,
+        "max_hp": 52,
+        "moves": [
+          "Growl",
+          "LeechSeed",
+          "VineWhip",
+          "Poisonpowder"
+        ],
+        "pp": [
+          40,
+          10,
+          10,
+          35
+        ],
+        "species": "Bulbasaur",
+        "status": "None"
+      }
+    ],
+    "bag": [
+      {
+        "item": "PokeBall",
+        "qty": 20
+      }
+    ],
+    "battle_live": {
+      "enemy": {
+        "hp": 18,
+        "level": 4,
+        "max_hp": 18,
+        "species": "Weedle",
+        "status": "None"
+      },
+      "enemy_party": [
+        {
+          "hp": 18,
+          "level": 4,
+          "species": "Weedle"
+        }
+      ],
+      "player": {
+        "hp": 52,
+        "level": 20,
+        "max_hp": 52,
+        "species": "Bulbasaur",
+        "status": "None"
+      },
+      "player_party": [
+        {
+          "hp": 52,
+          "level": 20,
+          "max_hp": 52,
+          "species": "Bulbasaur"
+        }
+      ]
+    },
+    "flags": {}
+  }
+]

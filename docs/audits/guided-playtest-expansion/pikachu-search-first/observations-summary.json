@@ -1,0 +1,144 @@
+[
+  {
+    "label": "encounter search",
+    "walking_segment": 2,
+    "species": "Kakuna",
+    "level": 5
+  },
+  {
+    "label": "encounter search",
+    "walking_segment": 19,
+    "species": "Kakuna",
+    "level": 5
+  },
+  {
+    "label": "encounter search",
+    "walking_segment": 32,
+    "species": "Kakuna",
+    "level": 5
+  },
+  {
+    "label": "encounter search",
+    "walking_segment": 70,
+    "species": "Kakuna",
+    "level": 5
+  },
+  {
+    "label": "encounter search",
+    "walking_segment": 121,
+    "species": "Kakuna",
+    "level": 5
+  },
+  {
+    "label": "encounter search",
+    "walking_segment": 158,
+    "species": "Kakuna",
+    "level": 4
+  },
+  {
+    "label": "encounter search",
+    "walking_segment": 183,
+    "species": "Weedle",
+    "level": 4
+  },
+  {
+    "label": "encounter search",
+    "walking_segment": 223,
+    "species": "Weedle",
+    "level": 5
+  },
+  {
+    "label": "encounter search",
+    "walking_segment": 297,
+    "species": "Kakuna",
+    "level": 6
+  },
+  {
+    "label": "encounter search",
+    "walking_segment": 317,
+    "species": "Kakuna",
+    "level": 5
+  },
+  {
+    "label": "encounter search",
+    "walking_segment": 471,
+    "species": "Kakuna",
+    "level": 6
+  },
+  {
+    "label": "encounter search",
+    "walking_segment": 499,
+    "species": "Kakuna",
+    "level": 5
+  },
+  {
+    "id": "forest-pikachu-search-catch",
+    "attempt": 1,
+    "label": "failure",
+    "map": "ViridianForest",
+    "position": [
+      3,
+      30
+    ],
+    "money": 0,
+    "party": [
+      {
+        "hp": 52,
+        "level": 20,
+        "max_hp": 52,
+        "moves": [
+          "Growl",
+          "LeechSeed",
+          "VineWhip",
+          "Poisonpowder"
+        ],
+        "pp": [
+          40,
+          10,
+          10,
+          35
+        ],
+        "species": "Bulbasaur",
+        "status": "None"
+      }
+    ],
+    "bag": [
+      {
+        "item": "PokeBall",
+        "qty": 20
+      }
+    ],
+    "battle_live": {
+      "enemy": {
+        "hp": 20,
+        "level": 5,
+        "max_hp": 20,
+        "species": "Kakuna",
+        "status": "None"
+      },
+      "enemy_party": [
+        {
+          "hp": 20,
+          "level": 5,
+          "species": "Kakuna"
+        }
+      ],
+      "player": {
+        "hp": 52,
+        "level": 20,
+        "max_hp": 52,
+        "species": "Bulbasaur",
+        "status": "None"
+      },
+      "player_party": [
+        {
+          "hp": 52,
+          "level": 20,
+          "max_hp": 52,
+          "species": "Bulbasaur"
+        }
+      ]
+    },
+    "flags": {}
+  }
+]
