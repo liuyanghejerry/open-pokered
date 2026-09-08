@@ -385,7 +385,7 @@ fn collect_cursor_glyphs(ops: &[Op]) -> Vec<(u32, u32, char)> {
 }
 
 #[test]
-fn save_menu_ask_phase_draws_info_box_prompt_box_and_yes_no_box() {
+fn save_menu_ask_phase_draws_info_card_and_integrated_confirmation() {
     let mut state = SaveMenuState::new(fixture_save_info(), false, false);
     state.phase = SavePhase::AskSave;
     state.cursor = YesNoChoice::Yes;
@@ -394,38 +394,35 @@ fn save_menu_ask_phase_draws_info_box_prompt_box_and_yes_no_box() {
     let mut ui = Ui::new(&mut rec);
     menus::save::draw(&state, &SAVE_DEFAULT_LAYOUT, &SAVE_ASK_PROMPT_LAYOUT, &mut ui, Lang::default());
 
-    // Three boxes: info (1,0,12,10), prompt (0,11,20,6), yes/no (13,7,6,4).
+    // Both cards span the screen; the choices share the prompt card.
+    assert_eq!(rec.ops[0], Op::Clear(Rgba::INK_WHITE));
     assert_eq!(collect_boxes(&rec.ops), vec![
-        TileRect::new(1, 0, 12, 10),
-        TileRect::new(0, 11, 20, 6),
-        TileRect::new(13, 7, 6, 4),
+        TileRect::new(0, 0, 20, 11),
+        TileRect::new(0, 12, 20, 6),
     ]);
 
-    // Info labels at exact original tile positions: PLAYER (2,2), name (6,2),
-    // BADGES (2,4), num (10,4), #DEX (2,6), dex (9,6), TIME (2,8), time (5,8).
-    // Prompt: "Would you like to" (1,12), "SAVE the game?" (1,14).
-    // YES/NO: "YES" (15,8), "NO" (15,9).
-    assert_eq!(collect_texts(&rec.ops), vec![
+    // Values share the same right edge; Recorder measures one tile per glyph.
+    assert_eq!(collect_text_runs(&rec.ops), vec![
         (2, 2, "PLAYER".into()),
-        (6, 2, "RED".into()),
+        (15, 2, "RED".into()),
         (2, 4, "BADGES".into()),
-        (10, 4, "3".into()),
+        (17, 4, "3".into()),
         (2, 6, "#DEX".into()),
-        (9, 6, "42".into()),
+        (16, 6, "42".into()),
         (2, 8, "TIME".into()),
-        (5, 8, " 12:34".into()),
-        (1, 12, "Would you like to".into()),
-        (1, 14, "SAVE the game?".into()),
-        (15, 8, "YES".into()),
-        (15, 9, "NO".into()),
+        (13, 8, "12:34".into()),
+        (2, 13, "Save your".into()),
+        (2, 15, "progress?".into()),
+        (16, 13, "YES".into()),
+        (16, 15, "NO".into()),
     ]);
 
-    // Cursor on YES → absolute tile (14, 8).
-    assert_eq!(collect_glyphs(&rec.ops), vec![(14, 8, '\u{25B6}')]);
+    // Cursor on YES → absolute tile (14, 13).
+    assert_eq!(collect_cursor_glyphs(&rec.ops), vec![(14, 13, '\u{25B6}')]);
 }
 
 #[test]
-fn save_menu_ask_phase_no_cursor_moves_to_row_9() {
+fn save_menu_ask_phase_no_cursor_moves_to_row_15() {
     let mut state = SaveMenuState::new(fixture_save_info(), false, false);
     state.phase = SavePhase::AskSave;
     state.cursor = YesNoChoice::No;
@@ -434,7 +431,7 @@ fn save_menu_ask_phase_no_cursor_moves_to_row_9() {
     let mut ui = Ui::new(&mut rec);
     menus::save::draw(&state, &SAVE_DEFAULT_LAYOUT, &SAVE_ASK_PROMPT_LAYOUT, &mut ui, Lang::default());
 
-    assert_eq!(collect_glyphs(&rec.ops), vec![(14, 9, '\u{25B6}')]);
+    assert_eq!(collect_cursor_glyphs(&rec.ops), vec![(14, 15, '\u{25B6}')]);
 }
 
 #[test]
@@ -447,16 +444,14 @@ fn save_menu_confirm_overwrite_uses_same_layout_as_ask() {
     let mut ui = Ui::new(&mut rec);
     menus::save::draw(&state, &SAVE_DEFAULT_LAYOUT, &SAVE_ASK_PROMPT_LAYOUT, &mut ui, Lang::default());
 
-    // ConfirmOverwrite reuses AskSave's three boxes and prompt — original
-    // game uses the identical layout for both phases.
+    // Both confirmation phases share the information card and choices.
     assert_eq!(collect_boxes(&rec.ops), vec![
-        TileRect::new(1, 0, 12, 10),
-        TileRect::new(0, 11, 20, 6),
-        TileRect::new(13, 7, 6, 4),
+        TileRect::new(0, 0, 20, 11),
+        TileRect::new(0, 12, 20, 6),
     ]);
-    let texts = collect_texts(&rec.ops);
-    assert!(texts.contains(&(1, 12, "Would you like to".into())));
-    assert!(texts.contains(&(1, 14, "SAVE the game?".into())));
+    let texts = collect_text_runs(&rec.ops);
+    assert!(texts.contains(&(2, 13, "Save your".into())));
+    assert!(texts.contains(&(2, 15, "progress?".into())));
 }
 
 #[test]
@@ -470,13 +465,13 @@ fn save_menu_saving_phase_shows_only_now_saving_in_prompt_box() {
 
     // Two boxes only — info box + prompt box; no YES/NO during saving.
     assert_eq!(collect_boxes(&rec.ops), vec![
-        TileRect::new(1, 0, 12, 10),
-        TileRect::new(0, 11, 18, 4),
+        TileRect::new(0, 0, 20, 11),
+        TileRect::new(0, 12, 20, 6),
     ]);
-    assert_eq!(collect_glyphs(&rec.ops), Vec::<(u32,u32,char)>::new());
+    assert_eq!(collect_cursor_glyphs(&rec.ops), Vec::<(u32,u32,char)>::new());
 
-    let texts = collect_texts(&rec.ops);
-    assert!(texts.contains(&(1, 13, "Now saving...".into())));
+    let texts = collect_text_runs(&rec.ops);
+    assert!(texts.contains(&(2, 13, "Now saving...".into())));
     assert!(!texts.iter().any(|(_, _, s)| s == "YES" || s == "NO"));
 }
 
@@ -489,17 +484,17 @@ fn save_menu_complete_phase_shows_player_saved_the_game() {
     let mut ui = Ui::new(&mut rec);
     menus::save::draw(&state, &SAVE_DEFAULT_LAYOUT, &SAVE_ASK_PROMPT_LAYOUT, &mut ui, Lang::default());
 
-    let texts = collect_texts(&rec.ops);
-    // Two-line completion message in the prompt box at (1,12) / (1,13).
-    assert!(texts.contains(&(1, 12, "RED saved".into())));
-    assert!(texts.contains(&(1, 13, "the game!".into())));
+    let texts = collect_text_runs(&rec.ops);
+    // Completion keeps the same two-row spacing as the confirmation.
+    assert!(texts.contains(&(2, 13, "RED saved".into())));
+    assert!(texts.contains(&(2, 15, "the game!".into())));
 
     // Same layout as Saving — info box + prompt box, no cursor.
     assert_eq!(collect_boxes(&rec.ops), vec![
-        TileRect::new(1, 0, 12, 10),
-        TileRect::new(0, 11, 18, 4),
+        TileRect::new(0, 0, 20, 11),
+        TileRect::new(0, 12, 20, 6),
     ]);
-    assert_eq!(collect_glyphs(&rec.ops), Vec::<(u32,u32,char)>::new());
+    assert_eq!(collect_cursor_glyphs(&rec.ops), Vec::<(u32,u32,char)>::new());
 }
 
 #[test]
