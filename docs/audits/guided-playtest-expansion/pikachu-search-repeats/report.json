@@ -1,0 +1,93 @@
+{
+  "engine_commit": "7b857c8605adce9d19b1d5cf75f71a75982680f0",
+  "binary_sha256": "33544521c87f6733c5e21305d8f2ab434a77d751264f666a7ae66f2d0f8de821",
+  "driver_sha256": "01e69c0bc8853e13dffa8663e861004c2832a9b71b9720061726408a812d5746",
+  "manifest_sha256": "42bdc0821fcdf38449c1945e302af298042516c4c02c7c1c5eeb3d696124bcf7",
+  "sources": {
+    "bp2": {
+      "title": "Bulbapedia Red/Blue walkthrough Part 2",
+      "url": "https://bulbapedia.bulbagarden.net/wiki/Walkthrough:Pok%C3%A9mon_Red_and_Blue/Part_2",
+      "revision_url": "https://bulbapedia.bulbagarden.net/w/index.php?title=Walkthrough:Pok%C3%A9mon_Red_and_Blue/Part_2&oldid=4423421",
+      "notes": "送包裹获得图鉴后回访Daisy领取地图；常青市有隐藏药水；Route22对手战可选；满足条件后Oak可赠精灵球。"
+    },
+    "bp3": {
+      "title": "Bulbapedia Red/Blue walkthrough Part 3",
+      "url": "https://bulbapedia.bulbagarden.net/wiki/Walkthrough:Pok%C3%A9mon_Red_and_Blue/Part_3",
+      "revision_url": "https://bulbapedia.bulbagarden.net/w/index.php?title=Walkthrough:Pok%C3%A9mon_Red_and_Blue/Part_3&oldid=4617635",
+      "notes": "森林有精灵球一件、解毒药两件、药水两件，包含两件隐藏物；博物馆门票50；古老琥珀需之后有Cut才能取得。"
+    },
+    "gf-viridian": {
+      "title": "GameFAQs Red Version guide 64175 — Viridian City",
+      "url": "https://gamefaqs.gamespot.com/gameboy/367023-pokemon-red-version/faqs/64175/viridian-city",
+      "notes": "精灵中心西北灌木旁有可步行绕行的小路，沿路检查树获得隐藏药水；返乡送包裹之后可领取地图。"
+    }
+  },
+  "results": [
+    {
+      "id": "forest-pikachu-search-catch",
+      "attempt": 1,
+      "status": "pass",
+      "contract": {
+        "goal": "在森林自然搜索稀有Pikachu并捕获，不通过指定敌人绕过遇敌表",
+        "sources": [
+          "bp3"
+        ],
+        "setup": "one entrance warp, Lv20 Bulbasaur and 20 balls; escape other species",
+        "guide_expectation": "森林草地可遇到Lv3或Lv5 Pikachu（攻略列5%）",
+        "additional_assertions": [
+          "成功捕获且保存恢复",
+          "预算耗尽为inconclusive",
+          "不将本次样本估算为5%概率的统计验证"
+        ]
+      },
+      "protocol_command_counts": {
+        "wait_until": 13,
+        "press_sequence": 304,
+        "step_frames": 318,
+        "get_state": 335,
+        "give_pokemon": 1,
+        "give_item": 1,
+        "warp": 1,
+        "get_npcs": 4,
+        "get_bag": 4,
+        "get_flags": 3,
+        "get_party": 2,
+        "save": 1
+      },
+      "wall_seconds": 21.759
+    },
+    {
+      "id": "forest-pikachu-search-catch",
+      "attempt": 2,
+      "status": "inconclusive",
+      "contract": {
+        "goal": "在森林自然搜索稀有Pikachu并捕获，不通过指定敌人绕过遇敌表",
+        "sources": [
+          "bp3"
+        ],
+        "setup": "one entrance warp, Lv20 Bulbasaur and 20 balls; escape other species",
+        "guide_expectation": "森林草地可遇到Lv3或Lv5 Pikachu（攻略列5%）",
+        "additional_assertions": [
+          "成功捕获且保存恢复",
+          "预算耗尽为inconclusive",
+          "不将本次样本估算为5%概率的统计验证"
+        ]
+      },
+      "error": "ExplorationIncomplete: no matching forest encounter (Pikachu) in 500 walking segments",
+      "protocol_command_counts": {
+        "wait_until": 48,
+        "press_sequence": 942,
+        "step_frames": 989,
+        "get_state": 1060,
+        "give_pokemon": 1,
+        "give_item": 1,
+        "warp": 1,
+        "get_npcs": 15,
+        "get_bag": 1,
+        "get_flags": 1
+      },
+      "wall_seconds": 68.409
+    }
+  ],
+  "wall_seconds": 90.17
+}

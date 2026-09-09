@@ -1,0 +1,310 @@
+{
+  "engine_commit": "b647e4de7fb4970db04c983d3bed25a0f8ae0bb9",
+  "binary_sha256": "6e3d94feab20e3d1149184e4a892f9e556a48020977bf2c8ea1304ee9fab07ea",
+  "driver_sha256": "fec52f945d5db82fc0ba09d07e4c43a66b870da1249aa6a094c9e098a4ae1136",
+  "manifest_sha256": "9b52a7f7d5f1020a7e9b933189069a0e8221b713dff34fdc3574b9432390ec20",
+  "sources": {
+    "bp2": {
+      "title": "Bulbapedia Red/Blue walkthrough Part 2",
+      "url": "https://bulbapedia.bulbagarden.net/wiki/Walkthrough:Pok%C3%A9mon_Red_and_Blue/Part_2",
+      "revision_url": "https://bulbapedia.bulbagarden.net/w/index.php?title=Walkthrough:Pok%C3%A9mon_Red_and_Blue/Part_2&oldid=4423421",
+      "notes": "送包裹获得图鉴后回访Daisy领取地图；常青市有隐藏药水；Route22对手战可选；满足条件后Oak可赠精灵球。"
+    },
+    "bp3": {
+      "title": "Bulbapedia Red/Blue walkthrough Part 3",
+      "url": "https://bulbapedia.bulbagarden.net/wiki/Walkthrough:Pok%C3%A9mon_Red_and_Blue/Part_3",
+      "revision_url": "https://bulbapedia.bulbagarden.net/w/index.php?title=Walkthrough:Pok%C3%A9mon_Red_and_Blue/Part_3&oldid=4617635",
+      "notes": "森林有精灵球一件、解毒药两件、药水两件，包含两件隐藏物；博物馆门票50；古老琥珀需之后有Cut才能取得。"
+    },
+    "gf-viridian": {
+      "title": "GameFAQs Red Version guide 64175 — Viridian City",
+      "url": "https://gamefaqs.gamespot.com/gameboy/367023-pokemon-red-version/faqs/64175/viridian-city",
+      "notes": "精灵中心西北灌木旁有可步行绕行的小路，沿路检查树获得隐藏药水；返乡送包裹之后可领取地图。"
+    }
+  },
+  "results": [
+    {
+      "id": "daisy-town-map-errand",
+      "attempt": 1,
+      "status": "pass",
+      "contract": {
+        "goal": "送包裹前后回访Daisy，取得地图并检查重复与存档恢复",
+        "sources": [
+          "bp2",
+          "gf-viridian"
+        ],
+        "setup": "fresh m01-m08 via real input, no warp/no starter or flag seeding",
+        "guide_expectation": "完成Oak包裹后可从Daisy获得Town Map",
+        "additional_assertions": [
+          "图鉴前没有地图",
+          "奖励一次且桌上地图隐藏",
+          "重复与保存重启不复制奖励"
+        ]
+      },
+      "protocol_command_counts": {
+        "wait_until": 61,
+        "press_sequence": 446,
+        "step_frames": 526,
+        "get_state": 699,
+        "get_npcs": 68,
+        "get_bag": 7,
+        "get_flags": 3,
+        "skip_dialogue": 29,
+        "save": 1
+      },
+      "wall_seconds": 38.108
+    },
+    {
+      "id": "viridian-hidden-potion-walk",
+      "attempt": 1,
+      "status": "pass",
+      "contract": {
+        "goal": "从常青市南入口绕行灌木小路寻找隐藏药水",
+        "sources": [
+          "bp2",
+          "gf-viridian"
+        ],
+        "setup": "one warp to city south entrance, seeded Lv5 Bulbasaur; no Cut/Surf",
+        "guide_expectation": "检查城市西北小路尽头的树获得Potion",
+        "additional_assertions": [
+          "真实步行到(13,4)面向(14,4)",
+          "重复及走回入口保存重启再走回来不复制"
+        ]
+      },
+      "protocol_command_counts": {
+        "wait_until": 7,
+        "press_sequence": 122,
+        "step_frames": 126,
+        "get_state": 172,
+        "give_pokemon": 1,
+        "warp": 1,
+        "get_npcs": 5,
+        "get_bag": 6,
+        "get_flags": 2,
+        "save": 1
+      },
+      "wall_seconds": 9.877
+    },
+    {
+      "id": "forest-five-item-tour",
+      "attempt": 1,
+      "status": "pass",
+      "contract": {
+        "goal": "从森林南入口步行收集五件物品，再从北门离开",
+        "sources": [
+          "bp3"
+        ],
+        "setup": "one warp to forest south entrance; Lv20 Bulbasaur combat fixture; no item/flag seeding",
+        "guide_expectation": "Poke Ball x1, Antidote x2, Potion x2 including two hidden pickups",
+        "additional_assertions": [
+          "每次拾取对应背包增加1",
+          "重复交互不复制",
+          "出北门保存重启后总数不变"
+        ]
+      },
+      "protocol_command_counts": {
+        "wait_until": 16,
+        "press_sequence": 230,
+        "step_frames": 253,
+        "get_state": 314,
+        "give_pokemon": 1,
+        "warp": 1,
+        "get_npcs": 18,
+        "get_bag": 27,
+        "get_flags": 6,
+        "skip_dialogue": 1,
+        "save": 1
+      },
+      "wall_seconds": 18.415
+    },
+    {
+      "id": "daisy-town-map-errand",
+      "attempt": 2,
+      "status": "pass",
+      "contract": {
+        "goal": "送包裹前后回访Daisy，取得地图并检查重复与存档恢复",
+        "sources": [
+          "bp2",
+          "gf-viridian"
+        ],
+        "setup": "fresh m01-m08 via real input, no warp/no starter or flag seeding",
+        "guide_expectation": "完成Oak包裹后可从Daisy获得Town Map",
+        "additional_assertions": [
+          "图鉴前没有地图",
+          "奖励一次且桌上地图隐藏",
+          "重复与保存重启不复制奖励"
+        ]
+      },
+      "protocol_command_counts": {
+        "wait_until": 57,
+        "press_sequence": 399,
+        "step_frames": 477,
+        "get_state": 651,
+        "get_npcs": 67,
+        "get_bag": 7,
+        "get_flags": 3,
+        "skip_dialogue": 29,
+        "save": 1
+      },
+      "wall_seconds": 35.342
+    },
+    {
+      "id": "viridian-hidden-potion-walk",
+      "attempt": 2,
+      "status": "pass",
+      "contract": {
+        "goal": "从常青市南入口绕行灌木小路寻找隐藏药水",
+        "sources": [
+          "bp2",
+          "gf-viridian"
+        ],
+        "setup": "one warp to city south entrance, seeded Lv5 Bulbasaur; no Cut/Surf",
+        "guide_expectation": "检查城市西北小路尽头的树获得Potion",
+        "additional_assertions": [
+          "真实步行到(13,4)面向(14,4)",
+          "重复及走回入口保存重启再走回来不复制"
+        ]
+      },
+      "protocol_command_counts": {
+        "wait_until": 7,
+        "press_sequence": 122,
+        "step_frames": 126,
+        "get_state": 172,
+        "give_pokemon": 1,
+        "warp": 1,
+        "get_npcs": 5,
+        "get_bag": 6,
+        "get_flags": 2,
+        "save": 1
+      },
+      "wall_seconds": 9.857
+    },
+    {
+      "id": "forest-five-item-tour",
+      "attempt": 2,
+      "status": "pass",
+      "contract": {
+        "goal": "从森林南入口步行收集五件物品，再从北门离开",
+        "sources": [
+          "bp3"
+        ],
+        "setup": "one warp to forest south entrance; Lv20 Bulbasaur combat fixture; no item/flag seeding",
+        "guide_expectation": "Poke Ball x1, Antidote x2, Potion x2 including two hidden pickups",
+        "additional_assertions": [
+          "每次拾取对应背包增加1",
+          "重复交互不复制",
+          "出北门保存重启后总数不变"
+        ]
+      },
+      "protocol_command_counts": {
+        "wait_until": 24,
+        "press_sequence": 293,
+        "step_frames": 323,
+        "get_state": 394,
+        "give_pokemon": 1,
+        "warp": 1,
+        "get_npcs": 25,
+        "get_bag": 27,
+        "get_flags": 6,
+        "skip_dialogue": 1,
+        "save": 1
+      },
+      "wall_seconds": 22.716
+    },
+    {
+      "id": "daisy-town-map-errand",
+      "attempt": 3,
+      "status": "pass",
+      "contract": {
+        "goal": "送包裹前后回访Daisy，取得地图并检查重复与存档恢复",
+        "sources": [
+          "bp2",
+          "gf-viridian"
+        ],
+        "setup": "fresh m01-m08 via real input, no warp/no starter or flag seeding",
+        "guide_expectation": "完成Oak包裹后可从Daisy获得Town Map",
+        "additional_assertions": [
+          "图鉴前没有地图",
+          "奖励一次且桌上地图隐藏",
+          "重复与保存重启不复制奖励"
+        ]
+      },
+      "protocol_command_counts": {
+        "wait_until": 59,
+        "press_sequence": 417,
+        "step_frames": 497,
+        "get_state": 667,
+        "get_npcs": 69,
+        "get_bag": 7,
+        "get_flags": 3,
+        "skip_dialogue": 29,
+        "save": 1
+      },
+      "wall_seconds": 36.271
+    },
+    {
+      "id": "viridian-hidden-potion-walk",
+      "attempt": 3,
+      "status": "pass",
+      "contract": {
+        "goal": "从常青市南入口绕行灌木小路寻找隐藏药水",
+        "sources": [
+          "bp2",
+          "gf-viridian"
+        ],
+        "setup": "one warp to city south entrance, seeded Lv5 Bulbasaur; no Cut/Surf",
+        "guide_expectation": "检查城市西北小路尽头的树获得Potion",
+        "additional_assertions": [
+          "真实步行到(13,4)面向(14,4)",
+          "重复及走回入口保存重启再走回来不复制"
+        ]
+      },
+      "protocol_command_counts": {
+        "wait_until": 7,
+        "press_sequence": 122,
+        "step_frames": 126,
+        "get_state": 172,
+        "give_pokemon": 1,
+        "warp": 1,
+        "get_npcs": 5,
+        "get_bag": 6,
+        "get_flags": 2,
+        "save": 1
+      },
+      "wall_seconds": 9.832
+    },
+    {
+      "id": "forest-five-item-tour",
+      "attempt": 3,
+      "status": "pass",
+      "contract": {
+        "goal": "从森林南入口步行收集五件物品，再从北门离开",
+        "sources": [
+          "bp3"
+        ],
+        "setup": "one warp to forest south entrance; Lv20 Bulbasaur combat fixture; no item/flag seeding",
+        "guide_expectation": "Poke Ball x1, Antidote x2, Potion x2 including two hidden pickups",
+        "additional_assertions": [
+          "每次拾取对应背包增加1",
+          "重复交互不复制",
+          "出北门保存重启后总数不变"
+        ]
+      },
+      "protocol_command_counts": {
+        "wait_until": 12,
+        "press_sequence": 187,
+        "step_frames": 207,
+        "get_state": 267,
+        "give_pokemon": 1,
+        "warp": 1,
+        "get_npcs": 17,
+        "get_bag": 27,
+        "get_flags": 6,
+        "skip_dialogue": 1,
+        "save": 1
+      },
+      "wall_seconds": 15.553
+    }
+  ],
+  "wall_seconds": 195.98
+}

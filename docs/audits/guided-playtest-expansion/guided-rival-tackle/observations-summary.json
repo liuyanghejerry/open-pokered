@@ -1,0 +1,331 @@
+[
+  {
+    "id": "route22-rival-oak-balls",
+    "attempt": 1,
+    "label": "before optional rival trigger 1",
+    "map": "Route22",
+    "position": [
+      30,
+      5
+    ],
+    "money": 0,
+    "party": [
+      {
+        "hp": 39,
+        "level": 13,
+        "max_hp": 39,
+        "moves": [
+          "Tackle",
+          "Growl",
+          "LeechSeed",
+          "VineWhip"
+        ],
+        "pp": [
+          35,
+          40,
+          10,
+          10
+        ],
+        "species": "Bulbasaur",
+        "status": "None"
+      }
+    ],
+    "bag": [],
+    "battle_live": {
+      "enemy": {
+        "hp": 0,
+        "level": 2,
+        "max_hp": 13,
+        "species": "Rattata",
+        "status": "None"
+      },
+      "enemy_party": [
+        {
+          "hp": 0,
+          "level": 2,
+          "species": "Rattata"
+        }
+      ],
+      "player": {
+        "hp": 26,
+        "level": 13,
+        "max_hp": 39,
+        "species": "Bulbasaur",
+        "status": "None"
+      },
+      "player_party": [
+        {
+          "hp": 26,
+          "level": 13,
+          "max_hp": 39,
+          "species": "Bulbasaur"
+        }
+      ]
+    },
+    "flags": {
+      "EVENT_1ST_ROUTE22_RIVAL_BATTLE": true,
+      "EVENT_ROUTE22_RIVAL_WANTS_BATTLE": true
+    }
+  },
+  {
+    "id": "route22-rival-oak-balls",
+    "attempt": 1,
+    "label": "optional rival battle",
+    "map": "Route22",
+    "position": [
+      29,
+      5
+    ],
+    "money": 0,
+    "party": [
+      {
+        "hp": 39,
+        "level": 13,
+        "max_hp": 39,
+        "moves": [
+          "Tackle",
+          "Growl",
+          "LeechSeed",
+          "VineWhip"
+        ],
+        "pp": [
+          35,
+          40,
+          10,
+          10
+        ],
+        "species": "Bulbasaur",
+        "status": "None"
+      }
+    ],
+    "bag": [],
+    "battle_live": {
+      "enemy": {
+        "hp": 27,
+        "level": 9,
+        "max_hp": 27,
+        "species": "Pidgey",
+        "status": "None"
+      },
+      "enemy_party": [
+        {
+          "hp": 27,
+          "level": 9,
+          "species": "Pidgey"
+        },
+        {
+          "hp": 25,
+          "level": 8,
+          "species": "Charmander"
+        }
+      ],
+      "player": {
+        "hp": 39,
+        "level": 13,
+        "max_hp": 39,
+        "species": "Bulbasaur",
+        "status": "None"
+      },
+      "player_party": [
+        {
+          "hp": 39,
+          "level": 13,
+          "max_hp": 39,
+          "species": "Bulbasaur"
+        }
+      ]
+    },
+    "flags": {
+      "EVENT_1ST_ROUTE22_RIVAL_BATTLE": true,
+      "EVENT_ROUTE22_RIVAL_WANTS_BATTLE": true
+    }
+  },
+  {
+    "id": "route22-rival-oak-balls",
+    "attempt": 1,
+    "label": "after optional rival",
+    "map": "Route22",
+    "position": [
+      29,
+      5
+    ],
+    "money": 280,
+    "party": [
+      {
+        "hp": 15,
+        "level": 13,
+        "max_hp": 39,
+        "moves": [
+          "Tackle",
+          "Growl",
+          "LeechSeed",
+          "VineWhip"
+        ],
+        "pp": [
+          23,
+          40,
+          10,
+          10
+        ],
+        "species": "Bulbasaur",
+        "status": "None"
+      }
+    ],
+    "bag": [],
+    "battle_live": {
+      "enemy": {
+        "hp": 0,
+        "level": 8,
+        "max_hp": 25,
+        "species": "Charmander",
+        "status": "None"
+      },
+      "enemy_party": [
+        {
+          "hp": 0,
+          "level": 9,
+          "species": "Pidgey"
+        },
+        {
+          "hp": 0,
+          "level": 8,
+          "species": "Charmander"
+        }
+      ],
+      "player": {
+        "hp": 15,
+        "level": 13,
+        "max_hp": 39,
+        "species": "Bulbasaur",
+        "status": "None"
+      },
+      "player_party": [
+        {
+          "hp": 15,
+          "level": 13,
+          "max_hp": 39,
+          "species": "Bulbasaur"
+        }
+      ]
+    },
+    "flags": {
+      "EVENT_BEAT_ROUTE22_RIVAL_1ST_BATTLE": true
+    }
+  },
+  {
+    "id": "route22-rival-oak-balls",
+    "attempt": 1,
+    "label": "Oak five-ball reward",
+    "map": "OaksLab",
+    "position": [
+      5,
+      3
+    ],
+    "money": 280,
+    "party": [
+      {
+        "hp": 15,
+        "level": 13,
+        "max_hp": 39,
+        "moves": [
+          "Tackle",
+          "Growl",
+          "LeechSeed",
+          "VineWhip"
+        ],
+        "pp": [
+          23,
+          40,
+          10,
+          10
+        ],
+        "species": "Bulbasaur",
+        "status": "None"
+      }
+    ],
+    "bag": [
+      {
+        "item": "PokeBall",
+        "qty": 5
+      }
+    ],
+    "battle_live": {
+      "enemy": {
+        "hp": 16,
+        "level": 4,
+        "max_hp": 16,
+        "species": "Rattata",
+        "status": "None"
+      },
+      "enemy_party": [
+        {
+          "hp": 16,
+          "level": 4,
+          "species": "Rattata"
+        }
+      ],
+      "player": {
+        "hp": 15,
+        "level": 13,
+        "max_hp": 39,
+        "species": "Bulbasaur",
+        "status": "None"
+      },
+      "player_party": [
+        {
+          "hp": 15,
+          "level": 13,
+          "max_hp": 39,
+          "species": "Bulbasaur"
+        }
+      ]
+    },
+    "flags": {
+      "EVENT_BEAT_ROUTE22_RIVAL_1ST_BATTLE": true,
+      "EVENT_GOT_POKEBALLS_FROM_OAK": true
+    }
+  },
+  {
+    "id": "route22-rival-oak-balls",
+    "attempt": 1,
+    "label": "completed",
+    "map": "OaksLab",
+    "position": [
+      5,
+      3
+    ],
+    "money": 280,
+    "party": [
+      {
+        "hp": 15,
+        "level": 13,
+        "max_hp": 39,
+        "moves": [
+          "Tackle",
+          "Growl",
+          "LeechSeed",
+          "VineWhip"
+        ],
+        "pp": [
+          23,
+          40,
+          10,
+          10
+        ],
+        "species": "Bulbasaur",
+        "status": "None"
+      }
+    ],
+    "bag": [
+      {
+        "item": "PokeBall",
+        "qty": 5
+      }
+    ],
+    "battle_live": null,
+    "flags": {
+      "EVENT_BEAT_ROUTE22_RIVAL_1ST_BATTLE": true,
+      "EVENT_GOT_POKEBALLS_FROM_OAK": true
+    }
+  }
+]

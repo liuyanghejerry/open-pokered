@@ -1,0 +1,112 @@
+# 攻略驱动的支线与收集测试
+
+这一轮先检索初代 Red/Blue 攻略，再从攻略选取目标并实际操作游戏。范围仍为 m10 内。
+目标和奖励不从重制版当前输出反推；pret 只补充地图坐标和一次性奖励的精确语义。
+
+## 收集的资料
+
+- [Bulbapedia Part 2](https://bulbapedia.bulbagarden.net/wiki/Walkthrough:Pok%C3%A9mon_Red_and_Blue/Part_2)：返乡领取城镇地图、常青市隐藏药水、可选 Route22 对手战等。
+- [Bulbapedia Part 3](https://bulbapedia.bulbagarden.net/wiki/Walkthrough:Pok%C3%A9mon_Red_and_Blue/Part_3)：常青森林物品清单与路线、博物馆参观；明确古老琥珀需之后取得 Cut。
+- [GameFAQs Viridian City](https://gamefaqs.gamespot.com/gameboy/367023-pokemon-red-version/faqs/64175/viridian-city)：交叉核对常青市隐藏药水的绕行路线与返乡地图奖励。
+
+采集日期为 2026-09-08。保存两篇 wiki 的 revision 链接、简短事实摘要、版本限定和待测清单，
+没有镜像整篇攻略。检索到的 FireRed/LeafGreen 攻略排除；Psypokes 页面两次返回 502，
+未用作测试依据。来源及每个场景的映射见 [guided_playtest_sources.json](../scripts/guided_playtest_sources.json)。
+
+## 首批可执行目标
+
+| 场景 | 执行与断言 | 状态准备 |
+|---|---|---|
+| Daisy 城镇地图 | 送包裹前拜访无奖励；实际完成包裹后回访获地图；桌上地图消失；重复及存档重启不复制 | 从开机跑 m01–m08，无 warp、无宝可梦或剧情标志注入 |
+| 常青市隐藏药水 | 从南入口绕路走到树旁，检查获得药水；走回入口保存重启，再走回来不重复获得 | 只在开头 warp 到城市入口，提供 Lv5 Bulbasaur；无 Cut/Surf |
+| 森林五件物品 | 从南入口步行收集精灵球×1、解毒药×2、药水×2，含两件隐藏物；从北门离开并保存重启 | 只在开头 warp 到森林入口，提供 Lv20 Bulbasaur 控制战斗成本；不注入物品或已拾取标志 |
+
+重复领取和存档持久化是额外回归性质，并非声称攻略逐条描述这些边界。
+两个入口构造场景只证明从入口往后的可达性。导航复用既有 BFS 和战斗处理，
+不是逐字照抄攻略方向，也不是纯视觉导航；目标交互使用实际按键。主线公共驱动可能使用
+已有对话同步命令，调试 save 验证存储恢复但不测试 SAVE 菜单。
+
+## 运行和证据
+
+```bash
+cargo build --bin pokered-app --features debug-server
+python3 scripts/guided_playtest.py --list
+python3 scripts/guided_playtest.py --output /tmp/guided-new-run
+python3 scripts/guided_playtest.py --only forest-five-item-tour --repeat 3
+```
+
+仅 Python 标准库，复用 `content_regression.Session` 和 `playthrough.Game`。
+输出目录必须为空或不存在。每个场景保留全部协议请求响应、关键状态、游戏日志与存档；
+报告每完成一例即落盘，含来源快照、脚本/来源/二进制哈希、每例耗时和调试命令计数。
+失败会继续其他场景，最终退出 1；导航失败先查目标解析和驱动，不能直接算产品 bug。
+
+第一轮森林测试把精灵球的交互位放在不可走的下侧格子，导航明确拒绝。
+已依据可通行邻格改从右侧交互；可见药水也选用上侧邻格。这是攻略地标到坐标的解析成本，
+不计为游戏缺陷，不通过直接 warp 到道具来规避。
+第二次探测还发现既有 `face()` 在可走格子前可能前进一步，导致面对错误格子检查隐藏药水。
+现通过从目标交互位后方步行到达、保留到达朝向解决，并在每次拾取前断言位置和朝向。
+修正后完整走通五件物品并从北门离开；这些调整局限于新测试，未改公共主线驱动或游戏。
+
+## 最终实测
+
+2026-09-08，游戏 `b647e4de7fb4970db04c983d3bed25a0f8ae0bb9`，三场景各独立复跑三次，
+**9/9 通过，合计 195.980 秒，平均约 65.3 秒/套**。Daisy 35.3–38.1 秒，
+常青市 9.8–9.9 秒，森林 15.6–22.7 秒。森林战斗次数随运行变化，不断言固定耗时。
+本批没有确认新的产品缺陷；上述两次早期失败均为驱动目标/朝向问题，保留说明以评估编写成本。
+
+[机器报告](audits/guided-playtest/report.json)、[当次来源快照](audits/guided-playtest/sources.json)、
+[关键状态摘要](audits/guided-playtest/observations-summary.json) 已归档。
+完整协议及存档在本机 `/tmp/guided-playtest-final/`；临时目录不作为长期归档保证。
+当前来源清单另补充了坐标源哈希与解析目标，运行快照忠实保留当次清单，不回写旧证据。
+协议计数已核实：Daisy 三次均无 warp/give_pokemon/give_item/set_flag；
+两个收集场景每次仅一次入口 warp、一次队伍准备，均无物品或剧情标志注入。
+
+## 已收集但未执行
+
+下述扩展批次继续处理 Route22 对手战/Oak 赠球、博物馆和自然遇敌捕获。
+古老琥珀和 TM42 的后期前置条件超出本轮范围。
+目前是攻略指导 AI 编写并调试的固定任务集，不是运行时自主读取网页并无限探索的代理。
+
+## 扩展批次：门票、自然捕获和 Route22
+
+新增入口仍为 `scripts/guided_playtest.py --only <case>`，场景来源仍为上面的初代攻略。
+博物馆精确门票分支、移动退回行为和二楼 NPC 坐标/文本辅以固定 pret 的
+`scripts/Museum1F.asm`、`data/maps/objects/Museum2F.asm`、`text/Museum2F.asm` 核实。
+
+| 场景 | 准备与验证 |
+|---|---|
+| `museum-insufficient-money` | SaveBuilder 构造49元，传送到馆外；真实进入、选YES，钱不减少、无票、退回一格 |
+| `museum-exact-ticket-visit` | 构造50元，真实进入购票；扣到0元、获得票、步行上二楼并与太空展览NPC对话 |
+| `museum-decline-ticket` | 构造100元，真实进入选NO；金额不变、无票、退回一格 |
+| `museum-reentry-ticket-reset` | 构造100元购票参观，出馆后票标志清除，再次进馆需再付50元（原版PewterCity脚本补充依据） |
+| `forest-natural-encounter-catch` | 森林入口、Lv20妙蛙种子和20球；步行自然遇敌、实际投球，验证种类/等级与保存恢复 |
+| `forest-pikachu-search-catch` | 同样准备，在草地自然搜索Pikachu，遇其他种类逃跑；最多500段行走，耗尽预算单列inconclusive |
+| `route22-rival-oak-balls` | 从新游戏完成包裹，真实训练到Lv13、治疗，触发对手战并返回Oak；不注入胜利标志或奖励 |
+
+博物馆金额快照保存在场景输出目录，票与剧情标志不预置。三项门票测试各跑三次均通过，
+分别耗时25.490、27.615、25.478秒（含一次模板准备成本）。
+自然遇敌捕获三次通过，共38.575秒；初版仅等待帧停在 WildReveal，已补实际A键推进开场。
+这些测试不检验区域概率分布，不要求三次覆盖每一种宝可梦。
+
+Pikachu首轮500段预算只观察到12次搜索遇敌（Kakuna10、Weedle2），结果为inconclusive；
+不能据此报告缺失Pikachu。Route22首轮触发正确队伍但战败，属于赠球前置条件未达成，
+不计为内容bug。已将该支线的操作策略改为优先撞击（公共Brock驱动优先藤鞭，遭两只对手抵抗），
+保留最多三次真实再战机会；若仍败则inconclusive，不宣称Oak未发奖励。
+早期尝试与确认结果保存在 [扩展证据目录](audits/guided-playtest-expansion/)。
+
+### 扩展批次最终核验（2026-09-09）
+
+- 博物馆四项各三次通过，合计12次通过。重入测试最初停在外部门格无法再次触发，
+  已在新驱动中先走到门外再重新进入；没有修改游戏或放宽票价断言。
+- 自然遇敌捕获三次通过，加入定向搜索后的当前代码又独立通过一次。
+- Pikachu定向搜索三次：一次成功自然捕获并保存恢复（21.759秒），两次预算耗尽。
+  保留所有结果，不将两次inconclusive当成缺失内容，也不宣称统计验证了攻略的5%。
+- Route22→Oak赠球使用撞击策略，从新游戏完整通过一次（257.756秒），训练本身190秒。
+  首次藤鞭策略的败北证据保留；没有声称这条长链已经三轮稳定。
+  协议确认没有warp、give_pokemon、give_item、set_flag或start_wild_battle命令。
+  实际对手为Lv9 Pidgey和Lv8 Charmander，击败后获得5球，重复对话和存档恢复不复制。
+
+当前共10个攻略场景（原3项、新7项）。新场景覆盖博物馆、Route22/Oak以及森林自然捕获，
+不表示m10内所有NPC或所有区域宝可梦均已穷尽。随机预算耗尽返回非零退出码并标记
+`inconclusive`，与确定性断言失败的`fail`区分；不宜直接将包含稀有搜索的整套作为无条件CI门禁。
+本批未确认新的产品缺陷。

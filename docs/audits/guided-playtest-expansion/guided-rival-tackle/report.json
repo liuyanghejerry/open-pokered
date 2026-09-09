@@ -1,0 +1,57 @@
+{
+  "engine_commit": "7b857c8605adce9d19b1d5cf75f71a75982680f0",
+  "binary_sha256": "33544521c87f6733c5e21305d8f2ab434a77d751264f666a7ae66f2d0f8de821",
+  "driver_sha256": "01e69c0bc8853e13dffa8663e861004c2832a9b71b9720061726408a812d5746",
+  "manifest_sha256": "42bdc0821fcdf38449c1945e302af298042516c4c02c7c1c5eeb3d696124bcf7",
+  "sources": {
+    "bp2": {
+      "title": "Bulbapedia Red/Blue walkthrough Part 2",
+      "url": "https://bulbapedia.bulbagarden.net/wiki/Walkthrough:Pok%C3%A9mon_Red_and_Blue/Part_2",
+      "revision_url": "https://bulbapedia.bulbagarden.net/w/index.php?title=Walkthrough:Pok%C3%A9mon_Red_and_Blue/Part_2&oldid=4423421",
+      "notes": "送包裹获得图鉴后回访Daisy领取地图；常青市有隐藏药水；Route22对手战可选；满足条件后Oak可赠精灵球。"
+    },
+    "bp3": {
+      "title": "Bulbapedia Red/Blue walkthrough Part 3",
+      "url": "https://bulbapedia.bulbagarden.net/wiki/Walkthrough:Pok%C3%A9mon_Red_and_Blue/Part_3",
+      "revision_url": "https://bulbapedia.bulbagarden.net/w/index.php?title=Walkthrough:Pok%C3%A9mon_Red_and_Blue/Part_3&oldid=4617635",
+      "notes": "森林有精灵球一件、解毒药两件、药水两件，包含两件隐藏物；博物馆门票50；古老琥珀需之后有Cut才能取得。"
+    },
+    "gf-viridian": {
+      "title": "GameFAQs Red Version guide 64175 — Viridian City",
+      "url": "https://gamefaqs.gamespot.com/gameboy/367023-pokemon-red-version/faqs/64175/viridian-city",
+      "notes": "精灵中心西北灌木旁有可步行绕行的小路，沿路检查树获得隐藏药水；返乡送包裹之后可领取地图。"
+    }
+  },
+  "results": [
+    {
+      "id": "route22-rival-oak-balls",
+      "attempt": 1,
+      "status": "pass",
+      "contract": {
+        "goal": "真实主线→训练→Route22可选对手战→回Oak领取5球",
+        "sources": [
+          "bp2"
+        ],
+        "setup": "fresh m01-m08, real wild training to L13, no warp/item/party/flag seeding",
+        "guide_expectation": "击败首次Route22对手且仅初始宝可梦、没有精灵球时，Oak赠5球",
+        "additional_assertions": [
+          "奖励不重复",
+          "保存重启仍有5球"
+        ]
+      },
+      "protocol_command_counts": {
+        "wait_until": 249,
+        "press_sequence": 3107,
+        "step_frames": 3597,
+        "get_state": 4219,
+        "get_npcs": 174,
+        "skip_dialogue": 68,
+        "get_bag": 10,
+        "get_flags": 7,
+        "save": 1
+      },
+      "wall_seconds": 257.756
+    }
+  ],
+  "wall_seconds": 257.756
+}

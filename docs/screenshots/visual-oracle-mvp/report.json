@@ -1,0 +1,338 @@
+{
+  "schema": 1,
+  "rom_sha1": "ea9bcae617fdf159b045185467ae58b2e4a48b9a",
+  "addresses": {
+    "map": 54110,
+    "x": 54114,
+    "y": 54113,
+    "facing": 49417
+  },
+  "versions": {
+    "pyboy": "2.7.0",
+    "numpy": "2.5.3",
+    "pillow": "12.3.0"
+  },
+  "binary_sha256": "6e3d94feab20e3d1149184e4a892f9e556a48020977bf2c8ea1304ee9fab07ea",
+  "scope": "m02 RedsHouse2F: real boot + walk, Rust debug-seeded equivalents; not a whole playthrough",
+  "scenes": [
+    {
+      "id": "bedroom_spawn",
+      "original_state": {
+        "map": 38,
+        "x": 3,
+        "y": 6,
+        "facing": 4
+      },
+      "rust_seed": {
+        "map": "RedsHouse2F",
+        "x": 3,
+        "y": 6,
+        "facing": "Up"
+      },
+      "rust_capture_command": [
+        "/Users/liuyanghe02/develop/open-pokered/target/debug/pokered-app",
+        "run",
+        "--save",
+        "/var/folders/d2/2fv86m890m34_13rn_t3d79w0000gn/T/visual-oracle-p01zq6qd/empty.sav",
+        "--skip-intro",
+        "--warp",
+        "RedsHouse2F,3,6",
+        "--no-audio",
+        "--screenshot",
+        "/Users/liuyanghe02/develop/open-pokered/docs/screenshots/visual-oracle-mvp/bedroom_spawn-rust.png",
+        "--screenshot-frames",
+        "30"
+      ],
+      "rust_observation_command": [
+        "/Users/liuyanghe02/develop/open-pokered/target/debug/pokered-app",
+        "run",
+        "--save",
+        "/var/folders/d2/2fv86m890m34_13rn_t3d79w0000gn/T/visual-oracle-p01zq6qd/empty.sav",
+        "--skip-intro",
+        "--warp",
+        "RedsHouse2F,3,6",
+        "--no-audio",
+        "--headless",
+        "--debug-port",
+        "57302"
+      ],
+      "rust_observed": {
+        "active_script_effect": null,
+        "battle_bag": null,
+        "battle_inventory": [],
+        "battle_live": null,
+        "battle_message": null,
+        "battle_moves": null,
+        "battle_party_cursor": 0,
+        "battle_phase": "Intro { phase: TransitionFlash, wait_frames: 72 }",
+        "choice": null,
+        "coins": 0,
+        "dialogue": null,
+        "dialogue_state": null,
+        "frame_count": 57,
+        "map_id": 38,
+        "map_name": "RedsHouse2F",
+        "money": 0,
+        "party": [],
+        "party_count": 0,
+        "pc_phase": null,
+        "player_facing": "Up",
+        "player_movement_state": "Idle",
+        "player_name": "",
+        "player_x": 3,
+        "player_y": 6,
+        "screen": "overworld",
+        "script_awaiting_battle": false,
+        "script_effect": null,
+        "script_running": false,
+        "shop_phase": null,
+        "text_speed_delay_frames": 3,
+        "warp_fade": "Idle"
+      },
+      "original_frame": 8000,
+      "palette_normalized": {
+        "pixels": 2974,
+        "total": 23040,
+        "fraction": 0.1290798611111111,
+        "bbox_xyxy": [
+          16,
+          0,
+          152,
+          96
+        ]
+      },
+      "raw_rgb": {
+        "fraction": 0.2026909722222222
+      },
+      "regions": {
+        "upper_map": {
+          "pixels": 1067,
+          "total": 7680,
+          "fraction": 0.13893229166666668,
+          "bbox_xyxy": [
+            16,
+            0,
+            152,
+            48
+          ]
+        },
+        "player_band": {
+          "pixels": 1907,
+          "total": 7680,
+          "fraction": 0.24830729166666668,
+          "bbox_xyxy": [
+            16,
+            0,
+            152,
+            48
+          ]
+        },
+        "lower_map": {
+          "pixels": 0,
+          "total": 7680,
+          "fraction": 0.0,
+          "bbox_xyxy": null
+        }
+      },
+      "diagnostic_registration": {
+        "candidate_offset_xy": [
+          8,
+          0
+        ],
+        "interior_fraction": 0.009494357638888888,
+        "used_for_pass": false
+      }
+    },
+    {
+      "id": "bedroom_walk_left",
+      "original_state": {
+        "map": 38,
+        "x": 2,
+        "y": 6,
+        "facing": 4
+      },
+      "rust_seed": {
+        "map": "RedsHouse2F",
+        "x": 2,
+        "y": 6,
+        "facing": "Up"
+      },
+      "rust_capture_command": [
+        "/Users/liuyanghe02/develop/open-pokered/target/debug/pokered-app",
+        "run",
+        "--save",
+        "/var/folders/d2/2fv86m890m34_13rn_t3d79w0000gn/T/visual-oracle-p01zq6qd/empty.sav",
+        "--skip-intro",
+        "--warp",
+        "RedsHouse2F,2,6",
+        "--no-audio",
+        "--screenshot",
+        "/Users/liuyanghe02/develop/open-pokered/docs/screenshots/visual-oracle-mvp/bedroom_walk_left-rust.png",
+        "--screenshot-frames",
+        "30"
+      ],
+      "rust_observation_command": [
+        "/Users/liuyanghe02/develop/open-pokered/target/debug/pokered-app",
+        "run",
+        "--save",
+        "/var/folders/d2/2fv86m890m34_13rn_t3d79w0000gn/T/visual-oracle-p01zq6qd/empty.sav",
+        "--skip-intro",
+        "--warp",
+        "RedsHouse2F,2,6",
+        "--no-audio",
+        "--headless",
+        "--debug-port",
+        "57309"
+      ],
+      "rust_observed": {
+        "active_script_effect": null,
+        "battle_bag": null,
+        "battle_inventory": [],
+        "battle_live": null,
+        "battle_message": null,
+        "battle_moves": null,
+        "battle_party_cursor": 0,
+        "battle_phase": "Intro { phase: TransitionFlash, wait_frames: 72 }",
+        "choice": null,
+        "coins": 0,
+        "dialogue": null,
+        "dialogue_state": null,
+        "frame_count": 57,
+        "map_id": 38,
+        "map_name": "RedsHouse2F",
+        "money": 0,
+        "party": [],
+        "party_count": 0,
+        "pc_phase": null,
+        "player_facing": "Up",
+        "player_movement_state": "Idle",
+        "player_name": "",
+        "player_x": 2,
+        "player_y": 6,
+        "screen": "overworld",
+        "script_awaiting_battle": false,
+        "script_effect": null,
+        "script_running": false,
+        "shop_phase": null,
+        "text_speed_delay_frames": 3,
+        "warp_fade": "Idle"
+      },
+      "original_frame": 8150,
+      "palette_normalized": {
+        "pixels": 2219,
+        "total": 23040,
+        "fraction": 0.09631076388888889,
+        "bbox_xyxy": [
+          32,
+          0,
+          152,
+          96
+        ]
+      },
+      "raw_rgb": {
+        "fraction": 0.16979166666666667
+      },
+      "regions": {
+        "upper_map": {
+          "pixels": 683,
+          "total": 7680,
+          "fraction": 0.08893229166666666,
+          "bbox_xyxy": [
+            32,
+            0,
+            104,
+            48
+          ]
+        },
+        "player_band": {
+          "pixels": 1536,
+          "total": 7680,
+          "fraction": 0.2,
+          "bbox_xyxy": [
+            32,
+            0,
+            152,
+            48
+          ]
+        },
+        "lower_map": {
+          "pixels": 0,
+          "total": 7680,
+          "fraction": 0.0,
+          "bbox_xyxy": null
+        }
+      },
+      "diagnostic_registration": {
+        "candidate_offset_xy": [
+          8,
+          0
+        ],
+        "interior_fraction": 0.009602864583333334,
+        "used_for_pass": false
+      }
+    }
+  ],
+  "calibration": {
+    "bedroom_spawn_emulator_replay": {
+      "pixels": 0,
+      "total": 23040,
+      "fraction": 0.0,
+      "bbox_xyxy": null
+    },
+    "bedroom_spawn_rust_rerun": {
+      "pixels": 0,
+      "total": 23040,
+      "fraction": 0.0,
+      "bbox_xyxy": null
+    },
+    "bedroom_spawn_injected_8x8": {
+      "pixels": 64,
+      "total": 23040,
+      "fraction": 0.002777777777777778,
+      "bbox_xyxy": [
+        16,
+        16,
+        24,
+        24
+      ]
+    },
+    "bedroom_spawn_palette_only": {
+      "pixels": 0,
+      "total": 23040,
+      "fraction": 0.0,
+      "bbox_xyxy": null
+    },
+    "bedroom_walk_left_emulator_replay": {
+      "pixels": 0,
+      "total": 23040,
+      "fraction": 0.0,
+      "bbox_xyxy": null
+    },
+    "bedroom_walk_left_rust_rerun": {
+      "pixels": 0,
+      "total": 23040,
+      "fraction": 0.0,
+      "bbox_xyxy": null
+    },
+    "bedroom_walk_left_injected_8x8": {
+      "pixels": 64,
+      "total": 23040,
+      "fraction": 0.002777777777777778,
+      "bbox_xyxy": [
+        16,
+        16,
+        24,
+        24
+      ]
+    },
+    "bedroom_walk_left_palette_only": {
+      "pixels": 0,
+      "total": 23040,
+      "fraction": 0.0,
+      "bbox_xyxy": null
+    }
+  },
+  "elapsed_seconds": 1.742,
+  "calibration_pass": true,
+  "verdict": "needs_review"
+}

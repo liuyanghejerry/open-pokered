@@ -1,0 +1,61 @@
+{
+  "engine_commit": "7b857c8605adce9d19b1d5cf75f71a75982680f0",
+  "binary_sha256": "33544521c87f6733c5e21305d8f2ab434a77d751264f666a7ae66f2d0f8de821",
+  "driver_sha256": "b136e8e833be6cf0cd31a0c3c8b7a3957f26d698d974e9696016c52c141fd8a4",
+  "manifest_sha256": "6780e67ec42b7749f70550959d68c55a6d945f7123dc4f5c0ec9dfbcc789d36b",
+  "sources": {
+    "bp2": {
+      "title": "Bulbapedia Red/Blue walkthrough Part 2",
+      "url": "https://bulbapedia.bulbagarden.net/wiki/Walkthrough:Pok%C3%A9mon_Red_and_Blue/Part_2",
+      "revision_url": "https://bulbapedia.bulbagarden.net/w/index.php?title=Walkthrough:Pok%C3%A9mon_Red_and_Blue/Part_2&oldid=4423421",
+      "notes": "送包裹获得图鉴后回访Daisy领取地图；常青市有隐藏药水；Route22对手战可选；满足条件后Oak可赠精灵球。"
+    },
+    "bp3": {
+      "title": "Bulbapedia Red/Blue walkthrough Part 3",
+      "url": "https://bulbapedia.bulbagarden.net/wiki/Walkthrough:Pok%C3%A9mon_Red_and_Blue/Part_3",
+      "revision_url": "https://bulbapedia.bulbagarden.net/w/index.php?title=Walkthrough:Pok%C3%A9mon_Red_and_Blue/Part_3&oldid=4617635",
+      "notes": "森林有精灵球一件、解毒药两件、药水两件，包含两件隐藏物；博物馆门票50；古老琥珀需之后有Cut才能取得。"
+    },
+    "gf-viridian": {
+      "title": "GameFAQs Red Version guide 64175 — Viridian City",
+      "url": "https://gamefaqs.gamespot.com/gameboy/367023-pokemon-red-version/faqs/64175/viridian-city",
+      "notes": "精灵中心西北灌木旁有可步行绕行的小路，沿路检查树获得隐藏药水；返乡送包裹之后可领取地图。"
+    }
+  },
+  "results": [
+    {
+      "id": "forest-natural-encounter-catch",
+      "attempt": 1,
+      "status": "pass",
+      "contract": {
+        "goal": "森林自然遇敌并捕获，验证种类等级与保存恢复",
+        "sources": [
+          "bp3"
+        ],
+        "setup": "one warp to south entrance, Lv20 Bulbasaur and 20 balls, no start_wild_battle",
+        "guide_expectation": "Red森林出现Caterpie3/Metapod4/Weedle3-5/Kakuna4-6/Pikachu3或5",
+        "additional_assertions": [
+          "actual encounter species and level preserved on capture",
+          "party persists across restart",
+          "500 walking segments or 20 exhausted balls => inconclusive, not missing-content failure"
+        ]
+      },
+      "protocol_command_counts": {
+        "wait_until": 9,
+        "press_sequence": 180,
+        "step_frames": 190,
+        "get_state": 205,
+        "give_pokemon": 1,
+        "give_item": 1,
+        "warp": 1,
+        "get_npcs": 6,
+        "get_bag": 4,
+        "get_flags": 3,
+        "get_party": 2,
+        "save": 1
+      },
+      "wall_seconds": 14.648
+    }
+  ],
+  "wall_seconds": 14.649
+}

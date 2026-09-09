@@ -1,0 +1,137 @@
+[
+  {
+    "id": "museum-decline-ticket",
+    "attempt": 1,
+    "label": "ticket offer",
+    "map": "Museum1F",
+    "position": [
+      10,
+      4
+    ],
+    "money": 100,
+    "party": [],
+    "bag": [],
+    "battle_live": null,
+    "flags": {}
+  },
+  {
+    "id": "museum-decline-ticket",
+    "attempt": 1,
+    "label": "ticket decision",
+    "map": "Museum1F",
+    "position": [
+      10,
+      5
+    ],
+    "money": 100,
+    "party": [],
+    "bag": [],
+    "battle_live": null,
+    "flags": {}
+  },
+  {
+    "id": "museum-decline-ticket",
+    "attempt": 1,
+    "label": "completed",
+    "map": "Museum1F",
+    "position": [
+      10,
+      5
+    ],
+    "money": 100,
+    "party": [],
+    "bag": [],
+    "battle_live": null,
+    "flags": {}
+  },
+  {
+    "id": "museum-decline-ticket",
+    "attempt": 2,
+    "label": "ticket offer",
+    "map": "Museum1F",
+    "position": [
+      10,
+      4
+    ],
+    "money": 100,
+    "party": [],
+    "bag": [],
+    "battle_live": null,
+    "flags": {}
+  },
+  {
+    "id": "museum-decline-ticket",
+    "attempt": 2,
+    "label": "ticket decision",
+    "map": "Museum1F",
+    "position": [
+      10,
+      5
+    ],
+    "money": 100,
+    "party": [],
+    "bag": [],
+    "battle_live": null,
+    "flags": {}
+  },
+  {
+    "id": "museum-decline-ticket",
+    "attempt": 2,
+    "label": "completed",
+    "map": "Museum1F",
+    "position": [
+      10,
+      5
+    ],
+    "money": 100,
+    "party": [],
+    "bag": [],
+    "battle_live": null,
+    "flags": {}
+  },
+  {
+    "id": "museum-decline-ticket",
+    "attempt": 3,
+    "label": "ticket offer",
+    "map": "Museum1F",
+    "position": [
+      10,
+      4
+    ],
+    "money": 100,
+    "party": [],
+    "bag": [],
+    "battle_live": null,
+    "flags": {}
+  },
+  {
+    "id": "museum-decline-ticket",
+    "attempt": 3,
+    "label": "ticket decision",
+    "map": "Museum1F",
+    "position": [
+      10,
+      5
+    ],
+    "money": 100,
+    "party": [],
+    "bag": [],
+    "battle_live": null,
+    "flags": {}
+  },
+  {
+    "id": "museum-decline-ticket",
+    "attempt": 3,
+    "label": "completed",
+    "map": "Museum1F",
+    "position": [
+      10,
+      5
+    ],
+    "money": 100,
+    "party": [],
+    "bag": [],
+    "battle_live": null,
+    "flags": {}
+  }
+]

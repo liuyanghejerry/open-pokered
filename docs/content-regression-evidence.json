@@ -1,0 +1,365 @@
+{
+  "full_suite": {
+    "oracle_commit": "fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c",
+    "oracle_repository": "https://github.com/pret/pokered",
+    "engine_commit": "b647e4de7fb4970db04c983d3bed25a0f8ae0bb9",
+    "setup": "fresh power-on, seeded starter/bag, debug warp, local real-input navigation and interaction",
+    "calibration": false,
+    "wall_seconds": 140.423,
+    "results": [
+      {
+        "id": "route1-sample-once-reload",
+        "attempt": 1,
+        "status": "pass",
+        "wall_seconds": 7.907
+      },
+      {
+        "id": "route1-full-bag-consumes-offer",
+        "attempt": 1,
+        "status": "pass",
+        "wall_seconds": 8.341
+      },
+      {
+        "id": "forest-npc-position-dialogue",
+        "attempt": 1,
+        "status": "pass",
+        "wall_seconds": 5.164
+      },
+      {
+        "id": "forest-visible-antidote-once-reload",
+        "attempt": 1,
+        "status": "pass",
+        "wall_seconds": 7.226
+      },
+      {
+        "id": "forest-visible-full-bag-keeps-object",
+        "attempt": 1,
+        "status": "fail",
+        "error": "AssertionError: BUG: full-bag ANTIDOTE object disappeared; dialogue='RED found ANTIDOTE!'",
+        "wall_seconds": 5.337
+      },
+      {
+        "id": "forest-hidden-antidote-once-reload",
+        "attempt": 1,
+        "status": "pass",
+        "wall_seconds": 6.704
+      },
+      {
+        "id": "forest-hidden-full-bag-repeatable",
+        "attempt": 1,
+        "status": "pass",
+        "wall_seconds": 6.061
+      },
+      {
+        "id": "route1-sample-once-reload",
+        "attempt": 2,
+        "status": "pass",
+        "wall_seconds": 7.882
+      },
+      {
+        "id": "route1-full-bag-consumes-offer",
+        "attempt": 2,
+        "status": "pass",
+        "wall_seconds": 8.194
+      },
+      {
+        "id": "forest-npc-position-dialogue",
+        "attempt": 2,
+        "status": "pass",
+        "wall_seconds": 5.079
+      },
+      {
+        "id": "forest-visible-antidote-once-reload",
+        "attempt": 2,
+        "status": "pass",
+        "wall_seconds": 7.192
+      },
+      {
+        "id": "forest-visible-full-bag-keeps-object",
+        "attempt": 2,
+        "status": "fail",
+        "error": "AssertionError: BUG: full-bag ANTIDOTE object disappeared; dialogue='RED found ANTIDOTE!'",
+        "wall_seconds": 5.343
+      },
+      {
+        "id": "forest-hidden-antidote-once-reload",
+        "attempt": 2,
+        "status": "pass",
+        "wall_seconds": 6.714
+      },
+      {
+        "id": "forest-hidden-full-bag-repeatable",
+        "attempt": 2,
+        "status": "pass",
+        "wall_seconds": 6.083
+      },
+      {
+        "id": "route1-sample-once-reload",
+        "attempt": 3,
+        "status": "pass",
+        "wall_seconds": 7.911
+      },
+      {
+        "id": "route1-full-bag-consumes-offer",
+        "attempt": 3,
+        "status": "pass",
+        "wall_seconds": 8.338
+      },
+      {
+        "id": "forest-npc-position-dialogue",
+        "attempt": 3,
+        "status": "pass",
+        "wall_seconds": 5.164
+      },
+      {
+        "id": "forest-visible-antidote-once-reload",
+        "attempt": 3,
+        "status": "pass",
+        "wall_seconds": 7.272
+      },
+      {
+        "id": "forest-visible-full-bag-keeps-object",
+        "attempt": 3,
+        "status": "fail",
+        "error": "AssertionError: BUG: full-bag ANTIDOTE object disappeared; dialogue='RED found ANTIDOTE!'",
+        "wall_seconds": 5.352
+      },
+      {
+        "id": "forest-hidden-antidote-once-reload",
+        "attempt": 3,
+        "status": "pass",
+        "wall_seconds": 6.895
+      },
+      {
+        "id": "forest-hidden-full-bag-repeatable",
+        "attempt": 3,
+        "status": "pass",
+        "wall_seconds": 6.222
+      }
+    ]
+  },
+  "restart_confirmation": {
+    "oracle_commit": "fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c",
+    "oracle_repository": "https://github.com/pret/pokered",
+    "engine_commit": "b647e4de7fb4970db04c983d3bed25a0f8ae0bb9",
+    "setup": "fresh power-on, seeded starter/bag, debug warp, local real-input navigation and interaction",
+    "calibration": false,
+    "wall_seconds": 21.506,
+    "results": [
+      {
+        "id": "forest-visible-full-bag-keeps-object",
+        "attempt": 1,
+        "status": "fail",
+        "error": "AssertionError: BUG: full-bag ANTIDOTE object disappeared; dialogue='RED found ANTIDOTE!'",
+        "wall_seconds": 7.122
+      },
+      {
+        "id": "forest-visible-full-bag-keeps-object",
+        "attempt": 2,
+        "status": "fail",
+        "error": "AssertionError: BUG: full-bag ANTIDOTE object disappeared; dialogue='RED found ANTIDOTE!'",
+        "wall_seconds": 7.169
+      },
+      {
+        "id": "forest-visible-full-bag-keeps-object",
+        "attempt": 3,
+        "status": "fail",
+        "error": "AssertionError: BUG: full-bag ANTIDOTE object disappeared; dialogue='RED found ANTIDOTE!'",
+        "wall_seconds": 7.178
+      }
+    ]
+  },
+  "calibration": {
+    "oracle_commit": "fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c",
+    "oracle_repository": "https://github.com/pret/pokered",
+    "engine_commit": "b647e4de7fb4970db04c983d3bed25a0f8ae0bb9",
+    "setup": "fresh power-on, seeded starter/bag, debug warp, local real-input navigation and interaction",
+    "calibration": true,
+    "wall_seconds": 5.451,
+    "results": [
+      {
+        "id": "route1-sample-once-reload",
+        "attempt": 1,
+        "status": "fail",
+        "error": "AssertionError: Route1 first gift expected 2 Potion, observed 1",
+        "wall_seconds": 5.408
+      }
+    ]
+  },
+  "failure_evidence": [
+    {
+      "attempt": 1,
+      "phase": "full-bag visible pickup",
+      "map": "ViridianForest",
+      "position": [
+        25,
+        12
+      ],
+      "bag_stack_count": 20,
+      "antidote_quantity": 0,
+      "object": {
+        "facing": "Down",
+        "home_x": 25,
+        "home_y": 11,
+        "npc_index": 4,
+        "scripted_path_remaining": 0,
+        "sprite_id": 61,
+        "text_id": 5,
+        "visible": false,
+        "walk_counter": 0,
+        "x": 25,
+        "y": 11
+      },
+      "flags": {
+        "EVENT_GOT_VIRIDIAN_FOREST_ANTIDOTE": true,
+        "__OBJ_HIDDEN_VIRIDIAN_FOREST_OBJ_5": true,
+        "__OBJ_SHOWN_VIRIDIAN_FOREST_OBJ_5": false
+      }
+    },
+    {
+      "attempt": 1,
+      "phase": "full-bag visible pickup after restart",
+      "map": "ViridianForest",
+      "position": [
+        25,
+        12
+      ],
+      "bag_stack_count": 20,
+      "antidote_quantity": 0,
+      "object": {
+        "facing": "Down",
+        "home_x": 25,
+        "home_y": 11,
+        "npc_index": 4,
+        "scripted_path_remaining": 0,
+        "sprite_id": 61,
+        "text_id": 5,
+        "visible": false,
+        "walk_counter": 0,
+        "x": 25,
+        "y": 11
+      },
+      "flags": {
+        "EVENT_GOT_VIRIDIAN_FOREST_ANTIDOTE": true,
+        "__OBJ_HIDDEN_VIRIDIAN_FOREST_OBJ_5": true,
+        "__OBJ_SHOWN_VIRIDIAN_FOREST_OBJ_5": false
+      }
+    },
+    {
+      "attempt": 2,
+      "phase": "full-bag visible pickup",
+      "map": "ViridianForest",
+      "position": [
+        25,
+        12
+      ],
+      "bag_stack_count": 20,
+      "antidote_quantity": 0,
+      "object": {
+        "facing": "Down",
+        "home_x": 25,
+        "home_y": 11,
+        "npc_index": 4,
+        "scripted_path_remaining": 0,
+        "sprite_id": 61,
+        "text_id": 5,
+        "visible": false,
+        "walk_counter": 0,
+        "x": 25,
+        "y": 11
+      },
+      "flags": {
+        "EVENT_GOT_VIRIDIAN_FOREST_ANTIDOTE": true,
+        "__OBJ_HIDDEN_VIRIDIAN_FOREST_OBJ_5": true,
+        "__OBJ_SHOWN_VIRIDIAN_FOREST_OBJ_5": false
+      }
+    },
+    {
+      "attempt": 2,
+      "phase": "full-bag visible pickup after restart",
+      "map": "ViridianForest",
+      "position": [
+        25,
+        12
+      ],
+      "bag_stack_count": 20,
+      "antidote_quantity": 0,
+      "object": {
+        "facing": "Down",
+        "home_x": 25,
+        "home_y": 11,
+        "npc_index": 4,
+        "scripted_path_remaining": 0,
+        "sprite_id": 61,
+        "text_id": 5,
+        "visible": false,
+        "walk_counter": 0,
+        "x": 25,
+        "y": 11
+      },
+      "flags": {
+        "EVENT_GOT_VIRIDIAN_FOREST_ANTIDOTE": true,
+        "__OBJ_HIDDEN_VIRIDIAN_FOREST_OBJ_5": true,
+        "__OBJ_SHOWN_VIRIDIAN_FOREST_OBJ_5": false
+      }
+    },
+    {
+      "attempt": 3,
+      "phase": "full-bag visible pickup",
+      "map": "ViridianForest",
+      "position": [
+        25,
+        12
+      ],
+      "bag_stack_count": 20,
+      "antidote_quantity": 0,
+      "object": {
+        "facing": "Down",
+        "home_x": 25,
+        "home_y": 11,
+        "npc_index": 4,
+        "scripted_path_remaining": 0,
+        "sprite_id": 61,
+        "text_id": 5,
+        "visible": false,
+        "walk_counter": 0,
+        "x": 25,
+        "y": 11
+      },
+      "flags": {
+        "EVENT_GOT_VIRIDIAN_FOREST_ANTIDOTE": true,
+        "__OBJ_HIDDEN_VIRIDIAN_FOREST_OBJ_5": true,
+        "__OBJ_SHOWN_VIRIDIAN_FOREST_OBJ_5": false
+      }
+    },
+    {
+      "attempt": 3,
+      "phase": "full-bag visible pickup after restart",
+      "map": "ViridianForest",
+      "position": [
+        25,
+        12
+      ],
+      "bag_stack_count": 20,
+      "antidote_quantity": 0,
+      "object": {
+        "facing": "Down",
+        "home_x": 25,
+        "home_y": 11,
+        "npc_index": 4,
+        "scripted_path_remaining": 0,
+        "sprite_id": 61,
+        "text_id": 5,
+        "visible": false,
+        "walk_counter": 0,
+        "x": 25,
+        "y": 11
+      },
+      "flags": {
+        "EVENT_GOT_VIRIDIAN_FOREST_ANTIDOTE": true,
+        "__OBJ_HIDDEN_VIRIDIAN_FOREST_OBJ_5": true,
+        "__OBJ_SHOWN_VIRIDIAN_FOREST_OBJ_5": false
+      }
+    }
+  ]
+}

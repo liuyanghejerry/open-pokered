@@ -1,0 +1,243 @@
+{
+  "retrieved": "2026-09-08",
+  "scope": "Original English Pokemon Red/Blue, m01-m10; exclude Yellow/FireRed/LeafGreen",
+  "sources": {
+    "bp2": {
+      "title": "Bulbapedia Red/Blue walkthrough Part 2",
+      "url": "https://bulbapedia.bulbagarden.net/wiki/Walkthrough:Pok%C3%A9mon_Red_and_Blue/Part_2",
+      "revision_url": "https://bulbapedia.bulbagarden.net/w/index.php?title=Walkthrough:Pok%C3%A9mon_Red_and_Blue/Part_2&oldid=4423421",
+      "notes": "送包裹获得图鉴后回访Daisy领取地图；常青市有隐藏药水；Route22对手战可选；满足条件后Oak可赠精灵球。"
+    },
+    "bp3": {
+      "title": "Bulbapedia Red/Blue walkthrough Part 3",
+      "url": "https://bulbapedia.bulbagarden.net/wiki/Walkthrough:Pok%C3%A9mon_Red_and_Blue/Part_3",
+      "revision_url": "https://bulbapedia.bulbagarden.net/w/index.php?title=Walkthrough:Pok%C3%A9mon_Red_and_Blue/Part_3&oldid=4617635",
+      "notes": "森林有精灵球一件、解毒药两件、药水两件，包含两件隐藏物；博物馆门票50；古老琥珀需之后有Cut才能取得。"
+    },
+    "gf-viridian": {
+      "title": "GameFAQs Red Version guide 64175 — Viridian City",
+      "url": "https://gamefaqs.gamespot.com/gameboy/367023-pokemon-red-version/faqs/64175/viridian-city",
+      "notes": "精灵中心西北灌木旁有可步行绕行的小路，沿路检查树获得隐藏药水；返乡送包裹之后可领取地图。"
+    }
+  },
+  "coordinate_reference": {
+    "repository": "https://github.com/pret/pokered",
+    "commit": "fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c",
+    "purpose": "Only resolve guide landmarks to coordinates and supplement one-time reward contracts; goals originate in online guides.",
+    "files": [
+      "data/maps/objects/PalletTown.asm",
+      "data/maps/objects/BluesHouse.asm",
+      "scripts/BluesHouse.asm",
+      "data/maps/objects/ViridianForest.asm",
+      "data/events/hidden_events.asm"
+    ],
+    "sha256": {
+      "data/maps/objects/PalletTown.asm": "e52943e730034b1bc7ead35cc9e9827db7fc9d4e55d97a2aa483c6dc715cc381",
+      "data/maps/objects/BluesHouse.asm": "766444cdd271d4839cf93aabd5aa222f34795a450d5c02ead9d5c3e7e499c9e9",
+      "scripts/BluesHouse.asm": "7c3a981b70074127febffbc7a4b4db512abd30739a07f46294b1dbc51debbcf1",
+      "data/maps/objects/ViridianForest.asm": "9e1e23ac1f52f797464b8aabd4efa14e90caddf67910ad441fe8a815db7aa627",
+      "data/events/hidden_events.asm": "1ca366dcbba1be0f4b19696be8aeb9eed8158e75bd852d4faf2119231a836877"
+    }
+  },
+  "cases": {
+    "daisy-town-map-errand": {
+      "goal": "送包裹前后回访Daisy，取得地图并检查重复与存档恢复",
+      "sources": [
+        "bp2",
+        "gf-viridian"
+      ],
+      "setup": "fresh m01-m08 via real input, no warp/no starter or flag seeding",
+      "guide_expectation": "完成Oak包裹后可从Daisy获得Town Map",
+      "additional_assertions": [
+        "图鉴前没有地图",
+        "奖励一次且桌上地图隐藏",
+        "重复与保存重启不复制奖励"
+      ]
+    },
+    "viridian-hidden-potion-walk": {
+      "goal": "从常青市南入口绕行灌木小路寻找隐藏药水",
+      "sources": [
+        "bp2",
+        "gf-viridian"
+      ],
+      "setup": "one warp to city south entrance, seeded Lv5 Bulbasaur; no Cut/Surf",
+      "guide_expectation": "检查城市西北小路尽头的树获得Potion",
+      "additional_assertions": [
+        "真实步行到(13,4)面向(14,4)",
+        "重复及走回入口保存重启再走回来不复制"
+      ]
+    },
+    "forest-five-item-tour": {
+      "goal": "从森林南入口步行收集五件物品，再从北门离开",
+      "sources": [
+        "bp3"
+      ],
+      "setup": "one warp to forest south entrance; Lv20 Bulbasaur combat fixture; no item/flag seeding",
+      "guide_expectation": "Poke Ball x1, Antidote x2, Potion x2 including two hidden pickups",
+      "additional_assertions": [
+        "每次拾取对应背包增加1",
+        "重复交互不复制",
+        "出北门保存重启后总数不变"
+      ],
+      "resolved_targets": [
+        {
+          "item": "Antidote",
+          "tile": [
+            16,
+            42
+          ],
+          "hidden": true
+        },
+        {
+          "item": "PokeBall",
+          "tile": [
+            1,
+            31
+          ],
+          "hidden": false
+        },
+        {
+          "item": "Antidote",
+          "tile": [
+            25,
+            11
+          ],
+          "hidden": false
+        },
+        {
+          "item": "Potion",
+          "tile": [
+            12,
+            29
+          ],
+          "hidden": false
+        },
+        {
+          "item": "Potion",
+          "tile": [
+            1,
+            18
+          ],
+          "hidden": true
+        }
+      ]
+    },
+    "museum-insufficient-money": {
+      "goal": "49元购票被拒且不扣款",
+      "sources": [
+        "bp3"
+      ],
+      "setup": "money snapshot 49; one warp to exterior entrance; no ticket flag injection",
+      "guide_expectation": "Pewter Museum admission costs 50; upstairs space exhibition",
+      "additional_assertions": [
+        "payment/decline flag and money agree",
+        "denied visitor moved back; paid visitor can enter Museum2F"
+      ]
+    },
+    "museum-exact-ticket-visit": {
+      "goal": "50元购票扣款并实际上楼参观",
+      "sources": [
+        "bp3"
+      ],
+      "setup": "money snapshot 50; one warp to exterior entrance; no ticket flag injection",
+      "guide_expectation": "Pewter Museum admission costs 50; upstairs space exhibition",
+      "additional_assertions": [
+        "payment/decline flag and money agree",
+        "denied visitor moved back; paid visitor can enter Museum2F"
+      ]
+    },
+    "museum-decline-ticket": {
+      "goal": "有钱仍可拒绝购票，不扣款",
+      "sources": [
+        "bp3"
+      ],
+      "setup": "money snapshot 100; one warp to exterior entrance; no ticket flag injection",
+      "guide_expectation": "Pewter Museum admission costs 50; upstairs space exhibition",
+      "additional_assertions": [
+        "payment/decline flag and money agree",
+        "denied visitor moved back; paid visitor can enter Museum2F"
+      ]
+    },
+    "route22-rival-oak-balls": {
+      "goal": "真实主线→训练→Route22可选对手战→回Oak领取5球",
+      "sources": [
+        "bp2"
+      ],
+      "setup": "fresh m01-m08, real wild training to L13, no warp/item/party/flag seeding",
+      "guide_expectation": "击败首次Route22对手且仅初始宝可梦、没有精灵球时，Oak赠5球",
+      "additional_assertions": [
+        "奖励不重复",
+        "保存重启仍有5球"
+      ]
+    },
+    "forest-natural-encounter-catch": {
+      "goal": "森林自然遇敌并捕获，验证种类等级与保存恢复",
+      "sources": [
+        "bp3"
+      ],
+      "setup": "one warp to south entrance, Lv20 Bulbasaur and 20 balls, no start_wild_battle",
+      "guide_expectation": "Red森林出现Caterpie3/Metapod4/Weedle3-5/Kakuna4-6/Pikachu3或5",
+      "additional_assertions": [
+        "actual encounter species and level preserved on capture",
+        "party persists across restart",
+        "500 walking segments or 20 exhausted balls => inconclusive, not missing-content failure"
+      ]
+    },
+    "forest-pikachu-search-catch": {
+      "goal": "在森林自然搜索稀有Pikachu并捕获，不通过指定敌人绕过遇敌表",
+      "sources": [
+        "bp3"
+      ],
+      "setup": "one entrance warp, Lv20 Bulbasaur and 20 balls; escape other species",
+      "guide_expectation": "森林草地可遇到Lv3或Lv5 Pikachu（攻略列5%）",
+      "additional_assertions": [
+        "成功捕获且保存恢复",
+        "预算耗尽为inconclusive",
+        "不将本次样本估算为5%概率的统计验证"
+      ]
+    }
+  },
+  "backlog": [
+    {
+      "goal": "Route1免费样品",
+      "sources": [
+        "bp2"
+      ],
+      "status": "covered by existing content_regression; not counted as new"
+    },
+    {
+      "goal": "Route22可选对手战→满足条件回Oak领取5球",
+      "sources": [
+        "bp2"
+      ],
+      "status": "collected, not executed in this batch"
+    },
+    {
+      "goal": "博物馆50元门票与参观",
+      "sources": [
+        "bp3"
+      ],
+      "status": "collected, not executed in this batch"
+    },
+    {
+      "goal": "森林捕获Pikachu等区域宝可梦",
+      "sources": [
+        "bp3"
+      ],
+      "status": "collected, deferred: need bounded random exploration verdict; timeout is not proof of absence"
+    },
+    {
+      "goal": "古老琥珀、常青市TM42",
+      "sources": [
+        "bp2",
+        "bp3"
+      ],
+      "status": "excluded before m10: Cut/Surf prerequisites"
+    }
+  ],
+  "collection_notes": [
+    "Search results for FireRed/LeafGreen were excluded.",
+    "Psypokes search result was found but page fetch returned 502 twice; not used as an assertion source.",
+    "Only concise paraphrased claims are stored; no wholesale guide mirroring."
+  ]
+}
