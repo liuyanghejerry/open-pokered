@@ -2,6 +2,8 @@
 
 这一路验证的是“原版明确存在的支线交互能否在运行中的重制版发生”，范围限定在 Route 1 和常青森林。沿用 `playthrough.Game` / TCP DebugClient，但独立于主线 milestones。所有预期来自固定 `pret/pokered` revision `fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c`；本次选用的 9 个原版文件与采样时 master `a1a22aaf84d1675bcdbaeb194592379d586d838e` 逐字节相同。
 
+当前套件已扩展至 10 例；满包地面道具问题的修复与验证见 [修复记录](full-bag-pickup-fix.md)。下方初版实测数据保留为发现过程证据。
+
 ## 运行
 
 ```bash
@@ -26,13 +28,16 @@ Python 标准库，无新增 Python 依赖。每例独立开新游戏、自动�
 | `route1-full-bag-consumes-offer` | 原版 `CheckAndSetEvent` 在 `GiveItem` 前：满包虽然失败，样品机会仍永久消耗；此处刻意保留 Gen I 行为 |
 | `forest-npc-position-dialogue` | 静止 NPC1 在 (16,43)，显示与朋友来寻找宝可梦对战的文本，背包不变 |
 | `forest-visible-antidote-once-reload` | (25,11) 可见 Antidote ×1，领取后消失；重复、地图重进、保存重启不再出现或多给 |
-| `forest-visible-full-bag-keeps-object` | 原版 `GiveItem` 失败先跳 `.BagFull`，不经过 `HideObject`：拒绝领取、道具保留 |
+| `forest-visible-full-bag-keeps-object` | 满包拒绝领取；重复及重启后保留 Antidote；实际丢弃一栈后可领取，重启不重复 |
+| `forest-potion-full-bag-retry` | (12,29) Potion 同样覆盖满包拒绝、丢弃后领取与重启 |
+| `forest-pokeball-full-bag-retry` | (1,31) Poké Ball 同样覆盖满包拒绝、丢弃后领取与重启 |
+| `forest-full-bag-existing-stack` | 20 格已满，但已有 Poké Ball ×1：正常合并为 ×2，隐藏对象并保存 |
 | `forest-hidden-antidote-once-reload` | 面向 (16,42) 隐藏 Antidote ×1；重复和重启后不重复获得 |
 | `forest-hidden-full-bag-repeatable` | 满包时先显示 found 再显示 no room；不置获得位，第二次仍可发现并拒绝领取 |
 
 每例到源文件的映射、明确预期和源 SHA-256 位于 [oracle.json](../scripts/content_regression_fixtures/oracle.json)。离线保留原版源文件并校验哈希，运行时无需联网。
 
-## 实测发现
+## 实测发现（初版历史记录）
 
 确认一个内容 bug：**常青森林可见 Antidote 在背包满时永久丢失**。运行中背包仍为 20 栈、Antidote 数量 0，但 NPC `text_id=5` 变为 `visible=false`，`EVENT_GOT_VIRIDIAN_FOREST_ANTIDOTE=true`，`__OBJ_HIDDEN_VIRIDIAN_FOREST_OBJ_5=true`；对话错误显示 `RED found ANTIDOTE!`。原版 [PickUpItem](https://github.com/pret/pokered/blob/fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c/engine/events/pick_up_item.asm) 在 GiveItem 失败时不会隐藏道具。这里只交付失败用例与证据，不修改游戏行为。
 

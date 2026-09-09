@@ -118,13 +118,15 @@ class Session:
         self.stop_game()
         self.trace.close()
 
-    def full_bag(self):
+    def full_bag(self, exclude=None):
         # Twenty distinct ordinary item stacks; no tested POTION/ANTIDOTE.
         items = ['POKE_BALL', 'GREAT_BALL', 'ULTRA_BALL', 'MASTER_BALL',
                  'BURN_HEAL', 'ICE_HEAL', 'AWAKENING', 'PARLYZ_HEAL',
                  'FULL_RESTORE', 'MAX_POTION', 'HYPER_POTION', 'SUPER_POTION',
                  'ESCAPE_ROPE', 'REPEL', 'MAX_REPEL', 'SUPER_REPEL',
                  'HP_UP', 'PROTEIN', 'IRON', 'CARBOS']
+        if exclude in items:
+            items[items.index(exclude)] = 'ETHER'
         for item in items:
             self.cmd(cmd='give_item', item=item, qty=1)
         require(len(self.cmd(cmd='get_bag')) == 20, 'full bag fixture not 20 stacks')
@@ -210,21 +212,81 @@ def visible(s):
     require(not next(n for n in s.g.d.npcs() if n['text_id'] == 5)['visible'], 'collected object returned after restart')
 
 
+def visible_full_retry(s, item, name, text_id, x, y):
+    s.full_bag(exclude=item)
+    s.warp('ViridianForest', x, y + 1)
+    s.g.face('up')
+    flag = 'EVENT_GOT_VIRIDIAN_FOREST_' + item
+    def assert_available(label):
+        data = s.observe(label)
+        require(next(n for n in data['npcs'] if n['text_id'] == text_id)['visible'],
+                f'{item} object disappeared after refused pickup')
+        require(flag not in data['flags'], f'{item} pickup flag set on failure')
+        require(s.qty(name) == 0, f'full bag unexpectedly gained {item}')
+
+    for attempt in range(2):
+        text = s.interact()
+        assert_available(f'{item} refusal {attempt + 1}')
+        require('No more room for items!' in text, f'bag-full refusal missing: {text!r}')
+    s.reload()
+    assert_available(f'{item} refusal after restart')
+
+    # Make room through the actual ITEM -> TOSS menu, not a debug mutation.
+    from scenarios import pause_menu
+    pause_menu(s.g)
+    s.g.tap('down', 10)  # no Pokedex: POKEMON, ITEM
+    s.g.tap('a', 10)
+    require(s.g.st()['screen'] == 'bag', 'ITEM menu did not open')
+    s.g.tap('a', 10)  # first stack -> USE / TOSS / CANCEL
+    s.g.tap('down', 10)
+    s.g.tap('a', 10)  # TOSS quantity (one)
+    s.g.tap('a', 10)
+    require(len(s.cmd(cmd='get_bag')) == 19, 'TOSS did not free a bag slot')
+    for _ in range(10):
+        if s.g.st()['screen'] == 'overworld':
+            break
+        s.g.tap('b', 10)
+    s.g.face('up')
+    s.interact()
+    require(s.qty(name) == 1, f'{item} not collectible after making room')
+    s.reload()
+    require(s.qty(name) == 1, f'{item} quantity lost after restart')
+    require(not next(n for n in s.g.d.npcs() if n['text_id'] == text_id)['visible'],
+            f'{item} collected object returned after restart')
+    s.g.face('up')
+    s.interact()
+    require(s.qty(name) == 1, f'{item} duplicated after restart')
+
+
 @case('forest-visible-full-bag-keeps-object')
 def visible_full(s):
+    visible_full_retry(s, 'ANTIDOTE', 'Antidote', 5, 25, 11)
+
+
+@case('forest-potion-full-bag-retry')
+def potion_full(s):
+    visible_full_retry(s, 'POTION', 'Potion', 6, 12, 29)
+
+
+@case('forest-pokeball-full-bag-retry')
+def pokeball_full(s):
+    visible_full_retry(s, 'POKE_BALL', 'PokeBall', 7, 1, 31)
+
+
+@case('forest-full-bag-existing-stack')
+def visible_existing_stack(s):
+    # A full set of distinct slots can still accept another Poke Ball.
     s.full_bag()
-    face_visible_antidote(s)
+    s.warp('ViridianForest', 1, 32)
+    s.g.face('up')
     text = s.interact()
-    data = s.observe('full-bag visible pickup')
-    require(s.qty('Antidote') == 0, 'full bag unexpectedly gained Antidote')
-    # Keep restart evidence even when the first interaction violated the contract.
+    require('found' in text, f'existing stack should accept pickup: {text!r}')
+    require(s.qty('PokeBall') == 2, 'pickup did not join existing stack')
+    require(len(s.cmd(cmd='get_bag')) == 20, 'pickup changed distinct slot count')
     s.reload()
-    restored = s.observe('full-bag visible pickup after restart')
-    require(next(n for n in data['npcs'] if n['text_id'] == 5)['visible'],
-            f'BUG: full-bag ANTIDOTE object disappeared; dialogue={text!r}')
-    require(next(n for n in restored['npcs'] if n['text_id'] == 5)['visible'],
-            'full-bag object vanished after restart')
-    require('room' in text.lower(), f'bag-full refusal missing: {text!r}')
+    require(s.qty('PokeBall') == 2, 'merged stack lost after restart')
+    require(not next(n for n in s.g.d.npcs() if n['text_id'] == 7)['visible'],
+            'collected Poke Ball returned after restart')
 
 
 def face_hidden_antidote(s):
