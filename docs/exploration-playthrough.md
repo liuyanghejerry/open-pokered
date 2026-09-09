@@ -10,6 +10,10 @@ cargo build --bin pokered-app --features debug-server
 python3 scripts/exploration_playthrough.py --list
 python3 scripts/exploration_playthrough.py --until m10 --seed 73 --samples 2 \
   --artifacts /tmp/pokered-exploration
+
+# 用 SaveBuilder 构造 m26 起点，跳过前置主线；4 个独立 probe worker 可并发运行
+python3 scripts/exploration_playthrough.py --from m26 --until m30 \
+  --jobs 4 --seed 73 --samples 2 --artifacts /tmp/pokered-late-exploration
 ```
 
 ## 两类检查
@@ -27,6 +31,18 @@ python3 scripts/exploration_playthrough.py --until m10 --seed 73 --samples 2 \
 总报告在 `report.json`。明确违反 oracle 是 `fail`，路径或随机探索预算耗尽是
 `inconclusive`，命令仍成功退出；后者不能直接当作内容缺失。明确违反 oracle 的
 `fail` 会让命令以非零状态退出。
+
+## 构造存档与并发
+
+`--from m26` 使用 `SaveBuilder.exploration("m26")` 生成离线 snapshot。它保留
+m26 已完成、m27 及以后尚未完成的剧情边界，并提供后期主线需要的高等级队伍和
+技能。runner 会先把它落成 m26 checkpoint，再从 m27 继续；因此可以直接验证
+m26 之后的内容。也可以单独运行
+`python3 scripts/save_builder.py -o /tmp/m26.json --preset m26-exploration`。
+
+`--jobs N` 会在主线 checkpoint 准备完成后启动最多 N 个独立 probe worker。每个
+worker 都复制自己的 checkpoint，并使用自己的游戏进程、存档和协议日志；一个
+支线的状态变化不会污染另一个支线。`--jobs 1` 保留串行行为。
 
 当前 manifest 覆盖：Daisy 在图鉴前后的对话、城镇地图奖励、常青市隐藏药水、
 Route 22 Boulder Badge 门禁、Pewter 博物馆拒票分支、Vermilion Pokémon Fan Club

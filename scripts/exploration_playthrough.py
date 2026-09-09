@@ -18,10 +18,13 @@ Examples:
     python3 scripts/exploration_playthrough.py --list
     python3 scripts/exploration_playthrough.py --until m10 --seed 73 \
         --samples 2 --artifacts /tmp/pokered-exploration
+    python3 scripts/exploration_playthrough.py --from m26 --until m30 \
+        --jobs 4 --samples 2 --artifacts /tmp/pokered-late-exploration
     python3 scripts/exploration_playthrough.py --only route22-gate-opens-after-brock
 """
 import argparse
 from collections import Counter
+from concurrent.futures import ThreadPoolExecutor, as_completed
 import hashlib
 import json
 from pathlib import Path
@@ -41,6 +44,7 @@ from playthrough import (
     NavError,
     resume_reentry,
 )
+from save_builder import SaveBuilder
 
 
 MANIFEST = Path(__file__).with_name("exploration_probes.json")
@@ -170,6 +174,18 @@ def _validate_selection(args, manifest):
             raise ValueError(
                 f"probe(s) occur after --until {args.until}: "
                 f"{', '.join(beyond_until)}"
+            )
+    start = getattr(args, "start", None)
+    if selected_ids and start:
+        start_index = Game.milestone_index(start)
+        before_start = sorted(
+            probe_id for probe_id in selected_ids
+            if Game.milestone_index(manifest["probe_checkpoint"][probe_id]) < start_index
+        )
+        if before_start:
+            raise ValueError(
+                f"probe(s) occur before --from {start}: "
+                f"{', '.join(before_start)}"
             )
 
 
@@ -307,14 +323,15 @@ def run_probe(session, probe):
 
 
 class ExplorationRunner:
-    def __init__(self, args, manifest, output):
+    def __init__(self, args, manifest, output, start_snapshot=None):
         self.args = args
         self.manifest = manifest
         self.output = output
         self.main_save = output / "mainline.sav"
         _validate_selection(args, manifest)
         self.selected_ids = set(args.only.split(",")) if args.only else None
-        self.g = Game(save_path=self.main_save)
+        self.start_snapshot = start_snapshot
+        self.g = Game(save_path=self.main_save, snapshot=start_snapshot)
         self.results = []
         self.rng = random.Random(args.seed)
 
@@ -338,66 +355,105 @@ class ExplorationRunner:
             probes = blocked + self.rng.sample(destinations, count)
         return probes
 
+    def _run_probe(self, mid, checkpoint, probe):
+        probe_dir = self.output / "probes" / mid / probe["id"]
+        probe_dir.parent.mkdir(parents=True, exist_ok=True)
+        session = ExplorationSession(probe_dir)
+        result = {"id": probe["id"], "checkpoint": mid,
+                  "kind": probe["kind"], "status": "pass",
+                  "contract": probe}
+        began = time.monotonic()
+        try:
+            session.boot_checkpoint(checkpoint)
+            session.g.smart_moves = Game.milestone_index(mid) >= Game.milestone_index("m11")
+            result["evidence"] = run_probe(session, probe)
+        except ProbeIncomplete as error:
+            result.update(status="inconclusive", error=f"{type(error).__name__}: {error}")
+        except Exception as error:
+            result.update(status="fail", error=f"{type(error).__name__}: {error}")
+            if session.g:
+                try:
+                    result["failure_state"] = session.g.st()
+                    result["failure_flags"] = session.cmd(cmd="get_flags")
+                    result["failure_bag"] = session.cmd(cmd="get_bag")
+                except Exception as capture_error:
+                    result["capture_error"] = str(capture_error)
+        finally:
+            session.close()
+        result["wall_seconds"] = round(time.monotonic() - began, 3)
+        (probe_dir / "result.json").write_text(
+            json.dumps(result, ensure_ascii=False, indent=2) + "\n")
+        print(json.dumps({k: result[k] for k in ("checkpoint", "id", "status", "wall_seconds")},
+                         ensure_ascii=False), flush=True)
+        return result
+
     def _run_checkpoint(self, mid, checkpoint, probes):
-        entry = {"checkpoint": mid, "selected": [p["id"] for p in probes],
-                 "probes": []}
-        for probe in probes:
-            probe_dir = self.output / "probes" / mid / probe["id"]
-            probe_dir.parent.mkdir(parents=True, exist_ok=True)
-            session = ExplorationSession(probe_dir)
-            result = {"id": probe["id"], "checkpoint": mid,
-                      "kind": probe["kind"], "status": "pass",
-                      "contract": probe}
-            began = time.monotonic()
-            try:
-                session.boot_checkpoint(checkpoint)
-                session.g.smart_moves = Game.milestone_index(mid) >= Game.milestone_index("m11")
-                result["evidence"] = run_probe(session, probe)
-            except ProbeIncomplete as error:
-                result.update(status="inconclusive", error=f"{type(error).__name__}: {error}")
-            except Exception as error:
-                result.update(status="fail", error=f"{type(error).__name__}: {error}")
-                if session.g:
-                    try:
-                        result["failure_state"] = session.g.st()
-                        result["failure_flags"] = session.cmd(cmd="get_flags")
-                        result["failure_bag"] = session.cmd(cmd="get_bag")
-                    except Exception as capture_error:
-                        result["capture_error"] = str(capture_error)
-            finally:
-                session.close()
-            result["wall_seconds"] = round(time.monotonic() - began, 3)
-            (probe_dir / "result.json").write_text(
-                json.dumps(result, ensure_ascii=False, indent=2) + "\n")
-            entry["probes"].append(result)
-            self.results.append(result)
-            print(json.dumps({k: result[k] for k in ("checkpoint", "id", "status", "wall_seconds")},
-                             ensure_ascii=False), flush=True)
-        return entry
+        results = [self._run_probe(mid, checkpoint, probe) for probe in probes]
+        self.results.extend(results)
+        return {"checkpoint": mid, "selected": [p["id"] for p in probes],
+                "probes": results}
+
+    def _run_pending(self, pending):
+        """Run all pending checkpoint probes concurrently from copied saves."""
+        if not pending:
+            return
+        if self.args.jobs == 1:
+            entries = [self._run_checkpoint(mid, checkpoint, probes)
+                       for mid, checkpoint, probes in pending]
+        else:
+            jobs = {}
+            with ThreadPoolExecutor(max_workers=self.args.jobs) as executor:
+                for mid, checkpoint, probes in pending:
+                    for probe in probes:
+                        key = (mid, probe["id"])
+                        jobs[key] = executor.submit(self._run_probe, mid, checkpoint, probe)
+                futures = {future: key for key, future in jobs.items()}
+                completed = {}
+                for future in as_completed(jobs.values()):
+                    completed[futures[future]] = future.result()
+            entries = []
+            for mid, checkpoint, probes in pending:
+                results = [completed[(mid, probe["id"])] for probe in probes]
+                self.results.extend(results)
+                entries.append({"checkpoint": mid,
+                                "selected": [p["id"] for p in probes],
+                                "probes": results})
+        for entry in entries:
+            self._write_checkpoint_result(entry)
 
     def run(self):
         try:
-            self.g.smart_moves = False
-            self.g.wait("screen=language-select", 1800)
+            if self.start_snapshot is None:
+                self.g.smart_moves = False
+                self.g.wait("screen=language-select", 1800)
+                start_index = 0
+            else:
+                resume_reentry(self.g)
+                start_index = Game.milestone_index(self.args.start)
+            pending = []
             # Reuse the canonical milestones' real power-on flow.  Calling the
             # functions directly keeps this mode a sibling, not a second route.
-            for mid, desc, fn in MILESTONES:
+            for index, (mid, desc, fn) in enumerate(MILESTONES):
+                if index < start_index:
+                    continue
                 print(f"== {mid}: {desc}", flush=True)
                 began = time.monotonic()
                 self.g.smart_moves = Game.milestone_index(mid) >= Game.milestone_index("m11")
-                if mid == "m05":
+                if self.start_snapshot is not None and index == start_index:
+                    pass  # the constructed snapshot already represents this checkpoint
+                elif mid == "m05":
                     fn(self.g, self.args.starter)
                 else:
                     fn(self.g)
                 self.g.smart_moves = Game.milestone_index(mid) >= Game.milestone_index("m11")
                 checkpoint = self._checkpoint_path(mid)
                 probes = self._choose(mid)
-                checkpoint_result = self._run_checkpoint(mid, checkpoint, probes)
-                self._write_checkpoint_result(checkpoint_result)
+                pending.append((mid, checkpoint, probes))
                 print(f"   mainline done ({time.monotonic() - began:.1f}s wall); "
                       f"explored {len(probes)} probe(s)", flush=True)
                 if self.args.until == mid:
                     break
+            self._run_pending(pending)
             return self._report()
         finally:
             self.g.close()
@@ -408,9 +464,12 @@ class ExplorationRunner:
 
     def _report(self):
         counts = Counter(result["status"] for result in self.results)
+        start_index = (Game.milestone_index(self.args.start)
+                       if self.args.start else 0)
+        until_index = (Game.milestone_index(self.args.until)
+                       if self.args.until else len(MILESTONES) - 1)
         milestone_ids = [mid for mid, _, _ in MILESTONES
-                         if not self.args.until or
-                         Game.milestone_index(mid) <= Game.milestone_index(self.args.until)]
+                         if start_index <= Game.milestone_index(mid) <= until_index]
         checkpoint_coverage = {}
         for mid in milestone_ids:
             group = self.manifest["by_checkpoint"].get(mid, {})
@@ -430,6 +489,8 @@ class ExplorationRunner:
             "manifest_sha256": hashlib.sha256(MANIFEST.read_bytes()).hexdigest(),
             "seed": self.args.seed,
             "samples_per_checkpoint": self.args.samples,
+            "jobs": self.args.jobs,
+            "from": self.args.start,
             "until": self.args.until,
             "milestones": milestone_ids,
             "checkpoint_coverage": checkpoint_coverage,
@@ -448,6 +509,8 @@ def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--list", action="store_true", help="list checkpoints and probes")
     parser.add_argument("--only", help="comma-separated probe IDs; run them at their checkpoints")
+    parser.add_argument("--from", dest="start", metavar="MILESTONE",
+                        help="start from a constructed checkpoint (currently m26)")
     parser.add_argument("--until", help="stop the mainline after this milestone")
     parser.add_argument("--starter", default="bulbasaur",
                         choices=["bulbasaur", "squirtle", "charmander"])
@@ -455,6 +518,8 @@ def main(argv=None):
                         help="deterministic destination-sampling seed")
     parser.add_argument("--samples", type=int, default=1,
                         help="random destinations per checkpoint (blocked probes always run)")
+    parser.add_argument("--jobs", type=int, default=1,
+                        help="parallel probe workers; each worker boots its own save copy")
     parser.add_argument("--artifacts", type=Path,
                         help="new directory for checkpoints, protocol traces and report")
     args = parser.parse_args(argv)
@@ -469,6 +534,15 @@ def main(argv=None):
         parser.error("--samples must be non-negative")
     if args.until and args.until not in _milestone_names():
         parser.error(f"unknown milestone: {args.until}")
+    if args.start and args.start not in _milestone_names():
+        parser.error(f"unknown milestone: {args.start}")
+    if args.start and args.start != "m26":
+        parser.error("constructed exploration currently supports only --from m26")
+    if (args.start and args.until
+            and Game.milestone_index(args.until) < Game.milestone_index(args.start)):
+        parser.error(f"--until {args.until} must be at or after --from {args.start}")
+    if args.jobs < 1:
+        parser.error("--jobs must be at least 1")
     try:
         _validate_selection(args, manifest)
     except ValueError as error:
@@ -478,7 +552,11 @@ def main(argv=None):
             "artifacts must be new or empty to preserve evidence")
     output.mkdir(parents=True, exist_ok=True)
     (output / "manifest.json").write_bytes(MANIFEST.read_bytes())
-    runner = ExplorationRunner(args, manifest, output)
+    start_snapshot = None
+    if args.start:
+        start_snapshot = output / f"constructed-{args.start}.json"
+        SaveBuilder().exploration(args.start).write(start_snapshot)
+    runner = ExplorationRunner(args, manifest, output, start_snapshot=start_snapshot)
     report = runner.run()
     # Inconclusive means that a route or stochastic search budget did not
     # produce enough evidence; it is intentionally visible in report.json

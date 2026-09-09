@@ -65,6 +65,11 @@ class ExplorationManifestTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "after --until m10"):
             exploration._validate_selection(args, self.manifest)
 
+    def test_selection_cannot_run_before_constructed_start(self):
+        args = SimpleNamespace(only="daisy-before-pokedex", until=None, start="m26")
+        with self.assertRaisesRegex(ValueError, "before --from m26"):
+            exploration._validate_selection(args, self.manifest)
+
 
 if __name__ == "__main__":
     unittest.main()
