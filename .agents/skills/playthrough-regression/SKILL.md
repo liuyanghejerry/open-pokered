@@ -7,7 +7,7 @@ description: Run end-to-end game engine regression checks using milestone playth
 
 Use this skill to regression-test the game engine end-to-end.
 `scripts/playthrough.py` drives a headless game instance **from a real
-power-on through story milestones m01–m10 using button input plus
+power-on through story milestones using button input plus
 debug-server observation only** — no `--skip-intro`, no `--warp`, no state
 seeding. A green run proves the real engine paths (intro flow, warps, map
 scripts, battles, story flags) still work after a change; a red run localizes
@@ -17,6 +17,12 @@ the regression to the surface a milestone exercises. Its sibling
 see "Beyond the chain: the scenario suite".
 
 ## Quick Start
+
+For the complete first-clear route and verification evidence, read
+[references/first-clear.md](references/first-clear.md): verified progress,
+route notes, issue evidence and the `--artifacts` workflow. Post-Brock
+milestones live in `scripts/playthrough_late.py`; an implemented milestone
+is not verified until its real-input run passes.
 
 ```bash
 # 1. Build the binary the driver launches. MUST be the debug profile
@@ -31,12 +37,15 @@ python3 scripts/playthrough.py --list
 # 3. Run the chain scoped to your diff (stops after the named milestone)
 python3 scripts/playthrough.py --until m06 2>&1 | tee /tmp/pt.log
 
-# 4. Full run = the m01–m10 chain
-python3 scripts/playthrough.py 2>&1 | tee /tmp/pt.log
+# 4. Established early-game baseline
+python3 scripts/playthrough.py --until m10 --artifacts /tmp/pt-early
+
+# 5. Verified first-clear chain (Bulbasaur; evidence in references/first-clear.md)
+python3 scripts/playthrough.py --until m49 --artifacts /tmp/pt-first-clear
 ```
 
-Python 3 stdlib only — no venv, no pip. Default debug port is 9020
-(`--port` to change). Success is the final line
+Python 3 stdlib only — no venv, no pip. The driver probes a free debug port
+(`--port` to override). Success is the final line
 `PLAYTHROUGH REACHED REQUESTED MILESTONE`.
 
 ## Scoping: which milestone guards which surface
@@ -57,6 +66,12 @@ milestones are cheap; the m09 forest and the m10 grind dominate wall time.
 | m08 | parcel delivery → POKéDEX | scripted delivery, event-flag flip changing Oak's dialogue branch |
 | m09 | gate houses → forest → Pewter | gate warp chains (`last_map` semantics), forest trainer LOS fights |
 | m10 | grind to L13 → Brock → badge | wild encounters, grass, Pokecenter heal flow, gym challenge; success = `EVENT_BEAT_BROCK` flag (3 internal attempts) |
+
+| m11–m20 | Mt. Moon, Misty, Bill, SS Anne, Cut, Surge, Rock Tunnel | move learning, story rewards, ledges, field moves |
+| m21–m30 | Erika, Rocket Hideout, Pokémon Tower, Koga, Safari, Saffron access | spinners, elevators, ghosts, timed steps, item exchanges |
+| m31–m40 | Silph, Sabrina, Fly/Surf, Zapdos, Mansion, final gyms | teleport pads, capture, party selection, water travel, switches |
+| m41–m44 | badge gates, Victory Road, Indigo supplies | Strength, boulder holes, dynamic collisions, shopping |
+| m45–m49 | Elite Four, Champion, Hall of Fame, credits, separate-process CONTINUE | forced switches, recovery, ending autosave and first-clear persistence |
 
 Rule of thumb: pure data edits (moves, stats, text) → m05/m06/m10 suffice;
 anything in warp/collision/script/flag code → run the full chain.
@@ -90,6 +105,7 @@ python3 scripts/scenarios.py --skip s05      # all but the RNG-heavy one
 | s08-start-menu | START menu opens; first entry opens the party screen; EXIT returns control |
 | s09-options | OPTIONS text-speed toggle changes `text_speed_delay_frames` and persists across menu reopen |
 | s10-npcs | `get_npcs` reports live, field-sane NPCs on the entered map |
+| s11-forced-switch | a fainted Magikarp is replaced by a living teammate through `PlayerFaintSwitch`, then the battle is won |
 
 Engine quirks the scenarios encode (same contract as the milestone
 comments — don't weaken them without an engine change):
@@ -103,9 +119,8 @@ comments — don't weaken them without an engine change):
   penalty is not assertable headless yet.
 - **Whiteout lands on PalletTown (5,6)** — the home fly point — not the
   bedroom.
-- The battle BAG menu has no protocol snapshot (unlike FIGHT's
-  `battle_moves`), so BagSelect is driven blind against
-  `battle_phase == "BagSelect"`.
+- `battle_bag` exposes the battle bag cursor and entries; the late-game
+  driver observes it before choosing medicine and its party target.
 
 s05 is the only RNG scenario (catch rolls; ~0.03% all-miss with 20
 balls). The chain's flake policy applies unchanged.
@@ -209,11 +224,11 @@ live flag store (visible to `get_flags`). See
 executable specs. Runtime-only extras (`__OBJ_HIDDEN_*`) are NOT part
 of a snapshot — set those with `set_flag` after boot.
 
-### Adding a scenario (s11+)
+### Adding a scenario (s12+)
 
 Seed with the protocol's write commands, drive with `g.d.drive` taps,
 assert against `get_state` / `get_party` / `get_bag` / `get_flags` /
-`get_npcs`. Register with `@scenario("s11-name", "one-line contract")`
+`get_npcs`. Register with `@scenario("s12-name", "one-line contract")`
 and add a row to the table above. Never assert on engine internals: if
 the protocol cannot observe it, extend the debug server first — the
 scenario layer is deliberately black-box. If the test reads like an
@@ -259,10 +274,10 @@ python3 scripts/playthrough.py --until mNN --record-video /tmp/repro.mp4
 # or PNG frames: --record /tmp/frames/ (assemble: ffmpeg -framerate 240 -i frame-%06d.png -r 60 out.mp4)
 ```
 
-Then diff-read the suspected subsystem with the milestone table above. The
-game's own stderr goes to `$TMPDIR/pokered-run-*/game.log`, but the driver
-deletes that directory on a normal milestone failure — the log survives
-only when the driver itself died before cleanup. For a persistent game log,
+Then diff-read the suspected subsystem with the milestone table above. With `--artifacts DIR`, the driver retains the game log, milestone observations,
+and failure state/traceback before cleanup. Without this option, the game's
+stderr in `$TMPDIR/pokered-run-*/game.log` is deleted on normal cleanup.
+For a separately managed game log,
 launch the game manually with `--debug-modules warp,event,overworld` (see
 the pokered-debug skill) and drive the scenario with
 `scripts/debug_drive.py`.
@@ -320,12 +335,12 @@ retry, m10 takes 3 gym attempts). Policy:
    `last_map` tracking). When driver and engine disagree, suspect the
    engine diff first, then `tools/map_data.json` staleness.
 
-## Adding a milestone (m11+)
+## Adding a milestone (m50+)
 
-1. Write `def m11_xxx(g):` modeled on `m09_to_pewter` — navigate, then
-   `assert` the engine state (call `g.evidence("m11")` so the contract is
+1. Write `def m50_xxx(g):` modeled on `m09_to_pewter` — navigate, then
+   `assert` the engine state (call `g.evidence("m50")` so the contract is
    visible in logs).
-2. Append to `MILESTONES` (`scripts/playthrough.py:1337`).
+2. Register post-Brock work in `LATE_MILESTONES` in `scripts/playthrough_late.py`; the main driver appends this list.
 3. Encode any engine quirk you had to respect (input edge-triggering,
    staged warp chains, patrol bands) as a comment at the exact line —
    these comments are the engine-behavior record; delete driver workarounds
@@ -335,7 +350,7 @@ retry, m10 takes 3 gym attempts). Policy:
 
 ## What this test does NOT cover
 
-- Content past Pewter City (no m11+ yet).
+- Alternate starters and optional postgame content are outside the verified first-clear route. See references/first-clear.md for the fresh m01–m49 evidence.
 - Rendering/audio correctness — use the screenshot CLI and the
   visual-verify skill; remember the AGENTS.md before/after screenshot rule
   for visual PRs.

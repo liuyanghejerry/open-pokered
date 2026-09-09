@@ -4998,12 +4998,19 @@ impl PokemonGame {
             "screen": crate::cli::screen_name(&self.state.screen).to_string(),
             "map_id": map_id as u8,
             "map_name": format!("{:?}", map_id),
+            "map_blocks": self.overworld.map_data.as_ref().map(|map| &map.blocks),
             "player_x": self.overworld.state.player.x,
             "player_y": self.overworld.state.player.y,
             "player_facing": format!("{:?}", self.overworld.state.player.facing),
+            "player_transport": format!("{:?}", self.overworld.state.player.transport),
             "player_name": self.player_name.clone(),
             "frame_count": self.frame_count,
             "party_count": self.overworld.party_count,
+            "badges": self.save_data.game_data.obtained_badges,
+            "hall_of_fame_count": self.save_data.hall_of_fame.team_count(),
+            "hof_phase": self.hof_ceremony.as_ref().map(|hof| format!("{:?}", hof.phase())),
+            "credits_phase": self.credits.as_ref().map(|credits| format!("{:?}", credits.phase())),
+            "credits_final_button": self.credits.as_ref().map(|credits| credits.awaiting_final_button()),
             // Full party roster (species/level/HP/moves/PP) so a driver
             // can plan healing, training and switch strategy offline.
             "party": self
@@ -5066,6 +5073,37 @@ impl PokemonGame {
             }).collect::<Vec<_>>(),
             "shop_phase": match &self.state.screen {
                 GameScreen::Shop(mart) => Some(format!("{:?}", mart.phase)),
+                _ => None,
+            },
+            // Read-only menu observations for real-input HM/item/field-move
+            // playthroughs. Expose the active menu only, never a stale cursor.
+            "field_menu": match &self.state.screen {
+                GameScreen::StartMenu => Some(serde_json::json!({
+                    "kind": "start", "cursor": self.start_menu.cursor(),
+                    "items": self.start_menu.items().iter().map(|item| format!("{:?}", item)).collect::<Vec<_>>(),
+                })),
+                GameScreen::Bag => Some(serde_json::json!({
+                    "kind": "bag", "cursor": self.bag_screen.cursor(),
+                    "phase": format!("{:?}", self.bag_screen.phase()),
+                    "items": self.bag_screen.items().iter().map(|(id, qty)| serde_json::json!({
+                        "item": format!("{:?}", id), "qty": qty,
+                    })).collect::<Vec<_>>(),
+                })),
+                GameScreen::PartyScreen => Some(serde_json::json!({
+                    "kind": "party", "cursor": self.party_screen.cursor(),
+                    "phase": format!("{:?}", self.party_screen.phase()),
+                    "mode": format!("{:?}", self.party_screen.mode()),
+                    "field_moves": self.party_screen.selected_field_moves().iter().map(|m| format!("{:?}", m)).collect::<Vec<_>>(),
+                    "known_moves": self.party_screen.selected_known_moves().iter().map(|m| format!("{:?}", m)).collect::<Vec<_>>(),
+                })),
+                GameScreen::Elevator => self.elevator_screen.as_ref().map(|lift| serde_json::json!({
+                    "kind": "elevator", "cursor": lift.selected_index(), "items": lift.floors(),
+                })),
+                GameScreen::TownMap => Some(serde_json::json!({
+                    "kind": "town_map", "cursor": self.town_map_screen.cursor(),
+                    "mode": format!("{:?}", self.town_map_screen.mode()),
+                    "selected_map": format!("{:?}", self.town_map_screen.selected_map()),
+                })),
                 _ => None,
             },
             // Live move menu while it is open (FIGHT selection): cursor and

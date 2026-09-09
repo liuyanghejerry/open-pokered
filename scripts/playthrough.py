@@ -17,6 +17,7 @@ Usage:
 """
 import argparse
 import json
+import re
 import shutil
 import socket
 import subprocess
@@ -25,6 +26,12 @@ import tempfile
 import time
 from collections import deque
 from pathlib import Path
+
+# Late helpers import the driver's navigation primitives. When this file is
+# executed as a script, keep one module/map cache instead of loading a second
+# stale copy under the name "playthrough" after a switch opens a passage.
+if __name__ == "__main__":
+    sys.modules["playthrough"] = sys.modules[__name__]
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "scripts"))
@@ -45,7 +52,35 @@ for _p in sorted((ROOT / "crates/pokered-data/maps").iterdir()):
         _j = json.load(open(_f))
         CONNS[_j["name"]] = _j.get("connections") or {}
 
+# A passable destination is necessary but not sufficient: Cavern walls
+# include individually passable tile 0x05 whose boundary with floor 0x20
+# is forbidden. Read the game's canonical land pair table, not a second
+# hand-maintained whitelist (MtMoon1F (10,22)->(9,22) exposed this).
+_collision_source = (ROOT / "crates/pokered-data/src/collision.rs").read_text()
+_land_pairs = _collision_source.split("pub const TILE_PAIR_COLLISIONS_LAND:", 1)[1].split("];", 1)[0]
+LAND_PAIRS = {(int(ts), frozenset((int(a, 16), int(b, 16))))
+              for ts, a, b in re.findall(
+                  r"tileset:\s*(\d+),\s*tile1:\s*(0x[0-9A-Fa-f]+),\s*tile2:\s*(0x[0-9A-Fa-f]+)",
+                  _land_pairs)}
+assert LAND_PAIRS, "could not read canonical land collision pairs"
+LEDGES = {(d.lower(), int(a, 16), int(b, 16)) for d, a, b in re.findall(
+    r"direction: SPRITE_FACING_(\w+),\s*standing_tile:\s*(0x[0-9A-Fa-f]+),\s*ledge_tile:\s*(0x[0-9A-Fa-f]+)",
+    _collision_source)}
+
 DELTA = {"up": (0, -1), "down": (0, 1), "left": (-1, 0), "right": (1, 0)}
+
+SPINNERS = {}
+_spin_source = (ROOT / "crates/pokered-core/src/overworld/spinner_paths.rs").read_text()
+for _map, _body in re.findall(r'"(\w+)" => &\[(.*?)\n\s*\],', _spin_source, re.S):
+    for _x, _y, _steps in re.findall(r"\((\d+), (\d+), &\[(.*?)\]\)", _body):
+        _end_x, _end_y = int(_x), int(_y)
+        _count = 0
+        for _direction, _length in re.findall(r"dir: Direction::(\w+), steps: (\d+)", _steps):
+            _dx, _dy = DELTA[_direction.lower()]
+            _end_x += _dx * int(_length)
+            _end_y += _dy * int(_length)
+            _count += int(_length)
+        SPINNERS.setdefault(_map, {})[(int(_x), int(_y))] = ((_end_x, _end_y), _count)
 
 
 def tile_at(map_name, x, y):
@@ -54,7 +89,10 @@ def tile_at(map_name, x, y):
     m = MAPS[map_name]
     if not (0 <= x < m["width"] * 2 and 0 <= y < m["height"] * 2):
         return None
-    block = m["blocks"][(y // 2) * m["width"] + (x // 2)]
+    index = (y // 2) * m["width"] + (x // 2)
+    if index >= len(m["blocks"]):
+        return None  # Engine get_block_at returns None for a short map.
+    block = m["blocks"][index]
     tiles = BLOCKSETS[m["tileset_id"]][block]
     return tiles[((y % 2) * 2 + 1) * 4 + (x % 2) * 2]
 
@@ -66,6 +104,13 @@ def walkable(map_name, x, y):
     if not (0 <= x < m["width"] * 2 and 0 <= y < m["height"] * 2):
         return False
     return tile_at(map_name, x, y) in m["passable_tiles"]
+
+
+def walkable_edge(map_name, start, end):
+    return (walkable(map_name, *end)
+            and (MAPS[map_name]["tileset_id"],
+                 frozenset((tile_at(map_name, *start), tile_at(map_name, *end))))
+            not in LAND_PAIRS)
 
 
 # data/tilesets/tileset_headers.asm grass tiles per tileset name.
@@ -107,7 +152,7 @@ def grass_tiles(map_name):
             if is_grass(map_name, x, y)}
 
 
-def bfs(map_name, start, goal, blocked=frozenset()):
+def bfs(map_name, start, goal, blocked=frozenset(), allow_spinners=False):
     """BFS over one map; `blocked` is a set of (x, y) tiles NPCs occupy.
     Returns [(tile, direction-of-arrival), …] from start to goal."""
     if start == goal:
@@ -118,9 +163,15 @@ def bfs(map_name, start, goal, blocked=frozenset()):
         cx, cy = q.popleft()
         for d, (dx, dy) in DELTA.items():
             n = (cx + dx, cy + dy)
-            if n in prev or n in blocked or not walkable(map_name, *n):
+            if n in prev or n in blocked or not walkable_edge(map_name, (cx, cy), n):
                 continue
-            prev[n] = ((cx, cy), d)
+            how = d
+            if allow_spinners and n in SPINNERS.get(map_name, {}):
+                n, count = SPINNERS[map_name][n]
+                if n in prev or n in blocked:
+                    continue
+                how = f"spin_{d}_{count}"
+            prev[n] = ((cx, cy), how)
             if n == goal:
                 out = []
                 c = n
@@ -134,6 +185,10 @@ def bfs(map_name, start, goal, blocked=frozenset()):
 
 
 _CONN_DIR = {"up": "north", "down": "south", "left": "west", "right": "east"}
+SCRIPTED_LAST_MAP = dict(re.findall(
+    r"MapId::(\w+) => Some\(MapId::(\w+)\)",
+    (ROOT / "crates/pokered-core/src/overworld/map_loading.rs").read_text()
+    .split("pub fn get_map_dimensions", 1)[0]))
 
 
 def warp_edges_from(map_name, x, y, last_map=None):
@@ -147,6 +202,7 @@ def warp_edges_from(map_name, x, y, last_map=None):
     exactly ONE candidate; parents are only a fallback before the first
     real transition."""
     out = []
+    last_map = SCRIPTED_LAST_MAP.get(map_name, last_map)
     for w in MAPS[map_name]["warps"]:
         if w["x"] != x or w["y"] != y:
             continue
@@ -215,7 +271,7 @@ def cross_step(map_name, x, y, d):
     m = MAPS[map_name]
     w2, h2 = m["width"] * 2, m["height"] * 2
     if 0 <= nx < w2 and 0 <= ny < h2:
-        if not walkable(map_name, nx, ny):
+        if not walkable_edge(map_name, (x, y), (nx, ny)):
             return None
         return (map_name, nx, ny)
     conn = CONNS[map_name].get(_CONN_DIR[d])
@@ -234,6 +290,17 @@ def cross_step(map_name, x, y, d):
     return (tgt, *tn) if walkable(tgt, *tn) else None
 
 
+def ledge_step(map_name, x, y, d):
+    if MAPS[map_name]["tileset_name"].lower() != "overworld":
+        return None
+    dx, dy = DELTA[d]
+    if (d, tile_at(map_name, x, y), tile_at(map_name, x + dx, y + dy)) in LEDGES:
+        target = (x + 2 * dx, y + 2 * dy)
+        if walkable(map_name, *target):
+            return (map_name, *target)
+    return None
+
+
 def _path_of(prev, start, goal):
     out = []
     c = goal
@@ -245,24 +312,33 @@ def _path_of(prev, start, goal):
 
 
 def bfs_cross(map_name, start, goal_map, goal, blocked_maps=None,
-              last_map=None):
+              last_map=None, allow_ledges=False, excluded_maps=()):
     """BFS whose steps are plain directions. Stepping onto a warp tile
     takes the warp: the expansion replaces the landed tile with its warp
     destinations (doors fire immediately; bottom-edge exit mats fire via
     the extra edge-check). Exit mats resolve against `last_map` — the
     driver tracks it from real transitions, so the plan matches what the
-    engine will actually do. Nodes are (map, x, y)."""
+    engine will actually do. Search nodes include the remembered outside
+    map; returned path nodes retain the public (map, x, y) shape."""
     blocked_maps = blocked_maps or {}
     s = (map_name, *start)
     t = (goal_map, *goal)
     if s == t:
         return [s]
-    q = deque([s])
-    prev = {s: None}
+    if MAPS[map_name]["tileset_name"].lower() in OUTSIDE_MAP_TILESETS:
+        last_map = map_name
+    root = (*s, last_map)
+    q = deque([root])
+    prev = {root: None}
     while q:
-        cm, cx, cy = q.popleft()
+        current = q.popleft()
+        cm, cx, cy, remembered = current
         for d in DELTA:
+            how = d
             landed = cross_step(cm, cx, cy, d)
+            if landed is None and allow_ledges:
+                landed = ledge_step(cm, cx, cy, d)
+                how = "jump_" + d
             if landed is None:
                 continue
             key = (landed[1], landed[2])
@@ -275,20 +351,31 @@ def bfs_cross(map_name, start, goal_map, goal, blocked_maps=None,
                         and not outward_dir(*landed, d)):
                     cands = [landed]
                 else:
-                    cands = [n for n in warp_edges_from(*landed, last_map)
+                    cands = [n for n in warp_edges_from(*landed, remembered)
                              if n != (cm, cx, cy)
                              and n[0] not in NO_THROUGH]
             else:
                 cands = [landed]
             for n in cands:
-                if n == s or n in prev:
+                if n[0] in excluded_maps:
+                    continue
+                outside = (n[0] if MAPS[n[0]]["tileset_name"].lower()
+                           in OUTSIDE_MAP_TILESETS else remembered)
+                node = (*n, outside)
+                if node in prev:
                     continue
                 if n[0] == cm and (n[1], n[2]) in blocked_maps.get(cm, ()):
                     continue
-                prev[n] = ((cm, cx, cy), d)
+                prev[node] = (current, how)
                 if n == t:
-                    return _path_of(prev, s, n)
-                q.append(n)
+                    out = []
+                    cur = node
+                    while prev[cur] is not None:
+                        parent, step = prev[cur]
+                        out.append((cur[:3], step))
+                        cur = parent
+                    return [s] + out[::-1]
+                q.append(node)
     return None
 
 
@@ -379,15 +466,22 @@ class Game:
         special_terrain::is_outside_map). Interior maps leave it as is,
         which is what makes the forest gate corridor work: last_map
         stays Route2 through SouthGate → Forest → NorthGate."""
-        prev = getattr(self, "_prev_map", None)
-        if prev is not None and current_map != prev:
-            if MAPS[current_map]["tileset_name"] in OUTSIDE_MAP_TILESETS:
-                self.last_map = current_map
+        # map_data.json uses title case ("Overworld"), unlike the engine
+        # trait name ("overworld"). Also initialize from a resumed outside
+        # map even when this is the first observation in the process.
+        if MAPS[current_map]["tileset_name"].lower() in OUTSIDE_MAP_TILESETS:
+            self.last_map = current_map
         self._prev_map = current_map
 
     # ── protocol helpers ────────────────────────────────────────────────
     def st(self):
-        return self.d.cmd(cmd="get_state")["data"]
+        s = self.d.cmd(cmd="get_state")["data"]
+        if getattr(self, "smart_moves", False) and s.get("map_blocks") is not None:
+            # CUT, switches and boulders change collision geometry live.
+            # Update the planning copy from read-only protocol observation.
+            MAPS[s["map_name"]]["blocks"] = s["map_blocks"]
+            self.track_last_map(s["map_name"])
+        return s
 
     def wait(self, condition, max_frames=600, must=True):
         r = self.d.cmd(cmd="wait_until", condition=condition,
@@ -475,19 +569,26 @@ class Game:
             if (cx, cy) == (x, y):
                 return
             blocked = self.npc_blocked(cm) | (warp_tiles(cm) - {(x, y)})
-            path = bfs(cm, (cx, cy), (x, y), blocked=blocked)
+            path = bfs(cm, (cx, cy), (x, y), blocked=blocked,
+                       allow_spinners=getattr(self, "smart_moves", False))
             if not path:
                 # Learned NPC bands must never seal a map: retry with
                 # live positions only.
                 path = bfs(cm, (cx, cy), (x, y),
                            blocked=self.live_npcs(cm)
-                           | (warp_tiles(cm) - {(x, y)}))
+                           | (warp_tiles(cm) - {(x, y)}),
+                           allow_spinners=getattr(self, "smart_moves", False))
             if not path:
                 raise NavError(f"no path in {cm}: ({cx},{cy})->({x},{y})")
             dirs = [d for _, d in path[1:]]
             i = 0
             import os as _os2
             while i < len(dirs):
+                if dirs[i].startswith("spin_"):
+                    _, direction, count = dirs[i].split("_")
+                    self.d.drive([direction] * FRAMES_PER_TILE,
+                                 frames=(int(count) + 1) * FRAMES_PER_TILE + 32)
+                    break  # Observe the scripted slide's actual endpoint.
                 j = i
                 while j + 1 < len(dirs) and dirs[j + 1] == dirs[i]:
                     j += 1
@@ -500,7 +601,8 @@ class Game:
                              frames=tiles * FRAMES_PER_TILE + 4)
                 i = j + 1
                 s2 = self.st()
-                if s2["screen"] == "battle" or s2.get("dialogue_state") is not None:
+                if (s2["map_name"] != cm or s2["screen"] == "battle"
+                        or s2.get("dialogue_state") is not None):
                     break
                 if (s2["player_x"], s2["player_y"]) == (px0, py0):
                     print(f"   [ntoPINCH] at {cm}({px0},{py0})", flush=True)
@@ -512,6 +614,33 @@ class Game:
         """Turn in place: one held frame turns, walking needs more."""
         self.d.drive([direction], frames=1 + 12)
 
+    def approach_object(self, x, y, map_name):
+        """Face an object from a reachable adjacent tile (trainers may
+        occupy one side after walking up to challenge the player)."""
+        for _ in range(4):
+            cm, cx, cy = self.pos()
+            assert cm == map_name, (cm, map_name)
+            blocked = self.live_npcs(cm) | warp_tiles(cm) | {(x, y)}
+            candidates = []
+            for direction, (dx, dy) in DELTA.items():
+                target = (x - dx, y - dy)
+                if target in blocked:
+                    continue
+                path = bfs(cm, (cx, cy), target, blocked,
+                           allow_spinners=getattr(self, "smart_moves", False))
+                if path:
+                    candidates.append((len(path), target, direction))
+            if not candidates:
+                raise NavError(f"no approach to {cm} object ({x},{y})")
+            _, target, direction = min(candidates)
+            try:
+                self.nav_to(*target, cm)
+            except NavError:
+                continue
+            self.face(direction)
+            return
+        raise NavError(f"object approach did not settle: {map_name} ({x},{y})")
+
     def nav_to_map(self, x, y, map_name, tries=150, avoid_grass=True):
         """Cross-map closed-loop walk (connections included). Prefers a
         route that avoids wild-encounter grass when one exists (wilds
@@ -520,6 +649,11 @@ class Game:
         from (or fought for trainers) and the walk re-localizes."""
         self.last_pinch = None
         self.pinch_count = 0
+        excluded_maps = ()
+        if getattr(self, "smart_moves", False):
+            flags = self.d.cmd(cmd="get_flags")["data"]
+            if not flags.get("EVENT_GAVE_SAFFRON_GUARDS_DRINK"):
+                excluded_maps = ("SaffronCity",)
         for attempt in range(tries):
             # Single snapshot for battle + position, same race as nav_to.
             s = self.st()
@@ -553,13 +687,17 @@ class Game:
                 path = bfs_cross(cm, (cx, cy), map_name, (x, y),
                                  blocked_maps={
                                      cm: blocked[cm] | grass_tiles(cm)},
-                                 last_map=self.last_map)
+                                 last_map=self.last_map,
+                                 allow_ledges=getattr(self, "smart_moves", False),
+                                 excluded_maps=excluded_maps)
             if path is None:
                 # Fallback: live NPC positions only — the learned bands
                 # must never seal off a whole map (they patrol wide).
                 path = bfs_cross(cm, (cx, cy), map_name, (x, y),
                                  blocked_maps={cm: self.live_npcs(cm)},
-                                 last_map=self.last_map)
+                                 last_map=self.last_map,
+                                 allow_ledges=getattr(self, "smart_moves", False),
+                                 excluded_maps=excluded_maps)
             if not path:
                 raise NavError(f"no cross path: {cm}({cx},{cy}) "
                                f"-> {map_name}({x},{y}) "
@@ -590,6 +728,10 @@ class Game:
             # re-localizes and re-plans either way)
             i = 0
             while i < len(steps):
+                if steps[i].startswith("jump_"):
+                    direction = steps[i].removeprefix("jump_")
+                    self.d.drive([direction] * 24, frames=40)
+                    break  # Two-tile jump: observe the landing and replan.
                 j = i
                 while (j + 1 < len(steps) and steps[j + 1] == steps[i]
                        and j + 1 - i < 3):
@@ -628,7 +770,13 @@ class Game:
                 self.d.drive([steps[i]] * held, frames=frames)
                 i = j + 1
                 s = self.st()
-                if s["screen"] == "battle":
+                if (s["screen"] == "battle" or s["map_name"] != cm
+                        or s.get("dialogue_state") is not None):
+                    break
+                if ((s["player_x"], s["player_y"]) != seg_end[1:]
+                        and (s["player_x"], s["player_y"]) != (px0, py0)):
+                    # Partial progress (NPC/input lock) invalidates every
+                    # later direction, even though this segment moved.
                     break
                 # Pinch: the segment made no progress (a wandering NPC
                 # holds the plan's next tile). Sidestep onto a free
@@ -704,14 +852,27 @@ class Game:
         faces the map edge with the direction still held (engine mirrors
         the original CheckWarps extra_warp_check), so path to (x, y-1)
         first and walk down through the mat."""
-        if approach == "down":
-            self.nav_to(x, y - 1, map_name=from_map, tries=tries)
-            self.d.drive(["down"] * (2 * FRAMES_PER_TILE + 32),
+        if approach in DELTA:
+            ax, ay = DELTA[approach]
+            try:
+                self.nav_to(x - ax, y - ay, map_name=from_map, tries=tries)
+            except NavError:
+                if to_map is not None and self.pos()[0] == to_map:
+                    assert self.cutscene(), f"{to_map} on-enter cutscene stalled"
+                    return to_map
+                raise
+            self.d.drive([approach] * (2 * FRAMES_PER_TILE + 32),
                          frames=2 * FRAMES_PER_TILE + 40)
         else:
             try:
                 self.nav_to(x, y, map_name=from_map, tries=tries)
             except NavError:
+                # A warp may finish during nav_to's final settlement. That
+                # is success only for the explicitly requested destination;
+                # never reinterpret a blackout/unexpected map as success.
+                if to_map is not None and self.pos()[0] == to_map:
+                    assert self.cutscene(), f"{to_map} on-enter cutscene stalled"
+                    return to_map
                 # Model blocked (e.g. an NPC patrol sealed the single
                 # approach): walk to an inward neighbor and long-hold
                 # onto the warp instead.
@@ -892,7 +1053,12 @@ class Game:
                 self.step(4)
                 continue
             moves = menu["moves"]
-            want = self._preferred_slot(moves)
+            want = None
+            if getattr(self, "smart_moves", False):
+                from playthrough_late import damage_slot
+                want = damage_slot(moves, s)
+            if want is None:
+                want = self._preferred_slot(moves)
             if want is None:
                 # No usable slot: the engine refuses to open this menu
                 # (forced Struggle), so this is only a defensive exit.
@@ -1106,7 +1272,34 @@ class Game:
             if s["screen"] != "battle":
                 break
             ph = s["battle_phase"]
-            if ph == "PlayerMenu":
+            if ph.startswith("LearnMove") and getattr(self, "smart_moves", False):
+                from playthrough_late import learn_move
+                learn_move(self, s)
+            elif ph == "PlayerMenu":
+                if s["map_name"].startswith("SafariZone"):
+                    # Safari's menu has RUN at the same bottom-right corner.
+                    self.tap("down", 8)
+                    self.tap("right", 8)
+                    self.tap("a", 8)
+                    continue
+                if fight and getattr(self, "smart_moves", False):
+                    from playthrough_late import battle_recovery_plan
+                    recovery = battle_recovery_plan(s)
+                    if recovery:
+                        self._medicine, self._medicine_target = recovery
+                        self.tap("down", 8)
+                        self.tap("left", 8)
+                        self.tap("a", 8)
+                        continue
+                    party = s.get("battle_live", {}).get("player_party", [])
+                    if any(mon["species"] == "Zapdos" for mon in party):
+                        from playthrough_late import battle_party_target
+                        target = battle_party_target(s)
+                        if party[target]["species"] != s["battle_live"]["player"]["species"]:
+                            self.tap("up", 8)
+                            self.tap("right", 8)
+                            self.tap("a", 8)
+                            continue
                 if not fight and iters_in_mode > 3:
                     fight = True          # escape keeps failing: brawl
                 iters_in_mode += 1
@@ -1123,9 +1316,20 @@ class Game:
             elif ph == "MoveSelect":
                 self._select_move()
                 self.step(30)
+            elif ph == "BagSelect" and getattr(self, "smart_moves", False):
+                menu = s["battle_bag"]
+                target = next(i for i, v in enumerate(menu["items"]) if v["item"] == self._medicine)
+                self.tap("a" if menu["cursor"] == target else "down", 8)
+            elif ph.startswith("ItemTargetSelect") and getattr(self, "smart_moves", False):
+                target = self._medicine_target
+                self.tap("a" if s["battle_party_cursor"] == target else "down", 8)
             elif ph == "ShiftPrompt":
-                self.tap("a", 8)               # default = switch in
+                self.tap("b" if getattr(self, "smart_moves", False) else "a", 8)
                 self.step(30)
+            elif ph in {"PartySelect", "PlayerFaintSwitch"} and getattr(self, "smart_moves", False):
+                from playthrough_late import battle_party_target
+                target = battle_party_target(s)
+                self.tap("a" if s["battle_party_cursor"] == target else "down", 8)
             else:
                 # Intro{..}/ShowingText{..}/TrainerVictory{..} pages
                 self.tap("a", 10)
@@ -1313,7 +1517,15 @@ def m09_to_pewter(g):
     Pewter City — the first gym town. Gate houses are traversed by the
     warp-aware BFS automatically."""
     g.nav_warp(5, 11, "OaksLab", "PalletTown", approach="down")
-    walk_pallet_to_pewter(g)
+    for attempt in range(3):
+        g.heal_pokecenter((23, 25), "ViridianCity", "ViridianPokecenter")
+        try:
+            walk_pallet_to_pewter(g)
+            break
+        except NavError:
+            if attempt == 2 or g.st()["map_name"] != "ViridianCity":
+                raise
+            g.evidence(f"m09-blackout-{attempt + 1}")
     g.evidence("m09")
 
 
@@ -1369,9 +1581,9 @@ def m10_brock(g):
     g.nav_to(12, 7, map_name="Route1")
     assert g.train_until(13, "Route1", (12, 7), heal), "training stalled"
     g.evidence("m10-trained")
-    # Gym attempts: a loss blacks out to the Viridian fly point (the last
-    # heal), so each retry is the same heal -> corridor -> gym chain. The
-    # badge flag — not the battle outcome — is the success check.
+    # Gym attempts repeat the healing/corridor route after normal losses.
+    # The final Pewter heal restores forest PP and becomes the blackout
+    # destination. The badge flag is the success check.
     for attempt in range(3):
         g.heal_pokecenter(*heal)
         # Stage the town hop: city north crossing -> forest corridor (m09
@@ -1382,9 +1594,19 @@ def m10_brock(g):
         g.d.drive(["up"] * 24, frames=28)    # N connection -> Route2 (8,71)
         g.step(8)
         forest_corridor_out(g)
+        # Forest encounters can exhaust Vine Whip before the gym's
+        # Diglett/Sandshrew trainer. Restore both HP and PP locally.
+        g.heal_pokecenter((13, 25), "PewterCity", "PewterPokecenter")
         g.nav_to_map(16, 18, "PewterCity")   # below the gym door (16,17)
         g.nav_warp(16, 17, "PewterCity", "PewterGym")
-        g.nav_to(4, 2, map_name="PewterGym")  # below Brock (4,1)
+        try:
+            g.nav_to(4, 2, map_name="PewterGym")  # below Brock (4,1)
+        except NavError:
+            if g.st()["map_name"] != "PewterCity":
+                raise
+            # The gym's first trainer can also cause a normal blackout.
+            g.evidence(f"m10-gym-trainer-blackout-{attempt + 1}")
+            continue
         g.face("up")
         g.tap("a", 20)                        # Brock's challenge speech
         assert g.cutscene(), "Brock challenge cutscene never finished"
@@ -1426,6 +1648,9 @@ MILESTONES = [
     ("m09", "Viridian Forest → Pewter City", m09_to_pewter),
     ("m10", "train + Boulder Badge (Brock)", m10_brock),
 ]
+
+from playthrough_late import LATE_MILESTONES
+MILESTONES += LATE_MILESTONES
 
 
 def state_done(mid, g):
@@ -1474,6 +1699,8 @@ def main():
     ap.add_argument("--resume", action="store_true",
                     help="use the persistent .playthrough.sav + marker: "
                          "skip milestones already satisfied")
+    ap.add_argument("--artifacts", type=Path,
+                    help="retain milestone observations and failure/game logs here")
     ap.add_argument("--record", default=None, metavar="DIR",
                     help="record every rendered frame to DIR (passes "
                          "--record-frames to the game); assemble with e.g. "
@@ -1490,12 +1717,16 @@ def main():
             print(f"{mid}: {desc}")
         return
 
+    if args.until is not None and Game.milestone_index(args.until) < 0:
+        ap.error(f"unknown milestone: {args.until}")
+    if args.artifacts:
+        args.artifacts.mkdir(parents=True, exist_ok=True)
+
     g = Game(args.port, save_path=(ROOT / "scripts" / ".playthrough.sav")
              if args.resume else None, record_dir=args.record,
              record_video=args.record_video)
     if args.resume and g.marker_at_least("m01"):
         resume_reentry(g)
-    t0 = time.time()
     try:
         for mid, desc, fn in MILESTONES:
             if args.resume and state_done(mid, g):
@@ -1505,6 +1736,8 @@ def main():
                     break
                 continue
             print(f"== {mid}: {desc}")
+            t0 = time.time()
+            g.smart_moves = Game.milestone_index(mid) >= Game.milestone_index("m11")
             if mid == "m05":
                 fn(g, args.starter)
             else:
@@ -1512,10 +1745,34 @@ def main():
             print(f"   done ({time.time()-t0:.1f}s wall)")
             if g.persistent:
                 g.checkpoint(mid)
+            if args.artifacts:
+                if g.save_path.exists():
+                    shutil.copy2(g.save_path, args.artifacts / f"{mid}.sav")
+                observations = {cmd: g.d.cmd(cmd=cmd) for cmd in
+                                ("get_state", "get_flags", "get_party", "get_bag")}
+                if hasattr(g, "first_clear_verification"):
+                    observations["first_clear_verification"] = g.first_clear_verification
+                (args.artifacts / f"{mid}.json").write_text(
+                    json.dumps(observations, ensure_ascii=False, indent=2))
             if args.until == mid:
                 break
         print("PLAYTHROUGH REACHED REQUESTED MILESTONE")
+    except Exception:
+        if args.artifacts:
+            import traceback
+            (args.artifacts / "failure.txt").write_text(traceback.format_exc())
+            try:
+                (args.artifacts / "failure-state.json").write_text(
+                    json.dumps(g.st(), ensure_ascii=False, indent=2))
+                (args.artifacts / "failure-npcs.json").write_text(
+                    json.dumps(g.d.cmd(cmd="get_npcs"), ensure_ascii=False, indent=2))
+            except Exception:
+                pass  # The game may have crashed; keep the original exception.
+        raise
     finally:
+        if args.artifacts:
+            g.log.flush()
+            shutil.copy2(g.run_dir / "game.log", args.artifacts / "game.log")
         g.close()
 
 

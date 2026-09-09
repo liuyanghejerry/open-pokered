@@ -1,0 +1,1216 @@
+{
+  "get_state": {
+    "ok": true,
+    "data": {
+      "active_script_effect": null,
+      "badges": 255,
+      "battle_bag": null,
+      "battle_inventory": [
+        {
+          "item": "HelixFossil",
+          "qty": 1
+        },
+        {
+          "item": "SsTicket",
+          "qty": 1
+        },
+        {
+          "item": "Tm28",
+          "qty": 1
+        },
+        {
+          "item": "Hm01",
+          "qty": 1
+        },
+        {
+          "item": "LiftKey",
+          "qty": 1
+        },
+        {
+          "item": "SilphScope",
+          "qty": 1
+        },
+        {
+          "item": "RareCandy",
+          "qty": 1
+        },
+        {
+          "item": "PokeFlute",
+          "qty": 1
+        },
+        {
+          "item": "Tm06",
+          "qty": 1
+        },
+        {
+          "item": "Hm03",
+          "qty": 1
+        },
+        {
+          "item": "Hm04",
+          "qty": 1
+        },
+        {
+          "item": "CardKey",
+          "qty": 1
+        },
+        {
+          "item": "Tm46",
+          "qty": 1
+        },
+        {
+          "item": "Hm02",
+          "qty": 1
+        },
+        {
+          "item": "SecretKey",
+          "qty": 1
+        },
+        {
+          "item": "Tm38",
+          "qty": 1
+        },
+        {
+          "item": "Tm27",
+          "qty": 1
+        },
+        {
+          "item": "FullRestore",
+          "qty": 4
+        },
+        {
+          "item": "Revive",
+          "qty": 4
+        }
+      ],
+      "battle_live": {
+        "enemy": {
+          "hp": 0,
+          "level": 65,
+          "max_hp": 186,
+          "species": "Charizard",
+          "status": "None"
+        },
+        "enemy_party": [
+          {
+            "hp": 0,
+            "level": 61,
+            "species": "Pidgeot"
+          },
+          {
+            "hp": 0,
+            "level": 59,
+            "species": "Alakazam"
+          },
+          {
+            "hp": 0,
+            "level": 61,
+            "species": "Rhydon"
+          },
+          {
+            "hp": 0,
+            "level": 61,
+            "species": "Exeggutor"
+          },
+          {
+            "hp": 0,
+            "level": 63,
+            "species": "Gyarados"
+          },
+          {
+            "hp": 0,
+            "level": 65,
+            "species": "Charizard"
+          }
+        ],
+        "player": {
+          "hp": 188,
+          "level": 56,
+          "max_hp": 188,
+          "species": "Zapdos",
+          "status": "None"
+        },
+        "player_party": [
+          {
+            "hp": 188,
+            "level": 56,
+            "max_hp": 188,
+            "species": "Zapdos"
+          },
+          {
+            "hp": 66,
+            "level": 15,
+            "max_hp": 66,
+            "species": "Lapras"
+          },
+          {
+            "hp": 171,
+            "level": 55,
+            "max_hp": 171,
+            "species": "Venusaur"
+          }
+        ]
+      },
+      "battle_message": null,
+      "battle_moves": null,
+      "battle_party_cursor": 0,
+      "battle_phase": "TrainerVictory { phase: EndBattleText, wait_frames: 0, player_won: true }",
+      "choice": null,
+      "coins": 0,
+      "credits_final_button": null,
+      "credits_phase": null,
+      "dialogue": null,
+      "dialogue_state": null,
+      "field_menu": null,
+      "frame_count": 590347,
+      "hall_of_fame_count": 1,
+      "hof_phase": null,
+      "map_blocks": [
+        82,
+        79,
+        82,
+        82,
+        79,
+        11,
+        80,
+        82,
+        82,
+        80,
+        78,
+        1,
+        56,
+        57,
+        1,
+        1,
+        56,
+        57,
+        1,
+        77,
+        78,
+        8,
+        60,
+        61,
+        1,
+        8,
+        60,
+        61,
+        1,
+        77,
+        78,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        77,
+        78,
+        1,
+        119,
+        86,
+        1,
+        12,
+        13,
+        14,
+        1,
+        77,
+        78,
+        1,
+        116,
+        116,
+        1,
+        16,
+        58,
+        0,
+        1,
+        77,
+        78,
+        1,
+        1,
+        1,
+        1,
+        119,
+        86,
+        119,
+        49,
+        77,
+        78,
+        10,
+        29,
+        30,
+        49,
+        116,
+        116,
+        10,
+        49,
+        77,
+        80,
+        10,
+        101,
+        100,
+        97,
+        97,
+        97,
+        97,
+        97,
+        79
+      ],
+      "map_id": 0,
+      "map_name": "PalletTown",
+      "money": 31805,
+      "party": [
+        {
+          "hp": 188,
+          "level": 56,
+          "max_hp": 188,
+          "moves": [
+            "Thunder",
+            "DrillPeck",
+            "Fly",
+            "Thunderbolt"
+          ],
+          "pp": [
+            6,
+            3,
+            15,
+            0
+          ],
+          "species": "Zapdos",
+          "status": "None"
+        },
+        {
+          "hp": 66,
+          "level": 15,
+          "max_hp": 66,
+          "moves": [
+            "WaterGun",
+            "Growl",
+            "Surf",
+            "Strength"
+          ],
+          "pp": [
+            25,
+            40,
+            15,
+            15
+          ],
+          "species": "Lapras",
+          "status": "None"
+        },
+        {
+          "hp": 171,
+          "level": 55,
+          "max_hp": 171,
+          "moves": [
+            "MegaDrain",
+            "RazorLeaf",
+            "Cut",
+            "VineWhip"
+          ],
+          "pp": [
+            9,
+            24,
+            30,
+            9
+          ],
+          "species": "Venusaur",
+          "status": "None"
+        }
+      ],
+      "party_count": 3,
+      "pc_phase": null,
+      "player_facing": "Down",
+      "player_movement_state": "Idle",
+      "player_name": "RED",
+      "player_transport": "Walking",
+      "player_x": 5,
+      "player_y": 6,
+      "screen": "overworld",
+      "script_awaiting_battle": false,
+      "script_effect": null,
+      "script_running": false,
+      "shop_phase": null,
+      "text_speed_delay_frames": 3,
+      "warp_fade": "Idle"
+    }
+  },
+  "get_flags": {
+    "ok": true,
+    "data": {
+      "EVENT_1ST_LOCK_OPENED": true,
+      "EVENT_2ND_LOCK_OPENED": true,
+      "EVENT_BATTLED_RIVAL_IN_OAKS_LAB": true,
+      "EVENT_BEAT_BLAINE": true,
+      "EVENT_BEAT_BROCK": true,
+      "EVENT_BEAT_CELADON_GYM_TRAINER_0": true,
+      "EVENT_BEAT_CELADON_GYM_TRAINER_1": true,
+      "EVENT_BEAT_CELADON_GYM_TRAINER_2": true,
+      "EVENT_BEAT_CELADON_GYM_TRAINER_3": true,
+      "EVENT_BEAT_CELADON_GYM_TRAINER_4": true,
+      "EVENT_BEAT_CELADON_GYM_TRAINER_5": true,
+      "EVENT_BEAT_CELADON_GYM_TRAINER_6": true,
+      "EVENT_BEAT_CERULEAN_GYM_TRAINER_0": true,
+      "EVENT_BEAT_CERULEAN_GYM_TRAINER_1": true,
+      "EVENT_BEAT_CERULEAN_RIVAL": true,
+      "EVENT_BEAT_CERULEAN_ROCKET_THIEF": true,
+      "EVENT_BEAT_CINNABAR_GYM_TRAINER_0": true,
+      "EVENT_BEAT_CINNABAR_GYM_TRAINER_1": true,
+      "EVENT_BEAT_CINNABAR_GYM_TRAINER_2": true,
+      "EVENT_BEAT_CINNABAR_GYM_TRAINER_3": true,
+      "EVENT_BEAT_CINNABAR_GYM_TRAINER_4": true,
+      "EVENT_BEAT_CINNABAR_GYM_TRAINER_5": true,
+      "EVENT_BEAT_CINNABAR_GYM_TRAINER_6": true,
+      "EVENT_BEAT_ERIKA": true,
+      "EVENT_BEAT_FUCHSIA_GYM_TRAINER_0": true,
+      "EVENT_BEAT_FUCHSIA_GYM_TRAINER_1": true,
+      "EVENT_BEAT_FUCHSIA_GYM_TRAINER_2": true,
+      "EVENT_BEAT_FUCHSIA_GYM_TRAINER_3": true,
+      "EVENT_BEAT_FUCHSIA_GYM_TRAINER_4": true,
+      "EVENT_BEAT_FUCHSIA_GYM_TRAINER_5": true,
+      "EVENT_BEAT_GAME_CORNER_ROCKET": true,
+      "EVENT_BEAT_GHOST_MAROWAK": true,
+      "EVENT_BEAT_KOGA": true,
+      "EVENT_BEAT_LT_SURGE": true,
+      "EVENT_BEAT_MANSION_1_TRAINER_0": true,
+      "EVENT_BEAT_MANSION_4_TRAINER_1": true,
+      "EVENT_BEAT_MISTY": true,
+      "EVENT_BEAT_MT_MOON_1_TRAINER_2": true,
+      "EVENT_BEAT_MT_MOON_3_TRAINER_0": true,
+      "EVENT_BEAT_MT_MOON_EXIT_SUPER_NERD": true,
+      "EVENT_BEAT_PEWTER_GYM_TRAINER_0": true,
+      "EVENT_BEAT_POKEMONTOWER_3_TRAINER_2": true,
+      "EVENT_BEAT_POKEMONTOWER_4_TRAINER_1": true,
+      "EVENT_BEAT_POKEMONTOWER_6_TRAINER_1": true,
+      "EVENT_BEAT_POKEMONTOWER_6_TRAINER_2": true,
+      "EVENT_BEAT_POKEMONTOWER_7_TRAINER_0": true,
+      "EVENT_BEAT_POKEMONTOWER_7_TRAINER_1": true,
+      "EVENT_BEAT_POKEMONTOWER_7_TRAINER_2": true,
+      "EVENT_BEAT_POKEMON_TOWER_RIVAL": true,
+      "EVENT_BEAT_ROCKET_HIDEOUT_1_TRAINER_0": true,
+      "EVENT_BEAT_ROCKET_HIDEOUT_1_TRAINER_4": true,
+      "EVENT_BEAT_ROCKET_HIDEOUT_4_TRAINER_0": true,
+      "EVENT_BEAT_ROCKET_HIDEOUT_4_TRAINER_1": true,
+      "EVENT_BEAT_ROCKET_HIDEOUT_4_TRAINER_2": true,
+      "EVENT_BEAT_ROCKET_HIDEOUT_GIOVANNI": true,
+      "EVENT_BEAT_ROCK_TUNNEL_1_TRAINER_0": true,
+      "EVENT_BEAT_ROCK_TUNNEL_1_TRAINER_3": true,
+      "EVENT_BEAT_ROCK_TUNNEL_1_TRAINER_4": true,
+      "EVENT_BEAT_ROCK_TUNNEL_1_TRAINER_5": true,
+      "EVENT_BEAT_ROCK_TUNNEL_1_TRAINER_6": true,
+      "EVENT_BEAT_ROCK_TUNNEL_2_TRAINER_0": true,
+      "EVENT_BEAT_ROCK_TUNNEL_2_TRAINER_1": true,
+      "EVENT_BEAT_ROCK_TUNNEL_2_TRAINER_3": true,
+      "EVENT_BEAT_ROCK_TUNNEL_2_TRAINER_4": true,
+      "EVENT_BEAT_ROCK_TUNNEL_2_TRAINER_5": true,
+      "EVENT_BEAT_ROCK_TUNNEL_2_TRAINER_7": true,
+      "EVENT_BEAT_ROUTE12_SNORLAX": true,
+      "EVENT_BEAT_ROUTE22_RIVAL_2ND_BATTLE": true,
+      "EVENT_BEAT_ROUTE24_ROCKET": true,
+      "EVENT_BEAT_ROUTE_10_TRAINER_0": true,
+      "EVENT_BEAT_ROUTE_10_TRAINER_2": true,
+      "EVENT_BEAT_ROUTE_10_TRAINER_3": true,
+      "EVENT_BEAT_ROUTE_12_TRAINER_0": true,
+      "EVENT_BEAT_ROUTE_12_TRAINER_1": true,
+      "EVENT_BEAT_ROUTE_12_TRAINER_2": true,
+      "EVENT_BEAT_ROUTE_12_TRAINER_3": true,
+      "EVENT_BEAT_ROUTE_12_TRAINER_4": true,
+      "EVENT_BEAT_ROUTE_12_TRAINER_5": true,
+      "EVENT_BEAT_ROUTE_13_TRAINER_0": true,
+      "EVENT_BEAT_ROUTE_13_TRAINER_1": true,
+      "EVENT_BEAT_ROUTE_13_TRAINER_2": true,
+      "EVENT_BEAT_ROUTE_13_TRAINER_4": true,
+      "EVENT_BEAT_ROUTE_13_TRAINER_5": true,
+      "EVENT_BEAT_ROUTE_13_TRAINER_6": true,
+      "EVENT_BEAT_ROUTE_14_TRAINER_2": true,
+      "EVENT_BEAT_ROUTE_14_TRAINER_4": true,
+      "EVENT_BEAT_ROUTE_14_TRAINER_6": true,
+      "EVENT_BEAT_ROUTE_14_TRAINER_8": true,
+      "EVENT_BEAT_ROUTE_24_TRAINER_1": true,
+      "EVENT_BEAT_ROUTE_24_TRAINER_2": true,
+      "EVENT_BEAT_ROUTE_24_TRAINER_3": true,
+      "EVENT_BEAT_ROUTE_24_TRAINER_4": true,
+      "EVENT_BEAT_ROUTE_24_TRAINER_5": true,
+      "EVENT_BEAT_ROUTE_25_TRAINER_0": true,
+      "EVENT_BEAT_ROUTE_25_TRAINER_1": true,
+      "EVENT_BEAT_ROUTE_25_TRAINER_2": true,
+      "EVENT_BEAT_ROUTE_25_TRAINER_3": true,
+      "EVENT_BEAT_ROUTE_25_TRAINER_5": true,
+      "EVENT_BEAT_ROUTE_25_TRAINER_6": true,
+      "EVENT_BEAT_ROUTE_3_TRAINER_0": true,
+      "EVENT_BEAT_ROUTE_3_TRAINER_1": true,
+      "EVENT_BEAT_ROUTE_3_TRAINER_3": true,
+      "EVENT_BEAT_ROUTE_3_TRAINER_4": true,
+      "EVENT_BEAT_ROUTE_3_TRAINER_6": true,
+      "EVENT_BEAT_ROUTE_3_TRAINER_7": true,
+      "EVENT_BEAT_ROUTE_6_TRAINER_3": true,
+      "EVENT_BEAT_ROUTE_6_TRAINER_4": true,
+      "EVENT_BEAT_ROUTE_6_TRAINER_5": true,
+      "EVENT_BEAT_ROUTE_8_TRAINER_1": true,
+      "EVENT_BEAT_ROUTE_8_TRAINER_6": true,
+      "EVENT_BEAT_ROUTE_8_TRAINER_8": true,
+      "EVENT_BEAT_ROUTE_9_TRAINER_0": true,
+      "EVENT_BEAT_ROUTE_9_TRAINER_3": true,
+      "EVENT_BEAT_ROUTE_9_TRAINER_8": true,
+      "EVENT_BEAT_SABRINA": true,
+      "EVENT_BEAT_SAFFRON_GYM_TRAINER_0": true,
+      "EVENT_BEAT_SAFFRON_GYM_TRAINER_1": true,
+      "EVENT_BEAT_SAFFRON_GYM_TRAINER_2": true,
+      "EVENT_BEAT_SAFFRON_GYM_TRAINER_3": true,
+      "EVENT_BEAT_SAFFRON_GYM_TRAINER_4": true,
+      "EVENT_BEAT_SAFFRON_GYM_TRAINER_5": true,
+      "EVENT_BEAT_SAFFRON_GYM_TRAINER_6": true,
+      "EVENT_BEAT_SILPH_CO_11F_TRAINER_0": true,
+      "EVENT_BEAT_SILPH_CO_3F_TRAINER_0": true,
+      "EVENT_BEAT_SILPH_CO_5F_TRAINER_0": true,
+      "EVENT_BEAT_SILPH_CO_5F_TRAINER_1": true,
+      "EVENT_BEAT_SILPH_CO_GIOVANNI": true,
+      "EVENT_BEAT_SILPH_CO_RIVAL": true,
+      "EVENT_BEAT_SS_ANNE_RIVAL": true,
+      "EVENT_BEAT_VERMILION_GYM_TRAINER_0": true,
+      "EVENT_BEAT_VERMILION_GYM_TRAINER_1": true,
+      "EVENT_BEAT_VERMILION_GYM_TRAINER_2": true,
+      "EVENT_BEAT_VICTORY_ROAD_1_TRAINER_1": true,
+      "EVENT_BEAT_VIRIDIAN_FOREST_TRAINER_2": true,
+      "EVENT_BEAT_VIRIDIAN_GYM_GIOVANNI": true,
+      "EVENT_BEAT_VIRIDIAN_GYM_TRAINER_0": true,
+      "EVENT_BEAT_VIRIDIAN_GYM_TRAINER_1": true,
+      "EVENT_BEAT_VIRIDIAN_GYM_TRAINER_2": true,
+      "EVENT_BEAT_VIRIDIAN_GYM_TRAINER_3": true,
+      "EVENT_BEAT_VIRIDIAN_GYM_TRAINER_4": true,
+      "EVENT_BEAT_VIRIDIAN_GYM_TRAINER_5": true,
+      "EVENT_BEAT_VIRIDIAN_GYM_TRAINER_6": true,
+      "EVENT_BEAT_VIRIDIAN_GYM_TRAINER_7": true,
+      "EVENT_BEAT_ZAPDOS": true,
+      "EVENT_BILL_SAID_USE_CELL_SEPARATOR": true,
+      "EVENT_CINNABAR_GYM_GATE1_UNLOCKED": true,
+      "EVENT_CINNABAR_GYM_GATE2_UNLOCKED": true,
+      "EVENT_CINNABAR_GYM_GATE3_UNLOCKED": true,
+      "EVENT_CINNABAR_GYM_GATE4_UNLOCKED": true,
+      "EVENT_CINNABAR_GYM_GATE5_UNLOCKED": true,
+      "EVENT_CINNABAR_GYM_GATE6_UNLOCKED": true,
+      "EVENT_ENTERED_ROCKET_HIDEOUT": true,
+      "EVENT_FIGHT_ROUTE12_SNORLAX": true,
+      "EVENT_FOLLOWED_OAK_INTO_LAB": true,
+      "EVENT_FOLLOWED_OAK_INTO_LAB_2": true,
+      "EVENT_FOUND_ROCKET_HIDEOUT": true,
+      "EVENT_GAVE_GOLD_TEETH": true,
+      "EVENT_GAVE_SAFFRON_GUARDS_DRINK": true,
+      "EVENT_GOT_CARD_KEY_SILPH_CO_5F": true,
+      "EVENT_GOT_HELIX_FOSSIL": true,
+      "EVENT_GOT_HM01": true,
+      "EVENT_GOT_HM02": true,
+      "EVENT_GOT_HM03": true,
+      "EVENT_GOT_HM04": true,
+      "EVENT_GOT_LAPRAS": true,
+      "EVENT_GOT_MASTER_BALL": true,
+      "EVENT_GOT_NUGGET": true,
+      "EVENT_GOT_OAKS_PARCEL": true,
+      "EVENT_GOT_POKEDEX": true,
+      "EVENT_GOT_POKE_FLUTE": true,
+      "EVENT_GOT_RARE_CANDY_POKEMON_TOWER_6F": true,
+      "EVENT_GOT_SECRET_KEY_MANSION_B1F": true,
+      "EVENT_GOT_SS_TICKET": true,
+      "EVENT_GOT_STARTER": true,
+      "EVENT_GOT_TM06": true,
+      "EVENT_GOT_TM11": true,
+      "EVENT_GOT_TM21": true,
+      "EVENT_GOT_TM24": true,
+      "EVENT_GOT_TM27": true,
+      "EVENT_GOT_TM34": true,
+      "EVENT_GOT_TM38": true,
+      "EVENT_GOT_TM46": true,
+      "EVENT_HALL_OF_FAME_DEX_RATING": true,
+      "EVENT_IN_PURIFIED_ZONE": true,
+      "EVENT_MANSION_SWITCH_ON": true,
+      "EVENT_MET_BILL": true,
+      "EVENT_MET_BILL_2": true,
+      "EVENT_OAK_APPEARED_IN_PALLET": true,
+      "EVENT_OAK_ASKED_TO_CHOOSE_MON": true,
+      "EVENT_OAK_GOT_PARCEL": true,
+      "EVENT_PASSED_CASCADEBADGE_CHECK": true,
+      "EVENT_PASSED_EARTHBADGE_CHECK": true,
+      "EVENT_PASSED_MARSHBADGE_CHECK": true,
+      "EVENT_PASSED_RAINBOWBADGE_CHECK": true,
+      "EVENT_PASSED_SOULBADGE_CHECK": true,
+      "EVENT_PASSED_THUNDERBADGE_CHECK": true,
+      "EVENT_PASSED_VOLCANOBADGE_CHECK": true,
+      "EVENT_RESCUED_MR_FUJI": true,
+      "EVENT_RESCUED_MR_FUJI_2": true,
+      "EVENT_ROCKET_DROPPED_LIFT_KEY": true,
+      "EVENT_ROCKET_HIDEOUT_4_DOOR_UNLOCKED": true,
+      "EVENT_RUBBED_CAPTAINS_BACK": true,
+      "EVENT_SILPH_CO_11_UNLOCKED_DOOR": true,
+      "EVENT_SILPH_CO_3_UNLOCKED_DOOR2": true,
+      "EVENT_SILPH_CO_RECEPTIONIST_AT_DESK": true,
+      "EVENT_SS_ANNE_LEFT": true,
+      "EVENT_STARTED_ELITE_4": true,
+      "EVENT_STARTED_WALKING_OUT_OF_DOCK": true,
+      "EVENT_TOWER7_ROCKET_0_LEFT": true,
+      "EVENT_TOWER7_ROCKET_1_LEFT": true,
+      "EVENT_TOWER7_ROCKET_2_LEFT": true,
+      "EVENT_USED_CELL_SEPARATOR_ON_BILL": true,
+      "EVENT_VICTORY_ROAD_2_BOULDER_ON_SWITCH1": true,
+      "EVENT_VICTORY_ROAD_2_BOULDER_ON_SWITCH2": true,
+      "EVENT_VICTORY_ROAD_3_BOULDER_ON_SWITCH1": true,
+      "EVENT_VICTORY_ROAD_3_BOULDER_ON_SWITCH2": true,
+      "__OBJ_HIDDEN_BILLS_HOUSE_OBJ_1": true,
+      "__OBJ_HIDDEN_BILLS_HOUSE_OBJ_2": false,
+      "__OBJ_HIDDEN_CERULEAN_GUARD_1": false,
+      "__OBJ_HIDDEN_CERULEAN_GUARD_2": true,
+      "__OBJ_HIDDEN_CERULEAN_RIVAL": true,
+      "__OBJ_HIDDEN_CERULEAN_ROCKET": true,
+      "__OBJ_HIDDEN_CHAMPIONS_ROOM_OBJ_2": true,
+      "__OBJ_HIDDEN_GAME_CORNER_OBJ_11": true,
+      "__OBJ_HIDDEN_MRFUJISHOUSE_MR_FUJI": false,
+      "__OBJ_HIDDEN_MTMOONB2F_DOME_FOSSIL": true,
+      "__OBJ_HIDDEN_MTMOONB2F_HELIX_FOSSIL": true,
+      "__OBJ_HIDDEN_OAKS_LAB_OBJ_1": true,
+      "__OBJ_HIDDEN_OAKS_LAB_OBJ_2": true,
+      "__OBJ_HIDDEN_OAKS_LAB_OBJ_4": true,
+      "__OBJ_HIDDEN_OAKS_LAB_OBJ_5": false,
+      "__OBJ_HIDDEN_OAKS_LAB_OBJ_6": true,
+      "__OBJ_HIDDEN_OAKS_LAB_OBJ_7": true,
+      "__OBJ_HIDDEN_OAKS_LAB_OBJ_8": true,
+      "__OBJ_HIDDEN_PALLET_TOWN_OBJ_1": true,
+      "__OBJ_HIDDEN_POKEMONTOWER7F_MR_FUJI": true,
+      "__OBJ_HIDDEN_POKEMONTOWER7F_ROCKET_1": true,
+      "__OBJ_HIDDEN_POKEMONTOWER7F_ROCKET_2": true,
+      "__OBJ_HIDDEN_POKEMONTOWER7F_ROCKET_3": true,
+      "__OBJ_HIDDEN_POKEMON_MANSION_B1F_OBJ_8": true,
+      "__OBJ_HIDDEN_POKEMON_TOWER_2F_RIVAL": true,
+      "__OBJ_HIDDEN_POKEMON_TOWER_6F_OBJ_4": true,
+      "__OBJ_HIDDEN_POWER_PLANT_OBJ_9": true,
+      "__OBJ_HIDDEN_ROCKET_HIDEOUT_B4F_OBJ_1": true,
+      "__OBJ_HIDDEN_ROCKET_HIDEOUT_B4F_OBJ_8": false,
+      "__OBJ_HIDDEN_ROCKET_HIDEOUT_B4F_OBJ_9": false,
+      "__OBJ_HIDDEN_ROUTE_12_OBJ_1": true,
+      "__OBJ_HIDDEN_ROUTE_22_RIVAL_1": true,
+      "__OBJ_HIDDEN_ROUTE_22_RIVAL_2": true,
+      "__OBJ_HIDDEN_SAFFRON_CITY_OBJ_1": true,
+      "__OBJ_HIDDEN_SAFFRON_CITY_OBJ_10": false,
+      "__OBJ_HIDDEN_SAFFRON_CITY_OBJ_11": false,
+      "__OBJ_HIDDEN_SAFFRON_CITY_OBJ_12": false,
+      "__OBJ_HIDDEN_SAFFRON_CITY_OBJ_13": false,
+      "__OBJ_HIDDEN_SAFFRON_CITY_OBJ_14": true,
+      "__OBJ_HIDDEN_SAFFRON_CITY_OBJ_15": true,
+      "__OBJ_HIDDEN_SAFFRON_CITY_OBJ_2": true,
+      "__OBJ_HIDDEN_SAFFRON_CITY_OBJ_3": true,
+      "__OBJ_HIDDEN_SAFFRON_CITY_OBJ_4": true,
+      "__OBJ_HIDDEN_SAFFRON_CITY_OBJ_5": true,
+      "__OBJ_HIDDEN_SAFFRON_CITY_OBJ_6": true,
+      "__OBJ_HIDDEN_SAFFRON_CITY_OBJ_7": true,
+      "__OBJ_HIDDEN_SAFFRON_CITY_OBJ_8": false,
+      "__OBJ_HIDDEN_SAFFRON_CITY_OBJ_9": false,
+      "__OBJ_HIDDEN_SILPH_CO_11F_OBJ_3": true,
+      "__OBJ_HIDDEN_SILPH_CO_11F_OBJ_4": true,
+      "__OBJ_HIDDEN_SILPH_CO_11F_OBJ_5": true,
+      "__OBJ_HIDDEN_SILPH_CO_1F_OBJ_1": false,
+      "__OBJ_HIDDEN_SILPH_CO_5F_OBJ_8": true,
+      "__OBJ_HIDDEN_SILPH_CO_7F_RIVAL": true,
+      "__OBJ_HIDDEN_SS_ANNE_2F_RIVAL": true,
+      "__OBJ_HIDDEN_VICTORY_ROAD_2F_OBJ_13": false,
+      "__OBJ_HIDDEN_VICTORY_ROAD_3F_OBJ_10": true,
+      "__OBJ_HIDDEN_VIRIDIANCITY_OLD_MAN": false,
+      "__OBJ_HIDDEN_VIRIDIANCITY_OLD_MAN_SLEEPY": true,
+      "__OBJ_SHOWN_BILLS_HOUSE_OBJ_1": false,
+      "__OBJ_SHOWN_BILLS_HOUSE_OBJ_2": true,
+      "__OBJ_SHOWN_CERULEAN_GUARD_1": true,
+      "__OBJ_SHOWN_CERULEAN_GUARD_2": false,
+      "__OBJ_SHOWN_CERULEAN_RIVAL": false,
+      "__OBJ_SHOWN_CERULEAN_ROCKET": false,
+      "__OBJ_SHOWN_CHAMPIONS_ROOM_OBJ_2": false,
+      "__OBJ_SHOWN_GAME_CORNER_OBJ_11": false,
+      "__OBJ_SHOWN_MRFUJISHOUSE_MR_FUJI": true,
+      "__OBJ_SHOWN_MTMOONB2F_DOME_FOSSIL": false,
+      "__OBJ_SHOWN_MTMOONB2F_HELIX_FOSSIL": false,
+      "__OBJ_SHOWN_OAKS_LAB_OBJ_1": false,
+      "__OBJ_SHOWN_OAKS_LAB_OBJ_2": false,
+      "__OBJ_SHOWN_OAKS_LAB_OBJ_4": false,
+      "__OBJ_SHOWN_OAKS_LAB_OBJ_5": true,
+      "__OBJ_SHOWN_OAKS_LAB_OBJ_6": false,
+      "__OBJ_SHOWN_OAKS_LAB_OBJ_7": false,
+      "__OBJ_SHOWN_OAKS_LAB_OBJ_8": false,
+      "__OBJ_SHOWN_PALLET_TOWN_OBJ_1": false,
+      "__OBJ_SHOWN_POKEMONTOWER7F_MR_FUJI": false,
+      "__OBJ_SHOWN_POKEMONTOWER7F_ROCKET_1": false,
+      "__OBJ_SHOWN_POKEMONTOWER7F_ROCKET_2": false,
+      "__OBJ_SHOWN_POKEMONTOWER7F_ROCKET_3": false,
+      "__OBJ_SHOWN_POKEMON_MANSION_B1F_OBJ_8": false,
+      "__OBJ_SHOWN_POKEMON_TOWER_2F_RIVAL": false,
+      "__OBJ_SHOWN_POKEMON_TOWER_6F_OBJ_4": false,
+      "__OBJ_SHOWN_POWER_PLANT_OBJ_9": false,
+      "__OBJ_SHOWN_ROCKET_HIDEOUT_B4F_OBJ_1": false,
+      "__OBJ_SHOWN_ROCKET_HIDEOUT_B4F_OBJ_8": true,
+      "__OBJ_SHOWN_ROCKET_HIDEOUT_B4F_OBJ_9": true,
+      "__OBJ_SHOWN_ROUTE_12_OBJ_1": false,
+      "__OBJ_SHOWN_ROUTE_22_RIVAL_1": false,
+      "__OBJ_SHOWN_ROUTE_22_RIVAL_2": false,
+      "__OBJ_SHOWN_SAFFRON_CITY_OBJ_1": false,
+      "__OBJ_SHOWN_SAFFRON_CITY_OBJ_10": true,
+      "__OBJ_SHOWN_SAFFRON_CITY_OBJ_11": true,
+      "__OBJ_SHOWN_SAFFRON_CITY_OBJ_12": true,
+      "__OBJ_SHOWN_SAFFRON_CITY_OBJ_13": true,
+      "__OBJ_SHOWN_SAFFRON_CITY_OBJ_14": false,
+      "__OBJ_SHOWN_SAFFRON_CITY_OBJ_15": false,
+      "__OBJ_SHOWN_SAFFRON_CITY_OBJ_2": false,
+      "__OBJ_SHOWN_SAFFRON_CITY_OBJ_3": false,
+      "__OBJ_SHOWN_SAFFRON_CITY_OBJ_4": false,
+      "__OBJ_SHOWN_SAFFRON_CITY_OBJ_5": false,
+      "__OBJ_SHOWN_SAFFRON_CITY_OBJ_6": false,
+      "__OBJ_SHOWN_SAFFRON_CITY_OBJ_7": false,
+      "__OBJ_SHOWN_SAFFRON_CITY_OBJ_8": true,
+      "__OBJ_SHOWN_SAFFRON_CITY_OBJ_9": true,
+      "__OBJ_SHOWN_SILPH_CO_11F_OBJ_3": false,
+      "__OBJ_SHOWN_SILPH_CO_11F_OBJ_4": false,
+      "__OBJ_SHOWN_SILPH_CO_11F_OBJ_5": false,
+      "__OBJ_SHOWN_SILPH_CO_1F_OBJ_1": true,
+      "__OBJ_SHOWN_SILPH_CO_5F_OBJ_8": false,
+      "__OBJ_SHOWN_SILPH_CO_7F_RIVAL": false,
+      "__OBJ_SHOWN_SS_ANNE_2F_RIVAL": false,
+      "__OBJ_SHOWN_VICTORY_ROAD_2F_OBJ_13": true,
+      "__OBJ_SHOWN_VICTORY_ROAD_3F_OBJ_10": false,
+      "__OBJ_SHOWN_VIRIDIANCITY_OLD_MAN": true,
+      "__OBJ_SHOWN_VIRIDIANCITY_OLD_MAN_SLEEPY": false
+    }
+  },
+  "get_party": {
+    "ok": true,
+    "data": [
+      {
+        "current_hp": 188,
+        "experience": 220227,
+        "level": 56,
+        "max_hp": 188,
+        "moves": [
+          "Thunder",
+          "DrillPeck",
+          "Fly",
+          "Thunderbolt"
+        ],
+        "species": "Zapdos",
+        "status": "None"
+      },
+      {
+        "current_hp": 66,
+        "experience": 4218,
+        "level": 15,
+        "max_hp": 66,
+        "moves": [
+          "WaterGun",
+          "Growl",
+          "Surf",
+          "Strength"
+        ],
+        "species": "Lapras",
+        "status": "None"
+      },
+      {
+        "current_hp": 171,
+        "experience": 159835,
+        "level": 55,
+        "max_hp": 171,
+        "moves": [
+          "MegaDrain",
+          "RazorLeaf",
+          "Cut",
+          "VineWhip"
+        ],
+        "species": "Venusaur",
+        "status": "None"
+      }
+    ]
+  },
+  "get_bag": {
+    "ok": true,
+    "data": [
+      {
+        "item": "HelixFossil",
+        "qty": 1
+      },
+      {
+        "item": "SsTicket",
+        "qty": 1
+      },
+      {
+        "item": "Tm28",
+        "qty": 1
+      },
+      {
+        "item": "Hm01",
+        "qty": 1
+      },
+      {
+        "item": "LiftKey",
+        "qty": 1
+      },
+      {
+        "item": "SilphScope",
+        "qty": 1
+      },
+      {
+        "item": "RareCandy",
+        "qty": 1
+      },
+      {
+        "item": "PokeFlute",
+        "qty": 1
+      },
+      {
+        "item": "Tm06",
+        "qty": 1
+      },
+      {
+        "item": "Hm03",
+        "qty": 1
+      },
+      {
+        "item": "Hm04",
+        "qty": 1
+      },
+      {
+        "item": "CardKey",
+        "qty": 1
+      },
+      {
+        "item": "Tm46",
+        "qty": 1
+      },
+      {
+        "item": "Hm02",
+        "qty": 1
+      },
+      {
+        "item": "SecretKey",
+        "qty": 1
+      },
+      {
+        "item": "Tm38",
+        "qty": 1
+      },
+      {
+        "item": "Tm27",
+        "qty": 1
+      },
+      {
+        "item": "FullRestore",
+        "qty": 4
+      },
+      {
+        "item": "Revive",
+        "qty": 4
+      }
+    ]
+  },
+  "first_clear_verification": {
+    "phases": [
+      {
+        "frame": 581703,
+        "phase": [
+          "overworld",
+          null,
+          null
+        ],
+        "hall_of_fame_count": 0
+      },
+      {
+        "frame": 582730,
+        "phase": [
+          "overworld",
+          "FadeOut",
+          null
+        ],
+        "hall_of_fame_count": 1
+      },
+      {
+        "frame": 582852,
+        "phase": [
+          "overworld",
+          "MonScroll",
+          null
+        ],
+        "hall_of_fame_count": 1
+      },
+      {
+        "frame": 582974,
+        "phase": [
+          "overworld",
+          "MonInfo",
+          null
+        ],
+        "hall_of_fame_count": 1
+      },
+      {
+        "frame": 583096,
+        "phase": [
+          "overworld",
+          "MonText",
+          null
+        ],
+        "hall_of_fame_count": 1
+      },
+      {
+        "frame": 583218,
+        "phase": [
+          "overworld",
+          "MonScroll",
+          null
+        ],
+        "hall_of_fame_count": 1
+      },
+      {
+        "frame": 583340,
+        "phase": [
+          "overworld",
+          "MonInfo",
+          null
+        ],
+        "hall_of_fame_count": 1
+      },
+      {
+        "frame": 583462,
+        "phase": [
+          "overworld",
+          "MonText",
+          null
+        ],
+        "hall_of_fame_count": 1
+      },
+      {
+        "frame": 583584,
+        "phase": [
+          "overworld",
+          "MonFade",
+          null
+        ],
+        "hall_of_fame_count": 1
+      },
+      {
+        "frame": 583706,
+        "phase": [
+          "overworld",
+          "MonInfo",
+          null
+        ],
+        "hall_of_fame_count": 1
+      },
+      {
+        "frame": 583828,
+        "phase": [
+          "overworld",
+          "MonText",
+          null
+        ],
+        "hall_of_fame_count": 1
+      },
+      {
+        "frame": 583950,
+        "phase": [
+          "overworld",
+          "MonFade",
+          null
+        ],
+        "hall_of_fame_count": 1
+      },
+      {
+        "frame": 584072,
+        "phase": [
+          "overworld",
+          "PlayerStats",
+          null
+        ],
+        "hall_of_fame_count": 1
+      },
+      {
+        "frame": 584438,
+        "phase": [
+          "overworld",
+          null,
+          "Hold"
+        ],
+        "hall_of_fame_count": 1
+      },
+      {
+        "frame": 584560,
+        "phase": [
+          "overworld",
+          null,
+          "MonScroll"
+        ],
+        "hall_of_fame_count": 1
+      },
+      {
+        "frame": 584804,
+        "phase": [
+          "overworld",
+          null,
+          "Hold"
+        ],
+        "hall_of_fame_count": 1
+      },
+      {
+        "frame": 585414,
+        "phase": [
+          "overworld",
+          null,
+          "MonScroll"
+        ],
+        "hall_of_fame_count": 1
+      },
+      {
+        "frame": 585658,
+        "phase": [
+          "overworld",
+          null,
+          "Hold"
+        ],
+        "hall_of_fame_count": 1
+      },
+      {
+        "frame": 586146,
+        "phase": [
+          "overworld",
+          null,
+          "MonScroll"
+        ],
+        "hall_of_fame_count": 1
+      },
+      {
+        "frame": 586390,
+        "phase": [
+          "overworld",
+          null,
+          "Hold"
+        ],
+        "hall_of_fame_count": 1
+      },
+      {
+        "frame": 586878,
+        "phase": [
+          "overworld",
+          null,
+          "MonScroll"
+        ],
+        "hall_of_fame_count": 1
+      },
+      {
+        "frame": 587000,
+        "phase": [
+          "overworld",
+          null,
+          "Hold"
+        ],
+        "hall_of_fame_count": 1
+      },
+      {
+        "frame": 589318,
+        "phase": [
+          "overworld",
+          null,
+          "TheEnd"
+        ],
+        "hall_of_fame_count": 1
+      },
+      {
+        "frame": 589948,
+        "phase": [
+          "title",
+          null,
+          null
+        ],
+        "hall_of_fame_count": 1
+      }
+    ],
+    "separate_process_continue": {
+      "active_script_effect": null,
+      "badges": 255,
+      "battle_bag": null,
+      "battle_inventory": [],
+      "battle_live": null,
+      "battle_message": null,
+      "battle_moves": null,
+      "battle_party_cursor": 0,
+      "battle_phase": "Intro { phase: TransitionFlash, wait_frames: 72 }",
+      "choice": null,
+      "coins": 0,
+      "credits_final_button": null,
+      "credits_phase": null,
+      "dialogue": null,
+      "dialogue_state": null,
+      "field_menu": null,
+      "frame_count": 639,
+      "hall_of_fame_count": 1,
+      "hof_phase": null,
+      "map_blocks": [
+        82,
+        79,
+        82,
+        82,
+        79,
+        11,
+        80,
+        82,
+        82,
+        80,
+        78,
+        1,
+        56,
+        57,
+        1,
+        1,
+        56,
+        57,
+        1,
+        77,
+        78,
+        8,
+        60,
+        61,
+        1,
+        8,
+        60,
+        61,
+        1,
+        77,
+        78,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        77,
+        78,
+        1,
+        119,
+        86,
+        1,
+        12,
+        13,
+        14,
+        1,
+        77,
+        78,
+        1,
+        116,
+        116,
+        1,
+        16,
+        58,
+        0,
+        1,
+        77,
+        78,
+        1,
+        1,
+        1,
+        1,
+        119,
+        86,
+        119,
+        49,
+        77,
+        78,
+        10,
+        29,
+        30,
+        49,
+        116,
+        116,
+        10,
+        49,
+        77,
+        80,
+        10,
+        101,
+        100,
+        97,
+        97,
+        97,
+        97,
+        97,
+        79
+      ],
+      "map_id": 0,
+      "map_name": "PalletTown",
+      "money": 31805,
+      "party": [
+        {
+          "hp": 188,
+          "level": 56,
+          "max_hp": 188,
+          "moves": [
+            "Thunder",
+            "DrillPeck",
+            "Fly",
+            "Thunderbolt"
+          ],
+          "pp": [
+            6,
+            3,
+            15,
+            0
+          ],
+          "species": "Zapdos",
+          "status": "None"
+        },
+        {
+          "hp": 66,
+          "level": 15,
+          "max_hp": 66,
+          "moves": [
+            "WaterGun",
+            "Growl",
+            "Surf",
+            "Strength"
+          ],
+          "pp": [
+            25,
+            40,
+            15,
+            15
+          ],
+          "species": "Lapras",
+          "status": "None"
+        },
+        {
+          "hp": 171,
+          "level": 55,
+          "max_hp": 171,
+          "moves": [
+            "MegaDrain",
+            "RazorLeaf",
+            "Cut",
+            "VineWhip"
+          ],
+          "pp": [
+            9,
+            24,
+            30,
+            9
+          ],
+          "species": "Venusaur",
+          "status": "None"
+        }
+      ],
+      "party_count": 3,
+      "pc_phase": null,
+      "player_facing": "Down",
+      "player_movement_state": "Idle",
+      "player_name": "RED",
+      "player_transport": "Walking",
+      "player_x": 5,
+      "player_y": 6,
+      "screen": "overworld",
+      "script_awaiting_battle": false,
+      "script_effect": null,
+      "script_running": false,
+      "shop_phase": null,
+      "text_speed_delay_frames": 3,
+      "warp_fade": "Idle"
+    }
+  }
+}
