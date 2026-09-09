@@ -52,10 +52,14 @@ game_scene ViridianForest {
   @storyline("itemAntidote") {
     @trigger(map = "ViridianForest", npc = 5, toggle = "VIRIDIAN_FOREST_OBJ_5")
     @if (!getFlag("EVENT_GOT_VIRIDIAN_FOREST_ANTIDOTE")) {
-      giveItem("ANTIDOTE", 1)
-      setFlag("EVENT_GOT_VIRIDIAN_FOREST_ANTIDOTE")
-      hideObjectByName("VIRIDIAN_FOREST_OBJ_5")
-      @speaker("") { @t("<PLAYER> found ANTIDOTE!", "<PLAYER>发现了解毒药！") }
+      given = giveItem("ANTIDOTE", 1)
+      @if (given) {
+        setFlag("EVENT_GOT_VIRIDIAN_FOREST_ANTIDOTE")
+        hideObjectByName("VIRIDIAN_FOREST_OBJ_5")
+        @speaker("") { @t("<PLAYER> found ANTIDOTE!", "<PLAYER>发现了解毒药！") }
+      } @else {
+        @speaker("") { @t("No more room for\nitems!", "背包没有空间\n放道具了！") }
+      }
     }
   }
 
@@ -63,10 +67,14 @@ game_scene ViridianForest {
   @storyline("itemPotion") {
     @trigger(map = "ViridianForest", npc = 6, toggle = "VIRIDIAN_FOREST_OBJ_6")
     @if (!getFlag("EVENT_GOT_VIRIDIAN_FOREST_POTION")) {
-      giveItem("POTION", 1)
-      setFlag("EVENT_GOT_VIRIDIAN_FOREST_POTION")
-      hideObjectByName("VIRIDIAN_FOREST_OBJ_6")
-      @speaker("") { @t("<PLAYER> found POTION!", "<PLAYER>发现了伤药！") }
+      given = giveItem("POTION", 1)
+      @if (given) {
+        setFlag("EVENT_GOT_VIRIDIAN_FOREST_POTION")
+        hideObjectByName("VIRIDIAN_FOREST_OBJ_6")
+        @speaker("") { @t("<PLAYER> found POTION!", "<PLAYER>发现了伤药！") }
+      } @else {
+        @speaker("") { @t("No more room for\nitems!", "背包没有空间\n放道具了！") }
+      }
     }
   }
 
@@ -74,10 +82,14 @@ game_scene ViridianForest {
   @storyline("itemPokeBall") {
     @trigger(map = "ViridianForest", npc = 7, toggle = "VIRIDIAN_FOREST_OBJ_7")
     @if (!getFlag("EVENT_GOT_VIRIDIAN_FOREST_POKE_BALL")) {
-      giveItem("POKE_BALL", 1)
-      setFlag("EVENT_GOT_VIRIDIAN_FOREST_POKE_BALL")
-      hideObjectByName("VIRIDIAN_FOREST_OBJ_7")
-      @speaker("") { @t("<PLAYER> found POKe BALL!", "<PLAYER>发现了精灵球！") }
+      given = giveItem("POKE_BALL", 1)
+      @if (given) {
+        setFlag("EVENT_GOT_VIRIDIAN_FOREST_POKE_BALL")
+        hideObjectByName("VIRIDIAN_FOREST_OBJ_7")
+        @speaker("") { @t("<PLAYER> found POKe BALL!", "<PLAYER>发现了精灵球！") }
+      } @else {
+        @speaker("") { @t("No more room for\nitems!", "背包没有空间\n放道具了！") }
+      }
     }
   }
 

@@ -46,6 +46,16 @@
       "path": "text/Route1.asm",
       "fixture": "text_Route1.asm",
       "sha256": "6a82503d414f57abd7782fa7efe4d5b8dacde69be5346b978c273dc1448b7571"
+    },
+    {
+      "path": "engine/items/inventory.asm",
+      "fixture": "engine_items_inventory.asm",
+      "sha256": "410632e0a82e3491fd6d2898c337eb4a8e83ce6a1b31dad0a12bf887a27a3f7e"
+    },
+    {
+      "path": "data/text/text_1.asm",
+      "fixture": "data_text_text_1.asm",
+      "sha256": "ae58dfc09cdfc0ea9b28362ac3bbd97fbd79923e96ce1dfa2e3c36a3b686f267"
     }
   ],
   "case_contracts": {
@@ -80,9 +90,11 @@
     },
     "forest-visible-full-bag-keeps-object": {
       "sources": [
-        "engine/events/pick_up_item.asm"
+        "engine/events/pick_up_item.asm",
+        "data/maps/objects/ViridianForest.asm",
+        "data/text/text_1.asm"
       ],
-      "expected": "GiveItem carry clear goes to BagFull before HideObject; no reward and original object stays visible."
+      "expected": "ANTIDOTE at (25,11): failed GiveItem preserves object and pickup flag through repeated attempts and restart. Toss one stack via ITEM menu, collect once, restart without duplication."
     },
     "forest-hidden-antidote-once-reload": {
       "sources": [
@@ -97,6 +109,30 @@
         "engine/events/hidden_items.asm"
       ],
       "expected": "On full bag, FoundHiddenItemText followed by HiddenItemBagFullText; FLAG_SET bypassed so subsequent interaction still discovers item."
+    },
+    "forest-potion-full-bag-retry": {
+      "sources": [
+        "engine/events/pick_up_item.asm",
+        "data/maps/objects/ViridianForest.asm",
+        "data/text/text_1.asm"
+      ],
+      "expected": "POTION at (12,29): failed GiveItem preserves object and pickup flag through repeated attempts and restart. Toss one stack via ITEM menu, collect once, restart without duplication."
+    },
+    "forest-pokeball-full-bag-retry": {
+      "sources": [
+        "engine/events/pick_up_item.asm",
+        "data/maps/objects/ViridianForest.asm",
+        "data/text/text_1.asm"
+      ],
+      "expected": "POKE_BALL at (1,31): failed GiveItem preserves object and pickup flag through repeated attempts and restart. Toss one stack via ITEM menu, collect once, restart without duplication."
+    },
+    "forest-full-bag-existing-stack": {
+      "sources": [
+        "engine/items/inventory.asm",
+        "engine/events/pick_up_item.asm",
+        "data/maps/objects/ViridianForest.asm"
+      ],
+      "expected": "With 20 distinct slots and POKE_BALL x1, pickup merges into x2, hides the object, and survives restart."
     }
   }
 }
