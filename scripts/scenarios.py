@@ -373,6 +373,34 @@ def s10_npcs(g):
     g.evidence("s10")
 
 
+@scenario("s11-forced-switch", "fainted leader → live replacement → battle victory")
+def s11_forced_switch(g):
+    boot_starter(g, "Magikarp", 1)
+    assert g.d.cmd(cmd="give_pokemon", species="Wartortle", level=50)["ok"]
+    assert g.d.cmd(cmd="start_wild_battle", species="Rattata", level=10)["ok"]
+    g.smart_moves = True
+    observed = set()
+    original_state = g.st
+
+    def observe():
+        state = original_state()
+        observed.add(state["battle_phase"])
+        return state
+
+    g.st = observe
+    try:
+        g.battle_loop()
+    finally:
+        g.st = original_state
+    state = g.st()
+    assert "PlayerFaintSwitch" in observed, observed
+    assert state["screen"] == "overworld", state["screen"]
+    assert state["party"][0]["hp"] == 0, state["party"]
+    assert state["party"][1]["hp"] > 0, state["party"]
+    assert state["battle_live"]["enemy"]["hp"] == 0, state["battle_live"]
+    g.evidence("s11")
+
+
 # ── runner ──────────────────────────────────────────────────────────────
 def main():
     ap = argparse.ArgumentParser()
