@@ -12,6 +12,7 @@ Use this skill when the user wants to verify that a visual animation in the curr
 - Audit behavior only unless the user explicitly asks for a fix. Do not modify game logic while collecting evidence.
 - Prefer the normal Red ROM for the reference. An official DEBUG build is acceptable when it makes a deterministic setup possible, but record the exact ROM variant and do not call it pixel-identical to Red.
 - Compare the same semantic event, not raw file indexes from unrelated emulator runs. Keep the input trace, pre-trigger state, trigger frame, and first stable post-animation state.
+- Never grant `PASS` from representative frames, a contact sheet, or matching source constants alone. `PASS` requires a contiguous raw-time window and quantitative timing/trajectory evidence from both implementations.
 - Treat species, player name, language, debug labels, palette, and save-data differences as confounders. Either normalize them or state that the comparison is limited to animation geometry/timing.
 - Use temporary directories created with `mktemp -d`; preserve only the compact evidence needed by the repository.
 
@@ -60,11 +61,15 @@ target/debug/pokered-app run \
 
 Drive it through the debug server using the commands from `pokered-debug` (`get_state`, `press_sequence`, `step_frames`, `warp`, and the relevant battle/party helpers). Capture a pre-trigger frame, the trigger state, the full animation, and enough post-animation frames to prove the final state. When using a reference emulator such as PyBoy, apply the same semantic input trace and save a machine-readable manifest alongside the frames.
 
+For any intended `PASS`, prove that each PNG corresponds to one consecutive emulated frame. The manifest must map image number → emulator/debug frame and include the trigger, phase changes, movement state/counter when observable, and first stable final frame. If the debug loop advances between observations or the mapping is unknown, timing is unverified and the maximum verdict is `PARTIAL`.
+
 If the recorder and debug loop run at different cadences, use the emulator/debug frame counter or state transition as the anchor. Do not infer timing from a contact-sheet label alone. Assemble a video only after confirming the input frame numbering; inspect the input filename pattern (`%04d` vs `%06d`) before invoking `ffmpeg`.
 
 ### 4. Align and judge the frames
 
-For each scenario, align on one or more of:
+Read [`references/quantitative-alignment.md`](references/quantitative-alignment.md) before judging a capture. First trim both recordings to the same semantic window without stretching, dropping, duplicating, or resampling frames. Contact sheets may only show identical elapsed-frame offsets (`t+N`); phase-normalized views are supplemental and cannot support a verdict.
+
+For each scenario, align on all applicable anchors:
 
 - trigger input;
 - first visible animation frame;
@@ -75,11 +80,26 @@ Evaluate independently:
 
 1. visibility and ordering of animation phases;
 2. sprite/OAM geometry, trajectory, shadow, and screen coordinates;
-3. phase duration and cadence in emulator frames;
-4. state transitions, lock/input behavior, and final map/transport/battle state;
-5. confounders that make an apparent pixel difference non-actionable.
+3. background/camera trajectory, including per-frame scroll and landing discontinuities;
+4. phase duration and cadence in emulator frames;
+5. state transitions, lock/input behavior, and final map/transport/battle state;
+6. confounders that make an apparent pixel difference non-actionable.
 
-Use these verdicts: `PASS` (matches the tested contract), `PARTIAL` (core behavior matches but setup/timing/scope limits exactness), `FAIL` (a visible phase or transition is missing/wrong), and `BLOCKED` (the pair could not be reproduced). A missing departure phase is a failure even if the arrival phase passes.
+Run the bundled sequence analyzer on at least one stable background ROI for every moving-camera scene:
+
+```bash
+python3 .agents/skills/key-animation-differential/scripts/compare_sequences.py \
+  --reference-dir "$REF_FRAMES" --reference-range "$REF_START:$REF_END" \
+  --current-dir "$CUR_FRAMES" --current-range "$CUR_START:$CUR_END" \
+  --roi X,Y,WIDTH,HEIGHT --max-dx N --max-dy N \
+  --output "$OUT/metrics.json" --diagnostic-image "$OUT/raw-time.png"
+```
+
+The ROI must contain stable map landmarks and exclude the player, UI, water, flowers, and other animated tiles. Use a separate sprite/OAM measurement or per-frame state trace for the actor path; background motion cannot substitute for actor motion.
+
+Use these verdicts: `PASS` (all mandatory raw-time, phase, actor, background, and final-state checks match), `PARTIAL` (a phase exists but one or more required quantitative channels are unavailable), `FAIL` (a phase, duration, trajectory, cadence, or transition is wrong), and `BLOCKED` (the pair could not be reproduced). A missing departure phase is a failure even if the arrival phase passes. Matching the original source table is corroboration only; the composed rendered motion remains the oracle.
+
+Repeat deterministic captures at least twice before a final `PASS`. A mismatch reproduced twice is a finding; inconsistent runs indicate capture instability and must be fixed or reported before judging the animation.
 
 ### 5. Persist compact evidence and report
 
@@ -92,7 +112,8 @@ docs/screenshots/visual-key-animations/
 
 Keep one or more of the following per scenario:
 
-- a labeled original/current contact sheet;
+- a raw-time original/current diagnostic sheet using the same `t+N` columns;
+- a labeled overview contact sheet (presentation only, not verdict evidence);
 - a short original/current MP4;
 - a machine-readable manifest with trigger frame, coordinates, state, and hashes;
 - a source cross-check naming the current implementation and original routine.

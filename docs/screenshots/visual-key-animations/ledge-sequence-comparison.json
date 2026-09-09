@@ -1,0 +1,35 @@
+{
+  "schema_version": 1,
+  "semantic_window": "down input consumed through first stable post-jump frame",
+  "roi": {"x": 0, "y": 10, "width": 56, "height": 120},
+  "reference": {
+    "range": "0:36",
+    "frame_count": 37,
+    "background": {
+      "translated_steps": 16,
+      "net_dy": -32,
+      "path_l1": 32,
+      "largest_step_l1": 2,
+      "largest_step_share": 0.0625
+    }
+  },
+  "current": {
+    "range": "775:792",
+    "frame_count": 18,
+    "background": {
+      "translated_steps": 1,
+      "net_dy": -32,
+      "path_l1": 32,
+      "largest_step_l1": 32,
+      "largest_step_share": 1.0
+    }
+  },
+  "checks": [
+    {"name": "contiguous_frame_ids", "status": "PASS"},
+    {"name": "raw_duration", "status": "FAIL", "current_to_reference_ratio": 0.486486},
+    {"name": "background_path_length", "status": "PASS", "delta_px": 0},
+    {"name": "largest_background_step", "status": "FAIL", "delta_px": 30},
+    {"name": "background_motion_distribution", "status": "FAIL", "largest_step_share_delta": 0.9375}
+  ],
+  "verdict": "FAIL"
+}
