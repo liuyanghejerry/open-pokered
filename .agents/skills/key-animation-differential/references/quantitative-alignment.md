@@ -16,11 +16,14 @@
 - 两侧帧 ID 连续，且一张 PNG 对应一个 emulated frame；
 - manifest 能把录制帧映射到 emulator/debug frame；
 - trigger 前至少有一帧稳定状态，结束点是第一个稳定 post-animation frame；
+- trigger 前截图和状态都处于声明的 UI/phase，且没有已经开始的动画；
 - 输入边沿、按住/松开时机和停止条件相同；
 - 场景、坐标、面向、存档条件和 ROM/build 版本已记录；
 - 同一设置至少重复两次，时间/轨迹结果可复现。
 
 如果当前 headless loop 在 debug 请求之间继续运行，不能用客户端请求时间推算帧号。应让同一捕获循环同时写图像与状态 manifest，或明确把 timing verdict 降为 `PARTIAL`。
+
+当前 app 的 `--record-frames` 会写 `frame-manifest.jsonl`。判定窗口使用 `press_timeline` 提交逐帧按钮/`null`，并用 `start_at_frame` 固定绝对触发帧。若菜单会暂停 overworld 更新，把菜单 setup 和 trigger 放进同一条固定时间线；只固定最后一次 A 的绝对帧仍可能留下水面、tile 或相机子系统相位漂移。`step_frames` 会在处理 debug 命令的外层 update 内递归 update，不得用于 verdict window。
 
 ## Gate 1：语义窗口
 
@@ -81,11 +84,11 @@ python3 -m venv /tmp/key-animation-venv
 ```bash
 /tmp/key-animation-venv/bin/python \
   .agents/skills/key-animation-differential/scripts/compare_sequences.py \
-  --reference-dir "$REF/frames" --reference-range 0:36 \
-  --current-dir "$CUR" --current-range 775:792 \
+  --reference-dir "$REF/frames" --reference-range 2:41 \
+  --current-dir "$CUR" --current-range 299:315 \
   --roi 0,10,56,120 --max-dx 0 --max-dy 40 \
   --output "$OUT/ledge-metrics.json" \
   --diagnostic-image "$OUT/ledge-raw-time.png" --strict
 ```
 
-本次已知录像在这个窗口下得到：reference 37 帧、current 18 帧；两侧背景总位移都是 32px，但 reference 分 16 次每次 2px，current 在落地时一次跳 32px。因此台阶动效必须判 `FAIL`。
+本次已知录像在这个窗口下得到：reference 40 帧、current 17 帧；两侧背景总位移都是 32px，但 reference 分 16 次每次 2px，current 在落地时一次跳 32px。因此台阶动效必须判 `FAIL`。

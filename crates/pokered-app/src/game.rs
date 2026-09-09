@@ -291,24 +291,76 @@ pub struct FrameRecorder {
     dir: PathBuf,
     next: u64,
     fb: FrameBuffer,
+    /// Compact state sampled in the same capture call as each PNG.
+    manifest: std::fs::File,
+    manifest_broken: bool,
 }
 
 #[cfg(not(target_arch = "wasm32"))]
 impl FrameRecorder {
     pub fn new(dir: PathBuf) -> std::io::Result<Self> {
         std::fs::create_dir_all(&dir)?;
+        let manifest = std::fs::File::create(dir.join("frame-manifest.jsonl"))?;
         Ok(Self {
             dir,
             next: 0,
             fb: FrameBuffer::new(RenderConfig::new(160, 144), Rgba::WHITE),
+            manifest,
+            manifest_broken: false,
         })
     }
 
     fn capture(&mut self, game: &mut PokemonGame) {
-  game.draw(&mut self.fb);
-        let path = self.dir.join(format!("frame-{:06}.png", self.next));
-        if let Err(e) = self.fb.save_png(&path) {
-            log::warn!("frame recorder: failed to write {}: {}", path.display(), e);
+        game.draw(&mut self.fb);
+        let filename = format!("frame-{:06}.png", self.next);
+        let path = self.dir.join(&filename);
+        let png_written = match self.fb.save_png(&path) {
+            Ok(()) => true,
+            Err(e) => {
+                log::warn!("frame recorder: failed to write {}: {}", path.display(), e);
+                false
+            }
+        };
+
+        if !self.manifest_broken {
+            let fly = game.overworld.enter_map_fly_anim.as_ref().map(|state| {
+                let (bird_y, bird_x) = state.bird_pos();
+                serde_json::json!({
+                    "frame": state.frame,
+                    "bird_x": bird_x,
+                    "bird_y": bird_y,
+                    "flap": state.flap_frame(),
+                })
+            });
+            let dialogue = game.overworld.pending_dialogue.as_ref()
+                .and_then(|state| state.get_display_text())
+                .map(|(top, bottom)| format!("{} {}", top, bottom).trim().to_string());
+            let entry = serde_json::json!({
+                "capture_index": self.next,
+                "png": filename,
+                "png_written": png_written,
+                "frame_count": game.frame_count,
+                "screen": crate::cli::screen_name(&game.state.screen),
+                "map": format!("{:?}", game.overworld.state.current_map),
+                "player_x": game.overworld.state.player.x,
+                "player_y": game.overworld.state.player.y,
+                "player_facing": format!("{:?}", game.overworld.state.player.facing),
+                "player_transport": format!("{:?}", game.overworld.state.player.transport),
+                "player_movement_state": format!("{:?}", game.overworld.state.player.movement_state),
+                "walk_counter": game.overworld.state.walk_counter,
+                "enter_map_fly": fly,
+                "warp_fade": format!("{:?}", game.overworld.warp_fade_state),
+                "dialogue": dialogue,
+                "battle_phase": format!("{:?}", game.battle.phase),
+                "battle_message": game.battle.current_message.clone(),
+            });
+            use std::io::Write;
+            if let Err(e) = writeln!(self.manifest, "{entry}")
+                .and_then(|_| self.manifest.flush())
+            {
+                log::warn!("frame recorder: failed to write frame manifest: {}", e);
+                self.manifest_broken = true;
+            }
         }
         self.next += 1;
     }
@@ -516,7 +568,7 @@ pub struct PokemonGame {
     pub asset_watcher: Option<AssetWatcher>,
     #[cfg(feature = "debug-server")]
     pub debug_handle: Option<pokered_debug_server::DebugServerHandle>,
-    pending_debug_inputs: Vec<GbButton>,
+    pending_debug_inputs: Vec<Option<GbButton>>,
     pending_debug_frames: u32,
     /// Persistent state for debug-server injected input. A queued button must
     /// read as HELD across consecutive frames (fresh `InputState` per frame
@@ -2487,7 +2539,9 @@ impl PokemonGame {
             let button = self.pending_debug_inputs.remove(0);
             self.debug_input.begin_frame();
             self.debug_input.set_from_bitmask(0);
-            self.debug_input.press(button);
+            if let Some(button) = button {
+                self.debug_input.press(button);
+            }
             _modified_input = self.debug_input.clone();
             &_modified_input
         } else if self.debug_input.raw_current() != 0 {
@@ -5337,6 +5391,56 @@ impl PokemonGame {
                     DebugResponse::err("capture_frame requires a native frontend".to_string())
                 }
             }
+            DebugCommand::Game(GameDebugCommand::PressTimeline {
+                ref buttons,
+                start_at_frame,
+            }) => {
+                let parsed = buttons
+                    .iter()
+                    .map(|button| match button.as_deref().map(str::to_lowercase) {
+                        None => Ok(None),
+                        Some(button) => match button.as_str() {
+                            "a" => Ok(Some(GbButton::A)),
+                            "b" => Ok(Some(GbButton::B)),
+                            "start" => Ok(Some(GbButton::Start)),
+                            "select" => Ok(Some(GbButton::Select)),
+                            "up" => Ok(Some(GbButton::Up)),
+                            "down" => Ok(Some(GbButton::Down)),
+                            "left" => Ok(Some(GbButton::Left)),
+                            "right" => Ok(Some(GbButton::Right)),
+                            _ => Err(format!("unknown button: '{}'", button)),
+                        },
+                    })
+                    .collect::<Result<Vec<_>, _>>();
+                match parsed {
+                    Ok(_parsed)
+                        if start_at_frame.is_some_and(|frame| frame < self.frame_count) =>
+                    {
+                        DebugResponse::err(format!(
+                            "start_at_frame {} is before current frame {}",
+                            start_at_frame.unwrap(),
+                            self.frame_count
+                        ))
+                    }
+                    Ok(parsed) => {
+                        let queue_start_frame = self.frame_count;
+                        let start_frame = start_at_frame.unwrap_or(queue_start_frame);
+                        let padding = start_frame.saturating_sub(queue_start_frame) as usize;
+                        let frames = parsed.len() as u64;
+                        self.pending_debug_inputs
+                            .extend(std::iter::repeat_n(None, padding));
+                        self.pending_debug_inputs.extend(parsed);
+                        DebugResponse::ok_with_data(serde_json::json!({
+                            "queue_start_frame": queue_start_frame,
+                            "start_frame": start_frame,
+                            "end_frame": start_frame + frames.saturating_sub(1),
+                            "frames": frames,
+                            "padding_frames": padding,
+                        }))
+                    }
+                    Err(error) => DebugResponse::err(error),
+                }
+            }
             DebugCommand::Game(GameDebugCommand::GetParty) => {
                 let party: Vec<serde_json::Value> = self
                     .save_data
@@ -5418,7 +5522,7 @@ impl PokemonGame {
                         return DebugResponse::err(format!("unknown button: '{}'", button));
                     }
                 };
-                self.pending_debug_inputs.push(gb_button);
+                self.pending_debug_inputs.push(Some(gb_button));
                 DebugResponse::ok()
             }
             DebugCommand::Core(CoreDebugCommand::PressSequence { ref buttons }) => {
@@ -5436,7 +5540,7 @@ impl PokemonGame {
                             return DebugResponse::err(format!("unknown button: '{}'", b));
                         }
                     };
-                    self.pending_debug_inputs.push(gb_button);
+                    self.pending_debug_inputs.push(Some(gb_button));
                 }
                 DebugResponse::ok()
             }
@@ -5552,7 +5656,10 @@ impl PokemonGame {
                         } else {
                             self.start_wild_battle(sp, level);
                             self.state.screen = GameScreen::Battle;
-                            DebugResponse::ok()
+                            DebugResponse::ok_with_data(serde_json::json!({
+                                "frame_count": self.frame_count,
+                                "state": self.debug_state_snapshot(),
+                            }))
                         }
                     }
                     Err(_) => DebugResponse::err(format!("unknown species: '{}'", species)),

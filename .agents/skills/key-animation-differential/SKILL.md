@@ -59,9 +59,11 @@ target/debug/pokered-app run \
   --record-video "$OUT/clip.mp4"
 ```
 
-Drive it through the debug server using the commands from `pokered-debug` (`get_state`, `press_sequence`, `step_frames`, `warp`, and the relevant battle/party helpers). Capture a pre-trigger frame, the trigger state, the full animation, and enough post-animation frames to prove the final state. When using a reference emulator such as PyBoy, apply the same semantic input trace and save a machine-readable manifest alongside the frames.
+Drive setup through the debug server using the commands from `pokered-debug`, then queue the verdict window with `press_timeline`: use one button or explicit `null` per emulated frame. Prefer `start_at_frame` and include setup in the scheduled timeline when paused menus would otherwise leave overworld animation phases dependent on client timing. Do not use recursive `step_frames` inside a verdict window: nested updates can make recorder order differ from emulator-frame order. Capture a pre-trigger frame, the trigger state, the full animation, and enough post-animation frames to prove the final state. When using a reference emulator such as PyBoy, apply the same semantic input trace and save a machine-readable manifest alongside the frames.
 
-For any intended `PASS`, prove that each PNG corresponds to one consecutive emulated frame. The manifest must map image number → emulator/debug frame and include the trigger, phase changes, movement state/counter when observable, and first stable final frame. If the debug loop advances between observations or the mapping is unknown, timing is unverified and the maximum verdict is `PARTIAL`.
+For any intended `PASS`, prove that each PNG corresponds to one consecutive emulated frame. With the current app recorder, verify `frame-manifest.jsonl` rather than assuming filename semantics: each row carries the PNG name, `capture_index`, `frame_count`, screen/map/player state, movement counter, active FLY/fade state, dialogue, and battle phase. The manifest must identify the trigger, phase changes, movement state/counter when observable, and first stable final frame. If the debug loop advances between observations or the mapping is unknown, timing is unverified and the maximum verdict is `PARTIAL`.
+
+Before accepting a run, inspect the pre-trigger screenshot and state together. Coordinates and facing alone are insufficient: reject a field-move run if the expected action menu/map selector is absent, and reject a battle run unless the battle state actually begins. Debug labels are not proof of the semantic path they appear to name.
 
 If the recorder and debug loop run at different cadences, use the emulator/debug frame counter or state transition as the anchor. Do not infer timing from a contact-sheet label alone. Assemble a video only after confirming the input frame numbering; inspect the input filename pattern (`%04d` vs `%06d`) before invoking `ffmpeg`.
 
@@ -100,6 +102,15 @@ The ROI must contain stable map landmarks and exclude the player, UI, water, flo
 Use these verdicts: `PASS` (all mandatory raw-time, phase, actor, background, and final-state checks match), `PARTIAL` (a phase exists but one or more required quantitative channels are unavailable), `FAIL` (a phase, duration, trajectory, cadence, or transition is wrong), and `BLOCKED` (the pair could not be reproduced). A missing departure phase is a failure even if the arrival phase passes. Matching the original source table is corroboration only; the composed rendered motion remains the oracle.
 
 Repeat deterministic captures at least twice before a final `PASS`. A mismatch reproduced twice is a finding; inconsistent runs indicate capture instability and must be fixed or reported before judging the animation.
+
+For non-camera scenes, render raw-time evidence without inventing a motion metric:
+
+```bash
+python3 .agents/skills/key-animation-differential/scripts/raw_time_contact.py \
+  --reference-dir "$REF_FRAMES" --reference-range "$REF_START:$REF_END" \
+  --current-dir "$CUR_FRAMES" --current-range "$CUR_START:$CUR_END" \
+  --offsets 0,12,24,36 --output "$OUT/raw-time.png"
+```
 
 ### 5. Persist compact evidence and report
 

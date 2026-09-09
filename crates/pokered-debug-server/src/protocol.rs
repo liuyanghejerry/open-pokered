@@ -16,6 +16,14 @@ pub enum GameDebugCommand {
     /// Render the current screen to a PNG without advancing simulation.
     /// Native debug harness only; the parent directory must already exist.
     CaptureFrame { path: String },
+    /// Queue one button or explicit neutral (`null`) per emulated frame.
+    /// `start_at_frame` pads with neutral frames so the first supplied input
+    /// lands on the requested absolute game frame.
+    PressTimeline {
+        buttons: Vec<Option<String>>,
+        #[serde(default)]
+        start_at_frame: Option<u64>,
+    },
     /// Read the live overworld blocks, including script and field-move edits.
     GetMap,
     /// Get the player's party Pokémon data.
@@ -149,6 +157,30 @@ mod tests {
         assert!(matches!(
             cmd,
             DebugCommand::Game(GameDebugCommand::SkipDialogue)
+        ));
+
+        let cmd: DebugCommand = serde_json::from_str(
+            r#"{"cmd":"press_timeline","buttons":["a",null,"down"],"start_at_frame":240}"#,
+        )
+        .unwrap();
+        assert!(matches!(
+            cmd,
+            DebugCommand::Game(GameDebugCommand::PressTimeline {
+                ref buttons,
+                start_at_frame: Some(240),
+            }) if buttons == &vec![Some("a".into()), None, Some("down".into())]
+        ));
+
+        let cmd: DebugCommand = serde_json::from_str(
+            r#"{"cmd":"press_timeline","buttons":[null]}"#,
+        )
+        .unwrap();
+        assert!(matches!(
+            cmd,
+            DebugCommand::Game(GameDebugCommand::PressTimeline {
+                start_at_frame: None,
+                ..
+            })
         ));
     }
 

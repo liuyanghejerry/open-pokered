@@ -1,0 +1,93 @@
+{
+  "schema_version": 1,
+  "date": "2026-09-10",
+  "capture_policy": {
+    "frame_resampling": false,
+    "repeats": 2,
+    "reference_rom_sha1": "5b1456177671b79b263c614ea0e7cc9ac542e9c4",
+    "reference_world_state_sha1": "9e472f881da3a1a2633a1169e2d7a9e304542be4",
+    "current_trigger_frame_for_field_scenes": 300,
+    "current_png_mapping": "capture_index + 1 == frame_count",
+    "reference_png_mapping": "capture_index == emulator_frame after pre-trigger state load"
+  },
+  "scenarios": {
+    "battle-entry": {
+      "verdict": "FAIL",
+      "repeat_exact": { "reference": true, "current_pixels": false },
+      "reference_window": {
+        "start_frame": 18,
+        "end_frame": 386,
+        "frames": 369,
+        "start": "wIsInBattle first becomes 1",
+        "end": "first complete Wild RHYDON appeared frame"
+      },
+      "current_window": {
+        "start_offset": 0,
+        "end_offset": 296,
+        "frames": 297,
+        "start": "TransitionFlash first frame",
+        "end": "WildReveal first reaches wait_frames 0"
+      },
+      "duration_ratio": 0.8049,
+      "hard_failures": [
+        "current is 72 frames shorter",
+        "current shows the enemy HUD during WildReveal while reference does not",
+        "current repeats differ on nine wipe frames when the absolute trigger frame differs"
+      ]
+    },
+    "fly-departure-arrival": {
+      "verdict": "FAIL",
+      "repeat_exact": { "reference": true, "current": true },
+      "reference_window": { "start_frame": 1, "end_frame": 345, "frames": 345 },
+      "current_window": { "start_offset": 0, "end_offset": 85, "frames": 86 },
+      "duration_ratio": 0.2493,
+      "map_switch_offset": { "reference": 228, "current": 25 },
+      "arrival_window_frames": { "reference": 47, "current": 61 },
+      "hard_failures": [
+        "current omits the reference departure-bird phase",
+        "current changes map 203 raw frames earlier",
+        "current holds the first arrival coordinate during fade instead of using the reference cadence"
+      ]
+    },
+    "cut-tree": {
+      "verdict": "FAIL",
+      "repeat_exact": { "reference": true, "current": true },
+      "reference_window": { "start_frame": 1, "end_frame": 321, "frames": 321 },
+      "current_window": { "start_offset": 0, "end_offset": 300, "frames": 301 },
+      "reference_cut_oam_frames": { "start": 302, "end": 319, "frames": 18 },
+      "hard_failures": [
+        "current removes the tree before the message completes",
+        "current omits the 18-frame reference CUT OAM overlay"
+      ]
+    },
+    "surf-entry": {
+      "verdict": "FAIL",
+      "repeat_exact": { "reference": true, "current": true },
+      "reference_window": { "start_frame": 1, "end_frame": 319, "frames": 319 },
+      "current_window": { "start_offset": 0, "end_offset": 240, "frames": 241 },
+      "movement_frames": { "reference": 18, "current": 9, "ratio": 0.5 },
+      "background_path_px": { "reference": 16, "current": 16 },
+      "largest_background_step_px": { "reference": 2, "current": 2 },
+      "hard_failures": [
+        "current moves onto the water while the message is still typing",
+        "current movement cadence is twice as fast"
+      ]
+    },
+    "ledge-down": {
+      "verdict": "FAIL",
+      "repeat_exact": { "reference": true, "current": true },
+      "reference_window": { "start_frame": 2, "end_frame": 41, "frames": 40 },
+      "current_window": { "start_offset": 0, "end_offset": 16, "frames": 17 },
+      "duration_ratio": 0.425,
+      "background_path_px": { "reference": 32, "current": 32 },
+      "background_steps": { "reference": "16 x 2px", "current": "1 x 32px" },
+      "largest_background_step_px": { "reference": 2, "current": 32 },
+      "state_path": { "reference_y": [4, 5, 6], "current_y": [4, 6] },
+      "hard_failures": [
+        "current is 23 frames shorter",
+        "current collapses the full camera path into one 32px landing snap",
+        "current skips the intermediate logical y=5 state"
+      ]
+    }
+  }
+}

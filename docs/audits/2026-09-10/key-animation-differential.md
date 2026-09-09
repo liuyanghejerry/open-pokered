@@ -4,103 +4,117 @@
 
 ## 结论
 
-> 复核更正：首版报告使用了人工挑选的“相似阶段”代表帧，并以源码坐标表一致辅助判定。这种方法会隐藏速度和相机滚动差异，因此撤回所有缺少 raw-time 定量证据的 `通过` 结论。
+更新后的逐帧流程已完整复跑。五个场景均未通过；旧报告中的三个“部分通过”在补齐 raw-time、phase、相机和状态通道后都确认存在实质差异。
 
-| 动效 | 录制有效性 | 结果 | 结论 |
-| --- | --- | --- | --- |
-| 战斗进场 | 触发路径不同；缺少逐 phase 时长 | 部分通过，待定量复测 | 淡入、双方入场和出现文字均存在，但当前证据不足以判断时序是否一致。 |
-| FLY 到达 | 可见阶段已录制；PNG/模拟帧映射未定量复核 | 部分通过，待定量复测 | 飞鸟进入与落地阶段存在；“12 坐标 × 3 帧一致”仅由源码推断，不能作为运行时通过结论。 |
-| FLY 起飞 | 缺失阶段可直接观察 | **不通过** | 原版有“原地拍翅 → 向右下飞行 → 向左上飞行 → 白屏”的离场段；当前版直接淡出。 |
-| SURF | 最终状态已录制；缺少上水 actor/phase 轨迹 | 部分通过，待定量复测 | 冲浪状态和水面精灵存在，但上水过程的时长与轨迹尚未完成定量对齐。 |
-| CUT | 缺失阶段可直接观察 | **不通过** | 原版有白屏/重载/`AnimCut` 时序；当前版直接替换树块、播放音效并打印文字。 |
-| 台阶跳跃 | 连续 raw-time 窗口与背景 ROI 已复核 | **不通过** | 原版 37 帧平滑滚动 32px；当前版 18 帧，并在落地帧一次跳动 32px。落点相同，但动画过程不一致。 |
+| 动效 | reference | current | 结果 | 关键差异 |
+| --- | ---: | ---: | --- | --- |
+| 战斗进场 | 369 帧 | 297 帧 | **FAIL** | current 快 72 帧，并在 `WildReveal` 提前显示敌方 HUD。 |
+| FLY 起飞到落地 | 345 帧 | 86 帧 | **FAIL** | current 缺失离场飞鸟，地图切换提前 203 帧；到达首坐标又多停 24 帧。 |
+| CUT | 321 帧 | 301 帧 | **FAIL** | current 先删树再打字，且完全缺失 reference 的 18 帧 CUT OAM 覆盖层。 |
+| SURF | 位移 18 帧 | 位移 9 帧 | **FAIL** | current 在文字尚未结束时就移动，位移节奏快一倍。 |
+| 台阶跳跃 | 40 帧 | 17 帧 | **FAIL** | current 把 16 次 × 2px 的滚动压成一次 32px 落地瞬移。 |
 
-已确认的修复优先级为台阶跳跃相机/节奏、FLY 起飞状态机和 CUT 覆盖层/OAM。战斗进场、FLY 到达和 SURF 需要按新流程重新捕获后才能给出最终判定。
+完整数值与窗口定义见 [rerun-summary.json](../../screenshots/visual-key-animations/rerun-summary.json)。优先级建议：台阶相机/状态路径、FLY 离场状态机、CUT 覆盖层、SURF 位移节奏、战斗 HUD/时长。
 
-## 录制方法
+## 录制有效性
 
-- 原版使用 pret/pokered 固定提交 `fbcf7d0` 构建的官方 `pokeblue_debug.gbc`。使用 DEBUG 测试入口准备完整队伍和场景；动画例程与 Gen-1 原版一致，但战斗 HUD 会显示 Blue/DEBUG 路径。
-- 当前版使用仓库现有 `target/debug/pokered-app`，提交为 `e54a435`。各场景使用可重复的字段快照，分辨率均为 160×144。
-- 帧率按 60fps 导出 MP4；对比图中的帧号是各录制文件内部帧号，不是跨实现的绝对模拟器时钟。
-- 场景坐标：FLY `PalletTown (5,6) → ViridianCity (23,26)`；CUT `VermilionCity (15,17)` 面向树；SURF `PalletTown (5,13)` 面向水；台阶 `Route1 (10,4) → (10,6)`。
-- 二次复核使用同一语义触发点后的 raw-time 窗口，不做时间拉伸。台阶背景 ROI 为 `(x=0,y=10,w=56,h=120)`，避开玩家与动态 UI，并逐帧搜索整数平移。
+- reference 使用 pret/pokered `fbcf7d0` 构建的官方 `pokeblue_debug.gbc`，SHA-1 为 `5b1456177671b79b263c614ea0e7cc9ac542e9c4`；预置 state SHA-1 为 `9e472f881da3a1a2633a1169e2d7a9e304542be4`。DEBUG Blue 只用于可重复地准备队伍和场景，不能当作 Red 的像素资产基准。
+- current 的可见实现基线为 `e54a435`；本分支新增的 recorder/debug 协议只写证据，不修改画面逻辑。两侧均为 160×144，每张 PNG 对应一个原始模拟帧。
+- reference 每帧 manifest 记录输入、WRAM、玩家屏幕坐标和可见 OAM；current 的 `frame-manifest.jsonl` 记录 `capture_index`、`frame_count`、screen/map、movement、FLY/fade、dialogue 和 battle phase。已验证 current 的 `capture_index + 1 == frame_count`。
+- FLY、CUT、SURF、台阶的 setup 与 trigger 使用同一条 `press_timeline`，并把 trigger 固定在绝对第 300 帧；四个场景两侧各两轮均逐帧哈希一致。
+- battle reference 两轮逐帧一致。current 两轮 phase/state 一致，但绝对触发帧不同造成 wipe 的 9 个像素帧不同；因此 battle 本就不能进入 `PASS` 候选。下述 72 帧时长和 HUD 差异在两轮都存在，不依赖这 9 帧波动。
+- verdict window 内没有使用 `step_frames`。它会在 debug 命令所在的外层 update 中递归 update，使录制顺序不再天然等于帧号。
+- 所有窗口都以语义 trigger 和第一个稳定结束帧裁切，不拉伸、不补帧；较短一侧在 raw-time 图中显示 `ENDED`。
 
-构建备注：本次尝试重新构建 debug-server 时被本机 Cargo 缓存中的 dotzuki 模板包名 `{{project-name}}` 解析错误阻断，因此使用已存在且对应当前提交的 debug binary 完成录制；未修改该无关缓存。
+复跑过程中有四类录像被有效性检查丢弃：battle 曾只进入昵称提示而没有开战；CUT 曾因 start-menu 游标持久化误入背包并使用自行车；SURF 曾因单帧按键未被原版轮询采到；台阶曾在 pre-trigger “校正朝向”时提前开始跳跃。旧证据已删除，未用于本结论。
 
 ## 帧证据
 
-### FLY
+### 战斗进场 — FAIL
 
-起飞对比最清楚：原版在地图淡出前持续出现飞鸟，当前版未出现离场飞鸟，目的地选择界面随后直接进入白色淡出。
+reference 从 `wIsInBattle` 首次置位到完整 `Wild RHYDON appeared!` 为 369 帧；current 从 `TransitionFlash` 到 `WildReveal(wait_frames=0)` 为 297 帧，仅为 80.5%。同一 raw-time 下，current 在 `t+296` 已结束，reference 到 `t+368` 才出现完整文字。
 
-![FLY 起飞对比](../../screenshots/visual-key-animations/fly-departure-compare.png)
+![战斗进场 raw-time](../../screenshots/visual-key-animations/battle-entry-raw-time.png)
 
-到达段两侧均能看到飞鸟从右上方进入并在玩家位置落地；当前图只证明阶段存在，尚未证明运行时拍翅节奏和每段时长一致。
+current 在野怪出现文字阶段已绘制 RHYDON 的名称、等级和 HP 条；reference 此时尚未显示敌方 HUD。reference 走官方 TestBattle 的昵称 `NO` 触发，current 走 `start_wild_battle`，所以触发前菜单和玩家存档内容属于已声明 confounder；进场后的时长与 HUD 顺序仍可直接判失败。
 
-![FLY 到达对比](../../screenshots/visual-key-animations/fly-arrival-compare.png)
+### FLY — FAIL
 
-录制： [原版 MP4](../../screenshots/visual-key-animations/fly-reference.mp4) · [当前版 MP4](../../screenshots/visual-key-animations/fly-current.mp4)
+reference 的完整窗口为 345 帧，current 为 86 帧。reference 在 `t+58` 后进入离场飞鸟段，`t+228` 才切换到 Viridian City；current 没有离场飞鸟，在 `t+25` 已切图。
 
-### CUT
+![FLY raw-time](../../screenshots/visual-key-animations/fly-raw-time.png)
 
-原版触发后先出现白屏，再回到地图并进入文字阶段；当前版从动作菜单退出后直接在地图上开始文字打印。
+到达段也不一致：reference 从第一帧入场飞鸟到普通玩家精灵稳定为 47 帧，current 为 61 帧。current 在 fade 期间把第一组 `(152,5)` 坐标保持了约 27 帧，之后才恢复每组三帧的坐标推进；源码坐标表一致没有产生一致的运行时节奏。
 
-![CUT 触发对比](../../screenshots/visual-key-animations/cut-trigger-compare.png)
+### CUT — FAIL
 
-录制： [原版 MP4](../../screenshots/visual-key-animations/cut-reference.mp4) · [当前版 MP4](../../screenshots/visual-key-animations/cut-current.mp4)
+reference 先完成文字，再在 `t+301` 后进入 CUT 图形阶段；OAM 36–39 在原始帧 302–319 连续出现 18 帧，随后树消失并稳定。current 在 `t+0` 已替换地图块并开始打字，没有该 OAM phase。
 
-### SURF
+![CUT raw-time](../../screenshots/visual-key-animations/cut-raw-time.png)
 
-两侧的持续帧都显示玩家已经处于水面运输状态；文字内容中的训练家名不同是测试存档差异。该证据没有覆盖触发到上水完成的逐帧 actor 轨迹，因此不能判完整通过。
+这不仅是总时长差异，也是可见 phase 缺失和状态提交顺序错误，属于硬失败。
 
-![SURF 持续状态对比](../../screenshots/visual-key-animations/surf-compare.png)
+### SURF — FAIL
 
-录制： [原版 MP4](../../screenshots/visual-key-animations/surf-reference.mp4) · [当前版 MP4](../../screenshots/visual-key-animations/surf-current.mp4)
+两侧最终都到达 `(5,14)` 且背景总位移都是 16px；但 reference 在文字确认后才移动，位移窗口为 18 帧，current 在文字仍为空/打印中时立即移动，9 帧完成。
 
-### 台阶跳跃
+![SURF 完整 raw-time](../../screenshots/visual-key-animations/surf-raw-time.png)
 
-首版对比图以不同时间密度人工挑帧，使两侧看起来处于相似阶段，掩盖了真实差异。修正后的图使用同一个 `t+N`：current 在第 18 帧已经结束，reference 到第 37 帧才稳定。
+稳定背景 ROI 的结果：两侧均为 8 次 × 2px、最大单帧 2px，但 current 没有 reference 的隔帧保持，因此速度正好快一倍。
 
-![台阶跳跃对比](../../screenshots/visual-key-animations/ledge-compare.png)
+![SURF 位移 raw-time](../../screenshots/visual-key-animations/surf-movement-raw-time.png)
 
-| 指标 | reference | current | 结果 |
-| --- | --- | --- | --- |
-| trigger → 首个稳定帧 | 37 帧（`0:36`） | 18 帧（`775:792`） | FAIL，current 仅为 48.6% |
-| 背景累计 Y | -32px | -32px | 总位移相同 |
-| 背景移动分布 | 16 次 × -2px | 1 次 × -32px | FAIL，current 落地瞬移 |
-| 最大单帧背景位移 | 2px | 32px | FAIL，差 30px |
+指标：[surf-sequence-comparison.json](../../screenshots/visual-key-animations/surf-sequence-comparison.json)
 
-指标：[JSON](../../screenshots/visual-key-animations/ledge-sequence-comparison.json)
+### 台阶跳跃 — FAIL
 
-录制： [原版 MP4](../../screenshots/visual-key-animations/ledge-reference.mp4) · [当前版 MP4](../../screenshots/visual-key-animations/ledge-current.mp4)
+reference 从 jump flag 首帧到第一个稳定帧为 40 帧；current 从 `Jumping(walk_counter=16)` 到 `Idle` 为 17 帧，只占 42.5%。
 
-### 战斗进场
+![台阶跳跃 raw-time](../../screenshots/visual-key-animations/ledge-compare.png)
 
-两侧都经过过渡、精灵出现和 `Wild RHYDON appeared!` 阶段。原版录制走官方 FIGHT/DEBUG 入口；当前版使用 debug server 的 `start_wild_battle Rhydon level20`，所以玩家精灵、训练家名和前置菜单时序不作像素级结论。
+| 指标 | reference | current |
+| --- | ---: | ---: |
+| 背景累计 Y | -32px | -32px |
+| 背景移动分布 | 16 次 × -2px | 1 次 × -32px |
+| 最大单帧背景位移 | 2px | 32px |
+| 逻辑 Y 状态 | 4 → 5 → 6 | 4 → 6 |
 
-![战斗进场对比](../../screenshots/visual-key-animations/battle-entry-compare.png)
-
-录制： [原版 MP4](../../screenshots/visual-key-animations/battle-reference.mp4) · [当前版 MP4](../../screenshots/visual-key-animations/battle-current.mp4)
+current 最终落点虽然正确，但相机在落地帧整体跳动，且状态路径跳过中间 `y=5`。指标：[ledge-sequence-comparison.json](../../screenshots/visual-key-animations/ledge-sequence-comparison.json)
 
 ## 实现侧交叉检查
 
-- 当前 FLY 入口 [`field_moves.rs`](../../../crates/pokered-core/src/overworld/field_moves.rs#L393-L411) 只设置 `pending_fly_arrival`、目的地和白色淡出；当前实现没有离场飞鸟状态。到达坐标表位于 [`presentation.rs`](../../../crates/pokered-core/src/overworld/presentation.rs#L176-L231)，与原版 `FlyAnimationEnterScreenCoords` 一致。
-- 原版 `_LeaveMapAnim` 在 `player_animations.asm` 中包含原地拍翅、两段坐标列表和最终白屏；这与 FLY 起飞录制差异吻合。
-- 当前 CUT [`field_moves.rs`](../../../crates/pokered-core/src/overworld/field_moves.rs#L121-L148) 直接 `set_block`、发 `SFX_CUT` 并进入文字，没有原版 `InitCutAnimOAM` / `AnimCut` 对应的渲染阶段。
-- 当前台阶渲染 [`overworld.rs`](../../../crates/pokered-app/src/render/overworld.rs#L596-L640) 虽然复制了原版 16 项 Y 偏移表，却把 `elapsed` 同时作为角色平移叠加在静止背景上；逻辑坐标提交后背景再整体跳到新视口。常量相同没有产生相同的合成运动，这与录像中的 32px 落地瞬移吻合。
-- 当前冲浪入口 [`field_moves.rs`](../../../crates/pokered-core/src/overworld/field_moves.rs#L221-L238) 设置 `TransportMode::Surfing` 并将玩家推进到水面；录制结果与该状态转换一致。
+- FLY 入口 [`field_moves.rs`](../../../crates/pokered-core/src/overworld/field_moves.rs) 直接设置目的地和白色淡出，没有原版 `_LeaveMapAnim` 的离场飞鸟状态；到达坐标表只覆盖后半段。
+- CUT 入口同文件直接 `set_block`、发 `SFX_CUT` 并进入文字，没有 `InitCutAnimOAM` / `AnimCut` 对应渲染阶段。
+- SURF 入口立即设置 `TransportMode::Surfing` 并推进玩家；录像中的“文字下移动”和 9 帧位移与该顺序一致。
+- 台阶渲染 [`overworld.rs`](../../../crates/pokered-app/src/render/overworld.rs) 虽有原版 Y 偏移表，但角色偏移与静止背景的合成方式使逻辑坐标提交后视口一次跳 32px。
+- 战斗渲染 [`battle.rs`](../../../crates/pokered-app/src/render/battle.rs) 的 `hide_enemy_hud` 未包含 `WildReveal`，与提前显示敌方 HUD 的画面吻合。
 
-## 流程复盘与修正
+源码仅用于解释已观察到的帧差异，不参与替代运行时判定。
 
-首版流程有三个问题：contact sheet 只适合导航却被用于判定；人工抽帧引入了时间重采样；源码表一致被误当成运行时画面一致。修正后的 Skill 要求：
+## 更新后的流程
 
-1. 记录 PNG → emulator frame 映射和完整 phase manifest；
-2. 使用相同 `t+N` 的 raw-time 对比，提前结束的一侧显示 `ENDED`；
-3. 分开测量 actor、background/camera、phase 和 state；
-4. 对时长、最大单帧位移、运动分布设置硬门槛；
-5. 缺少任一 mandatory channel 时最高只能判 `部分通过`；
-6. 确定性场景重复两次后才能给最终 `PASS`。
+本次把以下约束固化进 `key-animation-differential` Skill：
 
-流程定义见 [`quantitative-alignment.md`](../../../.agents/skills/key-animation-differential/references/quantitative-alignment.md)，自动分析脚本见 [`compare_sequences.py`](../../../.agents/skills/key-animation-differential/scripts/compare_sequences.py)。
+1. recorder 同帧写 PNG 和 `frame-manifest.jsonl`，不再猜 PNG 与 emulator frame 的映射；
+2. `press_timeline` 接受逐帧按钮/`null` 和 `start_at_frame`，把 setup、trigger 与环境动画相位固定下来；
+3. pre-trigger 同时校验截图和状态，菜单名称、坐标或朝向单独匹配都不算有效；
+4. 两轮逐帧哈希复现后才允许进入 `PASS`；
+5. moving-camera 场景强制测量 ROI 位移、最大单帧跳变和运动分布；
+6. 非相机场景由 `raw_time_contact.py` 按相同 `t+N` 生成证据，较短一侧明确标记 `ENDED`。
 
-本次仅新增审计文档和录制证据，没有修改游戏实现代码。
+流程定义见 [`quantitative-alignment.md`](../../../.agents/skills/key-animation-differential/references/quantitative-alignment.md)，采集入口见 [`rerun_key_animations.py`](rerun_key_animations.py)。current 固定场景快照位于 [`fixtures/current`](fixtures/current)。
+
+复跑命令：
+
+```bash
+cargo build --bin pokered-app --features debug-server
+OUT=$(mktemp -d /tmp/keyanim-rerun.XXXXXX)
+/tmp/visual-oracle-venv/bin/python \
+  docs/audits/2026-09-10/rerun_key_animations.py \
+  --output "$OUT" --repeat 2 \
+  --reference-rom /path/to/pokeblue_debug.gbc \
+  --reference-world-state /path/to/world.state \
+  --reference-symbols /path/to/pokeblue_debug.sym
+```
+
+本次只修改审计工具、Skill、测试快照、报告和证据，没有修改游戏的可见实现。
