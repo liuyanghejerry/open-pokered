@@ -4,8 +4,9 @@
 
 use super::field_moves::{FieldMoveOutcome, BOULDER_DUST_FRAMES};
 use super::hm_effects;
+use super::presentation;
 use super::screen::{OverworldScreen, PendingWarp, WarpFadeState};
-use super::{Direction, TransportMode};
+use super::{Direction, OverworldInput, TransportMode};
 use dotzuki_engine::overworld::npc_movement::NpcRuntimeState;
 use dotzuki_engine::overworld::types::NpcMovementType;
 use pokered_data::blockset_data;
@@ -37,6 +38,10 @@ fn dialogue_text(screen: &OverworldScreen<PokemonRedData>) -> Option<String> {
     let dlg = screen.pending_dialogue.as_ref()?;
     let page = dlg.current()?;
     Some(format!("{}\n{}", page.line1, page.line2))
+}
+
+fn no_input() -> OverworldInput {
+    OverworldInput::new(false, false, false, false, false, false, false, false)
 }
 
 /// Find a block in the Overworld blockset whose tile at a player-readable
@@ -165,7 +170,7 @@ fn cut_without_badge_shows_badge_message() {
 }
 
 #[test]
-fn cut_tree_replaces_block_and_plays_sfx() {
+fn cut_tree_waits_for_text_then_animates_and_plays_sfx() {
     let (tree_block, sub_x, sub_y) =
         find_block_with_tile(CUT_TREE_TILE_OVERWORLD, |b| cut_tree_replacement(b).is_some())
             .expect("blockset has a swappable cut-tree block");
@@ -180,9 +185,54 @@ fn cut_tree_replaces_block_and_plays_sfx() {
     let map = screen.map_data.as_ref().unwrap();
     assert_eq!(
         super::collision::get_block_at(10, 10, map.width, &map.blocks),
-        Some(replacement),
-        "the tree block was swapped for its cut-down replacement"
+        Some(tree_block),
+        "the tree remains while UsedCutText is open"
     );
+    assert!(screen.pending_cut.is_some());
+    assert!(screen.cut_anim.is_none());
+    assert!(!screen
+        .audio_requests
+        .iter()
+        .any(|r| matches!(r, super::screen::OverworldAudioRequest::PlaySound { sound_id } if sound_id == "SFX_CUT")));
+    assert!(dialogue_text(&screen)
+        .unwrap_or_default()
+        .contains("hacked\naway with CUT!"));
+
+    screen
+        .pending_dialogue
+        .as_mut()
+        .expect("UsedCutText")
+        .skip_to_full_page();
+    let press_a = OverworldInput::new(false, false, false, false, true, false, false, false);
+    screen.update_frame(press_a);
+    screen.update_frame(no_input());
+    assert!(screen.pending_dialogue.is_none());
+    assert!(screen.cut_retained_dialogue.is_some());
+
+    screen.update_frame(no_input());
+    let map = screen.map_data.as_ref().unwrap();
+    assert_eq!(
+        super::collision::get_block_at(10, 10, map.width, &map.blocks),
+        Some(replacement),
+        "the tree block swaps when AnimCut starts"
+    );
+    assert!(screen.cut_anim.is_some());
+    for _ in 0..8 {
+        screen.update_frame(no_input());
+    }
+    assert!(
+        screen.cut_retained_dialogue.is_some(),
+        "the original text-box BG remains during AnimCut setup"
+    );
+    screen.update_frame(no_input());
+    assert!(
+        screen.cut_retained_dialogue.is_none(),
+        "RedrawMapView clears the text box as separation starts"
+    );
+    for _ in 9..presentation::CUT_ANIM_FRAMES {
+        screen.update_frame(no_input());
+    }
+    assert!(screen.cut_anim.is_none());
     assert!(
         screen
             .audio_requests
@@ -190,9 +240,6 @@ fn cut_tree_replaces_block_and_plays_sfx() {
             .any(|r| matches!(r, super::screen::OverworldAudioRequest::PlaySound { sound_id } if sound_id == "SFX_CUT")),
         "SFX_CUT plays"
     );
-    assert!(dialogue_text(&screen)
-        .unwrap_or_default()
-        .contains("hacked\naway with CUT!"));
 }
 
 #[test]
@@ -242,7 +289,7 @@ fn surf_not_facing_water() {
 }
 
 #[test]
-fn surf_starts_on_water_and_sets_surfing_transport() {
+fn surf_waits_for_text_then_uses_original_step_cadence() {
     let (water_block, sub_x, sub_y) = find_block_with_tile(0x14, |_| true)
         .expect("blockset has a water block");
 
@@ -259,11 +306,9 @@ fn surf_starts_on_water_and_sets_surfing_transport() {
         TransportMode::Surfing,
         "surfing assigns TransportMode::Surfing"
     );
-    // .makePlayerMoveForward: the player walks one tile onto the water.
-    assert_eq!(
-        screen.scripted_player_path.front().copied(),
-        Some((player_x, player_y - 1))
-    );
+    assert!(screen.scripted_player_path.is_empty());
+    assert!(screen.pending_field_move_step.is_some());
+    assert_eq!((screen.state.player.x, screen.state.player.y), (player_x, player_y));
     // PlayDefaultMusic: map music re-request (app maps Surfing -> MUSIC_SURFING).
     assert!(screen
         .audio_requests
@@ -272,6 +317,42 @@ fn surf_starts_on_water_and_sets_surfing_transport() {
     assert!(dialogue_text(&screen)
         .unwrap_or_default()
         .contains("got on"));
+
+    // PrintText blocks the simulated forward press. Once it closes, the
+    // original's graphics restoration exposes 37 white and 23 map-only frames
+    // before movement spans 18 visible frames.
+    for _ in 0..1000 {
+        if screen
+            .pending_dialogue
+            .as_ref()
+            .is_some_and(|dialogue| dialogue.waiting_for_input())
+        {
+            break;
+        }
+        screen.update_frame(no_input());
+    }
+    let press_a = OverworldInput::new(false, false, false, false, true, false, false, false);
+    screen.update_frame(press_a);
+    assert!(screen
+        .pending_dialogue
+        .as_ref()
+        .is_some_and(|dialogue| dialogue.holding_open()));
+    screen.update_frame(no_input());
+    assert!(screen.pending_dialogue.is_none());
+    assert_eq!(
+        screen.field_move_restore,
+        Some(presentation::FieldMoveRestoreState::new())
+    );
+    for _ in 0..presentation::FIELD_MOVE_RESTORE_FRAMES {
+        screen.update_frame(no_input());
+    }
+    assert!(screen.field_move_step.is_some());
+    assert_eq!((screen.state.player.x, screen.state.player.y), (player_x, player_y));
+    for _ in 0..18 {
+        screen.update_frame(no_input());
+    }
+    assert!(screen.field_move_step.is_none());
+    assert_eq!((screen.state.player.x, screen.state.player.y), (player_x, player_y - 1));
 }
 
 #[test]
@@ -652,17 +733,32 @@ fn fly_outside_opens_fly_map() {
 }
 
 #[test]
-fn fly_warp_to_queues_fade_warp() {
+fn fly_warp_to_runs_departure_before_fade_and_commits_on_original_frame() {
     let mut screen = screen_on(MapId::Route1);
     let dest = hm_effects::fly_destination_for_map(MapId::CeruleanCity).unwrap();
     screen.fly_warp_to(dest.map, dest.x, dest.y);
     let warp = screen.pending_warp.as_ref().expect("fly warp queued");
     assert_eq!(warp.dest_map, MapId::CeruleanCity);
     assert_eq!((warp.dest_x, warp.dest_y), (19, 18));
-    assert!(matches!(
-        screen.warp_fade_state,
-        WarpFadeState::FadingOut { .. }
-    ));
+    assert!(matches!(screen.warp_fade_state, WarpFadeState::Idle));
+    assert!(screen.fly_departure.is_some());
+
+    for _ in 0..227 {
+        screen.update_frame(no_input());
+    }
+    assert_eq!(screen.state.current_map, MapId::Route1);
+    screen.update_frame(no_input());
+    assert_eq!(screen.state.current_map, MapId::CeruleanCity);
+    assert_eq!(screen.fly_arrival_delay_frames, presentation::FLY_ARRIVAL_POST_FADE_DELAY_FRAMES);
+
+    for _ in 228..297 {
+        screen.update_frame(no_input());
+    }
+    assert_eq!(screen.enter_map_fly_anim.as_ref().map(|fly| fly.frame), Some(0));
+    for _ in 0..presentation::FLY_ANIM_FRAMES {
+        screen.update_frame(no_input());
+    }
+    assert!(screen.enter_map_fly_anim.is_none());
 }
 
 // ══════════════════════════════════════════════════════════════════════

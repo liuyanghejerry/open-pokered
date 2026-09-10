@@ -86,6 +86,13 @@ class DebugClient:
     def press_sequence(self, buttons):
         return self.cmd(cmd="press_sequence", buttons=list(buttons))
 
+    def press_timeline(self, buttons, start_at_frame=None):
+        """Queue one button or explicit neutral (None) per emulated frame."""
+        command = {"cmd": "press_timeline", "buttons": list(buttons)}
+        if start_at_frame is not None:
+            command["start_at_frame"] = start_at_frame
+        return self.cmd(**command)
+
     def step(self, count):
         """Synchronously advance `count` frames; returns when done."""
         return self.cmd(cmd="step_frames", count=count)

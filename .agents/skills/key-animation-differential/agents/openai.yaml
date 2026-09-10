@@ -1,0 +1,4 @@
+interface:
+  display_name: "Key Animation Differential"
+  short_description: "Compare original and current key animation frames"
+  default_prompt: "Use $key-animation-differential to record and compare original versus current Pokémon animation behavior."

@@ -1,6 +1,9 @@
 use pokered_core::battle::state::{status2, status3};
 use pokered_core::battle::state::StatusCondition as CoreStatus;
-use pokered_core::battle::{BattleAnimEvent, BallAnimOutcome, BattlePhase, BattleScreen, BattleTransition as CoreTransition, IntroPhase};
+use pokered_core::battle::{
+    BallAnimOutcome, BattleAnimEvent, BattlePhase, BattleScreen,
+    BattleTransition as CoreTransition, IntroPhase,
+};
 use pokered_core::game_state::Lang;
 use pokered_audio::sfx_data::SfxId;
 use pokered_data::impl_traits::PokemonRenderData;
@@ -48,6 +51,12 @@ const FLASH_SCREEN_PALETTE: [[u8; 4]; 12] = [
     [2, 1, 0, 0], // Step 10: dc 2,1,0,0  (bright fading)
     [3, 2, 1, 0], // Step 11: dc 3,2,1,0  (normal) ← was [3,3,3,3]
 ];
+
+/// The party-ball strip appears for the last 25 frames of WildReveal.  Text
+/// begins three frames later and advances in the original's three-glyph /
+/// three-frame transfer cadence.
+const WILD_REVEAL_BALL_FRAMES: u16 = 25;
+const WILD_REVEAL_TEXT_START_WAIT: u16 = 21;
 
 #[derive(Debug, Clone, Copy)]
 struct AttackLunge {
@@ -2067,6 +2076,7 @@ pub fn draw_battle(
                 phase,
                 IntroPhase::SilhouetteSlide
                     | IntroPhase::TrainerReveal
+                    | IntroPhase::WildReveal
             )
         );
         let hide_player_hud = matches!(
@@ -2120,7 +2130,14 @@ pub fn draw_battle(
             );
         }
 
-        if screen.show_player_pokeballs {
+        let wild_reveal_balls = matches!(
+            &screen.phase,
+            BattlePhase::Intro {
+                phase: IntroPhase::WildReveal,
+                wait_frames,
+            } if *wait_frames < WILD_REVEAL_BALL_FRAMES
+        );
+        if screen.show_player_pokeballs || wild_reveal_balls {
             let player_balls: [BallStatus; 6] =
                 screen.player_pokeball_status.map(slot_status_to_pokeball);
             BallIndicators::draw_player(&mut tile_buf, &player_balls);
@@ -2238,6 +2255,44 @@ pub fn draw_battle(
                     ..
                 } => *current + 1 < messages.len() && *wait_frames == 0,
                 _ => false,
+            };
+            // PrintBeginningBattleText does not expose the complete sentence
+            // on the first WildReveal frame.  The reference keeps the empty
+            // battle text box while the cry/setup path runs, then writes one
+            // visible character per frame.  Preserve the explicit newline but
+            // do not count it as a typed glyph.
+            let text = match (&screen.phase, text) {
+                (
+                    BattlePhase::Intro {
+                        phase: IntroPhase::WildReveal,
+                        wait_frames,
+                    },
+                    Some(full),
+                ) => {
+                    if language == Lang::Zh {
+                        Some(full)
+                    } else {
+                        let full = full.replacen(" appeared!", "\nappeared!", 1);
+                        let visible = if *wait_frames <= WILD_REVEAL_TEXT_START_WAIT {
+                            1 + 3 * ((WILD_REVEAL_TEXT_START_WAIT - *wait_frames) / 3)
+                        } else {
+                            0
+                        };
+                        let mut glyphs = 0u16;
+                        Some(
+                            full.chars()
+                                .take_while(|ch| {
+                                    if *ch == '\n' {
+                                        return true;
+                                    }
+                                    glyphs += 1;
+                                    glyphs <= visible
+                                })
+                                .collect(),
+                        )
+                    }
+                }
+                (_, text) => text,
             };
             (text, arrow)
         };
@@ -2623,7 +2678,23 @@ pub fn draw_battle(
                 menus::yes_no::draw(&opts, selected, &YES_NO_DEFAULT_LAYOUT, &mut ui);
             } else if let Some(ref text) = dialog_text {
                 let shown = if language == Lang::Zh { crate::render::zh_battle_dialog(text, true) } else { text.clone() };
-                menus::battle_text::draw(&shown, dialog_show_arrow, &BATTLE_TEXT_DEFAULT_LAYOUT, &mut ui, language);
+                if matches!(
+                    &screen.phase,
+                    BattlePhase::Intro {
+                        phase: IntroPhase::WildReveal,
+                        ..
+                    }
+                ) {
+                    menus::battle_text::draw_hard_lines(
+                        &shown,
+                        dialog_show_arrow,
+                        &BATTLE_TEXT_DEFAULT_LAYOUT,
+                        &mut ui,
+                        language,
+                    );
+                } else {
+                    menus::battle_text::draw(&shown, dialog_show_arrow, &BATTLE_TEXT_DEFAULT_LAYOUT, &mut ui, language);
+                }
             }
         }
 

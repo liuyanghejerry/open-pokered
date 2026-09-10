@@ -2,7 +2,7 @@
 use dotzuki_engine::render_config::RenderConfig;
 use pokered_app::render::draw_overworld;
 use pokered_core::game_state::Lang;
-use pokered_core::overworld::presentation::EnterMapFlyState;
+use pokered_core::overworld::presentation::{EnterMapFlyState, FLY_ANIM_FRAMES};
 use pokered_core::overworld::{OverworldInput, OverworldScreen};
 use pokered_data::{impl_traits::PokemonRedData, maps::MapId};
 use pokered_renderer::{
@@ -186,7 +186,9 @@ fn fly_uses_side_wings_and_lands_at_the_player() {
     }
     // Completion must also show the player if a caller renders the done state
     // before the update loop removes it.
-    screen.enter_map_fly_anim = Some(EnterMapFlyState { frame: 36 });
+    screen.enter_map_fly_anim = Some(EnterMapFlyState {
+        frame: FLY_ANIM_FRAMES,
+    });
     assert_frame_eq(
         &render(&mut screen),
         &landed,
@@ -205,6 +207,8 @@ fn fly_lifecycle_freezes_input_then_restores_player() {
         assert_eq!((screen.state.player.x, screen.state.player.y), start);
     }
     let completed = render(&mut screen);
-    screen.enter_map_fly_anim = Some(EnterMapFlyState { frame: 36 });
+    screen.enter_map_fly_anim = Some(EnterMapFlyState {
+        frame: FLY_ANIM_FRAMES,
+    });
     assert_frame_eq(&render(&mut screen), &completed, "lifecycle completion");
 }

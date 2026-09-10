@@ -16,6 +16,14 @@ pub enum GameDebugCommand {
     /// Render the current screen to a PNG without advancing simulation.
     /// Native debug harness only; the parent directory must already exist.
     CaptureFrame { path: String },
+    /// Queue one button or explicit neutral (`null`) per emulated frame.
+    /// `start_at_frame` pads with neutral frames so the first supplied input
+    /// lands on the requested absolute game frame.
+    PressTimeline {
+        buttons: Vec<Option<String>>,
+        #[serde(default)]
+        start_at_frame: Option<u64>,
+    },
     /// Read the live overworld blocks, including script and field-move edits.
     GetMap,
     /// Get the player's party Pokémon data.
@@ -46,8 +54,15 @@ pub enum GameDebugCommand {
     /// Give a Pokémon to the player's party.
     GivePokemon { species: String, level: u8 },
     /// Start a wild battle against the given species/level (for testing catch
-    /// and battle flow without walking into a random encounter).
-    StartWildBattle { species: String, level: u8 },
+    /// and battle flow without walking into a random encounter).  A supplied
+    /// `start_at_frame` synchronously advances with neutral input first, so
+    /// animation captures do not inherit TCP connection timing.
+    StartWildBattle {
+        species: String,
+        level: u8,
+        #[serde(default)]
+        start_at_frame: Option<u64>,
+    },
 }
 
 /// Commands that can be sent to the debug server via JSON-line protocol:
@@ -127,6 +142,19 @@ mod tests {
             cmd,
             DebugCommand::Game(GameDebugCommand::StartWildBattle { level: 3, .. })
         ));
+
+        let cmd: DebugCommand = serde_json::from_str(
+            r#"{"cmd":"start_wild_battle","species":"Rattata","level":3,"start_at_frame":300}"#,
+        )
+        .unwrap();
+        assert!(matches!(
+            cmd,
+            DebugCommand::Game(GameDebugCommand::StartWildBattle {
+                level: 3,
+                start_at_frame: Some(300),
+                ..
+            })
+        ));
     }
 
     /// The game-side dialogue/cutscene stepping commands (wait_until /
@@ -149,6 +177,30 @@ mod tests {
         assert!(matches!(
             cmd,
             DebugCommand::Game(GameDebugCommand::SkipDialogue)
+        ));
+
+        let cmd: DebugCommand = serde_json::from_str(
+            r#"{"cmd":"press_timeline","buttons":["a",null,"down"],"start_at_frame":240}"#,
+        )
+        .unwrap();
+        assert!(matches!(
+            cmd,
+            DebugCommand::Game(GameDebugCommand::PressTimeline {
+                ref buttons,
+                start_at_frame: Some(240),
+            }) if buttons == &vec![Some("a".into()), None, Some("down".into())]
+        ));
+
+        let cmd: DebugCommand = serde_json::from_str(
+            r#"{"cmd":"press_timeline","buttons":[null]}"#,
+        )
+        .unwrap();
+        assert!(matches!(
+            cmd,
+            DebugCommand::Game(GameDebugCommand::PressTimeline {
+                start_at_frame: None,
+                ..
+            })
         ));
     }
 
