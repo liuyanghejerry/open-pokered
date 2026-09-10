@@ -441,7 +441,12 @@ def capture_current(binary: Path, snapshot: Path, scenario: str, out: Path) -> N
         client = DebugClient(port)
         pretrigger = prepare_current(client, scenario)
         if scenario == "battle-entry":
-            trigger_response = client.cmd(cmd="start_wild_battle", species="Rhydon", level=20)
+            trigger_response = client.cmd(
+                cmd="start_wild_battle",
+                species="Rhydon",
+                level=20,
+                start_at_frame=CURRENT_TRIGGER_FRAME,
+            )
             if not trigger_response.get("ok"):
                 raise RuntimeError(trigger_response)
             start_frame = trigger_response["data"]["frame_count"]

@@ -54,8 +54,15 @@ pub enum GameDebugCommand {
     /// Give a Pokémon to the player's party.
     GivePokemon { species: String, level: u8 },
     /// Start a wild battle against the given species/level (for testing catch
-    /// and battle flow without walking into a random encounter).
-    StartWildBattle { species: String, level: u8 },
+    /// and battle flow without walking into a random encounter).  A supplied
+    /// `start_at_frame` synchronously advances with neutral input first, so
+    /// animation captures do not inherit TCP connection timing.
+    StartWildBattle {
+        species: String,
+        level: u8,
+        #[serde(default)]
+        start_at_frame: Option<u64>,
+    },
 }
 
 /// Commands that can be sent to the debug server via JSON-line protocol:
@@ -134,6 +141,19 @@ mod tests {
         assert!(matches!(
             cmd,
             DebugCommand::Game(GameDebugCommand::StartWildBattle { level: 3, .. })
+        ));
+
+        let cmd: DebugCommand = serde_json::from_str(
+            r#"{"cmd":"start_wild_battle","species":"Rattata","level":3,"start_at_frame":300}"#,
+        )
+        .unwrap();
+        assert!(matches!(
+            cmd,
+            DebugCommand::Game(GameDebugCommand::StartWildBattle {
+                level: 3,
+                start_at_frame: Some(300),
+                ..
+            })
         ));
     }
 

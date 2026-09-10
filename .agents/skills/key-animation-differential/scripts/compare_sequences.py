@@ -268,6 +268,44 @@ def compare(
         f"current={cur_motion['largest_step_share']}; delta={smoothness_delta:.3f}",
     )
 
+    def ordered_motion(sequence: dict[str, object]) -> list[tuple[int, int]]:
+        ordered: list[tuple[int, int]] = []
+        transitions = sequence["transitions"]
+        assert isinstance(transitions, list)
+        for transition in transitions:
+            assert isinstance(transition, dict)
+            best = transition["best_translation"]
+            assert isinstance(best, dict)
+            ordered.append(
+                (int(best["dx"]), int(best["dy"]))
+                if best["accepted"]
+                else (0, 0)
+            )
+        return ordered
+
+    ref_ordered = ordered_motion(reference)
+    cur_ordered = ordered_motion(current)
+    first_mismatch = next(
+        (
+            index
+            for index, (ref_step, cur_step) in enumerate(
+                zip(ref_ordered, cur_ordered)
+            )
+            if ref_step != cur_step
+        ),
+        None,
+    )
+    cadence_matches = ref_ordered == cur_ordered
+    cadence_detail = f"{len(ref_ordered)} reference / {len(cur_ordered)} current transitions"
+    if first_mismatch is not None:
+        cadence_detail += (
+            f"; first mismatch at t+{first_mismatch}->t+{first_mismatch + 1}: "
+            f"reference={ref_ordered[first_mismatch]}, current={cur_ordered[first_mismatch]}"
+        )
+    elif len(ref_ordered) != len(cur_ordered):
+        cadence_detail += f"; first mismatch at t+{min(len(ref_ordered), len(cur_ordered))}"
+    add("ordered_background_cadence", cadence_matches, cadence_detail)
+
     return {
         "verdict": "PASS" if all(check["status"] == "PASS" for check in checks) else "FAIL",
         "duration_ratio": round(duration_ratio, 6),

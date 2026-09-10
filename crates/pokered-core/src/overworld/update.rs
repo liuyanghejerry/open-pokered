@@ -394,6 +394,26 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
             return ScreenAction::Continue;
         }
 
+        // FLY's `_LeaveMapAnim`: unlike TELEPORT/DIG this is a bird pickup,
+        // two coordinate-list passes and a blocking off-screen hold. Only its
+        // completion starts GBFadeOutToWhite and permits the map commit.
+        if let Some(mut fly) = self.fly_departure.take() {
+            let done = fly.tick();
+            if fly.frame == presentation::FLY_DEPARTURE_FIRST_PATH_START {
+                self.audio_requests.push(OverworldAudioRequest::PlaySound {
+                    sound_id: "SFX_FLY".to_string(),
+                });
+            }
+            if done {
+                self.warp_fade_state = WarpFadeState::FadingOut {
+                    frames_remaining: presentation::FLY_DEPARTURE_FADE_FRAMES,
+                };
+            } else {
+                self.fly_departure = Some(fly);
+            }
+            return ScreenAction::Continue;
+        }
+
         // TELEPORT/DIG/ESCAPE ROPE spin-out (_LeaveMapAnim): freeze gameplay
         // while the player spins and rises off screen; the warp fade-out
         // (GBFadeOutToWhite) starts when the spin finishes.
@@ -483,18 +503,30 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
             WarpFadeState::Idle => {}
         }
 
+        // EnterMapAnim performs Delay3, GBFadeInFromWhite and a blocking bird
+        // graphics copy before the first arrival coordinate becomes visible.
+        if self.fly_arrival_delay_frames > 0 {
+            self.fly_arrival_delay_frames -= 1;
+            if self.fly_arrival_delay_frames == 0 {
+                self.enter_map_fly_anim = Some(presentation::EnterMapFlyState::new());
+                self.audio_requests.push(OverworldAudioRequest::PlaySound {
+                    sound_id: "SFX_FLY".to_string(),
+                });
+            }
+            return ScreenAction::Continue;
+        }
+
         // EnterMapAnim .flyAnimation (player_animations.asm:53-70): the FLY
         // arrival bird — flaps every step (Delay3) along
         // FlyAnimationEnterScreenCoords while the player sprite is swapped
         // for the bird; gameplay stays frozen like the spin-in.
         if let Some(mut fly) = self.enter_map_fly_anim.take() {
-            if fly.frame == 0 {
-                self.audio_requests.push(OverworldAudioRequest::PlaySound {
-                    sound_id: "SFX_FLY".to_string(),
-                });
-            }
             fly.tick();
-            if !fly.is_done() {
+            if fly.is_done() {
+                self.audio_requests.push(OverworldAudioRequest::PlayMapMusic {
+                    map: self.state.current_map,
+                });
+            } else {
                 self.enter_map_fly_anim = Some(fly);
             }
             return ScreenAction::Continue;
@@ -781,6 +813,9 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
             if dlg.holding_open() {
                 // HoldTextDisplayOpen: keep text box open while A is held
                 if !input.a || b_just_pressed {
+                    if self.pending_cut.is_some() {
+                        self.cut_retained_dialogue = Some(dlg.clone());
+                    }
                     self.pending_dialogue = None;
                 }
             } else if a_just_pressed || b_just_pressed {
@@ -790,6 +825,9 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                         // Last page + A pressed → start holding open
                         dlg.start_holding_open();
                     } else if !dlg.advance() {
+                        if self.pending_cut.is_some() {
+                            self.cut_retained_dialogue = Some(dlg.clone());
+                        }
                         self.pending_dialogue = None;
                     }
                 } else {
@@ -801,6 +839,88 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                 // No button pressed → advance typewriter
                 dlg.reveal_next_char();
             }
+            if self.pending_dialogue.is_none()
+                && self.pending_field_move_step.is_some()
+                && self.field_move_step_needs_restore
+            {
+                // HoldTextDisplayOpen returns on the A-release frame. Start
+                // SURF's blocking teardown in that same frame; waiting for
+                // the next overworld update shifts the entire step by one.
+                self.field_move_step_needs_restore = false;
+                self.field_move_restore = Some(presentation::FieldMoveRestoreState::new());
+            }
+            return ScreenAction::Continue;
+        }
+
+        // UsedCut mutates/redraws the map only after UsedCutText returns, then
+        // AnimCut owns the next 18 frames with its four-sprite OAM overlay.
+        if self.cut_anim.is_none() {
+            if let Some(cut) = self.pending_cut.take() {
+                if let Some(replacement) = cut.replacement_block {
+                    if let Some(map) = self.map_data.as_mut() {
+                        map.set_block(cut.block_x, cut.block_y, replacement);
+                    }
+                }
+                self.cut_anim = Some(presentation::CutAnimState::new(
+                    self.state.player.facing,
+                    cut.kind,
+                ));
+                return ScreenAction::Continue;
+            }
+        }
+        if let Some(mut cut) = self.cut_anim.take() {
+            if cut.tick() {
+                self.cut_retained_dialogue = None;
+                self.audio_requests.push(OverworldAudioRequest::PlaySound {
+                    sound_id: "SFX_CUT".to_string(),
+                });
+            } else {
+                if cut.tree_spread_px() > 0 {
+                    self.cut_retained_dialogue = None;
+                }
+                self.cut_anim = Some(cut);
+            }
+            return ScreenAction::Continue;
+        }
+
+        // ItemUseSurfboard queues its simulated forward press before PrintText,
+        // but the blocking text routine, palette white-out, graphics reloads,
+        // and CloseTextDisplay all finish before the overworld consumes it.
+        // Preserve the original 37 white + 23 map-only restoration frames.
+        if self.pending_field_move_step.is_some() && self.field_move_step_needs_restore {
+            self.field_move_step_needs_restore = false;
+            self.field_move_restore = Some(presentation::FieldMoveRestoreState::new());
+            return ScreenAction::Continue;
+        }
+        if let Some(mut restore) = self.field_move_restore.take() {
+            if !restore.tick() {
+                self.field_move_restore = Some(restore);
+                return ScreenAction::Continue;
+            }
+            // The final restore tick and the first simulated movement setup
+            // share a display frame in the original overworld loop.
+        }
+        if self.field_move_step.is_none() {
+            if let Some(step) = self.pending_field_move_step.take() {
+                self.state.player.movement_state = MovementState::Walking;
+                self.state.walk_counter = step.walk_counter();
+                self.field_move_step = Some(step);
+                return ScreenAction::Continue;
+            }
+        }
+        if let Some(mut step) = self.field_move_step.take() {
+            let done = step.tick();
+            let (x, y) = step.player_position();
+            self.state.player.x = x;
+            self.state.player.y = y;
+            self.state.walk_counter = step.walk_counter();
+            if done {
+                self.state.player.movement_state = MovementState::Idle;
+                self.state.walk_counter = 0;
+            } else {
+                self.field_move_step = Some(step);
+            }
+            self.run_npc_movement_tick();
             return ScreenAction::Continue;
         }
 
@@ -1595,15 +1715,31 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                 movement_input
             };
 
-            let result = player_movement::process_frame(
-                &mut self.state,
-                &movement_input,
-                map,
-                standing_tile,
-                target_tile,
-                &npc_positions,
-                &collision_provider,
-            );
+            let result = if let Some(ref mut jump) = self.ledge_jump {
+                let done = jump.tick();
+                let (x, y) = jump.player_position();
+                self.state.player.x = x;
+                self.state.player.y = y;
+                self.state.walk_counter = jump.walk_counter();
+                if done {
+                    self.state.player.movement_state = MovementState::Idle;
+                    self.state.walk_counter = 0;
+                    self.ledge_jump = None;
+                    MoveResult::NoInput
+                } else {
+                    MoveResult::StillMoving
+                }
+            } else {
+                player_movement::process_frame(
+                    &mut self.state,
+                    &movement_input,
+                    map,
+                    standing_tile,
+                    target_tile,
+                    &npc_positions,
+                    &collision_provider,
+                )
+            };
 
             // Surf dismount (CollisionCheckOnWater .stopSurfing): the engine
             // flipped the transport back to Walking after stepping ashore —
@@ -1815,6 +1951,12 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                 MoveResult::LedgeJump => {
                     self.sfx_event = OverworldSfxEvent::Ledge;
                     self.bump_anim_counter = 0;
+                    self.state.walk_counter = 0;
+                    self.ledge_jump = Some(presentation::LedgeJumpState::new(
+                        self.state.player.x,
+                        self.state.player.y,
+                        self.state.player.facing,
+                    ));
                 }
                 _ => {
                     self.bump_anim_counter = 0;
@@ -1981,7 +2123,11 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                 .wrapping_mul(1103515245)
                 .wrapping_add(12345)
                 >> 16) as u8;
-            let player_dest = if self.state.player.movement_state != MovementState::Idle {
+            let player_dest = if let Some(jump) = self.ledge_jump {
+                Some(jump.landing_position())
+            } else if let Some(step) = self.field_move_step {
+                Some(step.landing_position())
+            } else if self.state.player.movement_state != MovementState::Idle {
                 // A ledge jump (Jumping) crosses TWO tiles: the landing tile
                 // is where the player will be, so that — not the ledge tile
                 // one step out — is the destination NPCs must yield to.

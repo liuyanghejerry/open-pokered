@@ -446,12 +446,25 @@ def m18_rock_tunnel_entrance(g):
 
 
 def m19_rock_tunnel(g):
-    g.nav_warp(8, 17, "Route10", "RockTunnel1F")
-    g.nav_warp(37, 3, "RockTunnel1F", "RockTunnelB1F")
-    g.nav_warp(27, 3, "RockTunnelB1F", "RockTunnel1F")
-    g.nav_warp(17, 11, "RockTunnel1F", "RockTunnelB1F")
-    g.nav_warp(3, 3, "RockTunnelB1F", "RockTunnel1F")
-    g.nav_warp(15, 33, "RockTunnel1F", "Route10", approach="down")
+    # Rock Tunnel has enough unavoidable encounters that a solo starter can
+    # legitimately black out midway.  That returns to the Route10 Pokecenter
+    # fully healed; retry the crossing only for that exact recovery state.
+    for attempt in range(3):
+        try:
+            g.nav_warp(8, 17, "Route10", "RockTunnel1F")
+            g.nav_warp(37, 3, "RockTunnel1F", "RockTunnelB1F")
+            g.nav_warp(27, 3, "RockTunnelB1F", "RockTunnel1F")
+            g.nav_warp(17, 11, "RockTunnel1F", "RockTunnelB1F")
+            g.nav_warp(3, 3, "RockTunnelB1F", "RockTunnel1F")
+            g.nav_warp(15, 33, "RockTunnel1F", "Route10", approach="down")
+            break
+        except RuntimeError:
+            if g.pos()[0] != "Route10":
+                raise
+            print(f"[m19] blackout {attempt + 1}: retrying Rock Tunnel",
+                  flush=True)
+    else:
+        raise RuntimeError("Rock Tunnel crossing failed after 3 blackouts")
     g.nav_to_map(3, 6, "LavenderTown")
     g.heal_pokecenter((3, 5), "LavenderTown", "LavenderPokecenter")
     g.evidence("m19")
