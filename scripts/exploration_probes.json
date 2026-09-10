@@ -1,0 +1,312 @@
+{
+  "version": 1,
+  "description": "Explicit checkpoint exploration contracts. Expectations are not generated from the reimplementation.",
+  "checkpoints": {
+    "m01": {},
+    "m02": {
+      "blocked": [],
+      "destinations": [
+        {
+          "id": "daisy-before-pokedex",
+          "kind": "destination",
+          "goal": "Visit Daisy before Oak's errand and confirm the Town Map is not available yet.",
+          "route": [
+            {"op": "nav_warp", "x": 7, "y": 1, "from_map": "RedsHouse2F", "to_map": "RedsHouse1F"},
+            {"op": "nav_warp", "x": 3, "y": 7, "from_map": "RedsHouse1F", "to_map": "PalletTown", "approach": "down"},
+            {"op": "nav_to", "x": 13, "y": 6, "map": "PalletTown"},
+            {"op": "nav_warp", "x": 13, "y": 5, "from_map": "PalletTown", "to_map": "BluesHouse"},
+            {"op": "nav_to", "x": 2, "y": 4, "map": "BluesHouse"}
+          ],
+          "visit": {"direction": "up"},
+          "expected": {
+            "map": "BluesHouse",
+            "position": [2, 4],
+            "dialogue_contains": ["BLUE is out"],
+            "bag": {"TownMap": 0}
+          }
+        }
+      ]
+    },
+    "m03": {},
+    "m04": {},
+    "m05": {},
+    "m06": {},
+    "m07": {},
+    "m08": {
+      "blocked": [],
+      "destinations": [
+        {
+          "id": "daisy-town-map-after-errand",
+          "kind": "destination",
+          "goal": "Return to Daisy after the parcel errand and receive the Town Map once.",
+          "route": [
+            {"op": "nav_warp", "x": 5, "y": 11, "from_map": "OaksLab", "to_map": "PalletTown", "approach": "down"},
+            {"op": "nav_to", "x": 13, "y": 6, "map": "PalletTown"},
+            {"op": "nav_warp", "x": 13, "y": 5, "from_map": "PalletTown", "to_map": "BluesHouse"},
+            {"op": "nav_to", "x": 2, "y": 4, "map": "BluesHouse"}
+          ],
+          "visit": {"direction": "up"},
+          "expected": {
+            "map": "BluesHouse",
+            "position": [2, 4],
+            "dialogue_contains": ["TOWN MAP"],
+            "flags": {"EVENT_GOT_TOWN_MAP": true},
+            "bag": {"TownMap": 1}
+          }
+        },
+        {
+          "id": "viridian-hidden-potion",
+          "kind": "destination",
+          "goal": "Walk the Viridian City hedge route and collect its hidden Potion.",
+          "route": [
+            {"op": "nav_warp", "x": 5, "y": 11, "from_map": "OaksLab", "to_map": "PalletTown", "approach": "down"},
+            {"op": "nav_to_map", "x": 20, "y": 32, "map": "ViridianCity", "avoid_grass": true},
+            {"op": "nav_to", "x": 13, "y": 4, "map": "ViridianCity"}
+          ],
+          "visit": {"direction": "right"},
+          "expected": {
+            "map": "ViridianCity",
+            "position": [13, 4],
+            "dialogue_contains": ["POTION"],
+            "bag": {"Potion": 1}
+          }
+        }
+      ]
+    },
+    "m09": {
+      "blocked": [],
+      "destinations": [
+        {
+          "id": "pewter-museum-decline",
+          "kind": "destination",
+          "goal": "Visit the Pewter Museum but decline the ticket without losing money.",
+          "route": [
+            {"op": "nav_warp", "x": 14, "y": 7, "from_map": "PewterCity", "to_map": "Museum1F"},
+            {"op": "nav_to", "x": 10, "y": 4, "map": "Museum1F"}
+          ],
+          "visit": {"direction": "up", "choice": "NO"},
+          "expected": {
+            "map": "Museum1F",
+            "position": [10, 5],
+            "dialogue_contains": ["50"],
+            "flags": {"EVENT_BOUGHT_MUSEUM_TICKET": false}
+          }
+        }
+      ]
+    },
+    "m10": {
+      "blocked": [],
+      "destinations": [
+        {
+          "id": "route22-gate-opens-after-brock",
+          "kind": "destination",
+          "goal": "After Boulder Badge, walk through Route 22 Gate and enter Route 23.",
+          "route": [
+            {"op": "nav_warp", "x": 4, "y": 13, "from_map": "PewterGym", "to_map": "PewterCity", "approach": "down"},
+            {"op": "nav_to_map", "x": 8, "y": 6, "map": "Route22", "avoid_grass": true, "allow_ledges": true},
+            {"op": "nav_warp", "x": 8, "y": 5, "from_map": "Route22", "to_map": "Route22Gate"},
+            {"op": "nav_warp", "x": 4, "y": 0, "from_map": "Route22Gate", "to_map": "Route23", "approach": "up"}
+          ],
+          "visit": {"direction": "up"},
+          "expected": {
+            "map": "Route23",
+            "position": [7, 138],
+            "flags": {"EVENT_BEAT_BROCK": true}
+          }
+        }
+      ]
+    },
+    "m11": {},
+    "m12": {},
+    "m13": {},
+    "m14": {
+      "blocked": [
+        {
+          "id": "route5-saffron-gate-closed",
+          "kind": "blocked",
+          "goal": "Before a guard drink, the Route 5 road to Saffron remains closed.",
+          "route": [
+            {"op": "nav_warp", "x": 2, "y": 7, "from_map": "BillsHouse", "to_map": "Route25", "approach": "down"},
+            {"op": "nav_to_map", "x": 27, "y": 12, "map": "CeruleanCity", "avoid_grass": true},
+            {"op": "nav_warp", "x": 27, "y": 11, "from_map": "CeruleanCity", "to_map": "CeruleanTrashedHouse"},
+            {"op": "nav_warp", "x": 3, "y": 0, "from_map": "CeruleanTrashedHouse", "to_map": "CeruleanCity", "approach": "up"},
+            {"op": "nav_to_map", "x": 17, "y": 28, "map": "Route5", "avoid_grass": true},
+            {"op": "nav_warp", "x": 10, "y": 29, "from_map": "Route5", "to_map": "Route5Gate", "approach": "down"}
+          ],
+          "attempt": {"direction": "down", "frames": 40},
+          "expected": {
+            "map": "Route5Gate",
+            "position": [4, 2],
+            "dialogue_contains": ["thirsty", "closed"],
+            "flags": {"EVENT_GAVE_SAFFRON_GUARDS_DRINK": false}
+          }
+        }
+      ],
+      "destinations": []
+    },
+    "m15": {
+      "blocked": [
+        {
+          "id": "route6-saffron-gate-closed",
+          "kind": "blocked",
+          "goal": "Before a guard drink, the Vermilion-side Route 6 road to Saffron remains closed.",
+          "route": [
+            {"op": "nav_to_map", "x": 17, "y": 14, "map": "Route6", "avoid_grass": true},
+            {"op": "nav_warp", "x": 10, "y": 7, "from_map": "Route6", "to_map": "Route6Gate"},
+            {"op": "nav_to", "x": 3, "y": 3, "map": "Route6Gate"}
+          ],
+          "attempt": {"direction": "up", "frames": 40},
+          "expected": {
+            "map": "Route6Gate",
+            "position": [3, 3],
+            "dialogue_contains": ["thirsty", "closed"],
+            "flags": {"EVENT_GAVE_SAFFRON_GUARDS_DRINK": false}
+          }
+        }
+      ],
+      "destinations": [
+        {
+          "id": "vermilion-fan-club-voucher",
+          "kind": "destination",
+          "goal": "Listen to the Fan Club chairman and claim the optional Bike Voucher.",
+          "route": [
+            {
+              "op": "nav_warp",
+              "x": 9,
+              "y": 13,
+              "from_map": "VermilionCity",
+              "to_map": "PokemonFanClub"
+            },
+            {
+              "op": "nav_to",
+              "x": 2,
+              "y": 1,
+              "map": "PokemonFanClub"
+            }
+          ],
+          "visit": {
+            "direction": "right",
+            "choice": "YES"
+          },
+          "expected": {
+            "map": "PokemonFanClub",
+            "position": [
+              2,
+              1
+            ],
+            "dialogue_contains": [
+              "BIKE",
+              "VOUCHER"
+            ],
+            "flags": {
+              "EVENT_GOT_BIKE_VOUCHER": true
+            },
+            "bag": {
+              "BikeVoucher": 1
+            }
+          }
+        }
+      ]
+    },
+    "m16": {},
+    "m17": {},
+    "m18": {},
+    "m19": {},
+    "m20": {
+      "blocked": [
+        {
+          "id": "route8-saffron-gate-closed",
+          "kind": "blocked",
+          "goal": "Before the guard drink, the Lavender-side Route 8 gate must reject passage.",
+          "route": [
+            {"op": "nav_to_map", "x": 13, "y": 4, "map": "Route8", "avoid_grass": true},
+            {"op": "nav_warp", "x": 8, "y": 10, "from_map": "Route8", "to_map": "Route8Gate", "approach": "left"},
+            {"op": "nav_to", "x": 3, "y": 4, "map": "Route8Gate"}
+          ],
+          "attempt": {"direction": "left", "frames": 40},
+          "expected": {
+            "map": "Route8Gate",
+            "position": [3, 4],
+            "dialogue_contains": ["thirsty", "closed"],
+            "flags": {"EVENT_GAVE_SAFFRON_GUARDS_DRINK": false}
+          }
+        }
+      ],
+      "destinations": []
+    },
+    "m21": {},
+    "m22": {},
+    "m23": {},
+    "m24": {},
+    "m25": {},
+    "m26": {
+      "blocked": [],
+      "destinations": [
+        {
+          "id": "fuchsia-good-rod-house",
+          "kind": "destination",
+          "goal": "Visit the Fishing Guru's brother and accept the optional Good Rod.",
+          "route": [
+            {
+              "op": "nav_warp",
+              "x": 31,
+              "y": 27,
+              "from_map": "FuchsiaCity",
+              "to_map": "FuchsiaGoodRodHouse"
+            },
+            {
+              "op": "nav_to",
+              "x": 5,
+              "y": 4,
+              "map": "FuchsiaGoodRodHouse"
+            }
+          ],
+          "visit": {
+            "direction": "up",
+            "choice": "YES"
+          },
+          "expected": {
+            "map": "FuchsiaGoodRodHouse",
+            "position": [
+              5,
+              4
+            ],
+            "dialogue_contains": [
+              "GOOD",
+              "ROD"
+            ],
+            "flags": {
+              "EVENT_GOT_GOOD_ROD": true
+            },
+            "bag": {
+              "GoodRod": 1
+            }
+          }
+        }
+      ]
+    },
+    "m27": {},
+    "m28": {},
+    "m29": {},
+    "m30": {},
+    "m31": {},
+    "m32": {},
+    "m33": {},
+    "m34": {},
+    "m35": {},
+    "m36": {},
+    "m37": {},
+    "m38": {},
+    "m39": {},
+    "m40": {},
+    "m41": {},
+    "m42": {},
+    "m43": {},
+    "m44": {},
+    "m45": {},
+    "m46": {},
+    "m47": {},
+    "m48": {},
+    "m49": {}
+  }
+}
