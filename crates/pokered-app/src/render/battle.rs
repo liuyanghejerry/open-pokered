@@ -373,6 +373,35 @@ pub struct BattleVisualEffects {
     pub victory_music_played: bool,
 }
 
+/// Machine-readable state emitted beside isolated move-animation frames.
+/// Coordinates use the renderer's screen-space convention (not raw OAM's
+/// +8/+16 hardware offsets).
+#[derive(Debug, serde::Serialize)]
+pub(crate) struct MoveAnimationCaptureState {
+    pub animation_finished: bool,
+    pub command_wait: u8,
+    pub tileset: u8,
+    pub player_visible: bool,
+    pub enemy_visible: bool,
+    pub player_offset: (i32, i32),
+    pub enemy_offset: (i32, i32),
+    pub objects_active: bool,
+    /// Objects emitted by AnimationPlayer before the frontend copies them
+    /// into its render layer. This separates command-data fidelity from
+    /// frontend presentation bugs in the differential report.
+    pub source_oam: Vec<MoveAnimationCaptureOam>,
+    /// Objects that the production frontend actually renders this frame.
+    pub oam: Vec<MoveAnimationCaptureOam>,
+}
+
+#[derive(Debug, serde::Serialize)]
+pub(crate) struct MoveAnimationCaptureOam {
+    pub x: i32,
+    pub y: i32,
+    pub tile: u8,
+    pub attributes: u8,
+}
+
 impl BattleVisualEffects {
     pub fn has_transition(&self) -> bool {
         self.transition_state.is_some()
@@ -388,6 +417,68 @@ impl BattleVisualEffects {
 
     pub fn clear_snapshot(&mut self) {
         self.overworld_snapshot = None;
+    }
+
+    /// Start a move's visual command stream without executing battle logic.
+    /// Used only by the frame-differential CLI so misses, charge turns, RNG,
+    /// and move effects cannot change which animation is sampled.
+    pub(crate) fn start_move_animation_capture(
+        &mut self,
+        move_id: MoveId,
+        player_is_attacker: bool,
+    ) {
+        debug_assert!(move_id != MoveId::None);
+        self.current_attacker_is_player = player_is_attacker;
+        self.current_move = move_id;
+        self.current_attacker_species = pokered_data::species::Species::Rhydon;
+        self.pending_applying = None;
+        self.pending_anim_start = None;
+        self.suppress_hit_flash = false;
+        self.anim_player
+            .start(move_id as usize - 1, player_is_attacker);
+        self.anim_wait = 0;
+        self.anim_layer.clear();
+    }
+
+    pub(crate) fn move_animation_capture_finished(&self) -> bool {
+        self.anim_player.is_finished() && self.anim_wait == 0
+    }
+
+    pub(crate) fn move_animation_capture_state(&self) -> MoveAnimationCaptureState {
+        MoveAnimationCaptureState {
+            animation_finished: self.anim_player.is_finished(),
+            command_wait: self.anim_wait,
+            tileset: self.anim_tileset,
+            player_visible: self.player_visible_now(),
+            enemy_visible: self.enemy_visible_now(),
+            player_offset: self.player_offset(),
+            enemy_offset: self.enemy_offset(),
+            objects_active: self.fx.objects_active(),
+            source_oam: self
+                .anim_player
+                .oam_entries()
+                .iter()
+                .map(|entry| MoveAnimationCaptureOam {
+                    x: entry.x,
+                    y: entry.y,
+                    tile: entry.tile_id.wrapping_sub(ANIM_BASE_TILE_ID),
+                    attributes: entry.attributes,
+                })
+                .collect(),
+            oam: self
+                .anim_layer
+                .entries
+                .iter()
+                .map(|entry| MoveAnimationCaptureOam {
+                    x: entry.x,
+                    y: entry.y,
+                    // anim_layer stores a tileset-relative id after
+                    // advance_move_animation subtracts ANIM_BASE_TILE_ID.
+                    tile: entry.tile_id,
+                    attributes: entry.attributes,
+                })
+                .collect(),
+        }
     }
 }
 
