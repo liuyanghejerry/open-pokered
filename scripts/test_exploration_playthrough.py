@@ -8,6 +8,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 import exploration_playthrough as exploration
 import playthrough
+from save_builder import (EXPLORATION_M26_ITEMS,
+                          EXPLORATION_M26_VISITED_TOWNS, SaveBuilder)
 
 
 class ExplorationManifestTests(unittest.TestCase):
@@ -69,6 +71,28 @@ class ExplorationManifestTests(unittest.TestCase):
         args = SimpleNamespace(only="daisy-before-pokedex", until=None, start="m26")
         with self.assertRaisesRegex(ValueError, "before --from m26"):
             exploration._validate_selection(args, self.manifest)
+
+
+class ExplorationPresetTests(unittest.TestCase):
+    def test_m26_preset_leaves_reward_capacity_and_marks_early_towns(self):
+        self.assertEqual(len(EXPLORATION_M26_ITEMS), 12)
+        self.assertEqual(set(EXPLORATION_M26_VISITED_TOWNS), {
+            "PalletTown", "ViridianCity", "PewterCity", "CeruleanCity",
+            "LavenderTown", "VermilionCity", "CeladonCity", "FuchsiaCity",
+        })
+
+        builder = SaveBuilder.__new__(SaveBuilder)
+        builder.data = {"game_data": {"town_visited_flags": [0, 0]}}
+        builder.visited_towns(EXPLORATION_M26_VISITED_TOWNS)
+        self.assertEqual(builder.data["game_data"]["town_visited_flags"], [0xFF, 0])
+
+    def test_builder_rejects_a_twenty_first_item_stack(self):
+        builder = SaveBuilder.__new__(SaveBuilder)
+        builder.data = {"game_data": {"bag": {"items": [
+            [f"Item{i}", 1] for i in range(20)
+        ]}}}
+        with self.assertRaisesRegex(ValueError, "no free item slots"):
+            builder.give_item("POTION", 1)
 
 
 if __name__ == "__main__":

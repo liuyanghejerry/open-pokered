@@ -86,7 +86,7 @@ def map_id(name):
     path = DATA / "maps" / name / "map.json"
     if not path.exists():
         raise KeyError(f"no map data at {path}")
-    d = json.load(open(path))
+    d = json.loads(path.read_text())
     if d.get("name") != name:
         raise RuntimeError(f"map name mismatch in {path}: {d.get('name')}")
     return d["id"]
@@ -240,6 +240,28 @@ EXPLORATION_M26_TEAM = [
     ("Venusaur", 50, ["RazorLeaf", "Cut", "Tackle", "SleepPowder"]),
 ]
 
+# Runtime object state is separate from the persistent event bitset. The m26
+# snapshot starts after the Route 12 Snorlax fight, so the exploration driver
+# must re-apply this sidecar flag after booting a copied snapshot.
+EXPLORATION_M26_RUNTIME_FLAGS = [
+    "__OBJ_HIDDEN_ROUTE_12_OBJ_1",
+]
+
+# Towns visited on the canonical route through m26. Keeping this bitset
+# accurate makes FLY available without unlocking future destinations.
+EXPLORATION_M26_VISITED_TOWNS = [
+    "PalletTown", "ViridianCity", "PewterCity", "CeruleanCity",
+    "LavenderTown", "VermilionCity", "CeladonCity", "FuchsiaCity",
+]
+
+EXPLORATION_M26_ITEMS = [
+    # Four free slots remain for Master Ball, HM02, Secret Key, and a later
+    # optional reward encountered during exploration.
+    "POKE_BALL", "FULL_RESTORE", "REVIVE", "HM01", "POKE_FLUTE",
+    "TOWN_MAP", "SS_TICKET", "HELIX_FOSSIL", "TM21", "TM24", "TM28",
+    "TM34",
+]
+
 
 # ── Gen-1 stat math (verified against create_pokemon output) ───────────
 def _dv_pair(dv_bytes):
@@ -382,7 +404,25 @@ class SaveBuilder:
                 entry[1] += qty
                 break
         else:
+            if len(items) >= 20:
+                raise ValueError("bag has no free item slots")
             items.append([name, qty])
+        return self
+
+    def visited_towns(self, towns):
+        """Mark the named city maps as visited for the FLY destination list."""
+        flags = bytearray(self.data["game_data"]["town_visited_flags"])
+        for town in towns:
+            town_id = map_id(town)
+            if town_id >= 0x0B:
+                raise ValueError(f"{town!r} is not a town map")
+            flags[town_id >> 3] |= 1 << (town_id & 7)
+        self.data["game_data"]["town_visited_flags"] = list(flags)
+        return self
+
+    def last_map(self, map_name):
+        """Set the saved outside map used by LAST_MAP exit warps."""
+        self.data["game_data"]["last_map"] = map_id(map_name)
         return self
 
     def flag(self, name, value=True):
@@ -464,18 +504,15 @@ class SaveBuilder:
             self.party_add(species, level, moves=moves)
         self.money(999999)
         self.badges(0x0F)  # Boulder, Cascade, Thunder, Rainbow
+        self.visited_towns(EXPLORATION_M26_VISITED_TOWNS)
         for flag in EXPLORATION_M26_FLAGS:
             self.flag(flag)
-        for item in (
-            "POKE_BALL", "GREAT_BALL", "ULTRA_BALL", "FULL_RESTORE",
-            "REVIVE", "HM01", "POKE_FLUTE", "TOWN_MAP", "SS_TICKET",
-            "HELIX_FOSSIL", "NUGGET", "TM11", "TM21", "TM24", "TM28",
-            "TM34",
-        ):
+        for item in EXPLORATION_M26_ITEMS:
             self.give_item(item, 99 if item in {
                 "POKE_BALL", "GREAT_BALL", "ULTRA_BALL", "FULL_RESTORE", "REVIVE"
             } else 1)
         self.position("FuchsiaCity", 19, 27)
+        self.last_map("FuchsiaCity")
         self.data["game_data"]["player_starter"] = species_id("Bulbasaur")
         self.data["game_data"]["rival_starter"] = species_id("Charmander")
         self.data["game_data"]["play_time"] = {

@@ -44,7 +44,7 @@ from playthrough import (
     NavError,
     resume_reentry,
 )
-from save_builder import SaveBuilder
+from save_builder import EXPLORATION_M26_RUNTIME_FLAGS, SaveBuilder
 
 
 MANIFEST = Path(__file__).with_name("exploration_probes.json")
@@ -196,6 +196,11 @@ class ExplorationSession(Session):
         shutil.copy2(checkpoint, self.output / "checkpoint.sav")
         shutil.copy2(checkpoint, self.save)
         super().boot(reload=True)
+        # Script object visibility is runtime sidecar state, not part of the
+        # serialized event bitset. Reapply the m26 checkpoint's hidden
+        # Snorlax after every copied-save boot.
+        for name in EXPLORATION_M26_RUNTIME_FLAGS:
+            self.cmd(cmd="set_flag", name=name, value=True)
 
     def snapshot(self, label):
         """Record the public evidence needed to reproduce a finding."""
@@ -429,6 +434,12 @@ class ExplorationRunner:
                 start_index = 0
             else:
                 resume_reentry(self.g)
+                # The constructed snapshot carries persistent event flags,
+                # but not script-engine object visibility sidecars.
+                for name in EXPLORATION_M26_RUNTIME_FLAGS:
+                    response = self.g.d.cmd(
+                        cmd="set_flag", name=name, value=True)
+                    require(response["ok"], response)
                 start_index = Game.milestone_index(self.args.start)
             pending = []
             # Reuse the canonical milestones' real power-on flow.  Calling the
