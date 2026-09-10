@@ -12,6 +12,7 @@
 //!   mapping below inverts from the rival's actual final starter species, which
 //!   the port knows directly.
 
+use crate::alloc_prelude::*;
 use crate::battle::state::Pokemon;
 use crate::pokemon::move_learning::get_move_max_pp;
 use pokered_data::moves::MoveId;

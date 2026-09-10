@@ -4,7 +4,8 @@
 //! provided by `dotzuki_engine::overworld::npc_movement`. This module adds
 //! Pokémon-specific data conversion functions.
 
-use std::collections::VecDeque;
+use crate::alloc_prelude::*;
+use alloc::collections::VecDeque;
 
 use dotzuki_engine::overworld::{Direction, NpcMovementType};
 use pokered_data::npc_data::{NpcEntry, NpcFacing, NpcMovement};

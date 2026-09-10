@@ -9,6 +9,7 @@
 //! INDIGO PLATEAU statues (text varies with the player's X parity).
 //! Runs BEFORE sign/NPC interaction, like the original's hidden-event pass.
 
+use crate::alloc_prelude::*;
 use pokered_data::blockset_data;
 use pokered_data::tilesets::TilesetId;
 

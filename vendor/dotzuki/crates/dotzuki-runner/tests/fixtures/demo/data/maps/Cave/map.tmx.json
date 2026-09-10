@@ -1,0 +1,48 @@
+{
+  "width": 5,
+  "height": 6,
+  "tilewidth": 16,
+  "tileheight": 16,
+  "backgroundcolor": "#201830",
+  "layers": [
+    {
+      "name": "ground",
+      "width": 5,
+      "height": 6,
+      "data": [
+        3, 3, 3, 3, 3,
+        3, 1, 1, 1, 3,
+        3, 1, 2, 1, 3,
+        3, 1, 1, 1, 3,
+        3, 1, 2, 4, 3,
+        3, 3, 3, 3, 3
+      ],
+      "visible": true,
+      "opacity": 1.0
+    },
+    {
+      "name": "collision",
+      "width": 5,
+      "height": 6,
+      "data": [
+        1, 1, 1, 1, 1,
+        1, 0, 0, 0, 1,
+        1, 0, 0, 0, 1,
+        1, 0, 0, 0, 1,
+        1, 0, 0, 0, 1,
+        1, 1, 1, 1, 1
+      ],
+      "visible": false,
+      "opacity": 1.0
+    }
+  ],
+  "tilesets": [
+    {
+      "firstgid": 1,
+      "name": "demo",
+      "tilewidth": 16,
+      "tileheight": 16,
+      "tilecount": 4
+    }
+  ]
+}

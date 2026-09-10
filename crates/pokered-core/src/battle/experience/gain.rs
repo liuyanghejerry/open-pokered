@@ -1,3 +1,4 @@
+use crate::alloc_prelude::*;
 use pokered_data::pokemon_data::{get_base_stats, BaseStats};
 use pokered_data::species::Species;
 

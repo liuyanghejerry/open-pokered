@@ -2,6 +2,7 @@
 name = "pokered-renderer"
 version.workspace = true
 edition.workspace = true
+build = "build.rs"
 
 [features]
 default = ["gpu"]
@@ -12,14 +13,31 @@ gpu = ["dep:pixels", "dep:winit", "dep:winit_input_helper", "dep:image", "dep:er
 pokered-data = { path = "../pokered-data" }
 pokered-core = { path = "../pokered-core" }
 dotzuki-engine = { git = "https://github.com/liuyanghejerry/dotzuki", tag = "v0.6.0" }
-dotzuki-renderer = { git = "https://github.com/liuyanghejerry/dotzuki", tag = "v0.6.0" }
 log = "0.4"
-thiserror = { workspace = true }
+# no_std HashMap (see pokered-data's twin entry).
+hashbrown = { version = "0.15", default-features = false }
 pixels = { version = "=0.15.0", optional = true }
 winit = { version = "0.30", optional = true }
 winit_input_helper = { version = "0.17", optional = true }
 image = { version = "0.25", default-features = false, features = ["png"], optional = true }
 error-iter = { version = "0.4", optional = true }
 
+# Hosted: full dotzuki-renderer (gpu windowing + PNG resource pipeline).
+[target.'cfg(not(target_os = "none"))'.dependencies]
+dotzuki-renderer = { git = "https://github.com/liuyanghejerry/dotzuki", tag = "v0.6.0" }
+thiserror = { workspace = true }
+
+# Bare metal (GBA): framebuffer-only engine renderer; assets come from the
+# build-time pre-converted 2bpp registry instead of runtime PNG loading.
+[target.'cfg(target_os = "none")'.dependencies]
+dotzuki-renderer = { git = "https://github.com/liuyanghejerry/dotzuki", tag = "v0.6.0", default-features = false, features = ["framebuffer"] }
+thiserror = { version = "2", default-features = false }
+
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 getrandom = { version = "0.2", features = ["js"] }
+
+# Host-side build-dependency: PNG decode for the bare-metal pre-conversion
+# (build.rs only runs it when TARGET is thumbv4t; build scripts always
+# compile for the host).
+[build-dependencies]
+image = { version = "0.25", default-features = false, features = ["png"] }

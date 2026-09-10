@@ -1,0 +1,8 @@
+{
+  "id": "heal",
+  "name": "Heal",
+  "type": "heal",
+  "power": 25,
+  "accuracy": 100,
+  "mpCost": 4
+}

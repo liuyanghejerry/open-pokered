@@ -119,3 +119,8 @@ scripts/.playthrough.marker
 # parallel-branch worktrees (git worktree add .worktrees/<name>)
 .worktrees/
 scripts/.playthrough.sav
+
+# GBA build artifacts (crates/pokered-gba)
+*.gba
+*.sav
+crates/pokered-gba/target/

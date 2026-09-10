@@ -3,6 +3,7 @@
 //! These types define the schema for `map.json` files in `maps/{MapName}/`.
 //! Used by both the generator tool (serialization) and the runtime loader (deserialization).
 
+use crate::alloc_prelude::*;
 use serde::{Deserialize, Serialize};
 
 /// Complete map data as stored in `map.json`.
@@ -130,11 +131,11 @@ pub struct SignJson {
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct MapTextJson {
     /// NPC dialog: key = text_id (string), value = array of text pages
-    #[serde(default, skip_serializing_if = "std::collections::HashMap::is_empty")]
-    pub npc: std::collections::HashMap<String, Vec<TextPageJson>>,
+    #[serde(default, skip_serializing_if = "crate::hash_compat::HashMap::is_empty")]
+    pub npc: crate::hash_compat::HashMap<String, Vec<TextPageJson>>,
     /// Sign dialog: key = text_id (string), value = array of text pages
-    #[serde(default, skip_serializing_if = "std::collections::HashMap::is_empty")]
-    pub sign: std::collections::HashMap<String, Vec<TextPageJson>>,
+    #[serde(default, skip_serializing_if = "crate::hash_compat::HashMap::is_empty")]
+    pub sign: crate::hash_compat::HashMap<String, Vec<TextPageJson>>,
 }
 
 /// A single dialog page (two lines displayed in the text box).

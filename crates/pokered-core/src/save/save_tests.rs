@@ -1,3 +1,4 @@
+use crate::alloc_prelude::*;
 use crate::battle::state::{decode_name, encode_name, Pokemon, StatusCondition, NAME_TEXT_BUF};
 use crate::pokemon::party::Party;
 use crate::pokemon::pc_box::PcBox;

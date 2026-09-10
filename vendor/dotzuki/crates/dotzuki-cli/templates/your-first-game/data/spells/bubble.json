@@ -1,0 +1,9 @@
+{
+  "id": "bubble",
+  "name": "Bubble",
+  "type": "attack",
+  "power": 40,
+  "accuracy": 100,
+  "element": "water",
+  "mpCost": 4
+}

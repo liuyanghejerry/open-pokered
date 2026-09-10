@@ -12,10 +12,11 @@
 //! number of injected entries (a handful per editor session), and the editor
 //! replaces rather than accumulates entries.
 
-use std::collections::HashMap;
-use std::hash::Hash;
-use std::str::FromStr;
-use std::sync::{Mutex, OnceLock};
+use crate::alloc_prelude::*;
+use crate::hash_compat::HashMap;
+use core::hash::Hash;
+use core::str::FromStr;
+use crate::sync_compat::{Mutex, OnceLock};
 
 use serde_json::Value;
 
@@ -32,7 +33,7 @@ use crate::types::PokemonType;
 fn overrides<K: Eq + Hash, T>(
     slot: &'static OnceLock<Mutex<HashMap<K, T>>>,
 ) -> &'static Mutex<HashMap<K, T>> {
-    slot.get_or_init(|| Mutex::new(HashMap::new()))
+    slot.get_or_init(|| Mutex::new(HashMap::default()))
 }
 
 // ── Override tables ───────────────────────────────────────────────────────

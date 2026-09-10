@@ -11,7 +11,8 @@
 //!   asset registry (wasm32/android/ios), and the named load helpers
 //!   (`load_tileset`, `load_pokemon_front`, …)
 
-use std::ops::{Deref, DerefMut};
+use crate::alloc_prelude::*;
+use core::ops::{Deref, DerefMut};
 use std::path::PathBuf;
 
 pub use dotzuki_renderer::resource::{
@@ -297,7 +298,7 @@ impl ResourceManager {
     /// instead of palette-indexed tiles. The PNG is loaded from the gfx/ directory.
     ///
     /// This method does NOT cache the result.
-    pub fn load_tileset_rgba(&self, name: &str) -> std::result::Result<RgbaTileSet, String> {
+    pub fn load_tileset_rgba(&self, name: &str) -> core::result::Result<RgbaTileSet, String> {
         self.0.load_tileset_rgba(AssetCategory::Tileset, name)
     }
 
@@ -305,7 +306,7 @@ impl ResourceManager {
     ///
     /// Converts the PNG to 4bpp bitplane data via `png_to_4bpp()` and caches the
     /// resulting [`TileSet`]. Subsequent calls return the cached reference.
-    pub fn load_tileset_4bpp(&mut self, name: &str) -> std::result::Result<&TileSet, String> {
+    pub fn load_tileset_4bpp(&mut self, name: &str) -> core::result::Result<&TileSet, String> {
         self.0.load_tileset_4bpp(AssetCategory::Tileset, name)
     }
 
@@ -316,7 +317,7 @@ impl ResourceManager {
     pub fn load_tileset_rgba_tileset(
         &mut self,
         name: &str,
-    ) -> std::result::Result<&TileSet, String> {
+    ) -> core::result::Result<&TileSet, String> {
         self.0.load_tileset_rgba_tileset(AssetCategory::Tileset, name)
     }
 
@@ -419,7 +420,7 @@ impl ResourceProvider for ResourceManager {
         &mut self,
         category: &str,
         filename: &str,
-    ) -> std::result::Result<&TileSet, String> {
+    ) -> core::result::Result<&TileSet, String> {
         let cat = category_from_str(category)?;
         self.0
             .load_asset(cat, filename)
@@ -431,7 +432,7 @@ impl ResourceProvider for ResourceManager {
         &mut self,
         category: &str,
         filename: &str,
-    ) -> std::result::Result<&TileSet, String> {
+    ) -> core::result::Result<&TileSet, String> {
         let cat = category_from_str(category)?;
         self.0
             .load_asset_2bpp(cat, filename)
@@ -439,14 +440,14 @@ impl ResourceProvider for ResourceManager {
             .map_err(|e| e.to_string())
     }
 
-    fn load_font(&mut self, name: &str) -> std::result::Result<&TileSet, String> {
+    fn load_font(&mut self, name: &str) -> core::result::Result<&TileSet, String> {
         self.load_font(name)
             .map(|c| &c.tileset)
             .map_err(|e| e.to_string())
     }
 }
 
-fn category_from_str(s: &str) -> std::result::Result<AssetCategory, String> {
+fn category_from_str(s: &str) -> core::result::Result<AssetCategory, String> {
     match s {
         "tilesets" => Ok(AssetCategory::Tileset),
         "sprites" => Ok(AssetCategory::Sprite),

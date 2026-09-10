@@ -7,6 +7,7 @@
 //! `MenuInput { up, down, a, b }` (converted to the engine's
 //! `MenuInput { up, down, confirm, cancel }` at the boundary).
 
+use crate::alloc_prelude::*;
 use crate::items::inventory::{BAG_ITEM_CAPACITY, Inventory, InventoryError};
 use crate::main_menu::MenuInput;
 use dotzuki_engine::items::mart::{MartBackend, MartStock};
@@ -107,7 +108,7 @@ impl MartState {
     }
 }
 
-impl std::ops::Deref for MartState {
+impl core::ops::Deref for MartState {
     type Target = dotzuki_engine::items::mart::MartState<ItemId>;
 
     fn deref(&self) -> &Self::Target {
@@ -115,7 +116,7 @@ impl std::ops::Deref for MartState {
     }
 }
 
-impl std::ops::DerefMut for MartState {
+impl core::ops::DerefMut for MartState {
     fn deref_mut(&mut self) -> &mut Self::Target {
         &mut self.0
     }

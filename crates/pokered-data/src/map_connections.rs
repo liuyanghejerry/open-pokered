@@ -1,4 +1,5 @@
-use std::sync::OnceLock;
+use crate::alloc_prelude::*;
+use crate::sync_compat::OnceLock;
 
 use crate::map_data_loader::{get_map_json, resolve_map_id};
 use crate::maps::MapId;
@@ -118,12 +119,12 @@ pub static MAP_CONNECTIONS: LazyConnections = LazyConnections;
 pub struct LazyConnections;
 
 impl LazyConnections {
-    pub fn iter(&self) -> std::slice::Iter<'static, MapConnectionEntry> {
+    pub fn iter(&self) -> core::slice::Iter<'static, MapConnectionEntry> {
         get_cache().entries.iter()
     }
 }
 
-impl std::ops::Index<usize> for LazyConnections {
+impl core::ops::Index<usize> for LazyConnections {
     type Output = MapConnectionEntry;
     fn index(&self, index: usize) -> &Self::Output {
         &get_cache().entries[index]

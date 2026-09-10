@@ -1,0 +1,8 @@
+game_scene Main {
+    @storylines {
+        @speaker("Guide") {
+            "Welcome to Your First Game!"
+            "Talk to the Guide in Hometown, then find the warp to the Clearing."
+        }
+    }
+}

@@ -1,3 +1,4 @@
+use crate::alloc_prelude::*;
 use pokered_core::intro_scene::{GengarPose, IntroPhase, IntroSceneState, FADE_OUT_FRAMES};
 use pokered_data::layout_constants;
 use pokered_renderer::embedded_font::draw_text;
@@ -130,10 +131,29 @@ fn load_intro_tilemap(_rm: &ResourceManager, filename: &str) -> Option<Vec<u8>> 
     pokered_renderer::embedded::get_embedded_asset(&path).map(|bytes| bytes.to_vec())
 }
 
-#[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
+#[cfg(all(
+    not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")),
+    not(target_os = "none")
+))]
 fn load_intro_tilemap(rm: &ResourceManager, filename: &str) -> Option<Vec<u8>> {
     let path = rm.root().resolve(AssetCategory::Intro, filename);
     std::fs::read(path).ok()
+}
+
+/// Bare metal: the intro tilemaps baked in at compile time (the pre-converted
+/// registry only carries PNGs, so the three `.tilemap` binaries are
+/// `include_bytes!`ed directly).
+#[cfg(target_os = "none")]
+fn load_intro_tilemap(_rm: &ResourceManager, filename: &str) -> Option<Vec<u8>> {
+    const TILEMAPS: &[(&str, &[u8])] = &[
+        ("gengar_1.tilemap", include_bytes!("../../../../gfx/intro/gengar_1.tilemap")),
+        ("gengar_2.tilemap", include_bytes!("../../../../gfx/intro/gengar_2.tilemap")),
+        ("gengar_3.tilemap", include_bytes!("../../../../gfx/intro/gengar_3.tilemap")),
+    ];
+    TILEMAPS
+        .iter()
+        .find(|(name, _)| *name == filename)
+        .map(|(_, bytes)| bytes.to_vec())
 }
 
 fn nidorino_asset_name(sprite_set: u8) -> &'static str {

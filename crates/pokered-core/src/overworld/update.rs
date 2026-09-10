@@ -3,6 +3,7 @@
 //! Contains the main game loop tick, script effect processing, NPC movement,
 //! wild encounter checks, and map transition logic.
 
+use crate::alloc_prelude::*;
 use super::screen::{
     self, BedroomDialogue, ConnectionNpcPreview, EmotionBubbleState, HealingMachineState,
     MapData, OverworldAudioRequest, OverworldGameDataRequest, OverworldScreen, OverworldSfxEvent,
@@ -35,7 +36,7 @@ use pokered_data::maps::MapId;
 use pokered_data::tileset_data;
 use pokered_data::tilesets::TilesetId;
 use player_movement::{InputState as MovementInput, MoveResult};
-use std::collections::VecDeque;
+use alloc::collections::VecDeque;
 
 // ── Free helper functions ─────────────────────────────────────────
 
@@ -639,7 +640,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                     base_result
                 };
                 if let Some(ref eff) = effect_done {
-                    log::info!(target: "pokered::overworld", "[Script] Effect done: {:?}", std::mem::discriminant(eff));
+                    log::info!(target: "pokered::overworld", "[Script] Effect done: {:?}", core::mem::discriminant(eff));
                 }
                 self.apply_finished_effect(effect_done);
                 if awaiting_battle {
@@ -659,7 +660,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                     // `resume_script_after_trade`.
                     self.script_awaiting_trade = true;
                 } else if let Ok(Some(next_cmd)) = self.script_engine.signal_done(result) {
-                    log::info!(target: "pokered::overworld", "[Script] Next command: {:?}", std::mem::discriminant(&next_cmd));
+                    log::info!(target: "pokered::overworld", "[Script] Next command: {:?}", core::mem::discriminant(&next_cmd));
                     self.active_script_effect = Some(script_bridge::dispatch_command_with_names(
                         &next_cmd,
                         &self.player_name,

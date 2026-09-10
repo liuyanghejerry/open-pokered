@@ -1,3 +1,4 @@
+use crate::alloc_prelude::*;
 use pokered_core::game_state::Lang;
 use pokered_core::town_map_screen::{TownMapMode, TownMapScreenState};
 use pokered_data::map_names::{map_name_str, map_name_str_zh};

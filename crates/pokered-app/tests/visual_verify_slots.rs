@@ -1,4 +1,5 @@
 //! Deterministic slots captures; set SLOTS_CAPTURE_DIR to save comparison frames.
+
 use dotzuki_engine::render_config::RenderConfig;
 use pokered_app::render::draw_slots;
 use pokered_core::{

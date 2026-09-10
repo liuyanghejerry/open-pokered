@@ -69,6 +69,7 @@ pub fn accuracy_check(
 
 #[cfg(test)]
 mod tests {
+    use crate::alloc_prelude::*;
     use super::*;
     use crate::battle::state::*;
     use pokered_data::moves::MoveId;

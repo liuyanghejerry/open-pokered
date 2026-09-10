@@ -1,3 +1,4 @@
+use crate::alloc_prelude::*;
 use pokered_core::game_state::Lang;
 use pokered_core::main_menu::MainMenuState;
 use pokered_data::lang_data;

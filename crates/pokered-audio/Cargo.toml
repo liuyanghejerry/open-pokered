@@ -14,8 +14,15 @@ cpal = ["dotzuki-audio/cpal"]
 web-audio = ["dotzuki-audio/web-audio"]
 
 [dependencies]
-dotzuki-audio = { git = "https://github.com/liuyanghejerry/dotzuki", tag = "v0.6.0" }
 bitflags = "2"
+
+# Hosted builds pull the full dotzuki-audio (APU, sequencer, manager and the
+# cpal/web-audio device backends behind the crate features above).
+[target.'cfg(not(target_os = "none"))'.dependencies]
+dotzuki-audio = { git = "https://github.com/liuyanghejerry/dotzuki", tag = "v0.6.0" }
+
+# Bare metal (GBA): no audio device layer — only the music/SFX data tables
+# plus the no-op `output::AudioOutput` compile; dotzuki-audio is not pulled.
 
 # The generated music/SFX tables are the game runtime's source of truth, so the
 # library build keeps `dotzuki-audio` dependency-light (no serde). Tests and the

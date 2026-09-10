@@ -1,3 +1,4 @@
+use crate::alloc_prelude::*;
 use pokered_core::data::blockset_data;
 use pokered_core::data::map_data_loader::{get_block_data, get_map_json, resolve_map_id};
 use pokered_core::data::maps::MapId;

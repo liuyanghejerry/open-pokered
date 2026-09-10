@@ -1,3 +1,4 @@
+use crate::alloc_prelude::*;
 use pokered_data::ui_layout::schema::PokedexDefaultLayout;
 use pokered_data::TILE_SIZE_PX;
 

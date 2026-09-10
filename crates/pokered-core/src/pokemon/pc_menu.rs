@@ -1,3 +1,4 @@
+use crate::alloc_prelude::*;
 use crate::main_menu::MenuInput;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

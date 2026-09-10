@@ -1,3 +1,4 @@
+use crate::alloc_prelude::*;
 mod battle;
 mod battle_i18n;
 mod diploma;
@@ -7,6 +8,8 @@ mod evolution;
 mod hof_ceremony;
 mod gamefreak_splash;
 mod intro;
+#[cfg(not(target_os = "none"))]
+#[cfg(not(target_os = "none"))]
 mod link;
 mod menu;
 mod oak;
@@ -28,6 +31,7 @@ pub use evolution::draw_evolution;
 pub use hof_ceremony::draw_hof_ceremony;
 pub use gamefreak_splash::draw_gamefreak_splash;
 pub use intro::draw_intro_scene;
+#[cfg(not(target_os = "none"))]
 pub use link::draw_link_flow;
 pub use menu::{draw_bag, draw_main_menu, draw_mart, draw_options_menu, draw_party_screen, draw_save_menu, draw_start_menu, draw_stats_screen};
 pub use oak::{draw_naming_screen, draw_oak_speech};

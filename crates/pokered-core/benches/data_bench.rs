@@ -23,7 +23,7 @@ fn bench_base_stats_all(c: &mut Criterion) {
     c.bench_function("base_stats_all_151", |b| {
         b.iter(|| {
             for i in 1..=151u8 {
-                let species: Species = unsafe { std::mem::transmute(i) };
+                let species: Species = unsafe { core::mem::transmute(i) };
                 black_box(get_base_stats(species));
             }
         })

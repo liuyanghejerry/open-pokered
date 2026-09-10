@@ -11,6 +11,7 @@
 //! tick (`OverworldGameDataRequest::PoisonStep` every 4th step); the frontend
 //! consumer calls [`apply_out_of_battle_poison_damage`].
 
+use crate::alloc_prelude::*;
 use crate::battle::state::StatusCondition;
 use crate::overworld::screen::{OverworldScreen, OverworldAudioRequest};
 use crate::save::SaveData;

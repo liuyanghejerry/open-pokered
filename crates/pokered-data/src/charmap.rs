@@ -5,6 +5,8 @@
 //! See constants/charmap.asm in the original disassembly.
 
 /// Control character byte values (used inline in text streams)
+
+use crate::alloc_prelude::*;
 pub mod control_chars {
     pub const CHAR_NULL: u8 = 0x00;
     pub const CHAR_PAGE: u8 = 0x49;

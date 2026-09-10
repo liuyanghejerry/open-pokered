@@ -1,3 +1,4 @@
+use crate::alloc_prelude::*;
 use super::naming_screen::*;
 
 fn input_a() -> NamingInput {

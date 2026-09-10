@@ -6,6 +6,7 @@
 //! quantity and removes that many. Pure logic (no rendering) — mirrors
 //! `party_screen::PartyScreenState`.
 
+use crate::alloc_prelude::*;
 use pokered_data::items::ItemId;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]

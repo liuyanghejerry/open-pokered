@@ -1,0 +1,11 @@
+{
+  "id": "goblin",
+  "name": "Goblin",
+  "hp": 55,
+  "atk": 10,
+  "def": 9,
+  "spd": 9,
+  "mp": 0,
+  "element": "fire",
+  "skills": ["slash"]
+}

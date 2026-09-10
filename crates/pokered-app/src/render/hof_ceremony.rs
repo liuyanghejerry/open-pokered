@@ -15,6 +15,7 @@
 //! front/back pics keep the reimpl's native sprite sizes (the mon front pics
 //! are 40×40 here vs the original's 7×7-tile 56×56).
 
+use crate::alloc_prelude::*;
 use pokered_core::game_state::Lang;
 use pokered_core::hof_ceremony::{HofCeremonyState, HofPhase, HofScrollStage};
 use pokered_data::lang_data;

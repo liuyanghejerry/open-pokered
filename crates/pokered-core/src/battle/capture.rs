@@ -116,7 +116,7 @@ fn try_capture_with_rand1(ctx: &CaptureContext, rand1: u8, rand2: u8) -> Capture
         return CaptureResult::Captured;
     }
 
-    let hp_quarter = std::cmp::max(ctx.wild_current_hp / 4, 1) as u16;
+    let hp_quarter = core::cmp::max(ctx.wild_current_hp / 4, 1) as u16;
     let ball_f = ball_factor_w(ctx.ball);
     let max_hp_scaled = (ctx.wild_max_hp as u32) * 255;
     let w_raw = max_hp_scaled / (ball_f as u32) / (hp_quarter as u32);
@@ -124,7 +124,7 @@ fn try_capture_with_rand1(ctx: &CaptureContext, rand1: u8, rand2: u8) -> Capture
     let adjusted_rand1 = rand1.saturating_sub(status_sub);
 
     if adjusted_rand1 > ctx.wild_catch_rate {
-        let x = std::cmp::min(w_raw, 255) as u8;
+        let x = core::cmp::min(w_raw, 255) as u8;
         return CaptureResult::Failed {
             shakes: calculate_wobbles(ctx.wild_catch_rate, ctx.ball, x, &ctx.wild_status),
         };

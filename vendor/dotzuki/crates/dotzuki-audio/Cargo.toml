@@ -1,0 +1,52 @@
+[package]
+name = "dotzuki-audio"
+version.workspace = true
+edition.workspace = true
+description = "Audio abstraction layer for the dotzuki JRPG engine (GB-style sound)"
+license.workspace = true
+repository.workspace = true
+
+[dependencies]
+bitflags = "2"
+serde = { version = "1", features = ["derive"], optional = true }
+serde_json = { version = "1", optional = true }
+# Streaming decoder for the `modern-audio` feature (WAV/OGG/FLAC/MP3).
+# Pure Rust, no native deps; kept optional so the default build stays
+# dependency-light — consumers that never play file audio never build it.
+symphonia = { version = "0.5", optional = true, default-features = false, features = ["pcm", "wav", "ogg", "vorbis", "flac", "mp3"] }
+# Native device output for the `cpal` feature (`output::CpalOutput`). Kept
+# optional for the same reason: games that never open a real device (tests,
+# headless, WASM) never build it.
+cpal = { version = "0.15", optional = true }
+log = { version = "0.4", optional = true }
+
+# Browser output for the `web-audio` feature (`output::WebAudioOutput`).
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+wasm-bindgen = { version = "0.2", optional = true }
+web-sys = { version = "0.3", optional = true, features = [
+    "AudioContext",
+    "AudioContextOptions",
+    "AudioContextState",
+    "AudioDestinationNode",
+    "AudioBuffer",
+    "AudioProcessingEvent",
+    "ScriptProcessorNode",
+] }
+
+[features]
+default = []
+# Enables the declarative, file-based audio format (`format`) and the
+# directory loader (`library`). Off by default so the game runtime — which
+# feeds byte streams to the sequencer directly — stays dependency-light.
+serde = ["dep:serde", "dep:serde_json"]
+# Enables the modern file-audio subsystem (`modern`): streaming WAV/OGG
+# decoding, a BGM/SFX mixing bus with volume/pan/fade, and DSP effects
+# (lowpass, reverb). Off by default — everything behind this feature is
+# compiled out of the crate when disabled, and symphonia is not built.
+modern-audio = ["dep:symphonia"]
+# Enables the native device backend (`output::CpalOutput`): a cpal stream at
+# 44.1 kHz pulling stereo samples from a `SampleSource`. Off by default.
+cpal = ["dep:cpal", "dep:log"]
+# Enables the browser backend (`output::WebAudioOutput`, wasm32 only): a Web
+# Audio ScriptProcessorNode pulling from a `SampleSource`. Off by default.
+web-audio = ["dep:wasm-bindgen", "dep:web-sys", "dep:log"]

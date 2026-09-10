@@ -1,3 +1,4 @@
+use crate::alloc_prelude::*;
 use crate::save::ser_pokemon::*;
 use crate::save::serialization::SaveError;
 use crate::save::sram_import::{import_sram, import_sram_no_checksum};
@@ -283,7 +284,7 @@ mod legacy_layout_migration_tests {
         // Insert the daycare stat-exp zeros first (later offset).
         bank1.splice(
             region_start + 11 + daycare_exp..region_start + 11 + daycare_exp,
-            std::iter::repeat(0u8).take(10),
+            core::iter::repeat(0u8).take(10),
         );
         // Then drop the union pad (earlier offset).
         bank1.drain(region_start + 11 + water_end..region_start + 11 + water_end + 377);

@@ -1,3 +1,4 @@
+use crate::alloc_prelude::*;
 use super::protocol::{LinkAction, LinkBattleResult, NetworkMessage, PartyExchangeData};
 use super::transport::{NetworkTransport, TransportError};
 

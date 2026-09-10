@@ -9,8 +9,9 @@
 //! ([`set_wild_data_override`]) which shadow the build-time tables — a saved
 //! wild-encounter edit shows up in the running game without a rebuild.
 
-use std::collections::HashMap;
-use std::sync::{Mutex, OnceLock};
+use crate::alloc_prelude::*;
+use crate::hash_compat::HashMap;
+use crate::sync_compat::{Mutex, OnceLock};
 
 use crate::map_names::{map_to_name_id, MapNameId};
 use crate::maps::MapId;
@@ -32,7 +33,7 @@ pub struct MapWildDataOverride {
 static WILD_OVERRIDES: OnceLock<Mutex<HashMap<String, MapWildDataOverride>>> = OnceLock::new();
 
 fn wild_overrides() -> &'static Mutex<HashMap<String, MapWildDataOverride>> {
-    WILD_OVERRIDES.get_or_init(|| Mutex::new(HashMap::new()))
+    WILD_OVERRIDES.get_or_init(|| Mutex::new(HashMap::default()))
 }
 
 /// Inject a wild-encounter override for a map, parsed from the editor's

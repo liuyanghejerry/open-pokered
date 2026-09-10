@@ -1,0 +1,8 @@
+game_scene Clearing {
+    @storyline("clearing_enter") {
+        @trigger(map = "Clearing", on_enter = true)
+        @speaker("") {
+            "Tall grass rustles all around. Wild monsters prowl here."
+        }
+    }
+}

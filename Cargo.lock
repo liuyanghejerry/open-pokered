@@ -291,7 +291,7 @@ dependencies = [
  "bitflags 2.13.1",
  "cexpr",
  "clang-sys",
- "itertools 0.10.5",
+ "itertools 0.13.0",
  "proc-macro2",
  "quote",
  "regex",
@@ -1631,6 +1631,7 @@ dependencies = [
  "allocator-api2",
  "equivalent",
  "foldhash 0.1.5",
+ "serde",
 ]
 
 [[package]]
@@ -3115,6 +3116,7 @@ dependencies = [
  "dotzuki-engine-dsl",
  "dotzuki-renderer",
  "dotzuki-web",
+ "hashbrown 0.15.5",
  "image",
  "js-sys",
  "log",
@@ -3151,6 +3153,7 @@ dependencies = [
  "dotzuki-engine-script",
  "dotzuki-rules",
  "getrandom 0.2.17",
+ "hashbrown 0.15.5",
  "log",
  "pokered-data",
  "rand",
@@ -3168,6 +3171,7 @@ dependencies = [
  "dotzuki-engine-dsl",
  "dotzuki-engine-script",
  "dotzuki-renderer",
+ "hashbrown 0.15.5",
  "log",
  "num-derive",
  "num-traits",
@@ -3221,6 +3225,7 @@ dependencies = [
  "dotzuki-renderer",
  "error-iter",
  "getrandom 0.2.17",
+ "hashbrown 0.15.5",
  "image",
  "log",
  "pixels",

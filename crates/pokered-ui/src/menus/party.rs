@@ -1,3 +1,4 @@
+use crate::alloc_prelude::*;
 use pokered_core::battle::state::{Pokemon, StatusCondition};
 use pokered_core::game_state::Lang;
 use pokered_core::overworld::hm_effects;

@@ -1,0 +1,24 @@
+game_scene TestShop {
+  @variables {
+    gold = 500
+    name = "Trainer"
+  }
+  @storylines {
+    @speaker("Shopkeeper") {
+      "Welcome to the shop!"
+      "What would you like?"
+    }
+    @choice {
+      @option("Buy") {
+        @speaker("Shopkeeper") {
+          "Great choice!"
+        }
+      }
+      @option("Leave") {
+        @speaker("Shopkeeper") {
+          "Come again!"
+        }
+      }
+    }
+  }
+}

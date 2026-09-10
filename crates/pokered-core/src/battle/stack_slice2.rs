@@ -39,8 +39,10 @@
 
 #![cfg(test)]
 
+use crate::alloc_prelude::*;
 #[cfg(test)]
 mod slice2_tests {
+use crate::alloc_prelude::*;
     use crate::battle::stack_parity::{
         assert_state_parity, build_stack_stream, first_mover, legacy_run, order_is_tie,
         run_scenario, stack_run, MoveBytes, Scenario,

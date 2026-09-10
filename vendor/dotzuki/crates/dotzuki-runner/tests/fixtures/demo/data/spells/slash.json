@@ -1,0 +1,8 @@
+{
+  "id": "slash",
+  "name": "Slash",
+  "type": "attack",
+  "power": 40,
+  "accuracy": 100,
+  "mpCost": 0
+}

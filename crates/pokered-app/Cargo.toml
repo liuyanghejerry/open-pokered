@@ -13,20 +13,40 @@ pokered-core = { path = "../pokered-core" }
 pokered-data = { path = "../pokered-data" }
 dotzuki-engine = { git = "https://github.com/liuyanghejerry/dotzuki", tag = "v0.6.0" }
 dotzuki-engine-dsl = { git = "https://github.com/liuyanghejerry/dotzuki", tag = "v0.6.0" }
-pokered-renderer = { path = "../pokered-renderer" }
-dotzuki-renderer = { git = "https://github.com/liuyanghejerry/dotzuki", tag = "v0.6.0" }
-dotzuki-app = { git = "https://github.com/liuyanghejerry/dotzuki", tag = "v0.6.0" }
-pokered-ui = { path = "../pokered-ui" }
+pokered-renderer = { path = "../pokered-renderer", default-features = false, features = ["framebuffer"] }
+dotzuki-renderer = { git = "https://github.com/liuyanghejerry/dotzuki", tag = "v0.6.0", default-features = false }
+pokered-ui = { path = "../pokered-ui", default-features = false, features = ["framebuffer"] }
+# Base audio crate (music/SFX data tables + ids) on every target; the cpal
+# device backend is added by the hosted target table below. Bare metal gets
+# a no-op AudioOutput stub from pokered-audio itself.
 pokered-audio = { path = "../pokered-audio" }
 pokered-debug-server = { path = "../pokered-debug-server", optional = true }
-anyhow = { workspace = true }
-tracing = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
 log = "0.4"
-image = { version = "0.25", default-features = false, features = ["png"] }
+# no_std HashMap (see pokered-data's twin entry); needed wherever the app
+# passes maps to pokered-core APIs that now use hashbrown.
+hashbrown = { version = "0.15", default-features = false, features = ["serde"] }
 
-[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+# Hosted builds want the full renderer (gpu windowing, PNG resource loading,
+# audio device glue, link play, CLI tooling). Bare metal (GBA,
+# target_os = "none") gets framebuffer-only builds — see the target tables
+# in the individual crate manifests.
+[target.'cfg(not(target_os = "none"))'.dependencies]
+pokered-renderer = { path = "../pokered-renderer", features = ["gpu"] }
+pokered-ui = { path = "../pokered-ui", features = ["gpu"] }
+
+# Bare metal (GBA): spin locks for the single-threaded lazy statics
+# (render/slots.rs).
+[target.'cfg(target_os = "none")'.dependencies]
+
+# Hosted-only (std-bound) app dependencies. Bare-metal builds (GBA,
+# target_os = "none") exclude windowing/CLI/filesystem/audio/link crates.
+[target.'cfg(all(not(target_arch = "wasm32"), not(target_os = "none")))'.dependencies]
+dotzuki-app = { git = "https://github.com/liuyanghejerry/dotzuki", tag = "v0.6.0" }
+anyhow = { workspace = true }
+tracing = { workspace = true }
+image = { version = "0.25", default-features = false, features = ["png"] }
 # Native device output comes from pokered-audio's `cpal` feature (the shared
 # `output::AudioOutput`, built on dotzuki-audio's cpal backend).
 pokered-audio = { path = "../pokered-audio", features = ["cpal"] }

@@ -41,6 +41,7 @@
 //!   the party is untouched until [`LinkTradeDriver::apply_exchange`].
 //! - **Disconnect** anywhere aborts the trade with nothing applied.
 
+use crate::alloc_prelude::*;
 use super::protocol::NetworkMessage;
 use super::transport::{NetworkTransport, TransportError};
 use crate::battle::obedience::is_traded_for;
@@ -468,8 +469,8 @@ pub enum LinkTradeError {
     PartyRemove,
 }
 
-impl std::fmt::Display for LinkTradeError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+impl core::fmt::Display for LinkTradeError {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         match self {
             LinkTradeError::Transport(e) => write!(f, "link transport error: {}", e),
             LinkTradeError::InvalidIndex(i) => write!(f, "invalid party index {}", i),
@@ -481,7 +482,7 @@ impl std::fmt::Display for LinkTradeError {
     }
 }
 
-impl std::error::Error for LinkTradeError {}
+impl core::error::Error for LinkTradeError {}
 
 impl From<TransportError> for LinkTradeError {
     fn from(e: TransportError) -> Self {

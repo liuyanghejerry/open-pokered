@@ -159,6 +159,7 @@ pub fn try_wild_encounter_with_rate(
 
 #[cfg(test)]
 mod tests {
+    use crate::alloc_prelude::*;
     use super::*;
     use pokered_data::wild_data::WildMon;
 

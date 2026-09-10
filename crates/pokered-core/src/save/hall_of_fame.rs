@@ -1,3 +1,4 @@
+use crate::alloc_prelude::*;
 use serde::{Deserialize, Serialize};
 
 pub const HOF_MON_SIZE: usize = 16;
@@ -12,6 +13,7 @@ const NICK_TERMINATOR: u8 = 0x50;
 /// 0x50 terminator), matching the variable-length `Vec<u8>` JSON shape of
 /// older saves.
 mod nickname_serde {
+    use crate::alloc_prelude::*;
     use super::NICK_TERMINATOR;
     use serde::{Deserialize, Deserializer, Serialize, Serializer};
 

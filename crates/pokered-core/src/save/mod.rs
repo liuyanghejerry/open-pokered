@@ -1,3 +1,4 @@
+use crate::alloc_prelude::*;
 pub mod game_data;
 pub mod hall_of_fame;
 pub mod ser_game_data;

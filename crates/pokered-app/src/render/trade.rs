@@ -18,6 +18,7 @@
 //! used when present; simple shapes stand in otherwise (e.g. missing embedded
 //! assets on wasm).
 
+use crate::alloc_prelude::*;
 use dotzuki_renderer::battle_anim::{
     AnimationPlayer, SubAnimTransform, ANIM_BASE_TILE_ID, SUBANIM_DATA,
 };

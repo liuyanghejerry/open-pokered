@@ -1,3 +1,12 @@
+// Dual-target crate: hosted builds (macOS/…) keep full std via the extern
+// crate below; bare-metal GBA builds (thumbv4t-none-eabi, target_os = "none")
+// compile against core + alloc only.
+#![no_std]
+
+#[cfg(not(target_os = "none"))]
+extern crate std;
+extern crate alloc;
+
 pub mod battle_quips;
 pub mod battle_text;
 pub mod blockset_data;
@@ -6,6 +15,7 @@ pub mod impl_traits;
 pub mod ui_layout;
 pub mod ui_text;
 pub mod charmap;
+pub mod hash_compat;
 pub mod collision;
 pub mod embedded_assets;
 pub mod embedded_scenes;
@@ -43,6 +53,7 @@ pub mod pokemon_data;
 pub mod sgb_palettes;
 pub mod save;
 pub mod scene_loader;
+#[cfg(feature = "script-boa")]
 pub mod script_api;
 pub mod sign_data;
 pub mod slot_machine;
@@ -64,3 +75,23 @@ pub mod type_chart;
 pub mod types;
 pub mod runtime_overrides;
 pub mod wild_data;
+
+// Internal std::sync shims: hosted keeps std's OnceLock/LazyLock/Mutex, bare
+// metal (target_os = "none") swaps in spin-backed equivalents with the same
+// call surface. Not part of the public API.
+pub(crate) mod sync_compat;
+
+// With `#![no_std]` the Vec/String/Box/vec!/format! family leaves the prelude
+// on BOTH targets (the extern std crate restores `std::` paths, not the
+// prelude). Modules glob-import this to keep using them unqualified.
+#[allow(unused_imports)]
+pub(crate) mod alloc_prelude {
+    pub use alloc::borrow::{Cow, ToOwned};
+    pub use alloc::boxed::Box;
+    pub use alloc::collections::{BTreeMap, BTreeSet, VecDeque};
+    pub use alloc::format;
+    pub use alloc::rc::Rc;
+    pub use alloc::string::{String, ToString};
+    pub use alloc::vec;
+    pub use alloc::vec::Vec;
+}

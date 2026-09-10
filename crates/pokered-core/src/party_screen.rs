@@ -1,3 +1,4 @@
+use crate::alloc_prelude::*;
 use crate::battle::state::Pokemon;
 use crate::overworld::hm_effects;
 use pokered_data::moves::MoveId;
@@ -1145,6 +1146,7 @@ pub(crate) mod tests {
 
 #[cfg(test)]
 mod ether_move_choice_tests {
+use crate::alloc_prelude::*;
     use super::*;
     use super::tests::{make_test_pokemon, party_of};
     use pokered_data::items::ItemId;

@@ -1,0 +1,9 @@
+{
+  "id": "focus",
+  "name": "Focus",
+  "type": "buff",
+  "stat": "attack",
+  "power": 0,
+  "accuracy": 100,
+  "mpCost": 3
+}

@@ -1,18 +1,43 @@
+//! Local cross-target `dbg_eprintln!` (must precede its uses below).
+#[cfg(not(target_os = "none"))]
+macro_rules! dbg_eprintln {
+    ($($arg:tt)*) => {
+        eprintln!($($arg)*)
+    };
+}
+#[cfg(target_os = "none")]
+macro_rules! dbg_eprintln {
+    ($($arg:tt)*) => {{
+        let _ = core::format_args!($($arg)*);
+    }};
+}
+
+use crate::alloc_prelude::*;
+use crate::alloc_prelude::*;
+
+// Link play, save files and the recorders are hosted-only (std fs/net/time).
+#[cfg(not(target_os = "none"))]
 use std::path::PathBuf;
 
-#[cfg(not(target_arch = "wasm32"))]
+#[cfg(all(not(target_arch = "wasm32"), not(target_os = "none")))]
 use std::path::Path;
 
+#[cfg(not(target_os = "none"))]
 use crate::link::{
     CableClubFlow, CableClubPhase, FlowNeed, LinkKind, LinkSession, LinkStatus,
 };
-#[cfg(not(target_arch = "wasm32"))]
+#[cfg(all(not(target_arch = "wasm32"), not(target_os = "none")))]
 use crate::link::LinkServer;
 
+#[cfg(not(target_os = "none"))]
 use pokered_core::battle::link_battle_driver::{LinkBattleDriver, LinkDriverEvent};
+#[cfg(not(target_os = "none"))]
 use pokered_core::link::link_trade::{LinkTradeDriver, LinkTradePollResult};
+#[cfg(not(target_os = "none"))]
 use pokered_core::link::protocol::NetworkMessage;
+#[cfg(not(target_os = "none"))]
 use pokered_core::link::transport::NetworkTransport;
+#[cfg(not(target_os = "none"))]
 use pokered_core::link::LinkRole;
 
 use pokered_audio::music_data::MusicId;
@@ -66,12 +91,12 @@ use pokered_renderer::resource::ResourceManager;
 
 use pokered_renderer::resource::AssetRoot;
 
-#[cfg(not(target_arch = "wasm32"))]
+#[cfg(all(not(target_arch = "wasm32"), not(target_os = "none")))]
 use pokered_renderer::window::GameLoop;
 use pokered_renderer::{FrameBuffer, Rgba};
 use dotzuki_engine::render_config::RenderConfig;
 
-#[cfg(all(debug_assertions, not(target_arch = "wasm32")))]
+#[cfg(all(debug_assertions, not(target_arch = "wasm32"), not(target_os = "none")))]
 use crate::hot_reload::AssetWatcher;
 
 use crate::audio::{play_species_cry, AudioOutput};
@@ -136,7 +161,10 @@ fn save_dir() -> std::path::PathBuf {
         .unwrap_or_else(|| std::path::PathBuf::from("."))
 }
 
-#[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
+#[cfg(all(
+    not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")),
+    not(target_os = "none")
+))]
 fn save_dir() -> std::path::PathBuf {
     std::env::current_exe()
         .ok()
@@ -144,12 +172,12 @@ fn save_dir() -> std::path::PathBuf {
         .unwrap_or_else(|| std::path::PathBuf::from("."))
 }
 
-#[cfg(not(target_arch = "wasm32"))]
+#[cfg(all(not(target_arch = "wasm32"), not(target_os = "none")))]
 fn save_file_path() -> std::path::PathBuf {
     save_dir().join(SAVE_FILE_NAME)
 }
 
-#[cfg(not(target_arch = "wasm32"))]
+#[cfg(all(not(target_arch = "wasm32"), not(target_os = "none")))]
 fn script_flags_file_path() -> std::path::PathBuf {
     save_dir().join(SCRIPT_FLAGS_FILE_NAME)
 }
@@ -286,15 +314,16 @@ struct PendingTrade {
 /// encoding is the only per-frame cost. For full-run video prefer
 /// `--record-video`, which streams raw frames to ffmpeg and leaves no
 /// intermediate files behind.
-#[cfg(not(target_arch = "wasm32"))]
+#[cfg(all(not(target_arch = "wasm32"), not(target_os = "none")))]
 pub struct FrameRecorder {
     dir: PathBuf,
     next: u64,
     fb: FrameBuffer,
 }
 
-#[cfg(not(target_arch = "wasm32"))]
+#[cfg(all(not(target_arch = "wasm32"), not(target_os = "none")))]
 impl FrameRecorder {
+    #[cfg(not(target_os = "none"))]
     pub fn new(dir: PathBuf) -> std::io::Result<Self> {
         std::fs::create_dir_all(&dir)?;
         Ok(Self {
@@ -320,7 +349,8 @@ impl FrameRecorder {
 /// intermediate files: ffmpeg reads `pipe:0` and encodes H.264 as the game
 /// runs, so the .mp4 is finished when the game exits. ffmpeg's stderr is
 /// inherited at `-loglevel error`, so only real errors surface.
-#[cfg(not(target_arch = "wasm32"))]
+#[cfg(all(not(target_arch = "wasm32"), not(target_os = "none")))]
+#[cfg(all(not(target_arch = "wasm32"), not(target_os = "none")))]
 pub struct VideoRecorder {
     child: std::process::Child,
     /// Option solely so Drop can close the pipe before waiting on ffmpeg.
@@ -335,7 +365,8 @@ pub struct VideoRecorder {
     broken: bool,
 }
 
-#[cfg(not(target_arch = "wasm32"))]
+#[cfg(all(not(target_arch = "wasm32"), not(target_os = "none")))]
+#[cfg(all(not(target_arch = "wasm32"), not(target_os = "none")))]
 impl VideoRecorder {
     pub fn new(path: &Path, fps: u32) -> std::io::Result<Self> {
         if fps == 0 {
@@ -411,7 +442,8 @@ impl VideoRecorder {
     }
 }
 
-#[cfg(not(target_arch = "wasm32"))]
+#[cfg(all(not(target_arch = "wasm32"), not(target_os = "none")))]
+#[cfg(all(not(target_arch = "wasm32"), not(target_os = "none")))]
 impl Drop for VideoRecorder {
     fn drop(&mut self) {
         // Closing stdin signals EOF; ffmpeg then flushes the encoder and
@@ -509,10 +541,11 @@ pub struct PokemonGame {
     faint_thud_pending: bool,
     pub black_screen_frames: u32,
     pub pending_screen: Option<GameScreen>,
+    #[cfg(not(target_os = "none"))]
     pub scripts_dir: Option<PathBuf>,
     pub audio: Option<AudioOutput>,
     startup_warp: Option<(MapId, u16, u16)>,
-    #[cfg(all(debug_assertions, not(target_arch = "wasm32")))]
+    #[cfg(all(debug_assertions, not(target_arch = "wasm32"), not(target_os = "none")))]
     pub asset_watcher: Option<AssetWatcher>,
     #[cfg(feature = "debug-server")]
     pub debug_handle: Option<pokered_debug_server::DebugServerHandle>,
@@ -525,12 +558,12 @@ pub struct PokemonGame {
     /// Per-frame PNG recorder (`--record-frames`): captures every update —
     /// real-time loop and synchronous step_frames bursts alike — so driven
     /// runs can be assembled into video offline.
-    #[cfg(not(target_arch = "wasm32"))]
+    #[cfg(all(not(target_arch = "wasm32"), not(target_os = "none")))]
     pub frame_recorder: Option<FrameRecorder>,
     /// Per-frame video recorder (`--record-video`): same capture cadence as
     /// `frame_recorder`, but streams raw RGBA into a spawned ffmpeg process
     /// instead of writing one PNG per frame.
-    #[cfg(not(target_arch = "wasm32"))]
+    #[cfg(all(not(target_arch = "wasm32"), not(target_os = "none")))]
     pub video_recorder: Option<VideoRecorder>,
     /// Consecutive frames A+B+Start+Select have all been held — the original's
     /// soft-reset combo (engine/joypad.asm `_Joypad`/`TrySoftReset`, 16 frames
@@ -545,19 +578,22 @@ pub struct PokemonGame {
     ow_ran_last_frame: bool,
     /// Save file the game was started with, kept so a soft reset can reload
     /// it from disk (the original re-reads SRAM on reset).
+    #[cfg(not(target_os = "none"))]
     save_path: Option<PathBuf>,
     /// Link play (Cable Club): pending server while waiting for one peer.
     /// `--link-listen` sets this (native only); `poll_link` accepts the peer
     /// into `link_session` and drops the server.
-    #[cfg(not(target_arch = "wasm32"))]
+    #[cfg(all(not(target_arch = "wasm32"), not(target_os = "none")))]
     pub link_server: Option<LinkServer>,
     /// Active link session: owns the transport and routes wire messages
     /// into the per-activity sub-transports consumed by the core drivers
     /// below. Created at connect (`--link-connect`, an accepted peer, or the
     /// wasm BroadcastChannel entry). Routed once per frame by `poll_link`.
+    #[cfg(not(target_os = "none"))]
     pub link_session: Option<LinkSession>,
     /// High-level link status for the UI (waiting / connected / "Player2
     /// disconnected" …), kept in sync by `poll_link`.
+    #[cfg(not(target_os = "none"))]
     pub link_status: LinkStatus,
     /// Cable Club clock role — the host (`--link-listen`, or `?linkHost=1`
     /// on wasm) is the internal clock ("player" side), the client/guest is
@@ -565,24 +601,29 @@ pub struct PokemonGame {
     /// or `attach_link_transport`; decides the remote player's sprite
     /// placement in the rooms, the simultaneous-gameboy tie-break and whose
     /// random list feeds the shared battle RNG.
+    #[cfg(not(target_os = "none"))]
     pub link_role: pokered_core::link::LinkRole,
     /// In-room Cable Club link UI: presence, the gameboy flow, prompts and
     /// the trade selection. Fed every frame from `poll_link` events.
+    #[cfg(not(target_os = "none"))]
     pub link_cable: CableClubFlow,
     /// The CANONICAL link battle driver (owns the handshake → request →
     /// party exchange → battle lifecycle, the battle screen and the shared
     /// RNG stream). Created when the connection comes up (the party is
     /// refreshed at the cable-club table); `self.battle` mirrors its screen
     /// each frame for the render/vfx/audio/settle machinery.
+    #[cfg(not(target_os = "none"))]
     pub link_battle: Option<LinkBattleDriver>,
     /// The CANONICAL link trade driver (owns the party, the selection →
     /// confirm → exchange lifecycle and trade evolution). Created when the
     /// connection comes up (the party is refreshed at the cable-club table).
+    #[cfg(not(target_os = "none"))]
     pub link_trade: Option<LinkTradeDriver>,
 }
 
 /// Normalize the trade driver's errors onto the transport error type so the
 /// flow-need handler treats both drivers uniformly.
+#[cfg(not(target_os = "none"))]
 fn link_trade_err_to_transport(
     e: pokered_core::link::link_trade::LinkTradeError,
 ) -> pokered_core::link::transport::TransportError {
@@ -596,7 +637,7 @@ fn link_trade_err_to_transport(
 /// `Math.random()` on wasm, where `std::time::SystemTime` is unavailable at
 /// runtime (it compiles but panics). The values only need to be
 /// host-known — both sides consume the host's list — not unpredictable.
-#[cfg(not(target_arch = "wasm32"))]
+#[cfg(all(not(target_arch = "wasm32"), not(target_os = "none")))]
 fn link_random_seed() -> u32 {
     std::time::SystemTime::now()
         .duration_since(std::time::UNIX_EPOCH)
@@ -692,6 +733,7 @@ impl PokemonGame {
     /// This is the transport-agnostic seam the native binary's
     /// `--link-connect` path (main.rs `attach_link`) and the wasm
     /// BroadcastChannel entry (pokered-web, `?link=<channel>`) both call.
+    #[cfg(not(target_os = "none"))]
     pub fn attach_link_transport(
         &mut self,
         transport: Box<dyn NetworkTransport<NetworkMessage>>,
@@ -711,6 +753,7 @@ impl PokemonGame {
     /// dropped with the session — closing the channel or socket — so the
     /// peer sees a disconnect. Call between activities; detaching mid-battle
     /// leaves the (mirrored) link battle screen frozen.
+    #[cfg(not(target_os = "none"))]
     pub fn detach_link(&mut self) {
         self.link_session = None;
         self.link_battle = None;
@@ -721,7 +764,10 @@ impl PokemonGame {
 
     /// Creates a new game with default settings (no save file, no scripts dir).
     /// This is the primary constructor used by both web and native builds.
-    #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
+    #[cfg(all(
+        not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")),
+        not(target_os = "none")
+    ))]
     pub fn new(version: GameVersion) -> Self {
         #[cfg(feature = "debug-server")]
         return Self::new_with_options(version, None, None, None, false, None, false, false, None);
@@ -731,7 +777,7 @@ impl PokemonGame {
 
     /// Creates a new game with optional save file, snapshot, and scripts directory.
     /// Only available for native builds (wasm doesn't support file system operations).
-    #[cfg(not(target_arch = "wasm32"))]
+    #[cfg(all(not(target_arch = "wasm32"), not(target_os = "none")))]
     #[allow(unused_variables)]
     pub fn new_with_options(
         version: GameVersion,
@@ -761,7 +807,7 @@ impl PokemonGame {
                     Some((map_id, x, y))
                 }
                 Err(e) => {
-                    eprintln!("Warning: invalid --warp argument '{}': {}. Ignoring warp.", warp_str, e);
+                    dbg_eprintln!("Warning: invalid --warp argument '{}': {}. Ignoring warp.", warp_str, e);
                     None
                 }
             }
@@ -832,7 +878,7 @@ impl PokemonGame {
             overworld.apply_hidden_object_flags();
             overworld.run_on_load();
 
-            eprintln!(
+            dbg_eprintln!(
                 "Skip-intro: starting at {:?} ({} x={}, y={})",
                 map_id, map_id as u8, px, py
             );
@@ -851,6 +897,15 @@ impl PokemonGame {
         let main_menu = MainMenuState::new(save_summary);
         let oak_speech = OakSpeechState::new();
         let battle = BattleScreen::new(true);
+        let state = GameState {
+            screen: GameScreen::GameFreakSplash,
+            config: {
+                let mut c = pokered_core::game_state::GameConfig::new(version);
+                apply_saved_options(&mut c, &GameOptions::default());
+                c
+            },
+            save_summary: None,
+        };
         let battle_vfx = BattleVisualEffects::default();
         let start_menu = StartMenuState::new(false, false, false);
         let options_menu = OptionsMenuState::new(GameOptions::default());
@@ -868,27 +923,27 @@ impl PokemonGame {
 
         let resources = match AssetRoot::auto_detect() {
             Ok(root) => {
-                eprintln!("Asset root found: {:?}", root.gfx_dir());
+                dbg_eprintln!("Asset root found: {:?}", root.gfx_dir());
                 Some(ResourceManager::new(root))
             }
             Err(e) => {
-                eprintln!("Warning: Could not find gfx/ directory: {}", e);
-                eprintln!("Falling back to text-only placeholder rendering.");
+                dbg_eprintln!("Warning: Could not find gfx/ directory: {}", e);
+                dbg_eprintln!("Falling back to text-only placeholder rendering.");
                 None
             }
         };
 
         let audio = if no_audio {
-            eprintln!("Audio output disabled (--no-audio).");
+            dbg_eprintln!("Audio output disabled (--no-audio).");
             None
         } else {
             match AudioOutput::new() {
                 Some(ao) => {
-                    eprintln!("Audio output initialized (cpal 44100 Hz stereo)");
+                    dbg_eprintln!("Audio output initialized (cpal 44100 Hz stereo)");
                     Some(ao)
                 }
                 None => {
-                    eprintln!("Warning: Could not initialize audio output.");
+                    dbg_eprintln!("Warning: Could not initialize audio output.");
                     None
                 }
             }
@@ -922,11 +977,11 @@ impl PokemonGame {
 
             match AssetWatcher::new(&dirs) {
                 Ok(w) => {
-                    eprintln!("[hot-reload] Asset watcher active");
+                    dbg_eprintln!("[hot-reload] Asset watcher active");
                     Some(w)
                 }
                 Err(e) => {
-                    eprintln!("[hot-reload] Failed to start watcher: {}", e);
+                    dbg_eprintln!("[hot-reload] Failed to start watcher: {}", e);
                     None
                 }
             }
@@ -988,6 +1043,7 @@ impl PokemonGame {
             faint_thud_pending: false,
             black_screen_frames: 0,
             pending_screen: None,
+            #[cfg(not(target_os = "none"))]
             scripts_dir,
             audio,
             startup_warp,
@@ -998,22 +1054,154 @@ impl PokemonGame {
             pending_debug_inputs: Vec::new(),
             pending_debug_frames: 0,
             debug_input: InputState::new(),
-            #[cfg(not(target_arch = "wasm32"))]
+            #[cfg(all(not(target_arch = "wasm32"), not(target_os = "none")))]
             frame_recorder: None,
-            #[cfg(not(target_arch = "wasm32"))]
+            #[cfg(all(not(target_arch = "wasm32"), not(target_os = "none")))]
             video_recorder: None,
             soft_reset_frames: 0,
             ow_ran_last_frame: false,
+            #[cfg(not(target_os = "none"))]
             save_path,
-            #[cfg(not(target_arch = "wasm32"))]
+            #[cfg(all(not(target_arch = "wasm32"), not(target_os = "none")))]
             link_server: None,
+            #[cfg(not(target_os = "none"))]
             link_session: None,
+            #[cfg(not(target_os = "none"))]
             link_status: LinkStatus::Disabled,
+            #[cfg(not(target_os = "none"))]
             link_role: pokered_core::link::LinkRole::Host,
+            #[cfg(not(target_os = "none"))]
             link_cable: CableClubFlow::new(),
+            #[cfg(not(target_os = "none"))]
             link_battle: None,
+            #[cfg(not(target_os = "none"))]
             link_trade: None,
         }
+    }
+
+    /// Bare-metal (GBA) constructor: a fresh new game — no save file, no
+    /// snapshot, no `--scripts-dir`, no warp, no watcher, no debug server and
+    /// no audio device (the no-op `AudioOutput`). Scenes and map data come
+    /// from the build-time embedded tables; graphics come from the
+    /// pre-converted 2bpp registry. Called by `pokered-gba`'s `main.rs`.
+    #[cfg(target_os = "none")]
+    pub fn new_for_gba(version: GameVersion) -> Self {
+        // NOTE: bare-metal callers keep `PokemonGame` in EWRAM (~29 KB, most
+        // of the IWRAM stack budget). Large fields are constructed inline in
+        // the struct literal below so no big temporary lives on the stack.
+        log::info!("gba:ctor overworld");
+        let title_screen = TitleScreenState::new(version);
+        let main_menu = MainMenuState::new(None);
+        let oak_speech = OakSpeechState::new();
+        let mut overworld = OverworldScreen::new(MapId::PalletTown, PokemonRedData);
+        overworld.set_script_lang(if pokered_core::game_state::GameConfig::new(version).language
+            == pokered_core::game_state::Lang::Zh
+        {
+            "zh"
+        } else {
+            "en"
+        });
+        let battle = BattleScreen::new(true);
+        let state = GameState {
+            screen: GameScreen::GameFreakSplash,
+            config: {
+                let mut c = pokered_core::game_state::GameConfig::new(version);
+                apply_saved_options(&mut c, &GameOptions::default());
+                c
+            },
+            save_summary: None,
+        };
+        let battle_vfx = BattleVisualEffects::default();
+        let start_menu = StartMenuState::new(false, false, false);
+        let options_menu = OptionsMenuState::new(GameOptions::default());
+        let save_menu = SaveMenuState::new(
+            SaveScreenInfo {
+                player_name: "RED".to_string(),
+                num_badges: 0,
+                pokedex_owned: 0,
+                play_time_hours: 0,
+                play_time_minutes: 0,
+            },
+            false,
+            false,
+        );
+
+        // Graphics from the build-time pre-converted registry.
+        log::info!("gba:ctor resources");
+        let resources = Some(ResourceManager::new(AssetRoot::new()));
+        // No-op device output (pokered_audio::output on bare metal).
+        let audio = AudioOutput::new();
+
+        log::info!("gba:ctor pre-intro");
+        let f_intro = IntroSceneState::new();
+        log::info!("gba:ctor pre-splash");
+        let f_splash = GameFreakSplashState::new();
+        log::info!("gba:ctor pre-party");
+        let f_party = PartyScreenState::new(vec![]);
+        log::info!("gba:ctor pre-dex");
+        let f_dex = PokedexScreenState::new(pokered_core::pokemon::pokedex::Pokedex::new(), version);
+        log::info!("gba:ctor pre-towns");
+        let f_town = TownMapScreenState::new(MapId::PalletTown);
+        log::info!("gba:ctor pre-bag");
+        let f_bag = BagScreenState::new(vec![]);
+        log::info!("gba:ctor pre-card");
+        let f_card = TrainerCardScreenState::new();
+        log::info!("gba:ctor pre-save");
+        let f_save = SaveData::new();
+        log::info!("gba:ctor fields built");
+        let built = Self {
+            state,
+            title_screen,
+            intro_scene: f_intro,
+            gamefreak_splash: f_splash,
+            main_menu,
+            oak_speech,
+            overworld,
+            battle,
+            battle_vfx,
+            start_menu,
+            options_menu,
+            save_menu,
+            party_screen: f_party,
+            bag_screen: f_bag,
+            town_map_screen: f_town,
+            pokedex_screen: f_dex,
+            trainer_card_screen: f_card,
+            pending_evolve_move_replace: None,
+            pending_fly_map: false,
+            pending_bag_item: None,
+            pending_softboiled_user: None,
+            stats_screen: None,
+            slots_screen: None,
+            elevator_screen: None,
+            pc_screen: None,
+            trade_anim: None,
+            evolution_anim: None,
+            hof_ceremony: None,
+            credits: None,
+            pending_trade: None,
+            save_data: f_save,
+            player_name: "RED".to_string(),
+            rival_name: "BLUE".to_string(),
+            frame_count: 0,
+            exit_requested: false,
+            resources,
+            prev_title_phase: None,
+            prev_oak_phase_tag: 0,
+            battle_prev_message: None,
+            faint_thud_pending: false,
+            black_screen_frames: 0,
+            pending_screen: None,
+            audio,
+            pending_debug_inputs: Vec::new(),
+            pending_debug_frames: 0,
+            debug_input: InputState::new(),
+            startup_warp: None,
+            soft_reset_frames: 0,
+            ow_ran_last_frame: false,
+        };
+        log::info!("gba:ctor literal built");
+        built
     }
 
     #[cfg(any(target_arch = "wasm32", target_os = "android", target_os = "ios"))]
@@ -1106,31 +1294,39 @@ impl PokemonGame {
             faint_thud_pending: false,
             black_screen_frames: 0,
             pending_screen: None,
+            #[cfg(not(target_os = "none"))]
             scripts_dir: None,
             audio,
             pending_debug_inputs: Vec::new(),
             pending_debug_frames: 0,
             debug_input: InputState::new(),
-            #[cfg(not(target_arch = "wasm32"))]
+            #[cfg(all(not(target_arch = "wasm32"), not(target_os = "none")))]
             frame_recorder: None,
-            #[cfg(not(target_arch = "wasm32"))]
+            #[cfg(all(not(target_arch = "wasm32"), not(target_os = "none")))]
             video_recorder: None,
             startup_warp: None,
             soft_reset_frames: 0,
             ow_ran_last_frame: false,
+            #[cfg(not(target_os = "none"))]
             save_path: None,
-            #[cfg(not(target_arch = "wasm32"))]
+            #[cfg(all(not(target_arch = "wasm32"), not(target_os = "none")))]
             link_server: None,
+            #[cfg(not(target_os = "none"))]
             link_session: None,
+            #[cfg(not(target_os = "none"))]
             link_status: LinkStatus::Disabled,
+            #[cfg(not(target_os = "none"))]
             link_role: pokered_core::link::LinkRole::Host,
+            #[cfg(not(target_os = "none"))]
             link_cable: CableClubFlow::new(),
+            #[cfg(not(target_os = "none"))]
             link_battle: None,
+            #[cfg(not(target_os = "none"))]
             link_trade: None,
         }
     }
 
-    #[cfg(not(target_arch = "wasm32"))]
+    #[cfg(all(not(target_arch = "wasm32"), not(target_os = "none")))]
     fn try_load_default_save() -> (SaveData, Option<SaveFileSummary>) {
         let path = save_file_path();
         let (save, summary) = match std::fs::read(&path) {
@@ -1140,45 +1336,45 @@ impl PokemonGame {
         (save, summary)
     }
 
-    #[cfg(not(target_arch = "wasm32"))]
+    #[cfg(all(not(target_arch = "wasm32"), not(target_os = "none")))]
     fn load_sram_from_path(path: &Path) -> (SaveData, Option<SaveFileSummary>) {
         let (save, summary) = match std::fs::read(path) {
             Ok(data) => Self::parse_sram(path, &data),
             Err(e) => {
-                eprintln!("Error: failed to read save file {:?}: {}", path, e);
+                dbg_eprintln!("Error: failed to read save file {:?}: {}", path, e);
                 (SaveData::new(), None)
             }
         };
         (save, summary)
     }
 
-    #[cfg(not(target_arch = "wasm32"))]
+    #[cfg(all(not(target_arch = "wasm32"), not(target_os = "none")))]
     fn load_snapshot_from_path(path: &Path) -> (SaveData, Option<SaveFileSummary>) {
         match std::fs::read(path) {
             Ok(data) => match serde_json::from_slice::<SaveData>(&data) {
                 Ok(save) => {
                     let summary = save_summary_from_data(&save);
-                    eprintln!("Snapshot loaded: {:?}", path);
+                    dbg_eprintln!("Snapshot loaded: {:?}", path);
                     (save, Some(summary))
                 }
                 Err(e) => {
-                    eprintln!("Error: failed to parse snapshot {:?}: {}", path, e);
+                    dbg_eprintln!("Error: failed to parse snapshot {:?}: {}", path, e);
                     (SaveData::new(), None)
                 }
             },
             Err(e) => {
-                eprintln!("Error: failed to read snapshot {:?}: {}", path, e);
+                dbg_eprintln!("Error: failed to read snapshot {:?}: {}", path, e);
                 (SaveData::new(), None)
             }
         }
     }
 
-    #[cfg(not(target_arch = "wasm32"))]
+    #[cfg(all(not(target_arch = "wasm32"), not(target_os = "none")))]
     fn parse_sram(path: &Path, data: &[u8]) -> (SaveData, Option<SaveFileSummary>) {
         match import_sram(data) {
             Ok(save) => {
                 let summary = save_summary_from_data(&save);
-                eprintln!("Save file loaded: {:?}", path);
+                dbg_eprintln!("Save file loaded: {:?}", path);
                 pokered_core::log_save!(
                     "position: map_id={}, x={}, y={}, dir={}",
                     save.game_data.position.map_id,
@@ -1189,7 +1385,7 @@ impl PokemonGame {
                 (save, Some(summary))
             }
             Err(e) => {
-                eprintln!("Warning: save file {:?} failed to load: {:?}", path, e);
+                dbg_eprintln!("Warning: save file {:?} failed to load: {:?}", path, e);
                 (SaveData::new(), None)
             }
         }
@@ -1199,14 +1395,14 @@ impl PokemonGame {
     /// runtime-only dynamic keys — e.g. `__OBJ_HIDDEN_*` — that have no bit
     /// in the fixed SRAM event-flags region). Named event flags in old
     /// sidecars are harmless: `set_script_flags` routes them to the bitset.
-    #[cfg(not(target_arch = "wasm32"))]
-    fn read_companion_script_flags() -> Option<std::collections::HashMap<String, bool>> {
+    #[cfg(all(not(target_arch = "wasm32"), not(target_os = "none")))]
+    fn read_companion_script_flags() -> Option<pokered_core::hash_compat::HashMap<String, bool>> {
         let flags_path = script_flags_file_path();
         let data = std::fs::read(&flags_path).ok()?;
-        match serde_json::from_slice::<std::collections::HashMap<String, bool>>(&data) {
+        match serde_json::from_slice::<pokered_core::hash_compat::HashMap<String, bool>>(&data) {
             Ok(flags) => Some(flags),
             Err(e) => {
-                eprintln!(
+                dbg_eprintln!(
                     "Warning: failed to parse script flags {:?}: {}",
                     flags_path, e
                 );
@@ -1218,7 +1414,7 @@ impl PokemonGame {
     /// Same companion store on web: the runtime-only extras live in a
     /// separate `localStorage` key next to the SaveData JSON.
     #[cfg(target_arch = "wasm32")]
-    fn read_companion_script_flags() -> Option<std::collections::HashMap<String, bool>> {
+    fn read_companion_script_flags() -> Option<pokered_core::hash_compat::HashMap<String, bool>> {
         let storage = web_local_storage()?;
         let data = storage.get_item(WEB_SCRIPT_FLAGS_STORAGE_KEY).ok()??;
         match serde_json::from_str::<std::collections::HashMap<String, bool>>(&data) {
@@ -1233,14 +1429,14 @@ impl PokemonGame {
     /// Persist the runtime-only extras (companion sidecar) if any exist;
     /// remove a stale sidecar when none do, so a previous save's extras
     /// can't re-merge onto a different save on next load.
-    #[cfg(not(target_arch = "wasm32"))]
+    #[cfg(all(not(target_arch = "wasm32"), not(target_os = "none")))]
     fn save_companion_script_flags(overworld: &OverworldScreen<PokemonRedData>) {
         let extras = overworld.unified_flags().extras();
         let flags_path = script_flags_file_path();
         if extras.is_empty() {
             if let Err(e) = std::fs::remove_file(&flags_path) {
                 if e.kind() != std::io::ErrorKind::NotFound {
-                    eprintln!("Error: failed to remove script flags file: {}", e);
+                    dbg_eprintln!("Error: failed to remove script flags file: {}", e);
                 }
             }
             return;
@@ -1248,16 +1444,16 @@ impl PokemonGame {
         match serde_json::to_string(extras) {
             Ok(json) => {
                 if let Err(e) = std::fs::write(&flags_path, json.as_bytes()) {
-                    eprintln!("Error: failed to write script flags file: {}", e);
+                    dbg_eprintln!("Error: failed to write script flags file: {}", e);
                 }
             }
             Err(e) => {
-                eprintln!("Error: failed to serialize script flags: {}", e);
+                dbg_eprintln!("Error: failed to serialize script flags: {}", e);
             }
         }
     }
 
-    #[cfg(not(target_arch = "wasm32"))]
+    #[cfg(all(not(target_arch = "wasm32"), not(target_os = "none")))]
     pub fn export_snapshot_from_sav(
         input_path: Option<&Path>,
         output_path: &Path,
@@ -1273,7 +1469,7 @@ impl PokemonGame {
             .map_err(|e| format!("Failed to serialize snapshot: {}", e))?;
         std::fs::write(output_path, json.as_bytes())
             .map_err(|e| format!("Failed to write {:?}: {}", output_path, e))?;
-        eprintln!(
+        dbg_eprintln!(
             "Exported snapshot: {:?} -> {:?} ({} bytes)",
             sav_path,
             output_path,
@@ -1282,7 +1478,7 @@ impl PokemonGame {
         Ok(())
     }
 
-    #[cfg(not(target_arch = "wasm32"))]
+    #[cfg(all(not(target_arch = "wasm32"), not(target_os = "none")))]
     pub fn import_snapshot_from_sav(
         input_path: &Path,
         output_path: &Path,
@@ -1295,7 +1491,7 @@ impl PokemonGame {
             .map_err(|e| format!("Failed to serialize snapshot: {}", e))?;
         std::fs::write(output_path, json.as_bytes())
             .map_err(|e| format!("Failed to write {:?}: {}", output_path, e))?;
-        eprintln!(
+        dbg_eprintln!(
             "Imported snapshot: {:?} -> {:?} ({} bytes)",
             input_path,
             output_path,
@@ -1442,7 +1638,7 @@ impl PokemonGame {
         self.handle_transition(GameScreen::TitleScreen);
     }
 
-    #[cfg(not(target_arch = "wasm32"))]
+    #[cfg(all(not(target_arch = "wasm32"), not(target_os = "none")))]
     fn save_to_file(&mut self) {
         let save = self.build_save_data();
         let sram = export_sram(&save);
@@ -1458,11 +1654,16 @@ impl PokemonGame {
                 self.save_data = save;
             }
             Err(e) => {
-                eprintln!("Error: failed to write save file: {}", e);
+                dbg_eprintln!("Error: failed to write save file: {}", e);
             }
         }
         Self::save_companion_script_flags(&self.overworld);
     }
+
+    /// Bare metal: no filesystem — persistence moves to SRAM in a later
+    /// pass. Silently succeed so the save menu / credits flows complete.
+    #[cfg(target_os = "none")]
+    fn save_to_file(&mut self) {}
 
     #[cfg(target_arch = "wasm32")]
     fn save_to_file(&mut self) {
@@ -1522,7 +1723,7 @@ impl PokemonGame {
 
     /// Export the current game state as SRAM bytes and write to an explicit path.
     /// Uses `build_save_data()` internally to capture current overworld state.
-    #[cfg(not(target_arch = "wasm32"))]
+    #[cfg(all(not(target_arch = "wasm32"), not(target_os = "none")))]
     pub fn save_to_path(&mut self, path: &Path) -> Result<(), String> {
         let save = self.build_save_data();
         let sram = export_sram(&save);
@@ -1536,7 +1737,7 @@ impl PokemonGame {
     /// Load game state from SRAM bytes read from the given path.
     /// Updates `save_data` in-place; the caller should arrange for overlay
     /// reconstruction (the next `update()` frame will pick up the new data).
-    #[cfg(not(target_arch = "wasm32"))]
+    #[cfg(all(not(target_arch = "wasm32"), not(target_os = "none")))]
     pub fn load_from_path(&mut self, path: &Path) -> Result<(), String> {
         let data = std::fs::read(path)
             .map_err(|e| format!("failed to read save from {:?}: {}", path, e))?;
@@ -1600,7 +1801,7 @@ impl PokemonGame {
                     {
                         let (map_id, px, py, facing) =
                             if let Some((warp_map, warp_x, warp_y)) = self.startup_warp.take() {
-                                eprintln!(
+                                dbg_eprintln!(
                                     "Warping to {:?} ({}, {})",
                                     warp_map, warp_x, warp_y
                                 );
@@ -1636,7 +1837,11 @@ impl PokemonGame {
                                     facing,
                                 )
                             };
-                        let mut overworld = OverworldScreen::new(map_id, self.scripts_dir.clone(), PokemonRedData);
+                        #[cfg(not(target_os = "none"))]
+                        let mut overworld =
+                            OverworldScreen::new(map_id, self.scripts_dir.clone(), PokemonRedData);
+                        #[cfg(target_os = "none")]
+                        let mut overworld = OverworldScreen::new(map_id, PokemonRedData);
                         overworld.restore_saved_last_map(self.save_data.game_data.last_map);
                         overworld.state.player.x = px;
                         overworld.state.player.y = py;
@@ -1650,6 +1855,7 @@ impl PokemonGame {
                         // merge any runtime-only extras (companion sidecar)
                         // on top.
                         overworld.set_event_flags_bytes(&self.save_data.game_data.event_flags);
+                        #[cfg(not(target_os = "none"))]
                         if let Some(extras) = Self::read_companion_script_flags() {
                             overworld.set_script_flags(extras);
                         }
@@ -1697,7 +1903,7 @@ impl PokemonGame {
                         self.state.config.battle_style = defaults.battle_style;
                         let (map_id, px, py) =
                             if let Some((warp_map, warp_x, warp_y)) = self.startup_warp.take() {
-                                eprintln!(
+                                dbg_eprintln!(
                                     "Warping to {:?} ({}, {})",
                                     warp_map, warp_x, warp_y
                                 );
@@ -1709,7 +1915,11 @@ impl PokemonGame {
                                     NEW_GAME_WARP.coords.y as u16,
                                 )
                             };
-                        let mut overworld = OverworldScreen::new(map_id, self.scripts_dir.clone(), PokemonRedData);
+                        #[cfg(not(target_os = "none"))]
+                        let mut overworld =
+                            OverworldScreen::new(map_id, self.scripts_dir.clone(), PokemonRedData);
+                        #[cfg(target_os = "none")]
+                        let mut overworld = OverworldScreen::new(map_id, PokemonRedData);
                         overworld.state.player.x = px;
                         overworld.state.player.y = py;
                         overworld.player_name = self.player_name.clone();
@@ -2013,7 +2223,7 @@ impl PokemonGame {
         if let Some(ref audio) = self.audio {
             audio.stop_all();
         }
-        #[cfg(not(target_arch = "wasm32"))]
+        #[cfg(all(not(target_arch = "wasm32"), not(target_os = "none")))]
         {
             let path = self
                 .save_path
@@ -2393,12 +2603,12 @@ impl PokemonGame {
         // capture AFTER the frame's logic ran, and do it here rather than
         // inside the update body so every frame lands — early returns,
         // real-time loop and synchronous step_frames bursts alike.
-        #[cfg(not(target_arch = "wasm32"))]
+        #[cfg(all(not(target_arch = "wasm32"), not(target_os = "none")))]
         if let Some(mut rec) = self.frame_recorder.take() {
             rec.capture(self);
             self.frame_recorder = Some(rec);
         }
-        #[cfg(not(target_arch = "wasm32"))]
+        #[cfg(all(not(target_arch = "wasm32"), not(target_os = "none")))]
         if let Some(mut rec) = self.video_recorder.take() {
             rec.capture(self);
             self.video_recorder = Some(rec);
@@ -2431,9 +2641,10 @@ impl PokemonGame {
         // Link play: accept a pending peer and drive the link session
         // (battle/trade state machines) every frame, before any early
         // returns so network progress never stalls.
+        #[cfg(not(target_os = "none"))]
         self.poll_link();
 
-        #[cfg(all(debug_assertions, not(target_arch = "wasm32")))]
+        #[cfg(all(debug_assertions, not(target_arch = "wasm32"), not(target_os = "none")))]
         {
             let changes = self
                 .asset_watcher
@@ -2441,7 +2652,7 @@ impl PokemonGame {
                 .map(|w| w.poll_events())
                 .unwrap_or_default();
             for change in &changes {
-                eprintln!("[hot-reload] Changed: {}", change.path.display());
+                dbg_eprintln!("[hot-reload] Changed: {}", change.path.display());
 
                 if change
                     .path
@@ -2465,7 +2676,7 @@ impl PokemonGame {
                                 "[hot-reload] Recompiled .scene: {}",
                                 map_key
                             ),
-                            Err(e) => eprintln!(
+                            Err(e) => dbg_eprintln!(
                                 "[hot-reload] Failed to compile {}: {}",
                                 change.path.display(), e
                             ),
@@ -2570,6 +2781,7 @@ impl PokemonGame {
                 if let Some(trade) = self.pending_trade.take() {
                     self.apply_npc_trade(trade);
                 }
+                #[cfg(not(target_os = "none"))]
                 if self.link_cable.phase() == &CableClubPhase::TradeAnim {
                     // Link trade: the driver applies the exchange
                     // (remove-then-add, traded flag, Pokédex, forced trade
@@ -2899,6 +3111,7 @@ impl PokemonGame {
                 // Colosseum/TradeCenter, the room's opponent NPC is pinned to
                 // the remote player's spot (the original's TradeCenter_Script
                 // placement); otherwise the map keeps its placeholder NPC.
+                #[cfg(not(target_os = "none"))]
                 let link_action: Option<ScreenAction> = {
                 let current_map = self.overworld.state.current_map;
                 let linked = matches!(self.link_status, LinkStatus::Connected)
@@ -2976,6 +3189,8 @@ impl PokemonGame {
                     None
                 }
                 };
+                #[cfg(target_os = "none")]
+                let link_action: Option<ScreenAction> = None;
                 if let Some(action) = link_action {
                     action
                 } else if self.overworld.is_party_select_active() {
@@ -3493,8 +3708,11 @@ impl PokemonGame {
                 // resolution, RNG, end detection); `self.battle` is a
                 // per-frame MIRROR of the driver's screen so the render /
                 // vfx / audio / settle machinery below stays untouched.
+                #[cfg_attr(target_os = "none", allow(unused_mut))]
                 let mut link_abort = false;
+                #[cfg_attr(target_os = "none", allow(unused_mut, unused_variables))]
                 let mut battle_over = false;
+                #[cfg(not(target_os = "none"))]
                 if self.battle.link_mode {
                     if let Some(driver) = self.link_battle.as_mut() {
                         // 1. Turn resolution + disconnect detection (the
@@ -3719,6 +3937,7 @@ impl PokemonGame {
                 // the battle — EndOfBattle → overworld → gameboy again). The
                 // settle at the transition reads `self.battle` (the final
                 // mirror), so the driver reset happens here only.
+                #[cfg(not(target_os = "none"))]
                 if self.battle.link_mode {
                     if matches!(action, ScreenAction::Transition(GameScreen::Overworld)) {
                         self.link_cable.on_battle_ended();
@@ -3862,7 +4081,7 @@ impl PokemonGame {
                 // Mirror any in-screen swap back into the canonical save data.
                 if let Some((a, b)) = self.party_screen.take_pending_swap() {
                     if let Err(e) = self.save_data.party.swap(a, b) {
-                        tracing::warn!("party swap {a}<->{b} failed: {e:?}");
+                        log::warn!("party swap {a}<->{b} failed: {e:?}");
                     }
                     if let Some(ref audio) = self.audio {
                         audio.play_sfx(SfxId::Swap);
@@ -4545,6 +4764,7 @@ impl PokemonGame {
     /// transport messages into the per-activity queues, drive the CORE
     /// battle/trade drivers, and keep `link_status` in sync for the Cable
     /// Club UI.
+    #[cfg(not(target_os = "none"))]
     fn poll_link(&mut self) {
         use pokered_core::link::protocol::LINK_RANDOM_LIST_SIZE;
 
@@ -4555,7 +4775,7 @@ impl PokemonGame {
         if let Some(server) = self.link_server.take() {
             match server.accept() {
                 Ok(Some(transport)) => {
-                    eprintln!("[link] peer connected, waiting for its Hello");
+                    dbg_eprintln!("[link] peer connected, waiting for its Hello");
                     // The acceptor side does NOT start the handshake: the
                     // core Hello/HelloAck exchange is asymmetric (initiator
                     // sends Hello, receiver auto-acks from its Idle state), so
@@ -4572,7 +4792,7 @@ impl PokemonGame {
                     self.link_server = Some(server);
                 }
                 Err(e) => {
-                    eprintln!("[link] accept failed: {}", e);
+                    dbg_eprintln!("[link] accept failed: {}", e);
                     self.link_status = LinkStatus::Disconnected(e.to_string());
                 }
             }
@@ -4584,7 +4804,7 @@ impl PokemonGame {
 
         // Route everything the transport has into the per-activity queues.
         if let Some(reason) = session.poll() {
-            eprintln!("[link] transport closed: {}", reason);
+            dbg_eprintln!("[link] transport closed: {}", reason);
         }
 
         // Lazily create the CORE drivers on the routed sub-transports. They
@@ -4605,7 +4825,7 @@ impl PokemonGame {
                 (seed >> 16) as u8
             };
             let random_numbers: [u8; LINK_RANDOM_LIST_SIZE] =
-                std::array::from_fn(|_| next_byte());
+                core::array::from_fn(|_| next_byte());
             let mut driver = LinkBattleDriver::new(
                 session.battle_transport(),
                 self.save_data.party.clone(),
@@ -4618,7 +4838,7 @@ impl PokemonGame {
             // the driver's Idle state.
             if self.link_role == LinkRole::Guest {
                 if let Err(e) = driver.start_handshake() {
-                    eprintln!("[link] handshake failed: {}", e);
+                    dbg_eprintln!("[link] handshake failed: {}", e);
                     self.link_status = LinkStatus::Disconnected(e.to_string());
                 }
             }
@@ -4640,11 +4860,11 @@ impl PokemonGame {
             for ev in driver.poll() {
                 match &ev {
                     LinkDriverEvent::Connected => {
-                        eprintln!("[link] handshake complete — connected");
+                        dbg_eprintln!("[link] handshake complete — connected");
                         self.link_status = LinkStatus::Connected;
                     }
                     LinkDriverEvent::Disconnected(reason) => {
-                        eprintln!("[link] disconnected: {}", reason);
+                        dbg_eprintln!("[link] disconnected: {}", reason);
                         self.link_status =
                             LinkStatus::Disconnected("Player2 disconnected".into());
                     }
@@ -4701,6 +4921,7 @@ impl PokemonGame {
     /// Execute a [`FlowNeed`] issued by the Cable Club flow. The flow does
     /// not own the drivers or the save party, so the game loop performs the
     /// actual driver calls and party snapshots here.
+    #[cfg(not(target_os = "none"))]
     fn handle_flow_need(&mut self, need: FlowNeed) {
         let result = match &need {
             FlowNeed::None => return,
@@ -4805,7 +5026,7 @@ impl PokemonGame {
         match result {
             Ok(()) => self.link_cable.on_need_done(&need),
             Err(e) => {
-                eprintln!("[link] flow action failed: {}", e);
+                dbg_eprintln!("[link] flow action failed: {}", e);
                 self.link_cable.on_session_error(format!("link error: {}", e));
             }
         }
@@ -4816,6 +5037,7 @@ impl PokemonGame {
     /// Here the app pushes the save-derived fields the driver cannot know,
     /// mirrors the screen into `self.battle` for the render/vfx/audio/settle
     /// machinery, and starts the battle music.
+    #[cfg(not(target_os = "none"))]
     fn start_link_battle(&mut self) {
         use pokered_data::trainer_data::TrainerClass;
 
@@ -4823,7 +5045,7 @@ impl PokemonGame {
             return;
         };
         if driver.screen().is_none() {
-            eprintln!("[link] battle started without a battle screen");
+            dbg_eprintln!("[link] battle started without a battle screen");
             self.link_cable
                 .on_session_error("link error: battle screen missing".into());
             return;
@@ -4860,6 +5082,7 @@ impl PokemonGame {
     /// Start the trade cutscene for a completed link exchange
     /// (`TradeExecute`): the animation plays via the app's `trade_anim`
     /// machinery; the driver applies the exchange when it finishes.
+    #[cfg(not(target_os = "none"))]
     fn start_link_trade_anim(&mut self) {
         use pokered_core::trade::TradeAnim;
         let is_zh = matches!(
@@ -4896,6 +5119,7 @@ impl PokemonGame {
     /// forced trade evolution detection (`TryEvolvingMon`, cable_club.asm:
     /// 851 — applied via the cutscene below, cancellable like the app's
     /// other post-battle evolutions).
+    #[cfg(not(target_os = "none"))]
     fn apply_link_trade(&mut self) {
         use pokered_core::battle::settlement::EvolutionEvent;
 
@@ -4908,7 +5132,7 @@ impl PokemonGame {
             let pending = match driver.apply_exchange(&mut self.save_data.game_data.pokedex) {
                 Ok(pending) => pending,
                 Err(e) => {
-                    eprintln!("[link] trade exchange failed: {}", e);
+                    dbg_eprintln!("[link] trade exchange failed: {}", e);
                     None
                 }
             };
@@ -5756,6 +5980,7 @@ impl PokemonGame {
                 draw_overworld(&mut self.overworld, &mut self.resources, frame_buffer, self.state.config.language);
                 // Cable Club link overlay (text boxes / prompts / trade list)
                 // over the frozen room.
+                #[cfg(not(target_os = "none"))]
                 if self.link_cable.is_active() {
                     crate::render::draw_link_flow(
                         &self.link_cable,
@@ -5896,6 +6121,7 @@ const BLACK_SCREEN_DURATION: u32 = 30;
 const SOFT_RESET_HOLD_FRAMES: u8 = 16;
 
 #[cfg(not(target_arch = "wasm32"))]
+#[cfg(all(not(target_arch = "wasm32"), not(target_os = "none")))]
 impl GameLoop for PokemonGame {
     type Fb = FrameBuffer;
 

@@ -1,3 +1,4 @@
+use crate::alloc_prelude::*;
 use crate::battle::state::Pokemon;
 use crate::pokemon::ask_name::AskNameState;
 use crate::pokemon::stats::{create_pokemon, roll_random_dvs};

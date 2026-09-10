@@ -1,5 +1,6 @@
-use std::collections::HashMap;
-use std::sync::OnceLock;
+use crate::alloc_prelude::*;
+use crate::hash_compat::HashMap;
+use crate::sync_compat::OnceLock;
 
 use crate::map_json::MapJson;
 use crate::maps::{MapId, NUM_MAPS};
@@ -16,7 +17,7 @@ fn get_store() -> &'static MapDataStore {
 }
 
 fn build_name_to_id() -> HashMap<String, MapId> {
-    let mut map = HashMap::new();
+    let mut map = HashMap::default();
     for i in 0..NUM_MAPS {
         if let Some(id) = MapId::from_u8(i as u8) {
             map.insert(format!("{:?}", id), id);
@@ -31,7 +32,14 @@ pub fn get_map_json(map_id: MapId) -> Option<&'static MapJson> {
     if let Some(ov) = crate::runtime_overrides::map_override(&name) {
         return Some(ov);
     }
-    get_store().maps.get(&name)
+    #[cfg(target_os = "none")]
+    {
+        gba_map_json(&name)
+    }
+    #[cfg(not(target_os = "none"))]
+    {
+        get_store().maps.get(&name)
+    }
 }
 
 pub fn get_block_data(map_id: MapId) -> &'static [u8] {
@@ -40,15 +48,71 @@ pub fn get_block_data(map_id: MapId) -> &'static [u8] {
     if let Some(ov) = crate::runtime_overrides::blk_override(&name) {
         return ov;
     }
-    get_store()
-        .blocks
-        .get(&name)
-        .map(|v| v.as_slice())
-        .unwrap_or(&[])
+    #[cfg(target_os = "none")]
+    {
+        gba_blk_data(&name).unwrap_or(&[])
+    }
+    #[cfg(not(target_os = "none"))]
+    {
+        get_store()
+            .blocks
+            .get(&name)
+            .map(|v| v.as_slice())
+            .unwrap_or(&[])
+    }
 }
 
 pub fn all_map_names() -> Vec<&'static str> {
-    get_store().maps.keys().map(|s| s.as_str()).collect()
+    #[cfg(target_os = "none")]
+    {
+        MAP_TABLE.iter().map(|(n, _)| *n).collect()
+    }
+    #[cfg(not(target_os = "none"))]
+    {
+        get_store().maps.keys().map(|s| s.as_str()).collect()
+    }
+}
+
+// ── Bare-metal lazy lookup ────────────────────────────────────────────────
+// EWRAM is 256 KiB — far too small to eagerly convert all 248 maps (≈735 KB
+// of owned strings/Vecs, which is what `init_map_data` does on hosted
+// targets). On the GBA we walk the static ROM tables and convert ONE map on
+// first use, leaking the result into a small cache. A play session visits a
+// few dozen maps, so the cache stays comfortably small.
+#[cfg(all(target_os = "none", feature = "embedded-map-data"))]
+pub(crate) fn gba_map_json(name: &str) -> Option<&'static MapJson> {
+    use crate::hash_compat::HashMap;
+    use crate::sync_compat::{Mutex, OnceLock};
+    static CACHE: OnceLock<Mutex<HashMap<String, &'static MapJson>>> = OnceLock::new();
+    let cache = CACHE.get_or_init(|| Mutex::new(HashMap::default()));
+    if let Some(hit) = cache.lock().ok().and_then(|m| m.get(name).copied()) {
+        return Some(hit);
+    }
+    let (_, static_map) = MAP_TABLE.iter().find(|(n, _)| *n == name)?;
+    let converted: &'static MapJson = Box::leak(Box::new(MapJson::from(*static_map)));
+    if let Ok(mut m) = cache.lock() {
+        m.insert(name.to_string(), converted);
+    }
+    Some(converted)
+}
+
+#[cfg(all(target_os = "none", feature = "embedded-map-data"))]
+pub(crate) fn gba_blk_data(name: &str) -> Option<&'static [u8]> {
+    use crate::hash_compat::HashMap;
+    use crate::sync_compat::{Mutex, OnceLock};
+    static CACHE: OnceLock<Mutex<HashMap<String, &'static [u8]>>> = OnceLock::new();
+    let cache = CACHE.get_or_init(|| Mutex::new(HashMap::default()));
+    if let Some(hit) = cache.lock().ok().and_then(|m| m.get(name).copied()) {
+        return Some(hit);
+    }
+    let (_, data) = embedded_blk_sources()
+        .iter()
+        .find(|(n, _)| *n == name)?;
+    let owned: &'static [u8] = Box::leak(data.to_vec().into_boxed_slice());
+    if let Ok(mut m) = cache.lock() {
+        m.insert(name.to_string(), owned);
+    }
+    Some(owned)
 }
 
 pub fn name_to_map_id() -> &'static HashMap<String, MapId> {
@@ -719,12 +783,14 @@ fn embedded_blk_sources() -> &'static [(&'static str, &'static [u8])] {
 
 #[cfg(feature = "embedded-map-data")]
 fn init_map_data() -> MapDataStore {
-    let mut maps = HashMap::with_capacity(MAP_TABLE.len());
+    let mut maps = HashMap::with_capacity_and_hasher(MAP_TABLE.len(), crate::hash_compat::FxBuildHasher);
+    let mut progress = 0usize;
     for (name, static_map) in MAP_TABLE {
         maps.insert((*name).to_string(), MapJson::from(*static_map));
+        let _ = &progress;
     }
 
-    let mut blocks = HashMap::new();
+    let mut blocks = HashMap::default();
     for (name, blk_data) in embedded_blk_sources() {
         blocks.insert(name.to_string(), blk_data.to_vec());
     }
@@ -732,13 +798,25 @@ fn init_map_data() -> MapDataStore {
     MapDataStore { maps, blocks }
 }
 
+// Bare metal without `embedded-map-data`: no filesystem, no embedded tables —
+// an empty store. The GBA build enables the feature, so this only keeps
+// other bare-metal feature combinations linking.
+#[cfg(all(not(feature = "embedded-map-data"), target_os = "none"))]
+fn init_map_data() -> MapDataStore {
+    log::warn!("MapDataLoader: no map data source on bare metal without embedded-map-data");
+    MapDataStore {
+        maps: HashMap::default(),
+        blocks: HashMap::default(),
+    }
+}
+
 // ── Filesystem mode ────────────────────────────────────────────────────────
 
-#[cfg(not(feature = "embedded-map-data"))]
+#[cfg(all(not(feature = "embedded-map-data"), not(target_os = "none")))]
 fn init_map_data() -> MapDataStore {
     let maps_dir = find_maps_directory();
-    let mut maps = HashMap::new();
-    let mut blocks = HashMap::new();
+    let mut maps = HashMap::default();
+    let mut blocks = HashMap::default();
 
     if let Some(dir) = &maps_dir {
         if let Ok(entries) = std::fs::read_dir(dir) {
@@ -792,7 +870,7 @@ fn init_map_data() -> MapDataStore {
     MapDataStore { maps, blocks }
 }
 
-#[cfg(not(feature = "embedded-map-data"))]
+#[cfg(all(not(feature = "embedded-map-data"), not(target_os = "none")))]
 fn find_maps_directory() -> Option<std::path::PathBuf> {
     // 0. Explicit override: POKERED_MAPS_DIR points directly at the maps directory.
     //    Takes precedence so the binary can be launched from any working directory.

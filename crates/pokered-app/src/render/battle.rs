@@ -1,3 +1,4 @@
+use crate::alloc_prelude::*;
 use pokered_core::battle::state::{status2, status3};
 use pokered_core::battle::state::StatusCondition as CoreStatus;
 use pokered_core::battle::{BattleAnimEvent, BallAnimOutcome, BattlePhase, BattleScreen, BattleTransition as CoreTransition, IntroPhase};
@@ -220,7 +221,7 @@ fn build_ball_choreo(ball: ItemId, shakes: u8, outcome: BallAnimOutcome) -> Ball
         BallAnimOutcome::Dodged => vec![toss],
         BallAnimOutcome::Caught => {
             let mut v = vec![toss, poof, hide];
-            v.extend(std::iter::repeat(shake).take(shakes as usize));
+            v.extend(core::iter::repeat(shake).take(shakes as usize));
             v
         }
         BallAnimOutcome::BrokeFree => {
@@ -228,7 +229,7 @@ fn build_ball_choreo(ball: ItemId, shakes: u8, outcome: BallAnimOutcome) -> Ball
                 vec![toss, poof]
             } else {
                 let mut v = vec![toss, poof, hide];
-                v.extend(std::iter::repeat(shake).take(shakes as usize));
+                v.extend(core::iter::repeat(shake).take(shakes as usize));
                 v.push(poof);
                 v.push(show);
                 v
@@ -359,7 +360,7 @@ pub struct BattleVisualEffects {
     ball_choreo: Option<BallChoreo>,
     /// Ball-flow SFX (BallToss / Tink per shake / BallPoof) queued for the
     /// frontend, which owns the audio device.
-    pending_ball_sfx: std::collections::VecDeque<SfxId>,
+    pending_ball_sfx: VecDeque<SfxId>,
     pub overworld_snapshot: Option<FrameBuffer>,
     pub victory_music_played: bool,
 }
@@ -389,13 +390,13 @@ impl BattleVisualEffects {
 
     /// Take the pending SFX_SILPH_SCOPE request (ghost-Marowak reveal done).
     pub fn take_silph_scope_sfx_pending(&mut self) -> bool {
-        std::mem::take(&mut self.silph_scope_sfx_pending)
+        core::mem::take(&mut self.silph_scope_sfx_pending)
     }
 
     /// Take the pending trainer-appear SFX request (SFX_SILPH_SCOPE,
     /// `PrintBeginningBattleText` `.trainerBattle`).
     pub fn take_trainer_appear_sfx_pending(&mut self) -> bool {
-        std::mem::take(&mut self.trainer_appear_sfx_pending)
+        core::mem::take(&mut self.trainer_appear_sfx_pending)
     }
 
     /// Take one queued ball-flow SFX (BallToss / Tink / BallPoof).
@@ -480,7 +481,7 @@ impl Default for BattleVisualEffects {
             silph_scope_sfx_pending: false,
             trainer_appear_sfx_pending: false,
             ball_choreo: None,
-            pending_ball_sfx: std::collections::VecDeque::new(),
+            pending_ball_sfx: VecDeque::new(),
             overworld_snapshot: None,
             victory_music_played: false,
         }

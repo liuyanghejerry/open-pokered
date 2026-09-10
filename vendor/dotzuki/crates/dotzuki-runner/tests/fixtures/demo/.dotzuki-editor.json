@@ -1,0 +1,97 @@
+{
+  "name": "demo",
+  "dataRoot": "./data",
+  "gfxRoot": "./gfx",
+  "activities": [
+    {
+      "id": "maps",
+      "type": "map",
+      "label": "Maps",
+      "icon": "",
+      "enabled": true,
+      "config": { "mapsDir": "maps" }
+    },
+    {
+      "id": "scripts",
+      "type": "script",
+      "label": "Scripts",
+      "icon": "",
+      "enabled": true,
+      "config": { "scriptsDir": "maps", "extension": ".scene" }
+    },
+    {
+      "id": "data",
+      "type": "data",
+      "label": "Data",
+      "icon": "",
+      "enabled": true,
+      "config": {
+        "tables": [
+          {
+            "id": "heroes",
+            "label": "Heroes",
+            "dir": "heroes",
+            "icon": "",
+            "idField": "id",
+            "fields": [
+              { "id": "name", "label": "Name", "type": "string" },
+              { "id": "hp", "label": "HP", "type": "number" },
+              { "id": "atk", "label": "Attack", "type": "number" },
+              { "id": "def", "label": "Defense", "type": "number" },
+              { "id": "spd", "label": "Speed", "type": "number" },
+              { "id": "mp", "label": "MP", "type": "number" },
+              { "id": "element", "label": "Element", "type": "string" },
+              { "id": "skills", "label": "Skills", "type": "list" }
+            ]
+          },
+          {
+            "id": "monsters",
+            "label": "Monsters",
+            "dir": "monsters",
+            "icon": "",
+            "idField": "id",
+            "fields": [
+              { "id": "name", "label": "Name", "type": "string" },
+              { "id": "hp", "label": "HP", "type": "number" },
+              { "id": "atk", "label": "Attack", "type": "number" },
+              { "id": "def", "label": "Defense", "type": "number" },
+              { "id": "spd", "label": "Speed", "type": "number" },
+              { "id": "mp", "label": "MP", "type": "number" },
+              { "id": "element", "label": "Element", "type": "string" },
+              { "id": "skills", "label": "Skills", "type": "list" }
+            ]
+          },
+          {
+            "id": "spells",
+            "label": "Spells",
+            "dir": "spells",
+            "icon": "",
+            "idField": "id",
+            "fields": [
+              { "id": "name", "label": "Name", "type": "string" },
+              { "id": "type", "label": "Category", "type": "string" },
+              { "id": "power", "label": "Power", "type": "number" },
+              { "id": "accuracy", "label": "Accuracy", "type": "number" },
+              { "id": "element", "label": "Element", "type": "string" },
+              { "id": "stat", "label": "Stat", "type": "string" },
+              { "id": "mpCost", "label": "MP Cost", "type": "number" }
+            ]
+          }
+        ]
+      }
+    }
+  ],
+  "game": {
+    "entryScene": "main",
+    "entryMap": "Town",
+    "scenesDir": "assets/scenes"
+  },
+  "battle": {
+    "party": { "table": "heroes" },
+    "enemies": { "table": "monsters" },
+    "skills": { "table": "spells", "field": "skills", "categoryField": "type", "costField": "mpCost" },
+    "stats": { "hp": "hp", "attack": "atk", "defense": "def", "speed": "spd" },
+    "resource": "mp",
+    "rules": "data/rules.ron"
+  }
+}

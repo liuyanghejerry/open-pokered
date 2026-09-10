@@ -8,7 +8,58 @@
 //! crate. This module keeps the `pokered_data::scene_loader::*` paths stable
 //! so existing call sites don't change.
 
+// The disk providers (`--scripts-dir` hot-reload path) are host-only: they
+// read `.scene` files from the filesystem. Bare metal always uses the
+// build-time embedded scenes (crate::embedded_scenes).
+
+#[cfg(not(target_os = "none"))]
 pub use dotzuki_engine_dsl::disk_loader::{SceneAstProvider, SceneFileMeta, SceneScriptProvider};
+
+// Bare-metal stand-ins with the same minimal surface the overworld screen
+// touches: `new()`, the `scenes`/`disk_mode` fields and `get_scene`. They
+// never hold data (disk_mode is always false, so every lookup falls back to
+// the embedded scene tables), but keep the screen's field types and the
+// `--scripts-dir` code paths (compiled out on the host path) type-checking.
+#[cfg(target_os = "none")]
+mod bare_metal_providers {
+    use alloc::string::String;
+    use dotzuki_engine_dsl::ast::GameScene;
+    use crate::hash_compat::HashMap;
+
+    #[derive(Default)]
+    pub struct SceneAstProvider {
+        pub scenes: HashMap<String, GameScene>,
+        pub disk_mode: bool,
+    }
+
+    impl SceneAstProvider {
+        pub fn new() -> Self {
+            Self::default()
+        }
+
+        pub fn get_scene(&self, map_id: &str) -> Option<&GameScene> {
+            self.scenes.get(map_id)
+        }
+    }
+
+    #[derive(Default)]
+    pub struct SceneScriptProvider {
+        pub scenes: HashMap<String, String>,
+    }
+
+    impl SceneScriptProvider {
+        pub fn new() -> Self {
+            Self::default()
+        }
+
+        pub fn get_scene(&self, map_id: &str) -> Option<&String> {
+            self.scenes.get(map_id)
+        }
+    }
+}
+
+#[cfg(target_os = "none")]
+pub use bare_metal_providers::{SceneAstProvider, SceneScriptProvider};
 
 #[cfg(test)]
 mod ast_provider_tests {

@@ -1,5 +1,6 @@
 //! Tests for HM overworld effects — Cut, Fly, Surf, Strength, Flash, Boulder Push.
 
+use crate::alloc_prelude::*;
 use super::hm_effects::*;
 use super::Direction;
 use pokered_data::maps::MapId;

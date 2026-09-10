@@ -1,0 +1,18 @@
+{
+  "npcs": [
+    {
+      "id": 1,
+      "name": "Guide",
+      "x": 12,
+      "y": 7,
+      "facing": "down",
+      "talk": "guide_talk"
+    }
+  ],
+  "warps": [
+    { "x": 18, "y": 7, "dest_map": "Clearing", "dest_x": 2, "dest_y": 5 }
+  ],
+  "signs": [
+    { "x": 3, "y": 3, "text": "Hometown — every journey starts here." }
+  ]
+}

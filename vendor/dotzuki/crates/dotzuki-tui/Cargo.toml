@@ -1,0 +1,12 @@
+[package]
+name = "dotzuki-tui"
+version.workspace = true
+edition.workspace = true
+description = "A generic terminal TUI shell for JRPG games — ratatui halfblock rendering"
+repository.workspace = true
+license.workspace = true
+
+[dependencies]
+dotzuki-renderer = { path = "../dotzuki-renderer", version = "0.6.0", default-features = false }
+ratatui = "0.29"
+crossterm = "0.28"

@@ -51,6 +51,7 @@
 //!
 //! Link battles skip the check entirely (no link battles exist here).
 
+use crate::alloc_prelude::*;
 use pokered_data::moves::MoveId;
 
 /// Badge bit positions (constants/ram_constants.asm:56-63).

@@ -10,6 +10,7 @@
 //! we redraw the alternating pics on a black background, with the pic itself
 //! drawn in an inverted "silhouette" palette to read as the original flash.
 
+use crate::alloc_prelude::*;
 use pokered_core::evolution_screen::{EvolutionPhase, EvolutionScreenState};
 use pokered_core::game_state::Lang;
 use pokered_data::ui_layout::schema::DIALOG_DEFAULT_LAYOUT;

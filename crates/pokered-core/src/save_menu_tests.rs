@@ -1,3 +1,4 @@
+use crate::alloc_prelude::*;
 use crate::save_menu::*;
 
 fn make_info() -> SaveScreenInfo {

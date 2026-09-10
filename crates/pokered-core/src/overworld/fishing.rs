@@ -19,6 +19,7 @@
 //! use, the animation plays after the item-use text closes, and the result
 //! text (plus the hooked battle on a bite) is queued when it finishes.
 
+use crate::alloc_prelude::*;
 use dotzuki_engine::overworld::types::TransportMode;
 use dotzuki_engine::GameData;
 use pokered_data::items::ItemId;

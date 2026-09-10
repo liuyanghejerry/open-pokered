@@ -1,3 +1,14 @@
+// The lib sources (`mod`-included below) are dual-target: compiled in the
+// no_std lib they import `crate::alloc_prelude` for Vec/String/vec!/format!;
+// mirror that module here from the std prelude so the same files build as
+// part of this std bin.
+mod alloc_prelude {
+    pub use std::prelude::rust_2021::*;
+    // Items the lib's alloc_prelude provides beyond the std prelude.
+    pub use std::borrow::Cow;
+    pub use std::collections::{BTreeMap, BTreeSet, VecDeque};
+}
+
 mod audio;
 mod battle_config;
 mod cli;

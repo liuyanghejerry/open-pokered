@@ -1,0 +1,12 @@
+// rules.ron — the demo fixture's battle ruleset. v1 consumes the type chart
+// only; stats/types/resources are declared so the file is a valid Ruleset.
+Ruleset(
+    stats: ["hp", "atk", "def", "spd"],
+    types: ["fire", "grass", "water"],
+    resources: ["mp"],
+    type_chart: [
+        (atk: "fire", def: "grass", mult: [2, 1]),
+        (atk: "grass", def: "fire", mult: [1, 2]),
+        (atk: "water", def: "fire", mult: [2, 1]),
+    ],
+)

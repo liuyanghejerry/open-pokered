@@ -49,8 +49,10 @@
 
 #![cfg(test)]
 
+use crate::alloc_prelude::*;
 #[cfg(test)]
 mod slice5_tests {
+use crate::alloc_prelude::*;
     use crate::battle::stack_parity::{
         legacy_run_residual, run_scenario_residual, stack_run_residual, stack_seeded,
         stack_toxic_counter, ResidualMon, ResidualScenario,

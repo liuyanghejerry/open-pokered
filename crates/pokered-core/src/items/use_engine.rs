@@ -33,6 +33,7 @@
 //! effects flow through the generic driver is the staged follow-up; until then
 //! the concrete path remains authoritative for them.
 
+use crate::alloc_prelude::*;
 use crate::battle::state::{Pokemon, StatusCondition};
 use crate::items::healing::{use_healing_item, HealResult};
 use crate::items::pp_restore::{use_pp_restore, PpRestoreResult};

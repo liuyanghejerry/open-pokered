@@ -1,4 +1,5 @@
 #[cfg(test)]
+use crate::alloc_prelude::*;
 mod tests {
     use pokered_data::moves::MoveId;
     use pokered_data::species::Species;

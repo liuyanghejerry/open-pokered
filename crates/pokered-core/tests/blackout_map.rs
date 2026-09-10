@@ -42,7 +42,7 @@ fn heal_at_viridian_nurse() -> Vec<OverworldGameDataRequest> {
             break;
         }
     }
-    std::mem::take(&mut screen.game_data_requests)
+    core::mem::take(&mut screen.game_data_requests)
 }
 
 #[test]

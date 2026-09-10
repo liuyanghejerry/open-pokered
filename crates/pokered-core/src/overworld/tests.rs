@@ -1,5 +1,6 @@
 //! Tests for the overworld module — map loading, dimensions, connections, header data.
 
+use crate::alloc_prelude::*;
 use super::map_loading::*;
 use super::*;
 use pokered_data::maps::MapId;

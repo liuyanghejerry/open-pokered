@@ -1,0 +1,38 @@
+game_scene Hometown {
+    @storyline("hometown_intro") {
+        @trigger(map = "Hometown", on_enter = true)
+        @speaker("Guide") {
+            "Welcome to Hometown, Aria!"
+            "The warp on the east edge leads to the Clearing."
+            "Wild monsters roam the tall grass there — a good place to train."
+        }
+    }
+
+    @storyline("guide_talk") {
+        @trigger(map = "Hometown", npc = "Guide")
+        @speaker("Guide") {
+            "You look ready for your first fight."
+            "Want to try one right here?"
+        }
+        @choice {
+            @option("Let's fight!") {
+                result = startBattle("slime")
+                @if (result == "win") {
+                    @speaker("Guide") {
+                        "Well fought! Fire beats grass, remember that."
+                    }
+                    @command("setFlag", "WON_GUIDE_BATTLE")
+                } @else {
+                    @speaker("Guide") {
+                        "It happens. Heal up and try again."
+                    }
+                }
+            }
+            @option("Not yet.") {
+                @speaker("Guide") {
+                    "Come back when you are ready."
+                }
+            }
+        }
+    }
+}

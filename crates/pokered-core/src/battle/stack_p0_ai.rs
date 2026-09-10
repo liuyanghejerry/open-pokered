@@ -33,8 +33,10 @@
 
 #![cfg(test)]
 
+use crate::alloc_prelude::*;
 #[cfg(test)]
 mod p0_ai_tests {
+use crate::alloc_prelude::*;
     use crate::battle::stack_parity::{
         ai_draw_count_pub, build_ai_turn_stream_pub, first_mover_ai_pub, harness_pick_enemy_move,
         order_is_tie_ai_pub, run_scenario_ai, AiMonSpec, AiScenario,

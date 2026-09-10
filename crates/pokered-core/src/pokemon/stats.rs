@@ -43,7 +43,7 @@ pub const TRAINER_DV_BYTES: [u8; 2] = [0x98, 0x88];
 /// wild encounters (`BattleRandom` ×2, core.asm:6012-6019) and gifted/starter
 /// mons (`Random` ×2, add_mon.asm:95-101).
 pub fn roll_random_dvs() -> [u8; 2] {
-    [rand::random::<u8>(), rand::random::<u8>()]
+    [crate::rng::random::<u8>(), crate::rng::random::<u8>()]
 }
 
 pub fn create_pokemon(species: Species, level: u8, dv_bytes: [u8; 2]) -> Option<Pokemon> {

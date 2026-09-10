@@ -1,0 +1,38 @@
+game_scene MonsterCenterHeal {
+  @storyline("nurse_heal") {
+    @trigger(map = "MonsterCenter", npc = "Nurse")
+    @speaker("Nurse") {
+      "Welcome to the MONSTER CENTER!"
+      "We heal your monsters back to"
+      "perfect health!"
+      "Shall we heal your monsters?"
+    }
+
+    @choice {
+      @option("Yes") {
+        @speaker("Nurse") {
+          "OK, we will need your monsters."
+        }
+        faceNpc("1", "right")
+        delay(8)
+        heal()
+        faceNpc("1", "down")
+        delay(8)
+        @speaker("Nurse") {
+          "Thank you for waiting."
+          "Your monsters are fully healed!"
+        }
+      }
+      @option("No") {
+        @speaker("Nurse") {
+          "No problem! Come back anytime"
+          "if your monsters need rest."
+        }
+      }
+    }
+
+    @speaker("Nurse") {
+      "We hope to see you again!"
+    }
+  }
+}

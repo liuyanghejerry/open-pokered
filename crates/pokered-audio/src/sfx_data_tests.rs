@@ -1,3 +1,5 @@
+use crate::alloc_prelude::*;
+
 use crate::sfx_data::*;
 
 #[test]

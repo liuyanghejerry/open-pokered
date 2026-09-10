@@ -1,3 +1,4 @@
+use crate::alloc_prelude::*;
 use crate::items::inventory::{Inventory, BAG_ITEM_CAPACITY, PC_ITEM_CAPACITY};
 use crate::options_menu::GameOptions;
 use crate::pokemon::pokedex::Pokedex;

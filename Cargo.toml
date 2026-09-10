@@ -1,5 +1,9 @@
 [workspace]
 resolver = "2"
+# pokered-gba is built standalone (own .cargo/config.toml, thumbv4t-none-eabi,
+# own profiles) — see crates/pokered-gba/build.sh. vendor/ holds the patched
+# (no_std) dotzuki engine copy consumed via [patch] from crates/pokered-gba.
+exclude = ["crates/pokered-gba", "vendor"]
 members = [
     "crates/pokered-web",
     "crates/pokered-runner-web",
@@ -24,17 +28,19 @@ edition = "2021"
 license = "MIT"
 
 [workspace.dependencies]
-serde = { version = "1", features = ["derive"] }
-serde_json = "1"
+# no_std-friendly defaults: std-dependent features are opt-in so the GBA
+# (thumbv4t-none-eabi) build of the game crates can share these definitions.
+serde = { version = "1", default-features = false, features = ["derive", "alloc"] }
+serde_json = { version = "1", default-features = false, features = ["alloc"] }
 ron = "0.8"
 bincode = "1"
-thiserror = "2"
+thiserror = { version = "2", default-features = false }
 miette = { version = "7", features = ["fancy"] }
 anyhow = "1"
 tracing = "0.1"
 notify = "6"
 rand = "0.8"
-strum = { version = "0.26", features = ["derive"] }
+strum = { version = "0.26", default-features = false, features = ["derive"] }
 strum_macros = "0.26"
 num-derive = "0.4"
-num-traits = "0.2"
+num-traits = { version = "0.2", default-features = false }

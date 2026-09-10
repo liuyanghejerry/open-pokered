@@ -206,7 +206,7 @@ fn build_ball_choreo(ball: ItemId, shakes: u8, outcome: BallAnimOutcome) -> Ball
         BallAnimOutcome::Dodged => vec![toss],
         BallAnimOutcome::Caught => {
             let mut v = vec![toss, poof, hide];
-            v.extend(std::iter::repeat(shake).take(shakes as usize));
+            v.extend(core::iter::repeat(shake).take(shakes as usize));
             v
         }
         BallAnimOutcome::BrokeFree => {
@@ -214,7 +214,7 @@ fn build_ball_choreo(ball: ItemId, shakes: u8, outcome: BallAnimOutcome) -> Ball
                 vec![toss, poof]
             } else {
                 let mut v = vec![toss, poof, hide];
-                v.extend(std::iter::repeat(shake).take(shakes as usize));
+                v.extend(core::iter::repeat(shake).take(shakes as usize));
                 v.push(poof);
                 v.push(show);
                 v
@@ -337,7 +337,7 @@ impl BattleVisualEffects {
     /// Take the pending trainer-appear SFX request (SFX_SILPH_SCOPE,
     /// `PrintBeginningBattleText` `.trainerBattle`).
     pub fn take_trainer_appear_sfx_pending(&mut self) -> bool {
-        std::mem::take(&mut self.trainer_appear_sfx_pending)
+        core::mem::take(&mut self.trainer_appear_sfx_pending)
     }
 
     /// Take one queued ball-flow SFX (BallToss / Tink / BallPoof).

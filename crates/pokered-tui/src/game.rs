@@ -599,10 +599,10 @@ impl PokemonGame {
     /// in the fixed SRAM event-flags region). Named event flags in old
     /// sidecars are harmless: `set_script_flags` routes them to the bitset.
     #[cfg(not(target_arch = "wasm32"))]
-    fn read_companion_script_flags() -> Option<std::collections::HashMap<String, bool>> {
+    fn read_companion_script_flags() -> Option<pokered_core::hash_compat::HashMap<String, bool>> {
         let flags_path = script_flags_file_path();
         let data = std::fs::read(&flags_path).ok()?;
-        match serde_json::from_slice::<std::collections::HashMap<String, bool>>(&data) {
+        match serde_json::from_slice::<pokered_core::hash_compat::HashMap<String, bool>>(&data) {
             Ok(flags) => Some(flags),
             Err(e) => {
                 eprintln!(

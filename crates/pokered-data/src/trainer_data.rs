@@ -1,3 +1,4 @@
+use crate::alloc_prelude::*;
 use crate::moves::MoveId;
 use crate::species::Species;
 use serde::{Deserialize, Serialize};
@@ -59,7 +60,7 @@ pub enum TrainerClass {
 impl TrainerClass {
     pub fn from_u8(value: u8) -> Self {
         if value <= TrainerClass::Lance as u8 {
-            unsafe { std::mem::transmute(value) }
+            unsafe { core::mem::transmute(value) }
         } else {
             TrainerClass::Nobody
         }
@@ -264,7 +265,7 @@ pub fn get_trainer_party(class: TrainerClass, party_index: usize) -> Option<&'st
     if let Some(ov) = crate::runtime_overrides::trainer_override(class) {
         return ov.parties.get(party_index);
     }
-    static TRAINER_DATA: std::sync::OnceLock<Vec<TrainerClassData>> = std::sync::OnceLock::new();
+    static TRAINER_DATA: crate::sync_compat::OnceLock<Vec<TrainerClassData>> = crate::sync_compat::OnceLock::new();
     let data = TRAINER_DATA.get_or_init(trainer_data);
 
     data.iter()

@@ -1,3 +1,4 @@
+use crate::alloc_prelude::*;
 use super::game_data::{
     GameData, MapConnection, MAX_BG_EVENTS, MAX_OBJECT_EVENTS, MAX_WARP_EVENTS,
 };

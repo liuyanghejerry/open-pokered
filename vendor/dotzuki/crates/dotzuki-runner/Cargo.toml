@@ -1,0 +1,43 @@
+[package]
+name = "dotzuki-runner"
+version.workspace = true
+edition.workspace = true
+description = "Generic runtime that boots a zero-Rust jrpg game project (manifest, DSL, maps)"
+license.workspace = true
+repository.workspace = true
+
+[features]
+default = ["gpu", "watch"]
+# Windowed/GPU renderer bits (pixels/winit) — native play; off for WASM.
+gpu = ["dotzuki-renderer/gpu"]
+# notify-based hot reload (`dotzuki run --watch`) — native only.
+watch = ["dep:notify"]
+# Modern file audio (WAV/OGG/FLAC/MP3) for the BGM/SFX scene commands —
+# forwarded to dotzuki-audio's `modern-audio`; off by default so projects
+# that only use TrackDef JSON chiptune stay dependency-light.
+modern-audio = ["dotzuki-audio/modern-audio"]
+
+[dependencies]
+dotzuki-engine = { path = "../dotzuki-engine", version = "0.6.0" }
+dotzuki-engine-script = { path = "../dotzuki-engine-script", version = "0.6.0" }
+dotzuki-engine-dsl = { path = "../dotzuki-engine-dsl", version = "0.6.0" }
+dotzuki-engine-tiled = { path = "../dotzuki-engine-tiled", version = "0.6.0" }
+dotzuki-rules = { path = "../dotzuki-rules", version = "0.6.0" }
+dotzuki-renderer = { path = "../dotzuki-renderer", version = "0.6.0", default-features = false, features = ["image-assets"] }
+dotzuki-ui = { path = "../dotzuki-ui", version = "0.6.0" }
+dotzuki-audio = { path = "../dotzuki-audio", version = "0.6.0", features = ["serde", "cpal"] }
+# Native audio output comes from dotzuki-audio's `cpal` feature (the APU
+# renders samples on cpal's callback thread; no device (CI/headless/wasm's
+# Null host) ⇒ RunnerAudio stays silent).
+image = { version = "0.25", default-features = false, features = ["png"] }
+serde = { workspace = true }
+serde_json = { workspace = true }
+anyhow = { workspace = true }
+log = "0.4"
+# Same version as dotzuki-engine-dsl's base64 (features unify workspace-wide);
+# decodes game bundles in `bundle.rs`.
+base64 = "0.22"
+
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+dotzuki-app = { path = "../dotzuki-app", version = "0.6.0" }
+notify = { workspace = true, optional = true }
