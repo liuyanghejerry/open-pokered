@@ -10,13 +10,15 @@ use agb::input::{Button, ButtonController};
 use dotzuki_engine::render_config::RenderConfig;
 use pokered_app::game::PokemonGame;
 use pokered_app::render::FrameDamageRect;
-use pokered_core::battle::{BattlePhase, IntroPhase};
+use pokered_core::battle::state::StatusCondition;
+use pokered_core::battle::{BattlePhase, IntroPhase, PokeballSlotStatus};
 use pokered_core::data::wild_data::GameVersion;
 use pokered_core::game_state::{GameScreen, Lang};
 use pokered_core::gamefreak_splash::SplashPhase;
 use pokered_core::oak_speech::{entrance_frames, OakSpeechPhase};
 use pokered_core::overworld::screen::WarpFadeState;
 use pokered_core::title_screen::{TitlePhase, TitleScreenState};
+use pokered_data::species::Species;
 use pokered_renderer::input::{GbButton, InputState};
 use pokered_renderer::palette::GbColor;
 use pokered_renderer::{FrameBuffer, Rgba};
@@ -331,20 +333,156 @@ impl OakVisualKey {
     }
 }
 
-/// Selected intro prompts stop mutating their pixels once their countdown
-/// reaches zero and remain there until the player presses A/B. Dynamic intro
-/// phases and every regular battle phase deliberately stay on the redraw path.
-fn reusable_battle_intro(game: &PokemonGame) -> Option<IntroPhase> {
-    match &game.battle.phase {
-        BattlePhase::Intro {
-            phase:
-                phase @ (IntroPhase::WildReveal
-                | IntroPhase::GhostCantID
-                | IntroPhase::TrainerReveal
-                | IntroPhase::TrainerSendOut),
-            wait_frames: 0,
-        } => Some(*phase),
-        _ => None,
+#[derive(Clone, Copy, PartialEq, Eq)]
+enum ReusableBattlePhase {
+    Intro(IntroPhase),
+    PlayerMenu { row: usize, col: usize },
+    SafariMenu { row: usize, col: usize },
+    MoveSelect { cursor: usize },
+    ItemMoveSelect { cursor: usize },
+    BagSelect { cursor: usize },
+    ItemTargetSelect { cursor: usize },
+    ShowingText { current: usize },
+    PartySelect { cursor: usize },
+    ShiftSwitchSelect { cursor: usize },
+    PlayerFaintSwitch { cursor: usize },
+    PartySubMenu { selected: usize, cursor: usize },
+    PartyStats { pokemon: usize },
+    ShiftPrompt { yes: bool },
+    LearnMoveAsk { yes: bool },
+    LearnMoveChoose { cursor: usize },
+    LearnMoveGiveUp { yes: bool },
+}
+
+#[derive(Clone, Copy, PartialEq, Eq)]
+struct BattleVisualKey {
+    phase: ReusableBattlePhase,
+    language: Lang,
+    enemy_species: Species,
+    enemy_level: u8,
+    enemy_hp: u16,
+    enemy_max_hp: u16,
+    enemy_status: StatusCondition,
+    player_species: Species,
+    player_level: u8,
+    player_hp: u16,
+    player_max_hp: u16,
+    player_status: StatusCondition,
+    player_balls: [PokeballSlotStatus; 6],
+    enemy_balls: [PokeballSlotStatus; 6],
+    ball_visibility: u8,
+    battle_status3: [u8; 2],
+    message_hash: u32,
+}
+
+impl BattleVisualKey {
+    /// Return a compact key only when neither the core nor renderer has a
+    /// visual state machine still advancing. Unsupported phases deliberately
+    /// redraw every frame.
+    fn new(game: &PokemonGame) -> Option<Self> {
+        let battle = &game.battle;
+        if !game.battle_vfx.is_frame_stable() || battle.hp_bar_anim.is_active() {
+            return None;
+        }
+
+        let phase = match &battle.phase {
+            BattlePhase::Intro {
+                phase:
+                    phase @ (IntroPhase::WildReveal
+                    | IntroPhase::GhostCantID
+                    | IntroPhase::TrainerReveal
+                    | IntroPhase::TrainerSendOut),
+                wait_frames: 0,
+            } => ReusableBattlePhase::Intro(*phase),
+            BattlePhase::PlayerMenu if battle.is_safari => ReusableBattlePhase::SafariMenu {
+                row: battle.safari_menu.row(),
+                col: battle.safari_menu.col(),
+            },
+            BattlePhase::PlayerMenu => ReusableBattlePhase::PlayerMenu {
+                row: battle.battle_menu.row(),
+                col: battle.battle_menu.col(),
+            },
+            BattlePhase::MoveSelect => ReusableBattlePhase::MoveSelect {
+                cursor: battle.move_menu.as_ref()?.cursor(),
+            },
+            BattlePhase::ItemMoveSelect { .. } => ReusableBattlePhase::ItemMoveSelect {
+                cursor: battle.move_menu.as_ref()?.cursor(),
+            },
+            BattlePhase::BagSelect => ReusableBattlePhase::BagSelect {
+                cursor: battle.bag_menu.as_ref()?.cursor(),
+            },
+            BattlePhase::ItemTargetSelect { .. } => ReusableBattlePhase::ItemTargetSelect {
+                cursor: battle.party_cursor,
+            },
+            BattlePhase::ShowingText {
+                current,
+                wait_frames: 0,
+                ..
+            } => ReusableBattlePhase::ShowingText { current: *current },
+            BattlePhase::PartySelect => ReusableBattlePhase::PartySelect {
+                cursor: battle.party_cursor,
+            },
+            BattlePhase::ShiftSwitchSelect => ReusableBattlePhase::ShiftSwitchSelect {
+                cursor: battle.party_cursor,
+            },
+            BattlePhase::PlayerFaintSwitch => ReusableBattlePhase::PlayerFaintSwitch {
+                cursor: battle.party_cursor,
+            },
+            BattlePhase::PartySubMenu { selected_index } => ReusableBattlePhase::PartySubMenu {
+                selected: *selected_index,
+                cursor: battle.party_submenu.as_ref()?.cursor(),
+            },
+            BattlePhase::PartyStats { pokemon_index } => ReusableBattlePhase::PartyStats {
+                pokemon: *pokemon_index,
+            },
+            BattlePhase::ShiftPrompt => ReusableBattlePhase::ShiftPrompt {
+                yes: battle.shift_prompt_yes,
+            },
+            BattlePhase::LearnMoveAsk { .. } => ReusableBattlePhase::LearnMoveAsk {
+                yes: battle.shift_prompt_yes,
+            },
+            BattlePhase::LearnMoveChoose { cursor, .. } => {
+                ReusableBattlePhase::LearnMoveChoose { cursor: *cursor }
+            }
+            BattlePhase::LearnMoveGiveUpConfirm { .. } => ReusableBattlePhase::LearnMoveGiveUp {
+                yes: battle.shift_prompt_yes,
+            },
+            _ => return None,
+        };
+
+        let mut message_hash = 0x811c_9dc5;
+        if let Some(message) = battle.current_message.as_deref() {
+            hash_byte(&mut message_hash, 1);
+            for &byte in message.as_bytes() {
+                hash_byte(&mut message_hash, byte);
+            }
+        } else {
+            hash_byte(&mut message_hash, 0);
+        }
+        let battle_status3 = battle.battle_state.as_ref().map_or([0, 0], |state| {
+            [state.player.battle_status3, state.enemy.battle_status3]
+        });
+
+        Some(Self {
+            phase,
+            language: game.state.config.language,
+            enemy_species: battle.enemy_species,
+            enemy_level: battle.enemy_level,
+            enemy_hp: battle.enemy_hp,
+            enemy_max_hp: battle.enemy_max_hp,
+            enemy_status: battle.enemy_status,
+            player_species: battle.player_species,
+            player_level: battle.player_level,
+            player_hp: battle.player_hp,
+            player_max_hp: battle.player_max_hp,
+            player_status: battle.player_status,
+            player_balls: battle.player_pokeball_status,
+            enemy_balls: battle.enemy_pokeball_status,
+            ball_visibility: battle.show_player_pokeballs as u8
+                | (battle.show_enemy_pokeballs as u8) << 1,
+            battle_status3,
+            message_hash,
+        })
     }
 }
 
@@ -767,7 +905,7 @@ fn game_main() -> ! {
     let mut last_main_menu: Option<(usize, bool)> = None;
     let mut last_oak: Option<OakVisualKey> = None;
     let mut last_overworld: Option<OverworldVisualKey> = None;
-    let mut last_battle_intro: Option<IntroPhase> = None;
+    let mut last_battle: Option<BattleVisualKey> = None;
     #[cfg(feature = "profiling")]
     let mut profile = ProfileSamples::default();
 
@@ -886,7 +1024,7 @@ fn game_main() -> ! {
             .then(|| OverworldVisualKey::new(game))
             .flatten();
         let battle_screen = game.state.screen == GameScreen::Battle;
-        let battle_intro = battle_screen.then(|| reusable_battle_intro(game)).flatten();
+        let battle = battle_screen.then(|| BattleVisualKey::new(game)).flatten();
         let redraw = if static_splash.is_some() {
             static_splash != last_static_splash
         } else if language_select.is_some() {
@@ -902,7 +1040,7 @@ fn game_main() -> ! {
                 .as_ref()
                 .map_or(true, |key| last_overworld.as_ref() != Some(key))
         } else if battle_screen {
-            battle_intro != last_battle_intro || battle_intro.is_none()
+            battle != last_battle || battle.is_none()
         } else {
             true
         };
@@ -930,7 +1068,7 @@ fn game_main() -> ! {
         last_main_menu = main_menu;
         last_oak = oak;
         last_overworld = overworld;
-        last_battle_intro = battle_intro;
+        last_battle = battle;
         #[cfg(feature = "profiling")]
         let mark4 = profile_now();
 

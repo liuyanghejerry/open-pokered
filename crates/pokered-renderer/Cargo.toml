@@ -12,7 +12,7 @@ gpu = ["dep:pixels", "dep:winit", "dep:winit_input_helper", "dep:image", "dep:er
 [dependencies]
 pokered-data = { path = "../pokered-data" }
 pokered-core = { path = "../pokered-core" }
-dotzuki-engine = { git = "https://github.com/liuyanghejerry/dotzuki", rev = "72e4cf62bd3fb5a5fd27fc7c726ebc6b4343b6c2" }
+dotzuki-engine = { git = "https://github.com/liuyanghejerry/dotzuki", rev = "22bc59de4d78653cb5413b2339026553f9371078" }
 log = "0.4"
 # no_std HashMap (see pokered-data's twin entry).
 hashbrown = { version = "0.15", default-features = false }
@@ -24,13 +24,13 @@ error-iter = { version = "0.4", optional = true }
 
 # Hosted: full dotzuki-renderer (gpu windowing + PNG resource pipeline).
 [target.'cfg(not(target_os = "none"))'.dependencies]
-dotzuki-renderer = { git = "https://github.com/liuyanghejerry/dotzuki", rev = "72e4cf62bd3fb5a5fd27fc7c726ebc6b4343b6c2" }
+dotzuki-renderer = { git = "https://github.com/liuyanghejerry/dotzuki", rev = "22bc59de4d78653cb5413b2339026553f9371078" }
 thiserror = { workspace = true }
 
 # Bare metal (GBA): framebuffer-only engine renderer; assets come from the
 # build-time pre-converted 2bpp registry instead of runtime PNG loading.
 [target.'cfg(target_os = "none")'.dependencies]
-dotzuki-renderer = { git = "https://github.com/liuyanghejerry/dotzuki", rev = "72e4cf62bd3fb5a5fd27fc7c726ebc6b4343b6c2", default-features = false, features = ["framebuffer"] }
+dotzuki-renderer = { git = "https://github.com/liuyanghejerry/dotzuki", rev = "22bc59de4d78653cb5413b2339026553f9371078", default-features = false, features = ["framebuffer"] }
 thiserror = { version = "2", default-features = false }
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]

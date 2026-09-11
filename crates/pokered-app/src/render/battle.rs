@@ -386,6 +386,28 @@ impl BattleVisualEffects {
         self.transition_state.is_some()
     }
 
+    /// Whether the visual state can be reused until the core battle state
+    /// changes. Persistent visibility/palette/substitute latches are stable;
+    /// every state machine that can still change pixels keeps this false.
+    pub fn is_frame_stable(&self) -> bool {
+        self.player_entry.is_none()
+            && self.enemy_entry.is_none()
+            && self.player_exit.is_none()
+            && self.enemy_exit.is_none()
+            && self.attack_lunge.is_none()
+            && self.move_mon_h.is_none()
+            && self.anim_player.is_finished()
+            && self.anim_wait == 0
+            && self.anim_layer.entries.is_empty()
+            && self.pending_applying.is_none()
+            && self.anim_disabled_wait == 0
+            && self.pending_anim_start.is_none()
+            && self.ball_choreo.is_none()
+            && self.transition_state.is_none()
+            && matches!(self.intro_anim, IntroAnimState::None)
+            && !self.fx.is_animating()
+    }
+
     pub fn render_transition(&self, source: &FrameBuffer, dest: &mut FrameBuffer) -> bool {
         if let Some(ref ts) = self.transition_state {
             ts.render(source, dest)
@@ -2872,6 +2894,31 @@ mod tests {
                 );
             }
         }
+    }
+
+    #[test]
+    fn stable_frame_requires_every_visual_animation_to_finish() {
+        let mut effects = BattleVisualEffects::default();
+        assert!(effects.is_frame_stable());
+
+        effects.attack_lunge = Some(AttackLunge {
+            attacker_is_player: true,
+            frame: 0,
+        });
+        assert!(!effects.is_frame_stable());
+        effects.attack_lunge = None;
+
+        effects.fx.apply(
+            &AnimEffect::ShakeScreenH {
+                pixels: 1,
+                frames: 2,
+            },
+            MonSide::Player,
+        );
+        assert!(!effects.is_frame_stable());
+        effects.fx.tick();
+        effects.fx.tick();
+        assert!(effects.is_frame_stable());
     }
 
     #[test]
