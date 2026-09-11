@@ -56,8 +56,8 @@
 
 ## master / 当前分支截图
 
-同一 Ultra Ball 捕获场景的第 12 帧；“前”由 `master@c382739` 的生产渲染器在独立 worktree 中生成，“后”由当前提交的 `item-animation-frames` 生成。
+同一 Ultra Ball 捕获场景投掷过程的 `t+24` 帧；“前”由 `master@c382739` 的生产渲染器在独立 worktree 中生成，“后”由当前提交的 `item-animation-frames` 生成。两侧都保留明确的 `RED used ULTRA BALL!` 文本，球体与飞行位置清晰可见。
 
 | 前 | 后 |
 |---|---|
-| ![前](../../../screenshots/item-use-animation/ultra-ball-before.png) | ![后](../../../screenshots/item-use-animation/ultra-ball-after.png) |
+| ![前](../../../screenshots/item-use-animation/ultra-ball-toss-before.png) | ![后](../../../screenshots/item-use-animation/ultra-ball-toss-after.png) |

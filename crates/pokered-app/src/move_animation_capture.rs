@@ -278,15 +278,25 @@ pub fn capture_item_animation(
     let player = rhydon()?;
     let enemy = rhydon()?;
     let mut screen = BattleScreen::from_parties(true, &[player], &[enemy], None);
-    // Match the retail oracle's static scene exactly. The semantic scenario
-    // is recorded in the manifest; keeping text/HUD constant makes palette
-    // effects comparable by changed-pixel mask without static-text noise.
-    let message = if matches!(scenario, CliItemAnimationScenario::XStatEnemy) {
-        "Enemy RHYDON\nused FURY ATTACK!"
-    } else {
-        "RHYDON\nused POUND!"
-    }
-    .to_string();
+    // Ball screenshots use semantic item text so the saved PR evidence is
+    // self-explanatory. X-stat palette comparisons retain the oracle's static
+    // text because the full-screen palette makes text geometry part of the
+    // dynamic-pixel mask.
+    let message = match scenario {
+        CliItemAnimationScenario::XStatEnemy => {
+            "Enemy RHYDON\nused FURY ATTACK!".to_string()
+        }
+        CliItemAnimationScenario::BallCaught
+        | CliItemAnimationScenario::BallBrokeFree
+        | CliItemAnimationScenario::BallDodged
+        | CliItemAnimationScenario::BallBlocked => {
+            let name = pokered_data::item_data::get_item_data(ball)
+                .map(|data| data.name)
+                .unwrap_or("BALL");
+            format!("RED used {}!", name)
+        }
+        _ => "RHYDON\nused POUND!".to_string(),
+    };
     screen.player_hp = 72;
     screen.player_max_hp = 72;
     screen.enemy_hp = 72;
