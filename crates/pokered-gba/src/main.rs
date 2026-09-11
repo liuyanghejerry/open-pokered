@@ -10,6 +10,7 @@ use agb::input::{Button, ButtonController};
 use dotzuki_engine::render_config::RenderConfig;
 use pokered_app::game::PokemonGame;
 use pokered_app::render::FrameDamageRect;
+use pokered_core::battle::{BattlePhase, IntroPhase};
 use pokered_core::data::wild_data::GameVersion;
 use pokered_core::game_state::{GameScreen, Lang};
 use pokered_core::gamefreak_splash::SplashPhase;
@@ -327,6 +328,23 @@ impl OakVisualKey {
             entrance_step,
             flashing: state.is_flashing(),
         })
+    }
+}
+
+/// Selected intro prompts stop mutating their pixels once their countdown
+/// reaches zero and remain there until the player presses A/B. Dynamic intro
+/// phases and every regular battle phase deliberately stay on the redraw path.
+fn reusable_battle_intro(game: &PokemonGame) -> Option<IntroPhase> {
+    match &game.battle.phase {
+        BattlePhase::Intro {
+            phase:
+                phase @ (IntroPhase::WildReveal
+                | IntroPhase::GhostCantID
+                | IntroPhase::TrainerReveal
+                | IntroPhase::TrainerSendOut),
+            wait_frames: 0,
+        } => Some(*phase),
+        _ => None,
     }
 }
 
@@ -744,6 +762,7 @@ fn game_main() -> ! {
     let mut last_main_menu: Option<(usize, bool)> = None;
     let mut last_oak: Option<OakVisualKey> = None;
     let mut last_overworld: Option<OverworldVisualKey> = None;
+    let mut last_battle_intro: Option<IntroPhase> = None;
     #[cfg(feature = "profiling")]
     let mut profile = ProfileSamples::default();
 
@@ -861,6 +880,8 @@ fn game_main() -> ! {
         let overworld = overworld_screen
             .then(|| OverworldVisualKey::new(game))
             .flatten();
+        let battle_screen = game.state.screen == GameScreen::Battle;
+        let battle_intro = battle_screen.then(|| reusable_battle_intro(game)).flatten();
         let redraw = if static_splash.is_some() {
             static_splash != last_static_splash
         } else if language_select.is_some() {
@@ -875,6 +896,8 @@ fn game_main() -> ! {
             overworld
                 .as_ref()
                 .map_or(true, |key| last_overworld.as_ref() != Some(key))
+        } else if battle_screen {
+            battle_intro != last_battle_intro || battle_intro.is_none()
         } else {
             true
         };
@@ -902,6 +925,7 @@ fn game_main() -> ! {
         last_main_menu = main_menu;
         last_oak = oak;
         last_overworld = overworld;
+        last_battle_intro = battle_intro;
         #[cfg(feature = "profiling")]
         let mark4 = profile_now();
 
