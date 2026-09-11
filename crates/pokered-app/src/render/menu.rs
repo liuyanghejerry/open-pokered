@@ -389,6 +389,12 @@ pub fn draw_bag(state: &BagScreenState, fb: &mut FrameBuffer, lang: Lang) {
                 frame.label(2, 3, &format!("x{:02}", qty), InkColor::Black);
             });
         }
+        BagPhase::MachineBoot { item } => {
+            menus::bag::draw_machine_prompt(item, None, &mut ui, lang);
+        }
+        BagPhase::MachineTeach { item, cursor } => {
+            menus::bag::draw_machine_prompt(item, Some(cursor), &mut ui, lang);
+        }
         BagPhase::Browsing => {}
     }
 }

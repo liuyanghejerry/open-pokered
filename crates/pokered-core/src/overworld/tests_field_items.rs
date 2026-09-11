@@ -25,9 +25,13 @@ fn bicycle_toggles_transport_mode() {
     assert!(!consumed, "the BICYCLE is a key item and is never consumed");
     assert_eq!(screen.state.player.transport, TransportMode::Biking);
     assert!(screen.pending_dialogue.is_some(), "shows a 'got on' message");
+    let page = screen.pending_dialogue.as_ref().unwrap().current().unwrap();
+    assert_eq!((page.line1, page.line2), ("RED got on the", "BICYCLE!"));
 
     screen.use_field_item(ItemId::Bicycle, MapId::PalletTown);
     assert_eq!(screen.state.player.transport, TransportMode::Walking);
+    let page = screen.pending_dialogue.as_ref().unwrap().current().unwrap();
+    assert_eq!((page.line1, page.line2), ("RED got off", "the BICYCLE."));
 }
 
 #[test]
@@ -40,11 +44,24 @@ fn bicycle_refused_while_surfing() {
         TransportMode::Surfing,
         "can't switch to the BICYCLE while SURFING"
     );
+    let first = screen.pending_dialogue.as_ref().unwrap().current().unwrap();
+    assert_eq!((first.line1, first.line2), ("OAK: RED!", "This isn't the"));
+}
+
+#[test]
+fn bicycle_refused_on_an_indoor_tileset() {
+    let mut screen = screen_on(MapId::RedsHouse1F);
+    screen.use_field_item(ItemId::Bicycle, MapId::PalletTown);
+    assert_eq!(screen.state.player.transport, TransportMode::Walking);
+    let page = screen.pending_dialogue.as_ref().unwrap().current().unwrap();
+    assert_eq!((page.line1, page.line2), ("No cycling", "allowed here."));
 }
 
 #[test]
 fn poke_flute_sets_snorlax_fight_flag_on_route12() {
     let mut screen = screen_on(MapId::Route12);
+    screen.state.player.x = 9;
+    screen.state.player.y = 62;
     assert!(!flag_set(&screen, "EVENT_FIGHT_ROUTE12_SNORLAX"));
 
     let consumed = screen.use_field_item(ItemId::PokeFlute, MapId::PalletTown);
@@ -58,11 +75,33 @@ fn poke_flute_sets_snorlax_fight_flag_on_route12() {
     assert!(
         screen.audio_requests.iter().any(|r| matches!(
             r,
-            super::screen::OverworldAudioRequest::PlaySound { sound_id }
-                if sound_id == "SFX_POKEFLUTE"
+            super::screen::OverworldAudioRequest::PlayPokeFlute { map: MapId::Route12 }
         )),
         "requests the SFX_POKEFLUTE jingle"
     );
+}
+
+#[test]
+fn poke_flute_requires_an_adjacent_snorlax_coordinate() {
+    let mut screen = screen_on(MapId::Route12);
+    screen.state.player.x = 1;
+    screen.state.player.y = 1;
+
+    screen.use_field_item(ItemId::PokeFlute, MapId::PalletTown);
+
+    assert!(!flag_set(&screen, "EVENT_FIGHT_ROUTE12_SNORLAX"));
+    assert!(screen.audio_requests.is_empty());
+}
+
+#[test]
+fn poke_flute_accepts_both_route16_flank_coordinates() {
+    for (x, y) in [(25, 10), (27, 10)] {
+        let mut screen = screen_on(MapId::Route16);
+        screen.state.player.x = x;
+        screen.state.player.y = y;
+        screen.use_field_item(ItemId::PokeFlute, MapId::PalletTown);
+        assert!(flag_set(&screen, "EVENT_FIGHT_ROUTE16_SNORLAX"));
+    }
 }
 
 #[test]
@@ -75,8 +114,7 @@ fn poke_flute_does_nothing_off_route() {
     assert!(
         !screen.audio_requests.iter().any(|r| matches!(
             r,
-            super::screen::OverworldAudioRequest::PlaySound { sound_id }
-                if sound_id == "SFX_POKEFLUTE"
+            super::screen::OverworldAudioRequest::PlayPokeFlute { .. }
         )),
         "no jingle when the flute had no effect"
     );
@@ -267,4 +305,3 @@ fn repel_wears_off_after_final_step_with_message() {
         "'REPEL's effect wore off.' shows on the final step"
     );
 }
-

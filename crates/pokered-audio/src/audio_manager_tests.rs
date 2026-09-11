@@ -16,6 +16,20 @@ fn test_new_defaults() {
 }
 
 #[test]
+fn itemfinder_sfx_lifetimes_match_blocking_sequence_constants() {
+    for (id, expected) in [(SfxId::HealingMachine, 11), (SfxId::Purchase, 17)] {
+        let mut mgr = AudioManager::new();
+        mgr.play_sfx(id);
+        let mut frames = 0;
+        while mgr.is_sfx_playing() && frames < 1000 {
+            mgr.update_frame();
+            frames += 1;
+        }
+        assert_eq!(frames, expected, "{id:?}");
+    }
+}
+
+#[test]
 fn test_set_master_volume() {
     let mut mgr = AudioManager::new();
     mgr.set_master_volume(5, 3);
@@ -460,6 +474,26 @@ fn test_play_flute_in_battle_skipped_during_low_health_alarm() {
     mgr.set_low_health_alarm(true);
     mgr.play_flute_in_battle();
     assert!(!mgr.is_sfx_playing());
+}
+
+#[test]
+fn test_overworld_flute_stops_then_resumes_map_music() {
+    let mut mgr = AudioManager::new();
+    mgr.play_music(MusicId::PALLET_TOWN);
+    mgr.play_flute_overworld(MusicId::PALLET_TOWN);
+    assert!(!mgr.is_music_playing());
+    assert!(mgr.is_sfx_playing());
+    assert_eq!(mgr.sequencer.current_sfx_id, SfxId::Pokeflute as u8);
+
+    for _ in 0..600 {
+        mgr.update_frame();
+        if !mgr.is_sfx_playing() {
+            break;
+        }
+    }
+    assert!(!mgr.is_sfx_playing());
+    assert!(mgr.is_music_playing());
+    assert_eq!(mgr.last_music_id(), Some(MusicId::PALLET_TOWN));
 }
 
 // ── Alternate tempo/start music (audio/alternate_tempo.asm) ───────────────

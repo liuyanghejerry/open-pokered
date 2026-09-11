@@ -93,10 +93,13 @@ pub const ITEMFINDER_FOUND_MESSAGE: &str = "Yes! ITEMFINDER\nindicates there's\n
 /// `_ItemfinderFoundNothingText` (data/text/text_6.asm:125).
 pub const ITEMFINDER_NOTHING_MESSAGE: &str = "Nope! ITEMFINDER\nisn't responding.";
 
-/// Frames between ITEMFINDER dings (approximates the original's
-/// PlaySoundWaitForCurrent blocking; same 30-frame spacing the Poké Center
-/// healing machine uses per SFX).
-pub const ITEMFINDER_DING_FRAMES: u8 = 30;
+/// Exact SFX lifetimes at 60 Hz in the Gen-1 audio sequencer. The original
+/// ItemUseItemfinder calls PlaySoundWaitForCurrent after every sound, so the
+/// next sound begins as soon as the previous one ends.
+pub const ITEMFINDER_HEALING_MACHINE_FRAMES: u8 = 11;
+pub const ITEMFINDER_PURCHASE_FRAMES: u8 = 17;
+pub const ITEMFINDER_SEQUENCE_FRAMES: usize =
+    4 * (ITEMFINDER_HEALING_MACHINE_FRAMES as usize + ITEMFINDER_PURCHASE_FRAMES as usize);
 
 #[cfg(test)]
 mod tests {

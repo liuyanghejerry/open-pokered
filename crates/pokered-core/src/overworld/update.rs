@@ -308,7 +308,11 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
     pub fn update_frame(&mut self, input: OverworldInput) -> ScreenAction {
         self.frame_counter = self.frame_counter.wrapping_add(1);
         self.sfx_event = OverworldSfxEvent::None;
-        self.audio_requests.clear();
+        if self.preserve_audio_requests_next_frame {
+            self.preserve_audio_requests_next_frame = false;
+        } else {
+            self.audio_requests.clear();
+        }
 
         // Push the configured text speed into any active dialogue (the frontend
         // sets `text_delay_frames` from the options menu every frame).
@@ -353,29 +357,42 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
         // (vblank-driven in the original).
         self.tile_anim.tick();
 
-        // ITEMFINDER dings: 4× (SFX_HEALING_MACHINE, SFX_PURCHASE), metered
-        // one per ITEMFINDER_DING_FRAMES (ItemUseItemfinder's
-        // PlaySoundWaitForCurrent loop, item_effects.asm:1928-1935).
-        if let Some((remaining, mut frames)) = self.itemfinder_dings {
+        // ITEMFINDER: PlaySoundWaitForCurrent blocks for the exact lifetime of
+        // each HEALING_MACHINE/PURCHASE track, four alternating pairs. The
+        // result text is printed only after the eighth track has ended.
+        if let Some((mut remaining, mut frames)) = self.itemfinder_dings {
+            frames = frames.saturating_sub(1);
             if frames == 0 {
-                let sound_id = if remaining % 2 == 0 {
-                    "SFX_HEALING_MACHINE"
+                if remaining == 0 {
+                    self.itemfinder_dings = None;
+                    let text = self.localize_message(
+                        crate::overworld::hidden_items::ITEMFINDER_FOUND_MESSAGE,
+                    );
+                    self.pending_dialogue = Some(BedroomDialogue::from_message(&text));
                 } else {
-                    "SFX_PURCHASE"
-                };
-                self.audio_requests.push(OverworldAudioRequest::PlaySound {
-                    sound_id: sound_id.to_string(),
-                });
-                frames = crate::overworld::hidden_items::ITEMFINDER_DING_FRAMES;
-                let remaining = remaining - 1;
-                self.itemfinder_dings = if remaining == 0 {
-                    None
-                } else {
-                    Some((remaining, frames))
-                };
+                    let healing = remaining % 2 == 0;
+                    let sound_id = if healing {
+                        "SFX_HEALING_MACHINE"
+                    } else {
+                        "SFX_PURCHASE"
+                    };
+                    self.audio_requests.push(OverworldAudioRequest::PlaySound {
+                        sound_id: sound_id.to_string(),
+                    });
+                    frames = if healing {
+                        crate::overworld::hidden_items::ITEMFINDER_HEALING_MACHINE_FRAMES
+                    } else {
+                        crate::overworld::hidden_items::ITEMFINDER_PURCHASE_FRAMES
+                    };
+                    remaining -= 1;
+                    self.itemfinder_dings = Some((remaining, frames));
+                }
             } else {
-                self.itemfinder_dings = Some((remaining, frames - 1));
+                self.itemfinder_dings = Some((remaining, frames));
             }
+            // The original is still inside ItemUseItemfinder while waiting;
+            // no movement, NPC update, or other input is processed.
+            return ScreenAction::Continue;
         }
 
         // FLASH white-out frames after a dark cave is lit. GBPalWhiteOutWithDelay3

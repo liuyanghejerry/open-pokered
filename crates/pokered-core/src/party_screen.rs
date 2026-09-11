@@ -2,6 +2,13 @@ use crate::battle::state::Pokemon;
 use crate::overworld::hm_effects;
 use pokered_data::moves::MoveId;
 
+fn hp_bar_pixels(hp: u16, max_hp: u16) -> u8 {
+    if hp == 0 || max_hp == 0 {
+        return 0;
+    }
+    (((u32::from(hp) * 48) / u32::from(max_hp)).max(1).min(48)) as u8
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct PartyScreenInput {
     pub up: bool,
@@ -31,6 +38,19 @@ pub enum PartyScreenPhase {
     /// "Which move should be forgotten?" — cursor over the selected mon's
     /// known moves, with a trailing CANCEL row (TM/HM replace-move flow).
     ChooseMove { cursor: u8 },
+    /// Blocking HMCantDeleteText; A/B returns to the same move list.
+    MoveChoiceNotice,
+    /// Gen-1 UpdateHPBar2 animation after using HP medicine on the party
+    /// screen. The result text appears only after the bar reaches its target.
+    ItemHpRestore,
+    /// Blocking result text after applying an item on this party screen.
+    ItemUseNotice { wait_frames: u8 },
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum PartyNoticeReturn {
+    Bag,
+    Party,
 }
 
 /// Why the party screen was opened.
@@ -67,6 +87,8 @@ pub enum PartyScreenAction {
     /// In the `ChooseMove` phase (TM/HM with a full moveset), the player
     /// picked the move slot to forget. The caller performs the replacement.
     MoveForgetChosen { party_index: usize, slot: usize },
+    /// The result text was dismissed and ItemUse should return to the bag.
+    ItemUseFinished,
     Cancelled,
 }
 
@@ -77,6 +99,21 @@ pub struct PartyScreenState {
     phase: PartyScreenPhase,
     mode: PartyScreenMode,
     pending_swap: Option<(usize, usize)>,
+    move_choice_notice: Option<String>,
+    move_choice_resume_cursor: u8,
+    item_use_notice: Option<String>,
+    notice_return: PartyNoticeReturn,
+    item_notice_wait_frames: u8,
+    item_hp_animation: Option<PartyHpAnimation>,
+}
+
+#[derive(Debug, Clone, Copy)]
+struct PartyHpAnimation {
+    party_index: usize,
+    old_hp: u16,
+    target_hp: u16,
+    elapsed: u16,
+    movement_frames: u16,
 }
 
 impl PartyScreenState {
@@ -87,6 +124,12 @@ impl PartyScreenState {
             phase: PartyScreenPhase::Browsing,
             mode: PartyScreenMode::Normal,
             pending_swap: None,
+            move_choice_notice: None,
+            move_choice_resume_cursor: 0,
+            item_use_notice: None,
+            notice_return: PartyNoticeReturn::Bag,
+            item_notice_wait_frames: 0,
+            item_hp_animation: None,
         }
     }
 
@@ -164,6 +207,11 @@ impl PartyScreenState {
                 self.update_switch_target(input, source_index)
             }
             PartyScreenPhase::ChooseMove { cursor } => self.update_choose_move(input, cursor),
+            PartyScreenPhase::MoveChoiceNotice => self.update_move_choice_notice(input),
+            PartyScreenPhase::ItemHpRestore => self.update_item_hp_restore(),
+            PartyScreenPhase::ItemUseNotice { wait_frames } => {
+                self.update_item_use_notice(input, wait_frames)
+            }
         }
     }
 
@@ -171,6 +219,148 @@ impl PartyScreenState {
     /// selected mon (TM/HM teaching when its moveset is full).
     pub fn enter_move_choice(&mut self) {
         self.phase = PartyScreenPhase::ChooseMove { cursor: 0 };
+    }
+
+    pub fn show_move_choice_notice(&mut self, message: String) {
+        self.move_choice_resume_cursor = match self.phase {
+            PartyScreenPhase::ChooseMove { cursor } => cursor,
+            _ => self.move_choice_resume_cursor,
+        };
+        self.move_choice_notice = Some(message);
+        self.phase = PartyScreenPhase::MoveChoiceNotice;
+    }
+
+    pub fn move_choice_notice(&self) -> Option<&str> {
+        self.move_choice_notice.as_deref()
+    }
+
+    pub fn refresh_party(&mut self, party: Vec<Pokemon>) {
+        self.party = party;
+        self.cursor = self.cursor.min(self.party.len().saturating_sub(1));
+    }
+
+    pub fn show_item_use_notice(
+        &mut self,
+        message: String,
+        wait_frames: u8,
+        return_to: PartyNoticeReturn,
+    ) {
+        self.item_use_notice = Some(message);
+        self.notice_return = return_to;
+        self.item_notice_wait_frames = wait_frames;
+        self.item_hp_animation = None;
+        self.phase = PartyScreenPhase::ItemUseNotice { wait_frames };
+    }
+
+    /// Show an HP-healing result using the original party-menu order:
+    /// SFX_HEAL_HP → UpdateHPBar2 (one bar pixel every two frames) → result
+    /// message. `refresh_party` must be called first so the target HP is the
+    /// already-applied persistent value.
+    pub fn show_item_use_notice_with_hp_animation(
+        &mut self,
+        party_index: usize,
+        old_hp: u16,
+        message: String,
+        wait_frames: u8,
+        return_to: PartyNoticeReturn,
+    ) {
+        let Some(mon) = self.party.get_mut(party_index) else {
+            self.show_item_use_notice(message, wait_frames, return_to);
+            return;
+        };
+        let target_hp = mon.hp;
+        let old_hp = old_hp.min(target_hp);
+        let old_pixels = hp_bar_pixels(old_hp, mon.max_hp);
+        let target_pixels = hp_bar_pixels(target_hp, mon.max_hp);
+        if target_hp <= old_hp || target_pixels <= old_pixels {
+            self.show_item_use_notice(message, wait_frames, return_to);
+            return;
+        }
+
+        mon.hp = old_hp;
+        self.item_use_notice = Some(message);
+        self.notice_return = return_to;
+        self.item_notice_wait_frames = wait_frames;
+        self.item_hp_animation = Some(PartyHpAnimation {
+            party_index,
+            old_hp,
+            target_hp,
+            elapsed: 0,
+            movement_frames: u16::from(target_pixels - old_pixels) * 2,
+        });
+        self.phase = PartyScreenPhase::ItemHpRestore;
+    }
+
+    pub fn item_use_notice(&self) -> Option<&str> {
+        self.item_use_notice.as_deref()
+    }
+
+    fn update_item_hp_restore(&mut self) -> PartyScreenAction {
+        let Some(anim) = self.item_hp_animation.as_mut() else {
+            self.phase = PartyScreenPhase::ItemUseNotice {
+                wait_frames: self.item_notice_wait_frames,
+            };
+            return PartyScreenAction::Active;
+        };
+
+        anim.elapsed = anim.elapsed.saturating_add(1);
+        let movement_elapsed = anim.elapsed.min(anim.movement_frames);
+        let hp_delta = u32::from(anim.target_hp - anim.old_hp);
+        let shown_hp = if anim.movement_frames == 0 {
+            anim.target_hp
+        } else {
+            anim.old_hp.saturating_add(
+                ((hp_delta * u32::from(movement_elapsed))
+                    / u32::from(anim.movement_frames)) as u16,
+            )
+        };
+        if let Some(mon) = self.party.get_mut(anim.party_index) {
+            mon.hp = shown_hp;
+        }
+
+        // UpdateHPBar2 ends with Delay3 after the final bar write.
+        if anim.elapsed >= anim.movement_frames.saturating_add(3) {
+            if let Some(mon) = self.party.get_mut(anim.party_index) {
+                mon.hp = anim.target_hp;
+            }
+            self.item_hp_animation = None;
+            self.phase = PartyScreenPhase::ItemUseNotice {
+                wait_frames: self.item_notice_wait_frames,
+            };
+        }
+        PartyScreenAction::Active
+    }
+
+    fn update_item_use_notice(
+        &mut self,
+        input: PartyScreenInput,
+        wait_frames: u8,
+    ) -> PartyScreenAction {
+        if wait_frames > 0 {
+            self.phase = PartyScreenPhase::ItemUseNotice {
+                wait_frames: wait_frames - 1,
+            };
+            return PartyScreenAction::Active;
+        }
+        if input.a || input.b {
+            self.item_use_notice = None;
+            self.phase = PartyScreenPhase::Browsing;
+            return match self.notice_return {
+                PartyNoticeReturn::Bag => PartyScreenAction::ItemUseFinished,
+                PartyNoticeReturn::Party => PartyScreenAction::Active,
+            };
+        }
+        PartyScreenAction::Active
+    }
+
+    fn update_move_choice_notice(&mut self, input: PartyScreenInput) -> PartyScreenAction {
+        if input.a || input.b {
+            self.move_choice_notice = None;
+            self.phase = PartyScreenPhase::ChooseMove {
+                cursor: self.move_choice_resume_cursor,
+            };
+        }
+        PartyScreenAction::Active
     }
 
     /// Known (non-empty) moves of the currently selected mon, in slot order.
@@ -262,6 +452,7 @@ impl PartyScreenState {
         }
 
         if input.a {
+            self.move_choice_resume_cursor = cursor;
             self.phase = PartyScreenPhase::Browsing;
             if cursor < num_moves {
                 return PartyScreenAction::MoveForgetChosen {
@@ -1140,6 +1331,66 @@ pub(crate) mod tests {
         });
         assert_eq!(result, PartyScreenAction::Active);
         assert_eq!(screen.phase(), PartyScreenPhase::Browsing);
+    }
+}
+
+#[cfg(test)]
+mod move_choice_notice_tests {
+    use super::*;
+
+    #[test]
+    fn hm_delete_notice_returns_to_same_move_cursor() {
+        let mut screen = PartyScreenState::new(Vec::new());
+        screen.phase = PartyScreenPhase::ChooseMove { cursor: 2 };
+        screen.show_move_choice_notice("HM techniques\ncan't be deleted!".to_string());
+        assert_eq!(screen.phase(), PartyScreenPhase::MoveChoiceNotice);
+        assert_eq!(
+            screen.move_choice_notice(),
+            Some("HM techniques\ncan't be deleted!")
+        );
+        screen.update_frame(PartyScreenInput {
+            a: true,
+            ..PartyScreenInput::none()
+        });
+        assert_eq!(screen.phase(), PartyScreenPhase::ChooseMove { cursor: 2 });
+    }
+}
+
+#[cfg(test)]
+mod item_hp_animation_tests {
+    use super::*;
+    use crate::pokemon::stats::create_pokemon;
+    use pokered_data::species::Species;
+
+    #[test]
+    fn healing_animates_bar_before_revealing_result_text() {
+        let mut mon = create_pokemon(Species::Bulbasaur, 20, [0xFF, 0xFF]).unwrap();
+        mon.max_hp = 40;
+        mon.hp = 30;
+        let mut screen = PartyScreenState::new(vec![mon]);
+        screen.show_item_use_notice_with_hp_animation(
+            0,
+            10,
+            "HP restored!".to_string(),
+            50,
+            PartyNoticeReturn::Bag,
+        );
+
+        assert_eq!(screen.phase(), PartyScreenPhase::ItemHpRestore);
+        assert_eq!(screen.party()[0].hp, 10);
+        // 12→36 pixels = 24 pixels × 2 frames, then Delay3.
+        for _ in 0..50 {
+            screen.update_frame(PartyScreenInput::none());
+        }
+        assert_eq!(screen.phase(), PartyScreenPhase::ItemHpRestore);
+        assert!(screen.party()[0].hp > 10);
+        screen.update_frame(PartyScreenInput::none());
+        assert_eq!(
+            screen.phase(),
+            PartyScreenPhase::ItemUseNotice { wait_frames: 50 }
+        );
+        assert_eq!(screen.party()[0].hp, 30);
+        assert_eq!(screen.item_use_notice(), Some("HP restored!"));
     }
 }
 

@@ -64,6 +64,14 @@ fn current_message(battle: &BattleScreen) -> String {
     battle.current_message.clone().unwrap_or_default()
 }
 
+fn text_resumes_with_enemy_item_turn(battle: &BattleScreen) -> bool {
+    matches!(
+        &battle.phase,
+        BattlePhase::ShowingText { next_phase, .. }
+            if **next_phase == BattlePhase::EnemyFreeTurnAfterItem
+    )
+}
+
 #[test]
 fn potion_from_filtered_battle_bag_preserves_key_items() {
     for is_wild in [false, true] {
@@ -85,10 +93,76 @@ fn potion_from_filtered_battle_bag_preserves_key_items() {
     }
 }
 
+#[test]
+fn successful_medicine_spends_the_player_turn_and_requests_heal_sfx() {
+    use super::BattleItemSfx;
+
+    let mut mon = create_pokemon(Species::Bulbasaur, 20, [0x9A, 0x78]).unwrap();
+    mon.hp = mon.hp.saturating_sub(10);
+    let player = vec![mon];
+    let enemy = vec![create_pokemon(Species::Rattata, 5, [0x9A, 0x78]).unwrap()];
+    let mut battle = BattleScreen::from_parties(true, &player, &enemy, None);
+    battle.player_bag.add_item(ItemId::Potion, 1).unwrap();
+    battle.phase = BattlePhase::PlayerMenu;
+
+    use_first_bag_item(&mut battle);
+    battle.update_frame(input(false, true));
+
+    assert_eq!(bag_quantity(&battle, ItemId::Potion), 0);
+    assert!(text_resumes_with_enemy_item_turn(&battle));
+    assert_eq!(
+        battle.take_item_sfx_pending(),
+        Some(BattleItemSfx::HealHp)
+    );
+}
+
+#[test]
+fn capped_x_stat_still_consumes_and_queues_the_original_animation() {
+    let player = vec![create_pokemon(Species::Bulbasaur, 20, [0x9A, 0x78]).unwrap()];
+    let enemy = vec![create_pokemon(Species::Rattata, 5, [0x9A, 0x78]).unwrap()];
+    let mut battle = BattleScreen::from_parties(true, &player, &enemy, None);
+    battle.battle_state.as_mut().unwrap().player.stat_stages.attack = 6;
+    battle.player_bag.add_item(ItemId::XAttack, 1).unwrap();
+    battle.phase = BattlePhase::PlayerMenu;
+
+    use_first_bag_item(&mut battle);
+
+    assert_eq!(bag_quantity(&battle, ItemId::XAttack), 0);
+    assert_eq!(battle.battle_state.as_ref().unwrap().player.stat_stages.attack, 6);
+    assert_eq!(battle.take_anim_event(), Some(BattleAnimEvent::XStatItem));
+    assert!(text_resumes_with_enemy_item_turn(&battle));
+}
+
+#[test]
+fn repeated_x_accuracy_is_consumed_without_x_stat_animation() {
+    use crate::battle::state::status2;
+
+    let player = vec![create_pokemon(Species::Bulbasaur, 20, [0x9A, 0x78]).unwrap()];
+    let enemy = vec![create_pokemon(Species::Rattata, 5, [0x9A, 0x78]).unwrap()];
+    let mut battle = BattleScreen::from_parties(true, &player, &enemy, None);
+    battle.player_bag.add_item(ItemId::XAccuracy, 2).unwrap();
+
+    for remaining in [1, 0] {
+        battle.phase = BattlePhase::PlayerMenu;
+        battle.bag_menu = None;
+        use_first_bag_item(&mut battle);
+        assert_eq!(bag_quantity(&battle, ItemId::XAccuracy), remaining);
+        assert!(battle
+            .battle_state
+            .as_ref()
+            .unwrap()
+            .player
+            .has_status2(status2::USING_X_ACCURACY));
+        assert_eq!(battle.take_anim_event(), None);
+        assert!(text_resumes_with_enemy_item_turn(&battle));
+    }
+}
+
 // ── ThrowBallAtTrainerMon (item_effects.asm:2292-2306) ─────────────────────
 
-/// In a trainer battle, throwing a ball plays the toss-only animation, prints
-/// the two blocked texts, and CONSUMES the ball (`jr RemoveUsedItem`).
+/// In a trainer battle, throwing a ball plays the toss + trainer-block
+/// animation, prints the two blocked texts, and CONSUMES the ball
+/// (`jr RemoveUsedItem`).
 #[test]
 fn trainer_ball_is_blocked_consumes_ball_and_animates() {
     let player = vec![create_pokemon(Species::Rattata, 10, [0x9A, 0x78]).unwrap()];
@@ -103,11 +177,12 @@ fn trainer_ball_is_blocked_consumes_ball_and_animates() {
     // The ball is spent: 2 → 1.
     assert_eq!(bag_quantity(&battle, ItemId::PokeBall), 1);
     assert_eq!(bag_quantity(&battle, ItemId::HelixFossil), 1);
-    // TOSS_ANIM: the $10 toss-only choreography, no shakes.
+    // TossBallAnimation `.BlockBall`: TOSS_ANIM, SFX_FAINT_THUD,
+    // BLOCKBALL_ANIM; no shakes.
     assert!(matches!(
         battle.take_anim_event(),
         Some(BattleAnimEvent::Ball {
-            outcome: BallAnimOutcome::Dodged,
+            outcome: BallAnimOutcome::Blocked,
             shakes: 0,
             ..
         })

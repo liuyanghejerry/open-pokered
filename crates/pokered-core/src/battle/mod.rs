@@ -27,6 +27,7 @@ use dotzuki_engine::battle::rng::BattleRng as _;
 
 #[cfg(test)]
 mod menu_tests;
+#[cfg(test)]
 mod item_fidelity_tests;
 #[cfg(test)]
 mod link_battle_driver_tests;
@@ -408,6 +409,10 @@ pub enum BattlePhase {
         /// Phase to transition to after all messages are shown.
         next_phase: Box<BattlePhase>,
     },
+    /// A successfully used battle item costs the player's action. This
+    /// one-frame handoff runs the opponent's free move only after the item's
+    /// blocking text/animation has completed.
+    EnemyFreeTurnAfterItem,
     /// Player chooses which party member to switch to.
     PartySelect,
     /// Player selected a party member, showing SWITCH/STATS/CANCEL menu.
@@ -918,6 +923,9 @@ pub enum BallAnimOutcome {
     BrokeFree,
     /// `$10`: an unidentified GHOST dodges the ball — toss only.
     Dodged,
+    /// Trainer battle: `TossBallAnimation` plays the normal low toss, then
+    /// `SFX_FAINT_THUD` and `BLOCKBALL_ANIM` as the trainer knocks it away.
+    Blocked,
 }
 
 /// Non-move battle animation requests (data/moves/animations.asm ids $A6+),
@@ -940,6 +948,14 @@ pub enum BattleAnimEvent {
     /// XSTATITEM_ANIM on the player's mon — a successful X-stat item use
     /// (`ItemUseXStat` → `StatModifierUpEffect`, engine/items/item_effects.asm:1657).
     XStatItem,
+}
+
+/// Sound requests produced by the original item-use routines outside the
+/// move-animation command stream.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum BattleItemSfx {
+    HealHp,
+    HealAilment,
 }
 
 #[derive(Clone)]
@@ -1055,6 +1071,7 @@ pub struct BattleScreen {
     /// layer polls this with [`Self::take_poke_flute_sfx_pending`] and plays
     /// `AudioManager::play_flute_in_battle`.
     pub poke_flute_sfx_pending: bool,
+    pub pending_item_sfx: Option<BattleItemSfx>,
     /// Localize battle messages to Chinese before pagination (Gen-1 Chinese
     /// fan-translation behavior). Set by the app from the language selection at
     /// battle start; default `false` keeps every message in the original
@@ -1259,6 +1276,7 @@ impl BattleScreen {
             player_box_full: false,
             hooked: false,
             poke_flute_sfx_pending: false,
+            pending_item_sfx: None,
             pending_anim_events: std::collections::VecDeque::new(),
             hp_bar_anim: HpBarAnim::default(),
             battle_style: BattleStyle::Shift,
@@ -1356,6 +1374,7 @@ impl BattleScreen {
             player_box_full: false,
             hooked: false,
             poke_flute_sfx_pending: false,
+            pending_item_sfx: None,
             pending_anim_events: std::collections::VecDeque::new(),
             hp_bar_anim: HpBarAnim::default(),
             battle_style: BattleStyle::Shift,
@@ -1452,6 +1471,10 @@ impl BattleScreen {
     /// [`Self::poke_flute_sfx_pending`]). Returns `true` at most once per use.
     pub fn take_poke_flute_sfx_pending(&mut self) -> bool {
         core::mem::take(&mut self.poke_flute_sfx_pending)
+    }
+
+    pub fn take_item_sfx_pending(&mut self) -> Option<BattleItemSfx> {
+        self.pending_item_sfx.take()
     }
 
     /// Pop the oldest pending non-move battle animation request (see
@@ -2159,6 +2182,10 @@ impl BattleScreen {
                 }
                 ScreenAction::Continue
             }
+            BattlePhase::EnemyFreeTurnAfterItem => {
+                self.run_enemy_free_turn_stack(Vec::new(), None);
+                ScreenAction::Continue
+            }
             BattlePhase::PartySelect => {
                 if input.b {
                     self.battle_menu = BattleMenuState::new();
@@ -2776,8 +2803,7 @@ learn {learn_name}!")];
                     self.pending_anim_events.push_back(BattleAnimEvent::Ball {
                         ball: item_id,
                         shakes: 0,
-                        // $10: toss-only choreography (same as TOSS_ANIM).
-                        outcome: BallAnimOutcome::Dodged,
+                        outcome: BallAnimOutcome::Blocked,
                     });
                     self.consume_selected_item();
                     self.bag_menu = None;
@@ -2786,7 +2812,7 @@ learn {learn_name}!")];
                             "The trainer\nblocked the BALL!".to_string(),
                             "Don't be a thief!".to_string(),
                         ],
-                        BattlePhase::PlayerMenu,
+                        BattlePhase::EnemyFreeTurnAfterItem,
                     );
                     return;
                 }
@@ -2883,7 +2909,7 @@ learn {learn_name}!")];
         }
 
         let category = ItemCategory::from_item(item_id);
-        let result_msg = if let Some(ref mut bs) = self.battle_state {
+        let (result_msg, item_used) = if let Some(ref mut bs) = self.battle_state {
             let mon = &mut bs.player.party[pokemon_index];
             match category {
                 ItemCategory::Healing => {
@@ -2891,15 +2917,15 @@ learn {learn_name}!")];
                     match use_healing_item(mon, item_id) {
                         HealResult::Healed { hp_restored } => {
                             self.consume_selected_item();
-                            format!("HP restored by {}!", hp_restored)
+                            (format!("HP restored by {}!", hp_restored), true)
                         }
                         HealResult::Revived { hp_restored } => {
                             self.consume_selected_item();
-                            format!("Revived! HP restored by {}!", hp_restored)
+                            (format!("Revived! HP restored by {}!", hp_restored), true)
                         }
-                        HealResult::AlreadyFullHp => "Already at full HP!".to_string(),
-                        HealResult::NotFainted => "Not fainted!".to_string(),
-                        HealResult::NotApplicable => "No effect!".to_string(),
+                        HealResult::AlreadyFullHp => ("Already at full HP!".to_string(), false),
+                        HealResult::NotFainted => ("Not fainted!".to_string(), false),
+                        HealResult::NotApplicable => ("No effect!".to_string(), false),
                     }
                 }
                 ItemCategory::StatusCure => {
@@ -2907,10 +2933,10 @@ learn {learn_name}!")];
                     match use_status_cure(mon, item_id) {
                         StatusCureResult::Cured => {
                             self.consume_selected_item();
-                            "Status cured!".to_string()
+                            ("Status cured!".to_string(), true)
                         }
-                        StatusCureResult::NoEffect => "No status to cure!".to_string(),
-                        StatusCureResult::NotApplicable => "No effect!".to_string(),
+                        StatusCureResult::NoEffect => ("No status to cure!".to_string(), false),
+                        StatusCureResult::NotApplicable => ("No effect!".to_string(), false),
                     }
                 }
                 ItemCategory::Revive => {
@@ -2918,20 +2944,33 @@ learn {learn_name}!")];
                     match use_healing_item(mon, item_id) {
                         HealResult::Revived { hp_restored } => {
                             self.consume_selected_item();
-                            format!("Revived! HP restored by {}!", hp_restored)
+                            (format!("Revived! HP restored by {}!", hp_restored), true)
                         }
-                        _ => "Can't revive that!".to_string(),
+                        _ => ("Can't revive that!".to_string(), false),
                     }
                 }
-                _ => "No effect!".to_string(),
+                _ => ("No effect!".to_string(), false),
             }
         } else {
-            "No effect!".to_string()
+            ("No effect!".to_string(), false)
         };
 
         self.sync_display_from_state();
         self.bag_menu = None;
-        self.show_text_then(vec![result_msg], BattlePhase::PlayerMenu);
+        if item_used {
+            self.pending_item_sfx = Some(match category {
+                ItemCategory::StatusCure => BattleItemSfx::HealAilment,
+                _ => BattleItemSfx::HealHp,
+            });
+        }
+        self.show_text_then(
+            vec![result_msg],
+            if item_used {
+                BattlePhase::EnemyFreeTurnAfterItem
+            } else {
+                BattlePhase::PlayerMenu
+            },
+        );
     }
 
     /// Apply a PP-restore item chosen in battle (ItemUsePPRestore's
@@ -2956,19 +2995,29 @@ learn {learn_name}!")];
             PpRestoreResult::NotApplicable
         };
 
-        let msg = match result {
+        let (msg, item_used) = match result {
             PpRestoreResult::Restored { .. } | PpRestoreResult::AllRestored { .. } => {
                 self.consume_selected_item();
                 // _PPRestoredText (data/text/text_6.asm:152).
-                "PP was restored.".to_string()
+                ("PP was restored.".to_string(), true)
             }
             // ItemUseNoEffect — the item is NOT used (`.noEffect`).
-            _ => "It won't have any effect.".to_string(),
+            _ => ("It won't have any effect.".to_string(), false),
         };
         self.move_menu = None;
         self.bag_menu = None;
         self.sync_display_from_state();
-        self.show_text_then(vec![msg], BattlePhase::PlayerMenu);
+        if item_used {
+            self.pending_item_sfx = Some(BattleItemSfx::HealAilment);
+        }
+        self.show_text_then(
+            vec![msg],
+            if item_used {
+                BattlePhase::EnemyFreeTurnAfterItem
+            } else {
+                BattlePhase::PlayerMenu
+            },
+        );
     }
 
     fn consume_selected_item(&mut self) {
@@ -3247,6 +3296,7 @@ learn {learn_name}!")];
             // a Great/Ultra/Safari draw above threshold is REDRAWN, never a fail.
             let result = try_capture_with_rolls(&ctx, &mut rand::random, rand::random());
             self.consume_selected_item();
+            self.pending_item_sfx = Some(BattleItemSfx::HealAilment);
             // wPokeBallAnimData: $43 caught (3 shakes) / $20 missed /
             // $61-$63 broke free after N shakes (ItemUseBall's
             // .setAnimData). The frontend stages the choreography from this.
@@ -3282,7 +3332,7 @@ learn {learn_name}!")];
                         3 => "Shoot! It was so close too!",
                         _ => "It broke free!",
                     };
-                    (shake_msg.to_string(), BattlePhase::PlayerMenu)
+                    (shake_msg.to_string(), BattlePhase::EnemyFreeTurnAfterItem)
                 }
             };
             self.bag_menu = None;
@@ -3292,6 +3342,10 @@ learn {learn_name}!")];
 
     fn use_battle_stat_item(&mut self, item_id: ItemId) {
         use crate::items::battle_items::{use_battle_item, BattleItemResult};
+        let is_x_stat = matches!(
+            item_id,
+            ItemId::XAttack | ItemId::XDefend | ItemId::XSpeed | ItemId::XSpecial
+        );
         // X-stat items route through the same `StatModifierUpEffect` as a stat-up
         // move (engine/items/item_effects.asm `ItemUseXStat` → `farcall
         // StatModifierUpEffect`), so a successful one ALSO re-applies the badge
@@ -3308,30 +3362,19 @@ learn {learn_name}!")];
                         Some(*stat),
                     );
                 }
-                // X Accuracy maps to ACCURACY_UP1_EFFECT in the original — the
-                // same effect path, so it too triggers the boost round (no stat
-                // reset: accuracy is not one of the four boosted stats).
-                BattleItemResult::FlagSet if item_id == ItemId::XAccuracy => {
-                    crate::battle::badge_boosts::reapply_on_stage_change_legacy(
-                        &mut bs.player,
-                        badges,
-                        None,
-                    );
-                }
                 _ => {}
             }
             self.consume_selected_item();
+            self.pending_item_sfx = Some(BattleItemSfx::HealAilment);
             // ItemUseXStat plays XSTATITEM_ANIM on the player's mon
             // (engine/items/item_effects.asm:1657, then StatModifierUpEffect
-            // runs wPlayerMoveNum = XSTATITEM_ANIM). Only a successful use
-            // animates — "No effect!" / "Can't use that!" print directly.
-            if matches!(
-                result,
-                BattleItemResult::StatBoosted { .. } | BattleItemResult::FlagSet
-            ) {
+            // runs wPlayerMoveNum = XSTATITEM_ANIM). The animation runs even
+            // at a capped stage; X Accuracy/Guard Spec/Dire Hit only set bits
+            // and do not enter this animation path.
+            if is_x_stat {
                 self.pending_anim_events.push_back(BattleAnimEvent::XStatItem);
             }
-            let msg = match result {
+            let effect_msg = match result {
                 BattleItemResult::StatBoosted { stat } => {
                     let stat_name = match stat {
                         crate::battle::stat_stages::StatIndex::Attack => "ATTACK",
@@ -3348,14 +3391,24 @@ learn {learn_name}!")];
                 BattleItemResult::NotApplicable => "Can't use that!".to_string(),
                 BattleItemResult::Escaped => unreachable!(),
             };
+            let player = self
+                .player_name
+                .clone()
+                .unwrap_or_else(|| "RED".to_string());
+            let item_name = pokered_data::lang_data::item_name(item_id, false);
+            let mut messages = vec![format!("{player} used\n{item_name}!")];
+            if is_x_stat {
+                messages.push(effect_msg);
+            }
             self.bag_menu = None;
             self.sync_display_from_state();
-            self.show_text_then(vec![msg], BattlePhase::PlayerMenu);
+            self.show_text_then(messages, BattlePhase::EnemyFreeTurnAfterItem);
         }
     }
 
     fn use_poke_doll(&mut self) {
         self.consume_selected_item();
+        self.pending_item_sfx = Some(BattleItemSfx::HealAilment);
         // ItemUsePokeDoll sets wEscapedFromBattle but never wBattleResult —
         // recorded so escape outcomes can be told apart from a menu run.
         self.escaped_via_poke_doll = true;
@@ -3372,8 +3425,8 @@ learn {learn_name}!")];
 
     fn use_poke_flute(&mut self) {
         if let Some(ref mut bs) = self.battle_state {
-            let player_was_asleep = bs.player.active_mon().status.is_sleep();
-            let enemy_was_asleep = bs.enemy.active_mon().status.is_sleep();
+            let player_was_asleep = bs.player.party.iter().any(|mon| mon.status.is_sleep());
+            let enemy_was_asleep = bs.enemy.party.iter().any(|mon| mon.status.is_sleep());
 
             if player_was_asleep || enemy_was_asleep {
                 for mon in bs.player.party.iter_mut() {
@@ -3398,13 +3451,13 @@ learn {learn_name}!")];
                         "Played the POKE FLUTE!".to_string(),
                         "All sleeping POKeMON woke up!".to_string(),
                     ],
-                    BattlePhase::PlayerMenu,
+                    BattlePhase::EnemyFreeTurnAfterItem,
                 );
             } else {
                 self.bag_menu = None;
                 self.show_text_then(
                     vec!["Played the POKE FLUTE!".to_string()],
-                    BattlePhase::PlayerMenu,
+                    BattlePhase::EnemyFreeTurnAfterItem,
                 );
             }
         }

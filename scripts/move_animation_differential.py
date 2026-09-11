@@ -219,6 +219,10 @@ class HookContext:
     started: bool = False
     finished: bool = False
     resolved_id: int | None = None
+    capture_index: int = 0
+    capture_start_index: int = 0
+    sound_events: list[dict[str, int]] | None = None
+    memory_overrides: dict[str, int] | None = None
 
     def address(self, name: str) -> int:
         return self.symbols[name][1]
@@ -287,8 +291,14 @@ class ReferenceRunner:
             memory = ctx.pyboy.memory
             if memory[ctx.address("hWhoseTurn")] != ctx.whose_turn or ctx.started:
                 return
+            # Item/non-move audits reuse this runner. Apply scratch-RAM values
+            # at the semantic animation entry because the intervening FIGHT
+            # menu and turn setup legitimately reuse wCurItem and related RAM.
+            for symbol, value in (ctx.memory_overrides or {}).items():
+                memory[ctx.address(symbol)] = value
             memory[ctx.address("wAnimationID")] = ctx.requested_id
             memory[ctx.address("wAnimationType")] = 0
+            ctx.capture_start_index = ctx.capture_index
             ctx.started = True
 
         def at_play_animation(ctx: HookContext) -> None:
@@ -300,10 +310,20 @@ class ReferenceRunner:
             if ctx.started and memory[ctx.address("hWhoseTurn")] == ctx.whose_turn:
                 ctx.finished = True
 
+        def at_play_sound(ctx: HookContext) -> None:
+            if ctx.started and not ctx.finished and ctx.sound_events is not None:
+                ctx.sound_events.append(
+                    {
+                        "capture_index": ctx.capture_index - ctx.capture_start_index + 1,
+                        "id": int(ctx.pyboy.register_file.A),
+                    }
+                )
+
         for name, callback in (
             ("MoveAnimation", at_move_animation),
             ("PlayAnimation", at_play_animation),
             ("MoveAnimation.animationFinished", at_animation_finished),
+            ("PlaySound", at_play_sound),
         ):
             bank, address = self.symbols[name]
             self.pyboy.hook_register(bank, address, callback, context)
@@ -330,7 +350,14 @@ class ReferenceRunner:
             )
         return entries
 
-    def capture(self, move_id: int, side: str, evidence_dir: Path | None) -> dict[str, Any]:
+    def capture(
+        self,
+        move_id: int,
+        side: str,
+        evidence_dir: Path | None,
+        *,
+        memory_overrides: dict[str, int] | None = None,
+    ) -> dict[str, Any]:
         pyboy = self.pyboy
         pyboy.load_state(io.BytesIO(self.stable_state))
         ctx = self.context
@@ -339,6 +366,10 @@ class ReferenceRunner:
         ctx.started = False
         ctx.finished = False
         ctx.resolved_id = None
+        ctx.capture_index = 0
+        ctx.capture_start_index = 0
+        ctx.sound_events = []
+        ctx.memory_overrides = memory_overrides
 
         memory = pyboy.memory
         player_speed = self._addr("wBattleMonSpeed")
@@ -360,6 +391,7 @@ class ReferenceRunner:
         pyboy.button_press("a")
         released = False
         for tick_index in range(1, self.max_frames + 1):
+            ctx.capture_index = tick_index
             pyboy.tick()
             if tick_index == 2:
                 pyboy.button_release("a")
@@ -383,7 +415,13 @@ class ReferenceRunner:
             previous = current
         else:
             raise RuntimeError(
-                f"reference move {move_id} ({side}) did not finish within {self.max_frames} frames"
+                f"reference move {move_id} ({side}) did not finish within {self.max_frames} frames; "
+                f"started={ctx.started}, finished={ctx.finished}, "
+                f"pc=${int(pyboy.register_file.PC):04x}, "
+                f"wAnimationID=${int(memory[self._addr('wAnimationID')]):02x}, "
+                f"wPokeBallAnimData=${int(memory[self._addr('wPokeBallAnimData')]):02x}, "
+                f"wCurItem=${int(memory[self._addr('wCurItem')]):02x}, "
+                f"wIsInBattle=${int(memory[self._addr('wIsInBattle')]):02x}"
             )
         if not released:
             pyboy.button_release("a")
@@ -394,6 +432,7 @@ class ReferenceRunner:
             oam_trace,
             resolved_animation_id=ctx.resolved_id,
         )
+        result["sfx_events"] = ctx.sound_events
         if evidence_dir is not None:
             write_json(evidence_dir / "manifest.json", result)
         return result
