@@ -2,9 +2,24 @@ use crate::alloc_prelude::*;
 use pokered_core::battle::state::Pokemon;
 use pokered_data::ui_layout::schema::BattlePartyDefaultLayout;
 
-use crate::engine::{InkColor, Painter, Ui};
+use crate::engine::{InkColor, Painter, Rgba, TilePos, Ui};
 
 const MAX_VISIBLE: usize = 4;
+
+fn visible_start(party_len: usize, cursor: usize) -> usize {
+    if party_len <= MAX_VISIBLE {
+        0
+    } else {
+        cursor
+            .saturating_sub(1)
+            .min(party_len.saturating_sub(MAX_VISIBLE))
+    }
+}
+
+/// Return the selected Pokémon's row in the four-entry viewport.
+pub fn cursor_visual_row(party_len: usize, cursor: usize) -> Option<usize> {
+    (cursor < party_len).then(|| cursor - visible_start(party_len, cursor))
+}
 
 pub fn draw<P: Painter>(party: &[Pokemon], cursor: usize, layout: &BattlePartyDefaultLayout, ui: &mut Ui<P>, is_zh: bool) {
     let party_len = party.len();
@@ -12,12 +27,7 @@ pub fn draw<P: Painter>(party: &[Pokemon], cursor: usize, layout: &BattlePartyDe
         return;
     }
 
-    let visible_start = if party_len <= MAX_VISIBLE {
-        0
-    } else {
-        let ideal_start = cursor.saturating_sub(1);
-        ideal_start.min(party_len - MAX_VISIBLE)
-    };
+    let visible_start = visible_start(party_len, cursor);
 
     ui.text_box(layout.box_0.rect, layout.box_0.color, true, |frame| {
         let cursor_def = &layout.cursor;
@@ -48,4 +58,28 @@ pub fn draw<P: Painter>(party: &[Pokemon], cursor: usize, layout: &BattlePartyDe
             }
         }
     });
+}
+
+/// Repaint only the changed cursor cells when the party viewport did not
+/// scroll. `previous_row` and `current_row` are viewport-relative rows.
+pub fn redraw_cursor<P: Painter>(
+    previous_row: usize,
+    current_row: usize,
+    layout: &BattlePartyDefaultLayout,
+    painter: &mut P,
+) {
+    let cursor = &layout.cursor;
+    let position = |row: usize| {
+        TilePos::new(
+            layout.box_0.rect.tx + 1 + cursor.tx,
+            layout.box_0.rect.ty + 1 + cursor.base_ty + row as u32 * cursor.row_step,
+        )
+    };
+    let old = position(previous_row);
+    painter.draw_pixel_rect(old.tx * 8, old.ty * 8, 8, 9, Rgba::INK_WHITE);
+    painter.draw_glyph(
+        position(current_row),
+        cursor.glyph,
+        cursor.color.into(),
+    );
 }

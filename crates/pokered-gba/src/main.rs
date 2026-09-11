@@ -372,6 +372,8 @@ struct BattleVisualKey {
     enemy_balls: [PokeballSlotStatus; 6],
     ball_visibility: u8,
     safari_balls: u8,
+    party_len: u8,
+    party_hash: u32,
     battle_status3: [u8; 2],
     message_hash: u32,
 }
@@ -463,6 +465,28 @@ impl BattleVisualKey {
         let battle_status3 = battle.battle_state.as_ref().map_or([0, 0], |state| {
             [state.player.battle_status3, state.enemy.battle_status3]
         });
+        let mut party_hash = 0x811c_9dc5;
+        let party_len = if matches!(
+            phase,
+            ReusableBattlePhase::PartySelect { .. }
+                | ReusableBattlePhase::ShiftSwitchSelect { .. }
+                | ReusableBattlePhase::PlayerFaintSwitch { .. }
+                | ReusableBattlePhase::ItemTargetSelect { .. }
+        ) {
+            battle.battle_state.as_ref().map_or(0, |state| {
+                for mon in state.player.party.iter() {
+                    hash_byte(&mut party_hash, mon.species as u8);
+                    for byte in mon.nickname {
+                        hash_byte(&mut party_hash, byte);
+                    }
+                    hash_u16(&mut party_hash, mon.hp);
+                    hash_u16(&mut party_hash, mon.max_hp);
+                }
+                state.player.party.len() as u8
+            })
+        } else {
+            0
+        };
 
         Some(Self {
             phase,
@@ -482,6 +506,8 @@ impl BattleVisualKey {
             ball_visibility: battle.show_player_pokeballs as u8
                 | (battle.show_enemy_pokeballs as u8) << 1,
             safari_balls: battle.safari_menu.safari_balls_remaining,
+            party_len,
+            party_hash,
             battle_status3,
             message_hash,
         })
@@ -617,6 +643,72 @@ impl BattleVisualKey {
         previous_without_cursor.phase = ReusableBattlePhase::BagSelect { cursor: 0 };
         (current_without_cursor == previous_without_cursor)
             .then_some((previous_cursor, cursor))
+    }
+
+    /// Return viewport-relative cursor rows when a party selector changes
+    /// selection without scrolling or changing any visible party data.
+    fn party_menu_cursor_change_from(&self, previous: &Self) -> Option<(usize, usize)> {
+        let (cursor, previous_cursor, normalized_phase) = match (self.phase, previous.phase) {
+            (
+                ReusableBattlePhase::PartySelect { cursor },
+                ReusableBattlePhase::PartySelect {
+                    cursor: previous_cursor,
+                },
+            ) => (
+                cursor,
+                previous_cursor,
+                ReusableBattlePhase::PartySelect { cursor: 0 },
+            ),
+            (
+                ReusableBattlePhase::ShiftSwitchSelect { cursor },
+                ReusableBattlePhase::ShiftSwitchSelect {
+                    cursor: previous_cursor,
+                },
+            ) => (
+                cursor,
+                previous_cursor,
+                ReusableBattlePhase::ShiftSwitchSelect { cursor: 0 },
+            ),
+            (
+                ReusableBattlePhase::PlayerFaintSwitch { cursor },
+                ReusableBattlePhase::PlayerFaintSwitch {
+                    cursor: previous_cursor,
+                },
+            ) => (
+                cursor,
+                previous_cursor,
+                ReusableBattlePhase::PlayerFaintSwitch { cursor: 0 },
+            ),
+            (
+                ReusableBattlePhase::ItemTargetSelect { cursor },
+                ReusableBattlePhase::ItemTargetSelect {
+                    cursor: previous_cursor,
+                },
+            ) => (
+                cursor,
+                previous_cursor,
+                ReusableBattlePhase::ItemTargetSelect { cursor: 0 },
+            ),
+            _ => return None,
+        };
+        if cursor == previous_cursor {
+            return None;
+        }
+
+        let party_len = self.party_len as usize;
+        let previous_row =
+            pokered_ui::menus::battle_party::cursor_visual_row(party_len, previous_cursor)?;
+        let current_row = pokered_ui::menus::battle_party::cursor_visual_row(party_len, cursor)?;
+        if previous_cursor - previous_row != cursor - current_row {
+            return None;
+        }
+
+        let mut current_without_cursor = *self;
+        current_without_cursor.phase = normalized_phase;
+        let mut previous_without_cursor = *previous;
+        previous_without_cursor.phase = normalized_phase;
+        (current_without_cursor == previous_without_cursor)
+            .then_some((previous_row, current_row))
     }
 }
 
@@ -1159,6 +1251,10 @@ fn game_main() -> ! {
             .as_ref()
             .zip(last_battle.as_ref())
             .and_then(|(current, previous)| current.bag_menu_cursor_change_from(previous));
+        let battle_party_cursor_change = battle
+            .as_ref()
+            .zip(last_battle.as_ref())
+            .and_then(|(current, previous)| current.party_menu_cursor_change_from(previous));
         let redraw = if static_splash.is_some() {
             static_splash != last_static_splash
         } else if language_select.is_some() {
@@ -1211,6 +1307,13 @@ fn game_main() -> ! {
                     &mut fb,
                     game.state.config.language,
                 );
+            } else if let Some((previous_row, current_row)) = battle_party_cursor_change {
+                pokered_app::render::redraw_battle_party_menu_cursor(
+                    previous_row,
+                    current_row,
+                    &mut fb,
+                    game.state.config.language,
+                );
             } else {
                 game.draw_gba(
                     &mut fb,
@@ -1245,6 +1348,13 @@ fn game_main() -> ! {
                     battle_bag_cursor_damage(current),
                 ]
             });
+            let battle_party_damage =
+                battle_party_cursor_change.map(|(previous_row, current_row)| {
+                    [
+                        battle_party_cursor_damage(previous_row),
+                        battle_party_cursor_damage(current_row),
+                    ]
+                });
             let damage = if let Some(rects) = battle_safari_damage.as_ref() {
                 Some(rects.as_slice())
             } else if let Some(rects) = battle_menu_damage.as_ref() {
@@ -1252,6 +1362,8 @@ fn game_main() -> ! {
             } else if let Some(rects) = battle_move_damage.as_ref() {
                 Some(rects.as_slice())
             } else if let Some(rects) = battle_bag_damage.as_ref() {
+                Some(rects.as_slice())
+            } else if let Some(rects) = battle_party_damage.as_ref() {
                 Some(rects.as_slice())
             } else {
                 overworld_background_cache
@@ -1362,6 +1474,16 @@ fn battle_bag_cursor_damage(cursor: usize) -> FrameDamageRect {
     FrameDamageRect {
         x: 6 * 8,
         y: (12 + cursor as u32) * 8,
+        width: 8,
+        height: 9,
+    }
+}
+
+#[inline]
+fn battle_party_cursor_damage(row: usize) -> FrameDamageRect {
+    FrameDamageRect {
+        x: 2 * 8,
+        y: (13 + row as u32) * 8,
         width: 8,
         height: 9,
     }

@@ -2920,6 +2920,24 @@ pub fn redraw_battle_bag_menu_cursor(
     );
 }
 
+/// Repaint only the cursor cells of an already-rendered battle party menu.
+/// The caller must ensure the four-entry viewport did not scroll.
+#[cfg(any(test, target_os = "none"))]
+pub fn redraw_battle_party_menu_cursor(
+    previous_row: usize,
+    current_row: usize,
+    fb: &mut FrameBuffer,
+    language: pokered_core::game_state::Lang,
+) {
+    let mut painter = FrameBufferPainter::new(fb).with_lang(language);
+    menus::battle_party::redraw_cursor(
+        previous_row,
+        current_row,
+        &BATTLE_PARTY_DEFAULT_LAYOUT,
+        &mut painter,
+    );
+}
+
 /// Repaint only the cursor and selected-move information of an already-
 /// rendered battle move menu.
 #[cfg(any(test, target_os = "none"))]
@@ -2983,6 +3001,24 @@ fn draw_battle_bag_menu_overlay(
         &BATTLE_BAG_DEFAULT_LAYOUT,
         &mut ui,
         &render_data,
+    );
+}
+
+#[cfg(test)]
+fn draw_battle_party_menu_overlay(
+    party: &[pokered_core::battle::state::Pokemon],
+    cursor: usize,
+    fb: &mut FrameBuffer,
+    language: pokered_core::game_state::Lang,
+) {
+    let mut painter = FrameBufferPainter::new(fb).with_lang(language);
+    let mut ui = Ui::new(&mut painter);
+    menus::battle_party::draw(
+        party,
+        cursor,
+        &BATTLE_PARTY_DEFAULT_LAYOUT,
+        &mut ui,
+        language == Lang::Zh,
     );
 }
 
@@ -3155,6 +3191,73 @@ mod tests {
                     let mut expected = FrameBuffer::new(config, Rgba::BLACK);
                     draw_battle_bag_menu_overlay(&current, &mut expected, language);
                     assert_framebuffers_equal(&actual, &expected);
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn battle_party_cursor_repaint_matches_a_fresh_menu_without_scrolling() {
+        use pokered_core::pokemon::stats::create_pokemon;
+        use pokered_data::species::Species;
+
+        let party: Vec<_> = [
+            Species::Bulbasaur,
+            Species::Charmander,
+            Species::Squirtle,
+            Species::Pikachu,
+            Species::Snorlax,
+            Species::Mewtwo,
+        ]
+        .into_iter()
+        .map(|species| create_pokemon(species, 25, [0x9a, 0x78]).unwrap())
+        .collect();
+
+        for language in [Lang::En, Lang::Zh] {
+            let config = dotzuki_engine::render_config::RenderConfig::new(160, 144);
+            for party in [&party[..4], party.as_slice()] {
+                for previous_cursor in 0..party.len() {
+                    for current_cursor in 0..party.len() {
+                        if previous_cursor == current_cursor {
+                            continue;
+                        }
+                        let Some(previous_row) =
+                            menus::battle_party::cursor_visual_row(party.len(), previous_cursor)
+                        else {
+                            continue;
+                        };
+                        let Some(current_row) =
+                            menus::battle_party::cursor_visual_row(party.len(), current_cursor)
+                        else {
+                            continue;
+                        };
+                        if previous_cursor - previous_row != current_cursor - current_row {
+                            continue;
+                        }
+
+                        let mut actual = FrameBuffer::new(config, Rgba::BLACK);
+                        draw_battle_party_menu_overlay(
+                            party,
+                            previous_cursor,
+                            &mut actual,
+                            language,
+                        );
+                        redraw_battle_party_menu_cursor(
+                            previous_row,
+                            current_row,
+                            &mut actual,
+                            language,
+                        );
+
+                        let mut expected = FrameBuffer::new(config, Rgba::BLACK);
+                        draw_battle_party_menu_overlay(
+                            party,
+                            current_cursor,
+                            &mut expected,
+                            language,
+                        );
+                        assert_framebuffers_equal(&actual, &expected);
+                    }
                 }
             }
         }
