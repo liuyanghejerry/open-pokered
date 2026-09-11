@@ -1,4 +1,6 @@
+#[cfg(not(target_os = "none"))]
 use crate::alloc_prelude::*;
+#[cfg(not(target_os = "none"))]
 use crate::sync_compat::OnceLock;
 
 use crate::map_data_loader::{get_map_json, resolve_map_id};
@@ -82,12 +84,15 @@ fn build_connection_entry(map_id: MapId) -> MapConnectionEntry {
     }
 }
 
+#[cfg(not(target_os = "none"))]
 struct ConnectionCache {
     entries: Vec<MapConnectionEntry>,
 }
 
+#[cfg(not(target_os = "none"))]
 static CONN_CACHE: OnceLock<ConnectionCache> = OnceLock::new();
 
+#[cfg(not(target_os = "none"))]
 fn get_cache() -> &'static ConnectionCache {
     CONN_CACHE.get_or_init(|| {
         let mut entries = Vec::with_capacity(248);
@@ -103,12 +108,23 @@ fn get_cache() -> &'static ConnectionCache {
 }
 
 pub fn get_map_connections(map: MapId) -> MapConnectionEntry {
-    let idx = map as usize;
-    let cache = get_cache();
-    if idx < cache.entries.len() {
-        cache.entries[idx]
-    } else {
-        MapConnectionEntry::NONE
+    #[cfg(target_os = "none")]
+    {
+        // GBA callers normally ask only about the current map. Building that
+        // POD entry on demand avoids a 248-entry heap cache and, together
+        // with the ROM-table resolver, keeps first contact with a map edge
+        // allocation-light.
+        build_connection_entry(map)
+    }
+    #[cfg(not(target_os = "none"))]
+    {
+        let idx = map as usize;
+        let cache = get_cache();
+        if idx < cache.entries.len() {
+            cache.entries[idx]
+        } else {
+            MapConnectionEntry::NONE
+        }
     }
 }
 
@@ -119,11 +135,13 @@ pub static MAP_CONNECTIONS: LazyConnections = LazyConnections;
 pub struct LazyConnections;
 
 impl LazyConnections {
+    #[cfg(not(target_os = "none"))]
     pub fn iter(&self) -> core::slice::Iter<'static, MapConnectionEntry> {
         get_cache().entries.iter()
     }
 }
 
+#[cfg(not(target_os = "none"))]
 impl core::ops::Index<usize> for LazyConnections {
     type Output = MapConnectionEntry;
     fn index(&self, index: usize) -> &Self::Output {

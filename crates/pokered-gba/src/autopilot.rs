@@ -14,6 +14,10 @@ const SCRIPT: &[(u32, u32, u8)] = &[
     (900, 908, 0b0000_0001),
     (1100, 1108, 0b0000_0001),
     (1300, 1308, 0b0000_0001),
+    // Once the bedroom is stable, exercise player/camera redraw invalidation
+    // before returning to a hands-off soak.
+    (4100, 4116, 0b1000_0000), // Down
+    (4200, 4216, 0b0001_0000), // Right
 ];
 
 /// Post-menu spam: confirm NEW GAME, mash A through Oak's speech and the

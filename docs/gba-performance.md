@@ -23,7 +23,8 @@ software framebuffer and converting/copying it to Mode 3 VRAM:
 | Game update | 0.05 ms | 0.05 ms at boot; about 5.4 ms per Overworld step |
 | Software draw | 76.7 ms | 11–15k ticks for a changed Title/Oak frame; 27.7 ms steady Overworld |
 | Present | 35.4 ms | 3.1–3.2 ms |
-| Steady Overworld outer loop | not reachable (allocation failure) | 50.1 ms / about 20 FPS |
+| Changed Overworld outer loop | not reachable (allocation failure) | 50.1 ms / about 20 FPS |
+| Unchanged ordinary Overworld | not reachable (allocation failure) | 4,351 ticks / about 59.7 Hz |
 
 The old presenter also decoded the planar 2bpp framebuffer as four adjacent
 chunky pixels. Besides being slow, that produced repeated/garbled glyphs in
@@ -67,6 +68,11 @@ pages, with the completed page flipped at VBlank.
   Main Menu and Oak also retain the last page until their visual state changes,
   so pauses and typewriter delay frames no longer rerasterize an identical
   screen.
+- Added a conservative visual key for the ordinary Overworld view. When the
+  map blocks, player/camera state, and visible NPC state are unchanged, the GBA
+  skips both software drawing and presentation. Dialogues, menus, scripted
+  movement, fades, and other complex overlays deliberately bypass this cache
+  and continue to redraw every frame.
 - Removed the remaining duplicate clears from Intro, Title, Oak and Overworld.
 
 In the measured boot sequence, static phases now advance at about 59.7 Hz.
@@ -75,8 +81,11 @@ frame fell from roughly 19,000–22,000 draw ticks to roughly 11,000–15,000,
 while unchanged frames perform no draw or present work. A steady software-
 rendered Overworld frame costs about 7,266 draw ticks (27.7 ms), with an outer
 loop rate of about 20 FPS once simulation catch-up and VBlank synchronization
-are included. The same path previously spent about 55,000 draw ticks and could
-not enter the Overworld before the layer allocation was removed.
+are included. An unchanged ordinary Overworld view performs no draw or present
+work and completes in about 4,351 ticks (16.6 ms), sustaining the hardware's
+59.7 Hz cadence. The same changed-frame path previously spent about 55,000 draw
+ticks and could not enter the Overworld before the layer allocation was
+removed.
 
 ## Invalid-address crash
 
@@ -90,8 +99,15 @@ stack/EWRAM budget.
 The GBA path now clears the large save arrays in place, reuses an Overworld
 screen prebuilt for the new-game map, performs screen transitions after the
 update stack has unwound, and renders opaque layers without an RGBA scratch
-buffer. The autopilot regression passed the former crash point and continued
-through more than 4,000 simulated frames in the Overworld.
+buffer.
+
+A second occurrence at the bottom edge of Pallet Town had a separate allocation
+trigger: the first connection lookup lazily built all 248 map-connection entries
+and a string-keyed map-name index. On GBA, connection data is now built only for
+the requested map and map names are resolved by scanning the generated ROM
+table, avoiding both heap structures. The movement regression crosses that map
+edge in two directions, and the emulator soak continued through more than 7,600
+simulated frames without another crash.
 
 ## Dotzuki dependency
 
@@ -103,11 +119,12 @@ checkouts do not require the sibling repository or new vendor changes.
 ## Remaining bottleneck
 
 Full-scene software rasterization remains dominant when pixels actually
-change. Overworld motion is not yet able to produce one fresh frame per VBlank.
-The next large improvement should avoid rebuilding unchanged map pixels:
+change. Overworld motion is still about 20 FPS and cannot produce one fresh
+frame per VBlank. The next large improvement should reduce the work within a
+changed frame:
 
-1. cache the static Overworld background and redraw only scrolling edges and
-   animated/object tiles;
+1. retain a static Overworld background and redraw only scrolling edges,
+   animated tiles, objects, and damaged regions;
 2. batch remaining monochrome glyph/tile writes;
 3. ultimately map backgrounds and sprites to native GBA tile/OAM hardware
    instead of treating the device as a software framebuffer.

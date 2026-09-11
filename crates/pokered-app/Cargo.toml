@@ -35,6 +35,8 @@ hashbrown = { version = "0.15", default-features = false, features = ["serde"] }
 [target.'cfg(not(target_os = "none"))'.dependencies]
 pokered-renderer = { path = "../pokered-renderer", features = ["gpu"] }
 pokered-ui = { path = "../pokered-ui", features = ["gpu"] }
+dotzuki-app = { git = "https://github.com/liuyanghejerry/dotzuki", rev = "1586af6d578e8920c24226b22b61eb81ce707d5a" }
+image = { version = "0.25", default-features = false, features = ["png"] }
 
 # Bare metal (GBA): spin locks for the single-threaded lazy statics
 # (render/slots.rs).
@@ -43,10 +45,8 @@ pokered-ui = { path = "../pokered-ui", features = ["gpu"] }
 # Hosted-only (std-bound) app dependencies. Bare-metal builds (GBA,
 # target_os = "none") exclude windowing/CLI/filesystem/audio/link crates.
 [target.'cfg(all(not(target_arch = "wasm32"), not(target_os = "none")))'.dependencies]
-dotzuki-app = { git = "https://github.com/liuyanghejerry/dotzuki", rev = "1586af6d578e8920c24226b22b61eb81ce707d5a" }
 anyhow = { workspace = true }
 tracing = { workspace = true }
-image = { version = "0.25", default-features = false, features = ["png"] }
 # Native device output comes from pokered-audio's `cpal` feature (the shared
 # `output::AudioOutput`, built on dotzuki-audio's cpal backend).
 pokered-audio = { path = "../pokered-audio", features = ["cpal"] }

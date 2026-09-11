@@ -13,6 +13,7 @@ use pokered_core::data::wild_data::GameVersion;
 use pokered_core::game_state::{GameScreen, Lang};
 use pokered_core::gamefreak_splash::SplashPhase;
 use pokered_core::oak_speech::{entrance_frames, OakSpeechPhase};
+use pokered_core::overworld::screen::WarpFadeState;
 use pokered_core::title_screen::{TitlePhase, TitleScreenState};
 use pokered_renderer::input::{GbButton, InputState};
 use pokered_renderer::palette::GbColor;
@@ -151,6 +152,123 @@ impl OakVisualKey {
             phase: state.phase.clone(),
             entrance_step,
             flashing: state.is_flashing(),
+        })
+    }
+}
+
+#[derive(Clone, Copy, PartialEq, Eq)]
+struct OverworldVisualKey {
+    language: Lang,
+    map: u8,
+    player_x: u16,
+    player_y: u16,
+    player_facing: u8,
+    player_movement: u8,
+    player_transport: u8,
+    walk_counter: u8,
+    bump_counter: u8,
+    tile_kind: u8,
+    water_shift: i8,
+    flower_frame: Option<u8>,
+    dark: bool,
+    map_hash: u32,
+    npc_hash: u32,
+}
+
+#[inline]
+fn hash_byte(hash: &mut u32, value: u8) {
+    *hash = (*hash ^ value as u32).wrapping_mul(0x0100_0193);
+}
+
+#[inline]
+fn hash_u16(hash: &mut u32, value: u16) {
+    for byte in value.to_le_bytes() {
+        hash_byte(hash, byte);
+    }
+}
+
+impl OverworldVisualKey {
+    /// Return a compact key only for the ordinary map view. Cutscenes,
+    /// overlays, fades, and other uncommon compositions deliberately redraw
+    /// every loop; their richer state is not approximated here.
+    fn new(game: &PokemonGame) -> Option<Self> {
+        let screen = &game.overworld;
+        if screen.naming_flash_frames != 0
+            || screen.pending_naming_screen.is_some()
+            || screen.pending_party_select.is_some()
+            || screen.pending_pokedex_entry.is_some()
+            || screen.pending_dialogue.is_some()
+            || screen.cut_retained_dialogue.is_some()
+            || screen.pending_choice.is_some()
+            || screen.pending_emotion_bubble.is_some()
+            || screen.pending_healing_machine.is_some()
+            || screen.connection_npc_preview.is_some()
+            || screen.ledge_jump.is_some()
+            || screen.field_move_step.is_some()
+            || screen.field_move_restore.is_some()
+            || screen.cut_anim.is_some()
+            || screen.elevator_shake.is_some()
+            || screen.teleport_spin.is_some()
+            || screen.fly_departure.is_some()
+            || screen.enter_map_anim.is_some()
+            || screen.enter_map_fly_anim.is_some()
+            || screen.pending_fly_arrival
+            || screen.fly_arrival_delay_frames != 0
+            || screen.fishing_anim.is_some()
+            || screen.ship_departure.is_some()
+            || screen.flash_lit_frames != 0
+            || screen.boulder_dust.is_active()
+            || !matches!(screen.warp_fade_state, WarpFadeState::Idle)
+        {
+            return None;
+        }
+
+        // Scripted tile swaps mutate the live block grid without necessarily
+        // moving the camera. Hash it so a cached frame can never hide a CUT
+        // tree, gym gate, or other map edit.
+        let mut map_hash = 0x811c_9dc5;
+        if let Some(map) = screen.map_data.as_ref() {
+            hash_byte(&mut map_hash, 1);
+            hash_byte(&mut map_hash, map.width);
+            hash_byte(&mut map_hash, map.height);
+            for &block in &map.blocks {
+                hash_byte(&mut map_hash, block);
+            }
+        } else {
+            hash_byte(&mut map_hash, 0);
+        }
+
+        // Delay counters and scripted paths affect future updates, but not the
+        // current pixels. Hash only the NPC fields consumed by the renderer.
+        let mut npc_hash = 0x811c_9dc5;
+        hash_u16(&mut npc_hash, screen.npc_states.len() as u16);
+        for npc in &screen.npc_states {
+            hash_byte(&mut npc_hash, npc.npc_index);
+            hash_byte(&mut npc_hash, npc.sprite_id);
+            hash_u16(&mut npc_hash, npc.x);
+            hash_u16(&mut npc_hash, npc.y);
+            hash_byte(&mut npc_hash, npc.facing as u8);
+            hash_byte(&mut npc_hash, npc.scripted_frame.unwrap_or(u8::MAX));
+            hash_byte(&mut npc_hash, npc.walk_counter);
+            hash_byte(&mut npc_hash, npc.visible as u8);
+        }
+
+        Some(Self {
+            language: game.state.config.language,
+            map: screen.state.current_map as u8,
+            player_x: screen.state.player.x,
+            player_y: screen.state.player.y,
+            player_facing: screen.state.player.facing as u8,
+            player_movement: screen.state.player.movement_state as u8,
+            player_transport: screen.state.player.transport as u8,
+            walk_counter: screen.state.walk_counter,
+            bump_counter: screen.bump_anim_counter,
+            tile_kind: screen.tile_anim.kind() as u8,
+            water_shift: screen.tile_anim.water_shift(),
+            flower_frame: screen.tile_anim.flower_frame(),
+            dark: screen.dark_cave.is_dark(),
+            map_hash,
+            npc_hash,
         })
     }
 }
@@ -390,6 +508,7 @@ fn game_main() -> ! {
     let mut last_title: Option<TitleVisualKey> = None;
     let mut last_main_menu: Option<(usize, bool)> = None;
     let mut last_oak: Option<OakVisualKey> = None;
+    let mut last_overworld: Option<OverworldVisualKey> = None;
     #[cfg(feature = "profiling")]
     let mut profile = ProfileSamples::default();
 
@@ -503,6 +622,10 @@ fn game_main() -> ! {
         ));
         let oak_screen = game.state.screen == GameScreen::OakSpeech;
         let oak = oak_screen.then(|| OakVisualKey::new(game)).flatten();
+        let overworld_screen = game.state.screen == GameScreen::Overworld;
+        let overworld = overworld_screen
+            .then(|| OverworldVisualKey::new(game))
+            .flatten();
         let redraw = if static_splash.is_some() {
             static_splash != last_static_splash
         } else if language_select.is_some() {
@@ -513,6 +636,10 @@ fn game_main() -> ! {
             main_menu != last_main_menu
         } else if oak_screen {
             oak.as_ref().map_or(true, |key| last_oak.as_ref() != Some(key))
+        } else if overworld_screen {
+            overworld
+                .as_ref()
+                .map_or(true, |key| last_overworld.as_ref() != Some(key))
         } else {
             true
         };
@@ -529,6 +656,7 @@ fn game_main() -> ! {
         last_title = title;
         last_main_menu = main_menu;
         last_oak = oak;
+        last_overworld = overworld;
         #[cfg(feature = "profiling")]
         let mark4 = profile_now();
 

@@ -121,7 +121,20 @@ pub fn name_to_map_id() -> &'static HashMap<String, MapId> {
 }
 
 pub fn resolve_map_id(name: &str) -> Option<MapId> {
-    name_to_map_id().get(name).copied()
+    #[cfg(all(target_os = "none", feature = "embedded-map-data"))]
+    {
+        // The generated ROM table already contains both the canonical name
+        // and numeric id. A linear scan avoids materializing the hosted
+        // 248-entry String HashMap in scarce GBA EWRAM.
+        MAP_TABLE
+            .iter()
+            .find(|(candidate, _)| *candidate == name)
+            .and_then(|(_, map)| MapId::from_u8(map.id))
+    }
+    #[cfg(not(all(target_os = "none", feature = "embedded-map-data")))]
+    {
+        name_to_map_id().get(name).copied()
+    }
 }
 
 // ── Embedded mode ──────────────────────────────────────────────────────────

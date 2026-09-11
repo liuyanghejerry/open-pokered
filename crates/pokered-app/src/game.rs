@@ -549,7 +549,6 @@ impl VideoRecorder {
 }
 
 #[cfg(all(not(target_arch = "wasm32"), not(target_os = "none")))]
-#[cfg(all(not(target_arch = "wasm32"), not(target_os = "none")))]
 impl Drop for VideoRecorder {
     fn drop(&mut self) {
         // Closing stdin signals EOF; ffmpeg then flushes the encoder and
@@ -1557,7 +1556,7 @@ impl PokemonGame {
     fn read_companion_script_flags() -> Option<pokered_core::hash_compat::HashMap<String, bool>> {
         let storage = web_local_storage()?;
         let data = storage.get_item(WEB_SCRIPT_FLAGS_STORAGE_KEY).ok()??;
-        match serde_json::from_str::<std::collections::HashMap<String, bool>>(&data) {
+        match serde_json::from_str::<pokered_core::hash_compat::HashMap<String, bool>>(&data) {
             Ok(flags) => Some(flags),
             Err(e) => {
                 log::warn!("failed to parse script flags from localStorage: {}", e);
