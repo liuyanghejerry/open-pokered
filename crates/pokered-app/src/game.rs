@@ -22,12 +22,10 @@ use std::path::PathBuf;
 #[cfg(all(not(target_arch = "wasm32"), not(target_os = "none")))]
 use std::path::Path;
 
-#[cfg(not(target_os = "none"))]
-use crate::link::{
-    CableClubFlow, CableClubPhase, FlowNeed, LinkKind, LinkSession, LinkStatus,
-};
 #[cfg(all(not(target_arch = "wasm32"), not(target_os = "none")))]
 use crate::link::LinkServer;
+#[cfg(not(target_os = "none"))]
+use crate::link::{CableClubFlow, CableClubPhase, FlowNeed, LinkKind, LinkSession, LinkStatus};
 
 #[cfg(not(target_os = "none"))]
 use pokered_core::battle::link_battle_driver::{LinkBattleDriver, LinkDriverEvent};
@@ -42,39 +40,39 @@ use pokered_core::link::LinkRole;
 
 use pokered_audio::music_data::MusicId;
 use pokered_audio::sfx_data::SfxId;
+use pokered_core::bag_screen::{BagScreenAction, BagScreenInput, BagScreenState};
 use pokered_core::battle::{BattleInput, BattlePhase, BattleScreen};
+use pokered_core::data::impl_traits::PokemonRedData;
 use pokered_core::data::maps::MapId;
 use pokered_core::data::wild_data::GameVersion;
 use pokered_core::game_state::{GameScreen, GameState, SaveFileSummary, ScreenAction};
 use pokered_core::gamefreak_splash::{GameFreakSplashState, SplashInput};
 use pokered_core::intro_scene::IntroSceneState;
-use pokered_core::items::{MartUpdate, PlayerData, SoundId};
 use pokered_core::intro_scene::IntroSfxEvent;
+use pokered_core::items::bag_use::{self, ItemApplyOutcome};
+use pokered_core::items::{MartUpdate, PlayerData, SoundId};
 use pokered_core::main_menu::{MainMenuState, MenuInput};
 use pokered_core::naming_screen::NamingInput;
 use pokered_core::oak_speech::{OakSpeechInput, OakSpeechPhase, OakSpeechResult, OakSpeechState};
 use pokered_core::options_menu::{
     BattleAnimation, GameOptions, OptionsInput, OptionsMenuResult, OptionsMenuState,
 };
-use pokered_core::data::impl_traits::PokemonRedData;
 use pokered_core::overworld::{
     BedroomDialogue, OverworldAudioRequest, OverworldGameDataRequest, OverworldInput,
     OverworldScreen, OverworldSfxEvent,
 };
 use pokered_core::party_screen::{PartyScreenAction, PartyScreenInput, PartyScreenState};
-use pokered_core::items::bag_use::{self, ItemApplyOutcome};
-use pokered_core::bag_screen::{BagScreenAction, BagScreenInput, BagScreenState};
+use pokered_core::pokedex_screen::{PokedexScreenAction, PokedexScreenInput, PokedexScreenState};
+#[cfg(any(not(target_arch = "wasm32"), debug_assertions))]
+use pokered_core::save::sram_export::export_sram;
+use pokered_core::stats_screen::{StatsScreenAction, StatsScreenInput, StatsScreenState};
 use pokered_core::town_map_screen::{TownMapScreenAction, TownMapScreenInput, TownMapScreenState};
-use pokered_core::pokedex_screen::{
-    PokedexScreenAction, PokedexScreenInput, PokedexScreenState,
-};
 use pokered_core::trainer_card_screen::{
     TrainerCardAction, TrainerCardInput, TrainerCardScreenState,
 };
-use pokered_core::stats_screen::{StatsScreenAction, StatsScreenInput, StatsScreenState};
-#[cfg(any(not(target_arch = "wasm32"), debug_assertions))]
-use pokered_core::save::sram_export::export_sram;
 
+use pokered_core::elevator_screen::{ElevatorAction, ElevatorInput, ElevatorScreen};
+use pokered_core::pc_screen::{PcContext, PcEntry, PcOpenContext, PcScreen, PcScreenAction, PcSfx};
 #[cfg(not(target_arch = "wasm32"))]
 use pokered_core::save::sram_import::import_sram;
 use pokered_core::save::SaveData;
@@ -82,8 +80,6 @@ use pokered_core::save_menu::{
     SaveMenuResult, SaveMenuState, SavePhase, SaveScreenInfo, SaveSfxEvent, YesNoInput,
 };
 use pokered_core::slots_screen::{SlotsAction, SlotsInput, SlotsScreen};
-use pokered_core::elevator_screen::{ElevatorAction, ElevatorInput, ElevatorScreen};
-use pokered_core::pc_screen::{PcContext, PcEntry, PcOpenContext, PcScreen, PcScreenAction, PcSfx};
 use pokered_core::start_menu::{StartMenuAction, StartMenuInput, StartMenuState};
 use pokered_core::title_screen::{TitlePhase, TitleScreenState};
 use pokered_renderer::input::{GbButton, InputState};
@@ -91,20 +87,21 @@ use pokered_renderer::resource::ResourceManager;
 
 use pokered_renderer::resource::AssetRoot;
 
+use dotzuki_engine::render_config::RenderConfig;
 #[cfg(all(not(target_arch = "wasm32"), not(target_os = "none")))]
 use pokered_renderer::window::GameLoop;
 use pokered_renderer::{FrameBuffer, Rgba};
-use dotzuki_engine::render_config::RenderConfig;
 
 #[cfg(all(debug_assertions, not(target_arch = "wasm32"), not(target_os = "none")))]
 use crate::hot_reload::AssetWatcher;
 
 use crate::audio::{play_species_cry, AudioOutput};
 use crate::render::{
-    draw_battle, draw_gamefreak_splash, draw_intro_scene, draw_main_menu, draw_mart, draw_oak_speech, draw_options_menu,
-    draw_bag, draw_overworld, draw_party_screen, draw_pokedex_screen, draw_save_menu, draw_slots, draw_start_menu,
-    draw_elevator, draw_filter_bag, draw_diploma, draw_evolution, draw_hof_ceremony, draw_credits, draw_pc,
-    draw_stats_screen, draw_title_screen, draw_town_map, draw_trade, draw_trainer_card, BattleVisualEffects,
+    draw_bag, draw_battle, draw_credits, draw_diploma, draw_elevator, draw_evolution,
+    draw_filter_bag, draw_gamefreak_splash, draw_hof_ceremony, draw_intro_scene, draw_main_menu,
+    draw_mart, draw_oak_speech, draw_options_menu, draw_overworld, draw_party_screen, draw_pc,
+    draw_pokedex_screen, draw_save_menu, draw_slots, draw_start_menu, draw_stats_screen,
+    draw_title_screen, draw_town_map, draw_trade, draw_trainer_card, BattleVisualEffects,
 };
 
 const SAVE_FILE_NAME: &str = "pokered.sav";
@@ -113,10 +110,7 @@ const SCRIPT_FLAGS_FILE_NAME: &str = "pokered.script_flags.json";
 /// Restore the options stored in the loaded save file into the live config
 /// (original: `wOptions` is part of SRAM, so a CONTINUE'd game keeps the
 /// saved text speed / battle animation / battle style).
-fn apply_saved_options(
-    config: &mut pokered_core::game_state::GameConfig,
-    options: &GameOptions,
-) {
+fn apply_saved_options(config: &mut pokered_core::game_state::GameConfig, options: &GameOptions) {
     use pokered_core::game_state as gs;
     use pokered_core::options_menu as om;
     config.text_speed = match options.text_speed {
@@ -235,10 +229,7 @@ fn try_load_save_from_local_storage() -> (SaveData, Option<SaveFileSummary>) {
             (save, Some(summary))
         }
         Err(e) => {
-            log::warn!(
-                "save in localStorage is invalid JSON ({}); ignoring",
-                e
-            );
+            log::warn!("save in localStorage is invalid JSON ({}); ignoring", e);
             (SaveData::new(), None)
         }
     }
@@ -334,7 +325,7 @@ impl FrameRecorder {
     }
 
     fn capture(&mut self, game: &mut PokemonGame) {
-  game.draw(&mut self.fb);
+        game.draw(&mut self.fb);
         let path = self.dir.join(format!("frame-{:06}.png", self.next));
         if let Err(e) = self.fb.save_png(&path) {
             log::warn!("frame recorder: failed to write {}: {}", path.display(), e);
@@ -788,7 +779,9 @@ impl PokemonGame {
         warp: Option<String>,
         watch: bool,
         no_audio: bool,
-        #[cfg(feature = "debug-server")] debug_handle: Option<pokered_debug_server::DebugServerHandle>,
+        #[cfg(feature = "debug-server")] debug_handle: Option<
+            pokered_debug_server::DebugServerHandle,
+        >,
     ) -> Self {
         let (save_data, save_summary) = if let Some(ref path) = snapshot_path {
             Self::load_snapshot_from_path(path)
@@ -807,7 +800,11 @@ impl PokemonGame {
                     Some((map_id, x, y))
                 }
                 Err(e) => {
-                    dbg_eprintln!("Warning: invalid --warp argument '{}': {}. Ignoring warp.", warp_str, e);
+                    dbg_eprintln!(
+                        "Warning: invalid --warp argument '{}': {}. Ignoring warp.",
+                        warp_str,
+                        e
+                    );
                     None
                 }
             }
@@ -870,9 +867,7 @@ impl PokemonGame {
             if let Some(extras) = Self::read_companion_script_flags() {
                 overworld.set_script_flags(extras);
             }
-            overworld.set_toggleable_object_flags(
-                save_data.game_data.toggleable_object_flags,
-            );
+            overworld.set_toggleable_object_flags(save_data.game_data.toggleable_object_flags);
             overworld.set_hidden_item_flags(save_data.game_data.obtained_hidden_items);
             overworld.set_hidden_coin_flags(save_data.game_data.obtained_hidden_coins);
             overworld.apply_hidden_object_flags();
@@ -880,11 +875,15 @@ impl PokemonGame {
 
             dbg_eprintln!(
                 "Skip-intro: starting at {:?} ({} x={}, y={})",
-                map_id, map_id as u8, px, py
+                map_id,
+                map_id as u8,
+                px,
+                py
             );
         } else {
             initial_screen = GameScreen::GameFreakSplash;
-            overworld = OverworldScreen::new(MapId::PalletTown, scripts_dir.clone(), PokemonRedData);
+            overworld =
+                OverworldScreen::new(MapId::PalletTown, scripts_dir.clone(), PokemonRedData);
         }
 
         let mut state = GameState {
@@ -991,11 +990,13 @@ impl PokemonGame {
 
         // The script engine language starts from the saved/default config;
         // the LanguageSelect screen re-syncs it whenever the choice changes.
-        overworld.set_script_lang(if state.config.language == pokered_core::game_state::Lang::Zh {
-            "zh"
-        } else {
-            "en"
-        });
+        overworld.set_script_lang(
+            if state.config.language == pokered_core::game_state::Lang::Zh {
+                "zh"
+            } else {
+                "en"
+            },
+        );
 
         Self {
             state,
@@ -1093,14 +1094,23 @@ impl PokemonGame {
         let title_screen = TitleScreenState::new(version);
         let main_menu = MainMenuState::new(None);
         let oak_speech = OakSpeechState::new();
-        let mut overworld = OverworldScreen::new(MapId::PalletTown, PokemonRedData);
-        overworld.set_script_lang(if pokered_core::game_state::GameConfig::new(version).language
-            == pokered_core::game_state::Lang::Zh
-        {
-            "zh"
-        } else {
-            "en"
-        });
+        // The bare-metal build has no saved-game path, so prebuild the exact
+        // first overworld map while the entry-point stack is shallow. Building
+        // a second complete OverworldScreen during the Oak transition would
+        // temporarily retain both script registries and exhaust EWRAM.
+        let mut overworld = OverworldScreen::new(
+            pokered_core::data::fly_warp_data::NEW_GAME_WARP.map_id,
+            PokemonRedData,
+        );
+        overworld.set_script_lang(
+            if pokered_core::game_state::GameConfig::new(version).language
+                == pokered_core::game_state::Lang::Zh
+            {
+                "zh"
+            } else {
+                "en"
+            },
+        );
         let battle = BattleScreen::new(true);
         let state = GameState {
             screen: GameScreen::GameFreakSplash,
@@ -1139,7 +1149,8 @@ impl PokemonGame {
         log::info!("gba:ctor pre-party");
         let f_party = PartyScreenState::new(vec![]);
         log::info!("gba:ctor pre-dex");
-        let f_dex = PokedexScreenState::new(pokered_core::pokemon::pokedex::Pokedex::new(), version);
+        let f_dex =
+            PokedexScreenState::new(pokered_core::pokemon::pokedex::Pokedex::new(), version);
         log::info!("gba:ctor pre-towns");
         let f_town = TownMapScreenState::new(MapId::PalletTown);
         log::info!("gba:ctor pre-bag");
@@ -1222,7 +1233,13 @@ impl PokemonGame {
         let main_menu = MainMenuState::new(save_summary);
         let oak_speech = OakSpeechState::new();
         let mut overworld = OverworldScreen::new(MapId::PalletTown, None, PokemonRedData);
-        overworld.set_script_lang(if state.config.language == pokered_core::game_state::Lang::Zh { "zh" } else { "en" });
+        overworld.set_script_lang(
+            if state.config.language == pokered_core::game_state::Lang::Zh {
+                "zh"
+            } else {
+                "en"
+            },
+        );
         let battle = BattleScreen::new(true);
         let battle_vfx = BattleVisualEffects::default();
         let start_menu = StartMenuState::new(false, false, false);
@@ -1404,7 +1421,8 @@ impl PokemonGame {
             Err(e) => {
                 dbg_eprintln!(
                     "Warning: failed to parse script flags {:?}: {}",
-                    flags_path, e
+                    flags_path,
+                    e
                 );
                 None
             }
@@ -1479,10 +1497,7 @@ impl PokemonGame {
     }
 
     #[cfg(all(not(target_arch = "wasm32"), not(target_os = "none")))]
-    pub fn import_snapshot_from_sav(
-        input_path: &Path,
-        output_path: &Path,
-    ) -> Result<(), String> {
+    pub fn import_snapshot_from_sav(input_path: &Path, output_path: &Path) -> Result<(), String> {
         let data = std::fs::read(input_path)
             .map_err(|e| format!("Failed to read {:?}: {}", input_path, e))?;
         let save = import_sram(&data)
@@ -1644,10 +1659,7 @@ impl PokemonGame {
         let sram = export_sram(&save);
         // Explicit --save path wins (headless/driver runs); normal play
         // falls back to the default location next to the executable.
-        let path = self
-            .save_path
-            .clone()
-            .unwrap_or_else(save_file_path);
+        let path = self.save_path.clone().unwrap_or_else(save_file_path);
         match std::fs::write(&path, &sram) {
             Ok(()) => {
                 pokered_core::log_save!("game saved to {:?} ({} bytes)", path, sram.len());
@@ -1754,7 +1766,8 @@ impl PokemonGame {
         // added…" entry then opens instead of the overworld
         // (engine/items/item_effects.asm:521-546).
         let mut post_catch_species: Option<pokered_data::species::Species> = None;
-        match screen {            GameScreen::IntroScene => {
+        match screen {
+            GameScreen::IntroScene => {
                 self.intro_scene.reset();
                 if let Some(ref audio) = self.audio {
                     audio.play_music(MusicId::INTRO_BATTLE);
@@ -1775,7 +1788,7 @@ impl PokemonGame {
             GameScreen::OakSpeech => {
                 // NEW GAME starts a fresh in-memory save before choosing a starter.
                 // Keep the disk save/summary for Continue and overwrite confirmation.
-                self.save_data = SaveData::new();
+                self.save_data.clear();
                 self.oak_speech = OakSpeechState::new();
                 if let Some(ref audio) = self.audio {
                     audio.stop_all();
@@ -1785,6 +1798,14 @@ impl PokemonGame {
             GameScreen::Overworld => {
                 use pokered_core::data::fly_warp_data::NEW_GAME_WARP;
                 use pokered_core::game_state::MainMenuChoice;
+
+                // Boot/title/Oak graphics are dead once play begins. Reclaim
+                // their decoded tiles before the overworld starts allocating
+                // transient render and script data in EWRAM.
+                #[cfg(target_os = "none")]
+                if let Some(resources) = self.resources.as_mut() {
+                    resources.clear_cache();
+                }
 
                 // Only create a new OverworldScreen when entering from the main menu
                 // (Continue or New Game). When returning from sub-screens (Start menu,
@@ -1801,10 +1822,7 @@ impl PokemonGame {
                     {
                         let (map_id, px, py, facing) =
                             if let Some((warp_map, warp_x, warp_y)) = self.startup_warp.take() {
-                                dbg_eprintln!(
-                                    "Warping to {:?} ({}, {})",
-                                    warp_map, warp_x, warp_y
-                                );
+                                dbg_eprintln!("Warping to {:?} ({}, {})", warp_map, warp_x, warp_y);
                                 (
                                     warp_map,
                                     warp_x,
@@ -1820,22 +1838,15 @@ impl PokemonGame {
                                     pos.y,
                                     self.save_data.game_data.player_direction
                                 );
-                                let map_id =
-                                    pokered_core::data::maps::MapId::from_u8(pos.map_id)
-                                        .unwrap_or(NEW_GAME_WARP.map_id);
-                                let facing =
-                                    match self.save_data.game_data.player_direction {
-                                        4 => pokered_core::overworld::Direction::Up,
-                                        8 => pokered_core::overworld::Direction::Left,
-                                        12 => pokered_core::overworld::Direction::Right,
-                                        _ => pokered_core::overworld::Direction::Down,
-                                    };
-                                (
-                                    map_id,
-                                    pos.x as u16,
-                                    pos.y as u16,
-                                    facing,
-                                )
+                                let map_id = pokered_core::data::maps::MapId::from_u8(pos.map_id)
+                                    .unwrap_or(NEW_GAME_WARP.map_id);
+                                let facing = match self.save_data.game_data.player_direction {
+                                    4 => pokered_core::overworld::Direction::Up,
+                                    8 => pokered_core::overworld::Direction::Left,
+                                    12 => pokered_core::overworld::Direction::Right,
+                                    _ => pokered_core::overworld::Direction::Down,
+                                };
+                                (map_id, pos.x as u16, pos.y as u16, facing)
                             };
                         #[cfg(not(target_os = "none"))]
                         let mut overworld =
@@ -1862,23 +1873,23 @@ impl PokemonGame {
                         overworld.set_toggleable_object_flags(
                             self.save_data.game_data.toggleable_object_flags,
                         );
-                        overworld.set_hidden_item_flags(
-                            self.save_data.game_data.obtained_hidden_items,
-                        );
-                        overworld.set_hidden_coin_flags(
-                            self.save_data.game_data.obtained_hidden_coins,
-                        );
+                        overworld
+                            .set_hidden_item_flags(self.save_data.game_data.obtained_hidden_items);
+                        overworld
+                            .set_hidden_coin_flags(self.save_data.game_data.obtained_hidden_coins);
                         overworld.apply_hidden_object_flags();
                         overworld.player_name = self.player_name.clone();
                         overworld.rival_name = self.rival_name.clone();
                         overworld.party_count = self.save_data.party.count() as u8;
                         overworld.party_lead_level = self.save_data.party.leader_level();
                         overworld.run_on_load();
-                        overworld.set_script_lang(if self.state.config.language == pokered_core::game_state::Lang::Zh {
-                            "zh"
-                        } else {
-                            "en"
-                        });
+                        overworld.set_script_lang(
+                            if self.state.config.language == pokered_core::game_state::Lang::Zh {
+                                "zh"
+                            } else {
+                                "en"
+                            },
+                        );
                         self.overworld = overworld;
                         pokered_core::log_save!(
                             "continue: overworld created: player x={}, y={}, map={:?}",
@@ -1903,10 +1914,7 @@ impl PokemonGame {
                         self.state.config.battle_style = defaults.battle_style;
                         let (map_id, px, py) =
                             if let Some((warp_map, warp_x, warp_y)) = self.startup_warp.take() {
-                                dbg_eprintln!(
-                                    "Warping to {:?} ({}, {})",
-                                    warp_map, warp_x, warp_y
-                                );
+                                dbg_eprintln!("Warping to {:?} ({}, {})", warp_map, warp_x, warp_y);
                                 (warp_map, warp_x, warp_y)
                             } else {
                                 (
@@ -1916,22 +1924,46 @@ impl PokemonGame {
                                 )
                             };
                         #[cfg(not(target_os = "none"))]
-                        let mut overworld =
-                            OverworldScreen::new(map_id, self.scripts_dir.clone(), PokemonRedData);
+                        {
+                            let mut overworld = OverworldScreen::new(
+                                map_id,
+                                self.scripts_dir.clone(),
+                                PokemonRedData,
+                            );
+                            overworld.state.player.x = px;
+                            overworld.state.player.y = py;
+                            overworld.player_name = self.player_name.clone();
+                            overworld.rival_name = self.rival_name.clone();
+                            overworld.party_count = self.save_data.party.count() as u8;
+                            overworld.party_lead_level = self.save_data.party.leader_level();
+                            overworld.set_script_lang(
+                                if self.state.config.language == pokered_core::game_state::Lang::Zh
+                                {
+                                    "zh"
+                                } else {
+                                    "en"
+                                },
+                            );
+                            self.overworld = overworld;
+                        }
                         #[cfg(target_os = "none")]
-                        let mut overworld = OverworldScreen::new(map_id, PokemonRedData);
-                        overworld.state.player.x = px;
-                        overworld.state.player.y = py;
-                        overworld.player_name = self.player_name.clone();
-                        overworld.rival_name = self.rival_name.clone();
-                        overworld.party_count = self.save_data.party.count() as u8;
-                        overworld.party_lead_level = self.save_data.party.leader_level();
-                        overworld.set_script_lang(if self.state.config.language == pokered_core::game_state::Lang::Zh {
-                            "zh"
-                        } else {
-                            "en"
-                        });
-                        self.overworld = overworld;
+                        {
+                            debug_assert_eq!(self.overworld.state.current_map, map_id);
+                            self.overworld.state.player.x = px;
+                            self.overworld.state.player.y = py;
+                            self.overworld.player_name = self.player_name.clone();
+                            self.overworld.rival_name = self.rival_name.clone();
+                            self.overworld.party_count = self.save_data.party.count() as u8;
+                            self.overworld.party_lead_level = self.save_data.party.leader_level();
+                            self.overworld.set_script_lang(
+                                if self.state.config.language == pokered_core::game_state::Lang::Zh
+                                {
+                                    "zh"
+                                } else {
+                                    "en"
+                                },
+                            );
+                        }
                         if let Some(ref audio) = self.audio {
                             audio.play_music(MusicId::PALLET_TOWN);
                         }
@@ -1983,7 +2015,8 @@ impl PokemonGame {
                                 // when it finishes (PlayDefaultMusic).
                                 if self.evolution_anim.is_none() {
                                     let map = self.overworld.state.current_map;
-                                    let data_id = pokered_core::overworld::map_loading::get_map_music(map);
+                                    let data_id =
+                                        pokered_core::overworld::map_loading::get_map_music(map);
                                     if let Some(id) = MusicId::from_u8(data_id as u8) {
                                         // Original uses fade_speed=8 after battle
                                         audio.play_music_with_fade(id, 8);
@@ -2081,11 +2114,9 @@ impl PokemonGame {
                 // trainer ID, saving first asks "The older file will be
                 // erased. Is that okay?" — compare the disk summary's ID
                 // against the in-memory one.
-                let is_different_player = self
-                    .state
-                    .save_summary
-                    .as_ref()
-                    .map_or(false, |s| s.player_id != 0 && s.player_id != self.save_data.game_data.player_id);
+                let is_different_player = self.state.save_summary.as_ref().map_or(false, |s| {
+                    s.player_id != 0 && s.player_id != self.save_data.game_data.player_id
+                });
                 self.save_menu = SaveMenuState::new(
                     SaveScreenInfo {
                         player_name: self.player_name.clone(),
@@ -2274,8 +2305,12 @@ impl PokemonGame {
 
         if let Some(enemy) = enemy_mon {
             if !player_party.is_empty() {
-                self.battle =
-                    pokered_core::battle::BattleScreen::from_parties(true, &player_party, &[enemy], None);
+                self.battle = pokered_core::battle::BattleScreen::from_parties(
+                    true,
+                    &player_party,
+                    &[enemy],
+                    None,
+                );
             } else {
                 self.battle = pokered_core::battle::BattleScreen::new(true);
             }
@@ -2334,8 +2369,9 @@ impl PokemonGame {
                 .unwrap_or(255);
             let balls = self.overworld.safari_balls_remaining();
             self.battle.is_safari = true;
-            self.battle.safari =
-                Some(pokered_core::battle::safari::SafariState::new(base_catch, balls));
+            self.battle.safari = Some(pokered_core::battle::safari::SafariState::new(
+                base_catch, balls,
+            ));
             self.battle.safari_menu = pokered_core::battle::menu::SafariBattleMenuState::new(balls);
         }
 
@@ -2411,7 +2447,12 @@ impl PokemonGame {
             Species::Pikachu,
             25,
             [0xFF, 0xFF],
-            [move_id, pokered_data::moves::MoveId::None, pokered_data::moves::MoveId::None, pokered_data::moves::MoveId::None],
+            [
+                move_id,
+                pokered_data::moves::MoveId::None,
+                pokered_data::moves::MoveId::None,
+                pokered_data::moves::MoveId::None,
+            ],
         )
         .expect("Pikachu Lv25 is a valid tester");
 
@@ -2430,7 +2471,11 @@ impl PokemonGame {
     /// Editor quick-entry: play the evolution animation `from` → `to` (the
     /// WYSIWYG "test this evolution" flow). The animation takeover renders
     /// until it finishes; the staged party slot is the morph's target.
-    pub fn debug_play_evolution(&mut self, from: pokered_data::species::Species, to: pokered_data::species::Species) {
+    pub fn debug_play_evolution(
+        &mut self,
+        from: pokered_data::species::Species,
+        to: pokered_data::species::Species,
+    ) {
         use pokered_core::evolution_screen::{EvolutionScreenState, PendingEvolution};
         use pokered_core::pokemon::stats::create_pokemon;
 
@@ -2507,14 +2552,17 @@ impl PokemonGame {
 
     fn start_trainer_battle(&mut self, trainer_id: &str, rival_triplet_base: Option<u8>) {
         use pokered_core::pokemon::stats::create_pokemon;
-        use pokered_data::trainer_data::{get_trainer_party, parse_trainer_id, TrainerClass};
         use pokered_data::species::Species;
+        use pokered_data::trainer_data::{get_trainer_party, parse_trainer_id, TrainerClass};
 
         let player_party = self.save_data.party.to_vec();
 
         let parsed = parse_trainer_id(trainer_id);
         let is_rival = parsed.as_ref().map_or(false, |(class, _)| {
-            matches!(class, TrainerClass::Rival1 | TrainerClass::Rival2 | TrainerClass::Rival3)
+            matches!(
+                class,
+                TrainerClass::Rival1 | TrainerClass::Rival2 | TrainerClass::Rival3
+            )
         });
 
         let enemy_party = if let Some((class, default_index)) = parsed {
@@ -2527,11 +2575,15 @@ impl PokemonGame {
                     self.save_data.game_data.player_starter,
                     player_party.first().map(|mon| mon.species),
                 );
-                let offset = starter.map(pokered_data::trainer_data::rival_starter_offset).unwrap_or(0);
+                let offset = starter
+                    .map(pokered_data::trainer_data::rival_starter_offset)
+                    .unwrap_or(0);
                 if self.save_data.game_data.player_starter == 0 {
                     if let Some(starter) = starter {
                         self.save_data.game_data.player_starter = starter as u8;
-                        self.save_data.game_data.rival_starter = [Species::Squirtle, Species::Bulbasaur, Species::Charmander][offset] as u8;
+                        self.save_data.game_data.rival_starter =
+                            [Species::Squirtle, Species::Bulbasaur, Species::Charmander][offset]
+                                as u8;
                     }
                 }
                 base + offset
@@ -2544,7 +2596,11 @@ impl PokemonGame {
                     .pokemon
                     .iter()
                     .filter_map(|mon| {
-                        create_pokemon(mon.species, mon.level, pokered_core::pokemon::stats::TRAINER_DV_BYTES)
+                        create_pokemon(
+                            mon.species,
+                            mon.level,
+                            pokered_core::pokemon::stats::TRAINER_DV_BYTES,
+                        )
                     })
                     .collect();
                 Self::apply_trainer_special_moves(class, &mut mons);
@@ -2654,12 +2710,7 @@ impl PokemonGame {
             for change in &changes {
                 dbg_eprintln!("[hot-reload] Changed: {}", change.path.display());
 
-                if change
-                    .path
-                    .extension()
-                    .and_then(|e| e.to_str())
-                    == Some("scene")
-                {
+                if change.path.extension().and_then(|e| e.to_str()) == Some("scene") {
                     use std::fs;
                     if let Ok(source) = fs::read_to_string(&change.path) {
                         let map_key = change
@@ -2672,13 +2723,11 @@ impl PokemonGame {
                         // recompiles it to an AST, the Boa path to JS — one
                         // seam for both engines.
                         match self.overworld.reload_scene_source(map_key, &source) {
-                            Ok(()) => log::info!(
-                                "[hot-reload] Recompiled .scene: {}",
-                                map_key
-                            ),
+                            Ok(()) => log::info!("[hot-reload] Recompiled .scene: {}", map_key),
                             Err(e) => dbg_eprintln!(
                                 "[hot-reload] Failed to compile {}: {}",
-                                change.path.display(), e
+                                change.path.display(),
+                                e
                             ),
                         }
                     }
@@ -2747,6 +2796,7 @@ impl PokemonGame {
         if self.black_screen_frames > 0 {
             self.black_screen_frames -= 1;
             if self.black_screen_frames == 0 {
+                #[cfg(not(target_os = "none"))]
                 if let Some(screen) = self.pending_screen.take() {
                     self.handle_transition(screen);
                 }
@@ -2948,13 +2998,17 @@ impl PokemonGame {
             }
             GameScreen::LanguageSelect => {
                 use pokered_core::game_state::Lang;
-                let action = if input.is_just_pressed(GbButton::Up) || input.is_just_pressed(GbButton::Down) {
+                let action = if input.is_just_pressed(GbButton::Up)
+                    || input.is_just_pressed(GbButton::Down)
+                {
                     self.state.config.language = match self.state.config.language {
                         Lang::En => Lang::Zh,
                         Lang::Zh => Lang::En,
                     };
                     ScreenAction::Continue
-                } else if input.is_just_pressed(GbButton::A) || input.is_just_pressed(GbButton::Start) {
+                } else if input.is_just_pressed(GbButton::A)
+                    || input.is_just_pressed(GbButton::Start)
+                {
                     ScreenAction::Transition(GameScreen::IntroScene)
                 } else {
                     ScreenAction::Continue
@@ -2962,11 +3016,12 @@ impl PokemonGame {
                 // Keep the overworld script engine in sync with the chosen
                 // language so NPC dialogue (`@t` literals) renders in it, and
                 // localize battle messages the same way.
-                self.overworld.set_script_lang(if self.state.config.language == Lang::Zh {
-                    "zh"
-                } else {
-                    "en"
-                });
+                self.overworld
+                    .set_script_lang(if self.state.config.language == Lang::Zh {
+                        "zh"
+                    } else {
+                        "en"
+                    });
                 self.battle.is_zh = self.state.config.language == Lang::Zh;
                 action
             }
@@ -3041,7 +3096,8 @@ impl PokemonGame {
                         start: input.is_just_pressed(GbButton::Start),
                         select: input.is_just_pressed(GbButton::Select),
                     };
-                    self.oak_speech.update_naming_frame(naming_input, self.state.config.language == Lang::Zh)
+                    self.oak_speech
+                        .update_naming_frame(naming_input, self.state.config.language == Lang::Zh)
                 } else {
                     let oak_input = OakSpeechInput {
                         up: input.is_just_pressed(GbButton::Up),
@@ -3113,81 +3169,82 @@ impl PokemonGame {
                 // placement); otherwise the map keeps its placeholder NPC.
                 #[cfg(not(target_os = "none"))]
                 let link_action: Option<ScreenAction> = {
-                let current_map = self.overworld.state.current_map;
-                let linked = matches!(self.link_status, LinkStatus::Connected)
-                    && self.link_session.is_some();
-                let in_cable_room = crate::link::cable_club::is_cable_room(current_map);
-                self.overworld.link_opponent = if linked && in_cable_room {
-                    Some(pokered_core::link::LinkOpponentPresence::for_role(
-                        self.link_role,
-                    ))
-                } else {
-                    None
-                };
-                self.link_cable.note_presence(linked, in_cable_room);
-
-                // The gameboy on the table: the map scene calls
-                // `game.linkStart()`; the flow starts the room's request
-                // (LINK BATTLE in the Colosseum, LINK TRADE in the Trade
-                // Center — the original's CableClubLeftGameboy/
-                // CableClubRightGameboy, engine/pokemon/bills_pc.asm).
-                if self.overworld.take_link_start_request() {
-                    if linked {
-                        let need = self.link_cable.on_gameboy_used(current_map);
-                        self.handle_flow_need(need);
+                    let current_map = self.overworld.state.current_map;
+                    let linked = matches!(self.link_status, LinkStatus::Connected)
+                        && self.link_session.is_some();
+                    let in_cable_room = crate::link::cable_club::is_cable_room(current_map);
+                    self.overworld.link_opponent = if linked && in_cable_room {
+                        Some(pokered_core::link::LinkOpponentPresence::for_role(
+                            self.link_role,
+                        ))
                     } else {
-                        // Offline (no link session): the original's
-                        // "Just a moment." (JustAMomentText) and nothing
-                        // happens — the room has no cable partner.
-                        self.overworld.pending_dialogue = Some(
-                            pokered_core::overworld::BedroomDialogue::from_message(
-                                &self.localize_dialogue(crate::link::cable_club::TEXT_JUST_A_MOMENT),
-                            ),
-                        );
-                    }
-                }
+                        None
+                    };
+                    self.link_cable.note_presence(linked, in_cable_room);
 
-                // Trade cutscene start: both sides confirmed, the wire mon
-                // arrived (TradeExecute) — play the exchange animation. The
-                // exchange data lives in the trade driver (`received_mon`).
-                if self.link_cable.phase() == &CableClubPhase::TradeAnim
-                    && self.trade_anim.is_none()
-                {
-                    if self
-                        .link_trade
-                        .as_ref()
-                        .is_some_and(|d| d.received_mon().is_some())
+                    // The gameboy on the table: the map scene calls
+                    // `game.linkStart()`; the flow starts the room's request
+                    // (LINK BATTLE in the Colosseum, LINK TRADE in the Trade
+                    // Center — the original's CableClubLeftGameboy/
+                    // CableClubRightGameboy, engine/pokemon/bills_pc.asm).
+                    if self.overworld.take_link_start_request() {
+                        if linked {
+                            let need = self.link_cable.on_gameboy_used(current_map);
+                            self.handle_flow_need(need);
+                        } else {
+                            // Offline (no link session): the original's
+                            // "Just a moment." (JustAMomentText) and nothing
+                            // happens — the room has no cable partner.
+                            self.overworld.pending_dialogue =
+                                Some(pokered_core::overworld::BedroomDialogue::from_message(
+                                    &self.localize_dialogue(
+                                        crate::link::cable_club::TEXT_JUST_A_MOMENT,
+                                    ),
+                                ));
+                        }
+                    }
+
+                    // Trade cutscene start: both sides confirmed, the wire mon
+                    // arrived (TradeExecute) — play the exchange animation. The
+                    // exchange data lives in the trade driver (`received_mon`).
+                    if self.link_cable.phase() == &CableClubPhase::TradeAnim
+                        && self.trade_anim.is_none()
                     {
-                        self.start_link_trade_anim();
+                        if self
+                            .link_trade
+                            .as_ref()
+                            .is_some_and(|d| d.received_mon().is_some())
+                        {
+                            self.start_link_trade_anim();
+                        }
                     }
-                }
 
-                // Modal link screens (prompts, party select, wait boxes):
-                // the game freezes like the original's link screens and the
-                // input goes to the flow. `BattleSetup` (both parties
-                // exchanged) builds the battle and transitions into it.
-                if self.link_cable.is_modal()
-                    || self.link_cable.phase() == &CableClubPhase::BattleSetup
-                {
-                    if self.link_cable.is_modal() {
-                        let psi = PartyScreenInput {
-                            up: input.is_just_pressed(GbButton::Up),
-                            down: input.is_just_pressed(GbButton::Down),
-                            a: input.is_just_pressed(GbButton::A),
-                            b: input.is_just_pressed(GbButton::B),
-                        };
-                        let need = self.link_cable.update(psi, &self.save_data.party.to_vec());
-                        self.handle_flow_need(need);
-                    }
-                    if self.link_cable.phase() == &CableClubPhase::BattleSetup {
-                        self.start_link_battle();
-                        Some(ScreenAction::Transition(GameScreen::Battle))
+                    // Modal link screens (prompts, party select, wait boxes):
+                    // the game freezes like the original's link screens and the
+                    // input goes to the flow. `BattleSetup` (both parties
+                    // exchanged) builds the battle and transitions into it.
+                    if self.link_cable.is_modal()
+                        || self.link_cable.phase() == &CableClubPhase::BattleSetup
+                    {
+                        if self.link_cable.is_modal() {
+                            let psi = PartyScreenInput {
+                                up: input.is_just_pressed(GbButton::Up),
+                                down: input.is_just_pressed(GbButton::Down),
+                                a: input.is_just_pressed(GbButton::A),
+                                b: input.is_just_pressed(GbButton::B),
+                            };
+                            let need = self.link_cable.update(psi, &self.save_data.party.to_vec());
+                            self.handle_flow_need(need);
+                        }
+                        if self.link_cable.phase() == &CableClubPhase::BattleSetup {
+                            self.start_link_battle();
+                            Some(ScreenAction::Transition(GameScreen::Battle))
+                        } else {
+                            Some(ScreenAction::Continue)
+                        }
                     } else {
-                        Some(ScreenAction::Continue)
+                        None
                     }
-                } else {
-                    None
-                }
                 };
                 #[cfg(target_os = "none")]
                 let link_action: Option<ScreenAction> = None;
@@ -3213,7 +3270,8 @@ impl PokemonGame {
                         start: input.is_just_pressed(GbButton::Start),
                         select: input.is_just_pressed(GbButton::Select),
                     };
-                    self.overworld.update_naming_input(naming_input, self.state.config.language == Lang::Zh);
+                    self.overworld
+                        .update_naming_input(naming_input, self.state.config.language == Lang::Zh);
                     ScreenAction::Continue
                 } else {
                     // While the A+B+Start+Select soft-reset combo is held, the
@@ -3369,11 +3427,8 @@ impl PokemonGame {
                                     .min(999_999);
                             }
                             OverworldGameDataRequest::TakeMoney { amount } => {
-                                self.save_data.game_data.player_money = self
-                                    .save_data
-                                    .game_data
-                                    .player_money
-                                    .saturating_sub(amount);
+                                self.save_data.game_data.player_money =
+                                    self.save_data.game_data.player_money.saturating_sub(amount);
                             }
                             OverworldGameDataRequest::GiveBadge { badge } => {
                                 self.save_data.game_data.set_badge(badge);
@@ -3460,15 +3515,13 @@ impl PokemonGame {
                             }
                             OverworldGameDataRequest::DepositDaycare { index } => {
                                 self.save_data.deposit_daycare(index);
-                                self.overworld.party_count =
-                                    self.save_data.party.count() as u8;
+                                self.overworld.party_count = self.save_data.party.count() as u8;
                                 self.overworld.party_lead_level =
                                     self.save_data.party.leader_level();
                             }
                             OverworldGameDataRequest::WithdrawDaycare => {
                                 self.save_data.withdraw_daycare();
-                                self.overworld.party_count =
-                                    self.save_data.party.count() as u8;
+                                self.overworld.party_count = self.save_data.party.count() as u8;
                                 self.overworld.party_lead_level =
                                     self.save_data.party.leader_level();
                             }
@@ -3521,10 +3574,11 @@ impl PokemonGame {
                                 OverworldAudioRequest::PlayMapMusic { map } => {
                                     use pokered_core::overworld::TransportMode;
                                     let data_id = match self.overworld.state.player.transport {
-                                        TransportMode::Biking => 32, // MUSIC_BIKE_RIDING
+                                        TransportMode::Biking => 32,  // MUSIC_BIKE_RIDING
                                         TransportMode::Surfing => 33, // MUSIC_SURFING
                                         TransportMode::Walking => {
-                                            pokered_core::overworld::map_loading::get_map_music(map) as u8
+                                            pokered_core::overworld::map_loading::get_map_music(map)
+                                                as u8
                                         }
                                     };
                                     if let Some(id) = MusicId::from_u8(data_id) {
@@ -3593,8 +3647,7 @@ impl PokemonGame {
                             self.save_data.game_data.pokedex.set_owned(pending.species);
                             self.overworld.party_count = self.save_data.party.count() as u8;
                             self.overworld.box_count = self.save_data.current_box.count() as u8;
-                            self.overworld.party_lead_level =
-                                self.save_data.party.leader_level();
+                            self.overworld.party_lead_level = self.save_data.party.leader_level();
                         }
                     }
 
@@ -3616,7 +3669,9 @@ impl PokemonGame {
                         }
                     } else if let Some(lucky) = self.overworld.pending_slots.take() {
                         let coins = self.save_data.game_data.player_coins;
-                        let seed = (self.frame_count as u32).wrapping_mul(2654435761).wrapping_add(1);
+                        let seed = (self.frame_count as u32)
+                            .wrapping_mul(2654435761)
+                            .wrapping_add(1);
                         self.slots_screen = Some(SlotsScreen::new(lucky, coins, seed));
                         ScreenAction::Transition(GameScreen::Slots)
                     } else if let Some(floors) = self.overworld.pending_elevator.take() {
@@ -3682,12 +3737,12 @@ impl PokemonGame {
                         // appeared!" (HookedMonAttackedText, wMoveMissed = 1).
                         self.battle.hooked = encounter.hooked;
                         ScreenAction::Transition(GameScreen::Battle)
-                } else if let Some(trainer) = self.overworld.pending_trainer_battle.take() {
-                    self.start_trainer_battle(&trainer.trainer_id, trainer.rival_triplet_base);
-                    if trainer.npc_index < u8::MAX {
-                        self.battle.trainer_npc_index = Some(trainer.npc_index);
-                    }
-                    self.battle.end_battle_text = trainer.end_battle_text;
+                    } else if let Some(trainer) = self.overworld.pending_trainer_battle.take() {
+                        self.start_trainer_battle(&trainer.trainer_id, trainer.rival_triplet_base);
+                        if trainer.npc_index < u8::MAX {
+                            self.battle.trainer_npc_index = Some(trainer.npc_index);
+                        }
+                        self.battle.end_battle_text = trainer.end_battle_text;
                         ScreenAction::Transition(GameScreen::Battle)
                     } else {
                         action
@@ -3841,8 +3896,7 @@ impl PokemonGame {
                     // PlayAnimation/PlaySubanimation — one play per command).
                     if let Some(req) = self.battle_vfx.take_move_sfx() {
                         use pokered_data::move_sfx::{get_move_sound, MoveSound};
-                        match get_move_sound(req.anim_move, req.sound_move, req.attacker_species)
-                        {
+                        match get_move_sound(req.anim_move, req.sound_move, req.attacker_species) {
                             Some(MoveSound::Sfx(raw)) => {
                                 if let Some(id) = SfxId::from_u8(raw) {
                                     audio.play_sfx(id);
@@ -3977,9 +4031,7 @@ impl PokemonGame {
                         self.bag_screen = BagScreenState::new(items);
                         ScreenAction::Transition(GameScreen::Bag)
                     }
-                    StartMenuAction::OpenPokedex => {
-                        ScreenAction::Transition(GameScreen::Pokedex)
-                    }
+                    StartMenuAction::OpenPokedex => ScreenAction::Transition(GameScreen::Pokedex),
                     StartMenuAction::OpenTrainerInfo => {
                         ScreenAction::Transition(GameScreen::TrainerCard)
                     }
@@ -4108,7 +4160,7 @@ impl PokemonGame {
                     }
                     PartyScreenAction::ShowStats(idx) => {
                         self.stats_screen = Some(StatsScreenState::new(
-                            self.party_screen.party_member(idx).cloned().unwrap()
+                            self.party_screen.party_member(idx).cloned().unwrap(),
                         ));
                         ScreenAction::Transition(GameScreen::PokemonStatsScreen(idx))
                     }
@@ -4140,20 +4192,18 @@ impl PokemonGame {
                                         // the lead's level (repel checks it).
                                         self.overworld.party_lead_level =
                                             self.save_data.party.leader_level();
-                                        self.overworld.pending_dialogue = Some(
-                                            BedroomDialogue::from_message(
+                                        self.overworld.pending_dialogue =
+                                            Some(BedroomDialogue::from_message(
                                                 &self.localize_dialogue(&message),
-                                            ),
-                                        );
+                                            ));
                                         self.pending_bag_item = None;
                                         ScreenAction::Transition(GameScreen::Overworld)
                                     }
                                     ItemApplyOutcome::NoEffect { message } => {
-                                        self.overworld.pending_dialogue = Some(
-                                            BedroomDialogue::from_message(
+                                        self.overworld.pending_dialogue =
+                                            Some(BedroomDialogue::from_message(
                                                 &self.localize_dialogue(&message),
-                                            ),
-                                        );
+                                            ));
                                         self.pending_bag_item = None;
                                         ScreenAction::Transition(GameScreen::Overworld)
                                     }
@@ -4189,7 +4239,11 @@ impl PokemonGame {
                                             }
                                         }
                                         self.queue_item_evolution(
-                                            party_index, from, to, pre_text, force,
+                                            party_index,
+                                            from,
+                                            to,
+                                            pre_text,
+                                            force,
                                         );
                                         self.overworld.party_lead_level =
                                             self.save_data.party.leader_level();
@@ -4243,41 +4297,44 @@ impl PokemonGame {
                         } else {
                             // Replace-move confirmation for the pending TM/HM.
                             match self.pending_bag_item {
-                            None => ScreenAction::Continue,
-                            Some(item) => {
-                                let outcome = match self.save_data.party.get_mut(party_index) {
-                                    Some(mon) => bag_use::finish_move_choice(item, mon, slot),
-                                    None => ItemApplyOutcome::NoEffect {
-                                        message: bag_use::NO_EFFECT_MESSAGE.to_string(),
-                                    },
-                                };
-                                let (message, consume) = match outcome {
-                                    ItemApplyOutcome::Used { message, consume } => {
-                                        (message, consume)
+                                None => ScreenAction::Continue,
+                                Some(item) => {
+                                    let outcome = match self.save_data.party.get_mut(party_index) {
+                                        Some(mon) => bag_use::finish_move_choice(item, mon, slot),
+                                        None => ItemApplyOutcome::NoEffect {
+                                            message: bag_use::NO_EFFECT_MESSAGE.to_string(),
+                                        },
+                                    };
+                                    let (message, consume) = match outcome {
+                                        ItemApplyOutcome::Used { message, consume } => {
+                                            (message, consume)
+                                        }
+                                        ItemApplyOutcome::NoEffect { message } => (message, false),
+                                        // finish_tm_hm_replace never re-asks.
+                                        ItemApplyOutcome::NeedsMoveReplace { .. } => {
+                                            (bag_use::NO_EFFECT_MESSAGE.to_string(), false)
+                                        }
+                                        // …nor starts an evolution.
+                                        ItemApplyOutcome::EvolutionPending { .. } => {
+                                            (bag_use::NO_EFFECT_MESSAGE.to_string(), false)
+                                        }
+                                    };
+                                    if consume {
+                                        let _ = self.save_data.game_data.bag.remove_item(item, 1);
                                     }
-                                    ItemApplyOutcome::NoEffect { message } => (message, false),
-                                    // finish_tm_hm_replace never re-asks.
-                                    ItemApplyOutcome::NeedsMoveReplace { .. } => {
-                                        (bag_use::NO_EFFECT_MESSAGE.to_string(), false)
-                                    }
-                                    // …nor starts an evolution.
-                                    ItemApplyOutcome::EvolutionPending { .. } => {
-                                        (bag_use::NO_EFFECT_MESSAGE.to_string(), false)
-                                    }
-                                };
-                                if consume {
-                                    let _ = self.save_data.game_data.bag.remove_item(item, 1);
+                                    let message = self.localize_dialogue(&message);
+                                    self.overworld.pending_dialogue =
+                                        Some(BedroomDialogue::from_message(&message));
+                                    self.pending_bag_item = None;
+                                    ScreenAction::Transition(GameScreen::Overworld)
                                 }
-                                let message = self.localize_dialogue(&message);
-                                self.overworld.pending_dialogue =
-                                    Some(BedroomDialogue::from_message(&message));
-                                self.pending_bag_item = None;
-                                ScreenAction::Transition(GameScreen::Overworld)
-                            }
                             }
                         }
                     }
-                    PartyScreenAction::UseFieldMove { party_index, move_id } => {
+                    PartyScreenAction::UseFieldMove {
+                        party_index,
+                        move_id,
+                    } => {
                         // Party-menu HM use (Gen-1 start_sub_menus.asm): the
                         // overworld applies the effect and queues any result
                         // text; FLY hands off to the town map picker instead.
@@ -4335,12 +4392,14 @@ impl PokemonGame {
                                 },
                             },
                             None => pokered_core::items::bag_use::ItemApplyOutcome::NoEffect {
-                                message: pokered_core::items::bag_use::NO_EFFECT_MESSAGE.to_string(),
+                                message: pokered_core::items::bag_use::NO_EFFECT_MESSAGE
+                                    .to_string(),
                             },
                         };
                         let message = match outcome {
                             pokered_core::items::bag_use::ItemApplyOutcome::Used {
-                                message, ..
+                                message,
+                                ..
                             } => message,
                             pokered_core::items::bag_use::ItemApplyOutcome::NoEffect {
                                 message,
@@ -4368,10 +4427,12 @@ impl PokemonGame {
                     select: input.is_just_pressed(GbButton::Select),
                 };
                 match self.bag_screen.update_frame(bag_input) {
-                    BagScreenAction::Cancelled => {
-                        ScreenAction::Transition(GameScreen::StartMenu)
-                    }
-                    BagScreenAction::TossItem { item, index, quantity } => {
+                    BagScreenAction::Cancelled => ScreenAction::Transition(GameScreen::StartMenu),
+                    BagScreenAction::TossItem {
+                        item,
+                        index,
+                        quantity,
+                    } => {
                         // Key items (incl. HMs) refuse: "That's too important
                         // to toss!" (_TooImportantToTossText). Everything else
                         // is removed and the bag view rebuilt.
@@ -4385,11 +4446,9 @@ impl PokemonGame {
                                 .set_items(self.save_data.game_data.bag.items().to_vec());
                             ScreenAction::Continue
                         } else {
-                            self.overworld.pending_dialogue = Some(
-                                BedroomDialogue::from_message(&self.localize_dialogue(
-                                    "That's too impor-\ntant to toss!",
-                                )),
-                            );
+                            self.overworld.pending_dialogue = Some(BedroomDialogue::from_message(
+                                &self.localize_dialogue("That's too impor-\ntant to toss!"),
+                            ));
                             ScreenAction::Transition(GameScreen::Overworld)
                         }
                     }
@@ -4466,9 +4525,7 @@ impl PokemonGame {
                 };
                 match self.trainer_card_screen.update_frame(tc_input) {
                     // RedisplayStartMenu (start_sub_menus.asm:475).
-                    TrainerCardAction::Closed => {
-                        ScreenAction::Transition(GameScreen::StartMenu)
-                    }
+                    TrainerCardAction::Closed => ScreenAction::Transition(GameScreen::StartMenu),
                     TrainerCardAction::Active => ScreenAction::Continue,
                 }
             }
@@ -4479,7 +4536,8 @@ impl PokemonGame {
                     a: input.is_just_pressed(GbButton::A),
                     b: input.is_just_pressed(GbButton::B),
                 };
-                match self.town_map_screen.update_frame(tm_input) {                    TownMapScreenAction::Closed => {
+                match self.town_map_screen.update_frame(tm_input) {
+                    TownMapScreenAction::Closed => {
                         // FLY cancel returns to the party menu (Gen-1 flow);
                         // the bag's TOWN MAP viewer returns to the overworld.
                         if self.town_map_screen.mode()
@@ -4648,72 +4706,73 @@ impl PokemonGame {
                     // Screen state lost (shouldn't happen) — bail out cleanly.
                     ScreenAction::Transition(GameScreen::Overworld)
                 } else {
-                let pc = self.pc_screen.as_mut().unwrap();
-                let pc_action = {
-                    let mut ctx = PcContext {
-                        party: &mut self.save_data.party,
-                        pc_storage: &mut self.save_data.pc_storage,
-                        bag: &mut self.save_data.game_data.bag,
-                        pc_items: &mut self.save_data.game_data.pc_items,
-                        pokedex: &self.save_data.game_data.pokedex,
+                    let pc = self.pc_screen.as_mut().unwrap();
+                    let pc_action = {
+                        let mut ctx = PcContext {
+                            party: &mut self.save_data.party,
+                            pc_storage: &mut self.save_data.pc_storage,
+                            bag: &mut self.save_data.game_data.bag,
+                            pc_items: &mut self.save_data.game_data.pc_items,
+                            pokedex: &self.save_data.game_data.pokedex,
+                        };
+                        pc.update_frame(menu_input, &mut ctx)
                     };
-                    pc.update_frame(menu_input, &mut ctx)
-                };
-                for sfx in pc.take_sfx() {
-                    if let Some(ref audio) = self.audio {
-                        let id = match sfx {
-                            PcSfx::TurnOn => SfxId::TurnOnPC,
-                            PcSfx::TurnOff => SfxId::TurnOffPC,
-                            PcSfx::Enter => SfxId::EnterPC,
-                            PcSfx::WithdrawDeposit => SfxId::WithdrawDeposit,
-                            PcSfx::Save => SfxId::Save,
-                        };
-                        audio.play_sfx(id);
-                    }
-                }
-                if menu_input.a {
-                    if let Some(ref audio) = self.audio {
-                        audio.play_sfx(SfxId::PressAB);
-                    }
-                }
-                if pc.take_save_request() {
-                    // CHANGE BOX saves the game (save.asm ChangeBox →
-                    // SaveGameData); keep the SRAM box-num byte in sync
-                    // (bit 7 = "has changed boxes", wCurrentBoxNum).
-                    self.save_data.game_data.current_box_num =
-                        self.save_data.pc_storage.current_box_index() as u8 | 0x80;
-                    // Keep the sCurBoxData mirror (the bank-1 copy of the
-                    // active box the original rewrites on every save,
-                    // save.asm:229-233) in sync with the storage.
-                    self.save_data.current_box = self.save_data.pc_storage.current_box().clone();
-                    self.save_to_file();
-                }
-                // Party membership may have changed (deposit/withdraw) — keep
-                // the overworld mirrors in sync (repel checks, scripts).
-                self.overworld.party_count = self.save_data.party.count() as u8;
-                self.overworld.box_count = self.save_data.current_box.count() as u8;
-                self.overworld.party_lead_level = self.save_data.party.leader_level();
-                match pc_action {
-                    PcScreenAction::Continue => ScreenAction::Continue,
-                    PcScreenAction::Exit => {
-                        self.pc_screen = None;
-                        ScreenAction::Transition(GameScreen::Overworld)
-                    }
-                    PcScreenAction::ShowStats { from_box, index } => {
-                        let mon = if from_box {
-                            self.save_data.pc_storage.current_box().get(index).cloned()
-                        } else {
-                            self.save_data.party.get(index).cloned()
-                        };
-                        match mon {
-                            Some(mon) => {
-                                self.stats_screen = Some(StatsScreenState::new(mon));
-                                ScreenAction::Transition(GameScreen::PokemonStatsScreen(index))
-                            }
-                            None => ScreenAction::Continue,
+                    for sfx in pc.take_sfx() {
+                        if let Some(ref audio) = self.audio {
+                            let id = match sfx {
+                                PcSfx::TurnOn => SfxId::TurnOnPC,
+                                PcSfx::TurnOff => SfxId::TurnOffPC,
+                                PcSfx::Enter => SfxId::EnterPC,
+                                PcSfx::WithdrawDeposit => SfxId::WithdrawDeposit,
+                                PcSfx::Save => SfxId::Save,
+                            };
+                            audio.play_sfx(id);
                         }
                     }
-                }
+                    if menu_input.a {
+                        if let Some(ref audio) = self.audio {
+                            audio.play_sfx(SfxId::PressAB);
+                        }
+                    }
+                    if pc.take_save_request() {
+                        // CHANGE BOX saves the game (save.asm ChangeBox →
+                        // SaveGameData); keep the SRAM box-num byte in sync
+                        // (bit 7 = "has changed boxes", wCurrentBoxNum).
+                        self.save_data.game_data.current_box_num =
+                            self.save_data.pc_storage.current_box_index() as u8 | 0x80;
+                        // Keep the sCurBoxData mirror (the bank-1 copy of the
+                        // active box the original rewrites on every save,
+                        // save.asm:229-233) in sync with the storage.
+                        self.save_data.current_box =
+                            self.save_data.pc_storage.current_box().clone();
+                        self.save_to_file();
+                    }
+                    // Party membership may have changed (deposit/withdraw) — keep
+                    // the overworld mirrors in sync (repel checks, scripts).
+                    self.overworld.party_count = self.save_data.party.count() as u8;
+                    self.overworld.box_count = self.save_data.current_box.count() as u8;
+                    self.overworld.party_lead_level = self.save_data.party.leader_level();
+                    match pc_action {
+                        PcScreenAction::Continue => ScreenAction::Continue,
+                        PcScreenAction::Exit => {
+                            self.pc_screen = None;
+                            ScreenAction::Transition(GameScreen::Overworld)
+                        }
+                        PcScreenAction::ShowStats { from_box, index } => {
+                            let mon = if from_box {
+                                self.save_data.pc_storage.current_box().get(index).cloned()
+                            } else {
+                                self.save_data.party.get(index).cloned()
+                            };
+                            match mon {
+                                Some(mon) => {
+                                    self.stats_screen = Some(StatsScreenState::new(mon));
+                                    ScreenAction::Transition(GameScreen::PokemonStatsScreen(index))
+                                }
+                                None => ScreenAction::Continue,
+                            }
+                        }
+                    }
                 }
             }
             GameScreen::Shop(ref mut mart_state) => {
@@ -4738,9 +4797,7 @@ impl PokemonGame {
                         }
                         ScreenAction::Continue
                     }
-                    MartUpdate::Exit => {
-                        ScreenAction::Transition(GameScreen::Overworld)
-                    }
+                    MartUpdate::Exit => ScreenAction::Transition(GameScreen::Overworld),
                 }
             }
         };
@@ -4755,7 +4812,29 @@ impl PokemonGame {
                 self.black_screen_frames = BLACK_SCREEN_DURATION;
                 self.pending_screen = Some(new_screen);
             } else {
-                self.handle_transition(new_screen);
+                // Some transition constructors contain large inline arrays.
+                // Let the bare-metal entry point run them after `update_inner`
+                // has returned so their stack frames do not overlap.
+                #[cfg(target_os = "none")]
+                {
+                    self.pending_screen = Some(new_screen);
+                }
+                #[cfg(not(target_os = "none"))]
+                {
+                    self.handle_transition(new_screen);
+                }
+            }
+        }
+    }
+
+    /// Complete a transition after the main update stack frame has unwound.
+    /// Large inline save/overworld values otherwise overflow the GBA's small
+    /// software stack when their constructors are nested in `update_inner`.
+    #[cfg(target_os = "none")]
+    pub fn flush_deferred_transition(&mut self) {
+        if self.black_screen_frames == 0 {
+            if let Some(screen) = self.pending_screen.take() {
+                self.handle_transition(screen);
             }
         }
     }
@@ -4824,8 +4903,7 @@ impl PokemonGame {
                 seed ^= seed << 5;
                 (seed >> 16) as u8
             };
-            let random_numbers: [u8; LINK_RANDOM_LIST_SIZE] =
-                core::array::from_fn(|_| next_byte());
+            let random_numbers: [u8; LINK_RANDOM_LIST_SIZE] = core::array::from_fn(|_| next_byte());
             let mut driver = LinkBattleDriver::new(
                 session.battle_transport(),
                 self.save_data.party.clone(),
@@ -4865,8 +4943,7 @@ impl PokemonGame {
                     }
                     LinkDriverEvent::Disconnected(reason) => {
                         dbg_eprintln!("[link] disconnected: {}", reason);
-                        self.link_status =
-                            LinkStatus::Disconnected("Player2 disconnected".into());
+                        self.link_status = LinkStatus::Disconnected("Player2 disconnected".into());
                     }
                     LinkDriverEvent::BattleRequested => {
                         // The peer's request can arrive before our party was
@@ -4892,8 +4969,7 @@ impl PokemonGame {
             let result = driver.poll(&mut *session.trade_transport());
             match &result {
                 LinkTradePollResult::Disconnected => {
-                    self.link_status =
-                        LinkStatus::Disconnected("Player2 disconnected".into());
+                    self.link_status = LinkStatus::Disconnected("Player2 disconnected".into());
                 }
                 LinkTradePollResult::Error(e) => {
                     self.link_status = LinkStatus::Disconnected(format!("link error: {}", e));
@@ -5027,7 +5103,8 @@ impl PokemonGame {
             Ok(()) => self.link_cable.on_need_done(&need),
             Err(e) => {
                 dbg_eprintln!("[link] flow action failed: {}", e);
-                self.link_cable.on_session_error(format!("link error: {}", e));
+                self.link_cable
+                    .on_session_error(format!("link error: {}", e));
             }
         }
     }
@@ -5194,23 +5271,19 @@ impl PokemonGame {
         // Structured dialogue-machine state: page progress, typewriter
         // position, and whether the current page is fully revealed and
         // waiting for A — the driver can align A presses exactly.
-        let dialogue_state = self
-            .overworld
-            .pending_dialogue
-            .as_ref()
-            .map(|d| {
-                let (a, b) = d.get_display_text().unwrap_or_default();
-                serde_json::json!({
-                    "text": format!("{} {}", a, b).trim(),
-                    "page": d.current_page() + 1,
-                    "total_pages": d.pages().len(),
-                    "char_index": d.char_index(),
-                    "total_chars": d.total_chars(),
-                    "waiting_for_input": d.waiting_for_input(),
-                    "holding_open": d.holding_open(),
-                    "done": d.is_done(),
-                })
-            });
+        let dialogue_state = self.overworld.pending_dialogue.as_ref().map(|d| {
+            let (a, b) = d.get_display_text().unwrap_or_default();
+            serde_json::json!({
+                "text": format!("{} {}", a, b).trim(),
+                "page": d.current_page() + 1,
+                "total_pages": d.pages().len(),
+                "char_index": d.char_index(),
+                "total_chars": d.total_chars(),
+                "waiting_for_input": d.waiting_for_input(),
+                "holding_open": d.holding_open(),
+                "done": d.is_done(),
+            })
+        });
         // Choice-menu cursor (script `@choice`), so a driver can move the
         // highlighted option without guessing.
         let choice = self
@@ -5534,12 +5607,14 @@ impl PokemonGame {
                 DebugResponse::ok_with_data(data)
             }
             DebugCommand::Game(GameDebugCommand::GetMap) => {
-                let map = self.overworld.map_data.as_ref().map(|m| serde_json::json!({
-                    "map_name": format!("{:?}", self.overworld.state.current_map),
-                    "width": m.width, "height": m.height,
-                    "tileset": format!("{:?}", m.tileset), "blocks": m.blocks,
-                    "transport": format!("{:?}", self.overworld.state.player.transport),
-                }));
+                let map = self.overworld.map_data.as_ref().map(|m| {
+                    serde_json::json!({
+                        "map_name": format!("{:?}", self.overworld.state.current_map),
+                        "width": m.width, "height": m.height,
+                        "tileset": format!("{:?}", m.tileset), "blocks": m.blocks,
+                        "transport": format!("{:?}", self.overworld.state.player.transport),
+                    })
+                });
                 DebugResponse::ok_with_data(serde_json::json!(map))
             }
             DebugCommand::Game(GameDebugCommand::CaptureFrame { ref path }) => {
@@ -5740,18 +5815,16 @@ impl PokemonGame {
                     .collect::<String>();
                 match normalized.parse::<pokered_data::species::Species>() {
                     Ok(sp) => {
-                        match pokered_core::pokemon::stats::create_pokemon(sp, level, [0x9A, 0x78]) {
+                        match pokered_core::pokemon::stats::create_pokemon(sp, level, [0x9A, 0x78])
+                        {
                             Some(mon) => {
                                 let _ = self.save_data.party.add(mon);
-                                self.overworld.party_count =
-                                    self.save_data.party.count() as u8;
+                                self.overworld.party_count = self.save_data.party.count() as u8;
                                 self.overworld.party_lead_level =
                                     self.save_data.party.leader_level();
                                 DebugResponse::ok()
                             }
-                            None => {
-                                DebugResponse::err(format!("failed to create '{}'", species))
-                            }
+                            None => DebugResponse::err(format!("failed to create '{}'", species)),
                         }
                     }
                     Err(_) => DebugResponse::err(format!("unknown species: '{}'", species)),
@@ -5944,7 +6017,12 @@ impl PokemonGame {
         // The Hall of Fame roll call and the end credits take over the whole
         // screen while they play.
         if let Some(ref hof) = self.hof_ceremony {
-            draw_hof_ceremony(hof, &mut self.resources, frame_buffer, self.state.config.language);
+            draw_hof_ceremony(
+                hof,
+                &mut self.resources,
+                frame_buffer,
+                self.state.config.language,
+            );
             return;
         }
         if let Some(ref roll) = self.credits {
@@ -5952,7 +6030,14 @@ impl PokemonGame {
             return;
         }
 
-        frame_buffer.clear(Rgba::WHITE);
+        // These renderers own their backgrounds and clear the full screen.
+        // Avoid clearing the GBA's software framebuffer twice every frame.
+        if !matches!(
+            self.state.screen,
+            GameScreen::GameFreakSplash | GameScreen::LanguageSelect
+        ) {
+            frame_buffer.clear(Rgba::WHITE);
+        }
 
         match self.state.screen {
             GameScreen::GameFreakSplash => {
@@ -5974,10 +6059,20 @@ impl PokemonGame {
                 draw_main_menu(&self.main_menu, frame_buffer, self.state.config.language);
             }
             GameScreen::OakSpeech => {
-                draw_oak_speech(&self.oak_speech, &mut self.resources, frame_buffer, self.state.config.language);
+                draw_oak_speech(
+                    &self.oak_speech,
+                    &mut self.resources,
+                    frame_buffer,
+                    self.state.config.language,
+                );
             }
             GameScreen::Overworld => {
-                draw_overworld(&mut self.overworld, &mut self.resources, frame_buffer, self.state.config.language);
+                draw_overworld(
+                    &mut self.overworld,
+                    &mut self.resources,
+                    frame_buffer,
+                    self.state.config.language,
+                );
                 // Cable Club link overlay (text boxes / prompts / trade list)
                 // over the frozen room.
                 #[cfg(not(target_os = "none"))]
@@ -5993,11 +6088,15 @@ impl PokemonGame {
                 }
             }
             GameScreen::Battle => {
-                if self.battle_vfx.has_transition()
-                    && self.battle_vfx.overworld_snapshot.is_none()
+                if self.battle_vfx.has_transition() && self.battle_vfx.overworld_snapshot.is_none()
                 {
                     let mut snapshot = FrameBuffer::new(RenderConfig::new(160, 144), Rgba::BLACK);
-                    draw_overworld(&mut self.overworld, &mut self.resources, &mut snapshot, self.state.config.language);
+                    draw_overworld(
+                        &mut self.overworld,
+                        &mut self.resources,
+                        &mut snapshot,
+                        self.state.config.language,
+                    );
                     self.battle_vfx.overworld_snapshot = Some(snapshot);
                 }
                 draw_battle(
@@ -6012,14 +6111,29 @@ impl PokemonGame {
                 }
             }
             GameScreen::StartMenu => {
-                draw_overworld(&mut self.overworld, &mut self.resources, frame_buffer, self.state.config.language);
-                draw_start_menu(&self.start_menu, &self.player_name, frame_buffer, self.state.config.language);
+                draw_overworld(
+                    &mut self.overworld,
+                    &mut self.resources,
+                    frame_buffer,
+                    self.state.config.language,
+                );
+                draw_start_menu(
+                    &self.start_menu,
+                    &self.player_name,
+                    frame_buffer,
+                    self.state.config.language,
+                );
             }
             GameScreen::OptionsMenu => {
                 draw_options_menu(&self.options_menu, frame_buffer, self.state.config.language);
             }
             GameScreen::SaveMenu => {
-                draw_overworld(&mut self.overworld, &mut self.resources, frame_buffer, self.state.config.language);
+                draw_overworld(
+                    &mut self.overworld,
+                    &mut self.resources,
+                    frame_buffer,
+                    self.state.config.language,
+                );
                 draw_save_menu(&self.save_menu, frame_buffer, self.state.config.language);
             }
             GameScreen::PartyScreen => {
@@ -6033,17 +6147,33 @@ impl PokemonGame {
             }
             GameScreen::PokemonStatsScreen(_) => {
                 if let Some(ref ss) = self.stats_screen {
-                    draw_stats_screen(ss, self.resources.as_mut(), frame_buffer, self.state.config.language);
+                    draw_stats_screen(
+                        ss,
+                        self.resources.as_mut(),
+                        frame_buffer,
+                        self.state.config.language,
+                    );
                 }
             }
             GameScreen::Shop(ref mart_state) => {
                 // The mart is an overworld overlay sequence: pokemart.asm
                 // saves and restores the screen tiles around every menu, so
                 // the live map (clerk included) stays visible as the backdrop.
-                draw_overworld(&mut self.overworld, &mut self.resources, frame_buffer, self.state.config.language);
+                draw_overworld(
+                    &mut self.overworld,
+                    &mut self.resources,
+                    frame_buffer,
+                    self.state.config.language,
+                );
                 let money = self.save_data.game_data.player_money;
                 let bag_slice = self.save_data.game_data.bag.items();
-                draw_mart(mart_state, money, &bag_slice[..], frame_buffer, self.state.config.language);
+                draw_mart(
+                    mart_state,
+                    money,
+                    &bag_slice[..],
+                    frame_buffer,
+                    self.state.config.language,
+                );
             }
             GameScreen::Bag => {
                 draw_bag(&self.bag_screen, frame_buffer, self.state.config.language);
@@ -6102,7 +6232,13 @@ impl PokemonGame {
             }
             GameScreen::PC => {
                 if let Some(ref pc) = self.pc_screen {
-                    draw_pc(pc, &self.save_data, &mut self.resources, frame_buffer, self.state.config.language);
+                    draw_pc(
+                        pc,
+                        &self.save_data,
+                        &mut self.resources,
+                        frame_buffer,
+                        self.state.config.language,
+                    );
                 }
             }
         }
@@ -6196,8 +6332,16 @@ fn draw_language_select(fb: &mut FrameBuffer, current: pokered_core::game_state:
     fb.clear(Rgba::WHITE);
     draw_text("Select Language / 选择语言", 16, 48, Rgba::BLACK, fb);
     let gray = Rgba::rgb(0x80, 0x80, 0x80);
-    let (en_pre, en_color) = if current == Lang::En { ("> ", Rgba::BLACK) } else { ("  ", gray) };
-    let (zh_pre, zh_color) = if current == Lang::Zh { ("> ", Rgba::BLACK) } else { ("  ", gray) };
+    let (en_pre, en_color) = if current == Lang::En {
+        ("> ", Rgba::BLACK)
+    } else {
+        ("  ", gray)
+    };
+    let (zh_pre, zh_color) = if current == Lang::Zh {
+        ("> ", Rgba::BLACK)
+    } else {
+        ("  ", gray)
+    };
     let en_line = format!("{}English", en_pre);
     let zh_line = format!("{}中文", zh_pre);
     draw_text(&en_line, 16, 72, en_color, fb);
@@ -6217,9 +6361,9 @@ mod session_guard_tests {
     fn shop_and_carried_screens_are_in_session() {
         assert!(is_ingame_session_screen(&GameScreen::Overworld));
         assert!(is_ingame_session_screen(&GameScreen::Shop(
-            pokered_core::items::MartState::new(
-                pokered_core::items::ShopInventory::new(vec![pokered_data::items::ItemId::Potion]),
-            )
+            pokered_core::items::MartState::new(pokered_core::items::ShopInventory::new(vec![
+                pokered_data::items::ItemId::Potion
+            ]),)
         )));
         assert!(is_ingame_session_screen(&GameScreen::PokemonStatsScreen(0)));
         assert!(is_ingame_session_screen(&GameScreen::Bag));

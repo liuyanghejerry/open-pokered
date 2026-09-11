@@ -15,7 +15,7 @@
 //! with the same tile count.
 
 use crate::alloc_prelude::*;
-use alloc::collections::BTreeMap;
+use alloc::collections::{BTreeMap, BTreeSet};
 
 use dotzuki_renderer::asset_provider::ResourceProvider;
 use dotzuki_renderer::tile::{TileSet, TILE_PIXELS};
@@ -164,6 +164,10 @@ pub struct ResourceManager {
     root: AssetRoot,
     /// decoded tilesets keyed by "<subdir>/<stem>" (leading ".png" stripped)
     cache: BTreeMap<String, CachedTileSet>,
+    /// Registry misses are immutable for the lifetime of the ROM. Remember
+    /// them so optional assets do not rescan the full generated table every
+    /// frame.
+    missing: BTreeSet<String>,
 }
 
 impl ResourceManager {
@@ -171,11 +175,19 @@ impl ResourceManager {
         Self {
             root,
             cache: BTreeMap::new(),
+            missing: BTreeSet::new(),
         }
     }
 
     pub fn root(&self) -> &AssetRoot {
         &self.root
+    }
+
+    /// Drop decoded assets at a screen-lifecycle boundary. The GBA cannot
+    /// retain every boot/title/Oak tileset alongside the overworld script
+    /// registry in its 256 KiB EWRAM.
+    pub fn clear_cache(&mut self) {
+        self.cache.clear();
     }
 
     /// Resolve `name` (with or without `.png`, possibly nested like
@@ -200,18 +212,28 @@ impl ResourceManager {
     }
 
     fn load_and_cache(&mut self, subdir: &str, name: &str) -> Result<&CachedTileSet> {
-        let (reg_dir, reg_stem) = Self::registry_key(subdir, name).ok_or_else(|| {
-            log::warn!("gba-asset miss: {}/{}", subdir, name);
-            ResourceError {
-                key: format!("{}/{}", subdir, name),
-            }
-        })?;
-        let cache_key = format!("{}/{}", reg_dir, reg_stem);
+        let normalized_name = name.strip_suffix(".png").unwrap_or(name);
+        let cache_key = format!("{}/{}", subdir, normalized_name);
+        if self.cache.contains_key(&cache_key) {
+            return Ok(self.cache.get(&cache_key).expect("cache key exists"));
+        }
+        if self.missing.contains(&cache_key) {
+            return Err(ResourceError { key: cache_key });
+        }
+
+        let Some((reg_dir, reg_stem)) = Self::registry_key(subdir, normalized_name) else {
+            log::warn!("gba-asset miss: {}", cache_key);
+            self.missing.insert(cache_key.clone());
+            return Err(ResourceError { key: cache_key });
+        };
         if !self.cache.contains_key(&cache_key) {
-            let bytes = crate::gba_assets::get_preconverted_asset(reg_dir, reg_stem).ok_or_else(|| {
-                log::warn!("gba-asset registry miss: {}/{}", reg_dir, reg_stem);
-                ResourceError { key: cache_key.clone() }
-            })?;
+            let bytes =
+                crate::gba_assets::get_preconverted_asset(reg_dir, reg_stem).ok_or_else(|| {
+                    log::warn!("gba-asset registry miss: {}/{}", reg_dir, reg_stem);
+                    ResourceError {
+                        key: cache_key.clone(),
+                    }
+                })?;
             // Decode with the registry's storage encoding (font → 1bpp,
             // everything else → 2bpp). Tile splitting must match the hosted
             // per-tile decode, and it does for both encodings.
@@ -220,10 +242,8 @@ impl ResourceManager {
             } else {
                 TileSet::from_2bpp(bytes)
             };
-            let source_size = tile_dims(reg_dir, reg_stem).unwrap_or((
-                (tileset.len() as u32) * 8,
-                8,
-            ));
+            let source_size =
+                tile_dims(reg_dir, reg_stem).unwrap_or(((tileset.len() as u32) * 8, 8));
             let tile_count = tileset.len();
             self.cache.insert(
                 cache_key.clone(),

@@ -103,24 +103,7 @@ fn draw_gengar(
                 continue;
             }
 
-            let tile = ts.get(tile_index);
-            for row in 0..TILE_SIZE {
-                let sy = py + row as i32;
-                if sy < 0 || sy >= fb.height() as i32 {
-                    continue;
-                }
-                let rgba_row = tile.render_row(row as usize, pal);
-                for col in 0..TILE_SIZE {
-                    let sx = px + col as i32;
-                    if sx < 0 || sx >= fb.width() as i32 {
-                        continue;
-                    }
-                    let c = rgba_row[col as usize];
-                    if c != Rgba::TRANSPARENT {
-                        fb.set_pixel(sx as u32, sy as u32, c);
-                    }
-                }
-            }
+            fb.blit_gb_tile(px, py, ts.get(tile_index), pal, true, false, false);
         }
     }
 }
@@ -146,9 +129,18 @@ fn load_intro_tilemap(rm: &ResourceManager, filename: &str) -> Option<Vec<u8>> {
 #[cfg(target_os = "none")]
 fn load_intro_tilemap(_rm: &ResourceManager, filename: &str) -> Option<Vec<u8>> {
     const TILEMAPS: &[(&str, &[u8])] = &[
-        ("gengar_1.tilemap", include_bytes!("../../../../gfx/intro/gengar_1.tilemap")),
-        ("gengar_2.tilemap", include_bytes!("../../../../gfx/intro/gengar_2.tilemap")),
-        ("gengar_3.tilemap", include_bytes!("../../../../gfx/intro/gengar_3.tilemap")),
+        (
+            "gengar_1.tilemap",
+            include_bytes!("../../../../gfx/intro/gengar_1.tilemap"),
+        ),
+        (
+            "gengar_2.tilemap",
+            include_bytes!("../../../../gfx/intro/gengar_2.tilemap"),
+        ),
+        (
+            "gengar_3.tilemap",
+            include_bytes!("../../../../gfx/intro/gengar_3.tilemap"),
+        ),
     ];
     TILEMAPS
         .iter()
@@ -200,24 +192,9 @@ fn draw_nidorino(
                 continue;
             }
 
-            let tile = ts.get(idx);
-            for row in 0..TILE_SIZE {
-                let sy = py + row as i32;
-                if sy < clip_top || sy >= clip_bottom || sy < 0 || sy >= fb.height() as i32 {
-                    continue;
-                }
-                let rgba_row = tile.render_row(row as usize, pal);
-                for col in 0..TILE_SIZE {
-                    let sx = px + col as i32;
-                    if sx < 0 || sx >= fb.width() as i32 {
-                        continue;
-                    }
-                    let c = rgba_row[col as usize];
-                    if c != Rgba::TRANSPARENT {
-                        fb.set_pixel(sx as u32, sy as u32, c);
-                    }
-                }
-            }
+            // The fight-area and sprite rows are tile-aligned, so the coarse
+            // rejection above makes ordinary framebuffer clipping sufficient.
+            fb.blit_gb_tile(px, py, ts.get(idx), pal, true, false, false);
         }
     }
 }

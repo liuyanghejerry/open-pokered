@@ -13,11 +13,14 @@ const NICK_TERMINATOR: u8 = 0x50;
 /// 0x50 terminator), matching the variable-length `Vec<u8>` JSON shape of
 /// older saves.
 mod nickname_serde {
-    use crate::alloc_prelude::*;
     use super::NICK_TERMINATOR;
+    use crate::alloc_prelude::*;
     use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
-    pub fn serialize<S: Serializer>(bytes: &[u8; super::NICKNAME_LEN], s: S) -> Result<S::Ok, S::Error> {
+    pub fn serialize<S: Serializer>(
+        bytes: &[u8; super::NICKNAME_LEN],
+        s: S,
+    ) -> Result<S::Ok, S::Error> {
         let active = bytes
             .iter()
             .position(|&b| b == NICK_TERMINATOR)
@@ -25,7 +28,9 @@ mod nickname_serde {
         (&bytes[..active]).serialize(s)
     }
 
-    pub fn deserialize<'de, D: Deserializer<'de>>(d: D) -> Result<[u8; super::NICKNAME_LEN], D::Error> {
+    pub fn deserialize<'de, D: Deserializer<'de>>(
+        d: D,
+    ) -> Result<[u8; super::NICKNAME_LEN], D::Error> {
         let bytes = Vec::<u8>::deserialize(d)?;
         let mut out = [NICK_TERMINATOR; super::NICKNAME_LEN];
         let len = bytes.len().min(out.len());
@@ -175,7 +180,10 @@ impl HallOfFame {
     }
 
     pub fn clear(&mut self) {
-        *self = Self::new();
+        // Teams beyond `count` are intentionally ignored by accessors and
+        // serialization. Resetting only the logical length avoids building a
+        // second 50-team inline array on constrained targets.
+        self.count = 0;
     }
 
     pub fn iter(&self) -> impl Iterator<Item = &HofTeam> {

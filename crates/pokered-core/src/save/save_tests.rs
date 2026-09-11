@@ -32,7 +32,9 @@ fn make_test_pokemon(species: Species, level: u8) -> Pokemon {
         dv_bytes: [0xAB, 0xCD],
         stat_exp: [100, 200, 300, 400, 500],
         total_exp: 1000,
-        is_traded: false, ot_id: 0, ot_name: [0x50; 11],
+        is_traded: false,
+        ot_id: 0,
+        ot_name: [0x50; 11],
     }
 }
 
@@ -54,11 +56,32 @@ fn test_save_data_clear() {
     save.game_data.player_money = 99999;
     save.game_data.obtained_badges = 0xFF;
     save.tile_animations = 5;
+    save.party
+        .add(make_test_pokemon(Species::Pikachu, 12))
+        .unwrap();
+    save.current_box
+        .deposit(make_test_pokemon(Species::Bulbasaur, 8))
+        .unwrap();
+    save.pc_storage
+        .current_box_mut()
+        .deposit(make_test_pokemon(Species::Charmander, 10))
+        .unwrap();
+    save.pc_storage.change_box(4).unwrap();
+    let mut team = HofTeam::new();
+    team.add_mon(HofMon::new(25, 12, &[0x8F]));
+    save.hall_of_fame.push_team(team);
+
     save.clear();
+
     assert!(save.player_name.is_empty());
     assert_eq!(save.game_data.player_money, 0);
     assert_eq!(save.game_data.obtained_badges, 0);
     assert_eq!(save.tile_animations, 0);
+    assert!(save.party.is_empty());
+    assert!(save.current_box.is_empty());
+    assert_eq!(save.pc_storage.current_box_index(), 0);
+    assert!(save.pc_storage.current_box().is_empty());
+    assert_eq!(save.hall_of_fame.team_count(), 0);
 }
 
 #[test]
@@ -496,12 +519,20 @@ fn test_party_sram_roundtrip() {
     let mon = make_test_pokemon(Species::Bulbasaur, 5);
     save.party.add(mon).unwrap();
 
-    assert_eq!(save.party.count(), 1, "party should have 1 member before save");
+    assert_eq!(
+        save.party.count(),
+        1,
+        "party should have 1 member before save"
+    );
 
     let sram = export_sram(&save);
     let restored = import_sram(&sram).expect("roundtrip import should succeed");
 
-    assert_eq!(restored.party.count(), 1, "party should have 1 member after load");
+    assert_eq!(
+        restored.party.count(),
+        1,
+        "party should have 1 member after load"
+    );
     let mon = restored.party.get(0).unwrap();
     assert_eq!(mon.species, Species::Bulbasaur);
     assert_eq!(mon.level, 5);
@@ -515,16 +546,30 @@ fn test_party_sram_roundtrip_multiple() {
     let mut save = SaveData::new();
     save.player_name = vec![0x80, 0x81, 0x50];
 
-    save.party.add(make_test_pokemon(Species::Charmander, 5)).unwrap();
-    save.party.add(make_test_pokemon(Species::Squirtle, 5)).unwrap();
-    save.party.add(make_test_pokemon(Species::Bulbasaur, 5)).unwrap();
+    save.party
+        .add(make_test_pokemon(Species::Charmander, 5))
+        .unwrap();
+    save.party
+        .add(make_test_pokemon(Species::Squirtle, 5))
+        .unwrap();
+    save.party
+        .add(make_test_pokemon(Species::Bulbasaur, 5))
+        .unwrap();
 
-    assert_eq!(save.party.count(), 3, "party should have 3 members before save");
+    assert_eq!(
+        save.party.count(),
+        3,
+        "party should have 3 members before save"
+    );
 
     let sram = export_sram(&save);
     let restored = import_sram(&sram).expect("roundtrip import should succeed");
 
-    assert_eq!(restored.party.count(), 3, "party should have 3 members after load");
+    assert_eq!(
+        restored.party.count(),
+        3,
+        "party should have 3 members after load"
+    );
     assert_eq!(restored.party.get(0).unwrap().species, Species::Charmander);
     assert_eq!(restored.party.get(1).unwrap().species, Species::Squirtle);
     assert_eq!(restored.party.get(2).unwrap().species, Species::Bulbasaur);
@@ -536,7 +581,12 @@ fn test_deserialize_mon_ot_id_and_pp_ups_roundtrip() {
     // must round-trip through the box/party struct serialization.
     let mut mon = make_test_pokemon(Species::Pikachu, 25);
     mon.ot_id = 0xBEEF;
-    mon.moves = [MoveId::Tackle, MoveId::Thunder, MoveId::QuickAttack, MoveId::None];
+    mon.moves = [
+        MoveId::Tackle,
+        MoveId::Thunder,
+        MoveId::QuickAttack,
+        MoveId::None,
+    ];
     mon.pp = [35, 10, 30, 0];
     mon.pp_ups = [3, 1, 0, 0];
 
@@ -572,7 +622,9 @@ fn test_party_sram_roundtrip_preserves_ot_and_nickname() {
     save.party.add(traded).unwrap();
 
     // An untouched own mon: no nickname, no OT data.
-    save.party.add(make_test_pokemon(Species::Bulbasaur, 5)).unwrap();
+    save.party
+        .add(make_test_pokemon(Species::Bulbasaur, 5))
+        .unwrap();
 
     let sram = export_sram(&save);
     let restored = import_sram(&sram).expect("roundtrip import should succeed");
@@ -580,8 +632,16 @@ fn test_party_sram_roundtrip_preserves_ot_and_nickname() {
     let m0 = restored.party.get(0).unwrap();
     assert_eq!(m0.ot_id, 0x1234, "OT id must survive the round-trip");
     let mut buf = [0u8; NAME_TEXT_BUF];
-    assert_eq!(decode_name(&m0.ot_name, &mut buf), "RED", "OT name must survive");
-    assert_eq!(decode_name(&m0.nickname, &mut buf), "SPARKY", "nickname must survive");
+    assert_eq!(
+        decode_name(&m0.ot_name, &mut buf),
+        "RED",
+        "OT name must survive"
+    );
+    assert_eq!(
+        decode_name(&m0.nickname, &mut buf),
+        "SPARKY",
+        "nickname must survive"
+    );
     assert_eq!(m0.pp_ups, [2, 0, 0, 0], "PP-Ups must survive");
     assert!(
         m0.is_traded,
@@ -632,8 +692,12 @@ fn test_box_sram_roundtrip_preserves_ot_and_nickname() {
 fn test_snapshot_json_keeps_legacy_shapes() {
     let mut save = SaveData::new();
     save.player_name = vec![0x80, 0x81];
-    save.party.add(make_test_pokemon(Species::Pikachu, 25)).unwrap();
-    save.party.add(make_test_pokemon(Species::Bulbasaur, 5)).unwrap();
+    save.party
+        .add(make_test_pokemon(Species::Pikachu, 25))
+        .unwrap();
+    save.party
+        .add(make_test_pokemon(Species::Bulbasaur, 5))
+        .unwrap();
     save.current_box
         .deposit(make_test_pokemon(Species::Charmander, 10))
         .unwrap();
@@ -652,7 +716,9 @@ fn test_snapshot_json_keeps_legacy_shapes() {
     assert_eq!(party[1]["species"], "Bulbasaur");
 
     // `current_box`: a plain 1-element array.
-    let box_data = value["current_box"].as_array().expect("current_box is an array");
+    let box_data = value["current_box"]
+        .as_array()
+        .expect("current_box is an array");
     assert_eq!(box_data.len(), 1);
     assert_eq!(box_data[0]["species"], "Charmander");
 
@@ -673,8 +739,12 @@ fn test_snapshot_json_keeps_legacy_shapes() {
     assert_eq!(team_json[0]["level"], 50);
     assert_eq!(
         team_json[0]["nickname"].as_array().unwrap(),
-        &[serde_json::Value::from(0x8F), serde_json::Value::from(0x88),
-          serde_json::Value::from(0x8A), serde_json::Value::from(0x80)]
+        &[
+            serde_json::Value::from(0x8F),
+            serde_json::Value::from(0x88),
+            serde_json::Value::from(0x8A),
+            serde_json::Value::from(0x80)
+        ]
     );
 
     // Full round-trip: JSON → SaveData → JSON is stable.
@@ -682,16 +752,19 @@ fn test_snapshot_json_keeps_legacy_shapes() {
     assert_eq!(back.party.count(), 2);
     assert_eq!(back.current_box.count(), 1);
     assert_eq!(back.hall_of_fame.team_count(), 1);
-    assert_eq!(back.hall_of_fame.get_team(0).unwrap().mons()[0].nickname_bytes(), &[0x8F, 0x88, 0x8A, 0x80]);
+    assert_eq!(
+        back.hall_of_fame.get_team(0).unwrap().mons()[0].nickname_bytes(),
+        &[0x8F, 0x88, 0x8A, 0x80]
+    );
     assert_eq!(serde_json::to_string(&back).unwrap(), json);
 }
 
 #[cfg(test)]
 mod current_box_roundtrip_tests {
-    use crate::save::sram_export::export_sram;
-    use crate::save::sram_import::import_sram;
     use super::SaveData;
     use crate::pokemon::pc_box::PcStorage;
+    use crate::save::sram_export::export_sram;
+    use crate::save::sram_import::import_sram;
 
     /// wCurrentBoxNum survives a save→load round-trip: the export writes the
     /// box number (menu index | $80, save.asm:382-384) and the import masks
@@ -702,8 +775,7 @@ mod current_box_roundtrip_tests {
         let mut save = SaveData::new();
         // Select box 5 (0-based 4) and stamp the byte like the game does.
         let _ = save.pc_storage.change_box(4);
-        save.game_data.current_box_num =
-            save.pc_storage.current_box_index() as u8 | 0x80;
+        save.game_data.current_box_num = save.pc_storage.current_box_index() as u8 | 0x80;
 
         let bytes = export_sram(&save);
         let back = import_sram(&bytes).expect("round-trip parses");
