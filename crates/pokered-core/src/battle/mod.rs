@@ -1,3 +1,4 @@
+use crate::alloc_prelude::*;
 pub mod accuracy;
 pub mod badge_boosts;
 pub mod capture;
@@ -1064,7 +1065,7 @@ pub struct BattleScreen {
     /// items — see [`BattleAnimEvent`]). Queued by the ball / X-stat flows;
     /// drained by the frontend every frame via [`Self::take_anim_event`]
     /// (same polling pattern as [`Self::poke_flute_sfx_pending`]).
-    pub pending_anim_events: std::collections::VecDeque<BattleAnimEvent>,
+    pub pending_anim_events: alloc::collections::VecDeque<BattleAnimEvent>,
     /// HP-bar drain/refill animation (original `UpdateHPBar`,
     /// engine/gfx/hp_bar.asm): [`Self::player_hp`]/[`Self::enemy_hp`] are the
     /// *displayed* values; this tracks the real-HP targets and steps the
@@ -1259,7 +1260,7 @@ impl BattleScreen {
             player_box_full: false,
             hooked: false,
             poke_flute_sfx_pending: false,
-            pending_anim_events: std::collections::VecDeque::new(),
+            pending_anim_events: alloc::collections::VecDeque::new(),
             hp_bar_anim: HpBarAnim::default(),
             battle_style: BattleStyle::Shift,
             player_name: None,
@@ -1356,7 +1357,7 @@ impl BattleScreen {
             player_box_full: false,
             hooked: false,
             poke_flute_sfx_pending: false,
-            pending_anim_events: std::collections::VecDeque::new(),
+            pending_anim_events: alloc::collections::VecDeque::new(),
             hp_bar_anim: HpBarAnim::default(),
             battle_style: BattleStyle::Shift,
             player_name: None,
@@ -1545,16 +1546,16 @@ impl BattleScreen {
 
     fn generate_move_randoms() -> MoveRandoms {
         MoveRandoms {
-            confusion_roll: rand::random(),
-            paralysis_roll: rand::random(),
-            crit_roll: rand::random(),
-            accuracy_roll: rand::random(),
-            damage_roll: rand::random(),
+            confusion_roll: crate::rng::random(),
+            paralysis_roll: crate::rng::random(),
+            crit_roll: crate::rng::random(),
+            accuracy_roll: crate::rng::random(),
+            damage_roll: crate::rng::random(),
             effect_randoms: EffectRandoms {
-                side_effect_roll: rand::random(),
-                duration_roll: rand::random(),
-                multi_hit_roll: rand::random(),
-                stat_down_miss_roll: rand::random(),
+                side_effect_roll: crate::rng::random(),
+                duration_roll: crate::rng::random(),
+                multi_hit_roll: crate::rng::random(),
+                stat_down_miss_roll: crate::rng::random(),
             },
         }
     }
@@ -1584,7 +1585,7 @@ impl BattleScreen {
                 // house-rule, not a fidelity fix). See pret/pokered engine/battle/{trainer_ai,core}.asm.
                 const AI_LAYER2_ENCOURAGEMENT: u8 = 0;
                 let result = choose_moves(layers, &bs.enemy, &bs.player, AI_LAYER2_ENCOURAGEMENT);
-                if let Some(slot) = result.pick_move(rand::random::<u8>()) {
+                if let Some(slot) = result.pick_move(crate::rng::random::<u8>()) {
                     let move_id = mon.moves[slot];
                     if move_id != MoveId::None && mon.pp[slot] > 0 {
                         return (move_id, slot as u8);
@@ -1593,7 +1594,7 @@ impl BattleScreen {
             }
         }
 
-        let idx: usize = rand::random::<usize>() % available.len();
+        let idx: usize = crate::rng::random::<usize>() % available.len();
         available[idx]
     }
 
@@ -3052,7 +3053,7 @@ learn {learn_name}!")];
                 let result = self
                     .safari
                     .as_mut()
-                    .map(|s| s.throw_ball(max_hp, cur_hp, status, rand::random(), &mut rand::random));
+                    .map(|s| s.throw_ball(max_hp, cur_hp, status, crate::rng::random(), &mut crate::rng::random));
                 match result {
                     Some(CaptureResult::Captured) => {
                         caught = true;
@@ -3087,14 +3088,14 @@ learn {learn_name}!")];
                 }
             }
             SafariMenuAction::Bait => {
-                let amt = roll_bait_rock_amount(&mut || rand::random());
+                let amt = roll_bait_rock_amount(&mut || crate::rng::random());
                 if let Some(s) = self.safari.as_mut() {
                     s.apply_bait(amt);
                 }
                 msgs.push("Threw some BAIT!".to_string());
             }
             SafariMenuAction::Rock => {
-                let amt = roll_bait_rock_amount(&mut || rand::random());
+                let amt = roll_bait_rock_amount(&mut || crate::rng::random());
                 if let Some(s) = self.safari.as_mut() {
                     s.apply_rock(amt);
                 }
@@ -3130,7 +3131,7 @@ learn {learn_name}!")];
         let fled = self
             .safari
             .as_ref()
-            .map_or(false, |s| s.flee_roll(speed, rand::random()));
+            .map_or(false, |s| s.flee_roll(speed, crate::rng::random()));
         if fled {
             msgs.push(format!("{} ran away!", name));
             self.show_text_then(msgs, escaped_over);
@@ -3245,7 +3246,7 @@ learn {learn_name}!")];
             };
             // Rand1 uses the original's rejection sampling (the `.loop` redraw):
             // a Great/Ultra/Safari draw above threshold is REDRAWN, never a fail.
-            let result = try_capture_with_rolls(&ctx, &mut rand::random, rand::random());
+            let result = try_capture_with_rolls(&ctx, &mut crate::rng::random, crate::rng::random());
             self.consume_selected_item();
             // wPokeBallAnimData: $43 caught (3 shakes) / $20 missed /
             // $61-$63 broke free after N shakes (ItemUseBall's
@@ -3436,7 +3437,7 @@ learn {learn_name}!")];
             return;
         }
         if let Some(ref mut bs) = self.battle_state {
-            let result = try_run_from_battle(bs, rand::random());
+            let result = try_run_from_battle(bs, crate::rng::random());
             match result {
                 RunResult::Escaped => {
                     self.show_text_then(
@@ -3863,7 +3864,7 @@ learn {learn_name}!")];
         {
             None
         } else {
-            self.decide_enemy_ai_action(rand::random())
+            self.decide_enemy_ai_action(crate::rng::random())
         };
         let enemy_ai_fired = ai_action.is_some() || self.link_enemy_skips_turn;
         let mut ai_msgs: Vec<String> = Vec::new();
@@ -3972,7 +3973,7 @@ learn {learn_name}!")];
                         let mut link_rng = self.link_rng.as_mut();
                         let mut draw = || match &mut link_rng {
                             Some(r) => r.next_u8(),
-                            None => rand::random::<u8>(),
+                            None => crate::rng::random::<u8>(),
                         };
                         let outcome = crate::battle::obedience::check_disobedience(
                             level,
@@ -4075,7 +4076,7 @@ learn {learn_name}!")];
                 Some(bs) => {
                     bs.player.selected_move = player_move_id;
                     bs.enemy.selected_move = enemy_move_id;
-                    crate::battle::turn_order::determine_order(bs, rand::random())
+                    crate::battle::turn_order::determine_order(bs, crate::rng::random())
                         == crate::battle::turn_order::TurnOrder::EnemyFirst
                 }
                 None => return,
@@ -4189,7 +4190,7 @@ learn {learn_name}!")];
                 // Speed order of the (blocked) turns, for placing the ghost-battle
                 // texts (PrintGhostText prints each side's line as its turn comes).
                 let ghost_enemy_first = ghost_enemy_blocked
-                    && crate::battle::turn_order::determine_order(bs, rand::random())
+                    && crate::battle::turn_order::determine_order(bs, crate::rng::random())
                         == crate::battle::turn_order::TurnOrder::EnemyFirst;
             let mut default_rng = pokered_rules::runtime::RandBattleRng;
             let rng: &mut dyn dotzuki_engine::battle::rng::BattleRng = match self.link_rng.as_mut()
@@ -4409,7 +4410,7 @@ learn {learn_name}!")];
             };
             // enemy-FIRST AI: its narration was generated pre-turn → it LEADS the turn text.
             if ai_applied_pre && !ai_msgs.is_empty() {
-                let mut combined = std::mem::take(&mut ai_msgs);
+                let mut combined = core::mem::take(&mut ai_msgs);
                 combined.append(&mut msgs);
                 msgs = combined;
             }
@@ -4429,7 +4430,7 @@ learn {learn_name}!")];
                     })
                     .unwrap_or(true);
                 if player_first {
-                    let mut combined = std::mem::take(&mut disobedience_msgs);
+                    let mut combined = core::mem::take(&mut disobedience_msgs);
                     combined.append(&mut msgs);
                     msgs = combined;
                 } else {
@@ -4465,7 +4466,7 @@ learn {learn_name}!")];
             // Link mode: lead the turn text with narration set by
             // resolve_link_turn (e.g. the remote's switch "sent out" line).
             if !self.link_turn_prefix_msgs.is_empty() {
-                let mut prefix = std::mem::take(&mut self.link_turn_prefix_msgs);
+                let mut prefix = core::mem::take(&mut self.link_turn_prefix_msgs);
                 prefix.append(&mut msgs);
                 msgs = prefix;
             }
@@ -4483,7 +4484,7 @@ learn {learn_name}!")];
                     .enemy
                     .party
                     .iter()
-                    .any(|p| p.hp > 0 && !std::ptr::eq(p, bs.enemy.active_mon()));
+                    .any(|p| p.hp > 0 && !core::ptr::eq(p, bs.enemy.active_mon()));
                 if !alive_enemies {
                     // The remote player is out of mons: battle over, we win.
                     // Both sides resolve this identically, so both end their
@@ -4537,7 +4538,7 @@ learn {learn_name}!")];
                     .player
                     .party
                     .iter()
-                    .any(|p| p.hp > 0 && !std::ptr::eq(p, bs.player.active_mon()));
+                    .any(|p| p.hp > 0 && !core::ptr::eq(p, bs.player.active_mon()));
                 if !alive_player {
                     // We're out of mons: battle over, we lose (the original's
                     // HandlePlayerBlackOut → LinkBattleLostText; the remote
@@ -4978,7 +4979,7 @@ learn {learn_name}!")];
     fn next_battle_random(&mut self) -> u8 {
         match &mut self.link_rng {
             Some(rng) => rng.next_u8(),
-            None => rand::random::<u8>(),
+            None => crate::rng::random::<u8>(),
         }
     }
 
@@ -7161,6 +7162,7 @@ mod hp_bar_anim_tests {
     // ── DecrementPP / AnyMoveToSelect parity (decrement_pp.asm, core.asm:2715) ──
 
     mod pp_lifecycle_tests {
+    use crate::alloc_prelude::*;
         use super::*;
         use crate::battle::state::status1;
         use crate::pokemon::stats::create_pokemon_with_moves;

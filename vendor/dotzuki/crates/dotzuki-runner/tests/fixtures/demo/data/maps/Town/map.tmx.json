@@ -1,0 +1,34 @@
+{
+  "width": 4,
+  "height": 3,
+  "tilewidth": 16,
+  "tileheight": 16,
+  "backgroundcolor": "#306850",
+  "layers": [
+    {
+      "name": "ground",
+      "width": 4,
+      "height": 3,
+      "data": [1, 1, 2, 2, 3, 3, 4, 4, 1, 2, 3, 4],
+      "visible": true,
+      "opacity": 1.0
+    },
+    {
+      "name": "collision",
+      "width": 4,
+      "height": 3,
+      "data": [1, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1, 1],
+      "visible": false,
+      "opacity": 1.0
+    }
+  ],
+  "tilesets": [
+    {
+      "firstgid": 1,
+      "name": "demo",
+      "tilewidth": 16,
+      "tileheight": 16,
+      "tilecount": 4
+    }
+  ]
+}

@@ -10,6 +10,7 @@
 //! sensitive implementation instead of drifting copy-paste. Frontends keep only their
 //! own concerns (audio, the `screen == Battle` guard) around the call.
 
+use crate::alloc_prelude::*;
 use crate::battle::settlement::EvolutionEvent;
 use crate::battle::BattleScreen;
 use crate::overworld::OverworldScreen;

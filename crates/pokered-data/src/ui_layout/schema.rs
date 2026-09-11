@@ -1,5 +1,6 @@
-use std::borrow::Cow;
-use std::collections::BTreeMap;
+use crate::alloc_prelude::*;
+use alloc::borrow::Cow;
+use alloc::collections::BTreeMap;
 
 use super::types::{BracketSides, InkColor, TileRect};
 

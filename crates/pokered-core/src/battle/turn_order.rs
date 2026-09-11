@@ -1,3 +1,4 @@
+use crate::alloc_prelude::*;
 use pokered_data::moves::MoveId;
 
 use super::state::{BattleState, BattlerState};
@@ -183,6 +184,7 @@ mod tests {
 // hardcoded expected answers: the legacy fn IS the oracle.
 #[cfg(test)]
 mod engine_parity_tests {
+use crate::alloc_prelude::*;
     use super::{determine_order, move_priority, TurnOrder};
     use crate::battle::state::{
         new_battle_state, BattleType, Pokemon, StatusCondition as CoreStatus,

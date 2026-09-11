@@ -4,6 +4,7 @@
 //! (`BoxFullCannotThrowBall`), and in-battle PP restore
 //! (`ItemUsePPRestore` — no `wIsInBattle` guard in the original).
 
+use crate::alloc_prelude::*;
 use super::{BattleInput, BattlePhase, BattleScreen};
 use crate::battle::BallAnimOutcome;
 use crate::battle::BattleAnimEvent;

@@ -1,0 +1,11 @@
+{
+  "id": "slime",
+  "name": "Slime",
+  "hp": 40,
+  "atk": 8,
+  "def": 8,
+  "spd": 5,
+  "mp": 0,
+  "element": "grass",
+  "skills": ["slash"]
+}

@@ -1,0 +1,7 @@
+{
+  "id": "rival",
+  "name": "Rival Kai",
+  "enemies": ["goblin"],
+  "trainer": true,
+  "money": 50
+}

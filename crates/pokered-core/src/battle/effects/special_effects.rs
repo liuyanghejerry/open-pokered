@@ -4,6 +4,7 @@ use crate::battle::state::{status1, status2, status3, BattleState};
 
 use super::{EffectRandoms, EffectResult};
 
+use crate::alloc_prelude::*;
 pub fn apply_flinch_side(
     state: &mut BattleState,
     randoms: &EffectRandoms,

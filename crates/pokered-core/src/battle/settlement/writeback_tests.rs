@@ -1,5 +1,6 @@
 //! Tests for [`settle_battle_into_save`] — the shared post-battle → save writeback.
 
+use crate::alloc_prelude::*;
 use super::{settle_battle_into_save, BattleOutcome, BattleSettlement};
 use crate::battle::BattleScreen;
 use crate::overworld::screen::OverworldScreen;

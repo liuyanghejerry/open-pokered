@@ -1,0 +1,9 @@
+{
+  "id": "fire-bolt",
+  "name": "Fire Bolt",
+  "type": "attack",
+  "power": 50,
+  "accuracy": 100,
+  "element": "fire",
+  "mpCost": 5
+}

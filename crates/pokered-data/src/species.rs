@@ -1,3 +1,4 @@
+use crate::alloc_prelude::*;
 use num_derive::{FromPrimitive, ToPrimitive};
 use serde::{Deserialize, Serialize};
 use strum::EnumCount;
@@ -37,7 +38,7 @@ impl Species {
     /// names (which are PascalCase, e.g. `MrMime`, `NidoranF`). PascalCase
     /// tokens (e.g. from `{:?}` formatting) are accepted as-is.
     pub fn from_scene_name(token: &str) -> Option<Species> {
-        use std::str::FromStr;
+        use core::str::FromStr;
         Species::from_str(token)
             .ok()
             .or_else(|| Species::from_str(&scene_species_to_pascal(token)).ok())

@@ -17,7 +17,11 @@
 //! ported as a native handler ([`VgymTrashState`]) registered under the
 //! `storyline_trashCans` function.
 
-use std::collections::{HashMap, VecDeque};
+use crate::alloc_prelude::*;
+#[cfg(not(target_os = "none"))]
+use crate::hash_compat::HashMap;
+#[cfg(target_os = "none")]
+use crate::hash_compat::HashMap;
 
 use dotzuki_engine_dsl::ast::{GameScene, StoryStmt};
 use dotzuki_engine_dsl::interpreter::{HostCall, Interpreter, InterpState, ScriptHost, Value};
@@ -58,6 +62,7 @@ fn custom(name: &str, args: Vec<serde_json::Value>) -> ScriptCommand {
 /// Argument conversion helpers — all fail with a descriptive message,
 /// mirroring the Boa registrar closures' type errors.
 mod args {
+    use crate::alloc_prelude::*;
     use super::Value;
 
     /// JS `String()` coercion: numbers/bools stringify (the Boa registrar
@@ -182,10 +187,10 @@ pub struct NativeHost {
 impl NativeHost {
     fn new() -> Self {
         Self {
-            flags: HashMap::new(),
-            numbers: HashMap::new(),
-            texts: HashMap::new(),
-            sets: HashMap::new(),
+            flags: HashMap::default(),
+            numbers: HashMap::default(),
+            texts: HashMap::default(),
+            sets: HashMap::default(),
             player_x: 0,
             player_y: 0,
             lang: "en".to_string(),
@@ -860,8 +865,8 @@ impl NativeScriptEngine {
     pub fn new() -> Self {
         Self {
             interp: Interpreter::new(NativeHost::new()),
-            functions: HashMap::new(),
-            shared_functions: HashMap::new(),
+            functions: HashMap::default(),
+            shared_functions: HashMap::default(),
             vgym: VgymTrashState::new(),
             state: InterpState::Idle,
         }
@@ -1170,7 +1175,7 @@ impl OverworldScriptEngine {
     pub fn get_all_flags(&self) -> HashMap<String, bool> {
         match self {
             #[cfg(feature = "script-boa")]
-            OverworldScriptEngine::Boa(e) => e.get_all_flags(),
+            OverworldScriptEngine::Boa(e) => e.get_all_flags().into_iter().collect(),
             OverworldScriptEngine::Native(e) => e.get_all_flags(),
         }
     }
@@ -1178,7 +1183,13 @@ impl OverworldScriptEngine {
     pub fn seed_flags(&mut self, flags: &HashMap<String, bool>) {
         match self {
             #[cfg(feature = "script-boa")]
-            OverworldScriptEngine::Boa(e) => e.seed_flags(flags),
+            OverworldScriptEngine::Boa(e) => {
+                let hosted_flags = flags
+                    .iter()
+                    .map(|(key, value)| (key.clone(), *value))
+                    .collect::<std::collections::HashMap<_, _>>();
+                e.seed_flags(&hosted_flags)
+            }
             OverworldScriptEngine::Native(e) => e.seed_flags(flags),
         }
     }

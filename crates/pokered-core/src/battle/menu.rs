@@ -21,6 +21,7 @@
 //! **Bag/Item menu** — vertical list of items from player's bag.
 //!   Replicates `engine/battle/core.asm` BagWasSelected → DisplayBagMenu flow.
 
+use crate::alloc_prelude::*;
 use pokered_data::items::ItemId;
 use pokered_data::moves::MoveId;
 

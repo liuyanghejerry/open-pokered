@@ -9,7 +9,9 @@
 //! direct NR11–NR14 tone writes, and the alternate tempo/start routines
 //! (audio/alternate_tempo.asm, audio/poke_flute.asm).
 
-use std::ops::{Deref, DerefMut};
+use core::ops::{Deref, DerefMut};
+
+use std::boxed::Box;
 
 use crate::music_data::{self, MusicId};
 use crate::sfx_data::{self, SfxId};

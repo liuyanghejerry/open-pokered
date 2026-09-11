@@ -33,6 +33,7 @@
 //! `MUSIC_INTRO_BATTLE` (intro.asm:333-338) is NOT started here — in this
 //! port the intro-fight scene (`IntroScene`) already starts it on entry.
 
+use crate::alloc_prelude::*;
 use crate::game_state::{GameScreen, ScreenAction};
 
 /// Frames for the initial copyright-on-black delay (intro.asm:312).

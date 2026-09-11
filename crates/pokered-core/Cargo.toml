@@ -10,7 +10,7 @@ embedded-map-data = ["pokered-data/embedded-map-data"]
 # of the default native DSL-AST interpreter. Kept for development/fallback —
 # the AST interpreter is the canonical scene semantics (see
 # docs/low-end-hardware-optimization.md §四).
-script-boa = []
+script-boa = ["pokered-data/script-boa", "dotzuki-engine-script/script-boa"]
 # P1 battle migration: dev hot-reload of the pokered rules.ron (mirrors minimon's
 # dual-mode flag). OFF (default) ⇒ BAKED rules.ron (include_str!, zero file IO);
 # ON ⇒ read + watch rules.ron on disk, rebuild the registry between turns. Both
@@ -19,23 +19,34 @@ script-boa = []
 hot-reload = ["dotzuki-rules/hot-reload"]
 
 [dependencies]
-dotzuki-engine = { git = "https://github.com/liuyanghejerry/dotzuki", tag = "v0.6.0" }
+dotzuki-engine = { git = "https://github.com/liuyanghejerry/dotzuki", rev = "2929ae90054c5f9828f9999593a1d3f0af7ca3fc" }
 pokered-data = { path = "../pokered-data" }
-dotzuki-engine-script = { git = "https://github.com/liuyanghejerry/dotzuki", tag = "v0.6.0" }
+dotzuki-engine-script = { git = "https://github.com/liuyanghejerry/dotzuki", rev = "2929ae90054c5f9828f9999593a1d3f0af7ca3fc", default-features = false }
 # Native script interpreter (de-Boa path): AST interpretation of compiled
 # `.scene` storylines — no JavaScript engine involved.
-dotzuki-engine-dsl = { git = "https://github.com/liuyanghejerry/dotzuki", tag = "v0.6.0" }
+dotzuki-engine-dsl = { git = "https://github.com/liuyanghejerry/dotzuki", rev = "2929ae90054c5f9828f9999593a1d3f0af7ca3fc" }
 # P1 battle migration: the game-agnostic no-code RON loader + dual-mode sourcing.
 # pokered-core authors a rules.ron for the bucket-A moves and a game binding; the
 # loader stays engine-only (no pokered types leak into it). Used by the additive
 # PokeredRules provider + the differential parity harness ONLY — the legacy
 # `apply_move_effect` dispatcher stays the production oracle (P1 is additive).
-dotzuki-rules = { git = "https://github.com/liuyanghejerry/dotzuki", tag = "v0.6.0" }
+dotzuki-rules = { git = "https://github.com/liuyanghejerry/dotzuki", rev = "2929ae90054c5f9828f9999593a1d3f0af7ca3fc" }
 serde = { workspace = true }
 serde_json = { workspace = true }
-thiserror = { workspace = true }
-rand = { workspace = true }
 log = "0.4"
+# no_std HashMap (see pokered-data's twin entry).
+hashbrown = { version = "0.15", default-features = false, features = ["serde"] }
+
+# Hosted builds keep `rand`'s std defaults (thread_rng / StdRng — OS entropy).
+[target.'cfg(not(target_os = "none"))'.dependencies]
+rand = { workspace = true, features = ["small_rng"] }
+thiserror = { workspace = true }
+
+# Bare-metal (GBA): no std — a global SmallRng seeded through `getrandom`
+# (custom source registered by pokered-gba) via `crate::rng`.
+[target.'cfg(target_os = "none")'.dependencies]
+rand = { version = "0.8", default-features = false, features = ["alloc", "small_rng", "getrandom"] }
+thiserror = { version = "2", default-features = false }
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 getrandom = { version = "0.2", features = ["js"] }

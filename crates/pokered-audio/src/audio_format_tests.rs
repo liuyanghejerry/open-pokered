@@ -6,6 +6,8 @@
 //! track. This is a far stronger test than hand-written unit cases — it covers
 //! every command shape that actually occurs in the original game's audio.
 
+use crate::alloc_prelude::*;
+
 use dotzuki_audio::commands::{decode_channel, encode_channel};
 use dotzuki_audio::format::{TrackDef, TrackKind};
 use dotzuki_audio::HwChannel;

@@ -3,6 +3,7 @@
 // Keeps the pokered-specific public API (taking YesNoDefaultLayout)
 // while delegating the actual rendering to dotzuki_ui::widgets::yes_no.
 
+use crate::alloc_prelude::*;
 use dotzuki_engine::menu::{CursorStyle, MenuConfig};
 use dotzuki_engine::render::TileRect;
 use pokered_data::ui_layout::schema::YesNoDefaultLayout;

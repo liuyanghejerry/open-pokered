@@ -1,3 +1,4 @@
+use crate::alloc_prelude::*;
 use boa_engine::{Context, JsArgs, JsResult, JsValue};
 use dotzuki_engine_script::{BridgeView, ScriptApiRegistrar, ScriptCommand};
 

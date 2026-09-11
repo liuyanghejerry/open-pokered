@@ -30,6 +30,7 @@
 //! - The credits are not skippable, matching the original (no
 //!   `CheckForUserInterruption` in `Credits`).
 
+use crate::alloc_prelude::*;
 use pokered_data::species::Species;
 use pokered_data::wild_data::GameVersion;
 

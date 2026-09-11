@@ -1,3 +1,4 @@
+use crate::alloc_prelude::*;
 use pokered_data::evos_moves::evos_moves_data;
 use pokered_data::items::{HM_MOVES, TM_MOVES};
 use pokered_data::move_data::MOVES;

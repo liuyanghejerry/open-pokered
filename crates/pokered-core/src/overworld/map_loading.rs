@@ -1,3 +1,4 @@
+use crate::alloc_prelude::*;
 use dotzuki_engine::map::MapProvider;
 use dotzuki_engine::tileset::{TilesetProvider, TilesetTrait};
 use pokered_data::map_data_loader::get_map_json;

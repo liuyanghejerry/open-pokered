@@ -1,5 +1,6 @@
 /// Verify the generated layout statics are addressable, parseable, and
 /// correctly populated with the values from the JSON files.
+
 use std::borrow::Cow;
 
 use pokered_data::ui_layout::schema::{self, DIALOG_DEFAULT_LAYOUT};

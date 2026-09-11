@@ -1,0 +1,26 @@
+{
+  "npcs": [
+    {
+      "id": 1,
+      "name": "Hermit",
+      "x": 2,
+      "y": 2,
+      "facing": "down",
+      "sprite": "",
+      "talk": "hermit_choice"
+    },
+    {
+      "id": 2,
+      "name": "Boss",
+      "x": 1,
+      "y": 1,
+      "facing": "down",
+      "sprite": "",
+      "talk": "boss_fight"
+    }
+  ],
+  "warps": [
+    { "x": 3, "y": 4, "dest_map": "Town", "dest_x": 1, "dest_y": 1 }
+  ],
+  "signs": []
+}

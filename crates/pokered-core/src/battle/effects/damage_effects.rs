@@ -3,6 +3,7 @@ use pokered_data::moves::MoveId;
 
 use super::EffectResult;
 
+use crate::alloc_prelude::*;
 pub fn apply_drain(state: &mut BattleState, damage_dealt: u16) -> EffectResult {
     let drain_amount = (damage_dealt / 2).max(1);
     let attacker = state.attacker_mut();

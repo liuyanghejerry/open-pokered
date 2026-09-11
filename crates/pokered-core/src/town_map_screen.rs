@@ -8,6 +8,7 @@
 //! FLY mode (party-menu FLY, `LoadTownMap_Fly` in engine/items/town_map.asm):
 //! the cursor walks the *visited-city* list and A picks a warp destination.
 
+use crate::alloc_prelude::*;
 use pokered_data::maps::MapId;
 use pokered_data::town_map_data::TOWN_MAP_ORDER;
 

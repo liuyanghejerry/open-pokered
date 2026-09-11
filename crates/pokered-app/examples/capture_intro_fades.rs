@@ -1,5 +1,6 @@
 //! Deterministic fade captures, without a window or audio device.
 //! cargo run --release -p pokered-app --example capture_intro_fades -- <output-dir>
+
 use dotzuki_engine::render_config::RenderConfig;
 use pokered_app::render::{draw_intro_scene, draw_title_screen};
 use pokered_core::intro_scene::{IntroPhase, IntroSceneState};

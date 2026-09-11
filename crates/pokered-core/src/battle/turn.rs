@@ -99,6 +99,7 @@ fn is_side_fainted(state: &BattleState, side: Side) -> bool {
 
 #[cfg(test)]
 mod tests {
+    use crate::alloc_prelude::*;
     use super::*;
     use crate::battle::state::*;
     use pokered_data::move_data::MoveData;

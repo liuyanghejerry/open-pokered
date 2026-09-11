@@ -1,30 +1,29 @@
+use crate::alloc_prelude::*;
+use dotzuki_engine::overworld::types::TransportMode;
+use dotzuki_engine::tileset::TilesetProvider;
+use dotzuki_renderer::transition::{FadePalette, FADE_PALETTES};
 use pokered_core::data::blockset_data;
 use pokered_core::data::map_data_loader::{get_block_data, get_map_json, resolve_map_id};
 use pokered_core::data::maps::MapId;
 use pokered_core::data::sprites::SpriteId;
 use pokered_core::data::tileset_data;
 use pokered_core::overworld::presentation::{
-    ANIM_FLOWER_TILE, ANIM_WATER_TILE, SHIP_DEPARTURE_PUFF_START_SCREEN_X,
-    SHIP_DEPARTURE_SMOKESTACK_TILE_X, npc_walk_anim_phase, npc_walk_pixel_offset,
+    npc_walk_anim_phase, npc_walk_pixel_offset, ANIM_FLOWER_TILE, ANIM_WATER_TILE,
+    SHIP_DEPARTURE_PUFF_START_SCREEN_X, SHIP_DEPARTURE_SMOKESTACK_TILE_X,
 };
 use pokered_core::overworld::screen::{WarpFadeState, WARP_FADE_DELAY, WARP_FADE_IN_FRAMES};
 use pokered_core::overworld::{Direction, MovementState, OverworldScreen};
 use pokered_data::impl_traits::PokemonTilesetData;
-use dotzuki_engine::overworld::types::TransportMode;
-use dotzuki_engine::tileset::TilesetProvider;
-use dotzuki_renderer::transition::{FadePalette, FADE_PALETTES};
+use pokered_data::map_json::MapJson;
 use pokered_renderer::embedded_font::draw_text;
 use pokered_renderer::palette::{GbColor, Palette, GRAYSCALE_PALETTE};
 use pokered_renderer::resource::{AssetCategory, ResourceManager};
-use pokered_renderer::{FrameBuffer, Rgba, TILE_SIZE};
+use pokered_renderer::{FrameBuffer, RenderConfig, Rgba, TILE_SIZE};
 
-use dotzuki_engine::render::MapLayer;
-use dotzuki_engine::tilemap::{Tilemap, TilemapEntry};
-use pokered_renderer::layer_renderer::render_layers;
-use pokered_renderer::tile::TileSet;
+use pokered_data::ui_layout::schema::{DIALOG_DEFAULT_LAYOUT, YES_NO_DEFAULT_LAYOUT};
+use pokered_renderer::tile::{Tile, TileSet};
 use pokered_ui::backends::FrameBufferPainter;
 use pokered_ui::{menus, Ui};
-use pokered_data::ui_layout::schema::{DIALOG_DEFAULT_LAYOUT, YES_NO_DEFAULT_LAYOUT};
 
 use super::apply_gb_palette;
 use super::blit_single_tile_flipped;
@@ -134,7 +133,7 @@ fn draw_pokedex_entry(
 }
 
 fn resolve_block_with_connections(
-    current_map: MapId,
+    map_json: Option<&MapJson>,
     map_w: u8,
     map_h: u8,
     blk: &[u8],
@@ -145,11 +144,13 @@ fn resolve_block_with_connections(
     if bx >= 0 && by >= 0 && (bx as u8) < map_w && (by as u8) < map_h && !blk.is_empty() {
         // The original north/south underground path declares 24 rows but
         // ships only 23. The viewport margin can sample that absent row.
-        return blk.get(by as usize * map_w as usize + bx as usize)
-            .copied().unwrap_or(border_block);
+        return blk
+            .get(by as usize * map_w as usize + bx as usize)
+            .copied()
+            .unwrap_or(border_block);
     }
 
-    let map_json = match get_map_json(current_map) {
+    let map_json = match map_json {
         Some(j) => j,
         None => return border_block,
     };
@@ -168,8 +169,10 @@ fn resolve_block_with_connections(
                     && (target_by as u8) < th
                     && !target_blk.is_empty()
                 {
-                    return target_blk.get(target_by as usize * tw as usize + target_bx as usize)
-                        .copied().unwrap_or(border_block);
+                    return target_blk
+                        .get(target_by as usize * tw as usize + target_bx as usize)
+                        .copied()
+                        .unwrap_or(border_block);
                 }
             }
         }
@@ -212,8 +215,10 @@ fn resolve_block_with_connections(
                     && (target_by as u8) < th
                     && !target_blk.is_empty()
                 {
-                    return target_blk.get(target_by as usize * tw as usize + target_bx as usize)
-                        .copied().unwrap_or(border_block);
+                    return target_blk
+                        .get(target_by as usize * tw as usize + target_bx as usize)
+                        .copied()
+                        .unwrap_or(border_block);
                 }
             }
         }
@@ -233,8 +238,10 @@ fn resolve_block_with_connections(
                     && (target_by as u8) < th
                     && !target_blk.is_empty()
                 {
-                    return target_blk.get(target_by as usize * tw as usize + target_bx as usize)
-                        .copied().unwrap_or(border_block);
+                    return target_blk
+                        .get(target_by as usize * tw as usize + target_bx as usize)
+                        .copied()
+                        .unwrap_or(border_block);
                 }
             }
         }
@@ -244,13 +251,236 @@ fn resolve_block_with_connections(
     border_block
 }
 
+#[derive(Clone, Copy, PartialEq, Eq)]
+struct OverworldBackgroundKey {
+    map: u8,
+    camera_x: i32,
+    camera_y: i32,
+    tile_anim_kind: u8,
+    water_shift: i8,
+    flower_frame: Option<u8>,
+    map_hash: u32,
+}
+
+impl OverworldBackgroundKey {
+    fn same_scene(self, other: Self) -> bool {
+        self.map == other.map
+            && self.tile_anim_kind == other.tile_anim_kind
+            && self.water_shift == other.water_shift
+            && self.flower_frame == other.flower_frame
+            && self.map_hash == other.map_hash
+    }
+}
+
+#[derive(Clone, Copy)]
+enum BackgroundDamage {
+    None,
+    Full,
+    Scrolled { dx: i32, dy: i32 },
+}
+
+impl BackgroundDamage {
+    fn intersects_tile(self, x: i32, y: i32, width: i32, height: i32) -> bool {
+        match self {
+            Self::None => false,
+            Self::Full => true,
+            Self::Scrolled { dx, dy } => {
+                let tile_right = x + TILE_SIZE as i32;
+                let tile_bottom = y + TILE_SIZE as i32;
+                (dx > 0 && x < dx && tile_right > 0)
+                    || (dx < 0 && x < width && tile_right > width + dx)
+                    || (dy > 0 && y < dy && tile_bottom > 0)
+                    || (dy < 0 && y < height && tile_bottom > height + dy)
+            }
+        }
+    }
+}
+
+/// Pure map-layer cache used by the GBA frontend. Player/NPC sprites and all
+/// overlays are still composited fresh after the cached background is copied.
+pub struct OverworldBackgroundCache {
+    frame_buffer: FrameBuffer,
+    key: Option<OverworldBackgroundKey>,
+}
+
+impl OverworldBackgroundCache {
+    pub fn new(width: u32, height: u32) -> Self {
+        Self {
+            frame_buffer: FrameBuffer::new(RenderConfig::new(width, height), Rgba::WHITE),
+            key: None,
+        }
+    }
+
+    fn prepare(&mut self, key: OverworldBackgroundKey) -> BackgroundDamage {
+        let Some(previous) = self.key else {
+            self.frame_buffer.clear(Rgba::WHITE);
+            return BackgroundDamage::Full;
+        };
+        if !previous.same_scene(key) {
+            self.frame_buffer.clear(Rgba::WHITE);
+            return BackgroundDamage::Full;
+        }
+
+        let dx = previous.camera_x - key.camera_x;
+        let dy = previous.camera_y - key.camera_y;
+        if dx == 0 && dy == 0 {
+            return BackgroundDamage::None;
+        }
+        if dx.unsigned_abs() >= self.frame_buffer.width()
+            || dy.unsigned_abs() >= self.frame_buffer.height()
+        {
+            self.frame_buffer.clear(Rgba::WHITE);
+            return BackgroundDamage::Full;
+        }
+
+        self.frame_buffer.scroll_indices(dx, dy, GbColor::White);
+        BackgroundDamage::Scrolled { dx, dy }
+    }
+}
+
+#[allow(clippy::too_many_arguments)]
+fn draw_background_tiles(
+    fb: &mut FrameBuffer,
+    damage: BackgroundDamage,
+    ts: &TileSet,
+    flower_ts: Option<&TileSet>,
+    shifted_water: Option<&Tile>,
+    tile_start_tx: i32,
+    tile_start_ty: i32,
+    tiles_w: i32,
+    tiles_h: i32,
+    camera_x: i32,
+    camera_y: i32,
+    departure_active: bool,
+    map_json: Option<&MapJson>,
+    map_w: u8,
+    map_h: u8,
+    blk: &[u8],
+    border_block: u8,
+    blockset: &[u8],
+    shake_offset_y: i32,
+) {
+    if matches!(damage, BackgroundDamage::None) {
+        return;
+    }
+    let width = fb.width() as i32;
+    let height = fb.height() as i32;
+    for ty in 0..tiles_h {
+        let screen_y = ty * TILE_SIZE as i32 - camera_y;
+        if screen_y + TILE_SIZE as i32 <= 0 || screen_y >= height {
+            continue;
+        }
+        let mut last_block: Option<(i32, i32, u8)> = None;
+        for tx in 0..tiles_w {
+            let screen_x = tx * TILE_SIZE as i32 - camera_x;
+            if screen_x + TILE_SIZE as i32 <= 0 || screen_x >= width {
+                continue;
+            }
+            if !damage.intersects_tile(screen_x, screen_y, width, height) {
+                continue;
+            }
+            let mut world_tx = tile_start_tx + tx;
+            let world_ty = tile_start_ty + ty;
+
+            if departure_active {
+                world_tx = world_tx.rem_euclid(map_w as i32 * 4);
+            }
+
+            let bx = world_tx.div_euclid(4);
+            let mut by = world_ty.div_euclid(4);
+            if shake_offset_y != 0 {
+                by = by.rem_euclid(map_h as i32);
+            }
+            let sub_x = world_tx.rem_euclid(4) as usize;
+            let sub_y = world_ty.rem_euclid(4) as usize;
+
+            let block_id = match last_block {
+                Some((last_bx, last_by, block_id)) if last_bx == bx && last_by == by => block_id,
+                _ => {
+                    let block_id = resolve_block_with_connections(
+                        map_json,
+                        map_w,
+                        map_h,
+                        blk,
+                        border_block,
+                        bx,
+                        by,
+                    );
+                    last_block = Some((bx, by, block_id));
+                    block_id
+                }
+            };
+
+            let block_offset = block_id as usize * blockset_data::BLOCK_SIZE;
+            let tile_idx = blockset
+                .get(block_offset + sub_y * 4 + sub_x)
+                .copied()
+                .map(usize::from)
+                .unwrap_or(0);
+
+            let tile = if tile_idx == ANIM_FLOWER_TILE as usize {
+                flower_ts.map_or_else(|| ts.get(tile_idx), |fts| fts.get(0))
+            } else if tile_idx == ANIM_WATER_TILE as usize {
+                shifted_water.unwrap_or_else(|| ts.get(tile_idx))
+            } else {
+                ts.get(tile_idx)
+            };
+            fb.blit_gb_tile_indices(screen_x, screen_y, tile, false, false, false);
+        }
+    }
+}
+
+fn background_map_hash(screen: &OverworldScreen) -> u32 {
+    let mut hash = 0x811c_9dc5u32;
+    let Some(map) = screen.map_data.as_ref() else {
+        return hash;
+    };
+    for byte in [map.width, map.height]
+        .into_iter()
+        .chain(map.blocks.iter().copied())
+    {
+        hash = (hash ^ byte as u32).wrapping_mul(0x0100_0193);
+    }
+    hash
+}
+
 pub fn draw_overworld(
     screen: &mut OverworldScreen,
     res: &mut Option<ResourceManager>,
     fb: &mut FrameBuffer,
     language: pokered_core::game_state::Lang,
 ) {
-    fb.clear(Rgba::WHITE);
+    draw_overworld_impl(screen, res, fb, language, None);
+}
+
+pub(crate) fn draw_overworld_cached(
+    screen: &mut OverworldScreen,
+    res: &mut Option<ResourceManager>,
+    fb: &mut FrameBuffer,
+    language: pokered_core::game_state::Lang,
+    cache: &mut OverworldBackgroundCache,
+) {
+    draw_overworld_impl(screen, res, fb, language, Some(cache));
+}
+
+fn draw_overworld_impl(
+    screen: &mut OverworldScreen,
+    res: &mut Option<ResourceManager>,
+    fb: &mut FrameBuffer,
+    language: pokered_core::game_state::Lang,
+    mut background_cache: Option<&mut OverworldBackgroundCache>,
+) {
+    let owns_full_screen = screen.naming_flash_frames > 0
+        || screen.pending_naming_screen.is_some()
+        || screen.pending_party_select.is_some();
+    if background_cache.is_none() || owns_full_screen || res.is_none() {
+        fb.clear(Rgba::WHITE);
+    }
+    if owns_full_screen || res.is_none() {
+        if let Some(cache) = background_cache.as_deref_mut() {
+            cache.key = None;
+        }
+    }
 
     // Naming screen open/submit white flash (GBPalWhiteOutWithDelay3).
     if screen.naming_flash_frames > 0 {
@@ -323,17 +553,16 @@ pub fn draw_overworld(
         // the current flower frame (flower1/2/3) on WATER_FLOWER tilesets.
         let tile_anim_kind = screen.tile_anim.kind();
         let water_shift = screen.tile_anim.water_shift() as i32;
-        let flower_ts = if tile_anim_kind
-            == pokered_core::overworld::presentation::TileAnimKind::WaterFlower
-        {
-            screen.tile_anim.flower_frame().and_then(|f| {
-                rm.load_asset(AssetCategory::Tileset, &format!("flower/flower{}.png", f))
-                    .ok()
-                    .map(|c| c.tileset.clone())
-            })
-        } else {
-            None
-        };
+        let flower_ts =
+            if tile_anim_kind == pokered_core::overworld::presentation::TileAnimKind::WaterFlower {
+                screen.tile_anim.flower_frame().and_then(|f| {
+                    rm.load_asset(AssetCategory::Tileset, &format!("flower/flower{}.png", f))
+                        .ok()
+                        .map(|c| c.tileset.clone())
+                })
+            } else {
+                None
+            };
 
         // ShakeElevator: the BG scrolls ±1px vertically (hSCY); sprites stay.
         let shake_offset_y = screen.elevator_shake.as_ref().map_or(0, |s| s.offset_y());
@@ -342,8 +571,7 @@ pub fn draw_overworld(
         // scrolls east up to 16 tiles while the ship sails away — the map
         // content slides left (wMapViewVRAMPointer += 2 per iteration +
         // the LY-split SCX ramp).
-        let departure_scroll =
-            screen.ship_departure.as_ref().map_or(0, |d| d.scroll_px());
+        let departure_scroll = screen.ship_departure.as_ref().map_or(0, |d| d.scroll_px());
         let departure_active = screen.ship_departure.is_some();
 
         let (map_w, map_h) = current_map.dimensions();
@@ -355,17 +583,17 @@ pub fn draw_overworld(
             Some(live) if live.width == map_w && live.height == map_h => &live.blocks,
             _ => get_block_data(current_map),
         };
+        let blockset = blockset_data::blockset_for_tileset(tileset_id);
 
         if let Ok(cached) = rm.load_tileset(tileset_name) {
-            let ts = cached.tileset.clone();
+            let ts = &cached.tileset;
 
-            // ── Multi-layer tilemap rendering via render_layers ────────────
-            // Layer 0 (ground, z=0): sub_y ∈ {0,1} — walking surface / base tiles
-            // Layer 1 (decoration, z=1): sub_y ∈ {2,3} — tree canopies, building tops
-            //
-            // The tilemap is built so that index (0,0) corresponds to world tile
+            // ── Visible background tiles ────────────────────────────────
+            // Render complete 8×8 GB tiles directly. Index (0,0) corresponds to world tile
             // (tile_start_tx, tile_start_ty). The camera is offset by `margin * TILE_SIZE`
-            // so that `render_single_layer` computes matching tilemap indices.
+            // so that the direct blitter computes matching tile indices. This
+            // avoids rebuilding a generic Tilemap and resolving the same tile
+            // and palette once for every pixel in the viewport.
 
             let margin = 2i32;
             let tile_start_tx = view_origin_tx - margin;
@@ -373,114 +601,123 @@ pub fn draw_overworld(
             let tiles_w = (fb.width() / TILE_SIZE) as i32 + margin * 2;
             let tiles_h = (fb.height() / TILE_SIZE) as i32 + margin * 2;
 
-            // Camera position: tilemap index 0 ↔ world tile tile_start_tx.
-            // render_single_layer computes tile_x = (camera_x + screen_x) / TILE_SIZE,
+            // Camera position: tile index 0 ↔ world tile tile_start_tx.
+            // The raster position computes tile_x = (camera_x + screen_x) / TILE_SIZE,
             // so camera_x = margin * TILE_SIZE + view_sub_x yields tile_x = margin at
             // screen_x=0 (when view_sub_x=0), pointing at tilemap column=margin which
             // maps to world tile tile_start_tx + margin = view_origin_tx.
             let camera_x = margin * TILE_SIZE as i32 + view_sub_x + departure_scroll;
             let camera_y = margin * TILE_SIZE as i32 + view_sub_y + shake_offset_y;
 
-            let mut ground_tm = Tilemap::new(tiles_w as u16, tiles_h as u16);
-            let mut deco_tm = Tilemap::new(tiles_w as u16, tiles_h as u16);
-
-            for ty in 0..tiles_h {
-                for tx in 0..tiles_w {
-                    let mut world_tx = tile_start_tx + tx;
-                    let world_ty = tile_start_ty + ty;
-
-                    // S.S. Anne departure scroll: the revealed east columns
-                    // wrap back to the map's west edge (the original's
-                    // ScheduleEastColumnRedraw re-draws the east column from
-                    // the screen tile buffer, which wraps at the map width).
-                    if departure_active {
-                        world_tx = world_tx.rem_euclid(map_w as i32 * 4);
+            // UpdateMovingBgTiles rotates the single water tile once, then all
+            // water cells can use the indexed framebuffer's fast tile blitter.
+            let shifted_water = if water_shift != 0 {
+                let source = ts.get(ANIM_WATER_TILE as usize);
+                let mut shifted = Tile::blank();
+                for py in 0..TILE_SIZE as usize {
+                    for px in 0..TILE_SIZE as usize {
+                        let source_x =
+                            (px as i32 - water_shift).rem_euclid(TILE_SIZE as i32) as usize;
+                        shifted.pixels[py][px] = source.pixels[py][source_x];
                     }
+                }
+                Some(shifted)
+            } else {
+                None
+            };
 
-                    let bx = world_tx.div_euclid(4);
-                    let mut by = world_ty.div_euclid(4);
-                    // ShakeElevator edge wrap: the ±1px hSCY scroll exposes a
-                    // 1px row of the tilemap row adjacent to the viewport.
-                    // The original's tilemap keeps that row a map row
-                    // (ShakeElevatorRedrawRow); the port's border tiles would
-                    // render as a white/void line at the map edge, so while
-                    // the shake is active the exposed rows WRAP back into the
-                    // map (the GB's tilemap-wrap semantics). In-bounds rows
-                    // are unchanged.
-                    if shake_offset_y != 0 {
-                        by = by.rem_euclid(map_h as i32);
-                    }
-                    let sub_x = world_tx.rem_euclid(4) as usize;
-                    let sub_y = world_ty.rem_euclid(4) as usize;
-
-                    let block_id = resolve_block_with_connections(
-                        current_map,
+            let cache_allowed = shake_offset_y == 0 && !departure_active;
+            if cache_allowed {
+                if let Some(cache) = background_cache.as_deref_mut() {
+                    let key = OverworldBackgroundKey {
+                        map: current_map as u8,
+                        camera_x: view_origin_tx * TILE_SIZE as i32 + view_sub_x,
+                        camera_y: view_origin_ty * TILE_SIZE as i32 + view_sub_y,
+                        tile_anim_kind: tile_anim_kind as u8,
+                        water_shift: screen.tile_anim.water_shift(),
+                        flower_frame: screen.tile_anim.flower_frame(),
+                        map_hash: background_map_hash(screen),
+                    };
+                    let damage = cache.prepare(key);
+                    draw_background_tiles(
+                        &mut cache.frame_buffer,
+                        damage,
+                        ts,
+                        flower_ts.as_ref(),
+                        shifted_water.as_ref(),
+                        tile_start_tx,
+                        tile_start_ty,
+                        tiles_w,
+                        tiles_h,
+                        camera_x,
+                        camera_y,
+                        departure_active,
+                        map_json,
                         map_w,
                         map_h,
                         blk,
                         border_block,
-                        bx,
-                        by,
+                        blockset,
+                        shake_offset_y,
                     );
-
-                    let tile_idx = blockset_data::block_tiles(tileset_id, block_id)
-                        .map(|t| t[sub_y * 4 + sub_x] as u16)
-                        .unwrap_or(0);
-
-                    let ground_entry = TilemapEntry {
-                        tile_id: if sub_y <= 1 { tile_idx } else { 0 },
-                        palette_group: if sub_y <= 1 { 0 } else { 255 },
-                        ..Default::default()
-                    };
-                    let deco_entry = TilemapEntry {
-                        tile_id: if sub_y <= 1 { 0 } else { tile_idx },
-                        palette_group: if sub_y <= 1 { 255 } else { 0 },
-                        ..Default::default()
-                    };
-
-                    ground_tm.set(tx as u16, ty as u16, ground_entry);
-                    deco_tm.set(tx as u16, ty as u16, deco_entry);
+                    cache.key = Some(key);
+                    fb.copy_from(&cache.frame_buffer);
+                } else {
+                    draw_background_tiles(
+                        fb,
+                        BackgroundDamage::Full,
+                        ts,
+                        flower_ts.as_ref(),
+                        shifted_water.as_ref(),
+                        tile_start_tx,
+                        tile_start_ty,
+                        tiles_w,
+                        tiles_h,
+                        camera_x,
+                        camera_y,
+                        departure_active,
+                        map_json,
+                        map_w,
+                        map_h,
+                        blk,
+                        border_block,
+                        blockset,
+                        shake_offset_y,
+                    );
                 }
+            } else {
+                if let Some(cache) = background_cache.as_deref_mut() {
+                    cache.key = None;
+                    fb.clear(Rgba::WHITE);
+                }
+                draw_background_tiles(
+                    fb,
+                    BackgroundDamage::Full,
+                    ts,
+                    flower_ts.as_ref(),
+                    shifted_water.as_ref(),
+                    tile_start_tx,
+                    tile_start_ty,
+                    tiles_w,
+                    tiles_h,
+                    camera_x,
+                    camera_y,
+                    departure_active,
+                    map_json,
+                    map_w,
+                    map_h,
+                    blk,
+                    border_block,
+                    blockset,
+                    shake_offset_y,
+                );
             }
-
-            let ground_layer = MapLayer::new(ground_tm, 0);
-            let deco_layer = MapLayer::new(deco_tm, 1);
-
-            // Tile-to-colour callback: palette_group 255 is the transparent sentinel.
-            let tile_color = |tile_id: u16, pal_group: u8, px: u8, py: u8| -> Rgba {
-                if pal_group == 255 {
-                    return Rgba::TRANSPARENT;
-                }
-                // Animated flower: tile $03 shows the current flower frame.
-                if tile_id == ANIM_FLOWER_TILE as u16 {
-                    if let Some(ref fts) = flower_ts {
-                        let tile = fts.get(0);
-                        let color_idx = tile.pixels[py as usize][px as usize];
-                        return pal.color(GbColor::from_u8(color_idx));
-                    }
-                }
-                let tile = ts.get(tile_id as usize);
-                // Animated water: tile $14's rows rotate horizontally.
-                if tile_id == ANIM_WATER_TILE as u16 && water_shift != 0 {
-                    let sx = (px as i32 - water_shift).rem_euclid(TILE_SIZE as i32) as usize;
-                    let color_idx = tile.pixels[py as usize][sx];
-                    return pal.color(GbColor::from_u8(color_idx));
-                }
-                let color_idx = tile.pixels[py as usize][px as usize];
-                pal.color(GbColor::from_u8(color_idx))
-            };
-
-            render_layers(
-                fb,
-                &[ground_layer, deco_layer],
-                camera_x,
-                camera_y,
-                fb.width(),
-                fb.height(),
-                tile_color,
-            );
+        } else {
+            if let Some(cache) = background_cache.as_deref_mut() {
+                cache.key = None;
+            }
+            fb.clear(Rgba::WHITE);
         }
-
         // Player sprite: 16×96 sheet = 6 frames of 16×16
         // Frame layout: DownStand=0, UpStand=1, LeftStand=2, DownWalk=3, UpWalk=4, LeftWalk=5
         // Right uses Left frames with horizontal flip
@@ -659,36 +896,35 @@ pub fn draw_overworld(
             };
 
             if player_visible {
-            for row in 0..2_u32 {
-                for col in 0..2_u32 {
-                    let src_col = if flip_h { 1 - col } else { col };
-                    let (tile_idx, tile_ts) = match (&pose_ts, row) {
-                        // Bottom half of the fishing pose (2 tiles: bottom-
-                        // left, bottom-right).
-                        (Some(p), 1) => (src_col as usize, p),
-                        _ => (
-                            base_tile + (row as usize * tpr as usize) + src_col as usize,
-                            &ts,
-                        ),
-                    };
-                    if tile_idx >= tile_ts.len() {
-                        continue;
-                    }
+                for row in 0..2_u32 {
+                    for col in 0..2_u32 {
+                        let src_col = if flip_h { 1 - col } else { col };
+                        let (tile_idx, tile_ts) = match (&pose_ts, row) {
+                            // Bottom half of the fishing pose (2 tiles: bottom-
+                            // left, bottom-right).
+                            (Some(p), 1) => (src_col as usize, p),
+                            _ => (
+                                base_tile + (row as usize * tpr as usize) + src_col as usize,
+                                &ts,
+                            ),
+                        };
+                        if tile_idx >= tile_ts.len() {
+                            continue;
+                        }
 
-                    blit_single_tile_flipped(
-                        fb,
-                        tile_ts,
-                        tile_idx,
-                        draw_x + col * TILE_SIZE,
-                        draw_y + row * TILE_SIZE,
-                        &sprite_pal,
-                        flip_h,
-                    );
+                        blit_single_tile_flipped(
+                            fb,
+                            tile_ts,
+                            tile_idx,
+                            draw_x + col * TILE_SIZE,
+                            draw_y + row * TILE_SIZE,
+                            &sprite_pal,
+                            flip_h,
+                        );
+                    }
                 }
             }
-            }
         }
-
         // Grass overlay: redraw BG grass tile over the player sprite's bottom
         // half, replicating Game Boy OAM_PRIO behavior where non-zero BG pixels
         // render on top of sprites with the priority bit set.
@@ -706,7 +942,7 @@ pub fn draw_overworld(
                         let sub_x = world_tx.rem_euclid(4) as usize;
                         let sub_y = world_ty.rem_euclid(4) as usize;
                         let block_id = resolve_block_with_connections(
-                            current_map,
+                            map_json,
                             map_w,
                             map_h,
                             blk,
@@ -714,8 +950,11 @@ pub fn draw_overworld(
                             bx,
                             by,
                         );
-                        let bg_tile_idx = blockset_data::block_tiles(tileset_id, block_id)
-                            .map(|t| t[sub_y * 4 + sub_x] as usize)
+                        let block_offset = block_id as usize * blockset_data::BLOCK_SIZE;
+                        let bg_tile_idx = blockset
+                            .get(block_offset + sub_y * 4 + sub_x)
+                            .copied()
+                            .map(usize::from)
                             .unwrap_or(0)
                             .min(bg_ts.len().saturating_sub(1));
                         if bg_tile_idx == grass_id as usize {
@@ -738,7 +977,6 @@ pub fn draw_overworld(
                 }
             }
         }
-
         for npc in &screen.npc_states {
             if screen.field_move_restore.is_some() {
                 break;
@@ -859,7 +1097,6 @@ pub fn draw_overworld(
                 }
             }
         }
-
         // Render destination-map NPCs offset into the old viewport during
         // a connection walk, so they scroll into view before the map swap.
         if let Some(ref preview) = screen.connection_npc_preview {
@@ -1088,7 +1325,11 @@ pub fn draw_overworld(
                     Rgba::rgb(0xFF, 0xFF, 0xFF),
                     Rgba::rgb(0x00, 0x00, 0x00),
                 ]);
-                let heal_pal = if healing_state.flash_active { &obp1_flash } else { &obp1_pal };
+                let heal_pal = if healing_state.flash_active {
+                    &obp1_flash
+                } else {
+                    &obp1_pal
+                };
 
                 // PokeCenterOAMData offsets relative to nurse sprite top-left.
                 // Nurse renders at map pos (3,1) as a 16×16 NPC sprite.
@@ -1098,9 +1339,12 @@ pub fn draw_overworld(
                 const MONITOR_DX: i32 = -20;
                 const MONITOR_DY: i32 = -12;
                 const BALL_OAM: [(i32, i32, bool); 6] = [
-                    (-24, -5, false), (-16, -5, true),
-                    (-24,  0, false), (-16,  0, true),
-                    (-24,  5, false), (-16,  5, true),
+                    (-24, -5, false),
+                    (-16, -5, true),
+                    (-24, 0, false),
+                    (-16, 0, true),
+                    (-24, 5, false),
+                    (-16, 5, true),
                 ];
 
                 let nurse_x = 3_i32;
@@ -1110,8 +1354,11 @@ pub fn draw_overworld(
 
                 if ts.len() > 0 {
                     blit_tile_clipped(
-                        fb, &ts, 0,
-                        nurse_px_x + MONITOR_DX, nurse_px_y + MONITOR_DY,
+                        fb,
+                        &ts,
+                        0,
+                        nurse_px_x + MONITOR_DX,
+                        nurse_px_y + MONITOR_DY,
                         heal_pal,
                     );
                 }
@@ -1121,9 +1368,13 @@ pub fn draw_overworld(
                     let (dx, dy, flip) = BALL_OAM[i];
                     if 1 < ts.len() {
                         blit_tile_clipped_flipped(
-                            fb, &ts, 1,
-                            nurse_px_x + dx, nurse_px_y + dy,
-                            heal_pal, flip,
+                            fb,
+                            &ts,
+                            1,
+                            nurse_px_x + dx,
+                            nurse_px_y + dy,
+                            heal_pal,
+                            flip,
                         );
                     }
                 }
@@ -1177,7 +1428,6 @@ pub fn draw_overworld(
                 }
             }
         }
-
 
         // CUT — InitCutAnimOAM + AnimCut. The map block underneath has already
         // been replaced; this 2×2 OAM copy of the tree holds the old shape,
@@ -1254,12 +1504,8 @@ pub fn draw_overworld(
                 if let Ok(cached) = rm.load_asset(AssetCategory::Overworld, "smoke.png") {
                     let ts = cached.tileset.clone();
                     // rOBP1=%00000000: idx 0→transparent, 1-3→white.
-                    let obp1_pal = Palette::new(&[
-                        Rgba::TRANSPARENT,
-                        Rgba::WHITE,
-                        Rgba::WHITE,
-                        Rgba::WHITE,
-                    ]);
+                    let obp1_pal =
+                        Palette::new(&[Rgba::TRANSPARENT, Rgba::WHITE, Rgba::WHITE, Rgba::WHITE]);
                     // The smokestack's screen position at departure start
                     // (map tile (16, 10.5) → view-relative px).
                     let anchor_x = SHIP_DEPARTURE_SMOKESTACK_TILE_X as i32 * TILE_SIZE as i32
@@ -1331,13 +1577,24 @@ pub fn draw_overworld(
             let show_arrow = dlg.waiting_for_input() && (screen.frame_counter / 16) % 2 == 0;
             let mut painter = FrameBufferPainter::new(fb);
             let mut ui = Ui::new(&mut painter);
-            menus::dialog::draw(&combined, show_arrow, &DIALOG_DEFAULT_LAYOUT, &mut ui, language);
+            menus::dialog::draw(
+                &combined,
+                show_arrow,
+                &DIALOG_DEFAULT_LAYOUT,
+                &mut ui,
+                language,
+            );
         }
 
         if let Some(ref choice) = screen.pending_choice {
             let mut painter = FrameBufferPainter::new(fb);
             let mut ui = Ui::new(&mut painter);
-            menus::yes_no::draw(&choice.options, choice.selected, &YES_NO_DEFAULT_LAYOUT, &mut ui);
+            menus::yes_no::draw(
+                &choice.options,
+                choice.selected,
+                &YES_NO_DEFAULT_LAYOUT,
+                &mut ui,
+            );
         }
 
         return;
@@ -1346,7 +1603,12 @@ pub fn draw_overworld(
     if let Some(ref choice) = screen.pending_choice {
         let mut painter = FrameBufferPainter::new(fb);
         let mut ui = Ui::new(&mut painter);
-        menus::yes_no::draw(&choice.options, choice.selected, &YES_NO_DEFAULT_LAYOUT, &mut ui);
+        menus::yes_no::draw(
+            &choice.options,
+            choice.selected,
+            &YES_NO_DEFAULT_LAYOUT,
+            &mut ui,
+        );
         return;
     }
 
@@ -1446,9 +1708,15 @@ mod tests {
         let root = pokered_renderer::resource::AssetRoot::auto_detect().expect("test graphics");
         let mut resources = Some(ResourceManager::new(root));
         let mut frame = FrameBuffer::new(
-            dotzuki_engine::render_config::RenderConfig::new(160, 144), Rgba::WHITE,
+            dotzuki_engine::render_config::RenderConfig::new(160, 144),
+            Rgba::WHITE,
         );
-        draw_overworld(&mut s, &mut resources, &mut frame, pokered_core::game_state::Lang::En);
+        draw_overworld(
+            &mut s,
+            &mut resources,
+            &mut frame,
+            pokered_core::game_state::Lang::En,
+        );
         assert_eq!(frame.width(), 160);
     }
 
@@ -1538,12 +1806,19 @@ mod tests {
     /// Render the overworld to a framebuffer and count the GRAYSCALE shades.
     #[cfg(not(target_arch = "wasm32"))]
     fn shade_histogram(screen: &mut OverworldScreen) -> [usize; 4] {
-        let mut res = pokered_renderer::resource::AssetRoot::auto_detect().ok().map(pokered_renderer::resource::ResourceManager::new);
+        let mut res = pokered_renderer::resource::AssetRoot::auto_detect()
+            .ok()
+            .map(pokered_renderer::resource::ResourceManager::new);
         let mut fb = FrameBuffer::new(
             dotzuki_engine::render_config::RenderConfig::new(160, 144),
             Rgba::WHITE,
         );
-        draw_overworld(screen, &mut res, &mut fb, pokered_core::game_state::Lang::En);
+        draw_overworld(
+            screen,
+            &mut res,
+            &mut fb,
+            pokered_core::game_state::Lang::En,
+        );
         // Classify by the *displayed* color: the fade now lives in the
         // display palette (indices stay as drawn), so get_pixel applies it.
         let mut counts = [0usize; 4];
@@ -1591,12 +1866,19 @@ mod tests {
             s.tile_anim.kind(),
             pokered_core::overworld::presentation::TileAnimKind::WaterFlower
         );
-        let mut res = pokered_renderer::resource::AssetRoot::auto_detect().ok().map(pokered_renderer::resource::ResourceManager::new);
+        let mut res = pokered_renderer::resource::AssetRoot::auto_detect()
+            .ok()
+            .map(pokered_renderer::resource::ResourceManager::new);
         let mut fb_a = FrameBuffer::new(
             dotzuki_engine::render_config::RenderConfig::new(160, 144),
             Rgba::WHITE,
         );
-        draw_overworld(&mut s, &mut res, &mut fb_a, pokered_core::game_state::Lang::En);
+        draw_overworld(
+            &mut s,
+            &mut res,
+            &mut fb_a,
+            pokered_core::game_state::Lang::En,
+        );
         // 20 ticks = one water update (one-pixel rotation of tile $14).
         for _ in 0..20 {
             s.tile_anim.tick();
@@ -1606,8 +1888,85 @@ mod tests {
             dotzuki_engine::render_config::RenderConfig::new(160, 144),
             Rgba::WHITE,
         );
-        draw_overworld(&mut s, &mut res, &mut fb_b, pokered_core::game_state::Lang::En);
-        assert_ne!(fb_a.packed(), fb_b.packed(), "water rotation changes the frame");
+        draw_overworld(
+            &mut s,
+            &mut res,
+            &mut fb_b,
+            pokered_core::game_state::Lang::En,
+        );
+        assert_ne!(
+            fb_a.packed(),
+            fb_b.packed(),
+            "water rotation changes the frame"
+        );
+    }
+
+    #[cfg(not(target_arch = "wasm32"))]
+    #[test]
+    fn incremental_background_matches_full_render_while_walking() {
+        let root = pokered_renderer::resource::AssetRoot::auto_detect().expect("test graphics");
+        let mut full_resources = Some(ResourceManager::new(root.clone()));
+        let mut cached_resources = Some(ResourceManager::new(root));
+        let mut s = screen_on(MapId::PalletTown);
+        s.state.player.x = 12;
+        s.state.player.y = 12;
+        let mut cache = OverworldBackgroundCache::new(160, 144);
+
+        let mut compare = |screen: &mut OverworldScreen| {
+            let mut full = FrameBuffer::new(RenderConfig::new(160, 144), Rgba::WHITE);
+            let mut incremental = FrameBuffer::new(RenderConfig::new(160, 144), Rgba::WHITE);
+            draw_overworld(
+                screen,
+                &mut full_resources,
+                &mut full,
+                pokered_core::game_state::Lang::En,
+            );
+            draw_overworld_cached(
+                screen,
+                &mut cached_resources,
+                &mut incremental,
+                pokered_core::game_state::Lang::En,
+                &mut cache,
+            );
+            assert_eq!(
+                full.packed(),
+                incremental.packed(),
+                "cached background must preserve every pixel"
+            );
+            assert_eq!(full.display_palette(), incremental.display_palette());
+        };
+
+        compare(&mut s);
+        for direction in [
+            Direction::Down,
+            Direction::Up,
+            Direction::Left,
+            Direction::Right,
+        ] {
+            s.state.player.facing = direction;
+            s.state.player.movement_state = MovementState::Walking;
+            s.state.walk_counter = 8;
+            compare(&mut s);
+            for counter in (1..8).rev() {
+                s.state.walk_counter = counter;
+                compare(&mut s);
+            }
+            let (dx, dy) = match direction {
+                Direction::Down => (0, 1),
+                Direction::Up => (0, -1),
+                Direction::Left => (-1, 0),
+                Direction::Right => (1, 0),
+            };
+            s.state.player.x = (s.state.player.x as i32 + dx) as u16;
+            s.state.player.y = (s.state.player.y as i32 + dy) as u16;
+            s.state.player.movement_state = MovementState::Idle;
+            s.state.walk_counter = 0;
+            compare(&mut s);
+        }
+
+        let map = s.map_data.as_mut().expect("live map");
+        map.blocks[0] = map.blocks[0].wrapping_add(1);
+        compare(&mut s);
     }
 }
 
@@ -1627,7 +1986,12 @@ mod elevator_edge_tests {
             dotzuki_engine::render_config::RenderConfig::new(160, 144),
             Rgba::WHITE,
         );
-        draw_overworld(screen, &mut res, &mut fb, pokered_core::game_state::Lang::En);
+        draw_overworld(
+            screen,
+            &mut res,
+            &mut fb,
+            pokered_core::game_state::Lang::En,
+        );
         fb
     }
 
@@ -1703,8 +2067,7 @@ mod elevator_edge_tests {
     /// never the border block.
     #[test]
     fn celadon_mansion_shake_wraps_past_short_map_edges() {
-        let mut ref_screen =
-            OverworldScreen::new(MapId::CeladonMansion3F, None, PokemonRedData);
+        let mut ref_screen = OverworldScreen::new(MapId::CeladonMansion3F, None, PokemonRedData);
         ref_screen.state.player.x = 6;
         ref_screen.state.player.y = 5;
         let reference = render_screen(&mut ref_screen);
@@ -1814,25 +2177,26 @@ mod elevator_edge_tests {
         s.state.player.x = 5;
         s.state.player.y = 5;
         s.state.player.facing = Direction::Down;
-        s.npc_states.push(dotzuki_engine::overworld::npc_movement::NpcRuntimeState {
-            npc_index: 0,
-            sprite_id: pokered_data::sprites::SpriteId::Boulder as u8,
-            x: 5,
-            y: 6,
-            home_x: 5,
-            home_y: 6,
-            facing: Direction::Down,
-            scripted_frame: None,
-            movement_type: dotzuki_engine::overworld::NpcMovementType::Stationary,
-            wander_axis: dotzuki_engine::overworld::NpcWanderAxis::Any,
-            range: 0,
-            walk_counter: 0,
-            delay_counter: 0,
-            text_id: 0,
-            defeated: false,
-            visible: true,
-            scripted_path: std::collections::VecDeque::new(),
-        });
+        s.npc_states
+            .push(dotzuki_engine::overworld::npc_movement::NpcRuntimeState {
+                npc_index: 0,
+                sprite_id: pokered_data::sprites::SpriteId::Boulder as u8,
+                x: 5,
+                y: 6,
+                home_x: 5,
+                home_y: 6,
+                facing: Direction::Down,
+                scripted_frame: None,
+                movement_type: dotzuki_engine::overworld::NpcMovementType::Stationary,
+                wander_axis: dotzuki_engine::overworld::NpcWanderAxis::Any,
+                range: 0,
+                walk_counter: 0,
+                delay_counter: 0,
+                text_id: 0,
+                defeated: false,
+                visible: true,
+                scripted_path: std::collections::VecDeque::new(),
+            });
         s.strength_active = true;
 
         let before = render_screen(&mut s);
@@ -1853,10 +2217,8 @@ mod elevator_edge_tests {
         // Sample the RIGHT column (88..96): the boulder sprite (16×16,
         // x 72..88) never covers it before or after the slide, so any pixel
         // change there must come from the dust.
-        let dust_area_changed = (88..96).any(|x| {
-            (116..132)
-                .any(|y| before.get_pixel(x, y) != after.get_pixel(x, y))
-        });
+        let dust_area_changed =
+            (88..96).any(|x| (116..132).any(|y| before.get_pixel(x, y) != after.get_pixel(x, y)));
         assert!(
             dust_area_changed,
             "dust pixels appear at the boulder's base during the push"

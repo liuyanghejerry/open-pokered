@@ -14,6 +14,8 @@
 
 /// Exact (static) message → Chinese, keyed on the full dialog text (all lines
 /// joined with `\n`, matching the page split used by `BedroomDialogue`).
+
+use crate::alloc_prelude::*;
 const EXACT: &[(&str, &str)] = &[
     // ── Field moves (field_moves.rs) ────────────────────────────────
     ("No! A new BADGE\nis required.", "不行！需要新的\n徽章。"),

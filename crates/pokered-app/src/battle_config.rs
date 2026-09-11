@@ -1,3 +1,5 @@
+use crate::alloc_prelude::*;
+#[cfg(not(target_os = "none"))]
 use std::path::Path;
 
 use pokered_core::battle::state::{BattleType, Pokemon, StatusCondition};
@@ -47,6 +49,7 @@ fn default_dvs() -> [u8; 2] {
 }
 
 impl BattleConfig {
+    #[cfg(not(target_os = "none"))]
     pub fn load(path: &Path) -> Result<Self, String> {
         let data = std::fs::read(path).map_err(|e| format!("Failed to read {:?}: {}", path, e))?;
         serde_json::from_slice(&data)

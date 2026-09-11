@@ -30,6 +30,7 @@
 //! `HoFRecordMonInfo`, hall_of_fame.asm:230-241 — but the net effect is one
 //! `SaveHallOfFameTeams` after the last mon).
 
+use crate::alloc_prelude::*;
 use pokered_data::species::Species;
 
 /// Frames for the initial/final `GBFadeOutToWhite` (approximation of the
@@ -227,19 +228,19 @@ impl HofCeremonyState {
 
     /// Drain one-shot SFX requests (mon cries).
     pub fn take_sfx(&mut self) -> Vec<HofSfx> {
-        std::mem::take(&mut self.pending_sfx)
+        core::mem::take(&mut self.pending_sfx)
     }
 
     /// Take the pending `MUSIC_HALL_OF_FAME` request (fires once, at the end
     /// of [`HofPhase::Opening`]).
     pub fn take_music_pending(&mut self) -> bool {
-        std::mem::take(&mut self.music_pending)
+        core::mem::take(&mut self.music_pending)
     }
 
     /// Take the pending music-fade request (fires once, at the start of
     /// [`HofPhase::FinalFade`]).
     pub fn take_music_fade_pending(&mut self) -> bool {
-        std::mem::take(&mut self.music_fade_pending)
+        core::mem::take(&mut self.music_fade_pending)
     }
 
     fn enter(&mut self, phase: HofPhase) {

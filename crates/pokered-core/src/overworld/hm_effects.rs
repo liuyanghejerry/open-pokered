@@ -1,3 +1,4 @@
+use crate::alloc_prelude::*;
 use dotzuki_engine::tileset::TilesetTrait;
 use pokered_data::maps::MapId;
 use pokered_data::moves::MoveId;

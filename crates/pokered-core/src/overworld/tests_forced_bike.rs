@@ -8,6 +8,7 @@
 //! start_sub_menus.asm:374-379 (BICYCLE refusal) and engine/overworld/
 //! field_move_messages.asm `IsSurfingAllowed` (SURF refusal).
 
+use crate::alloc_prelude::*;
 use super::field_moves::FieldMoveOutcome;
 use super::screen::{OverworldScreen, PendingWarp};
 use super::{Direction, OverworldInput};

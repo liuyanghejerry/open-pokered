@@ -5,6 +5,7 @@
 //! with the mon scrolling left as a black silhouette
 //! (`DisplayCreditsMon`); the roll closes on "THE END".
 
+use crate::alloc_prelude::*;
 use pokered_core::credits::{CreditsPhase, CreditsState};
 use pokered_renderer::embedded_font::draw_text;
 use pokered_renderer::palette::{Palette, GRAYSCALE_SPRITE_PALETTE};

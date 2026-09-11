@@ -4,6 +4,7 @@ use crate::battle::state::{status1, status2, BattleState};
 
 use super::{EffectRandoms, EffectResult};
 
+use crate::alloc_prelude::*;
 pub fn apply_charge(state: &mut BattleState, move_data: &MoveData) -> EffectResult {
     let attacker = state.attacker_mut();
     if attacker.has_status1(status1::CHARGING_UP) {

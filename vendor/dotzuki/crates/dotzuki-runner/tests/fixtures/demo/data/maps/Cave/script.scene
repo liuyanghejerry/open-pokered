@@ -1,0 +1,45 @@
+game_scene Cave {
+    @storyline("cave_enter") {
+        @trigger(map = "Cave", on_enter = true)
+        @speaker("") {
+            "A cold wind blows through the cave."
+        }
+    }
+    @storyline("hermit_choice") {
+        @trigger(map = "Cave", npc = "Hermit")
+        @speaker("Hermit") {
+            "Will you take the torch?"
+        }
+        @choice {
+            @option("Take it") {
+                @command("setFlag", "TOOK_TORCH")
+                @speaker("Hermit") {
+                    "Wise choice."
+                }
+            }
+            @option("Leave it") {
+                @speaker("Hermit") {
+                    "Suit yourself."
+                }
+            }
+        }
+    }
+    @storyline("boss_fight") {
+        @speaker("Boss") {
+            "A wild Slime blocks the path!"
+        }
+        @if (true) {
+            result = startBattle("slime")
+            @if (result == "win") {
+                @command("setFlag", "BEAT_SLIME")
+                @speaker("Boss") {
+                    "The path is clear!"
+                }
+            } @else {
+                @speaker("Boss") {
+                    "The Slime oozes onward..."
+                }
+            }
+        }
+    }
+}

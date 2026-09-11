@@ -1,3 +1,4 @@
+use crate::alloc_prelude::*;
 use super::state::{status2, status3, BattlerState, StatusCondition};
 
 /// Result of applying residual damage after a move.

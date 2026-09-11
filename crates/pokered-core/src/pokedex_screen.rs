@@ -32,6 +32,7 @@
 //! shows the entry *without* a side menu there (the side menu only exists in
 //! the `ShowPokedexMenu` list flow).
 
+use crate::alloc_prelude::*;
 use crate::pokemon::pokedex::Pokedex;
 use pokered_data::maps::MapId;
 use pokered_data::species::Species;

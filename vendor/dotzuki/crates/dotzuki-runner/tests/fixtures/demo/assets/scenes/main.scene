@@ -1,0 +1,7 @@
+game_scene Main {
+    @storylines {
+        @speaker("Guide") {
+            "Welcome to the demo project!"
+        }
+    }
+}

@@ -7,6 +7,7 @@
 //! perfect mirrors of each other (A's player == B's enemy, HP included) and
 //! both RNG streams have consumed exactly the same bytes.
 
+use crate::alloc_prelude::*;
 use super::link_battle_driver::{test_driver_pair, LinkBattleDriver, LinkDriverEvent, LinkDriverPhase};
 use crate::battle::state::Pokemon;
 use crate::battle::{BattleInput, BattlePhase};

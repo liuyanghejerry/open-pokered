@@ -1,3 +1,4 @@
+use crate::alloc_prelude::*;
 use pokered_core::game_state::Lang;
 use pokered_data::ui_layout::schema::BattleTextDefaultLayout;
 

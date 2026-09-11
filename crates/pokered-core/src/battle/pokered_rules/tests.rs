@@ -14,6 +14,7 @@
 
 #![cfg(test)]
 
+use crate::alloc_prelude::*;
 use super::{
     clear_current_moves, clear_last_move_live, install_canonical, move_effect_for, set_active_move,
     set_current_move, set_last_move_live, species_types, sub_created_this_turn, PokeVolatile,
@@ -262,9 +263,9 @@ fn first_mover(s: &Scenario) -> FirstMover {
     let pr = provider.turn_order_rank(&state, BattlerRef::PLAYER, &s.move_id);
     let er = provider.turn_order_rank(&state, BattlerRef::OPPONENT, &s.move_id);
     match pr.cmp(&er) {
-        std::cmp::Ordering::Less => FirstMover::Player,
-        std::cmp::Ordering::Greater => FirstMover::Opponent,
-        std::cmp::Ordering::Equal => {
+        core::cmp::Ordering::Less => FirstMover::Player,
+        core::cmp::Ordering::Greater => FirstMover::Opponent,
+        core::cmp::Ordering::Equal => {
             if s.order_byte < 128 { FirstMover::Player } else { FirstMover::Opponent }
         }
     }

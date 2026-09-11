@@ -5,6 +5,7 @@
 //! - 60 indoor map group entries (buildings, dungeons)
 //! - 48 town map order entries (fly destination ordering)
 
+use crate::alloc_prelude::*;
 use crate::map_names::{map_to_name_id, MapNameId};
 use crate::maps::MapId;
 

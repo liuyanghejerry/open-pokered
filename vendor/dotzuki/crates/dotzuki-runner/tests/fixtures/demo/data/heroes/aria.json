@@ -1,0 +1,11 @@
+{
+  "id": "aria",
+  "name": "Aria",
+  "hp": 60,
+  "atk": 12,
+  "def": 10,
+  "spd": 15,
+  "mp": 20,
+  "element": "grass",
+  "skills": ["slash", "fire-bolt", "heal", "focus"]
+}

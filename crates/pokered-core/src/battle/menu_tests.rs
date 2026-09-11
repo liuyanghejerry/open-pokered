@@ -1,3 +1,4 @@
+use crate::alloc_prelude::*;
 use crate::battle::menu::*;
 use crate::main_menu::MenuInput;
 use pokered_data::moves::MoveId;

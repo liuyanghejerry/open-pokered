@@ -1,0 +1,20 @@
+{
+  "npcs": [
+    {
+      "id": 1,
+      "name": "Guide",
+      "x": 2,
+      "y": 1,
+      "facing": "down",
+      "sprite": "guide.png",
+      "talk": "Welcome to Town."
+    }
+  ],
+  "warps": [
+    { "x": 0, "y": 1, "dest_map": "Cave", "dest_x": 3, "dest_y": 4 }
+  ],
+  "signs": [
+    { "x": 1, "y": 1, "text": "You are standing in Town." }
+  ],
+  "music": "town-theme"
+}

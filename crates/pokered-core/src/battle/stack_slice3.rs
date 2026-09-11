@@ -28,8 +28,10 @@
 
 #![cfg(test)]
 
+use crate::alloc_prelude::*;
 #[cfg(test)]
 mod slice3_tests {
+use crate::alloc_prelude::*;
     use crate::battle::stack_parity::{
         build_stack_stream_dmg, run_scenario_dmg, stack_run_dmg, DamageScenario, MonSpec, MoveBytes,
     };

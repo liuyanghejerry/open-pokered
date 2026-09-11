@@ -7,8 +7,9 @@
 //! at their defaults. Unknown species/moves/items are skipped with a warning
 //! instead of failing the whole snapshot.
 
-use std::collections::HashMap;
-use std::str::FromStr;
+use crate::alloc_prelude::*;
+use pokered_core::hash_compat::HashMap;
+use core::str::FromStr;
 
 use pokered_core::items::inventory::Inventory;
 use pokered_core::pokemon::stats::{create_pokemon, create_pokemon_with_moves};

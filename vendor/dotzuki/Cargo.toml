@@ -1,0 +1,62 @@
+[workspace]
+resolver = "2"
+members = [    "crates/dotzuki-engine",
+    "crates/dotzuki-rules",
+    "crates/dotzuki-rules-macro",
+    "crates/dotzuki-engine-tiled",
+    "crates/dotzuki-engine-dsl",
+    "crates/dotzuki-engine-script",
+    "crates/dotzuki-cli",
+    "crates/dotzuki-runner",
+    "crates/dotzuki-runner-web",
+    "crates/dotzuki-renderer",
+    "crates/dotzuki-tui",
+    "crates/dotzuki-ui",
+    "crates/dotzuki-audio",
+    "crates/dotzuki-web",
+    "crates/dotzuki-app",
+]
+
+# cargo-generate starter template: its Cargo.toml uses {{project-name}}
+# placeholders and must not be parsed as a workspace package (which also
+# breaks consumers that fetch this repo as a git dependency).
+exclude = ["dotzuki-template"]
+
+[workspace.package]
+version = "0.6.0"
+edition = "2021"
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/liuyanghejerry/dotzuki"
+
+[workspace.dependencies]
+# no_std-friendly dependency defaults (mirrors the main repo's GBA port):
+# serde/serde_json build without std so the engine crates can target
+# thumbv4t; hosted builds are unaffected (std is re-enabled by consumers
+# that depend on serde with default features elsewhere in the graph).
+serde = { version = "1", default-features = false, features = ["derive", "alloc"] }
+serde_json = { version = "1", default-features = false, features = ["alloc"] }
+log = { version = "0.4", default-features = false }
+# NOTE: `ron` stays a registry "0.8" requirement here. The GBA build redirects
+# it to the vendored ../ron copy via the downstream [patch.crates-io] section,
+# not via this workspace.
+ron = "0.8"
+bincode = "1"
+# thiserror's default features include "std"; thumbv4t builds need the
+# core::error::Error based no_std mode. Hosted builds are unaffected
+# (core::error::Error exists since Rust 1.81).
+thiserror = { version = "2", default-features = false }
+miette = { version = "7", features = ["fancy"] }
+anyhow = "1"
+tracing = "0.1"
+notify = "6"
+rand = "0.8"
+strum = { version = "0.26", features = ["derive"] }
+strum_macros = "0.26"
+num-derive = "0.4"
+num-traits = "0.2"
+
+# Redirect crates-io `ron` to the vendored no_std copy (same name/version,
+# so the downstream GBA consumer's [patch.crates-io] resolves identically).
+# This patch is scoped to builds of THIS workspace only.
+[patch.crates-io]
+ron = { path = "../ron" }

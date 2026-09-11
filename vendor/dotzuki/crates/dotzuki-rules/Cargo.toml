@@ -1,0 +1,38 @@
+[package]
+name = "dotzuki-rules"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "No-code RON authoring loader + closed primitive interpreter for dotzuki-engine's battle effect-stack. Parses a rules.ron into runtime Effects dispatched through ONE zero-capture interpreter-bridge fn keyed by source_effect (doc 11 Option A — zero engine change)."
+
+# HARD CONSTRAINT (doc 11 §0, §6): this crate depends on the game-agnostic
+# engine ONLY. It pulls in ZERO pokered / pokered-core / pokered-data / minimon
+# code and references ZERO concrete game/monster type. It links no `rand`
+# (randomness flows through dotzuki-engine's BattleRng). The data layer is a
+# CONSUMER of the closed primitive vocabulary; it amortizes content, it does NOT
+# extend mechanics.
+[dependencies]
+dotzuki-engine = { path = "../dotzuki-engine", version = "0.6.0" }
+serde = { workspace = true }
+ron = { workspace = true }
+thiserror = { workspace = true }
+dotzuki-rules-macro = { path = "../dotzuki-rules-macro", version = "0.6.0", optional = true }
+# Hot-reload (DEV only): the `notify`-based file watcher behind the `hot-reload`
+# feature. OFF by default ⇒ the BAKED path (zero file IO; `include_str!`) is the
+# default build. Both modes yield the SAME runtime ruleset (doc 11 §4.2): the
+# baked text and the on-disk text parse to an identical `Ruleset`. `notify` is
+# the same version (`6`) dotzuki-app's `AssetWatcher` already uses.
+notify = { workspace = true, optional = true }
+
+[features]
+default = []
+hot-reload = ["dep:notify"]
+compile-time = ["dep:dotzuki-rules-macro"]
+
+# The `rules_ron!` macro this example demonstrates lives behind `compile-time`,
+# so the example only builds with that feature on. Without this gate a default
+# `cargo build`/`cargo test` tries to compile it and fails on the macro import.
+[[example]]
+name = "compile_time"
+required-features = ["compile-time"]

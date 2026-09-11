@@ -3,6 +3,7 @@
 //! plus the shared entry renderer used by both the list screen and the
 //! overworld's script-driven entry overlay.
 
+use crate::alloc_prelude::*;
 use pokered_core::pokedex_screen::{
     PokedexScreenMode, PokedexScreenState, LIST_ROWS,
 };
@@ -299,13 +300,13 @@ fn wrap_zh_page(page: &str) -> Vec<String> {
                 let last = current.chars().last().unwrap();
                 let popped_w = char_tile_width(last);
                 current.pop();
-                lines.push(std::mem::take(&mut current));
+                lines.push(core::mem::take(&mut current));
                 current.push(last);
                 current.push(c);
                 width = popped_w + w;
                 continue;
             }
-            lines.push(std::mem::take(&mut current));
+            lines.push(core::mem::take(&mut current));
             width = 0;
         }
         current.push(c);

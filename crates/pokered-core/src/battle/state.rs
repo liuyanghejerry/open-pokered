@@ -1,3 +1,4 @@
+use crate::alloc_prelude::*;
 use pokered_data::moves::MoveId;
 use pokered_data::species::Species;
 use pokered_data::types::PokemonType;
@@ -110,6 +111,7 @@ pub const NAME_TEXT_BUF: usize = 64;
 /// but deserialize from the legacy `null`/decoded-string forms of old JSON
 /// saves as well.
 mod name_serde {
+    use crate::alloc_prelude::*;
     use super::{encode_name, NameBytes, NO_NAME};
     use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
@@ -281,7 +283,7 @@ pub fn decode_name<'a>(bytes: &[u8], out: &'a mut [u8; NAME_TEXT_BUF]) -> &'a st
         }
     }
     // decode_char only yields valid UTF-8.
-    std::str::from_utf8(&out[..len]).unwrap_or("")
+    core::str::from_utf8(&out[..len]).unwrap_or("")
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

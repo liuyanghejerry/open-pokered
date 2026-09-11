@@ -1,3 +1,4 @@
+use crate::alloc_prelude::*;
 pub mod game_data;
 pub mod hall_of_fame;
 pub mod ser_game_data;
@@ -10,11 +11,11 @@ pub mod sram_import;
 pub mod sram_layout;
 
 #[cfg(test)]
+mod daycare_tests;
+#[cfg(test)]
 mod save_tests;
 #[cfg(test)]
 mod sram_import_tests;
-#[cfg(test)]
-mod daycare_tests;
 
 use crate::pokemon::party::Party;
 use crate::pokemon::pc_box::{PcBox, PcStorage};
@@ -132,21 +133,23 @@ impl SaveData {
             let new_level = level_from_exp(base.growth_rate, dc.exp).clamp(1, 100);
             if let Some(mut mon) = create_pokemon(species, new_level, dc.dvs.to_be_bytes()) {
                 mon.total_exp = dc.exp;
-            let box_moves = [
-                MoveId::from_id(dc.moves[0]),
-                MoveId::from_id(dc.moves[1]),
-                MoveId::from_id(dc.moves[2]),
-                MoveId::from_id(dc.moves[3]),
-            ];
-            if box_moves.iter().any(|m| *m != MoveId::None) {
-                mon.moves = box_moves;
-                mon.pp = dc.pp;
-            }
-            process_level_up_moves(&mut mon, dc.box_level, new_level);
+                let box_moves = [
+                    MoveId::from_id(dc.moves[0]),
+                    MoveId::from_id(dc.moves[1]),
+                    MoveId::from_id(dc.moves[2]),
+                    MoveId::from_id(dc.moves[3]),
+                ];
+                if box_moves.iter().any(|m| *m != MoveId::None) {
+                    mon.moves = box_moves;
+                    mon.pp = dc.pp;
+                }
+                process_level_up_moves(&mut mon, dc.box_level, new_level);
                 recalculate_stats(&mut mon);
                 mon.hp = mon.max_hp;
                 let name = pokered_data::charmap::decode_string(&self.game_data.daycare_mon_name);
-                if !name.is_empty() && name != crate::save::ser_pokemon::species_default_name(species) {
+                if !name.is_empty()
+                    && name != crate::save::ser_pokemon::species_default_name(species)
+                {
                     mon.set_nickname(&name);
                 }
                 let _ = self.party.add(mon);
@@ -184,7 +187,16 @@ impl SaveData {
     }
 
     pub fn clear(&mut self) {
-        *self = Self::new();
+        // Keep the large inline PC and Hall-of-Fame arrays in place. Building
+        // a complete `SaveData::new()` temporary here can exhaust the GBA's
+        // stack when this runs inside the top-level update state machine.
+        self.player_name.clear();
+        self.game_data = GameData::new();
+        self.party.clear();
+        self.current_box.clear();
+        self.pc_storage.clear();
+        self.hall_of_fame.clear();
+        self.tile_animations = 0;
     }
 }
 

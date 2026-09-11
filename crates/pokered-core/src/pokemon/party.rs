@@ -1,3 +1,4 @@
+use crate::alloc_prelude::*;
 use crate::battle::state::Pokemon;
 use crate::pokemon::ask_name::AskNameState;
 use crate::pokemon::stats::{create_pokemon, roll_random_dvs};
@@ -47,6 +48,13 @@ impl Party {
 
     pub fn is_empty(&self) -> bool {
         self.count == 0
+    }
+
+    /// Remove every party member without constructing another full inline
+    /// party value. Inactive slots are deliberately left alone; every public
+    /// accessor and serializer is bounded by `count`.
+    pub fn clear(&mut self) {
+        self.count = 0;
     }
 
     pub fn get(&self, index: usize) -> Option<&Pokemon> {
@@ -111,8 +119,8 @@ impl Party {
             return Err(PartyError::PartyFull);
         }
 
-        let pokemon =
-            create_pokemon(species, level, roll_random_dvs()).ok_or(PartyError::IndexOutOfBounds)?;
+        let pokemon = create_pokemon(species, level, roll_random_dvs())
+            .ok_or(PartyError::IndexOutOfBounds)?;
 
         let ask_name = AskNameState::new(species);
         let index = self.count;
@@ -202,10 +210,8 @@ impl Party {
             mon.status = crate::battle::state::StatusCondition::None;
             for i in 0..4 {
                 if mon.moves[i] != MoveId::None {
-                    mon.pp[i] = crate::items::pp_restore::get_max_pp_with_ups(
-                        mon.moves[i],
-                        mon.pp_ups[i],
-                    );
+                    mon.pp[i] =
+                        crate::items::pp_restore::get_max_pp_with_ups(mon.moves[i], mon.pp_ups[i]);
                 }
             }
         }

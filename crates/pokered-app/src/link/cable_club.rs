@@ -33,6 +33,7 @@
 //! (it does not own the drivers or the save party) are returned as
 //! [`FlowNeed`]s for the game loop to execute.
 
+use crate::alloc_prelude::*;
 use pokered_core::battle::link_battle_driver::LinkDriverEvent;
 use pokered_core::battle::state::Pokemon;
 use pokered_core::link::link_trade::LinkTradePollResult;

@@ -1,3 +1,4 @@
+use crate::alloc_prelude::*;
 use dotzuki_engine::render_data::RenderData;
 use pokered_core::battle::experience::growth::exp_for_level;
 use pokered_core::battle::state::{Pokemon, StatusCondition};

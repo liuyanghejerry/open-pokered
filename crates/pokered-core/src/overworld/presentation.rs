@@ -406,6 +406,7 @@ impl FieldMoveStepState {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::alloc_prelude::*;
 
     #[test]
     fn npc_walk_pixel_offset_covers_the_full_tile() {

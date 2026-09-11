@@ -6,6 +6,7 @@
 //! `IsNextTileShoreOrWater` / `ReadSuperRodData`; data/wild/good_rod.asm;
 //! data/wild/super_rod.asm.
 
+use crate::alloc_prelude::*;
 use super::fishing::{is_fishing_tile, response_text, roll_rod_response, RodKind, RodResponse};
 use super::screen::{OverworldAudioRequest, OverworldScreen};
 use super::{Direction, OverworldInput, TransportMode};

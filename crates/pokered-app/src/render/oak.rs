@@ -1,3 +1,4 @@
+use crate::alloc_prelude::*;
 use pokered_core::naming_screen::NamingScreenState;
 use pokered_core::oak_speech::{
     entrance_frames, entrance_slide_offset, slide_pic_x, OakSpeechPhase, OakSpeechState,

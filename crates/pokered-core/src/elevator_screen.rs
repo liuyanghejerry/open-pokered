@@ -9,6 +9,8 @@
 //! crate is deterministic and I/O-free; rendering lives in the app layer.
 
 /// Per-frame input for the elevator screen (edge-triggered by the caller).
+
+use crate::alloc_prelude::*;
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
 pub struct ElevatorInput {
     pub up: bool,
@@ -96,6 +98,7 @@ impl ElevatorScreen {
 
 #[cfg(test)]
 mod tests {
+use crate::alloc_prelude::*;
     use super::*;
 
     fn floors() -> Vec<String> {

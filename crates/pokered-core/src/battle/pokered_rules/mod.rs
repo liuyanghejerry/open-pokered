@@ -74,7 +74,12 @@
 // test-only setup helpers + the surface not yet called by the production loop.
 #![allow(dead_code)]
 
-use std::cell::RefCell;
+use crate::alloc_prelude::*;
+use core::cell::RefCell;
+
+// Bare metal (GBA): the crate-local single-threaded `thread_local!` shim.
+#[cfg(target_os = "none")]
+use crate::thread_local;
 
 use dotzuki_engine::battle::stack::{
     BattleCtx, Effect, EffectId, EffectProvider, EffectState, EffectType, Event, EventHook,
@@ -801,9 +806,11 @@ pub fn install_compiled(compiled: CompiledRuleset) {
 /// (read + watch). Both yield the SAME [`Ruleset`] when the on-disk file matches
 /// the baked text (the dual-mode invariant).
 pub fn load_ruleset(hot: bool) -> RuleSource {
+    #[cfg(not(target_os = "none"))]
     if hot {
-        RuleSource::from_path(RULES_RON_PATH)
-    } else {
+        return RuleSource::from_path(RULES_RON_PATH);
+    }
+    {
         RuleSource::baked(RULES_RON_BAKED)
     }
 }
@@ -979,8 +986,8 @@ fn rebuild_move_index() {
     let host = PokeredRules::rules_host().expect("pokered rules host installed");
     // Group the compiled hooks by their owning record source_id, in a stable,
     // deterministic order (sorted by source_id, then by synthesized hook id).
-    let mut by_source: std::collections::BTreeMap<String, Vec<CompiledHook>> =
-        std::collections::BTreeMap::new();
+    let mut by_source: alloc::collections::BTreeMap<String, Vec<CompiledHook>> =
+        alloc::collections::BTreeMap::new();
     let mut hooks: Vec<CompiledHook> = host.compiled.hooks.values().cloned().collect();
     hooks.sort_by_key(|h| h.id.0);
     for h in hooks {
@@ -1297,8 +1304,8 @@ thread_local! {
     /// species so the player and opponent can differ when they use distinct species
     /// (the OHKO / Seismic Toss differential scenarios). Thread-local so the
     /// parallel test harness stays isolated.
-    static LEVELS: RefCell<std::collections::HashMap<Species, u16>> =
-        RefCell::new(std::collections::HashMap::new());
+    static LEVELS: RefCell<crate::hash_compat::HashMap<Species, u16>> =
+        RefCell::new(crate::hash_compat::HashMap::with_hasher(crate::hash_compat::FxBuildHasher));
 }
 
 /// Record a species' level for the P3 `battler_level` binding (harness-only).
@@ -2441,7 +2448,7 @@ fn bide_residual(
 /// The leaked `&'static` Bide residual effect (one `Residual` hook). Returned by
 /// `effect_for_volatile` for a `Bide` volatile so the driver ticks it each turn.
 fn bide_residual_effect() -> &'static Effect<PokeredRules> {
-    use std::sync::OnceLock;
+    use crate::sync_compat::OnceLock;
     static EFF: OnceLock<&'static Effect<PokeredRules>> = OnceLock::new();
     EFF.get_or_init(|| {
         let hooks: &'static [EventHook<PokeredRules>] = Box::leak(
@@ -2495,14 +2502,14 @@ fn try_boost_veto(
 /// The leaked `&'static` Mist veto effect (one `TryBoost` hook ⇒ `Fail`). Built
 /// once per process. `EffectId`s are well clear of the data / move-effect spaces.
 fn mist_try_boost_effect() -> &'static Effect<PokeredRules> {
-    use std::sync::OnceLock;
+    use crate::sync_compat::OnceLock;
     static EFF: OnceLock<&'static Effect<PokeredRules>> = OnceLock::new();
     EFF.get_or_init(|| build_try_boost_veto_effect(EffectId(0x40_001)))
 }
 
 /// The leaked `&'static` Substitute veto effect (one `TryBoost` hook ⇒ `Fail`).
 fn substitute_try_boost_effect() -> &'static Effect<PokeredRules> {
-    use std::sync::OnceLock;
+    use crate::sync_compat::OnceLock;
     static EFF: OnceLock<&'static Effect<PokeredRules>> = OnceLock::new();
     EFF.get_or_init(|| build_try_boost_veto_effect(EffectId(0x40_002)))
 }

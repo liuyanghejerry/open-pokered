@@ -23,8 +23,42 @@ pub fn extract_hp_iv(dv_bytes: [u8; 2]) -> u8 {
         | (extract_spc_iv(dv_bytes) & 1)
 }
 
+/// `⌈√stat_exp⌉` — exact integer ceiling square root.
+///
+/// Replaces the original `(stat_exp as f64).sqrt().ceil()`; for every
+/// reachable input (u16, ≤ 65535) the two agree: f64 sqrt is correctly
+/// rounded, and at these magnitudes (root ≤ 256, ~2⁻⁴⁵ ulp) the rounding
+/// never crosses an integer boundary, so the result is exactly the smallest
+/// `n` with `n * n >= stat_exp` — identical stats on hosted and bare metal
+/// (where f64 math is unavailable).
+pub(crate) fn ceil_sqrt_u16(x: u16) -> u16 {
+    if x == 0 {
+        return 0;
+    }
+    // Bit-by-bit floor isqrt (exact for any u32), then bump to the ceiling.
+    let mut n: u32 = 0;
+    let mut bit: u32 = 1 << 30; // highest power of 4 in u32
+    let mut v = x as u32;
+    while bit > v {
+        bit >>= 2;
+    }
+    while bit != 0 {
+        if v >= n + bit {
+            v -= n + bit;
+            n = (n >> 1) + bit;
+        } else {
+            n >>= 1;
+        }
+        bit >>= 2;
+    }
+    if n * n < x as u32 {
+        n += 1;
+    }
+    n as u16
+}
+
 fn stat_exp_contribution(stat_exp: u16) -> u16 {
-    let s = (stat_exp as f64).sqrt().ceil() as u16;
+    let s = ceil_sqrt_u16(stat_exp);
     s / 4
 }
 

@@ -2,6 +2,7 @@
 //! push — the live wiring of the HM field effects (CUT / SURF / STRENGTH /
 //! FLY / FLASH / DIG / TELEPORT) from the party menu.
 
+use crate::alloc_prelude::*;
 use super::field_moves::{FieldMoveOutcome, BOULDER_DUST_FRAMES};
 use super::hm_effects;
 use super::presentation;

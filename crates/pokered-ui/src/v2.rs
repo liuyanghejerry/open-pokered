@@ -6,12 +6,12 @@
 //! into a [`DataContext`], and renders through the shared [`Painter`] — the
 //! same painter the v1 menus use, so app and TUI backends work unchanged.
 
-use std::collections::HashMap;
+use crate::alloc_prelude::*;
 
 use dotzuki_engine::render::painter::Painter;
 use dotzuki_renderer::layout_engine::deserialize::parse_layout;
 use dotzuki_renderer::layout_engine::renderer::{render_layout, render_layout_no_clear};
-use dotzuki_renderer::layout_engine::types::{RenderContext, ScreenLayout};
+use dotzuki_renderer::layout_engine::types::{FontRegistry, RenderContext, ScreenLayout, TilesetRegistry};
 use pokered_core::game_state::Lang;
 
 pub use dotzuki_renderer::layout_engine::types::{DataContext, DataValue};
@@ -61,8 +61,8 @@ pub fn set_panel_height(layout: &mut ScreenLayout, th: u32) {
 /// `.gui` output — is swallowed so a stray frame renders empty instead of
 /// panicking the game loop.
 pub fn render_screen(layout: &ScreenLayout, ctx: &DataContext, painter: &mut dyn Painter) {
-    let fonts: HashMap<String, ()> = HashMap::new();
-    let tilesets: HashMap<String, ()> = HashMap::new();
+    let fonts: FontRegistry = FontRegistry::default();
+    let tilesets: TilesetRegistry = TilesetRegistry::default();
     let render_ctx = RenderContext::new(&layout.screen, &layout.theme, &fonts, &tilesets);
     let registry = crate::custom_elements::element_registry();
     let _ = render_layout(layout, ctx, &render_ctx, registry, painter);
@@ -72,8 +72,8 @@ pub fn render_screen(layout: &ScreenLayout, ctx: &DataContext, painter: &mut dyn
 /// already in the framebuffer — for menus drawn over a live scene, e.g. the
 /// battle action menu over the battle sprites.
 pub fn render_screen_overlay(layout: &ScreenLayout, ctx: &DataContext, painter: &mut dyn Painter) {
-    let fonts: HashMap<String, ()> = HashMap::new();
-    let tilesets: HashMap<String, ()> = HashMap::new();
+    let fonts: FontRegistry = FontRegistry::default();
+    let tilesets: TilesetRegistry = TilesetRegistry::default();
     let render_ctx = RenderContext::new(&layout.screen, &layout.theme, &fonts, &tilesets);
     let registry = crate::custom_elements::element_registry();
     let _ = render_layout_no_clear(layout, ctx, &render_ctx, registry, painter);

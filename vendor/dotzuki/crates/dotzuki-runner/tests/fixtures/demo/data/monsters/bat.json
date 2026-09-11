@@ -1,0 +1,11 @@
+{
+  "id": "bat",
+  "name": "Bat",
+  "hp": 200,
+  "atk": 30,
+  "def": 10,
+  "spd": 20,
+  "mp": 3,
+  "element": "fire",
+  "skills": ["fire-bolt"]
+}

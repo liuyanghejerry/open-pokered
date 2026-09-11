@@ -1,3 +1,4 @@
+use crate::alloc_prelude::*;
 use crate::battle::settlement::evolution::{
     apply_evolution, check_item_evolution, check_level_evolution, check_trade_evolution,
 };

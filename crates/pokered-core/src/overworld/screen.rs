@@ -3,6 +3,11 @@
 //!
 //! The game-loop (`update_frame`) and its helpers live in `update.rs`.
 
+use crate::alloc_prelude::*;
+#[cfg(not(target_os = "none"))]
+use crate::hash_compat::HashMap;
+#[cfg(target_os = "none")]
+use crate::hash_compat::HashMap;
 use dotzuki_engine::overworld::map_transitions::{
     ConnectionTransition as EngineConnectionTransition,
 };
@@ -22,7 +27,7 @@ use pokered_data::music::MusicId;
 use pokered_data::script_api::PokemonScriptApi;
 use pokered_data::tilesets::TilesetId;
 use rand::SeedableRng;
-use std::collections::VecDeque;
+use alloc::collections::VecDeque;
 
 use super::forced_bike;
 use super::hm_effects;
@@ -670,6 +675,7 @@ pub struct OverworldScreen<G: GameData = pokered_data::impl_traits::PokemonRedDa
     pub(crate) trigger_manager: TriggerManager,
     pub(crate) active_script_effect: Option<crate::overworld::script_bridge::ScriptEffect>,
     pub(crate) joy_ignore_mask: u8,
+    #[cfg(not(target_os = "none"))]
     pub(crate) scripts_dir: Option<std::path::PathBuf>,
     pub(crate) scripted_player_path: VecDeque<(u16, u16)>,
     pub audio_requests: Vec<OverworldAudioRequest>,
@@ -767,7 +773,7 @@ pub struct OverworldScreen<G: GameData = pokered_data::impl_traits::PokemonRedDa
     /// original blocks on each SFX (PlaySoundWaitForCurrent, 4× HEALING_MACHINE
     /// + PURCHASE); here one ding is emitted every ITEMFINDER_DING_FRAMES.
     pub(crate) itemfinder_dings: Option<(u8, u8)>,
-    pub(crate) rng: rand::rngs::StdRng,
+    pub(crate) rng: crate::rng::EntropyRng,
     /// Remaining Safari Zone steps (of [`SAFARI_ZONE_STEP_COUNT`]). Counts down
     /// once per completed step while the player is inside the Safari Zone.
     pub(crate) safari_steps: u16,
@@ -891,17 +897,23 @@ pub struct OverworldScreen<G: GameData = pokered_data::impl_traits::PokemonRedDa
 // ── Constructor + accessor methods ────────────────────────────────
 
 impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
-    pub fn new(start_map: MapId, scripts_dir: Option<std::path::PathBuf>, game_data: G) -> Self {
+    pub fn new(
+        start_map: MapId,
+        #[cfg(not(target_os = "none"))] scripts_dir: Option<std::path::PathBuf>,
+        game_data: G,
+    ) -> Self {
         log::info!(target: "pokered::overworld", "[Overworld] Creating new OverworldScreen for {:?}", start_map);
         let (map, npc_pokemon_data) =
             crate::overworld::map_data_loading::load_full_map_data(start_map, game_data.tileset_provider());
         let map_data = Some(map);
 
+        log::info!("gba:ow map data loaded");
         let mut scene_provider = pokered_data::scene_loader::SceneScriptProvider::new();
         // Native-interpreter disk provider: compiles .scene → AST at runtime
         // for `--scripts-dir` (the Boa path compiles .scene → JS instead).
         let mut scene_ast_provider = pokered_data::scene_loader::SceneAstProvider::new();
         let mut has_scenes = false;
+        #[cfg(not(target_os = "none"))]
         if let Some(ref dir) = scripts_dir {
             match scene_provider.load_from_directory(dir) {
                 Ok(count) if count > 0 => {
@@ -917,6 +929,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
             }
         }
 
+        log::info!("gba:ow scene providers");
         let mut script_loader = ScriptLoader::new();
         if has_scenes {
             for (map_id, js) in &scene_provider.scenes {
@@ -925,6 +938,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                 // trigger bindings). Without it no triggers are built, so
                 // disk-loaded (`--scripts-dir`) scenes would have no working
                 // interactions — the embedded path already bakes these configs.
+                #[cfg(not(target_os = "none"))]
                 if let Some(ref dir) = scripts_dir {
                     let cfg_path = dir.join(map_id).join("script_config.json");
                     if let Ok(json) = std::fs::read_to_string(&cfg_path) {
@@ -954,6 +968,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
             }
             log::info!(target: "pokered::overworld", "[SceneLoader] registered {} embedded scenes, {} configs", script_count, config_count);
             if script_count == 0 {
+                #[cfg(not(target_os = "none"))]
                 match script_loader.load_auto(scripts_dir.as_deref()) {
                     Ok(count) => log::info!(target: "pokered::overworld", "[ScriptLoader] loaded {} .js files via load_auto", count),
                     Err(e) => log::warn!(target: "pokered::overworld", "[ScriptLoader] load_auto failed: {}", e),
@@ -1004,6 +1019,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
             .map(|md| build_npc_runtime_states(&md.npcs, &npc_pokemon_data, &hidden_npc_ids))
             .unwrap_or_default();
 
+        log::info!("gba:ow script engine ready");
         let mut dark_cave = special_terrain::DarkCaveState::new();
         dark_cave.enter_map(start_map);
         // LoadTilesetHeader: hTileAnimations follows the start map's tileset.
@@ -1018,6 +1034,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
             game_data_requests.push(OverworldGameDataRequest::MarkTownVisited { map: start_map });
         }
 
+        log::info!("gba:ow building struct");
         let mut screen = Self {
             game_data,
             state: OverworldState::new(start_map),
@@ -1075,6 +1092,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
             trigger_manager: TriggerManager::new(),
             active_script_effect: None,
             joy_ignore_mask: 0,
+            #[cfg(not(target_os = "none"))]
             scripts_dir,
             scripted_player_path: VecDeque::new(),
             audio_requests: Vec::new(),
@@ -1108,7 +1126,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
             hidden_coin_flags: [0u8; crate::save::game_data::HIDDEN_COINS_BYTES],
             player_coins: 0,
             itemfinder_dings: None,
-            rng: rand::rngs::StdRng::from_entropy(),
+            rng: crate::rng::EntropyRng::from_entropy(),
             safari_steps: 0,
             safari_balls: 0,
             safari_game_active: false,
@@ -1402,7 +1420,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
     /// engines: the native path recompiles the DSL to an AST and reloads the
     /// current map's engine; the Boa path compiles to JS and reloads.
     pub fn reload_scene_source(&mut self, map_key: &str, source: &str) -> Result<(), String> {
-        #[cfg(not(feature = "script-boa"))]
+        #[cfg(all(not(feature = "script-boa"), not(target_os = "none")))]
         {
             let scene = dotzuki_engine_dsl::compiler::compile_scene_to_ast(source, map_key)?;
             self.scene_ast_provider
@@ -1422,7 +1440,12 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                 }
             }
         }
-        #[cfg(feature = "script-boa")]
+        #[cfg(all(not(feature = "script-boa"), target_os = "none"))]
+        {
+            let _ = (map_key, source);
+            return Err("hot reload is not supported on bare metal".to_string());
+        }
+#[cfg(feature = "script-boa")]
         {
             let js = dotzuki_engine_dsl::compiler::compile_scene_to_js(source, map_key)?;
             self.reload_scene_script(map_key, &js);
@@ -1449,7 +1472,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
         source: &str,
         config_json: Option<&str>,
     ) -> Result<(), String> {
-        #[cfg(not(feature = "script-boa"))]
+        #[cfg(all(not(feature = "script-boa"), not(target_os = "none")))]
         {
             let scene = dotzuki_engine_dsl::compiler::compile_scene_to_ast(source, map_key)?;
             self.scene_ast_provider
@@ -1470,6 +1493,11 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                 // here; that would double-load.
                 self.load_map_script(self.state.current_map);
             }
+        }
+        #[cfg(all(not(feature = "script-boa"), target_os = "none"))]
+        {
+            let _ = (map_key, source, config_json);
+            return Err("hot reload is not supported on bare metal".to_string());
         }
         #[cfg(feature = "script-boa")]
         {
@@ -1599,7 +1627,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
     }
 
     /// Snapshot of all live flags (bits + extras) as a name→value map.
-    pub fn script_flags(&self) -> std::collections::HashMap<String, bool> {
+    pub fn script_flags(&self) -> HashMap<String, bool> {
         self.unified_flags.to_hashmap()
     }
 
@@ -1630,7 +1658,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
         self.script_engine.is_idle()
     }
 
-    pub fn set_script_flags(&mut self, flags: std::collections::HashMap<String, bool>) {
+    pub fn set_script_flags(&mut self, flags: HashMap<String, bool>) {
         self.unified_flags.merge_from(&flags);
     }
 
@@ -2438,14 +2466,14 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
     /// Returns `true` (once) if a script asked to open the party selector. The
     /// app should respond by calling `begin_party_select` with the party.
     pub fn take_party_select_request(&mut self) -> bool {
-        std::mem::take(&mut self.party_select_requested)
+        core::mem::take(&mut self.party_select_requested)
     }
 
     /// Returns `true` (once) if a Cable Club "gameboy" script asked to start
     /// the link flow (`game.linkStart()`). The app drains this and drives the
     /// request/accept/decline state machines (which own the session).
     pub fn take_link_start_request(&mut self) -> bool {
-        std::mem::take(&mut self.link_start_requested)
+        core::mem::take(&mut self.link_start_requested)
     }
 
     /// Hand the party members to the pending party selector (app-owned data).
@@ -2536,7 +2564,7 @@ pub(crate) fn build_npc_runtime_states(
                 text_id: npc.text_id,
                 defeated: false,
                 visible,
-                scripted_path: std::collections::VecDeque::new(),
+                scripted_path: alloc::collections::VecDeque::new(),
             }
         })
         .collect()

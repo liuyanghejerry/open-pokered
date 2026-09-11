@@ -3,6 +3,7 @@
 //! Manages transitions between the title screen, main menu, Oak's intro,
 //! the overworld, battles, and other top-level game screens.
 
+use crate::alloc_prelude::*;
 use pokered_data::wild_data::GameVersion;
 
 use crate::items::MartState;

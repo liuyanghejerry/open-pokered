@@ -1,3 +1,4 @@
+use crate::alloc_prelude::*;
 use pokered_data::trainer_data::TrainerClass;
 
 use super::evolution::check_level_evolution;

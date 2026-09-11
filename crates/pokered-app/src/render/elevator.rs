@@ -4,6 +4,7 @@
 //! list of floor labels with the current selection marked, and a hint line.
 //! The menu logic lives entirely in `pokered_core::elevator_screen`.
 
+use crate::alloc_prelude::*;
 use pokered_core::elevator_screen::ElevatorScreen;
 use pokered_core::game_state::Lang;
 use pokered_data::lang_data;

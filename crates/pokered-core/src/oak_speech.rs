@@ -1,3 +1,4 @@
+use crate::alloc_prelude::*;
 use crate::game_state::Lang;
 use crate::naming_screen::{
     NamingInput, NamingScreenResult, NamingScreenState, NamingScreenType, NAMING_FLASH_FRAMES,
@@ -395,11 +396,11 @@ impl OakSpeechState {
             return OakSpeechResult::Active;
         }
 
-        let prev_phase = std::mem::discriminant(&self.phase);
+        let prev_phase = core::mem::discriminant(&self.phase);
         if let Some(new_phase) = self.process_phase(input) {
             self.phase = new_phase;
         }
-        if std::mem::discriminant(&self.phase) == prev_phase {
+        if core::mem::discriminant(&self.phase) == prev_phase {
             self.phase_frame += 1;
         } else {
             self.phase_frame = 0;

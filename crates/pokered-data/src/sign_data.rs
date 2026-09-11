@@ -1,4 +1,5 @@
-use std::sync::OnceLock;
+use crate::alloc_prelude::*;
+use crate::sync_compat::OnceLock;
 
 use crate::map_data_loader::get_map_json;
 use crate::maps::MapId;

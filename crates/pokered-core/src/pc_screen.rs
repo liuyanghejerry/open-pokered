@@ -21,6 +21,7 @@
 //! Rendering lives in the app layer (`pokered-app/src/render/pc.rs`); the
 //! screen exposes its phase and cursors for it.
 
+use crate::alloc_prelude::*;
 use crate::items::inventory::{
     is_tossable, BAG_ITEM_CAPACITY, MAX_ITEM_QUANTITY, PC_ITEM_CAPACITY, Inventory,
 };
@@ -422,13 +423,13 @@ impl PcScreen {
 
     /// SFX queued since the last drain.
     pub fn take_sfx(&mut self) -> Vec<PcSfx> {
-        std::mem::take(&mut self.sfx)
+        core::mem::take(&mut self.sfx)
     }
 
     /// True once after CHANGE BOX switched boxes — the original saves the
     /// game (save.asm:396 `call SaveGameData`), so the app should persist.
     pub fn take_save_request(&mut self) -> bool {
-        std::mem::replace(&mut self.save_requested, false)
+        core::mem::replace(&mut self.save_requested, false)
     }
 
     /// Current HoF viewer page: the all-time team number ("HALL OF FAME
@@ -1184,7 +1185,7 @@ impl PcScreen {
                     );
                     return;
                 }
-                std::mem::swap(ctx.pc_items, &mut trial);
+                core::mem::swap(ctx.pc_items, &mut trial);
                 let _ = ctx.bag.remove_item_at(index, qty);
                 self.sfx.push(PcSfx::WithdrawDeposit);
                 // "{ITEM} was stored via PC." (_ItemWasStoredText)
@@ -1203,7 +1204,7 @@ impl PcScreen {
                     );
                     return;
                 }
-                std::mem::swap(ctx.bag, &mut trial);
+                core::mem::swap(ctx.bag, &mut trial);
                 let _ = ctx.pc_items.remove_item_at(index, qty);
                 self.sfx.push(PcSfx::WithdrawDeposit);
                 // "Withdrew {ITEM}." (_WithdrewItemText)

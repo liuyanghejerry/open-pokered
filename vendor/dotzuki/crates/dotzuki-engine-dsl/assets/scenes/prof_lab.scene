@@ -1,0 +1,44 @@
+game_scene ProfLabIntro {
+  @storyline("prof_lab_intro") {
+    @trigger(map = "ProfLab", npc = "Prof")
+    fadeScreen("out")
+    warpTo("ProfLab", "2", "6")
+    fadeScreen("in")
+
+    @speaker("Prof") {
+      "Hello there, young trainer!"
+      "The world of monsters is vast and full"
+      "of wonderful creatures waiting to be"
+      "discovered."
+      ""
+      "Before you go, choose a partner!"
+    }
+
+    @choice {
+      @option("FLAMBIT") {
+        giveMonster("FLAMBIT", 5)
+        @speaker("Prof") {
+          "FLAMBIT is a fire type!"
+          "It will be a loyal companion."
+        }
+      }
+      @option("AQUAKIT") {
+        giveMonster("AQUAKIT", 5)
+        @speaker("Prof") {
+          "AQUAKIT is a water type!"
+          "It will be a loyal companion."
+        }
+      }
+      @option("LEAFKIT") {
+        giveMonster("LEAFKIT", 5)
+        @speaker("Prof") {
+          "LEAFKIT is a grass type!"
+          "It will be a loyal companion."
+        }
+      }
+    }
+
+    setFlag("HIDE_PROF_LAB_STARTER")
+    delay(30)
+  }
+}

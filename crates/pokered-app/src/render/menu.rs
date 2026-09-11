@@ -1,3 +1,4 @@
+use crate::alloc_prelude::*;
 use pokered_core::game_state::Lang;
 use pokered_core::items::{BuyMenuState, BuyResult, MartPhase, MartState, SellMenuState, SellResult};
 use pokered_core::main_menu::MainMenuState;
@@ -93,7 +94,7 @@ pub fn draw_party_screen(
                     draw_mon_icon(fb, tiles, ICON_X_PX, y, &GRAYSCALE_SPRITE_PALETTE);
                 }
                 Err(e) => {
-                    tracing::warn!(
+                    log::warn!(
                         "party screen: failed to load icon for {:?}: {}",
                         pokemon.species,
                         e
@@ -110,7 +111,7 @@ pub fn draw_party_screen(
                 pokemon.hp,
                 pokemon.max_hp,
             ) {
-                tracing::warn!(
+                log::warn!(
                     "party screen: failed to draw HP bar for {:?}: {}",
                     pokemon.species,
                     e

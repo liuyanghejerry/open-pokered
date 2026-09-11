@@ -32,6 +32,11 @@
 
 #![cfg(test)]
 
+use crate::alloc_prelude::*;
+
+// Bare metal (GBA): the crate-local single-threaded `thread_local!` shim.
+#[cfg(target_os = "none")]
+use crate::thread_local;
 use dotzuki_engine::battle::stack::{
     BattleCtx, Effect, EffectId, EffectProvider, EffectState, EffectType, Event, EventHook,
     FirstMover, HandlerResult, RelayVar, StackDriver,
@@ -1979,7 +1984,7 @@ pub fn poc_move_data() -> MoveData {
 // `accuracy_check` see identical inputs — parity by construction.
 
 thread_local! {
-    static ACTIVE_MOVE: std::cell::Cell<MoveData> = const { std::cell::Cell::new(SLICE12_MOVE) };
+    static ACTIVE_MOVE: core::cell::Cell<MoveData> = const { core::cell::Cell::new(SLICE12_MOVE) };
 }
 
 /// The slice-1/2 default move (Electric, power 40, acc 100).
@@ -2369,9 +2374,9 @@ pub fn first_mover(s: &Scenario) -> FirstMover {
     let pr = provider.turn_order_rank(&state, BattlerRef::PLAYER, &MoveId::Thundershock);
     let er = provider.turn_order_rank(&state, BattlerRef::OPPONENT, &MoveId::Thundershock);
     match pr.cmp(&er) {
-        std::cmp::Ordering::Less => FirstMover::Player,
-        std::cmp::Ordering::Greater => FirstMover::Opponent,
-        std::cmp::Ordering::Equal => {
+        core::cmp::Ordering::Less => FirstMover::Player,
+        core::cmp::Ordering::Greater => FirstMover::Opponent,
+        core::cmp::Ordering::Equal => {
             if s.order_byte < 128 {
                 FirstMover::Player
             } else {
@@ -2744,9 +2749,9 @@ fn first_mover_dmg(s: &DamageScenario) -> FirstMover {
     let pr = provider.turn_order_rank(&state, BattlerRef::PLAYER, &MoveId::Thundershock);
     let er = provider.turn_order_rank(&state, BattlerRef::OPPONENT, &MoveId::Thundershock);
     match pr.cmp(&er) {
-        std::cmp::Ordering::Less => FirstMover::Player,
-        std::cmp::Ordering::Greater => FirstMover::Opponent,
-        std::cmp::Ordering::Equal => {
+        core::cmp::Ordering::Less => FirstMover::Player,
+        core::cmp::Ordering::Greater => FirstMover::Opponent,
+        core::cmp::Ordering::Equal => {
             if s.order_byte < 128 {
                 FirstMover::Player
             } else {
@@ -3262,9 +3267,9 @@ fn first_mover_residual(s: &ResidualScenario) -> FirstMover {
     let pr = provider.turn_order_rank(&state, BattlerRef::PLAYER, &MoveId::Thundershock);
     let er = provider.turn_order_rank(&state, BattlerRef::OPPONENT, &MoveId::Thundershock);
     match pr.cmp(&er) {
-        std::cmp::Ordering::Less => FirstMover::Player,
-        std::cmp::Ordering::Greater => FirstMover::Opponent,
-        std::cmp::Ordering::Equal => {
+        core::cmp::Ordering::Less => FirstMover::Player,
+        core::cmp::Ordering::Greater => FirstMover::Opponent,
+        core::cmp::Ordering::Equal => {
             if s.order_byte < 128 {
                 FirstMover::Player
             } else {
@@ -3900,9 +3905,9 @@ fn first_mover_secondary(s: &SecondaryScenario) -> FirstMover {
     let pr = provider.turn_order_rank(&state, BattlerRef::PLAYER, &MoveId::Thundershock);
     let er = provider.turn_order_rank(&state, BattlerRef::OPPONENT, &MoveId::Thundershock);
     match pr.cmp(&er) {
-        std::cmp::Ordering::Less => FirstMover::Player,
-        std::cmp::Ordering::Greater => FirstMover::Opponent,
-        std::cmp::Ordering::Equal => {
+        core::cmp::Ordering::Less => FirstMover::Player,
+        core::cmp::Ordering::Greater => FirstMover::Opponent,
+        core::cmp::Ordering::Equal => {
             if s.order_byte < 128 {
                 FirstMover::Player
             } else {
@@ -4550,9 +4555,9 @@ fn first_mover_ai(s: &AiScenario, enemy_move: MoveId) -> FirstMover {
     let pr = provider.turn_order_rank(&state, BattlerRef::PLAYER, &s.player_move);
     let er = provider.turn_order_rank(&state, BattlerRef::OPPONENT, &enemy_move);
     match pr.cmp(&er) {
-        std::cmp::Ordering::Less => FirstMover::Player,
-        std::cmp::Ordering::Greater => FirstMover::Opponent,
-        std::cmp::Ordering::Equal => {
+        core::cmp::Ordering::Less => FirstMover::Player,
+        core::cmp::Ordering::Greater => FirstMover::Opponent,
+        core::cmp::Ordering::Equal => {
             if s.order_byte < 128 {
                 FirstMover::Player
             } else {

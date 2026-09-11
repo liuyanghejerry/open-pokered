@@ -5,6 +5,7 @@
 //! renderers: text boxes with `>` cursors, single/double-spaced lists, YES/NO
 //! popups. All logic lives in `pokered_core::pc_screen`.
 
+use crate::alloc_prelude::*;
 use pokered_core::battle::state::Pokemon;
 use pokered_core::game_state::Lang;
 use pokered_core::pc_screen::{ItemListMode, MonListMode, PcPhase, PcScreen, PC_LIST_VISIBLE_ROWS};
@@ -68,7 +69,7 @@ fn wrap_message(text: &str) -> Vec<String> {
         let mut next = line.clone();
         next.push(ch);
         if !line.is_empty() && measure_text(&next) > 18 * T {
-            lines.push(std::mem::take(&mut line));
+            lines.push(core::mem::take(&mut line));
         }
         line.push(ch);
     }
