@@ -19,7 +19,7 @@ bitflags = "2"
 # Hosted builds pull the full dotzuki-audio (APU, sequencer, manager and the
 # cpal/web-audio device backends behind the crate features above).
 [target.'cfg(not(target_os = "none"))'.dependencies]
-dotzuki-audio = { git = "https://github.com/liuyanghejerry/dotzuki", rev = "d8b31cd54da7af3e9c90e775180311b246911c91" }
+dotzuki-audio = { git = "https://github.com/liuyanghejerry/dotzuki", rev = "162182fde89e414414ac9e9ba0e9a5051804b16d" }
 
 # Bare metal (GBA): no audio device layer — only the music/SFX data tables
 # plus the no-op `output::AudioOutput` compile; dotzuki-audio is not pulled.
@@ -29,5 +29,5 @@ dotzuki-audio = { git = "https://github.com/liuyanghejerry/dotzuki", rev = "d8b3
 # `export_audio` example opt into the file-based `format`/`library` API — dev
 # feature activation only affects those targets, not `cargo build`.
 [dev-dependencies]
-dotzuki-audio = { git = "https://github.com/liuyanghejerry/dotzuki", rev = "d8b31cd54da7af3e9c90e775180311b246911c91", features = ["serde"] }
+dotzuki-audio = { git = "https://github.com/liuyanghejerry/dotzuki", rev = "162182fde89e414414ac9e9ba0e9a5051804b16d", features = ["serde"] }
 serde_json = "1"

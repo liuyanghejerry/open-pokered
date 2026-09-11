@@ -27,7 +27,7 @@ pub use battle::{draw_battle, BattleVisualEffects};
 pub use battle::{
     redraw_battle_bag_menu_cursor, redraw_battle_main_menu_cursor,
     redraw_battle_move_menu_selection, redraw_battle_party_menu_cursor,
-    redraw_battle_safari_menu_cursor,
+    redraw_battle_party_menu_viewport, redraw_battle_safari_menu_cursor,
 };
 pub use battle_i18n::{trainer_class_zh, zh_battle_dialog};
 pub use credits::draw_credits;

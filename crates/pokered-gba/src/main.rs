@@ -378,6 +378,18 @@ struct BattleVisualKey {
     message_hash: u32,
 }
 
+#[derive(Clone, Copy)]
+enum BattlePartyMenuChange {
+    Cursor {
+        previous_row: usize,
+        current_row: usize,
+    },
+    Viewport {
+        previous_start: usize,
+        current_start: usize,
+    },
+}
+
 impl BattleVisualKey {
     /// Return a compact key only when neither the core nor renderer has a
     /// visual state machine still advancing. Unsupported phases deliberately
@@ -647,7 +659,7 @@ impl BattleVisualKey {
 
     /// Return viewport-relative cursor rows when a party selector changes
     /// selection without scrolling or changing any visible party data.
-    fn party_menu_cursor_change_from(&self, previous: &Self) -> Option<(usize, usize)> {
+    fn party_menu_change_from(&self, previous: &Self) -> Option<BattlePartyMenuChange> {
         let (cursor, previous_cursor, normalized_phase) = match (self.phase, previous.phase) {
             (
                 ReusableBattlePhase::PartySelect { cursor },
@@ -695,20 +707,31 @@ impl BattleVisualKey {
             return None;
         }
 
-        let party_len = self.party_len as usize;
-        let previous_row =
-            pokered_ui::menus::battle_party::cursor_visual_row(party_len, previous_cursor)?;
-        let current_row = pokered_ui::menus::battle_party::cursor_visual_row(party_len, cursor)?;
-        if previous_cursor - previous_row != cursor - current_row {
-            return None;
-        }
-
         let mut current_without_cursor = *self;
         current_without_cursor.phase = normalized_phase;
         let mut previous_without_cursor = *previous;
         previous_without_cursor.phase = normalized_phase;
-        (current_without_cursor == previous_without_cursor)
-            .then_some((previous_row, current_row))
+        if current_without_cursor != previous_without_cursor {
+            return None;
+        }
+
+        let party_len = self.party_len as usize;
+        let previous_row =
+            pokered_ui::menus::battle_party::cursor_visual_row(party_len, previous_cursor)?;
+        let current_row = pokered_ui::menus::battle_party::cursor_visual_row(party_len, cursor)?;
+        let previous_start = previous_cursor - previous_row;
+        let current_start = cursor - current_row;
+        Some(if previous_start == current_start {
+            BattlePartyMenuChange::Cursor {
+                previous_row,
+                current_row,
+            }
+        } else {
+            BattlePartyMenuChange::Viewport {
+                previous_start,
+                current_start,
+            }
+        })
     }
 }
 
@@ -1251,10 +1274,10 @@ fn game_main() -> ! {
             .as_ref()
             .zip(last_battle.as_ref())
             .and_then(|(current, previous)| current.bag_menu_cursor_change_from(previous));
-        let battle_party_cursor_change = battle
+        let battle_party_menu_change = battle
             .as_ref()
             .zip(last_battle.as_ref())
-            .and_then(|(current, previous)| current.party_menu_cursor_change_from(previous));
+            .and_then(|(current, previous)| current.party_menu_change_from(previous));
         let redraw = if static_splash.is_some() {
             static_splash != last_static_splash
         } else if language_select.is_some() {
@@ -1307,10 +1330,30 @@ fn game_main() -> ! {
                     &mut fb,
                     game.state.config.language,
                 );
-            } else if let Some((previous_row, current_row)) = battle_party_cursor_change {
+            } else if let Some(BattlePartyMenuChange::Cursor {
+                previous_row,
+                current_row,
+            }) = battle_party_menu_change
+            {
                 pokered_app::render::redraw_battle_party_menu_cursor(
                     previous_row,
                     current_row,
+                    &mut fb,
+                    game.state.config.language,
+                );
+            } else if let (
+                Some(BattlePartyMenuChange::Viewport {
+                    previous_start,
+                    current_start,
+                }),
+                Some(battle_state),
+            ) = (battle_party_menu_change, game.battle.battle_state.as_ref())
+            {
+                pokered_app::render::redraw_battle_party_menu_viewport(
+                    &battle_state.player.party,
+                    game.battle.party_cursor,
+                    previous_start,
+                    current_start,
                     &mut fb,
                     game.state.config.language,
                 );
@@ -1348,13 +1391,21 @@ fn game_main() -> ! {
                     battle_bag_cursor_damage(current),
                 ]
             });
-            let battle_party_damage =
-                battle_party_cursor_change.map(|(previous_row, current_row)| {
-                    [
-                        battle_party_cursor_damage(previous_row),
-                        battle_party_cursor_damage(current_row),
-                    ]
-                });
+            let battle_party_cursor_damage = match battle_party_menu_change {
+                Some(BattlePartyMenuChange::Cursor {
+                    previous_row,
+                    current_row,
+                }) => Some([
+                    battle_party_cursor_damage(previous_row),
+                    battle_party_cursor_damage(current_row),
+                ]),
+                _ => None,
+            };
+            let battle_party_viewport_damage = matches!(
+                battle_party_menu_change,
+                Some(BattlePartyMenuChange::Viewport { .. })
+            )
+            .then_some([battle_party_viewport_damage()]);
             let damage = if let Some(rects) = battle_safari_damage.as_ref() {
                 Some(rects.as_slice())
             } else if let Some(rects) = battle_menu_damage.as_ref() {
@@ -1363,7 +1414,9 @@ fn game_main() -> ! {
                 Some(rects.as_slice())
             } else if let Some(rects) = battle_bag_damage.as_ref() {
                 Some(rects.as_slice())
-            } else if let Some(rects) = battle_party_damage.as_ref() {
+            } else if let Some(rects) = battle_party_cursor_damage.as_ref() {
+                Some(rects.as_slice())
+            } else if let Some(rects) = battle_party_viewport_damage.as_ref() {
                 Some(rects.as_slice())
             } else {
                 overworld_background_cache
@@ -1486,5 +1539,15 @@ fn battle_party_cursor_damage(row: usize) -> FrameDamageRect {
         y: (13 + row as u32) * 8,
         width: 8,
         height: 9,
+    }
+}
+
+#[inline]
+fn battle_party_viewport_damage() -> FrameDamageRect {
+    FrameDamageRect {
+        x: 2 * 8,
+        y: 13 * 8 - 1,
+        width: 16 * 8,
+        height: 4 * 8 + 6,
     }
 }
