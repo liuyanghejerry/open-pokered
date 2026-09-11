@@ -4,7 +4,7 @@ use pokered_core::start_menu::StartMenuState;
 use pokered_data::lang_data::ui_label;
 use pokered_data::ui_layout::schema::{Justify, SizeMode, StartDefaultLayout};
 
-use crate::engine::{InkColor, Painter, TileRect, Ui};
+use crate::engine::{InkColor, Painter, Rgba, TilePos, TileRect, Ui};
 
 pub fn draw<P: Painter>(state: &StartMenuState, player_name: &str, layout: &StartDefaultLayout, ui: &mut Ui<P>, lang: Lang) {
     // PrintSafariZoneSteps (player_state.asm:219-255): inside the Safari Zone
@@ -71,6 +71,56 @@ pub fn draw<P: Painter>(state: &StartMenuState, player_name: &str, layout: &Star
             frame.cursor_glyph_at(0, cur_y, cursor.glyph, cursor.color);
         }
     });
+}
+
+/// Repaint only the changed cursor cells of an already-rendered START menu.
+pub fn redraw_cursor<P: Painter>(
+    item_count: usize,
+    previous_cursor: usize,
+    current_cursor: usize,
+    layout: &StartDefaultLayout,
+    painter: &mut P,
+) {
+    if item_count == 0 {
+        return;
+    }
+    let flex = &layout.menu;
+    let num_items = item_count as u32;
+    let content_h = num_items + num_items.saturating_sub(1) * flex.gap;
+    let eff_h = match flex.height_mode {
+        SizeMode::Fixed => flex.rect.th,
+        SizeMode::Auto => clamp(
+            content_h + flex.padding.top + flex.padding.bottom + 2,
+            flex.min_height,
+            flex.max_height,
+        ),
+    };
+    let start_y = match flex.justify {
+        Justify::Start => flex.padding.top,
+        Justify::Center => {
+            flex.padding.top
+                + (eff_h
+                    .saturating_sub(flex.padding.top + flex.padding.bottom)
+                    .saturating_sub(content_h))
+                    / 2
+        }
+        Justify::End => eff_h.saturating_sub(flex.padding.bottom + content_h),
+    };
+    let position = |cursor: usize| {
+        TilePos::new(
+            flex.rect.tx + 1,
+            flex.rect.ty + 1 + start_y + cursor as u32 * (1 + flex.gap),
+        )
+    };
+    let old = position(previous_cursor);
+    painter.draw_pixel_rect(old.tx * 8, old.ty * 8, 8, 9, Rgba::INK_WHITE);
+    if let Some(cursor) = &flex.cursor {
+        painter.draw_glyph(
+            position(current_cursor),
+            cursor.glyph,
+            cursor.color.into(),
+        );
+    }
 }
 
 fn clamp(val: u32, min: Option<u32>, max: Option<u32>) -> u32 {

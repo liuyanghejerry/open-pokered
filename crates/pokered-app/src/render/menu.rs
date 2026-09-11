@@ -46,6 +46,25 @@ pub fn draw_start_menu(state: &StartMenuState, player_name: &str, fb: &mut Frame
     menus::start::draw(state, player_name, &START_DEFAULT_LAYOUT, &mut ui, lang);
 }
 
+/// Repaint only the changed cursor cells of an already-rendered START menu.
+#[cfg(any(test, target_os = "none"))]
+pub fn redraw_start_menu_cursor(
+    item_count: usize,
+    previous_cursor: usize,
+    current_cursor: usize,
+    fb: &mut FrameBuffer,
+    lang: Lang,
+) {
+    let mut painter = FrameBufferPainter::new(fb).with_lang(lang);
+    menus::start::redraw_cursor(
+        item_count,
+        previous_cursor,
+        current_cursor,
+        &START_DEFAULT_LAYOUT,
+        &mut painter,
+    );
+}
+
 pub fn draw_options_menu(state: &OptionsMenuState, fb: &mut FrameBuffer, lang: Lang) {
     let mut painter = FrameBufferPainter::new(fb).with_lang(lang);
     let mut ui = Ui::new(&mut painter);
@@ -356,6 +375,7 @@ fn sell_result_lines(result: &SellResult, is_zh: bool) -> Vec<&'static str> {
 mod tests {
     use super::*;
     use pokered_core::game_state::SaveFileSummary;
+    use pokered_core::start_menu::{StartMenuInput, StartMenuState};
     use pokered_renderer::Rgba;
 
     fn assert_framebuffers_equal(actual: &FrameBuffer, expected: &FrameBuffer) {
@@ -408,6 +428,52 @@ mod tests {
 
                         let mut expected = FrameBuffer::new(config, Rgba::BLACK);
                         draw_main_menu(&current, &mut expected, language);
+                        assert_framebuffers_equal(&actual, &expected);
+                    }
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn start_menu_cursor_repaint_matches_a_fresh_menu_for_every_transition() {
+        let input_down = StartMenuInput {
+            up: false,
+            down: true,
+            a: false,
+            b: false,
+            start: false,
+        };
+        for language in [Lang::En, Lang::Zh] {
+            for (has_pokedex, has_pokemon) in [(false, false), (true, true)] {
+                let state = StartMenuState::new(has_pokedex, has_pokemon, false);
+                for previous_cursor in 0..state.item_count() {
+                    for current_cursor in 0..state.item_count() {
+                        if previous_cursor == current_cursor {
+                            continue;
+                        }
+                        let mut previous = state.clone();
+                        for _ in 0..previous_cursor {
+                            previous.update_frame(input_down);
+                        }
+                        let mut current = state.clone();
+                        for _ in 0..current_cursor {
+                            current.update_frame(input_down);
+                        }
+                        let config = dotzuki_engine::render_config::RenderConfig::new(160, 144);
+
+                        let mut actual = FrameBuffer::new(config, Rgba::BLACK);
+                        draw_start_menu(&previous, "RED", &mut actual, language);
+                        redraw_start_menu_cursor(
+                            state.item_count(),
+                            previous_cursor,
+                            current_cursor,
+                            &mut actual,
+                            language,
+                        );
+
+                        let mut expected = FrameBuffer::new(config, Rgba::BLACK);
+                        draw_start_menu(&current, "RED", &mut expected, language);
                         assert_framebuffers_equal(&actual, &expected);
                     }
                 }

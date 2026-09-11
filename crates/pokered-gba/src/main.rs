@@ -924,6 +924,51 @@ impl OverworldVisualKey {
     }
 }
 
+#[derive(Clone, Copy, PartialEq, Eq)]
+struct StartMenuVisualKey {
+    cursor: usize,
+    item_count: usize,
+    items_hash: u32,
+    player_name_hash: u32,
+    safari_info: Option<pokered_core::start_menu::SafariZoneInfo>,
+    language: Lang,
+    overworld: OverworldVisualKey,
+}
+
+impl StartMenuVisualKey {
+    fn new(game: &PokemonGame) -> Option<Self> {
+        let mut items_hash = 0x811c_9dc5;
+        for &item in game.start_menu.items() {
+            hash_byte(&mut items_hash, item as u8);
+        }
+        let mut player_name_hash = 0x811c_9dc5;
+        for &byte in game.player_name.as_bytes() {
+            hash_byte(&mut player_name_hash, byte);
+        }
+        Some(Self {
+            cursor: game.start_menu.cursor(),
+            item_count: game.start_menu.item_count(),
+            items_hash,
+            player_name_hash,
+            safari_info: game.start_menu.safari_info,
+            language: game.state.config.language,
+            overworld: OverworldVisualKey::new(game)?,
+        })
+    }
+
+    fn cursor_change_from(&self, previous: &Self) -> Option<(usize, usize)> {
+        if self.cursor == previous.cursor {
+            return None;
+        }
+        let mut current_without_cursor = *self;
+        current_without_cursor.cursor = 0;
+        let mut previous_without_cursor = *previous;
+        previous_without_cursor.cursor = 0;
+        (current_without_cursor == previous_without_cursor)
+            .then_some((previous.cursor, self.cursor))
+    }
+}
+
 impl Mode4Presenter {
     fn new(fb: &FrameBuffer) -> Self {
         // Both pages retain the fixed index-3 border; subsequent presents
@@ -1224,6 +1269,7 @@ fn game_main() -> ! {
     let mut last_language_select: Option<Lang> = None;
     let mut last_title: Option<TitleVisualKey> = None;
     let mut last_main_menu: Option<MainMenuVisualKey> = None;
+    let mut last_start_menu: Option<StartMenuVisualKey> = None;
     let mut last_oak: Option<OakVisualKey> = None;
     let mut last_overworld: Option<OverworldVisualKey> = None;
     let mut last_battle: Option<BattleVisualKey> = None;
@@ -1324,6 +1370,14 @@ fn game_main() -> ! {
             .as_ref()
             .zip(last_main_menu.as_ref())
             .and_then(|(current, previous)| current.cursor_change_from(previous));
+        let start_menu_screen = game.state.screen == GameScreen::StartMenu;
+        let start_menu = start_menu_screen
+            .then(|| StartMenuVisualKey::new(game))
+            .flatten();
+        let start_menu_cursor_change = start_menu
+            .as_ref()
+            .zip(last_start_menu.as_ref())
+            .and_then(|(current, previous)| current.cursor_change_from(previous));
         let oak_screen = game.state.screen == GameScreen::OakSpeech;
         let oak = oak_screen.then(|| OakVisualKey::new(game)).flatten();
         let overworld_screen = game.state.screen == GameScreen::Overworld;
@@ -1364,6 +1418,10 @@ fn game_main() -> ! {
             title != last_title
         } else if main_menu.is_some() {
             main_menu != last_main_menu
+        } else if start_menu_screen {
+            start_menu
+                .as_ref()
+                .map_or(true, |key| last_start_menu.as_ref() != Some(key))
         } else if oak_screen {
             oak.as_ref().map_or(true, |key| last_oak.as_ref() != Some(key))
         } else if overworld_screen {
@@ -1378,6 +1436,14 @@ fn game_main() -> ! {
         if redraw {
             if let Some((previous, current)) = main_menu_cursor_change {
                 pokered_app::render::redraw_main_menu_cursor(
+                    previous,
+                    current,
+                    &mut fb,
+                    game.state.config.language,
+                );
+            } else if let Some((previous, current)) = start_menu_cursor_change {
+                pokered_app::render::redraw_start_menu_cursor(
+                    game.start_menu.item_count(),
                     previous,
                     current,
                     &mut fb,
@@ -1467,6 +1533,12 @@ fn game_main() -> ! {
                     main_menu_cursor_damage(current, game.state.config.language),
                 ]
             });
+            let start_menu_damage = start_menu_cursor_change.map(|(previous, current)| {
+                [
+                    start_menu_cursor_damage(previous),
+                    start_menu_cursor_damage(current),
+                ]
+            });
             let battle_safari_damage =
                 battle_safari_cursor_change.map(|(previous, current)| {
                     [
@@ -1513,6 +1585,8 @@ fn game_main() -> ! {
                 });
             let damage = if let Some(rects) = main_menu_damage.as_ref() {
                 Some(rects.as_slice())
+            } else if let Some(rects) = start_menu_damage.as_ref() {
+                Some(rects.as_slice())
             } else if let Some(rects) = battle_safari_damage.as_ref() {
                 Some(rects.as_slice())
             } else if let Some(rects) = battle_menu_damage.as_ref() {
@@ -1540,6 +1614,7 @@ fn game_main() -> ! {
         last_language_select = language_select;
         last_title = title;
         last_main_menu = main_menu;
+        last_start_menu = start_menu;
         last_oak = oak;
         last_overworld = overworld;
         last_battle = battle;
@@ -1679,5 +1754,15 @@ fn main_menu_cursor_damage(cursor: usize, language: Lang) -> FrameDamageRect {
         y: (2 + cursor as u32 * 2) * 8,
         width: if language == Lang::Zh { 10 } else { 8 },
         height: if language == Lang::Zh { 10 } else { 9 },
+    }
+}
+
+#[inline]
+fn start_menu_cursor_damage(cursor: usize) -> FrameDamageRect {
+    FrameDamageRect {
+        x: 11 * 8,
+        y: (2 + cursor as u32 * 2) * 8,
+        width: 8,
+        height: 9,
     }
 }
