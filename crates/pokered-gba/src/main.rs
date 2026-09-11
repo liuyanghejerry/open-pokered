@@ -748,6 +748,11 @@ fn game_main() -> ! {
         slot.get_or_insert_with(|| PokemonGame::new_for_gba(GameVersion::Red))
     };
     agb::println!("pokered-gba: game constructed");
+    // Compile and retain the canonical battle rules before render resources
+    // occupy the heap. Production battle entry points call this defensively,
+    // but the idempotent fast path makes those later calls allocation-free.
+    pokered_core::battle::prepare_battle_rules();
+    agb::println!("pokered-gba: battle rules ready");
 
     let mut fb = FrameBuffer::new(RenderConfig::new(160, 144), Rgba::WHITE);
     let mut presenter = Mode4Presenter::new(&fb);

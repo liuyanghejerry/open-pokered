@@ -44,6 +44,28 @@ use crate::battle::state::{
 };
 use crate::battle::turn::{execute_turn, TurnRandoms};
 
+#[test]
+fn canonical_install_reuses_the_current_thread_registry() {
+    install_canonical();
+    let first_host = super::HOST.with(|host| {
+        let host = host.borrow();
+        *host.as_ref().expect("canonical host installed") as *const _ as usize
+    });
+    let first_effects =
+        super::MOVE_EFFECTS.with(|effects| (effects.borrow().as_ptr(), effects.borrow().len()));
+
+    install_canonical();
+
+    let second_host = super::HOST.with(|host| {
+        let host = host.borrow();
+        *host.as_ref().expect("canonical host retained") as *const _ as usize
+    });
+    let second_effects =
+        super::MOVE_EFFECTS.with(|effects| (effects.borrow().as_ptr(), effects.borrow().len()));
+    assert_eq!(second_host, first_host, "canonical host was rebuilt");
+    assert_eq!(second_effects, first_effects, "combined move effects were rebuilt");
+}
+
 // ─── Scenario shape (mirrors the stack_parity DamageScenario, PokeredRules-side) ─
 
 /// Per-mover RNG bytes in pokered's `MoveRandoms` FIELD order. Only the

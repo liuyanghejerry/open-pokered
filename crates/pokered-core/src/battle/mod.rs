@@ -158,6 +158,16 @@ mod stack_p0_ai;
 /// drive the live battle loop. The differential tests inside self-gate.
 mod pokered_rules;
 
+/// Prepare the data-driven production battle rules on the current thread.
+///
+/// Frontends with a constrained heap can call this during startup, before
+/// graphics caches are populated. Battle entry points also call the same
+/// idempotent initializer, so this is an optional prewarm rather than a
+/// lifecycle requirement.
+pub fn prepare_battle_rules() {
+    pokered_rules::install_canonical();
+}
+
 // ── BattleScreen (frame-loop adapter) ─────────────────────────────
 
 use crate::battle::experience::gain::{calc_exp_gain, gain_experience};

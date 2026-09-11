@@ -75,7 +75,7 @@
 #![allow(dead_code)]
 
 use crate::alloc_prelude::*;
-use core::cell::RefCell;
+use core::cell::{Cell, RefCell};
 
 // Bare metal (GBA): the crate-local single-threaded `thread_local!` shim.
 #[cfg(target_os = "none")]
@@ -783,6 +783,11 @@ pub fn status_index_of(name: &str) -> Option<usize> {
 
 thread_local! {
     static HOST: RefCell<Option<&'static RulesHost<PokeredRules>>> = const { RefCell::new(None) };
+    /// `install_canonical` is called at every production stack-engine entry
+    /// point. Remember when the current thread already owns the canonical
+    /// registry so those calls do not repeatedly parse, compile, and leak the
+    /// same ruleset. A deliberate `install_compiled` hot-swap clears the flag.
+    static CANONICAL_INSTALLED: Cell<bool> = const { Cell::new(false) };
 }
 
 /// Install (or hot-swap) the compiled registry the interpreter reads. Leaks a
@@ -793,6 +798,7 @@ pub fn install_compiled(compiled: CompiledRuleset) {
     let host = RulesHost::new(compiled, PokeredBindings);
     let leaked: &'static RulesHost<PokeredRules> = Box::leak(Box::new(host));
     HOST.with(|h| *h.borrow_mut() = Some(leaked));
+    CANONICAL_INSTALLED.with(|installed| installed.set(false));
     // Rebuild the per-record op-list index + combined move effects on this thread.
     rebuild_move_index();
 }
@@ -831,9 +837,13 @@ pub fn compile(ruleset: &Ruleset) -> Result<CompiledRuleset, dotzuki_rules::Load
 /// rebuilds the combined move-effect index). The harness calls this FIRST on each
 /// test thread (the thread-local host is per-thread; test threads are pooled).
 pub fn install_canonical() {
+    if CANONICAL_INSTALLED.with(Cell::get) {
+        return;
+    }
     let ruleset = load_ruleset(false).load().expect("baked pokered rules.ron parses");
     let compiled = compile(&ruleset).expect("pokered rules.ron compiles");
     install_compiled(compiled);
+    CANONICAL_INSTALLED.with(|installed| installed.set(true));
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -857,8 +867,9 @@ pub fn install_canonical() {
 struct MoveRecord {
     /// The rules.ron record id string (e.g. `"move.surf"`).
     source_id: String,
-    /// Per-event compiled hooks (the op-list + chance gate) for this record.
-    hooks: Vec<CompiledHook>,
+    /// Per-event hooks owned by the installed [`CompiledRuleset`]. Keeping only
+    /// ids avoids duplicating every op list in the move index.
+    hook_ids: Vec<EffectId>,
 }
 
 thread_local! {
@@ -986,25 +997,34 @@ fn rebuild_move_index() {
     let host = PokeredRules::rules_host().expect("pokered rules host installed");
     // Group the compiled hooks by their owning record source_id, in a stable,
     // deterministic order (sorted by source_id, then by synthesized hook id).
-    let mut by_source: alloc::collections::BTreeMap<String, Vec<CompiledHook>> =
+    let mut by_source: alloc::collections::BTreeMap<String, Vec<EffectId>> =
         alloc::collections::BTreeMap::new();
-    let mut hooks: Vec<CompiledHook> = host.compiled.hooks.values().cloned().collect();
+    let mut hooks: Vec<&CompiledHook> = host.compiled.hooks.values().collect();
     hooks.sort_by_key(|h| h.id.0);
     for h in hooks {
-        by_source.entry(h.source_id.clone()).or_default().push(h);
+        by_source
+            .entry(h.source_id.clone())
+            .or_default()
+            .push(h.id);
     }
     // Also register the no-op records (Splash) that carry no hooks, so a MoveId →
     // record_id mapping always resolves.
     let mut records: Vec<MoveRecord> = Vec::new();
-    for (source_id, hs) in by_source {
-        records.push(MoveRecord { source_id, hooks: hs });
+    for (source_id, hook_ids) in by_source {
+        records.push(MoveRecord {
+            source_id,
+            hook_ids,
+        });
     }
     // Ensure every authored record id has a slot even if hook-less (Splash), plus
     // the fully-native records whose behaviour is a native handler, not data ops
     // (Counter reflects via `counter_handler`, registered in the rebuild loop below).
     for sid in ["move.splash", "special.counter", "status.transform", "move.mimic", "status.haze", "special.switch_teleport", "status.substitute", "status.conversion", "status.disable"] {
         if !records.iter().any(|r| r.source_id == sid) {
-            records.push(MoveRecord { source_id: sid.to_string(), hooks: Vec::new() });
+            records.push(MoveRecord {
+                source_id: sid.to_string(),
+                hook_ids: Vec::new(),
+            });
         }
     }
     records.sort_by(|a, b| a.source_id.cmp(&b.source_id));
@@ -1017,8 +1037,24 @@ fn rebuild_move_index() {
     // records still register the pipeline hooks; the handlers short-circuit on
     // power-0 (drawing only the accuracy byte) to match the legacy power-0 branch.
     let mut effects: Vec<&'static Effect<PokeredRules>> = Vec::new();
+    #[cfg(target_os = "none")]
+    let mut shared_gba_hooks: Option<&'static [EventHook<PokeredRules>]> = None;
     for (idx, rec) in records.iter().enumerate() {
         let id = EffectId(MOVE_EFFECT_ID_BASE + idx as u32);
+        // The canonical GBA rules use one common hook topology. Only the
+        // source-effect id varies between move records, and each data bridge
+        // resolves that id through MOVE_RECORDS. Sharing this slice avoids
+        // retaining dozens of identical native hooks per record in EWRAM.
+        #[cfg(target_os = "none")]
+        if let Some(hooks) = shared_gba_hooks {
+            let eff: &'static Effect<PokeredRules> = Box::leak(Box::new(Effect {
+                id,
+                kind: EffectType::Move,
+                hooks,
+            }));
+            effects.push(eff);
+            continue;
+        }
         let mut event_hooks: Vec<EventHook<PokeredRules>> = Vec::new();
         // ── Native pipeline (the DRAW structure, re-homing pokered's formula). ──
         event_hooks.push(EventHook {
@@ -1203,7 +1239,7 @@ fn rebuild_move_index() {
         //    the special.counter record). power-0 record → the native crit/damage
         //    draws already short-circuit; pokered_accuracy skips Counter; this native
         //    handler is Counter's sole damage authority (reads its own DamageTaken). ──
-        if rec.source_id == "special.counter" {
+        if cfg!(target_os = "none") || rec.source_id == "special.counter" {
             event_hooks.push(EventHook {
                 event: Event::ModifyDamage,
                 call: counter_handler,
@@ -1213,7 +1249,12 @@ fn rebuild_move_index() {
             });
         }
         // ── Data bridge hooks (the EFFECT op-lists, by event). ──
-        for h in &rec.hooks {
+        #[cfg(not(target_os = "none"))]
+        for hook_id in &rec.hook_ids {
+            let h = host
+                .compiled
+                .hook(*hook_id)
+                .expect("move index references an installed compiled hook");
             // A DamagingHit hook whose op-list carries a foe-directed `Boost`
             // (target Target/Foe, NOT Source) is a foe stat-down — route it to the
             // pokered-side nested-veto driver (`bridge_foe_stat_down`) which fires
@@ -1258,8 +1299,43 @@ fn rebuild_move_index() {
                 sub_order: None,
             });
         }
+        #[cfg(target_os = "none")]
+        event_hooks.extend([
+            EventHook {
+                event: Event::Accuracy,
+                call: bridge_accuracy,
+                order: 50,
+                priority: 0,
+                sub_order: None,
+            },
+            EventHook {
+                event: Event::Effectiveness,
+                call: bridge_effectiveness,
+                order: 100,
+                priority: 0,
+                sub_order: None,
+            },
+            EventHook {
+                event: Event::DamagingHit,
+                call: bridge_damaging_hit,
+                order: 100,
+                priority: 0,
+                sub_order: None,
+            },
+            EventHook {
+                event: Event::ModifyDamage,
+                call: bridge_modify_damage,
+                order: 2000,
+                priority: 0,
+                sub_order: None,
+            },
+        ]);
         let leaked_hooks: &'static [EventHook<PokeredRules>] =
             Box::leak(event_hooks.into_boxed_slice());
+        #[cfg(target_os = "none")]
+        {
+            shared_gba_hooks = Some(leaked_hooks);
+        }
         let eff: &'static Effect<PokeredRules> = Box::leak(Box::new(Effect {
             id,
             kind: EffectType::Move,
@@ -1290,10 +1366,27 @@ pub fn move_effect_for(m: MoveId) -> Option<&'static Effect<PokeredRules>> {
 /// recovering the record from the combined effect's `source_effect` id.
 fn hook_for(source_effect: EffectId, event: Event) -> Option<CompiledHook> {
     let rec_idx = source_effect.0.checked_sub(MOVE_EFFECT_ID_BASE)? as usize;
+    let host = PokeredRules::rules_host()?;
     MOVE_RECORDS.with(|r| {
         r.borrow()
             .get(rec_idx)
-            .and_then(|rec| rec.hooks.iter().find(|h| h.event == event).cloned())
+            .and_then(|rec| {
+                rec.hook_ids
+                    .iter()
+                    .find_map(|id| host.compiled.hook(*id).filter(|h| h.event == event))
+            })
+            .cloned()
+    })
+}
+
+fn source_effect_is(source_effect: EffectId, source_id: &str) -> bool {
+    let Some(rec_idx) = source_effect.0.checked_sub(MOVE_EFFECT_ID_BASE) else {
+        return false;
+    };
+    MOVE_RECORDS.with(|r| {
+        r.borrow()
+            .get(rec_idx as usize)
+            .is_some_and(|rec| rec.source_id == source_id)
     })
 }
 
@@ -1743,8 +1836,11 @@ fn counter_handler(
     _relay: RelayVar,
     target: BattlerRef,
     source: BattlerRef,
-    _eff: EffectId,
+    source_effect: EffectId,
 ) -> HandlerResult {
+    if !source_effect_is(source_effect, "special.counter") {
+        return HandlerResult::Unchanged;
+    }
     let (amount, counterable) = match ctx
         .effects
         .iter()
@@ -2714,6 +2810,21 @@ fn bridge_damaging_hit(
     source: BattlerRef,
     source_effect: EffectId,
 ) -> HandlerResult {
+    let is_foe_stat_down = hook_for(source_effect, Event::DamagingHit).is_some_and(|hook| {
+        hook.ops.iter().any(|op| {
+            matches!(
+                op,
+                dotzuki_rules::Op::Boost {
+                    target: dotzuki_rules::Selector::Target
+                        | dotzuki_rules::Selector::Foe,
+                    ..
+                }
+            )
+        })
+    });
+    if is_foe_stat_down {
+        return bridge_foe_stat_down(ctx, relay, target, source, source_effect);
+    }
     run_bridge(ctx, relay, target, source, source_effect, Event::DamagingHit)
 }
 
@@ -2845,11 +2956,20 @@ fn scaled_accuracy(move_accuracy: u8, acc_stage: i8, eva_stage: i8) -> u8 {
 /// Sanity helper for tests: assert the op-list of a record id contains an op.
 #[allow(dead_code)]
 pub fn record_has_op(source_id: &str, want: &Op) -> bool {
+    let Some(host) = PokeredRules::rules_host() else {
+        return false;
+    };
     MOVE_RECORDS.with(|r| {
         r.borrow()
             .iter()
             .find(|rec| rec.source_id == source_id)
-            .map(|rec| rec.hooks.iter().any(|h| h.ops.iter().any(|o| o == want)))
+            .map(|rec| {
+                rec.hook_ids.iter().any(|id| {
+                    host.compiled
+                        .hook(*id)
+                        .is_some_and(|h| h.ops.iter().any(|o| o == want))
+                })
+            })
             .unwrap_or(false)
     })
 }
