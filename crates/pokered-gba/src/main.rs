@@ -22,7 +22,11 @@ use pokered_core::party_screen::{PartyScreenMode, PartyScreenPhase};
 use pokered_core::save_menu::{SavePhase, YesNoChoice};
 use pokered_core::stats_screen::StatsPage;
 use pokered_core::title_screen::{TitlePhase, TitleScreenState};
+use pokered_core::town_map_screen::TownMapMode;
+use pokered_data::map_names::{map_name_str, map_name_str_zh};
+use pokered_data::maps::MapId;
 use pokered_data::species::Species;
+use pokered_renderer::embedded_font::measure_text;
 use pokered_renderer::input::{GbButton, InputState};
 use pokered_renderer::palette::GbColor;
 use pokered_renderer::{FrameBuffer, Rgba};
@@ -1324,6 +1328,80 @@ impl StatsVisualKey {
     }
 }
 
+#[derive(Clone, Copy, PartialEq, Eq)]
+struct TownMapVisualKey {
+    current_map: MapId,
+    selected_map: MapId,
+    mode: TownMapMode,
+    marker_phase: u8,
+    language: Lang,
+}
+
+impl TownMapVisualKey {
+    fn new(game: &PokemonGame) -> Self {
+        let state = &game.town_map_screen;
+        let marker_position = pokered_data::town_map_data::town_map_position(state.current_map());
+        Self {
+            current_map: state.current_map(),
+            selected_map: state.selected_map(),
+            mode: state.mode(),
+            marker_phase: match marker_position {
+                Some((_, y, _)) if state.mode() != TownMapMode::View || y < 14 => {
+                    ((game.frame_count / 16) & 1) as u8
+                }
+                _ => 0,
+            },
+            language: game.state.config.language,
+        }
+    }
+
+    fn marker_animation_change_from(&self, previous: &Self) -> bool {
+        if self.marker_phase == previous.marker_phase {
+            return false;
+        }
+        let mut current_without_phase = *self;
+        current_without_phase.marker_phase = 0;
+        let mut previous_without_phase = *previous;
+        previous_without_phase.marker_phase = 0;
+        current_without_phase == previous_without_phase
+    }
+
+    fn cursor_change_from(&self, previous: &Self) -> Option<MapId> {
+        if self.selected_map == previous.selected_map {
+            return None;
+        }
+        let mut current_without_cursor = *self;
+        current_without_cursor.selected_map = MapId::PalletTown;
+        current_without_cursor.marker_phase = 0;
+        let mut previous_without_cursor = *previous;
+        previous_without_cursor.selected_map = MapId::PalletTown;
+        previous_without_cursor.marker_phase = 0;
+        (current_without_cursor == previous_without_cursor).then_some(previous.selected_map)
+    }
+}
+
+fn town_map_label_width(map: MapId, lang: Lang) -> u32 {
+    pokered_data::town_map_data::town_map_position(map)
+        .map(|(_, _, name)| {
+            measure_text(if lang == Lang::Zh {
+                map_name_str_zh(name)
+            } else {
+                map_name_str(name)
+            })
+        })
+        .unwrap_or(0)
+}
+
+fn town_map_reticle_overlaps_view_box(map: MapId) -> bool {
+    pokered_data::town_map_data::town_map_position(map)
+        .is_some_and(|(_, y, _)| y as u32 * 8 + 5 + 16 > 15 * 8)
+}
+
+fn town_map_marker_is_behind_view_box(map: MapId) -> bool {
+    pokered_data::town_map_data::town_map_position(map)
+        .is_some_and(|(_, y, _)| (y as u32 + 1) * 8 >= 15 * 8)
+}
+
 impl Mode4Presenter {
     fn new(fb: &FrameBuffer) -> Self {
         // Both pages retain the fixed index-3 border; subsequent presents
@@ -1630,6 +1708,7 @@ fn game_main() -> ! {
     let mut last_bag: Option<BagVisualKey> = None;
     let mut last_party: Option<PartyVisualKey> = None;
     let mut last_stats: Option<StatsVisualKey> = None;
+    let mut last_town_map: Option<TownMapVisualKey> = None;
     let mut last_oak: Option<OakVisualKey> = None;
     let mut last_overworld: Option<OverworldVisualKey> = None;
     let mut last_battle: Option<BattleVisualKey> = None;
@@ -1780,6 +1859,16 @@ fn game_main() -> ! {
         let stats = matches!(game.state.screen, GameScreen::PokemonStatsScreen(_))
             .then(|| StatsVisualKey::new(game))
             .flatten();
+        let town_map = (game.state.screen == GameScreen::TownMap)
+            .then(|| TownMapVisualKey::new(game));
+        let town_map_cursor_change = town_map
+            .as_ref()
+            .zip(last_town_map.as_ref())
+            .and_then(|(current, previous)| current.cursor_change_from(previous));
+        let town_map_marker_animation_change = town_map
+            .as_ref()
+            .zip(last_town_map.as_ref())
+            .is_some_and(|(current, previous)| current.marker_animation_change_from(previous));
         let oak_screen = game.state.screen == GameScreen::OakSpeech;
         let oak = oak_screen.then(|| OakVisualKey::new(game)).flatten();
         let overworld_screen = game.state.screen == GameScreen::Overworld;
@@ -1834,6 +1923,8 @@ fn game_main() -> ! {
             party != last_party
         } else if stats.is_some() {
             stats != last_stats
+        } else if town_map.is_some() {
+            town_map != last_town_map
         } else if oak_screen {
             oak.as_ref().map_or(true, |key| last_oak.as_ref() != Some(key))
         } else if overworld_screen {
@@ -1929,6 +2020,23 @@ fn game_main() -> ! {
                     &game.party_screen,
                     game.frame_count,
                     game.resources.as_mut(),
+                    &mut fb,
+                    game.state.config.language,
+                );
+            } else if let Some(previous_map) = town_map_cursor_change {
+                pokered_app::render::redraw_town_map_cursor(
+                    &game.town_map_screen,
+                    previous_map,
+                    &mut game.resources,
+                    game.frame_count,
+                    &mut fb,
+                    game.state.config.language,
+                );
+            } else if town_map_marker_animation_change {
+                pokered_app::render::redraw_town_map_marker(
+                    &game.town_map_screen,
+                    &mut game.resources,
+                    game.frame_count,
                     &mut fb,
                     game.state.config.language,
                 );
@@ -2073,6 +2181,91 @@ fn game_main() -> ! {
                     )
                 },
             );
+            let town_map_marker_damage = town_map_marker_animation_change
+                .then(|| {
+                    pokered_data::town_map_data::town_map_position(
+                        game.town_map_screen.current_map(),
+                    )
+                    .map(|(x, y, _)| {
+                        [FrameDamageRect {
+                            x: (x as u32 + 2) * 8,
+                            y: (y as u32 + 1) * 8,
+                            width: 8,
+                            height: 8,
+                        }]
+                    })
+                })
+                .flatten();
+            let town_map_cursor_damage = town_map_cursor_change.and_then(|previous_map| {
+                let (old_x, old_y, _) =
+                    pokered_data::town_map_data::town_map_position(previous_map)?;
+                let (new_x, new_y, _) = pokered_data::town_map_data::town_map_position(
+                    game.town_map_screen.selected_map(),
+                )?;
+                let (marker_x, marker_y, _) = pokered_data::town_map_data::town_map_position(
+                    game.town_map_screen.current_map(),
+                )?;
+                let label = if game.town_map_screen.mode() == TownMapMode::Fly {
+                    FrameDamageRect {
+                        x: 0,
+                        y: 0,
+                        width: 160,
+                        height: 16,
+                    }
+                } else {
+                    if town_map_reticle_overlaps_view_box(previous_map)
+                        || town_map_reticle_overlaps_view_box(
+                            game.town_map_screen.selected_map(),
+                        )
+                        || town_map_marker_is_behind_view_box(
+                            game.town_map_screen.current_map(),
+                        )
+                    {
+                        FrameDamageRect {
+                            x: 0,
+                            y: 15 * 8,
+                            width: 160,
+                            height: 3 * 8,
+                        }
+                    } else {
+                        FrameDamageRect {
+                            x: 8,
+                            y: 16 * 8,
+                            width: town_map_label_width(
+                                previous_map,
+                                game.state.config.language,
+                            )
+                            .max(town_map_label_width(
+                                game.town_map_screen.selected_map(),
+                                game.state.config.language,
+                            ))
+                            .min(18 * 8),
+                            height: 13,
+                        }
+                    }
+                };
+                Some([
+                    FrameDamageRect {
+                        x: old_x as u32 * 8 + 12,
+                        y: old_y as u32 * 8 + 5,
+                        width: 16,
+                        height: 16,
+                    },
+                    FrameDamageRect {
+                        x: new_x as u32 * 8 + 12,
+                        y: new_y as u32 * 8 + 5,
+                        width: 16,
+                        height: 16,
+                    },
+                    FrameDamageRect {
+                        x: (marker_x as u32 + 2) * 8,
+                        y: (marker_y as u32 + 1) * 8,
+                        width: 8,
+                        height: 8,
+                    },
+                    label,
+                ])
+            });
             let battle_safari_damage =
                 battle_safari_cursor_change.map(|(previous, current)| {
                     [
@@ -2137,6 +2330,10 @@ fn game_main() -> ! {
                 Some(&rects[..if *icon_changed { 3 } else { 2 }])
             } else if let Some(rects) = party_icon_damage_rects.as_ref() {
                 Some(rects.as_slice())
+            } else if let Some(rects) = town_map_cursor_damage.as_ref() {
+                Some(rects.as_slice())
+            } else if let Some(rects) = town_map_marker_damage.as_ref() {
+                Some(rects.as_slice())
             } else if let Some(rects) = battle_safari_damage.as_ref() {
                 Some(rects.as_slice())
             } else if let Some(rects) = battle_menu_damage.as_ref() {
@@ -2170,12 +2367,12 @@ fn game_main() -> ! {
         last_bag = bag;
         last_party = party;
         last_stats = stats;
+        last_town_map = town_map;
         last_oak = oak;
         last_overworld = overworld;
         last_battle = battle;
         #[cfg(feature = "profiling")]
         let mark4 = profile_now();
-
         // Debug: mirror the packed 2bpp framebuffer into SRAM so mGBA's
         // .sav file carries a decodable snapshot. SRAM needs byte-wide
         // volatile writes.

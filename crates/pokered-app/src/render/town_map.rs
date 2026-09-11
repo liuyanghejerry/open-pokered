@@ -3,7 +3,7 @@ use pokered_core::game_state::Lang;
 use pokered_core::town_map_screen::{TownMapMode, TownMapScreenState};
 use pokered_data::map_names::{map_name_str, map_name_str_zh};
 use pokered_data::town_map_data::{decode_town_map_tilemap, town_map_position, TOWN_MAP_WIDTH};
-use pokered_renderer::embedded_font::{draw_text, fill_tile};
+use pokered_renderer::embedded_font::{draw_text, fill_tile, measure_text};
 use pokered_renderer::palette::{Palette, GRAYSCALE_PALETTE};
 use pokered_renderer::resource::ResourceManager;
 use pokered_renderer::{FrameBuffer, Rgba, TILE_SIZE};
@@ -42,11 +42,17 @@ pub fn draw_town_map(
     if let Some(ref mut rm) = res {
         // 1. Background map — one of 16 sheet tiles per cell, row-major.
         if let Ok(sheet) = rm.load_town_map("town_map") {
-            let ts = sheet.tileset.clone();
             for (i, &tile) in decode_town_map_tilemap().iter().enumerate() {
                 let tx = (i % TOWN_MAP_WIDTH) as u32;
                 let ty = (i / TOWN_MAP_WIDTH) as u32;
-                blit_single_tile(fb, &ts, tile as usize, tx * TILE_SIZE, ty * TILE_SIZE, bg_pal);
+                blit_single_tile(
+                    fb,
+                    &sheet.tileset,
+                    tile as usize,
+                    tx * TILE_SIZE,
+                    ty * TILE_SIZE,
+                    bg_pal,
+                );
             }
         }
 
@@ -58,13 +64,33 @@ pub fn draw_town_map(
         // square baked into the tilemap at tile (x+2, y+1).
         if let Some((sx, sy, _)) = town_map_position(state.selected_map()) {
             if let Ok(cursor) = rm.load_town_map("town_map_cursor") {
-                let cts = cursor.tileset.clone();
                 let bx = (sx as u32) * TILE_SIZE + 12;
                 let by = (sy as u32) * TILE_SIZE + 5;
-                blit_single_tile(fb, &cts, 0, bx, by, &cursor_pal);
-                blit_single_tile(fb, &cts, 1, bx + TILE_SIZE, by, &cursor_pal);
-                blit_single_tile(fb, &cts, 2, bx, by + TILE_SIZE, &cursor_pal);
-                blit_single_tile(fb, &cts, 3, bx + TILE_SIZE, by + TILE_SIZE, &cursor_pal);
+                blit_single_tile(fb, &cursor.tileset, 0, bx, by, &cursor_pal);
+                blit_single_tile(
+                    fb,
+                    &cursor.tileset,
+                    1,
+                    bx + TILE_SIZE,
+                    by,
+                    &cursor_pal,
+                );
+                blit_single_tile(
+                    fb,
+                    &cursor.tileset,
+                    2,
+                    bx,
+                    by + TILE_SIZE,
+                    &cursor_pal,
+                );
+                blit_single_tile(
+                    fb,
+                    &cursor.tileset,
+                    3,
+                    bx + TILE_SIZE,
+                    by + TILE_SIZE,
+                    &cursor_pal,
+                );
             }
         }
 
@@ -77,10 +103,9 @@ pub fn draw_town_map(
                 draw_text(label, 3 * TILE_SIZE, 0, Rgba::BLACK, fb);
             }
             if let Ok(arrow) = rm.load_town_map("up_arrow") {
-                let ats = arrow.tileset.clone();
                 // TownMapUpArrow (gfx/town_map/up_arrow.1bpp) is the '▲'
                 // glyph (charmap.asm:85); the '▼' is the font's cursor glyph.
-                blit_single_tile(fb, &ats, 0, 18 * TILE_SIZE, 0, bg_pal);
+                blit_single_tile(fb, &arrow.tileset, 0, 18 * TILE_SIZE, 0, bg_pal);
             }
             draw_text("▼", 19 * TILE_SIZE, 0, Rgba::BLACK, fb);
 
@@ -90,7 +115,6 @@ pub fn draw_town_map(
             // shares the reticle's OAM-derived anchor (top-left at
             // x*8+12, y*8+5). White pixels stay transparent.
             if let Ok(bird) = rm.load_sprite("bird") {
-                let bts = bird.tileset.clone();
                 let bird_pal = Palette::new(&[
                     Rgba::TRANSPARENT,
                     GRAYSCALE_PALETTE.colors[1],
@@ -100,10 +124,31 @@ pub fn draw_town_map(
                 if let Some((sx, sy, _)) = town_map_position(state.selected_map()) {
                     let bx = (sx as u32) * TILE_SIZE + 12;
                     let by = (sy as u32) * TILE_SIZE + 5;
-                    blit_single_tile(fb, &bts, 0, bx, by, &bird_pal);
-                    blit_single_tile(fb, &bts, 1, bx + TILE_SIZE, by, &bird_pal);
-                    blit_single_tile(fb, &bts, 2, bx, by + TILE_SIZE, &bird_pal);
-                    blit_single_tile(fb, &bts, 3, bx + TILE_SIZE, by + TILE_SIZE, &bird_pal);
+                    blit_single_tile(fb, &bird.tileset, 0, bx, by, &bird_pal);
+                    blit_single_tile(
+                        fb,
+                        &bird.tileset,
+                        1,
+                        bx + TILE_SIZE,
+                        by,
+                        &bird_pal,
+                    );
+                    blit_single_tile(
+                        fb,
+                        &bird.tileset,
+                        2,
+                        bx,
+                        by + TILE_SIZE,
+                        &bird_pal,
+                    );
+                    blit_single_tile(
+                        fb,
+                        &bird.tileset,
+                        3,
+                        bx + TILE_SIZE,
+                        by + TILE_SIZE,
+                        &bird_pal,
+                    );
                 }
             }
         }
@@ -129,12 +174,398 @@ pub fn draw_town_map(
     }
 }
 
+#[cfg(any(test, target_os = "none"))]
+fn restore_town_map_marker_layers(
+    state: &TownMapScreenState,
+    res: &mut Option<ResourceManager>,
+    fb: &mut FrameBuffer,
+    lang: Lang,
+    marker_tx: usize,
+    marker_ty: usize,
+) {
+    if let Some(rm) = res.as_mut() {
+        if let Some(&tile) = decode_town_map_tilemap()
+            .get(marker_ty * TOWN_MAP_WIDTH + marker_tx)
+        {
+            if let Ok(sheet) = rm.load_town_map("town_map") {
+                fill_tile(
+                    marker_tx as u32 * TILE_SIZE,
+                    marker_ty as u32 * TILE_SIZE,
+                    Rgba::WHITE,
+                    fb,
+                );
+                blit_single_tile(
+                    fb,
+                    &sheet.tileset,
+                    tile as usize,
+                    marker_tx as u32 * TILE_SIZE,
+                    marker_ty as u32 * TILE_SIZE,
+                    &GRAYSCALE_PALETTE,
+                );
+            }
+        }
+
+        let overlay_pal = Palette::new(&[
+            Rgba::TRANSPARENT,
+            GRAYSCALE_PALETTE.colors[1],
+            GRAYSCALE_PALETTE.colors[2],
+            GRAYSCALE_PALETTE.colors[3],
+        ]);
+        if let Some((sx, sy, _)) = town_map_position(state.selected_map()) {
+            let bx = sx as u32 * TILE_SIZE + 12;
+            let by = sy as u32 * TILE_SIZE + 5;
+            if let Ok(cursor) = rm.load_town_map("town_map_cursor") {
+                blit_single_tile(fb, &cursor.tileset, 0, bx, by, &overlay_pal);
+                blit_single_tile(
+                    fb,
+                    &cursor.tileset,
+                    1,
+                    bx + TILE_SIZE,
+                    by,
+                    &overlay_pal,
+                );
+                blit_single_tile(
+                    fb,
+                    &cursor.tileset,
+                    2,
+                    bx,
+                    by + TILE_SIZE,
+                    &overlay_pal,
+                );
+                blit_single_tile(
+                    fb,
+                    &cursor.tileset,
+                    3,
+                    bx + TILE_SIZE,
+                    by + TILE_SIZE,
+                    &overlay_pal,
+                );
+            }
+            if state.mode() == TownMapMode::Fly {
+                draw_text(if lang == Lang::Zh { "去" } else { "To" }, 0, 0, Rgba::BLACK, fb);
+                if let Some((_, _, name)) = town_map_position(state.selected_map()) {
+                    let label = if lang == Lang::Zh {
+                        map_name_str_zh(name)
+                    } else {
+                        map_name_str(name)
+                    };
+                    draw_text(label, 3 * TILE_SIZE, 0, Rgba::BLACK, fb);
+                }
+                if let Ok(arrow) = rm.load_town_map("up_arrow") {
+                    blit_single_tile(fb, &arrow.tileset, 0, 18 * TILE_SIZE, 0, &GRAYSCALE_PALETTE);
+                }
+                draw_text("▼", 19 * TILE_SIZE, 0, Rgba::BLACK, fb);
+                if let Ok(bird) = rm.load_sprite("bird") {
+                    blit_single_tile(fb, &bird.tileset, 0, bx, by, &overlay_pal);
+                    blit_single_tile(
+                        fb,
+                        &bird.tileset,
+                        1,
+                        bx + TILE_SIZE,
+                        by,
+                        &overlay_pal,
+                    );
+                    blit_single_tile(
+                        fb,
+                        &bird.tileset,
+                        2,
+                        bx,
+                        by + TILE_SIZE,
+                        &overlay_pal,
+                    );
+                    blit_single_tile(
+                        fb,
+                        &bird.tileset,
+                        3,
+                        bx + TILE_SIZE,
+                        by + TILE_SIZE,
+                        &overlay_pal,
+                    );
+                }
+            }
+        }
+    }
+}
+
+/// Repaint only the flashing 8×8 current-location marker.
+///
+/// The marker is drawn after the selection reticle and FLY bird, so turning
+/// it off must restore those layers as well as the underlying map tile.
+#[cfg(any(test, target_os = "none"))]
+pub fn redraw_town_map_marker(
+    state: &TownMapScreenState,
+    res: &mut Option<ResourceManager>,
+    frame_counter: u64,
+    fb: &mut FrameBuffer,
+    lang: Lang,
+) {
+    let Some((px, py, _)) = town_map_position(state.current_map()) else {
+        return;
+    };
+    let marker_tx = px as usize + 2;
+    let marker_ty = py as usize + 1;
+    if state.mode() == TownMapMode::View && marker_ty as u32 * TILE_SIZE >= 15 * TILE_SIZE {
+        // The bottom location-name box is drawn after the marker and covers
+        // it completely, so its animation has no visible pixels to update.
+        return;
+    }
+    if (frame_counter / 16) % 2 == 0 {
+        fill_tile(
+            marker_tx as u32 * TILE_SIZE,
+            marker_ty as u32 * TILE_SIZE,
+            Rgba::BLACK,
+            fb,
+        );
+    } else {
+        restore_town_map_marker_layers(state, res, fb, lang, marker_tx, marker_ty);
+    }
+}
+
+#[cfg(any(test, target_os = "none"))]
+fn restore_town_map_background_rect(
+    rm: &mut ResourceManager,
+    fb: &mut FrameBuffer,
+    x: u32,
+    y: u32,
+    width: u32,
+    height: u32,
+) {
+    let first_tx = x / TILE_SIZE;
+    let first_ty = y / TILE_SIZE;
+    let last_tx = (x + width.saturating_sub(1)) / TILE_SIZE;
+    let last_ty = (y + height.saturating_sub(1)) / TILE_SIZE;
+    let tilemap = decode_town_map_tilemap();
+    let Ok(sheet) = rm.load_town_map("town_map") else {
+        return;
+    };
+    for ty in first_ty..=last_ty.min(17) {
+        for tx in first_tx..=last_tx.min((TOWN_MAP_WIDTH - 1) as u32) {
+            let Some(&tile) = tilemap.get(ty as usize * TOWN_MAP_WIDTH + tx as usize) else {
+                continue;
+            };
+            fill_tile(tx * TILE_SIZE, ty * TILE_SIZE, Rgba::WHITE, fb);
+            blit_single_tile(
+                fb,
+                &sheet.tileset,
+                tile as usize,
+                tx * TILE_SIZE,
+                ty * TILE_SIZE,
+                &GRAYSCALE_PALETTE,
+            );
+        }
+    }
+}
+
+/// Repaint the old/new selection area and its localized label.
+#[cfg(any(test, target_os = "none"))]
+pub fn redraw_town_map_cursor(
+    state: &TownMapScreenState,
+    previous_map: pokered_data::maps::MapId,
+    res: &mut Option<ResourceManager>,
+    frame_counter: u64,
+    fb: &mut FrameBuffer,
+    lang: Lang,
+) {
+    if let Some(rm) = res.as_mut() {
+        if let Some((sx, sy, _)) = town_map_position(previous_map) {
+            restore_town_map_background_rect(
+                rm,
+                fb,
+                sx as u32 * TILE_SIZE + 12,
+                sy as u32 * TILE_SIZE + 5,
+                16,
+                16,
+            );
+        }
+        if state.mode() == TownMapMode::Fly {
+            // The embedded font can extend one pixel below its nominal row.
+            restore_town_map_background_rect(rm, fb, 0, 0, 160, 2 * TILE_SIZE);
+        }
+    }
+    if let Some((px, py, _)) = town_map_position(state.current_map()) {
+        let marker_tx = px as usize + 2;
+        let marker_ty = py as usize + 1;
+        restore_town_map_marker_layers(state, res, fb, lang, marker_tx, marker_ty);
+        if (frame_counter / 16) % 2 == 0
+            && (state.mode() != TownMapMode::View
+                || marker_ty as u32 * TILE_SIZE < 15 * TILE_SIZE)
+        {
+            fill_tile(
+                marker_tx as u32 * TILE_SIZE,
+                marker_ty as u32 * TILE_SIZE,
+                Rgba::BLACK,
+                fb,
+            );
+        }
+    }
+    if state.mode() == TownMapMode::View {
+        let label_for = |map| {
+            town_map_position(map).map(|(_, _, name)| {
+                if lang == Lang::Zh {
+                    map_name_str_zh(name)
+                } else {
+                    map_name_str(name)
+                }
+            })
+        };
+        let previous_label = label_for(previous_map);
+        let current_label = label_for(state.selected_map());
+        let clear_width = previous_label
+            .map_or(0, measure_text)
+            .max(current_label.map_or(0, measure_text))
+            .min(18 * TILE_SIZE);
+        let reticle_overlaps_box = [previous_map, state.selected_map()]
+            .iter()
+            .filter_map(|&map| town_map_position(map))
+            .any(|(_, y, _)| y as u32 * TILE_SIZE + 5 + 16 > 15 * TILE_SIZE);
+        let marker_is_behind_box = town_map_position(state.current_map())
+            .is_some_and(|(_, y, _)| (y as u32 + 1) * TILE_SIZE >= 15 * TILE_SIZE);
+        if reticle_overlaps_box || marker_is_behind_box {
+            // These layers are conceptually below the box. Re-establish the
+            // complete box when restoring them touched its pixels.
+            draw_text_box(fb, 0, 15 * TILE_SIZE, 18, 1, Rgba::BLACK);
+        } else {
+            // The box itself is static. Clear only the old/new label union
+            // across its 13-pixel font bounds; keep the border intact.
+            for y in 16 * TILE_SIZE..16 * TILE_SIZE + 13 {
+                for x in TILE_SIZE..TILE_SIZE + clear_width {
+                    fb.set_pixel(x, y, Rgba::WHITE);
+                }
+            }
+        }
+        if let Some(label) = current_label {
+            draw_text(label, TILE_SIZE, 16 * TILE_SIZE, Rgba::BLACK, fb);
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
     use dotzuki_engine::render_config::RenderConfig;
     use pokered_core::town_map_screen::TownMapScreenState;
     use pokered_data::maps::MapId;
+
+    fn assert_framebuffers_equal(actual: &FrameBuffer, expected: &FrameBuffer) {
+        assert_eq!(actual.width(), expected.width());
+        assert_eq!(actual.height(), expected.height());
+        for y in 0..actual.height() {
+            for x in 0..actual.width() {
+                assert_eq!(
+                    actual.get_pixel(x, y),
+                    expected.get_pixel(x, y),
+                    "framebuffer mismatch at ({x}, {y})",
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn marker_repaint_matches_full_draw_in_view_and_fly_modes() {
+        let config = dotzuki_engine::render_config::RenderConfig::new(160, 144);
+        let cases = [
+            TownMapScreenState::new(MapId::PalletTown),
+            TownMapScreenState::new_fly(
+                MapId::PalletTown,
+                vec![MapId::PalletTown, MapId::ViridianCity],
+            ),
+        ];
+
+        for state in cases {
+            for lang in [Lang::En, Lang::Zh] {
+                let mut res = pokered_renderer::resource::AssetRoot::auto_detect()
+                    .ok()
+                    .map(pokered_renderer::resource::ResourceManager::new);
+                let mut actual = FrameBuffer::new(config, Rgba::WHITE);
+                draw_town_map(&state, &mut res, 0, &mut actual, lang);
+                redraw_town_map_marker(&state, &mut res, 16, &mut actual, lang);
+                let mut expected = FrameBuffer::new(config, Rgba::WHITE);
+                draw_town_map(&state, &mut res, 16, &mut expected, lang);
+                assert_framebuffers_equal(&actual, &expected);
+
+                redraw_town_map_marker(&state, &mut res, 32, &mut actual, lang);
+                let mut expected = FrameBuffer::new(config, Rgba::WHITE);
+                draw_town_map(&state, &mut res, 32, &mut expected, lang);
+                assert_framebuffers_equal(&actual, &expected);
+            }
+        }
+    }
+
+    #[test]
+    fn cursor_repaint_matches_full_draw_in_view_and_fly_modes() {
+        let config = dotzuki_engine::render_config::RenderConfig::new(160, 144);
+        for lang in [Lang::En, Lang::Zh] {
+            let mut cases = [
+                TownMapScreenState::new(MapId::PalletTown),
+                TownMapScreenState::new(MapId::CinnabarIsland),
+                TownMapScreenState::new_fly(
+                    MapId::PalletTown,
+                    vec![MapId::PalletTown, MapId::ViridianCity],
+                ),
+            ];
+            for state in &mut cases {
+                let mut res = pokered_renderer::resource::AssetRoot::auto_detect()
+                    .ok()
+                    .map(pokered_renderer::resource::ResourceManager::new);
+                let mut actual = FrameBuffer::new(config, Rgba::WHITE);
+                draw_town_map(state, &mut res, 0, &mut actual, lang);
+                let previous = state.selected_map();
+                let input = pokered_core::town_map_screen::TownMapScreenInput {
+                    up: state.mode() == TownMapMode::Fly,
+                    down: state.mode() == TownMapMode::View,
+                    a: false,
+                    b: false,
+                };
+                state.update_frame(input);
+                redraw_town_map_cursor(state, previous, &mut res, 16, &mut actual, lang);
+
+                let mut expected = FrameBuffer::new(config, Rgba::WHITE);
+                draw_town_map(state, &mut res, 16, &mut expected, lang);
+                assert_framebuffers_equal(&actual, &expected);
+            }
+        }
+    }
+
+    #[test]
+    fn view_cursor_repaint_matches_full_draw_for_every_landmark() {
+        let config = dotzuki_engine::render_config::RenderConfig::new(160, 144);
+        for lang in [Lang::En, Lang::Zh] {
+            let mut state = TownMapScreenState::new(
+                pokered_data::town_map_data::TOWN_MAP_ORDER[0],
+            );
+            let mut res = pokered_renderer::resource::AssetRoot::auto_detect()
+                .ok()
+                .map(pokered_renderer::resource::ResourceManager::new);
+            let mut actual = FrameBuffer::new(config, Rgba::WHITE);
+            draw_town_map(&state, &mut res, 0, &mut actual, lang);
+
+            for frame in 1..pokered_data::town_map_data::TOWN_MAP_ORDER.len() {
+                let previous = state.selected_map();
+                state.update_frame(pokered_core::town_map_screen::TownMapScreenInput {
+                    down: true,
+                    ..Default::default()
+                });
+                redraw_town_map_cursor(
+                    &state,
+                    previous,
+                    &mut res,
+                    frame as u64 * 16,
+                    &mut actual,
+                    lang,
+                );
+
+                let mut expected = FrameBuffer::new(config, Rgba::WHITE);
+                draw_town_map(
+                    &state,
+                    &mut res,
+                    frame as u64 * 16,
+                    &mut expected,
+                    lang,
+                );
+                assert_framebuffers_equal(&actual, &expected);
+            }
+        }
+    }
 
     #[test]
     fn fly_mode_draws_to_prompt_bird_and_arrows() {

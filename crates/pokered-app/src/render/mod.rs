@@ -63,6 +63,8 @@ pub use pokedex::draw_pokedex_screen;
 pub use slots::draw_slots;
 pub use title::draw_title_screen;
 pub use town_map::draw_town_map;
+#[cfg(any(test, target_os = "none"))]
+pub use town_map::{redraw_town_map_cursor, redraw_town_map_marker};
 pub use trade::draw_trade;
 pub use trainer_card::draw_trainer_card;
 
