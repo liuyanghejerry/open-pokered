@@ -1225,15 +1225,30 @@ fn draw_overworld_impl(
                             continue;
                         }
 
-                        blit_single_tile_flipped(
-                            fb,
-                            tile_ts,
-                            tile_idx,
-                            draw_x + col * TILE_SIZE,
-                            draw_y + row * TILE_SIZE,
-                            &sprite_pal,
-                            flip_h,
-                        );
+                        if flip_h {
+                            // The player OBJ palette is identity-mapped for
+                            // indices 1..=3, with index zero transparent.
+                            // Preserve those indices and skip RGBA palette
+                            // conversion on the mirrored hot path.
+                            fb.blit_gb_tile_indices(
+                                (draw_x + col * TILE_SIZE) as i32,
+                                (draw_y + row * TILE_SIZE) as i32,
+                                tile_ts.get(tile_idx),
+                                true,
+                                true,
+                                false,
+                            );
+                        } else {
+                            blit_single_tile_flipped(
+                                fb,
+                                tile_ts,
+                                tile_idx,
+                                draw_x + col * TILE_SIZE,
+                                draw_y + row * TILE_SIZE,
+                                &sprite_pal,
+                                false,
+                            );
+                        }
                     }
                 }
             }
@@ -2024,6 +2039,30 @@ mod tests {
 
     fn screen() -> OverworldScreen<PokemonRedData> {
         OverworldScreen::new(MapId::PalletTown, None, PokemonRedData)
+    }
+
+    #[test]
+    fn mirrored_player_index_blit_matches_sprite_palette_blit() {
+        let mut tile = Tile::blank();
+        for row in 0..TILE_SIZE as usize {
+            for column in 0..TILE_SIZE as usize {
+                tile.pixels[row][column] = ((row * 3 + column) & 3) as u8;
+            }
+        }
+        let sprite_palette = Palette::new(&[
+            Rgba::TRANSPARENT,
+            Rgba::rgb(0xAA, 0xAA, 0xAA),
+            Rgba::rgb(0x55, 0x55, 0x55),
+            Rgba::BLACK,
+        ]);
+        let config = RenderConfig::new(10, 10);
+        let mut palette_blit = FrameBuffer::new(config.clone(), Rgba::rgb(0x55, 0x55, 0x55));
+        let mut index_blit = FrameBuffer::new(config, Rgba::rgb(0x55, 0x55, 0x55));
+
+        palette_blit.blit_gb_tile(1, 1, &tile, &sprite_palette, true, true, false);
+        index_blit.blit_gb_tile_indices(1, 1, &tile, true, true, false);
+
+        assert_eq!(palette_blit.packed(), index_blit.packed());
     }
 
     #[test]
