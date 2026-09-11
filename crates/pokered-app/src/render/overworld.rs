@@ -521,18 +521,44 @@ fn draw_background_tiles(
     }
     let width = fb.width() as i32;
     let height = fb.height() as i32;
-    for ty in 0..tiles_h {
+    let tile_span = |start: i32, end: i32, camera: i32, count: i32| {
+        let first = (start + camera).div_euclid(TILE_SIZE as i32).clamp(0, count);
+        let end = ((end - 1 + camera).div_euclid(TILE_SIZE as i32) + 1).clamp(0, count);
+        first..end
+    };
+    let visible_x = tile_span(0, width, camera_x, tiles_w);
+    let visible_y = tile_span(0, height, camera_y, tiles_h);
+    let (tile_x, tile_y, filter_damage) = match damage {
+        BackgroundDamage::Scrolled { dx, dy } if dx != 0 && dy == 0 => {
+            let dirty_x = if dx > 0 { 0..dx } else { width + dx..width };
+            (
+                tile_span(dirty_x.start, dirty_x.end, camera_x, tiles_w),
+                visible_y,
+                false,
+            )
+        }
+        BackgroundDamage::Scrolled { dx, dy } if dx == 0 && dy != 0 => {
+            let dirty_y = if dy > 0 { 0..dy } else { height + dy..height };
+            (
+                visible_x,
+                tile_span(dirty_y.start, dirty_y.end, camera_y, tiles_h),
+                false,
+            )
+        }
+        _ => (visible_x, visible_y, true),
+    };
+    for ty in tile_y {
         let screen_y = ty * TILE_SIZE as i32 - camera_y;
         if screen_y + TILE_SIZE as i32 <= 0 || screen_y >= height {
             continue;
         }
         let mut last_block: Option<(i32, i32, u8)> = None;
-        for tx in 0..tiles_w {
+        for tx in tile_x.clone() {
             let screen_x = tx * TILE_SIZE as i32 - camera_x;
             if screen_x + TILE_SIZE as i32 <= 0 || screen_x >= width {
                 continue;
             }
-            if !damage.intersects_tile(screen_x, screen_y, width, height) {
+            if filter_damage && !damage.intersects_tile(screen_x, screen_y, width, height) {
                 continue;
             }
             let mut world_tx = tile_start_tx + tx;
@@ -2235,6 +2261,12 @@ mod tests {
             s.state.walk_counter = 0;
             let _ = compare(&mut s);
         }
+
+        // Non-standard camera changes can move both axes at once. They keep
+        // the conservative union filter rather than the single-strip ranges.
+        s.state.player.x += 1;
+        s.state.player.y += 1;
+        assert!(compare(&mut s).0);
 
         let map = s.map_data.as_mut().expect("live map");
         map.blocks[0] = map.blocks[0].wrapping_add(1);
