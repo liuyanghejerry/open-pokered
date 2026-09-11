@@ -48,23 +48,7 @@ fn blit_tile_clipped(
     {
         return;
     }
-    let tile = tileset.get(tile_idx);
-    for row in 0..TILE_SIZE as i32 {
-        let sy = y + row;
-        if sy < 0 || sy >= fb.height() as i32 {
-            continue;
-        }
-        let rgba_row = tile.render_row(row as usize, palette);
-        for col in 0..TILE_SIZE as i32 {
-            let sx = x + col;
-            if sx >= 0 && sx < fb.width() as i32 {
-                let c = rgba_row[col as usize];
-                if c != Rgba::TRANSPARENT {
-                    fb.set_pixel(sx as u32, sy as u32, c);
-                }
-            }
-        }
-    }
+    fb.blit_gb_tile(x, y, tileset.get(tile_idx), palette, true, false, false);
 }
 
 fn blit_tile_clipped_flipped(
@@ -86,28 +70,15 @@ fn blit_tile_clipped_flipped(
     {
         return;
     }
-    let tile = tileset.get(tile_idx);
-    for row in 0..TILE_SIZE as i32 {
-        let sy = y + row;
-        if sy < 0 || sy >= fb.height() as i32 {
-            continue;
-        }
-        let rgba_row = tile.render_row(row as usize, palette);
-        for col in 0..TILE_SIZE as i32 {
-            let sx = x + col;
-            if sx >= 0 && sx < fb.width() as i32 {
-                let src_col = if flip_horizontal {
-                    TILE_SIZE as i32 - 1 - col
-                } else {
-                    col
-                };
-                let c = rgba_row[src_col as usize];
-                if c != Rgba::TRANSPARENT {
-                    fb.set_pixel(sx as u32, sy as u32, c);
-                }
-            }
-        }
-    }
+    fb.blit_gb_tile(
+        x,
+        y,
+        tileset.get(tile_idx),
+        palette,
+        true,
+        flip_horizontal,
+        false,
+    );
 }
 
 /// Script-driven entry overlay (`showPokedexEntry`): resolve the scene species
@@ -2039,6 +2010,96 @@ mod tests {
 
     fn screen() -> OverworldScreen<PokemonRedData> {
         OverworldScreen::new(MapId::PalletTown, None, PokemonRedData)
+    }
+
+    fn reference_sprite_tile_blit(
+        fb: &mut FrameBuffer,
+        tile: &Tile,
+        x: i32,
+        y: i32,
+        palette: &Palette,
+        flip_horizontal: bool,
+    ) {
+        for row in 0..TILE_SIZE as i32 {
+            let sy = y + row;
+            if sy < 0 || sy >= fb.height() as i32 {
+                continue;
+            }
+            let rgba_row = tile.render_row(row as usize, palette);
+            for col in 0..TILE_SIZE as i32 {
+                let sx = x + col;
+                if sx < 0 || sx >= fb.width() as i32 {
+                    continue;
+                }
+                let src_col = if flip_horizontal {
+                    TILE_SIZE as i32 - 1 - col
+                } else {
+                    col
+                };
+                let color = rgba_row[src_col as usize];
+                if color != Rgba::TRANSPARENT {
+                    fb.set_pixel(sx as u32, sy as u32, color);
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn clipped_sprite_helpers_match_reference_for_palettes_and_flips() {
+        let tileset = TileSet::from_2bpp(&[
+            0xAA, 0xCC, 0xF0, 0x5A, 0x33, 0x0F, 0x81, 0x7E, 0x66, 0x99, 0x18, 0xE7, 0xC3, 0x3C,
+            0xA5, 0x5A,
+        ]);
+        let palettes = [
+            Palette::new(&[
+                Rgba::TRANSPARENT,
+                Rgba::rgb(0xAA, 0xAA, 0xAA),
+                Rgba::rgb(0x55, 0x55, 0x55),
+                Rgba::BLACK,
+            ]),
+            // A non-identity palette with a transparent non-zero entry
+            // exercises the generic palette mapping and transparency rules.
+            Palette::new(&[
+                Rgba::TRANSPARENT,
+                Rgba::BLACK,
+                Rgba::TRANSPARENT,
+                Rgba::rgb(0xAA, 0xAA, 0xAA),
+            ]),
+        ];
+        let cases = [
+            (-3, 2, false),
+            (5, -2, true),
+            (7, 6, false),
+            (3, 7, true),
+            (-9, 3, false),
+        ];
+
+        for (palette_index, palette) in palettes.iter().enumerate() {
+            for &(x, y, flip_horizontal) in &cases {
+                let config = RenderConfig::new(10, 10);
+                let background = Rgba::rgb(0x55, 0x55, 0x55);
+                let mut expected = FrameBuffer::new(config.clone(), background);
+                let mut actual = FrameBuffer::new(config, background);
+                reference_sprite_tile_blit(
+                    &mut expected,
+                    tileset.get(0),
+                    x,
+                    y,
+                    palette,
+                    flip_horizontal,
+                );
+                if flip_horizontal {
+                    blit_tile_clipped_flipped(&mut actual, &tileset, 0, x, y, palette, true);
+                } else {
+                    blit_tile_clipped(&mut actual, &tileset, 0, x, y, palette);
+                }
+                assert_eq!(
+                    actual.packed(),
+                    expected.packed(),
+                    "palette={palette_index}, x={x}, y={y}, flip={flip_horizontal}",
+                );
+            }
+        }
     }
 
     #[test]
