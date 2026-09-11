@@ -594,6 +594,30 @@ impl BattleVisualKey {
         (current_without_cursor == previous_without_cursor)
             .then_some((previous_cursor, cursor))
     }
+
+    /// Return the old and new selected rows when every visible battle field
+    /// is unchanged except the battle-bag cursor.
+    fn bag_menu_cursor_change_from(&self, previous: &Self) -> Option<(usize, usize)> {
+        let (
+            ReusableBattlePhase::BagSelect { cursor },
+            ReusableBattlePhase::BagSelect {
+                cursor: previous_cursor,
+            },
+        ) = (self.phase, previous.phase)
+        else {
+            return None;
+        };
+        if cursor == previous_cursor {
+            return None;
+        }
+
+        let mut current_without_cursor = *self;
+        current_without_cursor.phase = ReusableBattlePhase::BagSelect { cursor: 0 };
+        let mut previous_without_cursor = *previous;
+        previous_without_cursor.phase = ReusableBattlePhase::BagSelect { cursor: 0 };
+        (current_without_cursor == previous_without_cursor)
+            .then_some((previous_cursor, cursor))
+    }
 }
 
 #[derive(Clone, Copy, PartialEq, Eq)]
@@ -1131,6 +1155,10 @@ fn game_main() -> ! {
             .as_ref()
             .zip(last_battle.as_ref())
             .and_then(|(current, previous)| current.move_menu_cursor_change_from(previous));
+        let battle_bag_cursor_change = battle
+            .as_ref()
+            .zip(last_battle.as_ref())
+            .and_then(|(current, previous)| current.bag_menu_cursor_change_from(previous));
         let redraw = if static_splash.is_some() {
             static_splash != last_static_splash
         } else if language_select.is_some() {
@@ -1174,6 +1202,15 @@ fn game_main() -> ! {
                     &mut fb,
                     game.state.config.language,
                 );
+            } else if let (Some((previous, _)), Some(bag_menu)) =
+                (battle_bag_cursor_change, game.battle.bag_menu.as_ref())
+            {
+                pokered_app::render::redraw_battle_bag_menu_cursor(
+                    previous,
+                    bag_menu,
+                    &mut fb,
+                    game.state.config.language,
+                );
             } else {
                 game.draw_gba(
                     &mut fb,
@@ -1202,11 +1239,19 @@ fn game_main() -> ! {
             let battle_move_damage = battle_move_cursor_change.map(|(previous, current)| {
                 battle_move_menu_damage(previous, current, game.state.config.language)
             });
+            let battle_bag_damage = battle_bag_cursor_change.map(|(previous, current)| {
+                [
+                    battle_bag_cursor_damage(previous),
+                    battle_bag_cursor_damage(current),
+                ]
+            });
             let damage = if let Some(rects) = battle_safari_damage.as_ref() {
                 Some(rects.as_slice())
             } else if let Some(rects) = battle_menu_damage.as_ref() {
                 Some(rects.as_slice())
             } else if let Some(rects) = battle_move_damage.as_ref() {
+                Some(rects.as_slice())
+            } else if let Some(rects) = battle_bag_damage.as_ref() {
                 Some(rects.as_slice())
             } else {
                 overworld_background_cache
@@ -1310,4 +1355,14 @@ fn battle_move_menu_damage(
         cursor_damage(previous),
         cursor_damage(current),
     ]
+}
+
+#[inline]
+fn battle_bag_cursor_damage(cursor: usize) -> FrameDamageRect {
+    FrameDamageRect {
+        x: 6 * 8,
+        y: (12 + cursor as u32) * 8,
+        width: 8,
+        height: 9,
+    }
 }

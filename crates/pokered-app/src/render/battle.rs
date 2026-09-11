@@ -2903,6 +2903,23 @@ pub fn redraw_battle_safari_menu_cursor(
     menus::battle_safari::redraw_cursor(previous, state, &mut painter);
 }
 
+/// Repaint only the changed cursor cells of an already-rendered battle bag.
+#[cfg(any(test, target_os = "none"))]
+pub fn redraw_battle_bag_menu_cursor(
+    previous_cursor: usize,
+    state: &pokered_core::battle::menu::BagMenuState,
+    fb: &mut FrameBuffer,
+    language: pokered_core::game_state::Lang,
+) {
+    let mut painter = FrameBufferPainter::new(fb).with_lang(language);
+    menus::battle_bag::redraw_cursor(
+        previous_cursor,
+        state,
+        &BATTLE_BAG_DEFAULT_LAYOUT,
+        &mut painter,
+    );
+}
+
 /// Repaint only the cursor and selected-move information of an already-
 /// rendered battle move menu.
 #[cfg(any(test, target_os = "none"))]
@@ -2950,6 +2967,23 @@ fn draw_battle_safari_menu_overlay(
     let mut painter = FrameBufferPainter::new(fb).with_lang(language);
     let mut ui = Ui::new(&mut painter);
     menus::battle_safari::draw(state, &mut ui, language);
+}
+
+#[cfg(test)]
+fn draw_battle_bag_menu_overlay(
+    state: &pokered_core::battle::menu::BagMenuState,
+    fb: &mut FrameBuffer,
+    language: pokered_core::game_state::Lang,
+) {
+    let mut painter = FrameBufferPainter::new(fb).with_lang(language);
+    let mut ui = Ui::new(&mut painter);
+    let render_data = PokemonRenderData::new(language == Lang::Zh);
+    menus::battle_bag::draw(
+        state,
+        &BATTLE_BAG_DEFAULT_LAYOUT,
+        &mut ui,
+        &render_data,
+    );
 }
 
 #[cfg(test)]
@@ -3074,6 +3108,53 @@ mod tests {
                             assert_framebuffers_equal(&actual, &expected);
                         }
                     }
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn battle_bag_cursor_repaint_matches_a_fresh_menu_for_every_transition() {
+        use pokered_core::battle::menu::{BagMenuState, BattleMenuInput};
+
+        let state_at = |cursor: usize| {
+            let mut state = BagMenuState::new(vec![
+                (ItemId::Potion, 5),
+                (ItemId::Antidote, 4),
+                (ItemId::PokeBall, 3),
+                (ItemId::SuperPotion, 2),
+            ]);
+            for _ in 0..cursor {
+                state.update_frame(BattleMenuInput {
+                    down: true,
+                    ..BattleMenuInput::none()
+                });
+            }
+            state
+        };
+
+        for language in [Lang::En, Lang::Zh] {
+            let config = dotzuki_engine::render_config::RenderConfig::new(160, 144);
+            for previous_cursor in 0..4 {
+                for current_cursor in 0..4 {
+                    if previous_cursor == current_cursor {
+                        continue;
+                    }
+                    let previous = state_at(previous_cursor);
+                    let current = state_at(current_cursor);
+
+                    let mut actual = FrameBuffer::new(config, Rgba::BLACK);
+                    draw_battle_bag_menu_overlay(&previous, &mut actual, language);
+                    redraw_battle_bag_menu_cursor(
+                        previous_cursor,
+                        &current,
+                        &mut actual,
+                        language,
+                    );
+
+                    let mut expected = FrameBuffer::new(config, Rgba::BLACK);
+                    draw_battle_bag_menu_overlay(&current, &mut expected, language);
+                    assert_framebuffers_equal(&actual, &expected);
                 }
             }
         }

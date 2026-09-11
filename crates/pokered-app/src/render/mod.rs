@@ -25,7 +25,8 @@ mod trainer_card;
 pub use battle::{draw_battle, BattleVisualEffects};
 #[cfg(target_os = "none")]
 pub use battle::{
-    redraw_battle_main_menu_cursor, redraw_battle_move_menu_selection,
+    redraw_battle_bag_menu_cursor, redraw_battle_main_menu_cursor,
+    redraw_battle_move_menu_selection,
     redraw_battle_safari_menu_cursor,
 };
 pub use battle_i18n::{trainer_class_zh, zh_battle_dialog};
