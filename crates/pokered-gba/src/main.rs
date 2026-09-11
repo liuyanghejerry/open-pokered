@@ -514,6 +514,54 @@ impl BattleVisualKey {
             (row, col),
         ))
     }
+
+    /// Return the old and new selected rows when the current move-selection
+    /// screen has no other visible change.
+    fn move_menu_cursor_change_from(&self, previous: &Self) -> Option<(usize, usize)> {
+        let (cursor, previous_cursor, normalized_phase) = match (self.phase, previous.phase) {
+            (
+                ReusableBattlePhase::MoveSelect { cursor },
+                ReusableBattlePhase::MoveSelect {
+                    cursor: previous_cursor,
+                },
+            ) => (
+                cursor,
+                previous_cursor,
+                ReusableBattlePhase::MoveSelect { cursor: 0 },
+            ),
+            (
+                ReusableBattlePhase::ItemMoveSelect { cursor },
+                ReusableBattlePhase::ItemMoveSelect {
+                    cursor: previous_cursor,
+                },
+            ) => (
+                cursor,
+                previous_cursor,
+                ReusableBattlePhase::ItemMoveSelect { cursor: 0 },
+            ),
+            (
+                ReusableBattlePhase::LearnMoveChoose { cursor },
+                ReusableBattlePhase::LearnMoveChoose {
+                    cursor: previous_cursor,
+                },
+            ) => (
+                cursor,
+                previous_cursor,
+                ReusableBattlePhase::LearnMoveChoose { cursor: 0 },
+            ),
+            _ => return None,
+        };
+        if cursor == previous_cursor {
+            return None;
+        }
+
+        let mut current_without_cursor = *self;
+        current_without_cursor.phase = normalized_phase;
+        let mut previous_without_cursor = *previous;
+        previous_without_cursor.phase = normalized_phase;
+        (current_without_cursor == previous_without_cursor)
+            .then_some((previous_cursor, cursor))
+    }
 }
 
 #[derive(Clone, Copy, PartialEq, Eq)]
@@ -1043,6 +1091,10 @@ fn game_main() -> ! {
             .as_ref()
             .zip(last_battle.as_ref())
             .and_then(|(current, previous)| current.player_menu_cursor_change_from(previous));
+        let battle_move_cursor_change = battle
+            .as_ref()
+            .zip(last_battle.as_ref())
+            .and_then(|(current, previous)| current.move_menu_cursor_change_from(previous));
         let redraw = if static_splash.is_some() {
             static_splash != last_static_splash
         } else if language_select.is_some() {
@@ -1070,6 +1122,15 @@ fn game_main() -> ! {
                     &mut fb,
                     game.state.config.language,
                 );
+            } else if let (Some((previous, _)), Some(move_menu)) =
+                (battle_move_cursor_change, game.battle.move_menu.as_ref())
+            {
+                pokered_app::render::redraw_battle_move_menu_selection(
+                    previous,
+                    move_menu,
+                    &mut fb,
+                    game.state.config.language,
+                );
             } else {
                 game.draw_gba(
                     &mut fb,
@@ -1088,7 +1149,12 @@ fn game_main() -> ! {
                     battle_menu_cursor_damage(current),
                 ]
             });
+            let battle_move_damage = battle_move_cursor_change.map(|(previous, current)| {
+                battle_move_menu_damage(previous, current, game.state.config.language)
+            });
             let damage = if let Some(rects) = battle_menu_damage.as_ref() {
+                Some(rects.as_slice())
+            } else if let Some(rects) = battle_move_damage.as_ref() {
                 Some(rects.as_slice())
             } else {
                 overworld_background_cache
@@ -1164,4 +1230,32 @@ fn battle_menu_cursor_damage((row, col): (usize, usize)) -> FrameDamageRect {
         width: 8,
         height: 9,
     }
+}
+
+fn battle_move_menu_damage(
+    previous: usize,
+    current: usize,
+    language: Lang,
+) -> [FrameDamageRect; 3] {
+    let (cursor_x, cursor_y, cursor_step, info_y, info_height) = if language == Lang::Zh {
+        (8, 96, 10, 72, 16)
+    } else {
+        (5 * 8, 13 * 8, 8, 80, 18)
+    };
+    let cursor_damage = |selected: usize| FrameDamageRect {
+        x: cursor_x,
+        y: cursor_y + selected as u32 * cursor_step,
+        width: 8,
+        height: 9,
+    };
+    [
+        FrameDamageRect {
+            x: 8,
+            y: info_y,
+            width: 72,
+            height: info_height,
+        },
+        cursor_damage(previous),
+        cursor_damage(current),
+    ]
 }

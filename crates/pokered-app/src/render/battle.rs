@@ -2891,6 +2891,28 @@ pub fn redraw_battle_main_menu_cursor(
     menus::battle_main::redraw_cursor(previous, state, &mut painter, language);
 }
 
+/// Repaint only the cursor and selected-move information of an already-
+/// rendered battle move menu.
+#[cfg(any(test, target_os = "none"))]
+pub fn redraw_battle_move_menu_selection(
+    previous_cursor: usize,
+    state: &pokered_core::battle::menu::MoveMenuState,
+    fb: &mut FrameBuffer,
+    language: pokered_core::game_state::Lang,
+) {
+    let mut painter = FrameBufferPainter::new(fb).with_lang(language);
+    let mut ui = Ui::new(&mut painter);
+    let render_data = PokemonRenderData::new(language == Lang::Zh);
+    menus::battle_move::redraw_selection(
+        previous_cursor,
+        state,
+        &BATTLE_MOVE_DEFAULT_LAYOUT,
+        &mut ui,
+        language,
+        &render_data,
+    );
+}
+
 #[cfg(test)]
 fn draw_battle_main_menu_overlay(
     state: &pokered_core::battle::menu::BattleMenuState,
@@ -2904,6 +2926,24 @@ fn draw_battle_main_menu_overlay(
         &BATTLE_MAIN_DEFAULT_LAYOUT,
         &mut ui,
         language,
+    );
+}
+
+#[cfg(test)]
+fn draw_battle_move_menu_overlay(
+    state: &pokered_core::battle::menu::MoveMenuState,
+    fb: &mut FrameBuffer,
+    language: pokered_core::game_state::Lang,
+) {
+    let mut painter = FrameBufferPainter::new(fb).with_lang(language);
+    let mut ui = Ui::new(&mut painter);
+    let render_data = PokemonRenderData::new(language == Lang::Zh);
+    menus::battle_move::draw(
+        state,
+        &BATTLE_MOVE_DEFAULT_LAYOUT,
+        &mut ui,
+        language,
+        &render_data,
     );
 }
 
@@ -2965,6 +3005,66 @@ mod tests {
 
                     let mut expected = FrameBuffer::new(config, Rgba::BLACK);
                     draw_battle_main_menu_overlay(new, &mut expected, language);
+                    assert_framebuffers_equal(&actual, &expected);
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn battle_move_selection_repaint_matches_a_fresh_menu_for_every_transition() {
+        use pokered_core::battle::menu::{MoveMenuState, MoveSlot};
+
+        let base = MoveMenuState::new(vec![
+            MoveSlot {
+                move_id: MoveId::Pound,
+                current_pp: 35,
+                max_pp: 35,
+                is_disabled: false,
+            },
+            MoveSlot {
+                move_id: MoveId::Growl,
+                current_pp: 39,
+                max_pp: 40,
+                is_disabled: false,
+            },
+            MoveSlot {
+                move_id: MoveId::Ember,
+                current_pp: 18,
+                max_pp: 25,
+                is_disabled: false,
+            },
+            MoveSlot {
+                move_id: MoveId::WaterGun,
+                current_pp: 4,
+                max_pp: 25,
+                is_disabled: false,
+            },
+        ]);
+
+        for language in [Lang::En, Lang::Zh] {
+            let config = dotzuki_engine::render_config::RenderConfig::new(160, 144);
+            for previous_cursor in 0..4 {
+                for current_cursor in 0..4 {
+                    if previous_cursor == current_cursor {
+                        continue;
+                    }
+                    let mut previous = base.clone();
+                    previous.set_cursor(previous_cursor);
+                    let mut current = base.clone();
+                    current.set_cursor(current_cursor);
+
+                    let mut actual = FrameBuffer::new(config, Rgba::BLACK);
+                    draw_battle_move_menu_overlay(&previous, &mut actual, language);
+                    redraw_battle_move_menu_selection(
+                        previous_cursor,
+                        &current,
+                        &mut actual,
+                        language,
+                    );
+
+                    let mut expected = FrameBuffer::new(config, Rgba::BLACK);
+                    draw_battle_move_menu_overlay(&current, &mut expected, language);
                     assert_framebuffers_equal(&actual, &expected);
                 }
             }

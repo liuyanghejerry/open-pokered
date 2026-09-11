@@ -4,7 +4,7 @@ use pokered_core::battle::menu::MoveMenuState;
 use pokered_data::moves::MoveId;
 use pokered_data::ui_layout::schema::BattleMoveDefaultLayout;
 
-use crate::engine::{InkColor, Painter, TileRect, Ui};
+use crate::engine::{InkColor, Painter, Rgba, TilePos, TileRect, Ui};
 
 pub fn draw<P: Painter>(
     state: &MoveMenuState,
@@ -36,40 +36,168 @@ pub fn draw<P: Painter>(
         }
         if let Some(list_cursor) = &layout.list_default.cursor {
             let cursor_row = list_cursor.base_ty + cursor as u32 * list_cursor.row_step;
-            frame.cursor_glyph_at(list_cursor.tx, cursor_row, list_cursor.glyph, list_cursor.color);
+            frame.cursor_glyph_at(
+                list_cursor.tx,
+                cursor_row,
+                list_cursor.glyph,
+                list_cursor.color,
+            );
         }
     });
 
-    if cursor < moves.len() {
-        let slot = &moves[cursor];
-        // PP info box rect (0, 8, 11, 5) → interior origin (1, 9).
-        // Native: TYPE/ at (1,9)=frame(0,0); type at (1,10)=frame(0,1);
-        //         PP at (2,11)=frame(1,2); PP value at (5,11)=frame(4,2).
-        ui.text_box(layout.box_1.rect, layout.box_1.color, true, |frame| {
-            for label in layout.box_1.labels.iter() {
-                frame.label(label.tx, label.ty, &label.text, label.color);
-            }
-            let type_id = render_data.move_type(slot.move_id);
-            let type_str = move_type_display_name(type_id);
-            frame.label(0, 1, &type_str, InkColor::Black);
+    draw_en_info(state, layout, ui, render_data);
 
-            let pp_text = format!(
-                "{:>2}/{:>2}",
-                slot.current_pp.min(99),
-                slot.max_pp.min(99)
-            );
-            frame.label(4, 2, &pp_text, InkColor::Black);
-        });
+    draw_connectors(layout, ui);
+}
+
+/// Redraw the portions of an already-rendered move menu that change when its
+/// selection moves: the old/new cursor cells and the selected move's info box.
+pub fn redraw_selection<P: Painter>(
+    previous_cursor: usize,
+    state: &MoveMenuState,
+    layout: &BattleMoveDefaultLayout,
+    ui: &mut Ui<P>,
+    lang: pokered_core::game_state::Lang,
+    render_data: &dyn RenderData<Move = MoveId, Item = pokered_data::items::ItemId, Species = pokered_data::species::Species>,
+) {
+    if lang == pokered_core::game_state::Lang::Zh {
+        let old_y = 96 + previous_cursor as u32 * 10;
+        ui.painter()
+            .draw_pixel_rect(8, old_y, 8, 9, Rgba::INK_WHITE);
+        draw_zh_cursor(state.cursor(), ui.painter());
+        redraw_zh_selected_info(state, ui.painter(), render_data);
+        return;
     }
 
-    // Connector tiles bridging the move-list box top border with the PP-info box.
-    // Positions derived from layout boxes instead of hardcoded screen coordinates.
+    if let Some(cursor) = &layout.list_default.cursor {
+        let old = TilePos::new(
+            layout.box_0.rect.tx + 1 + cursor.tx,
+            layout.box_0.rect.ty
+                + 1
+                + cursor.base_ty
+                + previous_cursor as u32 * cursor.row_step,
+        );
+        ui.painter()
+            .draw_pixel_rect(old.tx * 8, old.ty * 8, 8, 9, Rgba::INK_WHITE);
+    }
+    draw_en_cursor(state.cursor(), layout, ui.painter());
+    redraw_en_selected_info(state, layout, ui.painter(), render_data);
+}
+
+fn redraw_en_selected_info<P: Painter>(
+    state: &MoveMenuState,
+    layout: &BattleMoveDefaultLayout,
+    painter: &mut P,
+    render_data: &dyn RenderData<Move = MoveId, Item = pokered_data::items::ItemId, Species = pokered_data::species::Species>,
+) {
+    // Clear only the dynamic TYPE and PP-value ink. Latin glyphs can extend
+    // outside their nominal eight-pixel row, so restore the fixed labels that
+    // overlap the cleared pixels before drawing the new values.
+    painter.draw_pixel_rect(8, 80, 72, 10, Rgba::INK_WHITE);
+    painter.draw_pixel_rect(40, 88, 40, 10, Rgba::INK_WHITE);
+    for label in layout.box_1.labels.iter() {
+        painter.draw_text(
+            TilePos::new(
+                layout.box_1.rect.tx + 1 + label.tx,
+                layout.box_1.rect.ty + 1 + label.ty,
+            ),
+            &label.text,
+            label.color.into(),
+        );
+    }
+    let Some(slot) = state.current_move() else {
+        return;
+    };
+    let type_name = move_type_display_name(render_data.move_type(slot.move_id));
+    painter.draw_text(TilePos::new(1, 10), &type_name, Rgba::INK_BLACK);
+    painter.draw_text(
+        TilePos::new(5, 11),
+        &format!(
+            "{:>2}/{:>2}",
+            slot.current_pp.min(99),
+            slot.max_pp.min(99)
+        ),
+        Rgba::INK_BLACK,
+    );
+}
+
+fn redraw_zh_selected_info<P: Painter>(
+    state: &MoveMenuState,
+    painter: &mut P,
+    data: &dyn RenderData<Move = MoveId, Item = pokered_data::items::ItemId, Species = pokered_data::species::Species>,
+) {
+    painter.draw_pixel_rect(8, 72, 72, 16, Rgba::INK_WHITE);
+    if let Some(slot) = state.current_move() {
+        let kind = pokered_data::types::PokemonType::from_id(data.move_type(slot.move_id));
+        painter.draw_text_px(
+            8,
+            72,
+            &format!("属性/{}", pokered_data::lang_data::type_name(kind, true)),
+            Rgba::INK_BLACK,
+        );
+    }
+}
+
+fn draw_connectors<P: Painter>(layout: &BattleMoveDefaultLayout, ui: &mut Ui<P>) {
+    // Connector tiles bridge the move-list box top border with the PP-info
+    // box. Repaint them after the info box because their pixels overlap its
+    // bottom edge.
     ui.text_box(TileRect::new(0, 0, 20, 18), InkColor::Black, false, |frame| {
         let left_tx = layout.box_0.rect.tx;
         let right_tx = layout.box_1.rect.tx + layout.box_1.rect.tw - 1;
         let connector_ty = layout.base.rect.ty;
         frame.gb_tile(left_tx, connector_ty, 0x7A, "", InkColor::Black);
         frame.gb_tile(right_tx, connector_ty, 0x7E, "", InkColor::Black);
+    });
+}
+
+fn draw_en_cursor<P: Painter>(
+    selected: usize,
+    layout: &BattleMoveDefaultLayout,
+    painter: &mut P,
+) {
+    let Some(cursor) = &layout.list_default.cursor else {
+        return;
+    };
+    painter.draw_glyph(
+        TilePos::new(
+            layout.box_0.rect.tx + 1 + cursor.tx,
+            layout.box_0.rect.ty
+                + 1
+                + cursor.base_ty
+                + selected as u32 * cursor.row_step,
+        ),
+        cursor.glyph,
+        cursor.color.into(),
+    );
+}
+
+fn draw_en_info<P: Painter>(
+    state: &MoveMenuState,
+    layout: &BattleMoveDefaultLayout,
+    ui: &mut Ui<P>,
+    render_data: &dyn RenderData<Move = MoveId, Item = pokered_data::items::ItemId, Species = pokered_data::species::Species>,
+) {
+    let Some(slot) = state.current_move() else {
+        return;
+    };
+    // PP info box rect (0, 8, 11, 5) → interior origin (1, 9).
+    // Native: TYPE/ at (1,9)=frame(0,0); type at (1,10)=frame(0,1);
+    //         PP at (2,11)=frame(1,2); PP value at (5,11)=frame(4,2).
+    ui.text_box(layout.box_1.rect, layout.box_1.color, true, |frame| {
+        for label in layout.box_1.labels.iter() {
+            frame.label(label.tx, label.ty, &label.text, label.color);
+        }
+        let type_id = render_data.move_type(slot.move_id);
+        let type_str = move_type_display_name(type_id);
+        frame.label(0, 1, &type_str, InkColor::Black);
+
+        let pp_text = format!(
+            "{:>2}/{:>2}",
+            slot.current_pp.min(99),
+            slot.max_pp.min(99)
+        );
+        frame.label(4, 2, &pp_text, InkColor::Black);
     });
 }
 
@@ -100,19 +228,41 @@ fn draw_zh<P: Painter>(
     ui: &mut Ui<P>,
     data: &dyn RenderData<Move = MoveId, Item = pokered_data::items::ItemId, Species = pokered_data::species::Species>,
 ) {
-    ui.text_box(TileRect::new(0, 8, 11, 4), InkColor::Black, true, |_| {});
+    draw_zh_info(state, ui, data);
     ui.text_box(TileRect::new(0, 11, 20, 7), InkColor::Black, true, |_| {});
     let painter = ui.painter();
-    if let Some(slot) = state.current_move() {
-        let kind = pokered_data::types::PokemonType::from_id(data.move_type(slot.move_id));
-        painter.draw_text_px(8, 72, &format!("属性/{}", pokered_data::lang_data::type_name(kind, true)), InkColor::Black.into());
-    }
     for (i, slot) in state.moves().iter().enumerate() {
         let y = 96 + i as u32 * 10;
         painter.draw_text_px(16, y, data.move_name(slot.move_id), InkColor::Black.into());
         painter.draw_text_px(104, y, &format!("PP {:>2}/{:>2}", slot.current_pp.min(99), slot.max_pp.min(99)), InkColor::Black.into());
         if i == state.cursor() {
-            painter.draw_text_px(8, y, "▶", InkColor::Black.into());
+            draw_zh_cursor(i, painter);
         }
+    }
+}
+
+fn draw_zh_cursor<P: Painter>(selected: usize, painter: &mut P) {
+    painter.draw_text_px(
+        8,
+        96 + selected as u32 * 10,
+        "▶",
+        InkColor::Black.into(),
+    );
+}
+
+fn draw_zh_info<P: Painter>(
+    state: &MoveMenuState,
+    ui: &mut Ui<P>,
+    data: &dyn RenderData<Move = MoveId, Item = pokered_data::items::ItemId, Species = pokered_data::species::Species>,
+) {
+    ui.text_box(TileRect::new(0, 8, 11, 4), InkColor::Black, true, |_| {});
+    if let Some(slot) = state.current_move() {
+        let kind = pokered_data::types::PokemonType::from_id(data.move_type(slot.move_id));
+        ui.painter().draw_text_px(
+            8,
+            72,
+            &format!("属性/{}", pokered_data::lang_data::type_name(kind, true)),
+            InkColor::Black.into(),
+        );
     }
 }
