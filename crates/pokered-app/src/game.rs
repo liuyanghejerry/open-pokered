@@ -6034,7 +6034,12 @@ impl PokemonGame {
         // Avoid clearing the GBA's software framebuffer twice every frame.
         if !matches!(
             self.state.screen,
-            GameScreen::GameFreakSplash | GameScreen::LanguageSelect
+            GameScreen::GameFreakSplash
+                | GameScreen::LanguageSelect
+                | GameScreen::IntroScene
+                | GameScreen::TitleScreen
+                | GameScreen::OakSpeech
+                | GameScreen::Overworld
         ) {
             frame_buffer.clear(Rgba::WHITE);
         }

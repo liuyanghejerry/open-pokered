@@ -12,6 +12,8 @@ use pokered_app::game::PokemonGame;
 use pokered_core::data::wild_data::GameVersion;
 use pokered_core::game_state::{GameScreen, Lang};
 use pokered_core::gamefreak_splash::SplashPhase;
+use pokered_core::oak_speech::{entrance_frames, OakSpeechPhase};
+use pokered_core::title_screen::{TitlePhase, TitleScreenState};
 use pokered_renderer::input::{GbButton, InputState};
 use pokered_renderer::palette::GbColor;
 use pokered_renderer::{FrameBuffer, Rgba};
@@ -85,6 +87,72 @@ struct Mode4Presenter {
     draw_page: u8,
     ready_page: Option<u8>,
     ready_palette: [u16; 4],
+}
+
+#[derive(Clone, Copy, PartialEq, Eq)]
+struct TitleVisualKey {
+    phase: TitlePhase,
+    scroll_y: i32,
+    current_mon: u8,
+    player_visible: bool,
+    logo_visible: bool,
+    version_text_visible: bool,
+    version_scroll_progress: u32,
+    mon_scroll_offset: i32,
+    effect_frame: u32,
+}
+
+impl TitleVisualKey {
+    fn new(state: &TitleScreenState) -> Self {
+        Self {
+            phase: state.phase,
+            scroll_y: state.scroll_y,
+            current_mon: state.current_mon as u8,
+            player_visible: state.player_visible,
+            logo_visible: state.logo_visible,
+            version_text_visible: state.version_text_visible,
+            version_scroll_progress: state.version_scroll_progress.to_bits(),
+            mon_scroll_offset: state.mon_scroll_offset,
+            effect_frame: if state.phase == TitlePhase::FadeOut {
+                state.frame_counter
+            } else {
+                0
+            },
+        }
+    }
+}
+
+#[derive(Clone, PartialEq, Eq)]
+struct OakVisualKey {
+    phase: OakSpeechPhase,
+    entrance_step: u16,
+    flashing: bool,
+}
+
+impl OakVisualKey {
+    fn new(game: &PokemonGame) -> Option<Self> {
+        let state = &game.oak_speech;
+        // Naming input exposes more visual state than OakSpeechPhase. Keep
+        // that uncommon interactive screen on the conservative redraw path.
+        if state.naming_screen.is_some() {
+            return None;
+        }
+
+        let entrance = entrance_frames(&state.phase);
+        let frame = state.phase_frame.min(entrance);
+        let entrance_step = match state.phase {
+            OakSpeechPhase::Greeting { .. } | OakSpeechPhase::IntroduceRival { .. } => frame / 10,
+            OakSpeechPhase::FinalSpeech { .. } => frame / 8,
+            OakSpeechPhase::ShowNidorino { .. }
+            | OakSpeechPhase::IntroducePlayer { .. } => frame,
+            _ => 0,
+        };
+        Some(Self {
+            phase: state.phase.clone(),
+            entrance_step,
+            flashing: state.is_flashing(),
+        })
+    }
 }
 
 impl Mode4Presenter {
@@ -319,6 +387,9 @@ fn game_main() -> ! {
     let mut update_accumulator = FRAME_TICKS;
     let mut last_static_splash: Option<SplashPhase> = None;
     let mut last_language_select: Option<Lang> = None;
+    let mut last_title: Option<TitleVisualKey> = None;
+    let mut last_main_menu: Option<(usize, bool)> = None;
+    let mut last_oak: Option<OakVisualKey> = None;
     #[cfg(feature = "profiling")]
     let mut profile = ProfileSamples::default();
 
@@ -424,10 +495,24 @@ fn game_main() -> ! {
         };
         let language_select =
             (game.state.screen == GameScreen::LanguageSelect).then_some(game.state.config.language);
+        let title = (game.state.screen == GameScreen::TitleScreen)
+            .then(|| TitleVisualKey::new(&game.title_screen));
+        let main_menu = (game.state.screen == GameScreen::MainMenu).then_some((
+            game.main_menu.cursor,
+            game.main_menu.continue_info_phase.is_some(),
+        ));
+        let oak_screen = game.state.screen == GameScreen::OakSpeech;
+        let oak = oak_screen.then(|| OakVisualKey::new(game)).flatten();
         let redraw = if static_splash.is_some() {
             static_splash != last_static_splash
         } else if language_select.is_some() {
             language_select != last_language_select
+        } else if title.is_some() {
+            title != last_title
+        } else if main_menu.is_some() {
+            main_menu != last_main_menu
+        } else if oak_screen {
+            oak.as_ref().map_or(true, |key| last_oak.as_ref() != Some(key))
         } else {
             true
         };
@@ -441,6 +526,9 @@ fn game_main() -> ! {
         }
         last_static_splash = static_splash;
         last_language_select = language_select;
+        last_title = title;
+        last_main_menu = main_menu;
+        last_oak = oak;
         #[cfg(feature = "profiling")]
         let mark4 = profile_now();
 
