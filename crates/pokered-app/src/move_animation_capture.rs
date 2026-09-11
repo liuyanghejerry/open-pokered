@@ -132,18 +132,34 @@ pub fn capture_move_animation(
     let player = rhydon()?;
     let enemy = rhydon()?;
     let mut screen = BattleScreen::from_parties(true, &[player], &[enemy], None);
-    // A menu frame keeps both Pokémon/HUDs visible and is invariant across
-    // all captures. The differential compares temporal deltas, so the
-    // original's static "used" text is deliberately not synthesized here.
-    screen.phase = BattlePhase::PlayerMenu;
-    screen.current_message = None;
+    // Match the retail-ROM oracle's static battle scene. The DEBUG ROM enters
+    // MoveAnimation from POUND on the player side and FURY ATTACK on the enemy
+    // side, then the harness replaces only wAnimationID. Matching that text
+    // and its level-20 HP avoids false dynamic-mask failures when a palette or
+    // sprite effect touches the otherwise-static HUD/text-box pixels.
+    let message = if player_is_attacker {
+        "RHYDON\nused POUND!"
+    } else {
+        "Enemy RHYDON\nused FURY ATTACK!"
+    }
+    .to_string();
+    screen.player_hp = 72;
+    screen.player_max_hp = 72;
+    screen.enemy_hp = 72;
+    screen.enemy_max_hp = 72;
+    screen.phase = BattlePhase::ShowingText {
+        messages: vec![message.clone()],
+        current: 0,
+        wait_frames: 0,
+        next_phase: Box::new(BattlePhase::PlayerMenu),
+    };
+    screen.current_message = Some(message);
 
     let root =
         AssetRoot::auto_detect().map_err(|error| format!("cannot locate gfx assets: {error}"))?;
     let mut resources = Some(ResourceManager::new(root));
     let mut effects = BattleVisualEffects::default();
-    // Prime phase observation before the explicit animation start.
-    effects.update(&screen);
+    effects.prime_move_animation_capture_scene(&screen);
 
     let mut framebuffer = FrameBuffer::new(RenderConfig::new(160, 144), Rgba::WHITE);
     draw_battle(

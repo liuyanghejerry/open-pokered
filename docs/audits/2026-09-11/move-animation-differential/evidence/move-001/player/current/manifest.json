@@ -3,7 +3,7 @@
   "attacker": "player",
   "baseline_capture_index": 0,
   "capture": "isolated production BattleVisualEffects + draw_battle",
-  "completed_capture_index": 3,
+  "completed_capture_index": 29,
   "first_update_capture_index": 1,
   "frames": [
     {
@@ -23,6 +23,8 @@
           0
         ],
         "enemy_visible": true,
+        "move_mon_h_frame": null,
+        "move_mon_h_resetting": false,
         "oam": [],
         "objects_active": false,
         "player_offset": [
@@ -51,6 +53,8 @@
           0
         ],
         "enemy_visible": true,
+        "move_mon_h_frame": null,
+        "move_mon_h_resetting": false,
         "oam": [],
         "objects_active": false,
         "player_offset": [
@@ -58,62 +62,7 @@
           0
         ],
         "player_visible": true,
-        "source_oam": [
-          {
-            "attributes": 0,
-            "tile": 44,
-            "x": 112,
-            "y": 32
-          },
-          {
-            "attributes": 0,
-            "tile": 45,
-            "x": 120,
-            "y": 32
-          },
-          {
-            "attributes": 32,
-            "tile": 44,
-            "x": 128,
-            "y": 32
-          },
-          {
-            "attributes": 0,
-            "tile": 60,
-            "x": 112,
-            "y": 40
-          },
-          {
-            "attributes": 0,
-            "tile": 61,
-            "x": 120,
-            "y": 40
-          },
-          {
-            "attributes": 32,
-            "tile": 60,
-            "x": 128,
-            "y": 40
-          },
-          {
-            "attributes": 64,
-            "tile": 44,
-            "x": 112,
-            "y": 48
-          },
-          {
-            "attributes": 64,
-            "tile": 45,
-            "x": 120,
-            "y": 48
-          },
-          {
-            "attributes": 96,
-            "tile": 44,
-            "x": 128,
-            "y": 48
-          }
-        ],
+        "source_oam": [],
         "tileset": 0
       }
     },
@@ -134,6 +83,8 @@
           0
         ],
         "enemy_visible": true,
+        "move_mon_h_frame": null,
+        "move_mon_h_resetting": false,
         "oam": [],
         "objects_active": false,
         "player_offset": [
@@ -141,62 +92,7 @@
           0
         ],
         "player_visible": true,
-        "source_oam": [
-          {
-            "attributes": 0,
-            "tile": 44,
-            "x": 128,
-            "y": 48
-          },
-          {
-            "attributes": 0,
-            "tile": 45,
-            "x": 136,
-            "y": 48
-          },
-          {
-            "attributes": 32,
-            "tile": 44,
-            "x": 144,
-            "y": 48
-          },
-          {
-            "attributes": 0,
-            "tile": 60,
-            "x": 128,
-            "y": 56
-          },
-          {
-            "attributes": 0,
-            "tile": 61,
-            "x": 136,
-            "y": 56
-          },
-          {
-            "attributes": 32,
-            "tile": 60,
-            "x": 144,
-            "y": 56
-          },
-          {
-            "attributes": 64,
-            "tile": 44,
-            "x": 128,
-            "y": 64
-          },
-          {
-            "attributes": 64,
-            "tile": 45,
-            "x": 136,
-            "y": 64
-          },
-          {
-            "attributes": 96,
-            "tile": 44,
-            "x": 144,
-            "y": 64
-          }
-        ],
+        "source_oam": [],
         "tileset": 0
       }
     },
@@ -210,6 +106,2856 @@
       },
       "png": "frame-000003.png",
       "state": {
+        "animation_finished": false,
+        "command_wait": 0,
+        "enemy_offset": [
+          0,
+          0
+        ],
+        "enemy_visible": true,
+        "move_mon_h_frame": null,
+        "move_mon_h_resetting": false,
+        "oam": [],
+        "objects_active": false,
+        "player_offset": [
+          0,
+          0
+        ],
+        "player_visible": true,
+        "source_oam": [],
+        "tileset": 0
+      }
+    },
+    {
+      "capture_index": 4,
+      "pixel": {
+        "bbox": null,
+        "changed_pixels": 0,
+        "delta_adler32": "0b400001",
+        "delta_crc32": "044d19c2"
+      },
+      "png": "frame-000004.png",
+      "state": {
+        "animation_finished": false,
+        "command_wait": 0,
+        "enemy_offset": [
+          0,
+          0
+        ],
+        "enemy_visible": true,
+        "move_mon_h_frame": null,
+        "move_mon_h_resetting": false,
+        "oam": [],
+        "objects_active": false,
+        "player_offset": [
+          0,
+          0
+        ],
+        "player_visible": true,
+        "source_oam": [],
+        "tileset": 0
+      }
+    },
+    {
+      "capture_index": 5,
+      "pixel": {
+        "bbox": null,
+        "changed_pixels": 0,
+        "delta_adler32": "0b400001",
+        "delta_crc32": "044d19c2"
+      },
+      "png": "frame-000005.png",
+      "state": {
+        "animation_finished": false,
+        "command_wait": 0,
+        "enemy_offset": [
+          0,
+          0
+        ],
+        "enemy_visible": true,
+        "move_mon_h_frame": null,
+        "move_mon_h_resetting": false,
+        "oam": [],
+        "objects_active": false,
+        "player_offset": [
+          0,
+          0
+        ],
+        "player_visible": true,
+        "source_oam": [],
+        "tileset": 0
+      }
+    },
+    {
+      "capture_index": 6,
+      "pixel": {
+        "bbox": null,
+        "changed_pixels": 0,
+        "delta_adler32": "0b400001",
+        "delta_crc32": "044d19c2"
+      },
+      "png": "frame-000006.png",
+      "state": {
+        "animation_finished": false,
+        "command_wait": 0,
+        "enemy_offset": [
+          0,
+          0
+        ],
+        "enemy_visible": true,
+        "move_mon_h_frame": null,
+        "move_mon_h_resetting": false,
+        "oam": [],
+        "objects_active": false,
+        "player_offset": [
+          0,
+          0
+        ],
+        "player_visible": true,
+        "source_oam": [],
+        "tileset": 0
+      }
+    },
+    {
+      "capture_index": 7,
+      "pixel": {
+        "bbox": null,
+        "changed_pixels": 0,
+        "delta_adler32": "0b400001",
+        "delta_crc32": "044d19c2"
+      },
+      "png": "frame-000007.png",
+      "state": {
+        "animation_finished": false,
+        "command_wait": 0,
+        "enemy_offset": [
+          0,
+          0
+        ],
+        "enemy_visible": true,
+        "move_mon_h_frame": null,
+        "move_mon_h_resetting": false,
+        "oam": [],
+        "objects_active": false,
+        "player_offset": [
+          0,
+          0
+        ],
+        "player_visible": true,
+        "source_oam": [],
+        "tileset": 0
+      }
+    },
+    {
+      "capture_index": 8,
+      "pixel": {
+        "bbox": null,
+        "changed_pixels": 0,
+        "delta_adler32": "0b400001",
+        "delta_crc32": "044d19c2"
+      },
+      "png": "frame-000008.png",
+      "state": {
+        "animation_finished": false,
+        "command_wait": 0,
+        "enemy_offset": [
+          0,
+          0
+        ],
+        "enemy_visible": true,
+        "move_mon_h_frame": null,
+        "move_mon_h_resetting": false,
+        "oam": [],
+        "objects_active": false,
+        "player_offset": [
+          0,
+          0
+        ],
+        "player_visible": true,
+        "source_oam": [],
+        "tileset": 0
+      }
+    },
+    {
+      "capture_index": 9,
+      "pixel": {
+        "bbox": null,
+        "changed_pixels": 0,
+        "delta_adler32": "0b400001",
+        "delta_crc32": "044d19c2"
+      },
+      "png": "frame-000009.png",
+      "state": {
+        "animation_finished": false,
+        "command_wait": 0,
+        "enemy_offset": [
+          0,
+          0
+        ],
+        "enemy_visible": true,
+        "move_mon_h_frame": null,
+        "move_mon_h_resetting": false,
+        "oam": [],
+        "objects_active": false,
+        "player_offset": [
+          0,
+          0
+        ],
+        "player_visible": true,
+        "source_oam": [],
+        "tileset": 0
+      }
+    },
+    {
+      "capture_index": 10,
+      "pixel": {
+        "bbox": null,
+        "changed_pixels": 0,
+        "delta_adler32": "0b400001",
+        "delta_crc32": "044d19c2"
+      },
+      "png": "frame-000010.png",
+      "state": {
+        "animation_finished": false,
+        "command_wait": 0,
+        "enemy_offset": [
+          0,
+          0
+        ],
+        "enemy_visible": true,
+        "move_mon_h_frame": null,
+        "move_mon_h_resetting": false,
+        "oam": [],
+        "objects_active": false,
+        "player_offset": [
+          0,
+          0
+        ],
+        "player_visible": true,
+        "source_oam": [],
+        "tileset": 0
+      }
+    },
+    {
+      "capture_index": 11,
+      "pixel": {
+        "bbox": null,
+        "changed_pixels": 0,
+        "delta_adler32": "0b400001",
+        "delta_crc32": "044d19c2"
+      },
+      "png": "frame-000011.png",
+      "state": {
+        "animation_finished": false,
+        "command_wait": 0,
+        "enemy_offset": [
+          0,
+          0
+        ],
+        "enemy_visible": true,
+        "move_mon_h_frame": null,
+        "move_mon_h_resetting": false,
+        "oam": [
+          {
+            "attributes": 0,
+            "tile": 44,
+            "x": 104,
+            "y": 16
+          },
+          {
+            "attributes": 0,
+            "tile": 45,
+            "x": 112,
+            "y": 16
+          },
+          {
+            "attributes": 32,
+            "tile": 44,
+            "x": 120,
+            "y": 16
+          },
+          {
+            "attributes": 0,
+            "tile": 60,
+            "x": 104,
+            "y": 24
+          },
+          {
+            "attributes": 0,
+            "tile": 61,
+            "x": 112,
+            "y": 24
+          },
+          {
+            "attributes": 32,
+            "tile": 60,
+            "x": 120,
+            "y": 24
+          },
+          {
+            "attributes": 64,
+            "tile": 44,
+            "x": 104,
+            "y": 32
+          },
+          {
+            "attributes": 64,
+            "tile": 45,
+            "x": 112,
+            "y": 32
+          },
+          {
+            "attributes": 96,
+            "tile": 44,
+            "x": 120,
+            "y": 32
+          }
+        ],
+        "objects_active": false,
+        "player_offset": [
+          0,
+          0
+        ],
+        "player_visible": true,
+        "source_oam": [
+          {
+            "attributes": 0,
+            "tile": 44,
+            "x": 104,
+            "y": 16
+          },
+          {
+            "attributes": 0,
+            "tile": 45,
+            "x": 112,
+            "y": 16
+          },
+          {
+            "attributes": 32,
+            "tile": 44,
+            "x": 120,
+            "y": 16
+          },
+          {
+            "attributes": 0,
+            "tile": 60,
+            "x": 104,
+            "y": 24
+          },
+          {
+            "attributes": 0,
+            "tile": 61,
+            "x": 112,
+            "y": 24
+          },
+          {
+            "attributes": 32,
+            "tile": 60,
+            "x": 120,
+            "y": 24
+          },
+          {
+            "attributes": 64,
+            "tile": 44,
+            "x": 104,
+            "y": 32
+          },
+          {
+            "attributes": 64,
+            "tile": 45,
+            "x": 112,
+            "y": 32
+          },
+          {
+            "attributes": 96,
+            "tile": 44,
+            "x": 120,
+            "y": 32
+          }
+        ],
+        "tileset": 0
+      }
+    },
+    {
+      "capture_index": 12,
+      "pixel": {
+        "bbox": [
+          104,
+          16,
+          128,
+          40
+        ],
+        "changed_pixels": 193,
+        "delta_adler32": "1e7e14e2",
+        "delta_crc32": "1912787f"
+      },
+      "png": "frame-000012.png",
+      "state": {
+        "animation_finished": false,
+        "command_wait": 0,
+        "enemy_offset": [
+          0,
+          0
+        ],
+        "enemy_visible": true,
+        "move_mon_h_frame": null,
+        "move_mon_h_resetting": false,
+        "oam": [
+          {
+            "attributes": 0,
+            "tile": 44,
+            "x": 104,
+            "y": 16
+          },
+          {
+            "attributes": 0,
+            "tile": 45,
+            "x": 112,
+            "y": 16
+          },
+          {
+            "attributes": 32,
+            "tile": 44,
+            "x": 120,
+            "y": 16
+          },
+          {
+            "attributes": 0,
+            "tile": 60,
+            "x": 104,
+            "y": 24
+          },
+          {
+            "attributes": 0,
+            "tile": 61,
+            "x": 112,
+            "y": 24
+          },
+          {
+            "attributes": 32,
+            "tile": 60,
+            "x": 120,
+            "y": 24
+          },
+          {
+            "attributes": 64,
+            "tile": 44,
+            "x": 104,
+            "y": 32
+          },
+          {
+            "attributes": 64,
+            "tile": 45,
+            "x": 112,
+            "y": 32
+          },
+          {
+            "attributes": 96,
+            "tile": 44,
+            "x": 120,
+            "y": 32
+          }
+        ],
+        "objects_active": false,
+        "player_offset": [
+          0,
+          0
+        ],
+        "player_visible": true,
+        "source_oam": [
+          {
+            "attributes": 0,
+            "tile": 44,
+            "x": 104,
+            "y": 16
+          },
+          {
+            "attributes": 0,
+            "tile": 45,
+            "x": 112,
+            "y": 16
+          },
+          {
+            "attributes": 32,
+            "tile": 44,
+            "x": 120,
+            "y": 16
+          },
+          {
+            "attributes": 0,
+            "tile": 60,
+            "x": 104,
+            "y": 24
+          },
+          {
+            "attributes": 0,
+            "tile": 61,
+            "x": 112,
+            "y": 24
+          },
+          {
+            "attributes": 32,
+            "tile": 60,
+            "x": 120,
+            "y": 24
+          },
+          {
+            "attributes": 64,
+            "tile": 44,
+            "x": 104,
+            "y": 32
+          },
+          {
+            "attributes": 64,
+            "tile": 45,
+            "x": 112,
+            "y": 32
+          },
+          {
+            "attributes": 96,
+            "tile": 44,
+            "x": 120,
+            "y": 32
+          }
+        ],
+        "tileset": 0
+      }
+    },
+    {
+      "capture_index": 13,
+      "pixel": {
+        "bbox": [
+          104,
+          16,
+          128,
+          40
+        ],
+        "changed_pixels": 193,
+        "delta_adler32": "1e7e14e2",
+        "delta_crc32": "1912787f"
+      },
+      "png": "frame-000013.png",
+      "state": {
+        "animation_finished": false,
+        "command_wait": 0,
+        "enemy_offset": [
+          0,
+          0
+        ],
+        "enemy_visible": true,
+        "move_mon_h_frame": null,
+        "move_mon_h_resetting": false,
+        "oam": [
+          {
+            "attributes": 0,
+            "tile": 44,
+            "x": 104,
+            "y": 16
+          },
+          {
+            "attributes": 0,
+            "tile": 45,
+            "x": 112,
+            "y": 16
+          },
+          {
+            "attributes": 32,
+            "tile": 44,
+            "x": 120,
+            "y": 16
+          },
+          {
+            "attributes": 0,
+            "tile": 60,
+            "x": 104,
+            "y": 24
+          },
+          {
+            "attributes": 0,
+            "tile": 61,
+            "x": 112,
+            "y": 24
+          },
+          {
+            "attributes": 32,
+            "tile": 60,
+            "x": 120,
+            "y": 24
+          },
+          {
+            "attributes": 64,
+            "tile": 44,
+            "x": 104,
+            "y": 32
+          },
+          {
+            "attributes": 64,
+            "tile": 45,
+            "x": 112,
+            "y": 32
+          },
+          {
+            "attributes": 96,
+            "tile": 44,
+            "x": 120,
+            "y": 32
+          }
+        ],
+        "objects_active": false,
+        "player_offset": [
+          0,
+          0
+        ],
+        "player_visible": true,
+        "source_oam": [
+          {
+            "attributes": 0,
+            "tile": 44,
+            "x": 104,
+            "y": 16
+          },
+          {
+            "attributes": 0,
+            "tile": 45,
+            "x": 112,
+            "y": 16
+          },
+          {
+            "attributes": 32,
+            "tile": 44,
+            "x": 120,
+            "y": 16
+          },
+          {
+            "attributes": 0,
+            "tile": 60,
+            "x": 104,
+            "y": 24
+          },
+          {
+            "attributes": 0,
+            "tile": 61,
+            "x": 112,
+            "y": 24
+          },
+          {
+            "attributes": 32,
+            "tile": 60,
+            "x": 120,
+            "y": 24
+          },
+          {
+            "attributes": 64,
+            "tile": 44,
+            "x": 104,
+            "y": 32
+          },
+          {
+            "attributes": 64,
+            "tile": 45,
+            "x": 112,
+            "y": 32
+          },
+          {
+            "attributes": 96,
+            "tile": 44,
+            "x": 120,
+            "y": 32
+          }
+        ],
+        "tileset": 0
+      }
+    },
+    {
+      "capture_index": 14,
+      "pixel": {
+        "bbox": [
+          104,
+          16,
+          128,
+          40
+        ],
+        "changed_pixels": 193,
+        "delta_adler32": "1e7e14e2",
+        "delta_crc32": "1912787f"
+      },
+      "png": "frame-000014.png",
+      "state": {
+        "animation_finished": false,
+        "command_wait": 0,
+        "enemy_offset": [
+          0,
+          0
+        ],
+        "enemy_visible": true,
+        "move_mon_h_frame": null,
+        "move_mon_h_resetting": false,
+        "oam": [
+          {
+            "attributes": 0,
+            "tile": 44,
+            "x": 104,
+            "y": 16
+          },
+          {
+            "attributes": 0,
+            "tile": 45,
+            "x": 112,
+            "y": 16
+          },
+          {
+            "attributes": 32,
+            "tile": 44,
+            "x": 120,
+            "y": 16
+          },
+          {
+            "attributes": 0,
+            "tile": 60,
+            "x": 104,
+            "y": 24
+          },
+          {
+            "attributes": 0,
+            "tile": 61,
+            "x": 112,
+            "y": 24
+          },
+          {
+            "attributes": 32,
+            "tile": 60,
+            "x": 120,
+            "y": 24
+          },
+          {
+            "attributes": 64,
+            "tile": 44,
+            "x": 104,
+            "y": 32
+          },
+          {
+            "attributes": 64,
+            "tile": 45,
+            "x": 112,
+            "y": 32
+          },
+          {
+            "attributes": 96,
+            "tile": 44,
+            "x": 120,
+            "y": 32
+          }
+        ],
+        "objects_active": false,
+        "player_offset": [
+          0,
+          0
+        ],
+        "player_visible": true,
+        "source_oam": [
+          {
+            "attributes": 0,
+            "tile": 44,
+            "x": 104,
+            "y": 16
+          },
+          {
+            "attributes": 0,
+            "tile": 45,
+            "x": 112,
+            "y": 16
+          },
+          {
+            "attributes": 32,
+            "tile": 44,
+            "x": 120,
+            "y": 16
+          },
+          {
+            "attributes": 0,
+            "tile": 60,
+            "x": 104,
+            "y": 24
+          },
+          {
+            "attributes": 0,
+            "tile": 61,
+            "x": 112,
+            "y": 24
+          },
+          {
+            "attributes": 32,
+            "tile": 60,
+            "x": 120,
+            "y": 24
+          },
+          {
+            "attributes": 64,
+            "tile": 44,
+            "x": 104,
+            "y": 32
+          },
+          {
+            "attributes": 64,
+            "tile": 45,
+            "x": 112,
+            "y": 32
+          },
+          {
+            "attributes": 96,
+            "tile": 44,
+            "x": 120,
+            "y": 32
+          }
+        ],
+        "tileset": 0
+      }
+    },
+    {
+      "capture_index": 15,
+      "pixel": {
+        "bbox": [
+          104,
+          16,
+          128,
+          40
+        ],
+        "changed_pixels": 193,
+        "delta_adler32": "1e7e14e2",
+        "delta_crc32": "1912787f"
+      },
+      "png": "frame-000015.png",
+      "state": {
+        "animation_finished": false,
+        "command_wait": 0,
+        "enemy_offset": [
+          0,
+          0
+        ],
+        "enemy_visible": true,
+        "move_mon_h_frame": null,
+        "move_mon_h_resetting": false,
+        "oam": [
+          {
+            "attributes": 0,
+            "tile": 44,
+            "x": 104,
+            "y": 16
+          },
+          {
+            "attributes": 0,
+            "tile": 45,
+            "x": 112,
+            "y": 16
+          },
+          {
+            "attributes": 32,
+            "tile": 44,
+            "x": 120,
+            "y": 16
+          },
+          {
+            "attributes": 0,
+            "tile": 60,
+            "x": 104,
+            "y": 24
+          },
+          {
+            "attributes": 0,
+            "tile": 61,
+            "x": 112,
+            "y": 24
+          },
+          {
+            "attributes": 32,
+            "tile": 60,
+            "x": 120,
+            "y": 24
+          },
+          {
+            "attributes": 64,
+            "tile": 44,
+            "x": 104,
+            "y": 32
+          },
+          {
+            "attributes": 64,
+            "tile": 45,
+            "x": 112,
+            "y": 32
+          },
+          {
+            "attributes": 96,
+            "tile": 44,
+            "x": 120,
+            "y": 32
+          }
+        ],
+        "objects_active": false,
+        "player_offset": [
+          0,
+          0
+        ],
+        "player_visible": true,
+        "source_oam": [
+          {
+            "attributes": 0,
+            "tile": 44,
+            "x": 104,
+            "y": 16
+          },
+          {
+            "attributes": 0,
+            "tile": 45,
+            "x": 112,
+            "y": 16
+          },
+          {
+            "attributes": 32,
+            "tile": 44,
+            "x": 120,
+            "y": 16
+          },
+          {
+            "attributes": 0,
+            "tile": 60,
+            "x": 104,
+            "y": 24
+          },
+          {
+            "attributes": 0,
+            "tile": 61,
+            "x": 112,
+            "y": 24
+          },
+          {
+            "attributes": 32,
+            "tile": 60,
+            "x": 120,
+            "y": 24
+          },
+          {
+            "attributes": 64,
+            "tile": 44,
+            "x": 104,
+            "y": 32
+          },
+          {
+            "attributes": 64,
+            "tile": 45,
+            "x": 112,
+            "y": 32
+          },
+          {
+            "attributes": 96,
+            "tile": 44,
+            "x": 120,
+            "y": 32
+          }
+        ],
+        "tileset": 0
+      }
+    },
+    {
+      "capture_index": 16,
+      "pixel": {
+        "bbox": [
+          104,
+          16,
+          128,
+          40
+        ],
+        "changed_pixels": 193,
+        "delta_adler32": "1e7e14e2",
+        "delta_crc32": "1912787f"
+      },
+      "png": "frame-000016.png",
+      "state": {
+        "animation_finished": false,
+        "command_wait": 0,
+        "enemy_offset": [
+          0,
+          0
+        ],
+        "enemy_visible": true,
+        "move_mon_h_frame": null,
+        "move_mon_h_resetting": false,
+        "oam": [
+          {
+            "attributes": 0,
+            "tile": 44,
+            "x": 104,
+            "y": 16
+          },
+          {
+            "attributes": 0,
+            "tile": 45,
+            "x": 112,
+            "y": 16
+          },
+          {
+            "attributes": 32,
+            "tile": 44,
+            "x": 120,
+            "y": 16
+          },
+          {
+            "attributes": 0,
+            "tile": 60,
+            "x": 104,
+            "y": 24
+          },
+          {
+            "attributes": 0,
+            "tile": 61,
+            "x": 112,
+            "y": 24
+          },
+          {
+            "attributes": 32,
+            "tile": 60,
+            "x": 120,
+            "y": 24
+          },
+          {
+            "attributes": 64,
+            "tile": 44,
+            "x": 104,
+            "y": 32
+          },
+          {
+            "attributes": 64,
+            "tile": 45,
+            "x": 112,
+            "y": 32
+          },
+          {
+            "attributes": 96,
+            "tile": 44,
+            "x": 120,
+            "y": 32
+          }
+        ],
+        "objects_active": false,
+        "player_offset": [
+          0,
+          0
+        ],
+        "player_visible": true,
+        "source_oam": [
+          {
+            "attributes": 0,
+            "tile": 44,
+            "x": 104,
+            "y": 16
+          },
+          {
+            "attributes": 0,
+            "tile": 45,
+            "x": 112,
+            "y": 16
+          },
+          {
+            "attributes": 32,
+            "tile": 44,
+            "x": 120,
+            "y": 16
+          },
+          {
+            "attributes": 0,
+            "tile": 60,
+            "x": 104,
+            "y": 24
+          },
+          {
+            "attributes": 0,
+            "tile": 61,
+            "x": 112,
+            "y": 24
+          },
+          {
+            "attributes": 32,
+            "tile": 60,
+            "x": 120,
+            "y": 24
+          },
+          {
+            "attributes": 64,
+            "tile": 44,
+            "x": 104,
+            "y": 32
+          },
+          {
+            "attributes": 64,
+            "tile": 45,
+            "x": 112,
+            "y": 32
+          },
+          {
+            "attributes": 96,
+            "tile": 44,
+            "x": 120,
+            "y": 32
+          }
+        ],
+        "tileset": 0
+      }
+    },
+    {
+      "capture_index": 17,
+      "pixel": {
+        "bbox": [
+          104,
+          16,
+          128,
+          40
+        ],
+        "changed_pixels": 193,
+        "delta_adler32": "1e7e14e2",
+        "delta_crc32": "1912787f"
+      },
+      "png": "frame-000017.png",
+      "state": {
+        "animation_finished": false,
+        "command_wait": 0,
+        "enemy_offset": [
+          0,
+          0
+        ],
+        "enemy_visible": true,
+        "move_mon_h_frame": null,
+        "move_mon_h_resetting": false,
+        "oam": [
+          {
+            "attributes": 0,
+            "tile": 44,
+            "x": 104,
+            "y": 16
+          },
+          {
+            "attributes": 0,
+            "tile": 45,
+            "x": 112,
+            "y": 16
+          },
+          {
+            "attributes": 32,
+            "tile": 44,
+            "x": 120,
+            "y": 16
+          },
+          {
+            "attributes": 0,
+            "tile": 60,
+            "x": 104,
+            "y": 24
+          },
+          {
+            "attributes": 0,
+            "tile": 61,
+            "x": 112,
+            "y": 24
+          },
+          {
+            "attributes": 32,
+            "tile": 60,
+            "x": 120,
+            "y": 24
+          },
+          {
+            "attributes": 64,
+            "tile": 44,
+            "x": 104,
+            "y": 32
+          },
+          {
+            "attributes": 64,
+            "tile": 45,
+            "x": 112,
+            "y": 32
+          },
+          {
+            "attributes": 96,
+            "tile": 44,
+            "x": 120,
+            "y": 32
+          }
+        ],
+        "objects_active": false,
+        "player_offset": [
+          0,
+          0
+        ],
+        "player_visible": true,
+        "source_oam": [
+          {
+            "attributes": 0,
+            "tile": 44,
+            "x": 104,
+            "y": 16
+          },
+          {
+            "attributes": 0,
+            "tile": 45,
+            "x": 112,
+            "y": 16
+          },
+          {
+            "attributes": 32,
+            "tile": 44,
+            "x": 120,
+            "y": 16
+          },
+          {
+            "attributes": 0,
+            "tile": 60,
+            "x": 104,
+            "y": 24
+          },
+          {
+            "attributes": 0,
+            "tile": 61,
+            "x": 112,
+            "y": 24
+          },
+          {
+            "attributes": 32,
+            "tile": 60,
+            "x": 120,
+            "y": 24
+          },
+          {
+            "attributes": 64,
+            "tile": 44,
+            "x": 104,
+            "y": 32
+          },
+          {
+            "attributes": 64,
+            "tile": 45,
+            "x": 112,
+            "y": 32
+          },
+          {
+            "attributes": 96,
+            "tile": 44,
+            "x": 120,
+            "y": 32
+          }
+        ],
+        "tileset": 0
+      }
+    },
+    {
+      "capture_index": 18,
+      "pixel": {
+        "bbox": [
+          104,
+          16,
+          128,
+          40
+        ],
+        "changed_pixels": 193,
+        "delta_adler32": "1e7e14e2",
+        "delta_crc32": "1912787f"
+      },
+      "png": "frame-000018.png",
+      "state": {
+        "animation_finished": false,
+        "command_wait": 0,
+        "enemy_offset": [
+          0,
+          0
+        ],
+        "enemy_visible": true,
+        "move_mon_h_frame": null,
+        "move_mon_h_resetting": false,
+        "oam": [
+          {
+            "attributes": 0,
+            "tile": 44,
+            "x": 104,
+            "y": 16
+          },
+          {
+            "attributes": 0,
+            "tile": 45,
+            "x": 112,
+            "y": 16
+          },
+          {
+            "attributes": 32,
+            "tile": 44,
+            "x": 120,
+            "y": 16
+          },
+          {
+            "attributes": 0,
+            "tile": 60,
+            "x": 104,
+            "y": 24
+          },
+          {
+            "attributes": 0,
+            "tile": 61,
+            "x": 112,
+            "y": 24
+          },
+          {
+            "attributes": 32,
+            "tile": 60,
+            "x": 120,
+            "y": 24
+          },
+          {
+            "attributes": 64,
+            "tile": 44,
+            "x": 104,
+            "y": 32
+          },
+          {
+            "attributes": 64,
+            "tile": 45,
+            "x": 112,
+            "y": 32
+          },
+          {
+            "attributes": 96,
+            "tile": 44,
+            "x": 120,
+            "y": 32
+          }
+        ],
+        "objects_active": false,
+        "player_offset": [
+          0,
+          0
+        ],
+        "player_visible": true,
+        "source_oam": [
+          {
+            "attributes": 0,
+            "tile": 44,
+            "x": 104,
+            "y": 16
+          },
+          {
+            "attributes": 0,
+            "tile": 45,
+            "x": 112,
+            "y": 16
+          },
+          {
+            "attributes": 32,
+            "tile": 44,
+            "x": 120,
+            "y": 16
+          },
+          {
+            "attributes": 0,
+            "tile": 60,
+            "x": 104,
+            "y": 24
+          },
+          {
+            "attributes": 0,
+            "tile": 61,
+            "x": 112,
+            "y": 24
+          },
+          {
+            "attributes": 32,
+            "tile": 60,
+            "x": 120,
+            "y": 24
+          },
+          {
+            "attributes": 64,
+            "tile": 44,
+            "x": 104,
+            "y": 32
+          },
+          {
+            "attributes": 64,
+            "tile": 45,
+            "x": 112,
+            "y": 32
+          },
+          {
+            "attributes": 96,
+            "tile": 44,
+            "x": 120,
+            "y": 32
+          }
+        ],
+        "tileset": 0
+      }
+    },
+    {
+      "capture_index": 19,
+      "pixel": {
+        "bbox": [
+          104,
+          16,
+          128,
+          40
+        ],
+        "changed_pixels": 193,
+        "delta_adler32": "1e7e14e2",
+        "delta_crc32": "1912787f"
+      },
+      "png": "frame-000019.png",
+      "state": {
+        "animation_finished": false,
+        "command_wait": 0,
+        "enemy_offset": [
+          0,
+          0
+        ],
+        "enemy_visible": true,
+        "move_mon_h_frame": null,
+        "move_mon_h_resetting": false,
+        "oam": [
+          {
+            "attributes": 0,
+            "tile": 44,
+            "x": 104,
+            "y": 16
+          },
+          {
+            "attributes": 0,
+            "tile": 45,
+            "x": 112,
+            "y": 16
+          },
+          {
+            "attributes": 32,
+            "tile": 44,
+            "x": 120,
+            "y": 16
+          },
+          {
+            "attributes": 0,
+            "tile": 60,
+            "x": 104,
+            "y": 24
+          },
+          {
+            "attributes": 0,
+            "tile": 61,
+            "x": 112,
+            "y": 24
+          },
+          {
+            "attributes": 32,
+            "tile": 60,
+            "x": 120,
+            "y": 24
+          },
+          {
+            "attributes": 64,
+            "tile": 44,
+            "x": 104,
+            "y": 32
+          },
+          {
+            "attributes": 64,
+            "tile": 45,
+            "x": 112,
+            "y": 32
+          },
+          {
+            "attributes": 96,
+            "tile": 44,
+            "x": 120,
+            "y": 32
+          }
+        ],
+        "objects_active": false,
+        "player_offset": [
+          0,
+          0
+        ],
+        "player_visible": true,
+        "source_oam": [
+          {
+            "attributes": 0,
+            "tile": 44,
+            "x": 104,
+            "y": 16
+          },
+          {
+            "attributes": 0,
+            "tile": 45,
+            "x": 112,
+            "y": 16
+          },
+          {
+            "attributes": 32,
+            "tile": 44,
+            "x": 120,
+            "y": 16
+          },
+          {
+            "attributes": 0,
+            "tile": 60,
+            "x": 104,
+            "y": 24
+          },
+          {
+            "attributes": 0,
+            "tile": 61,
+            "x": 112,
+            "y": 24
+          },
+          {
+            "attributes": 32,
+            "tile": 60,
+            "x": 120,
+            "y": 24
+          },
+          {
+            "attributes": 64,
+            "tile": 44,
+            "x": 104,
+            "y": 32
+          },
+          {
+            "attributes": 64,
+            "tile": 45,
+            "x": 112,
+            "y": 32
+          },
+          {
+            "attributes": 96,
+            "tile": 44,
+            "x": 120,
+            "y": 32
+          }
+        ],
+        "tileset": 0
+      }
+    },
+    {
+      "capture_index": 20,
+      "pixel": {
+        "bbox": [
+          104,
+          16,
+          128,
+          40
+        ],
+        "changed_pixels": 193,
+        "delta_adler32": "1e7e14e2",
+        "delta_crc32": "1912787f"
+      },
+      "png": "frame-000020.png",
+      "state": {
+        "animation_finished": false,
+        "command_wait": 0,
+        "enemy_offset": [
+          0,
+          0
+        ],
+        "enemy_visible": true,
+        "move_mon_h_frame": null,
+        "move_mon_h_resetting": false,
+        "oam": [
+          {
+            "attributes": 0,
+            "tile": 44,
+            "x": 120,
+            "y": 32
+          },
+          {
+            "attributes": 0,
+            "tile": 45,
+            "x": 128,
+            "y": 32
+          },
+          {
+            "attributes": 32,
+            "tile": 44,
+            "x": 136,
+            "y": 32
+          },
+          {
+            "attributes": 0,
+            "tile": 60,
+            "x": 120,
+            "y": 40
+          },
+          {
+            "attributes": 0,
+            "tile": 61,
+            "x": 128,
+            "y": 40
+          },
+          {
+            "attributes": 32,
+            "tile": 60,
+            "x": 136,
+            "y": 40
+          },
+          {
+            "attributes": 64,
+            "tile": 44,
+            "x": 120,
+            "y": 48
+          },
+          {
+            "attributes": 64,
+            "tile": 45,
+            "x": 128,
+            "y": 48
+          },
+          {
+            "attributes": 96,
+            "tile": 44,
+            "x": 136,
+            "y": 48
+          }
+        ],
+        "objects_active": false,
+        "player_offset": [
+          0,
+          0
+        ],
+        "player_visible": true,
+        "source_oam": [
+          {
+            "attributes": 0,
+            "tile": 44,
+            "x": 120,
+            "y": 32
+          },
+          {
+            "attributes": 0,
+            "tile": 45,
+            "x": 128,
+            "y": 32
+          },
+          {
+            "attributes": 32,
+            "tile": 44,
+            "x": 136,
+            "y": 32
+          },
+          {
+            "attributes": 0,
+            "tile": 60,
+            "x": 120,
+            "y": 40
+          },
+          {
+            "attributes": 0,
+            "tile": 61,
+            "x": 128,
+            "y": 40
+          },
+          {
+            "attributes": 32,
+            "tile": 60,
+            "x": 136,
+            "y": 40
+          },
+          {
+            "attributes": 64,
+            "tile": 44,
+            "x": 120,
+            "y": 48
+          },
+          {
+            "attributes": 64,
+            "tile": 45,
+            "x": 128,
+            "y": 48
+          },
+          {
+            "attributes": 96,
+            "tile": 44,
+            "x": 136,
+            "y": 48
+          }
+        ],
+        "tileset": 0
+      }
+    },
+    {
+      "capture_index": 21,
+      "pixel": {
+        "bbox": [
+          120,
+          32,
+          144,
+          56
+        ],
+        "changed_pixels": 221,
+        "delta_adler32": "fb5218e2",
+        "delta_crc32": "c07ec78b"
+      },
+      "png": "frame-000021.png",
+      "state": {
+        "animation_finished": false,
+        "command_wait": 0,
+        "enemy_offset": [
+          0,
+          0
+        ],
+        "enemy_visible": true,
+        "move_mon_h_frame": null,
+        "move_mon_h_resetting": false,
+        "oam": [
+          {
+            "attributes": 0,
+            "tile": 44,
+            "x": 120,
+            "y": 32
+          },
+          {
+            "attributes": 0,
+            "tile": 45,
+            "x": 128,
+            "y": 32
+          },
+          {
+            "attributes": 32,
+            "tile": 44,
+            "x": 136,
+            "y": 32
+          },
+          {
+            "attributes": 0,
+            "tile": 60,
+            "x": 120,
+            "y": 40
+          },
+          {
+            "attributes": 0,
+            "tile": 61,
+            "x": 128,
+            "y": 40
+          },
+          {
+            "attributes": 32,
+            "tile": 60,
+            "x": 136,
+            "y": 40
+          },
+          {
+            "attributes": 64,
+            "tile": 44,
+            "x": 120,
+            "y": 48
+          },
+          {
+            "attributes": 64,
+            "tile": 45,
+            "x": 128,
+            "y": 48
+          },
+          {
+            "attributes": 96,
+            "tile": 44,
+            "x": 136,
+            "y": 48
+          }
+        ],
+        "objects_active": false,
+        "player_offset": [
+          0,
+          0
+        ],
+        "player_visible": true,
+        "source_oam": [
+          {
+            "attributes": 0,
+            "tile": 44,
+            "x": 120,
+            "y": 32
+          },
+          {
+            "attributes": 0,
+            "tile": 45,
+            "x": 128,
+            "y": 32
+          },
+          {
+            "attributes": 32,
+            "tile": 44,
+            "x": 136,
+            "y": 32
+          },
+          {
+            "attributes": 0,
+            "tile": 60,
+            "x": 120,
+            "y": 40
+          },
+          {
+            "attributes": 0,
+            "tile": 61,
+            "x": 128,
+            "y": 40
+          },
+          {
+            "attributes": 32,
+            "tile": 60,
+            "x": 136,
+            "y": 40
+          },
+          {
+            "attributes": 64,
+            "tile": 44,
+            "x": 120,
+            "y": 48
+          },
+          {
+            "attributes": 64,
+            "tile": 45,
+            "x": 128,
+            "y": 48
+          },
+          {
+            "attributes": 96,
+            "tile": 44,
+            "x": 136,
+            "y": 48
+          }
+        ],
+        "tileset": 0
+      }
+    },
+    {
+      "capture_index": 22,
+      "pixel": {
+        "bbox": [
+          120,
+          32,
+          144,
+          56
+        ],
+        "changed_pixels": 221,
+        "delta_adler32": "fb5218e2",
+        "delta_crc32": "c07ec78b"
+      },
+      "png": "frame-000022.png",
+      "state": {
+        "animation_finished": false,
+        "command_wait": 0,
+        "enemy_offset": [
+          0,
+          0
+        ],
+        "enemy_visible": true,
+        "move_mon_h_frame": null,
+        "move_mon_h_resetting": false,
+        "oam": [
+          {
+            "attributes": 0,
+            "tile": 44,
+            "x": 120,
+            "y": 32
+          },
+          {
+            "attributes": 0,
+            "tile": 45,
+            "x": 128,
+            "y": 32
+          },
+          {
+            "attributes": 32,
+            "tile": 44,
+            "x": 136,
+            "y": 32
+          },
+          {
+            "attributes": 0,
+            "tile": 60,
+            "x": 120,
+            "y": 40
+          },
+          {
+            "attributes": 0,
+            "tile": 61,
+            "x": 128,
+            "y": 40
+          },
+          {
+            "attributes": 32,
+            "tile": 60,
+            "x": 136,
+            "y": 40
+          },
+          {
+            "attributes": 64,
+            "tile": 44,
+            "x": 120,
+            "y": 48
+          },
+          {
+            "attributes": 64,
+            "tile": 45,
+            "x": 128,
+            "y": 48
+          },
+          {
+            "attributes": 96,
+            "tile": 44,
+            "x": 136,
+            "y": 48
+          }
+        ],
+        "objects_active": false,
+        "player_offset": [
+          0,
+          0
+        ],
+        "player_visible": true,
+        "source_oam": [
+          {
+            "attributes": 0,
+            "tile": 44,
+            "x": 120,
+            "y": 32
+          },
+          {
+            "attributes": 0,
+            "tile": 45,
+            "x": 128,
+            "y": 32
+          },
+          {
+            "attributes": 32,
+            "tile": 44,
+            "x": 136,
+            "y": 32
+          },
+          {
+            "attributes": 0,
+            "tile": 60,
+            "x": 120,
+            "y": 40
+          },
+          {
+            "attributes": 0,
+            "tile": 61,
+            "x": 128,
+            "y": 40
+          },
+          {
+            "attributes": 32,
+            "tile": 60,
+            "x": 136,
+            "y": 40
+          },
+          {
+            "attributes": 64,
+            "tile": 44,
+            "x": 120,
+            "y": 48
+          },
+          {
+            "attributes": 64,
+            "tile": 45,
+            "x": 128,
+            "y": 48
+          },
+          {
+            "attributes": 96,
+            "tile": 44,
+            "x": 136,
+            "y": 48
+          }
+        ],
+        "tileset": 0
+      }
+    },
+    {
+      "capture_index": 23,
+      "pixel": {
+        "bbox": [
+          120,
+          32,
+          144,
+          56
+        ],
+        "changed_pixels": 221,
+        "delta_adler32": "fb5218e2",
+        "delta_crc32": "c07ec78b"
+      },
+      "png": "frame-000023.png",
+      "state": {
+        "animation_finished": false,
+        "command_wait": 0,
+        "enemy_offset": [
+          0,
+          0
+        ],
+        "enemy_visible": true,
+        "move_mon_h_frame": null,
+        "move_mon_h_resetting": false,
+        "oam": [
+          {
+            "attributes": 0,
+            "tile": 44,
+            "x": 120,
+            "y": 32
+          },
+          {
+            "attributes": 0,
+            "tile": 45,
+            "x": 128,
+            "y": 32
+          },
+          {
+            "attributes": 32,
+            "tile": 44,
+            "x": 136,
+            "y": 32
+          },
+          {
+            "attributes": 0,
+            "tile": 60,
+            "x": 120,
+            "y": 40
+          },
+          {
+            "attributes": 0,
+            "tile": 61,
+            "x": 128,
+            "y": 40
+          },
+          {
+            "attributes": 32,
+            "tile": 60,
+            "x": 136,
+            "y": 40
+          },
+          {
+            "attributes": 64,
+            "tile": 44,
+            "x": 120,
+            "y": 48
+          },
+          {
+            "attributes": 64,
+            "tile": 45,
+            "x": 128,
+            "y": 48
+          },
+          {
+            "attributes": 96,
+            "tile": 44,
+            "x": 136,
+            "y": 48
+          }
+        ],
+        "objects_active": false,
+        "player_offset": [
+          0,
+          0
+        ],
+        "player_visible": true,
+        "source_oam": [
+          {
+            "attributes": 0,
+            "tile": 44,
+            "x": 120,
+            "y": 32
+          },
+          {
+            "attributes": 0,
+            "tile": 45,
+            "x": 128,
+            "y": 32
+          },
+          {
+            "attributes": 32,
+            "tile": 44,
+            "x": 136,
+            "y": 32
+          },
+          {
+            "attributes": 0,
+            "tile": 60,
+            "x": 120,
+            "y": 40
+          },
+          {
+            "attributes": 0,
+            "tile": 61,
+            "x": 128,
+            "y": 40
+          },
+          {
+            "attributes": 32,
+            "tile": 60,
+            "x": 136,
+            "y": 40
+          },
+          {
+            "attributes": 64,
+            "tile": 44,
+            "x": 120,
+            "y": 48
+          },
+          {
+            "attributes": 64,
+            "tile": 45,
+            "x": 128,
+            "y": 48
+          },
+          {
+            "attributes": 96,
+            "tile": 44,
+            "x": 136,
+            "y": 48
+          }
+        ],
+        "tileset": 0
+      }
+    },
+    {
+      "capture_index": 24,
+      "pixel": {
+        "bbox": [
+          120,
+          32,
+          144,
+          56
+        ],
+        "changed_pixels": 221,
+        "delta_adler32": "fb5218e2",
+        "delta_crc32": "c07ec78b"
+      },
+      "png": "frame-000024.png",
+      "state": {
+        "animation_finished": false,
+        "command_wait": 0,
+        "enemy_offset": [
+          0,
+          0
+        ],
+        "enemy_visible": true,
+        "move_mon_h_frame": null,
+        "move_mon_h_resetting": false,
+        "oam": [
+          {
+            "attributes": 0,
+            "tile": 44,
+            "x": 120,
+            "y": 32
+          },
+          {
+            "attributes": 0,
+            "tile": 45,
+            "x": 128,
+            "y": 32
+          },
+          {
+            "attributes": 32,
+            "tile": 44,
+            "x": 136,
+            "y": 32
+          },
+          {
+            "attributes": 0,
+            "tile": 60,
+            "x": 120,
+            "y": 40
+          },
+          {
+            "attributes": 0,
+            "tile": 61,
+            "x": 128,
+            "y": 40
+          },
+          {
+            "attributes": 32,
+            "tile": 60,
+            "x": 136,
+            "y": 40
+          },
+          {
+            "attributes": 64,
+            "tile": 44,
+            "x": 120,
+            "y": 48
+          },
+          {
+            "attributes": 64,
+            "tile": 45,
+            "x": 128,
+            "y": 48
+          },
+          {
+            "attributes": 96,
+            "tile": 44,
+            "x": 136,
+            "y": 48
+          }
+        ],
+        "objects_active": false,
+        "player_offset": [
+          0,
+          0
+        ],
+        "player_visible": true,
+        "source_oam": [
+          {
+            "attributes": 0,
+            "tile": 44,
+            "x": 120,
+            "y": 32
+          },
+          {
+            "attributes": 0,
+            "tile": 45,
+            "x": 128,
+            "y": 32
+          },
+          {
+            "attributes": 32,
+            "tile": 44,
+            "x": 136,
+            "y": 32
+          },
+          {
+            "attributes": 0,
+            "tile": 60,
+            "x": 120,
+            "y": 40
+          },
+          {
+            "attributes": 0,
+            "tile": 61,
+            "x": 128,
+            "y": 40
+          },
+          {
+            "attributes": 32,
+            "tile": 60,
+            "x": 136,
+            "y": 40
+          },
+          {
+            "attributes": 64,
+            "tile": 44,
+            "x": 120,
+            "y": 48
+          },
+          {
+            "attributes": 64,
+            "tile": 45,
+            "x": 128,
+            "y": 48
+          },
+          {
+            "attributes": 96,
+            "tile": 44,
+            "x": 136,
+            "y": 48
+          }
+        ],
+        "tileset": 0
+      }
+    },
+    {
+      "capture_index": 25,
+      "pixel": {
+        "bbox": [
+          120,
+          32,
+          144,
+          56
+        ],
+        "changed_pixels": 221,
+        "delta_adler32": "fb5218e2",
+        "delta_crc32": "c07ec78b"
+      },
+      "png": "frame-000025.png",
+      "state": {
+        "animation_finished": false,
+        "command_wait": 0,
+        "enemy_offset": [
+          0,
+          0
+        ],
+        "enemy_visible": true,
+        "move_mon_h_frame": null,
+        "move_mon_h_resetting": false,
+        "oam": [
+          {
+            "attributes": 0,
+            "tile": 44,
+            "x": 120,
+            "y": 32
+          },
+          {
+            "attributes": 0,
+            "tile": 45,
+            "x": 128,
+            "y": 32
+          },
+          {
+            "attributes": 32,
+            "tile": 44,
+            "x": 136,
+            "y": 32
+          },
+          {
+            "attributes": 0,
+            "tile": 60,
+            "x": 120,
+            "y": 40
+          },
+          {
+            "attributes": 0,
+            "tile": 61,
+            "x": 128,
+            "y": 40
+          },
+          {
+            "attributes": 32,
+            "tile": 60,
+            "x": 136,
+            "y": 40
+          },
+          {
+            "attributes": 64,
+            "tile": 44,
+            "x": 120,
+            "y": 48
+          },
+          {
+            "attributes": 64,
+            "tile": 45,
+            "x": 128,
+            "y": 48
+          },
+          {
+            "attributes": 96,
+            "tile": 44,
+            "x": 136,
+            "y": 48
+          }
+        ],
+        "objects_active": false,
+        "player_offset": [
+          0,
+          0
+        ],
+        "player_visible": true,
+        "source_oam": [
+          {
+            "attributes": 0,
+            "tile": 44,
+            "x": 120,
+            "y": 32
+          },
+          {
+            "attributes": 0,
+            "tile": 45,
+            "x": 128,
+            "y": 32
+          },
+          {
+            "attributes": 32,
+            "tile": 44,
+            "x": 136,
+            "y": 32
+          },
+          {
+            "attributes": 0,
+            "tile": 60,
+            "x": 120,
+            "y": 40
+          },
+          {
+            "attributes": 0,
+            "tile": 61,
+            "x": 128,
+            "y": 40
+          },
+          {
+            "attributes": 32,
+            "tile": 60,
+            "x": 136,
+            "y": 40
+          },
+          {
+            "attributes": 64,
+            "tile": 44,
+            "x": 120,
+            "y": 48
+          },
+          {
+            "attributes": 64,
+            "tile": 45,
+            "x": 128,
+            "y": 48
+          },
+          {
+            "attributes": 96,
+            "tile": 44,
+            "x": 136,
+            "y": 48
+          }
+        ],
+        "tileset": 0
+      }
+    },
+    {
+      "capture_index": 26,
+      "pixel": {
+        "bbox": [
+          120,
+          32,
+          144,
+          56
+        ],
+        "changed_pixels": 221,
+        "delta_adler32": "fb5218e2",
+        "delta_crc32": "c07ec78b"
+      },
+      "png": "frame-000026.png",
+      "state": {
+        "animation_finished": false,
+        "command_wait": 0,
+        "enemy_offset": [
+          0,
+          0
+        ],
+        "enemy_visible": true,
+        "move_mon_h_frame": null,
+        "move_mon_h_resetting": false,
+        "oam": [
+          {
+            "attributes": 0,
+            "tile": 44,
+            "x": 120,
+            "y": 32
+          },
+          {
+            "attributes": 0,
+            "tile": 45,
+            "x": 128,
+            "y": 32
+          },
+          {
+            "attributes": 32,
+            "tile": 44,
+            "x": 136,
+            "y": 32
+          },
+          {
+            "attributes": 0,
+            "tile": 60,
+            "x": 120,
+            "y": 40
+          },
+          {
+            "attributes": 0,
+            "tile": 61,
+            "x": 128,
+            "y": 40
+          },
+          {
+            "attributes": 32,
+            "tile": 60,
+            "x": 136,
+            "y": 40
+          },
+          {
+            "attributes": 64,
+            "tile": 44,
+            "x": 120,
+            "y": 48
+          },
+          {
+            "attributes": 64,
+            "tile": 45,
+            "x": 128,
+            "y": 48
+          },
+          {
+            "attributes": 96,
+            "tile": 44,
+            "x": 136,
+            "y": 48
+          }
+        ],
+        "objects_active": false,
+        "player_offset": [
+          0,
+          0
+        ],
+        "player_visible": true,
+        "source_oam": [
+          {
+            "attributes": 0,
+            "tile": 44,
+            "x": 120,
+            "y": 32
+          },
+          {
+            "attributes": 0,
+            "tile": 45,
+            "x": 128,
+            "y": 32
+          },
+          {
+            "attributes": 32,
+            "tile": 44,
+            "x": 136,
+            "y": 32
+          },
+          {
+            "attributes": 0,
+            "tile": 60,
+            "x": 120,
+            "y": 40
+          },
+          {
+            "attributes": 0,
+            "tile": 61,
+            "x": 128,
+            "y": 40
+          },
+          {
+            "attributes": 32,
+            "tile": 60,
+            "x": 136,
+            "y": 40
+          },
+          {
+            "attributes": 64,
+            "tile": 44,
+            "x": 120,
+            "y": 48
+          },
+          {
+            "attributes": 64,
+            "tile": 45,
+            "x": 128,
+            "y": 48
+          },
+          {
+            "attributes": 96,
+            "tile": 44,
+            "x": 136,
+            "y": 48
+          }
+        ],
+        "tileset": 0
+      }
+    },
+    {
+      "capture_index": 27,
+      "pixel": {
+        "bbox": [
+          120,
+          32,
+          144,
+          56
+        ],
+        "changed_pixels": 221,
+        "delta_adler32": "fb5218e2",
+        "delta_crc32": "c07ec78b"
+      },
+      "png": "frame-000027.png",
+      "state": {
+        "animation_finished": false,
+        "command_wait": 0,
+        "enemy_offset": [
+          0,
+          0
+        ],
+        "enemy_visible": true,
+        "move_mon_h_frame": null,
+        "move_mon_h_resetting": false,
+        "oam": [
+          {
+            "attributes": 0,
+            "tile": 44,
+            "x": 120,
+            "y": 32
+          },
+          {
+            "attributes": 0,
+            "tile": 45,
+            "x": 128,
+            "y": 32
+          },
+          {
+            "attributes": 32,
+            "tile": 44,
+            "x": 136,
+            "y": 32
+          },
+          {
+            "attributes": 0,
+            "tile": 60,
+            "x": 120,
+            "y": 40
+          },
+          {
+            "attributes": 0,
+            "tile": 61,
+            "x": 128,
+            "y": 40
+          },
+          {
+            "attributes": 32,
+            "tile": 60,
+            "x": 136,
+            "y": 40
+          },
+          {
+            "attributes": 64,
+            "tile": 44,
+            "x": 120,
+            "y": 48
+          },
+          {
+            "attributes": 64,
+            "tile": 45,
+            "x": 128,
+            "y": 48
+          },
+          {
+            "attributes": 96,
+            "tile": 44,
+            "x": 136,
+            "y": 48
+          }
+        ],
+        "objects_active": false,
+        "player_offset": [
+          0,
+          0
+        ],
+        "player_visible": true,
+        "source_oam": [
+          {
+            "attributes": 0,
+            "tile": 44,
+            "x": 120,
+            "y": 32
+          },
+          {
+            "attributes": 0,
+            "tile": 45,
+            "x": 128,
+            "y": 32
+          },
+          {
+            "attributes": 32,
+            "tile": 44,
+            "x": 136,
+            "y": 32
+          },
+          {
+            "attributes": 0,
+            "tile": 60,
+            "x": 120,
+            "y": 40
+          },
+          {
+            "attributes": 0,
+            "tile": 61,
+            "x": 128,
+            "y": 40
+          },
+          {
+            "attributes": 32,
+            "tile": 60,
+            "x": 136,
+            "y": 40
+          },
+          {
+            "attributes": 64,
+            "tile": 44,
+            "x": 120,
+            "y": 48
+          },
+          {
+            "attributes": 64,
+            "tile": 45,
+            "x": 128,
+            "y": 48
+          },
+          {
+            "attributes": 96,
+            "tile": 44,
+            "x": 136,
+            "y": 48
+          }
+        ],
+        "tileset": 0
+      }
+    },
+    {
+      "capture_index": 28,
+      "pixel": {
+        "bbox": [
+          120,
+          32,
+          144,
+          56
+        ],
+        "changed_pixels": 221,
+        "delta_adler32": "fb5218e2",
+        "delta_crc32": "c07ec78b"
+      },
+      "png": "frame-000028.png",
+      "state": {
+        "animation_finished": false,
+        "command_wait": 0,
+        "enemy_offset": [
+          0,
+          0
+        ],
+        "enemy_visible": true,
+        "move_mon_h_frame": null,
+        "move_mon_h_resetting": false,
+        "oam": [
+          {
+            "attributes": 0,
+            "tile": 44,
+            "x": 120,
+            "y": 32
+          },
+          {
+            "attributes": 0,
+            "tile": 45,
+            "x": 128,
+            "y": 32
+          },
+          {
+            "attributes": 32,
+            "tile": 44,
+            "x": 136,
+            "y": 32
+          },
+          {
+            "attributes": 0,
+            "tile": 60,
+            "x": 120,
+            "y": 40
+          },
+          {
+            "attributes": 0,
+            "tile": 61,
+            "x": 128,
+            "y": 40
+          },
+          {
+            "attributes": 32,
+            "tile": 60,
+            "x": 136,
+            "y": 40
+          },
+          {
+            "attributes": 64,
+            "tile": 44,
+            "x": 120,
+            "y": 48
+          },
+          {
+            "attributes": 64,
+            "tile": 45,
+            "x": 128,
+            "y": 48
+          },
+          {
+            "attributes": 96,
+            "tile": 44,
+            "x": 136,
+            "y": 48
+          }
+        ],
+        "objects_active": false,
+        "player_offset": [
+          0,
+          0
+        ],
+        "player_visible": true,
+        "source_oam": [
+          {
+            "attributes": 0,
+            "tile": 44,
+            "x": 120,
+            "y": 32
+          },
+          {
+            "attributes": 0,
+            "tile": 45,
+            "x": 128,
+            "y": 32
+          },
+          {
+            "attributes": 32,
+            "tile": 44,
+            "x": 136,
+            "y": 32
+          },
+          {
+            "attributes": 0,
+            "tile": 60,
+            "x": 120,
+            "y": 40
+          },
+          {
+            "attributes": 0,
+            "tile": 61,
+            "x": 128,
+            "y": 40
+          },
+          {
+            "attributes": 32,
+            "tile": 60,
+            "x": 136,
+            "y": 40
+          },
+          {
+            "attributes": 64,
+            "tile": 44,
+            "x": 120,
+            "y": 48
+          },
+          {
+            "attributes": 64,
+            "tile": 45,
+            "x": 128,
+            "y": 48
+          },
+          {
+            "attributes": 96,
+            "tile": 44,
+            "x": 136,
+            "y": 48
+          }
+        ],
+        "tileset": 0
+      }
+    },
+    {
+      "capture_index": 29,
+      "pixel": {
+        "bbox": [
+          120,
+          32,
+          144,
+          56
+        ],
+        "changed_pixels": 221,
+        "delta_adler32": "fb5218e2",
+        "delta_crc32": "c07ec78b"
+      },
+      "png": "frame-000029.png",
+      "state": {
         "animation_finished": true,
         "command_wait": 0,
         "enemy_offset": [
@@ -217,6 +2963,8 @@
           0
         ],
         "enemy_visible": true,
+        "move_mon_h_frame": null,
+        "move_mon_h_resetting": false,
         "oam": [],
         "objects_active": false,
         "player_offset": [
