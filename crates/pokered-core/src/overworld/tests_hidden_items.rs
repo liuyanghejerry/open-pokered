@@ -133,16 +133,18 @@ fn itemfinder_dings_when_item_nearby() {
 
     let consumed = screen.use_field_item(ItemId::Itemfinder, MapId::PalletTown);
     assert!(!consumed, "the ITEMFINDER is a key item");
-    let text = pending_dialogue_text(&screen);
     assert!(
-        text.contains("Yes! ITEMFINDER"),
-        "_ItemfinderFoundItemText (text_6.asm:119), got: {text:?}"
+        screen.pending_dialogue.is_none(),
+        "result text waits until all PlaySoundWaitForCurrent calls finish"
     );
 
     // ItemUseItemfinder plays SFX_HEALING_MACHINE + SFX_PURCHASE four times
-    // (item_effects.asm:1928-1935); the port meters them out per frame.
-    let mut sounds: Vec<String> = Vec::new();
-    for _ in 0..(8 * super::hidden_items::ITEMFINDER_DING_FRAMES as usize + 2) {
+    // (item_effects.asm:1928-1935), waiting for each exact track lifetime.
+    // The item is dispatched while Bag owns the frame. Its first request must
+    // survive the transition and the next Overworld update before the
+    // frontend gets its normal drain point.
+    let mut sounds = Vec::new();
+    for _ in 0..(super::hidden_items::ITEMFINDER_SEQUENCE_FRAMES + 2) {
         screen.update_frame(OverworldInput::none());
         for req in screen.audio_requests.drain(..) {
             if let OverworldAudioRequest::PlaySound { sound_id } = req {
@@ -154,6 +156,11 @@ fn itemfinder_dings_when_item_nearby() {
         .flat_map(|_| ["SFX_HEALING_MACHINE".to_string(), "SFX_PURCHASE".to_string()])
         .collect();
     assert_eq!(sounds, expected, "four ding pairs, alternating");
+    let text = pending_dialogue_text(&screen);
+    assert!(
+        text.contains("Yes! ITEMFINDER"),
+        "_ItemfinderFoundItemText follows the last sound, got: {text:?}"
+    );
 }
 
 #[test]

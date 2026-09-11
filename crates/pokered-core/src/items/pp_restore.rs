@@ -48,7 +48,11 @@ fn use_ether(mon: &mut Pokemon, move_index: usize, full: bool) -> PpRestoreResul
         return PpRestoreResult::NoEffect;
     }
     let max_pp = get_max_pp_with_ups(mon.moves[move_index], mon.pp_ups[move_index]);
-    if mon.pp[move_index] >= max_pp {
+    // Gen I's Max Ether path compares the packed PP byte (including the two
+    // PP-Up bits) with max PP without masking first. Consequently a full move
+    // with any PP Ups still counts as a successful use and consumes the item.
+    let gen1_full_restore_bug = full && mon.pp_ups[move_index] != 0;
+    if mon.pp[move_index] >= max_pp && !gen1_full_restore_bug {
         return PpRestoreResult::NoEffect;
     }
     let old_pp = mon.pp[move_index];
@@ -65,12 +69,14 @@ fn use_ether(mon: &mut Pokemon, move_index: usize, full: bool) -> PpRestoreResul
 
 fn use_elixir(mon: &mut Pokemon, full: bool) -> PpRestoreResult {
     let mut total_restored: u16 = 0;
+    let mut affected = false;
     for i in 0..4 {
         if mon.moves[i] == MoveId::None {
             continue;
         }
         let max_pp = get_max_pp_with_ups(mon.moves[i], mon.pp_ups[i]);
-        if mon.pp[i] < max_pp {
+        let gen1_full_restore_bug = full && mon.pp_ups[i] != 0;
+        if mon.pp[i] < max_pp || gen1_full_restore_bug {
             let old_pp = mon.pp[i];
             mon.pp[i] = if full {
                 max_pp
@@ -78,9 +84,10 @@ fn use_elixir(mon: &mut Pokemon, full: bool) -> PpRestoreResult {
                 (mon.pp[i] + 10).min(max_pp)
             };
             total_restored += (mon.pp[i] - old_pp) as u16;
+            affected = true;
         }
     }
-    if total_restored == 0 {
+    if !affected {
         PpRestoreResult::NoEffect
     } else {
         PpRestoreResult::AllRestored {

@@ -108,6 +108,13 @@ impl AudioOutput {
         }
     }
 
+    pub fn play_flute_overworld(&self, resume_music: MusicId) {
+        self.try_resume();
+        if let Ok(mut mgr) = self.manager.lock() {
+            mgr.play_flute_overworld(resume_music);
+        }
+    }
+
     /// Alternate tempo/start music variants (audio/alternate_tempo.asm);
     /// see `AudioManager::play_script_music`.
     pub fn play_script_music(&self, name: &str) -> bool {

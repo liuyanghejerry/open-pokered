@@ -36,7 +36,9 @@ use pokered_core::overworld::{
     BedroomDialogue, OverworldAudioRequest, OverworldGameDataRequest, OverworldInput,
     OverworldScreen, OverworldSfxEvent,
 };
-use pokered_core::party_screen::{PartyScreenAction, PartyScreenInput, PartyScreenState};
+use pokered_core::party_screen::{
+    PartyNoticeReturn, PartyScreenAction, PartyScreenInput, PartyScreenState,
+};
 use pokered_core::items::bag_use::{self, ItemApplyOutcome};
 use pokered_core::bag_screen::{BagScreenAction, BagScreenInput, BagScreenState};
 use pokered_core::town_map_screen::{TownMapScreenAction, TownMapScreenInput, TownMapScreenState};
@@ -3452,6 +3454,20 @@ impl PokemonGame {
                                         log::warn!("Unknown cry species: {}", species);
                                     }
                                 }
+                                OverworldAudioRequest::PlayPokeFlute { map } => {
+                                    use pokered_core::overworld::TransportMode;
+                                    let data_id = match self.overworld.state.player.transport {
+                                        TransportMode::Biking => 32,
+                                        TransportMode::Surfing => 33,
+                                        TransportMode::Walking => {
+                                            pokered_core::overworld::map_loading::get_map_music(map)
+                                                as u8
+                                        }
+                                    };
+                                    if let Some(id) = MusicId::from_u8(data_id) {
+                                        audio.play_flute_overworld(id);
+                                    }
+                                }
                             }
                         }
                     }
@@ -3712,6 +3728,12 @@ impl PokemonGame {
                     // (engine/items/item_effects.asm:1732-1739).
                     if self.battle.take_poke_flute_sfx_pending() {
                         audio.play_flute_in_battle();
+                    }
+                    if let Some(sfx) = self.battle.take_item_sfx_pending() {
+                        audio.play_sfx(match sfx {
+                            pokered_core::battle::BattleItemSfx::HealHp => SfxId::HealHP,
+                            pokered_core::battle::BattleItemSfx::HealAilment => SfxId::HealAilment,
+                        });
                     }
                     // HP-bar drain starting: play the damage SFX once per
                     // drain. (Deviation: Gen 1's UpdateHPBar drain itself is
@@ -3995,6 +4017,10 @@ impl PokemonGame {
                 }
 
                 match action {
+                    PartyScreenAction::ItemUseFinished => {
+                        self.pending_bag_item = None;
+                        ScreenAction::Transition(GameScreen::Bag)
+                    }
                     PartyScreenAction::Cancelled => {
                         // A SOFTBOILED target pick that got back to the normal
                         // menu and was cancelled abandons the heal entirely.
@@ -4026,6 +4052,12 @@ impl PokemonGame {
                         match self.pending_bag_item {
                             None => ScreenAction::Continue,
                             Some(item) => {
+                                let old_hp = self
+                                    .save_data
+                                    .party
+                                    .get(party_index)
+                                    .map(|mon| mon.hp)
+                                    .unwrap_or(0);
                                 let outcome = match self.save_data.party.get_mut(party_index) {
                                     Some(mon) => bag_use::apply_item_to_pokemon(
                                         item,
@@ -4046,22 +4078,63 @@ impl PokemonGame {
                                         // the lead's level (repel checks it).
                                         self.overworld.party_lead_level =
                                             self.save_data.party.leader_level();
-                                        self.overworld.pending_dialogue = Some(
-                                            BedroomDialogue::from_message(
-                                                &self.localize_dialogue(&message),
-                                            ),
-                                        );
+                                        self.party_screen
+                                            .refresh_party(self.save_data.party.to_vec());
+                                        if let (Some(audio), Some(sfx)) =
+                                            (self.audio.as_ref(), bag_use::success_sfx(item))
+                                        {
+                                            audio.play_sfx(match sfx {
+                                                bag_use::ItemUseSfx::HealHp => SfxId::HealHP,
+                                                bag_use::ItemUseSfx::HealAilment => {
+                                                    SfxId::HealAilment
+                                                }
+                                            });
+                                        }
+                                        let wait = if matches!(
+                                            bag_use::success_sfx(item),
+                                            Some(bag_use::ItemUseSfx::HealHp)
+                                                | Some(bag_use::ItemUseSfx::HealAilment)
+                                        ) {
+                                            50
+                                        } else {
+                                            0
+                                        };
+                                        let message = self.localize_dialogue(&message);
+                                        if matches!(
+                                            bag_use::success_sfx(item),
+                                            Some(bag_use::ItemUseSfx::HealHp)
+                                        ) {
+                                            self.party_screen
+                                                .show_item_use_notice_with_hp_animation(
+                                                    party_index,
+                                                    old_hp,
+                                                    message,
+                                                    wait,
+                                                    PartyNoticeReturn::Bag,
+                                                );
+                                        } else {
+                                            self.party_screen.show_item_use_notice(
+                                                message,
+                                                wait,
+                                                PartyNoticeReturn::Bag,
+                                            );
+                                        }
                                         self.pending_bag_item = None;
-                                        ScreenAction::Transition(GameScreen::Overworld)
+                                        ScreenAction::Continue
                                     }
                                     ItemApplyOutcome::NoEffect { message } => {
-                                        self.overworld.pending_dialogue = Some(
-                                            BedroomDialogue::from_message(
-                                                &self.localize_dialogue(&message),
-                                            ),
+                                        let return_to = if bag_use::machine_of(item).is_some() {
+                                            PartyNoticeReturn::Party
+                                        } else {
+                                            self.pending_bag_item = None;
+                                            PartyNoticeReturn::Bag
+                                        };
+                                        self.party_screen.show_item_use_notice(
+                                            self.localize_dialogue(&message),
+                                            0,
+                                            return_to,
                                         );
-                                        self.pending_bag_item = None;
-                                        ScreenAction::Transition(GameScreen::Overworld)
+                                        ScreenAction::Continue
                                     }
                                     ItemApplyOutcome::NeedsMoveReplace { .. } => {
                                         // TM/HM on a full moveset: ask which
@@ -4109,13 +4182,12 @@ impl PokemonGame {
                     PartyScreenAction::MoveForgetChosen { party_index, slot } => {
                         // Post-evolution full-moveset learn (Gen-1 `LearnMove`,
                         // learn_move.asm:98-184): replace a move with the
-                        // level-up move that could not be learned. The HM
-                        // guard (HMCantDeleteText) refuses an HM pick; like
-                        // the TM flow the prompt then ends (the move stays
-                        // unlearned) — the original re-asks inline, which the
-                        // party screen cannot render (documented deviation).
-                        if let Some((_, move_id)) = self.pending_evolve_move_replace.take() {
-                            let message = match self.save_data.party.get_mut(party_index) {
+                        // level-up move that could not be learned. An HM pick
+                        // displays HMCantDeleteText and resumes this same move
+                        // list; the pending move is kept until a deletable move
+                        // is chosen or the player cancels.
+                        if let Some((_, move_id)) = self.pending_evolve_move_replace {
+                            let outcome = match self.save_data.party.get_mut(party_index) {
                                 Some(mon) => {
                                     use pokered_core::pokemon::move_learning::{
                                         replace_move_guarded, ReplaceMoveError,
@@ -4124,28 +4196,44 @@ impl PokemonGame {
                                         Ok(old_move) => {
                                             let mut name_buf =
                                                 [0u8; pokered_core::battle::state::NAME_TEXT_BUF];
-                                            format!(
+                                            Ok(format!(
                                                 "{} forgot\n{}...\nand learned\n{}!",
                                                 mon.display_name(&mut name_buf),
                                                 pokered_data::lang_data::move_name(old_move, false),
                                                 pokered_data::lang_data::move_name(move_id, false)
-                                            )
+                                            ))
                                         }
-                                        Err(ReplaceMoveError::HmCantDelete) => {
-                                            // HMCantDeleteText (learn_move.asm:178-181).
-                                            "HM techniques\ncan't be deleted!".to_string()
-                                        }
-                                        Err(ReplaceMoveError::InvalidSlot) => {
-                                            bag_use::NO_EFFECT_MESSAGE.to_string()
-                                        }
+                                        Err(ReplaceMoveError::HmCantDelete) => Err(true),
+                                        Err(ReplaceMoveError::InvalidSlot) => Err(false),
                                     }
                                 }
-                                None => bag_use::NO_EFFECT_MESSAGE.to_string(),
+                                None => Err(false),
                             };
-                            let message = self.localize_dialogue(&message);
-                            self.overworld.pending_dialogue =
-                                Some(BedroomDialogue::from_message(&message));
-                            ScreenAction::Transition(GameScreen::Overworld)
+                            match outcome {
+                                Err(true) => {
+                                    let message = self.localize_dialogue(
+                                        "HM techniques\ncan't be deleted!",
+                                    );
+                                    self.party_screen.show_move_choice_notice(message);
+                                    ScreenAction::Continue
+                                }
+                                Ok(message) => {
+                                    self.pending_evolve_move_replace = None;
+                                    let message = self.localize_dialogue(&message);
+                                    self.overworld.pending_dialogue =
+                                        Some(BedroomDialogue::from_message(&message));
+                                    ScreenAction::Transition(GameScreen::Overworld)
+                                }
+                                Err(false) => {
+                                    self.pending_evolve_move_replace = None;
+                                    let message = self.localize_dialogue(
+                                        bag_use::NO_EFFECT_MESSAGE,
+                                    );
+                                    self.overworld.pending_dialogue =
+                                        Some(BedroomDialogue::from_message(&message));
+                                    ScreenAction::Transition(GameScreen::Overworld)
+                                }
+                            }
                         } else {
                             // Replace-move confirmation for the pending TM/HM.
                             match self.pending_bag_item {
@@ -4157,12 +4245,24 @@ impl PokemonGame {
                                         message: bag_use::NO_EFFECT_MESSAGE.to_string(),
                                     },
                                 };
+                                let hm_notice = match &outcome {
+                                    ItemApplyOutcome::NoEffect { message }
+                                        if message.starts_with("HM techniques") =>
+                                    {
+                                        Some(self.localize_dialogue(message))
+                                    }
+                                    _ => None,
+                                };
+                                if let Some(message) = hm_notice {
+                                    self.party_screen.show_move_choice_notice(message);
+                                    ScreenAction::Continue
+                                } else {
                                 let (message, consume) = match outcome {
                                     ItemApplyOutcome::Used { message, consume } => {
                                         (message, consume)
                                     }
                                     ItemApplyOutcome::NoEffect { message } => (message, false),
-                                    // finish_tm_hm_replace never re-asks.
+                                    // Invalid/non-machine fallbacks end the flow.
                                     ItemApplyOutcome::NeedsMoveReplace { .. } => {
                                         (bag_use::NO_EFFECT_MESSAGE.to_string(), false)
                                     }
@@ -4179,6 +4279,7 @@ impl PokemonGame {
                                     Some(BedroomDialogue::from_message(&message));
                                 self.pending_bag_item = None;
                                 ScreenAction::Transition(GameScreen::Overworld)
+                                }
                             }
                             }
                         }
@@ -4308,6 +4409,8 @@ impl PokemonGame {
                         // its message. Consumed items leave the bag.
                         if item == pokered_data::items::ItemId::TownMap {
                             ScreenAction::Transition(GameScreen::TownMap)
+                        } else if item == pokered_data::items::ItemId::Pokedex {
+                            ScreenAction::Transition(GameScreen::Pokedex)
                         } else {
                             match bag_use::classify_bag_use(item) {
                                 bag_use::BagUseKind::OnPokemon => {

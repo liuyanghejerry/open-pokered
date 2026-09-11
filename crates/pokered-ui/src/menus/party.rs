@@ -119,6 +119,27 @@ pub fn draw_overlay<P: Painter>(state: &PartyScreenState, ui: &mut Ui<P>, lang: 
         } => {
             draw_move_choice(ui, state, move_cursor, is_zh);
         }
+        PartyScreenPhase::MoveChoiceNotice => {
+            ui.text_box(TileRect::new(0, 12, 20, 6), InkColor::Black, true, |frame| {
+                for (row, line) in state
+                    .move_choice_notice()
+                    .unwrap_or("")
+                    .lines()
+                    .take(4)
+                    .enumerate()
+                {
+                    frame.label(1, 1 + row as u32, line, InkColor::Black);
+                }
+            });
+        }
+        PartyScreenPhase::ItemHpRestore => {}
+        PartyScreenPhase::ItemUseNotice { .. } => {
+            ui.text_box(TileRect::new(0, 12, 20, 6), InkColor::Black, true, |frame| {
+                for (row, line) in state.item_use_notice().unwrap_or("").lines().take(4).enumerate() {
+                    frame.label(1, 1 + row as u32, line, InkColor::Black);
+                }
+            });
+        }
     }
 }
 

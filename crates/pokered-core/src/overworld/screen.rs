@@ -13,6 +13,7 @@ use dotzuki_engine::overworld::{
 use dotzuki_engine::overworld::types::TransportMode;
 use dotzuki_engine::trigger_manager::TriggerManager;
 use dotzuki_engine::GameData;
+use dotzuki_engine::tileset::TilesetTrait;
 use dotzuki_engine::overworld::collision::CollisionProvider;
 use dotzuki_engine_script::{CutsceneManager, MapScriptConfig, ScriptLoader};
 use pokered_data::map_flags::is_city_map;
@@ -100,6 +101,9 @@ pub enum OverworldAudioRequest {
     PlayMapMusic { map: MapId },
     /// Play a Pokémon cry by species name (script `game.playCry(...)`).
     PlayCry { species: String },
+    /// ItemUsePokeFlute: stop map music, play the full channel-3 jingle, then
+    /// resume the current transport/map theme only after it finishes.
+    PlayPokeFlute { map: MapId },
 }
 
 // ── Overworld Game-Data Requests (script-driven bag/money mutations) ─
@@ -673,6 +677,10 @@ pub struct OverworldScreen<G: GameData = pokered_data::impl_traits::PokemonRedDa
     pub(crate) scripts_dir: Option<std::path::PathBuf>,
     pub(crate) scripted_player_path: VecDeque<(u16, u16)>,
     pub audio_requests: Vec<OverworldAudioRequest>,
+    /// A field item is dispatched while the bag screen owns the frame, so its
+    /// first sound request must survive the next overworld update long enough
+    /// for the frontend to drain it.
+    pub(crate) preserve_audio_requests_next_frame: bool,
     /// Bag/money mutations requested by scripts, drained + applied by the app layer.
     pub game_data_requests: Vec<OverworldGameDataRequest>,
     /// True while a script is suspended on `await game.startBattle(...)`,
@@ -763,9 +771,9 @@ pub struct OverworldScreen<G: GameData = pokered_data::impl_traits::PokemonRedDa
     /// Cached casino-coin total (seeded by `seed_script_query_state`), used by
     /// the hidden-coin "dropped" text check (9999 cap).
     pub(crate) player_coins: u16,
-    /// ITEMFINDER ding sequencer: `(dings_remaining, frames_until_next)`. The
+    /// ITEMFINDER ding sequencer: `(sounds_remaining, current_sfx_frames)`. The
     /// original blocks on each SFX (PlaySoundWaitForCurrent, 4× HEALING_MACHINE
-    /// + PURCHASE); here one ding is emitted every ITEMFINDER_DING_FRAMES.
+    /// + PURCHASE); exact lifetimes come from the shared audio sequencer.
     pub(crate) itemfinder_dings: Option<(u8, u8)>,
     pub(crate) rng: rand::rngs::StdRng,
     /// Remaining Safari Zone steps (of [`SAFARI_ZONE_STEP_COUNT`]). Counts down
@@ -1078,6 +1086,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
             scripts_dir,
             scripted_player_path: VecDeque::new(),
             audio_requests: Vec::new(),
+            preserve_audio_requests_next_frame: false,
             game_data_requests,
             script_awaiting_battle: false,
             script_awaiting_elevator: false,
@@ -1686,11 +1695,13 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
             // (sets the FIGHT flag so talking to it starts the battle). Elsewhere
             // it just plays. (Original ItemUsePokeFlute; a key item, not consumed.)
             ItemId::PokeFlute => {
+                let pos = (self.state.player.x, self.state.player.y);
                 let woke = match self.state.current_map {
                     MapId::Route12
                         if !self
                             .unified_flags
-                            .check(EventFlag::EVENT_BEAT_ROUTE12_SNORLAX) =>
+                            .check(EventFlag::EVENT_BEAT_ROUTE12_SNORLAX)
+                            && matches!(pos, (9, 62) | (10, 61) | (10, 63) | (11, 62)) =>
                     {
                         self.set_flag_live("EVENT_FIGHT_ROUTE12_SNORLAX", true);
                         true
@@ -1698,7 +1709,8 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                     MapId::Route16
                         if !self
                             .unified_flags
-                            .check(EventFlag::EVENT_BEAT_ROUTE16_SNORLAX) =>
+                            .check(EventFlag::EVENT_BEAT_ROUTE16_SNORLAX)
+                            && matches!(pos, (27, 10) | (25, 10)) =>
                     {
                         self.set_flag_live("EVENT_FIGHT_ROUTE16_SNORLAX", true);
                         true
@@ -1709,14 +1721,13 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                     // PlayedFluteHadEffectText (engine/items/item_effects.asm:1794-1811):
                     // when the flute had an effect outside battle, the original
                     // stops the music, plays SFX_POKEFLUTE, then restarts the map
-                    // music. Here the jingle plays as a plain SFX with the map
-                    // music continuing underneath (no blocking wait).
-                    self.audio_requests.push(OverworldAudioRequest::PlaySound {
-                        sound_id: "SFX_POKEFLUTE".to_string(),
+                    // music.
+                    self.audio_requests.push(OverworldAudioRequest::PlayPokeFlute {
+                        map: self.state.current_map,
                     });
-                    "You played the\nPOKe FLUTE!\n\nThe SNORLAX\nwoke up!".to_string()
+                    format!("{} played the\nPOKe FLUTE.", self.player_name)
                 } else {
-                    "You played the\nPOKe FLUTE.\n\nNothing happened.".to_string()
+                    "Played the POKe\nFLUTE.\n\nNow, that's a\ncatchy tune!".to_string()
                 })
             }
             // BICYCLE: toggle riding, which halves the frames-per-step (Biking = 4
@@ -1729,20 +1740,42 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                     Some("You can't get off\nhere.".to_string())
                 } else {
                     Some(match self.state.player.transport {
-                        TransportMode::Surfing => "You can't\nBICYCLE here!".to_string(),
+                        TransportMode::Surfing => format!(
+                            "OAK: {}!\nThis isn't the\ntime to use that!",
+                            self.player_name
+                        ),
                         TransportMode::Biking => {
                             self.state.player.transport = TransportMode::Walking;
-                            "You got off the\nBICYCLE.".to_string()
+                            format!("{} got off\nthe BICYCLE.", self.player_name)
                         }
                         TransportMode::Walking => {
-                            self.state.player.transport = TransportMode::Biking;
-                            "You got on the\nBICYCLE!".to_string()
+                            let map_override = matches!(
+                                self.state.current_map,
+                                MapId::Route23 | MapId::IndigoPlateau
+                            );
+                            let tileset_allowed = self.map_data.as_ref().is_some_and(|map| {
+                                matches!(
+                                    map.tileset.id(),
+                                    0 | 3 | 11 | 14 | 17 // OVERWORLD/FOREST/UNDERGROUND/SHIP_PORT/CAVERN
+                                )
+                            });
+                            if map_override || tileset_allowed {
+                                self.state.player.transport = TransportMode::Biking;
+                                format!("{} got on the\nBICYCLE!", self.player_name)
+                            } else {
+                                "No cycling\nallowed here.".to_string()
+                            }
                         }
                     })
                 }
             },
             // TOWN MAP: the full scrollable KANTO map screen is a follow-up.
             ItemId::TownMap => Some("You checked the\nTOWN MAP.".to_string()),
+            // These have dedicated ItemUsePtrTable handlers in Gen I; they do
+            // not use the generic OAK refusal shown for unusable items.
+            ItemId::Pokedex => None,
+            ItemId::CoinCase => Some(format!("Coins\n{:04} ", self.player_coins)),
+            ItemId::OaksParcel => Some("This isn't yours\nto use!".to_string()),
             // ESCAPE ROPE / DIG (ItemUseEscapeRope, engine/items/
             // item_effects.asm:1492-1528): usable only in a dungeon — a map
             // whose tileset is in EscapeRopeTilesets (FOREST/CEMETERY/CAVERN/
@@ -1799,11 +1832,9 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
             // detected (HiddenItemCoords only).
             //
             // The original plays each SFX with PlaySoundWaitForCurrent, so the
-            // eight dings run sequentially; the port's audio layer plays one SFX
-            // per drained request and has no SFX queue, so the dings are metered
-            // out by `itemfinder_dings` (ticked in update_frame, one ding every
-            // ITEMFINDER_DING_FRAMES — the same 30-frame spacing the Poké Center
-            // healing machine uses per SFX).
+            // eight sounds run sequentially and the result text appears only
+            // after the final PURCHASE ends. `itemfinder_dings` blocks the
+            // overworld for those exact per-track lifetimes.
             ItemId::Itemfinder => {
                 let found = pokered_data::hidden_items::hidden_item_near(
                     self.state.current_map,
@@ -1812,8 +1843,14 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                     |i| crate::overworld::hidden_items::check_obtained(&self.hidden_item_flags, i),
                 );
                 if found {
-                    self.itemfinder_dings = Some((8, 0));
-                    Some(crate::overworld::hidden_items::ITEMFINDER_FOUND_MESSAGE.to_string())
+                    self.audio_requests.push(OverworldAudioRequest::PlaySound {
+                        sound_id: "SFX_HEALING_MACHINE".to_string(),
+                    });
+                    self.itemfinder_dings = Some((
+                        7,
+                        crate::overworld::hidden_items::ITEMFINDER_HEALING_MACHINE_FRAMES,
+                    ));
+                    None
                 } else {
                     Some(crate::overworld::hidden_items::ITEMFINDER_NOTHING_MESSAGE.to_string())
                 }
@@ -1851,6 +1888,9 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
         if let Some(text) = msg {
             let text = self.localize_message(&text);
             self.pending_dialogue = Some(BedroomDialogue::from_message(&text));
+        }
+        if !self.audio_requests.is_empty() {
+            self.preserve_audio_requests_next_frame = true;
         }
         consumed
     }

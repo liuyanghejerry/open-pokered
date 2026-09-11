@@ -1,5 +1,6 @@
 use dotzuki_engine::render_data::RenderData;
 use pokered_data::items::ItemId;
+use pokered_core::game_state::Lang;
 use pokered_data::moves::MoveId;
 use pokered_data::species::Species;
 use pokered_data::ui_layout::schema::{BagDefaultLayout, SizeMode};
@@ -80,6 +81,56 @@ pub fn draw<P: Painter>(
             let cur_y = start_y + (cursor - offset) as u32 * row_pitch;
             frame.cursor_glyph_at(1, cur_y, c.glyph, c.color);
         }
+    });
+}
+
+/// ItemUseTMHM's two pre-party prompts, drawn over the retained bag screen.
+pub fn draw_machine_prompt<P: Painter>(
+    item: ItemId,
+    choice_cursor: Option<u8>,
+    ui: &mut Ui<P>,
+    lang: Lang,
+) {
+    let Some(machine) = pokered_core::items::bag_use::machine_of(item) else {
+        return;
+    };
+    let is_zh = lang == Lang::Zh;
+    if choice_cursor.is_none() {
+        ui.text_box(TileRect::new(0, 12, 20, 6), InkColor::Black, true, |frame| {
+            let text = if is_zh {
+                if machine.is_tm() { "启动了招式学习器！" } else { "启动了秘传学习器！" }
+            } else if machine.is_tm() {
+                "Booted up a TM!"
+            } else {
+                "Booted up an HM!"
+            };
+            frame.label(1, 2, text, InkColor::Black);
+        });
+        return;
+    }
+
+    let move_name = machine
+        .move_id()
+        .map(|m| pokered_data::lang_data::move_name(m, is_zh))
+        .unwrap_or("???");
+    ui.text_box(TileRect::new(0, 10, 20, 8), InkColor::Black, true, |frame| {
+        if is_zh {
+            frame.label(1, 1, &format!("里面是{}！", move_name), InkColor::Black);
+            frame.label(1, 4, "让宝可梦学会", InkColor::Black);
+            frame.label(1, 5, &format!("{}吗？", move_name), InkColor::Black);
+        } else {
+            frame.label(1, 1, "It contained", InkColor::Black);
+            frame.label(1, 2, &format!("{}!", move_name), InkColor::Black);
+            frame.label(1, 4, &format!("Teach {}", move_name), InkColor::Black);
+            frame.label(1, 5, "to a POKeMON?", InkColor::Black);
+        }
+    });
+    ui.text_box(TileRect::new(14, 4, 6, 6), InkColor::Black, true, |frame| {
+        let yes = if is_zh { "是" } else { "YES" };
+        let no = if is_zh { "否" } else { "NO" };
+        frame.label(2, 1, yes, InkColor::Black);
+        frame.label(2, 3, no, InkColor::Black);
+        frame.cursor_glyph_at(1, 1 + choice_cursor.unwrap_or(0) as u32 * 2, '▶', InkColor::Black);
     });
 }
 

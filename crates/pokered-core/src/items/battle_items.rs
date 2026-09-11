@@ -18,23 +18,16 @@ pub fn use_battle_item(battler: &mut BattlerState, item: ItemId) -> BattleItemRe
         ItemId::XSpeed => use_x_stat(battler, StatIndex::Speed),
         ItemId::XSpecial => use_x_stat(battler, StatIndex::Special),
         ItemId::XAccuracy => {
-            if battler.has_status2(status2::USING_X_ACCURACY) {
-                return BattleItemResult::NoEffect;
-            }
+            // Gen I consumes repeated flag items and prints the normal use
+            // text even when the bit was already set.
             battler.set_status2(status2::USING_X_ACCURACY);
             BattleItemResult::FlagSet
         }
         ItemId::GuardSpec => {
-            if battler.has_status2(status2::PROTECTED_BY_MIST) {
-                return BattleItemResult::NoEffect;
-            }
             battler.set_status2(status2::PROTECTED_BY_MIST);
             BattleItemResult::FlagSet
         }
         ItemId::DireHit => {
-            if battler.has_status2(status2::GETTING_PUMPED) {
-                return BattleItemResult::NoEffect;
-            }
             battler.set_status2(status2::GETTING_PUMPED);
             BattleItemResult::FlagSet
         }

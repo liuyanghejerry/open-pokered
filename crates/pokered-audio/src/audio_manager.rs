@@ -64,6 +64,9 @@ pub struct AudioManager {
     low_health_alarm_enabled: bool,
     /// `wLowHealthAlarm` bits 0-6 (`LOW_HEALTH_TIMER_MASK`): tone timer.
     low_health_timer: u8,
+    /// Overworld ItemUsePokeFlute stops map music, waits for the channel-3
+    /// jingle to end, then starts the map music again.
+    music_after_sfx: Option<MusicId>,
 }
 
 impl Deref for AudioManager {
@@ -97,6 +100,7 @@ impl AudioManager {
             engine,
             low_health_alarm_enabled: false,
             low_health_timer: 0,
+            music_after_sfx: None,
         }
     }
 
@@ -155,6 +159,12 @@ impl AudioManager {
             .override_channel_stream(CHAN6, sfx_data::POKEFLUTE_IN_BATTLE_CH6);
         self.sequencer
             .override_channel_stream(CHAN7, sfx_data::POKEFLUTE_IN_BATTLE_CH7);
+    }
+
+    pub fn play_flute_overworld(&mut self, resume_music: MusicId) {
+        self.engine.stop_music();
+        self.play_sfx(SfxId::Pokeflute);
+        self.music_after_sfx = Some(resume_music);
     }
 
     /// `Music_RivalAlternateStart` (audio/alternate_tempo.asm:2-12): play
@@ -249,6 +259,10 @@ impl AudioManager {
     /// direct hardware writes override whatever the sound engine put there.
     pub fn update_frame(&mut self) {
         self.engine.update_frame();
+        if self.music_after_sfx.is_some() && !self.engine.is_sfx_playing() {
+            let music = self.music_after_sfx.take().unwrap();
+            self.engine.play_music(music);
+        }
         if self.low_health_alarm_enabled {
             self.tick_low_health_alarm();
         }

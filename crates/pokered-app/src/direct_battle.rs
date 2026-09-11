@@ -22,7 +22,7 @@ fn phase_tag(phase: &BattlePhase) -> u8 {
         BattlePhase::ItemMoveSelect { .. } => 3,
         BattlePhase::BagSelect => 11,
         BattlePhase::ItemTargetSelect { .. } => 12,
-        BattlePhase::ShowingText { .. } => 4,
+        BattlePhase::ShowingText { .. } | BattlePhase::EnemyFreeTurnAfterItem => 4,
         BattlePhase::PartySelect => 5,
         BattlePhase::PartySubMenu { .. } => 9,
         BattlePhase::PartyStats { .. } => 10,
@@ -169,6 +169,12 @@ impl DirectBattleGame {
             if let Some(ref audio) = self.audio {
                 audio.play_flute_in_battle();
             }
+        }
+        if let Some(sfx) = self.battle.take_item_sfx_pending() {
+            self.play_sfx(match sfx {
+                pokered_core::battle::BattleItemSfx::HealHp => SfxId::HealHP,
+                pokered_core::battle::BattleItemSfx::HealAilment => SfxId::HealAilment,
+            });
         }
 
         // Non-move battle animation requests (ball throws, X-stat items)

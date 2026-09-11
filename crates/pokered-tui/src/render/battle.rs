@@ -18,10 +18,10 @@ use pokered_renderer::battle_scene::{
 use pokered_renderer::battle_transition::{BattleTransitionKind, BattleTransitionState};
 use pokered_renderer::embedded_font::draw_text;
 use pokered_renderer::gen1_battle_anim::{
-    draw_mon_pic_clipped, move_short_flash_timing, render_gen1_oam, render_gen1_slide_up,
-    render_gen1_squish, AnimTickResult, AnimationPlayer, BgPaletteState, BlinkMon, LongFlashTiming,
-    LongScreenFlash, MonTilemapAnimation, RockSlideShake, ShakeBackAndForth, ShortFlashTiming,
-    ShortScreenFlash,
+    draw_mon_pic_clipped, move_short_flash_timing, render_gen1_oam,
+    render_gen1_oam_palette_split, render_gen1_slide_up, render_gen1_squish, AnimTickResult,
+    AnimationPlayer, BallFrameEvent, BgPaletteState, BlinkMon, LongFlashTiming, LongScreenFlash,
+    MonTilemapAnimation, RockSlideShake, ShakeBackAndForth, ShortFlashTiming, ShortScreenFlash,
 };
 use pokered_renderer::palette::GRAYSCALE_PALETTE;
 use pokered_renderer::resource::{AssetCategory, ResourceManager};
@@ -188,15 +188,18 @@ mod non_move_anim {
     /// XSTATITEM_DUPLICATE_ANIM ($AF): same, for the enemy side (trainer-AI
     /// X items).
     pub const XSTATITEM_DUP: usize = 0xAE;
-    /// TOSS_ANIM ($C1): SUBANIM_0_BALL_TOSS_LOW (Poké Ball).
+    /// TOSS_ANIM ($C1): SUBANIM_0_BALL_TOSS_HIGH (Poké Ball).
     pub const BALL_TOSS: usize = 0xC0;
     /// SHAKE_ANIM ($C2): SUBANIM_0_BALL_SHAKE_ENEMY.
     pub const BALL_SHAKE: usize = 0xC1;
     /// POOF_ANIM ($C3): SUBANIM_0_BALL_POOF_ENEMY.
     pub const BALL_POOF: usize = 0xC2;
+    /// BLOCKBALL_ANIM ($C4): trainer knocks the thrown ball away.
+    pub const BLOCK_BALL: usize = 0xC3;
     /// GREATTOSS_ANIM ($C5): SUBANIM_0_BALL_TOSS_MIDDLE (Great Ball).
     pub const GREAT_TOSS: usize = 0xC4;
-    /// ULTRATOSS_ANIM ($C6): SUBANIM_0_BALL_TOSS_HIGH (Ultra/Safari Ball).
+    /// ULTRATOSS_ANIM ($C6): SUBANIM_0_BALL_TOSS_LOW
+    /// (Ultra/Master/Safari Ball).
     pub const ULTRA_TOSS: usize = 0xC5;
     /// HIDEPIC_ANIM ($C8): SE_HIDE_ENEMY_MON_PIC.
     pub const HIDEPIC: usize = 0xC7;
@@ -208,15 +211,11 @@ mod non_move_anim {
 
 /// One step of the ball-throw choreography (`TossBallAnimation` +
 /// `.PokeBallAnimations`, engine/battle/animations.asm:2581-2628): play one
-/// non-move animation for at least `min_frames` frames. `shake` steps get
-/// the `DoBallShakeSpecialEffects` treatment: SFX_TINK at the start and a
-/// 40-frame hold on the first frame block before the wobble plays out.
+/// non-move animation. Per-frame special handling uses the raw subanimation
+/// counter surfaced by [`AnimationPlayer`].
 #[derive(Debug, Clone, Copy)]
 struct BallStep {
     anim: usize,
-    min_frames: u8,
-    shake: bool,
-    sfx: Option<SfxId>,
 }
 
 /// The capture/ball-throw sequence currently playing (see
@@ -225,8 +224,21 @@ struct BallStep {
 struct BallChoreo {
     steps: Vec<BallStep>,
     step: usize,
-    frames: u8,
     started: bool,
+    shakes_remaining: u8,
+    flash_toss: bool,
+    ghost_dodge: bool,
+    trainer_block: bool,
+    hide_top_only: bool,
+    show_pattern: BallShowPattern,
+    ghost_transition_start: u8,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum BallShowPattern {
+    StandardTop,
+    BottomTwice,
+    HiddenThenTop,
 }
 
 /// Build the step list for a thrown ball, mirroring `TossBallAnimation`:
@@ -243,43 +255,43 @@ fn build_ball_choreo(ball: ItemId, shakes: u8, outcome: BallAnimOutcome) -> Ball
             ItemId::GreatBall => non_move_anim::GREAT_TOSS,
             _ => non_move_anim::ULTRA_TOSS,
         },
-        // Subanim_0BallToss*: 11 frame blocks × delay 3.
-        min_frames: 33,
-        shake: false,
-        sfx: Some(SfxId::BallToss),
     };
     let poof = BallStep {
         anim: non_move_anim::BALL_POOF,
-        // Subanim_0BallPoofEnemy: 6 frame blocks × delay 4.
-        min_frames: 24,
-        shake: false,
-        sfx: Some(SfxId::BallPoof),
     };
     let hide = BallStep {
         anim: non_move_anim::HIDEPIC,
-        min_frames: 3,
-        shake: false,
-        sfx: None,
     };
     let shake = BallStep {
         anim: non_move_anim::BALL_SHAKE,
-        // SFX_TINK + 40-frame hold (DoBallShakeSpecialEffects) + the
-        // 4-block wobble (delay 4).
-        min_frames: 56,
-        shake: true,
-        sfx: Some(SfxId::Tink),
     };
     let show = BallStep {
         anim: non_move_anim::SHOWPIC,
-        min_frames: 3,
-        shake: false,
-        sfx: None,
+    };
+    let block = BallStep {
+        anim: non_move_anim::BLOCK_BALL,
+    };
+    let low_toss = toss.anim == non_move_anim::ULTRA_TOSS;
+    let show_pattern = match (low_toss, shakes) {
+        (true, 1) | (false, 3) => BallShowPattern::BottomTwice,
+        (true, 3) | (false, 2) => BallShowPattern::HiddenThenTop,
+        _ => BallShowPattern::StandardTop,
     };
     let steps = match outcome {
         BallAnimOutcome::Dodged => vec![toss],
+        // The trainer branch hard-codes TOSS_ANIM regardless of which ball
+        // was selected, then plays BLOCKBALL_ANIM.
+        BallAnimOutcome::Blocked => vec![
+            BallStep {
+                anim: non_move_anim::BALL_TOSS,
+            },
+            block,
+        ],
         BallAnimOutcome::Caught => {
             let mut v = vec![toss, poof, hide];
-            v.extend(std::iter::repeat(shake).take(shakes as usize));
+            if shakes > 0 {
+                v.push(shake);
+            }
             v
         }
         BallAnimOutcome::BrokeFree => {
@@ -287,7 +299,7 @@ fn build_ball_choreo(ball: ItemId, shakes: u8, outcome: BallAnimOutcome) -> Ball
                 vec![toss, poof]
             } else {
                 let mut v = vec![toss, poof, hide];
-                v.extend(std::iter::repeat(shake).take(shakes as usize));
+                v.push(shake);
                 v.push(poof);
                 v.push(show);
                 v
@@ -297,8 +309,14 @@ fn build_ball_choreo(ball: ItemId, shakes: u8, outcome: BallAnimOutcome) -> Ball
     BallChoreo {
         steps,
         step: 0,
-        frames: 0,
         started: false,
+        shakes_remaining: shakes,
+        flash_toss: matches!(ball, ItemId::MasterBall | ItemId::UltraBall),
+        ghost_dodge: outcome == BallAnimOutcome::Dodged,
+        trainer_block: outcome == BallAnimOutcome::Blocked,
+        hide_top_only: !low_toss,
+        show_pattern,
+        ghost_transition_start: if low_toss { 5 } else { 6 },
     }
 }
 
@@ -431,9 +449,23 @@ pub struct BattleVisualEffects {
     trainer_appear_sfx_pending: bool,
     /// Active ball-throw choreography (capture / ghost dodge / old man).
     ball_choreo: Option<BallChoreo>,
+    /// Horizontal tilemap displacement accumulated by Ghost Marowak's dodge.
+    ball_enemy_offset_x: i32,
+    ball_enemy_top_offset_x: Option<i32>,
+    ball_ghost_frame: Option<u8>,
+    ball_ghost_transition_start: u8,
+    /// OBP0's middle shades are swapped after each Master/Ultra toss frame.
+    ball_obj_palette_flipped: bool,
+    ball_obj_palette_frame_initial: bool,
+    ball_obj_palette_write_scanline: Option<u32>,
+    /// Three-VBlank BG-map clear performed by HIDEPIC_ANIM in a ball flow.
+    ball_hide_raster: Option<u8>,
+    ball_hide_top_only: bool,
+    ball_show_pattern: Option<BallShowPattern>,
     /// Ball-flow SFX (BallToss / Tink per shake / BallPoof) queued for the
     /// frontend, which owns the audio device.
     pending_ball_sfx: std::collections::VecDeque<SfxId>,
+    scheduled_ball_sfx: Vec<(u8, SfxId)>,
 }
 
 impl BattleVisualEffects {
@@ -488,7 +520,17 @@ impl BattleVisualEffects {
                 shakes,
                 outcome,
             } => {
-                self.ball_choreo = Some(build_ball_choreo(ball, shakes, outcome));
+                let choreo = build_ball_choreo(ball, shakes, outcome);
+                self.ball_enemy_offset_x = 0;
+                self.ball_enemy_top_offset_x = None;
+                self.ball_ghost_frame = None;
+                self.ball_ghost_transition_start = choreo.ghost_transition_start;
+                self.ball_obj_palette_flipped = false;
+                self.ball_hide_raster = None;
+                self.ball_hide_top_only = choreo.hide_top_only;
+                self.ball_show_pattern = None;
+                self.scheduled_ball_sfx.clear();
+                self.ball_choreo = Some(choreo);
             }
             BattleAnimEvent::XStatItem => {
                 self.start_non_move_anim(non_move_anim::XSTATITEM, true);
@@ -583,7 +625,18 @@ impl Default for BattleVisualEffects {
             cry_pending: None,
             trainer_appear_sfx_pending: false,
             ball_choreo: None,
+            ball_enemy_offset_x: 0,
+            ball_enemy_top_offset_x: None,
+            ball_ghost_frame: None,
+            ball_ghost_transition_start: 0,
+            ball_obj_palette_flipped: false,
+            ball_obj_palette_frame_initial: false,
+            ball_obj_palette_write_scanline: None,
+            ball_hide_raster: None,
+            ball_hide_top_only: false,
+            ball_show_pattern: None,
             pending_ball_sfx: std::collections::VecDeque::new(),
+            scheduled_ball_sfx: Vec::new(),
         }
     }
 }
@@ -598,7 +651,9 @@ impl BattleVisualEffects {
             BattlePhase::ItemMoveSelect { .. } => BattlePhaseKind::MoveSelect,
             BattlePhase::BagSelect => BattlePhaseKind::BagSelect,
             BattlePhase::ItemTargetSelect { .. } => BattlePhaseKind::ItemTargetSelect,
-            BattlePhase::ShowingText { .. } => BattlePhaseKind::ShowingText,
+            BattlePhase::ShowingText { .. } | BattlePhase::EnemyFreeTurnAfterItem => {
+                BattlePhaseKind::ShowingText
+            }
             BattlePhase::PartySelect => BattlePhaseKind::PartySelect,
             BattlePhase::PartySubMenu { .. } => BattlePhaseKind::PartySubMenu,
             BattlePhase::PartyStats { .. } => BattlePhaseKind::PartyStats,
@@ -1148,6 +1203,10 @@ impl BattleVisualEffects {
                 self.blink_mon.start(defender);
                 0
             }
+            AnimEffect::HideEnemyMon if self.ball_choreo.is_some() => {
+                self.ball_hide_raster = Some(0);
+                0
+            }
             _ => self.fx.apply(&effect, attacker),
         };
         let wait = AnimationPlayer::effect_duration(&effect, attacker).unwrap_or(generic_wait);
@@ -1182,7 +1241,18 @@ impl BattleVisualEffects {
             AnimEffect::ShowEnemyMon => {
                 self.set_visible(defender, true);
                 if self.current_move != MoveId::DoubleTeam {
-                    self.show_reveal[Self::side_index(defender)] = Some(0);
+                    if let Some(pattern) = self.ball_choreo.as_ref().map(|c| c.show_pattern) {
+                        self.ball_show_pattern = Some(pattern);
+                        self.show_reveal[Self::side_index(defender)] = Some(
+                            if pattern == BallShowPattern::StandardTop {
+                                1
+                            } else {
+                                0
+                            },
+                        );
+                    } else {
+                        self.show_reveal[Self::side_index(defender)] = Some(0);
+                    }
                     self.anim_wait = self.anim_wait.max(2);
                 }
             }
@@ -1290,6 +1360,21 @@ impl BattleVisualEffects {
     }
 
     fn short_flash_timing(&self) -> ShortFlashTiming {
+        if matches!(self.anim_player.animation_id(), 0xAE | 0xAF) {
+            return if self.current_attacker_is_player {
+                ShortFlashTiming {
+                    entry_scanline: 17,
+                    white_scanline: 8,
+                    restore_scanline: 8,
+                }
+            } else {
+                ShortFlashTiming {
+                    entry_scanline: 17,
+                    white_scanline: 8,
+                    restore_scanline: 8,
+                }
+            };
+        }
         if let Some(timing) = move_short_flash_timing(
             self.current_move as u8,
             self.current_attacker_is_player,
@@ -1562,6 +1647,11 @@ impl BattleVisualEffects {
     fn palette_write_scanline(&self, effect: &AnimEffect) -> u32 {
         let player = self.current_attacker_is_player;
         let side = |player_line, enemy_line| if player { player_line } else { enemy_line };
+        if matches!(self.anim_player.animation_id(), 0xAE | 0xAF)
+            && matches!(effect, AnimEffect::LightScreenPalette)
+        {
+            return side(13, 14);
+        }
         match (self.current_move, effect) {
             (MoveId::Smokescreen, AnimEffect::DarkenMonPalette)
                 if self.bg_palette.current_bgp() == 0xe4 =>
@@ -1722,6 +1812,7 @@ impl BattleVisualEffects {
                     if let Some(sound_move) = sound {
                         self.emit_move_sfx(sound_move);
                     }
+                    self.handle_ball_frame_event();
                     self.commit_move_animation_frame();
                     return;
                 }
@@ -1746,7 +1837,9 @@ impl BattleVisualEffects {
                     }
                 }
                 AnimTickResult::Done => {
-                    self.anim_layer_pending.clear();
+                    if !self.anim_player.preserves_oam_when_finished() {
+                        self.anim_layer_pending.clear();
+                    }
                     if !self.suppress_hit_flash {
                         if let Some(pending) = self.pending_applying.take() {
                             self.run_applying_attack_feedback(
@@ -1764,44 +1857,117 @@ impl BattleVisualEffects {
         debug_assert!(false, "move animation executed too many zero-time commands");
     }
 
-    /// Advance the ball-throw choreography (capture / ghost dodge / old man)
-    /// by one frame: start each step's animation in turn, hold shake steps
-    /// on their first frame block for 40 frames
-    /// (`DoBallShakeSpecialEffects`: SFX_TINK + DelayFrames 40), and keep
-    /// each step up for at least its `min_frames`.
-    fn advance_ball_choreo(&mut self) {
+    fn handle_ball_frame_event(&mut self) {
+        let Some(event) = self.anim_player.take_ball_frame_event() else {
+            return;
+        };
         let Some(choreo) = self.ball_choreo.as_mut() else {
             return;
         };
+        match event {
+            BallFrameEvent::Toss { counter } => {
+                if choreo.flash_toss && counter < 11 {
+                    self.ball_obj_palette_frame_initial = self.ball_obj_palette_flipped;
+                    self.ball_obj_palette_flipped = !self.ball_obj_palette_flipped;
+                    self.ball_obj_palette_write_scanline = Some(if counter == 2 {
+                        if choreo.trainer_block { 28 } else { 44 }
+                    } else {
+                        0
+                    });
+                }
+                if counter == 11 {
+                    let delay = if self.anim_player.animation_id() == 0xC6 {
+                        3
+                    } else {
+                        4
+                    };
+                    self.scheduled_ball_sfx.push((delay, SfxId::BallToss));
+                }
+                if choreo.ghost_dodge && counter == 3 {
+                    self.ball_ghost_frame = Some(0);
+                }
+                if choreo.trainer_block && counter == 2 {
+                    self.anim_player.skip_next_subanimation_frame();
+                }
+            }
+            BallFrameEvent::Shake { counter } => {
+                if counter == 4 {
+                    self.scheduled_ball_sfx.push((4, SfxId::Tink));
+                    self.anim_wait = self.anim_wait.max(40);
+                } else if counter == 1 && choreo.shakes_remaining > 1 {
+                    choreo.shakes_remaining -= 1;
+                    self.anim_player.repeat_current_subanimation();
+                }
+            }
+            BallFrameEvent::Poof { counter: 5 } => {
+                self.scheduled_ball_sfx.push((5, SfxId::BallPoof));
+            }
+            BallFrameEvent::Poof { .. } => {}
+        }
+    }
+
+    fn tick_scheduled_ball_sfx(&mut self) {
+        for (remaining, _) in &mut self.scheduled_ball_sfx {
+            *remaining = remaining.saturating_sub(1);
+        }
+        let mut index = 0;
+        while index < self.scheduled_ball_sfx.len() {
+            if self.scheduled_ball_sfx[index].0 == 0 {
+                let (_, sfx) = self.scheduled_ball_sfx.remove(index);
+                self.pending_ball_sfx.push_back(sfx);
+            } else {
+                index += 1;
+            }
+        }
+    }
+
+    /// Start and chain each raw animation used by `TossBallAnimation`.
+    fn advance_ball_choreo(&mut self) -> bool {
+        let Some(choreo) = self.ball_choreo.as_mut() else {
+            return false;
+        };
         if !choreo.started {
             let step = choreo.steps[choreo.step];
-            self.anim_player.start(step.anim, true);
+            if choreo.step == 0 {
+                self.anim_player.start(step.anim, true);
+            } else {
+                self.anim_player.start_preserving_oam(step.anim, true);
+            }
             self.anim_wait = 0;
-            self.anim_layer.clear();
-            self.anim_layer_pending.clear();
             self.current_move = MoveId::None;
-            if let Some(sfx) = step.sfx {
-                self.pending_ball_sfx.push_back(sfx);
+            if step.anim == non_move_anim::BLOCK_BALL {
+                self.pending_ball_sfx.push_back(SfxId::FaintThud);
             }
             choreo.started = true;
-            return;
+            return true;
         }
-        choreo.frames = choreo.frames.saturating_add(1);
-        let step = choreo.steps[choreo.step];
-        // The first frame block is on screen now (ticked by
-        // advance_move_animation above): hold it for 40 frames before the
-        // wobble plays out.
-        if step.shake && choreo.frames == 1 {
-            self.anim_wait = self.anim_wait.max(40);
-        }
-        if self.anim_player.is_finished() && choreo.frames >= step.min_frames {
+        if self.anim_player.is_finished() && self.anim_wait == 0 {
+            let finished_anim = choreo.steps[choreo.step].anim;
+            if matches!(
+                finished_anim,
+                non_move_anim::BALL_TOSS | non_move_anim::GREAT_TOSS | non_move_anim::ULTRA_TOSS
+            ) {
+                self.ball_obj_palette_flipped = false;
+                self.ball_obj_palette_frame_initial = false;
+                self.ball_obj_palette_write_scanline = None;
+            }
             choreo.step += 1;
-            choreo.frames = 0;
             choreo.started = false;
             if choreo.step >= choreo.steps.len() {
                 self.ball_choreo = None;
+                self.ball_obj_palette_flipped = false;
+            } else {
+                let step = choreo.steps[choreo.step];
+                self.anim_player.start_preserving_oam(step.anim, true);
+                self.current_move = MoveId::None;
+                if step.anim == non_move_anim::BLOCK_BALL {
+                    self.pending_ball_sfx.push_back(SfxId::FaintThud);
+                }
+                choreo.started = true;
+                return true;
             }
         }
+        false
     }
 
     /// Duration of a slide animation in frames, per the original routines
@@ -1874,6 +2040,11 @@ impl BattleVisualEffects {
     }
 
     fn horizontal_slide_top_dx(&self, side: MonSide) -> Option<i32> {
+        if side == MonSide::Enemy {
+            if let Some(dx) = self.ball_enemy_top_offset_x {
+                return Some(dx);
+            }
+        }
         if let Some(dx) = self.shake_back_and_forth.top_dx(side) {
             return Some(dx);
         }
@@ -1923,6 +2094,9 @@ impl BattleVisualEffects {
     }
 
     fn horizontal_slide_clip(&self, side: MonSide) -> (i32, i32) {
+        if side == MonSide::Enemy && self.ball_ghost_frame.is_some() {
+            return (96, 152);
+        }
         let sliding = match side {
             MonSide::Player => {
                 self.player_half_off
@@ -1948,6 +2122,7 @@ impl BattleVisualEffects {
     }
 
     pub fn update(&mut self, screen: &BattleScreen) {
+        self.tick_scheduled_ball_sfx();
         std::mem::swap(&mut self.anim_layer, &mut self.anim_layer_pending);
         std::mem::swap(
             &mut self.anim_layer_tileset,
@@ -1976,6 +2151,35 @@ impl BattleVisualEffects {
             self.transform_raster = None;
         }
         self.bg_palette.begin_frame();
+        self.ball_obj_palette_frame_initial = self.ball_obj_palette_flipped;
+        self.ball_obj_palette_write_scanline = None;
+        if let Some(frame) = self.ball_hide_raster.as_mut() {
+            if *frame >= 3 {
+                self.ball_hide_raster = None;
+                self.enemy_visible = false;
+            } else {
+                *frame += 1;
+            }
+        }
+        if let Some(frame) = self.ball_ghost_frame.as_mut() {
+            *frame = frame.saturating_add(1);
+            let phase = *frame;
+            let first = self.ball_ghost_transition_start;
+            self.ball_enemy_top_offset_x = None;
+            if phase < first {
+                self.ball_enemy_offset_x = 0;
+            } else if phase == first {
+                self.ball_enemy_offset_x = 0;
+                self.ball_enemy_top_offset_x = Some(8);
+            } else if phase < first.saturating_add(3) {
+                self.ball_enemy_offset_x = 8;
+            } else if phase == first.saturating_add(3) {
+                self.ball_enemy_offset_x = 8;
+                self.ball_enemy_top_offset_x = Some(8);
+            } else {
+                self.ball_enemy_offset_x = 16;
+            }
+        }
 
         let kind = Self::phase_kind(&screen.phase);
         if self.last_phase_kind != Some(kind) {
@@ -2015,8 +2219,11 @@ impl BattleVisualEffects {
             }
         }
 
-        self.advance_move_animation();
         self.advance_ball_choreo();
+        self.advance_move_animation();
+        if self.advance_ball_choreo() {
+            self.advance_move_animation();
+        }
 
         // Substitute doll lifecycle: SE_SUBSTITUTE_MON latches the doll on
         // (inside `fx`); here we only clear the latch when the core
@@ -2105,6 +2312,9 @@ impl BattleVisualEffects {
             if let Some(frame) = reveal.as_mut() {
                 if *frame >= 3 {
                     *reveal = None;
+                    if side == Self::side_index(MonSide::Enemy) {
+                        self.ball_show_pattern = None;
+                    }
                     if self.current_move == MoveId::Softboiled {
                         if side == Self::side_index(MonSide::Player) {
                             self.player_half_off = false;
@@ -2296,6 +2506,7 @@ impl BattleVisualEffects {
         }
         dx += self.fx.mon_dx(MonSide::Enemy);
         dx += self.shake_back_and_forth.dx(MonSide::Enemy);
+        dx += self.ball_enemy_offset_x;
         if !self.mon_tilemap.controls_side(MonSide::Enemy) {
             dy += self.fx.mon_dy(MonSide::Enemy);
         }
@@ -2346,6 +2557,7 @@ impl BattleVisualEffects {
     fn enemy_visible_now(&self) -> bool {
         let side = MonSide::Enemy;
         let reveal = self.show_reveal[Self::side_index(side)];
+        let bottom_first = self.ball_show_pattern == Some(BallShowPattern::BottomTwice);
         let seismic_defender = self.current_move == MoveId::SeismicToss
             && side
                 != if self.current_attacker_is_player {
@@ -2356,6 +2568,7 @@ impl BattleVisualEffects {
         let reveal_hidden = (matches!(reveal, Some(1))
             && !matches!(self.current_move, MoveId::Softboiled | MoveId::Fly))
             || (matches!(reveal, Some(2))
+                && !bottom_first
                 && !matches!(
                     self.current_move,
                     MoveId::Softboiled | MoveId::Submission | MoveId::Fly
@@ -2367,6 +2580,7 @@ impl BattleVisualEffects {
         self.enemy_visible
             && self.blink_mon.visible_band(side, 144).is_some()
             && !reveal_hidden
+            && self.ball_hide_raster != Some(3)
             && (self.mon_tilemap.keeps_side_visible(side)
                 || seismic_transfer
                 || !self.fx.mon_hidden(side))
@@ -2415,6 +2629,23 @@ impl BattleVisualEffects {
             transfer.side == side && side == MonSide::Player && transfer.frame == 3
         }) {
             top = top.max(48);
+        }
+        if side == MonSide::Enemy {
+            match (self.ball_hide_top_only, self.ball_hide_raster) {
+                (true, Some(1 | 2)) => bottom = bottom.min(48),
+                (false, Some(2)) => top = top.max(48),
+                _ => {}
+            }
+        }
+        if self.ball_hide_raster == Some(3) && side == MonSide::Enemy {
+            return (0, 0);
+        }
+        if side == MonSide::Enemy
+            && self.ball_show_pattern == Some(BallShowPattern::BottomTwice)
+            && matches!(self.show_reveal[Self::side_index(side)], Some(2 | 3))
+        {
+            top = top.max(48);
+            return (top, bottom);
         }
         if self.show_reveal[Self::side_index(side)] == Some(3) {
             bottom = bottom.min(48);
@@ -3934,7 +4165,33 @@ pub fn draw_battle(
                 _ => "move_anim_0",
             };
             if let Ok(cached) = rm.load_battle(anim_tileset_name) {
-                render_gen1_oam(fb, &effects.anim_layer.entries, &cached.tileset, pal);
+                if effects.ball_obj_palette_flipped
+                    || effects.ball_obj_palette_frame_initial
+                    || effects.ball_obj_palette_write_scanline.is_some()
+                {
+                    let mut flipped = *pal;
+                    flipped.colors.swap(1, 2);
+                    let before = if effects.ball_obj_palette_frame_initial {
+                        &flipped
+                    } else {
+                        pal
+                    };
+                    let after = if effects.ball_obj_palette_flipped {
+                        &flipped
+                    } else {
+                        pal
+                    };
+                    render_gen1_oam_palette_split(
+                        fb,
+                        &effects.anim_layer.entries,
+                        &cached.tileset,
+                        before,
+                        after,
+                        effects.ball_obj_palette_write_scanline,
+                    );
+                } else {
+                    render_gen1_oam(fb, &effects.anim_layer.entries, &cached.tileset, pal);
+                }
             }
         }
     } else {

@@ -357,6 +357,26 @@ fn main() {
                 std::process::exit(1);
             }
         }
+        Some(crate::cli::Commands::ItemAnimationFrames {
+            scenario,
+            ball,
+            shakes,
+            ref output_dir,
+            max_frames,
+            manifest_only,
+        }) => {
+            if let Err(error) = crate::move_animation_capture::capture_item_animation(
+                scenario,
+                ball.item_id(),
+                shakes,
+                output_dir,
+                max_frames,
+                !manifest_only,
+            ) {
+                eprintln!("Error: {error}");
+                std::process::exit(1);
+            }
+        }
     }
 }
 

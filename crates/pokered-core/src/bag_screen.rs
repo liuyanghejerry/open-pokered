@@ -38,6 +38,10 @@ pub enum BagPhase {
     /// SELECT-swap mode (swap_items.asm): the marked row waits for a second
     /// SELECT on another row to swap/merge. B cancels the mark.
     SwapFrom { row: usize },
+    /// ItemUseTMHM's first blocking text: "Booted up a TM/HM!".
+    MachineBoot { item: ItemId },
+    /// "It contained MOVE! Teach MOVE to a POKéMON?" plus YES/NO.
+    MachineTeach { item: ItemId, cursor: u8 },
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -139,6 +143,10 @@ impl BagScreenState {
             BagPhase::ActionMenu { cursor } => self.update_action_menu(input, cursor),
             BagPhase::TossQuantity { qty } => self.update_toss_quantity(input, qty),
             BagPhase::SwapFrom { row } => self.update_swap(input, row),
+            BagPhase::MachineBoot { item } => self.update_machine_boot(input, item),
+            BagPhase::MachineTeach { item, cursor } => {
+                self.update_machine_teach(input, item, cursor)
+            }
         }
     }
 
@@ -234,7 +242,12 @@ impl BagScreenState {
             };
             match cursor {
                 0 => {
-                    // USE — hand back to the caller; stay on the bag afterwards.
+                    // ItemUseTMHM prints two blocking prompts before opening
+                    // the party menu. Other items dispatch immediately.
+                    if crate::items::bag_use::machine_of(item).is_some() {
+                        self.phase = BagPhase::MachineBoot { item };
+                        return BagScreenAction::Active;
+                    }
                     self.phase = BagPhase::Browsing;
                     return BagScreenAction::UseItem {
                         item,
@@ -250,6 +263,38 @@ impl BagScreenState {
                     self.phase = BagPhase::Browsing;
                 }
             }
+        }
+        BagScreenAction::Active
+    }
+
+    fn update_machine_boot(&mut self, input: BagScreenInput, item: ItemId) -> BagScreenAction {
+        if input.a || input.b {
+            // YES is selected initially, matching DisplayTwoOptionMenu.
+            self.phase = BagPhase::MachineTeach { item, cursor: 0 };
+        }
+        BagScreenAction::Active
+    }
+
+    fn update_machine_teach(
+        &mut self,
+        input: BagScreenInput,
+        item: ItemId,
+        mut cursor: u8,
+    ) -> BagScreenAction {
+        if input.up || input.down {
+            cursor ^= 1;
+        }
+        self.phase = BagPhase::MachineTeach { item, cursor };
+        if input.b || (input.a && cursor == 1) {
+            self.phase = BagPhase::Browsing;
+            return BagScreenAction::Active;
+        }
+        if input.a {
+            self.phase = BagPhase::Browsing;
+            return BagScreenAction::UseItem {
+                item,
+                index: self.cursor,
+            };
         }
         BagScreenAction::Active
     }
@@ -323,6 +368,37 @@ mod tests {
         s.update_frame(BagScreenInput { a: true, ..Default::default() }); // action menu
         let act = s.update_frame(BagScreenInput { a: true, ..Default::default() }); // USE
         assert_eq!(act, BagScreenAction::UseItem { item: ItemId::PokeFlute, index: 1 });
+        assert_eq!(s.phase(), BagPhase::Browsing);
+    }
+
+    #[test]
+    fn tm_hm_use_runs_boot_and_teach_confirmation_before_party() {
+        for item in [ItemId::Tm01, ItemId::Hm01] {
+            let mut s = BagScreenState::new(vec![(item, 1)]);
+            s.update_frame(BagScreenInput { a: true, ..Default::default() });
+            assert_eq!(
+                s.update_frame(BagScreenInput { a: true, ..Default::default() }),
+                BagScreenAction::Active
+            );
+            assert_eq!(s.phase(), BagPhase::MachineBoot { item });
+            s.update_frame(BagScreenInput { a: true, ..Default::default() });
+            assert_eq!(s.phase(), BagPhase::MachineTeach { item, cursor: 0 });
+            assert_eq!(
+                s.update_frame(BagScreenInput { a: true, ..Default::default() }),
+                BagScreenAction::UseItem { item, index: 0 }
+            );
+        }
+    }
+
+    #[test]
+    fn tm_hm_teach_prompt_b_selects_no_without_using_item() {
+        let item = ItemId::Tm01;
+        let mut s = BagScreenState::new(vec![(item, 1)]);
+        s.phase = BagPhase::MachineTeach { item, cursor: 0 };
+        assert_eq!(
+            s.update_frame(BagScreenInput { b: true, ..Default::default() }),
+            BagScreenAction::Active
+        );
         assert_eq!(s.phase(), BagPhase::Browsing);
     }
 

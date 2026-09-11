@@ -38,9 +38,28 @@ pub fn render_gen1_oam(
     tileset: &TileSet,
     palette: &Palette,
 ) {
+    render_gen1_oam_palette_split(fb, entries, tileset, palette, palette, None);
+}
+
+/// Render OAM while honoring one mid-scanout OBJ-palette write. Ball tosses
+/// on the DMG toggle OBP0 after every frame block, so the scanout containing
+/// the write can use the old palette above `split_y` and the new one below it.
+pub fn render_gen1_oam_palette_split(
+    fb: &mut crate::FrameBuffer,
+    entries: &[SpriteOamEntry],
+    tileset: &TileSet,
+    palette_before: &Palette,
+    palette_after: &Palette,
+    split_y: Option<u32>,
+) {
     let width = fb.width() as i32;
     let height = fb.height() as i32;
     for screen_y in 0..height {
+        let palette = if split_y.is_some_and(|line| screen_y as u32 >= line) {
+            palette_after
+        } else {
+            palette_before
+        };
         let mut selected: Vec<(usize, &SpriteOamEntry)> = entries
             .iter()
             .enumerate()
@@ -236,6 +255,18 @@ pub enum AnimTickResult {
         effect: SpecialEffect,
     },
     Done,
+}
+
+/// A per-frame-block callback used by the original ball-animation helpers.
+///
+/// The normal move interpreter can treat these hooks as no-ops, but the
+/// item-use flow needs the exact countdown value to reproduce sound timing,
+/// trainer deflection, Ghost Marowak's dodge, and repeated shakes.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum BallFrameEvent {
+    Toss { counter: u8 },
+    Shake { counter: u8 },
+    Poof { counter: u8 },
 }
 
 /// Scanline boundaries for the three palette writes made by
@@ -1485,6 +1516,7 @@ pub struct AnimationPlayer {
     shake_restore_pending: Option<u8>,
     oam_slots: Vec<Option<SpriteOamEntry>>,
     oam_buffer: Vec<SpriteOamEntry>,
+    ball_frame_event: Option<BallFrameEvent>,
     finished: bool,
 }
 
@@ -1507,6 +1539,7 @@ impl AnimationPlayer {
             shake_restore_pending: None,
             oam_slots: vec![None; MAX_OAM_ENTRIES],
             oam_buffer: Vec::with_capacity(MAX_OAM_ENTRIES),
+            ball_frame_event: None,
             finished: true,
         }
     }
@@ -1514,6 +1547,23 @@ impl AnimationPlayer {
     /// Start an animation. `move_id` is the zero-based index used by the
     /// shared animation tables.
     pub fn start(&mut self, move_id: usize, player_is_attacker: bool) {
+        self.start_with_oam_policy(move_id, player_is_attacker, false);
+    }
+
+    /// Start an animation without clearing the OAM left by the preceding
+    /// animation. `TossBallAnimation` relies on this when a mode-04 shake is
+    /// followed by a poof: the final closed-ball frame remains visible while
+    /// the next tileset is uploaded.
+    pub fn start_preserving_oam(&mut self, move_id: usize, player_is_attacker: bool) {
+        self.start_with_oam_policy(move_id, player_is_attacker, true);
+    }
+
+    fn start_with_oam_policy(
+        &mut self,
+        move_id: usize,
+        player_is_attacker: bool,
+        preserve_oam: bool,
+    ) {
         let resolved = if !player_is_attacker {
             match move_id + 1 {
                 id if id == AMNESIA as usize => CONF_ANIM as usize - 1,
@@ -1542,12 +1592,20 @@ impl AnimationPlayer {
         self.display_shake = None;
         self.shake_call_count = 0;
         self.shake_restore_pending = None;
-        self.clear_oam();
+        self.ball_frame_event = None;
+        if !preserve_oam {
+            self.clear_oam();
+        }
         self.finished = self.commands.is_empty();
     }
 
     pub fn is_finished(&self) -> bool {
         self.finished
+    }
+
+    /// One-based animation id currently loaded from MOVE_ANIM_DATA.
+    pub fn animation_id(&self) -> u8 {
+        self.animation_id as u8 + 1
     }
 
     /// Current screen-space OAM. The +8/+16 hardware coordinate bias has
@@ -1558,6 +1616,43 @@ impl AnimationPlayer {
 
     pub fn current_tileset(&self) -> Option<u8> {
         self.current_tileset
+    }
+
+    /// Ball-shake frame blocks use mode 04, and the original leaves the last
+    /// closed-ball OAM visible while the following animation loads tiles.
+    pub fn preserves_oam_when_finished(&self) -> bool {
+        get_frame_hook(self.animation_id as u8 + 1) == Some(FrameHook::BallShake)
+    }
+
+    /// Take the ball-specific hook emitted by the most recently drawn frame
+    /// block, if any.
+    pub fn take_ball_frame_event(&mut self) -> Option<BallFrameEvent> {
+        self.ball_frame_event.take()
+    }
+
+    /// Skip the next frame block of the active subanimation. The trainer
+    /// battle branch applies this at toss counter 3, exactly matching the
+    /// original helper's extra decrement of `wSubAnimCounter`.
+    pub fn skip_next_subanimation_frame(&mut self) -> bool {
+        let Some(state) = self.subanim.as_mut() else {
+            return false;
+        };
+        if state.frame_index >= state.frames.len() {
+            return false;
+        }
+        state.frame_index += 1;
+        true
+    }
+
+    /// Rewind the active subanimation without reloading tiles or clearing
+    /// OAM. Ball shakes use this at counter 1 for every remaining wobble.
+    pub fn repeat_current_subanimation(&mut self) -> bool {
+        let Some(state) = self.subanim.as_mut() else {
+            return false;
+        };
+        state.frame_index = 0;
+        state.dest_slot = 0;
+        true
     }
 
     /// Apply the scanline/window effects whose timing is owned by this
@@ -2101,6 +2196,12 @@ impl AnimationPlayer {
                     }
 
                     let frame_hook = get_frame_hook(self.animation_id as u8 + 1);
+                    self.ball_frame_event = match frame_hook {
+                        Some(FrameHook::BallToss) => Some(BallFrameEvent::Toss { counter }),
+                        Some(FrameHook::BallShake) => Some(BallFrameEvent::Shake { counter }),
+                        Some(FrameHook::BallPoof) => Some(BallFrameEvent::Poof { counter }),
+                        _ => None,
+                    };
                     let post = if frame_hook == Some(FrameHook::Growl) {
                         PostFrameAction::Growl {
                             final_frame: counter == 1,
@@ -2159,7 +2260,9 @@ impl AnimationPlayer {
 
             let Some(command) = self.commands.get(self.command_index).copied() else {
                 self.finished = true;
-                self.clear_oam();
+                if !self.preserves_oam_when_finished() {
+                    self.clear_oam();
+                }
                 return AnimTickResult::Done;
             };
             self.command_index += 1;

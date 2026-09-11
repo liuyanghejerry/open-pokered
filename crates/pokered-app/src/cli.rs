@@ -77,6 +77,42 @@ impl CliAnimationSide {
     }
 }
 
+/// Semantic non-move battle sequence used by the item-animation recorder.
+#[derive(Clone, Copy, Debug, ValueEnum)]
+pub enum CliItemAnimationScenario {
+    XStatPlayer,
+    XStatEnemy,
+    SafariBait,
+    SafariRock,
+    BallCaught,
+    BallBrokeFree,
+    BallDodged,
+    BallBlocked,
+}
+
+/// Ball item selected for an isolated item-animation capture.
+#[derive(Clone, Copy, Debug, ValueEnum)]
+pub enum CliBallKind {
+    Master,
+    Ultra,
+    Great,
+    Poke,
+    Safari,
+}
+
+impl CliBallKind {
+    pub fn item_id(self) -> pokered_data::items::ItemId {
+        use pokered_data::items::ItemId;
+        match self {
+            Self::Master => ItemId::MasterBall,
+            Self::Ultra => ItemId::UltraBall,
+            Self::Great => ItemId::GreatBall,
+            Self::Poke => ItemId::PokeBall,
+            Self::Safari => ItemId::SafariBall,
+        }
+    }
+}
+
 #[derive(Subcommand)]
 pub enum Commands {
     /// Run the game in windowed mode (default)
@@ -227,6 +263,31 @@ pub enum Commands {
         /// Which side performs the move (affects mirroring and target effects).
         #[arg(long, value_enum, default_value_t = CliAnimationSide::Player)]
         side: CliAnimationSide,
+        /// Empty/nonexistent directory for manifest.json and optional PNGs.
+        #[arg(short, long)]
+        output_dir: PathBuf,
+        /// Safety cap; an unfinished animation at this frame is an error.
+        #[arg(long, default_value_t = 2000)]
+        max_frames: u32,
+        /// Record frame hashes and change masks without encoding PNG files.
+        #[arg(long)]
+        manifest_only: bool,
+    },
+    /// Record one isolated item-use battle animation frame by frame.
+    ///
+    /// The semantic scenarios retain the production ball choreography and
+    /// non-move animation player while bypassing capture RNG and menu input.
+    ItemAnimationFrames {
+        /// Item animation/process branch to record.
+        #[arg(long, value_enum)]
+        scenario: CliItemAnimationScenario,
+        /// Ball kind for `ball-*` scenarios (ignored for other scenarios).
+        #[arg(long, value_enum, default_value_t = CliBallKind::Poke)]
+        ball: CliBallKind,
+        /// Shake count for `ball-broke-free` (0-3). Caught always uses 3;
+        /// dodged/blocked always use 0.
+        #[arg(long, default_value_t = 3, value_parser = clap::value_parser!(u8).range(0..=3))]
+        shakes: u8,
         /// Empty/nonexistent directory for manifest.json and optional PNGs.
         #[arg(short, long)]
         output_dir: PathBuf,

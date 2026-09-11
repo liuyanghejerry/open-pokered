@@ -105,11 +105,11 @@ fn x_accuracy_sets_flag() {
 }
 
 #[test]
-fn x_accuracy_no_effect_if_already_set() {
+fn x_accuracy_is_still_used_if_already_set() {
     let mut battler = make_battler();
     battler.set_status2(status2::USING_X_ACCURACY);
     let result = use_battle_item(&mut battler, ItemId::XAccuracy);
-    assert_eq!(result, BattleItemResult::NoEffect);
+    assert_eq!(result, BattleItemResult::FlagSet);
 }
 
 #[test]
@@ -121,11 +121,11 @@ fn guard_spec_sets_mist_flag() {
 }
 
 #[test]
-fn guard_spec_no_effect_if_already_set() {
+fn guard_spec_is_still_used_if_already_set() {
     let mut battler = make_battler();
     battler.set_status2(status2::PROTECTED_BY_MIST);
     let result = use_battle_item(&mut battler, ItemId::GuardSpec);
-    assert_eq!(result, BattleItemResult::NoEffect);
+    assert_eq!(result, BattleItemResult::FlagSet);
 }
 
 #[test]
@@ -137,11 +137,11 @@ fn dire_hit_sets_pumped_flag() {
 }
 
 #[test]
-fn dire_hit_no_effect_if_already_set() {
+fn dire_hit_is_still_used_if_already_set() {
     let mut battler = make_battler();
     battler.set_status2(status2::GETTING_PUMPED);
     let result = use_battle_item(&mut battler, ItemId::DireHit);
-    assert_eq!(result, BattleItemResult::NoEffect);
+    assert_eq!(result, BattleItemResult::FlagSet);
 }
 
 #[test]

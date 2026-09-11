@@ -65,6 +65,9 @@ fn is_field_item(item: ItemId) -> bool {
         ItemId::PokeFlute
             | ItemId::Bicycle
             | ItemId::TownMap
+            | ItemId::Pokedex
+            | ItemId::CoinCase
+            | ItemId::OaksParcel
             | ItemId::EscapeRope
             | ItemId::Repel
             | ItemId::SuperRepel
@@ -196,6 +199,53 @@ pub enum ItemApplyOutcome {
         force: bool,
         consume: bool,
     },
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ItemUseSfx {
+    HealHp,
+    HealAilment,
+}
+
+/// Sound emitted by successful party-menu item handlers in item_effects.asm.
+pub fn success_sfx(item: ItemId) -> Option<ItemUseSfx> {
+    if matches!(
+        item,
+        ItemId::Potion
+            | ItemId::SuperPotion
+            | ItemId::HyperPotion
+            | ItemId::MaxPotion
+            | ItemId::FullRestore
+            | ItemId::FreshWater
+            | ItemId::SodaPop
+            | ItemId::Lemonade
+            | ItemId::Revive
+            | ItemId::MaxRevive
+    ) {
+        Some(ItemUseSfx::HealHp)
+    } else if matches!(
+        item,
+        ItemId::Antidote
+            | ItemId::BurnHeal
+            | ItemId::IceHeal
+            | ItemId::Awakening
+            | ItemId::ParlyzHeal
+            | ItemId::FullHeal
+            | ItemId::HpUp
+            | ItemId::Protein
+            | ItemId::Iron
+            | ItemId::Carbos
+            | ItemId::Calcium
+            | ItemId::Ether
+            | ItemId::MaxEther
+            | ItemId::Elixer
+            | ItemId::MaxElixer
+            | ItemId::PpUp
+    ) {
+        Some(ItemUseSfx::HealAilment)
+    } else {
+        None
+    }
 }
 
 fn used(message: String, consume: bool) -> ItemApplyOutcome {
@@ -468,6 +518,9 @@ mod tests {
             ItemId::EscapeRope,
             ItemId::Bicycle,
             ItemId::TownMap,
+            ItemId::Pokedex,
+            ItemId::CoinCase,
+            ItemId::OaksParcel,
             ItemId::PokeFlute,
             ItemId::Itemfinder,
             ItemId::OldRod,
@@ -479,6 +532,84 @@ mod tests {
         for item in [ItemId::PokeBall, ItemId::XAttack, ItemId::SilphScope, ItemId::Nugget] {
             assert_eq!(classify_bag_use(item), BagUseKind::NotTime, "{item:?}");
         }
+    }
+
+    /// Exhaustive guard for the original ItemUsePtrTable surface: all 83 base
+    /// IDs plus 5 HMs and 50 TMs (138 usable item identifiers) must have an
+    /// intentional bag route. This prevents a newly added special-case item
+    /// from silently falling through to OAK's generic refusal.
+    #[test]
+    fn classify_all_138_gen1_item_ids() {
+        let field = [
+            ItemId::TownMap,
+            ItemId::Bicycle,
+            ItemId::Pokedex,
+            ItemId::EscapeRope,
+            ItemId::Repel,
+            ItemId::SuperRepel,
+            ItemId::MaxRepel,
+            ItemId::CoinCase,
+            ItemId::OaksParcel,
+            ItemId::Itemfinder,
+            ItemId::PokeFlute,
+            ItemId::OldRod,
+            ItemId::GoodRod,
+            ItemId::SuperRod,
+        ];
+        let on_pokemon = [
+            ItemId::MoonStone,
+            ItemId::Antidote,
+            ItemId::BurnHeal,
+            ItemId::IceHeal,
+            ItemId::Awakening,
+            ItemId::ParlyzHeal,
+            ItemId::FullRestore,
+            ItemId::MaxPotion,
+            ItemId::HyperPotion,
+            ItemId::SuperPotion,
+            ItemId::Potion,
+            ItemId::FireStone,
+            ItemId::ThunderStone,
+            ItemId::WaterStone,
+            ItemId::HpUp,
+            ItemId::Protein,
+            ItemId::Iron,
+            ItemId::Carbos,
+            ItemId::Calcium,
+            ItemId::RareCandy,
+            ItemId::LeafStone,
+            ItemId::FullHeal,
+            ItemId::Revive,
+            ItemId::MaxRevive,
+            ItemId::FreshWater,
+            ItemId::SodaPop,
+            ItemId::Lemonade,
+            ItemId::PpUp,
+            ItemId::Ether,
+            ItemId::MaxEther,
+            ItemId::Elixer,
+            ItemId::MaxElixer,
+        ];
+
+        let mut audited = 0usize;
+        for raw in 1u8..=pokered_data::items::NUM_ITEMS {
+            let item = ItemId::from_id(raw);
+            let expected = if field.contains(&item) {
+                BagUseKind::Field
+            } else if on_pokemon.contains(&item) {
+                BagUseKind::OnPokemon
+            } else {
+                BagUseKind::NotTime
+            };
+            assert_eq!(classify_bag_use(item), expected, "base id ${raw:02X} {item:?}");
+            audited += 1;
+        }
+        for raw in ItemId::Hm01 as u8..=ItemId::Tm50 as u8 {
+            let item = ItemId::from_id(raw);
+            assert_eq!(classify_bag_use(item), BagUseKind::OnPokemon, "machine ${raw:02X} {item:?}");
+            audited += 1;
+        }
+        assert_eq!(audited, 138);
     }
 
     #[test]
