@@ -9,11 +9,11 @@ serde = []
 embedded-map-data = []
 # The Boa-based JS registrar — only for the legacy `script-boa` engine path;
 # requires boa_engine, which cannot build on bare metal (target_os = "none").
-script-boa = ["dep:boa_engine"]
+script-boa = ["dep:boa_engine", "dotzuki-engine-script/script-boa"]
 
 [dependencies]
-dotzuki-engine-script = { git = "https://github.com/liuyanghejerry/dotzuki", rev = "f1c60ba4c1d4607e0faecd73df2f4d42b8a67112" }
-dotzuki-engine-dsl = { git = "https://github.com/liuyanghejerry/dotzuki", rev = "f1c60ba4c1d4607e0faecd73df2f4d42b8a67112" }
+dotzuki-engine-script = { git = "https://github.com/liuyanghejerry/dotzuki", rev = "1586af6d578e8920c24226b22b61eb81ce707d5a", default-features = false }
+dotzuki-engine-dsl = { git = "https://github.com/liuyanghejerry/dotzuki", rev = "1586af6d578e8920c24226b22b61eb81ce707d5a" }
 boa_engine = { version = "0.20", default-features = false, optional = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
@@ -22,19 +22,19 @@ strum_macros = { workspace = true }
 num-derive = { workspace = true }
 num-traits = { workspace = true }
 log = "0.4"
-dotzuki-engine = { git = "https://github.com/liuyanghejerry/dotzuki", rev = "f1c60ba4c1d4607e0faecd73df2f4d42b8a67112" }
+dotzuki-engine = { git = "https://github.com/liuyanghejerry/dotzuki", rev = "1586af6d578e8920c24226b22b61eb81ce707d5a" }
 # no_std HashMap (std::collections::HashMap replacement; iteration order is
 # unspecified either way, same contract as std).
 hashbrown = { version = "0.15", default-features = false, features = ["serde"] }
 
 # Hosted: full dotzuki-renderer (gpu + PNG resource pipeline).
 [target.'cfg(not(target_os = "none"))'.dependencies]
-dotzuki-renderer = { git = "https://github.com/liuyanghejerry/dotzuki", rev = "f1c60ba4c1d4607e0faecd73df2f4d42b8a67112" }
+dotzuki-renderer = { git = "https://github.com/liuyanghejerry/dotzuki", rev = "1586af6d578e8920c24226b22b61eb81ce707d5a" }
 thiserror = { workspace = true }
 
 # Bare metal (GBA): framebuffer-only engine renderer.
 [target.'cfg(target_os = "none")'.dependencies]
-dotzuki-renderer = { git = "https://github.com/liuyanghejerry/dotzuki", rev = "f1c60ba4c1d4607e0faecd73df2f4d42b8a67112", default-features = false, features = ["framebuffer"] }
+dotzuki-renderer = { git = "https://github.com/liuyanghejerry/dotzuki", rev = "1586af6d578e8920c24226b22b61eb81ce707d5a", default-features = false, features = ["framebuffer"] }
 thiserror = { version = "2", default-features = false }
 
 [dev-dependencies]
@@ -42,4 +42,4 @@ ron = { workspace = true }
 
 [build-dependencies]
 serde_json = { workspace = true }
-dotzuki-engine-dsl = { git = "https://github.com/liuyanghejerry/dotzuki", rev = "f1c60ba4c1d4607e0faecd73df2f4d42b8a67112" }
+dotzuki-engine-dsl = { git = "https://github.com/liuyanghejerry/dotzuki", rev = "1586af6d578e8920c24226b22b61eb81ce707d5a" }

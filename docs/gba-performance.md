@@ -96,7 +96,7 @@ through more than 4,000 simulated frames in the Overworld.
 ## Dotzuki dependency
 
 The reusable no_std and renderer work lives in dotzuki PR #63 on the
-`feat/gba-renderer-performance` branch (through commit `f1c60ba`). Every
+`feat/gba-renderer-performance` branch (through commit `1586af6`). Every
 open-pokered consumer is pinned to that remote revision, so CI and independent
 checkouts do not require the sibling repository or new vendor changes.
 

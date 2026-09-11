@@ -1175,7 +1175,7 @@ impl OverworldScriptEngine {
     pub fn get_all_flags(&self) -> HashMap<String, bool> {
         match self {
             #[cfg(feature = "script-boa")]
-            OverworldScriptEngine::Boa(e) => e.get_all_flags(),
+            OverworldScriptEngine::Boa(e) => e.get_all_flags().into_iter().collect(),
             OverworldScriptEngine::Native(e) => e.get_all_flags(),
         }
     }
@@ -1183,7 +1183,13 @@ impl OverworldScriptEngine {
     pub fn seed_flags(&mut self, flags: &HashMap<String, bool>) {
         match self {
             #[cfg(feature = "script-boa")]
-            OverworldScriptEngine::Boa(e) => e.seed_flags(flags),
+            OverworldScriptEngine::Boa(e) => {
+                let hosted_flags = flags
+                    .iter()
+                    .map(|(key, value)| (key.clone(), *value))
+                    .collect::<std::collections::HashMap<_, _>>();
+                e.seed_flags(&hosted_flags)
+            }
             OverworldScriptEngine::Native(e) => e.seed_flags(flags),
         }
     }

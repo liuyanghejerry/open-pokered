@@ -10,7 +10,7 @@ embedded-map-data = ["pokered-data/embedded-map-data"]
 # of the default native DSL-AST interpreter. Kept for development/fallback —
 # the AST interpreter is the canonical scene semantics (see
 # docs/low-end-hardware-optimization.md §四).
-script-boa = ["pokered-data/script-boa"]
+script-boa = ["pokered-data/script-boa", "dotzuki-engine-script/script-boa"]
 # P1 battle migration: dev hot-reload of the pokered rules.ron (mirrors minimon's
 # dual-mode flag). OFF (default) ⇒ BAKED rules.ron (include_str!, zero file IO);
 # ON ⇒ read + watch rules.ron on disk, rebuild the registry between turns. Both
@@ -19,18 +19,18 @@ script-boa = ["pokered-data/script-boa"]
 hot-reload = ["dotzuki-rules/hot-reload"]
 
 [dependencies]
-dotzuki-engine = { git = "https://github.com/liuyanghejerry/dotzuki", rev = "f1c60ba4c1d4607e0faecd73df2f4d42b8a67112" }
+dotzuki-engine = { git = "https://github.com/liuyanghejerry/dotzuki", rev = "1586af6d578e8920c24226b22b61eb81ce707d5a" }
 pokered-data = { path = "../pokered-data" }
-dotzuki-engine-script = { git = "https://github.com/liuyanghejerry/dotzuki", rev = "f1c60ba4c1d4607e0faecd73df2f4d42b8a67112" }
+dotzuki-engine-script = { git = "https://github.com/liuyanghejerry/dotzuki", rev = "1586af6d578e8920c24226b22b61eb81ce707d5a", default-features = false }
 # Native script interpreter (de-Boa path): AST interpretation of compiled
 # `.scene` storylines — no JavaScript engine involved.
-dotzuki-engine-dsl = { git = "https://github.com/liuyanghejerry/dotzuki", rev = "f1c60ba4c1d4607e0faecd73df2f4d42b8a67112" }
+dotzuki-engine-dsl = { git = "https://github.com/liuyanghejerry/dotzuki", rev = "1586af6d578e8920c24226b22b61eb81ce707d5a" }
 # P1 battle migration: the game-agnostic no-code RON loader + dual-mode sourcing.
 # pokered-core authors a rules.ron for the bucket-A moves and a game binding; the
 # loader stays engine-only (no pokered types leak into it). Used by the additive
 # PokeredRules provider + the differential parity harness ONLY — the legacy
 # `apply_move_effect` dispatcher stays the production oracle (P1 is additive).
-dotzuki-rules = { git = "https://github.com/liuyanghejerry/dotzuki", rev = "f1c60ba4c1d4607e0faecd73df2f4d42b8a67112" }
+dotzuki-rules = { git = "https://github.com/liuyanghejerry/dotzuki", rev = "1586af6d578e8920c24226b22b61eb81ce707d5a" }
 serde = { workspace = true }
 serde_json = { workspace = true }
 log = "0.4"
