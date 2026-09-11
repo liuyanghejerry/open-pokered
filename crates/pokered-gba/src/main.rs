@@ -9,6 +9,7 @@ mod autopilot;
 use agb::input::{Button, ButtonController};
 use dotzuki_engine::render_config::RenderConfig;
 use pokered_app::game::PokemonGame;
+use pokered_app::render::FrameDamageRect;
 use pokered_core::data::wild_data::GameVersion;
 use pokered_core::game_state::{GameScreen, Lang};
 use pokered_core::gamefreak_splash::SplashPhase;
@@ -40,6 +41,12 @@ const SCREEN_H: usize = 160;
 // pokered's 160x144 viewport, centered.
 const VIEW_X: usize = (SCREEN_W - 160) / 2; // 40
 const VIEW_Y: usize = (SCREEN_H - 144) / 2; // 8
+const VIEW_W: usize = 160;
+const VIEW_H: usize = 144;
+const DAMAGE_TILE_SIZE: usize = 8;
+const DAMAGE_COLS: usize = VIEW_W / DAMAGE_TILE_SIZE;
+const DAMAGE_ROWS: usize = VIEW_H / DAMAGE_TILE_SIZE;
+const FULL_DAMAGE_ROW: u32 = (1 << DAMAGE_COLS) - 1;
 const MODE4_BG2: u16 = 0x0404;
 const PAGE_SELECT: u16 = 0x0010;
 const MODE4_PAGE_BYTES: usize = SCREEN_W * SCREEN_H;
@@ -115,6 +122,56 @@ struct Mode4Presenter {
     draw_page: u8,
     ready_page: Option<u8>,
     ready_palette: [u16; 4],
+    pending_damage: [DirtyTiles; 2],
+}
+
+/// Pixels each VRAM page is missing relative to the software framebuffer.
+/// Rectangles are rounded out to 8×8 cells, then each tile row is submitted
+/// as one horizontal DMA span. This keeps the bookkeeping tiny and preserves
+/// aligned 32-bit transfers even when a sprite is moving in 2px steps.
+#[derive(Clone, Copy)]
+struct DirtyTiles {
+    rows: [u32; DAMAGE_ROWS],
+    any: bool,
+    full: bool,
+}
+
+impl DirtyTiles {
+    const EMPTY: Self = Self {
+        rows: [0; DAMAGE_ROWS],
+        any: false,
+        full: false,
+    };
+    const FULL: Self = Self {
+        rows: [FULL_DAMAGE_ROW; DAMAGE_ROWS],
+        any: true,
+        full: true,
+    };
+
+    #[inline]
+    fn mark(&mut self, rect: FrameDamageRect) {
+        if self.full {
+            return;
+        }
+        let left = (rect.x as usize).min(VIEW_W);
+        let top = (rect.y as usize).min(VIEW_H);
+        let right = (rect.x.saturating_add(rect.width) as usize).min(VIEW_W);
+        let bottom = (rect.y.saturating_add(rect.height) as usize).min(VIEW_H);
+        if left >= right || top >= bottom {
+            return;
+        }
+
+        let first_col = left / DAMAGE_TILE_SIZE;
+        let end_col = right.div_ceil(DAMAGE_TILE_SIZE);
+        let columns = end_col - first_col;
+        let mask = ((1u32 << columns) - 1) << first_col;
+        let first_row = top / DAMAGE_TILE_SIZE;
+        let end_row = bottom.div_ceil(DAMAGE_TILE_SIZE);
+        for row in &mut self.rows[first_row..end_row] {
+            *row |= mask;
+        }
+        self.any = true;
+    }
 }
 
 #[derive(Clone, Copy, PartialEq, Eq)]
@@ -317,6 +374,7 @@ impl Mode4Presenter {
             draw_page: 1,
             ready_page: None,
             ready_palette: palette,
+            pending_damage: [DirtyTiles::FULL; 2],
         }
     }
 
@@ -351,18 +409,77 @@ impl Mode4Presenter {
         self.draw_page = page ^ 1;
     }
 
-    /// DMA the centered 160x144 chunky index framebuffer into the hidden
-    /// Mode 4 page. One transfer per row preserves the screen's 240px pitch.
-    fn present(&mut self, fb: &FrameBuffer) {
+    #[inline(never)]
+    fn copy_full_page(fb: &FrameBuffer, page: u8) {
         let indices = fb.indices();
-        let dst = mode4_page(self.draw_page);
-        for y in 0..144 {
-            let src_word = unsafe { indices.as_ptr().add(y * 160).cast::<u32>() };
+        let dst = mode4_page(page);
+        for y in 0..VIEW_H {
+            let src_word = unsafe { indices.as_ptr().add(y * VIEW_W).cast::<u32>() };
             let dst_word = ((VIEW_Y + y) * SCREEN_W + VIEW_X) / 4;
-            unsafe { dma3_copy_words(src_word, dst.add(dst_word), 40) };
+            unsafe { dma3_copy_words(src_word, dst.add(dst_word), VIEW_W / 4) };
+        }
+    }
+
+    #[inline(never)]
+    fn copy_dirty_page(fb: &FrameBuffer, page: u8, damage: DirtyTiles) {
+        let indices = fb.indices();
+        let dst = mode4_page(page);
+        for (tile_y, &row_mask) in damage.rows.iter().enumerate() {
+            if row_mask == 0 {
+                continue;
+            }
+            let first_col = row_mask.trailing_zeros() as usize;
+            let end_col = (u32::BITS - row_mask.leading_zeros()) as usize;
+            let x = first_col * DAMAGE_TILE_SIZE;
+            let width = (end_col - first_col) * DAMAGE_TILE_SIZE;
+            for sub_y in 0..DAMAGE_TILE_SIZE {
+                let y = tile_y * DAMAGE_TILE_SIZE + sub_y;
+                let src_word = unsafe { indices.as_ptr().add(y * VIEW_W + x).cast::<u32>() };
+                let dst_word = ((VIEW_Y + y) * SCREEN_W + VIEW_X + x) / 4;
+                unsafe { dma3_copy_words(src_word, dst.add(dst_word), width / 4) };
+            }
+        }
+    }
+
+    /// Submit a complete or partial software frame into the hidden Mode 4
+    /// page. Damage is accumulated independently for both pages because the
+    /// hidden page may be two rendered frames behind.
+    fn present(&mut self, fb: &FrameBuffer, damage: Option<&[FrameDamageRect]>) {
+        let page = self.draw_page as usize;
+        if let Some(rects) = damage {
+            for &rect in rects {
+                self.pending_damage[0].mark(rect);
+                self.pending_damage[1].mark(rect);
+            }
+            let pending = self.pending_damage[page];
+            if pending.full {
+                Self::copy_full_page(fb, self.draw_page);
+            } else if pending.any {
+                Self::copy_dirty_page(fb, self.draw_page, pending);
+            }
+            self.pending_damage[page] = DirtyTiles::EMPTY;
+        } else {
+            Self::copy_full_page(fb, self.draw_page);
+            self.pending_damage[page] = DirtyTiles::EMPTY;
+            self.pending_damage[page ^ 1] = DirtyTiles::FULL;
         }
         self.ready_palette = Self::palette(fb);
         self.ready_page = Some(self.draw_page);
+    }
+
+    /// When the image is static, use the otherwise idle frame budget to bring
+    /// the hidden page up to date without flipping it. This lets the next
+    /// isolated sprite-only redraw use its small damage set immediately.
+    fn sync_hidden(&mut self, fb: &FrameBuffer) {
+        let page = self.draw_page as usize;
+        let pending = self.pending_damage[page];
+        if pending.full {
+            Self::copy_full_page(fb, self.draw_page);
+            self.pending_damage[page] = DirtyTiles::EMPTY;
+        } else if pending.any {
+            Self::copy_dirty_page(fb, self.draw_page, pending);
+            self.pending_damage[page] = DirtyTiles::EMPTY;
+        }
     }
 }
 
@@ -682,7 +799,12 @@ fn game_main() -> ! {
         #[cfg(feature = "profiling")]
         let mark3 = profile_now();
         if redraw {
-            presenter.present(&fb);
+            let damage = overworld_background_cache
+                .as_ref()
+                .and_then(|cache| cache.presentation_damage());
+            presenter.present(&fb, damage);
+        } else {
+            presenter.sync_hidden(&fb);
         }
         last_static_splash = static_splash;
         last_language_select = language_select;

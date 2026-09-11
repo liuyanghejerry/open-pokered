@@ -297,14 +297,14 @@ impl BackgroundDamage {
 }
 
 #[derive(Clone, Copy)]
-struct FrameRect {
-    x: u32,
-    y: u32,
-    width: u32,
-    height: u32,
+pub struct FrameDamageRect {
+    pub x: u32,
+    pub y: u32,
+    pub width: u32,
+    pub height: u32,
 }
 
-impl FrameRect {
+impl FrameDamageRect {
     #[inline]
     fn clipped(
         x: i32,
@@ -337,7 +337,9 @@ pub struct OverworldBackgroundCache {
     frame_buffer: FrameBuffer,
     key: Option<OverworldBackgroundKey>,
     output_key: Option<OverworldBackgroundKey>,
-    foreground_damage: Vec<FrameRect>,
+    foreground_damage: Vec<FrameDamageRect>,
+    presentation_damage: Vec<FrameDamageRect>,
+    partial_present: bool,
 }
 
 impl OverworldBackgroundCache {
@@ -347,7 +349,17 @@ impl OverworldBackgroundCache {
             key: None,
             output_key: None,
             foreground_damage: Vec::with_capacity(32),
+            presentation_damage: Vec::with_capacity(64),
+            partial_present: false,
         }
+    }
+
+    /// Regions whose pixels changed during the most recent cached draw.
+    /// `None` means the frontend must submit the complete framebuffer.
+    #[cfg(any(target_os = "none", test))]
+    pub fn presentation_damage(&self) -> Option<&[FrameDamageRect]> {
+        self.partial_present
+            .then_some(self.presentation_damage.as_slice())
     }
 
     fn invalidate(&mut self) {
@@ -360,6 +372,18 @@ impl OverworldBackgroundCache {
         self.foreground_damage.clear();
     }
 
+    fn require_full_present(&mut self) {
+        self.partial_present = false;
+        self.presentation_damage.clear();
+    }
+
+    fn begin_partial_present(&mut self) {
+        self.presentation_damage.clear();
+        self.presentation_damage
+            .extend_from_slice(&self.foreground_damage);
+        self.partial_present = true;
+    }
+
     #[inline(never)]
     fn record_foreground_rect(&mut self, x: i32, y: i32, width: u32, height: u32) {
         let right = x.saturating_add(width as i32);
@@ -369,15 +393,21 @@ impl OverworldBackgroundCache {
             && right <= self.frame_buffer.width() as i32
             && bottom <= self.frame_buffer.height() as i32
         {
-            self.foreground_damage.push(FrameRect {
+            let rect = FrameDamageRect {
                 x: x as u32,
                 y: y as u32,
                 width,
                 height,
-            });
+            };
+            if self.output_key.is_some() {
+                self.foreground_damage.push(rect);
+            }
+            if self.partial_present {
+                self.presentation_damage.push(rect);
+            }
             return;
         }
-        if let Some(rect) = FrameRect::clipped(
+        if let Some(rect) = FrameDamageRect::clipped(
             x,
             y,
             width,
@@ -385,7 +415,12 @@ impl OverworldBackgroundCache {
             self.frame_buffer.width(),
             self.frame_buffer.height(),
         ) {
-            self.foreground_damage.push(rect);
+            if self.output_key.is_some() {
+                self.foreground_damage.push(rect);
+            }
+            if self.partial_present {
+                self.presentation_damage.push(rect);
+            }
         }
     }
 
@@ -613,6 +648,9 @@ fn draw_overworld_impl(
     mut copy_background: Option<&mut dyn FnMut(&mut [u8], &[u8])>,
     reuse_composited_hint: Option<bool>,
 ) {
+    if let Some(cache) = background_cache.as_deref_mut() {
+        cache.require_full_present();
+    }
     let owns_full_screen = screen.naming_flash_frames > 0
         || screen.pending_naming_screen.is_some()
         || screen.pending_party_select.is_some();
@@ -811,6 +849,7 @@ fn draw_overworld_impl(
                         && cache.output_key == Some(key)
                     {
                         restore_foreground_regions(fb, cache);
+                        cache.begin_partial_present();
                     } else if let Some(copy_pixels) = copy_background.as_deref_mut() {
                         fb.copy_from_with(&cache.frame_buffer, copy_pixels);
                     } else {
@@ -1045,7 +1084,7 @@ fn draw_overworld_impl(
 
             if player_visible {
                 if let Some(cache) = background_cache.as_deref_mut() {
-                    if cache.output_key.is_some() {
+                    if cache.output_key.is_some() || cache.partial_present {
                         cache.record_foreground_rect(
                             draw_x as i32,
                             draw_y as i32,
@@ -1262,7 +1301,7 @@ fn draw_overworld_impl(
                 }
 
                 if let Some(cache) = background_cache.as_deref_mut() {
-                    if cache.output_key.is_some() {
+                    if cache.output_key.is_some() || cache.partial_present {
                         cache.record_foreground_rect(
                             npc_px_x,
                             npc_px_y,
@@ -2103,7 +2142,7 @@ mod tests {
         let mut cache = OverworldBackgroundCache::new(160, 144);
         let mut incremental = FrameBuffer::new(RenderConfig::new(160, 144), Rgba::WHITE);
 
-        let mut compare = |screen: &mut OverworldScreen| -> bool {
+        let mut compare = |screen: &mut OverworldScreen| -> (bool, Option<usize>) {
             let mut full = FrameBuffer::new(RenderConfig::new(160, 144), Rgba::WHITE);
             draw_overworld(
                 screen,
@@ -2131,15 +2170,24 @@ mod tests {
                 "cached background must preserve every pixel"
             );
             assert_eq!(full.display_palette(), incremental.display_palette());
-            copied_full_background
+            (
+                copied_full_background,
+                cache.presentation_damage().map(<[_]>::len),
+            )
         };
 
-        assert!(compare(&mut s), "the cold frame copies the full background");
+        assert_eq!(
+            compare(&mut s),
+            (true, None),
+            "the cold frame copies and presents the full background"
+        );
         s.state.player.facing = Direction::Right;
+        let (copied, damage_count) = compare(&mut s);
         assert!(
-            !compare(&mut s),
+            !copied,
             "an exact background hit restores only prior foreground regions"
         );
+        assert!(damage_count.is_some_and(|count| count >= 2));
         {
             let npc = s
                 .npc_states
@@ -2149,16 +2197,18 @@ mod tests {
             npc.facing = Direction::Right;
             npc.walk_counter = 8;
         }
+        let (copied, damage_count) = compare(&mut s);
         assert!(
-            !compare(&mut s),
+            !copied,
             "moving an NPC restores both its old and current regions"
         );
+        assert!(damage_count.is_some_and(|count| count >= 2));
         s.npc_states
             .iter_mut()
             .find(|npc| npc.visible)
             .unwrap()
             .walk_counter = 0;
-        assert!(!compare(&mut s));
+        assert!(!compare(&mut s).0);
         for direction in [
             Direction::Down,
             Direction::Up,
@@ -2189,7 +2239,7 @@ mod tests {
         let map = s.map_data.as_mut().expect("live map");
         map.blocks[0] = map.blocks[0].wrapping_add(1);
         assert!(
-            compare(&mut s),
+            compare(&mut s).0,
             "a live map edit rebuilds and copies the background"
         );
     }

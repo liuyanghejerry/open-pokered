@@ -40,7 +40,7 @@ pub use menu::{
 pub use oak::{draw_naming_screen, draw_oak_speech};
 pub use overworld::draw_overworld;
 #[cfg(target_os = "none")]
-pub use overworld::OverworldBackgroundCache;
+pub use overworld::{FrameDamageRect, OverworldBackgroundCache};
 #[cfg(target_os = "none")]
 pub(crate) use overworld::draw_overworld_cached_with;
 pub use pc::draw_pc;
