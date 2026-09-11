@@ -1033,26 +1033,41 @@ fn draw_overworld_impl(
             TransportMode::Biking => "red_bike",
             TransportMode::Surfing => "seel",
         };
+        // _LeaveMapAnim spin-out (TELEPORT/DIG/ESCAPE ROPE): the facing
+        // spins and the sprite rises off the top of the screen.
+        let spin = screen.teleport_spin.as_ref();
+        // EnterMapAnim spin-in (FLY/TELEPORT/DIG/ESCAPE ROPE/dungeon
+        // arrivals): the sprite descends from off the top and spins in
+        // place after the fade-in-from-white.
+        let enter = screen.enter_map_anim.as_ref();
+        // FishingAnim (player_animations.asm:378-469): while the rod is
+        // out, the player sprite is swapped to the fishing pose
+        // (RedFishingTiles — the bottom two tiles) and the sprite shakes
+        // ±1 px vertically on a bite (.ShakePlayerSprite).
+        let fishing = screen.fishing_anim.as_ref();
+        let player_facing = fishing
+            .map(|f| f.facing())
+            .or_else(|| enter.map(|s| s.facing()))
+            .or_else(|| spin.map(|s| s.facing()))
+            .unwrap_or(screen.state.player.facing);
+        let fishing_pose = fishing.map_or(false, |f| f.pose_active());
+        // Load the optional pose first so the common player sheet can remain
+        // borrowed from the resource cache instead of cloning its TileSet.
+        let pose_ts = if fishing_pose {
+            let asset = match player_facing {
+                Direction::Down => "red_fish_front.png",
+                Direction::Up => "red_fish_back.png",
+                Direction::Left | Direction::Right => "red_fish_side.png",
+            };
+            rm.load_asset(AssetCategory::Overworld, asset)
+                .ok()
+                .map(|c| c.tileset.clone())
+        } else {
+            None
+        };
         if let Ok(cached) = rm.load_sprite(player_sprite) {
-            let ts = cached.tileset.clone();
+            let ts = &cached.tileset;
 
-            // _LeaveMapAnim spin-out (TELEPORT/DIG/ESCAPE ROPE): the facing
-            // spins and the sprite rises off the top of the screen.
-            let spin = screen.teleport_spin.as_ref();
-            // EnterMapAnim spin-in (FLY/TELEPORT/DIG/ESCAPE ROPE/dungeon
-            // arrivals): the sprite descends from off the top and spins in
-            // place after the fade-in-from-white.
-            let enter = screen.enter_map_anim.as_ref();
-            // FishingAnim (player_animations.asm:378-469): while the rod is
-            // out, the player sprite is swapped to the fishing pose
-            // (RedFishingTiles — the bottom two tiles) and the sprite shakes
-            // ±1 px vertically on a bite (.ShakePlayerSprite).
-            let fishing = screen.fishing_anim.as_ref();
-            let player_facing = fishing
-                .map(|f| f.facing())
-                .or_else(|| enter.map(|s| s.facing()))
-                .or_else(|| spin.map(|s| s.facing()))
-                .unwrap_or(screen.state.player.facing);
             let spin_y_offset = spin.map_or(0, |s| s.player_y_offset());
             let enter_y_offset = enter.map_or(0, |s| s.player_y_offset());
             let fishing_shake_offset = fishing.map_or(0, |f| f.player_shake_offset());
@@ -1069,10 +1084,8 @@ fn draw_overworld_impl(
                     && screen.fly_arrival_delay_frames == 0
                     && fly.is_none_or(|s| s.is_done())
             };
-            let player_visible = player_visible
-                && fly_player_visible
-                && screen.field_move_restore.is_none();
-            let fishing_pose = fishing.map_or(false, |f| f.pose_active());
+            let player_visible =
+                player_visible && fly_player_visible && screen.field_move_restore.is_none();
 
             let (frame, flip_h) = if screen.state.player.movement_state == MovementState::Walking
                 || screen.state.player.movement_state == MovementState::Jumping
@@ -1195,24 +1208,6 @@ fn draw_overworld_impl(
                 }
             }
 
-            // Fishing pose: RedFishingTilesFront/Back/Side (gfx/fishing.asm)
-            // replace the BOTTOM two tiles of the standing sprite while the
-            // rod is out (the original loads them at the standing sprite's
-            // tile slots $02/$06/$0a); the top half keeps the normal head.
-            // Right uses the side pose with a horizontal flip.
-            let pose_ts = if fishing_pose {
-                let asset = match player_facing {
-                    Direction::Down => "red_fish_front.png",
-                    Direction::Up => "red_fish_back.png",
-                    Direction::Left | Direction::Right => "red_fish_side.png",
-                };
-                rm.load_asset(AssetCategory::Overworld, asset)
-                    .ok()
-                    .map(|c| c.tileset.clone())
-            } else {
-                None
-            };
-
             if player_visible {
                 for row in 0..2_u32 {
                     for col in 0..2_u32 {
@@ -1223,7 +1218,7 @@ fn draw_overworld_impl(
                             (Some(p), 1) => (src_col as usize, p),
                             _ => (
                                 base_tile + (row as usize * tpr as usize) + src_col as usize,
-                                &ts,
+                                ts,
                             ),
                         };
                         if tile_idx >= tile_ts.len() {
@@ -1249,7 +1244,7 @@ fn draw_overworld_impl(
         if screen.state.player.movement_state != MovementState::Jumping {
             if let Some(grass_id) = tileset_data::get_grass_tile(tileset_id) {
                 if let Ok(bg_cached) = rm.load_tileset(tileset_name) {
-                    let bg_ts = bg_cached.tileset.clone();
+                    let bg_ts = &bg_cached.tileset;
                     let overlay_x = screen_center_tx as u32 * TILE_SIZE;
                     let overlay_y = screen_center_ty as u32 * TILE_SIZE + TILE_SIZE;
                     for col_off in 0..2i32 {
@@ -1310,7 +1305,7 @@ fn draw_overworld_impl(
 
             let sprite_name = sprite_id.sprite_name();
             if let Ok(cached) = rm.load_sprite(sprite_name) {
-                let ts = cached.tileset.clone();
+                let ts = &cached.tileset;
                 let num_frames = (cached.source_size.1 / TILE_SIZE) as usize;
 
                 let npc_facing = npc.facing;
@@ -1422,7 +1417,7 @@ fn draw_overworld_impl(
 
                         let tx = npc_px_x + (col * TILE_SIZE) as i32;
                         let ty = npc_px_y + (row * TILE_SIZE) as i32;
-                        blit_tile_clipped_flipped(fb, &ts, tile_idx, tx, ty, &sprite_pal, flip_h);
+                        blit_tile_clipped_flipped(fb, ts, tile_idx, tx, ty, &sprite_pal, flip_h);
                     }
                 }
             }
@@ -1440,7 +1435,7 @@ fn draw_overworld_impl(
                 };
                 let sprite_name = sprite_id.sprite_name();
                 if let Ok(cached) = rm.load_sprite(sprite_name) {
-                    let ts = cached.tileset.clone();
+                    let ts = &cached.tileset;
                     let tpr = cached.source_size.0 / TILE_SIZE;
                     let base_tile = 0usize;
                     let npc_screen_tx = (npc.x as i32 + preview.step_offset_x) * 2 - view_origin_tx;
@@ -1465,15 +1460,7 @@ fn draw_overworld_impl(
                             }
                             let tx = npc_px_x + (col * TILE_SIZE) as i32;
                             let ty = npc_px_y + (row * TILE_SIZE) as i32;
-                            blit_tile_clipped_flipped(
-                                fb,
-                                &ts,
-                                tile_idx,
-                                tx,
-                                ty,
-                                &sprite_pal,
-                                false,
-                            );
+                            blit_tile_clipped_flipped(fb, ts, tile_idx, tx, ty, &sprite_pal, false);
                         }
                     }
                 }
@@ -1503,7 +1490,7 @@ fn draw_overworld_impl(
             });
         if let Some((oy, ox, flap)) = bird_pose {
             if let Ok(bird) = rm.load_sprite("bird") {
-                let bts = bird.tileset.clone();
+                let bts = &bird.tileset;
                 let bird_pal = Palette::new(&[
                     Rgba::TRANSPARENT,
                     GRAYSCALE_PALETTE.colors[1],
@@ -1519,7 +1506,7 @@ fn draw_overworld_impl(
                         if tile_idx < bts.len() {
                             blit_tile_clipped(
                                 fb,
-                                &bts,
+                                bts,
                                 tile_idx,
                                 bx + (c * TILE_SIZE) as i32,
                                 by + (r * TILE_SIZE) as i32,
@@ -1539,7 +1526,7 @@ fn draw_overworld_impl(
                 _ => "shock",
             };
             if let Ok(cached) = rm.load_emote(emote_asset) {
-                let ts = cached.tileset.clone();
+                let ts = &cached.tileset;
                 let tpr = cached.source_size.0 / TILE_SIZE;
                 if let Some(npc) = screen
                     .npc_states
@@ -1571,7 +1558,7 @@ fn draw_overworld_impl(
                             }
                             let tx = emote_x + (col * TILE_SIZE) as i32;
                             let ty = emote_y + (row * TILE_SIZE) as i32;
-                            blit_tile_clipped(fb, &ts, tile_idx, tx, ty, &sprite_pal);
+                            blit_tile_clipped(fb, ts, tile_idx, tx, ty, &sprite_pal);
                         }
                     }
                 }
@@ -1597,10 +1584,10 @@ fn draw_overworld_impl(
                 // (.ShakePlayerSprite, player_animations.asm:413-416).
                 let rod_y = rod_y + anim.player_shake_offset();
                 if let Ok(cached) = rm.load_asset(AssetCategory::Overworld, "fishing_rod.png") {
-                    let rod_ts = cached.tileset.clone();
+                    let rod_ts = &cached.tileset;
                     blit_tile_clipped_flipped(
                         fb,
-                        &rod_ts,
+                        rod_ts,
                         rod_tile as usize,
                         rod_x,
                         rod_y,
@@ -1618,7 +1605,7 @@ fn draw_overworld_impl(
         if let Some(anim) = screen.fishing_anim.as_ref() {
             if anim.bubble_active() {
                 if let Ok(cached) = rm.load_emote("shock") {
-                    let ts = cached.tileset.clone();
+                    let ts = &cached.tileset;
                     let tpr = cached.source_size.0 / TILE_SIZE;
                     let emote_x = screen_center_tx as i32 * TILE_SIZE as i32;
                     let emote_y = screen_center_ty as i32 * TILE_SIZE as i32 - TILE_SIZE as i32 * 2;
@@ -1630,7 +1617,7 @@ fn draw_overworld_impl(
                             }
                             let tx = emote_x + (col * TILE_SIZE) as i32;
                             let ty = emote_y + (row * TILE_SIZE) as i32;
-                            blit_tile_clipped(fb, &ts, tile_idx, tx, ty, &sprite_pal);
+                            blit_tile_clipped(fb, ts, tile_idx, tx, ty, &sprite_pal);
                         }
                     }
                 }
@@ -1639,7 +1626,7 @@ fn draw_overworld_impl(
 
         if let Some(ref healing_state) = screen.pending_healing_machine {
             if let Ok(cached) = rm.load_asset(AssetCategory::Overworld, "heal_machine.png") {
-                let ts = cached.tileset.clone();
+                let ts = &cached.tileset;
 
                 // rOBP1=$e0: idx 0→transparent, 1→white, 2→dark gray, 3→black
                 let obp1_pal = Palette::new(&[
@@ -1685,7 +1672,7 @@ fn draw_overworld_impl(
                 if ts.len() > 0 {
                     blit_tile_clipped(
                         fb,
-                        &ts,
+                        ts,
                         0,
                         nurse_px_x + MONITOR_DX,
                         nurse_px_y + MONITOR_DY,
@@ -1699,7 +1686,7 @@ fn draw_overworld_impl(
                     if 1 < ts.len() {
                         blit_tile_clipped_flipped(
                             fb,
-                            &ts,
+                            ts,
                             1,
                             nurse_px_x + dx,
                             nurse_px_y + dy,
@@ -1727,7 +1714,7 @@ fn draw_overworld_impl(
             let (bx, by) = dust.base_offset();
             let step = dust.step() as i32;
             if let Ok(cached) = rm.load_asset(AssetCategory::Overworld, "smoke.png") {
-                let ts = cached.tileset.clone();
+                let ts = &cached.tileset;
                 // rOBP1=%11100100: idx 0→transparent, 1→white, 2→light gray,
                 // 3→dark gray; the step flash XORs %01100100, swapping idx 2/3.
                 let obp1_pal = Palette::new(&[
@@ -1754,7 +1741,7 @@ fn draw_overworld_impl(
                     let (ddx, ddy) = drifts[i];
                     let tx = anchor_px_x + bx + col * TILE_SIZE as i32 + ddx * step;
                     let ty = anchor_px_y + by + row * TILE_SIZE as i32 + ddy * step;
-                    blit_tile_clipped(fb, &ts, 0, tx, ty, dust_pal);
+                    blit_tile_clipped(fb, ts, 0, tx, ty, dust_pal);
                 }
             }
         }
@@ -1779,11 +1766,15 @@ fn draw_overworld_impl(
                 Rgba::rgb(0x55, 0x55, 0x55),
                 Rgba::rgb(0xAA, 0xAA, 0xAA),
             ]);
-            let cut_pal = if cut.palette_flipped() { &flipped } else { &normal };
+            let cut_pal = if cut.palette_flipped() {
+                &flipped
+            } else {
+                &normal
+            };
             match cut.kind {
                 pokered_core::overworld::presentation::CutAnimKind::Tree => {
                     if let Ok(cached) = rm.load_tileset("overworld") {
-                        let tree = cached.tileset.clone();
+                        let tree = &cached.tileset;
                         for (tile, col, row) in [
                             (0x2dusize, 0i32, 0i32),
                             (0x2e, 1, 0),
@@ -1793,7 +1784,7 @@ fn draw_overworld_impl(
                             let dx = if row == 0 { spread } else { -spread };
                             blit_tile_clipped(
                                 fb,
-                                &tree,
+                                tree,
                                 tile,
                                 player_x + base_x + col * TILE_SIZE as i32 + dx,
                                 player_y + base_y + row * TILE_SIZE as i32,
@@ -1804,12 +1795,17 @@ fn draw_overworld_impl(
                 }
                 pokered_core::overworld::presentation::CutAnimKind::Grass => {
                     if let Ok(cached) = rm.load_battle("move_anim_0") {
-                        let leaves = cached.tileset.clone();
+                        let leaves = &cached.tileset;
                         let drift = cut.frame.saturating_sub(2) as i32;
-                        for (col, row, dx) in [(0, 0, drift), (1, 0, drift * 2), (0, 1, -drift * 2), (1, 1, -drift)] {
+                        for (col, row, dx) in [
+                            (0, 0, drift),
+                            (1, 0, drift * 2),
+                            (0, 1, -drift * 2),
+                            (1, 1, -drift),
+                        ] {
                             blit_tile_clipped(
                                 fb,
-                                &leaves,
+                                leaves,
                                 6,
                                 player_x + base_x + col * TILE_SIZE as i32 + dx,
                                 player_y + base_y + row * TILE_SIZE as i32 + drift / 4,
@@ -1832,7 +1828,7 @@ fn draw_overworld_impl(
         if let Some(dep) = screen.ship_departure.as_ref() {
             if dep.puff_count() > 0 {
                 if let Ok(cached) = rm.load_asset(AssetCategory::Overworld, "smoke.png") {
-                    let ts = cached.tileset.clone();
+                    let ts = &cached.tileset;
                     // rOBP1=%00000000: idx 0→transparent, 1-3→white.
                     let obp1_pal =
                         Palette::new(&[Rgba::TRANSPARENT, Rgba::WHITE, Rgba::WHITE, Rgba::WHITE]);
@@ -1847,7 +1843,7 @@ fn draw_overworld_impl(
                         for (col, row) in [(0i32, 0i32), (1, 0), (0, 1), (1, 1)] {
                             blit_tile_clipped(
                                 fb,
-                                &ts,
+                                ts,
                                 0,
                                 px + col * TILE_SIZE as i32,
                                 anchor_y + row * TILE_SIZE as i32,
