@@ -15,8 +15,6 @@
 //! with the same tile count.
 
 use crate::alloc_prelude::*;
-use alloc::collections::{BTreeMap, BTreeSet};
-
 use dotzuki_renderer::asset_provider::ResourceProvider;
 use dotzuki_renderer::tile::{TileSet, TILE_PIXELS};
 
@@ -162,20 +160,28 @@ pub struct CachedTileSet {
 
 pub struct ResourceManager {
     root: AssetRoot,
-    /// decoded tilesets keyed by "<subdir>/<stem>" (leading ".png" stripped)
-    cache: BTreeMap<String, CachedTileSet>,
+    /// Decoded tilesets. GBA screen lifecycles retain only a handful of
+    /// entries, so a compact linear cache avoids allocating a combined
+    /// "<subdir>/<stem>" String on every lookup.
+    cache: Vec<CachedAsset>,
     /// Registry misses are immutable for the lifetime of the ROM. Remember
     /// them so optional assets do not rescan the full generated table every
     /// frame.
-    missing: BTreeSet<String>,
+    missing: Vec<(AssetCategory, String)>,
+}
+
+struct CachedAsset {
+    category: AssetCategory,
+    name: String,
+    value: CachedTileSet,
 }
 
 impl ResourceManager {
     pub fn new(root: AssetRoot) -> Self {
         Self {
             root,
-            cache: BTreeMap::new(),
-            missing: BTreeSet::new(),
+            cache: Vec::new(),
+            missing: Vec::new(),
         }
     }
 
@@ -195,15 +201,18 @@ impl ResourceManager {
     /// `(&'static dir, &'static stem)` pair.
     fn registry_key(subdir: &str, name: &str) -> Option<(&'static str, &'static str)> {
         let name = name.strip_suffix(".png").unwrap_or(name);
+        let nested = name.rsplit_once('/');
         crate::gba_assets::PRECONVERTED_ASSETS
             .iter()
             .find(|(s, n, _)| {
-                if name.contains('/') {
-                    // nested asset (e.g. tilesets/flower/flower0):
-                    // dir is "subdir/name_dir", stem is the last segment.
-                    let full = format!("{}/{}", subdir, name);
-                    let (parent, stem) = full.rsplit_once('/').unwrap_or(("", &full));
-                    *s == parent && *n == stem
+                if let Some((relative_dir, stem)) = nested {
+                    // Nested asset (e.g. tilesets/flower/flower0): compare
+                    // the registry directory in two borrowed pieces instead
+                    // of formatting a temporary full path for every entry.
+                    s.strip_prefix(subdir)
+                        .and_then(|rest| rest.strip_prefix('/'))
+                        == Some(relative_dir)
+                        && *n == stem
                 } else {
                     *s == subdir && *n == name
                 }
@@ -211,54 +220,63 @@ impl ResourceManager {
             .map(|(s, n, _)| (*s, *n))
     }
 
-    fn load_and_cache(&mut self, subdir: &str, name: &str) -> Result<&CachedTileSet> {
+    fn load_and_cache(&mut self, category: AssetCategory, name: &str) -> Result<&CachedTileSet> {
         let normalized_name = name.strip_suffix(".png").unwrap_or(name);
-        let cache_key = format!("{}/{}", subdir, normalized_name);
-        if self.cache.contains_key(&cache_key) {
-            return Ok(self.cache.get(&cache_key).expect("cache key exists"));
+        if let Some(index) = self
+            .cache
+            .iter()
+            .position(|entry| entry.category == category && entry.name == normalized_name)
+        {
+            return Ok(&self.cache[index].value);
         }
-        if self.missing.contains(&cache_key) {
-            return Err(ResourceError { key: cache_key });
+        let subdir = category.subdir();
+        if self
+            .missing
+            .iter()
+            .any(|(kind, missing_name)| *kind == category && missing_name == normalized_name)
+        {
+            return Err(ResourceError {
+                key: format!("{}/{}", subdir, normalized_name),
+            });
         }
 
         let Some((reg_dir, reg_stem)) = Self::registry_key(subdir, normalized_name) else {
+            let cache_key = format!("{}/{}", subdir, normalized_name);
             log::warn!("gba-asset miss: {}", cache_key);
-            self.missing.insert(cache_key.clone());
+            self.missing.push((category, normalized_name.to_string()));
             return Err(ResourceError { key: cache_key });
         };
-        if !self.cache.contains_key(&cache_key) {
-            let bytes =
-                crate::gba_assets::get_preconverted_asset(reg_dir, reg_stem).ok_or_else(|| {
-                    log::warn!("gba-asset registry miss: {}/{}", reg_dir, reg_stem);
-                    ResourceError {
-                        key: cache_key.clone(),
-                    }
-                })?;
-            // Decode with the registry's storage encoding (font → 1bpp,
-            // everything else → 2bpp). Tile splitting must match the hosted
-            // per-tile decode, and it does for both encodings.
-            let tileset = if reg_dir == "font" {
-                TileSet::from_1bpp(bytes)
-            } else {
-                TileSet::from_2bpp(bytes)
-            };
-            let source_size =
-                tile_dims(reg_dir, reg_stem).unwrap_or(((tileset.len() as u32) * 8, 8));
-            let tile_count = tileset.len();
-            self.cache.insert(
-                cache_key.clone(),
-                CachedTileSet {
-                    tileset,
-                    source_size,
-                    tile_count,
-                },
-            );
-        }
-        Ok(self.cache.get(&cache_key).expect("just inserted"))
+        let bytes =
+            crate::gba_assets::get_preconverted_asset(reg_dir, reg_stem).ok_or_else(|| {
+                log::warn!("gba-asset registry miss: {}/{}", reg_dir, reg_stem);
+                ResourceError {
+                    key: format!("{}/{}", subdir, normalized_name),
+                }
+            })?;
+        // Decode with the registry's storage encoding (font → 1bpp,
+        // everything else → 2bpp). Tile splitting must match the hosted
+        // per-tile decode, and it does for both encodings.
+        let tileset = if reg_dir == "font" {
+            TileSet::from_1bpp(bytes)
+        } else {
+            TileSet::from_2bpp(bytes)
+        };
+        let source_size = tile_dims(reg_dir, reg_stem).unwrap_or(((tileset.len() as u32) * 8, 8));
+        let tile_count = tileset.len();
+        self.cache.push(CachedAsset {
+            category,
+            name: normalized_name.to_string(),
+            value: CachedTileSet {
+                tileset,
+                source_size,
+                tile_count,
+            },
+        });
+        Ok(&self.cache.last().expect("just inserted").value)
     }
 
     pub fn load(&mut self, category: AssetCategory, name: &str) -> Result<&CachedTileSet> {
-        self.load_and_cache(category.subdir(), name)
+        self.load_and_cache(category, name)
     }
 
     // ── Named helpers (same surface as the hosted resource module) ─────────
