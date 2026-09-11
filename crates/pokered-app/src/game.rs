@@ -6204,14 +6204,13 @@ impl PokemonGame {
         }
     }
 
-    /// Draw with the GBA's incremental pure-background cache. Full-screen
-    /// takeovers discard it before using their own temporary framebuffers.
+    /// Draw with the GBA's incremental underlay cache. Full-screen takeovers
+    /// discard it before using their own temporary framebuffers.
     #[cfg(target_os = "none")]
     pub fn draw_gba(
         &mut self,
         frame_buffer: &mut FrameBuffer,
         background_cache: &mut Option<OverworldBackgroundCache>,
-        copy_background: &mut dyn FnMut(&mut [u8], &[u8]),
         scroll_background: &mut dyn FnMut(&mut [u8], usize, usize, i32, i32, u8),
         reuse_composited_overworld: bool,
     ) {
@@ -6236,7 +6235,6 @@ impl PokemonGame {
             frame_buffer,
             self.state.config.language,
             cache,
-            copy_background,
             scroll_background,
             reuse_composited_overworld,
         );

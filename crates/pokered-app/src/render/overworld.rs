@@ -18,7 +18,9 @@ use pokered_data::map_json::MapJson;
 use pokered_renderer::embedded_font::draw_text;
 use pokered_renderer::palette::{GbColor, Palette, GRAYSCALE_PALETTE};
 use pokered_renderer::resource::{AssetCategory, ResourceManager};
-use pokered_renderer::{FrameBuffer, RenderConfig, Rgba, TILE_SIZE};
+#[cfg(test)]
+use pokered_renderer::RenderConfig;
+use pokered_renderer::{FrameBuffer, Rgba, TILE_SIZE};
 
 use pokered_data::ui_layout::schema::{DIALOG_DEFAULT_LAYOUT, YES_NO_DEFAULT_LAYOUT};
 use pokered_renderer::tile::{Tile, TileSet};
@@ -306,6 +308,73 @@ pub struct FrameDamageRect {
     pub height: u32,
 }
 
+const FOREGROUND_PATCH_SIDE: usize = (TILE_SIZE * 2) as usize;
+const FOREGROUND_PATCH_PIXELS: usize = FOREGROUND_PATCH_SIDE * FOREGROUND_PATCH_SIDE;
+
+struct ForegroundPatch {
+    rect: FrameDamageRect,
+    pixels: [u8; FOREGROUND_PATCH_PIXELS],
+}
+
+impl ForegroundPatch {
+    fn capture(source: &FrameBuffer, rect: FrameDamageRect) -> Self {
+        assert!(rect.width as usize <= FOREGROUND_PATCH_SIDE);
+        assert!(rect.height as usize <= FOREGROUND_PATCH_SIDE);
+        let mut patch = Self {
+            rect,
+            pixels: [0; FOREGROUND_PATCH_PIXELS],
+        };
+        let width = rect.width as usize;
+        let height = rect.height as usize;
+
+        #[cfg(all(target_os = "none", target_arch = "arm"))]
+        for row in 0..height {
+            let source_offset = (rect.y as usize + row) * source.width() as usize + rect.x as usize;
+            let patch_offset = row * width;
+            patch.pixels[patch_offset..patch_offset + width]
+                .copy_from_slice(&source.indices()[source_offset..source_offset + width]);
+        }
+
+        #[cfg(not(all(target_os = "none", target_arch = "arm")))]
+        for row in 0..height {
+            for column in 0..width {
+                patch.pixels[row * width + column] = source
+                    .indexed()
+                    .get_pixel(rect.x + column as u32, rect.y + row as u32)
+                    .expect("foreground patch is clipped")
+                    as u8;
+            }
+        }
+
+        patch
+    }
+
+    fn restore(&self, destination: &mut FrameBuffer) {
+        let width = self.rect.width as usize;
+        let height = self.rect.height as usize;
+
+        #[cfg(all(target_os = "none", target_arch = "arm"))]
+        for row in 0..height {
+            let destination_offset =
+                (self.rect.y as usize + row) * destination.width() as usize + self.rect.x as usize;
+            let patch_offset = row * width;
+            destination.indices_mut()[destination_offset..destination_offset + width]
+                .copy_from_slice(&self.pixels[patch_offset..patch_offset + width]);
+        }
+
+        #[cfg(not(all(target_os = "none", target_arch = "arm")))]
+        for row in 0..height {
+            for column in 0..width {
+                destination.set_pixel_index(
+                    self.rect.x + column as u32,
+                    self.rect.y + row as u32,
+                    GbColor::from_u8(self.pixels[row * width + column]),
+                );
+            }
+        }
+    }
+}
+
 impl FrameDamageRect {
     #[inline]
     fn clipped(
@@ -331,15 +400,16 @@ impl FrameDamageRect {
     }
 }
 
-/// Pure map-layer cache used by the GBA frontend. For ordinary map frames it
-/// also remembers where the previous player/NPC sprites were composited, so
-/// an exact background hit can restore just those regions instead of copying
-/// the entire 160×144 background again.
+/// Incremental map-layer cache used by the GBA frontend. The visible output
+/// keeps the current background in place; this buffer stores the pixels that
+/// were underneath the previous player/NPC sprites, so the next frame can
+/// restore those small regions before scrolling or drawing new foreground.
 pub struct OverworldBackgroundCache {
-    frame_buffer: FrameBuffer,
+    width: u32,
+    height: u32,
     key: Option<OverworldBackgroundKey>,
     output_key: Option<OverworldBackgroundKey>,
-    foreground_damage: Vec<FrameDamageRect>,
+    foreground_patches: Vec<ForegroundPatch>,
     presentation_damage: Vec<FrameDamageRect>,
     partial_present: bool,
 }
@@ -347,10 +417,11 @@ pub struct OverworldBackgroundCache {
 impl OverworldBackgroundCache {
     pub fn new(width: u32, height: u32) -> Self {
         Self {
-            frame_buffer: FrameBuffer::new(RenderConfig::new(width, height), Rgba::WHITE),
+            width,
+            height,
             key: None,
             output_key: None,
-            foreground_damage: Vec::with_capacity(32),
+            foreground_patches: Vec::with_capacity(16),
             presentation_damage: Vec::with_capacity(64),
             partial_present: false,
         }
@@ -371,7 +442,7 @@ impl OverworldBackgroundCache {
 
     fn invalidate_output(&mut self) {
         self.output_key = None;
-        self.foreground_damage.clear();
+        self.foreground_patches.clear();
     }
 
     fn require_full_present(&mut self) {
@@ -382,43 +453,23 @@ impl OverworldBackgroundCache {
     fn begin_partial_present(&mut self) {
         self.presentation_damage.clear();
         self.presentation_damage
-            .extend_from_slice(&self.foreground_damage);
+            .extend(self.foreground_patches.iter().map(|patch| patch.rect));
         self.partial_present = true;
     }
 
     #[inline(never)]
-    fn record_foreground_rect(&mut self, x: i32, y: i32, width: u32, height: u32) {
-        let right = x.saturating_add(width as i32);
-        let bottom = y.saturating_add(height as i32);
-        if x >= 0
-            && y >= 0
-            && right <= self.frame_buffer.width() as i32
-            && bottom <= self.frame_buffer.height() as i32
-        {
-            let rect = FrameDamageRect {
-                x: x as u32,
-                y: y as u32,
-                width,
-                height,
-            };
+    fn save_foreground_rect(
+        &mut self,
+        source: &FrameBuffer,
+        x: i32,
+        y: i32,
+        width: u32,
+        height: u32,
+    ) {
+        if let Some(rect) = FrameDamageRect::clipped(x, y, width, height, self.width, self.height) {
             if self.output_key.is_some() {
-                self.foreground_damage.push(rect);
-            }
-            if self.partial_present {
-                self.presentation_damage.push(rect);
-            }
-            return;
-        }
-        if let Some(rect) = FrameDamageRect::clipped(
-            x,
-            y,
-            width,
-            height,
-            self.frame_buffer.width(),
-            self.frame_buffer.height(),
-        ) {
-            if self.output_key.is_some() {
-                self.foreground_damage.push(rect);
+                self.foreground_patches
+                    .push(ForegroundPatch::capture(source, rect));
             }
             if self.partial_present {
                 self.presentation_damage.push(rect);
@@ -428,36 +479,42 @@ impl OverworldBackgroundCache {
 
     fn prepare(
         &mut self,
+        output: &mut FrameBuffer,
         key: OverworldBackgroundKey,
         scroll_pixels: Option<&mut ScrollIndexedPixels<'_>>,
     ) -> BackgroundDamage {
+        output.reset_palette();
         let Some(previous) = self.key else {
-            self.frame_buffer.clear(Rgba::WHITE);
+            output.clear(Rgba::WHITE);
             return BackgroundDamage::Full;
         };
         if !previous.same_scene(key) {
-            self.frame_buffer.clear(Rgba::WHITE);
+            output.clear(Rgba::WHITE);
             return BackgroundDamage::Full;
         }
+
+        if self.output_key != Some(previous) {
+            output.clear(Rgba::WHITE);
+            return BackgroundDamage::Full;
+        }
+        restore_foreground_regions(output, self);
 
         let dx = previous.camera_x - key.camera_x;
         let dy = previous.camera_y - key.camera_y;
         if dx == 0 && dy == 0 {
             return BackgroundDamage::None;
         }
-        if dx.unsigned_abs() >= self.frame_buffer.width()
-            || dy.unsigned_abs() >= self.frame_buffer.height()
-        {
-            self.frame_buffer.clear(Rgba::WHITE);
+        if dx.unsigned_abs() >= output.width() || dy.unsigned_abs() >= output.height() {
+            output.clear(Rgba::WHITE);
             return BackgroundDamage::Full;
         }
 
         #[cfg(all(target_os = "none", target_arch = "arm"))]
         if let Some(scroll_pixels) = scroll_pixels {
-            let width = self.frame_buffer.width() as usize;
-            let height = self.frame_buffer.height() as usize;
+            let width = output.width() as usize;
+            let height = output.height() as usize;
             scroll_pixels(
-                self.frame_buffer.indices_mut(),
+                output.indices_mut(),
                 width,
                 height,
                 dx,
@@ -465,12 +522,12 @@ impl OverworldBackgroundCache {
                 GbColor::White as u8,
             );
         } else {
-            self.frame_buffer.scroll_indices(dx, dy, GbColor::White);
+            output.scroll_indices(dx, dy, GbColor::White);
         }
         #[cfg(not(all(target_os = "none", target_arch = "arm")))]
         {
             let _ = scroll_pixels;
-            self.frame_buffer.scroll_indices(dx, dy, GbColor::White);
+            output.scroll_indices(dx, dy, GbColor::White);
         }
         BackgroundDamage::Scrolled { dx, dy }
     }
@@ -478,8 +535,10 @@ impl OverworldBackgroundCache {
 
 #[inline(never)]
 fn restore_foreground_regions(fb: &mut FrameBuffer, cache: &OverworldBackgroundCache) {
-    for rect in &cache.foreground_damage {
-        fb.copy_rect_from(&cache.frame_buffer, rect.x, rect.y, rect.width, rect.height);
+    // Later sprites may overlap earlier ones, so their saved underlay can
+    // contain pixels from an earlier foreground draw. Undo in reverse order.
+    for patch in cache.foreground_patches.iter().rev() {
+        patch.restore(fb);
     }
     // A prior dark-cave frame may have changed only the display palette.
     // Foreground is always drawn against the base palette before the current
@@ -657,7 +716,7 @@ pub fn draw_overworld(
     fb: &mut FrameBuffer,
     language: pokered_core::game_state::Lang,
 ) {
-    draw_overworld_impl(screen, res, fb, language, None, None, None, None);
+    draw_overworld_impl(screen, res, fb, language, None, None, None);
 }
 
 pub(crate) fn draw_overworld_cached(
@@ -667,16 +726,7 @@ pub(crate) fn draw_overworld_cached(
     language: pokered_core::game_state::Lang,
     cache: &mut OverworldBackgroundCache,
 ) {
-    draw_overworld_impl(
-        screen,
-        res,
-        fb,
-        language,
-        Some(cache),
-        None,
-        None,
-        None,
-    );
+    draw_overworld_impl(screen, res, fb, language, Some(cache), None, None);
 }
 
 pub(crate) fn draw_overworld_cached_with(
@@ -685,7 +735,6 @@ pub(crate) fn draw_overworld_cached_with(
     fb: &mut FrameBuffer,
     language: pokered_core::game_state::Lang,
     cache: &mut OverworldBackgroundCache,
-    copy_background: &mut dyn FnMut(&mut [u8], &[u8]),
     scroll_background: &mut ScrollIndexedPixels<'_>,
     reuse_composited: bool,
 ) {
@@ -695,7 +744,6 @@ pub(crate) fn draw_overworld_cached_with(
         fb,
         language,
         Some(cache),
-        Some(copy_background),
         Some(scroll_background),
         Some(reuse_composited),
     );
@@ -707,7 +755,6 @@ fn draw_overworld_impl(
     fb: &mut FrameBuffer,
     language: pokered_core::game_state::Lang,
     mut background_cache: Option<&mut OverworldBackgroundCache>,
-    mut copy_background: Option<&mut dyn FnMut(&mut [u8], &[u8])>,
     mut scroll_background: Option<&mut ScrollIndexedPixels<'_>>,
     reuse_composited_hint: Option<bool>,
 ) {
@@ -882,9 +929,9 @@ fn draw_overworld_impl(
                         flower_frame: screen.tile_anim.flower_frame(),
                         map_hash: background_map_hash(screen),
                     };
-                    let damage = cache.prepare(key, scroll_background.as_deref_mut());
+                    let damage = cache.prepare(fb, key, scroll_background.as_deref_mut());
                     draw_background_tiles(
-                        &mut cache.frame_buffer,
+                        fb,
                         damage,
                         ts,
                         flower_ts.as_ref(),
@@ -911,21 +958,10 @@ fn draw_overworld_impl(
                         && reuse_composited
                         && cache.output_key == Some(key)
                     {
-                        restore_foreground_regions(fb, cache);
                         cache.begin_partial_present();
-                    } else if let Some(copy_pixels) = copy_background.as_deref_mut() {
-                        fb.copy_from_with(&cache.frame_buffer, copy_pixels);
-                    } else {
-                        fb.copy_from(&cache.frame_buffer);
                     }
-                    // While the player is walking the next visual update also
-                    // changes the camera, so saving foreground rectangles on
-                    // each intermediate step cannot produce an exact hit.
-                    // Idle frames still cover turning, bumping, NPC motion,
-                    // and the first frame of the next player step.
-                    if reuse_composited && screen.state.player.movement_state == MovementState::Idle
-                    {
-                        cache.foreground_damage.clear();
+                    if reuse_composited {
+                        cache.foreground_patches.clear();
                         cache.output_key = Some(key);
                     } else {
                         cache.invalidate_output();
@@ -1148,7 +1184,8 @@ fn draw_overworld_impl(
             if player_visible {
                 if let Some(cache) = background_cache.as_deref_mut() {
                     if cache.output_key.is_some() || cache.partial_present {
-                        cache.record_foreground_rect(
+                        cache.save_foreground_rect(
+                            fb,
                             draw_x as i32,
                             draw_y as i32,
                             TILE_SIZE * 2,
@@ -1365,7 +1402,8 @@ fn draw_overworld_impl(
 
                 if let Some(cache) = background_cache.as_deref_mut() {
                     if cache.output_key.is_some() || cache.partial_present {
-                        cache.record_foreground_rect(
+                        cache.save_foreground_rect(
+                            fb,
                             npc_px_x,
                             npc_px_y,
                             TILE_SIZE * 2,
@@ -2088,6 +2126,50 @@ mod tests {
     }
 
     #[test]
+    fn overlapping_foreground_patches_restore_background_in_reverse_order() {
+        let mut frame = FrameBuffer::new(RenderConfig::new(32, 32), Rgba::WHITE);
+        for y in 0..frame.height() {
+            for x in 0..frame.width() {
+                frame.set_pixel_index(x, y, GbColor::from_u8(((x + y) & 3) as u8));
+            }
+        }
+        let background = frame.packed().to_vec();
+        let mut cache = OverworldBackgroundCache::new(frame.width(), frame.height());
+        let first = FrameDamageRect {
+            x: 4,
+            y: 4,
+            width: 16,
+            height: 16,
+        };
+        let second = FrameDamageRect {
+            x: 12,
+            y: 12,
+            width: 16,
+            height: 16,
+        };
+
+        cache
+            .foreground_patches
+            .push(ForegroundPatch::capture(&frame, first));
+        for y in first.y..first.y + first.height {
+            for x in first.x..first.x + first.width {
+                frame.set_pixel_index(x, y, GbColor::Black);
+            }
+        }
+        cache
+            .foreground_patches
+            .push(ForegroundPatch::capture(&frame, second));
+        for y in second.y..second.y + second.height {
+            for x in second.x..second.x + second.width {
+                frame.set_pixel_index(x, y, GbColor::LightGray);
+            }
+        }
+
+        restore_foreground_regions(&mut frame, &cache);
+        assert_eq!(frame.packed(), background);
+    }
+
+    #[test]
     fn dark_cave_palette_is_fadepal2() {
         // LoadGBPal with wMapPalOffset=6 reads FadePal4 - 6 bytes = FadePal2.
         let pal = dotzuki_renderer::transition::load_gb_pal(6);
@@ -2205,7 +2287,7 @@ mod tests {
         let mut cache = OverworldBackgroundCache::new(160, 144);
         let mut incremental = FrameBuffer::new(RenderConfig::new(160, 144), Rgba::WHITE);
 
-        let mut compare = |screen: &mut OverworldScreen| -> (bool, Option<usize>) {
+        let mut compare = |screen: &mut OverworldScreen| -> Option<usize> {
             let mut full = FrameBuffer::new(RenderConfig::new(160, 144), Rgba::WHITE);
             draw_overworld(
                 screen,
@@ -2213,7 +2295,6 @@ mod tests {
                 &mut full,
                 pokered_core::game_state::Lang::En,
             );
-            let mut copied_full_background = false;
             let reuse_composited = can_reuse_composited_frame(screen);
             draw_overworld_cached_with(
                 screen,
@@ -2221,10 +2302,6 @@ mod tests {
                 &mut incremental,
                 pokered_core::game_state::Lang::En,
                 &mut cache,
-                &mut |destination, source| {
-                    copied_full_background = true;
-                    destination.copy_from_slice(source);
-                },
                 &mut |_, _, _, _, _, _| {
                     unreachable!("host framebuffer must use its planar scroll implementation")
                 },
@@ -2236,23 +2313,16 @@ mod tests {
                 "cached background must preserve every pixel"
             );
             assert_eq!(full.display_palette(), incremental.display_palette());
-            (
-                copied_full_background,
-                cache.presentation_damage().map(<[_]>::len),
-            )
+            cache.presentation_damage().map(<[_]>::len)
         };
 
         assert_eq!(
             compare(&mut s),
-            (true, None),
-            "the cold frame copies and presents the full background"
+            None,
+            "the cold frame draws directly into the output"
         );
         s.state.player.facing = Direction::Right;
-        let (copied, damage_count) = compare(&mut s);
-        assert!(
-            !copied,
-            "an exact background hit restores only prior foreground regions"
-        );
+        let damage_count = compare(&mut s);
         assert!(damage_count.is_some_and(|count| count >= 2));
         {
             let npc = s
@@ -2263,18 +2333,14 @@ mod tests {
             npc.facing = Direction::Right;
             npc.walk_counter = 8;
         }
-        let (copied, damage_count) = compare(&mut s);
-        assert!(
-            !copied,
-            "moving an NPC restores both its old and current regions"
-        );
+        let damage_count = compare(&mut s);
         assert!(damage_count.is_some_and(|count| count >= 2));
         s.npc_states
             .iter_mut()
             .find(|npc| npc.visible)
             .unwrap()
             .walk_counter = 0;
-        assert!(!compare(&mut s).0);
+        let _ = compare(&mut s);
         for direction in [
             Direction::Down,
             Direction::Up,
@@ -2306,14 +2372,11 @@ mod tests {
         // the conservative union filter rather than the single-strip ranges.
         s.state.player.x += 1;
         s.state.player.y += 1;
-        assert!(compare(&mut s).0);
+        let _ = compare(&mut s);
 
         let map = s.map_data.as_mut().expect("live map");
         map.blocks[0] = map.blocks[0].wrapping_add(1);
-        assert!(
-            compare(&mut s).0,
-            "a live map edit rebuilds and copies the background"
-        );
+        let _ = compare(&mut s);
     }
 
     #[cfg(not(target_arch = "wasm32"))]

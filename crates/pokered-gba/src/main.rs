@@ -215,33 +215,6 @@ fn dma3_scroll_indices(
     }
 }
 
-/// Use DMA3 for aligned EWRAM-to-EWRAM copies, falling back for arbitrary
-/// slices. Immediate DMA completes before this function returns.
-#[inline]
-fn dma3_copy_bytes(destination: &mut [u8], source: &[u8]) {
-    assert_eq!(destination.len(), source.len());
-    let len = source.len();
-    let aligned = (destination.as_ptr() as usize | source.as_ptr() as usize | len) & 3 == 0;
-    let words = len / 4;
-    if len == 0 {
-        return;
-    }
-    if !aligned || words > u16::MAX as usize {
-        destination.copy_from_slice(source);
-        return;
-    }
-
-    core::sync::atomic::compiler_fence(core::sync::atomic::Ordering::SeqCst);
-    unsafe {
-        dma3_copy_words(
-            source.as_ptr().cast::<u32>(),
-            destination.as_mut_ptr().cast::<u32>(),
-            words,
-        );
-    }
-    core::sync::atomic::compiler_fence(core::sync::atomic::Ordering::SeqCst);
-}
-
 /// RGB888 → RGB555.
 const fn rgb15(r: u8, g: u8, b: u8) -> u16 {
     ((r >> 3) as u16) | (((g >> 3) as u16) << 5) | (((b >> 3) as u16) << 10)
@@ -921,7 +894,6 @@ fn game_main() -> ! {
             game.draw_gba(
                 &mut fb,
                 &mut overworld_background_cache,
-                &mut dma3_copy_bytes,
                 &mut dma3_scroll_indices,
                 overworld.is_some(),
             );
