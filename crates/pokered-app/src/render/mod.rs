@@ -51,7 +51,9 @@ pub use overworld::{FrameDamageRect, OverworldBackgroundCache};
 #[cfg(target_os = "none")]
 pub use menu::{
     options_menu_cursor_position, redraw_main_menu_cursor, redraw_options_menu_cursor,
-    redraw_save_menu_cursor, redraw_start_menu_cursor,
+    redraw_save_menu_cursor, redraw_start_menu_cursor, redraw_top_level_bag_action_cursor,
+    redraw_top_level_bag_cursor, redraw_top_level_bag_quantity, top_level_bag_cursor_position,
+    top_level_bag_viewport_offset,
 };
 #[cfg(target_os = "none")]
 pub(crate) use overworld::draw_overworld_cached_with;

@@ -17,7 +17,7 @@ use pokered_renderer::party_hp_bar::draw_party_hp_bar;
 use pokered_renderer::resource::ResourceManager;
 use pokered_renderer::{FrameBuffer, TILE_SIZE};
 use pokered_ui::backends::FrameBufferPainter;
-use pokered_ui::{menus, InkColor, TileRect, Ui};
+use pokered_ui::{menus, InkColor, Painter, TilePos, TileRect, Ui};
 use pokered_core::bag_screen::{BagPhase, BagScreenState};
 
 use super::{blit_tileset, species_to_sprite_name};
@@ -410,12 +410,14 @@ fn sell_result_lines(result: &SellResult, is_zh: bool) -> Vec<&'static str> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use pokered_core::bag_screen::{BagScreenInput, BagScreenState};
     use pokered_core::game_state::SaveFileSummary;
     use pokered_core::start_menu::{StartMenuInput, StartMenuState};
     use pokered_core::options_menu::{
         BattleAnimation, BattleStyle, GameOptions, OptionsMenuState, OptionsRow, TextSpeed,
     };
     use pokered_core::save_menu::{SavePhase, SaveScreenInfo};
+    use pokered_data::items::ItemId;
     use pokered_renderer::Rgba;
 
     fn assert_framebuffers_equal(actual: &FrameBuffer, expected: &FrameBuffer) {
@@ -653,6 +655,160 @@ mod tests {
             }
         }
     }
+
+    fn bag_at(cursor: usize) -> BagScreenState {
+        let mut state = BagScreenState::new(vec![
+            (ItemId::Potion, 5),
+            (ItemId::Antidote, 2),
+            (ItemId::PokeBall, 12),
+            (ItemId::PokeFlute, 1),
+            (ItemId::Bicycle, 1),
+            (ItemId::Potion, 8),
+            (ItemId::Antidote, 4),
+            (ItemId::PokeBall, 20),
+        ]);
+        for _ in 0..cursor {
+            state.update_frame(BagScreenInput {
+                down: true,
+                ..BagScreenInput::none()
+            });
+        }
+        state
+    }
+
+    #[test]
+    fn top_level_bag_list_cursor_repaint_matches_a_fresh_bag() {
+        for language in [Lang::En, Lang::Zh] {
+            for (previous_cursor, down) in [(0, true), (1, false), (4, true), (5, false)] {
+                let mut state = bag_at(previous_cursor);
+                let config = dotzuki_engine::render_config::RenderConfig::new(160, 144);
+                let mut actual = FrameBuffer::new(config, Rgba::BLACK);
+                draw_bag(&state, &mut actual, language);
+                let previous = top_level_bag_cursor_position(state.items().len(), state.cursor());
+
+                state.update_frame(BagScreenInput {
+                    up: !down,
+                    down,
+                    ..BagScreenInput::none()
+                });
+                let current = top_level_bag_cursor_position(state.items().len(), state.cursor());
+                assert_eq!(
+                    top_level_bag_viewport_offset(state.items().len(), previous_cursor),
+                    top_level_bag_viewport_offset(state.items().len(), state.cursor()),
+                );
+                redraw_top_level_bag_cursor(previous, current, &mut actual, language);
+
+                let mut expected = FrameBuffer::new(config, Rgba::BLACK);
+                draw_bag(&state, &mut expected, language);
+                assert_framebuffers_equal(&actual, &expected);
+            }
+        }
+    }
+
+    #[test]
+    fn top_level_bag_swap_and_action_cursors_match_fresh_draws() {
+        for language in [Lang::En, Lang::Zh] {
+            let config = dotzuki_engine::render_config::RenderConfig::new(160, 144);
+
+            let mut swap = bag_at(0);
+            swap.update_frame(BagScreenInput {
+                select: true,
+                ..BagScreenInput::none()
+            });
+            let mut actual = FrameBuffer::new(config, Rgba::BLACK);
+            draw_bag(&swap, &mut actual, language);
+            let previous = top_level_bag_cursor_position(swap.items().len(), swap.cursor());
+            swap.update_frame(BagScreenInput {
+                down: true,
+                ..BagScreenInput::none()
+            });
+            let current = top_level_bag_cursor_position(swap.items().len(), swap.cursor());
+            redraw_top_level_bag_cursor(previous, current, &mut actual, language);
+            let mut expected = FrameBuffer::new(config, Rgba::BLACK);
+            draw_bag(&swap, &mut expected, language);
+            assert_framebuffers_equal(&actual, &expected);
+
+            let mut action = bag_at(0);
+            action.update_frame(BagScreenInput {
+                a: true,
+                ..BagScreenInput::none()
+            });
+            let mut actual = FrameBuffer::new(config, Rgba::BLACK);
+            draw_bag(&action, &mut actual, language);
+            action.update_frame(BagScreenInput {
+                down: true,
+                ..BagScreenInput::none()
+            });
+            redraw_top_level_bag_action_cursor(0, 1, &mut actual, language);
+            let mut expected = FrameBuffer::new(config, Rgba::BLACK);
+            draw_bag(&action, &mut expected, language);
+            assert_framebuffers_equal(&actual, &expected);
+        }
+    }
+
+    #[test]
+    fn top_level_bag_quantity_repaint_matches_a_fresh_draw() {
+        for language in [Lang::En, Lang::Zh] {
+            let config = dotzuki_engine::render_config::RenderConfig::new(160, 144);
+            let mut state = bag_at(0);
+            state.update_frame(BagScreenInput {
+                a: true,
+                ..BagScreenInput::none()
+            });
+            state.update_frame(BagScreenInput {
+                down: true,
+                ..BagScreenInput::none()
+            });
+            state.update_frame(BagScreenInput {
+                a: true,
+                ..BagScreenInput::none()
+            });
+
+            let mut actual = FrameBuffer::new(config, Rgba::BLACK);
+            draw_bag(&state, &mut actual, language);
+            state.update_frame(BagScreenInput {
+                up: true,
+                ..BagScreenInput::none()
+            });
+            redraw_top_level_bag_quantity(1, 2, &mut actual, language);
+
+            let mut expected = FrameBuffer::new(config, Rgba::BLACK);
+            draw_bag(&state, &mut expected, language);
+            assert_framebuffers_equal(&actual, &expected);
+
+            // Crossing the two/three-digit boundary must also erase the
+            // trailing digit when moving back from x100 to x99.
+            let mut state = BagScreenState::new(vec![(ItemId::Potion, 100)]);
+            state.update_frame(BagScreenInput {
+                a: true,
+                ..BagScreenInput::none()
+            });
+            state.update_frame(BagScreenInput {
+                down: true,
+                ..BagScreenInput::none()
+            });
+            state.update_frame(BagScreenInput {
+                a: true,
+                ..BagScreenInput::none()
+            });
+            for _ in 1..100 {
+                state.update_frame(BagScreenInput {
+                    up: true,
+                    ..BagScreenInput::none()
+                });
+            }
+            let mut actual = FrameBuffer::new(config, Rgba::BLACK);
+            draw_bag(&state, &mut actual, language);
+            state.update_frame(BagScreenInput {
+                down: true,
+                ..BagScreenInput::none()
+            });
+            redraw_top_level_bag_quantity(100, 99, &mut actual, language);
+            let mut expected = FrameBuffer::new(config, Rgba::BLACK);
+            draw_bag(&state, &mut expected, language);
+            assert_framebuffers_equal(&actual, &expected);
+        }
+    }
 }
 
 /// Overworld ITEM bag (Start menu → ITEM): the item list, plus a USE / TOSS /
@@ -661,12 +817,7 @@ pub fn draw_bag(state: &BagScreenState, fb: &mut FrameBuffer, lang: Lang) {
     let mut painter = FrameBufferPainter::new(fb).with_lang(lang);
     let mut ui = Ui::new(&mut painter);
     let rd = PokemonRenderData::new(false);
-    let items_u8: Vec<(pokered_data::items::ItemId, u8)> = state
-        .items()
-        .iter()
-        .map(|(id, q)| (*id, (*q).min(99) as u8))
-        .collect();
-    menus::bag::draw(&items_u8, state.cursor(), &BAG_DEFAULT_LAYOUT, &mut ui, &rd);
+    menus::bag::draw(state.items(), state.cursor(), &BAG_DEFAULT_LAYOUT, &mut ui, &rd);
 
     match state.phase() {
         BagPhase::SwapFrom { row } => {
@@ -707,4 +858,66 @@ pub fn draw_bag(state: &BagScreenState, fb: &mut FrameBuffer, lang: Lang) {
         }
         BagPhase::Browsing => {}
     }
+}
+
+#[cfg(any(test, target_os = "none"))]
+pub fn top_level_bag_viewport_offset(item_count: usize, cursor: usize) -> usize {
+    menus::bag::viewport_offset(item_count, cursor, &BAG_DEFAULT_LAYOUT)
+}
+
+#[cfg(any(test, target_os = "none"))]
+pub fn top_level_bag_cursor_position(item_count: usize, cursor: usize) -> TilePos {
+    menus::bag::cursor_position(item_count, cursor, &BAG_DEFAULT_LAYOUT)
+}
+
+/// Repaint only the changed list cursor cells of an already-rendered bag.
+#[cfg(any(test, target_os = "none"))]
+pub fn redraw_top_level_bag_cursor(
+    previous: TilePos,
+    current: TilePos,
+    fb: &mut FrameBuffer,
+    lang: Lang,
+) {
+    let mut painter = FrameBufferPainter::new(fb).with_lang(lang);
+    menus::bag::redraw_cursor(previous, current, &mut painter);
+}
+
+/// Repaint only the changed USE/TOSS/CANCEL cursor cells.
+#[cfg(any(test, target_os = "none"))]
+pub fn redraw_top_level_bag_action_cursor(
+    previous: u8,
+    current: u8,
+    fb: &mut FrameBuffer,
+    lang: Lang,
+) {
+    let mut painter = FrameBufferPainter::new(fb).with_lang(lang);
+    let position = |cursor| TilePos::new(13, 12 + cursor as u32 * 2);
+    let old = position(previous);
+    painter.draw_pixel_rect(old.tx * 8, old.ty * 8, 8, 9, pokered_ui::Rgba::INK_WHITE);
+    painter.draw_glyph(position(current), '▶', pokered_ui::Rgba::INK_BLACK);
+}
+
+/// Repaint only the changed `xNN` value of the toss-quantity prompt.
+#[cfg(any(test, target_os = "none"))]
+pub fn redraw_top_level_bag_quantity(
+    previous: u32,
+    current: u32,
+    fb: &mut FrameBuffer,
+    lang: Lang,
+) {
+    let mut painter = FrameBufferPainter::new(fb).with_lang(lang);
+    let position = TilePos::new(7, 15);
+    let text_width = |qty| format!("x{:02}", qty).chars().count() as u32 * 8;
+    painter.draw_pixel_rect(
+        position.tx * 8,
+        position.ty * 8,
+        text_width(previous).max(text_width(current)),
+        10,
+        pokered_ui::Rgba::INK_WHITE,
+    );
+    painter.draw_text(
+        position,
+        &format!("x{:02}", current),
+        pokered_ui::Rgba::INK_BLACK,
+    );
 }

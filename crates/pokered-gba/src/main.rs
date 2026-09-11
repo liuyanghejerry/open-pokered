@@ -10,6 +10,7 @@ use agb::input::{Button, ButtonController};
 use dotzuki_engine::render_config::RenderConfig;
 use pokered_app::game::PokemonGame;
 use pokered_app::render::FrameDamageRect;
+use pokered_core::bag_screen::BagPhase;
 use pokered_core::battle::state::StatusCondition;
 use pokered_core::battle::{BattlePhase, IntroPhase, PokeballSlotStatus};
 use pokered_core::data::wild_data::GameVersion;
@@ -23,6 +24,7 @@ use pokered_data::species::Species;
 use pokered_renderer::input::{GbButton, InputState};
 use pokered_renderer::palette::GbColor;
 use pokered_renderer::{FrameBuffer, Rgba};
+use pokered_ui::TilePos;
 
 /// Route the game crates' `log` output to the mGBA debug console.
 struct GbaLogger;
@@ -839,6 +841,13 @@ fn hash_u16(hash: &mut u32, value: u16) {
     }
 }
 
+#[inline]
+fn hash_u32(hash: &mut u32, value: u32) {
+    for byte in value.to_le_bytes() {
+        hash_byte(hash, byte);
+    }
+}
+
 impl OverworldVisualKey {
     /// Return a compact key only for the ordinary map view. Cutscenes,
     /// overlays, fades, and other uncommon compositions deliberately redraw
@@ -1051,6 +1060,97 @@ impl SaveVisualKey {
         previous_without_cursor.cursor = YesNoChoice::Yes;
         (current_without_cursor == previous_without_cursor)
             .then_some((previous.cursor, self.cursor))
+    }
+}
+
+#[derive(Clone, Copy, PartialEq, Eq)]
+struct BagVisualKey {
+    cursor: usize,
+    cursor_position: TilePos,
+    viewport_offset: usize,
+    phase: BagPhase,
+    swap_marker_view_row: Option<usize>,
+    items_hash: u32,
+    language: Lang,
+}
+
+impl BagVisualKey {
+    fn new(game: &PokemonGame) -> Self {
+        let state = &game.bag_screen;
+        let mut items_hash = 0x811c_9dc5;
+        hash_u16(&mut items_hash, state.items().len() as u16);
+        for &(item, qty) in state.items() {
+            hash_byte(&mut items_hash, item as u8);
+            hash_u32(&mut items_hash, qty);
+        }
+        let phase = state.phase();
+        Self {
+            cursor: state.cursor(),
+            cursor_position: pokered_app::render::top_level_bag_cursor_position(
+                state.items().len(),
+                state.cursor(),
+            ),
+            viewport_offset: pokered_app::render::top_level_bag_viewport_offset(
+                state.items().len(),
+                state.cursor(),
+            ),
+            phase,
+            swap_marker_view_row: match phase {
+                BagPhase::SwapFrom { row } => Some(row.saturating_sub(state.scroll())),
+                _ => None,
+            },
+            items_hash,
+            language: game.state.config.language,
+        }
+    }
+
+    fn list_cursor_change_from(&self, previous: &Self) -> Option<(TilePos, TilePos)> {
+        if self.cursor == previous.cursor
+            || self.phase != previous.phase
+            || !matches!(self.phase, BagPhase::Browsing | BagPhase::SwapFrom { .. })
+        {
+            return None;
+        }
+        let mut current_without_cursor = *self;
+        current_without_cursor.cursor = 0;
+        current_without_cursor.cursor_position = TilePos::new(0, 0);
+        let mut previous_without_cursor = *previous;
+        previous_without_cursor.cursor = 0;
+        previous_without_cursor.cursor_position = TilePos::new(0, 0);
+        (current_without_cursor == previous_without_cursor)
+            .then_some((previous.cursor_position, self.cursor_position))
+    }
+
+    fn action_cursor_change_from(&self, previous: &Self) -> Option<(u8, u8)> {
+        let (BagPhase::ActionMenu { cursor: current }, BagPhase::ActionMenu { cursor: old }) =
+            (self.phase, previous.phase)
+        else {
+            return None;
+        };
+        if current == old {
+            return None;
+        }
+        let mut current_without_cursor = *self;
+        current_without_cursor.phase = BagPhase::ActionMenu { cursor: 0 };
+        let mut previous_without_cursor = *previous;
+        previous_without_cursor.phase = BagPhase::ActionMenu { cursor: 0 };
+        (current_without_cursor == previous_without_cursor).then_some((old, current))
+    }
+
+    fn quantity_change_from(&self, previous: &Self) -> Option<(u32, u32)> {
+        let (BagPhase::TossQuantity { qty: current }, BagPhase::TossQuantity { qty: old }) =
+            (self.phase, previous.phase)
+        else {
+            return None;
+        };
+        if current == old {
+            return None;
+        }
+        let mut current_without_qty = *self;
+        current_without_qty.phase = BagPhase::TossQuantity { qty: 1 };
+        let mut previous_without_qty = *previous;
+        previous_without_qty.phase = BagPhase::TossQuantity { qty: 1 };
+        (current_without_qty == previous_without_qty).then_some((old, current))
     }
 }
 
@@ -1357,6 +1457,7 @@ fn game_main() -> ! {
     let mut last_start_menu: Option<StartMenuVisualKey> = None;
     let mut last_options: Option<OptionsVisualKey> = None;
     let mut last_save: Option<SaveVisualKey> = None;
+    let mut last_bag: Option<BagVisualKey> = None;
     let mut last_oak: Option<OakVisualKey> = None;
     let mut last_overworld: Option<OverworldVisualKey> = None;
     let mut last_battle: Option<BattleVisualKey> = None;
@@ -1477,6 +1578,19 @@ fn game_main() -> ! {
             .as_ref()
             .zip(last_save.as_ref())
             .and_then(|(current, previous)| current.cursor_change_from(previous));
+        let bag = (game.state.screen == GameScreen::Bag).then(|| BagVisualKey::new(game));
+        let bag_list_cursor_change = bag
+            .as_ref()
+            .zip(last_bag.as_ref())
+            .and_then(|(current, previous)| current.list_cursor_change_from(previous));
+        let bag_action_cursor_change = bag
+            .as_ref()
+            .zip(last_bag.as_ref())
+            .and_then(|(current, previous)| current.action_cursor_change_from(previous));
+        let bag_quantity_change = bag
+            .as_ref()
+            .zip(last_bag.as_ref())
+            .and_then(|(current, previous)| current.quantity_change_from(previous));
         let oak_screen = game.state.screen == GameScreen::OakSpeech;
         let oak = oak_screen.then(|| OakVisualKey::new(game)).flatten();
         let overworld_screen = game.state.screen == GameScreen::Overworld;
@@ -1525,6 +1639,8 @@ fn game_main() -> ! {
             options != last_options
         } else if save.is_some() {
             save != last_save
+        } else if bag.is_some() {
+            bag != last_bag
         } else if oak_screen {
             oak.as_ref().map_or(true, |key| last_oak.as_ref() != Some(key))
         } else if overworld_screen {
@@ -1561,6 +1677,27 @@ fn game_main() -> ! {
                 );
             } else if let Some((previous, current)) = save_cursor_change {
                 pokered_app::render::redraw_save_menu_cursor(
+                    previous,
+                    current,
+                    &mut fb,
+                    game.state.config.language,
+                );
+            } else if let Some((previous, current)) = bag_list_cursor_change {
+                pokered_app::render::redraw_top_level_bag_cursor(
+                    previous,
+                    current,
+                    &mut fb,
+                    game.state.config.language,
+                );
+            } else if let Some((previous, current)) = bag_action_cursor_change {
+                pokered_app::render::redraw_top_level_bag_action_cursor(
+                    previous,
+                    current,
+                    &mut fb,
+                    game.state.config.language,
+                );
+            } else if let Some((previous, current)) = bag_quantity_change {
+                pokered_app::render::redraw_top_level_bag_quantity(
                     previous,
                     current,
                     &mut fb,
@@ -1668,6 +1805,17 @@ fn game_main() -> ! {
                     save_cursor_damage(current),
                 ]
             });
+            let bag_list_cursor_damage = bag_list_cursor_change.map(|(previous, current)| {
+                [bag_cursor_damage(previous), bag_cursor_damage(current)]
+            });
+            let bag_action_cursor_damage = bag_action_cursor_change.map(|(previous, current)| {
+                [
+                    bag_action_cursor_damage(previous),
+                    bag_action_cursor_damage(current),
+                ]
+            });
+            let bag_quantity_damage = bag_quantity_change
+                .map(|(previous, current)| [bag_quantity_damage(previous, current)]);
             let battle_safari_damage =
                 battle_safari_cursor_change.map(|(previous, current)| {
                     [
@@ -1720,6 +1868,12 @@ fn game_main() -> ! {
                 Some(rects.as_slice())
             } else if let Some(rects) = save_damage.as_ref() {
                 Some(rects.as_slice())
+            } else if let Some(rects) = bag_list_cursor_damage.as_ref() {
+                Some(rects.as_slice())
+            } else if let Some(rects) = bag_action_cursor_damage.as_ref() {
+                Some(rects.as_slice())
+            } else if let Some(rects) = bag_quantity_damage.as_ref() {
+                Some(rects.as_slice())
             } else if let Some(rects) = battle_safari_damage.as_ref() {
                 Some(rects.as_slice())
             } else if let Some(rects) = battle_menu_damage.as_ref() {
@@ -1750,6 +1904,7 @@ fn game_main() -> ! {
         last_start_menu = start_menu;
         last_options = options;
         last_save = save;
+        last_bag = bag;
         last_oak = oak;
         last_overworld = overworld;
         last_battle = battle;
@@ -1923,5 +2078,43 @@ fn save_cursor_damage(cursor: YesNoChoice) -> FrameDamageRect {
         },
         width: 8,
         height: 9,
+    }
+}
+
+#[inline]
+fn bag_cursor_damage(cursor: TilePos) -> FrameDamageRect {
+    FrameDamageRect {
+        x: cursor.tx * 8,
+        y: cursor.ty * 8,
+        width: 8,
+        height: 9,
+    }
+}
+
+#[inline]
+fn bag_action_cursor_damage(cursor: u8) -> FrameDamageRect {
+    FrameDamageRect {
+        x: 13 * 8,
+        y: (12 + cursor as u32 * 2) * 8,
+        width: 8,
+        height: 9,
+    }
+}
+
+#[inline]
+fn bag_quantity_damage(previous: u32, current: u32) -> FrameDamageRect {
+    let text_width = |mut qty| {
+        let mut digits = 1;
+        while qty >= 10 {
+            qty /= 10;
+            digits += 1;
+        }
+        (1 + digits.max(2)) * 8
+    };
+    FrameDamageRect {
+        x: 7 * 8,
+        y: 15 * 8,
+        width: text_width(previous).max(text_width(current)),
+        height: 10,
     }
 }
