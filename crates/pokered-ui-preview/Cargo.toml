@@ -13,7 +13,7 @@ pokered-core = { path = "../pokered-core" }
 pokered-ui = { path = "../pokered-ui", default-features = false, features = ["framebuffer"] }
 pokered-data = { path = "../pokered-data", features = ["serde"] }
 pokered-renderer = { path = "../pokered-renderer", default-features = false }
-dotzuki-renderer = { git = "https://github.com/liuyanghejerry/dotzuki", rev = "a18bacf1cf6f7bfd9c20439abcf0745ad25d7057" }
+dotzuki-renderer = { git = "https://github.com/liuyanghejerry/dotzuki", rev = "2929ae90054c5f9828f9999593a1d3f0af7ca3fc" }
 serde_json = "1"
 wasm-bindgen = "0.2"
 
