@@ -1,0 +1,3325 @@
+{
+  "schema": 1,
+  "provenance": {
+    "reference_rom": "/Users/liuyanghe02/develop/pokered-worktree/pokered.gbc",
+    "reference_rom_sha1": "ea9bcae617fdf159b045185467ae58b2e4a48b9a",
+    "setup_rom": "/private/tmp/pokered-reference/pokeblue_debug.gbc",
+    "setup_rom_sha1": "5b1456177671b79b263c614ea0e7cc9ac542e9c4",
+    "reference_symbols": "/Users/liuyanghe02/develop/pokered-worktree/pokered.sym",
+    "reference_symbols_sha1": "03783c86a42588bd77f73bd7814cf8d70e590118",
+    "reference_source": "/Users/liuyanghe02/develop/pokered-worktree",
+    "reference_source_commit": "fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c",
+    "current_binary": "/Users/liuyanghe02/develop/open-pokered-2/target/release/pokered-app",
+    "current_git_head": "7ff55ddaf21fe61754aa7f0f7ca75d91d623bd5b"
+  },
+  "scope": {
+    "cases": [
+      "x-stat-player",
+      "x-stat-enemy",
+      "safari-bait",
+      "safari-rock",
+      "master-caught",
+      "master-ghost-dodged",
+      "master-trainer-blocked",
+      "ultra-caught",
+      "ultra-missed",
+      "ultra-broke-free-1",
+      "ultra-broke-free-2",
+      "ultra-broke-free-3",
+      "ultra-ghost-dodged",
+      "ultra-trainer-blocked",
+      "great-caught",
+      "great-missed",
+      "great-broke-free-1",
+      "great-broke-free-2",
+      "great-broke-free-3",
+      "great-ghost-dodged",
+      "great-trainer-blocked",
+      "poke-caught",
+      "poke-missed",
+      "poke-broke-free-1",
+      "poke-broke-free-2",
+      "poke-broke-free-3",
+      "poke-ghost-dodged",
+      "poke-trainer-blocked",
+      "safari-caught",
+      "safari-missed",
+      "safari-broke-free-1",
+      "safari-broke-free-2",
+      "safari-broke-free-3"
+    ],
+    "repeat": 2,
+    "max_frames": 500,
+    "kept_continuous_frames": [
+      "ultra-caught"
+    ]
+  },
+  "results": [
+    {
+      "verdict": "PASS",
+      "reference_frames": 111,
+      "current_frames": 111,
+      "frame_delta": 0,
+      "duration_match": true,
+      "rendered_oam_match": true,
+      "dynamic_mask_match": true,
+      "source_geometry_match_ignoring_holds": true,
+      "visible_source_keyframes_match": true,
+      "visible_source_keyframes_match_after_hardware_offset": false,
+      "issues": [],
+      "diagnostics": [],
+      "sfx_match": true,
+      "reference_sfx": [],
+      "current_sfx": [],
+      "case": "x-stat-player",
+      "animation_id": 174,
+      "ball_id": null,
+      "anim_data": null,
+      "reference_deterministic": true,
+      "current_deterministic": true,
+      "reference_repeat_sha1": [
+        "6f4747fe675aeeeb949e4002cb5140a26c41ff51",
+        "6f4747fe675aeeeb949e4002cb5140a26c41ff51"
+      ],
+      "current_repeat_sha1": [
+        "6f4747fe675aeeeb949e4002cb5140a26c41ff51",
+        "6f4747fe675aeeeb949e4002cb5140a26c41ff51"
+      ],
+      "reference": {
+        "duration_frames": 111,
+        "trace_sha1": "6f4747fe675aeeeb949e4002cb5140a26c41ff51",
+        "max_rendered_objects": 3,
+        "sfx_events": []
+      },
+      "current": {
+        "duration_frames": 111,
+        "trace_sha1": "6f4747fe675aeeeb949e4002cb5140a26c41ff51",
+        "max_rendered_objects": 3,
+        "sfx_events": []
+      }
+    },
+    {
+      "verdict": "PASS",
+      "reference_frames": 111,
+      "current_frames": 111,
+      "frame_delta": 0,
+      "duration_match": true,
+      "rendered_oam_match": true,
+      "dynamic_mask_match": true,
+      "source_geometry_match_ignoring_holds": true,
+      "visible_source_keyframes_match": true,
+      "visible_source_keyframes_match_after_hardware_offset": false,
+      "issues": [],
+      "diagnostics": [],
+      "sfx_match": true,
+      "reference_sfx": [],
+      "current_sfx": [],
+      "case": "x-stat-enemy",
+      "animation_id": 175,
+      "ball_id": null,
+      "anim_data": null,
+      "reference_deterministic": true,
+      "current_deterministic": true,
+      "reference_repeat_sha1": [
+        "9a86231846363bf0371d04ebe4a3d3f656324361",
+        "9a86231846363bf0371d04ebe4a3d3f656324361"
+      ],
+      "current_repeat_sha1": [
+        "9a86231846363bf0371d04ebe4a3d3f656324361",
+        "9a86231846363bf0371d04ebe4a3d3f656324361"
+      ],
+      "reference": {
+        "duration_frames": 111,
+        "trace_sha1": "9a86231846363bf0371d04ebe4a3d3f656324361",
+        "max_rendered_objects": 3,
+        "sfx_events": []
+      },
+      "current": {
+        "duration_frames": 111,
+        "trace_sha1": "9a86231846363bf0371d04ebe4a3d3f656324361",
+        "max_rendered_objects": 3,
+        "sfx_events": []
+      }
+    },
+    {
+      "verdict": "PASS",
+      "reference_frames": 55,
+      "current_frames": 55,
+      "frame_delta": 0,
+      "duration_match": true,
+      "rendered_oam_match": true,
+      "dynamic_mask_match": true,
+      "source_geometry_match_ignoring_holds": true,
+      "visible_source_keyframes_match": true,
+      "visible_source_keyframes_match_after_hardware_offset": false,
+      "issues": [],
+      "diagnostics": [],
+      "sfx_match": true,
+      "reference_sfx": [
+        {
+          "capture_index": 11,
+          "name": "Battle32"
+        }
+      ],
+      "current_sfx": [
+        {
+          "capture_index": 11,
+          "name": "Battle32"
+        }
+      ],
+      "case": "safari-bait",
+      "animation_id": 202,
+      "ball_id": null,
+      "anim_data": null,
+      "reference_deterministic": true,
+      "current_deterministic": true,
+      "reference_repeat_sha1": [
+        "9f4362646487414f1611b473f31787936032a799",
+        "9f4362646487414f1611b473f31787936032a799"
+      ],
+      "current_repeat_sha1": [
+        "9f4362646487414f1611b473f31787936032a799",
+        "9f4362646487414f1611b473f31787936032a799"
+      ],
+      "reference": {
+        "duration_frames": 55,
+        "trace_sha1": "9f4362646487414f1611b473f31787936032a799",
+        "max_rendered_objects": 1,
+        "sfx_events": [
+          {
+            "capture_index": 11,
+            "id": 221
+          }
+        ]
+      },
+      "current": {
+        "duration_frames": 55,
+        "trace_sha1": "9f4362646487414f1611b473f31787936032a799",
+        "max_rendered_objects": 1,
+        "sfx_events": [
+          {
+            "capture_index": 11,
+            "name": "Battle32"
+          }
+        ]
+      }
+    },
+    {
+      "verdict": "PASS",
+      "reference_frames": 59,
+      "current_frames": 59,
+      "frame_delta": 0,
+      "duration_match": true,
+      "rendered_oam_match": true,
+      "dynamic_mask_match": true,
+      "source_geometry_match_ignoring_holds": true,
+      "visible_source_keyframes_match": true,
+      "visible_source_keyframes_match_after_hardware_offset": false,
+      "issues": [],
+      "diagnostics": [],
+      "sfx_match": true,
+      "reference_sfx": [
+        {
+          "capture_index": 11,
+          "name": "Battle32"
+        }
+      ],
+      "current_sfx": [
+        {
+          "capture_index": 11,
+          "name": "Battle32"
+        }
+      ],
+      "case": "safari-rock",
+      "animation_id": 201,
+      "ball_id": null,
+      "anim_data": null,
+      "reference_deterministic": true,
+      "current_deterministic": true,
+      "reference_repeat_sha1": [
+        "9812f314c994045598a385961317b1e9927605c5",
+        "9812f314c994045598a385961317b1e9927605c5"
+      ],
+      "current_repeat_sha1": [
+        "9812f314c994045598a385961317b1e9927605c5",
+        "9812f314c994045598a385961317b1e9927605c5"
+      ],
+      "reference": {
+        "duration_frames": 59,
+        "trace_sha1": "9812f314c994045598a385961317b1e9927605c5",
+        "max_rendered_objects": 9,
+        "sfx_events": [
+          {
+            "capture_index": 11,
+            "id": 221
+          }
+        ]
+      },
+      "current": {
+        "duration_frames": 59,
+        "trace_sha1": "9812f314c994045598a385961317b1e9927605c5",
+        "max_rendered_objects": 9,
+        "sfx_events": [
+          {
+            "capture_index": 11,
+            "name": "Battle32"
+          }
+        ]
+      }
+    },
+    {
+      "verdict": "PASS",
+      "reference_frames": 265,
+      "current_frames": 265,
+      "frame_delta": 0,
+      "duration_match": true,
+      "rendered_oam_match": true,
+      "dynamic_mask_match": true,
+      "source_geometry_match_ignoring_holds": true,
+      "visible_source_keyframes_match": true,
+      "visible_source_keyframes_match_after_hardware_offset": false,
+      "issues": [],
+      "diagnostics": [],
+      "sfx_match": true,
+      "reference_sfx": [
+        {
+          "capture_index": 14,
+          "name": "BallToss"
+        },
+        {
+          "capture_index": 64,
+          "name": "BallPoof"
+        },
+        {
+          "capture_index": 101,
+          "name": "Tink"
+        },
+        {
+          "capture_index": 157,
+          "name": "Tink"
+        },
+        {
+          "capture_index": 213,
+          "name": "Tink"
+        }
+      ],
+      "current_sfx": [
+        {
+          "capture_index": 14,
+          "name": "BallToss"
+        },
+        {
+          "capture_index": 64,
+          "name": "BallPoof"
+        },
+        {
+          "capture_index": 101,
+          "name": "Tink"
+        },
+        {
+          "capture_index": 157,
+          "name": "Tink"
+        },
+        {
+          "capture_index": 213,
+          "name": "Tink"
+        }
+      ],
+      "case": "master-caught",
+      "animation_id": 193,
+      "ball_id": 1,
+      "anim_data": 67,
+      "reference_deterministic": true,
+      "current_deterministic": true,
+      "reference_repeat_sha1": [
+        "e668b845a03ccf6faf84efb984303f525667f5cc",
+        "e668b845a03ccf6faf84efb984303f525667f5cc"
+      ],
+      "current_repeat_sha1": [
+        "e668b845a03ccf6faf84efb984303f525667f5cc",
+        "e668b845a03ccf6faf84efb984303f525667f5cc"
+      ],
+      "reference": {
+        "duration_frames": 265,
+        "trace_sha1": "e668b845a03ccf6faf84efb984303f525667f5cc",
+        "max_rendered_objects": 16,
+        "sfx_events": [
+          {
+            "capture_index": 14,
+            "id": 145
+          },
+          {
+            "capture_index": 64,
+            "id": 147
+          },
+          {
+            "capture_index": 101,
+            "id": 140
+          },
+          {
+            "capture_index": 157,
+            "id": 140
+          },
+          {
+            "capture_index": 213,
+            "id": 140
+          }
+        ]
+      },
+      "current": {
+        "duration_frames": 265,
+        "trace_sha1": "e668b845a03ccf6faf84efb984303f525667f5cc",
+        "max_rendered_objects": 16,
+        "sfx_events": [
+          {
+            "capture_index": 14,
+            "name": "BallToss"
+          },
+          {
+            "capture_index": 64,
+            "name": "BallPoof"
+          },
+          {
+            "capture_index": 101,
+            "name": "Tink"
+          },
+          {
+            "capture_index": 157,
+            "name": "Tink"
+          },
+          {
+            "capture_index": 213,
+            "name": "Tink"
+          }
+        ]
+      }
+    },
+    {
+      "verdict": "PASS",
+      "reference_frames": 44,
+      "current_frames": 44,
+      "frame_delta": 0,
+      "duration_match": true,
+      "rendered_oam_match": true,
+      "dynamic_mask_match": true,
+      "source_geometry_match_ignoring_holds": true,
+      "visible_source_keyframes_match": true,
+      "visible_source_keyframes_match_after_hardware_offset": false,
+      "issues": [],
+      "diagnostics": [],
+      "sfx_match": true,
+      "reference_sfx": [
+        {
+          "capture_index": 14,
+          "name": "BallToss"
+        }
+      ],
+      "current_sfx": [
+        {
+          "capture_index": 14,
+          "name": "BallToss"
+        }
+      ],
+      "case": "master-ghost-dodged",
+      "animation_id": 193,
+      "ball_id": 1,
+      "anim_data": 16,
+      "reference_deterministic": true,
+      "current_deterministic": true,
+      "reference_repeat_sha1": [
+        "15e49640927c70800e2ba4eb147ba5aaea2be6e7",
+        "15e49640927c70800e2ba4eb147ba5aaea2be6e7"
+      ],
+      "current_repeat_sha1": [
+        "15e49640927c70800e2ba4eb147ba5aaea2be6e7",
+        "15e49640927c70800e2ba4eb147ba5aaea2be6e7"
+      ],
+      "reference": {
+        "duration_frames": 44,
+        "trace_sha1": "15e49640927c70800e2ba4eb147ba5aaea2be6e7",
+        "max_rendered_objects": 4,
+        "sfx_events": [
+          {
+            "capture_index": 14,
+            "id": 145
+          }
+        ]
+      },
+      "current": {
+        "duration_frames": 44,
+        "trace_sha1": "15e49640927c70800e2ba4eb147ba5aaea2be6e7",
+        "max_rendered_objects": 4,
+        "sfx_events": [
+          {
+            "capture_index": 14,
+            "name": "BallToss"
+          }
+        ]
+      }
+    },
+    {
+      "verdict": "PASS",
+      "reference_frames": 77,
+      "current_frames": 77,
+      "frame_delta": 0,
+      "duration_match": true,
+      "rendered_oam_match": true,
+      "dynamic_mask_match": true,
+      "source_geometry_match_ignoring_holds": true,
+      "visible_source_keyframes_match": true,
+      "visible_source_keyframes_match_after_hardware_offset": false,
+      "issues": [],
+      "diagnostics": [],
+      "sfx_match": true,
+      "reference_sfx": [
+        {
+          "capture_index": 15,
+          "name": "BallToss"
+        },
+        {
+          "capture_index": 51,
+          "name": "FaintThud"
+        }
+      ],
+      "current_sfx": [
+        {
+          "capture_index": 15,
+          "name": "BallToss"
+        },
+        {
+          "capture_index": 51,
+          "name": "FaintThud"
+        }
+      ],
+      "case": "master-trainer-blocked",
+      "animation_id": 193,
+      "ball_id": 1,
+      "anim_data": null,
+      "reference_deterministic": true,
+      "current_deterministic": true,
+      "reference_repeat_sha1": [
+        "999eac68d1690879847cb755bb89db350d001168",
+        "999eac68d1690879847cb755bb89db350d001168"
+      ],
+      "current_repeat_sha1": [
+        "999eac68d1690879847cb755bb89db350d001168",
+        "999eac68d1690879847cb755bb89db350d001168"
+      ],
+      "reference": {
+        "duration_frames": 77,
+        "trace_sha1": "999eac68d1690879847cb755bb89db350d001168",
+        "max_rendered_objects": 9,
+        "sfx_events": [
+          {
+            "capture_index": 15,
+            "id": 145
+          },
+          {
+            "capture_index": 51,
+            "id": 149
+          }
+        ]
+      },
+      "current": {
+        "duration_frames": 77,
+        "trace_sha1": "999eac68d1690879847cb755bb89db350d001168",
+        "max_rendered_objects": 9,
+        "sfx_events": [
+          {
+            "capture_index": 15,
+            "name": "BallToss"
+          },
+          {
+            "capture_index": 51,
+            "name": "FaintThud"
+          }
+        ]
+      }
+    },
+    {
+      "verdict": "PASS",
+      "reference_frames": 265,
+      "current_frames": 265,
+      "frame_delta": 0,
+      "duration_match": true,
+      "rendered_oam_match": true,
+      "dynamic_mask_match": true,
+      "source_geometry_match_ignoring_holds": true,
+      "visible_source_keyframes_match": true,
+      "visible_source_keyframes_match_after_hardware_offset": false,
+      "issues": [],
+      "diagnostics": [],
+      "sfx_match": true,
+      "reference_sfx": [
+        {
+          "capture_index": 14,
+          "name": "BallToss"
+        },
+        {
+          "capture_index": 64,
+          "name": "BallPoof"
+        },
+        {
+          "capture_index": 101,
+          "name": "Tink"
+        },
+        {
+          "capture_index": 157,
+          "name": "Tink"
+        },
+        {
+          "capture_index": 213,
+          "name": "Tink"
+        }
+      ],
+      "current_sfx": [
+        {
+          "capture_index": 14,
+          "name": "BallToss"
+        },
+        {
+          "capture_index": 64,
+          "name": "BallPoof"
+        },
+        {
+          "capture_index": 101,
+          "name": "Tink"
+        },
+        {
+          "capture_index": 157,
+          "name": "Tink"
+        },
+        {
+          "capture_index": 213,
+          "name": "Tink"
+        }
+      ],
+      "case": "ultra-caught",
+      "animation_id": 193,
+      "ball_id": 2,
+      "anim_data": 67,
+      "reference_deterministic": true,
+      "current_deterministic": true,
+      "reference_repeat_sha1": [
+        "e668b845a03ccf6faf84efb984303f525667f5cc",
+        "e668b845a03ccf6faf84efb984303f525667f5cc"
+      ],
+      "current_repeat_sha1": [
+        "e668b845a03ccf6faf84efb984303f525667f5cc",
+        "e668b845a03ccf6faf84efb984303f525667f5cc"
+      ],
+      "reference": {
+        "duration_frames": 265,
+        "trace_sha1": "e668b845a03ccf6faf84efb984303f525667f5cc",
+        "max_rendered_objects": 16,
+        "sfx_events": [
+          {
+            "capture_index": 14,
+            "id": 145
+          },
+          {
+            "capture_index": 64,
+            "id": 147
+          },
+          {
+            "capture_index": 101,
+            "id": 140
+          },
+          {
+            "capture_index": 157,
+            "id": 140
+          },
+          {
+            "capture_index": 213,
+            "id": 140
+          }
+        ]
+      },
+      "current": {
+        "duration_frames": 265,
+        "trace_sha1": "e668b845a03ccf6faf84efb984303f525667f5cc",
+        "max_rendered_objects": 16,
+        "sfx_events": [
+          {
+            "capture_index": 14,
+            "name": "BallToss"
+          },
+          {
+            "capture_index": 64,
+            "name": "BallPoof"
+          },
+          {
+            "capture_index": 101,
+            "name": "Tink"
+          },
+          {
+            "capture_index": 157,
+            "name": "Tink"
+          },
+          {
+            "capture_index": 213,
+            "name": "Tink"
+          }
+        ]
+      }
+    },
+    {
+      "verdict": "PASS",
+      "reference_frames": 84,
+      "current_frames": 84,
+      "frame_delta": 0,
+      "duration_match": true,
+      "rendered_oam_match": true,
+      "dynamic_mask_match": true,
+      "source_geometry_match_ignoring_holds": true,
+      "visible_source_keyframes_match": true,
+      "visible_source_keyframes_match_after_hardware_offset": false,
+      "issues": [],
+      "diagnostics": [],
+      "sfx_match": true,
+      "reference_sfx": [
+        {
+          "capture_index": 14,
+          "name": "BallToss"
+        },
+        {
+          "capture_index": 64,
+          "name": "BallPoof"
+        }
+      ],
+      "current_sfx": [
+        {
+          "capture_index": 14,
+          "name": "BallToss"
+        },
+        {
+          "capture_index": 64,
+          "name": "BallPoof"
+        }
+      ],
+      "case": "ultra-missed",
+      "animation_id": 193,
+      "ball_id": 2,
+      "anim_data": 32,
+      "reference_deterministic": true,
+      "current_deterministic": true,
+      "reference_repeat_sha1": [
+        "42e2c9d4828f101cf645aadffb1f073995fb2a30",
+        "42e2c9d4828f101cf645aadffb1f073995fb2a30"
+      ],
+      "current_repeat_sha1": [
+        "42e2c9d4828f101cf645aadffb1f073995fb2a30",
+        "42e2c9d4828f101cf645aadffb1f073995fb2a30"
+      ],
+      "reference": {
+        "duration_frames": 84,
+        "trace_sha1": "42e2c9d4828f101cf645aadffb1f073995fb2a30",
+        "max_rendered_objects": 16,
+        "sfx_events": [
+          {
+            "capture_index": 14,
+            "id": 145
+          },
+          {
+            "capture_index": 64,
+            "id": 147
+          }
+        ]
+      },
+      "current": {
+        "duration_frames": 84,
+        "trace_sha1": "42e2c9d4828f101cf645aadffb1f073995fb2a30",
+        "max_rendered_objects": 16,
+        "sfx_events": [
+          {
+            "capture_index": 14,
+            "name": "BallToss"
+          },
+          {
+            "capture_index": 64,
+            "name": "BallPoof"
+          }
+        ]
+      }
+    },
+    {
+      "verdict": "PASS",
+      "reference_frames": 196,
+      "current_frames": 196,
+      "frame_delta": 0,
+      "duration_match": true,
+      "rendered_oam_match": true,
+      "dynamic_mask_match": true,
+      "source_geometry_match_ignoring_holds": true,
+      "visible_source_keyframes_match": true,
+      "visible_source_keyframes_match_after_hardware_offset": false,
+      "issues": [],
+      "diagnostics": [],
+      "sfx_match": true,
+      "reference_sfx": [
+        {
+          "capture_index": 14,
+          "name": "BallToss"
+        },
+        {
+          "capture_index": 64,
+          "name": "BallPoof"
+        },
+        {
+          "capture_index": 101,
+          "name": "Tink"
+        },
+        {
+          "capture_index": 173,
+          "name": "BallPoof"
+        }
+      ],
+      "current_sfx": [
+        {
+          "capture_index": 14,
+          "name": "BallToss"
+        },
+        {
+          "capture_index": 64,
+          "name": "BallPoof"
+        },
+        {
+          "capture_index": 101,
+          "name": "Tink"
+        },
+        {
+          "capture_index": 173,
+          "name": "BallPoof"
+        }
+      ],
+      "case": "ultra-broke-free-1",
+      "animation_id": 193,
+      "ball_id": 2,
+      "anim_data": 97,
+      "reference_deterministic": true,
+      "current_deterministic": true,
+      "reference_repeat_sha1": [
+        "35ff1470a81bec2d3f8f3bbea0f1c522b16eacf4",
+        "35ff1470a81bec2d3f8f3bbea0f1c522b16eacf4"
+      ],
+      "current_repeat_sha1": [
+        "35ff1470a81bec2d3f8f3bbea0f1c522b16eacf4",
+        "35ff1470a81bec2d3f8f3bbea0f1c522b16eacf4"
+      ],
+      "reference": {
+        "duration_frames": 196,
+        "trace_sha1": "35ff1470a81bec2d3f8f3bbea0f1c522b16eacf4",
+        "max_rendered_objects": 16,
+        "sfx_events": [
+          {
+            "capture_index": 14,
+            "id": 145
+          },
+          {
+            "capture_index": 64,
+            "id": 147
+          },
+          {
+            "capture_index": 101,
+            "id": 140
+          },
+          {
+            "capture_index": 173,
+            "id": 147
+          }
+        ]
+      },
+      "current": {
+        "duration_frames": 196,
+        "trace_sha1": "35ff1470a81bec2d3f8f3bbea0f1c522b16eacf4",
+        "max_rendered_objects": 16,
+        "sfx_events": [
+          {
+            "capture_index": 14,
+            "name": "BallToss"
+          },
+          {
+            "capture_index": 64,
+            "name": "BallPoof"
+          },
+          {
+            "capture_index": 101,
+            "name": "Tink"
+          },
+          {
+            "capture_index": 173,
+            "name": "BallPoof"
+          }
+        ]
+      }
+    },
+    {
+      "verdict": "PASS",
+      "reference_frames": 252,
+      "current_frames": 252,
+      "frame_delta": 0,
+      "duration_match": true,
+      "rendered_oam_match": true,
+      "dynamic_mask_match": true,
+      "source_geometry_match_ignoring_holds": true,
+      "visible_source_keyframes_match": true,
+      "visible_source_keyframes_match_after_hardware_offset": false,
+      "issues": [],
+      "diagnostics": [],
+      "sfx_match": true,
+      "reference_sfx": [
+        {
+          "capture_index": 14,
+          "name": "BallToss"
+        },
+        {
+          "capture_index": 64,
+          "name": "BallPoof"
+        },
+        {
+          "capture_index": 101,
+          "name": "Tink"
+        },
+        {
+          "capture_index": 157,
+          "name": "Tink"
+        },
+        {
+          "capture_index": 229,
+          "name": "BallPoof"
+        }
+      ],
+      "current_sfx": [
+        {
+          "capture_index": 14,
+          "name": "BallToss"
+        },
+        {
+          "capture_index": 64,
+          "name": "BallPoof"
+        },
+        {
+          "capture_index": 101,
+          "name": "Tink"
+        },
+        {
+          "capture_index": 157,
+          "name": "Tink"
+        },
+        {
+          "capture_index": 229,
+          "name": "BallPoof"
+        }
+      ],
+      "case": "ultra-broke-free-2",
+      "animation_id": 193,
+      "ball_id": 2,
+      "anim_data": 98,
+      "reference_deterministic": true,
+      "current_deterministic": true,
+      "reference_repeat_sha1": [
+        "a965685bdb53d7870dd5aeb7a74bdf0d6832c2d8",
+        "a965685bdb53d7870dd5aeb7a74bdf0d6832c2d8"
+      ],
+      "current_repeat_sha1": [
+        "a965685bdb53d7870dd5aeb7a74bdf0d6832c2d8",
+        "a965685bdb53d7870dd5aeb7a74bdf0d6832c2d8"
+      ],
+      "reference": {
+        "duration_frames": 252,
+        "trace_sha1": "a965685bdb53d7870dd5aeb7a74bdf0d6832c2d8",
+        "max_rendered_objects": 16,
+        "sfx_events": [
+          {
+            "capture_index": 14,
+            "id": 145
+          },
+          {
+            "capture_index": 64,
+            "id": 147
+          },
+          {
+            "capture_index": 101,
+            "id": 140
+          },
+          {
+            "capture_index": 157,
+            "id": 140
+          },
+          {
+            "capture_index": 229,
+            "id": 147
+          }
+        ]
+      },
+      "current": {
+        "duration_frames": 252,
+        "trace_sha1": "a965685bdb53d7870dd5aeb7a74bdf0d6832c2d8",
+        "max_rendered_objects": 16,
+        "sfx_events": [
+          {
+            "capture_index": 14,
+            "name": "BallToss"
+          },
+          {
+            "capture_index": 64,
+            "name": "BallPoof"
+          },
+          {
+            "capture_index": 101,
+            "name": "Tink"
+          },
+          {
+            "capture_index": 157,
+            "name": "Tink"
+          },
+          {
+            "capture_index": 229,
+            "name": "BallPoof"
+          }
+        ]
+      }
+    },
+    {
+      "verdict": "PASS",
+      "reference_frames": 308,
+      "current_frames": 308,
+      "frame_delta": 0,
+      "duration_match": true,
+      "rendered_oam_match": true,
+      "dynamic_mask_match": true,
+      "source_geometry_match_ignoring_holds": true,
+      "visible_source_keyframes_match": true,
+      "visible_source_keyframes_match_after_hardware_offset": false,
+      "issues": [],
+      "diagnostics": [],
+      "sfx_match": true,
+      "reference_sfx": [
+        {
+          "capture_index": 14,
+          "name": "BallToss"
+        },
+        {
+          "capture_index": 64,
+          "name": "BallPoof"
+        },
+        {
+          "capture_index": 101,
+          "name": "Tink"
+        },
+        {
+          "capture_index": 157,
+          "name": "Tink"
+        },
+        {
+          "capture_index": 213,
+          "name": "Tink"
+        },
+        {
+          "capture_index": 285,
+          "name": "BallPoof"
+        }
+      ],
+      "current_sfx": [
+        {
+          "capture_index": 14,
+          "name": "BallToss"
+        },
+        {
+          "capture_index": 64,
+          "name": "BallPoof"
+        },
+        {
+          "capture_index": 101,
+          "name": "Tink"
+        },
+        {
+          "capture_index": 157,
+          "name": "Tink"
+        },
+        {
+          "capture_index": 213,
+          "name": "Tink"
+        },
+        {
+          "capture_index": 285,
+          "name": "BallPoof"
+        }
+      ],
+      "case": "ultra-broke-free-3",
+      "animation_id": 193,
+      "ball_id": 2,
+      "anim_data": 99,
+      "reference_deterministic": true,
+      "current_deterministic": true,
+      "reference_repeat_sha1": [
+        "7aac38e095924f4dc34b5f7c4d3a939b675a48f8",
+        "7aac38e095924f4dc34b5f7c4d3a939b675a48f8"
+      ],
+      "current_repeat_sha1": [
+        "7aac38e095924f4dc34b5f7c4d3a939b675a48f8",
+        "7aac38e095924f4dc34b5f7c4d3a939b675a48f8"
+      ],
+      "reference": {
+        "duration_frames": 308,
+        "trace_sha1": "7aac38e095924f4dc34b5f7c4d3a939b675a48f8",
+        "max_rendered_objects": 16,
+        "sfx_events": [
+          {
+            "capture_index": 14,
+            "id": 145
+          },
+          {
+            "capture_index": 64,
+            "id": 147
+          },
+          {
+            "capture_index": 101,
+            "id": 140
+          },
+          {
+            "capture_index": 157,
+            "id": 140
+          },
+          {
+            "capture_index": 213,
+            "id": 140
+          },
+          {
+            "capture_index": 285,
+            "id": 147
+          }
+        ]
+      },
+      "current": {
+        "duration_frames": 308,
+        "trace_sha1": "7aac38e095924f4dc34b5f7c4d3a939b675a48f8",
+        "max_rendered_objects": 16,
+        "sfx_events": [
+          {
+            "capture_index": 14,
+            "name": "BallToss"
+          },
+          {
+            "capture_index": 64,
+            "name": "BallPoof"
+          },
+          {
+            "capture_index": 101,
+            "name": "Tink"
+          },
+          {
+            "capture_index": 157,
+            "name": "Tink"
+          },
+          {
+            "capture_index": 213,
+            "name": "Tink"
+          },
+          {
+            "capture_index": 285,
+            "name": "BallPoof"
+          }
+        ]
+      }
+    },
+    {
+      "verdict": "PASS",
+      "reference_frames": 44,
+      "current_frames": 44,
+      "frame_delta": 0,
+      "duration_match": true,
+      "rendered_oam_match": true,
+      "dynamic_mask_match": true,
+      "source_geometry_match_ignoring_holds": true,
+      "visible_source_keyframes_match": true,
+      "visible_source_keyframes_match_after_hardware_offset": false,
+      "issues": [],
+      "diagnostics": [],
+      "sfx_match": true,
+      "reference_sfx": [
+        {
+          "capture_index": 14,
+          "name": "BallToss"
+        }
+      ],
+      "current_sfx": [
+        {
+          "capture_index": 14,
+          "name": "BallToss"
+        }
+      ],
+      "case": "ultra-ghost-dodged",
+      "animation_id": 193,
+      "ball_id": 2,
+      "anim_data": 16,
+      "reference_deterministic": true,
+      "current_deterministic": true,
+      "reference_repeat_sha1": [
+        "15e49640927c70800e2ba4eb147ba5aaea2be6e7",
+        "15e49640927c70800e2ba4eb147ba5aaea2be6e7"
+      ],
+      "current_repeat_sha1": [
+        "15e49640927c70800e2ba4eb147ba5aaea2be6e7",
+        "15e49640927c70800e2ba4eb147ba5aaea2be6e7"
+      ],
+      "reference": {
+        "duration_frames": 44,
+        "trace_sha1": "15e49640927c70800e2ba4eb147ba5aaea2be6e7",
+        "max_rendered_objects": 4,
+        "sfx_events": [
+          {
+            "capture_index": 14,
+            "id": 145
+          }
+        ]
+      },
+      "current": {
+        "duration_frames": 44,
+        "trace_sha1": "15e49640927c70800e2ba4eb147ba5aaea2be6e7",
+        "max_rendered_objects": 4,
+        "sfx_events": [
+          {
+            "capture_index": 14,
+            "name": "BallToss"
+          }
+        ]
+      }
+    },
+    {
+      "verdict": "PASS",
+      "reference_frames": 77,
+      "current_frames": 77,
+      "frame_delta": 0,
+      "duration_match": true,
+      "rendered_oam_match": true,
+      "dynamic_mask_match": true,
+      "source_geometry_match_ignoring_holds": true,
+      "visible_source_keyframes_match": true,
+      "visible_source_keyframes_match_after_hardware_offset": false,
+      "issues": [],
+      "diagnostics": [],
+      "sfx_match": true,
+      "reference_sfx": [
+        {
+          "capture_index": 15,
+          "name": "BallToss"
+        },
+        {
+          "capture_index": 51,
+          "name": "FaintThud"
+        }
+      ],
+      "current_sfx": [
+        {
+          "capture_index": 15,
+          "name": "BallToss"
+        },
+        {
+          "capture_index": 51,
+          "name": "FaintThud"
+        }
+      ],
+      "case": "ultra-trainer-blocked",
+      "animation_id": 193,
+      "ball_id": 2,
+      "anim_data": null,
+      "reference_deterministic": true,
+      "current_deterministic": true,
+      "reference_repeat_sha1": [
+        "999eac68d1690879847cb755bb89db350d001168",
+        "999eac68d1690879847cb755bb89db350d001168"
+      ],
+      "current_repeat_sha1": [
+        "999eac68d1690879847cb755bb89db350d001168",
+        "999eac68d1690879847cb755bb89db350d001168"
+      ],
+      "reference": {
+        "duration_frames": 77,
+        "trace_sha1": "999eac68d1690879847cb755bb89db350d001168",
+        "max_rendered_objects": 9,
+        "sfx_events": [
+          {
+            "capture_index": 15,
+            "id": 145
+          },
+          {
+            "capture_index": 51,
+            "id": 149
+          }
+        ]
+      },
+      "current": {
+        "duration_frames": 77,
+        "trace_sha1": "999eac68d1690879847cb755bb89db350d001168",
+        "max_rendered_objects": 9,
+        "sfx_events": [
+          {
+            "capture_index": 15,
+            "name": "BallToss"
+          },
+          {
+            "capture_index": 51,
+            "name": "FaintThud"
+          }
+        ]
+      }
+    },
+    {
+      "verdict": "PASS",
+      "reference_frames": 276,
+      "current_frames": 276,
+      "frame_delta": 0,
+      "duration_match": true,
+      "rendered_oam_match": true,
+      "dynamic_mask_match": true,
+      "source_geometry_match_ignoring_holds": true,
+      "visible_source_keyframes_match": true,
+      "visible_source_keyframes_match_after_hardware_offset": false,
+      "issues": [],
+      "diagnostics": [],
+      "sfx_match": true,
+      "reference_sfx": [
+        {
+          "capture_index": 15,
+          "name": "BallToss"
+        },
+        {
+          "capture_index": 75,
+          "name": "BallPoof"
+        },
+        {
+          "capture_index": 112,
+          "name": "Tink"
+        },
+        {
+          "capture_index": 168,
+          "name": "Tink"
+        },
+        {
+          "capture_index": 224,
+          "name": "Tink"
+        }
+      ],
+      "current_sfx": [
+        {
+          "capture_index": 15,
+          "name": "BallToss"
+        },
+        {
+          "capture_index": 75,
+          "name": "BallPoof"
+        },
+        {
+          "capture_index": 112,
+          "name": "Tink"
+        },
+        {
+          "capture_index": 168,
+          "name": "Tink"
+        },
+        {
+          "capture_index": 224,
+          "name": "Tink"
+        }
+      ],
+      "case": "great-caught",
+      "animation_id": 193,
+      "ball_id": 3,
+      "anim_data": 67,
+      "reference_deterministic": true,
+      "current_deterministic": true,
+      "reference_repeat_sha1": [
+        "b813a0444e4d2224717842bd7187673b68144026",
+        "b813a0444e4d2224717842bd7187673b68144026"
+      ],
+      "current_repeat_sha1": [
+        "b813a0444e4d2224717842bd7187673b68144026",
+        "b813a0444e4d2224717842bd7187673b68144026"
+      ],
+      "reference": {
+        "duration_frames": 276,
+        "trace_sha1": "b813a0444e4d2224717842bd7187673b68144026",
+        "max_rendered_objects": 16,
+        "sfx_events": [
+          {
+            "capture_index": 15,
+            "id": 145
+          },
+          {
+            "capture_index": 75,
+            "id": 147
+          },
+          {
+            "capture_index": 112,
+            "id": 140
+          },
+          {
+            "capture_index": 168,
+            "id": 140
+          },
+          {
+            "capture_index": 224,
+            "id": 140
+          }
+        ]
+      },
+      "current": {
+        "duration_frames": 276,
+        "trace_sha1": "b813a0444e4d2224717842bd7187673b68144026",
+        "max_rendered_objects": 16,
+        "sfx_events": [
+          {
+            "capture_index": 15,
+            "name": "BallToss"
+          },
+          {
+            "capture_index": 75,
+            "name": "BallPoof"
+          },
+          {
+            "capture_index": 112,
+            "name": "Tink"
+          },
+          {
+            "capture_index": 168,
+            "name": "Tink"
+          },
+          {
+            "capture_index": 224,
+            "name": "Tink"
+          }
+        ]
+      }
+    },
+    {
+      "verdict": "PASS",
+      "reference_frames": 95,
+      "current_frames": 95,
+      "frame_delta": 0,
+      "duration_match": true,
+      "rendered_oam_match": true,
+      "dynamic_mask_match": true,
+      "source_geometry_match_ignoring_holds": true,
+      "visible_source_keyframes_match": true,
+      "visible_source_keyframes_match_after_hardware_offset": false,
+      "issues": [],
+      "diagnostics": [],
+      "sfx_match": true,
+      "reference_sfx": [
+        {
+          "capture_index": 15,
+          "name": "BallToss"
+        },
+        {
+          "capture_index": 75,
+          "name": "BallPoof"
+        }
+      ],
+      "current_sfx": [
+        {
+          "capture_index": 15,
+          "name": "BallToss"
+        },
+        {
+          "capture_index": 75,
+          "name": "BallPoof"
+        }
+      ],
+      "case": "great-missed",
+      "animation_id": 193,
+      "ball_id": 3,
+      "anim_data": 32,
+      "reference_deterministic": true,
+      "current_deterministic": true,
+      "reference_repeat_sha1": [
+        "de93b3f444bf4cc1d3819d1f220bb8b0c01e1cf0",
+        "de93b3f444bf4cc1d3819d1f220bb8b0c01e1cf0"
+      ],
+      "current_repeat_sha1": [
+        "de93b3f444bf4cc1d3819d1f220bb8b0c01e1cf0",
+        "de93b3f444bf4cc1d3819d1f220bb8b0c01e1cf0"
+      ],
+      "reference": {
+        "duration_frames": 95,
+        "trace_sha1": "de93b3f444bf4cc1d3819d1f220bb8b0c01e1cf0",
+        "max_rendered_objects": 16,
+        "sfx_events": [
+          {
+            "capture_index": 15,
+            "id": 145
+          },
+          {
+            "capture_index": 75,
+            "id": 147
+          }
+        ]
+      },
+      "current": {
+        "duration_frames": 95,
+        "trace_sha1": "de93b3f444bf4cc1d3819d1f220bb8b0c01e1cf0",
+        "max_rendered_objects": 16,
+        "sfx_events": [
+          {
+            "capture_index": 15,
+            "name": "BallToss"
+          },
+          {
+            "capture_index": 75,
+            "name": "BallPoof"
+          }
+        ]
+      }
+    },
+    {
+      "verdict": "PASS",
+      "reference_frames": 207,
+      "current_frames": 207,
+      "frame_delta": 0,
+      "duration_match": true,
+      "rendered_oam_match": true,
+      "dynamic_mask_match": true,
+      "source_geometry_match_ignoring_holds": true,
+      "visible_source_keyframes_match": true,
+      "visible_source_keyframes_match_after_hardware_offset": false,
+      "issues": [],
+      "diagnostics": [],
+      "sfx_match": true,
+      "reference_sfx": [
+        {
+          "capture_index": 15,
+          "name": "BallToss"
+        },
+        {
+          "capture_index": 75,
+          "name": "BallPoof"
+        },
+        {
+          "capture_index": 112,
+          "name": "Tink"
+        },
+        {
+          "capture_index": 184,
+          "name": "BallPoof"
+        }
+      ],
+      "current_sfx": [
+        {
+          "capture_index": 15,
+          "name": "BallToss"
+        },
+        {
+          "capture_index": 75,
+          "name": "BallPoof"
+        },
+        {
+          "capture_index": 112,
+          "name": "Tink"
+        },
+        {
+          "capture_index": 184,
+          "name": "BallPoof"
+        }
+      ],
+      "case": "great-broke-free-1",
+      "animation_id": 193,
+      "ball_id": 3,
+      "anim_data": 97,
+      "reference_deterministic": true,
+      "current_deterministic": true,
+      "reference_repeat_sha1": [
+        "232eeee9b1738d521a8ca926554c8a48213799cf",
+        "232eeee9b1738d521a8ca926554c8a48213799cf"
+      ],
+      "current_repeat_sha1": [
+        "232eeee9b1738d521a8ca926554c8a48213799cf",
+        "232eeee9b1738d521a8ca926554c8a48213799cf"
+      ],
+      "reference": {
+        "duration_frames": 207,
+        "trace_sha1": "232eeee9b1738d521a8ca926554c8a48213799cf",
+        "max_rendered_objects": 16,
+        "sfx_events": [
+          {
+            "capture_index": 15,
+            "id": 145
+          },
+          {
+            "capture_index": 75,
+            "id": 147
+          },
+          {
+            "capture_index": 112,
+            "id": 140
+          },
+          {
+            "capture_index": 184,
+            "id": 147
+          }
+        ]
+      },
+      "current": {
+        "duration_frames": 207,
+        "trace_sha1": "232eeee9b1738d521a8ca926554c8a48213799cf",
+        "max_rendered_objects": 16,
+        "sfx_events": [
+          {
+            "capture_index": 15,
+            "name": "BallToss"
+          },
+          {
+            "capture_index": 75,
+            "name": "BallPoof"
+          },
+          {
+            "capture_index": 112,
+            "name": "Tink"
+          },
+          {
+            "capture_index": 184,
+            "name": "BallPoof"
+          }
+        ]
+      }
+    },
+    {
+      "verdict": "PASS",
+      "reference_frames": 263,
+      "current_frames": 263,
+      "frame_delta": 0,
+      "duration_match": true,
+      "rendered_oam_match": true,
+      "dynamic_mask_match": true,
+      "source_geometry_match_ignoring_holds": true,
+      "visible_source_keyframes_match": true,
+      "visible_source_keyframes_match_after_hardware_offset": false,
+      "issues": [],
+      "diagnostics": [],
+      "sfx_match": true,
+      "reference_sfx": [
+        {
+          "capture_index": 15,
+          "name": "BallToss"
+        },
+        {
+          "capture_index": 75,
+          "name": "BallPoof"
+        },
+        {
+          "capture_index": 112,
+          "name": "Tink"
+        },
+        {
+          "capture_index": 168,
+          "name": "Tink"
+        },
+        {
+          "capture_index": 240,
+          "name": "BallPoof"
+        }
+      ],
+      "current_sfx": [
+        {
+          "capture_index": 15,
+          "name": "BallToss"
+        },
+        {
+          "capture_index": 75,
+          "name": "BallPoof"
+        },
+        {
+          "capture_index": 112,
+          "name": "Tink"
+        },
+        {
+          "capture_index": 168,
+          "name": "Tink"
+        },
+        {
+          "capture_index": 240,
+          "name": "BallPoof"
+        }
+      ],
+      "case": "great-broke-free-2",
+      "animation_id": 193,
+      "ball_id": 3,
+      "anim_data": 98,
+      "reference_deterministic": true,
+      "current_deterministic": true,
+      "reference_repeat_sha1": [
+        "48d32b8171c6f18c31a3ab1505496a5c0014a1fa",
+        "48d32b8171c6f18c31a3ab1505496a5c0014a1fa"
+      ],
+      "current_repeat_sha1": [
+        "48d32b8171c6f18c31a3ab1505496a5c0014a1fa",
+        "48d32b8171c6f18c31a3ab1505496a5c0014a1fa"
+      ],
+      "reference": {
+        "duration_frames": 263,
+        "trace_sha1": "48d32b8171c6f18c31a3ab1505496a5c0014a1fa",
+        "max_rendered_objects": 16,
+        "sfx_events": [
+          {
+            "capture_index": 15,
+            "id": 145
+          },
+          {
+            "capture_index": 75,
+            "id": 147
+          },
+          {
+            "capture_index": 112,
+            "id": 140
+          },
+          {
+            "capture_index": 168,
+            "id": 140
+          },
+          {
+            "capture_index": 240,
+            "id": 147
+          }
+        ]
+      },
+      "current": {
+        "duration_frames": 263,
+        "trace_sha1": "48d32b8171c6f18c31a3ab1505496a5c0014a1fa",
+        "max_rendered_objects": 16,
+        "sfx_events": [
+          {
+            "capture_index": 15,
+            "name": "BallToss"
+          },
+          {
+            "capture_index": 75,
+            "name": "BallPoof"
+          },
+          {
+            "capture_index": 112,
+            "name": "Tink"
+          },
+          {
+            "capture_index": 168,
+            "name": "Tink"
+          },
+          {
+            "capture_index": 240,
+            "name": "BallPoof"
+          }
+        ]
+      }
+    },
+    {
+      "verdict": "PASS",
+      "reference_frames": 319,
+      "current_frames": 319,
+      "frame_delta": 0,
+      "duration_match": true,
+      "rendered_oam_match": true,
+      "dynamic_mask_match": true,
+      "source_geometry_match_ignoring_holds": true,
+      "visible_source_keyframes_match": true,
+      "visible_source_keyframes_match_after_hardware_offset": false,
+      "issues": [],
+      "diagnostics": [],
+      "sfx_match": true,
+      "reference_sfx": [
+        {
+          "capture_index": 15,
+          "name": "BallToss"
+        },
+        {
+          "capture_index": 75,
+          "name": "BallPoof"
+        },
+        {
+          "capture_index": 112,
+          "name": "Tink"
+        },
+        {
+          "capture_index": 168,
+          "name": "Tink"
+        },
+        {
+          "capture_index": 224,
+          "name": "Tink"
+        },
+        {
+          "capture_index": 296,
+          "name": "BallPoof"
+        }
+      ],
+      "current_sfx": [
+        {
+          "capture_index": 15,
+          "name": "BallToss"
+        },
+        {
+          "capture_index": 75,
+          "name": "BallPoof"
+        },
+        {
+          "capture_index": 112,
+          "name": "Tink"
+        },
+        {
+          "capture_index": 168,
+          "name": "Tink"
+        },
+        {
+          "capture_index": 224,
+          "name": "Tink"
+        },
+        {
+          "capture_index": 296,
+          "name": "BallPoof"
+        }
+      ],
+      "case": "great-broke-free-3",
+      "animation_id": 193,
+      "ball_id": 3,
+      "anim_data": 99,
+      "reference_deterministic": true,
+      "current_deterministic": true,
+      "reference_repeat_sha1": [
+        "06748ed4a5935b24627af9b4aae3374c1bf10d17",
+        "06748ed4a5935b24627af9b4aae3374c1bf10d17"
+      ],
+      "current_repeat_sha1": [
+        "06748ed4a5935b24627af9b4aae3374c1bf10d17",
+        "06748ed4a5935b24627af9b4aae3374c1bf10d17"
+      ],
+      "reference": {
+        "duration_frames": 319,
+        "trace_sha1": "06748ed4a5935b24627af9b4aae3374c1bf10d17",
+        "max_rendered_objects": 16,
+        "sfx_events": [
+          {
+            "capture_index": 15,
+            "id": 145
+          },
+          {
+            "capture_index": 75,
+            "id": 147
+          },
+          {
+            "capture_index": 112,
+            "id": 140
+          },
+          {
+            "capture_index": 168,
+            "id": 140
+          },
+          {
+            "capture_index": 224,
+            "id": 140
+          },
+          {
+            "capture_index": 296,
+            "id": 147
+          }
+        ]
+      },
+      "current": {
+        "duration_frames": 319,
+        "trace_sha1": "06748ed4a5935b24627af9b4aae3374c1bf10d17",
+        "max_rendered_objects": 16,
+        "sfx_events": [
+          {
+            "capture_index": 15,
+            "name": "BallToss"
+          },
+          {
+            "capture_index": 75,
+            "name": "BallPoof"
+          },
+          {
+            "capture_index": 112,
+            "name": "Tink"
+          },
+          {
+            "capture_index": 168,
+            "name": "Tink"
+          },
+          {
+            "capture_index": 224,
+            "name": "Tink"
+          },
+          {
+            "capture_index": 296,
+            "name": "BallPoof"
+          }
+        ]
+      }
+    },
+    {
+      "verdict": "PASS",
+      "reference_frames": 55,
+      "current_frames": 55,
+      "frame_delta": 0,
+      "duration_match": true,
+      "rendered_oam_match": true,
+      "dynamic_mask_match": true,
+      "source_geometry_match_ignoring_holds": true,
+      "visible_source_keyframes_match": true,
+      "visible_source_keyframes_match_after_hardware_offset": false,
+      "issues": [],
+      "diagnostics": [],
+      "sfx_match": true,
+      "reference_sfx": [
+        {
+          "capture_index": 15,
+          "name": "BallToss"
+        }
+      ],
+      "current_sfx": [
+        {
+          "capture_index": 15,
+          "name": "BallToss"
+        }
+      ],
+      "case": "great-ghost-dodged",
+      "animation_id": 193,
+      "ball_id": 3,
+      "anim_data": 16,
+      "reference_deterministic": true,
+      "current_deterministic": true,
+      "reference_repeat_sha1": [
+        "5f753e652a8acd1be6cdb37da0995ebfe4bb1fe2",
+        "5f753e652a8acd1be6cdb37da0995ebfe4bb1fe2"
+      ],
+      "current_repeat_sha1": [
+        "5f753e652a8acd1be6cdb37da0995ebfe4bb1fe2",
+        "5f753e652a8acd1be6cdb37da0995ebfe4bb1fe2"
+      ],
+      "reference": {
+        "duration_frames": 55,
+        "trace_sha1": "5f753e652a8acd1be6cdb37da0995ebfe4bb1fe2",
+        "max_rendered_objects": 4,
+        "sfx_events": [
+          {
+            "capture_index": 15,
+            "id": 145
+          }
+        ]
+      },
+      "current": {
+        "duration_frames": 55,
+        "trace_sha1": "5f753e652a8acd1be6cdb37da0995ebfe4bb1fe2",
+        "max_rendered_objects": 4,
+        "sfx_events": [
+          {
+            "capture_index": 15,
+            "name": "BallToss"
+          }
+        ]
+      }
+    },
+    {
+      "verdict": "PASS",
+      "reference_frames": 77,
+      "current_frames": 77,
+      "frame_delta": 0,
+      "duration_match": true,
+      "rendered_oam_match": true,
+      "dynamic_mask_match": true,
+      "source_geometry_match_ignoring_holds": true,
+      "visible_source_keyframes_match": true,
+      "visible_source_keyframes_match_after_hardware_offset": false,
+      "issues": [],
+      "diagnostics": [],
+      "sfx_match": true,
+      "reference_sfx": [
+        {
+          "capture_index": 15,
+          "name": "BallToss"
+        },
+        {
+          "capture_index": 51,
+          "name": "FaintThud"
+        }
+      ],
+      "current_sfx": [
+        {
+          "capture_index": 15,
+          "name": "BallToss"
+        },
+        {
+          "capture_index": 51,
+          "name": "FaintThud"
+        }
+      ],
+      "case": "great-trainer-blocked",
+      "animation_id": 193,
+      "ball_id": 3,
+      "anim_data": null,
+      "reference_deterministic": true,
+      "current_deterministic": true,
+      "reference_repeat_sha1": [
+        "460adb46c6c3f8a068f9937975250508e122926c",
+        "460adb46c6c3f8a068f9937975250508e122926c"
+      ],
+      "current_repeat_sha1": [
+        "460adb46c6c3f8a068f9937975250508e122926c",
+        "460adb46c6c3f8a068f9937975250508e122926c"
+      ],
+      "reference": {
+        "duration_frames": 77,
+        "trace_sha1": "460adb46c6c3f8a068f9937975250508e122926c",
+        "max_rendered_objects": 9,
+        "sfx_events": [
+          {
+            "capture_index": 15,
+            "id": 145
+          },
+          {
+            "capture_index": 51,
+            "id": 149
+          }
+        ]
+      },
+      "current": {
+        "duration_frames": 77,
+        "trace_sha1": "460adb46c6c3f8a068f9937975250508e122926c",
+        "max_rendered_objects": 9,
+        "sfx_events": [
+          {
+            "capture_index": 15,
+            "name": "BallToss"
+          },
+          {
+            "capture_index": 51,
+            "name": "FaintThud"
+          }
+        ]
+      }
+    },
+    {
+      "verdict": "PASS",
+      "reference_frames": 276,
+      "current_frames": 276,
+      "frame_delta": 0,
+      "duration_match": true,
+      "rendered_oam_match": true,
+      "dynamic_mask_match": true,
+      "source_geometry_match_ignoring_holds": true,
+      "visible_source_keyframes_match": true,
+      "visible_source_keyframes_match_after_hardware_offset": false,
+      "issues": [],
+      "diagnostics": [],
+      "sfx_match": true,
+      "reference_sfx": [
+        {
+          "capture_index": 15,
+          "name": "BallToss"
+        },
+        {
+          "capture_index": 75,
+          "name": "BallPoof"
+        },
+        {
+          "capture_index": 112,
+          "name": "Tink"
+        },
+        {
+          "capture_index": 168,
+          "name": "Tink"
+        },
+        {
+          "capture_index": 224,
+          "name": "Tink"
+        }
+      ],
+      "current_sfx": [
+        {
+          "capture_index": 15,
+          "name": "BallToss"
+        },
+        {
+          "capture_index": 75,
+          "name": "BallPoof"
+        },
+        {
+          "capture_index": 112,
+          "name": "Tink"
+        },
+        {
+          "capture_index": 168,
+          "name": "Tink"
+        },
+        {
+          "capture_index": 224,
+          "name": "Tink"
+        }
+      ],
+      "case": "poke-caught",
+      "animation_id": 193,
+      "ball_id": 4,
+      "anim_data": 67,
+      "reference_deterministic": true,
+      "current_deterministic": true,
+      "reference_repeat_sha1": [
+        "3d9b8a72f84e2e590069df09799b348e707b426f",
+        "3d9b8a72f84e2e590069df09799b348e707b426f"
+      ],
+      "current_repeat_sha1": [
+        "3d9b8a72f84e2e590069df09799b348e707b426f",
+        "3d9b8a72f84e2e590069df09799b348e707b426f"
+      ],
+      "reference": {
+        "duration_frames": 276,
+        "trace_sha1": "3d9b8a72f84e2e590069df09799b348e707b426f",
+        "max_rendered_objects": 16,
+        "sfx_events": [
+          {
+            "capture_index": 15,
+            "id": 145
+          },
+          {
+            "capture_index": 75,
+            "id": 147
+          },
+          {
+            "capture_index": 112,
+            "id": 140
+          },
+          {
+            "capture_index": 168,
+            "id": 140
+          },
+          {
+            "capture_index": 224,
+            "id": 140
+          }
+        ]
+      },
+      "current": {
+        "duration_frames": 276,
+        "trace_sha1": "3d9b8a72f84e2e590069df09799b348e707b426f",
+        "max_rendered_objects": 16,
+        "sfx_events": [
+          {
+            "capture_index": 15,
+            "name": "BallToss"
+          },
+          {
+            "capture_index": 75,
+            "name": "BallPoof"
+          },
+          {
+            "capture_index": 112,
+            "name": "Tink"
+          },
+          {
+            "capture_index": 168,
+            "name": "Tink"
+          },
+          {
+            "capture_index": 224,
+            "name": "Tink"
+          }
+        ]
+      }
+    },
+    {
+      "verdict": "PASS",
+      "reference_frames": 95,
+      "current_frames": 95,
+      "frame_delta": 0,
+      "duration_match": true,
+      "rendered_oam_match": true,
+      "dynamic_mask_match": true,
+      "source_geometry_match_ignoring_holds": true,
+      "visible_source_keyframes_match": true,
+      "visible_source_keyframes_match_after_hardware_offset": false,
+      "issues": [],
+      "diagnostics": [],
+      "sfx_match": true,
+      "reference_sfx": [
+        {
+          "capture_index": 15,
+          "name": "BallToss"
+        },
+        {
+          "capture_index": 75,
+          "name": "BallPoof"
+        }
+      ],
+      "current_sfx": [
+        {
+          "capture_index": 15,
+          "name": "BallToss"
+        },
+        {
+          "capture_index": 75,
+          "name": "BallPoof"
+        }
+      ],
+      "case": "poke-missed",
+      "animation_id": 193,
+      "ball_id": 4,
+      "anim_data": 32,
+      "reference_deterministic": true,
+      "current_deterministic": true,
+      "reference_repeat_sha1": [
+        "4e2737ef0b27640b4a1781d15e3a2dacdbe3147c",
+        "4e2737ef0b27640b4a1781d15e3a2dacdbe3147c"
+      ],
+      "current_repeat_sha1": [
+        "4e2737ef0b27640b4a1781d15e3a2dacdbe3147c",
+        "4e2737ef0b27640b4a1781d15e3a2dacdbe3147c"
+      ],
+      "reference": {
+        "duration_frames": 95,
+        "trace_sha1": "4e2737ef0b27640b4a1781d15e3a2dacdbe3147c",
+        "max_rendered_objects": 16,
+        "sfx_events": [
+          {
+            "capture_index": 15,
+            "id": 145
+          },
+          {
+            "capture_index": 75,
+            "id": 147
+          }
+        ]
+      },
+      "current": {
+        "duration_frames": 95,
+        "trace_sha1": "4e2737ef0b27640b4a1781d15e3a2dacdbe3147c",
+        "max_rendered_objects": 16,
+        "sfx_events": [
+          {
+            "capture_index": 15,
+            "name": "BallToss"
+          },
+          {
+            "capture_index": 75,
+            "name": "BallPoof"
+          }
+        ]
+      }
+    },
+    {
+      "verdict": "PASS",
+      "reference_frames": 207,
+      "current_frames": 207,
+      "frame_delta": 0,
+      "duration_match": true,
+      "rendered_oam_match": true,
+      "dynamic_mask_match": true,
+      "source_geometry_match_ignoring_holds": true,
+      "visible_source_keyframes_match": true,
+      "visible_source_keyframes_match_after_hardware_offset": false,
+      "issues": [],
+      "diagnostics": [],
+      "sfx_match": true,
+      "reference_sfx": [
+        {
+          "capture_index": 15,
+          "name": "BallToss"
+        },
+        {
+          "capture_index": 75,
+          "name": "BallPoof"
+        },
+        {
+          "capture_index": 112,
+          "name": "Tink"
+        },
+        {
+          "capture_index": 184,
+          "name": "BallPoof"
+        }
+      ],
+      "current_sfx": [
+        {
+          "capture_index": 15,
+          "name": "BallToss"
+        },
+        {
+          "capture_index": 75,
+          "name": "BallPoof"
+        },
+        {
+          "capture_index": 112,
+          "name": "Tink"
+        },
+        {
+          "capture_index": 184,
+          "name": "BallPoof"
+        }
+      ],
+      "case": "poke-broke-free-1",
+      "animation_id": 193,
+      "ball_id": 4,
+      "anim_data": 97,
+      "reference_deterministic": true,
+      "current_deterministic": true,
+      "reference_repeat_sha1": [
+        "e7bfea98fdf9cbbb56ef164cb9b0d782078bb96b",
+        "e7bfea98fdf9cbbb56ef164cb9b0d782078bb96b"
+      ],
+      "current_repeat_sha1": [
+        "e7bfea98fdf9cbbb56ef164cb9b0d782078bb96b",
+        "e7bfea98fdf9cbbb56ef164cb9b0d782078bb96b"
+      ],
+      "reference": {
+        "duration_frames": 207,
+        "trace_sha1": "e7bfea98fdf9cbbb56ef164cb9b0d782078bb96b",
+        "max_rendered_objects": 16,
+        "sfx_events": [
+          {
+            "capture_index": 15,
+            "id": 145
+          },
+          {
+            "capture_index": 75,
+            "id": 147
+          },
+          {
+            "capture_index": 112,
+            "id": 140
+          },
+          {
+            "capture_index": 184,
+            "id": 147
+          }
+        ]
+      },
+      "current": {
+        "duration_frames": 207,
+        "trace_sha1": "e7bfea98fdf9cbbb56ef164cb9b0d782078bb96b",
+        "max_rendered_objects": 16,
+        "sfx_events": [
+          {
+            "capture_index": 15,
+            "name": "BallToss"
+          },
+          {
+            "capture_index": 75,
+            "name": "BallPoof"
+          },
+          {
+            "capture_index": 112,
+            "name": "Tink"
+          },
+          {
+            "capture_index": 184,
+            "name": "BallPoof"
+          }
+        ]
+      }
+    },
+    {
+      "verdict": "PASS",
+      "reference_frames": 263,
+      "current_frames": 263,
+      "frame_delta": 0,
+      "duration_match": true,
+      "rendered_oam_match": true,
+      "dynamic_mask_match": true,
+      "source_geometry_match_ignoring_holds": true,
+      "visible_source_keyframes_match": true,
+      "visible_source_keyframes_match_after_hardware_offset": false,
+      "issues": [],
+      "diagnostics": [],
+      "sfx_match": true,
+      "reference_sfx": [
+        {
+          "capture_index": 15,
+          "name": "BallToss"
+        },
+        {
+          "capture_index": 75,
+          "name": "BallPoof"
+        },
+        {
+          "capture_index": 112,
+          "name": "Tink"
+        },
+        {
+          "capture_index": 168,
+          "name": "Tink"
+        },
+        {
+          "capture_index": 240,
+          "name": "BallPoof"
+        }
+      ],
+      "current_sfx": [
+        {
+          "capture_index": 15,
+          "name": "BallToss"
+        },
+        {
+          "capture_index": 75,
+          "name": "BallPoof"
+        },
+        {
+          "capture_index": 112,
+          "name": "Tink"
+        },
+        {
+          "capture_index": 168,
+          "name": "Tink"
+        },
+        {
+          "capture_index": 240,
+          "name": "BallPoof"
+        }
+      ],
+      "case": "poke-broke-free-2",
+      "animation_id": 193,
+      "ball_id": 4,
+      "anim_data": 98,
+      "reference_deterministic": true,
+      "current_deterministic": true,
+      "reference_repeat_sha1": [
+        "b1b266ef193bc9afe03371c9ba438b88ae4d10c8",
+        "b1b266ef193bc9afe03371c9ba438b88ae4d10c8"
+      ],
+      "current_repeat_sha1": [
+        "b1b266ef193bc9afe03371c9ba438b88ae4d10c8",
+        "b1b266ef193bc9afe03371c9ba438b88ae4d10c8"
+      ],
+      "reference": {
+        "duration_frames": 263,
+        "trace_sha1": "b1b266ef193bc9afe03371c9ba438b88ae4d10c8",
+        "max_rendered_objects": 16,
+        "sfx_events": [
+          {
+            "capture_index": 15,
+            "id": 145
+          },
+          {
+            "capture_index": 75,
+            "id": 147
+          },
+          {
+            "capture_index": 112,
+            "id": 140
+          },
+          {
+            "capture_index": 168,
+            "id": 140
+          },
+          {
+            "capture_index": 240,
+            "id": 147
+          }
+        ]
+      },
+      "current": {
+        "duration_frames": 263,
+        "trace_sha1": "b1b266ef193bc9afe03371c9ba438b88ae4d10c8",
+        "max_rendered_objects": 16,
+        "sfx_events": [
+          {
+            "capture_index": 15,
+            "name": "BallToss"
+          },
+          {
+            "capture_index": 75,
+            "name": "BallPoof"
+          },
+          {
+            "capture_index": 112,
+            "name": "Tink"
+          },
+          {
+            "capture_index": 168,
+            "name": "Tink"
+          },
+          {
+            "capture_index": 240,
+            "name": "BallPoof"
+          }
+        ]
+      }
+    },
+    {
+      "verdict": "PASS",
+      "reference_frames": 319,
+      "current_frames": 319,
+      "frame_delta": 0,
+      "duration_match": true,
+      "rendered_oam_match": true,
+      "dynamic_mask_match": true,
+      "source_geometry_match_ignoring_holds": true,
+      "visible_source_keyframes_match": true,
+      "visible_source_keyframes_match_after_hardware_offset": false,
+      "issues": [],
+      "diagnostics": [],
+      "sfx_match": true,
+      "reference_sfx": [
+        {
+          "capture_index": 15,
+          "name": "BallToss"
+        },
+        {
+          "capture_index": 75,
+          "name": "BallPoof"
+        },
+        {
+          "capture_index": 112,
+          "name": "Tink"
+        },
+        {
+          "capture_index": 168,
+          "name": "Tink"
+        },
+        {
+          "capture_index": 224,
+          "name": "Tink"
+        },
+        {
+          "capture_index": 296,
+          "name": "BallPoof"
+        }
+      ],
+      "current_sfx": [
+        {
+          "capture_index": 15,
+          "name": "BallToss"
+        },
+        {
+          "capture_index": 75,
+          "name": "BallPoof"
+        },
+        {
+          "capture_index": 112,
+          "name": "Tink"
+        },
+        {
+          "capture_index": 168,
+          "name": "Tink"
+        },
+        {
+          "capture_index": 224,
+          "name": "Tink"
+        },
+        {
+          "capture_index": 296,
+          "name": "BallPoof"
+        }
+      ],
+      "case": "poke-broke-free-3",
+      "animation_id": 193,
+      "ball_id": 4,
+      "anim_data": 99,
+      "reference_deterministic": true,
+      "current_deterministic": true,
+      "reference_repeat_sha1": [
+        "eb4fb342fbaf0fb57465a76fcaa5221ddb80f306",
+        "eb4fb342fbaf0fb57465a76fcaa5221ddb80f306"
+      ],
+      "current_repeat_sha1": [
+        "eb4fb342fbaf0fb57465a76fcaa5221ddb80f306",
+        "eb4fb342fbaf0fb57465a76fcaa5221ddb80f306"
+      ],
+      "reference": {
+        "duration_frames": 319,
+        "trace_sha1": "eb4fb342fbaf0fb57465a76fcaa5221ddb80f306",
+        "max_rendered_objects": 16,
+        "sfx_events": [
+          {
+            "capture_index": 15,
+            "id": 145
+          },
+          {
+            "capture_index": 75,
+            "id": 147
+          },
+          {
+            "capture_index": 112,
+            "id": 140
+          },
+          {
+            "capture_index": 168,
+            "id": 140
+          },
+          {
+            "capture_index": 224,
+            "id": 140
+          },
+          {
+            "capture_index": 296,
+            "id": 147
+          }
+        ]
+      },
+      "current": {
+        "duration_frames": 319,
+        "trace_sha1": "eb4fb342fbaf0fb57465a76fcaa5221ddb80f306",
+        "max_rendered_objects": 16,
+        "sfx_events": [
+          {
+            "capture_index": 15,
+            "name": "BallToss"
+          },
+          {
+            "capture_index": 75,
+            "name": "BallPoof"
+          },
+          {
+            "capture_index": 112,
+            "name": "Tink"
+          },
+          {
+            "capture_index": 168,
+            "name": "Tink"
+          },
+          {
+            "capture_index": 224,
+            "name": "Tink"
+          },
+          {
+            "capture_index": 296,
+            "name": "BallPoof"
+          }
+        ]
+      }
+    },
+    {
+      "verdict": "PASS",
+      "reference_frames": 55,
+      "current_frames": 55,
+      "frame_delta": 0,
+      "duration_match": true,
+      "rendered_oam_match": true,
+      "dynamic_mask_match": true,
+      "source_geometry_match_ignoring_holds": true,
+      "visible_source_keyframes_match": true,
+      "visible_source_keyframes_match_after_hardware_offset": false,
+      "issues": [],
+      "diagnostics": [],
+      "sfx_match": true,
+      "reference_sfx": [
+        {
+          "capture_index": 15,
+          "name": "BallToss"
+        }
+      ],
+      "current_sfx": [
+        {
+          "capture_index": 15,
+          "name": "BallToss"
+        }
+      ],
+      "case": "poke-ghost-dodged",
+      "animation_id": 193,
+      "ball_id": 4,
+      "anim_data": 16,
+      "reference_deterministic": true,
+      "current_deterministic": true,
+      "reference_repeat_sha1": [
+        "37779ddb207722a00f631c01dbe10c680eb6961f",
+        "37779ddb207722a00f631c01dbe10c680eb6961f"
+      ],
+      "current_repeat_sha1": [
+        "37779ddb207722a00f631c01dbe10c680eb6961f",
+        "37779ddb207722a00f631c01dbe10c680eb6961f"
+      ],
+      "reference": {
+        "duration_frames": 55,
+        "trace_sha1": "37779ddb207722a00f631c01dbe10c680eb6961f",
+        "max_rendered_objects": 4,
+        "sfx_events": [
+          {
+            "capture_index": 15,
+            "id": 145
+          }
+        ]
+      },
+      "current": {
+        "duration_frames": 55,
+        "trace_sha1": "37779ddb207722a00f631c01dbe10c680eb6961f",
+        "max_rendered_objects": 4,
+        "sfx_events": [
+          {
+            "capture_index": 15,
+            "name": "BallToss"
+          }
+        ]
+      }
+    },
+    {
+      "verdict": "PASS",
+      "reference_frames": 77,
+      "current_frames": 77,
+      "frame_delta": 0,
+      "duration_match": true,
+      "rendered_oam_match": true,
+      "dynamic_mask_match": true,
+      "source_geometry_match_ignoring_holds": true,
+      "visible_source_keyframes_match": true,
+      "visible_source_keyframes_match_after_hardware_offset": false,
+      "issues": [],
+      "diagnostics": [],
+      "sfx_match": true,
+      "reference_sfx": [
+        {
+          "capture_index": 15,
+          "name": "BallToss"
+        },
+        {
+          "capture_index": 51,
+          "name": "FaintThud"
+        }
+      ],
+      "current_sfx": [
+        {
+          "capture_index": 15,
+          "name": "BallToss"
+        },
+        {
+          "capture_index": 51,
+          "name": "FaintThud"
+        }
+      ],
+      "case": "poke-trainer-blocked",
+      "animation_id": 193,
+      "ball_id": 4,
+      "anim_data": null,
+      "reference_deterministic": true,
+      "current_deterministic": true,
+      "reference_repeat_sha1": [
+        "460adb46c6c3f8a068f9937975250508e122926c",
+        "460adb46c6c3f8a068f9937975250508e122926c"
+      ],
+      "current_repeat_sha1": [
+        "460adb46c6c3f8a068f9937975250508e122926c",
+        "460adb46c6c3f8a068f9937975250508e122926c"
+      ],
+      "reference": {
+        "duration_frames": 77,
+        "trace_sha1": "460adb46c6c3f8a068f9937975250508e122926c",
+        "max_rendered_objects": 9,
+        "sfx_events": [
+          {
+            "capture_index": 15,
+            "id": 145
+          },
+          {
+            "capture_index": 51,
+            "id": 149
+          }
+        ]
+      },
+      "current": {
+        "duration_frames": 77,
+        "trace_sha1": "460adb46c6c3f8a068f9937975250508e122926c",
+        "max_rendered_objects": 9,
+        "sfx_events": [
+          {
+            "capture_index": 15,
+            "name": "BallToss"
+          },
+          {
+            "capture_index": 51,
+            "name": "FaintThud"
+          }
+        ]
+      }
+    },
+    {
+      "verdict": "PASS",
+      "reference_frames": 265,
+      "current_frames": 265,
+      "frame_delta": 0,
+      "duration_match": true,
+      "rendered_oam_match": true,
+      "dynamic_mask_match": true,
+      "source_geometry_match_ignoring_holds": true,
+      "visible_source_keyframes_match": true,
+      "visible_source_keyframes_match_after_hardware_offset": false,
+      "issues": [],
+      "diagnostics": [],
+      "sfx_match": true,
+      "reference_sfx": [
+        {
+          "capture_index": 14,
+          "name": "BallToss"
+        },
+        {
+          "capture_index": 64,
+          "name": "BallPoof"
+        },
+        {
+          "capture_index": 101,
+          "name": "Tink"
+        },
+        {
+          "capture_index": 157,
+          "name": "Tink"
+        },
+        {
+          "capture_index": 213,
+          "name": "Tink"
+        }
+      ],
+      "current_sfx": [
+        {
+          "capture_index": 14,
+          "name": "BallToss"
+        },
+        {
+          "capture_index": 64,
+          "name": "BallPoof"
+        },
+        {
+          "capture_index": 101,
+          "name": "Tink"
+        },
+        {
+          "capture_index": 157,
+          "name": "Tink"
+        },
+        {
+          "capture_index": 213,
+          "name": "Tink"
+        }
+      ],
+      "case": "safari-caught",
+      "animation_id": 193,
+      "ball_id": 8,
+      "anim_data": 67,
+      "reference_deterministic": true,
+      "current_deterministic": true,
+      "reference_repeat_sha1": [
+        "6f3f1c605d8fd200c8abd64c76a4c0340f47ad19",
+        "6f3f1c605d8fd200c8abd64c76a4c0340f47ad19"
+      ],
+      "current_repeat_sha1": [
+        "6f3f1c605d8fd200c8abd64c76a4c0340f47ad19",
+        "6f3f1c605d8fd200c8abd64c76a4c0340f47ad19"
+      ],
+      "reference": {
+        "duration_frames": 265,
+        "trace_sha1": "6f3f1c605d8fd200c8abd64c76a4c0340f47ad19",
+        "max_rendered_objects": 16,
+        "sfx_events": [
+          {
+            "capture_index": 14,
+            "id": 145
+          },
+          {
+            "capture_index": 64,
+            "id": 147
+          },
+          {
+            "capture_index": 101,
+            "id": 140
+          },
+          {
+            "capture_index": 157,
+            "id": 140
+          },
+          {
+            "capture_index": 213,
+            "id": 140
+          }
+        ]
+      },
+      "current": {
+        "duration_frames": 265,
+        "trace_sha1": "6f3f1c605d8fd200c8abd64c76a4c0340f47ad19",
+        "max_rendered_objects": 16,
+        "sfx_events": [
+          {
+            "capture_index": 14,
+            "name": "BallToss"
+          },
+          {
+            "capture_index": 64,
+            "name": "BallPoof"
+          },
+          {
+            "capture_index": 101,
+            "name": "Tink"
+          },
+          {
+            "capture_index": 157,
+            "name": "Tink"
+          },
+          {
+            "capture_index": 213,
+            "name": "Tink"
+          }
+        ]
+      }
+    },
+    {
+      "verdict": "PASS",
+      "reference_frames": 84,
+      "current_frames": 84,
+      "frame_delta": 0,
+      "duration_match": true,
+      "rendered_oam_match": true,
+      "dynamic_mask_match": true,
+      "source_geometry_match_ignoring_holds": true,
+      "visible_source_keyframes_match": true,
+      "visible_source_keyframes_match_after_hardware_offset": false,
+      "issues": [],
+      "diagnostics": [],
+      "sfx_match": true,
+      "reference_sfx": [
+        {
+          "capture_index": 14,
+          "name": "BallToss"
+        },
+        {
+          "capture_index": 64,
+          "name": "BallPoof"
+        }
+      ],
+      "current_sfx": [
+        {
+          "capture_index": 14,
+          "name": "BallToss"
+        },
+        {
+          "capture_index": 64,
+          "name": "BallPoof"
+        }
+      ],
+      "case": "safari-missed",
+      "animation_id": 193,
+      "ball_id": 8,
+      "anim_data": 32,
+      "reference_deterministic": true,
+      "current_deterministic": true,
+      "reference_repeat_sha1": [
+        "65c84840a1d45daa1b0b45efdad30b2ea5ac9f35",
+        "65c84840a1d45daa1b0b45efdad30b2ea5ac9f35"
+      ],
+      "current_repeat_sha1": [
+        "65c84840a1d45daa1b0b45efdad30b2ea5ac9f35",
+        "65c84840a1d45daa1b0b45efdad30b2ea5ac9f35"
+      ],
+      "reference": {
+        "duration_frames": 84,
+        "trace_sha1": "65c84840a1d45daa1b0b45efdad30b2ea5ac9f35",
+        "max_rendered_objects": 16,
+        "sfx_events": [
+          {
+            "capture_index": 14,
+            "id": 145
+          },
+          {
+            "capture_index": 64,
+            "id": 147
+          }
+        ]
+      },
+      "current": {
+        "duration_frames": 84,
+        "trace_sha1": "65c84840a1d45daa1b0b45efdad30b2ea5ac9f35",
+        "max_rendered_objects": 16,
+        "sfx_events": [
+          {
+            "capture_index": 14,
+            "name": "BallToss"
+          },
+          {
+            "capture_index": 64,
+            "name": "BallPoof"
+          }
+        ]
+      }
+    },
+    {
+      "verdict": "PASS",
+      "reference_frames": 196,
+      "current_frames": 196,
+      "frame_delta": 0,
+      "duration_match": true,
+      "rendered_oam_match": true,
+      "dynamic_mask_match": true,
+      "source_geometry_match_ignoring_holds": true,
+      "visible_source_keyframes_match": true,
+      "visible_source_keyframes_match_after_hardware_offset": false,
+      "issues": [],
+      "diagnostics": [],
+      "sfx_match": true,
+      "reference_sfx": [
+        {
+          "capture_index": 14,
+          "name": "BallToss"
+        },
+        {
+          "capture_index": 64,
+          "name": "BallPoof"
+        },
+        {
+          "capture_index": 101,
+          "name": "Tink"
+        },
+        {
+          "capture_index": 173,
+          "name": "BallPoof"
+        }
+      ],
+      "current_sfx": [
+        {
+          "capture_index": 14,
+          "name": "BallToss"
+        },
+        {
+          "capture_index": 64,
+          "name": "BallPoof"
+        },
+        {
+          "capture_index": 101,
+          "name": "Tink"
+        },
+        {
+          "capture_index": 173,
+          "name": "BallPoof"
+        }
+      ],
+      "case": "safari-broke-free-1",
+      "animation_id": 193,
+      "ball_id": 8,
+      "anim_data": 97,
+      "reference_deterministic": true,
+      "current_deterministic": true,
+      "reference_repeat_sha1": [
+        "90852f4663c82e6c01e11b36508548d7368caa43",
+        "90852f4663c82e6c01e11b36508548d7368caa43"
+      ],
+      "current_repeat_sha1": [
+        "90852f4663c82e6c01e11b36508548d7368caa43",
+        "90852f4663c82e6c01e11b36508548d7368caa43"
+      ],
+      "reference": {
+        "duration_frames": 196,
+        "trace_sha1": "90852f4663c82e6c01e11b36508548d7368caa43",
+        "max_rendered_objects": 16,
+        "sfx_events": [
+          {
+            "capture_index": 14,
+            "id": 145
+          },
+          {
+            "capture_index": 64,
+            "id": 147
+          },
+          {
+            "capture_index": 101,
+            "id": 140
+          },
+          {
+            "capture_index": 173,
+            "id": 147
+          }
+        ]
+      },
+      "current": {
+        "duration_frames": 196,
+        "trace_sha1": "90852f4663c82e6c01e11b36508548d7368caa43",
+        "max_rendered_objects": 16,
+        "sfx_events": [
+          {
+            "capture_index": 14,
+            "name": "BallToss"
+          },
+          {
+            "capture_index": 64,
+            "name": "BallPoof"
+          },
+          {
+            "capture_index": 101,
+            "name": "Tink"
+          },
+          {
+            "capture_index": 173,
+            "name": "BallPoof"
+          }
+        ]
+      }
+    },
+    {
+      "verdict": "PASS",
+      "reference_frames": 252,
+      "current_frames": 252,
+      "frame_delta": 0,
+      "duration_match": true,
+      "rendered_oam_match": true,
+      "dynamic_mask_match": true,
+      "source_geometry_match_ignoring_holds": true,
+      "visible_source_keyframes_match": true,
+      "visible_source_keyframes_match_after_hardware_offset": false,
+      "issues": [],
+      "diagnostics": [],
+      "sfx_match": true,
+      "reference_sfx": [
+        {
+          "capture_index": 14,
+          "name": "BallToss"
+        },
+        {
+          "capture_index": 64,
+          "name": "BallPoof"
+        },
+        {
+          "capture_index": 101,
+          "name": "Tink"
+        },
+        {
+          "capture_index": 157,
+          "name": "Tink"
+        },
+        {
+          "capture_index": 229,
+          "name": "BallPoof"
+        }
+      ],
+      "current_sfx": [
+        {
+          "capture_index": 14,
+          "name": "BallToss"
+        },
+        {
+          "capture_index": 64,
+          "name": "BallPoof"
+        },
+        {
+          "capture_index": 101,
+          "name": "Tink"
+        },
+        {
+          "capture_index": 157,
+          "name": "Tink"
+        },
+        {
+          "capture_index": 229,
+          "name": "BallPoof"
+        }
+      ],
+      "case": "safari-broke-free-2",
+      "animation_id": 193,
+      "ball_id": 8,
+      "anim_data": 98,
+      "reference_deterministic": true,
+      "current_deterministic": true,
+      "reference_repeat_sha1": [
+        "e24afdec86b8f2a065056b90f8082219857087f1",
+        "e24afdec86b8f2a065056b90f8082219857087f1"
+      ],
+      "current_repeat_sha1": [
+        "e24afdec86b8f2a065056b90f8082219857087f1",
+        "e24afdec86b8f2a065056b90f8082219857087f1"
+      ],
+      "reference": {
+        "duration_frames": 252,
+        "trace_sha1": "e24afdec86b8f2a065056b90f8082219857087f1",
+        "max_rendered_objects": 16,
+        "sfx_events": [
+          {
+            "capture_index": 14,
+            "id": 145
+          },
+          {
+            "capture_index": 64,
+            "id": 147
+          },
+          {
+            "capture_index": 101,
+            "id": 140
+          },
+          {
+            "capture_index": 157,
+            "id": 140
+          },
+          {
+            "capture_index": 229,
+            "id": 147
+          }
+        ]
+      },
+      "current": {
+        "duration_frames": 252,
+        "trace_sha1": "e24afdec86b8f2a065056b90f8082219857087f1",
+        "max_rendered_objects": 16,
+        "sfx_events": [
+          {
+            "capture_index": 14,
+            "name": "BallToss"
+          },
+          {
+            "capture_index": 64,
+            "name": "BallPoof"
+          },
+          {
+            "capture_index": 101,
+            "name": "Tink"
+          },
+          {
+            "capture_index": 157,
+            "name": "Tink"
+          },
+          {
+            "capture_index": 229,
+            "name": "BallPoof"
+          }
+        ]
+      }
+    },
+    {
+      "verdict": "PASS",
+      "reference_frames": 308,
+      "current_frames": 308,
+      "frame_delta": 0,
+      "duration_match": true,
+      "rendered_oam_match": true,
+      "dynamic_mask_match": true,
+      "source_geometry_match_ignoring_holds": true,
+      "visible_source_keyframes_match": true,
+      "visible_source_keyframes_match_after_hardware_offset": false,
+      "issues": [],
+      "diagnostics": [],
+      "sfx_match": true,
+      "reference_sfx": [
+        {
+          "capture_index": 14,
+          "name": "BallToss"
+        },
+        {
+          "capture_index": 64,
+          "name": "BallPoof"
+        },
+        {
+          "capture_index": 101,
+          "name": "Tink"
+        },
+        {
+          "capture_index": 157,
+          "name": "Tink"
+        },
+        {
+          "capture_index": 213,
+          "name": "Tink"
+        },
+        {
+          "capture_index": 285,
+          "name": "BallPoof"
+        }
+      ],
+      "current_sfx": [
+        {
+          "capture_index": 14,
+          "name": "BallToss"
+        },
+        {
+          "capture_index": 64,
+          "name": "BallPoof"
+        },
+        {
+          "capture_index": 101,
+          "name": "Tink"
+        },
+        {
+          "capture_index": 157,
+          "name": "Tink"
+        },
+        {
+          "capture_index": 213,
+          "name": "Tink"
+        },
+        {
+          "capture_index": 285,
+          "name": "BallPoof"
+        }
+      ],
+      "case": "safari-broke-free-3",
+      "animation_id": 193,
+      "ball_id": 8,
+      "anim_data": 99,
+      "reference_deterministic": true,
+      "current_deterministic": true,
+      "reference_repeat_sha1": [
+        "dea538fcf6fc6c7f5d1f120c111b382688626695",
+        "dea538fcf6fc6c7f5d1f120c111b382688626695"
+      ],
+      "current_repeat_sha1": [
+        "dea538fcf6fc6c7f5d1f120c111b382688626695",
+        "dea538fcf6fc6c7f5d1f120c111b382688626695"
+      ],
+      "reference": {
+        "duration_frames": 308,
+        "trace_sha1": "dea538fcf6fc6c7f5d1f120c111b382688626695",
+        "max_rendered_objects": 16,
+        "sfx_events": [
+          {
+            "capture_index": 14,
+            "id": 145
+          },
+          {
+            "capture_index": 64,
+            "id": 147
+          },
+          {
+            "capture_index": 101,
+            "id": 140
+          },
+          {
+            "capture_index": 157,
+            "id": 140
+          },
+          {
+            "capture_index": 213,
+            "id": 140
+          },
+          {
+            "capture_index": 285,
+            "id": 147
+          }
+        ]
+      },
+      "current": {
+        "duration_frames": 308,
+        "trace_sha1": "dea538fcf6fc6c7f5d1f120c111b382688626695",
+        "max_rendered_objects": 16,
+        "sfx_events": [
+          {
+            "capture_index": 14,
+            "name": "BallToss"
+          },
+          {
+            "capture_index": 64,
+            "name": "BallPoof"
+          },
+          {
+            "capture_index": 101,
+            "name": "Tink"
+          },
+          {
+            "capture_index": 157,
+            "name": "Tink"
+          },
+          {
+            "capture_index": 213,
+            "name": "Tink"
+          },
+          {
+            "capture_index": 285,
+            "name": "BallPoof"
+          }
+        ]
+      }
+    }
+  ],
+  "totals": {
+    "cases": 33,
+    "pass": 33,
+    "fail": 0,
+    "inconclusive": 0,
+    "duration_mismatch": 0,
+    "rendered_oam_mismatch": 0,
+    "dynamic_mask_mismatch": 0,
+    "sfx_mismatch": 0
+  },
+  "frame_trace_archive": "frame-traces.json.gz"
+}
