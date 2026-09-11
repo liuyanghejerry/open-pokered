@@ -163,11 +163,8 @@ fn dma3_scroll_indices(
 
     let x_offset = dx.unsigned_abs() as usize;
     let y_offset = dy.unsigned_abs() as usize;
-    let copy_width = width - x_offset;
-    let source_x = if dx < 0 { x_offset } else { 0 };
-    let destination_x = if dx > 0 { x_offset } else { 0 };
 
-    if dx == 0 {
+    if dy != 0 {
         let len = (height - y_offset) * width;
         let (source, destination) = if dy > 0 {
             (0, y_offset * width)
@@ -182,35 +179,26 @@ fn dma3_scroll_indices(
         } else {
             pixels[(height - y_offset) * width..].fill(clear);
         }
+    }
+
+    if dx == 0 {
         return;
     }
 
-    let copy_row = |pixels: &mut [u8], source_y: usize, destination_y: usize| {
-        let source = source_y * width + source_x;
-        let destination = destination_y * width + destination_x;
-        if !dma3_memmove_bytes(pixels, source, destination, copy_width) {
-            pixels.copy_within(source..source + copy_width, destination);
-        }
+    // A horizontal shift can be one overlapping linear move. Bytes that
+    // cross a row boundary land only in the newly exposed edge and are
+    // cleared below, avoiding one DMA setup per framebuffer row.
+    let len = pixels.len() - x_offset;
+    let (source, destination) = if dx > 0 { (0, x_offset) } else { (x_offset, 0) };
+    if !dma3_memmove_bytes(pixels, source, destination, len) {
+        pixels.copy_within(source..source + len, destination);
+    }
+    for y in 0..height {
+        let row = y * width;
         if dx > 0 {
-            pixels[destination_y * width..destination_y * width + destination_x].fill(clear);
+            pixels[row..row + x_offset].fill(clear);
         } else {
-            pixels[destination + copy_width..(destination_y + 1) * width].fill(clear);
-        }
-    };
-
-    if dy > 0 {
-        for source_y in (0..height - y_offset).rev() {
-            copy_row(pixels, source_y, source_y + y_offset);
-        }
-        pixels[..y_offset * width].fill(clear);
-    } else if dy < 0 {
-        for source_y in y_offset..height {
-            copy_row(pixels, source_y, source_y - y_offset);
-        }
-        pixels[(height - y_offset) * width..].fill(clear);
-    } else {
-        for y in 0..height {
-            copy_row(pixels, y, y);
+            pixels[row + width - x_offset..row + width].fill(clear);
         }
     }
 }
