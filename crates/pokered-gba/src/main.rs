@@ -17,6 +17,7 @@ use pokered_core::game_state::{GameScreen, Lang};
 use pokered_core::gamefreak_splash::SplashPhase;
 use pokered_core::oak_speech::{entrance_frames, OakSpeechPhase};
 use pokered_core::overworld::screen::WarpFadeState;
+use pokered_core::save_menu::{SavePhase, YesNoChoice};
 use pokered_core::title_screen::{TitlePhase, TitleScreenState};
 use pokered_data::species::Species;
 use pokered_renderer::input::{GbButton, InputState};
@@ -992,6 +993,67 @@ impl OptionsVisualKey {
     }
 }
 
+#[derive(Clone, Copy, PartialEq, Eq)]
+enum SaveVisualPhase {
+    Asking,
+    Saving,
+    Complete,
+}
+
+#[derive(Clone, Copy, PartialEq, Eq)]
+struct SaveVisualKey {
+    phase: SaveVisualPhase,
+    cursor: YesNoChoice,
+    player_name_hash: u32,
+    badges: u8,
+    pokedex_owned: u16,
+    play_time_hours: u16,
+    play_time_minutes: u8,
+    language: Lang,
+}
+
+impl SaveVisualKey {
+    fn new(game: &PokemonGame) -> Self {
+        let phase = match game.save_menu.phase {
+            SavePhase::AskSave | SavePhase::ConfirmOverwrite => SaveVisualPhase::Asking,
+            SavePhase::Saving { .. } => SaveVisualPhase::Saving,
+            SavePhase::SaveComplete | SavePhase::WaitAfterSave { .. } => {
+                SaveVisualPhase::Complete
+            }
+        };
+        let mut player_name_hash = 0x811c_9dc5;
+        for &byte in game.save_menu.info.player_name.as_bytes() {
+            hash_byte(&mut player_name_hash, byte);
+        }
+        Self {
+            phase,
+            cursor: if phase == SaveVisualPhase::Asking {
+                game.save_menu.cursor
+            } else {
+                YesNoChoice::Yes
+            },
+            player_name_hash,
+            badges: game.save_menu.info.num_badges,
+            pokedex_owned: game.save_menu.info.pokedex_owned,
+            play_time_hours: game.save_menu.info.play_time_hours,
+            play_time_minutes: game.save_menu.info.play_time_minutes,
+            language: game.state.config.language,
+        }
+    }
+
+    fn cursor_change_from(&self, previous: &Self) -> Option<(YesNoChoice, YesNoChoice)> {
+        if self.phase != SaveVisualPhase::Asking || self.cursor == previous.cursor {
+            return None;
+        }
+        let mut current_without_cursor = *self;
+        current_without_cursor.cursor = YesNoChoice::Yes;
+        let mut previous_without_cursor = *previous;
+        previous_without_cursor.cursor = YesNoChoice::Yes;
+        (current_without_cursor == previous_without_cursor)
+            .then_some((previous.cursor, self.cursor))
+    }
+}
+
 impl Mode4Presenter {
     fn new(fb: &FrameBuffer) -> Self {
         // Both pages retain the fixed index-3 border; subsequent presents
@@ -1294,6 +1356,7 @@ fn game_main() -> ! {
     let mut last_main_menu: Option<MainMenuVisualKey> = None;
     let mut last_start_menu: Option<StartMenuVisualKey> = None;
     let mut last_options: Option<OptionsVisualKey> = None;
+    let mut last_save: Option<SaveVisualKey> = None;
     let mut last_oak: Option<OakVisualKey> = None;
     let mut last_overworld: Option<OverworldVisualKey> = None;
     let mut last_battle: Option<BattleVisualKey> = None;
@@ -1408,6 +1471,12 @@ fn game_main() -> ! {
             .as_ref()
             .zip(last_options.as_ref())
             .and_then(|(current, previous)| current.cursor_change_from(previous));
+        let save = (game.state.screen == GameScreen::SaveMenu)
+            .then(|| SaveVisualKey::new(game));
+        let save_cursor_change = save
+            .as_ref()
+            .zip(last_save.as_ref())
+            .and_then(|(current, previous)| current.cursor_change_from(previous));
         let oak_screen = game.state.screen == GameScreen::OakSpeech;
         let oak = oak_screen.then(|| OakVisualKey::new(game)).flatten();
         let overworld_screen = game.state.screen == GameScreen::Overworld;
@@ -1454,6 +1523,8 @@ fn game_main() -> ! {
                 .map_or(true, |key| last_start_menu.as_ref() != Some(key))
         } else if options.is_some() {
             options != last_options
+        } else if save.is_some() {
+            save != last_save
         } else if oak_screen {
             oak.as_ref().map_or(true, |key| last_oak.as_ref() != Some(key))
         } else if overworld_screen {
@@ -1483,6 +1554,13 @@ fn game_main() -> ! {
                 );
             } else if let Some((previous, current)) = options_cursor_change {
                 pokered_app::render::redraw_options_menu_cursor(
+                    previous,
+                    current,
+                    &mut fb,
+                    game.state.config.language,
+                );
+            } else if let Some((previous, current)) = save_cursor_change {
+                pokered_app::render::redraw_save_menu_cursor(
                     previous,
                     current,
                     &mut fb,
@@ -1584,6 +1662,12 @@ fn game_main() -> ! {
                     options_cursor_damage(current),
                 ]
             });
+            let save_damage = save_cursor_change.map(|(previous, current)| {
+                [
+                    save_cursor_damage(previous),
+                    save_cursor_damage(current),
+                ]
+            });
             let battle_safari_damage =
                 battle_safari_cursor_change.map(|(previous, current)| {
                     [
@@ -1634,6 +1718,8 @@ fn game_main() -> ! {
                 Some(rects.as_slice())
             } else if let Some(rects) = options_damage.as_ref() {
                 Some(rects.as_slice())
+            } else if let Some(rects) = save_damage.as_ref() {
+                Some(rects.as_slice())
             } else if let Some(rects) = battle_safari_damage.as_ref() {
                 Some(rects.as_slice())
             } else if let Some(rects) = battle_menu_damage.as_ref() {
@@ -1663,6 +1749,7 @@ fn game_main() -> ! {
         last_main_menu = main_menu;
         last_start_menu = start_menu;
         last_options = options;
+        last_save = save;
         last_oak = oak;
         last_overworld = overworld;
         last_battle = battle;
@@ -1820,6 +1907,20 @@ fn options_cursor_damage(cursor: (u32, u32)) -> FrameDamageRect {
     FrameDamageRect {
         x: cursor.0 * 8,
         y: cursor.1 * 8,
+        width: 8,
+        height: 9,
+    }
+}
+
+#[inline]
+fn save_cursor_damage(cursor: YesNoChoice) -> FrameDamageRect {
+    FrameDamageRect {
+        x: 14 * 8,
+        y: if cursor == YesNoChoice::Yes {
+            13 * 8
+        } else {
+            15 * 8
+        },
         width: 8,
         height: 9,
     }

@@ -6386,12 +6386,9 @@ impl PokemonGame {
                 draw_options_menu(&self.options_menu, frame_buffer, self.state.config.language);
             }
             GameScreen::SaveMenu => {
-                draw_overworld(
-                    &mut self.overworld,
-                    &mut self.resources,
-                    frame_buffer,
-                    self.state.config.language,
-                );
+                // save.gui clears and covers the complete 160x144 viewport;
+                // drawing the live map first only creates pixels immediately
+                // discarded by the save card.
                 draw_save_menu(&self.save_menu, frame_buffer, self.state.config.language);
             }
             GameScreen::PartyScreen => {

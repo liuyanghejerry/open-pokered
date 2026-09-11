@@ -4,7 +4,7 @@ use pokered_core::items::{BuyMenuState, BuyResult, MartPhase, MartState, SellMen
 use pokered_core::main_menu::MainMenuState;
 use pokered_core::options_menu::OptionsMenuState;
 use pokered_core::party_screen::PartyScreenState;
-use pokered_core::save_menu::SaveMenuState;
+use pokered_core::save_menu::{SaveMenuState, YesNoChoice};
 use pokered_core::start_menu::StartMenuState;
 use pokered_core::stats_screen::{StatsPage, StatsScreenState};
 use pokered_data::mon_party_icons::{icon_for_species, IconKind};
@@ -99,6 +99,18 @@ pub fn draw_save_menu(state: &SaveMenuState, fb: &mut FrameBuffer, lang: Lang) {
     let mut painter = FrameBufferPainter::new(fb).with_lang(lang);
     let mut ui = Ui::new(&mut painter);
     menus::save::draw(state, &SAVE_DEFAULT_LAYOUT, &SAVE_ASK_PROMPT_LAYOUT, &mut ui, lang);
+}
+
+/// Repaint only the changed YES/NO cursor cells of an already-rendered save prompt.
+#[cfg(any(test, target_os = "none"))]
+pub fn redraw_save_menu_cursor(
+    previous: YesNoChoice,
+    current: YesNoChoice,
+    fb: &mut FrameBuffer,
+    lang: Lang,
+) {
+    let mut painter = FrameBufferPainter::new(fb).with_lang(lang);
+    menus::save::redraw_cursor(previous, current, &mut painter);
 }
 
 /// Draws the party screen with real Pokémon icons composited on top of the
@@ -403,6 +415,7 @@ mod tests {
     use pokered_core::options_menu::{
         BattleAnimation, BattleStyle, GameOptions, OptionsMenuState, OptionsRow, TextSpeed,
     };
+    use pokered_core::save_menu::{SavePhase, SaveScreenInfo};
     use pokered_renderer::Rgba;
 
     fn assert_framebuffers_equal(actual: &FrameBuffer, expected: &FrameBuffer) {
@@ -599,6 +612,42 @@ mod tests {
 
                     let mut expected = FrameBuffer::new(config, Rgba::BLACK);
                     draw_options_menu(current, &mut expected, language);
+                    assert_framebuffers_equal(&actual, &expected);
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn save_cursor_repaint_matches_a_fresh_prompt_in_both_directions() {
+        for language in [Lang::En, Lang::Zh] {
+            for phase in [SavePhase::AskSave, SavePhase::ConfirmOverwrite] {
+                for (previous, current) in [
+                    (YesNoChoice::Yes, YesNoChoice::No),
+                    (YesNoChoice::No, YesNoChoice::Yes),
+                ] {
+                    let make_state = |cursor| SaveMenuState {
+                        phase: phase.clone(),
+                        cursor,
+                        info: SaveScreenInfo {
+                            player_name: "RED".into(),
+                            num_badges: 3,
+                            pokedex_owned: 42,
+                            play_time_hours: 12,
+                            play_time_minutes: 34,
+                        },
+                        has_previous_save: false,
+                        is_different_player: false,
+                        sfx_event: pokered_core::save_menu::SaveSfxEvent::None,
+                    };
+                    let config = dotzuki_engine::render_config::RenderConfig::new(160, 144);
+
+                    let mut actual = FrameBuffer::new(config, Rgba::BLACK);
+                    draw_save_menu(&make_state(previous), &mut actual, language);
+                    redraw_save_menu_cursor(previous, current, &mut actual, language);
+
+                    let mut expected = FrameBuffer::new(config, Rgba::BLACK);
+                    draw_save_menu(&make_state(current), &mut expected, language);
                     assert_framebuffers_equal(&actual, &expected);
                 }
             }
