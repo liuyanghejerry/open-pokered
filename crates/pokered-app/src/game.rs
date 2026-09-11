@@ -6212,6 +6212,7 @@ impl PokemonGame {
         frame_buffer: &mut FrameBuffer,
         background_cache: &mut Option<OverworldBackgroundCache>,
         copy_background: &mut dyn FnMut(&mut [u8], &[u8]),
+        scroll_background: &mut dyn FnMut(&mut [u8], usize, usize, i32, i32, u8),
         reuse_composited_overworld: bool,
     ) {
         let ordinary_overworld = self.black_screen_frames == 0
@@ -6236,6 +6237,7 @@ impl PokemonGame {
             self.state.config.language,
             cache,
             copy_background,
+            scroll_background,
             reuse_composited_overworld,
         );
     }

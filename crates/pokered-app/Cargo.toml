@@ -11,10 +11,10 @@ debug-server = ["pokered-debug-server"]
 [dependencies]
 pokered-core = { path = "../pokered-core" }
 pokered-data = { path = "../pokered-data" }
-dotzuki-engine = { git = "https://github.com/liuyanghejerry/dotzuki", rev = "b827f3cb916f0383774823fd3ca3c12b344e511d" }
-dotzuki-engine-dsl = { git = "https://github.com/liuyanghejerry/dotzuki", rev = "b827f3cb916f0383774823fd3ca3c12b344e511d" }
+dotzuki-engine = { git = "https://github.com/liuyanghejerry/dotzuki", rev = "366e5026e872466305b8b338082a8de9f7969b5b" }
+dotzuki-engine-dsl = { git = "https://github.com/liuyanghejerry/dotzuki", rev = "366e5026e872466305b8b338082a8de9f7969b5b" }
 pokered-renderer = { path = "../pokered-renderer", default-features = false, features = ["framebuffer"] }
-dotzuki-renderer = { git = "https://github.com/liuyanghejerry/dotzuki", rev = "b827f3cb916f0383774823fd3ca3c12b344e511d", default-features = false }
+dotzuki-renderer = { git = "https://github.com/liuyanghejerry/dotzuki", rev = "366e5026e872466305b8b338082a8de9f7969b5b", default-features = false }
 pokered-ui = { path = "../pokered-ui", default-features = false, features = ["framebuffer"] }
 # Base audio crate (music/SFX data tables + ids) on every target; the cpal
 # device backend is added by the hosted target table below. Bare metal gets
@@ -35,7 +35,7 @@ hashbrown = { version = "0.15", default-features = false, features = ["serde"] }
 [target.'cfg(not(target_os = "none"))'.dependencies]
 pokered-renderer = { path = "../pokered-renderer", features = ["gpu"] }
 pokered-ui = { path = "../pokered-ui", features = ["gpu"] }
-dotzuki-app = { git = "https://github.com/liuyanghejerry/dotzuki", rev = "b827f3cb916f0383774823fd3ca3c12b344e511d" }
+dotzuki-app = { git = "https://github.com/liuyanghejerry/dotzuki", rev = "366e5026e872466305b8b338082a8de9f7969b5b" }
 image = { version = "0.25", default-features = false, features = ["png"] }
 
 # Bare metal (GBA): spin locks for the single-threaded lazy statics
@@ -76,5 +76,5 @@ web-sys = { version = "0.3", features = [
 # dependencies section above untouched.
 [target.'cfg(target_arch = "wasm32")'.dependencies.dotzuki-web]
 git = "https://github.com/liuyanghejerry/dotzuki"
-rev = "b827f3cb916f0383774823fd3ca3c12b344e511d"
+rev = "366e5026e872466305b8b338082a8de9f7969b5b"
 features = ["link"]

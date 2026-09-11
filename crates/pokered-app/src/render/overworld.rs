@@ -279,6 +279,8 @@ enum BackgroundDamage {
     Scrolled { dx: i32, dy: i32 },
 }
 
+type ScrollIndexedPixels<'a> = dyn FnMut(&mut [u8], usize, usize, i32, i32, u8) + 'a;
+
 impl BackgroundDamage {
     fn intersects_tile(self, x: i32, y: i32, width: i32, height: i32) -> bool {
         match self {
@@ -424,7 +426,11 @@ impl OverworldBackgroundCache {
         }
     }
 
-    fn prepare(&mut self, key: OverworldBackgroundKey) -> BackgroundDamage {
+    fn prepare(
+        &mut self,
+        key: OverworldBackgroundKey,
+        scroll_pixels: Option<&mut ScrollIndexedPixels<'_>>,
+    ) -> BackgroundDamage {
         let Some(previous) = self.key else {
             self.frame_buffer.clear(Rgba::WHITE);
             return BackgroundDamage::Full;
@@ -446,7 +452,26 @@ impl OverworldBackgroundCache {
             return BackgroundDamage::Full;
         }
 
-        self.frame_buffer.scroll_indices(dx, dy, GbColor::White);
+        #[cfg(all(target_os = "none", target_arch = "arm"))]
+        if let Some(scroll_pixels) = scroll_pixels {
+            let width = self.frame_buffer.width() as usize;
+            let height = self.frame_buffer.height() as usize;
+            scroll_pixels(
+                self.frame_buffer.indices_mut(),
+                width,
+                height,
+                dx,
+                dy,
+                GbColor::White as u8,
+            );
+        } else {
+            self.frame_buffer.scroll_indices(dx, dy, GbColor::White);
+        }
+        #[cfg(not(all(target_os = "none", target_arch = "arm")))]
+        {
+            let _ = scroll_pixels;
+            self.frame_buffer.scroll_indices(dx, dy, GbColor::White);
+        }
         BackgroundDamage::Scrolled { dx, dy }
     }
 }
@@ -632,7 +657,7 @@ pub fn draw_overworld(
     fb: &mut FrameBuffer,
     language: pokered_core::game_state::Lang,
 ) {
-    draw_overworld_impl(screen, res, fb, language, None, None, None);
+    draw_overworld_impl(screen, res, fb, language, None, None, None, None);
 }
 
 pub(crate) fn draw_overworld_cached(
@@ -642,7 +667,16 @@ pub(crate) fn draw_overworld_cached(
     language: pokered_core::game_state::Lang,
     cache: &mut OverworldBackgroundCache,
 ) {
-    draw_overworld_impl(screen, res, fb, language, Some(cache), None, None);
+    draw_overworld_impl(
+        screen,
+        res,
+        fb,
+        language,
+        Some(cache),
+        None,
+        None,
+        None,
+    );
 }
 
 pub(crate) fn draw_overworld_cached_with(
@@ -652,6 +686,7 @@ pub(crate) fn draw_overworld_cached_with(
     language: pokered_core::game_state::Lang,
     cache: &mut OverworldBackgroundCache,
     copy_background: &mut dyn FnMut(&mut [u8], &[u8]),
+    scroll_background: &mut ScrollIndexedPixels<'_>,
     reuse_composited: bool,
 ) {
     draw_overworld_impl(
@@ -661,6 +696,7 @@ pub(crate) fn draw_overworld_cached_with(
         language,
         Some(cache),
         Some(copy_background),
+        Some(scroll_background),
         Some(reuse_composited),
     );
 }
@@ -672,6 +708,7 @@ fn draw_overworld_impl(
     language: pokered_core::game_state::Lang,
     mut background_cache: Option<&mut OverworldBackgroundCache>,
     mut copy_background: Option<&mut dyn FnMut(&mut [u8], &[u8])>,
+    mut scroll_background: Option<&mut ScrollIndexedPixels<'_>>,
     reuse_composited_hint: Option<bool>,
 ) {
     if let Some(cache) = background_cache.as_deref_mut() {
@@ -845,7 +882,7 @@ fn draw_overworld_impl(
                         flower_frame: screen.tile_anim.flower_frame(),
                         map_hash: background_map_hash(screen),
                     };
-                    let damage = cache.prepare(key);
+                    let damage = cache.prepare(key, scroll_background.as_deref_mut());
                     draw_background_tiles(
                         &mut cache.frame_buffer,
                         damage,
@@ -2187,6 +2224,9 @@ mod tests {
                 &mut |destination, source| {
                     copied_full_background = true;
                     destination.copy_from_slice(source);
+                },
+                &mut |_, _, _, _, _, _| {
+                    unreachable!("host framebuffer must use its planar scroll implementation")
                 },
                 reuse_composited,
             );

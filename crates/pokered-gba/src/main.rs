@@ -57,6 +57,8 @@ const DMA3_DESTINATION: *mut u32 = 0x0400_00D8 as *mut u32;
 const DMA3_CONTROL: *mut u32 = 0x0400_00DC as *mut u32;
 const DMA_ENABLE: u32 = 1 << 31;
 const DMA_32BIT: u32 = 1 << 26;
+const DMA_SOURCE_DECREMENT: u32 = 1 << 23;
+const DMA_DESTINATION_DECREMENT: u32 = 1 << 21;
 const VCOUNT: *const u16 = 0x0400_0006 as *const u16;
 
 #[inline]
@@ -79,10 +81,137 @@ fn is_vblank() -> bool {
 /// words have reached VRAM and the enable bit has cleared.
 #[inline]
 unsafe fn dma3_copy_words(source: *const u32, destination: *mut u32, words: usize) {
+    debug_assert!(words != 0 && words <= u16::MAX as usize);
     unsafe {
         core::ptr::write_volatile(DMA3_SOURCE, source as usize as u32);
         core::ptr::write_volatile(DMA3_DESTINATION, destination as usize as u32);
         core::ptr::write_volatile(DMA3_CONTROL, DMA_ENABLE | DMA_32BIT | words as u32);
+    }
+}
+
+/// Overlap-safe DMA3 memmove inside a byte slice. Returns false when the
+/// addresses cannot use 16/32-bit DMA and the caller must fall back to CPU.
+#[inline]
+fn dma3_memmove_bytes(pixels: &mut [u8], source: usize, destination: usize, len: usize) -> bool {
+    if len == 0 || source == destination {
+        return true;
+    }
+    debug_assert!(source + len <= pixels.len());
+    debug_assert!(destination + len <= pixels.len());
+
+    let base = pixels.as_mut_ptr();
+    let source_address = unsafe { base.add(source) } as usize;
+    let destination_address = unsafe { base.add(destination) } as usize;
+    let unit = if (source_address | destination_address | len) & 3 == 0 {
+        4
+    } else if (source_address | destination_address | len) & 1 == 0 {
+        2
+    } else {
+        return false;
+    };
+    let count = len / unit;
+    if count == 0 || count > u16::MAX as usize {
+        return false;
+    }
+
+    let backwards = destination > source && destination < source + len;
+    let end_offset = if backwards { len - unit } else { 0 };
+    let control = if unit == 4 { DMA_32BIT } else { 0 }
+        | if backwards {
+            DMA_SOURCE_DECREMENT | DMA_DESTINATION_DECREMENT
+        } else {
+            0
+        };
+
+    core::sync::atomic::compiler_fence(core::sync::atomic::Ordering::SeqCst);
+    unsafe {
+        core::ptr::write_volatile(DMA3_SOURCE, base.add(source + end_offset) as usize as u32);
+        core::ptr::write_volatile(
+            DMA3_DESTINATION,
+            base.add(destination + end_offset) as usize as u32,
+        );
+        core::ptr::write_volatile(DMA3_CONTROL, DMA_ENABLE | control | count as u32);
+    }
+    core::sync::atomic::compiler_fence(core::sync::atomic::Ordering::SeqCst);
+    true
+}
+
+/// Move a chunky indexed framebuffer with DMA3 and clear newly exposed
+/// pixels. Row order preserves source data for vertical and diagonal moves;
+/// horizontal overlap is handled by increment/decrement DMA address modes.
+#[inline(never)]
+fn dma3_scroll_indices(
+    pixels: &mut [u8],
+    width: usize,
+    height: usize,
+    dx: i32,
+    dy: i32,
+    clear: u8,
+) {
+    debug_assert_eq!(pixels.len(), width * height);
+    if dx == 0 && dy == 0 {
+        return;
+    }
+    if width == 0
+        || height == 0
+        || dx.unsigned_abs() as usize >= width
+        || dy.unsigned_abs() as usize >= height
+    {
+        pixels.fill(clear);
+        return;
+    }
+
+    let x_offset = dx.unsigned_abs() as usize;
+    let y_offset = dy.unsigned_abs() as usize;
+    let copy_width = width - x_offset;
+    let source_x = if dx < 0 { x_offset } else { 0 };
+    let destination_x = if dx > 0 { x_offset } else { 0 };
+
+    if dx == 0 {
+        let len = (height - y_offset) * width;
+        let (source, destination) = if dy > 0 {
+            (0, y_offset * width)
+        } else {
+            (y_offset * width, 0)
+        };
+        if !dma3_memmove_bytes(pixels, source, destination, len) {
+            pixels.copy_within(source..source + len, destination);
+        }
+        if dy > 0 {
+            pixels[..y_offset * width].fill(clear);
+        } else {
+            pixels[(height - y_offset) * width..].fill(clear);
+        }
+        return;
+    }
+
+    let copy_row = |pixels: &mut [u8], source_y: usize, destination_y: usize| {
+        let source = source_y * width + source_x;
+        let destination = destination_y * width + destination_x;
+        if !dma3_memmove_bytes(pixels, source, destination, copy_width) {
+            pixels.copy_within(source..source + copy_width, destination);
+        }
+        if dx > 0 {
+            pixels[destination_y * width..destination_y * width + destination_x].fill(clear);
+        } else {
+            pixels[destination + copy_width..(destination_y + 1) * width].fill(clear);
+        }
+    };
+
+    if dy > 0 {
+        for source_y in (0..height - y_offset).rev() {
+            copy_row(pixels, source_y, source_y + y_offset);
+        }
+        pixels[..y_offset * width].fill(clear);
+    } else if dy < 0 {
+        for source_y in y_offset..height {
+            copy_row(pixels, source_y, source_y - y_offset);
+        }
+        pixels[(height - y_offset) * width..].fill(clear);
+    } else {
+        for y in 0..height {
+            copy_row(pixels, y, y);
+        }
     }
 }
 
@@ -793,6 +922,7 @@ fn game_main() -> ! {
                 &mut fb,
                 &mut overworld_background_cache,
                 &mut dma3_copy_bytes,
+                &mut dma3_scroll_indices,
                 overworld.is_some(),
             );
         }
