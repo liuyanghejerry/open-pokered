@@ -19,7 +19,7 @@ framebuffer-dump = []
 [dependencies]
 agb = "0.25.0"
 getrandom = { version = "0.2", features = ["custom"] }
-dotzuki-engine = { git = "https://github.com/liuyanghejerry/dotzuki", rev = "dcacf65c1af058234440fc8142d6f2802ef2c3f3" }
+dotzuki-engine = { git = "https://github.com/liuyanghejerry/dotzuki", rev = "a18bacf1cf6f7bfd9c20439abcf0745ad25d7057" }
 log = { version = "0.4", default-features = false }
 
 # The pokered game crates. Built for thumbv4t via this crate's

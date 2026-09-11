@@ -499,6 +499,7 @@ fn game_main() -> ! {
 
     let mut fb = FrameBuffer::new(RenderConfig::new(160, 144), Rgba::WHITE);
     let mut presenter = Mode4Presenter::new(&fb);
+    let mut overworld_background_cache = None;
     profile_timer_start();
     let mut frame: u32 = 0;
     let mut last_clock = profile_now();
@@ -644,7 +645,7 @@ fn game_main() -> ! {
             true
         };
         if redraw {
-            game.draw(&mut fb);
+            game.draw_gba(&mut fb, &mut overworld_background_cache);
         }
         #[cfg(feature = "profiling")]
         let mark3 = profile_now();

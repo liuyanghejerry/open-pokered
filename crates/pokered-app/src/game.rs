@@ -103,6 +103,8 @@ use crate::render::{
     draw_pokedex_screen, draw_save_menu, draw_slots, draw_start_menu, draw_stats_screen,
     draw_title_screen, draw_town_map, draw_trade, draw_trainer_card, BattleVisualEffects,
 };
+#[cfg(target_os = "none")]
+use crate::render::{draw_overworld_cached, OverworldBackgroundCache};
 
 const SAVE_FILE_NAME: &str = "pokered.sav";
 const SCRIPT_FLAGS_FILE_NAME: &str = "pokered.script_flags.json";
@@ -6200,6 +6202,38 @@ impl PokemonGame {
                 self.pending_evolve_move_replace = Some((outcome.party_index, move_id));
             }
         }
+    }
+
+    /// Draw with the GBA's incremental pure-background cache. Full-screen
+    /// takeovers discard it before using their own temporary framebuffers.
+    #[cfg(target_os = "none")]
+    pub fn draw_gba(
+        &mut self,
+        frame_buffer: &mut FrameBuffer,
+        background_cache: &mut Option<OverworldBackgroundCache>,
+    ) {
+        let ordinary_overworld = self.black_screen_frames == 0
+            && self.trade_anim.is_none()
+            && self.evolution_anim.is_none()
+            && self.hof_ceremony.is_none()
+            && self.credits.is_none()
+            && self.state.screen == GameScreen::Overworld;
+        if !ordinary_overworld {
+            *background_cache = None;
+            self.draw(frame_buffer);
+            return;
+        }
+
+        let cache = background_cache.get_or_insert_with(|| {
+            OverworldBackgroundCache::new(frame_buffer.width(), frame_buffer.height())
+        });
+        draw_overworld_cached(
+            &mut self.overworld,
+            &mut self.resources,
+            frame_buffer,
+            self.state.config.language,
+            cache,
+        );
     }
 
     /// Draw game state to frame buffer. Available for both wasm and native builds.
