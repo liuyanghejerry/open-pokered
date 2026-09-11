@@ -334,6 +334,37 @@ impl OakVisualKey {
 }
 
 #[derive(Clone, Copy, PartialEq, Eq)]
+struct MainMenuVisualKey {
+    cursor: usize,
+    continue_info: bool,
+    language: Lang,
+    item_count: usize,
+}
+
+impl MainMenuVisualKey {
+    fn new(game: &PokemonGame) -> Self {
+        Self {
+            cursor: game.main_menu.cursor,
+            continue_info: game.main_menu.continue_info_phase.is_some(),
+            language: game.state.config.language,
+            item_count: game.main_menu.item_count(),
+        }
+    }
+
+    fn cursor_change_from(&self, previous: &Self) -> Option<(usize, usize)> {
+        if self.cursor == previous.cursor || self.continue_info {
+            return None;
+        }
+        let mut current_without_cursor = *self;
+        current_without_cursor.cursor = 0;
+        let mut previous_without_cursor = *previous;
+        previous_without_cursor.cursor = 0;
+        (current_without_cursor == previous_without_cursor)
+            .then_some((previous.cursor, self.cursor))
+    }
+}
+
+#[derive(Clone, Copy, PartialEq, Eq)]
 enum ReusableBattlePhase {
     Intro(IntroPhase),
     PlayerMenu { row: usize, col: usize },
@@ -1192,7 +1223,7 @@ fn game_main() -> ! {
     let mut last_static_splash: Option<SplashPhase> = None;
     let mut last_language_select: Option<Lang> = None;
     let mut last_title: Option<TitleVisualKey> = None;
-    let mut last_main_menu: Option<(usize, bool)> = None;
+    let mut last_main_menu: Option<MainMenuVisualKey> = None;
     let mut last_oak: Option<OakVisualKey> = None;
     let mut last_overworld: Option<OverworldVisualKey> = None;
     let mut last_battle: Option<BattleVisualKey> = None;
@@ -1287,10 +1318,12 @@ fn game_main() -> ! {
             (game.state.screen == GameScreen::LanguageSelect).then_some(game.state.config.language);
         let title = (game.state.screen == GameScreen::TitleScreen)
             .then(|| TitleVisualKey::new(&game.title_screen));
-        let main_menu = (game.state.screen == GameScreen::MainMenu).then_some((
-            game.main_menu.cursor,
-            game.main_menu.continue_info_phase.is_some(),
-        ));
+        let main_menu =
+            (game.state.screen == GameScreen::MainMenu).then(|| MainMenuVisualKey::new(game));
+        let main_menu_cursor_change = main_menu
+            .as_ref()
+            .zip(last_main_menu.as_ref())
+            .and_then(|(current, previous)| current.cursor_change_from(previous));
         let oak_screen = game.state.screen == GameScreen::OakSpeech;
         let oak = oak_screen.then(|| OakVisualKey::new(game)).flatten();
         let overworld_screen = game.state.screen == GameScreen::Overworld;
@@ -1343,7 +1376,14 @@ fn game_main() -> ! {
             true
         };
         if redraw {
-            if let Some((previous, _)) = battle_safari_cursor_change {
+            if let Some((previous, current)) = main_menu_cursor_change {
+                pokered_app::render::redraw_main_menu_cursor(
+                    previous,
+                    current,
+                    &mut fb,
+                    game.state.config.language,
+                );
+            } else if let Some((previous, _)) = battle_safari_cursor_change {
                 pokered_app::render::redraw_battle_safari_menu_cursor(
                     previous,
                     &game.battle.safari_menu,
@@ -1421,6 +1461,12 @@ fn game_main() -> ! {
         #[cfg(feature = "profiling")]
         let mark3 = profile_now();
         if redraw {
+            let main_menu_damage = main_menu_cursor_change.map(|(previous, current)| {
+                [
+                    main_menu_cursor_damage(previous, game.state.config.language),
+                    main_menu_cursor_damage(current, game.state.config.language),
+                ]
+            });
             let battle_safari_damage =
                 battle_safari_cursor_change.map(|(previous, current)| {
                     [
@@ -1465,7 +1511,9 @@ fn game_main() -> ! {
                         battle_yes_no_cursor_damage(current_yes),
                     ]
                 });
-            let damage = if let Some(rects) = battle_safari_damage.as_ref() {
+            let damage = if let Some(rects) = main_menu_damage.as_ref() {
+                Some(rects.as_slice())
+            } else if let Some(rects) = battle_safari_damage.as_ref() {
                 Some(rects.as_slice())
             } else if let Some(rects) = battle_menu_damage.as_ref() {
                 Some(rects.as_slice())
@@ -1621,5 +1669,15 @@ fn battle_yes_no_cursor_damage(yes: bool) -> FrameDamageRect {
         y: (9 + selected * 2) * 8,
         width: 8,
         height: 9,
+    }
+}
+
+#[inline]
+fn main_menu_cursor_damage(cursor: usize, language: Lang) -> FrameDamageRect {
+    FrameDamageRect {
+        x: 8,
+        y: (2 + cursor as u32 * 2) * 8,
+        width: if language == Lang::Zh { 10 } else { 8 },
+        height: if language == Lang::Zh { 10 } else { 9 },
     }
 }

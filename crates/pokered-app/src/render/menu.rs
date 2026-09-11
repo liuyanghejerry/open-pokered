@@ -28,6 +28,18 @@ pub fn draw_main_menu(state: &MainMenuState, fb: &mut FrameBuffer, lang: Lang) {
     menus::main::draw(state, &MAIN_DEFAULT_LAYOUT, &mut ui, lang);
 }
 
+/// Repaint only the changed cursor cells of an already-rendered title menu.
+#[cfg(any(test, target_os = "none"))]
+pub fn redraw_main_menu_cursor(
+    previous_cursor: usize,
+    current_cursor: usize,
+    fb: &mut FrameBuffer,
+    lang: Lang,
+) {
+    let mut painter = FrameBufferPainter::new(fb).with_lang(lang);
+    menus::main::redraw_cursor(previous_cursor, current_cursor, &mut painter, lang);
+}
+
 pub fn draw_start_menu(state: &StartMenuState, player_name: &str, fb: &mut FrameBuffer, lang: Lang) {
     let mut painter = FrameBufferPainter::new(fb).with_lang(lang);
     let mut ui = Ui::new(&mut painter);
@@ -336,6 +348,70 @@ fn sell_result_lines(result: &SellResult, is_zh: bool) -> Vec<&'static str> {
             SellResult::Unsellable => vec!["I can't buy", "that item."],
             SellResult::NotInBag => vec!["You don't have", "that item!"],
             SellResult::InvalidItem => vec!["That item doesn't", "exist!"],
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use pokered_core::game_state::SaveFileSummary;
+    use pokered_renderer::Rgba;
+
+    fn assert_framebuffers_equal(actual: &FrameBuffer, expected: &FrameBuffer) {
+        assert_eq!(actual.width(), expected.width());
+        assert_eq!(actual.height(), expected.height());
+        for y in 0..actual.height() {
+            for x in 0..actual.width() {
+                assert_eq!(
+                    actual.get_pixel(x, y),
+                    expected.get_pixel(x, y),
+                    "framebuffer mismatch at ({x}, {y})",
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn main_menu_cursor_repaint_matches_a_fresh_menu_for_every_transition() {
+        let save = SaveFileSummary {
+            player_name: b"RED".to_vec(),
+            badges: 0,
+            pokedex_owned: 0,
+            play_time_hours: 0,
+            play_time_minutes: 0,
+            play_time_seconds: 0,
+            player_id: 0,
+        };
+        for language in [Lang::En, Lang::Zh] {
+            for save_summary in [None, Some(save.clone())] {
+                let state = MainMenuState::new(save_summary);
+                for previous_cursor in 0..state.item_count() {
+                    for current_cursor in 0..state.item_count() {
+                        if previous_cursor == current_cursor {
+                            continue;
+                        }
+                        let mut previous = state.clone();
+                        previous.cursor = previous_cursor;
+                        let mut current = state.clone();
+                        current.cursor = current_cursor;
+                        let config = dotzuki_engine::render_config::RenderConfig::new(160, 144);
+
+                        let mut actual = FrameBuffer::new(config, Rgba::BLACK);
+                        draw_main_menu(&previous, &mut actual, language);
+                        redraw_main_menu_cursor(
+                            previous_cursor,
+                            current_cursor,
+                            &mut actual,
+                            language,
+                        );
+
+                        let mut expected = FrameBuffer::new(config, Rgba::BLACK);
+                        draw_main_menu(&current, &mut expected, language);
+                        assert_framebuffers_equal(&actual, &expected);
+                    }
+                }
+            }
         }
     }
 }
