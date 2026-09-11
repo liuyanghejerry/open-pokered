@@ -6285,6 +6285,7 @@ impl PokemonGame {
                 | GameScreen::TitleScreen
                 | GameScreen::OakSpeech
                 | GameScreen::Overworld
+                | GameScreen::Battle
         ) {
             frame_buffer.clear(Rgba::WHITE);
         }
