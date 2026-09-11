@@ -733,6 +733,47 @@ impl BattleVisualKey {
             }
         })
     }
+
+    /// Return the old and new choices when every visible battle field is
+    /// unchanged except a YES/NO cursor.
+    fn yes_no_cursor_change_from(&self, previous: &Self) -> Option<(bool, bool)> {
+        let (yes, previous_yes, normalized_phase) = match (self.phase, previous.phase) {
+            (
+                ReusableBattlePhase::ShiftPrompt { yes },
+                ReusableBattlePhase::ShiftPrompt { yes: previous_yes },
+            ) => (
+                yes,
+                previous_yes,
+                ReusableBattlePhase::ShiftPrompt { yes: false },
+            ),
+            (
+                ReusableBattlePhase::LearnMoveAsk { yes },
+                ReusableBattlePhase::LearnMoveAsk { yes: previous_yes },
+            ) => (
+                yes,
+                previous_yes,
+                ReusableBattlePhase::LearnMoveAsk { yes: false },
+            ),
+            (
+                ReusableBattlePhase::LearnMoveGiveUp { yes },
+                ReusableBattlePhase::LearnMoveGiveUp { yes: previous_yes },
+            ) => (
+                yes,
+                previous_yes,
+                ReusableBattlePhase::LearnMoveGiveUp { yes: false },
+            ),
+            _ => return None,
+        };
+        if yes == previous_yes {
+            return None;
+        }
+
+        let mut current_without_cursor = *self;
+        current_without_cursor.phase = normalized_phase;
+        let mut previous_without_cursor = *previous;
+        previous_without_cursor.phase = normalized_phase;
+        (current_without_cursor == previous_without_cursor).then_some((previous_yes, yes))
+    }
 }
 
 #[derive(Clone, Copy, PartialEq, Eq)]
@@ -1278,6 +1319,10 @@ fn game_main() -> ! {
             .as_ref()
             .zip(last_battle.as_ref())
             .and_then(|(current, previous)| current.party_menu_change_from(previous));
+        let battle_yes_no_cursor_change = battle
+            .as_ref()
+            .zip(last_battle.as_ref())
+            .and_then(|(current, previous)| current.yes_no_cursor_change_from(previous));
         let redraw = if static_splash.is_some() {
             static_splash != last_static_splash
         } else if language_select.is_some() {
@@ -1357,6 +1402,13 @@ fn game_main() -> ! {
                     &mut fb,
                     game.state.config.language,
                 );
+            } else if let Some((previous_yes, current_yes)) = battle_yes_no_cursor_change {
+                pokered_app::render::redraw_battle_yes_no_cursor(
+                    previous_yes,
+                    current_yes,
+                    &mut fb,
+                    game.state.config.language,
+                );
             } else {
                 game.draw_gba(
                     &mut fb,
@@ -1406,6 +1458,13 @@ fn game_main() -> ! {
                 Some(BattlePartyMenuChange::Viewport { .. })
             )
             .then_some([battle_party_viewport_damage()]);
+            let battle_yes_no_damage =
+                battle_yes_no_cursor_change.map(|(previous_yes, current_yes)| {
+                    [
+                        battle_yes_no_cursor_damage(previous_yes),
+                        battle_yes_no_cursor_damage(current_yes),
+                    ]
+                });
             let damage = if let Some(rects) = battle_safari_damage.as_ref() {
                 Some(rects.as_slice())
             } else if let Some(rects) = battle_menu_damage.as_ref() {
@@ -1417,6 +1476,8 @@ fn game_main() -> ! {
             } else if let Some(rects) = battle_party_cursor_damage.as_ref() {
                 Some(rects.as_slice())
             } else if let Some(rects) = battle_party_viewport_damage.as_ref() {
+                Some(rects.as_slice())
+            } else if let Some(rects) = battle_yes_no_damage.as_ref() {
                 Some(rects.as_slice())
             } else {
                 overworld_background_cache
@@ -1549,5 +1610,16 @@ fn battle_party_viewport_damage() -> FrameDamageRect {
         y: 13 * 8 - 1,
         width: 16 * 8,
         height: 4 * 8 + 6,
+    }
+}
+
+#[inline]
+fn battle_yes_no_cursor_damage(yes: bool) -> FrameDamageRect {
+    let selected = if yes { 0 } else { 1 };
+    FrameDamageRect {
+        x: 12 * 8,
+        y: (9 + selected * 2) * 8,
+        width: 8,
+        height: 9,
     }
 }

@@ -2988,6 +2988,24 @@ pub fn redraw_battle_party_menu_viewport(
     );
 }
 
+/// Repaint only the changed cursor cells of a battle YES/NO prompt.
+#[cfg(any(test, target_os = "none"))]
+pub fn redraw_battle_yes_no_cursor(
+    previous_yes: bool,
+    current_yes: bool,
+    fb: &mut FrameBuffer,
+    language: pokered_core::game_state::Lang,
+) {
+    let selected = |yes: bool| if yes { 0 } else { 1 };
+    let mut painter = FrameBufferPainter::new(fb).with_lang(language);
+    menus::yes_no::redraw_cursor(
+        selected(previous_yes),
+        selected(current_yes),
+        &YES_NO_DEFAULT_LAYOUT,
+        &mut painter,
+    );
+}
+
 /// Repaint only the cursor and selected-move information of an already-
 /// rendered battle move menu.
 #[cfg(any(test, target_os = "none"))]
@@ -3369,6 +3387,50 @@ mod tests {
                     );
                     assert_framebuffers_equal(&actual, &expected);
                 }
+            }
+        }
+    }
+
+    #[test]
+    fn battle_yes_no_cursor_repaint_matches_a_fresh_menu_for_both_languages() {
+        for language in [Lang::En, Lang::Zh] {
+            let options = if language == Lang::Zh {
+                vec!["是".to_string(), "否".to_string()]
+            } else {
+                vec!["YES".to_string(), "NO".to_string()]
+            };
+            for previous_yes in [false, true] {
+                let current_yes = !previous_yes;
+                let config = dotzuki_engine::render_config::RenderConfig::new(160, 144);
+
+                let mut actual = FrameBuffer::new(config, Rgba::BLACK);
+                {
+                    let mut painter = FrameBufferPainter::new(&mut actual).with_lang(language);
+                    let mut ui = Ui::new(&mut painter);
+                    menus::yes_no::draw(
+                        &options,
+                        if previous_yes { 0 } else { 1 },
+                        &YES_NO_DEFAULT_LAYOUT,
+                        &mut ui,
+                    );
+                }
+                redraw_battle_yes_no_cursor(
+                    previous_yes,
+                    current_yes,
+                    &mut actual,
+                    language,
+                );
+
+                let mut expected = FrameBuffer::new(config, Rgba::BLACK);
+                let mut painter = FrameBufferPainter::new(&mut expected).with_lang(language);
+                let mut ui = Ui::new(&mut painter);
+                menus::yes_no::draw(
+                    &options,
+                    if current_yes { 0 } else { 1 },
+                    &YES_NO_DEFAULT_LAYOUT,
+                    &mut ui,
+                );
+                assert_framebuffers_equal(&actual, &expected);
             }
         }
     }
