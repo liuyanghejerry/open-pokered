@@ -3,14 +3,14 @@ use pokered_core::game_state::Lang;
 use pokered_core::items::{BuyMenuState, BuyResult, MartPhase, MartState, SellMenuState, SellResult};
 use pokered_core::main_menu::MainMenuState;
 use pokered_core::options_menu::OptionsMenuState;
-use pokered_core::party_screen::PartyScreenState;
+use pokered_core::party_screen::{PartyScreenPhase, PartyScreenState};
 use pokered_core::save_menu::{SaveMenuState, YesNoChoice};
 use pokered_core::start_menu::StartMenuState;
 use pokered_core::stats_screen::{StatsPage, StatsScreenState};
 use pokered_data::mon_party_icons::{icon_for_species, IconKind};
 use pokered_data::impl_traits::PokemonRenderData;
 use pokered_data::lang_data;
-use pokered_data::ui_layout::schema::{MART_CONFIRM_LAYOUT, MART_MAIN_MENU_LAYOUT, MART_QUANTITY_LAYOUT, MART_RESULT_DIALOG_LAYOUT, MAIN_DEFAULT_LAYOUT, START_DEFAULT_LAYOUT, OPTIONS_DEFAULT_LAYOUT, SAVE_DEFAULT_LAYOUT, SAVE_ASK_PROMPT_LAYOUT, PARTY_DEFAULT_LAYOUT, STATS_PAGE1_LAYOUT, STATS_PAGE2_LAYOUT, BAG_DEFAULT_LAYOUT};
+use pokered_data::ui_layout::schema::{MART_CONFIRM_LAYOUT, MART_MAIN_MENU_LAYOUT, MART_QUANTITY_LAYOUT, MART_RESULT_DIALOG_LAYOUT, MAIN_DEFAULT_LAYOUT, START_DEFAULT_LAYOUT, OPTIONS_DEFAULT_LAYOUT, SAVE_DEFAULT_LAYOUT, SAVE_ASK_PROMPT_LAYOUT, PARTY_DEFAULT_LAYOUT, PARTY_ENTRY_LAYOUT, STATS_PAGE1_LAYOUT, STATS_PAGE2_LAYOUT, BAG_DEFAULT_LAYOUT};
 use pokered_renderer::mon_icon::{draw_mon_icon, load_mon_icon_tiles, IconFrame};
 use pokered_renderer::palette::GRAYSCALE_SPRITE_PALETTE;
 use pokered_renderer::party_hp_bar::draw_party_hp_bar;
@@ -188,6 +188,174 @@ pub fn draw_party_screen(
     }
     let mut painter = FrameBufferPainter::new(fb).with_lang(lang);
     menus::party::draw_overlay(state, &mut Ui::new(&mut painter), lang);
+}
+
+#[cfg(any(test, target_os = "none"))]
+fn clear_top_level_party_icon_at(party_index: usize, fb: &mut FrameBuffer) {
+    const ICON_X_PX: u32 = 8;
+    const ICON_SIZE_PX: u32 = 16;
+    let row_height = PARTY_ENTRY_LAYOUT.cursors[0].row_step * TILE_SIZE;
+    let icon_y = party_index as u32 * row_height;
+    fb.fill_rect(
+        ICON_X_PX,
+        icon_y,
+        ICON_SIZE_PX,
+        ICON_SIZE_PX,
+        pokered_renderer::Rgba::WHITE,
+    );
+}
+
+#[cfg(any(test, target_os = "none"))]
+fn draw_top_level_party_icon_at(
+    state: &PartyScreenState,
+    party_index: usize,
+    frame: IconFrame,
+    resources: Option<&mut ResourceManager>,
+    fb: &mut FrameBuffer,
+) {
+    const ICON_X_PX: u32 = 8;
+    let row_height = PARTY_ENTRY_LAYOUT.cursors[0].row_step * TILE_SIZE;
+    let icon_y = party_index as u32 * row_height;
+    let (Some(pokemon), Some(rm)) = (state.party_member(party_index), resources) else {
+        return;
+    };
+    let kind = icon_for_species(pokemon.species);
+    if let Ok(tiles) = load_mon_icon_tiles(rm, kind, frame) {
+        draw_mon_icon(
+            fb,
+            tiles,
+            ICON_X_PX,
+            icon_y,
+            &GRAYSCALE_SPRITE_PALETTE,
+        );
+    }
+}
+
+/// Repaint the selected icon when its 16-frame animation phase changes.
+#[cfg(any(test, target_os = "none"))]
+pub fn redraw_top_level_party_icon(
+    state: &PartyScreenState,
+    frame_counter: u64,
+    resources: Option<&mut ResourceManager>,
+    fb: &mut FrameBuffer,
+    lang: Lang,
+) {
+    clear_top_level_party_icon_at(state.cursor(), fb);
+    draw_top_level_party_icon_at(
+        state,
+        state.cursor(),
+        IconFrame::from_counter(frame_counter, 16),
+        resources,
+        fb,
+    );
+
+    // The switch-target hint can cover the bottom party row. The complete
+    // renderer draws overlays after icons, so restore that ordering here too.
+    if matches!(state.phase(), PartyScreenPhase::SwitchTarget { .. }) {
+        let mut painter = FrameBufferPainter::new(fb).with_lang(lang);
+        menus::party::draw_overlay(state, &mut Ui::new(&mut painter), lang);
+    }
+}
+
+/// Repaint the two affected list rows when the selected party member moves.
+#[cfg(any(test, target_os = "none"))]
+pub fn redraw_top_level_party_selection(
+    state: &PartyScreenState,
+    previous_cursor: usize,
+    frame_counter: u64,
+    mut resources: Option<&mut ResourceManager>,
+    fb: &mut FrameBuffer,
+    lang: Lang,
+) {
+    let current_cursor = state.cursor();
+    let cursor_defs = PARTY_ENTRY_LAYOUT.cursors.as_ref();
+    let cursor_position = |row: usize| {
+        TilePos::new(
+            cursor_defs[0].tx,
+            cursor_defs[0].base_ty + row as u32 * cursor_defs[0].row_step,
+        )
+    };
+    let previous_position = cursor_position(previous_cursor);
+    let current_position = cursor_position(current_cursor);
+    let source_index = match state.phase() {
+        PartyScreenPhase::SwitchTarget { source_index } => Some(source_index),
+        _ => None,
+    };
+
+    clear_top_level_party_icon_at(previous_cursor, fb);
+    clear_top_level_party_icon_at(current_cursor, fb);
+    {
+        let mut painter = FrameBufferPainter::new(fb).with_lang(lang);
+        for position in [previous_position, current_position] {
+            painter.draw_pixel_rect(
+                position.tx * TILE_SIZE,
+                position.ty * TILE_SIZE,
+                TILE_SIZE,
+                TILE_SIZE + 1,
+                pokered_ui::Rgba::INK_WHITE,
+            );
+        }
+        if source_index == Some(previous_cursor) && previous_cursor != current_cursor {
+            let source = &cursor_defs[1];
+            painter.draw_glyph(
+                previous_position,
+                source.glyph,
+                pokered_ui::Rgba::INK_DARK_GRAY,
+            );
+        }
+        let selected = &cursor_defs[0];
+        painter.draw_glyph(
+            current_position,
+            selected.glyph,
+            pokered_ui::Rgba::INK_BLACK,
+        );
+    }
+
+    draw_top_level_party_icon_at(
+        state,
+        previous_cursor,
+        IconFrame::Frame1,
+        resources.as_deref_mut(),
+        fb,
+    );
+    draw_top_level_party_icon_at(
+        state,
+        current_cursor,
+        IconFrame::from_counter(frame_counter, 16),
+        resources,
+        fb,
+    );
+
+    if matches!(state.phase(), PartyScreenPhase::SwitchTarget { .. }) {
+        let mut painter = FrameBufferPainter::new(fb).with_lang(lang);
+        menus::party::draw_overlay(state, &mut Ui::new(&mut painter), lang);
+    }
+}
+
+/// Repaint only the changed cursor cells of an action/choose-move overlay.
+#[cfg(any(test, target_os = "none"))]
+pub fn redraw_top_level_party_overlay_cursor(
+    state: &PartyScreenState,
+    previous_cursor: u8,
+    current_cursor: u8,
+    fb: &mut FrameBuffer,
+    lang: Lang,
+) {
+    let Some(previous) = menus::party::overlay_cursor_position(state, previous_cursor, lang) else {
+        return;
+    };
+    let Some(current) = menus::party::overlay_cursor_position(state, current_cursor, lang) else {
+        return;
+    };
+    let mut painter = FrameBufferPainter::new(fb).with_lang(lang);
+    painter.draw_pixel_rect(
+        previous.tx * TILE_SIZE,
+        previous.ty * TILE_SIZE,
+        TILE_SIZE,
+        TILE_SIZE + 1,
+        pokered_ui::Rgba::INK_WHITE,
+    );
+    painter.draw_glyph(current, '▶', pokered_ui::Rgba::INK_BLACK);
 }
 
 /// Draw the stats/details screen. Renders the text UI (name, level, HP
@@ -417,7 +585,11 @@ mod tests {
         BattleAnimation, BattleStyle, GameOptions, OptionsMenuState, OptionsRow, TextSpeed,
     };
     use pokered_core::save_menu::{SavePhase, SaveScreenInfo};
+    use pokered_core::party_screen::{PartyScreenInput, PartyScreenState};
+    use pokered_core::pokemon::stats::create_pokemon;
     use pokered_data::items::ItemId;
+    use pokered_data::species::Species;
+    use pokered_renderer::resource::AssetRoot;
     use pokered_renderer::Rgba;
 
     fn assert_framebuffers_equal(actual: &FrameBuffer, expected: &FrameBuffer) {
@@ -653,6 +825,178 @@ mod tests {
                     assert_framebuffers_equal(&actual, &expected);
                 }
             }
+        }
+    }
+
+    fn top_level_party() -> PartyScreenState {
+        PartyScreenState::new(vec![
+            create_pokemon(Species::Bulbasaur, 20, [0xFF, 0xFF]).unwrap(),
+            create_pokemon(Species::Charmander, 20, [0xFF, 0xFF]).unwrap(),
+            create_pokemon(Species::Squirtle, 20, [0xFF, 0xFF]).unwrap(),
+            create_pokemon(Species::Pikachu, 20, [0xFF, 0xFF]).unwrap(),
+            create_pokemon(Species::Pidgey, 20, [0xFF, 0xFF]).unwrap(),
+            create_pokemon(Species::Rattata, 20, [0xFF, 0xFF]).unwrap(),
+        ])
+    }
+
+    fn party_input(up: bool, down: bool, a: bool) -> PartyScreenInput {
+        PartyScreenInput {
+            up,
+            down,
+            a,
+            b: false,
+        }
+    }
+
+    #[test]
+    fn top_level_party_icon_repaint_matches_fresh_draws_in_browsing_and_switch_hint() {
+        let config = dotzuki_engine::render_config::RenderConfig::new(160, 144);
+        let root = AssetRoot::auto_detect().expect("test graphics");
+        let mut resources = ResourceManager::new(root);
+
+        for language in [Lang::En, Lang::Zh] {
+            let browsing = top_level_party();
+            let mut actual = FrameBuffer::new(config, Rgba::BLACK);
+            draw_party_screen(&browsing, Some(&mut resources), 0, &mut actual, language);
+            redraw_top_level_party_icon(
+                &browsing,
+                16,
+                Some(&mut resources),
+                &mut actual,
+                language,
+            );
+            let mut expected = FrameBuffer::new(config, Rgba::BLACK);
+            draw_party_screen(&browsing, Some(&mut resources), 16, &mut expected, language);
+            assert_framebuffers_equal(&actual, &expected);
+
+            // Select the bottom row, then enter SWITCH so its icon overlaps
+            // the hint overlay. Incremental animation must restore the hint.
+            let mut switching = top_level_party();
+            for _ in 0..5 {
+                switching.update_frame(party_input(false, true, false));
+            }
+            switching.update_frame(party_input(false, false, true));
+            switching.update_frame(party_input(false, true, false));
+            switching.update_frame(party_input(false, false, true));
+            assert!(matches!(
+                switching.phase(),
+                PartyScreenPhase::SwitchTarget { source_index: 5 }
+            ));
+
+            let mut actual = FrameBuffer::new(config, Rgba::BLACK);
+            draw_party_screen(&switching, Some(&mut resources), 0, &mut actual, language);
+            redraw_top_level_party_icon(
+                &switching,
+                16,
+                Some(&mut resources),
+                &mut actual,
+                language,
+            );
+            let mut expected = FrameBuffer::new(config, Rgba::BLACK);
+            draw_party_screen(&switching, Some(&mut resources), 16, &mut expected, language);
+            assert_framebuffers_equal(&actual, &expected);
+        }
+    }
+
+    #[test]
+    fn top_level_party_selection_repaint_matches_fresh_draws() {
+        let config = dotzuki_engine::render_config::RenderConfig::new(160, 144);
+        let root = AssetRoot::auto_detect().expect("test graphics");
+        let mut resources = ResourceManager::new(root);
+
+        for language in [Lang::En, Lang::Zh] {
+            for previous_cursor in 0..6 {
+                for down in [false, true] {
+                    if (!down && previous_cursor == 0) || (down && previous_cursor == 5) {
+                        continue;
+                    }
+                    let mut state = top_level_party();
+                    for _ in 0..previous_cursor {
+                        state.update_frame(party_input(false, true, false));
+                    }
+                    let mut actual = FrameBuffer::new(config, Rgba::BLACK);
+                    draw_party_screen(&state, Some(&mut resources), 0, &mut actual, language);
+                    state.update_frame(party_input(!down, down, false));
+                    redraw_top_level_party_selection(
+                        &state,
+                        previous_cursor,
+                        16,
+                        Some(&mut resources),
+                        &mut actual,
+                        language,
+                    );
+
+                    let mut expected = FrameBuffer::new(config, Rgba::BLACK);
+                    draw_party_screen(&state, Some(&mut resources), 16, &mut expected, language);
+                    assert_framebuffers_equal(&actual, &expected);
+                }
+            }
+
+            // In SWITCH mode the old source row changes from the selected
+            // arrow to the diamond marker when the cursor leaves it.
+            let mut switching = top_level_party();
+            switching.update_frame(party_input(false, false, true));
+            switching.update_frame(party_input(false, true, false));
+            switching.update_frame(party_input(false, false, true));
+            let mut actual = FrameBuffer::new(config, Rgba::BLACK);
+            draw_party_screen(&switching, Some(&mut resources), 0, &mut actual, language);
+            switching.update_frame(party_input(false, true, false));
+            redraw_top_level_party_selection(
+                &switching,
+                0,
+                16,
+                Some(&mut resources),
+                &mut actual,
+                language,
+            );
+            let mut expected = FrameBuffer::new(config, Rgba::BLACK);
+            draw_party_screen(&switching, Some(&mut resources), 16, &mut expected, language);
+            assert_framebuffers_equal(&actual, &expected);
+        }
+    }
+
+    #[test]
+    fn top_level_party_overlay_cursor_repaint_matches_fresh_draws() {
+        let config = dotzuki_engine::render_config::RenderConfig::new(160, 144);
+        let root = AssetRoot::auto_detect().expect("test graphics");
+        let mut resources = ResourceManager::new(root);
+
+        for language in [Lang::En, Lang::Zh] {
+            let mut action = top_level_party();
+            action.update_frame(party_input(false, false, true));
+            let mut actual = FrameBuffer::new(config, Rgba::BLACK);
+            draw_party_screen(&action, Some(&mut resources), 0, &mut actual, language);
+            action.update_frame(party_input(false, true, false));
+            redraw_top_level_party_icon(
+                &action,
+                16,
+                Some(&mut resources),
+                &mut actual,
+                language,
+            );
+            redraw_top_level_party_overlay_cursor(&action, 0, 1, &mut actual, language);
+            let mut expected = FrameBuffer::new(config, Rgba::BLACK);
+            draw_party_screen(&action, Some(&mut resources), 16, &mut expected, language);
+            assert_framebuffers_equal(&actual, &expected);
+
+            let mut choose = PartyScreenState::new_for_move_choice(
+                top_level_party().party().to_vec(),
+                0,
+            );
+            let mut actual = FrameBuffer::new(config, Rgba::BLACK);
+            draw_party_screen(&choose, Some(&mut resources), 0, &mut actual, language);
+            choose.update_frame(party_input(false, true, false));
+            redraw_top_level_party_icon(
+                &choose,
+                16,
+                Some(&mut resources),
+                &mut actual,
+                language,
+            );
+            redraw_top_level_party_overlay_cursor(&choose, 0, 1, &mut actual, language);
+            let mut expected = FrameBuffer::new(config, Rgba::BLACK);
+            draw_party_screen(&choose, Some(&mut resources), 16, &mut expected, language);
+            assert_framebuffers_equal(&actual, &expected);
         }
     }
 

@@ -18,6 +18,7 @@ use pokered_core::game_state::{GameScreen, Lang};
 use pokered_core::gamefreak_splash::SplashPhase;
 use pokered_core::oak_speech::{entrance_frames, OakSpeechPhase};
 use pokered_core::overworld::screen::WarpFadeState;
+use pokered_core::party_screen::{PartyScreenMode, PartyScreenPhase};
 use pokered_core::save_menu::{SavePhase, YesNoChoice};
 use pokered_core::title_screen::{TitlePhase, TitleScreenState};
 use pokered_data::species::Species;
@@ -1154,6 +1155,116 @@ impl BagVisualKey {
     }
 }
 
+#[derive(Clone, Copy, PartialEq, Eq)]
+struct PartyVisualKey {
+    cursor: usize,
+    phase: PartyScreenPhase,
+    mode: PartyScreenMode,
+    party_hash: u32,
+    icon_frame: u8,
+    language: Lang,
+}
+
+impl PartyVisualKey {
+    fn new(game: &PokemonGame) -> Self {
+        let state = &game.party_screen;
+        let mut party_hash = 0x811c_9dc5;
+        hash_u16(&mut party_hash, state.party().len() as u16);
+        for pokemon in state.party() {
+            hash_byte(&mut party_hash, pokemon.species as u8);
+            for &byte in &pokemon.nickname {
+                hash_byte(&mut party_hash, byte);
+            }
+            hash_byte(&mut party_hash, pokemon.level);
+            hash_u16(&mut party_hash, pokemon.hp);
+            hash_u16(&mut party_hash, pokemon.max_hp);
+            match pokemon.status {
+                StatusCondition::None => hash_byte(&mut party_hash, 0),
+                StatusCondition::Sleep(turns) => {
+                    hash_byte(&mut party_hash, 1);
+                    hash_byte(&mut party_hash, turns);
+                }
+                StatusCondition::Poison => hash_byte(&mut party_hash, 2),
+                StatusCondition::Burn => hash_byte(&mut party_hash, 3),
+                StatusCondition::Freeze => hash_byte(&mut party_hash, 4),
+                StatusCondition::Paralysis => hash_byte(&mut party_hash, 5),
+            }
+            for &move_id in &pokemon.moves {
+                hash_byte(&mut party_hash, move_id as u8);
+            }
+        }
+        Self {
+            cursor: state.cursor(),
+            phase: state.phase(),
+            mode: state.mode(),
+            party_hash,
+            icon_frame: if state.party().is_empty() {
+                0
+            } else {
+                ((game.frame_count / 16) & 1) as u8
+            },
+            language: game.state.config.language,
+        }
+    }
+
+    fn icon_animation_change_from(&self, previous: &Self) -> bool {
+        if self.icon_frame == previous.icon_frame {
+            return false;
+        }
+        let mut current_without_frame = *self;
+        current_without_frame.icon_frame = 0;
+        let mut previous_without_frame = *previous;
+        previous_without_frame.icon_frame = 0;
+        current_without_frame == previous_without_frame
+    }
+
+    fn selection_change_from(&self, previous: &Self) -> Option<usize> {
+        if self.cursor == previous.cursor
+            || self.phase != previous.phase
+            || !matches!(
+                self.phase,
+                PartyScreenPhase::Browsing | PartyScreenPhase::SwitchTarget { .. }
+            )
+        {
+            return None;
+        }
+        let mut current_without_selection = *self;
+        current_without_selection.cursor = 0;
+        current_without_selection.icon_frame = 0;
+        let mut previous_without_selection = *previous;
+        previous_without_selection.cursor = 0;
+        previous_without_selection.icon_frame = 0;
+        (current_without_selection == previous_without_selection).then_some(previous.cursor)
+    }
+
+    fn overlay_cursor_change_from(&self, previous: &Self) -> Option<(u8, u8, bool)> {
+        let (old_cursor, current_cursor, normalized_phase) = match (previous.phase, self.phase) {
+            (
+                PartyScreenPhase::ActionMenu { cursor: old },
+                PartyScreenPhase::ActionMenu { cursor: current },
+            ) => (old, current, PartyScreenPhase::ActionMenu { cursor: 0 }),
+            (
+                PartyScreenPhase::ChooseMove { cursor: old },
+                PartyScreenPhase::ChooseMove { cursor: current },
+            ) => (old, current, PartyScreenPhase::ChooseMove { cursor: 0 }),
+            _ => return None,
+        };
+        if old_cursor == current_cursor {
+            return None;
+        }
+
+        let icon_changed = self.icon_frame != previous.icon_frame;
+        let mut current_without_cursor = *self;
+        current_without_cursor.phase = normalized_phase;
+        current_without_cursor.icon_frame = 0;
+        let mut previous_without_cursor = *previous;
+        previous_without_cursor.phase = normalized_phase;
+        previous_without_cursor.icon_frame = 0;
+        (current_without_cursor == previous_without_cursor)
+            .then_some((old_cursor, current_cursor, icon_changed))
+    }
+}
+
 impl Mode4Presenter {
     fn new(fb: &FrameBuffer) -> Self {
         // Both pages retain the fixed index-3 border; subsequent presents
@@ -1458,6 +1569,7 @@ fn game_main() -> ! {
     let mut last_options: Option<OptionsVisualKey> = None;
     let mut last_save: Option<SaveVisualKey> = None;
     let mut last_bag: Option<BagVisualKey> = None;
+    let mut last_party: Option<PartyVisualKey> = None;
     let mut last_oak: Option<OakVisualKey> = None;
     let mut last_overworld: Option<OverworldVisualKey> = None;
     let mut last_battle: Option<BattleVisualKey> = None;
@@ -1591,6 +1703,20 @@ fn game_main() -> ! {
             .as_ref()
             .zip(last_bag.as_ref())
             .and_then(|(current, previous)| current.quantity_change_from(previous));
+        let party = (game.state.screen == GameScreen::PartyScreen)
+            .then(|| PartyVisualKey::new(game));
+        let party_selection_change = party
+            .as_ref()
+            .zip(last_party.as_ref())
+            .and_then(|(current, previous)| current.selection_change_from(previous));
+        let party_overlay_cursor_change = party
+            .as_ref()
+            .zip(last_party.as_ref())
+            .and_then(|(current, previous)| current.overlay_cursor_change_from(previous));
+        let party_icon_animation_change = party
+            .as_ref()
+            .zip(last_party.as_ref())
+            .is_some_and(|(current, previous)| current.icon_animation_change_from(previous));
         let oak_screen = game.state.screen == GameScreen::OakSpeech;
         let oak = oak_screen.then(|| OakVisualKey::new(game)).flatten();
         let overworld_screen = game.state.screen == GameScreen::Overworld;
@@ -1641,6 +1767,8 @@ fn game_main() -> ! {
             save != last_save
         } else if bag.is_some() {
             bag != last_bag
+        } else if party.is_some() {
+            party != last_party
         } else if oak_screen {
             oak.as_ref().map_or(true, |key| last_oak.as_ref() != Some(key))
         } else if overworld_screen {
@@ -1700,6 +1828,42 @@ fn game_main() -> ! {
                 pokered_app::render::redraw_top_level_bag_quantity(
                     previous,
                     current,
+                    &mut fb,
+                    game.state.config.language,
+                );
+            } else if let Some(previous_cursor) = party_selection_change {
+                pokered_app::render::redraw_top_level_party_selection(
+                    &game.party_screen,
+                    previous_cursor,
+                    game.frame_count,
+                    game.resources.as_mut(),
+                    &mut fb,
+                    game.state.config.language,
+                );
+            } else if let Some((previous, current, icon_changed)) =
+                party_overlay_cursor_change
+            {
+                if icon_changed {
+                    pokered_app::render::redraw_top_level_party_icon(
+                        &game.party_screen,
+                        game.frame_count,
+                        game.resources.as_mut(),
+                        &mut fb,
+                        game.state.config.language,
+                    );
+                }
+                pokered_app::render::redraw_top_level_party_overlay_cursor(
+                    &game.party_screen,
+                    previous,
+                    current,
+                    &mut fb,
+                    game.state.config.language,
+                );
+            } else if party_icon_animation_change {
+                pokered_app::render::redraw_top_level_party_icon(
+                    &game.party_screen,
+                    game.frame_count,
+                    game.resources.as_mut(),
                     &mut fb,
                     game.state.config.language,
                 );
@@ -1816,6 +1980,34 @@ fn game_main() -> ! {
             });
             let bag_quantity_damage = bag_quantity_change
                 .map(|(previous, current)| [bag_quantity_damage(previous, current)]);
+            let party_selection_damage = party_selection_change.map(|previous_cursor| {
+                [
+                    party_selection_damage(previous_cursor),
+                    party_selection_damage(game.party_screen.cursor()),
+                ]
+            });
+            let party_icon_damage_rects = party_icon_animation_change
+                .then_some([party_icon_damage(game.party_screen.cursor())]);
+            let party_overlay_cursor_damage = party_overlay_cursor_change.map(
+                |(previous, current, icon_changed)| {
+                    (
+                        [
+                            party_overlay_cursor_damage(
+                                &game.party_screen,
+                                previous,
+                                game.state.config.language,
+                            ),
+                            party_overlay_cursor_damage(
+                                &game.party_screen,
+                                current,
+                                game.state.config.language,
+                            ),
+                            party_icon_damage(game.party_screen.cursor()),
+                        ],
+                        icon_changed,
+                    )
+                },
+            );
             let battle_safari_damage =
                 battle_safari_cursor_change.map(|(previous, current)| {
                     [
@@ -1874,6 +2066,12 @@ fn game_main() -> ! {
                 Some(rects.as_slice())
             } else if let Some(rects) = bag_quantity_damage.as_ref() {
                 Some(rects.as_slice())
+            } else if let Some(rects) = party_selection_damage.as_ref() {
+                Some(rects.as_slice())
+            } else if let Some((rects, icon_changed)) = party_overlay_cursor_damage.as_ref() {
+                Some(&rects[..if *icon_changed { 3 } else { 2 }])
+            } else if let Some(rects) = party_icon_damage_rects.as_ref() {
+                Some(rects.as_slice())
             } else if let Some(rects) = battle_safari_damage.as_ref() {
                 Some(rects.as_slice())
             } else if let Some(rects) = battle_menu_damage.as_ref() {
@@ -1905,6 +2103,7 @@ fn game_main() -> ! {
         last_options = options;
         last_save = save;
         last_bag = bag;
+        last_party = party;
         last_oak = oak;
         last_overworld = overworld;
         last_battle = battle;
@@ -2116,5 +2315,41 @@ fn bag_quantity_damage(previous: u32, current: u32) -> FrameDamageRect {
         y: 15 * 8,
         width: text_width(previous).max(text_width(current)),
         height: 10,
+    }
+}
+
+#[inline]
+fn party_selection_damage(cursor: usize) -> FrameDamageRect {
+    FrameDamageRect {
+        x: 0,
+        y: cursor as u32 * 24,
+        width: 24,
+        height: 16,
+    }
+}
+
+#[inline]
+fn party_icon_damage(cursor: usize) -> FrameDamageRect {
+    FrameDamageRect {
+        x: 8,
+        y: cursor as u32 * 24,
+        width: 16,
+        height: 16,
+    }
+}
+
+#[inline]
+fn party_overlay_cursor_damage(
+    state: &pokered_core::party_screen::PartyScreenState,
+    cursor: u8,
+    language: Lang,
+) -> FrameDamageRect {
+    let position = pokered_ui::menus::party::overlay_cursor_position(state, cursor, language)
+        .unwrap_or(TilePos::new(0, 0));
+    FrameDamageRect {
+        x: position.tx * 8,
+        y: position.ty * 8,
+        width: 8,
+        height: 9,
     }
 }

@@ -195,9 +195,32 @@ fn draw_entry<P: Painter>(
     }
 }
 
+fn action_menu_rect(field_moves: &[pokered_data::moves::MoveId], items: &[&str]) -> TileRect {
+    let n = field_moves.len() as u32;
+    let base = &PARTY_ACTION_MENU_LAYOUT.box_0.rect;
+    if n == 0 {
+        return *base;
+    }
+
+    // With field moves the original grows the box 2 rows per move and shifts
+    // it left when a long name (STRENGTH/TELEPORT) is listed
+    // (FieldMoveDisplayData "leftmost tile", text_box.asm).
+    let leftmost = field_moves
+        .iter()
+        .filter_map(|m| hm_effects::field_move_menu_leftmost(*m))
+        .min()
+        .unwrap_or(0x0C) as u32;
+    let width = menu_width(items).max(base.tx + base.tw - (leftmost - 1));
+    TileRect::new(
+        base.tx + base.tw - width,
+        base.ty - 2 * n,
+        width,
+        base.th + 2 * n,
+    )
+}
+
 fn draw_action_menu<P: Painter>(ui: &mut Ui<P>, state: &PartyScreenState, menu_cursor: u8, is_zh: bool) {
     let field_moves = state.selected_field_moves();
-    let n = field_moves.len() as u32;
 
     // Menu entries: usable field moves first (Gen-1 order), then
     // STATS / SWITCH / CANCEL — mirrors DisplayFieldMoveMonMenu.
@@ -209,31 +232,7 @@ fn draw_action_menu<P: Painter>(ui: &mut Ui<P>, state: &PartyScreenState, menu_c
     items.push(lang_data::ui_label("SWITCH", is_zh));
     items.push(lang_data::ui_label("CANCEL", is_zh));
 
-    if n == 0 {
-        // No field moves: the fixed 3-entry box from the layout file.
-        let box_def = &PARTY_ACTION_MENU_LAYOUT.box_0;
-        ui.text_box(box_def.rect, box_def.color, true, |frame| {
-            frame.menu_list(0, 0, &items, menu_cursor as usize, 2, InkColor::Black);
-        });
-        return;
-    }
-
-    // With field moves the original grows the box 2 rows per move and shifts
-    // it left when a long name (STRENGTH/TELEPORT) is listed
-    // (FieldMoveDisplayData "leftmost tile", text_box.asm).
-    let leftmost = field_moves
-        .iter()
-        .filter_map(|m| hm_effects::field_move_menu_leftmost(*m))
-        .min()
-        .unwrap_or(0x0C) as u32;
-    let base = &PARTY_ACTION_MENU_LAYOUT.box_0.rect;
-    let width = menu_width(&items).max(base.tx + base.tw - (leftmost - 1));
-    let rect = TileRect::new(
-        base.tx + base.tw - width,
-        base.ty - 2 * n,
-        width,
-        base.th + 2 * n,
-    );
+    let rect = action_menu_rect(&field_moves, &items);
     ui.text_box(rect, InkColor::Black, true, |frame| {
         frame.menu_list(0, 0, &items, menu_cursor as usize, 2, InkColor::Black);
     });
@@ -259,21 +258,55 @@ fn draw_move_choice<P: Painter>(ui: &mut Ui<P>, state: &PartyScreenState, move_c
         .collect();
     items.push(lang_data::ui_label("CANCEL", is_zh));
 
-    let extra_rows = (items.len() as u32).saturating_sub(3);
+    let rect = move_choice_rect(items.len());
+    ui.text_box(rect, InkColor::Black, true, |frame| {
+        frame.menu_list(0, 0, &items, move_cursor as usize, 2, InkColor::Black);
+    });
+}
+
+fn move_choice_rect(item_count: usize) -> TileRect {
+    let extra_rows = (item_count as u32).saturating_sub(3);
     let base = &PARTY_ACTION_MENU_LAYOUT.box_0.rect;
     // Original learn_move.asm:123: the move-choice menu is its OWN box at
     // column 4 with an interior 14 tiles wide — the narrow action-menu box
     // truncated LEECH SEED / POISONPOWDER past the border (audit:
     // cut-forget-menu.png).
-    let rect = TileRect::new(
+    TileRect::new(
         4,
         base.ty - 2 * extra_rows,
         16,
         base.th + 2 * extra_rows,
-    );
-    ui.text_box(rect, InkColor::Black, true, |frame| {
-        frame.menu_list(0, 0, &items, move_cursor as usize, 2, InkColor::Black);
-    });
+    )
+}
+
+/// Return the screen-absolute cursor cell for an action/choose-move overlay.
+pub fn overlay_cursor_position(
+    state: &PartyScreenState,
+    cursor: u8,
+    lang: Lang,
+) -> Option<crate::engine::TilePos> {
+    let is_zh = lang == Lang::Zh;
+    let rect = match state.phase() {
+        PartyScreenPhase::ActionMenu { .. } => {
+            let field_moves = state.selected_field_moves();
+            let mut items: Vec<&str> = field_moves
+                .iter()
+                .map(|m| lang_data::move_name(*m, is_zh))
+                .collect();
+            items.push(lang_data::ui_label("STATS", is_zh));
+            items.push(lang_data::ui_label("SWITCH", is_zh));
+            items.push(lang_data::ui_label("CANCEL", is_zh));
+            action_menu_rect(&field_moves, &items)
+        }
+        PartyScreenPhase::ChooseMove { .. } => {
+            move_choice_rect(state.selected_known_moves().len() + 1)
+        }
+        _ => return None,
+    };
+    Some(crate::engine::TilePos::new(
+        rect.tx + 1,
+        rect.ty + 1 + cursor as u32 * 2,
+    ))
 }
 
 #[cfg(test)]
