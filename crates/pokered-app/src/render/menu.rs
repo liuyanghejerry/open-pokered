@@ -383,7 +383,6 @@ pub fn draw_stats_screen(
     let species_display = format!("{}", pokemon.species);
     let sprite_name = species_to_sprite_name(&species_display);
     let drew_front = if let Ok(cached) = rm.load_pokemon_front(&sprite_name) {
-        let ts = cached.tileset.clone();
         let w_tiles = cached.source_size.0 / TILE_SIZE;
         let max_w = 7u32;
         let x_off = ((max_w.saturating_sub(w_tiles)) / 2) * TILE_SIZE;
@@ -395,7 +394,14 @@ pub fn draw_stats_screen(
             StatsPage::Stats => 0,
             StatsPage::Moves => TILE_SIZE / 2,
         };
-        blit_tileset(fb, &ts, px, py, w_tiles, &GRAYSCALE_SPRITE_PALETTE);
+        blit_tileset(
+            fb,
+            &cached.tileset,
+            px,
+            py,
+            w_tiles,
+            &GRAYSCALE_SPRITE_PALETTE,
+        );
         true
     } else {
         false

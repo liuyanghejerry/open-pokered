@@ -20,6 +20,7 @@ use pokered_core::oak_speech::{entrance_frames, OakSpeechPhase};
 use pokered_core::overworld::screen::WarpFadeState;
 use pokered_core::party_screen::{PartyScreenMode, PartyScreenPhase};
 use pokered_core::save_menu::{SavePhase, YesNoChoice};
+use pokered_core::stats_screen::StatsPage;
 use pokered_core::title_screen::{TitlePhase, TitleScreenState};
 use pokered_data::species::Species;
 use pokered_renderer::input::{GbButton, InputState};
@@ -1265,6 +1266,64 @@ impl PartyVisualKey {
     }
 }
 
+#[derive(Clone, Copy, PartialEq, Eq)]
+struct StatsVisualKey {
+    page: StatsPage,
+    pokemon_hash: u32,
+    language: Lang,
+}
+
+impl StatsVisualKey {
+    fn new(game: &PokemonGame) -> Option<Self> {
+        let state = game.stats_screen.as_ref()?;
+        let pokemon = state.pokemon();
+        let mut pokemon_hash = 0x811c_9dc5;
+        hash_byte(&mut pokemon_hash, pokemon.species as u8);
+        for &byte in &pokemon.nickname {
+            hash_byte(&mut pokemon_hash, byte);
+        }
+        hash_byte(&mut pokemon_hash, pokemon.level);
+        hash_u16(&mut pokemon_hash, pokemon.hp);
+        hash_u16(&mut pokemon_hash, pokemon.max_hp);
+        hash_u16(&mut pokemon_hash, pokemon.attack);
+        hash_u16(&mut pokemon_hash, pokemon.defense);
+        hash_u16(&mut pokemon_hash, pokemon.speed);
+        hash_u16(&mut pokemon_hash, pokemon.special);
+        hash_byte(&mut pokemon_hash, pokemon.type1 as u8);
+        hash_byte(&mut pokemon_hash, pokemon.type2 as u8);
+        for &move_id in &pokemon.moves {
+            hash_byte(&mut pokemon_hash, move_id as u8);
+        }
+        for &pp in &pokemon.pp {
+            hash_byte(&mut pokemon_hash, pp);
+        }
+        for &pp_ups in &pokemon.pp_ups {
+            hash_byte(&mut pokemon_hash, pp_ups);
+        }
+        match pokemon.status {
+            StatusCondition::None => hash_byte(&mut pokemon_hash, 0),
+            StatusCondition::Sleep(turns) => {
+                hash_byte(&mut pokemon_hash, 1);
+                hash_byte(&mut pokemon_hash, turns);
+            }
+            StatusCondition::Poison => hash_byte(&mut pokemon_hash, 2),
+            StatusCondition::Burn => hash_byte(&mut pokemon_hash, 3),
+            StatusCondition::Freeze => hash_byte(&mut pokemon_hash, 4),
+            StatusCondition::Paralysis => hash_byte(&mut pokemon_hash, 5),
+        }
+        hash_u32(&mut pokemon_hash, pokemon.total_exp);
+        hash_u16(&mut pokemon_hash, pokemon.ot_id);
+        for &byte in &pokemon.ot_name {
+            hash_byte(&mut pokemon_hash, byte);
+        }
+        Some(Self {
+            page: state.page(),
+            pokemon_hash,
+            language: game.state.config.language,
+        })
+    }
+}
+
 impl Mode4Presenter {
     fn new(fb: &FrameBuffer) -> Self {
         // Both pages retain the fixed index-3 border; subsequent presents
@@ -1570,6 +1629,7 @@ fn game_main() -> ! {
     let mut last_save: Option<SaveVisualKey> = None;
     let mut last_bag: Option<BagVisualKey> = None;
     let mut last_party: Option<PartyVisualKey> = None;
+    let mut last_stats: Option<StatsVisualKey> = None;
     let mut last_oak: Option<OakVisualKey> = None;
     let mut last_overworld: Option<OverworldVisualKey> = None;
     let mut last_battle: Option<BattleVisualKey> = None;
@@ -1717,6 +1777,9 @@ fn game_main() -> ! {
             .as_ref()
             .zip(last_party.as_ref())
             .is_some_and(|(current, previous)| current.icon_animation_change_from(previous));
+        let stats = matches!(game.state.screen, GameScreen::PokemonStatsScreen(_))
+            .then(|| StatsVisualKey::new(game))
+            .flatten();
         let oak_screen = game.state.screen == GameScreen::OakSpeech;
         let oak = oak_screen.then(|| OakVisualKey::new(game)).flatten();
         let overworld_screen = game.state.screen == GameScreen::Overworld;
@@ -1769,6 +1832,8 @@ fn game_main() -> ! {
             bag != last_bag
         } else if party.is_some() {
             party != last_party
+        } else if stats.is_some() {
+            stats != last_stats
         } else if oak_screen {
             oak.as_ref().map_or(true, |key| last_oak.as_ref() != Some(key))
         } else if overworld_screen {
@@ -2104,6 +2169,7 @@ fn game_main() -> ! {
         last_save = save;
         last_bag = bag;
         last_party = party;
+        last_stats = stats;
         last_oak = oak;
         last_overworld = overworld;
         last_battle = battle;
