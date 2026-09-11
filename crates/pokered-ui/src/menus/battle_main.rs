@@ -4,9 +4,9 @@ use pokered_core::game_state::Lang;
 use pokered_data::ui_layout::schema::get_screen_v2_json;
 use pokered_data::ui_layout::schema::BattleMainDefaultLayout;
 
-use crate::engine::{Painter, Ui};
+use crate::engine::{Painter, Rgba, TilePos, Ui};
 #[cfg(any(test, target_os = "none"))]
-use crate::engine::{Rgba, TilePos, TileRect};
+use crate::engine::TileRect;
 #[cfg(not(target_os = "none"))]
 use crate::v2::{self, DataContext};
 
@@ -76,12 +76,37 @@ fn draw_compiled<P: Painter>(state: &BattleMenuState, painter: &mut P, lang: Lan
     draw_label(painter, TilePos::new(10, 16), item, lang);
     draw_label(painter, TilePos::new(16, 16), run, lang);
 
-    let cursor = TilePos::new(9 + state.col() as u32 * 6, 14 + state.row() as u32 * 2);
+    draw_cursor(painter, cursor_position(state.row(), state.col()), lang);
+}
+
+fn cursor_position(row: usize, col: usize) -> TilePos {
+    TilePos::new(9 + col as u32 * 6, 14 + row as u32 * 2)
+}
+
+fn draw_cursor<P: Painter>(painter: &mut P, cursor: TilePos, lang: Lang) {
     if lang == Lang::Zh && painter.supports_proportional() {
         painter.draw_text_px(cursor.tx * 8, cursor.ty * 8, "▶", Rgba::INK_BLACK);
     } else {
         painter.draw_glyph(cursor, '▶', Rgba::INK_BLACK);
     }
+}
+
+/// Repaint only the changed cursor cells of an already-rendered compiled
+/// battle action menu.
+///
+/// The fallback arrow's ink fits within the cursor's 8-pixel-wide tile and
+/// extends one pixel into the following tile row. Both affected regions are
+/// plain menu paper, so restoring the old 8×9 cell before drawing the new
+/// cursor is pixel-identical to rebuilding the complete menu.
+pub fn redraw_cursor<P: Painter>(
+    previous: (usize, usize),
+    state: &BattleMenuState,
+    painter: &mut P,
+    lang: Lang,
+) {
+    let old = cursor_position(previous.0, previous.1);
+    painter.draw_pixel_rect(old.tx * 8, old.ty * 8, 8, 9, Rgba::INK_WHITE);
+    draw_cursor(painter, cursor_position(state.row(), state.col()), lang);
 }
 
 #[cfg(any(test, target_os = "none"))]

@@ -484,6 +484,36 @@ impl BattleVisualKey {
             message_hash,
         })
     }
+
+    /// Return the old and new cursor positions when every visible battle
+    /// field is unchanged except the regular 2×2 PlayerMenu cursor.
+    fn player_menu_cursor_change_from(
+        &self,
+        previous: &Self,
+    ) -> Option<((usize, usize), (usize, usize))> {
+        let (
+            ReusableBattlePhase::PlayerMenu { row, col },
+            ReusableBattlePhase::PlayerMenu {
+                row: previous_row,
+                col: previous_col,
+            },
+        ) = (self.phase, previous.phase)
+        else {
+            return None;
+        };
+        if (row, col) == (previous_row, previous_col) {
+            return None;
+        }
+
+        let mut current_without_cursor = *self;
+        current_without_cursor.phase = ReusableBattlePhase::PlayerMenu { row: 0, col: 0 };
+        let mut previous_without_cursor = *previous;
+        previous_without_cursor.phase = ReusableBattlePhase::PlayerMenu { row: 0, col: 0 };
+        (current_without_cursor == previous_without_cursor).then_some((
+            (previous_row, previous_col),
+            (row, col),
+        ))
+    }
 }
 
 #[derive(Clone, Copy, PartialEq, Eq)]
@@ -1009,6 +1039,10 @@ fn game_main() -> ! {
             .flatten();
         let battle_screen = game.state.screen == GameScreen::Battle;
         let battle = battle_screen.then(|| BattleVisualKey::new(game)).flatten();
+        let battle_menu_cursor_change = battle
+            .as_ref()
+            .zip(last_battle.as_ref())
+            .and_then(|(current, previous)| current.player_menu_cursor_change_from(previous));
         let redraw = if static_splash.is_some() {
             static_splash != last_static_splash
         } else if language_select.is_some() {
@@ -1029,19 +1063,38 @@ fn game_main() -> ! {
             true
         };
         if redraw {
-            game.draw_gba(
-                &mut fb,
-                &mut overworld_background_cache,
-                &mut dma3_scroll_indices,
-                overworld.is_some(),
-            );
+            if let Some((previous, _)) = battle_menu_cursor_change {
+                pokered_app::render::redraw_battle_main_menu_cursor(
+                    previous,
+                    &game.battle.battle_menu,
+                    &mut fb,
+                    game.state.config.language,
+                );
+            } else {
+                game.draw_gba(
+                    &mut fb,
+                    &mut overworld_background_cache,
+                    &mut dma3_scroll_indices,
+                    overworld.is_some(),
+                );
+            }
         }
         #[cfg(feature = "profiling")]
         let mark3 = profile_now();
         if redraw {
-            let damage = overworld_background_cache
-                .as_ref()
-                .and_then(|cache| cache.presentation_damage());
+            let battle_menu_damage = battle_menu_cursor_change.map(|(previous, current)| {
+                [
+                    battle_menu_cursor_damage(previous),
+                    battle_menu_cursor_damage(current),
+                ]
+            });
+            let damage = if let Some(rects) = battle_menu_damage.as_ref() {
+                Some(rects.as_slice())
+            } else {
+                overworld_background_cache
+                    .as_ref()
+                    .and_then(|cache| cache.presentation_damage())
+            };
             presenter.present(&fb, damage);
         } else {
             presenter.sync_hidden(&fb);
@@ -1100,5 +1153,15 @@ fn game_main() -> ! {
         if first_frame_pending && updates > 0 {
             agb::println!("pokered-gba: first frame done");
         }
+    }
+}
+
+#[inline]
+fn battle_menu_cursor_damage((row, col): (usize, usize)) -> FrameDamageRect {
+    FrameDamageRect {
+        x: (9 + col as u32 * 6) * 8,
+        y: (14 + row as u32 * 2) * 8,
+        width: 8,
+        height: 9,
     }
 }

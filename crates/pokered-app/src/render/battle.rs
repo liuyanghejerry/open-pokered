@@ -2878,6 +2878,35 @@ pub fn draw_battle(
     }
 }
 
+/// Repaint only the changed cursor cells of an already-rendered battle action
+/// menu. The caller must ensure every other visible battle field is unchanged.
+#[cfg(any(test, target_os = "none"))]
+pub fn redraw_battle_main_menu_cursor(
+    previous: (usize, usize),
+    state: &pokered_core::battle::menu::BattleMenuState,
+    fb: &mut FrameBuffer,
+    language: pokered_core::game_state::Lang,
+) {
+    let mut painter = FrameBufferPainter::new(fb).with_lang(language);
+    menus::battle_main::redraw_cursor(previous, state, &mut painter, language);
+}
+
+#[cfg(test)]
+fn draw_battle_main_menu_overlay(
+    state: &pokered_core::battle::menu::BattleMenuState,
+    fb: &mut FrameBuffer,
+    language: pokered_core::game_state::Lang,
+) {
+    let mut painter = FrameBufferPainter::new(fb).with_lang(language);
+    let mut ui = Ui::new(&mut painter);
+    menus::battle_main::draw(
+        state,
+        &BATTLE_MAIN_DEFAULT_LAYOUT,
+        &mut ui,
+        language,
+    );
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -2894,6 +2923,60 @@ mod tests {
                 );
             }
         }
+    }
+
+    #[test]
+    fn battle_main_cursor_repaint_matches_a_fresh_menu_for_every_transition() {
+        use pokered_core::battle::menu::{BattleMenuInput, BattleMenuState};
+
+        for language in [Lang::En, Lang::Zh] {
+            let config = dotzuki_engine::render_config::RenderConfig::new(160, 144);
+            let states = [
+                BattleMenuState::new(),
+                battle_menu_state_after(BattleMenuInput {
+                    right: true,
+                    ..BattleMenuInput::none()
+                }),
+                battle_menu_state_after(BattleMenuInput {
+                    down: true,
+                    ..BattleMenuInput::none()
+                }),
+                battle_menu_state_after(BattleMenuInput {
+                    right: true,
+                    down: true,
+                    ..BattleMenuInput::none()
+                }),
+            ];
+
+            for old in &states {
+                for new in &states {
+                    if (old.row(), old.col()) == (new.row(), new.col()) {
+                        continue;
+                    }
+
+                    let mut actual = FrameBuffer::new(config, Rgba::BLACK);
+                    draw_battle_main_menu_overlay(old, &mut actual, language);
+                    redraw_battle_main_menu_cursor(
+                        (old.row(), old.col()),
+                        new,
+                        &mut actual,
+                        language,
+                    );
+
+                    let mut expected = FrameBuffer::new(config, Rgba::BLACK);
+                    draw_battle_main_menu_overlay(new, &mut expected, language);
+                    assert_framebuffers_equal(&actual, &expected);
+                }
+            }
+        }
+    }
+
+    fn battle_menu_state_after(
+        input: pokered_core::battle::menu::BattleMenuInput,
+    ) -> pokered_core::battle::menu::BattleMenuState {
+        let mut state = pokered_core::battle::menu::BattleMenuState::new();
+        state.update_frame(input);
+        state
     }
 
     #[test]
