@@ -2891,6 +2891,18 @@ pub fn redraw_battle_main_menu_cursor(
     menus::battle_main::redraw_cursor(previous, state, &mut painter, language);
 }
 
+/// Repaint only the changed cursor cells of an already-rendered Safari menu.
+#[cfg(any(test, target_os = "none"))]
+pub fn redraw_battle_safari_menu_cursor(
+    previous: (usize, usize),
+    state: &pokered_core::battle::menu::SafariBattleMenuState,
+    fb: &mut FrameBuffer,
+    language: pokered_core::game_state::Lang,
+) {
+    let mut painter = FrameBufferPainter::new(fb).with_lang(language);
+    menus::battle_safari::redraw_cursor(previous, state, &mut painter);
+}
+
 /// Repaint only the cursor and selected-move information of an already-
 /// rendered battle move menu.
 #[cfg(any(test, target_os = "none"))]
@@ -2927,6 +2939,17 @@ fn draw_battle_main_menu_overlay(
         &mut ui,
         language,
     );
+}
+
+#[cfg(test)]
+fn draw_battle_safari_menu_overlay(
+    state: &pokered_core::battle::menu::SafariBattleMenuState,
+    fb: &mut FrameBuffer,
+    language: pokered_core::game_state::Lang,
+) {
+    let mut painter = FrameBufferPainter::new(fb).with_lang(language);
+    let mut ui = Ui::new(&mut painter);
+    menus::battle_safari::draw(state, &mut ui, language);
 }
 
 #[cfg(test)]
@@ -3006,6 +3029,51 @@ mod tests {
                     let mut expected = FrameBuffer::new(config, Rgba::BLACK);
                     draw_battle_main_menu_overlay(new, &mut expected, language);
                     assert_framebuffers_equal(&actual, &expected);
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn battle_safari_cursor_repaint_matches_a_fresh_menu_for_every_transition() {
+        use pokered_core::battle::menu::{BattleMenuInput, SafariBattleMenuState};
+
+        let state_at = |row: usize, col: usize| {
+            let mut state = SafariBattleMenuState::new(30);
+            state.update_frame(BattleMenuInput {
+                down: row == 1,
+                right: col == 1,
+                ..BattleMenuInput::none()
+            });
+            state
+        };
+
+        for language in [Lang::En, Lang::Zh] {
+            let config = dotzuki_engine::render_config::RenderConfig::new(160, 144);
+            for old_row in 0..2 {
+                for old_col in 0..2 {
+                    for new_row in 0..2 {
+                        for new_col in 0..2 {
+                            if (old_row, old_col) == (new_row, new_col) {
+                                continue;
+                            }
+                            let old = state_at(old_row, old_col);
+                            let new = state_at(new_row, new_col);
+
+                            let mut actual = FrameBuffer::new(config, Rgba::BLACK);
+                            draw_battle_safari_menu_overlay(&old, &mut actual, language);
+                            redraw_battle_safari_menu_cursor(
+                                (old_row, old_col),
+                                &new,
+                                &mut actual,
+                                language,
+                            );
+
+                            let mut expected = FrameBuffer::new(config, Rgba::BLACK);
+                            draw_battle_safari_menu_overlay(&new, &mut expected, language);
+                            assert_framebuffers_equal(&actual, &expected);
+                        }
+                    }
                 }
             }
         }

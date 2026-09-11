@@ -371,6 +371,7 @@ struct BattleVisualKey {
     player_balls: [PokeballSlotStatus; 6],
     enemy_balls: [PokeballSlotStatus; 6],
     ball_visibility: u8,
+    safari_balls: u8,
     battle_status3: [u8; 2],
     message_hash: u32,
 }
@@ -480,6 +481,7 @@ impl BattleVisualKey {
             enemy_balls: battle.enemy_pokeball_status,
             ball_visibility: battle.show_player_pokeballs as u8
                 | (battle.show_enemy_pokeballs as u8) << 1,
+            safari_balls: battle.safari_menu.safari_balls_remaining,
             battle_status3,
             message_hash,
         })
@@ -509,6 +511,36 @@ impl BattleVisualKey {
         current_without_cursor.phase = ReusableBattlePhase::PlayerMenu { row: 0, col: 0 };
         let mut previous_without_cursor = *previous;
         previous_without_cursor.phase = ReusableBattlePhase::PlayerMenu { row: 0, col: 0 };
+        (current_without_cursor == previous_without_cursor).then_some((
+            (previous_row, previous_col),
+            (row, col),
+        ))
+    }
+
+    /// Return the old and new cursor positions when every visible battle
+    /// field is unchanged except the Safari action-menu cursor.
+    fn safari_menu_cursor_change_from(
+        &self,
+        previous: &Self,
+    ) -> Option<((usize, usize), (usize, usize))> {
+        let (
+            ReusableBattlePhase::SafariMenu { row, col },
+            ReusableBattlePhase::SafariMenu {
+                row: previous_row,
+                col: previous_col,
+            },
+        ) = (self.phase, previous.phase)
+        else {
+            return None;
+        };
+        if (row, col) == (previous_row, previous_col) {
+            return None;
+        }
+
+        let mut current_without_cursor = *self;
+        current_without_cursor.phase = ReusableBattlePhase::SafariMenu { row: 0, col: 0 };
+        let mut previous_without_cursor = *previous;
+        previous_without_cursor.phase = ReusableBattlePhase::SafariMenu { row: 0, col: 0 };
         (current_without_cursor == previous_without_cursor).then_some((
             (previous_row, previous_col),
             (row, col),
@@ -1091,6 +1123,10 @@ fn game_main() -> ! {
             .as_ref()
             .zip(last_battle.as_ref())
             .and_then(|(current, previous)| current.player_menu_cursor_change_from(previous));
+        let battle_safari_cursor_change = battle
+            .as_ref()
+            .zip(last_battle.as_ref())
+            .and_then(|(current, previous)| current.safari_menu_cursor_change_from(previous));
         let battle_move_cursor_change = battle
             .as_ref()
             .zip(last_battle.as_ref())
@@ -1115,7 +1151,14 @@ fn game_main() -> ! {
             true
         };
         if redraw {
-            if let Some((previous, _)) = battle_menu_cursor_change {
+            if let Some((previous, _)) = battle_safari_cursor_change {
+                pokered_app::render::redraw_battle_safari_menu_cursor(
+                    previous,
+                    &game.battle.safari_menu,
+                    &mut fb,
+                    game.state.config.language,
+                );
+            } else if let Some((previous, _)) = battle_menu_cursor_change {
                 pokered_app::render::redraw_battle_main_menu_cursor(
                     previous,
                     &game.battle.battle_menu,
@@ -1143,6 +1186,13 @@ fn game_main() -> ! {
         #[cfg(feature = "profiling")]
         let mark3 = profile_now();
         if redraw {
+            let battle_safari_damage =
+                battle_safari_cursor_change.map(|(previous, current)| {
+                    [
+                        battle_menu_cursor_damage(previous),
+                        battle_menu_cursor_damage(current),
+                    ]
+                });
             let battle_menu_damage = battle_menu_cursor_change.map(|(previous, current)| {
                 [
                     battle_menu_cursor_damage(previous),
@@ -1152,7 +1202,9 @@ fn game_main() -> ! {
             let battle_move_damage = battle_move_cursor_change.map(|(previous, current)| {
                 battle_move_menu_damage(previous, current, game.state.config.language)
             });
-            let damage = if let Some(rects) = battle_menu_damage.as_ref() {
+            let damage = if let Some(rects) = battle_safari_damage.as_ref() {
+                Some(rects.as_slice())
+            } else if let Some(rects) = battle_menu_damage.as_ref() {
                 Some(rects.as_slice())
             } else if let Some(rects) = battle_move_damage.as_ref() {
                 Some(rects.as_slice())
