@@ -42,7 +42,7 @@ pub use overworld::draw_overworld;
 #[cfg(target_os = "none")]
 pub use overworld::OverworldBackgroundCache;
 #[cfg(target_os = "none")]
-pub(crate) use overworld::draw_overworld_cached;
+pub(crate) use overworld::draw_overworld_cached_with;
 pub use pc::draw_pc;
 pub use pokedex::draw_pokedex_screen;
 pub use slots::draw_slots;

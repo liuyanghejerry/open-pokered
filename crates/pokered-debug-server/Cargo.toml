@@ -5,6 +5,6 @@ edition.workspace = true
 license.workspace = true
 
 [dependencies]
-dotzuki-app = { git = "https://github.com/liuyanghejerry/dotzuki", rev = "2929ae90054c5f9828f9999593a1d3f0af7ca3fc" }
+dotzuki-app = { git = "https://github.com/liuyanghejerry/dotzuki", rev = "6453bde42576825a1bb23b4cf9a823563b3d1615" }
 serde = { workspace = true }
 serde_json = { workspace = true }

@@ -450,7 +450,7 @@ pub fn draw_overworld(
     fb: &mut FrameBuffer,
     language: pokered_core::game_state::Lang,
 ) {
-    draw_overworld_impl(screen, res, fb, language, None);
+    draw_overworld_impl(screen, res, fb, language, None, None);
 }
 
 pub(crate) fn draw_overworld_cached(
@@ -460,7 +460,25 @@ pub(crate) fn draw_overworld_cached(
     language: pokered_core::game_state::Lang,
     cache: &mut OverworldBackgroundCache,
 ) {
-    draw_overworld_impl(screen, res, fb, language, Some(cache));
+    draw_overworld_impl(screen, res, fb, language, Some(cache), None);
+}
+
+pub(crate) fn draw_overworld_cached_with(
+    screen: &mut OverworldScreen,
+    res: &mut Option<ResourceManager>,
+    fb: &mut FrameBuffer,
+    language: pokered_core::game_state::Lang,
+    cache: &mut OverworldBackgroundCache,
+    copy_background: &mut dyn FnMut(&mut [u8], &[u8]),
+) {
+    draw_overworld_impl(
+        screen,
+        res,
+        fb,
+        language,
+        Some(cache),
+        Some(copy_background),
+    );
 }
 
 fn draw_overworld_impl(
@@ -469,6 +487,7 @@ fn draw_overworld_impl(
     fb: &mut FrameBuffer,
     language: pokered_core::game_state::Lang,
     mut background_cache: Option<&mut OverworldBackgroundCache>,
+    mut copy_background: Option<&mut dyn FnMut(&mut [u8], &[u8])>,
 ) {
     let owns_full_screen = screen.naming_flash_frames > 0
         || screen.pending_naming_screen.is_some()
@@ -661,7 +680,11 @@ fn draw_overworld_impl(
                         shake_offset_y,
                     );
                     cache.key = Some(key);
-                    fb.copy_from(&cache.frame_buffer);
+                    if let Some(copy_pixels) = copy_background.as_deref_mut() {
+                        fb.copy_from_with(&cache.frame_buffer, copy_pixels);
+                    } else {
+                        fb.copy_from(&cache.frame_buffer);
+                    }
                 } else {
                     draw_background_tiles(
                         fb,

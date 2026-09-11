@@ -104,7 +104,7 @@ use crate::render::{
     draw_title_screen, draw_town_map, draw_trade, draw_trainer_card, BattleVisualEffects,
 };
 #[cfg(target_os = "none")]
-use crate::render::{draw_overworld_cached, OverworldBackgroundCache};
+use crate::render::{draw_overworld_cached_with, OverworldBackgroundCache};
 
 const SAVE_FILE_NAME: &str = "pokered.sav";
 const SCRIPT_FLAGS_FILE_NAME: &str = "pokered.script_flags.json";
@@ -6211,6 +6211,7 @@ impl PokemonGame {
         &mut self,
         frame_buffer: &mut FrameBuffer,
         background_cache: &mut Option<OverworldBackgroundCache>,
+        copy_background: &mut dyn FnMut(&mut [u8], &[u8]),
     ) {
         let ordinary_overworld = self.black_screen_frames == 0
             && self.trade_anim.is_none()
@@ -6227,12 +6228,13 @@ impl PokemonGame {
         let cache = background_cache.get_or_insert_with(|| {
             OverworldBackgroundCache::new(frame_buffer.width(), frame_buffer.height())
         });
-        draw_overworld_cached(
+        draw_overworld_cached_with(
             &mut self.overworld,
             &mut self.resources,
             frame_buffer,
             self.state.config.language,
             cache,
+            copy_background,
         );
     }
 
