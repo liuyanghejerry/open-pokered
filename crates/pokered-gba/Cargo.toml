@@ -9,32 +9,28 @@ publish = false
 # Scripted input driver for automated playtesting: replaces hardware input
 # with a frame-indexed button script (see src/autopilot.rs).
 autopilot = []
+# Hardware-timer phase profiling, reported through the mGBA debug channel.
+profiling = []
+# Mirror the packed framebuffer into SRAM for offline screenshot extraction.
+# This is intentionally opt-in: SRAM writes are slow and the dump overwrites
+# the same address range used by a real save cartridge.
+framebuffer-dump = []
 
 [dependencies]
 agb = "0.25.0"
 getrandom = { version = "0.2", features = ["custom"] }
-dotzuki-engine = { git = "https://github.com/liuyanghejerry/dotzuki", tag = "v0.6.0" }
+dotzuki-engine = { git = "https://github.com/liuyanghejerry/dotzuki", rev = "febe87eab83dc28d209e6b13a3f03d1f6efec82e" }
 log = { version = "0.4", default-features = false }
 
 # The pokered game crates. Built for thumbv4t via this crate's
-# .cargo/config.toml (nightly -Zbuild-std); the vendored, no_std-patched
-# dotzuki engine below replaces the git dependency for these builds.
+# .cargo/config.toml (nightly -Zbuild-std). All dotzuki dependencies are
+# pinned to the reviewed GBA/no_std feature commit through the manifests below.
 # framebuffer-only everywhere on GBA (no pixels/winit/image).
 pokered-app = { path = "../pokered-app", default-features = false }
 pokered-core = { path = "../pokered-core", default-features = false, features = ["embedded-map-data"] }
 pokered-data = { path = "../pokered-data" }
 pokered-renderer = { path = "../pokered-renderer", default-features = false, features = ["framebuffer"] }
 pokered-ui = { path = "../pokered-ui", default-features = false, features = ["framebuffer"] }
-
-[patch."https://github.com/liuyanghejerry/dotzuki"]
-dotzuki-engine = { path = "../../vendor/dotzuki/crates/dotzuki-engine" }
-dotzuki-engine-dsl = { path = "../../vendor/dotzuki/crates/dotzuki-engine-dsl" }
-dotzuki-engine-script = { path = "../../vendor/dotzuki/crates/dotzuki-engine-script" }
-dotzuki-renderer = { path = "../../vendor/dotzuki/crates/dotzuki-renderer" }
-dotzuki-ui = { path = "../../vendor/dotzuki/crates/dotzuki-ui" }
-dotzuki-rules = { path = "../../vendor/dotzuki/crates/dotzuki-rules" }
-dotzuki-app = { path = "../../vendor/dotzuki/crates/dotzuki-app" }
-dotzuki-audio = { path = "../../vendor/dotzuki/crates/dotzuki-audio" }
 
 # ron 0.8.1 is std-only on crates.io; the vendored copy is the no_std port.
 [patch.crates-io]

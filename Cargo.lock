@@ -1137,7 +1137,7 @@ dependencies = [
 [[package]]
 name = "dotzuki-app"
 version = "0.6.0"
-source = "git+https://github.com/liuyanghejerry/dotzuki?tag=v0.6.0#88f1fccd72c62fcb51ce036e5d2b211e37ac9051"
+source = "git+https://github.com/liuyanghejerry/dotzuki?rev=febe87eab83dc28d209e6b13a3f03d1f6efec82e#febe87eab83dc28d209e6b13a3f03d1f6efec82e"
 dependencies = [
  "dotzuki-engine",
  "dotzuki-renderer",
@@ -1150,7 +1150,7 @@ dependencies = [
 [[package]]
 name = "dotzuki-audio"
 version = "0.6.0"
-source = "git+https://github.com/liuyanghejerry/dotzuki?tag=v0.6.0#88f1fccd72c62fcb51ce036e5d2b211e37ac9051"
+source = "git+https://github.com/liuyanghejerry/dotzuki?rev=febe87eab83dc28d209e6b13a3f03d1f6efec82e#febe87eab83dc28d209e6b13a3f03d1f6efec82e"
 dependencies = [
  "bitflags 2.13.1",
  "cpal",
@@ -1164,9 +1164,10 @@ dependencies = [
 [[package]]
 name = "dotzuki-engine"
 version = "0.6.0"
-source = "git+https://github.com/liuyanghejerry/dotzuki?tag=v0.6.0#88f1fccd72c62fcb51ce036e5d2b211e37ac9051"
+source = "git+https://github.com/liuyanghejerry/dotzuki?rev=febe87eab83dc28d209e6b13a3f03d1f6efec82e#febe87eab83dc28d209e6b13a3f03d1f6efec82e"
 dependencies = [
- "image",
+ "hashbrown 0.15.5",
+ "libm",
  "serde",
  "serde_json",
  "thiserror 2.0.20",
@@ -1175,9 +1176,10 @@ dependencies = [
 [[package]]
 name = "dotzuki-engine-dsl"
 version = "0.6.0"
-source = "git+https://github.com/liuyanghejerry/dotzuki?tag=v0.6.0#88f1fccd72c62fcb51ce036e5d2b211e37ac9051"
+source = "git+https://github.com/liuyanghejerry/dotzuki?rev=febe87eab83dc28d209e6b13a3f03d1f6efec82e#febe87eab83dc28d209e6b13a3f03d1f6efec82e"
 dependencies = [
  "dotzuki-engine-script",
+ "hashbrown 0.15.5",
  "miette",
  "serde",
  "serde_json",
@@ -1188,9 +1190,8 @@ dependencies = [
 [[package]]
 name = "dotzuki-engine-script"
 version = "0.6.0"
-source = "git+https://github.com/liuyanghejerry/dotzuki?tag=v0.6.0#88f1fccd72c62fcb51ce036e5d2b211e37ac9051"
+source = "git+https://github.com/liuyanghejerry/dotzuki?rev=febe87eab83dc28d209e6b13a3f03d1f6efec82e#febe87eab83dc28d209e6b13a3f03d1f6efec82e"
 dependencies = [
- "boa_engine",
  "log",
  "serde",
  "serde_json",
@@ -1200,12 +1201,13 @@ dependencies = [
 [[package]]
 name = "dotzuki-renderer"
 version = "0.6.0"
-source = "git+https://github.com/liuyanghejerry/dotzuki?tag=v0.6.0#88f1fccd72c62fcb51ce036e5d2b211e37ac9051"
+source = "git+https://github.com/liuyanghejerry/dotzuki?rev=febe87eab83dc28d209e6b13a3f03d1f6efec82e#febe87eab83dc28d209e6b13a3f03d1f6efec82e"
 dependencies = [
  "dotzuki-engine",
  "error-iter",
  "getrandom 0.2.17",
  "image",
+ "libm",
  "log",
  "pixels",
  "serde",
@@ -1218,7 +1220,7 @@ dependencies = [
 [[package]]
 name = "dotzuki-rules"
 version = "0.6.0"
-source = "git+https://github.com/liuyanghejerry/dotzuki?tag=v0.6.0#88f1fccd72c62fcb51ce036e5d2b211e37ac9051"
+source = "git+https://github.com/liuyanghejerry/dotzuki?rev=febe87eab83dc28d209e6b13a3f03d1f6efec82e#febe87eab83dc28d209e6b13a3f03d1f6efec82e"
 dependencies = [
  "dotzuki-engine",
  "notify",
@@ -1230,7 +1232,7 @@ dependencies = [
 [[package]]
 name = "dotzuki-tui"
 version = "0.6.0"
-source = "git+https://github.com/liuyanghejerry/dotzuki?tag=v0.6.0#88f1fccd72c62fcb51ce036e5d2b211e37ac9051"
+source = "git+https://github.com/liuyanghejerry/dotzuki?rev=febe87eab83dc28d209e6b13a3f03d1f6efec82e#febe87eab83dc28d209e6b13a3f03d1f6efec82e"
 dependencies = [
  "crossterm",
  "dotzuki-renderer",
@@ -1240,7 +1242,7 @@ dependencies = [
 [[package]]
 name = "dotzuki-ui"
 version = "0.6.0"
-source = "git+https://github.com/liuyanghejerry/dotzuki?tag=v0.6.0#88f1fccd72c62fcb51ce036e5d2b211e37ac9051"
+source = "git+https://github.com/liuyanghejerry/dotzuki?rev=febe87eab83dc28d209e6b13a3f03d1f6efec82e#febe87eab83dc28d209e6b13a3f03d1f6efec82e"
 dependencies = [
  "dotzuki-engine",
  "dotzuki-renderer",
@@ -1249,7 +1251,7 @@ dependencies = [
 [[package]]
 name = "dotzuki-web"
 version = "0.6.0"
-source = "git+https://github.com/liuyanghejerry/dotzuki?tag=v0.6.0#88f1fccd72c62fcb51ce036e5d2b211e37ac9051"
+source = "git+https://github.com/liuyanghejerry/dotzuki?rev=febe87eab83dc28d209e6b13a3f03d1f6efec82e#febe87eab83dc28d209e6b13a3f03d1f6efec82e"
 dependencies = [
  "dotzuki-audio",
  "dotzuki-engine",
@@ -2227,6 +2229,12 @@ dependencies = [
  "cfg-if",
  "windows-link",
 ]
+
+[[package]]
+name = "libm"
+version = "0.2.16"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b6d2cec3eae94f9f509c767b45932f1ada8350c4bdb85af2fcab4a3c14807981"
 
 [[package]]
 name = "libredox"

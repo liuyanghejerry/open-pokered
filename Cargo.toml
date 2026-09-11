@@ -1,8 +1,8 @@
 [workspace]
 resolver = "2"
 # pokered-gba is built standalone (own .cargo/config.toml, thumbv4t-none-eabi,
-# own profiles) — see crates/pokered-gba/build.sh. vendor/ holds the patched
-# (no_std) dotzuki engine copy consumed via [patch] from crates/pokered-gba.
+# own profiles) — see crates/pokered-gba/build.sh. Its dotzuki dependencies are
+# pinned to the upstream GBA/no_std feature commit; vendor/ only carries ron.
 exclude = ["crates/pokered-gba", "vendor"]
 members = [
     "crates/pokered-web",
