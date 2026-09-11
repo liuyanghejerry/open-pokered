@@ -25,8 +25,7 @@ use pokered_data::tilesets::TilesetId;
 
 use super::hm_effects::{self, BoulderPushResult, CutResult, FlashResult, FlyResult, StrengthResult, SurfResult};
 use super::screen::{
-    BedroomDialogue, OverworldAudioRequest, OverworldScreen, OverworldSfxEvent, PendingWarp,
-    WarpFadeState, WARP_FADE_OUT_WHITE_FRAMES,
+    BedroomDialogue, OverworldAudioRequest, OverworldScreen, PendingCut, PendingWarp, WarpFadeState,
 };
 use super::collision::CollisionProvider;
 use super::{collision, player_movement, presentation, special_terrain, Direction};
@@ -129,21 +128,23 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
             CutResult::NoBadge => self.field_message(NEW_BADGE_REQUIRED_TEXT),
             CutResult::NothingToCut => self.field_message("There isn't\nanything to CUT!"),
             CutResult::CutTree { replacement_block } => {
-                let map = self.map_data.as_mut().expect("map_data present");
-                map.set_block((fx / 2) as u8, (fy / 2) as u8, replacement_block);
-                self.audio_requests
-                    .push(OverworldAudioRequest::PlaySound {
-                        sound_id: "SFX_CUT".to_string(),
-                    });
+                self.pending_cut = Some(PendingCut {
+                    block_x: (fx / 2) as u8,
+                    block_y: (fy / 2) as u8,
+                    replacement_block: Some(replacement_block),
+                    kind: presentation::CutAnimKind::Tree,
+                });
                 self.field_message(&format!("{} hacked\naway with CUT!", mon_name))
             }
             // Gen-1 grass cutting plays the same animation + text but does not
             // alter the map (grass blocks are not in CutTreeBlockSwaps).
             CutResult::CutGrass => {
-                self.audio_requests
-                    .push(OverworldAudioRequest::PlaySound {
-                        sound_id: "SFX_CUT".to_string(),
-                    });
+                self.pending_cut = Some(PendingCut {
+                    block_x: (fx / 2) as u8,
+                    block_y: (fy / 2) as u8,
+                    replacement_block: None,
+                    kind: presentation::CutAnimKind::Grass,
+                });
                 self.field_message(&format!("{} hacked\naway with CUT!", mon_name))
             }
         }
@@ -231,7 +232,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                     return self.field_message(&format!("No SURFing on\n{}\nhere!", mon_name));
                 }
                 self.state.player.transport = TransportMode::Surfing;
-                self.step_player_forward_onto_tile();
+                self.defer_field_move_step();
                 // PlayDefaultMusic: surfing music follows the transport mode.
                 self.audio_requests
                     .push(OverworldAudioRequest::PlayMapMusic { map: current_map });
@@ -254,7 +255,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
             return self.field_message("There's no place\nto get off!");
         }
         self.state.player.transport = TransportMode::Walking;
-        self.step_player_forward_onto_tile();
+        self.defer_field_move_step();
         // PlayDefaultMusic: back to the map's own music.
         self.audio_requests
             .push(OverworldAudioRequest::PlayMapMusic { map: current_map });
@@ -263,11 +264,13 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
 
     /// The Gen-1 `.makePlayerMoveForward` step: walk one tile ahead via the
     /// scripted-movement path (the tile was already validated by the caller).
-    fn step_player_forward_onto_tile(&mut self) {
-        let (dx, dy) = player_movement::direction_delta(self.state.player.facing);
-        let tx = (self.state.player.x as i32 + dx as i32).max(0) as u16;
-        let ty = (self.state.player.y as i32 + dy as i32).max(0) as u16;
-        self.scripted_player_path.push_back((tx, ty));
+    fn defer_field_move_step(&mut self) {
+        self.pending_field_move_step = Some(presentation::FieldMoveStepState::new(
+            self.state.player.x,
+            self.state.player.y,
+            self.state.player.facing,
+        ));
+        self.field_move_step_needs_restore = true;
     }
 
     /// First visible NPC (if any) standing on the tile the player faces.
@@ -389,8 +392,8 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
 
     /// Begin a fly-warp to an overworld destination — FLY's chosen town-map
     /// target. Mirrors the BIT_FLY_WARP handling in special_warps.asm: the
-    /// screen fades out (to white — `_LeaveMapAnim` ends in GBFadeOutToWhite)
-    /// and the player lands at the map's fly point.
+    /// `_LeaveMapAnim` first plays the full bird pickup/departure, then fades
+    /// to white and lands the player at the map's fly point.
     pub fn fly_warp_to(&mut self, dest_map: MapId, dest_x: u8, dest_y: u8) {
         // BIT_USED_FLY (player_animations.asm:55-70): the arrival plays the
         // BIRD animation instead of the spin-in.
@@ -405,10 +408,9 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
             arrival_spin: true,
         });
         self.warp_fade_to_white = true;
-        self.warp_fade_state = WarpFadeState::FadingOut {
-            frames_remaining: WARP_FADE_OUT_WHITE_FRAMES,
-        };
-        self.sfx_event = OverworldSfxEvent::GoOutside;
+        self.warp_fade_state = WarpFadeState::Idle;
+        self.fly_departure = Some(presentation::LeaveMapFlyState::new());
+        self.audio_requests.push(OverworldAudioRequest::StopMusic);
     }
 
     // ── Boulder pushing (STRENGTH) ────────────────────────────────────

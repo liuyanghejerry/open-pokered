@@ -1,0 +1,405 @@
+{
+  "schema_version": 1,
+  "roi": {
+    "x": 0,
+    "y": 0,
+    "width": 56,
+    "height": 56
+  },
+  "reference": {
+    "label": "reference",
+    "directory": "/tmp/keyanim-reference-final2-20260910.PTL6nv/reference/surf-entry/run-1/frames",
+    "requested_range": {
+      "start": 302,
+      "end": 319
+    },
+    "present_frame_count": 18,
+    "missing_frames": [],
+    "background_motion": {
+      "translated_steps": 8,
+      "net_dx": 0,
+      "net_dy": -16,
+      "path_l1": 16,
+      "largest_step_l1": 2,
+      "largest_step_share": 0.125
+    },
+    "transitions": [
+      {
+        "from": 302,
+        "to": 303,
+        "raw_mad": 0.0,
+        "changed_fraction": 0.0,
+        "best_translation": {
+          "dx": 0,
+          "dy": 0,
+          "residual_mad": 0.0,
+          "improvement": 0.0,
+          "accepted": false
+        }
+      },
+      {
+        "from": 303,
+        "to": 304,
+        "raw_mad": 21.596939,
+        "changed_fraction": 0.199936,
+        "best_translation": {
+          "dx": 0,
+          "dy": -2,
+          "residual_mad": 0.0,
+          "improvement": 21.596939,
+          "accepted": true
+        }
+      },
+      {
+        "from": 304,
+        "to": 305,
+        "raw_mad": 0.0,
+        "changed_fraction": 0.0,
+        "best_translation": {
+          "dx": 0,
+          "dy": 0,
+          "residual_mad": 0.0,
+          "improvement": 0.0,
+          "accepted": false
+        }
+      },
+      {
+        "from": 305,
+        "to": 306,
+        "raw_mad": 21.304209,
+        "changed_fraction": 0.201849,
+        "best_translation": {
+          "dx": 0,
+          "dy": -2,
+          "residual_mad": 0.0,
+          "improvement": 21.304209,
+          "accepted": true
+        }
+      },
+      {
+        "from": 306,
+        "to": 307,
+        "raw_mad": 0.0,
+        "changed_fraction": 0.0,
+        "best_translation": {
+          "dx": 0,
+          "dy": 0,
+          "residual_mad": 0.0,
+          "improvement": 0.0,
+          "accepted": false
+        }
+      },
+      {
+        "from": 307,
+        "to": 308,
+        "raw_mad": 21.586097,
+        "changed_fraction": 0.205676,
+        "best_translation": {
+          "dx": 0,
+          "dy": -2,
+          "residual_mad": 0.0,
+          "improvement": 21.586097,
+          "accepted": true
+        }
+      },
+      {
+        "from": 308,
+        "to": 309,
+        "raw_mad": 0.0,
+        "changed_fraction": 0.0,
+        "best_translation": {
+          "dx": 0,
+          "dy": 0,
+          "residual_mad": 0.0,
+          "improvement": 0.0,
+          "accepted": false
+        }
+      },
+      {
+        "from": 309,
+        "to": 310,
+        "raw_mad": 21.618622,
+        "changed_fraction": 0.206314,
+        "best_translation": {
+          "dx": 0,
+          "dy": -2,
+          "residual_mad": 0.0,
+          "improvement": 21.618622,
+          "accepted": true
+        }
+      },
+      {
+        "from": 310,
+        "to": 311,
+        "raw_mad": 0.0,
+        "changed_fraction": 0.0,
+        "best_translation": {
+          "dx": 0,
+          "dy": 0,
+          "residual_mad": 0.0,
+          "improvement": 0.0,
+          "accepted": false
+        }
+      },
+      {
+        "from": 311,
+        "to": 312,
+        "raw_mad": 21.683673,
+        "changed_fraction": 0.206952,
+        "best_translation": {
+          "dx": 0,
+          "dy": -2,
+          "residual_mad": 0.0,
+          "improvement": 21.683673,
+          "accepted": true
+        }
+      },
+      {
+        "from": 312,
+        "to": 313,
+        "raw_mad": 0.0,
+        "changed_fraction": 0.0,
+        "best_translation": {
+          "dx": 0,
+          "dy": 0,
+          "residual_mad": 0.0,
+          "improvement": 0.0,
+          "accepted": false
+        }
+      },
+      {
+        "from": 313,
+        "to": 314,
+        "raw_mad": 21.260842,
+        "changed_fraction": 0.202487,
+        "best_translation": {
+          "dx": 0,
+          "dy": -2,
+          "residual_mad": 0.0,
+          "improvement": 21.260842,
+          "accepted": true
+        }
+      },
+      {
+        "from": 314,
+        "to": 315,
+        "raw_mad": 0.0,
+        "changed_fraction": 0.0,
+        "best_translation": {
+          "dx": 0,
+          "dy": 0,
+          "residual_mad": 0.0,
+          "improvement": 0.0,
+          "accepted": false
+        }
+      },
+      {
+        "from": 315,
+        "to": 316,
+        "raw_mad": 20.653699,
+        "changed_fraction": 0.196747,
+        "best_translation": {
+          "dx": 0,
+          "dy": -2,
+          "residual_mad": 0.0,
+          "improvement": 20.653699,
+          "accepted": true
+        }
+      },
+      {
+        "from": 316,
+        "to": 317,
+        "raw_mad": 0.0,
+        "changed_fraction": 0.0,
+        "best_translation": {
+          "dx": 0,
+          "dy": 0,
+          "residual_mad": 0.0,
+          "improvement": 0.0,
+          "accepted": false
+        }
+      },
+      {
+        "from": 317,
+        "to": 318,
+        "raw_mad": 19.851403,
+        "changed_fraction": 0.191964,
+        "best_translation": {
+          "dx": 0,
+          "dy": -2,
+          "residual_mad": 0.0,
+          "improvement": 19.851403,
+          "accepted": true
+        }
+      },
+      {
+        "from": 318,
+        "to": 319,
+        "raw_mad": 0.0,
+        "changed_fraction": 0.0,
+        "best_translation": {
+          "dx": 0,
+          "dy": 0,
+          "residual_mad": 0.0,
+          "improvement": 0.0,
+          "accepted": false
+        }
+      }
+    ]
+  },
+  "current": {
+    "label": "current",
+    "directory": "/tmp/keyanim-current-deterministic-20260910.qs1cQc/current/surf-entry/run-1/frames",
+    "requested_range": {
+      "start": 300,
+      "end": 308
+    },
+    "present_frame_count": 9,
+    "missing_frames": [],
+    "background_motion": {
+      "translated_steps": 8,
+      "net_dx": 0,
+      "net_dy": -16,
+      "path_l1": 16,
+      "largest_step_l1": 2,
+      "largest_step_share": 0.125
+    },
+    "transitions": [
+      {
+        "from": 300,
+        "to": 301,
+        "raw_mad": 22.361288,
+        "changed_fraction": 0.211735,
+        "best_translation": {
+          "dx": 0,
+          "dy": -2,
+          "residual_mad": 0.0,
+          "improvement": 22.361288,
+          "accepted": true
+        }
+      },
+      {
+        "from": 301,
+        "to": 302,
+        "raw_mad": 21.927615,
+        "changed_fraction": 0.212054,
+        "best_translation": {
+          "dx": 0,
+          "dy": -2,
+          "residual_mad": 0.0,
+          "improvement": 21.927615,
+          "accepted": true
+        }
+      },
+      {
+        "from": 302,
+        "to": 303,
+        "raw_mad": 22.144452,
+        "changed_fraction": 0.214923,
+        "best_translation": {
+          "dx": 0,
+          "dy": -2,
+          "residual_mad": 0.0,
+          "improvement": 22.144452,
+          "accepted": true
+        }
+      },
+      {
+        "from": 303,
+        "to": 304,
+        "raw_mad": 22.659439,
+        "changed_fraction": 0.217156,
+        "best_translation": {
+          "dx": 0,
+          "dy": -2,
+          "residual_mad": 0.0,
+          "improvement": 22.659439,
+          "accepted": true
+        }
+      },
+      {
+        "from": 304,
+        "to": 305,
+        "raw_mad": 22.794962,
+        "changed_fraction": 0.216837,
+        "best_translation": {
+          "dx": 0,
+          "dy": -2,
+          "residual_mad": 0.0,
+          "improvement": 22.794962,
+          "accepted": true
+        }
+      },
+      {
+        "from": 305,
+        "to": 306,
+        "raw_mad": 23.228635,
+        "changed_fraction": 0.216518,
+        "best_translation": {
+          "dx": 0,
+          "dy": -2,
+          "residual_mad": 0.0,
+          "improvement": 23.228635,
+          "accepted": true
+        }
+      },
+      {
+        "from": 306,
+        "to": 307,
+        "raw_mad": 23.011798,
+        "changed_fraction": 0.213648,
+        "best_translation": {
+          "dx": 0,
+          "dy": -2,
+          "residual_mad": 0.0,
+          "improvement": 23.011798,
+          "accepted": true
+        }
+      },
+      {
+        "from": 307,
+        "to": 308,
+        "raw_mad": 22.496811,
+        "changed_fraction": 0.211416,
+        "best_translation": {
+          "dx": 0,
+          "dy": -2,
+          "residual_mad": 0.0,
+          "improvement": 22.496811,
+          "accepted": true
+        }
+      }
+    ]
+  },
+  "comparison": {
+    "verdict": "FAIL",
+    "duration_ratio": 0.5,
+    "checks": [
+      {
+        "name": "contiguous_frame_ids",
+        "status": "PASS",
+        "detail": "reference missing=[]; current missing=[]"
+      },
+      {
+        "name": "raw_duration",
+        "status": "FAIL",
+        "detail": "reference=18 frames; current=9 frames; ratio=0.500"
+      },
+      {
+        "name": "background_path_length",
+        "status": "PASS",
+        "detail": "reference=16 px; current=16 px; delta=0 px"
+      },
+      {
+        "name": "largest_background_step",
+        "status": "PASS",
+        "detail": "reference=2 px; current=2 px; delta=0 px"
+      },
+      {
+        "name": "background_motion_distribution",
+        "status": "PASS",
+        "detail": "largest-step/path share: reference=0.125; current=0.125; delta=0.000"
+      }
+    ]
+  }
+}

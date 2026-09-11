@@ -1,0 +1,1099 @@
+{
+  "schema_version": 1,
+  "roi": {
+    "x": 0,
+    "y": 10,
+    "width": 56,
+    "height": 120
+  },
+  "reference": {
+    "label": "reference",
+    "directory": "/tmp/keyanim-ledge-final-20260910.0bjAJ9/reference/ledge-down/run-1/frames",
+    "requested_range": {
+      "start": 2,
+      "end": 41
+    },
+    "present_frame_count": 40,
+    "missing_frames": [],
+    "background_motion": {
+      "translated_steps": 16,
+      "net_dx": 0,
+      "net_dy": -32,
+      "path_l1": 32,
+      "largest_step_l1": 2,
+      "largest_step_share": 0.0625
+    },
+    "transitions": [
+      {
+        "from": 2,
+        "to": 3,
+        "raw_mad": 0.0,
+        "changed_fraction": 0.0,
+        "best_translation": {
+          "dx": 0,
+          "dy": 0,
+          "residual_mad": 0.0,
+          "improvement": 0.0,
+          "accepted": false
+        }
+      },
+      {
+        "from": 3,
+        "to": 4,
+        "raw_mad": 0.0,
+        "changed_fraction": 0.0,
+        "best_translation": {
+          "dx": 0,
+          "dy": 0,
+          "residual_mad": 0.0,
+          "improvement": 0.0,
+          "accepted": false
+        }
+      },
+      {
+        "from": 4,
+        "to": 5,
+        "raw_mad": 0.0,
+        "changed_fraction": 0.0,
+        "best_translation": {
+          "dx": 0,
+          "dy": 0,
+          "residual_mad": 0.0,
+          "improvement": 0.0,
+          "accepted": false
+        }
+      },
+      {
+        "from": 5,
+        "to": 6,
+        "raw_mad": 0.0,
+        "changed_fraction": 0.0,
+        "best_translation": {
+          "dx": 0,
+          "dy": 0,
+          "residual_mad": 0.0,
+          "improvement": 0.0,
+          "accepted": false
+        }
+      },
+      {
+        "from": 6,
+        "to": 7,
+        "raw_mad": 56.681845,
+        "changed_fraction": 0.489286,
+        "best_translation": {
+          "dx": 0,
+          "dy": -2,
+          "residual_mad": 1.996368,
+          "improvement": 54.685477,
+          "accepted": true
+        }
+      },
+      {
+        "from": 7,
+        "to": 8,
+        "raw_mad": 0.0,
+        "changed_fraction": 0.0,
+        "best_translation": {
+          "dx": 0,
+          "dy": 0,
+          "residual_mad": 0.0,
+          "improvement": 0.0,
+          "accepted": false
+        }
+      },
+      {
+        "from": 8,
+        "to": 9,
+        "raw_mad": 56.153125,
+        "changed_fraction": 0.48631,
+        "best_translation": {
+          "dx": 0,
+          "dy": -2,
+          "residual_mad": 0.0,
+          "improvement": 56.153125,
+          "accepted": true
+        }
+      },
+      {
+        "from": 9,
+        "to": 10,
+        "raw_mad": 0.0,
+        "changed_fraction": 0.0,
+        "best_translation": {
+          "dx": 0,
+          "dy": 0,
+          "residual_mad": 0.0,
+          "improvement": 0.0,
+          "accepted": false
+        }
+      },
+      {
+        "from": 10,
+        "to": 11,
+        "raw_mad": 56.069643,
+        "changed_fraction": 0.486012,
+        "best_translation": {
+          "dx": 0,
+          "dy": -2,
+          "residual_mad": 0.0,
+          "improvement": 56.069643,
+          "accepted": true
+        }
+      },
+      {
+        "from": 11,
+        "to": 12,
+        "raw_mad": 0.0,
+        "changed_fraction": 0.0,
+        "best_translation": {
+          "dx": 0,
+          "dy": 0,
+          "residual_mad": 0.0,
+          "improvement": 0.0,
+          "accepted": false
+        }
+      },
+      {
+        "from": 12,
+        "to": 13,
+        "raw_mad": 55.36131,
+        "changed_fraction": 0.482738,
+        "best_translation": {
+          "dx": 0,
+          "dy": -2,
+          "residual_mad": 0.0,
+          "improvement": 55.36131,
+          "accepted": true
+        }
+      },
+      {
+        "from": 13,
+        "to": 14,
+        "raw_mad": 0.0,
+        "changed_fraction": 0.0,
+        "best_translation": {
+          "dx": 0,
+          "dy": 0,
+          "residual_mad": 0.0,
+          "improvement": 0.0,
+          "accepted": false
+        }
+      },
+      {
+        "from": 14,
+        "to": 15,
+        "raw_mad": 53.436161,
+        "changed_fraction": 0.475744,
+        "best_translation": {
+          "dx": 0,
+          "dy": -2,
+          "residual_mad": 0.0,
+          "improvement": 53.436161,
+          "accepted": true
+        }
+      },
+      {
+        "from": 15,
+        "to": 16,
+        "raw_mad": 0.0,
+        "changed_fraction": 0.0,
+        "best_translation": {
+          "dx": 0,
+          "dy": 0,
+          "residual_mad": 0.0,
+          "improvement": 0.0,
+          "accepted": false
+        }
+      },
+      {
+        "from": 16,
+        "to": 17,
+        "raw_mad": 53.241369,
+        "changed_fraction": 0.476488,
+        "best_translation": {
+          "dx": 0,
+          "dy": -2,
+          "residual_mad": 0.0,
+          "improvement": 53.241369,
+          "accepted": true
+        }
+      },
+      {
+        "from": 17,
+        "to": 18,
+        "raw_mad": 0.0,
+        "changed_fraction": 0.0,
+        "best_translation": {
+          "dx": 0,
+          "dy": 0,
+          "residual_mad": 0.0,
+          "improvement": 0.0,
+          "accepted": false
+        }
+      },
+      {
+        "from": 18,
+        "to": 19,
+        "raw_mad": 53.254018,
+        "changed_fraction": 0.476935,
+        "best_translation": {
+          "dx": 0,
+          "dy": -2,
+          "residual_mad": 0.0,
+          "improvement": 53.254018,
+          "accepted": true
+        }
+      },
+      {
+        "from": 19,
+        "to": 20,
+        "raw_mad": 0.0,
+        "changed_fraction": 0.0,
+        "best_translation": {
+          "dx": 0,
+          "dy": 0,
+          "residual_mad": 0.0,
+          "improvement": 0.0,
+          "accepted": false
+        }
+      },
+      {
+        "from": 20,
+        "to": 21,
+        "raw_mad": 53.403274,
+        "changed_fraction": 0.475744,
+        "best_translation": {
+          "dx": 0,
+          "dy": -2,
+          "residual_mad": 0.0,
+          "improvement": 53.403274,
+          "accepted": true
+        }
+      },
+      {
+        "from": 21,
+        "to": 22,
+        "raw_mad": 0.0,
+        "changed_fraction": 0.0,
+        "best_translation": {
+          "dx": 0,
+          "dy": 0,
+          "residual_mad": 0.0,
+          "improvement": 0.0,
+          "accepted": false
+        }
+      },
+      {
+        "from": 22,
+        "to": 23,
+        "raw_mad": 53.625893,
+        "changed_fraction": 0.474554,
+        "best_translation": {
+          "dx": 0,
+          "dy": -2,
+          "residual_mad": 0.0,
+          "improvement": 53.625893,
+          "accepted": true
+        }
+      },
+      {
+        "from": 23,
+        "to": 24,
+        "raw_mad": 0.0,
+        "changed_fraction": 0.0,
+        "best_translation": {
+          "dx": 0,
+          "dy": 0,
+          "residual_mad": 0.0,
+          "improvement": 0.0,
+          "accepted": false
+        }
+      },
+      {
+        "from": 24,
+        "to": 25,
+        "raw_mad": 53.471577,
+        "changed_fraction": 0.472321,
+        "best_translation": {
+          "dx": 0,
+          "dy": -2,
+          "residual_mad": 0.0,
+          "improvement": 53.471577,
+          "accepted": true
+        }
+      },
+      {
+        "from": 25,
+        "to": 26,
+        "raw_mad": 0.0,
+        "changed_fraction": 0.0,
+        "best_translation": {
+          "dx": 0,
+          "dy": 0,
+          "residual_mad": 0.0,
+          "improvement": 0.0,
+          "accepted": false
+        }
+      },
+      {
+        "from": 26,
+        "to": 27,
+        "raw_mad": 52.48497,
+        "changed_fraction": 0.468899,
+        "best_translation": {
+          "dx": 0,
+          "dy": -2,
+          "residual_mad": 0.0,
+          "improvement": 52.48497,
+          "accepted": true
+        }
+      },
+      {
+        "from": 27,
+        "to": 28,
+        "raw_mad": 2.064286,
+        "changed_fraction": 0.014286,
+        "best_translation": {
+          "dx": 0,
+          "dy": 0,
+          "residual_mad": 2.064286,
+          "improvement": 0.0,
+          "accepted": false
+        }
+      },
+      {
+        "from": 28,
+        "to": 29,
+        "raw_mad": 52.659524,
+        "changed_fraction": 0.46994,
+        "best_translation": {
+          "dx": 0,
+          "dy": -2,
+          "residual_mad": 0.0,
+          "improvement": 52.659524,
+          "accepted": true
+        }
+      },
+      {
+        "from": 29,
+        "to": 30,
+        "raw_mad": 0.0,
+        "changed_fraction": 0.0,
+        "best_translation": {
+          "dx": 0,
+          "dy": 0,
+          "residual_mad": 0.0,
+          "improvement": 0.0,
+          "accepted": false
+        }
+      },
+      {
+        "from": 30,
+        "to": 31,
+        "raw_mad": 53.716964,
+        "changed_fraction": 0.475446,
+        "best_translation": {
+          "dx": 0,
+          "dy": -2,
+          "residual_mad": 0.0,
+          "improvement": 53.716964,
+          "accepted": true
+        }
+      },
+      {
+        "from": 31,
+        "to": 32,
+        "raw_mad": 0.0,
+        "changed_fraction": 0.0,
+        "best_translation": {
+          "dx": 0,
+          "dy": 0,
+          "residual_mad": 0.0,
+          "improvement": 0.0,
+          "accepted": false
+        }
+      },
+      {
+        "from": 32,
+        "to": 33,
+        "raw_mad": 54.635268,
+        "changed_fraction": 0.480804,
+        "best_translation": {
+          "dx": 0,
+          "dy": -2,
+          "residual_mad": 0.0,
+          "improvement": 54.635268,
+          "accepted": true
+        }
+      },
+      {
+        "from": 33,
+        "to": 34,
+        "raw_mad": 0.0,
+        "changed_fraction": 0.0,
+        "best_translation": {
+          "dx": 0,
+          "dy": 0,
+          "residual_mad": 0.0,
+          "improvement": 0.0,
+          "accepted": false
+        }
+      },
+      {
+        "from": 34,
+        "to": 35,
+        "raw_mad": 55.14375,
+        "changed_fraction": 0.483929,
+        "best_translation": {
+          "dx": 0,
+          "dy": -2,
+          "residual_mad": 0.0,
+          "improvement": 55.14375,
+          "accepted": true
+        }
+      },
+      {
+        "from": 35,
+        "to": 36,
+        "raw_mad": 0.0,
+        "changed_fraction": 0.0,
+        "best_translation": {
+          "dx": 0,
+          "dy": 0,
+          "residual_mad": 0.0,
+          "improvement": 0.0,
+          "accepted": false
+        }
+      },
+      {
+        "from": 36,
+        "to": 37,
+        "raw_mad": 56.621131,
+        "changed_fraction": 0.490625,
+        "best_translation": {
+          "dx": 0,
+          "dy": -2,
+          "residual_mad": 0.0,
+          "improvement": 56.621131,
+          "accepted": true
+        }
+      },
+      {
+        "from": 37,
+        "to": 38,
+        "raw_mad": 0.0,
+        "changed_fraction": 0.0,
+        "best_translation": {
+          "dx": 0,
+          "dy": 0,
+          "residual_mad": 0.0,
+          "improvement": 0.0,
+          "accepted": false
+        }
+      },
+      {
+        "from": 38,
+        "to": 39,
+        "raw_mad": 0.0,
+        "changed_fraction": 0.0,
+        "best_translation": {
+          "dx": 0,
+          "dy": 0,
+          "residual_mad": 0.0,
+          "improvement": 0.0,
+          "accepted": false
+        }
+      },
+      {
+        "from": 39,
+        "to": 40,
+        "raw_mad": 0.0,
+        "changed_fraction": 0.0,
+        "best_translation": {
+          "dx": 0,
+          "dy": 0,
+          "residual_mad": 0.0,
+          "improvement": 0.0,
+          "accepted": false
+        }
+      },
+      {
+        "from": 40,
+        "to": 41,
+        "raw_mad": 0.0,
+        "changed_fraction": 0.0,
+        "best_translation": {
+          "dx": 0,
+          "dy": 0,
+          "residual_mad": 0.0,
+          "improvement": 0.0,
+          "accepted": false
+        }
+      }
+    ]
+  },
+  "current": {
+    "label": "current",
+    "directory": "/tmp/keyanim-postfix-all-20260910.GgWoqu/current/ledge-down/run-1/frames",
+    "requested_range": {
+      "start": 299,
+      "end": 338
+    },
+    "present_frame_count": 40,
+    "missing_frames": [],
+    "background_motion": {
+      "translated_steps": 16,
+      "net_dx": 0,
+      "net_dy": -32,
+      "path_l1": 32,
+      "largest_step_l1": 2,
+      "largest_step_share": 0.0625
+    },
+    "transitions": [
+      {
+        "from": 299,
+        "to": 300,
+        "raw_mad": 0.0,
+        "changed_fraction": 0.0,
+        "best_translation": {
+          "dx": 0,
+          "dy": 0,
+          "residual_mad": 0.0,
+          "improvement": 0.0,
+          "accepted": false
+        }
+      },
+      {
+        "from": 300,
+        "to": 301,
+        "raw_mad": 0.0,
+        "changed_fraction": 0.0,
+        "best_translation": {
+          "dx": 0,
+          "dy": 0,
+          "residual_mad": 0.0,
+          "improvement": 0.0,
+          "accepted": false
+        }
+      },
+      {
+        "from": 301,
+        "to": 302,
+        "raw_mad": 0.0,
+        "changed_fraction": 0.0,
+        "best_translation": {
+          "dx": 0,
+          "dy": 0,
+          "residual_mad": 0.0,
+          "improvement": 0.0,
+          "accepted": false
+        }
+      },
+      {
+        "from": 302,
+        "to": 303,
+        "raw_mad": 0.0,
+        "changed_fraction": 0.0,
+        "best_translation": {
+          "dx": 0,
+          "dy": 0,
+          "residual_mad": 0.0,
+          "improvement": 0.0,
+          "accepted": false
+        }
+      },
+      {
+        "from": 303,
+        "to": 304,
+        "raw_mad": 50.291667,
+        "changed_fraction": 0.479911,
+        "best_translation": {
+          "dx": 0,
+          "dy": -2,
+          "residual_mad": 0.0,
+          "improvement": 50.291667,
+          "accepted": true
+        }
+      },
+      {
+        "from": 304,
+        "to": 305,
+        "raw_mad": 0.0,
+        "changed_fraction": 0.0,
+        "best_translation": {
+          "dx": 0,
+          "dy": 0,
+          "residual_mad": 0.0,
+          "improvement": 0.0,
+          "accepted": false
+        }
+      },
+      {
+        "from": 305,
+        "to": 306,
+        "raw_mad": 50.291667,
+        "changed_fraction": 0.479911,
+        "best_translation": {
+          "dx": 0,
+          "dy": -2,
+          "residual_mad": 0.0,
+          "improvement": 50.291667,
+          "accepted": true
+        }
+      },
+      {
+        "from": 306,
+        "to": 307,
+        "raw_mad": 0.0,
+        "changed_fraction": 0.0,
+        "best_translation": {
+          "dx": 0,
+          "dy": 0,
+          "residual_mad": 0.0,
+          "improvement": 0.0,
+          "accepted": false
+        }
+      },
+      {
+        "from": 307,
+        "to": 308,
+        "raw_mad": 50.291667,
+        "changed_fraction": 0.479911,
+        "best_translation": {
+          "dx": 0,
+          "dy": -2,
+          "residual_mad": 0.0,
+          "improvement": 50.291667,
+          "accepted": true
+        }
+      },
+      {
+        "from": 308,
+        "to": 309,
+        "raw_mad": 0.0,
+        "changed_fraction": 0.0,
+        "best_translation": {
+          "dx": 0,
+          "dy": 0,
+          "residual_mad": 0.0,
+          "improvement": 0.0,
+          "accepted": false
+        }
+      },
+      {
+        "from": 309,
+        "to": 310,
+        "raw_mad": 49.393601,
+        "changed_fraction": 0.47619,
+        "best_translation": {
+          "dx": 0,
+          "dy": -2,
+          "residual_mad": 0.0,
+          "improvement": 49.393601,
+          "accepted": true
+        }
+      },
+      {
+        "from": 310,
+        "to": 311,
+        "raw_mad": 0.0,
+        "changed_fraction": 0.0,
+        "best_translation": {
+          "dx": 0,
+          "dy": 0,
+          "residual_mad": 0.0,
+          "improvement": 0.0,
+          "accepted": false
+        }
+      },
+      {
+        "from": 311,
+        "to": 312,
+        "raw_mad": 47.331845,
+        "changed_fraction": 0.46875,
+        "best_translation": {
+          "dx": 0,
+          "dy": -2,
+          "residual_mad": 0.0,
+          "improvement": 47.331845,
+          "accepted": true
+        }
+      },
+      {
+        "from": 312,
+        "to": 313,
+        "raw_mad": 0.0,
+        "changed_fraction": 0.0,
+        "best_translation": {
+          "dx": 0,
+          "dy": 0,
+          "residual_mad": 0.0,
+          "improvement": 0.0,
+          "accepted": false
+        }
+      },
+      {
+        "from": 313,
+        "to": 314,
+        "raw_mad": 47.420387,
+        "changed_fraction": 0.471726,
+        "best_translation": {
+          "dx": 0,
+          "dy": -2,
+          "residual_mad": 2.508323,
+          "improvement": 44.912064,
+          "accepted": true
+        }
+      },
+      {
+        "from": 314,
+        "to": 315,
+        "raw_mad": 0.0,
+        "changed_fraction": 0.0,
+        "best_translation": {
+          "dx": 0,
+          "dy": 0,
+          "residual_mad": 0.0,
+          "improvement": 0.0,
+          "accepted": false
+        }
+      },
+      {
+        "from": 315,
+        "to": 316,
+        "raw_mad": 46.547619,
+        "changed_fraction": 0.468006,
+        "best_translation": {
+          "dx": 0,
+          "dy": -2,
+          "residual_mad": 0.0,
+          "improvement": 46.547619,
+          "accepted": true
+        }
+      },
+      {
+        "from": 316,
+        "to": 317,
+        "raw_mad": 0.0,
+        "changed_fraction": 0.0,
+        "best_translation": {
+          "dx": 0,
+          "dy": 0,
+          "residual_mad": 0.0,
+          "improvement": 0.0,
+          "accepted": false
+        }
+      },
+      {
+        "from": 317,
+        "to": 318,
+        "raw_mad": 46.43378,
+        "changed_fraction": 0.466667,
+        "best_translation": {
+          "dx": 0,
+          "dy": -2,
+          "residual_mad": 0.0,
+          "improvement": 46.43378,
+          "accepted": true
+        }
+      },
+      {
+        "from": 318,
+        "to": 319,
+        "raw_mad": 0.0,
+        "changed_fraction": 0.0,
+        "best_translation": {
+          "dx": 0,
+          "dy": 0,
+          "residual_mad": 0.0,
+          "improvement": 0.0,
+          "accepted": false
+        }
+      },
+      {
+        "from": 319,
+        "to": 320,
+        "raw_mad": 46.307292,
+        "changed_fraction": 0.465179,
+        "best_translation": {
+          "dx": 0,
+          "dy": -2,
+          "residual_mad": 0.0,
+          "improvement": 46.307292,
+          "accepted": true
+        }
+      },
+      {
+        "from": 320,
+        "to": 321,
+        "raw_mad": 0.0,
+        "changed_fraction": 0.0,
+        "best_translation": {
+          "dx": 0,
+          "dy": 0,
+          "residual_mad": 0.0,
+          "improvement": 0.0,
+          "accepted": false
+        }
+      },
+      {
+        "from": 321,
+        "to": 322,
+        "raw_mad": 45.915179,
+        "changed_fraction": 0.462798,
+        "best_translation": {
+          "dx": 0,
+          "dy": -2,
+          "residual_mad": 0.0,
+          "improvement": 45.915179,
+          "accepted": true
+        }
+      },
+      {
+        "from": 322,
+        "to": 323,
+        "raw_mad": 0.0,
+        "changed_fraction": 0.0,
+        "best_translation": {
+          "dx": 0,
+          "dy": 0,
+          "residual_mad": 0.0,
+          "improvement": 0.0,
+          "accepted": false
+        }
+      },
+      {
+        "from": 323,
+        "to": 324,
+        "raw_mad": 44.637649,
+        "changed_fraction": 0.459226,
+        "best_translation": {
+          "dx": 0,
+          "dy": -2,
+          "residual_mad": 0.0,
+          "improvement": 44.637649,
+          "accepted": true
+        }
+      },
+      {
+        "from": 324,
+        "to": 325,
+        "raw_mad": 0.0,
+        "changed_fraction": 0.0,
+        "best_translation": {
+          "dx": 0,
+          "dy": 0,
+          "residual_mad": 0.0,
+          "improvement": 0.0,
+          "accepted": false
+        }
+      },
+      {
+        "from": 325,
+        "to": 326,
+        "raw_mad": 45.080357,
+        "changed_fraction": 0.461756,
+        "best_translation": {
+          "dx": 0,
+          "dy": -2,
+          "residual_mad": 0.0,
+          "improvement": 45.080357,
+          "accepted": true
+        }
+      },
+      {
+        "from": 326,
+        "to": 327,
+        "raw_mad": 0.0,
+        "changed_fraction": 0.0,
+        "best_translation": {
+          "dx": 0,
+          "dy": 0,
+          "residual_mad": 0.0,
+          "improvement": 0.0,
+          "accepted": false
+        }
+      },
+      {
+        "from": 327,
+        "to": 328,
+        "raw_mad": 46.421131,
+        "changed_fraction": 0.468155,
+        "best_translation": {
+          "dx": 0,
+          "dy": -2,
+          "residual_mad": 0.0,
+          "improvement": 46.421131,
+          "accepted": true
+        }
+      },
+      {
+        "from": 328,
+        "to": 329,
+        "raw_mad": 0.0,
+        "changed_fraction": 0.0,
+        "best_translation": {
+          "dx": 0,
+          "dy": 0,
+          "residual_mad": 0.0,
+          "improvement": 0.0,
+          "accepted": false
+        }
+      },
+      {
+        "from": 329,
+        "to": 330,
+        "raw_mad": 47.559524,
+        "changed_fraction": 0.473661,
+        "best_translation": {
+          "dx": 0,
+          "dy": -2,
+          "residual_mad": 0.0,
+          "improvement": 47.559524,
+          "accepted": true
+        }
+      },
+      {
+        "from": 330,
+        "to": 331,
+        "raw_mad": 0.0,
+        "changed_fraction": 0.0,
+        "best_translation": {
+          "dx": 0,
+          "dy": 0,
+          "residual_mad": 0.0,
+          "improvement": 0.0,
+          "accepted": false
+        }
+      },
+      {
+        "from": 331,
+        "to": 332,
+        "raw_mad": 48.280506,
+        "changed_fraction": 0.476786,
+        "best_translation": {
+          "dx": 0,
+          "dy": -2,
+          "residual_mad": 0.0,
+          "improvement": 48.280506,
+          "accepted": true
+        }
+      },
+      {
+        "from": 332,
+        "to": 333,
+        "raw_mad": 0.0,
+        "changed_fraction": 0.0,
+        "best_translation": {
+          "dx": 0,
+          "dy": 0,
+          "residual_mad": 0.0,
+          "improvement": 0.0,
+          "accepted": false
+        }
+      },
+      {
+        "from": 333,
+        "to": 334,
+        "raw_mad": 50.063988,
+        "changed_fraction": 0.484077,
+        "best_translation": {
+          "dx": 0,
+          "dy": -2,
+          "residual_mad": 0.0,
+          "improvement": 50.063988,
+          "accepted": true
+        }
+      },
+      {
+        "from": 334,
+        "to": 335,
+        "raw_mad": 2.65625,
+        "changed_fraction": 0.017857,
+        "best_translation": {
+          "dx": 0,
+          "dy": 0,
+          "residual_mad": 2.65625,
+          "improvement": 0.0,
+          "accepted": false
+        }
+      },
+      {
+        "from": 335,
+        "to": 336,
+        "raw_mad": 0.0,
+        "changed_fraction": 0.0,
+        "best_translation": {
+          "dx": 0,
+          "dy": 0,
+          "residual_mad": 0.0,
+          "improvement": 0.0,
+          "accepted": false
+        }
+      },
+      {
+        "from": 336,
+        "to": 337,
+        "raw_mad": 0.0,
+        "changed_fraction": 0.0,
+        "best_translation": {
+          "dx": 0,
+          "dy": 0,
+          "residual_mad": 0.0,
+          "improvement": 0.0,
+          "accepted": false
+        }
+      },
+      {
+        "from": 337,
+        "to": 338,
+        "raw_mad": 0.0,
+        "changed_fraction": 0.0,
+        "best_translation": {
+          "dx": 0,
+          "dy": 0,
+          "residual_mad": 0.0,
+          "improvement": 0.0,
+          "accepted": false
+        }
+      }
+    ]
+  },
+  "comparison": {
+    "verdict": "PASS",
+    "duration_ratio": 1.0,
+    "checks": [
+      {
+        "name": "contiguous_frame_ids",
+        "status": "PASS",
+        "detail": "reference missing=[]; current missing=[]"
+      },
+      {
+        "name": "raw_duration",
+        "status": "PASS",
+        "detail": "reference=40 frames; current=40 frames; ratio=1.000"
+      },
+      {
+        "name": "background_path_length",
+        "status": "PASS",
+        "detail": "reference=32 px; current=32 px; delta=0 px"
+      },
+      {
+        "name": "largest_background_step",
+        "status": "PASS",
+        "detail": "reference=2 px; current=2 px; delta=0 px"
+      },
+      {
+        "name": "background_motion_distribution",
+        "status": "PASS",
+        "detail": "largest-step/path share: reference=0.0625; current=0.0625; delta=0.000"
+      },
+      {
+        "name": "ordered_background_cadence",
+        "status": "PASS",
+        "detail": "39 reference / 39 current transitions"
+      }
+    ]
+  }
+}

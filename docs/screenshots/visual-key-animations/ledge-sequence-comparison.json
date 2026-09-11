@@ -1,0 +1,795 @@
+{
+  "schema_version": 1,
+  "roi": {
+    "x": 0,
+    "y": 10,
+    "width": 56,
+    "height": 120
+  },
+  "reference": {
+    "label": "reference",
+    "directory": "/tmp/keyanim-ledge-final-20260910.0bjAJ9/reference/ledge-down/run-1/frames",
+    "requested_range": {
+      "start": 2,
+      "end": 41
+    },
+    "present_frame_count": 40,
+    "missing_frames": [],
+    "background_motion": {
+      "translated_steps": 16,
+      "net_dx": 0,
+      "net_dy": -32,
+      "path_l1": 32,
+      "largest_step_l1": 2,
+      "largest_step_share": 0.0625
+    },
+    "transitions": [
+      {
+        "from": 2,
+        "to": 3,
+        "raw_mad": 0.0,
+        "changed_fraction": 0.0,
+        "best_translation": {
+          "dx": 0,
+          "dy": 0,
+          "residual_mad": 0.0,
+          "improvement": 0.0,
+          "accepted": false
+        }
+      },
+      {
+        "from": 3,
+        "to": 4,
+        "raw_mad": 0.0,
+        "changed_fraction": 0.0,
+        "best_translation": {
+          "dx": 0,
+          "dy": 0,
+          "residual_mad": 0.0,
+          "improvement": 0.0,
+          "accepted": false
+        }
+      },
+      {
+        "from": 4,
+        "to": 5,
+        "raw_mad": 0.0,
+        "changed_fraction": 0.0,
+        "best_translation": {
+          "dx": 0,
+          "dy": 0,
+          "residual_mad": 0.0,
+          "improvement": 0.0,
+          "accepted": false
+        }
+      },
+      {
+        "from": 5,
+        "to": 6,
+        "raw_mad": 0.0,
+        "changed_fraction": 0.0,
+        "best_translation": {
+          "dx": 0,
+          "dy": 0,
+          "residual_mad": 0.0,
+          "improvement": 0.0,
+          "accepted": false
+        }
+      },
+      {
+        "from": 6,
+        "to": 7,
+        "raw_mad": 56.681845,
+        "changed_fraction": 0.489286,
+        "best_translation": {
+          "dx": 0,
+          "dy": -2,
+          "residual_mad": 1.996368,
+          "improvement": 54.685477,
+          "accepted": true
+        }
+      },
+      {
+        "from": 7,
+        "to": 8,
+        "raw_mad": 0.0,
+        "changed_fraction": 0.0,
+        "best_translation": {
+          "dx": 0,
+          "dy": 0,
+          "residual_mad": 0.0,
+          "improvement": 0.0,
+          "accepted": false
+        }
+      },
+      {
+        "from": 8,
+        "to": 9,
+        "raw_mad": 56.153125,
+        "changed_fraction": 0.48631,
+        "best_translation": {
+          "dx": 0,
+          "dy": -2,
+          "residual_mad": 0.0,
+          "improvement": 56.153125,
+          "accepted": true
+        }
+      },
+      {
+        "from": 9,
+        "to": 10,
+        "raw_mad": 0.0,
+        "changed_fraction": 0.0,
+        "best_translation": {
+          "dx": 0,
+          "dy": 0,
+          "residual_mad": 0.0,
+          "improvement": 0.0,
+          "accepted": false
+        }
+      },
+      {
+        "from": 10,
+        "to": 11,
+        "raw_mad": 56.069643,
+        "changed_fraction": 0.486012,
+        "best_translation": {
+          "dx": 0,
+          "dy": -2,
+          "residual_mad": 0.0,
+          "improvement": 56.069643,
+          "accepted": true
+        }
+      },
+      {
+        "from": 11,
+        "to": 12,
+        "raw_mad": 0.0,
+        "changed_fraction": 0.0,
+        "best_translation": {
+          "dx": 0,
+          "dy": 0,
+          "residual_mad": 0.0,
+          "improvement": 0.0,
+          "accepted": false
+        }
+      },
+      {
+        "from": 12,
+        "to": 13,
+        "raw_mad": 55.36131,
+        "changed_fraction": 0.482738,
+        "best_translation": {
+          "dx": 0,
+          "dy": -2,
+          "residual_mad": 0.0,
+          "improvement": 55.36131,
+          "accepted": true
+        }
+      },
+      {
+        "from": 13,
+        "to": 14,
+        "raw_mad": 0.0,
+        "changed_fraction": 0.0,
+        "best_translation": {
+          "dx": 0,
+          "dy": 0,
+          "residual_mad": 0.0,
+          "improvement": 0.0,
+          "accepted": false
+        }
+      },
+      {
+        "from": 14,
+        "to": 15,
+        "raw_mad": 53.436161,
+        "changed_fraction": 0.475744,
+        "best_translation": {
+          "dx": 0,
+          "dy": -2,
+          "residual_mad": 0.0,
+          "improvement": 53.436161,
+          "accepted": true
+        }
+      },
+      {
+        "from": 15,
+        "to": 16,
+        "raw_mad": 0.0,
+        "changed_fraction": 0.0,
+        "best_translation": {
+          "dx": 0,
+          "dy": 0,
+          "residual_mad": 0.0,
+          "improvement": 0.0,
+          "accepted": false
+        }
+      },
+      {
+        "from": 16,
+        "to": 17,
+        "raw_mad": 53.241369,
+        "changed_fraction": 0.476488,
+        "best_translation": {
+          "dx": 0,
+          "dy": -2,
+          "residual_mad": 0.0,
+          "improvement": 53.241369,
+          "accepted": true
+        }
+      },
+      {
+        "from": 17,
+        "to": 18,
+        "raw_mad": 0.0,
+        "changed_fraction": 0.0,
+        "best_translation": {
+          "dx": 0,
+          "dy": 0,
+          "residual_mad": 0.0,
+          "improvement": 0.0,
+          "accepted": false
+        }
+      },
+      {
+        "from": 18,
+        "to": 19,
+        "raw_mad": 53.254018,
+        "changed_fraction": 0.476935,
+        "best_translation": {
+          "dx": 0,
+          "dy": -2,
+          "residual_mad": 0.0,
+          "improvement": 53.254018,
+          "accepted": true
+        }
+      },
+      {
+        "from": 19,
+        "to": 20,
+        "raw_mad": 0.0,
+        "changed_fraction": 0.0,
+        "best_translation": {
+          "dx": 0,
+          "dy": 0,
+          "residual_mad": 0.0,
+          "improvement": 0.0,
+          "accepted": false
+        }
+      },
+      {
+        "from": 20,
+        "to": 21,
+        "raw_mad": 53.403274,
+        "changed_fraction": 0.475744,
+        "best_translation": {
+          "dx": 0,
+          "dy": -2,
+          "residual_mad": 0.0,
+          "improvement": 53.403274,
+          "accepted": true
+        }
+      },
+      {
+        "from": 21,
+        "to": 22,
+        "raw_mad": 0.0,
+        "changed_fraction": 0.0,
+        "best_translation": {
+          "dx": 0,
+          "dy": 0,
+          "residual_mad": 0.0,
+          "improvement": 0.0,
+          "accepted": false
+        }
+      },
+      {
+        "from": 22,
+        "to": 23,
+        "raw_mad": 53.625893,
+        "changed_fraction": 0.474554,
+        "best_translation": {
+          "dx": 0,
+          "dy": -2,
+          "residual_mad": 0.0,
+          "improvement": 53.625893,
+          "accepted": true
+        }
+      },
+      {
+        "from": 23,
+        "to": 24,
+        "raw_mad": 0.0,
+        "changed_fraction": 0.0,
+        "best_translation": {
+          "dx": 0,
+          "dy": 0,
+          "residual_mad": 0.0,
+          "improvement": 0.0,
+          "accepted": false
+        }
+      },
+      {
+        "from": 24,
+        "to": 25,
+        "raw_mad": 53.471577,
+        "changed_fraction": 0.472321,
+        "best_translation": {
+          "dx": 0,
+          "dy": -2,
+          "residual_mad": 0.0,
+          "improvement": 53.471577,
+          "accepted": true
+        }
+      },
+      {
+        "from": 25,
+        "to": 26,
+        "raw_mad": 0.0,
+        "changed_fraction": 0.0,
+        "best_translation": {
+          "dx": 0,
+          "dy": 0,
+          "residual_mad": 0.0,
+          "improvement": 0.0,
+          "accepted": false
+        }
+      },
+      {
+        "from": 26,
+        "to": 27,
+        "raw_mad": 52.48497,
+        "changed_fraction": 0.468899,
+        "best_translation": {
+          "dx": 0,
+          "dy": -2,
+          "residual_mad": 0.0,
+          "improvement": 52.48497,
+          "accepted": true
+        }
+      },
+      {
+        "from": 27,
+        "to": 28,
+        "raw_mad": 2.064286,
+        "changed_fraction": 0.014286,
+        "best_translation": {
+          "dx": 0,
+          "dy": 0,
+          "residual_mad": 2.064286,
+          "improvement": 0.0,
+          "accepted": false
+        }
+      },
+      {
+        "from": 28,
+        "to": 29,
+        "raw_mad": 52.659524,
+        "changed_fraction": 0.46994,
+        "best_translation": {
+          "dx": 0,
+          "dy": -2,
+          "residual_mad": 0.0,
+          "improvement": 52.659524,
+          "accepted": true
+        }
+      },
+      {
+        "from": 29,
+        "to": 30,
+        "raw_mad": 0.0,
+        "changed_fraction": 0.0,
+        "best_translation": {
+          "dx": 0,
+          "dy": 0,
+          "residual_mad": 0.0,
+          "improvement": 0.0,
+          "accepted": false
+        }
+      },
+      {
+        "from": 30,
+        "to": 31,
+        "raw_mad": 53.716964,
+        "changed_fraction": 0.475446,
+        "best_translation": {
+          "dx": 0,
+          "dy": -2,
+          "residual_mad": 0.0,
+          "improvement": 53.716964,
+          "accepted": true
+        }
+      },
+      {
+        "from": 31,
+        "to": 32,
+        "raw_mad": 0.0,
+        "changed_fraction": 0.0,
+        "best_translation": {
+          "dx": 0,
+          "dy": 0,
+          "residual_mad": 0.0,
+          "improvement": 0.0,
+          "accepted": false
+        }
+      },
+      {
+        "from": 32,
+        "to": 33,
+        "raw_mad": 54.635268,
+        "changed_fraction": 0.480804,
+        "best_translation": {
+          "dx": 0,
+          "dy": -2,
+          "residual_mad": 0.0,
+          "improvement": 54.635268,
+          "accepted": true
+        }
+      },
+      {
+        "from": 33,
+        "to": 34,
+        "raw_mad": 0.0,
+        "changed_fraction": 0.0,
+        "best_translation": {
+          "dx": 0,
+          "dy": 0,
+          "residual_mad": 0.0,
+          "improvement": 0.0,
+          "accepted": false
+        }
+      },
+      {
+        "from": 34,
+        "to": 35,
+        "raw_mad": 55.14375,
+        "changed_fraction": 0.483929,
+        "best_translation": {
+          "dx": 0,
+          "dy": -2,
+          "residual_mad": 0.0,
+          "improvement": 55.14375,
+          "accepted": true
+        }
+      },
+      {
+        "from": 35,
+        "to": 36,
+        "raw_mad": 0.0,
+        "changed_fraction": 0.0,
+        "best_translation": {
+          "dx": 0,
+          "dy": 0,
+          "residual_mad": 0.0,
+          "improvement": 0.0,
+          "accepted": false
+        }
+      },
+      {
+        "from": 36,
+        "to": 37,
+        "raw_mad": 56.621131,
+        "changed_fraction": 0.490625,
+        "best_translation": {
+          "dx": 0,
+          "dy": -2,
+          "residual_mad": 0.0,
+          "improvement": 56.621131,
+          "accepted": true
+        }
+      },
+      {
+        "from": 37,
+        "to": 38,
+        "raw_mad": 0.0,
+        "changed_fraction": 0.0,
+        "best_translation": {
+          "dx": 0,
+          "dy": 0,
+          "residual_mad": 0.0,
+          "improvement": 0.0,
+          "accepted": false
+        }
+      },
+      {
+        "from": 38,
+        "to": 39,
+        "raw_mad": 0.0,
+        "changed_fraction": 0.0,
+        "best_translation": {
+          "dx": 0,
+          "dy": 0,
+          "residual_mad": 0.0,
+          "improvement": 0.0,
+          "accepted": false
+        }
+      },
+      {
+        "from": 39,
+        "to": 40,
+        "raw_mad": 0.0,
+        "changed_fraction": 0.0,
+        "best_translation": {
+          "dx": 0,
+          "dy": 0,
+          "residual_mad": 0.0,
+          "improvement": 0.0,
+          "accepted": false
+        }
+      },
+      {
+        "from": 40,
+        "to": 41,
+        "raw_mad": 0.0,
+        "changed_fraction": 0.0,
+        "best_translation": {
+          "dx": 0,
+          "dy": 0,
+          "residual_mad": 0.0,
+          "improvement": 0.0,
+          "accepted": false
+        }
+      }
+    ]
+  },
+  "current": {
+    "label": "current",
+    "directory": "/tmp/keyanim-ledge-final-20260910.0bjAJ9/current/ledge-down/run-1/frames",
+    "requested_range": {
+      "start": 299,
+      "end": 315
+    },
+    "present_frame_count": 17,
+    "missing_frames": [],
+    "background_motion": {
+      "translated_steps": 1,
+      "net_dx": 0,
+      "net_dy": -32,
+      "path_l1": 32,
+      "largest_step_l1": 32,
+      "largest_step_share": 1.0
+    },
+    "transitions": [
+      {
+        "from": 299,
+        "to": 300,
+        "raw_mad": 0.0,
+        "changed_fraction": 0.0,
+        "best_translation": {
+          "dx": 0,
+          "dy": 0,
+          "residual_mad": 0.0,
+          "improvement": 0.0,
+          "accepted": false
+        }
+      },
+      {
+        "from": 300,
+        "to": 301,
+        "raw_mad": 0.0,
+        "changed_fraction": 0.0,
+        "best_translation": {
+          "dx": 0,
+          "dy": 0,
+          "residual_mad": 0.0,
+          "improvement": 0.0,
+          "accepted": false
+        }
+      },
+      {
+        "from": 301,
+        "to": 302,
+        "raw_mad": 0.0,
+        "changed_fraction": 0.0,
+        "best_translation": {
+          "dx": 0,
+          "dy": 0,
+          "residual_mad": 0.0,
+          "improvement": 0.0,
+          "accepted": false
+        }
+      },
+      {
+        "from": 302,
+        "to": 303,
+        "raw_mad": 0.0,
+        "changed_fraction": 0.0,
+        "best_translation": {
+          "dx": 0,
+          "dy": 0,
+          "residual_mad": 0.0,
+          "improvement": 0.0,
+          "accepted": false
+        }
+      },
+      {
+        "from": 303,
+        "to": 304,
+        "raw_mad": 0.0,
+        "changed_fraction": 0.0,
+        "best_translation": {
+          "dx": 0,
+          "dy": 0,
+          "residual_mad": 0.0,
+          "improvement": 0.0,
+          "accepted": false
+        }
+      },
+      {
+        "from": 304,
+        "to": 305,
+        "raw_mad": 0.0,
+        "changed_fraction": 0.0,
+        "best_translation": {
+          "dx": 0,
+          "dy": 0,
+          "residual_mad": 0.0,
+          "improvement": 0.0,
+          "accepted": false
+        }
+      },
+      {
+        "from": 305,
+        "to": 306,
+        "raw_mad": 0.0,
+        "changed_fraction": 0.0,
+        "best_translation": {
+          "dx": 0,
+          "dy": 0,
+          "residual_mad": 0.0,
+          "improvement": 0.0,
+          "accepted": false
+        }
+      },
+      {
+        "from": 306,
+        "to": 307,
+        "raw_mad": 0.0,
+        "changed_fraction": 0.0,
+        "best_translation": {
+          "dx": 0,
+          "dy": 0,
+          "residual_mad": 0.0,
+          "improvement": 0.0,
+          "accepted": false
+        }
+      },
+      {
+        "from": 307,
+        "to": 308,
+        "raw_mad": 0.0,
+        "changed_fraction": 0.0,
+        "best_translation": {
+          "dx": 0,
+          "dy": 0,
+          "residual_mad": 0.0,
+          "improvement": 0.0,
+          "accepted": false
+        }
+      },
+      {
+        "from": 308,
+        "to": 309,
+        "raw_mad": 0.0,
+        "changed_fraction": 0.0,
+        "best_translation": {
+          "dx": 0,
+          "dy": 0,
+          "residual_mad": 0.0,
+          "improvement": 0.0,
+          "accepted": false
+        }
+      },
+      {
+        "from": 309,
+        "to": 310,
+        "raw_mad": 0.0,
+        "changed_fraction": 0.0,
+        "best_translation": {
+          "dx": 0,
+          "dy": 0,
+          "residual_mad": 0.0,
+          "improvement": 0.0,
+          "accepted": false
+        }
+      },
+      {
+        "from": 310,
+        "to": 311,
+        "raw_mad": 0.0,
+        "changed_fraction": 0.0,
+        "best_translation": {
+          "dx": 0,
+          "dy": 0,
+          "residual_mad": 0.0,
+          "improvement": 0.0,
+          "accepted": false
+        }
+      },
+      {
+        "from": 311,
+        "to": 312,
+        "raw_mad": 0.0,
+        "changed_fraction": 0.0,
+        "best_translation": {
+          "dx": 0,
+          "dy": 0,
+          "residual_mad": 0.0,
+          "improvement": 0.0,
+          "accepted": false
+        }
+      },
+      {
+        "from": 312,
+        "to": 313,
+        "raw_mad": 0.0,
+        "changed_fraction": 0.0,
+        "best_translation": {
+          "dx": 0,
+          "dy": 0,
+          "residual_mad": 0.0,
+          "improvement": 0.0,
+          "accepted": false
+        }
+      },
+      {
+        "from": 313,
+        "to": 314,
+        "raw_mad": 2.466518,
+        "changed_fraction": 0.018601,
+        "best_translation": {
+          "dx": 0,
+          "dy": 0,
+          "residual_mad": 2.466518,
+          "improvement": 0.0,
+          "accepted": false
+        }
+      },
+      {
+        "from": 314,
+        "to": 315,
+        "raw_mad": 42.462054,
+        "changed_fraction": 0.310417,
+        "best_translation": {
+          "dx": 0,
+          "dy": -32,
+          "residual_mad": 0.0,
+          "improvement": 42.462054,
+          "accepted": true
+        }
+      }
+    ]
+  },
+  "comparison": {
+    "verdict": "FAIL",
+    "duration_ratio": 0.425,
+    "checks": [
+      {
+        "name": "contiguous_frame_ids",
+        "status": "PASS",
+        "detail": "reference missing=[]; current missing=[]"
+      },
+      {
+        "name": "raw_duration",
+        "status": "FAIL",
+        "detail": "reference=40 frames; current=17 frames; ratio=0.425"
+      },
+      {
+        "name": "background_path_length",
+        "status": "PASS",
+        "detail": "reference=32 px; current=32 px; delta=0 px"
+      },
+      {
+        "name": "largest_background_step",
+        "status": "FAIL",
+        "detail": "reference=2 px; current=32 px; delta=30 px"
+      },
+      {
+        "name": "background_motion_distribution",
+        "status": "FAIL",
+        "detail": "largest-step/path share: reference=0.0625; current=1.0; delta=0.938"
+      }
+    ]
+  }
+}

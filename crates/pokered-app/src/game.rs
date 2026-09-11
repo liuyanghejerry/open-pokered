@@ -310,6 +310,9 @@ pub struct FrameRecorder {
     dir: PathBuf,
     next: u64,
     fb: FrameBuffer,
+    /// Compact state sampled in the same capture call as each PNG.
+    manifest: std::fs::File,
+    manifest_broken: bool,
 }
 
 #[cfg(all(not(target_arch = "wasm32"), not(target_os = "none")))]
@@ -317,18 +320,132 @@ impl FrameRecorder {
     #[cfg(not(target_os = "none"))]
     pub fn new(dir: PathBuf) -> std::io::Result<Self> {
         std::fs::create_dir_all(&dir)?;
+        let manifest = std::fs::File::create(dir.join("frame-manifest.jsonl"))?;
         Ok(Self {
             dir,
             next: 0,
             fb: FrameBuffer::new(RenderConfig::new(160, 144), Rgba::WHITE),
+            manifest,
+            manifest_broken: false,
         })
     }
 
     fn capture(&mut self, game: &mut PokemonGame) {
         game.draw(&mut self.fb);
-        let path = self.dir.join(format!("frame-{:06}.png", self.next));
-        if let Err(e) = self.fb.save_png(&path) {
-            log::warn!("frame recorder: failed to write {}: {}", path.display(), e);
+        let filename = format!("frame-{:06}.png", self.next);
+        let path = self.dir.join(&filename);
+        let png_written = match self.fb.save_png(&path) {
+            Ok(()) => true,
+            Err(e) => {
+                log::warn!("frame recorder: failed to write {}: {}", path.display(), e);
+                false
+            }
+        };
+
+        if !self.manifest_broken {
+            let fly_arrival = game.overworld.enter_map_fly_anim.as_ref().map(|state| {
+                let (bird_y, bird_x) = state.bird_pos();
+                serde_json::json!({
+                    "frame": state.frame,
+                    "bird_x": bird_x,
+                    "bird_y": bird_y,
+                    "flap": state.flap_frame(),
+                })
+            });
+            let fly_departure = game.overworld.fly_departure.as_ref().map(|state| {
+                let bird = state.bird_pose().map(|(bird_y, bird_x, flap)| {
+                    serde_json::json!({
+                        "bird_x": bird_x,
+                        "bird_y": bird_y,
+                        "flap": flap,
+                    })
+                });
+                serde_json::json!({
+                    "frame": state.frame,
+                    "force_white": state.force_white(),
+                    "player_visible": state.player_visible(),
+                    "bird": bird,
+                })
+            });
+            let ledge_jump = game.overworld.ledge_jump.as_ref().map(|state| {
+                serde_json::json!({
+                    "frame": state.frame,
+                    "origin": [state.origin_x, state.origin_y],
+                    "logical_position": state.player_position(),
+                    "camera_progress_px": state.camera_progress_px(),
+                    "camera_residual_px": state.camera_residual_px(),
+                    "walk_counter": state.walk_counter(),
+                    "player_y_offset": state.player_y_offset(),
+                })
+            });
+            let field_move_step = game.overworld.field_move_step.as_ref().map(|state| {
+                serde_json::json!({
+                    "frame": state.frame,
+                    "origin": [state.origin_x, state.origin_y],
+                    "logical_position": state.player_position(),
+                    "camera_progress_px": state.camera_progress_px(),
+                    "camera_residual_px": state.camera_residual_px(),
+                    "walk_counter": state.walk_counter(),
+                })
+            });
+            let field_move_restore = game.overworld.field_move_restore.as_ref().map(|state| {
+                serde_json::json!({
+                    "frame": state.frame,
+                    "force_white": state.force_white(),
+                    "sprites_visible": false,
+                })
+            });
+            let cut_anim = game.overworld.cut_anim.as_ref().map(|state| {
+                serde_json::json!({
+                    "frame": state.frame,
+                    "kind": format!("{:?}", state.kind),
+                    "facing": format!("{:?}", state.facing),
+                    "tree_spread_px": state.tree_spread_px(),
+                    "palette_flipped": state.palette_flipped(),
+                    "base_offset": state.base_offset(),
+                })
+            });
+            let dialogue = game
+                .overworld
+                .pending_dialogue
+                .as_ref()
+                .or(game.overworld.cut_retained_dialogue.as_ref())
+                .and_then(|state| state.get_display_text())
+                .map(|(top, bottom)| format!("{} {}", top, bottom).trim().to_string());
+            let entry = serde_json::json!({
+                "capture_index": self.next,
+                "png": filename,
+                "png_written": png_written,
+                "frame_count": game.frame_count,
+                "screen": crate::cli::screen_name(&game.state.screen),
+                "map": format!("{:?}", game.overworld.state.current_map),
+                "player_x": game.overworld.state.player.x,
+                "player_y": game.overworld.state.player.y,
+                "player_facing": format!("{:?}", game.overworld.state.player.facing),
+                "player_transport": format!("{:?}", game.overworld.state.player.transport),
+                "player_movement_state": format!("{:?}", game.overworld.state.player.movement_state),
+                "walk_counter": game.overworld.state.walk_counter,
+                "enter_map_fly": fly_arrival,
+                "fly_departure": fly_departure,
+                "fly_arrival_delay_frames": game.overworld.fly_arrival_delay_frames,
+                "pending_fly_arrival": game.overworld.pending_fly_arrival,
+                "ledge_jump": ledge_jump,
+                "field_move_step": field_move_step,
+                "field_move_restore": field_move_restore,
+                "cut_anim": cut_anim,
+                "cut_retained_dialogue": game.overworld.cut_retained_dialogue.is_some(),
+                "warp_fade": format!("{:?}", game.overworld.warp_fade_state),
+                "dialogue": dialogue,
+                "battle_phase": format!("{:?}", game.battle.phase),
+                "battle_message": game.battle.current_message.clone(),
+            });
+            use std::io::Write;
+            if let Err(e) = writeln!(self.manifest, "{entry}")
+                .and_then(|_| self.manifest.flush())
+            {
+                log::warn!("frame recorder: failed to write frame manifest: {}", e);
+                self.manifest_broken = true;
+            }
         }
         self.next += 1;
     }
@@ -340,7 +457,6 @@ impl FrameRecorder {
 /// intermediate files: ffmpeg reads `pipe:0` and encodes H.264 as the game
 /// runs, so the .mp4 is finished when the game exits. ffmpeg's stderr is
 /// inherited at `-loglevel error`, so only real errors surface.
-#[cfg(all(not(target_arch = "wasm32"), not(target_os = "none")))]
 #[cfg(all(not(target_arch = "wasm32"), not(target_os = "none")))]
 pub struct VideoRecorder {
     child: std::process::Child,
@@ -356,7 +472,6 @@ pub struct VideoRecorder {
     broken: bool,
 }
 
-#[cfg(all(not(target_arch = "wasm32"), not(target_os = "none")))]
 #[cfg(all(not(target_arch = "wasm32"), not(target_os = "none")))]
 impl VideoRecorder {
     pub fn new(path: &Path, fps: u32) -> std::io::Result<Self> {
@@ -477,6 +592,10 @@ pub struct PokemonGame {
     /// Set when the town map should open in FLY destination-picker mode
     /// (party-menu FLY) instead of the read-only viewer.
     pending_fly_map: bool,
+    /// The original keeps the selected town-map frame visible for eight raw
+    /// frames while `_LeaveMapAnim` begins. During this countdown the hidden
+    /// overworld FLY state still advances once per frame.
+    fly_departure_screen_frames: u8,
     /// Bag item awaiting a party-member target: set when the bag's USE opens
     /// the party screen (potions, stones, TM/HM…), cleared when the item is
     /// applied or the selection is cancelled.
@@ -540,7 +659,7 @@ pub struct PokemonGame {
     pub asset_watcher: Option<AssetWatcher>,
     #[cfg(feature = "debug-server")]
     pub debug_handle: Option<pokered_debug_server::DebugServerHandle>,
-    pending_debug_inputs: Vec<GbButton>,
+    pending_debug_inputs: Vec<Option<GbButton>>,
     pending_debug_frames: u32,
     /// Persistent state for debug-server injected input. A queued button must
     /// read as HELD across consecutive frames (fresh `InputState` per frame
@@ -1021,6 +1140,7 @@ impl PokemonGame {
             trainer_card_screen: TrainerCardScreenState::new(),
             pending_evolve_move_replace: None,
             pending_fly_map: false,
+            fly_departure_screen_frames: 0,
             pending_bag_item: None,
             pending_softboiled_user: None,
             stats_screen: None,
@@ -1180,6 +1300,7 @@ impl PokemonGame {
             trainer_card_screen: f_card,
             pending_evolve_move_replace: None,
             pending_fly_map: false,
+            fly_departure_screen_frames: 0,
             pending_bag_item: None,
             pending_softboiled_user: None,
             stats_screen: None,
@@ -1288,6 +1409,7 @@ impl PokemonGame {
             trainer_card_screen: TrainerCardScreenState::new(),
             pending_evolve_move_replace: None,
             pending_fly_map: false,
+            fly_departure_screen_frames: 0,
             pending_bag_item: None,
             pending_softboiled_user: None,
             stats_screen: None,
@@ -2747,7 +2869,9 @@ impl PokemonGame {
             let button = self.pending_debug_inputs.remove(0);
             self.debug_input.begin_frame();
             self.debug_input.set_from_bitmask(0);
-            self.debug_input.press(button);
+            if let Some(button) = button {
+                self.debug_input.press(button);
+            }
             _modified_input = self.debug_input.clone();
             &_modified_input
         } else if self.debug_input.raw_current() != 0 {
@@ -4530,35 +4654,51 @@ impl PokemonGame {
                 }
             }
             GameScreen::TownMap => {
-                let tm_input = TownMapScreenInput {
-                    up: input.is_just_pressed(GbButton::Up),
-                    down: input.is_just_pressed(GbButton::Down),
-                    a: input.is_just_pressed(GbButton::A),
-                    b: input.is_just_pressed(GbButton::B),
-                };
-                match self.town_map_screen.update_frame(tm_input) {
-                    TownMapScreenAction::Closed => {
-                        // FLY cancel returns to the party menu (Gen-1 flow);
-                        // the bag's TOWN MAP viewer returns to the overworld.
-                        if self.town_map_screen.mode()
-                            == pokered_core::town_map_screen::TownMapMode::Fly
-                        {
-                            ScreenAction::Transition(GameScreen::PartyScreen)
-                        } else {
-                            ScreenAction::Transition(GameScreen::Overworld)
-                        }
-                    }
-                    TownMapScreenAction::FlyTo(dest) => {
-                        // BIT_FLY_WARP: fade out and land at the destination's
-                        // fly point (FlyWarpData).
-                        let point =
-                            pokered_core::overworld::hm_effects::fly_destination_for_map(dest);
-                        if let Some(point) = point {
-                            self.overworld.fly_warp_to(point.map, point.x, point.y);
-                        }
+                if self.fly_departure_screen_frames > 0 {
+                    self.overworld.update_frame(
+                        pokered_core::overworld::OverworldInput::new(
+                            false, false, false, false, false, false, false, false,
+                        ),
+                    );
+                    self.fly_departure_screen_frames -= 1;
+                    if self.fly_departure_screen_frames == 0 {
                         ScreenAction::Transition(GameScreen::Overworld)
+                    } else {
+                        ScreenAction::Continue
                     }
-                    TownMapScreenAction::Active => ScreenAction::Continue,
+                } else {
+                    let tm_input = TownMapScreenInput {
+                        up: input.is_just_pressed(GbButton::Up),
+                        down: input.is_just_pressed(GbButton::Down),
+                        a: input.is_just_pressed(GbButton::A),
+                        b: input.is_just_pressed(GbButton::B),
+                    };
+                    match self.town_map_screen.update_frame(tm_input) {
+                        TownMapScreenAction::Closed => {
+                            // FLY cancel returns to the party menu (Gen-1 flow);
+                            // the bag's TOWN MAP viewer returns to the overworld.
+                            if self.town_map_screen.mode()
+                                == pokered_core::town_map_screen::TownMapMode::Fly
+                            {
+                                ScreenAction::Transition(GameScreen::PartyScreen)
+                            } else {
+                                ScreenAction::Transition(GameScreen::Overworld)
+                            }
+                        }
+                        TownMapScreenAction::FlyTo(dest) => {
+                            // BIT_FLY_WARP: leave the selected town-map frame
+                            // up while `_LeaveMapAnim` starts, then hand drawing
+                            // back to the overworld for the bird departure.
+                            let point =
+                                pokered_core::overworld::hm_effects::fly_destination_for_map(dest);
+                            if let Some(point) = point {
+                                self.overworld.fly_warp_to(point.map, point.x, point.y);
+                                self.fly_departure_screen_frames = pokered_core::overworld::presentation::FLY_DEPARTURE_TOWN_MAP_FRAMES;
+                            }
+                            ScreenAction::Continue
+                        }
+                        TownMapScreenAction::Active => ScreenAction::Continue,
+                    }
                 }
             }
             GameScreen::PokemonStatsScreen(_idx) => {
@@ -5636,6 +5776,56 @@ impl PokemonGame {
                     DebugResponse::err("capture_frame requires a native frontend".to_string())
                 }
             }
+            DebugCommand::Game(GameDebugCommand::PressTimeline {
+                ref buttons,
+                start_at_frame,
+            }) => {
+                let parsed = buttons
+                    .iter()
+                    .map(|button| match button.as_deref().map(str::to_lowercase) {
+                        None => Ok(None),
+                        Some(button) => match button.as_str() {
+                            "a" => Ok(Some(GbButton::A)),
+                            "b" => Ok(Some(GbButton::B)),
+                            "start" => Ok(Some(GbButton::Start)),
+                            "select" => Ok(Some(GbButton::Select)),
+                            "up" => Ok(Some(GbButton::Up)),
+                            "down" => Ok(Some(GbButton::Down)),
+                            "left" => Ok(Some(GbButton::Left)),
+                            "right" => Ok(Some(GbButton::Right)),
+                            _ => Err(format!("unknown button: '{}'", button)),
+                        },
+                    })
+                    .collect::<Result<Vec<_>, _>>();
+                match parsed {
+                    Ok(_parsed)
+                        if start_at_frame.is_some_and(|frame| frame < self.frame_count) =>
+                    {
+                        DebugResponse::err(format!(
+                            "start_at_frame {} is before current frame {}",
+                            start_at_frame.unwrap(),
+                            self.frame_count
+                        ))
+                    }
+                    Ok(parsed) => {
+                        let queue_start_frame = self.frame_count;
+                        let start_frame = start_at_frame.unwrap_or(queue_start_frame);
+                        let padding = start_frame.saturating_sub(queue_start_frame) as usize;
+                        let frames = parsed.len() as u64;
+                        self.pending_debug_inputs
+                            .extend(std::iter::repeat_n(None, padding));
+                        self.pending_debug_inputs.extend(parsed);
+                        DebugResponse::ok_with_data(serde_json::json!({
+                            "queue_start_frame": queue_start_frame,
+                            "start_frame": start_frame,
+                            "end_frame": start_frame + frames.saturating_sub(1),
+                            "frames": frames,
+                            "padding_frames": padding,
+                        }))
+                    }
+                    Err(error) => DebugResponse::err(error),
+                }
+            }
             DebugCommand::Game(GameDebugCommand::GetParty) => {
                 let party: Vec<serde_json::Value> = self
                     .save_data
@@ -5717,7 +5907,7 @@ impl PokemonGame {
                         return DebugResponse::err(format!("unknown button: '{}'", button));
                     }
                 };
-                self.pending_debug_inputs.push(gb_button);
+                self.pending_debug_inputs.push(Some(gb_button));
                 DebugResponse::ok()
             }
             DebugCommand::Core(CoreDebugCommand::PressSequence { ref buttons }) => {
@@ -5735,7 +5925,7 @@ impl PokemonGame {
                             return DebugResponse::err(format!("unknown button: '{}'", b));
                         }
                     };
-                    self.pending_debug_inputs.push(gb_button);
+                    self.pending_debug_inputs.push(Some(gb_button));
                 }
                 DebugResponse::ok()
             }
@@ -5830,7 +6020,22 @@ impl PokemonGame {
                     Err(_) => DebugResponse::err(format!("unknown species: '{}'", species)),
                 }
             }
-            DebugCommand::Game(GameDebugCommand::StartWildBattle { ref species, level }) => {
+            DebugCommand::Game(GameDebugCommand::StartWildBattle {
+                ref species,
+                level,
+                start_at_frame,
+            }) => {
+                if let Some(target) = start_at_frame {
+                    if target < self.frame_count {
+                        return DebugResponse::err(format!(
+                            "start_at_frame {} is behind current frame {}",
+                            target, self.frame_count
+                        ));
+                    }
+                    while self.frame_count < target {
+                        self.update(&InputState::new());
+                    }
+                }
                 let normalized = species
                     .chars()
                     .enumerate()
@@ -5849,7 +6054,10 @@ impl PokemonGame {
                         } else {
                             self.start_wild_battle(sp, level);
                             self.state.screen = GameScreen::Battle;
-                            DebugResponse::ok()
+                            DebugResponse::ok_with_data(serde_json::json!({
+                                "frame_count": self.frame_count,
+                                "state": self.debug_state_snapshot(),
+                            }))
                         }
                     }
                     Err(_) => DebugResponse::err(format!("unknown species: '{}'", species)),
@@ -6093,8 +6301,15 @@ impl PokemonGame {
                 }
             }
             GameScreen::Battle => {
-                if self.battle_vfx.has_transition() && self.battle_vfx.overworld_snapshot.is_none()
-                {
+                let uses_overworld_snapshot = matches!(
+                    &self.battle.phase,
+                    BattlePhase::Intro {
+                        phase: pokered_core::battle::IntroPhase::TransitionFlash
+                            | pokered_core::battle::IntroPhase::BattleTransitionWipe(_),
+                        ..
+                    }
+                );
+                if uses_overworld_snapshot && self.battle_vfx.overworld_snapshot.is_none() {
                     let mut snapshot = FrameBuffer::new(RenderConfig::new(160, 144), Rgba::BLACK);
                     draw_overworld(
                         &mut self.overworld,
@@ -6111,7 +6326,7 @@ impl PokemonGame {
                     &mut self.battle_vfx,
                     self.state.config.language,
                 );
-                if !self.battle_vfx.has_transition() {
+                if !uses_overworld_snapshot {
                     self.battle_vfx.clear_snapshot();
                 }
             }

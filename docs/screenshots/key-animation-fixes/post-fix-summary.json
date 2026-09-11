@@ -1,0 +1,129 @@
+{
+  "schema_version": 2,
+  "date": "2026-09-10",
+  "verdict": "PASS",
+  "scope": "visual animation behavior; cross-implementation font and asset pixels are not required to match",
+  "capture_policy": {
+    "frame_resampling": false,
+    "repeats": 2,
+    "reference_rom_sha1": "5b1456177671b79b263c614ea0e7cc9ac542e9c4",
+    "current_absolute_trigger_frame": 300,
+    "current_png_mapping": "capture_index + 1 == frame_count",
+    "mandatory_checks": [
+      "raw duration",
+      "ordered phase sequence",
+      "ordered actor/background/state sequence",
+      "first stable final state",
+      "two-run pixel repeatability"
+    ]
+  },
+  "pipeline_regression": {
+    "fixture": "pre-final SURF capture with a one-frame camera-cadence shift",
+    "legacy_aggregate_checks": {
+      "raw_duration": "PASS",
+      "background_path_length": "PASS",
+      "largest_background_step": "PASS",
+      "background_motion_distribution": "PASS"
+    },
+    "ordered_background_cadence": {
+      "status": "FAIL",
+      "first_mismatch": "t+1 -> t+2: reference=(0,0), current=(0,-2)"
+    },
+    "post_fix_ordered_background_cadence": "PASS"
+  },
+  "scenarios": {
+    "battle-entry": {
+      "verdict": "PASS",
+      "repeat_exact": {
+        "reference_pixels": true,
+        "current_pixels": true
+      },
+      "reference_window": {
+        "start_frame": 18,
+        "end_frame": 386,
+        "frames": 369
+      },
+      "current_window": {
+        "start_offset": 0,
+        "end_offset": 368,
+        "frames": 369
+      },
+      "current_phases": [
+        { "name": "TransitionFlash", "start": 0, "end": 71, "frames": 72 },
+        { "name": "BattleTransitionWipe", "start": 72, "end": 192, "frames": 121 },
+        { "name": "SilhouetteSlide", "start": 193, "end": 265, "frames": 73 },
+        { "name": "WildReveal", "start": 266, "end": 368, "frames": 103 }
+      ],
+      "ordering": [
+        "enemy HUD stays hidden throughout WildReveal",
+        "party-ball strip appears in the final 25 frames",
+        "Wild RHYDON appeared text follows the reference three-frame transfer cadence"
+      ],
+      "declared_confounder": "reference DEBUG battle begins over the nickname prompt; current debug injection begins over the overworld"
+    },
+    "fly-departure-arrival": {
+      "verdict": "PASS",
+      "repeat_exact": {
+        "reference_pixels": true,
+        "current_pixels": true
+      },
+      "reference_window": { "start_frame": 1, "end_frame": 345, "frames": 345 },
+      "current_window": { "start_offset": 0, "end_offset": 344, "frames": 345 },
+      "departure": { "start": 0, "end": 204, "frames": 205 },
+      "map_switch_offset": { "reference": 228, "current": 228 },
+      "arrival_delay": { "start": 228, "end": 296, "frames": 69 },
+      "arrival_bird": { "start": 297, "end": 343, "frames": 47 },
+      "first_stable_offset": 344
+    },
+    "cut-tree": {
+      "verdict": "PASS",
+      "repeat_exact": {
+        "reference_pixels": true,
+        "current_pixels": true
+      },
+      "window": { "start_offset": 0, "end_offset": 319, "frames": 320 },
+      "cut_overlay": { "start": 301, "end": 318, "frames": 18 },
+      "retained_dialogue": { "start": 300, "end": 309, "frames": 10 },
+      "ordering": "dialogue completes before tree mutation; map redraw and CUT overlay then run before SFX/final stability"
+    },
+    "surf-entry": {
+      "verdict": "PASS",
+      "repeat_exact": {
+        "reference_pixels": true,
+        "current_pixels": true
+      },
+      "window": { "start_offset": 0, "end_offset": 318, "frames": 319 },
+      "screen_restore": {
+        "start": 240,
+        "end": 299,
+        "frames": 60,
+        "white_frames": 37,
+        "map_without_sprites_frames": 23
+      },
+      "movement": {
+        "start": 300,
+        "end": 317,
+        "first_stable_offset": 318,
+        "frames": 18,
+        "background_progress_px": [0, 0, 0, 2, 2, 4, 4, 6, 6, 8, 8, 10, 10, 12, 12, 14, 14, 16],
+        "walk_counter": [0, 7, 7, 7, 6, 6, 5, 5, 4, 4, 3, 3, 2, 2, 1, 1, 0, 0],
+        "logical_y": [13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 14, 14]
+      },
+      "ordered_background_cadence": "PASS"
+    },
+    "ledge-down": {
+      "verdict": "PASS",
+      "repeat_exact": {
+        "reference_pixels": true,
+        "current_pixels": true
+      },
+      "reference_window": { "start_frame": 2, "end_frame": 41, "frames": 40 },
+      "current_window": { "start_offset": 0, "end_offset": 39, "frames": 40 },
+      "background_path_px": { "reference": 32, "current": 32 },
+      "background_steps": { "reference": "16 x 2px", "current": "16 x 2px" },
+      "largest_background_step_px": { "reference": 2, "current": 2 },
+      "ordered_background_cadence": "PASS",
+      "logical_y": [4, 5, 6]
+    }
+  }
+}

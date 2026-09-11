@@ -299,7 +299,11 @@ pub fn draw_overworld(
 
     // Sub-pixel viewport offset: scrolls the world smoothly during player walking.
     // Original GB uses SCX/SCY registers to scroll the background 2px/frame.
-    let (view_sub_x, view_sub_y) = if screen.state.player.movement_state == MovementState::Walking {
+    let (view_sub_x, view_sub_y) = if let Some(jump) = screen.ledge_jump {
+        jump.camera_residual_px()
+    } else if let Some(step) = screen.field_move_step {
+        step.camera_residual_px()
+    } else if screen.state.player.movement_state == MovementState::Walking {
         let elapsed = (8u8.saturating_sub(screen.state.walk_counter)) as i32;
         let px = elapsed * 2;
         match screen.state.player.facing {
@@ -516,7 +520,16 @@ pub fn draw_overworld(
             // player sprite while it glides in; the player reappears when it
             // lands.
             let fly = screen.enter_map_fly_anim.as_ref();
-            let player_visible = player_visible && fly.is_none_or(|s| s.is_done());
+            let fly_player_visible = if let Some(departure) = screen.fly_departure.as_ref() {
+                departure.player_visible()
+            } else {
+                !screen.pending_fly_arrival
+                    && screen.fly_arrival_delay_frames == 0
+                    && fly.is_none_or(|s| s.is_done())
+            };
+            let player_visible = player_visible
+                && fly_player_visible
+                && screen.field_move_restore.is_none();
             let fishing_pose = fishing.map_or(false, |f| f.pose_active());
 
             let (frame, flip_h) = if screen.state.player.movement_state == MovementState::Walking
@@ -592,40 +605,12 @@ pub fn draw_overworld(
             let player_px_x = screen_center_tx as u32 * TILE_SIZE;
             let player_px_y = screen_center_ty as u32 * TILE_SIZE;
 
-            // Ledge jump: compute vertical arc offset from the original game's
-            // PlayerJumpingYScreenCoords table. The table stores absolute Y positions;
-            // we convert to offsets from baseline. walk_counter counts 16 → 0, so
-            // jump frame index = 16 - walk_counter.
-            //
-            // Original table (baseline $3C = 60):
-            //   $38,$36,$34,$32,$31,$30,$30,$30,$31,$32,$33,$34,$36,$38,$3C,$3C
-            // Offsets from baseline:
-            //   -4, -6, -8,-10,-11,-12,-12,-12,-11,-10, -9, -8, -6, -4,  0,  0
-            const JUMP_Y_OFFSETS: [i32; 16] = [
-                -4, -6, -8, -10, -11, -12, -12, -12, -11, -10, -9, -8, -6, -4, 0, 0,
-            ];
-
-            // Original game scrolls the background via AdvancePlayerSprite (2px/frame)
-            // while _HandleMidJump applies the arc. Our map is tile-snapped, so we
-            // offset the sprite from screen center: 1px/frame × 16 frames = 16px = 2 tiles.
-            let (jump_translate_x, jump_translate_y, jump_arc_offset) =
-                if screen.state.player.movement_state == MovementState::Jumping {
-                    let wc = screen.state.walk_counter as i32;
-                    let elapsed = 16 - wc;
-                    let (tdx, tdy) = match screen.state.player.facing {
-                        Direction::Down => (0, elapsed),
-                        Direction::Up => (0, -elapsed),
-                        Direction::Left => (-elapsed, 0),
-                        Direction::Right => (elapsed, 0),
-                    };
-                    let idx = (elapsed as usize).min(JUMP_Y_OFFSETS.len() - 1);
-                    (tdx, tdy, JUMP_Y_OFFSETS[idx])
-                } else {
-                    (0, 0, 0)
-                };
+            // The player stays centered while the camera traverses both tiles;
+            // only the original PlayerJumpingYScreenCoords arc moves the sprite.
+            let jump_arc_offset = screen.ledge_jump.map_or(0, |jump| jump.player_y_offset());
             if screen.state.player.movement_state == MovementState::Jumping && jump_arc_offset < 0 {
-                let shadow_cx = (player_px_x as i32 + jump_translate_x + 8) as i32;
-                let shadow_cy = (player_px_y as i32 + jump_translate_y + 15) as i32;
+                let shadow_cx = player_px_x as i32 + 8;
+                let shadow_cy = player_px_y as i32 + 15;
                 let rx: i32 = 7;
                 let ry: i32 = 3;
                 let shadow_color = Rgba::rgb(0x55, 0x55, 0x55);
@@ -646,9 +631,8 @@ pub fn draw_overworld(
                 }
             }
 
-            let draw_x = (player_px_x as i32 + jump_translate_x).max(0) as u32;
+            let draw_x = player_px_x;
             let draw_y = (player_px_y as i32
-                + jump_translate_y
                 + jump_arc_offset
                 + spin_y_offset
                 + enter_y_offset
@@ -756,6 +740,9 @@ pub fn draw_overworld(
             }
         }
         for npc in &screen.npc_states {
+            if screen.field_move_restore.is_some() {
+                break;
+            }
             if !npc.visible {
                 continue;
             }
@@ -925,40 +912,51 @@ pub fn draw_overworld(
             }
         }
 
-        // The player owns the first OAM entries: the arriving bird must
-        // cover NPCs it crosses, even though NPCs are drawn later above.
+        // The player owns the first OAM entries: the FLY bird must cover NPCs
+        // it crosses, even though NPCs are drawn later above.
         // BirdSprite uses the same six-frame sheet as walking sprites:
         // image indexes $8/$9 select LeftStand/LeftWalk (frames 2/5).
-        // FlyAnimationEnterScreenCoords contains sprite-state coordinates,
-        // not OAM coordinates. Anchor its final ($40,$3c) at our player
+        // The departure and arrival coordinate tables contain sprite-state
+        // coordinates, not OAM coordinates. Anchor ($40,$3c) at our player
         // position; PrepareOAMData's hardware bias is not a screen offset.
-        if let Some(fly) = screen.enter_map_fly_anim.as_ref() {
-            if !fly.is_done() {
-                if let Ok(bird) = rm.load_sprite("bird") {
-                    let bts = bird.tileset.clone();
-                    let bird_pal = Palette::new(&[
-                        Rgba::TRANSPARENT,
-                        GRAYSCALE_PALETTE.colors[1],
-                        GRAYSCALE_PALETTE.colors[2],
-                        GRAYSCALE_PALETTE.colors[3],
-                    ]);
-                    let (oy, ox) = fly.bird_pos();
-                    let bx = screen_center_tx * TILE_SIZE as i32 + ox as i32 - 0x40;
-                    let by = screen_center_ty * TILE_SIZE as i32 + oy as i32 - 0x3c;
-                    let base_tile = [2, 5][fly.flap_frame() as usize] * 4;
-                    for r in 0..2u32 {
-                        for c in 0..2u32 {
-                            let tile_idx = base_tile + (r * 2 + c) as usize;
-                            if tile_idx < bts.len() {
-                                blit_tile_clipped(
-                                    fb,
-                                    &bts,
-                                    tile_idx,
-                                    bx + (c * TILE_SIZE) as i32,
-                                    by + (r * TILE_SIZE) as i32,
-                                    &bird_pal,
-                                );
-                            }
+        let bird_pose = screen
+            .fly_departure
+            .as_ref()
+            .and_then(|fly| fly.bird_pose())
+            .or_else(|| {
+                screen
+                    .enter_map_fly_anim
+                    .as_ref()
+                    .filter(|fly| !fly.is_done())
+                    .map(|fly| {
+                        let (y, x) = fly.bird_pos();
+                        (y, x, fly.flap_frame())
+                    })
+            });
+        if let Some((oy, ox, flap)) = bird_pose {
+            if let Ok(bird) = rm.load_sprite("bird") {
+                let bts = bird.tileset.clone();
+                let bird_pal = Palette::new(&[
+                    Rgba::TRANSPARENT,
+                    GRAYSCALE_PALETTE.colors[1],
+                    GRAYSCALE_PALETTE.colors[2],
+                    GRAYSCALE_PALETTE.colors[3],
+                ]);
+                let bx = screen_center_tx * TILE_SIZE as i32 + ox as i32 - 0x40;
+                let by = screen_center_ty * TILE_SIZE as i32 + oy as i32 - 0x3c;
+                let base_tile = [2, 5][flap as usize] * 4;
+                for r in 0..2u32 {
+                    for c in 0..2u32 {
+                        let tile_idx = base_tile + (r * 2 + c) as usize;
+                        if tile_idx < bts.len() {
+                            blit_tile_clipped(
+                                fb,
+                                &bts,
+                                tile_idx,
+                                bx + (c * TILE_SIZE) as i32,
+                                by + (r * TILE_SIZE) as i32,
+                                &bird_pal,
+                            );
                         }
                     }
                 }
@@ -1193,6 +1191,69 @@ pub fn draw_overworld(
             }
         }
 
+
+        // CUT — InitCutAnimOAM + AnimCut. The map block underneath has already
+        // been replaced; this 2×2 OAM copy of the tree holds the old shape,
+        // then separates its rows horizontally one pixel per update.
+        if let Some(cut) = screen.cut_anim {
+            let player_x = screen_center_tx * TILE_SIZE as i32;
+            let player_y = screen_center_ty * TILE_SIZE as i32;
+            let (base_x, base_y) = cut.base_offset();
+            let spread = cut.tree_spread_px();
+            let normal = Palette::new(&[
+                Rgba::TRANSPARENT,
+                Rgba::rgb(0xFF, 0xFF, 0xFF),
+                Rgba::rgb(0xAA, 0xAA, 0xAA),
+                Rgba::rgb(0x55, 0x55, 0x55),
+            ]);
+            let flipped = Palette::new(&[
+                Rgba::TRANSPARENT,
+                Rgba::rgb(0xFF, 0xFF, 0xFF),
+                Rgba::rgb(0x55, 0x55, 0x55),
+                Rgba::rgb(0xAA, 0xAA, 0xAA),
+            ]);
+            let cut_pal = if cut.palette_flipped() { &flipped } else { &normal };
+            match cut.kind {
+                pokered_core::overworld::presentation::CutAnimKind::Tree => {
+                    if let Ok(cached) = rm.load_tileset("overworld") {
+                        let tree = cached.tileset.clone();
+                        for (tile, col, row) in [
+                            (0x2dusize, 0i32, 0i32),
+                            (0x2e, 1, 0),
+                            (0x3d, 0, 1),
+                            (0x3e, 1, 1),
+                        ] {
+                            let dx = if row == 0 { spread } else { -spread };
+                            blit_tile_clipped(
+                                fb,
+                                &tree,
+                                tile,
+                                player_x + base_x + col * TILE_SIZE as i32 + dx,
+                                player_y + base_y + row * TILE_SIZE as i32,
+                                cut_pal,
+                            );
+                        }
+                    }
+                }
+                pokered_core::overworld::presentation::CutAnimKind::Grass => {
+                    if let Ok(cached) = rm.load_battle("move_anim_0") {
+                        let leaves = cached.tileset.clone();
+                        let drift = cut.frame.saturating_sub(2) as i32;
+                        for (col, row, dx) in [(0, 0, drift), (1, 0, drift * 2), (0, 1, -drift * 2), (1, 1, -drift)] {
+                            blit_tile_clipped(
+                                fb,
+                                &leaves,
+                                6,
+                                player_x + base_x + col * TILE_SIZE as i32 + dx,
+                                player_y + base_y + row * TILE_SIZE as i32 + drift / 4,
+                                cut_pal,
+                            );
+                        }
+                    }
+                }
+            }
+        }
+
         // S.S. Anne departure smoke puffs (VermilionDockSSAnneLeavesScript,
         // scripts/VermilionDock.asm:76-88): a 2×2 block of smoke tiles
         // (gfx/overworld/smoke.2bpp) emitted above the smokestack once per
@@ -1263,7 +1324,11 @@ pub fn draw_overworld(
         return;
     }
 
-    if let Some(ref dlg) = screen.pending_dialogue {
+    if let Some(dlg) = screen
+        .pending_dialogue
+        .as_ref()
+        .or(screen.cut_retained_dialogue.as_ref())
+    {
         if let Some((d1, d2)) = dlg.get_display_text() {
             // Keep the script-authored line break: joining with ' ' and
             // re-wrapping loses it (and CJK pages re-wrap at wrong points).
@@ -1315,8 +1380,26 @@ pub fn draw_overworld(
     // > warp fade. Entering a dark cave fades OUT to black, but the arrival
     // applies the dark palette instantly via LoadGBPal (no fade-in), which
     // this ordering reproduces.
+    if screen
+        .field_move_restore
+        .as_ref()
+        .is_some_and(|restore| restore.force_white())
+    {
+        // SURF's party-menu teardown reloads VRAM while the GB palettes are
+        // white. The final 23 restoration frames show the map but no OAM.
+        fb.clear(Rgba::WHITE);
+        return;
+    }
     if screen.flash_lit_frames > 0 {
         // GBPalWhiteOutWithDelay3: all palettes to white.
+        fb.clear(Rgba::WHITE);
+        return;
+    }
+    if screen
+        .fly_departure
+        .as_ref()
+        .is_some_and(|fly| fly.force_white())
+    {
         fb.clear(Rgba::WHITE);
         return;
     }

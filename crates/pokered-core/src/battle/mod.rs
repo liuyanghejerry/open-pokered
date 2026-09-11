@@ -283,6 +283,14 @@ impl Default for BattleTransition {
 /// (`ld b, $3`) — engine/battle/battle_transitions.asm:329-358.
 pub const TRANSITION_FLASH_FRAMES: u16 = 12 * 2 * 3;
 
+/// Runtime of the ordinary wild-Pokemon reveal, from the first settled
+/// battle frame through the completed `WildMonAppearedText` frame.  The
+/// original spends the first 78 frames waiting on the cry/setup path, then
+/// draws the party-ball strip and progressively reveals the message over the
+/// final 25 frames. `wait_frames == 0` is itself rendered before the phase
+/// advances, so this 102-frame countdown produces 103 visible phase samples.
+pub const WILD_REVEAL_FRAMES: u16 = 102;
+
 /// First intro phase for a given transition. In the original, ONLY the
 /// Circle and DoubleCircle transitions (wild, non-dungeon) run the
 /// FlashScreen palette strobe BEFORE the wipe — BattleTransition_Circle and
@@ -333,7 +341,8 @@ pub enum IntroPhase {
     TransitionFlash,
     /// Silhouettes sliding onto screen (72 frames, matching ASM's $70→$00 SCX slide)
     SilhouetteSlide,
-    /// Wild Pokémon revealed — "Wild X appeared!" text shown (30 frames).
+    /// Wild Pokémon revealed — cry/setup delay followed by the progressively
+    /// printed "Wild X appeared!" text (102-to-0 countdown).
     /// A Pokémon-Tower GHOST battle (no SILPH SCOPE) shows "Enemy GHOST appeared!"
     /// here instead (engine/battle/common_text.asm's `.noSilphScope`).
     WildReveal,
@@ -1790,7 +1799,7 @@ impl BattleScreen {
                         if self.is_wild {
                             BattlePhase::Intro {
                                 phase: IntroPhase::WildReveal,
-                                wait_frames: 30,
+                                wait_frames: WILD_REVEAL_FRAMES,
                             }
                         } else {
                             self.show_enemy_pokeballs = true;
@@ -1836,7 +1845,7 @@ impl BattleScreen {
                         self.ghost_marowak_unveiled = true;
                         BattlePhase::Intro {
                             phase: IntroPhase::WildReveal,
-                            wait_frames: 30,
+                            wait_frames: WILD_REVEAL_FRAMES,
                         }
                     }
                     IntroPhase::TrainerReveal => BattlePhase::Intro {
@@ -6211,6 +6220,26 @@ mod ghost_tests {
         assert!(!visited.contains(&IntroPhase::GhostCantID));
         assert!(!visited.contains(&IntroPhase::GhostUnveil));
         assert!(matches!(s.phase, BattlePhase::PlayerMenu));
+    }
+
+    #[test]
+    fn ordinary_wild_reveal_uses_reference_runtime() {
+        let player = vec![mk(Species::Charmander, 20)];
+        let enemy = vec![mk(Species::Rattata, 20)];
+        let mut s = BattleScreen::from_parties(true, &player, &enemy, None);
+
+        for _ in 0..1000 {
+            if let BattlePhase::Intro {
+                phase: IntroPhase::WildReveal,
+                wait_frames,
+            } = s.phase
+            {
+                assert_eq!(wait_frames, WILD_REVEAL_FRAMES);
+                return;
+            }
+            s.update_frame(BattleInput::none());
+        }
+        panic!("ordinary wild battle never reached WildReveal");
     }
 }
 

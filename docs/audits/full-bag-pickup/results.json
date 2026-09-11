@@ -1,0 +1,235 @@
+{
+  "base_commit": "2a87d93f6c588f7c45c4b7522b3443b6cf2cfb3d",
+  "tested_worktree_sha256": {
+    "crates/pokered-data/maps/ViridianForest/script.scene": "b5f453172c461d9c54884191d7f715db72a356bb76aef4d04916317023c50104",
+    "scripts/content_regression.py": "cd684002d1a657d9e349ee7e61c812636f650a8552eb719c412d73c543f49db3"
+  },
+  "before": {
+    "oracle_commit": "fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c",
+    "oracle_repository": "https://github.com/pret/pokered",
+    "engine_commit": "2a87d93f6c588f7c45c4b7522b3443b6cf2cfb3d",
+    "setup": "fresh power-on, seeded starter/bag, debug warp, local real-input navigation and interaction",
+    "calibration": false,
+    "wall_seconds": 7.149,
+    "results": [
+      {
+        "id": "forest-visible-full-bag-keeps-object",
+        "attempt": 1,
+        "status": "fail",
+        "error": "AssertionError: BUG: full-bag ANTIDOTE object disappeared; dialogue='RED found ANTIDOTE!'",
+        "wall_seconds": 7.109
+      }
+    ]
+  },
+  "original_case_after": {
+    "oracle_commit": "fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c",
+    "oracle_repository": "https://github.com/pret/pokered",
+    "engine_commit": "2a87d93f6c588f7c45c4b7522b3443b6cf2cfb3d",
+    "setup": "fresh power-on, seeded starter/bag, debug warp, local real-input navigation and interaction",
+    "calibration": false,
+    "wall_seconds": 7.089,
+    "results": [
+      {
+        "id": "forest-visible-full-bag-keeps-object",
+        "attempt": 1,
+        "status": "pass",
+        "wall_seconds": 7.067
+      }
+    ]
+  },
+  "content_suite": {
+    "oracle_commit": "fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c",
+    "oracle_repository": "https://github.com/pret/pokered",
+    "engine_commit": "2a87d93f6c588f7c45c4b7522b3443b6cf2cfb3d",
+    "setup": "fresh power-on, seeded starter/bag, debug warp, local real-input navigation and interaction",
+    "calibration": false,
+    "wall_seconds": 232.877,
+    "results": [
+      {
+        "id": "route1-sample-once-reload",
+        "attempt": 1,
+        "status": "pass",
+        "wall_seconds": 7.902
+      },
+      {
+        "id": "route1-full-bag-consumes-offer",
+        "attempt": 1,
+        "status": "pass",
+        "wall_seconds": 8.273
+      },
+      {
+        "id": "forest-npc-position-dialogue",
+        "attempt": 1,
+        "status": "pass",
+        "wall_seconds": 5.11
+      },
+      {
+        "id": "forest-visible-antidote-once-reload",
+        "attempt": 1,
+        "status": "pass",
+        "wall_seconds": 7.257
+      },
+      {
+        "id": "forest-visible-full-bag-keeps-object",
+        "attempt": 1,
+        "status": "pass",
+        "wall_seconds": 9.773
+      },
+      {
+        "id": "forest-potion-full-bag-retry",
+        "attempt": 1,
+        "status": "pass",
+        "wall_seconds": 9.855
+      },
+      {
+        "id": "forest-pokeball-full-bag-retry",
+        "attempt": 1,
+        "status": "pass",
+        "wall_seconds": 9.714
+      },
+      {
+        "id": "forest-full-bag-existing-stack",
+        "attempt": 1,
+        "status": "pass",
+        "wall_seconds": 6.807
+      },
+      {
+        "id": "forest-hidden-antidote-once-reload",
+        "attempt": 1,
+        "status": "pass",
+        "wall_seconds": 6.771
+      },
+      {
+        "id": "forest-hidden-full-bag-repeatable",
+        "attempt": 1,
+        "status": "pass",
+        "wall_seconds": 6.132
+      },
+      {
+        "id": "route1-sample-once-reload",
+        "attempt": 2,
+        "status": "pass",
+        "wall_seconds": 7.917
+      },
+      {
+        "id": "route1-full-bag-consumes-offer",
+        "attempt": 2,
+        "status": "pass",
+        "wall_seconds": 8.238
+      },
+      {
+        "id": "forest-npc-position-dialogue",
+        "attempt": 2,
+        "status": "pass",
+        "wall_seconds": 5.082
+      },
+      {
+        "id": "forest-visible-antidote-once-reload",
+        "attempt": 2,
+        "status": "pass",
+        "wall_seconds": 7.232
+      },
+      {
+        "id": "forest-visible-full-bag-keeps-object",
+        "attempt": 2,
+        "status": "pass",
+        "wall_seconds": 9.798
+      },
+      {
+        "id": "forest-potion-full-bag-retry",
+        "attempt": 2,
+        "status": "pass",
+        "wall_seconds": 9.761
+      },
+      {
+        "id": "forest-pokeball-full-bag-retry",
+        "attempt": 2,
+        "status": "pass",
+        "wall_seconds": 9.727
+      },
+      {
+        "id": "forest-full-bag-existing-stack",
+        "attempt": 2,
+        "status": "pass",
+        "wall_seconds": 6.877
+      },
+      {
+        "id": "forest-hidden-antidote-once-reload",
+        "attempt": 2,
+        "status": "pass",
+        "wall_seconds": 6.776
+      },
+      {
+        "id": "forest-hidden-full-bag-repeatable",
+        "attempt": 2,
+        "status": "pass",
+        "wall_seconds": 6.133
+      },
+      {
+        "id": "route1-sample-once-reload",
+        "attempt": 3,
+        "status": "pass",
+        "wall_seconds": 7.911
+      },
+      {
+        "id": "route1-full-bag-consumes-offer",
+        "attempt": 3,
+        "status": "pass",
+        "wall_seconds": 8.313
+      },
+      {
+        "id": "forest-npc-position-dialogue",
+        "attempt": 3,
+        "status": "pass",
+        "wall_seconds": 5.144
+      },
+      {
+        "id": "forest-visible-antidote-once-reload",
+        "attempt": 3,
+        "status": "pass",
+        "wall_seconds": 7.254
+      },
+      {
+        "id": "forest-visible-full-bag-keeps-object",
+        "attempt": 3,
+        "status": "pass",
+        "wall_seconds": 9.821
+      },
+      {
+        "id": "forest-potion-full-bag-retry",
+        "attempt": 3,
+        "status": "pass",
+        "wall_seconds": 9.727
+      },
+      {
+        "id": "forest-pokeball-full-bag-retry",
+        "attempt": 3,
+        "status": "pass",
+        "wall_seconds": 9.804
+      },
+      {
+        "id": "forest-full-bag-existing-stack",
+        "attempt": 3,
+        "status": "pass",
+        "wall_seconds": 6.837
+      },
+      {
+        "id": "forest-hidden-antidote-once-reload",
+        "attempt": 3,
+        "status": "pass",
+        "wall_seconds": 6.81
+      },
+      {
+        "id": "forest-hidden-full-bag-repeatable",
+        "attempt": 3,
+        "status": "pass",
+        "wall_seconds": 6.072
+      }
+    ]
+  },
+  "fresh_m01_m10": {
+    "status": "pass",
+    "summed_milestone_seconds": 226.9,
+    "log": "m10.log"
+  }
+}

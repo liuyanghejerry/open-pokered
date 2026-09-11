@@ -86,7 +86,7 @@ def map_id(name):
     path = DATA / "maps" / name / "map.json"
     if not path.exists():
         raise KeyError(f"no map data at {path}")
-    d = json.load(open(path))
+    d = json.loads(path.read_text())
     if d.get("name") != name:
         raise RuntimeError(f"map name mismatch in {path}: {d.get('name')}")
     return d["id"]
@@ -198,6 +198,68 @@ CHAMPION_TEAM = [
     ("Jolteon", 57, ["Thunderbolt", "PinMissile", "ThunderWave", "DoubleKick"]),
     ("Dugtrio", 53, ["Earthquake", "Slash", "Dig", "SandAttack"]),
     ("Nidoking", 55, ["Earthquake", "IceBeam", "Thunderbolt", "HornDrill"]),
+]
+
+# A deliberately over-provisioned, but story-accurate, start state for
+# checkpoint exploration.  It represents the state immediately after m26:
+# the player has reached Fuchsia, but Koga and all later milestones are still
+# untouched.  The high-level starter has the early field move needed by the
+# later canonical route, while later story gifts/captures remain available.
+EXPLORATION_M26_FLAGS = [
+    "EVENT_OAK_ASKED_TO_CHOOSE_MON", "EVENT_GOT_STARTER",
+    "EVENT_BATTLED_RIVAL_IN_OAKS_LAB", "EVENT_FOLLOWED_OAK_INTO_LAB",
+    "EVENT_FOLLOWED_OAK_INTO_LAB_2", "EVENT_GOT_POKEDEX",
+    "EVENT_GOT_POKEBALLS_FROM_OAK", "EVENT_GOT_TOWN_MAP",
+    "EVENT_ENTERED_BLUES_HOUSE", "EVENT_OAK_GOT_PARCEL",
+    "EVENT_OAK_APPEARED_IN_PALLET", "EVENT_GOT_OAKS_PARCEL",
+    "EVENT_BEAT_ROUTE22_RIVAL_1ST_BATTLE", "EVENT_BEAT_BROCK",
+    "EVENT_BEAT_MISTY", "EVENT_BEAT_CERULEAN_RIVAL",
+    "EVENT_BEAT_CERULEAN_ROCKET_THIEF", "EVENT_BEAT_LT_SURGE",
+    "EVENT_BEAT_ERIKA", "EVENT_BEAT_MT_MOON_EXIT_SUPER_NERD",
+    "EVENT_GOT_HELIX_FOSSIL", "EVENT_GOT_SS_TICKET",
+    "EVENT_SS_ANNE_LEFT", "EVENT_STARTED_WALKING_OUT_OF_DOCK",
+    "EVENT_WALKED_OUT_OF_DOCK", "EVENT_RUBBED_CAPTAINS_BACK",
+    "EVENT_ENTERED_ROCKET_HIDEOUT", "EVENT_FOUND_ROCKET_HIDEOUT",
+    "EVENT_ROCKET_DROPPED_LIFT_KEY", "EVENT_ROCKET_HIDEOUT_4_DOOR_UNLOCKED",
+    "EVENT_BEAT_ROCKET_HIDEOUT_GIOVANNI", "EVENT_BEAT_GHOST_MAROWAK",
+    "EVENT_RESCUED_MR_FUJI", "EVENT_RESCUED_MR_FUJI_2",
+    "EVENT_GOT_POKE_FLUTE", "EVENT_FIGHT_ROUTE12_SNORLAX",
+    "EVENT_BEAT_ROUTE12_SNORLAX", "EVENT_MET_BILL", "EVENT_MET_BILL_2",
+    "EVENT_USED_CELL_SEPARATOR_ON_BILL", "EVENT_BILL_SAID_USE_CELL_SEPARATOR",
+    "EVENT_GOT_NUGGET", "EVENT_GOT_HM01", "EVENT_GOT_TM11",
+    "EVENT_GOT_TM21", "EVENT_GOT_TM24", "EVENT_GOT_TM34",
+    "EVENT_BEAT_CELADON_GYM_TRAINER_0", "EVENT_BEAT_CELADON_GYM_TRAINER_1",
+    "EVENT_BEAT_CELADON_GYM_TRAINER_2", "EVENT_BEAT_CELADON_GYM_TRAINER_3",
+    "EVENT_BEAT_CELADON_GYM_TRAINER_4", "EVENT_BEAT_CELADON_GYM_TRAINER_5",
+    "EVENT_BEAT_CELADON_GYM_TRAINER_6",
+]
+
+EXPLORATION_M26_TEAM = [
+    # Keep later story gifts/captures at their canonical party indexes:
+    # m32 adds Lapras at index 1 and m36 catches Zapdos at index 2.
+    ("Venusaur", 50, ["RazorLeaf", "Cut", "Tackle", "SleepPowder"]),
+]
+
+# Runtime object state is separate from the persistent event bitset. The m26
+# snapshot starts after the Route 12 Snorlax fight, so the exploration driver
+# must re-apply this sidecar flag after booting a copied snapshot.
+EXPLORATION_M26_RUNTIME_FLAGS = [
+    "__OBJ_HIDDEN_ROUTE_12_OBJ_1",
+]
+
+# Towns visited on the canonical route through m26. Keeping this bitset
+# accurate makes FLY available without unlocking future destinations.
+EXPLORATION_M26_VISITED_TOWNS = [
+    "PalletTown", "ViridianCity", "PewterCity", "CeruleanCity",
+    "LavenderTown", "VermilionCity", "CeladonCity", "FuchsiaCity",
+]
+
+EXPLORATION_M26_ITEMS = [
+    # Four free slots remain for Master Ball, HM02, Secret Key, and a later
+    # optional reward encountered during exploration.
+    "POKE_BALL", "FULL_RESTORE", "REVIVE", "HM01", "POKE_FLUTE",
+    "TOWN_MAP", "SS_TICKET", "HELIX_FOSSIL", "TM21", "TM24", "TM28",
+    "TM34",
 ]
 
 
@@ -342,7 +404,25 @@ class SaveBuilder:
                 entry[1] += qty
                 break
         else:
+            if len(items) >= 20:
+                raise ValueError("bag has no free item slots")
             items.append([name, qty])
+        return self
+
+    def visited_towns(self, towns):
+        """Mark the named city maps as visited for the FLY destination list."""
+        flags = bytearray(self.data["game_data"]["town_visited_flags"])
+        for town in towns:
+            town_id = map_id(town)
+            if town_id >= 0x0B:
+                raise ValueError(f"{town!r} is not a town map")
+            flags[town_id >> 3] |= 1 << (town_id & 7)
+        self.data["game_data"]["town_visited_flags"] = list(flags)
+        return self
+
+    def last_map(self, map_name):
+        """Set the saved outside map used by LAST_MAP exit warps."""
+        self.data["game_data"]["last_map"] = map_id(map_name)
         return self
 
     def flag(self, name, value=True):
@@ -410,6 +490,37 @@ class SaveBuilder:
         self.data["game_data"]["rival_starter"] = 7    # Squirtle
         return self
 
+    def exploration(self, milestone):
+        """Build a fast, independent checkpoint-exploration start state.
+
+        Unlike ``champion()``, this keeps the story just after the requested
+        milestone and leaves later gates, gifts, and optional pickups live.
+        The first supported state is m26 because it is the useful hand-off
+        point for the long late-game exploration tail.
+        """
+        if milestone != "m26":
+            raise ValueError(f"unsupported exploration milestone {milestone!r}")
+        for species, level, moves in EXPLORATION_M26_TEAM:
+            self.party_add(species, level, moves=moves)
+        self.money(999999)
+        self.badges(0x0F)  # Boulder, Cascade, Thunder, Rainbow
+        self.visited_towns(EXPLORATION_M26_VISITED_TOWNS)
+        for flag in EXPLORATION_M26_FLAGS:
+            self.flag(flag)
+        for item in EXPLORATION_M26_ITEMS:
+            self.give_item(item, 99 if item in {
+                "POKE_BALL", "GREAT_BALL", "ULTRA_BALL", "FULL_RESTORE", "REVIVE"
+            } else 1)
+        self.position("FuchsiaCity", 19, 27)
+        self.last_map("FuchsiaCity")
+        self.data["game_data"]["player_starter"] = species_id("Bulbasaur")
+        self.data["game_data"]["rival_starter"] = species_id("Charmander")
+        self.data["game_data"]["play_time"] = {
+            "hours": 18, "minutes": 0, "seconds": 0, "frames": 0,
+            "maxed": False,
+        }
+        return self
+
     def write(self, path):
         Path(path).write_text(json.dumps(self.data))
         return path
@@ -420,9 +531,10 @@ def main():
     ap = argparse.ArgumentParser(
         description="Construct a bootable game snapshot JSON.")
     ap.add_argument("-o", "--out", required=True, help="output .json path")
-    ap.add_argument("--preset", choices=["champion"],
+    ap.add_argument("--preset", choices=["champion", "m26-exploration"],
                     help="start from a built-in preset (champion = story "
-                         "complete, post-game roam)")
+                         "complete; m26-exploration = fast late-game "
+                         "checkpoint hand-off)")
     ap.add_argument("--party", action="append", default=[],
                     metavar="SPECIES:LEVEL",
                     help="add a party member (repeatable)")
@@ -443,6 +555,8 @@ def main():
     sb = SaveBuilder()
     if args.preset == "champion":
         sb.champion()
+    elif args.preset == "m26-exploration":
+        sb.exploration("m26")
     pending_moves = None
     for spec in args.party:
         species, _, level = spec.partition(":")

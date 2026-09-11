@@ -562,6 +562,14 @@ pub struct HealingMachineState {
     pub flash_active: bool,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(crate) struct PendingCut {
+    pub block_x: u8,
+    pub block_y: u8,
+    pub replacement_block: Option<u8>,
+    pub kind: super::presentation::CutAnimKind,
+}
+
 // ── OverworldScreen struct ────────────────────────────────────────
 
 use crate::overworld::collision;
@@ -626,6 +634,25 @@ pub struct OverworldScreen<G: GameData = pokered_data::impl_traits::PokemonRedDa
     pub pending_give_pokemon: Option<PendingGivePokemon>,
     pub sfx_event: OverworldSfxEvent,
     pub bump_anim_counter: u8,
+    /// Frame-exact two-tile ledge hop. Kept outside the generic engine because
+    /// Pokémon's setup/arc/landing timing is game-specific.
+    pub ledge_jump: Option<super::presentation::LedgeJumpState>,
+    /// Active one-tile SURF mount/dismount movement after its text/white-out.
+    pub field_move_step: Option<super::presentation::FieldMoveStepState>,
+    /// A validated field-move step waiting for text dismissal and screen restoration.
+    pub(crate) pending_field_move_step: Option<super::presentation::FieldMoveStepState>,
+    pub(crate) field_move_step_needs_restore: bool,
+    /// Blocking party-menu-to-map restoration before a SURF step. Public so
+    /// renderers and frame manifests can reproduce/observe its two phases.
+    pub field_move_restore: Option<super::presentation::FieldMoveRestoreState>,
+    /// CUT map mutation queued behind UsedCutText.
+    pub(crate) pending_cut: Option<PendingCut>,
+    /// Active CUT OAM overlay; input and NPC updates are frozen while present.
+    pub cut_anim: Option<super::presentation::CutAnimState>,
+    /// Last fully-rendered UsedCutText page. The Game Boy leaves those BG tiles
+    /// intact during AnimCut's nine-frame setup, until RedrawMapView replaces
+    /// them as the tree rows begin to separate.
+    pub cut_retained_dialogue: Option<BedroomDialogue>,
     pub player_name: String,
     pub rival_name: String,
     pub frame_counter: u32,
@@ -801,6 +828,9 @@ pub struct OverworldScreen<G: GameData = pokered_data::impl_traits::PokemonRedDa
     /// (`_LeaveMapAnim`). While `Some`, the warp fade is deferred and player
     /// input is frozen.
     pub teleport_spin: Option<presentation::TeleportSpinState>,
+    /// Active FLY-specific `_LeaveMapAnim`: bird pickup, two flight paths and
+    /// their blocking delays. The warp fade starts only after this completes.
+    pub fly_departure: Option<presentation::LeaveMapFlyState>,
     /// Active `EnterMapAnim` arrival spin-in (FLY / TELEPORT / DIG / ESCAPE
     /// ROPE / dungeon-warp arrivals). Created when the warp commits; ticked
     /// once the fade-in-from-white completes. The player stays hidden during
@@ -813,7 +843,11 @@ pub struct OverworldScreen<G: GameData = pokered_data::impl_traits::PokemonRedDa
     /// The pending warp was queued by the FLY field move: its arrival plays
     /// the bird animation instead of the spin-in (BIT_USED_FLY,
     /// player_animations.asm:55-70).
-    pub(crate) pending_fly_arrival: bool,
+    pub pending_fly_arrival: bool,
+    /// EnterMapAnim's blocking pre-bird work after the generic fade-in. Keeping
+    /// this separate prevents the first coordinate from being held under the
+    /// fade, which made the visible arrival path much slower than the original.
+    pub fly_arrival_delay_frames: u8,
     /// Active `ShakeElevator` animation (screen BG shake after riding an
     /// elevator). While `Some`, player input is frozen.
     pub elevator_shake: Option<presentation::ElevatorShakeState>,
@@ -1032,6 +1066,14 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
             pending_give_pokemon: None,
             sfx_event: OverworldSfxEvent::None,
             bump_anim_counter: 0,
+            ledge_jump: None,
+            field_move_step: None,
+            pending_field_move_step: None,
+            field_move_step_needs_restore: false,
+            field_move_restore: None,
+            pending_cut: None,
+            cut_anim: None,
+            cut_retained_dialogue: None,
             player_name: "RED".to_string(),
             rival_name: "BLUE".to_string(),
             frame_counter: 0,
@@ -1099,9 +1141,11 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
             flash_pending_white: false,
             warp_fade_to_white: false,
             teleport_spin: None,
+            fly_departure: None,
             enter_map_anim: None,
             enter_map_fly_anim: None,
             pending_fly_arrival: false,
+            fly_arrival_delay_frames: 0,
             elevator_shake: None,
             elevator_shake_pending: false,
             fishing_cast_delay: 0,
@@ -2313,8 +2357,10 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                 ));
             }
             self.load_map_script(warp.dest_map);
-            self.audio_requests
-                .push(OverworldAudioRequest::PlayMapMusic { map: warp.dest_map });
+            if !self.pending_fly_arrival {
+                self.audio_requests
+                    .push(OverworldAudioRequest::PlayMapMusic { map: warp.dest_map });
+            }
             let hidden_npc_ids = self.map_script_config.hidden_npc_ids();
             self.npc_states = self
                 .map_data
@@ -2386,9 +2432,12 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                     .unwrap_or(true);
                 if self.pending_fly_arrival {
                     // BIT_USED_FLY (player_animations.asm:55-70): the bird
-                    // flies the player in — no spin, no descend.
+                    // flies the player in — no spin, no descend. EnterMapAnim
+                    // finishes its fade and blocking graphics copy before the
+                    // first coordinate is rendered.
                     self.pending_fly_arrival = false;
-                    self.enter_map_fly_anim = Some(presentation::EnterMapFlyState::new());
+                    self.fly_arrival_delay_frames =
+                        presentation::FLY_ARRIVAL_POST_FADE_DELAY_FRAMES;
                 } else {
                     self.enter_map_anim = Some(presentation::EnterMapSpinState::new(
                         self.state.player.facing,

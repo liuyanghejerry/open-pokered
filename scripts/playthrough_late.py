@@ -446,12 +446,25 @@ def m18_rock_tunnel_entrance(g):
 
 
 def m19_rock_tunnel(g):
-    g.nav_warp(8, 17, "Route10", "RockTunnel1F")
-    g.nav_warp(37, 3, "RockTunnel1F", "RockTunnelB1F")
-    g.nav_warp(27, 3, "RockTunnelB1F", "RockTunnel1F")
-    g.nav_warp(17, 11, "RockTunnel1F", "RockTunnelB1F")
-    g.nav_warp(3, 3, "RockTunnelB1F", "RockTunnel1F")
-    g.nav_warp(15, 33, "RockTunnel1F", "Route10", approach="down")
+    # Rock Tunnel has enough unavoidable encounters that a solo starter can
+    # legitimately black out midway.  That returns to the Route10 Pokecenter
+    # fully healed; retry the crossing only for that exact recovery state.
+    for attempt in range(3):
+        try:
+            g.nav_warp(8, 17, "Route10", "RockTunnel1F")
+            g.nav_warp(37, 3, "RockTunnel1F", "RockTunnelB1F")
+            g.nav_warp(27, 3, "RockTunnelB1F", "RockTunnel1F")
+            g.nav_warp(17, 11, "RockTunnel1F", "RockTunnelB1F")
+            g.nav_warp(3, 3, "RockTunnelB1F", "RockTunnel1F")
+            g.nav_warp(15, 33, "RockTunnel1F", "Route10", approach="down")
+            break
+        except RuntimeError:
+            if g.pos()[0] != "Route10":
+                raise
+            print(f"[m19] blackout {attempt + 1}: retrying Rock Tunnel",
+                  flush=True)
+    else:
+        raise RuntimeError("Rock Tunnel crossing failed after 3 blackouts")
     g.nav_to_map(3, 6, "LavenderTown")
     g.heal_pokecenter((3, 5), "LavenderTown", "LavenderPokecenter")
     g.evidence("m19")
@@ -1088,6 +1101,14 @@ def mansion_switch(g, map_name, x, y):
             continue
         g.face("up")
         g.tap("a", 16)
+        # A wild encounter can begin during the interaction tap itself, after
+        # the pre-tap battle check above. Drain it before looking for the
+        # statue's YES/NO menu, otherwise dialogue_then_choice reports a
+        # misleading missing-choice failure.
+        if g.st()["screen"] == "battle":
+            g.battle_loop(prefer="run")
+            assert g.cutscene()
+            continue
         g.dialogue_then_choice()
         break
     else:
@@ -1099,13 +1120,21 @@ def mansion_switch(g, map_name, x, y):
 
 
 def m38_secret_key(g):
+    from playthrough import NavError
     # Avoid the locked gym's automatic shove at (18,4) while walking west.
     g.nav_to(10, 5, "CinnabarIsland")
     g.nav_warp(6, 3, "CinnabarIsland", "PokemonMansion1F")
     g.nav_warp(5, 10, "PokemonMansion1F", "PokemonMansion2F")
     g.nav_warp(6, 1, "PokemonMansion2F", "PokemonMansion3F")
     mansion_switch(g, "PokemonMansion3F", 10, 5)
-    g.nav_to(16, 14, "PokemonMansion3F")
+    # The hole changes maps while nav_to is finishing its final drive. The
+    # requested destination is already reached when nav_to raises its
+    # same-map guard, so accept only this explicitly expected landing.
+    try:
+        g.nav_to(16, 14, "PokemonMansion3F")
+    except NavError:
+        if g.pos() != ("PokemonMansion1F", 16, 14):
+            raise
     assert g.cutscene()
     assert g.pos()[0] == "PokemonMansion1F", g.pos()
     g.nav_warp(21, 23, "PokemonMansion1F", "PokemonMansionB1F")
@@ -1200,6 +1229,12 @@ def m41_victory_road_entrance(g):
 def push_boulder(g, map_name, text_id, destination, flag):
     from collections import deque
     from playthrough import bfs, DELTA, MAPS, walkable_edge, tile_at, warp_tiles
+    # A switch push can finish on the same frame that a wild encounter hands
+    # control back to the overworld. Resolve that hand-off before opening the
+    # party menu for the next Strength use.
+    if g.st()["screen"] == "battle":
+        g.battle_loop(prefer="run")
+        assert g.cutscene()
     index = next(i for i, mon in enumerate(g.st()["party"]) if "Strength" in mon["moves"])
     field_move(g, "Strength", party_index=index)
     for _ in range(150):
@@ -1209,46 +1244,96 @@ def push_boulder(g, map_name, text_id, destination, flag):
         data = g.d.cmd(cmd="get_npcs")["data"]
         npcs = data.get("npcs", data) if isinstance(data, dict) else data
         target = next(n for n in npcs if n["text_id"] == text_id and n.get("visible", True))
-        box = (target["x"], target["y"])
-        if flag is None and box == destination:
+        target_npc_index = npcs.index(target)
+        all_boulder_indices = [i for i, npc in enumerate(npcs)
+                               if npc.get("visible", True)
+                               and npc.get("sprite_id") == 63]
+        # The 3F second switch is the one puzzle where another boulder must
+        # be moved to open the route. Keep the state space tight elsewhere:
+        # the normal single-boulder planner is both faster and avoids
+        # inventing unnecessary moves for the already-solved puzzles.
+        if map_name == "VictoryRoad3F" and text_id == 10:
+            boulder_indices = [target_npc_index] + [i for i in all_boulder_indices
+                               if npcs[i]["text_id"] == 8]
+        else:
+            boulder_indices = [target_npc_index]
+        target_slot = boulder_indices.index(target_npc_index)
+        boulders = tuple((npcs[i]["x"], npcs[i]["y"])
+                         for i in boulder_indices)
+        box = boulders[target_slot]
+        if box == destination and (flag is None or
+                                   g.d.cmd(cmd="get_flags")["data"].get(flag)):
             return
-        occupied = {(n["x"], n["y"]) for n in npcs
-                    if n.get("visible", True) and n["text_id"] != text_id}
+        # Other boulders are dynamic obstacles, not permanent walls. Static
+        # NPCs remain hard obstacles; all boulder positions are part of the
+        # search state and may be pushed when that is the only way to reach
+        # the requested target.
+        occupied = {(n["x"], n["y"]) for i, n in enumerate(npcs)
+                    if n.get("visible", True)
+                    and (n.get("sprite_id") != 63
+                         or i not in boulder_indices)
+                    and (n["x"], n["y"]) != (-1, -1)}
         exit_mats = {(w["x"], w["y"]) for w in MAPS[map_name]["warps"]
                      if w["y"] == MAPS[map_name]["height"] * 2 - 1}
         occupied |= warp_tiles(map_name) - exit_mats
-        root = ((s["player_x"], s["player_y"]), box)
+        root = ((s["player_x"], s["player_y"]), boulders)
         queue, previous = deque([root]), {root: None}
         solved = None
-        while queue:
-            player, boulder = node = queue.popleft()
-            if boulder == destination:
+        while queue and len(previous) <= 5000:
+            player, positions = node = queue.popleft()
+            if positions[target_slot] == destination:
                 solved = node
                 break
-            for d, (dx, dy) in DELTA.items():
-                behind = (boulder[0] - dx, boulder[1] - dy)
-                ahead = (boulder[0] + dx, boulder[1] + dy)
-                child = (boulder, ahead)
-                if (child in previous or ahead in occupied or not walkable_edge(map_name, behind, ahead)
-                        or tile_at(map_name, *ahead) == 0x15
-                        or behind in occupied or behind == boulder):
-                    continue
-                if not bfs(map_name, player, behind, blocked=occupied | {boulder}):
-                    continue
-                previous[child] = (node, d, behind)
-                queue.append(child)
+            blocked = occupied | set(positions)
+            # Prefer the requested boulder, then use the others only when a
+            # valid solution requires clearing their route.
+            slots = [target_slot] + [slot for slot in range(len(positions))
+                                     if slot != target_slot]
+            for slot in slots:
+                boulder = positions[slot]
+                for d, (dx, dy) in DELTA.items():
+                    behind = (boulder[0] - dx, boulder[1] - dy)
+                    ahead = (boulder[0] + dx, boulder[1] + dy)
+                    if (ahead in occupied or ahead in positions
+                            or not walkable_edge(map_name, behind, ahead)
+                            or tile_at(map_name, *ahead) == 0x15
+                            or behind in occupied or behind in positions):
+                        continue
+                    if not bfs(map_name, player, behind, blocked=blocked):
+                        continue
+                    moved = list(positions)
+                    moved[slot] = ahead
+                    child = (boulder, tuple(moved))
+                    if child in previous:
+                        continue
+                    previous[child] = (node, d, behind, slot)
+                    queue.append(child)
         assert solved is not None, (map_name, box, destination)
         actions, node = [], solved
         while previous[node]:
-            node, d, behind = previous[node]
-            actions.append((d, behind))
-        print(f"[boulder] {map_name} {box} → {destination}: {len(actions)} pushes", flush=True)
-        for d, behind in reversed(actions):
+            parent, d, behind, slot = previous[node]
+            actions.append((d, behind, slot))
+            node = parent
+        actions.reverse()
+        print(f"[boulder] {map_name} {box} → {destination}: {len(actions)} pushes",
+              flush=True)
+        # A plan involving another movable boulder is executed one push at a
+        # time and re-planned from the live state. Single-boulder plans keep
+        # the original batch execution, which is much faster and has no
+        # dynamic obstacle state to invalidate.
+        actions_to_execute = actions if len(boulder_indices) == 1 else actions[:1]
+        for d, behind, slot in actions_to_execute:
+            # Boulder coordinates are mutable NPC state. The general
+            # navigator intentionally remembers observed NPC bands, but a
+            # remembered old boulder tile is stale immediately after a push
+            # and can seal the next valid route.
+            g.observed_npcs[map_name] = g.live_npcs(map_name)
             if map_name == "VictoryRoad1F" and behind in {(8, 17), (9, 17)}:
                 # Enter an exit mat sideways to stand south of the boulder.
                 # Walking DOWN onto it would leave the cave.
                 g.nav_to(7, 17, map_name)
-                g.d.drive(["right"] * ((behind[0] - 7) * 8), frames=(behind[0] - 7) * 8 + 16)
+                g.d.drive(["right"] * ((behind[0] - 7) * 8),
+                          frames=(behind[0] - 7) * 8 + 16)
             else:
                 g.nav_to(*behind, map_name)
             g.d.drive([d] * 8, frames=48)
@@ -1329,10 +1414,22 @@ def m44_indigo(g):
             sell(g, item)
     quantity = min(16, (g.st()["money"] - 6000) // 3000)
     assert quantity >= 8, g.st()["money"]
-    g.tap("a", 16)
-    buy(g, "FullRestore", 2, quantity)
-    g.tap("a", 16)
-    buy(g, "Revive", 5, 4)
+    # The m26 exploration preset already carries large stacks. Buy only the
+    # amount that fits the current stack cap; crossing 99 would create a new
+    # bag slot and can make the subsequent Revive purchase fail at the full
+    # bag limit.
+    full_restore = sum(v["qty"] for v in g.d.cmd(cmd="get_bag")["data"]
+                       if v["item"] == "FullRestore")
+    full_restore_buy = min(quantity, max(0, 99 - full_restore))
+    if full_restore_buy:
+        g.tap("a", 16)
+        buy(g, "FullRestore", 2, full_restore_buy)
+    revive = sum(v["qty"] for v in g.d.cmd(cmd="get_bag")["data"]
+                 if v["item"] == "Revive")
+    revive_buy = min(4, max(0, 99 - revive))
+    if revive_buy:
+        g.tap("a", 16)
+        buy(g, "Revive", 5, revive_buy)
     lead_with(g, "Zapdos")
     g.evidence("m44")
 

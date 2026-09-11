@@ -1,0 +1,63 @@
+== m01: boot to NEW GAME / Oak speech
+   done (1.0s wall)
+== m02: Oak speech + default names → bedroom
+[m02] frame=1925 screen=overworld map=RedsHouse2F pos=(3,6) party=0 money=0 effect=None
+   done (2.7s wall)
+== m03: leave home → Pallet Town
+[m03] frame=2257 screen=overworld map=PalletTown pos=(5,5) party=0 money=0 effect=None
+   done (0.7s wall)
+== m04: Oak interception → OaksLab
+[m04] frame=4208 screen=overworld map=OaksLab pos=(5,3) party=0 money=0 effect=None
+   done (1.0s wall)
+== m05: take starter (bulbasaur)
+[m05] frame=5328 screen=overworld map=OaksLab pos=(8,4) party=1 money=0 effect=None
+   done (0.7s wall)
+== m06: first rival battle
+[m06] frame=8096 screen=overworld map=OaksLab pos=(5,6) party=1 money=175 effect=None
+   done (6.5s wall)
+== m07: Route 1 → Viridian Mart parcel
+[m07-in-mart] frame=10975 screen=overworld map=ViridianMart pos=(3,5) party=1 money=175 effect=None
+[m07-back-outside] frame=11087 screen=overworld map=ViridianCity pos=(29,19) party=1 money=175 effect=None
+   done (6.9s wall)
+== m08: deliver parcel → POKéDEX
+[m08-southlane] frame=11336 screen=overworld map=ViridianCity pos=(20,32) party=1 money=175 effect=None
+[m08-back-home] frame=12782 screen=overworld map=PalletTown pos=(12,12) party=1 money=175 effect=None
+[m08-delivered] frame=15526 screen=overworld map=OaksLab pos=(5,3) party=1 money=175 effect=None
+[m08] oak-after-delivery: POKeMON around the world wait for you, RED!
+   done (5.9s wall)
+== m09: Viridian Forest → Pewter City
+[m09-blackout-1] frame=25473 screen=overworld map=ViridianCity pos=(23,26) party=1 money=88 effect=None
+[m09] frame=32301 screen=overworld map=PewterCity pos=(16,29) party=1 money=178 effect=None
+   done (38.8s wall)
+== m10: train + Boulder Badge (Brock)
+[m10-arrived] frame=32306 screen=overworld map=PewterCity pos=(16,29) party=1 money=178 effect=None
+   [ntoPINCH] at ViridianForest(13,8)
+   [ntoPINCH] at ViridianForest(13,9)
+   [ntoPINCH] at ViridianForest(11,19)
+   [ntoPINCH] at ViridianForest(11,19)
+   [ntoPINCH] at ViridianForest(11,19)
+   [ntoPINCH] at ViridianForest(13,8)
+   [ntoPINCH] at ViridianForest(13,9)
+   [ntoPINCH] at ViridianForest(11,19)
+   [ntoPINCH] at ViridianForest(11,19)
+   [ntoPINCH] at ViridianForest(11,19)
+   [ntoPINCH] at ViridianForest(26,10)
+[train] grass spot Route1 (12,7), target L13
+[train] cyc=0 battles=0 L7 hp=25/25 (0s)
+[train] cyc=25 battles=5 L9 hp=18/30 (15s)
+[train] hp 11/30 -> heal
+[train] hp 15/30 -> heal
+[train] cyc=50 battles=13 L10 hp=23/32 (45s)
+[train] hp 17/32 -> heal
+[train] hp 19/34 -> heal
+[train] cyc=100 battles=29 L11 hp=22/34 (91s)
+[train] hp 22/37 -> heal
+[train] cyc=125 battles=34 L12 hp=33/37 (108s)
+[train] level 13 reached (127s, 42 battles)
+[m10-trained] frame=81874 screen=overworld map=Route1 pos=(12,7) party=1 money=178 effect=None
+   [ntoPINCH] at ViridianForest(11,4)
+   [ntoPINCH] at ViridianForest(11,19)
+   [ntoPINCH] at ViridianForest(11,16)
+[m10] frame=94562 screen=overworld map=PewterGym pos=(4,2) party=1 money=1784 effect=None
+   done (162.7s wall)
+PLAYTHROUGH REACHED REQUESTED MILESTONE
