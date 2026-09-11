@@ -908,37 +908,17 @@ fn game_main() -> ! {
     let mut last_battle: Option<BattleVisualKey> = None;
     #[cfg(feature = "profiling")]
     let mut profile = ProfileSamples::default();
+    // Retain input history across display frames so a held key produces one
+    // edge instead of appearing newly pressed on every pass through the loop.
+    let mut state = InputState::new();
 
     loop {
         let first_frame_pending = frame == 0;
-        let mut state = InputState::new();
+        state.begin_frame();
+        state.set_from_bitmask(0);
         #[cfg(feature = "autopilot")]
         {
-            let held = autopilot::buttons_at(frame);
-            if held & 1 != 0 {
-                state.press(GbButton::A);
-            }
-            if held & 2 != 0 {
-                state.press(GbButton::B);
-            }
-            if held & 8 != 0 {
-                state.press(GbButton::Start);
-            }
-            if held & 4 != 0 {
-                state.press(GbButton::Select);
-            }
-            if held & 64 != 0 {
-                state.press(GbButton::Up);
-            }
-            if held & 128 != 0 {
-                state.press(GbButton::Down);
-            }
-            if held & 32 != 0 {
-                state.press(GbButton::Left);
-            }
-            if held & 16 != 0 {
-                state.press(GbButton::Right);
-            }
+            state.set_from_bitmask(autopilot::buttons_at(frame));
         }
         #[cfg(not(feature = "autopilot"))]
         {
@@ -989,12 +969,16 @@ fn game_main() -> ! {
         // simulation up to the hardware clock so animation and input timing
         // stay near 59.7 Hz instead of slowing down with the renderer.
         let mut updates = 0;
+        let mut update_state = state.clone();
         while update_accumulator >= FRAME_TICKS && updates < 8 {
-            game.update(&state);
+            game.update(&update_state);
             game.flush_deferred_transition();
             frame = frame.wrapping_add(1);
             update_accumulator -= FRAME_TICKS;
             updates += 1;
+            // A physical edge belongs to one simulation tick. Keep held keys
+            // active during catch-up without replaying just-pressed actions.
+            update_state.begin_frame();
         }
         #[cfg(feature = "profiling")]
         let mark2 = profile_now();
