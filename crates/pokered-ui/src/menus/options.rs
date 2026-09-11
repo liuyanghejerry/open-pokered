@@ -6,7 +6,7 @@ use pokered_data::ui_layout::schema::{
     get_screen_v2_json, OptionsDefaultLayout, OPTIONS_DEFAULT_LAYOUT,
 };
 
-use crate::engine::{Painter, Ui};
+use crate::engine::{Painter, Rgba, TilePos, Ui};
 use crate::v2::{self, DataContext};
 
 fn enum_offset(layout: &OptionsDefaultLayout, key: &str) -> u32 {
@@ -56,6 +56,50 @@ fn battle_style_key(state: &OptionsMenuState) -> &'static str {
     match state.options.battle_style {
         BattleStyle::Shift => "Shift",
         BattleStyle::Set => "Set",
+    }
+}
+
+/// Absolute tile position of the single visible options cursor.
+pub fn cursor_position(
+    state: &OptionsMenuState,
+    layout: &OptionsDefaultLayout,
+    lang: Lang,
+) -> TilePos {
+    let cursors = layout.cursors.as_ref();
+    match state.row {
+        OptionsRow::TextSpeed => TilePos::new(
+            cursors[0].tx + 1 + lang_enum_offset(layout, text_speed_key(state), lang),
+            cursors[0].base_ty + 1,
+        ),
+        OptionsRow::BattleAnimation => TilePos::new(
+            cursors[1].tx
+                + 1
+                + lang_enum_offset(layout, battle_animation_key(state), lang),
+            cursors[1].base_ty + 1,
+        ),
+        OptionsRow::BattleStyle => TilePos::new(
+            cursors[2].tx + 1 + lang_enum_offset(layout, battle_style_key(state), lang),
+            cursors[2].base_ty + 1,
+        ),
+        OptionsRow::Cancel => TilePos::new(cursors[3].tx, cursors[3].base_ty),
+    }
+}
+
+/// Repaint only the two cursor cells of an already-rendered options screen.
+pub fn redraw_cursor<P: Painter>(
+    previous: TilePos,
+    current: TilePos,
+    painter: &mut P,
+    lang: Lang,
+) {
+    // The proportional cursor advances by 10 px but its actual fallback ink
+    // fits in 8x9.  Clearing the full advance would erase the adjacent CJK
+    // option label, which starts one tile to the right.
+    painter.draw_pixel_rect(previous.tx * 8, previous.ty * 8, 8, 9, Rgba::INK_WHITE);
+    if lang == Lang::Zh {
+        painter.draw_text_px(current.tx * 8, current.ty * 8, "▶", Rgba::INK_BLACK);
+    } else {
+        painter.draw_glyph(current, '▶', Rgba::INK_BLACK);
     }
 }
 

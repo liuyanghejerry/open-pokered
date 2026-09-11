@@ -71,6 +71,30 @@ pub fn draw_options_menu(state: &OptionsMenuState, fb: &mut FrameBuffer, lang: L
     menus::options::draw(state, &OPTIONS_DEFAULT_LAYOUT, &mut ui, lang);
 }
 
+/// Return the absolute tile position of the options screen's visible cursor.
+#[cfg(target_os = "none")]
+pub fn options_menu_cursor_position(state: &OptionsMenuState, lang: Lang) -> (u32, u32) {
+    let pos = menus::options::cursor_position(state, &OPTIONS_DEFAULT_LAYOUT, lang);
+    (pos.tx, pos.ty)
+}
+
+/// Repaint only the changed cursor cells of an already-rendered options screen.
+#[cfg(any(test, target_os = "none"))]
+pub fn redraw_options_menu_cursor(
+    previous: (u32, u32),
+    current: (u32, u32),
+    fb: &mut FrameBuffer,
+    lang: Lang,
+) {
+    let mut painter = FrameBufferPainter::new(fb).with_lang(lang);
+    menus::options::redraw_cursor(
+        pokered_ui::TilePos::new(previous.0, previous.1),
+        pokered_ui::TilePos::new(current.0, current.1),
+        &mut painter,
+        lang,
+    );
+}
+
 pub fn draw_save_menu(state: &SaveMenuState, fb: &mut FrameBuffer, lang: Lang) {
     let mut painter = FrameBufferPainter::new(fb).with_lang(lang);
     let mut ui = Ui::new(&mut painter);
@@ -376,6 +400,9 @@ mod tests {
     use super::*;
     use pokered_core::game_state::SaveFileSummary;
     use pokered_core::start_menu::{StartMenuInput, StartMenuState};
+    use pokered_core::options_menu::{
+        BattleAnimation, BattleStyle, GameOptions, OptionsMenuState, OptionsRow, TextSpeed,
+    };
     use pokered_renderer::Rgba;
 
     fn assert_framebuffers_equal(actual: &FrameBuffer, expected: &FrameBuffer) {
@@ -476,6 +503,103 @@ mod tests {
                         draw_start_menu(&current, "RED", &mut expected, language);
                         assert_framebuffers_equal(&actual, &expected);
                     }
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn options_cursor_repaint_matches_a_fresh_menu_for_every_visible_transition() {
+        let state = |row, text_speed, battle_animation, battle_style| {
+            let mut state = OptionsMenuState::new(GameOptions {
+                text_speed,
+                battle_animation,
+                battle_style,
+            });
+            state.row = row;
+            state
+        };
+        let states = [
+            state(
+                OptionsRow::TextSpeed,
+                TextSpeed::Fast,
+                BattleAnimation::On,
+                BattleStyle::Shift,
+            ),
+            state(
+                OptionsRow::TextSpeed,
+                TextSpeed::Medium,
+                BattleAnimation::On,
+                BattleStyle::Shift,
+            ),
+            state(
+                OptionsRow::TextSpeed,
+                TextSpeed::Slow,
+                BattleAnimation::On,
+                BattleStyle::Shift,
+            ),
+            state(
+                OptionsRow::BattleAnimation,
+                TextSpeed::Medium,
+                BattleAnimation::On,
+                BattleStyle::Shift,
+            ),
+            state(
+                OptionsRow::BattleAnimation,
+                TextSpeed::Medium,
+                BattleAnimation::Off,
+                BattleStyle::Shift,
+            ),
+            state(
+                OptionsRow::BattleStyle,
+                TextSpeed::Medium,
+                BattleAnimation::On,
+                BattleStyle::Shift,
+            ),
+            state(
+                OptionsRow::BattleStyle,
+                TextSpeed::Medium,
+                BattleAnimation::On,
+                BattleStyle::Set,
+            ),
+            state(
+                OptionsRow::Cancel,
+                TextSpeed::Medium,
+                BattleAnimation::On,
+                BattleStyle::Shift,
+            ),
+        ];
+        let config = dotzuki_engine::render_config::RenderConfig::new(160, 144);
+
+        for language in [Lang::En, Lang::Zh] {
+            for previous in &states {
+                for current in &states {
+                    let previous_pos = menus::options::cursor_position(
+                        previous,
+                        &OPTIONS_DEFAULT_LAYOUT,
+                        language,
+                    );
+                    let current_pos = menus::options::cursor_position(
+                        current,
+                        &OPTIONS_DEFAULT_LAYOUT,
+                        language,
+                    );
+                    if previous_pos == current_pos {
+                        continue;
+                    }
+
+                    let mut actual = FrameBuffer::new(config, Rgba::BLACK);
+                    draw_options_menu(previous, &mut actual, language);
+                    redraw_options_menu_cursor(
+                        (previous_pos.tx, previous_pos.ty),
+                        (current_pos.tx, current_pos.ty),
+                        &mut actual,
+                        language,
+                    );
+
+                    let mut expected = FrameBuffer::new(config, Rgba::BLACK);
+                    draw_options_menu(current, &mut expected, language);
+                    assert_framebuffers_equal(&actual, &expected);
                 }
             }
         }

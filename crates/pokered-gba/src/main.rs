@@ -969,6 +969,29 @@ impl StartMenuVisualKey {
     }
 }
 
+#[derive(Clone, Copy, PartialEq, Eq)]
+struct OptionsVisualKey {
+    cursor: (u32, u32),
+    language: Lang,
+}
+
+impl OptionsVisualKey {
+    fn new(game: &PokemonGame) -> Self {
+        Self {
+            cursor: pokered_app::render::options_menu_cursor_position(
+                &game.options_menu,
+                game.state.config.language,
+            ),
+            language: game.state.config.language,
+        }
+    }
+
+    fn cursor_change_from(&self, previous: &Self) -> Option<((u32, u32), (u32, u32))> {
+        (self.language == previous.language && self.cursor != previous.cursor)
+            .then_some((previous.cursor, self.cursor))
+    }
+}
+
 impl Mode4Presenter {
     fn new(fb: &FrameBuffer) -> Self {
         // Both pages retain the fixed index-3 border; subsequent presents
@@ -1270,6 +1293,7 @@ fn game_main() -> ! {
     let mut last_title: Option<TitleVisualKey> = None;
     let mut last_main_menu: Option<MainMenuVisualKey> = None;
     let mut last_start_menu: Option<StartMenuVisualKey> = None;
+    let mut last_options: Option<OptionsVisualKey> = None;
     let mut last_oak: Option<OakVisualKey> = None;
     let mut last_overworld: Option<OverworldVisualKey> = None;
     let mut last_battle: Option<BattleVisualKey> = None;
@@ -1378,6 +1402,12 @@ fn game_main() -> ! {
             .as_ref()
             .zip(last_start_menu.as_ref())
             .and_then(|(current, previous)| current.cursor_change_from(previous));
+        let options = (game.state.screen == GameScreen::OptionsMenu)
+            .then(|| OptionsVisualKey::new(game));
+        let options_cursor_change = options
+            .as_ref()
+            .zip(last_options.as_ref())
+            .and_then(|(current, previous)| current.cursor_change_from(previous));
         let oak_screen = game.state.screen == GameScreen::OakSpeech;
         let oak = oak_screen.then(|| OakVisualKey::new(game)).flatten();
         let overworld_screen = game.state.screen == GameScreen::Overworld;
@@ -1422,6 +1452,8 @@ fn game_main() -> ! {
             start_menu
                 .as_ref()
                 .map_or(true, |key| last_start_menu.as_ref() != Some(key))
+        } else if options.is_some() {
+            options != last_options
         } else if oak_screen {
             oak.as_ref().map_or(true, |key| last_oak.as_ref() != Some(key))
         } else if overworld_screen {
@@ -1444,6 +1476,13 @@ fn game_main() -> ! {
             } else if let Some((previous, current)) = start_menu_cursor_change {
                 pokered_app::render::redraw_start_menu_cursor(
                     game.start_menu.item_count(),
+                    previous,
+                    current,
+                    &mut fb,
+                    game.state.config.language,
+                );
+            } else if let Some((previous, current)) = options_cursor_change {
+                pokered_app::render::redraw_options_menu_cursor(
                     previous,
                     current,
                     &mut fb,
@@ -1539,6 +1578,12 @@ fn game_main() -> ! {
                     start_menu_cursor_damage(current),
                 ]
             });
+            let options_damage = options_cursor_change.map(|(previous, current)| {
+                [
+                    options_cursor_damage(previous),
+                    options_cursor_damage(current),
+                ]
+            });
             let battle_safari_damage =
                 battle_safari_cursor_change.map(|(previous, current)| {
                     [
@@ -1587,6 +1632,8 @@ fn game_main() -> ! {
                 Some(rects.as_slice())
             } else if let Some(rects) = start_menu_damage.as_ref() {
                 Some(rects.as_slice())
+            } else if let Some(rects) = options_damage.as_ref() {
+                Some(rects.as_slice())
             } else if let Some(rects) = battle_safari_damage.as_ref() {
                 Some(rects.as_slice())
             } else if let Some(rects) = battle_menu_damage.as_ref() {
@@ -1615,6 +1662,7 @@ fn game_main() -> ! {
         last_title = title;
         last_main_menu = main_menu;
         last_start_menu = start_menu;
+        last_options = options;
         last_oak = oak;
         last_overworld = overworld;
         last_battle = battle;
@@ -1762,6 +1810,16 @@ fn start_menu_cursor_damage(cursor: usize) -> FrameDamageRect {
     FrameDamageRect {
         x: 11 * 8,
         y: (2 + cursor as u32 * 2) * 8,
+        width: 8,
+        height: 9,
+    }
+}
+
+#[inline]
+fn options_cursor_damage(cursor: (u32, u32)) -> FrameDamageRect {
+    FrameDamageRect {
+        x: cursor.0 * 8,
+        y: cursor.1 * 8,
         width: 8,
         height: 9,
     }
