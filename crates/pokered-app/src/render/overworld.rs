@@ -81,6 +81,11 @@ fn blit_tile_clipped_flipped(
     );
 }
 
+#[inline]
+fn blit_priority_bg_tile(fb: &mut FrameBuffer, tile: &Tile, x: i32, y: i32) {
+    fb.blit_gb_tile_indices(x, y, tile, true, false, false);
+}
+
 /// Script-driven entry overlay (`showPokedexEntry`): resolve the scene species
 /// token and draw the real dex data (`pokered_data::pokedex`, ported from
 /// `data/pokemon/dex_entries.asm`) via the shared entry renderer. Previews
@@ -765,8 +770,6 @@ fn draw_overworld_impl(
         return;
     }
 
-    let pal = &GRAYSCALE_PALETTE;
-
     // Sprite palette: color 0 is transparent (matches Game Boy OBP0/OBP1 behavior).
     let sprite_pal = Palette::new(&[
         Rgba::TRANSPARENT,
@@ -1258,19 +1261,8 @@ fn draw_overworld_impl(
                             .min(bg_ts.len().saturating_sub(1));
                         if bg_tile_idx == grass_id as usize {
                             let tile = bg_ts.get(bg_tile_idx);
-                            let gx = overlay_x + col_off as u32 * TILE_SIZE;
-                            for row in 0..TILE_SIZE {
-                                for col in 0..TILE_SIZE {
-                                    let ci = tile.pixels[row as usize][col as usize];
-                                    if ci != 0 {
-                                        let sx = gx + col;
-                                        let sy = overlay_y + row;
-                                        if sx < fb.width() && sy < fb.height() {
-                                            fb.set_pixel(sx, sy, pal.color(GbColor::from_u8(ci)));
-                                        }
-                                    }
-                                }
-                            }
+                            let gx = overlay_x as i32 + col_off * TILE_SIZE as i32;
+                            blit_priority_bg_tile(fb, tile, gx, overlay_y as i32);
                         }
                     }
                 }
@@ -2044,6 +2036,32 @@ mod tests {
         }
     }
 
+    fn reference_priority_bg_tile_blit(
+        fb: &mut FrameBuffer,
+        tile: &Tile,
+        x: i32,
+        y: i32,
+        palette: &Palette,
+    ) {
+        for row in 0..TILE_SIZE as i32 {
+            for col in 0..TILE_SIZE as i32 {
+                let color_index = tile.pixels[row as usize][col as usize];
+                if color_index == 0 {
+                    continue;
+                }
+                let sx = x + col;
+                let sy = y + row;
+                if sx >= 0 && sx < fb.width() as i32 && sy >= 0 && sy < fb.height() as i32 {
+                    fb.set_pixel(
+                        sx as u32,
+                        sy as u32,
+                        palette.color(GbColor::from_u8(color_index)),
+                    );
+                }
+            }
+        }
+    }
+
     #[test]
     fn clipped_sprite_helpers_match_reference_for_palettes_and_flips() {
         let tileset = TileSet::from_2bpp(&[
@@ -2099,6 +2117,24 @@ mod tests {
                     "palette={palette_index}, x={x}, y={y}, flip={flip_horizontal}",
                 );
             }
+        }
+    }
+
+    #[test]
+    fn priority_background_tile_blit_matches_grass_overlay_reference() {
+        let tileset = TileSet::from_2bpp(&[
+            0xAA, 0xCC, 0xF0, 0x5A, 0x33, 0x0F, 0x81, 0x7E, 0x66, 0x99, 0x18, 0xE7, 0xC3, 0x3C,
+            0xA5, 0x5A,
+        ]);
+        let tile = tileset.get(0);
+        for &(x, y) in &[(1, 1), (7, 6)] {
+            let config = RenderConfig::new(10, 10);
+            let background = Rgba::rgb(0x55, 0x55, 0x55);
+            let mut expected = FrameBuffer::new(config.clone(), background);
+            let mut actual = FrameBuffer::new(config, background);
+            reference_priority_bg_tile_blit(&mut expected, tile, x, y, &GRAYSCALE_PALETTE);
+            blit_priority_bg_tile(&mut actual, tile, x, y);
+            assert_eq!(actual.packed(), expected.packed(), "x={x}, y={y}");
         }
     }
 
