@@ -676,6 +676,7 @@ fn game_main() -> ! {
                 &mut fb,
                 &mut overworld_background_cache,
                 &mut dma3_copy_bytes,
+                overworld.is_some(),
             );
         }
         #[cfg(feature = "profiling")]

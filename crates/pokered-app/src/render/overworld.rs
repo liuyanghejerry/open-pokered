@@ -296,11 +296,48 @@ impl BackgroundDamage {
     }
 }
 
-/// Pure map-layer cache used by the GBA frontend. Player/NPC sprites and all
-/// overlays are still composited fresh after the cached background is copied.
+#[derive(Clone, Copy)]
+struct FrameRect {
+    x: u32,
+    y: u32,
+    width: u32,
+    height: u32,
+}
+
+impl FrameRect {
+    #[inline]
+    fn clipped(
+        x: i32,
+        y: i32,
+        width: u32,
+        height: u32,
+        frame_width: u32,
+        frame_height: u32,
+    ) -> Option<Self> {
+        let frame_width = frame_width as i32;
+        let frame_height = frame_height as i32;
+        let left = x.clamp(0, frame_width);
+        let top = y.clamp(0, frame_height);
+        let right = x.saturating_add(width as i32).clamp(0, frame_width);
+        let bottom = y.saturating_add(height as i32).clamp(0, frame_height);
+        (left < right && top < bottom).then_some(Self {
+            x: left as u32,
+            y: top as u32,
+            width: (right - left) as u32,
+            height: (bottom - top) as u32,
+        })
+    }
+}
+
+/// Pure map-layer cache used by the GBA frontend. For ordinary map frames it
+/// also remembers where the previous player/NPC sprites were composited, so
+/// an exact background hit can restore just those regions instead of copying
+/// the entire 160×144 background again.
 pub struct OverworldBackgroundCache {
     frame_buffer: FrameBuffer,
     key: Option<OverworldBackgroundKey>,
+    output_key: Option<OverworldBackgroundKey>,
+    foreground_damage: Vec<FrameRect>,
 }
 
 impl OverworldBackgroundCache {
@@ -308,6 +345,47 @@ impl OverworldBackgroundCache {
         Self {
             frame_buffer: FrameBuffer::new(RenderConfig::new(width, height), Rgba::WHITE),
             key: None,
+            output_key: None,
+            foreground_damage: Vec::with_capacity(32),
+        }
+    }
+
+    fn invalidate(&mut self) {
+        self.key = None;
+        self.invalidate_output();
+    }
+
+    fn invalidate_output(&mut self) {
+        self.output_key = None;
+        self.foreground_damage.clear();
+    }
+
+    #[inline(never)]
+    fn record_foreground_rect(&mut self, x: i32, y: i32, width: u32, height: u32) {
+        let right = x.saturating_add(width as i32);
+        let bottom = y.saturating_add(height as i32);
+        if x >= 0
+            && y >= 0
+            && right <= self.frame_buffer.width() as i32
+            && bottom <= self.frame_buffer.height() as i32
+        {
+            self.foreground_damage.push(FrameRect {
+                x: x as u32,
+                y: y as u32,
+                width,
+                height,
+            });
+            return;
+        }
+        if let Some(rect) = FrameRect::clipped(
+            x,
+            y,
+            width,
+            height,
+            self.frame_buffer.width(),
+            self.frame_buffer.height(),
+        ) {
+            self.foreground_damage.push(rect);
         }
     }
 
@@ -336,6 +414,49 @@ impl OverworldBackgroundCache {
         self.frame_buffer.scroll_indices(dx, dy, GbColor::White);
         BackgroundDamage::Scrolled { dx, dy }
     }
+}
+
+#[inline(never)]
+fn restore_foreground_regions(fb: &mut FrameBuffer, cache: &OverworldBackgroundCache) {
+    for rect in &cache.foreground_damage {
+        fb.copy_rect_from(&cache.frame_buffer, rect.x, rect.y, rect.width, rect.height);
+    }
+    // A prior dark-cave frame may have changed only the display palette.
+    // Foreground is always drawn against the base palette before the current
+    // effect is applied.
+    fb.reset_palette();
+}
+
+/// Keep the partial restore path deliberately narrower than the renderer's
+/// full feature set. These states add overlays, move sprites outside their
+/// ordinary 16×16 bounds, or temporarily own the whole framebuffer.
+fn can_reuse_composited_frame(screen: &OverworldScreen) -> bool {
+    screen.naming_flash_frames == 0
+        && screen.pending_naming_screen.is_none()
+        && screen.pending_party_select.is_none()
+        && screen.pending_pokedex_entry.is_none()
+        && screen.pending_dialogue.is_none()
+        && screen.cut_retained_dialogue.is_none()
+        && screen.pending_choice.is_none()
+        && screen.pending_emotion_bubble.is_none()
+        && screen.pending_healing_machine.is_none()
+        && screen.connection_npc_preview.is_none()
+        && screen.ledge_jump.is_none()
+        && screen.field_move_step.is_none()
+        && screen.field_move_restore.is_none()
+        && screen.cut_anim.is_none()
+        && screen.elevator_shake.is_none()
+        && screen.teleport_spin.is_none()
+        && screen.fly_departure.is_none()
+        && screen.enter_map_anim.is_none()
+        && screen.enter_map_fly_anim.is_none()
+        && !screen.pending_fly_arrival
+        && screen.fly_arrival_delay_frames == 0
+        && screen.fishing_anim.is_none()
+        && screen.ship_departure.is_none()
+        && screen.flash_lit_frames == 0
+        && !screen.boulder_dust.is_active()
+        && matches!(screen.warp_fade_state, WarpFadeState::Idle)
 }
 
 #[allow(clippy::too_many_arguments)]
@@ -450,7 +571,7 @@ pub fn draw_overworld(
     fb: &mut FrameBuffer,
     language: pokered_core::game_state::Lang,
 ) {
-    draw_overworld_impl(screen, res, fb, language, None, None);
+    draw_overworld_impl(screen, res, fb, language, None, None, None);
 }
 
 pub(crate) fn draw_overworld_cached(
@@ -460,7 +581,7 @@ pub(crate) fn draw_overworld_cached(
     language: pokered_core::game_state::Lang,
     cache: &mut OverworldBackgroundCache,
 ) {
-    draw_overworld_impl(screen, res, fb, language, Some(cache), None);
+    draw_overworld_impl(screen, res, fb, language, Some(cache), None, None);
 }
 
 pub(crate) fn draw_overworld_cached_with(
@@ -470,6 +591,7 @@ pub(crate) fn draw_overworld_cached_with(
     language: pokered_core::game_state::Lang,
     cache: &mut OverworldBackgroundCache,
     copy_background: &mut dyn FnMut(&mut [u8], &[u8]),
+    reuse_composited: bool,
 ) {
     draw_overworld_impl(
         screen,
@@ -478,6 +600,7 @@ pub(crate) fn draw_overworld_cached_with(
         language,
         Some(cache),
         Some(copy_background),
+        Some(reuse_composited),
     );
 }
 
@@ -488,6 +611,7 @@ fn draw_overworld_impl(
     language: pokered_core::game_state::Lang,
     mut background_cache: Option<&mut OverworldBackgroundCache>,
     mut copy_background: Option<&mut dyn FnMut(&mut [u8], &[u8])>,
+    reuse_composited_hint: Option<bool>,
 ) {
     let owns_full_screen = screen.naming_flash_frames > 0
         || screen.pending_naming_screen.is_some()
@@ -497,7 +621,7 @@ fn draw_overworld_impl(
     }
     if owns_full_screen || res.is_none() {
         if let Some(cache) = background_cache.as_deref_mut() {
-            cache.key = None;
+            cache.invalidate();
         }
     }
 
@@ -680,10 +804,29 @@ fn draw_overworld_impl(
                         shake_offset_y,
                     );
                     cache.key = Some(key);
-                    if let Some(copy_pixels) = copy_background.as_deref_mut() {
+                    let reuse_composited =
+                        reuse_composited_hint.unwrap_or_else(|| can_reuse_composited_frame(screen));
+                    if matches!(damage, BackgroundDamage::None)
+                        && reuse_composited
+                        && cache.output_key == Some(key)
+                    {
+                        restore_foreground_regions(fb, cache);
+                    } else if let Some(copy_pixels) = copy_background.as_deref_mut() {
                         fb.copy_from_with(&cache.frame_buffer, copy_pixels);
                     } else {
                         fb.copy_from(&cache.frame_buffer);
+                    }
+                    // While the player is walking the next visual update also
+                    // changes the camera, so saving foreground rectangles on
+                    // each intermediate step cannot produce an exact hit.
+                    // Idle frames still cover turning, bumping, NPC motion,
+                    // and the first frame of the next player step.
+                    if reuse_composited && screen.state.player.movement_state == MovementState::Idle
+                    {
+                        cache.foreground_damage.clear();
+                        cache.output_key = Some(key);
+                    } else {
+                        cache.invalidate_output();
                     }
                 } else {
                     draw_background_tiles(
@@ -710,7 +853,7 @@ fn draw_overworld_impl(
                 }
             } else {
                 if let Some(cache) = background_cache.as_deref_mut() {
-                    cache.key = None;
+                    cache.invalidate();
                     fb.clear(Rgba::WHITE);
                 }
                 draw_background_tiles(
@@ -737,7 +880,7 @@ fn draw_overworld_impl(
             }
         } else {
             if let Some(cache) = background_cache.as_deref_mut() {
-                cache.key = None;
+                cache.invalidate();
             }
             fb.clear(Rgba::WHITE);
         }
@@ -899,6 +1042,19 @@ fn draw_overworld_impl(
                 + enter_y_offset
                 + fishing_shake_offset)
                 .max(0) as u32;
+
+            if player_visible {
+                if let Some(cache) = background_cache.as_deref_mut() {
+                    if cache.output_key.is_some() {
+                        cache.record_foreground_rect(
+                            draw_x as i32,
+                            draw_y as i32,
+                            TILE_SIZE * 2,
+                            TILE_SIZE * 2,
+                        );
+                    }
+                }
+            }
 
             // Fishing pose: RedFishingTilesFront/Back/Side (gfx/fishing.asm)
             // replace the BOTTOM two tiles of the standing sprite while the
@@ -1103,6 +1259,17 @@ fn draw_overworld_impl(
                     || npc_px_y >= fb.height() as i32
                 {
                     continue;
+                }
+
+                if let Some(cache) = background_cache.as_deref_mut() {
+                    if cache.output_key.is_some() {
+                        cache.record_foreground_rect(
+                            npc_px_x,
+                            npc_px_y,
+                            TILE_SIZE * 2,
+                            TILE_SIZE * 2,
+                        );
+                    }
                 }
 
                 for row in 0..2_u32 {
@@ -1934,22 +2101,29 @@ mod tests {
         s.state.player.x = 12;
         s.state.player.y = 12;
         let mut cache = OverworldBackgroundCache::new(160, 144);
+        let mut incremental = FrameBuffer::new(RenderConfig::new(160, 144), Rgba::WHITE);
 
-        let mut compare = |screen: &mut OverworldScreen| {
+        let mut compare = |screen: &mut OverworldScreen| -> bool {
             let mut full = FrameBuffer::new(RenderConfig::new(160, 144), Rgba::WHITE);
-            let mut incremental = FrameBuffer::new(RenderConfig::new(160, 144), Rgba::WHITE);
             draw_overworld(
                 screen,
                 &mut full_resources,
                 &mut full,
                 pokered_core::game_state::Lang::En,
             );
-            draw_overworld_cached(
+            let mut copied_full_background = false;
+            let reuse_composited = can_reuse_composited_frame(screen);
+            draw_overworld_cached_with(
                 screen,
                 &mut cached_resources,
                 &mut incremental,
                 pokered_core::game_state::Lang::En,
                 &mut cache,
+                &mut |destination, source| {
+                    copied_full_background = true;
+                    destination.copy_from_slice(source);
+                },
+                reuse_composited,
             );
             assert_eq!(
                 full.packed(),
@@ -1957,9 +2131,34 @@ mod tests {
                 "cached background must preserve every pixel"
             );
             assert_eq!(full.display_palette(), incremental.display_palette());
+            copied_full_background
         };
 
-        compare(&mut s);
+        assert!(compare(&mut s), "the cold frame copies the full background");
+        s.state.player.facing = Direction::Right;
+        assert!(
+            !compare(&mut s),
+            "an exact background hit restores only prior foreground regions"
+        );
+        {
+            let npc = s
+                .npc_states
+                .iter_mut()
+                .find(|npc| npc.visible)
+                .expect("Pallet Town has a visible NPC");
+            npc.facing = Direction::Right;
+            npc.walk_counter = 8;
+        }
+        assert!(
+            !compare(&mut s),
+            "moving an NPC restores both its old and current regions"
+        );
+        s.npc_states
+            .iter_mut()
+            .find(|npc| npc.visible)
+            .unwrap()
+            .walk_counter = 0;
+        assert!(!compare(&mut s));
         for direction in [
             Direction::Down,
             Direction::Up,
@@ -1969,10 +2168,10 @@ mod tests {
             s.state.player.facing = direction;
             s.state.player.movement_state = MovementState::Walking;
             s.state.walk_counter = 8;
-            compare(&mut s);
+            let _ = compare(&mut s);
             for counter in (1..8).rev() {
                 s.state.walk_counter = counter;
-                compare(&mut s);
+                let _ = compare(&mut s);
             }
             let (dx, dy) = match direction {
                 Direction::Down => (0, 1),
@@ -1984,12 +2183,53 @@ mod tests {
             s.state.player.y = (s.state.player.y as i32 + dy) as u16;
             s.state.player.movement_state = MovementState::Idle;
             s.state.walk_counter = 0;
-            compare(&mut s);
+            let _ = compare(&mut s);
         }
 
         let map = s.map_data.as_mut().expect("live map");
         map.blocks[0] = map.blocks[0].wrapping_add(1);
-        compare(&mut s);
+        assert!(
+            compare(&mut s),
+            "a live map edit rebuilds and copies the background"
+        );
+    }
+
+    #[cfg(not(target_arch = "wasm32"))]
+    #[test]
+    fn exact_background_hit_preserves_dark_cave_palette() {
+        let root = pokered_renderer::resource::AssetRoot::auto_detect().expect("test graphics");
+        let mut full_resources = Some(ResourceManager::new(root.clone()));
+        let mut cached_resources = Some(ResourceManager::new(root));
+        let mut s = screen_on(MapId::RockTunnel1F);
+        assert!(s.dark_cave.is_dark());
+        let mut cache = OverworldBackgroundCache::new(160, 144);
+        let mut cached = FrameBuffer::new(RenderConfig::new(160, 144), Rgba::WHITE);
+
+        draw_overworld_cached(
+            &mut s,
+            &mut cached_resources,
+            &mut cached,
+            pokered_core::game_state::Lang::En,
+            &mut cache,
+        );
+        s.state.player.facing = Direction::Right;
+        let mut full = FrameBuffer::new(RenderConfig::new(160, 144), Rgba::WHITE);
+        draw_overworld(
+            &mut s,
+            &mut full_resources,
+            &mut full,
+            pokered_core::game_state::Lang::En,
+        );
+        draw_overworld_cached(
+            &mut s,
+            &mut cached_resources,
+            &mut cached,
+            pokered_core::game_state::Lang::En,
+            &mut cache,
+        );
+
+        assert_eq!(full.packed(), cached.packed());
+        assert_eq!(full.display_palette(), cached.display_palette());
     }
 }
 

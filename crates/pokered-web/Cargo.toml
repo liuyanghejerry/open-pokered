@@ -19,7 +19,7 @@ pokered-app = { path = "../pokered-app" }
 # Generic pixels+winit game shell (browser canvas / native fallback window,
 # GB-frame pacing); patched to the sibling dotzuki checkout by the workspace
 # root [patch].
-dotzuki-web = { git = "https://github.com/liuyanghejerry/dotzuki", rev = "6453bde42576825a1bb23b4cf9a823563b3d1615", features = ["game-shell"] }
+dotzuki-web = { git = "https://github.com/liuyanghejerry/dotzuki", rev = "b827f3cb916f0383774823fd3ca3c12b344e511d", features = ["game-shell"] }
 log = "0.4"
 cargo-run-wasm = "0.4.0"
 
