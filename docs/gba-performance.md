@@ -21,7 +21,7 @@ software framebuffer and converting/copying it to Mode 3 VRAM:
 | Stage | Original | Optimized representative frame |
 | --- | ---: | ---: |
 | Game update | 0.05 ms | 0.05 ms at boot; about 5.4 ms per Overworld step |
-| Software draw | 76.7 ms | 11–15k ticks for a changed Title/Oak frame; 27.7 ms steady Overworld |
+| Software draw | 76.7 ms | 11–15k ticks for a changed Title/Oak frame; 26–28 ms moving Overworld |
 | Present | 35.4 ms | 3.1–3.2 ms |
 | Changed Overworld outer loop | not reachable (allocation failure) | 50.1 ms / about 20 FPS |
 | Unchanged ordinary Overworld | not reachable (allocation failure) | 4,351 ticks / about 59.7 Hz |
@@ -52,6 +52,11 @@ pages, with the completed page flipped at VBlank.
   decoded 2-bit indices directly to the Mode 4 staging buffer. Title and Oak
   tiles now use the same path automatically; transparent sprites only test and
   skip source index zero.
+- Word-aligned decoded tiles keep their original 64-byte size. On GBA, the
+  opaque row-copy path now emits two 32-bit writes for word-aligned targets or
+  four 16-bit writes for halfword-aligned targets, with a byte-copy fallback
+  for incompatible row strides or addresses. The copy shape is selected once
+  per tile, and framebuffer widths other than 160 remain safe.
 - The Overworld renderer now culls off-screen margin tiles, reuses the current
   map metadata instead of formatting and looking it up for every out-of-bounds
   tile, and indexes the selected blockset directly. Its background pass fell
@@ -79,13 +84,15 @@ In the measured boot sequence, static phases now advance at about 59.7 Hz.
 Dynamic splash frames now fit close to one video frame. A changed Title/Oak
 frame fell from roughly 19,000–22,000 draw ticks to roughly 11,000–15,000,
 while unchanged frames perform no draw or present work. A steady software-
-rendered Overworld frame costs about 7,266 draw ticks (27.7 ms), with an outer
-loop rate of about 20 FPS once simulation catch-up and VBlank synchronization
-are included. An unchanged ordinary Overworld view performs no draw or present
-work and completes in about 4,351 ticks (16.6 ms), sustaining the hardware's
-59.7 Hz cadence. The same changed-frame path previously spent about 55,000 draw
-ticks and could not enter the Overworld before the layer allocation was
-removed.
+rendered Overworld frame now costs about 6,904–7,270 draw ticks (26.3–27.7 ms),
+with an outer loop rate around 20 FPS once simulation catch-up and VBlank
+synchronization are included. Before the aligned row-write change, the same
+movement windows cost 7,722 and 8,158 ticks respectively, so the final tile
+write optimization reduces changed-frame draw time by 10.6%–10.9%. An unchanged
+ordinary Overworld view performs no draw or present work and completes in about
+4,351 ticks (16.6 ms), sustaining the hardware's 59.7 Hz cadence. The same
+changed-frame path previously spent about 55,000 draw ticks and could not enter
+the Overworld before the layer allocation was removed.
 
 ## Invalid-address crash
 
@@ -106,13 +113,13 @@ trigger: the first connection lookup lazily built all 248 map-connection entries
 and a string-keyed map-name index. On GBA, connection data is now built only for
 the requested map and map names are resolved by scanning the generated ROM
 table, avoiding both heap structures. The movement regression crosses that map
-edge in two directions, and the emulator soak continued through more than 7,600
+edge in two directions, and the emulator soak continued through more than 8,000
 simulated frames without another crash.
 
 ## Dotzuki dependency
 
 The reusable no_std and renderer work lives in dotzuki PR #63 on the
-`feat/gba-renderer-performance` branch (through commit `1586af6`). Every
+`feat/gba-renderer-performance` branch (through commit `dcacf65`). Every
 open-pokered consumer is pinned to that remote revision, so CI and independent
 checkouts do not require the sibling repository or new vendor changes.
 
@@ -125,7 +132,7 @@ changed frame:
 
 1. retain a static Overworld background and redraw only scrolling edges,
    animated tiles, objects, and damaged regions;
-2. batch remaining monochrome glyph/tile writes;
+2. batch remaining monochrome glyph writes and transparent sprite spans;
 3. ultimately map backgrounds and sprites to native GBA tile/OAM hardware
    instead of treating the device as a software framebuffer.
 
