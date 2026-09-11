@@ -1,34 +1,42 @@
-use pokered_core::battle::state::{status2, status3};
+use pokered_audio::sfx_data::SfxId;
 use pokered_core::battle::state::StatusCondition as CoreStatus;
+use pokered_core::battle::state::{status2, status3};
 use pokered_core::battle::{
     BallAnimOutcome, BattleAnimEvent, BattlePhase, BattleScreen,
     BattleTransition as CoreTransition, IntroPhase,
 };
 use pokered_core::game_state::Lang;
-use pokered_audio::sfx_data::SfxId;
 use pokered_data::impl_traits::PokemonRenderData;
 use pokered_data::items::ItemId;
 use pokered_data::move_data::MoveData;
 use pokered_data::moves::{MoveEffect, MoveId};
+use pokered_data::ui_layout::schema::{
+    BATTLE_BAG_DEFAULT_LAYOUT, BATTLE_MAIN_DEFAULT_LAYOUT, BATTLE_MOVE_DEFAULT_LAYOUT,
+    BATTLE_PARTY_DEFAULT_LAYOUT, BATTLE_TEXT_DEFAULT_LAYOUT, YES_NO_DEFAULT_LAYOUT,
+};
 use pokered_renderer::battle_anim::{
-    AnimEffect, AnimTickResult, AnimationPlayer, AnimationType, BattleEffects, MonRect, MonSide,
-    ANIM_BASE_TILE_ID,
+    AnimEffect, AnimationType, BattleEffects, MonRect, MonSide, ANIM_BASE_TILE_ID,
 };
 use pokered_renderer::battle_scene::{
-    EnemyHud, PlayerHud, BallIndicators, BallStatus, StatusCondition,
+    BallIndicators, BallStatus, EnemyHud, PlayerHud, StatusCondition,
 };
 use pokered_renderer::battle_transition::{BattleTransitionKind, BattleTransitionState};
+use pokered_renderer::embedded_font::draw_text;
+use pokered_renderer::gen1_battle_anim::{
+    draw_mon_pic_clipped, move_short_flash_timing, render_gen1_oam, render_gen1_slide_up,
+    render_gen1_squish, AnimTickResult, AnimationPlayer, BgPaletteState, BlinkMon, LongFlashTiming,
+    LongScreenFlash, MonTilemapAnimation, RockSlideShake, ShakeBackAndForth, ShortFlashTiming,
+    ShortScreenFlash,
+};
 use pokered_renderer::palette::{GRAYSCALE_PALETTE, GRAYSCALE_SPRITE_PALETTE};
 use pokered_renderer::resource::{AssetCategory, ResourceManager};
 use pokered_renderer::sprite::SpriteLayer;
 use pokered_renderer::text_renderer::{write_tiles_at, ScreenTileBuffer};
 use pokered_renderer::textbox::TextBoxFrame;
 use pokered_renderer::tile::{Tile, TileSet, TILE_PIXELS};
-use pokered_renderer::embedded_font::draw_text;
 use pokered_renderer::{FrameBuffer, Rgba, TILE_SIZE};
 use pokered_ui::backends::FrameBufferPainter;
 use pokered_ui::{menus, Ui};
-use pokered_data::ui_layout::schema::{BATTLE_TEXT_DEFAULT_LAYOUT, BATTLE_PARTY_DEFAULT_LAYOUT, BATTLE_BAG_DEFAULT_LAYOUT, BATTLE_MAIN_DEFAULT_LAYOUT, BATTLE_MOVE_DEFAULT_LAYOUT, YES_NO_DEFAULT_LAYOUT};
 
 use super::{blit_tileset, species_to_sprite_name};
 
@@ -65,11 +73,70 @@ struct AttackLunge {
 }
 
 /// `AnimationMoveMonHorizontally` (Tackle/Body Slam): shift the mon 1 tile
-/// toward the opponent for 3 frames.
+/// toward the opponent until `AnimationResetMonPosition` restores it.
 #[derive(Debug, Clone, Copy)]
 struct MoveMonH {
     side: MonSide,
     frame: u8,
+    /// `false` while `AnimationMoveMonHorizontally` is hiding/redrawing the
+    /// shifted pic; `true` while `AnimationResetMonPosition` redraws it back.
+    resetting: bool,
+    reset_profile: MoveMonResetProfile,
+    /// Tail Whip/Metronome's second forward copy is scanned bottom-first:
+    /// the lower six tile rows move one VBlank before the top row.
+    bottom_first_entry: bool,
+}
+
+#[derive(Debug, Clone, Copy)]
+struct SquishRaster {
+    side: MonSide,
+    frame: u8,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum MoveMonResetProfile {
+    Normal,
+    AfterSingleFlash,
+    AfterDoubleFlash,
+}
+
+impl MoveMonH {
+    /// Use the shifted tilemap as the base during reset. On its last frame the
+    /// top tile row has already returned; `apply_move_mon_h_raster_edge`
+    /// corrects that row after the mon is rendered.
+    fn base_is_shifted(self) -> bool {
+        if !self.resetting {
+            return if self.bottom_first_entry {
+                self.frame >= 2
+            } else {
+                self.frame > 3
+            };
+        }
+        match self.reset_profile {
+            MoveMonResetProfile::Normal => self.frame < 4,
+            MoveMonResetProfile::AfterSingleFlash => self.frame < 3,
+            MoveMonResetProfile::AfterDoubleFlash => self.frame == 1,
+        }
+    }
+
+    /// `Some(true)` means the first tile row has moved toward the opponent;
+    /// `Some(false)` means that row has moved back to the normal position.
+    fn top_row_transition(self) -> Option<bool> {
+        if !self.resetting {
+            return if self.bottom_first_entry && matches!(self.frame, 2 | 3) {
+                Some(false)
+            } else {
+                (self.frame == 3).then_some(true)
+            };
+        }
+        match (self.reset_profile, self.frame) {
+            (MoveMonResetProfile::Normal, 3) | (MoveMonResetProfile::AfterSingleFlash, 2) => {
+                Some(false)
+            }
+            (MoveMonResetProfile::AfterDoubleFlash, 2 | 3) => Some(true),
+            _ => None,
+        }
+    }
 }
 
 /// Slide animation kinds. `Legacy` covers battle-flow slides (switch,
@@ -98,6 +165,12 @@ enum SlideKind {
 struct SlideAnim {
     frame: u8,
     kind: SlideKind,
+}
+
+#[derive(Debug, Clone, Copy)]
+struct MonRasterTransfer {
+    side: MonSide,
+    frame: u8,
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -256,21 +329,35 @@ fn build_ball_choreo(ball: ItemId, shakes: u8, outcome: BallAnimOutcome) -> Ball
 enum IntroAnimState {
     None,
     /// Screen wipe transition (8 types selected by 3-bit flags)
-    BattleTransition { step: u8 },
+    BattleTransition {
+        step: u8,
+    },
     /// FlashScreen with 12 palette steps × 2 frames each.
     /// Matches BattleTransition_FlashScreenPalettes from engine/battle/battle_transitions.asm:
     /// each step applies a DMG palette that shifts all 4 shades toward darker/lighter values.
     /// step index 0-11 maps to the 12 palette entries, cycling from normal → black → flash white → normal.
-    ScreenFlash { step: u8, step_frames: u8 },
-    SilhouetteSlide { remaining: u8, offset: i32 },
+    ScreenFlash {
+        step: u8,
+        step_frames: u8,
+    },
+    SilhouetteSlide {
+        remaining: u8,
+        offset: i32,
+    },
     /// Player send-out (AnimateSendingOutMon + SendOutMon,
     /// engine/battle/core.asm:6801 / :1723): POOF_ANIM plays (stage 0),
     /// then the ball tile sits at hlcoord(4,11) (stage 1, Delay3), then the
     /// mon pic grows 3×3 at (3,9) (stage 2, DelayFrames 4) → 5×5 at (2,7)
     /// (stage 3, DelayFrames 5) → full 7×7 + cry.
-    PlayerSendOut { stage: u8, frames: u8 },
+    PlayerSendOut {
+        stage: u8,
+        frames: u8,
+    },
     /// Ghost Marowak reveal: flash ghost → fade out → fade in Marowak
-    GhostMarowakReveal { phase: u8, counter: u8 },
+    GhostMarowakReveal {
+        phase: u8,
+        counter: u8,
+    },
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -311,6 +398,7 @@ pub struct BattleVisualEffects {
     enemy_half_off: bool,
     attack_lunge: Option<AttackLunge>,
     move_mon_h: Option<MoveMonH>,
+    move_mon_h_count: u8,
     anim_player: AnimationPlayer,
     current_attacker_is_player: bool,
     /// `wAnimationID` for the running animation (IsCryMove checks this, not
@@ -320,7 +408,13 @@ pub struct BattleVisualEffects {
     current_attacker_species: pokered_data::species::Species,
     anim_wait: u8,
     anim_tileset: u8,
+    /// OAM visible in the scanout being drawn this update.
     anim_layer: SpriteLayer,
+    /// Shadow OAM submitted on this VBlank, visible on the next scanout.
+    anim_layer_pending: SpriteLayer,
+    /// Tile banks are latched with their corresponding visible/shadow OAM.
+    anim_layer_tileset: u8,
+    anim_layer_pending_tileset: u8,
     pending_applying: Option<PendingApplying>,
     /// Sound of the latest animation command, waiting for the frontend to
     /// play it (PlayAnimation/PlaySubanimation call GetMoveSound+PlaySound
@@ -348,6 +442,41 @@ pub struct BattleVisualEffects {
     enemy_sub_flag: bool,
     /// Shared framebuffer special effects (dotzuki-renderer battle_anim::effects).
     fx: BattleEffects,
+    /// Exact partial tilemap transfers used by Splash and Acid Armor.
+    mon_tilemap: MonTilemapAnimation,
+    /// Tile-column copies and partial VBlank rows for SquishMonPic.
+    squish_raster: Option<SquishRaster>,
+    /// BG-map copy and scanout edges used by Double Team's mon shake.
+    shake_back_and_forth: ShakeBackAndForth,
+    /// Sequential WX/WY mutation used by Rock Slide's four hooks.
+    rock_slide_shake: RockSlideShake,
+    /// BG-map clear/restore and scanout edges used by `AnimationBlinkMon`.
+    blink_mon: BlinkMon,
+    /// Raster-accurate four-frame `AnimationFlashScreen` state.
+    short_flash: ShortScreenFlash,
+    /// Raster-accurate 48-frame `AnimationFlashScreenLong` state.
+    long_flash: LongScreenFlash,
+    /// Zero-based `AnimationFlashScreen` call index within the current move.
+    short_flash_count: u8,
+    /// Persistent BGP register plus the writes visible during this scanout.
+    bg_palette: BgPaletteState,
+    /// Three-VBlank BG-map transfer performed by AnimationShowMonPic.
+    show_reveal: [Option<u8>; 2],
+    /// Enemy-side `AnimationMinimizeMon` keeps the old BG picture for four
+    /// scanouts while `CopyTempPicToMonPic` finishes.
+    minimize_reveal_delay: [u8; 2],
+    /// Delay the Substitute doll until its synchronous copy routine returns.
+    substitute_reveal_delay: [u8; 2],
+    /// Two visible thirds of the mon tilemap while Seismic Toss hides it.
+    seismic_hide_raster: Option<MonRasterTransfer>,
+    /// Player-side tilemap edge and hidden tail of `AnimationTransformMon`.
+    transform_raster: Option<MonRasterTransfer>,
+    /// Preserve the user's picture on the scanout where Selfdestruct or
+    /// Explosion dispatches HideMonPic; the hidden tilemap appears next frame.
+    hide_mon_one_frame: Option<MonSide>,
+    /// Select the native tile-font oracle scene used only by the isolated
+    /// move-animation differential recorder.
+    move_animation_capture_scene: bool,
     intro_anim: IntroAnimState,
     is_wild_intro: bool,
     cry_pending: Option<pokered_data::species::Species>,
@@ -373,6 +502,36 @@ pub struct BattleVisualEffects {
     pub victory_music_played: bool,
 }
 
+/// Machine-readable state emitted beside isolated move-animation frames.
+/// Coordinates use the renderer's screen-space convention (not raw OAM's
+/// +8/+16 hardware offsets).
+#[derive(Debug, serde::Serialize)]
+pub(crate) struct MoveAnimationCaptureState {
+    pub animation_finished: bool,
+    pub command_wait: u8,
+    pub tileset: u8,
+    pub player_visible: bool,
+    pub enemy_visible: bool,
+    pub player_offset: (i32, i32),
+    pub enemy_offset: (i32, i32),
+    pub move_mon_h_frame: Option<u8>,
+    pub move_mon_h_resetting: bool,
+    pub objects_active: bool,
+    /// Screen-space objects emitted by AnimationPlayer before the frontend
+    /// copies them into its render layer.
+    pub source_oam: Vec<MoveAnimationCaptureOam>,
+    /// Objects that the production frontend actually renders this frame.
+    pub oam: Vec<MoveAnimationCaptureOam>,
+}
+
+#[derive(Debug, serde::Serialize)]
+pub(crate) struct MoveAnimationCaptureOam {
+    pub x: i32,
+    pub y: i32,
+    pub tile: u8,
+    pub attributes: u8,
+}
+
 impl BattleVisualEffects {
     pub fn has_transition(&self) -> bool {
         self.transition_state.is_some()
@@ -388,6 +547,97 @@ impl BattleVisualEffects {
 
     pub fn clear_snapshot(&mut self) {
         self.overworld_snapshot = None;
+    }
+
+    /// Mark the static scene used by the differential recorder as already
+    /// observed, so its synthetic attack text is not mistaken for a live
+    /// battle event on the first sampled frame.
+    pub(crate) fn prime_move_animation_capture_scene(&mut self, screen: &BattleScreen) {
+        self.last_phase_kind = Some(Self::phase_kind(&screen.phase));
+        self.last_message = screen.current_message.clone();
+        self.move_animation_capture_scene = true;
+    }
+
+    /// Start a move's visual command stream without executing battle logic.
+    /// Used only by the frame-differential CLI so misses, charge turns, RNG,
+    /// and move effects cannot change which animation is sampled.
+    pub(crate) fn start_move_animation_capture(
+        &mut self,
+        move_id: MoveId,
+        player_is_attacker: bool,
+    ) {
+        debug_assert!(move_id != MoveId::None);
+        self.current_attacker_is_player = player_is_attacker;
+        self.current_move = move_id;
+        self.attack_lunge = None;
+        self.mon_tilemap = MonTilemapAnimation::default();
+        self.squish_raster = None;
+        self.shake_back_and_forth = ShakeBackAndForth::default();
+        self.rock_slide_shake.reset();
+        self.blink_mon = BlinkMon::default();
+        self.short_flash = ShortScreenFlash::default();
+        self.long_flash = LongScreenFlash::default();
+        self.short_flash_count = 0;
+        self.move_mon_h_count = 0;
+        self.show_reveal = [None; 2];
+        self.minimize_reveal_delay = [0; 2];
+        self.substitute_reveal_delay = [0; 2];
+        self.seismic_hide_raster = None;
+        self.transform_raster = None;
+        self.hide_mon_one_frame = None;
+        self.bg_palette.reset();
+        self.current_attacker_species = pokered_data::species::Species::Rhydon;
+        self.pending_applying = None;
+        self.pending_anim_start = None;
+        self.suppress_hit_flash = false;
+        self.anim_player
+            .start(move_id as usize - 1, player_is_attacker);
+        self.anim_wait = 0;
+        self.anim_layer.clear();
+        self.anim_layer_pending.clear();
+    }
+
+    pub(crate) fn move_animation_capture_finished(&self) -> bool {
+        self.anim_player.is_finished() && self.anim_wait == 0
+    }
+
+    pub(crate) fn move_animation_capture_state(&self) -> MoveAnimationCaptureState {
+        MoveAnimationCaptureState {
+            animation_finished: self.anim_player.is_finished(),
+            command_wait: self.anim_wait,
+            tileset: self.anim_tileset,
+            player_visible: self.player_visible_now(),
+            enemy_visible: self.enemy_visible_now(),
+            player_offset: self.player_offset(),
+            enemy_offset: self.enemy_offset(),
+            move_mon_h_frame: self.move_mon_h.map(|state| state.frame),
+            move_mon_h_resetting: self.move_mon_h.is_some_and(|state| state.resetting),
+            objects_active: self.fx.objects_active(),
+            source_oam: self
+                .anim_player
+                .oam_entries()
+                .iter()
+                .map(|entry| MoveAnimationCaptureOam {
+                    x: entry.x,
+                    y: entry.y,
+                    tile: entry.tile_id.wrapping_sub(ANIM_BASE_TILE_ID),
+                    attributes: entry.attributes,
+                })
+                .collect(),
+            oam: self
+                .anim_layer_pending
+                .entries
+                .iter()
+                .map(|entry| MoveAnimationCaptureOam {
+                    x: entry.x,
+                    y: entry.y,
+                    // anim_layer stores a tileset-relative id after
+                    // advance_move_animation subtracts ANIM_BASE_TILE_ID.
+                    tile: entry.tile_id,
+                    attributes: entry.attributes,
+                })
+                .collect(),
+        }
     }
 }
 
@@ -436,9 +686,26 @@ impl BattleVisualEffects {
     fn start_non_move_anim(&mut self, anim_index: usize, player_is_attacker: bool) {
         self.current_attacker_is_player = player_is_attacker;
         self.current_move = MoveId::None;
+        self.mon_tilemap = MonTilemapAnimation::default();
+        self.squish_raster = None;
+        self.shake_back_and_forth = ShakeBackAndForth::default();
+        self.rock_slide_shake.reset();
+        self.blink_mon = BlinkMon::default();
+        self.short_flash = ShortScreenFlash::default();
+        self.long_flash = LongScreenFlash::default();
+        self.short_flash_count = 0;
+        self.move_mon_h_count = 0;
+        self.show_reveal = [None; 2];
+        self.minimize_reveal_delay = [0; 2];
+        self.substitute_reveal_delay = [0; 2];
+        self.seismic_hide_raster = None;
+        self.transform_raster = None;
+        self.hide_mon_one_frame = None;
+        self.bg_palette.reset();
         self.anim_player.start(anim_index, player_is_attacker);
         self.anim_wait = 0;
         self.anim_layer.clear();
+        self.anim_layer_pending.clear();
     }
 
     /// Take the pending animation-command sound request, if any.
@@ -463,6 +730,7 @@ impl Default for BattleVisualEffects {
             enemy_half_off: false,
             attack_lunge: None,
             move_mon_h: None,
+            move_mon_h_count: 0,
             anim_player: AnimationPlayer::new(),
             current_attacker_is_player: true,
             current_move: MoveId::None,
@@ -470,6 +738,9 @@ impl Default for BattleVisualEffects {
             anim_wait: 0,
             anim_tileset: 0,
             anim_layer: SpriteLayer::new(),
+            anim_layer_pending: SpriteLayer::new(),
+            anim_layer_tileset: 0,
+            anim_layer_pending_tileset: 0,
             pending_applying: None,
             pending_move_sfx: None,
             animations_enabled: true,
@@ -480,6 +751,22 @@ impl Default for BattleVisualEffects {
             player_sub_flag: false,
             enemy_sub_flag: false,
             fx: BattleEffects::new(),
+            mon_tilemap: MonTilemapAnimation::default(),
+            squish_raster: None,
+            shake_back_and_forth: ShakeBackAndForth::default(),
+            rock_slide_shake: RockSlideShake::default(),
+            blink_mon: BlinkMon::default(),
+            short_flash: ShortScreenFlash::default(),
+            long_flash: LongScreenFlash::default(),
+            short_flash_count: 0,
+            bg_palette: BgPaletteState::new(),
+            show_reveal: [None; 2],
+            minimize_reveal_delay: [0; 2],
+            substitute_reveal_delay: [0; 2],
+            seismic_hide_raster: None,
+            transform_raster: None,
+            hide_mon_one_frame: None,
+            move_animation_capture_scene: false,
             intro_anim: IntroAnimState::None,
             is_wild_intro: false,
             cry_pending: None,
@@ -532,14 +819,20 @@ impl BattleVisualEffects {
             }
             BattlePhase::EnemySendingNext { .. } => {
                 self.enemy_visible = true;
-                self.enemy_entry = Some(SlideAnim { frame: 0, kind: SlideKind::Legacy });
+                self.enemy_entry = Some(SlideAnim {
+                    frame: 0,
+                    kind: SlideKind::Legacy,
+                });
                 self.enemy_exit = None;
                 self.enemy_half_off = false;
                 self.fx.clear_side(MonSide::Enemy);
             }
             BattlePhase::PlayerFaintSwitch => {
                 self.player_visible = true;
-                self.player_entry = Some(SlideAnim { frame: 0, kind: SlideKind::Legacy });
+                self.player_entry = Some(SlideAnim {
+                    frame: 0,
+                    kind: SlideKind::Legacy,
+                });
                 self.player_exit = None;
                 self.player_half_off = false;
                 self.fx.clear_side(MonSide::Player);
@@ -560,9 +853,13 @@ impl BattleVisualEffects {
             IntroPhase::BattleTransitionWipe(transition) => {
                 let kind = match transition {
                     CoreTransition::DoubleCircle => BattleTransitionKind::DoubleCircle,
-                    CoreTransition::Spiral { outward } => BattleTransitionKind::Spiral { outward: *outward },
+                    CoreTransition::Spiral { outward } => {
+                        BattleTransitionKind::Spiral { outward: *outward }
+                    }
                     CoreTransition::Circle => BattleTransitionKind::Circle,
-                    CoreTransition::SpiralTrainerStronger => BattleTransitionKind::Spiral { outward: true },
+                    CoreTransition::SpiralTrainerStronger => {
+                        BattleTransitionKind::Spiral { outward: true }
+                    }
                     CoreTransition::HorizontalStripes => BattleTransitionKind::HorizontalStripes,
                     CoreTransition::Shrink => BattleTransitionKind::Shrink,
                     CoreTransition::VerticalStripes => BattleTransitionKind::VerticalStripes,
@@ -628,7 +925,10 @@ impl BattleVisualEffects {
             IntroPhase::GhostUnveil => {
                 // SILPH SCOPE reveal: run the MarowakAnim (flash 8×, fade the
                 // ghost out, fade the Marowak in — ghost_marowak_anim.asm).
-                self.intro_anim = IntroAnimState::GhostMarowakReveal { phase: 0, counter: 0 };
+                self.intro_anim = IntroAnimState::GhostMarowakReveal {
+                    phase: 0,
+                    counter: 0,
+                };
                 self.ghost_marowak_palette = 0xe4;
                 self.player_visible = true;
                 self.enemy_visible = true;
@@ -650,7 +950,10 @@ impl BattleVisualEffects {
                 self.intro_anim = IntroAnimState::None;
                 self.player_visible = true;
                 self.enemy_visible = true;
-                self.enemy_exit = Some(SlideAnim { frame: 0, kind: SlideKind::Legacy });
+                self.enemy_exit = Some(SlideAnim {
+                    frame: 0,
+                    kind: SlideKind::Legacy,
+                });
                 // The original has NO enemy-mon entry animation: the trainer
                 // pic slides off right, then the mon simply appears with its
                 // cry (no slide/drop/grow).
@@ -660,7 +963,10 @@ impl BattleVisualEffects {
                 // SendOutMon (engine/battle/core.asm:1723): POOF_ANIM at the
                 // player's side (hWhoseTurn = 1 → HVFLIP), then
                 // AnimateSendingOutMon grows the pic 3×3 → 5×5 → 7×7.
-                self.intro_anim = IntroAnimState::PlayerSendOut { stage: 0, frames: 0 };
+                self.intro_anim = IntroAnimState::PlayerSendOut {
+                    stage: 0,
+                    frames: 0,
+                };
                 self.player_visible = true;
                 self.enemy_visible = true;
                 self.player_entry = None;
@@ -863,6 +1169,22 @@ impl BattleVisualEffects {
                     {
                         self.current_attacker_is_player = player_is_attacker;
                         self.current_move = move_id;
+                        self.mon_tilemap = MonTilemapAnimation::default();
+                        self.squish_raster = None;
+                        self.shake_back_and_forth = ShakeBackAndForth::default();
+                        self.rock_slide_shake.reset();
+                        self.blink_mon = BlinkMon::default();
+                        self.short_flash = ShortScreenFlash::default();
+                        self.long_flash = LongScreenFlash::default();
+                        self.short_flash_count = 0;
+                        self.move_mon_h_count = 0;
+                        self.show_reveal = [None; 2];
+                        self.minimize_reveal_delay = [0; 2];
+                        self.substitute_reveal_delay = [0; 2];
+                        self.seismic_hide_raster = None;
+                        self.transform_raster = None;
+                        self.hide_mon_one_frame = None;
+                        self.bg_palette.reset();
                         self.current_attacker_species = if player_is_attacker {
                             screen.player_species
                         } else {
@@ -877,6 +1199,7 @@ impl BattleVisualEffects {
                                 self.anim_player.start(anim_id, player_is_attacker);
                                 self.anim_wait = 0;
                                 self.anim_layer.clear();
+                                self.anim_layer_pending.clear();
                             }
                         } else {
                             // MoveAnimation .animationsDisabled: no animation (and no
@@ -895,14 +1218,20 @@ impl BattleVisualEffects {
 
         if normalized.starts_with("Go! ") {
             self.player_visible = true;
-            self.player_entry = Some(SlideAnim { frame: 0, kind: SlideKind::Legacy });
+            self.player_entry = Some(SlideAnim {
+                frame: 0,
+                kind: SlideKind::Legacy,
+            });
             self.player_exit = None;
             self.player_half_off = false;
             self.fx.clear_side(MonSide::Player);
         }
 
         if normalized.contains("come back!") {
-            self.player_exit = Some(SlideAnim { frame: 0, kind: SlideKind::Legacy });
+            self.player_exit = Some(SlideAnim {
+                frame: 0,
+                kind: SlideKind::Legacy,
+            });
             self.player_entry = None;
             self.player_half_off = false;
             self.fx.clear_side(MonSide::Player);
@@ -911,12 +1240,18 @@ impl BattleVisualEffects {
         if normalized.ends_with("fainted!") {
             if normalized.starts_with("Enemy ") {
                 // SlideDownFaintedMonPic: enemy mon slides DOWN, not right.
-                self.enemy_exit = Some(SlideAnim { frame: 0, kind: SlideKind::Faint });
+                self.enemy_exit = Some(SlideAnim {
+                    frame: 0,
+                    kind: SlideKind::Faint,
+                });
                 self.enemy_entry = None;
                 self.enemy_half_off = false;
                 self.fx.clear_side(MonSide::Enemy);
             } else {
-                self.player_exit = Some(SlideAnim { frame: 0, kind: SlideKind::Faint });
+                self.player_exit = Some(SlideAnim {
+                    frame: 0,
+                    kind: SlideKind::Faint,
+                });
                 self.player_entry = None;
                 self.player_half_off = false;
                 self.fx.clear_side(MonSide::Player);
@@ -933,6 +1268,13 @@ impl BattleVisualEffects {
             MonSide::Player
         } else {
             MonSide::Enemy
+        }
+    }
+
+    fn side_index(side: MonSide) -> usize {
+        match side {
+            MonSide::Player => 0,
+            MonSide::Enemy => 1,
         }
     }
 
@@ -956,6 +1298,12 @@ impl BattleVisualEffects {
         let attacker = self.attacker_side();
         let defender = attacker.other();
 
+        if self.current_move == MoveId::DoubleTeam
+            && matches!(effect, AnimEffect::ResetScreenPalette)
+        {
+            self.shake_back_and_forth.prime(attacker);
+        }
+
         // Miss / no-effect messages suppress the blink feedback.
         if self.suppress_hit_flash
             && matches!(
@@ -969,11 +1317,74 @@ impl BattleVisualEffects {
             return;
         }
 
-        // Shared framebuffer effects (dotzuki-renderer). The returned frame
-        // count is how long the original routine blocks the command stream.
-        let wait = self.fx.apply(&effect, attacker);
+        self.mon_tilemap.start(&effect, attacker);
+        if matches!(effect, AnimEffect::SquishMonPic) {
+            self.squish_raster = Some(SquishRaster {
+                side: attacker,
+                frame: 0,
+            });
+        }
+        let palette_bgp = match effect {
+            AnimEffect::DarkScreenPalette => Some(0x6f),
+            AnimEffect::LightScreenPalette => Some(0x90),
+            AnimEffect::DarkenMonPalette => Some(0xf9),
+            AnimEffect::ResetScreenPalette => Some(0xe4),
+            _ => None,
+        };
+        let generic_wait = match effect {
+            _ if palette_bgp.is_some() => {
+                self.bg_palette.write(
+                    palette_bgp.expect("palette effect has a BGP value"),
+                    self.palette_write_scanline(&effect),
+                );
+                0
+            }
+            AnimEffect::FlashScreen { frames } if frames <= 4 => {
+                let timing = self.short_flash_timing();
+                self.short_flash
+                    .start(self.bg_palette.current_bgp(), timing);
+                self.short_flash_count = self.short_flash_count.saturating_add(1);
+                frames
+            }
+            AnimEffect::FlashScreen { frames } => {
+                let timing = self.long_flash_timing();
+                self.long_flash.start(self.bg_palette.current_bgp(), timing);
+                frames
+            }
+            AnimEffect::ShakeBackAndForth => {
+                self.shake_back_and_forth.start(attacker);
+                96
+            }
+            AnimEffect::ShakeScreenHV { .. } if self.current_move == MoveId::RockSlide => {
+                self.rock_slide_shake.start(self.current_attacker_is_player);
+                0
+            }
+            AnimEffect::TransformMon => {
+                self.transform_raster = Some(MonRasterTransfer {
+                    side: attacker,
+                    frame: 0,
+                });
+                0
+            }
+            AnimEffect::BlinkPlayerMon { .. } => {
+                self.blink_mon.start(attacker);
+                0
+            }
+            AnimEffect::BlinkEnemyMon { .. } => {
+                self.blink_mon.start(defender);
+                0
+            }
+            _ => self.fx.apply(&effect, attacker),
+        };
+        let wait = AnimationPlayer::effect_duration(&effect, attacker).unwrap_or(generic_wait);
+        if matches!(effect, AnimEffect::SubstituteMon) {
+            self.substitute_reveal_delay[Self::side_index(attacker)] =
+                if attacker == MonSide::Enemy { 10 } else { 11 };
+        }
         if wait > 0 {
-            self.anim_wait = self.anim_wait.max(wait);
+            // The effect is applied before this update is rendered, so the
+            // current display frame is already the first blocked VBlank.
+            self.anim_wait = self.anim_wait.max(wait.saturating_sub(1));
         }
 
         // Frontend-side flows: visibility, mon slides and lunges.
@@ -983,9 +1394,42 @@ impl BattleVisualEffects {
             // lives in `self.fx`; these flags cover the battle flow.
             AnimEffect::ShowPlayerMon | AnimEffect::SubstituteMon | AnimEffect::MinimizeMon => {
                 self.set_visible(attacker, true);
+                if matches!(effect, AnimEffect::MinimizeMon) {
+                    self.minimize_reveal_delay[Self::side_index(attacker)] =
+                        if attacker == MonSide::Enemy { 5 } else { 0 };
+                }
+                if matches!(effect, AnimEffect::ShowPlayerMon)
+                    && self.current_move != MoveId::DoubleTeam
+                {
+                    self.show_reveal[Self::side_index(attacker)] = Some(0);
+                    // AnimationShowMonPic ends with Delay3.
+                    self.anim_wait = self.anim_wait.max(2);
+                }
             }
             AnimEffect::ShowEnemyMon => {
                 self.set_visible(defender, true);
+                if self.current_move != MoveId::DoubleTeam {
+                    self.show_reveal[Self::side_index(defender)] = Some(0);
+                    self.anim_wait = self.anim_wait.max(2);
+                }
+            }
+            AnimEffect::HidePlayerMon => {
+                self.show_reveal[Self::side_index(attacker)] = None;
+                if matches!(self.current_move, MoveId::Selfdestruct | MoveId::Explosion) {
+                    self.hide_mon_one_frame = Some(attacker);
+                }
+            }
+            AnimEffect::HideEnemyMon => {
+                self.show_reveal[Self::side_index(defender)] = None;
+                if self.current_move == MoveId::SeismicToss {
+                    self.seismic_hide_raster = Some(MonRasterTransfer {
+                        side: defender,
+                        frame: 0,
+                    });
+                }
+                if matches!(self.current_move, MoveId::Selfdestruct | MoveId::Explosion) {
+                    self.hide_mon_one_frame = Some(defender);
+                }
             }
             AnimEffect::SlideEnemyMonOff => {
                 // AnimationSlideMonOff: e = 8 tiles, wSlideMonDelay = 3.
@@ -993,14 +1437,14 @@ impl BattleVisualEffects {
                     frame: 0,
                     kind: SlideKind::SeOff,
                 });
-                self.anim_wait = self.anim_wait.max(24);
+                self.anim_wait = self.anim_wait.max(23);
             }
             AnimEffect::SlidePlayerMonOff => {
                 *self.slide_slot(attacker, false) = Some(SlideAnim {
                     frame: 0,
                     kind: SlideKind::SeOff,
                 });
-                self.anim_wait = self.anim_wait.max(24);
+                self.anim_wait = self.anim_wait.max(23);
             }
             AnimEffect::SlidePlayerMonHalfOff => {
                 // AnimationSlideMonHalfOff: e = 4 tiles, wSlideMonDelay = 4;
@@ -1009,14 +1453,14 @@ impl BattleVisualEffects {
                     frame: 0,
                     kind: SlideKind::SeHalfOff,
                 });
-                self.anim_wait = self.anim_wait.max(16);
+                self.anim_wait = self.anim_wait.max(18);
             }
             AnimEffect::SlidePlayerMonDown => {
                 *self.slide_slot(attacker, false) = Some(SlideAnim {
                     frame: 0,
                     kind: SlideKind::SeDown,
                 });
-                self.anim_wait = self.anim_wait.max(21);
+                self.anim_wait = self.anim_wait.max(20);
             }
             AnimEffect::SlidePlayerMonUp => {
                 self.set_visible(attacker, true);
@@ -1024,17 +1468,30 @@ impl BattleVisualEffects {
                     frame: 0,
                     kind: SlideKind::SeUp,
                 });
-                self.anim_wait = self.anim_wait.max(21);
+                self.anim_wait = self.anim_wait.max(13);
             }
             AnimEffect::ResetPlayerMonPosition => {
-                // AnimationResetMonPosition: instantly redraw the pic at the
-                // normal coordinates (no slide).
-                self.move_mon_h = None;
+                // AnimationResetMonPosition redraws the normal pic through
+                // AnimationShowMonPic, whose final Delay3 blocks here.
+                let reset_profile = match self.current_move {
+                    MoveId::BodySlam => MoveMonResetProfile::AfterDoubleFlash,
+                    MoveId::TakeDown | MoveId::DoubleEdge => MoveMonResetProfile::AfterSingleFlash,
+                    MoveId::TailWhip | MoveId::Metronome if self.move_mon_h_count == 1 => {
+                        MoveMonResetProfile::AfterSingleFlash
+                    }
+                    _ => MoveMonResetProfile::Normal,
+                };
+                if let Some(anim) = self.move_mon_h.as_mut() {
+                    anim.frame = 0;
+                    anim.resetting = true;
+                    anim.reset_profile = reset_profile;
+                }
                 match attacker {
                     MonSide::Player => self.player_half_off = false,
                     MonSide::Enemy => self.enemy_half_off = false,
                 }
                 self.set_visible(attacker, true);
+                self.anim_wait = self.anim_wait.max(2);
             }
             AnimEffect::MovePlayerMonH => {
                 // AnimationMoveMonHorizontally: hold the mon 1 tile toward
@@ -1042,13 +1499,394 @@ impl BattleVisualEffects {
                 self.move_mon_h = Some(MoveMonH {
                     side: attacker,
                     frame: 0,
+                    resetting: false,
+                    reset_profile: MoveMonResetProfile::Normal,
+                    bottom_first_entry: matches!(
+                        self.current_move,
+                        MoveId::TailWhip | MoveId::Metronome
+                    ) && self.move_mon_h_count == 1,
                 });
-                self.anim_wait = self.anim_wait.max(3);
+                self.move_mon_h_count = self.move_mon_h_count.saturating_add(1);
+                self.anim_wait = self.anim_wait.max(2);
             }
             AnimEffect::Delay10 => {
-                self.anim_wait = self.anim_wait.max(10);
+                self.anim_wait = self.anim_wait.max(9);
             }
             _ => {}
+        }
+    }
+
+    fn short_flash_timing(&self) -> ShortFlashTiming {
+        if let Some(timing) = move_short_flash_timing(
+            self.current_move as u8,
+            self.current_attacker_is_player,
+            usize::from(self.short_flash_count),
+        ) {
+            return timing;
+        }
+        match (self.current_move, self.current_attacker_is_player) {
+            (MoveId::Growth, _) => ShortFlashTiming {
+                entry_scanline: 17,
+                white_scanline: 8,
+                restore_scanline: 9,
+            },
+            (MoveId::Leer | MoveId::Disable, true) if self.short_flash_count == 0 => {
+                ShortFlashTiming {
+                    entry_scanline: 26,
+                    white_scanline: 9,
+                    restore_scanline: 15,
+                }
+            }
+            (MoveId::Leer | MoveId::Disable, false) if self.short_flash_count == 0 => {
+                ShortFlashTiming {
+                    entry_scanline: 27,
+                    white_scanline: 9,
+                    restore_scanline: 16,
+                }
+            }
+            (MoveId::Leer | MoveId::Disable, _) => ShortFlashTiming {
+                entry_scanline: 25,
+                white_scanline: 9,
+                restore_scanline: 9,
+            },
+            (MoveId::Glare, true) if self.short_flash_count == 0 => ShortFlashTiming {
+                entry_scanline: 24,
+                white_scanline: 9,
+                restore_scanline: 9,
+            },
+            (MoveId::Glare, false) if self.short_flash_count == 0 => ShortFlashTiming {
+                entry_scanline: 25,
+                white_scanline: 9,
+                restore_scanline: 9,
+            },
+            (MoveId::Flash, true) if self.short_flash_count == 0 => ShortFlashTiming {
+                entry_scanline: 26,
+                white_scanline: 9,
+                restore_scanline: 9,
+            },
+            (MoveId::Flash, false) if self.short_flash_count == 0 => ShortFlashTiming {
+                entry_scanline: 27,
+                white_scanline: 9,
+                restore_scanline: 9,
+            },
+            (MoveId::Glare | MoveId::Flash, true) => ShortFlashTiming {
+                entry_scanline: 9,
+                white_scanline: 16,
+                restore_scanline: 9,
+            },
+            (MoveId::Glare | MoveId::Flash, false) => ShortFlashTiming {
+                entry_scanline: 10,
+                white_scanline: 16,
+                restore_scanline: 9,
+            },
+            (MoveId::DoubleEdge, _) => ShortFlashTiming {
+                entry_scanline: 15,
+                white_scanline: 9,
+                restore_scanline: 9,
+            },
+            (MoveId::MegaDrain, true) if self.short_flash_count == 0 => ShortFlashTiming {
+                entry_scanline: 22,
+                white_scanline: 8,
+                restore_scanline: 9,
+            },
+            (MoveId::MegaDrain, false) if self.short_flash_count == 0 => ShortFlashTiming {
+                entry_scanline: 23,
+                white_scanline: 9,
+                restore_scanline: 9,
+            },
+            (MoveId::MegaDrain, true) => ShortFlashTiming {
+                entry_scanline: 44,
+                white_scanline: 8,
+                restore_scanline: 8,
+            },
+            (MoveId::MegaDrain, false) => ShortFlashTiming {
+                entry_scanline: 21,
+                white_scanline: 9,
+                restore_scanline: 8,
+            },
+            (MoveId::Thunder, true) if self.short_flash_count == 0 => ShortFlashTiming {
+                entry_scanline: 18,
+                white_scanline: 9,
+                restore_scanline: 9,
+            },
+            (MoveId::Thunder, false) if self.short_flash_count == 0 => ShortFlashTiming {
+                entry_scanline: 19,
+                white_scanline: 9,
+                restore_scanline: 9,
+            },
+            (MoveId::Thunder, true) => ShortFlashTiming {
+                entry_scanline: 21,
+                white_scanline: 8,
+                restore_scanline: 9,
+            },
+            (MoveId::Thunder, false) => ShortFlashTiming {
+                entry_scanline: 21,
+                white_scanline: 8,
+                restore_scanline: 17,
+            },
+            (MoveId::Meditate, true) => ShortFlashTiming {
+                entry_scanline: 21,
+                white_scanline: 9,
+                restore_scanline: 8,
+            },
+            (MoveId::Meditate, false) => ShortFlashTiming {
+                entry_scanline: 21,
+                white_scanline: 8,
+                restore_scanline: 9,
+            },
+            (MoveId::DoubleTeam, true) => ShortFlashTiming {
+                entry_scanline: 9,
+                white_scanline: 8,
+                restore_scanline: 9,
+            },
+            (MoveId::DoubleTeam, false) if self.short_flash_count == 0 => ShortFlashTiming {
+                entry_scanline: 9,
+                white_scanline: 8,
+                restore_scanline: 9,
+            },
+            (MoveId::DoubleTeam, false) => ShortFlashTiming {
+                entry_scanline: 9,
+                white_scanline: 8,
+                restore_scanline: 8,
+            },
+            (MoveId::Recover, _) => ShortFlashTiming {
+                entry_scanline: 17,
+                white_scanline: 8,
+                restore_scanline: 8,
+            },
+            (MoveId::Harden, _) => ShortFlashTiming {
+                entry_scanline: 22,
+                white_scanline: 9,
+                restore_scanline: 9,
+            },
+            (MoveId::Minimize, _) => ShortFlashTiming {
+                entry_scanline: 17,
+                white_scanline: 8,
+                restore_scanline: 9,
+            },
+            (MoveId::DefenseCurl, true) => ShortFlashTiming {
+                entry_scanline: 21,
+                white_scanline: 8,
+                restore_scanline: 9,
+            },
+            (MoveId::DefenseCurl, false) => ShortFlashTiming {
+                entry_scanline: 21,
+                white_scanline: 8,
+                restore_scanline: 8,
+            },
+            (MoveId::Softboiled, true) => ShortFlashTiming {
+                entry_scanline: 17,
+                white_scanline: 8,
+                restore_scanline: 9,
+            },
+            (MoveId::Softboiled, false) => ShortFlashTiming {
+                entry_scanline: 18,
+                white_scanline: 9,
+                restore_scanline: 8,
+            },
+            (MoveId::Sharpen, _) => ShortFlashTiming {
+                entry_scanline: 21,
+                white_scanline: 8,
+                restore_scanline: 8,
+            },
+            (MoveId::HyperBeam, _) if self.short_flash_count == 0 => ShortFlashTiming {
+                entry_scanline: 17,
+                white_scanline: 8,
+                restore_scanline: 9,
+            },
+            (MoveId::HyperBeam, true) if self.short_flash_count == 1 => ShortFlashTiming {
+                entry_scanline: 16,
+                white_scanline: 32,
+                restore_scanline: 9,
+            },
+            (MoveId::HyperBeam, false) if self.short_flash_count == 1 => ShortFlashTiming {
+                entry_scanline: 24,
+                white_scanline: 24,
+                restore_scanline: 9,
+            },
+            (MoveId::HyperBeam, true) if self.short_flash_count == 2 => ShortFlashTiming {
+                entry_scanline: 31,
+                white_scanline: 9,
+                restore_scanline: 17,
+            },
+            (MoveId::HyperBeam, false) if self.short_flash_count == 2 => ShortFlashTiming {
+                entry_scanline: 31,
+                white_scanline: 17,
+                restore_scanline: 9,
+            },
+            (MoveId::HyperBeam, true) if self.short_flash_count == 3 => ShortFlashTiming {
+                entry_scanline: 16,
+                white_scanline: 9,
+                restore_scanline: 24,
+            },
+            (MoveId::HyperBeam, false) if self.short_flash_count == 3 => ShortFlashTiming {
+                entry_scanline: 16,
+                white_scanline: 9,
+                restore_scanline: 32,
+            },
+            (MoveId::HyperBeam, true) if self.short_flash_count == 4 => ShortFlashTiming {
+                entry_scanline: 27,
+                white_scanline: 18,
+                restore_scanline: 31,
+            },
+            (MoveId::HyperBeam, false) if self.short_flash_count == 4 => ShortFlashTiming {
+                entry_scanline: 27,
+                white_scanline: 18,
+                restore_scanline: 38,
+            },
+            (MoveId::HyperBeam, true) => ShortFlashTiming {
+                entry_scanline: 31,
+                white_scanline: 18,
+                restore_scanline: 16,
+            },
+            (MoveId::HyperBeam, false) => ShortFlashTiming {
+                entry_scanline: 39,
+                white_scanline: 18,
+                restore_scanline: 16,
+            },
+            (MoveId::BodySlam, _) if self.short_flash_count > 0 => ShortFlashTiming::default(),
+            (MoveId::BodySlam, true) => ShortFlashTiming {
+                entry_scanline: 9,
+                white_scanline: 9,
+                restore_scanline: 18,
+            },
+            (MoveId::BodySlam, false) => ShortFlashTiming {
+                entry_scanline: 9,
+                white_scanline: 24,
+                restore_scanline: 9,
+            },
+            (MoveId::TakeDown, true) => ShortFlashTiming {
+                entry_scanline: 15,
+                white_scanline: 9,
+                restore_scanline: 18,
+            },
+            (MoveId::TakeDown, false) => ShortFlashTiming {
+                entry_scanline: 16,
+                white_scanline: 24,
+                restore_scanline: 9,
+            },
+            _ => ShortFlashTiming::default(),
+        }
+    }
+
+    fn long_flash_timing(&self) -> LongFlashTiming {
+        let player = self.current_attacker_is_player;
+        let write_scanlines = match (self.current_move, player) {
+            (MoveId::Psybeam, true) => [30, 10, 27, 10, 24, 10, 16, 10, 17, 10, 16, 10],
+            (MoveId::Psybeam, false) => [30, 10, 35, 17, 17, 10, 16, 10, 17, 17, 16, 10],
+            (MoveId::PsychicM, true) => [23, 25, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9],
+            (MoveId::PsychicM, false) => [24, 25, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9],
+            (MoveId::Hypnosis, true) => [20, 8, 9, 9, 9, 9, 9, 9, 10, 9, 9, 9],
+            (MoveId::Hypnosis, false) => [21, 8, 9, 9, 9, 9, 9, 9, 10, 9, 9, 9],
+            (MoveId::DreamEater, true) => [20, 8, 9, 9, 9, 9, 9, 9, 10, 18, 9, 8],
+            (MoveId::DreamEater, false) => [21, 8, 9, 9, 9, 9, 9, 9, 10, 18, 9, 8],
+            (_, true) => LongFlashTiming::default().write_scanlines,
+            (_, false) => [19, 15, 10, 9, 10, 8, 8, 9, 9, 8, 8, 8],
+        };
+        LongFlashTiming { write_scanlines }
+    }
+
+    /// First scanline that observes a zero-time BGP write. These boundaries
+    /// are measured against the pinned retail-ROM oracle; the one-line side
+    /// difference comes from the flipped-turn dispatch path.
+    fn palette_write_scanline(&self, effect: &AnimEffect) -> u32 {
+        let player = self.current_attacker_is_player;
+        let side = |player_line, enemy_line| if player { player_line } else { enemy_line };
+        match (self.current_move, effect) {
+            (MoveId::Smokescreen, AnimEffect::DarkenMonPalette)
+                if self.bg_palette.current_bgp() == 0xe4 =>
+            {
+                23
+            }
+            (MoveId::Smokescreen, _) => 9,
+            (MoveId::Agility, AnimEffect::ResetScreenPalette) => {
+                if player {
+                    19
+                } else {
+                    20
+                }
+            }
+            (MoveId::Thunderpunch, AnimEffect::ResetScreenPalette) => side(21, 22),
+            (MoveId::DoubleEdge, AnimEffect::ResetScreenPalette) => 22,
+            (MoveId::Mist, AnimEffect::ResetScreenPalette) => side(10, 11),
+            (MoveId::HyperBeam, AnimEffect::ResetScreenPalette) => 36,
+            (MoveId::Absorb, AnimEffect::ResetScreenPalette) => side(23, 22),
+            (MoveId::MegaDrain, AnimEffect::ResetScreenPalette) => 9,
+            (MoveId::PetalDance, AnimEffect::ResetScreenPalette) => 18,
+            (MoveId::Thunder, AnimEffect::ResetScreenPalette) => side(31, 23),
+            (MoveId::Meditate, AnimEffect::ResetScreenPalette) => side(9, 10),
+            (MoveId::DoubleTeam, AnimEffect::ResetScreenPalette) => side(10, 9),
+            (MoveId::Recover, AnimEffect::ResetScreenPalette) => 9,
+            (MoveId::Minimize, AnimEffect::ResetScreenPalette) => 9,
+            (MoveId::ConfuseRay, AnimEffect::ResetScreenPalette) => 22,
+            (MoveId::Withdraw, AnimEffect::ResetScreenPalette) => side(22, 44),
+            (MoveId::DefenseCurl, AnimEffect::ResetScreenPalette) => side(10, 9),
+            (MoveId::LightScreen, AnimEffect::ResetScreenPalette) => side(22, 21),
+            (MoveId::Haze, AnimEffect::ResetScreenPalette) => side(10, 11),
+            (MoveId::Reflect, AnimEffect::ResetScreenPalette) => side(10, 9),
+            (MoveId::Smog, AnimEffect::ResetScreenPalette) => 22,
+            (MoveId::Softboiled, AnimEffect::ResetScreenPalette) => side(10, 8),
+            (MoveId::DreamEater, AnimEffect::DarkenMonPalette) => 18,
+            (MoveId::DreamEater, AnimEffect::DarkScreenPalette) => 18,
+            (MoveId::DreamEater, AnimEffect::ResetScreenPalette) => side(31, 23),
+            (MoveId::Sharpen, AnimEffect::ResetScreenPalette) => 9,
+            (MoveId::SuperFang, AnimEffect::ResetScreenPalette) => side(22, 21),
+            (_, AnimEffect::ResetScreenPalette) => 10,
+            (MoveId::Thunderpunch, AnimEffect::DarkScreenPalette) => 22,
+            (
+                MoveId::Leer
+                | MoveId::Disable
+                | MoveId::HyperBeam
+                | MoveId::Thunder
+                | MoveId::ConfuseRay
+                | MoveId::SuperFang,
+                AnimEffect::DarkScreenPalette,
+            ) => {
+                if player {
+                    17
+                } else {
+                    18
+                }
+            }
+            (MoveId::Glare, AnimEffect::DarkScreenPalette) => side(17, 18),
+            (MoveId::DoubleTeam | MoveId::Reflect, AnimEffect::DarkScreenPalette) => side(11, 12),
+            (MoveId::DoubleEdge | MoveId::PetalDance, AnimEffect::LightScreenPalette) => {
+                side(19, 20)
+            }
+            (MoveId::Mist, AnimEffect::LightScreenPalette) => side(13, 14),
+            (MoveId::Absorb | MoveId::MegaDrain, AnimEffect::LightScreenPalette) => side(21, 22),
+            (MoveId::Meditate, AnimEffect::LightScreenPalette) => side(18, 19),
+            (MoveId::Recover, AnimEffect::LightScreenPalette) => 11,
+            (MoveId::Harden | MoveId::Minimize, AnimEffect::LightScreenPalette) => side(19, 20),
+            (
+                MoveId::Withdraw | MoveId::DefenseCurl | MoveId::Sharpen,
+                AnimEffect::LightScreenPalette,
+            ) => side(21, 22),
+            (MoveId::Softboiled, AnimEffect::LightScreenPalette) => side(23, 24),
+            (MoveId::Haze, AnimEffect::DarkenMonPalette) => side(12, 13),
+            (MoveId::Smog, AnimEffect::DarkenMonPalette) => side(18, 19),
+            (MoveId::Growth | MoveId::Flash, AnimEffect::LightScreenPalette) => {
+                if player {
+                    19
+                } else {
+                    20
+                }
+            }
+            (MoveId::LightScreen, AnimEffect::LightScreenPalette) => {
+                if player {
+                    13
+                } else {
+                    14
+                }
+            }
+            (MoveId::Agility, AnimEffect::LightScreenPalette) => {
+                if player {
+                    18
+                } else {
+                    19
+                }
+            }
+            _ => 10,
         }
     }
 
@@ -1060,6 +1898,24 @@ impl BattleVisualEffects {
             anim_move: self.current_move,
             attacker_species: self.current_attacker_species,
         });
+    }
+
+    /// Copy the shared Gen-I driver's screen-space OAM into the render layer.
+    fn commit_move_animation_frame(&mut self) {
+        self.anim_layer_pending.clear();
+        for entry in self.anim_player.oam_entries() {
+            let mut entry = *entry;
+            // OAM tile ids are absolute VRAM ids (raw + $31, matching
+            // DrawFrameBlock); renderer tilesets are indexed from zero.
+            entry.tile_id = entry.tile_id.wrapping_sub(ANIM_BASE_TILE_ID);
+            if entry.is_on_screen(160, 144) {
+                self.anim_layer_pending.add(entry);
+            }
+        }
+        if let Some(tileset) = self.anim_player.current_tileset() {
+            self.anim_tileset = tileset;
+            self.anim_layer_pending_tileset = tileset;
+        }
     }
 
     fn advance_move_animation(&mut self) {
@@ -1092,64 +1948,59 @@ impl BattleVisualEffects {
             return;
         }
 
-        match self.anim_player.tick() {
-            AnimTickResult::Playing { sound, hook } => {
-                if let Some(sound_move) = sound {
-                    self.emit_move_sfx(sound_move);
-                }
-                self.anim_layer.clear();
-                for entry in self.anim_player.oam_entries() {
-                    // OAM tile ids are absolute VRAM ids (raw + $31, matching
-                    // DrawFrameBlock); the loaded move-anim tilesets are
-                    // indexed from 0 (they are loaded at vSprites tile $31 in
-                    // the original), so subtract the base for rendering.
-                    let mut e = *entry;
-                    e.tile_id = e.tile_id.wrapping_sub(ANIM_BASE_TILE_ID);
-                    self.anim_layer.add(e);
-                }
-                if let Some(ts) = self.anim_player.current_tileset() {
-                    self.anim_tileset = ts;
-                }
-                if let Some(hook) = hook {
-                    self.apply_anim_effect(hook);
-                }
-            }
-            AnimTickResult::WaitDelay {
-                frames,
-                sound,
-                hook,
-            } => {
-                if let Some(sound_move) = sound {
-                    self.emit_move_sfx(sound_move);
-                }
-                // AnimationPlayer already decrements subanimation delays internally.
-                // Do not add extra renderer delay, otherwise pacing is effectively doubled.
-                let _ = frames;
-                self.anim_wait = 0;
-                if let Some(hook) = hook {
-                    self.apply_anim_effect(hook);
-                }
-            }
-            AnimTickResult::Effect { sound, effect } => {
-                if let Some(sound_move) = sound {
-                    self.emit_move_sfx(sound_move);
-                }
-                self.apply_anim_effect(AnimationPlayer::apply_effect(effect));
-            }
-            AnimTickResult::Done => {
-                self.anim_layer.clear();
-                if !self.suppress_hit_flash {
-                    if let Some(pending) = self.pending_applying.take() {
-                        self.run_applying_attack_feedback(
-                            pending.anim_type,
-                            pending.attacker_is_player,
-                        );
+        // Mode02 frame blocks and non-blocking special effects execute before
+        // the next VBlank. Consume them until the shared driver reports a
+        // display frame or a blocking effect.
+        for _ in 0..1024 {
+            match self.anim_player.tick() {
+                AnimTickResult::Loading { sound } | AnimTickResult::Display { sound } => {
+                    if let Some(sound_move) = sound {
+                        self.emit_move_sfx(sound_move);
                     }
-                } else {
-                    self.pending_applying = None;
+                    self.commit_move_animation_frame();
+                    return;
+                }
+                AnimTickResult::Hook { sound, effect } => {
+                    if let Some(sound_move) = sound {
+                        self.emit_move_sfx(sound_move);
+                    }
+                    self.commit_move_animation_frame();
+                    self.apply_anim_effect(effect);
+                    if self.anim_wait > 0 {
+                        return;
+                    }
+                }
+                AnimTickResult::Effect { sound, effect } => {
+                    if let Some(sound_move) = sound {
+                        self.emit_move_sfx(sound_move);
+                    }
+                    // A command-stream effect starts after the preceding
+                    // subanimation has returned and cleared shadow OAM.
+                    self.commit_move_animation_frame();
+                    self.apply_anim_effect(AnimationPlayer::apply_effect(effect));
+                    if self.anim_wait > 0 {
+                        return;
+                    }
+                }
+                AnimTickResult::Done => {
+                    // Shadow OAM is empty now, but the just-finished scanout
+                    // still contains the entries submitted one VBlank ago.
+                    self.anim_layer_pending.clear();
+                    if !self.suppress_hit_flash {
+                        if let Some(pending) = self.pending_applying.take() {
+                            self.run_applying_attack_feedback(
+                                pending.anim_type,
+                                pending.attacker_is_player,
+                            );
+                        }
+                    } else {
+                        self.pending_applying = None;
+                    }
+                    return;
                 }
             }
         }
+        debug_assert!(false, "move animation executed too many zero-time commands");
     }
 
     /// Advance the ball-throw choreography (capture / ghost dodge / old man)
@@ -1167,6 +2018,7 @@ impl BattleVisualEffects {
             self.anim_player.start(step.anim, true);
             self.anim_wait = 0;
             self.anim_layer.clear();
+            self.anim_layer_pending.clear();
             self.current_move = MoveId::None;
             if let Some(sfx) = step.sfx {
                 self.pending_ball_sfx.push_back(sfx);
@@ -1210,7 +2062,7 @@ impl BattleVisualEffects {
             // AnimationSlideMonHalfOff: 4 tiles × delay 4.
             SlideKind::SeHalfOff => 16,
             // AnimationSlideMonDown: 7 rows × Delay3.
-            SlideKind::SeDown => 21,
+            SlideKind::SeDown => 22,
             // _AnimationSlideMonUp: 7 rows × Delay3.
             SlideKind::SeUp => 21,
         }
@@ -1219,7 +2071,7 @@ impl BattleVisualEffects {
     /// Pixel offset contributed by an exit slide. Player slides left, enemy
     /// slides right (`_AnimationSlideMonOff` shifts player tile ids +7 / enemy
     /// −7, i.e. the pics move off their respective screen edges).
-    fn exit_slide_offset(kind: SlideKind, frame: u8, is_player: bool) -> (i32, i32) {
+    fn exit_slide_offset(&self, kind: SlideKind, frame: u8, is_player: bool) -> (i32, i32) {
         let f = frame as i32;
         match kind {
             SlideKind::Legacy => {
@@ -1234,19 +2086,152 @@ impl BattleVisualEffects {
             // SlideDownFaintedMonPic: one 8px row every 2 frames, straight down.
             SlideKind::Faint => (0, (f / 2 + 1) * 8),
             SlideKind::SeOff => {
-                let d = (f / 3 + 1) * 8;
+                // The shadow tilemap changes before DelayFrames(3), but the
+                // BG map copier reaches the mon rows on the third VBlank.
+                let d = if self.current_move == MoveId::SeismicToss {
+                    (f / 3) * 8
+                } else if self.current_move == MoveId::Whirlwind {
+                    ((f + 1) / 3) * 8
+                } else {
+                    ((f - 1).max(0) / 3) * 8
+                };
                 (if is_player { -d } else { d }, 0)
             }
             SlideKind::SeHalfOff => {
-                let d = (f / 4 + 1) * 8;
+                // The 7x8 tilemap rewrite itself spans scanouts, so the four
+                // nominal Delay4 steps do not land at uniform frame offsets.
+                let d = match f {
+                    0..=3 => 0,
+                    4..=6 => 8,
+                    7..=9 => 16,
+                    10..=15 => 24,
+                    _ => 32,
+                };
                 (if is_player { -d } else { d }, 0)
             }
-            SlideKind::SeDown => (0, (f / 3 + 1) * 8),
+            SlideKind::SeDown => {
+                let d = if f < 7 { 0 } else { ((f - 4) / 3) * 8 };
+                (0, if is_player { d } else { d.min(48) })
+            }
             SlideKind::SeUp => (0, 0),
         }
     }
 
+    /// On the last VBlank of each horizontal-slide delay, only the top third
+    /// of the BG map contains the next tilemap column. The ordinary offset is
+    /// still used below scanline 48.
+    fn horizontal_slide_top_dx(&self, side: MonSide) -> Option<i32> {
+        if let Some(dx) = self.shake_back_and_forth.top_dx(side) {
+            return Some(dx);
+        }
+        if self.current_move == MoveId::Softboiled
+            && matches!(self.show_reveal[Self::side_index(side)], Some(2 | 3))
+        {
+            return Some(match side {
+                MonSide::Player => -32,
+                MonSide::Enemy => 32,
+            });
+        }
+        let anim = match side {
+            MonSide::Player => self.player_exit?,
+            MonSide::Enemy => self.enemy_exit?,
+        };
+        let toward_opponent = match side {
+            MonSide::Player => -8,
+            MonSide::Enemy => 8,
+        };
+        match anim.kind {
+            SlideKind::SeOff if self.current_move == MoveId::SeismicToss => {
+                (anim.frame % 3 == 2).then_some(toward_opponent)
+            }
+            SlideKind::SeOff
+                if self.current_move == MoveId::Whirlwind
+                    && anim.frame >= 2
+                    && (anim.frame + 1) % 3 != 2 =>
+            {
+                Some(-toward_opponent)
+            }
+            SlideKind::SeOff if anim.frame != 0 && anim.frame % 3 == 0 => Some(toward_opponent),
+            SlideKind::SeHalfOff => match anim.frame {
+                3 | 6 | 15 => Some(toward_opponent),
+                // The third tilemap copy reaches the lower mon rows first;
+                // its upper band remains at the preceding offset for two
+                // scanouts.
+                10 | 11 => Some(-toward_opponent),
+                _ => None,
+            },
+            _ => None,
+        }
+    }
+
+    fn horizontal_slide_top_split(&self, side: MonSide) -> u32 {
+        if self.shake_back_and_forth.top_dx(side).is_some() {
+            self.shake_back_and_forth.top_split(side)
+        } else {
+            48
+        }
+    }
+
+    fn horizontal_slide_clip(&self, side: MonSide) -> (i32, i32) {
+        let sliding = match side {
+            MonSide::Player => {
+                self.player_half_off
+                    || self.player_exit.is_some_and(|anim| {
+                        matches!(anim.kind, SlideKind::SeOff | SlideKind::SeHalfOff)
+                    })
+            }
+            MonSide::Enemy => {
+                self.enemy_half_off
+                    || self.enemy_exit.is_some_and(|anim| {
+                        matches!(anim.kind, SlideKind::SeOff | SlideKind::SeHalfOff)
+                    })
+            }
+        };
+        if sliding {
+            match side {
+                MonSide::Player => (8, 64),
+                MonSide::Enemy => (96, 152),
+            }
+        } else {
+            (0, 160)
+        }
+    }
+
     pub fn update(&mut self, screen: &BattleScreen) {
+        // OAM written during the previous VBlank is what this scanout sees.
+        std::mem::swap(&mut self.anim_layer, &mut self.anim_layer_pending);
+        std::mem::swap(
+            &mut self.anim_layer_tileset,
+            &mut self.anim_layer_pending_tileset,
+        );
+        // If no interpreter frame is submitted this update (for example
+        // while a frame hook blocks), shadow OAM is copied unchanged.
+        self.anim_layer_pending
+            .entries
+            .clone_from(&self.anim_layer.entries);
+        self.anim_layer_pending_tileset = self.anim_layer_tileset;
+        // Advance effects that were visible last frame before any command can
+        // start a new effect. Newly applied effects therefore render frame 0.
+        self.fx.tick();
+        self.mon_tilemap.tick();
+        if let Some(squish) = self.squish_raster.as_mut() {
+            if squish.frame == 24 {
+                self.squish_raster = None;
+            } else {
+                squish.frame += 1;
+            }
+        }
+        self.shake_back_and_forth.tick();
+        self.rock_slide_shake.tick();
+        self.blink_mon.tick();
+        self.short_flash.tick();
+        self.long_flash.tick();
+        self.hide_mon_one_frame = None;
+        if self.anim_player.is_finished() {
+            self.transform_raster = None;
+        }
+        self.bg_palette.begin_frame();
+
         let kind = Self::phase_kind(&screen.phase);
         if self.last_phase_kind != Some(kind) {
             self.on_phase_change(&screen.phase);
@@ -1283,6 +2268,7 @@ impl BattleVisualEffects {
                 self.anim_player.start(anim_id, player_is_attacker);
                 self.anim_wait = 0;
                 self.anim_layer.clear();
+                self.anim_layer_pending.clear();
             }
         }
 
@@ -1304,8 +2290,6 @@ impl BattleVisualEffects {
             self.player_sub_flag = p;
             self.enemy_sub_flag = e;
         }
-        self.fx.tick();
-
         if let Some(anim) = self.player_entry.as_mut() {
             anim.frame = anim.frame.saturating_add(1);
             if anim.frame >= Self::slide_frames(anim.kind, true) {
@@ -1332,7 +2316,12 @@ impl BattleVisualEffects {
         }
         if let Some(anim) = self.enemy_exit.as_mut() {
             anim.frame = anim.frame.saturating_add(1);
-            if anim.frame >= Self::slide_frames(anim.kind, false) {
+            let end_frame = if anim.kind == SlideKind::SeDown {
+                35
+            } else {
+                Self::slide_frames(anim.kind, false)
+            };
+            if anim.frame >= end_frame {
                 let kind = anim.kind;
                 self.enemy_exit = None;
                 match kind {
@@ -1365,9 +2354,41 @@ impl BattleVisualEffects {
         }
         if let Some(anim) = self.move_mon_h.as_mut() {
             anim.frame = anim.frame.saturating_add(1);
-            if anim.frame >= 3 {
+            if anim.resetting && anim.frame >= 4 {
                 self.move_mon_h = None;
             }
+        }
+        for (side, reveal) in self.show_reveal.iter_mut().enumerate() {
+            if let Some(frame) = reveal.as_mut() {
+                if *frame >= 3 {
+                    *reveal = None;
+                    if self.current_move == MoveId::Softboiled {
+                        if side == Self::side_index(MonSide::Player) {
+                            self.player_half_off = false;
+                        } else {
+                            self.enemy_half_off = false;
+                        }
+                    }
+                } else {
+                    *frame += 1;
+                }
+            }
+        }
+        for delay in &mut self.minimize_reveal_delay {
+            *delay = delay.saturating_sub(1);
+        }
+        for delay in &mut self.substitute_reveal_delay {
+            *delay = delay.saturating_sub(1);
+        }
+        if let Some(transfer) = self.seismic_hide_raster.as_mut() {
+            if transfer.frame >= 2 {
+                self.seismic_hide_raster = None;
+            } else {
+                transfer.frame += 1;
+            }
+        }
+        if let Some(transfer) = self.transform_raster.as_mut() {
+            transfer.frame = transfer.frame.saturating_add(1);
         }
 
         // Tick battle transition state
@@ -1392,7 +2413,8 @@ impl BattleVisualEffects {
                     1 => {
                         // Fade out ghost: dim palette each 10 frames
                         if counter >= 10 {
-                            self.ghost_marowak_palette = self.ghost_marowak_palette.saturating_sub(0x10);
+                            self.ghost_marowak_palette =
+                                self.ghost_marowak_palette.saturating_sub(0x10);
                             if self.ghost_marowak_palette <= 0x40 {
                                 // The ghost has faded out — the fade-in below
                                 // brightens the REVEALED Marowak sprite.
@@ -1408,7 +2430,8 @@ impl BattleVisualEffects {
                     2 => {
                         // Fade in Marowak: brighten palette each 10 frames
                         if counter >= 10 {
-                            self.ghost_marowak_palette = (self.ghost_marowak_palette + 0x10).min(0xe4);
+                            self.ghost_marowak_palette =
+                                (self.ghost_marowak_palette + 0x10).min(0xe4);
                             if self.ghost_marowak_palette >= 0xe4 {
                                 self.intro_anim = IntroAnimState::None;
                                 self.ghost_marowak_revealed = true;
@@ -1504,18 +2527,17 @@ impl BattleVisualEffects {
         // Retreat uses AnimateRetreatingPlayerMon (shrink to pokeball), not a slide.
 
         if let Some(exit) = self.player_exit {
-            let (ox, oy) = Self::exit_slide_offset(exit.kind, exit.frame, true);
+            let (ox, oy) = self.exit_slide_offset(exit.kind, exit.frame, true);
             dx += ox;
             dy += oy;
         }
         if self.player_half_off {
             // SE_SLIDE_MON_HALF_OFF latch (Softboiled): stays 4 tiles off.
-            dx -= 32;
-        }
-        if let Some(entry) = self.player_entry {
-            if entry.kind == SlideKind::SeUp {
-                // AnimationSlideMonUp (Dig): rise from one row below.
-                dy += 56 - (entry.frame as i32 / 3 + 1) * 8;
+            if !matches!(
+                self.show_reveal[Self::side_index(MonSide::Player)],
+                Some(2 | 3)
+            ) {
+                dx -= 32;
             }
         }
         if let Some(lunge) = self.attack_lunge {
@@ -1527,14 +2549,17 @@ impl BattleVisualEffects {
             }
         }
         if let Some(mh) = self.move_mon_h {
-            if mh.side == MonSide::Player {
+            if mh.side == MonSide::Player && mh.base_is_shifted() {
                 // AnimationMoveMonHorizontally: hlcoord(2,5) vs (1,5).
                 dx += 8;
             }
         }
         dx += self.fx.mon_dx(MonSide::Player);
+        dx += self.shake_back_and_forth.dx(MonSide::Player);
         // AnimationBoundUpAndDown (Splash): vertical slide-down cycles.
-        dy += self.fx.mon_dy(MonSide::Player);
+        if !self.mon_tilemap.controls_side(MonSide::Player) {
+            dy += self.fx.mon_dy(MonSide::Player);
+        }
 
         if let IntroAnimState::SilhouetteSlide { offset, .. } = self.intro_anim {
             dx -= offset;
@@ -1549,9 +2574,7 @@ impl BattleVisualEffects {
 
         if let Some(entry) = self.enemy_entry {
             match entry.kind {
-                SlideKind::SeUp => {
-                    dy += 56 - (entry.frame as i32 / 3 + 1) * 8;
-                }
+                SlideKind::SeUp => {}
                 _ => {
                     // Original ScrollTrainerPicAfterBattle scrolls 7 columns from the right,
                     // one column per step with 4-frame delay between steps.
@@ -1561,12 +2584,17 @@ impl BattleVisualEffects {
             }
         }
         if let Some(exit) = self.enemy_exit {
-            let (ox, oy) = Self::exit_slide_offset(exit.kind, exit.frame, false);
+            let (ox, oy) = self.exit_slide_offset(exit.kind, exit.frame, false);
             dx += ox;
             dy += oy;
         }
         if self.enemy_half_off {
-            dx += 32;
+            if !matches!(
+                self.show_reveal[Self::side_index(MonSide::Enemy)],
+                Some(2 | 3)
+            ) {
+                dx += 32;
+            }
         }
         if let Some(lunge) = self.attack_lunge {
             if !lunge.attacker_is_player {
@@ -1577,13 +2605,16 @@ impl BattleVisualEffects {
             }
         }
         if let Some(mh) = self.move_mon_h {
-            if mh.side == MonSide::Enemy {
+            if mh.side == MonSide::Enemy && mh.base_is_shifted() {
                 // AnimationMoveMonHorizontally: hlcoord(11,0) vs (12,0).
                 dx -= 8;
             }
         }
         dx += self.fx.mon_dx(MonSide::Enemy);
-        dy += self.fx.mon_dy(MonSide::Enemy);
+        dx += self.shake_back_and_forth.dx(MonSide::Enemy);
+        if !self.mon_tilemap.controls_side(MonSide::Enemy) {
+            dy += self.fx.mon_dy(MonSide::Enemy);
+        }
         // AnimationShakeEnemyHUD scrolls the BG (SCX); the enemy mon is part
         // of the BG in the original, so it shakes along with the HUD strip.
         dx += self.fx.enemy_hud_shake_offset();
@@ -1601,16 +2632,297 @@ impl BattleVisualEffects {
     }
 
     fn player_visible_now(&self) -> bool {
-        self.player_visible && !self.fx.mon_hidden(MonSide::Player)
+        let side = MonSide::Player;
+        let reveal = self.show_reveal[Self::side_index(side)];
+        let seismic_defender = self.current_move == MoveId::SeismicToss
+            && side
+                != if self.current_attacker_is_player {
+                    MonSide::Player
+                } else {
+                    MonSide::Enemy
+                };
+        let reveal_hidden = (matches!(reveal, Some(1))
+            && !matches!(self.current_move, MoveId::Softboiled | MoveId::Fly))
+            || (matches!(reveal, Some(2))
+                && !matches!(
+                    self.current_move,
+                    MoveId::Softboiled | MoveId::Submission | MoveId::Fly
+                )
+                && !seismic_defender);
+        let seismic_transfer = self
+            .seismic_hide_raster
+            .is_some_and(|transfer| transfer.side == side);
+        let transform_hidden = self.transform_raster.is_some_and(|transfer| {
+            transfer.side == side && side == MonSide::Player && transfer.frame >= 4
+        });
+        self.player_visible
+            && self.blink_mon.visible_band(side, 144).is_some()
+            && !reveal_hidden
+            && !transform_hidden
+            && (self.mon_tilemap.keeps_side_visible(side)
+                || seismic_transfer
+                || !self.fx.mon_hidden(side))
     }
 
     fn enemy_visible_now(&self) -> bool {
-        self.enemy_visible && !self.fx.mon_hidden(MonSide::Enemy)
+        let side = MonSide::Enemy;
+        let reveal = self.show_reveal[Self::side_index(side)];
+        let seismic_defender = self.current_move == MoveId::SeismicToss
+            && side
+                != if self.current_attacker_is_player {
+                    MonSide::Player
+                } else {
+                    MonSide::Enemy
+                };
+        let reveal_hidden = (matches!(reveal, Some(1))
+            && !matches!(self.current_move, MoveId::Softboiled | MoveId::Fly))
+            || (matches!(reveal, Some(2))
+                && !matches!(
+                    self.current_move,
+                    MoveId::Softboiled | MoveId::Submission | MoveId::Fly
+                )
+                && !seismic_defender);
+        let seismic_transfer = self
+            .seismic_hide_raster
+            .is_some_and(|transfer| transfer.side == side);
+        self.enemy_visible
+            && self.blink_mon.visible_band(side, 144).is_some()
+            && !reveal_hidden
+            && (self.mon_tilemap.keeps_side_visible(side)
+                || seismic_transfer
+                || !self.fx.mon_hidden(side))
+    }
+
+    fn vertical_mon_clip(&self, side: MonSide, screen_bottom: u32) -> (u32, u32) {
+        let (mut top, mut bottom) = self
+            .blink_mon
+            .visible_band(side, screen_bottom)
+            .unwrap_or((0, 0));
+        if self.current_move == MoveId::Softboiled
+            && matches!(self.show_reveal[Self::side_index(side)], Some(2 | 3))
+        {
+            return (top, bottom);
+        }
+        if self.current_move == MoveId::Fly && self.show_reveal[Self::side_index(side)].is_some() {
+            return (top, bottom);
+        }
+        if self.current_move == MoveId::Submission
+            && matches!(self.show_reveal[Self::side_index(side)], Some(2 | 3))
+        {
+            top = top.max(48);
+            return (top, bottom);
+        }
+        if self.current_move == MoveId::SeismicToss {
+            if self
+                .seismic_hide_raster
+                .is_some_and(|transfer| transfer.side == side && transfer.frame == 2)
+            {
+                top = top.max(48);
+            }
+            let defender = if self.current_attacker_is_player {
+                MonSide::Enemy
+            } else {
+                MonSide::Player
+            };
+            if side == defender {
+                match self.show_reveal[Self::side_index(side)] {
+                    Some(2) => bottom = bottom.min(48),
+                    Some(3) => return (top, bottom),
+                    _ => {}
+                }
+            }
+        }
+        if self.transform_raster.is_some_and(|transfer| {
+            transfer.side == side && side == MonSide::Player && transfer.frame == 3
+        }) {
+            top = top.max(48);
+        }
+        if self.show_reveal[Self::side_index(side)] == Some(3) {
+            bottom = bottom.min(48);
+        }
+        let slide = match side {
+            MonSide::Player => self.player_exit,
+            MonSide::Enemy => self.enemy_exit,
+        };
+        if slide.is_some_and(|anim| anim.kind == SlideKind::SeDown) {
+            bottom = bottom.min(match side {
+                MonSide::Player => 96,
+                MonSide::Enemy => 56,
+            });
+            if side == MonSide::Player && slide.is_some_and(|anim| anim.frame == 6) {
+                top = top.max(48);
+            }
+        }
+        (top, bottom)
+    }
+
+    /// `AnimationSlideMonDown` copies the enemy tilemap while the LCD is
+    /// scanning it. On every third frame the middle band has advanced one
+    /// tile row while the rows above and below still show the old map.
+    fn slide_down_transition(&self, side: MonSide) -> Option<(u32, u32)> {
+        if side != MonSide::Enemy {
+            return None;
+        }
+        let anim = self.enemy_exit?;
+        if anim.kind != SlideKind::SeDown || !(6..=21).contains(&anim.frame) {
+            return None;
+        }
+        if (anim.frame - 6) % 3 != 0 {
+            return None;
+        }
+        Some((3 + u32::from((anim.frame - 6) / 3) * 8, 48))
+    }
+
+    fn squish_visible(&self, side: MonSide) -> bool {
+        self.squish_raster
+            .is_some_and(|squish| squish.side == side && squish.frame <= 20)
+    }
+
+    fn draw_squish(
+        &self,
+        fb: &mut FrameBuffer,
+        tileset: &TileSet,
+        x: i32,
+        y: i32,
+        palette: &pokered_renderer::palette::Palette,
+        side: MonSide,
+    ) -> bool {
+        let Some(squish) = self.squish_raster.filter(|squish| squish.side == side) else {
+            return false;
+        };
+        render_gen1_squish(fb, tileset, x, y, palette, side, squish.frame);
+        true
+    }
+
+    fn draw_slide_up(
+        &self,
+        fb: &mut FrameBuffer,
+        tileset: &TileSet,
+        x: i32,
+        y: i32,
+        tiles_per_row: u32,
+        palette: &pokered_renderer::palette::Palette,
+        side: MonSide,
+    ) -> bool {
+        let entry = match side {
+            MonSide::Player => self.player_entry,
+            MonSide::Enemy => self.enemy_entry,
+        };
+        let Some(entry) = entry.filter(|entry| entry.kind == SlideKind::SeUp) else {
+            return false;
+        };
+        render_gen1_slide_up(
+            fb,
+            tileset,
+            x,
+            y,
+            tiles_per_row,
+            palette,
+            entry.frame,
+            self.current_move == MoveId::Waterfall,
+        );
+        true
+    }
+
+    fn player_slide_corner_blank(&self) -> bool {
+        if self.current_move == MoveId::Softboiled
+            && matches!(
+                self.show_reveal[Self::side_index(MonSide::Player)],
+                Some(2 | 3)
+            )
+        {
+            return false;
+        }
+        if self.player_half_off {
+            return true;
+        }
+        let Some(anim) = self.player_exit else {
+            return false;
+        };
+        match anim.kind {
+            SlideKind::SeOff if self.current_move == MoveId::Whirlwind => anim.frame >= 2,
+            SlideKind::SeOff if self.current_move == MoveId::SeismicToss => anim.frame >= 3,
+            SlideKind::SeOff => anim.frame >= 4,
+            SlideKind::SeHalfOff => anim.frame >= 4,
+            _ => false,
+        }
     }
 
     fn apply_post_effects(&self, fb: &mut FrameBuffer) {
         self.fx.apply_screen_effects(fb);
+        if !(self.anim_player.is_shake_restore_frame()
+            && self.short_flash.is_active()
+            && !self.short_flash.is_entry())
+        {
+            self.anim_player.apply_screen_effects(fb);
+        }
+        self.rock_slide_shake.apply(fb);
         self.apply_intro_effects(fb);
+        if self.long_flash.is_active() {
+            self.long_flash.apply_with_palette(&self.bg_palette, fb);
+        } else {
+            self.short_flash.apply_with_palette(&self.bg_palette, fb);
+        }
+        if self.current_move == MoveId::Softboiled
+            && !self.current_attacker_is_player
+            && self.short_flash.is_restoring()
+        {
+            // CopyTempPicToMonPic reaches the enemy picture's top tile row
+            // during this scanout. Three transparent pixels still expose the
+            // previous blank tile before the following frame is fully copied.
+            for x in [138, 148, 150] {
+                fb.set_pixel_index(x, 8, pokered_renderer::palette::GbColor::White);
+            }
+        }
+    }
+
+    /// Reproduce the VBlank-edge tilemap tear in
+    /// `AnimationMoveMonHorizontally` / `AnimationResetMonPosition`. The
+    /// original's first 8-pixel row changes one scanout before the other six.
+    fn apply_move_mon_h_raster_edge(&self, fb: &mut FrameBuffer) {
+        let Some(anim) = self.move_mon_h else {
+            return;
+        };
+        let Some(toward_opponent) = anim.top_row_transition() else {
+            return;
+        };
+
+        // The player pic begins on tilemap row 5, so only its first row has
+        // crossed the VBlank boundary. The enemy pic begins at row 0: six
+        // rows are scanned after the transfer and the last row remains old.
+        let (normal_x, y, toward_dx, transition_height) = match anim.side {
+            MonSide::Player => (8i32, 40u32, 8i32, 8u32),
+            MonSide::Enemy => (96i32, 0u32, -8i32, 48u32),
+        };
+        let shifted_x = normal_x + toward_dx;
+        let (source_x, dest_x) = if toward_opponent {
+            (normal_x, shifted_x)
+        } else {
+            (shifted_x, normal_x)
+        };
+
+        let mut row = Vec::with_capacity(56 * transition_height as usize);
+        for py in y..y + transition_height {
+            for px in source_x..source_x + 56 {
+                row.push(fb.get_pixel(px as u32, py).unwrap_or(Rgba::WHITE));
+            }
+        }
+
+        let clear_x = normal_x.min(shifted_x) as u32;
+        for py in y..y + transition_height {
+            for px in clear_x..clear_x + 64 {
+                fb.set_pixel(px, py, Rgba::WHITE);
+            }
+        }
+        for py in 0..transition_height {
+            for px in 0..56u32 {
+                fb.set_pixel(
+                    (dest_x + px as i32) as u32,
+                    y + py,
+                    row[(py * 56 + px) as usize],
+                );
+            }
+        }
     }
 
     fn apply_intro_effects(&self, fb: &mut FrameBuffer) {
@@ -1743,8 +3055,7 @@ fn downscale_mon_tiles(src: &TileSet, src_tiles: usize, dst_tiles: usize) -> Til
                     let sy = dy * src_px_len / dst_px_len;
                     let sx = dx * src_px_len / dst_px_len;
                     let tile_idx = (sy / TILE_PIXELS) * src_tiles + (sx / TILE_PIXELS);
-                    pixels[row][col] =
-                        src.get(tile_idx).pixels[sy % TILE_PIXELS][sx % TILE_PIXELS];
+                    pixels[row][col] = src.get(tile_idx).pixels[sy % TILE_PIXELS][sx % TILE_PIXELS];
                 }
             }
             out.set(ty * dst_tiles + tx, Tile { pixels });
@@ -1941,6 +3252,11 @@ pub fn draw_battle(
     fb.clear(Rgba::WHITE);
     let pal = &GRAYSCALE_PALETTE;
     let sprite_pal = &GRAYSCALE_SPRITE_PALETTE;
+    // `GRAYSCALE_SPRITE_PALETTE` makes color 0 transparent for ordinary
+    // sprite blits. Substitute replaces a BG mon picture, so its blank
+    // pixels are opaque white just like `wTempPic` in the original.
+    let mut substitute_pal = *sprite_pal;
+    substitute_pal.colors[0] = Rgba::WHITE;
 
     // During BattleTransitionWipe and TransitionFlash, the screen should be
     // fully controlled by the transition/animation effects — no battle scene
@@ -2009,16 +3325,25 @@ pub fn draw_battle(
     // The ghost-Marowak battle (with scope) is also "GHOST" until the unveil phase
     // completes and the SILPH SCOPE reveals the Marowak.
     let is_zh = language == pokered_core::game_state::Lang::Zh;
-    let enemy_name = if screen.is_ghost || (screen.ghost_marowak_reveal && !screen.ghost_marowak_unveiled) {
-        if is_zh { "幽灵".to_string() } else { "GHOST".to_string() }
-    } else if is_zh {
-        pokered_data::lang_data::species_name(screen.enemy_species, true).to_string()
-    } else {
-        format!("{}", screen.enemy_species).to_uppercase()
-    };
+    let enemy_name =
+        if screen.is_ghost || (screen.ghost_marowak_reveal && !screen.ghost_marowak_unveiled) {
+            if is_zh {
+                "幽灵".to_string()
+            } else {
+                "GHOST".to_string()
+            }
+        } else if is_zh {
+            pokered_data::lang_data::species_name(screen.enemy_species, true).to_string()
+        } else {
+            format!("{}", screen.enemy_species).to_uppercase()
+        };
     // The catch tutorial shows the player as "OLD MAN" (Gen-1 BATTLE_TYPE_OLD_MAN).
     let player_name = if screen.is_old_man {
-        if is_zh { "老头".to_string() } else { "OLD MAN".to_string() }
+        if is_zh {
+            "老头".to_string()
+        } else {
+            "OLD MAN".to_string()
+        }
     } else if is_zh {
         pokered_data::lang_data::species_name(screen.player_species, true).to_string()
     } else {
@@ -2172,7 +3497,9 @@ pub fn draw_battle(
                 | BattlePhase::ItemTargetSelect { .. }
         ) || matches!(
             screen.phase,
-            BattlePhase::PartySelect | BattlePhase::ShiftSwitchSelect | BattlePhase::PlayerFaintSwitch
+            BattlePhase::PartySelect
+                | BattlePhase::ShiftSwitchSelect
+                | BattlePhase::PlayerFaintSwitch
         ) {
             (None, false)
         } else {
@@ -2203,16 +3530,12 @@ pub fn draw_battle(
                         }
                     }
                     // GhostCantBeIDdText (data/text/text_2.asm:1269-1272).
-                    IntroPhase::GhostCantID => {
-                        Some("Darn! The GHOST\ncan't be ID'd!".to_string())
-                    }
+                    IntroPhase::GhostCantID => Some("Darn! The GHOST\ncan't be ID'd!".to_string()),
                     // UnveiledGhostText (data/text/text_2.asm:1263-1267).
                     IntroPhase::GhostUnveil => {
                         Some("SILPH SCOPE unveiled the\nGHOST's identity!".to_string())
                     }
-                    IntroPhase::TrainerReveal => {
-                        Some(format!("{} wants to fight!", trainer_name))
-                    }
+                    IntroPhase::TrainerReveal => Some(format!("{} wants to fight!", trainer_name)),
                     IntroPhase::TrainerSendOut => {
                         Some(format!("{} sent out {}!", trainer_name, enemy_name))
                     }
@@ -2305,22 +3628,37 @@ pub fn draw_battle(
         // Bag/Party variants are unified so the editor preview and in-game
         // render share the same code path. ItemTargetSelect reuses the party
         // list view (same data, target-pick semantics).
-        let use_unified_ui = matches!(
-            screen.phase,
-            BattlePhase::PlayerMenu
-                | BattlePhase::MoveSelect
-                | BattlePhase::ItemMoveSelect { .. }
-                | BattlePhase::LearnMoveChoose { .. }
-                | BattlePhase::BagSelect
-                | BattlePhase::ItemTargetSelect { .. }
-                | BattlePhase::PartySelect
-                | BattlePhase::ShiftSwitchSelect
-                | BattlePhase::PlayerFaintSwitch
-        ) || dialog_text.is_some();
+        let use_unified_ui = !effects.move_animation_capture_scene
+            && (matches!(
+                screen.phase,
+                BattlePhase::PlayerMenu
+                    | BattlePhase::MoveSelect
+                    | BattlePhase::ItemMoveSelect { .. }
+                    | BattlePhase::LearnMoveChoose { .. }
+                    | BattlePhase::BagSelect
+                    | BattlePhase::ItemTargetSelect { .. }
+                    | BattlePhase::PartySelect
+                    | BattlePhase::ShiftSwitchSelect
+                    | BattlePhase::PlayerFaintSwitch
+            ) || dialog_text.is_some());
 
         // ── Bottom area (text box + menu) ───────────────────────────
-        // All phase-specific menu drawing now happens in the unified UI block
-        // below; nothing left to draw via tile_buf at this stage.
+        // Palette animations transform the complete framebuffer. Keep the
+        // recorder's static scene pixel-identical to the retail ROM by using
+        // the native 8x8 battle font instead of the proportional frontend UI.
+        if effects.move_animation_capture_scene {
+            let frame = TextBoxFrame::standard_dialog();
+            frame.draw_frame(&mut tile_buf);
+            if let Some(text) = dialog_text.as_deref() {
+                let mut lines = text.split('\n');
+                if let Some(line) = lines.next() {
+                    write_tiles_at(&mut tile_buf, 1, 14, &ascii_to_tiles(line));
+                }
+                if let Some(line) = lines.next() {
+                    write_tiles_at(&mut tile_buf, 1, 16, &ascii_to_tiles(line));
+                }
+            }
+        }
 
         // ── Render tile buffer to framebuffer ────────────────────────
         tile_buf.render(fb, &battle_ts, pal);
@@ -2348,7 +3686,10 @@ pub fn draw_battle(
         };
 
         let (enemy_dx, enemy_dy) = effects.enemy_offset();
-        if effects.enemy_visible_now() {
+        if effects.enemy_visible_now()
+            || effects.hide_mon_one_frame == Some(MonSide::Enemy)
+            || effects.squish_visible(MonSide::Enemy)
+        {
             if show_trainer_sprite {
                 if let Some(tc) = screen.trainer_class {
                     if let Ok(cached) = rm.load_trainer(tc.sprite_name()) {
@@ -2382,15 +3723,28 @@ pub fn draw_battle(
             } else if effects.fx.is_substitute(MonSide::Enemy) {
                 // AnimationSubstitute: the mon pic is replaced by the
                 // MonsterSprite mini doll (facing down on the enemy side).
-                if let Ok(cached) = rm.load_sprite("monster") {
-                    let doll = cached.tileset.clone();
-                    let rect = MonRect {
-                        x: 12 * TILE_SIZE as i32 + enemy_dx,
-                        y: enemy_dy,
-                    };
-                    BattleEffects::draw_substitute(fb, rect, &doll, sprite_pal, MonSide::Enemy);
+                if effects.substitute_reveal_delay[BattleVisualEffects::side_index(MonSide::Enemy)]
+                    == 0
+                {
+                    if let Ok(cached) = rm.load_sprite("monster") {
+                        let doll = cached.tileset.clone();
+                        let rect = MonRect {
+                            x: 12 * TILE_SIZE as i32 + enemy_dx,
+                            y: enemy_dy,
+                        };
+                        BattleEffects::draw_substitute(
+                            fb,
+                            rect,
+                            &doll,
+                            &substitute_pal,
+                            MonSide::Enemy,
+                        );
+                    }
                 }
-            } else if effects.fx.is_minimized(MonSide::Enemy) {
+            } else if effects.fx.is_minimized(MonSide::Enemy)
+                && effects.minimize_reveal_delay[BattleVisualEffects::side_index(MonSide::Enemy)]
+                    == 0
+            {
                 // AnimationMinimizeMon: the mon pic is replaced by the blob.
                 let rect = MonRect {
                     x: 12 * TILE_SIZE as i32 + enemy_dx,
@@ -2403,34 +3757,129 @@ pub fn draw_battle(
                 let h_tiles = cached.source_size.1 / TILE_SIZE;
                 let x_off = ((8 - w_tiles) / 2) * TILE_SIZE;
                 let y_off = (7 - h_tiles) * TILE_SIZE;
-                let ex = apply_offset(12 * TILE_SIZE + x_off, enemy_dx);
-                let ey = apply_offset(y_off, enemy_dy);
-                if let Some((rows, yoff)) = effects.fx.slide_down_hide_params(MonSide::Enemy) {
+                let ex = (12 * TILE_SIZE + x_off) as i32 + enemy_dx;
+                let ey = y_off as i32 + enemy_dy;
+                if effects.draw_slide_up(fb, &ts, ex, ey, w_tiles, sprite_pal, MonSide::Enemy) {
+                } else if effects.mon_tilemap.draw(
+                    fb,
+                    &ts,
+                    ex,
+                    ey,
+                    w_tiles,
+                    sprite_pal,
+                    MonSide::Enemy,
+                ) {
+                } else if let Some((rows, yoff)) = effects.fx.slide_down_hide_params(MonSide::Enemy)
+                {
                     // AnimationSlideMonDownAndHide (Acid Armor): crop to the
                     // top rows (7×5 then 7×3 tile-id lists), drawn lower.
-                    BattleEffects::draw_mon_rows(
-                        fb,
-                        &ts,
-                        ex as i32,
-                        ey as i32 + yoff,
-                        w_tiles,
-                        sprite_pal,
-                        rows,
-                    );
-                } else if let Some((width, anchor_right)) = effects.fx.squish_params(MonSide::Enemy) {
+                    BattleEffects::draw_mon_rows(fb, &ts, ex, ey + yoff, w_tiles, sprite_pal, rows);
+                } else if effects.draw_squish(fb, &ts, ex, ey, sprite_pal, MonSide::Enemy) {
+                } else if let Some((width, anchor_right)) = effects.fx.squish_params(MonSide::Enemy)
+                {
                     // AnimationSquishMonPic: narrow the pic one tile per pass.
                     BattleEffects::draw_squished(
                         fb,
                         &ts,
-                        ex as i32,
-                        ey as i32,
+                        ex,
+                        ey,
                         w_tiles,
                         sprite_pal,
                         width,
                         anchor_right,
                     );
+                } else if let Some((transition_top, transition_bottom)) =
+                    effects.slide_down_transition(MonSide::Enemy)
+                {
+                    let (visible_top, visible_bottom) =
+                        effects.vertical_mon_clip(MonSide::Enemy, fb.height());
+                    for (draw_y, top, bottom) in [
+                        (ey, visible_top, transition_top),
+                        (ey + 8, transition_top, transition_bottom),
+                        (ey, transition_bottom, visible_bottom),
+                    ] {
+                        if top < bottom {
+                            draw_mon_pic_clipped(
+                                fb,
+                                &ts,
+                                ex,
+                                draw_y,
+                                w_tiles,
+                                sprite_pal,
+                                false,
+                                0,
+                                fb.width() as i32,
+                                top,
+                                bottom,
+                            );
+                        }
+                    }
                 } else {
-                    blit_tileset(fb, &ts, ex, ey, w_tiles, sprite_pal);
+                    let (clip_left, clip_right) = effects.horizontal_slide_clip(MonSide::Enemy);
+                    let (visible_top, visible_bottom) =
+                        effects.vertical_mon_clip(MonSide::Enemy, fb.height());
+                    if let Some(top_dx) = effects.horizontal_slide_top_dx(MonSide::Enemy) {
+                        let top_split = effects.horizontal_slide_top_split(MonSide::Enemy);
+                        draw_mon_pic_clipped(
+                            fb,
+                            &ts,
+                            ex,
+                            ey,
+                            w_tiles,
+                            sprite_pal,
+                            false,
+                            clip_left,
+                            clip_right,
+                            top_split.max(visible_top),
+                            visible_bottom,
+                        );
+                        draw_mon_pic_clipped(
+                            fb,
+                            &ts,
+                            ex + top_dx,
+                            ey,
+                            w_tiles,
+                            sprite_pal,
+                            false,
+                            clip_left,
+                            clip_right,
+                            visible_top,
+                            top_split.min(visible_bottom),
+                        );
+                    } else {
+                        draw_mon_pic_clipped(
+                            fb,
+                            &ts,
+                            ex,
+                            ey,
+                            w_tiles,
+                            sprite_pal,
+                            false,
+                            clip_left,
+                            clip_right,
+                            visible_top,
+                            visible_bottom,
+                        );
+                    }
+                    if let Some((top, bottom)) = effects
+                        .shake_back_and_forth
+                        .stale_normal_right_band(MonSide::Enemy, visible_bottom)
+                    {
+                        let normal_x = ex - effects.shake_back_and_forth.dx(MonSide::Enemy);
+                        draw_mon_pic_clipped(
+                            fb,
+                            &ts,
+                            normal_x,
+                            ey,
+                            w_tiles,
+                            sprite_pal,
+                            false,
+                            normal_x + 48,
+                            normal_x + 56,
+                            top.max(visible_top),
+                            bottom.min(visible_bottom),
+                        );
+                    }
                 }
             }
         }
@@ -2448,7 +3897,10 @@ pub fn draw_battle(
         };
 
         let (player_dx, player_dy) = effects.player_offset();
-        if effects.player_visible_now() {
+        if effects.player_visible_now()
+            || effects.hide_mon_one_frame == Some(MonSide::Player)
+            || effects.squish_visible(MonSide::Player)
+        {
             if let IntroAnimState::PlayerSendOut { stage, .. } = effects.intro_anim {
                 // AnimateSendingOutMon stages (engine/battle/core.asm:6801):
                 // stage 0 = POOF only (mon still in the ball), stage 1 = the
@@ -2499,15 +3951,28 @@ pub fn draw_battle(
             } else if effects.fx.is_substitute(MonSide::Player) {
                 // AnimationSubstitute: MonsterSprite mini doll, facing up on
                 // the player side.
-                if let Ok(cached) = rm.load_sprite("monster") {
-                    let doll = cached.tileset.clone();
-                    let rect = MonRect {
-                        x: TILE_SIZE as i32 + player_dx,
-                        y: 5 * TILE_SIZE as i32 + player_dy,
-                    };
-                    BattleEffects::draw_substitute(fb, rect, &doll, sprite_pal, MonSide::Player);
+                if effects.substitute_reveal_delay[BattleVisualEffects::side_index(MonSide::Player)]
+                    == 0
+                {
+                    if let Ok(cached) = rm.load_sprite("monster") {
+                        let doll = cached.tileset.clone();
+                        let rect = MonRect {
+                            x: TILE_SIZE as i32 + player_dx,
+                            y: 5 * TILE_SIZE as i32 + player_dy,
+                        };
+                        BattleEffects::draw_substitute(
+                            fb,
+                            rect,
+                            &doll,
+                            &substitute_pal,
+                            MonSide::Player,
+                        );
+                    }
                 }
-            } else if effects.fx.is_minimized(MonSide::Player) {
+            } else if effects.fx.is_minimized(MonSide::Player)
+                && effects.minimize_reveal_delay[BattleVisualEffects::side_index(MonSide::Player)]
+                    == 0
+            {
                 let rect = MonRect {
                     x: TILE_SIZE as i32 + player_dx,
                     y: 5 * TILE_SIZE as i32 + player_dy,
@@ -2519,56 +3984,115 @@ pub fn draw_battle(
                     let ts = cached.tileset.clone();
                     let src_tpr = (cached.source_size.0 / TILE_SIZE) as usize;
                     let scaled = scale_sprite_by_two(&ts, src_tpr);
-                    let px = apply_offset(1 * TILE_SIZE, player_dx);
-                    let py = apply_offset(5 * TILE_SIZE, player_dy);
-                    if let Some((rows, yoff)) = effects.fx.slide_down_hide_params(MonSide::Player) {
+                    let px = TILE_SIZE as i32 + player_dx;
+                    let py = (5 * TILE_SIZE) as i32 + player_dy;
+                    if effects.draw_slide_up(fb, &scaled, px, py, 7, sprite_pal, MonSide::Player) {
+                    } else if effects.mon_tilemap.draw(
+                        fb,
+                        &scaled,
+                        px,
+                        py,
+                        7,
+                        sprite_pal,
+                        MonSide::Player,
+                    ) {
+                    } else if let Some((rows, yoff)) =
+                        effects.fx.slide_down_hide_params(MonSide::Player)
+                    {
                         BattleEffects::draw_mon_rows(
                             fb,
                             &scaled,
-                            px as i32,
-                            py as i32 + yoff,
+                            px,
+                            py + yoff,
                             7,
                             sprite_pal,
                             rows,
                         );
-                    } else if let Some((width, anchor_right)) = effects.fx.squish_params(MonSide::Player) {
+                    } else if effects.draw_squish(fb, &scaled, px, py, sprite_pal, MonSide::Player)
+                    {
+                    } else if let Some((width, anchor_right)) =
+                        effects.fx.squish_params(MonSide::Player)
+                    {
                         BattleEffects::draw_squished(
                             fb,
                             &scaled,
-                            px as i32,
-                            py as i32,
+                            px,
+                            py,
                             7,
                             sprite_pal,
                             width,
                             anchor_right,
                         );
                     } else {
-                        blit_tileset(fb, &scaled, px, py, 7, sprite_pal);
+                        let (clip_left, clip_right) =
+                            effects.horizontal_slide_clip(MonSide::Player);
+                        let corner_blank = effects.player_slide_corner_blank();
+                        let (visible_top, visible_bottom) =
+                            effects.vertical_mon_clip(MonSide::Player, fb.height());
+                        if let Some(top_dx) = effects.horizontal_slide_top_dx(MonSide::Player) {
+                            let top_split = effects.horizontal_slide_top_split(MonSide::Player);
+                            draw_mon_pic_clipped(
+                                fb,
+                                &scaled,
+                                px,
+                                py,
+                                7,
+                                sprite_pal,
+                                corner_blank,
+                                clip_left,
+                                clip_right,
+                                top_split.max(visible_top),
+                                visible_bottom,
+                            );
+                            draw_mon_pic_clipped(
+                                fb,
+                                &scaled,
+                                px + top_dx,
+                                py,
+                                7,
+                                sprite_pal,
+                                true,
+                                clip_left,
+                                clip_right,
+                                visible_top,
+                                top_split.min(visible_bottom),
+                            );
+                        } else {
+                            draw_mon_pic_clipped(
+                                fb,
+                                &scaled,
+                                px,
+                                py,
+                                7,
+                                sprite_pal,
+                                corner_blank,
+                                clip_left,
+                                clip_right,
+                                visible_top,
+                                visible_bottom,
+                            );
+                        }
+                        if let Some((top, bottom)) = effects
+                            .shake_back_and_forth
+                            .stale_normal_right_band(MonSide::Player, visible_bottom)
+                        {
+                            let normal_x = px - effects.shake_back_and_forth.dx(MonSide::Player);
+                            draw_mon_pic_clipped(
+                                fb,
+                                &scaled,
+                                normal_x,
+                                py,
+                                7,
+                                sprite_pal,
+                                false,
+                                normal_x + 48,
+                                normal_x + 56,
+                                top.max(visible_top),
+                                bottom.min(visible_bottom),
+                            );
+                        }
                     }
                 }
-            }
-        }
-
-        if effects.fx.objects_active() {
-            // SE object effects (spiral/shoot balls, petals/leaves, water
-            // droplets) drawn with the move-animation tilesets.
-            let ts0 = rm.load_battle("move_anim_0").map(|c| c.tileset.clone()).ok();
-            let ts1 = rm.load_battle("move_anim_1").map(|c| c.tileset.clone()).ok();
-            if let (Some(ts0), Some(ts1)) = (ts0, ts1) {
-                effects.fx.render_objects(fb, &ts0, &ts1, pal);
-            }
-        }
-
-        if !effects.anim_layer.entries.is_empty() {
-            let anim_tileset_name = match effects.anim_tileset {
-                1 => "move_anim_1",
-                2 => "move_anim_0",
-                _ => "move_anim_0",
-            };
-            if let Ok(cached) = rm.load_battle(anim_tileset_name) {
-                effects
-                    .anim_layer
-                    .render(fb, &cached.tileset, pal, pal, None);
             }
         }
 
@@ -2614,9 +4138,9 @@ pub fn draw_battle(
         }
 
         // Unified UI render: draw battle dialog/menus directly to framebuffer
-        // using the same code path the editor preview uses. Must run AFTER sprites
-        // and animation overlays so the menu box stays on top.
-            if !skip_dialog && use_unified_ui {
+        // using the same code path the editor preview uses. Hardware OAM is
+        // composited after this window/background layer below.
+        if !skip_dialog && use_unified_ui {
             let mut painter = FrameBufferPainter::new(fb).with_lang(language);
             let mut ui = Ui::new(&mut painter);
             let rd = PokemonRenderData::new(is_zh);
@@ -2634,7 +4158,12 @@ pub fn draw_battle(
                         fb,
                     );
                 } else {
-                    menus::battle_main::draw(&screen.battle_menu, &BATTLE_MAIN_DEFAULT_LAYOUT, &mut ui, language);
+                    menus::battle_main::draw(
+                        &screen.battle_menu,
+                        &BATTLE_MAIN_DEFAULT_LAYOUT,
+                        &mut ui,
+                        language,
+                    );
                 }
             } else if matches!(
                 screen.phase,
@@ -2643,7 +4172,13 @@ pub fn draw_battle(
                     | BattlePhase::LearnMoveChoose { .. }
             ) {
                 if let Some(ref mm) = screen.move_menu {
-                    menus::battle_move::draw(mm, &BATTLE_MOVE_DEFAULT_LAYOUT, &mut ui, language, &rd);
+                    menus::battle_move::draw(
+                        mm,
+                        &BATTLE_MOVE_DEFAULT_LAYOUT,
+                        &mut ui,
+                        language,
+                        &rd,
+                    );
                 }
             } else if matches!(screen.phase, BattlePhase::BagSelect) {
                 if let Some(ref bm) = screen.bag_menu {
@@ -2657,7 +4192,13 @@ pub fn draw_battle(
                     | BattlePhase::PlayerFaintSwitch
             ) {
                 if let Some(ref bs) = screen.battle_state {
-                    menus::battle_party::draw(&bs.player.party, screen.party_cursor, &BATTLE_PARTY_DEFAULT_LAYOUT, &mut ui, language == Lang::Zh);
+                    menus::battle_party::draw(
+                        &bs.player.party,
+                        screen.party_cursor,
+                        &BATTLE_PARTY_DEFAULT_LAYOUT,
+                        &mut ui,
+                        language == Lang::Zh,
+                    );
                 }
             } else if matches!(
                 screen.phase,
@@ -2669,15 +4210,33 @@ pub fn draw_battle(
                 // (TWO_OPTION_MENU, cursor default NO). The learn-move chain
                 // reuses the same TWO_OPTION_MENU rendering.
                 if let Some(ref text) = dialog_text {
-                    let shown = if language == Lang::Zh { crate::render::zh_battle_dialog(text, true) } else { text.clone() };
-                    menus::battle_text::draw(&shown, false, &BATTLE_TEXT_DEFAULT_LAYOUT, &mut ui, language);
+                    let shown = if language == Lang::Zh {
+                        crate::render::zh_battle_dialog(text, true)
+                    } else {
+                        text.clone()
+                    };
+                    menus::battle_text::draw(
+                        &shown,
+                        false,
+                        &BATTLE_TEXT_DEFAULT_LAYOUT,
+                        &mut ui,
+                        language,
+                    );
                 }
-                let (yes, no) = if language == Lang::Zh { ("是".to_string(), "否".to_string()) } else { ("YES".to_string(), "NO".to_string()) };
+                let (yes, no) = if language == Lang::Zh {
+                    ("是".to_string(), "否".to_string())
+                } else {
+                    ("YES".to_string(), "NO".to_string())
+                };
                 let opts = vec![yes, no];
                 let selected = if screen.shift_prompt_yes { 0 } else { 1 };
                 menus::yes_no::draw(&opts, selected, &YES_NO_DEFAULT_LAYOUT, &mut ui);
             } else if let Some(ref text) = dialog_text {
-                let shown = if language == Lang::Zh { crate::render::zh_battle_dialog(text, true) } else { text.clone() };
+                let shown = if language == Lang::Zh {
+                    crate::render::zh_battle_dialog(text, true)
+                } else {
+                    text.clone()
+                };
                 if matches!(
                     &screen.phase,
                     BattlePhase::Intro {
@@ -2693,12 +4252,45 @@ pub fn draw_battle(
                         language,
                     );
                 } else {
-                    menus::battle_text::draw(&shown, dialog_show_arrow, &BATTLE_TEXT_DEFAULT_LAYOUT, &mut ui, language);
+                    menus::battle_text::draw(
+                        &shown,
+                        dialog_show_arrow,
+                        &BATTLE_TEXT_DEFAULT_LAYOUT,
+                        &mut ui,
+                        language,
+                    );
                 }
             }
         }
 
+        effects.apply_move_mon_h_raster_edge(fb);
         effects.apply_post_effects(fb);
+
+        // Hardware OAM is composited after the window/background, so move
+        // objects may cover the battle text box just as they do on the Game Boy.
+        if effects.fx.objects_active() {
+            let ts0 = rm
+                .load_battle("move_anim_0")
+                .map(|c| c.tileset.clone())
+                .ok();
+            let ts1 = rm
+                .load_battle("move_anim_1")
+                .map(|c| c.tileset.clone())
+                .ok();
+            if let (Some(ts0), Some(ts1)) = (ts0, ts1) {
+                effects.fx.render_objects(fb, &ts0, &ts1, pal);
+            }
+        }
+        if !effects.anim_layer.entries.is_empty() {
+            let anim_tileset_name = match effects.anim_layer_tileset {
+                1 => "move_anim_1",
+                2 => "move_anim_0",
+                _ => "move_anim_0",
+            };
+            if let Ok(cached) = rm.load_battle(anim_tileset_name) {
+                render_gen1_oam(fb, &effects.anim_layer.entries, &cached.tileset, pal);
+            }
+        }
     } else {
         // No resources — fallback: render tile buffer with blank tileset
         let blank_ts = TileSet::blank(256);
@@ -2765,7 +4357,10 @@ mod tests {
         // $20 (0 shakes): TOSS, POOF — the mon is never hidden.
         let miss = build_ball_choreo(ItemId::UltraBall, 0, BallAnimOutcome::BrokeFree);
         let anims: Vec<usize> = miss.steps.iter().map(|s| s.anim).collect();
-        assert_eq!(anims, vec![non_move_anim::ULTRA_TOSS, non_move_anim::BALL_POOF]);
+        assert_eq!(
+            anims,
+            vec![non_move_anim::ULTRA_TOSS, non_move_anim::BALL_POOF]
+        );
         // $10 (ghost dodge): TOSS only. Safari Ball uses the HIGH toss.
         let dodge = build_ball_choreo(ItemId::SafariBall, 0, BallAnimOutcome::Dodged);
         let anims: Vec<usize> = dodge.steps.iter().map(|s| s.anim).collect();
@@ -2831,7 +4426,12 @@ mod tests {
         }
         assert_eq!(
             sfx,
-            vec![SfxId::BallToss, SfxId::BallPoof, SfxId::Tink, SfxId::BallPoof]
+            vec![
+                SfxId::BallToss,
+                SfxId::BallPoof,
+                SfxId::Tink,
+                SfxId::BallPoof
+            ]
         );
     }
 
@@ -2849,14 +4449,25 @@ mod tests {
             BattleVisualEffects::used_item_id("Enemy PIDGEY used GUST!"),
             None
         );
-        assert_eq!(BattleVisualEffects::used_item_id("CHARMANDER used EMBER!"), None);
+        assert_eq!(
+            BattleVisualEffects::used_item_id("CHARMANDER used EMBER!"),
+            None
+        );
     }
 
     #[test]
     fn charge_messages_match_status_affected_trigger() {
-        assert!(BattleVisualEffects::is_charge_message("CHARMANDER flew up high!"));
-        assert!(BattleVisualEffects::is_charge_message("Enemy PIDGEY dug a hole!"));
-        assert!(BattleVisualEffects::is_charge_message("Enemy EXEGGUTOR took in sunlight!"));
-        assert!(!BattleVisualEffects::is_charge_message("CHARMANDER used FLY!"));
+        assert!(BattleVisualEffects::is_charge_message(
+            "CHARMANDER flew up high!"
+        ));
+        assert!(BattleVisualEffects::is_charge_message(
+            "Enemy PIDGEY dug a hole!"
+        ));
+        assert!(BattleVisualEffects::is_charge_message(
+            "Enemy EXEGGUTOR took in sunlight!"
+        ));
+        assert!(!BattleVisualEffects::is_charge_message(
+            "CHARMANDER used FLY!"
+        ));
     }
 }

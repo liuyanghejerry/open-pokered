@@ -1,0 +1,173 @@
+{
+  "duration_frames": 29,
+  "trace_sha1": "3c8f7e32f3a8b3cce493f14efd2d1aa36bff3106",
+  "pixel_delta_rle": [
+    {
+      "count": 11,
+      "value": {
+        "delta_crc32": "044d19c2",
+        "delta_adler32": "0b400001",
+        "changed_pixels": 0,
+        "bbox": null
+      }
+    },
+    {
+      "count": 9,
+      "value": {
+        "delta_crc32": "f2453eb8",
+        "delta_adler32": "ca0c0cff",
+        "changed_pixels": 108,
+        "bbox": [
+          33,
+          56,
+          56,
+          80
+        ]
+      }
+    },
+    {
+      "count": 9,
+      "value": {
+        "delta_crc32": "4402184e",
+        "delta_adler32": "f7701923",
+        "changed_pixels": 218,
+        "bbox": [
+          16,
+          73,
+          40,
+          95
+        ]
+      }
+    }
+  ],
+  "rendered_oam_rle": [
+    {
+      "count": 10,
+      "value": []
+    },
+    {
+      "count": 9,
+      "value": [
+        {
+          "x": 48,
+          "y": 56,
+          "tile": 44,
+          "attributes": 32
+        },
+        {
+          "x": 40,
+          "y": 56,
+          "tile": 45,
+          "attributes": 32
+        },
+        {
+          "x": 32,
+          "y": 56,
+          "tile": 44,
+          "attributes": 0
+        },
+        {
+          "x": 48,
+          "y": 64,
+          "tile": 60,
+          "attributes": 32
+        },
+        {
+          "x": 40,
+          "y": 64,
+          "tile": 61,
+          "attributes": 32
+        },
+        {
+          "x": 32,
+          "y": 64,
+          "tile": 60,
+          "attributes": 0
+        },
+        {
+          "x": 48,
+          "y": 72,
+          "tile": 44,
+          "attributes": 96
+        },
+        {
+          "x": 40,
+          "y": 72,
+          "tile": 45,
+          "attributes": 96
+        },
+        {
+          "x": 32,
+          "y": 72,
+          "tile": 44,
+          "attributes": 64
+        }
+      ]
+    },
+    {
+      "count": 9,
+      "value": [
+        {
+          "x": 32,
+          "y": 72,
+          "tile": 44,
+          "attributes": 32
+        },
+        {
+          "x": 24,
+          "y": 72,
+          "tile": 45,
+          "attributes": 32
+        },
+        {
+          "x": 16,
+          "y": 72,
+          "tile": 44,
+          "attributes": 0
+        },
+        {
+          "x": 32,
+          "y": 80,
+          "tile": 60,
+          "attributes": 32
+        },
+        {
+          "x": 24,
+          "y": 80,
+          "tile": 61,
+          "attributes": 32
+        },
+        {
+          "x": 16,
+          "y": 80,
+          "tile": 60,
+          "attributes": 0
+        },
+        {
+          "x": 32,
+          "y": 88,
+          "tile": 44,
+          "attributes": 96
+        },
+        {
+          "x": 24,
+          "y": 88,
+          "tile": 45,
+          "attributes": 96
+        },
+        {
+          "x": 16,
+          "y": 88,
+          "tile": 44,
+          "attributes": 64
+        }
+      ]
+    },
+    {
+      "count": 1,
+      "value": []
+    }
+  ],
+  "max_rendered_objects": 9,
+  "resolved_animation_id": 1
+}

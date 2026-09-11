@@ -23,6 +23,8 @@ pub type FrameBuffer = dotzuki_renderer::RgbaIndexedFrameBuffer<GbColor>;
 
 // Pokemon-specific modules (not in dotzuki-renderer)
 pub mod embedded;
+pub mod gen1_battle_anim;
+mod gen1_wavy_schedule;
 pub mod screen_fade;
 // Pokered asset-name override of the engine's `mon_icon` loader — shadows the
 // glob re-export above so `pokered_renderer::mon_icon::load_mon_icon_tiles`

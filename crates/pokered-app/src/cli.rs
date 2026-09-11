@@ -64,6 +64,19 @@ impl CliLang {
     }
 }
 
+/// Attacking side used by the isolated move-animation frame recorder.
+#[derive(Clone, Copy, Debug, ValueEnum)]
+pub enum CliAnimationSide {
+    Player,
+    Enemy,
+}
+
+impl CliAnimationSide {
+    pub fn player_is_attacker(self) -> bool {
+        matches!(self, Self::Player)
+    }
+}
+
 #[derive(Subcommand)]
 pub enum Commands {
     /// Run the game in windowed mode (default)
@@ -201,6 +214,28 @@ pub enum Commands {
         /// Text language for the capture (menus, messages)
         #[arg(long, value_enum, default_value_t = CliLang::En)]
         lang: CliLang,
+    },
+    /// Record one isolated battle move animation frame by frame.
+    ///
+    /// This is a fidelity-audit seam: it bypasses accuracy, damage, move
+    /// effects, and AI while retaining the production battle renderer and
+    /// animation state machines.
+    MoveAnimationFrames {
+        /// Canonical Gen-I move id (1=Pound through 165=Struggle).
+        #[arg(long, value_parser = clap::value_parser!(u8).range(1..=165))]
+        move_id: u8,
+        /// Which side performs the move (affects mirroring and target effects).
+        #[arg(long, value_enum, default_value_t = CliAnimationSide::Player)]
+        side: CliAnimationSide,
+        /// Empty/nonexistent directory for manifest.json and optional PNGs.
+        #[arg(short, long)]
+        output_dir: PathBuf,
+        /// Safety cap; an unfinished animation at this frame is an error.
+        #[arg(long, default_value_t = 2000)]
+        max_frames: u32,
+        /// Record frame hashes and change masks without encoding PNG files.
+        #[arg(long)]
+        manifest_only: bool,
     },
 }
 
