@@ -1772,6 +1772,79 @@ impl SlotsVisualKey {
 }
 
 #[derive(Clone, Copy, PartialEq, Eq)]
+enum AuxiliaryMenuKind {
+    Elevator,
+    FilterBag,
+}
+
+#[derive(Clone, Copy, PartialEq, Eq)]
+struct AuxiliaryMenuVisualKey {
+    kind: AuxiliaryMenuKind,
+    list_hash: u32,
+    scroll_offset: usize,
+    cursor: (u32, u32),
+    language: Lang,
+}
+
+impl AuxiliaryMenuVisualKey {
+    fn new(game: &PokemonGame, kind: AuxiliaryMenuKind) -> Option<Self> {
+        let menu = game.elevator_screen.as_ref()?;
+        let mut list_hash = 0x811c_9dc5;
+        hash_u16(&mut list_hash, menu.floors().len() as u16);
+        for entry in menu.floors() {
+            for &byte in entry.as_bytes() {
+                hash_byte(&mut list_hash, byte);
+            }
+            hash_byte(&mut list_hash, 0xff);
+        }
+
+        let scroll_offset = menu.scroll_offset(7);
+        let x = match kind {
+            AuxiliaryMenuKind::Elevator => 60,
+            AuxiliaryMenuKind::FilterBag => 44,
+        };
+        Some(Self {
+            kind,
+            list_hash,
+            scroll_offset,
+            cursor: (
+                x,
+                30 + (menu.selected_index() - scroll_offset) as u32 * 14,
+            ),
+            language: game.state.config.language,
+        })
+    }
+
+    fn cursor_change_from(&self, previous: &Self) -> Option<((u32, u32), (u32, u32))> {
+        (self.kind == previous.kind
+            && self.list_hash == previous.list_hash
+            && self.scroll_offset == previous.scroll_offset
+            && self.language == previous.language
+            && self.cursor != previous.cursor)
+            .then_some((previous.cursor, self.cursor))
+    }
+}
+
+#[derive(Clone, Copy, PartialEq, Eq)]
+struct DiplomaVisualKey {
+    player_name_hash: u32,
+    language: Lang,
+}
+
+impl DiplomaVisualKey {
+    fn new(game: &PokemonGame) -> Self {
+        let mut player_name_hash = 0x811c_9dc5;
+        for &byte in game.player_name.as_bytes() {
+            hash_byte(&mut player_name_hash, byte);
+        }
+        Self {
+            player_name_hash,
+            language: game.state.config.language,
+        }
+    }
+}
+
+#[derive(Clone, Copy, PartialEq, Eq)]
 struct TownMapVisualKey {
     current_map: MapId,
     selected_map: MapId,
@@ -2154,6 +2227,8 @@ fn game_main() -> ! {
     let mut last_pokedex: Option<PokedexVisualKey> = None;
     let mut last_pc: Option<PcVisualKey> = None;
     let mut last_slots: Option<SlotsVisualKey> = None;
+    let mut last_auxiliary_menu: Option<AuxiliaryMenuVisualKey> = None;
+    let mut last_diploma: Option<DiplomaVisualKey> = None;
     let mut last_trainer_card: Option<TrainerCardVisualKey> = None;
     let mut last_town_map: Option<TownMapVisualKey> = None;
     let mut last_oak: Option<OakVisualKey> = None;
@@ -2326,6 +2401,21 @@ fn game_main() -> ! {
             .as_ref()
             .zip(last_slots.as_ref())
             .and_then(|(current, previous)| current.cursor_change_from(previous));
+        let auxiliary_menu = match game.state.screen {
+            GameScreen::Elevator => {
+                AuxiliaryMenuVisualKey::new(game, AuxiliaryMenuKind::Elevator)
+            }
+            GameScreen::FilterBag => {
+                AuxiliaryMenuVisualKey::new(game, AuxiliaryMenuKind::FilterBag)
+            }
+            _ => None,
+        };
+        let auxiliary_menu_cursor_change = auxiliary_menu
+            .as_ref()
+            .zip(last_auxiliary_menu.as_ref())
+            .and_then(|(current, previous)| current.cursor_change_from(previous));
+        let diploma = (game.state.screen == GameScreen::Diploma)
+            .then(|| DiplomaVisualKey::new(game));
         let trainer_card = (game.state.screen == GameScreen::TrainerCard)
             .then(|| TrainerCardVisualKey::new(game));
         let town_map = (game.state.screen == GameScreen::TownMap)
@@ -2398,6 +2488,10 @@ fn game_main() -> ! {
             pc != last_pc
         } else if slots.is_some() {
             slots != last_slots
+        } else if auxiliary_menu.is_some() {
+            auxiliary_menu != last_auxiliary_menu
+        } else if diploma.is_some() {
+            diploma != last_diploma
         } else if trainer_card.is_some() {
             trainer_card != last_trainer_card
         } else if town_map.is_some() {
@@ -2506,6 +2600,8 @@ fn game_main() -> ! {
                 pokered_app::render::redraw_pc_cursor(previous, current, &mut fb);
             } else if let Some((previous, current)) = slots_cursor_change {
                 pokered_app::render::redraw_slots_bet_cursor(previous, current, &mut fb);
+            } else if let Some((previous, current)) = auxiliary_menu_cursor_change {
+                pokered_app::render::redraw_elevator_cursor(previous, current, &mut fb);
             } else if let Some(previous_map) = town_map_cursor_change {
                 pokered_app::render::redraw_town_map_cursor(
                     &game.town_map_screen,
@@ -2692,6 +2788,23 @@ fn game_main() -> ! {
                     },
                 ]
             });
+            let auxiliary_menu_cursor_damage =
+                auxiliary_menu_cursor_change.map(|(previous, current)| {
+                    [
+                        FrameDamageRect {
+                            x: previous.0,
+                            y: previous.1,
+                            width: 5,
+                            height: 10,
+                        },
+                        FrameDamageRect {
+                            x: current.0,
+                            y: current.1,
+                            width: 5,
+                            height: 10,
+                        },
+                    ]
+                });
             let party_overlay_cursor_damage = party_overlay_cursor_change.map(
                 |(previous, current, icon_changed)| {
                     (
@@ -2867,6 +2980,8 @@ fn game_main() -> ! {
                 Some(rects.as_slice())
             } else if let Some(rects) = slots_cursor_damage.as_ref() {
                 Some(rects.as_slice())
+            } else if let Some(rects) = auxiliary_menu_cursor_damage.as_ref() {
+                Some(rects.as_slice())
             } else if let Some(rects) = town_map_cursor_damage.as_ref() {
                 Some(rects.as_slice())
             } else if let Some(rects) = town_map_marker_damage.as_ref() {
@@ -2907,6 +3022,8 @@ fn game_main() -> ! {
         last_pokedex = pokedex;
         last_pc = pc;
         last_slots = slots;
+        last_auxiliary_menu = auxiliary_menu;
+        last_diploma = diploma;
         last_trainer_card = trainer_card;
         last_town_map = town_map;
         last_oak = oak;

@@ -34,6 +34,8 @@ pub use battle_i18n::{trainer_class_zh, zh_battle_dialog};
 pub use credits::draw_credits;
 pub use diploma::draw_diploma;
 pub use elevator::{draw_elevator, draw_filter_bag};
+#[cfg(any(test, target_os = "none"))]
+pub use elevator::redraw_elevator_cursor;
 pub use evolution::draw_evolution;
 pub use gamefreak_splash::draw_gamefreak_splash;
 pub use hof_ceremony::draw_hof_ceremony;
