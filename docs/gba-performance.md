@@ -76,9 +76,13 @@ and save ZH PNGs are byte-identical. The battle target is a transition frame;
 its difference from master already exists at `383c82c`, whose PNG is byte-identical
 to the refactor's battle image. It is not a battle action-menu screenshot.
 
-Remaining boundary work is explicit: consolidate the duplicated no_std resource
-backends; replace silent unsupported script behavior with capability
-errors; move remaining legacy menu damage geometry into the owning UI modules.
+The resource catalog is now target-independent: asset categories, canonical path
+parsing, Pokémon sprite dimensions and the typed named-loader API have one source
+of truth. A small compile-time macro emits that API for both resource managers;
+only the filesystem/PNG provider and the preconverted ROM registry/cache remain
+platform-specific. Remaining boundary work is explicit: replace silent unsupported
+script behavior with capability errors and move remaining legacy menu damage
+geometry into the owning UI modules.
 The cursor erasure fast paths still assume the current arrow's 8×9 ink footprint
 and plain background; this is now an explicit UI-owned damage contract, but it
 is not inferred from glyph metrics. Changing those authored shapes requires

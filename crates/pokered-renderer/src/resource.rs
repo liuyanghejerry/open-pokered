@@ -17,158 +17,16 @@ use std::path::PathBuf;
 
 pub use dotzuki_renderer::resource::{
     bw_to_color_index, grayscale_to_16_levels, grayscale_to_color_index,
-    grayscale_to_color_index_strict, load_1bpp_from_png, load_2bpp_from_png,
-    load_tileset_from_png, load_tileset_from_png_1bpp, png_to_1bpp, png_to_2bpp, png_to_4bpp,
-    png_to_rgba, png_to_tileset_1bpp, png_to_tileset_2bpp, png_to_tileset_4bpp,
-    png_to_tileset_rgba, AssetKind, CachedTileSet, EmbeddedAssetLoader, LoadedPng, ResourceError,
-    Result,
+    grayscale_to_color_index_strict, load_1bpp_from_png, load_2bpp_from_png, load_tileset_from_png,
+    load_tileset_from_png_1bpp, png_to_1bpp, png_to_2bpp, png_to_4bpp, png_to_rgba,
+    png_to_tileset_1bpp, png_to_tileset_2bpp, png_to_tileset_4bpp, png_to_tileset_rgba, AssetKind,
+    CachedTileSet, EmbeddedAssetLoader, LoadedPng, ResourceError, Result,
 };
 
+use crate::resource_catalog::{category_from_str, impl_named_loaders};
+pub use crate::resource_catalog::{AssetCategory, PokemonSpriteSize};
 use dotzuki_renderer::asset_provider::ResourceProvider;
 use dotzuki_renderer::tile::{RgbaTileSet, TileSet};
-
-// ---------------------------------------------------------------------------
-// Pokémon sprite sizes
-// ---------------------------------------------------------------------------
-
-/// Pokémon front sprite dimensions in tiles.
-///
-/// In the original game, front sprites come in three sizes:
-/// - 5×5 tiles (40×40 px) — small Pokémon (e.g., Bulbasaur, Pikachu)
-/// - 6×6 tiles (48×48 px) — medium Pokémon (e.g., Venusaur, Blastoise)
-/// - 7×7 tiles (56×56 px) — large Pokémon (e.g., Charizard, Gyarados)
-///
-/// Back sprites are always 4×4 tiles (32×32 px).
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum PokemonSpriteSize {
-    /// 5×5 tiles = 40×40 pixels
-    Small,
-    /// 6×6 tiles = 48×48 pixels
-    Medium,
-    /// 7×7 tiles = 56×56 pixels
-    Large,
-}
-
-impl PokemonSpriteSize {
-    /// Width/height in tiles.
-    pub fn tiles(self) -> u32 {
-        match self {
-            Self::Small => 5,
-            Self::Medium => 6,
-            Self::Large => 7,
-        }
-    }
-
-    /// Width/height in pixels.
-    pub fn pixels(self) -> u32 {
-        self.tiles() * 8
-    }
-
-    /// Determine size from pixel dimensions.
-    pub fn from_dimensions(width: u32, height: u32) -> Option<Self> {
-        match (width, height) {
-            (40, 40) => Some(Self::Small),
-            (48, 48) => Some(Self::Medium),
-            (56, 56) => Some(Self::Large),
-            _ => None,
-        }
-    }
-
-    /// Back sprite size (always 4×4 = 32×32).
-    pub const BACK_TILES: u32 = 4;
-    pub const BACK_PIXELS: u32 = 32;
-}
-
-// ---------------------------------------------------------------------------
-// Asset categories
-// ---------------------------------------------------------------------------
-
-/// Categories of graphical assets in the pokered `gfx/` directory.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub enum AssetCategory {
-    /// Tilesets (gfx/tilesets/*.png) — overworld, house, cave, etc.
-    Tileset,
-    /// Overworld sprites (gfx/sprites/*.png) — player, NPCs
-    Sprite,
-    /// Pokémon front sprites (gfx/pokemon/front/*.png or front_rg/*.png)
-    PokemonFront,
-    /// Pokémon front sprites, Red/Green version (gfx/pokemon/front_rg/*.png)
-    PokemonFrontRG,
-    /// Pokémon back sprites (gfx/pokemon/back/*.png)
-    PokemonBack,
-    /// Font glyphs (gfx/font/*.png)
-    Font,
-    /// Trainer sprites (gfx/trainers/*.png)
-    Trainer,
-    /// Battle UI elements (gfx/battle/*.png)
-    Battle,
-    /// Title screen graphics (gfx/title/*.png)
-    Title,
-    /// Intro sequence graphics (gfx/intro/*.png)
-    Intro,
-    /// Town map (gfx/town_map/*.png)
-    TownMap,
-    /// Splash/copyright (gfx/splash/*.png)
-    Splash,
-    /// Overworld emotes (gfx/emotes/*.png)
-    Emote,
-    /// Trading animation (gfx/trade/*.png)
-    Trade,
-    /// Player-specific graphics (gfx/player/*.png)
-    Player,
-    /// Credits (gfx/credits/*.png)
-    Credits,
-    /// Slot machine (gfx/slots/*.png)
-    Slots,
-    /// Pokédex graphics (gfx/pokedex/*.png)
-    Pokedex,
-    /// SGB border (gfx/sgb/*.png)
-    Sgb,
-    /// Overworld NPC/object graphics (gfx/overworld/*.png)
-    Overworld,
-    /// Blockset graphics (gfx/blocksets/*.png)
-    Blockset,
-    /// Icon graphics (gfx/icons/*.png)
-    Icon,
-    /// Trainer card (gfx/trainer_card/*.png)
-    TrainerCard,
-}
-
-impl AssetCategory {
-    /// Subdirectory name under `gfx/`.
-    pub fn subdir(self) -> &'static str {
-        match self {
-            Self::Tileset => "tilesets",
-            Self::Sprite => "sprites",
-            Self::PokemonFront => "pokemon/front",
-            Self::PokemonFrontRG => "pokemon/front_rg",
-            Self::PokemonBack => "pokemon/back",
-            Self::Font => "font",
-            Self::Trainer => "trainers",
-            Self::Battle => "battle",
-            Self::Title => "title",
-            Self::Intro => "intro",
-            Self::TownMap => "town_map",
-            Self::Splash => "splash",
-            Self::Emote => "emotes",
-            Self::Trade => "trade",
-            Self::Player => "player",
-            Self::Credits => "credits",
-            Self::Slots => "slots",
-            Self::Pokedex => "pokedex",
-            Self::Sgb => "sgb",
-            Self::Overworld => "overworld",
-            Self::Blockset => "blocksets",
-            Self::Icon => "icons",
-            Self::TrainerCard => "trainer_card",
-        }
-    }
-
-    /// Whether this category uses 1bpp encoding (fonts) vs 2bpp.
-    pub fn is_1bpp(self) -> bool {
-        matches!(self, Self::Font)
-    }
-}
 
 impl AssetKind for AssetCategory {
     fn subdir(self) -> &'static str {
@@ -287,10 +145,7 @@ impl ResourceManager {
         Self(manager)
     }
 
-    /// Load a tileset (from gfx/tilesets/).
-    pub fn load_tileset(&mut self, name: &str) -> Result<&CachedTileSet> {
-        self.0.load(AssetCategory::Tileset, name)
-    }
+    impl_named_loaders!();
 
     /// Load an RGBA tileset from a PNG file directly (no palette remapping).
     ///
@@ -318,82 +173,8 @@ impl ResourceManager {
         &mut self,
         name: &str,
     ) -> core::result::Result<&TileSet, String> {
-        self.0.load_tileset_rgba_tileset(AssetCategory::Tileset, name)
-    }
-
-    /// Load an overworld sprite PNG (from gfx/sprites/).
-    pub fn load_sprite(&mut self, name: &str) -> Result<&CachedTileSet> {
-        self.0.load(AssetCategory::Sprite, name)
-    }
-
-    /// Load a Pokémon front sprite (Blue version, from gfx/pokemon/front/).
-    pub fn load_pokemon_front(&mut self, name: &str) -> Result<&CachedTileSet> {
-        self.0.load(AssetCategory::PokemonFront, name)
-    }
-
-    /// Load a Pokémon front sprite (Red/Green version, from gfx/pokemon/front_rg/).
-    pub fn load_pokemon_front_rg(&mut self, name: &str) -> Result<&CachedTileSet> {
-        self.0.load(AssetCategory::PokemonFrontRG, name)
-    }
-
-    /// Load a Pokémon back sprite (from gfx/pokemon/back/).
-    pub fn load_pokemon_back(&mut self, name: &str) -> Result<&CachedTileSet> {
-        self.0.load(AssetCategory::PokemonBack, name)
-    }
-
-    /// Load a font PNG (from gfx/font/). Uses 1bpp encoding.
-    pub fn load_font(&mut self, name: &str) -> Result<&CachedTileSet> {
-        self.0.load(AssetCategory::Font, name)
-    }
-
-    /// Load a trainer sprite (from gfx/trainers/).
-    pub fn load_trainer(&mut self, name: &str) -> Result<&CachedTileSet> {
-        self.0.load(AssetCategory::Trainer, name)
-    }
-
-    /// Load a battle UI element (from gfx/battle/).
-    pub fn load_battle(&mut self, name: &str) -> Result<&CachedTileSet> {
-        self.0.load(AssetCategory::Battle, name)
-    }
-
-    /// Load a title screen graphic (from gfx/title/).
-    pub fn load_title(&mut self, name: &str) -> Result<&CachedTileSet> {
-        self.0.load(AssetCategory::Title, name)
-    }
-
-    /// Load an intro graphic (from gfx/intro/).
-    pub fn load_intro(&mut self, name: &str) -> Result<&CachedTileSet> {
-        self.0.load(AssetCategory::Intro, name)
-    }
-
-    /// Load a town map graphic (from gfx/town_map/).
-    pub fn load_town_map(&mut self, name: &str) -> Result<&CachedTileSet> {
-        self.0.load(AssetCategory::TownMap, name)
-    }
-
-    /// Load a splash/copyright graphic (from gfx/splash/).
-    pub fn load_splash(&mut self, name: &str) -> Result<&CachedTileSet> {
-        self.0.load(AssetCategory::Splash, name)
-    }
-
-    /// Load a trade animation graphic (from gfx/trade/).
-    pub fn load_trade(&mut self, name: &str) -> Result<&CachedTileSet> {
-        self.0.load(AssetCategory::Trade, name)
-    }
-
-    /// Load a slot machine graphic (from gfx/slots/).
-    pub fn load_slots(&mut self, name: &str) -> Result<&CachedTileSet> {
-        self.0.load(AssetCategory::Slots, name)
-    }
-
-    /// Load a pokédex graphic (from gfx/pokedex/).
-    pub fn load_pokedex(&mut self, name: &str) -> Result<&CachedTileSet> {
-        self.0.load(AssetCategory::Pokedex, name)
-    }
-
-    /// Load an overworld emote graphic (from gfx/emotes/).
-    pub fn load_emote(&mut self, name: &str) -> Result<&CachedTileSet> {
-        self.0.load(AssetCategory::Emote, name)
+        self.0
+            .load_tileset_rgba_tileset(AssetCategory::Tileset, name)
     }
 }
 
@@ -421,7 +202,8 @@ impl ResourceProvider for ResourceManager {
         category: &str,
         filename: &str,
     ) -> core::result::Result<&TileSet, String> {
-        let cat = category_from_str(category)?;
+        let cat = category_from_str(category)
+            .ok_or_else(|| format!("unknown asset category: {}", category))?;
         self.0
             .load_asset(cat, filename)
             .map(|c| &c.tileset)
@@ -433,7 +215,8 @@ impl ResourceProvider for ResourceManager {
         category: &str,
         filename: &str,
     ) -> core::result::Result<&TileSet, String> {
-        let cat = category_from_str(category)?;
+        let cat = category_from_str(category)
+            .ok_or_else(|| format!("unknown asset category: {}", category))?;
         self.0
             .load_asset_2bpp(cat, filename)
             .map(|c| &c.tileset)
@@ -444,34 +227,5 @@ impl ResourceProvider for ResourceManager {
         self.load_font(name)
             .map(|c| &c.tileset)
             .map_err(|e| e.to_string())
-    }
-}
-
-fn category_from_str(s: &str) -> core::result::Result<AssetCategory, String> {
-    match s {
-        "tilesets" => Ok(AssetCategory::Tileset),
-        "sprites" => Ok(AssetCategory::Sprite),
-        "pokemon/front" => Ok(AssetCategory::PokemonFront),
-        "pokemon/front_rg" => Ok(AssetCategory::PokemonFrontRG),
-        "pokemon/back" => Ok(AssetCategory::PokemonBack),
-        "font" => Ok(AssetCategory::Font),
-        "trainers" => Ok(AssetCategory::Trainer),
-        "battle" => Ok(AssetCategory::Battle),
-        "title" => Ok(AssetCategory::Title),
-        "intro" => Ok(AssetCategory::Intro),
-        "town_map" => Ok(AssetCategory::TownMap),
-        "splash" => Ok(AssetCategory::Splash),
-        "emotes" => Ok(AssetCategory::Emote),
-        "trade" => Ok(AssetCategory::Trade),
-        "player" => Ok(AssetCategory::Player),
-        "credits" => Ok(AssetCategory::Credits),
-        "slots" => Ok(AssetCategory::Slots),
-        "pokedex" => Ok(AssetCategory::Pokedex),
-        "sgb" => Ok(AssetCategory::Sgb),
-        "overworld" => Ok(AssetCategory::Overworld),
-        "blocksets" => Ok(AssetCategory::Blockset),
-        "icons" => Ok(AssetCategory::Icon),
-        "trainer_card" => Ok(AssetCategory::TrainerCard),
-        _ => Err(format!("unknown asset category: {}", s)),
     }
 }
