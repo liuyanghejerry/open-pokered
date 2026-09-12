@@ -3026,8 +3026,12 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
     fn apply_finished_effect(&mut self, effect: Option<script_bridge::ScriptEffect>) {
         if let Some(eff) = effect {
             match eff {
-                script_bridge::ScriptEffect::UnsupportedCommand { name } => {
-                    log::error!(target: "pokered::overworld", "[Script] unsupported host command: {name}");
+                script_bridge::ScriptEffect::UnsupportedCommand { name, reason } => {
+                    if let Some(reason) = reason {
+                        log::error!(target: "pokered::overworld", "[Script] unsupported host command {name}: {reason}");
+                    } else {
+                        log::error!(target: "pokered::overworld", "[Script] unsupported host command: {name}");
+                    }
                 }
                 script_bridge::ScriptEffect::SetJoyIgnore { mask } => {
                     self.joy_ignore_mask = mask;

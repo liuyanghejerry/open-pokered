@@ -1,5 +1,6 @@
 use crate::alloc_prelude::*;
 use pokered_data::maps::MapId;
+use pokered_data::script_command::PokemonScriptCommand;
 use dotzuki_engine_script::{CommandResult, ScriptCommand};
 use serde_json::Value;
 
@@ -200,6 +201,7 @@ pub enum ScriptEffect {
     /// A command reached pokered that its script host does not implement.
     UnsupportedCommand {
         name: String,
+        reason: Option<String>,
     },
     OpenShop {
         items: Vec<String>,
@@ -512,8 +514,8 @@ impl ScriptEffect {
                     dotzuki_engine_script::CommandResult::Text(t) => json!(t),
                 },
             }),
-            ScriptEffect::UnsupportedCommand { name } => {
-                json!({ "effect": "UnsupportedCommand", "name": name })
+            ScriptEffect::UnsupportedCommand { name, reason } => {
+                json!({ "effect": "UnsupportedCommand", "name": name, "reason": reason })
             }
             ScriptEffect::OpenShop { items } => {
                 json!({ "effect": "OpenShop", "items": items })
@@ -810,112 +812,81 @@ pub fn dispatch_command_with_names(
 /// registrar passed through (see `pokered-data::script_api`); unknown names
 /// become an explicit unsupported-capability effect.
 fn dispatch_custom(name: &str, args: &[Value]) -> ScriptEffect {
-    match name {
-        "oldManTutorial" => ScriptEffect::OldManTutorial,
-        "tradePokemon" => ScriptEffect::TradePokemon {
-            offered: custom_str(args, 0),
-            received: custom_str(args, 1),
-            nickname: custom_str(args, 2),
-        },
-        "animateHealingMachine" => ScriptEffect::AnimateHealingMachine {
+    let command = match PokemonScriptCommand::from_custom(name, args) {
+        Ok(command) => command,
+        Err(error) => return unsupported_with_reason(name, error),
+    };
+    match command {
+        PokemonScriptCommand::OldManTutorial => ScriptEffect::OldManTutorial,
+        PokemonScriptCommand::TradePokemon { offered, received, nickname } => {
+            ScriptEffect::TradePokemon { offered, received, nickname }
+        }
+        PokemonScriptCommand::AnimateHealingMachine => ScriptEffect::AnimateHealingMachine {
             phase: HealingMachinePhase::FadeOutMusic,
             frames_remaining: 0,
         },
-        "showPokedexEntry" => ScriptEffect::ShowPokedexEntry {
-            species: custom_str(args, 0),
+        PokemonScriptCommand::ShowPokedexEntry { species } => ScriptEffect::ShowPokedexEntry {
+            species,
             started: false,
         },
-        "openNamingScreen" => ScriptEffect::NamingScreen {
-            species: custom_str(args, 0),
+        PokemonScriptCommand::OpenNamingScreen { species } => ScriptEffect::NamingScreen {
+            species,
             naming_state: None,
             started: false,
             result_name: None,
         },
-        "choosePartyPokemon" => ScriptEffect::ChoosePartyPokemon {
+        PokemonScriptCommand::ChoosePartyPokemon => ScriptEffect::ChoosePartyPokemon {
             started: false,
             result_index: None,
         },
-        "setPartyNickname" => ScriptEffect::SetPartyNickname {
-            index: custom_u64(args, 0) as u8,
-            nickname: custom_str(args, 1),
+        PokemonScriptCommand::SetPartyNickname { index, nickname } => ScriptEffect::SetPartyNickname {
+            index,
+            nickname,
         },
-        "startBattleSet" => ScriptEffect::StartBattle {
-            trainer_id: custom_str(args, 0),
-            rival_triplet_base: Some(custom_u64(args, 1) as u8),
+        PokemonScriptCommand::StartBattleSet { trainer_id, rival_triplet_base } => ScriptEffect::StartBattle {
+            trainer_id,
+            rival_triplet_base: Some(rival_triplet_base),
         },
-        "openSlots" => ScriptEffect::OpenSlots {
-            // None (no explicit argument) → resolve against the per-map-entry
-            // lucky-machine roll at dispatch time.
-            lucky: args.get(0).and_then(|v| v.as_bool()),
-        },
-        "elevatorMenu" => ScriptEffect::ElevatorMenu {
-            floors: json_string_vec(args.first()),
-        },
-        "filterBag" => ScriptEffect::FilterBag {
-            item_ids: json_string_vec(args.first()),
-        },
-        "showDiploma" => ScriptEffect::ShowDiploma,
-        "openPC" => ScriptEffect::OpenPc {
+        PokemonScriptCommand::OpenSlots { lucky } => ScriptEffect::OpenSlots { lucky },
+        PokemonScriptCommand::ElevatorMenu { floors } => ScriptEffect::ElevatorMenu { floors },
+        PokemonScriptCommand::FilterBag { item_ids } => ScriptEffect::FilterBag { item_ids },
+        PokemonScriptCommand::ShowDiploma => ScriptEffect::ShowDiploma,
+        PokemonScriptCommand::OpenPc => ScriptEffect::OpenPc {
             kind: "center".to_string(),
         },
-        "openItemPC" => ScriptEffect::OpenPc {
+        PokemonScriptCommand::OpenItemPc => ScriptEffect::OpenPc {
             kind: "items".to_string(),
         },
-        "openBillsPC" => ScriptEffect::OpenPc {
+        PokemonScriptCommand::OpenBillsPc => ScriptEffect::OpenPc {
             kind: "bills".to_string(),
         },
-        "linkStart" => ScriptEffect::LinkStart,
-        "giveCoins" => ScriptEffect::GiveCoins {
-            amount: custom_u64(args, 0) as u16,
+        PokemonScriptCommand::LinkStart => ScriptEffect::LinkStart,
+        PokemonScriptCommand::GiveCoins { amount } => ScriptEffect::GiveCoins { amount },
+        PokemonScriptCommand::TakeCoins { amount } => ScriptEffect::TakeCoins { amount },
+        PokemonScriptCommand::DepositDaycare { index } => ScriptEffect::DepositDaycare { index },
+        PokemonScriptCommand::WithdrawDaycare => ScriptEffect::WithdrawDaycare,
+        PokemonScriptCommand::ReplaceTileBlock { x, y, block_id } => ScriptEffect::ReplaceTileBlock {
+            x,
+            y,
+            block_id,
         },
-        "takeCoins" => ScriptEffect::TakeCoins {
-            amount: custom_u64(args, 0) as u16,
-        },
-        "depositDaycare" => ScriptEffect::DepositDaycare {
-            index: custom_u64(args, 0) as u8,
-        },
-        "withdrawDaycare" => ScriptEffect::WithdrawDaycare,
-        "replaceTileBlock" => ScriptEffect::ReplaceTileBlock {
-            x: custom_u64(args, 0) as u8,
-            y: custom_u64(args, 1) as u8,
-            block_id: custom_u64(args, 2) as u8,
-        },
-        "playShipDeparture" => ScriptEffect::PlayShipDeparture { started: false },
-        "enterHallOfFame" => ScriptEffect::HallOfFameCeremony,
-        _ => unsupported(name),
+        PokemonScriptCommand::PlayShipDeparture => ScriptEffect::PlayShipDeparture { started: false },
+        PokemonScriptCommand::EnterHallOfFame => ScriptEffect::HallOfFameCeremony,
     }
 }
 
 fn unsupported(name: &str) -> ScriptEffect {
     ScriptEffect::UnsupportedCommand {
         name: name.to_string(),
+        reason: None,
     }
 }
 
-/// Read the `i`-th `Custom` argument as a string ("" when missing or not a
-/// string).
-fn custom_str(args: &[Value], i: usize) -> String {
-    args.get(i).and_then(|v| v.as_str()).unwrap_or("").to_string()
-}
-
-/// Read the `i`-th `Custom` argument as an unsigned integer (0 when missing
-/// or not an integer).
-fn custom_u64(args: &[Value], i: usize) -> u64 {
-    args.get(i).and_then(|v| v.as_u64()).unwrap_or(0)
-}
-
-/// Read the `i`-th `Custom` argument as a boolean (false when missing or not
-/// a boolean).
-/// Convert a `Custom` array argument into a `Vec<String>` (empty when absent
-/// or not an array of strings).
-fn json_string_vec(arg: Option<&Value>) -> Vec<String> {
-    arg.and_then(|v| v.as_array())
-        .map(|arr| {
-            arr.iter()
-                .filter_map(|x| x.as_str().map(str::to_string))
-                .collect()
-        })
-        .unwrap_or_default()
+fn unsupported_with_reason(name: &str, reason: String) -> ScriptEffect {
+    ScriptEffect::UnsupportedCommand {
+        name: name.to_string(),
+        reason: Some(reason),
+    }
 }
 
 fn resolve_placeholders(text: &str, player_name: &str, rival_name: &str, starter_name: &str) -> String {
@@ -1011,7 +982,7 @@ mod name_rater_tests {
         });
         assert!(matches!(
             eff,
-            ScriptEffect::UnsupportedCommand { ref name } if name == "notRegistered"
+            ScriptEffect::UnsupportedCommand { ref name, .. } if name == "notRegistered"
         ));
     }
 
@@ -1022,7 +993,7 @@ mod name_rater_tests {
         });
         assert!(matches!(
             eff,
-            ScriptEffect::UnsupportedCommand { ref name } if name == "setWeather"
+            ScriptEffect::UnsupportedCommand { ref name, .. } if name == "setWeather"
         ));
     }
 }

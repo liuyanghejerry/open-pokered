@@ -53,6 +53,7 @@ pub mod pokemon_data;
 pub mod sgb_palettes;
 pub mod save;
 pub mod scene_loader;
+pub mod script_command;
 #[cfg(feature = "script-boa")]
 pub mod script_api;
 pub mod sign_data;
