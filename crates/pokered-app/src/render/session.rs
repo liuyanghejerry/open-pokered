@@ -22,10 +22,12 @@ use pokered_core::slots_screen::SlotsPhase;
 use pokered_core::stats_screen::StatsPage;
 use pokered_core::title_screen::{TitlePhase, TitleScreenState};
 use pokered_core::town_map_screen::TownMapMode;
-use pokered_data::map_names::{map_name_str, map_name_str_zh};
 use pokered_data::maps::MapId;
 use pokered_data::species::Species;
-use pokered_renderer::embedded_font::measure_text;
+use pokered_data::ui_layout::schema::{
+    BATTLE_BAG_DEFAULT_LAYOUT, BATTLE_PARTY_DEFAULT_LAYOUT, START_DEFAULT_LAYOUT,
+    YES_NO_DEFAULT_LAYOUT,
+};
 use pokered_renderer::FrameBuffer;
 use pokered_ui::TilePos;
 
@@ -1792,28 +1794,6 @@ impl TownMapVisualKey {
     }
 }
 
-fn town_map_label_width(map: MapId, lang: Lang) -> u32 {
-    pokered_data::town_map_data::town_map_position(map)
-        .map(|(_, _, name)| {
-            measure_text(if lang == Lang::Zh {
-                map_name_str_zh(name)
-            } else {
-                map_name_str(name)
-            })
-        })
-        .unwrap_or(0)
-}
-
-fn town_map_reticle_overlaps_view_box(map: MapId) -> bool {
-    pokered_data::town_map_data::town_map_position(map)
-        .is_some_and(|(_, y, _)| y as u32 * 8 + 5 + 16 > 15 * 8)
-}
-
-fn town_map_marker_is_behind_view_box(map: MapId) -> bool {
-    pokered_data::town_map_data::town_map_position(map)
-        .is_some_and(|(_, y, _)| (y as u32 + 1) * 8 >= 15 * 8)
-}
-
 /// Result of rendering a frame. Damage rectangles borrow the session until the
 /// frontend finishes presenting; they never expose simulation state.
 pub enum FrameUpdate<'a> {
@@ -2308,241 +2288,137 @@ impl RenderSession {
         if redraw {
             let main_menu_damage = main_menu_cursor_change.map(|(previous, current)| {
                 [
-                    main_menu_cursor_damage(previous, game.state.config.language),
-                    main_menu_cursor_damage(current, game.state.config.language),
+                    pokered_ui::menus::main::cursor_damage(previous, game.state.config.language).into(),
+                    pokered_ui::menus::main::cursor_damage(current, game.state.config.language).into(),
                 ]
             });
             let start_menu_damage = start_menu_cursor_change.map(|(previous, current)| {
                 [
-                    start_menu_cursor_damage(previous),
-                    start_menu_cursor_damage(current),
+                    pokered_ui::menus::start::cursor_damage(previous, &START_DEFAULT_LAYOUT).into(),
+                    pokered_ui::menus::start::cursor_damage(current, &START_DEFAULT_LAYOUT).into(),
                 ]
             });
             let options_damage = options_cursor_change.map(|(previous, current)| {
                 [
-                    options_cursor_damage(previous),
-                    options_cursor_damage(current),
+                    pokered_ui::menus::options::cursor_damage(TilePos::new(previous.0, previous.1)).into(),
+                    pokered_ui::menus::options::cursor_damage(TilePos::new(current.0, current.1)).into(),
                 ]
             });
             let save_damage = save_cursor_change.map(|(previous, current)| {
-                [save_cursor_damage(previous), save_cursor_damage(current)]
+                [
+                    pokered_ui::menus::save::cursor_damage(previous).into(),
+                    pokered_ui::menus::save::cursor_damage(current).into(),
+                ]
             });
             let bag_list_cursor_damage = bag_list_cursor_change.map(|(previous, current)| {
-                [bag_cursor_damage(previous), bag_cursor_damage(current)]
+                [
+                    pokered_ui::menus::bag::cursor_damage(previous).into(),
+                    pokered_ui::menus::bag::cursor_damage(current).into(),
+                ]
             });
             let bag_action_cursor_damage = bag_action_cursor_change.map(|(previous, current)| {
                 [
-                    bag_action_cursor_damage(previous),
-                    bag_action_cursor_damage(current),
+                    pokered_ui::menus::bag::action_cursor_damage(previous).into(),
+                    pokered_ui::menus::bag::action_cursor_damage(current).into(),
                 ]
             });
             let bag_quantity_damage = bag_quantity_change
-                .map(|(previous, current)| [bag_quantity_damage(previous, current)]);
+                .map(|(previous, current)| [pokered_ui::menus::bag::quantity_damage(previous, current).into()]);
             let party_selection_damage = party_selection_change.map(|previous_cursor| {
                 [
-                    party_selection_damage(previous_cursor),
-                    party_selection_damage(game.party_screen.cursor()),
+                    pokered_ui::menus::party::selection_damage(previous_cursor).into(),
+                    pokered_ui::menus::party::selection_damage(game.party_screen.cursor()).into(),
                 ]
             });
             let party_icon_damage_rects = party_icon_animation_change
-                .then_some([party_icon_damage(game.party_screen.cursor())]);
+                .then_some([pokered_ui::menus::party::icon_damage(game.party_screen.cursor()).into()]);
             let pokedex_cursor_damage = pokedex_cursor_change.map(|(previous, current)| {
                 [
-                    FrameDamageRect {
-                        x: previous.0,
-                        y: previous.1,
-                        width: 8,
-                        height: 9,
-                    },
-                    FrameDamageRect {
-                        x: current.0,
-                        y: current.1,
-                        width: 8,
-                        height: 9,
-                    },
+                    pokered_ui::DamageRect::cursor_pixels(previous.0, previous.1).into(),
+                    pokered_ui::DamageRect::cursor_pixels(current.0, current.1).into(),
                 ]
             });
             let pc_cursor_damage = pc_cursor_change.map(|(previous, current)| {
                 [
-                    FrameDamageRect {
-                        x: previous.0,
-                        y: previous.1,
-                        width: 5,
-                        height: 10,
-                    },
-                    FrameDamageRect {
-                        x: current.0,
-                        y: current.1,
-                        width: 5,
-                        height: 10,
-                    },
+                    pokered_ui::DamageRect::compact_cursor_pixels(previous.0, previous.1).into(),
+                    pokered_ui::DamageRect::compact_cursor_pixels(current.0, current.1).into(),
                 ]
             });
             let slots_cursor_damage = slots_cursor_change.map(|(previous, current)| {
                 [
-                    FrameDamageRect {
-                        x: previous.0,
-                        y: previous.1,
-                        width: 5,
-                        height: 10,
-                    },
-                    FrameDamageRect {
-                        x: current.0,
-                        y: current.1,
-                        width: 5,
-                        height: 10,
-                    },
+                    pokered_ui::DamageRect::compact_cursor_pixels(previous.0, previous.1).into(),
+                    pokered_ui::DamageRect::compact_cursor_pixels(current.0, current.1).into(),
                 ]
             });
             let auxiliary_menu_cursor_damage =
                 auxiliary_menu_cursor_change.map(|(previous, current)| {
                     [
-                        FrameDamageRect {
-                            x: previous.0,
-                            y: previous.1,
-                            width: 5,
-                            height: 10,
-                        },
-                        FrameDamageRect {
-                            x: current.0,
-                            y: current.1,
-                            width: 5,
-                            height: 10,
-                        },
+                        pokered_ui::DamageRect::compact_cursor_pixels(previous.0, previous.1).into(),
+                        pokered_ui::DamageRect::compact_cursor_pixels(current.0, current.1).into(),
                     ]
                 });
             let shop_cursor_damage = shop_cursor_change.map(|(previous, current)| {
                 [
-                    FrameDamageRect {
-                        x: previous.0 * 8,
-                        y: previous.1 * 8,
-                        width: 8,
-                        height: 9,
-                    },
-                    FrameDamageRect {
-                        x: current.0 * 8,
-                        y: current.1 * 8,
-                        width: 8,
-                        height: 9,
-                    },
+                    pokered_ui::DamageRect::cursor(TilePos::new(previous.0, previous.1)).into(),
+                    pokered_ui::DamageRect::cursor(TilePos::new(current.0, current.1)).into(),
                 ]
             });
             let party_overlay_cursor_damage =
-                party_overlay_cursor_change.map(|(previous, current, icon_changed)| {
-                    (
+                party_overlay_cursor_change.and_then(|(previous, current, icon_changed)| {
+                    let previous = pokered_ui::menus::party::overlay_cursor_damage(
+                        &game.party_screen,
+                        previous,
+                        game.state.config.language,
+                    )?;
+                    let current = pokered_ui::menus::party::overlay_cursor_damage(
+                        &game.party_screen,
+                        current,
+                        game.state.config.language,
+                    )?;
+                    Some((
                         [
-                            party_overlay_cursor_damage(
-                                &game.party_screen,
-                                previous,
-                                game.state.config.language,
-                            ),
-                            party_overlay_cursor_damage(
-                                &game.party_screen,
-                                current,
-                                game.state.config.language,
-                            ),
-                            party_icon_damage(game.party_screen.cursor()),
+                            previous.into(),
+                            current.into(),
+                            pokered_ui::menus::party::icon_damage(game.party_screen.cursor()).into(),
                         ],
                         icon_changed,
-                    )
+                    ))
                 });
             let town_map_marker_damage = town_map_marker_animation_change
-                .then(|| {
-                    pokered_data::town_map_data::town_map_position(
-                        game.town_map_screen.current_map(),
-                    )
-                    .map(|(x, y, _)| {
-                        [FrameDamageRect {
-                            x: (x as u32 + 2) * 8,
-                            y: (y as u32 + 1) * 8,
-                            width: 8,
-                            height: 8,
-                        }]
-                    })
-                })
+                .then(|| super::town_map::marker_damage(game.town_map_screen.current_map())
+                    .map(|rect| [rect.into()]))
                 .flatten();
             let town_map_cursor_damage = town_map_cursor_change.and_then(|previous_map| {
-                let (old_x, old_y, _) =
-                    pokered_data::town_map_data::town_map_position(previous_map)?;
-                let (new_x, new_y, _) = pokered_data::town_map_data::town_map_position(
-                    game.town_map_screen.selected_map(),
-                )?;
-                let (marker_x, marker_y, _) = pokered_data::town_map_data::town_map_position(
-                    game.town_map_screen.current_map(),
-                )?;
-                let label = if game.town_map_screen.mode() == TownMapMode::Fly {
-                    FrameDamageRect {
-                        x: 0,
-                        y: 0,
-                        width: 160,
-                        height: 16,
-                    }
-                } else {
-                    if town_map_reticle_overlaps_view_box(previous_map)
-                        || town_map_reticle_overlaps_view_box(game.town_map_screen.selected_map())
-                        || town_map_marker_is_behind_view_box(game.town_map_screen.current_map())
-                    {
-                        FrameDamageRect {
-                            x: 0,
-                            y: 15 * 8,
-                            width: 160,
-                            height: 3 * 8,
-                        }
-                    } else {
-                        FrameDamageRect {
-                            x: 8,
-                            y: 16 * 8,
-                            width: town_map_label_width(previous_map, game.state.config.language)
-                                .max(town_map_label_width(
-                                    game.town_map_screen.selected_map(),
-                                    game.state.config.language,
-                                ))
-                                .min(18 * 8),
-                            height: 13,
-                        }
-                    }
-                };
-                Some([
-                    FrameDamageRect {
-                        x: old_x as u32 * 8 + 12,
-                        y: old_y as u32 * 8 + 5,
-                        width: 16,
-                        height: 16,
-                    },
-                    FrameDamageRect {
-                        x: new_x as u32 * 8 + 12,
-                        y: new_y as u32 * 8 + 5,
-                        width: 16,
-                        height: 16,
-                    },
-                    FrameDamageRect {
-                        x: (marker_x as u32 + 2) * 8,
-                        y: (marker_y as u32 + 1) * 8,
-                        width: 8,
-                        height: 8,
-                    },
-                    label,
-                ])
+                super::town_map::cursor_damage(
+                    &game.town_map_screen,
+                    previous_map,
+                    game.state.config.language,
+                )
+                .map(|rects| rects.map(Into::into))
             });
             let battle_safari_damage = battle_safari_cursor_change.map(|(previous, current)| {
                 [
-                    battle_safari_cursor_damage(previous),
-                    battle_safari_cursor_damage(current),
+                    pokered_ui::menus::battle_safari::cursor_damage(previous.0, previous.1).into(),
+                    pokered_ui::menus::battle_safari::cursor_damage(current.0, current.1).into(),
                 ]
             });
             let battle_menu_damage = battle_menu_cursor_change.map(|(previous, current)| {
                 [
-                    battle_menu_cursor_damage(previous),
-                    battle_menu_cursor_damage(current),
+                    pokered_ui::menus::battle_main::cursor_damage(previous.0, previous.1).into(),
+                    pokered_ui::menus::battle_main::cursor_damage(current.0, current.1).into(),
                 ]
             });
             let battle_move_damage = battle_move_cursor_change.map(|(previous, current)| {
-                battle_move_menu_damage(previous, current, game.state.config.language)
+                pokered_ui::menus::battle_move::selection_damage(
+                    previous,
+                    current,
+                    game.state.config.language,
+                ).map(Into::into)
             });
             let battle_bag_damage = battle_bag_cursor_change.map(|(previous, current)| {
                 [
-                    battle_bag_cursor_damage(previous),
-                    battle_bag_cursor_damage(current),
+                    pokered_ui::menus::battle_bag::cursor_damage(previous, &BATTLE_BAG_DEFAULT_LAYOUT).into(),
+                    pokered_ui::menus::battle_bag::cursor_damage(current, &BATTLE_BAG_DEFAULT_LAYOUT).into(),
                 ]
             });
             let battle_party_cursor_damage = match battle_party_menu_change {
@@ -2550,8 +2426,8 @@ impl RenderSession {
                     previous_row,
                     current_row,
                 }) => Some([
-                    battle_party_cursor_damage(previous_row),
-                    battle_party_cursor_damage(current_row),
+                    pokered_ui::menus::battle_party::cursor_damage(previous_row, &BATTLE_PARTY_DEFAULT_LAYOUT).into(),
+                    pokered_ui::menus::battle_party::cursor_damage(current_row, &BATTLE_PARTY_DEFAULT_LAYOUT).into(),
                 ]),
                 _ => None,
             };
@@ -2559,12 +2435,12 @@ impl RenderSession {
                 battle_party_menu_change,
                 Some(BattlePartyMenuChange::Viewport { .. })
             )
-            .then_some([battle_party_viewport_damage()]);
+            .then_some([pokered_ui::menus::battle_party::viewport_damage(&BATTLE_PARTY_DEFAULT_LAYOUT).into()]);
             let battle_yes_no_damage =
                 battle_yes_no_cursor_change.map(|(previous_yes, current_yes)| {
                     [
-                        battle_yes_no_cursor_damage(previous_yes),
-                        battle_yes_no_cursor_damage(current_yes),
+                        pokered_ui::menus::yes_no::cursor_damage(if previous_yes { 0 } else { 1 }, &YES_NO_DEFAULT_LAYOUT).into(),
+                        pokered_ui::menus::yes_no::cursor_damage(if current_yes { 0 } else { 1 }, &YES_NO_DEFAULT_LAYOUT).into(),
                     ]
                 });
             let damage = if let Some(rects) = main_menu_damage.as_ref() {
@@ -2770,187 +2646,4 @@ fn draw_full(
         scroll_background,
         reuse_composited_overworld,
     );
-}
-
-#[inline]
-fn battle_menu_cursor_damage((row, col): (usize, usize)) -> FrameDamageRect {
-    pokered_ui::menus::battle_main::cursor_damage(row, col).into()
-}
-
-fn battle_safari_cursor_damage((row, col): (usize, usize)) -> FrameDamageRect {
-    pokered_ui::menus::battle_safari::cursor_damage(row, col).into()
-}
-
-fn battle_move_menu_damage(
-    previous: usize,
-    current: usize,
-    language: Lang,
-) -> [FrameDamageRect; 3] {
-    let (cursor_x, cursor_y, cursor_step, info_y, info_height) = if language == Lang::Zh {
-        (8, 96, 10, 72, 16)
-    } else {
-        (5 * 8, 13 * 8, 8, 80, 18)
-    };
-    let cursor_damage = |selected: usize| FrameDamageRect {
-        x: cursor_x,
-        y: cursor_y + selected as u32 * cursor_step,
-        width: 8,
-        height: 9,
-    };
-    [
-        FrameDamageRect {
-            x: 8,
-            y: info_y,
-            width: 72,
-            height: info_height,
-        },
-        cursor_damage(previous),
-        cursor_damage(current),
-    ]
-}
-
-#[inline]
-fn battle_bag_cursor_damage(cursor: usize) -> FrameDamageRect {
-    FrameDamageRect {
-        x: 6 * 8,
-        y: (12 + cursor as u32) * 8,
-        width: 8,
-        height: 9,
-    }
-}
-
-#[inline]
-fn battle_party_cursor_damage(row: usize) -> FrameDamageRect {
-    FrameDamageRect {
-        x: 2 * 8,
-        y: (13 + row as u32) * 8,
-        width: 8,
-        height: 9,
-    }
-}
-
-#[inline]
-fn battle_party_viewport_damage() -> FrameDamageRect {
-    FrameDamageRect {
-        x: 2 * 8,
-        y: 13 * 8 - 1,
-        width: 16 * 8,
-        height: 4 * 8 + 6,
-    }
-}
-
-#[inline]
-fn battle_yes_no_cursor_damage(yes: bool) -> FrameDamageRect {
-    let selected = if yes { 0 } else { 1 };
-    FrameDamageRect {
-        x: 12 * 8,
-        y: (9 + selected * 2) * 8,
-        width: 8,
-        height: 9,
-    }
-}
-
-#[inline]
-fn main_menu_cursor_damage(cursor: usize, language: Lang) -> FrameDamageRect {
-    FrameDamageRect {
-        x: 8,
-        y: (2 + cursor as u32 * 2) * 8,
-        width: if language == Lang::Zh { 10 } else { 8 },
-        height: if language == Lang::Zh { 10 } else { 9 },
-    }
-}
-
-#[inline]
-fn start_menu_cursor_damage(cursor: usize) -> FrameDamageRect {
-    FrameDamageRect {
-        x: 11 * 8,
-        y: (2 + cursor as u32 * 2) * 8,
-        width: 8,
-        height: 9,
-    }
-}
-
-#[inline]
-fn options_cursor_damage(cursor: (u32, u32, char)) -> FrameDamageRect {
-    let rect = pokered_ui::menus::options::cursor_damage(TilePos::new(cursor.0, cursor.1));
-    FrameDamageRect::from(rect)
-}
-
-#[inline]
-fn save_cursor_damage(cursor: YesNoChoice) -> FrameDamageRect {
-    pokered_ui::menus::save::cursor_damage(cursor).into()
-}
-
-#[inline]
-fn bag_cursor_damage(cursor: TilePos) -> FrameDamageRect {
-    FrameDamageRect {
-        x: cursor.tx * 8,
-        y: cursor.ty * 8,
-        width: 8,
-        height: 9,
-    }
-}
-
-#[inline]
-fn bag_action_cursor_damage(cursor: u8) -> FrameDamageRect {
-    FrameDamageRect {
-        x: 13 * 8,
-        y: (12 + cursor as u32 * 2) * 8,
-        width: 8,
-        height: 9,
-    }
-}
-
-#[inline]
-fn bag_quantity_damage(previous: u32, current: u32) -> FrameDamageRect {
-    let text_width = |mut qty| {
-        let mut digits = 1;
-        while qty >= 10 {
-            qty /= 10;
-            digits += 1;
-        }
-        (1 + digits.max(2)) * 8
-    };
-    FrameDamageRect {
-        x: 7 * 8,
-        y: 15 * 8,
-        width: text_width(previous).max(text_width(current)),
-        height: 10,
-    }
-}
-
-#[inline]
-fn party_selection_damage(cursor: usize) -> FrameDamageRect {
-    FrameDamageRect {
-        x: 0,
-        y: cursor as u32 * 24,
-        width: 24,
-        height: 16,
-    }
-}
-
-#[inline]
-fn party_icon_damage(cursor: usize) -> FrameDamageRect {
-    FrameDamageRect {
-        x: 8,
-        y: cursor as u32 * 24,
-        width: 16,
-        height: 16,
-    }
-}
-
-#[inline]
-fn party_overlay_cursor_damage(
-    state: &pokered_core::party_screen::PartyScreenState,
-    cursor: u8,
-    language: Lang,
-) -> FrameDamageRect {
-    let position = pokered_ui::menus::party::overlay_cursor_position(state, cursor, language)
-        .unwrap_or(TilePos::new(0, 0));
-    FrameDamageRect {
-        x: position.tx * 8,
-        y: position.ty * 8,
-        width: 8,
-        height: 9,
-    }
 }

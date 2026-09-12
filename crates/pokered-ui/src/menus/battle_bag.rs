@@ -77,6 +77,17 @@ pub fn redraw_cursor<P: Painter>(
     );
 }
 
+/// Cursor ink region for the authored battle-bag layout.
+pub fn cursor_damage(selected: usize, layout: &BattleBagDefaultLayout) -> crate::DamageRect {
+    crate::DamageRect::cursor(TilePos::new(
+        layout.list.rect.tx + 2,
+        layout.list.rect.ty
+            + 1
+            + layout.list.padding.top
+            + selected as u32 * (1 + layout.list.gap),
+    ))
+}
+
 fn clamp(val: u32, min: Option<u32>, max: Option<u32>) -> u32 {
     let v = min.map_or(val, |m| val.max(m));
     max.map_or(v, |m| v.min(m))

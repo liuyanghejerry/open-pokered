@@ -10,6 +10,71 @@ use pokered_renderer::{FrameBuffer, Rgba, TILE_SIZE};
 
 use super::{blit_single_tile, draw_text_box};
 
+/// Region changed by one phase of the current-location marker.
+pub fn marker_damage(current_map: pokered_data::maps::MapId) -> Option<pokered_ui::DamageRect> {
+    town_map_position(current_map).map(|(x, y, _)| {
+        pokered_ui::DamageRect::new(
+            (x as u32 + 2) * TILE_SIZE,
+            (y as u32 + 1) * TILE_SIZE,
+            TILE_SIZE,
+            TILE_SIZE,
+        )
+    })
+}
+
+/// Regions changed by [`redraw_town_map_cursor`].
+pub fn cursor_damage(
+    state: &TownMapScreenState,
+    previous_map: pokered_data::maps::MapId,
+    lang: Lang,
+) -> Option<[pokered_ui::DamageRect; 4]> {
+    let (old_x, old_y, old_name) = town_map_position(previous_map)?;
+    let (new_x, new_y, new_name) = town_map_position(state.selected_map())?;
+    let marker = marker_damage(state.current_map())?;
+    let label = if state.mode() == TownMapMode::Fly {
+        pokered_ui::DamageRect::new(0, 0, 160, 2 * TILE_SIZE)
+    } else {
+        let overlaps_view_box = [(old_y, old_name), (new_y, new_name)]
+            .iter()
+            .any(|(y, _)| *y as u32 * TILE_SIZE + 5 + 16 > 15 * TILE_SIZE);
+        let marker_is_behind_box = town_map_position(state.current_map())
+            .is_some_and(|(_, y, _)| (y as u32 + 1) * TILE_SIZE >= 15 * TILE_SIZE);
+        if overlaps_view_box || marker_is_behind_box {
+            pokered_ui::DamageRect::new(0, 15 * TILE_SIZE, 160, 3 * TILE_SIZE)
+        } else {
+            let label_width = |name| {
+                measure_text(if lang == Lang::Zh {
+                    map_name_str_zh(name)
+                } else {
+                    map_name_str(name)
+                })
+            };
+            pokered_ui::DamageRect::new(
+                TILE_SIZE,
+                16 * TILE_SIZE,
+                label_width(old_name).max(label_width(new_name)).min(18 * TILE_SIZE),
+                13,
+            )
+        }
+    };
+    Some([
+        pokered_ui::DamageRect::new(
+            old_x as u32 * TILE_SIZE + 12,
+            old_y as u32 * TILE_SIZE + 5,
+            16,
+            16,
+        ),
+        pokered_ui::DamageRect::new(
+            new_x as u32 * TILE_SIZE + 12,
+            new_y as u32 * TILE_SIZE + 5,
+            16,
+            16,
+        ),
+        marker,
+        label,
+    ])
+}
+
 /// Draw the Town Map viewer: the full 20×18 Kanto tilemap, a selection reticle
 /// around the browse cursor's landmark, a flashing "you are here" marker at the
 /// player's current location, and the highlighted landmark's name in a box.

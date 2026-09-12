@@ -309,6 +309,25 @@ pub fn overlay_cursor_position(
     ))
 }
 
+/// Icon-and-cursor region repainted when list selection changes.
+pub fn selection_damage(cursor: usize) -> crate::DamageRect {
+    crate::DamageRect::new(0, cursor as u32 * 24, 24, 16)
+}
+
+/// Animated icon region for one party row.
+pub fn icon_damage(cursor: usize) -> crate::DamageRect {
+    crate::DamageRect::new(8, cursor as u32 * 24, 16, 16)
+}
+
+/// Cursor ink region for an action/choose-move overlay.
+pub fn overlay_cursor_damage(
+    state: &PartyScreenState,
+    cursor: u8,
+    lang: Lang,
+) -> Option<crate::DamageRect> {
+    overlay_cursor_position(state, cursor, lang).map(crate::DamageRect::cursor)
+}
+
 #[cfg(test)]
 mod move_choice_tests {
     use super::*;

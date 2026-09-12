@@ -83,8 +83,12 @@ only the filesystem/PNG provider and the preconverted ROM registry/cache remain
 platform-specific. Script representation APIs are also feature-gated now: native
 builds expose scene-AST loading, while Boa builds expose raw-JavaScript loading;
 unsupported engine/custom commands produce an observable error effect instead of
-silently succeeding as `Void`. Remaining boundary work is explicit: move remaining
-legacy menu damage geometry into the owning UI modules.
+silently succeeding as `Void`. Incremental-menu damage footprints now live beside
+their UI/renderer implementations (including Town Map's layered regions), while
+`RenderSession` only chooses between reuse, full redraw and those declared regions.
+The remaining script-boundary debt is the duplicated Pokémon verb/argument schema
+between the Boa registrar and native host; that should be generated from one typed
+command catalog rather than replaced with another hand-written dispatcher.
 The cursor erasure fast paths still assume the current arrow's 8×9 ink footprint
 and plain background; this is now an explicit UI-owned damage contract, but it
 is not inferred from glyph metrics. Changing those authored shapes requires

@@ -110,6 +110,34 @@ pub fn cursor_position(item_count: usize, cursor: usize, layout: &BagDefaultLayo
     )
 }
 
+/// Ink region changed when repainting a browsing/swap cursor cell.
+pub fn cursor_damage(position: crate::engine::TilePos) -> crate::DamageRect {
+    crate::DamageRect::cursor(position)
+}
+
+/// Ink region changed by the USE/TOSS/CANCEL cursor.
+pub fn action_cursor_damage(cursor: u8) -> crate::DamageRect {
+    crate::DamageRect::cursor(crate::engine::TilePos::new(13, 12 + cursor as u32 * 2))
+}
+
+/// Union of the old/new `xNN` value ink regions in the toss prompt.
+pub fn quantity_damage(previous: u32, current: u32) -> crate::DamageRect {
+    let text_width = |mut qty| {
+        let mut digits = 1;
+        while qty >= 10 {
+            qty /= 10;
+            digits += 1;
+        }
+        (1 + digits.max(2)) * 8
+    };
+    crate::DamageRect::new(
+        7 * 8,
+        15 * 8,
+        text_width(previous).max(text_width(current)),
+        10,
+    )
+}
+
 /// Repaint only the changed browsing/swap cursor cells.
 pub fn redraw_cursor<P: Painter>(
     previous: crate::engine::TilePos,

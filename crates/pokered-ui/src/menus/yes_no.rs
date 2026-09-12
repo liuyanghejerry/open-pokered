@@ -56,3 +56,11 @@ pub fn redraw_cursor<P: Painter>(
         layout.cursor.color.into(),
     );
 }
+
+/// Cursor ink region for one choice in the authored yes/no layout.
+pub fn cursor_damage(selected: usize, layout: &YesNoDefaultLayout) -> crate::DamageRect {
+    crate::DamageRect::cursor(TilePos::new(
+        layout.box_0.rect.tx + 1,
+        layout.box_0.rect.ty + 1 + selected as u32 * 2,
+    ))
+}

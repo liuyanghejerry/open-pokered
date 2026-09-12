@@ -106,3 +106,13 @@ pub fn redraw_cursor<P: Painter>(
         painter.draw_glyph(position(current_cursor), '▶', Rgba::INK_BLACK);
     }
 }
+
+/// Cursor ink region used by the compiled main-menu renderer.
+pub fn cursor_damage(cursor: usize, lang: Lang) -> crate::DamageRect {
+    let position = TilePos::new(1, 2 + cursor as u32 * 2);
+    if lang == Lang::Zh {
+        crate::DamageRect::new(position.tx * 8, position.ty * 8, 10, 10)
+    } else {
+        crate::DamageRect::cursor(position)
+    }
+}

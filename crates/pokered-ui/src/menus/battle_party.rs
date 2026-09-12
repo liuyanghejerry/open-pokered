@@ -89,6 +89,26 @@ pub fn redraw_cursor<P: Painter>(
     );
 }
 
+/// Cursor ink region for a viewport-relative party row.
+pub fn cursor_damage(row: usize, layout: &BattlePartyDefaultLayout) -> crate::DamageRect {
+    let cursor = &layout.cursor;
+    crate::DamageRect::cursor(TilePos::new(
+        layout.box_0.rect.tx + 1 + cursor.tx,
+        layout.box_0.rect.ty + 1 + cursor.base_ty + row as u32 * cursor.row_step,
+    ))
+}
+
+/// Label/cursor band changed when the four-entry viewport scrolls.
+pub fn viewport_damage(layout: &BattlePartyDefaultLayout) -> crate::DamageRect {
+    let rect = layout.box_0.rect;
+    crate::DamageRect::new(
+        (rect.tx + 1) * 8,
+        (rect.ty + 1) * 8 - 1,
+        rect.tw.saturating_sub(2) * 8,
+        rect.th.saturating_sub(2) * 8 + 6,
+    )
+}
+
 /// Finish a viewport scroll after the caller has shifted the retained label
 /// pixels. This clears and redraws only the newly exposed rows plus the cursor.
 pub fn redraw_viewport_edges<P: Painter>(

@@ -16,6 +16,11 @@ pub struct DamageRect {
 }
 
 impl DamageRect {
+    /// Creates a pixel-space damage rectangle.
+    pub const fn new(x: u32, y: u32, width: u32, height: u32) -> Self {
+        Self { x, y, width, height }
+    }
+
     /// Current cursor glyphs occupy one tile plus one ink row below it.
     pub const fn cursor(pos: TilePos) -> Self {
         let tile = pokered_data::TILE_SIZE_PX;
@@ -25,5 +30,15 @@ impl DamageRect {
             width: tile,
             height: tile + 1,
         }
+    }
+
+    /// Current cursor glyph footprint at a pixel-space origin.
+    pub const fn cursor_pixels(x: u32, y: u32) -> Self {
+        Self::new(x, y, pokered_data::TILE_SIZE_PX, pokered_data::TILE_SIZE_PX + 1)
+    }
+
+    /// Compact proportional cursor footprint used by non-tile-aligned menus.
+    pub const fn compact_cursor_pixels(x: u32, y: u32) -> Self {
+        Self::new(x, y, 5, 10)
     }
 }

@@ -84,6 +84,33 @@ pub fn redraw_selection<P: Painter>(
     redraw_en_selected_info(state, layout, ui.painter(), render_data);
 }
 
+/// Regions changed by [`redraw_selection`].
+pub fn selection_damage(
+    previous: usize,
+    current: usize,
+    lang: pokered_core::game_state::Lang,
+) -> [crate::DamageRect; 3] {
+    let (cursor_x, cursor_y, cursor_step, info_y, info_height) =
+        if lang == pokered_core::game_state::Lang::Zh {
+            (8, 96, 10, 72, 16)
+        } else {
+            (5 * 8, 13 * 8, 8, 80, 18)
+        };
+    let cursor = |selected: usize| {
+        crate::DamageRect::new(
+            cursor_x,
+            cursor_y + selected as u32 * cursor_step,
+            8,
+            9,
+        )
+    };
+    [
+        crate::DamageRect::new(8, info_y, 72, info_height),
+        cursor(previous),
+        cursor(current),
+    ]
+}
+
 fn redraw_en_selected_info<P: Painter>(
     state: &MoveMenuState,
     layout: &BattleMoveDefaultLayout,

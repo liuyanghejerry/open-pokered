@@ -123,6 +123,15 @@ pub fn redraw_cursor<P: Painter>(
     }
 }
 
+/// Cursor ink region for a START-menu row.
+pub fn cursor_damage(cursor: usize, layout: &StartDefaultLayout) -> crate::DamageRect {
+    crate::DamageRect::cursor(TilePos::new(
+        layout.menu.rect.tx + 1,
+        layout.menu.rect.ty + 1 + layout.menu.padding.top
+            + cursor as u32 * (1 + layout.menu.gap),
+    ))
+}
+
 fn clamp(val: u32, min: Option<u32>, max: Option<u32>) -> u32 {
     let v = min.map_or(val, |m| val.max(m));
     max.map_or(v, |m| v.min(m))
