@@ -510,6 +510,24 @@ class Game:
         s = self.st()
         return s["map_name"], s["player_x"], s["player_y"]
 
+    def navigation_snapshot_changed(self, state):
+        """Recheck a failed plan before treating it as a navigation error.
+
+        The headless game keeps advancing while the driver computes a path.
+        Trainer sight can therefore replace an overworld snapshot with a
+        dialogue or battle before BFS reports that the old position is
+        unreachable. Let the outer navigation loop handle that interruption
+        instead of turning a stale observation into a false path failure.
+        """
+        current = self.st()
+        keys = ("screen", "map_name", "player_x", "player_y",
+                "dialogue_state")
+        return any(current.get(key) != state.get(key) for key in keys)
+
+    def destination_blocked_by_live_npc(self, current_map, target_map, x, y):
+        """Whether a moving NPC temporarily occupies the requested tile."""
+        return current_map == target_map and (x, y) in self.live_npcs(current_map)
+
     def live_npcs(self, map_name):
         data = self.d.cmd(cmd="get_npcs")["data"]
         npcs = data.get("npcs", data) if isinstance(data, dict) else data
@@ -579,6 +597,11 @@ class Game:
                            | (warp_tiles(cm) - {(x, y)}),
                            allow_spinners=getattr(self, "smart_moves", False))
             if not path:
+                if self.navigation_snapshot_changed(s):
+                    continue
+                if self.destination_blocked_by_live_npc(cm, map_name, x, y):
+                    self.step(200)
+                    continue
                 raise NavError(f"no path in {cm}: ({cx},{cy})->({x},{y})")
             dirs = [d for _, d in path[1:]]
             i = 0
@@ -699,6 +722,11 @@ class Game:
                                  allow_ledges=getattr(self, "smart_moves", False),
                                  excluded_maps=excluded_maps)
             if not path:
+                if self.navigation_snapshot_changed(s):
+                    continue
+                if self.destination_blocked_by_live_npc(cm, map_name, x, y):
+                    self.step(200)
+                    continue
                 raise NavError(f"no cross path: {cm}({cx},{cy}) "
                                f"-> {map_name}({x},{y}) "
                                f"blocked={sorted(blocked.get(cm, set()))}")
@@ -854,15 +882,21 @@ class Game:
         first and walk down through the mat."""
         if approach in DELTA:
             ax, ay = DELTA[approach]
-            try:
-                self.nav_to(x - ax, y - ay, map_name=from_map, tries=tries)
-            except NavError:
-                if to_map is not None and self.pos()[0] == to_map:
-                    assert self.cutscene(), f"{to_map} on-enter cutscene stalled"
-                    return to_map
-                raise
-            self.d.drive([approach] * (2 * FRAMES_PER_TILE + 32),
-                         frames=2 * FRAMES_PER_TILE + 40)
+            for _ in range(3):
+                try:
+                    self.nav_to(x - ax, y - ay, map_name=from_map,
+                                tries=tries)
+                except NavError:
+                    if to_map is not None and self.pos()[0] == to_map:
+                        assert self.cutscene(), f"{to_map} on-enter cutscene stalled"
+                        return to_map
+                    raise
+                self.d.drive([approach] * (2 * FRAMES_PER_TILE + 32),
+                             frames=2 * FRAMES_PER_TILE + 40)
+                destination = self._wait_for_warp(from_map, to_map)
+                if destination is not None:
+                    return destination
+            raise NavError(f"warp at ({x},{y}) never fired ({from_map})")
         else:
             try:
                 self.nav_to(x, y, map_name=from_map, tries=tries)
@@ -870,9 +904,12 @@ class Game:
                 # A warp may finish during nav_to's final settlement. That
                 # is success only for the explicitly requested destination;
                 # never reinterpret a blackout/unexpected map as success.
-                if to_map is not None and self.pos()[0] == to_map:
+                current_map = self.pos()[0]
+                if to_map is not None and current_map == to_map:
                     assert self.cutscene(), f"{to_map} on-enter cutscene stalled"
                     return to_map
+                if current_map != from_map:
+                    raise
                 # Model blocked (e.g. an NPC patrol sealed the single
                 # approach): walk to an inward neighbor and long-hold
                 # onto the warp instead.
@@ -892,8 +929,26 @@ class Game:
                 if outward_dir(from_map, x, y, d):
                     self.d.drive([d] * 40, frames=48)
                     break
+        destination = self._wait_for_warp(from_map, to_map)
+        if destination is not None:
+            return destination
+        raise NavError(f"warp at ({x},{y}) never fired ({from_map})")
+
+    def _wait_for_warp(self, from_map, to_map):
+        """Observe a warp attempt; return None when gameplay interrupted it."""
         for _ in range(40):
-            cm, _, _ = self.pos()
+            state = self.st()
+            cm = state["map_name"]
+            if state["screen"] == "battle":
+                prefer = ("fight" if state["script_awaiting_battle"]
+                          else "run")
+                self.battle_loop(prefer=prefer)
+                self.cutscene()
+                return None
+            if state.get("dialogue_state") is not None:
+                if not self.cutscene():
+                    raise NavError("warp approach dialogue did not finish")
+                return None
             if cm != from_map:
                 if to_map is not None:
                     assert cm == to_map, f"unexpected warp target {cm}"
@@ -902,7 +957,7 @@ class Game:
                 assert self.cutscene(), f"{cm} on-enter cutscene stalled"
                 return cm
             self.step(10)
-        raise NavError(f"warp at ({x},{y}) never fired ({from_map})")
+        return None
 
     # ── cutscenes & dialogue ────────────────────────────────────────────
     def cutscene(self, max_rounds=300):
