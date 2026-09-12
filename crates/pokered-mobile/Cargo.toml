@@ -1,0 +1,16 @@
+[package]
+name = "pokered-mobile"
+version.workspace = true
+edition.workspace = true
+
+[lib]
+crate-type = ["staticlib", "rlib"]
+
+[dependencies]
+dotzuki-mobile = { git = "https://github.com/liuyanghejerry/dotzuki", tag = "v0.6.0" }
+pokered-app = { path = "../pokered-app", default-features = false, features = ["mobile"] }
+pokered-core = { path = "../pokered-core" }
+pokered-renderer = { path = "../pokered-renderer", default-features = false, features = ["resource", "embedded-assets"] }
+
+[dev-dependencies]
+serde_json = "1"

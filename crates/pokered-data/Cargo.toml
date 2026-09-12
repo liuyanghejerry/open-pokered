@@ -21,7 +21,7 @@ num-traits = { workspace = true }
 thiserror = { workspace = true }
 log = "0.4"
 dotzuki-engine = { git = "https://github.com/liuyanghejerry/dotzuki", tag = "v0.6.0" }
-dotzuki-renderer = { git = "https://github.com/liuyanghejerry/dotzuki", tag = "v0.6.0" }
+dotzuki-renderer = { git = "https://github.com/liuyanghejerry/dotzuki", tag = "v0.6.0", default-features = false }
 
 [dev-dependencies]
 ron = { workspace = true }

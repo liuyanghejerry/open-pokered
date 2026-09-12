@@ -3,20 +3,28 @@ name = "pokered-app"
 version.workspace = true
 edition.workspace = true
 
+[[bin]]
+name = "pokered-app"
+path = "src/main.rs"
+required-features = ["desktop"]
+
 [features]
+default = ["desktop"]
+desktop = ["pokered-renderer/gpu", "pokered-ui/gpu", "dotzuki-app/desktop", "pokered-audio/cpal", "dep:clap", "dep:notify"]
+mobile = ["pokered-renderer/embedded-assets", "embedded-scripts", "embedded-map-data"]
 embedded-scripts = ["pokered-core/embedded-scripts"]
 embedded-map-data = ["pokered-core/embedded-map-data"]
-debug-server = ["pokered-debug-server"]
+debug-server = ["pokered-debug-server", "desktop"]
 
 [dependencies]
 pokered-core = { path = "../pokered-core" }
 pokered-data = { path = "../pokered-data" }
 dotzuki-engine = { git = "https://github.com/liuyanghejerry/dotzuki", tag = "v0.6.0" }
 dotzuki-engine-dsl = { git = "https://github.com/liuyanghejerry/dotzuki", tag = "v0.6.0" }
-pokered-renderer = { path = "../pokered-renderer" }
-dotzuki-renderer = { git = "https://github.com/liuyanghejerry/dotzuki", tag = "v0.6.0" }
-dotzuki-app = { git = "https://github.com/liuyanghejerry/dotzuki", tag = "v0.6.0" }
-pokered-ui = { path = "../pokered-ui" }
+pokered-renderer = { path = "../pokered-renderer", default-features = false, features = ["resource"] }
+dotzuki-renderer = { git = "https://github.com/liuyanghejerry/dotzuki", tag = "v0.6.0", default-features = false }
+dotzuki-app = { git = "https://github.com/liuyanghejerry/dotzuki", tag = "v0.6.0", default-features = false }
+pokered-ui = { path = "../pokered-ui", default-features = false }
 pokered-audio = { path = "../pokered-audio" }
 pokered-debug-server = { path = "../pokered-debug-server", optional = true }
 anyhow = { workspace = true }
@@ -29,9 +37,9 @@ image = { version = "0.25", default-features = false, features = ["png"] }
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 # Native device output comes from pokered-audio's `cpal` feature (the shared
 # `output::AudioOutput`, built on dotzuki-audio's cpal backend).
-pokered-audio = { path = "../pokered-audio", features = ["cpal"] }
-clap = { version = "4", features = ["derive"] }
-notify = "6"
+pokered-audio = { path = "../pokered-audio" }
+clap = { version = "4", features = ["derive"], optional = true }
+notify = { version = "6", optional = true }
 
 # The play_audio_test example drives a raw cpal stream for diagnostics.
 [target.'cfg(not(target_arch = "wasm32"))'.dev-dependencies]

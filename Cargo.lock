@@ -291,7 +291,7 @@ dependencies = [
  "bitflags 2.13.1",
  "cexpr",
  "clang-sys",
- "itertools 0.10.5",
+ "itertools 0.13.0",
  "proc-macro2",
  "quote",
  "regex",
@@ -1137,7 +1137,6 @@ dependencies = [
 [[package]]
 name = "dotzuki-app"
 version = "0.6.0"
-source = "git+https://github.com/liuyanghejerry/dotzuki?tag=v0.6.0#88f1fccd72c62fcb51ce036e5d2b211e37ac9051"
 dependencies = [
  "dotzuki-engine",
  "dotzuki-renderer",
@@ -1150,7 +1149,6 @@ dependencies = [
 [[package]]
 name = "dotzuki-audio"
 version = "0.6.0"
-source = "git+https://github.com/liuyanghejerry/dotzuki?tag=v0.6.0#88f1fccd72c62fcb51ce036e5d2b211e37ac9051"
 dependencies = [
  "bitflags 2.13.1",
  "cpal",
@@ -1164,7 +1162,6 @@ dependencies = [
 [[package]]
 name = "dotzuki-engine"
 version = "0.6.0"
-source = "git+https://github.com/liuyanghejerry/dotzuki?tag=v0.6.0#88f1fccd72c62fcb51ce036e5d2b211e37ac9051"
 dependencies = [
  "image",
  "serde",
@@ -1175,7 +1172,6 @@ dependencies = [
 [[package]]
 name = "dotzuki-engine-dsl"
 version = "0.6.0"
-source = "git+https://github.com/liuyanghejerry/dotzuki?tag=v0.6.0#88f1fccd72c62fcb51ce036e5d2b211e37ac9051"
 dependencies = [
  "dotzuki-engine-script",
  "miette",
@@ -1188,7 +1184,6 @@ dependencies = [
 [[package]]
 name = "dotzuki-engine-script"
 version = "0.6.0"
-source = "git+https://github.com/liuyanghejerry/dotzuki?tag=v0.6.0#88f1fccd72c62fcb51ce036e5d2b211e37ac9051"
 dependencies = [
  "boa_engine",
  "log",
@@ -1198,9 +1193,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "dotzuki-mobile"
+version = "0.6.0"
+
+[[package]]
 name = "dotzuki-renderer"
 version = "0.6.0"
-source = "git+https://github.com/liuyanghejerry/dotzuki?tag=v0.6.0#88f1fccd72c62fcb51ce036e5d2b211e37ac9051"
 dependencies = [
  "dotzuki-engine",
  "error-iter",
@@ -1218,7 +1216,6 @@ dependencies = [
 [[package]]
 name = "dotzuki-rules"
 version = "0.6.0"
-source = "git+https://github.com/liuyanghejerry/dotzuki?tag=v0.6.0#88f1fccd72c62fcb51ce036e5d2b211e37ac9051"
 dependencies = [
  "dotzuki-engine",
  "notify",
@@ -1230,7 +1227,6 @@ dependencies = [
 [[package]]
 name = "dotzuki-tui"
 version = "0.6.0"
-source = "git+https://github.com/liuyanghejerry/dotzuki?tag=v0.6.0#88f1fccd72c62fcb51ce036e5d2b211e37ac9051"
 dependencies = [
  "crossterm",
  "dotzuki-renderer",
@@ -1240,7 +1236,6 @@ dependencies = [
 [[package]]
 name = "dotzuki-ui"
 version = "0.6.0"
-source = "git+https://github.com/liuyanghejerry/dotzuki?tag=v0.6.0#88f1fccd72c62fcb51ce036e5d2b211e37ac9051"
 dependencies = [
  "dotzuki-engine",
  "dotzuki-renderer",
@@ -1249,7 +1244,6 @@ dependencies = [
 [[package]]
 name = "dotzuki-web"
 version = "0.6.0"
-source = "git+https://github.com/liuyanghejerry/dotzuki?tag=v0.6.0#88f1fccd72c62fcb51ce036e5d2b211e37ac9051"
 dependencies = [
  "dotzuki-audio",
  "dotzuki-engine",
@@ -3211,6 +3205,17 @@ dependencies = [
  "serde",
  "serde_json",
  "wasm-bindgen",
+]
+
+[[package]]
+name = "pokered-mobile"
+version = "0.1.0"
+dependencies = [
+ "dotzuki-mobile",
+ "pokered-app",
+ "pokered-core",
+ "pokered-renderer",
+ "serde_json",
 ]
 
 [[package]]

@@ -277,7 +277,7 @@ impl ResourceManager {
         let manager = dotzuki_renderer::resource::ResourceManager::new(root.0);
         // On wasm32/android/ios, assets are baked into the binary; load them
         // through the embedded registry instead of the file system.
-        #[cfg(any(target_arch = "wasm32", target_os = "android", target_os = "ios"))]
+        #[cfg(any(feature = "embedded-assets", target_arch = "wasm32", target_os = "android", target_os = "ios"))]
         let manager = {
             let mut manager = manager;
             manager.set_embedded_loader(crate::embedded::get_embedded_asset);
