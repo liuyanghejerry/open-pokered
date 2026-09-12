@@ -41,6 +41,8 @@ pub use evolution::draw_evolution;
 pub use evolution::{evolution_visual_key, EvolutionVisualKey};
 pub use gamefreak_splash::draw_gamefreak_splash;
 pub use hof_ceremony::draw_hof_ceremony;
+#[cfg(any(test, target_os = "none"))]
+pub use hof_ceremony::{hof_visual_key, HofVisualKey};
 pub use intro::draw_intro_scene;
 #[cfg(not(target_os = "none"))]
 pub use link::draw_link_flow;

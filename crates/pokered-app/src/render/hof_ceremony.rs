@@ -39,6 +39,104 @@ const FRONT_REST_Y: u32 = 5 * T;
 /// screen y = (40 − 208) mod 256 = 88.
 const BACK_PIC_Y: u32 = 11 * T;
 
+/// Compact description of every value consumed by [`draw_hof_ceremony`].
+///
+/// Long roll-call dwell phases only advance an invisible counter. The GBA
+/// frontend uses this key to retain the existing framebuffer in those
+/// intervals while scroll positions and phase transitions still redraw.
+#[cfg(any(test, target_os = "none"))]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct HofVisualKey {
+    visual_phase: u8,
+    species: Option<pokered_data::species::Species>,
+    scroll_stage: Option<HofScrollStage>,
+    scroll_x: u16,
+    content_hash: u32,
+    is_zh: bool,
+}
+
+#[cfg(any(test, target_os = "none"))]
+pub fn hof_visual_key(hof: &HofCeremonyState, lang: Lang) -> HofVisualKey {
+    let is_zh = lang == Lang::Zh;
+    let mut key = HofVisualKey {
+        visual_phase: 0, // Every fade/opening/done frame is plain white.
+        species: None,
+        scroll_stage: None,
+        scroll_x: 0,
+        content_hash: 0x811c_9dc5,
+        is_zh,
+    };
+    let hash_byte = |hash: &mut u32, byte: u8| {
+        *hash = (*hash ^ byte as u32).wrapping_mul(0x0100_0193);
+    };
+    let hash_u16 = |hash: &mut u32, value: u16| {
+        for byte in value.to_le_bytes() {
+            hash_byte(hash, byte);
+        }
+    };
+    let hash_u32 = |hash: &mut u32, value: u32| {
+        for byte in value.to_le_bytes() {
+            hash_byte(hash, byte);
+        }
+    };
+
+    match hof.phase() {
+        HofPhase::MonScroll | HofPhase::PlayerScroll => {
+            let x = hof.scroll_pic_x();
+            // draw_scroll_pic exits before loading an asset when the image is
+            // outside the 160 px viewport, so these positions are all blank.
+            if x >= 160 {
+                return key;
+            }
+            let is_mon = hof.phase() == HofPhase::MonScroll;
+            key.visual_phase = if is_mon { 1 } else { 4 };
+            key.species = if is_mon {
+                hof.current_entry().map(|entry| entry.species)
+            } else {
+                None
+            };
+            key.scroll_stage = hof.scroll_stage();
+            key.scroll_x = x as u16;
+        }
+        HofPhase::MonInfo | HofPhase::MonText | HofPhase::MonFade => {
+            let Some(entry) = hof.current_entry() else {
+                return key;
+            };
+            key.visual_phase = if hof.phase() == HofPhase::MonText {
+                3
+            } else {
+                2
+            };
+            key.species = Some(entry.species);
+            hash_byte(&mut key.content_hash, entry.species as u8);
+            hash_byte(&mut key.content_hash, entry.level);
+            for byte in entry.nickname.bytes() {
+                hash_byte(&mut key.content_hash, byte);
+            }
+        }
+        HofPhase::PlayerStats => {
+            key.visual_phase = 5;
+            let stats = hof.stats();
+            for byte in stats.name.bytes() {
+                hash_byte(&mut key.content_hash, byte);
+            }
+            hash_u16(&mut key.content_hash, stats.play_time_hours);
+            hash_byte(&mut key.content_hash, stats.play_time_minutes);
+            hash_u32(&mut key.content_hash, stats.money);
+            hash_u16(&mut key.content_hash, stats.dex_seen);
+            hash_u16(&mut key.content_hash, stats.dex_owned);
+            for byte in stats.rating.bytes() {
+                hash_byte(&mut key.content_hash, byte);
+            }
+        }
+        HofPhase::FadeOut
+        | HofPhase::Opening
+        | HofPhase::FinalFade
+        | HofPhase::Done => {}
+    }
+    key
+}
+
 /// Draw the roll call to the 160x144 framebuffer.
 pub fn draw_hof_ceremony(
     hof: &HofCeremonyState,
@@ -183,16 +281,24 @@ fn draw_player_back(
     }
 }
 
-fn blit_native(fb: &mut FrameBuffer, cached: &pokered_renderer::resource::CachedTileSet, x: u32, y: u32) {
-    let ts = cached.tileset.clone();
+fn blit_native(
+    fb: &mut FrameBuffer,
+    cached: &pokered_renderer::resource::CachedTileSet,
+    x: u32,
+    y: u32,
+) {
     let w_tiles = cached.source_size.0 / TILE_SIZE;
-    blit_tileset(fb, &ts, x, y, w_tiles, &GRAYSCALE_SPRITE_PALETTE);
+    blit_tileset(fb, &cached.tileset, x, y, w_tiles, &GRAYSCALE_SPRITE_PALETTE);
 }
 
-fn blit_scaled(fb: &mut FrameBuffer, cached: &pokered_renderer::resource::CachedTileSet, x: u32, y: u32) {
-    let ts = cached.tileset.clone();
+fn blit_scaled(
+    fb: &mut FrameBuffer,
+    cached: &pokered_renderer::resource::CachedTileSet,
+    x: u32,
+    y: u32,
+) {
     let src_tpr = (cached.source_size.0 / TILE_SIZE) as usize;
-    let scaled = scale_sprite_by_two(&ts, src_tpr);
+    let scaled = scale_sprite_by_two(&cached.tileset, src_tpr);
     blit_tileset(fb, &scaled, x, y, 7, &GRAYSCALE_SPRITE_PALETTE);
 }
 
@@ -262,5 +368,114 @@ fn draw_player_stats(hof: &HofCeremonyState, fb: &mut FrameBuffer, is_zh: bool) 
     for (i, line) in stats.rating.split('\n').take(2).enumerate() {
         let shown = if is_zh { zh_pc_line(line) } else { line.to_string() };
         draw_text(&shown, T, (14 + i as u32) * T, FG, fb);
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use dotzuki_engine::render_config::RenderConfig;
+    use pokered_core::hof_ceremony::{HofEntry, HofPlayerStats};
+    use pokered_data::species::Species;
+    use pokered_renderer::resource::AssetRoot;
+
+    fn new_fb() -> FrameBuffer {
+        FrameBuffer::new(RenderConfig::new(160, 144), Rgba::WHITE)
+    }
+
+    fn test_resources() -> Option<ResourceManager> {
+        let candidate = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../gfx");
+        if candidate.is_dir() {
+            AssetRoot::new(candidate).ok().map(ResourceManager::new)
+        } else {
+            None
+        }
+    }
+
+    fn assert_framebuffers_equal(
+        actual: &FrameBuffer,
+        expected: &FrameBuffer,
+        context: &str,
+    ) {
+        assert_eq!(actual.width(), expected.width());
+        assert_eq!(actual.height(), expected.height());
+        for y in 0..actual.height() {
+            for x in 0..actual.width() {
+                assert_eq!(
+                    actual.get_pixel(x, y),
+                    expected.get_pixel(x, y),
+                    "framebuffer mismatch at ({x}, {y}); {context}",
+                );
+            }
+        }
+    }
+
+    fn ceremony() -> HofCeremonyState {
+        HofCeremonyState::new(
+            vec![
+                HofEntry {
+                    species: Species::Doduo,
+                    level: 24,
+                    nickname: "DODUO".to_string(),
+                },
+                HofEntry {
+                    species: Species::Lapras,
+                    level: 35,
+                    nickname: "LAPRAS".to_string(),
+                },
+            ],
+            HofPlayerStats {
+                name: "RED".to_string(),
+                play_time_hours: 12,
+                play_time_minutes: 34,
+                money: 99_999,
+                dex_seen: 100,
+                dex_owned: 80,
+                rating: "Great! Keep catching Pokemon!",
+            },
+        )
+    }
+
+    #[test]
+    fn visual_key_only_reuses_pixel_identical_hof_frames() {
+        for lang in [Lang::En, Lang::Zh] {
+            let mut resources = test_resources();
+            let mut hof = ceremony();
+            let mut previous: Option<(HofVisualKey, HofPhase, u16, FrameBuffer)> = None;
+            let mut reused = 0;
+            let mut ticks = 0;
+
+            loop {
+                let key = hof_visual_key(&hof, lang);
+                let mut current = new_fb();
+                draw_hof_ceremony(&hof, &mut resources, &mut current, lang);
+                if let Some((previous_key, previous_phase, previous_phase_frame, previous_frame)) =
+                    previous.as_ref()
+                {
+                    if *previous_key == key {
+                        let context = format!(
+                            "previous={previous_phase:?}/{previous_phase_frame}, current={:?}/{}, key={key:?}",
+                            hof.phase(),
+                            hof.phase_frame(),
+                        );
+                        assert_framebuffers_equal(previous_frame, &current, &context);
+                        reused += 1;
+                    }
+                }
+                previous = Some((key, hof.phase(), hof.phase_frame(), current));
+
+                if hof.phase() == HofPhase::Done {
+                    break;
+                }
+                hof.update_frame();
+                hof.take_sfx();
+                hof.take_music_pending();
+                hof.take_music_fade_pending();
+                ticks += 1;
+                assert!(ticks < 2000, "Hall of Fame ceremony must terminate");
+            }
+
+            assert!(reused > 900, "long dwell phases should be reusable");
+        }
     }
 }
