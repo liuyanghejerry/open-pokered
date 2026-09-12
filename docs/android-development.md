@@ -10,7 +10,7 @@ and Gradle project template.
 - the `aarch64-linux-android` Rust target;
 - Android SDK 35, NDK 27, CMake 3.22.1, and JDK 17;
 - the `gfx/` assets from `scripts/fetch-gfx.sh`; and
-- a dotzuki engine checkout at v0.7.0 or later.
+- a dotzuki engine checkout at v0.7.1 or later.
 
 ## Export the Android Studio project
 

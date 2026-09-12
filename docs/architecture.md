@@ -14,7 +14,7 @@
 | 表现与输出 | `pokered-ui`、`pokered-renderer`、`pokered-audio` | 菜单布局、160 × 144 帧缓冲、图形基础、游戏曲谱和音频输出 |
 | 内容数据 | `pokered-data`、`gfx/` | 地图、物种、招式、训练师、场景脚本、UI 布局与图形资源 |
 | 创作与验证 | 编辑器、3 个 WASM 桥接 crate、调试服务、`scene_apply`、`scripts/`、`tools/` | 编辑、预览、试玩、内容构建和自动化回归 |
-| 外部引擎 | 独立仓库中的 `dotzuki-*` | 通用效果栈、DSL、渲染、UI、音频和平台基础；Cargo Git 依赖固定在 `v0.7.0` |
+| 外部引擎 | 独立仓库中的 `dotzuki-*` | 通用效果栈、DSL、渲染、UI、音频和平台基础；Cargo Git 依赖固定在 `v0.7.1` |
 
 阅读时留意这些边界：
 

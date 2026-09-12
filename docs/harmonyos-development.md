@@ -2,7 +2,7 @@
 
 The game implements `dotzuki_mobile::MobileGame` in `pokered-mobile`. The engine owns the C ABI, PCM queue, frame pacing, Native/ArkTS host, and export template. Pokemon owns the 160×144 indexed framebuffer, game audio commands, initialization payload and committed save format.
 
-All dotzuki dependencies are pinned to v0.7.0. The build script still writes
+All dotzuki dependencies are pinned to v0.7.1. The build script still writes
 an explicit local Cargo patch so the game adapter and the engine-owned host use
 the same checkout while developing platform changes. Do not mix engine crates
 from different revisions.

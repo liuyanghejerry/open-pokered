@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 A native **Rust reimplementation** of Pokémon Red/Blue. It is *not* a Game Boy emulator and *not* byte-identical to the original ROM — it reproduces the game *logic* (battles, overworld, events, menus, audio) as portable Rust.
 
-This repo is **game-only**: the generic **JRPG engine** （the `dotzuki-*` crates) lives in a separate repository and is consumed here as a **Cargo git dependency** (see `crates/*/Cargo.toml` — the `dotzuki-*` deps are `{ git = ..., tag = "v0.7.0" }` deps). To iterate on engine code, work in the engine repo and bump the tag + `cargo update` here.
+This repo is **game-only**: the generic **JRPG engine** （the `dotzuki-*` crates) lives in a separate repository and is consumed here as a **Cargo git dependency** (see `crates/*/Cargo.toml` — the `dotzuki-*` deps are `{ git = ..., tag = "v0.7.1" }` deps). To iterate on engine code, work in the engine repo and bump the tag + `cargo update` here.
 
 The original RGBDS assembly disassembly has been **removed**. `ANALYSIS.md` at the repo root is kept as a historical reference to the original assembly codebase.
 
