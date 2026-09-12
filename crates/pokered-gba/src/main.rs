@@ -19,6 +19,7 @@ use pokered_core::gamefreak_splash::SplashPhase;
 use pokered_core::oak_speech::{entrance_frames, OakSpeechPhase};
 use pokered_core::overworld::screen::WarpFadeState;
 use pokered_core::party_screen::{PartyScreenMode, PartyScreenPhase};
+use pokered_core::pc_screen::{ItemListMode, MonListMode, PcPhase};
 use pokered_core::pokedex_screen::PokedexScreenMode;
 use pokered_core::save_menu::{SavePhase, YesNoChoice};
 use pokered_core::stats_screen::StatsPage;
@@ -1487,6 +1488,149 @@ impl PokedexVisualKey {
 }
 
 #[derive(Clone, Copy, PartialEq, Eq)]
+struct PcVisualKey {
+    phase: PcPhase,
+    visual_hash: u32,
+    language: Lang,
+}
+
+fn hash_pc_mon(hash: &mut u32, pokemon: &pokered_core::battle::state::Pokemon) {
+    hash_byte(hash, pokemon.species as u8);
+    for &byte in &pokemon.nickname {
+        hash_byte(hash, byte);
+    }
+    hash_byte(hash, pokemon.level);
+}
+
+fn hash_pc_inventory<const N: usize>(
+    hash: &mut u32,
+    inventory: &pokered_core::items::inventory::Inventory<N>,
+) {
+    hash_u16(hash, inventory.count() as u16);
+    for index in 0..inventory.count() {
+        if let Some((item, quantity)) = inventory.get(index) {
+            hash_byte(hash, item as u8);
+            hash_byte(hash, quantity);
+        }
+    }
+}
+
+impl PcVisualKey {
+    fn new(game: &PokemonGame) -> Option<Self> {
+        let pc = game.pc_screen.as_ref()?;
+        let phase = pc.phase();
+        let mut visual_hash = 0x811c_9dc5;
+        hash_byte(&mut visual_hash, phase as u8);
+        match phase {
+            PcPhase::Message => {
+                hash_u32(&mut visual_hash, pc.message_page() as u32);
+                let start = pc.message_page() * 4;
+                for line in pc.message_lines().iter().skip(start).take(4) {
+                    for &byte in line.as_bytes() {
+                        hash_byte(&mut visual_hash, byte);
+                    }
+                    hash_byte(&mut visual_hash, 0xff);
+                }
+            }
+            PcPhase::MainMenu => {
+                hash_u32(&mut visual_hash, pc.main_menu().cursor() as u32);
+                hash_byte(&mut visual_hash, pc.main_menu().met_bill() as u8);
+                for &item in pc.main_menu().items() {
+                    hash_byte(&mut visual_hash, item as u8);
+                }
+                for &byte in pc.player_name().as_bytes() {
+                    hash_byte(&mut visual_hash, byte);
+                }
+            }
+            PcPhase::BillsMenu => {
+                hash_u32(&mut visual_hash, pc.bills_menu().cursor() as u32);
+                hash_u32(
+                    &mut visual_hash,
+                    game.save_data.pc_storage.current_box_index() as u32,
+                );
+            }
+            PcPhase::MonList | PcPhase::MonAction | PcPhase::ReleaseConfirm => {
+                hash_byte(&mut visual_hash, pc.mon_mode() as u8);
+                hash_u32(&mut visual_hash, pc.mon_cursor() as u32);
+                if phase == PcPhase::MonAction {
+                    hash_u32(&mut visual_hash, pc.mon_action_cursor() as u32);
+                } else if phase == PcPhase::ReleaseConfirm {
+                    hash_byte(&mut visual_hash, pc.yes_selected() as u8);
+                }
+                match pc.mon_mode() {
+                    MonListMode::Deposit => {
+                        hash_u16(&mut visual_hash, game.save_data.party.count() as u16);
+                        for pokemon in game.save_data.party.iter() {
+                            hash_pc_mon(&mut visual_hash, pokemon);
+                        }
+                    }
+                    MonListMode::Withdraw | MonListMode::Release => {
+                        let current_box = game.save_data.pc_storage.current_box();
+                        hash_u16(&mut visual_hash, current_box.count() as u16);
+                        for pokemon in current_box.iter() {
+                            hash_pc_mon(&mut visual_hash, pokemon);
+                        }
+                    }
+                }
+            }
+            PcPhase::ChangeBoxConfirm | PcPhase::OaksConfirm => {
+                hash_byte(&mut visual_hash, pc.yes_selected() as u8);
+            }
+            PcPhase::BoxList => {
+                hash_u32(&mut visual_hash, pc.box_cursor() as u32);
+                for index in 0..pokered_core::pokemon::pc_box::NUM_BOXES {
+                    let nonempty = game
+                        .save_data
+                        .pc_storage
+                        .get_box(index)
+                        .is_ok_and(|box_data| !box_data.is_empty());
+                    hash_byte(&mut visual_hash, nonempty as u8);
+                }
+            }
+            PcPhase::ItemMenu => {
+                hash_u32(&mut visual_hash, pc.players_menu().cursor() as u32);
+            }
+            PcPhase::ItemList | PcPhase::ItemQuantity | PcPhase::TossConfirm => {
+                hash_byte(&mut visual_hash, pc.item_mode() as u8);
+                hash_u32(&mut visual_hash, pc.item_list_cursor() as u32);
+                if phase == PcPhase::ItemQuantity {
+                    hash_byte(&mut visual_hash, pc.item_qty());
+                } else if phase == PcPhase::TossConfirm {
+                    hash_byte(&mut visual_hash, pc.yes_selected() as u8);
+                }
+                match pc.item_mode() {
+                    ItemListMode::Deposit => hash_pc_inventory(
+                        &mut visual_hash,
+                        &game.save_data.game_data.bag,
+                    ),
+                    ItemListMode::Withdraw | ItemListMode::Toss => hash_pc_inventory(
+                        &mut visual_hash,
+                        &game.save_data.game_data.pc_items,
+                    ),
+                }
+            }
+            PcPhase::LeagueHoF => {
+                if let Some((team_no, pokemon)) = pc.league_hof_mon() {
+                    hash_byte(&mut visual_hash, team_no);
+                    hash_byte(&mut visual_hash, pokemon.species as u8);
+                    hash_byte(&mut visual_hash, pokemon.level);
+                    for &byte in pokemon.nickname.as_bytes() {
+                        hash_byte(&mut visual_hash, byte);
+                    }
+                } else {
+                    hash_byte(&mut visual_hash, 0xff);
+                }
+            }
+        }
+        Some(Self {
+            phase,
+            visual_hash,
+            language: game.state.config.language,
+        })
+    }
+}
+
+#[derive(Clone, Copy, PartialEq, Eq)]
 struct TownMapVisualKey {
     current_map: MapId,
     selected_map: MapId,
@@ -1867,6 +2011,7 @@ fn game_main() -> ! {
     let mut last_party: Option<PartyVisualKey> = None;
     let mut last_stats: Option<StatsVisualKey> = None;
     let mut last_pokedex: Option<PokedexVisualKey> = None;
+    let mut last_pc: Option<PcVisualKey> = None;
     let mut last_trainer_card: Option<TrainerCardVisualKey> = None;
     let mut last_town_map: Option<TownMapVisualKey> = None;
     let mut last_oak: Option<OakVisualKey> = None;
@@ -2025,6 +2170,9 @@ fn game_main() -> ! {
             .as_ref()
             .zip(last_pokedex.as_ref())
             .and_then(|(current, previous)| current.cursor_change_from(previous));
+        let pc = (game.state.screen == GameScreen::PC)
+            .then(|| PcVisualKey::new(game))
+            .flatten();
         let trainer_card = (game.state.screen == GameScreen::TrainerCard)
             .then(|| TrainerCardVisualKey::new(game));
         let town_map = (game.state.screen == GameScreen::TownMap)
@@ -2093,6 +2241,8 @@ fn game_main() -> ! {
             stats != last_stats
         } else if pokedex.is_some() {
             pokedex != last_pokedex
+        } else if pc.is_some() {
+            pc != last_pc
         } else if trainer_card.is_some() {
             trainer_card != last_trainer_card
         } else if town_map.is_some() {
@@ -2560,6 +2710,7 @@ fn game_main() -> ! {
         last_party = party;
         last_stats = stats;
         last_pokedex = pokedex;
+        last_pc = pc;
         last_trainer_card = trainer_card;
         last_town_map = town_map;
         last_oak = oak;

@@ -346,6 +346,9 @@ impl PcScreen {
     pub fn entry(&self) -> PcEntry {
         self.entry
     }
+    pub fn player_name(&self) -> &str {
+        &self.player_name
+    }
     pub fn message_lines(&self) -> &[String] {
         &self.msg_lines
     }
