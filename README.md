@@ -14,7 +14,7 @@
   No installation required — play the full bilingual game or explore the editor directly in your browser.
 </p>
 
-A faithful reimplementation of **Pokémon Red and Blue** in **Rust**, built from the [pret/pokered](https://github.com/pret/pokered) disassembly — playable on **desktop, web, Android, and iOS** from a single codebase, fully playable in **English and 中文**, and shipping with a full **visual editor suite** for maps, data, UI layouts, and saves.
+A faithful reimplementation of **Pokémon Red and Blue** in **Rust**, built from the [pret/pokered](https://github.com/pret/pokered) disassembly — playable on **desktop, web, Android, iOS and the terminal** from a single codebase, fully playable in **English and 中文**, and shipping with a full **visual editor suite** for maps, data, UI layouts, and saves.
 
 This repo is **game-only**: the generic **JRPG engine** lives in a separate repository and is consumed here as a Cargo **git dependency** (`dotzuki-engine`, `dotzuki-engine-dsl`, `dotzuki-engine-script`, `dotzuki-rules`, `dotzuki-renderer`, `dotzuki-ui`, `dotzuki-audio`, `dotzuki-app`, `dotzuki-tui` — see `crates/*/Cargo.toml`, all pinned to the `v0.6.0` tag of the engine repo).
 
@@ -60,11 +60,24 @@ Screenshots are regenerated with `scripts/capture_readme_screenshots.sh` (headle
 
 - **Faithful to the original** — all 248 maps, 151 species, moves, items, and game logic rebuilt from the disassembly, with ongoing fidelity audits (`docs/FIDELITY_GAPS.md`)
 - **Playable instantly** — a full WebAssembly build runs directly in the browser
-- **Cross-platform** — native desktop app, web, Android, and iOS from one codebase
+- **Cross-platform** — native desktop app, web, Android, iOS, and a terminal frontend from one codebase
 - **Bilingual** — every screen and line of dialogue in English and 中文, switchable in-game
 - **Authentic audio** — Game Boy APU emulation (`pokered-audio`)
 - **Hackable by design** — per-map `.scene` event scripts on a native DSL interpreter, a DSL for UI layouts, and JSON-driven game data
 - **Full editor suite** — map editor, Pokémon/move/trainer data editors, UI layout editor with live preview, save editor, sprite tools, and an AI assistant
+
+## Beyond the original
+
+The game itself stays faithful — same mechanics, same maps, [deliberate bugs included](docs/FIDELITY_GAPS.md). What follows is what the remake adds around it: things a 1996 cartridge on a Game Boy with a link cable could not do.
+
+- **One codebase, six targets** — native desktop binary, WebAssembly web build, Android, iOS, a **terminal frontend** (`pokered-tui`: the same game as half-block cells in a true-color terminal), and headless mode, which runs the update loop with no window at all
+- **Bilingual end to end** — a language-select screen at boot (`--lang en|zh`), 2,700+ `@t("english", "中文")` lines across every map, localized menus and species/move/item names, a bundled OFL CJK pixel font, and **pinyin input** on the naming screen
+- **Link play without a link cable** — Colosseum battles and Trade Center trades over TCP (`--link-listen` / `--link-connect`) or between two browser tabs (`?link=<channel>`), on the original Cable Club flow. You join from the CLI or a URL today: the in-game entry from a Poké Center receptionist is not wired yet
+- **Saves you can build, edit and inspect** — the original `.sav` SRAM layout, JSON snapshots (`export-snapshot`, `run --snapshot`), browser-storage saves on web, and a save editor that constructs party, bag, badges and event flags, then boots the real game on the result
+- **Drive the game like a service** — a JSON-line TCP debug server (`run --headless --debug-port 9000`) with 20+ commands: `get_state`, `get_party`, `get_flags`, `get_npcs` to see; `warp`, `press_sequence`, `give_pokemon`, `start_wild_battle` to act; `step_frames` and `wait_until` for deterministic, frame-exact control
+- **Capture anything, headlessly** — `screenshot --screen <target>` (22 screen targets), `screenshot-all`, `dump-state` as JSON, plus `--record-frames` (PNG sequence with a per-frame animation manifest) and `--record-video` (H.264, via ffmpeg)
+- **Skip the story when you don't need it** — `run --skip-intro --warp CeruleanCity,14,8`, or `battle --config sample_battle.json` to jump straight into a battle defined in JSON
+- **Touch and browser conveniences** — an on-screen gamepad on web, Android and iOS, plus volume/mute and an FPS readout in the web build
 
 ## Built for hacking — and for AI collaboration
 
