@@ -11,12 +11,12 @@ config:
     curve: basis
 ---
 flowchart TB
-%% Direct in-workspace normal Cargo dependencies at 746f7dd.
+%% Direct in-workspace normal Cargo dependencies for the v0.7.0 engine migration.
 %% Optional edges are dashed. No transitive/dev dependencies; external engine summarized.
   subgraph platform["平台与编排"]
     pokered_app["pokered-app"]
     pokered_web["pokered-web"]
-    pokered_android["pokered-android"]
+    pokered_mobile["pokered-mobile"]
     pokered_ios["pokered-ios"]
     pokered_tui["pokered-tui"]
   end
@@ -36,11 +36,9 @@ flowchart TB
   subgraph content["内容数据"]
     pokered_data["pokered-data"]
   end
-  pokered_android --> pokered_app
-  pokered_android --> pokered_audio
-  pokered_android --> pokered_core
-  pokered_android --> pokered_data
-  pokered_android --> pokered_renderer
+  pokered_mobile --> pokered_app
+  pokered_mobile --> pokered_core
+  pokered_mobile --> pokered_renderer
   pokered_app --> pokered_audio
   pokered_app --> pokered_core
   pokered_app --> pokered_data
@@ -76,7 +74,7 @@ flowchart TB
   pokered_web --> pokered_renderer
 
   editor["pokered-editor · Vue / Vite / Electron"]
-  dotzuki["外部 dotzuki-* · Cargo Git v0.6.0<br/>各 crate 按职责直接引入，未展开引擎内部依赖"]
+  dotzuki["外部 dotzuki-* · Cargo Git v0.7.0<br/>各 crate 按职责直接引入，未展开引擎内部依赖"]
   editor -. "试玩 / 注入" .-> pokered_runner_web
   editor -. "当前布局预览 / DSL 编译" .-> pokered_layout_preview
   editor -. "编辑内容（磁盘 / 浏览器覆盖）" .-> pokered_data

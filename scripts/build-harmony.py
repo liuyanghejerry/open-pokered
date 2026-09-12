@@ -57,6 +57,7 @@ def main():
         target = root / target
     library = target / 'aarch64-unknown-linux-ohos/release/libpokered_mobile.a'
     subprocess.run([sys.executable, str(engine / 'scripts/export-mobile-host.py'),
+                    '--platform', 'harmony',
                     '--library', str(library), '--init', f'pokered:{args.version}:v1',
                     '--out', str(output), '--title', 'Pokered', '--bundle', 'com.pokered.mobile'], check=True)
     print(f'Open {output} in DevEco Studio, or build entry with hvigor assembleHap.')

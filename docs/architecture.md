@@ -4,17 +4,17 @@
 
 [高清 PNG](diagrams/open-pokered-architecture.png) · [可缩放 SVG](diagrams/open-pokered-architecture.svg) · [Mermaid 模块依赖图源码](diagrams/open-pokered-dependencies.mmd)
 
-基于源码版本 `746f7dd` 整理。主图按职责分层，实线表示主要调用或依赖，紫色虚线表示内容或控制流；Mermaid 图覆盖当前工作区 15 个 crate 之间的 38 条直接 Cargo 依赖，包含可选依赖，不展开传递依赖、测试依赖或外部引擎内部关系。
+主图按职责分层，实线表示主要调用或依赖，紫色虚线表示内容或控制流；Mermaid 图覆盖当前工作区的直接 Cargo 依赖，包含可选依赖，不展开传递依赖、测试依赖或外部引擎内部关系。
 
 | 层次 | 模块 | 职责 |
 | --- | --- | --- |
-| 平台接入 | `pokered-app` 二进制、`pokered-web`、`pokered-android`、`pokered-ios`、`pokered-tui` | 窗口、输入、平台生命周期与显示适配 |
+| 平台接入 | `pokered-app`、`pokered-web`、`pokered-mobile`、`pokered-ios`、`pokered-tui` | 窗口、输入、平台生命周期与显示适配；Android 与鸿蒙共用移动 ABI |
 | 游戏编排 | `pokered-app::PokemonGame`；TUI 自有 `game/render/audio` | 推进状态、切换屏幕、组合画面、调度音频和平台 I/O |
 | 游戏逻辑 | `pokered-core` | 战斗、地图、事件、宝可梦、道具、存档模型与屏幕状态机 |
 | 表现与输出 | `pokered-ui`、`pokered-renderer`、`pokered-audio` | 菜单布局、160 × 144 帧缓冲、图形基础、游戏曲谱和音频输出 |
 | 内容数据 | `pokered-data`、`gfx/` | 地图、物种、招式、训练师、场景脚本、UI 布局与图形资源 |
 | 创作与验证 | 编辑器、3 个 WASM 桥接 crate、调试服务、`scene_apply`、`scripts/`、`tools/` | 编辑、预览、试玩、内容构建和自动化回归 |
-| 外部引擎 | 独立仓库中的 `dotzuki-*` | 通用效果栈、DSL、渲染、UI、音频和平台基础；Cargo Git 依赖固定在 `v0.6.0` |
+| 外部引擎 | 独立仓库中的 `dotzuki-*` | 通用效果栈、DSL、渲染、UI、音频和平台基础；Cargo Git 依赖固定在 `v0.7.0` |
 
 阅读时留意这些边界：
 

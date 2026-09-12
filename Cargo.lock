@@ -109,24 +109,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "fc7eb209b1518d6bb87b283c20095f5228ecda460da70b44f0802523dea6da04"
 
 [[package]]
-name = "android_log-sys"
-version = "0.3.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "84521a3cf562bc62942e294181d9eef17eb38ceb8c68677bc49f144e4c3d4f8d"
-
-[[package]]
-name = "android_logger"
-version = "0.13.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c494134f746c14dc653a35a4ea5aca24ac368529da5370ecf41fe0341c35772f"
-dependencies = [
- "android_log-sys",
- "env_logger",
- "log",
- "once_cell",
-]
-
-[[package]]
 name = "android_system_properties"
 version = "0.1.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -291,7 +273,7 @@ dependencies = [
  "bitflags 2.13.1",
  "cexpr",
  "clang-sys",
- "itertools 0.13.0",
+ "itertools 0.10.5",
  "proc-macro2",
  "quote",
  "regex",
@@ -1136,7 +1118,8 @@ dependencies = [
 
 [[package]]
 name = "dotzuki-app"
-version = "0.6.0"
+version = "0.7.0"
+source = "git+https://github.com/liuyanghejerry/dotzuki?tag=v0.7.0#6cbe0c2d0f587290772f00e3940c0e0ff7053a8c"
 dependencies = [
  "dotzuki-engine",
  "dotzuki-renderer",
@@ -1148,7 +1131,8 @@ dependencies = [
 
 [[package]]
 name = "dotzuki-audio"
-version = "0.6.0"
+version = "0.7.0"
+source = "git+https://github.com/liuyanghejerry/dotzuki?tag=v0.7.0#6cbe0c2d0f587290772f00e3940c0e0ff7053a8c"
 dependencies = [
  "bitflags 2.13.1",
  "cpal",
@@ -1161,7 +1145,8 @@ dependencies = [
 
 [[package]]
 name = "dotzuki-engine"
-version = "0.6.0"
+version = "0.7.0"
+source = "git+https://github.com/liuyanghejerry/dotzuki?tag=v0.7.0#6cbe0c2d0f587290772f00e3940c0e0ff7053a8c"
 dependencies = [
  "image",
  "serde",
@@ -1171,7 +1156,8 @@ dependencies = [
 
 [[package]]
 name = "dotzuki-engine-dsl"
-version = "0.6.0"
+version = "0.7.0"
+source = "git+https://github.com/liuyanghejerry/dotzuki?tag=v0.7.0#6cbe0c2d0f587290772f00e3940c0e0ff7053a8c"
 dependencies = [
  "dotzuki-engine-script",
  "miette",
@@ -1183,7 +1169,8 @@ dependencies = [
 
 [[package]]
 name = "dotzuki-engine-script"
-version = "0.6.0"
+version = "0.7.0"
+source = "git+https://github.com/liuyanghejerry/dotzuki?tag=v0.7.0#6cbe0c2d0f587290772f00e3940c0e0ff7053a8c"
 dependencies = [
  "boa_engine",
  "log",
@@ -1194,11 +1181,13 @@ dependencies = [
 
 [[package]]
 name = "dotzuki-mobile"
-version = "0.6.0"
+version = "0.7.0"
+source = "git+https://github.com/liuyanghejerry/dotzuki?tag=v0.7.0#6cbe0c2d0f587290772f00e3940c0e0ff7053a8c"
 
 [[package]]
 name = "dotzuki-renderer"
-version = "0.6.0"
+version = "0.7.0"
+source = "git+https://github.com/liuyanghejerry/dotzuki?tag=v0.7.0#6cbe0c2d0f587290772f00e3940c0e0ff7053a8c"
 dependencies = [
  "dotzuki-engine",
  "error-iter",
@@ -1215,7 +1204,8 @@ dependencies = [
 
 [[package]]
 name = "dotzuki-rules"
-version = "0.6.0"
+version = "0.7.0"
+source = "git+https://github.com/liuyanghejerry/dotzuki?tag=v0.7.0#6cbe0c2d0f587290772f00e3940c0e0ff7053a8c"
 dependencies = [
  "dotzuki-engine",
  "notify",
@@ -1226,7 +1216,8 @@ dependencies = [
 
 [[package]]
 name = "dotzuki-tui"
-version = "0.6.0"
+version = "0.7.0"
+source = "git+https://github.com/liuyanghejerry/dotzuki?tag=v0.7.0#6cbe0c2d0f587290772f00e3940c0e0ff7053a8c"
 dependencies = [
  "crossterm",
  "dotzuki-renderer",
@@ -1235,7 +1226,8 @@ dependencies = [
 
 [[package]]
 name = "dotzuki-ui"
-version = "0.6.0"
+version = "0.7.0"
+source = "git+https://github.com/liuyanghejerry/dotzuki?tag=v0.7.0#6cbe0c2d0f587290772f00e3940c0e0ff7053a8c"
 dependencies = [
  "dotzuki-engine",
  "dotzuki-renderer",
@@ -1243,7 +1235,8 @@ dependencies = [
 
 [[package]]
 name = "dotzuki-web"
-version = "0.6.0"
+version = "0.7.0"
+source = "git+https://github.com/liuyanghejerry/dotzuki?tag=v0.7.0#6cbe0c2d0f587290772f00e3940c0e0ff7053a8c"
 dependencies = [
  "dotzuki-audio",
  "dotzuki-engine",
@@ -3074,27 +3067,6 @@ dependencies = [
  "fdeflate",
  "flate2",
  "miniz_oxide",
-]
-
-[[package]]
-name = "pokered-android"
-version = "0.1.0"
-dependencies = [
- "android_logger",
- "anyhow",
- "env_logger",
- "jni 0.21.1",
- "log",
- "pixels",
- "pokered-app",
- "pokered-audio",
- "pokered-core",
- "pokered-data",
- "pokered-renderer",
- "serde",
- "serde_json",
- "tracing",
- "winit",
 ]
 
 [[package]]

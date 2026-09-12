@@ -89,12 +89,12 @@ jobs:
             pokered-android:
               - 'Cargo.lock'
               - 'Cargo.toml'
-              - '.cargo/config.toml'
-              - 'crates/pokered-android/**'
+              - 'crates/pokered-mobile/**'
               - 'crates/pokered-app/**'
               - 'crates/pokered-renderer/**'
               - 'crates/pokered-core/**'
               - 'android/**'
+              - 'scripts/build-android.py'
             pokered-ios:
               - 'Cargo.lock'
               - 'Cargo.toml'
@@ -405,8 +405,15 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Checkout dotzuki engine host
+        uses: actions/checkout@v4
+        with:
+          repository: liuyanghejerry/dotzuki
+          ref: v0.7.0
+          path: .ci/dotzuki-engine
+
       - name: Fetch gfx assets
-        # Android build embeds gfx/ into the .so at build time (build.rs).
+        # The game-specific mobile static library embeds gfx/ at build time.
         run: ./scripts/fetch-gfx.sh
 
       - name: Setup Java 17
@@ -419,7 +426,7 @@ jobs:
         id: setup-android
         uses: android-actions/setup-android@v3
         with:
-          packages: 'platforms;android-35 build-tools;35.0.0 ndk;27.0.12077973'
+          packages: 'platforms;android-35 build-tools;35.0.0 cmake;3.22.1 ndk;27.0.12077973'
 
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@stable
@@ -445,39 +452,23 @@ jobs:
           key: android-gradle-${{ hashFiles('android/**/*.gradle*', 'android/gradle/wrapper/gradle-wrapper.properties') }}
           restore-keys: android-gradle-
 
-      - name: Build Rust library
+      - name: Build shared host project
         run: |
-          # .cargo/config.toml uses bare NDK linker names
-          # (aarch64-linux-android21-clang), so the NDK's prebuilt LLVM
-          # bin dir must be on PATH — same as android/build.sh does locally.
-          # setup-android has no ndk-path output; ANDROID_HOME is exported
-          # globally by the action and the NDK sits under $ANDROID_HOME/ndk/.
           NDK_HOME="$(ls -d "$ANDROID_HOME"/ndk/* | sort -V | tail -1)"
-          export PATH="$NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin:$PATH"
-          cargo build -p pokered-android --target aarch64-linux-android --release
-
-      - name: Copy .so to jniLibs
-        run: |
-          JNILIBS="android/app/src/main/jniLibs/arm64-v8a"
-          mkdir -p "$JNILIBS"
-          cp target/aarch64-linux-android/release/libpokered_android.so "$JNILIBS/"
-          cp target/aarch64-linux-android/release/libpokered_android.so "$JNILIBS/libgame-activity.so"
-          # Bundle the C++ runtime (linked via `-C link-arg=-lc++`), same as
-          # android/build.sh — it lives in the NDK sysroot, not target/.
-          NDK_HOME="$(ls -d "$ANDROID_HOME"/ndk/* | sort -V | tail -1)"
-          cp "$NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/lib/aarch64-linux-android/libc++_shared.so" "$JNILIBS/"
+          python3 scripts/build-android.py \
+            --engine-checkout .ci/dotzuki-engine \
+            --ndk "$NDK_HOME" \
+            --out dist/android
 
       - name: Build debug APK
-        working-directory: android
         run: |
-          chmod +x gradlew
-          ./gradlew assembleDebug -x lintDebug --no-daemon
+          android/gradlew --project-dir dist/android assembleDebug --no-daemon
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
           name: pokered-android-debug
-          path: android/app/build/outputs/apk/debug/app-debug.apk
+          path: dist/android/app/build/outputs/apk/debug/app-debug.apk
           retention-days: 30
 
   build-ios-app:
