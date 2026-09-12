@@ -5992,6 +5992,67 @@ impl PokemonGame {
                     "entities": entities,
                 }))
             }
+            DebugCommand::Game(GameDebugCommand::MoveTo { x, y }) => {
+                // Synchronous closed-loop walk (see agent_nav.rs): the
+                // outcome plus fresh snapshots, same convention as
+                // wait_until. Param bounds are inherent (u16); map-bounds
+                // and reachability report as `blocked` outcomes.
+                let outcome = self.agent_move_to(x, y);
+                let mut data = serde_json::to_value(&outcome).unwrap_or_default();
+                if let Some(obj) = data.as_object_mut() {
+                    obj.insert(
+                        "map".to_string(),
+                        serde_json::json!(format!("{:?}", self.overworld.state.current_map)),
+                    );
+                    obj.insert("state".to_string(), self.debug_state_snapshot());
+                    obj.insert(
+                        "agent_state".to_string(),
+                        serde_json::to_value(
+                            self.agent_snapshot(&pokered_agent::ObservationProfile::default()),
+                        )
+                        .unwrap_or_default(),
+                    );
+                }
+                DebugResponse::ok_with_data(data)
+            }
+            DebugCommand::Game(GameDebugCommand::Interact) => {
+                let outcome = self.agent_interact();
+                let mut data = serde_json::to_value(&outcome).unwrap_or_default();
+                if let Some(obj) = data.as_object_mut() {
+                    obj.insert(
+                        "map".to_string(),
+                        serde_json::json!(format!("{:?}", self.overworld.state.current_map)),
+                    );
+                    obj.insert("state".to_string(), self.debug_state_snapshot());
+                    obj.insert(
+                        "agent_state".to_string(),
+                        serde_json::to_value(
+                            self.agent_snapshot(&pokered_agent::ObservationProfile::default()),
+                        )
+                        .unwrap_or_default(),
+                    );
+                }
+                DebugResponse::ok_with_data(data)
+            }
+            DebugCommand::Game(GameDebugCommand::InteractWith { ref id }) => {
+                let outcome = self.agent_interact_with(id);
+                let mut data = serde_json::to_value(&outcome).unwrap_or_default();
+                if let Some(obj) = data.as_object_mut() {
+                    obj.insert(
+                        "map".to_string(),
+                        serde_json::json!(format!("{:?}", self.overworld.state.current_map)),
+                    );
+                    obj.insert("state".to_string(), self.debug_state_snapshot());
+                    obj.insert(
+                        "agent_state".to_string(),
+                        serde_json::to_value(
+                            self.agent_snapshot(&pokered_agent::ObservationProfile::default()),
+                        )
+                        .unwrap_or_default(),
+                    );
+                }
+                DebugResponse::ok_with_data(data)
+            }
             DebugCommand::Game(GameDebugCommand::WaitUntil {
                 ref condition,
                 max_frames,

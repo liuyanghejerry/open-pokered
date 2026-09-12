@@ -10,6 +10,7 @@ mod alloc_prelude {
 }
 
 mod audio;
+mod agent_nav;
 mod battle_config;
 mod cli;
 mod demo;

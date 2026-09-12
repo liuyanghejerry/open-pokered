@@ -16,11 +16,16 @@
 //! a block); distances are Manhattan in step units.
 
 pub mod mode;
+pub mod nav;
 pub mod nearby;
 pub mod profile;
 pub mod snapshot;
 
 pub use mode::{classify_mode, AgentMode, ModeInput, OverworldObs};
+pub use nav::{
+    direction_between, find_approach, find_path, InteractOutcome, InteractResult, NavGrid,
+    NavigationOutcome, NavigationResult,
+};
 pub use nearby::{
     hidden_item_spots, nearby_entities, EntityKind, HiddenItemSpot, NearbyEntity, NpcObs,
     Position, DEFAULT_NEARBY_RADIUS, INTERACT_REACH,

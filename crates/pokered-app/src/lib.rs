@@ -19,6 +19,7 @@ pub mod render;
 #[cfg(not(target_os = "none"))]
 pub mod save_editor;
 
+pub mod agent_nav;
 pub mod audio;
 
 // Link play works on hosted targets only: the session/router and codec are

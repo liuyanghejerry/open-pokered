@@ -139,14 +139,20 @@ Debug-server protocol (JSON-line over TCP): `get_state`, `get_position`,
 `get_party`, `get_bag`, `get_flags`, `get_npcs`, `warp`, `press`,
 `press_sequence`, `run_frames`, `step_frames`, `save`, `set_flag`,
 `give_item`, `give_pokemon`, `start_wild_battle`, `get_agent_state`,
-`get_nearby`. `get_state` also reports
+`get_nearby`, `move_to`, `interact`, `interact_with`. `get_state` also
+reports
 `active_script_effect`, `script_awaiting_battle`, `player_movement_state`,
 `dialogue`, and battle phase/message. `get_agent_state` (optional `level`
 1-4 or `profile`) returns the typed `pokered-agent` semantic snapshot
 (mode/map/position/party/bag/badges/dialogue/battle/nearby);
 `get_nearby` (optional `radius`, default 10 step units) returns the
-distance-sorted nearby entities. A minimal Python client lives at
-`scripts/debug_drive.py`.
+distance-sorted nearby entities. `move_to {x, y}` is a closed-loop walk
+(BFS over the game's own collision, one verified tile at a time) that
+reports `reached`/`blocked`/`interrupted`/`entered_battle`/
+`entered_dialogue`/`map_changed`; `interact` / `interact_with {id}`
+(face + A on an adjacent entity or a `get_nearby` id) report
+`dialogue`/`battle`/`nothing`/`blocked`/`not_found`/…. A minimal Python
+client lives at `scripts/debug_drive.py`.
 
 Screen targets: `copyright title main-menu oak overworld battle start-menu options save`.
 

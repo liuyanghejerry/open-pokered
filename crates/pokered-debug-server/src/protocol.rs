@@ -73,6 +73,27 @@ pub enum GameDebugCommand {
         #[serde(default)]
         radius: Option<u32>,
     },
+    /// Closed-loop walk to tile (`x`, `y`) on the current map: the game
+    /// BFS-pathfinds reusing its own collision, walks one tile at a time
+    /// with real controller input (re-observing after every tile), and
+    /// aborts cleanly on interruption. Synchronous like `step_frames`:
+    /// the response carries the `NavigationOutcome` (`result`:
+    /// `reached` / `blocked` / `interrupted` / `entered_battle` /
+    /// `entered_dialogue` / `map_changed`, plus `steps`, `frames`, and
+    /// `start`/`target`/`final` positions) and fresh state snapshots.
+    MoveTo { x: u16, y: u16 },
+    /// Face the adjacent interactable (the faced tile first, otherwise
+    /// the player turns toward an adjacent visible NPC / sign / hidden
+    /// item, in that priority) and press A, running until a dialogue
+    /// opens, a battle starts, a script takes over, or nothing happens.
+    Interact,
+    /// Pathfind adjacent to a `get_nearby` entity id (`npc:{i}`,
+    /// `sign:{i}`, `hidden:{table_index}` — warps are `move_to`'s job),
+    /// face it, and press A. The response carries the interaction
+    /// result (`dialogue` / `battle` / `nothing` / `interrupted` /
+    /// `blocked` / `not_found` / …) and, when navigation ran, its
+    /// outcome.
+    InteractWith { id: String },
     /// Give a Pokémon to the player's party.
     GivePokemon { species: String, level: u8 },
     /// Start a wild battle against the given species/level (for testing catch
@@ -220,6 +241,22 @@ mod tests {
             cmd,
             DebugCommand::Game(GameDebugCommand::GetNearby { radius: Some(5) })
         ));
+
+        let cmd: DebugCommand = serde_json::from_str(r#"{"cmd":"move_to","x":12,"y":11}"#).unwrap();
+        assert!(matches!(
+            cmd,
+            DebugCommand::Game(GameDebugCommand::MoveTo { x: 12, y: 11 })
+        ));
+
+        let cmd: DebugCommand = serde_json::from_str(r#"{"cmd":"interact"}"#).unwrap();
+        assert!(matches!(cmd, DebugCommand::Game(GameDebugCommand::Interact)));
+
+        let cmd: DebugCommand =
+            serde_json::from_str(r#"{"cmd":"interact_with","id":"npc:0"}"#).unwrap();
+        assert!(matches!(
+            cmd,
+            DebugCommand::Game(GameDebugCommand::InteractWith { ref id }) if id == "npc:0"
+        ));
     }
 
     /// The game-side dialogue/cutscene stepping commands (wait_until /
@@ -347,6 +384,24 @@ mod tests {
         assert!(matches!(
             back,
             DebugCommand::Game(GameDebugCommand::GetNearby { radius: Some(12) })
+        ));
+
+        let cmd = DebugCommand::Game(GameDebugCommand::MoveTo { x: 12, y: 11 });
+        let line = serde_json::to_string(&cmd).unwrap();
+        assert_eq!(line, r#"{"cmd":"move_to","x":12,"y":11}"#);
+        let back: DebugCommand = serde_json::from_str(&line).unwrap();
+        assert!(matches!(
+            back,
+            DebugCommand::Game(GameDebugCommand::MoveTo { x: 12, y: 11 })
+        ));
+
+        let cmd = DebugCommand::Game(GameDebugCommand::InteractWith { id: "sign:1".into() });
+        let line = serde_json::to_string(&cmd).unwrap();
+        assert_eq!(line, r#"{"cmd":"interact_with","id":"sign:1"}"#);
+        let back: DebugCommand = serde_json::from_str(&line).unwrap();
+        assert!(matches!(
+            back,
+            DebugCommand::Game(GameDebugCommand::InteractWith { ref id }) if id == "sign:1"
         ));
     }
 }
