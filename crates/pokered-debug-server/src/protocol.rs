@@ -94,6 +94,27 @@ pub enum GameDebugCommand {
     /// `blocked` / `not_found` / …) and, when navigation ran, its
     /// outcome.
     InteractWith { id: String },
+    /// The M3 geographic world graph: every map's connection and warp
+    /// edges. With `maps` (a list of PascalCase map names) returns only
+    /// edges leaving those maps; without it returns the full graph
+    /// (large). Purely observational: never steps frames.
+    GetWorldGraph {
+        #[serde(default)]
+        maps: Option<Vec<String>>,
+    },
+    /// BFS shortest route between two maps as a leg list (connection /
+    /// warp legs with positions where derivable). Purely observational.
+    FindWorldRoute { from: String, to: String },
+    /// Travel cross-map to `map`: world routing → tile-level execution
+    /// per leg (M2 walker) → warp/connection traversal with landing
+    /// verification → replan on surprise. Wild battles are auto-resolved
+    /// (RUN with a fast lead, FIGHT fallback); trainer battles are
+    /// fought with the lead's first move; blackouts and unresolvable
+    /// battles abort. Synchronous like `step_frames`. The response
+    /// carries the `TravelOutcome` (`result`: `reached` / `blocked` /
+    /// `entered_battle` / `interrupted` / `map_mismatch` / `blackout` /
+    /// `invalid_target`) plus fresh state snapshots.
+    TravelTo { map: String },
     /// Give a Pokémon to the player's party.
     GivePokemon { species: String, level: u8 },
     /// Start a wild battle against the given species/level (for testing catch
@@ -257,6 +278,35 @@ mod tests {
             cmd,
             DebugCommand::Game(GameDebugCommand::InteractWith { ref id }) if id == "npc:0"
         ));
+
+        let cmd: DebugCommand = serde_json::from_str(r#"{"cmd":"get_world_graph"}"#).unwrap();
+        assert!(matches!(
+            cmd,
+            DebugCommand::Game(GameDebugCommand::GetWorldGraph { maps: None })
+        ));
+
+        let cmd: DebugCommand =
+            serde_json::from_str(r#"{"cmd":"get_world_graph","maps":["PalletTown","Route1"]}"#)
+                .unwrap();
+        assert!(matches!(
+            cmd,
+            DebugCommand::Game(GameDebugCommand::GetWorldGraph { maps: Some(_) })
+        ));
+
+        let cmd: DebugCommand =
+            serde_json::from_str(r#"{"cmd":"find_world_route","from":"PalletTown","to":"PewterCity"}"#)
+                .unwrap();
+        assert!(matches!(
+            cmd,
+            DebugCommand::Game(GameDebugCommand::FindWorldRoute { .. })
+        ));
+
+        let cmd: DebugCommand =
+            serde_json::from_str(r#"{"cmd":"travel_to","map":"ViridianCity"}"#).unwrap();
+        assert!(matches!(
+            cmd,
+            DebugCommand::Game(GameDebugCommand::TravelTo { ref map }) if map == "ViridianCity"
+        ));
     }
 
     /// The game-side dialogue/cutscene stepping commands (wait_until /
@@ -402,6 +452,17 @@ mod tests {
         assert!(matches!(
             back,
             DebugCommand::Game(GameDebugCommand::InteractWith { ref id }) if id == "sign:1"
+        ));
+
+        let cmd = DebugCommand::Game(GameDebugCommand::TravelTo {
+            map: "PewterCity".into(),
+        });
+        let line = serde_json::to_string(&cmd).unwrap();
+        assert_eq!(line, r#"{"cmd":"travel_to","map":"PewterCity"}"#);
+        let back: DebugCommand = serde_json::from_str(&line).unwrap();
+        assert!(matches!(
+            back,
+            DebugCommand::Game(GameDebugCommand::TravelTo { .. })
         ));
     }
 }

@@ -959,6 +959,15 @@ impl BattleVisualEffects {
             }
             _ => {}
         }
+        // The intro mirror (send-out growth, silhouette slides, …) is
+        // intro-scoped: once the battle leaves the intro it must stop
+        // ticking. A fast input driver can advance the core phase before
+        // the mirror's poof completes — move animations then own the
+        // shared anim_player indefinitely, and the stale mirror's u8
+        // frame counter would overflow after 255 ticks.
+        if !matches!(phase, BattlePhase::Intro { .. }) {
+            self.intro_anim = IntroAnimState::None;
+        }
     }
 
     fn on_intro_phase_change(

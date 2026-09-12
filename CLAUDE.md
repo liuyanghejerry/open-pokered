@@ -139,8 +139,8 @@ Debug-server protocol (JSON-line over TCP): `get_state`, `get_position`,
 `get_party`, `get_bag`, `get_flags`, `get_npcs`, `warp`, `press`,
 `press_sequence`, `run_frames`, `step_frames`, `save`, `set_flag`,
 `give_item`, `give_pokemon`, `start_wild_battle`, `get_agent_state`,
-`get_nearby`, `move_to`, `interact`, `interact_with`. `get_state` also
-reports
+`get_nearby`, `move_to`, `interact`, `interact_with`, `get_world_graph`,
+`find_world_route`, `travel_to`. `get_state` also reports
 `active_script_effect`, `script_awaiting_battle`, `player_movement_state`,
 `dialogue`, and battle phase/message. `get_agent_state` (optional `level`
 1-4 or `profile`) returns the typed `pokered-agent` semantic snapshot
@@ -151,8 +151,15 @@ distance-sorted nearby entities. `move_to {x, y}` is a closed-loop walk
 reports `reached`/`blocked`/`interrupted`/`entered_battle`/
 `entered_dialogue`/`map_changed`; `interact` / `interact_with {id}`
 (face + A on an adjacent entity or a `get_nearby` id) report
-`dialogue`/`battle`/`nothing`/`blocked`/`not_found`/…. A minimal Python
-client lives at `scripts/debug_drive.py`.
+`dialogue`/`battle`/`nothing`/`blocked`/`not_found`/….
+`get_world_graph` (optional `maps` filter) exposes the M3 geographic
+world graph (connections + warps, LAST_MAP candidates resolved);
+`find_world_route {from, to}` returns the map-level legs;
+`travel_to {map}` executes the route end-to-end (tile-level routing with
+warp transit, wild battles auto-run, trainer battles auto-fought) and
+reports `reached`/`blocked`/`entered_battle`/`interrupted`/
+`map_mismatch`/`blackout`/`invalid_target`. A minimal Python client
+lives at `scripts/debug_drive.py`.
 
 Screen targets: `copyright title main-menu oak overworld battle start-menu options save`.
 

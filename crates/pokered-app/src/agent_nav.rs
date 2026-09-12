@@ -94,14 +94,19 @@ impl PokemonGame {
                 || self.overworld.pending_wild_encounter.is_some()
                 || self.overworld.pending_trainer_battle.is_some()
                 || self.overworld.script_awaiting_battle,
-            self.overworld.pending_dialogue.is_some() || self.overworld.pending_choice.is_some(),
+            // A trainer sight-intro reads as dialogue-incoming, so the
+            // caller can wait it out instead of treating it as an opaque
+            // script interruption.
+            self.overworld.pending_dialogue.is_some()
+                || self.overworld.pending_choice.is_some()
+                || self.overworld.trainer_encounter_pending(),
             self.overworld.active_script_effect_label().is_some()
                 || !self.overworld.script_engine_idle(),
         )
     }
 
     /// NavGrid for the current map with live NPC occupancy.
-    fn build_nav_grid(&self) -> Option<NavGrid> {
+    pub(crate) fn build_nav_grid(&self) -> Option<NavGrid> {
         let map = self.overworld.map_data.as_ref()?;
         let npcs: Vec<NpcObs> = self
             .overworld
@@ -112,7 +117,7 @@ impl PokemonGame {
         Some(NavGrid::build(map, &npcs))
     }
 
-    fn step_with(&mut self, button: Option<GbButton>, frames: &mut u32) {
+    pub(crate) fn step_with(&mut self, button: Option<GbButton>, frames: &mut u32) {
         let mut input = InputState::new();
         if let Some(button) = button {
             input.press(button);
@@ -121,7 +126,7 @@ impl PokemonGame {
         *frames += 1;
     }
 
-    fn player_pos(&self) -> (u16, u16) {
+    pub(crate) fn player_pos(&self) -> (u16, u16) {
         (
             self.overworld.state.player.x,
             self.overworld.state.player.y,
@@ -189,7 +194,7 @@ impl PokemonGame {
 
     /// Step neutral frames until the warp fade completes (bounded), so a
     /// `MapChanged` outcome reports the destination map already settled.
-    fn settle_map_change(&mut self, frames: &mut u32) {
+    pub(crate) fn settle_map_change(&mut self, frames: &mut u32) {
         for _ in 0..240 {
             if matches!(self.overworld.warp_fade_state, WarpFadeState::Idle)
                 && self.overworld.pending_warp.is_none()
@@ -320,7 +325,7 @@ impl PokemonGame {
 
     /// Turn in place to face `dir` (one press frame + settle). No-op
     /// when already facing — never walks.
-    fn turn_to(&mut self, dir: Direction, frames: &mut u32) {
+    pub(crate) fn turn_to(&mut self, dir: Direction, frames: &mut u32) {
         if self.overworld.state.player.facing == dir {
             return;
         }

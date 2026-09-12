@@ -6053,6 +6053,72 @@ impl PokemonGame {
                 }
                 DebugResponse::ok_with_data(data)
             }
+            DebugCommand::Game(GameDebugCommand::GetWorldGraph { ref maps }) => {
+                // Validate the scope filter up front.
+                let scope: Option<Vec<pokered_data::maps::MapId>> = match maps {
+                    Some(names) => {
+                        let mut resolved = Vec::with_capacity(names.len());
+                        for name in names {
+                            match pokered_data::map_data_loader::resolve_map_id(name) {
+                                Some(id) => resolved.push(id),
+                                None => {
+                                    return DebugResponse::err(format!(
+                                        "unknown map: '{name}'"
+                                    ))
+                                }
+                            }
+                        }
+                        Some(resolved)
+                    }
+                    None => None,
+                };
+                let graph = pokered_agent::WorldGraph::shared();
+                let edges: Vec<&pokered_agent::WorldEdge> = match scope {
+                    Some(ids) => ids
+                        .iter()
+                        .flat_map(|&id| graph.edges_from(id))
+                        .collect(),
+                    None => graph.edges().iter().collect(),
+                };
+                DebugResponse::ok_with_data(serde_json::json!({
+                    "edge_count": edges.len(),
+                    "edges": edges,
+                }))
+            }
+            DebugCommand::Game(GameDebugCommand::FindWorldRoute { ref from, ref to }) => {
+                let from_id = pokered_data::map_data_loader::resolve_map_id(from);
+                let to_id = pokered_data::map_data_loader::resolve_map_id(to);
+                let (from_id, to_id) = match (from_id, to_id) {
+                    (Some(from_id), Some(to_id)) => (from_id, to_id),
+                    (None, _) => return DebugResponse::err(format!("unknown map: '{from}'")),
+                    (_, None) => return DebugResponse::err(format!("unknown map: '{to}'")),
+                };
+                let route = pokered_agent::WorldGraph::shared().find_route(from_id, to_id);
+                DebugResponse::ok_with_data(serde_json::json!({
+                    "from": format!("{:?}", from_id),
+                    "to": format!("{:?}", to_id),
+                    "found": route.is_some(),
+                    "legs": route.unwrap_or_default(),
+                }))
+            }
+            DebugCommand::Game(GameDebugCommand::TravelTo { ref map }) => {
+                let Some(dest) = pokered_data::map_data_loader::resolve_map_id(map) else {
+                    return DebugResponse::err(format!("unknown map: '{map}'"));
+                };
+                let outcome = self.agent_travel_to(dest);
+                let mut data = serde_json::to_value(&outcome).unwrap_or_default();
+                if let Some(obj) = data.as_object_mut() {
+                    obj.insert("state".to_string(), self.debug_state_snapshot());
+                    obj.insert(
+                        "agent_state".to_string(),
+                        serde_json::to_value(
+                            self.agent_snapshot(&pokered_agent::ObservationProfile::default()),
+                        )
+                        .unwrap_or_default(),
+                    );
+                }
+                DebugResponse::ok_with_data(data)
+            }
             DebugCommand::Game(GameDebugCommand::WaitUntil {
                 ref condition,
                 max_frames,

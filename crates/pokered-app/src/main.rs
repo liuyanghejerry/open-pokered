@@ -11,6 +11,7 @@ mod alloc_prelude {
 
 mod audio;
 mod agent_nav;
+mod agent_travel;
 mod battle_config;
 mod cli;
 mod demo;

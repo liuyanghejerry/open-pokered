@@ -1667,6 +1667,15 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
         self.script_engine.is_idle()
     }
 
+    /// True while a sight trainer's engage-intro ("!" bubble + walk-up) or
+    /// before-battle text is pending — a trainer dialogue/battle is
+    /// imminent. Observability for agent navigation/travel (M3): an
+    /// intro in flight reads as "dialogue incoming", not as an opaque
+    /// script interruption.
+    pub fn trainer_encounter_pending(&self) -> bool {
+        self.trainer_encounter_intro.is_some() || self.trainer_intro_text_pending.is_some()
+    }
+
     pub fn set_script_flags(&mut self, flags: HashMap<String, bool>) {
         self.unified_flags.merge_from(&flags);
     }
