@@ -28,9 +28,8 @@ cargo run --release --config target/harmony/engine.toml --bin pokered-app -- scr
 The host's startup payload is `pokered:red:v1` or `pokered:blue:v1`, not a `.dzpk` project, even though the shared template retains that resource filename. Saves are UTF-8 JSON envelopes containing version 1, Pokemon SaveData and companion script flags. Menu SAVE commits a new envelope; backgrounding does not snapshot unsaved progress. The host polls committed saves every 500 ms and flushes them to Preferences, and also attempts a flush on page hide. Abrupt termination before the asynchronous flush finishes can lose the most recent commit. Soft reset restores the last committed envelope.
 
 The desktop frontend retains its default GPU/device-audio behavior. Mobile
-builds disable desktop features and use embedded graphics. Android now uses
-the same `pokered-mobile` adapter and ABI version 1; iOS still uses its
-game-specific ABI.
+builds disable desktop features and use embedded graphics. Android, iOS and
+HarmonyOS use the same `pokered-mobile` adapter and ABI version 1.
 
 ## Validation on 2026-09-12
 
@@ -44,4 +43,4 @@ at `6cbe0c2` and this game branch.
 - All 12 desktop screenshot-all outputs are byte-identical to the baseline. Hashes are in `screenshots/shared-mobile-host/desktop-comparison.json`; title, battle and overworld before/after PNGs are retained alongside it.
 - ARM64 OHOS static library and unsigned HAP built successfully with the installed DevEco SDK. Installed and launched on the local Pura 90 API 24 emulator; title graphics and touch navigation to the main menu were verified. Captures: [title](screenshots/shared-mobile-host/harmony-title.jpeg), [menu](screenshots/shared-mobile-host/harmony-menu.jpeg).
 
-The emulator captures demonstrate the new platform; there is no baseline Harmony build of this game. Full playthrough, physical-device audio/latency, suspend/resume stress and on-device save/relaunch testing remain release validation work. Android now builds through the shared host and has been verified through the language-selection screen on an Android 15 arm64 emulator. iOS migration remains a separate follow-up.
+The emulator captures demonstrate the new platform; there is no baseline Harmony build of this game. Full playthrough, physical-device audio/latency, suspend/resume stress and on-device save/relaunch testing remain release validation work. Android now builds through the shared host and has been verified through the language-selection screen on an Android 15 arm64 emulator. iOS now uses the same ABI; its host build is covered separately by the iOS workflow.

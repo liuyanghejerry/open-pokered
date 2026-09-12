@@ -17,7 +17,6 @@ flowchart TB
     pokered_app["pokered-app"]
     pokered_web["pokered-web"]
     pokered_mobile["pokered-mobile"]
-    pokered_ios["pokered-ios"]
     pokered_tui["pokered-tui"]
   end
   subgraph preview["预览与开发工具"]
@@ -46,11 +45,6 @@ flowchart TB
   pokered_app --> pokered_renderer
   pokered_app --> pokered_ui
   pokered_core --> pokered_data
-  pokered_ios --> pokered_app
-  pokered_ios --> pokered_audio
-  pokered_ios --> pokered_core
-  pokered_ios --> pokered_data
-  pokered_ios --> pokered_renderer
   pokered_renderer --> pokered_core
   pokered_renderer --> pokered_data
   pokered_runner_web --> pokered_app
