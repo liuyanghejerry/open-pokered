@@ -26,7 +26,9 @@ This follow-up retains those optimizations while restoring shared contracts:
 | Hot menu layouts | `battle_main.gui`, `battle_safari.gui`, `options.gui`, `save.gui` feed both editor JSON and build-generated static layouts | No JSON parsing or layout-tree allocation in the static draw path; bindings may still format dynamic strings |
 | Frame reuse and damage | `pokered-app::render::RenderSession` owns visual keys, caches and redraw decisions | GBA consumes `Reuse` / `Full` / `Damage` and retains MMIO, DMA and page presentation |
 | Framebuffer representation | Dotzuki's explicit packed/linear types have the same contracts on every target | The GBA adapter selects word-aligned linear indices; packed remains the default |
-| Map metadata lifetime | `MapJsonHandle` retains borrowed hosted data or shared embedded data | Four-entry recent-map cache; evicted maps are released after the last live handle; block bytes borrow ROM |
+| Map metadata lifetime | The build-generated map table owns canonical names and embedded payloads; `MapJsonHandle` retains borrowed hosted data or shared embedded data | Four-entry recent-map cache; embedded queries borrow the table name and block bytes from ROM instead of formatting a new `String`; evicted maps are released after the last live handle |
+| Runtime data overrides | Editor injection APIs exclusively own lazy override-table creation; ordinary readers only inspect an already-installed table | Baseline game reads neither initialize global override state nor take a lock when no editor override exists |
+| Boot/save state | `Game::new_with_options` constructs one `GameState` from the loaded `SaveData` and `SaveFileSummary` | Normal boot preserves the CONTINUE source of truth instead of shadowing it with a second empty state |
 | Platform synchronization | `pokered-platform` owns the hosted/bare-metal synchronization contract | Four game crates share one implementation; recursive bare-metal locks/initializers fail instead of creating mutable aliases |
 | Native script command parsing | Dotzuki's native-AST `core_host` owns the generic async `game.*` catalog, argument validation and `ScriptCommand` construction | Pokered's host keeps only stateful queries/RNG and Pokémon-specific extensions; no second engine protocol table in the game |
 | Script capability contract | Dotzuki walks structured scene ASTs; `pokered-data` owns the Pokémon-specific capability catalog | Every scene is validated during the data build, and tests require both Boa registration and the native GBA host to cover that catalog |
@@ -48,7 +50,8 @@ Validation:
 
 - Core: 2,559 unit tests passed. UI: all 8 tests passed, including static/dynamic
   parity for the four menus, both languages and all enumerated states.
-- App: 94 unit tests passed, including incremental options rendering versus a full
+- App: 95 unit tests passed, including loaded-save constructor coverage,
+  incremental options rendering versus a full
   draw, changed-pixel damage coverage, reuse and black-screen invalidation.
 - Dotzuki renderer: 474 default-feature unit tests passed. Packed/linear storage
   is checked pixel-for-pixel across odd dimensions, fills, overlapping copies,
@@ -60,13 +63,17 @@ Validation:
   with the pinned remote dependency and no local patch configuration (the web
   check is not a wasm-target test).
 - Dotzuki's native dispatcher, capability validator and `return` control-flow
-  semantics pass all 295 DSL crate unit tests. Pokered data passes 250 native
-  and 259 Boa-feature tests; both script backends are checked against the same
+  semantics pass all 295 DSL crate unit tests. Pokered data passes 251 native
+  and 260 Boa-feature tests; both script backends are checked against the same
   Pokémon-specific capability catalog.
-- Fresh-start playthrough m01–m10 passes through defeating Brock. Seeded scenarios
-  pass 10/11: `s07-save-roundtrip` fails waiting for CONTINUE to reach Overworld.
-  It fails twice on this change and also on unmodified PR head `383c82c`, so it is
-  recorded as a pre-existing failure, not waived or reported as passing.
+- Fresh-start playthrough m01–m49 passes from NEW GAME through the Champion,
+  Hall of Fame and credits. The game writes a 32,768-byte SRAM save; a separate
+  normally booted process selects CONTINUE and restores PalletTown `(5,6)`, all
+  eight badges and one Hall of Fame team. All 49 milestone observations and the
+  save are retained in `/tmp/pt-map-name-fresh-a7`. The focused
+  `s07-save-roundtrip` scenario also passes; the complete seeded scenario suite
+  passes 11/11 and the Gherkin BDD suite passes 15/15. This validation exposed
+  and fixed a duplicate constructor state that discarded the loaded save summary.
 - Release GBA autopilot/profiling ROM runs through 159,396 simulated frames without
   panic, allocation failure or invalid-address crash. This exercises boot, Oak,
   scripted bedroom movement and then a long idle period, not 159k frames of broad
@@ -112,6 +119,14 @@ and plain background; this is now an explicit UI-owned damage contract, but it
 is not inferred from glyph metrics. Changing those authored shapes requires
 updating that contract and its parity coverage. `RenderSession` is desktop-testable but desktop presentation
 does not yet opt into it, and the deferred-transition protocol remains separate.
+Embedded map lookup now resolves names from the same generated `MAP_TABLE` that
+owns the map payloads, removing a per-query enum-debug formatting allocation
+without introducing a second ID/name table. Read-only override probes likewise
+use `OnceLock::get`; only editor writes initialize their corresponding tables.
+The full-playthrough driver now rechecks failed plans against live state, waits
+for temporary destination occupancy, and retries interrupted directional warps.
+Shared Pokémon Tower recovery removes a duplicated floor sequence while keeping
+all recovery as ordinary player input.
 
 ## Historical findings
 
@@ -162,6 +177,10 @@ pages, with the completed page flipped at VBlank.
   map metadata instead of formatting and looking it up for every out-of-bounds
   tile, and indexes the selected blockset directly. Its background pass fell
   from about 52,000 to 5,700 ticks (roughly 90%).
+- Embedded map queries borrow their canonical name from the generated map table,
+  eliminating the remaining `format!("{:?}", map_id)` allocation in ordinary
+  map and block lookup. Baseline override reads avoid initializing or locking an
+  editor-only global table.
 - The GBA resource manager checks its decoded cache before scanning the asset
   registry and remembers immutable misses. Boot assets are released before
   entering the Overworld.
