@@ -65,6 +65,8 @@ pub use pokedex::draw_pokedex_screen;
 #[cfg(any(test, target_os = "none"))]
 pub use pokedex::redraw_pokedex_cursor;
 pub use slots::draw_slots;
+#[cfg(any(test, target_os = "none"))]
+pub use slots::redraw_slots_bet_cursor;
 pub use title::draw_title_screen;
 pub use town_map::draw_town_map;
 #[cfg(any(test, target_os = "none"))]

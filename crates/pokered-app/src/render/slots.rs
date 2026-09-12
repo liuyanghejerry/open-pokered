@@ -276,6 +276,24 @@ pub fn draw_slots(slots: &SlotsScreen, fb: &mut FrameBuffer, lang: Lang) {
     }
 }
 
+/// Repaint only the `>` marker when the selected slot-machine bet changes.
+/// The marker sits on a white background and occupies exactly 5x10 pixels.
+#[cfg(any(test, target_os = "none"))]
+pub fn redraw_slots_bet_cursor(
+    previous: (u32, u32),
+    current: (u32, u32),
+    fb: &mut FrameBuffer,
+) {
+    for (x, y) in [previous, current] {
+        for py in y..(y + 10).min(fb.height()) {
+            for px in x..(x + measure_text(">")).min(fb.width()) {
+                fb.set_pixel(px, py, Rgba::WHITE);
+            }
+        }
+    }
+    draw_text(">", current.0, current.1, Rgba::BLACK, fb);
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -283,9 +301,27 @@ mod tests {
     use pokered_core::slots_screen::SlotsInput;
 
     fn render(s: &SlotsScreen) -> FrameBuffer {
+        render_lang(s, Lang::En)
+    }
+
+    fn render_lang(s: &SlotsScreen, lang: Lang) -> FrameBuffer {
         let mut fb = FrameBuffer::new(RenderConfig::new(160, 144), Rgba::WHITE);
-        draw_slots(s, &mut fb, Lang::En);
+        draw_slots(s, &mut fb, lang);
         fb
+    }
+
+    fn assert_framebuffers_equal(actual: &FrameBuffer, expected: &FrameBuffer) {
+        assert_eq!(actual.width(), expected.width());
+        assert_eq!(actual.height(), expected.height());
+        for y in 0..actual.height() {
+            for x in 0..actual.width() {
+                assert_eq!(
+                    actual.get_pixel(x, y),
+                    expected.get_pixel(x, y),
+                    "framebuffer mismatch at ({x}, {y})",
+                );
+            }
+        }
     }
 
     fn region(fb: &FrameBuffer, x: u32, y: u32, w: u32, h: u32) -> Vec<[u8; 4]> {
@@ -334,6 +370,33 @@ mod tests {
             let lines = message_lines(&text, 144);
             assert!(lines.len() <= 3);
             assert!(lines.iter().all(|line| measure_text(line) <= 144));
+        }
+    }
+
+    #[test]
+    fn bet_cursor_repaint_matches_full_redraw_for_every_transition() {
+        let position = |bet| (120, 96 + (3 - bet as u32) * 16);
+        for language in [Lang::En, Lang::Zh] {
+            for previous_bet in 1..=3 {
+                for current_bet in 1..=3 {
+                    if previous_bet == current_bet {
+                        continue;
+                    }
+                    let mut previous = SlotsScreen::new(false, 100, 1);
+                    previous.bet = previous_bet;
+                    let mut current = previous.clone();
+                    current.bet = current_bet;
+
+                    let mut actual = render_lang(&previous, language);
+                    redraw_slots_bet_cursor(
+                        position(previous_bet),
+                        position(current_bet),
+                        &mut actual,
+                    );
+                    let expected = render_lang(&current, language);
+                    assert_framebuffers_equal(&actual, &expected);
+                }
+            }
         }
     }
 

@@ -22,6 +22,7 @@ use pokered_core::party_screen::{PartyScreenMode, PartyScreenPhase};
 use pokered_core::pc_screen::{ItemListMode, MonListMode, PcPhase};
 use pokered_core::pokedex_screen::PokedexScreenMode;
 use pokered_core::save_menu::{SavePhase, YesNoChoice};
+use pokered_core::slots_screen::SlotsPhase;
 use pokered_core::stats_screen::StatsPage;
 use pokered_core::title_screen::{TitlePhase, TitleScreenState};
 use pokered_core::town_map_screen::TownMapMode;
@@ -1711,6 +1712,66 @@ impl PcVisualKey {
 }
 
 #[derive(Clone, Copy, PartialEq, Eq)]
+struct SlotsVisualKey {
+    phase: SlotsPhase,
+    visual_hash: u32,
+    bet_cursor: Option<(u32, u32)>,
+    language: Lang,
+}
+
+fn slots_bet_cursor_position(bet: u8) -> Option<(u32, u32)> {
+    match bet {
+        3 => Some((120, 96)),
+        2 => Some((120, 112)),
+        1 => Some((120, 128)),
+        _ => None,
+    }
+}
+
+impl SlotsVisualKey {
+    fn new(game: &PokemonGame) -> Option<Self> {
+        let slots = game.slots_screen.as_ref()?;
+        let mut visual_hash = 0x811c_9dc5;
+        hash_byte(&mut visual_hash, slots.phase as u8);
+        for offset in slots.machine.wheel_offsets {
+            hash_byte(&mut visual_hash, offset);
+        }
+        hash_u16(&mut visual_hash, slots.coins);
+        hash_u16(&mut visual_hash, slots.payout_remaining);
+        hash_byte(&mut visual_hash, slots.payout_stage as u8);
+        hash_byte(&mut visual_hash, slots.flash_on as u8);
+        for &byte in slots.message.as_bytes() {
+            hash_byte(&mut visual_hash, byte);
+        }
+
+        let bet_cursor = if slots.phase == SlotsPhase::BetSelect {
+            slots_bet_cursor_position(slots.bet)
+        } else {
+            // Outside bet selection, the bet controls the cabinet's lit lines.
+            hash_byte(&mut visual_hash, slots.bet);
+            None
+        };
+
+        Some(Self {
+            phase: slots.phase,
+            visual_hash,
+            bet_cursor,
+            language: game.state.config.language,
+        })
+    }
+
+    fn cursor_change_from(&self, previous: &Self) -> Option<((u32, u32), (u32, u32))> {
+        (self.phase == SlotsPhase::BetSelect
+            && self.phase == previous.phase
+            && self.visual_hash == previous.visual_hash
+            && self.language == previous.language
+            && self.bet_cursor != previous.bet_cursor)
+            .then(|| previous.bet_cursor.zip(self.bet_cursor))
+            .flatten()
+    }
+}
+
+#[derive(Clone, Copy, PartialEq, Eq)]
 struct TownMapVisualKey {
     current_map: MapId,
     selected_map: MapId,
@@ -2092,6 +2153,7 @@ fn game_main() -> ! {
     let mut last_stats: Option<StatsVisualKey> = None;
     let mut last_pokedex: Option<PokedexVisualKey> = None;
     let mut last_pc: Option<PcVisualKey> = None;
+    let mut last_slots: Option<SlotsVisualKey> = None;
     let mut last_trainer_card: Option<TrainerCardVisualKey> = None;
     let mut last_town_map: Option<TownMapVisualKey> = None;
     let mut last_oak: Option<OakVisualKey> = None;
@@ -2257,6 +2319,13 @@ fn game_main() -> ! {
             .as_ref()
             .zip(last_pc.as_ref())
             .and_then(|(current, previous)| current.cursor_change_from(previous));
+        let slots = (game.state.screen == GameScreen::Slots)
+            .then(|| SlotsVisualKey::new(game))
+            .flatten();
+        let slots_cursor_change = slots
+            .as_ref()
+            .zip(last_slots.as_ref())
+            .and_then(|(current, previous)| current.cursor_change_from(previous));
         let trainer_card = (game.state.screen == GameScreen::TrainerCard)
             .then(|| TrainerCardVisualKey::new(game));
         let town_map = (game.state.screen == GameScreen::TownMap)
@@ -2327,6 +2396,8 @@ fn game_main() -> ! {
             pokedex != last_pokedex
         } else if pc.is_some() {
             pc != last_pc
+        } else if slots.is_some() {
+            slots != last_slots
         } else if trainer_card.is_some() {
             trainer_card != last_trainer_card
         } else if town_map.is_some() {
@@ -2433,6 +2504,8 @@ fn game_main() -> ! {
                 pokered_app::render::redraw_pokedex_cursor(previous, current, &mut fb);
             } else if let Some((previous, current)) = pc_cursor_change {
                 pokered_app::render::redraw_pc_cursor(previous, current, &mut fb);
+            } else if let Some((previous, current)) = slots_cursor_change {
+                pokered_app::render::redraw_slots_bet_cursor(previous, current, &mut fb);
             } else if let Some(previous_map) = town_map_cursor_change {
                 pokered_app::render::redraw_town_map_cursor(
                     &game.town_map_screen,
@@ -2588,6 +2661,22 @@ fn game_main() -> ! {
                 ]
             });
             let pc_cursor_damage = pc_cursor_change.map(|(previous, current)| {
+                [
+                    FrameDamageRect {
+                        x: previous.0,
+                        y: previous.1,
+                        width: 5,
+                        height: 10,
+                    },
+                    FrameDamageRect {
+                        x: current.0,
+                        y: current.1,
+                        width: 5,
+                        height: 10,
+                    },
+                ]
+            });
+            let slots_cursor_damage = slots_cursor_change.map(|(previous, current)| {
                 [
                     FrameDamageRect {
                         x: previous.0,
@@ -2776,6 +2865,8 @@ fn game_main() -> ! {
                 Some(rects.as_slice())
             } else if let Some(rects) = pc_cursor_damage.as_ref() {
                 Some(rects.as_slice())
+            } else if let Some(rects) = slots_cursor_damage.as_ref() {
+                Some(rects.as_slice())
             } else if let Some(rects) = town_map_cursor_damage.as_ref() {
                 Some(rects.as_slice())
             } else if let Some(rects) = town_map_marker_damage.as_ref() {
@@ -2815,6 +2906,7 @@ fn game_main() -> ! {
         last_stats = stats;
         last_pokedex = pokedex;
         last_pc = pc;
+        last_slots = slots;
         last_trainer_card = trainer_card;
         last_town_map = town_map;
         last_oak = oak;
