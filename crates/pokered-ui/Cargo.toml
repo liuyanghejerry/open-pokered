@@ -13,6 +13,7 @@ license.workspace = true
 # .sisyphus/plans/menu-layout-engine.md Appendix A.4).
 
 [dependencies]
+pokered-platform = { path = "../pokered-platform" }
 dotzuki-engine = { git = "https://github.com/liuyanghejerry/dotzuki", rev = "17560d4b70de097655b7d01b1349d696f990e3f8" }
 pokered-core = { path = "../pokered-core" }
 pokered-data = { path = "../pokered-data" }

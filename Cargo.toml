@@ -5,6 +5,7 @@ resolver = "2"
 # pinned to the upstream GBA/no_std feature commit; vendor/ only carries ron.
 exclude = ["crates/pokered-gba", "vendor"]
 members = [
+    "crates/pokered-platform",
     "crates/pokered-web",
     "crates/pokered-runner-web",
     "crates/pokered-debug-server",

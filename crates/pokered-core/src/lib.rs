@@ -49,9 +49,10 @@ pub mod town_map_screen;
 pub mod trade;
 pub mod trainer_card_screen;
 
-// Internal std::sync shims (see pokered-data's twin): hosted keeps std's
-// OnceLock/LazyLock/Mutex, bare metal swaps in spin-backed equivalents.
+// Compatibility import backed by the shared platform contract.
 pub(crate) mod sync_compat;
+#[cfg(target_os = "none")]
+pub(crate) use pokered_platform::thread_local;
 
 // With `#![no_std]` the Vec/String/Box/vec!/format! family leaves the prelude
 // on BOTH targets. Modules glob-import this to keep using them unqualified.

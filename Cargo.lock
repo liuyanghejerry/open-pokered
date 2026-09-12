@@ -3165,6 +3165,7 @@ dependencies = [
  "hashbrown 0.15.5",
  "log",
  "pokered-data",
+ "pokered-platform",
  "rand",
  "serde",
  "serde_json",
@@ -3184,6 +3185,7 @@ dependencies = [
  "log",
  "num-derive",
  "num-traits",
+ "pokered-platform",
  "ron",
  "serde",
  "serde_json",
@@ -3227,6 +3229,10 @@ dependencies = [
 ]
 
 [[package]]
+name = "pokered-platform"
+version = "0.1.0"
+
+[[package]]
 name = "pokered-renderer"
 version = "0.1.0"
 dependencies = [
@@ -3240,6 +3246,7 @@ dependencies = [
  "pixels",
  "pokered-core",
  "pokered-data",
+ "pokered-platform",
  "thiserror 2.0.20",
  "winit",
  "winit_input_helper",
@@ -3291,6 +3298,7 @@ dependencies = [
  "log",
  "pokered-core",
  "pokered-data",
+ "pokered-platform",
  "pokered-renderer",
  "serde",
  "serde_json",

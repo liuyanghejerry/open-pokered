@@ -19,7 +19,7 @@ pub use engine::{
 
 pub use pokered_data::{SCREEN_HEIGHT_PX, SCREEN_WIDTH_PX, TILE_SIZE_PX};
 
-// Internal std::sync shims (see pokered-data's twin).
+// Compatibility import backed by the shared platform contract.
 pub(crate) mod sync_compat;
 
 // With `#![no_std]` the Vec/String/Box/vec!/format! family leaves the prelude

@@ -19,6 +19,7 @@ script-boa = ["pokered-data/script-boa", "dotzuki-engine-script/script-boa"]
 hot-reload = ["dotzuki-rules/hot-reload"]
 
 [dependencies]
+pokered-platform = { path = "../pokered-platform" }
 dotzuki-engine = { git = "https://github.com/liuyanghejerry/dotzuki", rev = "17560d4b70de097655b7d01b1349d696f990e3f8" }
 pokered-data = { path = "../pokered-data" }
 dotzuki-engine-script = { git = "https://github.com/liuyanghejerry/dotzuki", rev = "17560d4b70de097655b7d01b1349d696f990e3f8", default-features = false }

@@ -12,6 +12,7 @@ embedded-map-data = []
 script-boa = ["dep:boa_engine", "dotzuki-engine-script/script-boa"]
 
 [dependencies]
+pokered-platform = { path = "../pokered-platform" }
 dotzuki-engine-script = { git = "https://github.com/liuyanghejerry/dotzuki", rev = "17560d4b70de097655b7d01b1349d696f990e3f8", default-features = false }
 dotzuki-engine-dsl = { git = "https://github.com/liuyanghejerry/dotzuki", rev = "17560d4b70de097655b7d01b1349d696f990e3f8" }
 boa_engine = { version = "0.20", default-features = false, optional = true }

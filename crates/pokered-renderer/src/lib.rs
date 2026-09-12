@@ -38,7 +38,7 @@ pub type FrameBuffer = dotzuki_renderer::RgbaIndexedFrameBuffer<GbColor>;
 #[cfg(all(target_os = "none", target_arch = "arm"))]
 pub type FrameBuffer = dotzuki_renderer::LinearRgbaIndexedFrameBuffer<GbColor>;
 
-// Internal std::sync shims (see pokered-data's twin).
+// Compatibility import backed by the shared platform contract.
 pub(crate) mod sync_compat;
 
 // With `#![no_std]` the Vec/String/Box/vec!/format! family leaves the prelude

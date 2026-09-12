@@ -76,9 +76,7 @@ pub mod types;
 pub mod runtime_overrides;
 pub mod wild_data;
 
-// Internal std::sync shims: hosted keeps std's OnceLock/LazyLock/Mutex, bare
-// metal (target_os = "none") swaps in spin-backed equivalents with the same
-// call surface. Not part of the public API.
+// Compatibility import backed by the shared platform contract.
 pub(crate) mod sync_compat;
 
 // With `#![no_std]` the Vec/String/Box/vec!/format! family leaves the prelude

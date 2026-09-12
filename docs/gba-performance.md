@@ -27,6 +27,7 @@ This follow-up retains those optimizations while restoring shared contracts:
 | Frame reuse and damage | `pokered-app::render::RenderSession` owns visual keys, caches and redraw decisions | GBA consumes `Reuse` / `Full` / `Damage` and retains MMIO, DMA and page presentation |
 | Framebuffer representation | Dotzuki's explicit packed/linear types have the same contracts on every target | The GBA adapter selects word-aligned linear indices; packed remains the default |
 | Map metadata lifetime | `MapJsonHandle` retains borrowed hosted data or shared embedded data | Four-entry recent-map cache; evicted maps are released after the last live handle; block bytes borrow ROM |
+| Platform synchronization | `pokered-platform` owns the hosted/bare-metal synchronization contract | Four game crates share one implementation; recursive bare-metal locks/initializers fail instead of creating mutable aliases |
 
 The static GUI compiler is generic dotzuki functionality, not a Pokemon-specific
 layout table. It lowers the normal GUI compiler output (after component expansion),
@@ -75,8 +76,8 @@ and save ZH PNGs are byte-identical. The battle target is a transition frame;
 its difference from master already exists at `383c82c`, whose PNG is byte-identical
 to the refactor's battle image. It is not a battle action-menu screenshot.
 
-Remaining boundary work is explicit: consolidate the duplicated no_std sync and
-resource backends; replace silent unsupported script behavior with capability
+Remaining boundary work is explicit: consolidate the duplicated no_std resource
+backends; replace silent unsupported script behavior with capability
 errors; move remaining legacy menu damage geometry into the owning UI modules.
 The cursor erasure fast paths still assume the current arrow's 8×9 ink footprint
 and plain background; this is now an explicit UI-owned damage contract, but it

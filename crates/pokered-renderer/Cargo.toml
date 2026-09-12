@@ -10,6 +10,7 @@ framebuffer = []
 gpu = ["dep:pixels", "dep:winit", "dep:winit_input_helper", "dep:image", "dep:error-iter"]
 
 [dependencies]
+pokered-platform = { path = "../pokered-platform" }
 pokered-data = { path = "../pokered-data" }
 pokered-core = { path = "../pokered-core" }
 dotzuki-engine = { git = "https://github.com/liuyanghejerry/dotzuki", rev = "17560d4b70de097655b7d01b1349d696f990e3f8" }
