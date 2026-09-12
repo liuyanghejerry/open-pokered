@@ -62,6 +62,10 @@ pub fn cursor_position(row: usize, col: usize) -> TilePos {
     cursor_spec(row, col).0
 }
 
+pub fn cursor_damage(row: usize, col: usize) -> crate::DamageRect {
+    crate::DamageRect::cursor(cursor_position(row, col))
+}
+
 fn cursor_spec(row: usize, col: usize) -> (TilePos, char) {
     let mut ctx: dotzuki_renderer::layout_engine::static_layout::Context<'_, 2> =
         dotzuki_renderer::layout_engine::static_layout::Context::new();

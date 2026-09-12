@@ -707,22 +707,19 @@ impl StartMenuVisualKey {
 
 #[derive(Clone, Copy, PartialEq, Eq)]
 struct OptionsVisualKey {
-    cursor: (u32, u32),
+    cursor: (u32, u32, char),
     language: Lang,
 }
 
 impl OptionsVisualKey {
     fn new(game: &PokemonGame) -> Self {
         Self {
-            cursor: super::options_menu_cursor_position(
-                &game.options_menu,
-                game.state.config.language,
-            ),
+            cursor: super::options_menu_cursor_spec(&game.options_menu, game.state.config.language),
             language: game.state.config.language,
         }
     }
 
-    fn cursor_change_from(&self, previous: &Self) -> Option<((u32, u32), (u32, u32))> {
+    fn cursor_change_from(&self, previous: &Self) -> Option<((u32, u32, char), (u32, u32, char))> {
         (self.language == previous.language && self.cursor != previous.cursor)
             .then_some((previous.cursor, self.cursor))
     }
@@ -2777,23 +2774,11 @@ fn draw_full(
 
 #[inline]
 fn battle_menu_cursor_damage((row, col): (usize, usize)) -> FrameDamageRect {
-    let pos = pokered_ui::menus::battle_main::cursor_position(row, col);
-    FrameDamageRect {
-        x: pos.tx * 8,
-        y: pos.ty * 8,
-        width: 8,
-        height: 9,
-    }
+    pokered_ui::menus::battle_main::cursor_damage(row, col).into()
 }
 
 fn battle_safari_cursor_damage((row, col): (usize, usize)) -> FrameDamageRect {
-    let pos = pokered_ui::menus::battle_safari::cursor_position(row, col);
-    FrameDamageRect {
-        x: pos.tx * 8,
-        y: pos.ty * 8,
-        width: 8,
-        height: 9,
-    }
+    pokered_ui::menus::battle_safari::cursor_damage(row, col).into()
 }
 
 fn battle_move_menu_damage(
@@ -2886,24 +2871,14 @@ fn start_menu_cursor_damage(cursor: usize) -> FrameDamageRect {
 }
 
 #[inline]
-fn options_cursor_damage(cursor: (u32, u32)) -> FrameDamageRect {
-    FrameDamageRect {
-        x: cursor.0 * 8,
-        y: cursor.1 * 8,
-        width: 8,
-        height: 9,
-    }
+fn options_cursor_damage(cursor: (u32, u32, char)) -> FrameDamageRect {
+    let rect = pokered_ui::menus::options::cursor_damage(TilePos::new(cursor.0, cursor.1));
+    FrameDamageRect::from(rect)
 }
 
 #[inline]
 fn save_cursor_damage(cursor: YesNoChoice) -> FrameDamageRect {
-    let pos = pokered_ui::menus::save::cursor_position(cursor);
-    FrameDamageRect {
-        x: pos.tx * 8,
-        y: pos.ty * 8,
-        width: 8,
-        height: 9,
-    }
+    pokered_ui::menus::save::cursor_damage(cursor).into()
 }
 
 #[inline]

@@ -284,6 +284,17 @@ pub struct FrameDamageRect {
     pub height: u32,
 }
 
+impl From<pokered_ui::DamageRect> for FrameDamageRect {
+    fn from(rect: pokered_ui::DamageRect) -> Self {
+        Self {
+            x: rect.x,
+            y: rect.y,
+            width: rect.width,
+            height: rect.height,
+        }
+    }
+}
+
 const FOREGROUND_PATCH_SIDE: usize = (TILE_SIZE * 2) as usize;
 const FOREGROUND_PATCH_PIXELS: usize = FOREGROUND_PATCH_SIDE * FOREGROUND_PATCH_SIDE;
 

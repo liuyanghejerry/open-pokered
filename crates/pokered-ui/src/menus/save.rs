@@ -123,6 +123,10 @@ pub fn cursor_position(choice: YesNoChoice) -> TilePos {
     cursor_spec(choice).0
 }
 
+pub fn cursor_damage(choice: YesNoChoice) -> crate::DamageRect {
+    crate::DamageRect::cursor(cursor_position(choice))
+}
+
 fn cursor_spec(choice: YesNoChoice) -> (TilePos, char) {
     let mut ctx: dotzuki_renderer::layout_engine::static_layout::Context<'_, 2> =
         dotzuki_renderer::layout_engine::static_layout::Context::new();

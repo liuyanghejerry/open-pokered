@@ -34,6 +34,13 @@ and rejects unsupported properties or expressions at build time. Static and
 dynamic rendering share text/cursor primitives and menu bindings. Battle, Safari
 and save cursor positions/glyphs are read from the generated layout as well.
 
+The follow-up commit also moved every English/Chinese Options cursor coordinate
+into `options.gui`. Runtime bindings now expose only semantic state (active row,
+language and selected value), and both full rendering and incremental cursor
+updates resolve position and glyph from the generated layout. The UI crate owns
+the cursor damage footprint for all four compiled menus; `RenderSession` only
+converts that frontend-neutral rectangle to its presentation type.
+
 Validation:
 
 - Core: 2,556 unit tests passed. UI: all 8 tests passed, including static/dynamic
@@ -72,9 +79,9 @@ Remaining boundary work is explicit: consolidate the duplicated no_std sync and
 resource backends; replace silent unsupported script behavior with capability
 errors; move remaining legacy menu damage geometry into the owning UI modules.
 The cursor erasure fast paths still assume the current arrow's 8×9 ink footprint
-and plain background, and options still has legacy v1 geometry adjustments.
-Changing those authored shapes requires updating the damage contract and its
-parity coverage. `RenderSession` is desktop-testable but desktop presentation
+and plain background; this is now an explicit UI-owned damage contract, but it
+is not inferred from glyph metrics. Changing those authored shapes requires
+updating that contract and its parity coverage. `RenderSession` is desktop-testable but desktop presentation
 does not yet opt into it, and the deferred-transition protocol remains separate.
 
 ## Historical findings

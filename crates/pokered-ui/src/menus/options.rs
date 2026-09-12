@@ -4,107 +4,58 @@ use pokered_core::options_menu::{
 };
 #[cfg(not(target_os = "none"))]
 use pokered_data::ui_layout::schema::get_screen_v2_json;
-use pokered_data::ui_layout::schema::{OptionsDefaultLayout, OPTIONS_DEFAULT_LAYOUT};
+use pokered_data::ui_layout::schema::OptionsDefaultLayout;
 
 #[cfg(any(test, target_os = "none"))]
 use crate::engine::TileRect;
 use crate::engine::{Painter, Rgba, TilePos, Ui};
 use crate::v2;
 
-fn enum_offset(layout: &OptionsDefaultLayout, key: &str) -> u32 {
-    layout
-        .enum_position_map
-        .iter()
-        .find_map(|(k, v)| if k == key { Some(*v as u32) } else { None })
-        .unwrap_or(0)
+/// Active cursor specification resolved from the compiled GUI source.
+pub fn cursor_spec(state: &OptionsMenuState, lang: Lang) -> (TilePos, char) {
+    pokered_data::ui_layout::schema::OPTIONS_STATIC_LAYOUT
+        .cursor(&bindings(state, lang))
+        .expect("options layout must declare exactly one active cursor")
 }
 
-/// Cursor x-offsets for the individually positioned Chinese choices in
-/// `options.gui`. Each cursor sits one tile to the left of its label.
-fn zh_enum_offset(key: &str) -> u32 {
-    match key {
-        "Medium" => 3,
-        "Slow" => 6,
-        "Off" => 8,
-        "Set" => 6,
-        // Fast / On / Shift and unknown keys all sit at offset 0.
-        _ => 0,
-    }
-}
-
-fn lang_enum_offset(layout: &OptionsDefaultLayout, key: &str, lang: Lang) -> u32 {
-    match lang {
-        Lang::Zh => zh_enum_offset(key),
-        Lang::En => enum_offset(layout, key),
-    }
-}
-
-fn text_speed_key(state: &OptionsMenuState) -> &'static str {
-    match state.options.text_speed {
-        TextSpeed::Fast => "Fast",
-        TextSpeed::Medium => "Medium",
-        TextSpeed::Slow => "Slow",
-    }
-}
-
-fn battle_animation_key(state: &OptionsMenuState) -> &'static str {
-    match state.options.battle_animation {
-        BattleAnimation::On => "On",
-        BattleAnimation::Off => "Off",
-    }
-}
-
-fn battle_style_key(state: &OptionsMenuState) -> &'static str {
-    match state.options.battle_style {
-        BattleStyle::Shift => "Shift",
-        BattleStyle::Set => "Set",
-    }
-}
-
-/// Absolute tile position of the single visible options cursor.
+/// Absolute tile position of the single visible options cursor. The legacy
+/// layout parameter remains for call-site compatibility but is not authoritative.
 pub fn cursor_position(
     state: &OptionsMenuState,
-    layout: &OptionsDefaultLayout,
+    _layout: &OptionsDefaultLayout,
     lang: Lang,
 ) -> TilePos {
-    let cursors = layout.cursors.as_ref();
-    match state.row {
-        OptionsRow::TextSpeed => TilePos::new(
-            cursors[0].tx + 1 + lang_enum_offset(layout, text_speed_key(state), lang),
-            cursors[0].base_ty + 1,
-        ),
-        OptionsRow::BattleAnimation => TilePos::new(
-            cursors[1].tx + 1 + lang_enum_offset(layout, battle_animation_key(state), lang),
-            cursors[1].base_ty + 1,
-        ),
-        OptionsRow::BattleStyle => TilePos::new(
-            cursors[2].tx + 1 + lang_enum_offset(layout, battle_style_key(state), lang),
-            cursors[2].base_ty + 1,
-        ),
-        OptionsRow::Cancel => TilePos::new(cursors[3].tx, cursors[3].base_ty),
-    }
+    cursor_spec(state, lang).0
+}
+
+pub fn cursor_damage(cursor: TilePos) -> crate::DamageRect {
+    crate::DamageRect::cursor(cursor)
 }
 
 /// Repaint only the two cursor cells of an already-rendered options screen.
-pub fn redraw_cursor<P: Painter>(previous: TilePos, current: TilePos, painter: &mut P, lang: Lang) {
+pub fn redraw_cursor<P: Painter>(
+    previous: (TilePos, char),
+    current: (TilePos, char),
+    painter: &mut P,
+    lang: Lang,
+) {
     // The proportional cursor advances by 10 px but its actual fallback ink
     // fits in 8x9.  Clearing the full advance would erase the adjacent CJK
     // option label, which starts one tile to the right.
-    painter.draw_pixel_rect(previous.tx * 8, previous.ty * 8, 8, 9, Rgba::INK_WHITE);
-    if lang == Lang::Zh {
-        painter.draw_text_px(current.tx * 8, current.ty * 8, "▶", Rgba::INK_BLACK);
-    } else {
-        painter.draw_glyph(current, '▶', Rgba::INK_BLACK);
-    }
+    painter.draw_pixel_rect(previous.0.tx * 8, previous.0.ty * 8, 8, 9, Rgba::INK_WHITE);
+    dotzuki_renderer::layout_engine::elements::cursor::draw_cursor_glyph(
+        current.0,
+        current.1,
+        Rgba::INK_BLACK,
+        lang == Lang::Zh && painter.supports_proportional(),
+        painter,
+    );
 }
 
 /// Options screen — rendered through the v2 layout engine from `options.gui`.
 ///
-/// Single cursor: a ▶ on the active row only, at the selected option's
-/// x-position. The absolute cursor positions replicate the v1 math (box inset
-/// + per-enum x-offset from the v1 `enum_position_map`) and are fed to the
-/// `.gui` cursor elements as `{rN_tx}`/`{rN_ty}` bindings; `{rN_active}`
-/// toggles which row's ▶ is shown.
+/// Cursor labels and geometry are both authored in `options.gui`; bindings
+/// select one semantic state without copying coordinates into Rust.
 pub fn draw<P: Painter>(
     state: &OptionsMenuState,
     _layout: &OptionsDefaultLayout,
@@ -142,41 +93,69 @@ fn bindings(
     state: &OptionsMenuState,
     lang: Lang,
 ) -> dotzuki_renderer::layout_engine::static_layout::Context<'static> {
-    // Reuse the v1 cursor coordinates + enum-position map for pixel parity.
-    let v1 = &OPTIONS_DEFAULT_LAYOUT;
-    let cursors = v1.cursors.as_ref();
-
     let mut ctx = dotzuki_renderer::layout_engine::static_layout::Context::new();
-
-    // Rows 0..2 sit in bordered boxes (1-tile inset); the x-offset selects the
-    // current enum value's column. Absolute = cursor.tx + 1 + offset, ty + 1.
-    let c0 = &cursors[0];
+    let en = lang == Lang::En;
+    let zh = lang == Lang::Zh;
+    let text = state.row == OptionsRow::TextSpeed;
+    let animation = state.row == OptionsRow::BattleAnimation;
+    let style = state.row == OptionsRow::BattleStyle;
     ctx.set(
-        "r0_tx",
-        (c0.tx + 1 + lang_enum_offset(v1, text_speed_key(state), lang)) as i64,
+        "text_fast_en",
+        text && en && state.options.text_speed == TextSpeed::Fast,
     );
-    ctx.set("r0_ty", (c0.base_ty + 1) as i64);
-    let c1 = &cursors[1];
     ctx.set(
-        "r1_tx",
-        (c1.tx + 1 + lang_enum_offset(v1, battle_animation_key(state), lang)) as i64,
+        "text_medium_en",
+        text && en && state.options.text_speed == TextSpeed::Medium,
     );
-    ctx.set("r1_ty", (c1.base_ty + 1) as i64);
-    let c2 = &cursors[2];
     ctx.set(
-        "r2_tx",
-        (c2.tx + 1 + lang_enum_offset(v1, battle_style_key(state), lang)) as i64,
+        "text_slow_en",
+        text && en && state.options.text_speed == TextSpeed::Slow,
     );
-    ctx.set("r2_ty", (c2.base_ty + 1) as i64);
-    // Cancel sits in a borderless region (no inset, no enum offset).
-    let c3 = &cursors[3];
-    ctx.set("r3_tx", c3.tx as i64);
-    ctx.set("r3_ty", c3.base_ty as i64);
-
-    ctx.set("r0_active", state.row == OptionsRow::TextSpeed);
-    ctx.set("r1_active", state.row == OptionsRow::BattleAnimation);
-    ctx.set("r2_active", state.row == OptionsRow::BattleStyle);
-    ctx.set("r3_active", state.row == OptionsRow::Cancel);
+    ctx.set(
+        "text_fast_zh",
+        text && zh && state.options.text_speed == TextSpeed::Fast,
+    );
+    ctx.set(
+        "text_medium_zh",
+        text && zh && state.options.text_speed == TextSpeed::Medium,
+    );
+    ctx.set(
+        "text_slow_zh",
+        text && zh && state.options.text_speed == TextSpeed::Slow,
+    );
+    ctx.set(
+        "animation_on_en",
+        animation && en && state.options.battle_animation == BattleAnimation::On,
+    );
+    ctx.set(
+        "animation_off_en",
+        animation && en && state.options.battle_animation == BattleAnimation::Off,
+    );
+    ctx.set(
+        "animation_on_zh",
+        animation && zh && state.options.battle_animation == BattleAnimation::On,
+    );
+    ctx.set(
+        "animation_off_zh",
+        animation && zh && state.options.battle_animation == BattleAnimation::Off,
+    );
+    ctx.set(
+        "style_shift_en",
+        style && en && state.options.battle_style == BattleStyle::Shift,
+    );
+    ctx.set(
+        "style_set_en",
+        style && en && state.options.battle_style == BattleStyle::Set,
+    );
+    ctx.set(
+        "style_shift_zh",
+        style && zh && state.options.battle_style == BattleStyle::Shift,
+    );
+    ctx.set(
+        "style_set_zh",
+        style && zh && state.options.battle_style == BattleStyle::Set,
+    );
+    ctx.set("cancel_active", state.row == OptionsRow::Cancel);
     ctx.set("__lang", v2::lang_code(lang));
     ctx.set("is_zh", lang == Lang::Zh);
     ctx.set("is_en", lang == Lang::En);

@@ -71,21 +71,26 @@ pub fn draw_options_menu(state: &OptionsMenuState, fb: &mut FrameBuffer, lang: L
 
 /// Return the absolute tile position of the options screen's visible cursor.
 pub fn options_menu_cursor_position(state: &OptionsMenuState, lang: Lang) -> (u32, u32) {
-    let pos = menus::options::cursor_position(state, &OPTIONS_DEFAULT_LAYOUT, lang);
+    let pos = menus::options::cursor_spec(state, lang).0;
     (pos.tx, pos.ty)
+}
+
+pub fn options_menu_cursor_spec(state: &OptionsMenuState, lang: Lang) -> (u32, u32, char) {
+    let (pos, glyph) = menus::options::cursor_spec(state, lang);
+    (pos.tx, pos.ty, glyph)
 }
 
 /// Repaint only the changed cursor cells of an already-rendered options screen.
 pub fn redraw_options_menu_cursor(
-    previous: (u32, u32),
-    current: (u32, u32),
+    previous: (u32, u32, char),
+    current: (u32, u32, char),
     fb: &mut FrameBuffer,
     lang: Lang,
 ) {
     let mut painter = FrameBufferPainter::new(fb).with_lang(lang);
     menus::options::redraw_cursor(
-        pokered_ui::TilePos::new(previous.0, previous.1),
-        pokered_ui::TilePos::new(current.0, current.1),
+        (pokered_ui::TilePos::new(previous.0, previous.1), previous.2),
+        (pokered_ui::TilePos::new(current.0, current.1), current.2),
         &mut painter,
         lang,
     );
@@ -773,16 +778,10 @@ mod tests {
         for language in [Lang::En, Lang::Zh] {
             for previous in &states {
                 for current in &states {
-                    let previous_pos = menus::options::cursor_position(
-                        previous,
-                        &OPTIONS_DEFAULT_LAYOUT,
-                        language,
-                    );
-                    let current_pos = menus::options::cursor_position(
-                        current,
-                        &OPTIONS_DEFAULT_LAYOUT,
-                        language,
-                    );
+                    let previous_spec = menus::options::cursor_spec(previous, language);
+                    let current_spec = menus::options::cursor_spec(current, language);
+                    let previous_pos = previous_spec.0;
+                    let current_pos = current_spec.0;
                     if previous_pos == current_pos {
                         continue;
                     }
@@ -790,8 +789,8 @@ mod tests {
                     let mut actual = FrameBuffer::new(config, Rgba::BLACK);
                     draw_options_menu(previous, &mut actual, language);
                     redraw_options_menu_cursor(
-                        (previous_pos.tx, previous_pos.ty),
-                        (current_pos.tx, current_pos.ty),
+                        (previous_pos.tx, previous_pos.ty, previous_spec.1),
+                        (current_pos.tx, current_pos.ty, current_spec.1),
                         &mut actual,
                         language,
                     );
