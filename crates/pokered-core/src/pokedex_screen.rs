@@ -187,6 +187,10 @@ impl PokedexScreenState {
         self.entry_page
     }
 
+    pub fn version(&self) -> GameVersion {
+        self.version
+    }
+
     pub fn seen_count(&self) -> u32 {
         self.dex.seen_count()
     }

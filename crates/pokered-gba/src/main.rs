@@ -19,6 +19,7 @@ use pokered_core::gamefreak_splash::SplashPhase;
 use pokered_core::oak_speech::{entrance_frames, OakSpeechPhase};
 use pokered_core::overworld::screen::WarpFadeState;
 use pokered_core::party_screen::{PartyScreenMode, PartyScreenPhase};
+use pokered_core::pokedex_screen::PokedexScreenMode;
 use pokered_core::save_menu::{SavePhase, YesNoChoice};
 use pokered_core::stats_screen::StatsPage;
 use pokered_core::title_screen::{TitlePhase, TitleScreenState};
@@ -1356,6 +1357,136 @@ impl TrainerCardVisualKey {
 }
 
 #[derive(Clone, Copy, PartialEq, Eq)]
+enum PokedexVisualKey {
+    List {
+        cursor: u16,
+        scroll: u16,
+        max_seen: u16,
+        visible_flags: u16,
+        seen_count: u32,
+        owned_count: u32,
+        side_menu_cursor: Option<u8>,
+        language: Lang,
+    },
+    Entry {
+        species: Species,
+        page: usize,
+        owned: bool,
+        language: Lang,
+    },
+    Area {
+        species: Species,
+        current_map: MapId,
+        version: GameVersion,
+        language: Lang,
+    },
+}
+
+impl PokedexVisualKey {
+    fn new(game: &PokemonGame) -> Self {
+        let state = &game.pokedex_screen;
+        let language = game.state.config.language;
+        match state.mode() {
+            PokedexScreenMode::List | PokedexScreenMode::SideMenu => {
+                let mut visible_flags = 0;
+                for row in 0..pokered_core::pokedex_screen::LIST_ROWS {
+                    let number = state.scroll_offset() + 1 + row;
+                    if number > state.max_seen() {
+                        break;
+                    }
+                    if state.is_seen(number) {
+                        visible_flags |= 1 << (row * 2);
+                    }
+                    if state.is_owned(number) {
+                        visible_flags |= 1 << (row * 2 + 1);
+                    }
+                }
+                Self::List {
+                    cursor: state.cursor(),
+                    scroll: state.scroll_offset(),
+                    max_seen: state.max_seen(),
+                    visible_flags,
+                    seen_count: state.seen_count(),
+                    owned_count: state.owned_count(),
+                    side_menu_cursor: (state.mode() == PokedexScreenMode::SideMenu)
+                        .then(|| state.side_menu_cursor()),
+                    language,
+                }
+            }
+            PokedexScreenMode::Entry => Self::Entry {
+                species: state.cursor_species(),
+                page: state.entry_page(),
+                owned: state.is_owned(state.cursor()),
+                language,
+            },
+            PokedexScreenMode::Area => Self::Area {
+                species: state.cursor_species(),
+                current_map: game.overworld.state.current_map,
+                version: state.version(),
+                language,
+            },
+        }
+    }
+
+    fn cursor_change_from(&self, previous: &Self) -> Option<((u32, u32), (u32, u32))> {
+        let (
+            Self::List {
+                cursor,
+                scroll,
+                max_seen,
+                visible_flags,
+                seen_count,
+                owned_count,
+                side_menu_cursor,
+                language,
+            },
+            Self::List {
+                cursor: previous_cursor,
+                scroll: previous_scroll,
+                max_seen: previous_max_seen,
+                visible_flags: previous_visible_flags,
+                seen_count: previous_seen_count,
+                owned_count: previous_owned_count,
+                side_menu_cursor: previous_side_menu_cursor,
+                language: previous_language,
+            },
+        ) = (self, previous)
+        else {
+            return None;
+        };
+        if scroll != previous_scroll
+            || max_seen != previous_max_seen
+            || visible_flags != previous_visible_flags
+            || seen_count != previous_seen_count
+            || owned_count != previous_owned_count
+            || language != previous_language
+        {
+            return None;
+        }
+        match (previous_side_menu_cursor, side_menu_cursor) {
+            (None, None) if cursor != previous_cursor => {
+                let previous_row = previous_cursor - 1 - scroll;
+                let current_row = cursor - 1 - scroll;
+                Some((
+                    (0, (3 + previous_row as u32 * 2) * 8),
+                    (0, (3 + current_row as u32 * 2) * 8),
+                ))
+            }
+            (Some(previous_side), Some(current_side))
+                if cursor == previous_cursor && previous_side != current_side =>
+            {
+                let row_step = if *language == Lang::Zh { 2 } else { 1 };
+                Some((
+                    (15 * 8, (10 + *previous_side as u32 * row_step) * 8),
+                    (15 * 8, (10 + *current_side as u32 * row_step) * 8),
+                ))
+            }
+            _ => None,
+        }
+    }
+}
+
+#[derive(Clone, Copy, PartialEq, Eq)]
 struct TownMapVisualKey {
     current_map: MapId,
     selected_map: MapId,
@@ -1735,6 +1866,7 @@ fn game_main() -> ! {
     let mut last_bag: Option<BagVisualKey> = None;
     let mut last_party: Option<PartyVisualKey> = None;
     let mut last_stats: Option<StatsVisualKey> = None;
+    let mut last_pokedex: Option<PokedexVisualKey> = None;
     let mut last_trainer_card: Option<TrainerCardVisualKey> = None;
     let mut last_town_map: Option<TownMapVisualKey> = None;
     let mut last_oak: Option<OakVisualKey> = None;
@@ -1887,6 +2019,12 @@ fn game_main() -> ! {
         let stats = matches!(game.state.screen, GameScreen::PokemonStatsScreen(_))
             .then(|| StatsVisualKey::new(game))
             .flatten();
+        let pokedex = (game.state.screen == GameScreen::Pokedex)
+            .then(|| PokedexVisualKey::new(game));
+        let pokedex_cursor_change = pokedex
+            .as_ref()
+            .zip(last_pokedex.as_ref())
+            .and_then(|(current, previous)| current.cursor_change_from(previous));
         let trainer_card = (game.state.screen == GameScreen::TrainerCard)
             .then(|| TrainerCardVisualKey::new(game));
         let town_map = (game.state.screen == GameScreen::TownMap)
@@ -1953,6 +2091,8 @@ fn game_main() -> ! {
             party != last_party
         } else if stats.is_some() {
             stats != last_stats
+        } else if pokedex.is_some() {
+            pokedex != last_pokedex
         } else if trainer_card.is_some() {
             trainer_card != last_trainer_card
         } else if town_map.is_some() {
@@ -2055,6 +2195,8 @@ fn game_main() -> ! {
                     &mut fb,
                     game.state.config.language,
                 );
+            } else if let Some((previous, current)) = pokedex_cursor_change {
+                pokered_app::render::redraw_pokedex_cursor(previous, current, &mut fb);
             } else if let Some(previous_map) = town_map_cursor_change {
                 pokered_app::render::redraw_town_map_cursor(
                     &game.town_map_screen,
@@ -2193,6 +2335,22 @@ fn game_main() -> ! {
             });
             let party_icon_damage_rects = party_icon_animation_change
                 .then_some([party_icon_damage(game.party_screen.cursor())]);
+            let pokedex_cursor_damage = pokedex_cursor_change.map(|(previous, current)| {
+                [
+                    FrameDamageRect {
+                        x: previous.0,
+                        y: previous.1,
+                        width: 8,
+                        height: 9,
+                    },
+                    FrameDamageRect {
+                        x: current.0,
+                        y: current.1,
+                        width: 8,
+                        height: 9,
+                    },
+                ]
+            });
             let party_overlay_cursor_damage = party_overlay_cursor_change.map(
                 |(previous, current, icon_changed)| {
                     (
@@ -2362,6 +2520,8 @@ fn game_main() -> ! {
                 Some(&rects[..if *icon_changed { 3 } else { 2 }])
             } else if let Some(rects) = party_icon_damage_rects.as_ref() {
                 Some(rects.as_slice())
+            } else if let Some(rects) = pokedex_cursor_damage.as_ref() {
+                Some(rects.as_slice())
             } else if let Some(rects) = town_map_cursor_damage.as_ref() {
                 Some(rects.as_slice())
             } else if let Some(rects) = town_map_marker_damage.as_ref() {
@@ -2399,6 +2559,7 @@ fn game_main() -> ! {
         last_bag = bag;
         last_party = party;
         last_stats = stats;
+        last_pokedex = pokedex;
         last_trainer_card = trainer_card;
         last_town_map = town_map;
         last_oak = oak;
