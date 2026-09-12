@@ -18,6 +18,12 @@ A faithful reimplementation of **Pokémon Red and Blue** in **Rust**, built from
 
 This repo is **game-only**: the generic **JRPG engine** lives in a separate repository and is consumed here as a Cargo **git dependency** (`dotzuki-engine`, `dotzuki-engine-dsl`, `dotzuki-engine-script`, `dotzuki-rules`, `dotzuki-renderer`, `dotzuki-ui`, `dotzuki-audio`, `dotzuki-app`, `dotzuki-tui` — see `crates/*/Cargo.toml`, all pinned to the `v0.6.0` tag of the engine repo).
 
+## Story behind the repo
+
+Read the five-month retrospective on rebuilding *Pokémon Red* with AI: the motivation behind the experiment, the hard parts of achieving 1:1 fidelity, and the lessons learned along the way.
+
+**[中文原文](blog/my-retro-2026-08.md)** · **[English version](blog/my-retro-2026-08.en.md)**
+
 ## Try it in your browser
 
 **Play now: [https://liuyanghejerry.github.io/open-pokered/](https://liuyanghejerry.github.io/open-pokered/)**

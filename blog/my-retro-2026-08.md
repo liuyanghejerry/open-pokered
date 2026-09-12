@@ -1,5 +1,7 @@
 # 5个月一比一复刻 《宝可梦 红》 ，我是怎么做的，我又收获了哪些认知
 
+**English version:** [Replicating Pokemon Red 1:1 in 5 Months with AI: How I Did It, and What I Learned](my-retro-2026-08.en.md)
+
 2026年3月，我察觉到 AI Coding 的能力越来越强，普通的编程小任务已经无法探查 AI 的能力上限，于是我做了一个疯狂的实验：用 AI 复刻一次经典游戏《宝可梦 红》，看看 AI 到底能做到什么地步。5个月过去了，复刻已经进入收尾阶段，我对 AI 能做到什么地步、该如何使用 AI 也有了更清晰的认知。
 
 ![游戏画面截图 1](images/opening-screenshot-1.png)

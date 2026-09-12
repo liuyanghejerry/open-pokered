@@ -1,5 +1,7 @@
 # Replicating Pokemon Red 1:1 in 5 Months with AI: How I Did It, and What I Learned
 
+**中文版：**[5个月一比一复刻《宝可梦 红》，我是怎么做的，我又收获了哪些认知](my-retro-2026-08.md)
+
 In March 2026, I noticed AI Coding was getting stronger and stronger — ordinary programming tasks could no longer probe its limits. So I ran a crazy experiment: use AI to replicate the classic game *Pokemon Red*, and see how far AI could really go. Five months later, the remake is entering its final stage, and I have a much clearer picture of what AI can do and how to work with it.
 
 The game is now fully playable. The original only ran on the GameBoy, but my remake supports macOS, Windows, the web, Android, and iOS — even a TUI!
