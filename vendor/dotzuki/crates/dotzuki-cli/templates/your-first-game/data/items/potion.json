@@ -1,7 +1,0 @@
-{
-  "id": "potion",
-  "name": "Potion",
-  "healHp": 20,
-  "price": 20,
-  "effect": "Restores 20 HP."
-}

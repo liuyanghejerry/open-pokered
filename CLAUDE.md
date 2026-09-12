@@ -92,9 +92,9 @@ cd crates/pokered-gba
 ./build.sh            # cargo +nightly build --release + agb-gbafix -> .gba
 ./build.sh run        # launch the ROM in mGBA (SDL)
 ./build.sh logs       # run ~10s in mGBA capturing the agb::println channel
-# The GBA build consumes the VENDORED, no_std-patched dotzuki engine
-# (vendor/dotzuki) + vendored ron (vendor/ron) via [patch] in
-# crates/pokered-gba/Cargo.toml; hosted builds keep using the git deps.
+# The GBA build consumes the dotzuki Git revision pinned in
+# crates/pokered-gba/Cargo.toml. Only the no_std-patched ron crate remains
+# vendored under vendor/ron through that manifest's [patch.crates-io].
 # Automated playtest input: --features autopilot (frame-scripted buttons).
 ```
 

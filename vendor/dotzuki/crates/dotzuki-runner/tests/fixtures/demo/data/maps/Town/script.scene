@@ -1,7 +1,0 @@
-game_scene Town {
-    @storylines {
-        @speaker("Guide") {
-            "Welcome to Town."
-        }
-    }
-}
