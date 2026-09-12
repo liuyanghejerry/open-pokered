@@ -10,6 +10,7 @@ members = [
     "crates/pokered-web",
     "crates/pokered-runner-web",
     "crates/pokered-debug-server",
+    "crates/pokered-agent",
     "crates/scene_apply",
     "crates/pokered-layout-preview",
     "crates/pokered-core",

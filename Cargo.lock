@@ -3136,6 +3136,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "pokered-agent"
+version = "0.1.0"
+dependencies = [
+ "pokered-core",
+ "pokered-data",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
 name = "pokered-app"
 version = "0.1.0"
 dependencies = [
@@ -3152,6 +3162,7 @@ dependencies = [
  "js-sys",
  "log",
  "notify",
+ "pokered-agent",
  "pokered-audio",
  "pokered-core",
  "pokered-data",

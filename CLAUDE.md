@@ -38,6 +38,8 @@ crates/
 ├── pokered-web/           # Full game for WASM/browser (wgpu/pixels)
 ├── pokered-runner-web/    # Headless WASM bridge for the editor's Play activity
 ├── pokered-debug-server/  # TCP debug server (JSON-line protocol); `debug-server` feature
+├── pokered-agent/         # AI-agent observation layer: AgentMode classifier, typed
+│                          #   AgentSnapshot, nearby-entity aggregation, ObservationProfile
 ├── pokered-mobile/        # Shared Android/HarmonyOS ABI adapter
 ├── pokered-ios/           # iOS shell (staticlib)
 └── scene_apply/           # Story-translation helper: .scene → script_config.json
@@ -136,9 +138,14 @@ cargo run --release --bin pokered-app --features debug-server -- run --headless 
 Debug-server protocol (JSON-line over TCP): `get_state`, `get_position`,
 `get_party`, `get_bag`, `get_flags`, `get_npcs`, `warp`, `press`,
 `press_sequence`, `run_frames`, `step_frames`, `save`, `set_flag`,
-`give_item`, `give_pokemon`, `start_wild_battle`. `get_state` also reports
+`give_item`, `give_pokemon`, `start_wild_battle`, `get_agent_state`,
+`get_nearby`. `get_state` also reports
 `active_script_effect`, `script_awaiting_battle`, `player_movement_state`,
-`dialogue`, and battle phase/message. A minimal Python client lives at
+`dialogue`, and battle phase/message. `get_agent_state` (optional `level`
+1-4 or `profile`) returns the typed `pokered-agent` semantic snapshot
+(mode/map/position/party/bag/badges/dialogue/battle/nearby);
+`get_nearby` (optional `radius`, default 10 step units) returns the
+distance-sorted nearby entities. A minimal Python client lives at
 `scripts/debug_drive.py`.
 
 Screen targets: `copyright title main-menu oak overworld battle start-menu options save`.

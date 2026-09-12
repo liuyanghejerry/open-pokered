@@ -51,6 +51,28 @@ pub enum GameDebugCommand {
     /// dialogue is showing. Queued (unconsumed) Press/PressSequence inputs
     /// are dropped first — they would override the internal taps.
     SkipDialogue,
+    /// Semantic observation snapshot for AI agents (the M1 observation
+    /// layer), built by the app on the `pokered-agent` crate. `level`
+    /// (1-4) selects a canned observation profile — 1: runtime state
+    /// only, 2: +dialogue/battle, 3: +nearby entities, 4: +world-data
+    /// allowance; `profile` supplies a complete `ObservationProfile`
+    /// document instead. Pass at most one of them; with neither, the
+    /// default is the full symbolic level 3. Purely observational: never
+    /// steps frames.
+    GetAgentState {
+        #[serde(default)]
+        level: Option<u8>,
+        #[serde(default)]
+        profile: Option<serde_json::Value>,
+    },
+    /// Entities near the player (NPCs, trainers, item balls, signs,
+    /// warps, hidden items), sorted by Manhattan distance in step units
+    /// (1 step = 2 GB tiles). `radius` caps the distance, default 10.
+    /// Purely observational: never steps frames.
+    GetNearby {
+        #[serde(default)]
+        radius: Option<u32>,
+    },
     /// Give a Pokémon to the player's party.
     GivePokemon { species: String, level: u8 },
     /// Start a wild battle against the given species/level (for testing catch
@@ -155,6 +177,49 @@ mod tests {
                 ..
             })
         ));
+
+        let cmd: DebugCommand = serde_json::from_str(r#"{"cmd":"get_agent_state"}"#).unwrap();
+        assert!(matches!(
+            cmd,
+            DebugCommand::Game(GameDebugCommand::GetAgentState {
+                level: None,
+                profile: None,
+            })
+        ));
+
+        let cmd: DebugCommand =
+            serde_json::from_str(r#"{"cmd":"get_agent_state","level":2}"#).unwrap();
+        assert!(matches!(
+            cmd,
+            DebugCommand::Game(GameDebugCommand::GetAgentState {
+                level: Some(2),
+                profile: None,
+            })
+        ));
+
+        let cmd: DebugCommand = serde_json::from_str(
+            r#"{"cmd":"get_agent_state","profile":{"level":"interaction","include_nearby":true}}"#,
+        )
+        .unwrap();
+        assert!(matches!(
+            cmd,
+            DebugCommand::Game(GameDebugCommand::GetAgentState {
+                level: None,
+                profile: Some(_),
+            })
+        ));
+
+        let cmd: DebugCommand = serde_json::from_str(r#"{"cmd":"get_nearby"}"#).unwrap();
+        assert!(matches!(
+            cmd,
+            DebugCommand::Game(GameDebugCommand::GetNearby { radius: None })
+        ));
+
+        let cmd: DebugCommand = serde_json::from_str(r#"{"cmd":"get_nearby","radius":5}"#).unwrap();
+        assert!(matches!(
+            cmd,
+            DebugCommand::Game(GameDebugCommand::GetNearby { radius: Some(5) })
+        ));
     }
 
     /// The game-side dialogue/cutscene stepping commands (wait_until /
@@ -230,11 +295,58 @@ mod tests {
             json,
             r#"{"cmd":"wait_until","condition":"control_ready","max_frames":120}"#
         );
+
+        let json = serde_json::to_string(&DebugCommand::Game(GameDebugCommand::GetAgentState {
+            level: Some(3),
+            profile: None,
+        }))
+        .unwrap();
+        assert_eq!(json, r#"{"cmd":"get_agent_state","level":3,"profile":null}"#);
+
+        let json = serde_json::to_string(&DebugCommand::Game(GameDebugCommand::GetAgentState {
+            level: None,
+            profile: None,
+        }))
+        .unwrap();
+        assert_eq!(json, r#"{"cmd":"get_agent_state","level":null,"profile":null}"#);
+
+        let json = serde_json::to_string(&DebugCommand::Game(GameDebugCommand::GetNearby {
+            radius: None,
+        }))
+        .unwrap();
+        assert_eq!(json, r#"{"cmd":"get_nearby","radius":null}"#);
     }
 
     /// An unknown command string is an error (not silently misparsed).
     #[test]
     fn unknown_command_is_an_error() {
         assert!(serde_json::from_str::<DebugCommand>(r#"{"cmd":"fly_to_moon"}"#).is_err());
+    }
+
+    /// The agent observation commands round-trip through the wire format.
+    #[test]
+    fn agent_commands_round_trip() {
+        let cmd = DebugCommand::Game(GameDebugCommand::GetAgentState {
+            level: None,
+            profile: Some(serde_json::json!({"level": "full_symbolic"})),
+        });
+        let line = serde_json::to_string(&cmd).unwrap();
+        let back: DebugCommand = serde_json::from_str(&line).unwrap();
+        assert!(matches!(
+            back,
+            DebugCommand::Game(GameDebugCommand::GetAgentState {
+                level: None,
+                profile: Some(_),
+            })
+        ));
+
+        let cmd = DebugCommand::Game(GameDebugCommand::GetNearby { radius: Some(12) });
+        let line = serde_json::to_string(&cmd).unwrap();
+        assert_eq!(line, r#"{"cmd":"get_nearby","radius":12}"#);
+        let back: DebugCommand = serde_json::from_str(&line).unwrap();
+        assert!(matches!(
+            back,
+            DebugCommand::Game(GameDebugCommand::GetNearby { radius: Some(12) })
+        ));
     }
 }

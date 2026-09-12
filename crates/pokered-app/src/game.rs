@@ -5790,6 +5790,77 @@ impl PokemonGame {
         })
     }
 
+    /// Typed semantic observation snapshot (the `pokered-agent` M1 layer),
+    /// built from the same live sources as [`Self::debug_state_snapshot`].
+    /// Pure observation: reads state, never steps frames. Not gated on
+    /// `debug-server` — the observation logic is pure and reusable; only
+    /// the debug-command surface is feature-gated.
+    pub fn agent_snapshot(
+        &self,
+        profile: &pokered_agent::ObservationProfile,
+    ) -> pokered_agent::AgentSnapshot {
+        use pokered_agent::{ObservationSource, OverworldObs};
+        let map_id = self.overworld.state.current_map;
+        let bag = self.save_data.game_data.bag.items();
+        let hidden = pokered_agent::hidden_item_spots(map_id, self.overworld.hidden_item_flags());
+        let in_battle = matches!(self.state.screen, GameScreen::Battle);
+        let src = ObservationSource {
+            screen: &self.state.screen,
+            map_id,
+            player_x: self.overworld.state.player.x,
+            player_y: self.overworld.state.player.y,
+            player_facing: self.overworld.state.player.facing,
+            overworld: OverworldObs {
+                dialogue_open: self.overworld.pending_dialogue.is_some(),
+                choice_open: self.overworld.pending_choice.is_some(),
+                script_running: !self.overworld.script_engine_idle()
+                    || self.overworld.active_script_effect_label().is_some()
+                    || self.overworld.script_awaiting_battle,
+                warp_transition: self.overworld.pending_warp.is_some()
+                    || !matches!(
+                        self.overworld.warp_fade_state,
+                        pokered_core::overworld::WarpFadeState::Idle
+                    ),
+            },
+            battle_phase: in_battle.then_some(&self.battle.phase),
+            party: &self.save_data.party,
+            bag: &bag,
+            obtained_badges: self.save_data.game_data.obtained_badges,
+            dialogue: self.overworld.pending_dialogue.as_ref(),
+            choice: self.overworld.pending_choice.as_ref(),
+            battle: in_battle.then_some(&self.battle),
+            npc_states: &self.overworld.npc_states,
+            map_json: pokered_data::map_data_loader::get_map_json(map_id),
+            hidden_items: &hidden,
+            nearby_radius: profile.nearby_radius,
+        };
+        pokered_agent::build_agent_snapshot(&src, profile)
+    }
+
+    /// Entities near the player within `radius` step units, nearest first
+    /// (same aggregation as the snapshot's `nearby` section).
+    pub fn agent_nearby(&self, radius: i32) -> Vec<pokered_agent::NearbyEntity> {
+        let map_id = self.overworld.state.current_map;
+        let player = pokered_agent::Position {
+            x: self.overworld.state.player.x as i32,
+            y: self.overworld.state.player.y as i32,
+        };
+        let npcs: Vec<pokered_agent::NpcObs> = self
+            .overworld
+            .npc_states
+            .iter()
+            .map(pokered_agent::NpcObs::from)
+            .collect();
+        let hidden = pokered_agent::hidden_item_spots(map_id, self.overworld.hidden_item_flags());
+        pokered_agent::nearby_entities(
+            player,
+            &npcs,
+            pokered_data::map_data_loader::get_map_json(map_id),
+            &hidden,
+            radius,
+        )
+    }
+
     /// Predicate used by the debug `wait_until` command. Returns whether
     /// the named condition currently holds. Named conditions are the
     /// driver-facing vocabulary; `screen=` / `battle_phase=` /
@@ -5869,6 +5940,57 @@ impl PokemonGame {
         match cmd {
             DebugCommand::Core(CoreDebugCommand::GetState) => {
                 DebugResponse::ok_with_data(self.debug_state_snapshot())
+            }
+            DebugCommand::Game(GameDebugCommand::GetAgentState { level, profile }) => {
+                // Validate params up front: `level` (1-4) selects a canned
+                // profile, `profile` supplies one verbatim; both is a
+                // caller error. No frames are stepped — pure observation.
+                let profile = match (level, profile) {
+                    (Some(_), Some(_)) => {
+                        return DebugResponse::err(
+                            "pass either `level` or `profile`, not both".to_string(),
+                        )
+                    }
+                    (Some(level), None) => {
+                        match pokered_agent::ObservationLevel::from_u8(level) {
+                            Some(level) => pokered_agent::ObservationProfile::for_level(level),
+                            None => {
+                                return DebugResponse::err(format!(
+                                    "unknown observation level: {level} (expected 1-4)"
+                                ))
+                            }
+                        }
+                    }
+                    (None, Some(profile)) => {
+                        match serde_json::from_value::<pokered_agent::ObservationProfile>(profile)
+                        {
+                            Ok(profile) => profile,
+                            Err(err) => {
+                                return DebugResponse::err(format!("invalid profile: {err}"))
+                            }
+                        }
+                    }
+                    (None, None) => pokered_agent::ObservationProfile::default(),
+                };
+                DebugResponse::ok_with_data(
+                    serde_json::to_value(self.agent_snapshot(&profile)).unwrap_or_default(),
+                )
+            }
+            DebugCommand::Game(GameDebugCommand::GetNearby { radius }) => {
+                let radius = radius
+                    .unwrap_or(pokered_agent::DEFAULT_NEARBY_RADIUS as u32)
+                    as i32;
+                let map_id = self.overworld.state.current_map;
+                let entities = self.agent_nearby(radius);
+                DebugResponse::ok_with_data(serde_json::json!({
+                    "map": { "id": map_id as u8, "name": format!("{:?}", map_id) },
+                    "position": {
+                        "x": self.overworld.state.player.x,
+                        "y": self.overworld.state.player.y,
+                    },
+                    "radius": radius,
+                    "entities": entities,
+                }))
             }
             DebugCommand::Game(GameDebugCommand::WaitUntil {
                 ref condition,
