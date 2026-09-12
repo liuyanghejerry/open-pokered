@@ -1,194 +1,182 @@
-# Replicating Pokemon Red 1:1 in 5 Months with AI: How I Did It, and What I Learned
+# Five Months Rebuilding Pokémon Red with AI: Progress, Detours, and Lessons
 
-**中文版：**[5个月一比一复刻《宝可梦 红》，我是怎么做的，我又收获了哪些认知](my-retro-2026-08.md)
+**中文版：**[用 AI 复刻《宝可梦 红》的五个月：进展、弯路与收获](my-retro-2026-08.md)
 
-In March 2026, I noticed AI Coding was getting stronger and stronger — ordinary programming tasks could no longer probe its limits. So I ran a crazy experiment: use AI to replicate the classic game *Pokemon Red*, and see how far AI could really go. Five months later, the remake is entering its final stage, and I have a much clearer picture of what AI can do and how to work with it.
+In March 2026, I started rebuilding *Pokémon Red* in Rust with AI. I wanted to see how far AI could go when the task grew from a small coding exercise into a complete classic game.
 
-The game is now fully playable. The original only ran on the GameBoy, but my remake supports macOS, Windows, the web, Android, and iOS — even a TUI!
+Five months later, the game is playable on macOS, Windows, the web, Android, and iOS. It even has a terminal interface (TUI). My goal is to reproduce the original's behavior and visuals as faithfully as possible. Some animations and details still need work.
 
-![Gameplay screenshot 1](images/opening-screenshot-1.png)
-![Gameplay screenshot 2](images/opening-screenshot-2.png)
+![The remake's town, battle, map, and opening screens](images/opening-screenshot-1.png)
 
-To make it easy to try, I deployed a build on GitHub — click and play: https://liuyanghejerry.github.io/open-pokered/
+*The remake so far: Pallet Town, a battle, the town map, and the opening dialogue.*
 
-The whole project is now open source: https://github.com/liuyanghejerry/open-pokered . This version has the game engine extracted. I didn't publish the original working repo directly, mainly because the engine/game split was only finalized later — this version is much cleaner.
+**[Play in your browser](https://liuyanghejerry.github.io/open-pokered/) · [View the source](https://github.com/liuyanghejerry/open-pokered)**
 
-I also extracted the game engine into its own project: https://github.com/liuyanghejerry/dotzuki , which can power more interesting games in the future.
+A question kept coming up throughout those five months: after AI makes a change, how do I know it got it right? Answering that shaped my choice of models, debugging tools, and architecture. It also changed how I spent my own time on the project.
 
-## What Makes This Hard?
+This is an account of those changes, including the problems I still haven't solved.
 
-At the time of writing, the remake project had **1,823 commits**, **189 merged PRs**, and **416K lines** of code (Rust/Web/DSL/Python, covering engine + game + toolchain).
+## Why Having the Original Code Wasn't Enough
 
-I know GPT-6 is dominating the Internet right now, but even GPT-6 can't do this in one prompt — making a demo is easy; making a faithful remake is hard; optimizing the architecture on top of that is harder still.
+The community's [pret/pokered](https://github.com/pret/pokered) project provides an annotated disassembly, so I could refer directly to the original implementation. The graphics are based on the original assets; the game logic is reimplemented in Rust so it can run independently of Game Boy hardware.
 
-But where exactly is the difficulty?
+Having that reference doesn't make the translation straightforward. The original spans 1,923 assembly files and roughly 174,000 lines of assembly. Much of it is tied to the hardware, with game logic and rendering intertwined. Changing the language, platform, and architecture meant checking those semantics all over again.
 
-**Different hardware, different programming — the code can't be copied.** The community already has a disassembly of *Pokemon Red* (https://github.com/pret/pokered), complete with comments, so I didn't need to mine the ROM for information. But GameBoy-era games were written almost entirely in assembly, tied to a specific CPU architecture. Although AI has largely freed us from reading assembly, this project has 1,923 assembly files and 174K lines of assembly code, and AI can't precisely restore the semantics of every instruction — which means we had to invest heavily in testing.
+Then there is the scale: 151 Pokémon, 165 moves, and 245 maps, plus trainers, NPCs, items, and story events. The numbers, trigger conditions, and animation sequences all need to match. When designing my own game, I can choose the rules. In a remake, the original's behavior is the reference.
 
-**Nobody has organized all the game logic for you.** Even though this is the first-generation Pokemon game — the simplest one — it still has 151 Pokemon, 165 moves, 391 trainers, 245 maps, roughly 500 NPCs, and over 200 map items. What needs aligning is not just the numbers, but also the relationships and the animations. When you write your own game, you define what you want and what's correct. When you remake a game, there is only one answer: if yours differs, you're wrong — it's not a faithful remake. And because GameBoy hardware was extremely limited, the original developers had to count every byte, sacrificing many general-purpose designs. For example, there is no complete script engine in all of *Pokemon Red* — a big difference from modern engine-based games. Game logic and rendering logic are deeply intertwined; you can hardly call it layered.
+A battle screenshot can look right while the random-number sampling for catches, poison state transitions, or critical-hit table lookups behave differently. A character can reach the correct position without matching the original's movement timing along the way.
 
-**Direct frame-by-frame comparison doesn't work.** I guessed some people would do what I did at first: have AI control an emulator running the original, then break it down and implement frame by frame. I tried — it's extremely inefficient. Lacking any understanding of the game's internals, with only images and little else to go on, the AI spends most of its time on the most basic operations: even "press forward a few times, then back" requires repeated deliberation. You find that the AI is mostly not understanding the game but wrestling with basic controls. GPT-6 improved this significantly, but doing the entire game this way is still prohibitively expensive.
+At the time of writing, the project had **1,823 commits, 189 merged PRs, and 416,000 lines of code**, covering the game, engine, and toolchain across Rust, web code, DSLs, and Python. Those figures describe the project's scale. Fidelity still has to be checked behavior by behavior.
 
-**Games are dynamic, not static — and often there's no standard at all.** I've tried replicating other people's web pages, with a much higher success rate than replicating a whole game. Most web pages follow modern component-based design, and the web is highly structured information — great for reasoning and imitation. Games aren't like that: their basic building blocks are more abstract, non-standard, and far less structured. More importantly, much of a game's content is dynamic — you have to experience the process, not just a static result — which drives the cost of alignment up dramatically.
+The work went through four broad stages:
 
-## Timeline at a Glance
+| Stage | Main work | The next question |
+| --- | --- | --- |
+| Getting started | Extract data from assembly; build data models and unit tests | Do passing tests mean it matches the original? |
+| Tools and engine | Separate subsystems; add debugging access and a scripting engine | How can AI check its own work? |
+| Story and visuals | Migrate scenes in batches; compare screenshots and animations | How can I handle so much repetitive work efficiently? |
+| Playthroughs and finishing work | Run complete playthroughs; check events and details | What does completing the main story still miss? |
 
-The project evolved right alongside AI's growing capabilities, so you could say it captured the full dividend of this entire cycle.
+The [full timeline](images/timeline-en.png) records the dates, tools, and model changes. I'll focus here on the shifts that made the biggest difference.
 
-![Project timeline](images/timeline-en.png)
+## Stronger Models Let Me Delegate Bigger Tasks
 
-### Testing the Waters
+Two kinds of work shaped my view of model capability.
 
-When the remake kicked off, AI's capabilities were fairly limited, so I had to intervene manually relatively often. The most important tech-stack choices and architecture design were made in that period.
+Early models were already useful for writing parsers, moving data, and migrating scenes with well-defined formats. I had to intervene much more often when the task was to judge whether two implementations were equivalent. With assembly on one side and Rust on the other, the model needed to understand both and check their edge cases.
 
-The main work then was modeling: maps, Pokemon, moves, the Pokedex — turning them into well-defined data structures. The primary approach was to have AI read the assembly code, then keep enriching the unit tests.
+When its reasoning fell short, AI could produce a convincing report claiming that the implementations matched. I still had to recheck the important behavior myself. That taught me that **model capability determines which judgments I can delegate.**
 
-![Prototyping: modeling and unit tests](images/prototyping-phase.png)
+Mobile integration made this especially clear. Earlier models repeatedly got stuck on lifecycle and rendering integration when connecting the Rust framebuffer module to Android and iOS. After I switched to Claude Opus, it worked through the same problem in about half an hour. That experience changed how I chose models: when a reasoning task kept getting stuck, I became quicker to try a stronger one.
 
-But unit tests alone only prove the code has no logic bugs — they can't ensure alignment with the original. So I kept having AI organize the original's logic — its map rendering logic, battle logic, and so on — and then re-implement that logic in my remake based on those write-ups.
+Vision changed the division of work too. A font shadow displaced by one pixel or a misaligned menu cursor used to require me to inspect screenshots and describe the difference to AI. Pixel comparisons could highlight differences, but I still had to interpret them and guide the fix. Once models could analyze screenshots directly, I could gradually hand over more of that work.
 
-### Building the Toolchain
+The coding agent environment, often called the **harness**, mattered as well. It runs the model, manages context, and connects tools, affecting how long the agent can keep working productively. I used four main environments:
 
-As AI models and harness infrastructure evolved, tool calling matured. I began dispatching larger tasks. A game looks like a monolith, but it's actually composed of many subsystems.
+| Environment | What I could delegate | My main role |
+| --- | --- | --- |
+| Cursor / VS Code, March | Changes to individual files | Review every diff and organize commits |
+| opencode + OMO, from late March | Divide a feature among planning, implementation, and review roles | Break down tasks and coordinate models |
+| Claude Code, around late May | A sustained series of related changes | Turn debugging and verification into repeatable project instructions and skills |
+| kimi-code, from late August | Extended investigations across repositories and Git history | Set the goal and review the evidence and results |
 
-![Battle system](images/battle.jpg)
+OMO's role assignments and context compaction helped an agent carry a feature through to completion. Later, project instructions, reusable playbooks called skills, and longer context in Claude Code made debugging and screenshot verification repeatable. By the kimi-code stage, tracing Git history across three repositories had become a routine assignment. Sometimes the initial brief could be as broad as “figure out what happened here.”
 
-Take *Pokemon Red*'s battle system — a relatively independent subsystem. Without doing anything special, testing a battle would require starting the game, playing through the story until you reach a trainer who can battle, and only then entering combat. Very inefficient. A better approach is to isolate the subsystem with dedicated unit tests and a dedicated CLI test entry, so AI can close the loop on battles autonomously.
+My role shifted from author to coordinator to reviewer. Eventually, I could delegate some of the task breakdown I had previously done myself. But the models still needed clear completion criteria and tools to check the results.
 
-Early battle testing was very simple — purely CLI input and output — but fully sufficient for verifying battle algorithms. Get the underlying algorithms working first, then add visual coverage: the whole process is far more efficient.
+## Give AI a Way to Check Its Work
 
-![Walking left in the bedroom: original vs. remake](images/bedroom_walk_left-comparison.png)
+At the start, I had AI read the assembly, build data structures for maps, Pokémon, moves, and the Pokédex, and add unit tests.
 
-Later, AI gained multimodal capabilities and could analyze game screenshots or do screenshot comparisons, so I built an instant-screenshot tool to let AI see as it worked.
+Passing tests can create a false sense of certainty. **Tests check the cases they cover. If their expectations differ from the original game, passing them doesn't establish fidelity.** I also had AI document the original's map and battle logic, then use those findings to check the implementation.
 
-![Cut animation timing comparison](images/cut-raw-time.png)
+Many problems required running the game.
 
-### Building the Engine
+To check encounter logic, I had to walk into an encounter. To test a trainer, I had to reach them first. I tried having AI control an emulator of the original using screenshots alone. It spent so much time deciding basic forward and backward movements that little time was left for analyzing the game.
 
-As mentioned, the original *Pokemon Red* has no strict layered design, and its script engine is extremely minimal. But it's 2026 — there's no need to be that constrained — so I spent a dedicated stretch building an engine. Beyond the story script engine, I built an extra DSL for dialog boxes, so the many dialog boxes in the game could be aligned and fixed in a unified way.
+That pushed me to build dedicated testing interfaces. Battles are a relatively independent subsystem, so I added a command-line interface that let AI set up a battle, run it, and read the result directly. Checking the algorithms first, then adding visual verification, removed the need to replay story sequences just to reach a test.
 
-![Engine editor 1](images/editor-4.jpeg)
-![Engine editor 2](images/editor-2.jpeg)
+Later, taking inspiration from Chrome's DevTools Protocol, I built a debug server for the game. It accepts commands over TCP and returns structured data:
 
-Because I had built extensive unit tests early on, they proved valuable during engine development.
+| What needs checking | What the tools provide |
+| --- | --- |
+| What is happening now? | Queries for game state, NPCs, and story flags |
+| Does this location behave correctly? | Teleportation to a specified map and position |
+| What does this sequence of actions trigger? | Batched button inputs |
+| At which frame does an animation diverge? | Synchronous frame stepping and screenshots |
 
-Later I split the engine into its own repository, fully isolated from the game's story content — stripping out almost everything Pokemon-related: https://liuyanghejerry.github.io/dotzuki/stable/
+The first debugging interface arrived in May. In July, I added better playtesting controls, frame stepping, and a headless mode that runs without a window. Those tools made sustained audits of battles and visuals much easier.
 
-That also dramatically cut the project's regression cost.
+With controlled scenarios, frame comparisons became useful: bring the original and the remake to corresponding states, then compare how their screens change under the same inputs.
 
-### Story Completion & Visual Fidelity
+![Walking left in the bedroom: original, remake, and pixel differences](images/bedroom_walk_left-comparison.png)
 
-With the script engine in place, story completion had a solid foundation. In the summer of 2026, once the script engine proved stable, I used the Flash-series models for large-scale story completion — very efficient. I had initially worried AI would struggle with my custom DSL; that turned out to be completely unfounded. Of course, to make the DSL work well, I also equipped it with a syntax checker and a manual for AI to consult quickly.
+*Original on the left, Rust remake in the middle, and pixel differences highlighted in red on the right. Differences in character position and scene edges need to be interpreted alongside the inputs and frame timing.*
 
-![Story completion](images/story-completion.png)
+![The Cut sequence in the original and the remake, compared over time](images/cut-raw-time.png)
 
-After completing large amounts of story content, I turned to visual fidelity details. By then domestic models were shipping multimodal capabilities too, so I rebuilt the game's debug tooling — adding commands for teleporting the protagonist anywhere, real-time map queries, joystick state, joystick control, and more. AI could loop rapidly between playing and looking, and visual details improved quickly.
+*The Cut sequence: original above, remake at the time of comparison below. Dialogue, screen transitions, and the end of the sequence all need timing checks. A screenshot of the final state would miss these differences.*
 
-![Stats page before the fix](images/ui-fix-stats-page1-zh-before.png)
-![Stats page after the fix](images/ui-fix-stats-page1-zh-after.png)
+Screenshots also became feedback for interface fixes. A model could inspect the before and after images, check for overlapping text or misplaced cursors and borders, and make another revision.
 
-### Climbing Higher Peaks
+| Before | After |
+| --- | --- |
+| ![Chinese stats screen before the layout fix](images/ui-fix-stats-page1-zh-before.png) | ![Chinese stats screen after the layout fix](images/ui-fix-stats-page1-zh-after.png) |
 
-Many game details can't be identified through static code analysis — for instance, later areas that only trigger with special items or special story events. Looking at a single scene's script rarely reveals the problem.
+*Layout fixes in the Chinese stats screen. The name and several labels overlap or are obscured on the left. The right image shows the corrected text and border positions.*
 
-![NPC walk interpolation, before](images/npc-walk-interpolation-before.gif)
-![NPC walk interpolation, after](images/npc-walk-interpolation-after.gif)
+Alongside unit tests, I added visual snapshot tests for menus, dialogue boxes, and battle screens. If a later change alters a baseline image, the test flags it for review. This protects previously checked output from changing unnoticed. Whether the baseline itself matches the original still requires a separate comparison.
 
-These cases require constructing game states for dynamic analysis, so recently I started experimenting with a more powerful testing mechanism — **AI playthroughs**.
+These checks gradually became part of GitHub CI, running automatically on pull requests. The models and tools kept changing, but the accumulated checks could stay.
 
-A playthrough means having AI write gameplay scripts that simulate a human completing the game. If something unexpected happens along the way, that's a bug. In my testing, the latest Kimi K3, GLM-5.3, and others can all write completion scripts and run playthroughs. The one caveat: without guidance, AI's completion scripts tend to stick to the main storyline and rarely try side quests.
+More recently, I started having AI write gameplay scripts that simulate a complete playthrough. These connect story events that isolated tests can miss, checking whether special items and events correctly unlock later sequences.
 
-After GPT-6 launched, AI's ability to operate tools and windows got even stronger, letting me layer "free-roam" tasks on top of scripted playthroughs, so AI and scripts coexist better.
+Playthroughs have their own blind spots, though. **Without extra guidance, AI's scripts tend to follow the main story and rarely explore side content.** One successful run doesn't check the whole game. An unexpected result also needs investigation: the game might be wrong, or the script's inputs or expectations might be wrong.
 
-In addition, most pre-GPT-6 models don't understand consecutive frames well enough, so a portion of the animations in my project are still not fully aligned — one of the things to catch up on in the future.
+I've started adding free exploration alongside the fixed playthroughs, and still need to broaden coverage of side content. Interpreting consecutive frames and matching some animations also remain unfinished work.
 
-Now let me share some of the shifts in my own understanding along the way.
+These experiences made me more willing to invest in verification tools early. Each new state query or control can reduce the manual work needed for many later fixes.
 
-## Insight 1: Model Capability Is the Decisive Factor
+## The Stack and Architecture Shape the Cost of Future Changes
 
-A remake project has two kinds of work, with completely different demands on the model.
+Choices made in the first week were still affecting development months later.
 
-One is **well-patterned local production**: writing parser scripts, moving data, migrating scenes. Models from March 2026 could handle this — even Copilot-level code completion suffices. This kind of work is never the bottleneck.
+**One of Rust's biggest benefits in this project was reducing the cost of checking AI's work.** The compiler catches type, ownership, and interface errors before the game runs, providing feedback the model can act on. By day three, the project had 2,452 tests running. Together with the compiler, they supported the larger changes that followed.
 
-The other is **judgment calls that require real reasoning**. The core work of a remake isn't "write a Pokemon-like game" — it's **alignment**: on the left is the original's disassembly, on the right is my Rust, and the question is "do these two behave identically under boundary conditions" — how the catch-rate RNG samples, how badly-poisoned switches with regular poison, whether the critical-hit table lookup uses the same index. Because the language, tech stack, and architecture all changed, the model must understand two semantics at once and argue equivalence. If the model can't reason well enough, it hands you a report that "looks aligned" — worse than not doing it at all, because human intervention never ends.
+April was the only month when the codebase shrank: roughly 48,000 lines added and 55,000 deleted, including an editor rewrite and a refactor of the battle system. Existing checks gave me the confidence to let AI make changes on that scale.
 
-One thing that impressed me: integrating the Rust framebuffer module on Android/iOS. With earlier models, they could never get the lifecycle and same-layer heterogeneous rendering right. Then Claude Opus arrived and solved it in about half an hour.
+That made automated verification a more important consideration in language selection. Rust's compile-time constraints, testing support, and cross-platform ecosystem all helped this project.
 
-But reasoning alone wasn't enough — there was a second threshold crossed even later: **vision**. Rendering issues — a font shadow off by one pixel, a menu cursor misaligned — before strong multimodal models shipped, I had to eyeball screenshots myself and describe the differences back in text; even pixel-diff tests couldn't spare me from describing the diffs. Once screenshots could be fed back to the model, "spot the difference" became a closed loop, and visual fixes could iterate.
+The language could only do part of the job, though. Adding platforms, changing story content, and fixing visuals also needed clear architectural boundaries.
 
-## Insight 2: The Harness Determines How Involved You Must Be
+![Architecture of the game, reusable engine, and platform integrations](images/open-pokered-architecture-en.png)
 
-Over these five months I used four generations of harnesses, and the difference between generations wasn't "writing faster" — it was **how big a thing I could hand to AI**:
+*The project is divided by responsibility: game rules and content, the reusable engine, rendering, and platform integration each have a place.*
 
-- **Cursor / VS Code era** (March): single-file generation, I reviewed every diff, commits were my hand-written milestone journal pushed straight to master. Automation was minimal — at most build verification and some basic unit tests.
-- **opencode + OMO era** (from late March): I quickly realized the project depended on me too heavily and progress would never leap forward. Luckily I found the powerful oh-my-opencode tool in the community. Models at the time each had their strengths — Claude and GPT were good at different things — so opencode + OMO's role decomposition (planning / implementation / review / retrieval) plus multi-vendor routing could cut "one feature" into parallelizable task packages. Context windows were generally only 200K+ then; OMO's auto-compaction gave tasks a chance to close the loop. It solved the **single-feature, single-task** granularity.
-- **Claude Code era** (from late May): after a while I found Claude Opus's reasoning outstanding, plus it had strong vision — to the point that I basically stopped using the other models in opencode, only occasionally needing GPT for tricky problems. So I went all-in on Claude. CLAUDE.md let project memory survive across sessions, skills solidified debugging and screenshot verification into repeatable flows, and the 1M context let a single task run for a long stretch. Task granularity evolved from "feature" level to "campaign" level.
-- **kimi-code era** (late August to now): Opus is great, but obtaining and protecting an account gradually became a problem. Thankfully Kimi K3 arrived out of nowhere. After trying K3's capabilities immediately, I subscribed on the spot — and it proved to be an incredible deal. In this era, long-horizon tasks (like git archaeology across three repos) became routine. Goals can be as vague as "figure this out."
+I made three main separations:
 
-The essence of this line is **steadily declining human involvement**: from author, to dispatcher, to acceptance reviewer. In the OMO era I had to cut intent into chunks the model could swallow; once agentic models arrived, the cutting itself could be delegated. The vaguer and longer the task, the more it feeds on the product of model × harness — if either is missing, the delegation boundary falls back a notch.
+- **Game and engine.** I extracted reusable capabilities while keeping Pokémon-specific rules and content in the game, leaving room to build other games later.
+- **Game logic and platform integration.** Windowing, hardware input, and display implementations are isolated so the platforms can share core logic. The terminal version can use those same game capabilities.
+- **Content descriptions and runtime behavior.** Dedicated domain-specific languages (DSLs) describe story scripts and dialogue layouts, with JSON for other structured data. That gives content editing a consistent interface and supports hot reload during development.
 
-## Insight 3: Tech Stack Is the First Architecture Decision of the AI Era
+Cross-platform results came early. The WebAssembly (WASM) build worked three days into the project. After I separated renderer features in May, Android and iOS followed by the end of the month. Platform integration still involved lifecycle and rendering problems, but sharing the core reduced duplicate implementations and the work needed to keep them in sync.
 
-Two selection decisions were made in the first week, on intuition; only five months later did I see clearly what they actually saved.
+Separating content from code also changed how I filled out the story. I had worried that AI would struggle with a DSL I designed myself. In practice, a syntax checker and an accessible reference manual let the models write scenes according to its rules. Once the scripting engine was stable, I used Flash-series models to fill in story content in batches.
 
-**Rust's core value is verification cost.** AI writes code fast, but the confirmation cost of "is what AI wrote correct" is the real bottleneck. The Rust compiler is a first reviewer that never gets off work: type errors, ownership issues, half the API misuses — all caught at compile time, with feedback in seconds. By day 3, the repo already had 2,452 tests running.
+![Editing the main menu DSL with a rendered preview](images/editor-4.jpeg)
 
-April was the only month with net-negative code growth (+48K / −55K lines) — the editor rewritten from scratch, the battle system refactored. Without the compiler and automated tests as a safety net, I wouldn't have dared let AI delete code like that. The first criterion for choosing a language in the AI era should change from "ecosystem and performance" to "**the cost of machine-verifying output**" — and Rust happens to be the optimal answer under that criterion.
+*The layout editor puts the description and result together: edit the main menu's DSL below and inspect the rendered preview above.*
 
-**The right tech stack makes cross-platform extremely easy.** Rust itself is a strongly cross-platform language with a community full of reusable cross-platform components — including the framebuffer our game renderer depends on.
+Dialogue boxes benefited too. Layouts that had been scattered through the implementation now had a consistent representation and a clear place to edit and check them.
 
-To validate cross-platform feasibility, the WASM build worked in 3 days; after the renderer split into framebuffer/gpu features on May 12, Android and iOS followed by the end of the month; by the final split, Web, desktop, Android, iOS, and TUI — five platforms — shared the same rendering stack. Mobile adaptation and web deployment would each occupy a full person in a traditional project; we finished each platform in just a few commits. The biggest hidden cost of a remake isn't just "writing the game" — it's "making the game run identically everywhere it can run" — and that cost was eliminated in one stroke by the architecture decision.
+As the code and tests grew, module boundaries also affected regression testing. Running the full suite for every change means longer waits. Modules with clear responsibilities make it easier to identify what a change affects and choose the relevant checks.
 
-In hindsight, had we chosen the wrong tech stack, the Token cost of cross-platform work would have stayed high no matter how strong the models were, and every new feature would have come with extra cost.
+Building that structure took time upfront. Its value became clearer as new platforms, story additions, and visual fixes each had an obvious place to go.
 
-## Insight 4: Architecture Decides How the Game Should Be Split
+## Cheaper Models Made More Work Worth Doing
 
-![open-pokered architecture](images/open-pokered-architecture-en.png)
+As the project grew, I paid more attention to how I assigned tasks.
 
-Model, harness, and toolchain are three multipliers — but what shape of object the multiplication acts on is decided by architecture. To remake a monolithic GB game, the easiest path is a monolithic Rust program — logic, rendering, and platform code all tangled together. AI can write that too; it's just that every later change happens inside that tangle. But I'm a software veteran, so instead of letting AI deliver only features, I deliberately chose and partitioned the architecture:
+MiMo, DeepSeek, and Kimi models produced a substantial share of the code and content, while Opus continued handling difficult judgments and reviews. I assigned work according to its demands: stronger reasoning for semantic checks; cheaper models for batches of well-defined work that could be checked automatically.
 
-- **Separate logic from engine**: in *Pokemon Red*'s GameBoy era, the programmers' main challenge was squeezing the game into that tiny hardware. Today's software and hardware environment is completely different, and I didn't want the remake to become a frozen, unreusable monolith — so I deliberately had AI split the project into an engine and a game body.
-- **Separate logic from platform**: cross-platform needs more than the right tech stack — platform-specific parts must be isolated, so game logic doesn't care about rendering methods or hardware input handling. In the past, making a game run in a TUI was basically redoing the whole game; with the right architecture, a TUI is just one more small renderer.
-- **Separate content from code**: the disassembled *Pokemon Red* doesn't distinguish data from code — they're basically the same blob, a limitation imposed by the hardware. If AI simply copied it, the remake would be the same. But I wanted logic and data separated, so I designed a dedicated story engine, a dialog-box layout engine, and so on, sinking all such data into DSL and JSON. Besides making content easier to adjust, this also gave us hot reload during development — no more waiting for a compile-and-package cycle for every tweak.
+Story migration is one example. Once the scripting engine, syntax checks, and reference manual were ready, many scenes could follow the same rules. The tools made each task easier to specify, and lower model costs made batch execution more affordable.
 
-Anyone who programs with AI long-term will feel this: CI/CD costs keep rising, because AI writes not just code but also tests. If every change runs the full test suite, you wait longer and longer — and your GitHub Actions bill grows accordingly. With the right architecture, module boundaries become firewalls for AI changes. Each module has a single responsibility, the blast radius of a change is predictable, CI scope stays controllable — and that in turn optimizes the long-term cost structure.
+Scene comparisons and additional checks followed a similar pattern. An individual task might be straightforward, but there were many of them. Work I would once have hesitated to repeat across the entire game could now run in parallel, backed by automated checks and reviews from stronger models.
 
-What architecture partitioning decides is not what the code looks like, but **where change happens**. Early on it's the overhead of "writing extra skeleton"; later it gives every new requirement — a new platform, a new game, a new audit — a clear place to land.
+I've kept a [record of monthly commits and model assignments](images/monthly-commits.png). Commit counts help trace the pace of work, but task types, commit sizes, models, and tools were all changing together. Those numbers alone can't isolate the productivity gain from a particular model.
 
-## Insight 5: Verifiability Must Be Built Deliberately
+As models from Chinese providers took on more of the work, I also gained more practical options. Reliable account access, subscription costs, and ease of continued use all matter in a project that runs for months.
 
-Games are graphical programs, naturally hostile to AI: **the engine's internals are invisible, and game progress is uncontrollable**. After changing an encounter logic, verifying it meant literally walking in and triggering dozens of wild battles — in the early days, that verification was basically me, by hand. I'd seen and tried community projects where AI controls a GameBoy emulator, but that mode forces AI to judge every single step: incredibly slow, and it burns through your Token plan fast.
+For me, the most direct effect of falling costs was being able to run checks more often as part of everyday development.
 
-An important community shift in the first half of this year: browser-use-type projects became genuinely usable. Beyond better model reasoning, browser-use's spread relied on Chromium's long-accumulated CDP protocol — a protocol that gave AI hands and feet. That inspired me.
+## What Remains
 
-AI's image recognition is both slow and inaccurate — so don't rely on image recognition alone. The solution was a debug server: a JSON-line command/response protocol over a TCP port, modeled on Chrome's DevTools Protocol — state queries (`get_state`/`get_npcs`), input injection (`press_sequence`), time control (`step_frames` for synchronous frame-by-frame stepping), teleport (`warp`):
+Five months in, I can delegate much more of the implementation, debugging, and testing. More of my own effort goes into defining goals, designing boundaries, and deciding whether the evidence is sufficient.
 
-```
-05-09  born (same day the CLI got warp / skip-intro)
-07-12  playability rework — truly usable for playtests
-07-22  frame stepping + headless mode
-        ↓ immediate payoff
-late 07  battle-fidelity campaign rolls out
-08-14→17 fidelity-audit blitz: two rounds of high/mid-priority issues merged in four days
-```
+The next tasks are concrete: improve animation timing, expand playtesting of side content and special events, and investigate behavior that a single screenshot or a successful run through the main story won't reveal.
 
-**The returns on verification capability are paid out concentrated in the later stages** — which is exactly why it's easy to postpone investing in it. Verification tooling is no longer a byproduct of development; it's infrastructure to be built in advance. It matters far more to AI than to humans — a human can "play and see," but AI must "measure," and only the measurable is truly improvable.
+Stronger models have changed this project. Every test, debugging command, and clear module boundary also helps the next round of work avoid repeating earlier detours. That is why I feel more confident about continuing.
 
-My testing infrastructure is worth another mention: tests in this project were not an afterthought. Beyond extensive unit-test coverage, I used golden snapshot tests to lock down the rendered output of menus, dialog boxes, and battle screens with framebuffer hashes — any refactor that changes visual output goes red immediately. Since my tools and models kept changing, all of these test capabilities live in GitHub CI to ensure long-term stability, and every change must go through a pull request that triggers CI.
+The game is [open source](https://github.com/liuyanghejerry/open-pokered/) and [playable in your browser](https://liuyanghejerry.github.io/open-pokered/). The public repository contains the version after the engine was split out. That engine, [dotzuki](https://github.com/liuyanghejerry/dotzuki), also has an [online demo](https://liuyanghejerry.github.io/dotzuki/stable/).
 
-## Insight 6: Cost Structure Changes How Work Is Organized
-
-This one isn't a technical insight — it's an economic one.
-
-On April 23/24, Xiaomi's MiMo 2.5 Pro and DeepSeek V4 launched almost simultaneously, and my monthly commits jumped from 314 to 434; on July 16, Kimi K3 arrived with long-horizon agentic capability, and V4 Flash went GA at the end of the month. These models, plus Kimi, shouldered a considerable share of the project's code output. Their division of labor with Opus wasn't "good vs. bad" — it was **pairing the expensive with the cheap**: expensive models handle decisions and reviews; cheap models handle scaled execution.
-
-![Monthly commits and model division of labor](images/monthly-commits.png)
-
-The point of cheap isn't saving money — it's that **things that weren't worth doing before are now doable**. Full-fidelity alignment, scene-by-scene comparison, large-scale story completion — these tasks share a profile: individually simple, massively numerous — a perfect match for "cheap models + high parallelism." When token prices drop by an order of magnitude, work organization changes with it: from "carefully pick what the expensive model does" to "scatter tasks to cheap models in parallel, with the expensive model spot-checking."
-
-A dependency shift happened at the same time: from full reliance on overseas models to domestic models taking the lead — no longer at anyone's mercy.
-
-## Closing Thoughts
-
-Over these five-plus months, beyond models getting stronger, what I've felt most is that the philosophy of engineering itself has fundamentally changed. The value of verification tooling, architecture design, and tech-stack selection will rise significantly in this era — and measuring whether a project is well-built becomes genuinely feasible, no longer stuck at "cyclomatic complexity."
-The *Pokemon Red* remake is still not finished, but I'm increasingly confident I'll complete it.
+If you try the game, I'd especially welcome some exploration beyond the main story. The places my playthrough scripts rarely visit are exactly where I want to look next.
