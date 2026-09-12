@@ -59,6 +59,8 @@ pub use menu::{
 #[cfg(target_os = "none")]
 pub(crate) use overworld::draw_overworld_cached_with;
 pub use pc::draw_pc;
+#[cfg(any(test, target_os = "none"))]
+pub use pc::redraw_pc_cursor;
 pub use pokedex::draw_pokedex_screen;
 #[cfg(any(test, target_os = "none"))]
 pub use pokedex::redraw_pokedex_cursor;

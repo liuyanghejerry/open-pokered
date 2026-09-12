@@ -1491,6 +1491,7 @@ impl PokedexVisualKey {
 struct PcVisualKey {
     phase: PcPhase,
     visual_hash: u32,
+    cursor: Option<(u32, u32)>,
     language: Lang,
 }
 
@@ -1515,11 +1516,46 @@ fn hash_pc_inventory<const N: usize>(
     }
 }
 
+fn pc_follow_scroll(cursor: usize, rows: usize) -> usize {
+    const VISIBLE_ROWS: usize = 8;
+    if rows <= VISIBLE_ROWS {
+        0
+    } else {
+        cursor
+            .saturating_sub(VISIBLE_ROWS / 2)
+            .min(rows - VISIBLE_ROWS)
+    }
+}
+
+fn pc_list_cursor_position(cursor: usize, rows: usize, language: Lang) -> (u32, u32) {
+    let scroll = pc_follow_scroll(cursor, rows);
+    let pitch = if language == Lang::Zh { 12 } else { 8 };
+    (8, 8 + (cursor - scroll) as u32 * pitch)
+}
+
+fn pc_yes_no_cursor_position(selected_yes: bool, language: Lang) -> (u32, u32) {
+    let box_y = if language == Lang::Zh { 8 } else { 7 * 8 };
+    (15 * 8, box_y + if selected_yes { 8 } else { 3 * 8 })
+}
+
+fn pc_box_cursor_position(cursor: usize, language: Lang) -> (u32, u32) {
+    if language == Lang::Zh {
+        (
+            (cursor / 6) as u32 * 10 * 8 + 8,
+            (5 + (cursor % 6) as u32 * 2) * 8,
+        )
+    } else {
+        (12 * 8, (1 + cursor as u32) * 8)
+    }
+}
+
 impl PcVisualKey {
     fn new(game: &PokemonGame) -> Option<Self> {
         let pc = game.pc_screen.as_ref()?;
         let phase = pc.phase();
+        let language = game.state.config.language;
         let mut visual_hash = 0x811c_9dc5;
+        let mut cursor = None;
         hash_byte(&mut visual_hash, phase as u8);
         match phase {
             PcPhase::Message => {
@@ -1533,7 +1569,7 @@ impl PcVisualKey {
                 }
             }
             PcPhase::MainMenu => {
-                hash_u32(&mut visual_hash, pc.main_menu().cursor() as u32);
+                cursor = Some((8, (1 + pc.main_menu().cursor() as u32 * 2) * 8));
                 hash_byte(&mut visual_hash, pc.main_menu().met_bill() as u8);
                 for &item in pc.main_menu().items() {
                     hash_byte(&mut visual_hash, item as u8);
@@ -1543,7 +1579,7 @@ impl PcVisualKey {
                 }
             }
             PcPhase::BillsMenu => {
-                hash_u32(&mut visual_hash, pc.bills_menu().cursor() as u32);
+                cursor = Some((8, (1 + pc.bills_menu().cursor() as u32 * 2) * 8));
                 hash_u32(
                     &mut visual_hash,
                     game.save_data.pc_storage.current_box_index() as u32,
@@ -1551,18 +1587,13 @@ impl PcVisualKey {
             }
             PcPhase::MonList | PcPhase::MonAction | PcPhase::ReleaseConfirm => {
                 hash_byte(&mut visual_hash, pc.mon_mode() as u8);
-                hash_u32(&mut visual_hash, pc.mon_cursor() as u32);
-                if phase == PcPhase::MonAction {
-                    hash_u32(&mut visual_hash, pc.mon_action_cursor() as u32);
-                } else if phase == PcPhase::ReleaseConfirm {
-                    hash_byte(&mut visual_hash, pc.yes_selected() as u8);
-                }
-                match pc.mon_mode() {
+                let rows = match pc.mon_mode() {
                     MonListMode::Deposit => {
                         hash_u16(&mut visual_hash, game.save_data.party.count() as u16);
                         for pokemon in game.save_data.party.iter() {
                             hash_pc_mon(&mut visual_hash, pokemon);
                         }
+                        game.save_data.party.count() + 1
                     }
                     MonListMode::Withdraw | MonListMode::Release => {
                         let current_box = game.save_data.pc_storage.current_box();
@@ -1570,14 +1601,37 @@ impl PcVisualKey {
                         for pokemon in current_box.iter() {
                             hash_pc_mon(&mut visual_hash, pokemon);
                         }
+                        current_box.count() + 1
                     }
+                };
+                match phase {
+                    PcPhase::MonList => {
+                        hash_u32(
+                            &mut visual_hash,
+                            pc_follow_scroll(pc.mon_cursor(), rows) as u32,
+                        );
+                        cursor = Some(pc_list_cursor_position(
+                            pc.mon_cursor(),
+                            rows,
+                            language,
+                        ));
+                    }
+                    PcPhase::MonAction => {
+                        hash_u32(&mut visual_hash, pc.mon_cursor() as u32);
+                        cursor = Some((11 * 8, (9 + pc.mon_action_cursor() as u32 * 2) * 8));
+                    }
+                    PcPhase::ReleaseConfirm => {
+                        hash_u32(&mut visual_hash, pc.mon_cursor() as u32);
+                        cursor = Some(pc_yes_no_cursor_position(pc.yes_selected(), language));
+                    }
+                    _ => unreachable!(),
                 }
             }
             PcPhase::ChangeBoxConfirm | PcPhase::OaksConfirm => {
-                hash_byte(&mut visual_hash, pc.yes_selected() as u8);
+                cursor = Some(pc_yes_no_cursor_position(pc.yes_selected(), language));
             }
             PcPhase::BoxList => {
-                hash_u32(&mut visual_hash, pc.box_cursor() as u32);
+                cursor = Some(pc_box_cursor_position(pc.box_cursor(), language));
                 for index in 0..pokered_core::pokemon::pc_box::NUM_BOXES {
                     let nonempty = game
                         .save_data
@@ -1588,26 +1642,42 @@ impl PcVisualKey {
                 }
             }
             PcPhase::ItemMenu => {
-                hash_u32(&mut visual_hash, pc.players_menu().cursor() as u32);
+                cursor = Some((8, (1 + pc.players_menu().cursor() as u32 * 2) * 8));
             }
             PcPhase::ItemList | PcPhase::ItemQuantity | PcPhase::TossConfirm => {
                 hash_byte(&mut visual_hash, pc.item_mode() as u8);
-                hash_u32(&mut visual_hash, pc.item_list_cursor() as u32);
-                if phase == PcPhase::ItemQuantity {
-                    hash_byte(&mut visual_hash, pc.item_qty());
-                } else if phase == PcPhase::TossConfirm {
-                    hash_byte(&mut visual_hash, pc.yes_selected() as u8);
-                }
-                match pc.item_mode() {
-                    ItemListMode::Deposit => hash_pc_inventory(
-                        &mut visual_hash,
-                        &game.save_data.game_data.bag,
-                    ),
-                    ItemListMode::Withdraw | ItemListMode::Toss => hash_pc_inventory(
-                        &mut visual_hash,
-                        &game.save_data.game_data.pc_items,
-                    ),
-                }
+                let rows = match pc.item_mode() {
+                    ItemListMode::Deposit => {
+                        hash_pc_inventory(&mut visual_hash, &game.save_data.game_data.bag);
+                        game.save_data.game_data.bag.count() + 1
+                    }
+                    ItemListMode::Withdraw | ItemListMode::Toss => {
+                        hash_pc_inventory(&mut visual_hash, &game.save_data.game_data.pc_items);
+                        game.save_data.game_data.pc_items.count() + 1
+                    }
+                };
+                match phase {
+                    PcPhase::ItemList => {
+                        hash_u32(
+                            &mut visual_hash,
+                            pc_follow_scroll(pc.item_list_cursor(), rows) as u32,
+                        );
+                        cursor = Some(pc_list_cursor_position(
+                            pc.item_list_cursor(),
+                            rows,
+                            language,
+                        ));
+                    }
+                    PcPhase::ItemQuantity => {
+                        hash_u32(&mut visual_hash, pc.item_list_cursor() as u32);
+                        hash_byte(&mut visual_hash, pc.item_qty());
+                    }
+                    PcPhase::TossConfirm => {
+                        hash_u32(&mut visual_hash, pc.item_list_cursor() as u32);
+                        cursor = Some(pc_yes_no_cursor_position(pc.yes_selected(), language));
+                    }
+                    _ => unreachable!(),
+                };
             }
             PcPhase::LeagueHoF => {
                 if let Some((team_no, pokemon)) = pc.league_hof_mon() {
@@ -1625,8 +1695,18 @@ impl PcVisualKey {
         Some(Self {
             phase,
             visual_hash,
-            language: game.state.config.language,
+            cursor,
+            language,
         })
+    }
+
+    fn cursor_change_from(&self, previous: &Self) -> Option<((u32, u32), (u32, u32))> {
+        (self.phase == previous.phase
+            && self.visual_hash == previous.visual_hash
+            && self.language == previous.language
+            && self.cursor != previous.cursor)
+            .then(|| previous.cursor.zip(self.cursor))
+            .flatten()
     }
 }
 
@@ -2173,6 +2253,10 @@ fn game_main() -> ! {
         let pc = (game.state.screen == GameScreen::PC)
             .then(|| PcVisualKey::new(game))
             .flatten();
+        let pc_cursor_change = pc
+            .as_ref()
+            .zip(last_pc.as_ref())
+            .and_then(|(current, previous)| current.cursor_change_from(previous));
         let trainer_card = (game.state.screen == GameScreen::TrainerCard)
             .then(|| TrainerCardVisualKey::new(game));
         let town_map = (game.state.screen == GameScreen::TownMap)
@@ -2347,6 +2431,8 @@ fn game_main() -> ! {
                 );
             } else if let Some((previous, current)) = pokedex_cursor_change {
                 pokered_app::render::redraw_pokedex_cursor(previous, current, &mut fb);
+            } else if let Some((previous, current)) = pc_cursor_change {
+                pokered_app::render::redraw_pc_cursor(previous, current, &mut fb);
             } else if let Some(previous_map) = town_map_cursor_change {
                 pokered_app::render::redraw_town_map_cursor(
                     &game.town_map_screen,
@@ -2498,6 +2584,22 @@ fn game_main() -> ! {
                         y: current.1,
                         width: 8,
                         height: 9,
+                    },
+                ]
+            });
+            let pc_cursor_damage = pc_cursor_change.map(|(previous, current)| {
+                [
+                    FrameDamageRect {
+                        x: previous.0,
+                        y: previous.1,
+                        width: 5,
+                        height: 10,
+                    },
+                    FrameDamageRect {
+                        x: current.0,
+                        y: current.1,
+                        width: 5,
+                        height: 10,
                     },
                 ]
             });
@@ -2671,6 +2773,8 @@ fn game_main() -> ! {
             } else if let Some(rects) = party_icon_damage_rects.as_ref() {
                 Some(rects.as_slice())
             } else if let Some(rects) = pokedex_cursor_damage.as_ref() {
+                Some(rects.as_slice())
+            } else if let Some(rects) = pc_cursor_damage.as_ref() {
                 Some(rects.as_slice())
             } else if let Some(rects) = town_map_cursor_damage.as_ref() {
                 Some(rects.as_slice())

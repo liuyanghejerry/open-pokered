@@ -25,6 +25,29 @@ const FG: Rgba = Rgba::BLACK;
 
 const T: u32 = 8; // tile size in pixels
 
+/// Repaint the two cursor cells used by PC menus and lists.
+///
+/// This is deliberately limited to the marker column: every PC cursor is a
+/// plain `>` on the white list/menu background, and the adjacent label never
+/// overlaps this 5x10 pixel cell. The proportional font advances `>` by five
+/// pixels; clearing a full tile would erase the first letter in the compact
+/// box chooser, which intentionally has no separating space.
+#[cfg(any(test, target_os = "none"))]
+pub fn redraw_pc_cursor(
+    previous: (u32, u32),
+    current: (u32, u32),
+    fb: &mut FrameBuffer,
+) {
+    for (x, y) in [previous, current] {
+        for py in y..(y + 10).min(fb.height()) {
+            for px in x..(x + measure_text(">")).min(fb.width()) {
+                fb.set_pixel(px, py, BG);
+            }
+        }
+    }
+    draw_text(">", current.0, current.1, FG, fb);
+}
+
 fn item_name(id: pokered_data::items::ItemId, is_zh: bool) -> String {
     if is_zh {
         lang_data::item_name(id, true).to_string()
@@ -473,6 +496,104 @@ fn draw_league_hof(pc: &PcScreen, resources: &mut Option<ResourceManager>, fb: &
 mod layout_tests {
     use super::*;
     use dotzuki_engine::render_config::RenderConfig;
+    use pokered_core::main_menu::MenuInput;
+    use pokered_core::pc_screen::{PcContext, PcEntry, PcOpenContext};
+    use pokered_core::pokemon::stats::create_pokemon;
+    use pokered_data::items::ItemId;
+    use pokered_data::species::Species;
+
+    const A: MenuInput = MenuInput {
+        up: false,
+        down: false,
+        a: true,
+        b: false,
+    };
+    const UP: MenuInput = MenuInput {
+        up: true,
+        down: false,
+        a: false,
+        b: false,
+    };
+    const DOWN: MenuInput = MenuInput {
+        up: false,
+        down: true,
+        a: false,
+        b: false,
+    };
+
+    fn open_context(has_pokedex: bool) -> PcOpenContext {
+        PcOpenContext {
+            has_pokedex,
+            met_bill: true,
+            beaten_league: false,
+            player_name: "RED".into(),
+            hof_teams: Vec::new(),
+        }
+    }
+
+    fn update_pc(pc: &mut PcScreen, save: &mut SaveData, input: MenuInput) {
+        let mut ctx = PcContext {
+            party: &mut save.party,
+            pc_storage: &mut save.pc_storage,
+            bag: &mut save.game_data.bag,
+            pc_items: &mut save.game_data.pc_items,
+            pokedex: &save.game_data.pokedex,
+        };
+        let _ = pc.update_frame(input, &mut ctx);
+    }
+
+    fn skip_message(pc: &mut PcScreen, save: &mut SaveData) {
+        while pc.phase() == PcPhase::Message {
+            update_pc(pc, save, A);
+        }
+    }
+
+    fn render_pc_state(pc: &PcScreen, save: &SaveData, language: Lang) -> FrameBuffer {
+        let mut fb = FrameBuffer::new(RenderConfig::new(160, 144), Rgba::BLACK);
+        let mut resources = None;
+        draw_pc(pc, save, &mut resources, &mut fb, language);
+        fb
+    }
+
+    fn assert_framebuffers_equal(actual: &FrameBuffer, expected: &FrameBuffer) {
+        assert_eq!(actual.width(), expected.width());
+        assert_eq!(actual.height(), expected.height());
+        for y in 0..actual.height() {
+            for x in 0..actual.width() {
+                assert_eq!(
+                    actual.get_pixel(x, y),
+                    expected.get_pixel(x, y),
+                    "framebuffer mismatch at ({x}, {y})",
+                );
+            }
+        }
+    }
+
+    fn assert_cursor_repaint(
+        previous: &PcScreen,
+        current: &PcScreen,
+        save: &SaveData,
+        language: Lang,
+        previous_position: (u32, u32),
+        current_position: (u32, u32),
+    ) {
+        let mut actual = render_pc_state(previous, save, language);
+        redraw_pc_cursor(previous_position, current_position, &mut actual);
+        let expected = render_pc_state(current, save, language);
+        assert_framebuffers_equal(&actual, &expected);
+    }
+
+    fn cursor_state(
+        base: &PcScreen,
+        save: &mut SaveData,
+        cursor: usize,
+    ) -> PcScreen {
+        let mut state = base.clone();
+        for _ in 0..cursor {
+            update_pc(&mut state, save, DOWN);
+        }
+        state
+    }
 
     #[test]
     fn translated_message_wrap_preserves_text_and_fits_box() {
@@ -494,6 +615,267 @@ mod layout_tests {
             for x in 8..152 {
                 assert_eq!(fb.get_pixel(x, y), Some(BG), "rows touch at {x},{y}");
             }
+        }
+    }
+
+    #[test]
+    fn pc_menu_cursor_repaint_matches_full_redraw_for_every_transition() {
+        for language in [Lang::En, Lang::Zh] {
+            for (entry, phase, item_count) in [
+                (PcEntry::PokemonCenter, PcPhase::MainMenu, 4),
+                (PcEntry::BillsPc, PcPhase::BillsMenu, 5),
+                (PcEntry::PlayersPc, PcPhase::ItemMenu, 4),
+            ] {
+                let mut save = SaveData::new();
+                let mut base = PcScreen::new(entry, &open_context(true));
+                skip_message(&mut base, &mut save);
+                assert_eq!(base.phase(), phase);
+
+                for previous_cursor in 0..item_count {
+                    for current_cursor in 0..item_count {
+                        if previous_cursor == current_cursor {
+                            continue;
+                        }
+                        let previous = cursor_state(&base, &mut save, previous_cursor);
+                        let current = cursor_state(&base, &mut save, current_cursor);
+                        let position = |cursor| (8, (1 + cursor as u32 * 2) * T);
+                        assert_cursor_repaint(
+                            &previous,
+                            &current,
+                            &save,
+                            language,
+                            position(previous_cursor),
+                            position(current_cursor),
+                        );
+                    }
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn pc_list_and_overlay_cursor_repaint_matches_full_redraw() {
+        for language in [Lang::En, Lang::Zh] {
+            let pitch = if language == Lang::Zh { 12 } else { T };
+
+            let mut mon_save = SaveData::new();
+            let mon = create_pokemon(Species::Bulbasaur, 9, [0x9a, 0x78]).unwrap();
+            mon_save.pc_storage.current_box_mut().deposit(mon).unwrap();
+            let mut mon_list = PcScreen::new(PcEntry::BillsPc, &open_context(false));
+            skip_message(&mut mon_list, &mut mon_save);
+            update_pc(&mut mon_list, &mut mon_save, A);
+            assert_eq!(mon_list.phase(), PcPhase::MonList);
+
+            let mon_cancel = cursor_state(&mon_list, &mut mon_save, 1);
+            assert_cursor_repaint(
+                &mon_list,
+                &mon_cancel,
+                &mon_save,
+                language,
+                (T, T),
+                (T, T + pitch),
+            );
+            assert_cursor_repaint(
+                &mon_cancel,
+                &mon_list,
+                &mon_save,
+                language,
+                (T, T + pitch),
+                (T, T),
+            );
+
+            let mut mon_action = mon_list.clone();
+            update_pc(&mut mon_action, &mut mon_save, A);
+            assert_eq!(mon_action.phase(), PcPhase::MonAction);
+            for previous_cursor in 0..3 {
+                for current_cursor in 0..3 {
+                    if previous_cursor == current_cursor {
+                        continue;
+                    }
+                    let previous = cursor_state(&mon_action, &mut mon_save, previous_cursor);
+                    let current = cursor_state(&mon_action, &mut mon_save, current_cursor);
+                    let position = |cursor| (11 * T, (9 + cursor as u32 * 2) * T);
+                    assert_cursor_repaint(
+                        &previous,
+                        &current,
+                        &mon_save,
+                        language,
+                        position(previous_cursor),
+                        position(current_cursor),
+                    );
+                }
+            }
+
+            let mut item_save = SaveData::new();
+            item_save
+                .game_data
+                .pc_items
+                .add_item(ItemId::Potion, 2)
+                .unwrap();
+            item_save
+                .game_data
+                .pc_items
+                .add_item(ItemId::Antidote, 1)
+                .unwrap();
+            let mut item_list = PcScreen::new(PcEntry::PlayersPc, &open_context(false));
+            skip_message(&mut item_list, &mut item_save);
+            update_pc(&mut item_list, &mut item_save, A);
+            assert_eq!(item_list.phase(), PcPhase::ItemList);
+
+            for previous_cursor in 0..3 {
+                for current_cursor in 0..3 {
+                    if previous_cursor == current_cursor {
+                        continue;
+                    }
+                    let previous = cursor_state(&item_list, &mut item_save, previous_cursor);
+                    let current = cursor_state(&item_list, &mut item_save, current_cursor);
+                    let position = |cursor| (T, T + cursor as u32 * pitch);
+                    assert_cursor_repaint(
+                        &previous,
+                        &current,
+                        &item_save,
+                        language,
+                        position(previous_cursor),
+                        position(current_cursor),
+                    );
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn pc_confirmation_and_box_cursor_repaint_matches_full_redraw() {
+        for language in [Lang::En, Lang::Zh] {
+            let yes_no_position = |selected_yes| {
+                let box_y = if language == Lang::Zh { T } else { 7 * T };
+                (15 * T, box_y + if selected_yes { T } else { 3 * T })
+            };
+
+            let mut save = SaveData::new();
+            let mut confirm = PcScreen::new(PcEntry::BillsPc, &open_context(false));
+            skip_message(&mut confirm, &mut save);
+            for _ in 0..3 {
+                update_pc(&mut confirm, &mut save, DOWN);
+            }
+            update_pc(&mut confirm, &mut save, A);
+            assert_eq!(confirm.phase(), PcPhase::ChangeBoxConfirm);
+            let mut yes = confirm.clone();
+            update_pc(&mut yes, &mut save, UP);
+            assert_cursor_repaint(
+                &confirm,
+                &yes,
+                &save,
+                language,
+                yes_no_position(false),
+                yes_no_position(true),
+            );
+            assert_cursor_repaint(
+                &yes,
+                &confirm,
+                &save,
+                language,
+                yes_no_position(true),
+                yes_no_position(false),
+            );
+
+            update_pc(&mut yes, &mut save, A);
+            assert_eq!(yes.phase(), PcPhase::BoxList);
+            let box_position = |cursor: usize| {
+                if language == Lang::Zh {
+                    (
+                        (cursor / 6) as u32 * 10 * T + T,
+                        (5 + (cursor % 6) as u32 * 2) * T,
+                    )
+                } else {
+                    (12 * T, (1 + cursor as u32) * T)
+                }
+            };
+            for previous_cursor in 0..12 {
+                for current_cursor in 0..12 {
+                    if previous_cursor == current_cursor {
+                        continue;
+                    }
+                    let previous = cursor_state(&yes, &mut save, previous_cursor);
+                    let current = cursor_state(&yes, &mut save, current_cursor);
+                    assert_cursor_repaint(
+                        &previous,
+                        &current,
+                        &save,
+                        language,
+                        box_position(previous_cursor),
+                        box_position(current_cursor),
+                    );
+                }
+            }
+
+            let mut release_save = SaveData::new();
+            let mon = create_pokemon(Species::Pikachu, 5, [0x9a, 0x78]).unwrap();
+            release_save
+                .pc_storage
+                .current_box_mut()
+                .deposit(mon)
+                .unwrap();
+            let mut release = PcScreen::new(PcEntry::BillsPc, &open_context(false));
+            skip_message(&mut release, &mut release_save);
+            update_pc(&mut release, &mut release_save, DOWN);
+            update_pc(&mut release, &mut release_save, DOWN);
+            update_pc(&mut release, &mut release_save, A);
+            update_pc(&mut release, &mut release_save, A);
+            assert_eq!(release.phase(), PcPhase::ReleaseConfirm);
+            let mut release_yes = release.clone();
+            update_pc(&mut release_yes, &mut release_save, UP);
+            assert_cursor_repaint(
+                &release,
+                &release_yes,
+                &release_save,
+                language,
+                yes_no_position(false),
+                yes_no_position(true),
+            );
+
+            let mut toss_save = SaveData::new();
+            toss_save
+                .game_data
+                .pc_items
+                .add_item(ItemId::Potion, 2)
+                .unwrap();
+            let mut toss = PcScreen::new(PcEntry::PlayersPc, &open_context(false));
+            skip_message(&mut toss, &mut toss_save);
+            update_pc(&mut toss, &mut toss_save, DOWN);
+            update_pc(&mut toss, &mut toss_save, DOWN);
+            update_pc(&mut toss, &mut toss_save, A);
+            update_pc(&mut toss, &mut toss_save, A);
+            update_pc(&mut toss, &mut toss_save, A);
+            assert_eq!(toss.phase(), PcPhase::TossConfirm);
+            let mut toss_yes = toss.clone();
+            update_pc(&mut toss_yes, &mut toss_save, UP);
+            assert_cursor_repaint(
+                &toss,
+                &toss_yes,
+                &toss_save,
+                language,
+                yes_no_position(false),
+                yes_no_position(true),
+            );
+
+            let mut oak_save = SaveData::new();
+            let mut oak = PcScreen::new(PcEntry::PokemonCenter, &open_context(true));
+            skip_message(&mut oak, &mut oak_save);
+            update_pc(&mut oak, &mut oak_save, DOWN);
+            update_pc(&mut oak, &mut oak_save, DOWN);
+            update_pc(&mut oak, &mut oak_save, A);
+            skip_message(&mut oak, &mut oak_save);
+            assert_eq!(oak.phase(), PcPhase::OaksConfirm);
+            let mut oak_yes = oak.clone();
+            update_pc(&mut oak_yes, &mut oak_save, UP);
+            assert_cursor_repaint(
+                &oak,
+                &oak_yes,
+                &oak_save,
+                language,
+                yes_no_position(false),
+                yes_no_position(true),
+            );
         }
     }
 }
