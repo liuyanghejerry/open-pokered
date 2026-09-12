@@ -1,0 +1,188 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1960" height="1740" viewBox="0 0 1960 1740" role="img" aria-labelledby="title desc">
+<title id="title">open-pokered 工程架构：平台接入、游戏编排、游戏逻辑与表现、内容数据和外部引擎</title>
+<desc id="desc">桌面、Web、Android 和 iOS 通过 pokered-app 的 PokemonGame 编排核心逻辑、UI、渲染与音频；TUI 使用独立编排并复用下层模块。pokered-data 提供数据和构建时编译的场景脚本。编辑器通过 WASM 预览和试玩，TCP 调试服务支持自动化验证。各模块按职责依赖外部 dotzuki 引擎。</desc>
+<defs>
+<marker id="gray" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="userSpaceOnUse"><path d="M0 0 L8 4 L0 8 Z" fill="#9BAEC2"/></marker>
+<marker id="purple" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="userSpaceOnUse"><path d="M0 0 L8 4 L0 8 Z" fill="#7861B5"/></marker>
+<marker id="amber" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="userSpaceOnUse"><path d="M0 0 L8 4 L0 8 Z" fill="#B37A22"/></marker>
+<pattern id="grid" width="24" height="24" patternUnits="userSpaceOnUse"><circle cx="1" cy="1" r="0.8" fill="#D9E2ED"/></pattern>
+<linearGradient id="base" x2="1" y2="1"><stop stop-color="#F5F8FC"/><stop offset="1" stop-color="#EDF3F7"/></linearGradient>
+</defs>
+<rect x="0" y="0" width="1960" height="1740" rx="0" fill="url(#base)" stroke="none" />
+<rect x="0" y="0" width="1960" height="1740" rx="0" fill="url(#grid)" stroke="none" />
+<circle cx="94" cy="93" r="32" fill="#fff" stroke="#172B45" stroke-width="3"/><path d="M62 93 A32 32 0 0 1 126 93 Z" fill="#D66A6A"/><path d="M62 93 H126" stroke="#172B45" stroke-width="3"/><circle cx="94" cy="93" r="10" fill="#fff" stroke="#172B45" stroke-width="3"/>
+<text x="150" y="107" fill="#172B45" font-family="Inter, -apple-system, BlinkMacSystemFont, Segoe UI, PingFang SC, Microsoft YaHei, sans-serif" font-size="46" font-weight="750" text-anchor="start">open-pokered 工程架构</text>
+<text x="64" y="161" fill="#60738A" font-family="Inter, -apple-system, BlinkMacSystemFont, Segoe UI, PingFang SC, Microsoft YaHei, sans-serif" font-size="24" font-weight="400" text-anchor="start">Rust 游戏重实现 · 以共享游戏逻辑连接多端体验、内容编辑与自动化验证</text>
+<rect x="64" y="192" width="152" height="30" rx="15" fill="#E5EFFD" stroke="none" />
+<text x="140.0" y="213" fill="#3878D4" font-family="Inter, -apple-system, BlinkMacSystemFont, Segoe UI, PingFang SC, Microsoft YaHei, sans-serif" font-size="17" font-weight="600" text-anchor="middle">多端运行</text>
+<rect x="228" y="192" width="174" height="30" rx="15" fill="#E4F3ED" stroke="none" />
+<text x="315.0" y="213" fill="#148276" font-family="Inter, -apple-system, BlinkMacSystemFont, Segoe UI, PingFang SC, Microsoft YaHei, sans-serif" font-size="17" font-weight="600" text-anchor="middle">内容与逻辑分离</text>
+<rect x="414" y="192" width="174" height="30" rx="15" fill="#EEE9F8" stroke="none" />
+<text x="501.0" y="213" fill="#7861B5" font-family="Inter, -apple-system, BlinkMacSystemFont, Segoe UI, PingFang SC, Microsoft YaHei, sans-serif" font-size="17" font-weight="600" text-anchor="middle">引擎独立仓库</text>
+<text x="1896" y="84" fill="#60738A" font-family="Inter, -apple-system, BlinkMacSystemFont, Segoe UI, PingFang SC, Microsoft YaHei, sans-serif" font-size="16" font-weight="650" text-anchor="end">SYSTEM OVERVIEW</text>
+<text x="1896" y="115" fill="#60738A" font-family="Inter, -apple-system, BlinkMacSystemFont, Segoe UI, PingFang SC, Microsoft YaHei, sans-serif" font-size="19" font-weight="400" text-anchor="end">基于当前源码与 Cargo 依赖</text>
+<path d="M1480 160 H1530" fill="none" stroke="#9BAEC2" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round" marker-end="url(#gray)"/>
+<text x="1546" y="166" fill="#60738A" font-family="Inter, -apple-system, BlinkMacSystemFont, Segoe UI, PingFang SC, Microsoft YaHei, sans-serif" font-size="17" font-weight="400" text-anchor="start">主要调用 / 依赖</text>
+<path d="M1480 202 H1530" fill="none" stroke="#7861B5" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="7 6" marker-end="url(#purple)"/>
+<text x="1546" y="208" fill="#60738A" font-family="Inter, -apple-system, BlinkMacSystemFont, Segoe UI, PingFang SC, Microsoft YaHei, sans-serif" font-size="17" font-weight="400" text-anchor="start">内容 / 控制流</text>
+<rect x="48" y="256" width="1300" height="1150" rx="24" fill="#FFFFFF" stroke="#D6E1EC" />
+<rect x="1430" y="256" width="482" height="1150" rx="24" fill="#F7F4FC" stroke="#DDD4EF" />
+<rect x="76" y="273" width="36" height="30" rx="15" fill="#E9F1FF" stroke="none" />
+<text x="94.0" y="294" fill="#3878D4" font-family="Inter, -apple-system, BlinkMacSystemFont, Segoe UI, PingFang SC, Microsoft YaHei, sans-serif" font-size="16" font-weight="600" text-anchor="middle">01</text>
+<text x="124" y="296" fill="#172B45" font-family="Inter, -apple-system, BlinkMacSystemFont, Segoe UI, PingFang SC, Microsoft YaHei, sans-serif" font-size="22" font-weight="650" text-anchor="start">平台接入</text>
+<text x="292" y="296" fill="#60738A" font-family="Inter, -apple-system, BlinkMacSystemFont, Segoe UI, PingFang SC, Microsoft YaHei, sans-serif" font-size="14" font-weight="500" text-anchor="start">PLATFORM ENTRY POINTS</text>
+<rect x="76" y="320" width="252" height="104" rx="16" fill="#fff" stroke="#DEE6EF" />
+<rect x="92" y="341" width="4" height="24" rx="2" fill="#3878D4" stroke="none" />
+<text x="108" y="359" fill="#172B45" font-family="Inter, -apple-system, BlinkMacSystemFont, Segoe UI, PingFang SC, Microsoft YaHei, sans-serif" font-size="24" font-weight="650" text-anchor="start">桌面 / CLI</text>
+<text x="108" y="387" fill="#3878D4" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="18" font-weight="550" text-anchor="start">pokered-app</text>
+<text x="108" y="412" fill="#60738A" font-family="Inter, -apple-system, BlinkMacSystemFont, Segoe UI, PingFang SC, Microsoft YaHei, sans-serif" font-size="17" font-weight="400" text-anchor="start">原生窗口 · 无头运行</text>
+<rect x="352" y="320" width="252" height="104" rx="16" fill="#fff" stroke="#DEE6EF" />
+<rect x="368" y="341" width="4" height="24" rx="2" fill="#3878D4" stroke="none" />
+<text x="384" y="359" fill="#172B45" font-family="Inter, -apple-system, BlinkMacSystemFont, Segoe UI, PingFang SC, Microsoft YaHei, sans-serif" font-size="24" font-weight="650" text-anchor="start">Web 浏览器</text>
+<text x="384" y="387" fill="#3878D4" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="18" font-weight="550" text-anchor="start">pokered-web</text>
+<text x="384" y="412" fill="#60738A" font-family="Inter, -apple-system, BlinkMacSystemFont, Segoe UI, PingFang SC, Microsoft YaHei, sans-serif" font-size="17" font-weight="400" text-anchor="start">WASM · Canvas</text>
+<rect x="628" y="320" width="352" height="104" rx="16" fill="#fff" stroke="#DEE6EF" />
+<rect x="644" y="341" width="4" height="24" rx="2" fill="#3878D4" stroke="none" />
+<text x="660" y="359" fill="#172B45" font-family="Inter, -apple-system, BlinkMacSystemFont, Segoe UI, PingFang SC, Microsoft YaHei, sans-serif" font-size="24" font-weight="650" text-anchor="start">Android / iOS</text>
+<text x="660" y="387" fill="#3878D4" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="18" font-weight="550" text-anchor="start">pokered-android / -ios</text>
+<text x="660" y="412" fill="#60738A" font-family="Inter, -apple-system, BlinkMacSystemFont, Segoe UI, PingFang SC, Microsoft YaHei, sans-serif" font-size="17" font-weight="400" text-anchor="start">JNI / C ABI · 移动端宿主</text>
+<rect x="1004" y="320" width="316" height="104" rx="16" fill="#fff" stroke="#DEE6EF" />
+<rect x="1020" y="341" width="4" height="24" rx="2" fill="#3878D4" stroke="none" />
+<text x="1036" y="359" fill="#172B45" font-family="Inter, -apple-system, BlinkMacSystemFont, Segoe UI, PingFang SC, Microsoft YaHei, sans-serif" font-size="24" font-weight="650" text-anchor="start">终端</text>
+<text x="1036" y="387" fill="#3878D4" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="18" font-weight="550" text-anchor="start">pokered-tui</text>
+<text x="1036" y="412" fill="#60738A" font-family="Inter, -apple-system, BlinkMacSystemFont, Segoe UI, PingFang SC, Microsoft YaHei, sans-serif" font-size="17" font-weight="400" text-anchor="start">ratatui · 终端输出</text>
+<path d="M202 424 V445 H478" fill="none" stroke="#9BAEC2" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M804 424 V445 H478" fill="none" stroke="#9BAEC2" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M478 424 V445 H720 V492" fill="none" stroke="#9BAEC2" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round" marker-end="url(#gray)"/>
+<path d="M1162 424 V492" fill="none" stroke="#9BAEC2" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round" marker-end="url(#gray)"/>
+<rect x="76" y="449" width="36" height="30" rx="15" fill="#E9F1FF" stroke="none" />
+<text x="94.0" y="470" fill="#3878D4" font-family="Inter, -apple-system, BlinkMacSystemFont, Segoe UI, PingFang SC, Microsoft YaHei, sans-serif" font-size="16" font-weight="600" text-anchor="middle">02</text>
+<text x="124" y="472" fill="#172B45" font-family="Inter, -apple-system, BlinkMacSystemFont, Segoe UI, PingFang SC, Microsoft YaHei, sans-serif" font-size="22" font-weight="650" text-anchor="start">游戏编排</text>
+<text x="292" y="472" fill="#60738A" font-family="Inter, -apple-system, BlinkMacSystemFont, Segoe UI, PingFang SC, Microsoft YaHei, sans-serif" font-size="14" font-weight="500" text-anchor="start">APPLICATION ORCHESTRATION</text>
+<rect x="76" y="492" width="904" height="146" rx="16" fill="#EDF4FF" stroke="#BDD1ED" />
+<rect x="790" y="506" width="172" height="30" rx="15" fill="#DDEBFF" stroke="none" />
+<text x="876.0" y="527" fill="#3878D4" font-family="Inter, -apple-system, BlinkMacSystemFont, Segoe UI, PingFang SC, Microsoft YaHei, sans-serif" font-size="16" font-weight="600" text-anchor="middle">多端共享 library</text>
+<text x="102" y="531" fill="#172B45" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="27" font-weight="650" text-anchor="start">pokered-app :: PokemonGame</text>
+<text x="102" y="565" fill="#3878D4" font-family="Inter, -apple-system, BlinkMacSystemFont, Segoe UI, PingFang SC, Microsoft YaHei, sans-serif" font-size="24" font-weight="550" text-anchor="start">输入分发 → 状态推进 → 画面组合 / 音频调度</text>
+<text x="102" y="601" fill="#60738A" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="18" font-weight="400" text-anchor="start">game.rs · render/ · audio/ · save I/O · link transport</text>
+<rect x="1004" y="492" width="316" height="146" rx="16" fill="#F3F6FA" stroke="#D6E1EC" />
+<text x="1030" y="533" fill="#172B45" font-family="Inter, -apple-system, BlinkMacSystemFont, Segoe UI, PingFang SC, Microsoft YaHei, sans-serif" font-size="24" font-weight="650" text-anchor="start">TUI 独立编排</text>
+<text x="1030" y="570" fill="#60738A" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="19" font-weight="400" text-anchor="start">game / render / audio</text>
+<text x="1030" y="605" fill="#60738A" font-family="Inter, -apple-system, BlinkMacSystemFont, Segoe UI, PingFang SC, Microsoft YaHei, sans-serif" font-size="21" font-weight="400" text-anchor="start">复用下层游戏模块</text>
+<path d="M528 638 V682" fill="none" stroke="#9BAEC2" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M1162 638 V682 H528" fill="none" stroke="#9BAEC2" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M600 738 V682 H1010 V738" fill="none" stroke="#9BAEC2" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M600 717 V738" fill="none" stroke="#9BAEC2" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round" marker-end="url(#gray)"/>
+<path d="M1010 717 V738" fill="none" stroke="#9BAEC2" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round" marker-end="url(#gray)"/>
+<rect x="76" y="689" width="36" height="30" rx="15" fill="#E9F1FF" stroke="none" />
+<text x="94.0" y="710" fill="#3878D4" font-family="Inter, -apple-system, BlinkMacSystemFont, Segoe UI, PingFang SC, Microsoft YaHei, sans-serif" font-size="16" font-weight="600" text-anchor="middle">03</text>
+<text x="124" y="712" fill="#172B45" font-family="Inter, -apple-system, BlinkMacSystemFont, Segoe UI, PingFang SC, Microsoft YaHei, sans-serif" font-size="22" font-weight="650" text-anchor="start">游戏模块</text>
+<text x="292" y="712" fill="#60738A" font-family="Inter, -apple-system, BlinkMacSystemFont, Segoe UI, PingFang SC, Microsoft YaHei, sans-serif" font-size="14" font-weight="500" text-anchor="start">LOGIC &amp; PRESENTATION</text>
+<rect x="76" y="738" width="592" height="258" rx="16" fill="#EDFAF5" stroke="#B9DCCD" />
+<text x="102" y="779" fill="#148276" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="28" font-weight="650" text-anchor="start">pokered-core</text>
+<rect x="473" y="754" width="171" height="30" rx="15" fill="#D7EFE4" stroke="none" />
+<text x="558.5" y="775" fill="#148276" font-family="Inter, -apple-system, BlinkMacSystemFont, Segoe UI, PingFang SC, Microsoft YaHei, sans-serif" font-size="16" font-weight="600" text-anchor="middle">游戏逻辑与状态</text>
+<text x="102" y="819" fill="#172B45" font-family="Inter, -apple-system, BlinkMacSystemFont, Segoe UI, PingFang SC, Microsoft YaHei, sans-serif" font-size="23" font-weight="650" text-anchor="start">战斗系统</text>
+<text x="360" y="819" fill="#172B45" font-family="Inter, -apple-system, BlinkMacSystemFont, Segoe UI, PingFang SC, Microsoft YaHei, sans-serif" font-size="23" font-weight="650" text-anchor="start">地图与事件</text>
+<text x="102" y="849" fill="#60738A" font-family="Inter, -apple-system, BlinkMacSystemFont, Segoe UI, PingFang SC, Microsoft YaHei, sans-serif" font-size="19" font-weight="400" text-anchor="start">Gen I 规则 · 效果栈接入</text>
+<text x="360" y="849" fill="#60738A" font-family="Inter, -apple-system, BlinkMacSystemFont, Segoe UI, PingFang SC, Microsoft YaHei, sans-serif" font-size="19" font-weight="400" text-anchor="start">移动 / NPC / 场景解释</text>
+<text x="102" y="891" fill="#172B45" font-family="Inter, -apple-system, BlinkMacSystemFont, Segoe UI, PingFang SC, Microsoft YaHei, sans-serif" font-size="23" font-weight="650" text-anchor="start">宝可梦与玩家系统</text>
+<text x="360" y="891" fill="#172B45" font-family="Inter, -apple-system, BlinkMacSystemFont, Segoe UI, PingFang SC, Microsoft YaHei, sans-serif" font-size="23" font-weight="650" text-anchor="start">屏幕状态机</text>
+<text x="102" y="921" fill="#60738A" font-family="Inter, -apple-system, BlinkMacSystemFont, Segoe UI, PingFang SC, Microsoft YaHei, sans-serif" font-size="19" font-weight="400" text-anchor="start">队伍 / 道具 / 存档模型</text>
+<text x="360" y="921" fill="#60738A" font-family="Inter, -apple-system, BlinkMacSystemFont, Segoe UI, PingFang SC, Microsoft YaHei, sans-serif" font-size="19" font-weight="400" text-anchor="start">菜单 / 对话 / 标题流程</text>
+<path d="M102 943 H642" fill="none" stroke="#C6E4D8" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>
+<text x="102" y="975" fill="#148276" font-family="Inter, -apple-system, BlinkMacSystemFont, Segoe UI, PingFang SC, Microsoft YaHei, sans-serif" font-size="18" font-weight="400" text-anchor="start">职责边界：游戏规则与状态推进，不承担平台输出</text>
+<rect x="700" y="738" width="620" height="258" rx="16" fill="#F5F8FC" stroke="#D6E1EC" />
+<text x="724" y="774" fill="#172B45" font-family="Inter, -apple-system, BlinkMacSystemFont, Segoe UI, PingFang SC, Microsoft YaHei, sans-serif" font-size="22" font-weight="650" text-anchor="start">表现与输出</text>
+<text x="1296" y="774" fill="#60738A" font-family="Inter, -apple-system, BlinkMacSystemFont, Segoe UI, PingFang SC, Microsoft YaHei, sans-serif" font-size="17" font-weight="400" text-anchor="end">由编排层调度</text>
+<rect x="720" y="794" width="256" height="82" rx="12" fill="#fff" stroke="#DBE5EF" />
+<text x="738" y="825" fill="#3878D4" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="21" font-weight="650" text-anchor="start">pokered-ui</text>
+<text x="738" y="854" fill="#60738A" font-family="Inter, -apple-system, BlinkMacSystemFont, Segoe UI, PingFang SC, Microsoft YaHei, sans-serif" font-size="17" font-weight="400" text-anchor="start">菜单 · Painter · .gui v2</text>
+<path d="M976 835 H1008" fill="none" stroke="#9BAEC2" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round" marker-end="url(#gray)"/>
+<rect x="1008" y="794" width="292" height="82" rx="12" fill="#fff" stroke="#DBE5EF" />
+<text x="1026" y="825" fill="#3878D4" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="21" font-weight="650" text-anchor="start">pokered-renderer</text>
+<text x="1026" y="854" fill="#60738A" font-family="Inter, -apple-system, BlinkMacSystemFont, Segoe UI, PingFang SC, Microsoft YaHei, sans-serif" font-size="17" font-weight="400" text-anchor="start">160 × 144 帧缓冲 · 字体</text>
+<rect x="720" y="899" width="580" height="76" rx="12" fill="#fff" stroke="#DBE5EF" />
+<text x="738" y="929" fill="#3878D4" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="21" font-weight="650" text-anchor="start">pokered-audio</text>
+<text x="948" y="929" fill="#60738A" font-family="Inter, -apple-system, BlinkMacSystemFont, Segoe UI, PingFang SC, Microsoft YaHei, sans-serif" font-size="19" font-weight="400" text-anchor="start">APU · 序列器 · BGM / SFX</text>
+<text x="738" y="958" fill="#60738A" font-family="Inter, -apple-system, BlinkMacSystemFont, Segoe UI, PingFang SC, Microsoft YaHei, sans-serif" font-size="17" font-weight="400" text-anchor="start">游戏曲谱 + 音效表；设备输出按平台适配</text>
+<path d="M620 996 V1090" fill="none" stroke="#9BAEC2" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round" marker-end="url(#gray)"/>
+<text x="76" y="1032" fill="#60738A" font-family="Inter, -apple-system, BlinkMacSystemFont, Segoe UI, PingFang SC, Microsoft YaHei, sans-serif" font-size="18" font-weight="400" text-anchor="start">读取数据 / 已编译场景</text>
+<path d="M1320 824 H1333 V1054 H1130 V1090" fill="none" stroke="#9BAEC2" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round" marker-end="url(#gray)"/>
+<text x="930" y="1045" fill="#60738A" font-family="Inter, -apple-system, BlinkMacSystemFont, Segoe UI, PingFang SC, Microsoft YaHei, sans-serif" font-size="18" font-weight="400" text-anchor="start">UI / 渲染读取布局与资源</text>
+<rect x="76" y="1050" width="36" height="30" rx="15" fill="#E9F1FF" stroke="none" />
+<text x="94.0" y="1071" fill="#3878D4" font-family="Inter, -apple-system, BlinkMacSystemFont, Segoe UI, PingFang SC, Microsoft YaHei, sans-serif" font-size="16" font-weight="600" text-anchor="middle">04</text>
+<text x="124" y="1073" fill="#172B45" font-family="Inter, -apple-system, BlinkMacSystemFont, Segoe UI, PingFang SC, Microsoft YaHei, sans-serif" font-size="22" font-weight="650" text-anchor="start">内容数据</text>
+<text x="292" y="1073" fill="#60738A" font-family="Inter, -apple-system, BlinkMacSystemFont, Segoe UI, PingFang SC, Microsoft YaHei, sans-serif" font-size="14" font-weight="500" text-anchor="start">GAME CONTENT &amp; BUILD PIPELINE</text>
+<rect x="76" y="1090" width="1244" height="214" rx="16" fill="#FFF9EE" stroke="#E9D7B6" />
+<text x="102" y="1130" fill="#B37A22" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="27" font-weight="650" text-anchor="start">pokered-data</text>
+<text x="1294" y="1130" fill="#60738A" font-family="Inter, -apple-system, BlinkMacSystemFont, Segoe UI, PingFang SC, Microsoft YaHei, sans-serif" font-size="19" font-weight="400" text-anchor="end">静态表 · 内嵌资源 · 运行时覆盖</text>
+<text x="102" y="1174" fill="#172B45" font-family="Inter, -apple-system, BlinkMacSystemFont, Segoe UI, PingFang SC, Microsoft YaHei, sans-serif" font-size="23" font-weight="650" text-anchor="start">地图与脚本</text>
+<text x="102" y="1205" fill="#60738A" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="18" font-weight="400" text-anchor="start">maps/*.json · *.scene</text>
+<text x="422" y="1174" fill="#172B45" font-family="Inter, -apple-system, BlinkMacSystemFont, Segoe UI, PingFang SC, Microsoft YaHei, sans-serif" font-size="23" font-weight="650" text-anchor="start">游戏数据库</text>
+<text x="422" y="1205" fill="#60738A" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="18" font-weight="400" text-anchor="start">pokemon / moves / trainers</text>
+<text x="822" y="1174" fill="#172B45" font-family="Inter, -apple-system, BlinkMacSystemFont, Segoe UI, PingFang SC, Microsoft YaHei, sans-serif" font-size="23" font-weight="650" text-anchor="start">UI 与图形资源</text>
+<text x="822" y="1205" fill="#60738A" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="18" font-weight="400" text-anchor="start">ui_layouts/*.gui · gfx/</text>
+<rect x="98" y="1230" width="1200" height="52" rx="10" fill="#F5EBD6" stroke="none" />
+<text x="116" y="1263" fill="#B37A22" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="20" font-weight="650" text-anchor="start">build.rs</text>
+<text x="256" y="1263" fill="#172B45" font-family="Inter, -apple-system, BlinkMacSystemFont, Segoe UI, PingFang SC, Microsoft YaHei, sans-serif" font-size="20" font-weight="400" text-anchor="start">JSON / .scene / .gui → 静态 Rust 表、场景 AST、布局数据 → 内嵌至运行时</text>
+<text x="76" y="1345" fill="#60738A" font-family="Inter, -apple-system, BlinkMacSystemFont, Segoe UI, PingFang SC, Microsoft YaHei, sans-serif" font-size="20" font-weight="400" text-anchor="start">默认场景执行：原生 AST 解释器；Boa 为 script-boa 开发 / 回退路径。</text>
+<text x="76" y="1376" fill="#60738A" font-family="Inter, -apple-system, BlinkMacSystemFont, Segoe UI, PingFang SC, Microsoft YaHei, sans-serif" font-size="18" font-weight="400" text-anchor="start">分层按职责展示；仅保留主要关系，仓库内 crate 依赖详见配套 Mermaid 源码。</text>
+<text x="1456" y="297" fill="#7861B5" font-family="Inter, -apple-system, BlinkMacSystemFont, Segoe UI, PingFang SC, Microsoft YaHei, sans-serif" font-size="26" font-weight="700" text-anchor="start">创作与验证工具链</text>
+<text x="1456" y="329" fill="#60738A" font-family="Inter, -apple-system, BlinkMacSystemFont, Segoe UI, PingFang SC, Microsoft YaHei, sans-serif" font-size="14" font-weight="600" text-anchor="start">AUTHORING &amp; VERIFICATION</text>
+<rect x="1454" y="356" width="434" height="215" rx="16" fill="#fff" stroke="#DCD3EC" />
+<text x="1478" y="396" fill="#7861B5" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="26" font-weight="650" text-anchor="start">pokered-editor</text>
+<text x="1478" y="428" fill="#60738A" font-family="Inter, -apple-system, BlinkMacSystemFont, Segoe UI, PingFang SC, Microsoft YaHei, sans-serif" font-size="20" font-weight="400" text-anchor="start">Vue 3 / Vite / Electron</text>
+<text x="1478" y="469" fill="#172B45" font-family="Inter, -apple-system, BlinkMacSystemFont, Segoe UI, PingFang SC, Microsoft YaHei, sans-serif" font-size="20" font-weight="400" text-anchor="start">地图 · 剧情 · 数据 · UI · 存档 · 像素</text>
+<text x="1478" y="505" fill="#172B45" font-family="Inter, -apple-system, BlinkMacSystemFont, Segoe UI, PingFang SC, Microsoft YaHei, sans-serif" font-size="19" font-weight="400" text-anchor="start">AI 助手 → 可审查的内容修改提案</text>
+<rect x="1478" y="524" width="386" height="30" rx="15" fill="#F0EBF8" stroke="none" />
+<text x="1671.0" y="545" fill="#7861B5" font-family="Inter, -apple-system, BlinkMacSystemFont, Segoe UI, PingFang SC, Microsoft YaHei, sans-serif" font-size="16" font-weight="600" text-anchor="middle">本地 API / 磁盘 · 静态模式 / IndexedDB</text>
+<path d="M1668 571 V620" fill="none" stroke="#7861B5" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="7 6" marker-end="url(#purple)"/>
+<text x="1690" y="603" fill="#7861B5" font-family="Inter, -apple-system, BlinkMacSystemFont, Segoe UI, PingFang SC, Microsoft YaHei, sans-serif" font-size="17" font-weight="400" text-anchor="start">预览与试玩</text>
+<rect x="1454" y="622" width="434" height="256" rx="16" fill="#fff" stroke="#DCD3EC" />
+<text x="1478" y="660" fill="#7861B5" font-family="Inter, -apple-system, BlinkMacSystemFont, Segoe UI, PingFang SC, Microsoft YaHei, sans-serif" font-size="24" font-weight="650" text-anchor="start">WASM 桥接</text>
+<text x="1478" y="697" fill="#172B45" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="22" font-weight="600" text-anchor="start">pokered-runner-web</text>
+<text x="1478" y="729" fill="#60738A" font-family="Inter, -apple-system, BlinkMacSystemFont, Segoe UI, PingFang SC, Microsoft YaHei, sans-serif" font-size="19" font-weight="400" text-anchor="start">复用 PokemonGame · tick → RGBA</text>
+<path d="M1478 749 H1862" fill="none" stroke="#E5DDF0" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>
+<text x="1478" y="782" fill="#172B45" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="21" font-weight="600" text-anchor="start">pokered-layout-preview</text>
+<text x="1478" y="812" fill="#60738A" font-family="Inter, -apple-system, BlinkMacSystemFont, Segoe UI, PingFang SC, Microsoft YaHei, sans-serif" font-size="19" font-weight="400" text-anchor="start">.gui 编译 / 布局预览 → dotzuki</text>
+<text x="1478" y="851" fill="#60738A" font-family="Inter, -apple-system, BlinkMacSystemFont, Segoe UI, PingFang SC, Microsoft YaHei, sans-serif" font-size="18" font-weight="400" text-anchor="start">pokered-ui-preview：游戏 UI 桥接</text>
+<path d="M1454 700 H1382 V660 H1174 Q1162 646 1150 660 H950 V638" fill="none" stroke="#7861B5" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="7 6" marker-end="url(#purple)"/>
+<text x="1380" y="614" fill="#7861B5" font-family="Inter, -apple-system, BlinkMacSystemFont, Segoe UI, PingFang SC, Microsoft YaHei, sans-serif" font-size="16" font-weight="500" text-anchor="middle">试玩</text>
+<rect x="1454" y="926" width="434" height="170" rx="16" fill="#fff" stroke="#DCD3EC" />
+<text x="1478" y="965" fill="#7861B5" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="23" font-weight="650" text-anchor="start">pokered-debug-server</text>
+<text x="1478" y="1000" fill="#172B45" font-family="Inter, -apple-system, BlinkMacSystemFont, Segoe UI, PingFang SC, Microsoft YaHei, sans-serif" font-size="20" font-weight="400" text-anchor="start">TCP / JSON-line → pokered-app</text>
+<text x="1478" y="1033" fill="#60738A" font-family="Inter, -apple-system, BlinkMacSystemFont, Segoe UI, PingFang SC, Microsoft YaHei, sans-serif" font-size="19" font-weight="400" text-anchor="start">读取状态 · 注入输入 · 确定性逐帧推进</text>
+<text x="1478" y="1070" fill="#60738A" font-family="Inter, -apple-system, BlinkMacSystemFont, Segoe UI, PingFang SC, Microsoft YaHei, sans-serif" font-size="18" font-weight="400" text-anchor="start">按需启用 debug-server feature</text>
+<rect x="1454" y="1144" width="434" height="226" rx="16" fill="#fff" stroke="#DCD3EC" />
+<text x="1478" y="1183" fill="#7861B5" font-family="Inter, -apple-system, BlinkMacSystemFont, Segoe UI, PingFang SC, Microsoft YaHei, sans-serif" font-size="24" font-weight="650" text-anchor="start">内容构建与回归</text>
+<text x="1478" y="1220" fill="#172B45" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="19" font-weight="500" text-anchor="start">scene_apply + scripts/ + tools/</text>
+<text x="1478" y="1253" fill="#60738A" font-family="Inter, -apple-system, BlinkMacSystemFont, Segoe UI, PingFang SC, Microsoft YaHei, sans-serif" font-size="20" font-weight="400" text-anchor="start">脚本检查 / 配置生成 · 数据提取</text>
+<text x="1478" y="1286" fill="#60738A" font-family="Inter, -apple-system, BlinkMacSystemFont, Segoe UI, PingFang SC, Microsoft YaHei, sans-serif" font-size="20" font-weight="400" text-anchor="start">通关回归 / BDD · 截图与保真审计</text>
+<path d="M1478 1305 H1862" fill="none" stroke="#E5DDF0" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>
+<text x="1478" y="1342" fill="#7861B5" font-family="Inter, -apple-system, BlinkMacSystemFont, Segoe UI, PingFang SC, Microsoft YaHei, sans-serif" font-size="20" font-weight="550" text-anchor="start">编辑 → 构建 / 注入 → 试玩与验证</text>
+<path d="M1454 1237 H1320" fill="none" stroke="#7861B5" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="7 6" marker-end="url(#purple)"/>
+<path d="M702 1406 V1472" fill="none" stroke="#9BAEC2" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round" marker-end="url(#gray)"/>
+<text x="726" y="1447" fill="#60738A" font-family="Inter, -apple-system, BlinkMacSystemFont, Segoe UI, PingFang SC, Microsoft YaHei, sans-serif" font-size="19" font-weight="400" text-anchor="start">各层按职责直接依赖 dotzuki-*</text>
+<path d="M1668 1406 V1472" fill="none" stroke="#7861B5" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round" marker-end="url(#purple)"/>
+<text x="1690" y="1447" fill="#60738A" font-family="Inter, -apple-system, BlinkMacSystemFont, Segoe UI, PingFang SC, Microsoft YaHei, sans-serif" font-size="18" font-weight="400" text-anchor="start">复用引擎</text>
+<rect x="48" y="1472" width="1864" height="196" rx="24" fill="#EAF0F8" stroke="#CAD6E6" />
+<text x="76" y="1516" fill="#172B45" font-family="Inter, -apple-system, BlinkMacSystemFont, Segoe UI, PingFang SC, Microsoft YaHei, sans-serif" font-size="27" font-weight="700" text-anchor="start">外部通用引擎</text>
+<text x="295" y="1516" fill="#3878D4" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="27" font-weight="650" text-anchor="start">dotzuki</text>
+<rect x="1552" y="1489" width="332" height="30" rx="15" fill="#DCE7F6" stroke="none" />
+<text x="1718.0" y="1510" fill="#3878D4" font-family="Inter, -apple-system, BlinkMacSystemFont, Segoe UI, PingFang SC, Microsoft YaHei, sans-serif" font-size="17" font-weight="600" text-anchor="middle">独立仓库 · Cargo Git · v0.6.0</text>
+<text x="76" y="1557" fill="#172B45" font-family="Inter, -apple-system, BlinkMacSystemFont, Segoe UI, PingFang SC, Microsoft YaHei, sans-serif" font-size="23" font-weight="650" text-anchor="start">规则与场景</text>
+<text x="76" y="1589" fill="#3878D4" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="20" font-weight="500" text-anchor="start">engine · engine-dsl · rules</text>
+<text x="76" y="1623" fill="#60738A" font-family="Inter, -apple-system, BlinkMacSystemFont, Segoe UI, PingFang SC, Microsoft YaHei, sans-serif" font-size="18" font-weight="400" text-anchor="start">效果栈 / 状态接口 / DSL 编译与解释</text>
+<text x="562" y="1557" fill="#172B45" font-family="Inter, -apple-system, BlinkMacSystemFont, Segoe UI, PingFang SC, Microsoft YaHei, sans-serif" font-size="23" font-weight="650" text-anchor="start">渲染与交互</text>
+<text x="562" y="1589" fill="#3878D4" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="20" font-weight="500" text-anchor="start">renderer · ui</text>
+<text x="562" y="1623" fill="#60738A" font-family="Inter, -apple-system, BlinkMacSystemFont, Segoe UI, PingFang SC, Microsoft YaHei, sans-serif" font-size="18" font-weight="400" text-anchor="start">帧缓冲 / 图形基础 / 布局引擎 / Painter</text>
+<text x="1052" y="1557" fill="#172B45" font-family="Inter, -apple-system, BlinkMacSystemFont, Segoe UI, PingFang SC, Microsoft YaHei, sans-serif" font-size="23" font-weight="650" text-anchor="start">音频</text>
+<text x="1052" y="1589" fill="#3878D4" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="20" font-weight="500" text-anchor="start">audio</text>
+<text x="1052" y="1623" fill="#60738A" font-family="Inter, -apple-system, BlinkMacSystemFont, Segoe UI, PingFang SC, Microsoft YaHei, sans-serif" font-size="18" font-weight="400" text-anchor="start">APU / 序列器 / 设备输出</text>
+<text x="1472" y="1557" fill="#172B45" font-family="Inter, -apple-system, BlinkMacSystemFont, Segoe UI, PingFang SC, Microsoft YaHei, sans-serif" font-size="23" font-weight="650" text-anchor="start">平台基础</text>
+<text x="1472" y="1589" fill="#3878D4" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="20" font-weight="500" text-anchor="start">app · web · tui</text>
+<text x="1472" y="1623" fill="#60738A" font-family="Inter, -apple-system, BlinkMacSystemFont, Segoe UI, PingFang SC, Microsoft YaHei, sans-serif" font-size="18" font-weight="400" text-anchor="start">应用循环 / 浏览器与终端宿主</text>
+<text x="64" y="1710" fill="#60738A" font-family="Inter, -apple-system, BlinkMacSystemFont, Segoe UI, PingFang SC, Microsoft YaHei, sans-serif" font-size="15" font-weight="600" text-anchor="start">OPEN-POKERED  /  ARCHITECTURE MAP</text>
+<text x="1896" y="1710" fill="#60738A" font-family="Inter, -apple-system, BlinkMacSystemFont, Segoe UI, PingFang SC, Microsoft YaHei, sans-serif" font-size="17" font-weight="400" text-anchor="end">图中引擎模块省略 dotzuki- 前缀；仓库中的 pokered-* 负责游戏专属实现。</text>
+</svg>

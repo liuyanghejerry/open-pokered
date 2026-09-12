@@ -1,0 +1,95 @@
+---
+config:
+  theme: base
+  themeVariables:
+    primaryColor: "#EDF4FF"
+    primaryBorderColor: "#BDD1ED"
+    primaryTextColor: "#172B45"
+    lineColor: "#91A5BE"
+    fontFamily: "PingFang SC, Microsoft YaHei, sans-serif"
+  flowchart:
+    curve: basis
+---
+flowchart TB
+%% Direct in-workspace normal Cargo dependencies at 746f7dd.
+%% Optional edges are dashed. No transitive/dev dependencies; external engine summarized.
+  subgraph platform["平台与编排"]
+    pokered_app["pokered-app"]
+    pokered_web["pokered-web"]
+    pokered_android["pokered-android"]
+    pokered_ios["pokered-ios"]
+    pokered_tui["pokered-tui"]
+  end
+  subgraph preview["预览与开发工具"]
+    pokered_runner_web["pokered-runner-web"]
+    pokered_layout_preview["pokered-layout-preview"]
+    pokered_ui_preview["pokered-ui-preview"]
+    pokered_debug_server["pokered-debug-server"]
+    scene_apply["scene_apply"]
+  end
+  subgraph services["游戏模块"]
+    pokered_ui["pokered-ui"]
+    pokered_renderer["pokered-renderer"]
+    pokered_audio["pokered-audio"]
+    pokered_core["pokered-core"]
+  end
+  subgraph content["内容数据"]
+    pokered_data["pokered-data"]
+  end
+  pokered_android --> pokered_app
+  pokered_android --> pokered_audio
+  pokered_android --> pokered_core
+  pokered_android --> pokered_data
+  pokered_android --> pokered_renderer
+  pokered_app --> pokered_audio
+  pokered_app --> pokered_core
+  pokered_app --> pokered_data
+  pokered_app -. "optional" .-> pokered_debug_server
+  pokered_app --> pokered_renderer
+  pokered_app --> pokered_ui
+  pokered_core --> pokered_data
+  pokered_ios --> pokered_app
+  pokered_ios --> pokered_audio
+  pokered_ios --> pokered_core
+  pokered_ios --> pokered_data
+  pokered_ios --> pokered_renderer
+  pokered_renderer --> pokered_core
+  pokered_renderer --> pokered_data
+  pokered_runner_web --> pokered_app
+  pokered_runner_web --> pokered_core
+  pokered_runner_web --> pokered_data
+  pokered_runner_web --> pokered_renderer
+  pokered_tui --> pokered_audio
+  pokered_tui --> pokered_core
+  pokered_tui --> pokered_data
+  pokered_tui --> pokered_renderer
+  pokered_tui --> pokered_ui
+  pokered_ui --> pokered_core
+  pokered_ui --> pokered_data
+  pokered_ui --> pokered_renderer
+  pokered_ui_preview --> pokered_core
+  pokered_ui_preview --> pokered_data
+  pokered_ui_preview --> pokered_renderer
+  pokered_ui_preview --> pokered_ui
+  pokered_web --> pokered_app
+  pokered_web --> pokered_core
+  pokered_web --> pokered_renderer
+
+  editor["pokered-editor · Vue / Vite / Electron"]
+  dotzuki["外部 dotzuki-* · Cargo Git v0.6.0<br/>各 crate 按职责直接引入，未展开引擎内部依赖"]
+  editor -. "试玩 / 注入" .-> pokered_runner_web
+  editor -. "当前布局预览 / DSL 编译" .-> pokered_layout_preview
+  editor -. "编辑内容（磁盘 / 浏览器覆盖）" .-> pokered_data
+  platform --> dotzuki
+  preview --> dotzuki
+  services --> dotzuki
+  content --> dotzuki
+
+  classDef game fill:#EDFAF5,stroke:#B9DCCD,color:#148276
+  classDef tooling fill:#F4EFFB,stroke:#DDD4EF,color:#6D559F
+  classDef data fill:#FFF9EE,stroke:#E9D7B6,color:#95631D
+  classDef external fill:#EAF0F8,stroke:#CAD6E6,color:#172B45
+  class pokered_core game
+  class pokered_runner_web,pokered_layout_preview,pokered_ui_preview,pokered_debug_server,scene_apply,editor tooling
+  class pokered_data data
+  class dotzuki external
