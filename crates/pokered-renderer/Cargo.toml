@@ -25,9 +25,11 @@ winit_input_helper = { version = "0.17", optional = true }
 image = { version = "0.25", default-features = false, features = ["png"], optional = true }
 error-iter = { version = "0.4", optional = true }
 
-# Hosted: full dotzuki-renderer (gpu windowing + PNG resource pipeline).
+# Hosted base: framebuffer only. The crate's `resource` and `gpu` features
+# opt into PNG loading and windowing respectively, so mobile never inherits
+# desktop winit/android-activity dependencies merely for having `std`.
 [target.'cfg(not(target_os = "none"))'.dependencies]
-dotzuki-renderer = { git = "https://github.com/liuyanghejerry/dotzuki", rev = "55b90736aa9c2cc56e69a247b57e320c57136898" }
+dotzuki-renderer = { git = "https://github.com/liuyanghejerry/dotzuki", rev = "55b90736aa9c2cc56e69a247b57e320c57136898", default-features = false, features = ["framebuffer"] }
 thiserror = { workspace = true }
 
 # Bare metal (GBA): framebuffer-only engine renderer; assets come from the

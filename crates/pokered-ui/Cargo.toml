@@ -29,13 +29,6 @@ default = ["gpu"]
 framebuffer = ["pokered-renderer/framebuffer"]
 gpu = ["pokered-renderer/gpu", "dotzuki-ui/gpu"]
 
-# Hosted gpu windowing: full dotzuki-renderer (pixels/winit/resource).
-# Bare metal (GBA, target_os = "none") builds with default-features = false
-# and gets the framebuffer-only engine renderer declared above.
-[target.'cfg(not(target_os = "none"))'.dependencies]
-dotzuki-renderer = { git = "https://github.com/liuyanghejerry/dotzuki", rev = "55b90736aa9c2cc56e69a247b57e320c57136898", features = ["gpu", "resource"] }
-pokered-renderer = { path = "../pokered-renderer", features = ["gpu"] }
-
 # Bare metal (GBA): spin-backed sync shims (crate::sync_compat).
 [target.'cfg(target_os = "none")'.dependencies]
 

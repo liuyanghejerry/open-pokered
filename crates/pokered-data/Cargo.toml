@@ -28,9 +28,11 @@ dotzuki-engine = { git = "https://github.com/liuyanghejerry/dotzuki", rev = "55b
 # unspecified either way, same contract as std).
 hashbrown = { version = "0.15", default-features = false, features = ["serde"] }
 
-# Hosted: full dotzuki-renderer (gpu + PNG resource pipeline).
+# Hosted data only shares renderer-owned value types (palettes, icon kinds,
+# and compiled layouts). It must not select a presentation backend: desktop
+# and mobile hosts make that choice at their respective composition roots.
 [target.'cfg(not(target_os = "none"))'.dependencies]
-dotzuki-renderer = { git = "https://github.com/liuyanghejerry/dotzuki", rev = "55b90736aa9c2cc56e69a247b57e320c57136898" }
+dotzuki-renderer = { git = "https://github.com/liuyanghejerry/dotzuki", rev = "55b90736aa9c2cc56e69a247b57e320c57136898", default-features = false, features = ["framebuffer"] }
 thiserror = { workspace = true }
 
 # Bare metal (GBA): framebuffer-only engine renderer.

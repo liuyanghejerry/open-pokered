@@ -247,6 +247,22 @@ table, avoiding both heap structures. The movement regression crosses that map
 edge in two directions, and the emulator soak continued through more than 8,000
 simulated frames without another crash.
 
+## Platform feature boundary
+
+Renderer backend selection belongs to the application composition root. Shared
+data, UI, renderer, and session crates therefore request only framebuffer/value-
+type features by default; the explicit `desktop` feature is the sole owner of
+GPU windowing. Mobile selects embedded resources without inheriting
+`winit`/`android-activity`, while GBA remains framebuffer-only. This prevents a
+hosted-target shortcut (`not(target_os = "none")`) from silently treating
+Android and iOS as desktop platforms.
+
+The boundary is checked with native desktop/mobile builds, direct
+`aarch64-linux-android` and `aarch64-apple-ios` checks, and an Android dependency
+tree assertion that contains neither `winit` nor `android-activity`. The GBA
+release ROM is rebuilt with `autopilot,profiling` and passed through
+`agb-gbafix` after the feature split.
+
 ## Dotzuki dependency
 
 The reusable no_std and renderer work lives in dotzuki PR #63 on the

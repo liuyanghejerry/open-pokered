@@ -36,14 +36,11 @@ log = "0.4"
 # passes maps to pokered-core APIs that now use hashbrown.
 hashbrown = { version = "0.15", default-features = false, features = ["serde"] }
 
-# Hosted builds want the full renderer (gpu windowing, PNG resource loading,
-# audio device glue, link play, CLI tooling). Bare metal (GBA,
-# target_os = "none") gets framebuffer-only builds — see the target tables
-# in the individual crate manifests.
+# Hosted builds share link/session and resource APIs. Windowing remains owned
+# exclusively by the explicit `desktop` feature; Android/iOS use the mobile
+# framebuffer host and must not pull winit/android-activity through defaults.
 [target.'cfg(not(target_os = "none"))'.dependencies]
-pokered-renderer = { path = "../pokered-renderer", features = ["gpu"] }
-pokered-ui = { path = "../pokered-ui", features = ["gpu"] }
-dotzuki-app = { git = "https://github.com/liuyanghejerry/dotzuki", rev = "55b90736aa9c2cc56e69a247b57e320c57136898" }
+dotzuki-app = { git = "https://github.com/liuyanghejerry/dotzuki", rev = "55b90736aa9c2cc56e69a247b57e320c57136898", default-features = false }
 image = { version = "0.25", default-features = false, features = ["png"] }
 
 # Bare metal (GBA): spin locks for the single-threaded lazy statics
