@@ -32,6 +32,8 @@ pub use battle::{
 };
 pub use battle_i18n::{trainer_class_zh, zh_battle_dialog};
 pub use credits::draw_credits;
+#[cfg(any(test, target_os = "none"))]
+pub use credits::{credits_visual_key, CreditsVisualKey};
 pub use diploma::draw_diploma;
 pub use elevator::{draw_elevator, draw_filter_bag};
 #[cfg(any(test, target_os = "none"))]

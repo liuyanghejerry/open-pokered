@@ -2412,6 +2412,7 @@ fn game_main() -> ! {
     let mut last_trade: Option<pokered_app::render::TradeVisualKey> = None;
     let mut last_evolution: Option<pokered_app::render::EvolutionVisualKey> = None;
     let mut last_hof: Option<pokered_app::render::HofVisualKey> = None;
+    let mut last_credits: Option<pokered_app::render::CreditsVisualKey> = None;
     let mut last_takeover_active = false;
     let mut last_static_splash: Option<SplashPhase> = None;
     let mut last_language_select: Option<Lang> = None;
@@ -2523,15 +2524,15 @@ fn game_main() -> ! {
             .hof_ceremony
             .as_ref()
             .map(|hof| pokered_app::render::hof_visual_key(hof, game.state.config.language));
-        // Credits owns the full framebuffer. Until it receives an exact
-        // visual key, render every display frame so the ordinary screen
-        // cache can never freeze it.
-        let uncached_takeover = game.credits.is_some();
+        let credits = game
+            .credits
+            .as_ref()
+            .map(pokered_app::render::credits_visual_key);
         let takeover_active = black_screen
             || trade.is_some()
             || evolution.is_some()
             || hof.is_some()
-            || uncached_takeover;
+            || credits.is_some();
         // The copyright, setup, and post-delay splash phases are completely
         // static. Keep the already-presented page while only advancing logic.
         let static_splash = if game.state.screen == GameScreen::GameFreakSplash
@@ -2695,8 +2696,8 @@ fn game_main() -> ! {
             evolution != last_evolution
         } else if hof.is_some() {
             hof != last_hof
-        } else if uncached_takeover {
-            true
+        } else if credits.is_some() {
+            credits != last_credits
         } else if last_takeover_active {
             // The takeover replaced the ordinary screen contents. Restore
             // that screen even when its own visual state did not change.
@@ -3281,6 +3282,7 @@ fn game_main() -> ! {
         last_trade = trade;
         last_evolution = evolution;
         last_hof = hof;
+        last_credits = credits;
         last_takeover_active = takeover_active;
         last_static_splash = static_splash;
         last_language_select = language_select;
