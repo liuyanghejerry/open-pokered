@@ -1,0 +1,188 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1960" height="1740" viewBox="0 0 1960 1740" role="img" aria-labelledby="title desc">
+<title id="title">open-pokered architecture: platform entry points, game orchestration, game logic &amp; presentation, content data, and the external engine</title>
+<desc id="desc">Desktop, Web, Android and iOS orchestrate core logic, UI, rendering and audio through pokered-app's PokemonGame; TUI uses its own orchestration while reusing lower-level modules. pokered-data provides data and build-time compiled scene scripts. The editor previews and playtests via WASM, and a TCP debug server supports automated verification. Each module depends on the external dotzuki engine by responsibility.</desc>
+<defs>
+<marker id="gray" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="userSpaceOnUse"><path d="M0 0 L8 4 L0 8 Z" fill="#9BAEC2"/></marker>
+<marker id="purple" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="userSpaceOnUse"><path d="M0 0 L8 4 L0 8 Z" fill="#7861B5"/></marker>
+<marker id="amber" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="userSpaceOnUse"><path d="M0 0 L8 4 L0 8 Z" fill="#B37A22"/></marker>
+<pattern id="grid" width="24" height="24" patternUnits="userSpaceOnUse"><circle cx="1" cy="1" r="0.8" fill="#D9E2ED"/></pattern>
+<linearGradient id="base" x2="1" y2="1"><stop stop-color="#F5F8FC"/><stop offset="1" stop-color="#EDF3F7"/></linearGradient>
+</defs>
+<rect x="0" y="0" width="1960" height="1740" rx="0" fill="url(#base)" stroke="none" />
+<rect x="0" y="0" width="1960" height="1740" rx="0" fill="url(#grid)" stroke="none" />
+<circle cx="94" cy="93" r="32" fill="#fff" stroke="#172B45" stroke-width="3"/><path d="M62 93 A32 32 0 0 1 126 93 Z" fill="#D66A6A"/><path d="M62 93 H126" stroke="#172B45" stroke-width="3"/><circle cx="94" cy="93" r="10" fill="#fff" stroke="#172B45" stroke-width="3"/>
+<text x="150" y="107" fill="#172B45" font-family="Inter, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="46" font-weight="750" text-anchor="start">open-pokered Architecture</text>
+<text x="64" y="161" fill="#60738A" font-family="Inter, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="24" font-weight="400" text-anchor="start">A Rust game reimplementation · shared game logic connecting multi-platform play, content editing, and automated verification</text>
+<rect x="64" y="192" width="150" height="30" rx="15" fill="#E5EFFD" stroke="none" />
+<text x="139.0" y="213" fill="#3878D4" font-family="Inter, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="17" font-weight="600" text-anchor="middle">Multi-Platform</text>
+<rect x="224" y="192" width="185" height="30" rx="15" fill="#E4F3ED" stroke="none" />
+<text x="316.5" y="213" fill="#148276" font-family="Inter, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="17" font-weight="600" text-anchor="middle">Content / Logic Split</text>
+<rect x="419" y="192" width="210" height="30" rx="15" fill="#EEE9F8" stroke="none" />
+<text x="524.0" y="213" fill="#7861B5" font-family="Inter, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="17" font-weight="600" text-anchor="middle">Standalone Engine Repo</text>
+<text x="1896" y="84" fill="#60738A" font-family="Inter, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="16" font-weight="650" text-anchor="end">SYSTEM OVERVIEW</text>
+<text x="1896" y="115" fill="#60738A" font-family="Inter, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="19" font-weight="400" text-anchor="end">Based on current source &amp; Cargo deps</text>
+<path d="M1480 160 H1530" fill="none" stroke="#9BAEC2" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round" marker-end="url(#gray)"/>
+<text x="1546" y="166" fill="#60738A" font-family="Inter, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="17" font-weight="400" text-anchor="start">Primary calls / deps</text>
+<path d="M1480 202 H1530" fill="none" stroke="#7861B5" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="7 6" marker-end="url(#purple)"/>
+<text x="1546" y="208" fill="#60738A" font-family="Inter, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="17" font-weight="400" text-anchor="start">Content / control flow</text>
+<rect x="48" y="256" width="1300" height="1150" rx="24" fill="#FFFFFF" stroke="#D6E1EC" />
+<rect x="1430" y="256" width="482" height="1150" rx="24" fill="#F7F4FC" stroke="#DDD4EF" />
+<rect x="76" y="273" width="36" height="30" rx="15" fill="#E9F1FF" stroke="none" />
+<text x="94.0" y="294" fill="#3878D4" font-family="Inter, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="16" font-weight="600" text-anchor="middle">01</text>
+<text x="124" y="296" fill="#172B45" font-family="Inter, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="22" font-weight="650" text-anchor="start">Platform Entry</text>
+<text x="292" y="296" fill="#60738A" font-family="Inter, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="14" font-weight="500" text-anchor="start">PLATFORM ENTRY POINTS</text>
+<rect x="76" y="320" width="252" height="104" rx="16" fill="#fff" stroke="#DEE6EF" />
+<rect x="92" y="341" width="4" height="24" rx="2" fill="#3878D4" stroke="none" />
+<text x="108" y="359" fill="#172B45" font-family="Inter, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="24" font-weight="650" text-anchor="start">Desktop / CLI</text>
+<text x="108" y="387" fill="#3878D4" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="18" font-weight="550" text-anchor="start">pokered-app</text>
+<text x="108" y="412" fill="#60738A" font-family="Inter, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="17" font-weight="400" text-anchor="start">Native window · headless</text>
+<rect x="352" y="320" width="252" height="104" rx="16" fill="#fff" stroke="#DEE6EF" />
+<rect x="368" y="341" width="4" height="24" rx="2" fill="#3878D4" stroke="none" />
+<text x="384" y="359" fill="#172B45" font-family="Inter, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="24" font-weight="650" text-anchor="start">Web Browser</text>
+<text x="384" y="387" fill="#3878D4" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="18" font-weight="550" text-anchor="start">pokered-web</text>
+<text x="384" y="412" fill="#60738A" font-family="Inter, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="17" font-weight="400" text-anchor="start">WASM · Canvas</text>
+<rect x="628" y="320" width="352" height="104" rx="16" fill="#fff" stroke="#DEE6EF" />
+<rect x="644" y="341" width="4" height="24" rx="2" fill="#3878D4" stroke="none" />
+<text x="660" y="359" fill="#172B45" font-family="Inter, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="24" font-weight="650" text-anchor="start">Android / iOS</text>
+<text x="660" y="387" fill="#3878D4" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="18" font-weight="550" text-anchor="start">pokered-android / -ios</text>
+<text x="660" y="412" fill="#60738A" font-family="Inter, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="17" font-weight="400" text-anchor="start">JNI / C ABI · mobile host</text>
+<rect x="1004" y="320" width="316" height="104" rx="16" fill="#fff" stroke="#DEE6EF" />
+<rect x="1020" y="341" width="4" height="24" rx="2" fill="#3878D4" stroke="none" />
+<text x="1036" y="359" fill="#172B45" font-family="Inter, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="24" font-weight="650" text-anchor="start">Terminal</text>
+<text x="1036" y="387" fill="#3878D4" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="18" font-weight="550" text-anchor="start">pokered-tui</text>
+<text x="1036" y="412" fill="#60738A" font-family="Inter, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="17" font-weight="400" text-anchor="start">ratatui · terminal output</text>
+<path d="M202 424 V445 H478" fill="none" stroke="#9BAEC2" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M804 424 V445 H478" fill="none" stroke="#9BAEC2" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M478 424 V445 H720 V492" fill="none" stroke="#9BAEC2" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round" marker-end="url(#gray)"/>
+<path d="M1162 424 V492" fill="none" stroke="#9BAEC2" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round" marker-end="url(#gray)"/>
+<rect x="76" y="449" width="36" height="30" rx="15" fill="#E9F1FF" stroke="none" />
+<text x="94.0" y="470" fill="#3878D4" font-family="Inter, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="16" font-weight="600" text-anchor="middle">02</text>
+<text x="124" y="472" fill="#172B45" font-family="Inter, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="22" font-weight="650" text-anchor="start">Orchestration</text>
+<text x="292" y="472" fill="#60738A" font-family="Inter, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="14" font-weight="500" text-anchor="start">APPLICATION ORCHESTRATION</text>
+<rect x="76" y="492" width="904" height="146" rx="16" fill="#EDF4FF" stroke="#BDD1ED" />
+<rect x="790" y="506" width="172" height="30" rx="15" fill="#DDEBFF" stroke="none" />
+<text x="876.0" y="526" fill="#3878D4" font-family="Inter, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="14" font-weight="600" text-anchor="middle">Multi-platform shared lib</text>
+<text x="102" y="531" fill="#172B45" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="27" font-weight="650" text-anchor="start">pokered-app :: PokemonGame</text>
+<text x="102" y="565" fill="#3878D4" font-family="Inter, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="24" font-weight="550" text-anchor="start">Input dispatch → state advance → frame &amp; audio</text>
+<text x="102" y="601" fill="#60738A" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="18" font-weight="400" text-anchor="start">game.rs · render/ · audio/ · save I/O · link transport</text>
+<rect x="1004" y="492" width="316" height="146" rx="16" fill="#F3F6FA" stroke="#D6E1EC" />
+<text x="1030" y="533" fill="#172B45" font-family="Inter, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="24" font-weight="650" text-anchor="start">TUI Standalone Loop</text>
+<text x="1030" y="570" fill="#60738A" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="19" font-weight="400" text-anchor="start">game / render / audio</text>
+<text x="1030" y="605" fill="#60738A" font-family="Inter, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="21" font-weight="400" text-anchor="start">Reuses lower game modules</text>
+<path d="M528 638 V682" fill="none" stroke="#9BAEC2" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M1162 638 V682 H528" fill="none" stroke="#9BAEC2" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M600 738 V682 H1010 V738" fill="none" stroke="#9BAEC2" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M600 717 V738" fill="none" stroke="#9BAEC2" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round" marker-end="url(#gray)"/>
+<path d="M1010 717 V738" fill="none" stroke="#9BAEC2" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round" marker-end="url(#gray)"/>
+<rect x="76" y="689" width="36" height="30" rx="15" fill="#E9F1FF" stroke="none" />
+<text x="94.0" y="710" fill="#3878D4" font-family="Inter, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="16" font-weight="600" text-anchor="middle">03</text>
+<text x="124" y="712" fill="#172B45" font-family="Inter, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="22" font-weight="650" text-anchor="start">Game Modules</text>
+<text x="292" y="712" fill="#60738A" font-family="Inter, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="14" font-weight="500" text-anchor="start">LOGIC &amp; PRESENTATION</text>
+<rect x="76" y="738" width="592" height="258" rx="16" fill="#EDFAF5" stroke="#B9DCCD" />
+<text x="102" y="779" fill="#148276" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="28" font-weight="650" text-anchor="start">pokered-core</text>
+<rect x="473" y="754" width="171" height="30" rx="15" fill="#D7EFE4" stroke="none" />
+<text x="558.5" y="775" fill="#148276" font-family="Inter, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="16" font-weight="600" text-anchor="middle">Logic &amp; State</text>
+<text x="102" y="819" fill="#172B45" font-family="Inter, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="23" font-weight="650" text-anchor="start">Battle System</text>
+<text x="360" y="819" fill="#172B45" font-family="Inter, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="23" font-weight="650" text-anchor="start">Maps &amp; Events</text>
+<text x="102" y="849" fill="#60738A" font-family="Inter, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="18" font-weight="400" text-anchor="start">Gen I rules · effect stack</text>
+<text x="360" y="849" fill="#60738A" font-family="Inter, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="18" font-weight="400" text-anchor="start">Move / NPC / scene interp</text>
+<text x="102" y="891" fill="#172B45" font-family="Inter, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="23" font-weight="650" text-anchor="start">Pokémon &amp; Player</text>
+<text x="360" y="891" fill="#172B45" font-family="Inter, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="23" font-weight="650" text-anchor="start">Screen State Machine</text>
+<text x="102" y="921" fill="#60738A" font-family="Inter, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="18" font-weight="400" text-anchor="start">Party / items / save model</text>
+<text x="360" y="921" fill="#60738A" font-family="Inter, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="18" font-weight="400" text-anchor="start">Menus / dialogue / title flow</text>
+<path d="M102 943 H642" fill="none" stroke="#C6E4D8" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>
+<text x="102" y="975" fill="#148276" font-family="Inter, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="18" font-weight="400" text-anchor="start">Boundary: game rules &amp; state; no platform output</text>
+<rect x="700" y="738" width="620" height="258" rx="16" fill="#F5F8FC" stroke="#D6E1EC" />
+<text x="724" y="774" fill="#172B45" font-family="Inter, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="22" font-weight="650" text-anchor="start">Presentation &amp; Output</text>
+<text x="1296" y="774" fill="#60738A" font-family="Inter, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="17" font-weight="400" text-anchor="end">scheduled by orchestration layer</text>
+<rect x="720" y="794" width="256" height="82" rx="12" fill="#fff" stroke="#DBE5EF" />
+<text x="738" y="825" fill="#3878D4" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="21" font-weight="650" text-anchor="start">pokered-ui</text>
+<text x="738" y="854" fill="#60738A" font-family="Inter, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="17" font-weight="400" text-anchor="start">Menus · Painter · .gui v2</text>
+<path d="M976 835 H1008" fill="none" stroke="#9BAEC2" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round" marker-end="url(#gray)"/>
+<rect x="1008" y="794" width="292" height="82" rx="12" fill="#fff" stroke="#DBE5EF" />
+<text x="1026" y="825" fill="#3878D4" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="21" font-weight="650" text-anchor="start">pokered-renderer</text>
+<text x="1026" y="854" fill="#60738A" font-family="Inter, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="17" font-weight="400" text-anchor="start">160 × 144 framebuffer · fonts</text>
+<rect x="720" y="899" width="580" height="76" rx="12" fill="#fff" stroke="#DBE5EF" />
+<text x="738" y="929" fill="#3878D4" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="21" font-weight="650" text-anchor="start">pokered-audio</text>
+<text x="948" y="929" fill="#60738A" font-family="Inter, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="19" font-weight="400" text-anchor="start">APU · sequencer · BGM / SFX</text>
+<text x="738" y="958" fill="#60738A" font-family="Inter, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="17" font-weight="400" text-anchor="start">Game score + SFX tables; device output per platform</text>
+<path d="M620 996 V1090" fill="none" stroke="#9BAEC2" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round" marker-end="url(#gray)"/>
+<text x="76" y="1032" fill="#60738A" font-family="Inter, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="18" font-weight="400" text-anchor="start">Reads data / compiled scenes</text>
+<path d="M1320 824 H1333 V1054 H1130 V1090" fill="none" stroke="#9BAEC2" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round" marker-end="url(#gray)"/>
+<text x="930" y="1045" fill="#60738A" font-family="Inter, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="18" font-weight="400" text-anchor="start">UI / renderer read layouts &amp; assets</text>
+<rect x="76" y="1050" width="36" height="30" rx="15" fill="#E9F1FF" stroke="none" />
+<text x="94.0" y="1071" fill="#3878D4" font-family="Inter, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="16" font-weight="600" text-anchor="middle">04</text>
+<text x="124" y="1073" fill="#172B45" font-family="Inter, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="22" font-weight="650" text-anchor="start">Content Data</text>
+<text x="292" y="1073" fill="#60738A" font-family="Inter, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="14" font-weight="500" text-anchor="start">GAME CONTENT &amp; BUILD PIPELINE</text>
+<rect x="76" y="1090" width="1244" height="214" rx="16" fill="#FFF9EE" stroke="#E9D7B6" />
+<text x="102" y="1130" fill="#B37A22" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="27" font-weight="650" text-anchor="start">pokered-data</text>
+<text x="1294" y="1130" fill="#60738A" font-family="Inter, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="19" font-weight="400" text-anchor="end">Static tables · embedded assets · runtime override</text>
+<text x="102" y="1174" fill="#172B45" font-family="Inter, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="23" font-weight="650" text-anchor="start">Maps &amp; Scripts</text>
+<text x="102" y="1205" fill="#60738A" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="18" font-weight="400" text-anchor="start">maps/*.json · *.scene</text>
+<text x="422" y="1174" fill="#172B45" font-family="Inter, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="23" font-weight="650" text-anchor="start">Game Database</text>
+<text x="422" y="1205" fill="#60738A" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="18" font-weight="400" text-anchor="start">pokemon / moves / trainers</text>
+<text x="822" y="1174" fill="#172B45" font-family="Inter, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="23" font-weight="650" text-anchor="start">UI &amp; Graphics</text>
+<text x="822" y="1205" fill="#60738A" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="18" font-weight="400" text-anchor="start">ui_layouts/*.gui · gfx/</text>
+<rect x="98" y="1230" width="1200" height="52" rx="10" fill="#F5EBD6" stroke="none" />
+<text x="116" y="1263" fill="#B37A22" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="20" font-weight="650" text-anchor="start">build.rs</text>
+<text x="256" y="1263" fill="#172B45" font-family="Inter, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="20" font-weight="400" text-anchor="start">JSON / .scene / .gui → static Rust tables, scene ASTs, layout data → embedded at runtime</text>
+<text x="76" y="1345" fill="#60738A" font-family="Inter, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="20" font-weight="400" text-anchor="start">Default scene execution: native AST interpreter; Boa is the script-boa dev / fallback path.</text>
+<text x="76" y="1376" fill="#60738A" font-family="Inter, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="18" font-weight="400" text-anchor="start">Layers shown by responsibility; only primary relationships kept — see the companion Mermaid source for full crate deps.</text>
+<text x="1456" y="297" fill="#7861B5" font-family="Inter, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="26" font-weight="700" text-anchor="start">Authoring &amp; Verification</text>
+<text x="1456" y="329" fill="#60738A" font-family="Inter, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="14" font-weight="600" text-anchor="start">TOOLCHAIN</text>
+<rect x="1454" y="356" width="434" height="215" rx="16" fill="#fff" stroke="#DCD3EC" />
+<text x="1478" y="396" fill="#7861B5" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="26" font-weight="650" text-anchor="start">pokered-editor</text>
+<text x="1478" y="428" fill="#60738A" font-family="Inter, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="20" font-weight="400" text-anchor="start">Vue 3 / Vite / Electron</text>
+<text x="1478" y="469" fill="#172B45" font-family="Inter, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="18" font-weight="400" text-anchor="start">Maps · story · data · UI · saves · pixels</text>
+<text x="1478" y="505" fill="#172B45" font-family="Inter, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="17" font-weight="400" text-anchor="start">AI assistant → reviewable edit proposals</text>
+<rect x="1478" y="524" width="386" height="30" rx="15" fill="#F0EBF8" stroke="none" />
+<text x="1671.0" y="545" fill="#7861B5" font-family="Inter, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="16" font-weight="600" text-anchor="middle">Local API / disk · static mode / IndexedDB</text>
+<path d="M1668 571 V620" fill="none" stroke="#7861B5" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="7 6" marker-end="url(#purple)"/>
+<text x="1690" y="603" fill="#7861B5" font-family="Inter, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="17" font-weight="400" text-anchor="start">Preview &amp; playtest</text>
+<rect x="1454" y="622" width="434" height="256" rx="16" fill="#fff" stroke="#DCD3EC" />
+<text x="1478" y="660" fill="#7861B5" font-family="Inter, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="24" font-weight="650" text-anchor="start">WASM Bridge</text>
+<text x="1478" y="697" fill="#172B45" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="22" font-weight="600" text-anchor="start">pokered-runner-web</text>
+<text x="1478" y="729" fill="#60738A" font-family="Inter, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="19" font-weight="400" text-anchor="start">Reuses PokemonGame · tick → RGBA</text>
+<path d="M1478 749 H1862" fill="none" stroke="#E5DDF0" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>
+<text x="1478" y="782" fill="#172B45" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="21" font-weight="600" text-anchor="start">pokered-layout-preview</text>
+<text x="1478" y="812" fill="#60738A" font-family="Inter, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="19" font-weight="400" text-anchor="start">.gui compile / layout preview → dotzuki</text>
+<text x="1478" y="851" fill="#60738A" font-family="Inter, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="18" font-weight="400" text-anchor="start">pokered-ui-preview: game UI bridge</text>
+<path d="M1454 700 H1382 V660 H1174 Q1162 646 1150 660 H950 V638" fill="none" stroke="#7861B5" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="7 6" marker-end="url(#purple)"/>
+<text x="1380" y="614" fill="#7861B5" font-family="Inter, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="16" font-weight="500" text-anchor="middle">Playtest</text>
+<rect x="1454" y="926" width="434" height="170" rx="16" fill="#fff" stroke="#DCD3EC" />
+<text x="1478" y="965" fill="#7861B5" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="23" font-weight="650" text-anchor="start">pokered-debug-server</text>
+<text x="1478" y="1000" fill="#172B45" font-family="Inter, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="20" font-weight="400" text-anchor="start">TCP / JSON-line → pokered-app</text>
+<text x="1478" y="1033" fill="#60738A" font-family="Inter, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="19" font-weight="400" text-anchor="start">State reads · input injection · deterministic frames</text>
+<text x="1478" y="1070" fill="#60738A" font-family="Inter, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="18" font-weight="400" text-anchor="start">Enable via debug-server feature flag</text>
+<rect x="1454" y="1144" width="434" height="226" rx="16" fill="#fff" stroke="#DCD3EC" />
+<text x="1478" y="1183" fill="#7861B5" font-family="Inter, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="24" font-weight="650" text-anchor="start">Content Build &amp; Regression</text>
+<text x="1478" y="1220" fill="#172B45" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="19" font-weight="500" text-anchor="start">scene_apply + scripts/ + tools/</text>
+<text x="1478" y="1253" fill="#60738A" font-family="Inter, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="17" font-weight="400" text-anchor="start">Script checks / config gen · data extraction</text>
+<text x="1478" y="1286" fill="#60738A" font-family="Inter, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="17" font-weight="400" text-anchor="start">Playthrough regression / BDD · fidelity audits</text>
+<path d="M1478 1305 H1862" fill="none" stroke="#E5DDF0" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>
+<text x="1478" y="1342" fill="#7861B5" font-family="Inter, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="18" font-weight="550" text-anchor="start">Edit → build / inject → playtest &amp; verify</text>
+<path d="M1454 1237 H1320" fill="none" stroke="#7861B5" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="7 6" marker-end="url(#purple)"/>
+<path d="M702 1406 V1472" fill="none" stroke="#9BAEC2" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round" marker-end="url(#gray)"/>
+<text x="726" y="1447" fill="#60738A" font-family="Inter, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="19" font-weight="400" text-anchor="start">Each layer depends on dotzuki-* by responsibility</text>
+<path d="M1668 1406 V1472" fill="none" stroke="#7861B5" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round" marker-end="url(#purple)"/>
+<text x="1690" y="1447" fill="#60738A" font-family="Inter, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="18" font-weight="400" text-anchor="start">Reuses engine</text>
+<rect x="48" y="1472" width="1864" height="196" rx="24" fill="#EAF0F8" stroke="#CAD6E6" />
+<text x="76" y="1516" fill="#172B45" font-family="Inter, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="27" font-weight="700" text-anchor="start">External General Engine</text>
+<text x="450" y="1516" fill="#3878D4" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="27" font-weight="650" text-anchor="start">dotzuki</text>
+<rect x="1552" y="1489" width="332" height="30" rx="15" fill="#DCE7F6" stroke="none" />
+<text x="1718.0" y="1510" fill="#3878D4" font-family="Inter, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="17" font-weight="600" text-anchor="middle">Standalone repo · Cargo Git · v0.6.0</text>
+<text x="76" y="1557" fill="#172B45" font-family="Inter, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="23" font-weight="650" text-anchor="start">Rules &amp; Scenes</text>
+<text x="76" y="1589" fill="#3878D4" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="20" font-weight="500" text-anchor="start">engine · engine-dsl · rules</text>
+<text x="76" y="1623" fill="#60738A" font-family="Inter, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="18" font-weight="400" text-anchor="start">Effect stack / state API / DSL compile &amp; interpret</text>
+<text x="562" y="1557" fill="#172B45" font-family="Inter, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="23" font-weight="650" text-anchor="start">Rendering &amp; Interaction</text>
+<text x="562" y="1589" fill="#3878D4" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="20" font-weight="500" text-anchor="start">renderer · ui</text>
+<text x="562" y="1623" fill="#60738A" font-family="Inter, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="18" font-weight="400" text-anchor="start">Framebuffer / gfx base / layout / Painter</text>
+<text x="1052" y="1557" fill="#172B45" font-family="Inter, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="23" font-weight="650" text-anchor="start">Audio</text>
+<text x="1052" y="1589" fill="#3878D4" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="20" font-weight="500" text-anchor="start">audio</text>
+<text x="1052" y="1623" fill="#60738A" font-family="Inter, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="18" font-weight="400" text-anchor="start">APU / sequencer / device output</text>
+<text x="1472" y="1557" fill="#172B45" font-family="Inter, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="23" font-weight="650" text-anchor="start">Platform Base</text>
+<text x="1472" y="1589" fill="#3878D4" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="20" font-weight="500" text-anchor="start">app · web · tui</text>
+<text x="1472" y="1623" fill="#60738A" font-family="Inter, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="18" font-weight="400" text-anchor="start">App loop / browser &amp; terminal hosts</text>
+<text x="64" y="1710" fill="#60738A" font-family="Inter, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="15" font-weight="600" text-anchor="start">OPEN-POKERED  /  ARCHITECTURE MAP</text>
+<text x="1896" y="1710" fill="#60738A" font-family="Inter, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="17" font-weight="400" text-anchor="end">Engine modules omit the dotzuki- prefix; pokered-* crates hold game-specific code.</text>
+</svg>

@@ -1,0 +1,161 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1460" height="735" viewBox="0 0 1460 735" font-family="-apple-system,'PingFang SC','Helvetica Neue',Arial,sans-serif">
+  <rect width="1460" height="735" fill="#FFFFFF"/>
+
+  <!-- ===== Title ===== -->
+  <text x="80" y="34" font-size="20" font-weight="700" fill="#0F172A">Pokemon Red 复刻 · 关键要素全景时间线（2026-03-19 → 08-26）</text>
+  <text x="80" y="53" font-size="11" fill="#64748B">自建工具链 × 模型演进 × Harness 演进 的五个月叠乘 —— 证据哈希见 docs/retrospective-2026-08.md 附录A</text>
+
+  <!-- ===== Month gridlines (exact linear map: 8.15 px/day from 03-19) ===== -->
+  <g stroke="#E2E8F0" stroke-dasharray="4 3">
+    <line x1="186" y1="58" x2="186" y2="647"/>
+    <line x1="431" y1="58" x2="431" y2="647"/>
+    <line x1="683" y1="58" x2="683" y2="647"/>
+    <line x1="928" y1="58" x2="928" y2="647"/>
+    <line x1="1180" y1="58" x2="1180" y2="647"/>
+    <line x1="1384" y1="58" x2="1384" y2="647"/>
+  </g>
+
+  <!-- ===== Lane 1 : phases (7 stages) ===== -->
+  <text x="14" y="85" font-size="10" font-weight="700" fill="#94A3B8">阶 段</text>
+  <g font-size="11.5" font-weight="600">
+    <rect x="80"   y="64" width="106" height="34" rx="6" fill="#DBEAFE"/><text x="133"  y="85" text-anchor="middle" fill="#1E40AF">① 启动试水</text>
+    <rect x="186"  y="64" width="334" height="34" rx="6" fill="#CFFAFE"/><text x="353"  y="85" text-anchor="middle" fill="#155E75">② 工具建设</text>
+    <rect x="520"  y="64" width="204" height="34" rx="6" fill="#D1FAE5"/><text x="622"  y="85" text-anchor="middle" fill="#065F46">③ 引擎建设</text>
+    <rect x="724"  y="64" width="310" height="34" rx="6" fill="#FEF3C7"/><text x="879"  y="85" text-anchor="middle" fill="#92400E">④ 剧情补全</text>
+    <rect x="1034" y="64" width="146" height="34" rx="6" fill="#EDE9FE"/><text x="1107" y="85" text-anchor="middle" fill="#5B21B6">⑤ 还原度提升</text>
+    <rect x="1180" y="64" width="65"  height="34" rx="6" fill="#FFEDD5"/>
+    <rect x="1245" y="64" width="139" height="34" rx="6" fill="#FFE4E6"/><text x="1315" y="85" text-anchor="middle" fill="#9F1239">⑦ 拆分开源</text>
+  </g>
+  <text x="1213" y="59" font-size="10.5" font-weight="600" text-anchor="middle" fill="#9A3412">⑥ 难题攻克</text>
+
+  <!-- ===== Lane 2 : monthly commits ===== -->
+  <text x="14" y="185" font-size="10" font-weight="700" fill="#94A3B8">个人提交/月</text>
+  <line x1="80" y1="216" x2="1384" y2="216" stroke="#CBD5E1"/>
+  <g fill="#6366F1">
+    <rect x="115"  y="192" width="36" height="24" rx="3"/>
+    <rect x="290"  y="167" width="36" height="49" rx="3"/>
+    <rect x="539"  y="148" width="36" height="68" rx="3"/>
+    <rect x="787"  y="141" width="36" height="75" rx="3"/>
+    <rect x="1036" y="175" width="36" height="41" rx="3"/>
+  </g>
+  <rect x="1264" y="193" width="36" height="23" rx="3" fill="#6366F1"/>
+  <g font-size="10" fill="#475569" text-anchor="middle">
+    <text x="133" y="187">150</text><text x="308" y="162">314</text><text x="557" y="143">434</text>
+    <text x="805" y="136" font-weight="700">478</text><text x="1054" y="170">260</text><text x="1282" y="188">141*</text>
+  </g>
+
+  <!-- ===== Lane 3 : cumulative LOC ===== -->
+  <text x="14" y="271" font-size="10" font-weight="700" fill="#94A3B8">代码量·累计</text>
+  <line x1="80" y1="296" x2="1384" y2="296" stroke="#CBD5E1"/>
+  <polygon points="80,296 88,290 186,274 431,275 683,267 928,254 1180,245 1245,237 1384,236 1384,296" fill="#10B981" opacity="0.12"/>
+  <polyline points="80,296 88,290 186,274 431,275 683,267 928,254 1180,245 1245,237 1384,236" fill="none" stroke="#10B981" stroke-width="2"/>
+  <g fill="#059669">
+    <circle cx="88" cy="290" r="3.5"/><circle cx="186" cy="274" r="3.5"/><circle cx="431" cy="275" r="3.5"/>
+    <circle cx="683" cy="267" r="3.5"/><circle cx="928" cy="254" r="3.5"/><circle cx="1180" cy="245" r="3.5"/>
+    <circle cx="1245" cy="237" r="3.5"/><circle cx="1384" cy="236" r="3.5"/>
+  </g>
+  <g font-size="9.5" fill="#047857">
+    <text x="94" y="285" text-anchor="start">3.9万</text>
+    <text x="186" y="266" text-anchor="middle" font-weight="700">15.1万</text>
+    <text x="928" y="246" text-anchor="middle">29.0万</text>
+    <text x="1378" y="228" text-anchor="end" font-weight="700">41.6万</text>
+  </g>
+
+  <!-- ===== Lane 4 : harness ===== -->
+  <text x="14" y="347" font-size="10" font-weight="700" fill="#94A3B8">HARNESS</text>
+  <g>
+    <rect x="80"   y="331" width="40"  height="24" rx="6" fill="#CBD5E1"/>
+    <rect x="120"  y="331" width="539" height="24" rx="6" fill="#BAE6FD"/>
+    <rect x="659"  y="331" width="586" height="24" rx="6" fill="#C7D2FE"/>
+    <rect x="1245" y="331" width="139" height="24" rx="6" fill="#FBCFE8"/>
+  </g>
+  <text x="84" y="326" font-size="9.5" fill="#475569">Cursor / VS Code + Copilot agent</text>
+  <g font-size="11" fill="#0F172A" text-anchor="middle">
+    <text x="390"  y="347">opencode+OMO（内部调用 Opus）</text>
+    <text x="952"  y="347">Claude Code（Opus 4.8 · 1M 上下文）</text>
+    <text x="1315" y="347">kimi-code</text>
+  </g>
+  <g fill="#475569"><path d="M120 367 l5 8 l-10 0 z"/><path d="M243 367 l5 8 l-10 0 z"/><path d="M659 367 l5 8 l-10 0 z"/><path d="M1017 367 l5 8 l-10 0 z"/></g>
+  <g font-size="10" fill="#475569">
+    <text x="126" y="379" text-anchor="start">03-24 多智能体编队配置入库（03-27 主力切 glm-5）</text>
+    <text x="665" y="379" text-anchor="start">05-29 CLAUDE.md 正式化 · Claude Code 转主力</text>
+    <text x="1023" y="379" text-anchor="start">07-12 验证技能固化（.claude/skills）</text>
+    <text x="249" y="393" text-anchor="start">04-08 Claude Code 首次试水 · 与 OMO 并行</text>
+  </g>
+
+  <!-- ===== Lane 5 : model releases ===== -->
+  <text x="14" y="430" font-size="10" font-weight="700" fill="#94A3B8">模 型</text>
+  <line x1="80" y1="423" x2="1384" y2="423" stroke="#CBD5E1"/>
+  <rect x="84" y="407" width="168" height="21" rx="4" fill="#FFFFFF" stroke="#CBD5E1" stroke-dasharray="4 3"/>
+  <text x="92" y="421" font-size="10" fill="#64748B">基线：Sonnet 4.6（2025-09）</text>
+  <g fill="#EF4444">
+    <path d="M369 415 l9 8 l-9 8 l-9 -8 z"/>
+    <path d="M1050 415 l9 8 l-9 8 l-9 -8 z"/>
+    <path d="M1115 415 l9 8 l-9 8 l-9 -8 z"/>
+    <path d="M1172 415 l9 8 l-9 8 l-9 -8 z"/>
+    <path d="M1343 415 l9 8 l-9 8 l-9 -8 z"/>
+  </g>
+  <g font-size="10.5" fill="#B91C1C">
+    <text x="390" y="405" text-anchor="middle">04-23/24 小米 MiMo 2.5 Pro · DeepSeek V4 发布</text>
+    <text x="1050" y="405" text-anchor="middle">07-16 Kimi K3 发布</text>
+    <text x="1195" y="405" text-anchor="middle">07-31 V4 Flash 正式版</text>
+    <text x="1343" y="405" text-anchor="middle">08-21 V4 Flash Vision</text>
+    <text x="1115" y="445" text-anchor="middle">07-24 Opus 5</text>
+  </g>
+  <text x="90" y="465" font-size="10" font-style="italic" fill="#64748B">项目内实测：主力 Opus 4.8（1M 上下文，6 月协作率峰值 68%）；DeepSeek V4 Flash 与 MiMo 2.5 Pro 承担部分代码产出，V4 Flash Vision 支撑视觉修复</text>
+
+  <!-- ===== Lane 6 : toolchain milestones ===== -->
+  <text x="14" y="506" font-size="10" font-weight="700" fill="#94A3B8">工具链</text>
+  <line x1="80" y1="501" x2="1384" y2="501" stroke="#CBD5E1"/>
+  <g fill="#0EA5E9">
+    <circle cx="100" cy="501" r="6"/><circle cx="496" cy="501" r="6"/><circle cx="675" cy="501" r="6"/>
+    <circle cx="1017" cy="501" r="6"/><circle cx="1099" cy="501" r="6"/>
+  </g>
+  <g font-size="10.5" fill="#0369A1">
+    <text x="86" y="523" text-anchor="start">03-21/22 解析脚本×3 · WASM 打通（2452 个测试）</text>
+    <text x="496" y="485" text-anchor="middle">05-09 debug-server + 调试 CLI 上线</text>
+    <text x="675" y="523" text-anchor="middle">05-31 DSL 编译器落地 · 一周迁 255 个场景</text>
+    <text x="1017" y="485" text-anchor="middle">07-12 debug-server 可玩性重做</text>
+    <text x="1099" y="523" text-anchor="middle">07-22 逐帧步进 + 无头模式</text>
+  </g>
+
+  <!-- ===== Lane 7 : key events ===== -->
+  <text x="14" y="590" font-size="10" font-weight="700" fill="#94A3B8">里程碑</text>
+  <line x1="80" y1="585" x2="1384" y2="585" stroke="#CBD5E1"/>
+  <g fill="#F59E0B">
+    <circle cx="80" cy="585" r="6"/><circle cx="194" cy="585" r="6"/><circle cx="650" cy="585" r="6"/>
+    <circle cx="716" cy="585" r="6"/><circle cx="1025" cy="585" r="6"/><circle cx="1213" cy="585" r="6"/>
+    <circle cx="1245" cy="585" r="6"/><circle cx="1380" cy="585" r="6"/>
+  </g>
+  <g font-size="10.5" fill="#B45309">
+    <text x="86" y="609" text-anchor="start">03-19 PR#1 重写计划 · 首个 AI agent 产物</text>
+    <text x="194" y="569" text-anchor="middle">04-02 编辑器 Vue3 工程</text>
+    <text x="650" y="555" text-anchor="middle">05-28 Android/iOS 移动端适配</text>
+    <text x="716" y="609" text-anchor="middle">06-05 引擎通用性验证</text>
+    <text x="1025" y="623" text-anchor="middle">07-13 主线剧情补完</text>
+    <text x="1213" y="555" text-anchor="middle">08-05 开源拆分调研</text>
+    <text x="1245" y="609" text-anchor="middle">08-09 拆分：游戏仓开源 · 引擎仓独立</text>
+    <text x="1384" y="637" text-anchor="end">08-25/26 拼音输入法大修 · 截图制度</text>
+  </g>
+
+  <!-- ===== Month tick labels ===== -->
+  <g font-size="9" fill="#94A3B8" text-anchor="middle">
+    <text x="80" y="663">03-19</text><text x="186" y="663">04-01</text><text x="431" y="663">05-01</text>
+    <text x="683" y="663">06-01</text><text x="928" y="663">07-01</text><text x="1180" y="663">08-01</text>
+    <text x="1384" y="663">08-26</text>
+  </g>
+
+  <!-- ===== Footer ===== -->
+  <text x="80" y="681" font-size="9.5" fill="#64748B">* 8 月柱为跨仓合计（74 + 67 = 141 条）；代码量 = Rust+Web+Python+DSL 累计行数，08-09 后为游戏仓+引擎仓之和。菱形=外部模型发布；圆点=仓库内提交（X 轴按日期线性映射）。</text>
+  <text x="80" y="699" font-size="9.5" fill="#64748B">分层读法：Harness 决定「一次能托付多大」、模型决定「脑多好」、工具链决定「手多快」，三者乘积即各阶段的实际产出速率。</text>
+
+  <!-- ===== Legend ===== -->
+  <g font-size="10" font-weight="600">
+    <text x="940" y="40" fill="#334155">图例</text>
+    <rect x="972" y="30" width="10" height="10" rx="2" fill="#6366F1"/><text x="986" y="40" fill="#334155">月提交数</text>
+    <line x1="1050" y1="35" x2="1070" y2="35" stroke="#10B981" stroke-width="2.5"/><text x="1076" y="40" fill="#334155">代码行数</text>
+    <circle cx="1142" cy="35" r="5" fill="#0EA5E9"/><text x="1152" y="40" fill="#334155">工具链</text>
+    <path d="M1192 30 l7 5 l-7 5 z" fill="#EF4444"/><text x="1204" y="40" fill="#334155">模型发布</text>
+    <circle cx="1260" cy="35" r="5" fill="#F59E0B"/><text x="1270" y="40" fill="#334155">里程碑</text>
+  </g>
+</svg>
