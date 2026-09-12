@@ -1329,6 +1329,33 @@ impl StatsVisualKey {
 }
 
 #[derive(Clone, Copy, PartialEq, Eq)]
+struct TrainerCardVisualKey {
+    player_name_hash: u32,
+    money: u32,
+    play_time_hours: u8,
+    play_time_minutes: u8,
+    obtained_badges: u8,
+    language: Lang,
+}
+
+impl TrainerCardVisualKey {
+    fn new(game: &PokemonGame) -> Self {
+        let mut player_name_hash = 0x811c_9dc5;
+        for &byte in game.player_name.as_bytes() {
+            hash_byte(&mut player_name_hash, byte);
+        }
+        Self {
+            player_name_hash,
+            money: game.save_data.game_data.player_money,
+            play_time_hours: game.save_data.game_data.play_time.hours,
+            play_time_minutes: game.save_data.game_data.play_time.minutes,
+            obtained_badges: game.save_data.game_data.obtained_badges,
+            language: game.state.config.language,
+        }
+    }
+}
+
+#[derive(Clone, Copy, PartialEq, Eq)]
 struct TownMapVisualKey {
     current_map: MapId,
     selected_map: MapId,
@@ -1708,6 +1735,7 @@ fn game_main() -> ! {
     let mut last_bag: Option<BagVisualKey> = None;
     let mut last_party: Option<PartyVisualKey> = None;
     let mut last_stats: Option<StatsVisualKey> = None;
+    let mut last_trainer_card: Option<TrainerCardVisualKey> = None;
     let mut last_town_map: Option<TownMapVisualKey> = None;
     let mut last_oak: Option<OakVisualKey> = None;
     let mut last_overworld: Option<OverworldVisualKey> = None;
@@ -1859,6 +1887,8 @@ fn game_main() -> ! {
         let stats = matches!(game.state.screen, GameScreen::PokemonStatsScreen(_))
             .then(|| StatsVisualKey::new(game))
             .flatten();
+        let trainer_card = (game.state.screen == GameScreen::TrainerCard)
+            .then(|| TrainerCardVisualKey::new(game));
         let town_map = (game.state.screen == GameScreen::TownMap)
             .then(|| TownMapVisualKey::new(game));
         let town_map_cursor_change = town_map
@@ -1923,6 +1953,8 @@ fn game_main() -> ! {
             party != last_party
         } else if stats.is_some() {
             stats != last_stats
+        } else if trainer_card.is_some() {
+            trainer_card != last_trainer_card
         } else if town_map.is_some() {
             town_map != last_town_map
         } else if oak_screen {
@@ -2367,6 +2399,7 @@ fn game_main() -> ! {
         last_bag = bag;
         last_party = party;
         last_stats = stats;
+        last_trainer_card = trainer_card;
         last_town_map = town_map;
         last_oak = oak;
         last_overworld = overworld;
