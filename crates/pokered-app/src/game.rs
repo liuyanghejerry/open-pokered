@@ -1014,15 +1014,6 @@ impl PokemonGame {
         let main_menu = MainMenuState::new(save_summary);
         let oak_speech = OakSpeechState::new();
         let battle = BattleScreen::new(true);
-        let state = GameState {
-            screen: GameScreen::GameFreakSplash,
-            config: {
-                let mut c = pokered_core::game_state::GameConfig::new(version);
-                apply_saved_options(&mut c, &GameOptions::default());
-                c
-            },
-            save_summary: None,
-        };
         let battle_vfx = BattleVisualEffects::default();
         let start_menu = StartMenuState::new(false, false, false);
         let options_menu = OptionsMenuState::new(GameOptions::default());
@@ -6602,6 +6593,7 @@ mod session_guard_tests {
 
 #[cfg(test)]
 mod save_overwrite_tests {
+    use super::*;
     use pokered_core::game_state::SaveFileSummary;
 
     fn summary_with(id: u16) -> SaveFileSummary {
@@ -6632,6 +6624,36 @@ mod save_overwrite_tests {
         // Legacy summaries (pre-field) carry 0 and never trigger the prompt.
         let legacy = summary_with(0);
         assert!(!(legacy.player_id != 0 && legacy.player_id != memory_id));
+    }
+
+    #[test]
+    fn constructor_preserves_loaded_save_summary() {
+        let mut save = SaveData::new();
+        save.game_data.player_id = 0x1234;
+        let path = std::env::temp_dir().join(format!(
+            "pokered-constructor-save-{}-{}.sav",
+            std::process::id(),
+            std::thread::current().name().unwrap_or("test")
+        ));
+        std::fs::write(&path, export_sram(&save)).unwrap();
+
+        let game = PokemonGame::new_with_options(
+            GameVersion::Red,
+            Some(path.clone()),
+            None,
+            None,
+            false,
+            None,
+            false,
+            true,
+            #[cfg(feature = "debug-server")]
+            None,
+        );
+
+        assert!(game.state.has_save_file());
+        assert!(game.main_menu.has_save);
+        assert_eq!(game.state.save_summary.unwrap().player_id, 0x1234);
+        std::fs::remove_file(path).unwrap();
     }
 }
 
