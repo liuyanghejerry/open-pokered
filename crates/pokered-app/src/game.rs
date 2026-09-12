@@ -13,7 +13,6 @@ macro_rules! dbg_eprintln {
 }
 
 use crate::alloc_prelude::*;
-use crate::alloc_prelude::*;
 
 // Link play, save files and the recorders are hosted-only (std fs/net/time).
 #[cfg(not(target_os = "none"))]
@@ -61,9 +60,11 @@ use pokered_core::overworld::{
     BedroomDialogue, OverworldAudioRequest, OverworldGameDataRequest, OverworldInput,
     OverworldScreen, OverworldSfxEvent,
 };
-use pokered_core::party_screen::{PartyScreenAction, PartyScreenInput, PartyScreenState};
+use pokered_core::party_screen::{
+    PartyNoticeReturn, PartyScreenAction, PartyScreenInput, PartyScreenState,
+};
 use pokered_core::pokedex_screen::{PokedexScreenAction, PokedexScreenInput, PokedexScreenState};
-#[cfg(any(not(target_arch = "wasm32"), debug_assertions))]
+#[cfg(all(not(target_arch = "wasm32"), not(target_os = "none")))]
 use pokered_core::save::sram_export::export_sram;
 use pokered_core::stats_screen::{StatsScreenAction, StatsScreenInput, StatsScreenState};
 use pokered_core::town_map_screen::{TownMapScreenAction, TownMapScreenInput, TownMapScreenState};
@@ -88,11 +89,11 @@ use pokered_renderer::resource::ResourceManager;
 use pokered_renderer::resource::AssetRoot;
 
 use dotzuki_engine::render_config::RenderConfig;
-#[cfg(all(not(target_arch = "wasm32"), not(target_os = "none")))]
+#[cfg(all(feature = "desktop", not(target_arch = "wasm32"), not(target_os = "none")))]
 use pokered_renderer::window::GameLoop;
 use pokered_renderer::{FrameBuffer, Rgba};
 
-#[cfg(all(debug_assertions, not(target_arch = "wasm32"), not(target_os = "none")))]
+#[cfg(all(feature = "desktop", debug_assertions, not(target_arch = "wasm32"), not(target_os = "none")))]
 use crate::hot_reload::AssetWatcher;
 
 use crate::audio::{play_species_cry, AudioOutput};
@@ -103,6 +104,13 @@ use crate::render::{
     draw_pokedex_screen, draw_save_menu, draw_slots, draw_start_menu, draw_stats_screen,
     draw_title_screen, draw_town_map, draw_trade, draw_trainer_card, BattleVisualEffects,
 };
+
+#[derive(serde::Serialize, serde::Deserialize)]
+struct MobileSave {
+    version: u32,
+    data: SaveData,
+    flags: pokered_core::hash_compat::HashMap<String, bool>,
+}
 
 const SAVE_FILE_NAME: &str = "pokered.sav";
 const SCRIPT_FLAGS_FILE_NAME: &str = "pokered.script_flags.json";
@@ -305,7 +313,7 @@ struct PendingTrade {
 /// encoding is the only per-frame cost. For full-run video prefer
 /// `--record-video`, which streams raw frames to ffmpeg and leaves no
 /// intermediate files behind.
-#[cfg(all(not(target_arch = "wasm32"), not(target_os = "none")))]
+#[cfg(all(feature = "desktop", not(target_arch = "wasm32"), not(target_os = "none")))]
 pub struct FrameRecorder {
     dir: PathBuf,
     next: u64,
@@ -315,7 +323,7 @@ pub struct FrameRecorder {
     manifest_broken: bool,
 }
 
-#[cfg(all(not(target_arch = "wasm32"), not(target_os = "none")))]
+#[cfg(all(feature = "desktop", not(target_arch = "wasm32"), not(target_os = "none")))]
 impl FrameRecorder {
     #[cfg(not(target_os = "none"))]
     pub fn new(dir: PathBuf) -> std::io::Result<Self> {
@@ -457,7 +465,7 @@ impl FrameRecorder {
 /// intermediate files: ffmpeg reads `pipe:0` and encodes H.264 as the game
 /// runs, so the .mp4 is finished when the game exits. ffmpeg's stderr is
 /// inherited at `-loglevel error`, so only real errors surface.
-#[cfg(all(not(target_arch = "wasm32"), not(target_os = "none")))]
+#[cfg(all(feature = "desktop", not(target_arch = "wasm32"), not(target_os = "none")))]
 pub struct VideoRecorder {
     child: std::process::Child,
     /// Option solely so Drop can close the pipe before waiting on ffmpeg.
@@ -472,7 +480,7 @@ pub struct VideoRecorder {
     broken: bool,
 }
 
-#[cfg(all(not(target_arch = "wasm32"), not(target_os = "none")))]
+#[cfg(all(feature = "desktop", not(target_arch = "wasm32"), not(target_os = "none")))]
 impl VideoRecorder {
     pub fn new(path: &Path, fps: u32) -> std::io::Result<Self> {
         if fps == 0 {
@@ -548,7 +556,7 @@ impl VideoRecorder {
     }
 }
 
-#[cfg(all(not(target_arch = "wasm32"), not(target_os = "none")))]
+#[cfg(all(feature = "desktop", not(target_arch = "wasm32"), not(target_os = "none")))]
 impl Drop for VideoRecorder {
     fn drop(&mut self) {
         // Closing stdin signals EOF; ffmpeg then flushes the encoder and
@@ -637,6 +645,12 @@ pub struct PokemonGame {
     /// title screen (scripts/HallOfFame.asm:45-56).
     pub credits: Option<pokered_core::credits::CreditsState>,
     pub save_data: SaveData,
+    #[cfg(not(target_os = "none"))]
+    external_saves: bool,
+    #[cfg(not(target_os = "none"))]
+    committed_save: Option<String>,
+    #[cfg(not(target_os = "none"))]
+    mobile_flags: pokered_core::hash_compat::HashMap<String, bool>,
     pub player_name: String,
     pub rival_name: String,
     pub frame_count: u64,
@@ -654,7 +668,7 @@ pub struct PokemonGame {
     pub scripts_dir: Option<PathBuf>,
     pub audio: Option<AudioOutput>,
     startup_warp: Option<(MapId, u16, u16)>,
-    #[cfg(all(debug_assertions, not(target_arch = "wasm32"), not(target_os = "none")))]
+    #[cfg(all(feature = "desktop", debug_assertions, not(target_arch = "wasm32"), not(target_os = "none")))]
     pub asset_watcher: Option<AssetWatcher>,
     #[cfg(feature = "debug-server")]
     pub debug_handle: Option<pokered_debug_server::DebugServerHandle>,
@@ -667,12 +681,12 @@ pub struct PokemonGame {
     /// Per-frame PNG recorder (`--record-frames`): captures every update —
     /// real-time loop and synchronous step_frames bursts alike — so driven
     /// runs can be assembled into video offline.
-    #[cfg(all(not(target_arch = "wasm32"), not(target_os = "none")))]
+    #[cfg(all(feature = "desktop", not(target_arch = "wasm32"), not(target_os = "none")))]
     pub frame_recorder: Option<FrameRecorder>,
     /// Per-frame video recorder (`--record-video`): same capture cadence as
     /// `frame_recorder`, but streams raw RGBA into a spawned ffmpeg process
     /// instead of writing one PNG per frame.
-    #[cfg(all(not(target_arch = "wasm32"), not(target_os = "none")))]
+    #[cfg(all(feature = "desktop", not(target_arch = "wasm32"), not(target_os = "none")))]
     pub video_recorder: Option<VideoRecorder>,
     /// Consecutive frames A+B+Start+Select have all been held — the original's
     /// soft-reset combo (engine/joypad.asm `_Joypad`/`TrySoftReset`, 16 frames
@@ -1057,7 +1071,7 @@ impl PokemonGame {
             }
         };
 
-        #[cfg(all(debug_assertions, not(target_arch = "wasm32")))]
+        #[cfg(all(feature = "desktop", debug_assertions, not(target_arch = "wasm32")))]
         let asset_watcher = if watch {
             let mut dirs = Vec::new();
 
@@ -1143,6 +1157,9 @@ impl PokemonGame {
             credits: None,
             pending_trade: None,
             save_data,
+            external_saves: false,
+            committed_save: None,
+            mobile_flags: Default::default(),
             player_name,
             rival_name,
             frame_count: 0,
@@ -1160,14 +1177,14 @@ impl PokemonGame {
             startup_warp,
             #[cfg(feature = "debug-server")]
             debug_handle,
-            #[cfg(all(debug_assertions, not(target_arch = "wasm32")))]
+            #[cfg(all(feature = "desktop", debug_assertions, not(target_arch = "wasm32")))]
             asset_watcher,
             pending_debug_inputs: Vec::new(),
             pending_debug_frames: 0,
             debug_input: InputState::new(),
-            #[cfg(all(not(target_arch = "wasm32"), not(target_os = "none")))]
+            #[cfg(all(feature = "desktop", not(target_arch = "wasm32"), not(target_os = "none")))]
             frame_recorder: None,
-            #[cfg(all(not(target_arch = "wasm32"), not(target_os = "none")))]
+            #[cfg(all(feature = "desktop", not(target_arch = "wasm32"), not(target_os = "none")))]
             video_recorder: None,
             soft_reset_frames: 0,
             ow_ran_last_frame: false,
@@ -1334,6 +1351,16 @@ impl PokemonGame {
         let (save_data, save_summary) = Self::try_load_default_save();
         #[cfg(target_os = "ios")]
         let (save_data, save_summary) = Self::try_load_default_save();
+        Self::new_portable(version, save_data, save_summary, AudioOutput::new())
+    }
+
+    #[cfg(not(target_os = "none"))]
+    fn new_portable(
+        version: GameVersion,
+        save_data: SaveData,
+        save_summary: Option<SaveFileSummary>,
+        audio: Option<AudioOutput>,
+    ) -> Self {
         let mut state = GameState {
             screen: GameScreen::GameFreakSplash,
             config: pokered_core::game_state::GameConfig::new(version),
@@ -1369,14 +1396,11 @@ impl PokemonGame {
 
         let resources = Some(ResourceManager::new(AssetRoot::new_wasm()));
 
-        let audio = AudioOutput::new();
-        if audio.is_some() {
-            log::info!("Web Audio initialized (44100 Hz stereo)");
-        } else {
-            log::warn!("Could not initialize Web Audio output");
-        }
-
         Self {
+            #[cfg(all(feature = "desktop", debug_assertions, not(target_arch = "wasm32")))]
+            asset_watcher: None,
+            #[cfg(feature = "debug-server")]
+            debug_handle: None,
             state,
             title_screen,
             intro_scene: IntroSceneState::new(),
@@ -1412,6 +1436,9 @@ impl PokemonGame {
             credits: None,
             pending_trade: None,
             save_data,
+            external_saves: false,
+            committed_save: None,
+            mobile_flags: Default::default(),
             player_name: "RED".to_string(),
             rival_name: "BLUE".to_string(),
             frame_count: 0,
@@ -1429,9 +1456,9 @@ impl PokemonGame {
             pending_debug_inputs: Vec::new(),
             pending_debug_frames: 0,
             debug_input: InputState::new(),
-            #[cfg(all(not(target_arch = "wasm32"), not(target_os = "none")))]
+            #[cfg(all(feature = "desktop", not(target_arch = "wasm32"), not(target_os = "none")))]
             frame_recorder: None,
-            #[cfg(all(not(target_arch = "wasm32"), not(target_os = "none")))]
+            #[cfg(all(feature = "desktop", not(target_arch = "wasm32"), not(target_os = "none")))]
             video_recorder: None,
             startup_warp: None,
             soft_reset_frames: 0,
@@ -1452,6 +1479,46 @@ impl PokemonGame {
             link_battle: None,
             #[cfg(not(target_os = "none"))]
             link_trade: None,
+        }
+    }
+
+    /// Boot an embedded game without opening a device or reading desktop saves.
+    #[cfg(not(target_os = "none"))]
+    pub fn new_mobile(version: GameVersion, save: Option<&str>) -> Result<Self, String> {
+        let parsed = save
+            .map(serde_json::from_str::<MobileSave>)
+            .transpose()
+            .map_err(|e| e.to_string())?;
+        if parsed.as_ref().is_some_and(|s| s.version != 1) {
+            return Err("unsupported mobile save version".into());
+        }
+        let data = parsed
+            .as_ref()
+            .map(|s| s.data.clone())
+            .unwrap_or_else(SaveData::new);
+        let summary = parsed.as_ref().map(|s| save_summary_from_data(&s.data));
+        let mut game = Self::new_portable(version, data, summary, Some(AudioOutput::new_pcm()));
+        game.external_saves = true;
+        game.committed_save = save.map(str::to_owned);
+        game.mobile_flags = parsed.map(|s| s.flags).unwrap_or_default();
+        Ok(game)
+    }
+    #[cfg(not(target_os = "none"))]
+    pub fn export_mobile_save(&self) -> Option<String> {
+        self.committed_save.clone()
+    }
+    #[cfg(not(target_os = "none"))]
+    pub fn import_mobile_save(&mut self, save: &str) -> Result<(), String> {
+        let replacement = Self::new_mobile(self.state.config.version, Some(save))?;
+        *self = replacement;
+        Ok(())
+    }
+    #[cfg(not(target_os = "none"))]
+    fn companion_flags(&self) -> Option<pokered_core::hash_compat::HashMap<String, bool>> {
+        if self.external_saves {
+            Some(self.mobile_flags.clone())
+        } else {
+            Self::read_companion_script_flags()
         }
     }
 
@@ -1768,6 +1835,20 @@ impl PokemonGame {
     #[cfg(all(not(target_arch = "wasm32"), not(target_os = "none")))]
     fn save_to_file(&mut self) {
         let save = self.build_save_data();
+        if self.external_saves {
+            let flags = self.overworld.script_flags();
+            let envelope = MobileSave {
+                version: 1,
+                data: save.clone(),
+                flags: flags.clone(),
+            };
+            if let Ok(json) = serde_json::to_string(&envelope) {
+                self.save_data = save;
+                self.mobile_flags = flags;
+                self.committed_save = Some(json);
+            }
+            return;
+        }
         let sram = export_sram(&save);
         // Explicit --save path wins (headless/driver runs); normal play
         // falls back to the default location next to the executable.
@@ -1792,6 +1873,20 @@ impl PokemonGame {
     #[cfg(target_arch = "wasm32")]
     fn save_to_file(&mut self) {
         let save = self.build_save_data();
+        if self.external_saves {
+            let flags = self.overworld.script_flags();
+            let envelope = MobileSave {
+                version: 1,
+                data: save.clone(),
+                flags: flags.clone(),
+            };
+            if let Ok(json) = serde_json::to_string(&envelope) {
+                self.save_data = save;
+                self.mobile_flags = flags;
+                self.committed_save = Some(json);
+            }
+            return;
+        }
         // Keep the SRAM round-trip on web for debug builds: this validates
         // that the in-memory state can be encoded into the canonical SRAM
         // layout (catches regressions identical to the native build).
@@ -1979,7 +2074,7 @@ impl PokemonGame {
                         // on top.
                         overworld.set_event_flags_bytes(&self.save_data.game_data.event_flags);
                         #[cfg(not(target_os = "none"))]
-                        if let Some(extras) = Self::read_companion_script_flags() {
+                        if let Some(extras) = self.companion_flags() {
                             overworld.set_script_flags(extras);
                         }
                         overworld.set_toggleable_object_flags(
@@ -2363,6 +2458,19 @@ impl PokemonGame {
     /// all sounds, reload the save from disk (unsaved progress is lost, as on
     /// hardware), and return to the title screen.
     fn soft_reset(&mut self) {
+        #[cfg(not(target_os = "none"))]
+        {
+            if self.external_saves {
+                let save = self.committed_save.clone();
+                if let Ok(mut replacement) =
+                    Self::new_mobile(self.state.config.version, save.as_deref())
+                {
+                    replacement.handle_transition(GameScreen::TitleScreen);
+                    *self = replacement;
+                }
+                return;
+            }
+        }
         if let Some(ref audio) = self.audio {
             audio.stop_all();
         }
@@ -2771,12 +2879,12 @@ impl PokemonGame {
         // capture AFTER the frame's logic ran, and do it here rather than
         // inside the update body so every frame lands — early returns,
         // real-time loop and synchronous step_frames bursts alike.
-        #[cfg(all(not(target_arch = "wasm32"), not(target_os = "none")))]
+        #[cfg(all(feature = "desktop", not(target_arch = "wasm32"), not(target_os = "none")))]
         if let Some(mut rec) = self.frame_recorder.take() {
             rec.capture(self);
             self.frame_recorder = Some(rec);
         }
-        #[cfg(all(not(target_arch = "wasm32"), not(target_os = "none")))]
+        #[cfg(all(feature = "desktop", not(target_arch = "wasm32"), not(target_os = "none")))]
         if let Some(mut rec) = self.video_recorder.take() {
             rec.capture(self);
             self.video_recorder = Some(rec);
@@ -2812,7 +2920,7 @@ impl PokemonGame {
         #[cfg(not(target_os = "none"))]
         self.poll_link();
 
-        #[cfg(all(debug_assertions, not(target_arch = "wasm32"), not(target_os = "none")))]
+        #[cfg(all(feature = "desktop", debug_assertions, not(target_arch = "wasm32"), not(target_os = "none")))]
         {
             let changes = self
                 .asset_watcher
@@ -3710,6 +3818,20 @@ impl PokemonGame {
                                         log::warn!("Unknown cry species: {}", species);
                                     }
                                 }
+                                OverworldAudioRequest::PlayPokeFlute { map } => {
+                                    use pokered_core::overworld::TransportMode;
+                                    let data_id = match self.overworld.state.player.transport {
+                                        TransportMode::Biking => 32,
+                                        TransportMode::Surfing => 33,
+                                        TransportMode::Walking => {
+                                            pokered_core::overworld::map_loading::get_map_music(map)
+                                                as u8
+                                        }
+                                    };
+                                    if let Some(id) = MusicId::from_u8(data_id) {
+                                        audio.play_flute_overworld(id);
+                                    }
+                                }
                             }
                         }
                     }
@@ -3974,6 +4096,12 @@ impl PokemonGame {
                     // (engine/items/item_effects.asm:1732-1739).
                     if self.battle.take_poke_flute_sfx_pending() {
                         audio.play_flute_in_battle();
+                    }
+                    if let Some(sfx) = self.battle.take_item_sfx_pending() {
+                        audio.play_sfx(match sfx {
+                            pokered_core::battle::BattleItemSfx::HealHp => SfxId::HealHP,
+                            pokered_core::battle::BattleItemSfx::HealAilment => SfxId::HealAilment,
+                        });
                     }
                     // HP-bar drain starting: play the damage SFX once per
                     // drain. (Deviation: Gen 1's UpdateHPBar drain itself is
@@ -4255,6 +4383,10 @@ impl PokemonGame {
                 }
 
                 match action {
+                    PartyScreenAction::ItemUseFinished => {
+                        self.pending_bag_item = None;
+                        ScreenAction::Transition(GameScreen::Bag)
+                    }
                     PartyScreenAction::Cancelled => {
                         // A SOFTBOILED target pick that got back to the normal
                         // menu and was cancelled abandons the heal entirely.
@@ -4286,6 +4418,12 @@ impl PokemonGame {
                         match self.pending_bag_item {
                             None => ScreenAction::Continue,
                             Some(item) => {
+                                let old_hp = self
+                                    .save_data
+                                    .party
+                                    .get(party_index)
+                                    .map(|mon| mon.hp)
+                                    .unwrap_or(0);
                                 let outcome = match self.save_data.party.get_mut(party_index) {
                                     Some(mon) => bag_use::apply_item_to_pokemon(
                                         item,
@@ -4306,20 +4444,63 @@ impl PokemonGame {
                                         // the lead's level (repel checks it).
                                         self.overworld.party_lead_level =
                                             self.save_data.party.leader_level();
-                                        self.overworld.pending_dialogue =
-                                            Some(BedroomDialogue::from_message(
-                                                &self.localize_dialogue(&message),
-                                            ));
+                                        self.party_screen
+                                            .refresh_party(self.save_data.party.to_vec());
+                                        if let (Some(audio), Some(sfx)) =
+                                            (self.audio.as_ref(), bag_use::success_sfx(item))
+                                        {
+                                            audio.play_sfx(match sfx {
+                                                bag_use::ItemUseSfx::HealHp => SfxId::HealHP,
+                                                bag_use::ItemUseSfx::HealAilment => {
+                                                    SfxId::HealAilment
+                                                }
+                                            });
+                                        }
+                                        let wait = if matches!(
+                                            bag_use::success_sfx(item),
+                                            Some(bag_use::ItemUseSfx::HealHp)
+                                                | Some(bag_use::ItemUseSfx::HealAilment)
+                                        ) {
+                                            50
+                                        } else {
+                                            0
+                                        };
+                                        let message = self.localize_dialogue(&message);
+                                        if matches!(
+                                            bag_use::success_sfx(item),
+                                            Some(bag_use::ItemUseSfx::HealHp)
+                                        ) {
+                                            self.party_screen
+                                                .show_item_use_notice_with_hp_animation(
+                                                    party_index,
+                                                    old_hp,
+                                                    message,
+                                                    wait,
+                                                    PartyNoticeReturn::Bag,
+                                                );
+                                        } else {
+                                            self.party_screen.show_item_use_notice(
+                                                message,
+                                                wait,
+                                                PartyNoticeReturn::Bag,
+                                            );
+                                        }
                                         self.pending_bag_item = None;
-                                        ScreenAction::Transition(GameScreen::Overworld)
+                                        ScreenAction::Continue
                                     }
                                     ItemApplyOutcome::NoEffect { message } => {
-                                        self.overworld.pending_dialogue =
-                                            Some(BedroomDialogue::from_message(
-                                                &self.localize_dialogue(&message),
-                                            ));
-                                        self.pending_bag_item = None;
-                                        ScreenAction::Transition(GameScreen::Overworld)
+                                        let return_to = if bag_use::machine_of(item).is_some() {
+                                            PartyNoticeReturn::Party
+                                        } else {
+                                            self.pending_bag_item = None;
+                                            PartyNoticeReturn::Bag
+                                        };
+                                        self.party_screen.show_item_use_notice(
+                                            self.localize_dialogue(&message),
+                                            0,
+                                            return_to,
+                                        );
+                                        ScreenAction::Continue
                                     }
                                     ItemApplyOutcome::NeedsMoveReplace { .. } => {
                                         // TM/HM on a full moveset: ask which
@@ -4371,13 +4552,12 @@ impl PokemonGame {
                     PartyScreenAction::MoveForgetChosen { party_index, slot } => {
                         // Post-evolution full-moveset learn (Gen-1 `LearnMove`,
                         // learn_move.asm:98-184): replace a move with the
-                        // level-up move that could not be learned. The HM
-                        // guard (HMCantDeleteText) refuses an HM pick; like
-                        // the TM flow the prompt then ends (the move stays
-                        // unlearned) — the original re-asks inline, which the
-                        // party screen cannot render (documented deviation).
-                        if let Some((_, move_id)) = self.pending_evolve_move_replace.take() {
-                            let message = match self.save_data.party.get_mut(party_index) {
+                        // level-up move that could not be learned. An HM pick
+                        // displays HMCantDeleteText and resumes this same move
+                        // list; the pending move is kept until a deletable move
+                        // is chosen or the player cancels.
+                        if let Some((_, move_id)) = self.pending_evolve_move_replace {
+                            let outcome = match self.save_data.party.get_mut(party_index) {
                                 Some(mon) => {
                                     use pokered_core::pokemon::move_learning::{
                                         replace_move_guarded, ReplaceMoveError,
@@ -4386,62 +4566,91 @@ impl PokemonGame {
                                         Ok(old_move) => {
                                             let mut name_buf =
                                                 [0u8; pokered_core::battle::state::NAME_TEXT_BUF];
-                                            format!(
+                                            Ok(format!(
                                                 "{} forgot\n{}...\nand learned\n{}!",
                                                 mon.display_name(&mut name_buf),
                                                 pokered_data::lang_data::move_name(old_move, false),
                                                 pokered_data::lang_data::move_name(move_id, false)
-                                            )
+                                            ))
                                         }
-                                        Err(ReplaceMoveError::HmCantDelete) => {
-                                            // HMCantDeleteText (learn_move.asm:178-181).
-                                            "HM techniques\ncan't be deleted!".to_string()
-                                        }
-                                        Err(ReplaceMoveError::InvalidSlot) => {
-                                            bag_use::NO_EFFECT_MESSAGE.to_string()
-                                        }
+                                        Err(ReplaceMoveError::HmCantDelete) => Err(true),
+                                        Err(ReplaceMoveError::InvalidSlot) => Err(false),
                                     }
                                 }
-                                None => bag_use::NO_EFFECT_MESSAGE.to_string(),
+                                None => Err(false),
                             };
-                            let message = self.localize_dialogue(&message);
-                            self.overworld.pending_dialogue =
-                                Some(BedroomDialogue::from_message(&message));
-                            ScreenAction::Transition(GameScreen::Overworld)
-                        } else {
-                            // Replace-move confirmation for the pending TM/HM.
-                            match self.pending_bag_item {
-                                None => ScreenAction::Continue,
-                                Some(item) => {
-                                    let outcome = match self.save_data.party.get_mut(party_index) {
-                                        Some(mon) => bag_use::finish_move_choice(item, mon, slot),
-                                        None => ItemApplyOutcome::NoEffect {
-                                            message: bag_use::NO_EFFECT_MESSAGE.to_string(),
-                                        },
-                                    };
-                                    let (message, consume) = match outcome {
-                                        ItemApplyOutcome::Used { message, consume } => {
-                                            (message, consume)
-                                        }
-                                        ItemApplyOutcome::NoEffect { message } => (message, false),
-                                        // finish_tm_hm_replace never re-asks.
-                                        ItemApplyOutcome::NeedsMoveReplace { .. } => {
-                                            (bag_use::NO_EFFECT_MESSAGE.to_string(), false)
-                                        }
-                                        // …nor starts an evolution.
-                                        ItemApplyOutcome::EvolutionPending { .. } => {
-                                            (bag_use::NO_EFFECT_MESSAGE.to_string(), false)
-                                        }
-                                    };
-                                    if consume {
-                                        let _ = self.save_data.game_data.bag.remove_item(item, 1);
-                                    }
+                            match outcome {
+                                Err(true) => {
+                                    let message = self.localize_dialogue(
+                                        "HM techniques\ncan't be deleted!",
+                                    );
+                                    self.party_screen.show_move_choice_notice(message);
+                                    ScreenAction::Continue
+                                }
+                                Ok(message) => {
+                                    self.pending_evolve_move_replace = None;
                                     let message = self.localize_dialogue(&message);
                                     self.overworld.pending_dialogue =
                                         Some(BedroomDialogue::from_message(&message));
-                                    self.pending_bag_item = None;
                                     ScreenAction::Transition(GameScreen::Overworld)
                                 }
+                                Err(false) => {
+                                    self.pending_evolve_move_replace = None;
+                                    let message = self.localize_dialogue(
+                                        bag_use::NO_EFFECT_MESSAGE,
+                                    );
+                                    self.overworld.pending_dialogue =
+                                        Some(BedroomDialogue::from_message(&message));
+                                    ScreenAction::Transition(GameScreen::Overworld)
+                                }
+                            }
+                        } else {
+                            // Replace-move confirmation for the pending TM/HM.
+                            match self.pending_bag_item {
+                            None => ScreenAction::Continue,
+                            Some(item) => {
+                                let outcome = match self.save_data.party.get_mut(party_index) {
+                                    Some(mon) => bag_use::finish_move_choice(item, mon, slot),
+                                    None => ItemApplyOutcome::NoEffect {
+                                        message: bag_use::NO_EFFECT_MESSAGE.to_string(),
+                                    },
+                                };
+                                let hm_notice = match &outcome {
+                                    ItemApplyOutcome::NoEffect { message }
+                                        if message.starts_with("HM techniques") =>
+                                    {
+                                        Some(self.localize_dialogue(message))
+                                    }
+                                    _ => None,
+                                };
+                                if let Some(message) = hm_notice {
+                                    self.party_screen.show_move_choice_notice(message);
+                                    ScreenAction::Continue
+                                } else {
+                                let (message, consume) = match outcome {
+                                    ItemApplyOutcome::Used { message, consume } => {
+                                        (message, consume)
+                                    }
+                                    ItemApplyOutcome::NoEffect { message } => (message, false),
+                                    // Invalid/non-machine fallbacks end the flow.
+                                    ItemApplyOutcome::NeedsMoveReplace { .. } => {
+                                        (bag_use::NO_EFFECT_MESSAGE.to_string(), false)
+                                    }
+                                    // …nor starts an evolution.
+                                    ItemApplyOutcome::EvolutionPending { .. } => {
+                                        (bag_use::NO_EFFECT_MESSAGE.to_string(), false)
+                                    }
+                                };
+                                if consume {
+                                    let _ = self.save_data.game_data.bag.remove_item(item, 1);
+                                }
+                                let message = self.localize_dialogue(&message);
+                                self.overworld.pending_dialogue =
+                                    Some(BedroomDialogue::from_message(&message));
+                                self.pending_bag_item = None;
+                                ScreenAction::Transition(GameScreen::Overworld)
+                                }
+                            }
                             }
                         }
                     }
@@ -4575,6 +4784,8 @@ impl PokemonGame {
                         // its message. Consumed items leave the bag.
                         if item == pokered_data::items::ItemId::TownMap {
                             ScreenAction::Transition(GameScreen::TownMap)
+                        } else if item == pokered_data::items::ItemId::Pokedex {
+                            ScreenAction::Transition(GameScreen::Pokedex)
                         } else {
                             match bag_use::classify_bag_use(item) {
                                 bag_use::BagUseKind::OnPokemon => {
@@ -6465,8 +6676,7 @@ const BLACK_SCREEN_DURATION: u32 = 30;
 /// (`hSoftReset` starts at 16 in home/init.asm).
 const SOFT_RESET_HOLD_FRAMES: u8 = 16;
 
-#[cfg(not(target_arch = "wasm32"))]
-#[cfg(all(not(target_arch = "wasm32"), not(target_os = "none")))]
+#[cfg(all(feature = "desktop", not(target_arch = "wasm32"), not(target_os = "none")))]
 impl GameLoop for PokemonGame {
     type Fb = FrameBuffer;
 

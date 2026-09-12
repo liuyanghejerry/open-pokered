@@ -27,16 +27,16 @@ pub mod audio;
 #[cfg(not(target_os = "none"))]
 pub mod link;
 
-#[cfg(all(not(target_arch = "wasm32"), not(target_os = "none")))]
+#[cfg(all(feature = "desktop", not(target_arch = "wasm32"), not(target_os = "none")))]
 pub mod direct_battle;
 
-#[cfg(all(not(target_arch = "wasm32"), not(target_os = "none")))]
+#[cfg(all(feature = "desktop", not(target_arch = "wasm32"), not(target_os = "none")))]
 pub mod tools;
 
-#[cfg(all(not(target_arch = "wasm32"), not(target_os = "none")))]
+#[cfg(all(feature = "desktop", not(target_arch = "wasm32"), not(target_os = "none")))]
 pub mod cli;
 
-#[cfg(all(debug_assertions, not(target_arch = "wasm32"), not(target_os = "none")))]
+#[cfg(all(feature = "desktop", debug_assertions, not(target_arch = "wasm32"), not(target_os = "none")))]
 pub mod hot_reload;
 
 // Vec/String/vec!/format! prelude shim (see pokered-data's twin).
@@ -53,5 +53,4 @@ pub(crate) mod alloc_prelude {
 
 pub use game::PokemonGame;
 pub use render::BattleVisualEffects;
-
 

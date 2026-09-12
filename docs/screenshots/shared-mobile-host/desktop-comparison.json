@@ -1,0 +1,62 @@
+[
+  {
+    "screen": "battle",
+    "sha256": "fb94cd72b8711ee84e1d85b2c9a1f7996ccea68262909fcba3b4be03ffb8057e",
+    "identical": true
+  },
+  {
+    "screen": "copyright",
+    "sha256": "6efadcbd43e4e6299443dad8f58bd41e37eb348886fcf8b10e593de082753aee",
+    "identical": true
+  },
+  {
+    "screen": "intro",
+    "sha256": "af410742824250d3f375f3daab21f501805176461c72a184dfda425945d8c05a",
+    "identical": true
+  },
+  {
+    "screen": "main-menu",
+    "sha256": "efcaa6207bb0241379d34d98fa821c9276e8aa9d540e0293db1a59b49732e9fb",
+    "identical": true
+  },
+  {
+    "screen": "oak",
+    "sha256": "563b1b1f9e998213d67e3483750ad5e3012635431845067e39b5ac18fff36b4f",
+    "identical": true
+  },
+  {
+    "screen": "options",
+    "sha256": "7959eba6d05c5c025689e88fa50896770fd7be950e277707f37a68895f1019c0",
+    "identical": true
+  },
+  {
+    "screen": "overworld",
+    "sha256": "fb94cd72b8711ee84e1d85b2c9a1f7996ccea68262909fcba3b4be03ffb8057e",
+    "identical": true
+  },
+  {
+    "screen": "party",
+    "sha256": "28968b413e90330674c051aafb92753479748135b34547db69dcc836e414b3f9",
+    "identical": true
+  },
+  {
+    "screen": "save",
+    "sha256": "ccd7d261cdebd7d3a55d8067e16a6a6fc53b142c401af617869c0c20191d393b",
+    "identical": true
+  },
+  {
+    "screen": "start-menu",
+    "sha256": "9bee7b98585c973d32deb955057bafa4661e356eaeeaccab3798e8a69977d342",
+    "identical": true
+  },
+  {
+    "screen": "stats",
+    "sha256": "28968b413e90330674c051aafb92753479748135b34547db69dcc836e414b3f9",
+    "identical": true
+  },
+  {
+    "screen": "title",
+    "sha256": "653b915f8c4ce1dbf93e131a872e9a585c92ab0750745766e26f0701ca142c05",
+    "identical": true
+  }
+]

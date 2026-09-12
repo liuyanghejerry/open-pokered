@@ -6,11 +6,10 @@ resolver = "2"
 exclude = ["crates/pokered-gba", "vendor"]
 members = [
     "crates/pokered-platform",
+    "crates/pokered-mobile",
     "crates/pokered-web",
     "crates/pokered-runner-web",
     "crates/pokered-debug-server",
-    "crates/pokered-android",
-    "crates/pokered-ios",
     "crates/scene_apply",
     "crates/pokered-layout-preview",
     "crates/pokered-core",

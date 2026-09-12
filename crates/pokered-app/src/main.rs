@@ -16,6 +16,7 @@ mod demo;
 mod direct_battle;
 mod game;
 mod link;
+mod move_animation_capture;
 mod render;
 mod tools;
 
@@ -347,6 +348,44 @@ fn main() {
                     Ok(()) => println!("Battle finished."),
                     Err(e) => eprintln!("Error: {}", e),
                 }
+            }
+        }
+        Some(crate::cli::Commands::MoveAnimationFrames {
+            move_id,
+            side,
+            ref output_dir,
+            max_frames,
+            manifest_only,
+        }) => {
+            if let Err(error) = crate::move_animation_capture::capture_move_animation(
+                move_id,
+                side.player_is_attacker(),
+                output_dir,
+                max_frames,
+                !manifest_only,
+            ) {
+                eprintln!("Error: {error}");
+                std::process::exit(1);
+            }
+        }
+        Some(crate::cli::Commands::ItemAnimationFrames {
+            scenario,
+            ball,
+            shakes,
+            ref output_dir,
+            max_frames,
+            manifest_only,
+        }) => {
+            if let Err(error) = crate::move_animation_capture::capture_item_animation(
+                scenario,
+                ball.item_id(),
+                shakes,
+                output_dir,
+                max_frames,
+                !manifest_only,
+            ) {
+                eprintln!("Error: {error}");
+                std::process::exit(1);
             }
         }
     }

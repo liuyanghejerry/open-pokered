@@ -468,6 +468,15 @@ def m19_rock_tunnel(g):
             g.nav_warp(17, 11, "RockTunnel1F", "RockTunnelB1F")
             g.nav_warp(3, 3, "RockTunnelB1F", "RockTunnel1F")
             g.nav_warp(15, 33, "RockTunnel1F", "Route10", approach="down")
+            # Stay on the southern half of Route 10 before asking the
+            # cross-map planner for Lavender. If a trainer temporarily
+            # blocks the narrow southbound lane, a global fallback can
+            # otherwise detour west onto Route 9; its one-way ledges make
+            # that detour impossible to undo. Keep both this leg and the
+            # Lavender connection inside the recovery loop because a loss
+            # to the lower Route 10 trainers respawns at the north center.
+            g.nav_to(9, 70, "Route10")
+            g.nav_to_map(3, 6, "LavenderTown")
             break
         except RuntimeError:
             if g.pos()[0] != "Route10":
@@ -476,7 +485,6 @@ def m19_rock_tunnel(g):
                   flush=True)
     else:
         raise RuntimeError("Rock Tunnel crossing failed after 3 blackouts")
-    g.nav_to_map(3, 6, "LavenderTown")
     g.heal_pokecenter((3, 5), "LavenderTown", "LavenderPokecenter")
     g.evidence("m19")
 
@@ -1337,11 +1345,11 @@ def push_boulder(g, map_name, text_id, destination, flag):
         actions.reverse()
         print(f"[boulder] {map_name} {box} → {destination}: {len(actions)} pushes",
               flush=True)
-        # A plan involving another movable boulder is executed one push at a
-        # time and re-planned from the live state. Single-boulder plans keep
-        # the original batch execution, which is much faster and has no
-        # dynamic obstacle state to invalidate.
-        actions_to_execute = actions if len(boulder_indices) == 1 else actions[:1]
+        # Execute one push, then re-plan from live player and boulder state.
+        # A held input can occasionally finish the dust cutscene without
+        # completing the planned push; replaying the remaining batch would
+        # then navigate to positions computed for a boulder that never moved.
+        actions_to_execute = actions[:1]
         for d, behind, slot in actions_to_execute:
             # Boulder coordinates are mutable NPC state. The general
             # navigator intentionally remembers observed NPC bands, but a

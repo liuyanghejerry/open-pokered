@@ -32,6 +32,9 @@ impl AudioOutput {
     /// In-battle POKé FLUTE jingle (`Music_PokeFluteInBattle`).
     pub fn play_flute_in_battle(&self) {}
 
+    /// Overworld POKé FLUTE jingle followed by the current map music.
+    pub fn play_flute_overworld(&self, _resume_music: MusicId) {}
+
     /// Alternate tempo/start music variants; no music means no variants.
     pub fn play_script_music(&self, _name: &str) -> bool {
         false

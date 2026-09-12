@@ -73,9 +73,11 @@ DerivedData/
 xcuserdata/
 Pods/
 .build/
+ios/build/
 **/*.xcodeproj/xcuserdata/
 **/*.xcodeproj/project.xcworkspace/xcuserdata/
 **/libpokered_ios_*.a
+**/libpokered_mobile_*.a
 
 # IDE
 .idea/

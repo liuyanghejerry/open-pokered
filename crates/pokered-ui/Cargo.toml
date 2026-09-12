@@ -14,12 +14,12 @@ license.workspace = true
 
 [dependencies]
 pokered-platform = { path = "../pokered-platform" }
-dotzuki-engine = { git = "https://github.com/liuyanghejerry/dotzuki", rev = "ff66260e9c9382fd3aa53afc05dc2e1ce57c61e0" }
+dotzuki-engine = { git = "https://github.com/liuyanghejerry/dotzuki", rev = "55b90736aa9c2cc56e69a247b57e320c57136898" }
 pokered-core = { path = "../pokered-core" }
 pokered-data = { path = "../pokered-data" }
 pokered-renderer = { path = "../pokered-renderer", default-features = false }
-dotzuki-renderer = { git = "https://github.com/liuyanghejerry/dotzuki", rev = "ff66260e9c9382fd3aa53afc05dc2e1ce57c61e0", default-features = false, features = ["framebuffer"] }
-dotzuki-ui = { git = "https://github.com/liuyanghejerry/dotzuki", rev = "ff66260e9c9382fd3aa53afc05dc2e1ce57c61e0" }
+dotzuki-renderer = { git = "https://github.com/liuyanghejerry/dotzuki", rev = "55b90736aa9c2cc56e69a247b57e320c57136898", default-features = false, features = ["framebuffer"] }
+dotzuki-ui = { git = "https://github.com/liuyanghejerry/dotzuki", rev = "55b90736aa9c2cc56e69a247b57e320c57136898", default-features = false }
 serde = { workspace = true }
 serde_json = { workspace = true }
 log = "0.4"
@@ -27,13 +27,13 @@ log = "0.4"
 [features]
 default = ["gpu"]
 framebuffer = ["pokered-renderer/framebuffer"]
-gpu = ["pokered-renderer/gpu"]
+gpu = ["pokered-renderer/gpu", "dotzuki-ui/gpu"]
 
 # Hosted gpu windowing: full dotzuki-renderer (pixels/winit/resource).
 # Bare metal (GBA, target_os = "none") builds with default-features = false
 # and gets the framebuffer-only engine renderer declared above.
 [target.'cfg(not(target_os = "none"))'.dependencies]
-dotzuki-renderer = { git = "https://github.com/liuyanghejerry/dotzuki", rev = "ff66260e9c9382fd3aa53afc05dc2e1ce57c61e0", features = ["gpu", "resource"] }
+dotzuki-renderer = { git = "https://github.com/liuyanghejerry/dotzuki", rev = "55b90736aa9c2cc56e69a247b57e320c57136898", features = ["gpu", "resource"] }
 pokered-renderer = { path = "../pokered-renderer", features = ["gpu"] }
 
 # Bare metal (GBA): spin-backed sync shims (crate::sync_compat).

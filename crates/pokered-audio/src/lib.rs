@@ -23,13 +23,7 @@ pub mod sfx_data;
 
 /// Shared device output (`AudioOutput`) for the native (`cpal` feature) and
 /// WASM (`web-audio` feature) frontends.
-#[cfg(all(
-    not(target_os = "none"),
-    any(
-        all(not(target_arch = "wasm32"), feature = "cpal"),
-        all(target_arch = "wasm32", feature = "web-audio"),
-    ),
-))]
+#[cfg(not(target_os = "none"))]
 pub mod output;
 
 /// Bare-metal (GBA) stand-in for [`output`]: the same `AudioOutput` surface

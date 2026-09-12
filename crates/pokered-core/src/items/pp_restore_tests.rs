@@ -144,6 +144,24 @@ fn max_ether_restores_all_pp() {
 }
 
 #[test]
+fn max_ether_is_consumed_on_full_pp_with_pp_ups_gen1_bug() {
+    let mut mon = make_mon_with_pp(
+        [MoveId::Thundershock, MoveId::None, MoveId::None, MoveId::None],
+        [0; 4],
+        [0; 4],
+    );
+    mon.pp_ups[0] = 1;
+    mon.pp[0] = get_max_pp_with_ups(mon.moves[0], 1);
+    assert_eq!(
+        use_pp_restore(&mut mon, ItemId::MaxEther, 0),
+        PpRestoreResult::Restored {
+            move_index: 0,
+            pp_restored: 0,
+        }
+    );
+}
+
+#[test]
 fn ether_respects_pp_ups() {
     let mut mon = make_mon_with_pp(
         [
@@ -212,6 +230,32 @@ fn max_elixir_fully_restores_all_moves() {
         }
         _ => panic!("expected AllRestored"),
     }
+}
+
+#[test]
+fn max_elixir_is_consumed_on_full_pp_with_pp_ups_gen1_bug() {
+    let mut mon = make_mon_with_pp(
+        [
+            MoveId::Thundershock,
+            MoveId::QuickAttack,
+            MoveId::None,
+            MoveId::None,
+        ],
+        [0; 4],
+        [0; 4],
+    );
+    for i in 0..4 {
+        if mon.moves[i] != MoveId::None {
+            mon.pp_ups[i] = 1;
+            mon.pp[i] = get_max_pp_with_ups(mon.moves[i], 1);
+        }
+    }
+    assert_eq!(
+        use_pp_restore(&mut mon, ItemId::MaxElixer, 0),
+        PpRestoreResult::AllRestored {
+            total_pp_restored: 0,
+        }
+    );
 }
 
 #[test]

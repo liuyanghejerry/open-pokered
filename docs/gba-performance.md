@@ -48,7 +48,8 @@ converts that frontend-neutral rectangle to its presentation type.
 
 Validation:
 
-- Core: 2,559 unit tests passed. UI: all 8 tests passed, including static/dynamic
+- Core: 2,572 unit tests passed after merging master `4bb79d9`. UI: all 8 tests
+  passed, including static/dynamic
   parity for the four menus, both languages and all enumerated states.
 - App: 95 unit tests passed, including loaded-save constructor coverage,
   incremental options rendering versus a full
@@ -70,10 +71,20 @@ Validation:
   Hall of Fame and credits. The game writes a 32,768-byte SRAM save; a separate
   normally booted process selects CONTINUE and restores PalletTown `(5,6)`, all
   eight badges and one Hall of Fame team. All 49 milestone observations and the
-  save are retained in `/tmp/pt-map-name-fresh-a7`. The focused
+  save are retained in `/tmp/pt-pr77-final-r3.MvZHG0`. The focused
   `s07-save-roundtrip` scenario also passes; the complete seeded scenario suite
   passes 11/11 and the Gherkin BDD suite passes 15/15. This validation exposed
   and fixed a duplicate constructor state that discarded the loaded save summary.
+- Post-merge platform checks pass against one pinned dotzuki revision: app 95/95,
+  mobile runtime 2/2, TUI compile, navigation 22/22, embedded data 253/253,
+  native data 251/251 and Boa data 260/260. The GBA release build with
+  `autopilot,profiling` also passes `agb-gbafix`.
+- The full run exposed three driver recovery gaps rather than game-runtime
+  failures: long held movement could drift after a battle handoff, Route 10
+  recovery ended before the lower trainers, and precomputed Strength batches
+  assumed every push completed. The driver now re-observes movement at most
+  every three tiles, keeps the entire Rock Tunnel-to-Lavender leg in its
+  recovery loop, and replans from live boulder state after every push.
 - Release GBA autopilot/profiling ROM runs through 159,396 simulated frames without
   panic, allocation failure or invalid-address crash. This exercises boot, Oak,
   scripted bedroom movement and then a long idle period, not 159k frames of broad
@@ -239,7 +250,8 @@ simulated frames without another crash.
 ## Dotzuki dependency
 
 The reusable no_std and renderer work lives in dotzuki PR #63 on the
-`feat/gba-renderer-performance` branch (through commit `ff66260e9c9382fd3aa53afc05dc2e1ce57c61e0`). Every
+`feat/gba-renderer-performance` branch (through commit
+`55b90736aa9c2cc56e69a247b57e320c57136898`). Every
 open-pokered consumer is pinned to that remote revision, so CI and independent
 checkouts do not require the sibling repository or new vendor changes.
 

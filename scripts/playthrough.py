@@ -613,7 +613,11 @@ class Game:
                                  frames=(int(count) + 1) * FRAMES_PER_TILE + 32)
                     break  # Observe the scripted slide's actual endpoint.
                 j = i
-                while j + 1 < len(dirs) and dirs[j + 1] == dirs[i]:
+                # Re-observe at least every three tiles. Long held runs can
+                # outlive a wild-battle handoff or collision pause and drift
+                # onto a different ladder/door before the next state poll.
+                while (j + 1 < len(dirs) and dirs[j + 1] == dirs[i]
+                       and j + 1 - i < 3):
                     j += 1
                 tiles = j - i + 1
                 if _os2.environ.get("PT_DEBUG"):

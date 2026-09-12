@@ -6,7 +6,8 @@ use std::path::Path;
 fn main() {
     let target_arch = env::var("CARGO_CFG_TARGET_ARCH").unwrap_or_default();
     let target_os = env::var("CARGO_CFG_TARGET_OS").unwrap_or_default();
-    let is_embedded_target = target_arch == "wasm32" || target_os == "android" || target_os == "ios";
+    let is_embedded_target = env::var_os("CARGO_FEATURE_EMBEDDED_ASSETS").is_some()
+        || target_arch == "wasm32" || target_os == "android" || target_os == "ios";
 
     let manifest_dir = env::var("CARGO_MANIFEST_DIR").unwrap();
     // gfx/ lives at gfx (sibling of crates/); this crate is at
