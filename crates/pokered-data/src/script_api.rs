@@ -629,8 +629,28 @@ impl ScriptApiRegistrar for PokemonScriptApi {
 #[cfg(test)]
 mod tests {
     use crate::alloc_prelude::*;
+    use crate::script_function_catalog::POKERED_SCRIPT_FUNCTIONS;
     use super::PokemonScriptApi;
     use dotzuki_engine_script::{CommandResult, ScriptCommand, ScriptEngine};
+
+    #[test]
+    fn boa_registrar_implements_every_cataloged_capability() {
+        let names = serde_json::to_string(POKERED_SCRIPT_FUNCTIONS).unwrap();
+        let source = format!(
+            r#"
+                export async function verifyCatalog() {{
+                    for (const name of {names}) {{
+                        if (typeof game[name] !== "function") {{
+                            throw new Error(`missing game capability: ${{name}}`);
+                        }}
+                    }}
+                }}
+            "#
+        );
+        let mut engine = ScriptEngine::with_api(&PokemonScriptApi);
+        engine.load_script(&source).unwrap();
+        assert_eq!(engine.call_function("verifyCatalog", &[]).unwrap(), None);
+    }
 
     /// Proves the synchronous query APIs (`hasItem`, `getMoney`) read seeded
     /// state: seeding money=5000 + bag={SILPH_SCOPE} makes the gate take the

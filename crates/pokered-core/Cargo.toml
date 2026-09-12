@@ -20,18 +20,18 @@ hot-reload = ["dotzuki-rules/hot-reload"]
 
 [dependencies]
 pokered-platform = { path = "../pokered-platform" }
-dotzuki-engine = { git = "https://github.com/liuyanghejerry/dotzuki", rev = "7735402f24085cc5101a81ba38417651ff228977" }
+dotzuki-engine = { git = "https://github.com/liuyanghejerry/dotzuki", rev = "ff66260e9c9382fd3aa53afc05dc2e1ce57c61e0" }
 pokered-data = { path = "../pokered-data" }
-dotzuki-engine-script = { git = "https://github.com/liuyanghejerry/dotzuki", rev = "7735402f24085cc5101a81ba38417651ff228977", default-features = false }
+dotzuki-engine-script = { git = "https://github.com/liuyanghejerry/dotzuki", rev = "ff66260e9c9382fd3aa53afc05dc2e1ce57c61e0", default-features = false }
 # Native script interpreter (de-Boa path): AST interpretation of compiled
 # `.scene` storylines — no JavaScript engine involved.
-dotzuki-engine-dsl = { git = "https://github.com/liuyanghejerry/dotzuki", rev = "7735402f24085cc5101a81ba38417651ff228977" }
+dotzuki-engine-dsl = { git = "https://github.com/liuyanghejerry/dotzuki", rev = "ff66260e9c9382fd3aa53afc05dc2e1ce57c61e0" }
 # P1 battle migration: the game-agnostic no-code RON loader + dual-mode sourcing.
 # pokered-core authors a rules.ron for the bucket-A moves and a game binding; the
 # loader stays engine-only (no pokered types leak into it). Used by the additive
 # PokeredRules provider + the differential parity harness ONLY — the legacy
 # `apply_move_effect` dispatcher stays the production oracle (P1 is additive).
-dotzuki-rules = { git = "https://github.com/liuyanghejerry/dotzuki", rev = "7735402f24085cc5101a81ba38417651ff228977" }
+dotzuki-rules = { git = "https://github.com/liuyanghejerry/dotzuki", rev = "ff66260e9c9382fd3aa53afc05dc2e1ce57c61e0" }
 serde = { workspace = true }
 serde_json = { workspace = true }
 log = "0.4"

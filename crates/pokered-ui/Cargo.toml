@@ -14,12 +14,12 @@ license.workspace = true
 
 [dependencies]
 pokered-platform = { path = "../pokered-platform" }
-dotzuki-engine = { git = "https://github.com/liuyanghejerry/dotzuki", rev = "7735402f24085cc5101a81ba38417651ff228977" }
+dotzuki-engine = { git = "https://github.com/liuyanghejerry/dotzuki", rev = "ff66260e9c9382fd3aa53afc05dc2e1ce57c61e0" }
 pokered-core = { path = "../pokered-core" }
 pokered-data = { path = "../pokered-data" }
 pokered-renderer = { path = "../pokered-renderer", default-features = false }
-dotzuki-renderer = { git = "https://github.com/liuyanghejerry/dotzuki", rev = "7735402f24085cc5101a81ba38417651ff228977", default-features = false, features = ["framebuffer"] }
-dotzuki-ui = { git = "https://github.com/liuyanghejerry/dotzuki", rev = "7735402f24085cc5101a81ba38417651ff228977" }
+dotzuki-renderer = { git = "https://github.com/liuyanghejerry/dotzuki", rev = "ff66260e9c9382fd3aa53afc05dc2e1ce57c61e0", default-features = false, features = ["framebuffer"] }
+dotzuki-ui = { git = "https://github.com/liuyanghejerry/dotzuki", rev = "ff66260e9c9382fd3aa53afc05dc2e1ce57c61e0" }
 serde = { workspace = true }
 serde_json = { workspace = true }
 log = "0.4"
@@ -33,7 +33,7 @@ gpu = ["pokered-renderer/gpu"]
 # Bare metal (GBA, target_os = "none") builds with default-features = false
 # and gets the framebuffer-only engine renderer declared above.
 [target.'cfg(not(target_os = "none"))'.dependencies]
-dotzuki-renderer = { git = "https://github.com/liuyanghejerry/dotzuki", rev = "7735402f24085cc5101a81ba38417651ff228977", features = ["gpu", "resource"] }
+dotzuki-renderer = { git = "https://github.com/liuyanghejerry/dotzuki", rev = "ff66260e9c9382fd3aa53afc05dc2e1ce57c61e0", features = ["gpu", "resource"] }
 pokered-renderer = { path = "../pokered-renderer", features = ["gpu"] }
 
 # Bare metal (GBA): spin-backed sync shims (crate::sync_compat).

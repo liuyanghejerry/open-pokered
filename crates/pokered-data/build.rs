@@ -15,9 +15,13 @@ use std::fs;
 use std::io::Write;
 use std::path::{Path, PathBuf};
 
+#[path = "src/script_function_catalog.rs"]
+mod script_function_catalog;
+
 fn main() {
     let manifest_dir = PathBuf::from(env::var("CARGO_MANIFEST_DIR").unwrap());
     let out_dir = env::var("OUT_DIR").unwrap();
+    println!("cargo:rerun-if-changed=src/script_function_catalog.rs");
 
     generate_species_enum(&manifest_dir, &out_dir);
     generate_moves_enum(&manifest_dir, &out_dir);
@@ -1841,6 +1845,7 @@ fn generate_scene_scripts(manifest_dir: &Path, out_dir: &str) {
                 &scene_path.to_string_lossy(),
             )
             .unwrap_or_else(|e| panic!("parse {} to AST: {}", scene_path.display(), e));
+            validate_scene_capabilities(&ast, &scene_path);
             let ast_bytes = serde_json::to_vec(&ast)
                 .unwrap_or_else(|e| panic!("serialize AST {}: {}", scene_path.display(), e));
             let ast_path = ast_out_dir.join(format!("{}.bin", map_name));
@@ -1883,6 +1888,7 @@ fn generate_scene_scripts(manifest_dir: &Path, out_dir: &str) {
                 &path.to_string_lossy(),
             )
             .unwrap_or_else(|e| panic!("parse shared scene {}: {}", path.display(), e));
+            validate_scene_capabilities(&ast, &path);
             let ast_bytes = serde_json::to_vec(&ast)
                 .unwrap_or_else(|e| panic!("serialize shared AST {}: {}", path.display(), e));
             let ast_path = ast_out_dir.join(format!("shared_{}.bin", stem));
@@ -1931,6 +1937,36 @@ fn generate_scene_scripts(manifest_dir: &Path, out_dir: &str) {
 
     writeln!(out, "pub const SCENE_SCRIPT_COUNT: usize = {};", scripts.len()).unwrap();
     writeln!(out, "pub const SCENE_AST_COUNT: usize = {};", asts.len()).unwrap();
+}
+
+fn validate_scene_capabilities(
+    scene: &dotzuki_engine_dsl::ast::GameScene,
+    path: &Path,
+) {
+    let unknown = dotzuki_engine_dsl::core_host::unknown_host_functions(
+        scene,
+        script_function_catalog::is_pokered_script_function,
+    );
+    if !unknown.is_empty() {
+        let details = unknown
+            .iter()
+            .map(|function| {
+                format!(
+                    "{}:{}:{}: unknown game function '{}'",
+                    function.span.file,
+                    function.span.line_start,
+                    function.span.col_start,
+                    function.name
+                )
+            })
+            .collect::<Vec<_>>()
+            .join("\n");
+        panic!(
+            "scene capability validation failed for {}:\n{}",
+            path.display(),
+            details
+        );
+    }
 }
 
 fn emit_variant_struct(out: &mut String, screen: &str, variant_name: &str, variant: &serde_json::Value) {

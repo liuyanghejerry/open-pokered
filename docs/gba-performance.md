@@ -29,6 +29,7 @@ This follow-up retains those optimizations while restoring shared contracts:
 | Map metadata lifetime | `MapJsonHandle` retains borrowed hosted data or shared embedded data | Four-entry recent-map cache; evicted maps are released after the last live handle; block bytes borrow ROM |
 | Platform synchronization | `pokered-platform` owns the hosted/bare-metal synchronization contract | Four game crates share one implementation; recursive bare-metal locks/initializers fail instead of creating mutable aliases |
 | Native script command parsing | Dotzuki's native-AST `core_host` owns the generic async `game.*` catalog, argument validation and `ScriptCommand` construction | Pokered's host keeps only stateful queries/RNG and Pokémon-specific extensions; no second engine protocol table in the game |
+| Script capability contract | Dotzuki walks structured scene ASTs; `pokered-data` owns the Pokémon-specific capability catalog | Every scene is validated during the data build, and tests require both Boa registration and the native GBA host to cover that catalog |
 
 The static GUI compiler is generic dotzuki functionality, not a Pokemon-specific
 layout table. It lowers the normal GUI compiler output (after component expansion),
@@ -45,7 +46,7 @@ converts that frontend-neutral rectangle to its presentation type.
 
 Validation:
 
-- Core: 2,558 unit tests passed. UI: all 8 tests passed, including static/dynamic
+- Core: 2,559 unit tests passed. UI: all 8 tests passed, including static/dynamic
   parity for the four menus, both languages and all enumerated states.
 - App: 94 unit tests passed, including incremental options rendering versus a full
   draw, changed-pixel damage coverage, reuse and black-screen invalidation.
@@ -58,8 +59,10 @@ Validation:
 - Native app, TUI and web-crate checks and the production GBA release build pass
   with the pinned remote dependency and no local patch configuration (the web
   check is not a wasm-target test).
-- Dotzuki's native core-command dispatcher passes all 291 DSL crate unit tests;
-  the pinned pokered build passes both native and Boa-feature checks.
+- Dotzuki's native dispatcher, capability validator and `return` control-flow
+  semantics pass all 295 DSL crate unit tests. Pokered data passes 250 native
+  and 259 Boa-feature tests; both script backends are checked against the same
+  Pokémon-specific capability catalog.
 - Fresh-start playthrough m01–m10 passes through defeating Brock. Seeded scenarios
   pass 10/11: `s07-save-roundtrip` fails waiting for CONTINUE to reach Overworld.
   It fails twice on this change and also on unmodified PR head `383c82c`, so it is
@@ -97,7 +100,13 @@ the bridge decodes and validates the same schema, and malformed payloads become
 observable capability errors. Generic async commands are now parsed by dotzuki's
 shared no_std native-host dispatcher. Its exported static command catalog can also
 be consumed by build-time capability validation; pokered no longer copies movement,
-audio, object, shop or scene command schemas into its native host.
+audio, object, shop or scene command schemas into its native host. The build now
+walks every structured scene AST and rejects undeclared `game.*` calls with source
+locations. Introducing that check exposed and fixed two dormant semantic gaps:
+bare `return` had been compiled as a host call, and a structured Viridian City
+command incorrectly used the raw-JS-style `game.` prefix. The same contract audit
+also exposed the native backend's missing `getGameVersion` query, which is now
+implemented and guarded by catalog-coverage tests for both native and Boa engines.
 The cursor erasure fast paths still assume the current arrow's 8×9 ink footprint
 and plain background; this is now an explicit UI-owned damage contract, but it
 is not inferred from glyph metrics. Changing those authored shapes requires
@@ -211,7 +220,7 @@ simulated frames without another crash.
 ## Dotzuki dependency
 
 The reusable no_std and renderer work lives in dotzuki PR #63 on the
-`feat/gba-renderer-performance` branch (through commit `7735402f24085cc5101a81ba38417651ff228977`). Every
+`feat/gba-renderer-performance` branch (through commit `ff66260e9c9382fd3aa53afc05dc2e1ce57c61e0`). Every
 open-pokered consumer is pinned to that remote revision, so CI and independent
 checkouts do not require the sibling repository or new vendor changes.
 

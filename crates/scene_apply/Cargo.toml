@@ -7,4 +7,4 @@ description = "Compile-check a map's script.scene and regenerate its script_conf
 [dependencies]
 # jrpg engine crates are consumed via git (see repo README / docs for how to
 # switch the engine URL once the real hosting is chosen).
-dotzuki-engine-dsl = { git = "https://github.com/liuyanghejerry/dotzuki", rev = "7735402f24085cc5101a81ba38417651ff228977" }
+dotzuki-engine-dsl = { git = "https://github.com/liuyanghejerry/dotzuki", rev = "ff66260e9c9382fd3aa53afc05dc2e1ce57c61e0" }

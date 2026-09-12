@@ -214,6 +214,9 @@ impl ScriptHost for NativeHost {
             "getRivalStarter" => Ok(HostCall::Value(Value::Number(
                 self.numbers.get("rivalStarter").copied().unwrap_or(0.0),
             ))),
+            "getGameVersion" => Ok(HostCall::Value(Value::Number(
+                self.numbers.get("gameVersion").copied().unwrap_or(0.0),
+            ))),
             "getBadgeCount" => {
                 let badges = self.numbers.get("obtainedBadges").copied().unwrap_or(0.0) as u8;
                 Ok(HostCall::Value(Value::Number(badges.count_ones() as f64)))
@@ -1233,6 +1236,19 @@ mod tests {
         let mut host = NativeHost::new();
         let err = host.call("noSuchFunction", &[]).unwrap_err();
         assert!(err.contains("unknown game function"));
+    }
+
+    #[test]
+    fn native_host_implements_every_cataloged_capability() {
+        let mut host = NativeHost::new();
+        for &name in pokered_data::script_function_catalog::POKERED_SCRIPT_FUNCTIONS {
+            if let Err(error) = host.call(name, &[]) {
+                assert!(
+                    !error.contains("unknown game function"),
+                    "cataloged capability {name:?} is missing from NativeHost"
+                );
+            }
+        }
     }
 
     #[test]

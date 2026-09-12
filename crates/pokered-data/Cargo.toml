@@ -13,8 +13,8 @@ script-boa = ["dep:boa_engine", "dotzuki-engine-script/script-boa"]
 
 [dependencies]
 pokered-platform = { path = "../pokered-platform" }
-dotzuki-engine-script = { git = "https://github.com/liuyanghejerry/dotzuki", rev = "7735402f24085cc5101a81ba38417651ff228977", default-features = false }
-dotzuki-engine-dsl = { git = "https://github.com/liuyanghejerry/dotzuki", rev = "7735402f24085cc5101a81ba38417651ff228977" }
+dotzuki-engine-script = { git = "https://github.com/liuyanghejerry/dotzuki", rev = "ff66260e9c9382fd3aa53afc05dc2e1ce57c61e0", default-features = false }
+dotzuki-engine-dsl = { git = "https://github.com/liuyanghejerry/dotzuki", rev = "ff66260e9c9382fd3aa53afc05dc2e1ce57c61e0" }
 boa_engine = { version = "0.20", default-features = false, optional = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
@@ -23,19 +23,19 @@ strum_macros = { workspace = true }
 num-derive = { workspace = true }
 num-traits = { workspace = true }
 log = "0.4"
-dotzuki-engine = { git = "https://github.com/liuyanghejerry/dotzuki", rev = "7735402f24085cc5101a81ba38417651ff228977" }
+dotzuki-engine = { git = "https://github.com/liuyanghejerry/dotzuki", rev = "ff66260e9c9382fd3aa53afc05dc2e1ce57c61e0" }
 # no_std HashMap (std::collections::HashMap replacement; iteration order is
 # unspecified either way, same contract as std).
 hashbrown = { version = "0.15", default-features = false, features = ["serde"] }
 
 # Hosted: full dotzuki-renderer (gpu + PNG resource pipeline).
 [target.'cfg(not(target_os = "none"))'.dependencies]
-dotzuki-renderer = { git = "https://github.com/liuyanghejerry/dotzuki", rev = "7735402f24085cc5101a81ba38417651ff228977" }
+dotzuki-renderer = { git = "https://github.com/liuyanghejerry/dotzuki", rev = "ff66260e9c9382fd3aa53afc05dc2e1ce57c61e0" }
 thiserror = { workspace = true }
 
 # Bare metal (GBA): framebuffer-only engine renderer.
 [target.'cfg(target_os = "none")'.dependencies]
-dotzuki-renderer = { git = "https://github.com/liuyanghejerry/dotzuki", rev = "7735402f24085cc5101a81ba38417651ff228977", default-features = false, features = ["framebuffer"] }
+dotzuki-renderer = { git = "https://github.com/liuyanghejerry/dotzuki", rev = "ff66260e9c9382fd3aa53afc05dc2e1ce57c61e0", default-features = false, features = ["framebuffer"] }
 thiserror = { version = "2", default-features = false }
 
 [dev-dependencies]
@@ -43,4 +43,4 @@ ron = { workspace = true }
 
 [build-dependencies]
 serde_json = { workspace = true }
-dotzuki-engine-dsl = { git = "https://github.com/liuyanghejerry/dotzuki", rev = "7735402f24085cc5101a81ba38417651ff228977" }
+dotzuki-engine-dsl = { git = "https://github.com/liuyanghejerry/dotzuki", rev = "ff66260e9c9382fd3aa53afc05dc2e1ce57c61e0" }
