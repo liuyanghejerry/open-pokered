@@ -15,16 +15,16 @@ pub mod audio;
 // is native-only, BroadcastChannel (broadcast_channel.rs) is wasm-only.
 pub mod link;
 
-#[cfg(not(target_arch = "wasm32"))]
+#[cfg(all(feature = "desktop", not(target_arch = "wasm32")))]
 pub mod direct_battle;
 
-#[cfg(not(target_arch = "wasm32"))]
+#[cfg(all(feature = "desktop", not(target_arch = "wasm32")))]
 pub mod tools;
 
-#[cfg(not(target_arch = "wasm32"))]
+#[cfg(all(feature = "desktop", not(target_arch = "wasm32")))]
 pub mod cli;
 
-#[cfg(all(debug_assertions, not(target_arch = "wasm32")))]
+#[cfg(all(feature = "desktop", debug_assertions, not(target_arch = "wasm32")))]
 pub mod hot_reload;
 
 pub use game::PokemonGame;

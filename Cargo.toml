@@ -1,10 +1,10 @@
 [workspace]
 resolver = "2"
 members = [
+    "crates/pokered-mobile",
     "crates/pokered-web",
     "crates/pokered-runner-web",
     "crates/pokered-debug-server",
-    "crates/pokered-android",
     "crates/pokered-ios",
     "crates/scene_apply",
     "crates/pokered-layout-preview",

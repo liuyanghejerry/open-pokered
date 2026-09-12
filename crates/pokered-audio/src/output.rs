@@ -20,42 +20,63 @@ use crate::sfx_data::SfxId;
 /// Dropping `AudioOutput` stops the output stream.
 pub struct AudioOutput {
     pub manager: Arc<Mutex<AudioManager>>,
-    #[cfg(not(target_arch = "wasm32"))]
-    _output: dotzuki_audio::output::CpalOutput,
-    #[cfg(target_arch = "wasm32")]
-    _output: dotzuki_audio::output::WebAudioOutput,
+    #[cfg(all(not(target_arch = "wasm32"), feature = "cpal"))]
+    _output: Option<dotzuki_audio::output::CpalOutput>,
+    #[cfg(all(target_arch = "wasm32", feature = "web-audio"))]
+    _output: Option<dotzuki_audio::output::WebAudioOutput>,
 }
 
 impl AudioOutput {
     /// Create the shared manager (powering on the APU, NR52 bit 7) and open
     /// the device output. `None` when no output device/context is available —
     /// the caller continues silent.
-    pub fn new() -> Option<Self> {
-        let manager = Arc::new(Mutex::new(AudioManager::new()));
-        // Enable APU power (NR52 bit 7). Without this, all APU register
-        // writes are silently ignored and no sound is produced.
-        {
-            let mut mgr = manager.lock().unwrap();
-            mgr.apu.write_register(0xFF26, 0x80);
+    /// A powered-on game sound source without a platform device.
+    pub fn new_pcm() -> Self {
+        let mut manager = AudioManager::new();
+        manager.apu.write_register(0xFF26, 0x80);
+        Self {
+            manager: Arc::new(Mutex::new(manager)),
+            #[cfg(any(
+                all(not(target_arch = "wasm32"), feature = "cpal"),
+                all(target_arch = "wasm32", feature = "web-audio")
+            ))]
+            _output: None,
         }
-
-        let source = {
-            let mgr = Arc::clone(&manager);
-            move |out: &mut [f32], sample_rate: u32| {
-                let mut mgr = mgr.lock().unwrap();
-                dotzuki_audio::output::render_apu_stereo(&mut mgr.apu, out, sample_rate);
+    }
+    pub fn new() -> Option<Self> {
+        #[cfg(any(
+            all(not(target_arch = "wasm32"), feature = "cpal"),
+            all(target_arch = "wasm32", feature = "web-audio")
+        ))]
+        {
+            let mut audio = Self::new_pcm();
+            let manager = Arc::clone(&audio.manager);
+            let source = move |out: &mut [f32], rate: u32| {
+                let mut manager = manager.lock().unwrap();
+                dotzuki_audio::output::render_apu_stereo(&mut manager.apu, out, rate);
+            };
+            #[cfg(not(target_arch = "wasm32"))]
+            {
+                audio._output = Some(dotzuki_audio::output::CpalOutput::new(source)?);
             }
-        };
-
-        #[cfg(not(target_arch = "wasm32"))]
-        let output = dotzuki_audio::output::CpalOutput::new(source)?;
-        #[cfg(target_arch = "wasm32")]
-        let output = dotzuki_audio::output::WebAudioOutput::new(source)?;
-
-        Some(Self {
-            manager,
-            _output: output,
-        })
+            #[cfg(target_arch = "wasm32")]
+            {
+                audio._output = Some(dotzuki_audio::output::WebAudioOutput::new(source)?);
+            }
+            Some(audio)
+        }
+        #[cfg(not(any(
+            all(not(target_arch = "wasm32"), feature = "cpal"),
+            all(target_arch = "wasm32", feature = "web-audio")
+        )))]
+        {
+            None
+        }
+    }
+    /// Called by the embedding game thread, never alongside a live device output.
+    pub fn render_pcm(&self, output: &mut [f32]) {
+        let mut manager = self.manager.lock().unwrap();
+        dotzuki_audio::output::render_apu_stereo(&mut manager.apu, output, 44100);
     }
 
     pub fn play_music(&self, id: MusicId) {
@@ -186,6 +207,9 @@ impl AudioOutput {
     /// gesture).
     #[cfg(target_arch = "wasm32")]
     pub fn try_resume(&self) {
-        self._output.try_resume();
+        #[cfg(feature = "web-audio")]
+        if let Some(ref output) = self._output {
+            output.try_resume();
+        }
     }
 }

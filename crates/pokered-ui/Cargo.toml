@@ -13,12 +13,12 @@ license.workspace = true
 # .sisyphus/plans/menu-layout-engine.md Appendix A.4).
 
 [dependencies]
-dotzuki-engine = { git = "https://github.com/liuyanghejerry/dotzuki", tag = "v0.6.0" }
+dotzuki-engine = { git = "https://github.com/liuyanghejerry/dotzuki", tag = "v0.7.0" }
 pokered-core = { path = "../pokered-core" }
 pokered-data = { path = "../pokered-data" }
 pokered-renderer = { path = "../pokered-renderer", default-features = false }
-dotzuki-renderer = { git = "https://github.com/liuyanghejerry/dotzuki", tag = "v0.6.0" }
-dotzuki-ui = { git = "https://github.com/liuyanghejerry/dotzuki", tag = "v0.6.0" }
+dotzuki-renderer = { git = "https://github.com/liuyanghejerry/dotzuki", tag = "v0.7.0", default-features = false }
+dotzuki-ui = { git = "https://github.com/liuyanghejerry/dotzuki", tag = "v0.7.0", default-features = false }
 serde = { workspace = true }
 serde_json = { workspace = true }
 log = "0.4"
@@ -26,7 +26,7 @@ log = "0.4"
 [features]
 default = ["gpu"]
 framebuffer = ["pokered-renderer/framebuffer"]
-gpu = ["pokered-renderer/gpu"]
+gpu = ["pokered-renderer/gpu", "dotzuki-ui/gpu"]
 
 [dev-dependencies]
 pokered-data = { path = "../pokered-data" }

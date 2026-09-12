@@ -68,12 +68,12 @@ use pokered_renderer::resource::ResourceManager;
 
 use pokered_renderer::resource::AssetRoot;
 
-#[cfg(not(target_arch = "wasm32"))]
+#[cfg(all(feature = "desktop", not(target_arch = "wasm32")))]
 use pokered_renderer::window::GameLoop;
 use pokered_renderer::{FrameBuffer, Rgba};
 use dotzuki_engine::render_config::RenderConfig;
 
-#[cfg(all(debug_assertions, not(target_arch = "wasm32")))]
+#[cfg(all(feature = "desktop", debug_assertions, not(target_arch = "wasm32")))]
 use crate::hot_reload::AssetWatcher;
 
 use crate::audio::{play_species_cry, AudioOutput};
@@ -83,6 +83,13 @@ use crate::render::{
     draw_elevator, draw_filter_bag, draw_diploma, draw_evolution, draw_hof_ceremony, draw_credits, draw_pc,
     draw_stats_screen, draw_title_screen, draw_town_map, draw_trade, draw_trainer_card, BattleVisualEffects,
 };
+
+#[derive(serde::Serialize, serde::Deserialize)]
+struct MobileSave {
+    version: u32,
+    data: SaveData,
+    flags: std::collections::HashMap<String, bool>,
+}
 
 const SAVE_FILE_NAME: &str = "pokered.sav";
 const SCRIPT_FLAGS_FILE_NAME: &str = "pokered.script_flags.json";
@@ -288,7 +295,7 @@ struct PendingTrade {
 /// encoding is the only per-frame cost. For full-run video prefer
 /// `--record-video`, which streams raw frames to ffmpeg and leaves no
 /// intermediate files behind.
-#[cfg(not(target_arch = "wasm32"))]
+#[cfg(all(feature = "desktop", not(target_arch = "wasm32")))]
 pub struct FrameRecorder {
     dir: PathBuf,
     next: u64,
@@ -298,7 +305,7 @@ pub struct FrameRecorder {
     manifest_broken: bool,
 }
 
-#[cfg(not(target_arch = "wasm32"))]
+#[cfg(all(feature = "desktop", not(target_arch = "wasm32")))]
 impl FrameRecorder {
     pub fn new(dir: PathBuf) -> std::io::Result<Self> {
         std::fs::create_dir_all(&dir)?;
@@ -439,7 +446,7 @@ impl FrameRecorder {
 /// intermediate files: ffmpeg reads `pipe:0` and encodes H.264 as the game
 /// runs, so the .mp4 is finished when the game exits. ffmpeg's stderr is
 /// inherited at `-loglevel error`, so only real errors surface.
-#[cfg(not(target_arch = "wasm32"))]
+#[cfg(all(feature = "desktop", not(target_arch = "wasm32")))]
 pub struct VideoRecorder {
     child: std::process::Child,
     /// Option solely so Drop can close the pipe before waiting on ffmpeg.
@@ -454,7 +461,7 @@ pub struct VideoRecorder {
     broken: bool,
 }
 
-#[cfg(not(target_arch = "wasm32"))]
+#[cfg(all(feature = "desktop", not(target_arch = "wasm32")))]
 impl VideoRecorder {
     pub fn new(path: &Path, fps: u32) -> std::io::Result<Self> {
         if fps == 0 {
@@ -530,7 +537,7 @@ impl VideoRecorder {
     }
 }
 
-#[cfg(not(target_arch = "wasm32"))]
+#[cfg(all(feature = "desktop", not(target_arch = "wasm32")))]
 impl Drop for VideoRecorder {
     fn drop(&mut self) {
         // Closing stdin signals EOF; ffmpeg then flushes the encoder and
@@ -619,6 +626,9 @@ pub struct PokemonGame {
     /// title screen (scripts/HallOfFame.asm:45-56).
     pub credits: Option<pokered_core::credits::CreditsState>,
     pub save_data: SaveData,
+    external_saves: bool,
+    committed_save: Option<String>,
+    mobile_flags: std::collections::HashMap<String, bool>,
     pub player_name: String,
     pub rival_name: String,
     pub frame_count: u64,
@@ -635,7 +645,7 @@ pub struct PokemonGame {
     pub scripts_dir: Option<PathBuf>,
     pub audio: Option<AudioOutput>,
     startup_warp: Option<(MapId, u16, u16)>,
-    #[cfg(all(debug_assertions, not(target_arch = "wasm32")))]
+    #[cfg(all(feature = "desktop", debug_assertions, not(target_arch = "wasm32")))]
     pub asset_watcher: Option<AssetWatcher>,
     #[cfg(feature = "debug-server")]
     pub debug_handle: Option<pokered_debug_server::DebugServerHandle>,
@@ -648,12 +658,12 @@ pub struct PokemonGame {
     /// Per-frame PNG recorder (`--record-frames`): captures every update —
     /// real-time loop and synchronous step_frames bursts alike — so driven
     /// runs can be assembled into video offline.
-    #[cfg(not(target_arch = "wasm32"))]
+    #[cfg(all(feature = "desktop", not(target_arch = "wasm32")))]
     pub frame_recorder: Option<FrameRecorder>,
     /// Per-frame video recorder (`--record-video`): same capture cadence as
     /// `frame_recorder`, but streams raw RGBA into a spawned ffmpeg process
     /// instead of writing one PNG per frame.
-    #[cfg(not(target_arch = "wasm32"))]
+    #[cfg(all(feature = "desktop", not(target_arch = "wasm32")))]
     pub video_recorder: Option<VideoRecorder>,
     /// Consecutive frames A+B+Start+Select have all been held — the original's
     /// soft-reset combo (engine/joypad.asm `_Joypad`/`TrySoftReset`, 16 frames
@@ -1017,7 +1027,7 @@ impl PokemonGame {
             }
         };
 
-        #[cfg(all(debug_assertions, not(target_arch = "wasm32")))]
+        #[cfg(all(feature = "desktop", debug_assertions, not(target_arch = "wasm32")))]
         let asset_watcher = if watch {
             let mut dirs = Vec::new();
 
@@ -1101,6 +1111,9 @@ impl PokemonGame {
             credits: None,
             pending_trade: None,
             save_data,
+            external_saves: false,
+            committed_save: None,
+            mobile_flags: Default::default(),
             player_name,
             rival_name,
             frame_count: 0,
@@ -1117,14 +1130,14 @@ impl PokemonGame {
             startup_warp,
             #[cfg(feature = "debug-server")]
             debug_handle,
-            #[cfg(all(debug_assertions, not(target_arch = "wasm32")))]
+            #[cfg(all(feature = "desktop", debug_assertions, not(target_arch = "wasm32")))]
             asset_watcher,
             pending_debug_inputs: Vec::new(),
             pending_debug_frames: 0,
             debug_input: InputState::new(),
-            #[cfg(not(target_arch = "wasm32"))]
+            #[cfg(all(feature = "desktop", not(target_arch = "wasm32")))]
             frame_recorder: None,
-            #[cfg(not(target_arch = "wasm32"))]
+            #[cfg(all(feature = "desktop", not(target_arch = "wasm32")))]
             video_recorder: None,
             soft_reset_frames: 0,
             ow_ran_last_frame: false,
@@ -1148,6 +1161,15 @@ impl PokemonGame {
         let (save_data, save_summary) = Self::try_load_default_save();
         #[cfg(target_os = "ios")]
         let (save_data, save_summary) = Self::try_load_default_save();
+        Self::new_portable(version, save_data, save_summary, AudioOutput::new())
+    }
+
+    fn new_portable(
+        version: GameVersion,
+        save_data: SaveData,
+        save_summary: Option<SaveFileSummary>,
+        audio: Option<AudioOutput>,
+    ) -> Self {
         let mut state = GameState {
             screen: GameScreen::GameFreakSplash,
             config: pokered_core::game_state::GameConfig::new(version),
@@ -1177,14 +1199,11 @@ impl PokemonGame {
 
         let resources = Some(ResourceManager::new(AssetRoot::new_wasm()));
 
-        let audio = AudioOutput::new();
-        if audio.is_some() {
-            log::info!("Web Audio initialized (44100 Hz stereo)");
-        } else {
-            log::warn!("Could not initialize Web Audio output");
-        }
-
         Self {
+            #[cfg(all(feature = "desktop", debug_assertions, not(target_arch = "wasm32")))]
+            asset_watcher: None,
+            #[cfg(feature = "debug-server")]
+            debug_handle: None,
             state,
             title_screen,
             intro_scene: IntroSceneState::new(),
@@ -1220,6 +1239,9 @@ impl PokemonGame {
             credits: None,
             pending_trade: None,
             save_data,
+            external_saves: false,
+            committed_save: None,
+            mobile_flags: Default::default(),
             player_name: "RED".to_string(),
             rival_name: "BLUE".to_string(),
             frame_count: 0,
@@ -1236,9 +1258,9 @@ impl PokemonGame {
             pending_debug_inputs: Vec::new(),
             pending_debug_frames: 0,
             debug_input: InputState::new(),
-            #[cfg(not(target_arch = "wasm32"))]
+            #[cfg(all(feature = "desktop", not(target_arch = "wasm32")))]
             frame_recorder: None,
-            #[cfg(not(target_arch = "wasm32"))]
+            #[cfg(all(feature = "desktop", not(target_arch = "wasm32")))]
             video_recorder: None,
             startup_warp: None,
             soft_reset_frames: 0,
@@ -1252,6 +1274,42 @@ impl PokemonGame {
             link_cable: CableClubFlow::new(),
             link_battle: None,
             link_trade: None,
+        }
+    }
+
+    /// Boot an embedded game without opening a device or reading desktop saves.
+    pub fn new_mobile(version: GameVersion, save: Option<&str>) -> Result<Self, String> {
+        let parsed = save
+            .map(serde_json::from_str::<MobileSave>)
+            .transpose()
+            .map_err(|e| e.to_string())?;
+        if parsed.as_ref().is_some_and(|s| s.version != 1) {
+            return Err("unsupported mobile save version".into());
+        }
+        let data = parsed
+            .as_ref()
+            .map(|s| s.data.clone())
+            .unwrap_or_else(SaveData::new);
+        let summary = parsed.as_ref().map(|s| save_summary_from_data(&s.data));
+        let mut game = Self::new_portable(version, data, summary, Some(AudioOutput::new_pcm()));
+        game.external_saves = true;
+        game.committed_save = save.map(str::to_owned);
+        game.mobile_flags = parsed.map(|s| s.flags).unwrap_or_default();
+        Ok(game)
+    }
+    pub fn export_mobile_save(&self) -> Option<String> {
+        self.committed_save.clone()
+    }
+    pub fn import_mobile_save(&mut self, save: &str) -> Result<(), String> {
+        let replacement = Self::new_mobile(self.state.config.version, Some(save))?;
+        *self = replacement;
+        Ok(())
+    }
+    fn companion_flags(&self) -> Option<std::collections::HashMap<String, bool>> {
+        if self.external_saves {
+            Some(self.mobile_flags.clone())
+        } else {
+            Self::read_companion_script_flags()
         }
     }
 
@@ -1570,6 +1628,20 @@ impl PokemonGame {
     #[cfg(not(target_arch = "wasm32"))]
     fn save_to_file(&mut self) {
         let save = self.build_save_data();
+        if self.external_saves {
+            let flags = self.overworld.script_flags();
+            let envelope = MobileSave {
+                version: 1,
+                data: save.clone(),
+                flags: flags.clone(),
+            };
+            if let Ok(json) = serde_json::to_string(&envelope) {
+                self.save_data = save;
+                self.mobile_flags = flags;
+                self.committed_save = Some(json);
+            }
+            return;
+        }
         let sram = export_sram(&save);
         // Explicit --save path wins (headless/driver runs); normal play
         // falls back to the default location next to the executable.
@@ -1592,6 +1664,20 @@ impl PokemonGame {
     #[cfg(target_arch = "wasm32")]
     fn save_to_file(&mut self) {
         let save = self.build_save_data();
+        if self.external_saves {
+            let flags = self.overworld.script_flags();
+            let envelope = MobileSave {
+                version: 1,
+                data: save.clone(),
+                flags: flags.clone(),
+            };
+            if let Ok(json) = serde_json::to_string(&envelope) {
+                self.save_data = save;
+                self.mobile_flags = flags;
+                self.committed_save = Some(json);
+            }
+            return;
+        }
         // Keep the SRAM round-trip on web for debug builds: this validates
         // that the in-memory state can be encoded into the canonical SRAM
         // layout (catches regressions identical to the native build).
@@ -1775,7 +1861,7 @@ impl PokemonGame {
                         // merge any runtime-only extras (companion sidecar)
                         // on top.
                         overworld.set_event_flags_bytes(&self.save_data.game_data.event_flags);
-                        if let Some(extras) = Self::read_companion_script_flags() {
+                        if let Some(extras) = self.companion_flags() {
                             overworld.set_script_flags(extras);
                         }
                         overworld.set_toggleable_object_flags(
@@ -2135,6 +2221,14 @@ impl PokemonGame {
     /// all sounds, reload the save from disk (unsaved progress is lost, as on
     /// hardware), and return to the title screen.
     fn soft_reset(&mut self) {
+        if self.external_saves {
+            let save = self.committed_save.clone();
+            if let Ok(mut replacement) = Self::new_mobile(self.state.config.version, save.as_deref()) {
+                replacement.handle_transition(GameScreen::TitleScreen);
+                *self = replacement;
+            }
+            return;
+        }
         if let Some(ref audio) = self.audio {
             audio.stop_all();
         }
@@ -2518,12 +2612,12 @@ impl PokemonGame {
         // capture AFTER the frame's logic ran, and do it here rather than
         // inside the update body so every frame lands — early returns,
         // real-time loop and synchronous step_frames bursts alike.
-        #[cfg(not(target_arch = "wasm32"))]
+        #[cfg(all(feature = "desktop", not(target_arch = "wasm32")))]
         if let Some(mut rec) = self.frame_recorder.take() {
             rec.capture(self);
             self.frame_recorder = Some(rec);
         }
-        #[cfg(not(target_arch = "wasm32"))]
+        #[cfg(all(feature = "desktop", not(target_arch = "wasm32")))]
         if let Some(mut rec) = self.video_recorder.take() {
             rec.capture(self);
             self.video_recorder = Some(rec);
@@ -2558,7 +2652,7 @@ impl PokemonGame {
         // returns so network progress never stalls.
         self.poll_link();
 
-        #[cfg(all(debug_assertions, not(target_arch = "wasm32")))]
+        #[cfg(all(feature = "desktop", debug_assertions, not(target_arch = "wasm32")))]
         {
             let changes = self
                 .asset_watcher
@@ -6214,7 +6308,7 @@ const BLACK_SCREEN_DURATION: u32 = 30;
 /// (`hSoftReset` starts at 16 in home/init.asm).
 const SOFT_RESET_HOLD_FRAMES: u8 = 16;
 
-#[cfg(not(target_arch = "wasm32"))]
+#[cfg(all(feature = "desktop", not(target_arch = "wasm32")))]
 impl GameLoop for PokemonGame {
     type Fb = FrameBuffer;
 

@@ -30,7 +30,7 @@ pub mod screen_fade;
 // glob re-export above so `pokered_renderer::mon_icon::load_mon_icon_tiles`
 // resolves the party icons against the real pret/pokered gfx files.
 pub mod mon_icon;
-#[cfg(feature = "gpu")]
+#[cfg(feature = "resource")]
 pub mod resource;
 
 #[cfg(test)]

@@ -6,13 +6,15 @@ edition.workspace = true
 [features]
 default = ["gpu"]
 framebuffer = []
-gpu = ["dep:pixels", "dep:winit", "dep:winit_input_helper", "dep:image", "dep:error-iter"]
+resource = ["dotzuki-renderer/resource"]
+embedded-assets = ["resource"]
+gpu = ["resource", "dotzuki-renderer/gpu","dep:pixels", "dep:winit", "dep:winit_input_helper", "dep:image", "dep:error-iter"]
 
 [dependencies]
 pokered-data = { path = "../pokered-data" }
 pokered-core = { path = "../pokered-core" }
-dotzuki-engine = { git = "https://github.com/liuyanghejerry/dotzuki", tag = "v0.6.0" }
-dotzuki-renderer = { git = "https://github.com/liuyanghejerry/dotzuki", tag = "v0.6.0" }
+dotzuki-engine = { git = "https://github.com/liuyanghejerry/dotzuki", tag = "v0.7.0" }
+dotzuki-renderer = { git = "https://github.com/liuyanghejerry/dotzuki", tag = "v0.7.0", default-features = false }
 log = "0.4"
 thiserror = { workspace = true }
 pixels = { version = "=0.15.0", optional = true }
