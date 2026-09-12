@@ -58,6 +58,8 @@ pub use menu::{
     top_level_bag_viewport_offset, redraw_top_level_party_icon,
     redraw_top_level_party_overlay_cursor, redraw_top_level_party_selection,
 };
+#[cfg(any(test, target_os = "none"))]
+pub use menu::redraw_mart_cursor;
 #[cfg(target_os = "none")]
 pub(crate) use overworld::draw_overworld_cached_with;
 pub use pc::draw_pc;

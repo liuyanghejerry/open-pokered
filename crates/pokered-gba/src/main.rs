@@ -16,6 +16,9 @@ use pokered_core::battle::{BattlePhase, IntroPhase, PokeballSlotStatus};
 use pokered_core::data::wild_data::GameVersion;
 use pokered_core::game_state::{GameScreen, Lang};
 use pokered_core::gamefreak_splash::SplashPhase;
+use pokered_core::items::shop::{
+    BuyMenuState, BuyResult, ConfirmChoice, MartPhase, SellMenuState, SellResult,
+};
 use pokered_core::oak_speech::{entrance_frames, OakSpeechPhase};
 use pokered_core::overworld::screen::WarpFadeState;
 use pokered_core::party_screen::{PartyScreenMode, PartyScreenPhase};
@@ -1845,6 +1848,197 @@ impl DiplomaVisualKey {
 }
 
 #[derive(Clone, Copy, PartialEq, Eq)]
+enum ShopPhaseKind {
+    MainMenu,
+    BuySelect,
+    BuyQuantity,
+    BuyConfirm,
+    BuyResult,
+    SellSelect,
+    SellQuantity,
+    SellConfirm,
+    SellResult,
+    Exiting,
+}
+
+#[derive(Clone, Copy, PartialEq, Eq)]
+struct ShopVisualKey {
+    phase: ShopPhaseKind,
+    visual_hash: u32,
+    cursor: Option<(u32, u32)>,
+    background: OverworldVisualKey,
+    language: Lang,
+}
+
+fn mart_list_scroll(cursor: usize, count: usize) -> usize {
+    const VISIBLE_ROWS: usize = 5;
+    cursor
+        .saturating_sub(VISIBLE_ROWS - 1)
+        .min(count.saturating_sub(VISIBLE_ROWS))
+}
+
+fn hash_buy_result(hash: &mut u32, result: &BuyResult) {
+    match result {
+        BuyResult::Success { total_cost } => {
+            hash_byte(hash, 0);
+            hash_u32(hash, *total_cost);
+        }
+        BuyResult::NotEnoughMoney => hash_byte(hash, 1),
+        BuyResult::BagFull => hash_byte(hash, 2),
+        BuyResult::InvalidItem => hash_byte(hash, 3),
+    }
+}
+
+fn hash_sell_result(hash: &mut u32, result: &SellResult) {
+    match result {
+        SellResult::Success { total_value } => {
+            hash_byte(hash, 0);
+            hash_u32(hash, *total_value);
+        }
+        SellResult::Unsellable => hash_byte(hash, 1),
+        SellResult::NotInBag => hash_byte(hash, 2),
+        SellResult::InvalidItem => hash_byte(hash, 3),
+    }
+}
+
+impl ShopVisualKey {
+    fn new(game: &PokemonGame) -> Option<Self> {
+        let GameScreen::Shop(mart) = &game.state.screen else {
+            return None;
+        };
+        let background = OverworldVisualKey::new(game)?;
+        let language = game.state.config.language;
+        let mut visual_hash = 0x811c_9dc5;
+        hash_u32(
+            &mut visual_hash,
+            game.save_data.game_data.player_money,
+        );
+        hash_u16(&mut visual_hash, mart.inventory.items().len() as u16);
+        for &item in mart.inventory.items() {
+            hash_byte(&mut visual_hash, item as u8);
+        }
+        hash_u16(
+            &mut visual_hash,
+            game.save_data.game_data.bag.count() as u16,
+        );
+        for index in 0..game.save_data.game_data.bag.count() {
+            if let Some((item, quantity)) = game.save_data.game_data.bag.get(index) {
+                hash_byte(&mut visual_hash, item as u8);
+                hash_byte(&mut visual_hash, quantity);
+            }
+        }
+
+        let (phase, cursor) = match &mart.phase {
+            MartPhase::MainMenu { cursor } => (
+                ShopPhaseKind::MainMenu,
+                Some((1, 2 + cursor.position() as u32 * 2)),
+            ),
+            MartPhase::Buy(BuyMenuState::SelectItem { cursor }) => {
+                let scroll = mart_list_scroll(*cursor, mart.inventory.items().len());
+                hash_u32(&mut visual_hash, scroll as u32);
+                (
+                    ShopPhaseKind::BuySelect,
+                    Some((2, 4 + (*cursor - scroll) as u32 * 2)),
+                )
+            }
+            MartPhase::Buy(BuyMenuState::Quantity {
+                item_index,
+                quantity,
+            }) => {
+                hash_u32(&mut visual_hash, *item_index as u32);
+                hash_byte(&mut visual_hash, *quantity);
+                (ShopPhaseKind::BuyQuantity, None)
+            }
+            MartPhase::Buy(BuyMenuState::Confirm {
+                item_index,
+                quantity,
+                selected,
+            }) => {
+                hash_u32(&mut visual_hash, *item_index as u32);
+                hash_byte(&mut visual_hash, *quantity);
+                let row_step = if language == Lang::Zh { 2 } else { 1 };
+                let row = match selected {
+                    ConfirmChoice::Yes => 0,
+                    ConfirmChoice::No => row_step,
+                };
+                (ShopPhaseKind::BuyConfirm, Some((15, 9 + row)))
+            }
+            MartPhase::Buy(BuyMenuState::Result {
+                dialogue,
+                return_to_list,
+            }) => {
+                hash_buy_result(&mut visual_hash, dialogue);
+                hash_byte(&mut visual_hash, *return_to_list as u8);
+                (ShopPhaseKind::BuyResult, None)
+            }
+            MartPhase::Sell(SellMenuState::SelectItem { cursor }) => {
+                let entries = game.save_data.game_data.bag.count() + 1;
+                let scroll = mart_list_scroll(*cursor, entries);
+                hash_u32(&mut visual_hash, scroll as u32);
+                (
+                    ShopPhaseKind::SellSelect,
+                    Some((2, 4 + (*cursor - scroll) as u32 * 2)),
+                )
+            }
+            MartPhase::Sell(SellMenuState::Quantity {
+                item_index,
+                quantity,
+                max_quantity,
+            }) => {
+                hash_u32(&mut visual_hash, *item_index as u32);
+                hash_byte(&mut visual_hash, *quantity);
+                hash_byte(&mut visual_hash, *max_quantity);
+                (ShopPhaseKind::SellQuantity, None)
+            }
+            MartPhase::Sell(SellMenuState::Confirm {
+                item_index,
+                quantity,
+                max_quantity,
+                selected,
+            }) => {
+                hash_u32(&mut visual_hash, *item_index as u32);
+                hash_byte(&mut visual_hash, *quantity);
+                hash_byte(&mut visual_hash, *max_quantity);
+                let row_step = if language == Lang::Zh { 2 } else { 1 };
+                let row = match selected {
+                    ConfirmChoice::Yes => 0,
+                    ConfirmChoice::No => row_step,
+                };
+                (ShopPhaseKind::SellConfirm, Some((15, 9 + row)))
+            }
+            MartPhase::Sell(SellMenuState::Result {
+                dialogue,
+                return_to_list,
+            }) => {
+                hash_sell_result(&mut visual_hash, dialogue);
+                hash_byte(&mut visual_hash, *return_to_list as u8);
+                (ShopPhaseKind::SellResult, None)
+            }
+            MartPhase::Exiting => (ShopPhaseKind::Exiting, None),
+        };
+        hash_byte(&mut visual_hash, phase as u8);
+
+        Some(Self {
+            phase,
+            visual_hash,
+            cursor,
+            background,
+            language,
+        })
+    }
+
+    fn cursor_change_from(&self, previous: &Self) -> Option<((u32, u32), (u32, u32))> {
+        (self.phase == previous.phase
+            && self.visual_hash == previous.visual_hash
+            && self.background == previous.background
+            && self.language == previous.language
+            && self.cursor != previous.cursor)
+            .then(|| previous.cursor.zip(self.cursor))
+            .flatten()
+    }
+}
+
+#[derive(Clone, Copy, PartialEq, Eq)]
 struct TownMapVisualKey {
     current_map: MapId,
     selected_map: MapId,
@@ -2229,6 +2423,7 @@ fn game_main() -> ! {
     let mut last_slots: Option<SlotsVisualKey> = None;
     let mut last_auxiliary_menu: Option<AuxiliaryMenuVisualKey> = None;
     let mut last_diploma: Option<DiplomaVisualKey> = None;
+    let mut last_shop: Option<ShopVisualKey> = None;
     let mut last_trainer_card: Option<TrainerCardVisualKey> = None;
     let mut last_town_map: Option<TownMapVisualKey> = None;
     let mut last_oak: Option<OakVisualKey> = None;
@@ -2416,6 +2611,11 @@ fn game_main() -> ! {
             .and_then(|(current, previous)| current.cursor_change_from(previous));
         let diploma = (game.state.screen == GameScreen::Diploma)
             .then(|| DiplomaVisualKey::new(game));
+        let shop = ShopVisualKey::new(game);
+        let shop_cursor_change = shop
+            .as_ref()
+            .zip(last_shop.as_ref())
+            .and_then(|(current, previous)| current.cursor_change_from(previous));
         let trainer_card = (game.state.screen == GameScreen::TrainerCard)
             .then(|| TrainerCardVisualKey::new(game));
         let town_map = (game.state.screen == GameScreen::TownMap)
@@ -2492,6 +2692,8 @@ fn game_main() -> ! {
             auxiliary_menu != last_auxiliary_menu
         } else if diploma.is_some() {
             diploma != last_diploma
+        } else if shop.is_some() {
+            shop != last_shop
         } else if trainer_card.is_some() {
             trainer_card != last_trainer_card
         } else if town_map.is_some() {
@@ -2602,6 +2804,13 @@ fn game_main() -> ! {
                 pokered_app::render::redraw_slots_bet_cursor(previous, current, &mut fb);
             } else if let Some((previous, current)) = auxiliary_menu_cursor_change {
                 pokered_app::render::redraw_elevator_cursor(previous, current, &mut fb);
+            } else if let Some((previous, current)) = shop_cursor_change {
+                pokered_app::render::redraw_mart_cursor(
+                    previous,
+                    current,
+                    &mut fb,
+                    game.state.config.language,
+                );
             } else if let Some(previous_map) = town_map_cursor_change {
                 pokered_app::render::redraw_town_map_cursor(
                     &game.town_map_screen,
@@ -2805,6 +3014,22 @@ fn game_main() -> ! {
                         },
                     ]
                 });
+            let shop_cursor_damage = shop_cursor_change.map(|(previous, current)| {
+                [
+                    FrameDamageRect {
+                        x: previous.0 * 8,
+                        y: previous.1 * 8,
+                        width: 8,
+                        height: 9,
+                    },
+                    FrameDamageRect {
+                        x: current.0 * 8,
+                        y: current.1 * 8,
+                        width: 8,
+                        height: 9,
+                    },
+                ]
+            });
             let party_overlay_cursor_damage = party_overlay_cursor_change.map(
                 |(previous, current, icon_changed)| {
                     (
@@ -2982,6 +3207,8 @@ fn game_main() -> ! {
                 Some(rects.as_slice())
             } else if let Some(rects) = auxiliary_menu_cursor_damage.as_ref() {
                 Some(rects.as_slice())
+            } else if let Some(rects) = shop_cursor_damage.as_ref() {
+                Some(rects.as_slice())
             } else if let Some(rects) = town_map_cursor_damage.as_ref() {
                 Some(rects.as_slice())
             } else if let Some(rects) = town_map_marker_damage.as_ref() {
@@ -3024,6 +3251,7 @@ fn game_main() -> ! {
         last_slots = slots;
         last_auxiliary_menu = auxiliary_menu;
         last_diploma = diploma;
+        last_shop = shop;
         last_trainer_card = trainer_card;
         last_town_map = town_map;
         last_oak = oak;

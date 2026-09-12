@@ -545,6 +545,23 @@ pub fn draw_mart(state: &MartState, player_money: u32, bag_items: &[(pokered_dat
     }
 }
 
+/// Repaint only the changed `▶` cells of an already-rendered mart screen.
+#[cfg(any(test, target_os = "none"))]
+pub fn redraw_mart_cursor(
+    previous: (u32, u32),
+    current: (u32, u32),
+    fb: &mut FrameBuffer,
+    lang: Lang,
+) {
+    let mut painter = FrameBufferPainter::new(fb).with_lang(lang);
+    painter.draw_pixel_rect(previous.0 * 8, previous.1 * 8, 8, 9, pokered_ui::Rgba::INK_WHITE);
+    painter.draw_glyph(
+        TilePos::new(current.0, current.1),
+        '▶',
+        pokered_ui::Rgba::INK_BLACK,
+    );
+}
+
 fn buy_result_lines(result: &BuyResult, is_zh: bool) -> Vec<&'static str> {
     if is_zh {
         match result {
@@ -1157,6 +1174,177 @@ mod tests {
             let mut expected = FrameBuffer::new(config, Rgba::BLACK);
             draw_bag(&state, &mut expected, language);
             assert_framebuffers_equal(&actual, &expected);
+        }
+    }
+
+    fn mart_state(stock: &[ItemId], phase: MartPhase) -> MartState {
+        let mut state = MartState::new(pokered_core::items::shop::ShopInventory::new(
+            stock.to_vec(),
+        ));
+        state.phase = phase;
+        state
+    }
+
+    fn assert_mart_cursor_repaint(
+        previous: MartState,
+        current: MartState,
+        previous_pos: (u32, u32),
+        current_pos: (u32, u32),
+        bag: &[(ItemId, u32)],
+        language: Lang,
+    ) {
+        let config = dotzuki_engine::render_config::RenderConfig::new(160, 144);
+        let mut actual = FrameBuffer::new(config, Rgba::BLACK);
+        draw_mart(&previous, 12_345, bag, &mut actual, language);
+        redraw_mart_cursor(previous_pos, current_pos, &mut actual, language);
+
+        let mut expected = FrameBuffer::new(config, Rgba::BLACK);
+        draw_mart(&current, 12_345, bag, &mut expected, language);
+        assert_framebuffers_equal(&actual, &expected);
+    }
+
+    #[test]
+    fn mart_cursor_repaint_matches_fresh_draws_for_all_local_transitions() {
+        use pokered_core::items::shop::{ConfirmChoice, MartTopChoice, ShopInventory};
+
+        let stock = [
+            ItemId::PokeBall,
+            ItemId::Potion,
+            ItemId::Antidote,
+            ItemId::PokeBall,
+            ItemId::Potion,
+        ];
+        let bag = [
+            (ItemId::Potion, 3),
+            (ItemId::Antidote, 2),
+            (ItemId::PokeBall, 12),
+        ];
+
+        for language in [Lang::En, Lang::Zh] {
+            let top_choices = [
+                MartTopChoice::Buy,
+                MartTopChoice::Sell,
+                MartTopChoice::Quit,
+            ];
+            for (previous_cursor, previous_choice) in top_choices.iter().enumerate() {
+                for (current_cursor, current_choice) in top_choices.iter().enumerate() {
+                    if previous_cursor == current_cursor {
+                        continue;
+                    }
+                    assert_mart_cursor_repaint(
+                        mart_state(
+                            &stock,
+                            MartPhase::MainMenu {
+                                cursor: *previous_choice,
+                            },
+                        ),
+                        mart_state(
+                            &stock,
+                            MartPhase::MainMenu {
+                                cursor: *current_choice,
+                            },
+                        ),
+                        (1, 2 + previous_cursor as u32 * 2),
+                        (1, 2 + current_cursor as u32 * 2),
+                        &bag,
+                        language,
+                    );
+                }
+            }
+
+            for previous_cursor in 0..stock.len() {
+                for current_cursor in 0..stock.len() {
+                    if previous_cursor == current_cursor {
+                        continue;
+                    }
+                    assert_mart_cursor_repaint(
+                        mart_state(
+                            &stock,
+                            MartPhase::Buy(BuyMenuState::SelectItem {
+                                cursor: previous_cursor,
+                            }),
+                        ),
+                        mart_state(
+                            &stock,
+                            MartPhase::Buy(BuyMenuState::SelectItem {
+                                cursor: current_cursor,
+                            }),
+                        ),
+                        (2, 4 + previous_cursor as u32 * 2),
+                        (2, 4 + current_cursor as u32 * 2),
+                        &bag,
+                        language,
+                    );
+                }
+            }
+
+            // The sell list has one extra CANCEL row after the bag items.
+            for previous_cursor in 0..=bag.len() {
+                for current_cursor in 0..=bag.len() {
+                    if previous_cursor == current_cursor {
+                        continue;
+                    }
+                    assert_mart_cursor_repaint(
+                        mart_state(
+                            &stock,
+                            MartPhase::Sell(SellMenuState::SelectItem {
+                                cursor: previous_cursor,
+                            }),
+                        ),
+                        mart_state(
+                            &stock,
+                            MartPhase::Sell(SellMenuState::SelectItem {
+                                cursor: current_cursor,
+                            }),
+                        ),
+                        (2, 4 + previous_cursor as u32 * 2),
+                        (2, 4 + current_cursor as u32 * 2),
+                        &bag,
+                        language,
+                    );
+                }
+            }
+
+            let confirm_y = |choice| match (language, choice) {
+                (_, ConfirmChoice::Yes) => 9,
+                (Lang::En, ConfirmChoice::No) => 10,
+                (Lang::Zh, ConfirmChoice::No) => 11,
+            };
+            for sell in [false, true] {
+                for (previous, current) in [
+                    (ConfirmChoice::Yes, ConfirmChoice::No),
+                    (ConfirmChoice::No, ConfirmChoice::Yes),
+                ] {
+                    let phase = |selected| {
+                        if sell {
+                            MartPhase::Sell(SellMenuState::Confirm {
+                                item_index: 0,
+                                quantity: 2,
+                                max_quantity: 3,
+                                selected,
+                            })
+                        } else {
+                            MartPhase::Buy(BuyMenuState::Confirm {
+                                item_index: 0,
+                                quantity: 2,
+                                selected,
+                            })
+                        }
+                    };
+                    let mut previous_state = MartState::new(ShopInventory::new(stock.to_vec()));
+                    previous_state.phase = phase(previous);
+                    let mut current_state = MartState::new(ShopInventory::new(stock.to_vec()));
+                    current_state.phase = phase(current);
+                    assert_mart_cursor_repaint(
+                        previous_state,
+                        current_state,
+                        (15, confirm_y(previous)),
+                        (15, confirm_y(current)),
+                        &bag,
+                        language,
+                    );
+                }
+            }
         }
     }
 }
