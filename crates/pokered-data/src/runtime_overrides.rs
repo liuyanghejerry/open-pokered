@@ -36,6 +36,21 @@ fn overrides<K: Eq + Hash, T>(
     slot.get_or_init(|| Mutex::new(HashMap::default()))
 }
 
+/// Query an override table without creating it. Normal game builds never
+/// install editor overrides, so baseline data reads should remain pure and
+/// allocation-free instead of initializing an empty global map.
+fn existing_override<K, Q, T>(
+    slot: &OnceLock<Mutex<HashMap<K, T>>>,
+    key: &Q,
+) -> Option<T>
+where
+    K: Eq + Hash,
+    Q: Hash + hashbrown::Equivalent<K> + ?Sized,
+    T: Copy,
+{
+    slot.get()?.lock().unwrap().get(key).copied()
+}
+
 // ── Override tables ───────────────────────────────────────────────────────
 
 /// Map directory name → overridden `map.json` (static ref leaked once).
@@ -55,36 +70,28 @@ static POKEMON_OVERRIDES: OnceLock<Mutex<HashMap<Species, &'static BaseStats>>> 
 // ── Query hooks (called by the family query functions, before the baseline) ──
 
 pub(crate) fn map_override(name: &str) -> Option<&'static MapJson> {
-    overrides(&MAP_OVERRIDES).lock().unwrap().get(name).copied()
+    existing_override(&MAP_OVERRIDES, name)
 }
 
 pub(crate) fn blk_override(name: &str) -> Option<&'static [u8]> {
-    overrides(&BLK_OVERRIDES).lock().unwrap().get(name).copied()
+    existing_override(&BLK_OVERRIDES, name)
 }
 
 pub(crate) fn trainer_override(class: TrainerClass) -> Option<&'static TrainerClassData> {
     let name = crate::trainer_data::trainer_class_name(class);
-    overrides(&TRAINER_OVERRIDES)
-        .lock()
-        .unwrap()
-        .get(name)
-        .copied()
+    existing_override(&TRAINER_OVERRIDES, name)
 }
 
 pub(crate) fn move_override(id: MoveId) -> Option<&'static MoveData> {
-    overrides(&MOVE_OVERRIDES).lock().unwrap().get(&id).copied()
+    existing_override(&MOVE_OVERRIDES, &id)
 }
 
 pub(crate) fn item_override(id: ItemId) -> Option<&'static ItemData> {
-    overrides(&ITEM_OVERRIDES).lock().unwrap().get(&id).copied()
+    existing_override(&ITEM_OVERRIDES, &id)
 }
 
 pub(crate) fn base_stats_override(species: Species) -> Option<&'static BaseStats> {
-    overrides(&POKEMON_OVERRIDES)
-        .lock()
-        .unwrap()
-        .get(&species)
-        .copied()
+    existing_override(&POKEMON_OVERRIDES, &species)
 }
 
 // ── Injection API (wasm bridge / tests) ───────────────────────────────────
@@ -385,6 +392,13 @@ mod tests {
     static TEST_LOCK: Mutex<()> = Mutex::new(());
     fn lock() -> std::sync::MutexGuard<'static, ()> {
         TEST_LOCK.lock().unwrap()
+    }
+
+    #[test]
+    fn baseline_lookup_does_not_initialize_an_override_table() {
+        let slot = OnceLock::new();
+        assert_eq!(existing_override::<u8, u8, u8>(&slot, &1), None);
+        assert!(slot.get().is_none());
     }
 
     #[test]

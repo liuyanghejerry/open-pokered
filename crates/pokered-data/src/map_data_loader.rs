@@ -51,6 +51,20 @@ fn build_name_to_id() -> HashMap<String, MapId> {
     map
 }
 
+/// Resolve the canonical map directory name without allocating when the
+/// build-time embedded table is available. Filesystem builds retain the enum
+/// debug-name fallback used by the existing loader.
+fn map_name(map_id: MapId) -> Cow<'static, str> {
+    #[cfg(feature = "embedded-map-data")]
+    if let Some((name, _)) = MAP_TABLE
+        .iter()
+        .find(|(_, source)| source.id == map_id as u8)
+    {
+        return Cow::Borrowed(*name);
+    }
+    Cow::Owned(format!("{:?}", map_id))
+}
+
 /// Keeps map metadata alive only while a consumer holds it. Embedded backends
 /// may evict their cached entry without invalidating a live handle.
 #[derive(Clone)]
@@ -69,7 +83,7 @@ impl core::ops::Deref for MapJsonHandle {
 }
 
 pub fn get_map_json(map_id: MapId) -> Option<MapJsonHandle> {
-    let name = format!("{:?}", map_id);
+    let name = map_name(map_id);
     // Editor-injected runtime override shadows the baseline (embedded or disk).
     if let Some(ov) = crate::runtime_overrides::map_override(&name) {
         return Some(MapJsonHandle::Borrowed(ov));
@@ -80,12 +94,15 @@ pub fn get_map_json(map_id: MapId) -> Option<MapJsonHandle> {
     }
     #[cfg(not(target_os = "none"))]
     {
-        get_store().maps.get(&name).map(MapJsonHandle::Borrowed)
+        get_store()
+            .maps
+            .get(name.as_ref())
+            .map(MapJsonHandle::Borrowed)
     }
 }
 
 pub fn get_block_data(map_id: MapId) -> &'static [u8] {
-    let name = format!("{:?}", map_id);
+    let name = map_name(map_id);
     // Editor-injected runtime override shadows the baseline (embedded or disk).
     if let Some(ov) = crate::runtime_overrides::blk_override(&name) {
         return ov;
@@ -98,7 +115,7 @@ pub fn get_block_data(map_id: MapId) -> &'static [u8] {
     {
         get_store()
             .blocks
-            .get(&name)
+            .get(name.as_ref())
             .map(|v| v.as_slice())
             .unwrap_or(&[])
     }
@@ -980,6 +997,17 @@ fn find_maps_directory() -> Option<std::path::PathBuf> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[cfg(feature = "embedded-map-data")]
+    #[test]
+    fn embedded_map_names_borrow_the_generated_catalog() {
+        for raw in 0..NUM_MAPS as u8 {
+            let id = MapId::from_u8(raw).expect("all map ids are defined");
+            let name = map_name(id);
+            assert!(matches!(name, Cow::Borrowed(_)), "{id:?} allocated its name");
+            assert_eq!(name, format!("{id:?}"));
+        }
+    }
 
     #[test]
     fn test_name_to_map_id_roundtrip() {
