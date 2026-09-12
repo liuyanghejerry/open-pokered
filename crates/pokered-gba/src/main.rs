@@ -2408,6 +2408,9 @@ fn game_main() -> ! {
     let mut frame: u32 = 0;
     let mut last_clock = profile_now();
     let mut update_accumulator = FRAME_TICKS;
+    let mut last_black_screen = false;
+    let mut last_trade: Option<pokered_app::render::TradeVisualKey> = None;
+    let mut last_takeover_active = false;
     let mut last_static_splash: Option<SplashPhase> = None;
     let mut last_language_select: Option<Lang> = None;
     let mut last_title: Option<TitleVisualKey> = None;
@@ -2505,6 +2508,18 @@ fn game_main() -> ! {
         }
         #[cfg(feature = "profiling")]
         let mark2 = profile_now();
+        let black_screen = game.black_screen_frames > 0;
+        let trade = game
+            .trade_anim
+            .as_ref()
+            .map(pokered_app::render::trade_visual_key);
+        // These cutscenes own the full framebuffer. Until they receive their
+        // own exact visual keys, render every display frame so the ordinary
+        // screen cache can never freeze them.
+        let uncached_takeover = game.evolution_anim.is_some()
+            || game.hof_ceremony.is_some()
+            || game.credits.is_some();
+        let takeover_active = black_screen || trade.is_some() || uncached_takeover;
         // The copyright, setup, and post-delay splash phases are completely
         // static. Keep the already-presented page while only advancing logic.
         let static_splash = if game.state.screen == GameScreen::GameFreakSplash
@@ -2660,7 +2675,17 @@ fn game_main() -> ! {
             .as_ref()
             .zip(last_battle.as_ref())
             .and_then(|(current, previous)| current.yes_no_cursor_change_from(previous));
-        let redraw = if static_splash.is_some() {
+        let redraw = if black_screen {
+            !last_black_screen
+        } else if trade.is_some() {
+            trade != last_trade
+        } else if uncached_takeover {
+            true
+        } else if last_takeover_active {
+            // The takeover replaced the ordinary screen contents. Restore
+            // that screen even when its own visual state did not change.
+            true
+        } else if static_splash.is_some() {
             static_splash != last_static_splash
         } else if language_select.is_some() {
             language_select != last_language_select
@@ -3236,6 +3261,9 @@ fn game_main() -> ! {
         } else {
             presenter.sync_hidden(&fb);
         }
+        last_black_screen = black_screen;
+        last_trade = trade;
+        last_takeover_active = takeover_active;
         last_static_splash = static_splash;
         last_language_select = language_select;
         last_title = title;

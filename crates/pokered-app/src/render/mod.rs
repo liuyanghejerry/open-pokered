@@ -76,6 +76,8 @@ pub use town_map::draw_town_map;
 #[cfg(any(test, target_os = "none"))]
 pub use town_map::{redraw_town_map_cursor, redraw_town_map_marker};
 pub use trade::draw_trade;
+#[cfg(any(test, target_os = "none"))]
+pub use trade::{trade_visual_key, TradeVisualKey};
 pub use trainer_card::draw_trainer_card;
 
 use pokered_renderer::embedded_font::{box_tiles, draw_box_tile, fill_tile};

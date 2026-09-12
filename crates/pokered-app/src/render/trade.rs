@@ -45,6 +45,55 @@ fn trade_subanim_id(kind: TradeBallSubAnim) -> usize {
     }
 }
 
+/// Compact description of every value consumed by [`draw_trade`].
+///
+/// Consecutive logic frames often only advance an invisible hold counter. On
+/// GBA, equality lets the frontend keep the already-rendered framebuffer for
+/// those frames without slowing the 60 Hz cutscene clock.
+#[cfg(any(test, target_os = "none"))]
+#[derive(Clone, Copy, PartialEq, Eq)]
+pub struct TradeVisualKey {
+    cable_visible: bool,
+    visible_mon: Option<pokered_data::species::Species>,
+    mon_panel_offset_x: i32,
+    ball_pos: Option<(i32, i32)>,
+    ball_sub_anim: Option<(TradeBallSubAnim, u8)>,
+    text_hash: u32,
+    text_box_offset_x: i32,
+    is_zh: bool,
+}
+
+#[cfg(any(test, target_os = "none"))]
+pub fn trade_visual_key(anim: &TradeAnim) -> TradeVisualKey {
+    let mut text_hash = 0x811c_9dc5u32;
+    let mut hash_byte = |byte: u8| {
+        text_hash = (text_hash ^ byte as u32).wrapping_mul(0x0100_0193);
+    };
+    if let Some((line1, line2)) = anim.text_lines() {
+        hash_byte(1);
+        for byte in line1.bytes() {
+            hash_byte(byte);
+        }
+        hash_byte(0xff);
+        for byte in line2.bytes() {
+            hash_byte(byte);
+        }
+    } else {
+        hash_byte(0);
+    }
+
+    TradeVisualKey {
+        cable_visible: anim.cable_visible(),
+        visible_mon: anim.visible_mon(),
+        mon_panel_offset_x: anim.mon_panel_offset_x(),
+        ball_pos: anim.ball_pos(),
+        ball_sub_anim: anim.ball_sub_anim(),
+        text_hash,
+        text_box_offset_x: anim.text_box_offset_x(),
+        is_zh: anim.is_zh,
+    }
+}
+
 /// Draw the active trade cutscene to the 160x144 framebuffer.
 pub fn draw_trade(anim: &TradeAnim, resources: &mut Option<ResourceManager>, fb: &mut FrameBuffer) {
     fb.clear(Rgba::WHITE);
@@ -268,6 +317,20 @@ mod tests {
         count
     }
 
+    fn assert_framebuffers_equal(actual: &FrameBuffer, expected: &FrameBuffer) {
+        assert_eq!(actual.width(), expected.width());
+        assert_eq!(actual.height(), expected.height());
+        for y in 0..actual.height() {
+            for x in 0..actual.width() {
+                assert_eq!(
+                    actual.get_pixel(x, y),
+                    expected.get_pixel(x, y),
+                    "framebuffer mismatch at ({x}, {y})",
+                );
+            }
+        }
+    }
+
     /// gfx/ lives at gfx; skip asset-backed checks when it
     /// has not been fetched (`scripts/fetch-gfx.sh`).
     fn test_resources() -> Option<ResourceManager> {
@@ -317,6 +380,41 @@ mod tests {
             assert!(ticks < 2000, "animation must terminate");
         }
         assert_eq!(seen.len(), 15, "all visible phases rendered");
+    }
+
+    #[test]
+    fn visual_key_only_reuses_pixel_identical_trade_frames() {
+        for is_zh in [false, true] {
+            let mut resources = test_resources();
+            let mut anim = TradeAnim::new(
+                Species::Cubone,
+                Species::Machoke,
+                "RED".to_string(),
+                is_zh,
+            );
+            let mut previous: Option<(TradeVisualKey, FrameBuffer)> = None;
+            let mut reused = 0;
+
+            loop {
+                let key = trade_visual_key(&anim);
+                let mut current = new_fb();
+                draw_trade(&anim, &mut resources, &mut current);
+                if let Some((previous_key, previous_frame)) = previous.as_ref() {
+                    if *previous_key == key {
+                        assert_framebuffers_equal(previous_frame, &current);
+                        reused += 1;
+                    }
+                }
+                previous = Some((key, current));
+
+                if anim.tick() {
+                    break;
+                }
+                anim.pending_sfx.clear();
+            }
+
+            assert!(reused > 300, "expected long static holds to be reusable");
+        }
     }
 
     /// The slide-in moves the mon panel from off-screen-right to its rest
@@ -399,4 +497,3 @@ mod tests {
         assert!(ink_pixels(&fb) > 50);
     }
 }
-
