@@ -185,11 +185,11 @@ pub struct WildMonJson {
 // &StaticMapJson)] = &[...]` literal — fully placed in `.rodata` with zero
 // runtime allocation.
 //
-// At init time, the embedded loader walks `MAP_TABLE` and uses the
-// `From<&'static StaticMapJson> for MapJson` cascade defined below to
-// materialize owned `MapJson` values into the existing
-// `HashMap<String, MapJson>` store. This preserves the existing public API
-// (`get_map_json -> Option<&'static MapJson>`) without disturbing any caller.
+// The hosted embedded loader materializes the table into its stable store.
+// The GBA loader instead converts entries on demand with the `From` cascade
+// below and retains only four recent maps. The public `MapJsonHandle` keeps
+// a borrowed hosted entry or a shared embedded entry alive for its consumer;
+// eviction never requires leaking metadata or invalidating live handles.
 //
 // Types whose runtime representation contains no `String`/`Vec`/`HashMap`
 // fields (currently `SignJson`) reuse the owned type directly inside `&'static

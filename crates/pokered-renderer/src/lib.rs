@@ -31,7 +31,12 @@ use dotzuki_renderer::palette::GbColor;
 // is 5,760 bytes of packed 2bpp instead of 92,160 bytes of RGBA.
 // The engine's RGBA `dotzuki_renderer::FrameBuffer` stays available for the
 // true-color paths (e.g. the `--demo` tileset demo).
+#[cfg(not(all(target_os = "none", target_arch = "arm")))]
 pub type FrameBuffer = dotzuki_renderer::RgbaIndexedFrameBuffer<GbColor>;
+// The application chooses its hardware staging format explicitly. The generic
+// engine types keep the same storage and APIs on every target.
+#[cfg(all(target_os = "none", target_arch = "arm"))]
+pub type FrameBuffer = dotzuki_renderer::LinearRgbaIndexedFrameBuffer<GbColor>;
 
 // Internal std::sync shims (see pokered-data's twin).
 pub(crate) mod sync_compat;

@@ -1666,6 +1666,17 @@ fn generate_ui_layouts(manifest_dir: &Path, out_dir: &str) {
         // The v2 registry always carries the element-format JSON.
         gui_v2_literals.push((stem.clone(), compiled_json.clone()));
 
+        // Static hot-path layouts come from the same expanded GUI document as
+        // the editor JSON. Unsupported features fail the build at their source.
+        if matches!(stem.as_str(), "battle_main" | "battle_safari" | "options" | "save") {
+            let expression = dotzuki_engine_dsl::static_ui::compile(&compiled_json)
+                .unwrap_or_else(|e| panic!("{}: {e}", gui_path.display()));
+            out.push_str(&format!(
+                "pub static {}_STATIC_LAYOUT: dotzuki_renderer::layout_engine::static_layout::Layout = {};\n",
+                stem.to_uppercase(), expression
+            ));
+        }
+
         // `get_layout_json` keeps v1 precedence: only register the .gui there
         // for screens that have no v1 (variants) JSON.
         if !json_literals.iter().any(|(s, _)| s == &stem) {

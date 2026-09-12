@@ -1,0 +1,2981 @@
+//! Retained frame state and incremental rendering policy, shared by frontends.
+//! Hardware code receives only reuse/full/damage results; game state keys and
+//! UI geometry stay with the application renderer.
+use super::{FrameDamageRect, OverworldBackgroundCache};
+use crate::alloc_prelude::*;
+use crate::game::PokemonGame;
+use pokered_core::bag_screen::BagPhase;
+use pokered_core::battle::state::StatusCondition;
+use pokered_core::battle::{BattlePhase, IntroPhase, PokeballSlotStatus};
+use pokered_core::data::wild_data::GameVersion;
+use pokered_core::game_state::{GameScreen, Lang};
+use pokered_core::gamefreak_splash::SplashPhase;
+use pokered_core::items::shop::{
+    BuyMenuState, BuyResult, ConfirmChoice, MartPhase, SellMenuState, SellResult,
+};
+use pokered_core::oak_speech::{entrance_frames, OakSpeechPhase};
+use pokered_core::party_screen::{PartyScreenMode, PartyScreenPhase};
+use pokered_core::pc_screen::{ItemListMode, MonListMode, PcPhase};
+use pokered_core::pokedex_screen::PokedexScreenMode;
+use pokered_core::save_menu::{SavePhase, YesNoChoice};
+use pokered_core::slots_screen::SlotsPhase;
+use pokered_core::stats_screen::StatsPage;
+use pokered_core::title_screen::{TitlePhase, TitleScreenState};
+use pokered_core::town_map_screen::TownMapMode;
+use pokered_data::map_names::{map_name_str, map_name_str_zh};
+use pokered_data::maps::MapId;
+use pokered_data::species::Species;
+use pokered_renderer::embedded_font::measure_text;
+use pokered_renderer::FrameBuffer;
+use pokered_ui::TilePos;
+
+#[derive(Clone, Copy, PartialEq, Eq)]
+struct TitleVisualKey {
+    phase: TitlePhase,
+    scroll_y: i32,
+    current_mon: u8,
+    player_visible: bool,
+    logo_visible: bool,
+    version_text_visible: bool,
+    version_scroll_progress: u32,
+    mon_scroll_offset: i32,
+    effect_frame: u32,
+}
+
+impl TitleVisualKey {
+    fn new(state: &TitleScreenState) -> Self {
+        Self {
+            phase: state.phase,
+            scroll_y: state.scroll_y,
+            current_mon: state.current_mon as u8,
+            player_visible: state.player_visible,
+            logo_visible: state.logo_visible,
+            version_text_visible: state.version_text_visible,
+            version_scroll_progress: state.version_scroll_progress.to_bits(),
+            mon_scroll_offset: state.mon_scroll_offset,
+            effect_frame: if state.phase == TitlePhase::FadeOut {
+                state.frame_counter
+            } else {
+                0
+            },
+        }
+    }
+}
+
+#[derive(Clone, PartialEq, Eq)]
+struct OakVisualKey {
+    phase: OakSpeechPhase,
+    entrance_step: u16,
+    flashing: bool,
+}
+
+impl OakVisualKey {
+    fn new(game: &PokemonGame) -> Option<Self> {
+        let state = &game.oak_speech;
+        // Naming input exposes more visual state than OakSpeechPhase. Keep
+        // that uncommon interactive screen on the conservative redraw path.
+        if state.naming_screen.is_some() {
+            return None;
+        }
+
+        let entrance = entrance_frames(&state.phase);
+        let frame = state.phase_frame.min(entrance);
+        let entrance_step = match state.phase {
+            OakSpeechPhase::Greeting { .. } | OakSpeechPhase::IntroduceRival { .. } => frame / 10,
+            OakSpeechPhase::FinalSpeech { .. } => frame / 8,
+            OakSpeechPhase::ShowNidorino { .. } | OakSpeechPhase::IntroducePlayer { .. } => frame,
+            _ => 0,
+        };
+        Some(Self {
+            phase: state.phase.clone(),
+            entrance_step,
+            flashing: state.is_flashing(),
+        })
+    }
+}
+
+#[derive(Clone, Copy, PartialEq, Eq)]
+struct MainMenuVisualKey {
+    cursor: usize,
+    continue_info: bool,
+    language: Lang,
+    item_count: usize,
+}
+
+impl MainMenuVisualKey {
+    fn new(game: &PokemonGame) -> Self {
+        Self {
+            cursor: game.main_menu.cursor,
+            continue_info: game.main_menu.continue_info_phase.is_some(),
+            language: game.state.config.language,
+            item_count: game.main_menu.item_count(),
+        }
+    }
+
+    fn cursor_change_from(&self, previous: &Self) -> Option<(usize, usize)> {
+        if self.cursor == previous.cursor || self.continue_info {
+            return None;
+        }
+        let mut current_without_cursor = *self;
+        current_without_cursor.cursor = 0;
+        let mut previous_without_cursor = *previous;
+        previous_without_cursor.cursor = 0;
+        (current_without_cursor == previous_without_cursor)
+            .then_some((previous.cursor, self.cursor))
+    }
+}
+
+#[derive(Clone, Copy, PartialEq, Eq)]
+enum ReusableBattlePhase {
+    Intro(IntroPhase),
+    PlayerMenu { row: usize, col: usize },
+    SafariMenu { row: usize, col: usize },
+    MoveSelect { cursor: usize },
+    ItemMoveSelect { cursor: usize },
+    BagSelect { cursor: usize },
+    ItemTargetSelect { cursor: usize },
+    ShowingText { current: usize },
+    PartySelect { cursor: usize },
+    ShiftSwitchSelect { cursor: usize },
+    PlayerFaintSwitch { cursor: usize },
+    PartySubMenu { selected: usize, cursor: usize },
+    PartyStats { pokemon: usize },
+    ShiftPrompt { yes: bool },
+    LearnMoveAsk { yes: bool },
+    LearnMoveChoose { cursor: usize },
+    LearnMoveGiveUp { yes: bool },
+}
+
+#[derive(Clone, Copy, PartialEq, Eq)]
+struct BattleVisualKey {
+    phase: ReusableBattlePhase,
+    language: Lang,
+    enemy_species: Species,
+    enemy_level: u8,
+    enemy_hp: u16,
+    enemy_max_hp: u16,
+    enemy_status: StatusCondition,
+    player_species: Species,
+    player_level: u8,
+    player_hp: u16,
+    player_max_hp: u16,
+    player_status: StatusCondition,
+    player_balls: [PokeballSlotStatus; 6],
+    enemy_balls: [PokeballSlotStatus; 6],
+    ball_visibility: u8,
+    safari_balls: u8,
+    party_len: u8,
+    party_hash: u32,
+    battle_status3: [u8; 2],
+    message_hash: u32,
+}
+
+#[derive(Clone, Copy)]
+enum BattlePartyMenuChange {
+    Cursor {
+        previous_row: usize,
+        current_row: usize,
+    },
+    Viewport {
+        previous_start: usize,
+        current_start: usize,
+    },
+}
+
+impl BattleVisualKey {
+    /// Return a compact key only when neither the core nor renderer has a
+    /// visual state machine still advancing. Unsupported phases deliberately
+    /// redraw every frame.
+    fn new(game: &PokemonGame) -> Option<Self> {
+        let battle = &game.battle;
+        if !game.battle_vfx.is_frame_stable() || battle.hp_bar_anim.is_active() {
+            return None;
+        }
+
+        let phase = match &battle.phase {
+            BattlePhase::Intro {
+                phase:
+                    phase @ (IntroPhase::WildReveal
+                    | IntroPhase::GhostCantID
+                    | IntroPhase::TrainerReveal
+                    | IntroPhase::TrainerSendOut),
+                wait_frames: 0,
+            } => ReusableBattlePhase::Intro(*phase),
+            BattlePhase::PlayerMenu if battle.is_safari => ReusableBattlePhase::SafariMenu {
+                row: battle.safari_menu.row(),
+                col: battle.safari_menu.col(),
+            },
+            BattlePhase::PlayerMenu => ReusableBattlePhase::PlayerMenu {
+                row: battle.battle_menu.row(),
+                col: battle.battle_menu.col(),
+            },
+            BattlePhase::MoveSelect => ReusableBattlePhase::MoveSelect {
+                cursor: battle.move_menu.as_ref()?.cursor(),
+            },
+            BattlePhase::ItemMoveSelect { .. } => ReusableBattlePhase::ItemMoveSelect {
+                cursor: battle.move_menu.as_ref()?.cursor(),
+            },
+            BattlePhase::BagSelect => ReusableBattlePhase::BagSelect {
+                cursor: battle.bag_menu.as_ref()?.cursor(),
+            },
+            BattlePhase::ItemTargetSelect { .. } => ReusableBattlePhase::ItemTargetSelect {
+                cursor: battle.party_cursor,
+            },
+            BattlePhase::ShowingText {
+                current,
+                wait_frames: 0,
+                ..
+            } => ReusableBattlePhase::ShowingText { current: *current },
+            BattlePhase::PartySelect => ReusableBattlePhase::PartySelect {
+                cursor: battle.party_cursor,
+            },
+            BattlePhase::ShiftSwitchSelect => ReusableBattlePhase::ShiftSwitchSelect {
+                cursor: battle.party_cursor,
+            },
+            BattlePhase::PlayerFaintSwitch => ReusableBattlePhase::PlayerFaintSwitch {
+                cursor: battle.party_cursor,
+            },
+            BattlePhase::PartySubMenu { selected_index } => ReusableBattlePhase::PartySubMenu {
+                selected: *selected_index,
+                cursor: battle.party_submenu.as_ref()?.cursor(),
+            },
+            BattlePhase::PartyStats { pokemon_index } => ReusableBattlePhase::PartyStats {
+                pokemon: *pokemon_index,
+            },
+            BattlePhase::ShiftPrompt => ReusableBattlePhase::ShiftPrompt {
+                yes: battle.shift_prompt_yes,
+            },
+            BattlePhase::LearnMoveAsk { .. } => ReusableBattlePhase::LearnMoveAsk {
+                yes: battle.shift_prompt_yes,
+            },
+            BattlePhase::LearnMoveChoose { cursor, .. } => {
+                ReusableBattlePhase::LearnMoveChoose { cursor: *cursor }
+            }
+            BattlePhase::LearnMoveGiveUpConfirm { .. } => ReusableBattlePhase::LearnMoveGiveUp {
+                yes: battle.shift_prompt_yes,
+            },
+            _ => return None,
+        };
+
+        let mut message_hash = 0x811c_9dc5;
+        if let Some(message) = battle.current_message.as_deref() {
+            hash_byte(&mut message_hash, 1);
+            for &byte in message.as_bytes() {
+                hash_byte(&mut message_hash, byte);
+            }
+        } else {
+            hash_byte(&mut message_hash, 0);
+        }
+        let battle_status3 = battle.battle_state.as_ref().map_or([0, 0], |state| {
+            [state.player.battle_status3, state.enemy.battle_status3]
+        });
+        let mut party_hash = 0x811c_9dc5;
+        let party_len = if matches!(
+            phase,
+            ReusableBattlePhase::PartySelect { .. }
+                | ReusableBattlePhase::ShiftSwitchSelect { .. }
+                | ReusableBattlePhase::PlayerFaintSwitch { .. }
+                | ReusableBattlePhase::ItemTargetSelect { .. }
+        ) {
+            battle.battle_state.as_ref().map_or(0, |state| {
+                for mon in state.player.party.iter() {
+                    hash_byte(&mut party_hash, mon.species as u8);
+                    for byte in mon.nickname {
+                        hash_byte(&mut party_hash, byte);
+                    }
+                    hash_u16(&mut party_hash, mon.hp);
+                    hash_u16(&mut party_hash, mon.max_hp);
+                }
+                state.player.party.len() as u8
+            })
+        } else {
+            0
+        };
+
+        Some(Self {
+            phase,
+            language: game.state.config.language,
+            enemy_species: battle.enemy_species,
+            enemy_level: battle.enemy_level,
+            enemy_hp: battle.enemy_hp,
+            enemy_max_hp: battle.enemy_max_hp,
+            enemy_status: battle.enemy_status,
+            player_species: battle.player_species,
+            player_level: battle.player_level,
+            player_hp: battle.player_hp,
+            player_max_hp: battle.player_max_hp,
+            player_status: battle.player_status,
+            player_balls: battle.player_pokeball_status,
+            enemy_balls: battle.enemy_pokeball_status,
+            ball_visibility: battle.show_player_pokeballs as u8
+                | (battle.show_enemy_pokeballs as u8) << 1,
+            safari_balls: battle.safari_menu.safari_balls_remaining,
+            party_len,
+            party_hash,
+            battle_status3,
+            message_hash,
+        })
+    }
+
+    /// Return the old and new cursor positions when every visible battle
+    /// field is unchanged except the regular 2×2 PlayerMenu cursor.
+    fn player_menu_cursor_change_from(
+        &self,
+        previous: &Self,
+    ) -> Option<((usize, usize), (usize, usize))> {
+        let (
+            ReusableBattlePhase::PlayerMenu { row, col },
+            ReusableBattlePhase::PlayerMenu {
+                row: previous_row,
+                col: previous_col,
+            },
+        ) = (self.phase, previous.phase)
+        else {
+            return None;
+        };
+        if (row, col) == (previous_row, previous_col) {
+            return None;
+        }
+
+        let mut current_without_cursor = *self;
+        current_without_cursor.phase = ReusableBattlePhase::PlayerMenu { row: 0, col: 0 };
+        let mut previous_without_cursor = *previous;
+        previous_without_cursor.phase = ReusableBattlePhase::PlayerMenu { row: 0, col: 0 };
+        (current_without_cursor == previous_without_cursor)
+            .then_some(((previous_row, previous_col), (row, col)))
+    }
+
+    /// Return the old and new cursor positions when every visible battle
+    /// field is unchanged except the Safari action-menu cursor.
+    fn safari_menu_cursor_change_from(
+        &self,
+        previous: &Self,
+    ) -> Option<((usize, usize), (usize, usize))> {
+        let (
+            ReusableBattlePhase::SafariMenu { row, col },
+            ReusableBattlePhase::SafariMenu {
+                row: previous_row,
+                col: previous_col,
+            },
+        ) = (self.phase, previous.phase)
+        else {
+            return None;
+        };
+        if (row, col) == (previous_row, previous_col) {
+            return None;
+        }
+
+        let mut current_without_cursor = *self;
+        current_without_cursor.phase = ReusableBattlePhase::SafariMenu { row: 0, col: 0 };
+        let mut previous_without_cursor = *previous;
+        previous_without_cursor.phase = ReusableBattlePhase::SafariMenu { row: 0, col: 0 };
+        (current_without_cursor == previous_without_cursor)
+            .then_some(((previous_row, previous_col), (row, col)))
+    }
+
+    /// Return the old and new selected rows when the current move-selection
+    /// screen has no other visible change.
+    fn move_menu_cursor_change_from(&self, previous: &Self) -> Option<(usize, usize)> {
+        let (cursor, previous_cursor, normalized_phase) = match (self.phase, previous.phase) {
+            (
+                ReusableBattlePhase::MoveSelect { cursor },
+                ReusableBattlePhase::MoveSelect {
+                    cursor: previous_cursor,
+                },
+            ) => (
+                cursor,
+                previous_cursor,
+                ReusableBattlePhase::MoveSelect { cursor: 0 },
+            ),
+            (
+                ReusableBattlePhase::ItemMoveSelect { cursor },
+                ReusableBattlePhase::ItemMoveSelect {
+                    cursor: previous_cursor,
+                },
+            ) => (
+                cursor,
+                previous_cursor,
+                ReusableBattlePhase::ItemMoveSelect { cursor: 0 },
+            ),
+            (
+                ReusableBattlePhase::LearnMoveChoose { cursor },
+                ReusableBattlePhase::LearnMoveChoose {
+                    cursor: previous_cursor,
+                },
+            ) => (
+                cursor,
+                previous_cursor,
+                ReusableBattlePhase::LearnMoveChoose { cursor: 0 },
+            ),
+            _ => return None,
+        };
+        if cursor == previous_cursor {
+            return None;
+        }
+
+        let mut current_without_cursor = *self;
+        current_without_cursor.phase = normalized_phase;
+        let mut previous_without_cursor = *previous;
+        previous_without_cursor.phase = normalized_phase;
+        (current_without_cursor == previous_without_cursor).then_some((previous_cursor, cursor))
+    }
+
+    /// Return the old and new selected rows when every visible battle field
+    /// is unchanged except the battle-bag cursor.
+    fn bag_menu_cursor_change_from(&self, previous: &Self) -> Option<(usize, usize)> {
+        let (
+            ReusableBattlePhase::BagSelect { cursor },
+            ReusableBattlePhase::BagSelect {
+                cursor: previous_cursor,
+            },
+        ) = (self.phase, previous.phase)
+        else {
+            return None;
+        };
+        if cursor == previous_cursor {
+            return None;
+        }
+
+        let mut current_without_cursor = *self;
+        current_without_cursor.phase = ReusableBattlePhase::BagSelect { cursor: 0 };
+        let mut previous_without_cursor = *previous;
+        previous_without_cursor.phase = ReusableBattlePhase::BagSelect { cursor: 0 };
+        (current_without_cursor == previous_without_cursor).then_some((previous_cursor, cursor))
+    }
+
+    /// Return viewport-relative cursor rows when a party selector changes
+    /// selection without scrolling or changing any visible party data.
+    fn party_menu_change_from(&self, previous: &Self) -> Option<BattlePartyMenuChange> {
+        let (cursor, previous_cursor, normalized_phase) = match (self.phase, previous.phase) {
+            (
+                ReusableBattlePhase::PartySelect { cursor },
+                ReusableBattlePhase::PartySelect {
+                    cursor: previous_cursor,
+                },
+            ) => (
+                cursor,
+                previous_cursor,
+                ReusableBattlePhase::PartySelect { cursor: 0 },
+            ),
+            (
+                ReusableBattlePhase::ShiftSwitchSelect { cursor },
+                ReusableBattlePhase::ShiftSwitchSelect {
+                    cursor: previous_cursor,
+                },
+            ) => (
+                cursor,
+                previous_cursor,
+                ReusableBattlePhase::ShiftSwitchSelect { cursor: 0 },
+            ),
+            (
+                ReusableBattlePhase::PlayerFaintSwitch { cursor },
+                ReusableBattlePhase::PlayerFaintSwitch {
+                    cursor: previous_cursor,
+                },
+            ) => (
+                cursor,
+                previous_cursor,
+                ReusableBattlePhase::PlayerFaintSwitch { cursor: 0 },
+            ),
+            (
+                ReusableBattlePhase::ItemTargetSelect { cursor },
+                ReusableBattlePhase::ItemTargetSelect {
+                    cursor: previous_cursor,
+                },
+            ) => (
+                cursor,
+                previous_cursor,
+                ReusableBattlePhase::ItemTargetSelect { cursor: 0 },
+            ),
+            _ => return None,
+        };
+        if cursor == previous_cursor {
+            return None;
+        }
+
+        let mut current_without_cursor = *self;
+        current_without_cursor.phase = normalized_phase;
+        let mut previous_without_cursor = *previous;
+        previous_without_cursor.phase = normalized_phase;
+        if current_without_cursor != previous_without_cursor {
+            return None;
+        }
+
+        let party_len = self.party_len as usize;
+        let previous_row =
+            pokered_ui::menus::battle_party::cursor_visual_row(party_len, previous_cursor)?;
+        let current_row = pokered_ui::menus::battle_party::cursor_visual_row(party_len, cursor)?;
+        let previous_start = previous_cursor - previous_row;
+        let current_start = cursor - current_row;
+        Some(if previous_start == current_start {
+            BattlePartyMenuChange::Cursor {
+                previous_row,
+                current_row,
+            }
+        } else {
+            BattlePartyMenuChange::Viewport {
+                previous_start,
+                current_start,
+            }
+        })
+    }
+
+    /// Return the old and new choices when every visible battle field is
+    /// unchanged except a YES/NO cursor.
+    fn yes_no_cursor_change_from(&self, previous: &Self) -> Option<(bool, bool)> {
+        let (yes, previous_yes, normalized_phase) = match (self.phase, previous.phase) {
+            (
+                ReusableBattlePhase::ShiftPrompt { yes },
+                ReusableBattlePhase::ShiftPrompt { yes: previous_yes },
+            ) => (
+                yes,
+                previous_yes,
+                ReusableBattlePhase::ShiftPrompt { yes: false },
+            ),
+            (
+                ReusableBattlePhase::LearnMoveAsk { yes },
+                ReusableBattlePhase::LearnMoveAsk { yes: previous_yes },
+            ) => (
+                yes,
+                previous_yes,
+                ReusableBattlePhase::LearnMoveAsk { yes: false },
+            ),
+            (
+                ReusableBattlePhase::LearnMoveGiveUp { yes },
+                ReusableBattlePhase::LearnMoveGiveUp { yes: previous_yes },
+            ) => (
+                yes,
+                previous_yes,
+                ReusableBattlePhase::LearnMoveGiveUp { yes: false },
+            ),
+            _ => return None,
+        };
+        if yes == previous_yes {
+            return None;
+        }
+
+        let mut current_without_cursor = *self;
+        current_without_cursor.phase = normalized_phase;
+        let mut previous_without_cursor = *previous;
+        previous_without_cursor.phase = normalized_phase;
+        (current_without_cursor == previous_without_cursor).then_some((previous_yes, yes))
+    }
+}
+
+#[derive(Clone, Copy, PartialEq, Eq)]
+struct OverworldVisualKey {
+    language: Lang,
+    map: u8,
+    player_x: u16,
+    player_y: u16,
+    player_facing: u8,
+    player_movement: u8,
+    player_transport: u8,
+    walk_counter: u8,
+    bump_counter: u8,
+    tile_kind: u8,
+    water_shift: i8,
+    flower_frame: Option<u8>,
+    dark: bool,
+    map_hash: u32,
+    npc_hash: u32,
+}
+
+#[inline]
+fn hash_byte(hash: &mut u32, value: u8) {
+    *hash = (*hash ^ value as u32).wrapping_mul(0x0100_0193);
+}
+
+#[inline]
+fn hash_u16(hash: &mut u32, value: u16) {
+    for byte in value.to_le_bytes() {
+        hash_byte(hash, byte);
+    }
+}
+
+#[inline]
+fn hash_u32(hash: &mut u32, value: u32) {
+    for byte in value.to_le_bytes() {
+        hash_byte(hash, byte);
+    }
+}
+
+impl OverworldVisualKey {
+    /// Return a compact key only for the ordinary map view. Cutscenes,
+    /// overlays, fades, and other uncommon compositions deliberately redraw
+    /// every loop; their richer state is not approximated here.
+    fn new(game: &PokemonGame) -> Option<Self> {
+        let screen = &game.overworld;
+        if !super::overworld::can_reuse_composited_frame(screen) {
+            return None;
+        }
+
+        // Scripted tile swaps mutate the live block grid without necessarily
+        // moving the camera. Hash it so a cached frame can never hide a CUT
+        // tree, gym gate, or other map edit.
+        let mut map_hash = 0x811c_9dc5;
+        if let Some(map) = screen.map_data.as_ref() {
+            hash_byte(&mut map_hash, 1);
+            hash_byte(&mut map_hash, map.width);
+            hash_byte(&mut map_hash, map.height);
+            for &block in &map.blocks {
+                hash_byte(&mut map_hash, block);
+            }
+        } else {
+            hash_byte(&mut map_hash, 0);
+        }
+
+        // Delay counters and scripted paths affect future updates, but not the
+        // current pixels. Hash only the NPC fields consumed by the renderer.
+        let mut npc_hash = 0x811c_9dc5;
+        hash_u16(&mut npc_hash, screen.npc_states.len() as u16);
+        for npc in &screen.npc_states {
+            hash_byte(&mut npc_hash, npc.npc_index);
+            hash_byte(&mut npc_hash, npc.sprite_id);
+            hash_u16(&mut npc_hash, npc.x);
+            hash_u16(&mut npc_hash, npc.y);
+            hash_byte(&mut npc_hash, npc.facing as u8);
+            hash_byte(&mut npc_hash, npc.scripted_frame.unwrap_or(u8::MAX));
+            hash_byte(&mut npc_hash, npc.walk_counter);
+            hash_byte(&mut npc_hash, npc.visible as u8);
+        }
+
+        Some(Self {
+            language: game.state.config.language,
+            map: screen.state.current_map as u8,
+            player_x: screen.state.player.x,
+            player_y: screen.state.player.y,
+            player_facing: screen.state.player.facing as u8,
+            player_movement: screen.state.player.movement_state as u8,
+            player_transport: screen.state.player.transport as u8,
+            walk_counter: screen.state.walk_counter,
+            bump_counter: screen.bump_anim_counter,
+            tile_kind: screen.tile_anim.kind() as u8,
+            water_shift: screen.tile_anim.water_shift(),
+            flower_frame: screen.tile_anim.flower_frame(),
+            dark: screen.dark_cave.is_dark(),
+            map_hash,
+            npc_hash,
+        })
+    }
+}
+
+#[derive(Clone, Copy, PartialEq, Eq)]
+struct StartMenuVisualKey {
+    cursor: usize,
+    item_count: usize,
+    items_hash: u32,
+    player_name_hash: u32,
+    safari_info: Option<pokered_core::start_menu::SafariZoneInfo>,
+    language: Lang,
+    overworld: OverworldVisualKey,
+}
+
+impl StartMenuVisualKey {
+    fn new(game: &PokemonGame) -> Option<Self> {
+        let mut items_hash = 0x811c_9dc5;
+        for &item in game.start_menu.items() {
+            hash_byte(&mut items_hash, item as u8);
+        }
+        let mut player_name_hash = 0x811c_9dc5;
+        for &byte in game.player_name.as_bytes() {
+            hash_byte(&mut player_name_hash, byte);
+        }
+        Some(Self {
+            cursor: game.start_menu.cursor(),
+            item_count: game.start_menu.item_count(),
+            items_hash,
+            player_name_hash,
+            safari_info: game.start_menu.safari_info,
+            language: game.state.config.language,
+            overworld: OverworldVisualKey::new(game)?,
+        })
+    }
+
+    fn cursor_change_from(&self, previous: &Self) -> Option<(usize, usize)> {
+        if self.cursor == previous.cursor {
+            return None;
+        }
+        let mut current_without_cursor = *self;
+        current_without_cursor.cursor = 0;
+        let mut previous_without_cursor = *previous;
+        previous_without_cursor.cursor = 0;
+        (current_without_cursor == previous_without_cursor)
+            .then_some((previous.cursor, self.cursor))
+    }
+}
+
+#[derive(Clone, Copy, PartialEq, Eq)]
+struct OptionsVisualKey {
+    cursor: (u32, u32),
+    language: Lang,
+}
+
+impl OptionsVisualKey {
+    fn new(game: &PokemonGame) -> Self {
+        Self {
+            cursor: super::options_menu_cursor_position(
+                &game.options_menu,
+                game.state.config.language,
+            ),
+            language: game.state.config.language,
+        }
+    }
+
+    fn cursor_change_from(&self, previous: &Self) -> Option<((u32, u32), (u32, u32))> {
+        (self.language == previous.language && self.cursor != previous.cursor)
+            .then_some((previous.cursor, self.cursor))
+    }
+}
+
+#[derive(Clone, Copy, PartialEq, Eq)]
+enum SaveVisualPhase {
+    Asking,
+    Saving,
+    Complete,
+}
+
+#[derive(Clone, Copy, PartialEq, Eq)]
+struct SaveVisualKey {
+    phase: SaveVisualPhase,
+    cursor: YesNoChoice,
+    player_name_hash: u32,
+    badges: u8,
+    pokedex_owned: u16,
+    play_time_hours: u16,
+    play_time_minutes: u8,
+    language: Lang,
+}
+
+impl SaveVisualKey {
+    fn new(game: &PokemonGame) -> Self {
+        let phase = match game.save_menu.phase {
+            SavePhase::AskSave | SavePhase::ConfirmOverwrite => SaveVisualPhase::Asking,
+            SavePhase::Saving { .. } => SaveVisualPhase::Saving,
+            SavePhase::SaveComplete | SavePhase::WaitAfterSave { .. } => SaveVisualPhase::Complete,
+        };
+        let mut player_name_hash = 0x811c_9dc5;
+        for &byte in game.save_menu.info.player_name.as_bytes() {
+            hash_byte(&mut player_name_hash, byte);
+        }
+        Self {
+            phase,
+            cursor: if phase == SaveVisualPhase::Asking {
+                game.save_menu.cursor
+            } else {
+                YesNoChoice::Yes
+            },
+            player_name_hash,
+            badges: game.save_menu.info.num_badges,
+            pokedex_owned: game.save_menu.info.pokedex_owned,
+            play_time_hours: game.save_menu.info.play_time_hours,
+            play_time_minutes: game.save_menu.info.play_time_minutes,
+            language: game.state.config.language,
+        }
+    }
+
+    fn cursor_change_from(&self, previous: &Self) -> Option<(YesNoChoice, YesNoChoice)> {
+        if self.phase != SaveVisualPhase::Asking || self.cursor == previous.cursor {
+            return None;
+        }
+        let mut current_without_cursor = *self;
+        current_without_cursor.cursor = YesNoChoice::Yes;
+        let mut previous_without_cursor = *previous;
+        previous_without_cursor.cursor = YesNoChoice::Yes;
+        (current_without_cursor == previous_without_cursor)
+            .then_some((previous.cursor, self.cursor))
+    }
+}
+
+#[derive(Clone, Copy, PartialEq, Eq)]
+struct BagVisualKey {
+    cursor: usize,
+    cursor_position: TilePos,
+    viewport_offset: usize,
+    phase: BagPhase,
+    swap_marker_view_row: Option<usize>,
+    items_hash: u32,
+    language: Lang,
+}
+
+impl BagVisualKey {
+    fn new(game: &PokemonGame) -> Self {
+        let state = &game.bag_screen;
+        let mut items_hash = 0x811c_9dc5;
+        hash_u16(&mut items_hash, state.items().len() as u16);
+        for &(item, qty) in state.items() {
+            hash_byte(&mut items_hash, item as u8);
+            hash_u32(&mut items_hash, qty);
+        }
+        let phase = state.phase();
+        Self {
+            cursor: state.cursor(),
+            cursor_position: super::top_level_bag_cursor_position(
+                state.items().len(),
+                state.cursor(),
+            ),
+            viewport_offset: super::top_level_bag_viewport_offset(
+                state.items().len(),
+                state.cursor(),
+            ),
+            phase,
+            swap_marker_view_row: match phase {
+                BagPhase::SwapFrom { row } => Some(row.saturating_sub(state.scroll())),
+                _ => None,
+            },
+            items_hash,
+            language: game.state.config.language,
+        }
+    }
+
+    fn list_cursor_change_from(&self, previous: &Self) -> Option<(TilePos, TilePos)> {
+        if self.cursor == previous.cursor
+            || self.phase != previous.phase
+            || !matches!(self.phase, BagPhase::Browsing | BagPhase::SwapFrom { .. })
+        {
+            return None;
+        }
+        let mut current_without_cursor = *self;
+        current_without_cursor.cursor = 0;
+        current_without_cursor.cursor_position = TilePos::new(0, 0);
+        let mut previous_without_cursor = *previous;
+        previous_without_cursor.cursor = 0;
+        previous_without_cursor.cursor_position = TilePos::new(0, 0);
+        (current_without_cursor == previous_without_cursor)
+            .then_some((previous.cursor_position, self.cursor_position))
+    }
+
+    fn action_cursor_change_from(&self, previous: &Self) -> Option<(u8, u8)> {
+        let (BagPhase::ActionMenu { cursor: current }, BagPhase::ActionMenu { cursor: old }) =
+            (self.phase, previous.phase)
+        else {
+            return None;
+        };
+        if current == old {
+            return None;
+        }
+        let mut current_without_cursor = *self;
+        current_without_cursor.phase = BagPhase::ActionMenu { cursor: 0 };
+        let mut previous_without_cursor = *previous;
+        previous_without_cursor.phase = BagPhase::ActionMenu { cursor: 0 };
+        (current_without_cursor == previous_without_cursor).then_some((old, current))
+    }
+
+    fn quantity_change_from(&self, previous: &Self) -> Option<(u32, u32)> {
+        let (BagPhase::TossQuantity { qty: current }, BagPhase::TossQuantity { qty: old }) =
+            (self.phase, previous.phase)
+        else {
+            return None;
+        };
+        if current == old {
+            return None;
+        }
+        let mut current_without_qty = *self;
+        current_without_qty.phase = BagPhase::TossQuantity { qty: 1 };
+        let mut previous_without_qty = *previous;
+        previous_without_qty.phase = BagPhase::TossQuantity { qty: 1 };
+        (current_without_qty == previous_without_qty).then_some((old, current))
+    }
+}
+
+#[derive(Clone, Copy, PartialEq, Eq)]
+struct PartyVisualKey {
+    cursor: usize,
+    phase: PartyScreenPhase,
+    mode: PartyScreenMode,
+    party_hash: u32,
+    icon_frame: u8,
+    language: Lang,
+}
+
+impl PartyVisualKey {
+    fn new(game: &PokemonGame) -> Self {
+        let state = &game.party_screen;
+        let mut party_hash = 0x811c_9dc5;
+        hash_u16(&mut party_hash, state.party().len() as u16);
+        for pokemon in state.party() {
+            hash_byte(&mut party_hash, pokemon.species as u8);
+            for &byte in &pokemon.nickname {
+                hash_byte(&mut party_hash, byte);
+            }
+            hash_byte(&mut party_hash, pokemon.level);
+            hash_u16(&mut party_hash, pokemon.hp);
+            hash_u16(&mut party_hash, pokemon.max_hp);
+            match pokemon.status {
+                StatusCondition::None => hash_byte(&mut party_hash, 0),
+                StatusCondition::Sleep(turns) => {
+                    hash_byte(&mut party_hash, 1);
+                    hash_byte(&mut party_hash, turns);
+                }
+                StatusCondition::Poison => hash_byte(&mut party_hash, 2),
+                StatusCondition::Burn => hash_byte(&mut party_hash, 3),
+                StatusCondition::Freeze => hash_byte(&mut party_hash, 4),
+                StatusCondition::Paralysis => hash_byte(&mut party_hash, 5),
+            }
+            for &move_id in &pokemon.moves {
+                hash_byte(&mut party_hash, move_id as u8);
+            }
+        }
+        Self {
+            cursor: state.cursor(),
+            phase: state.phase(),
+            mode: state.mode(),
+            party_hash,
+            icon_frame: if state.party().is_empty() {
+                0
+            } else {
+                ((game.frame_count / 16) & 1) as u8
+            },
+            language: game.state.config.language,
+        }
+    }
+
+    fn icon_animation_change_from(&self, previous: &Self) -> bool {
+        if self.icon_frame == previous.icon_frame {
+            return false;
+        }
+        let mut current_without_frame = *self;
+        current_without_frame.icon_frame = 0;
+        let mut previous_without_frame = *previous;
+        previous_without_frame.icon_frame = 0;
+        current_without_frame == previous_without_frame
+    }
+
+    fn selection_change_from(&self, previous: &Self) -> Option<usize> {
+        if self.cursor == previous.cursor
+            || self.phase != previous.phase
+            || !matches!(
+                self.phase,
+                PartyScreenPhase::Browsing | PartyScreenPhase::SwitchTarget { .. }
+            )
+        {
+            return None;
+        }
+        let mut current_without_selection = *self;
+        current_without_selection.cursor = 0;
+        current_without_selection.icon_frame = 0;
+        let mut previous_without_selection = *previous;
+        previous_without_selection.cursor = 0;
+        previous_without_selection.icon_frame = 0;
+        (current_without_selection == previous_without_selection).then_some(previous.cursor)
+    }
+
+    fn overlay_cursor_change_from(&self, previous: &Self) -> Option<(u8, u8, bool)> {
+        let (old_cursor, current_cursor, normalized_phase) = match (previous.phase, self.phase) {
+            (
+                PartyScreenPhase::ActionMenu { cursor: old },
+                PartyScreenPhase::ActionMenu { cursor: current },
+            ) => (old, current, PartyScreenPhase::ActionMenu { cursor: 0 }),
+            (
+                PartyScreenPhase::ChooseMove { cursor: old },
+                PartyScreenPhase::ChooseMove { cursor: current },
+            ) => (old, current, PartyScreenPhase::ChooseMove { cursor: 0 }),
+            _ => return None,
+        };
+        if old_cursor == current_cursor {
+            return None;
+        }
+
+        let icon_changed = self.icon_frame != previous.icon_frame;
+        let mut current_without_cursor = *self;
+        current_without_cursor.phase = normalized_phase;
+        current_without_cursor.icon_frame = 0;
+        let mut previous_without_cursor = *previous;
+        previous_without_cursor.phase = normalized_phase;
+        previous_without_cursor.icon_frame = 0;
+        (current_without_cursor == previous_without_cursor).then_some((
+            old_cursor,
+            current_cursor,
+            icon_changed,
+        ))
+    }
+}
+
+#[derive(Clone, Copy, PartialEq, Eq)]
+struct StatsVisualKey {
+    page: StatsPage,
+    pokemon_hash: u32,
+    language: Lang,
+}
+
+impl StatsVisualKey {
+    fn new(game: &PokemonGame) -> Option<Self> {
+        let state = game.stats_screen.as_ref()?;
+        let pokemon = state.pokemon();
+        let mut pokemon_hash = 0x811c_9dc5;
+        hash_byte(&mut pokemon_hash, pokemon.species as u8);
+        for &byte in &pokemon.nickname {
+            hash_byte(&mut pokemon_hash, byte);
+        }
+        hash_byte(&mut pokemon_hash, pokemon.level);
+        hash_u16(&mut pokemon_hash, pokemon.hp);
+        hash_u16(&mut pokemon_hash, pokemon.max_hp);
+        hash_u16(&mut pokemon_hash, pokemon.attack);
+        hash_u16(&mut pokemon_hash, pokemon.defense);
+        hash_u16(&mut pokemon_hash, pokemon.speed);
+        hash_u16(&mut pokemon_hash, pokemon.special);
+        hash_byte(&mut pokemon_hash, pokemon.type1 as u8);
+        hash_byte(&mut pokemon_hash, pokemon.type2 as u8);
+        for &move_id in &pokemon.moves {
+            hash_byte(&mut pokemon_hash, move_id as u8);
+        }
+        for &pp in &pokemon.pp {
+            hash_byte(&mut pokemon_hash, pp);
+        }
+        for &pp_ups in &pokemon.pp_ups {
+            hash_byte(&mut pokemon_hash, pp_ups);
+        }
+        match pokemon.status {
+            StatusCondition::None => hash_byte(&mut pokemon_hash, 0),
+            StatusCondition::Sleep(turns) => {
+                hash_byte(&mut pokemon_hash, 1);
+                hash_byte(&mut pokemon_hash, turns);
+            }
+            StatusCondition::Poison => hash_byte(&mut pokemon_hash, 2),
+            StatusCondition::Burn => hash_byte(&mut pokemon_hash, 3),
+            StatusCondition::Freeze => hash_byte(&mut pokemon_hash, 4),
+            StatusCondition::Paralysis => hash_byte(&mut pokemon_hash, 5),
+        }
+        hash_u32(&mut pokemon_hash, pokemon.total_exp);
+        hash_u16(&mut pokemon_hash, pokemon.ot_id);
+        for &byte in &pokemon.ot_name {
+            hash_byte(&mut pokemon_hash, byte);
+        }
+        Some(Self {
+            page: state.page(),
+            pokemon_hash,
+            language: game.state.config.language,
+        })
+    }
+}
+
+#[derive(Clone, Copy, PartialEq, Eq)]
+struct TrainerCardVisualKey {
+    player_name_hash: u32,
+    money: u32,
+    play_time_hours: u8,
+    play_time_minutes: u8,
+    obtained_badges: u8,
+    language: Lang,
+}
+
+impl TrainerCardVisualKey {
+    fn new(game: &PokemonGame) -> Self {
+        let mut player_name_hash = 0x811c_9dc5;
+        for &byte in game.player_name.as_bytes() {
+            hash_byte(&mut player_name_hash, byte);
+        }
+        Self {
+            player_name_hash,
+            money: game.save_data.game_data.player_money,
+            play_time_hours: game.save_data.game_data.play_time.hours,
+            play_time_minutes: game.save_data.game_data.play_time.minutes,
+            obtained_badges: game.save_data.game_data.obtained_badges,
+            language: game.state.config.language,
+        }
+    }
+}
+
+#[derive(Clone, Copy, PartialEq, Eq)]
+enum PokedexVisualKey {
+    List {
+        cursor: u16,
+        scroll: u16,
+        max_seen: u16,
+        visible_flags: u16,
+        seen_count: u32,
+        owned_count: u32,
+        side_menu_cursor: Option<u8>,
+        language: Lang,
+    },
+    Entry {
+        species: Species,
+        page: usize,
+        owned: bool,
+        language: Lang,
+    },
+    Area {
+        species: Species,
+        current_map: MapId,
+        version: GameVersion,
+        language: Lang,
+    },
+}
+
+impl PokedexVisualKey {
+    fn new(game: &PokemonGame) -> Self {
+        let state = &game.pokedex_screen;
+        let language = game.state.config.language;
+        match state.mode() {
+            PokedexScreenMode::List | PokedexScreenMode::SideMenu => {
+                let mut visible_flags = 0;
+                for row in 0..pokered_core::pokedex_screen::LIST_ROWS {
+                    let number = state.scroll_offset() + 1 + row;
+                    if number > state.max_seen() {
+                        break;
+                    }
+                    if state.is_seen(number) {
+                        visible_flags |= 1 << (row * 2);
+                    }
+                    if state.is_owned(number) {
+                        visible_flags |= 1 << (row * 2 + 1);
+                    }
+                }
+                Self::List {
+                    cursor: state.cursor(),
+                    scroll: state.scroll_offset(),
+                    max_seen: state.max_seen(),
+                    visible_flags,
+                    seen_count: state.seen_count(),
+                    owned_count: state.owned_count(),
+                    side_menu_cursor: (state.mode() == PokedexScreenMode::SideMenu)
+                        .then(|| state.side_menu_cursor()),
+                    language,
+                }
+            }
+            PokedexScreenMode::Entry => Self::Entry {
+                species: state.cursor_species(),
+                page: state.entry_page(),
+                owned: state.is_owned(state.cursor()),
+                language,
+            },
+            PokedexScreenMode::Area => Self::Area {
+                species: state.cursor_species(),
+                current_map: game.overworld.state.current_map,
+                version: state.version(),
+                language,
+            },
+        }
+    }
+
+    fn cursor_change_from(&self, previous: &Self) -> Option<((u32, u32), (u32, u32))> {
+        let (
+            Self::List {
+                cursor,
+                scroll,
+                max_seen,
+                visible_flags,
+                seen_count,
+                owned_count,
+                side_menu_cursor,
+                language,
+            },
+            Self::List {
+                cursor: previous_cursor,
+                scroll: previous_scroll,
+                max_seen: previous_max_seen,
+                visible_flags: previous_visible_flags,
+                seen_count: previous_seen_count,
+                owned_count: previous_owned_count,
+                side_menu_cursor: previous_side_menu_cursor,
+                language: previous_language,
+            },
+        ) = (self, previous)
+        else {
+            return None;
+        };
+        if scroll != previous_scroll
+            || max_seen != previous_max_seen
+            || visible_flags != previous_visible_flags
+            || seen_count != previous_seen_count
+            || owned_count != previous_owned_count
+            || language != previous_language
+        {
+            return None;
+        }
+        match (previous_side_menu_cursor, side_menu_cursor) {
+            (None, None) if cursor != previous_cursor => {
+                let previous_row = previous_cursor - 1 - scroll;
+                let current_row = cursor - 1 - scroll;
+                Some((
+                    (0, (3 + previous_row as u32 * 2) * 8),
+                    (0, (3 + current_row as u32 * 2) * 8),
+                ))
+            }
+            (Some(previous_side), Some(current_side))
+                if cursor == previous_cursor && previous_side != current_side =>
+            {
+                let row_step = if *language == Lang::Zh { 2 } else { 1 };
+                Some((
+                    (15 * 8, (10 + *previous_side as u32 * row_step) * 8),
+                    (15 * 8, (10 + *current_side as u32 * row_step) * 8),
+                ))
+            }
+            _ => None,
+        }
+    }
+}
+
+#[derive(Clone, Copy, PartialEq, Eq)]
+struct PcVisualKey {
+    phase: PcPhase,
+    visual_hash: u32,
+    cursor: Option<(u32, u32)>,
+    language: Lang,
+}
+
+fn hash_pc_mon(hash: &mut u32, pokemon: &pokered_core::battle::state::Pokemon) {
+    hash_byte(hash, pokemon.species as u8);
+    for &byte in &pokemon.nickname {
+        hash_byte(hash, byte);
+    }
+    hash_byte(hash, pokemon.level);
+}
+
+fn hash_pc_inventory<const N: usize>(
+    hash: &mut u32,
+    inventory: &pokered_core::items::inventory::Inventory<N>,
+) {
+    hash_u16(hash, inventory.count() as u16);
+    for index in 0..inventory.count() {
+        if let Some((item, quantity)) = inventory.get(index) {
+            hash_byte(hash, item as u8);
+            hash_byte(hash, quantity);
+        }
+    }
+}
+
+fn pc_follow_scroll(cursor: usize, rows: usize) -> usize {
+    const VISIBLE_ROWS: usize = 8;
+    if rows <= VISIBLE_ROWS {
+        0
+    } else {
+        cursor
+            .saturating_sub(VISIBLE_ROWS / 2)
+            .min(rows - VISIBLE_ROWS)
+    }
+}
+
+fn pc_list_cursor_position(cursor: usize, rows: usize, language: Lang) -> (u32, u32) {
+    let scroll = pc_follow_scroll(cursor, rows);
+    let pitch = if language == Lang::Zh { 12 } else { 8 };
+    (8, 8 + (cursor - scroll) as u32 * pitch)
+}
+
+fn pc_yes_no_cursor_position(selected_yes: bool, language: Lang) -> (u32, u32) {
+    let box_y = if language == Lang::Zh { 8 } else { 7 * 8 };
+    (15 * 8, box_y + if selected_yes { 8 } else { 3 * 8 })
+}
+
+fn pc_box_cursor_position(cursor: usize, language: Lang) -> (u32, u32) {
+    if language == Lang::Zh {
+        (
+            (cursor / 6) as u32 * 10 * 8 + 8,
+            (5 + (cursor % 6) as u32 * 2) * 8,
+        )
+    } else {
+        (12 * 8, (1 + cursor as u32) * 8)
+    }
+}
+
+impl PcVisualKey {
+    fn new(game: &PokemonGame) -> Option<Self> {
+        let pc = game.pc_screen.as_ref()?;
+        let phase = pc.phase();
+        let language = game.state.config.language;
+        let mut visual_hash = 0x811c_9dc5;
+        let mut cursor = None;
+        hash_byte(&mut visual_hash, phase as u8);
+        match phase {
+            PcPhase::Message => {
+                hash_u32(&mut visual_hash, pc.message_page() as u32);
+                let start = pc.message_page() * 4;
+                for line in pc.message_lines().iter().skip(start).take(4) {
+                    for &byte in line.as_bytes() {
+                        hash_byte(&mut visual_hash, byte);
+                    }
+                    hash_byte(&mut visual_hash, 0xff);
+                }
+            }
+            PcPhase::MainMenu => {
+                cursor = Some((8, (1 + pc.main_menu().cursor() as u32 * 2) * 8));
+                hash_byte(&mut visual_hash, pc.main_menu().met_bill() as u8);
+                for &item in pc.main_menu().items() {
+                    hash_byte(&mut visual_hash, item as u8);
+                }
+                for &byte in pc.player_name().as_bytes() {
+                    hash_byte(&mut visual_hash, byte);
+                }
+            }
+            PcPhase::BillsMenu => {
+                cursor = Some((8, (1 + pc.bills_menu().cursor() as u32 * 2) * 8));
+                hash_u32(
+                    &mut visual_hash,
+                    game.save_data.pc_storage.current_box_index() as u32,
+                );
+            }
+            PcPhase::MonList | PcPhase::MonAction | PcPhase::ReleaseConfirm => {
+                hash_byte(&mut visual_hash, pc.mon_mode() as u8);
+                let rows = match pc.mon_mode() {
+                    MonListMode::Deposit => {
+                        hash_u16(&mut visual_hash, game.save_data.party.count() as u16);
+                        for pokemon in game.save_data.party.iter() {
+                            hash_pc_mon(&mut visual_hash, pokemon);
+                        }
+                        game.save_data.party.count() + 1
+                    }
+                    MonListMode::Withdraw | MonListMode::Release => {
+                        let current_box = game.save_data.pc_storage.current_box();
+                        hash_u16(&mut visual_hash, current_box.count() as u16);
+                        for pokemon in current_box.iter() {
+                            hash_pc_mon(&mut visual_hash, pokemon);
+                        }
+                        current_box.count() + 1
+                    }
+                };
+                match phase {
+                    PcPhase::MonList => {
+                        hash_u32(
+                            &mut visual_hash,
+                            pc_follow_scroll(pc.mon_cursor(), rows) as u32,
+                        );
+                        cursor = Some(pc_list_cursor_position(pc.mon_cursor(), rows, language));
+                    }
+                    PcPhase::MonAction => {
+                        hash_u32(&mut visual_hash, pc.mon_cursor() as u32);
+                        cursor = Some((11 * 8, (9 + pc.mon_action_cursor() as u32 * 2) * 8));
+                    }
+                    PcPhase::ReleaseConfirm => {
+                        hash_u32(&mut visual_hash, pc.mon_cursor() as u32);
+                        cursor = Some(pc_yes_no_cursor_position(pc.yes_selected(), language));
+                    }
+                    _ => unreachable!(),
+                }
+            }
+            PcPhase::ChangeBoxConfirm | PcPhase::OaksConfirm => {
+                cursor = Some(pc_yes_no_cursor_position(pc.yes_selected(), language));
+            }
+            PcPhase::BoxList => {
+                cursor = Some(pc_box_cursor_position(pc.box_cursor(), language));
+                for index in 0..pokered_core::pokemon::pc_box::NUM_BOXES {
+                    let nonempty = game
+                        .save_data
+                        .pc_storage
+                        .get_box(index)
+                        .is_ok_and(|box_data| !box_data.is_empty());
+                    hash_byte(&mut visual_hash, nonempty as u8);
+                }
+            }
+            PcPhase::ItemMenu => {
+                cursor = Some((8, (1 + pc.players_menu().cursor() as u32 * 2) * 8));
+            }
+            PcPhase::ItemList | PcPhase::ItemQuantity | PcPhase::TossConfirm => {
+                hash_byte(&mut visual_hash, pc.item_mode() as u8);
+                let rows = match pc.item_mode() {
+                    ItemListMode::Deposit => {
+                        hash_pc_inventory(&mut visual_hash, &game.save_data.game_data.bag);
+                        game.save_data.game_data.bag.count() + 1
+                    }
+                    ItemListMode::Withdraw | ItemListMode::Toss => {
+                        hash_pc_inventory(&mut visual_hash, &game.save_data.game_data.pc_items);
+                        game.save_data.game_data.pc_items.count() + 1
+                    }
+                };
+                match phase {
+                    PcPhase::ItemList => {
+                        hash_u32(
+                            &mut visual_hash,
+                            pc_follow_scroll(pc.item_list_cursor(), rows) as u32,
+                        );
+                        cursor = Some(pc_list_cursor_position(
+                            pc.item_list_cursor(),
+                            rows,
+                            language,
+                        ));
+                    }
+                    PcPhase::ItemQuantity => {
+                        hash_u32(&mut visual_hash, pc.item_list_cursor() as u32);
+                        hash_byte(&mut visual_hash, pc.item_qty());
+                    }
+                    PcPhase::TossConfirm => {
+                        hash_u32(&mut visual_hash, pc.item_list_cursor() as u32);
+                        cursor = Some(pc_yes_no_cursor_position(pc.yes_selected(), language));
+                    }
+                    _ => unreachable!(),
+                };
+            }
+            PcPhase::LeagueHoF => {
+                if let Some((team_no, pokemon)) = pc.league_hof_mon() {
+                    hash_byte(&mut visual_hash, team_no);
+                    hash_byte(&mut visual_hash, pokemon.species as u8);
+                    hash_byte(&mut visual_hash, pokemon.level);
+                    for &byte in pokemon.nickname.as_bytes() {
+                        hash_byte(&mut visual_hash, byte);
+                    }
+                } else {
+                    hash_byte(&mut visual_hash, 0xff);
+                }
+            }
+        }
+        Some(Self {
+            phase,
+            visual_hash,
+            cursor,
+            language,
+        })
+    }
+
+    fn cursor_change_from(&self, previous: &Self) -> Option<((u32, u32), (u32, u32))> {
+        (self.phase == previous.phase
+            && self.visual_hash == previous.visual_hash
+            && self.language == previous.language
+            && self.cursor != previous.cursor)
+            .then(|| previous.cursor.zip(self.cursor))
+            .flatten()
+    }
+}
+
+#[derive(Clone, Copy, PartialEq, Eq)]
+struct SlotsVisualKey {
+    phase: SlotsPhase,
+    visual_hash: u32,
+    bet_cursor: Option<(u32, u32)>,
+    language: Lang,
+}
+
+fn slots_bet_cursor_position(bet: u8) -> Option<(u32, u32)> {
+    match bet {
+        3 => Some((120, 96)),
+        2 => Some((120, 112)),
+        1 => Some((120, 128)),
+        _ => None,
+    }
+}
+
+impl SlotsVisualKey {
+    fn new(game: &PokemonGame) -> Option<Self> {
+        let slots = game.slots_screen.as_ref()?;
+        let mut visual_hash = 0x811c_9dc5;
+        hash_byte(&mut visual_hash, slots.phase as u8);
+        for offset in slots.machine.wheel_offsets {
+            hash_byte(&mut visual_hash, offset);
+        }
+        hash_u16(&mut visual_hash, slots.coins);
+        hash_u16(&mut visual_hash, slots.payout_remaining);
+        hash_byte(&mut visual_hash, slots.payout_stage as u8);
+        hash_byte(&mut visual_hash, slots.flash_on as u8);
+        for &byte in slots.message.as_bytes() {
+            hash_byte(&mut visual_hash, byte);
+        }
+
+        let bet_cursor = if slots.phase == SlotsPhase::BetSelect {
+            slots_bet_cursor_position(slots.bet)
+        } else {
+            // Outside bet selection, the bet controls the cabinet's lit lines.
+            hash_byte(&mut visual_hash, slots.bet);
+            None
+        };
+
+        Some(Self {
+            phase: slots.phase,
+            visual_hash,
+            bet_cursor,
+            language: game.state.config.language,
+        })
+    }
+
+    fn cursor_change_from(&self, previous: &Self) -> Option<((u32, u32), (u32, u32))> {
+        (self.phase == SlotsPhase::BetSelect
+            && self.phase == previous.phase
+            && self.visual_hash == previous.visual_hash
+            && self.language == previous.language
+            && self.bet_cursor != previous.bet_cursor)
+            .then(|| previous.bet_cursor.zip(self.bet_cursor))
+            .flatten()
+    }
+}
+
+#[derive(Clone, Copy, PartialEq, Eq)]
+enum AuxiliaryMenuKind {
+    Elevator,
+    FilterBag,
+}
+
+#[derive(Clone, Copy, PartialEq, Eq)]
+struct AuxiliaryMenuVisualKey {
+    kind: AuxiliaryMenuKind,
+    list_hash: u32,
+    scroll_offset: usize,
+    cursor: (u32, u32),
+    language: Lang,
+}
+
+impl AuxiliaryMenuVisualKey {
+    fn new(game: &PokemonGame, kind: AuxiliaryMenuKind) -> Option<Self> {
+        let menu = game.elevator_screen.as_ref()?;
+        let mut list_hash = 0x811c_9dc5;
+        hash_u16(&mut list_hash, menu.floors().len() as u16);
+        for entry in menu.floors() {
+            for &byte in entry.as_bytes() {
+                hash_byte(&mut list_hash, byte);
+            }
+            hash_byte(&mut list_hash, 0xff);
+        }
+
+        let scroll_offset = menu.scroll_offset(7);
+        let x = match kind {
+            AuxiliaryMenuKind::Elevator => 60,
+            AuxiliaryMenuKind::FilterBag => 44,
+        };
+        Some(Self {
+            kind,
+            list_hash,
+            scroll_offset,
+            cursor: (x, 30 + (menu.selected_index() - scroll_offset) as u32 * 14),
+            language: game.state.config.language,
+        })
+    }
+
+    fn cursor_change_from(&self, previous: &Self) -> Option<((u32, u32), (u32, u32))> {
+        (self.kind == previous.kind
+            && self.list_hash == previous.list_hash
+            && self.scroll_offset == previous.scroll_offset
+            && self.language == previous.language
+            && self.cursor != previous.cursor)
+            .then_some((previous.cursor, self.cursor))
+    }
+}
+
+#[derive(Clone, Copy, PartialEq, Eq)]
+struct DiplomaVisualKey {
+    player_name_hash: u32,
+    language: Lang,
+}
+
+impl DiplomaVisualKey {
+    fn new(game: &PokemonGame) -> Self {
+        let mut player_name_hash = 0x811c_9dc5;
+        for &byte in game.player_name.as_bytes() {
+            hash_byte(&mut player_name_hash, byte);
+        }
+        Self {
+            player_name_hash,
+            language: game.state.config.language,
+        }
+    }
+}
+
+#[derive(Clone, Copy, PartialEq, Eq)]
+enum ShopPhaseKind {
+    MainMenu,
+    BuySelect,
+    BuyQuantity,
+    BuyConfirm,
+    BuyResult,
+    SellSelect,
+    SellQuantity,
+    SellConfirm,
+    SellResult,
+    Exiting,
+}
+
+#[derive(Clone, Copy, PartialEq, Eq)]
+struct ShopVisualKey {
+    phase: ShopPhaseKind,
+    visual_hash: u32,
+    cursor: Option<(u32, u32)>,
+    background: OverworldVisualKey,
+    language: Lang,
+}
+
+fn mart_list_scroll(cursor: usize, count: usize) -> usize {
+    const VISIBLE_ROWS: usize = 5;
+    cursor
+        .saturating_sub(VISIBLE_ROWS - 1)
+        .min(count.saturating_sub(VISIBLE_ROWS))
+}
+
+fn hash_buy_result(hash: &mut u32, result: &BuyResult) {
+    match result {
+        BuyResult::Success { total_cost } => {
+            hash_byte(hash, 0);
+            hash_u32(hash, *total_cost);
+        }
+        BuyResult::NotEnoughMoney => hash_byte(hash, 1),
+        BuyResult::BagFull => hash_byte(hash, 2),
+        BuyResult::InvalidItem => hash_byte(hash, 3),
+    }
+}
+
+fn hash_sell_result(hash: &mut u32, result: &SellResult) {
+    match result {
+        SellResult::Success { total_value } => {
+            hash_byte(hash, 0);
+            hash_u32(hash, *total_value);
+        }
+        SellResult::Unsellable => hash_byte(hash, 1),
+        SellResult::NotInBag => hash_byte(hash, 2),
+        SellResult::InvalidItem => hash_byte(hash, 3),
+    }
+}
+
+impl ShopVisualKey {
+    fn new(game: &PokemonGame) -> Option<Self> {
+        let GameScreen::Shop(mart) = &game.state.screen else {
+            return None;
+        };
+        let background = OverworldVisualKey::new(game)?;
+        let language = game.state.config.language;
+        let mut visual_hash = 0x811c_9dc5;
+        hash_u32(&mut visual_hash, game.save_data.game_data.player_money);
+        hash_u16(&mut visual_hash, mart.inventory.items().len() as u16);
+        for &item in mart.inventory.items() {
+            hash_byte(&mut visual_hash, item as u8);
+        }
+        hash_u16(
+            &mut visual_hash,
+            game.save_data.game_data.bag.count() as u16,
+        );
+        for index in 0..game.save_data.game_data.bag.count() {
+            if let Some((item, quantity)) = game.save_data.game_data.bag.get(index) {
+                hash_byte(&mut visual_hash, item as u8);
+                hash_byte(&mut visual_hash, quantity);
+            }
+        }
+
+        let (phase, cursor) = match &mart.phase {
+            MartPhase::MainMenu { cursor } => (
+                ShopPhaseKind::MainMenu,
+                Some((1, 2 + cursor.position() as u32 * 2)),
+            ),
+            MartPhase::Buy(BuyMenuState::SelectItem { cursor }) => {
+                let scroll = mart_list_scroll(*cursor, mart.inventory.items().len());
+                hash_u32(&mut visual_hash, scroll as u32);
+                (
+                    ShopPhaseKind::BuySelect,
+                    Some((2, 4 + (*cursor - scroll) as u32 * 2)),
+                )
+            }
+            MartPhase::Buy(BuyMenuState::Quantity {
+                item_index,
+                quantity,
+            }) => {
+                hash_u32(&mut visual_hash, *item_index as u32);
+                hash_byte(&mut visual_hash, *quantity);
+                (ShopPhaseKind::BuyQuantity, None)
+            }
+            MartPhase::Buy(BuyMenuState::Confirm {
+                item_index,
+                quantity,
+                selected,
+            }) => {
+                hash_u32(&mut visual_hash, *item_index as u32);
+                hash_byte(&mut visual_hash, *quantity);
+                let row_step = if language == Lang::Zh { 2 } else { 1 };
+                let row = match selected {
+                    ConfirmChoice::Yes => 0,
+                    ConfirmChoice::No => row_step,
+                };
+                (ShopPhaseKind::BuyConfirm, Some((15, 9 + row)))
+            }
+            MartPhase::Buy(BuyMenuState::Result {
+                dialogue,
+                return_to_list,
+            }) => {
+                hash_buy_result(&mut visual_hash, dialogue);
+                hash_byte(&mut visual_hash, *return_to_list as u8);
+                (ShopPhaseKind::BuyResult, None)
+            }
+            MartPhase::Sell(SellMenuState::SelectItem { cursor }) => {
+                let entries = game.save_data.game_data.bag.count() + 1;
+                let scroll = mart_list_scroll(*cursor, entries);
+                hash_u32(&mut visual_hash, scroll as u32);
+                (
+                    ShopPhaseKind::SellSelect,
+                    Some((2, 4 + (*cursor - scroll) as u32 * 2)),
+                )
+            }
+            MartPhase::Sell(SellMenuState::Quantity {
+                item_index,
+                quantity,
+                max_quantity,
+            }) => {
+                hash_u32(&mut visual_hash, *item_index as u32);
+                hash_byte(&mut visual_hash, *quantity);
+                hash_byte(&mut visual_hash, *max_quantity);
+                (ShopPhaseKind::SellQuantity, None)
+            }
+            MartPhase::Sell(SellMenuState::Confirm {
+                item_index,
+                quantity,
+                max_quantity,
+                selected,
+            }) => {
+                hash_u32(&mut visual_hash, *item_index as u32);
+                hash_byte(&mut visual_hash, *quantity);
+                hash_byte(&mut visual_hash, *max_quantity);
+                let row_step = if language == Lang::Zh { 2 } else { 1 };
+                let row = match selected {
+                    ConfirmChoice::Yes => 0,
+                    ConfirmChoice::No => row_step,
+                };
+                (ShopPhaseKind::SellConfirm, Some((15, 9 + row)))
+            }
+            MartPhase::Sell(SellMenuState::Result {
+                dialogue,
+                return_to_list,
+            }) => {
+                hash_sell_result(&mut visual_hash, dialogue);
+                hash_byte(&mut visual_hash, *return_to_list as u8);
+                (ShopPhaseKind::SellResult, None)
+            }
+            MartPhase::Exiting => (ShopPhaseKind::Exiting, None),
+        };
+        hash_byte(&mut visual_hash, phase as u8);
+
+        Some(Self {
+            phase,
+            visual_hash,
+            cursor,
+            background,
+            language,
+        })
+    }
+
+    fn cursor_change_from(&self, previous: &Self) -> Option<((u32, u32), (u32, u32))> {
+        (self.phase == previous.phase
+            && self.visual_hash == previous.visual_hash
+            && self.background == previous.background
+            && self.language == previous.language
+            && self.cursor != previous.cursor)
+            .then(|| previous.cursor.zip(self.cursor))
+            .flatten()
+    }
+}
+
+#[derive(Clone, Copy, PartialEq, Eq)]
+struct TownMapVisualKey {
+    current_map: MapId,
+    selected_map: MapId,
+    mode: TownMapMode,
+    marker_phase: u8,
+    language: Lang,
+}
+
+impl TownMapVisualKey {
+    fn new(game: &PokemonGame) -> Self {
+        let state = &game.town_map_screen;
+        let marker_position = pokered_data::town_map_data::town_map_position(state.current_map());
+        Self {
+            current_map: state.current_map(),
+            selected_map: state.selected_map(),
+            mode: state.mode(),
+            marker_phase: match marker_position {
+                Some((_, y, _)) if state.mode() != TownMapMode::View || y < 14 => {
+                    ((game.frame_count / 16) & 1) as u8
+                }
+                _ => 0,
+            },
+            language: game.state.config.language,
+        }
+    }
+
+    fn marker_animation_change_from(&self, previous: &Self) -> bool {
+        if self.marker_phase == previous.marker_phase {
+            return false;
+        }
+        let mut current_without_phase = *self;
+        current_without_phase.marker_phase = 0;
+        let mut previous_without_phase = *previous;
+        previous_without_phase.marker_phase = 0;
+        current_without_phase == previous_without_phase
+    }
+
+    fn cursor_change_from(&self, previous: &Self) -> Option<MapId> {
+        if self.selected_map == previous.selected_map {
+            return None;
+        }
+        let mut current_without_cursor = *self;
+        current_without_cursor.selected_map = MapId::PalletTown;
+        current_without_cursor.marker_phase = 0;
+        let mut previous_without_cursor = *previous;
+        previous_without_cursor.selected_map = MapId::PalletTown;
+        previous_without_cursor.marker_phase = 0;
+        (current_without_cursor == previous_without_cursor).then_some(previous.selected_map)
+    }
+}
+
+fn town_map_label_width(map: MapId, lang: Lang) -> u32 {
+    pokered_data::town_map_data::town_map_position(map)
+        .map(|(_, _, name)| {
+            measure_text(if lang == Lang::Zh {
+                map_name_str_zh(name)
+            } else {
+                map_name_str(name)
+            })
+        })
+        .unwrap_or(0)
+}
+
+fn town_map_reticle_overlaps_view_box(map: MapId) -> bool {
+    pokered_data::town_map_data::town_map_position(map)
+        .is_some_and(|(_, y, _)| y as u32 * 8 + 5 + 16 > 15 * 8)
+}
+
+fn town_map_marker_is_behind_view_box(map: MapId) -> bool {
+    pokered_data::town_map_data::town_map_position(map)
+        .is_some_and(|(_, y, _)| (y as u32 + 1) * 8 >= 15 * 8)
+}
+
+/// Result of rendering a frame. Damage rectangles borrow the session until the
+/// frontend finishes presenting; they never expose simulation state.
+pub enum FrameUpdate<'a> {
+    Reuse,
+    Full,
+    Damage(&'a [FrameDamageRect]),
+}
+
+#[derive(Default)]
+pub struct RenderSession {
+    last_black_screen: bool,
+    last_trade: Option<super::TradeVisualKey>,
+    last_evolution: Option<super::EvolutionVisualKey>,
+    last_hof: Option<super::HofVisualKey>,
+    last_credits: Option<super::CreditsVisualKey>,
+    last_takeover_active: bool,
+    last_static_splash: Option<SplashPhase>,
+    last_language_select: Option<Lang>,
+    last_title: Option<TitleVisualKey>,
+    last_main_menu: Option<MainMenuVisualKey>,
+    last_start_menu: Option<StartMenuVisualKey>,
+    last_options: Option<OptionsVisualKey>,
+    last_save: Option<SaveVisualKey>,
+    last_bag: Option<BagVisualKey>,
+    last_party: Option<PartyVisualKey>,
+    last_stats: Option<StatsVisualKey>,
+    last_pokedex: Option<PokedexVisualKey>,
+    last_pc: Option<PcVisualKey>,
+    last_slots: Option<SlotsVisualKey>,
+    last_auxiliary_menu: Option<AuxiliaryMenuVisualKey>,
+    last_diploma: Option<DiplomaVisualKey>,
+    last_shop: Option<ShopVisualKey>,
+    last_trainer_card: Option<TrainerCardVisualKey>,
+    last_town_map: Option<TownMapVisualKey>,
+    last_oak: Option<OakVisualKey>,
+    last_overworld: Option<OverworldVisualKey>,
+    last_battle: Option<BattleVisualKey>,
+    background_cache: Option<OverworldBackgroundCache>,
+    pending_damage: Vec<FrameDamageRect>,
+}
+impl RenderSession {
+    pub fn new() -> Self {
+        Self::default()
+    }
+    pub fn render(
+        &mut self,
+        game: &mut PokemonGame,
+        fb: &mut FrameBuffer,
+        scroll_background: &mut dyn FnMut(&mut [u8], usize, usize, i32, i32, u8),
+    ) -> FrameUpdate<'_> {
+        let last_black_screen = self.last_black_screen;
+        let last_trade = self.last_trade.take();
+        let last_evolution = self.last_evolution.take();
+        let last_hof = self.last_hof.take();
+        let last_credits = self.last_credits.take();
+        let last_takeover_active = self.last_takeover_active;
+        let last_static_splash = self.last_static_splash.take();
+        let last_language_select = self.last_language_select.take();
+        let last_title = self.last_title.take();
+        let last_main_menu = self.last_main_menu.take();
+        let last_start_menu = self.last_start_menu.take();
+        let last_options = self.last_options.take();
+        let last_save = self.last_save.take();
+        let last_bag = self.last_bag.take();
+        let last_party = self.last_party.take();
+        let last_stats = self.last_stats.take();
+        let last_pokedex = self.last_pokedex.take();
+        let last_pc = self.last_pc.take();
+        let last_slots = self.last_slots.take();
+        let last_auxiliary_menu = self.last_auxiliary_menu.take();
+        let last_diploma = self.last_diploma.take();
+        let last_shop = self.last_shop.take();
+        let last_trainer_card = self.last_trainer_card.take();
+        let last_town_map = self.last_town_map.take();
+        let last_oak = self.last_oak.take();
+        let last_overworld = self.last_overworld.take();
+        let last_battle = self.last_battle.take();
+        let overworld_background_cache = &mut self.background_cache;
+        self.pending_damage.clear();
+        let mut partial = false;
+        let black_screen = game.black_screen_frames > 0;
+        let trade = game.trade_anim.as_ref().map(super::trade_visual_key);
+        let evolution = game
+            .evolution_anim
+            .as_ref()
+            .map(super::evolution_visual_key);
+        let hof = game
+            .hof_ceremony
+            .as_ref()
+            .map(|hof| super::hof_visual_key(hof, game.state.config.language));
+        let credits = game.credits.as_ref().map(super::credits_visual_key);
+        let takeover_active = black_screen
+            || trade.is_some()
+            || evolution.is_some()
+            || hof.is_some()
+            || credits.is_some();
+        // The copyright, setup, and post-delay splash phases are completely
+        // static. Keep the already-presented page while only advancing logic.
+        let static_splash = if game.state.screen == GameScreen::GameFreakSplash
+            && matches!(
+                game.gamefreak_splash.phase,
+                SplashPhase::BlackDelay | SplashPhase::Setup | SplashPhase::PostDelay
+            ) {
+            Some(game.gamefreak_splash.phase)
+        } else {
+            None
+        };
+        let language_select =
+            (game.state.screen == GameScreen::LanguageSelect).then_some(game.state.config.language);
+        let title = (game.state.screen == GameScreen::TitleScreen)
+            .then(|| TitleVisualKey::new(&game.title_screen));
+        let main_menu =
+            (game.state.screen == GameScreen::MainMenu).then(|| MainMenuVisualKey::new(game));
+        let main_menu_cursor_change = main_menu
+            .as_ref()
+            .zip(last_main_menu.as_ref())
+            .and_then(|(current, previous)| current.cursor_change_from(previous));
+        let start_menu_screen = game.state.screen == GameScreen::StartMenu;
+        let start_menu = start_menu_screen
+            .then(|| StartMenuVisualKey::new(game))
+            .flatten();
+        let start_menu_cursor_change = start_menu
+            .as_ref()
+            .zip(last_start_menu.as_ref())
+            .and_then(|(current, previous)| current.cursor_change_from(previous));
+        let options =
+            (game.state.screen == GameScreen::OptionsMenu).then(|| OptionsVisualKey::new(game));
+        let options_cursor_change = options
+            .as_ref()
+            .zip(last_options.as_ref())
+            .and_then(|(current, previous)| current.cursor_change_from(previous));
+        let save = (game.state.screen == GameScreen::SaveMenu).then(|| SaveVisualKey::new(game));
+        let save_cursor_change = save
+            .as_ref()
+            .zip(last_save.as_ref())
+            .and_then(|(current, previous)| current.cursor_change_from(previous));
+        let bag = (game.state.screen == GameScreen::Bag).then(|| BagVisualKey::new(game));
+        let bag_list_cursor_change = bag
+            .as_ref()
+            .zip(last_bag.as_ref())
+            .and_then(|(current, previous)| current.list_cursor_change_from(previous));
+        let bag_action_cursor_change = bag
+            .as_ref()
+            .zip(last_bag.as_ref())
+            .and_then(|(current, previous)| current.action_cursor_change_from(previous));
+        let bag_quantity_change = bag
+            .as_ref()
+            .zip(last_bag.as_ref())
+            .and_then(|(current, previous)| current.quantity_change_from(previous));
+        let party =
+            (game.state.screen == GameScreen::PartyScreen).then(|| PartyVisualKey::new(game));
+        let party_selection_change = party
+            .as_ref()
+            .zip(last_party.as_ref())
+            .and_then(|(current, previous)| current.selection_change_from(previous));
+        let party_overlay_cursor_change = party
+            .as_ref()
+            .zip(last_party.as_ref())
+            .and_then(|(current, previous)| current.overlay_cursor_change_from(previous));
+        let party_icon_animation_change = party
+            .as_ref()
+            .zip(last_party.as_ref())
+            .is_some_and(|(current, previous)| current.icon_animation_change_from(previous));
+        let stats = matches!(game.state.screen, GameScreen::PokemonStatsScreen(_))
+            .then(|| StatsVisualKey::new(game))
+            .flatten();
+        let pokedex =
+            (game.state.screen == GameScreen::Pokedex).then(|| PokedexVisualKey::new(game));
+        let pokedex_cursor_change = pokedex
+            .as_ref()
+            .zip(last_pokedex.as_ref())
+            .and_then(|(current, previous)| current.cursor_change_from(previous));
+        let pc = (game.state.screen == GameScreen::PC)
+            .then(|| PcVisualKey::new(game))
+            .flatten();
+        let pc_cursor_change = pc
+            .as_ref()
+            .zip(last_pc.as_ref())
+            .and_then(|(current, previous)| current.cursor_change_from(previous));
+        let slots = (game.state.screen == GameScreen::Slots)
+            .then(|| SlotsVisualKey::new(game))
+            .flatten();
+        let slots_cursor_change = slots
+            .as_ref()
+            .zip(last_slots.as_ref())
+            .and_then(|(current, previous)| current.cursor_change_from(previous));
+        let auxiliary_menu = match game.state.screen {
+            GameScreen::Elevator => AuxiliaryMenuVisualKey::new(game, AuxiliaryMenuKind::Elevator),
+            GameScreen::FilterBag => {
+                AuxiliaryMenuVisualKey::new(game, AuxiliaryMenuKind::FilterBag)
+            }
+            _ => None,
+        };
+        let auxiliary_menu_cursor_change = auxiliary_menu
+            .as_ref()
+            .zip(last_auxiliary_menu.as_ref())
+            .and_then(|(current, previous)| current.cursor_change_from(previous));
+        let diploma =
+            (game.state.screen == GameScreen::Diploma).then(|| DiplomaVisualKey::new(game));
+        let shop = ShopVisualKey::new(game);
+        let shop_cursor_change = shop
+            .as_ref()
+            .zip(last_shop.as_ref())
+            .and_then(|(current, previous)| current.cursor_change_from(previous));
+        let trainer_card =
+            (game.state.screen == GameScreen::TrainerCard).then(|| TrainerCardVisualKey::new(game));
+        let town_map =
+            (game.state.screen == GameScreen::TownMap).then(|| TownMapVisualKey::new(game));
+        let town_map_cursor_change = town_map
+            .as_ref()
+            .zip(last_town_map.as_ref())
+            .and_then(|(current, previous)| current.cursor_change_from(previous));
+        let town_map_marker_animation_change = town_map
+            .as_ref()
+            .zip(last_town_map.as_ref())
+            .is_some_and(|(current, previous)| current.marker_animation_change_from(previous));
+        let oak_screen = game.state.screen == GameScreen::OakSpeech;
+        let oak = oak_screen.then(|| OakVisualKey::new(game)).flatten();
+        let overworld_screen = game.state.screen == GameScreen::Overworld;
+        let overworld = overworld_screen
+            .then(|| OverworldVisualKey::new(game))
+            .flatten();
+        let battle_screen = game.state.screen == GameScreen::Battle;
+        let battle = battle_screen.then(|| BattleVisualKey::new(game)).flatten();
+        let battle_menu_cursor_change = battle
+            .as_ref()
+            .zip(last_battle.as_ref())
+            .and_then(|(current, previous)| current.player_menu_cursor_change_from(previous));
+        let battle_safari_cursor_change = battle
+            .as_ref()
+            .zip(last_battle.as_ref())
+            .and_then(|(current, previous)| current.safari_menu_cursor_change_from(previous));
+        let battle_move_cursor_change = battle
+            .as_ref()
+            .zip(last_battle.as_ref())
+            .and_then(|(current, previous)| current.move_menu_cursor_change_from(previous));
+        let battle_bag_cursor_change = battle
+            .as_ref()
+            .zip(last_battle.as_ref())
+            .and_then(|(current, previous)| current.bag_menu_cursor_change_from(previous));
+        let battle_party_menu_change = battle
+            .as_ref()
+            .zip(last_battle.as_ref())
+            .and_then(|(current, previous)| current.party_menu_change_from(previous));
+        let battle_yes_no_cursor_change = battle
+            .as_ref()
+            .zip(last_battle.as_ref())
+            .and_then(|(current, previous)| current.yes_no_cursor_change_from(previous));
+        let redraw = if black_screen {
+            !last_black_screen
+        } else if trade.is_some() {
+            trade != last_trade
+        } else if evolution.is_some() {
+            evolution != last_evolution
+        } else if hof.is_some() {
+            hof != last_hof
+        } else if credits.is_some() {
+            credits != last_credits
+        } else if last_takeover_active {
+            // The takeover replaced the ordinary screen contents. Restore
+            // that screen even when its own visual state did not change.
+            true
+        } else if static_splash.is_some() {
+            static_splash != last_static_splash
+        } else if language_select.is_some() {
+            language_select != last_language_select
+        } else if title.is_some() {
+            title != last_title
+        } else if main_menu.is_some() {
+            main_menu != last_main_menu
+        } else if start_menu_screen {
+            start_menu
+                .as_ref()
+                .map_or(true, |key| last_start_menu.as_ref() != Some(key))
+        } else if options.is_some() {
+            options != last_options
+        } else if save.is_some() {
+            save != last_save
+        } else if bag.is_some() {
+            bag != last_bag
+        } else if party.is_some() {
+            party != last_party
+        } else if stats.is_some() {
+            stats != last_stats
+        } else if pokedex.is_some() {
+            pokedex != last_pokedex
+        } else if pc.is_some() {
+            pc != last_pc
+        } else if slots.is_some() {
+            slots != last_slots
+        } else if auxiliary_menu.is_some() {
+            auxiliary_menu != last_auxiliary_menu
+        } else if diploma.is_some() {
+            diploma != last_diploma
+        } else if shop.is_some() {
+            shop != last_shop
+        } else if trainer_card.is_some() {
+            trainer_card != last_trainer_card
+        } else if town_map.is_some() {
+            town_map != last_town_map
+        } else if oak_screen {
+            oak.as_ref()
+                .map_or(true, |key| last_oak.as_ref() != Some(key))
+        } else if overworld_screen {
+            overworld
+                .as_ref()
+                .map_or(true, |key| last_overworld.as_ref() != Some(key))
+        } else if battle_screen {
+            battle != last_battle || battle.is_none()
+        } else {
+            true
+        };
+        if redraw {
+            if let Some((previous, current)) = main_menu_cursor_change {
+                super::redraw_main_menu_cursor(previous, current, fb, game.state.config.language);
+            } else if let Some((previous, current)) = start_menu_cursor_change {
+                super::redraw_start_menu_cursor(
+                    game.start_menu.item_count(),
+                    previous,
+                    current,
+                    fb,
+                    game.state.config.language,
+                );
+            } else if let Some((previous, current)) = options_cursor_change {
+                super::redraw_options_menu_cursor(
+                    previous,
+                    current,
+                    fb,
+                    game.state.config.language,
+                );
+            } else if let Some((previous, current)) = save_cursor_change {
+                super::redraw_save_menu_cursor(previous, current, fb, game.state.config.language);
+            } else if let Some((previous, current)) = bag_list_cursor_change {
+                super::redraw_top_level_bag_cursor(
+                    previous,
+                    current,
+                    fb,
+                    game.state.config.language,
+                );
+            } else if let Some((previous, current)) = bag_action_cursor_change {
+                super::redraw_top_level_bag_action_cursor(
+                    previous,
+                    current,
+                    fb,
+                    game.state.config.language,
+                );
+            } else if let Some((previous, current)) = bag_quantity_change {
+                super::redraw_top_level_bag_quantity(
+                    previous,
+                    current,
+                    fb,
+                    game.state.config.language,
+                );
+            } else if let Some(previous_cursor) = party_selection_change {
+                super::redraw_top_level_party_selection(
+                    &game.party_screen,
+                    previous_cursor,
+                    game.frame_count,
+                    game.resources.as_mut(),
+                    fb,
+                    game.state.config.language,
+                );
+            } else if let Some((previous, current, icon_changed)) = party_overlay_cursor_change {
+                if icon_changed {
+                    super::redraw_top_level_party_icon(
+                        &game.party_screen,
+                        game.frame_count,
+                        game.resources.as_mut(),
+                        fb,
+                        game.state.config.language,
+                    );
+                }
+                super::redraw_top_level_party_overlay_cursor(
+                    &game.party_screen,
+                    previous,
+                    current,
+                    fb,
+                    game.state.config.language,
+                );
+            } else if party_icon_animation_change {
+                super::redraw_top_level_party_icon(
+                    &game.party_screen,
+                    game.frame_count,
+                    game.resources.as_mut(),
+                    fb,
+                    game.state.config.language,
+                );
+            } else if let Some((previous, current)) = pokedex_cursor_change {
+                super::redraw_pokedex_cursor(previous, current, fb);
+            } else if let Some((previous, current)) = pc_cursor_change {
+                super::redraw_pc_cursor(previous, current, fb);
+            } else if let Some((previous, current)) = slots_cursor_change {
+                super::redraw_slots_bet_cursor(previous, current, fb);
+            } else if let Some((previous, current)) = auxiliary_menu_cursor_change {
+                super::redraw_elevator_cursor(previous, current, fb);
+            } else if let Some((previous, current)) = shop_cursor_change {
+                super::redraw_mart_cursor(previous, current, fb, game.state.config.language);
+            } else if let Some(previous_map) = town_map_cursor_change {
+                super::redraw_town_map_cursor(
+                    &game.town_map_screen,
+                    previous_map,
+                    &mut game.resources,
+                    game.frame_count,
+                    fb,
+                    game.state.config.language,
+                );
+            } else if town_map_marker_animation_change {
+                super::redraw_town_map_marker(
+                    &game.town_map_screen,
+                    &mut game.resources,
+                    game.frame_count,
+                    fb,
+                    game.state.config.language,
+                );
+            } else if let Some((previous, _)) = battle_safari_cursor_change {
+                super::redraw_battle_safari_menu_cursor(
+                    previous,
+                    &game.battle.safari_menu,
+                    fb,
+                    game.state.config.language,
+                );
+            } else if let Some((previous, _)) = battle_menu_cursor_change {
+                super::redraw_battle_main_menu_cursor(
+                    previous,
+                    &game.battle.battle_menu,
+                    fb,
+                    game.state.config.language,
+                );
+            } else if let (Some((previous, _)), Some(move_menu)) =
+                (battle_move_cursor_change, game.battle.move_menu.as_ref())
+            {
+                super::redraw_battle_move_menu_selection(
+                    previous,
+                    move_menu,
+                    fb,
+                    game.state.config.language,
+                );
+            } else if let (Some((previous, _)), Some(bag_menu)) =
+                (battle_bag_cursor_change, game.battle.bag_menu.as_ref())
+            {
+                super::redraw_battle_bag_menu_cursor(
+                    previous,
+                    bag_menu,
+                    fb,
+                    game.state.config.language,
+                );
+            } else if let Some(BattlePartyMenuChange::Cursor {
+                previous_row,
+                current_row,
+            }) = battle_party_menu_change
+            {
+                super::redraw_battle_party_menu_cursor(
+                    previous_row,
+                    current_row,
+                    fb,
+                    game.state.config.language,
+                );
+            } else if let (
+                Some(BattlePartyMenuChange::Viewport {
+                    previous_start,
+                    current_start,
+                }),
+                Some(battle_state),
+            ) = (battle_party_menu_change, game.battle.battle_state.as_ref())
+            {
+                super::redraw_battle_party_menu_viewport(
+                    &battle_state.player.party,
+                    game.battle.party_cursor,
+                    previous_start,
+                    current_start,
+                    fb,
+                    game.state.config.language,
+                );
+            } else if let Some((previous_yes, current_yes)) = battle_yes_no_cursor_change {
+                super::redraw_battle_yes_no_cursor(
+                    previous_yes,
+                    current_yes,
+                    fb,
+                    game.state.config.language,
+                );
+            } else {
+                draw_full(
+                    game,
+                    fb,
+                    overworld_background_cache,
+                    scroll_background,
+                    overworld.is_some(),
+                );
+            }
+        }
+
+        if redraw {
+            let main_menu_damage = main_menu_cursor_change.map(|(previous, current)| {
+                [
+                    main_menu_cursor_damage(previous, game.state.config.language),
+                    main_menu_cursor_damage(current, game.state.config.language),
+                ]
+            });
+            let start_menu_damage = start_menu_cursor_change.map(|(previous, current)| {
+                [
+                    start_menu_cursor_damage(previous),
+                    start_menu_cursor_damage(current),
+                ]
+            });
+            let options_damage = options_cursor_change.map(|(previous, current)| {
+                [
+                    options_cursor_damage(previous),
+                    options_cursor_damage(current),
+                ]
+            });
+            let save_damage = save_cursor_change.map(|(previous, current)| {
+                [save_cursor_damage(previous), save_cursor_damage(current)]
+            });
+            let bag_list_cursor_damage = bag_list_cursor_change.map(|(previous, current)| {
+                [bag_cursor_damage(previous), bag_cursor_damage(current)]
+            });
+            let bag_action_cursor_damage = bag_action_cursor_change.map(|(previous, current)| {
+                [
+                    bag_action_cursor_damage(previous),
+                    bag_action_cursor_damage(current),
+                ]
+            });
+            let bag_quantity_damage = bag_quantity_change
+                .map(|(previous, current)| [bag_quantity_damage(previous, current)]);
+            let party_selection_damage = party_selection_change.map(|previous_cursor| {
+                [
+                    party_selection_damage(previous_cursor),
+                    party_selection_damage(game.party_screen.cursor()),
+                ]
+            });
+            let party_icon_damage_rects = party_icon_animation_change
+                .then_some([party_icon_damage(game.party_screen.cursor())]);
+            let pokedex_cursor_damage = pokedex_cursor_change.map(|(previous, current)| {
+                [
+                    FrameDamageRect {
+                        x: previous.0,
+                        y: previous.1,
+                        width: 8,
+                        height: 9,
+                    },
+                    FrameDamageRect {
+                        x: current.0,
+                        y: current.1,
+                        width: 8,
+                        height: 9,
+                    },
+                ]
+            });
+            let pc_cursor_damage = pc_cursor_change.map(|(previous, current)| {
+                [
+                    FrameDamageRect {
+                        x: previous.0,
+                        y: previous.1,
+                        width: 5,
+                        height: 10,
+                    },
+                    FrameDamageRect {
+                        x: current.0,
+                        y: current.1,
+                        width: 5,
+                        height: 10,
+                    },
+                ]
+            });
+            let slots_cursor_damage = slots_cursor_change.map(|(previous, current)| {
+                [
+                    FrameDamageRect {
+                        x: previous.0,
+                        y: previous.1,
+                        width: 5,
+                        height: 10,
+                    },
+                    FrameDamageRect {
+                        x: current.0,
+                        y: current.1,
+                        width: 5,
+                        height: 10,
+                    },
+                ]
+            });
+            let auxiliary_menu_cursor_damage =
+                auxiliary_menu_cursor_change.map(|(previous, current)| {
+                    [
+                        FrameDamageRect {
+                            x: previous.0,
+                            y: previous.1,
+                            width: 5,
+                            height: 10,
+                        },
+                        FrameDamageRect {
+                            x: current.0,
+                            y: current.1,
+                            width: 5,
+                            height: 10,
+                        },
+                    ]
+                });
+            let shop_cursor_damage = shop_cursor_change.map(|(previous, current)| {
+                [
+                    FrameDamageRect {
+                        x: previous.0 * 8,
+                        y: previous.1 * 8,
+                        width: 8,
+                        height: 9,
+                    },
+                    FrameDamageRect {
+                        x: current.0 * 8,
+                        y: current.1 * 8,
+                        width: 8,
+                        height: 9,
+                    },
+                ]
+            });
+            let party_overlay_cursor_damage =
+                party_overlay_cursor_change.map(|(previous, current, icon_changed)| {
+                    (
+                        [
+                            party_overlay_cursor_damage(
+                                &game.party_screen,
+                                previous,
+                                game.state.config.language,
+                            ),
+                            party_overlay_cursor_damage(
+                                &game.party_screen,
+                                current,
+                                game.state.config.language,
+                            ),
+                            party_icon_damage(game.party_screen.cursor()),
+                        ],
+                        icon_changed,
+                    )
+                });
+            let town_map_marker_damage = town_map_marker_animation_change
+                .then(|| {
+                    pokered_data::town_map_data::town_map_position(
+                        game.town_map_screen.current_map(),
+                    )
+                    .map(|(x, y, _)| {
+                        [FrameDamageRect {
+                            x: (x as u32 + 2) * 8,
+                            y: (y as u32 + 1) * 8,
+                            width: 8,
+                            height: 8,
+                        }]
+                    })
+                })
+                .flatten();
+            let town_map_cursor_damage = town_map_cursor_change.and_then(|previous_map| {
+                let (old_x, old_y, _) =
+                    pokered_data::town_map_data::town_map_position(previous_map)?;
+                let (new_x, new_y, _) = pokered_data::town_map_data::town_map_position(
+                    game.town_map_screen.selected_map(),
+                )?;
+                let (marker_x, marker_y, _) = pokered_data::town_map_data::town_map_position(
+                    game.town_map_screen.current_map(),
+                )?;
+                let label = if game.town_map_screen.mode() == TownMapMode::Fly {
+                    FrameDamageRect {
+                        x: 0,
+                        y: 0,
+                        width: 160,
+                        height: 16,
+                    }
+                } else {
+                    if town_map_reticle_overlaps_view_box(previous_map)
+                        || town_map_reticle_overlaps_view_box(game.town_map_screen.selected_map())
+                        || town_map_marker_is_behind_view_box(game.town_map_screen.current_map())
+                    {
+                        FrameDamageRect {
+                            x: 0,
+                            y: 15 * 8,
+                            width: 160,
+                            height: 3 * 8,
+                        }
+                    } else {
+                        FrameDamageRect {
+                            x: 8,
+                            y: 16 * 8,
+                            width: town_map_label_width(previous_map, game.state.config.language)
+                                .max(town_map_label_width(
+                                    game.town_map_screen.selected_map(),
+                                    game.state.config.language,
+                                ))
+                                .min(18 * 8),
+                            height: 13,
+                        }
+                    }
+                };
+                Some([
+                    FrameDamageRect {
+                        x: old_x as u32 * 8 + 12,
+                        y: old_y as u32 * 8 + 5,
+                        width: 16,
+                        height: 16,
+                    },
+                    FrameDamageRect {
+                        x: new_x as u32 * 8 + 12,
+                        y: new_y as u32 * 8 + 5,
+                        width: 16,
+                        height: 16,
+                    },
+                    FrameDamageRect {
+                        x: (marker_x as u32 + 2) * 8,
+                        y: (marker_y as u32 + 1) * 8,
+                        width: 8,
+                        height: 8,
+                    },
+                    label,
+                ])
+            });
+            let battle_safari_damage = battle_safari_cursor_change.map(|(previous, current)| {
+                [
+                    battle_safari_cursor_damage(previous),
+                    battle_safari_cursor_damage(current),
+                ]
+            });
+            let battle_menu_damage = battle_menu_cursor_change.map(|(previous, current)| {
+                [
+                    battle_menu_cursor_damage(previous),
+                    battle_menu_cursor_damage(current),
+                ]
+            });
+            let battle_move_damage = battle_move_cursor_change.map(|(previous, current)| {
+                battle_move_menu_damage(previous, current, game.state.config.language)
+            });
+            let battle_bag_damage = battle_bag_cursor_change.map(|(previous, current)| {
+                [
+                    battle_bag_cursor_damage(previous),
+                    battle_bag_cursor_damage(current),
+                ]
+            });
+            let battle_party_cursor_damage = match battle_party_menu_change {
+                Some(BattlePartyMenuChange::Cursor {
+                    previous_row,
+                    current_row,
+                }) => Some([
+                    battle_party_cursor_damage(previous_row),
+                    battle_party_cursor_damage(current_row),
+                ]),
+                _ => None,
+            };
+            let battle_party_viewport_damage = matches!(
+                battle_party_menu_change,
+                Some(BattlePartyMenuChange::Viewport { .. })
+            )
+            .then_some([battle_party_viewport_damage()]);
+            let battle_yes_no_damage =
+                battle_yes_no_cursor_change.map(|(previous_yes, current_yes)| {
+                    [
+                        battle_yes_no_cursor_damage(previous_yes),
+                        battle_yes_no_cursor_damage(current_yes),
+                    ]
+                });
+            let damage = if let Some(rects) = main_menu_damage.as_ref() {
+                Some(rects.as_slice())
+            } else if let Some(rects) = start_menu_damage.as_ref() {
+                Some(rects.as_slice())
+            } else if let Some(rects) = options_damage.as_ref() {
+                Some(rects.as_slice())
+            } else if let Some(rects) = save_damage.as_ref() {
+                Some(rects.as_slice())
+            } else if let Some(rects) = bag_list_cursor_damage.as_ref() {
+                Some(rects.as_slice())
+            } else if let Some(rects) = bag_action_cursor_damage.as_ref() {
+                Some(rects.as_slice())
+            } else if let Some(rects) = bag_quantity_damage.as_ref() {
+                Some(rects.as_slice())
+            } else if let Some(rects) = party_selection_damage.as_ref() {
+                Some(rects.as_slice())
+            } else if let Some((rects, icon_changed)) = party_overlay_cursor_damage.as_ref() {
+                Some(&rects[..if *icon_changed { 3 } else { 2 }])
+            } else if let Some(rects) = party_icon_damage_rects.as_ref() {
+                Some(rects.as_slice())
+            } else if let Some(rects) = pokedex_cursor_damage.as_ref() {
+                Some(rects.as_slice())
+            } else if let Some(rects) = pc_cursor_damage.as_ref() {
+                Some(rects.as_slice())
+            } else if let Some(rects) = slots_cursor_damage.as_ref() {
+                Some(rects.as_slice())
+            } else if let Some(rects) = auxiliary_menu_cursor_damage.as_ref() {
+                Some(rects.as_slice())
+            } else if let Some(rects) = shop_cursor_damage.as_ref() {
+                Some(rects.as_slice())
+            } else if let Some(rects) = town_map_cursor_damage.as_ref() {
+                Some(rects.as_slice())
+            } else if let Some(rects) = town_map_marker_damage.as_ref() {
+                Some(rects.as_slice())
+            } else if let Some(rects) = battle_safari_damage.as_ref() {
+                Some(rects.as_slice())
+            } else if let Some(rects) = battle_menu_damage.as_ref() {
+                Some(rects.as_slice())
+            } else if let Some(rects) = battle_move_damage.as_ref() {
+                Some(rects.as_slice())
+            } else if let Some(rects) = battle_bag_damage.as_ref() {
+                Some(rects.as_slice())
+            } else if let Some(rects) = battle_party_cursor_damage.as_ref() {
+                Some(rects.as_slice())
+            } else if let Some(rects) = battle_party_viewport_damage.as_ref() {
+                Some(rects.as_slice())
+            } else if let Some(rects) = battle_yes_no_damage.as_ref() {
+                Some(rects.as_slice())
+            } else {
+                overworld_background_cache
+                    .as_ref()
+                    .and_then(|cache| cache.presentation_damage())
+            };
+            match damage {
+                Some(rects) => {
+                    self.pending_damage.extend_from_slice(rects);
+                    partial = true;
+                }
+                None => {}
+            }
+        }
+        self.last_black_screen = black_screen;
+        self.last_trade = trade;
+        self.last_evolution = evolution;
+        self.last_hof = hof;
+        self.last_credits = credits;
+        self.last_takeover_active = takeover_active;
+        self.last_static_splash = static_splash;
+        self.last_language_select = language_select;
+        self.last_title = title;
+        self.last_main_menu = main_menu;
+        self.last_start_menu = start_menu;
+        self.last_options = options;
+        self.last_save = save;
+        self.last_bag = bag;
+        self.last_party = party;
+        self.last_stats = stats;
+        self.last_pokedex = pokedex;
+        self.last_pc = pc;
+        self.last_slots = slots;
+        self.last_auxiliary_menu = auxiliary_menu;
+        self.last_diploma = diploma;
+        self.last_shop = shop;
+        self.last_trainer_card = trainer_card;
+        self.last_town_map = town_map;
+        self.last_oak = oak;
+        self.last_overworld = overworld;
+        self.last_battle = battle;
+        if !redraw {
+            FrameUpdate::Reuse
+        } else if partial {
+            FrameUpdate::Damage(&self.pending_damage)
+        } else {
+            FrameUpdate::Full
+        }
+    }
+}
+
+#[cfg(test)]
+mod session_tests {
+    use super::*;
+    use dotzuki_engine::render_config::RenderConfig;
+    use pokered_core::options_menu::OptionsRow;
+    use pokered_renderer::Rgba;
+
+    #[test]
+    fn retained_menu_frames_and_damage_match_full_draws_across_takeovers() {
+        let mut game = PokemonGame::new(GameVersion::Red);
+        for language in [Lang::En, Lang::Zh] {
+            game.state.config.language = language;
+            game.handle_transition(GameScreen::OptionsMenu);
+            let mut session = RenderSession::new();
+            let mut fb = FrameBuffer::new(RenderConfig::new(160, 144), Rgba::WHITE);
+            let mut scroll = |_: &mut [u8], _: usize, _: usize, _: i32, _: i32, _: u8| {
+                panic!("menu rendering must not scroll an overworld buffer");
+            };
+            assert!(matches!(
+                session.render(&mut game, &mut fb, &mut scroll),
+                FrameUpdate::Full
+            ));
+            assert!(matches!(
+                session.render(&mut game, &mut fb, &mut scroll),
+                FrameUpdate::Reuse
+            ));
+            for row in [
+                OptionsRow::BattleAnimation,
+                OptionsRow::BattleStyle,
+                OptionsRow::Cancel,
+                OptionsRow::TextSpeed,
+            ] {
+                let before = fb.clone();
+                game.options_menu.row = row;
+                let update = session.render(&mut game, &mut fb, &mut scroll);
+                let FrameUpdate::Damage(rects) = update else {
+                    panic!("cursor change must produce damage");
+                };
+                let mut full = FrameBuffer::new(RenderConfig::new(160, 144), Rgba::WHITE);
+                game.draw(&mut full);
+                for y in 0..144 {
+                    for x in 0..160 {
+                        assert_eq!(
+                            fb.get_pixel(x, y),
+                            full.get_pixel(x, y),
+                            "{language:?} {row:?} at {x},{y}"
+                        );
+                        if before.get_pixel(x, y) != fb.get_pixel(x, y) {
+                            assert!(rects.iter().any(|r| x >= r.x
+                                && x < r.x + r.width
+                                && y >= r.y
+                                && y < r.y + r.height));
+                        }
+                    }
+                }
+            }
+            game.black_screen_frames = 1;
+            assert!(matches!(
+                session.render(&mut game, &mut fb, &mut scroll),
+                FrameUpdate::Full
+            ));
+            game.black_screen_frames = 0;
+            assert!(matches!(
+                session.render(&mut game, &mut fb, &mut scroll),
+                FrameUpdate::Full
+            ));
+            assert!(matches!(
+                session.render(&mut game, &mut fb, &mut scroll),
+                FrameUpdate::Reuse
+            ));
+        }
+    }
+}
+
+fn draw_full(
+    game: &mut PokemonGame,
+    frame_buffer: &mut FrameBuffer,
+    background_cache: &mut Option<OverworldBackgroundCache>,
+    scroll_background: &mut dyn FnMut(&mut [u8], usize, usize, i32, i32, u8),
+    reuse_composited_overworld: bool,
+) {
+    let ordinary_overworld = game.black_screen_frames == 0
+        && game.trade_anim.is_none()
+        && game.evolution_anim.is_none()
+        && game.hof_ceremony.is_none()
+        && game.credits.is_none()
+        && game.state.screen == GameScreen::Overworld;
+    if !ordinary_overworld {
+        *background_cache = None;
+        game.draw(frame_buffer);
+        return;
+    }
+
+    let cache = background_cache.get_or_insert_with(|| {
+        OverworldBackgroundCache::new(frame_buffer.width(), frame_buffer.height())
+    });
+    super::overworld::draw_overworld_cached_with(
+        &mut game.overworld,
+        &mut game.resources,
+        frame_buffer,
+        game.state.config.language,
+        cache,
+        scroll_background,
+        reuse_composited_overworld,
+    );
+}
+
+#[inline]
+fn battle_menu_cursor_damage((row, col): (usize, usize)) -> FrameDamageRect {
+    let pos = pokered_ui::menus::battle_main::cursor_position(row, col);
+    FrameDamageRect {
+        x: pos.tx * 8,
+        y: pos.ty * 8,
+        width: 8,
+        height: 9,
+    }
+}
+
+fn battle_safari_cursor_damage((row, col): (usize, usize)) -> FrameDamageRect {
+    let pos = pokered_ui::menus::battle_safari::cursor_position(row, col);
+    FrameDamageRect {
+        x: pos.tx * 8,
+        y: pos.ty * 8,
+        width: 8,
+        height: 9,
+    }
+}
+
+fn battle_move_menu_damage(
+    previous: usize,
+    current: usize,
+    language: Lang,
+) -> [FrameDamageRect; 3] {
+    let (cursor_x, cursor_y, cursor_step, info_y, info_height) = if language == Lang::Zh {
+        (8, 96, 10, 72, 16)
+    } else {
+        (5 * 8, 13 * 8, 8, 80, 18)
+    };
+    let cursor_damage = |selected: usize| FrameDamageRect {
+        x: cursor_x,
+        y: cursor_y + selected as u32 * cursor_step,
+        width: 8,
+        height: 9,
+    };
+    [
+        FrameDamageRect {
+            x: 8,
+            y: info_y,
+            width: 72,
+            height: info_height,
+        },
+        cursor_damage(previous),
+        cursor_damage(current),
+    ]
+}
+
+#[inline]
+fn battle_bag_cursor_damage(cursor: usize) -> FrameDamageRect {
+    FrameDamageRect {
+        x: 6 * 8,
+        y: (12 + cursor as u32) * 8,
+        width: 8,
+        height: 9,
+    }
+}
+
+#[inline]
+fn battle_party_cursor_damage(row: usize) -> FrameDamageRect {
+    FrameDamageRect {
+        x: 2 * 8,
+        y: (13 + row as u32) * 8,
+        width: 8,
+        height: 9,
+    }
+}
+
+#[inline]
+fn battle_party_viewport_damage() -> FrameDamageRect {
+    FrameDamageRect {
+        x: 2 * 8,
+        y: 13 * 8 - 1,
+        width: 16 * 8,
+        height: 4 * 8 + 6,
+    }
+}
+
+#[inline]
+fn battle_yes_no_cursor_damage(yes: bool) -> FrameDamageRect {
+    let selected = if yes { 0 } else { 1 };
+    FrameDamageRect {
+        x: 12 * 8,
+        y: (9 + selected * 2) * 8,
+        width: 8,
+        height: 9,
+    }
+}
+
+#[inline]
+fn main_menu_cursor_damage(cursor: usize, language: Lang) -> FrameDamageRect {
+    FrameDamageRect {
+        x: 8,
+        y: (2 + cursor as u32 * 2) * 8,
+        width: if language == Lang::Zh { 10 } else { 8 },
+        height: if language == Lang::Zh { 10 } else { 9 },
+    }
+}
+
+#[inline]
+fn start_menu_cursor_damage(cursor: usize) -> FrameDamageRect {
+    FrameDamageRect {
+        x: 11 * 8,
+        y: (2 + cursor as u32 * 2) * 8,
+        width: 8,
+        height: 9,
+    }
+}
+
+#[inline]
+fn options_cursor_damage(cursor: (u32, u32)) -> FrameDamageRect {
+    FrameDamageRect {
+        x: cursor.0 * 8,
+        y: cursor.1 * 8,
+        width: 8,
+        height: 9,
+    }
+}
+
+#[inline]
+fn save_cursor_damage(cursor: YesNoChoice) -> FrameDamageRect {
+    let pos = pokered_ui::menus::save::cursor_position(cursor);
+    FrameDamageRect {
+        x: pos.tx * 8,
+        y: pos.ty * 8,
+        width: 8,
+        height: 9,
+    }
+}
+
+#[inline]
+fn bag_cursor_damage(cursor: TilePos) -> FrameDamageRect {
+    FrameDamageRect {
+        x: cursor.tx * 8,
+        y: cursor.ty * 8,
+        width: 8,
+        height: 9,
+    }
+}
+
+#[inline]
+fn bag_action_cursor_damage(cursor: u8) -> FrameDamageRect {
+    FrameDamageRect {
+        x: 13 * 8,
+        y: (12 + cursor as u32 * 2) * 8,
+        width: 8,
+        height: 9,
+    }
+}
+
+#[inline]
+fn bag_quantity_damage(previous: u32, current: u32) -> FrameDamageRect {
+    let text_width = |mut qty| {
+        let mut digits = 1;
+        while qty >= 10 {
+            qty /= 10;
+            digits += 1;
+        }
+        (1 + digits.max(2)) * 8
+    };
+    FrameDamageRect {
+        x: 7 * 8,
+        y: 15 * 8,
+        width: text_width(previous).max(text_width(current)),
+        height: 10,
+    }
+}
+
+#[inline]
+fn party_selection_damage(cursor: usize) -> FrameDamageRect {
+    FrameDamageRect {
+        x: 0,
+        y: cursor as u32 * 24,
+        width: 24,
+        height: 16,
+    }
+}
+
+#[inline]
+fn party_icon_damage(cursor: usize) -> FrameDamageRect {
+    FrameDamageRect {
+        x: 8,
+        y: cursor as u32 * 24,
+        width: 16,
+        height: 16,
+    }
+}
+
+#[inline]
+fn party_overlay_cursor_damage(
+    state: &pokered_core::party_screen::PartyScreenState,
+    cursor: u8,
+    language: Lang,
+) -> FrameDamageRect {
+    let position = pokered_ui::menus::party::overlay_cursor_position(state, cursor, language)
+        .unwrap_or(TilePos::new(0, 0));
+    FrameDamageRect {
+        x: position.tx * 8,
+        y: position.ty * 8,
+        width: 8,
+        height: 9,
+    }
+}

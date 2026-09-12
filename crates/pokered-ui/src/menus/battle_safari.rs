@@ -3,11 +3,10 @@ use pokered_core::game_state::Lang;
 #[cfg(not(target_os = "none"))]
 use pokered_data::ui_layout::schema::get_screen_v2_json;
 
-use crate::engine::{Painter, Rgba, TilePos, Ui};
 #[cfg(any(test, target_os = "none"))]
 use crate::engine::TileRect;
-#[cfg(not(target_os = "none"))]
-use crate::v2::{self, DataContext};
+use crate::engine::{Painter, Rgba, TilePos, Ui};
+use crate::v2;
 
 /// Safari battle action menu (BALL / BAIT / ROCK / RUN) — rendered from
 /// `battle_safari.gui` as an OVERLAY on the battle scene, mirroring `battle_main`.
@@ -32,47 +31,49 @@ fn draw_v2<P: Painter>(state: &SafariBattleMenuState, ui: &mut Ui<P>, lang: Lang
         return;
     };
 
-    let mut ctx = DataContext::new();
-    ctx.set("bcol", state.col() as i64);
-    ctx.set("brow", state.row() as i64);
-    ctx.set("__lang", v2::lang_code(lang));
+    let ctx = bindings(state, lang).dynamic();
 
     v2::render_screen_overlay(&layout, &ctx, ui.painter());
 }
 
+fn bindings(
+    state: &SafariBattleMenuState,
+    lang: Lang,
+) -> dotzuki_renderer::layout_engine::static_layout::Context<'static> {
+    let mut ctx = dotzuki_renderer::layout_engine::static_layout::Context::new();
+    ctx.set("bcol", state.col() as i64);
+    ctx.set("brow", state.row() as i64);
+    ctx.set("__lang", v2::lang_code(lang));
+
+    ctx
+}
+
 #[cfg(any(test, target_os = "none"))]
 fn draw_compiled<P: Painter>(state: &SafariBattleMenuState, painter: &mut P, lang: Lang) {
-    painter.draw_text_box(TileRect::new(0, 12, 20, 6), Rgba::INK_BLACK);
-    painter.draw_text_box(TileRect::new(8, 12, 12, 6), Rgba::INK_BLACK);
-
-    let (ball, bait, rock, run) = match lang {
-        Lang::Zh => ("球", "饵", "石", "逃跑"),
-        _ => ("BALL", "BAIT", "ROCK", "RUN"),
-    };
-    draw_label(painter, TilePos::new(10, 14), ball);
-    draw_label(painter, TilePos::new(16, 14), bait);
-    draw_label(painter, TilePos::new(10, 16), rock);
-    draw_label(painter, TilePos::new(16, 16), run);
-    draw_cursor(painter, cursor_position(state.row(), state.col()));
+    pokered_data::ui_layout::schema::BATTLE_SAFARI_STATIC_LAYOUT.render(
+        &bindings(state, lang),
+        painter,
+        false,
+        false,
+    );
 }
 
-fn cursor_position(row: usize, col: usize) -> TilePos {
-    TilePos::new(9 + col as u32 * 6, 14 + row as u32 * 2)
+pub fn cursor_position(row: usize, col: usize) -> TilePos {
+    cursor_spec(row, col).0
 }
 
-fn draw_cursor<P: Painter>(painter: &mut P, position: TilePos) {
-    painter.draw_glyph(position, '▶', Rgba::INK_BLACK);
+fn cursor_spec(row: usize, col: usize) -> (TilePos, char) {
+    let mut ctx: dotzuki_renderer::layout_engine::static_layout::Context<'_, 2> =
+        dotzuki_renderer::layout_engine::static_layout::Context::new();
+    ctx.set("brow", row as i64);
+    ctx.set("bcol", col as i64);
+    pokered_data::ui_layout::schema::BATTLE_SAFARI_STATIC_LAYOUT
+        .cursor(&ctx)
+        .expect("battle layout must declare a cursor")
 }
 
-#[cfg(any(test, target_os = "none"))]
-fn draw_label<P: Painter>(painter: &mut P, position: TilePos, text: &str) {
-    for (offset, glyph) in text.chars().enumerate() {
-        painter.draw_glyph(
-            TilePos::new(position.tx + offset as u32, position.ty),
-            glyph,
-            Rgba::INK_BLACK,
-        );
-    }
+fn draw_cursor<P: Painter>(painter: &mut P, cursor: (TilePos, char)) {
+    painter.draw_glyph(cursor.0, cursor.1, Rgba::INK_BLACK);
 }
 
 /// Repaint only the changed cursor cells of an already-rendered Safari menu.
@@ -83,7 +84,7 @@ pub fn redraw_cursor<P: Painter>(
 ) {
     let old = cursor_position(previous.0, previous.1);
     painter.draw_pixel_rect(old.tx * 8, old.ty * 8, 8, 9, Rgba::INK_WHITE);
-    draw_cursor(painter, cursor_position(state.row(), state.col()));
+    draw_cursor(painter, cursor_spec(state.row(), state.col()));
 }
 
 #[cfg(test)]

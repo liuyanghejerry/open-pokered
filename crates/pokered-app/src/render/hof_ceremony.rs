@@ -44,7 +44,6 @@ const BACK_PIC_Y: u32 = 11 * T;
 /// Long roll-call dwell phases only advance an invisible counter. The GBA
 /// frontend uses this key to retain the existing framebuffer in those
 /// intervals while scroll positions and phase transitions still redraw.
-#[cfg(any(test, target_os = "none"))]
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct HofVisualKey {
     visual_phase: u8,
@@ -55,7 +54,6 @@ pub struct HofVisualKey {
     is_zh: bool,
 }
 
-#[cfg(any(test, target_os = "none"))]
 pub fn hof_visual_key(hof: &HofCeremonyState, lang: Lang) -> HofVisualKey {
     let is_zh = lang == Lang::Zh;
     let mut key = HofVisualKey {

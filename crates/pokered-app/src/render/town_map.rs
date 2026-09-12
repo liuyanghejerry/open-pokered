@@ -174,7 +174,6 @@ pub fn draw_town_map(
     }
 }
 
-#[cfg(any(test, target_os = "none"))]
 fn restore_town_map_marker_layers(
     state: &TownMapScreenState,
     res: &mut Option<ResourceManager>,
@@ -291,7 +290,6 @@ fn restore_town_map_marker_layers(
 ///
 /// The marker is drawn after the selection reticle and FLY bird, so turning
 /// it off must restore those layers as well as the underlying map tile.
-#[cfg(any(test, target_os = "none"))]
 pub fn redraw_town_map_marker(
     state: &TownMapScreenState,
     res: &mut Option<ResourceManager>,
@@ -321,7 +319,6 @@ pub fn redraw_town_map_marker(
     }
 }
 
-#[cfg(any(test, target_os = "none"))]
 fn restore_town_map_background_rect(
     rm: &mut ResourceManager,
     fb: &mut FrameBuffer,
@@ -357,7 +354,6 @@ fn restore_town_map_background_rect(
 }
 
 /// Repaint the old/new selection area and its localized label.
-#[cfg(any(test, target_os = "none"))]
 pub fn redraw_town_map_cursor(
     state: &TownMapScreenState,
     previous_map: pokered_data::maps::MapId,

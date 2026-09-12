@@ -4,6 +4,31 @@ use crate::sync_compat::OnceLock;
 
 use crate::map_json::MapJson;
 use crate::maps::{MapId, NUM_MAPS};
+use alloc::rc::Rc;
+
+#[cfg(all(test, feature = "embedded-map-data"))]
+mod cache_tests {
+    use super::*;
+    #[test]
+    fn visiting_every_map_releases_evicted_metadata_and_preserves_live_handles() {
+        let mut cache = EmbeddedMapCache::default();
+        let first = cache.get(MAP_TABLE[0].0).unwrap();
+        let MapJsonHandle::Shared(ref held) = first else {
+            panic!()
+        };
+        let weak = Rc::downgrade(held);
+        let original_id = first.id;
+        for (name, _) in MAP_TABLE.iter().skip(1) {
+            let current = cache.get(name).unwrap();
+            assert!(cache.entries.len() <= 4);
+            assert_eq!(first.id, original_id);
+            drop(current);
+        }
+        assert!(weak.upgrade().is_some());
+        drop(first);
+        assert!(weak.upgrade().is_none());
+    }
+}
 
 struct MapDataStore {
     maps: HashMap<String, MapJson>,
@@ -26,11 +51,28 @@ fn build_name_to_id() -> HashMap<String, MapId> {
     map
 }
 
-pub fn get_map_json(map_id: MapId) -> Option<&'static MapJson> {
+/// Keeps map metadata alive only while a consumer holds it. Embedded backends
+/// may evict their cached entry without invalidating a live handle.
+#[derive(Clone)]
+pub enum MapJsonHandle {
+    Borrowed(&'static MapJson),
+    Shared(Rc<MapJson>),
+}
+impl core::ops::Deref for MapJsonHandle {
+    type Target = MapJson;
+    fn deref(&self) -> &MapJson {
+        match self {
+            Self::Borrowed(map) => map,
+            Self::Shared(map) => map,
+        }
+    }
+}
+
+pub fn get_map_json(map_id: MapId) -> Option<MapJsonHandle> {
     let name = format!("{:?}", map_id);
     // Editor-injected runtime override shadows the baseline (embedded or disk).
     if let Some(ov) = crate::runtime_overrides::map_override(&name) {
-        return Some(ov);
+        return Some(MapJsonHandle::Borrowed(ov));
     }
     #[cfg(target_os = "none")]
     {
@@ -38,7 +80,7 @@ pub fn get_map_json(map_id: MapId) -> Option<&'static MapJson> {
     }
     #[cfg(not(target_os = "none"))]
     {
-        get_store().maps.get(&name)
+        get_store().maps.get(&name).map(MapJsonHandle::Borrowed)
     }
 }
 
@@ -73,46 +115,49 @@ pub fn all_map_names() -> Vec<&'static str> {
     }
 }
 
-// ── Bare-metal lazy lookup ────────────────────────────────────────────────
-// EWRAM is 256 KiB — far too small to eagerly convert all 248 maps (≈735 KB
-// of owned strings/Vecs, which is what `init_map_data` does on hosted
-// targets). On the GBA we walk the static ROM tables and convert ONE map on
-// first use, leaking the result into a small cache. A play session visits a
-// few dozen maps, so the cache stays comfortably small.
+// Four recent maps cover an active map and adjacent lookups without retaining
+// the entire playthrough. Handles held by callers survive cache eviction.
+#[cfg(feature = "embedded-map-data")]
+#[derive(Default)]
+struct EmbeddedMapCache {
+    entries: Vec<(&'static str, Rc<MapJson>)>,
+}
+#[cfg(feature = "embedded-map-data")]
+impl EmbeddedMapCache {
+    fn get(&mut self, name: &str) -> Option<MapJsonHandle> {
+        if let Some(index) = self.entries.iter().position(|(key, _)| *key == name) {
+            let entry = self.entries.remove(index);
+            let handle = MapJsonHandle::Shared(entry.1.clone());
+            self.entries.push(entry);
+            return Some(handle);
+        }
+        let (key, source) = MAP_TABLE.iter().find(|(key, _)| *key == name)?;
+        if self.entries.len() == 4 {
+            self.entries.remove(0);
+        }
+        let map = Rc::new(MapJson::from(*source));
+        self.entries.push((*key, map.clone()));
+        Some(MapJsonHandle::Shared(map))
+    }
+}
+
 #[cfg(all(target_os = "none", feature = "embedded-map-data"))]
-pub(crate) fn gba_map_json(name: &str) -> Option<&'static MapJson> {
-    use crate::hash_compat::HashMap;
-    use crate::sync_compat::{Mutex, OnceLock};
-    static CACHE: OnceLock<Mutex<HashMap<String, &'static MapJson>>> = OnceLock::new();
-    let cache = CACHE.get_or_init(|| Mutex::new(HashMap::default()));
-    if let Some(hit) = cache.lock().ok().and_then(|m| m.get(name).copied()) {
-        return Some(hit);
-    }
-    let (_, static_map) = MAP_TABLE.iter().find(|(n, _)| *n == name)?;
-    let converted: &'static MapJson = Box::leak(Box::new(MapJson::from(*static_map)));
-    if let Ok(mut m) = cache.lock() {
-        m.insert(name.to_string(), converted);
-    }
-    Some(converted)
+pub(crate) fn gba_map_json(name: &str) -> Option<MapJsonHandle> {
+    use crate::sync_compat::Mutex;
+    static CACHE: OnceLock<Mutex<EmbeddedMapCache>> = OnceLock::new();
+    CACHE
+        .get_or_init(|| Mutex::new(EmbeddedMapCache::default()))
+        .lock()
+        .ok()?
+        .get(name)
 }
 
 #[cfg(all(target_os = "none", feature = "embedded-map-data"))]
 pub(crate) fn gba_blk_data(name: &str) -> Option<&'static [u8]> {
-    use crate::hash_compat::HashMap;
-    use crate::sync_compat::{Mutex, OnceLock};
-    static CACHE: OnceLock<Mutex<HashMap<String, &'static [u8]>>> = OnceLock::new();
-    let cache = CACHE.get_or_init(|| Mutex::new(HashMap::default()));
-    if let Some(hit) = cache.lock().ok().and_then(|m| m.get(name).copied()) {
-        return Some(hit);
-    }
-    let (_, data) = embedded_blk_sources()
+    embedded_blk_sources()
         .iter()
-        .find(|(n, _)| *n == name)?;
-    let owned: &'static [u8] = Box::leak(data.to_vec().into_boxed_slice());
-    if let Ok(mut m) = cache.lock() {
-        m.insert(name.to_string(), owned);
-    }
-    Some(owned)
+        .find(|(key, _)| *key == name)
+        .map(|(_, bytes)| *bytes)
 }
 
 pub fn name_to_map_id() -> &'static HashMap<String, MapId> {
@@ -141,9 +186,9 @@ pub fn resolve_map_id(name: &str) -> Option<MapId> {
 
 #[cfg(feature = "embedded-map-data")]
 use crate::map_json::{
-    SignJson, StaticConnectionEntryJson, StaticConnectionsJson, StaticMapHeaderJson,
-    StaticMapJson, StaticMapTextJson, StaticNpcJson, StaticTextPageJson, StaticVersionWildJson,
-    StaticWarpJson, StaticWildDataJson, StaticWildEncounterTableJson, StaticWildMonJson,
+    SignJson, StaticConnectionEntryJson, StaticConnectionsJson, StaticMapHeaderJson, StaticMapJson,
+    StaticMapTextJson, StaticNpcJson, StaticTextPageJson, StaticVersionWildJson, StaticWarpJson,
+    StaticWildDataJson, StaticWildEncounterTableJson, StaticWildMonJson,
 };
 
 #[cfg(feature = "embedded-map-data")]
@@ -796,7 +841,8 @@ fn embedded_blk_sources() -> &'static [(&'static str, &'static [u8])] {
 
 #[cfg(feature = "embedded-map-data")]
 fn init_map_data() -> MapDataStore {
-    let mut maps = HashMap::with_capacity_and_hasher(MAP_TABLE.len(), crate::hash_compat::FxBuildHasher);
+    let mut maps =
+        HashMap::with_capacity_and_hasher(MAP_TABLE.len(), crate::hash_compat::FxBuildHasher);
     let mut progress = 0usize;
     for (name, static_map) in MAP_TABLE {
         maps.insert((*name).to_string(), MapJson::from(*static_map));

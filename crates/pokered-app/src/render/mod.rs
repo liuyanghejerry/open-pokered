@@ -23,7 +23,6 @@ mod trade;
 mod trainer_card;
 
 pub use battle::{draw_battle, BattleVisualEffects};
-#[cfg(target_os = "none")]
 pub use battle::{
     redraw_battle_bag_menu_cursor, redraw_battle_main_menu_cursor,
     redraw_battle_move_menu_selection, redraw_battle_party_menu_cursor,
@@ -32,18 +31,14 @@ pub use battle::{
 };
 pub use battle_i18n::{trainer_class_zh, zh_battle_dialog};
 pub use credits::draw_credits;
-#[cfg(any(test, target_os = "none"))]
 pub use credits::{credits_visual_key, CreditsVisualKey};
 pub use diploma::draw_diploma;
 pub use elevator::{draw_elevator, draw_filter_bag};
-#[cfg(any(test, target_os = "none"))]
 pub use elevator::redraw_elevator_cursor;
 pub use evolution::draw_evolution;
-#[cfg(any(test, target_os = "none"))]
 pub use evolution::{evolution_visual_key, EvolutionVisualKey};
 pub use gamefreak_splash::draw_gamefreak_splash;
 pub use hof_ceremony::draw_hof_ceremony;
-#[cfg(any(test, target_os = "none"))]
 pub use hof_ceremony::{hof_visual_key, HofVisualKey};
 pub use intro::draw_intro_scene;
 #[cfg(not(target_os = "none"))]
@@ -54,9 +49,8 @@ pub use menu::{
 };
 pub use oak::{draw_naming_screen, draw_oak_speech};
 pub use overworld::draw_overworld;
-#[cfg(target_os = "none")]
 pub use overworld::{FrameDamageRect, OverworldBackgroundCache};
-#[cfg(target_os = "none")]
+pub mod session;
 pub use menu::{
     options_menu_cursor_position, redraw_main_menu_cursor, redraw_options_menu_cursor,
     redraw_save_menu_cursor, redraw_start_menu_cursor, redraw_top_level_bag_action_cursor,
@@ -64,25 +58,17 @@ pub use menu::{
     top_level_bag_viewport_offset, redraw_top_level_party_icon,
     redraw_top_level_party_overlay_cursor, redraw_top_level_party_selection,
 };
-#[cfg(any(test, target_os = "none"))]
 pub use menu::redraw_mart_cursor;
-#[cfg(target_os = "none")]
-pub(crate) use overworld::draw_overworld_cached_with;
 pub use pc::draw_pc;
-#[cfg(any(test, target_os = "none"))]
 pub use pc::redraw_pc_cursor;
 pub use pokedex::draw_pokedex_screen;
-#[cfg(any(test, target_os = "none"))]
 pub use pokedex::redraw_pokedex_cursor;
 pub use slots::draw_slots;
-#[cfg(any(test, target_os = "none"))]
 pub use slots::redraw_slots_bet_cursor;
 pub use title::draw_title_screen;
 pub use town_map::draw_town_map;
-#[cfg(any(test, target_os = "none"))]
 pub use town_map::{redraw_town_map_cursor, redraw_town_map_marker};
 pub use trade::draw_trade;
-#[cfg(any(test, target_os = "none"))]
 pub use trade::{trade_visual_key, TradeVisualKey};
 pub use trainer_card::draw_trainer_card;
 

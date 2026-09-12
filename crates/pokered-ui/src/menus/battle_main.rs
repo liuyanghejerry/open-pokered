@@ -4,19 +4,16 @@ use pokered_core::game_state::Lang;
 use pokered_data::ui_layout::schema::get_screen_v2_json;
 use pokered_data::ui_layout::schema::BattleMainDefaultLayout;
 
-use crate::engine::{Painter, Rgba, TilePos, Ui};
 #[cfg(any(test, target_os = "none"))]
 use crate::engine::TileRect;
-#[cfg(not(target_os = "none"))]
-use crate::v2::{self, DataContext};
+use crate::engine::{Painter, Rgba, TilePos, Ui};
+use crate::v2;
 
 /// Battle action menu (FIGHT / PKMN / ITEM / RUN), rendered as an OVERLAY on
 /// the battle scene.
 ///
-/// Desktop builds use the v2 layout engine and `battle_main.gui`, preserving
-/// layout-editor hot reload. Bare-metal builds use an allocation-free compiled
-/// equivalent because this menu sits on the GBA battle render hot path. A
-/// parity test keeps its draw operations synchronized with the v2 layout.
+/// The GBA layout is generated from `battle_main.gui` at build time; hosted
+/// builds retain the same source through the editable v2 path.
 /// `_layout` (v1 `BattleMainDefaultLayout`) remains for call-site compatibility.
 pub fn draw<P: Painter>(
     state: &BattleMenuState,
@@ -52,43 +49,56 @@ fn draw_v2<P: Painter>(state: &BattleMenuState, ui: &mut Ui<P>, lang: Lang) {
         layout.theme.text_mode = dotzuki_renderer::layout_engine::types::TextMode::Proportional;
     }
 
-    let mut ctx = DataContext::new();
-    ctx.set("bcol", state.col() as i64);
-    ctx.set("brow", state.row() as i64);
-    ctx.set("__lang", v2::lang_code(lang));
+    let ctx = bindings(state, lang).dynamic();
 
     // Overlay: the battle sprites are already in the framebuffer; do not clear.
     v2::render_screen_overlay(&layout, &ctx, ui.painter());
 }
 
+fn bindings(
+    state: &BattleMenuState,
+    lang: Lang,
+) -> dotzuki_renderer::layout_engine::static_layout::Context<'static> {
+    let mut ctx = dotzuki_renderer::layout_engine::static_layout::Context::new();
+    ctx.set("bcol", state.col() as i64);
+    ctx.set("brow", state.row() as i64);
+    ctx.set("__lang", v2::lang_code(lang));
+
+    ctx
+}
+
 #[cfg(any(test, target_os = "none"))]
 fn draw_compiled<P: Painter>(state: &BattleMenuState, painter: &mut P, lang: Lang) {
-    painter.draw_text_box(TileRect::new(0, 12, 20, 6), Rgba::INK_BLACK);
-    painter.draw_text_box(TileRect::new(8, 12, 12, 6), Rgba::INK_BLACK);
-
-    let (fight, item, run) = match lang {
-        Lang::Zh => ("战斗", "道具", "逃跑"),
-        _ => ("FIGHT", "ITEM", "RUN"),
-    };
-    draw_label(painter, TilePos::new(10, 14), fight, lang);
-    painter.draw_gb_tile(TilePos::new(16, 14), 0xE1, "[225]", Rgba::INK_BLACK);
-    painter.draw_gb_tile(TilePos::new(17, 14), 0xE2, "[226]", Rgba::INK_BLACK);
-    draw_label(painter, TilePos::new(10, 16), item, lang);
-    draw_label(painter, TilePos::new(16, 16), run, lang);
-
-    draw_cursor(painter, cursor_position(state.row(), state.col()), lang);
+    pokered_data::ui_layout::schema::BATTLE_MAIN_STATIC_LAYOUT.render(
+        &bindings(state, lang),
+        painter,
+        lang == Lang::Zh,
+        false,
+    );
 }
 
-fn cursor_position(row: usize, col: usize) -> TilePos {
-    TilePos::new(9 + col as u32 * 6, 14 + row as u32 * 2)
+pub fn cursor_position(row: usize, col: usize) -> TilePos {
+    cursor_spec(row, col).0
 }
 
-fn draw_cursor<P: Painter>(painter: &mut P, cursor: TilePos, lang: Lang) {
-    if lang == Lang::Zh && painter.supports_proportional() {
-        painter.draw_text_px(cursor.tx * 8, cursor.ty * 8, "▶", Rgba::INK_BLACK);
-    } else {
-        painter.draw_glyph(cursor, '▶', Rgba::INK_BLACK);
-    }
+fn cursor_spec(row: usize, col: usize) -> (TilePos, char) {
+    let mut ctx: dotzuki_renderer::layout_engine::static_layout::Context<'_, 2> =
+        dotzuki_renderer::layout_engine::static_layout::Context::new();
+    ctx.set("brow", row as i64);
+    ctx.set("bcol", col as i64);
+    pokered_data::ui_layout::schema::BATTLE_MAIN_STATIC_LAYOUT
+        .cursor(&ctx)
+        .expect("battle layout must declare a cursor")
+}
+
+fn draw_cursor<P: Painter>(painter: &mut P, cursor: (TilePos, char), lang: Lang) {
+    dotzuki_renderer::layout_engine::elements::cursor::draw_cursor_glyph(
+        cursor.0,
+        cursor.1,
+        Rgba::INK_BLACK,
+        lang == Lang::Zh && painter.supports_proportional(),
+        painter,
+    );
 }
 
 /// Repaint only the changed cursor cells of an already-rendered compiled
@@ -106,22 +116,7 @@ pub fn redraw_cursor<P: Painter>(
 ) {
     let old = cursor_position(previous.0, previous.1);
     painter.draw_pixel_rect(old.tx * 8, old.ty * 8, 8, 9, Rgba::INK_WHITE);
-    draw_cursor(painter, cursor_position(state.row(), state.col()), lang);
-}
-
-#[cfg(any(test, target_os = "none"))]
-fn draw_label<P: Painter>(painter: &mut P, pos: TilePos, text: &str, lang: Lang) {
-    if lang == Lang::Zh && painter.supports_proportional() {
-        painter.draw_text_px_scaled(pos.tx * 8, pos.ty * 8, text, 1, Rgba::INK_BLACK);
-    } else {
-        for (offset, glyph) in text.chars().enumerate() {
-            painter.draw_glyph(
-                TilePos::new(pos.tx + offset as u32, pos.ty),
-                glyph,
-                Rgba::INK_BLACK,
-            );
-        }
-    }
+    draw_cursor(painter, cursor_spec(state.row(), state.col()), lang);
 }
 
 #[cfg(test)]

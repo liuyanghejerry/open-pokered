@@ -405,7 +405,6 @@ impl OverworldBackgroundCache {
 
     /// Regions whose pixels changed during the most recent cached draw.
     /// `None` means the frontend must submit the complete framebuffer.
-    #[cfg(any(target_os = "none", test))]
     pub fn presentation_damage(&self) -> Option<&[FrameDamageRect]> {
         self.partial_present
             .then_some(self.presentation_damage.as_slice())
@@ -525,7 +524,7 @@ fn restore_foreground_regions(fb: &mut FrameBuffer, cache: &OverworldBackgroundC
 /// Keep the partial restore path deliberately narrower than the renderer's
 /// full feature set. These states add overlays, move sprites outside their
 /// ordinary 16×16 bounds, or temporarily own the whole framebuffer.
-fn can_reuse_composited_frame(screen: &OverworldScreen) -> bool {
+pub(super) fn can_reuse_composited_frame(screen: &OverworldScreen) -> bool {
     screen.naming_flash_frames == 0
         && screen.pending_naming_screen.is_none()
         && screen.pending_party_select.is_none()
@@ -806,7 +805,8 @@ fn draw_overworld_impl(
 
     if let Some(ref mut rm) = res {
         let current_map: MapId = screen.state.current_map;
-        let map_json = get_map_json(current_map);
+        let map_handle = get_map_json(current_map);
+        let map_json = map_handle.as_deref();
         let tileset_id = map_json
             .and_then(|j| PokemonTilesetData.tileset_by_name(&j.header.tileset))
             .unwrap_or_else(|| PokemonTilesetData.tileset_by_id(0).unwrap());

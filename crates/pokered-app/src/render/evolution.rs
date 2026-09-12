@@ -27,7 +27,6 @@ use super::{blit_tileset, species_to_sprite_name};
 /// The evolution state machine advances several invisible delay counters.
 /// On GBA, equality lets the frontend keep the already-rendered framebuffer
 /// while those counters continue to advance at 60 Hz.
-#[cfg(any(test, target_os = "none"))]
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub struct EvolutionVisualKey {
     black_palette: bool,
@@ -37,7 +36,6 @@ pub struct EvolutionVisualKey {
     is_zh: bool,
 }
 
-#[cfg(any(test, target_os = "none"))]
 pub fn evolution_visual_key(anim: &EvolutionScreenState) -> EvolutionVisualKey {
     let mut text_hash = 0x811c_9dc5u32;
     let mut hash_byte = |byte: u8| {

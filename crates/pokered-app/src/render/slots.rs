@@ -278,7 +278,6 @@ pub fn draw_slots(slots: &SlotsScreen, fb: &mut FrameBuffer, lang: Lang) {
 
 /// Repaint only the `>` marker when the selected slot-machine bet changes.
 /// The marker sits on a white background and occupies exactly 5x10 pixels.
-#[cfg(any(test, target_os = "none"))]
 pub fn redraw_slots_bet_cursor(
     previous: (u32, u32),
     current: (u32, u32),

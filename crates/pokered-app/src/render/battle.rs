@@ -2880,7 +2880,6 @@ pub fn draw_battle(
 
 /// Repaint only the changed cursor cells of an already-rendered battle action
 /// menu. The caller must ensure every other visible battle field is unchanged.
-#[cfg(any(test, target_os = "none"))]
 pub fn redraw_battle_main_menu_cursor(
     previous: (usize, usize),
     state: &pokered_core::battle::menu::BattleMenuState,
@@ -2892,7 +2891,6 @@ pub fn redraw_battle_main_menu_cursor(
 }
 
 /// Repaint only the changed cursor cells of an already-rendered Safari menu.
-#[cfg(any(test, target_os = "none"))]
 pub fn redraw_battle_safari_menu_cursor(
     previous: (usize, usize),
     state: &pokered_core::battle::menu::SafariBattleMenuState,
@@ -2904,7 +2902,6 @@ pub fn redraw_battle_safari_menu_cursor(
 }
 
 /// Repaint only the changed cursor cells of an already-rendered battle bag.
-#[cfg(any(test, target_os = "none"))]
 pub fn redraw_battle_bag_menu_cursor(
     previous_cursor: usize,
     state: &pokered_core::battle::menu::BagMenuState,
@@ -2922,7 +2919,6 @@ pub fn redraw_battle_bag_menu_cursor(
 
 /// Repaint only the cursor cells of an already-rendered battle party menu.
 /// The caller must ensure the four-entry viewport did not scroll.
-#[cfg(any(test, target_os = "none"))]
 pub fn redraw_battle_party_menu_cursor(
     previous_row: usize,
     current_row: usize,
@@ -2940,7 +2936,6 @@ pub fn redraw_battle_party_menu_cursor(
 
 /// Repaint the visible party rows after the four-entry viewport scrolls,
 /// retaining the surrounding battle scene and text-box border.
-#[cfg(any(test, target_os = "none"))]
 pub fn redraw_battle_party_menu_viewport(
     party: &[pokered_core::battle::state::Pokemon],
     cursor: usize,
@@ -2989,7 +2984,6 @@ pub fn redraw_battle_party_menu_viewport(
 }
 
 /// Repaint only the changed cursor cells of a battle YES/NO prompt.
-#[cfg(any(test, target_os = "none"))]
 pub fn redraw_battle_yes_no_cursor(
     previous_yes: bool,
     current_yes: bool,
@@ -3008,7 +3002,6 @@ pub fn redraw_battle_yes_no_cursor(
 
 /// Repaint only the cursor and selected-move information of an already-
 /// rendered battle move menu.
-#[cfg(any(test, target_os = "none"))]
 pub fn redraw_battle_move_menu_selection(
     previous_cursor: usize,
     state: &pokered_core::battle::menu::MoveMenuState,

@@ -117,7 +117,6 @@ fn draw_dex_list(state: &PokedexScreenState, is_zh: bool, fb: &mut FrameBuffer) 
 
 /// Repaint only the old and new Pokédex cursor cells on an already-rendered
 /// list or side menu. Both cursor columns have a plain white background.
-#[cfg(any(test, target_os = "none"))]
 pub fn redraw_pokedex_cursor(
     previous: (u32, u32),
     current: (u32, u32),

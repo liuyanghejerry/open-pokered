@@ -12,7 +12,72 @@ mgba -1 -C logToStdout=1 -C logLevel.gba.debug=127 \
   target/thumbv4t-none-eabi/release/pokered-gba.gba
 ```
 
-## Findings
+## Architecture follow-up (2026-09-12)
+
+The sections below preserve the early investigation's measurements. They are
+historical, not a claim that the current moving Overworld still runs at 20 FPS.
+PR #77 contains the subsequent incremental-rendering A/B measurements.
+
+This follow-up retains those optimizations while restoring shared contracts:
+
+| Concern | Shared source / owner | Retained optimization |
+| --- | --- | --- |
+| Battle hook topology | All targets install hooks from the same compiled RON definitions, including ordering and event routing | Equal complete hook slices share one allocation; no GBA-only subscription list |
+| Hot menu layouts | `battle_main.gui`, `battle_safari.gui`, `options.gui`, `save.gui` feed both editor JSON and build-generated static layouts | No JSON parsing or layout-tree allocation in the static draw path; bindings may still format dynamic strings |
+| Frame reuse and damage | `pokered-app::render::RenderSession` owns visual keys, caches and redraw decisions | GBA consumes `Reuse` / `Full` / `Damage` and retains MMIO, DMA and page presentation |
+| Framebuffer representation | Dotzuki's explicit packed/linear types have the same contracts on every target | The GBA adapter selects word-aligned linear indices; packed remains the default |
+| Map metadata lifetime | `MapJsonHandle` retains borrowed hosted data or shared embedded data | Four-entry recent-map cache; evicted maps are released after the last live handle; block bytes borrow ROM |
+
+The static GUI compiler is generic dotzuki functionality, not a Pokemon-specific
+layout table. It lowers the normal GUI compiler output (after component expansion),
+and rejects unsupported properties or expressions at build time. Static and
+dynamic rendering share text/cursor primitives and menu bindings. Battle, Safari
+and save cursor positions/glyphs are read from the generated layout as well.
+
+Validation:
+
+- Core: 2,556 unit tests passed. UI: all 8 tests passed, including static/dynamic
+  parity for the four menus, both languages and all enumerated states.
+- App: 94 unit tests passed, including incremental options rendering versus a full
+  draw, changed-pixel damage coverage, reuse and black-screen invalidation.
+- Dotzuki renderer: 474 default-feature unit tests passed. Packed/linear storage
+  is checked pixel-for-pixel across odd dimensions, fills, overlapping copies,
+  scrolling, clipped/flipped/transparent blits; direct binding semantics are
+  checked against the dynamic context. Static compiler rejection/source tests pass.
+- Embedded metadata test visits every generated map, checks the four-entry bound,
+  and proves an evicted live handle remains valid and is freed after release.
+- Native app, TUI and web-crate checks and the production GBA release build pass
+  with the pinned remote dependency and no local patch configuration (the web
+  check is not a wasm-target test).
+- Fresh-start playthrough m01–m10 passes through defeating Brock. Seeded scenarios
+  pass 10/11: `s07-save-roundtrip` fails waiting for CONTINUE to reach Overworld.
+  It fails twice on this change and also on unmodified PR head `383c82c`, so it is
+  recorded as a pre-existing failure, not waived or reported as passing.
+- Release GBA autopilot/profiling ROM runs through 159,396 simulated frames without
+  panic, allocation failure or invalid-address crash. This exercises boot, Oak,
+  scripted bedroom movement and then a long idle period, not 159k frames of broad
+  gameplay. Idle still reports zero draw/present work at hardware cadence.
+- Representative movement draw windows remain around 1.8k–2.1k ticks in both the
+  `383c82c` baseline and this follow-up. Profiling mark 3 now includes damage-list
+  assembly, and window phases/render counts differ; these are smoke measurements,
+  not a controlled percentage improvement or proof of no regression in every scene.
+
+Visual comparisons under `docs/screenshots/gba-architecture-*` use master
+`bb6df8b` as before and the refactor as after, at screenshot frame 10. Options EN
+and save ZH PNGs are byte-identical. The battle target is a transition frame;
+its difference from master already exists at `383c82c`, whose PNG is byte-identical
+to the refactor's battle image. It is not a battle action-menu screenshot.
+
+Remaining boundary work is explicit: consolidate the duplicated no_std sync and
+resource backends; replace silent unsupported script behavior with capability
+errors; move remaining legacy menu damage geometry into the owning UI modules.
+The cursor erasure fast paths still assume the current arrow's 8×9 ink footprint
+and plain background, and options still has legacy v1 geometry adjustments.
+Changing those authored shapes requires updating the damage contract and its
+parity coverage. `RenderSession` is desktop-testable but desktop presentation
+does not yet opt into it, and the deferred-transition protocol remains separate.
+
+## Historical findings
 
 The original startup frame averaged 29,500 ticks (about 112.5 ms, or 8.9
 FPS). Game update took only 13 ticks; almost all time was spent redrawing the
@@ -119,11 +184,11 @@ simulated frames without another crash.
 ## Dotzuki dependency
 
 The reusable no_std and renderer work lives in dotzuki PR #63 on the
-`feat/gba-renderer-performance` branch (through commit `dcacf65`). Every
+`feat/gba-renderer-performance` branch (through commit `17560d4b70de097655b7d01b1349d696f990e3f8`). Every
 open-pokered consumer is pinned to that remote revision, so CI and independent
 checkouts do not require the sibling repository or new vendor changes.
 
-## Remaining bottleneck
+## Historical remaining bottleneck (before incremental rendering)
 
 Full-scene software rasterization remains dominant when pixels actually
 change. Overworld motion is still about 20 FPS and cannot produce one fresh

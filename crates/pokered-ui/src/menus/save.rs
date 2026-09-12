@@ -5,11 +5,10 @@ use pokered_core::save_menu::{SaveMenuState, SavePhase, YesNoChoice};
 use pokered_data::ui_layout::schema::get_screen_v2_json;
 use pokered_data::ui_layout::schema::{SaveAskPromptLayout, SaveDefaultLayout};
 
-use crate::engine::{Painter, Rgba, TilePos, Ui};
 #[cfg(any(test, target_os = "none"))]
 use crate::engine::TileRect;
-#[cfg(not(target_os = "none"))]
-use crate::v2::{self, DataContext};
+use crate::engine::{Painter, Rgba, TilePos, Ui};
+use crate::v2;
 
 /// Save screen, with phase-specific content in the shared `save.gui` layout.
 /// Legacy layout arguments remain for compatibility with existing frontends.
@@ -42,6 +41,15 @@ fn draw_v2<P: Painter>(state: &SaveMenuState, ui: &mut Ui<P>, lang: Lang) {
     // and enough room for the prompt beside its choices.
     layout.theme.text_mode = dotzuki_renderer::layout_engine::types::TextMode::Proportional;
 
+    let ctx = bindings(state, lang).dynamic();
+
+    v2::render_screen(&layout, &ctx, ui.painter());
+}
+
+fn bindings(
+    state: &SaveMenuState,
+    lang: Lang,
+) -> dotzuki_renderer::layout_engine::static_layout::Context<'static> {
     let is_zh = lang == Lang::Zh;
     let asking = matches!(
         state.phase,
@@ -50,9 +58,9 @@ fn draw_v2<P: Painter>(state: &SaveMenuState, ui: &mut Ui<P>, lang: Lang) {
     let (line_1, line_2) = match state.phase {
         SavePhase::AskSave | SavePhase::ConfirmOverwrite => {
             if is_zh {
-                ("是否要".into(), "保存游戏？")
+                (String::from("是否要"), "保存游戏？")
             } else {
-                ("Save your".into(), "progress?")
+                (String::from("Save your"), "progress?")
             }
         }
         SavePhase::Saving { .. } => (
@@ -73,7 +81,7 @@ fn draw_v2<P: Painter>(state: &SaveMenuState, ui: &mut Ui<P>, lang: Lang) {
         }
     };
 
-    let mut ctx = DataContext::new();
+    let mut ctx = dotzuki_renderer::layout_engine::static_layout::Context::new();
     ctx.set("__lang", v2::lang_code(lang));
     ctx.set("player_name", state.info.player_name.clone());
     ctx.set("badges", state.info.num_badges.to_string());
@@ -90,127 +98,60 @@ fn draw_v2<P: Painter>(state: &SaveMenuState, ui: &mut Ui<P>, lang: Lang) {
     ctx.set("asking", asking);
     ctx.set("show_status", !asking);
     ctx.set(
-        "cursor_ty",
+        "cursor_row",
         if state.cursor == YesNoChoice::Yes {
-            13_i64
+            0_i64
         } else {
-            15_i64
+            1_i64
         },
     );
-    v2::render_screen(&layout, &ctx, ui.painter());
+    ctx
 }
 
 #[cfg(any(test, target_os = "none"))]
 fn draw_compiled<P: Painter>(state: &SaveMenuState, painter: &mut P, lang: Lang) {
-    painter.clear(Rgba::INK_WHITE);
-    painter.draw_text_box(TileRect::new(0, 0, 20, 11), Rgba::INK_BLACK);
-
-    let (player, badges, pokedex, time) = match lang {
-        Lang::Zh => ("玩家", "徽章", "图鉴", "时间"),
-        Lang::En => ("PLAYER", "BADGES", "#DEX", "TIME"),
-    };
-    draw_label(painter, 2, 2, player);
-    draw_right_aligned(painter, 10, 2, 8, &state.info.player_name);
-    draw_label(painter, 2, 4, badges);
-    draw_right_aligned(painter, 10, 4, 8, &state.info.num_badges.to_string());
-    draw_label(painter, 2, 6, pokedex);
-    draw_right_aligned(painter, 10, 6, 8, &state.info.pokedex_owned.to_string());
-    draw_label(painter, 2, 8, time);
-    draw_right_aligned(
+    pokered_data::ui_layout::schema::SAVE_STATIC_LAYOUT.render(
+        &bindings(state, lang),
         painter,
-        10,
-        8,
-        8,
-        &format!(
-            "{}:{:02}",
-            state.info.play_time_hours, state.info.play_time_minutes
-        ),
+        true,
+        true,
     );
-
-    painter.draw_text_box(TileRect::new(0, 12, 20, 6), Rgba::INK_BLACK);
-    match state.phase {
-        SavePhase::AskSave | SavePhase::ConfirmOverwrite => {
-            let (line_1, line_2, yes, no) = match lang {
-                Lang::Zh => ("是否要", "保存游戏？", "是", "否"),
-                Lang::En => ("Save your", "progress?", "YES", "NO"),
-            };
-            draw_label(painter, 2, 13, line_1);
-            draw_label(painter, 2, 15, line_2);
-            draw_label(painter, 16, 13, yes);
-            draw_label(painter, 16, 15, no);
-            let cursor_ty = if state.cursor == YesNoChoice::Yes {
-                13
-            } else {
-                15
-            };
-            painter.draw_text_px(14 * 8, cursor_ty * 8, "▶", Rgba::INK_BLACK);
-        }
-        SavePhase::Saving { .. } => {
-            draw_label(
-                painter,
-                2,
-                13,
-                if lang == Lang::Zh {
-                    "正在保存……"
-                } else {
-                    "Now saving..."
-                },
-            );
-            draw_label(painter, 2, 15, "");
-        }
-        SavePhase::SaveComplete | SavePhase::WaitAfterSave { .. } => {
-            let line_1 = match lang {
-                Lang::Zh => format!("{}已保存", state.info.player_name),
-                Lang::En => format!("{} saved", state.info.player_name),
-            };
-            draw_label(painter, 2, 13, &line_1);
-            draw_label(
-                painter,
-                2,
-                15,
-                if lang == Lang::Zh {
-                    "游戏！"
-                } else {
-                    "the game!"
-                },
-            );
-        }
-    }
 }
 
-#[cfg(any(test, target_os = "none"))]
-fn draw_label<P: Painter>(painter: &mut P, tx: u32, ty: u32, text: &str) {
-    painter.draw_text_px_scaled(tx * 8, ty * 8, text, 1, Rgba::INK_BLACK);
+/// Resolve YES/NO cursor geometry from the compiled GUI source.
+pub fn cursor_position(choice: YesNoChoice) -> TilePos {
+    cursor_spec(choice).0
 }
 
-#[cfg(any(test, target_os = "none"))]
-fn draw_right_aligned<P: Painter>(
-    painter: &mut P,
-    tx: u32,
-    ty: u32,
-    tw: u32,
-    text: &str,
-) {
-    let px = tx * 8 + (tw * 8).saturating_sub(painter.measure_text_px(text));
-    painter.draw_text_px_scaled(px, ty * 8, text, 1, Rgba::INK_BLACK);
+fn cursor_spec(choice: YesNoChoice) -> (TilePos, char) {
+    let mut ctx: dotzuki_renderer::layout_engine::static_layout::Context<'_, 2> =
+        dotzuki_renderer::layout_engine::static_layout::Context::new();
+    ctx.set("asking", true);
+    ctx.set(
+        "cursor_row",
+        if choice == YesNoChoice::Yes {
+            0_i64
+        } else {
+            1_i64
+        },
+    );
+    pokered_data::ui_layout::schema::SAVE_STATIC_LAYOUT
+        .cursor(&ctx)
+        .expect("save layout must declare a cursor")
 }
 
 /// Repaint only the changed YES/NO cursor cells of an already-rendered prompt.
-pub fn redraw_cursor<P: Painter>(
-    previous: YesNoChoice,
-    current: YesNoChoice,
-    painter: &mut P,
-) {
-    let position = |choice| {
-        TilePos::new(
-            14,
-            if choice == YesNoChoice::Yes { 13 } else { 15 },
-        )
-    };
-    let old = position(previous);
+pub fn redraw_cursor<P: Painter>(previous: YesNoChoice, current: YesNoChoice, painter: &mut P) {
+    let old = cursor_position(previous);
     painter.draw_pixel_rect(old.tx * 8, old.ty * 8, 8, 9, Rgba::INK_WHITE);
-    let current = position(current);
-    painter.draw_text_px(current.tx * 8, current.ty * 8, "▶", Rgba::INK_BLACK);
+    let (position, glyph) = cursor_spec(current);
+    dotzuki_renderer::layout_engine::elements::cursor::draw_cursor_glyph(
+        position,
+        glyph,
+        Rgba::INK_BLACK,
+        painter.supports_proportional(),
+        painter,
+    );
 }
 
 #[cfg(test)]
@@ -242,24 +183,9 @@ mod tests {
 
         fn draw_glyph(&mut self, _pos: TilePos, _glyph: char, _color: Rgba) {}
 
-        fn draw_pixel_rect(
-            &mut self,
-            _px: u32,
-            _py: u32,
-            _pw: u32,
-            _ph: u32,
-            _color: Rgba,
-        ) {
-        }
+        fn draw_pixel_rect(&mut self, _px: u32, _py: u32, _pw: u32, _ph: u32, _color: Rgba) {}
 
-        fn draw_gb_tile(
-            &mut self,
-            _pos: TilePos,
-            _tile_id: u8,
-            _fallback: &str,
-            _color: Rgba,
-        ) {
-        }
+        fn draw_gb_tile(&mut self, _pos: TilePos, _tile_id: u8, _fallback: &str, _color: Rgba) {}
 
         fn draw_text_px(&mut self, px: u32, py: u32, text: &str, color: Rgba) {
             self.0.push(Op::TextPx(px, py, text.into(), color));
@@ -269,14 +195,7 @@ mod tests {
             dotzuki_renderer::embedded_font::measure_text(text)
         }
 
-        fn draw_text_px_scaled(
-            &mut self,
-            px: u32,
-            py: u32,
-            text: &str,
-            scale: u32,
-            color: Rgba,
-        ) {
+        fn draw_text_px_scaled(&mut self, px: u32, py: u32, text: &str, scale: u32, color: Rgba) {
             self.0
                 .push(Op::TextPxScaled(px, py, text.into(), scale, color));
         }

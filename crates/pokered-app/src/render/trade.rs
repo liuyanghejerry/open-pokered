@@ -50,7 +50,6 @@ fn trade_subanim_id(kind: TradeBallSubAnim) -> usize {
 /// Consecutive logic frames often only advance an invisible hold counter. On
 /// GBA, equality lets the frontend keep the already-rendered framebuffer for
 /// those frames without slowing the 60 Hz cutscene clock.
-#[cfg(any(test, target_os = "none"))]
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub struct TradeVisualKey {
     cable_visible: bool,
@@ -63,7 +62,6 @@ pub struct TradeVisualKey {
     is_zh: bool,
 }
 
-#[cfg(any(test, target_os = "none"))]
 pub fn trade_visual_key(anim: &TradeAnim) -> TradeVisualKey {
     let mut text_hash = 0x811c_9dc5u32;
     let mut hash_byte = |byte: u8| {

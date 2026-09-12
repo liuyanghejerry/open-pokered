@@ -6,11 +6,10 @@ use pokered_core::options_menu::{
 use pokered_data::ui_layout::schema::get_screen_v2_json;
 use pokered_data::ui_layout::schema::{OptionsDefaultLayout, OPTIONS_DEFAULT_LAYOUT};
 
-use crate::engine::{Painter, Rgba, TilePos, Ui};
 #[cfg(any(test, target_os = "none"))]
 use crate::engine::TileRect;
-#[cfg(not(target_os = "none"))]
-use crate::v2::{self, DataContext};
+use crate::engine::{Painter, Rgba, TilePos, Ui};
+use crate::v2;
 
 fn enum_offset(layout: &OptionsDefaultLayout, key: &str) -> u32 {
     layout
@@ -75,9 +74,7 @@ pub fn cursor_position(
             cursors[0].base_ty + 1,
         ),
         OptionsRow::BattleAnimation => TilePos::new(
-            cursors[1].tx
-                + 1
-                + lang_enum_offset(layout, battle_animation_key(state), lang),
+            cursors[1].tx + 1 + lang_enum_offset(layout, battle_animation_key(state), lang),
             cursors[1].base_ty + 1,
         ),
         OptionsRow::BattleStyle => TilePos::new(
@@ -89,12 +86,7 @@ pub fn cursor_position(
 }
 
 /// Repaint only the two cursor cells of an already-rendered options screen.
-pub fn redraw_cursor<P: Painter>(
-    previous: TilePos,
-    current: TilePos,
-    painter: &mut P,
-    lang: Lang,
-) {
+pub fn redraw_cursor<P: Painter>(previous: TilePos, current: TilePos, painter: &mut P, lang: Lang) {
     // The proportional cursor advances by 10 px but its actual fallback ink
     // fits in 8x9.  Clearing the full advance would erase the adjacent CJK
     // option label, which starts one tile to the right.
@@ -138,27 +130,43 @@ fn draw_v2<P: Painter>(state: &OptionsMenuState, ui: &mut Ui<P>, lang: Lang) {
         return;
     };
 
+    if lang == Lang::Zh {
+        layout.theme.text_mode = dotzuki_renderer::layout_engine::types::TextMode::Proportional;
+    }
+    let ctx = bindings(state, lang).dynamic();
+
+    v2::render_screen(&layout, &ctx, ui.painter());
+}
+
+fn bindings(
+    state: &OptionsMenuState,
+    lang: Lang,
+) -> dotzuki_renderer::layout_engine::static_layout::Context<'static> {
     // Reuse the v1 cursor coordinates + enum-position map for pixel parity.
     let v1 = &OPTIONS_DEFAULT_LAYOUT;
     let cursors = v1.cursors.as_ref();
 
-    // The Chinese font advances 10 px, wider than the legacy 8 px tile grid.
-    if lang == Lang::Zh {
-        layout.theme.text_mode = dotzuki_renderer::layout_engine::types::TextMode::Proportional;
-    }
-
-    let mut ctx = DataContext::new();
+    let mut ctx = dotzuki_renderer::layout_engine::static_layout::Context::new();
 
     // Rows 0..2 sit in bordered boxes (1-tile inset); the x-offset selects the
     // current enum value's column. Absolute = cursor.tx + 1 + offset, ty + 1.
     let c0 = &cursors[0];
-    ctx.set("r0_tx", (c0.tx + 1 + lang_enum_offset(v1, text_speed_key(state), lang)) as i64);
+    ctx.set(
+        "r0_tx",
+        (c0.tx + 1 + lang_enum_offset(v1, text_speed_key(state), lang)) as i64,
+    );
     ctx.set("r0_ty", (c0.base_ty + 1) as i64);
     let c1 = &cursors[1];
-    ctx.set("r1_tx", (c1.tx + 1 + lang_enum_offset(v1, battle_animation_key(state), lang)) as i64);
+    ctx.set(
+        "r1_tx",
+        (c1.tx + 1 + lang_enum_offset(v1, battle_animation_key(state), lang)) as i64,
+    );
     ctx.set("r1_ty", (c1.base_ty + 1) as i64);
     let c2 = &cursors[2];
-    ctx.set("r2_tx", (c2.tx + 1 + lang_enum_offset(v1, battle_style_key(state), lang)) as i64);
+    ctx.set(
+        "r2_tx",
+        (c2.tx + 1 + lang_enum_offset(v1, battle_style_key(state), lang)) as i64,
+    );
     ctx.set("r2_ty", (c2.base_ty + 1) as i64);
     // Cancel sits in a borderless region (no inset, no enum offset).
     let c3 = &cursors[3];
@@ -173,87 +181,17 @@ fn draw_v2<P: Painter>(state: &OptionsMenuState, ui: &mut Ui<P>, lang: Lang) {
     ctx.set("is_zh", lang == Lang::Zh);
     ctx.set("is_en", lang == Lang::En);
 
-    v2::render_screen(&layout, &ctx, ui.painter());
+    ctx
 }
 
 #[cfg(any(test, target_os = "none"))]
 fn draw_compiled<P: Painter>(state: &OptionsMenuState, painter: &mut P, lang: Lang) {
-    painter.clear(Rgba::INK_WHITE);
-    painter.draw_text_box(TileRect::new(0, 0, 20, 5), Rgba::INK_BLACK);
-    draw_label(painter, TilePos::new(1, 1), match lang {
-        Lang::Zh => "文字速度",
-        Lang::En => "TEXT SPEED",
-    }, lang);
-    match lang {
-        Lang::En => draw_label(painter, TilePos::new(1, 3), " FAST  MEDIUM SLOW", lang),
-        Lang::Zh => {
-            draw_label(painter, TilePos::new(2, 3), "快", lang);
-            draw_label(painter, TilePos::new(5, 3), "中", lang);
-            draw_label(painter, TilePos::new(8, 3), "慢", lang);
-        }
-    }
-
-    painter.draw_text_box(TileRect::new(0, 5, 20, 5), Rgba::INK_BLACK);
-    draw_label(painter, TilePos::new(1, 6), match lang {
-        Lang::Zh => "战斗动画",
-        Lang::En => "BATTLE ANIMATION",
-    }, lang);
-    match lang {
-        Lang::En => draw_label(painter, TilePos::new(1, 8), " ON       OFF", lang),
-        Lang::Zh => {
-            draw_label(painter, TilePos::new(2, 8), "开", lang);
-            draw_label(painter, TilePos::new(10, 8), "关", lang);
-        }
-    }
-
-    painter.draw_text_box(TileRect::new(0, 10, 20, 5), Rgba::INK_BLACK);
-    draw_label(painter, TilePos::new(1, 11), match lang {
-        Lang::Zh => "战斗模式",
-        Lang::En => "BATTLE STYLE",
-    }, lang);
-    match lang {
-        Lang::En => draw_label(painter, TilePos::new(1, 13), " SHIFT    SET", lang),
-        Lang::Zh => {
-            draw_label(painter, TilePos::new(2, 13), "替换", lang);
-            draw_label(painter, TilePos::new(8, 13), "固定", lang);
-        }
-    }
-
-    draw_label(painter, TilePos::new(2, 16), match lang {
-        Lang::Zh => "取消",
-        Lang::En => "CANCEL",
-    }, lang);
-    draw_cursor(painter, cursor_position(state, &OPTIONS_DEFAULT_LAYOUT, lang), lang);
-}
-
-#[cfg(any(test, target_os = "none"))]
-fn draw_label<P: Painter>(painter: &mut P, position: TilePos, text: &str, lang: Lang) {
-    if lang == Lang::Zh && painter.supports_proportional() {
-        painter.draw_text_px_scaled(
-            position.tx * 8,
-            position.ty * 8,
-            text,
-            1,
-            Rgba::INK_BLACK,
-        );
-    } else {
-        for (offset, glyph) in text.chars().enumerate() {
-            painter.draw_glyph(
-                TilePos::new(position.tx + offset as u32, position.ty),
-                glyph,
-                Rgba::INK_BLACK,
-            );
-        }
-    }
-}
-
-#[cfg(any(test, target_os = "none"))]
-fn draw_cursor<P: Painter>(painter: &mut P, position: TilePos, lang: Lang) {
-    if lang == Lang::Zh && painter.supports_proportional() {
-        painter.draw_text_px(position.tx * 8, position.ty * 8, "▶", Rgba::INK_BLACK);
-    } else {
-        painter.draw_glyph(position, '▶', Rgba::INK_BLACK);
-    }
+    pokered_data::ui_layout::schema::OPTIONS_STATIC_LAYOUT.render(
+        &bindings(state, lang),
+        painter,
+        lang == Lang::Zh,
+        true,
+    );
 }
 
 #[cfg(test)]
@@ -297,14 +235,7 @@ mod tests {
             self.0.push(Op::TextPx(px, py, text.into(), color));
         }
 
-        fn draw_text_px_scaled(
-            &mut self,
-            px: u32,
-            py: u32,
-            text: &str,
-            scale: u32,
-            color: Rgba,
-        ) {
+        fn draw_text_px_scaled(&mut self, px: u32, py: u32, text: &str, scale: u32, color: Rgba) {
             self.0
                 .push(Op::TextPxScaled(px, py, text.into(), scale, color));
         }

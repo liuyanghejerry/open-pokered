@@ -900,7 +900,7 @@ dependencies = [
 [[package]]
 name = "dotzuki-app"
 version = "0.6.0"
-source = "git+https://github.com/liuyanghejerry/dotzuki?rev=162182fde89e414414ac9e9ba0e9a5051804b16d#162182fde89e414414ac9e9ba0e9a5051804b16d"
+source = "git+https://github.com/liuyanghejerry/dotzuki?rev=17560d4b70de097655b7d01b1349d696f990e3f8#17560d4b70de097655b7d01b1349d696f990e3f8"
 dependencies = [
  "dotzuki-engine",
  "dotzuki-renderer",
@@ -913,7 +913,7 @@ dependencies = [
 [[package]]
 name = "dotzuki-audio"
 version = "0.6.0"
-source = "git+https://github.com/liuyanghejerry/dotzuki?rev=162182fde89e414414ac9e9ba0e9a5051804b16d#162182fde89e414414ac9e9ba0e9a5051804b16d"
+source = "git+https://github.com/liuyanghejerry/dotzuki?rev=17560d4b70de097655b7d01b1349d696f990e3f8#17560d4b70de097655b7d01b1349d696f990e3f8"
 dependencies = [
  "bitflags 2.13.1",
  "cpal",
@@ -927,7 +927,7 @@ dependencies = [
 [[package]]
 name = "dotzuki-engine"
 version = "0.6.0"
-source = "git+https://github.com/liuyanghejerry/dotzuki?rev=162182fde89e414414ac9e9ba0e9a5051804b16d#162182fde89e414414ac9e9ba0e9a5051804b16d"
+source = "git+https://github.com/liuyanghejerry/dotzuki?rev=17560d4b70de097655b7d01b1349d696f990e3f8#17560d4b70de097655b7d01b1349d696f990e3f8"
 dependencies = [
  "hashbrown 0.15.5",
  "libm",
@@ -939,7 +939,7 @@ dependencies = [
 [[package]]
 name = "dotzuki-engine-dsl"
 version = "0.6.0"
-source = "git+https://github.com/liuyanghejerry/dotzuki?rev=162182fde89e414414ac9e9ba0e9a5051804b16d#162182fde89e414414ac9e9ba0e9a5051804b16d"
+source = "git+https://github.com/liuyanghejerry/dotzuki?rev=17560d4b70de097655b7d01b1349d696f990e3f8#17560d4b70de097655b7d01b1349d696f990e3f8"
 dependencies = [
  "dotzuki-engine-script",
  "hashbrown 0.15.5",
@@ -953,7 +953,7 @@ dependencies = [
 [[package]]
 name = "dotzuki-engine-script"
 version = "0.6.0"
-source = "git+https://github.com/liuyanghejerry/dotzuki?rev=162182fde89e414414ac9e9ba0e9a5051804b16d#162182fde89e414414ac9e9ba0e9a5051804b16d"
+source = "git+https://github.com/liuyanghejerry/dotzuki?rev=17560d4b70de097655b7d01b1349d696f990e3f8#17560d4b70de097655b7d01b1349d696f990e3f8"
 dependencies = [
  "log",
  "serde",
@@ -964,7 +964,7 @@ dependencies = [
 [[package]]
 name = "dotzuki-renderer"
 version = "0.6.0"
-source = "git+https://github.com/liuyanghejerry/dotzuki?rev=162182fde89e414414ac9e9ba0e9a5051804b16d#162182fde89e414414ac9e9ba0e9a5051804b16d"
+source = "git+https://github.com/liuyanghejerry/dotzuki?rev=17560d4b70de097655b7d01b1349d696f990e3f8#17560d4b70de097655b7d01b1349d696f990e3f8"
 dependencies = [
  "dotzuki-engine",
  "error-iter",
@@ -983,7 +983,7 @@ dependencies = [
 [[package]]
 name = "dotzuki-rules"
 version = "0.6.0"
-source = "git+https://github.com/liuyanghejerry/dotzuki?rev=162182fde89e414414ac9e9ba0e9a5051804b16d#162182fde89e414414ac9e9ba0e9a5051804b16d"
+source = "git+https://github.com/liuyanghejerry/dotzuki?rev=17560d4b70de097655b7d01b1349d696f990e3f8#17560d4b70de097655b7d01b1349d696f990e3f8"
 dependencies = [
  "dotzuki-engine",
  "ron",
@@ -994,7 +994,7 @@ dependencies = [
 [[package]]
 name = "dotzuki-ui"
 version = "0.6.0"
-source = "git+https://github.com/liuyanghejerry/dotzuki?rev=162182fde89e414414ac9e9ba0e9a5051804b16d#162182fde89e414414ac9e9ba0e9a5051804b16d"
+source = "git+https://github.com/liuyanghejerry/dotzuki?rev=17560d4b70de097655b7d01b1349d696f990e3f8#17560d4b70de097655b7d01b1349d696f990e3f8"
 dependencies = [
  "dotzuki-engine",
  "dotzuki-renderer",
@@ -1003,7 +1003,7 @@ dependencies = [
 [[package]]
 name = "dotzuki-web"
 version = "0.6.0"
-source = "git+https://github.com/liuyanghejerry/dotzuki?rev=162182fde89e414414ac9e9ba0e9a5051804b16d#162182fde89e414414ac9e9ba0e9a5051804b16d"
+source = "git+https://github.com/liuyanghejerry/dotzuki?rev=17560d4b70de097655b7d01b1349d696f990e3f8#17560d4b70de097655b7d01b1349d696f990e3f8"
 dependencies = [
  "dotzuki-audio",
  "dotzuki-engine",

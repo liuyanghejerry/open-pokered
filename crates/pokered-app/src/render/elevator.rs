@@ -80,7 +80,6 @@ pub fn draw_filter_bag(filter: &ElevatorScreen, fb: &mut FrameBuffer, lang: Lang
 }
 
 /// Repaint only the `>` marker shared by elevator and filtered-bag menus.
-#[cfg(any(test, target_os = "none"))]
 pub fn redraw_elevator_cursor(
     previous: (u32, u32),
     current: (u32, u32),

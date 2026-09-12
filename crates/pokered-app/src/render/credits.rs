@@ -32,7 +32,6 @@ const FADE_SHADES: [Rgba; 5] = [
 /// Credits holds and each two-frame scroll step contain many consecutive
 /// pixel-identical frames. The GBA frontend compares this key while the
 /// logical roll continues advancing at 60 Hz.
-#[cfg(any(test, target_os = "none"))]
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct CreditsVisualKey {
     visual_phase: u8,
@@ -41,7 +40,6 @@ pub struct CreditsVisualKey {
     mon_scroll_step: u8,
 }
 
-#[cfg(any(test, target_os = "none"))]
 pub fn credits_visual_key(roll: &CreditsState) -> CreditsVisualKey {
     let mut key = CreditsVisualKey {
         visual_phase: 0, // Letterbox bars only: hidden THE END or Done.

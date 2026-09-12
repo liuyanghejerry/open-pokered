@@ -29,7 +29,6 @@ pub fn draw_main_menu(state: &MainMenuState, fb: &mut FrameBuffer, lang: Lang) {
 }
 
 /// Repaint only the changed cursor cells of an already-rendered title menu.
-#[cfg(any(test, target_os = "none"))]
 pub fn redraw_main_menu_cursor(
     previous_cursor: usize,
     current_cursor: usize,
@@ -47,7 +46,6 @@ pub fn draw_start_menu(state: &StartMenuState, player_name: &str, fb: &mut Frame
 }
 
 /// Repaint only the changed cursor cells of an already-rendered START menu.
-#[cfg(any(test, target_os = "none"))]
 pub fn redraw_start_menu_cursor(
     item_count: usize,
     previous_cursor: usize,
@@ -72,14 +70,12 @@ pub fn draw_options_menu(state: &OptionsMenuState, fb: &mut FrameBuffer, lang: L
 }
 
 /// Return the absolute tile position of the options screen's visible cursor.
-#[cfg(target_os = "none")]
 pub fn options_menu_cursor_position(state: &OptionsMenuState, lang: Lang) -> (u32, u32) {
     let pos = menus::options::cursor_position(state, &OPTIONS_DEFAULT_LAYOUT, lang);
     (pos.tx, pos.ty)
 }
 
 /// Repaint only the changed cursor cells of an already-rendered options screen.
-#[cfg(any(test, target_os = "none"))]
 pub fn redraw_options_menu_cursor(
     previous: (u32, u32),
     current: (u32, u32),
@@ -102,7 +98,6 @@ pub fn draw_save_menu(state: &SaveMenuState, fb: &mut FrameBuffer, lang: Lang) {
 }
 
 /// Repaint only the changed YES/NO cursor cells of an already-rendered save prompt.
-#[cfg(any(test, target_os = "none"))]
 pub fn redraw_save_menu_cursor(
     previous: YesNoChoice,
     current: YesNoChoice,
@@ -190,7 +185,6 @@ pub fn draw_party_screen(
     menus::party::draw_overlay(state, &mut Ui::new(&mut painter), lang);
 }
 
-#[cfg(any(test, target_os = "none"))]
 fn clear_top_level_party_icon_at(party_index: usize, fb: &mut FrameBuffer) {
     const ICON_X_PX: u32 = 8;
     const ICON_SIZE_PX: u32 = 16;
@@ -205,7 +199,6 @@ fn clear_top_level_party_icon_at(party_index: usize, fb: &mut FrameBuffer) {
     );
 }
 
-#[cfg(any(test, target_os = "none"))]
 fn draw_top_level_party_icon_at(
     state: &PartyScreenState,
     party_index: usize,
@@ -232,7 +225,6 @@ fn draw_top_level_party_icon_at(
 }
 
 /// Repaint the selected icon when its 16-frame animation phase changes.
-#[cfg(any(test, target_os = "none"))]
 pub fn redraw_top_level_party_icon(
     state: &PartyScreenState,
     frame_counter: u64,
@@ -258,7 +250,6 @@ pub fn redraw_top_level_party_icon(
 }
 
 /// Repaint the two affected list rows when the selected party member moves.
-#[cfg(any(test, target_os = "none"))]
 pub fn redraw_top_level_party_selection(
     state: &PartyScreenState,
     previous_cursor: usize,
@@ -333,7 +324,6 @@ pub fn redraw_top_level_party_selection(
 }
 
 /// Repaint only the changed cursor cells of an action/choose-move overlay.
-#[cfg(any(test, target_os = "none"))]
 pub fn redraw_top_level_party_overlay_cursor(
     state: &PartyScreenState,
     previous_cursor: u8,
@@ -546,7 +536,6 @@ pub fn draw_mart(state: &MartState, player_money: u32, bag_items: &[(pokered_dat
 }
 
 /// Repaint only the changed `▶` cells of an already-rendered mart screen.
-#[cfg(any(test, target_os = "none"))]
 pub fn redraw_mart_cursor(
     previous: (u32, u32),
     current: (u32, u32),
@@ -1398,18 +1387,15 @@ pub fn draw_bag(state: &BagScreenState, fb: &mut FrameBuffer, lang: Lang) {
     }
 }
 
-#[cfg(any(test, target_os = "none"))]
 pub fn top_level_bag_viewport_offset(item_count: usize, cursor: usize) -> usize {
     menus::bag::viewport_offset(item_count, cursor, &BAG_DEFAULT_LAYOUT)
 }
 
-#[cfg(any(test, target_os = "none"))]
 pub fn top_level_bag_cursor_position(item_count: usize, cursor: usize) -> TilePos {
     menus::bag::cursor_position(item_count, cursor, &BAG_DEFAULT_LAYOUT)
 }
 
 /// Repaint only the changed list cursor cells of an already-rendered bag.
-#[cfg(any(test, target_os = "none"))]
 pub fn redraw_top_level_bag_cursor(
     previous: TilePos,
     current: TilePos,
@@ -1421,7 +1407,6 @@ pub fn redraw_top_level_bag_cursor(
 }
 
 /// Repaint only the changed USE/TOSS/CANCEL cursor cells.
-#[cfg(any(test, target_os = "none"))]
 pub fn redraw_top_level_bag_action_cursor(
     previous: u8,
     current: u8,
@@ -1436,7 +1421,6 @@ pub fn redraw_top_level_bag_action_cursor(
 }
 
 /// Repaint only the changed `xNN` value of the toss-quantity prompt.
-#[cfg(any(test, target_os = "none"))]
 pub fn redraw_top_level_bag_quantity(
     previous: u32,
     current: u32,

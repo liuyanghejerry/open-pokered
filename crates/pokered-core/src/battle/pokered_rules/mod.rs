@@ -1037,24 +1037,11 @@ fn rebuild_move_index() {
     // records still register the pipeline hooks; the handlers short-circuit on
     // power-0 (drawing only the accuracy byte) to match the legacy power-0 branch.
     let mut effects: Vec<&'static Effect<PokeredRules>> = Vec::new();
-    #[cfg(target_os = "none")]
-    let mut shared_gba_hooks: Option<&'static [EventHook<PokeredRules>]> = None;
+    // Intern identical complete hook topologies on every platform. The RON
+    // records remain authoritative for event order, priority and veto routing.
+    let mut hook_sets: Vec<&'static [EventHook<PokeredRules>]> = Vec::new();
     for (idx, rec) in records.iter().enumerate() {
         let id = EffectId(MOVE_EFFECT_ID_BASE + idx as u32);
-        // The canonical GBA rules use one common hook topology. Only the
-        // source-effect id varies between move records, and each data bridge
-        // resolves that id through MOVE_RECORDS. Sharing this slice avoids
-        // retaining dozens of identical native hooks per record in EWRAM.
-        #[cfg(target_os = "none")]
-        if let Some(hooks) = shared_gba_hooks {
-            let eff: &'static Effect<PokeredRules> = Box::leak(Box::new(Effect {
-                id,
-                kind: EffectType::Move,
-                hooks,
-            }));
-            effects.push(eff);
-            continue;
-        }
         let mut event_hooks: Vec<EventHook<PokeredRules>> = Vec::new();
         // ── Native pipeline (the DRAW structure, re-homing pokered's formula). ──
         event_hooks.push(EventHook {
@@ -1239,7 +1226,7 @@ fn rebuild_move_index() {
         //    the special.counter record). power-0 record → the native crit/damage
         //    draws already short-circuit; pokered_accuracy skips Counter; this native
         //    handler is Counter's sole damage authority (reads its own DamageTaken). ──
-        if cfg!(target_os = "none") || rec.source_id == "special.counter" {
+        if rec.source_id == "special.counter" {
             event_hooks.push(EventHook {
                 event: Event::ModifyDamage,
                 call: counter_handler,
@@ -1249,7 +1236,6 @@ fn rebuild_move_index() {
             });
         }
         // ── Data bridge hooks (the EFFECT op-lists, by event). ──
-        #[cfg(not(target_os = "none"))]
         for hook_id in &rec.hook_ids {
             let h = host
                 .compiled
@@ -1299,43 +1285,23 @@ fn rebuild_move_index() {
                 sub_order: None,
             });
         }
-        #[cfg(target_os = "none")]
-        event_hooks.extend([
-            EventHook {
-                event: Event::Accuracy,
-                call: bridge_accuracy,
-                order: 50,
-                priority: 0,
-                sub_order: None,
-            },
-            EventHook {
-                event: Event::Effectiveness,
-                call: bridge_effectiveness,
-                order: 100,
-                priority: 0,
-                sub_order: None,
-            },
-            EventHook {
-                event: Event::DamagingHit,
-                call: bridge_damaging_hit,
-                order: 100,
-                priority: 0,
-                sub_order: None,
-            },
-            EventHook {
-                event: Event::ModifyDamage,
-                call: bridge_modify_damage,
-                order: 2000,
-                priority: 0,
-                sub_order: None,
-            },
-        ]);
-        let leaked_hooks: &'static [EventHook<PokeredRules>] =
-            Box::leak(event_hooks.into_boxed_slice());
-        #[cfg(target_os = "none")]
-        {
-            shared_gba_hooks = Some(leaked_hooks);
-        }
+        let leaked_hooks = if let Some(existing) = hook_sets.iter().copied().find(|hooks| {
+            hooks.len() == event_hooks.len()
+                && hooks.iter().zip(&event_hooks).all(|(a, b)| {
+                    a.event == b.event
+                        && core::ptr::fn_addr_eq(a.call, b.call)
+                        && a.order == b.order
+                        && a.priority == b.priority
+                        && a.sub_order == b.sub_order
+                })
+        }) {
+            existing
+        } else {
+            let hooks: &'static [EventHook<PokeredRules>] =
+                Box::leak(event_hooks.into_boxed_slice());
+            hook_sets.push(hooks);
+            hooks
+        };
         let eff: &'static Effect<PokeredRules> = Box::leak(Box::new(Effect {
             id,
             kind: EffectType::Move,

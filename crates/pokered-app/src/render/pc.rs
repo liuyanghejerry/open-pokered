@@ -32,7 +32,6 @@ const T: u32 = 8; // tile size in pixels
 /// overlaps this 5x10 pixel cell. The proportional font advances `>` by five
 /// pixels; clearing a full tile would erase the first letter in the compact
 /// box chooser, which intentionally has no separating space.
-#[cfg(any(test, target_os = "none"))]
 pub fn redraw_pc_cursor(
     previous: (u32, u32),
     current: (u32, u32),
