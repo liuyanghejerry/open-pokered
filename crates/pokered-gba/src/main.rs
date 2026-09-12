@@ -2410,6 +2410,7 @@ fn game_main() -> ! {
     let mut update_accumulator = FRAME_TICKS;
     let mut last_black_screen = false;
     let mut last_trade: Option<pokered_app::render::TradeVisualKey> = None;
+    let mut last_evolution: Option<pokered_app::render::EvolutionVisualKey> = None;
     let mut last_takeover_active = false;
     let mut last_static_splash: Option<SplashPhase> = None;
     let mut last_language_select: Option<Lang> = None;
@@ -2513,13 +2514,16 @@ fn game_main() -> ! {
             .trade_anim
             .as_ref()
             .map(pokered_app::render::trade_visual_key);
-        // These cutscenes own the full framebuffer. Until they receive their
-        // own exact visual keys, render every display frame so the ordinary
-        // screen cache can never freeze them.
-        let uncached_takeover = game.evolution_anim.is_some()
-            || game.hof_ceremony.is_some()
-            || game.credits.is_some();
-        let takeover_active = black_screen || trade.is_some() || uncached_takeover;
+        let evolution = game
+            .evolution_anim
+            .as_ref()
+            .map(pokered_app::render::evolution_visual_key);
+        // Hall of Fame and credits own the full framebuffer. Until they
+        // receive exact visual keys, render every display frame so the
+        // ordinary screen cache can never freeze them.
+        let uncached_takeover = game.hof_ceremony.is_some() || game.credits.is_some();
+        let takeover_active =
+            black_screen || trade.is_some() || evolution.is_some() || uncached_takeover;
         // The copyright, setup, and post-delay splash phases are completely
         // static. Keep the already-presented page while only advancing logic.
         let static_splash = if game.state.screen == GameScreen::GameFreakSplash
@@ -2679,6 +2683,8 @@ fn game_main() -> ! {
             !last_black_screen
         } else if trade.is_some() {
             trade != last_trade
+        } else if evolution.is_some() {
+            evolution != last_evolution
         } else if uncached_takeover {
             true
         } else if last_takeover_active {
@@ -3263,6 +3269,7 @@ fn game_main() -> ! {
         }
         last_black_screen = black_screen;
         last_trade = trade;
+        last_evolution = evolution;
         last_takeover_active = takeover_active;
         last_static_splash = static_splash;
         last_language_select = language_select;

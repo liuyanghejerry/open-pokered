@@ -37,6 +37,8 @@ pub use elevator::{draw_elevator, draw_filter_bag};
 #[cfg(any(test, target_os = "none"))]
 pub use elevator::redraw_elevator_cursor;
 pub use evolution::draw_evolution;
+#[cfg(any(test, target_os = "none"))]
+pub use evolution::{evolution_visual_key, EvolutionVisualKey};
 pub use gamefreak_splash::draw_gamefreak_splash;
 pub use hof_ceremony::draw_hof_ceremony;
 pub use intro::draw_intro_scene;
