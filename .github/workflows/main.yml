@@ -24,7 +24,7 @@ jobs:
       pokered-runner-web: ${{ steps.filter.outputs.pokered-runner-web }}
       pokered-tui: ${{ steps.filter.outputs.pokered-tui }}
       pokered-android: ${{ steps.filter.outputs.pokered-android }}
-      pokered-ios: ${{ steps.filter.outputs.pokered-ios }}
+      ios: ${{ steps.filter.outputs.ios }}
       pokered-debug-server: ${{ steps.filter.outputs.pokered-debug-server }}
       pokered-ui: ${{ steps.filter.outputs.pokered-ui }}
       pokered-ui-preview: ${{ steps.filter.outputs.pokered-ui-preview }}
@@ -95,10 +95,10 @@ jobs:
               - 'crates/pokered-core/**'
               - 'android/**'
               - 'scripts/build-android.py'
-            pokered-ios:
+            ios:
               - 'Cargo.lock'
               - 'Cargo.toml'
-              - 'crates/pokered-ios/**'
+              - 'crates/pokered-mobile/**'
               - 'crates/pokered-app/**'
               - 'crates/pokered-renderer/**'
               - 'crates/pokered-core/**'
@@ -139,7 +139,7 @@ jobs:
           [ "${{ steps.filter.outputs.pokered-runner-web }}" == "true" ]      && CHANGES="$CHANGES pokered-runner-web"      || true
           [ "${{ steps.filter.outputs.pokered-tui }}" == "true" ]             && CHANGES="$CHANGES pokered-tui"             || true
           [ "${{ steps.filter.outputs.pokered-android }}" == "true" ]         && CHANGES="$CHANGES pokered-android"         || true
-          [ "${{ steps.filter.outputs.pokered-ios }}" == "true" ]             && CHANGES="$CHANGES pokered-ios"             || true
+          [ "${{ steps.filter.outputs.ios }}" == "true" ]                     && CHANGES="$CHANGES ios"                     || true
           [ "${{ steps.filter.outputs.pokered-debug-server }}" == "true" ]    && CHANGES="$CHANGES pokered-debug-server"    || true
           [ "${{ steps.filter.outputs.pokered-ui }}" == "true" ]              && CHANGES="$CHANGES pokered-ui"              || true
           [ "${{ steps.filter.outputs.pokered-ui-preview }}" == "true" ]      && CHANGES="$CHANGES pokered-ui-preview"      || true
@@ -473,7 +473,7 @@ jobs:
 
   build-ios-app:
     needs: [detect-changes]
-    if: ${{ needs.detect-changes.outputs.pokered-ios == 'true' }}
+    if: ${{ needs.detect-changes.outputs.ios == 'true' }}
     permissions:
       contents: read
     name: Build iOS App
@@ -493,6 +493,7 @@ jobs:
         run: |
           rustup target add aarch64-apple-ios
           rustup target add aarch64-apple-ios-sim
+          rustup target add x86_64-apple-ios
 
       - name: Cache cargo registry & build
         uses: actions/cache@v4
@@ -506,16 +507,21 @@ jobs:
             ios-cargo-
 
       - name: Build Rust library (device)
-        run: cargo build -p pokered-ios --target aarch64-apple-ios --release
+        run: cargo build -p pokered-mobile --target aarch64-apple-ios --release
 
       - name: Build Rust library (simulator)
-        run: cargo build -p pokered-ios --target aarch64-apple-ios-sim --release
+        run: |
+          cargo build -p pokered-mobile --target aarch64-apple-ios-sim --release
+          cargo build -p pokered-mobile --target x86_64-apple-ios --release
 
       - name: Copy .a files to Xcode lib directory
         run: |
           mkdir -p ios/Pokered/lib
-          cp target/aarch64-apple-ios/release/libpokered_ios.a ios/Pokered/lib/libpokered_ios_device.a
-          cp target/aarch64-apple-ios-sim/release/libpokered_ios.a ios/Pokered/lib/libpokered_ios_sim.a
+          cp target/aarch64-apple-ios/release/libpokered_mobile.a ios/Pokered/lib/libpokered_mobile_device.a
+          lipo -create \
+            target/aarch64-apple-ios-sim/release/libpokered_mobile.a \
+            target/x86_64-apple-ios/release/libpokered_mobile.a \
+            -output ios/Pokered/lib/libpokered_mobile_sim.a
 
       - name: Build Xcode project (unsigned)
         working-directory: ios

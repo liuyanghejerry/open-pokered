@@ -2,15 +2,15 @@ import AVFoundation
 
 // MARK: - Rust FFI Import
 
-/// Bridge to `pokered_audio_fill` in `crates/pokered-ios/src/lib.rs`.
+/// Bridge to `dotzuki_mobile_audio_fill` in the shared mobile ABI.
 ///
 /// Pulls interleaved stereo `f32` samples from the lock-free ring buffer.
 /// - Parameter ctx: Raw pointer to the Rust `GameContext`.
 /// - Parameter buffer: Destination for interleaved stereo samples (L,R,L,R,…).
 /// - Parameter frames: Requested number of stereo frame pairs.
 /// - Returns: Number of frames actually written (may be less than `frames`).
-@_silgen_name("pokered_audio_fill")
-func pokered_audio_fill(
+@_silgen_name("dotzuki_mobile_audio_fill")
+func dotzuki_mobile_audio_fill(
     _ ctx: UnsafeMutableRawPointer,
     _ buffer: UnsafeMutablePointer<Float>,
     _ frames: UInt32
@@ -34,11 +34,11 @@ final class AudioEngine {
 
     // MARK: - Audio Format
 
-    /// Standard game-audio format: 48 kHz, 2-channel stereo, float32 PCM,
+    /// Shared mobile ABI audio: 44.1 kHz, 2-channel stereo, float32 PCM,
     /// non-interleaved (two `AudioBuffer` entries in the output `AudioBufferList`).
     private let stereoFormat = AVAudioFormat(
         commonFormat: .pcmFormatFloat32,
-        sampleRate: 48000,
+        sampleRate: 44100,
         channels: 2,
         interleaved: false
     )!
@@ -123,7 +123,7 @@ final class AudioEngine {
             let requested = UInt32(min(fc, maxFrames))
 
             // === Pull interleaved stereo from the Rust ring buffer ===
-            let filled = pokered_audio_fill(ctx, scratch, requested)
+            let filled = dotzuki_mobile_audio_fill(ctx, scratch, requested)
 
             // === Access the two non-interleaved output channel buffers ===
             let outputBuffers = UnsafeMutableAudioBufferListPointer(outputData)

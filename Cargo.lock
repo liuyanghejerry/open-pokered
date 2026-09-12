@@ -3155,18 +3155,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "pokered-ios"
-version = "0.1.0"
-dependencies = [
- "log",
- "pokered-app",
- "pokered-audio",
- "pokered-core",
- "pokered-data",
- "pokered-renderer",
-]
-
-[[package]]
 name = "pokered-layout-preview"
 version = "0.1.0"
 dependencies = [

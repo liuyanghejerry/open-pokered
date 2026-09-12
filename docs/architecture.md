@@ -8,7 +8,7 @@
 
 | 层次 | 模块 | 职责 |
 | --- | --- | --- |
-| 平台接入 | `pokered-app`、`pokered-web`、`pokered-mobile`、`pokered-ios`、`pokered-tui` | 窗口、输入、平台生命周期与显示适配；Android 与鸿蒙共用移动 ABI |
+| 平台接入 | `pokered-app`、`pokered-web`、`pokered-mobile`、`pokered-tui` | 窗口、输入、平台生命周期与显示适配；Android、iOS 与鸿蒙共用移动 ABI |
 | 游戏编排 | `pokered-app::PokemonGame`；TUI 自有 `game/render/audio` | 推进状态、切换屏幕、组合画面、调度音频和平台 I/O |
 | 游戏逻辑 | `pokered-core` | 战斗、地图、事件、宝可梦、道具、存档模型与屏幕状态机 |
 | 表现与输出 | `pokered-ui`、`pokered-renderer`、`pokered-audio` | 菜单布局、160 × 144 帧缓冲、图形基础、游戏曲谱和音频输出 |

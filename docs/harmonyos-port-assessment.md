@@ -100,7 +100,7 @@ PR 描述报告了 ARM64 OHOS 静态库构建、HAP 构建安装、ArkUI→Node-
 | `crates/pokered-app/Cargo.toml` | 非 WASM 目标自动启用 `cpal`，并引入 `clap`、`notify`、`dotzuki-app` | 要把通用运行时与桌面启动/工具功能分开 |
 | `crates/pokered-app/src/game.rs` | `PokemonGame::new` 区分桌面与 Android/iOS/WASM；默认保存路径也按平台硬编码 | 新平台不能直接复用桌面构造函数和可执行文件目录存档 |
 | `crates/pokered-audio/src/output.rs` | `AudioOutput` 在非 WASM 下直接持有 `CpalOutput` | 需分离音源/游戏音频控制与设备输出，并增加外部 PCM 消费接口 |
-| `crates/pokered-ios/src/lib.rs` | 已有 init/update/draw/save/load/audio_fill C ABI，输出 160×144 RGBA | 可参考 ABI 形状；不应直接复制并假定实现完整 |
+| `crates/pokered-ios/src/lib.rs`（迁移前） | 旧版 init/update/draw/save/load/audio_fill C ABI，输出 160×144 RGBA | 可参考 ABI 形状；不应直接复制并假定实现完整 |
 | `crates/pokered-android/`、`android/` | NativeActivity、JNI、Kotlin 虚拟按键、winit/pixels | 可借鉴交互设计，平台代码需要重做 |
 | `crates/pokered-web/` | 已有完整 WASM 游戏 shell，包含首个用户手势恢复音频逻辑 | 可作为低成本 ArkWeb 方案的起点 |
 
@@ -116,7 +116,7 @@ target_os="linux"
 
 因此平台条件应识别 `target_env = "ohos"`，不能写成 `target_os = "ohos"`，也不能把所有 Linux 目标都当成桌面 Linux。
 
-用 `cargo tree --offline --locked -p pokered-ios --target aarch64-unknown-linux-ohos` 检查现有移动端依赖，可见 `pixels 0.15.0 → wgpu 0.19.4`、`winit 0.30.13`、`cpal 0.15.3 → alsa/alsa-sys`、`notify 6.1.1 → inotify`，以及 `boa_engine 0.20.0`。这说明直接沿用当前 shell 会携带桌面平台依赖。读取已锁定版本的源码也确认，winit 的 Unix 平台条件未排除 OHOS，cpal 的 Linux 条件会启用 ALSA。
+迁移前曾用 `cargo tree --offline --locked -p pokered-ios --target aarch64-unknown-linux-ohos` 检查旧移动端依赖，可见 `pixels 0.15.0 → wgpu 0.19.4`、`winit 0.30.13`、`cpal 0.15.3 → alsa/alsa-sys`、`notify 6.1.1 → inotify`，以及 `boa_engine 0.20.0`。这说明直接沿用当时的 shell 会携带桌面平台依赖。读取已锁定版本的源码也确认，winit 的 Unix 平台条件未排除 OHOS，cpal 的 Linux 条件会启用 ALSA。
 
 上述命令同时输出了引擎缓存中模板 manifest 的 `{{project-name}}` 包名诊断。依赖树有输出，但不能把它当成交叉编译通过；该诊断也应在构建 PoC 中澄清。
 

@@ -4,26 +4,42 @@ import UIKit
 
 // MARK: - FFI Bridge
 
-struct GameContext {}
+/// Opaque runner owned by dotzuki-mobile's shared C ABI.
+struct DotzukiMobileRunner {}
 
-@_silgen_name("pokered_init")
-func pokered_init(_ version: UInt8) -> UnsafeMutablePointer<GameContext>?
+@_silgen_name("dotzuki_mobile_abi_version")
+func dotzuki_mobile_abi_version() -> UInt32
 
-@_silgen_name("pokered_set_save_dir")
-func pokered_set_save_dir(_ ctx: UnsafeMutableRawPointer, _ path: UnsafePointer<CChar>?)
+@_silgen_name("dotzuki_mobile_create")
+func dotzuki_mobile_create(
+    _ pack: UnsafePointer<UInt8>, _ packLen: Int,
+    _ save: UnsafePointer<UInt8>?, _ saveLen: Int
+) -> UnsafeMutablePointer<DotzukiMobileRunner>?
 
-@_silgen_name("pokered_load")
-func pokered_load(_ ctx: UnsafeMutableRawPointer, _ path: UnsafePointer<CChar>?) -> Bool
+@_silgen_name("dotzuki_mobile_destroy")
+func dotzuki_mobile_destroy(_ runner: UnsafeMutablePointer<DotzukiMobileRunner>)
 
-@_silgen_name("pokered_update")
-func pokered_update(_ ctx: UnsafeMutablePointer<GameContext>?, _ input_bits: UInt8)
+@_silgen_name("dotzuki_mobile_width")
+func dotzuki_mobile_width(_ runner: UnsafePointer<DotzukiMobileRunner>) -> UInt32
 
-@_silgen_name("pokered_draw")
-func pokered_draw(
-    _ ctx: UnsafeMutablePointer<GameContext>?,
-    _ buffer: UnsafeMutablePointer<UInt8>,
-    _ len: Int
-)
+@_silgen_name("dotzuki_mobile_height")
+func dotzuki_mobile_height(_ runner: UnsafePointer<DotzukiMobileRunner>) -> UInt32
+
+@_silgen_name("dotzuki_mobile_frame_len")
+func dotzuki_mobile_frame_len(_ runner: UnsafePointer<DotzukiMobileRunner>) -> Int
+
+@_silgen_name("dotzuki_mobile_tick")
+func dotzuki_mobile_tick(_ runner: UnsafeMutablePointer<DotzukiMobileRunner>, _ inputBits: UInt8) -> Bool
+
+@_silgen_name("dotzuki_mobile_copy_frame")
+func dotzuki_mobile_copy_frame(
+    _ runner: UnsafePointer<DotzukiMobileRunner>, _ buffer: UnsafeMutablePointer<UInt8>, _ len: Int
+) -> Int
+
+@_silgen_name("dotzuki_mobile_export_save")
+func dotzuki_mobile_export_save(
+    _ runner: UnsafePointer<DotzukiMobileRunner>, _ buffer: UnsafeMutablePointer<UInt8>?, _ len: Int
+) -> Int
 
 // MARK: - Constants
 
@@ -32,7 +48,9 @@ private let SCREEN_HEIGHT: Int   = 144
 private let BYTES_PER_PIXEL: Int = 4
 private let FRAME_BUFFER_SIZE: Int = SCREEN_WIDTH * SCREEN_HEIGHT * BYTES_PER_PIXEL
 private let BYTES_PER_ROW: Int   = SCREEN_WIDTH * BYTES_PER_PIXEL
-private let FRAME_DURATION_NS: UInt64 = 16_742_706
+private let MOBILE_ABI_VERSION: UInt32 = 1
+private let SAVE_KEY = "pokered-mobile-save-v1"
+private let INITIALIZATION_PAYLOAD = Array("pokered:red:v1".utf8)
 
 // MARK: - Inline MSL Source
 
@@ -87,7 +105,8 @@ final class GameViewController: UIViewController {
     private var displayLink: CADisplayLink!
     private var frameBuffer: [UInt8] = Array(repeating: 0, count: FRAME_BUFFER_SIZE)
 
-    var ctxPtr: UnsafeMutablePointer<GameContext>? = nil
+    var ctxPtr: UnsafeMutablePointer<DotzukiMobileRunner>? = nil
+    private var lastCommittedSave = ""
 
     private let touchHandler = TouchHandler()
 
@@ -238,25 +257,22 @@ final class GameViewController: UIViewController {
             if loadingTick < 2 {
                 drawLoadingScreen(tick: loadingTick)
             } else if loadingTick == 2 {
-                ctxPtr = pokered_init(0)
-                // Set save directory AFTER ctx is created
-                if let ctx = ctxPtr {
-                    let docs = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
-                    let savePath = docs.appendingPathComponent("pokered.sav").path
-                    savePath.withCString { cPath in
-                        pokered_set_save_dir(UnsafeMutableRawPointer(ctx), cPath)
-                    }
-                    // Load previous save if it exists; ignore failure (fresh start).
-                    _ = pokered_load(UnsafeMutableRawPointer(ctx), nil)
-                }
+                createMobileRunner()
                 isLoading = false
             }
             loadingTick += 1
         }
 
         if let ctx = ctxPtr {
-            pokered_update(ctx, currentInputBits)
-            pokered_draw(ctx, &frameBuffer, FRAME_BUFFER_SIZE)
+            guard dotzuki_mobile_tick(ctx, currentInputBits) else {
+                destroyRunner()
+                return
+            }
+            let written = dotzuki_mobile_copy_frame(ctx, &frameBuffer, FRAME_BUFFER_SIZE)
+            guard written == FRAME_BUFFER_SIZE else {
+                destroyRunner()
+                return
+            }
         }
 
         frameCount += 1
@@ -369,7 +385,7 @@ final class GameViewController: UIViewController {
 
     /// Creates the `AudioEngine`, wires its `ctxPtr`, sets up the source
     /// node, and registers interruption observers. Must be called after
-    /// `ctxPtr` has been assigned (post-`pokered_init`).
+    /// the shared mobile runner is created.
     func setupAudioEngine() {
         guard let ctx = ctxPtr else { return }
         let audio = AudioEngine()
@@ -390,6 +406,72 @@ final class GameViewController: UIViewController {
     func releaseDrawables() {
         // On iOS 17+, Metal drawables are released automatically when the
         // app enters background; explicit release is a no-op for safety.
+    }
+
+    /// Persist only committed JSON saves from the shared mobile runtime.
+    /// A zero-length export means the game has no committed save yet.
+    @discardableResult
+    func persistSave() -> Bool {
+        guard let ctx = ctxPtr else { return false }
+        let length = dotzuki_mobile_export_save(ctx, nil, 0)
+        guard length > 0 else { return false }
+        var bytes = [UInt8](repeating: 0, count: length)
+        let written = bytes.withUnsafeMutableBufferPointer {
+            dotzuki_mobile_export_save(ctx, $0.baseAddress, $0.count)
+        }
+        guard written == length, let save = String(bytes: bytes, encoding: .utf8) else {
+            return false
+        }
+        if save != lastCommittedSave {
+            UserDefaults.standard.set(save, forKey: SAVE_KEY)
+            lastCommittedSave = save
+        }
+        return true
+    }
+
+    /// Stop Core Audio before releasing the FFI runner, as required by ABI v1.
+    func destroyRunner() {
+        audioEngine?.stop()
+        audioEngine = nil
+        guard let ctx = ctxPtr else { return }
+        _ = persistSave()
+        dotzuki_mobile_destroy(ctx)
+        ctxPtr = nil
+    }
+
+    private func createMobileRunner() {
+        guard dotzuki_mobile_abi_version() == MOBILE_ABI_VERSION else {
+            fatalError("Unsupported dotzuki mobile ABI")
+        }
+        let saved = UserDefaults.standard.string(forKey: SAVE_KEY)
+        let runner: UnsafeMutablePointer<DotzukiMobileRunner>? = INITIALIZATION_PAYLOAD.withUnsafeBufferPointer { pack in
+            guard let packPtr = pack.baseAddress else { return nil }
+            guard let saved else {
+                return dotzuki_mobile_create(packPtr, pack.count, nil, 0)
+            }
+            let bytes = Array(saved.utf8)
+            return bytes.withUnsafeBufferPointer {
+                dotzuki_mobile_create(packPtr, pack.count, $0.baseAddress, $0.count)
+            }
+        }
+        guard let runner else {
+            fatalError("Unable to create dotzuki mobile runner")
+        }
+        guard dotzuki_mobile_width(runner) == UInt32(SCREEN_WIDTH),
+              dotzuki_mobile_height(runner) == UInt32(SCREEN_HEIGHT),
+              dotzuki_mobile_frame_len(runner) == FRAME_BUFFER_SIZE
+        else {
+            dotzuki_mobile_destroy(runner)
+            fatalError("Unexpected dotzuki mobile framebuffer contract")
+        }
+        ctxPtr = runner
+        lastCommittedSave = saved ?? ""
+        setupAudioEngine()
+        do {
+            try audioEngine?.start()
+        } catch {
+            print("AudioEngine start failed after runner creation: \(error)")
+        }
     }
 }
 
