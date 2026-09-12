@@ -19,6 +19,7 @@ pub mod mode;
 pub mod nav;
 pub mod nearby;
 pub mod profile;
+pub mod semantics;
 pub mod snapshot;
 pub mod world;
 
@@ -26,6 +27,11 @@ pub use mode::{classify_mode, AgentMode, ModeInput, OverworldObs};
 pub use nav::{
     direction_between, find_approach, find_path, InteractOutcome, InteractResult, NavGrid,
     NavigationOutcome, NavigationResult,
+};
+pub use semantics::{
+    extract_map_semantics, generate_event_graph_json, generate_world_semantics, BattleKind,
+    CoverageReport, EdgeKind, EventEdge, EventGraph, MapSemantics, ScriptSemantics, StateEffect,
+    StatePredicate, WorldSemantics,
 };
 pub use world::{
     find_tile_route, RouteLeg, RouteLegKind, TileCross, TileLeg, TravelOutcome, TravelResult,

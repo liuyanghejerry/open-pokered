@@ -115,6 +115,16 @@ pub enum GameDebugCommand {
     /// `entered_battle` / `interrupted` / `map_mismatch` / `blackout` /
     /// `invalid_target`) plus fresh state snapshots.
     TravelTo { map: String },
+    /// M4 static scene semantics. With `map` (PascalCase name) returns
+    /// that map's extracted storylines (`reads` state predicates,
+    /// `effects` state changes, `triggers`). Without it returns the
+    /// coverage summary plus the list of analyzed maps (full per-map
+    /// payloads live in `target/agent/world_semantics.json`). Purely
+    /// observational: never steps frames.
+    GetScriptSemantics {
+        #[serde(default)]
+        map: Option<String>,
+    },
     /// Give a Pokémon to the player's party.
     GivePokemon { species: String, level: u8 },
     /// Start a wild battle against the given species/level (for testing catch
@@ -306,6 +316,20 @@ mod tests {
         assert!(matches!(
             cmd,
             DebugCommand::Game(GameDebugCommand::TravelTo { ref map }) if map == "ViridianCity"
+        ));
+
+        let cmd: DebugCommand =
+            serde_json::from_str(r#"{"cmd":"get_script_semantics"}"#).unwrap();
+        assert!(matches!(
+            cmd,
+            DebugCommand::Game(GameDebugCommand::GetScriptSemantics { map: None })
+        ));
+
+        let cmd: DebugCommand =
+            serde_json::from_str(r#"{"cmd":"get_script_semantics","map":"OaksLab"}"#).unwrap();
+        assert!(matches!(
+            cmd,
+            DebugCommand::Game(GameDebugCommand::GetScriptSemantics { map: Some(_) })
         ));
     }
 

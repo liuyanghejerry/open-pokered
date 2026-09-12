@@ -6119,6 +6119,36 @@ impl PokemonGame {
                 }
                 DebugResponse::ok_with_data(data)
             }
+            DebugCommand::Game(GameDebugCommand::GetScriptSemantics { ref map }) => {
+                match map {
+                    Some(name) => {
+                        // Validate the map exists in world data first so a
+                        // typo is a clean error, not an empty payload.
+                        if pokered_data::map_data_loader::resolve_map_id(name).is_none()
+                            && !name.starts_with("shared/")
+                        {
+                            return DebugResponse::err(format!("unknown map: '{name}'"));
+                        }
+                        match pokered_agent::extract_map_semantics(name) {
+                            Some(semantics) => DebugResponse::ok_with_data(
+                                serde_json::to_value(semantics).unwrap_or_default(),
+                            ),
+                            None => DebugResponse::err(format!(
+                                "no scene script for map: '{name}'"
+                            )),
+                        }
+                    }
+                    None => {
+                        let world = pokered_agent::generate_world_semantics();
+                        let maps: Vec<&str> =
+                            world.maps.iter().map(|m| m.map.as_str()).collect();
+                        DebugResponse::ok_with_data(serde_json::json!({
+                            "coverage": world.coverage,
+                            "maps": maps,
+                        }))
+                    }
+                }
+            }
             DebugCommand::Game(GameDebugCommand::WaitUntil {
                 ref condition,
                 max_frames,

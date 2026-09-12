@@ -140,7 +140,8 @@ Debug-server protocol (JSON-line over TCP): `get_state`, `get_position`,
 `press_sequence`, `run_frames`, `step_frames`, `save`, `set_flag`,
 `give_item`, `give_pokemon`, `start_wild_battle`, `get_agent_state`,
 `get_nearby`, `move_to`, `interact`, `interact_with`, `get_world_graph`,
-`find_world_route`, `travel_to`. `get_state` also reports
+`find_world_route`, `travel_to`, `get_script_semantics`. `get_state` also
+reports
 `active_script_effect`, `script_awaiting_battle`, `player_movement_state`,
 `dialogue`, and battle phase/message. `get_agent_state` (optional `level`
 1-4 or `profile`) returns the typed `pokered-agent` semantic snapshot
@@ -158,8 +159,13 @@ world graph (connections + warps, LAST_MAP candidates resolved);
 `travel_to {map}` executes the route end-to-end (tile-level routing with
 warp transit, wild battles auto-run, trainer battles auto-fought) and
 reports `reached`/`blocked`/`entered_battle`/`interrupted`/
-`map_mismatch`/`blackout`/`invalid_target`. A minimal Python client
-lives at `scripts/debug_drive.py`.
+`map_mismatch`/`blackout`/`invalid_target`. `get_script_semantics {map?}`
+returns the M4 static scene semantics (per-storyline flag/item/battle/
+warp `reads`/`effects`; coverage summary when unscoped) — the generated
+event graph lives at `crates/pokered-data/story/graph.json` and the full
+payload at `target/agent/world_semantics.json`, both refreshed via
+`cargo run -p pokered-agent --bin gen_event_graph`. A minimal Python
+client lives at `scripts/debug_drive.py`.
 
 Screen targets: `copyright title main-menu oak overworld battle start-menu options save`.
 
