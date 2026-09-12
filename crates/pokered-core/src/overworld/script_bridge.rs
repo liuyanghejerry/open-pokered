@@ -197,6 +197,10 @@ pub enum ScriptEffect {
     Immediate {
         result: CommandResult,
     },
+    /// A command reached pokered that its script host does not implement.
+    UnsupportedCommand {
+        name: String,
+    },
     OpenShop {
         items: Vec<String>,
     },
@@ -508,6 +512,9 @@ impl ScriptEffect {
                     dotzuki_engine_script::CommandResult::Text(t) => json!(t),
                 },
             }),
+            ScriptEffect::UnsupportedCommand { name } => {
+                json!({ "effect": "UnsupportedCommand", "name": name })
+            }
             ScriptEffect::OpenShop { items } => {
                 json!({ "effect": "OpenShop", "items": items })
             }
@@ -788,24 +795,20 @@ pub fn dispatch_command_with_names(
         | ScriptCommand::CheckFlag { .. } => ScriptEffect::Immediate {
             result: CommandResult::Void,
         },
-        // dotzuki-engine UI/scene commands — not used by pokered, no-op.
-        ScriptCommand::ShowScene { .. }
-        | ScriptCommand::HideScene { .. }
-        | ScriptCommand::UpdateUI { .. } => ScriptEffect::Immediate {
-            result: CommandResult::Void,
-        },
+        // These commands belong to host capabilities pokered does not expose.
+        ScriptCommand::ShowScene { .. } => unsupported("showScene"),
+        ScriptCommand::HideScene { .. } => unsupported("hideScene"),
+        ScriptCommand::UpdateUI { .. } => unsupported("updateUI"),
         // dotzuki-runner battle weather — registered only by the jrpg runner's
-        // scene engine; never produced by pokered scripts. No-op.
-        ScriptCommand::SetWeather { .. } => ScriptEffect::Immediate {
-            result: CommandResult::Void,
-        },
+        // scene engine; never produced by pokered scripts.
+        ScriptCommand::SetWeather { .. } => unsupported("setWeather"),
     }
 }
 
 /// Dispatch a game-defined [`ScriptCommand::Custom`] to the matching
 /// [`ScriptEffect`] by its JS verb name. `args` are the raw JSON values the
 /// registrar passed through (see `pokered-data::script_api`); unknown names
-/// are a defensive no-op (Void), like the unhandled engine commands above.
+/// become an explicit unsupported-capability effect.
 fn dispatch_custom(name: &str, args: &[Value]) -> ScriptEffect {
     match name {
         "oldManTutorial" => ScriptEffect::OldManTutorial,
@@ -879,9 +882,13 @@ fn dispatch_custom(name: &str, args: &[Value]) -> ScriptEffect {
         },
         "playShipDeparture" => ScriptEffect::PlayShipDeparture { started: false },
         "enterHallOfFame" => ScriptEffect::HallOfFameCeremony,
-        _ => ScriptEffect::Immediate {
-            result: CommandResult::Void,
-        },
+        _ => unsupported(name),
+    }
+}
+
+fn unsupported(name: &str) -> ScriptEffect {
+    ScriptEffect::UnsupportedCommand {
+        name: name.to_string(),
     }
 }
 
@@ -994,6 +1001,29 @@ mod name_rater_tests {
             }
             other => panic!("expected SetPartyNickname, got {other:?}"),
         }
+    }
+
+    #[test]
+    fn unknown_custom_command_is_not_silently_accepted() {
+        let eff = dispatch_command(&ScriptCommand::Custom {
+            name: "notRegistered".to_string(),
+            args: vec![],
+        });
+        assert!(matches!(
+            eff,
+            ScriptEffect::UnsupportedCommand { ref name } if name == "notRegistered"
+        ));
+    }
+
+    #[test]
+    fn unsupported_engine_command_is_observable() {
+        let eff = dispatch_command(&ScriptCommand::SetWeather {
+            weather: Some("rain".to_string()),
+        });
+        assert!(matches!(
+            eff,
+            ScriptEffect::UnsupportedCommand { ref name } if name == "setWeather"
+        ));
     }
 }
 

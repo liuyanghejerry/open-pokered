@@ -80,9 +80,11 @@ The resource catalog is now target-independent: asset categories, canonical path
 parsing, Pokémon sprite dimensions and the typed named-loader API have one source
 of truth. A small compile-time macro emits that API for both resource managers;
 only the filesystem/PNG provider and the preconverted ROM registry/cache remain
-platform-specific. Remaining boundary work is explicit: replace silent unsupported
-script behavior with capability errors and move remaining legacy menu damage
-geometry into the owning UI modules.
+platform-specific. Script representation APIs are also feature-gated now: native
+builds expose scene-AST loading, while Boa builds expose raw-JavaScript loading;
+unsupported engine/custom commands produce an observable error effect instead of
+silently succeeding as `Void`. Remaining boundary work is explicit: move remaining
+legacy menu damage geometry into the owning UI modules.
 The cursor erasure fast paths still assume the current arrow's 8×9 ink footprint
 and plain background; this is now an explicit UI-owned damage contract, but it
 is not inferred from glyph metrics. Changing those authored shapes requires

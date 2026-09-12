@@ -2449,7 +2449,8 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                     true
                 }
             }
-            script_bridge::ScriptEffect::Immediate { .. } => true,
+            script_bridge::ScriptEffect::Immediate { .. }
+            | script_bridge::ScriptEffect::UnsupportedCommand { .. } => true,
             script_bridge::ScriptEffect::SetJoyIgnore { .. } => true,
             script_bridge::ScriptEffect::ClearJoyIgnore => true,
             script_bridge::ScriptEffect::StartNpcMove { npc_id, path } => {
@@ -3003,6 +3004,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                 CommandResult::Number(*selected as f64)
             }
             script_bridge::ScriptEffect::Immediate { result } => result.clone(),
+            script_bridge::ScriptEffect::UnsupportedCommand { .. } => CommandResult::Void,
             script_bridge::ScriptEffect::NamingScreen {
                 result_name,
                 species,
@@ -3024,6 +3026,9 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
     fn apply_finished_effect(&mut self, effect: Option<script_bridge::ScriptEffect>) {
         if let Some(eff) = effect {
             match eff {
+                script_bridge::ScriptEffect::UnsupportedCommand { name } => {
+                    log::error!(target: "pokered::overworld", "[Script] unsupported host command: {name}");
+                }
                 script_bridge::ScriptEffect::SetJoyIgnore { mask } => {
                     self.joy_ignore_mask = mask;
                 }

@@ -1261,26 +1261,32 @@ impl OverworldScriptEngine {
         }
     }
 
-    /// Load raw JS into the Boa engine. The native engine has no JS path —
-    /// load scene ASTs via the `load_map`-style methods on the `Native`
-    /// variant instead.
+    /// Load raw JS into the Boa engine.
+    ///
+    /// This API does not exist in native-AST builds, so selecting the wrong
+    /// representation fails at compile time instead of silently succeeding.
+    #[cfg(feature = "script-boa")]
     pub fn load_script(&mut self, _source: &str) -> Result<(), String> {
         match self {
-            #[cfg(feature = "script-boa")]
             OverworldScriptEngine::Boa(e) => e
                 .load_script(_source)
                 .map_err(|err| format!("JS load failed: {}", err)),
-            OverworldScriptEngine::Native(_) => Ok(()),
+            OverworldScriptEngine::Native(_) => {
+                Err("raw JavaScript is not supported by the native AST engine".to_string())
+            }
         }
     }
 
+    /// Load a raw JS shared module into the Boa engine.
+    #[cfg(feature = "script-boa")]
     pub fn load_shared_module(&mut self, _name: &str, _source: &str) -> Result<(), String> {
         match self {
-            #[cfg(feature = "script-boa")]
             OverworldScriptEngine::Boa(e) => e
                 .load_shared_module(_name, _source)
                 .map_err(|err| format!("JS shared module load failed: {}", err)),
-            OverworldScriptEngine::Native(_) => Ok(()),
+            OverworldScriptEngine::Native(_) => {
+                Err("raw JavaScript modules are not supported by the native AST engine".to_string())
+            }
         }
     }
 
@@ -1292,21 +1298,19 @@ impl OverworldScriptEngine {
         }
     }
 
-    /// Native-only: register a shared module scene (e.g. `shared/pokecenter`).
-    /// No-op on the Boa variant (which loads shared modules as raw JS).
-    #[cfg_attr(not(feature = "script-boa"), allow(irrefutable_let_patterns))]
+    /// Register a shared native scene (e.g. `shared/pokecenter`).
+    #[cfg(not(feature = "script-boa"))]
     pub fn register_shared_scene_native(&mut self, scene: &dotzuki_engine_dsl::ast::GameScene) {
-        if let OverworldScriptEngine::Native(e) = self {
-            e.register_shared_scene(scene);
+        match self {
+            OverworldScriptEngine::Native(e) => e.register_shared_scene(scene),
         }
     }
 
-    /// Native-only: load a map's scene AST. No-op on the Boa variant (which
-    /// loads the compiled JS instead).
-    #[cfg_attr(not(feature = "script-boa"), allow(irrefutable_let_patterns))]
+    /// Load a map's native scene AST.
+    #[cfg(not(feature = "script-boa"))]
     pub fn load_map_native(&mut self, map_name: &str, scene: &dotzuki_engine_dsl::ast::GameScene) {
-        if let OverworldScriptEngine::Native(e) = self {
-            e.load_map(map_name, scene);
+        match self {
+            OverworldScriptEngine::Native(e) => e.load_map(map_name, scene),
         }
     }
 
