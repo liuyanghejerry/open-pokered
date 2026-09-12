@@ -64,7 +64,7 @@ use pokered_core::party_screen::{
     PartyNoticeReturn, PartyScreenAction, PartyScreenInput, PartyScreenState,
 };
 use pokered_core::pokedex_screen::{PokedexScreenAction, PokedexScreenInput, PokedexScreenState};
-#[cfg(all(not(target_arch = "wasm32"), not(target_os = "none")))]
+#[cfg(not(target_os = "none"))]
 use pokered_core::save::sram_export::export_sram;
 use pokered_core::stats_screen::{StatsScreenAction, StatsScreenInput, StatsScreenState};
 use pokered_core::town_map_screen::{TownMapScreenAction, TownMapScreenInput, TownMapScreenState};
@@ -74,7 +74,7 @@ use pokered_core::trainer_card_screen::{
 
 use pokered_core::elevator_screen::{ElevatorAction, ElevatorInput, ElevatorScreen};
 use pokered_core::pc_screen::{PcContext, PcEntry, PcOpenContext, PcScreen, PcScreenAction, PcSfx};
-#[cfg(not(target_arch = "wasm32"))]
+#[cfg(all(not(target_arch = "wasm32"), not(target_os = "none")))]
 use pokered_core::save::sram_import::import_sram;
 use pokered_core::save::SaveData;
 use pokered_core::save_menu::{
