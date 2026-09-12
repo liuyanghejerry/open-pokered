@@ -24,6 +24,7 @@ use crate::hash_compat::HashMap;
 use crate::hash_compat::HashMap;
 
 use dotzuki_engine_dsl::ast::{GameScene, StoryStmt};
+use dotzuki_engine_dsl::core_host::dispatch_core_async;
 use dotzuki_engine_dsl::interpreter::{HostCall, Interpreter, InterpState, ScriptHost, Value};
 use dotzuki_engine_script::{CommandResult, ScriptCommand};
 use pokered_data::script_command::PokemonScriptCommand;
@@ -95,10 +96,6 @@ mod args {
         number(v, what).map(|n| n as u8)
     }
 
-    pub fn u16(v: &Value, what: &str) -> Result<u16, String> {
-        number(v, what).map(|n| n as u16)
-    }
-
     pub fn u32(v: &Value, what: &str) -> Result<u32, String> {
         number(v, what).map(|n| n as u32)
     }
@@ -109,69 +106,6 @@ mod args {
                 .iter()
                 .map(|i| text(i, &format!("{what} element")))
                 .collect(),
-            other => Err(format!("{what}: expected array, got {}", other.type_name())),
-        }
-    }
-
-    pub fn path(v: &Value, what: &str) -> Result<Vec<(u8, u8)>, String> {
-        match v {
-            Value::Array(items) => {
-                let mut out = Vec::with_capacity(items.len());
-                for (i, p) in items.iter().enumerate() {
-                    match p {
-                        Value::Array(xy) if xy.len() == 2 => {
-                            out.push((u8(&xy[0], &format!("{what}[{i}].x"))?, u8(&xy[1], &format!("{what}[{i}].y"))?));
-                        }
-                        other => {
-                            return Err(format!(
-                                "{what}[{i}]: expected [x, y] pair, got {}",
-                                other.type_name()
-                            ))
-                        }
-                    }
-                }
-                Ok(out)
-            }
-            other => Err(format!("{what}: expected array, got {}", other.type_name())),
-        }
-    }
-
-    /// `movePlayerRelative` steps: `[dx, dy]` pairs or direction strings.
-    pub fn relative_steps(v: &Value, what: &str) -> Result<Vec<(i16, i16)>, String> {
-        match v {
-            Value::Array(items) => {
-                let mut out = Vec::with_capacity(items.len());
-                for (i, p) in items.iter().enumerate() {
-                    match p {
-                        Value::Text(dir) => {
-                            let (dx, dy) = match dir.to_ascii_lowercase().as_str() {
-                                "up" | "north" => (0i16, -1i16),
-                                "down" | "south" => (0, 1),
-                                "left" | "west" => (-1, 0),
-                                "right" | "east" => (1, 0),
-                                other => {
-                                    return Err(format!(
-                                        "{what}[{i}]: unknown direction '{other}'"
-                                    ))
-                                }
-                            };
-                            out.push((dx, dy));
-                        }
-                        Value::Array(xy) if xy.len() == 2 => {
-                            let dx = number(&xy[0], &format!("{what}[{i}].dx"))? as i16;
-                            let dy = number(&xy[1], &format!("{what}[{i}].dy"))? as i16;
-                            out.push((dx, dy));
-                        }
-                        other => {
-                            return Err(format!(
-                                "{what}[{i}]: expected direction string or [dx, dy], got {}",
-                                other.type_name()
-                            ))
-                        }
-                    }
-                }
-                Ok(out)
-            }
             other => Err(format!("{what}: expected array, got {}", other.type_name())),
         }
     }
@@ -230,6 +164,10 @@ impl NativeHost {
 
 impl ScriptHost for NativeHost {
     fn call(&mut self, name: &str, v: &[Value]) -> Result<HostCall, String> {
+        if let Some(command) = dispatch_core_async(name, v)? {
+            return Ok(HostCall::Command(command));
+        }
+
         match name {
             // ── sync flag queries/mutations ──────────────────────────────
             "getFlag" => {
@@ -353,14 +291,6 @@ impl ScriptHost for NativeHost {
             }
 
             // ── async commands: build a ScriptCommand for the driver ──────
-            "showText" => {
-                let text = args::text(v.first().ok_or("showText: missing text")?, "showText")?;
-                Ok(HostCall::Command(ScriptCommand::ShowText { text }))
-            }
-            "showChoice" => {
-                let options = args::string_array(v.first().ok_or("showChoice: missing options")?, "showChoice")?;
-                Ok(HostCall::Command(ScriptCommand::ShowChoice { options }))
-            }
             "giveItem" => {
                 let item_id = args::text(v.first().ok_or("giveItem: missing item")?, "giveItem")?;
                 let quantity = args::u8(v.get(1).ok_or("giveItem: missing quantity")?, "giveItem")?;
@@ -472,130 +402,8 @@ impl ScriptHost for NativeHost {
             }
             "withdrawDaycare" => Ok(pokemon(PokemonScriptCommand::WithdrawDaycare)),
 
-            // ── core engine commands (dotzuki-engine-script/src/engine.rs) ──
-            "moveNpc" => {
-                let npc_id = args::text(v.first().ok_or("moveNpc: missing npc")?, "moveNpc")?;
-                let path = args::path(v.get(1).ok_or("moveNpc: missing path")?, "moveNpc")?;
-                Ok(HostCall::Command(ScriptCommand::MoveNpc { npc_id, path }))
-            }
-            "startNpcMove" => {
-                let npc_id = args::text(v.first().ok_or("startNpcMove: missing npc")?, "startNpcMove")?;
-                let path = args::path(v.get(1).ok_or("startNpcMove: missing path")?, "startNpcMove")?;
-                Ok(HostCall::Command(ScriptCommand::StartNpcMove { npc_id, path }))
-            }
-            "awaitNpcMove" => {
-                let npc_id = args::text(v.first().ok_or("awaitNpcMove: missing npc")?, "awaitNpcMove")?;
-                Ok(HostCall::Command(ScriptCommand::AwaitNpcMove { npc_id }))
-            }
-            "movePlayer" => {
-                let path = args::path(v.first().ok_or("movePlayer: missing path")?, "movePlayer")?;
-                Ok(HostCall::Command(ScriptCommand::MovePlayer { path }))
-            }
-            "movePlayerRelative" => {
-                let steps = args::relative_steps(v.first().ok_or("movePlayerRelative: missing steps")?, "movePlayerRelative")?;
-                Ok(HostCall::Command(ScriptCommand::MovePlayerRelative { steps }))
-            }
-            "moveNpcTo" => {
-                let npc_id = args::text(v.first().ok_or("moveNpcTo: missing npc")?, "moveNpcTo")?;
-                let x = args::u8(v.get(1).ok_or("moveNpcTo: missing x")?, "moveNpcTo")?;
-                let y = args::u8(v.get(2).ok_or("moveNpcTo: missing y")?, "moveNpcTo")?;
-                Ok(HostCall::Command(ScriptCommand::MoveNpcTo { npc_id, x, y }))
-            }
-            "startNpcMoveTo" => {
-                let npc_id = args::text(v.first().ok_or("startNpcMoveTo: missing npc")?, "startNpcMoveTo")?;
-                let x = args::u8(v.get(1).ok_or("startNpcMoveTo: missing x")?, "startNpcMoveTo")?;
-                let y = args::u8(v.get(2).ok_or("startNpcMoveTo: missing y")?, "startNpcMoveTo")?;
-                Ok(HostCall::Command(ScriptCommand::StartNpcMoveTo { npc_id, x, y }))
-            }
-            "movePlayerTo" => {
-                let x = args::u8(v.first().ok_or("movePlayerTo: missing x")?, "movePlayerTo")?;
-                let y = args::u8(v.get(1).ok_or("movePlayerTo: missing y")?, "movePlayerTo")?;
-                Ok(HostCall::Command(ScriptCommand::MovePlayerTo { x, y }))
-            }
-            "faceNpc" => {
-                let npc_id = args::text(v.first().ok_or("faceNpc: missing npc")?, "faceNpc")?;
-                let direction = args::text(v.get(1).ok_or("faceNpc: missing direction")?, "faceNpc")?;
-                Ok(HostCall::Command(ScriptCommand::FaceNpc { npc_id, direction }))
-            }
-            "facePlayer" => {
-                let direction = args::text(v.first().ok_or("facePlayer: missing direction")?, "facePlayer")?;
-                Ok(HostCall::Command(ScriptCommand::FacePlayer { direction }))
-            }
-            "setNpcFrame" => {
-                let npc_id = args::text(v.first().ok_or("setNpcFrame: missing npc")?, "setNpcFrame")?;
-                let frame = args::u8(v.get(1).ok_or("setNpcFrame: missing frame")?, "setNpcFrame")?;
-                Ok(HostCall::Command(ScriptCommand::SetNpcFrame { npc_id, frame }))
-            }
-            "playMusic" => {
-                let music_id = args::text(v.first().ok_or("playMusic: missing music")?, "playMusic")?;
-                Ok(HostCall::Command(ScriptCommand::PlayMusic { music_id }))
-            }
-            "playSound" => {
-                let sound_id = args::text(v.first().ok_or("playSound: missing sound")?, "playSound")?;
-                Ok(HostCall::Command(ScriptCommand::PlaySound { sound_id }))
-            }
             "playShipDeparture" => Ok(pokemon(PokemonScriptCommand::PlayShipDeparture)),
-            "stopMusic" => Ok(HostCall::Command(ScriptCommand::StopMusic)),
-            "fadeOutMusic" => Ok(HostCall::Command(ScriptCommand::FadeOutMusic)),
-            "delay" => {
-                let frames = args::u16(v.first().ok_or("delay: missing frames")?, "delay")?;
-                Ok(HostCall::Command(ScriptCommand::Delay { frames }))
-            }
-            "warpTo" => {
-                let map = args::text(v.first().ok_or("warpTo: missing map")?, "warpTo")?;
-                let x = args::u8(v.get(1).ok_or("warpTo: missing x")?, "warpTo")?;
-                let y = args::u8(v.get(2).ok_or("warpTo: missing y")?, "warpTo")?;
-                Ok(HostCall::Command(ScriptCommand::WarpTo { map, x, y }))
-            }
-            "heal" => Ok(HostCall::Command(ScriptCommand::Heal)),
             "animateHealingMachine" => Ok(pokemon(PokemonScriptCommand::AnimateHealingMachine)),
-            "fadeScreen" => {
-                let fade_type = args::text(v.first().ok_or("fadeScreen: missing type")?, "fadeScreen")?;
-                Ok(HostCall::Command(ScriptCommand::FadeScreen { fade_type }))
-            }
-            "showObject" => {
-                let arg = v.first().ok_or("showObject: missing argument")?;
-                match arg {
-                    Value::Text(toggle_id) => Ok(HostCall::Command(ScriptCommand::ShowObjectByName {
-                        toggle_id: toggle_id.clone(),
-                    })),
-                    Value::Number(_) => Ok(HostCall::Command(ScriptCommand::ShowObject {
-                        object_index: args::u8(arg, "showObject")?,
-                    })),
-                    other => Err(format!("showObject: expected number or string, got {}", other.type_name())),
-                }
-            }
-            "hideObject" => {
-                let arg = v.first().ok_or("hideObject: missing argument")?;
-                match arg {
-                    Value::Text(toggle_id) => Ok(HostCall::Command(ScriptCommand::HideObjectByName {
-                        toggle_id: toggle_id.clone(),
-                    })),
-                    Value::Number(_) => Ok(HostCall::Command(ScriptCommand::HideObject {
-                        object_index: args::u8(arg, "hideObject")?,
-                    })),
-                    other => Err(format!("hideObject: expected number or string, got {}", other.type_name())),
-                }
-            }
-            "showObjectByName" => {
-                let toggle_id = args::text(v.first().ok_or("showObjectByName: missing id")?, "showObjectByName")?;
-                Ok(HostCall::Command(ScriptCommand::ShowObjectByName { toggle_id }))
-            }
-            "hideObjectByName" => {
-                let toggle_id = args::text(v.first().ok_or("hideObjectByName: missing id")?, "hideObjectByName")?;
-                Ok(HostCall::Command(ScriptCommand::HideObjectByName { toggle_id }))
-            }
-            "setJoyIgnore" => {
-                let mask = args::u8(v.first().ok_or("setJoyIgnore: missing mask")?, "setJoyIgnore")?;
-                Ok(HostCall::Command(ScriptCommand::SetJoyIgnore { mask }))
-            }
-            "clearJoyIgnore" => Ok(HostCall::Command(ScriptCommand::ClearJoyIgnore)),
-            "followNpc" => {
-                let npc_id = args::text(v.first().ok_or("followNpc: missing npc")?, "followNpc")?;
-                let target_x = args::u8(v.get(1).ok_or("followNpc: missing x")?, "followNpc")?;
-                let target_y = args::u8(v.get(2).ok_or("followNpc: missing y")?, "followNpc")?;
-                Ok(HostCall::Command(ScriptCommand::FollowNpc { npc_id, target_x, target_y }))
-            }
             "openNamingScreen" => {
                 let species = args::text(v.first().ok_or("openNamingScreen: missing species")?, "openNamingScreen")?;
                 Ok(pokemon(PokemonScriptCommand::OpenNamingScreen { species }))
@@ -605,34 +413,6 @@ impl ScriptHost for NativeHost {
                 let index = args::u8(v.first().ok_or("setPartyNickname: missing index")?, "setPartyNickname")?;
                 let nickname = args::text(v.get(1).ok_or("setPartyNickname: missing nickname")?, "setPartyNickname")?;
                 Ok(pokemon(PokemonScriptCommand::SetPartyNickname { index, nickname }))
-            }
-            "openShop" => {
-                let items = args::string_array(v.first().ok_or("openShop: missing items")?, "openShop")?;
-                Ok(HostCall::Command(ScriptCommand::OpenShop { items }))
-            }
-            "showEmotionBubble" => {
-                let npc_id = args::text(v.first().ok_or("showEmotionBubble: missing npc")?, "showEmotionBubble")?;
-                let emotion = args::text(v.get(1).ok_or("showEmotionBubble: missing emotion")?, "showEmotionBubble")?;
-                Ok(HostCall::Command(ScriptCommand::ShowEmotionBubble { npc_id, emotion }))
-            }
-            "setNpcPosition" => {
-                let npc_id = args::text(v.first().ok_or("setNpcPosition: missing npc")?, "setNpcPosition")?;
-                let x = args::u8(v.get(1).ok_or("setNpcPosition: missing x")?, "setNpcPosition")?;
-                let y = args::u8(v.get(2).ok_or("setNpcPosition: missing y")?, "setNpcPosition")?;
-                Ok(HostCall::Command(ScriptCommand::SetNpcPosition { npc_id, x, y }))
-            }
-            // dotzuki-engine UI/scene commands — never produced by pokered scenes;
-            // accepted for parity with the Boa registrar.
-            "showScene" => {
-                let scene_name = args::text(v.first().ok_or("showScene: missing name")?, "showScene")?;
-                Ok(HostCall::Command(ScriptCommand::ShowScene {
-                    scene_name,
-                    layout_json: None,
-                }))
-            }
-            "hideScene" => {
-                let scene_name = args::text(v.first().ok_or("hideScene: missing name")?, "hideScene")?;
-                Ok(HostCall::Command(ScriptCommand::HideScene { scene_name }))
             }
             _ => Err(format!(
                 "unknown game function '{name}' (native interpreter host)"
