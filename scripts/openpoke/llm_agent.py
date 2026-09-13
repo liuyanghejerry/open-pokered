@@ -86,19 +86,23 @@ class ChatClient:
     """
 
     def __init__(self, base_url, api_key, model, timeout=60, max_retries=2,
-                 opener=None):
+                 opener=None, temperature=0.0):
         self.base_url = base_url.rstrip("/")
         self.api_key = api_key
         self.model = model
         self.timeout = timeout
         self.max_retries = max_retries
         self.opener = opener or urllib.request.urlopen
+        # temperature 0 pins decoding where the endpoint supports it (RQ1);
+        # residual LLM nondeterminism is disclosed in run summaries.
+        self.temperature = temperature
 
     def chat(self, messages, max_tokens=64):
         body = json.dumps({
             "model": self.model,
             "messages": messages,
             "max_tokens": max_tokens,
+            "temperature": self.temperature,
         }).encode()
         req = urllib.request.Request(
             self.base_url + "/chat/completions", data=body,
@@ -161,7 +165,7 @@ def parse_t1_action(text):
     return f"press:{btn}" if n == 1 else f"drive:{btn},{n}"
 
 
-def parse_t2_action(text):
+def parse_t2_action(text, allow_travel_to=True):
     m = _T2_RE.match(text.strip())
     if not m:
         raise ParseFailure(f"no skill action in {text!r}")
@@ -172,6 +176,8 @@ def parse_t2_action(text):
         x, y = (int(v) for v in rest.split(","))
         return f"move_to:{x},{y}"
     if verb == "travel_to":
+        if not allow_travel_to:
+            raise ParseFailure("travel_to is disabled for this tier")
         return f"travel_to:{rest}"
     if verb == "interact_with":
         return f"interact_with:{rest.lower()}"
@@ -379,15 +385,27 @@ class SkillLlmAgent(LlmAgent):
     POLICY_NAME = "llm_skills"
     TIER = "T2"
 
+    def __init__(self, client, seed, max_model_calls=60, history=8,
+                 allow_travel_to=True):
+        super().__init__(client, seed, max_model_calls, history)
+        # RQ1 T2 runs with this OFF (mirrors the calibration T2, which has
+        # no world-model travel); the prompt's action list matches.
+        self.allow_travel_to = allow_travel_to
+
     def system_prompt(self, task):
+        actions = ("`move_to:X,Y` (walk to tile), `interact_with:<id>` "
+                   "(talk to / pick up a nearby entity), `interact` "
+                   "(A in place), `press:a`, `step_frames:N` (wait)")
+        if self.allow_travel_to:
+            actions = ("`move_to:X,Y` (walk to tile), `interact_with:<id>` "
+                       "(talk to / pick up a nearby entity), `interact` "
+                       "(A in place), `travel_to:MapName` (cross-map "
+                       "travel), `press:a`, `step_frames:N` (wait)")
         return (
             "You play Pokémon Red through a navigation API. Goal: "
             f"{_goal_text(task)}. Each turn I report map, position, mode "
             "and nearby entities. You answer with EXACTLY ONE action, one "
-            "of: `move_to:X,Y` (walk to tile), `interact_with:<id>` (talk "
-            "to / pick up a nearby entity), `interact` (A in place), "
-            "`travel_to:MapName` (cross-map travel), `press:a`, "
-            "`step_frames:N` (wait). No prose.")
+            f"of: {actions}. No prose.")
 
     def describe(self, env, task, obs):
         pos = obs["position"]
@@ -396,7 +414,7 @@ class SkillLlmAgent(LlmAgent):
                 f"Goal: {_goal_text(task)}. Action?")
 
     def parse_action(self, text):
-        return parse_t2_action(text)
+        return parse_t2_action(text, allow_travel_to=self.allow_travel_to)
 
     def fallback_action(self, obs):
         # Head for the north map edge — the same compass prior the

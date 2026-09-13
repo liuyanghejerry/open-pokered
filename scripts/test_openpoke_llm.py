@@ -273,5 +273,65 @@ class PolicyDecisionTests(unittest.TestCase):
                       user_msg)
 
 
+# ── WP2: travel_to knob + temperature + runner units ─────────────────
+class TravelKnobTests(unittest.TestCase):
+    def test_parse_rejects_travel_to_when_disabled(self):
+        self.assertEqual(la.parse_t2_action("travel_to:ViridianCity",
+                                            allow_travel_to=True),
+                         "travel_to:ViridianCity")
+        with self.assertRaises(la.ParseFailure):
+            la.parse_t2_action("travel_to:ViridianCity",
+                               allow_travel_to=False)
+
+    def test_prompt_matches_knob(self):
+        chat = StubChat(["interact"])
+        on = la.SkillLlmAgent(chat, 42, allow_travel_to=True)
+        self.assertIn("travel_to:MapName", on.system_prompt(TASK))
+        off = la.SkillLlmAgent(chat, 42, allow_travel_to=False)
+        self.assertNotIn("travel_to", off.system_prompt(TASK))
+
+    def test_temperature_in_request_body(self):
+        opener = ScriptedOpener([chat_payload("up")])
+        client = la.ChatClient("http://v", "k", "m", opener=opener,
+                               temperature=0.0)
+        client.chat([])
+        body = json.loads(opener.calls[0].data)
+        self.assertEqual(body["temperature"], 0.0)
+
+
+class RunnerUnitTests(unittest.TestCase):
+    def test_existing_cells_reads_rows(self):
+        import tempfile
+        from openpoke import run_rq1
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "reach-viridian-city__T2.jsonl"
+            row = {"task_id": "reach-viridian-city", "seed": 42,
+                   "success": True, "frames_elapsed": 100}
+            path.write_text(json.dumps(row) + "\n")
+            cells = run_rq1.existing_cells(Path(tmp))
+            self.assertIn(("reach-viridian-city", 42), cells)
+            self.assertEqual(cells[("reach-viridian-city", 42)][0]["frames_elapsed"], 100)
+
+    def test_aggregate_table_shape_and_oracle_row(self):
+        from openpoke import run_rq1
+        tier_runs = {
+            "T2": [{"task_id": "reach-viridian-city", "seed": 42,
+                    "success": True, "frames_elapsed": 1000, "model_calls": 5,
+                    "model_tokens_prompt": 100, "model_tokens_completion": 10,
+                    "failure_reason": ""},
+                   {"task_id": "reach-viridian-city", "seed": 1,
+                    "success": False, "frames_elapsed": 2000, "model_calls": 9,
+                    "model_tokens_prompt": 200, "model_tokens_completion": 20,
+                    "failure_reason": "frame_budget"}],
+        }
+        oracle = [{"task_id": "reach-viridian-city", "seed": 42,
+                   "success": True, "frames_elapsed": 873, "env_steps": 1}]
+        out = run_rq1.aggregate(tier_runs, oracle, "m/test", 1.0, ["d1"])
+        self.assertIn("| T2 | **1/2** | 1000 |", out)
+        self.assertIn("| oracle (scripted, ref) | **1/1** | 873 | 0 | 0 | 0 |", out)
+        self.assertIn("| reach-viridian-city | — | 1/2 | — | 1/1 |", out)
+        self.assertIn("- d1", out)
+
+
 if __name__ == "__main__":
     unittest.main()
