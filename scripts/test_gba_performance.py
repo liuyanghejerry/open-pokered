@@ -4,7 +4,12 @@
 from __future__ import annotations
 
 import importlib.util
+import json
 from pathlib import Path
+import shlex
+import sys
+import tempfile
+from types import SimpleNamespace
 import unittest
 
 
@@ -15,9 +20,9 @@ gba_performance = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(gba_performance)
 
 
-def metrics(**overrides: int) -> dict[str, int | str]:
+def metrics(scenario: str = "overworld-movement-v1", **overrides: int) -> dict[str, int | str]:
     result: dict[str, int | str] = {
-        "scenario": "overworld-autopilot-v1",
+        "scenario": scenario,
         "samples": 240,
         "renders": 18,
         "update_avg_ticks": 1400,
@@ -32,24 +37,106 @@ def metrics(**overrides: int) -> dict[str, int | str]:
     return result
 
 
+def suite() -> dict[str, dict[str, int | str]]:
+    return {scenario: metrics(scenario) for scenario in gba_performance.SCENARIO_METRICS}
+
+
 class GbaPerformanceTests(unittest.TestCase):
     def test_parses_structured_mgba_line(self) -> None:
         line = (
-            "[INFO] GBA Debug: gba-perf scenario=overworld-autopilot-v1 samples=240 "
+            "[INFO] GBA Debug: gba-perf scenario=battle-entry-v1 samples=240 "
             "update_avg_ticks=1400 renders=18 draw_avg_ticks=2000 "
             "draw_per_frame_ticks=150 draw_max_ticks=9000 present_avg_ticks=780 "
             "present_per_frame_ticks=60 present_max_ticks=800"
         )
-        self.assertEqual(gba_performance.parse_performance_line(line), metrics())
+        self.assertEqual(
+            gba_performance.parse_performance_line(line),
+            metrics("battle-entry-v1"),
+        )
 
-    def test_rejects_material_regression(self) -> None:
-        candidate = metrics(draw_per_frame_ticks=180)
-        failures = gba_performance.compare_metrics(metrics(), candidate, 15.0, 25)
-        self.assertTrue(any("draw_per_frame_ticks" in failure for failure in failures))
+    def test_rejects_missing_render_for_visual_scenario(self) -> None:
+        line = (
+            "gba-perf scenario=pokedex-entry-v1 samples=10 update_avg_ticks=10 "
+            "renders=0 draw_avg_ticks=0 draw_per_frame_ticks=0 draw_max_ticks=0 "
+            "present_avg_ticks=0 present_per_frame_ticks=0 present_max_ticks=0"
+        )
+        with self.assertRaisesRegex(ValueError, "required render"):
+            gba_performance.parse_performance_line(line)
+
+    def test_accepts_frame_reuse_for_idle_overworld(self) -> None:
+        line = (
+            "gba-perf scenario=overworld-idle-v1 samples=10 update_avg_ticks=10 "
+            "renders=0 draw_avg_ticks=0 draw_per_frame_ticks=0 draw_max_ticks=0 "
+            "present_avg_ticks=0 present_per_frame_ticks=0 present_max_ticks=0"
+        )
+        parsed = gba_performance.parse_performance_line(line)
+        self.assertIsNotNone(parsed)
+        self.assertEqual(parsed["renders"], 0)
+
+    def test_rejects_material_regression_in_one_scene(self) -> None:
+        baseline = suite()
+        candidate = suite()
+        candidate["battle-entry-v1"] = metrics(
+            "battle-entry-v1", draw_per_frame_ticks=180
+        )
+        failures = gba_performance.compare_metrics(baseline, candidate, 15.0, 25)
+        self.assertTrue(
+            any(
+                "battle-entry-v1/draw_per_frame_ticks" in failure
+                for failure in failures
+            )
+        )
 
     def test_allows_small_absolute_variation(self) -> None:
-        candidate = metrics(present_per_frame_ticks=82)
-        self.assertEqual(gba_performance.compare_metrics(metrics(), candidate, 15.0, 25), [])
+        baseline = suite()
+        candidate = suite()
+        candidate["pokedex-entry-v1"] = metrics(
+            "pokedex-entry-v1", present_per_frame_ticks=82
+        )
+        self.assertEqual(
+            gba_performance.compare_metrics(baseline, candidate, 15.0, 25), []
+        )
+
+    def test_idle_scene_gates_update_only(self) -> None:
+        baseline = suite()
+        candidate = suite()
+        candidate["overworld-idle-v1"] = metrics(
+            "overworld-idle-v1", renders=1, draw_max_ticks=50_000
+        )
+        self.assertEqual(
+            gba_performance.compare_metrics(baseline, candidate, 15.0, 25), []
+        )
+
+    def test_load_requires_the_complete_scenario_suite(self) -> None:
+        payload = {
+            "suite": "autopilot-v1",
+            "emulator": "mGBA test",
+            "scenarios": suite(),
+        }
+        payload["scenarios"].pop("pokedex-entry-v1")
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "metrics.json"
+            path.write_text(json.dumps(payload), encoding="utf-8")
+            with self.assertRaisesRegex(ValueError, "expected scenarios"):
+                gba_performance.load_metrics(path)
+
+    def test_record_timeout_is_not_blocked_by_silent_emulator(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            rom = root / "benchmark.gba"
+            rom.touch()
+            args = SimpleNamespace(
+                rom=rom,
+                emulator=(
+                    f"{shlex.quote(sys.executable)} -c "
+                    '"import time; time.sleep(2)"'
+                ),
+                timeout_seconds=0.05,
+                output=root / "metrics.json",
+                log=None,
+            )
+            with self.assertRaisesRegex(TimeoutError, "every scenario"):
+                gba_performance.record(args)
 
 
 if __name__ == "__main__":

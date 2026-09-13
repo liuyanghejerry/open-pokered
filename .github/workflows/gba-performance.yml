@@ -17,6 +17,7 @@ jobs:
   performance:
     name: GBA performance baseline
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - name: Checkout candidate
         uses: actions/checkout@v4
@@ -30,7 +31,7 @@ jobs:
           HEAD_SHA: ${{ github.event.pull_request.head.sha }}
         run: |
           if git diff --quiet "$BASE_SHA" "$HEAD_SHA" -- \
-            Cargo.toml crates/pokered-gba crates/pokered-app crates/pokered-audio \
+            Cargo.toml Cargo.lock .cargo crates/pokered-gba crates/pokered-app crates/pokered-audio \
             crates/pokered-core crates/pokered-data crates/pokered-platform \
             crates/pokered-renderer crates/pokered-ui scripts/fetch-gfx.sh \
             scripts/gba_performance.py scripts/test_gba_performance.py vendor/ron \
@@ -81,7 +82,7 @@ jobs:
         env:
           MGBA_COMMAND: xvfb-run -a mgba
         run: |
-          python3 scripts/gba_performance.py record \
+          timeout --signal=TERM 2m python3 scripts/gba_performance.py record \
             --rom crates/pokered-gba/target/thumbv4t-none-eabi/release/pokered-gba.gba \
             --output "$RUNNER_TEMP/gba-performance-candidate.json" \
             --log "$RUNNER_TEMP/gba-performance-candidate.log"

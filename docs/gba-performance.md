@@ -14,9 +14,20 @@ mgba -1 -C logToStdout=1 -C logLevel.gba.debug=127 \
 
 ## CI regression baseline
 
-Pull requests that affect the GBA build run `perf-benchmark`, which replays a
-fixed bedroom Overworld movement sequence and reports Timer 2 cycle counts for
-game update, software drawing, and Mode 4 presentation. The checked-in
+Pull requests that affect the GBA build run `perf-benchmark`, which replays six
+deterministic windows through the production update/render paths:
+
+- intro/title animation;
+- Oak dialogue;
+- stable Overworld frame reuse;
+- Overworld movement/redraw;
+- wild-Battle entry through the HUD;
+- a populated Pokédex entry.
+
+Each window reports Timer 2 cycle counts for game update, software drawing, and
+Mode 4 presentation. The stable Overworld window gates update time only because
+zero redraws is the intended result; all visual windows must contain at least
+one render. The checked-in
 [`perf-baseline.json`](../crates/pokered-gba/perf-baseline.json) is the
 reviewed baseline. CI fails if any gated metric regresses by more than 15% (or
 25 timer ticks for small metrics), and uploads the candidate JSON/log as an
@@ -211,6 +222,11 @@ pages, with the completed page flipped at VBlank.
 - The GBA resource manager checks its decoded cache before scanning the asset
   registry and remembers immutable misses. Boot assets are released before
   entering the Overworld.
+- The Battle renderer releases its full-screen Overworld transition snapshot
+  and decoded map resources before allocating the combined battle tileset. This
+  removes the EWRAM peak that previously crashed when the first Battle HUD was
+  displayed; leaving Battle also releases its GBA-only render caches before a
+  Pokédex or Overworld screen allocates.
 - Fully opaque Normal layer stacks composite directly into the destination,
   avoiding the 92 KiB RGBA scratch allocation that cannot fit in GBA EWRAM.
 - Kept game simulation tied to the 59.7 Hz hardware clock. When a dynamic

@@ -14,6 +14,7 @@ import json
 import os
 from pathlib import Path
 import re
+import selectors
 import shlex
 import signal
 import subprocess
@@ -22,7 +23,6 @@ import time
 from typing import Any
 
 
-SCENARIO = "overworld-autopilot-v1"
 METRICS = (
     "update_avg_ticks",
     "draw_per_frame_ticks",
@@ -30,6 +30,17 @@ METRICS = (
     "present_per_frame_ticks",
     "present_max_ticks",
 )
+SCENARIO_METRICS = {
+    "intro-title-v1": METRICS,
+    "oak-dialogue-v1": METRICS,
+    # A stable overworld intentionally reuses its previous frame. Requiring a
+    # render here would turn the optimization into a test failure; update time
+    # is the only meaningful performance measurement for this window.
+    "overworld-idle-v1": ("update_avg_ticks",),
+    "overworld-movement-v1": METRICS,
+    "battle-entry-v1": METRICS,
+    "pokedex-entry-v1": METRICS,
+}
 PERF_LINE = re.compile(r"\bgba-perf\s+(?P<fields>.+)")
 
 
@@ -48,10 +59,12 @@ def parse_performance_line(line: str) -> dict[str, Any] | None:
     missing = required.difference(fields)
     if missing:
         raise ValueError(f"incomplete gba-perf line; missing {', '.join(sorted(missing))}")
-    if fields["scenario"] != SCENARIO:
+    if fields["scenario"] not in SCENARIO_METRICS:
         raise ValueError(f"unexpected GBA performance scenario: {fields['scenario']}")
-    if fields["samples"] < 1 or fields["renders"] < 1:
-        raise ValueError("GBA performance window did not contain samples and renders")
+    if fields["samples"] < 1:
+        raise ValueError("GBA performance window did not contain samples")
+    if len(SCENARIO_METRICS[fields["scenario"]]) > 1 and fields["renders"] < 1:
+        raise ValueError("GBA performance window did not contain a required render")
     return fields
 
 
@@ -84,28 +97,32 @@ def record(args: argparse.Namespace) -> int:
         text=True,
         bufsize=1,
     )
-    result: dict[str, Any] | None = None
+    results: dict[str, dict[str, Any]] = {}
+    selector = selectors.DefaultSelector()
     try:
         assert process.stdout is not None
+        selector.register(process.stdout, selectors.EVENT_READ)
         while True:
-            if time.monotonic() - started > args.timeout_seconds:
+            remaining = args.timeout_seconds - (time.monotonic() - started)
+            if remaining <= 0:
                 raise TimeoutError(
-                    f"mGBA did not emit {SCENARIO!r} within {args.timeout_seconds}s"
+                    f"mGBA did not emit every scenario within {args.timeout_seconds}s"
                 )
-            line = process.stdout.readline()
+            ready = selector.select(timeout=min(remaining, 0.25))
+            line = process.stdout.readline() if ready else ""
             if line:
                 line = line.rstrip()
                 log_lines.append(line)
                 print(line, flush=True)
                 parsed = parse_performance_line(line)
                 if parsed is not None:
-                    result = parsed
-                    break
+                    results[parsed["scenario"]] = parsed
+                    if set(results) == set(SCENARIO_METRICS):
+                        break
             elif process.poll() is not None:
                 raise RuntimeError(f"mGBA exited before a benchmark result (status {process.returncode})")
-            else:
-                time.sleep(0.01)
     finally:
+        selector.close()
         if process.poll() is None:
             process.send_signal(signal.SIGTERM)
             try:
@@ -113,13 +130,16 @@ def record(args: argparse.Namespace) -> int:
             except subprocess.TimeoutExpired:
                 process.kill()
                 process.wait()
+        if process.stdout is not None:
+            process.stdout.close()
 
-    if result is None:
-        raise RuntimeError("mGBA finished without a performance result")
+    if set(results) != set(SCENARIO_METRICS):
+        missing = set(SCENARIO_METRICS).difference(results)
+        raise RuntimeError(f"mGBA finished without performance scenarios: {', '.join(sorted(missing))}")
     payload = {
-        "scenario": SCENARIO,
+        "suite": "autopilot-v1",
         "emulator": args.emulator,
-        "metrics": result,
+        "scenarios": results,
     }
     write_json(args.output, payload)
     if args.log:
@@ -128,38 +148,49 @@ def record(args: argparse.Namespace) -> int:
     return 0
 
 
-def load_metrics(path: Path) -> dict[str, Any]:
+def load_metrics(path: Path) -> dict[str, dict[str, Any]]:
     payload = json.loads(path.read_text(encoding="utf-8"))
-    if payload.get("scenario") != SCENARIO:
-        raise ValueError(f"{path}: expected scenario {SCENARIO!r}")
-    metrics = payload.get("metrics")
-    if not isinstance(metrics, dict):
-        raise ValueError(f"{path}: missing metrics object")
-    for key in ("samples", "renders", *METRICS):
-        if not isinstance(metrics.get(key), int):
-            raise ValueError(f"{path}: missing integer metric {key}")
-    return metrics
+    if payload.get("suite") != "autopilot-v1":
+        raise ValueError(f"{path}: expected autopilot-v1 suite")
+    scenarios = payload.get("scenarios")
+    if not isinstance(scenarios, dict) or set(scenarios) != set(SCENARIO_METRICS):
+        expected = ", ".join(sorted(SCENARIO_METRICS))
+        raise ValueError(f"{path}: expected scenarios {expected}")
+    for scenario, metrics in scenarios.items():
+        if not isinstance(metrics, dict):
+            raise ValueError(f"{path}: {scenario} metrics must be an object")
+        if metrics.get("scenario") != scenario:
+            raise ValueError(f"{path}: {scenario} contains mismatched scenario name")
+        for key in ("samples", "renders", *METRICS):
+            if not isinstance(metrics.get(key), int):
+                raise ValueError(f"{path}: {scenario} missing integer metric {key}")
+        if metrics["samples"] < 1:
+            raise ValueError(f"{path}: {scenario} did not contain samples")
+        if len(SCENARIO_METRICS[scenario]) > 1 and metrics["renders"] < 1:
+            raise ValueError(f"{path}: {scenario} did not contain a required render")
+    return scenarios
 
 
 def compare_metrics(
-    baseline: dict[str, Any], candidate: dict[str, Any], max_regression_pct: float, min_absolute_ticks: int
+    baseline: dict[str, dict[str, Any]], candidate: dict[str, dict[str, Any]], max_regression_pct: float, min_absolute_ticks: int
 ) -> list[str]:
     failures: list[str] = []
-    for metric in METRICS:
-        before = baseline[metric]
-        after = candidate[metric]
-        allowed_delta = max(before * max_regression_pct / 100.0, min_absolute_ticks)
-        limit = before + allowed_delta
-        change_pct = 0.0 if before == 0 and after == 0 else float("inf") if before == 0 else (after - before) * 100.0 / before
-        print(
-            f"{metric}: {before} -> {after} ticks "
-            f"({change_pct:+.1f}%, limit {limit:.1f})"
-        )
-        if after > limit:
-            failures.append(
-                f"{metric} regressed from {before} to {after} ticks "
-                f"(allowed at most {limit:.1f}; {max_regression_pct:g}% or {min_absolute_ticks} ticks)"
+    for scenario, gated_metrics in SCENARIO_METRICS.items():
+        for metric in gated_metrics:
+            before = baseline[scenario][metric]
+            after = candidate[scenario][metric]
+            allowed_delta = max(before * max_regression_pct / 100.0, min_absolute_ticks)
+            limit = before + allowed_delta
+            change_pct = 0.0 if before == 0 and after == 0 else float("inf") if before == 0 else (after - before) * 100.0 / before
+            print(
+                f"{scenario}/{metric}: {before} -> {after} ticks "
+                f"({change_pct:+.1f}%, limit {limit:.1f})"
             )
+            if after > limit:
+                failures.append(
+                    f"{scenario}/{metric} regressed from {before} to {after} ticks "
+                    f"(allowed at most {limit:.1f}; {max_regression_pct:g}% or {min_absolute_ticks} ticks)"
+                )
     return failures
 
 

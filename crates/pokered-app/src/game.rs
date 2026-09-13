@@ -1984,6 +1984,7 @@ impl PokemonGame {
     }
 
     pub fn handle_transition(&mut self, screen: GameScreen) {
+        self.prepare_gba_screen_resources(&screen);
         // Set in the Battle→Overworld settle below when a caught species was
         // newly added to the Pokédex — the post-capture "New DEX data will be
         // added…" entry then opens instead of the overworld
@@ -2450,6 +2451,27 @@ impl PokemonGame {
         self.state.transition_to(screen);
     }
 
+    /// Reclaim decoded graphics at GBA full-screen boundaries. Leaving battle
+    /// must drop its combined tileset before another full-screen renderer
+    /// starts allocating. The Overworld→Battle boundary is handled when the
+    /// transition snapshot stops being visible, immediately before battle
+    /// graphics are allocated.
+    fn prepare_gba_screen_resources(&mut self, next: &GameScreen) {
+        #[cfg(target_os = "none")]
+        {
+            if self.state.screen == GameScreen::Battle && *next != GameScreen::Battle {
+                self.battle_vfx = BattleVisualEffects::default();
+            }
+            if matches!(next, GameScreen::Overworld | GameScreen::Pokedex) {
+                if let Some(resources) = self.resources.as_mut() {
+                    resources.clear_cache();
+                }
+            }
+        }
+        #[cfg(not(target_os = "none"))]
+        let _ = next;
+    }
+
     /// Re-baseline the overworld's button edge detectors against the buttons
     /// currently held. Called by the update loop before the first
     /// `overworld.update_frame` after any frame that skipped it (sub-screens,
@@ -2664,7 +2686,7 @@ impl PokemonGame {
             }
         }
         self.start_wild_battle(species, level);
-        self.state.screen = GameScreen::Battle;
+        self.handle_transition(GameScreen::Battle);
     }
 
     /// Editor quick-entry: open the Pokédex directly on `species`' entry (the
@@ -2673,6 +2695,7 @@ impl PokemonGame {
     /// flavor text; closing the Pokédex returns to the overworld.
     pub fn debug_open_pokedex(&mut self, species: pokered_data::species::Species) {
         use pokered_core::pokedex_screen::PokedexScreenState;
+        self.prepare_gba_screen_resources(&GameScreen::Pokedex);
         self.save_data.game_data.pokedex.set_seen(species);
         self.save_data.game_data.pokedex.set_owned(species);
         self.pokedex_screen = PokedexScreenState::new_entry(
@@ -2680,7 +2703,7 @@ impl PokemonGame {
             species,
             self.state.config.version,
         );
-        self.state.screen = GameScreen::Pokedex;
+        self.state.transition_to(GameScreen::Pokedex);
     }
 
     /// Editor quick-entry: start a trainer battle against `class` using its
@@ -2698,7 +2721,7 @@ impl PokemonGame {
         let index = (party_index + 1).min(255) as u8;
         let trainer_id = pokered_data::trainer_data::make_trainer_id(class, index);
         self.start_trainer_battle(&trainer_id, None);
-        self.state.screen = GameScreen::Battle;
+        self.handle_transition(GameScreen::Battle);
     }
 
     /// Editor quick-entry: verify a move in battle — a Lv25 Pikachu tester
@@ -2733,7 +2756,7 @@ impl PokemonGame {
         }
 
         self.start_wild_battle(Species::Pidgey, 25);
-        self.state.screen = GameScreen::Battle;
+        self.handle_transition(GameScreen::Battle);
     }
 
     /// Editor quick-entry: play the evolution animation `from` → `to` (the
@@ -6933,6 +6956,18 @@ impl PokemonGame {
                     );
                     self.battle_vfx.overworld_snapshot = Some(snapshot);
                 }
+                // The first non-transition battle frame builds the combined
+                // battle tileset and sprite caches. Drop the full 160×144
+                // snapshot and its decoded Overworld assets *before* those
+                // allocations; doing this after draw exceeds GBA EWRAM at the
+                // WildReveal→HUD boundary.
+                if !uses_overworld_snapshot && self.battle_vfx.overworld_snapshot.is_some() {
+                    self.battle_vfx.clear_snapshot();
+                    #[cfg(target_os = "none")]
+                    if let Some(resources) = self.resources.as_mut() {
+                        resources.clear_cache();
+                    }
+                }
                 draw_battle(
                     &self.battle,
                     &mut self.resources,
@@ -6940,9 +6975,6 @@ impl PokemonGame {
                     &mut self.battle_vfx,
                     self.state.config.language,
                 );
-                if !uses_overworld_snapshot {
-                    self.battle_vfx.clear_snapshot();
-                }
             }
             GameScreen::StartMenu => {
                 draw_overworld(

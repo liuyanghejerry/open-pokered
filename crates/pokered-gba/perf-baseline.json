@@ -1,16 +1,78 @@
 {
   "emulator": "mGBA 0.10.5",
-  "metrics": {
-    "draw_avg_ticks": 2078,
-    "draw_max_ticks": 2580,
-    "draw_per_frame_ticks": 163,
-    "present_avg_ticks": 709,
-    "present_max_ticks": 801,
-    "present_per_frame_ticks": 55,
-    "renders": 18,
-    "samples": 229,
-    "scenario": "overworld-autopilot-v1",
-    "update_avg_ticks": 1493
+  "scenarios": {
+    "battle-entry-v1": {
+      "draw_avg_ticks": 8354,
+      "draw_max_ticks": 33704,
+      "draw_per_frame_ticks": 4641,
+      "present_avg_ticks": 787,
+      "present_max_ticks": 800,
+      "present_per_frame_ticks": 437,
+      "renders": 155,
+      "samples": 279,
+      "scenario": "battle-entry-v1",
+      "update_avg_ticks": 151
+    },
+    "intro-title-v1": {
+      "draw_avg_ticks": 7674,
+      "draw_max_ticks": 18469,
+      "draw_per_frame_ticks": 2205,
+      "present_avg_ticks": 787,
+      "present_max_ticks": 788,
+      "present_per_frame_ticks": 226,
+      "renders": 50,
+      "samples": 174,
+      "scenario": "intro-title-v1",
+      "update_avg_ticks": 29
+    },
+    "oak-dialogue-v1": {
+      "draw_avg_ticks": 5750,
+      "draw_max_ticks": 9434,
+      "draw_per_frame_ticks": 1941,
+      "present_avg_ticks": 788,
+      "present_max_ticks": 800,
+      "present_per_frame_ticks": 266,
+      "renders": 158,
+      "samples": 468,
+      "scenario": "oak-dialogue-v1",
+      "update_avg_ticks": 90
+    },
+    "overworld-idle-v1": {
+      "draw_avg_ticks": 0,
+      "draw_max_ticks": 0,
+      "draw_per_frame_ticks": 0,
+      "present_avg_ticks": 0,
+      "present_max_ticks": 0,
+      "present_per_frame_ticks": 0,
+      "renders": 0,
+      "samples": 1400,
+      "scenario": "overworld-idle-v1",
+      "update_avg_ticks": 1417
+    },
+    "overworld-movement-v1": {
+      "draw_avg_ticks": 2093,
+      "draw_max_ticks": 2579,
+      "draw_per_frame_ticks": 165,
+      "present_avg_ticks": 708,
+      "present_max_ticks": 800,
+      "present_per_frame_ticks": 55,
+      "renders": 18,
+      "samples": 228,
+      "scenario": "overworld-movement-v1",
+      "update_avg_ticks": 1500
+    },
+    "pokedex-entry-v1": {
+      "draw_avg_ticks": 18909,
+      "draw_max_ticks": 18909,
+      "draw_per_frame_ticks": 47,
+      "present_avg_ticks": 787,
+      "present_max_ticks": 787,
+      "present_per_frame_ticks": 1,
+      "renders": 1,
+      "samples": 396,
+      "scenario": "pokedex-entry-v1",
+      "update_avg_ticks": 20
+    }
   },
-  "scenario": "overworld-autopilot-v1"
+  "suite": "autopilot-v1"
 }
