@@ -1,0 +1,76 @@
+name: Build GBA ROM
+
+on:
+  push:
+    branches: [master]
+    paths:
+      - '.github/workflows/build-gba.yml'
+      - 'Cargo.toml'
+      - 'crates/pokered-gba/**'
+      - 'crates/pokered-app/**'
+      - 'crates/pokered-audio/**'
+      - 'crates/pokered-core/**'
+      - 'crates/pokered-data/**'
+      - 'crates/pokered-platform/**'
+      - 'crates/pokered-renderer/**'
+      - 'crates/pokered-ui/**'
+      - 'scripts/fetch-gfx.sh'
+      - 'vendor/ron/**'
+  pull_request:
+    paths:
+      - '.github/workflows/build-gba.yml'
+      - 'Cargo.toml'
+      - 'crates/pokered-gba/**'
+      - 'crates/pokered-app/**'
+      - 'crates/pokered-audio/**'
+      - 'crates/pokered-core/**'
+      - 'crates/pokered-data/**'
+      - 'crates/pokered-platform/**'
+      - 'crates/pokered-renderer/**'
+      - 'crates/pokered-ui/**'
+      - 'scripts/fetch-gfx.sh'
+      - 'vendor/ron/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build:
+    name: Build release ROM
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Fetch gfx assets
+        run: ./scripts/fetch-gfx.sh
+
+      - name: Install Rust nightly
+        uses: dtolnay/rust-toolchain@nightly
+        with:
+          components: rust-src
+
+      - name: Cache Cargo registry and GBA build
+        uses: Swatinem/rust-cache@v2
+        with:
+          key: gba
+          workspaces: crates/pokered-gba -> target
+
+      - name: Install agb-gbafix
+        # Keep the ROM fixer aligned with the agb crate used by pokered-gba.
+        run: cargo install agb-gbafix --version 0.25.0 --locked
+
+      - name: Build release ROM
+        run: ./crates/pokered-gba/build.sh
+
+      - name: Upload ROM
+        uses: actions/upload-artifact@v4
+        with:
+          name: pokered-gba-${{ github.sha }}
+          path: crates/pokered-gba/target/thumbv4t-none-eabi/release/pokered-gba.gba
+          if-no-files-found: error
+          retention-days: 30
