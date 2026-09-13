@@ -1,0 +1,16 @@
+{
+  "emulator": "mGBA 0.10.5",
+  "metrics": {
+    "draw_avg_ticks": 2078,
+    "draw_max_ticks": 2580,
+    "draw_per_frame_ticks": 163,
+    "present_avg_ticks": 709,
+    "present_max_ticks": 801,
+    "present_per_frame_ticks": 55,
+    "renders": 18,
+    "samples": 229,
+    "scenario": "overworld-autopilot-v1",
+    "update_avg_ticks": 1493
+  },
+  "scenario": "overworld-autopilot-v1"
+}

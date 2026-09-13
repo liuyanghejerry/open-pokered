@@ -11,6 +11,10 @@ publish = false
 autopilot = []
 # Hardware-timer phase profiling, reported through the mGBA debug channel.
 profiling = []
+# Deterministic scripted workload for CI performance comparisons. This includes
+# the existing profiling and input-driver instrumentation, never the release
+# ROM shipped to players.
+perf-benchmark = ["autopilot", "profiling"]
 # Mirror the packed framebuffer into SRAM for offline screenshot extraction.
 # This is intentionally opt-in: SRAM writes are slow and the dump overwrites
 # the same address range used by a real save cartridge.

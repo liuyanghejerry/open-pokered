@@ -492,6 +492,73 @@ impl ProfileSamples {
     }
 }
 
+// ── Deterministic CI performance workload ─────────────────────────────
+//
+// The autopilot reaches the bedroom, then performs a down/right movement
+// sequence. This window includes changed Overworld frames and presentation
+// work while avoiding boot allocation and title/Oak animation noise. Timer 2
+// measures emulated GBA cycles, so the values are meaningful even when CI runs
+// mGBA without a frame-rate cap.
+#[cfg(feature = "perf-benchmark")]
+const PERF_WINDOW_START: u32 = 4050;
+#[cfg(feature = "perf-benchmark")]
+const PERF_WINDOW_END: u32 = 4290;
+
+#[cfg(feature = "perf-benchmark")]
+#[derive(Default)]
+struct PerfBenchmark {
+    samples: u32,
+    update: u32,
+    renders: u32,
+    draw: u32,
+    draw_max: u16,
+    present: u32,
+    present_max: u16,
+    reported: bool,
+}
+
+#[cfg(feature = "perf-benchmark")]
+impl PerfBenchmark {
+    fn record(&mut self, frame: u32, marks: [u16; 4], rendered: bool) {
+        if !(PERF_WINDOW_START..PERF_WINDOW_END).contains(&frame) {
+            return;
+        }
+        let elapsed = |from: u16, to: u16| to.wrapping_sub(from);
+        self.samples += 1;
+        self.update += elapsed(marks[0], marks[1]) as u32;
+        if rendered {
+            let draw = elapsed(marks[1], marks[2]);
+            let present = elapsed(marks[2], marks[3]);
+            self.renders += 1;
+            self.draw += draw as u32;
+            self.draw_max = self.draw_max.max(draw);
+            self.present += present as u32;
+            self.present_max = self.present_max.max(present);
+        }
+    }
+
+    fn report_once(&mut self, frame: u32) {
+        if self.reported || frame < PERF_WINDOW_END {
+            return;
+        }
+        self.reported = true;
+        let samples = self.samples.max(1);
+        let renders = self.renders.max(1);
+        agb::println!(
+            "gba-perf scenario=overworld-autopilot-v1 samples={} update_avg_ticks={} renders={} draw_avg_ticks={} draw_per_frame_ticks={} draw_max_ticks={} present_avg_ticks={} present_per_frame_ticks={} present_max_ticks={}",
+            self.samples,
+            self.update / samples,
+            self.renders,
+            self.draw / renders,
+            self.draw / samples,
+            self.draw_max,
+            self.present / renders,
+            self.present / samples,
+            self.present_max
+        );
+    }
+}
+
 // ── EWRAM main stack ───────────────────────────────────────────────────
 // The BIOS pins the main stack at the top of IWRAM (~31 KiB usable), which
 // is far too small for the pokered game loop (frame locals + renderer
@@ -558,6 +625,8 @@ fn game_main() -> ! {
     let mut update_accumulator = FRAME_TICKS;
     #[cfg(feature = "profiling")]
     let mut profile = ProfileSamples::default();
+    #[cfg(feature = "perf-benchmark")]
+    let mut benchmark = PerfBenchmark::default();
     // Retain input history across display frames so a held key produces one
     // edge instead of appearing newly pressed on every pass through the loop.
     let mut state = InputState::new();
@@ -682,6 +751,11 @@ fn game_main() -> ! {
             if profile.frames == 60 {
                 profile.report_and_reset(frame);
             }
+        }
+        #[cfg(feature = "perf-benchmark")]
+        {
+            benchmark.record(frame, [mark1, mark2, mark3, mark4], redraw);
+            benchmark.report_once(frame);
         }
 
         if first_frame_pending && updates > 0 {

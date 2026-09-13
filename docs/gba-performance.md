@@ -12,6 +12,22 @@ mgba -1 -C logToStdout=1 -C logLevel.gba.debug=127 \
   target/thumbv4t-none-eabi/release/pokered-gba.gba
 ```
 
+## CI regression baseline
+
+Pull requests that affect the GBA build run `perf-benchmark`, which replays a
+fixed bedroom Overworld movement sequence and reports Timer 2 cycle counts for
+game update, software drawing, and Mode 4 presentation. The checked-in
+[`perf-baseline.json`](../crates/pokered-gba/perf-baseline.json) is the
+reviewed baseline. CI fails if any gated metric regresses by more than 15% (or
+25 timer ticks for small metrics), and uploads the candidate JSON/log as an
+artifact.
+
+To refresh the baseline deliberately after a reviewed performance-affecting
+change, build with `--features perf-benchmark`, fix the ELF with `agb-gbafix`,
+then run `scripts/gba_performance.py record` against the `.gba` file. Commit
+the resulting JSON in the same PR and explain the expected regression or
+improvement; do not update it merely to bypass the gate.
+
 ## Architecture follow-up (2026-09-12)
 
 The sections below preserve the early investigation's measurements. They are
