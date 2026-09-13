@@ -27,10 +27,37 @@ use pokered_data::event_flags::{EventFlag, EVENT_FLAGS_SIZE};
 /// Backed by a fixed `[u8; EVENT_FLAGS_SIZE]` bit array in the original
 /// game's layout (bit index `n` lives in byte `n / 8`, bit `n % 8`), plus
 /// a small `extras` map for dynamic keys that have no bit representation.
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 pub struct EventFlags {
+    #[serde(with = "bits_array_serde")]
     bits: [u8; EVENT_FLAGS_SIZE],
     extras: HashMap<String, bool>,
+}
+
+/// serde only covers arrays up to 32 elements; the 320-byte flag array
+/// round-trips as a length-checked byte vector.
+mod bits_array_serde {
+    use pokered_data::event_flags::EVENT_FLAGS_SIZE;
+    use serde::{Deserialize, Deserializer, Serialize, Serializer};
+
+    pub fn serialize<S: Serializer>(
+        bits: &[u8; EVENT_FLAGS_SIZE],
+        serializer: S,
+    ) -> Result<S::Ok, S::Error> {
+        bits.as_slice().serialize(serializer)
+    }
+
+    pub fn deserialize<'de, D: Deserializer<'de>>(
+        deserializer: D,
+    ) -> Result<[u8; EVENT_FLAGS_SIZE], D::Error> {
+        let bytes = Vec::<u8>::deserialize(deserializer)?;
+        bytes.try_into().map_err(|bytes: Vec<u8>| {
+            serde::de::Error::custom(format!(
+                "expected {EVENT_FLAGS_SIZE} flag bytes, got {}",
+                bytes.len()
+            ))
+        })
+    }
 }
 
 /// Resolve a string flag name to a raw bit index, if it names an `EventFlag`

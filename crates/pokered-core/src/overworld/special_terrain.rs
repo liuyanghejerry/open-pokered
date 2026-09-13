@@ -35,7 +35,7 @@ fn direction_to_pad_input(dir: Direction) -> Option<PadInput> {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(serde::Serialize, serde::Deserialize, Debug, Clone, Copy, PartialEq, Eq)]
 pub struct LedgeJumpResult {
     pub direction: Direction,
 }
@@ -84,7 +84,7 @@ pub fn check_warp_pad_or_hole<T: TilesetTrait>(
     data_check_warp_pad_or_hole(concrete, standing_tile)
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(serde::Serialize, serde::Deserialize, Debug, Clone, Copy, PartialEq, Eq)]
 pub struct SpinnerResult {
     pub new_facing: Direction,
 }
@@ -115,7 +115,7 @@ pub fn handle_spinner_rotation<T: TilesetTrait>(
 /// From home/overworld.asm: Rock Tunnel sets wMapPalOffset to 6.
 const DARK_CAVE_MAPS: &[MapId] = &[MapId::RockTunnel1F, MapId::RockTunnelB1F];
 
-#[derive(Debug, Clone)]
+#[derive(serde::Serialize, serde::Deserialize, Debug, Clone)]
 pub struct DarkCaveState {
     pub map_pal_offset: u8,
 }
@@ -175,7 +175,7 @@ pub fn is_outside_map<T: TilesetTrait>(tileset: T) -> bool {
     matches!(tileset.name(), "overworld" | "plateau")
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(serde::Serialize, serde::Deserialize, Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ExtraWarpCheckType {
     /// Check if player is facing the edge of the map.
     FacingEdge,

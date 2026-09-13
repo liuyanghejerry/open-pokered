@@ -114,6 +114,7 @@ mod args {
 /// Bridge state + `game.*` dispatch for the native interpreter. Mirrors
 /// `dotzuki_engine_script::SharedBridge` (seeded query state) and the registrars
 /// of `dotzuki-engine-script/src/engine.rs` + `pokered-data/src/script_api.rs`.
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct NativeHost {
     flags: HashMap<String, bool>,
     numbers: HashMap<String, f64>,
@@ -429,13 +430,35 @@ impl ScriptHost for NativeHost {
 }
 
 /// One step of the native VermilionGym trash-can puzzle.
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, serde::Serialize)]
 enum TrashStep {
     ShowText(String),
     PlaySound(String),
     ReplaceTileBlock(u8, u8, u8),
     SetFlag(&'static str),
     ResetFlag(&'static str),
+}
+
+/// The static table's flag names are string literals; deserialization
+/// leaks the owned form to keep the 'static field type.
+impl<'de> serde::Deserialize<'de> for TrashStep {
+    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        #[derive(serde::Deserialize)]
+        enum Owned {
+            ShowText(String),
+            PlaySound(String),
+            ReplaceTileBlock(u8, u8, u8),
+            SetFlag(String),
+            ResetFlag(String),
+        }
+        Ok(match Owned::deserialize(deserializer)? {
+            Owned::ShowText(t) => TrashStep::ShowText(t),
+            Owned::PlaySound(t) => TrashStep::PlaySound(t),
+            Owned::ReplaceTileBlock(x, y, b) => TrashStep::ReplaceTileBlock(x, y, b),
+            Owned::SetFlag(f) => TrashStep::SetFlag(Box::leak(f.into_boxed_str())),
+            Owned::ResetFlag(f) => TrashStep::ResetFlag(Box::leak(f.into_boxed_str())),
+        })
+    }
 }
 
 /// Native port of the VermilionGym `@run` trash-can puzzle
@@ -445,7 +468,7 @@ enum TrashStep {
 /// the engine (recreated per map, same as the Boa engine) and randomness
 /// comes from the bridge RNG (`seed_rng`/`mix_rng`-driven), matching the
 /// original's hardware-RNG re-roll on every reset.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct VgymTrashState {
     active: bool,
     first: i32,
@@ -906,6 +929,38 @@ impl Default for NativeScriptEngine {
     }
 }
 
+/// Frame-level snapshot of the native script engine (agent M5): the
+/// interpreter (execution state, stack, suspended await, host incl.
+/// flags + bridge RNG) plus the VermilionGym puzzle state and the
+/// engine-level InterpState. Function tables are NOT captured — they are
+/// deterministic per map and rebuilt by `load_map_script_ex` on restore.
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+pub struct NativeScriptEngineSnapshot {
+    interp: Interpreter<NativeHost>,
+    vgym: VgymTrashState,
+    state: InterpState,
+}
+
+impl NativeScriptEngine {
+    /// Capture the engine's runtime state (see [`NativeScriptEngineSnapshot`]).
+    pub fn snapshot(&self) -> NativeScriptEngineSnapshot {
+        NativeScriptEngineSnapshot {
+            interp: self.interp.clone(),
+            vgym: self.vgym.clone(),
+            state: self.state,
+        }
+    }
+
+    /// Restore a previously captured state. The caller must have rebuilt
+    /// the function tables for the current map first
+    /// (`load_map_script_ex`); this only overwrites runtime state.
+    pub fn restore_snapshot(&mut self, snapshot: &NativeScriptEngineSnapshot) {
+        self.interp = snapshot.interp.clone();
+        self.vgym = snapshot.vgym.clone();
+        self.state = snapshot.state;
+    }
+}
+
 /// Engine-agnostic handle the overworld stores in `OverworldScreen`: either
 /// the legacy Boa engine (feature `script-boa`) or the native AST engine
 /// (default). All methods delegate to the active variant, so the glue in
@@ -981,6 +1036,27 @@ impl OverworldScriptEngine {
                 e.seed_flags(&hosted_flags)
             }
             OverworldScriptEngine::Native(e) => e.seed_flags(flags),
+        }
+    }
+
+    /// Frame-level snapshot of the script engine (agent M5). `None`
+    /// under the `script-boa` feature — the Boa JS heap is not
+    /// serializable; the default native engine is fully covered.
+    pub fn snapshot(&self) -> Option<NativeScriptEngineSnapshot> {
+        match self {
+            #[cfg(feature = "script-boa")]
+            OverworldScriptEngine::Boa(_) => None,
+            OverworldScriptEngine::Native(e) => Some(e.snapshot()),
+        }
+    }
+
+    /// Restore a script-engine snapshot (function tables must already
+    /// be rebuilt for the current map). No-op under `script-boa`.
+    pub fn restore_snapshot(&mut self, snapshot: &NativeScriptEngineSnapshot) {
+        match self {
+            #[cfg(feature = "script-boa")]
+            OverworldScriptEngine::Boa(_) => {}
+            OverworldScriptEngine::Native(e) => e.restore_snapshot(snapshot),
         }
     }
 

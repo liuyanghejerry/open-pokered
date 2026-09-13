@@ -38,6 +38,7 @@ pub mod hash_compat;
 pub mod stats_screen;
 pub mod pokemon;
 pub mod save;
+pub mod snapshot;
 pub mod save_menu;
 pub mod slots;
 pub mod slots_screen;

@@ -11,6 +11,7 @@ mod alloc_prelude {
 
 mod audio;
 mod agent_nav;
+mod agent_state;
 mod agent_travel;
 mod battle_config;
 mod cli;
@@ -135,6 +136,7 @@ fn main() {
             snapshot,
             skip_intro,
             warp,
+            seed,
             ref debug_port,
             headless,
             no_audio,
@@ -192,6 +194,10 @@ fn main() {
             let mut game = PokemonGame::new_with_options(version, save, snapshot, cli.scripts_dir, skip_intro, warp, cli.watch, no_audio);
             // Text language for this run (menus / battle text / scene dialogue).
             crate::tools::apply_lang(&mut game, lang.to_lang());
+            if let Some(seed) = seed {
+                game.set_seed(seed);
+                eprintln!("Determinism pinned: seed {seed}");
+            }
             attach_link(&mut game, cli.link_listen, cli.link_connect.clone());
             if let Some(ref shot) = screenshot {
                 // Offscreen capture of the startup state (--save/--snapshot/

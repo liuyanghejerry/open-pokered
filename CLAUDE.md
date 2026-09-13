@@ -133,6 +133,10 @@ cargo run --release --bin pokered-app --features debug-server -- run --debug-por
 # debug server; the `step_frames` command gives synchronous, deterministic
 # frame control (unlike `run_frames`, which only schedules on the real-time loop).
 cargo run --release --bin pokered-app --features debug-server -- run --headless --debug-port 9000 --skip-intro --warp PalletTown,10,5
+
+# Determinism (agent M5): pin both RNG streams from boot with --seed, then
+# fork/replay frames exactly via save_state/restore_state slots.
+cargo run --release --bin pokered-app --features debug-server -- run --headless --debug-port 9000 --skip-intro --seed 42
 ```
 
 Debug-server protocol (JSON-line over TCP): `get_state`, `get_position`,
@@ -140,8 +144,8 @@ Debug-server protocol (JSON-line over TCP): `get_state`, `get_position`,
 `press_sequence`, `run_frames`, `step_frames`, `save`, `set_flag`,
 `give_item`, `give_pokemon`, `start_wild_battle`, `get_agent_state`,
 `get_nearby`, `move_to`, `interact`, `interact_with`, `get_world_graph`,
-`find_world_route`, `travel_to`, `get_script_semantics`. `get_state` also
-reports
+`find_world_route`, `travel_to`, `get_script_semantics`, `set_seed`,
+`save_state`, `restore_state`. `get_state` also reports
 `active_script_effect`, `script_awaiting_battle`, `player_movement_state`,
 `dialogue`, and battle phase/message. `get_agent_state` (optional `level`
 1-4 or `profile`) returns the typed `pokered-agent` semantic snapshot
@@ -164,8 +168,13 @@ returns the M4 static scene semantics (per-storyline flag/item/battle/
 warp `reads`/`effects`; coverage summary when unscoped) — the generated
 event graph lives at `crates/pokered-data/story/graph.json` and the full
 payload at `target/agent/world_semantics.json`, both refreshed via
-`cargo run -p pokered-agent --bin gen_event_graph`. A minimal Python
-client lives at `scripts/debug_drive.py`.
+`cargo run -p pokered-agent --bin gen_event_graph`. `set_seed {seed}`
+pins both RNG streams (runtime form of `--seed`);
+`save_state {slot}` / `restore_state {slot}` capture and restore the
+full frame-level runtime (save data + screen + overworld/battle
+internals + RNG state) with a content hash for identity assertions —
+overworld/battle screens only; menus and mid-movie takeovers error
+cleanly. A minimal Python client lives at `scripts/debug_drive.py`.
 
 Screen targets: `copyright title main-menu oak overworld battle start-menu options save`.
 

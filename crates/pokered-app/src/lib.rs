@@ -20,6 +20,7 @@ pub mod render;
 pub mod save_editor;
 
 pub mod agent_nav;
+pub mod agent_state;
 pub mod agent_travel;
 pub mod audio;
 

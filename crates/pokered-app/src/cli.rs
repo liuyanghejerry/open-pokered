@@ -136,6 +136,11 @@ pub enum Commands {
         /// e.g. --warp PalletTown,10,14 or --warp CeruleanCity,14,8
         #[arg(long)]
         warp: Option<String>,
+        /// Pin determinism from boot: seed both RNG streams (overworld +
+        /// battle) with the given u64. Default (absent) stays entropy-based.
+        /// Combine with save_state/restore_state for reproducible runs.
+        #[arg(long)]
+        seed: Option<u64>,
         /// Start a TCP debug server on the given port.
         #[arg(long)]
         debug_port: Option<u16>,

@@ -40,8 +40,22 @@ miette = { version = "7", features = ["fancy"] }
 anyhow = "1"
 tracing = "0.1"
 notify = "6"
-rand = "0.8"
+rand = { version = "0.8", features = ["serde1"] }
 strum = { version = "0.26", default-features = false, features = ["derive"] }
 strum_macros = "0.26"
 num-derive = "0.4"
 num-traits = { version = "0.2", default-features = false }
+
+# M5 (agent determinism): the engine crates are patched to the sibling
+# dotzuki checkout (branch `feat/agent-serde`, on top of the v0.7.1 tag)
+# which adds serde derives the agent snapshot needs (interpreter, trigger
+# manager, NPC runtime state, cutscene manager, connection transition).
+# All other engine code is byte-identical to the pinned tag.
+[patch."https://github.com/liuyanghejerry/dotzuki"]
+dotzuki-app = { path = "../dotzuki-2/workspace/crates/dotzuki-app" }
+dotzuki-engine = { path = "../dotzuki-2/workspace/crates/dotzuki-engine" }
+dotzuki-engine-dsl = { path = "../dotzuki-2/workspace/crates/dotzuki-engine-dsl" }
+dotzuki-engine-script = { path = "../dotzuki-2/workspace/crates/dotzuki-engine-script" }
+dotzuki-renderer = { path = "../dotzuki-2/workspace/crates/dotzuki-renderer" }
+dotzuki-rules = { path = "../dotzuki-2/workspace/crates/dotzuki-rules" }
+dotzuki-web = { path = "../dotzuki-2/workspace/crates/dotzuki-web" }

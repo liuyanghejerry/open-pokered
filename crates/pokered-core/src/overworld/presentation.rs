@@ -138,7 +138,7 @@ pub fn npc_walk_anim_phase(walk_counter: u8) -> u8 {
 /// `HandleLedges`. The original spends 40 visible frames from the ledge flag
 /// being set until control is restored: setup, two 16 px steps at 2 px every
 /// other frame, then the three-frame landing delay.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 pub struct LedgeJumpState {
     pub origin_x: u16,
     pub origin_y: u16,
@@ -250,7 +250,7 @@ impl LedgeJumpState {
 /// One-tile scripted field-move step (SURF mount/dismount). The original
 /// movement loop is sampled every other display frame: eight 2 px camera
 /// advances, followed by the frame that clears scripted movement.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 pub struct FieldMoveStepState {
     pub origin_x: u16,
     pub origin_y: u16,
@@ -263,7 +263,7 @@ pub struct FieldMoveStepState {
 /// `GBPalWhiteOutWithDelay3`, sprite/font tile reloads, and
 /// `CloseTextDisplay`: 37 all-white frames followed by 23 map-only frames
 /// while OAM graphics are still being restored.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 pub struct FieldMoveRestoreState {
     pub frame: u8,
 }
@@ -286,7 +286,7 @@ impl FieldMoveRestoreState {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 pub enum CutAnimKind {
     Tree,
     Grass,
@@ -295,7 +295,7 @@ pub enum CutAnimKind {
 /// CUT's temporary four-sprite OAM block. Tree CUT holds the intact 2×2
 /// shape during setup, then pulls the top and bottom rows apart over eight
 /// updates (`AnimCut`), for 18 raw visible frames in total.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 pub struct CutAnimState {
     pub facing: Direction,
     pub kind: CutAnimKind,
@@ -541,7 +541,7 @@ mod tests {
 /// 49 frames on its menu transition before returning to the overworld. The
 /// bird flaps in place, crosses right, waits off-screen, and crosses back out
 /// through the top-left before the final white fade.
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(serde::Serialize, serde::Deserialize, Debug, Clone, PartialEq, Eq)]
 pub struct LeaveMapFlyState {
     pub frame: u16,
 }
@@ -651,7 +651,7 @@ impl Default for LeaveMapFlyState {
 /// Game-specific (the
 /// coordinate list and sprite are Pokémon's), so it lives here rather than
 /// in the engine crate.
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(serde::Serialize, serde::Deserialize, Debug, Clone, PartialEq, Eq)]
 pub struct EnterMapFlyState {
     /// Elapsed frames; each coordinate step lasts [`FLY_ANIM_STEP_FRAMES`].
     pub frame: u16,

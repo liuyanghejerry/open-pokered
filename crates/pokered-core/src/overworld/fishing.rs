@@ -38,7 +38,7 @@ const SHORE_TILE_USUAL: u8 = 0x32;
 const SHORE_TILE_SAFARI: u8 = 0x48;
 
 /// The three fishing rods (bag items OLD ROD / GOOD ROD / SUPER ROD).
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(serde::Serialize, serde::Deserialize, Debug, Clone, Copy, PartialEq, Eq)]
 pub enum RodKind {
     Old,
     Good,
@@ -58,7 +58,7 @@ impl RodKind {
 
 /// `wRodResponse` (ram/wram.asm:848-851): `0` = no bite, `1` = bite,
 /// `2` = no fish on this map.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(serde::Serialize, serde::Deserialize, Debug, Clone, Copy, PartialEq, Eq)]
 pub enum RodResponse {
     /// "Not even a nibble!" (`_NoNibbleText`, data/text/text_1.asm:21-23).
     NoBite,
@@ -157,6 +157,7 @@ pub fn response_text(response: RodResponse) -> &'static str {
 /// while the "You used the <ROD>!" dialogue shows and the animation runs;
 /// when the animation completes, the result text (and, on a bite, the hooked
 /// mon's deferred wild battle) is emitted from this record.
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub(crate) struct PendingFishing {
     /// The pre-rolled rod response.
     pub(crate) response: RodResponse,

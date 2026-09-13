@@ -672,8 +672,15 @@ pub struct PokemonGame {
     pub asset_watcher: Option<AssetWatcher>,
     #[cfg(feature = "debug-server")]
     pub debug_handle: Option<pokered_debug_server::DebugServerHandle>,
-    pending_debug_inputs: Vec<Option<GbButton>>,
-    pending_debug_frames: u32,
+    pub(crate) pending_debug_inputs: Vec<Option<GbButton>>,
+    pub(crate) pending_debug_frames: u32,
+    /// Active determinism seed (agent M5), set by `--seed` / `set_seed`.
+    pub seed: Option<u64>,
+    /// Battles started since boot — feeds the per-battle RNG seed so
+    /// successive battles draw distinct (but reproducible) streams.
+    pub battle_count: u64,
+    /// In-memory `save_state` snapshots (JSON strings).
+    pub agent_state_slots: std::collections::HashMap<u8, String>,
     /// Persistent state for debug-server injected input. A queued button must
     /// read as HELD across consecutive frames (fresh `InputState` per frame
     /// looks like repeated taps, so d-pad walking never starts).
@@ -1181,6 +1188,9 @@ impl PokemonGame {
             asset_watcher,
             pending_debug_inputs: Vec::new(),
             pending_debug_frames: 0,
+            seed: None,
+            battle_count: 0,
+            agent_state_slots: std::collections::HashMap::new(),
             debug_input: InputState::new(),
             #[cfg(all(feature = "desktop", not(target_arch = "wasm32"), not(target_os = "none")))]
             frame_recorder: None,
@@ -1455,6 +1465,9 @@ impl PokemonGame {
             audio,
             pending_debug_inputs: Vec::new(),
             pending_debug_frames: 0,
+            seed: None,
+            battle_count: 0,
+            agent_state_slots: std::collections::HashMap::new(),
             debug_input: InputState::new(),
             #[cfg(all(feature = "desktop", not(target_arch = "wasm32"), not(target_os = "none")))]
             frame_recorder: None,
@@ -2516,11 +2529,36 @@ impl PokemonGame {
         }
     }
 
-    fn start_wild_battle(&mut self, species: pokered_data::species::Species, level: u8) {
-        use pokered_core::pokemon::stats::{create_pokemon, roll_random_dvs};
+    /// Compute the per-battle RNG stream for a battle about to start
+    /// (agent M5): deterministic from `seed + battle_count` — successive
+    /// battles differ, replays match. The caller assigns it onto the
+    /// freshly constructed BattleScreen (constructors seed from entropy,
+    /// so assigning before construction would discard it). Advances the
+    /// counter only when a seed is pinned.
+    fn next_battle_rng(
+        &mut self,
+    ) -> Option<pokered_core::battle::pokered_rules::runtime::StdBattleRng> {
+        self.seed.map(|seed| {
+            self.battle_count += 1;
+            pokered_core::battle::pokered_rules::runtime::StdBattleRng::from_seed(
+                seed.wrapping_add(0x9E3779B97F4A7C15)
+                    .wrapping_add(self.battle_count),
+            )
+        })
+    }
 
-        // Wild DVs are two random bytes (core.asm:6012-6019).
-        let enemy_mon = create_pokemon(species, level, roll_random_dvs());
+    fn start_wild_battle(&mut self, species: pokered_data::species::Species, level: u8) {
+        use pokered_core::pokemon::stats::create_pokemon;
+        use rand::Rng;
+
+        let mut battle_rng = self.next_battle_rng();
+        // Wild DVs are two random bytes (core.asm:6012-6019) — drawn from
+        // the (possibly seeded) battle stream so encounters replay.
+        let dvs = match battle_rng.as_mut() {
+            Some(rng) => [rng.0.gen(), rng.0.gen()],
+            None => pokered_core::pokemon::stats::roll_random_dvs(),
+        };
+        let enemy_mon = create_pokemon(species, level, dvs);
         let player_party = self.save_data.party.to_vec();
 
         if let Some(enemy) = enemy_mon {
@@ -2536,6 +2574,9 @@ impl PokemonGame {
             }
         } else {
             self.battle = pokered_core::battle::BattleScreen::new(true);
+        }
+        if let Some(rng) = battle_rng {
+            self.battle.rng = rng;
         }
         self.battle.is_zh = self.state.config.language == pokered_core::game_state::Lang::Zh;
         self.battle.player_money = self.save_data.game_data.player_money;
@@ -2772,6 +2813,8 @@ impl PokemonGame {
 
     fn start_trainer_battle(&mut self, trainer_id: &str, rival_triplet_base: Option<u8>) {
         use pokered_core::pokemon::stats::create_pokemon;
+
+        let battle_rng = self.next_battle_rng();
         use pokered_data::species::Species;
         use pokered_data::trainer_data::{get_trainer_party, parse_trainer_id, TrainerClass};
 
@@ -2850,6 +2893,9 @@ impl PokemonGame {
             }
         } else {
             self.battle = pokered_core::battle::BattleScreen::new(false);
+        }
+        if let Some(rng) = battle_rng {
+            self.battle.rng = rng;
         }
         self.battle.is_zh = self.state.config.language == pokered_core::game_state::Lang::Zh;
         self.battle.player_money = self.save_data.game_data.player_money;
@@ -3374,7 +3420,12 @@ impl PokemonGame {
                         // rolls the player's trainer ID — the save-overwrite
                         // "different player?" check compares against it.
                         if self.save_data.game_data.player_id == 0 {
-                            let dvs = pokered_core::pokemon::stats::roll_random_dvs();
+                            // Seeded overworld stream when determinism is
+                            // pinned (agent M5); entropy otherwise.
+                            let dvs = [
+                                self.overworld.next_rng_u8(),
+                                self.overworld.next_rng_u8(),
+                            ];
                             self.save_data.game_data.player_id =
                                 dvs[0] as u16 | ((dvs[1] as u16) << 8);
                         }
@@ -3609,149 +3660,7 @@ impl PokemonGame {
                     self.ow_ran_last_frame = true;
                     let action = self.overworld.update_frame(ow_input);
 
-                    // Drain script-requested bag/money mutations and apply them
-                    // to the persistent game data (the overworld is pure logic
-                    // and cannot reach SaveData itself).
-                    // A failed tradePokemon resumes the suspended script AFTER
-                    // the drain (the drain borrows self.overworld).
-                    let mut trade_rejected = false;
-                    // Drained into a local first so request handlers can take
-                    // `&mut self.overworld` (the poison tick mutates the
-                    // screen's pending dialogue / warp state).
-                    let game_data_requests: Vec<_> =
-                        self.overworld.game_data_requests.drain(..).collect();
-                    for req in game_data_requests {
-                        match req {
-                            OverworldGameDataRequest::GiveItem { item, quantity } => {
-                                if let Some(id) =
-                                    pokered_data::items::ItemId::from_const_name(&item)
-                                {
-                                    let _ = self.save_data.game_data.bag.add_item(id, quantity);
-                                } else {
-                                    log::warn!("giveItem: unknown item const '{}'", item);
-                                }
-                            }
-                            OverworldGameDataRequest::TakeItem { item, quantity } => {
-                                if let Some(id) =
-                                    pokered_data::items::ItemId::from_const_name(&item)
-                                {
-                                    let _ = self.save_data.game_data.bag.remove_item(id, quantity);
-                                } else {
-                                    log::warn!("takeItem: unknown item const '{}'", item);
-                                }
-                            }
-                            OverworldGameDataRequest::GiveMoney { amount } => {
-                                self.save_data.game_data.player_money = self
-                                    .save_data
-                                    .game_data
-                                    .player_money
-                                    .saturating_add(amount)
-                                    .min(999_999);
-                            }
-                            OverworldGameDataRequest::TakeMoney { amount } => {
-                                self.save_data.game_data.player_money =
-                                    self.save_data.game_data.player_money.saturating_sub(amount);
-                            }
-                            OverworldGameDataRequest::GiveBadge { badge } => {
-                                self.save_data.game_data.set_badge(badge);
-                            }
-                            OverworldGameDataRequest::MarkTownVisited { map } => {
-                                self.save_data.game_data.mark_town_visited(map);
-                            }
-                            // SetLastBlackoutMap (engine/events/set_blackout_map.asm):
-                            // a script-driven heal records the blackout/Teleport
-                            // target.
-                            OverworldGameDataRequest::SetBlackoutMap { map } => {
-                                self.save_data.game_data.last_blackout_map = map as u8;
-                            }
-                            OverworldGameDataRequest::TradePokemon {
-                                offered,
-                                received,
-                                nickname,
-                            } => {
-                                use pokered_data::species::Species;
-                                use pokered_data::trades::find_npc_trade;
-                                let pair = (
-                                    Species::from_scene_name(&offered),
-                                    Species::from_scene_name(&received),
-                                );
-                                // The script is suspended on this await; it
-                                // resumes via resume_script_after_trade.
-                                let ok = if let (Some(off_sp), Some(rec_sp)) = pair {
-                                    self.save_data.party.find_species(off_sp).is_some()
-                                        && self.trade_anim.is_none()
-                                        && {
-                                            // Nickname: the TradeMons table is
-                                            // authoritative (the original stores
-                                            // it per-trade); the script arg is
-                                            // the fallback for non-table pairs.
-                                            let nick = find_npc_trade(off_sp, rec_sp)
-                                                .map(|t| t.nickname.to_string())
-                                                .unwrap_or(nickname);
-                                            let is_zh = matches!(
-                                                self.state.config.language,
-                                                pokered_core::game_state::Lang::Zh
-                                            );
-                                            // Start the trade cutscene
-                                            // (engine/movie/trade.asm); the party
-                                            // mutation lands when it completes.
-                                            self.trade_anim =
-                                                Some(pokered_core::trade::TradeAnim::new(
-                                                    off_sp,
-                                                    rec_sp,
-                                                    self.player_name.clone(),
-                                                    is_zh,
-                                                ));
-                                            self.pending_trade = Some(PendingTrade {
-                                                give: off_sp,
-                                                receive: rec_sp,
-                                                nickname: nick,
-                                            });
-                                            true
-                                        }
-                                } else {
-                                    false
-                                };
-                                if !ok {
-                                    // Offered mon not in the party (or bad
-                                    // species): the scene takes its no-trade
-                                    // branch, no cutscene. Deferred to after
-                                    // the drain loop (borrow conflict).
-                                    trade_rejected = true;
-                                }
-                            }
-                            OverworldGameDataRequest::GiveCoins { amount } => {
-                                self.save_data.game_data.give_coins(amount);
-                            }
-                            OverworldGameDataRequest::TakeCoins { amount } => {
-                                self.save_data.game_data.take_coins(amount);
-                            }
-                            OverworldGameDataRequest::TickDaycareExp => {
-                                self.save_data.game_data.tick_daycare_exp();
-                            }
-                            OverworldGameDataRequest::PoisonStep => {
-                                pokered_core::overworld::poison::apply_out_of_battle_poison_damage(
-                                    &mut self.save_data,
-                                    &mut self.overworld,
-                                );
-                            }
-                            OverworldGameDataRequest::DepositDaycare { index } => {
-                                self.save_data.deposit_daycare(index);
-                                self.overworld.party_count = self.save_data.party.count() as u8;
-                                self.overworld.party_lead_level =
-                                    self.save_data.party.leader_level();
-                            }
-                            OverworldGameDataRequest::WithdrawDaycare => {
-                                self.save_data.withdraw_daycare();
-                                self.overworld.party_count = self.save_data.party.count() as u8;
-                                self.overworld.party_lead_level =
-                                    self.save_data.party.leader_level();
-                            }
-                        }
-                    }
-                    if trade_rejected {
-                        self.overworld.resume_script_after_trade(false);
-                    }
+                    self.apply_overworld_game_data_requests();
 
                     if let Some(ref audio) = self.audio {
                         match self.overworld.sfx_event {
@@ -3863,7 +3772,10 @@ impl PokemonGame {
                         if let Some(mut pokemon) = pokered_core::pokemon::stats::create_pokemon(
                             pending.species,
                             pending.level,
-                            pokered_core::pokemon::stats::roll_random_dvs(),
+                            [
+                                self.overworld.next_rng_u8(),
+                                self.overworld.next_rng_u8(),
+                            ],
                         ) {
                             if let Some(nick) = pending.nickname {
                                 pokemon.set_nickname(&nick);
@@ -5596,6 +5508,162 @@ impl PokemonGame {
         });
     }
 
+    /// Drain script-requested bag/money mutations and apply them to the
+    /// persistent game data (the overworld is pure logic and cannot reach
+    /// SaveData itself). Runs every frame from the overworld update path —
+    /// and once before `agent_save_state` captures, so no committed effect
+    /// is lost sitting in the queue (agent M5).
+    pub(crate) fn apply_overworld_game_data_requests(&mut self) {
+// Drain script-requested bag/money mutations and apply them
+                    // to the persistent game data (the overworld is pure logic
+                    // and cannot reach SaveData itself).
+                    // A failed tradePokemon resumes the suspended script AFTER
+                    // the drain (the drain borrows self.overworld).
+                    let mut trade_rejected = false;
+                    // Drained into a local first so request handlers can take
+                    // `&mut self.overworld` (the poison tick mutates the
+                    // screen's pending dialogue / warp state).
+                    let game_data_requests: Vec<_> =
+                        self.overworld.game_data_requests.drain(..).collect();
+                    for req in game_data_requests {
+                        match req {
+                            OverworldGameDataRequest::GiveItem { item, quantity } => {
+                                if let Some(id) =
+                                    pokered_data::items::ItemId::from_const_name(&item)
+                                {
+                                    let _ = self.save_data.game_data.bag.add_item(id, quantity);
+                                } else {
+                                    log::warn!("giveItem: unknown item const '{}'", item);
+                                }
+                            }
+                            OverworldGameDataRequest::TakeItem { item, quantity } => {
+                                if let Some(id) =
+                                    pokered_data::items::ItemId::from_const_name(&item)
+                                {
+                                    let _ = self.save_data.game_data.bag.remove_item(id, quantity);
+                                } else {
+                                    log::warn!("takeItem: unknown item const '{}'", item);
+                                }
+                            }
+                            OverworldGameDataRequest::GiveMoney { amount } => {
+                                self.save_data.game_data.player_money = self
+                                    .save_data
+                                    .game_data
+                                    .player_money
+                                    .saturating_add(amount)
+                                    .min(999_999);
+                            }
+                            OverworldGameDataRequest::TakeMoney { amount } => {
+                                self.save_data.game_data.player_money = self
+                                    .save_data
+                                    .game_data
+                                    .player_money
+                                    .saturating_sub(amount);
+                            }
+                            OverworldGameDataRequest::GiveBadge { badge } => {
+                                self.save_data.game_data.set_badge(badge);
+                            }
+                            OverworldGameDataRequest::MarkTownVisited { map } => {
+                                self.save_data.game_data.mark_town_visited(map);
+                            }
+                            // SetLastBlackoutMap (engine/events/set_blackout_map.asm):
+                            // a script-driven heal records the blackout/Teleport
+                            // target.
+                            OverworldGameDataRequest::SetBlackoutMap { map } => {
+                                self.save_data.game_data.last_blackout_map = map as u8;
+                            }
+                            OverworldGameDataRequest::TradePokemon {
+                                offered,
+                                received,
+                                nickname,
+                            } => {
+                                use pokered_data::species::Species;
+                                use pokered_data::trades::find_npc_trade;
+                                let pair = (
+                                    Species::from_scene_name(&offered),
+                                    Species::from_scene_name(&received),
+                                );
+                                // The script is suspended on this await; it
+                                // resumes via resume_script_after_trade.
+                                let ok = if let (Some(off_sp), Some(rec_sp)) = pair {
+                                    self.save_data.party.find_species(off_sp).is_some()
+                                        && self.trade_anim.is_none()
+                                        && {
+                                            // Nickname: the TradeMons table is
+                                            // authoritative (the original stores
+                                            // it per-trade); the script arg is
+                                            // the fallback for non-table pairs.
+                                            let nick = find_npc_trade(off_sp, rec_sp)
+                                                .map(|t| t.nickname.to_string())
+                                                .unwrap_or(nickname);
+                                            let is_zh = matches!(
+                                                self.state.config.language,
+                                                pokered_core::game_state::Lang::Zh
+                                            );
+                                            // Start the trade cutscene
+                                            // (engine/movie/trade.asm); the party
+                                            // mutation lands when it completes.
+                                            self.trade_anim =
+                                                Some(pokered_core::trade::TradeAnim::new(
+                                                    off_sp,
+                                                    rec_sp,
+                                                    self.player_name.clone(),
+                                                    is_zh,
+                                                ));
+                                            self.pending_trade = Some(PendingTrade {
+                                                give: off_sp,
+                                                receive: rec_sp,
+                                                nickname: nick,
+                                            });
+                                            true
+                                        }
+                                } else {
+                                    false
+                                };
+                                if !ok {
+                                    // Offered mon not in the party (or bad
+                                    // species): the scene takes its no-trade
+                                    // branch, no cutscene. Deferred to after
+                                    // the drain loop (borrow conflict).
+                                    trade_rejected = true;
+                                }
+                            }
+                            OverworldGameDataRequest::GiveCoins { amount } => {
+                                self.save_data.game_data.give_coins(amount);
+                            }
+                            OverworldGameDataRequest::TakeCoins { amount } => {
+                                self.save_data.game_data.take_coins(amount);
+                            }
+                            OverworldGameDataRequest::TickDaycareExp => {
+                                self.save_data.game_data.tick_daycare_exp();
+                            }
+                            OverworldGameDataRequest::PoisonStep => {
+                                pokered_core::overworld::poison::apply_out_of_battle_poison_damage(
+                                    &mut self.save_data,
+                                    &mut self.overworld,
+                                );
+                            }
+                            OverworldGameDataRequest::DepositDaycare { index } => {
+                                self.save_data.deposit_daycare(index);
+                                self.overworld.party_count =
+                                    self.save_data.party.count() as u8;
+                                self.overworld.party_lead_level =
+                                    self.save_data.party.leader_level();
+                            }
+                            OverworldGameDataRequest::WithdrawDaycare => {
+                                self.save_data.withdraw_daycare();
+                                self.overworld.party_count =
+                                    self.save_data.party.count() as u8;
+                                self.overworld.party_lead_level =
+                                    self.save_data.party.leader_level();
+                            }
+                        }
+                    }
+                    if trade_rejected {
+                        self.overworld.resume_script_after_trade(false);
+                    }
+    }
+
     /// Full structured state snapshot for the debug protocol's `get_state`
     /// (and the payload of `wait_until` / `skip_dialogue` responses).
     #[cfg(feature = "debug-server")]
@@ -6118,6 +6186,37 @@ impl PokemonGame {
                     );
                 }
                 DebugResponse::ok_with_data(data)
+            }
+            DebugCommand::Game(GameDebugCommand::SetSeed { seed }) => {
+                self.set_seed(seed);
+                DebugResponse::ok_with_data(serde_json::json!({ "seed": seed }))
+            }
+            DebugCommand::Game(GameDebugCommand::SaveState { slot }) => {
+                match self.agent_save_state_slot(slot) {
+                    Ok(hash) => DebugResponse::ok_with_data(serde_json::json!({
+                        "slot": slot,
+                        "hash": hash,
+                        "screen": crate::cli::screen_name(&self.state.screen),
+                        "frame_count": self.frame_count,
+                        "seed": self.seed,
+                    })),
+                    Err(err) => DebugResponse::err(err.message()),
+                }
+            }
+            DebugCommand::Game(GameDebugCommand::RestoreState { slot }) => {
+                match self.agent_restore_state_slot(slot) {
+                    Ok(hash) => DebugResponse::ok_with_data(serde_json::json!({
+                        "slot": slot,
+                        "hash": hash,
+                        "restored": true,
+                        "state": self.debug_state_snapshot(),
+                        "agent_state": serde_json::to_value(
+                            self.agent_snapshot(&pokered_agent::ObservationProfile::default()),
+                        )
+                        .unwrap_or_default(),
+                    })),
+                    Err(err) => DebugResponse::err(err.message()),
+                }
             }
             DebugCommand::Game(GameDebugCommand::GetScriptSemantics { ref map }) => {
                 match map {

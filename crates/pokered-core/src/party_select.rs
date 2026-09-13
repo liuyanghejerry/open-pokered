@@ -22,7 +22,7 @@ pub enum PartySelectResult {
 }
 
 /// Single-pick party selector.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct PartySelectState {
     inner: PartyScreenState,
 }

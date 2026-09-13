@@ -10,7 +10,7 @@ use crate::naming_screen::NamingScreenState;
 
 pub use dotzuki_engine_script::config::{CoordEventBinding, NpcBinding, SignBinding};
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct PendingChoice {
     pub options: Vec<String>,
     pub selected: u32,
@@ -45,7 +45,7 @@ impl PendingChoice {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub enum ScriptEffect {
     ShowDialogue {
         text: String,
@@ -296,7 +296,7 @@ pub enum ScriptEffect {
     },
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(serde::Serialize, serde::Deserialize, Debug, Clone, PartialEq, Eq)]
 pub enum FollowNpcPhase {
     StartNpc,
     Following {
@@ -310,7 +310,7 @@ pub enum FollowNpcPhase {
     Done,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 pub enum HealingMachinePhase {
     FadeOutMusic,
     WaitForFadeOut,

@@ -157,7 +157,7 @@ mod stack_p0_ai;
 ///
 /// PRODUCTIONIZED (P6 flip): no longer `#[cfg(test)]` — the provider + `runtime`
 /// drive the live battle loop. The differential tests inside self-gate.
-mod pokered_rules;
+pub mod pokered_rules;
 
 /// Prepare the data-driven production battle rules on the current thread.
 ///
@@ -200,7 +200,7 @@ use state::{BattleState, BattleType, StatusCondition};
 /// - StatusAilment: mon has a non-volatile status condition (poisoned, paralyzed, etc.)
 /// - Fainted: mon's current HP is 0
 /// - Empty: party slot is unused (beyond party count)
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 pub enum PokeballSlotStatus {
     Normal,
     StatusAilment,
@@ -220,7 +220,7 @@ use trainer_ai::trainer_ai_config;
 
 /// Battle transition type (screen wipe effect) matching ASM's BattleTransitions table.
 /// Selected via 3 bits: trainer flag + stronger enemy flag + dungeon map flag.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 pub enum BattleTransition {
     /// %000 — wild, not stronger, not dungeon: double half-circle wipe
     DoubleCircle,
@@ -342,7 +342,7 @@ fn intro_start_phase(transition: BattleTransition) -> BattlePhase {
 /// 2. Trainer reveal — "X wants to fight!" text shown (enemy trainer pic visible)
 /// 3. Trainer sends out Pokémon — trainer pic slides off, enemy Pokémon appears
 /// 4. Player sends out first Pokémon — "Go! X!" with Poké Ball throw animation
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(serde::Serialize, serde::Deserialize, Debug, Clone, Copy, PartialEq, Eq)]
 pub enum IntroPhase {
     /// Battle screen wipe transition (8 variants based on trainer/wild + level + dungeon)
     BattleTransitionWipe(BattleTransition),
@@ -376,7 +376,7 @@ pub enum IntroPhase {
 
 /// Sub-phases of trainer battle victory sequence.
 /// Matches ASM's TrainerBattleVictory flow.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(serde::Serialize, serde::Deserialize, Debug, Clone, Copy, PartialEq, Eq)]
 pub enum VictoryPhase {
     /// Print "Trainer defeated!" text and play victory music
     DefeatedText,
@@ -389,7 +389,7 @@ pub enum VictoryPhase {
 }
 
 /// High-level battle phase (frame-loop granularity).
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 pub enum BattlePhase {
     Intro {
         /// Current sub-phase of the intro sequence.
@@ -806,7 +806,7 @@ fn disobedience_self_hit_damage(bs: &BattleState) -> u16 {
 /// ≥ 10 px) are computed downstream from the displayed HP, so they follow the
 /// animation automatically — as does `low_health_alarm` (the original's alarm
 /// is likewise driven by the *displayed* bar color, core.asm:1860-1873).
-#[derive(Debug, Clone, Copy, Default)]
+#[derive(Debug, Clone, Copy, Default, serde::Serialize, serde::Deserialize)]
 pub struct HpBarAnim {
     player: HpBarSide,
     enemy: HpBarSide,
@@ -819,7 +819,7 @@ pub struct HpBarAnim {
     drain_sfx_pending: bool,
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, serde::Serialize, serde::Deserialize)]
 struct HpBarSide {
     /// Real HP the bar is tweening toward.
     target: u16,
@@ -924,7 +924,7 @@ enum BattleSide {
 /// values (engine/items/item_effects.asm `ItemUseBall`):
 /// `$43` caught / `$20` missed (0 shakes) / `$61`-`$63` broke free after
 /// N shakes / `$10` ghost dodge.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(serde::Serialize, serde::Deserialize, Debug, Clone, Copy, PartialEq, Eq)]
 pub enum BallAnimOutcome {
     /// `$43`: caught — toss, poof, hide mon pic, 3 shakes.
     Caught,
@@ -943,7 +943,7 @@ pub enum BallAnimOutcome {
 /// queued by core flows for the frontend to stage through its battle
 /// animation player. Core is I/O-free, so the frontend drains these each
 /// frame via [`BattleScreen::take_anim_event`].
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 pub enum BattleAnimEvent {
     /// A ball was thrown at the wild mon (`ItemUseBall` → `TossBallAnimation`,
     /// engine/battle/animations.asm:2581). Carries the computed shake count
@@ -963,7 +963,7 @@ pub enum BattleAnimEvent {
 
 /// Sound requests produced by the original item-use routines outside the
 /// move-animation command stream.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 pub enum BattleItemSfx {
     HealHp,
     HealAilment,
@@ -1143,6 +1143,10 @@ pub struct BattleScreen {
     /// Shared link-battle RNG stream (the host's random-number list, consumed
     /// by both sides). `None` outside link battles → the normal local RNG.
     pub link_rng: Option<crate::link::rng::LinkRng>,
+    /// Persistent battle RNG stream (agent M5): used for every non-link
+    /// draw (accuracy, damage, crit, AI, …). From entropy by default —
+    /// unseeded behavior is unchanged; `set_seed` replaces it.
+    pub rng: pokered_rules::runtime::StdBattleRng,
     /// The local player's action chosen via the battle menus, awaiting the
     /// remote action. Set when `link_mode` and a menu action was picked; the
     /// driver sends it over the wire and calls [`Self::resolve_link_turn`]
@@ -1234,6 +1238,27 @@ fn is_gym_leader_victory_theme(tc: Option<TrainerClass>) -> bool {
     )
 }
 
+enum AiRng<'a> {
+    Seeded(&'a mut (dyn dotzuki_engine::battle::rng::BattleRng + 'a)),
+    Unseeded,
+}
+
+impl AiRng<'_> {
+    fn byte(&mut self) -> u8 {
+        match self {
+            AiRng::Seeded(rng) => rng.next_u8(),
+            AiRng::Unseeded => crate::rng::random(),
+        }
+    }
+
+    fn range(&mut self, bound: u32) -> u32 {
+        match self {
+            AiRng::Seeded(rng) => dotzuki_engine::battle::rng::BattleRng::range(*rng, bound),
+            AiRng::Unseeded => (crate::rng::random::<usize>() % bound.max(1) as usize) as u32,
+        }
+    }
+}
+
 impl BattleScreen {
     pub fn new(is_wild: bool) -> Self {
         let transition = BattleTransition::default();
@@ -1298,6 +1323,7 @@ impl BattleScreen {
             player_id: 0,
             link_mode: false,
             link_rng: None,
+            rng: pokered_rules::runtime::StdBattleRng::from_entropy(),
             link_pending_local_action: None,
             link_enemy_move_override: None,
             link_enemy_skips_turn: false,
@@ -1396,6 +1422,7 @@ impl BattleScreen {
             player_id: 0,
             link_mode: false,
             link_rng: None,
+            rng: pokered_rules::runtime::StdBattleRng::from_entropy(),
             link_pending_local_action: None,
             link_enemy_move_override: None,
             link_enemy_skips_turn: false,
@@ -1593,7 +1620,16 @@ impl BattleScreen {
         }
     }
 
-    fn pick_enemy_move(bs: &BattleState, trainer_class: Option<TrainerClass>) -> (MoveId, u8) {
+    /// The enemy AI move pick's two entropy paths (agent M5): LINK
+    /// battles draw from `rand::random()` — the pick must stay OUT of
+    /// the shared link stream (each side picks independently; consuming
+    /// shared bytes here would desync the mirror). Non-link battles draw
+    /// from the seeded battle stream.
+    fn pick_enemy_move_impl(
+        bs: &BattleState,
+        trainer_class: Option<TrainerClass>,
+        rng: &mut AiRng,
+    ) -> (MoveId, u8) {
         let mon = bs.enemy.active_mon();
         let available: Vec<(MoveId, u8)> = mon
             .moves
@@ -1618,7 +1654,7 @@ impl BattleScreen {
                 // house-rule, not a fidelity fix). See pret/pokered engine/battle/{trainer_ai,core}.asm.
                 const AI_LAYER2_ENCOURAGEMENT: u8 = 0;
                 let result = choose_moves(layers, &bs.enemy, &bs.player, AI_LAYER2_ENCOURAGEMENT);
-                if let Some(slot) = result.pick_move(crate::rng::random::<u8>()) {
+                if let Some(slot) = result.pick_move(rng.byte()) {
                     let move_id = mon.moves[slot];
                     if move_id != MoveId::None && mon.pp[slot] > 0 {
                         return (move_id, slot as u8);
@@ -1627,7 +1663,7 @@ impl BattleScreen {
             }
         }
 
-        let idx: usize = crate::rng::random::<usize>() % available.len();
+        let idx: usize = rng.range(available.len() as u32) as usize;
         available[idx]
     }
 
@@ -3565,15 +3601,22 @@ learn {learn_name}!")];
                 Some(b) => b,
                 None => return,
             };
-            let mut default_rng = pokered_rules::runtime::RandBattleRng;
+            let is_link = self.link_rng.is_some();
             let rng: &mut dyn dotzuki_engine::battle::rng::BattleRng = match self.link_rng.as_mut()
             {
                 Some(link) => link,
-                None => &mut default_rng,
+                None => &mut self.rng,
             };
             let (eid, eidx) = match enemy_move_override {
                 Some(m) => m,
-                None => Self::pick_enemy_move(bs, self.trainer_class),
+                None => {
+                    let mut ai_rng = if is_link {
+                        AiRng::Unseeded
+                    } else {
+                        AiRng::Seeded(rng)
+                    };
+                    Self::pick_enemy_move_impl(bs, self.trainer_class, &mut ai_rng)
+                }
             };
             enemy_move_idx = eidx;
             let base = if move_is_locked(&bs.enemy) { bs.enemy.selected_move } else { eid };
@@ -3618,11 +3661,10 @@ learn {learn_name}!")];
             // Shared-stream injection: in a link battle the turn's random
             // draws (accuracy, damage, crit, status, multi-hit, …) come from
             // the link RNG so both sides resolve identically (BattleRandom).
-            let mut default_rng = pokered_rules::runtime::RandBattleRng;
             let rng: &mut dyn dotzuki_engine::battle::rng::BattleRng = match self.link_rng.as_mut()
             {
                 Some(link) => link,
-                None => &mut default_rng,
+                None => &mut self.rng,
             };
             let (_r, log) = StackDriver::execute_turn_logged(
                 &pokered_rules::PokeredRules, &mut state, &mut effects, actions, rng,
@@ -3927,7 +3969,14 @@ learn {learn_name}!")];
         {
             None
         } else {
-            self.decide_enemy_ai_action(crate::rng::random())
+            // Seeded battle stream when determinism is pinned (agent M5);
+            // link battles keep the legacy unseeded draw.
+            let ai_rand = if self.link_rng.is_some() {
+                crate::rng::random()
+            } else {
+                dotzuki_engine::battle::rng::BattleRng::next_u8(&mut self.rng)
+            };
+            self.decide_enemy_ai_action(ai_rand)
         };
         let enemy_ai_fired = ai_action.is_some() || self.link_enemy_skips_turn;
         let mut ai_msgs: Vec<String> = Vec::new();
@@ -3956,9 +4005,17 @@ learn {learn_name}!")];
             // Link battles: the enemy move comes from the wire (raw move index
             // into the remote party's active mon); a locked enemy still forces
             // its locked move, exactly like the AI pick would be overridden.
+            let is_link = self.link_rng.is_some();
             let (eid, eidx) = match self.link_enemy_move_override.take() {
                 Some(m) => m,
-                None => Self::pick_enemy_move(bs, self.trainer_class),
+                None => {
+                    let mut ai_rng = if is_link {
+                        AiRng::Unseeded
+                    } else {
+                        AiRng::Seeded(&mut self.rng)
+                    };
+                    Self::pick_enemy_move_impl(bs, self.trainer_class, &mut ai_rng)
+                }
             };
             enemy_move_id = if move_is_locked(&bs.enemy) {
                 bs.enemy.selected_move
@@ -4101,11 +4158,10 @@ learn {learn_name}!")];
             (None, None);
         let (mut player_call_failed, mut enemy_call_failed) = (false, false);
         if let Some(ref bs) = self.battle_state {
-            let mut default_rng = pokered_rules::runtime::RandBattleRng;
             let rng: &mut dyn dotzuki_engine::battle::rng::BattleRng = match self.link_rng.as_mut()
             {
                 Some(link) => link,
-                None => &mut default_rng,
+                None => &mut self.rng,
             };
             let (pid, pl, pf) =
                 resolve_called_move(player_move_id, bs.enemy.last_move_used, rng);
@@ -4255,11 +4311,10 @@ learn {learn_name}!")];
                 let ghost_enemy_first = ghost_enemy_blocked
                     && crate::battle::turn_order::determine_order(bs, crate::rng::random())
                         == crate::battle::turn_order::TurnOrder::EnemyFirst;
-            let mut default_rng = pokered_rules::runtime::RandBattleRng;
             let rng: &mut dyn dotzuki_engine::battle::rng::BattleRng = match self.link_rng.as_mut()
             {
                 Some(link) => link,
-                None => &mut default_rng,
+                None => &mut self.rng,
             };
             let (_result, log) = StackDriver::execute_turn_logged(
                 &pokered_rules::PokeredRules, &mut state, &mut effects, actions, rng,

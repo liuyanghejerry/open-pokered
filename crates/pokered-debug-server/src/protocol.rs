@@ -125,6 +125,21 @@ pub enum GameDebugCommand {
         #[serde(default)]
         map: Option<String>,
     },
+    /// M5: pin determinism by replacing both RNG streams (overworld +
+    /// battle) with seeded ChaCha12 streams. Unseeded runs stay
+    /// entropy-based; this is the runtime form of `--seed`.
+    SetSeed { seed: u64 },
+    /// M5: capture the full runtime (save data + screen + overworld/
+    /// battle internals + frame counters + RNG state) into an in-memory
+    /// slot. Overworld and battle screens only — menus and mid-movie
+    /// takeovers error cleanly. The response carries a content hash of
+    /// the snapshot for identity assertions.
+    SaveState { slot: u8 },
+    /// M5: restore a slot captured by `save_state`. Bit-for-bit:
+    /// afterwards identical inputs produce identical frames. Queued
+    /// debug inputs are dropped; presentation-only state (battle VFX)
+    /// restarts.
+    RestoreState { slot: u8 },
     /// Give a Pokémon to the player's party.
     GivePokemon { species: String, level: u8 },
     /// Start a wild battle against the given species/level (for testing catch
@@ -331,6 +346,25 @@ mod tests {
             cmd,
             DebugCommand::Game(GameDebugCommand::GetScriptSemantics { map: Some(_) })
         ));
+
+        let cmd: DebugCommand = serde_json::from_str(r#"{"cmd":"set_seed","seed":42}"#).unwrap();
+        assert!(matches!(
+            cmd,
+            DebugCommand::Game(GameDebugCommand::SetSeed { seed: 42 })
+        ));
+
+        let cmd: DebugCommand = serde_json::from_str(r#"{"cmd":"save_state","slot":1}"#).unwrap();
+        assert!(matches!(
+            cmd,
+            DebugCommand::Game(GameDebugCommand::SaveState { slot: 1 })
+        ));
+
+        let cmd: DebugCommand =
+            serde_json::from_str(r#"{"cmd":"restore_state","slot":1}"#).unwrap();
+        assert!(matches!(
+            cmd,
+            DebugCommand::Game(GameDebugCommand::RestoreState { slot: 1 })
+        ));
     }
 
     /// The game-side dialogue/cutscene stepping commands (wait_until /
@@ -487,6 +521,24 @@ mod tests {
         assert!(matches!(
             back,
             DebugCommand::Game(GameDebugCommand::TravelTo { .. })
+        ));
+
+        let cmd = DebugCommand::Game(GameDebugCommand::SetSeed { seed: 42 });
+        let line = serde_json::to_string(&cmd).unwrap();
+        assert_eq!(line, r#"{"cmd":"set_seed","seed":42}"#);
+        let back: DebugCommand = serde_json::from_str(&line).unwrap();
+        assert!(matches!(
+            back,
+            DebugCommand::Game(GameDebugCommand::SetSeed { seed: 42 })
+        ));
+
+        let cmd = DebugCommand::Game(GameDebugCommand::SaveState { slot: 3 });
+        let line = serde_json::to_string(&cmd).unwrap();
+        assert_eq!(line, r#"{"cmd":"save_state","slot":3}"#);
+        let back: DebugCommand = serde_json::from_str(&line).unwrap();
+        assert!(matches!(
+            back,
+            DebugCommand::Game(GameDebugCommand::SaveState { slot: 3 })
         ));
     }
 }
