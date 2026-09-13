@@ -16,7 +16,7 @@ env:
 jobs:
   performance:
     name: GBA performance baseline
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 15
     steps:
       - name: Checkout candidate
@@ -56,8 +56,19 @@ jobs:
         if: steps.changes.outputs.has-changes == 'true'
         run: |
           cargo install agb-gbafix --version 0.25.0 --locked
+          MGBA_VERSION=0.10.5
+          MGBA_ARCHIVE="mGBA-${MGBA_VERSION}-ubuntu64-noble.tar.xz"
+          MGBA_DIR="mGBA-${MGBA_VERSION}-ubuntu64-noble"
+          MGBA_URL="https://github.com/mgba-emu/mgba/releases/download/${MGBA_VERSION}/${MGBA_ARCHIVE}"
+          curl --fail --location --retry 3 "$MGBA_URL" --output "$RUNNER_TEMP/$MGBA_ARCHIVE"
+          echo "0bbf1e7ca511cd4b443239b97546f699df72211241a1db9177e331866031d8e9  $RUNNER_TEMP/$MGBA_ARCHIVE" \
+            | sha256sum --check
+          tar --extract --xz --file "$RUNNER_TEMP/$MGBA_ARCHIVE" --directory "$RUNNER_TEMP"
           sudo apt-get update
-          sudo apt-get install -yq mgba-sdl xvfb
+          sudo apt-get install -yq xvfb \
+            "$RUNNER_TEMP/$MGBA_DIR/libmgba.deb" \
+            "$RUNNER_TEMP/$MGBA_DIR/mgba-sdl.deb"
+          mgba --version
 
       - name: Cache Cargo registry and GBA benchmark build
         if: steps.changes.outputs.has-changes == 'true'

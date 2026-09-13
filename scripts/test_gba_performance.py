@@ -138,9 +138,15 @@ class GbaPerformanceTests(unittest.TestCase):
             with self.assertRaisesRegex(TimeoutError, "every scenario"):
                 gba_performance.record(args)
 
-    def test_ci_mgba_has_dummy_audio_and_line_buffered_output(self) -> None:
+    def test_ci_pins_headless_mgba_and_streams_its_output(self) -> None:
         workflow = (SCRIPT.parents[1] / ".github/workflows/gba-performance.yml").read_text(
             encoding="utf-8"
+        )
+        self.assertIn("runs-on: ubuntu-24.04", workflow)
+        self.assertIn("MGBA_VERSION=0.10.5", workflow)
+        self.assertIn(
+            "0bbf1e7ca511cd4b443239b97546f699df72211241a1db9177e331866031d8e9",
+            workflow,
         )
         self.assertIn("SDL_AUDIODRIVER: dummy", workflow)
         self.assertIn("MGBA_COMMAND: xvfb-run -a stdbuf -oL -eL mgba", workflow)
