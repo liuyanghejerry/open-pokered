@@ -9,8 +9,9 @@ and Gradle project template.
 
 - the `aarch64-linux-android` Rust target;
 - Android SDK 35, NDK 27, CMake 3.22.1, and JDK 17;
-- the `gfx/` assets from `scripts/fetch-gfx.sh`; and
-- a dotzuki engine checkout at v0.8.2 or later.
+- the `gfx/` assets from `scripts/fetch-gfx.sh`;
+- a dotzuki engine checkout at v0.8.2 or later; and
+- Pillow for the launcher-icon step: `python3 -m pip install pillow`.
 
 ## Export the Android Studio project
 
@@ -32,6 +33,16 @@ and asks the selected engine checkout's
 `export-mobile-host.py --platform android` command to assemble the host. The
 initialization payload is `pokered:red:v1` or `pokered:blue:v1`; the game
 factory validates it.
+
+The engine export carries a neutral launcher mark, so the script then runs
+`scripts/apply-mobile-icon.py`: it redraws the adaptive foreground and the
+legacy tiles with the game's Poké Ball mark on the mobile backdrop, keeping the
+template's tile silhouette and the icon footprints. Apply it by hand to a host
+exported straight from the engine:
+
+```bash
+python3 scripts/apply-mobile-icon.py --platform android --host dist/android
+```
 
 Open `dist/android` in Android Studio, or assemble a debug APK with the
 checked-in Gradle wrapper:

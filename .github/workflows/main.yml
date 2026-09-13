@@ -452,6 +452,14 @@ jobs:
           key: android-gradle-${{ hashFiles('android/**/*.gradle*', 'android/gradle/wrapper/gradle-wrapper.properties') }}
           restore-keys: android-gradle-
 
+      - name: Ensure Pillow (launcher icon step)
+        # scripts/apply-mobile-icon.py draws the game's launcher icon into the
+        # exported host; runner images usually ship Pillow already.
+        run: |
+          if ! python3 -c 'import PIL' 2>/dev/null; then
+            python3 -m pip install --quiet pillow || python3 -m pip install --quiet --break-system-packages pillow
+          fi
+
       - name: Build shared host project
         run: |
           NDK_HOME="$(ls -d "$ANDROID_HOME"/ndk/* | sort -V | tail -1)"
