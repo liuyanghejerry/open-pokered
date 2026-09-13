@@ -1,0 +1,28 @@
+{
+  "id": "get-pokedex",
+  "name": "Deliver Oak's parcel and receive the Pok\u00e9dex",
+  "tier": 3,
+  "initial_state": {
+    "warp": "PalletTown,10,6"
+  },
+  "seed": 42,
+  "setup": {
+    "flags": {
+      "EVENT_FOLLOWED_OAK_INTO_LAB": true
+    },
+    "party": [
+      {
+        "species": "Charmander",
+        "level": 8
+      }
+    ]
+  },
+  "goal": {
+    "type": "flag",
+    "id": "EVENT_GOT_POKEDEX"
+  },
+  "allowed_actions": "semantic",
+  "max_steps": 200,
+  "oracle": false,
+  "note": "Requires the mart-shopping + parcel-delivery flow (buy at the Viridian mart, walk back, deliver). Encoded for completeness; the rule-based oracle v2 needs the shop driver before it can run this."
+}

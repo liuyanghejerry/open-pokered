@@ -576,49 +576,28 @@ impl PokemonGame {
             leg.to
         };
         let current = self.overworld.state.current_map;
-        let tile_legs = match leg.kind {
-            pokered_agent::RouteLegKind::Warp => {
-                // Single tile leg straight to the warp tile.
-                let Some(tile) = leg.from_pos else {
-                    return LegExec::Abort(
-                        TravelResult::Blocked,
-                        Some("warp leg without a source tile".to_string()),
-                    );
-                };
-                let warp_index = leg.warp_index.unwrap_or(0);
-                vec![TileLeg {
-                    map: current,
-                    tiles: if self.player_pos() == (tile.x as u16, tile.y as u16) {
-                        Vec::new()
-                    } else {
-                        vec![(tile.x as u16, tile.y as u16)]
-                    },
-                    cross: Some(TileCross::Warp {
-                        to_map: expected,
-                        warp_index,
-                    }),
-                }]
-            }
-            pokered_agent::RouteLegKind::Connection => {
-                let pos = self.player_pos();
-                match find_tile_route(
-                    &|map| self.travel_grid(map),
-                    current,
-                    pos,
-                    expected,
-                    self.overworld.last_map,
-                ) {
-                    Some(legs) => legs,
-                    None => {
-                        return LegExec::Abort(
-                            TravelResult::Blocked,
-                            Some(format!(
-                                "no tile route from {:?}({},{}) to {:?}",
-                                current, pos.0, pos.1, expected
-                            )),
-                        );
-                    }
-                }
+        // Both leg kinds route at tile level: reaching the leg's
+        // destination map may itself require warp transit (e.g. Route 2's
+        // north forest gate is only reachable through the south gate and
+        // the forest — a naive direct walk to its door tile is fenced
+        // off). The tile BFS handles that transit natively.
+        let pos = self.player_pos();
+        let tile_legs = match find_tile_route(
+            &|map| self.travel_grid(map),
+            current,
+            pos,
+            expected,
+            self.overworld.last_map,
+        ) {
+            Some(legs) => legs,
+            None => {
+                return LegExec::Abort(
+                    TravelResult::Blocked,
+                    Some(format!(
+                        "no tile route from {:?}({},{}) to {:?}",
+                        current, pos.0, pos.1, expected
+                    )),
+                );
             }
         };
         for tile_leg in &tile_legs {

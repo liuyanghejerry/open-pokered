@@ -1,0 +1,26 @@
+{
+  "id": "win-wild-battle",
+  "name": "Win a wild battle on Route 1",
+  "tier": 1,
+  "initial_state": {
+    "warp": "PalletTown,10,6"
+  },
+  "seed": 42,
+  "setup": {
+    "flags": {
+      "EVENT_FOLLOWED_OAK_INTO_LAB": true,
+      "EVENT_GOT_STARTER": true
+    },
+    "party": [
+      {
+        "species": "Charizard",
+        "level": 100
+      }
+    ]
+  },
+  "goal": {
+    "type": "battle_won"
+  },
+  "allowed_actions": "semantic",
+  "max_steps": 60
+}

@@ -433,6 +433,11 @@ impl PokemonGame {
         let start_map = self.overworld.state.current_map;
         let mut frames = 0u32;
 
+        // A post-battle/warp fade-IN tail reads as a map transition to
+        // the entry check below — settle it first (same class of fix as
+        // travel's settle_for_travel).
+        self.settle_map_change(&mut frames);
+
         if let Some(result) = self.check_nav_interruption(start_map) {
             let result = match result {
                 NavigationResult::EnteredBattle => InteractResult::Battle,
@@ -514,6 +519,11 @@ impl PokemonGame {
     pub fn agent_interact_with(&mut self, id: &str) -> InteractOutcome {
         let start_map = self.overworld.state.current_map;
         let mut frames = 0u32;
+
+        // Settle any post-battle fade-IN tail before the entry check
+        // (it would otherwise read as a map transition — see
+        // agent_interact).
+        self.settle_map_change(&mut frames);
 
         if let Some(result) = self.check_nav_interruption(start_map) {
             let result = match result {

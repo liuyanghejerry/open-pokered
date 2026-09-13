@@ -175,6 +175,12 @@ full frame-level runtime (save data + screen + overworld/battle
 internals + RNG state) with a content hash for identity assertions —
 overworld/battle screens only; menus and mid-movie takeovers error
 cleanly. A minimal Python client lives at `scripts/debug_drive.py`.
+The M6 experiment adapter builds on it at `scripts/openpoke/` — typed
+client, Gym-style env, task specs (`tasks/*.json`), run metrics
+(`target/agent/runs/*.jsonl`), skill actions, and a rule-based oracle
+planner. Run a task with `python3 scripts/openpoke/run_task.py
+<task.json|all>` (needs a `--features debug-server` binary); unit tests:
+`python3 -m unittest scripts.test_openpoke`.
 
 Screen targets: `copyright title main-menu oak overworld battle start-menu options save`.
 

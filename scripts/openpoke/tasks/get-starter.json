@@ -1,0 +1,22 @@
+{
+  "id": "get-starter",
+  "name": "Pick a starter Pok\u00e9mon in Oak's lab",
+  "tier": 1,
+  "initial_state": {
+    "warp": "PalletTown,10,6"
+  },
+  "seed": 42,
+  "setup": {
+    "flags": {
+      "EVENT_OAK_APPEARED_IN_PALLET": true
+    },
+    "party": []
+  },
+  "goal": {
+    "type": "flag",
+    "id": "EVENT_GOT_STARTER"
+  },
+  "allowed_actions": "semantic",
+  "max_steps": 60,
+  "note": "Starter selection requires the ask flag (EVENT_OAK_ASKED_TO_CHOOSE_MON) from the lab entry speech; the setup reproduces the post-escort, pre-speech state (EVENT_OAK_APPEARED_IN_PALLET set, FOLLOWED unset)."
+}
