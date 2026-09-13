@@ -1,6 +1,7 @@
 name: Build GBA ROM
 
 on:
+  workflow_call:
   push:
     branches: [master]
     paths:
