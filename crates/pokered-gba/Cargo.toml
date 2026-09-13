@@ -19,12 +19,12 @@ framebuffer-dump = []
 [dependencies]
 agb = "0.25.0"
 getrandom = { version = "0.2", features = ["custom"] }
-dotzuki-engine = { git = "https://github.com/liuyanghejerry/dotzuki", branch = "feat/agent-serde" }
+dotzuki-engine = { git = "https://github.com/liuyanghejerry/dotzuki", tag = "v0.8.2" }
 log = { version = "0.4", default-features = false }
 
 # The pokered game crates. Built for thumbv4t via this crate's
-# .cargo/config.toml (nightly -Zbuild-std). All dotzuki dependencies are
-# pinned to the reviewed GBA/no_std feature commit through the manifests below.
+# .cargo/config.toml (nightly -Zbuild-std). All dotzuki dependencies come from
+# the v0.8.2 tag through the manifests below.
 # framebuffer-only everywhere on GBA (no pixels/winit/image).
 pokered-app = { path = "../pokered-app", default-features = false }
 pokered-core = { path = "../pokered-core", default-features = false, features = ["embedded-map-data"] }

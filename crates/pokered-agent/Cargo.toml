@@ -7,6 +7,6 @@ license.workspace = true
 [dependencies]
 pokered-core = { path = "../pokered-core" }
 pokered-data = { path = "../pokered-data" }
-dotzuki-engine-dsl = { git = "https://github.com/liuyanghejerry/dotzuki", branch = "feat/agent-serde" }
+dotzuki-engine-dsl = { git = "https://github.com/liuyanghejerry/dotzuki", tag = "v0.8.2" }
 serde = { workspace = true }
 serde_json = { workspace = true }
