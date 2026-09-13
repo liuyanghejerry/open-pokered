@@ -36,7 +36,7 @@ use pokered_data::charmap::naming_tiles;
 use pokered_data::pinyin_dict;
 
 /// Input mode for the naming screen.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(serde::Serialize, serde::Deserialize, Debug, Clone, Copy, PartialEq, Eq)]
 pub enum InputMode {
     Alphabet,
     Pinyin,
@@ -146,7 +146,7 @@ pub const LOWER_ALPHABET: [[u8; GRID_COLS]; GRID_ROWS] = [
 /// The ED tile ID (row 4, col 8).
 pub const ED_TILE_ID: u8 = naming_tiles::ED_TILE;
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(serde::Serialize, serde::Deserialize, Debug, Clone, Copy, PartialEq, Eq)]
 pub enum NamingScreenType {
     Player,
     Rival,
@@ -202,7 +202,7 @@ pub enum NamingScreenResult {
 }
 
 /// The naming screen state machine.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct NamingScreenState {
     screen_type: NamingScreenType,
     name: String,

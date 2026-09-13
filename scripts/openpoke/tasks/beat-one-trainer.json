@@ -1,0 +1,29 @@
+{
+  "id": "beat-one-trainer",
+  "name": "Defeat a Bug Catcher in Viridian Forest",
+  "tier": 2,
+  "initial_state": {
+    "warp": "PalletTown,10,6"
+  },
+  "seed": 42,
+  "setup": {
+    "flags": {
+      "EVENT_FOLLOWED_OAK_INTO_LAB": true,
+      "EVENT_GOT_STARTER": true,
+      "EVENT_GOT_POKEDEX": true,
+      "EVENT_GOT_OAKS_PARCEL": true
+    },
+    "party": [
+      {
+        "species": "Charizard",
+        "level": 100
+      }
+    ]
+  },
+  "goal": {
+    "type": "flag",
+    "id": "EVENT_BEAT_VIRIDIAN_FOREST_TRAINER_0"
+  },
+  "allowed_actions": "semantic",
+  "max_steps": 80
+}

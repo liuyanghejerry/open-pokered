@@ -15,7 +15,7 @@ gpu = ["resource", "dotzuki-renderer/gpu","dep:pixels", "dep:winit", "dep:winit_
 pokered-platform = { path = "../pokered-platform" }
 pokered-data = { path = "../pokered-data" }
 pokered-core = { path = "../pokered-core" }
-dotzuki-engine = { git = "https://github.com/liuyanghejerry/dotzuki", rev = "55b90736aa9c2cc56e69a247b57e320c57136898" }
+dotzuki-engine = { git = "https://github.com/liuyanghejerry/dotzuki", branch = "feat/agent-serde" }
 log = "0.4"
 # no_std HashMap (see pokered-data's twin entry).
 hashbrown = { version = "0.15", default-features = false }
@@ -29,13 +29,13 @@ error-iter = { version = "0.4", optional = true }
 # opt into PNG loading and windowing respectively, so mobile never inherits
 # desktop winit/android-activity dependencies merely for having `std`.
 [target.'cfg(not(target_os = "none"))'.dependencies]
-dotzuki-renderer = { git = "https://github.com/liuyanghejerry/dotzuki", rev = "55b90736aa9c2cc56e69a247b57e320c57136898", default-features = false, features = ["framebuffer"] }
+dotzuki-renderer = { git = "https://github.com/liuyanghejerry/dotzuki", branch = "feat/agent-serde", default-features = false, features = ["framebuffer"] }
 thiserror = { workspace = true }
 
 # Bare metal (GBA): framebuffer-only engine renderer; assets come from the
 # build-time pre-converted 2bpp registry instead of runtime PNG loading.
 [target.'cfg(target_os = "none")'.dependencies]
-dotzuki-renderer = { git = "https://github.com/liuyanghejerry/dotzuki", rev = "55b90736aa9c2cc56e69a247b57e320c57136898", default-features = false, features = ["framebuffer"] }
+dotzuki-renderer = { git = "https://github.com/liuyanghejerry/dotzuki", branch = "feat/agent-serde", default-features = false, features = ["framebuffer"] }
 thiserror = { version = "2", default-features = false }
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]

@@ -16,7 +16,7 @@ use pokered_data::items::ItemId;
 
 /// Per-battle Safari state (Gen-1 `wEnemyMonActualCatchRate` + `wSafariBaitFactor` +
 /// `wSafariEscapeFactor` + `wNumSafariBalls`).
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 pub struct SafariState {
     /// The species base catch rate — restored onto `catch_rate` when anger wears off.
     pub base_catch_rate: u8,

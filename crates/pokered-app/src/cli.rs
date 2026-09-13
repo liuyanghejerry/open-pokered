@@ -136,6 +136,20 @@ pub enum Commands {
         /// e.g. --warp PalletTown,10,14 or --warp CeruleanCity,14,8
         #[arg(long)]
         warp: Option<String>,
+        /// Pin determinism from boot: seed both RNG streams (overworld +
+        /// battle) with the given u64. Default (absent) stays entropy-based.
+        /// Combine with save_state/restore_state for reproducible runs.
+        #[arg(long)]
+        seed: Option<u64>,
+        /// Headless frame pacing: N >= 1 divides the 16.7ms per-frame sleep
+        /// (2 = ~2x real-time idle). 0 = driven-only mode: the free-running
+        /// loop never advances game frames on its own — frames advance only
+        /// inside synchronous debug-server commands (step_frames, move_to,
+        /// ...), which are polled at sub-ms latency. Requires --debug-port;
+        /// makes driven runs wall-clock-insensitive (exact frame-count
+        /// determinism) and much faster for command-dense drivers.
+        #[arg(long, default_value = "1")]
+        speed: u32,
         /// Start a TCP debug server on the given port.
         #[arg(long)]
         debug_port: Option<u16>,

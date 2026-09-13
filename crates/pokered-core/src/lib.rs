@@ -38,6 +38,11 @@ pub mod hash_compat;
 pub mod stats_screen;
 pub mod pokemon;
 pub mod save;
+// Frame-level snapshot save/restore (agent M5) serializes the RNG streams,
+// and the only serde-capable RNG in the rand 0.8 family pulls serde/std —
+// unavailable on bare metal. Hosted-only like the agent layer it serves.
+#[cfg(not(target_os = "none"))]
+pub mod snapshot;
 pub mod save_menu;
 pub mod slots;
 pub mod slots_screen;

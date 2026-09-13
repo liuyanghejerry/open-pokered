@@ -10,7 +10,7 @@ fn hp_bar_pixels(hp: u16, max_hp: u16) -> u8 {
     (((u32::from(hp) * 48) / u32::from(max_hp)).max(1).min(48)) as u8
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(serde::Serialize, serde::Deserialize, Debug, Clone, Copy, PartialEq, Eq)]
 pub struct PartyScreenInput {
     pub up: bool,
     pub down: bool,
@@ -29,7 +29,7 @@ impl PartyScreenInput {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(serde::Serialize, serde::Deserialize, Debug, Clone, Copy, PartialEq, Eq)]
 pub enum PartyScreenPhase {
     Browsing,
     /// Cursor into the dynamic action menu: any usable field moves of the
@@ -48,14 +48,14 @@ pub enum PartyScreenPhase {
     ItemUseNotice { wait_frames: u8 },
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(serde::Serialize, serde::Deserialize, Debug, Clone, Copy, PartialEq, Eq)]
 pub enum PartyNoticeReturn {
     Bag,
     Party,
 }
 
 /// Why the party screen was opened.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(serde::Serialize, serde::Deserialize, Debug, Clone, Copy, PartialEq, Eq)]
 pub enum PartyScreenMode {
     /// Opened from the start menu: STATS / SWITCH / field moves.
     Normal,
@@ -70,7 +70,7 @@ pub enum PartyScreenMode {
     SoftboiledTarget(usize),
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(serde::Serialize, serde::Deserialize, Debug, Clone, Copy, PartialEq, Eq)]
 pub enum PartyScreenAction {
     Active,
     /// Party index for the caller to open a stats/details screen.
@@ -93,7 +93,7 @@ pub enum PartyScreenAction {
     Cancelled,
 }
 
-#[derive(Debug, Clone)]
+#[derive(serde::Serialize, serde::Deserialize, Debug, Clone)]
 pub struct PartyScreenState {
     party: Vec<Pokemon>,
     cursor: usize,
@@ -108,7 +108,7 @@ pub struct PartyScreenState {
     item_hp_animation: Option<PartyHpAnimation>,
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(serde::Serialize, serde::Deserialize, Debug, Clone, Copy)]
 struct PartyHpAnimation {
     party_index: usize,
     old_hp: u16,

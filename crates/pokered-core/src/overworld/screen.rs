@@ -46,7 +46,7 @@ pub use dotzuki_engine::overworld::{
 /// movement, facing). Game-specific fields like trainer info and item drops
 /// are stored here so they can be referenced during NPC interaction and
 /// runtime state construction.
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 pub struct PokemonNpcData {
     pub is_trainer: bool,
     pub trainer_class: u8,
@@ -168,7 +168,7 @@ pub enum OverworldGameDataRequest {
 // ── Wild Encounter ─────────────────────────────────────────────────
 
 /// Wild encounter data ready to be passed to BattleScreen.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct PendingWildEncounter {
     pub species: pokered_data::species::Species,
     pub level: u8,
@@ -183,7 +183,7 @@ pub struct PendingWildEncounter {
 /// The engage-intro state (CheckFightingMapTrainers, home/trainers.asm:
 /// 129-159): "!" bubble + MEET_* music + the trainer's walk-up, before the
 /// battle itself is pended. Same payload as [`PendingTrainerBattle`].
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct TrainerEncounterIntro {
     pub trainer_id: String,
     pub npc_index: u8,
@@ -193,7 +193,7 @@ pub struct TrainerEncounterIntro {
 
 /// Trainer battle data ready to be passed to BattleScreen.
 /// trainer_id is a string like "OPP_RIVAL1" that maps to a trainer class and party.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct PendingTrainerBattle {
     pub trainer_id: String,
     /// NPC index in the overworld npcs list (for marking defeated after win).
@@ -208,7 +208,7 @@ pub struct PendingTrainerBattle {
     pub rival_triplet_base: Option<u8>,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct PendingGivePokemon {
     pub species: pokered_data::species::Species,
     pub level: u8,
@@ -247,7 +247,7 @@ pub const SAFARI_GATE_RETURN_X: u8 = 3;
 pub const SAFARI_GATE_RETURN_Y: u8 = 1;
 
 /// Warp transition visual state.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 pub enum WarpFadeState {
     /// No warp transition in progress.
     Idle,
@@ -260,7 +260,7 @@ pub enum WarpFadeState {
 }
 
 /// Pending warp destination, stored when a warp is detected during fade-out.
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, serde::Serialize, serde::Deserialize)]
 pub struct PendingWarp {
     pub dest_map: MapId,
     pub dest_x: u8,
@@ -276,7 +276,7 @@ pub struct PendingWarp {
 /// Pending map connection transition, stored when the player walks across a
 /// map boundary. The actual map swap is deferred until the walk animation
 /// completes, matching the original Game Boy's seamless scrolling behavior.
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, serde::Serialize, serde::Deserialize)]
 pub(crate) struct PendingConnection {
     pub(crate) transition: EngineConnectionTransition<MapId>,
     pub(crate) save_last_map: bool,
@@ -286,7 +286,7 @@ pub(crate) struct PendingConnection {
 /// Pre-loaded NPCs from the destination map, rendered with a coordinate
 /// offset during the connection walk so they scroll into view naturally
 /// before the actual map swap occurs.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct ConnectionNpcPreview {
     pub npcs: Vec<crate::overworld::npc_movement::NpcRuntimeState>,
     pub step_offset_x: i32,
@@ -307,13 +307,31 @@ const DEFAULT_TEXT_DELAY_FRAMES: u16 = 1;
 
 /// State machine for the new-game bedroom dialogue sequence.
 /// Mirrors the original "RED is playing the SNES!" hidden event text.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize)]
 pub struct DialoguePage {
     pub line1: &'static str,
     pub line2: &'static str,
 }
 
-#[derive(Debug, Clone)]
+/// The type's lines are intentionally `Box::leak`'d at construction
+/// (see `BedroomDialogue::new` / `from_message`); deserialization leaks
+/// the same way so restored pages have the same 'static lifetime.
+impl<'de> serde::Deserialize<'de> for DialoguePage {
+    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        #[derive(serde::Deserialize)]
+        struct Page {
+            line1: String,
+            line2: String,
+        }
+        let page = Page::deserialize(deserializer)?;
+        Ok(DialoguePage {
+            line1: Box::leak(page.line1.into_boxed_str()),
+            line2: Box::leak(page.line2.into_boxed_str()),
+        })
+    }
+}
+
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct BedroomDialogue {
     pages: Vec<DialoguePage>,
     current_page: usize,
@@ -543,6 +561,7 @@ fn resolve_placeholders(text: &str, player_name: &str, rival_name: &str, starter
 use crate::overworld::presentation;
 use crate::overworld::special_terrain;
 
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct PokedexEntryState {
     pub species: String,
     pub page: usize,
@@ -551,6 +570,7 @@ pub struct PokedexEntryState {
     pub total_pages: usize,
 }
 
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct EmotionBubbleState {
     pub npc_id: String,
     pub emotion: String,
@@ -559,6 +579,7 @@ pub struct EmotionBubbleState {
 
 pub use crate::overworld::script_bridge::HealingMachinePhase;
 
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct HealingMachineState {
     pub phase: HealingMachinePhase,
     pub frames_remaining: u16,
@@ -566,7 +587,7 @@ pub struct HealingMachineState {
     pub flash_active: bool,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 pub(crate) struct PendingCut {
     pub block_x: u8,
     pub block_y: u8,
@@ -781,7 +802,7 @@ pub struct OverworldScreen<G: GameData = pokered_data::impl_traits::PokemonRedDa
     /// original blocks on each SFX (PlaySoundWaitForCurrent, 4× HEALING_MACHINE
     /// + PURCHASE); exact lifetimes come from the shared audio sequencer.
     pub(crate) itemfinder_dings: Option<(u8, u8)>,
-    pub(crate) rng: crate::rng::EntropyRng,
+    pub(crate) rng: crate::rng::SeededRng,
     /// Remaining Safari Zone steps (of [`SAFARI_ZONE_STEP_COUNT`]). Counts down
     /// once per completed step while the player is inside the Safari Zone.
     pub(crate) safari_steps: u16,
@@ -1135,7 +1156,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
             hidden_coin_flags: [0u8; crate::save::game_data::HIDDEN_COINS_BYTES],
             player_coins: 0,
             itemfinder_dings: None,
-            rng: crate::rng::EntropyRng::from_entropy(),
+            rng: crate::rng::SeededRng::from_entropy(),
             safari_steps: 0,
             safari_balls: 0,
             safari_game_active: false,
@@ -1665,6 +1686,30 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
     /// running, so no cutscene owns the game and the player has control.
     pub fn script_engine_idle(&self) -> bool {
         self.script_engine.is_idle()
+    }
+
+    /// True while a sight trainer's engage-intro ("!" bubble + walk-up) or
+    /// before-battle text is pending — a trainer dialogue/battle is
+    /// imminent. Observability for agent navigation/travel (M3): an
+    /// intro in flight reads as "dialogue incoming", not as an opaque
+    /// script interruption.
+    pub fn trainer_encounter_pending(&self) -> bool {
+        self.trainer_encounter_intro.is_some() || self.trainer_intro_text_pending.is_some()
+    }
+
+    /// Draw the next byte from the overworld RNG stream (agent M5).
+    /// App-side rolls that must reproduce under a pinned seed (wild DV
+    /// bytes, trainer ID, gift DVs) go through this accessor.
+    pub fn next_rng_u8(&mut self) -> u8 {
+        use rand::Rng;
+        self.rng.gen()
+    }
+
+    /// Replace the overworld RNG stream with a seeded one (agent M5).
+    /// Same SmallRng algorithm the default constructor draws from
+    /// entropy — unseeded behavior is unchanged.
+    pub fn set_rng_seed(&mut self, seed: u64) {
+        self.rng = crate::rng::SeededRng::seed_from_u64(seed);
     }
 
     pub fn set_script_flags(&mut self, flags: HashMap<String, bool>) {

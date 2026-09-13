@@ -51,6 +51,95 @@ pub enum GameDebugCommand {
     /// dialogue is showing. Queued (unconsumed) Press/PressSequence inputs
     /// are dropped first — they would override the internal taps.
     SkipDialogue,
+    /// Semantic observation snapshot for AI agents (the M1 observation
+    /// layer), built by the app on the `pokered-agent` crate. `level`
+    /// (1-4) selects a canned observation profile — 1: runtime state
+    /// only, 2: +dialogue/battle, 3: +nearby entities, 4: +world-data
+    /// allowance; `profile` supplies a complete `ObservationProfile`
+    /// document instead. Pass at most one of them; with neither, the
+    /// default is the full symbolic level 3. Purely observational: never
+    /// steps frames.
+    GetAgentState {
+        #[serde(default)]
+        level: Option<u8>,
+        #[serde(default)]
+        profile: Option<serde_json::Value>,
+    },
+    /// Entities near the player (NPCs, trainers, item balls, signs,
+    /// warps, hidden items), sorted by Manhattan distance in step units
+    /// (1 step = 2 GB tiles). `radius` caps the distance, default 10.
+    /// Purely observational: never steps frames.
+    GetNearby {
+        #[serde(default)]
+        radius: Option<u32>,
+    },
+    /// Closed-loop walk to tile (`x`, `y`) on the current map: the game
+    /// BFS-pathfinds reusing its own collision, walks one tile at a time
+    /// with real controller input (re-observing after every tile), and
+    /// aborts cleanly on interruption. Synchronous like `step_frames`:
+    /// the response carries the `NavigationOutcome` (`result`:
+    /// `reached` / `blocked` / `interrupted` / `entered_battle` /
+    /// `entered_dialogue` / `map_changed`, plus `steps`, `frames`, and
+    /// `start`/`target`/`final` positions) and fresh state snapshots.
+    MoveTo { x: u16, y: u16 },
+    /// Face the adjacent interactable (the faced tile first, otherwise
+    /// the player turns toward an adjacent visible NPC / sign / hidden
+    /// item, in that priority) and press A, running until a dialogue
+    /// opens, a battle starts, a script takes over, or nothing happens.
+    Interact,
+    /// Pathfind adjacent to a `get_nearby` entity id (`npc:{i}`,
+    /// `sign:{i}`, `hidden:{table_index}` — warps are `move_to`'s job),
+    /// face it, and press A. The response carries the interaction
+    /// result (`dialogue` / `battle` / `nothing` / `interrupted` /
+    /// `blocked` / `not_found` / …) and, when navigation ran, its
+    /// outcome.
+    InteractWith { id: String },
+    /// The M3 geographic world graph: every map's connection and warp
+    /// edges. With `maps` (a list of PascalCase map names) returns only
+    /// edges leaving those maps; without it returns the full graph
+    /// (large). Purely observational: never steps frames.
+    GetWorldGraph {
+        #[serde(default)]
+        maps: Option<Vec<String>>,
+    },
+    /// BFS shortest route between two maps as a leg list (connection /
+    /// warp legs with positions where derivable). Purely observational.
+    FindWorldRoute { from: String, to: String },
+    /// Travel cross-map to `map`: world routing → tile-level execution
+    /// per leg (M2 walker) → warp/connection traversal with landing
+    /// verification → replan on surprise. Wild battles are auto-resolved
+    /// (RUN with a fast lead, FIGHT fallback); trainer battles are
+    /// fought with the lead's first move; blackouts and unresolvable
+    /// battles abort. Synchronous like `step_frames`. The response
+    /// carries the `TravelOutcome` (`result`: `reached` / `blocked` /
+    /// `entered_battle` / `interrupted` / `map_mismatch` / `blackout` /
+    /// `invalid_target`) plus fresh state snapshots.
+    TravelTo { map: String },
+    /// M4 static scene semantics. With `map` (PascalCase name) returns
+    /// that map's extracted storylines (`reads` state predicates,
+    /// `effects` state changes, `triggers`). Without it returns the
+    /// coverage summary plus the list of analyzed maps (full per-map
+    /// payloads live in `target/agent/world_semantics.json`). Purely
+    /// observational: never steps frames.
+    GetScriptSemantics {
+        #[serde(default)]
+        map: Option<String>,
+    },
+    /// M5: pin determinism by replacing both RNG streams (overworld +
+    /// battle) with seeded ChaCha12 streams. Unseeded runs stay
+    /// entropy-based; this is the runtime form of `--seed`.
+    SetSeed { seed: u64 },
+    /// M5: capture the full runtime (save data + screen + overworld/
+    /// battle internals + frame counters + RNG state) into an in-memory
+    /// slot. Overworld and battle screens only — menus and mid-movie
+    /// takeovers error cleanly. The response carries a content hash of
+    /// the snapshot for identity assertions.
+    SaveState { slot: u8 },
+    /// M5: restore a slot captured by `save_state`. Bit-for-bit:
+    /// afterwards identical inputs produce identical frames. Queued
+    /// debug inputs are dropped; presentation-only state (battle VFX)
+    /// restarts.
+    RestoreState { slot: u8 },
     /// Give a Pokémon to the player's party.
     GivePokemon { species: String, level: u8 },
     /// Start a wild battle against the given species/level (for testing catch
@@ -155,6 +244,127 @@ mod tests {
                 ..
             })
         ));
+
+        let cmd: DebugCommand = serde_json::from_str(r#"{"cmd":"get_agent_state"}"#).unwrap();
+        assert!(matches!(
+            cmd,
+            DebugCommand::Game(GameDebugCommand::GetAgentState {
+                level: None,
+                profile: None,
+            })
+        ));
+
+        let cmd: DebugCommand =
+            serde_json::from_str(r#"{"cmd":"get_agent_state","level":2}"#).unwrap();
+        assert!(matches!(
+            cmd,
+            DebugCommand::Game(GameDebugCommand::GetAgentState {
+                level: Some(2),
+                profile: None,
+            })
+        ));
+
+        let cmd: DebugCommand = serde_json::from_str(
+            r#"{"cmd":"get_agent_state","profile":{"level":"interaction","include_nearby":true}}"#,
+        )
+        .unwrap();
+        assert!(matches!(
+            cmd,
+            DebugCommand::Game(GameDebugCommand::GetAgentState {
+                level: None,
+                profile: Some(_),
+            })
+        ));
+
+        let cmd: DebugCommand = serde_json::from_str(r#"{"cmd":"get_nearby"}"#).unwrap();
+        assert!(matches!(
+            cmd,
+            DebugCommand::Game(GameDebugCommand::GetNearby { radius: None })
+        ));
+
+        let cmd: DebugCommand = serde_json::from_str(r#"{"cmd":"get_nearby","radius":5}"#).unwrap();
+        assert!(matches!(
+            cmd,
+            DebugCommand::Game(GameDebugCommand::GetNearby { radius: Some(5) })
+        ));
+
+        let cmd: DebugCommand = serde_json::from_str(r#"{"cmd":"move_to","x":12,"y":11}"#).unwrap();
+        assert!(matches!(
+            cmd,
+            DebugCommand::Game(GameDebugCommand::MoveTo { x: 12, y: 11 })
+        ));
+
+        let cmd: DebugCommand = serde_json::from_str(r#"{"cmd":"interact"}"#).unwrap();
+        assert!(matches!(cmd, DebugCommand::Game(GameDebugCommand::Interact)));
+
+        let cmd: DebugCommand =
+            serde_json::from_str(r#"{"cmd":"interact_with","id":"npc:0"}"#).unwrap();
+        assert!(matches!(
+            cmd,
+            DebugCommand::Game(GameDebugCommand::InteractWith { ref id }) if id == "npc:0"
+        ));
+
+        let cmd: DebugCommand = serde_json::from_str(r#"{"cmd":"get_world_graph"}"#).unwrap();
+        assert!(matches!(
+            cmd,
+            DebugCommand::Game(GameDebugCommand::GetWorldGraph { maps: None })
+        ));
+
+        let cmd: DebugCommand =
+            serde_json::from_str(r#"{"cmd":"get_world_graph","maps":["PalletTown","Route1"]}"#)
+                .unwrap();
+        assert!(matches!(
+            cmd,
+            DebugCommand::Game(GameDebugCommand::GetWorldGraph { maps: Some(_) })
+        ));
+
+        let cmd: DebugCommand =
+            serde_json::from_str(r#"{"cmd":"find_world_route","from":"PalletTown","to":"PewterCity"}"#)
+                .unwrap();
+        assert!(matches!(
+            cmd,
+            DebugCommand::Game(GameDebugCommand::FindWorldRoute { .. })
+        ));
+
+        let cmd: DebugCommand =
+            serde_json::from_str(r#"{"cmd":"travel_to","map":"ViridianCity"}"#).unwrap();
+        assert!(matches!(
+            cmd,
+            DebugCommand::Game(GameDebugCommand::TravelTo { ref map }) if map == "ViridianCity"
+        ));
+
+        let cmd: DebugCommand =
+            serde_json::from_str(r#"{"cmd":"get_script_semantics"}"#).unwrap();
+        assert!(matches!(
+            cmd,
+            DebugCommand::Game(GameDebugCommand::GetScriptSemantics { map: None })
+        ));
+
+        let cmd: DebugCommand =
+            serde_json::from_str(r#"{"cmd":"get_script_semantics","map":"OaksLab"}"#).unwrap();
+        assert!(matches!(
+            cmd,
+            DebugCommand::Game(GameDebugCommand::GetScriptSemantics { map: Some(_) })
+        ));
+
+        let cmd: DebugCommand = serde_json::from_str(r#"{"cmd":"set_seed","seed":42}"#).unwrap();
+        assert!(matches!(
+            cmd,
+            DebugCommand::Game(GameDebugCommand::SetSeed { seed: 42 })
+        ));
+
+        let cmd: DebugCommand = serde_json::from_str(r#"{"cmd":"save_state","slot":1}"#).unwrap();
+        assert!(matches!(
+            cmd,
+            DebugCommand::Game(GameDebugCommand::SaveState { slot: 1 })
+        ));
+
+        let cmd: DebugCommand =
+            serde_json::from_str(r#"{"cmd":"restore_state","slot":1}"#).unwrap();
+        assert!(matches!(
+            cmd,
+            DebugCommand::Game(GameDebugCommand::RestoreState { slot: 1 })
+        ));
     }
 
     /// The game-side dialogue/cutscene stepping commands (wait_until /
@@ -230,11 +440,105 @@ mod tests {
             json,
             r#"{"cmd":"wait_until","condition":"control_ready","max_frames":120}"#
         );
+
+        let json = serde_json::to_string(&DebugCommand::Game(GameDebugCommand::GetAgentState {
+            level: Some(3),
+            profile: None,
+        }))
+        .unwrap();
+        assert_eq!(json, r#"{"cmd":"get_agent_state","level":3,"profile":null}"#);
+
+        let json = serde_json::to_string(&DebugCommand::Game(GameDebugCommand::GetAgentState {
+            level: None,
+            profile: None,
+        }))
+        .unwrap();
+        assert_eq!(json, r#"{"cmd":"get_agent_state","level":null,"profile":null}"#);
+
+        let json = serde_json::to_string(&DebugCommand::Game(GameDebugCommand::GetNearby {
+            radius: None,
+        }))
+        .unwrap();
+        assert_eq!(json, r#"{"cmd":"get_nearby","radius":null}"#);
     }
 
     /// An unknown command string is an error (not silently misparsed).
     #[test]
     fn unknown_command_is_an_error() {
         assert!(serde_json::from_str::<DebugCommand>(r#"{"cmd":"fly_to_moon"}"#).is_err());
+    }
+
+    /// The agent observation commands round-trip through the wire format.
+    #[test]
+    fn agent_commands_round_trip() {
+        let cmd = DebugCommand::Game(GameDebugCommand::GetAgentState {
+            level: None,
+            profile: Some(serde_json::json!({"level": "full_symbolic"})),
+        });
+        let line = serde_json::to_string(&cmd).unwrap();
+        let back: DebugCommand = serde_json::from_str(&line).unwrap();
+        assert!(matches!(
+            back,
+            DebugCommand::Game(GameDebugCommand::GetAgentState {
+                level: None,
+                profile: Some(_),
+            })
+        ));
+
+        let cmd = DebugCommand::Game(GameDebugCommand::GetNearby { radius: Some(12) });
+        let line = serde_json::to_string(&cmd).unwrap();
+        assert_eq!(line, r#"{"cmd":"get_nearby","radius":12}"#);
+        let back: DebugCommand = serde_json::from_str(&line).unwrap();
+        assert!(matches!(
+            back,
+            DebugCommand::Game(GameDebugCommand::GetNearby { radius: Some(12) })
+        ));
+
+        let cmd = DebugCommand::Game(GameDebugCommand::MoveTo { x: 12, y: 11 });
+        let line = serde_json::to_string(&cmd).unwrap();
+        assert_eq!(line, r#"{"cmd":"move_to","x":12,"y":11}"#);
+        let back: DebugCommand = serde_json::from_str(&line).unwrap();
+        assert!(matches!(
+            back,
+            DebugCommand::Game(GameDebugCommand::MoveTo { x: 12, y: 11 })
+        ));
+
+        let cmd = DebugCommand::Game(GameDebugCommand::InteractWith { id: "sign:1".into() });
+        let line = serde_json::to_string(&cmd).unwrap();
+        assert_eq!(line, r#"{"cmd":"interact_with","id":"sign:1"}"#);
+        let back: DebugCommand = serde_json::from_str(&line).unwrap();
+        assert!(matches!(
+            back,
+            DebugCommand::Game(GameDebugCommand::InteractWith { ref id }) if id == "sign:1"
+        ));
+
+        let cmd = DebugCommand::Game(GameDebugCommand::TravelTo {
+            map: "PewterCity".into(),
+        });
+        let line = serde_json::to_string(&cmd).unwrap();
+        assert_eq!(line, r#"{"cmd":"travel_to","map":"PewterCity"}"#);
+        let back: DebugCommand = serde_json::from_str(&line).unwrap();
+        assert!(matches!(
+            back,
+            DebugCommand::Game(GameDebugCommand::TravelTo { .. })
+        ));
+
+        let cmd = DebugCommand::Game(GameDebugCommand::SetSeed { seed: 42 });
+        let line = serde_json::to_string(&cmd).unwrap();
+        assert_eq!(line, r#"{"cmd":"set_seed","seed":42}"#);
+        let back: DebugCommand = serde_json::from_str(&line).unwrap();
+        assert!(matches!(
+            back,
+            DebugCommand::Game(GameDebugCommand::SetSeed { seed: 42 })
+        ));
+
+        let cmd = DebugCommand::Game(GameDebugCommand::SaveState { slot: 3 });
+        let line = serde_json::to_string(&cmd).unwrap();
+        assert_eq!(line, r#"{"cmd":"save_state","slot":3}"#);
+        let back: DebugCommand = serde_json::from_str(&line).unwrap();
+        assert!(matches!(
+            back,
+            DebugCommand::Game(GameDebugCommand::SaveState { slot: 3 })
+        ));
     }
 }

@@ -10,6 +10,7 @@ members = [
     "crates/pokered-web",
     "crates/pokered-runner-web",
     "crates/pokered-debug-server",
+    "crates/pokered-agent",
     "crates/scene_apply",
     "crates/pokered-layout-preview",
     "crates/pokered-core",
@@ -39,8 +40,16 @@ miette = { version = "7", features = ["fancy"] }
 anyhow = "1"
 tracing = "0.1"
 notify = "6"
-rand = "0.8"
+rand = { version = "0.8", features = ["serde1"] }
 strum = { version = "0.26", default-features = false, features = ["derive"] }
 strum_macros = "0.26"
 num-derive = "0.4"
 num-traits = { version = "0.2", default-features = false }
+
+# NOTE (agent environment / M5): all dotzuki engine crates are pinned to the
+# branch `feat/agent-serde` (instead of upstream's rev
+# 55b90736aa9c2cc56e69a247b57e320c57136898) in each crate's Cargo.toml. The
+# branch is that rev + serde-only additions the agent snapshot needs
+# (interpreter, trigger manager, NPC runtime state, cutscene manager,
+# connection transition, presentation states, CommandResult). Pin back to a
+# release tag/rev once it includes those derives.

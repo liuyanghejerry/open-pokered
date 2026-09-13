@@ -47,3 +47,19 @@ mod imp {
 }
 
 pub use imp::{random, EntropyRng};
+
+/// Seedable RNG stream for pinned determinism (agent M5: `--seed` /
+/// `set_seed`, per-battle streams). On hosted targets the snapshot
+/// save/restore also round-trips the stream STATE, which needs a
+/// serde-capable RNG: ChaCha12 is the only one in the rand 0.8 family
+/// (its `serde1` pulls serde/std — fine on hosted, impossible on bare
+/// metal), and it is the algorithm `StdRng` wraps anyway. On the GBA the
+/// snapshot layer is compiled out, so the plain facade RNG (SmallRng,
+/// seedable via `SeedableRng`) serves the same field. Distinct type from
+/// [`EntropyRng`], so seeded and unseeded paths never alias one stream.
+#[cfg(not(target_os = "none"))]
+pub type SeededRng = rand_chacha::ChaCha12Rng;
+
+/// Bare-metal seeded stream: no serde needed (snapshots are hosted-only).
+#[cfg(target_os = "none")]
+pub type SeededRng = rand::rngs::SmallRng;

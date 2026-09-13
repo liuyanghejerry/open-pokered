@@ -672,8 +672,15 @@ pub struct PokemonGame {
     pub asset_watcher: Option<AssetWatcher>,
     #[cfg(feature = "debug-server")]
     pub debug_handle: Option<pokered_debug_server::DebugServerHandle>,
-    pending_debug_inputs: Vec<Option<GbButton>>,
-    pending_debug_frames: u32,
+    pub(crate) pending_debug_inputs: Vec<Option<GbButton>>,
+    pub(crate) pending_debug_frames: u32,
+    /// Active determinism seed (agent M5), set by `--seed` / `set_seed`.
+    pub seed: Option<u64>,
+    /// Battles started since boot — feeds the per-battle RNG seed so
+    /// successive battles draw distinct (but reproducible) streams.
+    pub battle_count: u64,
+    /// In-memory `save_state` snapshots (JSON strings).
+    pub agent_state_slots: crate::alloc_prelude::BTreeMap<u8, String>,
     /// Persistent state for debug-server injected input. A queued button must
     /// read as HELD across consecutive frames (fresh `InputState` per frame
     /// looks like repeated taps, so d-pad walking never starts).
@@ -1181,6 +1188,9 @@ impl PokemonGame {
             asset_watcher,
             pending_debug_inputs: Vec::new(),
             pending_debug_frames: 0,
+            seed: None,
+            battle_count: 0,
+            agent_state_slots: crate::alloc_prelude::BTreeMap::new(),
             debug_input: InputState::new(),
             #[cfg(all(feature = "desktop", not(target_arch = "wasm32"), not(target_os = "none")))]
             frame_recorder: None,
@@ -1334,6 +1344,9 @@ impl PokemonGame {
             audio,
             pending_debug_inputs: Vec::new(),
             pending_debug_frames: 0,
+            seed: None,
+            battle_count: 0,
+            agent_state_slots: crate::alloc_prelude::BTreeMap::new(),
             debug_input: InputState::new(),
             startup_warp: None,
             soft_reset_frames: 0,
@@ -1455,6 +1468,9 @@ impl PokemonGame {
             audio,
             pending_debug_inputs: Vec::new(),
             pending_debug_frames: 0,
+            seed: None,
+            battle_count: 0,
+            agent_state_slots: crate::alloc_prelude::BTreeMap::new(),
             debug_input: InputState::new(),
             #[cfg(all(feature = "desktop", not(target_arch = "wasm32"), not(target_os = "none")))]
             frame_recorder: None,
@@ -2516,11 +2532,40 @@ impl PokemonGame {
         }
     }
 
-    fn start_wild_battle(&mut self, species: pokered_data::species::Species, level: u8) {
-        use pokered_core::pokemon::stats::{create_pokemon, roll_random_dvs};
+    /// Compute the per-battle RNG stream for a battle about to start
+    /// (agent M5): deterministic from `seed + battle_count` — successive
+    /// battles differ, replays match. The caller assigns it onto the
+    /// freshly constructed BattleScreen (constructors seed from entropy,
+    /// so assigning before construction would discard it). Advances the
+    /// counter only when a seed is pinned.
+    fn next_battle_rng(
+        &mut self,
+    ) -> Option<pokered_core::battle::pokered_rules::runtime::StdBattleRng> {
+        self.seed.map(|seed| {
+            self.battle_count += 1;
+            pokered_core::battle::pokered_rules::runtime::StdBattleRng::from_seed(
+                seed.wrapping_add(0x9E3779B97F4A7C15)
+                    .wrapping_add(self.battle_count),
+            )
+        })
+    }
 
-        // Wild DVs are two random bytes (core.asm:6012-6019).
-        let enemy_mon = create_pokemon(species, level, roll_random_dvs());
+    fn start_wild_battle(&mut self, species: pokered_data::species::Species, level: u8) {
+        use pokered_core::pokemon::stats::create_pokemon;
+
+        let mut battle_rng = self.next_battle_rng();
+        // Wild DVs are two random bytes (core.asm:6012-6019) — drawn from
+        // the (possibly seeded) battle stream so encounters replay. The
+        // BattleRng trait keeps this call site free of a direct rand dep
+        // (rand is hosted-only for pokered-app).
+        let dvs = match battle_rng.as_mut() {
+            Some(rng) => [
+                dotzuki_engine::battle::rng::BattleRng::next_u8(rng),
+                dotzuki_engine::battle::rng::BattleRng::next_u8(rng),
+            ],
+            None => pokered_core::pokemon::stats::roll_random_dvs(),
+        };
+        let enemy_mon = create_pokemon(species, level, dvs);
         let player_party = self.save_data.party.to_vec();
 
         if let Some(enemy) = enemy_mon {
@@ -2536,6 +2581,9 @@ impl PokemonGame {
             }
         } else {
             self.battle = pokered_core::battle::BattleScreen::new(true);
+        }
+        if let Some(rng) = battle_rng {
+            self.battle.rng = rng;
         }
         self.battle.is_zh = self.state.config.language == pokered_core::game_state::Lang::Zh;
         self.battle.player_money = self.save_data.game_data.player_money;
@@ -2772,6 +2820,8 @@ impl PokemonGame {
 
     fn start_trainer_battle(&mut self, trainer_id: &str, rival_triplet_base: Option<u8>) {
         use pokered_core::pokemon::stats::create_pokemon;
+
+        let battle_rng = self.next_battle_rng();
         use pokered_data::species::Species;
         use pokered_data::trainer_data::{get_trainer_party, parse_trainer_id, TrainerClass};
 
@@ -2851,6 +2901,9 @@ impl PokemonGame {
         } else {
             self.battle = pokered_core::battle::BattleScreen::new(false);
         }
+        if let Some(rng) = battle_rng {
+            self.battle.rng = rng;
+        }
         self.battle.is_zh = self.state.config.language == pokered_core::game_state::Lang::Zh;
         self.battle.player_money = self.save_data.game_data.player_money;
         // Badge stat boosts + traded-mon obedience context (wObtainedBadges /
@@ -2891,6 +2944,39 @@ impl PokemonGame {
         }
     }
 
+    /// Poll and execute pending debug-server commands WITHOUT advancing a
+    /// frame; returns how many ran. The normal update path calls this at
+    /// the top of every frame; driven-only headless mode (`--speed 0`)
+    /// calls it in a low-latency loop so game frames advance ONLY inside
+    /// synchronous commands (step_frames/move_to/...) — driven runs become
+    /// wall-clock-insensitive (exact frame-count determinism) and avoid
+    /// the 16.7ms tick of command latency.
+    #[cfg(feature = "debug-server")]
+    pub fn poll_debug_commands(&mut self) -> usize {
+        let commands = self
+            .debug_handle
+            .as_ref()
+            .map(|h| h.poll_commands())
+            .unwrap_or_default();
+        let count = commands.len();
+        for cmd in commands {
+            let response = self.handle_debug_command(cmd);
+            if let Some(ref handle) = self.debug_handle {
+                handle.send_response(response);
+            }
+        }
+        count
+    }
+
+    /// Debug work queued by earlier commands: pressed buttons waiting to
+    /// be consumed one-per-frame, or RunFrames bursts. Driven-only mode
+    /// drains these through normal updates (same one-per-frame semantics
+    /// as StepFrames bursts).
+    #[cfg(feature = "debug-server")]
+    pub fn debug_work_pending(&self) -> bool {
+        self.pending_debug_frames > 0 || !self.pending_debug_inputs.is_empty()
+    }
+
     fn update_inner(&mut self, input: &InputState) {
         use pokered_core::game_state::Lang;
         self.frame_count += 1;
@@ -2900,19 +2986,7 @@ impl PokemonGame {
         self.ow_ran_last_frame = false;
 
         #[cfg(feature = "debug-server")]
-        {
-            let commands = self
-                .debug_handle
-                .as_ref()
-                .map(|h| h.poll_commands())
-                .unwrap_or_default();
-            for cmd in commands {
-                let response = self.handle_debug_command(cmd);
-                if let Some(ref handle) = self.debug_handle {
-                    handle.send_response(response);
-                }
-            }
-        }
+        self.poll_debug_commands();
 
         // Link play: accept a pending peer and drive the link session
         // (battle/trade state machines) every frame, before any early
@@ -3374,7 +3448,12 @@ impl PokemonGame {
                         // rolls the player's trainer ID — the save-overwrite
                         // "different player?" check compares against it.
                         if self.save_data.game_data.player_id == 0 {
-                            let dvs = pokered_core::pokemon::stats::roll_random_dvs();
+                            // Seeded overworld stream when determinism is
+                            // pinned (agent M5); entropy otherwise.
+                            let dvs = [
+                                self.overworld.next_rng_u8(),
+                                self.overworld.next_rng_u8(),
+                            ];
                             self.save_data.game_data.player_id =
                                 dvs[0] as u16 | ((dvs[1] as u16) << 8);
                         }
@@ -3609,149 +3688,7 @@ impl PokemonGame {
                     self.ow_ran_last_frame = true;
                     let action = self.overworld.update_frame(ow_input);
 
-                    // Drain script-requested bag/money mutations and apply them
-                    // to the persistent game data (the overworld is pure logic
-                    // and cannot reach SaveData itself).
-                    // A failed tradePokemon resumes the suspended script AFTER
-                    // the drain (the drain borrows self.overworld).
-                    let mut trade_rejected = false;
-                    // Drained into a local first so request handlers can take
-                    // `&mut self.overworld` (the poison tick mutates the
-                    // screen's pending dialogue / warp state).
-                    let game_data_requests: Vec<_> =
-                        self.overworld.game_data_requests.drain(..).collect();
-                    for req in game_data_requests {
-                        match req {
-                            OverworldGameDataRequest::GiveItem { item, quantity } => {
-                                if let Some(id) =
-                                    pokered_data::items::ItemId::from_const_name(&item)
-                                {
-                                    let _ = self.save_data.game_data.bag.add_item(id, quantity);
-                                } else {
-                                    log::warn!("giveItem: unknown item const '{}'", item);
-                                }
-                            }
-                            OverworldGameDataRequest::TakeItem { item, quantity } => {
-                                if let Some(id) =
-                                    pokered_data::items::ItemId::from_const_name(&item)
-                                {
-                                    let _ = self.save_data.game_data.bag.remove_item(id, quantity);
-                                } else {
-                                    log::warn!("takeItem: unknown item const '{}'", item);
-                                }
-                            }
-                            OverworldGameDataRequest::GiveMoney { amount } => {
-                                self.save_data.game_data.player_money = self
-                                    .save_data
-                                    .game_data
-                                    .player_money
-                                    .saturating_add(amount)
-                                    .min(999_999);
-                            }
-                            OverworldGameDataRequest::TakeMoney { amount } => {
-                                self.save_data.game_data.player_money =
-                                    self.save_data.game_data.player_money.saturating_sub(amount);
-                            }
-                            OverworldGameDataRequest::GiveBadge { badge } => {
-                                self.save_data.game_data.set_badge(badge);
-                            }
-                            OverworldGameDataRequest::MarkTownVisited { map } => {
-                                self.save_data.game_data.mark_town_visited(map);
-                            }
-                            // SetLastBlackoutMap (engine/events/set_blackout_map.asm):
-                            // a script-driven heal records the blackout/Teleport
-                            // target.
-                            OverworldGameDataRequest::SetBlackoutMap { map } => {
-                                self.save_data.game_data.last_blackout_map = map as u8;
-                            }
-                            OverworldGameDataRequest::TradePokemon {
-                                offered,
-                                received,
-                                nickname,
-                            } => {
-                                use pokered_data::species::Species;
-                                use pokered_data::trades::find_npc_trade;
-                                let pair = (
-                                    Species::from_scene_name(&offered),
-                                    Species::from_scene_name(&received),
-                                );
-                                // The script is suspended on this await; it
-                                // resumes via resume_script_after_trade.
-                                let ok = if let (Some(off_sp), Some(rec_sp)) = pair {
-                                    self.save_data.party.find_species(off_sp).is_some()
-                                        && self.trade_anim.is_none()
-                                        && {
-                                            // Nickname: the TradeMons table is
-                                            // authoritative (the original stores
-                                            // it per-trade); the script arg is
-                                            // the fallback for non-table pairs.
-                                            let nick = find_npc_trade(off_sp, rec_sp)
-                                                .map(|t| t.nickname.to_string())
-                                                .unwrap_or(nickname);
-                                            let is_zh = matches!(
-                                                self.state.config.language,
-                                                pokered_core::game_state::Lang::Zh
-                                            );
-                                            // Start the trade cutscene
-                                            // (engine/movie/trade.asm); the party
-                                            // mutation lands when it completes.
-                                            self.trade_anim =
-                                                Some(pokered_core::trade::TradeAnim::new(
-                                                    off_sp,
-                                                    rec_sp,
-                                                    self.player_name.clone(),
-                                                    is_zh,
-                                                ));
-                                            self.pending_trade = Some(PendingTrade {
-                                                give: off_sp,
-                                                receive: rec_sp,
-                                                nickname: nick,
-                                            });
-                                            true
-                                        }
-                                } else {
-                                    false
-                                };
-                                if !ok {
-                                    // Offered mon not in the party (or bad
-                                    // species): the scene takes its no-trade
-                                    // branch, no cutscene. Deferred to after
-                                    // the drain loop (borrow conflict).
-                                    trade_rejected = true;
-                                }
-                            }
-                            OverworldGameDataRequest::GiveCoins { amount } => {
-                                self.save_data.game_data.give_coins(amount);
-                            }
-                            OverworldGameDataRequest::TakeCoins { amount } => {
-                                self.save_data.game_data.take_coins(amount);
-                            }
-                            OverworldGameDataRequest::TickDaycareExp => {
-                                self.save_data.game_data.tick_daycare_exp();
-                            }
-                            OverworldGameDataRequest::PoisonStep => {
-                                pokered_core::overworld::poison::apply_out_of_battle_poison_damage(
-                                    &mut self.save_data,
-                                    &mut self.overworld,
-                                );
-                            }
-                            OverworldGameDataRequest::DepositDaycare { index } => {
-                                self.save_data.deposit_daycare(index);
-                                self.overworld.party_count = self.save_data.party.count() as u8;
-                                self.overworld.party_lead_level =
-                                    self.save_data.party.leader_level();
-                            }
-                            OverworldGameDataRequest::WithdrawDaycare => {
-                                self.save_data.withdraw_daycare();
-                                self.overworld.party_count = self.save_data.party.count() as u8;
-                                self.overworld.party_lead_level =
-                                    self.save_data.party.leader_level();
-                            }
-                        }
-                    }
-                    if trade_rejected {
-                        self.overworld.resume_script_after_trade(false);
-                    }
+                    self.apply_overworld_game_data_requests();
 
                     if let Some(ref audio) = self.audio {
                         match self.overworld.sfx_event {
@@ -3863,7 +3800,10 @@ impl PokemonGame {
                         if let Some(mut pokemon) = pokered_core::pokemon::stats::create_pokemon(
                             pending.species,
                             pending.level,
-                            pokered_core::pokemon::stats::roll_random_dvs(),
+                            [
+                                self.overworld.next_rng_u8(),
+                                self.overworld.next_rng_u8(),
+                            ],
                         ) {
                             if let Some(nick) = pending.nickname {
                                 pokemon.set_nickname(&nick);
@@ -5596,6 +5536,162 @@ impl PokemonGame {
         });
     }
 
+    /// Drain script-requested bag/money mutations and apply them to the
+    /// persistent game data (the overworld is pure logic and cannot reach
+    /// SaveData itself). Runs every frame from the overworld update path —
+    /// and once before `agent_save_state` captures, so no committed effect
+    /// is lost sitting in the queue (agent M5).
+    pub(crate) fn apply_overworld_game_data_requests(&mut self) {
+// Drain script-requested bag/money mutations and apply them
+                    // to the persistent game data (the overworld is pure logic
+                    // and cannot reach SaveData itself).
+                    // A failed tradePokemon resumes the suspended script AFTER
+                    // the drain (the drain borrows self.overworld).
+                    let mut trade_rejected = false;
+                    // Drained into a local first so request handlers can take
+                    // `&mut self.overworld` (the poison tick mutates the
+                    // screen's pending dialogue / warp state).
+                    let game_data_requests: Vec<_> =
+                        self.overworld.game_data_requests.drain(..).collect();
+                    for req in game_data_requests {
+                        match req {
+                            OverworldGameDataRequest::GiveItem { item, quantity } => {
+                                if let Some(id) =
+                                    pokered_data::items::ItemId::from_const_name(&item)
+                                {
+                                    let _ = self.save_data.game_data.bag.add_item(id, quantity);
+                                } else {
+                                    log::warn!("giveItem: unknown item const '{}'", item);
+                                }
+                            }
+                            OverworldGameDataRequest::TakeItem { item, quantity } => {
+                                if let Some(id) =
+                                    pokered_data::items::ItemId::from_const_name(&item)
+                                {
+                                    let _ = self.save_data.game_data.bag.remove_item(id, quantity);
+                                } else {
+                                    log::warn!("takeItem: unknown item const '{}'", item);
+                                }
+                            }
+                            OverworldGameDataRequest::GiveMoney { amount } => {
+                                self.save_data.game_data.player_money = self
+                                    .save_data
+                                    .game_data
+                                    .player_money
+                                    .saturating_add(amount)
+                                    .min(999_999);
+                            }
+                            OverworldGameDataRequest::TakeMoney { amount } => {
+                                self.save_data.game_data.player_money = self
+                                    .save_data
+                                    .game_data
+                                    .player_money
+                                    .saturating_sub(amount);
+                            }
+                            OverworldGameDataRequest::GiveBadge { badge } => {
+                                self.save_data.game_data.set_badge(badge);
+                            }
+                            OverworldGameDataRequest::MarkTownVisited { map } => {
+                                self.save_data.game_data.mark_town_visited(map);
+                            }
+                            // SetLastBlackoutMap (engine/events/set_blackout_map.asm):
+                            // a script-driven heal records the blackout/Teleport
+                            // target.
+                            OverworldGameDataRequest::SetBlackoutMap { map } => {
+                                self.save_data.game_data.last_blackout_map = map as u8;
+                            }
+                            OverworldGameDataRequest::TradePokemon {
+                                offered,
+                                received,
+                                nickname,
+                            } => {
+                                use pokered_data::species::Species;
+                                use pokered_data::trades::find_npc_trade;
+                                let pair = (
+                                    Species::from_scene_name(&offered),
+                                    Species::from_scene_name(&received),
+                                );
+                                // The script is suspended on this await; it
+                                // resumes via resume_script_after_trade.
+                                let ok = if let (Some(off_sp), Some(rec_sp)) = pair {
+                                    self.save_data.party.find_species(off_sp).is_some()
+                                        && self.trade_anim.is_none()
+                                        && {
+                                            // Nickname: the TradeMons table is
+                                            // authoritative (the original stores
+                                            // it per-trade); the script arg is
+                                            // the fallback for non-table pairs.
+                                            let nick = find_npc_trade(off_sp, rec_sp)
+                                                .map(|t| t.nickname.to_string())
+                                                .unwrap_or(nickname);
+                                            let is_zh = matches!(
+                                                self.state.config.language,
+                                                pokered_core::game_state::Lang::Zh
+                                            );
+                                            // Start the trade cutscene
+                                            // (engine/movie/trade.asm); the party
+                                            // mutation lands when it completes.
+                                            self.trade_anim =
+                                                Some(pokered_core::trade::TradeAnim::new(
+                                                    off_sp,
+                                                    rec_sp,
+                                                    self.player_name.clone(),
+                                                    is_zh,
+                                                ));
+                                            self.pending_trade = Some(PendingTrade {
+                                                give: off_sp,
+                                                receive: rec_sp,
+                                                nickname: nick,
+                                            });
+                                            true
+                                        }
+                                } else {
+                                    false
+                                };
+                                if !ok {
+                                    // Offered mon not in the party (or bad
+                                    // species): the scene takes its no-trade
+                                    // branch, no cutscene. Deferred to after
+                                    // the drain loop (borrow conflict).
+                                    trade_rejected = true;
+                                }
+                            }
+                            OverworldGameDataRequest::GiveCoins { amount } => {
+                                self.save_data.game_data.give_coins(amount);
+                            }
+                            OverworldGameDataRequest::TakeCoins { amount } => {
+                                self.save_data.game_data.take_coins(amount);
+                            }
+                            OverworldGameDataRequest::TickDaycareExp => {
+                                self.save_data.game_data.tick_daycare_exp();
+                            }
+                            OverworldGameDataRequest::PoisonStep => {
+                                pokered_core::overworld::poison::apply_out_of_battle_poison_damage(
+                                    &mut self.save_data,
+                                    &mut self.overworld,
+                                );
+                            }
+                            OverworldGameDataRequest::DepositDaycare { index } => {
+                                self.save_data.deposit_daycare(index);
+                                self.overworld.party_count =
+                                    self.save_data.party.count() as u8;
+                                self.overworld.party_lead_level =
+                                    self.save_data.party.leader_level();
+                            }
+                            OverworldGameDataRequest::WithdrawDaycare => {
+                                self.save_data.withdraw_daycare();
+                                self.overworld.party_count =
+                                    self.save_data.party.count() as u8;
+                                self.overworld.party_lead_level =
+                                    self.save_data.party.leader_level();
+                            }
+                        }
+                    }
+                    if trade_rejected {
+                        self.overworld.resume_script_after_trade(false);
+                    }
+    }
+
     /// Full structured state snapshot for the debug protocol's `get_state`
     /// (and the payload of `wait_until` / `skip_dialogue` responses).
     #[cfg(feature = "debug-server")]
@@ -5790,6 +5886,82 @@ impl PokemonGame {
         })
     }
 
+    /// Typed semantic observation snapshot (the `pokered-agent` M1 layer),
+    /// built from the same live sources as [`Self::debug_state_snapshot`].
+    /// Pure observation: reads state, never steps frames. Not gated on
+    /// `debug-server` — the observation logic is pure and reusable; only
+    /// the debug-command surface is feature-gated. Hosted-only: the
+    /// pokered-agent layer is excluded from bare-metal (GBA) builds.
+    #[cfg(not(target_os = "none"))]
+    pub fn agent_snapshot(
+        &self,
+        profile: &pokered_agent::ObservationProfile,
+    ) -> pokered_agent::AgentSnapshot {
+        use pokered_agent::{ObservationSource, OverworldObs};
+        let map_id = self.overworld.state.current_map;
+        let bag = self.save_data.game_data.bag.items();
+        let hidden = pokered_agent::hidden_item_spots(map_id, self.overworld.hidden_item_flags());
+        let in_battle = matches!(self.state.screen, GameScreen::Battle);
+        let map_handle = pokered_data::map_data_loader::get_map_json(map_id);
+        let src = ObservationSource {
+            screen: &self.state.screen,
+            map_id,
+            player_x: self.overworld.state.player.x,
+            player_y: self.overworld.state.player.y,
+            player_facing: self.overworld.state.player.facing,
+            overworld: OverworldObs {
+                dialogue_open: self.overworld.pending_dialogue.is_some(),
+                choice_open: self.overworld.pending_choice.is_some(),
+                script_running: !self.overworld.script_engine_idle()
+                    || self.overworld.active_script_effect_label().is_some()
+                    || self.overworld.script_awaiting_battle,
+                warp_transition: self.overworld.pending_warp.is_some()
+                    || !matches!(
+                        self.overworld.warp_fade_state,
+                        pokered_core::overworld::WarpFadeState::Idle
+                    ),
+            },
+            battle_phase: in_battle.then_some(&self.battle.phase),
+            party: &self.save_data.party,
+            bag: &bag,
+            obtained_badges: self.save_data.game_data.obtained_badges,
+            dialogue: self.overworld.pending_dialogue.as_ref(),
+            choice: self.overworld.pending_choice.as_ref(),
+            battle: in_battle.then_some(&self.battle),
+            npc_states: &self.overworld.npc_states,
+            map_json: map_handle.as_ref().map(|h| &**h),
+            hidden_items: &hidden,
+            nearby_radius: profile.nearby_radius,
+        };
+        pokered_agent::build_agent_snapshot(&src, profile)
+    }
+
+    /// Entities near the player within `radius` step units, nearest first
+    /// (same aggregation as the snapshot's `nearby` section).
+    #[cfg(not(target_os = "none"))]
+    pub fn agent_nearby(&self, radius: i32) -> Vec<pokered_agent::NearbyEntity> {
+        let map_id = self.overworld.state.current_map;
+        let player = pokered_agent::Position {
+            x: self.overworld.state.player.x as i32,
+            y: self.overworld.state.player.y as i32,
+        };
+        let npcs: Vec<pokered_agent::NpcObs> = self
+            .overworld
+            .npc_states
+            .iter()
+            .map(pokered_agent::NpcObs::from)
+            .collect();
+        let hidden = pokered_agent::hidden_item_spots(map_id, self.overworld.hidden_item_flags());
+        let map_handle = pokered_data::map_data_loader::get_map_json(map_id);
+        pokered_agent::nearby_entities(
+            player,
+            &npcs,
+            map_handle.as_ref().map(|h| &**h),
+            &hidden,
+            radius,
+        )
+    }
+
     /// Predicate used by the debug `wait_until` command. Returns whether
     /// the named condition currently holds. Named conditions are the
     /// driver-facing vocabulary; `screen=` / `battle_phase=` /
@@ -5869,6 +6041,245 @@ impl PokemonGame {
         match cmd {
             DebugCommand::Core(CoreDebugCommand::GetState) => {
                 DebugResponse::ok_with_data(self.debug_state_snapshot())
+            }
+            DebugCommand::Game(GameDebugCommand::GetAgentState { level, profile }) => {
+                // Validate params up front: `level` (1-4) selects a canned
+                // profile, `profile` supplies one verbatim; both is a
+                // caller error. No frames are stepped — pure observation.
+                let profile = match (level, profile) {
+                    (Some(_), Some(_)) => {
+                        return DebugResponse::err(
+                            "pass either `level` or `profile`, not both".to_string(),
+                        )
+                    }
+                    (Some(level), None) => {
+                        match pokered_agent::ObservationLevel::from_u8(level) {
+                            Some(level) => pokered_agent::ObservationProfile::for_level(level),
+                            None => {
+                                return DebugResponse::err(format!(
+                                    "unknown observation level: {level} (expected 1-4)"
+                                ))
+                            }
+                        }
+                    }
+                    (None, Some(profile)) => {
+                        match serde_json::from_value::<pokered_agent::ObservationProfile>(profile)
+                        {
+                            Ok(profile) => profile,
+                            Err(err) => {
+                                return DebugResponse::err(format!("invalid profile: {err}"))
+                            }
+                        }
+                    }
+                    (None, None) => pokered_agent::ObservationProfile::default(),
+                };
+                DebugResponse::ok_with_data(
+                    serde_json::to_value(self.agent_snapshot(&profile)).unwrap_or_default(),
+                )
+            }
+            DebugCommand::Game(GameDebugCommand::GetNearby { radius }) => {
+                let radius = radius
+                    .unwrap_or(pokered_agent::DEFAULT_NEARBY_RADIUS as u32)
+                    as i32;
+                let map_id = self.overworld.state.current_map;
+                let entities = self.agent_nearby(radius);
+                DebugResponse::ok_with_data(serde_json::json!({
+                    "map": { "id": map_id as u8, "name": format!("{:?}", map_id) },
+                    "position": {
+                        "x": self.overworld.state.player.x,
+                        "y": self.overworld.state.player.y,
+                    },
+                    "radius": radius,
+                    "entities": entities,
+                }))
+            }
+            DebugCommand::Game(GameDebugCommand::MoveTo { x, y }) => {
+                // Synchronous closed-loop walk (see agent_nav.rs): the
+                // outcome plus fresh snapshots, same convention as
+                // wait_until. Param bounds are inherent (u16); map-bounds
+                // and reachability report as `blocked` outcomes.
+                let outcome = self.agent_move_to(x, y);
+                let mut data = serde_json::to_value(&outcome).unwrap_or_default();
+                if let Some(obj) = data.as_object_mut() {
+                    obj.insert(
+                        "map".to_string(),
+                        serde_json::json!(format!("{:?}", self.overworld.state.current_map)),
+                    );
+                    obj.insert("state".to_string(), self.debug_state_snapshot());
+                    obj.insert(
+                        "agent_state".to_string(),
+                        serde_json::to_value(
+                            self.agent_snapshot(&pokered_agent::ObservationProfile::default()),
+                        )
+                        .unwrap_or_default(),
+                    );
+                }
+                DebugResponse::ok_with_data(data)
+            }
+            DebugCommand::Game(GameDebugCommand::Interact) => {
+                let outcome = self.agent_interact();
+                let mut data = serde_json::to_value(&outcome).unwrap_or_default();
+                if let Some(obj) = data.as_object_mut() {
+                    obj.insert(
+                        "map".to_string(),
+                        serde_json::json!(format!("{:?}", self.overworld.state.current_map)),
+                    );
+                    obj.insert("state".to_string(), self.debug_state_snapshot());
+                    obj.insert(
+                        "agent_state".to_string(),
+                        serde_json::to_value(
+                            self.agent_snapshot(&pokered_agent::ObservationProfile::default()),
+                        )
+                        .unwrap_or_default(),
+                    );
+                }
+                DebugResponse::ok_with_data(data)
+            }
+            DebugCommand::Game(GameDebugCommand::InteractWith { ref id }) => {
+                let outcome = self.agent_interact_with(id);
+                let mut data = serde_json::to_value(&outcome).unwrap_or_default();
+                if let Some(obj) = data.as_object_mut() {
+                    obj.insert(
+                        "map".to_string(),
+                        serde_json::json!(format!("{:?}", self.overworld.state.current_map)),
+                    );
+                    obj.insert("state".to_string(), self.debug_state_snapshot());
+                    obj.insert(
+                        "agent_state".to_string(),
+                        serde_json::to_value(
+                            self.agent_snapshot(&pokered_agent::ObservationProfile::default()),
+                        )
+                        .unwrap_or_default(),
+                    );
+                }
+                DebugResponse::ok_with_data(data)
+            }
+            DebugCommand::Game(GameDebugCommand::GetWorldGraph { ref maps }) => {
+                // Validate the scope filter up front.
+                let scope: Option<Vec<pokered_data::maps::MapId>> = match maps {
+                    Some(names) => {
+                        let mut resolved = Vec::with_capacity(names.len());
+                        for name in names {
+                            match pokered_data::map_data_loader::resolve_map_id(name) {
+                                Some(id) => resolved.push(id),
+                                None => {
+                                    return DebugResponse::err(format!(
+                                        "unknown map: '{name}'"
+                                    ))
+                                }
+                            }
+                        }
+                        Some(resolved)
+                    }
+                    None => None,
+                };
+                let graph = pokered_agent::WorldGraph::shared();
+                let edges: Vec<&pokered_agent::WorldEdge> = match scope {
+                    Some(ids) => ids
+                        .iter()
+                        .flat_map(|&id| graph.edges_from(id))
+                        .collect(),
+                    None => graph.edges().iter().collect(),
+                };
+                DebugResponse::ok_with_data(serde_json::json!({
+                    "edge_count": edges.len(),
+                    "edges": edges,
+                }))
+            }
+            DebugCommand::Game(GameDebugCommand::FindWorldRoute { ref from, ref to }) => {
+                let from_id = pokered_data::map_data_loader::resolve_map_id(from);
+                let to_id = pokered_data::map_data_loader::resolve_map_id(to);
+                let (from_id, to_id) = match (from_id, to_id) {
+                    (Some(from_id), Some(to_id)) => (from_id, to_id),
+                    (None, _) => return DebugResponse::err(format!("unknown map: '{from}'")),
+                    (_, None) => return DebugResponse::err(format!("unknown map: '{to}'")),
+                };
+                let route = pokered_agent::WorldGraph::shared().find_route(from_id, to_id);
+                DebugResponse::ok_with_data(serde_json::json!({
+                    "from": format!("{:?}", from_id),
+                    "to": format!("{:?}", to_id),
+                    "found": route.is_some(),
+                    "legs": route.unwrap_or_default(),
+                }))
+            }
+            DebugCommand::Game(GameDebugCommand::TravelTo { ref map }) => {
+                let Some(dest) = pokered_data::map_data_loader::resolve_map_id(map) else {
+                    return DebugResponse::err(format!("unknown map: '{map}'"));
+                };
+                let outcome = self.agent_travel_to(dest);
+                let mut data = serde_json::to_value(&outcome).unwrap_or_default();
+                if let Some(obj) = data.as_object_mut() {
+                    obj.insert("state".to_string(), self.debug_state_snapshot());
+                    obj.insert(
+                        "agent_state".to_string(),
+                        serde_json::to_value(
+                            self.agent_snapshot(&pokered_agent::ObservationProfile::default()),
+                        )
+                        .unwrap_or_default(),
+                    );
+                }
+                DebugResponse::ok_with_data(data)
+            }
+            DebugCommand::Game(GameDebugCommand::SetSeed { seed }) => {
+                self.set_seed(seed);
+                DebugResponse::ok_with_data(serde_json::json!({ "seed": seed }))
+            }
+            DebugCommand::Game(GameDebugCommand::SaveState { slot }) => {
+                match self.agent_save_state_slot(slot) {
+                    Ok(hash) => DebugResponse::ok_with_data(serde_json::json!({
+                        "slot": slot,
+                        "hash": hash,
+                        "screen": crate::cli::screen_name(&self.state.screen),
+                        "frame_count": self.frame_count,
+                        "seed": self.seed,
+                    })),
+                    Err(err) => DebugResponse::err(err.message()),
+                }
+            }
+            DebugCommand::Game(GameDebugCommand::RestoreState { slot }) => {
+                match self.agent_restore_state_slot(slot) {
+                    Ok(hash) => DebugResponse::ok_with_data(serde_json::json!({
+                        "slot": slot,
+                        "hash": hash,
+                        "restored": true,
+                        "state": self.debug_state_snapshot(),
+                        "agent_state": serde_json::to_value(
+                            self.agent_snapshot(&pokered_agent::ObservationProfile::default()),
+                        )
+                        .unwrap_or_default(),
+                    })),
+                    Err(err) => DebugResponse::err(err.message()),
+                }
+            }
+            DebugCommand::Game(GameDebugCommand::GetScriptSemantics { ref map }) => {
+                match map {
+                    Some(name) => {
+                        // Validate the map exists in world data first so a
+                        // typo is a clean error, not an empty payload.
+                        if pokered_data::map_data_loader::resolve_map_id(name).is_none()
+                            && !name.starts_with("shared/")
+                        {
+                            return DebugResponse::err(format!("unknown map: '{name}'"));
+                        }
+                        match pokered_agent::extract_map_semantics(name) {
+                            Some(semantics) => DebugResponse::ok_with_data(
+                                serde_json::to_value(semantics).unwrap_or_default(),
+                            ),
+                            None => DebugResponse::err(format!(
+                                "no scene script for map: '{name}'"
+                            )),
+                        }
+                    }
+                    None => {
+                        let world = pokered_agent::generate_world_semantics();
+                        let maps: Vec<&str> =
+                            world.maps.iter().map(|m| m.map.as_str()).collect();
+                        DebugResponse::ok_with_data(serde_json::json!({
+                            "coverage": world.coverage,
+                            "maps": maps,
+                        }))
+                    }
+                }
             }
             DebugCommand::Game(GameDebugCommand::WaitUntil {
                 ref condition,

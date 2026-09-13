@@ -43,6 +43,39 @@ impl BattleRng for RandBattleRng {
     }
 }
 
+/// A persistent, seedable battle RNG stream (agent M5). Held on
+/// [`BattleScreen`](crate::battle::BattleScreen) so every draw in every
+/// turn comes from one continuing stream: seeding it makes battle
+/// outcomes reproducible, and its state round-trips through frame-level
+/// save/restore. Draws are `gen::<u8>()` from the underlying
+/// [`crate::rng::SeededRng`] (SmallRng on every target) — same byte
+/// distribution as [`RandBattleRng`], so unseeded behavior (constructed
+/// from entropy) is unchanged. Serde is derived on hosted targets only
+/// (the snapshot layer it round-trips through is compiled out on bare
+/// metal, and the serde-capable RNG is unavailable there).
+#[derive(Debug, Clone)]
+#[cfg_attr(not(target_os = "none"), derive(serde::Serialize, serde::Deserialize))]
+pub struct StdBattleRng(pub crate::rng::SeededRng);
+
+impl StdBattleRng {
+    pub fn from_entropy() -> Self {
+        use rand::SeedableRng;
+        Self(crate::rng::SeededRng::from_entropy())
+    }
+
+    pub fn from_seed(seed: u64) -> Self {
+        use rand::SeedableRng;
+        Self(crate::rng::SeededRng::seed_from_u64(seed))
+    }
+}
+
+impl BattleRng for StdBattleRng {
+    fn next_u8(&mut self) -> u8 {
+        use rand::Rng;
+        self.0.gen()
+    }
+}
+
 /// The `MoveData` for a move logged in a `MoveUsed` event (always a real move).
 fn move_data(m: MoveId) -> MoveData {
     *MoveData::get(m).unwrap_or_else(|| MoveData::get(MoveId::Tackle).unwrap())

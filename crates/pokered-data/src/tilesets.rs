@@ -18,7 +18,7 @@ pub const NUM_TILESETS: usize = NUM_BUILTIN_TILESETS;
 /// (palettes, counter/grass tiles, animations, door/warp/spinner behaviour)
 /// from a built-in *base* tileset; only the block arrangement and (optionally)
 /// the passable-tile list are unique per custom tileset.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, serde::Serialize, serde::Deserialize)]
 pub enum TilesetId {
     Overworld,
     RedsHouse1,

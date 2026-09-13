@@ -1,0 +1,22 @@
+{
+  "id": "talk-to-oak",
+  "name": "Hear Oak's starter offer in his lab",
+  "tier": 1,
+  "initial_state": {
+    "warp": "PalletTown,10,6"
+  },
+  "seed": 42,
+  "setup": {
+    "flags": {
+      "EVENT_OAK_APPEARED_IN_PALLET": true
+    },
+    "party": []
+  },
+  "goal": {
+    "type": "flag",
+    "id": "EVENT_OAK_ASKED_TO_CHOOSE_MON"
+  },
+  "allowed_actions": "semantic",
+  "max_steps": 40,
+  "note": "The ask flag (EVENT_OAK_ASKED_TO_CHOOSE_MON) is set by the lab's on-entry OakChooseMonSpeech, which requires EVENT_OAK_APPEARED_IN_PALLET set and EVENT_FOLLOWED_OAK_INTO_LAB unset \u2014 the setup reproduces the post-escort, pre-speech state."
+}

@@ -10,7 +10,10 @@ use pokered_data::tilesets::TilesetId;
 
 /// Underground entrance scripts explicitly set wLastMap even when entered
 /// from the indoor tunnel (scripts/UndergroundPathRoute{5,6,7,8}.asm).
-pub(crate) fn scripted_last_map(map: MapId) -> Option<MapId> {
+///
+/// `pub` so the agent world graph can statically resolve LAST_MAP warps
+/// with the same overrides (M3); no behavior change.
+pub fn scripted_last_map(map: MapId) -> Option<MapId> {
     match map {
         MapId::UndergroundPathRoute5 => Some(MapId::Route5),
         MapId::UndergroundPathRoute6 => Some(MapId::Route6),

@@ -126,3 +126,7 @@ scripts/.playthrough.sav
 *.gba
 *.sav
 crates/pokered-gba/target/
+
+# kimi-code local config (machine-specific absolute paths)
+.kimi-code/
+

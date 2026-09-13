@@ -3387,6 +3387,14 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
     }
 
     pub(crate) fn load_map_script(&mut self, map_id: MapId) {
+        self.load_map_script_ex(map_id, true);
+    }
+
+    /// `load_map_script` with an on-load fire switch: frame-level
+    /// snapshot restore (agent M5) rebuilds functions/triggers through
+    /// this path but must NOT fire `@load` (the restored storyline state
+    /// is authoritative; re-firing would double-apply its effects).
+    pub(crate) fn load_map_script_ex(&mut self, map_id: MapId, fire_on_load: bool) {
         self.sync_flags_from_engine();
 
         let map_key = script_bridge::map_id_to_script_key(map_id);
@@ -3456,23 +3464,25 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
         self.script_engine
             .seed_flags(&self.unified_flags.to_hashmap());
 
-        if let Some(fn_name) = self.map_script_config.on_load() {
-            log::info!(target: "pokered::overworld", "[Script] on_load function: {}", fn_name);
-            if self.script_engine.has_function(fn_name) {
-                log::info!(target: "pokered::overworld", "[Script] Calling on_load: {}", fn_name);
-                self.script_engine
-                    .set_player_position(self.state.player.x as u8, self.state.player.y as u8);
-                if let Ok(Some(cmd)) = self.script_engine.call_function_no_args(fn_name) {
-                    self.active_script_effect = Some(script_bridge::dispatch_command_with_names(
-                        &cmd,
-                        &self.player_name,
-                        &self.rival_name,
-                        &self.starter_display_name(),
-                    ));
+        if fire_on_load {
+            if let Some(fn_name) = self.map_script_config.on_load() {
+                log::info!(target: "pokered::overworld", "[Script] on_load function: {}", fn_name);
+                if self.script_engine.has_function(fn_name) {
+                    log::info!(target: "pokered::overworld", "[Script] Calling on_load: {}", fn_name);
+                    self.script_engine
+                        .set_player_position(self.state.player.x as u8, self.state.player.y as u8);
+                    if let Ok(Some(cmd)) = self.script_engine.call_function_no_args(fn_name) {
+                        self.active_script_effect = Some(script_bridge::dispatch_command_with_names(
+                            &cmd,
+                            &self.player_name,
+                            &self.rival_name,
+                            &self.starter_display_name(),
+                        ));
+                    }
+                    self.sync_flags_from_engine();
+                } else {
+                    log::warn!(target: "pokered::overworld", "[Script] on_load function '{}' not found in module", fn_name);
                 }
-                self.sync_flags_from_engine();
-            } else {
-                log::warn!(target: "pokered::overworld", "[Script] on_load function '{}' not found in module", fn_name);
             }
         }
 

@@ -1,0 +1,15 @@
+{
+  "objectives": [
+    { "id": "get-starter", "name": "Choose a starter Pokémon", "satisfied_when": { "flag": "EVENT_GOT_STARTER" } },
+    { "id": "get-pokedex", "name": "Receive the Pokédex from Prof. Oak", "satisfied_when": { "flag": "EVENT_GOT_POKEDEX" } },
+    { "id": "beat-brock", "name": "Defeat Brock, the Pewter Gym Leader", "satisfied_when": { "flag": "EVENT_BEAT_BROCK" } },
+    { "id": "beat-misty", "name": "Defeat Misty, the Cerulean Gym Leader", "satisfied_when": { "flag": "EVENT_BEAT_MISTY" } },
+    { "id": "beat-lt-surge", "name": "Defeat Lt. Surge, the Vermilion Gym Leader", "satisfied_when": { "flag": "EVENT_BEAT_LT_SURGE" } },
+    { "id": "beat-erika", "name": "Defeat Erika, the Celadon Gym Leader", "satisfied_when": { "flag": "EVENT_BEAT_ERIKA" } },
+    { "id": "beat-koga", "name": "Defeat Koga, the Fuchsia Gym Leader", "satisfied_when": { "flag": "EVENT_BEAT_KOGA" } },
+    { "id": "beat-sabrina", "name": "Defeat Sabrina, the Saffron Gym Leader", "satisfied_when": { "flag": "EVENT_BEAT_SABRINA" } },
+    { "id": "beat-blaine", "name": "Defeat Blaine, the Cinnabar Gym Leader", "satisfied_when": { "flag": "EVENT_BEAT_BLAINE" } },
+    { "id": "beat-giovanni", "name": "Defeat Giovanni, the Viridian Gym Leader", "satisfied_when": { "flag": "EVENT_BEAT_VIRIDIAN_GYM_GIOVANNI" } },
+    { "id": "become-champion", "name": "Defeat the Champion and enter the Hall of Fame", "satisfied_when": { "flag": "EVENT_BEAT_CHAMPION_RIVAL" } }
+  ]
+}

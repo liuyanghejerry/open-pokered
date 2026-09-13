@@ -1,5 +1,5 @@
 use crate::alloc_prelude::*;
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, serde::Serialize, serde::Deserialize)]
 #[repr(u8)]
 #[allow(non_camel_case_types)]
 pub enum MusicId {

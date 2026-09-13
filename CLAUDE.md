@@ -38,6 +38,8 @@ crates/
 ├── pokered-web/           # Full game for WASM/browser (wgpu/pixels)
 ├── pokered-runner-web/    # Headless WASM bridge for the editor's Play activity
 ├── pokered-debug-server/  # TCP debug server (JSON-line protocol); `debug-server` feature
+├── pokered-agent/         # AI-agent observation layer: AgentMode classifier, typed
+│                          #   AgentSnapshot, nearby-entity aggregation, ObservationProfile
 ├── pokered-mobile/        # Shared Android/HarmonyOS ABI adapter
 ├── pokered-ios/           # iOS shell (staticlib)
 └── scene_apply/           # Story-translation helper: .scene → script_config.json
@@ -131,15 +133,77 @@ cargo run --release --bin pokered-app --features debug-server -- run --debug-por
 # debug server; the `step_frames` command gives synchronous, deterministic
 # frame control (unlike `run_frames`, which only schedules on the real-time loop).
 cargo run --release --bin pokered-app --features debug-server -- run --headless --debug-port 9000 --skip-intro --warp PalletTown,10,5
+
+# Determinism (agent M5): pin both RNG streams from boot with --seed, then
+# fork/replay frames exactly via save_state/restore_state slots.
+cargo run --release --bin pokered-app --features debug-server -- run --headless --debug-port 9000 --skip-intro --seed 42
 ```
 
 Debug-server protocol (JSON-line over TCP): `get_state`, `get_position`,
 `get_party`, `get_bag`, `get_flags`, `get_npcs`, `warp`, `press`,
 `press_sequence`, `run_frames`, `step_frames`, `save`, `set_flag`,
-`give_item`, `give_pokemon`, `start_wild_battle`. `get_state` also reports
+`give_item`, `give_pokemon`, `start_wild_battle`, `get_agent_state`,
+`get_nearby`, `move_to`, `interact`, `interact_with`, `get_world_graph`,
+`find_world_route`, `travel_to`, `get_script_semantics`, `set_seed`,
+`save_state`, `restore_state`. `get_state` also reports
 `active_script_effect`, `script_awaiting_battle`, `player_movement_state`,
-`dialogue`, and battle phase/message. A minimal Python client lives at
-`scripts/debug_drive.py`.
+`dialogue`, and battle phase/message. `get_agent_state` (optional `level`
+1-4 or `profile`) returns the typed `pokered-agent` semantic snapshot
+(mode/map/position/party/bag/badges/dialogue/battle/nearby);
+`get_nearby` (optional `radius`, default 10 step units) returns the
+distance-sorted nearby entities. `move_to {x, y}` is a closed-loop walk
+(BFS over the game's own collision, one verified tile at a time) that
+reports `reached`/`blocked`/`interrupted`/`entered_battle`/
+`entered_dialogue`/`map_changed`; `interact` / `interact_with {id}`
+(face + A on an adjacent entity or a `get_nearby` id) report
+`dialogue`/`battle`/`nothing`/`blocked`/`not_found`/….
+`get_world_graph` (optional `maps` filter) exposes the M3 geographic
+world graph (connections + warps, LAST_MAP candidates resolved);
+`find_world_route {from, to}` returns the map-level legs;
+`travel_to {map}` executes the route end-to-end (tile-level routing with
+warp transit, wild battles auto-run, trainer battles auto-fought) and
+reports `reached`/`blocked`/`entered_battle`/`interrupted`/
+`map_mismatch`/`blackout`/`invalid_target`. `get_script_semantics {map?}`
+returns the M4 static scene semantics (per-storyline flag/item/battle/
+warp `reads`/`effects`; coverage summary when unscoped) — the generated
+event graph lives at `crates/pokered-data/story/graph.json` and the full
+payload at `target/agent/world_semantics.json`, both refreshed via
+`cargo run -p pokered-agent --bin gen_event_graph`. `set_seed {seed}`
+pins both RNG streams (runtime form of `--seed`);
+`save_state {slot}` / `restore_state {slot}` capture and restore the
+full frame-level runtime (save data + screen + overworld/battle
+internals + RNG state) with a content hash for identity assertions —
+overworld/battle screens only; menus and mid-movie takeovers error
+cleanly. A minimal Python client lives at `scripts/debug_drive.py`.
+The M6 experiment adapter builds on it at `scripts/openpoke/` — typed
+client, Gym-style env, task specs (`tasks/*.json`), run metrics
+(`target/agent/runs/*.jsonl`), skill actions, and a rule-based oracle
+planner. Run a task with `python3 scripts/openpoke/run_task.py
+<task.json|all>` (needs a `--features debug-server` binary); unit tests:
+`python3 -m unittest scripts.test_openpoke`.
+RQ1 calibration (`calibrate_rq1.py`) runs the tier matrix — T3 oracle,
+T2 `LocalExplorer`, T1 `ButtonRandomWalk` (`policies.py`) — over task ×
+seed into `target/agent/runs/rq1/` with a SUMMARY.md pivot; unit tests:
+`python3 -m unittest scripts.test_openpoke_rq1`. Experiment runs pass
+`--speed 0` (driven-only headless: game frames advance ONLY inside
+synchronous debug commands — wall-clock-insensitive frame determinism
+and ~10x lower command latency; `--speed N≥1` merely divides the
+16.7ms idle sleep).
+M7 adds world variants for generalization experiments (RQ3), as PURE
+DATA: `variants.py` copies `crates/pokered-data/maps/` and applies seeded
+mutations (encounter-table permutation, level-capped trainer re-rolls,
+wandering-NPC/item-ball relocation, bidirectionally-consistent door-warp
+shuffles) with a `variant.json` manifest; a spawned game loads a variant
+via `POKERED_MAPS_DIR` + `--scripts-dir` (the desktop build reads map
+data/scenes from the filesystem; `run_task.py --maps-dir` threads it
+through). `validate_variant.py` proves completability: static checks over
+a graph/walkability dump of the variant (`cargo run -p pokered-agent
+--bin dump_world_data` — key routes BFS, warp-pair integrity, no orphan
+towns, item grabbability) plus in-game smoke runs of the reach tasks.
+Generate/validate: `python3 scripts/openpoke/variants.py <profile>
+--seed N` then `python3 scripts/openpoke/validate_variant.py
+target/agent/variants/<name>`; unit tests: `python3 -m unittest
+scripts.test_openpoke_variants`.
 
 Screen targets: `copyright title main-menu oak overworld battle start-menu options save`.
 

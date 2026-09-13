@@ -40,7 +40,7 @@ pub enum BattleMenuAction {
 /// Layout used by renderer/menu UI:
 ///   (0,0)=FIGHT   (0,1)=POKeMON
 ///   (1,0)=BAG     (1,1)=RUN
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct BattleMenuState {
     row: usize,
     col: usize,
@@ -168,7 +168,7 @@ pub enum SafariMenuAction {
     Run,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct SafariBattleMenuState {
     row: usize,
     col: usize,
@@ -234,7 +234,7 @@ pub enum MoveMenuResult {
     Disabled(usize),
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(serde::Serialize, serde::Deserialize, Debug, Clone, Copy, PartialEq, Eq)]
 pub struct MoveSlot {
     pub move_id: MoveId,
     pub current_pp: u8,
@@ -242,7 +242,7 @@ pub struct MoveSlot {
     pub is_disabled: bool,
 }
 
-#[derive(Debug, Clone)]
+#[derive(serde::Serialize, serde::Deserialize, Debug, Clone)]
 pub struct MoveMenuState {
     moves: Vec<MoveSlot>,
     cursor: usize,
@@ -343,7 +343,7 @@ pub enum PartySubMenuAction {
 }
 
 /// Party submenu state for SWITCH/STATS/CANCEL selection.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct PartySubMenuState {
     cursor: usize,
 }
@@ -401,7 +401,7 @@ pub enum BagMenuResult {
 
 /// Bag/Item menu state for selecting items during battle.
 /// Vertical list of items, navigated with up/down.
-#[derive(Clone)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct BagMenuState {
     /// Items available in the bag (from player's inventory).
     items: Vec<(ItemId, u8)>,

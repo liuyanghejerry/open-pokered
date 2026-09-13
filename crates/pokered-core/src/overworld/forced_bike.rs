@@ -45,7 +45,7 @@ pub const FORCED_SURF_TILES: &[(MapId, u8, u8)] = &[
 ];
 
 /// What a map entry did to the player's transport state.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(serde::Serialize, serde::Deserialize, Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ForcedBikeMapEntry {
     /// Nothing to change (not a forced tile, or already on the bike).
     Keep,
@@ -64,7 +64,7 @@ pub enum ForcedBikeMapEntry {
 /// the bike and cannot SURF; the lock survives connection walks (the whole
 /// road keeps you on the bike) and is released by the gates, FLY/DIG/TELEPORT
 /// and blackout.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+#[derive(serde::Serialize, serde::Deserialize, Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub struct ForcedBikeState {
     /// Whether `BIT_ALWAYS_ON_BIKE` is currently set.
     pub active: bool,

@@ -1,0 +1,12 @@
+[package]
+name = "pokered-agent"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+pokered-core = { path = "../pokered-core" }
+pokered-data = { path = "../pokered-data" }
+dotzuki-engine-dsl = { git = "https://github.com/liuyanghejerry/dotzuki", branch = "feat/agent-serde" }
+serde = { workspace = true }
+serde_json = { workspace = true }
