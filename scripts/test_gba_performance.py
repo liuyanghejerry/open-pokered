@@ -149,7 +149,7 @@ class GbaPerformanceTests(unittest.TestCase):
             workflow,
         )
         self.assertIn("SDL_AUDIODRIVER: dummy", workflow)
-        self.assertIn("MGBA_COMMAND: xvfb-run -a stdbuf -oL -eL mgba", workflow)
+        self.assertIn("MGBA_COMMAND: xvfb-run -a stdbuf -oL -eL mgba-qt", workflow)
 
 
 if __name__ == "__main__":

@@ -67,8 +67,8 @@ jobs:
           sudo apt-get update
           sudo apt-get install -yq xvfb \
             "$RUNNER_TEMP/$MGBA_DIR/libmgba.deb" \
-            "$RUNNER_TEMP/$MGBA_DIR/mgba-sdl.deb"
-          mgba --version
+            "$RUNNER_TEMP/$MGBA_DIR/mgba-qt.deb"
+          mgba-qt --version
 
       - name: Cache Cargo registry and GBA benchmark build
         if: steps.changes.outputs.has-changes == 'true'
@@ -91,11 +91,11 @@ jobs:
       - name: Record and compare GBA hardware-timer baseline
         if: steps.changes.outputs.has-changes == 'true'
         env:
-          # Ubuntu runners have no sound device, and mGBA's SDL frontend waits
-          # indefinitely after ALSA initialization fails. Its C stdout is also
-          # block-buffered through a pipe, so force line buffering for metrics.
+          # Ubuntu runners have no sound device, so keep mGBA's audio backend
+          # off ALSA. Its C stdout is block-buffered through a pipe, so force
+          # line buffering for metrics.
           SDL_AUDIODRIVER: dummy
-          MGBA_COMMAND: xvfb-run -a stdbuf -oL -eL mgba
+          MGBA_COMMAND: xvfb-run -a stdbuf -oL -eL mgba-qt
         run: |
           timeout --signal=TERM 2m python3 scripts/gba_performance.py record \
             --rom crates/pokered-gba/target/thumbv4t-none-eabi/release/pokered-gba.gba \
