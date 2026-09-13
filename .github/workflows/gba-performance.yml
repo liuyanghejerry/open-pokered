@@ -1,0 +1,120 @@
+name: GBA performance
+
+on:
+  # This workflow intentionally runs for every PR so its status check can be
+  # required by branch protection. The job exits successfully and cheaply when
+  # the PR cannot affect the GBA ROM.
+  pull_request:
+
+permissions:
+  contents: read
+  pull-requests: read
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  performance:
+    name: GBA performance baseline
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - name: Checkout candidate
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check whether the PR can affect GBA performance
+        id: changes
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          if git diff --quiet "$BASE_SHA" "$HEAD_SHA" -- \
+            Cargo.toml Cargo.lock .cargo crates/pokered-gba crates/pokered-app crates/pokered-audio \
+            crates/pokered-core crates/pokered-data crates/pokered-platform \
+            crates/pokered-renderer crates/pokered-ui scripts/fetch-gfx.sh \
+            scripts/gba_performance.py scripts/test_gba_performance.py vendor/ron \
+            .github/workflows/gba-performance.yml; then
+            echo "has-changes=false" >> "$GITHUB_OUTPUT"
+            echo "No GBA-relevant changes; performance gate passes without sampling."
+          else
+            echo "has-changes=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Fetch gfx assets
+        if: steps.changes.outputs.has-changes == 'true'
+        run: ./scripts/fetch-gfx.sh
+
+      - name: Install Rust nightly
+        if: steps.changes.outputs.has-changes == 'true'
+        uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: nightly-2025-12-07
+          components: rust-src
+
+      - name: Install agb-gbafix and mGBA
+        if: steps.changes.outputs.has-changes == 'true'
+        run: |
+          cargo install agb-gbafix --version 0.25.0 --locked
+          MGBA_VERSION=0.10.5
+          MGBA_ARCHIVE="mGBA-${MGBA_VERSION}-ubuntu64-noble.tar.xz"
+          MGBA_DIR="mGBA-${MGBA_VERSION}-ubuntu64-noble"
+          MGBA_URL="https://github.com/mgba-emu/mgba/releases/download/${MGBA_VERSION}/${MGBA_ARCHIVE}"
+          curl --fail --location --retry 3 "$MGBA_URL" --output "$RUNNER_TEMP/$MGBA_ARCHIVE"
+          echo "0bbf1e7ca511cd4b443239b97546f699df72211241a1db9177e331866031d8e9  $RUNNER_TEMP/$MGBA_ARCHIVE" \
+            | sha256sum --check
+          tar --extract --xz --file "$RUNNER_TEMP/$MGBA_ARCHIVE" --directory "$RUNNER_TEMP"
+          sudo apt-get update
+          sudo apt-get install -yq xvfb \
+            "$RUNNER_TEMP/$MGBA_DIR/libmgba.deb" \
+            "$RUNNER_TEMP/$MGBA_DIR/mgba-qt.deb"
+          mgba-qt --version
+
+      - name: Cache Cargo registry and GBA benchmark build
+        if: steps.changes.outputs.has-changes == 'true'
+        uses: Swatinem/rust-cache@v2
+        with:
+          key: gba-performance
+          workspaces: crates/pokered-gba -> target
+
+      - name: Test performance-gate tooling
+        if: steps.changes.outputs.has-changes == 'true'
+        run: python3 -m unittest scripts/test_gba_performance.py
+
+      - name: Build candidate benchmark ROM
+        if: steps.changes.outputs.has-changes == 'true'
+        working-directory: crates/pokered-gba
+        run: |
+          cargo +nightly-2025-12-07 build --release --features perf-benchmark
+          agb-gbafix target/thumbv4t-none-eabi/release/pokered-gba
+
+      - name: Record and compare GBA hardware-timer baseline
+        if: steps.changes.outputs.has-changes == 'true'
+        env:
+          # Ubuntu runners have no sound device, so keep mGBA's audio backend
+          # off ALSA. Its C stdout is block-buffered through a pipe, so force
+          # line buffering for metrics.
+          SDL_AUDIODRIVER: dummy
+          MGBA_COMMAND: xvfb-run -a stdbuf -oL -eL mgba-qt
+        run: |
+          timeout --signal=TERM 2m python3 scripts/gba_performance.py record \
+            --rom crates/pokered-gba/target/thumbv4t-none-eabi/release/pokered-gba.gba \
+            --output "$RUNNER_TEMP/gba-performance-candidate.json" \
+            --log "$RUNNER_TEMP/gba-performance-candidate.log"
+          python3 scripts/gba_performance.py compare \
+            --baseline crates/pokered-gba/perf-baseline.json \
+            --candidate "$RUNNER_TEMP/gba-performance-candidate.json"
+
+      - name: Upload performance evidence
+        if: ${{ always() && steps.changes.outputs.has-changes == 'true' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: gba-performance-${{ github.sha }}
+          path: |
+            crates/pokered-gba/perf-baseline.json
+            crates/pokered-gba/target/thumbv4t-none-eabi/release/pokered-gba.gba
+            ${{ runner.temp }}/gba-performance-candidate.json
+            ${{ runner.temp }}/gba-performance-candidate.log
+          if-no-files-found: warn
+          retention-days: 30

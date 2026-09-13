@@ -1,4 +1,4 @@
-"""Rule-based oracle planner for openpoke (M6).
+"""Rule-based oracle planner for openpokered (M6).
 
 The oracle plays the "intent" role the design doc assigns to the LLM —
 decompose a task goal into semantic steps over the event graph, world

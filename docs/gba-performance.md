@@ -6,11 +6,44 @@ instrumentation with:
 
 ```bash
 cd crates/pokered-gba
-cargo +nightly build --release --features profiling
+cargo +nightly-2025-12-07 build --release --features profiling
 agb-gbafix target/thumbv4t-none-eabi/release/pokered-gba
 mgba -1 -C logToStdout=1 -C logLevel.gba.debug=127 \
   target/thumbv4t-none-eabi/release/pokered-gba.gba
 ```
+
+## CI regression baseline
+
+Pull requests that affect the GBA build run `perf-benchmark`, which replays six
+deterministic windows through the production update/render paths:
+
+- intro/title animation;
+- Oak dialogue;
+- stable Overworld frame reuse;
+- Overworld movement/redraw;
+- wild-Battle entry through the HUD;
+- a populated Pokédex entry.
+
+Each window reports Timer 2 cycle counts for game update, software drawing, and
+Mode 4 presentation. The stable Overworld window gates update time only because
+zero redraws is the intended result; all visual windows must contain at least
+one render. The checked-in
+[`perf-baseline.json`](../crates/pokered-gba/perf-baseline.json) is the
+reviewed baseline. CI fails if any gated metric regresses by more than 15% (or
+25 timer ticks for small metrics), and uploads the candidate JSON, emulator
+log, and benchmark ROM as an artifact. The log and ROM are retained even when
+the emulator crashes or the benchmark times out.
+
+Both the release-ROM workflow and benchmark use `nightly-2025-12-07`.
+Thumbv4t code generation is therefore part of the reviewed baseline instead of
+silently changing whenever a new nightly is published. Upgrade the pinned
+nightly only in a PR that runs the full mGBA suite and reviews the new metrics.
+
+To refresh the baseline deliberately after a reviewed performance-affecting
+change, build with `--features perf-benchmark`, fix the ELF with `agb-gbafix`,
+then run `scripts/gba_performance.py record` against the `.gba` file. Commit
+the resulting JSON in the same PR and explain the expected regression or
+improvement; do not update it merely to bypass the gate.
 
 ## Architecture follow-up (2026-09-12)
 
@@ -195,6 +228,11 @@ pages, with the completed page flipped at VBlank.
 - The GBA resource manager checks its decoded cache before scanning the asset
   registry and remembers immutable misses. Boot assets are released before
   entering the Overworld.
+- The Battle renderer releases its full-screen Overworld transition snapshot
+  and decoded map resources before allocating the combined battle tileset. This
+  removes the EWRAM peak that previously crashed when the first Battle HUD was
+  displayed; leaving Battle also releases its GBA-only render caches before a
+  Pokédex or Overworld screen allocates.
 - Fully opaque Normal layer stacks composite directly into the destination,
   avoiding the 92 KiB RGBA scratch allocation that cannot fit in GBA EWRAM.
 - Kept game simulation tied to the 59.7 Hz hardware clock. When a dynamic

@@ -1,4 +1,4 @@
-# OpenPokeRed as an AI Agent Research Environment
+# open-pokered as an AI Agent Research Environment
 
 ## 1. 核心设想
 
@@ -1001,9 +1001,10 @@ Agent
 
 > **Pokémon Red with First-Class Agent Semantics**
 
-一个可能的论文标题（**OpenPoke** 作为该研究环境的简称，对应仓库 `open-pokered`）：
+一个可能的论文标题（名称即仓库 **`open-pokered`**，全项目命名统一为此，
+不再使用 OpenPoke/OpenPokeRed 等变体）：
 
-> **OpenPoke: A Semantically Instrumented RPG Environment for Studying Long-Horizon Agents**
+> **open-pokered: A Semantically Instrumented RPG Environment for Studying Long-Horizon Agents**
 
 副标题可以是：
 
@@ -1052,6 +1053,6 @@ Execution
 
 整个项目最终可以压缩成一句话：
 
-> **Existing game benchmarks often tell us that an agent failed; OpenPoke should help us determine at which level of abstraction the agent failed, and why.**
+> **Existing game benchmarks often tell us that an agent failed; open-pokered should help us determine at which level of abstraction the agent failed, and why.**
 
 这应该成为整个 Research Environment 最核心的设计原则。

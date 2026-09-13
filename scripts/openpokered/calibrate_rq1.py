@@ -2,7 +2,7 @@
 """RQ1 calibration matrix runner.
 
 "Same Game / Same Initial State / Same Objective": every cell spawns the
-same headless seeded game via OpenPokeEnv on the same task spec; only the
+same headless seeded game via OpenPokeredEnv on the same task spec; only the
 agent tier changes.
 
 - T3 semantic + world model: the M6 rule-based oracle (travel_to, world
@@ -23,8 +23,8 @@ pivot table. Spot-checks determinism: re-runs one T3 and one T2 cell
 and compares frame counts (tagged extra.spot_check, excluded from the
 pivot).
 
-    python3 scripts/openpoke/calibrate_rq1.py            # full matrix
-    python3 scripts/openpoke/calibrate_rq1.py --only T3  # one tier
+    python3 scripts/openpokered/calibrate_rq1.py            # full matrix
+    python3 scripts/openpokered/calibrate_rq1.py --only T3  # one tier
 """
 import argparse
 import json
@@ -35,11 +35,11 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from openpoke.env import OpenPokeEnv  # noqa: E402
-from openpoke.metrics import RUNS_DIR, RunMetrics  # noqa: E402
-from openpoke.oracle import Oracle, OracleError  # noqa: E402
-from openpoke.policies import ButtonRandomWalk, LocalExplorer  # noqa: E402
-from openpoke.tasks import goal_satisfied, load_task  # noqa: E402
+from openpokered.env import OpenPokeredEnv  # noqa: E402
+from openpokered.metrics import RUNS_DIR, RunMetrics  # noqa: E402
+from openpokered.oracle import Oracle, OracleError  # noqa: E402
+from openpokered.policies import ButtonRandomWalk, LocalExplorer  # noqa: E402
+from openpokered.tasks import goal_satisfied, load_task  # noqa: E402
 
 RQ1_DIR = RUNS_DIR / "rq1"
 TASKS_DIR = Path(__file__).resolve().parent / "tasks"
@@ -69,7 +69,7 @@ def run_cell(task, seed, tier, out_dir, frame_budget=None, spot_check=False):
         metrics.extra["spot_check"] = True
     # speed=0 (driven-only): the frame budget and the determinism guard
     # both assume wall-clock-insensitive frame accounting.
-    env = OpenPokeEnv(speed=0)
+    env = OpenPokeredEnv(speed=0)
     try:
         env.reset(task)
         metrics.start(env.frame_count())

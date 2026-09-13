@@ -1,6 +1,6 @@
-"""Unit checks for openpoke RQ1 tier policies (stdlib unittest, no game).
+"""Unit checks for openpokered RQ1 tier policies (stdlib unittest, no game).
 
-FakeClient/FakeEnv mirror scripts/test_openpoke.py: observation feeds are
+FakeClient/FakeEnv mirror scripts/test_openpokered.py: observation feeds are
 scripted, actions are recorded, no process is spawned.
 """
 import sys
@@ -9,8 +9,8 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from openpoke import skills
-from openpoke.policies import ButtonRandomWalk, LocalExplorer
+from openpokered import skills
+from openpokered.policies import ButtonRandomWalk, LocalExplorer
 
 
 def obs(mode="overworld", x=10, y=10, map_name="PalletTown"):
