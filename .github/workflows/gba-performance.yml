@@ -48,8 +48,9 @@ jobs:
 
       - name: Install Rust nightly
         if: steps.changes.outputs.has-changes == 'true'
-        uses: dtolnay/rust-toolchain@nightly
+        uses: dtolnay/rust-toolchain@master
         with:
+          toolchain: nightly-2025-12-07
           components: rust-src
 
       - name: Install agb-gbafix and mGBA
@@ -85,7 +86,7 @@ jobs:
         if: steps.changes.outputs.has-changes == 'true'
         working-directory: crates/pokered-gba
         run: |
-          cargo +nightly build --release --features perf-benchmark
+          cargo +nightly-2025-12-07 build --release --features perf-benchmark
           agb-gbafix target/thumbv4t-none-eabi/release/pokered-gba
 
       - name: Record and compare GBA hardware-timer baseline
@@ -112,6 +113,7 @@ jobs:
           name: gba-performance-${{ github.sha }}
           path: |
             crates/pokered-gba/perf-baseline.json
+            crates/pokered-gba/target/thumbv4t-none-eabi/release/pokered-gba.gba
             ${{ runner.temp }}/gba-performance-candidate.json
             ${{ runner.temp }}/gba-performance-candidate.log
           if-no-files-found: warn

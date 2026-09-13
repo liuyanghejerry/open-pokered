@@ -6,7 +6,7 @@ instrumentation with:
 
 ```bash
 cd crates/pokered-gba
-cargo +nightly build --release --features profiling
+cargo +nightly-2025-12-07 build --release --features profiling
 agb-gbafix target/thumbv4t-none-eabi/release/pokered-gba
 mgba -1 -C logToStdout=1 -C logLevel.gba.debug=127 \
   target/thumbv4t-none-eabi/release/pokered-gba.gba
@@ -30,8 +30,14 @@ zero redraws is the intended result; all visual windows must contain at least
 one render. The checked-in
 [`perf-baseline.json`](../crates/pokered-gba/perf-baseline.json) is the
 reviewed baseline. CI fails if any gated metric regresses by more than 15% (or
-25 timer ticks for small metrics), and uploads the candidate JSON/log as an
-artifact.
+25 timer ticks for small metrics), and uploads the candidate JSON, emulator
+log, and benchmark ROM as an artifact. The log and ROM are retained even when
+the emulator crashes or the benchmark times out.
+
+Both the release-ROM workflow and benchmark use `nightly-2025-12-07`.
+Thumbv4t code generation is therefore part of the reviewed baseline instead of
+silently changing whenever a new nightly is published. Upgrade the pinned
+nightly only in a PR that runs the full mGBA suite and reviews the new metrics.
 
 To refresh the baseline deliberately after a reviewed performance-affecting
 change, build with `--features perf-benchmark`, fix the ELF with `agb-gbafix`,

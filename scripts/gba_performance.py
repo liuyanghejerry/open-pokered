@@ -132,6 +132,14 @@ def record(args: argparse.Namespace) -> int:
                 process.wait()
         if process.stdout is not None:
             process.stdout.close()
+        # Preserve whatever the emulator emitted even when it crashes or the
+        # benchmark times out, so the CI artifact contains actionable evidence.
+        if args.log:
+            log_text = "\n".join(log_lines)
+            if log_text:
+                log_text += "\n"
+            Path(args.log).parent.mkdir(parents=True, exist_ok=True)
+            Path(args.log).write_text(log_text, encoding="utf-8")
 
     if set(results) != set(SCENARIO_METRICS):
         missing = set(SCENARIO_METRICS).difference(results)
@@ -142,8 +150,6 @@ def record(args: argparse.Namespace) -> int:
         "scenarios": results,
     }
     write_json(args.output, payload)
-    if args.log:
-        Path(args.log).write_text("\n".join(log_lines) + "\n", encoding="utf-8")
     print(json.dumps(payload, indent=2, sort_keys=True))
     return 0
 

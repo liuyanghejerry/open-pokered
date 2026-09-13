@@ -13,8 +13,9 @@ cd "$(dirname "$0")"
 MODE="${1:-release}"
 PROFILE=release
 [[ "$MODE" == "debug" ]] && PROFILE=dev
+GBA_TOOLCHAIN="${GBA_TOOLCHAIN:-nightly-2025-12-07}"
 
-cargo +nightly build "--$PROFILE"
+cargo "+$GBA_TOOLCHAIN" build "--$PROFILE"
 ELF="target/thumbv4t-none-eabi/$PROFILE/pokered-gba"
 agb-gbafix "$ELF"
 ROM="$ELF.gba"

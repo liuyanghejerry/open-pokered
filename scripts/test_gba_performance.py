@@ -138,11 +138,43 @@ class GbaPerformanceTests(unittest.TestCase):
             with self.assertRaisesRegex(TimeoutError, "every scenario"):
                 gba_performance.record(args)
 
+    def test_record_failure_preserves_emulator_log(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            rom = root / "benchmark.gba"
+            rom.touch()
+            log = root / "evidence" / "emulator.log"
+            emulator_script = (
+                'import time; print("boot marker", flush=True); time.sleep(2)'
+            )
+            args = SimpleNamespace(
+                rom=rom,
+                emulator=(
+                    f"{shlex.quote(sys.executable)} -u -c "
+                    f"{shlex.quote(emulator_script)}"
+                ),
+                timeout_seconds=0.1,
+                output=root / "metrics.json",
+                log=log,
+            )
+            with self.assertRaisesRegex(TimeoutError, "every scenario"):
+                gba_performance.record(args)
+            self.assertEqual(log.read_text(encoding="utf-8"), "boot marker\n")
+
     def test_ci_pins_headless_mgba_and_streams_its_output(self) -> None:
         workflow = (SCRIPT.parents[1] / ".github/workflows/gba-performance.yml").read_text(
             encoding="utf-8"
         )
+        release_workflow = (
+            SCRIPT.parents[1] / ".github/workflows/build-gba.yml"
+        ).read_text(encoding="utf-8")
+        build_script = (SCRIPT.parents[1] / "crates/pokered-gba/build.sh").read_text(
+            encoding="utf-8"
+        )
         self.assertIn("runs-on: ubuntu-24.04", workflow)
+        self.assertIn("toolchain: nightly-2025-12-07", workflow)
+        self.assertIn("toolchain: nightly-2025-12-07", release_workflow)
+        self.assertIn("nightly-2025-12-07", build_script)
         self.assertIn("MGBA_VERSION=0.10.5", workflow)
         self.assertIn(
             "0bbf1e7ca511cd4b443239b97546f699df72211241a1db9177e331866031d8e9",
