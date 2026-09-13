@@ -46,16 +46,10 @@ strum_macros = "0.26"
 num-derive = "0.4"
 num-traits = { version = "0.2", default-features = false }
 
-# M5 (agent determinism): the engine crates are patched to the sibling
-# dotzuki checkout (branch `feat/agent-serde`, on top of the v0.7.1 tag)
-# which adds serde derives the agent snapshot needs (interpreter, trigger
-# manager, NPC runtime state, cutscene manager, connection transition).
-# All other engine code is byte-identical to the pinned tag.
-[patch."https://github.com/liuyanghejerry/dotzuki"]
-dotzuki-app = { path = "../dotzuki-2/workspace/crates/dotzuki-app" }
-dotzuki-engine = { path = "../dotzuki-2/workspace/crates/dotzuki-engine" }
-dotzuki-engine-dsl = { path = "../dotzuki-2/workspace/crates/dotzuki-engine-dsl" }
-dotzuki-engine-script = { path = "../dotzuki-2/workspace/crates/dotzuki-engine-script" }
-dotzuki-renderer = { path = "../dotzuki-2/workspace/crates/dotzuki-renderer" }
-dotzuki-rules = { path = "../dotzuki-2/workspace/crates/dotzuki-rules" }
-dotzuki-web = { path = "../dotzuki-2/workspace/crates/dotzuki-web" }
+# NOTE (agent environment / M5): all dotzuki engine crates are pinned to the
+# branch `feat/agent-serde` (instead of upstream's rev
+# 55b90736aa9c2cc56e69a247b57e320c57136898) in each crate's Cargo.toml. The
+# branch is that rev + serde-only additions the agent snapshot needs
+# (interpreter, trigger manager, NPC runtime state, cutscene manager,
+# connection transition, presentation states, CommandResult). Pin back to a
+# release tag/rev once it includes those derives.
