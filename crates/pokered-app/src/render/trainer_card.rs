@@ -4,6 +4,7 @@
 //! front sprite, and the 8 gym badges in two rows of four (a slot shows the
 //! gym leader's face until the badge is owned).
 
+use crate::alloc_prelude::*;
 use pokered_core::game_state::Lang;
 use pokered_data::lang_data::ui_label;
 use pokered_renderer::embedded_font::{draw_text, measure_text};

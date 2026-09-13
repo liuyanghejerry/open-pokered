@@ -31,8 +31,10 @@
 
 #![cfg(test)]
 
+use crate::alloc_prelude::*;
 #[cfg(test)]
 mod parity_tests {
+use crate::alloc_prelude::*;
     use crate::battle::stack_parity::{
         assert_crit_drawn_before_accuracy, build_stack_stream, engine_battler, first_mover,
         legacy_run, order_is_tie, run_scenario, stack_run, MoveBytes, PocData, Scenario,

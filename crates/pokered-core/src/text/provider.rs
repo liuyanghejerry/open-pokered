@@ -1,3 +1,4 @@
+use crate::alloc_prelude::*;
 use dotzuki_engine::text::{ControlAction, DialogState, TextProvider, TextStream, TileBuffer};
 use pokered_data::{charmap, text_commands::TextCommand};
 

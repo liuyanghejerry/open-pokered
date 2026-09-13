@@ -5,6 +5,7 @@ use crate::battle::state::{status1, status2, status3, BattleState, StatusConditi
 
 use super::EffectResult;
 
+use crate::alloc_prelude::*;
 pub fn apply_mist(state: &mut BattleState) -> EffectResult {
     let attacker = state.attacker();
     if attacker.has_status2(status2::PROTECTED_BY_MIST) {

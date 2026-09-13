@@ -61,7 +61,9 @@ screen Save {
     visible = "{asking}"
   }
   cursor {
-    rect = {tx: 14, ty: "{cursor_ty}", tw: 1, th: 1}
+    rect = {tx: 14, ty: 13, tw: 1, th: 1}
+    row = "{cursor_row}"
+    row_step = 2
     glyph = "▶"
     visible = "{asking}"
   }

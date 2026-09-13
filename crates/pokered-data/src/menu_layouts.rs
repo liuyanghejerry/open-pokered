@@ -3,7 +3,7 @@
 //! Provides [`MenuConfig`] statics for each of the 18 standard menus,
 //! derived from the layout definitions in `ui_layouts/*.json`.
 
-use std::sync::LazyLock;
+use crate::sync_compat::LazyLock;
 
 use dotzuki_engine::menu::{BorderStyle, CursorStyle, MenuConfig};
 use dotzuki_engine::render::TileRect;

@@ -39,8 +39,10 @@
 
 #![cfg(test)]
 
+use crate::alloc_prelude::*;
 #[cfg(test)]
 mod slice4_tests {
+use crate::alloc_prelude::*;
     use crate::battle::stack_parity::{
         run_scenario_sub, stack_run_sub, DamageScenario, MonSpec, MoveBytes,
     };

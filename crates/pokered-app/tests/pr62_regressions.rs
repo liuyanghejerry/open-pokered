@@ -1,4 +1,5 @@
 //! Regression coverage and deterministic captures for the PR #62 corrections.
+
 use dotzuki_engine::render_config::RenderConfig;
 use pokered_app::render::draw_overworld;
 use pokered_core::game_state::Lang;

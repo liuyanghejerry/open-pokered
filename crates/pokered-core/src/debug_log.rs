@@ -11,12 +11,23 @@
 //! pokered_core::log_save!("position: x={}, y={}", x, y);
 //! ```
 
+use crate::alloc_prelude::*;
 use log::{LevelFilter, Log, Metadata, Record};
+#[cfg(not(target_os = "none"))]
+use core::sync::atomic::{AtomicU64, Ordering};
+
+// The file logger is host-only (std::fs + Instant). Bare metal keeps the
+// module-toggle API and the log macros; init/try_init/flush are no-ops there.
+#[cfg(not(target_os = "none"))]
 use std::fs::{File, OpenOptions};
+#[cfg(not(target_os = "none"))]
 use std::io::{BufWriter, Write};
-use std::sync::atomic::{AtomicU64, Ordering};
-use std::sync::{Mutex, OnceLock};
+#[cfg(not(target_os = "none"))]
 use std::time::Instant;
+#[cfg(not(target_os = "none"))]
+use std::sync::Mutex;
+#[cfg(not(target_os = "none"))]
+use crate::sync_compat::OnceLock;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 #[repr(u64)]
@@ -71,18 +82,30 @@ impl LogModule {
     }
 }
 
+#[cfg(not(target_os = "none"))]
 static ENABLED_MODULES: AtomicU64 = AtomicU64::new(0);
+// thumbv4t has no atomics; the module mask is a plain static under the
+// single-threaded game-loop contract.
+#[cfg(target_os = "none")]
+static mut ENABLED_MODULES: u64 = 0;
+#[cfg(not(target_os = "none"))]
 static LOGGER: OnceLock<GameLogger> = OnceLock::new();
+#[cfg(not(target_os = "none"))]
 static START_TIME: OnceLock<Instant> = OnceLock::new();
 
+#[cfg(not(target_os = "none"))]
 struct GameLogger {
     writer: Mutex<BufWriter<File>>,
 }
 
+#[cfg(not(target_os = "none"))]
 impl GameLogger {
     #[inline]
     fn target_enabled(target: &str) -> bool {
+        #[cfg(not(target_os = "none"))]
         let flags = ENABLED_MODULES.load(Ordering::Relaxed);
+        #[cfg(target_os = "none")]
+        let flags = unsafe { ENABLED_MODULES };
         if flags == 0 {
             return false;
         }
@@ -100,6 +123,7 @@ impl GameLogger {
     }
 }
 
+#[cfg(not(target_os = "none"))]
 impl Log for GameLogger {
     #[inline]
     fn enabled(&self, metadata: &Metadata<'_>) -> bool {
@@ -137,6 +161,7 @@ impl Log for GameLogger {
 
 /// Initialize the debug logger, writing to the given file path.
 /// All modules start disabled — call [`enable`] to turn on specific modules.
+#[cfg(not(target_os = "none"))]
 pub fn init(log_path: &str) -> Result<(), Box<dyn std::error::Error>> {
     START_TIME.get_or_init(Instant::now);
 
@@ -156,6 +181,7 @@ pub fn init(log_path: &str) -> Result<(), Box<dyn std::error::Error>> {
 }
 
 /// Like [`init`], but silently succeeds if another logger is already set.
+#[cfg(not(target_os = "none"))]
 pub fn try_init(log_path: &str) -> Result<(), Box<dyn std::error::Error>> {
     match init(log_path) {
         Ok(()) => Ok(()),
@@ -171,11 +197,25 @@ pub fn try_init(log_path: &str) -> Result<(), Box<dyn std::error::Error>> {
 }
 
 pub fn enable(module: LogModule) {
-    ENABLED_MODULES.fetch_or(module as u64, Ordering::Relaxed);
+    #[cfg(not(target_os = "none"))]
+    {
+        ENABLED_MODULES.fetch_or(module as u64, Ordering::Relaxed);
+    }
+    #[cfg(target_os = "none")]
+    {
+        unsafe { ENABLED_MODULES |= module as u64 };
+    }
 }
 
 pub fn disable(module: LogModule) {
-    ENABLED_MODULES.fetch_and(!(module as u64), Ordering::Relaxed);
+    #[cfg(not(target_os = "none"))]
+    {
+        ENABLED_MODULES.fetch_and(!(module as u64), Ordering::Relaxed);
+    }
+    #[cfg(target_os = "none")]
+    {
+        unsafe { ENABLED_MODULES &= !(module as u64) };
+    }
 }
 
 pub fn enable_all() {
@@ -183,15 +223,33 @@ pub fn enable_all() {
     for &m in LogModule::ALL {
         mask |= m as u64;
     }
-    ENABLED_MODULES.store(mask, Ordering::Relaxed);
+    #[cfg(not(target_os = "none"))]
+    {
+        ENABLED_MODULES.store(mask, Ordering::Relaxed);
+    }
+    #[cfg(target_os = "none")]
+    {
+        unsafe { ENABLED_MODULES = mask };
+    }
 }
 
 pub fn disable_all() {
-    ENABLED_MODULES.store(0, Ordering::Relaxed);
+    #[cfg(not(target_os = "none"))]
+    {
+        ENABLED_MODULES.store(0, Ordering::Relaxed);
+    }
+    #[cfg(target_os = "none")]
+    {
+        unsafe { ENABLED_MODULES = 0 };
+    }
 }
 
 pub fn is_enabled(module: LogModule) -> bool {
-    ENABLED_MODULES.load(Ordering::Relaxed) & (module as u64) != 0
+    #[cfg(not(target_os = "none"))]
+    let enabled = ENABLED_MODULES.load(Ordering::Relaxed);
+    #[cfg(target_os = "none")]
+    let enabled = unsafe { ENABLED_MODULES };
+    enabled & (module as u64) != 0
 }
 
 /// Parse comma-separated module names and enable them. Example: `"save,overworld"`.
@@ -209,6 +267,7 @@ pub fn enable_from_str(modules: &str) {
 }
 
 pub fn flush() {
+    #[cfg(not(target_os = "none"))]
     if let Some(logger) = LOGGER.get() {
         logger.flush();
     }

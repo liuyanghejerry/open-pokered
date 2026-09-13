@@ -1,3 +1,4 @@
+use crate::alloc_prelude::*;
 use super::wild_encounters::*;
 use pokered_data::maps::MapId;
 use pokered_data::species::Species;

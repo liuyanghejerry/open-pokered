@@ -136,22 +136,5 @@ fn blit_tile_clipped(
     if tile_idx >= tileset.len() {
         return;
     }
-    let tile = tileset.get(tile_idx);
-    for row in 0..TILE_SIZE {
-        let sy = py + row as i32;
-        if sy < 0 || sy >= fb.height() as i32 {
-            continue;
-        }
-        let rgba_row = tile.render_row(row as usize, palette);
-        for col in 0..TILE_SIZE {
-            let sx = px + col as i32;
-            if sx < 0 || sx >= fb.width() as i32 {
-                continue;
-            }
-            let c = rgba_row[col as usize];
-            if c != Rgba::TRANSPARENT {
-                fb.set_pixel(sx as u32, sy as u32, c);
-            }
-        }
-    }
+    fb.blit_gb_tile(px, py, tileset.get(tile_idx), palette, true, false, false);
 }

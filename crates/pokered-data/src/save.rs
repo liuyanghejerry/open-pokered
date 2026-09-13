@@ -6,6 +6,8 @@
 //! [`SaveManager`] can persist it through any [`SaveStorage`] backend.
 
 /// Total size of a Game Boy .sav file (4 banks × 8 KiB).
+
+use crate::alloc_prelude::*;
 pub const SAV_FILE_SIZE: usize = 0x8000;
 
 /// Raw SRAM save data for Pokémon Red/Blue.

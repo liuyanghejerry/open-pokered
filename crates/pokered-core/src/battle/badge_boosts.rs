@@ -261,6 +261,7 @@ pub fn engine_stats_snapshot(b: &EngineBattler<PokeredRules>) -> [u16; 4] {
 
 #[cfg(test)]
 mod tests {
+    use crate::alloc_prelude::*;
     use super::*;
 
     const BOULDER: u8 = 1 << BIT_BOULDERBADGE;

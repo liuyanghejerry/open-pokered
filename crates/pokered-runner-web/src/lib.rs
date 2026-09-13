@@ -59,9 +59,8 @@
 //! requestAnimationFrame(frame);
 //! ```
 
-use std::collections::HashMap;
-
 use pokered_app::PokemonGame;
+use pokered_core::hash_compat::HashMap;
 use pokered_core::data::impl_traits::PokemonRedData;
 use pokered_core::data::maps::MapId;
 use pokered_core::data::wild_data::GameVersion;
@@ -599,7 +598,7 @@ fn resolve_species(name: &str) -> Option<Species> {
 fn parse_string_map(json: &str, what: &str) -> Result<HashMap<String, String>, String> {
     let trimmed = json.trim();
     if trimmed.is_empty() {
-        return Ok(HashMap::new());
+        return Ok(HashMap::default());
     }
     serde_json::from_str(trimmed).map_err(|e| format!("{what}: {e}"))
 }
@@ -808,7 +807,7 @@ mod tests {
 }
 "#;
         let scenes = {
-            let mut m = HashMap::new();
+            let mut m = HashMap::default();
             m.insert("PalletTown".to_string(), scene.to_string());
             serde_json::to_string(&m).unwrap()
         };
@@ -866,7 +865,7 @@ mod tests {
         // through the editor without a save: set → export → fresh runner →
         // import → restored.
         let mut runner = PokeredRunner::new(None).unwrap();
-        let mut flags = HashMap::new();
+        let mut flags = HashMap::default();
         flags.insert("EVENT_GOT_POKEDEX".to_string(), true);
         flags.insert("__OBJ_HIDDEN_EDITOR_TEST".to_string(), true);
         flags.insert("__OBJ_HIDDEN_EDITOR_FALSE".to_string(), false);

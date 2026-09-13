@@ -1,3 +1,4 @@
+use crate::alloc_prelude::*;
 use crate::battle::state::Pokemon;
 use crate::pokemon::party::{Party, PartyError};
 use pokered_data::species::Species;
@@ -38,6 +39,12 @@ impl PcBox {
 
     pub fn is_empty(&self) -> bool {
         self.count == 0
+    }
+
+    /// Mark the box empty in place. Avoiding `*self = Self::new()` matters on
+    /// small-stack targets because a box stores twenty Pokémon inline.
+    pub fn clear(&mut self) {
+        self.count = 0;
     }
 
     pub fn get(&self, index: usize) -> Option<&Pokemon> {
@@ -153,6 +160,15 @@ impl PcStorage {
 
     pub fn current_box_mut(&mut self) -> &mut PcBox {
         &mut self.boxes[self.current_box]
+    }
+
+    /// Empty every PC box without materializing another twelve-box array on
+    /// the caller's stack.
+    pub fn clear(&mut self) {
+        for box_data in &mut self.boxes {
+            box_data.clear();
+        }
+        self.current_box = 0;
     }
 
     pub fn change_box(&mut self, box_num: usize) -> Result<(), BoxError> {

@@ -20,14 +20,17 @@
 //! Everything else (frame animation policy, 8-wide mirror expansion, blit)
 //! mirrors the engine module; `draw_mon_icon` is re-exported unchanged.
 
-use std::collections::HashMap;
-use std::sync::Mutex;
+use crate::alloc_prelude::*;
 
+#[cfg(not(target_os = "none"))]
+pub use dotzuki_renderer::mon_icon::{IconFrame, draw_mon_icon};
+#[cfg(not(target_os = "none"))]
 use dotzuki_renderer::asset_provider::ResourceProvider;
+use crate::sync_compat::Mutex;
+use crate::hash_compat::HashMap;
+
 use dotzuki_renderer::icon::IconKind;
 use dotzuki_renderer::tile::TileSet;
-
-pub use dotzuki_renderer::mon_icon::{IconFrame, draw_mon_icon};
 
 /// Animation frame + asset coordinates for one icon kind.
 struct IconAsset {
@@ -97,6 +100,7 @@ const fn icon_asset(filename: &'static str, start_tile: usize) -> IconAsset {
 
 // Cache key includes both the icon kind and which frame, since the two
 // frames are different bitmaps.
+#[cfg(not(target_os = "none"))]
 static CACHE: Mutex<Option<HashMap<(IconKind, IconFrame), &'static TileSet>>> = Mutex::new(None);
 
 /// The 16-wide icons are stored column-major in the Game Boy OAM; reorder the
@@ -128,6 +132,7 @@ fn extract_8wide(source: &TileSet, start: usize) -> TileSet {
     ts
 }
 
+#[cfg(not(target_os = "none"))]
 pub fn load_mon_icon_tiles(
     provider: &mut dyn ResourceProvider,
     kind: IconKind,
@@ -173,7 +178,132 @@ pub fn load_mon_icon_tiles(
     let mut guard = CACHE
         .lock()
         .map_err(|e| format!("cache lock poisoned: {}", e))?;
-    let map = guard.get_or_insert_with(HashMap::new);
+    let map = guard.get_or_insert_with(HashMap::default);
     map.insert(key, leaked);
     Ok(leaked)
 }
+
+// ── Bare metal (GBA) ─────────────────────────────────────────────────────────
+//
+// The engine's `mon_icon` module is gpu-gated (std::sync cache), so on bare
+// metal this local twin provides the same surface: the frame enum, the
+// 2×2-tile blit and a registry-backed loader (the icon sheets ship in the
+// pre-converted 2bpp registry under `sprites/` / `icons/`).
+
+#[cfg(target_os = "none")]
+mod gba {
+    use crate::alloc_prelude::*;
+    use crate::hash_compat::HashMap;
+
+    use dotzuki_renderer::FbSurface;
+    use dotzuki_renderer::icon::IconKind;
+    use dotzuki_renderer::palette::{GbColor, Palette};
+    use dotzuki_renderer::tile::{TileSet, TILE_PIXELS};
+
+    use super::{asset_for, extract_16wide, extract_8wide};
+    use crate::sync_compat::Mutex;
+
+    /// Animation frame for the party-screen mon icon (engine twin).
+    #[derive(Copy, Clone, Eq, PartialEq, Hash, Debug)]
+    pub enum IconFrame {
+        Frame1,
+        Frame2,
+    }
+
+    impl IconFrame {
+        pub fn from_counter(counter: u64, period: u64) -> Self {
+            if period == 0 || (counter / period) % 2 == 0 {
+                IconFrame::Frame1
+            } else {
+                IconFrame::Frame2
+            }
+        }
+    }
+
+    static CACHE: Mutex<Option<HashMap<(IconKind, IconFrame), &'static TileSet>>> =
+        Mutex::new(None);
+
+    pub fn load_mon_icon_tiles(
+        _provider: &mut dyn dotzuki_renderer::asset_provider::ResourceProvider,
+        kind: IconKind,
+        frame: IconFrame,
+    ) -> Result<&'static TileSet, String> {
+        let key = (kind, frame);
+        {
+            let guard = CACHE.lock().unwrap();
+            if let Some(tiles) = guard.as_ref().and_then(|m| m.get(&key)) {
+                return Ok(tiles);
+            }
+        }
+
+        let asset = asset_for(kind, frame);
+        let subdir = asset.category;
+        let stem = asset.filename.trim_end_matches(".png");
+        let bytes = crate::gba_assets::get_preconverted_asset(subdir, stem)
+            .ok_or_else(|| format!("asset not in registry: {}/{}", subdir, stem))?;
+        let source = if subdir == "font" {
+            TileSet::from_1bpp(bytes)
+        } else {
+            TileSet::from_2bpp(bytes)
+        };
+        if source.len() < asset.start_tile + asset.tile_count {
+            // For 8-wide icons whose frame2 slot doesn't exist in the asset,
+            // silently fall back to frame1 so we never crash the party screen.
+            if frame == IconFrame::Frame2 && asset.tile_count == 2 {
+                return load_mon_icon_tiles(_provider, kind, IconFrame::Frame1);
+            }
+            return Err(format!(
+                "{} has only {} tiles, need at least {}",
+                asset.filename,
+                source.len(),
+                asset.start_tile + asset.tile_count
+            ));
+        }
+
+        let icon_tiles = if asset.tile_count == 2 {
+            extract_8wide(&source, asset.start_tile)
+        } else {
+            extract_16wide(&source, asset.start_tile)
+        };
+        let leaked: &'static TileSet = Box::leak(Box::new(icon_tiles));
+        let mut guard = CACHE.lock().unwrap();
+        guard.get_or_insert_with(HashMap::default).insert(key, leaked);
+        Ok(leaked)
+    }
+
+    /// 2×2-tile icon blit (engine twin: color 0 transparent).
+    pub fn draw_mon_icon(fb: &mut impl FbSurface, tiles: &TileSet, x: u32, y: u32, palette: &Palette) {
+        let fb_h = fb.height();
+        let fb_w = fb.width();
+        let positions = [(0u32, 0u32), (0, 1), (1, 0), (1, 1)];
+        for (i, (col, row)) in positions.iter().enumerate() {
+            let tile = tiles.get(i);
+            let base_x = x + col * TILE_PIXELS as u32;
+            let base_y = y + row * TILE_PIXELS as u32;
+            for r in 0..TILE_PIXELS {
+                let screen_y = base_y + r as u32;
+                if screen_y >= fb_h {
+                    continue;
+                }
+                for c in 0..TILE_PIXELS {
+                    let screen_x = base_x + c as u32;
+                    if screen_x >= fb_w {
+                        continue;
+                    }
+                    let color_idx = tile.get(r, c);
+                    if color_idx == 0 {
+                        continue;
+                    }
+                    fb.set_pixel(
+                        screen_x,
+                        screen_y,
+                        palette.color(GbColor::from_u8(color_idx)),
+                    );
+                }
+            }
+        }
+    }
+}
+
+#[cfg(target_os = "none")]
+pub use gba::{draw_mon_icon, load_mon_icon_tiles, IconFrame};

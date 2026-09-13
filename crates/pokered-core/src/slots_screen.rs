@@ -12,6 +12,7 @@
 //! layer and the coin balance is owned by the caller (persisted to
 //! `game_data.player_coins`).
 
+use crate::alloc_prelude::*;
 use crate::slots::SlotMachineState;
 use pokered_data::slot_machine::{SlotSymbol, WHEEL_OFFSET_MAX};
 
@@ -142,7 +143,7 @@ pub struct SlotsScreen {
     /// Winning symbol of the most recent spin, if any.
     pub last_symbol: Option<SlotSymbol>,
     /// Pending sound cues (drained by the frontend each frame).
-    pending_sfx: std::collections::VecDeque<SlotsSfx>,
+    pending_sfx: alloc::collections::VecDeque<SlotsSfx>,
     /// Human-readable status line for rendering.
     pub message: String,
     /// Frame counter (drives reel animation cadence).
@@ -177,7 +178,7 @@ impl SlotsScreen {
             machine,
             coins: coins.min(MAX_COINS),
             phase: SlotsPhase::BetSelect,
-            pending_sfx: std::collections::VecDeque::new(),
+            pending_sfx: alloc::collections::VecDeque::new(),
             bet: 1,
             reels_stopped: [false; 3],
             current_reel: 0,

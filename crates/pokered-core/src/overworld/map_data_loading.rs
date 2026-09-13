@@ -1,3 +1,4 @@
+use crate::alloc_prelude::*;
 use dotzuki_engine::overworld::{
     Direction, MapConnection, MapConnections, NpcDefinition, NpcMovementType, Sign, WarpPoint,
 };
@@ -23,8 +24,10 @@ pub fn load_full_map_data<T: TilesetTrait>(
         )
     });
 
+    log::info!("gba:md json ok");
     let (width, height) = map_id.dimensions();
 
+    log::info!("gba:md dims");
     let blocks = get_block_data(map_id).to_vec();
 
     let warps: Vec<WarpPoint<MapId>> = map_json
@@ -33,11 +36,13 @@ pub fn load_full_map_data<T: TilesetTrait>(
         .map(|w| convert_warp(w, map_id))
         .collect();
 
+    log::info!("gba:md warps");
     let (npcs, npc_pokemon_data): (Vec<NpcDefinition>, Vec<PokemonNpcData>) =
         map_json.npcs.iter().map(convert_npc).unzip();
 
     let signs: Vec<Sign> = map_json.signs.iter().map(convert_sign).collect();
 
+    log::info!("gba:md npcs+signs");
     let connections = convert_connections(&map_json.connections);
 
     let tileset = provider
@@ -47,6 +52,7 @@ pub fn load_full_map_data<T: TilesetTrait>(
             panic!("No tileset found for '{}'", map_json.header.tileset)
         });
 
+    log::info!("gba:md tileset");
     let music = MusicId::from_name(&map_json.header.music).unwrap_or_else(|| {
         log::warn!(
             "Unknown music '{}' for map {:?}, defaulting to PalletTown",

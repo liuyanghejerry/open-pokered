@@ -1,22 +1,23 @@
+use crate::alloc_prelude::*;
 use pokered_core::game_state::Lang;
 use pokered_core::items::{BuyMenuState, BuyResult, MartPhase, MartState, SellMenuState, SellResult};
 use pokered_core::main_menu::MainMenuState;
 use pokered_core::options_menu::OptionsMenuState;
-use pokered_core::party_screen::PartyScreenState;
-use pokered_core::save_menu::SaveMenuState;
+use pokered_core::party_screen::{PartyScreenPhase, PartyScreenState};
+use pokered_core::save_menu::{SaveMenuState, YesNoChoice};
 use pokered_core::start_menu::StartMenuState;
 use pokered_core::stats_screen::{StatsPage, StatsScreenState};
 use pokered_data::mon_party_icons::{icon_for_species, IconKind};
 use pokered_data::impl_traits::PokemonRenderData;
 use pokered_data::lang_data;
-use pokered_data::ui_layout::schema::{MART_CONFIRM_LAYOUT, MART_MAIN_MENU_LAYOUT, MART_QUANTITY_LAYOUT, MART_RESULT_DIALOG_LAYOUT, MAIN_DEFAULT_LAYOUT, START_DEFAULT_LAYOUT, OPTIONS_DEFAULT_LAYOUT, SAVE_DEFAULT_LAYOUT, SAVE_ASK_PROMPT_LAYOUT, PARTY_DEFAULT_LAYOUT, STATS_PAGE1_LAYOUT, STATS_PAGE2_LAYOUT, BAG_DEFAULT_LAYOUT};
+use pokered_data::ui_layout::schema::{MART_CONFIRM_LAYOUT, MART_MAIN_MENU_LAYOUT, MART_QUANTITY_LAYOUT, MART_RESULT_DIALOG_LAYOUT, MAIN_DEFAULT_LAYOUT, START_DEFAULT_LAYOUT, OPTIONS_DEFAULT_LAYOUT, SAVE_DEFAULT_LAYOUT, SAVE_ASK_PROMPT_LAYOUT, PARTY_DEFAULT_LAYOUT, PARTY_ENTRY_LAYOUT, STATS_PAGE1_LAYOUT, STATS_PAGE2_LAYOUT, BAG_DEFAULT_LAYOUT};
 use pokered_renderer::mon_icon::{draw_mon_icon, load_mon_icon_tiles, IconFrame};
 use pokered_renderer::palette::GRAYSCALE_SPRITE_PALETTE;
 use pokered_renderer::party_hp_bar::draw_party_hp_bar;
 use pokered_renderer::resource::ResourceManager;
 use pokered_renderer::{FrameBuffer, TILE_SIZE};
 use pokered_ui::backends::FrameBufferPainter;
-use pokered_ui::{menus, InkColor, TileRect, Ui};
+use pokered_ui::{menus, InkColor, Painter, TilePos, TileRect, Ui};
 use pokered_core::bag_screen::{BagPhase, BagScreenState};
 
 use super::{blit_tileset, species_to_sprite_name};
@@ -27,10 +28,39 @@ pub fn draw_main_menu(state: &MainMenuState, fb: &mut FrameBuffer, lang: Lang) {
     menus::main::draw(state, &MAIN_DEFAULT_LAYOUT, &mut ui, lang);
 }
 
+/// Repaint only the changed cursor cells of an already-rendered title menu.
+pub fn redraw_main_menu_cursor(
+    previous_cursor: usize,
+    current_cursor: usize,
+    fb: &mut FrameBuffer,
+    lang: Lang,
+) {
+    let mut painter = FrameBufferPainter::new(fb).with_lang(lang);
+    menus::main::redraw_cursor(previous_cursor, current_cursor, &mut painter, lang);
+}
+
 pub fn draw_start_menu(state: &StartMenuState, player_name: &str, fb: &mut FrameBuffer, lang: Lang) {
     let mut painter = FrameBufferPainter::new(fb).with_lang(lang);
     let mut ui = Ui::new(&mut painter);
     menus::start::draw(state, player_name, &START_DEFAULT_LAYOUT, &mut ui, lang);
+}
+
+/// Repaint only the changed cursor cells of an already-rendered START menu.
+pub fn redraw_start_menu_cursor(
+    item_count: usize,
+    previous_cursor: usize,
+    current_cursor: usize,
+    fb: &mut FrameBuffer,
+    lang: Lang,
+) {
+    let mut painter = FrameBufferPainter::new(fb).with_lang(lang);
+    menus::start::redraw_cursor(
+        item_count,
+        previous_cursor,
+        current_cursor,
+        &START_DEFAULT_LAYOUT,
+        &mut painter,
+    );
 }
 
 pub fn draw_options_menu(state: &OptionsMenuState, fb: &mut FrameBuffer, lang: Lang) {
@@ -39,10 +69,48 @@ pub fn draw_options_menu(state: &OptionsMenuState, fb: &mut FrameBuffer, lang: L
     menus::options::draw(state, &OPTIONS_DEFAULT_LAYOUT, &mut ui, lang);
 }
 
+/// Return the absolute tile position of the options screen's visible cursor.
+pub fn options_menu_cursor_position(state: &OptionsMenuState, lang: Lang) -> (u32, u32) {
+    let pos = menus::options::cursor_spec(state, lang).0;
+    (pos.tx, pos.ty)
+}
+
+pub fn options_menu_cursor_spec(state: &OptionsMenuState, lang: Lang) -> (u32, u32, char) {
+    let (pos, glyph) = menus::options::cursor_spec(state, lang);
+    (pos.tx, pos.ty, glyph)
+}
+
+/// Repaint only the changed cursor cells of an already-rendered options screen.
+pub fn redraw_options_menu_cursor(
+    previous: (u32, u32, char),
+    current: (u32, u32, char),
+    fb: &mut FrameBuffer,
+    lang: Lang,
+) {
+    let mut painter = FrameBufferPainter::new(fb).with_lang(lang);
+    menus::options::redraw_cursor(
+        (pokered_ui::TilePos::new(previous.0, previous.1), previous.2),
+        (pokered_ui::TilePos::new(current.0, current.1), current.2),
+        &mut painter,
+        lang,
+    );
+}
+
 pub fn draw_save_menu(state: &SaveMenuState, fb: &mut FrameBuffer, lang: Lang) {
     let mut painter = FrameBufferPainter::new(fb).with_lang(lang);
     let mut ui = Ui::new(&mut painter);
     menus::save::draw(state, &SAVE_DEFAULT_LAYOUT, &SAVE_ASK_PROMPT_LAYOUT, &mut ui, lang);
+}
+
+/// Repaint only the changed YES/NO cursor cells of an already-rendered save prompt.
+pub fn redraw_save_menu_cursor(
+    previous: YesNoChoice,
+    current: YesNoChoice,
+    fb: &mut FrameBuffer,
+    lang: Lang,
+) {
+    let mut painter = FrameBufferPainter::new(fb).with_lang(lang);
+    menus::save::redraw_cursor(previous, current, &mut painter);
 }
 
 /// Draws the party screen with real Pokémon icons composited on top of the
@@ -93,7 +161,7 @@ pub fn draw_party_screen(
                     draw_mon_icon(fb, tiles, ICON_X_PX, y, &GRAYSCALE_SPRITE_PALETTE);
                 }
                 Err(e) => {
-                    tracing::warn!(
+                    log::warn!(
                         "party screen: failed to load icon for {:?}: {}",
                         pokemon.species,
                         e
@@ -110,7 +178,7 @@ pub fn draw_party_screen(
                 pokemon.hp,
                 pokemon.max_hp,
             ) {
-                tracing::warn!(
+                log::warn!(
                     "party screen: failed to draw HP bar for {:?}: {}",
                     pokemon.species,
                     e
@@ -120,6 +188,169 @@ pub fn draw_party_screen(
     }
     let mut painter = FrameBufferPainter::new(fb).with_lang(lang);
     menus::party::draw_overlay(state, &mut Ui::new(&mut painter), lang);
+}
+
+fn clear_top_level_party_icon_at(party_index: usize, fb: &mut FrameBuffer) {
+    const ICON_X_PX: u32 = 8;
+    const ICON_SIZE_PX: u32 = 16;
+    let row_height = PARTY_ENTRY_LAYOUT.cursors[0].row_step * TILE_SIZE;
+    let icon_y = party_index as u32 * row_height;
+    fb.fill_rect(
+        ICON_X_PX,
+        icon_y,
+        ICON_SIZE_PX,
+        ICON_SIZE_PX,
+        pokered_renderer::Rgba::WHITE,
+    );
+}
+
+fn draw_top_level_party_icon_at(
+    state: &PartyScreenState,
+    party_index: usize,
+    frame: IconFrame,
+    resources: Option<&mut ResourceManager>,
+    fb: &mut FrameBuffer,
+) {
+    const ICON_X_PX: u32 = 8;
+    let row_height = PARTY_ENTRY_LAYOUT.cursors[0].row_step * TILE_SIZE;
+    let icon_y = party_index as u32 * row_height;
+    let (Some(pokemon), Some(rm)) = (state.party_member(party_index), resources) else {
+        return;
+    };
+    let kind = icon_for_species(pokemon.species);
+    if let Ok(tiles) = load_mon_icon_tiles(rm, kind, frame) {
+        draw_mon_icon(
+            fb,
+            tiles,
+            ICON_X_PX,
+            icon_y,
+            &GRAYSCALE_SPRITE_PALETTE,
+        );
+    }
+}
+
+/// Repaint the selected icon when its 16-frame animation phase changes.
+pub fn redraw_top_level_party_icon(
+    state: &PartyScreenState,
+    frame_counter: u64,
+    resources: Option<&mut ResourceManager>,
+    fb: &mut FrameBuffer,
+    lang: Lang,
+) {
+    clear_top_level_party_icon_at(state.cursor(), fb);
+    draw_top_level_party_icon_at(
+        state,
+        state.cursor(),
+        IconFrame::from_counter(frame_counter, 16),
+        resources,
+        fb,
+    );
+
+    // The switch-target hint can cover the bottom party row. The complete
+    // renderer draws overlays after icons, so restore that ordering here too.
+    if matches!(state.phase(), PartyScreenPhase::SwitchTarget { .. }) {
+        let mut painter = FrameBufferPainter::new(fb).with_lang(lang);
+        menus::party::draw_overlay(state, &mut Ui::new(&mut painter), lang);
+    }
+}
+
+/// Repaint the two affected list rows when the selected party member moves.
+pub fn redraw_top_level_party_selection(
+    state: &PartyScreenState,
+    previous_cursor: usize,
+    frame_counter: u64,
+    mut resources: Option<&mut ResourceManager>,
+    fb: &mut FrameBuffer,
+    lang: Lang,
+) {
+    let current_cursor = state.cursor();
+    let cursor_defs = PARTY_ENTRY_LAYOUT.cursors.as_ref();
+    let cursor_position = |row: usize| {
+        TilePos::new(
+            cursor_defs[0].tx,
+            cursor_defs[0].base_ty + row as u32 * cursor_defs[0].row_step,
+        )
+    };
+    let previous_position = cursor_position(previous_cursor);
+    let current_position = cursor_position(current_cursor);
+    let source_index = match state.phase() {
+        PartyScreenPhase::SwitchTarget { source_index } => Some(source_index),
+        _ => None,
+    };
+
+    clear_top_level_party_icon_at(previous_cursor, fb);
+    clear_top_level_party_icon_at(current_cursor, fb);
+    {
+        let mut painter = FrameBufferPainter::new(fb).with_lang(lang);
+        for position in [previous_position, current_position] {
+            painter.draw_pixel_rect(
+                position.tx * TILE_SIZE,
+                position.ty * TILE_SIZE,
+                TILE_SIZE,
+                TILE_SIZE + 1,
+                pokered_ui::Rgba::INK_WHITE,
+            );
+        }
+        if source_index == Some(previous_cursor) && previous_cursor != current_cursor {
+            let source = &cursor_defs[1];
+            painter.draw_glyph(
+                previous_position,
+                source.glyph,
+                pokered_ui::Rgba::INK_DARK_GRAY,
+            );
+        }
+        let selected = &cursor_defs[0];
+        painter.draw_glyph(
+            current_position,
+            selected.glyph,
+            pokered_ui::Rgba::INK_BLACK,
+        );
+    }
+
+    draw_top_level_party_icon_at(
+        state,
+        previous_cursor,
+        IconFrame::Frame1,
+        resources.as_deref_mut(),
+        fb,
+    );
+    draw_top_level_party_icon_at(
+        state,
+        current_cursor,
+        IconFrame::from_counter(frame_counter, 16),
+        resources,
+        fb,
+    );
+
+    if matches!(state.phase(), PartyScreenPhase::SwitchTarget { .. }) {
+        let mut painter = FrameBufferPainter::new(fb).with_lang(lang);
+        menus::party::draw_overlay(state, &mut Ui::new(&mut painter), lang);
+    }
+}
+
+/// Repaint only the changed cursor cells of an action/choose-move overlay.
+pub fn redraw_top_level_party_overlay_cursor(
+    state: &PartyScreenState,
+    previous_cursor: u8,
+    current_cursor: u8,
+    fb: &mut FrameBuffer,
+    lang: Lang,
+) {
+    let Some(previous) = menus::party::overlay_cursor_position(state, previous_cursor, lang) else {
+        return;
+    };
+    let Some(current) = menus::party::overlay_cursor_position(state, current_cursor, lang) else {
+        return;
+    };
+    let mut painter = FrameBufferPainter::new(fb).with_lang(lang);
+    painter.draw_pixel_rect(
+        previous.tx * TILE_SIZE,
+        previous.ty * TILE_SIZE,
+        TILE_SIZE,
+        TILE_SIZE + 1,
+        pokered_ui::Rgba::INK_WHITE,
+    );
+    painter.draw_glyph(current, '▶', pokered_ui::Rgba::INK_BLACK);
 }
 
 /// Draw the stats/details screen. Renders the text UI (name, level, HP
@@ -147,7 +378,6 @@ pub fn draw_stats_screen(
     let species_display = format!("{}", pokemon.species);
     let sprite_name = species_to_sprite_name(&species_display);
     let drew_front = if let Ok(cached) = rm.load_pokemon_front(&sprite_name) {
-        let ts = cached.tileset.clone();
         let w_tiles = cached.source_size.0 / TILE_SIZE;
         let max_w = 7u32;
         let x_off = ((max_w.saturating_sub(w_tiles)) / 2) * TILE_SIZE;
@@ -159,7 +389,14 @@ pub fn draw_stats_screen(
             StatsPage::Stats => 0,
             StatsPage::Moves => TILE_SIZE / 2,
         };
-        blit_tileset(fb, &ts, px, py, w_tiles, &GRAYSCALE_SPRITE_PALETTE);
+        blit_tileset(
+            fb,
+            &cached.tileset,
+            px,
+            py,
+            w_tiles,
+            &GRAYSCALE_SPRITE_PALETTE,
+        );
         true
     } else {
         false
@@ -303,6 +540,22 @@ pub fn draw_mart(state: &MartState, player_money: u32, bag_items: &[(pokered_dat
     }
 }
 
+/// Repaint only the changed `▶` cells of an already-rendered mart screen.
+pub fn redraw_mart_cursor(
+    previous: (u32, u32),
+    current: (u32, u32),
+    fb: &mut FrameBuffer,
+    lang: Lang,
+) {
+    let mut painter = FrameBufferPainter::new(fb).with_lang(lang);
+    painter.draw_pixel_rect(previous.0 * 8, previous.1 * 8, 8, 9, pokered_ui::Rgba::INK_WHITE);
+    painter.draw_glyph(
+        TilePos::new(current.0, current.1),
+        '▶',
+        pokered_ui::Rgba::INK_BLACK,
+    );
+}
+
 fn buy_result_lines(result: &BuyResult, is_zh: bool) -> Vec<&'static str> {
     if is_zh {
         match result {
@@ -339,18 +592,758 @@ fn sell_result_lines(result: &SellResult, is_zh: bool) -> Vec<&'static str> {
     }
 }
 
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use pokered_core::bag_screen::{BagScreenInput, BagScreenState};
+    use pokered_core::game_state::SaveFileSummary;
+    use pokered_core::start_menu::{StartMenuInput, StartMenuState};
+    use pokered_core::options_menu::{
+        BattleAnimation, BattleStyle, GameOptions, OptionsMenuState, OptionsRow, TextSpeed,
+    };
+    use pokered_core::save_menu::{SavePhase, SaveScreenInfo};
+    use pokered_core::party_screen::{PartyScreenInput, PartyScreenState};
+    use pokered_core::pokemon::stats::create_pokemon;
+    use pokered_data::items::ItemId;
+    use pokered_data::species::Species;
+    use pokered_renderer::resource::AssetRoot;
+    use pokered_renderer::Rgba;
+
+    fn assert_framebuffers_equal(actual: &FrameBuffer, expected: &FrameBuffer) {
+        assert_eq!(actual.width(), expected.width());
+        assert_eq!(actual.height(), expected.height());
+        for y in 0..actual.height() {
+            for x in 0..actual.width() {
+                assert_eq!(
+                    actual.get_pixel(x, y),
+                    expected.get_pixel(x, y),
+                    "framebuffer mismatch at ({x}, {y})",
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn main_menu_cursor_repaint_matches_a_fresh_menu_for_every_transition() {
+        let save = SaveFileSummary {
+            player_name: b"RED".to_vec(),
+            badges: 0,
+            pokedex_owned: 0,
+            play_time_hours: 0,
+            play_time_minutes: 0,
+            play_time_seconds: 0,
+            player_id: 0,
+        };
+        for language in [Lang::En, Lang::Zh] {
+            for save_summary in [None, Some(save.clone())] {
+                let state = MainMenuState::new(save_summary);
+                for previous_cursor in 0..state.item_count() {
+                    for current_cursor in 0..state.item_count() {
+                        if previous_cursor == current_cursor {
+                            continue;
+                        }
+                        let mut previous = state.clone();
+                        previous.cursor = previous_cursor;
+                        let mut current = state.clone();
+                        current.cursor = current_cursor;
+                        let config = dotzuki_engine::render_config::RenderConfig::new(160, 144);
+
+                        let mut actual = FrameBuffer::new(config, Rgba::BLACK);
+                        draw_main_menu(&previous, &mut actual, language);
+                        redraw_main_menu_cursor(
+                            previous_cursor,
+                            current_cursor,
+                            &mut actual,
+                            language,
+                        );
+
+                        let mut expected = FrameBuffer::new(config, Rgba::BLACK);
+                        draw_main_menu(&current, &mut expected, language);
+                        assert_framebuffers_equal(&actual, &expected);
+                    }
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn start_menu_cursor_repaint_matches_a_fresh_menu_for_every_transition() {
+        let input_down = StartMenuInput {
+            up: false,
+            down: true,
+            a: false,
+            b: false,
+            start: false,
+        };
+        for language in [Lang::En, Lang::Zh] {
+            for (has_pokedex, has_pokemon) in [(false, false), (true, true)] {
+                let state = StartMenuState::new(has_pokedex, has_pokemon, false);
+                for previous_cursor in 0..state.item_count() {
+                    for current_cursor in 0..state.item_count() {
+                        if previous_cursor == current_cursor {
+                            continue;
+                        }
+                        let mut previous = state.clone();
+                        for _ in 0..previous_cursor {
+                            previous.update_frame(input_down);
+                        }
+                        let mut current = state.clone();
+                        for _ in 0..current_cursor {
+                            current.update_frame(input_down);
+                        }
+                        let config = dotzuki_engine::render_config::RenderConfig::new(160, 144);
+
+                        let mut actual = FrameBuffer::new(config, Rgba::BLACK);
+                        draw_start_menu(&previous, "RED", &mut actual, language);
+                        redraw_start_menu_cursor(
+                            state.item_count(),
+                            previous_cursor,
+                            current_cursor,
+                            &mut actual,
+                            language,
+                        );
+
+                        let mut expected = FrameBuffer::new(config, Rgba::BLACK);
+                        draw_start_menu(&current, "RED", &mut expected, language);
+                        assert_framebuffers_equal(&actual, &expected);
+                    }
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn options_cursor_repaint_matches_a_fresh_menu_for_every_visible_transition() {
+        let state = |row, text_speed, battle_animation, battle_style| {
+            let mut state = OptionsMenuState::new(GameOptions {
+                text_speed,
+                battle_animation,
+                battle_style,
+            });
+            state.row = row;
+            state
+        };
+        let states = [
+            state(
+                OptionsRow::TextSpeed,
+                TextSpeed::Fast,
+                BattleAnimation::On,
+                BattleStyle::Shift,
+            ),
+            state(
+                OptionsRow::TextSpeed,
+                TextSpeed::Medium,
+                BattleAnimation::On,
+                BattleStyle::Shift,
+            ),
+            state(
+                OptionsRow::TextSpeed,
+                TextSpeed::Slow,
+                BattleAnimation::On,
+                BattleStyle::Shift,
+            ),
+            state(
+                OptionsRow::BattleAnimation,
+                TextSpeed::Medium,
+                BattleAnimation::On,
+                BattleStyle::Shift,
+            ),
+            state(
+                OptionsRow::BattleAnimation,
+                TextSpeed::Medium,
+                BattleAnimation::Off,
+                BattleStyle::Shift,
+            ),
+            state(
+                OptionsRow::BattleStyle,
+                TextSpeed::Medium,
+                BattleAnimation::On,
+                BattleStyle::Shift,
+            ),
+            state(
+                OptionsRow::BattleStyle,
+                TextSpeed::Medium,
+                BattleAnimation::On,
+                BattleStyle::Set,
+            ),
+            state(
+                OptionsRow::Cancel,
+                TextSpeed::Medium,
+                BattleAnimation::On,
+                BattleStyle::Shift,
+            ),
+        ];
+        let config = dotzuki_engine::render_config::RenderConfig::new(160, 144);
+
+        for language in [Lang::En, Lang::Zh] {
+            for previous in &states {
+                for current in &states {
+                    let previous_spec = menus::options::cursor_spec(previous, language);
+                    let current_spec = menus::options::cursor_spec(current, language);
+                    let previous_pos = previous_spec.0;
+                    let current_pos = current_spec.0;
+                    if previous_pos == current_pos {
+                        continue;
+                    }
+
+                    let mut actual = FrameBuffer::new(config, Rgba::BLACK);
+                    draw_options_menu(previous, &mut actual, language);
+                    redraw_options_menu_cursor(
+                        (previous_pos.tx, previous_pos.ty, previous_spec.1),
+                        (current_pos.tx, current_pos.ty, current_spec.1),
+                        &mut actual,
+                        language,
+                    );
+
+                    let mut expected = FrameBuffer::new(config, Rgba::BLACK);
+                    draw_options_menu(current, &mut expected, language);
+                    assert_framebuffers_equal(&actual, &expected);
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn save_cursor_repaint_matches_a_fresh_prompt_in_both_directions() {
+        for language in [Lang::En, Lang::Zh] {
+            for phase in [SavePhase::AskSave, SavePhase::ConfirmOverwrite] {
+                for (previous, current) in [
+                    (YesNoChoice::Yes, YesNoChoice::No),
+                    (YesNoChoice::No, YesNoChoice::Yes),
+                ] {
+                    let make_state = |cursor| SaveMenuState {
+                        phase: phase.clone(),
+                        cursor,
+                        info: SaveScreenInfo {
+                            player_name: "RED".into(),
+                            num_badges: 3,
+                            pokedex_owned: 42,
+                            play_time_hours: 12,
+                            play_time_minutes: 34,
+                        },
+                        has_previous_save: false,
+                        is_different_player: false,
+                        sfx_event: pokered_core::save_menu::SaveSfxEvent::None,
+                    };
+                    let config = dotzuki_engine::render_config::RenderConfig::new(160, 144);
+
+                    let mut actual = FrameBuffer::new(config, Rgba::BLACK);
+                    draw_save_menu(&make_state(previous), &mut actual, language);
+                    redraw_save_menu_cursor(previous, current, &mut actual, language);
+
+                    let mut expected = FrameBuffer::new(config, Rgba::BLACK);
+                    draw_save_menu(&make_state(current), &mut expected, language);
+                    assert_framebuffers_equal(&actual, &expected);
+                }
+            }
+        }
+    }
+
+    fn top_level_party() -> PartyScreenState {
+        PartyScreenState::new(vec![
+            create_pokemon(Species::Bulbasaur, 20, [0xFF, 0xFF]).unwrap(),
+            create_pokemon(Species::Charmander, 20, [0xFF, 0xFF]).unwrap(),
+            create_pokemon(Species::Squirtle, 20, [0xFF, 0xFF]).unwrap(),
+            create_pokemon(Species::Pikachu, 20, [0xFF, 0xFF]).unwrap(),
+            create_pokemon(Species::Pidgey, 20, [0xFF, 0xFF]).unwrap(),
+            create_pokemon(Species::Rattata, 20, [0xFF, 0xFF]).unwrap(),
+        ])
+    }
+
+    fn party_input(up: bool, down: bool, a: bool) -> PartyScreenInput {
+        PartyScreenInput {
+            up,
+            down,
+            a,
+            b: false,
+        }
+    }
+
+    #[test]
+    fn top_level_party_icon_repaint_matches_fresh_draws_in_browsing_and_switch_hint() {
+        let config = dotzuki_engine::render_config::RenderConfig::new(160, 144);
+        let root = AssetRoot::auto_detect().expect("test graphics");
+        let mut resources = ResourceManager::new(root);
+
+        for language in [Lang::En, Lang::Zh] {
+            let browsing = top_level_party();
+            let mut actual = FrameBuffer::new(config, Rgba::BLACK);
+            draw_party_screen(&browsing, Some(&mut resources), 0, &mut actual, language);
+            redraw_top_level_party_icon(
+                &browsing,
+                16,
+                Some(&mut resources),
+                &mut actual,
+                language,
+            );
+            let mut expected = FrameBuffer::new(config, Rgba::BLACK);
+            draw_party_screen(&browsing, Some(&mut resources), 16, &mut expected, language);
+            assert_framebuffers_equal(&actual, &expected);
+
+            // Select the bottom row, then enter SWITCH so its icon overlaps
+            // the hint overlay. Incremental animation must restore the hint.
+            let mut switching = top_level_party();
+            for _ in 0..5 {
+                switching.update_frame(party_input(false, true, false));
+            }
+            switching.update_frame(party_input(false, false, true));
+            switching.update_frame(party_input(false, true, false));
+            switching.update_frame(party_input(false, false, true));
+            assert!(matches!(
+                switching.phase(),
+                PartyScreenPhase::SwitchTarget { source_index: 5 }
+            ));
+
+            let mut actual = FrameBuffer::new(config, Rgba::BLACK);
+            draw_party_screen(&switching, Some(&mut resources), 0, &mut actual, language);
+            redraw_top_level_party_icon(
+                &switching,
+                16,
+                Some(&mut resources),
+                &mut actual,
+                language,
+            );
+            let mut expected = FrameBuffer::new(config, Rgba::BLACK);
+            draw_party_screen(&switching, Some(&mut resources), 16, &mut expected, language);
+            assert_framebuffers_equal(&actual, &expected);
+        }
+    }
+
+    #[test]
+    fn top_level_party_selection_repaint_matches_fresh_draws() {
+        let config = dotzuki_engine::render_config::RenderConfig::new(160, 144);
+        let root = AssetRoot::auto_detect().expect("test graphics");
+        let mut resources = ResourceManager::new(root);
+
+        for language in [Lang::En, Lang::Zh] {
+            for previous_cursor in 0..6 {
+                for down in [false, true] {
+                    if (!down && previous_cursor == 0) || (down && previous_cursor == 5) {
+                        continue;
+                    }
+                    let mut state = top_level_party();
+                    for _ in 0..previous_cursor {
+                        state.update_frame(party_input(false, true, false));
+                    }
+                    let mut actual = FrameBuffer::new(config, Rgba::BLACK);
+                    draw_party_screen(&state, Some(&mut resources), 0, &mut actual, language);
+                    state.update_frame(party_input(!down, down, false));
+                    redraw_top_level_party_selection(
+                        &state,
+                        previous_cursor,
+                        16,
+                        Some(&mut resources),
+                        &mut actual,
+                        language,
+                    );
+
+                    let mut expected = FrameBuffer::new(config, Rgba::BLACK);
+                    draw_party_screen(&state, Some(&mut resources), 16, &mut expected, language);
+                    assert_framebuffers_equal(&actual, &expected);
+                }
+            }
+
+            // In SWITCH mode the old source row changes from the selected
+            // arrow to the diamond marker when the cursor leaves it.
+            let mut switching = top_level_party();
+            switching.update_frame(party_input(false, false, true));
+            switching.update_frame(party_input(false, true, false));
+            switching.update_frame(party_input(false, false, true));
+            let mut actual = FrameBuffer::new(config, Rgba::BLACK);
+            draw_party_screen(&switching, Some(&mut resources), 0, &mut actual, language);
+            switching.update_frame(party_input(false, true, false));
+            redraw_top_level_party_selection(
+                &switching,
+                0,
+                16,
+                Some(&mut resources),
+                &mut actual,
+                language,
+            );
+            let mut expected = FrameBuffer::new(config, Rgba::BLACK);
+            draw_party_screen(&switching, Some(&mut resources), 16, &mut expected, language);
+            assert_framebuffers_equal(&actual, &expected);
+        }
+    }
+
+    #[test]
+    fn top_level_party_overlay_cursor_repaint_matches_fresh_draws() {
+        let config = dotzuki_engine::render_config::RenderConfig::new(160, 144);
+        let root = AssetRoot::auto_detect().expect("test graphics");
+        let mut resources = ResourceManager::new(root);
+
+        for language in [Lang::En, Lang::Zh] {
+            let mut action = top_level_party();
+            action.update_frame(party_input(false, false, true));
+            let mut actual = FrameBuffer::new(config, Rgba::BLACK);
+            draw_party_screen(&action, Some(&mut resources), 0, &mut actual, language);
+            action.update_frame(party_input(false, true, false));
+            redraw_top_level_party_icon(
+                &action,
+                16,
+                Some(&mut resources),
+                &mut actual,
+                language,
+            );
+            redraw_top_level_party_overlay_cursor(&action, 0, 1, &mut actual, language);
+            let mut expected = FrameBuffer::new(config, Rgba::BLACK);
+            draw_party_screen(&action, Some(&mut resources), 16, &mut expected, language);
+            assert_framebuffers_equal(&actual, &expected);
+
+            let mut choose = PartyScreenState::new_for_move_choice(
+                top_level_party().party().to_vec(),
+                0,
+            );
+            let mut actual = FrameBuffer::new(config, Rgba::BLACK);
+            draw_party_screen(&choose, Some(&mut resources), 0, &mut actual, language);
+            choose.update_frame(party_input(false, true, false));
+            redraw_top_level_party_icon(
+                &choose,
+                16,
+                Some(&mut resources),
+                &mut actual,
+                language,
+            );
+            redraw_top_level_party_overlay_cursor(&choose, 0, 1, &mut actual, language);
+            let mut expected = FrameBuffer::new(config, Rgba::BLACK);
+            draw_party_screen(&choose, Some(&mut resources), 16, &mut expected, language);
+            assert_framebuffers_equal(&actual, &expected);
+        }
+    }
+
+    fn bag_at(cursor: usize) -> BagScreenState {
+        let mut state = BagScreenState::new(vec![
+            (ItemId::Potion, 5),
+            (ItemId::Antidote, 2),
+            (ItemId::PokeBall, 12),
+            (ItemId::PokeFlute, 1),
+            (ItemId::Bicycle, 1),
+            (ItemId::Potion, 8),
+            (ItemId::Antidote, 4),
+            (ItemId::PokeBall, 20),
+        ]);
+        for _ in 0..cursor {
+            state.update_frame(BagScreenInput {
+                down: true,
+                ..BagScreenInput::none()
+            });
+        }
+        state
+    }
+
+    #[test]
+    fn top_level_bag_list_cursor_repaint_matches_a_fresh_bag() {
+        for language in [Lang::En, Lang::Zh] {
+            for (previous_cursor, down) in [(0, true), (1, false), (4, true), (5, false)] {
+                let mut state = bag_at(previous_cursor);
+                let config = dotzuki_engine::render_config::RenderConfig::new(160, 144);
+                let mut actual = FrameBuffer::new(config, Rgba::BLACK);
+                draw_bag(&state, &mut actual, language);
+                let previous = top_level_bag_cursor_position(state.items().len(), state.cursor());
+
+                state.update_frame(BagScreenInput {
+                    up: !down,
+                    down,
+                    ..BagScreenInput::none()
+                });
+                let current = top_level_bag_cursor_position(state.items().len(), state.cursor());
+                assert_eq!(
+                    top_level_bag_viewport_offset(state.items().len(), previous_cursor),
+                    top_level_bag_viewport_offset(state.items().len(), state.cursor()),
+                );
+                redraw_top_level_bag_cursor(previous, current, &mut actual, language);
+
+                let mut expected = FrameBuffer::new(config, Rgba::BLACK);
+                draw_bag(&state, &mut expected, language);
+                assert_framebuffers_equal(&actual, &expected);
+            }
+        }
+    }
+
+    #[test]
+    fn top_level_bag_swap_and_action_cursors_match_fresh_draws() {
+        for language in [Lang::En, Lang::Zh] {
+            let config = dotzuki_engine::render_config::RenderConfig::new(160, 144);
+
+            let mut swap = bag_at(0);
+            swap.update_frame(BagScreenInput {
+                select: true,
+                ..BagScreenInput::none()
+            });
+            let mut actual = FrameBuffer::new(config, Rgba::BLACK);
+            draw_bag(&swap, &mut actual, language);
+            let previous = top_level_bag_cursor_position(swap.items().len(), swap.cursor());
+            swap.update_frame(BagScreenInput {
+                down: true,
+                ..BagScreenInput::none()
+            });
+            let current = top_level_bag_cursor_position(swap.items().len(), swap.cursor());
+            redraw_top_level_bag_cursor(previous, current, &mut actual, language);
+            let mut expected = FrameBuffer::new(config, Rgba::BLACK);
+            draw_bag(&swap, &mut expected, language);
+            assert_framebuffers_equal(&actual, &expected);
+
+            let mut action = bag_at(0);
+            action.update_frame(BagScreenInput {
+                a: true,
+                ..BagScreenInput::none()
+            });
+            let mut actual = FrameBuffer::new(config, Rgba::BLACK);
+            draw_bag(&action, &mut actual, language);
+            action.update_frame(BagScreenInput {
+                down: true,
+                ..BagScreenInput::none()
+            });
+            redraw_top_level_bag_action_cursor(0, 1, &mut actual, language);
+            let mut expected = FrameBuffer::new(config, Rgba::BLACK);
+            draw_bag(&action, &mut expected, language);
+            assert_framebuffers_equal(&actual, &expected);
+        }
+    }
+
+    #[test]
+    fn top_level_bag_quantity_repaint_matches_a_fresh_draw() {
+        for language in [Lang::En, Lang::Zh] {
+            let config = dotzuki_engine::render_config::RenderConfig::new(160, 144);
+            let mut state = bag_at(0);
+            state.update_frame(BagScreenInput {
+                a: true,
+                ..BagScreenInput::none()
+            });
+            state.update_frame(BagScreenInput {
+                down: true,
+                ..BagScreenInput::none()
+            });
+            state.update_frame(BagScreenInput {
+                a: true,
+                ..BagScreenInput::none()
+            });
+
+            let mut actual = FrameBuffer::new(config, Rgba::BLACK);
+            draw_bag(&state, &mut actual, language);
+            state.update_frame(BagScreenInput {
+                up: true,
+                ..BagScreenInput::none()
+            });
+            redraw_top_level_bag_quantity(1, 2, &mut actual, language);
+
+            let mut expected = FrameBuffer::new(config, Rgba::BLACK);
+            draw_bag(&state, &mut expected, language);
+            assert_framebuffers_equal(&actual, &expected);
+
+            // Crossing the two/three-digit boundary must also erase the
+            // trailing digit when moving back from x100 to x99.
+            let mut state = BagScreenState::new(vec![(ItemId::Potion, 100)]);
+            state.update_frame(BagScreenInput {
+                a: true,
+                ..BagScreenInput::none()
+            });
+            state.update_frame(BagScreenInput {
+                down: true,
+                ..BagScreenInput::none()
+            });
+            state.update_frame(BagScreenInput {
+                a: true,
+                ..BagScreenInput::none()
+            });
+            for _ in 1..100 {
+                state.update_frame(BagScreenInput {
+                    up: true,
+                    ..BagScreenInput::none()
+                });
+            }
+            let mut actual = FrameBuffer::new(config, Rgba::BLACK);
+            draw_bag(&state, &mut actual, language);
+            state.update_frame(BagScreenInput {
+                down: true,
+                ..BagScreenInput::none()
+            });
+            redraw_top_level_bag_quantity(100, 99, &mut actual, language);
+            let mut expected = FrameBuffer::new(config, Rgba::BLACK);
+            draw_bag(&state, &mut expected, language);
+            assert_framebuffers_equal(&actual, &expected);
+        }
+    }
+
+    fn mart_state(stock: &[ItemId], phase: MartPhase) -> MartState {
+        let mut state = MartState::new(pokered_core::items::shop::ShopInventory::new(
+            stock.to_vec(),
+        ));
+        state.phase = phase;
+        state
+    }
+
+    fn assert_mart_cursor_repaint(
+        previous: MartState,
+        current: MartState,
+        previous_pos: (u32, u32),
+        current_pos: (u32, u32),
+        bag: &[(ItemId, u32)],
+        language: Lang,
+    ) {
+        let config = dotzuki_engine::render_config::RenderConfig::new(160, 144);
+        let mut actual = FrameBuffer::new(config, Rgba::BLACK);
+        draw_mart(&previous, 12_345, bag, &mut actual, language);
+        redraw_mart_cursor(previous_pos, current_pos, &mut actual, language);
+
+        let mut expected = FrameBuffer::new(config, Rgba::BLACK);
+        draw_mart(&current, 12_345, bag, &mut expected, language);
+        assert_framebuffers_equal(&actual, &expected);
+    }
+
+    #[test]
+    fn mart_cursor_repaint_matches_fresh_draws_for_all_local_transitions() {
+        use pokered_core::items::shop::{ConfirmChoice, MartTopChoice, ShopInventory};
+
+        let stock = [
+            ItemId::PokeBall,
+            ItemId::Potion,
+            ItemId::Antidote,
+            ItemId::PokeBall,
+            ItemId::Potion,
+        ];
+        let bag = [
+            (ItemId::Potion, 3),
+            (ItemId::Antidote, 2),
+            (ItemId::PokeBall, 12),
+        ];
+
+        for language in [Lang::En, Lang::Zh] {
+            let top_choices = [
+                MartTopChoice::Buy,
+                MartTopChoice::Sell,
+                MartTopChoice::Quit,
+            ];
+            for (previous_cursor, previous_choice) in top_choices.iter().enumerate() {
+                for (current_cursor, current_choice) in top_choices.iter().enumerate() {
+                    if previous_cursor == current_cursor {
+                        continue;
+                    }
+                    assert_mart_cursor_repaint(
+                        mart_state(
+                            &stock,
+                            MartPhase::MainMenu {
+                                cursor: *previous_choice,
+                            },
+                        ),
+                        mart_state(
+                            &stock,
+                            MartPhase::MainMenu {
+                                cursor: *current_choice,
+                            },
+                        ),
+                        (1, 2 + previous_cursor as u32 * 2),
+                        (1, 2 + current_cursor as u32 * 2),
+                        &bag,
+                        language,
+                    );
+                }
+            }
+
+            for previous_cursor in 0..stock.len() {
+                for current_cursor in 0..stock.len() {
+                    if previous_cursor == current_cursor {
+                        continue;
+                    }
+                    assert_mart_cursor_repaint(
+                        mart_state(
+                            &stock,
+                            MartPhase::Buy(BuyMenuState::SelectItem {
+                                cursor: previous_cursor,
+                            }),
+                        ),
+                        mart_state(
+                            &stock,
+                            MartPhase::Buy(BuyMenuState::SelectItem {
+                                cursor: current_cursor,
+                            }),
+                        ),
+                        (2, 4 + previous_cursor as u32 * 2),
+                        (2, 4 + current_cursor as u32 * 2),
+                        &bag,
+                        language,
+                    );
+                }
+            }
+
+            // The sell list has one extra CANCEL row after the bag items.
+            for previous_cursor in 0..=bag.len() {
+                for current_cursor in 0..=bag.len() {
+                    if previous_cursor == current_cursor {
+                        continue;
+                    }
+                    assert_mart_cursor_repaint(
+                        mart_state(
+                            &stock,
+                            MartPhase::Sell(SellMenuState::SelectItem {
+                                cursor: previous_cursor,
+                            }),
+                        ),
+                        mart_state(
+                            &stock,
+                            MartPhase::Sell(SellMenuState::SelectItem {
+                                cursor: current_cursor,
+                            }),
+                        ),
+                        (2, 4 + previous_cursor as u32 * 2),
+                        (2, 4 + current_cursor as u32 * 2),
+                        &bag,
+                        language,
+                    );
+                }
+            }
+
+            let confirm_y = |choice| match (language, choice) {
+                (_, ConfirmChoice::Yes) => 9,
+                (Lang::En, ConfirmChoice::No) => 10,
+                (Lang::Zh, ConfirmChoice::No) => 11,
+            };
+            for sell in [false, true] {
+                for (previous, current) in [
+                    (ConfirmChoice::Yes, ConfirmChoice::No),
+                    (ConfirmChoice::No, ConfirmChoice::Yes),
+                ] {
+                    let phase = |selected| {
+                        if sell {
+                            MartPhase::Sell(SellMenuState::Confirm {
+                                item_index: 0,
+                                quantity: 2,
+                                max_quantity: 3,
+                                selected,
+                            })
+                        } else {
+                            MartPhase::Buy(BuyMenuState::Confirm {
+                                item_index: 0,
+                                quantity: 2,
+                                selected,
+                            })
+                        }
+                    };
+                    let mut previous_state = MartState::new(ShopInventory::new(stock.to_vec()));
+                    previous_state.phase = phase(previous);
+                    let mut current_state = MartState::new(ShopInventory::new(stock.to_vec()));
+                    current_state.phase = phase(current);
+                    assert_mart_cursor_repaint(
+                        previous_state,
+                        current_state,
+                        (15, confirm_y(previous)),
+                        (15, confirm_y(current)),
+                        &bag,
+                        language,
+                    );
+                }
+            }
+        }
+    }
+}
+
 /// Overworld ITEM bag (Start menu → ITEM): the item list, plus a USE / TOSS /
 /// CANCEL menu or the TOSS-quantity prompt when an item is selected.
 pub fn draw_bag(state: &BagScreenState, fb: &mut FrameBuffer, lang: Lang) {
     let mut painter = FrameBufferPainter::new(fb).with_lang(lang);
     let mut ui = Ui::new(&mut painter);
     let rd = PokemonRenderData::new(false);
-    let items_u8: Vec<(pokered_data::items::ItemId, u8)> = state
-        .items()
-        .iter()
-        .map(|(id, q)| (*id, (*q).min(99) as u8))
-        .collect();
-    menus::bag::draw(&items_u8, state.cursor(), &BAG_DEFAULT_LAYOUT, &mut ui, &rd);
+    menus::bag::draw(state.items(), state.cursor(), &BAG_DEFAULT_LAYOUT, &mut ui, &rd);
 
     match state.phase() {
         BagPhase::SwapFrom { row } => {
@@ -397,4 +1390,61 @@ pub fn draw_bag(state: &BagScreenState, fb: &mut FrameBuffer, lang: Lang) {
         }
         BagPhase::Browsing => {}
     }
+}
+
+pub fn top_level_bag_viewport_offset(item_count: usize, cursor: usize) -> usize {
+    menus::bag::viewport_offset(item_count, cursor, &BAG_DEFAULT_LAYOUT)
+}
+
+pub fn top_level_bag_cursor_position(item_count: usize, cursor: usize) -> TilePos {
+    menus::bag::cursor_position(item_count, cursor, &BAG_DEFAULT_LAYOUT)
+}
+
+/// Repaint only the changed list cursor cells of an already-rendered bag.
+pub fn redraw_top_level_bag_cursor(
+    previous: TilePos,
+    current: TilePos,
+    fb: &mut FrameBuffer,
+    lang: Lang,
+) {
+    let mut painter = FrameBufferPainter::new(fb).with_lang(lang);
+    menus::bag::redraw_cursor(previous, current, &mut painter);
+}
+
+/// Repaint only the changed USE/TOSS/CANCEL cursor cells.
+pub fn redraw_top_level_bag_action_cursor(
+    previous: u8,
+    current: u8,
+    fb: &mut FrameBuffer,
+    lang: Lang,
+) {
+    let mut painter = FrameBufferPainter::new(fb).with_lang(lang);
+    let position = |cursor| TilePos::new(13, 12 + cursor as u32 * 2);
+    let old = position(previous);
+    painter.draw_pixel_rect(old.tx * 8, old.ty * 8, 8, 9, pokered_ui::Rgba::INK_WHITE);
+    painter.draw_glyph(position(current), '▶', pokered_ui::Rgba::INK_BLACK);
+}
+
+/// Repaint only the changed `xNN` value of the toss-quantity prompt.
+pub fn redraw_top_level_bag_quantity(
+    previous: u32,
+    current: u32,
+    fb: &mut FrameBuffer,
+    lang: Lang,
+) {
+    let mut painter = FrameBufferPainter::new(fb).with_lang(lang);
+    let position = TilePos::new(7, 15);
+    let text_width = |qty| format!("x{:02}", qty).chars().count() as u32 * 8;
+    painter.draw_pixel_rect(
+        position.tx * 8,
+        position.ty * 8,
+        text_width(previous).max(text_width(current)),
+        10,
+        pokered_ui::Rgba::INK_WHITE,
+    );
+    painter.draw_text(
+        position,
+        &format!("x{:02}", current),
+        pokered_ui::Rgba::INK_BLACK,
+    );
 }

@@ -9,13 +9,15 @@
 //! engine/game repo split — the engine crate now only ships the game-agnostic
 //! `render_gui` path.
 
-use std::collections::HashMap;
+use std::collections::HashMap as StdHashMap;
 
 use wasm_bindgen::prelude::*;
 
 use dotzuki_renderer::{FrameBuffer, RenderConfig};
 use dotzuki_renderer::layout_engine::deserialize::{parse_layout, load_layout};
-use dotzuki_renderer::layout_engine::types::{DataContext, RenderContext};
+use dotzuki_renderer::layout_engine::types::{
+    DataContext, FontRegistry, RenderContext, TilesetRegistry,
+};
 use dotzuki_renderer::layout_engine::renderer::render_layout as render_screen;
 
 mod mock_data;
@@ -87,7 +89,9 @@ pub fn render_layout(menu_name: &str, layout_json: &str, mock_state_id: u32, lan
 
     // Merge user overrides from the editor
     if !overrides_json.is_empty() {
-        if let Ok(overrides) = serde_json::from_str::<HashMap<String, serde_json::Value>>(overrides_json) {
+        if let Ok(overrides) =
+            serde_json::from_str::<StdHashMap<String, serde_json::Value>>(overrides_json)
+        {
             for (key, value) in overrides {
                 match value {
                     serde_json::Value::String(s) => { ctx.set(&key, s.as_str()); }
@@ -102,8 +106,8 @@ pub fn render_layout(menu_name: &str, layout_json: &str, mock_state_id: u32, lan
     }
 
     // 3. Create RenderContext with default font/tileset registries
-    let fonts: HashMap<String, ()> = HashMap::new();
-    let tilesets: HashMap<String, ()> = HashMap::new();
+    let fonts = FontRegistry::default();
+    let tilesets = TilesetRegistry::default();
     let render_ctx = RenderContext::new(menu_name, &layout.theme, &fonts, &tilesets);
 
     // 4. Render via the layout engine — do NOT silently swallow errors

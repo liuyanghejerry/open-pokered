@@ -1,3 +1,4 @@
+use crate::alloc_prelude::*;
 use dotzuki_engine::render_data::RenderData;
 use pokered_core::battle::menu::BagMenuState;
 use pokered_data::items::ItemId;
@@ -5,7 +6,7 @@ use pokered_data::moves::MoveId;
 use pokered_data::species::Species;
 use pokered_data::ui_layout::schema::{BattleBagDefaultLayout, SizeMode};
 
-use crate::engine::{InkColor, Painter, TileRect, Ui};
+use crate::engine::{InkColor, Painter, Rgba, TilePos, TileRect, Ui};
 
 pub fn draw<P: Painter>(
     state: &BagMenuState, layout: &BattleBagDefaultLayout, ui: &mut Ui<P>,
@@ -46,6 +47,45 @@ pub fn draw<P: Painter>(
             frame.cursor_glyph_at(1, cur_y, c.glyph, c.color);
         }
     });
+}
+
+/// Repaint only the changed cursor cells of an already-rendered battle bag.
+pub fn redraw_cursor<P: Painter>(
+    previous_cursor: usize,
+    state: &BagMenuState,
+    layout: &BattleBagDefaultLayout,
+    painter: &mut P,
+) {
+    let Some(cursor) = &layout.list.cursor else {
+        return;
+    };
+    let position = |selected: usize| {
+        TilePos::new(
+            layout.list.rect.tx + 2,
+            layout.list.rect.ty
+                + 1
+                + layout.list.padding.top
+                + selected as u32 * (1 + layout.list.gap),
+        )
+    };
+    let old = position(previous_cursor);
+    painter.draw_pixel_rect(old.tx * 8, old.ty * 8, 8, 9, Rgba::INK_WHITE);
+    painter.draw_glyph(
+        position(state.cursor()),
+        cursor.glyph,
+        cursor.color.into(),
+    );
+}
+
+/// Cursor ink region for the authored battle-bag layout.
+pub fn cursor_damage(selected: usize, layout: &BattleBagDefaultLayout) -> crate::DamageRect {
+    crate::DamageRect::cursor(TilePos::new(
+        layout.list.rect.tx + 2,
+        layout.list.rect.ty
+            + 1
+            + layout.list.padding.top
+            + selected as u32 * (1 + layout.list.gap),
+    ))
 }
 
 fn clamp(val: u32, min: Option<u32>, max: Option<u32>) -> u32 {

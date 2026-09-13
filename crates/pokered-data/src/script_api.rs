@@ -1,5 +1,7 @@
+use crate::alloc_prelude::*;
 use boa_engine::{Context, JsArgs, JsResult, JsValue};
 use dotzuki_engine_script::{BridgeView, ScriptApiRegistrar, ScriptCommand};
+use crate::script_command::PokemonScriptCommand;
 
 /// Registers Pokémon-specific JS APIs on the `game` global object.
 ///
@@ -111,13 +113,13 @@ impl ScriptApiRegistrar for PokemonScriptApi {
                     .to_string(ctx)?
                     .to_std_string_lossy();
                 let base = args.get_or_undefined(1).to_json(ctx)?;
-                Ok(ScriptCommand::Custom {
-                    name: "startBattleSet".to_string(),
-                    args: vec![
-                        serde_json::Value::String(trainer_id),
-                        base,
-                    ],
-                })
+                let rival_triplet_base = base.as_u64().and_then(|value| u8::try_from(value).ok())
+                    .ok_or_else(|| boa_engine::JsNativeError::typ()
+                        .with_message("startBattleSet: rivalTripletBase must be a u8"))?;
+                Ok(PokemonScriptCommand::StartBattleSet {
+                    trainer_id,
+                    rival_triplet_base,
+                }.into_script_command())
             },
         );
 
@@ -142,10 +144,7 @@ impl ScriptApiRegistrar for PokemonScriptApi {
         engine.register_async_fn(
             "oldManTutorial",
             |_args: &[JsValue], _ctx: &mut Context| -> JsResult<ScriptCommand> {
-                Ok(ScriptCommand::Custom {
-                    name: "oldManTutorial".to_string(),
-                    args: vec![],
-                })
+                Ok(PokemonScriptCommand::OldManTutorial.into_script_command())
             },
         );
 
@@ -154,14 +153,11 @@ impl ScriptApiRegistrar for PokemonScriptApi {
         engine.register_async_fn(
             "tradePokemon",
             |args: &[JsValue], ctx: &mut Context| -> JsResult<ScriptCommand> {
-                Ok(ScriptCommand::Custom {
-                    name: "tradePokemon".to_string(),
-                    args: vec![
-                        args.get_or_undefined(0).to_json(ctx)?,
-                        args.get_or_undefined(1).to_json(ctx)?,
-                        args.get_or_undefined(2).to_json(ctx)?,
-                    ],
-                })
+                Ok(PokemonScriptCommand::TradePokemon {
+                    offered: args.get_or_undefined(0).to_string(ctx)?.to_std_string_lossy(),
+                    received: args.get_or_undefined(1).to_string(ctx)?.to_std_string_lossy(),
+                    nickname: args.get_or_undefined(2).to_string(ctx)?.to_std_string_lossy(),
+                }.into_script_command())
             },
         );
 
@@ -169,10 +165,9 @@ impl ScriptApiRegistrar for PokemonScriptApi {
         engine.register_async_fn(
             "showPokedexEntry",
             |args: &[JsValue], ctx: &mut Context| -> JsResult<ScriptCommand> {
-                Ok(ScriptCommand::Custom {
-                    name: "showPokedexEntry".to_string(),
-                    args: vec![args.get_or_undefined(0).to_json(ctx)?],
-                })
+                Ok(PokemonScriptCommand::ShowPokedexEntry {
+                    species: args.get_or_undefined(0).to_string(ctx)?.to_std_string_lossy(),
+                }.into_script_command())
             },
         );
 
@@ -202,14 +197,11 @@ impl ScriptApiRegistrar for PokemonScriptApi {
         engine.register_async_fn(
             "replaceTileBlock",
             |args: &[JsValue], ctx: &mut Context| -> JsResult<ScriptCommand> {
-                Ok(ScriptCommand::Custom {
-                    name: "replaceTileBlock".to_string(),
-                    args: vec![
-                        args.get_or_undefined(0).to_json(ctx)?,
-                        args.get_or_undefined(1).to_json(ctx)?,
-                        args.get_or_undefined(2).to_json(ctx)?,
-                    ],
-                })
+                Ok(PokemonScriptCommand::ReplaceTileBlock {
+                    x: args.get_or_undefined(0).to_u32(ctx)? as u8,
+                    y: args.get_or_undefined(1).to_u32(ctx)? as u8,
+                    block_id: args.get_or_undefined(2).to_u32(ctx)? as u8,
+                }.into_script_command())
             },
         );
 
@@ -250,12 +242,10 @@ impl ScriptApiRegistrar for PokemonScriptApi {
         // and debits the player's coin balance.
         engine.register_async_fn(
             "openSlots",
-            |args: &[JsValue], ctx: &mut Context| -> JsResult<ScriptCommand> {
-                let lucky = args.get_or_undefined(0).to_json(ctx)?;
-                Ok(ScriptCommand::Custom {
-                    name: "openSlots".to_string(),
-                    args: vec![lucky],
-                })
+            |args: &[JsValue], _ctx: &mut Context| -> JsResult<ScriptCommand> {
+                let lucky = args.get(0).filter(|value| !value.is_undefined())
+                    .map(|value| value.to_boolean());
+                Ok(PokemonScriptCommand::OpenSlots { lucky }.into_script_command())
             },
         );
 
@@ -267,10 +257,9 @@ impl ScriptApiRegistrar for PokemonScriptApi {
             "elevatorMenu",
             |args: &[JsValue], ctx: &mut Context| -> JsResult<ScriptCommand> {
                 let floors = args.get_or_undefined(0).to_json(ctx)?;
-                Ok(ScriptCommand::Custom {
-                    name: "elevatorMenu".to_string(),
-                    args: vec![floors],
-                })
+                let command = PokemonScriptCommand::from_custom("elevatorMenu", &[floors])
+                    .map_err(|error| boa_engine::JsNativeError::typ().with_message(error))?;
+                Ok(command.into_script_command())
             },
         );
 
@@ -282,10 +271,9 @@ impl ScriptApiRegistrar for PokemonScriptApi {
             "filterBag",
             |args: &[JsValue], ctx: &mut Context| -> JsResult<ScriptCommand> {
                 let item_ids = args.get_or_undefined(0).to_json(ctx)?;
-                Ok(ScriptCommand::Custom {
-                    name: "filterBag".to_string(),
-                    args: vec![item_ids],
-                })
+                let command = PokemonScriptCommand::from_custom("filterBag", &[item_ids])
+                    .map_err(|error| boa_engine::JsNativeError::typ().with_message(error))?;
+                Ok(command.into_script_command())
             },
         );
 
@@ -295,10 +283,7 @@ impl ScriptApiRegistrar for PokemonScriptApi {
         engine.register_async_fn(
             "showDiploma",
             |_args: &[JsValue], _ctx: &mut Context| -> JsResult<ScriptCommand> {
-                Ok(ScriptCommand::Custom {
-                    name: "showDiploma".to_string(),
-                    args: vec![],
-                })
+                Ok(PokemonScriptCommand::ShowDiploma.into_script_command())
             },
         );
 
@@ -309,10 +294,7 @@ impl ScriptApiRegistrar for PokemonScriptApi {
         engine.register_async_fn(
             "openPC",
             |_args: &[JsValue], _ctx: &mut Context| -> JsResult<ScriptCommand> {
-                Ok(ScriptCommand::Custom {
-                    name: "openPC".to_string(),
-                    args: vec![],
-                })
+                Ok(PokemonScriptCommand::OpenPc.into_script_command())
             },
         );
 
@@ -322,10 +304,7 @@ impl ScriptApiRegistrar for PokemonScriptApi {
         engine.register_async_fn(
             "openItemPC",
             |_args: &[JsValue], _ctx: &mut Context| -> JsResult<ScriptCommand> {
-                Ok(ScriptCommand::Custom {
-                    name: "openItemPC".to_string(),
-                    args: vec![],
-                })
+                Ok(PokemonScriptCommand::OpenItemPc.into_script_command())
             },
         );
 
@@ -336,10 +315,7 @@ impl ScriptApiRegistrar for PokemonScriptApi {
         engine.register_async_fn(
             "openBillsPC",
             |_args: &[JsValue], _ctx: &mut Context| -> JsResult<ScriptCommand> {
-                Ok(ScriptCommand::Custom {
-                    name: "openBillsPC".to_string(),
-                    args: vec![],
-                })
+                Ok(PokemonScriptCommand::OpenBillsPc.into_script_command())
             },
         );
 
@@ -355,10 +331,7 @@ impl ScriptApiRegistrar for PokemonScriptApi {
         engine.register_async_fn(
             "linkStart",
             |_args: &[JsValue], _ctx: &mut Context| -> JsResult<ScriptCommand> {
-                Ok(ScriptCommand::Custom {
-                    name: "linkStart".to_string(),
-                    args: vec![],
-                })
+                Ok(PokemonScriptCommand::LinkStart.into_script_command())
             },
         );
 
@@ -371,10 +344,7 @@ impl ScriptApiRegistrar for PokemonScriptApi {
         engine.register_async_fn(
             "enterHallOfFame",
             |_args: &[JsValue], _ctx: &mut Context| -> JsResult<ScriptCommand> {
-                Ok(ScriptCommand::Custom {
-                    name: "enterHallOfFame".to_string(),
-                    args: vec![],
-                })
+                Ok(PokemonScriptCommand::EnterHallOfFame.into_script_command())
             },
         );
 
@@ -384,10 +354,7 @@ impl ScriptApiRegistrar for PokemonScriptApi {
             "giveCoins",
             |args: &[JsValue], ctx: &mut Context| -> JsResult<ScriptCommand> {
                 let amount = args.get_or_undefined(0).to_u32(ctx)?.min(u16::MAX as u32) as u16;
-                Ok(ScriptCommand::Custom {
-                    name: "giveCoins".to_string(),
-                    args: vec![serde_json::json!(amount)],
-                })
+                Ok(PokemonScriptCommand::GiveCoins { amount }.into_script_command())
             },
         );
 
@@ -396,10 +363,7 @@ impl ScriptApiRegistrar for PokemonScriptApi {
             "takeCoins",
             |args: &[JsValue], ctx: &mut Context| -> JsResult<ScriptCommand> {
                 let amount = args.get_or_undefined(0).to_u32(ctx)?.min(u16::MAX as u32) as u16;
-                Ok(ScriptCommand::Custom {
-                    name: "takeCoins".to_string(),
-                    args: vec![serde_json::json!(amount)],
-                })
+                Ok(PokemonScriptCommand::TakeCoins { amount }.into_script_command())
             },
         );
 
@@ -408,10 +372,9 @@ impl ScriptApiRegistrar for PokemonScriptApi {
         engine.register_async_fn(
             "depositDaycare",
             |args: &[JsValue], ctx: &mut Context| -> JsResult<ScriptCommand> {
-                Ok(ScriptCommand::Custom {
-                    name: "depositDaycare".to_string(),
-                    args: vec![args.get_or_undefined(0).to_json(ctx)?],
-                })
+                Ok(PokemonScriptCommand::DepositDaycare {
+                    index: args.get_or_undefined(0).to_u32(ctx)? as u8,
+                }.into_script_command())
             },
         );
 
@@ -420,10 +383,7 @@ impl ScriptApiRegistrar for PokemonScriptApi {
         engine.register_async_fn(
             "withdrawDaycare",
             |_args: &[JsValue], _ctx: &mut Context| -> JsResult<ScriptCommand> {
-                Ok(ScriptCommand::Custom {
-                    name: "withdrawDaycare".to_string(),
-                    args: vec![],
-                })
+                Ok(PokemonScriptCommand::WithdrawDaycare.into_script_command())
             },
         );
 
@@ -437,10 +397,7 @@ impl ScriptApiRegistrar for PokemonScriptApi {
         engine.register_async_fn(
             "playShipDeparture",
             |_args: &[JsValue], _ctx: &mut Context| -> JsResult<ScriptCommand> {
-                Ok(ScriptCommand::Custom {
-                    name: "playShipDeparture".to_string(),
-                    args: vec![],
-                })
+                Ok(PokemonScriptCommand::PlayShipDeparture.into_script_command())
             },
         );
 
@@ -449,10 +406,7 @@ impl ScriptApiRegistrar for PokemonScriptApi {
         engine.register_async_fn(
             "animateHealingMachine",
             |_args: &[JsValue], _ctx: &mut Context| -> JsResult<ScriptCommand> {
-                Ok(ScriptCommand::Custom {
-                    name: "animateHealingMachine".to_string(),
-                    args: vec![],
-                })
+                Ok(PokemonScriptCommand::AnimateHealingMachine.into_script_command())
             },
         );
 
@@ -462,10 +416,9 @@ impl ScriptApiRegistrar for PokemonScriptApi {
         engine.register_async_fn(
             "openNamingScreen",
             |args: &[JsValue], ctx: &mut Context| -> JsResult<ScriptCommand> {
-                Ok(ScriptCommand::Custom {
-                    name: "openNamingScreen".to_string(),
-                    args: vec![args.get_or_undefined(0).to_json(ctx)?],
-                })
+                Ok(PokemonScriptCommand::OpenNamingScreen {
+                    species: args.get_or_undefined(0).to_string(ctx)?.to_std_string_lossy(),
+                }.into_script_command())
             },
         );
 
@@ -475,10 +428,7 @@ impl ScriptApiRegistrar for PokemonScriptApi {
         engine.register_async_fn(
             "choosePartyPokemon",
             |_args: &[JsValue], _ctx: &mut Context| -> JsResult<ScriptCommand> {
-                Ok(ScriptCommand::Custom {
-                    name: "choosePartyPokemon".to_string(),
-                    args: vec![],
-                })
+                Ok(PokemonScriptCommand::ChoosePartyPokemon.into_script_command())
             },
         );
 
@@ -487,13 +437,10 @@ impl ScriptApiRegistrar for PokemonScriptApi {
         engine.register_async_fn(
             "setPartyNickname",
             |args: &[JsValue], ctx: &mut Context| -> JsResult<ScriptCommand> {
-                Ok(ScriptCommand::Custom {
-                    name: "setPartyNickname".to_string(),
-                    args: vec![
-                        args.get_or_undefined(0).to_json(ctx)?,
-                        args.get_or_undefined(1).to_json(ctx)?,
-                    ],
-                })
+                Ok(PokemonScriptCommand::SetPartyNickname {
+                    index: args.get_or_undefined(0).to_u32(ctx)? as u8,
+                    nickname: args.get_or_undefined(1).to_string(ctx)?.to_std_string_lossy(),
+                }.into_script_command())
             },
         );
 
@@ -681,8 +628,29 @@ impl ScriptApiRegistrar for PokemonScriptApi {
 
 #[cfg(test)]
 mod tests {
+    use crate::alloc_prelude::*;
+    use crate::script_function_catalog::POKERED_SCRIPT_FUNCTIONS;
     use super::PokemonScriptApi;
     use dotzuki_engine_script::{CommandResult, ScriptCommand, ScriptEngine};
+
+    #[test]
+    fn boa_registrar_implements_every_cataloged_capability() {
+        let names = serde_json::to_string(POKERED_SCRIPT_FUNCTIONS).unwrap();
+        let source = format!(
+            r#"
+                export async function verifyCatalog() {{
+                    for (const name of {names}) {{
+                        if (typeof game[name] !== "function") {{
+                            throw new Error(`missing game capability: ${{name}}`);
+                        }}
+                    }}
+                }}
+            "#
+        );
+        let mut engine = ScriptEngine::with_api(&PokemonScriptApi);
+        engine.load_script(&source).unwrap();
+        assert_eq!(engine.call_function("verifyCatalog", &[]).unwrap(), None);
+    }
 
     /// Proves the synchronous query APIs (`hasItem`, `getMoney`) read seeded
     /// state: seeding money=5000 + bag={SILPH_SCOPE} makes the gate take the

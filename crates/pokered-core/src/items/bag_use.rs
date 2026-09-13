@@ -19,6 +19,7 @@
 //! Message texts follow the original wording (data/text/text_6.asm /
 //! text_7.asm), line-broken for the two-line overworld text box.
 
+use crate::alloc_prelude::*;
 use crate::battle::state::Pokemon;
 use crate::items::healing::{use_healing_item, HealResult};
 use crate::items::pp_restore::{use_pp_restore, PpRestoreResult};

@@ -11,6 +11,7 @@
 //! wire protocol carries no party metadata until `TradeComplete`; the
 //! original exchanged full parties before the menu).
 
+use crate::alloc_prelude::*;
 use pokered_core::game_state::Lang;
 use pokered_core::party_select::PartySelectState;
 use pokered_data::lang_data;

@@ -433,6 +433,7 @@ pub fn draw_overworld(
         let current_map: MapId = screen.state.current_map;
         let map_json = get_map_json(current_map);
         let tileset_id = map_json
+            .as_ref()
             .and_then(|j| PokemonTilesetData.tileset_by_name(&j.header.tileset))
             .unwrap_or_else(|| PokemonTilesetData.tileset_by_id(0).unwrap());
         let border_block = map_json.map(|j| j.header.border_block).unwrap_or(0);

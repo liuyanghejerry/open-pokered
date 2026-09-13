@@ -8,6 +8,7 @@
 //! The translator here is the canonical, production copy; the differential
 //! `translate_*` tests in [`tests`](super) exercise the same logic test-side.
 
+use crate::alloc_prelude::*;
 use dotzuki_engine::battle::rng::BattleRng;
 use dotzuki_engine::battle::stack::{HpChangeCause, TurnEvent, TurnLog};
 use dotzuki_engine::battle::{
@@ -31,14 +32,14 @@ use crate::battle::state::{
 use super::{PokeVolatile, PokeredRules};
 
 /// A `rand`-backed [`BattleRng`] for live play (the engine never links `rand`, so
-/// the game supplies it). Each draw is a fresh `rand::random::<u8>()`; the stack's
+/// the game supplies it). Each draw is a fresh `crate::rng::random::<u8>()`; the stack's
 /// lazy draws are still correct Gen-1 distributions (byte-exact replay vs the
 /// legacy pre-roll only mattered for the differential parity tests).
 pub struct RandBattleRng;
 
 impl BattleRng for RandBattleRng {
     fn next_u8(&mut self) -> u8 {
-        rand::random::<u8>()
+        crate::rng::random::<u8>()
     }
 }
 

@@ -55,6 +55,72 @@ class NavigationRegression(unittest.TestCase):
             game.nav_to_map(11, 7, "Route1", avoid_grass=False)
         self.assertEqual(directions, ["up", "up", "right"])
 
+    def test_cross_map_no_path_rechecks_for_battle_transition(self):
+        game = nav.Game.__new__(nav.Game)
+        overworld = dict(screen="overworld", map_name="Route9",
+                         player_x=53, player_y=9, dialogue_state=None)
+        battle = dict(overworld, screen="battle",
+                      script_awaiting_battle=False)
+        destination = dict(screen="overworld", map_name="LavenderTown",
+                           player_x=3, player_y=6, dialogue_state=None)
+        states = iter((overworld, battle, battle, destination))
+        game.st = lambda: next(states)
+        game.track_last_map = lambda _: None
+        game.last_map = "Route9"
+        game.npc_blocked = game.live_npcs = lambda _: set()
+        game.battle_loop = lambda prefer: None
+        game.cutscene = lambda: True
+        game.step = lambda _: None
+        game.d = SimpleNamespace()
+
+        with patch.object(nav, "bfs_cross", return_value=None):
+            game.nav_to_map(3, 6, "LavenderTown", avoid_grass=False)
+
+    def test_destination_occupied_by_live_npc_is_temporary(self):
+        game = nav.Game.__new__(nav.Game)
+        game.live_npcs = lambda _: {(11, 6)}
+
+        self.assertTrue(game.destination_blocked_by_live_npc(
+            "Route4", "Route4", 11, 6))
+        self.assertFalse(game.destination_blocked_by_live_npc(
+            "Route4", "LavenderTown", 11, 6))
+
+    def test_directional_warp_retries_after_interrupted_hold(self):
+        game = nav.Game.__new__(nav.Game)
+        approaches = []
+        game.nav_to = lambda *args, **kwargs: approaches.append(args)
+        game.d = SimpleNamespace(drive=lambda *args, **kwargs: None)
+        game._wait_for_warp = unittest.mock.Mock(
+            side_effect=(None, "Route10"))
+
+        result = game.nav_warp(15, 33, "RockTunnel1F", "Route10",
+                               approach="down")
+
+        self.assertEqual(result, "Route10")
+        self.assertEqual(approaches, [(15, 32), (15, 32)])
+
+    def test_warp_wait_handles_battle_before_its_placeholder_map(self):
+        game = nav.Game.__new__(nav.Game)
+        game.st = lambda: {
+            "screen": "battle", "map_name": "PalletTown",
+            "script_awaiting_battle": False,
+        }
+        calls = []
+        game.battle_loop = lambda prefer: calls.append(prefer)
+        game.cutscene = lambda: True
+
+        self.assertIsNone(game._wait_for_warp("RockTunnel1F", "Route10"))
+        self.assertEqual(calls, ["run"])
+
+    def test_warp_does_not_replan_against_a_map_left_by_blackout(self):
+        game = nav.Game.__new__(nav.Game)
+        game.nav_to = unittest.mock.Mock(side_effect=nav.NavError("blackout"))
+        game.pos = lambda: ("LavenderTown", 3, 6)
+
+        with self.assertRaisesRegex(nav.NavError, "blackout"):
+            game.nav_warp(3, 9, "PokemonTower4F", "PokemonTower5F")
+        game.nav_to.assert_called_once()
+
     def test_locked_saffron_routes_recovery_through_underground(self):
         path = nav.bfs_cross("CeruleanCity", (19, 18), "VermilionCity", (11, 4),
                              allow_ledges=True, excluded_maps=("SaffronCity",))

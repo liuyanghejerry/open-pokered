@@ -1,4 +1,7 @@
 //! Game Corner cabinet, using the original Red tilemap and reel tiles.
+
+use crate::alloc_prelude::*;
+#[cfg(not(target_os = "none"))]
 use std::sync::OnceLock;
 
 use pokered_core::game_state::Lang;
@@ -12,6 +15,7 @@ use super::draw_text_box;
 
 const MAP: &[u8] = include_bytes!("../../../../gfx/slots/slots.tilemap");
 
+#[cfg(not(target_os = "none"))]
 fn tiles() -> &'static (image::RgbImage, image::RgbImage) {
     static TILES: OnceLock<(image::RgbImage, image::RgbImage)> = OnceLock::new();
     TILES.get_or_init(|| {
@@ -27,6 +31,7 @@ fn tiles() -> &'static (image::RgbImage, image::RgbImage) {
     })
 }
 
+#[cfg(not(target_os = "none"))]
 fn tile(fb: &mut FrameBuffer, sheet: &image::RgbImage, id: u8, x: u32, y: u32, flash: bool) {
     let tx = (id as u32 % (sheet.width() / 8)) * 8;
     let ty = (id as u32 / (sheet.width() / 8)) * 8;
@@ -45,6 +50,101 @@ fn tile(fb: &mut FrameBuffer, sheet: &image::RgbImage, id: u8, x: u32, y: u32, f
     }
 }
 
+// ── Bare metal (GBA) ──────────────────────────────────────────────────────────
+//
+// The slot sheets are 4-level grayscale PNGs, so the 2bpp round-trip through
+// the pre-converted registry is EXACT: sample s (2-bit) → gray (s*85) →
+// registry color index (3 - s) → gray ((3 - idx) * 85). The flash rule above
+// maps pure black (idx 3) to the color-2 gray (85).
+
+#[cfg(target_os = "none")]
+mod gba {
+    use crate::alloc_prelude::*;
+    use alloc::vec::Vec;
+
+    use pokered_renderer::resource::{AssetRoot, ResourceManager};
+    use pokered_renderer::FrameBuffer;
+
+    use super::Rgba;
+
+    /// One slots sheet as per-pixel GB color indices (0..=3).
+    pub struct SlotsSheet {
+        pub w: u32,
+        pub h: u32,
+        idx: Vec<u8>,
+    }
+
+    impl SlotsSheet {
+        pub fn width(&self) -> u32 {
+            self.w
+        }
+
+        pub fn color_index(&self, x: u32, y: u32) -> u8 {
+            if x < self.w && y < self.h {
+                self.idx[(y * self.w + x) as usize]
+            } else {
+                0
+            }
+        }
+    }
+
+    fn sheet(rm: &mut ResourceManager, name: &str) -> SlotsSheet {
+        let cached = rm
+            .load_slots(name)
+            .expect("slots sheet in pre-converted registry");
+        let (w, h) = cached.source_size;
+        let tpr = (w / 8) as usize;
+        let mut idx = vec![0u8; (w * h) as usize];
+        for i in 0..cached.tileset.len() {
+            let (tx, ty) = (i % tpr, i / tpr);
+            let tile = cached.tileset.get(i);
+            for r in 0..8usize {
+                for c in 0..8usize {
+                    let px = (tx * 8 + c) as u32;
+                    let py = (ty * 8 + r) as u32;
+                    idx[(py * w + px) as usize] = tile.get(r, c);
+                }
+            }
+        }
+        SlotsSheet { w, h, idx }
+    }
+
+    pub fn tiles() -> &'static (SlotsSheet, SlotsSheet) {
+        // Single-threaded GBA: build once per process.
+        // thumbv4t has no atomics; single-threaded GBA builds once per process.
+        static mut TILES: Option<(SlotsSheet, SlotsSheet)> = None;
+        unsafe {
+            let slot = &mut *core::ptr::addr_of_mut!(TILES);
+            slot.get_or_insert_with(|| {
+                let mut rm = ResourceManager::new(AssetRoot::new());
+                (sheet(&mut rm, "red_slots_1"), sheet(&mut rm, "red_slots_2"))
+            })
+        }
+    }
+
+    pub fn tile(fb: &mut FrameBuffer, sheet: &SlotsSheet, id: u8, x: u32, y: u32, flash: bool) {
+        let tpr = sheet.width() / 8;
+        let tx = (id as u32 % tpr) * 8;
+        let ty = (id as u32 / tpr) * 8;
+        for dy in 0..8 {
+            for dx in 0..8 {
+                let idx = sheet.color_index(tx + dx, ty + dy);
+                let gray = (3 - idx as u32) * 85;
+                // Original rule: flash turns pure black into the color-2 gray.
+                let color = if flash && idx == 3 {
+                    Rgba::new(85, 85, 85, 255)
+                } else {
+                    Rgba::new(gray as u8, gray as u8, gray as u8, 255)
+                };
+                fb.set_pixel(x + dx, y + dy, color);
+            }
+        }
+    }
+}
+
+#[cfg(target_os = "none")]
+use gba::{tile, tiles};
+
 /// Wrap by measured glyph width so both English and Chinese stay in the box.
 fn message_lines(text: &str, width: u32) -> Vec<String> {
     let mut lines = Vec::new();
@@ -58,7 +158,7 @@ fn message_lines(text: &str, width: u32) -> Vec<String> {
                 lines.push(line[..space].to_owned());
                 line = rest;
             } else {
-                lines.push(std::mem::take(&mut line));
+                lines.push(core::mem::take(&mut line));
             }
         }
         if ch != ' ' || !line.is_empty() {
@@ -176,6 +276,23 @@ pub fn draw_slots(slots: &SlotsScreen, fb: &mut FrameBuffer, lang: Lang) {
     }
 }
 
+/// Repaint only the `>` marker when the selected slot-machine bet changes.
+/// The marker sits on a white background and occupies exactly 5x10 pixels.
+pub fn redraw_slots_bet_cursor(
+    previous: (u32, u32),
+    current: (u32, u32),
+    fb: &mut FrameBuffer,
+) {
+    for (x, y) in [previous, current] {
+        for py in y..(y + 10).min(fb.height()) {
+            for px in x..(x + measure_text(">")).min(fb.width()) {
+                fb.set_pixel(px, py, Rgba::WHITE);
+            }
+        }
+    }
+    draw_text(">", current.0, current.1, Rgba::BLACK, fb);
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -183,9 +300,27 @@ mod tests {
     use pokered_core::slots_screen::SlotsInput;
 
     fn render(s: &SlotsScreen) -> FrameBuffer {
+        render_lang(s, Lang::En)
+    }
+
+    fn render_lang(s: &SlotsScreen, lang: Lang) -> FrameBuffer {
         let mut fb = FrameBuffer::new(RenderConfig::new(160, 144), Rgba::WHITE);
-        draw_slots(s, &mut fb, Lang::En);
+        draw_slots(s, &mut fb, lang);
         fb
+    }
+
+    fn assert_framebuffers_equal(actual: &FrameBuffer, expected: &FrameBuffer) {
+        assert_eq!(actual.width(), expected.width());
+        assert_eq!(actual.height(), expected.height());
+        for y in 0..actual.height() {
+            for x in 0..actual.width() {
+                assert_eq!(
+                    actual.get_pixel(x, y),
+                    expected.get_pixel(x, y),
+                    "framebuffer mismatch at ({x}, {y})",
+                );
+            }
+        }
     }
 
     fn region(fb: &FrameBuffer, x: u32, y: u32, w: u32, h: u32) -> Vec<[u8; 4]> {
@@ -234,6 +369,33 @@ mod tests {
             let lines = message_lines(&text, 144);
             assert!(lines.len() <= 3);
             assert!(lines.iter().all(|line| measure_text(line) <= 144));
+        }
+    }
+
+    #[test]
+    fn bet_cursor_repaint_matches_full_redraw_for_every_transition() {
+        let position = |bet| (120, 96 + (3 - bet as u32) * 16);
+        for language in [Lang::En, Lang::Zh] {
+            for previous_bet in 1..=3 {
+                for current_bet in 1..=3 {
+                    if previous_bet == current_bet {
+                        continue;
+                    }
+                    let mut previous = SlotsScreen::new(false, 100, 1);
+                    previous.bet = previous_bet;
+                    let mut current = previous.clone();
+                    current.bet = current_bet;
+
+                    let mut actual = render_lang(&previous, language);
+                    redraw_slots_bet_cursor(
+                        position(previous_bet),
+                        position(current_bet),
+                        &mut actual,
+                    );
+                    let expected = render_lang(&current, language);
+                    assert_framebuffers_equal(&actual, &expected);
+                }
+            }
         }
     }
 

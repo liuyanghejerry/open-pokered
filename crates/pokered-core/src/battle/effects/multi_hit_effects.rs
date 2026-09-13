@@ -11,6 +11,7 @@ use super::{EffectRandoms, EffectResult};
 /// (Single-byte equivalent of the asm's two-draw `BattleRandom & 3, re-roll if
 /// ≥2` in TwoToFiveAttacksEffect/TrappingEffect; also used for trapping-move
 /// durations, which roll the SAME distribution — effects.asm:1094-1103.)
+use crate::alloc_prelude::*;
 pub(crate) fn determine_hit_count(roll: u8) -> u8 {
     if roll < 96 {
         2

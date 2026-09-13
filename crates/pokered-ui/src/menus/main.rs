@@ -1,9 +1,10 @@
+use crate::alloc_prelude::*;
 use pokered_core::game_state::Lang;
 use pokered_core::main_menu::MainMenuState;
 use pokered_data::lang_data;
 use pokered_data::ui_layout::schema::{get_screen_v2_json, MainDefaultLayout};
 
-use crate::engine::{InkColor, Painter, TileRect, Ui};
+use crate::engine::{InkColor, Painter, Rgba, TilePos, TileRect, Ui};
 use crate::v2::{self, DataContext, DataValue};
 
 /// Title main menu (CONTINUE / NEW GAME / OPTION) — rendered through the v2
@@ -79,5 +80,39 @@ pub fn draw<P: Painter>(
             let px = (4 + 15) * 8 - 3 - painter.measure_text_px(value);
             painter.draw_text_px(px, (9 + ty) * 8, value, InkColor::Black.into());
         }
+    }
+}
+
+/// Repaint only the changed cursor cells of an already-rendered main menu.
+pub fn redraw_cursor<P: Painter>(
+    previous_cursor: usize,
+    current_cursor: usize,
+    painter: &mut P,
+    lang: Lang,
+) {
+    let position = |cursor: usize| TilePos::new(1, 2 + cursor as u32 * 2);
+    let old = position(previous_cursor);
+    if lang == Lang::Zh {
+        painter.draw_pixel_rect(old.tx * 8, old.ty * 8, 10, 10, Rgba::INK_WHITE);
+        let current = position(current_cursor);
+        painter.draw_text_px(
+            current.tx * 8,
+            current.ty * 8,
+            "▶",
+            Rgba::INK_BLACK,
+        );
+    } else {
+        painter.draw_pixel_rect(old.tx * 8, old.ty * 8, 8, 9, Rgba::INK_WHITE);
+        painter.draw_glyph(position(current_cursor), '▶', Rgba::INK_BLACK);
+    }
+}
+
+/// Cursor ink region used by the compiled main-menu renderer.
+pub fn cursor_damage(cursor: usize, lang: Lang) -> crate::DamageRect {
+    let position = TilePos::new(1, 2 + cursor as u32 * 2);
+    if lang == Lang::Zh {
+        crate::DamageRect::new(position.tx * 8, position.ty * 8, 10, 10)
+    } else {
+        crate::DamageRect::cursor(position)
     }
 }

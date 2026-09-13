@@ -1,8 +1,34 @@
-use std::collections::HashMap;
-use std::sync::OnceLock;
+use crate::alloc_prelude::*;
+use crate::hash_compat::HashMap;
+use crate::sync_compat::OnceLock;
 
 use crate::map_json::MapJson;
 use crate::maps::{MapId, NUM_MAPS};
+use alloc::rc::Rc;
+
+#[cfg(all(test, feature = "embedded-map-data"))]
+mod cache_tests {
+    use super::*;
+    #[test]
+    fn visiting_every_map_releases_evicted_metadata_and_preserves_live_handles() {
+        let mut cache = EmbeddedMapCache::default();
+        let first = cache.get(MAP_TABLE[0].0).unwrap();
+        let MapJsonHandle::Shared(ref held) = first else {
+            panic!()
+        };
+        let weak = Rc::downgrade(held);
+        let original_id = first.id;
+        for (name, _) in MAP_TABLE.iter().skip(1) {
+            let current = cache.get(name).unwrap();
+            assert!(cache.entries.len() <= 4);
+            assert_eq!(first.id, original_id);
+            drop(current);
+        }
+        assert!(weak.upgrade().is_some());
+        drop(first);
+        assert!(weak.upgrade().is_none());
+    }
+}
 
 struct MapDataStore {
     maps: HashMap<String, MapJson>,
@@ -16,7 +42,7 @@ fn get_store() -> &'static MapDataStore {
 }
 
 fn build_name_to_id() -> HashMap<String, MapId> {
-    let mut map = HashMap::new();
+    let mut map = HashMap::default();
     for i in 0..NUM_MAPS {
         if let Some(id) = MapId::from_u8(i as u8) {
             map.insert(format!("{:?}", id), id);
@@ -25,30 +51,130 @@ fn build_name_to_id() -> HashMap<String, MapId> {
     map
 }
 
-pub fn get_map_json(map_id: MapId) -> Option<&'static MapJson> {
-    let name = format!("{:?}", map_id);
+/// Resolve the canonical map directory name without allocating when the
+/// build-time embedded table is available. Filesystem builds retain the enum
+/// debug-name fallback used by the existing loader.
+fn map_name(map_id: MapId) -> Cow<'static, str> {
+    #[cfg(feature = "embedded-map-data")]
+    if let Some((name, _)) = MAP_TABLE
+        .iter()
+        .find(|(_, source)| source.id == map_id as u8)
+    {
+        return Cow::Borrowed(*name);
+    }
+    Cow::Owned(format!("{:?}", map_id))
+}
+
+/// Keeps map metadata alive only while a consumer holds it. Embedded backends
+/// may evict their cached entry without invalidating a live handle.
+#[derive(Clone)]
+pub enum MapJsonHandle {
+    Borrowed(&'static MapJson),
+    Shared(Rc<MapJson>),
+}
+impl core::ops::Deref for MapJsonHandle {
+    type Target = MapJson;
+    fn deref(&self) -> &MapJson {
+        match self {
+            Self::Borrowed(map) => map,
+            Self::Shared(map) => map,
+        }
+    }
+}
+
+pub fn get_map_json(map_id: MapId) -> Option<MapJsonHandle> {
+    let name = map_name(map_id);
     // Editor-injected runtime override shadows the baseline (embedded or disk).
     if let Some(ov) = crate::runtime_overrides::map_override(&name) {
-        return Some(ov);
+        return Some(MapJsonHandle::Borrowed(ov));
     }
-    get_store().maps.get(&name)
+    #[cfg(target_os = "none")]
+    {
+        gba_map_json(&name)
+    }
+    #[cfg(not(target_os = "none"))]
+    {
+        get_store()
+            .maps
+            .get(name.as_ref())
+            .map(MapJsonHandle::Borrowed)
+    }
 }
 
 pub fn get_block_data(map_id: MapId) -> &'static [u8] {
-    let name = format!("{:?}", map_id);
+    let name = map_name(map_id);
     // Editor-injected runtime override shadows the baseline (embedded or disk).
     if let Some(ov) = crate::runtime_overrides::blk_override(&name) {
         return ov;
     }
-    get_store()
-        .blocks
-        .get(&name)
-        .map(|v| v.as_slice())
-        .unwrap_or(&[])
+    #[cfg(target_os = "none")]
+    {
+        gba_blk_data(&name).unwrap_or(&[])
+    }
+    #[cfg(not(target_os = "none"))]
+    {
+        get_store()
+            .blocks
+            .get(name.as_ref())
+            .map(|v| v.as_slice())
+            .unwrap_or(&[])
+    }
 }
 
 pub fn all_map_names() -> Vec<&'static str> {
-    get_store().maps.keys().map(|s| s.as_str()).collect()
+    #[cfg(target_os = "none")]
+    {
+        MAP_TABLE.iter().map(|(n, _)| *n).collect()
+    }
+    #[cfg(not(target_os = "none"))]
+    {
+        get_store().maps.keys().map(|s| s.as_str()).collect()
+    }
+}
+
+// Four recent maps cover an active map and adjacent lookups without retaining
+// the entire playthrough. Handles held by callers survive cache eviction.
+#[cfg(feature = "embedded-map-data")]
+#[derive(Default)]
+struct EmbeddedMapCache {
+    entries: Vec<(&'static str, Rc<MapJson>)>,
+}
+#[cfg(feature = "embedded-map-data")]
+impl EmbeddedMapCache {
+    fn get(&mut self, name: &str) -> Option<MapJsonHandle> {
+        if let Some(index) = self.entries.iter().position(|(key, _)| *key == name) {
+            let entry = self.entries.remove(index);
+            let handle = MapJsonHandle::Shared(entry.1.clone());
+            self.entries.push(entry);
+            return Some(handle);
+        }
+        let (key, source) = MAP_TABLE.iter().find(|(key, _)| *key == name)?;
+        if self.entries.len() == 4 {
+            self.entries.remove(0);
+        }
+        let map = Rc::new(MapJson::from(*source));
+        self.entries.push((*key, map.clone()));
+        Some(MapJsonHandle::Shared(map))
+    }
+}
+
+#[cfg(all(target_os = "none", feature = "embedded-map-data"))]
+pub(crate) fn gba_map_json(name: &str) -> Option<MapJsonHandle> {
+    use crate::sync_compat::Mutex;
+    static CACHE: OnceLock<Mutex<EmbeddedMapCache>> = OnceLock::new();
+    CACHE
+        .get_or_init(|| Mutex::new(EmbeddedMapCache::default()))
+        .lock()
+        .ok()?
+        .get(name)
+}
+
+#[cfg(all(target_os = "none", feature = "embedded-map-data"))]
+pub(crate) fn gba_blk_data(name: &str) -> Option<&'static [u8]> {
+    embedded_blk_sources()
+        .iter()
+        .find(|(key, _)| *key == name)
+        .map(|(_, bytes)| *bytes)
 }
 
 pub fn name_to_map_id() -> &'static HashMap<String, MapId> {
@@ -57,16 +183,29 @@ pub fn name_to_map_id() -> &'static HashMap<String, MapId> {
 }
 
 pub fn resolve_map_id(name: &str) -> Option<MapId> {
-    name_to_map_id().get(name).copied()
+    #[cfg(all(target_os = "none", feature = "embedded-map-data"))]
+    {
+        // The generated ROM table already contains both the canonical name
+        // and numeric id. A linear scan avoids materializing the hosted
+        // 248-entry String HashMap in scarce GBA EWRAM.
+        MAP_TABLE
+            .iter()
+            .find(|(candidate, _)| *candidate == name)
+            .and_then(|(_, map)| MapId::from_u8(map.id))
+    }
+    #[cfg(not(all(target_os = "none", feature = "embedded-map-data")))]
+    {
+        name_to_map_id().get(name).copied()
+    }
 }
 
 // ── Embedded mode ──────────────────────────────────────────────────────────
 
 #[cfg(feature = "embedded-map-data")]
 use crate::map_json::{
-    SignJson, StaticConnectionEntryJson, StaticConnectionsJson, StaticMapHeaderJson,
-    StaticMapJson, StaticMapTextJson, StaticNpcJson, StaticTextPageJson, StaticVersionWildJson,
-    StaticWarpJson, StaticWildDataJson, StaticWildEncounterTableJson, StaticWildMonJson,
+    SignJson, StaticConnectionEntryJson, StaticConnectionsJson, StaticMapHeaderJson, StaticMapJson,
+    StaticMapTextJson, StaticNpcJson, StaticTextPageJson, StaticVersionWildJson, StaticWarpJson,
+    StaticWildDataJson, StaticWildEncounterTableJson, StaticWildMonJson,
 };
 
 #[cfg(feature = "embedded-map-data")]
@@ -719,12 +858,15 @@ fn embedded_blk_sources() -> &'static [(&'static str, &'static [u8])] {
 
 #[cfg(feature = "embedded-map-data")]
 fn init_map_data() -> MapDataStore {
-    let mut maps = HashMap::with_capacity(MAP_TABLE.len());
+    let mut maps =
+        HashMap::with_capacity_and_hasher(MAP_TABLE.len(), crate::hash_compat::FxBuildHasher);
+    let mut progress = 0usize;
     for (name, static_map) in MAP_TABLE {
         maps.insert((*name).to_string(), MapJson::from(*static_map));
+        let _ = &progress;
     }
 
-    let mut blocks = HashMap::new();
+    let mut blocks = HashMap::default();
     for (name, blk_data) in embedded_blk_sources() {
         blocks.insert(name.to_string(), blk_data.to_vec());
     }
@@ -732,13 +874,25 @@ fn init_map_data() -> MapDataStore {
     MapDataStore { maps, blocks }
 }
 
+// Bare metal without `embedded-map-data`: no filesystem, no embedded tables —
+// an empty store. The GBA build enables the feature, so this only keeps
+// other bare-metal feature combinations linking.
+#[cfg(all(not(feature = "embedded-map-data"), target_os = "none"))]
+fn init_map_data() -> MapDataStore {
+    log::warn!("MapDataLoader: no map data source on bare metal without embedded-map-data");
+    MapDataStore {
+        maps: HashMap::default(),
+        blocks: HashMap::default(),
+    }
+}
+
 // ── Filesystem mode ────────────────────────────────────────────────────────
 
-#[cfg(not(feature = "embedded-map-data"))]
+#[cfg(all(not(feature = "embedded-map-data"), not(target_os = "none")))]
 fn init_map_data() -> MapDataStore {
     let maps_dir = find_maps_directory();
-    let mut maps = HashMap::new();
-    let mut blocks = HashMap::new();
+    let mut maps = HashMap::default();
+    let mut blocks = HashMap::default();
 
     if let Some(dir) = &maps_dir {
         if let Ok(entries) = std::fs::read_dir(dir) {
@@ -792,7 +946,7 @@ fn init_map_data() -> MapDataStore {
     MapDataStore { maps, blocks }
 }
 
-#[cfg(not(feature = "embedded-map-data"))]
+#[cfg(all(not(feature = "embedded-map-data"), not(target_os = "none")))]
 fn find_maps_directory() -> Option<std::path::PathBuf> {
     // 0. Explicit override: POKERED_MAPS_DIR points directly at the maps directory.
     //    Takes precedence so the binary can be launched from any working directory.
@@ -843,6 +997,17 @@ fn find_maps_directory() -> Option<std::path::PathBuf> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[cfg(feature = "embedded-map-data")]
+    #[test]
+    fn embedded_map_names_borrow_the_generated_catalog() {
+        for raw in 0..NUM_MAPS as u8 {
+            let id = MapId::from_u8(raw).expect("all map ids are defined");
+            let name = map_name(id);
+            assert!(matches!(name, Cow::Borrowed(_)), "{id:?} allocated its name");
+            assert_eq!(name, format!("{id:?}"));
+        }
+    }
 
     #[test]
     fn test_name_to_map_id_roundtrip() {

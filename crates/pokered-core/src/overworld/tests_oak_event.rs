@@ -6,6 +6,7 @@
 //! These tests drive a real `OverworldScreen` with the on-disk `.scene`
 //! scripts (the same sources the game compiles at runtime).
 
+use crate::alloc_prelude::*;
 use super::screen::OverworldScreen;
 use super::{Direction, OverworldInput};
 use pokered_data::impl_traits::PokemonRedData;

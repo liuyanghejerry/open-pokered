@@ -9,6 +9,7 @@
 //! - B or START closes the menu
 //! - A dispatches to the selected sub-menu
 
+use crate::alloc_prelude::*;
 use crate::main_menu::MenuInput;
 
 /// Start menu items matching `draw_start_menu.asm` / `home/start_menu.asm`.

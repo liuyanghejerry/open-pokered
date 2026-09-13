@@ -49,8 +49,10 @@
 
 #![cfg(test)]
 
+use crate::alloc_prelude::*;
 #[cfg(test)]
 mod slice7_tests {
+use crate::alloc_prelude::*;
     use crate::battle::stack_parity::{
         legacy_run_secondary, run_scenario_secondary, stack_atk_stage, stack_run_secondary,
         stack_spc_stage, MoveBytes, SecondaryMon, SecondaryScenario,

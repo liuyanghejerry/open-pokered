@@ -1,6 +1,7 @@
 #[cfg(test)]
 mod tests {
     use super::super::stats::*;
+    use super::super::stats::ceil_sqrt_u16;
     use pokered_data::pokemon_data::get_base_stats;
     use pokered_data::species::Species;
 
@@ -53,6 +54,16 @@ mod tests {
         // stat = 140*25/100 + 5 = 35 + 5 = 40
         let result = calc_stat(55, 15, 0, 25, false);
         assert_eq!(result, 40);
+    }
+
+    /// The integer ceil-sqrt must agree with the f64 reference it replaced
+    /// (`(x as f64).sqrt().ceil()`) for every reachable stat-exp input.
+    #[test]
+    fn integer_ceil_sqrt_matches_f64_everywhere() {
+        for x in 0u16..=65535 {
+            let expected = ((x as f64).sqrt().ceil()) as u16;
+            assert_eq!(ceil_sqrt_u16(x), expected, "mismatch at stat_exp={}", x);
+        }
     }
 
     #[test]

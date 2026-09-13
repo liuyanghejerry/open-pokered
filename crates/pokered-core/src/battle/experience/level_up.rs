@@ -1,3 +1,4 @@
+use crate::alloc_prelude::*;
 use pokered_data::evos_moves::evos_moves_data;
 use pokered_data::moves::MoveId;
 use pokered_data::pokemon_data::get_base_stats;

@@ -1,4 +1,5 @@
 //! Original Red/Blue surfing uses SeelSprite, with the standard six-frame layout.
+
 use dotzuki_engine::{overworld::types::TransportMode, render_config::RenderConfig};
 use pokered_app::render::draw_overworld;
 use pokered_core::{

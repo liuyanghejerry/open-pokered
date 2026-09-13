@@ -427,6 +427,7 @@ pub fn ui_label<'a>(key: &'a str, is_zh: bool) -> &'a str {
 
 #[cfg(test)]
 mod move_translation_tests {
+    use crate::alloc_prelude::*;
     use super::*;
 
     #[test]

@@ -1,4 +1,5 @@
 #[cfg(test)]
+use crate::alloc_prelude::*;
 mod tests {
     use super::super::gain::*;
     use crate::battle::state::*;

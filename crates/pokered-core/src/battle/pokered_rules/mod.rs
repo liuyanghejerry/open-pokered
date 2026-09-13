@@ -74,7 +74,12 @@
 // test-only setup helpers + the surface not yet called by the production loop.
 #![allow(dead_code)]
 
-use std::cell::RefCell;
+use crate::alloc_prelude::*;
+use core::cell::{Cell, RefCell};
+
+// Bare metal (GBA): the crate-local single-threaded `thread_local!` shim.
+#[cfg(target_os = "none")]
+use crate::thread_local;
 
 use dotzuki_engine::battle::stack::{
     BattleCtx, Effect, EffectId, EffectProvider, EffectState, EffectType, Event, EventHook,
@@ -778,6 +783,11 @@ pub fn status_index_of(name: &str) -> Option<usize> {
 
 thread_local! {
     static HOST: RefCell<Option<&'static RulesHost<PokeredRules>>> = const { RefCell::new(None) };
+    /// `install_canonical` is called at every production stack-engine entry
+    /// point. Remember when the current thread already owns the canonical
+    /// registry so those calls do not repeatedly parse, compile, and leak the
+    /// same ruleset. A deliberate `install_compiled` hot-swap clears the flag.
+    static CANONICAL_INSTALLED: Cell<bool> = const { Cell::new(false) };
 }
 
 /// Install (or hot-swap) the compiled registry the interpreter reads. Leaks a
@@ -788,6 +798,7 @@ pub fn install_compiled(compiled: CompiledRuleset) {
     let host = RulesHost::new(compiled, PokeredBindings);
     let leaked: &'static RulesHost<PokeredRules> = Box::leak(Box::new(host));
     HOST.with(|h| *h.borrow_mut() = Some(leaked));
+    CANONICAL_INSTALLED.with(|installed| installed.set(false));
     // Rebuild the per-record op-list index + combined move effects on this thread.
     rebuild_move_index();
 }
@@ -801,9 +812,11 @@ pub fn install_compiled(compiled: CompiledRuleset) {
 /// (read + watch). Both yield the SAME [`Ruleset`] when the on-disk file matches
 /// the baked text (the dual-mode invariant).
 pub fn load_ruleset(hot: bool) -> RuleSource {
+    #[cfg(not(target_os = "none"))]
     if hot {
-        RuleSource::from_path(RULES_RON_PATH)
-    } else {
+        return RuleSource::from_path(RULES_RON_PATH);
+    }
+    {
         RuleSource::baked(RULES_RON_BAKED)
     }
 }
@@ -824,9 +837,13 @@ pub fn compile(ruleset: &Ruleset) -> Result<CompiledRuleset, dotzuki_rules::Load
 /// rebuilds the combined move-effect index). The harness calls this FIRST on each
 /// test thread (the thread-local host is per-thread; test threads are pooled).
 pub fn install_canonical() {
+    if CANONICAL_INSTALLED.with(Cell::get) {
+        return;
+    }
     let ruleset = load_ruleset(false).load().expect("baked pokered rules.ron parses");
     let compiled = compile(&ruleset).expect("pokered rules.ron compiles");
     install_compiled(compiled);
+    CANONICAL_INSTALLED.with(|installed| installed.set(true));
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -850,8 +867,9 @@ pub fn install_canonical() {
 struct MoveRecord {
     /// The rules.ron record id string (e.g. `"move.surf"`).
     source_id: String,
-    /// Per-event compiled hooks (the op-list + chance gate) for this record.
-    hooks: Vec<CompiledHook>,
+    /// Per-event hooks owned by the installed [`CompiledRuleset`]. Keeping only
+    /// ids avoids duplicating every op list in the move index.
+    hook_ids: Vec<EffectId>,
 }
 
 thread_local! {
@@ -979,25 +997,34 @@ fn rebuild_move_index() {
     let host = PokeredRules::rules_host().expect("pokered rules host installed");
     // Group the compiled hooks by their owning record source_id, in a stable,
     // deterministic order (sorted by source_id, then by synthesized hook id).
-    let mut by_source: std::collections::BTreeMap<String, Vec<CompiledHook>> =
-        std::collections::BTreeMap::new();
-    let mut hooks: Vec<CompiledHook> = host.compiled.hooks.values().cloned().collect();
+    let mut by_source: alloc::collections::BTreeMap<String, Vec<EffectId>> =
+        alloc::collections::BTreeMap::new();
+    let mut hooks: Vec<&CompiledHook> = host.compiled.hooks.values().collect();
     hooks.sort_by_key(|h| h.id.0);
     for h in hooks {
-        by_source.entry(h.source_id.clone()).or_default().push(h);
+        by_source
+            .entry(h.source_id.clone())
+            .or_default()
+            .push(h.id);
     }
     // Also register the no-op records (Splash) that carry no hooks, so a MoveId →
     // record_id mapping always resolves.
     let mut records: Vec<MoveRecord> = Vec::new();
-    for (source_id, hs) in by_source {
-        records.push(MoveRecord { source_id, hooks: hs });
+    for (source_id, hook_ids) in by_source {
+        records.push(MoveRecord {
+            source_id,
+            hook_ids,
+        });
     }
     // Ensure every authored record id has a slot even if hook-less (Splash), plus
     // the fully-native records whose behaviour is a native handler, not data ops
     // (Counter reflects via `counter_handler`, registered in the rebuild loop below).
     for sid in ["move.splash", "special.counter", "status.transform", "move.mimic", "status.haze", "special.switch_teleport", "status.substitute", "status.conversion", "status.disable"] {
         if !records.iter().any(|r| r.source_id == sid) {
-            records.push(MoveRecord { source_id: sid.to_string(), hooks: Vec::new() });
+            records.push(MoveRecord {
+                source_id: sid.to_string(),
+                hook_ids: Vec::new(),
+            });
         }
     }
     records.sort_by(|a, b| a.source_id.cmp(&b.source_id));
@@ -1010,6 +1037,9 @@ fn rebuild_move_index() {
     // records still register the pipeline hooks; the handlers short-circuit on
     // power-0 (drawing only the accuracy byte) to match the legacy power-0 branch.
     let mut effects: Vec<&'static Effect<PokeredRules>> = Vec::new();
+    // Intern identical complete hook topologies on every platform. The RON
+    // records remain authoritative for event order, priority and veto routing.
+    let mut hook_sets: Vec<&'static [EventHook<PokeredRules>]> = Vec::new();
     for (idx, rec) in records.iter().enumerate() {
         let id = EffectId(MOVE_EFFECT_ID_BASE + idx as u32);
         let mut event_hooks: Vec<EventHook<PokeredRules>> = Vec::new();
@@ -1206,7 +1236,11 @@ fn rebuild_move_index() {
             });
         }
         // ── Data bridge hooks (the EFFECT op-lists, by event). ──
-        for h in &rec.hooks {
+        for hook_id in &rec.hook_ids {
+            let h = host
+                .compiled
+                .hook(*hook_id)
+                .expect("move index references an installed compiled hook");
             // A DamagingHit hook whose op-list carries a foe-directed `Boost`
             // (target Target/Foe, NOT Source) is a foe stat-down — route it to the
             // pokered-side nested-veto driver (`bridge_foe_stat_down`) which fires
@@ -1251,8 +1285,23 @@ fn rebuild_move_index() {
                 sub_order: None,
             });
         }
-        let leaked_hooks: &'static [EventHook<PokeredRules>] =
-            Box::leak(event_hooks.into_boxed_slice());
+        let leaked_hooks = if let Some(existing) = hook_sets.iter().copied().find(|hooks| {
+            hooks.len() == event_hooks.len()
+                && hooks.iter().zip(&event_hooks).all(|(a, b)| {
+                    a.event == b.event
+                        && core::ptr::fn_addr_eq(a.call, b.call)
+                        && a.order == b.order
+                        && a.priority == b.priority
+                        && a.sub_order == b.sub_order
+                })
+        }) {
+            existing
+        } else {
+            let hooks: &'static [EventHook<PokeredRules>] =
+                Box::leak(event_hooks.into_boxed_slice());
+            hook_sets.push(hooks);
+            hooks
+        };
         let eff: &'static Effect<PokeredRules> = Box::leak(Box::new(Effect {
             id,
             kind: EffectType::Move,
@@ -1283,10 +1332,27 @@ pub fn move_effect_for(m: MoveId) -> Option<&'static Effect<PokeredRules>> {
 /// recovering the record from the combined effect's `source_effect` id.
 fn hook_for(source_effect: EffectId, event: Event) -> Option<CompiledHook> {
     let rec_idx = source_effect.0.checked_sub(MOVE_EFFECT_ID_BASE)? as usize;
+    let host = PokeredRules::rules_host()?;
     MOVE_RECORDS.with(|r| {
         r.borrow()
             .get(rec_idx)
-            .and_then(|rec| rec.hooks.iter().find(|h| h.event == event).cloned())
+            .and_then(|rec| {
+                rec.hook_ids
+                    .iter()
+                    .find_map(|id| host.compiled.hook(*id).filter(|h| h.event == event))
+            })
+            .cloned()
+    })
+}
+
+fn source_effect_is(source_effect: EffectId, source_id: &str) -> bool {
+    let Some(rec_idx) = source_effect.0.checked_sub(MOVE_EFFECT_ID_BASE) else {
+        return false;
+    };
+    MOVE_RECORDS.with(|r| {
+        r.borrow()
+            .get(rec_idx as usize)
+            .is_some_and(|rec| rec.source_id == source_id)
     })
 }
 
@@ -1297,8 +1363,8 @@ thread_local! {
     /// species so the player and opponent can differ when they use distinct species
     /// (the OHKO / Seismic Toss differential scenarios). Thread-local so the
     /// parallel test harness stays isolated.
-    static LEVELS: RefCell<std::collections::HashMap<Species, u16>> =
-        RefCell::new(std::collections::HashMap::new());
+    static LEVELS: RefCell<crate::hash_compat::HashMap<Species, u16>> =
+        RefCell::new(crate::hash_compat::HashMap::with_hasher(crate::hash_compat::FxBuildHasher));
 }
 
 /// Record a species' level for the P3 `battler_level` binding (harness-only).
@@ -1736,8 +1802,11 @@ fn counter_handler(
     _relay: RelayVar,
     target: BattlerRef,
     source: BattlerRef,
-    _eff: EffectId,
+    source_effect: EffectId,
 ) -> HandlerResult {
+    if !source_effect_is(source_effect, "special.counter") {
+        return HandlerResult::Unchanged;
+    }
     let (amount, counterable) = match ctx
         .effects
         .iter()
@@ -2441,7 +2510,7 @@ fn bide_residual(
 /// The leaked `&'static` Bide residual effect (one `Residual` hook). Returned by
 /// `effect_for_volatile` for a `Bide` volatile so the driver ticks it each turn.
 fn bide_residual_effect() -> &'static Effect<PokeredRules> {
-    use std::sync::OnceLock;
+    use crate::sync_compat::OnceLock;
     static EFF: OnceLock<&'static Effect<PokeredRules>> = OnceLock::new();
     EFF.get_or_init(|| {
         let hooks: &'static [EventHook<PokeredRules>] = Box::leak(
@@ -2495,14 +2564,14 @@ fn try_boost_veto(
 /// The leaked `&'static` Mist veto effect (one `TryBoost` hook ⇒ `Fail`). Built
 /// once per process. `EffectId`s are well clear of the data / move-effect spaces.
 fn mist_try_boost_effect() -> &'static Effect<PokeredRules> {
-    use std::sync::OnceLock;
+    use crate::sync_compat::OnceLock;
     static EFF: OnceLock<&'static Effect<PokeredRules>> = OnceLock::new();
     EFF.get_or_init(|| build_try_boost_veto_effect(EffectId(0x40_001)))
 }
 
 /// The leaked `&'static` Substitute veto effect (one `TryBoost` hook ⇒ `Fail`).
 fn substitute_try_boost_effect() -> &'static Effect<PokeredRules> {
-    use std::sync::OnceLock;
+    use crate::sync_compat::OnceLock;
     static EFF: OnceLock<&'static Effect<PokeredRules>> = OnceLock::new();
     EFF.get_or_init(|| build_try_boost_veto_effect(EffectId(0x40_002)))
 }
@@ -2707,6 +2776,21 @@ fn bridge_damaging_hit(
     source: BattlerRef,
     source_effect: EffectId,
 ) -> HandlerResult {
+    let is_foe_stat_down = hook_for(source_effect, Event::DamagingHit).is_some_and(|hook| {
+        hook.ops.iter().any(|op| {
+            matches!(
+                op,
+                dotzuki_rules::Op::Boost {
+                    target: dotzuki_rules::Selector::Target
+                        | dotzuki_rules::Selector::Foe,
+                    ..
+                }
+            )
+        })
+    });
+    if is_foe_stat_down {
+        return bridge_foe_stat_down(ctx, relay, target, source, source_effect);
+    }
     run_bridge(ctx, relay, target, source, source_effect, Event::DamagingHit)
 }
 
@@ -2838,11 +2922,20 @@ fn scaled_accuracy(move_accuracy: u8, acc_stage: i8, eva_stage: i8) -> u8 {
 /// Sanity helper for tests: assert the op-list of a record id contains an op.
 #[allow(dead_code)]
 pub fn record_has_op(source_id: &str, want: &Op) -> bool {
+    let Some(host) = PokeredRules::rules_host() else {
+        return false;
+    };
     MOVE_RECORDS.with(|r| {
         r.borrow()
             .iter()
             .find(|rec| rec.source_id == source_id)
-            .map(|rec| rec.hooks.iter().any(|h| h.ops.iter().any(|o| o == want)))
+            .map(|rec| {
+                rec.hook_ids.iter().any(|id| {
+                    host.compiled
+                        .hook(*id)
+                        .is_some_and(|h| h.ops.iter().any(|o| o == want))
+                })
+            })
             .unwrap_or(false)
     })
 }

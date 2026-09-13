@@ -17,11 +17,18 @@
 //! ported as a native handler ([`VgymTrashState`]) registered under the
 //! `storyline_trashCans` function.
 
-use std::collections::{HashMap, VecDeque};
+use crate::alloc_prelude::*;
+#[cfg(not(target_os = "none"))]
+use crate::hash_compat::HashMap;
+#[cfg(target_os = "none")]
+use crate::hash_compat::HashMap;
 
 use dotzuki_engine_dsl::ast::{GameScene, StoryStmt};
+use dotzuki_engine_dsl::core_host::dispatch_core_async;
 use dotzuki_engine_dsl::interpreter::{HostCall, Interpreter, InterpState, ScriptHost, Value};
 use dotzuki_engine_script::{CommandResult, ScriptCommand};
+use pokered_data::script_command::PokemonScriptCommand;
+#[cfg(test)]
 use serde_json::json;
 
 /// Non-zero default seed (a common splitmix64/golden-ratio constant) —
@@ -48,6 +55,7 @@ fn badge_index(name: &str) -> Option<u8> {
 /// Build a game-defined command from its JS verb name and JSON args
 /// (`ScriptCommand::Custom` — the engine's generic escape hatch for
 /// game-specific verbs; the engine dropped their dedicated variants).
+#[cfg(test)]
 fn custom(name: &str, args: Vec<serde_json::Value>) -> ScriptCommand {
     ScriptCommand::Custom {
         name: name.to_string(),
@@ -55,9 +63,14 @@ fn custom(name: &str, args: Vec<serde_json::Value>) -> ScriptCommand {
     }
 }
 
+fn pokemon(command: PokemonScriptCommand) -> HostCall {
+    HostCall::Command(command.into_script_command())
+}
+
 /// Argument conversion helpers — all fail with a descriptive message,
 /// mirroring the Boa registrar closures' type errors.
 mod args {
+    use crate::alloc_prelude::*;
     use super::Value;
 
     /// JS `String()` coercion: numbers/bools stringify (the Boa registrar
@@ -83,10 +96,6 @@ mod args {
         number(v, what).map(|n| n as u8)
     }
 
-    pub fn u16(v: &Value, what: &str) -> Result<u16, String> {
-        number(v, what).map(|n| n as u16)
-    }
-
     pub fn u32(v: &Value, what: &str) -> Result<u32, String> {
         number(v, what).map(|n| n as u32)
     }
@@ -97,69 +106,6 @@ mod args {
                 .iter()
                 .map(|i| text(i, &format!("{what} element")))
                 .collect(),
-            other => Err(format!("{what}: expected array, got {}", other.type_name())),
-        }
-    }
-
-    pub fn path(v: &Value, what: &str) -> Result<Vec<(u8, u8)>, String> {
-        match v {
-            Value::Array(items) => {
-                let mut out = Vec::with_capacity(items.len());
-                for (i, p) in items.iter().enumerate() {
-                    match p {
-                        Value::Array(xy) if xy.len() == 2 => {
-                            out.push((u8(&xy[0], &format!("{what}[{i}].x"))?, u8(&xy[1], &format!("{what}[{i}].y"))?));
-                        }
-                        other => {
-                            return Err(format!(
-                                "{what}[{i}]: expected [x, y] pair, got {}",
-                                other.type_name()
-                            ))
-                        }
-                    }
-                }
-                Ok(out)
-            }
-            other => Err(format!("{what}: expected array, got {}", other.type_name())),
-        }
-    }
-
-    /// `movePlayerRelative` steps: `[dx, dy]` pairs or direction strings.
-    pub fn relative_steps(v: &Value, what: &str) -> Result<Vec<(i16, i16)>, String> {
-        match v {
-            Value::Array(items) => {
-                let mut out = Vec::with_capacity(items.len());
-                for (i, p) in items.iter().enumerate() {
-                    match p {
-                        Value::Text(dir) => {
-                            let (dx, dy) = match dir.to_ascii_lowercase().as_str() {
-                                "up" | "north" => (0i16, -1i16),
-                                "down" | "south" => (0, 1),
-                                "left" | "west" => (-1, 0),
-                                "right" | "east" => (1, 0),
-                                other => {
-                                    return Err(format!(
-                                        "{what}[{i}]: unknown direction '{other}'"
-                                    ))
-                                }
-                            };
-                            out.push((dx, dy));
-                        }
-                        Value::Array(xy) if xy.len() == 2 => {
-                            let dx = number(&xy[0], &format!("{what}[{i}].dx"))? as i16;
-                            let dy = number(&xy[1], &format!("{what}[{i}].dy"))? as i16;
-                            out.push((dx, dy));
-                        }
-                        other => {
-                            return Err(format!(
-                                "{what}[{i}]: expected direction string or [dx, dy], got {}",
-                                other.type_name()
-                            ))
-                        }
-                    }
-                }
-                Ok(out)
-            }
             other => Err(format!("{what}: expected array, got {}", other.type_name())),
         }
     }
@@ -182,10 +128,10 @@ pub struct NativeHost {
 impl NativeHost {
     fn new() -> Self {
         Self {
-            flags: HashMap::new(),
-            numbers: HashMap::new(),
-            texts: HashMap::new(),
-            sets: HashMap::new(),
+            flags: HashMap::default(),
+            numbers: HashMap::default(),
+            texts: HashMap::default(),
+            sets: HashMap::default(),
             player_x: 0,
             player_y: 0,
             lang: "en".to_string(),
@@ -218,6 +164,10 @@ impl NativeHost {
 
 impl ScriptHost for NativeHost {
     fn call(&mut self, name: &str, v: &[Value]) -> Result<HostCall, String> {
+        if let Some(command) = dispatch_core_async(name, v)? {
+            return Ok(HostCall::Command(command));
+        }
+
         match name {
             // ── sync flag queries/mutations ──────────────────────────────
             "getFlag" => {
@@ -263,6 +213,9 @@ impl ScriptHost for NativeHost {
             ))),
             "getRivalStarter" => Ok(HostCall::Value(Value::Number(
                 self.numbers.get("rivalStarter").copied().unwrap_or(0.0),
+            ))),
+            "getGameVersion" => Ok(HostCall::Value(Value::Number(
+                self.numbers.get("gameVersion").copied().unwrap_or(0.0),
             ))),
             "getBadgeCount" => {
                 let badges = self.numbers.get("obtainedBadges").copied().unwrap_or(0.0) as u8;
@@ -341,14 +294,6 @@ impl ScriptHost for NativeHost {
             }
 
             // ── async commands: build a ScriptCommand for the driver ──────
-            "showText" => {
-                let text = args::text(v.first().ok_or("showText: missing text")?, "showText")?;
-                Ok(HostCall::Command(ScriptCommand::ShowText { text }))
-            }
-            "showChoice" => {
-                let options = args::string_array(v.first().ok_or("showChoice: missing options")?, "showChoice")?;
-                Ok(HostCall::Command(ScriptCommand::ShowChoice { options }))
-            }
             "giveItem" => {
                 let item_id = args::text(v.first().ok_or("giveItem: missing item")?, "giveItem")?;
                 let quantity = args::u8(v.get(1).ok_or("giveItem: missing quantity")?, "giveItem")?;
@@ -371,26 +316,30 @@ impl ScriptHost for NativeHost {
             "startBattleSet" => {
                 let trainer_id = args::text(v.first().ok_or("startBattleSet: missing trainer")?, "startBattleSet")?;
                 let base = args::u8(v.get(1).ok_or("startBattleSet: missing base")?, "startBattleSet")?;
-                Ok(HostCall::Command(custom("startBattleSet", vec![json!(trainer_id), json!(base)])))
+                Ok(pokemon(PokemonScriptCommand::StartBattleSet {
+                    trainer_id,
+                    rival_triplet_base: base,
+                }))
             }
             "startWildBattle" => {
                 let species = args::text(v.first().ok_or("startWildBattle: missing species")?, "startWildBattle")?;
                 let level = args::u8(v.get(1).ok_or("startWildBattle: missing level")?, "startWildBattle")?;
                 Ok(HostCall::Command(ScriptCommand::StartWildBattle { species, level }))
             }
-            "oldManTutorial" => Ok(HostCall::Command(custom("oldManTutorial", vec![]))),
+            "oldManTutorial" => Ok(pokemon(PokemonScriptCommand::OldManTutorial)),
             "tradePokemon" => {
                 let offered = args::text(v.first().ok_or("tradePokemon: missing offered")?, "tradePokemon")?;
                 let received = args::text(v.get(1).ok_or("tradePokemon: missing received")?, "tradePokemon")?;
                 let nickname = args::text(v.get(2).ok_or("tradePokemon: missing nickname")?, "tradePokemon")?;
-                Ok(HostCall::Command(custom(
-                    "tradePokemon",
-                    vec![json!(offered), json!(received), json!(nickname)],
-                )))
+                Ok(pokemon(PokemonScriptCommand::TradePokemon {
+                    offered,
+                    received,
+                    nickname,
+                }))
             }
             "showPokedexEntry" => {
                 let species = args::text(v.first().ok_or("showPokedexEntry: missing species")?, "showPokedexEntry")?;
-                Ok(HostCall::Command(custom("showPokedexEntry", vec![json!(species)])))
+                Ok(pokemon(PokemonScriptCommand::ShowPokedexEntry { species }))
             }
             "giveMoney" => {
                 let amount = args::u32(v.first().ok_or("giveMoney: missing amount")?, "giveMoney")?;
@@ -404,10 +353,7 @@ impl ScriptHost for NativeHost {
                 let x = args::u8(v.first().ok_or("replaceTileBlock: missing x")?, "replaceTileBlock")?;
                 let y = args::u8(v.get(1).ok_or("replaceTileBlock: missing y")?, "replaceTileBlock")?;
                 let block_id = args::u8(v.get(2).ok_or("replaceTileBlock: missing block")?, "replaceTileBlock")?;
-                Ok(HostCall::Command(custom(
-                    "replaceTileBlock",
-                    vec![json!(x), json!(y), json!(block_id)],
-                )))
+                Ok(pokemon(PokemonScriptCommand::ReplaceTileBlock { x, y, block_id }))
             }
             "playCry" => {
                 let species = args::text(v.first().ok_or("playCry: missing species")?, "playCry")?;
@@ -429,200 +375,47 @@ impl ScriptHost for NativeHost {
                     Some(Value::Bool(b)) => *b,
                     _ => false,
                 };
-                Ok(HostCall::Command(custom("openSlots", vec![json!(lucky)])))
+                Ok(pokemon(PokemonScriptCommand::OpenSlots { lucky: Some(lucky) }))
             }
             "elevatorMenu" => {
                 let floors = args::string_array(v.first().ok_or("elevatorMenu: missing floors")?, "elevatorMenu")?;
-                Ok(HostCall::Command(custom("elevatorMenu", vec![json!(floors)])))
+                Ok(pokemon(PokemonScriptCommand::ElevatorMenu { floors }))
             }
             "filterBag" => {
                 let item_ids = args::string_array(v.first().ok_or("filterBag: missing items")?, "filterBag")?;
-                Ok(HostCall::Command(custom("filterBag", vec![json!(item_ids)])))
+                Ok(pokemon(PokemonScriptCommand::FilterBag { item_ids }))
             }
-            "showDiploma" => Ok(HostCall::Command(custom("showDiploma", vec![]))),
-            "openPC" => Ok(HostCall::Command(custom("openPC", vec![]))),
-            "openItemPC" => Ok(HostCall::Command(custom("openItemPC", vec![]))),
-            "openBillsPC" => Ok(HostCall::Command(custom("openBillsPC", vec![]))),
-            "linkStart" => Ok(HostCall::Command(custom("linkStart", vec![]))),
-            "enterHallOfFame" => Ok(HostCall::Command(custom("enterHallOfFame", vec![]))),
+            "showDiploma" => Ok(pokemon(PokemonScriptCommand::ShowDiploma)),
+            "openPC" => Ok(pokemon(PokemonScriptCommand::OpenPc)),
+            "openItemPC" => Ok(pokemon(PokemonScriptCommand::OpenItemPc)),
+            "openBillsPC" => Ok(pokemon(PokemonScriptCommand::OpenBillsPc)),
+            "linkStart" => Ok(pokemon(PokemonScriptCommand::LinkStart)),
+            "enterHallOfFame" => Ok(pokemon(PokemonScriptCommand::EnterHallOfFame)),
             "giveCoins" => {
                 let amount = args::u32(v.first().ok_or("giveCoins: missing amount")?, "giveCoins")?.min(u16::MAX as u32) as u16;
-                Ok(HostCall::Command(custom("giveCoins", vec![json!(amount)])))
+                Ok(pokemon(PokemonScriptCommand::GiveCoins { amount }))
             }
             "takeCoins" => {
                 let amount = args::u32(v.first().ok_or("takeCoins: missing amount")?, "takeCoins")?.min(u16::MAX as u32) as u16;
-                Ok(HostCall::Command(custom("takeCoins", vec![json!(amount)])))
+                Ok(pokemon(PokemonScriptCommand::TakeCoins { amount }))
             }
             "depositDaycare" => {
                 let index = args::u8(v.first().ok_or("depositDaycare: missing index")?, "depositDaycare")?;
-                Ok(HostCall::Command(custom("depositDaycare", vec![json!(index)])))
+                Ok(pokemon(PokemonScriptCommand::DepositDaycare { index }))
             }
-            "withdrawDaycare" => Ok(HostCall::Command(custom("withdrawDaycare", vec![]))),
+            "withdrawDaycare" => Ok(pokemon(PokemonScriptCommand::WithdrawDaycare)),
 
-            // ── core engine commands (dotzuki-engine-script/src/engine.rs) ──
-            "moveNpc" => {
-                let npc_id = args::text(v.first().ok_or("moveNpc: missing npc")?, "moveNpc")?;
-                let path = args::path(v.get(1).ok_or("moveNpc: missing path")?, "moveNpc")?;
-                Ok(HostCall::Command(ScriptCommand::MoveNpc { npc_id, path }))
-            }
-            "startNpcMove" => {
-                let npc_id = args::text(v.first().ok_or("startNpcMove: missing npc")?, "startNpcMove")?;
-                let path = args::path(v.get(1).ok_or("startNpcMove: missing path")?, "startNpcMove")?;
-                Ok(HostCall::Command(ScriptCommand::StartNpcMove { npc_id, path }))
-            }
-            "awaitNpcMove" => {
-                let npc_id = args::text(v.first().ok_or("awaitNpcMove: missing npc")?, "awaitNpcMove")?;
-                Ok(HostCall::Command(ScriptCommand::AwaitNpcMove { npc_id }))
-            }
-            "movePlayer" => {
-                let path = args::path(v.first().ok_or("movePlayer: missing path")?, "movePlayer")?;
-                Ok(HostCall::Command(ScriptCommand::MovePlayer { path }))
-            }
-            "movePlayerRelative" => {
-                let steps = args::relative_steps(v.first().ok_or("movePlayerRelative: missing steps")?, "movePlayerRelative")?;
-                Ok(HostCall::Command(ScriptCommand::MovePlayerRelative { steps }))
-            }
-            "moveNpcTo" => {
-                let npc_id = args::text(v.first().ok_or("moveNpcTo: missing npc")?, "moveNpcTo")?;
-                let x = args::u8(v.get(1).ok_or("moveNpcTo: missing x")?, "moveNpcTo")?;
-                let y = args::u8(v.get(2).ok_or("moveNpcTo: missing y")?, "moveNpcTo")?;
-                Ok(HostCall::Command(ScriptCommand::MoveNpcTo { npc_id, x, y }))
-            }
-            "startNpcMoveTo" => {
-                let npc_id = args::text(v.first().ok_or("startNpcMoveTo: missing npc")?, "startNpcMoveTo")?;
-                let x = args::u8(v.get(1).ok_or("startNpcMoveTo: missing x")?, "startNpcMoveTo")?;
-                let y = args::u8(v.get(2).ok_or("startNpcMoveTo: missing y")?, "startNpcMoveTo")?;
-                Ok(HostCall::Command(ScriptCommand::StartNpcMoveTo { npc_id, x, y }))
-            }
-            "movePlayerTo" => {
-                let x = args::u8(v.first().ok_or("movePlayerTo: missing x")?, "movePlayerTo")?;
-                let y = args::u8(v.get(1).ok_or("movePlayerTo: missing y")?, "movePlayerTo")?;
-                Ok(HostCall::Command(ScriptCommand::MovePlayerTo { x, y }))
-            }
-            "faceNpc" => {
-                let npc_id = args::text(v.first().ok_or("faceNpc: missing npc")?, "faceNpc")?;
-                let direction = args::text(v.get(1).ok_or("faceNpc: missing direction")?, "faceNpc")?;
-                Ok(HostCall::Command(ScriptCommand::FaceNpc { npc_id, direction }))
-            }
-            "facePlayer" => {
-                let direction = args::text(v.first().ok_or("facePlayer: missing direction")?, "facePlayer")?;
-                Ok(HostCall::Command(ScriptCommand::FacePlayer { direction }))
-            }
-            "setNpcFrame" => {
-                let npc_id = args::text(v.first().ok_or("setNpcFrame: missing npc")?, "setNpcFrame")?;
-                let frame = args::u8(v.get(1).ok_or("setNpcFrame: missing frame")?, "setNpcFrame")?;
-                Ok(HostCall::Command(ScriptCommand::SetNpcFrame { npc_id, frame }))
-            }
-            "playMusic" => {
-                let music_id = args::text(v.first().ok_or("playMusic: missing music")?, "playMusic")?;
-                Ok(HostCall::Command(ScriptCommand::PlayMusic { music_id }))
-            }
-            "playSound" => {
-                let sound_id = args::text(v.first().ok_or("playSound: missing sound")?, "playSound")?;
-                Ok(HostCall::Command(ScriptCommand::PlaySound { sound_id }))
-            }
-            "playShipDeparture" => Ok(HostCall::Command(custom("playShipDeparture", vec![]))),
-            "stopMusic" => Ok(HostCall::Command(ScriptCommand::StopMusic)),
-            "fadeOutMusic" => Ok(HostCall::Command(ScriptCommand::FadeOutMusic)),
-            "delay" => {
-                let frames = args::u16(v.first().ok_or("delay: missing frames")?, "delay")?;
-                Ok(HostCall::Command(ScriptCommand::Delay { frames }))
-            }
-            "warpTo" => {
-                let map = args::text(v.first().ok_or("warpTo: missing map")?, "warpTo")?;
-                let x = args::u8(v.get(1).ok_or("warpTo: missing x")?, "warpTo")?;
-                let y = args::u8(v.get(2).ok_or("warpTo: missing y")?, "warpTo")?;
-                Ok(HostCall::Command(ScriptCommand::WarpTo { map, x, y }))
-            }
-            "heal" => Ok(HostCall::Command(ScriptCommand::Heal)),
-            "animateHealingMachine" => Ok(HostCall::Command(custom("animateHealingMachine", vec![]))),
-            "fadeScreen" => {
-                let fade_type = args::text(v.first().ok_or("fadeScreen: missing type")?, "fadeScreen")?;
-                Ok(HostCall::Command(ScriptCommand::FadeScreen { fade_type }))
-            }
-            "showObject" => {
-                let arg = v.first().ok_or("showObject: missing argument")?;
-                match arg {
-                    Value::Text(toggle_id) => Ok(HostCall::Command(ScriptCommand::ShowObjectByName {
-                        toggle_id: toggle_id.clone(),
-                    })),
-                    Value::Number(_) => Ok(HostCall::Command(ScriptCommand::ShowObject {
-                        object_index: args::u8(arg, "showObject")?,
-                    })),
-                    other => Err(format!("showObject: expected number or string, got {}", other.type_name())),
-                }
-            }
-            "hideObject" => {
-                let arg = v.first().ok_or("hideObject: missing argument")?;
-                match arg {
-                    Value::Text(toggle_id) => Ok(HostCall::Command(ScriptCommand::HideObjectByName {
-                        toggle_id: toggle_id.clone(),
-                    })),
-                    Value::Number(_) => Ok(HostCall::Command(ScriptCommand::HideObject {
-                        object_index: args::u8(arg, "hideObject")?,
-                    })),
-                    other => Err(format!("hideObject: expected number or string, got {}", other.type_name())),
-                }
-            }
-            "showObjectByName" => {
-                let toggle_id = args::text(v.first().ok_or("showObjectByName: missing id")?, "showObjectByName")?;
-                Ok(HostCall::Command(ScriptCommand::ShowObjectByName { toggle_id }))
-            }
-            "hideObjectByName" => {
-                let toggle_id = args::text(v.first().ok_or("hideObjectByName: missing id")?, "hideObjectByName")?;
-                Ok(HostCall::Command(ScriptCommand::HideObjectByName { toggle_id }))
-            }
-            "setJoyIgnore" => {
-                let mask = args::u8(v.first().ok_or("setJoyIgnore: missing mask")?, "setJoyIgnore")?;
-                Ok(HostCall::Command(ScriptCommand::SetJoyIgnore { mask }))
-            }
-            "clearJoyIgnore" => Ok(HostCall::Command(ScriptCommand::ClearJoyIgnore)),
-            "followNpc" => {
-                let npc_id = args::text(v.first().ok_or("followNpc: missing npc")?, "followNpc")?;
-                let target_x = args::u8(v.get(1).ok_or("followNpc: missing x")?, "followNpc")?;
-                let target_y = args::u8(v.get(2).ok_or("followNpc: missing y")?, "followNpc")?;
-                Ok(HostCall::Command(ScriptCommand::FollowNpc { npc_id, target_x, target_y }))
-            }
+            "playShipDeparture" => Ok(pokemon(PokemonScriptCommand::PlayShipDeparture)),
+            "animateHealingMachine" => Ok(pokemon(PokemonScriptCommand::AnimateHealingMachine)),
             "openNamingScreen" => {
                 let species = args::text(v.first().ok_or("openNamingScreen: missing species")?, "openNamingScreen")?;
-                Ok(HostCall::Command(custom("openNamingScreen", vec![json!(species)])))
+                Ok(pokemon(PokemonScriptCommand::OpenNamingScreen { species }))
             }
-            "choosePartyPokemon" => Ok(HostCall::Command(custom("choosePartyPokemon", vec![]))),
+            "choosePartyPokemon" => Ok(pokemon(PokemonScriptCommand::ChoosePartyPokemon)),
             "setPartyNickname" => {
                 let index = args::u8(v.first().ok_or("setPartyNickname: missing index")?, "setPartyNickname")?;
                 let nickname = args::text(v.get(1).ok_or("setPartyNickname: missing nickname")?, "setPartyNickname")?;
-                Ok(HostCall::Command(custom(
-                    "setPartyNickname",
-                    vec![json!(index), json!(nickname)],
-                )))
-            }
-            "openShop" => {
-                let items = args::string_array(v.first().ok_or("openShop: missing items")?, "openShop")?;
-                Ok(HostCall::Command(ScriptCommand::OpenShop { items }))
-            }
-            "showEmotionBubble" => {
-                let npc_id = args::text(v.first().ok_or("showEmotionBubble: missing npc")?, "showEmotionBubble")?;
-                let emotion = args::text(v.get(1).ok_or("showEmotionBubble: missing emotion")?, "showEmotionBubble")?;
-                Ok(HostCall::Command(ScriptCommand::ShowEmotionBubble { npc_id, emotion }))
-            }
-            "setNpcPosition" => {
-                let npc_id = args::text(v.first().ok_or("setNpcPosition: missing npc")?, "setNpcPosition")?;
-                let x = args::u8(v.get(1).ok_or("setNpcPosition: missing x")?, "setNpcPosition")?;
-                let y = args::u8(v.get(2).ok_or("setNpcPosition: missing y")?, "setNpcPosition")?;
-                Ok(HostCall::Command(ScriptCommand::SetNpcPosition { npc_id, x, y }))
-            }
-            // dotzuki-engine UI/scene commands — never produced by pokered scenes;
-            // accepted for parity with the Boa registrar.
-            "showScene" => {
-                let scene_name = args::text(v.first().ok_or("showScene: missing name")?, "showScene")?;
-                Ok(HostCall::Command(ScriptCommand::ShowScene {
-                    scene_name,
-                    layout_json: None,
-                }))
-            }
-            "hideScene" => {
-                let scene_name = args::text(v.first().ok_or("hideScene: missing name")?, "hideScene")?;
-                Ok(HostCall::Command(ScriptCommand::HideScene { scene_name }))
+                Ok(pokemon(PokemonScriptCommand::SetPartyNickname { index, nickname }))
             }
             _ => Err(format!(
                 "unknown game function '{name}' (native interpreter host)"
@@ -806,10 +599,12 @@ impl VgymTrashState {
                     return Some(cmd);
                 }
                 TrashStep::ReplaceTileBlock(x, y, block_id) => {
-                    let cmd = custom(
-                        "replaceTileBlock",
-                        vec![json!(x), json!(y), json!(block_id)],
-                    );
+                    let cmd = PokemonScriptCommand::ReplaceTileBlock {
+                        x,
+                        y,
+                        block_id,
+                    }
+                    .into_script_command();
                     self.pending = Some(cmd.clone());
                     self.active = true;
                     return Some(cmd);
@@ -860,8 +655,8 @@ impl NativeScriptEngine {
     pub fn new() -> Self {
         Self {
             interp: Interpreter::new(NativeHost::new()),
-            functions: HashMap::new(),
-            shared_functions: HashMap::new(),
+            functions: HashMap::default(),
+            shared_functions: HashMap::default(),
             vgym: VgymTrashState::new(),
             state: InterpState::Idle,
         }
@@ -1170,7 +965,7 @@ impl OverworldScriptEngine {
     pub fn get_all_flags(&self) -> HashMap<String, bool> {
         match self {
             #[cfg(feature = "script-boa")]
-            OverworldScriptEngine::Boa(e) => e.get_all_flags(),
+            OverworldScriptEngine::Boa(e) => e.get_all_flags().into_iter().collect(),
             OverworldScriptEngine::Native(e) => e.get_all_flags(),
         }
     }
@@ -1178,7 +973,13 @@ impl OverworldScriptEngine {
     pub fn seed_flags(&mut self, flags: &HashMap<String, bool>) {
         match self {
             #[cfg(feature = "script-boa")]
-            OverworldScriptEngine::Boa(e) => e.seed_flags(flags),
+            OverworldScriptEngine::Boa(e) => {
+                let hosted_flags = flags
+                    .iter()
+                    .map(|(key, value)| (key.clone(), *value))
+                    .collect::<std::collections::HashMap<_, _>>();
+                e.seed_flags(&hosted_flags)
+            }
             OverworldScriptEngine::Native(e) => e.seed_flags(flags),
         }
     }
@@ -1250,26 +1051,32 @@ impl OverworldScriptEngine {
         }
     }
 
-    /// Load raw JS into the Boa engine. The native engine has no JS path —
-    /// load scene ASTs via the `load_map`-style methods on the `Native`
-    /// variant instead.
+    /// Load raw JS into the Boa engine.
+    ///
+    /// This API does not exist in native-AST builds, so selecting the wrong
+    /// representation fails at compile time instead of silently succeeding.
+    #[cfg(feature = "script-boa")]
     pub fn load_script(&mut self, _source: &str) -> Result<(), String> {
         match self {
-            #[cfg(feature = "script-boa")]
             OverworldScriptEngine::Boa(e) => e
                 .load_script(_source)
                 .map_err(|err| format!("JS load failed: {}", err)),
-            OverworldScriptEngine::Native(_) => Ok(()),
+            OverworldScriptEngine::Native(_) => {
+                Err("raw JavaScript is not supported by the native AST engine".to_string())
+            }
         }
     }
 
+    /// Load a raw JS shared module into the Boa engine.
+    #[cfg(feature = "script-boa")]
     pub fn load_shared_module(&mut self, _name: &str, _source: &str) -> Result<(), String> {
         match self {
-            #[cfg(feature = "script-boa")]
             OverworldScriptEngine::Boa(e) => e
                 .load_shared_module(_name, _source)
                 .map_err(|err| format!("JS shared module load failed: {}", err)),
-            OverworldScriptEngine::Native(_) => Ok(()),
+            OverworldScriptEngine::Native(_) => {
+                Err("raw JavaScript modules are not supported by the native AST engine".to_string())
+            }
         }
     }
 
@@ -1281,21 +1088,19 @@ impl OverworldScriptEngine {
         }
     }
 
-    /// Native-only: register a shared module scene (e.g. `shared/pokecenter`).
-    /// No-op on the Boa variant (which loads shared modules as raw JS).
-    #[cfg_attr(not(feature = "script-boa"), allow(irrefutable_let_patterns))]
+    /// Register a shared native scene (e.g. `shared/pokecenter`).
+    #[cfg(not(feature = "script-boa"))]
     pub fn register_shared_scene_native(&mut self, scene: &dotzuki_engine_dsl::ast::GameScene) {
-        if let OverworldScriptEngine::Native(e) = self {
-            e.register_shared_scene(scene);
+        match self {
+            OverworldScriptEngine::Native(e) => e.register_shared_scene(scene),
         }
     }
 
-    /// Native-only: load a map's scene AST. No-op on the Boa variant (which
-    /// loads the compiled JS instead).
-    #[cfg_attr(not(feature = "script-boa"), allow(irrefutable_let_patterns))]
+    /// Load a map's native scene AST.
+    #[cfg(not(feature = "script-boa"))]
     pub fn load_map_native(&mut self, map_name: &str, scene: &dotzuki_engine_dsl::ast::GameScene) {
-        if let OverworldScriptEngine::Native(e) = self {
-            e.load_map(map_name, scene);
+        match self {
+            OverworldScriptEngine::Native(e) => e.load_map(map_name, scene),
         }
     }
 
@@ -1431,6 +1236,19 @@ mod tests {
         let mut host = NativeHost::new();
         let err = host.call("noSuchFunction", &[]).unwrap_err();
         assert!(err.contains("unknown game function"));
+    }
+
+    #[test]
+    fn native_host_implements_every_cataloged_capability() {
+        let mut host = NativeHost::new();
+        for &name in pokered_data::script_function_catalog::POKERED_SCRIPT_FUNCTIONS {
+            if let Err(error) = host.call(name, &[]) {
+                assert!(
+                    !error.contains("unknown game function"),
+                    "cataloged capability {name:?} is missing from NativeHost"
+                );
+            }
+        }
     }
 
     #[test]

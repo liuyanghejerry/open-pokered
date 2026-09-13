@@ -3,6 +3,7 @@ use crate::battle::state::{status2, BattleState};
 
 use super::{EffectRandoms, EffectResult};
 
+use crate::alloc_prelude::*;
 fn stat_index_from_u8(idx: u8) -> StatIndex {
     match idx {
         0 => StatIndex::Attack,

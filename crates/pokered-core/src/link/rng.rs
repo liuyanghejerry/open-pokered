@@ -64,6 +64,7 @@
 //! `crate::link::link_battle_driver`), so both sides feed the constructor the
 //! host's list.
 
+use crate::alloc_prelude::*;
 use dotzuki_engine::battle::rng::BattleRng;
 
 /// Length of the exchanged random-number list (SERIAL_RNS_LENGTH, 10).

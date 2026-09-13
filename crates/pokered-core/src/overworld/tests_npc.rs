@@ -1,3 +1,4 @@
+use crate::alloc_prelude::*;
 use super::collision::PokemonCollisionProvider;
 use super::npc_interaction::*;
 use super::npc_movement::*;
@@ -1935,7 +1936,7 @@ fn viridian_old_man_swap_applies_on_load() {
     let mut screen = OverworldScreen::new(MapId::ViridianCity, None, PokemonRedData);
     screen.state.player.x = 10;
     screen.state.player.y = 10;
-    let by_text = |s: &OverworldScreen| -> std::collections::HashMap<u8, bool> {
+    let by_text = |s: &OverworldScreen| -> crate::hash_compat::HashMap<u8, bool> {
         s.npc_states
             .iter()
             .map(|n| (n.text_id, n.visible))

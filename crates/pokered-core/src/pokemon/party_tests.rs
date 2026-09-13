@@ -1,3 +1,4 @@
+use crate::alloc_prelude::*;
 use super::party::*;
 use crate::battle::state::{Pokemon, StatusCondition};
 use pokered_data::moves::MoveId;

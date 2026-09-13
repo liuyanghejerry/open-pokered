@@ -49,6 +49,7 @@ pub fn find_hidden_coin(map: MapId, x: u8, y: u8) -> Option<usize> {
 
 #[cfg(test)]
 mod tests {
+    use crate::alloc_prelude::*;
     use super::*;
 
     #[test]

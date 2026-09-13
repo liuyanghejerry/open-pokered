@@ -46,11 +46,9 @@ fn check_frame_and_audio() {
 fn check_save_and_reset() {
     let mut game = PokemonGame::new_mobile(GameVersion::Red, None).unwrap();
     game.player_name = "RED".into();
-    game.overworld
-        .set_script_flags(std::collections::HashMap::from([(
-            "mobile_test_flag".into(),
-            true,
-        )]));
+    let mut flags = pokered_core::hash_compat::HashMap::default();
+    flags.insert("mobile_test_flag".into(), true);
+    game.overworld.set_script_flags(flags);
     game.state.screen = GameScreen::SaveMenu;
     game.save_menu.phase = SavePhase::WaitAfterSave {
         frames_remaining: 0,

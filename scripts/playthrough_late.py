@@ -377,7 +377,18 @@ def m17_surge(g):
     use_item(g, "Hm01", party_index=0, forget="LeechSeed")
     assert "Cut" in g.st()["party"][0]["moves"]
     g.nav_warp(0, 7, "SSAnneCaptainsRoom", "SSAnne2F", approach="down")
-    g.nav_warp(2, 4, "SSAnne2F", "SSAnne1F")
+    for _ in range(3):
+        try:
+            g.nav_warp(2, 4, "SSAnne2F", "SSAnne1F")
+            break
+        except RuntimeError:
+            if g.pos()[0] != "SSAnne3F":
+                raise
+            # The two staircases share the west corridor. If a long walk
+            # drifts onto the upper staircase, walk back down and replan.
+            g.nav_warp(19, 3, "SSAnne3F", "SSAnne2F")
+    else:
+        raise RuntimeError("could not descend from S.S. Anne 2F")
     g.nav_warp(27, 0, "SSAnne1F", "VermilionDock", approach="up")
     g.nav_warp(14, 0, "VermilionDock", "VermilionCity", approach="up")
     g.heal_pokecenter((11, 3), "VermilionCity", "VermilionPokecenter")
@@ -457,6 +468,15 @@ def m19_rock_tunnel(g):
             g.nav_warp(17, 11, "RockTunnel1F", "RockTunnelB1F")
             g.nav_warp(3, 3, "RockTunnelB1F", "RockTunnel1F")
             g.nav_warp(15, 33, "RockTunnel1F", "Route10", approach="down")
+            # Stay on the southern half of Route 10 before asking the
+            # cross-map planner for Lavender. If a trainer temporarily
+            # blocks the narrow southbound lane, a global fallback can
+            # otherwise detour west onto Route 9; its one-way ledges make
+            # that detour impossible to undo. Keep both this leg and the
+            # Lavender connection inside the recovery loop because a loss
+            # to the lower Route 10 trainers respawns at the north center.
+            g.nav_to(9, 70, "Route10")
+            g.nav_to_map(3, 6, "LavenderTown")
             break
         except RuntimeError:
             if g.pos()[0] != "Route10":
@@ -465,7 +485,6 @@ def m19_rock_tunnel(g):
                   flush=True)
     else:
         raise RuntimeError("Rock Tunnel crossing failed after 3 blackouts")
-    g.nav_to_map(3, 6, "LavenderTown")
     g.heal_pokecenter((3, 5), "LavenderTown", "LavenderPokecenter")
     g.evidence("m19")
 
@@ -622,6 +641,22 @@ def m24_tower(g):
     g.nav_warp(3, 7, "UndergroundPathRoute8", "Route8", approach="down")
     g.nav_to_map(3, 6, "LavenderTown")
     g.heal_pokecenter((3, 5), "LavenderTown", "LavenderPokecenter")
+    for attempt in range(3):
+        try:
+            climb_pokemon_tower_to_healing(g)
+            s = g.evidence("m24")
+            assert all(m["hp"] == m["max_hp"] for m in s["party"])
+            return
+        except (AssertionError, RuntimeError):
+            s = g.st()
+            if (attempt == 2 or s["map_name"] != "LavenderTown"
+                    or s.get("battle_live", {}).get("player", {}).get("hp") != 0):
+                raise
+            print(f"[m24] blackout {attempt + 1}: returning to the tower")
+
+
+def climb_pokemon_tower_to_healing(g):
+    """Enter from Lavender and climb to the canonical 5F healing tile."""
     g.nav_warp(14, 5, "LavenderTown", "PokemonTower1F")
     g.nav_warp(18, 9, "PokemonTower1F", "PokemonTower2F")
     g.nav_warp(3, 9, "PokemonTower2F", "PokemonTower3F")
@@ -629,8 +664,6 @@ def m24_tower(g):
     g.nav_warp(3, 9, "PokemonTower4F", "PokemonTower5F")
     g.nav_to(10, 8, "PokemonTower5F")
     assert g.cutscene()
-    s = g.evidence("m24")
-    assert all(m["hp"] == m["max_hp"] for m in s["party"])
 
 
 def m25_poke_flute(g):
@@ -643,12 +676,7 @@ def m25_poke_flute(g):
                     or s.get("battle_live", {}).get("player", {}).get("hp") != 0):
                 raise
             print(f"[m25] blackout {attempt + 1}: returning to the tower")
-            g.nav_warp(14, 5, "LavenderTown", "PokemonTower1F")
-            for floor in range(1, 5):
-                x = 18 if floor % 2 else 3
-                g.nav_warp(x, 9, f"PokemonTower{floor}F", f"PokemonTower{floor + 1}F")
-            g.nav_to(10, 8, "PokemonTower5F")
-            assert g.cutscene()
+            climb_pokemon_tower_to_healing(g)
 
 
 def rescue_fuji(g):
@@ -1317,11 +1345,11 @@ def push_boulder(g, map_name, text_id, destination, flag):
         actions.reverse()
         print(f"[boulder] {map_name} {box} → {destination}: {len(actions)} pushes",
               flush=True)
-        # A plan involving another movable boulder is executed one push at a
-        # time and re-planned from the live state. Single-boulder plans keep
-        # the original batch execution, which is much faster and has no
-        # dynamic obstacle state to invalidate.
-        actions_to_execute = actions if len(boulder_indices) == 1 else actions[:1]
+        # Execute one push, then re-plan from live player and boulder state.
+        # A held input can occasionally finish the dust cutscene without
+        # completing the planned push; replaying the remaining batch would
+        # then navigate to positions computed for a boulder that never moved.
+        actions_to_execute = actions[:1]
         for d, behind, slot in actions_to_execute:
             # Boulder coordinates are mutable NPC state. The general
             # navigator intentionally remembers observed NPC bands, but a

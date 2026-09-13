@@ -1,4 +1,5 @@
 //! Capture populated menus: cargo run --release -p pokered-app --example ui_audit_capture -- <directory> [en]
+
 use dotzuki_app::InputState;
 use dotzuki_engine::render_config::RenderConfig;
 use dotzuki_renderer::input::GbButton;

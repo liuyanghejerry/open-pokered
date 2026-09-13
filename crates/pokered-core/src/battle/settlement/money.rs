@@ -1,3 +1,4 @@
+use crate::alloc_prelude::*;
 use pokered_data::trainer_data::{get_base_money, TrainerClass};
 
 /// Prize money = base_money × level of last enemy Pokémon.

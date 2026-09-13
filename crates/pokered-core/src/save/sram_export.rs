@@ -1,3 +1,4 @@
+use crate::alloc_prelude::*;
 use super::hall_of_fame::{HallOfFame, HOF_MON_SIZE, HOF_TEAM_SIZE};
 use super::ser_pokemon::serialize_box_into;
 use super::sram_layout::*;

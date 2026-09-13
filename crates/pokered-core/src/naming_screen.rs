@@ -31,6 +31,7 @@
 //! CJK characters, a nickname 10 ASCII or 5 CJK — mirroring how the
 //! original's byte-sized NAME_LENGTH behaves under a DBCS encoding.
 
+use crate::alloc_prelude::*;
 use pokered_data::charmap::naming_tiles;
 use pokered_data::pinyin_dict;
 

@@ -20,6 +20,7 @@
 //!   save's `obtained_hidden_items` bytes (`FlagAction`,
 //!   engine/flag_action.asm), indexed by `HiddenItemCoords` position.
 
+use crate::alloc_prelude::*;
 use pokered_data::hidden_items;
 use pokered_data::items::ItemId;
 use pokered_data::maps::MapId;

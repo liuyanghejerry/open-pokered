@@ -19,4 +19,4 @@ impl core::fmt::Display for SaveError {
     }
 }
 
-impl std::error::Error for SaveError {}
+impl core::error::Error for SaveError {}

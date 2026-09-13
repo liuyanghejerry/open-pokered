@@ -7,4 +7,6 @@
 //! game-specific wire protocol ([`super::protocol::NetworkMessage`]) stays
 //! here.
 
-pub use dotzuki_engine::link::{ChannelTransport, NetworkTransport, TransportError};
+#[cfg(not(target_os = "none"))]
+pub use dotzuki_engine::link::ChannelTransport;
+pub use dotzuki_engine::link::{NetworkTransport, TransportError};

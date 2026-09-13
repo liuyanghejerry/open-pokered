@@ -147,7 +147,7 @@ game_scene ViridianCity {
         // The BATTLE_TYPE_OLD_MAN catch tutorial: an auto-played, guaranteed-catch
         // demo battle vs a Lv5 WEEDLE (the player is shown as "OLD MAN"), then the
         // old man's closing line.
-        game.oldManTutorial()
+        oldManTutorial()
         @speaker("") {
           @t("First, you need to weaken\nthe target POKeMON.", "首先，你需要削弱目标宝可梦。")
         }

@@ -1,4 +1,5 @@
 //! Deterministic STATS captures: cargo run --release -p pokered-app --example capture_stats -- <directory>
+
 use pokered_app::{
     tools::{apply_lang, capture_screen},
     PokemonGame,

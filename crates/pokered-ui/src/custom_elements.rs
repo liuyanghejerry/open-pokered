@@ -9,7 +9,8 @@
 //! (`ElementRegistry::validate_layout`). The `stats_layout_validates` test
 //! guards the two against drifting apart.
 
-use std::sync::OnceLock;
+use crate::alloc_prelude::*;
+use crate::sync_compat::OnceLock;
 
 use dotzuki_engine::render::{Painter, Rgba};
 use dotzuki_renderer::layout_engine::registry::{

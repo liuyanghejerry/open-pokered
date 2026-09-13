@@ -28,6 +28,7 @@
 //! server/session and exposes a [`LinkStatus`] for the Cable Club UI to
 //! render.
 
+use crate::alloc_prelude::*;
 mod codec;
 pub mod cable_club;
 #[cfg(target_arch = "wasm32")]

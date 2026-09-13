@@ -1,3 +1,4 @@
+use crate::alloc_prelude::*;
 use pokered_core::naming_screen::{
     InputMode, NamingScreenState, NamingScreenType, CANDIDATES_PER_LINE, ED_TILE_ID, GRID_ROWS,
     PINYIN_GRID_ROWS,

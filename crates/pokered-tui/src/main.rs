@@ -2,7 +2,7 @@ mod audio;
 mod game;
 mod render;
 
-use std::sync::atomic::{AtomicBool, Ordering};
+use core::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 
 use clap::Parser;

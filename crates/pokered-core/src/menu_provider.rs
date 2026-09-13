@@ -3,6 +3,7 @@
 //!
 //! [`MenuSystem`]: dotzuki_engine::menu::MenuSystem
 
+use crate::alloc_prelude::*;
 use dotzuki_engine::menu::{MenuLayout, MenuOption, MenuProvider};
 
 // ---------------------------------------------------------------------------

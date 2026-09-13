@@ -1,3 +1,4 @@
+use crate::alloc_prelude::*;
 use dotzuki_engine::overworld::collision::CollisionProvider as CollisionProviderTrait;
 use dotzuki_engine::overworld::types::Direction;
 use dotzuki_engine::tileset::TilesetTrait;

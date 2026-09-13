@@ -1,3 +1,4 @@
+use crate::alloc_prelude::*;
 use crate::naming_screen::{NamingInput, NamingScreenResult, NamingScreenState, NamingScreenType};
 use pokered_data::species::Species;
 

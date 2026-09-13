@@ -1,3 +1,6 @@
+use crate::alloc_prelude::*;
+#[cfg(target_os = "none")]
+use alloc::rc::Rc;
 use pokered_audio::sfx_data::SfxId;
 use pokered_core::battle::state::StatusCondition as CoreStatus;
 use pokered_core::battle::state::{status2, status3};
@@ -537,10 +540,16 @@ pub struct BattleVisualEffects {
     ball_show_pattern: Option<BallShowPattern>,
     /// Ball-flow SFX (BallToss / Tink per shake / BallPoof) queued for the
     /// frontend, which owns the audio device.
-    pending_ball_sfx: std::collections::VecDeque<SfxId>,
+    pending_ball_sfx: VecDeque<SfxId>,
     scheduled_ball_sfx: Vec<(u8, SfxId)>,
     pub overworld_snapshot: Option<FrameBuffer>,
     pub victory_music_played: bool,
+    #[cfg(target_os = "none")]
+    battle_tileset: Option<Rc<TileSet>>,
+    #[cfg(target_os = "none")]
+    scaled_player_back: Option<(String, Rc<TileSet>)>,
+    #[cfg(target_os = "none")]
+    scaled_trainer_back: Option<(bool, Rc<TileSet>)>,
 }
 
 /// Machine-readable state emitted beside isolated move-animation frames.
@@ -576,6 +585,28 @@ pub(crate) struct MoveAnimationCaptureOam {
 impl BattleVisualEffects {
     pub fn has_transition(&self) -> bool {
         self.transition_state.is_some()
+    }
+
+    /// Whether the visual state can be reused until the core battle state
+    /// changes. Persistent visibility/palette/substitute latches are stable;
+    /// every state machine that can still change pixels keeps this false.
+    pub fn is_frame_stable(&self) -> bool {
+        self.player_entry.is_none()
+            && self.enemy_entry.is_none()
+            && self.player_exit.is_none()
+            && self.enemy_exit.is_none()
+            && self.attack_lunge.is_none()
+            && self.move_mon_h.is_none()
+            && self.anim_player.is_finished()
+            && self.anim_wait == 0
+            && self.anim_layer.entries.is_empty()
+            && self.pending_applying.is_none()
+            && self.anim_disabled_wait == 0
+            && self.pending_anim_start.is_none()
+            && self.ball_choreo.is_none()
+            && self.transition_state.is_none()
+            && matches!(self.intro_anim, IntroAnimState::None)
+            && !self.fx.is_animating()
     }
 
     pub fn render_transition(&self, source: &FrameBuffer, dest: &mut FrameBuffer) -> bool {
@@ -708,13 +739,13 @@ impl BattleVisualEffects {
 
     /// Take the pending SFX_SILPH_SCOPE request (ghost-Marowak reveal done).
     pub fn take_silph_scope_sfx_pending(&mut self) -> bool {
-        std::mem::take(&mut self.silph_scope_sfx_pending)
+        core::mem::take(&mut self.silph_scope_sfx_pending)
     }
 
     /// Take the pending trainer-appear SFX request (SFX_SILPH_SCOPE,
     /// `PrintBeginningBattleText` `.trainerBattle`).
     pub fn take_trainer_appear_sfx_pending(&mut self) -> bool {
-        std::mem::take(&mut self.trainer_appear_sfx_pending)
+        core::mem::take(&mut self.trainer_appear_sfx_pending)
     }
 
     /// Take one queued ball-flow SFX (BallToss / Tink / BallPoof).
@@ -856,10 +887,16 @@ impl Default for BattleVisualEffects {
             ball_hide_raster: None,
             ball_hide_top_only: false,
             ball_show_pattern: None,
-            pending_ball_sfx: std::collections::VecDeque::new(),
+            pending_ball_sfx: VecDeque::new(),
             scheduled_ball_sfx: Vec::new(),
             overworld_snapshot: None,
             victory_music_played: false,
+            #[cfg(target_os = "none")]
+            battle_tileset: None,
+            #[cfg(target_os = "none")]
+            scaled_player_back: None,
+            #[cfg(target_os = "none")]
+            scaled_trainer_back: None,
         }
     }
 }
@@ -2411,8 +2448,8 @@ impl BattleVisualEffects {
     pub fn update(&mut self, screen: &BattleScreen) {
         self.tick_scheduled_ball_sfx();
         // OAM written during the previous VBlank is what this scanout sees.
-        std::mem::swap(&mut self.anim_layer, &mut self.anim_layer_pending);
-        std::mem::swap(
+        core::mem::swap(&mut self.anim_layer, &mut self.anim_layer_pending);
+        core::mem::swap(
             &mut self.anim_layer_tileset,
             &mut self.anim_layer_pending_tileset,
         );
@@ -3468,6 +3505,139 @@ fn build_battle_tileset(rm: &mut ResourceManager) -> TileSet {
     ts
 }
 
+fn render_battle_tile_buffer(
+    fb: &mut FrameBuffer,
+    tile_buf: &ScreenTileBuffer,
+    tileset: &TileSet,
+) {
+    // draw_battle clears to the same white represented by the blank
+    // battle-space tile, so untouched cells need no work.
+    #[cfg(target_os = "none")]
+    {
+        let width = fb.width() as usize;
+        let max_tiles_x = tile_buf.width_tiles.min(fb.width() / TILE_SIZE);
+        let max_tiles_y = tile_buf.height_tiles.min(fb.height() / TILE_SIZE);
+        let pixels = fb.indices_mut();
+        for ty in 0..max_tiles_y {
+            let row_start = (ty * tile_buf.width_tiles) as usize;
+            for tx in 0..max_tiles_x {
+                let tile_id = tile_buf.tiles[row_start + tx as usize];
+                if tile_id == 0x7F {
+                    continue;
+                }
+                let tile = tileset.get(tile_id as usize);
+                let pixel_x = tx as usize * TILE_SIZE as usize;
+                let pixel_y = ty as usize * TILE_SIZE as usize;
+                for row in 0..TILE_SIZE as usize {
+                    unsafe {
+                        let source = tile.pixels[row].as_ptr();
+                        let target = pixels
+                            .as_mut_ptr()
+                            .add((pixel_y + row) * width + pixel_x);
+                        // Both buffers are byte-aligned, so use an alignment-
+                        // agnostic fixed-size copy rather than typed word loads.
+                        core::ptr::copy_nonoverlapping(source, target, TILE_PIXELS);
+                    }
+                }
+            }
+        }
+        return;
+    }
+
+    #[cfg(not(target_os = "none"))]
+    for ty in 0..tile_buf.height_tiles {
+        let row_start = (ty * tile_buf.width_tiles) as usize;
+        for tx in 0..tile_buf.width_tiles {
+            let tile_id = tile_buf.tiles[row_start + tx as usize];
+            if tile_id == 0x7F {
+                continue;
+            }
+            fb.blit_gb_tile_indices(
+                (tx * TILE_SIZE) as i32,
+                (ty * TILE_SIZE) as i32,
+                tileset.get(tile_id as usize),
+                false,
+                false,
+                false,
+            );
+        }
+    }
+}
+
+fn blit_battle_tileset_on_white(
+    fb: &mut FrameBuffer,
+    tileset: &TileSet,
+    x: u32,
+    y: u32,
+    tiles_per_row: u32,
+) {
+    for index in 0..tileset.len() {
+        let tx = index as u32 % tiles_per_row;
+        let ty = index as u32 / tiles_per_row;
+        fb.blit_gb_tile_indices(
+            (x + tx * TILE_SIZE) as i32,
+            (y + ty * TILE_SIZE) as i32,
+            tileset.get(index),
+            false,
+            false,
+            false,
+        );
+    }
+}
+
+#[cfg(target_os = "none")]
+fn cached_battle_tileset(
+    effects: &mut BattleVisualEffects,
+    rm: &mut ResourceManager,
+) -> Rc<TileSet> {
+    if let Some(tileset) = effects.battle_tileset.as_ref() {
+        return Rc::clone(tileset);
+    }
+    let tileset = Rc::new(build_battle_tileset(rm));
+    effects.battle_tileset = Some(Rc::clone(&tileset));
+    tileset
+}
+
+#[cfg(target_os = "none")]
+fn cached_scaled_player_back(
+    effects: &mut BattleVisualEffects,
+    rm: &mut ResourceManager,
+    sprite_name: &str,
+) -> Option<Rc<TileSet>> {
+    if let Some((cached_name, tileset)) = effects.scaled_player_back.as_ref() {
+        if cached_name == sprite_name {
+            return Some(Rc::clone(tileset));
+        }
+    }
+    let cached = rm.load_pokemon_back(sprite_name).ok()?;
+    let src_tpr = (cached.source_size.0 / TILE_SIZE) as usize;
+    let scaled = Rc::new(scale_sprite_by_two(&cached.tileset, src_tpr));
+    effects.scaled_player_back = Some((sprite_name.to_string(), Rc::clone(&scaled)));
+    Some(scaled)
+}
+
+#[cfg(target_os = "none")]
+fn cached_scaled_trainer_back(
+    effects: &mut BattleVisualEffects,
+    rm: &mut ResourceManager,
+    old_man: bool,
+) -> Option<Rc<TileSet>> {
+    if let Some((cached_old_man, tileset)) = effects.scaled_trainer_back.as_ref() {
+        if *cached_old_man == old_man {
+            return Some(Rc::clone(tileset));
+        }
+    }
+    let cached = if old_man {
+        rm.load(AssetCategory::Battle, "oldmanb").ok()?
+    } else {
+        rm.load(AssetCategory::Player, "redb").ok()?
+    };
+    let src_tpr = (cached.source_size.0 / TILE_SIZE) as usize;
+    let scaled = Rc::new(scale_sprite_by_two(&cached.tileset, src_tpr));
+    effects.scaled_trainer_back = Some((old_man, Rc::clone(&scaled)));
+    Some(scaled)
+}
+
 fn draw_pokeball_tile(
     fb: &mut FrameBuffer,
     x: u32,
@@ -3643,25 +3813,14 @@ pub fn draw_battle(
         player_sprite
     };
 
-    // During BattleTransitionWipe and TransitionFlash, the screen should be
-    // fully controlled by the transition/animation effects — no battle scene
-    // elements (HUD, sprites, text box) should be visible yet.
-    // This matches the ASM flow: DoBattleTransition → SET_PAL_BATTLE_BLACK →
-    // SlideSilhouettes → only then do battle elements appear.
-    let skip_battle_render = matches!(
-        &screen.phase,
-        BattlePhase::Intro { phase, .. }
-        if matches!(
-            phase,
-            IntroPhase::BattleTransitionWipe(_) | IntroPhase::TransitionFlash
-        )
-    );
-
     // Build combined VRAM tileset and tile buffer
     let mut tile_buf = ScreenTileBuffer::new(fb.width() / TILE_SIZE, fb.height() / TILE_SIZE); // filled with $7F (space)
 
     if let Some(ref mut rm) = res {
         // ── Build combined 256-tile VRAM tileset ─────────────────────
+        #[cfg(target_os = "none")]
+        let battle_ts = cached_battle_tileset(effects, rm);
+        #[cfg(not(target_os = "none"))]
         let battle_ts = build_battle_tileset(rm);
 
         let hide_enemy_hud = matches!(
@@ -3931,7 +4090,7 @@ pub fn draw_battle(
         }
 
         // ── Render tile buffer to framebuffer ────────────────────────
-        tile_buf.render(fb, &battle_ts, pal);
+        render_battle_tile_buffer(fb, &tile_buf, &battle_ts);
 
         // AnimationShakeEnemyHUD: SCX-shake the enemy HUD strip. Applied
         // before the mon sprites are drawn — the original protects the
@@ -4184,10 +4343,14 @@ pub fn draw_battle(
                         let tiles: usize = if stage == 2 { 3 } else { 5 };
                         let (tx, ty) = if stage == 2 { (3, 9) } else { (2, 7) };
                         let back_sprite_name = format!("{}b", player_sprite);
-                        if let Ok(cached) = rm.load_pokemon_back(&back_sprite_name) {
-                            let ts = cached.tileset.clone();
+                        #[cfg(target_os = "none")]
+                        let scaled = cached_scaled_player_back(effects, rm, &back_sprite_name);
+                        #[cfg(not(target_os = "none"))]
+                        let scaled = rm.load_pokemon_back(&back_sprite_name).ok().map(|cached| {
                             let src_tpr = (cached.source_size.0 / TILE_SIZE) as usize;
-                            let scaled = scale_sprite_by_two(&ts, src_tpr);
+                            scale_sprite_by_two(&cached.tileset, src_tpr)
+                        });
+                        if let Some(scaled) = scaled {
                             let small = downscale_mon_tiles(&scaled, 7, tiles);
                             blit_tileset(
                                 fb,
@@ -4205,18 +4368,24 @@ pub fn draw_battle(
                 // player's back silhouette in the intro is RED — except in
                 // the Old-Man tutorial, where wBattleType = BATTLE_TYPE_OLD_MAN
                 // swaps in OldManPicBack (gfx/battle/oldmanb.png).
-                let back_asset = if screen.is_old_man {
-                    rm.load(AssetCategory::Battle, "oldmanb")
-                } else {
-                    rm.load(AssetCategory::Player, "redb")
+                #[cfg(target_os = "none")]
+                let scaled = cached_scaled_trainer_back(effects, rm, screen.is_old_man);
+                #[cfg(not(target_os = "none"))]
+                let scaled = {
+                    let back_asset = if screen.is_old_man {
+                        rm.load(AssetCategory::Battle, "oldmanb")
+                    } else {
+                        rm.load(AssetCategory::Player, "redb")
+                    };
+                    back_asset.ok().map(|cached| {
+                        let src_tpr = (cached.source_size.0 / TILE_SIZE) as usize;
+                        scale_sprite_by_two(&cached.tileset, src_tpr)
+                    })
                 };
-                if let Ok(cached) = back_asset {
-                    let ts = cached.tileset.clone();
-                    let src_tpr = (cached.source_size.0 / TILE_SIZE) as usize;
-                    let scaled = scale_sprite_by_two(&ts, src_tpr);
-                    let px = apply_offset(1 * TILE_SIZE, player_dx);
+                if let Some(scaled) = scaled {
+                    let px = apply_offset(TILE_SIZE, player_dx);
                     let py = apply_offset(5 * TILE_SIZE, player_dy);
-                    blit_tileset(fb, &scaled, px, py, 7, sprite_pal);
+                    blit_battle_tileset_on_white(fb, &scaled, px, py, 7);
                 }
             } else if effects.fx.is_substitute(MonSide::Player) {
                 // AnimationSubstitute: MonsterSprite mini doll, facing up on
@@ -4250,10 +4419,14 @@ pub fn draw_battle(
                 BattleEffects::draw_minimized(fb, rect, sprite_pal);
             } else {
                 let back_sprite_name = format!("{}b", player_sprite);
-                if let Ok(cached) = rm.load_pokemon_back(&back_sprite_name) {
-                    let ts = cached.tileset.clone();
+                #[cfg(target_os = "none")]
+                let scaled = cached_scaled_player_back(effects, rm, &back_sprite_name);
+                #[cfg(not(target_os = "none"))]
+                let scaled = rm.load_pokemon_back(&back_sprite_name).ok().map(|cached| {
                     let src_tpr = (cached.source_size.0 / TILE_SIZE) as usize;
-                    let scaled = scale_sprite_by_two(&ts, src_tpr);
+                    scale_sprite_by_two(&cached.tileset, src_tpr)
+                });
+                if let Some(scaled) = scaled {
                     let px = TILE_SIZE as i32 + player_dx;
                     let py = (5 * TILE_SIZE) as i32 + player_dy;
                     if effects.draw_slide_up(fb, &scaled, px, py, 7, sprite_pal, MonSide::Player) {
@@ -4594,9 +4767,726 @@ pub fn draw_battle(
     }
 }
 
+/// Repaint only the changed cursor cells of an already-rendered battle action
+/// menu. The caller must ensure every other visible battle field is unchanged.
+pub fn redraw_battle_main_menu_cursor(
+    previous: (usize, usize),
+    state: &pokered_core::battle::menu::BattleMenuState,
+    fb: &mut FrameBuffer,
+    language: pokered_core::game_state::Lang,
+) {
+    let mut painter = FrameBufferPainter::new(fb).with_lang(language);
+    menus::battle_main::redraw_cursor(previous, state, &mut painter, language);
+}
+
+/// Repaint only the changed cursor cells of an already-rendered Safari menu.
+pub fn redraw_battle_safari_menu_cursor(
+    previous: (usize, usize),
+    state: &pokered_core::battle::menu::SafariBattleMenuState,
+    fb: &mut FrameBuffer,
+    language: pokered_core::game_state::Lang,
+) {
+    let mut painter = FrameBufferPainter::new(fb).with_lang(language);
+    menus::battle_safari::redraw_cursor(previous, state, &mut painter);
+}
+
+/// Repaint only the changed cursor cells of an already-rendered battle bag.
+pub fn redraw_battle_bag_menu_cursor(
+    previous_cursor: usize,
+    state: &pokered_core::battle::menu::BagMenuState,
+    fb: &mut FrameBuffer,
+    language: pokered_core::game_state::Lang,
+) {
+    let mut painter = FrameBufferPainter::new(fb).with_lang(language);
+    menus::battle_bag::redraw_cursor(
+        previous_cursor,
+        state,
+        &BATTLE_BAG_DEFAULT_LAYOUT,
+        &mut painter,
+    );
+}
+
+/// Repaint only the cursor cells of an already-rendered battle party menu.
+/// The caller must ensure the four-entry viewport did not scroll.
+pub fn redraw_battle_party_menu_cursor(
+    previous_row: usize,
+    current_row: usize,
+    fb: &mut FrameBuffer,
+    language: pokered_core::game_state::Lang,
+) {
+    let mut painter = FrameBufferPainter::new(fb).with_lang(language);
+    menus::battle_party::redraw_cursor(
+        previous_row,
+        current_row,
+        &BATTLE_PARTY_DEFAULT_LAYOUT,
+        &mut painter,
+    );
+}
+
+/// Repaint the visible party rows after the four-entry viewport scrolls,
+/// retaining the surrounding battle scene and text-box border.
+pub fn redraw_battle_party_menu_viewport(
+    party: &[pokered_core::battle::state::Pokemon],
+    cursor: usize,
+    previous_start: usize,
+    current_start: usize,
+    fb: &mut FrameBuffer,
+    language: pokered_core::game_state::Lang,
+) {
+    let rect = BATTLE_PARTY_DEFAULT_LAYOUT.box_0.rect;
+    let label_x = (rect.tx + 2) * 8;
+    let band_y = ((rect.ty + 1) * 8).saturating_sub(1);
+    let label_width = rect.tw.saturating_sub(3) * 8;
+    let band_height = rect.th.saturating_sub(2) * 8 + 6;
+    let shift = current_start.abs_diff(previous_start) as u32 * 8;
+    if shift < band_height {
+        if current_start > previous_start {
+            fb.copy_rect_within(
+                label_x,
+                band_y + shift,
+                label_width,
+                band_height - shift,
+                label_x,
+                band_y,
+            );
+        } else {
+            fb.copy_rect_within(
+                label_x,
+                band_y,
+                label_width,
+                band_height - shift,
+                label_x,
+                band_y + shift,
+            );
+        }
+    }
+
+    let mut painter = FrameBufferPainter::new(fb).with_lang(language);
+    menus::battle_party::redraw_viewport_edges(
+        party,
+        cursor,
+        previous_start,
+        &BATTLE_PARTY_DEFAULT_LAYOUT,
+        &mut painter,
+        language == Lang::Zh,
+    );
+}
+
+/// Repaint only the changed cursor cells of a battle YES/NO prompt.
+pub fn redraw_battle_yes_no_cursor(
+    previous_yes: bool,
+    current_yes: bool,
+    fb: &mut FrameBuffer,
+    language: pokered_core::game_state::Lang,
+) {
+    let selected = |yes: bool| if yes { 0 } else { 1 };
+    let mut painter = FrameBufferPainter::new(fb).with_lang(language);
+    menus::yes_no::redraw_cursor(
+        selected(previous_yes),
+        selected(current_yes),
+        &YES_NO_DEFAULT_LAYOUT,
+        &mut painter,
+    );
+}
+
+/// Repaint only the cursor and selected-move information of an already-
+/// rendered battle move menu.
+pub fn redraw_battle_move_menu_selection(
+    previous_cursor: usize,
+    state: &pokered_core::battle::menu::MoveMenuState,
+    fb: &mut FrameBuffer,
+    language: pokered_core::game_state::Lang,
+) {
+    let mut painter = FrameBufferPainter::new(fb).with_lang(language);
+    let mut ui = Ui::new(&mut painter);
+    let render_data = PokemonRenderData::new(language == Lang::Zh);
+    menus::battle_move::redraw_selection(
+        previous_cursor,
+        state,
+        &BATTLE_MOVE_DEFAULT_LAYOUT,
+        &mut ui,
+        language,
+        &render_data,
+    );
+}
+
+#[cfg(test)]
+fn draw_battle_main_menu_overlay(
+    state: &pokered_core::battle::menu::BattleMenuState,
+    fb: &mut FrameBuffer,
+    language: pokered_core::game_state::Lang,
+) {
+    let mut painter = FrameBufferPainter::new(fb).with_lang(language);
+    let mut ui = Ui::new(&mut painter);
+    menus::battle_main::draw(
+        state,
+        &BATTLE_MAIN_DEFAULT_LAYOUT,
+        &mut ui,
+        language,
+    );
+}
+
+#[cfg(test)]
+fn draw_battle_safari_menu_overlay(
+    state: &pokered_core::battle::menu::SafariBattleMenuState,
+    fb: &mut FrameBuffer,
+    language: pokered_core::game_state::Lang,
+) {
+    let mut painter = FrameBufferPainter::new(fb).with_lang(language);
+    let mut ui = Ui::new(&mut painter);
+    menus::battle_safari::draw(state, &mut ui, language);
+}
+
+#[cfg(test)]
+fn draw_battle_bag_menu_overlay(
+    state: &pokered_core::battle::menu::BagMenuState,
+    fb: &mut FrameBuffer,
+    language: pokered_core::game_state::Lang,
+) {
+    let mut painter = FrameBufferPainter::new(fb).with_lang(language);
+    let mut ui = Ui::new(&mut painter);
+    let render_data = PokemonRenderData::new(language == Lang::Zh);
+    menus::battle_bag::draw(
+        state,
+        &BATTLE_BAG_DEFAULT_LAYOUT,
+        &mut ui,
+        &render_data,
+    );
+}
+
+#[cfg(test)]
+fn draw_battle_party_menu_overlay(
+    party: &[pokered_core::battle::state::Pokemon],
+    cursor: usize,
+    fb: &mut FrameBuffer,
+    language: pokered_core::game_state::Lang,
+) {
+    let mut painter = FrameBufferPainter::new(fb).with_lang(language);
+    let mut ui = Ui::new(&mut painter);
+    menus::battle_party::draw(
+        party,
+        cursor,
+        &BATTLE_PARTY_DEFAULT_LAYOUT,
+        &mut ui,
+        language == Lang::Zh,
+    );
+}
+
+#[cfg(test)]
+fn draw_battle_move_menu_overlay(
+    state: &pokered_core::battle::menu::MoveMenuState,
+    fb: &mut FrameBuffer,
+    language: pokered_core::game_state::Lang,
+) {
+    let mut painter = FrameBufferPainter::new(fb).with_lang(language);
+    let mut ui = Ui::new(&mut painter);
+    let render_data = PokemonRenderData::new(language == Lang::Zh);
+    menus::battle_move::draw(
+        state,
+        &BATTLE_MOVE_DEFAULT_LAYOUT,
+        &mut ui,
+        language,
+        &render_data,
+    );
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    fn assert_framebuffers_equal(actual: &FrameBuffer, expected: &FrameBuffer) {
+        assert_eq!(actual.width(), expected.width());
+        assert_eq!(actual.height(), expected.height());
+        for y in 0..actual.height() {
+            for x in 0..actual.width() {
+                assert_eq!(
+                    actual.get_pixel(x, y),
+                    expected.get_pixel(x, y),
+                    "framebuffer mismatch at ({x}, {y})",
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn battle_main_cursor_repaint_matches_a_fresh_menu_for_every_transition() {
+        use pokered_core::battle::menu::{BattleMenuInput, BattleMenuState};
+
+        for language in [Lang::En, Lang::Zh] {
+            let config = dotzuki_engine::render_config::RenderConfig::new(160, 144);
+            let states = [
+                BattleMenuState::new(),
+                battle_menu_state_after(BattleMenuInput {
+                    right: true,
+                    ..BattleMenuInput::none()
+                }),
+                battle_menu_state_after(BattleMenuInput {
+                    down: true,
+                    ..BattleMenuInput::none()
+                }),
+                battle_menu_state_after(BattleMenuInput {
+                    right: true,
+                    down: true,
+                    ..BattleMenuInput::none()
+                }),
+            ];
+
+            for old in &states {
+                for new in &states {
+                    if (old.row(), old.col()) == (new.row(), new.col()) {
+                        continue;
+                    }
+
+                    let mut actual = FrameBuffer::new(config, Rgba::BLACK);
+                    draw_battle_main_menu_overlay(old, &mut actual, language);
+                    redraw_battle_main_menu_cursor(
+                        (old.row(), old.col()),
+                        new,
+                        &mut actual,
+                        language,
+                    );
+
+                    let mut expected = FrameBuffer::new(config, Rgba::BLACK);
+                    draw_battle_main_menu_overlay(new, &mut expected, language);
+                    assert_framebuffers_equal(&actual, &expected);
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn battle_safari_cursor_repaint_matches_a_fresh_menu_for_every_transition() {
+        use pokered_core::battle::menu::{BattleMenuInput, SafariBattleMenuState};
+
+        let state_at = |row: usize, col: usize| {
+            let mut state = SafariBattleMenuState::new(30);
+            state.update_frame(BattleMenuInput {
+                down: row == 1,
+                right: col == 1,
+                ..BattleMenuInput::none()
+            });
+            state
+        };
+
+        for language in [Lang::En, Lang::Zh] {
+            let config = dotzuki_engine::render_config::RenderConfig::new(160, 144);
+            for old_row in 0..2 {
+                for old_col in 0..2 {
+                    for new_row in 0..2 {
+                        for new_col in 0..2 {
+                            if (old_row, old_col) == (new_row, new_col) {
+                                continue;
+                            }
+                            let old = state_at(old_row, old_col);
+                            let new = state_at(new_row, new_col);
+
+                            let mut actual = FrameBuffer::new(config, Rgba::BLACK);
+                            draw_battle_safari_menu_overlay(&old, &mut actual, language);
+                            redraw_battle_safari_menu_cursor(
+                                (old_row, old_col),
+                                &new,
+                                &mut actual,
+                                language,
+                            );
+
+                            let mut expected = FrameBuffer::new(config, Rgba::BLACK);
+                            draw_battle_safari_menu_overlay(&new, &mut expected, language);
+                            assert_framebuffers_equal(&actual, &expected);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn battle_bag_cursor_repaint_matches_a_fresh_menu_for_every_transition() {
+        use pokered_core::battle::menu::{BagMenuState, BattleMenuInput};
+
+        let state_at = |cursor: usize| {
+            let mut state = BagMenuState::new(vec![
+                (ItemId::Potion, 5),
+                (ItemId::Antidote, 4),
+                (ItemId::PokeBall, 3),
+                (ItemId::SuperPotion, 2),
+            ]);
+            for _ in 0..cursor {
+                state.update_frame(BattleMenuInput {
+                    down: true,
+                    ..BattleMenuInput::none()
+                });
+            }
+            state
+        };
+
+        for language in [Lang::En, Lang::Zh] {
+            let config = dotzuki_engine::render_config::RenderConfig::new(160, 144);
+            for previous_cursor in 0..4 {
+                for current_cursor in 0..4 {
+                    if previous_cursor == current_cursor {
+                        continue;
+                    }
+                    let previous = state_at(previous_cursor);
+                    let current = state_at(current_cursor);
+
+                    let mut actual = FrameBuffer::new(config, Rgba::BLACK);
+                    draw_battle_bag_menu_overlay(&previous, &mut actual, language);
+                    redraw_battle_bag_menu_cursor(
+                        previous_cursor,
+                        &current,
+                        &mut actual,
+                        language,
+                    );
+
+                    let mut expected = FrameBuffer::new(config, Rgba::BLACK);
+                    draw_battle_bag_menu_overlay(&current, &mut expected, language);
+                    assert_framebuffers_equal(&actual, &expected);
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn battle_party_cursor_repaint_matches_a_fresh_menu_without_scrolling() {
+        use pokered_core::pokemon::stats::create_pokemon;
+        use pokered_data::species::Species;
+
+        let party: Vec<_> = [
+            Species::Bulbasaur,
+            Species::Charmander,
+            Species::Squirtle,
+            Species::Pikachu,
+            Species::Snorlax,
+            Species::Mewtwo,
+        ]
+        .into_iter()
+        .map(|species| create_pokemon(species, 25, [0x9a, 0x78]).unwrap())
+        .collect();
+
+        for language in [Lang::En, Lang::Zh] {
+            let config = dotzuki_engine::render_config::RenderConfig::new(160, 144);
+            for party in [&party[..4], party.as_slice()] {
+                for previous_cursor in 0..party.len() {
+                    for current_cursor in 0..party.len() {
+                        if previous_cursor == current_cursor {
+                            continue;
+                        }
+                        let Some(previous_row) =
+                            menus::battle_party::cursor_visual_row(party.len(), previous_cursor)
+                        else {
+                            continue;
+                        };
+                        let Some(current_row) =
+                            menus::battle_party::cursor_visual_row(party.len(), current_cursor)
+                        else {
+                            continue;
+                        };
+                        if previous_cursor - previous_row != current_cursor - current_row {
+                            continue;
+                        }
+
+                        let mut actual = FrameBuffer::new(config, Rgba::BLACK);
+                        draw_battle_party_menu_overlay(
+                            party,
+                            previous_cursor,
+                            &mut actual,
+                            language,
+                        );
+                        redraw_battle_party_menu_cursor(
+                            previous_row,
+                            current_row,
+                            &mut actual,
+                            language,
+                        );
+
+                        let mut expected = FrameBuffer::new(config, Rgba::BLACK);
+                        draw_battle_party_menu_overlay(
+                            party,
+                            current_cursor,
+                            &mut expected,
+                            language,
+                        );
+                        assert_framebuffers_equal(&actual, &expected);
+                    }
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn battle_party_viewport_repaint_matches_a_fresh_menu_when_scrolling() {
+        use pokered_core::pokemon::stats::create_pokemon;
+        use pokered_data::species::Species;
+
+        let party: Vec<_> = [
+            Species::Bulbasaur,
+            Species::Charmander,
+            Species::Squirtle,
+            Species::Pikachu,
+            Species::Snorlax,
+            Species::Mewtwo,
+        ]
+        .into_iter()
+        .map(|species| create_pokemon(species, 25, [0x9a, 0x78]).unwrap())
+        .collect();
+
+        for language in [Lang::En, Lang::Zh] {
+            let config = dotzuki_engine::render_config::RenderConfig::new(160, 144);
+            for previous_cursor in 0..party.len() {
+                for current_cursor in 0..party.len() {
+                    let previous_row =
+                        menus::battle_party::cursor_visual_row(party.len(), previous_cursor)
+                            .unwrap();
+                    let current_row =
+                        menus::battle_party::cursor_visual_row(party.len(), current_cursor)
+                            .unwrap();
+                    if previous_cursor - previous_row == current_cursor - current_row {
+                        continue;
+                    }
+
+                    let mut actual = FrameBuffer::new(config, Rgba::BLACK);
+                    draw_battle_party_menu_overlay(
+                        &party,
+                        previous_cursor,
+                        &mut actual,
+                        language,
+                    );
+                    redraw_battle_party_menu_viewport(
+                        &party,
+                        current_cursor,
+                        previous_cursor - previous_row,
+                        current_cursor - current_row,
+                        &mut actual,
+                        language,
+                    );
+
+                    let mut expected = FrameBuffer::new(config, Rgba::BLACK);
+                    draw_battle_party_menu_overlay(
+                        &party,
+                        current_cursor,
+                        &mut expected,
+                        language,
+                    );
+                    assert_framebuffers_equal(&actual, &expected);
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn battle_yes_no_cursor_repaint_matches_a_fresh_menu_for_both_languages() {
+        for language in [Lang::En, Lang::Zh] {
+            let options = if language == Lang::Zh {
+                vec!["是".to_string(), "否".to_string()]
+            } else {
+                vec!["YES".to_string(), "NO".to_string()]
+            };
+            for previous_yes in [false, true] {
+                let current_yes = !previous_yes;
+                let config = dotzuki_engine::render_config::RenderConfig::new(160, 144);
+
+                let mut actual = FrameBuffer::new(config, Rgba::BLACK);
+                {
+                    let mut painter = FrameBufferPainter::new(&mut actual).with_lang(language);
+                    let mut ui = Ui::new(&mut painter);
+                    menus::yes_no::draw(
+                        &options,
+                        if previous_yes { 0 } else { 1 },
+                        &YES_NO_DEFAULT_LAYOUT,
+                        &mut ui,
+                    );
+                }
+                redraw_battle_yes_no_cursor(
+                    previous_yes,
+                    current_yes,
+                    &mut actual,
+                    language,
+                );
+
+                let mut expected = FrameBuffer::new(config, Rgba::BLACK);
+                let mut painter = FrameBufferPainter::new(&mut expected).with_lang(language);
+                let mut ui = Ui::new(&mut painter);
+                menus::yes_no::draw(
+                    &options,
+                    if current_yes { 0 } else { 1 },
+                    &YES_NO_DEFAULT_LAYOUT,
+                    &mut ui,
+                );
+                assert_framebuffers_equal(&actual, &expected);
+            }
+        }
+    }
+
+    #[test]
+    fn battle_move_selection_repaint_matches_a_fresh_menu_for_every_transition() {
+        use pokered_core::battle::menu::{MoveMenuState, MoveSlot};
+
+        let base = MoveMenuState::new(vec![
+            MoveSlot {
+                move_id: MoveId::Pound,
+                current_pp: 35,
+                max_pp: 35,
+                is_disabled: false,
+            },
+            MoveSlot {
+                move_id: MoveId::Growl,
+                current_pp: 39,
+                max_pp: 40,
+                is_disabled: false,
+            },
+            MoveSlot {
+                move_id: MoveId::Ember,
+                current_pp: 18,
+                max_pp: 25,
+                is_disabled: false,
+            },
+            MoveSlot {
+                move_id: MoveId::WaterGun,
+                current_pp: 4,
+                max_pp: 25,
+                is_disabled: false,
+            },
+        ]);
+
+        for language in [Lang::En, Lang::Zh] {
+            let config = dotzuki_engine::render_config::RenderConfig::new(160, 144);
+            for previous_cursor in 0..4 {
+                for current_cursor in 0..4 {
+                    if previous_cursor == current_cursor {
+                        continue;
+                    }
+                    let mut previous = base.clone();
+                    previous.set_cursor(previous_cursor);
+                    let mut current = base.clone();
+                    current.set_cursor(current_cursor);
+
+                    let mut actual = FrameBuffer::new(config, Rgba::BLACK);
+                    draw_battle_move_menu_overlay(&previous, &mut actual, language);
+                    redraw_battle_move_menu_selection(
+                        previous_cursor,
+                        &current,
+                        &mut actual,
+                        language,
+                    );
+
+                    let mut expected = FrameBuffer::new(config, Rgba::BLACK);
+                    draw_battle_move_menu_overlay(&current, &mut expected, language);
+                    assert_framebuffers_equal(&actual, &expected);
+                }
+            }
+        }
+    }
+
+    fn battle_menu_state_after(
+        input: pokered_core::battle::menu::BattleMenuInput,
+    ) -> pokered_core::battle::menu::BattleMenuState {
+        let mut state = pokered_core::battle::menu::BattleMenuState::new();
+        state.update_frame(input);
+        state
+    }
+
+    #[test]
+    fn stable_frame_requires_every_visual_animation_to_finish() {
+        let mut effects = BattleVisualEffects::default();
+        assert!(effects.is_frame_stable());
+
+        effects.attack_lunge = Some(AttackLunge {
+            attacker_is_player: true,
+            frame: 0,
+        });
+        assert!(!effects.is_frame_stable());
+        effects.attack_lunge = None;
+
+        effects.fx.apply(
+            &AnimEffect::ShakeScreenH {
+                pixels: 1,
+                frames: 2,
+            },
+            MonSide::Player,
+        );
+        assert!(!effects.is_frame_stable());
+        effects.fx.tick();
+        effects.fx.tick();
+        assert!(effects.is_frame_stable());
+    }
+
+    #[test]
+    fn sparse_battle_tile_buffer_matches_full_identity_render() {
+        let mut tileset = TileSet::blank(256);
+        tileset.set(
+            1,
+            Tile {
+                pixels: core::array::from_fn(|row| {
+                    core::array::from_fn(|column| ((row + column) & 3) as u8)
+                }),
+            },
+        );
+        tileset.set(
+            2,
+            Tile {
+                pixels: core::array::from_fn(|row| {
+                    core::array::from_fn(|column| ((row * 3 + column * 2) & 3) as u8)
+                }),
+            },
+        );
+        let mut tile_buf = ScreenTileBuffer::new(20, 18);
+        tile_buf.set(0, 0, 1);
+        tile_buf.set(7, 5, 2);
+        tile_buf.set(19, 17, 1);
+
+        let config = dotzuki_engine::render_config::RenderConfig::new(160, 144);
+        let mut expected = FrameBuffer::new(config, Rgba::WHITE);
+        tile_buf.render(&mut expected, &tileset, &GRAYSCALE_PALETTE);
+        let mut actual = FrameBuffer::new(config, Rgba::WHITE);
+        render_battle_tile_buffer(&mut actual, &tile_buf, &tileset);
+        assert_framebuffers_equal(&actual, &expected);
+    }
+
+    #[test]
+    fn opaque_battle_sprite_blit_matches_transparent_blit_on_white() {
+        let mut tileset = TileSet::blank(4);
+        for index in 0..tileset.len() {
+            tileset.set(
+                index,
+                Tile {
+                    pixels: core::array::from_fn(|row| {
+                        core::array::from_fn(|column| ((index + row + column) & 3) as u8)
+                    }),
+                },
+            );
+        }
+        let config = dotzuki_engine::render_config::RenderConfig::new(32, 32);
+        let mut expected = FrameBuffer::new(config, Rgba::WHITE);
+        blit_tileset(
+            &mut expected,
+            &tileset,
+            8,
+            8,
+            2,
+            &GRAYSCALE_SPRITE_PALETTE,
+        );
+        let mut actual = FrameBuffer::new(config, Rgba::WHITE);
+        blit_battle_tileset_on_white(&mut actual, &tileset, 8, 8, 2);
+        assert_framebuffers_equal(&actual, &expected);
+    }
+
+    #[cfg(not(target_os = "none"))]
+    #[test]
+    fn loaded_battle_space_tile_is_blank() {
+        use pokered_renderer::resource::AssetRoot;
+
+        let mut resources = ResourceManager::new(AssetRoot::auto_detect().unwrap());
+        let tileset = build_battle_tileset(&mut resources);
+        assert!(
+            tileset
+                .get(0x7F)
+                .pixels
+                .iter()
+                .flatten()
+                .all(|&pixel| pixel == 0),
+            "tile $7F must remain the white battle-space tile",
+        );
+    }
 
     #[test]
     fn ball_choreo_caught_is_toss_poof_hide_shake3() {

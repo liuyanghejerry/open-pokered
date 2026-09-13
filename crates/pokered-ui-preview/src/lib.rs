@@ -132,7 +132,7 @@ pub fn render_layout(menu_name: &str, layout_json: &str, mock_state_id: u32, lan
 
 // ── bag ───────────────────────────────────────────────────────────────
 fn render_bag(mock_state_id: u32, layout_json: &str) -> Vec<u8> {
-    let (items, cursor): (Vec<(ItemId, u8)>, usize) = match mock_state_id {
+    let (items, cursor): (Vec<(ItemId, u32)>, usize) = match mock_state_id {
         0 => (
             vec![
                 (ItemId::PokeBall, 5),

@@ -1,3 +1,4 @@
+use crate::alloc_prelude::*;
 use pokered_core::data::wild_data::GameVersion;
 use pokered_core::title_screen::{TitlePhase, TitleScreenState, FADE_OUT_FRAMES};
 use pokered_data::layout_constants;

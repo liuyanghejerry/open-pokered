@@ -5,6 +5,7 @@ use crate::battle::state::{status2, BattleState, StatusCondition};
 
 use super::{EffectRandoms, EffectResult, StatusEffectType};
 
+use crate::alloc_prelude::*;
 pub fn apply_sleep(state: &mut BattleState, randoms: &EffectRandoms) -> EffectResult {
     let defender = state.defender();
     if !defender.active_mon().status.is_none() {

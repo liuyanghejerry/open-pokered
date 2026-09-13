@@ -1,4 +1,5 @@
 #[cfg(test)]
+use crate::alloc_prelude::*;
 mod tests {
     use crate::battle::state::*;
     use crate::battle::trainer_ai::ai_action::*;

@@ -13,9 +13,10 @@
 //!   applied only after the animation completes, matching the original order
 //!   (anim → `RemovePokemon`/`AddPartyMon`).
 
+use crate::alloc_prelude::*;
 use pokered_data::species::Species;
 use pokered_data::trades::NPC_TRADE_OT_NAME;
-use rand::Rng;
+use rand::{Rng, SeedableRng};
 
 use crate::battle::obedience::is_traded_for;
 use crate::battle::state::Pokemon;
@@ -61,7 +62,7 @@ pub fn roll_npc_trade_randoms(rng: &mut impl Rng) -> ([u8; 2], u16) {
 /// [`roll_npc_trade_randoms`] on the thread RNG — what frontends use at trade
 /// completion (deterministic tests inject a seeded RNG instead).
 pub fn roll_npc_trade_randoms_thread() -> ([u8; 2], u16) {
-    roll_npc_trade_randoms(&mut rand::thread_rng())
+    roll_npc_trade_randoms(&mut crate::rng::EntropyRng::from_entropy())
 }
 
 // ---------------------------------------------------------------------------

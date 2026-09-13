@@ -60,6 +60,7 @@ pub fn get_pokedex_entry(species: Species) -> Option<&'static PokedexEntry> {
 
 #[cfg(test)]
 mod tests {
+    use crate::alloc_prelude::*;
     use super::*;
 
     #[test]

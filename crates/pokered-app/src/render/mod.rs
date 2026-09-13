@@ -1,12 +1,15 @@
+use crate::alloc_prelude::*;
 mod battle;
 mod battle_i18n;
+mod credits;
 mod diploma;
 mod elevator;
-mod credits;
 mod evolution;
-mod hof_ceremony;
 mod gamefreak_splash;
+mod hof_ceremony;
 mod intro;
+#[cfg(not(target_os = "none"))]
+#[cfg(not(target_os = "none"))]
 mod link;
 mod menu;
 mod oak;
@@ -20,24 +23,53 @@ mod trade;
 mod trainer_card;
 
 pub use battle::{draw_battle, BattleVisualEffects};
+pub use battle::{
+    redraw_battle_bag_menu_cursor, redraw_battle_main_menu_cursor,
+    redraw_battle_move_menu_selection, redraw_battle_party_menu_cursor,
+    redraw_battle_party_menu_viewport, redraw_battle_safari_menu_cursor,
+    redraw_battle_yes_no_cursor,
+};
 pub use battle_i18n::{trainer_class_zh, zh_battle_dialog};
+pub use credits::draw_credits;
+pub use credits::{credits_visual_key, CreditsVisualKey};
 pub use diploma::draw_diploma;
 pub use elevator::{draw_elevator, draw_filter_bag};
-pub use credits::draw_credits;
+pub use elevator::redraw_elevator_cursor;
 pub use evolution::draw_evolution;
-pub use hof_ceremony::draw_hof_ceremony;
+pub use evolution::{evolution_visual_key, EvolutionVisualKey};
 pub use gamefreak_splash::draw_gamefreak_splash;
+pub use hof_ceremony::draw_hof_ceremony;
+pub use hof_ceremony::{hof_visual_key, HofVisualKey};
 pub use intro::draw_intro_scene;
+#[cfg(not(target_os = "none"))]
 pub use link::draw_link_flow;
-pub use menu::{draw_bag, draw_main_menu, draw_mart, draw_options_menu, draw_party_screen, draw_save_menu, draw_start_menu, draw_stats_screen};
+pub use menu::{
+    draw_bag, draw_main_menu, draw_mart, draw_options_menu, draw_party_screen, draw_save_menu,
+    draw_start_menu, draw_stats_screen,
+};
 pub use oak::{draw_naming_screen, draw_oak_speech};
-pub use pc::draw_pc;
-pub use pokedex::draw_pokedex_screen;
-pub use slots::draw_slots;
 pub use overworld::draw_overworld;
+pub use overworld::{FrameDamageRect, OverworldBackgroundCache};
+pub mod session;
+pub use menu::{
+    options_menu_cursor_position, options_menu_cursor_spec, redraw_main_menu_cursor, redraw_options_menu_cursor,
+    redraw_save_menu_cursor, redraw_start_menu_cursor, redraw_top_level_bag_action_cursor,
+    redraw_top_level_bag_cursor, redraw_top_level_bag_quantity, top_level_bag_cursor_position,
+    top_level_bag_viewport_offset, redraw_top_level_party_icon,
+    redraw_top_level_party_overlay_cursor, redraw_top_level_party_selection,
+};
+pub use menu::redraw_mart_cursor;
+pub use pc::draw_pc;
+pub use pc::redraw_pc_cursor;
+pub use pokedex::draw_pokedex_screen;
+pub use pokedex::redraw_pokedex_cursor;
+pub use slots::draw_slots;
+pub use slots::redraw_slots_bet_cursor;
 pub use title::draw_title_screen;
 pub use town_map::draw_town_map;
+pub use town_map::{redraw_town_map_cursor, redraw_town_map_marker};
 pub use trade::draw_trade;
+pub use trade::{trade_visual_key, TradeVisualKey};
 pub use trainer_card::draw_trainer_card;
 
 use pokered_renderer::embedded_font::{box_tiles, draw_box_tile, fill_tile};
@@ -73,19 +105,7 @@ pub fn blit_tileset(
         let ty = (idx as u32) / tiles_per_row;
         let px = x + tx * TILE_SIZE;
         let py = y + ty * TILE_SIZE;
-        for row in 0..TILE_SIZE {
-            let rgba_row = tile.render_row(row as usize, palette);
-            for col in 0..TILE_SIZE {
-                let sx = px + col;
-                let sy = py + row;
-                if sx < fb.width() && sy < fb.height() {
-                    let c = rgba_row[col as usize];
-                    if c != Rgba::TRANSPARENT {
-                        fb.set_pixel(sx, sy, c);
-                    }
-                }
-            }
-        }
+        fb.blit_gb_tile(px as i32, py as i32, tile, palette, true, false, false);
     }
 }
 
@@ -93,7 +113,15 @@ pub fn draw_text_box(fb: &mut FrameBuffer, bx: u32, by: u32, bw: u32, bh: u32, c
     let bg = Rgba::WHITE;
     let t = TILE_SIZE;
 
-    draw_box_tile(&box_tiles::TOP_LEFT, &box_tiles::outside::TOP_LEFT, bx, by, color, bg, fb);
+    draw_box_tile(
+        &box_tiles::TOP_LEFT,
+        &box_tiles::outside::TOP_LEFT,
+        bx,
+        by,
+        color,
+        bg,
+        fb,
+    );
     for col in 0..bw {
         draw_box_tile(
             &box_tiles::HORIZONTAL,
@@ -105,11 +133,27 @@ pub fn draw_text_box(fb: &mut FrameBuffer, bx: u32, by: u32, bw: u32, bh: u32, c
             fb,
         );
     }
-    draw_box_tile(&box_tiles::TOP_RIGHT, &box_tiles::outside::TOP_RIGHT, bx + (1 + bw) * t, by, color, bg, fb);
+    draw_box_tile(
+        &box_tiles::TOP_RIGHT,
+        &box_tiles::outside::TOP_RIGHT,
+        bx + (1 + bw) * t,
+        by,
+        color,
+        bg,
+        fb,
+    );
 
     for row in 0..bh {
         let y = by + (1 + row) * t;
-        draw_box_tile(&box_tiles::VERTICAL_LEFT, &box_tiles::outside::VERTICAL_LEFT, bx, y, color, bg, fb);
+        draw_box_tile(
+            &box_tiles::VERTICAL_LEFT,
+            &box_tiles::outside::VERTICAL_LEFT,
+            bx,
+            y,
+            color,
+            bg,
+            fb,
+        );
         for col in 0..bw {
             fill_tile(bx + (1 + col) * t, y, bg, fb);
         }
@@ -125,7 +169,15 @@ pub fn draw_text_box(fb: &mut FrameBuffer, bx: u32, by: u32, bw: u32, bh: u32, c
     }
 
     let bot_y = by + (1 + bh) * t;
-    draw_box_tile(&box_tiles::BOTTOM_LEFT, &box_tiles::outside::BOTTOM_LEFT, bx, bot_y, color, bg, fb);
+    draw_box_tile(
+        &box_tiles::BOTTOM_LEFT,
+        &box_tiles::outside::BOTTOM_LEFT,
+        bx,
+        bot_y,
+        color,
+        bg,
+        fb,
+    );
     for col in 0..bw {
         draw_box_tile(
             &box_tiles::HORIZONTAL_BOTTOM,
@@ -185,30 +237,19 @@ pub fn blit_single_tile_flipped(
         return;
     }
     let tile = tileset.get(tile_idx);
-    for row in 0..TILE_SIZE {
-        let rgba_row = tile.render_row(row as usize, palette);
-        for col in 0..TILE_SIZE {
-            let src_col = if flip_horizontal {
-                TILE_SIZE - 1 - col
-            } else {
-                col
-            };
-            let sx = px + col;
-            let sy = py + row;
-            if sx < fb.width() && sy < fb.height() {
-                let c = rgba_row[src_col as usize];
-                if c != Rgba::TRANSPARENT {
-                    fb.set_pixel(sx, sy, c);
-                }
-            }
-        }
-    }
+    fb.blit_gb_tile(
+        px as i32,
+        py as i32,
+        tile,
+        palette,
+        true,
+        flip_horizontal,
+        false,
+    );
 }
 
 pub fn species_to_sprite_name(species_display: &str) -> String {
-    let name = species_display
-        .to_lowercase()
-        .replace([' ', '-', '\''], "");
+    let name = species_display.to_lowercase().replace([' ', '-', '\''], "");
     // Mr. Mime is the only Gen-1 species whose gfx filename keeps punctuation
     // (`mr.mime.png` / `mr.mimeb.png`); the display name loses the dot.
     if name == "mrmime" {

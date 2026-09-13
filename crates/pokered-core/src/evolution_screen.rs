@@ -50,7 +50,7 @@
 //! on the next level-up, exactly like the original.
 
 use pokered_data::species::Species;
-use std::collections::VecDeque;
+use crate::alloc_prelude::*;
 
 /// `DelayFrames(50)` after "What? X is evolving!" (evos_moves.asm:122-123).
 pub const IS_EVOLVING_FRAMES: u16 = 50;

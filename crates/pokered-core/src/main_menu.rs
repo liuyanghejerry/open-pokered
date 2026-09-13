@@ -10,6 +10,7 @@
 //! `MainMenuChoice::Option` so the frontend knows to return here (not to the
 //! Start menu) when the options screen is closed.
 
+use crate::alloc_prelude::*;
 use crate::game_state::{GameScreen, MainMenuChoice, SaveFileSummary, ScreenAction};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

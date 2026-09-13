@@ -53,6 +53,11 @@
 // → covered by allow(dead_code).
 #![allow(dead_code)]
 
+use crate::alloc_prelude::*;
+
+// Bare metal (GBA): the crate-local single-threaded `thread_local!` shim.
+#[cfg(target_os = "none")]
+use crate::thread_local;
 use dotzuki_engine::battle::stack::{
     BattleCtx, Effect, EffectId, EffectState, EffectType, Event, EventHook, HandlerResult, RelayVar,
 };
@@ -126,16 +131,16 @@ const P5_ID_BASE: u32 = 0x50_000;
 thread_local! {
     /// `BattlerRef → (type1, type2)` override (Conversion / Transform). `species_types`
     /// is unaffected; the data-reach tests read this override directly.
-    static TYPE_OVERRIDE: std::cell::RefCell<std::collections::HashMap<(u8, u8), (PokemonType, PokemonType)>> =
-        std::cell::RefCell::new(std::collections::HashMap::new());
+    static TYPE_OVERRIDE: core::cell::RefCell<crate::hash_compat::HashMap<(u8, u8), (PokemonType, PokemonType)>> =
+        core::cell::RefCell::new(crate::hash_compat::HashMap::with_hasher(crate::hash_compat::FxBuildHasher));
     /// The session coin pool (PayDay). One scalar per process-thread.
-    static COIN_POOL: std::cell::Cell<u32> = const { std::cell::Cell::new(0) };
+    static COIN_POOL: core::cell::Cell<u32> = const { core::cell::Cell::new(0) };
     /// `BattlerRef → last move used` (the data-reach Mimic/MirrorMove/Disable read).
-    static LAST_MOVE: std::cell::RefCell<std::collections::HashMap<(u8, u8), pokered_data::moves::MoveId>> =
-        std::cell::RefCell::new(std::collections::HashMap::new());
+    static LAST_MOVE: core::cell::RefCell<crate::hash_compat::HashMap<(u8, u8), pokered_data::moves::MoveId>> =
+        core::cell::RefCell::new(crate::hash_compat::HashMap::with_hasher(crate::hash_compat::FxBuildHasher));
     /// `BattlerRef → the move slot index` the Mimic handler overwrites.
-    static MIMIC_SLOT: std::cell::RefCell<std::collections::HashMap<(u8, u8), usize>> =
-        std::cell::RefCell::new(std::collections::HashMap::new());
+    static MIMIC_SLOT: core::cell::RefCell<crate::hash_compat::HashMap<(u8, u8), usize>> =
+        core::cell::RefCell::new(crate::hash_compat::HashMap::with_hasher(crate::hash_compat::FxBuildHasher));
 }
 
 /// Reset all P5 thread-local scratch (the harness calls this before each scenario).
@@ -985,7 +990,7 @@ fn jump_kick_crash(
 macro_rules! p5_effect {
     ($fnname:ident, $id:expr, $ev:expr, $call:expr) => {
         pub fn $fnname() -> &'static Effect<PokeredRules> {
-            use std::sync::OnceLock;
+            use crate::sync_compat::OnceLock;
             static EFF: OnceLock<&'static Effect<PokeredRules>> = OnceLock::new();
             EFF.get_or_init(|| {
                 let hooks: &'static [EventHook<PokeredRules>] = Box::leak(

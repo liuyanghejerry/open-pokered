@@ -5,6 +5,7 @@
 //! here avoids scattering `use dotzuki_engine::…` imports across the data crate
 //! and makes it easy to see which providers are available at a glance.
 
+use crate::alloc_prelude::*;
 use crate::blockset_data::{self, BLOCK_SIZE, BLOCK_TILES_H, BLOCK_TILES_W};
 use crate::collision;
 use crate::map_data_loader;

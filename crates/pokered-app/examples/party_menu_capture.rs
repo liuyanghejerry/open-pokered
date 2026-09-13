@@ -1,5 +1,6 @@
 //! Deterministic party action-menu capture: cargo run -p pokered-app
 //! --example party_menu_capture -- <output-directory>
+
 use dotzuki_engine::render_config::RenderConfig;
 use pokered_app::{render::draw_party_screen, PokemonGame};
 use pokered_core::{

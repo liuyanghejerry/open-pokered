@@ -30,6 +30,7 @@
 //! (same candidate order, same modulo). Non-candidate / no-PP moves are not
 //! enumerated, mirroring `pick_move` skipping them.
 
+use crate::alloc_prelude::*;
 use dotzuki_engine::battle::{
     BattleAction, BattleAiProvider, BattleProvider, BattleRng, BattleState, BattlerRef,
     BattlerState as EngineBattlerState, DamageResult, EffectResult, EnumMap, MoveEffect,
@@ -380,7 +381,7 @@ mod tests {
                 rng.consumed(),
                 1,
                 "rand_val={rand_val}: a 2-candidate tie must draw exactly one rng value, \
-                 matching production's single `rand::random::<u8>()` feeding `pick_move`"
+                 matching production's single `crate::rng::random::<u8>()` feeding `pick_move`"
             );
         }
     }

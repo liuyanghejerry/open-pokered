@@ -13,8 +13,9 @@
 //! (e.g. trainer victory quips) degrades gracefully — add exact entries for
 //! those as they are identified.
 
-use std::collections::HashMap;
-use std::sync::OnceLock;
+use crate::alloc_prelude::*;
+use crate::hash_compat::HashMap;
+use crate::sync_compat::OnceLock;
 
 use crate::lang_data;
 use crate::moves::MoveId;

@@ -1,3 +1,4 @@
+use crate::alloc_prelude::*;
 use super::game_data::*;
 use super::serialization::SaveError;
 

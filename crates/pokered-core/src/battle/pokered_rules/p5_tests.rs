@@ -15,6 +15,7 @@
 
 #![cfg(test)]
 
+use crate::alloc_prelude::*;
 use dotzuki_engine::battle::rng::ScriptedRng;
 use dotzuki_engine::battle::stack::dispatch::collect_from_effect;
 use dotzuki_engine::battle::stack::{

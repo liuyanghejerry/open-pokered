@@ -1,3 +1,4 @@
+use crate::alloc_prelude::*;
 pub const NUM_BOXES: usize = 12;
 pub const HOF_TEAM_CAPACITY: usize = 50;
 

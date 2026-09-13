@@ -74,6 +74,7 @@
 //! should show an error screen (there is no original error text to reuse; the
 //! game's own "link error" experience is a freeze + reset).
 
+use crate::alloc_prelude::*;
 use crate::battle::{BattleInput, BattleScreen, ScreenAction};
 use crate::link::link_battle::{LinkBattleManager, LinkBattlePollResult, LinkBattleState};
 use crate::link::protocol::{LinkBattleResult, NetworkMessage, PartyExchangeData};

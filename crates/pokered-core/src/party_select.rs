@@ -6,6 +6,7 @@
 //! cancel. It wraps a `PartyScreenState` purely so the existing party-screen
 //! renderer can draw it unchanged.
 
+use crate::alloc_prelude::*;
 use crate::battle::state::Pokemon;
 use crate::party_screen::{PartyScreenInput, PartyScreenState};
 

@@ -8,6 +8,8 @@
 //! (the naming screen has no way to type `ü`).
 
 /// Maximum candidates to show at once.
+
+use crate::alloc_prelude::*;
 pub const MAX_CANDIDATES: usize = 9;
 
 /// Search the pinyin dictionary for characters matching a romanization prefix.

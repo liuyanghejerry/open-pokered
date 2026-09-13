@@ -14,6 +14,7 @@
 //! [`AnimTickResult::Loading`] result. Zero-time commands are surfaced so the
 //! frontend can apply their effects and continue in the same update.
 
+use crate::alloc_prelude::*;
 use dotzuki_renderer::battle_anim::{
     get_frame_hook, get_move_animation, get_subanimation, AnimCommand, AnimEffect,
     AnimationPlayer as DataAnimationPlayer, FrameBlockMode, FrameHook, MonSide, SpecialEffect,

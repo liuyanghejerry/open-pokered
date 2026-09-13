@@ -3,6 +3,7 @@
 //! plus the shared entry renderer used by both the list screen and the
 //! overworld's script-driven entry overlay.
 
+use crate::alloc_prelude::*;
 use pokered_core::pokedex_screen::{
     PokedexScreenMode, PokedexScreenState, LIST_ROWS,
 };
@@ -112,6 +113,23 @@ fn draw_dex_list(state: &PokedexScreenState, is_zh: bool, fb: &mut FrameBuffer) 
     if state.mode() == PokedexScreenMode::SideMenu {
         draw_text("▶", 15 * t, (10 + state.side_menu_cursor() as u32 * row_step as u32) * t, fg, fb);
     }
+}
+
+/// Repaint only the old and new Pokédex cursor cells on an already-rendered
+/// list or side menu. Both cursor columns have a plain white background.
+pub fn redraw_pokedex_cursor(
+    previous: (u32, u32),
+    current: (u32, u32),
+    fb: &mut FrameBuffer,
+) {
+    for (x, y) in [previous, current] {
+        for py in y..(y + 9).min(fb.height()) {
+            for px in x..(x + 8).min(fb.width()) {
+                fb.set_pixel(px, py, Rgba::WHITE);
+            }
+        }
+    }
+    draw_text("▶", current.0, current.1, Rgba::BLACK, fb);
 }
 
 /// The AREA page (`LoadTownMap_Nest` in engine/items/town_map.asm): the Kanto
@@ -299,13 +317,13 @@ fn wrap_zh_page(page: &str) -> Vec<String> {
                 let last = current.chars().last().unwrap();
                 let popped_w = char_tile_width(last);
                 current.pop();
-                lines.push(std::mem::take(&mut current));
+                lines.push(core::mem::take(&mut current));
                 current.push(last);
                 current.push(c);
                 width = popped_w + w;
                 continue;
             }
-            lines.push(std::mem::take(&mut current));
+            lines.push(core::mem::take(&mut current));
             width = 0;
         }
         current.push(c);
@@ -557,6 +575,126 @@ mod tests {
         assert!(data_row_clean, "no arrow at (15,10) when CRY is selected");
         let path = std::env::temp_dir().join("pokedex_side_menu_test.png");
         fb.save_png(&path).expect("save side menu png");
+    }
+
+    #[test]
+    fn cursor_redraw_matches_full_list_and_side_menu_frames() {
+        for &is_zh in &[false, true] {
+            for previous in 0..LIST_ROWS {
+                for current in 0..LIST_ROWS {
+                    if previous == current {
+                        continue;
+                    }
+                    let mut state =
+                        PokedexScreenState::new(populated_dex(), GameVersion::Red);
+                    for _ in 0..previous {
+                        state.update_frame(PokedexScreenInput {
+                            down: true,
+                            ..Default::default()
+                        });
+                    }
+                    let mut actual = new_fb();
+                    draw_pokedex_screen(
+                        &state,
+                        MapId::PalletTown,
+                        is_zh,
+                        &mut None,
+                        &mut actual,
+                    );
+                    let input = if current > previous {
+                        PokedexScreenInput {
+                            down: true,
+                            ..Default::default()
+                        }
+                    } else {
+                        PokedexScreenInput {
+                            up: true,
+                            ..Default::default()
+                        }
+                    };
+                    for _ in 0..previous.abs_diff(current) {
+                        state.update_frame(input);
+                    }
+                    let mut expected = new_fb();
+                    draw_pokedex_screen(
+                        &state,
+                        MapId::PalletTown,
+                        is_zh,
+                        &mut None,
+                        &mut expected,
+                    );
+                    redraw_pokedex_cursor(
+                        (0, (3 + previous as u32 * 2) * TILE_SIZE),
+                        (0, (3 + current as u32 * 2) * TILE_SIZE),
+                        &mut actual,
+                    );
+                    assert_eq!(
+                        actual, expected,
+                        "list cursor {previous}->{current}, zh={is_zh}"
+                    );
+                }
+            }
+
+            let row_step = if is_zh { 2 } else { 1 };
+            for previous in 0..4u32 {
+                for current in 0..4u32 {
+                    if previous == current {
+                        continue;
+                    }
+                    let mut state =
+                        PokedexScreenState::new(populated_dex(), GameVersion::Red);
+                    state.update_frame(PokedexScreenInput {
+                        a: true,
+                        ..Default::default()
+                    });
+                    for _ in 0..previous {
+                        state.update_frame(PokedexScreenInput {
+                            down: true,
+                            ..Default::default()
+                        });
+                    }
+                    let mut actual = new_fb();
+                    draw_pokedex_screen(
+                        &state,
+                        MapId::PalletTown,
+                        is_zh,
+                        &mut None,
+                        &mut actual,
+                    );
+                    let input = if current > previous {
+                        PokedexScreenInput {
+                            down: true,
+                            ..Default::default()
+                        }
+                    } else {
+                        PokedexScreenInput {
+                            up: true,
+                            ..Default::default()
+                        }
+                    };
+                    for _ in 0..previous.abs_diff(current) {
+                        state.update_frame(input);
+                    }
+                    let mut expected = new_fb();
+                    draw_pokedex_screen(
+                        &state,
+                        MapId::PalletTown,
+                        is_zh,
+                        &mut None,
+                        &mut expected,
+                    );
+                    redraw_pokedex_cursor(
+                        (15 * TILE_SIZE, (10 + previous * row_step) * TILE_SIZE),
+                        (15 * TILE_SIZE, (10 + current * row_step) * TILE_SIZE),
+                        &mut actual,
+                    );
+                    assert_eq!(
+                        actual, expected,
+                        "side-menu cursor {previous}->{current}, zh={is_zh}"
+                    );
+                }
+            }
+        }
     }
 
     #[test]

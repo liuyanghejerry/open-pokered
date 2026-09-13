@@ -2,6 +2,7 @@
 //! Source of truth: `pokemon/{Species}.json`, with the runtime body emitted
 //! by `pokered-data/build.rs::generate_pokemon_and_evos_data`.
 
+use crate::alloc_prelude::*;
 use crate::items::ItemId;
 use crate::moves::MoveId;
 use crate::species::Species;
@@ -45,7 +46,7 @@ pub fn evos_moves_data() -> Vec<EvosMovesEntry> {
 
 /// Get evolution and learnset data for a specific species.
 pub fn get_evos_moves(species: Species) -> Option<&'static EvosMovesEntry> {
-    use std::sync::LazyLock;
+    use crate::sync_compat::LazyLock;
     static DATA: LazyLock<Vec<EvosMovesEntry>> = LazyLock::new(evos_moves_data);
     let dex = species as u8;
     if dex >= 1 && dex as usize <= DATA.len() {

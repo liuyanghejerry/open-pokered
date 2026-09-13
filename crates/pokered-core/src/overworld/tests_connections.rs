@@ -1,5 +1,6 @@
 //! Tests for M4.3 — map connections, warp data, and transition logic.
 
+use crate::alloc_prelude::*;
 use pokered_data::blockset_data;
 use pokered_data::impl_traits::PokemonMapData;
 use pokered_data::map_connections::{get_map_connections, MAP_CONNECTIONS};

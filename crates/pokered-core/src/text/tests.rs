@@ -1,3 +1,4 @@
+use crate::alloc_prelude::*;
 use pokered_data::charmap;
 use pokered_data::text_commands::inline_control_chars;
 

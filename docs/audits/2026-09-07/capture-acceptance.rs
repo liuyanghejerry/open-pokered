@@ -1,4 +1,5 @@
 // Shared deterministic capture fixture, run unchanged on master and PR HEAD.
+
 use dotzuki_engine::render_config::RenderConfig;
 use pokered_core::{game_state::Lang, overworld::{OverworldInput, OverworldScreen},
     hof_ceremony::{HofCeremonyState,HofEntry,HofPlayerStats}, credits::{CreditsState,CreditsInput},

@@ -1,3 +1,4 @@
+use crate::alloc_prelude::*;
 use super::inventory::{BAG_ITEM_CAPACITY, Inventory};
 use super::shop::*;
 use crate::main_menu::MenuInput;

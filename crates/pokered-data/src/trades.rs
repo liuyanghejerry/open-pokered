@@ -200,7 +200,7 @@ mod tests {
     fn find_npc_trade_resolves_every_used_trade() {
         for trade in NPC_TRADES.iter() {
             let found = find_npc_trade(trade.give, trade.receive).expect("pair must resolve");
-            assert!(std::ptr::eq(found, trade));
+            assert!(core::ptr::eq(found, trade));
         }
         assert!(find_npc_trade(Species::Pikachu, Species::Raichu).is_none());
     }

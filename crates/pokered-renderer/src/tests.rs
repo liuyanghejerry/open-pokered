@@ -1,3 +1,4 @@
+use crate::alloc_prelude::*;
 use super::*;
 use crate::input::{keycode_to_gb_button, GbButton, InputState};
 use crate::palette::*;

@@ -5,6 +5,7 @@
 //!
 //! `zh_name` (names embedded in messages) lives in [`crate::battle_text`].
 
+use crate::alloc_prelude::*;
 use crate::battle_text::zh_name;
 
 /// Translate a main-menu label produced by `pc_screen::main_menu_labels`

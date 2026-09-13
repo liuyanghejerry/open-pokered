@@ -210,12 +210,7 @@ pub fn draw_bag(state: &BagScreenState, fb: &mut FrameBuffer, lang: Lang) {
     let mut painter = FrameBufferPainter::new(fb).with_lang(lang);
     let mut ui = Ui::new(&mut painter);
     let rd = PokemonRenderData::new(false);
-    let items_u8: Vec<(pokered_data::items::ItemId, u8)> = state
-        .items()
-        .iter()
-        .map(|(id, q)| (*id, (*q).min(99) as u8))
-        .collect();
-    menus::bag::draw(&items_u8, state.cursor(), &BAG_DEFAULT_LAYOUT, &mut ui, &rd);
+    menus::bag::draw(state.items(), state.cursor(), &BAG_DEFAULT_LAYOUT, &mut ui, &rd);
 
     match state.phase() {
         BagPhase::SwapFrom { row } => {

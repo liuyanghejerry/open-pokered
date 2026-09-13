@@ -1,3 +1,4 @@
+use crate::alloc_prelude::*;
 use pokered_data::elevator_data::{ElevatorFloor, ElevatorId};
 use pokered_data::fly_warp_data::LinkWarpType;
 use pokered_data::maps::MapId;

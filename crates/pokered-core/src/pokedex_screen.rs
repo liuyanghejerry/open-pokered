@@ -32,6 +32,7 @@
 //! shows the entry *without* a side menu there (the side menu only exists in
 //! the `ShowPokedexMenu` list flow).
 
+use crate::alloc_prelude::*;
 use crate::pokemon::pokedex::Pokedex;
 use pokered_data::maps::MapId;
 use pokered_data::species::Species;
@@ -184,6 +185,10 @@ impl PokedexScreenState {
 
     pub fn entry_page(&self) -> usize {
         self.entry_page
+    }
+
+    pub fn version(&self) -> GameVersion {
+        self.version
     }
 
     pub fn seen_count(&self) -> u32 {

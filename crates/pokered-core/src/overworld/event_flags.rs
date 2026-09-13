@@ -11,7 +11,14 @@
 // `__OBJ_HIDDEN_*` / `__OBJ_SHOWN_*` NPC-visibility keys written by script
 // effects. Those are kept in a small `extras` map (usually empty).
 
-use std::collections::HashMap;
+use crate::alloc_prelude::*;
+// The flag-map type follows the target: std's HashMap on hosted builds
+// (the public script-flags API is called with maps parsed from JSON
+// sidecars there), hashbrown's on bare metal.
+#[cfg(not(target_os = "none"))]
+use crate::hash_compat::HashMap;
+#[cfg(target_os = "none")]
+use crate::hash_compat::HashMap;
 
 use pokered_data::event_flags::{EventFlag, EVENT_FLAGS_SIZE};
 
@@ -47,7 +54,7 @@ impl EventFlags {
     pub fn new() -> Self {
         Self {
             bits: [0u8; EVENT_FLAGS_SIZE],
-            extras: HashMap::new(),
+            extras: HashMap::default(),
         }
     }
 
@@ -201,7 +208,7 @@ impl EventFlags {
     /// external use (e.g. seeding the script engine's flag store). Named
     /// bits use their `EventFlag` name; unnamed set bits use `__RAW_BIT_n`.
     pub fn to_hashmap(&self) -> HashMap<String, bool> {
-        let mut map = HashMap::new();
+        let mut map = HashMap::default();
         for &ef in EventFlag::ALL {
             if self.get_bit(ef.bit_index()) {
                 map.insert(ef.name().to_owned(), true);
@@ -257,7 +264,7 @@ impl EventFlags {
     pub fn from_bytes(data: [u8; EVENT_FLAGS_SIZE]) -> Self {
         Self {
             bits: data,
-            extras: HashMap::new(),
+            extras: HashMap::default(),
         }
     }
 
@@ -395,7 +402,7 @@ mod tests {
     #[test]
     fn merge_from() {
         let mut flags = EventFlags::new();
-        let mut map = HashMap::new();
+        let mut map = HashMap::default();
         map.insert("test_flag".to_owned(), true);
         flags.merge_from(&map);
         assert!(flags.get_flag("test_flag"));
@@ -430,7 +437,7 @@ mod tests {
 
     #[test]
     fn from_hashmap() {
-        let mut map = HashMap::new();
+        let mut map = HashMap::default();
         map.insert("EVENT_GOT_STARTER".to_owned(), true);
         map.insert("b".to_owned(), false);
         let flags = EventFlags::from_hashmap(&map);

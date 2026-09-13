@@ -4,6 +4,7 @@
 //! The Viridian Forest POTION at (1, 18) — table index 0 — is the fixture:
 //! the player stands at (1, 17) facing Down so the tile in front is the item.
 
+use crate::alloc_prelude::*;
 use super::screen::{OverworldAudioRequest, OverworldGameDataRequest, OverworldScreen};
 use super::{Direction, OverworldInput};
 use pokered_data::impl_traits::PokemonRedData;

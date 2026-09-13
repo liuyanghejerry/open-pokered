@@ -1,3 +1,5 @@
+use crate::alloc_prelude::*;
+
 use crate::audio_manager::{AudioManager, FadeState};
 use crate::music_data::MusicId;
 use crate::sfx_data::SfxId;

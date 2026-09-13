@@ -4,7 +4,8 @@
 //! for compatibility with existing consumers. Data is loaded at runtime from
 //! `map.json` files via `map_data_loader::get_map_json()`.
 
-use std::sync::OnceLock;
+use crate::alloc_prelude::*;
+use crate::sync_compat::OnceLock;
 
 use crate::map_data_loader::get_map_json;
 use crate::map_json::NpcJson;

@@ -6,6 +6,7 @@
 //   Bank 2: Boxes 1-6 + checksums
 //   Bank 3: Boxes 7-12 + checksums
 
+use crate::alloc_prelude::*;
 use super::game_data::NAME_LENGTH;
 use super::hall_of_fame::{HallOfFame, HofMon, HofTeam};
 use super::ser_pokemon::{
@@ -390,7 +391,7 @@ fn migrate_legacy_bank1(bank1: &[u8]) -> Option<Vec<u8>> {
     out.drain(del_at..del_at + 10);
     // Insert the union padding.
     let ins_at = base + water_end;
-    out.splice(ins_at..ins_at, std::iter::repeat(0u8).take(377));
+    out.splice(ins_at..ins_at, core::iter::repeat(0u8).take(377));
 
     // Recompute + store the canonical checksum.
     let region: Vec<u8> = out[base..base + canonical_main].to_vec();

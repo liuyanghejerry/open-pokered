@@ -48,27 +48,69 @@ impl<'fb> Painter for FrameBufferPainter<'fb> {
         let inner_h = rect.th - 2;
         let right_x = bx + (rect.tw - 1) * t;
         let bot_y = by + (rect.th - 1) * t;
+        let inner_px_w = inner_w * t;
+        let inner_px_h = inner_h * t;
 
-        draw_box_tile(&box_tiles::TOP_LEFT, &box_tiles::outside::TOP_LEFT, bx, by, ink, bg, self.fb);
-        for col in 0..inner_w {
-            draw_box_tile(&box_tiles::HORIZONTAL, &box_tiles::outside::HORIZONTAL, bx + (1 + col) * t, by, ink, bg, self.fb);
+        draw_box_tile(
+            &box_tiles::TOP_LEFT,
+            &box_tiles::outside::TOP_LEFT,
+            bx,
+            by,
+            ink,
+            bg,
+            self.fb,
+        );
+        // The repeated edge tiles are solid horizontal/vertical runs. Batch
+        // those runs while retaining the four transparent corner masks.
+        if inner_w > 0 {
+            self.fb.fill_rect(bx + t, by + 1, inner_px_w, 2, ink);
+            self.fb.fill_rect(bx + t, by + 3, inner_px_w, 5, bg);
         }
-        draw_box_tile(&box_tiles::TOP_RIGHT, &box_tiles::outside::TOP_RIGHT, right_x, by, ink, bg, self.fb);
+        draw_box_tile(
+            &box_tiles::TOP_RIGHT,
+            &box_tiles::outside::TOP_RIGHT,
+            right_x,
+            by,
+            ink,
+            bg,
+            self.fb,
+        );
 
-        for row in 0..inner_h {
-            let y = by + (1 + row) * t;
-            draw_box_tile(&box_tiles::VERTICAL_LEFT, &box_tiles::outside::VERTICAL_LEFT, bx, y, ink, bg, self.fb);
-            for col in 0..inner_w {
-                fill_tile(bx + (1 + col) * t, y, bg, self.fb);
-            }
-            draw_box_tile(&box_tiles::VERTICAL_RIGHT, &box_tiles::outside::VERTICAL_RIGHT, right_x, y, ink, bg, self.fb);
+        if inner_w > 0 && inner_h > 0 {
+            self.fb
+                .fill_rect(bx + t, by + t, inner_w * t, inner_h * t, bg);
+        }
+        if inner_h > 0 {
+            self.fb.fill_rect(bx + 1, by + t, 2, inner_px_h, ink);
+            self.fb.fill_rect(bx + 3, by + t, 5, inner_px_h, bg);
+            self.fb.fill_rect(right_x, by + t, 5, inner_px_h, bg);
+            self.fb
+                .fill_rect(right_x + 5, by + t, 2, inner_px_h, ink);
         }
 
-        draw_box_tile(&box_tiles::BOTTOM_LEFT, &box_tiles::outside::BOTTOM_LEFT, bx, bot_y, ink, bg, self.fb);
-        for col in 0..inner_w {
-            draw_box_tile(&box_tiles::HORIZONTAL_BOTTOM, &box_tiles::outside::HORIZONTAL_BOTTOM, bx + (1 + col) * t, bot_y, ink, bg, self.fb);
+        draw_box_tile(
+            &box_tiles::BOTTOM_LEFT,
+            &box_tiles::outside::BOTTOM_LEFT,
+            bx,
+            bot_y,
+            ink,
+            bg,
+            self.fb,
+        );
+        if inner_w > 0 {
+            self.fb.fill_rect(bx + t, bot_y, inner_px_w, 5, bg);
+            self.fb
+                .fill_rect(bx + t, bot_y + 5, inner_px_w, 2, ink);
         }
-        draw_box_tile(&box_tiles::BOTTOM_RIGHT, &box_tiles::outside::BOTTOM_RIGHT, right_x, bot_y, ink, bg, self.fb);
+        draw_box_tile(
+            &box_tiles::BOTTOM_RIGHT,
+            &box_tiles::outside::BOTTOM_RIGHT,
+            right_x,
+            bot_y,
+            ink,
+            bg,
+            self.fb,
+        );
     }
 
     fn draw_text(&mut self, pos: TilePos, text: &str, color: EngineRgba) {

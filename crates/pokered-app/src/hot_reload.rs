@@ -1,3 +1,4 @@
+use crate::alloc_prelude::*;
 use std::collections::HashSet;
 use std::path::{Path, PathBuf};
 use std::sync::mpsc;
@@ -17,8 +18,8 @@ pub struct AssetChange {
     pub path: PathBuf,
 }
 
-impl std::fmt::Display for AssetChange {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+impl core::fmt::Display for AssetChange {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         write!(f, "{}", self.path.display())
     }
 }

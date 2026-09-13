@@ -27,6 +27,7 @@
 //! (the `Pokemon`-struct re-point is staged); see
 //! `docs/engine-gap-analysis/05-p0-migration-report.md` (party section).
 
+use crate::alloc_prelude::*;
 use dotzuki_engine::party::{
     EvolutionProvider, EvolutionTrigger as EngineEvolutionTrigger, ExpProvider, MonsterInstance,
     MonsterProvider, MonsterStatus, MoveSlot, StatSet,

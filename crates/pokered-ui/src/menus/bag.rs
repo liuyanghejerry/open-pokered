@@ -1,3 +1,4 @@
+use crate::alloc_prelude::*;
 use dotzuki_engine::render_data::RenderData;
 use pokered_data::items::ItemId;
 use pokered_core::game_state::Lang;
@@ -8,7 +9,7 @@ use pokered_data::ui_layout::schema::{BagDefaultLayout, SizeMode};
 use crate::engine::{InkColor, Painter, TileRect, Ui};
 
 pub fn draw<P: Painter>(
-    items: &[(ItemId, u8)], cursor: usize, layout: &BagDefaultLayout, ui: &mut Ui<P>,
+    items: &[(ItemId, u32)], cursor: usize, layout: &BagDefaultLayout, ui: &mut Ui<P>,
     render_data: &dyn RenderData<Move = MoveId, Item = ItemId, Species = Species>,
 ) {
     ui.clear(InkColor::White);
@@ -21,46 +22,16 @@ pub fn draw<P: Painter>(
     });
 
     let list_child = &layout.list;
-    // Total selectable entries: items + the trailing CANCEL row.
-    let total = items.len() as u32 + 1;
-    let content_h = total + total.saturating_sub(1) * list_child.gap;
-    // Auto height may never exceed the layout's own rect height: the bag box
-    // has to stay on-screen (the audit saw the bottom border leave the screen
-    // on long lists). The list becomes a scrolling window over the entries.
-    let eff_h = match list_child.height_mode {
-        SizeMode::Fixed => list_child.rect.th,
-        SizeMode::Auto => clamp(
-            content_h + list_child.padding.top + list_child.padding.bottom + 2,
-            list_child.min_height,
-            list_child.max_height,
-        )
-        .min(list_child.rect.th),
-    };
-    let rect = TileRect::new(list_child.rect.tx, list_child.rect.ty, list_child.rect.tw, eff_h);
-
+    let (rect, visible_rows, offset) = list_geometry(items.len(), cursor, layout);
     let start_y = list_child.padding.top;
-    // Visible window: entries that fit in the box interior, scrolled to keep
-    // the cursor row on-screen (the original bag list scrolls the same way).
-    let body_rows = eff_h.saturating_sub(2); // interior rows below the top border
-    let last_body_row = body_rows.saturating_sub(1);
     let row_pitch = 1 + list_child.gap;
-    let visible_rows = if row_pitch == 0 {
-        total
-    } else {
-        last_body_row.saturating_sub(start_y) / row_pitch + 1
-    }
-    .min(total);
-    let offset = if (cursor as u32) >= visible_rows {
-        cursor as u32 - (visible_rows - 1)
-    } else {
-        0
-    } as usize;
 
     ui.text_box(rect, list_child.color, true, |frame| {
         for (i, (item_id, qty)) in items.iter().enumerate().skip(offset).take(visible_rows as usize) {
             let y = start_y + (i - offset) as u32 * row_pitch;
             let item_name = render_data.item_name(*item_id);
             let name: String = item_name.chars().take(layout.list.item_name_width as usize).collect();
+            let qty = (*qty).min(99);
             let label = format!(
                 "{:<name_w$} ×{:<qty_w$}",
                 name,
@@ -82,6 +53,100 @@ pub fn draw<P: Painter>(
             frame.cursor_glyph_at(1, cur_y, c.glyph, c.color);
         }
     });
+}
+
+fn list_geometry(
+    item_count: usize,
+    cursor: usize,
+    layout: &BagDefaultLayout,
+) -> (TileRect, u32, usize) {
+    let list = &layout.list;
+    // Total selectable entries: items + the trailing CANCEL row.
+    let total = item_count as u32 + 1;
+    let content_h = total + total.saturating_sub(1) * list.gap;
+    // Auto height may never exceed the layout's own rect height: the bag box
+    // has to stay on-screen. The list becomes a scrolling window over entries.
+    let eff_h = match list.height_mode {
+        SizeMode::Fixed => list.rect.th,
+        SizeMode::Auto => clamp(
+            content_h + list.padding.top + list.padding.bottom + 2,
+            list.min_height,
+            list.max_height,
+        )
+        .min(list.rect.th),
+    };
+    let rect = TileRect::new(list.rect.tx, list.rect.ty, list.rect.tw, eff_h);
+
+    // Visible window: entries that fit in the box interior, scrolled to keep
+    // the cursor row on-screen (the original bag list scrolls the same way).
+    let body_rows = eff_h.saturating_sub(2);
+    let last_body_row = body_rows.saturating_sub(1);
+    let row_pitch = 1 + list.gap;
+    let visible_rows = if row_pitch == 0 {
+        total
+    } else {
+        last_body_row.saturating_sub(list.padding.top) / row_pitch + 1
+    }
+    .min(total);
+    let offset = if (cursor as u32) >= visible_rows {
+        cursor as u32 - visible_rows.saturating_sub(1)
+    } else {
+        0
+    } as usize;
+    (rect, visible_rows, offset)
+}
+
+/// First item index currently rendered in the list viewport.
+pub fn viewport_offset(item_count: usize, cursor: usize, layout: &BagDefaultLayout) -> usize {
+    list_geometry(item_count, cursor, layout).2
+}
+
+/// Absolute tile position of the browsing/swap cursor.
+pub fn cursor_position(item_count: usize, cursor: usize, layout: &BagDefaultLayout) -> crate::engine::TilePos {
+    let (rect, _, offset) = list_geometry(item_count, cursor, layout);
+    let list = &layout.list;
+    crate::engine::TilePos::new(
+        rect.tx + 2,
+        rect.ty + 1 + list.padding.top + cursor.saturating_sub(offset) as u32 * (1 + list.gap),
+    )
+}
+
+/// Ink region changed when repainting a browsing/swap cursor cell.
+pub fn cursor_damage(position: crate::engine::TilePos) -> crate::DamageRect {
+    crate::DamageRect::cursor(position)
+}
+
+/// Ink region changed by the USE/TOSS/CANCEL cursor.
+pub fn action_cursor_damage(cursor: u8) -> crate::DamageRect {
+    crate::DamageRect::cursor(crate::engine::TilePos::new(13, 12 + cursor as u32 * 2))
+}
+
+/// Union of the old/new `xNN` value ink regions in the toss prompt.
+pub fn quantity_damage(previous: u32, current: u32) -> crate::DamageRect {
+    let text_width = |mut qty| {
+        let mut digits = 1;
+        while qty >= 10 {
+            qty /= 10;
+            digits += 1;
+        }
+        (1 + digits.max(2)) * 8
+    };
+    crate::DamageRect::new(
+        7 * 8,
+        15 * 8,
+        text_width(previous).max(text_width(current)),
+        10,
+    )
+}
+
+/// Repaint only the changed browsing/swap cursor cells.
+pub fn redraw_cursor<P: Painter>(
+    previous: crate::engine::TilePos,
+    current: crate::engine::TilePos,
+    painter: &mut P,
+) {
+    painter.draw_pixel_rect(previous.tx * 8, previous.ty * 8, 8, 9, crate::engine::Rgba::INK_WHITE);
+    painter.draw_glyph(current, '▶', crate::engine::Rgba::INK_BLACK);
 }
 
 /// ItemUseTMHM's two pre-party prompts, drawn over the retained bag screen.
@@ -184,7 +249,7 @@ mod tests {
         fn species_name(&self, _: Species) -> &str { "" }
     }
 
-    fn bag_items(n: usize) -> Vec<(ItemId, u8)> {
+    fn bag_items(n: usize) -> Vec<(ItemId, u32)> {
         vec![(ItemId::Potion, 1); n]
     }
 
