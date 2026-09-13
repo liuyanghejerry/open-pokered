@@ -18,6 +18,7 @@ blackouts, invalid actions).
 If `gymnasium` is importable, `make_gymnasium_env()` adapts this class to
 the real `gymnasium.Env` protocol; without it the plain class is enough.
 """
+import os
 import subprocess
 import sys
 import tempfile
@@ -44,9 +45,14 @@ def _free_port():
 
 
 class OpenPokeEnv:
-    def __init__(self, binary=None, launch_timeout=20.0):
+    def __init__(self, binary=None, launch_timeout=20.0, maps_dir=None):
         self.binary = Path(binary) if binary else BIN
         self.launch_timeout = launch_timeout
+        # M7: an alternate maps tree (world variant). The desktop build
+        # loads map data from the filesystem (no embedded-map-data), so
+        # POKERED_MAPS_DIR redirects map.json/map.blk and --scripts-dir
+        # redirects script.scene/script_config.json.
+        self.maps_dir = Path(maps_dir) if maps_dir else None
         self.proc = None
         self.client = None
         self.task = None
@@ -76,8 +82,12 @@ class OpenPokeEnv:
             cmd += ["--save", str(initial["save"])]
         if "warp" in initial:
             cmd += ["--skip-intro", "--warp", initial["warp"]]
+        spawn_env = None
+        if self.maps_dir is not None:
+            cmd += ["--scripts-dir", str(self.maps_dir)]
+            spawn_env = dict(os.environ, POKERED_MAPS_DIR=str(self.maps_dir))
         self.proc = subprocess.Popen(
-            cmd, cwd=str(ROOT), stdout=subprocess.DEVNULL,
+            cmd, cwd=str(ROOT), env=spawn_env, stdout=subprocess.DEVNULL,
             stderr=open(self.run_dir / "game.log", "w"))
         self.client = AgentClient(port)
         # Wait for the game to accept commands (skip-intro boot takes a moment).

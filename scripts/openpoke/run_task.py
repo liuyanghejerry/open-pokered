@@ -6,6 +6,7 @@ game, run the rule-based oracle, record metrics, print a summary.
     python3 scripts/openpoke/run_task.py scripts/openpoke/tasks/reach-pewter-city.json --seed 7
     python3 scripts/openpoke/run_task.py scripts/openpoke/tasks/beat-brock.json --runs 3 --seeds 1,42,777
     python3 scripts/openpoke/run_task.py <task> --determinism-check
+    python3 scripts/openpoke/run_task.py <task> --maps-dir target/agent/variants/v1  (M7)
 
 Exit code 0 = success (all runs), 1 = failure.
 """
@@ -23,10 +24,10 @@ from openpoke.oracle import Oracle, OracleError  # noqa: E402
 from openpoke.tasks import load_task, goal_satisfied  # noqa: E402
 
 
-def run_once(task, seed, binary=None, write_metrics=True, quiet=False):
+def run_once(task, seed, binary=None, write_metrics=True, quiet=False, maps_dir=None):
     task = dict(task)
     task["seed"] = seed
-    env = OpenPokeEnv(binary=binary)
+    env = OpenPokeEnv(binary=binary, maps_dir=maps_dir)
     metrics = RunMetrics(task_id=task["id"], seed=seed)
     try:
         env.reset(task)
@@ -106,6 +107,9 @@ def main(argv=None):
     p.add_argument("--seeds", type=str, default=None, help="comma list for multi-seed runs")
     p.add_argument("--runs", type=int, default=1)
     p.add_argument("--binary", default=None)
+    p.add_argument("--maps-dir", default=None,
+                   help="alternate maps tree (M7 world variant): spawned games get "
+                        "POKERED_MAPS_DIR/--scripts-dir pointed at it")
     p.add_argument("--determinism-check", action="store_true")
     p.add_argument("--quiet", action="store_true")
     args = p.parse_args(argv)
@@ -135,7 +139,8 @@ def main(argv=None):
             continue
         run_seeds = seeds or [task["seed"]] * max(1, args.runs)
         for seed in run_seeds:
-            results.append(run_once(task, seed, binary=args.binary, quiet=args.quiet))
+            results.append(run_once(task, seed, binary=args.binary, quiet=args.quiet,
+                                    maps_dir=args.maps_dir))
     failed = [m for m in results if not m.success]
     if not args.quiet:
         print(f"── {len(results) - len(failed)}/{len(results)} runs succeeded")

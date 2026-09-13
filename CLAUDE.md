@@ -181,6 +181,21 @@ client, Gym-style env, task specs (`tasks/*.json`), run metrics
 planner. Run a task with `python3 scripts/openpoke/run_task.py
 <task.json|all>` (needs a `--features debug-server` binary); unit tests:
 `python3 -m unittest scripts.test_openpoke`.
+M7 adds world variants for generalization experiments (RQ3), as PURE
+DATA: `variants.py` copies `crates/pokered-data/maps/` and applies seeded
+mutations (encounter-table permutation, level-capped trainer re-rolls,
+wandering-NPC/item-ball relocation, bidirectionally-consistent door-warp
+shuffles) with a `variant.json` manifest; a spawned game loads a variant
+via `POKERED_MAPS_DIR` + `--scripts-dir` (the desktop build reads map
+data/scenes from the filesystem; `run_task.py --maps-dir` threads it
+through). `validate_variant.py` proves completability: static checks over
+a graph/walkability dump of the variant (`cargo run -p pokered-agent
+--bin dump_world_data` — key routes BFS, warp-pair integrity, no orphan
+towns, item grabbability) plus in-game smoke runs of the reach tasks.
+Generate/validate: `python3 scripts/openpoke/variants.py <profile>
+--seed N` then `python3 scripts/openpoke/validate_variant.py
+target/agent/variants/<name>`; unit tests: `python3 -m unittest
+scripts.test_openpoke_variants`.
 
 Screen targets: `copyright title main-menu oak overworld battle start-menu options save`.
 
