@@ -19,10 +19,10 @@ debug-server = ["pokered-debug-server", "desktop"]
 [dependencies]
 pokered-core = { path = "../pokered-core" }
 pokered-data = { path = "../pokered-data" }
-dotzuki-engine = { git = "https://github.com/liuyanghejerry/dotzuki", branch = "feat/agent-serde" }
-dotzuki-engine-dsl = { git = "https://github.com/liuyanghejerry/dotzuki", branch = "feat/agent-serde" }
+dotzuki-engine = { git = "https://github.com/liuyanghejerry/dotzuki", tag = "v0.8.2" }
+dotzuki-engine-dsl = { git = "https://github.com/liuyanghejerry/dotzuki", tag = "v0.8.2" }
 pokered-renderer = { path = "../pokered-renderer", default-features = false, features = ["framebuffer"] }
-dotzuki-renderer = { git = "https://github.com/liuyanghejerry/dotzuki", branch = "feat/agent-serde", default-features = false }
+dotzuki-renderer = { git = "https://github.com/liuyanghejerry/dotzuki", tag = "v0.8.2", default-features = false }
 pokered-ui = { path = "../pokered-ui", default-features = false, features = ["framebuffer"] }
 # Base audio crate (music/SFX data tables + ids) on every target; the cpal
 # device backend is added by the hosted target table below. Bare metal gets
@@ -40,7 +40,7 @@ hashbrown = { version = "0.15", default-features = false, features = ["serde"] }
 # exclusively by the explicit `desktop` feature; Android/iOS use the mobile
 # framebuffer host and must not pull winit/android-activity through defaults.
 [target.'cfg(not(target_os = "none"))'.dependencies]
-dotzuki-app = { git = "https://github.com/liuyanghejerry/dotzuki", branch = "feat/agent-serde", default-features = false }
+dotzuki-app = { git = "https://github.com/liuyanghejerry/dotzuki", tag = "v0.8.2", default-features = false }
 # The pokered-agent observation/navigation layer is hosted-only (DSL
 # semantics stack); bare-metal (GBA) builds exclude it (lib.rs gates the
 # modules on the same condition).
@@ -86,5 +86,5 @@ web-sys = { version = "0.3", features = [
 # dependencies section above untouched.
 [target.'cfg(target_arch = "wasm32")'.dependencies.dotzuki-web]
 git = "https://github.com/liuyanghejerry/dotzuki"
-branch = "feat/agent-serde"
+tag = "v0.8.2"
 features = ["link"]
