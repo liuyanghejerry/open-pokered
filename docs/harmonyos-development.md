@@ -7,7 +7,7 @@ an explicit local Cargo patch so the game adapter and the engine-owned host use
 the same checkout while developing platform changes. Do not mix engine crates
 from different revisions.
 
-From the repository root, with Python 3.11+, Rust's `aarch64-unknown-linux-ohos` target and DevEco's SDK installed:
+From the repository root, with Python 3.11+ (plus Pillow for the launcher-icon step: `python3 -m pip install pillow`), Rust's `aarch64-unknown-linux-ohos` target and DevEco's SDK installed:
 
 ```sh
 python3 scripts/build-harmony.py \
@@ -17,6 +17,12 @@ python3 scripts/build-harmony.py \
 ```
 
 Fetch `gfx/` with `scripts/fetch-gfx.sh` first. The export directory must be empty to protect edits to a generated host. The script leaves engine source untouched, builds `libpokered_mobile.a`, and calls the engine's host exporter. `--version blue` selects Blue. Use DevEco to build/sign the generated `entry` module; unsigned debug HAPs are only suitable for an emulator configured to allow them.
+
+The engine export carries a neutral launcher mark, so the script then runs `scripts/apply-mobile-icon.py` to draw the game's Poké Ball mark into the layered icon's foreground and the start-window tile, on the same mobile backdrop. Reapply it to a host exported straight from the engine with:
+
+```sh
+python3 scripts/apply-mobile-icon.py --platform harmony --host dist/harmony
+```
 
 The generated `target/harmony/engine.toml` also supports local validation:
 

@@ -60,6 +60,8 @@ def main():
                     '--platform', 'harmony',
                     '--library', str(library), '--init', f'pokered:{args.version}:v1',
                     '--out', str(output), '--title', 'Pokered', '--bundle', 'com.pokered.mobile'], check=True)
+    subprocess.run([sys.executable, str(root / 'scripts/apply-mobile-icon.py'),
+                    '--platform', 'harmony', '--host', str(output)], check=True)
     print(f'Open {output} in DevEco Studio, or build entry with hvigor assembleHap.')
     print(f'Local integration Cargo configuration: {patch}')
 

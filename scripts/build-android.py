@@ -80,6 +80,14 @@ def main():
         ],
         check=True,
     )
+    subprocess.run(
+        [
+            sys.executable, str(root / 'scripts/apply-mobile-icon.py'),
+            '--platform', 'android',
+            '--host', str(output),
+        ],
+        check=True,
+    )
     print(f'Open {output} in Android Studio.')
 
     if args.assemble:
