@@ -80,7 +80,11 @@ jobs:
       - name: Record and compare GBA hardware-timer baseline
         if: steps.changes.outputs.has-changes == 'true'
         env:
-          MGBA_COMMAND: xvfb-run -a mgba
+          # Ubuntu runners have no sound device, and mGBA's SDL frontend waits
+          # indefinitely after ALSA initialization fails. Its C stdout is also
+          # block-buffered through a pipe, so force line buffering for metrics.
+          SDL_AUDIODRIVER: dummy
+          MGBA_COMMAND: xvfb-run -a stdbuf -oL -eL mgba
         run: |
           timeout --signal=TERM 2m python3 scripts/gba_performance.py record \
             --rom crates/pokered-gba/target/thumbv4t-none-eabi/release/pokered-gba.gba \
