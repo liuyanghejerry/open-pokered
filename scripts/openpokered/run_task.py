@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
-"""openpoke task runner (M6): load a task spec, launch a headless seeded
+"""openpokered task runner (M6): load a task spec, launch a headless seeded
 game, run the rule-based oracle, record metrics, print a summary.
 
-    python3 scripts/openpoke/run_task.py scripts/openpoke/tasks/beat-brock.json
-    python3 scripts/openpoke/run_task.py scripts/openpoke/tasks/reach-pewter-city.json --seed 7
-    python3 scripts/openpoke/run_task.py scripts/openpoke/tasks/beat-brock.json --runs 3 --seeds 1,42,777
-    python3 scripts/openpoke/run_task.py <task> --determinism-check
-    python3 scripts/openpoke/run_task.py <task> --maps-dir target/agent/variants/v1  (M7)
+    python3 scripts/openpokered/run_task.py scripts/openpokered/tasks/beat-brock.json
+    python3 scripts/openpokered/run_task.py scripts/openpokered/tasks/reach-pewter-city.json --seed 7
+    python3 scripts/openpokered/run_task.py scripts/openpokered/tasks/beat-brock.json --runs 3 --seeds 1,42,777
+    python3 scripts/openpokered/run_task.py <task> --determinism-check
+    python3 scripts/openpokered/run_task.py <task> --maps-dir target/agent/variants/v1  (M7)
 
 Exit code 0 = success (all runs), 1 = failure.
 """
@@ -18,16 +18,16 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from openpoke.env import OpenPokeEnv  # noqa: E402
-from openpoke.metrics import RunMetrics  # noqa: E402
-from openpoke.oracle import Oracle, OracleError  # noqa: E402
-from openpoke.tasks import load_task, goal_satisfied  # noqa: E402
+from openpokered.env import OpenPokeredEnv  # noqa: E402
+from openpokered.metrics import RunMetrics  # noqa: E402
+from openpokered.oracle import Oracle, OracleError  # noqa: E402
+from openpokered.tasks import load_task, goal_satisfied  # noqa: E402
 
 
 def run_once(task, seed, binary=None, write_metrics=True, quiet=False, maps_dir=None):
     task = dict(task)
     task["seed"] = seed
-    env = OpenPokeEnv(binary=binary, maps_dir=maps_dir)
+    env = OpenPokeredEnv(binary=binary, maps_dir=maps_dir)
     metrics = RunMetrics(task_id=task["id"], seed=seed)
     try:
         env.reset(task)
@@ -72,7 +72,7 @@ def determinism_check(task, seed, binary=None):
     task["seed"] = seed
     traces = []
     for phase in ("straight", "forked"):
-        env = OpenPokeEnv(binary=binary)
+        env = OpenPokeredEnv(binary=binary)
         try:
             env.reset(task)
             env.client.save_state(0)
@@ -83,7 +83,7 @@ def determinism_check(task, seed, binary=None):
         finally:
             env.close()
     # Fork: restore mid-state and re-run from the same point.
-    env = OpenPokeEnv(binary=binary)
+    env = OpenPokeredEnv(binary=binary)
     try:
         env.reset(task)
         env.client.save_state(0)
@@ -114,7 +114,7 @@ def main(argv=None):
     p.add_argument("--quiet", action="store_true")
     args = p.parse_args(argv)
 
-    from openpoke.tasks import load_tasks_dir
+    from openpokered.tasks import load_tasks_dir
     if args.task == "all":
         tasks = load_tasks_dir()
     else:

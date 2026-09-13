@@ -175,16 +175,16 @@ full frame-level runtime (save data + screen + overworld/battle
 internals + RNG state) with a content hash for identity assertions —
 overworld/battle screens only; menus and mid-movie takeovers error
 cleanly. A minimal Python client lives at `scripts/debug_drive.py`.
-The M6 experiment adapter builds on it at `scripts/openpoke/` — typed
+The M6 experiment adapter builds on it at `scripts/openpokered/` — typed
 client, Gym-style env, task specs (`tasks/*.json`), run metrics
 (`target/agent/runs/*.jsonl`), skill actions, and a rule-based oracle
-planner. Run a task with `python3 scripts/openpoke/run_task.py
+planner. Run a task with `python3 scripts/openpokered/run_task.py
 <task.json|all>` (needs a `--features debug-server` binary); unit tests:
-`python3 -m unittest scripts.test_openpoke`.
+`python3 -m unittest scripts.test_openpokered`.
 RQ1 calibration (`calibrate_rq1.py`) runs the tier matrix — T3 oracle,
 T2 `LocalExplorer`, T1 `ButtonRandomWalk` (`policies.py`) — over task ×
 seed into `target/agent/runs/rq1/` with a SUMMARY.md pivot; unit tests:
-`python3 -m unittest scripts.test_openpoke_rq1`. Experiment runs pass
+`python3 -m unittest scripts.test_openpokered_rq1`. Experiment runs pass
 `--speed 0` (driven-only headless: game frames advance ONLY inside
 synchronous debug commands — wall-clock-insensitive frame determinism
 and ~10x lower command latency; `--speed N≥1` merely divides the
@@ -200,10 +200,10 @@ through). `validate_variant.py` proves completability: static checks over
 a graph/walkability dump of the variant (`cargo run -p pokered-agent
 --bin dump_world_data` — key routes BFS, warp-pair integrity, no orphan
 towns, item grabbability) plus in-game smoke runs of the reach tasks.
-Generate/validate: `python3 scripts/openpoke/variants.py <profile>
---seed N` then `python3 scripts/openpoke/validate_variant.py
+Generate/validate: `python3 scripts/openpokered/variants.py <profile>
+--seed N` then `python3 scripts/openpokered/validate_variant.py
 target/agent/variants/<name>`; unit tests: `python3 -m unittest
-scripts.test_openpoke_variants`.
+scripts.test_openpokered_variants`.
 
 Screen targets: `copyright title main-menu oak overworld battle start-menu options save`.
 

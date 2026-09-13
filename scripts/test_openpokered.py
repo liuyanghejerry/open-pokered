@@ -1,4 +1,4 @@
-"""Unit checks for openpoke M6 (stdlib unittest, no game binary needed)."""
+"""Unit checks for openpokered M6 (stdlib unittest, no game binary needed)."""
 import json
 import sys
 import tempfile
@@ -7,9 +7,9 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from openpoke import tasks as tasks_mod
-from openpoke.metrics import RunMetrics
-from openpoke.oracle import Oracle, OracleError
+from openpokered import tasks as tasks_mod
+from openpokered.metrics import RunMetrics
+from openpokered.oracle import Oracle, OracleError
 
 
 MINIMAL_SPEC = {
@@ -174,7 +174,7 @@ class OracleDecompositionTests(unittest.TestCase):
         env = FakeEnv(client)
         oracle = Oracle(env)
         # Patch the battle skill: no live battle in the unit test.
-        import openpoke.skills as skills
+        import openpokered.skills as skills
         orig = skills.fight_current_battle
         skills.fight_current_battle = lambda c, prefer="fight": True
         try:

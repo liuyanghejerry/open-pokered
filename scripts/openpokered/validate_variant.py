@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""openpoke variant validator (M7).
+"""openpokered variant validator (M7).
 
 Two layers:
 
@@ -18,8 +18,8 @@ Two layers:
    headless seeded game on the variant (POKERED_MAPS_DIR + --scripts-dir)
    and run the M6 reach tasks for real traversal.
 
-    python3 scripts/openpoke/validate_variant.py target/agent/variants/v1
-    python3 scripts/openpoke/validate_variant.py <dir> --skip-ingame
+    python3 scripts/openpokered/validate_variant.py target/agent/variants/v1
+    python3 scripts/openpokered/validate_variant.py <dir> --skip-ingame
 
 Exit code 0 = all checks pass. Unit tests inject fixture world data; no
 game or Rust bin is needed there.
@@ -32,8 +32,8 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from openpoke.tasks import load_task  # noqa: E402
-from openpoke.variants import TOWN_MAPS, VariantError, dump_world_data  # noqa: E402
+from openpokered.tasks import load_task  # noqa: E402
+from openpokered.variants import TOWN_MAPS, VariantError, dump_world_data  # noqa: E402
 
 KEY_ROUTES = [("PalletTown", "ViridianCity"), ("PalletTown", "PewterCity")]
 INGAME_TASKS = ["reach-viridian-city", "reach-pewter-city"]
@@ -209,7 +209,7 @@ def validate_static(variant_dir, world_data=None, required_routes=None,
 # ── in-game smoke ─────────────────────────────────────────────────────
 def validate_ingame(variant_dir, task_ids=None, binary=None):
     """Run M6 reach tasks on a headless game pointed at the variant."""
-    from openpoke.run_task import run_once
+    from openpokered.run_task import run_once
     task_ids = task_ids or INGAME_TASKS
     results = {}
     for task_id in task_ids:

@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
-"""openpoke world variant generator (M7).
+"""openpokered world variant generator (M7).
 
 A variant is PURE DATA: a copy of the `crates/pokered-data/maps/` tree with
 seeded mutations applied to `map.json` files. No engine changes. The desktop
 build loads map data from the filesystem, so a spawned game picks the variant
 up via `POKERED_MAPS_DIR` (map.json/map.blk) and `--scripts-dir`
-(script.scene/script_config.json) — see `OpenPokeEnv(maps_dir=...)`.
+(script.scene/script_config.json) — see `OpenPokeredEnv(maps_dir=...)`.
 
 Mutation classes (all recorded in the variant's `variant.json` manifest):
 
@@ -41,8 +41,8 @@ Determinism: one `random.Random(seed)` stream, mutations applied in a fixed
 class order over sorted maps, no timestamps in the manifest — same
 (seed, knobs) regenerates a byte-identical variant.
 
-    python3 scripts/openpoke/variants.py npc-item-shuffle --seed 7001
-    python3 scripts/openpoke/variants.py warp-shuffle --seed 7002 --name v2-warp-shuffle
+    python3 scripts/openpokered/variants.py npc-item-shuffle --seed 7001
+    python3 scripts/openpokered/variants.py warp-shuffle --seed 7002 --name v2-warp-shuffle
 """
 import argparse
 import json
@@ -58,7 +58,7 @@ TRAINERS_DIR = ROOT / "crates" / "pokered-data" / "trainers"
 DUMP_BIN = ROOT / "target" / "debug" / "dump_world_data"
 OUT_ROOT = ROOT / "target" / "agent" / "variants"
 
-GENERATOR_VERSION = "openpoke-variants/1"
+GENERATOR_VERSION = "openpokered-variants/1"
 
 TOWN_MAPS = [
     "PalletTown", "ViridianCity", "PewterCity", "CeruleanCity",
