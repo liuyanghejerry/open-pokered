@@ -37,6 +37,7 @@ pub struct EventFlags {
 /// serde only covers arrays up to 32 elements; the 320-byte flag array
 /// round-trips as a length-checked byte vector.
 mod bits_array_serde {
+    use crate::alloc_prelude::*;
     use pokered_data::event_flags::EVENT_FLAGS_SIZE;
     use serde::{Deserialize, Deserializer, Serialize, Serializer};
 

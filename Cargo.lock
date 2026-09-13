@@ -1119,7 +1119,7 @@ dependencies = [
 [[package]]
 name = "dotzuki-app"
 version = "0.7.1"
-source = "git+https://github.com/liuyanghejerry/dotzuki?rev=55b90736aa9c2cc56e69a247b57e320c57136898#55b90736aa9c2cc56e69a247b57e320c57136898"
+source = "git+https://github.com/liuyanghejerry/dotzuki?branch=feat%2Fagent-serde#f59c1698469130977a496cf66a2420da7202cf36"
 dependencies = [
  "dotzuki-engine",
  "dotzuki-renderer",
@@ -1132,7 +1132,7 @@ dependencies = [
 [[package]]
 name = "dotzuki-audio"
 version = "0.7.1"
-source = "git+https://github.com/liuyanghejerry/dotzuki?rev=55b90736aa9c2cc56e69a247b57e320c57136898#55b90736aa9c2cc56e69a247b57e320c57136898"
+source = "git+https://github.com/liuyanghejerry/dotzuki?branch=feat%2Fagent-serde#f59c1698469130977a496cf66a2420da7202cf36"
 dependencies = [
  "bitflags 2.13.2",
  "cpal",
@@ -1146,7 +1146,7 @@ dependencies = [
 [[package]]
 name = "dotzuki-engine"
 version = "0.7.1"
-source = "git+https://github.com/liuyanghejerry/dotzuki?rev=55b90736aa9c2cc56e69a247b57e320c57136898#55b90736aa9c2cc56e69a247b57e320c57136898"
+source = "git+https://github.com/liuyanghejerry/dotzuki?branch=feat%2Fagent-serde#f59c1698469130977a496cf66a2420da7202cf36"
 dependencies = [
  "hashbrown 0.15.5",
  "libm",
@@ -1158,7 +1158,7 @@ dependencies = [
 [[package]]
 name = "dotzuki-engine-dsl"
 version = "0.7.1"
-source = "git+https://github.com/liuyanghejerry/dotzuki?rev=55b90736aa9c2cc56e69a247b57e320c57136898#55b90736aa9c2cc56e69a247b57e320c57136898"
+source = "git+https://github.com/liuyanghejerry/dotzuki?branch=feat%2Fagent-serde#f59c1698469130977a496cf66a2420da7202cf36"
 dependencies = [
  "dotzuki-engine-script",
  "hashbrown 0.15.5",
@@ -1172,7 +1172,7 @@ dependencies = [
 [[package]]
 name = "dotzuki-engine-script"
 version = "0.7.1"
-source = "git+https://github.com/liuyanghejerry/dotzuki?rev=55b90736aa9c2cc56e69a247b57e320c57136898#55b90736aa9c2cc56e69a247b57e320c57136898"
+source = "git+https://github.com/liuyanghejerry/dotzuki?branch=feat%2Fagent-serde#f59c1698469130977a496cf66a2420da7202cf36"
 dependencies = [
  "boa_engine",
  "log",
@@ -1184,12 +1184,12 @@ dependencies = [
 [[package]]
 name = "dotzuki-mobile"
 version = "0.7.1"
-source = "git+https://github.com/liuyanghejerry/dotzuki?rev=55b90736aa9c2cc56e69a247b57e320c57136898#55b90736aa9c2cc56e69a247b57e320c57136898"
+source = "git+https://github.com/liuyanghejerry/dotzuki?branch=feat%2Fagent-serde#f59c1698469130977a496cf66a2420da7202cf36"
 
 [[package]]
 name = "dotzuki-renderer"
 version = "0.7.1"
-source = "git+https://github.com/liuyanghejerry/dotzuki?rev=55b90736aa9c2cc56e69a247b57e320c57136898#55b90736aa9c2cc56e69a247b57e320c57136898"
+source = "git+https://github.com/liuyanghejerry/dotzuki?branch=feat%2Fagent-serde#f59c1698469130977a496cf66a2420da7202cf36"
 dependencies = [
  "dotzuki-engine",
  "error-iter",
@@ -1208,7 +1208,7 @@ dependencies = [
 [[package]]
 name = "dotzuki-rules"
 version = "0.7.1"
-source = "git+https://github.com/liuyanghejerry/dotzuki?rev=55b90736aa9c2cc56e69a247b57e320c57136898#55b90736aa9c2cc56e69a247b57e320c57136898"
+source = "git+https://github.com/liuyanghejerry/dotzuki?branch=feat%2Fagent-serde#f59c1698469130977a496cf66a2420da7202cf36"
 dependencies = [
  "dotzuki-engine",
  "notify",
@@ -1220,7 +1220,7 @@ dependencies = [
 [[package]]
 name = "dotzuki-tui"
 version = "0.7.1"
-source = "git+https://github.com/liuyanghejerry/dotzuki?rev=55b90736aa9c2cc56e69a247b57e320c57136898#55b90736aa9c2cc56e69a247b57e320c57136898"
+source = "git+https://github.com/liuyanghejerry/dotzuki?branch=feat%2Fagent-serde#f59c1698469130977a496cf66a2420da7202cf36"
 dependencies = [
  "crossterm",
  "dotzuki-renderer",
@@ -1230,7 +1230,7 @@ dependencies = [
 [[package]]
 name = "dotzuki-ui"
 version = "0.7.1"
-source = "git+https://github.com/liuyanghejerry/dotzuki?rev=55b90736aa9c2cc56e69a247b57e320c57136898#55b90736aa9c2cc56e69a247b57e320c57136898"
+source = "git+https://github.com/liuyanghejerry/dotzuki?branch=feat%2Fagent-serde#f59c1698469130977a496cf66a2420da7202cf36"
 dependencies = [
  "dotzuki-engine",
  "dotzuki-renderer",
@@ -1239,7 +1239,7 @@ dependencies = [
 [[package]]
 name = "dotzuki-web"
 version = "0.7.1"
-source = "git+https://github.com/liuyanghejerry/dotzuki?rev=55b90736aa9c2cc56e69a247b57e320c57136898#55b90736aa9c2cc56e69a247b57e320c57136898"
+source = "git+https://github.com/liuyanghejerry/dotzuki?branch=feat%2Fagent-serde#f59c1698469130977a496cf66a2420da7202cf36"
 dependencies = [
  "dotzuki-audio",
  "dotzuki-engine",
@@ -3170,6 +3170,7 @@ dependencies = [
  "pokered-debug-server",
  "pokered-renderer",
  "pokered-ui",
+ "rand",
  "serde",
  "serde_json",
  "tracing",
@@ -3201,6 +3202,7 @@ dependencies = [
  "pokered-data",
  "pokered-platform",
  "rand",
+ "rand_chacha",
  "serde",
  "serde_json",
  "thiserror 2.0.20",
@@ -3510,6 +3512,7 @@ dependencies = [
  "libc",
  "rand_chacha",
  "rand_core",
+ "serde",
 ]
 
 [[package]]
@@ -3520,6 +3523,7 @@ checksum = "e6c10a63a0fa32252be49d21e7709d4d4baf8d231c2dbce1eaa8141b9b127d88"
 dependencies = [
  "ppv-lite86",
  "rand_core",
+ "serde",
 ]
 
 [[package]]
@@ -3529,6 +3533,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ec0be4795e2f6a28069bec0b5ff3e2ac9bafc99e6a9a7dc3547996c5c816922c"
 dependencies = [
  "getrandom 0.2.17",
+ "serde",
 ]
 
 [[package]]

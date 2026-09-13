@@ -10,6 +10,7 @@
 //! trainer battles are fought with the lead's first move. Blackouts and
 //! unresolvable battles abort the travel.
 
+use crate::alloc_prelude::*;
 use pokered_agent::{
     find_tile_route, NavGrid, NavigationResult, TileCross, TileLeg, TravelOutcome, TravelResult,
     WorldGraph,

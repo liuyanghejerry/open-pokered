@@ -432,6 +432,10 @@ impl<'a> Extractor<'a> {
                     construct: "run_js".to_string(),
                 });
             }
+            StoryStmt::Return { .. } => {
+                // Control flow (end the storyline early) — no state
+                // reads or effects to record.
+            }
             StoryStmt::Assign { value, .. } => {
                 self.walk_expression(value);
             }

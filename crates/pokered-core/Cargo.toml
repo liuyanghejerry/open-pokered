@@ -39,16 +39,19 @@ log = "0.4"
 hashbrown = { version = "0.15", default-features = false, features = ["serde"] }
 
 # Hosted builds keep `rand`'s std defaults (thread_rng / StdRng — OS entropy).
-# serde1 enables StdRng's serde impl for the M5 snapshot's RNG round-trip.
+# rand_chacha+serde1: the M5 seeded/snapshot streams (SeededRng) — the only
+# serde-serializable RNG state in the rand 0.8 family.
 [target.'cfg(not(target_os = "none"))'.dependencies]
-rand = { workspace = true, features = ["small_rng", "serde1"] }
+rand = { workspace = true, features = ["small_rng"] }
+rand_chacha = { version = "0.3", features = ["serde1"] }
 thiserror = { workspace = true }
 
 # Bare-metal (GBA): no std — a global SmallRng seeded through `getrandom`
-# (custom source registered by pokered-gba) via `crate::rng`. serde1 keeps
-# the same snapshot RNG type (SmallRng) serializable off-host.
+# (custom source registered by pokered-gba) via `crate::rng`. rand_chacha
+# stays off this target: its `serde1` pulls serde/std, and the snapshot
+# layer it serves is hosted-only (lib.rs gates `snapshot` accordingly).
 [target.'cfg(target_os = "none")'.dependencies]
-rand = { version = "0.8", default-features = false, features = ["alloc", "small_rng", "getrandom", "serde1"] }
+rand = { version = "0.8", default-features = false, features = ["alloc", "small_rng", "getrandom"] }
 thiserror = { version = "2", default-features = false }
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]

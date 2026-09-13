@@ -48,21 +48,24 @@ impl BattleRng for RandBattleRng {
 /// turn comes from one continuing stream: seeding it makes battle
 /// outcomes reproducible, and its state round-trips through frame-level
 /// save/restore. Draws are `gen::<u8>()` from the underlying
-/// [`crate::rng::EntropyRng`] (StdRng hosted, SmallRng bare metal) —
-/// same distribution as [`RandBattleRng`], so unseeded behavior
-/// (constructed from entropy) is unchanged.
-#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
-pub struct StdBattleRng(pub crate::rng::EntropyRng);
+/// [`crate::rng::SeededRng`] (SmallRng on every target) — same byte
+/// distribution as [`RandBattleRng`], so unseeded behavior (constructed
+/// from entropy) is unchanged. Serde is derived on hosted targets only
+/// (the snapshot layer it round-trips through is compiled out on bare
+/// metal, and the serde-capable RNG is unavailable there).
+#[derive(Debug, Clone)]
+#[cfg_attr(not(target_os = "none"), derive(serde::Serialize, serde::Deserialize))]
+pub struct StdBattleRng(pub crate::rng::SeededRng);
 
 impl StdBattleRng {
     pub fn from_entropy() -> Self {
         use rand::SeedableRng;
-        Self(crate::rng::EntropyRng::from_entropy())
+        Self(crate::rng::SeededRng::from_entropy())
     }
 
     pub fn from_seed(seed: u64) -> Self {
         use rand::SeedableRng;
-        Self(crate::rng::EntropyRng::seed_from_u64(seed))
+        Self(crate::rng::SeededRng::seed_from_u64(seed))
     }
 }
 

@@ -19,7 +19,6 @@ debug-server = ["pokered-debug-server", "desktop"]
 [dependencies]
 pokered-core = { path = "../pokered-core" }
 pokered-data = { path = "../pokered-data" }
-pokered-agent = { path = "../pokered-agent" }
 dotzuki-engine = { git = "https://github.com/liuyanghejerry/dotzuki", branch = "feat/agent-serde" }
 dotzuki-engine-dsl = { git = "https://github.com/liuyanghejerry/dotzuki", branch = "feat/agent-serde" }
 pokered-renderer = { path = "../pokered-renderer", default-features = false, features = ["framebuffer"] }
@@ -42,6 +41,10 @@ hashbrown = { version = "0.15", default-features = false, features = ["serde"] }
 # framebuffer host and must not pull winit/android-activity through defaults.
 [target.'cfg(not(target_os = "none"))'.dependencies]
 dotzuki-app = { git = "https://github.com/liuyanghejerry/dotzuki", branch = "feat/agent-serde", default-features = false }
+# The pokered-agent observation/navigation layer is hosted-only (DSL
+# semantics stack); bare-metal (GBA) builds exclude it (lib.rs gates the
+# modules on the same condition).
+pokered-agent = { path = "../pokered-agent" }
 rand = { workspace = true }
 image = { version = "0.25", default-features = false, features = ["png"] }
 

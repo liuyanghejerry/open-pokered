@@ -10,6 +10,7 @@
 //! runs inside the debug handler, no TCP involved (tests drive it
 //! directly).
 
+use crate::alloc_prelude::*;
 use pokered_agent::{
     direction_between, find_approach, find_path, InteractOutcome, InteractResult, NavGrid,
     NavigationOutcome, NavigationResult, NpcObs, Position,
@@ -499,10 +500,12 @@ impl PokemonGame {
                 .filter(|n| n.visible)
                 .map(|n| (n.x, n.y))
                 .ok_or_else(|| format!("no visible npc with index {index}")),
-            "sign" => pokered_data::map_data_loader::get_map_json(map_id)
-                .and_then(|m| m.signs.get(index))
-                .map(|s| (s.x as u16, s.y as u16))
-                .ok_or_else(|| format!("no sign with index {index} on this map")),
+            "sign" => {
+                let map_handle = pokered_data::map_data_loader::get_map_json(map_id);
+                map_handle
+                    .and_then(|m| m.signs.get(index).map(|s| (s.x as u16, s.y as u16)))
+                    .ok_or_else(|| format!("no sign with index {index} on this map"))
+            }
             "hidden" => pokered_data::hidden_items::HIDDEN_ITEMS
                 .get(index)
                 .filter(|h| h.map == map_id)

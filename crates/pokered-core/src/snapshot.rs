@@ -143,7 +143,7 @@ pub struct OverworldSnapshot {
     pub hidden_coin_flags: [u8; crate::save::game_data::HIDDEN_COINS_BYTES],
     pub player_coins: u16,
     pub itemfinder_dings: Option<(u8, u8)>,
-    pub rng: crate::rng::EntropyRng,
+    pub rng: crate::rng::SeededRng,
     pub safari_steps: u16,
     pub safari_balls: u8,
     pub safari_game_active: bool,
@@ -178,6 +178,7 @@ pub struct OverworldSnapshot {
 
 /// 32-byte flag array ↔ length-checked byte vector.
 mod bytes_32_serde {
+    use crate::alloc_prelude::Vec;
     use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
     pub fn serialize<S: Serializer>(bits: &[u8; 32], s: S) -> Result<S::Ok, S::Error> {

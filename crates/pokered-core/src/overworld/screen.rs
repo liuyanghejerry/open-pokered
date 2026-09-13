@@ -802,7 +802,7 @@ pub struct OverworldScreen<G: GameData = pokered_data::impl_traits::PokemonRedDa
     /// original blocks on each SFX (PlaySoundWaitForCurrent, 4× HEALING_MACHINE
     /// + PURCHASE); exact lifetimes come from the shared audio sequencer.
     pub(crate) itemfinder_dings: Option<(u8, u8)>,
-    pub(crate) rng: crate::rng::EntropyRng,
+    pub(crate) rng: crate::rng::SeededRng,
     /// Remaining Safari Zone steps (of [`SAFARI_ZONE_STEP_COUNT`]). Counts down
     /// once per completed step while the player is inside the Safari Zone.
     pub(crate) safari_steps: u16,
@@ -1156,7 +1156,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
             hidden_coin_flags: [0u8; crate::save::game_data::HIDDEN_COINS_BYTES],
             player_coins: 0,
             itemfinder_dings: None,
-            rng: crate::rng::EntropyRng::from_entropy(),
+            rng: crate::rng::SeededRng::from_entropy(),
             safari_steps: 0,
             safari_balls: 0,
             safari_game_active: false,
@@ -1706,11 +1706,10 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
     }
 
     /// Replace the overworld RNG stream with a seeded one (agent M5).
-    /// Same algorithm the default constructor draws from entropy
-    /// (StdRng hosted / SmallRng bare metal) — unseeded behavior is
-    /// unchanged.
+    /// Same SmallRng algorithm the default constructor draws from
+    /// entropy — unseeded behavior is unchanged.
     pub fn set_rng_seed(&mut self, seed: u64) {
-        self.rng = crate::rng::EntropyRng::seed_from_u64(seed);
+        self.rng = crate::rng::SeededRng::seed_from_u64(seed);
     }
 
     pub fn set_script_flags(&mut self, flags: HashMap<String, bool>) {

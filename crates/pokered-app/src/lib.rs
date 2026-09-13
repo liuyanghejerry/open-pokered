@@ -19,8 +19,13 @@ pub mod render;
 #[cfg(not(target_os = "none"))]
 pub mod save_editor;
 
+// The pokered-agent observation/navigation layer is hosted-only (it pulls
+// the DSL semantics stack); bare-metal (GBA) builds exclude it.
+#[cfg(not(target_os = "none"))]
 pub mod agent_nav;
+#[cfg(not(target_os = "none"))]
 pub mod agent_state;
+#[cfg(not(target_os = "none"))]
 pub mod agent_travel;
 pub mod audio;
 

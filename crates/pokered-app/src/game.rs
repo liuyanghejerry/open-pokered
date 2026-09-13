@@ -680,7 +680,7 @@ pub struct PokemonGame {
     /// successive battles draw distinct (but reproducible) streams.
     pub battle_count: u64,
     /// In-memory `save_state` snapshots (JSON strings).
-    pub agent_state_slots: std::collections::HashMap<u8, String>,
+    pub agent_state_slots: crate::alloc_prelude::BTreeMap<u8, String>,
     /// Persistent state for debug-server injected input. A queued button must
     /// read as HELD across consecutive frames (fresh `InputState` per frame
     /// looks like repeated taps, so d-pad walking never starts).
@@ -1190,7 +1190,7 @@ impl PokemonGame {
             pending_debug_frames: 0,
             seed: None,
             battle_count: 0,
-            agent_state_slots: std::collections::HashMap::new(),
+            agent_state_slots: crate::alloc_prelude::BTreeMap::new(),
             debug_input: InputState::new(),
             #[cfg(all(feature = "desktop", not(target_arch = "wasm32"), not(target_os = "none")))]
             frame_recorder: None,
@@ -1344,6 +1344,9 @@ impl PokemonGame {
             audio,
             pending_debug_inputs: Vec::new(),
             pending_debug_frames: 0,
+            seed: None,
+            battle_count: 0,
+            agent_state_slots: crate::alloc_prelude::BTreeMap::new(),
             debug_input: InputState::new(),
             startup_warp: None,
             soft_reset_frames: 0,
@@ -1467,7 +1470,7 @@ impl PokemonGame {
             pending_debug_frames: 0,
             seed: None,
             battle_count: 0,
-            agent_state_slots: std::collections::HashMap::new(),
+            agent_state_slots: crate::alloc_prelude::BTreeMap::new(),
             debug_input: InputState::new(),
             #[cfg(all(feature = "desktop", not(target_arch = "wasm32"), not(target_os = "none")))]
             frame_recorder: None,
@@ -2549,13 +2552,17 @@ impl PokemonGame {
 
     fn start_wild_battle(&mut self, species: pokered_data::species::Species, level: u8) {
         use pokered_core::pokemon::stats::create_pokemon;
-        use rand::Rng;
 
         let mut battle_rng = self.next_battle_rng();
         // Wild DVs are two random bytes (core.asm:6012-6019) — drawn from
-        // the (possibly seeded) battle stream so encounters replay.
+        // the (possibly seeded) battle stream so encounters replay. The
+        // BattleRng trait keeps this call site free of a direct rand dep
+        // (rand is hosted-only for pokered-app).
         let dvs = match battle_rng.as_mut() {
-            Some(rng) => [rng.0.gen(), rng.0.gen()],
+            Some(rng) => [
+                dotzuki_engine::battle::rng::BattleRng::next_u8(rng),
+                dotzuki_engine::battle::rng::BattleRng::next_u8(rng),
+            ],
             None => pokered_core::pokemon::stats::roll_random_dvs(),
         };
         let enemy_mon = create_pokemon(species, level, dvs);
@@ -5883,7 +5890,9 @@ impl PokemonGame {
     /// built from the same live sources as [`Self::debug_state_snapshot`].
     /// Pure observation: reads state, never steps frames. Not gated on
     /// `debug-server` — the observation logic is pure and reusable; only
-    /// the debug-command surface is feature-gated.
+    /// the debug-command surface is feature-gated. Hosted-only: the
+    /// pokered-agent layer is excluded from bare-metal (GBA) builds.
+    #[cfg(not(target_os = "none"))]
     pub fn agent_snapshot(
         &self,
         profile: &pokered_agent::ObservationProfile,
@@ -5893,6 +5902,7 @@ impl PokemonGame {
         let bag = self.save_data.game_data.bag.items();
         let hidden = pokered_agent::hidden_item_spots(map_id, self.overworld.hidden_item_flags());
         let in_battle = matches!(self.state.screen, GameScreen::Battle);
+        let map_handle = pokered_data::map_data_loader::get_map_json(map_id);
         let src = ObservationSource {
             screen: &self.state.screen,
             map_id,
@@ -5919,7 +5929,7 @@ impl PokemonGame {
             choice: self.overworld.pending_choice.as_ref(),
             battle: in_battle.then_some(&self.battle),
             npc_states: &self.overworld.npc_states,
-            map_json: pokered_data::map_data_loader::get_map_json(map_id),
+            map_json: map_handle.as_ref().map(|h| &**h),
             hidden_items: &hidden,
             nearby_radius: profile.nearby_radius,
         };
@@ -5928,6 +5938,7 @@ impl PokemonGame {
 
     /// Entities near the player within `radius` step units, nearest first
     /// (same aggregation as the snapshot's `nearby` section).
+    #[cfg(not(target_os = "none"))]
     pub fn agent_nearby(&self, radius: i32) -> Vec<pokered_agent::NearbyEntity> {
         let map_id = self.overworld.state.current_map;
         let player = pokered_agent::Position {
@@ -5941,10 +5952,11 @@ impl PokemonGame {
             .map(pokered_agent::NpcObs::from)
             .collect();
         let hidden = pokered_agent::hidden_item_spots(map_id, self.overworld.hidden_item_flags());
+        let map_handle = pokered_data::map_data_loader::get_map_json(map_id);
         pokered_agent::nearby_entities(
             player,
             &npcs,
-            pokered_data::map_data_loader::get_map_json(map_id),
+            map_handle.as_ref().map(|h| &**h),
             &hidden,
             radius,
         )

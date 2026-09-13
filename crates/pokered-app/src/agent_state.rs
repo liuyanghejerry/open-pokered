@@ -9,6 +9,7 @@
 //! frames. Scope boundary: only overworld and battle screens can be
 //! captured; menus/shops and mid-movie takeovers error cleanly.
 
+use crate::alloc_prelude::*;
 use pokered_core::game_state::GameScreen;
 use pokered_core::save::SaveData;
 use pokered_core::snapshot::{BattleSnapshot, OverworldSnapshot};
