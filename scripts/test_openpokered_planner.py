@@ -13,7 +13,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from openpoke import planner as pl
+from openpokered import planner as pl
 
 
 def edge(kind, frm, to, detail=None):

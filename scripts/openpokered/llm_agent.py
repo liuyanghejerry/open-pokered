@@ -22,7 +22,7 @@ Credential resolution order (first match wins):
 
 Default model: `Qwen/Qwen2.5-Coder-3B-Instruct` — the smallest instruct
 model enabled on the HF router for the probe token (verified with a tiny
-chat completion); override with `OPENPOKE_MODEL`.
+chat completion); override with `OPEN_POKERED_MODEL`.
 
 Parse failures are bounded: one corrective retry per decision, then a
 recorded deterministic fallback action (`parse_failures` /
@@ -40,7 +40,7 @@ from . import skills
 
 HF_BASE_URL = "https://router.huggingface.co/v1"
 DEFAULT_MODEL = "Qwen/Qwen2.5-Coder-3B-Instruct"
-MODEL_ENV = "OPENPOKE_MODEL"
+MODEL_ENV = "OPEN_POKERED_MODEL"
 
 
 class CredentialError(RuntimeError):

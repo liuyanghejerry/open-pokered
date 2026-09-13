@@ -6,8 +6,8 @@ calibration T2's no-world-model setting) / T3 world model, over the
 small-task subset × 3 seeds, plus the scripted-oracle row from the
 calibration artifacts as the ceiling reference.
 
-    python3 scripts/openpoke/run_rq1.py                 # full matrix
-    python3 scripts/openpoke/run_rq1.py --tier T1 --task reach-viridian-city --seed 42
+    python3 scripts/openpokered/run_rq1.py                 # full matrix
+    python3 scripts/openpokered/run_rq1.py --tier T1 --task reach-viridian-city --seed 42
 
 Resume: cells with an existing JSONL row (same task/tier/seed) are
 skipped; `--rerun-failed` re-runs failed cells (appends a new row).
@@ -37,12 +37,12 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from openpoke.env import OpenPokeEnv  # noqa: E402
-from openpoke.llm_agent import (ButtonLlmAgent, ChatClient, LlmError,  # noqa: E402
+from openpokered.env import OpenPokeredEnv  # noqa: E402
+from openpokered.llm_agent import (ButtonLlmAgent, ChatClient, LlmError,  # noqa: E402
                                 SkillLlmAgent, WorldModelLlmAgent,
                                 default_model, resolve_credentials)
-from openpoke.metrics import RUNS_DIR, RunMetrics  # noqa: E402
-from openpoke.tasks import load_task  # noqa: E402
+from openpokered.metrics import RUNS_DIR, RunMetrics  # noqa: E402
+from openpokered.tasks import load_task  # noqa: E402
 
 RQ1_DIR = RUNS_DIR / "rq1"
 TASKS_DIR = Path(__file__).resolve().parent / "tasks"
@@ -113,7 +113,7 @@ def run_cell(task, seed, tier, client, model, out_dir):
         "frame_budget": budget,
         "allow_travel_to": tier != "T2",
     })
-    env = OpenPokeEnv(speed=0)
+    env = OpenPokeredEnv(speed=0)
     policy = make_agent(tier, client, seed, cap)
     try:
         env.reset(task)

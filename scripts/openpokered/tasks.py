@@ -1,6 +1,6 @@
-"""Task-spec loading and validation for openpoke experiments (M6).
+"""Task-spec loading and validation for openpokered experiments (M6).
 
-A task JSON (see `scripts/openpoke/tasks/`) looks like:
+A task JSON (see `scripts/openpokered/tasks/`) looks like:
 
     {
       "id": "reach-pewter-city",

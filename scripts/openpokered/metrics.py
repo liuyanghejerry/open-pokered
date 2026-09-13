@@ -1,4 +1,4 @@
-"""Per-run metrics for openpoke experiments (M6).
+"""Per-run metrics for openpokered experiments (M6).
 
 One `RunMetrics` per (task, seed) attempt; serialized as one JSON line
 into `target/agent/runs/<task-id>.jsonl`. Counters are adapter-side so

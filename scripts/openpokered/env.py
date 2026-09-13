@@ -1,7 +1,7 @@
-"""OpenPokeEnv: a gym-style wrapper around the pokered agent debug API (M6).
+"""OpenPokeredEnv: a gym-style wrapper around the pokered agent debug API (M6).
 
 Plain-class API (no required deps):
-    env = OpenPokeEnv()
+    env = OpenPokeredEnv()
     obs = env.reset(task)
     obs, outcome, info = env.step("travel_to:ViridianCity")
     env.close()
@@ -44,7 +44,7 @@ def _free_port():
     return port
 
 
-class OpenPokeEnv:
+class OpenPokeredEnv:
     def __init__(self, binary=None, launch_timeout=20.0, maps_dir=None, speed=None):
         self.binary = Path(binary) if binary else BIN
         self.launch_timeout = launch_timeout
@@ -73,7 +73,7 @@ class OpenPokeEnv:
     # ── process management ──────────────────────────────────────────
     def _spawn(self, task):
         self.close()
-        self.run_dir = Path(tempfile.mkdtemp(prefix="openpoke-"))
+        self.run_dir = Path(tempfile.mkdtemp(prefix="openpokered-"))
         port = _free_port()
         initial = task["initial_state"]
         cmd = [str(self.binary), "run", "--headless", "--debug-port", str(port),
@@ -269,7 +269,7 @@ class OpenPokeEnv:
 
 
 def make_gymnasium_env(**kwargs):
-    """Adapt OpenPokeEnv to the `gymnasium` protocol when it's installed."""
+    """Adapt OpenPokeredEnv to the `gymnasium` protocol when it's installed."""
     import gymnasium as gym
     from gymnasium import spaces
 
@@ -278,7 +278,7 @@ def make_gymnasium_env(**kwargs):
 
         def __init__(self, task, **env_kwargs):
             super().__init__()
-            self.impl = OpenPokeEnv(**env_kwargs)
+            self.impl = OpenPokeredEnv(**env_kwargs)
             self.task = task
             self.action_space = spaces.Text(max_length=64)
             self.observation_space = spaces.Dict({})

@@ -1,4 +1,4 @@
-"""Unit checks for openpoke M7 variant tooling (stdlib unittest, fixtures
+"""Unit checks for openpokered M7 variant tooling (stdlib unittest, fixtures
 only — no game binary, no Rust dump bin, no repo maps tree).
 
 Fixtures: a tiny synthetic maps tree (PalletTown/Route1/ViridianCity/
@@ -13,8 +13,8 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from openpoke import validate_variant as vv
-from openpoke import variants
+from openpokered import validate_variant as vv
+from openpokered import variants
 
 
 # ── fixture construction ──────────────────────────────────────────────

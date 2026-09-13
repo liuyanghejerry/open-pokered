@@ -1,5 +1,5 @@
-"""Unit checks for openpoke LLM adapter (WP1) — mock HTTP only, no real
-API calls, no game spawns. Follows the scripts/test_openpoke_*.py pattern.
+"""Unit checks for openpokered LLM adapter (WP1) — mock HTTP only, no real
+API calls, no game spawns. Follows the scripts/test_openpokered_*.py pattern.
 """
 import json
 import sys
@@ -9,7 +9,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from openpoke import llm_agent as la
+from openpokered import llm_agent as la
 
 
 # ── mock HTTP ─────────────────────────────────────────────────────────
@@ -302,7 +302,7 @@ class TravelKnobTests(unittest.TestCase):
 class RunnerUnitTests(unittest.TestCase):
     def test_existing_cells_reads_rows(self):
         import tempfile
-        from openpoke import run_rq1
+        from openpokered import run_rq1
         with tempfile.TemporaryDirectory() as tmp:
             path = Path(tmp) / "reach-viridian-city__T2.jsonl"
             row = {"task_id": "reach-viridian-city", "seed": 42,
@@ -313,7 +313,7 @@ class RunnerUnitTests(unittest.TestCase):
             self.assertEqual(cells[("reach-viridian-city", 42)][0]["frames_elapsed"], 100)
 
     def test_aggregate_table_shape_and_oracle_row(self):
-        from openpoke import run_rq1
+        from openpokered import run_rq1
         tier_runs = {
             "T2": [{"task_id": "reach-viridian-city", "seed": 42,
                     "success": True, "frames_elapsed": 1000, "model_calls": 5,

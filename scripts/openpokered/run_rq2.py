@@ -9,8 +9,8 @@ referenced from the calibration artifacts), and the ablation: the same
 planner on a seeded 30%-edge-deleted event graph, ≥3 independent
 deletion samples per task×seed.
 
-    python3 scripts/openpoke/run_rq2.py                    # full matrix
-    python3 scripts/openpoke/run_rq2.py --aggregate-only   # rebuild tables
+    python3 scripts/openpokered/run_rq2.py                    # full matrix
+    python3 scripts/openpokered/run_rq2.py --aggregate-only   # rebuild tables
 
 Budgets follow the calibration convention (2× oracle median frames,
 floor 2000); runs are scripted (no LLM) in `--speed 0` driven-only mode.
@@ -26,12 +26,12 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from openpoke.env import OpenPokeEnv  # noqa: E402
-from openpoke.metrics import RUNS_DIR, RunMetrics  # noqa: E402
-from openpoke.planner import HierarchicalPlanner, ablate, load_graph  # noqa: E402
-from openpoke.run_rq1 import (MATRIX_TASKS, SEEDS,  # noqa: E402
+from openpokered.env import OpenPokeredEnv  # noqa: E402
+from openpokered.metrics import RUNS_DIR, RunMetrics  # noqa: E402
+from openpokered.planner import HierarchicalPlanner, ablate, load_graph  # noqa: E402
+from openpokered.run_rq1 import (MATRIX_TASKS, SEEDS,  # noqa: E402
                               oracle_median_frames, oracle_reference_rows)
-from openpoke.tasks import load_task  # noqa: E402
+from openpokered.tasks import load_task  # noqa: E402
 
 RQ2_DIR = RUNS_DIR / "rq2"
 TASKS_DIR = Path(__file__).resolve().parent / "tasks"
@@ -58,7 +58,7 @@ def run_cell(path, task, seed, condition, graph, ablation_sample=None):
     if ablation_sample is not None:
         metrics.extra["ablation_fraction"] = ABLATION_FRACTION
         metrics.extra["ablation_sample"] = ablation_sample
-    env = OpenPokeEnv(speed=0)
+    env = OpenPokeredEnv(speed=0)
     planner = HierarchicalPlanner(graph, seed=seed)
     try:
         env.reset(task)

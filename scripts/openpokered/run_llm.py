@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 """LLM smoke runner (WP1): one real LLM-driven run of a task spec.
 
-    python3 scripts/openpoke/run_llm.py scripts/openpoke/tasks/reach-viridian-city.json --tier T2 --seed 42
+    python3 scripts/openpokered/run_llm.py scripts/openpokered/tasks/reach-viridian-city.json --tier T2 --seed 42
 
 Spawns the seeded headless game in driven-only mode (`--speed 0`, same as
 the RQ1 calibration matrix), drives it with the tier's LLM policy, and
 appends the run to `target/agent/runs/rq1/smoke/<task>__<tier>.jsonl`
 plus a short SUMMARY.md. Credentials per llm_agent.resolve_credentials
-(OPENAI_BASE_URL+OPENAI_API_KEY, else HF_TOKEN); model via OPENPOKE_MODEL
+(OPENAI_BASE_URL+OPENAI_API_KEY, else HF_TOKEN); model via OPEN_POKERED_MODEL
 or the probed default.
 """
 import argparse
@@ -16,12 +16,12 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from openpoke.env import OpenPokeEnv  # noqa: E402
-from openpoke.llm_agent import (ButtonLlmAgent, ChatClient, SkillLlmAgent,  # noqa: E402
+from openpokered.env import OpenPokeredEnv  # noqa: E402
+from openpokered.llm_agent import (ButtonLlmAgent, ChatClient, SkillLlmAgent,  # noqa: E402
                                 WorldModelLlmAgent, default_model,
                                 resolve_credentials)
-from openpoke.metrics import RUNS_DIR, RunMetrics  # noqa: E402
-from openpoke.tasks import load_task  # noqa: E402
+from openpokered.metrics import RUNS_DIR, RunMetrics  # noqa: E402
+from openpokered.tasks import load_task  # noqa: E402
 
 TIER_CLASSES = {"T1": ButtonLlmAgent, "T2": SkillLlmAgent,
                 "T3": WorldModelLlmAgent}
@@ -37,7 +37,7 @@ def run_llm_cell(task, seed, tier, client, model, frame_budget, out_dir,
     metrics = RunMetrics(task_id=task["id"], seed=seed, tier=tier,
                          policy=cls.POLICY_NAME)
     metrics.extra["model"] = model
-    env = OpenPokeEnv(speed=0)
+    env = OpenPokeredEnv(speed=0)
     policy = cls(client, seed, max_model_calls=max_model_calls)
     try:
         env.reset(task)

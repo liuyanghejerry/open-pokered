@@ -33,7 +33,7 @@ hierarchical planner + 世界模型消融（全脚本、完整执行）。
 - **预算惯例**：T2/T3 帧预算 = 2× oracle 中位帧（floor 2000）；
   T1 = 20000 帧。模型调用封顶 T3 40 / T2 60 / T1 400。
 - **模型**：`Qwen/Qwen2.5-Coder-3B-Instruct`（HF Inference Providers
-  探针可用的最小 instruct 模型），temperature 0，`OPENPOKE_MODEL`
+  探针可用的最小 instruct 模型），temperature 0，`OPEN_POKERED_MODEL`
   环境变量可覆盖；凭据解析顺序 OPENAI_BASE_URL+OPENAI_API_KEY →
   HF_TOKEN。回复严格全串解析，失败计次 + 一次纠错重试 + 有界降级。
 - **tier 语义对齐决定**：RQ1 的 T2 **禁用 travel_to**（WP1 冒烟中模型
@@ -160,12 +160,12 @@ beat-brock 的 goal_unverified 样本暴露了一个结构性依赖：
 OpenAI 兼容端点）后：
 
 ```bash
-python3 scripts/openpoke/run_rq1.py            # 断点续跑，已有 JSONL 自动跳过
-python3 scripts/openpoke/run_rq1.py --aggregate-only   # 仅重建总表（配额安全）
-python3 scripts/openpoke/run_rq2.py            # RQ2 同理（全脚本，随时可重放）
-python3 scripts/openpoke/run_rq2.py --aggregate-only
+python3 scripts/openpokered/run_rq1.py            # 断点续跑，已有 JSONL 自动跳过
+python3 scripts/openpokered/run_rq1.py --aggregate-only   # 仅重建总表（配额安全）
+python3 scripts/openpokered/run_rq2.py            # RQ2 同理（全脚本，随时可重放）
+python3 scripts/openpokered/run_rq2.py --aggregate-only
 ```
 
-测试门禁：`python3 -m unittest scripts.test_openpoke
-scripts.test_openpoke_variants scripts.test_openpoke_rq1
-scripts.test_openpoke_llm scripts.test_openpoke_planner`（64 例）。
+测试门禁：`python3 -m unittest scripts.test_openpokered
+scripts.test_openpokered_variants scripts.test_openpokered_rq1
+scripts.test_openpokered_llm scripts.test_openpokered_planner`（64 例）。

@@ -1,4 +1,4 @@
-"""Skill actions for openpoke (M6): reusable compositions of the semantic
+"""Skill actions for openpokered (M6): reusable compositions of the semantic
 debug commands. Behavior reference: `scripts/playthrough.py`
 (`battle_loop`, `heal_pokecenter`, `train_until`) — ported onto the
 typed `AgentClient`, NOT reimplemented in Rust.

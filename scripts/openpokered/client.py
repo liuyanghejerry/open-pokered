@@ -3,7 +3,7 @@
 Wraps the raw JSON-line `DebugClient` with one method per agent command,
 returning the response `data` (raising on `ok: false`). Plain stdlib.
 
-    from openpoke.client import AgentClient
+    from openpokered.client import AgentClient
     c = AgentClient(9000)
     print(c.observe()["mode"], c.position())
 """
