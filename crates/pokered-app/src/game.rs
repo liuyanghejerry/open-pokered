@@ -2937,6 +2937,39 @@ impl PokemonGame {
         }
     }
 
+    /// Poll and execute pending debug-server commands WITHOUT advancing a
+    /// frame; returns how many ran. The normal update path calls this at
+    /// the top of every frame; driven-only headless mode (`--speed 0`)
+    /// calls it in a low-latency loop so game frames advance ONLY inside
+    /// synchronous commands (step_frames/move_to/...) — driven runs become
+    /// wall-clock-insensitive (exact frame-count determinism) and avoid
+    /// the 16.7ms tick of command latency.
+    #[cfg(feature = "debug-server")]
+    pub fn poll_debug_commands(&mut self) -> usize {
+        let commands = self
+            .debug_handle
+            .as_ref()
+            .map(|h| h.poll_commands())
+            .unwrap_or_default();
+        let count = commands.len();
+        for cmd in commands {
+            let response = self.handle_debug_command(cmd);
+            if let Some(ref handle) = self.debug_handle {
+                handle.send_response(response);
+            }
+        }
+        count
+    }
+
+    /// Debug work queued by earlier commands: pressed buttons waiting to
+    /// be consumed one-per-frame, or RunFrames bursts. Driven-only mode
+    /// drains these through normal updates (same one-per-frame semantics
+    /// as StepFrames bursts).
+    #[cfg(feature = "debug-server")]
+    pub fn debug_work_pending(&self) -> bool {
+        self.pending_debug_frames > 0 || !self.pending_debug_inputs.is_empty()
+    }
+
     fn update_inner(&mut self, input: &InputState) {
         use pokered_core::game_state::Lang;
         self.frame_count += 1;
@@ -2946,19 +2979,7 @@ impl PokemonGame {
         self.ow_ran_last_frame = false;
 
         #[cfg(feature = "debug-server")]
-        {
-            let commands = self
-                .debug_handle
-                .as_ref()
-                .map(|h| h.poll_commands())
-                .unwrap_or_default();
-            for cmd in commands {
-                let response = self.handle_debug_command(cmd);
-                if let Some(ref handle) = self.debug_handle {
-                    handle.send_response(response);
-                }
-            }
-        }
+        self.poll_debug_commands();
 
         // Link play: accept a pending peer and drive the link session
         // (battle/trade state machines) every frame, before any early

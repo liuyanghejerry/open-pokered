@@ -137,6 +137,7 @@ fn main() {
             skip_intro,
             warp,
             seed,
+            speed,
             ref debug_port,
             headless,
             no_audio,
@@ -254,18 +255,39 @@ fn main() {
                 // No window: drive the same update loop at the GB frame rate
                 // without rendering. The debug server (polled inside update)
                 // stays responsive, and step_frames gives drivers exact,
-                // synchronous frame control on top.
+                // synchronous frame control on top. --speed N divides the
+                // per-frame sleep; --speed 0 switches to driven-only mode:
+                // no free-running frames at all (exact determinism).
                 eprintln!("Running headless (no window). Press Ctrl-C to exit.");
                 const FRAME_DURATION: std::time::Duration =
                     std::time::Duration::from_nanos(16_742_706);
                 let mut game = game;
                 let input = InputState::new();
+                #[cfg(feature = "debug-server")]
+                let driven_only = speed == 0 && game.debug_handle.is_some();
+                #[cfg(not(feature = "debug-server"))]
+                let driven_only = false;
+                if speed == 0 && !driven_only {
+                    eprintln!("--speed 0 (driven-only) has no debug server; falling back to --speed 1");
+                }
+                if driven_only {
+                    eprintln!("Driven-only mode: frames advance only via debug commands.");
+                }
                 loop {
+                    #[cfg(feature = "debug-server")]
+                    if driven_only && !game.debug_work_pending() {
+                        game.poll_debug_commands();
+                        if game.should_exit() {
+                            break;
+                        }
+                        std::thread::sleep(std::time::Duration::from_micros(500));
+                        continue;
+                    }
                     game.update(&input);
                     if game.should_exit() {
                         break;
                     }
-                    std::thread::sleep(FRAME_DURATION);
+                    std::thread::sleep(FRAME_DURATION / speed.max(1));
                 }
                 println!("Game exited normally");
             } else {

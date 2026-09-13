@@ -17,6 +17,10 @@ RUNS_DIR = Path(__file__).resolve().parent.parent.parent / "target" / "agent" / 
 class RunMetrics:
     task_id: str
     seed: int
+    # RQ1: which abstraction tier / policy produced this run. Empty for
+    # pre-RQ1 records (M6 oracle runs default to the T3 oracle).
+    tier: str = ""
+    policy: str = ""
     success: bool = False
     failure_reason: str = ""
     env_steps: int = 0
@@ -56,6 +60,8 @@ class RunMetrics:
         return {
             "task_id": self.task_id,
             "seed": self.seed,
+            "tier": self.tier,
+            "policy": self.policy,
             "success": self.success,
             "failure_reason": self.failure_reason,
             "env_steps": self.env_steps,
@@ -77,7 +83,9 @@ class RunMetrics:
     def write(self, directory=None):
         directory = Path(directory) if directory else RUNS_DIR
         directory.mkdir(parents=True, exist_ok=True)
-        path = directory / f"{self.task_id}.jsonl"
+        # RQ1 cells share a task across tiers: disambiguate the file name.
+        stem = f"{self.task_id}__{self.tier}" if self.tier else self.task_id
+        path = directory / f"{stem}.jsonl"
         with open(path, "a") as f:
             f.write(json.dumps(self.to_dict()) + "\n")
         return path

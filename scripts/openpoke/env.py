@@ -45,7 +45,7 @@ def _free_port():
 
 
 class OpenPokeEnv:
-    def __init__(self, binary=None, launch_timeout=20.0, maps_dir=None):
+    def __init__(self, binary=None, launch_timeout=20.0, maps_dir=None, speed=None):
         self.binary = Path(binary) if binary else BIN
         self.launch_timeout = launch_timeout
         # M7: an alternate maps tree (world variant). The desktop build
@@ -53,6 +53,9 @@ class OpenPokeEnv:
         # POKERED_MAPS_DIR redirects map.json/map.blk and --scripts-dir
         # redirects script.scene/script_config.json.
         self.maps_dir = Path(maps_dir) if maps_dir else None
+        # RQ1: --speed for the headless loop; 0 = driven-only (no free-run
+        # frames → exact frame-count determinism + low command latency).
+        self.speed = speed
         self.proc = None
         self.client = None
         self.task = None
@@ -82,6 +85,8 @@ class OpenPokeEnv:
             cmd += ["--save", str(initial["save"])]
         if "warp" in initial:
             cmd += ["--skip-intro", "--warp", initial["warp"]]
+        if self.speed is not None:
+            cmd += ["--speed", str(self.speed)]
         spawn_env = None
         if self.maps_dir is not None:
             cmd += ["--scripts-dir", str(self.maps_dir)]
@@ -100,6 +105,14 @@ class OpenPokeEnv:
                 if time.time() > deadline:
                     raise RuntimeError("game did not come up in time")
                 time.sleep(0.5)
+        # Settle the boot/warp fade-in synchronously: at frame 0 the mode
+        # classifier already reports "overworld"/control_ready, but the
+        # fade-in only plays through update() calls, and travel_to aborts
+        # on the unfinished transition. Free-running headless covers this
+        # on its own; driven-only (--speed 0) only advances frames inside
+        # commands, so the settle must be an explicit fixed burst (same
+        # frame baseline every run).
+        self.client.step(120)
         setup = task.get("setup", {})
         for flag, value in setup.get("flags", {}).items():
             self.client.set_flag(flag, value)
@@ -193,6 +206,13 @@ class OpenPokeEnv:
             self.client.press(arg)
             self.client.step(1)
             return {"pressed": arg}
+        if verb == "drive":
+            # RQ1: hold a button across N frames (walking bursts) as ONE
+            # env step — press_sequence + step_frames.
+            btn, _, n = arg.partition(",")
+            n = int(n or 10)
+            self.client.drive([btn] * n, n)
+            return {"driven": btn, "frames": n}
         if verb == "step_frames":
             self.client.step(int(arg or 1))
             return {"stepped": int(arg or 1)}

@@ -181,6 +181,14 @@ client, Gym-style env, task specs (`tasks/*.json`), run metrics
 planner. Run a task with `python3 scripts/openpoke/run_task.py
 <task.json|all>` (needs a `--features debug-server` binary); unit tests:
 `python3 -m unittest scripts.test_openpoke`.
+RQ1 calibration (`calibrate_rq1.py`) runs the tier matrix — T3 oracle,
+T2 `LocalExplorer`, T1 `ButtonRandomWalk` (`policies.py`) — over task ×
+seed into `target/agent/runs/rq1/` with a SUMMARY.md pivot; unit tests:
+`python3 -m unittest scripts.test_openpoke_rq1`. Experiment runs pass
+`--speed 0` (driven-only headless: game frames advance ONLY inside
+synchronous debug commands — wall-clock-insensitive frame determinism
+and ~10x lower command latency; `--speed N≥1` merely divides the
+16.7ms idle sleep).
 M7 adds world variants for generalization experiments (RQ3), as PURE
 DATA: `variants.py` copies `crates/pokered-data/maps/` and applies seeded
 mutations (encounter-table permutation, level-capped trainer re-rolls,
