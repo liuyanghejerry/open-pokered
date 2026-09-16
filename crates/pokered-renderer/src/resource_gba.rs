@@ -102,6 +102,12 @@ impl ResourceManager {
     /// registry in its 256 KiB EWRAM.
     pub fn clear_cache(&mut self) {
         self.cache.clear();
+        self.cache.shrink_to_fit();
+        // Miss entries are only a lookup optimization. At GBA screen
+        // boundaries their retained Strings and Vec capacity compete with
+        // the next screen's decoded tiles, so trade the rescan for headroom.
+        self.missing.clear();
+        self.missing.shrink_to_fit();
     }
 
     /// Resolve `name` (with or without `.png`, possibly nested like

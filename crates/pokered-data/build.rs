@@ -1777,6 +1777,162 @@ fn generate_tmx_assets(manifest_dir: &Path, out_dir: &str) {
 
 // ── Compiled .scene embedding ──────────────────────────────────────────────
 
+fn write_scene_function(
+    functions: &mut Vec<(String, String, PathBuf)>,
+    out_dir: &Path,
+    map_name: &str,
+    function_name: &str,
+    file_stem: &str,
+    statements: &[dotzuki_engine_dsl::ast::StoryStmt],
+) {
+    fn strip_source_files(value: &mut serde_json::Value) {
+        match value {
+            serde_json::Value::Object(fields) => {
+                if let Some(serde_json::Value::Object(span)) = fields.get_mut("span") {
+                    if let Some(file) = span.get_mut("file") {
+                        *file = serde_json::Value::String(String::new());
+                    }
+                }
+                for child in fields.values_mut() {
+                    strip_source_files(child);
+                }
+            }
+            serde_json::Value::Array(values) => {
+                for child in values {
+                    strip_source_files(child);
+                }
+            }
+            _ => {}
+        }
+    }
+
+    let mut value = serde_json::to_value(statements).unwrap_or_else(|e| {
+        panic!("serialize function {} in {}: {}", function_name, map_name, e)
+    });
+    strip_source_files(&mut value);
+    let bytes = serde_json::to_vec(&value).unwrap_or_else(|e| {
+        panic!("serialize function {} in {}: {}", function_name, map_name, e)
+    });
+    let path = out_dir.join(format!("{}.bin", file_stem));
+    fs::write(&path, bytes).unwrap_or_else(|e| panic!("write {}: {}", path.display(), e));
+    functions.push((map_name.to_string(), function_name.to_string(), path));
+}
+
+fn find_speaker_containing(
+    statements: &[dotzuki_engine_dsl::ast::StoryStmt],
+    needle: &str,
+) -> Option<dotzuki_engine_dsl::ast::StoryStmt> {
+    for statement in statements {
+        if matches!(statement, dotzuki_engine_dsl::ast::StoryStmt::Speaker { .. })
+            && serde_json::to_string(statement).ok()?.contains(needle)
+        {
+            return Some(statement.clone());
+        }
+        if let dotzuki_engine_dsl::ast::StoryStmt::If {
+            then_branch,
+            else_branch,
+            ..
+        } = statement
+        {
+            if let Some(found) = find_speaker_containing(then_branch, needle) {
+                return Some(found);
+            }
+            if let Some(found) = find_speaker_containing(else_branch, needle) {
+                return Some(found);
+            }
+        }
+    }
+    None
+}
+
+/// `talkOak1` contains every late-game Pokédex-rating branch and is much too
+/// large to materialize on GBA just to run its tiny new-game fallback. Emit
+/// pre-pruned early-game leaf bodies; the native engine selects one from the
+/// same flags used by the source-level condition chain.
+fn write_oaks_lab_native_branches(
+    functions: &mut Vec<(String, String, PathBuf)>,
+    out_dir: &Path,
+    statements: &[dotzuki_engine_dsl::ast::StoryStmt],
+) {
+    for (name, needle) in [
+        ("battled", "raise your"),
+        ("starter", "wild POKeMON"),
+        ("choose", "which\\nPOKeMON do you want"),
+    ] {
+        let statement = find_speaker_containing(statements, needle)
+            .unwrap_or_else(|| panic!("talkOak1 leaf '{}' not found", name));
+        write_scene_function(
+            functions,
+            out_dir,
+            "OaksLab",
+            &format!("__native_talkOak1_{}", name),
+            &format!("OaksLab_talkOak1_{}", name),
+            core::slice::from_ref(&statement),
+        );
+    }
+}
+
+fn write_oaks_lab_rival_battle_branches(
+    functions: &mut Vec<(String, String, PathBuf)>,
+    out_dir: &Path,
+    statements: &[dotzuki_engine_dsl::ast::StoryStmt],
+) {
+    use dotzuki_engine_dsl::ast::{Expression, StoryStmt};
+
+    let dont_go = match statements.first() {
+        Some(StoryStmt::If { then_branch, .. }) => then_branch,
+        _ => panic!("coordDontGoAway missing pre-starter branch"),
+    };
+    let battle = match statements.get(1) {
+        Some(StoryStmt::If { then_branch, .. }) => then_branch,
+        _ => panic!("coordDontGoAway missing rival-battle branch"),
+    };
+    let battle_index = battle
+        .iter()
+        .position(|statement| {
+            matches!(
+                statement,
+                StoryStmt::Assign {
+                    value: Expression::Call { callee, .. },
+                    ..
+                } if callee == "startBattle"
+            )
+        })
+        .expect("coordDontGoAway missing startBattle assignment");
+    let before = &battle[..=battle_index];
+    let after = &battle[battle_index + 1..];
+    let (won, lost) = match after.first() {
+        Some(StoryStmt::If {
+            then_branch,
+            else_branch,
+            ..
+        }) => (then_branch, else_branch),
+        _ => panic!("coordDontGoAway missing result branch after startBattle"),
+    };
+    let tail = &after[1..];
+    let mut after_win = won.clone();
+    after_win.extend_from_slice(tail);
+    let mut after_loss = lost.clone();
+    after_loss.extend_from_slice(tail);
+
+    for (name, body) in [
+        ("dont_go", dont_go.as_slice()),
+        ("battle_before", before),
+        ("battle_win", after_win.as_slice()),
+        ("battle_loss", after_loss.as_slice()),
+        ("noop", &[]),
+    ] {
+        write_scene_function(
+            functions,
+            out_dir,
+            "OaksLab",
+            &format!("__native_coordDontGoAway_{}", name),
+            &format!("OaksLab_coordDontGoAway_{}", name),
+            body,
+        );
+    }
+}
+
 /// Compiles every `maps/{MapName}/script.scene` to JavaScript at build time
 /// (via the dotzuki-engine-dsl compiler) and emits `scene_scripts_gen.rs` into
 /// `OUT_DIR` with three static tables:
@@ -1785,6 +1941,8 @@ fn generate_tmx_assets(manifest_dir: &Path, out_dir: &str) {
 /// - `SCENE_ASTS: &[(&str, &[u8])]` — map name → serialized scene AST
 ///   (serde_json of `dotzuki_engine_dsl::ast::GameScene`, consumed by the native
 ///   AST interpreter — see `pokered-core::overworld::native_script`)
+/// - `SCENE_FUNCTIONS: &[(&str, &str, &[u8])]` — map/function → serialized
+///   statement list for memory-constrained targets to decode on demand
 /// - `SCENE_CONFIGS: &[(&str, &str)]` — map name → raw `script_config.json`
 ///
 /// The compiled JS is written to `OUT_DIR/scene_js/{MapName}.js` and pulled
@@ -1814,9 +1972,13 @@ fn generate_scene_scripts(manifest_dir: &Path, out_dir: &str) {
     let ast_out_dir = Path::new(out_dir).join("scene_asts");
     fs::create_dir_all(&ast_out_dir)
         .unwrap_or_else(|e| panic!("create {}: {}", ast_out_dir.display(), e));
+    let function_out_dir = Path::new(out_dir).join("scene_functions");
+    fs::create_dir_all(&function_out_dir)
+        .unwrap_or_else(|e| panic!("create {}: {}", function_out_dir.display(), e));
 
     let mut scripts: Vec<(String, PathBuf)> = Vec::new();
     let mut asts: Vec<(String, PathBuf)> = Vec::new();
+    let mut functions: Vec<(String, String, PathBuf)> = Vec::new();
     let mut configs: Vec<(String, PathBuf)> = Vec::new();
 
     for entry in dir_entries {
@@ -1852,6 +2014,42 @@ fn generate_scene_scripts(manifest_dir: &Path, out_dir: &str) {
             fs::write(&ast_path, ast_bytes)
                 .unwrap_or_else(|e| panic!("write {}: {}", ast_path.display(), e));
             asts.push((map_name.clone(), ast_path));
+
+            for (index, storyline) in ast.storylines.iter().enumerate() {
+                write_scene_function(
+                    &mut functions,
+                    &function_out_dir,
+                    &map_name,
+                    &storyline.name,
+                    &format!("{}_{}", map_name, index),
+                    &storyline.statements,
+                );
+                if map_name == "OaksLab" && storyline.name == "talkOak1" {
+                    write_oaks_lab_native_branches(
+                        &mut functions,
+                        &function_out_dir,
+                        &storyline.statements,
+                    );
+                }
+                if map_name == "OaksLab" && storyline.name == "coordDontGoAway" {
+                    write_oaks_lab_rival_battle_branches(
+                        &mut functions,
+                        &function_out_dir,
+                        &storyline.statements,
+                    );
+                }
+            }
+            if let Some(on_load) = &ast.on_load {
+                let function_name = format!("{}OnLoad", ast.name);
+                write_scene_function(
+                    &mut functions,
+                    &function_out_dir,
+                    &map_name,
+                    &function_name,
+                    &format!("{}_on_load", map_name),
+                    &on_load.statements,
+                );
+            }
         }
 
         let config_path = path.join("script_config.json");
@@ -1894,7 +2092,29 @@ fn generate_scene_scripts(manifest_dir: &Path, out_dir: &str) {
             let ast_path = ast_out_dir.join(format!("shared_{}.bin", stem));
             fs::write(&ast_path, ast_bytes)
                 .unwrap_or_else(|e| panic!("write {}: {}", ast_path.display(), e));
-            asts.push((format!("shared/{}", stem), ast_path));
+            let scene_key = format!("shared/{}", stem);
+            asts.push((scene_key.clone(), ast_path));
+            for (index, storyline) in ast.storylines.iter().enumerate() {
+                write_scene_function(
+                    &mut functions,
+                    &function_out_dir,
+                    &scene_key,
+                    &storyline.name,
+                    &format!("shared_{}_{}", stem, index),
+                    &storyline.statements,
+                );
+            }
+            if let Some(on_load) = &ast.on_load {
+                let function_name = format!("{}OnLoad", ast.name);
+                write_scene_function(
+                    &mut functions,
+                    &function_out_dir,
+                    &scene_key,
+                    &function_name,
+                    &format!("shared_{}_on_load", stem),
+                    &on_load.statements,
+                );
+            }
         }
     }
 
@@ -1928,6 +2148,18 @@ fn generate_scene_scripts(manifest_dir: &Path, out_dir: &str) {
     }
     writeln!(out, "];").unwrap();
 
+    writeln!(out, "pub static SCENE_FUNCTIONS: &[(&str, &str, &[u8])] = &[").unwrap();
+    for (map_name, function_name, function_path) in &functions {
+        let path_str = function_path.to_str().unwrap().replace('\\', "/");
+        writeln!(
+            out,
+            "    ({:?}, {:?}, include_bytes!({:?})),",
+            map_name, function_name, path_str
+        )
+        .unwrap();
+    }
+    writeln!(out, "];").unwrap();
+
     writeln!(out, "pub static SCENE_CONFIGS: &[(&str, &str)] = &[").unwrap();
     for (map_name, config_path) in &configs {
         let path_str = config_path.to_str().unwrap().replace('\\', "/");
@@ -1937,6 +2169,7 @@ fn generate_scene_scripts(manifest_dir: &Path, out_dir: &str) {
 
     writeln!(out, "pub const SCENE_SCRIPT_COUNT: usize = {};", scripts.len()).unwrap();
     writeln!(out, "pub const SCENE_AST_COUNT: usize = {};", asts.len()).unwrap();
+    writeln!(out, "pub const SCENE_FUNCTION_COUNT: usize = {};", functions.len()).unwrap();
 }
 
 fn validate_scene_capabilities(

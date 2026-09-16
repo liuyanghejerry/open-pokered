@@ -2572,9 +2572,22 @@ impl PokemonGame {
         })
     }
 
+    /// Drop decoded overworld graphics before constructing a battle. On GBA,
+    /// the battle parties and state are allocated while the script that
+    /// requested the fight is still suspended; retaining the map cache across
+    /// that heap peak can exhaust EWRAM before the transition renderer gets a
+    /// chance to clear it.
+    fn prepare_gba_battle_allocation(&mut self) {
+        #[cfg(target_os = "none")]
+        if let Some(resources) = self.resources.as_mut() {
+            resources.clear_cache();
+        }
+    }
+
     fn start_wild_battle(&mut self, species: pokered_data::species::Species, level: u8) {
         use pokered_core::pokemon::stats::create_pokemon;
 
+        self.prepare_gba_battle_allocation();
         let mut battle_rng = self.next_battle_rng();
         // Wild DVs are two random bytes (core.asm:6012-6019) — drawn from
         // the (possibly seeded) battle stream so encounters replay. The
@@ -2844,6 +2857,7 @@ impl PokemonGame {
     fn start_trainer_battle(&mut self, trainer_id: &str, rival_triplet_base: Option<u8>) {
         use pokered_core::pokemon::stats::create_pokemon;
 
+        self.prepare_gba_battle_allocation();
         let battle_rng = self.next_battle_rng();
         use pokered_data::species::Species;
         use pokered_data::trainer_data::{get_trainer_party, parse_trainer_id, TrainerClass};
@@ -3709,6 +3723,20 @@ impl PokemonGame {
                         self.sync_overworld_input_edges(input);
                     }
                     self.ow_ran_last_frame = true;
+                    // A black warp frame no longer needs the decoded assets
+                    // from the source map. Release them before core commits
+                    // the destination map and deserializes its scene AST;
+                    // retaining both sets can exhaust GBA EWRAM (notably the
+                    // Pallet Town Oak escort into Oak's Lab).
+                    #[cfg(target_os = "none")]
+                    if matches!(
+                        self.overworld.warp_fade_state,
+                        pokered_core::overworld::WarpFadeState::BlackScreen
+                    ) {
+                        if let Some(resources) = self.resources.as_mut() {
+                            resources.clear_cache();
+                        }
+                    }
                     let action = self.overworld.update_frame(ow_input);
 
                     self.apply_overworld_game_data_requests();
@@ -6947,7 +6975,19 @@ impl PokemonGame {
                     }
                 );
                 if uses_overworld_snapshot && self.battle_vfx.overworld_snapshot.is_none() {
+                    // On GBA the current software framebuffer already is the
+                    // final overworld frame. Release its decoded map assets
+                    // before allocating the transition snapshot; redrawing
+                    // the same frame while retaining those assets exhausts
+                    // EWRAM at the first grass encounter.
+                    #[cfg(target_os = "none")]
+                    if let Some(resources) = self.resources.as_mut() {
+                        resources.clear_cache();
+                    }
                     let mut snapshot = FrameBuffer::new(RenderConfig::new(160, 144), Rgba::BLACK);
+                    #[cfg(target_os = "none")]
+                    snapshot.copy_from(frame_buffer);
+                    #[cfg(not(target_os = "none"))]
                     draw_overworld(
                         &mut self.overworld,
                         &mut self.resources,

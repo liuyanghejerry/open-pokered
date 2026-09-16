@@ -49,7 +49,6 @@ dependencies = [
  "critical-section",
  "once_cell",
  "portable-atomic",
- "qrcodegen-no-heap",
  "serde",
 ]
 
@@ -670,8 +669,8 @@ dependencies = [
 
 [[package]]
 name = "dotzuki-app"
-version = "0.7.1"
-source = "git+https://github.com/liuyanghejerry/dotzuki?branch=feat%2Fagent-serde#f59c1698469130977a496cf66a2420da7202cf36"
+version = "0.8.2"
+source = "git+https://github.com/liuyanghejerry/dotzuki?tag=v0.8.2#7efac8ad2ca7d7ffe9eeb8aaafc0d7373397879e"
 dependencies = [
  "dotzuki-engine",
  "dotzuki-renderer",
@@ -682,8 +681,8 @@ dependencies = [
 
 [[package]]
 name = "dotzuki-audio"
-version = "0.7.1"
-source = "git+https://github.com/liuyanghejerry/dotzuki?branch=feat%2Fagent-serde#f59c1698469130977a496cf66a2420da7202cf36"
+version = "0.8.2"
+source = "git+https://github.com/liuyanghejerry/dotzuki?tag=v0.8.2#7efac8ad2ca7d7ffe9eeb8aaafc0d7373397879e"
 dependencies = [
  "bitflags 2.13.2",
  "log",
@@ -695,8 +694,8 @@ dependencies = [
 
 [[package]]
 name = "dotzuki-engine"
-version = "0.7.1"
-source = "git+https://github.com/liuyanghejerry/dotzuki?branch=feat%2Fagent-serde#f59c1698469130977a496cf66a2420da7202cf36"
+version = "0.8.2"
+source = "git+https://github.com/liuyanghejerry/dotzuki?tag=v0.8.2#7efac8ad2ca7d7ffe9eeb8aaafc0d7373397879e"
 dependencies = [
  "hashbrown 0.15.5",
  "libm",
@@ -707,8 +706,8 @@ dependencies = [
 
 [[package]]
 name = "dotzuki-engine-dsl"
-version = "0.7.1"
-source = "git+https://github.com/liuyanghejerry/dotzuki?branch=feat%2Fagent-serde#f59c1698469130977a496cf66a2420da7202cf36"
+version = "0.8.2"
+source = "git+https://github.com/liuyanghejerry/dotzuki?tag=v0.8.2#7efac8ad2ca7d7ffe9eeb8aaafc0d7373397879e"
 dependencies = [
  "dotzuki-engine-script",
  "hashbrown 0.15.5",
@@ -721,8 +720,8 @@ dependencies = [
 
 [[package]]
 name = "dotzuki-engine-script"
-version = "0.7.1"
-source = "git+https://github.com/liuyanghejerry/dotzuki?branch=feat%2Fagent-serde#f59c1698469130977a496cf66a2420da7202cf36"
+version = "0.8.2"
+source = "git+https://github.com/liuyanghejerry/dotzuki?tag=v0.8.2#7efac8ad2ca7d7ffe9eeb8aaafc0d7373397879e"
 dependencies = [
  "log",
  "serde",
@@ -732,8 +731,8 @@ dependencies = [
 
 [[package]]
 name = "dotzuki-renderer"
-version = "0.7.1"
-source = "git+https://github.com/liuyanghejerry/dotzuki?branch=feat%2Fagent-serde#f59c1698469130977a496cf66a2420da7202cf36"
+version = "0.8.2"
+source = "git+https://github.com/liuyanghejerry/dotzuki?tag=v0.8.2#7efac8ad2ca7d7ffe9eeb8aaafc0d7373397879e"
 dependencies = [
  "dotzuki-engine",
  "error-iter",
@@ -751,8 +750,8 @@ dependencies = [
 
 [[package]]
 name = "dotzuki-rules"
-version = "0.7.1"
-source = "git+https://github.com/liuyanghejerry/dotzuki?branch=feat%2Fagent-serde#f59c1698469130977a496cf66a2420da7202cf36"
+version = "0.8.2"
+source = "git+https://github.com/liuyanghejerry/dotzuki?tag=v0.8.2#7efac8ad2ca7d7ffe9eeb8aaafc0d7373397879e"
 dependencies = [
  "dotzuki-engine",
  "ron",
@@ -762,8 +761,8 @@ dependencies = [
 
 [[package]]
 name = "dotzuki-ui"
-version = "0.7.1"
-source = "git+https://github.com/liuyanghejerry/dotzuki?branch=feat%2Fagent-serde#f59c1698469130977a496cf66a2420da7202cf36"
+version = "0.8.2"
+source = "git+https://github.com/liuyanghejerry/dotzuki?tag=v0.8.2#7efac8ad2ca7d7ffe9eeb8aaafc0d7373397879e"
 dependencies = [
  "dotzuki-engine",
  "dotzuki-renderer",
@@ -771,8 +770,8 @@ dependencies = [
 
 [[package]]
 name = "dotzuki-web"
-version = "0.7.1"
-source = "git+https://github.com/liuyanghejerry/dotzuki?branch=feat%2Fagent-serde#f59c1698469130977a496cf66a2420da7202cf36"
+version = "0.8.2"
+source = "git+https://github.com/liuyanghejerry/dotzuki?tag=v0.8.2#7efac8ad2ca7d7ffe9eeb8aaafc0d7373397879e"
 dependencies = [
  "dotzuki-audio",
  "dotzuki-engine",
@@ -2395,12 +2394,6 @@ name = "pxfm"
 version = "0.1.30"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d55d956fa96f5ec02be2e13af0e20391a5aa83d6a074e3ad368959d0fab299ea"
-
-[[package]]
-name = "qrcodegen-no-heap"
-version = "1.8.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d0e2c0bf8be8a1c4a4f48973dabf26943f05da2bfc2d3180aae62409dbba6f0c"
 
 [[package]]
 name = "quick-xml"
