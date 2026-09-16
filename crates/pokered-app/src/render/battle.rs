@@ -3657,6 +3657,13 @@ fn render_packed_battle_tile_region(
         let row_start = (ty * tile_buf.width_tiles) as usize;
         for tx in start_x..end_x {
             let tile_id = tile_buf.tiles[row_start + tx as usize] as usize;
+            // ScreenTileBuffer initializes untouched cells to the battle-space
+            // tile. The framebuffer was already cleared to white, so decoding
+            // those cells is both incorrect (the packed HP data also occupies
+            // $7F) and needlessly expensive during battle entry.
+            if tile_id == 0x7F {
+                continue;
+            }
             let Some((bytes, tile, one_bpp)) = source(tile_id) else {
                 continue;
             };
