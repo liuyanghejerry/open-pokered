@@ -2156,6 +2156,17 @@ impl PokemonGame {
                             );
                             overworld.state.player.x = px;
                             overworld.state.player.y = py;
+                            // NEW GAME installs the freshly-reset save's
+                            // toggleable-object flags
+                            // (InitializeToggleableObjectsFlags: story-gated
+                            // objects like Pallet Town Oak start hidden).
+                            // Without this the screen's all-zero default makes
+                            // apply_hidden_object_flags re-show them on the
+                            // first warp.
+                            overworld.set_toggleable_object_flags(
+                                self.save_data.game_data.toggleable_object_flags,
+                            );
+                            overworld.apply_hidden_object_flags();
                             overworld.player_name = self.player_name.clone();
                             overworld.rival_name = self.rival_name.clone();
                             overworld.party_count = self.save_data.party.count() as u8;
@@ -2175,6 +2186,14 @@ impl PokemonGame {
                             debug_assert_eq!(self.overworld.state.current_map, map_id);
                             self.overworld.state.player.x = px;
                             self.overworld.state.player.y = py;
+                            // Same NEW GAME seeding as the native arm: install
+                            // the fresh save's toggleable-object flags so
+                            // story-gated objects (Pallet Town Oak) start
+                            // hidden.
+                            self.overworld.set_toggleable_object_flags(
+                                self.save_data.game_data.toggleable_object_flags,
+                            );
+                            self.overworld.apply_hidden_object_flags();
                             self.overworld.player_name = self.player_name.clone();
                             self.overworld.rival_name = self.rival_name.clone();
                             self.overworld.party_count = self.save_data.party.count() as u8;

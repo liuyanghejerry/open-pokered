@@ -941,6 +941,16 @@ impl PokemonGame {
                             OverworldScreen::new(NEW_GAME_WARP.map_id, self.scripts_dir.clone(), PokemonRedData);
                         overworld.state.player.x = NEW_GAME_WARP.coords.x as u16;
                         overworld.state.player.y = NEW_GAME_WARP.coords.y as u16;
+                        // NEW GAME installs the freshly-reset save's
+                        // toggleable-object flags
+                        // (InitializeToggleableObjectsFlags: story-gated
+                        // objects like Pallet Town Oak start hidden); the
+                        // screen's all-zero default would re-show them on the
+                        // first warp.
+                        overworld.set_toggleable_object_flags(
+                            self.save_data.game_data.toggleable_object_flags,
+                        );
+                        overworld.apply_hidden_object_flags();
                         overworld.player_name = self.player_name.clone();
                         overworld.rival_name = self.rival_name.clone();
                         overworld.set_script_lang(if self.state.config.language == pokered_core::game_state::Lang::Zh {
@@ -3941,6 +3951,23 @@ mod tests {
         // Default construction stays English.
         let fresh = PokemonGame::new(pokered_core::data::wild_data::GameVersion::Red);
         assert_eq!(fresh.overworld.script_lang(), Some("en"));
+    }
+
+    #[test]
+    fn new_game_seeds_toggleable_object_flags() {
+        use pokered_data::toggleable_objects::{is_object_hidden, toggle_id_to_bit_index};
+        let mut game = PokemonGame::new(pokered_core::data::wild_data::GameVersion::Red);
+        game.main_menu.last_choice = Some(MainMenuChoice::NewGame);
+        game.state.screen = GameScreen::MainMenu;
+        game.handle_transition(GameScreen::OakSpeech); // resets the in-memory save
+        game.handle_transition(GameScreen::Overworld);
+        // InitializeToggleableObjectsFlags: PALLET_TOWN Oak starts hidden;
+        // unseeded all-zero flags re-showed him on the first warp.
+        let bit = toggle_id_to_bit_index("PALLET_TOWN_OBJ_1").unwrap();
+        assert!(
+            is_object_hidden(game.overworld.toggleable_object_flags(), bit),
+            "NEW GAME must seed the fresh save's toggleable object flags into the overworld"
+        );
     }
 
     #[test]
