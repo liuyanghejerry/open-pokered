@@ -3399,18 +3399,21 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
 
         let map_key = script_bridge::map_id_to_script_key(map_id);
         log::info!(target: "pokered::overworld", "[Script] Loading map script for {:?} (key: {})", map_id, map_key);
-        // Resolve the scene ASTs before mutating the engine (native path).
-        let shared_ast = self.shared_scene_ast();
-        let map_ast = self.map_scene_ast(&map_key);
         // The engine is recreated per map; carry the selected script language
         // ("en"/"zh") over so a LanguageSelect choice survives map transitions
         // (bedroom → downstairs: mom's `@t` dialogue must stay Chinese).
         let script_lang = self.script_engine.script_lang().unwrap_or("en").to_string();
+        // Drop the previous map's interpreter, pending effect and bindings
+        // before deserializing the next AST. On GBA, retaining the old scene
+        // while materializing both the shared and target scenes exceeds EWRAM
+        // during the Pallet Town → Oak's Lab escort transition.
         self.script_engine = super::native_script::OverworldScriptEngine::new();
         self.script_engine.set_lang(&script_lang);
+        self.active_script_effect = None;
+        self.map_script_config = MapScriptConfig::default();
 
+        #[cfg(feature = "script-boa")]
         match &mut self.script_engine {
-            #[cfg(feature = "script-boa")]
             super::native_script::OverworldScriptEngine::Boa(engine) => {
                 if let Some(shared_source) = self.script_loader.get_script("shared/pokecenter") {
                     log::info!(target: "pokered::overworld", "[Script] Loading shared/pokecenter module ({} bytes)", shared_source.len());
@@ -3432,25 +3435,85 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                     log::warn!(target: "pokered::overworld", "[Script] No script found for key '{}'", map_key);
                 }
             }
-            super::native_script::OverworldScriptEngine::Native(engine) => {
-                if let Some(scene) = &shared_ast {
-                    engine.register_shared_scene(scene);
-                }
+        }
+
+        #[cfg(not(feature = "script-boa"))]
+        {
+            let map_ast = self.scene_ast_provider.get_scene(&map_key).cloned();
+            let disk_mode = self.scene_ast_provider.disk_mode;
+            if let super::native_script::OverworldScriptEngine::Native(engine) =
+                &mut self.script_engine
+            {
                 match map_ast {
-                    Some(ref scene) => {
-                        engine.load_map(&map_key, scene);
-                        log::info!(target: "pokered::overworld", "[NativeScript] Loaded AST for {} ({} storylines)", map_key, scene.storylines.len());
+                    Some(scene) => {
+                        let storyline_count = scene.storylines.len();
+                        engine.load_map_owned(&map_key, scene);
+                        log::info!(target: "pokered::overworld", "[NativeScript] Loaded AST for {} ({} storylines)", map_key, storyline_count);
                     }
-                    None => log::warn!(target: "pokered::overworld", "[NativeScript] No scene AST found for key '{}'", map_key),
+                    None if disk_mode => log::warn!(target: "pokered::overworld", "[NativeScript] No disk scene AST found for key '{}'", map_key),
+                    None => {
+                        let count = engine.load_embedded_map(
+                            &map_key,
+                            pokered_data::embedded_scenes::scene_functions(),
+                        );
+                        log::info!(target: "pokered::overworld", "[NativeScript] Registered {} lazy functions for {}", count, map_key);
+                    }
                 }
             }
         }
 
-        self.map_script_config = self
-            .script_loader
-            .get_config(&map_key)
-            .cloned()
-            .unwrap_or_default();
+        self.map_script_config =
+            screen::load_map_script_config(&self.script_loader, &map_key);
+
+        #[cfg(not(feature = "script-boa"))]
+        {
+            let requires_shared =
+                if let super::native_script::OverworldScriptEngine::Native(engine) =
+                    &self.script_engine
+                {
+                    self.map_script_config
+                        .on_load()
+                        .is_some_and(|name| !engine.has_function(name))
+                        || self.map_script_config.npcs.iter().any(|binding| {
+                            binding
+                                .talk
+                                .as_deref()
+                                .is_some_and(|name| !engine.has_function(name))
+                        })
+                        || self
+                            .map_script_config
+                            .signs
+                            .iter()
+                            .any(|binding| !engine.has_function(&binding.talk))
+                        || self
+                            .map_script_config
+                            .coord_events
+                            .iter()
+                            .any(|binding| !engine.has_function(&binding.trigger))
+                } else {
+                    false
+                };
+
+            if requires_shared {
+                let shared_ast = self
+                    .scene_ast_provider
+                    .get_scene("shared/pokecenter")
+                    .cloned();
+                let disk_mode = self.scene_ast_provider.disk_mode;
+                if let super::native_script::OverworldScriptEngine::Native(engine) =
+                    &mut self.script_engine
+                {
+                    if let Some(scene) = &shared_ast {
+                        engine.register_shared_scene(scene);
+                    } else if !disk_mode {
+                        engine.register_embedded_shared(
+                            "shared/pokecenter",
+                            pokered_data::embedded_scenes::scene_functions(),
+                        );
+                    }
+                }
+            }
+        }
 
         log::info!(target: "pokered::overworld", "[Script] Config for {}: {} NPCs, {} signs, {} coord_events",
             map_key,
@@ -3458,8 +3521,6 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
             self.map_script_config.signs.len(),
             self.map_script_config.coord_events.len(),
         );
-
-        self.active_script_effect = None;
 
         self.script_engine
             .seed_flags(&self.unified_flags.to_hashmap());

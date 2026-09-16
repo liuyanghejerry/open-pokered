@@ -21,7 +21,10 @@ perf-benchmark = ["autopilot", "profiling"]
 framebuffer-dump = []
 
 [dependencies]
-agb = "0.25.0"
+# Keep the allocation-free mGBA panic logger, but omit agb's QR/backtrace
+# renderer: when EWRAM is exhausted it allocates while handling the panic and
+# masks the original failure behind a misleading "Double panic" screen.
+agb = { version = "0.25.0", default-features = false, features = ["testing"] }
 getrandom = { version = "0.2", features = ["custom"] }
 dotzuki-engine = { git = "https://github.com/liuyanghejerry/dotzuki", tag = "v0.8.2" }
 log = { version = "0.4", default-features = false }

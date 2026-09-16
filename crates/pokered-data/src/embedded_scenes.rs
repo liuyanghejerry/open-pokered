@@ -45,6 +45,19 @@ pub fn get_scene_ast_bytes(map: &str) -> Option<&'static [u8]> {
         .map(|(_, bytes)| *bytes)
 }
 
+/// Serialized statement lists keyed by `(map, function)`. Unlike a full
+/// [`GameScene`](dotzuki_engine_dsl::ast::GameScene), these can remain in ROM
+/// until the function is actually called, avoiding a large map-wide heap spike
+/// on GBA transitions.
+pub fn scene_functions() -> &'static [(&'static str, &'static str, &'static [u8])] {
+    SCENE_FUNCTIONS
+}
+
+/// Number of embedded, independently decodable script functions.
+pub fn scene_function_count() -> usize {
+    SCENE_FUNCTION_COUNT
+}
+
 /// Every raw `script_config.json` as `(map_name, json)` pairs, sorted by
 /// map name.
 pub fn scene_configs() -> &'static [(&'static str, &'static str)] {
@@ -130,5 +143,80 @@ mod tests {
         );
         let cfg = get_scene_config("PalletTown").expect("PalletTown config embedded");
         assert!(cfg.contains("northExit1"), "config binds northExit1");
+    }
+
+    #[test]
+    fn oaks_lab_early_oak_dialogue_has_small_lazy_branches() {
+        for name in [
+            "__native_talkOak1_battled",
+            "__native_talkOak1_starter",
+            "__native_talkOak1_choose",
+        ] {
+            let bytes = scene_functions()
+                .iter()
+                .find(|(map, function, _)| *map == "OaksLab" && *function == name)
+                .map(|(_, _, bytes)| *bytes)
+                .unwrap_or_else(|| panic!("missing lazy OaksLab branch {name}"));
+            let statements: Vec<dotzuki_engine_dsl::ast::StoryStmt> =
+                serde_json::from_slice(bytes).expect("lazy branch must deserialize");
+            assert_eq!(statements.len(), 1, "{name} stays allocation-bounded");
+        }
+    }
+
+    #[test]
+    fn every_lazy_function_deserializes_without_host_source_paths() {
+        fn assert_spans_are_portable(value: &serde_json::Value, context: &str) {
+            match value {
+                serde_json::Value::Object(fields) => {
+                    if let Some(serde_json::Value::Object(span)) = fields.get("span") {
+                        assert_eq!(
+                            span.get("file").and_then(serde_json::Value::as_str),
+                            Some(""),
+                            "{context} embeds a build-host source path"
+                        );
+                    }
+                    for child in fields.values() {
+                        assert_spans_are_portable(child, context);
+                    }
+                }
+                serde_json::Value::Array(values) => {
+                    for child in values {
+                        assert_spans_are_portable(child, context);
+                    }
+                }
+                _ => {}
+            }
+        }
+
+        for (map, function, bytes) in scene_functions() {
+            let context = format!("{map}::{function}");
+            let value: serde_json::Value = serde_json::from_slice(bytes)
+                .unwrap_or_else(|error| panic!("{context} must deserialize: {error}"));
+            assert_spans_are_portable(&value, &context);
+        }
+    }
+
+    #[test]
+    fn oaks_lab_rival_battle_is_split_at_the_heap_peak() {
+        for name in [
+            "__native_coordDontGoAway_dont_go",
+            "__native_coordDontGoAway_battle_before",
+            "__native_coordDontGoAway_battle_win",
+            "__native_coordDontGoAway_battle_loss",
+            "__native_coordDontGoAway_noop",
+        ] {
+            let bytes = scene_functions()
+                .iter()
+                .find(|(map, function, _)| *map == "OaksLab" && *function == name)
+                .map(|(_, _, bytes)| *bytes)
+                .unwrap_or_else(|| panic!("missing split OaksLab branch {name}"));
+            let _: Vec<dotzuki_engine_dsl::ast::StoryStmt> = serde_json::from_slice(bytes)
+                .unwrap_or_else(|error| panic!("{name} must deserialize: {error}"));
+            assert!(
+                bytes.len() < 8 * 1024,
+                "{name} must stay below the GBA allocation budget, got {} bytes",
+                bytes.len()
+            );
+        }
     }
 }

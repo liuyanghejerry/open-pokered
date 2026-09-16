@@ -67,6 +67,35 @@ pub type MapData<T = TilesetId> = EngineMapData<MapId, T, MusicId>;
 /// Pokémon-specific overworld state wrapper.
 pub type OverworldState = EngineOverworldState<MapId>;
 
+/// Resolve the current map's script bindings. The bare-metal
+/// `dotzuki-engine-script` loader is intentionally a zero-storage shim, so
+/// GBA builds must deserialize the one embedded config they need on entry.
+/// Keeping only the current map's config also avoids retaining all 248 JSON
+/// configs in EWRAM.
+pub(super) fn load_map_script_config(
+    script_loader: &ScriptLoader,
+    map_key: &str,
+) -> MapScriptConfig {
+    if let Some(config) = script_loader.get_config(map_key) {
+        return config.clone();
+    }
+
+    pokered_data::embedded_scenes::get_scene_config(map_key)
+        .and_then(|json| match serde_json::from_str(json) {
+            Ok(config) => Some(config),
+            Err(error) => {
+                log::warn!(
+                    target: "pokered::overworld",
+                    "[SceneLoader] embedded config parse error for {}: {}",
+                    map_key,
+                    error
+                );
+                None
+            }
+        })
+        .unwrap_or_default()
+}
+
 // ── Overworld SFX Events ──────────────────────────────────────────
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -1015,32 +1044,27 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
         }
         #[cfg(not(feature = "script-boa"))]
         {
-            // Same all-or-nothing convention as the JS loader: a `--scripts-dir`
-            // provider shadows the embedded ASTs entirely; otherwise the
-            // provider only holds runtime injections and misses fall back.
-            let use_disk = scene_ast_provider.disk_mode;
-            let shared = if use_disk {
-                scene_ast_provider.get_scene("shared/pokecenter").cloned()
-            } else {
-                pokered_data::embedded_scenes::get_scene_ast("shared/pokecenter")
-            };
-            if let Some(scene) = shared {
-                script_engine.register_shared_scene_native(&scene);
+            let embedded_functions = pokered_data::embedded_scenes::scene_functions();
+            if let Some(scene) = scene_ast_provider.get_scene("shared/pokecenter") {
+                script_engine.register_shared_scene_native(scene);
+            } else if !scene_ast_provider.disk_mode {
+                script_engine.register_embedded_shared_native(
+                    "shared/pokecenter",
+                    embedded_functions,
+                );
             }
-            let map_scene = if use_disk {
-                scene_ast_provider.get_scene(&map_key).cloned()
+            if let Some(scene) = scene_ast_provider.get_scene(&map_key) {
+                script_engine.load_map_native(&map_key, scene);
+            } else if scene_ast_provider.disk_mode {
+                log::warn!(target: "pokered::overworld", "[SceneLoader] no disk scene AST found for start map '{}'", map_key);
             } else {
-                pokered_data::embedded_scenes::get_scene_ast(&map_key)
-            };
-            match map_scene {
-                Some(scene) => script_engine.load_map_native(&map_key, &scene),
-                None => log::warn!(target: "pokered::overworld", "[SceneLoader] no scene AST found for start map '{}'", map_key),
+                let count = script_engine.load_embedded_map_native(&map_key, embedded_functions);
+                if count == 0 {
+                    log::warn!(target: "pokered::overworld", "[SceneLoader] no embedded functions found for start map '{}'", map_key);
+                }
             }
         }
-        let map_script_config = script_loader
-            .get_config(&map_key)
-            .cloned()
-            .unwrap_or_default();
+        let map_script_config = load_map_script_config(&script_loader, &map_key);
 
         let hidden_npc_ids = map_script_config.hidden_npc_ids();
         let npc_states = map_data

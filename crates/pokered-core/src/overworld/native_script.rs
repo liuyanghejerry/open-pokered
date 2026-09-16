@@ -18,6 +18,7 @@
 //! `storyline_trashCans` function.
 
 use crate::alloc_prelude::*;
+use alloc::rc::Rc;
 #[cfg(not(target_os = "none"))]
 use crate::hash_compat::HashMap;
 #[cfg(target_os = "none")]
@@ -652,7 +653,11 @@ fn zh_or_en(lang: &str, en: &str, zh: &str) -> String {
 /// native trash-can puzzle.
 #[derive(Clone)]
 enum FunctionDef {
-    Story(Vec<StoryStmt>),
+    Story(Rc<[StoryStmt]>),
+    /// JSON-serialized `Vec<StoryStmt>` retained in ROM and decoded only when
+    /// the function runs. This keeps map transitions from materializing every
+    /// storyline at once on memory-constrained targets such as GBA.
+    Embedded(&'static [u8]),
     VgymTrash,
 }
 
@@ -672,6 +677,8 @@ pub struct NativeScriptEngine {
     shared_functions: HashMap<String, FunctionDef>,
     vgym: VgymTrashState,
     state: InterpState,
+    split_battle_active: bool,
+    split_battle_waiting: bool,
 }
 
 impl NativeScriptEngine {
@@ -682,6 +689,8 @@ impl NativeScriptEngine {
             shared_functions: HashMap::default(),
             vgym: VgymTrashState::new(),
             state: InterpState::Idle,
+            split_battle_active: false,
+            split_battle_waiting: false,
         }
     }
 
@@ -694,9 +703,36 @@ impl NativeScriptEngine {
     pub fn register_shared_scene(&mut self, scene: &GameScene) {
         for storyline in &scene.storylines {
             for name in [storyline.name.clone(), format!("storyline_{}", storyline.name)] {
-                let def = FunctionDef::Story(storyline.statements.clone());
-                self.functions.insert(name.clone(), def.clone());
+                let def = FunctionDef::Story(Rc::from(
+                    storyline.statements.clone().into_boxed_slice(),
+                ));
+                // A map-local storyline must shadow the shared fallback even
+                // when the shared module is registered after the map. GBA
+                // loads in that order to keep peak AST memory bounded.
+                if !self.functions.contains_key(&name) {
+                    self.functions.insert(name.clone(), def.clone());
+                }
                 self.shared_functions.insert(name, def);
+            }
+        }
+    }
+
+    /// Register a shared scene from independently serialized functions.
+    pub fn register_embedded_shared(
+        &mut self,
+        map_name: &str,
+        entries: &'static [(&'static str, &'static str, &'static [u8])],
+    ) {
+        for (_, function_name, bytes) in entries.iter().filter(|(map, _, _)| *map == map_name) {
+            let def = FunctionDef::Embedded(bytes);
+            for name in [
+                (*function_name).to_string(),
+                format!("storyline_{}", function_name),
+            ] {
+                if !self.functions.contains_key(&name) {
+                    self.functions.insert(name.clone(), def.clone());
+                }
+                self.shared_functions.insert(name, def.clone());
             }
         }
     }
@@ -716,7 +752,9 @@ impl NativeScriptEngine {
                 self.functions
                     .insert("storyline_trashCans".to_string(), FunctionDef::VgymTrash);
             } else {
-                let def = FunctionDef::Story(storyline.statements.clone());
+                let def = FunctionDef::Story(Rc::from(
+                    storyline.statements.clone().into_boxed_slice(),
+                ));
                 self.functions
                     .insert(format!("storyline_{}", storyline.name), def.clone());
                 self.functions.insert(storyline.name.clone(), def);
@@ -725,9 +763,61 @@ impl NativeScriptEngine {
         if let Some(on_load) = &scene.on_load {
             self.functions.insert(
                 format!("{}OnLoad", scene.name),
-                FunctionDef::Story(on_load.statements.clone()),
+                FunctionDef::Story(Rc::from(on_load.statements.clone().into_boxed_slice())),
             );
         }
+    }
+
+    /// Load a scene by value, transferring its statement buffers into the
+    /// function table. This avoids cloning an entire map AST after
+    /// deserialization and lets the bare/prefixed function aliases share one
+    /// allocation, which is essential for large GBA scenes such as Oak's Lab.
+    pub fn load_map_owned(&mut self, map_name: &str, scene: GameScene) {
+        self.functions = self.shared_functions.clone();
+        for storyline in scene.storylines {
+            if map_name == "VermilionGym" && storyline.name == "trashCans" {
+                self.functions
+                    .insert("storyline_trashCans".to_string(), FunctionDef::VgymTrash);
+            } else {
+                let name = storyline.name;
+                let def = FunctionDef::Story(Rc::from(storyline.statements.into_boxed_slice()));
+                self.functions
+                    .insert(format!("storyline_{}", name), def.clone());
+                self.functions.insert(name, def);
+            }
+        }
+        if let Some(on_load) = scene.on_load {
+            self.functions.insert(
+                format!("{}OnLoad", scene.name),
+                FunctionDef::Story(Rc::from(on_load.statements.into_boxed_slice())),
+            );
+        }
+    }
+
+    /// Load a map by registering its ROM-backed functions without decoding
+    /// their statements. Only the function invoked by a trigger is expanded.
+    pub fn load_embedded_map(
+        &mut self,
+        map_name: &str,
+        entries: &'static [(&'static str, &'static str, &'static [u8])],
+    ) -> usize {
+        self.functions = self.shared_functions.clone();
+        let mut count = 0;
+        for (_, function_name, bytes) in entries.iter().filter(|(map, _, _)| *map == map_name) {
+            count += 1;
+            if map_name == "VermilionGym" && *function_name == "trashCans" {
+                self.functions
+                    .insert("storyline_trashCans".to_string(), FunctionDef::VgymTrash);
+                self.functions
+                    .insert("trashCans".to_string(), FunctionDef::VgymTrash);
+                continue;
+            }
+            let def = FunctionDef::Embedded(bytes);
+            self.functions
+                .insert(format!("storyline_{}", function_name), def.clone());
+            self.functions.insert((*function_name).to_string(), def);
+        }
+        count
     }
 
     pub fn state(&self) -> InterpState {
@@ -813,6 +903,22 @@ impl NativeScriptEngine {
         &mut self,
         fn_name: &str,
     ) -> Result<Option<ScriptCommand>, String> {
+        let variant = if fn_name == "talkOak1"
+            && self.functions.contains_key("__native_talkOak1_choose")
+        {
+            Some(self.oaks_lab_oak1_variant())
+        } else if fn_name == "coordDontGoAway"
+            && self
+                .functions
+                .contains_key("__native_coordDontGoAway_battle_before")
+        {
+            Some(self.oaks_lab_exit_variant())
+        } else {
+            None
+        };
+        let fn_name = variant.as_deref().unwrap_or(fn_name);
+        self.split_battle_active = fn_name == "__native_coordDontGoAway_battle_before";
+        self.split_battle_waiting = false;
         let resolved = if self.functions.contains_key(fn_name) {
             fn_name.to_string()
         } else {
@@ -823,7 +929,7 @@ impl NativeScriptEngine {
             .get(&resolved)
             .cloned()
             .ok_or_else(|| format!("function not found: {}", fn_name))?;
-        match def {
+        let outcome = match def {
             FunctionDef::VgymTrash => {
                 log::info!(target: "pokered::overworld", "[NativeScript] VermilionGym trash-can puzzle start");
                 self.vgym.start(self.interp.host_mut());
@@ -836,24 +942,89 @@ impl NativeScriptEngine {
                 Ok(cmd)
             }
             FunctionDef::Story(stmts) => {
-                self.interp.load_function(&stmts);
-                self.state = InterpState::Running;
-                let cmd = self.interp.tick();
-                match cmd {
-                    Ok(Some(c)) => {
-                        self.state = InterpState::WaitingForCommand;
-                        Ok(Some(c))
-                    }
-                    Ok(None) => {
-                        self.state = InterpState::Idle;
-                        Ok(None)
-                    }
-                    Err(e) => {
-                        log::warn!(target: "pokered::overworld", "[NativeScript] script error in {}: {}", fn_name, e);
-                        self.state = InterpState::Finished;
-                        Ok(None)
-                    }
-                }
+                self.start_story(fn_name, stmts.as_ref())
+            }
+            FunctionDef::Embedded(bytes) => {
+                let stmts: Vec<StoryStmt> = serde_json::from_slice(bytes)
+                    .map_err(|e| format!("decode embedded function {}: {}", fn_name, e))?;
+                self.start_story(fn_name, &stmts)
+            }
+        };
+        self.track_split_battle_command(&outcome);
+        outcome
+    }
+
+    fn oaks_lab_oak1_variant(&self) -> String {
+        let host = self.interp.host();
+        let flag = |name: &str| host.flags.get(name).copied().unwrap_or(false);
+        if flag("EVENT_GOT_POKEDEX")
+            || (flag("EVENT_BATTLED_RIVAL_IN_OAKS_LAB")
+                && host
+                    .sets
+                    .get("bag")
+                    .is_some_and(|items| items.iter().any(|item| item == "OAKS_PARCEL")))
+        {
+            return "talkOak1".to_string();
+        }
+        if flag("EVENT_BATTLED_RIVAL_IN_OAKS_LAB") {
+            return "__native_talkOak1_battled".to_string();
+        }
+        if flag("EVENT_GOT_STARTER") {
+            return "__native_talkOak1_starter".to_string();
+        }
+        "__native_talkOak1_choose".to_string()
+    }
+
+    fn oaks_lab_exit_variant(&self) -> String {
+        let host = self.interp.host();
+        let flag = |name: &str| host.flags.get(name).copied().unwrap_or(false);
+        if flag("EVENT_GOT_STARTER") && !flag("EVENT_BATTLED_RIVAL_IN_OAKS_LAB") {
+            "__native_coordDontGoAway_battle_before".to_string()
+        } else if flag("EVENT_OAK_ASKED_TO_CHOOSE_MON") && !flag("EVENT_GOT_STARTER") {
+            "__native_coordDontGoAway_dont_go".to_string()
+        } else {
+            "__native_coordDontGoAway_noop".to_string()
+        }
+    }
+
+    fn track_split_battle_command(
+        &mut self,
+        outcome: &Result<Option<ScriptCommand>, String>,
+    ) {
+        if self.split_battle_active
+            && matches!(outcome, Ok(Some(ScriptCommand::StartBattle { .. })))
+        {
+            self.split_battle_waiting = true;
+            // The continuation is stored as a separate ROM blob, so the
+            // interpreter no longer needs the pre-battle frame. Release it
+            // before the app constructs BattleScreen and its render caches;
+            // waiting until the battle result arrives is too late for GBA's
+            // peak heap usage.
+            self.interp.load_function(&[]);
+            let _ = self.interp.tick();
+        }
+    }
+
+    fn start_story(
+        &mut self,
+        fn_name: &str,
+        stmts: &[StoryStmt],
+    ) -> Result<Option<ScriptCommand>, String> {
+        self.interp.load_function(stmts);
+        self.state = InterpState::Running;
+        match self.interp.tick() {
+            Ok(Some(command)) => {
+                self.state = InterpState::WaitingForCommand;
+                Ok(Some(command))
+            }
+            Ok(None) => {
+                self.state = InterpState::Idle;
+                Ok(None)
+            }
+            Err(error) => {
+                log::warn!(target: "pokered::overworld", "[NativeScript] script error in {}: {}", fn_name, error);
+                self.state = InterpState::Finished;
+                Ok(None)
             }
         }
     }
@@ -863,7 +1034,7 @@ impl NativeScriptEngine {
         if self.vgym.is_active() {
             return self.vgym.tick();
         }
-        match self.state {
+        let command = match self.state {
             InterpState::WaitingForCommand => {
                 self.interp.tick().unwrap_or_else(|e| {
                     log::warn!(target: "pokered::overworld", "[NativeScript] tick error: {}", e);
@@ -887,7 +1058,15 @@ impl NativeScriptEngine {
                 }
             },
             InterpState::Idle | InterpState::Finished => None,
+        };
+        if self.split_battle_active
+            && matches!(command, Some(ScriptCommand::StartBattle { .. }))
+        {
+            self.split_battle_waiting = true;
+            self.interp.load_function(&[]);
+            let _ = self.interp.tick();
         }
+        command
     }
 
     /// Deliver the result of the dispatched command and resume the script,
@@ -905,7 +1084,25 @@ impl NativeScriptEngine {
             self.state = InterpState::Idle;
             return Ok(None);
         }
-        match self.interp.signal_done(result) {
+        if self.split_battle_waiting {
+            let won = matches!(&result, CommandResult::Text(value) if value == "win");
+            let continuation = if won {
+                "__native_coordDontGoAway_battle_win"
+            } else {
+                "__native_coordDontGoAway_battle_loss"
+            };
+            self.split_battle_active = false;
+            self.split_battle_waiting = false;
+
+            let bytes = match self.functions.get(continuation) {
+                Some(FunctionDef::Embedded(bytes)) => *bytes,
+                _ => return Err(format!("missing split-battle continuation: {}", continuation)),
+            };
+            let statements: Vec<StoryStmt> = serde_json::from_slice(bytes)
+                .map_err(|e| format!("decode {}: {}", continuation, e))?;
+            return self.start_story(continuation, &statements);
+        }
+        let outcome = match self.interp.signal_done(result) {
             Ok(Some(cmd)) => {
                 self.state = InterpState::WaitingForCommand;
                 Ok(Some(cmd))
@@ -919,7 +1116,9 @@ impl NativeScriptEngine {
                 self.state = InterpState::Finished;
                 Ok(None)
             }
-        }
+        };
+        self.track_split_battle_command(&outcome);
+        outcome
     }
 }
 
@@ -939,6 +1138,8 @@ pub struct NativeScriptEngineSnapshot {
     interp: Interpreter<NativeHost>,
     vgym: VgymTrashState,
     state: InterpState,
+    split_battle_active: bool,
+    split_battle_waiting: bool,
 }
 
 impl NativeScriptEngine {
@@ -948,6 +1149,8 @@ impl NativeScriptEngine {
             interp: self.interp.clone(),
             vgym: self.vgym.clone(),
             state: self.state,
+            split_battle_active: self.split_battle_active,
+            split_battle_waiting: self.split_battle_waiting,
         }
     }
 
@@ -958,6 +1161,8 @@ impl NativeScriptEngine {
         self.interp = snapshot.interp.clone();
         self.vgym = snapshot.vgym.clone();
         self.state = snapshot.state;
+        self.split_battle_active = snapshot.split_battle_active;
+        self.split_battle_waiting = snapshot.split_battle_waiting;
     }
 }
 
@@ -1172,11 +1377,37 @@ impl OverworldScriptEngine {
         }
     }
 
+    /// Register shared native functions while leaving their statements in ROM.
+    #[cfg(not(feature = "script-boa"))]
+    pub fn register_embedded_shared_native(
+        &mut self,
+        map_name: &str,
+        entries: &'static [(&'static str, &'static str, &'static [u8])],
+    ) {
+        match self {
+            OverworldScriptEngine::Native(engine) => {
+                engine.register_embedded_shared(map_name, entries)
+            }
+        }
+    }
+
     /// Load a map's native scene AST.
     #[cfg(not(feature = "script-boa"))]
     pub fn load_map_native(&mut self, map_name: &str, scene: &dotzuki_engine_dsl::ast::GameScene) {
         match self {
             OverworldScriptEngine::Native(e) => e.load_map(map_name, scene),
+        }
+    }
+
+    /// Register an embedded map's native functions without decoding them.
+    #[cfg(not(feature = "script-boa"))]
+    pub fn load_embedded_map_native(
+        &mut self,
+        map_name: &str,
+        entries: &'static [(&'static str, &'static str, &'static [u8])],
+    ) -> usize {
+        match self {
+            OverworldScriptEngine::Native(engine) => engine.load_embedded_map(map_name, entries),
         }
     }
 
@@ -1312,6 +1543,37 @@ mod tests {
         let mut host = NativeHost::new();
         let err = host.call("noSuchFunction", &[]).unwrap_err();
         assert!(err.contains("unknown game function"));
+    }
+
+    #[test]
+    fn oaks_lab_rival_battle_releases_pre_battle_ast_before_continuation() {
+        let mut engine = NativeScriptEngine::new();
+        engine.load_embedded_map(
+            "OaksLab",
+            pokered_data::embedded_scenes::scene_functions(),
+        );
+        engine.set_flag("EVENT_GOT_STARTER", true);
+
+        let mut next = engine.call_function_no_args("coordDontGoAway").unwrap();
+        let mut saw_battle = false;
+        for _ in 0..32 {
+            match next {
+                Some(ScriptCommand::StartBattle { ref trainer_id }) => {
+                    assert_eq!(trainer_id, "OPP_RIVAL1");
+                    saw_battle = true;
+                    next = engine
+                        .signal_done(CommandResult::Text("win".to_string()))
+                        .unwrap();
+                    break;
+                }
+                Some(_) => next = engine.signal_done(CommandResult::Void).unwrap(),
+                None => break,
+            }
+        }
+        assert!(saw_battle, "split pre-battle segment must reach Blue's battle");
+        assert!(next.is_some(), "winning must start the post-battle continuation");
+        assert!(!engine.split_battle_active);
+        assert!(!engine.split_battle_waiting);
     }
 
     #[test]

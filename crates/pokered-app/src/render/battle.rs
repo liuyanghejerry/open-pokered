@@ -545,7 +545,6 @@ pub struct BattleVisualEffects {
     pub overworld_snapshot: Option<FrameBuffer>,
     pub victory_music_played: bool,
     #[cfg(target_os = "none")]
-    battle_tileset: Option<Rc<TileSet>>,
     #[cfg(target_os = "none")]
     scaled_player_back: Option<(String, Rc<TileSet>)>,
     #[cfg(target_os = "none")]
@@ -892,7 +891,6 @@ impl Default for BattleVisualEffects {
             overworld_snapshot: None,
             victory_music_played: false,
             #[cfg(target_os = "none")]
-            battle_tileset: None,
             #[cfg(target_os = "none")]
             scaled_player_back: None,
             #[cfg(target_os = "none")]
@@ -3450,7 +3448,7 @@ fn build_battle_tileset(rm: &mut ResourceManager) -> TileSet {
 
     // 1. Font tiles at $80-$FF (128 tiles from font.png, loaded as 1bpp)
     if let Ok(cached) = rm.load_font("font") {
-        let font_ts = cached.tileset.clone();
+        let font_ts = &cached.tileset;
         for i in 0..font_ts.len().min(128) {
             ts.set(0x80 + i, font_ts.get(i).clone());
         }
@@ -3459,7 +3457,7 @@ fn build_battle_tileset(rm: &mut ResourceManager) -> TileSet {
     // 2. TextBox tiles at $60-$7F (from font_extra.png, 2bpp)
     //    Must load as 2bpp — can't use load_font() which forces 1bpp.
     if let Ok(cached) = rm.load_asset_2bpp(AssetCategory::Font, "font_extra.png") {
-        let extra_ts = cached.tileset.clone();
+        let extra_ts = &cached.tileset;
         for i in 0..extra_ts.len().min(32) {
             ts.set(0x60 + i, extra_ts.get(i).clone());
         }
@@ -3468,7 +3466,7 @@ fn build_battle_tileset(rm: &mut ResourceManager) -> TileSet {
     // 3. HP bar + status tiles at $62+ (from font_battle_extra.png, 2bpp)
     //    OVERWRITES $62+ from step 2.
     if let Ok(cached) = rm.load_asset_2bpp(AssetCategory::Font, "font_battle_extra.png") {
-        let hp_ts = cached.tileset.clone();
+        let hp_ts = &cached.tileset;
         for i in 0..hp_ts.len() {
             ts.set(0x62 + i, hp_ts.get(i).clone());
         }
@@ -3479,7 +3477,7 @@ fn build_battle_tileset(rm: &mut ResourceManager) -> TileSet {
     //    and loads via CopyVideoDataDouble which doubles each byte (1bpp→2bpp).
     //    battle_hud_1.png (1bpp, 3 tiles) → $6D
     if let Ok(cached) = rm.load_asset_1bpp(AssetCategory::Battle, "battle_hud_1.png") {
-        let hud1 = cached.tileset.clone();
+        let hud1 = &cached.tileset;
         for i in 0..hud1.len() {
             ts.set(0x6D + i, hud1.get(i).clone());
         }
@@ -3488,13 +3486,13 @@ fn build_battle_tileset(rm: &mut ResourceManager) -> TileSet {
     //    battle_hud_2.png (1bpp, 3 tiles) → $73
     //    battle_hud_3.png (1bpp, 3 tiles) → concatenated after hud_2 at $73+3
     if let Ok(cached) = rm.load_asset_1bpp(AssetCategory::Battle, "battle_hud_2.png") {
-        let hud2 = cached.tileset.clone();
+        let hud2 = &cached.tileset;
         let hud2_len = hud2.len();
         for i in 0..hud2_len {
             ts.set(0x73 + i, hud2.get(i).clone());
         }
         if let Ok(cached3) = rm.load_asset_1bpp(AssetCategory::Battle, "battle_hud_3.png") {
-            let hud3 = cached3.tileset.clone();
+            let hud3 = &cached3.tileset;
             for i in 0..hud3.len() {
                 ts.set(0x73 + hud2_len + i, hud3.get(i).clone());
             }
@@ -3505,7 +3503,7 @@ fn build_battle_tileset(rm: &mut ResourceManager) -> TileSet {
     //    Original loads via CopyVideoData into vSprites tile $31 (OAM).
     //    We render them in the background tilemap instead.
     if let Ok(cached) = rm.load_asset_2bpp(AssetCategory::Battle, "balls.png") {
-        let balls_ts = cached.tileset.clone();
+        let balls_ts = &cached.tileset;
         for i in 0..balls_ts.len().min(5) {
             ts.set(0x31 + i, balls_ts.get(i).clone());
         }
@@ -3595,16 +3593,91 @@ fn blit_battle_tileset_on_white(
 }
 
 #[cfg(target_os = "none")]
-fn cached_battle_tileset(
-    effects: &mut BattleVisualEffects,
-    rm: &mut ResourceManager,
-) -> Rc<TileSet> {
-    if let Some(tileset) = effects.battle_tileset.as_ref() {
-        return Rc::clone(tileset);
+fn render_packed_battle_tile_buffer(fb: &mut FrameBuffer, tile_buf: &ScreenTileBuffer) {
+    render_packed_battle_tile_region(
+        fb,
+        tile_buf,
+        0,
+        0,
+        tile_buf.width_tiles,
+        tile_buf.height_tiles,
+    );
+}
+
+#[cfg(target_os = "none")]
+fn render_packed_battle_tile_region(
+    fb: &mut FrameBuffer,
+    tile_buf: &ScreenTileBuffer,
+    start_x: u32,
+    start_y: u32,
+    width_tiles: u32,
+    height_tiles: u32,
+) {
+    use pokered_renderer::gba_assets::get_preconverted_asset;
+
+    let font = get_preconverted_asset("font", "font").unwrap_or(&[]);
+    let extra = get_preconverted_asset("font", "font_extra").unwrap_or(&[]);
+    let hp = get_preconverted_asset("font", "font_battle_extra").unwrap_or(&[]);
+    let hud1 = get_preconverted_asset("battle", "battle_hud_1").unwrap_or(&[]);
+    let hud2 = get_preconverted_asset("battle", "battle_hud_2").unwrap_or(&[]);
+    let hud3 = get_preconverted_asset("battle", "battle_hud_3").unwrap_or(&[]);
+    let balls = get_preconverted_asset("battle", "balls").unwrap_or(&[]);
+    let hud2_tiles = hud2.len() / 16;
+
+    let source = |tile_id: usize| -> Option<(&[u8], usize, bool)> {
+        let in_range = |bytes: &[u8], start: usize, bytes_per_tile: usize| {
+            tile_id
+                .checked_sub(start)
+                .filter(|index| *index < bytes.len() / bytes_per_tile)
+        };
+        if let Some(index) = in_range(balls, 0x31, 16) {
+            Some((balls, index, false))
+        } else if let Some(index) = in_range(hud3, 0x73 + hud2_tiles, 16) {
+            Some((hud3, index, false))
+        } else if let Some(index) = in_range(hud2, 0x73, 16) {
+            Some((hud2, index, false))
+        } else if let Some(index) = in_range(hud1, 0x6D, 16) {
+            Some((hud1, index, false))
+        } else if let Some(index) = in_range(hp, 0x62, 8) {
+            Some((hp, index, true))
+        } else if let Some(index) = in_range(extra, 0x60, 8) {
+            Some((extra, index, true))
+        } else {
+            in_range(font, 0x80, 8).map(|index| (font, index, true))
+        }
+    };
+
+    let width = fb.width() as usize;
+    let max_tiles_x = tile_buf.width_tiles.min(fb.width() / TILE_SIZE);
+    let max_tiles_y = tile_buf.height_tiles.min(fb.height() / TILE_SIZE);
+    let end_x = start_x.saturating_add(width_tiles).min(max_tiles_x);
+    let end_y = start_y.saturating_add(height_tiles).min(max_tiles_y);
+    let pixels = fb.indices_mut();
+    for ty in start_y..end_y {
+        let row_start = (ty * tile_buf.width_tiles) as usize;
+        for tx in start_x..end_x {
+            let tile_id = tile_buf.tiles[row_start + tx as usize] as usize;
+            let Some((bytes, tile, one_bpp)) = source(tile_id) else {
+                continue;
+            };
+            let pixel_x = tx as usize * TILE_SIZE as usize;
+            let pixel_y = ty as usize * TILE_SIZE as usize;
+            for row in 0..TILE_SIZE as usize {
+                for col in 0..TILE_SIZE as usize {
+                    let bit = 7 - col;
+                    let color = if one_bpp {
+                        let byte = bytes[tile * 8 + row];
+                        if (byte >> bit) & 1 == 1 { 3 } else { 0 }
+                    } else {
+                        let offset = tile * 16 + row * 2;
+                        ((bytes[offset + 1] >> bit) & 1) << 1
+                            | ((bytes[offset] >> bit) & 1)
+                    };
+                    pixels[(pixel_y + row) * width + pixel_x + col] = color;
+                }
+            }
+        }
     }
-    let tileset = Rc::new(build_battle_tileset(rm));
-    effects.battle_tileset = Some(Rc::clone(&tileset));
-    tileset
 }
 
 #[cfg(target_os = "none")]
@@ -3621,6 +3694,7 @@ fn cached_scaled_player_back(
     let cached = rm.load_pokemon_back(sprite_name).ok()?;
     let src_tpr = (cached.source_size.0 / TILE_SIZE) as usize;
     let scaled = Rc::new(scale_sprite_by_two(&cached.tileset, src_tpr));
+    rm.clear_cache();
     effects.scaled_player_back = Some((sprite_name.to_string(), Rc::clone(&scaled)));
     Some(scaled)
 }
@@ -3643,6 +3717,7 @@ fn cached_scaled_trainer_back(
     };
     let src_tpr = (cached.source_size.0 / TILE_SIZE) as usize;
     let scaled = Rc::new(scale_sprite_by_two(&cached.tileset, src_tpr));
+    rm.clear_cache();
     effects.scaled_trainer_back = Some((old_man, Rc::clone(&scaled)));
     Some(scaled)
 }
@@ -3827,8 +3902,6 @@ pub fn draw_battle(
 
     if let Some(ref mut rm) = res {
         // ── Build combined 256-tile VRAM tileset ─────────────────────
-        #[cfg(target_os = "none")]
-        let battle_ts = cached_battle_tileset(effects, rm);
         #[cfg(not(target_os = "none"))]
         let battle_ts = build_battle_tileset(rm);
 
@@ -4099,6 +4172,9 @@ pub fn draw_battle(
         }
 
         // ── Render tile buffer to framebuffer ────────────────────────
+        #[cfg(target_os = "none")]
+        render_packed_battle_tile_buffer(fb, &tile_buf);
+        #[cfg(not(target_os = "none"))]
         render_battle_tile_buffer(fb, &tile_buf, &battle_ts);
 
         // AnimationShakeEnemyHUD: SCX-shake the enemy HUD strip. Applied
@@ -4131,7 +4207,7 @@ pub fn draw_battle(
             if show_trainer_sprite {
                 if let Some(tc) = screen.trainer_class {
                     if let Ok(cached) = rm.load_trainer(tc.sprite_name()) {
-                        let ts = cached.tileset.clone();
+                        let ts = &cached.tileset;
                         let w_tiles = cached.source_size.0 / TILE_SIZE;
                         let h_tiles = cached.source_size.1 / TILE_SIZE;
                         let x_off = ((8 - w_tiles) / 2) * TILE_SIZE;
@@ -4149,7 +4225,7 @@ pub fn draw_battle(
                 // scope) also opens on the ghost sprite; the reveal anim swaps it for
                 // the Marowak front when the fade-in completes.
                 if let Ok(cached) = rm.load_battle("ghost") {
-                    let ts = cached.tileset.clone();
+                    let ts = &cached.tileset;
                     let w_tiles = cached.source_size.0 / TILE_SIZE;
                     let h_tiles = cached.source_size.1 / TILE_SIZE;
                     let x_off = ((8 - w_tiles) / 2) * TILE_SIZE;
@@ -4165,7 +4241,7 @@ pub fn draw_battle(
                     == 0
                 {
                     if let Ok(cached) = rm.load_sprite("monster") {
-                        let doll = cached.tileset.clone();
+                        let doll = &cached.tileset;
                         let rect = MonRect {
                             x: 12 * TILE_SIZE as i32 + enemy_dx,
                             y: enemy_dy,
@@ -4190,7 +4266,7 @@ pub fn draw_battle(
                 };
                 BattleEffects::draw_minimized(fb, rect, sprite_pal);
             } else if let Ok(cached) = rm.load_pokemon_front(&enemy_sprite) {
-                let ts = cached.tileset.clone();
+                let ts = &cached.tileset;
                 let w_tiles = cached.source_size.0 / TILE_SIZE;
                 let h_tiles = cached.source_size.1 / TILE_SIZE;
                 let x_off = ((8 - w_tiles) / 2) * TILE_SIZE;
@@ -4403,7 +4479,7 @@ pub fn draw_battle(
                     == 0
                 {
                     if let Ok(cached) = rm.load_sprite("monster") {
-                        let doll = cached.tileset.clone();
+                        let doll = &cached.tileset;
                         let rect = MonRect {
                             x: TILE_SIZE as i32 + player_dx,
                             y: 5 * TILE_SIZE as i32 + player_dy,
@@ -4559,12 +4635,18 @@ pub fn draw_battle(
                 BattlePhase::MoveSelect | BattlePhase::ItemMoveSelect { .. }
             )
         {
+            #[cfg(target_os = "none")]
+            render_packed_battle_tile_region(fb, &tile_buf, 0, 8, 11, 5);
+            #[cfg(not(target_os = "none"))]
             tile_buf.render_region(fb, &battle_ts, pal, 0, 8, 11, 5);
         }
 
         // Keep the bottom dialog/menu box in front of sprites and animation overlays.
         // Skipped for `use_unified_ui` phases — pokered-ui draws their box directly to fb.
         if !use_unified_ui {
+            #[cfg(target_os = "none")]
+            render_packed_battle_tile_region(fb, &tile_buf, 0, 12, 20, 6);
+            #[cfg(not(target_os = "none"))]
             tile_buf.render_region(fb, &battle_ts, pal, 0, 12, 20, 6);
         }
 
