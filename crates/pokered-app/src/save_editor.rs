@@ -77,6 +77,10 @@ pub struct EditorItem {
 /// only hard error.
 pub fn apply_editor_save(snapshot: &EditorSaveSnapshot) -> Result<SaveData, String> {
     let mut save = SaveData::new();
+    // The snapshot is author-controlled: drop the new-game PC seed (the
+    // POTION from GameData::new) so the PC holds exactly what the editor
+    // lets the author specify. Money is overwritten by the snapshot below.
+    save.game_data.pc_items.clear();
 
     save.player_name = charmap::encode_string(&snapshot.player.player_name)
         .unwrap_or_default();

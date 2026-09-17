@@ -8,6 +8,7 @@ use crate::save::ser_pokemon::*;
 use crate::save::serialization::*;
 use crate::save::SaveData;
 use crate::save_menu::calc_checksum;
+use pokered_data::items::ItemId;
 use pokered_data::moves::MoveId;
 use pokered_data::species::Species;
 use pokered_data::types::PokemonType;
@@ -43,10 +44,21 @@ fn test_save_data_new_defaults() {
     let save = SaveData::new();
     assert!(save.player_name.is_empty());
     assert_eq!(save.tile_animations, 0);
-    assert_eq!(save.game_data.player_money, 0);
+    assert_eq!(save.game_data.player_money, 3000);
     assert_eq!(save.game_data.obtained_badges, 0);
     assert_eq!(save.party.count(), 0);
     assert_eq!(save.hall_of_fame.team_count(), 0);
+}
+
+#[test]
+fn test_new_game_seeds_pc_potion_and_start_money() {
+    // New Game parity: InitPlayerData2 sets START_MONEY = $3000 and OakSpeech
+    // adds one POTION to the PC item storage (wNumBoxItems), so the PC in
+    // Red's room starts with a withdrawable Potion. The bag stays empty.
+    let save = SaveData::new();
+    assert_eq!(save.game_data.player_money, 3000);
+    assert!(save.game_data.bag.is_empty());
+    assert_eq!(save.game_data.pc_items.items(), vec![(ItemId::Potion, 1)]);
 }
 
 #[test]
@@ -74,7 +86,9 @@ fn test_save_data_clear() {
     save.clear();
 
     assert!(save.player_name.is_empty());
-    assert_eq!(save.game_data.player_money, 0);
+    assert_eq!(save.game_data.player_money, 3000);
+    // clear() re-seeds the new-game state, POTION included.
+    assert_eq!(save.game_data.pc_items.items(), vec![(ItemId::Potion, 1)]);
     assert_eq!(save.game_data.obtained_badges, 0);
     assert_eq!(save.tile_animations, 0);
     assert!(save.party.is_empty());

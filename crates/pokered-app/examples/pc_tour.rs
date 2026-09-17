@@ -106,6 +106,9 @@ fn main() {
         std::fs::create_dir_all(dir).unwrap();
     }
     let mut save = SaveData::new();
+    // The tour lists its own PC items; drop the new-game POTION seed so the
+    // list order and cursor steps below stay as designed.
+    save.game_data.pc_items.clear();
     save.party
         .add(create_pokemon(Species::Pikachu, 12, [0x9A, 0x78]).unwrap())
         .unwrap();
