@@ -2,6 +2,7 @@ use crate::alloc_prelude::*;
 use crate::items::inventory::{Inventory, BAG_ITEM_CAPACITY, PC_ITEM_CAPACITY};
 use crate::options_menu::GameOptions;
 use crate::pokemon::pokedex::Pokedex;
+use pokered_data::items::ItemId;
 use serde::{Deserialize, Serialize};
 
 pub const NAME_LENGTH: usize = 11;
@@ -369,10 +370,17 @@ impl GameData {
 
 impl GameData {
     pub fn new() -> Self {
+        // OakSpeech adds one POTION to the PC item storage (wNumBoxItems,
+        // engine/movie/oak_speech/oak_speech.asm) on top of InitPlayerData2's
+        // fresh state — the PC in Red's room starts with a withdrawable Potion.
+        let mut pc_items = Inventory::new_pc();
+        let _ = pc_items.add_item(ItemId::Potion, 1);
         Self {
             pokedex: Pokedex::new(),
             bag: Inventory::new_bag(),
-            player_money: 0,
+            // START_MONEY EQU $3000 (InitPlayerData2,
+            // engine/movie/oak_speech/init_player_data.asm).
+            player_money: 3000,
             rival_name: Vec::new(),
             options: GameOptions::default(),
             obtained_badges: 0,
@@ -408,7 +416,7 @@ impl GameData {
             tileset_collision_ptr: 0,
             tileset_talking_over_tiles: [0; 3],
             grass_tile: 0,
-            pc_items: Inventory::new_pc(),
+            pc_items,
             current_box_num: 0,
             num_hof_teams: 0,
             player_coins: 0,
