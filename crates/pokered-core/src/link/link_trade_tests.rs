@@ -238,6 +238,70 @@ fn test_full_trade_execute() {
     assert_eq!(*mgr_a.state(), LinkTradeState::Completed);
 }
 
+/// The peer's confirm+mon pair (sent back-to-back by `confirm_trade`)
+/// regularly arrives while the local side has NOT confirmed yet — two
+/// humans cannot press A within one frame of each other, and on a real
+/// transport both messages land on consecutive polls. The mon must be
+/// stashed (not rejected), and the exchange fires once the local confirm
+/// lands. Regression test for the TCP cable-club failure.
+#[test]
+fn test_peer_confirm_and_mon_arrive_before_local_confirm() {
+    let (mut t_a, mut t_b) = ChannelTransport::new_pair();
+    let (mut mgr_a, mut mgr_b) = setup_selecting_pair(&mut t_a, &mut t_b);
+
+    mgr_a.select_mon(&mut t_a, 0).unwrap();
+    mgr_b.select_mon(&mut t_b, 1).unwrap();
+    mgr_b.poll_blocking(&mut t_b);
+    mgr_a.poll_blocking(&mut t_a);
+
+    let pokemon_a = make_test_pokemon(Species::Pikachu, 25);
+    let pokemon_b = make_test_pokemon(Species::Charizard, 36);
+
+    // A confirms; B's poll consumes BOTH of A's messages back-to-back
+    // (ConfirmTrade, then TradeComplete) without confirming in between —
+    // exactly the real-game frame order.
+    mgr_a.confirm_trade(&mut t_a, pokemon_a).unwrap();
+    assert_eq!(
+        mgr_b.poll_blocking(&mut t_b),
+        LinkTradePollResult::PeerConfirmed
+    );
+    assert!(matches!(
+        mgr_b.state(),
+        LinkTradeState::PeerConfirmedWaitingLocal { .. }
+    ));
+    assert_eq!(
+        mgr_b.poll_blocking(&mut t_b),
+        LinkTradePollResult::Pending,
+        "early TradeComplete must be stashed, not an error"
+    );
+    assert!(matches!(
+        mgr_b.state(),
+        LinkTradeState::PeerConfirmedWaitingLocal { .. }
+    ));
+
+    // B confirms at its own pace: the stashed exchange fires on the next
+    // poll — no further wire message carries it.
+    mgr_b.confirm_trade(&mut t_b, pokemon_b.clone()).unwrap();
+    assert!(matches!(mgr_b.state(), LinkTradeState::Trading { .. }));
+    assert!(matches!(
+        mgr_b.poll_blocking(&mut t_b),
+        LinkTradePollResult::TradeExecute {
+            local_index: 1,
+            remote_index: 0,
+            ..
+        }
+    ));
+    assert_eq!(*mgr_b.state(), LinkTradeState::Completed);
+
+    // A's side completes through the normal wire order.
+    assert_eq!(mgr_a.poll_blocking(&mut t_a), LinkTradePollResult::PeerConfirmed);
+    assert!(matches!(
+        mgr_a.poll_blocking(&mut t_a),
+        LinkTradePollResult::TradeExecute { .. }
+    ));
+    assert_eq!(*mgr_a.state(), LinkTradeState::Completed);
+}
+
 #[test]
 fn test_confirm_trade_wrong_state_fails() {
     let (mut t_a, _t_b) = ChannelTransport::new_pair();

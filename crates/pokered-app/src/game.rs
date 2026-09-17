@@ -5838,6 +5838,26 @@ impl PokemonGame {
             "dialogue": dialogue,
             "dialogue_state": dialogue_state,
             "choice": choice,
+            // Link (Cable Club) session and in-room flow phase. The flow's
+            // modal boxes (Just a moment. / prompts / trade select) are not
+            // part of the overworld dialogue/choice machinery, so a driver
+            // needs this to observe the link trade/battle flow.
+            "link": serde_json::json!({
+                "status": match &self.link_status {
+                    LinkStatus::Disabled => "disabled".to_string(),
+                    LinkStatus::WaitingForPeer => "waiting_for_peer".to_string(),
+                    LinkStatus::Connecting => "connecting".to_string(),
+                    LinkStatus::Connected => "connected".to_string(),
+                    LinkStatus::Disconnected(reason) => format!("disconnected: {reason}"),
+                },
+                "role": format!("{:?}", self.link_role),
+                "cable_phase": format!("{:?}", self.link_cable.phase()),
+                "trade": self.link_trade.as_ref().map(|d| serde_json::json!({
+                    "state": format!("{:?}", d.state()),
+                    "given": d.given_mon().map(|m| format!("{:?}", m.species)),
+                    "received": d.received_mon().map(|m| format!("{:?}", m.species)),
+                })),
+            }),
             // True while a storyline script owns the game (cutscene in
             // progress), false once control is back with the player.
             "script_running": !self.overworld.script_engine_idle(),
