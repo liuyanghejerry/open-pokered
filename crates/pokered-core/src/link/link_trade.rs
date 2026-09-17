@@ -96,6 +96,12 @@ pub struct LinkTradeManager {
     remote_selection: Option<u8>,
     local_confirmed: bool,
     remote_confirmed: bool,
+    /// The peer's mon arrived before our local confirm (the sender emits
+    /// `ConfirmTrade` + `TradeComplete` back-to-back, so on a real
+    /// transport the mon regularly reaches a side that has not confirmed
+    /// yet). Stashed here; `poll` emits the exchange once the local
+    /// confirm lands.
+    pending_remote_mon: Option<Pokemon>,
     /// Cable Club clock role, set by the session once the connection is up.
     /// Used to break the both-pressed-the-gameboy tie (see the
     /// `WaitingForTradeResponse` × `RequestTrade` arm).
@@ -110,6 +116,7 @@ impl LinkTradeManager {
             remote_selection: None,
             local_confirmed: false,
             remote_confirmed: false,
+            pending_remote_mon: None,
             role: None,
         }
     }
@@ -242,6 +249,9 @@ impl LinkTradeManager {
     }
 
     pub fn poll(&mut self, transport: &mut dyn NetworkTransport<NetworkMessage>) -> LinkTradePollResult {
+        if let Some(result) = self.try_complete_stashed_exchange() {
+            return result;
+        }
         let msg = match transport.try_recv() {
             Ok(Some(msg)) => msg,
             Ok(None) => return LinkTradePollResult::Pending,
@@ -260,6 +270,9 @@ impl LinkTradeManager {
     }
 
     pub fn poll_blocking(&mut self, transport: &mut dyn NetworkTransport<NetworkMessage>) -> LinkTradePollResult {
+        if let Some(result) = self.try_complete_stashed_exchange() {
+            return result;
+        }
         let msg = match transport.recv() {
             Ok(msg) => msg,
             Err(TransportError::Disconnected) => {
@@ -274,6 +287,30 @@ impl LinkTradeManager {
         };
 
         self.handle_message(msg, transport)
+    }
+
+    /// A trade whose peer mon was stashed before the local confirm (see
+    /// `pending_remote_mon`): once the local confirm moved us to `Trading`,
+    /// emit the exchange here — the wire `TradeComplete` was already
+    /// consumed, so no message will ever deliver it.
+    fn try_complete_stashed_exchange(&mut self) -> Option<LinkTradePollResult> {
+        let mon = self.pending_remote_mon.take()?;
+        if let LinkTradeState::Trading {
+            local_index,
+            remote_index,
+        } = self.state
+        {
+            self.state = LinkTradeState::Completed;
+            Some(LinkTradePollResult::TradeExecute {
+                local_index,
+                remote_index,
+                received_pokemon: mon,
+            })
+        } else {
+            // Not trading (yet): put the mon back until the confirm lands.
+            self.pending_remote_mon = Some(mon);
+            None
+        }
     }
 
     fn handle_message(
@@ -389,6 +426,19 @@ impl LinkTradeManager {
                 }
             }
 
+            // The peer's confirm+mon pair arrived while we had not
+            // confirmed yet (the sender emits both back-to-back, so this
+            // is the COMMON order on a real transport — two humans cannot
+            // confirm within one frame of each other). Stash the mon; the
+            // exchange fires from `poll` once the local confirm lands.
+            (
+                LinkTradeState::PeerConfirmedWaitingLocal { .. },
+                NetworkMessage::TradeComplete(pokemon),
+            ) => {
+                self.pending_remote_mon = Some(pokemon);
+                LinkTradePollResult::Pending
+            }
+
             (_, NetworkMessage::CancelTrade) => {
                 self.reset_selection();
                 self.state = LinkTradeState::SelectingMon;
@@ -424,6 +474,7 @@ impl LinkTradeManager {
         self.remote_selection = None;
         self.local_confirmed = false;
         self.remote_confirmed = false;
+        self.pending_remote_mon = None;
     }
 
     pub fn reset_for_new_trade(&mut self) {
