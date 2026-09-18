@@ -8,7 +8,10 @@ T2 `LocalExplorer` (symbolic observation + LOCAL navigation only):
   greedy compass walk with wall-bump recovery and visited-tile memory;
   entity targets (items, named NPCs) are acquired from get_nearby
   scans; when the target is not visible, unexplored building warps are
-  tried systematically (nearest-first, each once). The explorer does
+  tried systematically (nearest-first, each once). Entity targeting is
+  the exact id/`NPC_HINTS` rule; passing `judge=` adds a semantic
+  fallback that reads the task's own name, which is what lets a goal the
+  hint table never anticipated resolve at all. The explorer does
   NOT read the warp entities' destination names even though the
   observation layer exposes them (`get_nearby` warp `name` field) —
   that field is an abstraction leak noted for the RQ1 report.
@@ -32,7 +35,10 @@ from . import skills
 COMPASS_DELTA = {"north": (0, -1), "south": (0, 1), "west": (-1, 0), "east": (1, 0)}
 
 # Entity hints the GOAL text itself implies (not world knowledge):
-# "talk to Oak" → look for an npc whose name contains "oak".
+# "talk to Oak" → look for an npc whose name contains "oak". This stays
+# the cheap exact rule; a goal the table does not anticipate is handled
+# by the semantic resolver (`LocalExplorer.judge`), not by another entry
+# here.
 NPC_HINTS = {"talk-to-oak": "oak"}
 
 
@@ -49,11 +55,20 @@ class LocalExplorer:
 
     POLICY_NAME = "local_explorer"
 
-    def __init__(self, seed, compass="north", scan_radius=99, npc_hints=None):
+    def __init__(self, seed, compass="north", scan_radius=99, npc_hints=None,
+                 judge=None):
         self.rng = random.Random(seed)
         self.compass = compass
         self.scan_radius = scan_radius
         self.npc_hints = npc_hints or NPC_HINTS
+        # Optional semantic target resolver: any object with
+        # `select_entity(goal, candidates)`, e.g.
+        # `semantics.SemanticJudge.from_env()`. When absent the policy is
+        # byte-for-byte the RQ1 baseline — the hint table stays the only
+        # rule and no extra protocol calls are made.
+        self.judge = judge
+        self.semantic_calls = 0  # judgments attempted
+        self.semantic_hits = 0   # judgments that resolved to a live entity
         self.visited = set()       # (map, x, y) tiles stood on
         self.blocked = set()       # (map, x, y) move_to targets that failed
         self.tried_warps = set()   # (map, x, y) building warps already explored
@@ -82,11 +97,40 @@ class LocalExplorer:
 
     def _scan_target(self, env, task):
         want = self._want(task)
-        if want is None:
+        if want is None and self.judge is None:
             return None
         entities = env.client.nearby(radius=self.scan_radius).get("entities", [])
-        for e in entities:
-            if want(e) and e.get("interactable", True):
+        if want is not None:
+            for e in entities:
+                if want(e) and e.get("interactable", True):
+                    return e
+        # The deterministic rule found nothing. The goal's target may be
+        # described rather than named, or named in a way the hint table
+        # never anticipated — ask a judgment over the candidates code
+        # just enumerated instead of giving up on the step.
+        if self.judge is not None:
+            return self._semantic_target(task, entities)
+        return None
+
+    def _semantic_target(self, task, entities):
+        """Resolve the goal's target by judgment over `entities`.
+
+        The task's own `name` is the natural-language goal (the id is a
+        slug), so the model reads the same sentence a maintainer does.
+        Candidates come from the caller's scan, and the model can only
+        pick an id it was offered, so `scan_radius` must cover the map.
+        """
+        candidates = [e for e in entities if e.get("interactable", True)]
+        if not candidates:
+            return None
+        goal = task.get("name") or task["id"]
+        self.semantic_calls += 1
+        chosen = self.judge.select_entity(goal, candidates)
+        if chosen is None:
+            return None
+        for e in candidates:
+            if e.get("id") == chosen:
+                self.semantic_hits += 1
                 return e
         return None
 
