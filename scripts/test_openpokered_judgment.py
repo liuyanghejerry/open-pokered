@@ -3,6 +3,7 @@ key, no game spawns.
 
 Run: python3 -m unittest scripts.test_openpokered_judgment
 """
+import json
 import sys
 import unittest
 from pathlib import Path
@@ -50,6 +51,7 @@ class StubJudge:
     def __init__(self, pick=None):
         self.pick = pick
         self.requests = []
+        self.objective_requests = []
 
     def route_action(self, goal, actions, observation):
         self.requests.append({"goal": goal, "actions": dict(actions),
@@ -57,6 +59,120 @@ class StubJudge:
         if self.pick is None:
             return None
         return Selection(self.pick, {self.pick: 0.9}, 0.9)
+
+    def choose_objective(self, situation, candidates):
+        self.objective_requests.append({"situation": situation,
+                                        "candidates": list(candidates)})
+        return self.pick
+
+
+OBJECTIVES = [
+    {"id": "get-starter", "name": "Choose a starter Pokemon",
+     "satisfied_when": {"flag": "EVENT_GOT_STARTER"}},
+    {"id": "beat-brock", "name": "Defeat Brock",
+     "satisfied_when": {"flag": "EVENT_BEAT_BROCK"}},
+    {"id": "no-flag", "name": "Misconfigured objective"},
+]
+
+
+class ObjectiveLoadingTests(unittest.TestCase):
+    def write(self, payload):
+        import shutil
+        import tempfile
+        d = tempfile.mkdtemp(prefix="ts-obj-")
+        self.addCleanup(shutil.rmtree, d, ignore_errors=True)
+        path = Path(d) / "objectives.json"
+        path.write_text(payload)
+        return path
+
+    def test_a_missing_file_yields_nothing(self):
+        self.assertEqual(ja.load_objectives(Path("/nonexistent/o.json")), [])
+
+    def test_malformed_json_yields_nothing(self):
+        self.assertEqual(ja.load_objectives(self.write("{not json")), [])
+
+    def test_a_wrapped_list_is_unwrapped(self):
+        # Any entry with an id loads; whether it is *usable* is
+        # `outstanding`'s question, not this one's.
+        path = self.write(json.dumps({"objectives": OBJECTIVES}))
+        self.assertEqual([o["id"] for o in ja.load_objectives(path)],
+                         ["get-starter", "beat-brock", "no-flag"])
+
+    def test_a_bare_list_works_too(self):
+        path = self.write(json.dumps(OBJECTIVES))
+        self.assertEqual(len(ja.load_objectives(path)), len(OBJECTIVES))
+
+    def test_entries_without_an_id_are_dropped(self):
+        path = self.write(json.dumps([{"name": "x"}, {"id": "ok"}]))
+        self.assertEqual([o["id"] for o in ja.load_objectives(path)], ["ok"])
+
+
+class OutstandingTests(unittest.TestCase):
+    def test_only_objectives_whose_flag_is_unset_remain(self):
+        left = ja.outstanding(OBJECTIVES, {"EVENT_GOT_STARTER": True})
+        self.assertEqual([o["id"] for o in left], ["beat-brock"])
+
+    def test_the_flag_is_carried_along_for_the_places_lookup(self):
+        left = ja.outstanding(OBJECTIVES, {})
+        self.assertEqual([o["id"] for o in left], ["get-starter", "beat-brock"])
+        self.assertEqual(left[0]["flag"], "EVENT_GOT_STARTER")
+
+    def test_an_objective_with_no_flag_is_dropped_not_reported_done(self):
+        self.assertEqual(ja.outstanding([{"id": "x", "name": "y"}], {}), [])
+
+    def test_nothing_is_left_when_every_flag_is_set(self):
+        self.assertEqual(ja.outstanding(
+            OBJECTIVES, {"EVENT_GOT_STARTER": True, "EVENT_BEAT_BROCK": True}), [])
+
+
+class ChooseObjectiveTests(unittest.TestCase):
+    """The other mode: the goal is not given to the agent, it is chosen."""
+
+    def agent(self, pick, flags):
+        judge = StubJudge(pick)
+        client = semantics_client(DEEP_EDGES, BROCK)
+        client.flags = lambda: flags
+        return ja.JudgmentAgent(judge, objectives=OBJECTIVES, explore=True), \
+            judge, client
+
+    def test_the_chosen_objective_comes_back_with_its_flag(self):
+        agent, _judge, client = self.agent("beat-brock", {})
+        got = agent.choose_objective(client, OBS)
+        self.assertEqual(got["id"], "beat-brock")
+        self.assertEqual(got["flag"], "EVENT_BEAT_BROCK")
+
+    def test_every_outstanding_objective_is_offered(self):
+        agent, judge, client = self.agent("beat-brock", {})
+        agent.choose_objective(client, OBS)
+        offered = {c["id"] for c in judge.objective_requests[0]["candidates"]}
+        self.assertEqual(offered, {"get-starter", "beat-brock"})
+
+    def test_a_satisfied_objective_is_not_offered_again(self):
+        agent, judge, client = self.agent("beat-brock",
+                                          {"EVENT_GOT_STARTER": True})
+        agent.choose_objective(client, OBS)
+        offered = {c["id"] for c in judge.objective_requests[0]["candidates"]}
+        self.assertEqual(offered, {"beat-brock"})
+
+    def test_the_description_says_which_map_satisfies_each(self):
+        """The index is what turns "which story thread" into something the
+        rest of the policy can act on."""
+        agent, judge, client = self.agent("beat-brock", {})
+        agent.choose_objective(client, OBS)
+        notes = {c["id"]: c["note"]
+                 for c in judge.objective_requests[0]["candidates"]}
+        self.assertIn("PewterGym", notes["beat-brock"])
+        self.assertIn("nothing in the index", notes["get-starter"])
+
+    def test_no_objectives_left_means_the_story_is_done(self):
+        agent, judge, client = self.agent(
+            "beat-brock", {"EVENT_GOT_STARTER": True, "EVENT_BEAT_BROCK": True})
+        self.assertIsNone(agent.choose_objective(client, OBS))
+        self.assertEqual(judge.objective_requests, [])
+
+    def test_a_declined_choice_returns_no_objective(self):
+        agent, _judge, client = self.agent(None, {})
+        self.assertIsNone(agent.choose_objective(client, OBS))
 
 
 def edge(src, dst, kind="warp"):

@@ -28,7 +28,9 @@ The fallback matters: a judgment returns None on any transport failure, and
 this policy then takes a deterministic action rather than stalling, so a
 network outage degrades speed instead of correctness.
 """
+import json
 import random
+from pathlib import Path
 
 from . import skills
 from .semantics import render_candidate
@@ -37,6 +39,39 @@ from .semantics import render_candidate
 # cap is generous for the hop budgets in use (budget 1 from a typical town
 # yields 3-8 places) and exists to bound the pathological case.
 MAX_CANDIDATE_PLACES = 24
+
+# The curated story objectives. A committed data file rather than an API:
+# it is what the event-graph tooling validates against, and reading it
+# costs nothing.
+OBJECTIVES_PATH = (Path(__file__).resolve().parents[2]
+                   / "crates" / "pokered-data" / "story" / "objectives.json")
+
+
+def load_objectives(path=OBJECTIVES_PATH):
+    """The curated objectives as `[{id, name, satisfied_when:{flag}}]`."""
+    try:
+        data = json.loads(Path(path).read_text())
+    except (OSError, ValueError):
+        return []
+    if isinstance(data, dict):
+        data = data.get("objectives") or list(data.values())
+    if not isinstance(data, list):
+        return []
+    return [o for o in data if isinstance(o, dict) and o.get("id")]
+
+
+def outstanding(objectives, flags):
+    """Objectives whose flag is not set yet — what is left of the story.
+
+    A flag missing from the table counts as unset, so an objective is
+    dropped only when the game positively reports it done.
+    """
+    left = []
+    for objective in objectives:
+        flag = (objective.get("satisfied_when") or {}).get("flag")
+        if flag and not flags.get(flag):
+            left.append(dict(objective, flag=flag))
+    return left
 
 # How the graph says a place is reached, in words a reader would use.
 _VIA = {"warp": ("building", "indoors, enter by its door"),
@@ -305,8 +340,15 @@ class JudgmentAgent:
 
     def __init__(self, judge, seed=0, hop_budget=1, max_hop_budget=3,
                  max_judgments=60, entity_radius=99, place_facts=True,
-                 rich_state=True, act_margin=0.0):
+                 rich_state=True, act_margin=0.0, explore=False,
+                 objectives=None):
         self.judge = judge
+        # Exploration mode: the goal is not given by the task spec, it is
+        # chosen from what is left of the story. See `choose_objective`.
+        self.explore = explore
+        self.objectives = (load_objectives() if objectives is None
+                           else objectives)
+        self.chosen_objective = None
         self.rng = random.Random(seed)
         self.hop_budget = hop_budget
         self.max_hop_budget = max_hop_budget
@@ -402,6 +444,50 @@ class JudgmentAgent:
                 return actions
         return {}
 
+    # ── exploration: choosing what to pursue ────────────────────────
+    def choose_objective(self, client, obs):
+        """Pick the next story thread, or None when the story is done.
+
+        The task specs fix a goal; this is the other mode. Code narrows to
+        the objectives whose flag is still unset and reports what the
+        script index knows can satisfy each; the judgment chooses which is
+        worth pulling.
+
+        The state matters here as much as anywhere: offered nothing but a
+        list of the eleven objectives, the judgment declines all of them —
+        it has no way to tell whether the agent is standing in Pallet Town
+        at the start or outside the eighth gym. So who and where goes in
+        with the list.
+        """
+        left = outstanding(self.objectives, client.flags())
+        if not left:
+            return None
+        index = self._script_index(client)
+        candidates = []
+        for objective in left:
+            table = index.table_for({"type": "flag", "id": objective["flag"]})
+            maps = sorted((table or {}).get(objective["flag"], ()))
+            name = objective.get("name") or objective["id"]
+            candidates.append({
+                "id": objective["id"],
+                "kind": "objective",
+                "note": (f"{name}: a script in {', '.join(maps)} sets "
+                         f"{objective['flag']}" if maps else
+                         f"{name}: nothing in the index sets "
+                         f"{objective['flag']}"),
+            })
+        chosen = self.judge.choose_objective(
+            {"where": obs["map"]["name"],
+             "badges": (obs.get("badges") or {}).get("count", 0),
+             "party": [{"species": m.get("species"), "level": m.get("level"),
+                        "hp": m.get("hp"), "max_hp": m.get("max_hp")}
+                       for m in (obs.get("party") or [])],
+             "what_is_left_of_the_story": [c["note"] for c in candidates]},
+            candidates)
+        if chosen is None:
+            return None
+        return next(o for o in left if o["id"] == chosen)
+
     # ── decision (the model's half) ─────────────────────────────────
     def decide(self, client, obs, goal):
         """One action string, or None when nothing is left to try.
@@ -483,6 +569,20 @@ class JudgmentAgent:
                 if outcome["done"]:
                     return outcome["success"], "" if outcome["success"] else "max_steps"
                 continue
+
+            if self.explore:
+                flags = env.client.flags()
+                settled = (self.chosen_objective is not None
+                           and flags.get(self.chosen_objective["flag"]))
+                if self.chosen_objective is None or settled:
+                    nxt = self.choose_objective(env.client, obs)
+                    if nxt is None:
+                        # Nothing left of the story: that is the goal,
+                        # reached. Report it as the run's success.
+                        return True, ""
+                    self.chosen_objective = nxt
+                    self.goal_spec = {"type": "flag", "id": nxt["flag"]}
+                    goal = nxt.get("name") or nxt["id"]
 
             if obs["map"]["name"] != self._map:
                 self._map = obs["map"]["name"]

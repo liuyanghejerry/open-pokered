@@ -290,6 +290,77 @@ and if a future task does hinge on party condition or inventory the state
 is already there. But it should not be described as an improvement, and
 the default could reasonably flip to thin.
 
+### The gym wedge: a mode that lied about who had control
+
+`beat-brock` failed because the agent could not tell that the game had
+taken the controls away. The trainer sight-intro (`wJoyIgnore`) holds
+*all* input from the moment a trainer spots the player until the battle
+starts, and `OverworldObs` had no field for it — so `classify_mode`
+returned `Overworld` while every action silently did nothing.
+
+`OverworldObs` now carries `trainer_encounter_pending` and classifies it
+as `Transition`, which is what it is: the game is busy, the player does
+not have control. All the existing consumers get the truth for free.
+
+Measured over three repeats of the nine task specs:
+
+| | before | after |
+| --- | --- | --- |
+| T2J runs solved | 15/27 | **18/27** |
+| `beat-brock` | FAIL (3/3) | **OK, 14 steps / 3 judgments (3/3)** |
+
+And the repeats are now *identical* — `beat-brock` 3×14 steps / 6588
+frames, `beat-one-trainer` 3×13 / 2935. That also corrects the earlier
+reading of `win-wild-battle`: its flip was a consequence of changing the
+action vocabulary (which changes the prompt), not of run-to-run noise.
+The model's probabilities do wobble by a few points, but with a stable
+argmax the trace is reproducible. Both statements matter: repeats are
+meaningful *within* a configuration, and single runs are still not
+comparable *across* configurations.
+
+### Measurement protocol
+
+`run_judgment.py` now reports per task as `succeeded / runs` with the mean
+step count, instead of last-write-wins, and always prints it rather than
+only under `--compare`:
+
+```
+── per task (succeeded / runs) ──
+  task                  T2 base             T2J                 T3 oracle
+  beat-brock            0/2 (40 steps)      2/2 (18 steps)      2/2 (1 steps)
+```
+
+Anything compared across configurations should use `--runs N`; a single
+run cannot distinguish a policy change from a prompt change.
+
+### Exploration: the goal itself as a judgment
+
+`--explore` removes the task's goal. Code narrows to the objectives in
+`crates/pokered-data/story/objectives.json` whose flag is still unset and
+reports what the script index knows satisfies each; the judgment picks the
+thread. When the chosen objective's flag flips, it picks again; when
+nothing is left, the story is done and the run ends successfully.
+
+```
+$ python3 scripts/openpokered/run_judgment.py --explore
+  choice 1: get-starter (Choose a starter Pokémon)
+  choice 2: get-starter
+  choice 3: get-starter
+```
+
+From a fresh Pallet Town start, with all eleven objectives outstanding, it
+picks `get-starter` every time — the correct first move, and not something
+the code says: the enumeration is code's, the ordering is not.
+
+The state matters here as much as anywhere. Offered only the list of
+objectives and nothing about who or where it was, the judgment declined
+*all eleven*; adding the map, badges and party made it decide. That is the
+same lesson as `conveys(..., context=...)`, in a different judgment.
+
+The full exploration run currently ends at `judgment_cap` after 117 steps
+— it picks a starter and then meets the same wall `get-pokedex` does. The
+mechanism works; the budget does not cover all eleven objectives.
+
 **What still fails.** `get-starter` fails at the task's own 60-step
 budget, and `get-pokedex` is `oracle: false` — the hand-written reference
 declines it too.

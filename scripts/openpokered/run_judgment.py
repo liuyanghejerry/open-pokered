@@ -40,6 +40,25 @@ from openpokered.tasks import goal_satisfied, load_task, load_tasks_dir  # noqa:
 DEFAULT_FRAME_BUDGET = 20000
 
 
+# Exploration mode: no task goal. The policy chooses what to pursue from
+# the story objectives still unsatisfied, and the run ends when none are
+# left. The party is the same generous one the task specs use, so a wild
+# battle on the way does not decide the run.
+EXPLORE_TASK = {
+    "id": "explore-the-story",
+    "name": "Explore the story from where you stand",
+    "explore": True,
+    "seed": 42,
+    "initial_state": {"warp": "PalletTown,10,6"},
+    "setup": {"party": [{"species": "Charizard", "level": 100}]},
+    # `OpenPokeredEnv.step` assesses this on every step, so exploration
+    # still needs one; a flag nothing sets keeps it from ever firing, and
+    # the policy's own stopping condition ends the run instead.
+    "goal": {"type": "flag", "id": "EVENT_EXPLORATION_HAS_NO_GOAL"},
+    "max_steps": 400,
+}
+
+
 def _run_policy(task, seed, policy_factory, binary, maps_dir, frame_budget):
     task = dict(task)
     task["seed"] = seed
@@ -50,7 +69,10 @@ def _run_policy(task, seed, policy_factory, binary, maps_dir, frame_budget):
         env.reset(task)
         metrics.start(env.frame_count())
         ok, reason = policy.run(env, task, frame_budget)
-        success = goal_satisfied(task["goal"], env)
+        # Exploration has no goal to satisfy: the policy owns the stopping
+        # condition (nothing left of the story), so its verdict is the
+        # verdict. Asking `goal_satisfied` here would fail every run.
+        success = ok if task.get("explore") else goal_satisfied(task["goal"], env)
         metrics.env_steps = env.env_steps
         metrics.invalid_actions = env.invalid_actions
         metrics.battles = env.battles
@@ -105,7 +127,11 @@ def _run_oracle(task, seed, binary, maps_dir, frame_budget):
 
 def main(argv=None):
     p = argparse.ArgumentParser(description=__doc__)
-    p.add_argument("task", help="task spec JSON (or 'all')")
+    p.add_argument("task", nargs="?", default="all",
+                   help="task spec JSON (or 'all'); unused with --explore")
+    p.add_argument("--explore", action="store_true",
+                   help="no task goal: the policy picks what to pursue from "
+                        "the story objectives still unsatisfied")
     p.add_argument("--seed", type=int, default=None, help="override the spec seed")
     p.add_argument("--runs", type=int, default=1)
     p.add_argument("--binary", default=None)
@@ -138,7 +164,11 @@ def main(argv=None):
               file=sys.stderr)
         return 1
 
-    tasks = load_tasks_dir() if args.task == "all" else [load_task(args.task)]
+    if args.explore:
+        tasks = [dict(EXPLORE_TASK, seed=args.seed if args.seed is not None
+                      else EXPLORE_TASK["seed"])]
+    else:
+        tasks = load_tasks_dir() if args.task == "all" else [load_task(args.task)]
 
     rows = []
     for task in tasks:
@@ -154,7 +184,8 @@ def main(argv=None):
                                       max_judgments=args.max_judgments,
                                       place_facts=not args.no_place_facts,
                                       rich_state=not args.thin_state,
-                                      act_margin=args.act_margin),
+                                      act_margin=args.act_margin,
+                                      explore=args.explore),
                 args.binary, args.maps_dir, args.frame_budget)
             m.extra["judgments"] = policy.judgments
             m.extra["fallbacks"] = policy.fallbacks
@@ -203,39 +234,53 @@ def main(argv=None):
                 rows.append({"task": task["id"], "seed": seed, "tier": "T3 oracle",
                              "ok": None, "steps": 0})
 
-    if args.compare:
-        tiers = {}
+    if rows:
+        # Count per (task, tier) rather than last-write-wins. With
+        # `--runs N` a single result is exactly what the judgment's own
+        # variance makes unreliable, so the report has to carry the rate.
+        table = {}
         for r in rows:
+            cell = table.setdefault(r["task"], {}).setdefault(
+                r["tier"], {"runs": 0, "wins": 0, "steps": 0, "skipped": False})
             if r["ok"] is None:
+                cell["skipped"] = True     # e.g. a task marked `oracle: false`
                 continue
-            n, wins, total = tiers.get(r["tier"], (0, 0, 0))
-            tiers[r["tier"]] = (n + 1, wins + (1 if r["ok"] else 0),
-                                total + r["steps"])
-        print("\n── policy comparison ──")
-        for tier, (n, wins, total) in sorted(tiers.items()):
-            print(f"  {tier:<10} {wins}/{n} succeeded, {total} env-steps total")
+            cell["runs"] += 1
+            cell["wins"] += 1 if r["ok"] else 0
+            cell["steps"] += r["steps"]
+        tiers = sorted({t for cells in table.values() for t in cells})
 
-        by_task = {}
-        for r in rows:
-            by_task.setdefault(r["task"], {})[r["tier"]] = r
-        print("\n── per task ──")
-        print(f"  {'task':<22} {'T3 oracle':<16} {'T2J':<16} {'T2 base':<16}")
-        for name in sorted(by_task):
+        print("\n── policies ──")
+        for tier in tiers:
+            cells = [c[tier] for c in table.values() if tier in c]
+            runs = sum(c["runs"] for c in cells)
+            wins = sum(c["wins"] for c in cells)
+            steps = sum(c["steps"] for c in cells)
+            if not runs:
+                print(f"  {tier:<10} not run")
+                continue
+            print(f"  {tier:<10} {wins}/{runs} runs succeeded, "
+                  f"{steps} env-steps total")
+
+        print("\n── per task (succeeded / runs) ──")
+        print("  " + f"{'task':<22}" + "".join(f"{t:<20}" for t in tiers))
+        for name in sorted(table):
             cells = []
-            for tier in ("T3 oracle", "T2J", "T2 base"):
-                r = by_task[name].get(tier)
-                if r is None or r["ok"] is None:
+            for tier in tiers:
+                c = table[name].get(tier)
+                if c is None:
+                    cells.append("—")
+                elif c["skipped"] and not c["runs"]:
                     cells.append("n/a")
                 else:
-                    cells.append(f"{'OK' if r['ok'] else 'FAIL'} ({r['steps']} steps)")
-            print(f"  {name:<22} {cells[0]:<16} {cells[1]:<16} {cells[2]:<16}")
+                    avg = c["steps"] / c["runs"]
+                    cells.append(f"{c['wins']}/{c['runs']} ({avg:.0f} steps)")
+            print("  " + f"{name:<22}" + "".join(f"{x:<20}" for x in cells))
 
     failed = [r for r in rows if r["tier"] == "T2J" and not r["ok"]]
     if not args.quiet:
-        done = [r for r in rows if r["tier"] == "T2J"]
-        print(f"── T2J {len(done) - len(failed)}/{len(done)} runs succeeded "
-              f"({judge.calls} judgment requests, {judge.input_tokens} in / "
-              f"{judge.output_tokens} out tokens)")
+        print(f"\n── judgment cost: {judge.calls} requests, "
+              f"{judge.input_tokens} in / {judge.output_tokens} out tokens")
     return 1 if failed else 0
 
 

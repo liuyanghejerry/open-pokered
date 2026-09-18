@@ -6010,6 +6010,7 @@ impl PokemonGame {
                         self.overworld.warp_fade_state,
                         pokered_core::overworld::WarpFadeState::Idle
                     ),
+                trainer_encounter_pending: self.overworld.trainer_encounter_pending(),
             },
             battle_phase: in_battle.then_some(&self.battle.phase),
             party: &self.save_data.party,

@@ -218,6 +218,29 @@ class SemanticJudge:
             return None
         return selection.choice
 
+    def choose_objective(self, situation, candidates):
+        """Which outstanding story objective is worth pursuing next.
+
+        Unlike the other targeting judgments, the goal is not given — it
+        is what this question answers. Code narrows to the objectives whose
+        flag is still unset and what the script index knows about each; the
+        judgment picks the thread.
+        """
+        if not candidates:
+            return None
+        answers = self._ask(situation, {"objective": Choice(
+            instructions=(
+                "Which single outstanding story objective is worth pursuing "
+                "next? Pick the one that best advances the game from the "
+                f"current situation. Pick {NO_MATCH!r} if none is pursuable "
+                "right now."),
+            criteria={**{c["id"]: render_candidate(c) for c in candidates},
+                      NO_MATCH: "no listed objective is pursuable now"})})
+        if answers is None or "objective" not in answers:
+            return None
+        choice = answers["objective"].choice
+        return None if choice == NO_MATCH else choice
+
     def choose_destination(self, goal, candidates, location=None):
         """Which place, if any, does the goal point at? None for no match.
 

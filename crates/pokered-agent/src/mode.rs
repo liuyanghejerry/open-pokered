@@ -35,6 +35,15 @@ pub struct OverworldObs {
     pub script_running: bool,
     /// A warp/map transition is in flight (fade active or warp pending).
     pub warp_transition: bool,
+    /// A trainer sight-intro is in flight: the "!" bubble, the trainer's
+    /// walk-up, or the before-battle text (`trainer_encounter_pending`).
+    ///
+    /// The overworld holds *all* input from the moment of engagement
+    /// until the battle starts (`wJoyIgnore`), so a frame in this state
+    /// is "the game is busy", not "the player has control". Reporting
+    /// plain `Overworld` here is what lets an agent keep issuing actions
+    /// that silently do nothing.
+    pub trainer_encounter_pending: bool,
 }
 
 /// Inputs to [`classify_mode`]. `battle_phase` rides along for future
@@ -55,7 +64,10 @@ pub fn classify_mode(input: &ModeInput) -> AgentMode {
         GameScreen::Overworld => {
             if input.overworld.dialogue_open || input.overworld.choice_open {
                 AgentMode::Dialogue
-            } else if input.overworld.warp_transition || input.overworld.script_running {
+            } else if input.overworld.warp_transition
+                || input.overworld.script_running
+                || input.overworld.trainer_encounter_pending
+            {
                 AgentMode::Transition
             } else {
                 AgentMode::Overworld
@@ -106,6 +118,37 @@ mod tests {
     #[test]
     fn plain_overworld_is_overworld() {
         assert_eq!(classify(&GameScreen::Overworld, idle()), AgentMode::Overworld);
+    }
+
+    #[test]
+    fn a_trainer_sight_intro_is_a_transition_not_free_control() {
+        // The overworld holds all input from engagement until the battle
+        // starts (`wJoyIgnore`). Reporting `Overworld` here is what let a
+        // policy keep issuing actions that silently did nothing.
+        let intro = OverworldObs {
+            trainer_encounter_pending: true,
+            ..idle()
+        };
+        assert_eq!(classify(&GameScreen::Overworld, intro), AgentMode::Transition);
+    }
+
+    #[test]
+    fn an_open_dialogue_outranks_the_trainer_intro() {
+        let both = OverworldObs {
+            dialogue_open: true,
+            trainer_encounter_pending: true,
+            ..idle()
+        };
+        assert_eq!(classify(&GameScreen::Overworld, both), AgentMode::Dialogue);
+    }
+
+    #[test]
+    fn a_trainer_intro_does_not_claim_a_battle_screen() {
+        let intro = OverworldObs {
+            trainer_encounter_pending: true,
+            ..idle()
+        };
+        assert_eq!(classify(&GameScreen::Battle, intro), AgentMode::Battle);
     }
 
     #[test]
