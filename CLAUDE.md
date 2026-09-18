@@ -204,6 +204,15 @@ Generate/validate: `python3 scripts/openpokered/variants.py <profile>
 --seed N` then `python3 scripts/openpokered/validate_variant.py
 target/agent/variants/<name>`; unit tests: `python3 -m unittest
 scripts.test_openpokered_variants`.
+TypeSafe semantic judgments (`scripts/openpokered/typesafe.py` +
+`semantics.py`) add an opt-in layer for the two places that need meaning
+rather than a lookup: goal→entity targeting in `LocalExplorer`
+(`judge=SemanticJudge.from_env()`, off by default so RQ1 baselines are
+untouched) and semantic dialogue steps in `bdd_steps.py`
+(`python3 scripts/bdd.py --dir scripts/features_semantic`; needs a key in
+`.env`). Unit tests: `python3 -m unittest scripts.test_openpokered_typesafe`;
+live probe: `python3 scripts/openpokered/typesafe_probe.py --compare-dialogue`.
+See `docs/typesafe-semantics.md`.
 
 Screen targets: `copyright title main-menu oak overworld battle start-menu options save`.
 

@@ -8,4 +8,6 @@ Layers:
     skills.py    reusable skill actions (battle loop, heal, wild wins)
     oracle.py    rule-based oracle planner
     run_task.py  runner CLI
+    typesafe.py  TypeSafe System One client (typed questions/answers)
+    semantics.py typed judgments: goal→entity targeting, dialogue claims
 """
