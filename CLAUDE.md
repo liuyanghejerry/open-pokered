@@ -216,7 +216,9 @@ The same layer backs a judgment-driven policy, `judgment_agent.py` (T2J):
 `python3 scripts/openpokered/run_judgment.py all --compare` runs every
 task spec with it plus the `LocalExplorer` and `Oracle` references.
 Ablation switches on the same runner: `--no-place-facts`, `--thin-state`,
-`--act-margin`. **The judgment is stochastic** — identical requests differ
+`--act-margin`. `--explore` drops the task goal entirely and lets the
+judgment pick which story objective to pursue (from
+`crates/pokered-data/story/objectives.json`, filtered to unset flags). **The judgment is stochastic** — identical requests differ
 by ~3 probability points, which flips near-tie decisions, so compare
 policies with `--runs N` rather than a single run. Unit tests:
 `python3 -m unittest scripts.test_openpokered_judgment`.
