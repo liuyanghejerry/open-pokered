@@ -92,24 +92,52 @@ class Selection:
         return f"Selection({self.choice!r}, margin={self.margin:.3f})"
 
 
-def render_candidate(entity):
-    """One nearby entity as the model sees it.
+def render_candidate(candidate):
+    """One candidate as the model sees it — a nearby entity or a place.
 
     The description carries what a reader would use to tell candidates
-    apart: what it is, what it is called, and how far away it is. Code
+    apart: what it is, what it is called, where it is, how far away. Code
     keeps the id; the model only ever picks from the ids it is given.
     """
-    pos = entity.get("position") or {}
-    kind = entity.get("kind") or "entity"
-    name = entity.get("name") or ""
+    pos = candidate.get("position") or {}
+    kind = candidate.get("kind") or "entity"
+    name = candidate.get("name") or ""
     bits = [kind]
     if name:
         bits.append(f"named {name!r}")
+    if candidate.get("note"):
+        bits.append(candidate["note"])
     if pos:
         bits.append(f"at ({pos.get('x')},{pos.get('y')})")
-    if entity.get("distance") is not None:
-        bits.append(f"{entity['distance']} tiles away")
+    if candidate.get("distance") is not None:
+        bits.append(f"{candidate['distance']} tiles away")
     return ", ".join(bits)
+
+
+def _target_question(candidates, what):
+    """The Choice over candidate ids, with NO_MATCH as an explicit way out.
+
+    One definition for every caller, so the wording cannot drift between
+    entities and places — and `NO_MATCH` stays a first-class answer rather
+    than something the model has to express by picking a bad candidate.
+    """
+    return Choice(
+        instructions=(
+            f"Which single {what}, if any, does the task goal refer to? "
+            f"Pick the {what} the goal names or describes. "
+            f"Pick {NO_MATCH!r} if none matches, including when the goal's "
+            f"target is not in the list."),
+        criteria={**{c["id"]: render_candidate(c) for c in candidates},
+                  NO_MATCH: f"no listed {what} matches the goal"})
+
+
+def _action_question(actions):
+    """The closed set of things the caller can actually execute."""
+    return Choice(
+        instructions=(
+            "Which single action best advances the goal from the current "
+            "observation?"),
+        criteria=dict(actions))
 
 
 class SemanticJudge:
@@ -156,7 +184,19 @@ class SemanticJudge:
         self.output_tokens += result.output_tokens
         return result.answers
 
-    # ── entity targeting ────────────────────────────────────────────
+    # ── targeting: entities and places ──────────────────────────────
+    def _choose_from(self, state, candidates, what):
+        """One Choice over `candidates`; None only when the call failed."""
+        if not candidates:
+            return None
+        answers = self._ask(state,
+                            {"target": _target_question(candidates, what)})
+        if answers is None or "target" not in answers:
+            return None
+        answer = answers["target"]
+        return Selection(answer.choice, answer.probabilities,
+                         answer.confidence)
+
     def ask_for_entity(self, goal, candidates):
         """The raw Choice over `candidates`, `NO_MATCH` included.
 
@@ -164,24 +204,7 @@ class SemanticJudge:
         tell "the model rejected every candidate" from "the model never
         answered".
         """
-        if not candidates:
-            return None
-        answers = self._ask(goal, {
-            "target": Choice(
-                instructions=(
-                    "Which single entity, if any, does the task goal refer "
-                    "to? Pick the entity the goal names or describes. "
-                    f"Pick {NO_MATCH!r} if no entity matches, including when "
-                    "the goal's target is not in the list."),
-                criteria={
-                    **{e["id"]: render_candidate(e) for e in candidates},
-                    NO_MATCH: "no listed entity matches the goal",
-                })})
-        if answers is None or "target" not in answers:
-            return None
-        answer = answers["target"]
-        return Selection(answer.choice, answer.probabilities,
-                         answer.confidence, source=goal)
+        return self._choose_from(goal, candidates, "entity")
 
     def select_entity(self, goal, candidates):
         """The candidate id `goal` refers to, or None.
@@ -191,6 +214,24 @@ class SemanticJudge:
         them with a radius that covers the map before asking.
         """
         selection = self.ask_for_entity(goal, candidates)
+        if selection is None or selection.choice == NO_MATCH:
+            return None
+        return selection.choice
+
+    def choose_destination(self, goal, candidates, location=None):
+        """Which place, if any, does the goal point at? None for no match.
+
+        `candidates` are the places code has already established are worth
+        considering, and that narrowing is the point: a world graph here
+        holds 222 maps and 1060 edges — too many to offer, and mostly
+        unreachable from where the agent stands. Code walks the graph out
+        to a hop budget and the judgment chooses within that set. A map
+        outside the set cannot be chosen, so the budget *is* the
+        candidate set, and widening it is how recall improves.
+        """
+        state = goal if location is None else {"goal": goal,
+                                               "currently_at": location}
+        selection = self._choose_from(state, candidates, "place")
         if selection is None or selection.choice == NO_MATCH:
             return None
         return selection.choice
@@ -207,48 +248,31 @@ class SemanticJudge:
             return None
         answers = self._ask(
             {"goal": goal, "observation": observation},
-            {"action": Choice(
-                instructions=(
-                    "Which single action best advances the goal from the "
-                    "current observation?"),
-                criteria=dict(actions))})
+            {"action": _action_question(actions)})
         if answers is None or "action" not in answers:
             return None
         answer = answers["action"]
         return Selection(answer.choice, answer.probabilities,
-                         answer.confidence, source=goal)
+                         answer.confidence)
 
-    def decide(self, goal, candidates, actions, observation):
+    def decide(self, goal, candidates, actions, observation, what="entity"):
         """Target and action for one agent step, asked together.
 
         These two judgments share the same state and neither needs the
         other's answer, so one request covers both — the skill's
         speculative fan-out: they run in parallel and the caller consumes
-        whichever it needs. Returns `(entity_selection, action_selection)`;
+        whichever it needs. Returns `(target_selection, action_selection)`;
         either may be None.
         """
         questions = {}
         if candidates:
-            questions["target"] = Choice(
-                instructions=(
-                    "Which single entity, if any, does the task goal refer "
-                    "to? Pick the entity the goal names or describes. "
-                    f"Pick {NO_MATCH!r} if no entity matches, including when "
-                    "the goal's target is not in the list."),
-                criteria={
-                    **{e["id"]: render_candidate(e) for e in candidates},
-                    NO_MATCH: "no listed entity matches the goal",
-                })
+            questions["target"] = _target_question(candidates, what)
         if actions:
-            questions["action"] = Choice(
-                instructions=(
-                    "Which single action best advances the goal from the "
-                    "current observation?"),
-                criteria=dict(actions))
+            questions["action"] = _action_question(actions)
         answers = self._ask({"goal": goal, "observation": observation,
-                             "nearby_entities": [
-                                 {"id": e["id"], "description":
-                                  render_candidate(e)} for e in candidates]},
+                             "candidates": [
+                                 {"id": c["id"], "description":
+                                  render_candidate(c)} for c in candidates]},
                             questions)
         if answers is None:
             return None, None
