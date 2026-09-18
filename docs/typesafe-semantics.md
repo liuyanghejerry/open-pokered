@@ -290,13 +290,38 @@ and if a future task does hinge on party condition or inventory the state
 is already there. But it should not be described as an improvement, and
 the default could reasonably flip to thin.
 
-**What still fails.** `beat-brock` reaches the gym, correctly targets
-`npc:0` — now labelled `Brock` — and cannot close the distance: the
-interaction is a no-op from the entrance and gets retired. So the
-remaining gap there is *navigation to a known target inside a building*,
-not recognition or destination recall. `get-starter` fails at the task's
-own 60-step budget, and `get-pokedex` is `oracle: false` — the
-hand-written reference declines it too.
+**What still fails.** `get-starter` fails at the task's own 60-step
+budget, and `get-pokedex` is `oracle: false` — the hand-written reference
+declines it too.
+
+`beat-brock` reaches the gym, correctly targets `npc:0` (now labelled
+`Brock`), and gets wedged. Instrumented, the sequence is:
+
+1. `interact_with:npc:0` from the entrance works — it walks from (4,13)
+   to (4,6), where the junior trainer intercepts it
+   (`navigation.result: entered_dialogue`). That is correct game
+   behaviour: the trainer blocks the corridor to Brock.
+2. From then on the player **never moves again**. Every action reports
+   `before == after` with `invalid: false`, so each one is retired and the
+   agent oscillates between the gym and the city until its budget runs
+   out. All five gym actions end up retired.
+3. The game state at that moment looks clean — `screen: overworld`,
+   `script_running: false`, `script_awaiting_battle: false`,
+   `dialogue_state: null`, `player_movement_state: "Idle"`.
+4. `interact_with` on any *distant* target then returns
+   `result: "dialogue"` with `frames: 0` and no movement. It does not
+   report `blocked`, so the agent cannot tell "the path is shut" from
+   "something happened".
+
+So the remaining gap is narrower than "navigation inside a building", and
+the open question is *why the interaction layer reports `dialogue` with
+zero frames rather than `blocked`* — that single misleading result is what
+makes the wedge invisible to the policy. Two candidates, neither yet
+confirmed: the client's `skip_dialogue` during interception may dismiss
+the trainer's challenge before the battle is scheduled, and
+`agent_nav`'s blocked-path path may be returning the wrong
+`InteractResult`. This needs a look at `agent_nav.rs` with the wedge state
+reproduced under it, not more policy work.
 
 **A caveat on the oracle column.** In a combined `--compare` run the
 oracle scored 7/8, failing `get-starter`; run on its own it scores 8/8,
