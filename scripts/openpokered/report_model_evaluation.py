@@ -159,10 +159,16 @@ def report(runs,out):
             for name in ('summary.json','requests.jsonl','observations.jsonl','trace.jsonl','commands.jsonl')}})
     (out/'verification.json').write_text(json.dumps(audit,ensure_ascii=False,indent=2)+'\n')
     figures(runs,out)
-    text=['# Laya MLX 与 Jev：20 分钟自主探索实测','',
+    text=['# Laya MLX 与 Jev：20 分钟预算下的自主探索实测','',
           '本页由两轮原始记录生成。实验条件与指标定义见[评测框架](../laya-jev-evaluation-framework.md)。',
-          '同一控制器、二进制、种子和上限；初始化单列，Jev 仅扣实测 RTT。一次运行用于案例分析，不代表平均表现或成功率。','',
-          '| 指标 | Jev | Laya |','|---|---:|---:|']
+          '同一控制器、二进制、种子和上限；初始化单列，Jev 仅扣实测 RTT。一次运行用于案例分析，不代表平均表现或成功率。','']
+    if all(run['summary']['clock']['effective_s']<1200 for run in runs):
+        text+=['**两轮均提前结束，未取得完整 20 分钟终点成绩。** 曲线不延长到预算终点，剩余时间也不外推为进度。','']
+    if any('HTTP 402' in r.get('error','') and 'billing_error' in r.get('error','') for r in runs[0]['requests']):
+        text+=['Jev 因 HTTP 402 额度不足停止。这是外部服务限制，不能归为模型无法继续推进。该失败请求没有返回 usage，表中 Token 是已报告部分。','']
+    if (out/'interpretation.md').exists():
+        text+=['原生后端适配、提前结束原因和后续实验建议见[本轮分析](interpretation.md)。','']
+    text+=['| 指标 | Jev | Laya |','|---|---:|---:|']
     text.extend('| '+' | '.join(format_value(v) for v in row)+' |' for row in rows)
     text+=['','输入 Token 来自不同 tokenizer，不能按数量直接等价比较算力。Laya 无文本生成，输出 0 不代表零推断开销。金额变化是采样可见下界；失败各项可能重叠。','',
            '![剧情、徽章、队伍练度与余额](progress.png)','',
@@ -173,7 +179,8 @@ def report(runs,out):
         cells=[]
         for run in runs:
             milestone=run['summary']['metrics']['milestones'].get(objective['id'])
-            cells.append(f"{milestone['effective_s']:.3f} / {milestone['raw_s']:.3f}" if milestone else '预算内未达到')
+            absent='提前结束前未达到' if run['summary']['clock']['effective_s']<1200 else '预算内未达到'
+            cells.append(f"{milestone['effective_s']:.3f} / {milestone['raw_s']:.3f}" if milestone else absent)
         text.append('| '+objective['id']+' | '+' | '.join(cells)+' |')
     text+=['','## 队伍、图鉴与支线','']
     for run in runs:

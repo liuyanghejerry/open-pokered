@@ -1,0 +1,32 @@
+{
+  "valid": true,
+  "checks": [
+    "same seed / controller hash / game binary / Python / budget",
+    "Jev timed run ends before Laya timed run starts on the same host",
+    "all scored observations within budget and chronological",
+    "token and RTT totals match request journals",
+    "final scored snapshot matches observation journal"
+  ],
+  "sources": [
+    {
+      "folder": "/Users/liuyanghe02/develop/open-pokered/.artifacts/laya-jev-eval-worktree/.artifacts/laya-jev/jev",
+      "files": {
+        "summary.json": "2084e8de867a3331ad882dfd6c15bfd3084f9e8d3fabdac220decf33742bb27d",
+        "requests.jsonl": "c70e47ce34b1d856d7f901cc08cbd9f6cbd4058b94358655f6a43e2a9ef1f24b",
+        "observations.jsonl": "845c2f6c780c5271a7ee0e99bf668733a29af32364a29e6962ef68cd504b7561",
+        "trace.jsonl": "c9e25ca09a4b96801249179cdbc13a8e1f0eb330fcb775b794f2c1f57207d3e2",
+        "commands.jsonl": "734f45416e2055cdfcfe8139a963185f004442143dac3f1f63df803e8ca34173"
+      }
+    },
+    {
+      "folder": "/Users/liuyanghe02/develop/open-pokered/.artifacts/laya-jev-eval-worktree/.artifacts/laya-jev/laya",
+      "files": {
+        "summary.json": "93d8f694fa98d6781ef5b3af5c24e58ea46cf54c2f89a2518d925eea59db9b86",
+        "requests.jsonl": "d16a1f20d8fe9555d3cc1c12cefdf5fa6ba7ebe4ebf9a6de58c792c3c178c29a",
+        "observations.jsonl": "5881a393a335b75aecfd448278901794ea87f3691524a4b722b6a252ae37300c",
+        "trace.jsonl": "fe1bec8b2dd46bd5151f4cf010660104706b2a7e2ad7f63e9d5e774e05cc4ec6",
+        "commands.jsonl": "24a191b7f530a75c1f0a1279ca683e15211a6df4b26177567e0c55e82a19e54f"
+      }
+    }
+  ]
+}

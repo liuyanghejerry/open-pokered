@@ -1,0 +1,375 @@
+{
+  "backend": "jev",
+  "seed": 42,
+  "profile": "native-backend-replacement",
+  "layers": {
+    "strategy": "jev",
+    "action": "jev"
+  },
+  "limits": {
+    "calls": 50000,
+    "actions": 50000,
+    "frames": 40000000
+  },
+  "target": "become-champion",
+  "boot": "fresh NEW GAME",
+  "clock_mode": "driven-only",
+  "seconds": 1200,
+  "record_video": false,
+  "sidequest_catalog": {
+    "bicycle": {
+      "label": "取得自行车",
+      "flags": [
+        "EVENT_GOT_BICYCLE"
+      ]
+    },
+    "old_rod": {
+      "label": "取得旧钓竿",
+      "flags": [
+        "EVENT_GOT_OLD_ROD"
+      ]
+    },
+    "good_rod": {
+      "label": "取得好钓竿",
+      "flags": [
+        "EVENT_GOT_GOOD_ROD"
+      ]
+    },
+    "super_rod": {
+      "label": "取得超级钓竿",
+      "items": [
+        "SuperRod"
+      ]
+    },
+    "fly": {
+      "label": "取得飞翔秘传机",
+      "items": [
+        "Hm02"
+      ]
+    },
+    "flash": {
+      "label": "取得闪光秘传机",
+      "items": [
+        "Hm05"
+      ]
+    },
+    "dojo_gift": {
+      "label": "格斗道场获赠精灵",
+      "flags": [
+        "EVENT_GOT_HITMONLEE",
+        "EVENT_GOT_HITMONCHAN"
+      ]
+    },
+    "zapdos": {
+      "label": "捕获闪电鸟",
+      "owned": [
+        145
+      ]
+    },
+    "articuno": {
+      "label": "捕获急冻鸟",
+      "owned": [
+        144
+      ]
+    },
+    "moltres": {
+      "label": "捕获火焰鸟",
+      "owned": [
+        146
+      ]
+    },
+    "fossil_revived": {
+      "label": "拥有复活化石精灵",
+      "owned": [
+        138,
+        140,
+        142
+      ]
+    }
+  },
+  "controller_uses_milestones": false,
+  "telemetry_visibility": "Evaluator only; stripped from controller responses to preserve model inputs.",
+  "source_commit": "9641b27e89c23f4973970ee2b7326a27de131038",
+  "source_branch": "feat/laya-jev-budget-eval",
+  "binary_sha256": "ba629a591ad69997100926475d0bfc51bf67178dbd6c9be99d5da2e31d6d02ce",
+  "python": "3.12.13 (main, Mar 25 2026, 03:16:06) [Clang 22.1.1 ]",
+  "platform": "macOS-15.7.4-arm64-arm-64bit",
+  "sampling_interval_s": 0.5,
+  "setup_started_utc": "2026-09-20T21:49:09Z",
+  "host_load_at_setup": [
+    8.47998046875,
+    11.310546875,
+    8.689453125
+  ],
+  "hardware": {
+    "machdep.cpu.brand_string": "Apple M3 Pro",
+    "hw.memsize": "19327352832"
+  },
+  "source_files": {
+    "scripts/openpokered/__init__.py": "52d054963a89799fbc36080ba54da5c154cb263584a48c44d7cbbd6a14b459be",
+    "scripts/openpokered/autonomous_story.py": "bab5a0e7f8d608b1d2a65e48dc06b1ae702aebf0cc80a068e29e7ba68a156c7e",
+    "scripts/openpokered/boulder_skills.py": "e604111e531a7162af2d128911a6df59757c45fa447a90f3cd5c10636eb1c08b",
+    "scripts/openpokered/calibrate_rq1.py": "cfcb96e42ad064b7348f3346ab8c105ea0fde0ea54b12ae08031245690bccda7",
+    "scripts/openpokered/client.py": "d7afcb2456aa99a44b7b7b6d7a39c04e7a3e2990601db69660cd0256221fa891",
+    "scripts/openpokered/env.py": "b0620c550cfa7435aebb898042865cdb82682ae409842f898f1684667bed1036",
+    "scripts/openpokered/evaluation.py": "84c8d4614c16e26bd5f652272378501b586c29b4ef70e6b6d95a52d6d6cc6751",
+    "scripts/openpokered/evaluation_models.py": "abcd55e01fff5eda6f466e87077e488ec13297bf44f7c09d94faebd60d34819c",
+    "scripts/openpokered/judgment_agent.py": "3243e75be1688a692850044738db684bdf1dc87a90ca3185a3f1e8e47ccd1359",
+    "scripts/openpokered/llm_agent.py": "a11c2bd3b1f175697d8ff8688b0cf73695e38f0d4a42173ddf5e952bf93aafcb",
+    "scripts/openpokered/metrics.py": "c8e59cef6d829c2f70727fe79af98a0d5a4be0622b005686b1f96dc989fec33e",
+    "scripts/openpokered/navigation_skills.py": "112992507b004b956b8f72dc3f4a462a207201fa371eb44c943b1a4368c15487",
+    "scripts/openpokered/oracle.py": "989270287cbd94c19ffd6d400ee9bcf197f57c2fd72c61f1530bf3ac3a6458c7",
+    "scripts/openpokered/planner.py": "c224412405da1b562515896846edf6e21a728fcd459bf18ea4cab544ed3e3420",
+    "scripts/openpokered/playthrough_judgments.py": "a435f438e48c698b996eb2056ebd8045da6d1290dfa4a3b5318e67395ae7174c",
+    "scripts/openpokered/policies.py": "feb34b961c40e29130455424921b1e53870983fcee20f1213cab3a0aa0e436d1",
+    "scripts/openpokered/report_model_evaluation.py": "93a1e508928e047453776ed2e324f2b4a8b1e4e0d8193d04fe6a11cfca1ffcb2",
+    "scripts/openpokered/run_autonomous.py": "b0b7c54162eeaf7974de4d18ba4776923cc202c57fc1dafbc37d15f9869cad41",
+    "scripts/openpokered/run_judgment.py": "af074a3563863b35f7bcf1f10550dea79d663dafad0c69e492cd49ba8294f459",
+    "scripts/openpokered/run_llm.py": "6278c448aa4fd2e14c9e04fe7176d34258825e253a2f721a875f5efc8466203e",
+    "scripts/openpokered/run_model_evaluation.py": "e6de3e9d9a2dbe7f7a1305fa3b74833b6f9a0ced6a01d0b65505a15309ed69ed",
+    "scripts/openpokered/run_rq1.py": "017d7d318ec9f71f03bc3e5ae6548713a76a0661eed7ec8b7f9dba25fe2015bb",
+    "scripts/openpokered/run_rq2.py": "4d3944042ad30b2e91539423de8f67a6cc2fbba758219917922ddc38d4190222",
+    "scripts/openpokered/run_story.py": "d8fe692d8d0b52f08341345bbdfa1aa395b9d1cf59450520f8a3fc713e513011",
+    "scripts/openpokered/run_task.py": "d2e75348ce24c38efe9ac389d70f498c939f34691b9571ac8bb8f91f40f8b1f0",
+    "scripts/openpokered/semantics.py": "a9a92ae8f5274c8c9a77239b938c0e80d762d1280d1a426a03c981643a759b60",
+    "scripts/openpokered/skills.py": "ebd273bbc248a228371d9ca4961965618558370f888ee65ddedc8c141b549bab",
+    "scripts/openpokered/story_agent.py": "cc6768f19331de69f3503c4e01575c1bbb4dd3d219d255fe6103aa43861edf83",
+    "scripts/openpokered/story_rules.py": "6354850db55c2fa5fd7dd357c09e0ab451e5f05c6046a260a6a98977209e11c8",
+    "scripts/openpokered/tasks.py": "0f232e16b74a699934c269f9e2ba76124a18ac84f01596d1f6b28f51912f9a22",
+    "scripts/openpokered/typesafe.py": "5e475693a583d05f3605aeff38bdb8bbc6f83f7afe52fed13893bf90439bb5c2",
+    "scripts/openpokered/typesafe_probe.py": "8a83e95ead894aaa101dd8e8001c3bae411326809c4463c15dcaabb2ca5a85ea",
+    "scripts/openpokered/validate_variant.py": "30fbe502ced2523c9c96fa330c3ace63f1cf81998311da45bebf9efcc4e71dd0",
+    "scripts/openpokered/variants.py": "b72176e145d9e481008cea2b3c20ea6f968377e27018e4409c3ce96bc81f5975",
+    "scripts/playthrough.py": "f3f7732c9cc2e8748425e0a38945b23918de81f2acc0503f1eb3de0b93770c6f",
+    "scripts/playthrough_late.py": "fa2087acb0b9577fbd99ed25907c7bdd0b42d6de145bebdf373e5bcf366a65c0"
+  },
+  "source_sha256": "4819bcde044557bdaca5ab284f40603efe872b5b1f828c90e8ffa40a7e5e21e7",
+  "setup_s": 1.6344438749947585,
+  "timed_started_utc": "2026-09-20T21:49:10Z",
+  "host_load_at_finish": [
+    5.953125,
+    5.83837890625,
+    6.47509765625
+  ],
+  "deadline_overrun_s": 0.0,
+  "deadline_signal_received": false,
+  "reason": "strategy:service_unavailable",
+  "completed": false,
+  "clock": {
+    "start_monotonic": 477394.467627416,
+    "raw_s": 1037.732375624997,
+    "rtt_credit_s": 239.7069999999997,
+    "effective_s": 798.0253756249974,
+    "limit_s": 1200,
+    "max_rtt_credit_s": 300
+  },
+  "metrics": {
+    "final": {
+      "effective_s": 798.0236502090072,
+      "raw_s": 1037.7306502090069,
+      "rtt_credit_s": 239.7069999999997,
+      "frame": 373861,
+      "map": "VermilionCity",
+      "position": [
+        12,
+        19
+      ],
+      "screen": "overworld",
+      "badges": 3,
+      "completed_objectives": [
+        "get-starter",
+        "get-pokedex",
+        "beat-brock",
+        "beat-misty",
+        "beat-lt-surge"
+      ],
+      "sidequests": [],
+      "map_count": 37,
+      "pokedex": {
+        "owned": 3,
+        "owned_numbers": [
+          4,
+          5,
+          6
+        ],
+        "seen": 46,
+        "total": 151
+      },
+      "party": [
+        {
+          "hp": 116,
+          "level": 37,
+          "max_hp": 116,
+          "moves": [
+            "Slash",
+            "Cut",
+            "Ember",
+            "Dig"
+          ],
+          "pp": [
+            16,
+            30,
+            25,
+            0
+          ],
+          "species": "Charizard",
+          "status": "None",
+          "total_exp": 44515
+        }
+      ],
+      "party_source": "save_data",
+      "money": 15583,
+      "observed_money_gained": 19861,
+      "observed_money_lost": 7278,
+      "failures": {
+        "reported_battle_defeats": 12,
+        "unsuccessful_operations": 8,
+        "blocked_travel_operations": 8,
+        "observed_party_wipes": 4,
+        "judgment_errors": 1
+      },
+      "suspected_stall": false
+    },
+    "milestones": {
+      "get-starter": {
+        "effective_s": 9.498679291996174,
+        "raw_s": 10.752679291996174,
+        "frame": 2986
+      },
+      "get-pokedex": {
+        "effective_s": 25.077134624974804,
+        "raw_s": 29.416134624974802,
+        "frame": 7933
+      },
+      "beat-brock": {
+        "effective_s": 200.79222516697507,
+        "raw_s": 255.21122516697505,
+        "frame": 81091
+      },
+      "beat-misty": {
+        "effective_s": 655.6148941669986,
+        "raw_s": 855.6798941669986,
+        "frame": 319826
+      },
+      "beat-lt-surge": {
+        "effective_s": 793.6852958750011,
+        "raw_s": 1032.7132958750008,
+        "frame": 373603
+      }
+    },
+    "objective_total": 11,
+    "maps": [
+      "BillsHouse",
+      "CeruleanCity",
+      "CeruleanGym",
+      "CeruleanPokecenter",
+      "MtMoon1F",
+      "MtMoonB1F",
+      "MtMoonB2F",
+      "MtMoonPokecenter",
+      "OaksLab",
+      "PewterCity",
+      "PewterGym",
+      "PewterPokecenter",
+      "RedsHouse1F",
+      "RedsHouse2F",
+      "Route1",
+      "Route11",
+      "Route11Gate1F",
+      "Route12",
+      "Route2",
+      "Route24",
+      "Route25",
+      "Route3",
+      "Route4",
+      "Route5",
+      "Route6",
+      "SSAnne1F",
+      "SSAnne2F",
+      "SSAnneCaptainsRoom",
+      "UndergroundPathNorthSouth",
+      "UndergroundPathRoute6",
+      "VermilionCity",
+      "VermilionDock",
+      "VermilionGym",
+      "VermilionPokecenter",
+      "ViridianCity",
+      "ViridianForest",
+      "ViridianMart"
+    ],
+    "sidequests": {},
+    "sidequest_total": 11,
+    "party_levels": {
+      "sum": 37,
+      "max": 37,
+      "mean": 37.0
+    },
+    "money": {
+      "initial": 3000,
+      "final": 15583,
+      "peak": 15583,
+      "observed_positive_deltas": 19861,
+      "observed_negative_deltas": 7278,
+      "scope": "Sampled balance changes, not exact gross income/spending; multiple changes between observations can cancel."
+    },
+    "failures": {
+      "reported_battle_defeats": 12,
+      "unsuccessful_operations": 8,
+      "blocked_travel_operations": 8,
+      "observed_party_wipes": 4,
+      "judgment_errors": 1
+    },
+    "suspected_stalls": [],
+    "stall_policy": "Report only; no backend-specific recovery. No new flags/maps/dex/experience/levels for 180 effective seconds."
+  },
+  "model": {
+    "backend": "jev",
+    "metadata": {
+      "model": "jev-1.13.0",
+      "token_scope": "TypeSafe service-reported usage; tokenizer is provider-specific."
+    },
+    "calls": 854,
+    "successful_calls": 853,
+    "actual_models": [
+      "jev-1.13.0"
+    ],
+    "usage_missing_calls": 1,
+    "input_tokens": 2450366,
+    "output_tokens": 43899,
+    "latency_sum_s": 717.6267234399565,
+    "latency_median_s": 0.8231653335387819,
+    "latency_p95_s": 0.9662510420312174,
+    "rtt_measurements": 853,
+    "encoding": {
+      "questions": 0,
+      "state_tokens_before": 0,
+      "state_tokens_dropped": 0,
+      "questions_with_state_truncation": 0,
+      "candidate_tokens_dropped": 0,
+      "instruction_tokens_dropped": 0
+    },
+    "warmup": {
+      "calls": 1,
+      "latency_s": 1.1120287920348346,
+      "input_tokens": 331
+    }
+  },
+  "actions": 483,
+  "action_cache_hits": 294,
+  "first_clear_verification": null,
+  "commands": {
+    "get_state": 61797,
+    "press_timeline": 22801,
+    "get_script_semantics": 249,
+    "get_flags": 6613,
+    "get_bag": 6613,
+    "get_agent_state": 8583,
+    "get_npcs": 7505,
+    "step_frames": 4478,
+    "find_world_route": 2974,
+    "skip_dialogue": 201,
+    "move_to": 366,
+    "wait_until": 446,
+    "interact_with": 1
+  }
+}
