@@ -1,0 +1,172 @@
+{
+  "run": ".artifacts/jev-autonomous-fresh/20260920-081028-seed42",
+  "success": true,
+  "continuous_new_game": true,
+  "initial": {
+    "map_name": "RedsHouse2F",
+    "badges": 0,
+    "party": [],
+    "hall_of_fame_count": 0
+  },
+  "verified_continue": {
+    "screen": "overworld",
+    "map_name": "PalletTown",
+    "badges": 255,
+    "hall_of_fame_count": 1,
+    "party": [
+      {
+        "hp": 244,
+        "level": 95,
+        "max_hp": 324,
+        "moves": [
+          "Slash",
+          "Cut",
+          "Flamethrower",
+          "Dig"
+        ],
+        "pp": [
+          9,
+          30,
+          3,
+          0
+        ],
+        "species": "Charizard",
+        "status": "None"
+      },
+      {
+        "hp": 68,
+        "level": 15,
+        "max_hp": 68,
+        "moves": [
+          "WaterGun",
+          "Growl",
+          "Surf",
+          "Strength"
+        ],
+        "pp": [
+          25,
+          40,
+          15,
+          15
+        ],
+        "species": "Lapras",
+        "status": "None"
+      }
+    ]
+  },
+  "ending_phases_recorded": 23,
+  "hall_of_fame_observed": true,
+  "credits_the_end_observed": true,
+  "title_return_observed": true,
+  "uses_milestone_handlers": false,
+  "forbidden_gameplay_commands": [],
+  "current_policy_matches_run": true,
+  "policy_sha256": "672ebec9b5eb383295df88309aeed2facc741c0864271a1be0b0b9aab69b027f",
+  "binary_sha256": "c34978a8bcd1a75212e9f590b2fe131fdff7377a4c744de7c63c74beb9b2c978",
+  "autosave_sha256": "a0c9a55e337ae3358e138d0eee7d43188f0193ffdc07690beca4e90423dc0107",
+  "archived_save_sha256": "445f73c970927a509e8fc3060af28b1b05250bffe31af9017259436cd375e8bd",
+  "final_observations_valid": true,
+  "wall_s": 4926.469,
+  "calls": {
+    "strategy": 383,
+    "action": 2033
+  },
+  "tokens": {
+    "strategy": 2189612,
+    "output": 137967,
+    "action": 7799443
+  },
+  "defeats_by_map": {
+    "CeruleanGym": 5,
+    "LoreleisRoom": 10,
+    "LancesRoom": 1
+  },
+  "milestones": [
+    {
+      "objective": "get-starter",
+      "elapsed_s": 11.075
+    },
+    {
+      "objective": "get-pokedex",
+      "elapsed_s": 34.183
+    },
+    {
+      "objective": "beat-brock",
+      "elapsed_s": 225.634
+    },
+    {
+      "objective": "beat-misty",
+      "elapsed_s": 957.325
+    },
+    {
+      "objective": "beat-lt-surge",
+      "elapsed_s": 1181.32
+    },
+    {
+      "objective": "beat-koga",
+      "elapsed_s": 1536.976
+    },
+    {
+      "objective": "beat-erika",
+      "elapsed_s": 1771.059
+    },
+    {
+      "objective": "beat-sabrina",
+      "elapsed_s": 1982.999
+    },
+    {
+      "objective": "beat-blaine",
+      "elapsed_s": 2683.356
+    },
+    {
+      "objective": "beat-giovanni",
+      "elapsed_s": 2726.689
+    },
+    {
+      "objective": "become-champion",
+      "elapsed_s": 4926.462
+    }
+  ],
+  "archived_save_kind": "Post-verification development checkpoint; separate-process CONTINUE used the ending autosave before this checkpoint was written.",
+  "models": [
+    "jev-1.13.0"
+  ],
+  "seed": 42,
+  "actions": 1081,
+  "frames": 1045823,
+  "policy_files": {
+    "scripts/debug_drive.py": "acc1966fd4ec598829abc6ac64b6d2eece71ddb62b2b45f5586405b18d63d2fd",
+    "scripts/openpokered/__init__.py": "52d054963a89799fbc36080ba54da5c154cb263584a48c44d7cbbd6a14b459be",
+    "scripts/openpokered/autonomous_story.py": "bab5a0e7f8d608b1d2a65e48dc06b1ae702aebf0cc80a068e29e7ba68a156c7e",
+    "scripts/openpokered/boulder_skills.py": "e604111e531a7162af2d128911a6df59757c45fa447a90f3cd5c10636eb1c08b",
+    "scripts/openpokered/calibrate_rq1.py": "cfcb96e42ad064b7348f3346ab8c105ea0fde0ea54b12ae08031245690bccda7",
+    "scripts/openpokered/client.py": "d7afcb2456aa99a44b7b7b6d7a39c04e7a3e2990601db69660cd0256221fa891",
+    "scripts/openpokered/env.py": "b0620c550cfa7435aebb898042865cdb82682ae409842f898f1684667bed1036",
+    "scripts/openpokered/judgment_agent.py": "3243e75be1688a692850044738db684bdf1dc87a90ca3185a3f1e8e47ccd1359",
+    "scripts/openpokered/llm_agent.py": "a11c2bd3b1f175697d8ff8688b0cf73695e38f0d4a42173ddf5e952bf93aafcb",
+    "scripts/openpokered/metrics.py": "c8e59cef6d829c2f70727fe79af98a0d5a4be0622b005686b1f96dc989fec33e",
+    "scripts/openpokered/navigation_skills.py": "112992507b004b956b8f72dc3f4a462a207201fa371eb44c943b1a4368c15487",
+    "scripts/openpokered/oracle.py": "989270287cbd94c19ffd6d400ee9bcf197f57c2fd72c61f1530bf3ac3a6458c7",
+    "scripts/openpokered/planner.py": "c224412405da1b562515896846edf6e21a728fcd459bf18ea4cab544ed3e3420",
+    "scripts/openpokered/playthrough_judgments.py": "a435f438e48c698b996eb2056ebd8045da6d1290dfa4a3b5318e67395ae7174c",
+    "scripts/openpokered/policies.py": "feb34b961c40e29130455424921b1e53870983fcee20f1213cab3a0aa0e436d1",
+    "scripts/openpokered/run_autonomous.py": "b0b7c54162eeaf7974de4d18ba4776923cc202c57fc1dafbc37d15f9869cad41",
+    "scripts/openpokered/run_judgment.py": "af074a3563863b35f7bcf1f10550dea79d663dafad0c69e492cd49ba8294f459",
+    "scripts/openpokered/run_llm.py": "6278c448aa4fd2e14c9e04fe7176d34258825e253a2f721a875f5efc8466203e",
+    "scripts/openpokered/run_rq1.py": "017d7d318ec9f71f03bc3e5ae6548713a76a0661eed7ec8b7f9dba25fe2015bb",
+    "scripts/openpokered/run_rq2.py": "4d3944042ad30b2e91539423de8f67a6cc2fbba758219917922ddc38d4190222",
+    "scripts/openpokered/run_story.py": "d8fe692d8d0b52f08341345bbdfa1aa395b9d1cf59450520f8a3fc713e513011",
+    "scripts/openpokered/run_task.py": "d2e75348ce24c38efe9ac389d70f498c939f34691b9571ac8bb8f91f40f8b1f0",
+    "scripts/openpokered/semantics.py": "a9a92ae8f5274c8c9a77239b938c0e80d762d1280d1a426a03c981643a759b60",
+    "scripts/openpokered/skills.py": "ebd273bbc248a228371d9ca4961965618558370f888ee65ddedc8c141b549bab",
+    "scripts/openpokered/story_agent.py": "cc6768f19331de69f3503c4e01575c1bbb4dd3d219d255fe6103aa43861edf83",
+    "scripts/openpokered/story_rules.py": "6354850db55c2fa5fd7dd357c09e0ab451e5f05c6046a260a6a98977209e11c8",
+    "scripts/openpokered/tasks.py": "0f232e16b74a699934c269f9e2ba76124a18ac84f01596d1f6b28f51912f9a22",
+    "scripts/openpokered/typesafe.py": "5e475693a583d05f3605aeff38bdb8bbc6f83f7afe52fed13893bf90439bb5c2",
+    "scripts/openpokered/typesafe_probe.py": "8a83e95ead894aaa101dd8e8001c3bae411326809c4463c15dcaabb2ca5a85ea",
+    "scripts/openpokered/validate_variant.py": "30fbe502ced2523c9c96fa330c3ace63f1cf81998311da45bebf9efcc4e71dd0",
+    "scripts/openpokered/variants.py": "b72176e145d9e481008cea2b3c20ea6f968377e27018e4409c3ce96bc81f5975",
+    "scripts/playthrough.py": "1a163b85738f7a0b7f48420a4c2e9b057b26bad7e18e9d2eed1a5fb1b384c8d2",
+    "scripts/playthrough_late.py": "217a9f3a1c65ebbdfaf2cc30ed125c752399ce33f3873c2d9f99ad9ce5f41a92"
+  }
+}

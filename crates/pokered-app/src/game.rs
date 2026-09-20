@@ -5802,6 +5802,7 @@ impl PokemonGame {
             "screen": crate::cli::screen_name(&self.state.screen).to_string(),
             "map_id": map_id as u8,
             "map_name": format!("{:?}", map_id),
+            "last_outside_map": self.overworld.last_map.map(|map| format!("{map:?}")),
             "map_blocks": self.overworld.map_data.as_ref().map(|map| &map.blocks),
             "player_x": self.overworld.state.player.x,
             "player_y": self.overworld.state.player.y,
@@ -5873,6 +5874,7 @@ impl PokemonGame {
                 let player = bs.player.active_mon();
                 let enemy = bs.enemy.active_mon();
                 serde_json::json!({
+                    "is_ghost": self.battle.is_ghost,
                     "player_party": bs.player.party.iter().map(|mon| serde_json::json!({
                         "species": format!("{:?}", mon.species), "level": mon.level,
                         "hp": mon.hp, "max_hp": mon.max_hp,
@@ -6482,6 +6484,7 @@ impl PokemonGame {
             DebugCommand::Game(GameDebugCommand::PressTimeline {
                 ref buttons,
                 start_at_frame,
+                advance,
             }) => {
                 let parsed = buttons
                     .iter()
@@ -6511,6 +6514,11 @@ impl PokemonGame {
                         ))
                     }
                     Ok(parsed) => {
+                        if advance && !self.pending_debug_inputs.is_empty() {
+                            return DebugResponse::err(
+                                "synchronous timeline requires an empty input queue".to_string(),
+                            );
+                        }
                         let queue_start_frame = self.frame_count;
                         let start_frame = start_at_frame.unwrap_or(queue_start_frame);
                         let padding = start_frame.saturating_sub(queue_start_frame) as usize;
@@ -6518,12 +6526,20 @@ impl PokemonGame {
                         self.pending_debug_inputs
                             .extend(std::iter::repeat_n(None, padding));
                         self.pending_debug_inputs.extend(parsed);
+                        if advance {
+                            let input = InputState::new();
+                            for _ in 0..padding as u64 + frames {
+                                self.update(&input);
+                            }
+                        }
                         DebugResponse::ok_with_data(serde_json::json!({
                             "queue_start_frame": queue_start_frame,
                             "start_frame": start_frame,
                             "end_frame": start_frame + frames.saturating_sub(1),
                             "frames": frames,
                             "padding_frames": padding,
+                            "advanced": advance,
+                            "frame_count": self.frame_count,
                         }))
                     }
                     Err(error) => DebugResponse::err(error),
@@ -7321,6 +7337,51 @@ mod session_guard_tests {
         assert!(!is_ingame_session_screen(&GameScreen::MainMenu));
         assert!(!is_ingame_session_screen(&GameScreen::TitleScreen));
         assert!(!is_ingame_session_screen(&GameScreen::OakSpeech));
+    }
+}
+
+#[cfg(all(test, feature = "debug-server"))]
+mod synchronous_input_tests {
+    use super::*;
+
+    #[test]
+    fn timeline_advances_exact_frames_and_leaves_no_background_work() {
+        let mut game = PokemonGame::new_with_options(
+            GameVersion::Red,
+            None,
+            None,
+            None,
+            false,
+            None,
+            false,
+            true,
+            None,
+        );
+        let before = game.frame_count;
+        for _ in 0..2 {
+            let command = serde_json::from_value(serde_json::json!({
+                "cmd": "press_timeline", "buttons": ["b", "b", null], "advance": true,
+            }))
+            .unwrap();
+            let response = serde_json::to_value(game.handle_debug_command(command)).unwrap();
+            assert_eq!(response["ok"], true);
+            assert!(!game.debug_work_pending());
+        }
+        assert_eq!(game.frame_count, before + 6);
+
+        // A queued legacy input must never silently shift a synchronous one.
+        let queued = serde_json::from_value(serde_json::json!({
+            "cmd": "press_timeline", "buttons": [null],
+        }))
+        .unwrap();
+        game.handle_debug_command(queued);
+        let synchronous = serde_json::from_value(serde_json::json!({
+            "cmd": "press_timeline", "buttons": ["b"], "advance": true,
+        }))
+        .unwrap();
+        let response = serde_json::to_value(game.handle_debug_command(synchronous)).unwrap();
+        assert_eq!(response["ok"], false);
+        assert_eq!(game.frame_count, before + 6);
     }
 }
 

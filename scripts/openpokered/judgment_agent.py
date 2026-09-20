@@ -544,6 +544,9 @@ class JudgmentAgent:
         return (obs["map"]["name"], pos.get("x"), pos.get("y"), obs["mode"])
 
     def run(self, env, task, frame_budget):
+        if self.explore and (not self.objectives or any(
+                not o.get("satisfied_when", {}).get("flag") for o in self.objectives)):
+            return False, "invalid_objectives"
         start = env.frame_count()
         obs = env.client.observe()
         goal = task.get("name") or task["id"]
@@ -577,9 +580,10 @@ class JudgmentAgent:
                 if self.chosen_objective is None or settled:
                     nxt = self.choose_objective(env.client, obs)
                     if nxt is None:
-                        # Nothing left of the story: that is the goal,
-                        # reached. Report it as the run's success.
-                        return True, ""
+                        # Refusal/transport failure is distinct from actual
+                        # completion. Only observed flags establish success.
+                        left = outstanding(self.objectives, env.client.flags())
+                        return (False, "no_objective_selected") if left else (True, "")
                     self.chosen_objective = nxt
                     self.goal_spec = {"type": "flag", "id": nxt["flag"]}
                     goal = nxt.get("name") or nxt["id"]

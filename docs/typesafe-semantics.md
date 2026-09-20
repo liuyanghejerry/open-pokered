@@ -1,5 +1,19 @@
 # TypeSafe semantic judgments
 
+The current two-layer story runner is `scripts/openpokered/run_autonomous.py`
+(2026-09-20). It separates strategic subgoals from action/menu judgments,
+uses condition-preserving script ASTs, and starts a real NEW GAME with generic
+operation skills rather than the old playthrough route. Completion requires
+the Hall of Fame, credits, ending autosave and independent-process CONTINUE.
+One continuous seed-42 run passed in 82 minutes 6 seconds with `jev-1.13.0`;
+reproduction commands, audit and limitations are in
+[the autonomous progress record](jev-autonomous-progress.md).
+The earlier `run_story.py` remains available for layer ablations; see
+[the story exploration review](jev-story-exploration-review.md).
+The T2J measurements below describe the earlier policy, not the autonomous
+runner. Its former `--explore` refusal-as-success bug is now fixed:
+outstanding objective flags make a refused selection an unsuccessful run.
+
 TypeSafe's System One model (`jev-latest`) answers *typed questions* — pick
 one of a set, is this true, how much — and returns probabilities rather than
 generated text. There is nothing to parse, so the answer is either usable or

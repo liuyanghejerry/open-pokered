@@ -506,7 +506,12 @@ impl<'a> Extractor<'a> {
         }
     }
 
-    fn finish(mut self, storyline: &str, triggers: Vec<String>) -> ScriptSemantics {
+    fn finish(
+        mut self,
+        storyline: &str,
+        triggers: Vec<String>,
+        statements: &[StoryStmt],
+    ) -> ScriptSemantics {
         self.reads.sort();
         self.reads.dedup();
         self.effects.sort();
@@ -519,8 +524,29 @@ impl<'a> Extractor<'a> {
             triggers,
             reads: self.reads,
             effects: self.effects,
+            program: statements.iter().map(planning_statement).collect(),
         }
     }
+}
+
+/// Source spans contain build-machine paths and are irrelevant to planning.
+/// Keep the statement structure, including all conditions and text, portable.
+fn planning_statement(stmt: &StoryStmt) -> serde_json::Value {
+    fn strip_spans(value: &mut serde_json::Value) {
+        match value {
+            serde_json::Value::Object(fields) => {
+                fields.remove("span");
+                for value in fields.values_mut() {
+                    strip_spans(value);
+                }
+            }
+            serde_json::Value::Array(values) => values.iter_mut().for_each(strip_spans),
+            _ => {}
+        }
+    }
+    let mut value = serde_json::to_value(stmt).expect("scene statement serializes");
+    strip_spans(&mut value);
+    value
 }
 
 /// Extract one storyline's semantics (coverage not tracked — used by
@@ -539,7 +565,7 @@ pub fn extract_storyline(
         coverage: &mut coverage,
     };
     ex.walk_statements(statements);
-    ex.finish(storyline, triggers.to_vec())
+    ex.finish(storyline, triggers.to_vec(), statements)
 }
 
 /// Extract all storylines of one map (including its `@load` block),
@@ -558,7 +584,7 @@ pub(crate) fn extract_map_with_coverage(
             coverage,
         };
         ex.walk_statements(&on_load.statements);
-        storylines.push(ex.finish("@load", vec!["load".to_string()]));
+        storylines.push(ex.finish("@load", vec!["load".to_string()], &on_load.statements));
         coverage.storylines_analyzed += 1;
     }
     for storyline in &scene.storylines {
@@ -587,7 +613,7 @@ pub(crate) fn extract_map_with_coverage(
             coverage,
         };
         ex.walk_statements(&storyline.statements);
-        storylines.push(ex.finish(&storyline.name, triggers));
+        storylines.push(ex.finish(&storyline.name, triggers, &storyline.statements));
         coverage.storylines_analyzed += 1;
     }
     coverage.maps_analyzed += 1;
@@ -832,6 +858,39 @@ mod tests {
             "{:?}",
             sem.reads
         );
+    }
+
+    #[test]
+    fn planning_program_preserves_branches_and_returns_without_build_paths() {
+        let span = SourceSpan::point("/private/build/map.scene", 2, 1);
+        let statements = vec![StoryStmt::If {
+            condition: Expression::Call {
+                callee: "getFlag".into(),
+                args: vec![Expression::StringLit("ALREADY_DONE".into())],
+            },
+            then_branch: vec![StoryStmt::Return { span: span.clone() }],
+            else_branch: vec![StoryStmt::Command {
+                name: "giveItem".into(),
+                args: vec![Expression::StringLit("OAKS_PARCEL".into())],
+                span: span.clone(),
+            }],
+            span,
+        }];
+        let sem = extract_storyline("TestMap", "main", &[], &statements);
+        let branch = &sem.program[0]["If"];
+        assert_eq!(branch["condition"]["Call"]["callee"], "getFlag");
+        assert!(branch["then_branch"][0].get("Return").is_some());
+        assert_eq!(branch["else_branch"][0]["Command"]["name"], "giveItem");
+        let encoded = serde_json::to_string(&sem).unwrap();
+        assert!(!encoded.contains("/private/build"));
+        assert!(!encoded.contains("\"span\""));
+        let decoded: ScriptSemantics = serde_json::from_str(&encoded).unwrap();
+        assert_eq!(decoded.program, sem.program);
+        // Existing clients/documents can omit the additive field.
+        let mut legacy = serde_json::to_value(&sem).unwrap();
+        legacy.as_object_mut().unwrap().remove("program");
+        let decoded: ScriptSemantics = serde_json::from_value(legacy).unwrap();
+        assert!(decoded.program.is_empty());
     }
 
     use dotzuki_engine_dsl::ast::SourceSpan;
