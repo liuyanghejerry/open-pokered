@@ -74,13 +74,11 @@ def battle_party_target(state):
                 max((i for i, mon in enumerate(party) if mon["hp"] > 0), key=lambda i: party[i]["level"]))
 
 
-ELITE_ROOMS = {'LoreleisRoom', 'BrunosRoom', 'AgathasRoom', 'LancesRoom', 'ChampionsRoom'}
-
-
 def recovery_hp_threshold(state):
-    # At 75%, ordinary Ice attacks repeatedly trigger healing before the
-    # next attack. A recorded Dewgong at 6 HP consumed seven Full Restores.
-    return 0.4 if state.get('map_name') in ELITE_ROOMS else 0.75
+    # At 75%, ordinary attacks can repeatedly trigger healing before the
+    # next attack. Recorded Silph and Lorelei battles exhausted supplies
+    # even with the opponent near defeat. Keep turns available for attacks.
+    return 0.4
 
 
 def battle_medicine(state):
@@ -976,15 +974,48 @@ def m34_sabrina(g):
     g.nav_warp(26, 0, "SilphCo3F", "SilphCo2F")
     g.nav_warp(24, 0, "SilphCo2F", "SilphCo1F")
     g.nav_warp(10, 17, "SilphCo1F", "SaffronCity", approach="down")
-    g.heal_pokecenter((9, 29), "SaffronCity", "SaffronPokecenter")
-    g.nav_warp(34, 3, "SaffronCity", "SaffronGym")
-    for source, dest in [((11, 15), (19, 17)), ((19, 15), (19, 9)),
-                         ((19, 11), (1, 9)), ((1, 11), (5, 5)),
-                         ((1, 5), (11, 11))]:
-        teleport(g, "SaffronGym", source, dest)
-    talk_npc(g, "SaffronGym", 1)
-    require_flag(g, "EVENT_BEAT_SABRINA")
+    # Clear the Silph doorway before turning north toward the Mart.
+    g.nav_to(18, 23, 'SaffronCity')
+    challenge_sabrina(g)
     g.evidence("m34")
+
+
+def retry_town_challenge(g, label, town, center, challenge, max_attempts=6):
+    """Heal and retry only confirmed blackouts, retaining XP and spent money."""
+    for attempt in range(max_attempts):
+        g.heal_pokecenter(*center)
+        try:
+            challenge()
+            return
+        except (AssertionError, RuntimeError):
+            state = g.st()
+            party = (state.get('battle_live') or {}).get('player_party', [])
+            if (attempt + 1 >= max_attempts or state.get('screen') != 'overworld'
+                    or state.get('map_name') != town
+                    or 'player_won: false' not in state.get('battle_phase', '')
+                    or not party or not all(mon['hp'] == 0 for mon in party)):
+                raise
+            print(f'[{label}] blackout {attempt + 1}: healed, retrying', flush=True)
+
+
+def challenge_sabrina(g):
+    bag = {item['item']: item['qty'] for item in g.d.cmd(cmd='get_bag')['data']}
+    quantity = min(max(0, 8 - bag.get('HyperPotion', 0)), g.st()['money'] // 1500)
+    if quantity:
+        g.nav_warp(25, 11, 'SaffronCity', 'SaffronMart')
+        g.nav_to(2, 5, 'SaffronMart'); g.face('left'); g.tap('a', 16)
+        buy(g, 'HyperPotion', 1, quantity)
+        g.nav_warp(3, 7, 'SaffronMart', 'SaffronCity', approach='down')
+    def challenge():
+        g.nav_warp(34, 3, 'SaffronCity', 'SaffronGym')
+        for source, dest in [((11, 15), (19, 17)), ((19, 15), (19, 9)),
+                             ((19, 11), (1, 9)), ((1, 11), (5, 5)),
+                             ((1, 5), (11, 11))]:
+            teleport(g, 'SaffronGym', source, dest)
+        talk_npc(g, 'SaffronGym', 1)
+        require_flag(g, 'EVENT_BEAT_SABRINA')
+    retry_town_challenge(g, 'm34', 'SaffronCity',
+                         ((9, 29), 'SaffronCity', 'SaffronPokecenter'), challenge)
 
 
 def surf_to(g, destination):
@@ -1274,31 +1305,36 @@ def m39_blaine(g):
     mansion_switch(g, "PokemonMansionB1F", 18, 25)
     g.nav_warp(23, 22, "PokemonMansionB1F", "PokemonMansion1F")
     g.nav_warp(26, 27, "PokemonMansion1F", "CinnabarIsland", approach="down")
-    g.heal_pokecenter((11, 11), "CinnabarIsland", "CinnabarPokecenter")
     lead_with(g, "Zapdos")
-    g.nav_warp(18, 3, "CinnabarIsland", "CinnabarGym")
-    for i, (x, y, answer) in enumerate([(15, 7, "YES"), (10, 1, "NO"), (9, 7, "NO"),
-                                       (9, 13, "NO"), (1, 13, "YES"), (1, 7, "NO")], 1):
-        g.nav_to(x, y + 1, "CinnabarGym")
-        g.face("up")
-        g.tap("a", 16)
-        g.dialogue_then_choice()
-        g.choose(answer)
-        assert g.cutscene()
-        require_flag(g, f"EVENT_CINNABAR_GYM_GATE{i}_UNLOCKED")
-    talk_npc(g, "CinnabarGym", 1)
-    require_flag(g, "EVENT_BEAT_BLAINE")
+    def challenge():
+        g.nav_warp(18, 3, 'CinnabarIsland', 'CinnabarGym')
+        for i, (x, y, answer) in enumerate([(15, 7, 'YES'), (10, 1, 'NO'), (9, 7, 'NO'),
+                                           (9, 13, 'NO'), (1, 13, 'YES'), (1, 7, 'NO')], 1):
+            flag = f'EVENT_CINNABAR_GYM_GATE{i}_UNLOCKED'
+            if g.d.cmd(cmd='get_flags')['data'].get(flag):
+                continue
+            g.nav_to(x, y + 1, 'CinnabarGym')
+            g.face('up'); g.tap('a', 16)
+            g.dialogue_then_choice(); g.choose(answer)
+            assert g.cutscene()
+            require_flag(g, flag)
+        talk_npc(g, 'CinnabarGym', 1)
+        require_flag(g, 'EVENT_BEAT_BLAINE')
+    retry_town_challenge(g, 'm39', 'CinnabarIsland',
+                         ((11, 11), 'CinnabarIsland', 'CinnabarPokecenter'), challenge)
     g.evidence("m39")
 
 
 def m40_giovanni_badge(g):
     g.nav_warp(16, 17, "CinnabarGym", "CinnabarIsland", approach="down")
     fly(g, "ViridianCity")
-    g.heal_pokecenter((23, 25), "ViridianCity", "ViridianPokecenter")
     lead_with(g, "Venusaur")
-    g.nav_warp(32, 7, "ViridianCity", "ViridianGym")
-    talk_npc(g, "ViridianGym", 1)
-    require_flag(g, "EVENT_BEAT_VIRIDIAN_GYM_GIOVANNI")
+    def challenge():
+        g.nav_warp(32, 7, 'ViridianCity', 'ViridianGym')
+        talk_npc(g, 'ViridianGym', 1)
+        require_flag(g, 'EVENT_BEAT_VIRIDIAN_GYM_GIOVANNI')
+    retry_town_challenge(g, 'm40', 'ViridianCity',
+                         ((23, 25), 'ViridianCity', 'ViridianPokecenter'), challenge)
     s = g.evidence("m40")
     assert s["badges"] == 255, s["badges"]
 
@@ -1504,8 +1540,7 @@ def m44_indigo(g):
         if any(v["item"] == item for v in g.d.cmd(cmd="get_bag")["data"]):
             g.tap("a", 16)
             sell(g, item)
-    quantity = min(16, (g.st()["money"] - 6000) // 3000)
-    assert quantity >= 8, g.st()["money"]
+    quantity = max(0, min(16, (g.st()["money"] - 6000) // 3000))
     # The m26 exploration preset already carries large stacks. Buy only the
     # amount that fits the current stack cap; crossing 99 would create a new
     # bag slot and can make the subsequent Revive purchase fail at the full
@@ -1518,7 +1553,7 @@ def m44_indigo(g):
         buy(g, "FullRestore", 2, full_restore_buy)
     revive = sum(v["qty"] for v in g.d.cmd(cmd="get_bag")["data"]
                  if v["item"] == "Revive")
-    revive_buy = min(4, max(0, 99 - revive))
+    revive_buy = min(4, max(0, 99 - revive), g.st()['money'] // 1500)
     if revive_buy:
         g.tap("a", 16)
         buy(g, "Revive", 5, revive_buy)

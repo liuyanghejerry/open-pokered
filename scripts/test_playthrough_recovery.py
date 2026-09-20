@@ -89,7 +89,7 @@ class LeagueRecoveryTests(unittest.TestCase):
 
     def test_does_not_heal_lock_at_recorded_dewgong_state(self):
         self.assertIsNone(late.battle_recovery_plan(self.state()))
-        self.assertEqual(late.battle_recovery_plan(self.state(place='SilphCo7F')),('FullRestore',0))
+        self.assertIsNone(late.battle_recovery_plan(self.state(place='SilphCo7F')))
 
     def test_still_treats_critical_hp_and_status(self):
         self.assertEqual(late.battle_recovery_plan(self.state(hp=40)),('FullRestore',0))
@@ -151,6 +151,52 @@ class LeagueRecoveryTests(unittest.TestCase):
         with self.assertRaisesRegex(RuntimeError,'confirmed blackout'):
             late.m49_first_clear(game)
         game.step.assert_not_called()
+
+
+class TownChallengeTests(unittest.TestCase):
+    def game(self):
+        game=Mock()
+        game.st.return_value={'screen':'overworld','map_name':'SaffronCity',
+            'battle_phase':'TrainerVictory { player_won: false }',
+            'battle_live':{'player_party':[{'hp':0},{'hp':0}]}}
+        return game
+
+    def test_confirmed_blackout_heals_and_retries(self):
+        game=self.game();challenge=Mock(side_effect=[AssertionError('missing victory'),None])
+        center=((9,29),'SaffronCity','SaffronPokecenter')
+        late.retry_town_challenge(game,'m34','SaffronCity',center,challenge)
+        self.assertEqual(challenge.call_count,2)
+        self.assertEqual(game.heal_pokecenter.call_count,2)
+
+    def test_repeated_defeats_have_finite_budget(self):
+        game=self.game();challenge=Mock(side_effect=AssertionError('missing victory'))
+        with self.assertRaises(AssertionError):
+            late.retry_town_challenge(game,'m34','SaffronCity',(),challenge,max_attempts=3)
+        self.assertEqual(challenge.call_count,3)
+
+    def test_unrelated_failure_is_not_retried(self):
+        game=self.game();game.st.return_value['battle_live']['player_party'][0]['hp']=10
+        challenge=Mock(side_effect=RuntimeError('disconnected path'))
+        with self.assertRaisesRegex(RuntimeError,'disconnected'):
+            late.retry_town_challenge(game,'m34','SaffronCity',(),challenge)
+        self.assertEqual(challenge.call_count,1)
+
+    @patch.object(late,'buy')
+    @patch.object(late,'lead_with')
+    def test_league_supplies_respect_low_cash(self,lead,buy):
+        game=Mock();game.st.return_value={'money':2000,'party':[{'hp':10,'max_hp':10}]}
+        game.d.cmd.return_value={'data':[]}
+        late.m44_indigo(game)
+        buy.assert_called_once_with(game,'Revive',5,1)
+
+    @patch.object(late,'retry_town_challenge')
+    @patch.object(late,'buy')
+    def test_sabrina_preparation_buys_only_affordable_missing_stock(self,buy,retry):
+        game=Mock();game.st.return_value={'money':3000}
+        game.d.cmd.return_value={'data':[{'item':'HyperPotion','qty':1}]}
+        late.challenge_sabrina(game)
+        buy.assert_called_once_with(game,'HyperPotion',1,2)
+        retry.assert_called_once()
 
 
 if __name__=='__main__':unittest.main()
