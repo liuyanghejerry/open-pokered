@@ -1740,9 +1740,24 @@ def m09_to_pewter(g):
             walk_pallet_to_pewter(g)
             break
         except NavError:
-            if attempt == 2 or g.st()["map_name"] != "ViridianCity":
+            state = g.st()
+            party = (state.get('battle_live') or {}).get('player_party', [])
+            if (attempt == 2 or state.get('screen') != 'overworld'
+                    or state.get('map_name') != 'ViridianCity'
+                    or 'player_won: false' not in state.get('battle_phase', '')
+                    or not party or not all(mon['hp'] == 0 for mon in party)):
                 raise
             g.evidence(f"m09-blackout-{attempt + 1}")
+            # Repeating the forest with the same level-5 starter can fail
+            # without earning any XP. Bring forward the existing m10
+            # preparation, using real Route 1 battles and Center healing.
+            g.nav_to(20, 32, map_name='ViridianCity')
+            g.nav_to(20, 33, map_name='ViridianCity')
+            g.d.drive(['down'] * 24, frames=28)
+            g.step(8)
+            g.nav_to(12, 7, map_name='Route1')
+            heal = ((23, 25), 'ViridianCity', 'ViridianPokecenter')
+            assert g.train_until(13, 'Route1', (12, 7), heal), 'forest recovery training stalled'
     g.evidence("m09")
 
 

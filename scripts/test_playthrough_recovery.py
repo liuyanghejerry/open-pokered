@@ -1,9 +1,31 @@
-"""Regression scenarios for bounded Silph rival blackout recovery."""
+"""Regression scenarios for forest, Silph rival and league blackout recovery."""
 import unittest
 from unittest.mock import Mock, patch
 import playthrough_late as late
 import playthrough as pt
 import sys
+
+
+class ForestRecoveryTests(unittest.TestCase):
+    @patch.object(pt,'walk_pallet_to_pewter')
+    def test_real_blackout_advances_existing_training_before_retry(self,walk):
+        walk.side_effect=[pt.NavError('warped out'),None]
+        game=Mock()
+        game.st.return_value={'screen':'overworld','map_name':'ViridianCity',
+            'battle_phase':'TrainerVictory { player_won: false }',
+            'battle_live':{'player_party':[{'hp':0}]}}
+        pt.m09_to_pewter(game)
+        game.train_until.assert_called_once_with(13,'Route1',(12,7),
+            ((23,25),'ViridianCity','ViridianPokecenter'))
+        self.assertEqual(walk.call_count,2)
+
+    @patch.object(pt,'walk_pallet_to_pewter',side_effect=pt.NavError('unexpected warp'))
+    def test_city_location_without_blackout_does_not_trigger_training(self,_):
+        game=Mock()
+        game.st.return_value={'screen':'overworld','map_name':'ViridianCity',
+            'battle_phase':'PlayerMenu','battle_live':{'player_party':[{'hp':20}]}}
+        with self.assertRaises(pt.NavError):pt.m09_to_pewter(game)
+        game.train_until.assert_not_called()
 
 
 class SilphRecoveryTests(unittest.TestCase):
