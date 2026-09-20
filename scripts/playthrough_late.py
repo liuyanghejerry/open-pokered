@@ -107,7 +107,8 @@ def battle_recovery_plan(state):
     bag = {v["item"]: v["qty"] for v in state["battle_inventory"]}
     if party[target]["hp"] == 0 and bag.get("Revive"):
         return "Revive", target
-    if target != active and party[target]["hp"] < party[target]["max_hp"] * recovery_hp_threshold(state):
+    if (target != active and 0 < party[target]["hp"]
+            < party[target]["max_hp"] * recovery_hp_threshold(state)):
         medicine = next((item for item in ["HyperPotion", "FullRestore", "MaxPotion"] if bag.get(item)), None)
         if medicine:
             return medicine, target

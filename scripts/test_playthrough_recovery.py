@@ -95,6 +95,15 @@ class LeagueRecoveryTests(unittest.TestCase):
         self.assertEqual(late.battle_recovery_plan(self.state(hp=40)),('FullRestore',0))
         self.assertEqual(late.battle_recovery_plan(self.state(hp=157,status='Freeze')),('FullRestore',0))
 
+    def test_does_not_use_hp_medicine_on_fainted_target_without_revive(self):
+        state=self.state(hp=140)
+        live=state['battle_live']
+        live['player']['species']='Venusaur'
+        live['player_party']=[dict(live['player'],species='Zapdos',hp=0),live['player']]
+        self.assertIsNone(late.battle_recovery_plan(state))
+        state['battle_inventory'].append({'item':'Revive','qty':1})
+        self.assertEqual(late.battle_recovery_plan(state),('Revive',0))
+
     @patch.object(late,'lead_with')
     def test_confirmed_blackout_walks_back_without_injected_supplies(self,lead):
         game=Mock();state=self.state(hp=0,place='IndigoPlateau')
