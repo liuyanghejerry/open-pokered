@@ -28,6 +28,8 @@ def validate(runs):
         if a[key]!=b[key]:raise ValueError(f'Non-comparable {key}: {a[key]} != {b[key]}')
     if [a['backend'],b['backend']]!=['jev','laya']:raise ValueError('Require Jev then Laya in the corresponding CLI arguments')
     if a['seconds']!=1200:raise ValueError('The formal report requires a 20-minute budget')
+    if a['clock']['start_monotonic']+a['clock']['raw_s']>b['clock']['start_monotonic']:
+        raise ValueError('Timed runs overlap or were not executed in Jev then Laya order on this host')
     for run in runs:
         s=run['summary'];model=s['model'];states=run['states'];requests=run['requests']
         assert all(x['effective_s']<=s['seconds'] for x in states)
@@ -148,6 +150,7 @@ def report(runs,out):
         for j,l in matches]
     (out/'decision-evidence.json').write_text(json.dumps(cases,ensure_ascii=False,indent=2)+'\n')
     audit={'valid':True,'checks':['same seed / controller hash / game binary / Python / budget',
+        'Jev timed run ends before Laya timed run starts on the same host',
         'all scored observations within budget and chronological','token and RTT totals match request journals',
         'final scored snapshot matches observation journal'],'sources':[]}
     for run in runs:
