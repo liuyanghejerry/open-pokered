@@ -74,10 +74,19 @@ def battle_party_target(state):
                 max((i for i, mon in enumerate(party) if mon["hp"] > 0), key=lambda i: party[i]["level"]))
 
 
+ELITE_ROOMS = {'LoreleisRoom', 'BrunosRoom', 'AgathasRoom', 'LancesRoom', 'ChampionsRoom'}
+
+
+def recovery_hp_threshold(state):
+    # At 75%, ordinary Ice attacks repeatedly trigger healing before the
+    # next attack. A recorded Dewgong at 6 HP consumed seven Full Restores.
+    return 0.4 if state.get('map_name') in ELITE_ROOMS else 0.75
+
+
 def battle_medicine(state):
     live = state["battle_live"]["player"]
     bag = {v["item"]: v["qty"] for v in state["battle_inventory"]}
-    hurt = live["hp"] < live["max_hp"] * 0.75
+    hurt = live["hp"] < live["max_hp"] * recovery_hp_threshold(state)
     status = live["status"] != "None"
     if status and bag.get("FullRestore"):
         return "FullRestore"
@@ -98,7 +107,7 @@ def battle_recovery_plan(state):
     bag = {v["item"]: v["qty"] for v in state["battle_inventory"]}
     if party[target]["hp"] == 0 and bag.get("Revive"):
         return "Revive", target
-    if target != active and party[target]["hp"] < party[target]["max_hp"] * 0.75:
+    if target != active and party[target]["hp"] < party[target]["max_hp"] * recovery_hp_threshold(state):
         medicine = next((item for item in ["HyperPotion", "FullRestore", "MaxPotion"] if bag.get(item)), None)
         if medicine:
             return medicine, target
@@ -169,6 +178,20 @@ def use_item(g, name, party_index=None, forget=None):
         raise RuntimeError(f"bag item not selected: {name}")
     g.tap("a", 8)  # USE / TOSS / CANCEL, default USE.
     g.tap("a", 12)
+    # TM/HM use now has two blocking prompts before party selection.
+    # Observe them explicitly: waiting extra frames cannot dismiss a prompt.
+    for _ in range(4):
+        menu = g.st().get("field_menu")
+        if not menu or menu["kind"] != "bag":
+            break
+        phase = menu.get("phase", "")
+        if phase.startswith("MachineBoot"):
+            g.tap("a", 12)
+        elif phase.startswith("MachineTeach"):
+            cursor = int(re.search(r"cursor: (\d+)", phase)[1])
+            g.tap("a" if cursor == 0 else "up", 12)
+        else:
+            break
     if party_index is not None:
         for _ in range(8):
             menu = g.st()["field_menu"]
@@ -180,7 +203,7 @@ def use_item(g, name, party_index=None, forget=None):
         if forget is not None:
             for _ in range(8):
                 menu = g.st()["field_menu"]
-                if menu is None:
+                if menu is None or menu.get("phase", "").startswith("ItemUseNotice"):
                     break  # A free slot did not require replacement.
                 assert menu["phase"].startswith("ChooseMove"), menu
                 target = menu["known_moves"].index(forget)
@@ -189,6 +212,23 @@ def use_item(g, name, party_index=None, forget=None):
                     g.tap("a", 12)
                     break
                 g.tap("down", 8)
+    # Item results can return to party/bag menus instead of the overworld.
+    # Close only the expected notice/browsing states, retaining assertions
+    # for an unresolved move replacement or any unexpected menu.
+    for _ in range(20):
+        menu = g.st().get("field_menu")
+        if menu is None:
+            break
+        phase = menu.get("phase", "")
+        if phase == "ItemHpRestore":
+            g.step(16)
+        elif phase.startswith("ItemUseNotice"):
+            g.tap("a", 12)
+        else:
+            assert menu["kind"] == "start" or phase == "Browsing", menu
+            g.tap("b", 12)
+    else:
+        raise RuntimeError(f"item result menu did not close: {name}")
     assert g.cutscene()
 
 
@@ -851,17 +891,7 @@ def m32_lapras(g):
     buy(g, "HyperPotion", 1, 8)
     g.nav_warp(3, 7, "SaffronMart", "SaffronCity", approach="down")
     g.heal_pokecenter((9, 29), "SaffronCity", "SaffronPokecenter")
-    g.nav_warp(18, 21, "SaffronCity", "SilphCo1F")
-    g.nav_warp(26, 0, "SilphCo1F", "SilphCo2F")
-    g.nav_warp(26, 0, "SilphCo2F", "SilphCo3F")
-    talk_object(g, "SilphCo3F", 17, 9)
-    require_flag(g, "EVENT_SILPH_CO_3_UNLOCKED_DOOR2")
-    g.nav_warp(11, 11, "SilphCo3F", "SilphCo7F")
-    g.nav_to(3, 3, "SilphCo7F")
-    assert g.cutscene()
-    if g.st()["screen"] == "battle":
-        g.battle_loop()
-        assert g.cutscene()
+    challenge_silph_rival(g)
     require_flag(g, "EVENT_BEAT_SILPH_CO_RIVAL")
     talk_npc(g, "SilphCo7F", 1)
     require_flag(g, "EVENT_GOT_LAPRAS")
@@ -870,6 +900,39 @@ def m32_lapras(g):
     use_item(g, "Hm04", party_index=1, forget="Growl")
     assert "Strength" in g.st()["party"][1]["moves"]
     g.evidence("m32")
+
+
+def challenge_silph_rival(g, max_attempts=4):
+    """Retry observed blackouts from Saffron; preserve genuine driver errors.
+
+    Like the Tower recovery, this walks the earned route again. It does not
+    reload a checkpoint, inject progress, or change the team/battle policy.
+    """
+    for attempt in range(max_attempts):
+        if attempt:
+            g.heal_pokecenter((9, 29), "SaffronCity", "SaffronPokecenter")
+        try:
+            g.nav_warp(18, 21, "SaffronCity", "SilphCo1F")
+            g.nav_warp(26, 0, "SilphCo1F", "SilphCo2F")
+            g.nav_warp(26, 0, "SilphCo2F", "SilphCo3F")
+            talk_object(g, "SilphCo3F", 17, 9)
+            require_flag(g, "EVENT_SILPH_CO_3_UNLOCKED_DOOR2")
+            g.nav_warp(11, 11, "SilphCo3F", "SilphCo7F")
+            g.nav_to(3, 3, "SilphCo7F")
+            assert g.cutscene()
+            if g.st()["screen"] == "battle":
+                g.battle_loop()
+                assert g.cutscene()
+            require_flag(g, "EVENT_BEAT_SILPH_CO_RIVAL")
+            return
+        except (AssertionError, RuntimeError):
+            state = g.st()
+            if (attempt + 1 >= max_attempts or state["screen"] != "overworld"
+                    or state["map_name"] != "SaffronCity"
+                    or state.get("battle_live", {}).get("player", {}).get("hp") != 0
+                    or "player_won: false" not in state.get("battle_phase", "")):
+                raise
+            print(f"[m32] blackout {attempt + 1}: returning to the Silph rival")
 
 
 def silph_fifth_floor_pad(g):
@@ -1464,11 +1527,45 @@ def m44_indigo(g):
 
 def recover_party(g):
     for index, mon in enumerate(g.st()["party"]):
+        bag = {v['item']: v['qty'] for v in g.d.cmd(cmd='get_bag')['data']}
         if mon["hp"] == 0:
+            if not bag.get('Revive'):
+                continue
             use_item(g, "Revive", party_index=index)
         mon = g.st()["party"][index]
         if mon["hp"] < mon["max_hp"] or mon["status"] != "None":
-            use_item(g, "FullRestore", party_index=index)
+            if bag.get('FullRestore'):
+                use_item(g, "FullRestore", party_index=index)
+
+
+def league_blackout(state):
+    live = state.get('battle_live') or {}
+    party = live.get('player_party', [])
+    return (state.get('screen') == 'overworld' and state.get('map_name') == 'IndigoPlateau'
+            and 'player_won: false' in state.get('battle_phase', '')
+            and bool(party) and all(mon['hp'] == 0 for mon in party))
+
+
+def retry_elite_four(g, milestone, retries, max_retries=5):
+    """Retry earned league entry only after a confirmed whole-party blackout."""
+    if milestone not in {'m45', 'm46', 'm47', 'm48', 'm49'} or retries >= max_retries:
+        return False
+    if not league_blackout(g.st()):
+        return False
+    print(f'[league] blackout {retries + 1}: re-entering from Lorelei', flush=True)
+    g.nav_warp(9, 5, 'IndigoPlateau', 'IndigoPlateauLobby')
+    # Blackout already restores HP and PP. Buy only what current money permits;
+    # there is no save reload, injected money or skip over the cleared trainers.
+    bag = {v['item']: v['qty'] for v in g.d.cmd(cmd='get_bag')['data']}
+    money = g.st()['money']
+    for item, price, wanted, slot in [('FullRestore', 3000, 16, 2), ('Revive', 1500, 4, 5)]:
+        quantity = min(max(0, wanted - bag.get(item, 0)), money // price)
+        if quantity:
+            g.nav_to(2, 5, 'IndigoPlateauLobby'); g.face('left'); g.tap('a', 16)
+            buy(g, item, slot, quantity)
+            money = g.st()['money']
+    lead_with(g, 'Zapdos')
+    return True
 
 
 def elite_battle(g, map_name, text_id, flag, mid):
@@ -1508,10 +1605,16 @@ def m49_first_clear(g):
     assert g.cutscene()
     g.wait("screen=battle", 900)
     g.battle_loop(max_iters=1600)
+    if league_blackout(g.st()):
+        raise RuntimeError('champion battle ended in a confirmed blackout')
     seen_hof, seen_credits, final_button = False, False, False
     phases = []
     for _ in range(1200):
         s = g.st()
+        # The battle screen can close before the blackout warp finishes.
+        # Recheck during the transition instead of waiting for absent credits.
+        if league_blackout(s):
+            raise RuntimeError('champion battle ended in a confirmed blackout')
         if s.get("hof_phase"):
             seen_hof = True
         if s.get("credits_phase"):

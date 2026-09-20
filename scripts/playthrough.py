@@ -1945,20 +1945,31 @@ def main():
     if args.resume and g.marker_at_least("m01"):
         resume_reentry(g)
     try:
-        for mid, desc, fn in MILESTONES:
+        stage, league_retries = 0, 0
+        while stage < len(MILESTONES):
+            mid, desc, fn = MILESTONES[stage]
             if args.resume and state_done(mid, g):
                 print(f"== {mid}: {desc}")
                 print(f"   skipped (state/marker already satisfied)")
                 if args.until == mid:
                     break
+                stage += 1
                 continue
             print(f"== {mid}: {desc}")
             t0 = time.time()
             g.smart_moves = Game.milestone_index(mid) >= Game.milestone_index("m11")
-            if mid == "m05":
-                fn(g, args.starter)
-            else:
-                fn(g)
+            try:
+                if mid == "m05":
+                    fn(g, args.starter)
+                else:
+                    fn(g)
+            except (AssertionError, RuntimeError):
+                from playthrough_late import retry_elite_four
+                if not retry_elite_four(g, mid, league_retries):
+                    raise
+                league_retries += 1
+                stage = next(i for i, entry in enumerate(MILESTONES) if entry[0] == 'm45')
+                continue
             print(f"   done ({time.time()-t0:.1f}s wall)")
             if g.persistent:
                 g.checkpoint(mid)
@@ -1973,6 +1984,7 @@ def main():
                     json.dumps(observations, ensure_ascii=False, indent=2))
             if args.until == mid:
                 break
+            stage += 1
         print("PLAYTHROUGH REACHED REQUESTED MILESTONE")
     except Exception:
         if args.artifacts:
