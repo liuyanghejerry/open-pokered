@@ -1,0 +1,361 @@
+{
+  "backend": "example-stub",
+  "seed": 42,
+  "profile": "native-backend-replacement",
+  "layers": {
+    "strategy": "example-stub",
+    "action": "example-stub"
+  },
+  "limits": {
+    "calls": 50000,
+    "actions": 50000,
+    "frames": 40000000
+  },
+  "target": "become-champion",
+  "boot": "fresh NEW GAME",
+  "clock_mode": "driven-only",
+  "seconds": 20.0,
+  "record_video": false,
+  "sidequest_catalog": {
+    "bicycle": {
+      "label": "取得自行车",
+      "flags": [
+        "EVENT_GOT_BICYCLE"
+      ]
+    },
+    "old_rod": {
+      "label": "取得旧钓竿",
+      "flags": [
+        "EVENT_GOT_OLD_ROD"
+      ]
+    },
+    "good_rod": {
+      "label": "取得好钓竿",
+      "flags": [
+        "EVENT_GOT_GOOD_ROD"
+      ]
+    },
+    "super_rod": {
+      "label": "取得超级钓竿",
+      "items": [
+        "SuperRod"
+      ]
+    },
+    "fly": {
+      "label": "取得飞翔秘传机",
+      "items": [
+        "Hm02"
+      ]
+    },
+    "flash": {
+      "label": "取得闪光秘传机",
+      "items": [
+        "Hm05"
+      ]
+    },
+    "dojo_gift": {
+      "label": "格斗道场获赠精灵",
+      "flags": [
+        "EVENT_GOT_HITMONLEE",
+        "EVENT_GOT_HITMONCHAN"
+      ]
+    },
+    "zapdos": {
+      "label": "捕获闪电鸟",
+      "owned": [
+        145
+      ]
+    },
+    "articuno": {
+      "label": "捕获急冻鸟",
+      "owned": [
+        144
+      ]
+    },
+    "moltres": {
+      "label": "捕获火焰鸟",
+      "owned": [
+        146
+      ]
+    },
+    "fossil_revived": {
+      "label": "拥有复活化石精灵",
+      "owned": [
+        138,
+        140,
+        142
+      ]
+    }
+  },
+  "controller_uses_milestones": false,
+  "telemetry_visibility": "Evaluator only; stripped from controller responses to preserve model inputs.",
+  "source_commit": "23548f3729cc1729abbd6d517a3a21fbacc7bc9a",
+  "source_branch": "feat/laya-jev-budget-eval",
+  "binary_sha256": "ba629a591ad69997100926475d0bfc51bf67178dbd6c9be99d5da2e31d6d02ce",
+  "python": "3.12.13 (main, Mar 25 2026, 03:16:06) [Clang 22.1.1 ]",
+  "platform": "macOS-15.7.4-arm64-arm-64bit",
+  "sampling_interval_s": 0.5,
+  "setup_started_utc": "2026-09-21T06:21:45Z",
+  "host_load_at_setup": [
+    29.91064453125,
+    11.21826171875,
+    8.69873046875
+  ],
+  "benchmark": {
+    "id": "story-example-stub-s42-r0",
+    "track": "story",
+    "model_id": "example-stub",
+    "seed": 42,
+    "repetition": 0,
+    "comparison_key": "af59eed306110c7974ee04fea7feef18768db200a600b4dd167901cc40ef4e53",
+    "conditions": {
+      "benchmark": "open-pokered-autonomy-v1",
+      "profile": "native-controller-v1",
+      "purpose": "smoke",
+      "source_sha256": "935878bb05f7089c99e30736162e09dac401718f295f9f1ebfe76e546a5e74b8",
+      "data_sha256": "a7b5f45f6bd2251753dbcd3352ed4e7eb9630658993f7710ee5a45a266cdf9a6",
+      "host": {
+        "system": "Darwin",
+        "release": "24.6.0",
+        "machine": "arm64",
+        "processor": "arm",
+        "python": "3.12.13 (main, Mar 25 2026, 03:16:06) [Clang 22.1.1 ]",
+        "machdep.cpu.brand_string": "Apple M3 Pro",
+        "hw.memsize": "19327352832"
+      },
+      "binary_sha256": "ba629a591ad69997100926475d0bfc51bf67178dbd6c9be99d5da2e31d6d02ce",
+      "story": {
+        "seconds": 20.0,
+        "max_rtt_credit_s": 0
+      },
+      "decisions": {
+        "seconds": 300,
+        "option_orders": [
+          "original",
+          "reversed"
+        ]
+      },
+      "cases_sha256": "d790c0b4c6e9413b5f1dfce49ea0c7097ae8b4183c69d51523dd91e5c1beb8f9"
+    },
+    "model_config_sha256": "d2f816b50d546680a3975d3216be34eeea6c38070ead1331ccf8d06d885a0aef"
+  },
+  "hardware": {
+    "machdep.cpu.brand_string": "Apple M3 Pro",
+    "hw.memsize": "19327352832"
+  },
+  "source_files": {
+    "scripts/debug_drive.py": "acc1966fd4ec598829abc6ac64b6d2eece71ddb62b2b45f5586405b18d63d2fd",
+    "scripts/openpokered/__init__.py": "52d054963a89799fbc36080ba54da5c154cb263584a48c44d7cbbd6a14b459be",
+    "scripts/openpokered/autonomous_story.py": "bab5a0e7f8d608b1d2a65e48dc06b1ae702aebf0cc80a068e29e7ba68a156c7e",
+    "scripts/openpokered/benchmark.py": "99558d70d6cf402ab257069e287da3ae39e6fbf421a35cb81498e2404d2a8713",
+    "scripts/openpokered/benchmark_models.py": "6737a0952e5c6bfb81e437bb3f9ec973cc8b36ede68851211a765303f9cc4e1a",
+    "scripts/openpokered/benchmark_reports.py": "e9ef0c52b62db44e056508a25e730f9217e5b6621272159785b2e0c20e6a757f",
+    "scripts/openpokered/boulder_skills.py": "e604111e531a7162af2d128911a6df59757c45fa447a90f3cd5c10636eb1c08b",
+    "scripts/openpokered/calibrate_rq1.py": "cfcb96e42ad064b7348f3346ab8c105ea0fde0ea54b12ae08031245690bccda7",
+    "scripts/openpokered/client.py": "d7afcb2456aa99a44b7b7b6d7a39c04e7a3e2990601db69660cd0256221fa891",
+    "scripts/openpokered/env.py": "b0620c550cfa7435aebb898042865cdb82682ae409842f898f1684667bed1036",
+    "scripts/openpokered/evaluation.py": "84c8d4614c16e26bd5f652272378501b586c29b4ef70e6b6d95a52d6d6cc6751",
+    "scripts/openpokered/evaluation_models.py": "ade5eb7ad20b0ac18d9072e6cafb034b30647f43ed0a283c3009e5365f621021",
+    "scripts/openpokered/judgment_agent.py": "3243e75be1688a692850044738db684bdf1dc87a90ca3185a3f1e8e47ccd1359",
+    "scripts/openpokered/llm_agent.py": "a11c2bd3b1f175697d8ff8688b0cf73695e38f0d4a42173ddf5e952bf93aafcb",
+    "scripts/openpokered/metrics.py": "c8e59cef6d829c2f70727fe79af98a0d5a4be0622b005686b1f96dc989fec33e",
+    "scripts/openpokered/navigation_skills.py": "112992507b004b956b8f72dc3f4a462a207201fa371eb44c943b1a4368c15487",
+    "scripts/openpokered/oracle.py": "989270287cbd94c19ffd6d400ee9bcf197f57c2fd72c61f1530bf3ac3a6458c7",
+    "scripts/openpokered/planner.py": "c224412405da1b562515896846edf6e21a728fcd459bf18ea4cab544ed3e3420",
+    "scripts/openpokered/playthrough_judgments.py": "a435f438e48c698b996eb2056ebd8045da6d1290dfa4a3b5318e67395ae7174c",
+    "scripts/openpokered/policies.py": "feb34b961c40e29130455424921b1e53870983fcee20f1213cab3a0aa0e436d1",
+    "scripts/openpokered/report_model_evaluation.py": "89ca5b158b0732ce86d69a5c1ab8c77eb97f8f4cc704beb009397fd27c0d4cb1",
+    "scripts/openpokered/run_autonomous.py": "b0b7c54162eeaf7974de4d18ba4776923cc202c57fc1dafbc37d15f9869cad41",
+    "scripts/openpokered/run_judgment.py": "af074a3563863b35f7bcf1f10550dea79d663dafad0c69e492cd49ba8294f459",
+    "scripts/openpokered/run_llm.py": "6278c448aa4fd2e14c9e04fe7176d34258825e253a2f721a875f5efc8466203e",
+    "scripts/openpokered/run_model_evaluation.py": "e3572fab8e07410261688b83f61b52838eabc3b4cf46e5f35a5ac0ff6bc15348",
+    "scripts/openpokered/run_rq1.py": "017d7d318ec9f71f03bc3e5ae6548713a76a0661eed7ec8b7f9dba25fe2015bb",
+    "scripts/openpokered/run_rq2.py": "4d3944042ad30b2e91539423de8f67a6cc2fbba758219917922ddc38d4190222",
+    "scripts/openpokered/run_story.py": "d8fe692d8d0b52f08341345bbdfa1aa395b9d1cf59450520f8a3fc713e513011",
+    "scripts/openpokered/run_task.py": "d2e75348ce24c38efe9ac389d70f498c939f34691b9571ac8bb8f91f40f8b1f0",
+    "scripts/openpokered/semantics.py": "a9a92ae8f5274c8c9a77239b938c0e80d762d1280d1a426a03c981643a759b60",
+    "scripts/openpokered/skills.py": "ebd273bbc248a228371d9ca4961965618558370f888ee65ddedc8c141b549bab",
+    "scripts/openpokered/story_agent.py": "cc6768f19331de69f3503c4e01575c1bbb4dd3d219d255fe6103aa43861edf83",
+    "scripts/openpokered/story_rules.py": "6354850db55c2fa5fd7dd357c09e0ab451e5f05c6046a260a6a98977209e11c8",
+    "scripts/openpokered/tasks.py": "0f232e16b74a699934c269f9e2ba76124a18ac84f01596d1f6b28f51912f9a22",
+    "scripts/openpokered/typesafe.py": "5e475693a583d05f3605aeff38bdb8bbc6f83f7afe52fed13893bf90439bb5c2",
+    "scripts/openpokered/typesafe_probe.py": "8a83e95ead894aaa101dd8e8001c3bae411326809c4463c15dcaabb2ca5a85ea",
+    "scripts/openpokered/validate_variant.py": "30fbe502ced2523c9c96fa330c3ace63f1cf81998311da45bebf9efcc4e71dd0",
+    "scripts/openpokered/variants.py": "b72176e145d9e481008cea2b3c20ea6f968377e27018e4409c3ce96bc81f5975",
+    "scripts/playthrough.py": "f3f7732c9cc2e8748425e0a38945b23918de81f2acc0503f1eb3de0b93770c6f",
+    "scripts/playthrough_late.py": "fa2087acb0b9577fbd99ed25907c7bdd0b42d6de145bebdf373e5bcf366a65c0"
+  },
+  "source_sha256": "935878bb05f7089c99e30736162e09dac401718f295f9f1ebfe76e546a5e74b8",
+  "setup_s": 0.6419870830141008,
+  "timed_started_utc": "2026-09-21T06:21:45Z",
+  "host_load_at_finish": [
+    23.462890625,
+    10.95947265625,
+    8.66357421875
+  ],
+  "deadline_overrun_s": 0.5846937499591149,
+  "exit_detail": "effective_time_budget",
+  "deadline_signal_received": true,
+  "reason": "effective_time_budget",
+  "completed": false,
+  "clock": {
+    "start_monotonic": 508149.226324458,
+    "raw_s": 20.584693749959115,
+    "rtt_credit_s": 0.0,
+    "effective_s": 20.584693749959115,
+    "limit_s": 20.0,
+    "max_rtt_credit_s": 0
+  },
+  "metrics": {
+    "final": {
+      "effective_s": 19.199558832973707,
+      "raw_s": 19.199558832973707,
+      "rtt_credit_s": 0.0,
+      "frame": 13924,
+      "map": "ViridianForest",
+      "position": [
+        1,
+        18
+      ],
+      "screen": "battle",
+      "badges": 0,
+      "completed_objectives": [
+        "get-starter",
+        "get-pokedex"
+      ],
+      "sidequests": [],
+      "map_count": 6,
+      "pokedex": {
+        "owned": 1,
+        "owned_numbers": [
+          4
+        ],
+        "seen": 5,
+        "total": 151
+      },
+      "party": [
+        {
+          "hp": 13,
+          "level": 6,
+          "max_hp": 22,
+          "moves": [
+            "Scratch",
+            "Growl",
+            "None",
+            "None"
+          ],
+          "pp": [
+            29,
+            40,
+            0,
+            0
+          ],
+          "species": "Charmander",
+          "status": "Poison",
+          "total_exp": 205
+        }
+      ],
+      "party_source": "battle_live",
+      "money": 3175,
+      "observed_money_gained": 175,
+      "observed_money_lost": 0,
+      "failures": {},
+      "suspected_stall": false
+    },
+    "milestones": {
+      "get-starter": {
+        "effective_s": 6.378780957951676,
+        "raw_s": 6.378780957951676,
+        "frame": 2986
+      },
+      "get-pokedex": {
+        "effective_s": 16.705439916986506,
+        "raw_s": 16.705439916986506,
+        "frame": 9045
+      }
+    },
+    "objective_total": 11,
+    "maps": [
+      "OaksLab",
+      "RedsHouse2F",
+      "Route1",
+      "Route2",
+      "ViridianForest",
+      "ViridianMart"
+    ],
+    "sidequests": {},
+    "sidequest_total": 11,
+    "party_levels": {
+      "sum": 6,
+      "max": 6,
+      "mean": 6.0
+    },
+    "money": {
+      "initial": 3000,
+      "final": 3175,
+      "peak": 3175,
+      "observed_positive_deltas": 175,
+      "observed_negative_deltas": 0,
+      "scope": "Sampled balance changes, not exact gross income/spending; multiple changes between observations can cancel."
+    },
+    "failures": {},
+    "suspected_stalls": [],
+    "stall_policy": "Report only; no backend-specific recovery. No new flags/maps/dex/experience/levels for 180 effective seconds."
+  },
+  "model": {
+    "backend": "example-stub",
+    "metadata": {
+      "provider": "command",
+      "requested_model": "example-first-option-stub",
+      "protocol": "open-pokered-judge-v1",
+      "adapter_metadata": {
+        "implementation": "example-first-option",
+        "stub": true
+      },
+      "rtt_policy": "No verified socket RTT; no deduction.",
+      "token_scope": "Adapter-reported usage; missing usage remains null."
+    },
+    "calls": 19,
+    "successful_calls": 19,
+    "actual_models": [
+      "example-first-option-stub"
+    ],
+    "usage_missing_calls": 19,
+    "input_tokens": 0,
+    "output_tokens": 0,
+    "latency_sum_s": 0.004334251047112048,
+    "latency_median_s": 0.00018866703612729907,
+    "latency_p95_s": 0.00041879102354869246,
+    "rtt_measurements": 0,
+    "encoding": {
+      "questions": 0,
+      "state_tokens_before": 0,
+      "state_tokens_dropped": 0,
+      "questions_with_state_truncation": 0,
+      "candidate_tokens_dropped": 0,
+      "instruction_tokens_dropped": 0
+    },
+    "warmup": {
+      "calls": 1,
+      "latency_s": 0.0002211249666288495,
+      "input_tokens": 0
+    }
+  },
+  "actions": 7,
+  "action_cache_hits": 9,
+  "first_clear_verification": null,
+  "commands": {
+    "get_state": 1333,
+    "press_timeline": 564,
+    "get_script_semantics": 249,
+    "get_flags": 48,
+    "get_bag": 48,
+    "get_agent_state": 152,
+    "get_npcs": 105,
+    "step_frames": 207,
+    "find_world_route": 135,
+    "skip_dialogue": 28,
+    "move_to": 1,
+    "wait_until": 7
+  }
+}

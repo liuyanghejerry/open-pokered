@@ -134,6 +134,19 @@ screen Bag {
 
 Read state → drive inputs deterministically → verify the pixels. That loop maps one-to-one onto an agent's working cycle, and the repo ships agent-facing tooling built on it (debug and visual-verification skills under `.agents/skills/`). Fidelity audits (`docs/FIDELITY_GAPS.md`) and the screenshots above are products of the same loop: features get implemented, driven, and visually verified end to end — by humans or by agents.
 
+## Model benchmark
+
+The [autonomy benchmark](benchmarks/autonomy/README.md) compares interchangeable
+models on fixed decision cases and fresh, time-limited game exploration. A JSON
+manifest selects models, seeds, repetitions and budgets; adapters support Jev,
+Laya MLX and other models through a persistent JSON-lines process. Reports include
+story progress, elapsed time, token usage, Pokédex coverage, side quests, party
+training, failures and money, with raw evidence and comparison fingerprints.
+
+```bash
+python3 scripts/openpokered/benchmark.py validate benchmarks/autonomy/manifest.example.json
+```
+
 ## Editor Suite
 
 **Try it online: [https://liuyanghejerry.github.io/open-pokered/editor/](https://liuyanghejerry.github.io/open-pokered/editor/)**

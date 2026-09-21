@@ -1,0 +1,826 @@
+{
+  "checkpoint": "aac6fef/laya-mlx",
+  "revision": "20aed815fc6acde75733882e7ec0e3f28aeb9717",
+  "probes": [
+    {
+      "name": "native",
+      "state": {
+        "subgoal": [
+          "flag",
+          "EVENT_OAK_APPEARED_IN_PALLET",
+          true
+        ],
+        "advances": [
+          "Choose a starter Pokémon",
+          "Receive the Pokédex from Prof. Oak"
+        ],
+        "local_state": {
+          "flags": {},
+          "bag": {},
+          "party": [],
+          "badges": 0,
+          "map": "RedsHouse2F",
+          "x": 3,
+          "y": 6,
+          "money": 3000,
+          "coins": 0,
+          "fully_recovered": false,
+          "object_visibility": {},
+          "cleared_terrain": [],
+          "navigation_revision": 1,
+          "block_values": {},
+          "recent_battle_defeats": []
+        },
+        "recent_outcomes": [],
+        "strategy_context": {}
+      },
+      "questions": {
+        "action": {
+          "type": "choice",
+          "instructions": "Which next operation makes progress toward the current subgoal? Several operations may be needed to finish it. Select a live trigger, travel step, recovery or training operation using its described effects. Script effects describe what will happen when the intended interaction completes. Travel or interaction can be interrupted by other trainers: if recent attempts gained battle flags, retrying the intended NPC is valid progress.",
+          "criteria": {
+            "action:0": "{\"operation\": \"travel_to:PalletTown\", \"script_effects\": {\"map\": \"PalletTown\", \"script\": \"PalletTown:coordNorthExit\", \"produces\": [\"flag\", \"EVENT_OAK_APPEARED_IN_PALLET\", true], \"confirmation_options\": [], \"preceding_effects\": []}, \"navigation\": {\"map_hops\": 2, \"via\": [\"RedsHouse1F\", \"PalletTown\"], \"unvisited_maps\": [\"RedsHouse1F\", \"PalletTown\"], \"caution\": \"Travel can consume HP and PP in encounters; recovery should prefer a short known route.\"}}",
+            "none": "None of these candidates can advance the current goal."
+          }
+        }
+      },
+      "encoding_overrides": {},
+      "answers": {
+        "action": {
+          "type": "choice",
+          "confidence": 0.3105,
+          "action": {
+            "act_probability": 1.0
+          },
+          "choice": "none",
+          "probabilities": {
+            "action:0": 0.1843,
+            "none": 0.8157
+          }
+        }
+      },
+      "usage": {
+        "input_tokens": 307,
+        "output_tokens": 0
+      },
+      "latency_s": 0.08864020899636671,
+      "encoding": [
+        {
+          "question": "action",
+          "encoded_tokens": 307,
+          "instruction_tokens": [
+            78,
+            78
+          ],
+          "state_tokens": [
+            163,
+            163
+          ],
+          "option_tokens": [
+            [
+              149,
+              48
+            ],
+            [
+              12,
+              12
+            ]
+          ],
+          "input_ids_sha256": "1de85fdc32ec4cc342ae65e165def93a411c17e7bc62096482fffe4e4397acbc",
+          "effective_input_text": "[CLS]choice question: Which next operation makes progress toward the current subgoal? Several operations may be needed to finish it. Select a live trigger, travel step, recovery or training operation using its described effects. Script effects describe what will happen when the intended interaction completes. Travel or interaction can be interrupted by other trainers: if recent attempts gained battle flags, retrying the intended NPC is valid progress.[SEP][MASK] action:0: {\"operation\": \"travel_to:PalletTown\", \"script_effects\": {\"map\": \"PalletTown\", \"script\": \"PalletTown:coordNorthExit\", \"produces\": [\"flag\",[MASK] none: None of these candidates can advance the current goal.[SEP]{\"subgoal\": [\"flag\", \"EVENT_OAK_APPEARED_IN_PALLET\", true], \"advances\": [\"Choose a starter Pokémon\", \"Receive the Pokédex from Prof. Oak\"], \"local_state\": {\"flags\": {}, \"bag\": {}, \"party\": [], \"badges\": 0, \"map\": \"RedsHouse2F\", \"x\": 3, \"y\": 6, \"money\": 3000, \"coins\": 0, \"fully_recovered\": false, \"object_visibility\": {}, \"cleared_terrain\": [], \"navigation_revision\": 1, \"block_values\": {}, \"recent_battle_defeats\": []}, \"recent_outcomes\": [], \"strategy_context\": {}}[SEP]"
+        }
+      ],
+      "intervention": "action:0"
+    },
+    {
+      "name": "native",
+      "state": {
+        "subgoal": [
+          "flag",
+          "EVENT_OAK_APPEARED_IN_PALLET",
+          true
+        ],
+        "advances": [
+          "Choose a starter Pokémon",
+          "Receive the Pokédex from Prof. Oak"
+        ],
+        "local_state": {
+          "flags": {},
+          "bag": {},
+          "party": [],
+          "badges": 0,
+          "map": "RedsHouse2F",
+          "x": 3,
+          "y": 6,
+          "money": 3000,
+          "coins": 0,
+          "fully_recovered": false,
+          "object_visibility": {},
+          "cleared_terrain": [],
+          "navigation_revision": 1,
+          "block_values": {},
+          "recent_battle_defeats": []
+        },
+        "recent_outcomes": [],
+        "strategy_context": {}
+      },
+      "questions": {
+        "action": {
+          "type": "choice",
+          "instructions": "Which next operation makes progress toward the current subgoal? Several operations may be needed to finish it. Select a live trigger, travel step, recovery or training operation using its described effects. Script effects describe what will happen when the intended interaction completes. Travel or interaction can be interrupted by other trainers: if recent attempts gained battle flags, retrying the intended NPC is valid progress.",
+          "criteria": {
+            "move": "{\"operation\": \"travel_to:PalletTown\", \"script_effects\": {\"map\": \"PalletTown\", \"script\": \"PalletTown:coordNorthExit\", \"produces\": [\"flag\", \"EVENT_OAK_APPEARED_IN_PALLET\", true], \"confirmation_options\": [], \"preceding_effects\": []}, \"navigation\": {\"map_hops\": 2, \"via\": [\"RedsHouse1F\", \"PalletTown\"], \"unvisited_maps\": [\"RedsHouse1F\", \"PalletTown\"], \"caution\": \"Travel can consume HP and PP in encounters; recovery should prefer a short known route.\"}}",
+            "none": "None of these candidates can advance the current goal."
+          }
+        }
+      },
+      "encoding_overrides": {},
+      "answers": {
+        "action": {
+          "type": "choice",
+          "confidence": 0.2821,
+          "action": {
+            "act_probability": 1.0
+          },
+          "choice": "none",
+          "probabilities": {
+            "move": 0.198,
+            "none": 0.802
+          }
+        }
+      },
+      "usage": {
+        "input_tokens": 307,
+        "output_tokens": 0
+      },
+      "latency_s": 0.05703954101772979,
+      "encoding": [
+        {
+          "question": "action",
+          "encoded_tokens": 307,
+          "instruction_tokens": [
+            78,
+            78
+          ],
+          "state_tokens": [
+            163,
+            163
+          ],
+          "option_tokens": [
+            [
+              147,
+              48
+            ],
+            [
+              12,
+              12
+            ]
+          ],
+          "input_ids_sha256": "fbb894c45ea83dfb4b932d7d4186177457ae6464dea0126ab4f381bb08558108",
+          "effective_input_text": "[CLS]choice question: Which next operation makes progress toward the current subgoal? Several operations may be needed to finish it. Select a live trigger, travel step, recovery or training operation using its described effects. Script effects describe what will happen when the intended interaction completes. Travel or interaction can be interrupted by other trainers: if recent attempts gained battle flags, retrying the intended NPC is valid progress.[SEP][MASK] move: {\"operation\": \"travel_to:PalletTown\", \"script_effects\": {\"map\": \"PalletTown\", \"script\": \"PalletTown:coordNorthExit\", \"produces\": [\"flag\", \"EVENT[MASK] none: None of these candidates can advance the current goal.[SEP]{\"subgoal\": [\"flag\", \"EVENT_OAK_APPEARED_IN_PALLET\", true], \"advances\": [\"Choose a starter Pokémon\", \"Receive the Pokédex from Prof. Oak\"], \"local_state\": {\"flags\": {}, \"bag\": {}, \"party\": [], \"badges\": 0, \"map\": \"RedsHouse2F\", \"x\": 3, \"y\": 6, \"money\": 3000, \"coins\": 0, \"fully_recovered\": false, \"object_visibility\": {}, \"cleared_terrain\": [], \"navigation_revision\": 1, \"block_values\": {}, \"recent_battle_defeats\": []}, \"recent_outcomes\": [], \"strategy_context\": {}}[SEP]"
+        }
+      ],
+      "intervention": "move"
+    },
+    {
+      "name": "native",
+      "state": {
+        "subgoal": [
+          "flag",
+          "EVENT_OAK_APPEARED_IN_PALLET",
+          true
+        ],
+        "advances": [
+          "Choose a starter Pokémon",
+          "Receive the Pokédex from Prof. Oak"
+        ],
+        "local_state": {
+          "flags": {},
+          "bag": {},
+          "party": [],
+          "badges": 0,
+          "map": "RedsHouse2F",
+          "x": 3,
+          "y": 6,
+          "money": 3000,
+          "coins": 0,
+          "fully_recovered": false,
+          "object_visibility": {},
+          "cleared_terrain": [],
+          "navigation_revision": 1,
+          "block_values": {},
+          "recent_battle_defeats": []
+        },
+        "recent_outcomes": [],
+        "strategy_context": {}
+      },
+      "questions": {
+        "action": {
+          "type": "choice",
+          "instructions": "Which next operation makes progress toward the current subgoal? Several operations may be needed to finish it. Select a live trigger, travel step, recovery or training operation using its described effects. Script effects describe what will happen when the intended interaction completes. Travel or interaction can be interrupted by other trainers: if recent attempts gained battle flags, retrying the intended NPC is valid progress.",
+          "criteria": {
+            "travel": "{\"operation\": \"travel_to:PalletTown\", \"script_effects\": {\"map\": \"PalletTown\", \"script\": \"PalletTown:coordNorthExit\", \"produces\": [\"flag\", \"EVENT_OAK_APPEARED_IN_PALLET\", true], \"confirmation_options\": [], \"preceding_effects\": []}, \"navigation\": {\"map_hops\": 2, \"via\": [\"RedsHouse1F\", \"PalletTown\"], \"unvisited_maps\": [\"RedsHouse1F\", \"PalletTown\"], \"caution\": \"Travel can consume HP and PP in encounters; recovery should prefer a short known route.\"}}",
+            "none": "None of these candidates can advance the current goal."
+          }
+        }
+      },
+      "encoding_overrides": {},
+      "answers": {
+        "action": {
+          "type": "choice",
+          "confidence": 0.3542,
+          "action": {
+            "act_probability": 1.0
+          },
+          "choice": "none",
+          "probabilities": {
+            "travel": 0.1648,
+            "none": 0.8352
+          }
+        }
+      },
+      "usage": {
+        "input_tokens": 307,
+        "output_tokens": 0
+      },
+      "latency_s": 0.059631125011947006,
+      "encoding": [
+        {
+          "question": "action",
+          "encoded_tokens": 307,
+          "instruction_tokens": [
+            78,
+            78
+          ],
+          "state_tokens": [
+            163,
+            163
+          ],
+          "option_tokens": [
+            [
+              147,
+              48
+            ],
+            [
+              12,
+              12
+            ]
+          ],
+          "input_ids_sha256": "616324d1a6c44be8f23fd412c96bfb02bf2e0ce1b0cb0da1b551af68a29c2b95",
+          "effective_input_text": "[CLS]choice question: Which next operation makes progress toward the current subgoal? Several operations may be needed to finish it. Select a live trigger, travel step, recovery or training operation using its described effects. Script effects describe what will happen when the intended interaction completes. Travel or interaction can be interrupted by other trainers: if recent attempts gained battle flags, retrying the intended NPC is valid progress.[SEP][MASK] travel: {\"operation\": \"travel_to:PalletTown\", \"script_effects\": {\"map\": \"PalletTown\", \"script\": \"PalletTown:coordNorthExit\", \"produces\": [\"flag\", \"EVENT[MASK] none: None of these candidates can advance the current goal.[SEP]{\"subgoal\": [\"flag\", \"EVENT_OAK_APPEARED_IN_PALLET\", true], \"advances\": [\"Choose a starter Pokémon\", \"Receive the Pokédex from Prof. Oak\"], \"local_state\": {\"flags\": {}, \"bag\": {}, \"party\": [], \"badges\": 0, \"map\": \"RedsHouse2F\", \"x\": 3, \"y\": 6, \"money\": 3000, \"coins\": 0, \"fully_recovered\": false, \"object_visibility\": {}, \"cleared_terrain\": [], \"navigation_revision\": 1, \"block_values\": {}, \"recent_battle_defeats\": []}, \"recent_outcomes\": [], \"strategy_context\": {}}[SEP]"
+        }
+      ],
+      "intervention": "travel"
+    },
+    {
+      "name": "compact",
+      "state": "Location: RedsHouse2F (3,6). Party: empty. No story flags, items or badges. Money: 3000. Goal: make Prof. Oak appear in PalletTown to advance choosing a starter Pokemon and receiving the Pokedex. No recent execution outcomes.",
+      "questions": {
+        "action": {
+          "type": "choice",
+          "instructions": "Which next operation progresses toward the goal? Travel can be an intermediate step before the script interaction completes it.",
+          "criteria": {
+            "action:0": "Travel to PalletTown via RedsHouse1F (2 map hops); the north-exit script there makes Prof. Oak appear.",
+            "none": "None of these candidates can advance the current goal."
+          }
+        }
+      },
+      "encoding_overrides": {},
+      "answers": {
+        "action": {
+          "type": "choice",
+          "confidence": 0.0792,
+          "action": {
+            "act_probability": 1.0
+          },
+          "choice": "none",
+          "probabilities": {
+            "action:0": 0.3359,
+            "none": 0.6641
+          }
+        }
+      },
+      "usage": {
+        "input_tokens": 131,
+        "output_tokens": 0
+      },
+      "latency_s": 0.03753454197430983,
+      "encoding": [
+        {
+          "question": "action",
+          "encoded_tokens": 131,
+          "instruction_tokens": [
+            24,
+            24
+          ],
+          "state_tokens": [
+            58,
+            58
+          ],
+          "option_tokens": [
+            [
+              31,
+              31
+            ],
+            [
+              12,
+              12
+            ]
+          ],
+          "input_ids_sha256": "fc03f2cd1d9fe0afa056dc8b9bb30b97f9f13a87b8df5e85a0cd041b890aab6d",
+          "effective_input_text": "[CLS]choice question: Which next operation progresses toward the goal? Travel can be an intermediate step before the script interaction completes it.[SEP][MASK] action:0: Travel to PalletTown via RedsHouse1F (2 map hops); the north-exit script there makes Prof. Oak appear.[MASK] none: None of these candidates can advance the current goal.[SEP]Location: RedsHouse2F (3,6). Party: empty. No story flags, items or badges. Money: 3000. Goal: make Prof. Oak appear in PalletTown to advance choosing a starter Pokemon and receiving the Pokedex. No recent execution outcomes.[SEP]"
+        }
+      ],
+      "intervention": "action:0"
+    },
+    {
+      "name": "compact",
+      "state": "Location: RedsHouse2F (3,6). Party: empty. No story flags, items or badges. Money: 3000. Goal: make Prof. Oak appear in PalletTown to advance choosing a starter Pokemon and receiving the Pokedex. No recent execution outcomes.",
+      "questions": {
+        "action": {
+          "type": "choice",
+          "instructions": "Which next operation progresses toward the goal? Travel can be an intermediate step before the script interaction completes it.",
+          "criteria": {
+            "move": "Travel to PalletTown via RedsHouse1F (2 map hops); the north-exit script there makes Prof. Oak appear.",
+            "none": "None of these candidates can advance the current goal."
+          }
+        }
+      },
+      "encoding_overrides": {},
+      "answers": {
+        "action": {
+          "type": "choice",
+          "confidence": 0.0815,
+          "action": {
+            "act_probability": 1.0
+          },
+          "choice": "none",
+          "probabilities": {
+            "move": 0.3336,
+            "none": 0.6664
+          }
+        }
+      },
+      "usage": {
+        "input_tokens": 129,
+        "output_tokens": 0
+      },
+      "latency_s": 0.033377000014297664,
+      "encoding": [
+        {
+          "question": "action",
+          "encoded_tokens": 129,
+          "instruction_tokens": [
+            24,
+            24
+          ],
+          "state_tokens": [
+            58,
+            58
+          ],
+          "option_tokens": [
+            [
+              29,
+              29
+            ],
+            [
+              12,
+              12
+            ]
+          ],
+          "input_ids_sha256": "4d254c091548f48095dc88886af216ee9f4b59c8c1866df9ae67a2a32275f78d",
+          "effective_input_text": "[CLS]choice question: Which next operation progresses toward the goal? Travel can be an intermediate step before the script interaction completes it.[SEP][MASK] move: Travel to PalletTown via RedsHouse1F (2 map hops); the north-exit script there makes Prof. Oak appear.[MASK] none: None of these candidates can advance the current goal.[SEP]Location: RedsHouse2F (3,6). Party: empty. No story flags, items or badges. Money: 3000. Goal: make Prof. Oak appear in PalletTown to advance choosing a starter Pokemon and receiving the Pokedex. No recent execution outcomes.[SEP]"
+        }
+      ],
+      "intervention": "move"
+    },
+    {
+      "name": "compact",
+      "state": "Location: RedsHouse2F (3,6). Party: empty. No story flags, items or badges. Money: 3000. Goal: make Prof. Oak appear in PalletTown to advance choosing a starter Pokemon and receiving the Pokedex. No recent execution outcomes.",
+      "questions": {
+        "action": {
+          "type": "choice",
+          "instructions": "Which next operation progresses toward the goal? Travel can be an intermediate step before the script interaction completes it.",
+          "criteria": {
+            "travel": "Travel to PalletTown via RedsHouse1F (2 map hops); the north-exit script there makes Prof. Oak appear.",
+            "none": "None of these candidates can advance the current goal."
+          }
+        }
+      },
+      "encoding_overrides": {},
+      "answers": {
+        "action": {
+          "type": "choice",
+          "confidence": 0.1001,
+          "action": {
+            "act_probability": 1.0
+          },
+          "choice": "none",
+          "probabilities": {
+            "travel": 0.3159,
+            "none": 0.6841
+          }
+        }
+      },
+      "usage": {
+        "input_tokens": 129,
+        "output_tokens": 0
+      },
+      "latency_s": 0.0334292080369778,
+      "encoding": [
+        {
+          "question": "action",
+          "encoded_tokens": 129,
+          "instruction_tokens": [
+            24,
+            24
+          ],
+          "state_tokens": [
+            58,
+            58
+          ],
+          "option_tokens": [
+            [
+              29,
+              29
+            ],
+            [
+              12,
+              12
+            ]
+          ],
+          "input_ids_sha256": "946209177306458fad3e64a31b4e86087ec1fdab09988559d75256be77651ad1",
+          "effective_input_text": "[CLS]choice question: Which next operation progresses toward the goal? Travel can be an intermediate step before the script interaction completes it.[SEP][MASK] travel: Travel to PalletTown via RedsHouse1F (2 map hops); the north-exit script there makes Prof. Oak appear.[MASK] none: None of these candidates can advance the current goal.[SEP]Location: RedsHouse2F (3,6). Party: empty. No story flags, items or badges. Money: 3000. Goal: make Prof. Oak appear in PalletTown to advance choosing a starter Pokemon and receiving the Pokedex. No recent execution outcomes.[SEP]"
+        }
+      ],
+      "intervention": "travel"
+    },
+    {
+      "name": "relational",
+      "state": "Location: RedsHouse2F. Party: empty. There is a walking route to PalletTown via RedsHouse1F. At the north exit of PalletTown, an interaction makes Prof. Oak appear. Making Prof. Oak appear advances choosing a starter Pokemon. Goal: Make Prof. Oak appear.",
+      "questions": {
+        "action": {
+          "type": "choice",
+          "instructions": "Which next operation advances the goal? Intermediate steps are allowed.",
+          "criteria": {
+            "action:0": "Travel to PalletTown via RedsHouse1F.",
+            "none": "None of these candidates can advance the current goal."
+          }
+        }
+      },
+      "encoding_overrides": {},
+      "answers": {
+        "action": {
+          "type": "choice",
+          "confidence": 0.4593,
+          "action": {
+            "act_probability": 1.0
+          },
+          "choice": "action:0",
+          "probabilities": {
+            "action:0": 0.876,
+            "none": 0.124
+          }
+        }
+      },
+      "usage": {
+        "input_tokens": 112,
+        "output_tokens": 0
+      },
+      "latency_s": 0.029171459027566016,
+      "encoding": [
+        {
+          "question": "action",
+          "encoded_tokens": 112,
+          "instruction_tokens": [
+            16,
+            16
+          ],
+          "state_tokens": [
+            63,
+            63
+          ],
+          "option_tokens": [
+            [
+              15,
+              15
+            ],
+            [
+              12,
+              12
+            ]
+          ],
+          "input_ids_sha256": "11ef7a0882cd7362c327bdc4ad95fc33c3a787009a06f4a80d547229ea42d584",
+          "effective_input_text": "[CLS]choice question: Which next operation advances the goal? Intermediate steps are allowed.[SEP][MASK] action:0: Travel to PalletTown via RedsHouse1F.[MASK] none: None of these candidates can advance the current goal.[SEP]Location: RedsHouse2F. Party: empty. There is a walking route to PalletTown via RedsHouse1F. At the north exit of PalletTown, an interaction makes Prof. Oak appear. Making Prof. Oak appear advances choosing a starter Pokemon. Goal: Make Prof. Oak appear.[SEP]"
+        }
+      ],
+      "intervention": "action:0"
+    },
+    {
+      "name": "relational",
+      "state": "Location: RedsHouse2F. Party: empty. There is a walking route to PalletTown via RedsHouse1F. At the north exit of PalletTown, an interaction makes Prof. Oak appear. Making Prof. Oak appear advances choosing a starter Pokemon. Goal: Make Prof. Oak appear.",
+      "questions": {
+        "action": {
+          "type": "choice",
+          "instructions": "Which next operation advances the goal? Intermediate steps are allowed.",
+          "criteria": {
+            "move": "Travel to PalletTown via RedsHouse1F.",
+            "none": "None of these candidates can advance the current goal."
+          }
+        }
+      },
+      "encoding_overrides": {},
+      "answers": {
+        "action": {
+          "type": "choice",
+          "confidence": 0.5372,
+          "action": {
+            "act_probability": 1.0
+          },
+          "choice": "move",
+          "probabilities": {
+            "move": 0.902,
+            "none": 0.098
+          }
+        }
+      },
+      "usage": {
+        "input_tokens": 110,
+        "output_tokens": 0
+      },
+      "latency_s": 0.026064459001645446,
+      "encoding": [
+        {
+          "question": "action",
+          "encoded_tokens": 110,
+          "instruction_tokens": [
+            16,
+            16
+          ],
+          "state_tokens": [
+            63,
+            63
+          ],
+          "option_tokens": [
+            [
+              13,
+              13
+            ],
+            [
+              12,
+              12
+            ]
+          ],
+          "input_ids_sha256": "c7b8ad5f6676c4c9ab285c707b0a0f1dde111d541fedf90ee6ea717e88d2e625",
+          "effective_input_text": "[CLS]choice question: Which next operation advances the goal? Intermediate steps are allowed.[SEP][MASK] move: Travel to PalletTown via RedsHouse1F.[MASK] none: None of these candidates can advance the current goal.[SEP]Location: RedsHouse2F. Party: empty. There is a walking route to PalletTown via RedsHouse1F. At the north exit of PalletTown, an interaction makes Prof. Oak appear. Making Prof. Oak appear advances choosing a starter Pokemon. Goal: Make Prof. Oak appear.[SEP]"
+        }
+      ],
+      "intervention": "move"
+    },
+    {
+      "name": "relational",
+      "state": "Location: RedsHouse2F. Party: empty. There is a walking route to PalletTown via RedsHouse1F. At the north exit of PalletTown, an interaction makes Prof. Oak appear. Making Prof. Oak appear advances choosing a starter Pokemon. Goal: Make Prof. Oak appear.",
+      "questions": {
+        "action": {
+          "type": "choice",
+          "instructions": "Which next operation advances the goal? Intermediate steps are allowed.",
+          "criteria": {
+            "travel": "Travel to PalletTown via RedsHouse1F.",
+            "none": "None of these candidates can advance the current goal."
+          }
+        }
+      },
+      "encoding_overrides": {},
+      "answers": {
+        "action": {
+          "type": "choice",
+          "confidence": 0.3586,
+          "action": {
+            "act_probability": 1.0
+          },
+          "choice": "travel",
+          "probabilities": {
+            "travel": 0.837,
+            "none": 0.163
+          }
+        }
+      },
+      "usage": {
+        "input_tokens": 110,
+        "output_tokens": 0
+      },
+      "latency_s": 0.025177916046231985,
+      "encoding": [
+        {
+          "question": "action",
+          "encoded_tokens": 110,
+          "instruction_tokens": [
+            16,
+            16
+          ],
+          "state_tokens": [
+            63,
+            63
+          ],
+          "option_tokens": [
+            [
+              13,
+              13
+            ],
+            [
+              12,
+              12
+            ]
+          ],
+          "input_ids_sha256": "2c9742dc750e9c183d565ec55fe62b54165cb9f5c7fe56c43e4e164b6bc427d5",
+          "effective_input_text": "[CLS]choice question: Which next operation advances the goal? Intermediate steps are allowed.[SEP][MASK] travel: Travel to PalletTown via RedsHouse1F.[MASK] none: None of these candidates can advance the current goal.[SEP]Location: RedsHouse2F. Party: empty. There is a walking route to PalletTown via RedsHouse1F. At the north exit of PalletTown, an interaction makes Prof. Oak appear. Making Prof. Oak appear advances choosing a starter Pokemon. Goal: Make Prof. Oak appear.[SEP]"
+        }
+      ],
+      "intervention": "travel"
+    },
+    {
+      "name": "compact_relation_in_state",
+      "state": "Location: RedsHouse2F (3,6). Party: empty. No story flags, items or badges. Money: 3000. Goal: make Prof. Oak appear in PalletTown to advance choosing a starter Pokemon and receiving the Pokedex. No recent execution outcomes. A walking route goes from RedsHouse2F through RedsHouse1F to PalletTown.",
+      "questions": {
+        "action": {
+          "type": "choice",
+          "instructions": "Which next operation progresses toward the goal? Travel can be an intermediate step before the script interaction completes it.",
+          "criteria": {
+            "action:0": "Travel to PalletTown via RedsHouse1F (2 map hops); the north-exit script there makes Prof. Oak appear.",
+            "none": "None of these candidates can advance the current goal."
+          }
+        }
+      },
+      "encoding_overrides": {},
+      "answers": {
+        "action": {
+          "type": "choice",
+          "confidence": 0.1242,
+          "action": {
+            "act_probability": 1.0
+          },
+          "choice": "none",
+          "probabilities": {
+            "action:0": 0.2956,
+            "none": 0.7044
+          }
+        }
+      },
+      "usage": {
+        "input_tokens": 150,
+        "output_tokens": 0
+      },
+      "latency_s": 0.035052916035056114,
+      "encoding": [
+        {
+          "question": "action",
+          "encoded_tokens": 150,
+          "instruction_tokens": [
+            24,
+            24
+          ],
+          "state_tokens": [
+            77,
+            77
+          ],
+          "option_tokens": [
+            [
+              31,
+              31
+            ],
+            [
+              12,
+              12
+            ]
+          ],
+          "input_ids_sha256": "059d416c53128e48c3dfcf0e11467fb8e72e357a6a239cdbd45d846c93424df8",
+          "effective_input_text": "[CLS]choice question: Which next operation progresses toward the goal? Travel can be an intermediate step before the script interaction completes it.[SEP][MASK] action:0: Travel to PalletTown via RedsHouse1F (2 map hops); the north-exit script there makes Prof. Oak appear.[MASK] none: None of these candidates can advance the current goal.[SEP]Location: RedsHouse2F (3,6). Party: empty. No story flags, items or badges. Money: 3000. Goal: make Prof. Oak appear in PalletTown to advance choosing a starter Pokemon and receiving the Pokedex. No recent execution outcomes. A walking route goes from RedsHouse2F through RedsHouse1F to PalletTown.[SEP]"
+        }
+      ],
+      "intervention": " A walking route goes from RedsHouse2F through RedsHouse1F to PalletTown."
+    },
+    {
+      "name": "compact_relation_in_state",
+      "state": "Location: RedsHouse2F (3,6). Party: empty. No story flags, items or badges. Money: 3000. Goal: make Prof. Oak appear in PalletTown to advance choosing a starter Pokemon and receiving the Pokedex. No recent execution outcomes. At the north exit of PalletTown, an interaction makes Prof. Oak appear.",
+      "questions": {
+        "action": {
+          "type": "choice",
+          "instructions": "Which next operation progresses toward the goal? Travel can be an intermediate step before the script interaction completes it.",
+          "criteria": {
+            "action:0": "Travel to PalletTown via RedsHouse1F (2 map hops); the north-exit script there makes Prof. Oak appear.",
+            "none": "None of these candidates can advance the current goal."
+          }
+        }
+      },
+      "encoding_overrides": {},
+      "answers": {
+        "action": {
+          "type": "choice",
+          "confidence": 0.0104,
+          "action": {
+            "act_probability": 1.0
+          },
+          "choice": "action:0",
+          "probabilities": {
+            "action:0": 0.5601,
+            "none": 0.4399
+          }
+        }
+      },
+      "usage": {
+        "input_tokens": 148,
+        "output_tokens": 0
+      },
+      "latency_s": 0.03344233299139887,
+      "encoding": [
+        {
+          "question": "action",
+          "encoded_tokens": 148,
+          "instruction_tokens": [
+            24,
+            24
+          ],
+          "state_tokens": [
+            75,
+            75
+          ],
+          "option_tokens": [
+            [
+              31,
+              31
+            ],
+            [
+              12,
+              12
+            ]
+          ],
+          "input_ids_sha256": "28eb7cae126eef1cd5b275af83b1523f2aaf0bfaaac5a7444db2f7e308191859",
+          "effective_input_text": "[CLS]choice question: Which next operation progresses toward the goal? Travel can be an intermediate step before the script interaction completes it.[SEP][MASK] action:0: Travel to PalletTown via RedsHouse1F (2 map hops); the north-exit script there makes Prof. Oak appear.[MASK] none: None of these candidates can advance the current goal.[SEP]Location: RedsHouse2F (3,6). Party: empty. No story flags, items or badges. Money: 3000. Goal: make Prof. Oak appear in PalletTown to advance choosing a starter Pokemon and receiving the Pokedex. No recent execution outcomes. At the north exit of PalletTown, an interaction makes Prof. Oak appear.[SEP]"
+        }
+      ],
+      "intervention": " At the north exit of PalletTown, an interaction makes Prof. Oak appear."
+    },
+    {
+      "name": "compact_relation_in_state",
+      "state": "Location: RedsHouse2F (3,6). Party: empty. No story flags, items or badges. Money: 3000. Goal: make Prof. Oak appear in PalletTown to advance choosing a starter Pokemon and receiving the Pokedex. No recent execution outcomes. A walking route goes from RedsHouse2F through RedsHouse1F to PalletTown. At the north exit of PalletTown, an interaction makes Prof. Oak appear.",
+      "questions": {
+        "action": {
+          "type": "choice",
+          "instructions": "Which next operation progresses toward the goal? Travel can be an intermediate step before the script interaction completes it.",
+          "criteria": {
+            "action:0": "Travel to PalletTown via RedsHouse1F (2 map hops); the north-exit script there makes Prof. Oak appear.",
+            "none": "None of these candidates can advance the current goal."
+          }
+        }
+      },
+      "encoding_overrides": {},
+      "answers": {
+        "action": {
+          "type": "choice",
+          "confidence": 0.0035,
+          "action": {
+            "act_probability": 1.0
+          },
+          "choice": "action:0",
+          "probabilities": {
+            "action:0": 0.5348,
+            "none": 0.4652
+          }
+        }
+      },
+      "usage": {
+        "input_tokens": 167,
+        "output_tokens": 0
+      },
+      "latency_s": 0.048433541029226035,
+      "encoding": [
+        {
+          "question": "action",
+          "encoded_tokens": 167,
+          "instruction_tokens": [
+            24,
+            24
+          ],
+          "state_tokens": [
+            94,
+            94
+          ],
+          "option_tokens": [
+            [
+              31,
+              31
+            ],
+            [
+              12,
+              12
+            ]
+          ],
+          "input_ids_sha256": "d2fced316b1a1129c34ed56f59eb00b842bdf4cbbf4da1de031b32e898811324",
+          "effective_input_text": "[CLS]choice question: Which next operation progresses toward the goal? Travel can be an intermediate step before the script interaction completes it.[SEP][MASK] action:0: Travel to PalletTown via RedsHouse1F (2 map hops); the north-exit script there makes Prof. Oak appear.[MASK] none: None of these candidates can advance the current goal.[SEP]Location: RedsHouse2F (3,6). Party: empty. No story flags, items or badges. Money: 3000. Goal: make Prof. Oak appear in PalletTown to advance choosing a starter Pokemon and receiving the Pokedex. No recent execution outcomes. A walking route goes from RedsHouse2F through RedsHouse1F to PalletTown. At the north exit of PalletTown, an interaction makes Prof. Oak appear.[SEP]"
+        }
+      ],
+      "intervention": " A walking route goes from RedsHouse2F through RedsHouse1F to PalletTown. At the north exit of PalletTown, an interaction makes Prof. Oak appear."
+    }
+  ],
+  "scope": "Development fixtures; not a held-out benchmark. No gameplay or network inference."
+}
