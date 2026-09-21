@@ -1,0 +1,10 @@
+[
+  {
+    "attempt": 1,
+    "failure": "{'cursor': 0, 'items': [{'item': 'Hm01', 'qty': 1}], 'kind': 'bag', 'phase': 'MachineBoot { item: Hm01 }'}"
+  },
+  {
+    "attempt": 2,
+    "failure": "{'cursor': 0, 'items': [{'item': 'Hm01', 'qty': 1}], 'kind': 'bag', 'phase': 'MachineBoot { item: Hm01 }'}"
+  }
+]

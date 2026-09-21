@@ -1,0 +1,16 @@
+{
+  "passed": true,
+  "judgments_matched": 2122,
+  "input_types": {
+    "剧情策略": 346,
+    "操作选择": 869,
+    "对话选项": 63,
+    "战斗选招": 820,
+    "学习招式": 4,
+    "受限战斗": 4,
+    "战斗换人": 16
+  },
+  "commands_matched": 51669,
+  "battle_anchor_frame_mismatches": 0,
+  "scope": "Application input/output parity, chronology and recorded command provenance; not exact button-down frame timing."
+}

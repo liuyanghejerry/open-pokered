@@ -1,0 +1,42 @@
+{
+  "attempt": "script-a5",
+  "classification": "failed",
+  "milestone": "m32",
+  "wall_s": 2875.221,
+  "source_patch_sha256": "55a1b15e069138b504ca967bdc8d3148bfd042a61e449e72f94c9d24a52ec62b",
+  "failure": "Traceback (most recent call last):\n  File \"/Users/liuyanghe02/develop/open-pokered/docs/jev-retrospective-assets/capture_full_playthrough.py\", line 171, in main\n    pt.main()\n    ~~~~~~~^^\n  File \"/Users/liuyanghe02/develop/open-pokered/.artifacts/jev-full-comparison-20260920/source-script/scripts/playthrough.py\", line 1961, in main\n    fn(g)\n    ~~^^^\n  File \"/Users/liuyanghe02/develop/open-pokered/.artifacts/jev-full-comparison-20260920/source-script/scripts/playthrough_late.py\", line 896, in m32_lapras\n    require_flag(g, \"EVENT_BEAT_SILPH_CO_RIVAL\")\n    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/liuyanghe02/develop/open-pokered/.artifacts/jev-full-comparison-20260920/source-script/scripts/playthrough_late.py\", line 138, in require_flag\n    assert flags.get(name), f\"missing story flag {name}\"\n           ~~~~~~~~~^^^^^^\nAssertionError: missing story flag EVENT_BEAT_SILPH_CO_RIVAL\n",
+  "source_video_sha256": "1af1142ab52433a5aead9ebdcb80784279756565669f16a1a93ec51ea98f1a48",
+  "clip_source_s": [
+    8256.566667,
+    8276.566667
+  ],
+  "clip_sha256": "6b67593bb655e3dd4ed2e3b63aff9695a0d226cf572002a1a7a6f8b8dfe15033",
+  "observation": "Venusaur used Cut; enemy Charizard used Ember, critical and super effective; player_won false; returned to SaffronCity with no rival victory flag.",
+  "note": "No recovery loop in m32. Next attempt uses the unchanged driver.",
+  "pre_loss_recovery": {
+    "opponent": "Alakazam",
+    "opponent_hp": 17,
+    "consecutive_hyper_potions": 8,
+    "healed_amounts": [
+      73,
+      53,
+      46,
+      43,
+      52,
+      44,
+      80,
+      58
+    ],
+    "player_hp_after_enemy_responses": [
+      110,
+      117,
+      120,
+      111,
+      119,
+      83,
+      105,
+      86
+    ],
+    "explanation": "75% HP threshold repeatedly selected recovery while the opponent HP stayed at 17. All eight purchased Hyper Potions were consumed before Charizard."
+  }
+}

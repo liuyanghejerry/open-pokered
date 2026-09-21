@@ -1,0 +1,486 @@
+{
+  "attempt": "script-a8",
+  "evidence": "Observed menu/item phases; consecutive equivalent phases collapsed. An item use may span more than one phase.",
+  "events": [
+    {
+      "frame": 597603,
+      "source_s": 9960.05,
+      "wall_s": 3722.8805,
+      "phase": "ItemTargetSelect { item_id: FullRestore }",
+      "player": {
+        "hp": 99,
+        "level": 51,
+        "max_hp": 157,
+        "species": "Zapdos",
+        "status": "None"
+      },
+      "enemy": {
+        "hp": 6,
+        "level": 54,
+        "max_hp": 169,
+        "species": "Dewgong",
+        "status": "None"
+      }
+    },
+    {
+      "frame": 597785,
+      "source_s": 9963.083333333334,
+      "wall_s": 3724.5517,
+      "phase": "ItemTargetSelect { item_id: FullRestore }",
+      "player": {
+        "hp": 95,
+        "level": 51,
+        "max_hp": 157,
+        "species": "Zapdos",
+        "status": "None"
+      },
+      "enemy": {
+        "hp": 6,
+        "level": 54,
+        "max_hp": 169,
+        "species": "Dewgong",
+        "status": "None"
+      }
+    },
+    {
+      "frame": 597981,
+      "source_s": 9966.35,
+      "wall_s": 3726.3419,
+      "phase": "ItemTargetSelect { item_id: FullRestore }",
+      "player": {
+        "hp": 99,
+        "level": 51,
+        "max_hp": 157,
+        "species": "Zapdos",
+        "status": "None"
+      },
+      "enemy": {
+        "hp": 6,
+        "level": 54,
+        "max_hp": 169,
+        "species": "Dewgong",
+        "status": "None"
+      }
+    },
+    {
+      "frame": 598149,
+      "source_s": 9969.15,
+      "wall_s": 3727.8878,
+      "phase": "ItemTargetSelect { item_id: FullRestore }",
+      "player": {
+        "hp": 111,
+        "level": 51,
+        "max_hp": 157,
+        "species": "Zapdos",
+        "status": "None"
+      },
+      "enemy": {
+        "hp": 6,
+        "level": 54,
+        "max_hp": 169,
+        "species": "Dewgong",
+        "status": "None"
+      }
+    },
+    {
+      "frame": 598331,
+      "source_s": 9972.183333333332,
+      "wall_s": 3729.5412,
+      "phase": "ItemTargetSelect { item_id: FullRestore }",
+      "player": {
+        "hp": 109,
+        "level": 51,
+        "max_hp": 157,
+        "species": "Zapdos",
+        "status": "None"
+      },
+      "enemy": {
+        "hp": 6,
+        "level": 54,
+        "max_hp": 169,
+        "species": "Dewgong",
+        "status": "None"
+      }
+    },
+    {
+      "frame": 598499,
+      "source_s": 9974.983333333334,
+      "wall_s": 3731.0858,
+      "phase": "ItemTargetSelect { item_id: FullRestore }",
+      "player": {
+        "hp": 115,
+        "level": 51,
+        "max_hp": 157,
+        "species": "Zapdos",
+        "status": "None"
+      },
+      "enemy": {
+        "hp": 6,
+        "level": 54,
+        "max_hp": 169,
+        "species": "Dewgong",
+        "status": "None"
+      }
+    },
+    {
+      "frame": 599455,
+      "source_s": 9990.916666666666,
+      "wall_s": 3739.261,
+      "phase": "ItemTargetSelect { item_id: FullRestore }",
+      "player": {
+        "hp": 47,
+        "level": 52,
+        "max_hp": 161,
+        "species": "Zapdos",
+        "status": "None"
+      },
+      "enemy": {
+        "hp": 113,
+        "level": 56,
+        "max_hp": 147,
+        "species": "Jynx",
+        "status": "None"
+      }
+    },
+    {
+      "frame": 599735,
+      "source_s": 9995.583333333334,
+      "wall_s": 3741.7892,
+      "phase": "ItemTargetSelect { item_id: FullRestore }",
+      "player": {
+        "hp": 16,
+        "level": 52,
+        "max_hp": 161,
+        "species": "Zapdos",
+        "status": "None"
+      },
+      "enemy": {
+        "hp": 113,
+        "level": 56,
+        "max_hp": 147,
+        "species": "Jynx",
+        "status": "None"
+      }
+    },
+    {
+      "frame": 600043,
+      "source_s": 10000.716666666667,
+      "wall_s": 3744.5797,
+      "phase": "ItemTargetSelect { item_id: FullRestore }",
+      "player": {
+        "hp": 28,
+        "level": 52,
+        "max_hp": 161,
+        "species": "Zapdos",
+        "status": "None"
+      },
+      "enemy": {
+        "hp": 113,
+        "level": 56,
+        "max_hp": 147,
+        "species": "Jynx",
+        "status": "None"
+      }
+    },
+    {
+      "frame": 600281,
+      "source_s": 10004.683333333332,
+      "wall_s": 3746.7701,
+      "phase": "ItemTargetSelect { item_id: FullRestore }",
+      "player": {
+        "hp": 83,
+        "level": 52,
+        "max_hp": 161,
+        "species": "Zapdos",
+        "status": "None"
+      },
+      "enemy": {
+        "hp": 113,
+        "level": 56,
+        "max_hp": 147,
+        "species": "Jynx",
+        "status": "None"
+      }
+    },
+    {
+      "frame": 600477,
+      "source_s": 10007.95,
+      "wall_s": 3748.5933,
+      "phase": "ItemTargetSelect { item_id: FullRestore }",
+      "player": {
+        "hp": 83,
+        "level": 52,
+        "max_hp": 161,
+        "species": "Zapdos",
+        "status": "None"
+      },
+      "enemy": {
+        "hp": 113,
+        "level": 56,
+        "max_hp": 147,
+        "species": "Jynx",
+        "status": "None"
+      }
+    },
+    {
+      "frame": 600673,
+      "source_s": 10011.216666666667,
+      "wall_s": 3750.3848,
+      "phase": "ItemTargetSelect { item_id: FullRestore }",
+      "player": {
+        "hp": 86,
+        "level": 52,
+        "max_hp": 161,
+        "species": "Zapdos",
+        "status": "None"
+      },
+      "enemy": {
+        "hp": 113,
+        "level": 56,
+        "max_hp": 147,
+        "species": "Jynx",
+        "status": "None"
+      }
+    },
+    {
+      "frame": 600869,
+      "source_s": 10014.483333333334,
+      "wall_s": 3752.1576,
+      "phase": "ItemTargetSelect { item_id: FullRestore }",
+      "player": {
+        "hp": 82,
+        "level": 52,
+        "max_hp": 161,
+        "species": "Zapdos",
+        "status": "None"
+      },
+      "enemy": {
+        "hp": 113,
+        "level": 56,
+        "max_hp": 147,
+        "species": "Jynx",
+        "status": "None"
+      }
+    },
+    {
+      "frame": 601065,
+      "source_s": 10017.75,
+      "wall_s": 3753.9611,
+      "phase": "ItemTargetSelect { item_id: FullRestore }",
+      "player": {
+        "hp": 93,
+        "level": 52,
+        "max_hp": 161,
+        "species": "Zapdos",
+        "status": "None"
+      },
+      "enemy": {
+        "hp": 113,
+        "level": 56,
+        "max_hp": 147,
+        "species": "Jynx",
+        "status": "None"
+      }
+    },
+    {
+      "frame": 601261,
+      "source_s": 10021.016666666666,
+      "wall_s": 3755.7592,
+      "phase": "ItemTargetSelect { item_id: FullRestore }",
+      "player": {
+        "hp": 85,
+        "level": 52,
+        "max_hp": 161,
+        "species": "Zapdos",
+        "status": "None"
+      },
+      "enemy": {
+        "hp": 113,
+        "level": 56,
+        "max_hp": 147,
+        "species": "Jynx",
+        "status": "None"
+      }
+    },
+    {
+      "frame": 601457,
+      "source_s": 10024.283333333333,
+      "wall_s": 3757.5528,
+      "phase": "ItemTargetSelect { item_id: FullRestore }",
+      "player": {
+        "hp": 82,
+        "level": 52,
+        "max_hp": 161,
+        "species": "Zapdos",
+        "status": "None"
+      },
+      "enemy": {
+        "hp": 113,
+        "level": 56,
+        "max_hp": 147,
+        "species": "Jynx",
+        "status": "None"
+      }
+    },
+    {
+      "frame": 602003,
+      "source_s": 10033.383333333333,
+      "wall_s": 3762.5523,
+      "phase": "ItemTargetSelect { item_id: Revive }",
+      "player": {
+        "hp": 182,
+        "level": 54,
+        "max_hp": 182,
+        "species": "Venusaur",
+        "status": "None"
+      },
+      "enemy": {
+        "hp": 113,
+        "level": 56,
+        "max_hp": 147,
+        "species": "Jynx",
+        "status": "None"
+      }
+    },
+    {
+      "frame": 602027,
+      "source_s": 10033.783333333333,
+      "wall_s": 3762.789,
+      "phase": "ShowingText { messages: [\"Revived! HP\\nrestored by 80!\"], current: 0, wait_frames: 0, next_phase: EnemyFreeTurnAfterItem }",
+      "player": {
+        "hp": 182,
+        "level": 54,
+        "max_hp": 182,
+        "species": "Venusaur",
+        "status": "None"
+      },
+      "enemy": {
+        "hp": 113,
+        "level": 56,
+        "max_hp": 147,
+        "species": "Jynx",
+        "status": "None"
+      }
+    },
+    {
+      "frame": 602520,
+      "source_s": 10042.0,
+      "wall_s": 3767.2788,
+      "phase": "ItemTargetSelect { item_id: Revive }",
+      "player": {
+        "hp": 100,
+        "level": 54,
+        "max_hp": 182,
+        "species": "Venusaur",
+        "status": "None"
+      },
+      "enemy": {
+        "hp": 113,
+        "level": 56,
+        "max_hp": 147,
+        "species": "Jynx",
+        "status": "None"
+      }
+    },
+    {
+      "frame": 602544,
+      "source_s": 10042.4,
+      "wall_s": 3767.5195,
+      "phase": "ShowingText { messages: [\"Revived! HP\\nrestored by 80!\"], current: 0, wait_frames: 0, next_phase: EnemyFreeTurnAfterItem }",
+      "player": {
+        "hp": 100,
+        "level": 54,
+        "max_hp": 182,
+        "species": "Venusaur",
+        "status": "None"
+      },
+      "enemy": {
+        "hp": 113,
+        "level": 56,
+        "max_hp": 147,
+        "species": "Jynx",
+        "status": "None"
+      }
+    },
+    {
+      "frame": 603023,
+      "source_s": 10050.383333333333,
+      "wall_s": 3771.8953,
+      "phase": "ItemTargetSelect { item_id: Revive }",
+      "player": {
+        "hp": 24,
+        "level": 54,
+        "max_hp": 182,
+        "species": "Venusaur",
+        "status": "None"
+      },
+      "enemy": {
+        "hp": 113,
+        "level": 56,
+        "max_hp": 147,
+        "species": "Jynx",
+        "status": "None"
+      }
+    },
+    {
+      "frame": 603047,
+      "source_s": 10050.783333333333,
+      "wall_s": 3772.1347,
+      "phase": "ShowingText { messages: [\"Revived! HP\\nrestored by 80!\"], current: 0, wait_frames: 0, next_phase: EnemyFreeTurnAfterItem }",
+      "player": {
+        "hp": 24,
+        "level": 54,
+        "max_hp": 182,
+        "species": "Venusaur",
+        "status": "None"
+      },
+      "enemy": {
+        "hp": 113,
+        "level": 56,
+        "max_hp": 147,
+        "species": "Jynx",
+        "status": "None"
+      }
+    },
+    {
+      "frame": 603497,
+      "source_s": 10058.283333333333,
+      "wall_s": 3776.1714,
+      "phase": "ItemTargetSelect { item_id: Revive }",
+      "player": {
+        "hp": 65,
+        "level": 15,
+        "max_hp": 65,
+        "species": "Lapras",
+        "status": "None"
+      },
+      "enemy": {
+        "hp": 113,
+        "level": 56,
+        "max_hp": 147,
+        "species": "Jynx",
+        "status": "None"
+      }
+    },
+    {
+      "frame": 603533,
+      "source_s": 10058.883333333333,
+      "wall_s": 3776.518,
+      "phase": "ShowingText { messages: [\"Revived! HP\\nrestored by 80!\"], current: 0, wait_frames: 0, next_phase: EnemyFreeTurnAfterItem }",
+      "player": {
+        "hp": 65,
+        "level": 15,
+        "max_hp": 65,
+        "species": "Lapras",
+        "status": "None"
+      },
+      "enemy": {
+        "hp": 113,
+        "level": 56,
+        "max_hp": 147,
+        "species": "Jynx",
+        "status": "None"
+      }
+    }
+  ]
+}

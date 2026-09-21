@@ -1,0 +1,227 @@
+{
+  "purpose": "Complete script and autonomous Jev playthroughs with synchronized decision evidence",
+  "date": "2026-09-21",
+  "full_run": {
+    "script_attempt": "script-a12",
+    "jev_attempt": "jev-a1",
+    "overview": "full-run/script-vs-jev-full.mp4",
+    "overview_duration_s": 678.0,
+    "overview_fps": 30,
+    "resolution": [
+      1920,
+      1080
+    ],
+    "raw_fps": 60,
+    "reading_holds_s": 40,
+    "verification": "full-run/verification.json",
+    "manifest": "full-run/manifest.json",
+    "comparison_analysis": "full-run/comparison-analysis.json",
+    "input_output_log": "full-run/jev-inputs.json",
+    "recording_attempts": "full-run/recording-attempts.json",
+    "comparison_limit": "One pair of complete control systems; script has documented human repairs. Different clock modes, starters, routes and host loads; not a controlled model speed or success-rate estimate.",
+    "freeze": "For waiting at chapter ends, display the last legible frame within two seconds of the endpoint and show its actual source time. Raw videos and chronological intervals are unchanged.",
+    "terminal_dex": {
+      "source": "Manually read from actual Hall of Fame PlayerStats frames, archived in ending-frames.json",
+      "script": {
+        "seen": 109,
+        "owned": 5
+      },
+      "jev": {
+        "seen": 111,
+        "owned": 4
+      }
+    },
+    "raw_recordings": [
+      {
+        "controller": "script",
+        "file": "script-full.mp4",
+        "sha256": "9da22d4c181f21819afbf4cd6c7894274dd6d64de779c034da44fd1fd6ec2701",
+        "probe": {
+          "programs": [],
+          "stream_groups": [],
+          "streams": [
+            {
+              "width": 160,
+              "height": 144,
+              "r_frame_rate": "60/1",
+              "nb_frames": "640329"
+            },
+            {
+              "r_frame_rate": "0/0",
+              "nb_frames": "10"
+            }
+          ],
+          "format": {
+            "duration": "10672.150000",
+            "size": "88673825"
+          }
+        },
+        "process_frames": [
+          639705,
+          624
+        ],
+        "source_segments": [
+          {
+            "index": 1,
+            "sha256": "beccfc6c53a0ded87e92c903b7b09c74bf8d840d5c1377662ebd1fc0446f5cd8"
+          },
+          {
+            "index": 2,
+            "sha256": "e1cb4cfae56b9777c8e8a1b8eb6c25b47df847f0e52c830e6dcecbe76689d6ed"
+          }
+        ]
+      },
+      {
+        "controller": "jev",
+        "file": "jev-full.mp4",
+        "sha256": "3a5c6f7ee60d7551c6c99a67ca0da6e232ee473ba21b0b47ab1b452e35684f39",
+        "probe": {
+          "programs": [],
+          "stream_groups": [],
+          "streams": [
+            {
+              "width": 160,
+              "height": 144,
+              "r_frame_rate": "60/1",
+              "nb_frames": "929858"
+            },
+            {
+              "r_frame_rate": "0/0",
+              "nb_frames": "10"
+            }
+          ],
+          "format": {
+            "duration": "15497.633333",
+            "size": "145155241"
+          }
+        },
+        "process_frames": [
+          929238,
+          620
+        ],
+        "source_segments": [
+          {
+            "index": 1,
+            "sha256": "08c10910e16d6874fc83ca07c0d0655882b95baf1ddbe4f48411ff18dc5d2e0d"
+          },
+          {
+            "index": 2,
+            "sha256": "6621af3e44115d4085bb7680a54337cb7844195ed72bd0a994063a8b0d694933"
+          }
+        ]
+      }
+    ],
+    "encoded_overview": {
+      "file": "full-run/script-vs-jev-full.mp4",
+      "sha256": "b0abd0ea08da6ad34692cdf3a5c5fcb59b494f09846a97380b64744c21428e9c",
+      "probe": {
+        "programs": [],
+        "stream_groups": [],
+        "streams": [
+          {
+            "width": 1920,
+            "height": 1080,
+            "r_frame_rate": "30/1",
+            "nb_frames": "20340"
+          }
+        ],
+        "format": {
+          "duration": "678.000000",
+          "size": "371998829"
+        }
+      },
+      "validation": {
+        "composition_check": "full-run/final-hf-check.json",
+        "interactive_check": "full-run/full-player-browser-check.json",
+        "encoded_samples_s": [
+          514,
+          677
+        ],
+        "visually_verified_encoded_samples": true
+      }
+    }
+  },
+  "historical_opening": {
+    "purpose": "Supplementary opening recordings, not original full-clear footage",
+    "date": "2026-09-20",
+    "playback": "4x simulated game frames; model/network waiting is not recorded",
+    "comparison_limit": "Different controller timing (script default real-time; Jev driven-only). Not a wall-time benchmark.",
+    "recordings": [
+      {
+        "controller": "script",
+        "purpose": "supplementary opening capture",
+        "seed": 42,
+        "binary_sha256": "c34978a8bcd1a75212e9f590b2fe131fdff7377a4c744de7c63c74beb9b2c978",
+        "recording": "every simulated update; engine default record-video-fps=240",
+        "full_clear_evidence": false,
+        "success": true,
+        "wall_s_including_recording": 74.59,
+        "file": "script-opening.mp4",
+        "duration_s": 66.2,
+        "bytes": 800377,
+        "sha256": "4ba9ddfb41fc0aa4827ba3dd3fd5e0c9a5fef75084daf595c47601fcec9996b1"
+      },
+      {
+        "controller": "jev",
+        "purpose": "supplementary opening capture",
+        "seed": 42,
+        "binary_sha256": "c34978a8bcd1a75212e9f590b2fe131fdff7377a4c744de7c63c74beb9b2c978",
+        "recording": "every simulated update; engine default record-video-fps=240",
+        "full_clear_evidence": false,
+        "success": true,
+        "wall_s_including_recording": 45.779,
+        "file": "jev-opening.mp4",
+        "duration_s": 34.383333,
+        "bytes": 612488,
+        "sha256": "3a4ea7eac5ea552c9741a20881013f0eceb4ddf7ffb7cf44f3511524ca86dc94",
+        "calls": {
+          "strategy": 5,
+          "action": 10
+        },
+        "policy_sha256": "672ebec9b5eb383295df88309aeed2facc741c0864271a1be0b0b9aab69b027f"
+      }
+    ],
+    "failed_capture_attempt": {
+      "settings": "script with --speed 0 (not its historical default)",
+      "result": "stopped at m05: expected a choice menu, never opened",
+      "handling": "kept locally; corrected capture harness to historical default timing and completed m01-m08",
+      "inference": "does not establish a model advantage or a game-engine regression"
+    },
+    "comparison": {
+      "file": "script-vs-jev.mp4",
+      "sha256": "ae54c66113a18d8f2a873eb71f7973ab563df3a457231acaa22af509d9033f51",
+      "probe": {
+        "programs": [],
+        "stream_groups": [],
+        "streams": [
+          {
+            "codec_name": "h264",
+            "width": 1280,
+            "height": 720,
+            "r_frame_rate": "30/1",
+            "nb_frames": "2100"
+          }
+        ],
+        "format": {
+          "duration": "70.000000",
+          "size": "11907897"
+        }
+      },
+      "generator": "HyperFrames 0.8.54",
+      "validation": {
+        "lint_errors": 0,
+        "runtime_errors": 0,
+        "layout_issues": 0,
+        "motion_errors": 0,
+        "contrast_passed": 35,
+        "contrast_total": 35,
+        "delivered_project_check": "passed: docs/jev-retrospective-assets"
+      }
+    },
+    "full_clear_screenshot": {
+      "file": "jev-full-clear-final.png",
+      "source": ".artifacts/jev-autonomous-fresh/20260920-081028-seed42/final.png",
+      "sha256": "02b34f503261bf6b785fb5e8597012179d1e8fef9945a609631acc858579a7fb"
+    }
+  }
+}

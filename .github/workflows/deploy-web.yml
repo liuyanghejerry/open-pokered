@@ -146,10 +146,20 @@ jobs:
           cp -r crates/pokered-runner-web/editor-wasm/. "$DEST/wasm/"
           cp -r crates/pokered-layout-preview/editor-wasm/. "$DEST/wasm/"
 
+      # After this branch is merged, normal game deploys retain the dashboard.
+      - name: Include the recorded Jev dashboard when present
+        run: |
+          if [ -f scripts/stage_jev_dashboard.py ]; then
+            git lfs install --local
+            git lfs pull --include='docs/jev-retrospective-assets/*.mp4,docs/jev-retrospective-assets/full-run/*full.mp4,docs/jev-retrospective-assets/full-run/script-*failure.mp4,docs/jev-retrospective-assets/full-run/script-moon-navigation.mp4,docs/jev-retrospective-assets/full-run/script-original-machine-boot.mp4'
+            python3 scripts/stage_jev_dashboard.py --site crates/pokered-web/frontend/dist
+          fi
+
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
           path: crates/pokered-web/frontend/dist
+          retention-days: 7
 
   deploy:
     needs: build

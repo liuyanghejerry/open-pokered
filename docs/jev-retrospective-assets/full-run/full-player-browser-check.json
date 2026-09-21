@@ -1,0 +1,12 @@
+{
+  "passed": true,
+  "checks": [
+    "chapter deep link",
+    "4 HP recovery and 46% actual choice",
+    "complete raw input expansion",
+    "both independent CONTINUE states",
+    "rewind",
+    "both video playback"
+  ],
+  "errors": []
+}

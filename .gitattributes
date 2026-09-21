@@ -1,0 +1,2 @@
+docs/jev-retrospective-assets/**/*.mp4 filter=lfs diff=lfs merge=lfs -text
+docs/jev-retrospective-assets/*.mp4 filter=lfs diff=lfs merge=lfs -text

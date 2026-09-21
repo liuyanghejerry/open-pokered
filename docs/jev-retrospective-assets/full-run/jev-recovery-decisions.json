@@ -1,0 +1,2585 @@
+{
+  "source_attempt": "jev-a1",
+  "source_trace": ".artifacts/jev-full-comparison-20260920/jev-a1/run/20260920-222623-seed42/trace.jsonl",
+  "decisions": [
+    {
+      "elapsed_s": 5919.941,
+      "world": {
+        "flags": {
+          "EVENT_BEAT_AGATHAS_ROOM_TRAINER_0": true,
+          "EVENT_BEAT_BRUNOS_ROOM_TRAINER_0": true,
+          "EVENT_BEAT_LORELEIS_ROOM_TRAINER_0": true
+        },
+        "bag": {
+          "TM34": 1,
+          "DOMEFOSSIL": 1,
+          "TM11": 1,
+          "NUGGET": 1,
+          "SSTICKET": 1,
+          "HM01": 1,
+          "TM24": 1,
+          "RARECANDY": 1,
+          "POKEFLUTE": 1,
+          "TM06": 1,
+          "HM03": 1,
+          "COINCASE": 1,
+          "TM21": 1,
+          "CARDKEY": 1,
+          "TM46": 1,
+          "SECRETKEY": 1,
+          "TM38": 1,
+          "TM27": 1,
+          "HM04": 1
+        },
+        "party": [
+          {
+            "species": "Charizard",
+            "level": 66,
+            "hp": 4,
+            "max_hp": 210,
+            "status": "None",
+            "moves": [
+              "Slash",
+              "Cut",
+              "Flamethrower",
+              "Dig"
+            ],
+            "pp": [
+              14,
+              30,
+              1,
+              0
+            ]
+          },
+          {
+            "species": "Lapras",
+            "level": 15,
+            "hp": 65,
+            "max_hp": 65,
+            "status": "None",
+            "moves": [
+              "WaterGun",
+              "Growl",
+              "Surf",
+              "Strength"
+            ],
+            "pp": [
+              25,
+              40,
+              15,
+              15
+            ]
+          }
+        ],
+        "badges": 8,
+        "map": "AgathasRoom",
+        "x": 4,
+        "y": 2,
+        "money": 29579,
+        "coins": 0,
+        "fully_recovered": false,
+        "object_visibility": {},
+        "cleared_terrain": [
+          "CeladonGym,5,7",
+          "Route9,5,8"
+        ],
+        "navigation_revision": 141,
+        "block_values": {
+          "AgathasRoom,2,0": 14
+        },
+        "recent_battle_defeats": [],
+        "total_completed_event_flags": 273
+      },
+      "candidates": {
+        "subgoal:0": {
+          "establish": [
+            "flag",
+            "EVENT_BEAT_CHAMPION_RIVAL",
+            true
+          ],
+          "advances": [
+            "Defeat the Champion and enter the Hall of Fame"
+          ],
+          "ways": [
+            {
+              "map": "ChampionsRoom",
+              "script": "ChampionsRoom:@load",
+              "produces": [
+                "flag",
+                "EVENT_BEAT_CHAMPION_RIVAL",
+                true
+              ],
+              "confirmation_options": [],
+              "preceding_effects": [
+                [
+                  "movement",
+                  "movePlayer",
+                  true
+                ],
+                [
+                  "battle",
+                  "OPP_RIVAL3",
+                  true
+                ]
+              ]
+            }
+          ],
+          "context": {
+            "trigger_navigation": [
+              {
+                "map": "ChampionsRoom",
+                "tile_route_found": true,
+                "steps": 51,
+                "requires_surf": false,
+                "scope": "this trigger region, using known geometry and observed obstacles; available Surf can be used en route"
+              }
+            ]
+          }
+        },
+        "subgoal:1": {
+          "establish": [
+            "flag",
+            "EVENT_SILPH_CO_3_UNLOCKED_DOOR1",
+            true
+          ],
+          "advances": [
+            "Resolve a terrain prerequisite on a possible route to the active goal"
+          ],
+          "ways": [
+            {
+              "map": "SilphCo3F",
+              "script": "SilphCo3F:cardKeyDoor1",
+              "produces": [
+                "flag",
+                "EVENT_SILPH_CO_3_UNLOCKED_DOOR1",
+                true
+              ],
+              "confirmation_options": [],
+              "preceding_effects": []
+            }
+          ],
+          "context": {
+            "destination": "SilphCo9F",
+            "goal": [
+              "heal",
+              "party",
+              true
+            ],
+            "prerequisites": [
+              [
+                "block",
+                "SilphCo3F,4,4",
+                14
+              ]
+            ],
+            "evidence": "A planning path with doors relaxed and NPC collisions omitted; all proposed prerequisites still require real execution",
+            "trigger_navigation": [
+              {
+                "map": "SilphCo3F",
+                "tile_route_found": true,
+                "steps": 1319,
+                "requires_surf": true,
+                "scope": "this trigger region, using known geometry and observed obstacles; available Surf can be used en route"
+              }
+            ]
+          }
+        },
+        "subgoal:2": {
+          "establish": [
+            "block",
+            "SilphCo3F,4,4",
+            14
+          ],
+          "advances": [
+            "Resolve a terrain prerequisite on a possible route to the active goal"
+          ],
+          "ways": [
+            {
+              "map": "SilphCo3F",
+              "script": "SilphCo3F:cardKeyDoor1",
+              "produces": [
+                "block",
+                "SilphCo3F,4,4",
+                14
+              ],
+              "confirmation_options": [],
+              "preceding_effects": [
+                [
+                  "flag",
+                  "EVENT_SILPH_CO_3_UNLOCKED_DOOR1",
+                  true
+                ]
+              ]
+            }
+          ],
+          "context": {
+            "destination": "SilphCo9F",
+            "goal": [
+              "heal",
+              "party",
+              true
+            ],
+            "prerequisites": [
+              [
+                "block",
+                "SilphCo3F,4,4",
+                14
+              ]
+            ],
+            "evidence": "A planning path with doors relaxed and NPC collisions omitted; all proposed prerequisites still require real execution",
+            "trigger_navigation": [
+              {
+                "map": "SilphCo3F",
+                "tile_route_found": true,
+                "steps": 1319,
+                "requires_surf": true,
+                "scope": "this trigger region, using known geometry and observed obstacles; available Surf can be used en route"
+              }
+            ]
+          }
+        },
+        "subgoal:3": {
+          "establish": [
+            "terrain",
+            "CeladonCity,35,32",
+            true
+          ],
+          "advances": [
+            "Use Cut to clear the terrain obstruction"
+          ],
+          "ways": [
+            {
+              "map": "CeladonCity",
+              "script": "skill:field",
+              "produces": [
+                "terrain",
+                "CeladonCity,35,32",
+                true
+              ],
+              "confirmation_options": [],
+              "preceding_effects": []
+            }
+          ],
+          "context": {
+            "move": "Cut",
+            "map": "CeladonCity",
+            "tree": [
+              35,
+              32
+            ],
+            "stance": [
+              35,
+              33
+            ],
+            "direction": "up",
+            "destination": "CeladonPokecenter"
+          }
+        },
+        "subgoal:4": {
+          "establish": [
+            "heal",
+            "party",
+            true
+          ],
+          "advances": [
+            "Restore HP, status and move PP before continuing the story"
+          ],
+          "ways": [
+            {
+              "map": "IndigoPlateauLobby",
+              "script": "IndigoPlateauLobby:talkNurse",
+              "produces": [
+                "heal",
+                "party",
+                true
+              ],
+              "confirmation_options": [
+                "Yes"
+              ],
+              "preceding_effects": []
+            },
+            {
+              "map": "ViridianPokecenter",
+              "script": "ViridianPokecenter:talkNurse",
+              "produces": [
+                "heal",
+                "party",
+                true
+              ],
+              "confirmation_options": [
+                "Yes"
+              ],
+              "preceding_effects": []
+            },
+            {
+              "map": "PewterPokecenter",
+              "script": "PewterPokecenter:talkNurse",
+              "produces": [
+                "heal",
+                "party",
+                true
+              ],
+              "confirmation_options": [
+                "Yes"
+              ],
+              "preceding_effects": []
+            }
+          ],
+          "context": {
+            "urgently_needed": true,
+            "route_resets_won_battles": {
+              "IndigoPlateauLobby": [
+                "EVENT_BEAT_AGATHAS_ROOM_TRAINER_0",
+                "EVENT_BEAT_BRUNOS_ROOM_TRAINER_0",
+                "EVENT_BEAT_LORELEIS_ROOM_TRAINER_0"
+              ],
+              "ViridianPokecenter": [
+                "EVENT_BEAT_AGATHAS_ROOM_TRAINER_0",
+                "EVENT_BEAT_BRUNOS_ROOM_TRAINER_0",
+                "EVENT_BEAT_LORELEIS_ROOM_TRAINER_0"
+              ],
+              "PewterPokecenter": [
+                "EVENT_BEAT_AGATHAS_ROOM_TRAINER_0",
+                "EVENT_BEAT_BRUNOS_ROOM_TRAINER_0",
+                "EVENT_BEAT_LORELEIS_ROOM_TRAINER_0"
+              ]
+            },
+            "trigger_navigation": [
+              {
+                "map": "IndigoPlateauLobby",
+                "tile_route_found": true,
+                "steps": 47,
+                "requires_surf": false,
+                "scope": "this trigger region, using known geometry and observed obstacles; available Surf can be used en route"
+              },
+              {
+                "map": "ViridianPokecenter",
+                "tile_route_found": true,
+                "steps": 424,
+                "requires_surf": true,
+                "scope": "this trigger region, using known geometry and observed obstacles; available Surf can be used en route"
+              },
+              {
+                "map": "PewterPokecenter",
+                "tile_route_found": true,
+                "steps": 649,
+                "requires_surf": true,
+                "scope": "this trigger region, using known geometry and observed obstacles; available Surf can be used en route"
+              }
+            ]
+          }
+        },
+        "none": "None of these candidates can advance the current goal."
+      },
+      "instructions": "Which attainable story or preparation subgoal should the player pursue next? Healing, training and improving weak attacks are valid indirect progress toward later battles. The action layer can travel between maps before triggering a script; a subgoal need not be on the current map. Candidates already have satisfied script preconditions; winning battles is still an execution outcome. Topological routes may have local obstacles. Use the supplied script facts and known navigation failures; prefer resolving an observed blocker before retrying its destination unless prerequisites have changed. A known tile route to the specific trigger is stronger evidence than a map-only failure: another region on that same map can still be reachable. Prefer reachable prerequisites when the requested trigger has no tile route. Prefer necessary early story prerequisites before optional detours or difficult battles. Compare recovery travel with its supplied story-reset cost. Depleted PP in one move does not require leaving when other usable attacks can handle the remaining opponents. Prefer preserving completed battles when continuing or using carried recovery is viable; retreat remains valid when the party cannot proceed. Recovery is preparation, not a requirement to be fully replenished after every battle. When recovery resets won battles, do not repeat a full-heal loop just to top off HP or PP. Compare current health and usable effective attacks with the next opponent, and continue when those resources are sufficient. The urgently_needed field is a heuristic warning, not a requirement to refill each depleted move. A depleted attack can be replaced by another effective attack with PP remaining. Retreat only when its benefit outweighs replaying all reset battles.",
+      "answer": {
+        "choice": "subgoal:4",
+        "probabilities": {
+          "subgoal:3": 0.01,
+          "subgoal:0": 0.44,
+          "none": 0.06,
+          "subgoal:2": 0.01,
+          "subgoal:4": 0.46,
+          "subgoal:1": 0.02
+        },
+        "confidence": 0.34
+      }
+    },
+    {
+      "elapsed_s": 6164.796,
+      "world": {
+        "flags": {
+          "EVENT_AUTOWALKED_INTO_BRUNOS_ROOM": true,
+          "EVENT_AUTOWALKED_INTO_LORELEIS_ROOM": true,
+          "EVENT_BEAT_LORELEIS_ROOM_TRAINER_0": true,
+          "EVENT_STARTED_ELITE_4": true
+        },
+        "bag": {
+          "TM34": 1,
+          "DOMEFOSSIL": 1,
+          "TM11": 1,
+          "NUGGET": 1,
+          "SSTICKET": 1,
+          "HM01": 1,
+          "TM24": 1,
+          "RARECANDY": 1,
+          "POKEFLUTE": 1,
+          "TM06": 1,
+          "HM03": 1,
+          "COINCASE": 1,
+          "TM21": 1,
+          "CARDKEY": 1,
+          "TM46": 1,
+          "SECRETKEY": 1,
+          "TM38": 1,
+          "TM27": 1,
+          "HM04": 1
+        },
+        "party": [
+          {
+            "species": "Charizard",
+            "level": 69,
+            "hp": 220,
+            "max_hp": 220,
+            "status": "None",
+            "moves": [
+              "Slash",
+              "Cut",
+              "Flamethrower",
+              "Dig"
+            ],
+            "pp": [
+              20,
+              30,
+              15,
+              10
+            ]
+          },
+          {
+            "species": "Lapras",
+            "level": 15,
+            "hp": 65,
+            "max_hp": 65,
+            "status": "None",
+            "moves": [
+              "WaterGun",
+              "Growl",
+              "Surf",
+              "Strength"
+            ],
+            "pp": [
+              25,
+              40,
+              15,
+              15
+            ]
+          }
+        ],
+        "badges": 8,
+        "map": "IndigoPlateau",
+        "x": 9,
+        "y": 6,
+        "money": 9291,
+        "coins": 0,
+        "fully_recovered": true,
+        "object_visibility": {},
+        "cleared_terrain": [
+          "CeladonGym,5,7",
+          "Route9,5,8"
+        ],
+        "navigation_revision": 141,
+        "block_values": {},
+        "recent_battle_defeats": [
+          {
+            "map": "AgathasRoom",
+            "party_level": 68,
+            "opponents": [
+              {
+                "hp": 142,
+                "level": 56,
+                "species": "Gengar"
+              },
+              {
+                "hp": 158,
+                "level": 56,
+                "species": "Golbat"
+              },
+              {
+                "hp": 123,
+                "level": 55,
+                "species": "Haunter"
+              },
+              {
+                "hp": 146,
+                "level": 58,
+                "species": "Arbok"
+              },
+              {
+                "hp": 151,
+                "level": 60,
+                "species": "Gengar"
+              }
+            ],
+            "preparation_signature": {
+              "party": [
+                {
+                  "species": "Charizard",
+                  "level": 68,
+                  "moves": [
+                    "Slash",
+                    "Cut",
+                    "Flamethrower",
+                    "Dig"
+                  ],
+                  "hp_band": 3,
+                  "pp": [
+                    16,
+                    30,
+                    8,
+                    2
+                  ],
+                  "status": "None"
+                },
+                {
+                  "species": "Lapras",
+                  "level": 15,
+                  "moves": [
+                    "WaterGun",
+                    "Growl",
+                    "Surf",
+                    "Strength"
+                  ],
+                  "hp_band": 4,
+                  "pp": [
+                    25,
+                    40,
+                    15,
+                    15
+                  ],
+                  "status": "None"
+                }
+              ],
+              "medicine": {
+                "RARECANDY": 1
+              }
+            },
+            "proposed_training_level": 70
+          },
+          {
+            "map": "BrunosRoom",
+            "party_level": 69,
+            "opponents": [
+              {
+                "hp": 108,
+                "level": 53,
+                "species": "Onix"
+              },
+              {
+                "hp": 128,
+                "level": 55,
+                "species": "Hitmonchan"
+              },
+              {
+                "hp": 128,
+                "level": 55,
+                "species": "Hitmonlee"
+              },
+              {
+                "hp": 114,
+                "level": 56,
+                "species": "Onix"
+              },
+              {
+                "hp": 181,
+                "level": 58,
+                "species": "Machamp"
+              }
+            ],
+            "preparation_signature": {
+              "party": [
+                {
+                  "species": "Charizard",
+                  "level": 69,
+                  "moves": [
+                    "Slash",
+                    "Cut",
+                    "Flamethrower",
+                    "Dig"
+                  ],
+                  "hp_band": 1,
+                  "pp": [
+                    17,
+                    30,
+                    10,
+                    10
+                  ],
+                  "status": "None"
+                },
+                {
+                  "species": "Lapras",
+                  "level": 15,
+                  "moves": [
+                    "WaterGun",
+                    "Growl",
+                    "Surf",
+                    "Strength"
+                  ],
+                  "hp_band": 4,
+                  "pp": [
+                    25,
+                    40,
+                    15,
+                    15
+                  ],
+                  "status": "None"
+                }
+              ],
+              "medicine": {
+                "RARECANDY": 1
+              }
+            },
+            "proposed_training_level": 71
+          }
+        ],
+        "total_completed_event_flags": 270
+      },
+      "candidates": {
+        "subgoal:0": {
+          "establish": [
+            "flag",
+            "EVENT_AUTOWALKED_INTO_BRUNOS_ROOM",
+            false
+          ],
+          "advances": [
+            "Resolve a terrain prerequisite on a possible route to the active goal"
+          ],
+          "ways": [
+            {
+              "map": "HallOfFame",
+              "script": "HallOfFame:@load",
+              "produces": [
+                "flag",
+                "EVENT_AUTOWALKED_INTO_BRUNOS_ROOM",
+                false
+              ],
+              "confirmation_options": [],
+              "preceding_effects": [
+                [
+                  "movement",
+                  "movePlayerRelative",
+                  true
+                ],
+                [
+                  "flag",
+                  "EVENT_HALL_OF_FAME_DEX_RATING",
+                  true
+                ],
+                [
+                  "flag",
+                  "EVENT_BEAT_LORELEIS_ROOM_TRAINER_0",
+                  false
+                ],
+                [
+                  "flag",
+                  "EVENT_AUTOWALKED_INTO_LORELEIS_ROOM",
+                  false
+                ],
+                [
+                  "flag",
+                  "EVENT_BEAT_BRUNOS_ROOM_TRAINER_0",
+                  false
+                ]
+              ]
+            },
+            {
+              "map": "IndigoPlateauLobby",
+              "script": "IndigoPlateauLobby:@load",
+              "produces": [
+                "flag",
+                "EVENT_AUTOWALKED_INTO_BRUNOS_ROOM",
+                false
+              ],
+              "confirmation_options": [],
+              "preceding_effects": [
+                [
+                  "flag",
+                  "EVENT_VICTORY_ROAD_1_BOULDER_ON_SWITCH",
+                  false
+                ],
+                [
+                  "flag",
+                  "EVENT_STARTED_ELITE_4",
+                  false
+                ],
+                [
+                  "flag",
+                  "EVENT_BEAT_LORELEIS_ROOM_TRAINER_0",
+                  false
+                ],
+                [
+                  "flag",
+                  "EVENT_AUTOWALKED_INTO_LORELEIS_ROOM",
+                  false
+                ],
+                [
+                  "flag",
+                  "EVENT_BEAT_BRUNOS_ROOM_TRAINER_0",
+                  false
+                ]
+              ]
+            }
+          ],
+          "context": {
+            "destination": "ChampionsRoom",
+            "goal": [
+              "flag",
+              "EVENT_BEAT_CHAMPION_RIVAL",
+              true
+            ],
+            "prerequisites": [
+              [
+                "block",
+                "BrunosRoom,2,0",
+                5
+              ]
+            ],
+            "evidence": "Planning with doors relaxed; each prerequisite requires real execution",
+            "trigger_navigation": [
+              {
+                "map": "HallOfFame",
+                "tile_route_found": false,
+                "steps": null,
+                "requires_surf": false,
+                "scope": "this trigger region, using known geometry and observed obstacles; available Surf can be used en route"
+              },
+              {
+                "map": "IndigoPlateauLobby",
+                "tile_route_found": true,
+                "steps": 2,
+                "requires_surf": false,
+                "scope": "this trigger region, using known geometry and observed obstacles; available Surf can be used en route"
+              }
+            ]
+          }
+        },
+        "subgoal:1": {
+          "establish": [
+            "flag",
+            "EVENT_BEAT_BRUNOS_ROOM_TRAINER_0",
+            true
+          ],
+          "advances": [
+            "Resolve a terrain prerequisite on a possible route to the active goal"
+          ],
+          "ways": [
+            {
+              "map": "BrunosRoom",
+              "script": "BrunosRoom:talkBruno",
+              "produces": [
+                "flag",
+                "EVENT_BEAT_BRUNOS_ROOM_TRAINER_0",
+                true
+              ],
+              "confirmation_options": [],
+              "preceding_effects": [
+                [
+                  "battle",
+                  "Bruno:1",
+                  true
+                ]
+              ]
+            }
+          ],
+          "context": {
+            "destination": "ChampionsRoom",
+            "goal": [
+              "flag",
+              "EVENT_BEAT_CHAMPION_RIVAL",
+              true
+            ],
+            "prerequisites": [
+              [
+                "block",
+                "BrunosRoom,2,0",
+                5
+              ]
+            ],
+            "evidence": "Planning with doors relaxed; each prerequisite requires real execution",
+            "opponent_parties": [
+              {
+                "level": 53,
+                "species": "Onix"
+              },
+              {
+                "level": 55,
+                "species": "Hitmonchan"
+              },
+              {
+                "level": 55,
+                "species": "Hitmonlee"
+              },
+              {
+                "level": 56,
+                "species": "Onix"
+              },
+              {
+                "level": 58,
+                "species": "Machamp"
+              }
+            ],
+            "battle_is_not_guaranteed_by_script_preconditions": true,
+            "trigger_navigation": [
+              {
+                "map": "BrunosRoom",
+                "tile_route_found": false,
+                "steps": null,
+                "requires_surf": false,
+                "scope": "this trigger region, using known geometry and observed obstacles; available Surf can be used en route"
+              }
+            ]
+          }
+        },
+        "subgoal:2": {
+          "establish": [
+            "terrain",
+            "CeladonCity,35,32",
+            true
+          ],
+          "advances": [
+            "Use Cut to clear the terrain obstruction"
+          ],
+          "ways": [
+            {
+              "map": "CeladonCity",
+              "script": "skill:field",
+              "produces": [
+                "terrain",
+                "CeladonCity,35,32",
+                true
+              ],
+              "confirmation_options": [],
+              "preceding_effects": []
+            }
+          ],
+          "context": {
+            "move": "Cut",
+            "map": "CeladonCity",
+            "tree": [
+              35,
+              32
+            ],
+            "stance": [
+              35,
+              33
+            ],
+            "direction": "up",
+            "destination": "CeladonPokecenter"
+          }
+        },
+        "subgoal:3": {
+          "establish": [
+            "supply",
+            "FullRestore",
+            1
+          ],
+          "advances": [
+            "Buy recovery supplies for battles that caused an observed defeat"
+          ],
+          "ways": [
+            {
+              "map": "IndigoPlateauLobby",
+              "script": "IndigoPlateauLobby:talkClerk",
+              "produces": [
+                "shop",
+                [
+                  "ULTRA_BALL",
+                  "GREAT_BALL",
+                  "FULL_RESTORE",
+                  "MAX_POTION",
+                  "FULL_HEAL",
+                  "REVIVE",
+                  "MAX_REPEL"
+                ],
+                true
+              ],
+              "confirmation_options": [],
+              "preceding_effects": []
+            }
+          ],
+          "context": {
+            "optional_preparation": true,
+            "stock_index": 2,
+            "item": {
+              "id": "FullRestore",
+              "name": "FULL RESTORE",
+              "price": 3000,
+              "category": "Medicine",
+              "effect": {
+                "type": "FullRestore",
+                "params": {}
+              },
+              "held_effect": null,
+              "berry": null,
+              "use_outside_battle": true,
+              "use_in_battle": true,
+              "consume": true,
+              "key_item": false,
+              "sellable": true,
+              "description": "",
+              "tags": [
+                "healing",
+                "hp",
+                "status",
+                "cure"
+              ]
+            },
+            "quantity_to_buy": 1,
+            "total_cost": 3000,
+            "remaining_money": 6291,
+            "use": "Usable in battle or between fights when a nurse is inaccessible",
+            "trigger_navigation": [
+              {
+                "map": "IndigoPlateauLobby",
+                "tile_route_found": true,
+                "steps": 12,
+                "requires_surf": false,
+                "scope": "this trigger region, using known geometry and observed obstacles; available Surf can be used en route"
+              }
+            ]
+          }
+        },
+        "subgoal:4": {
+          "establish": [
+            "supply",
+            "MaxPotion",
+            2
+          ],
+          "advances": [
+            "Buy recovery supplies for battles that caused an observed defeat"
+          ],
+          "ways": [
+            {
+              "map": "IndigoPlateauLobby",
+              "script": "IndigoPlateauLobby:talkClerk",
+              "produces": [
+                "shop",
+                [
+                  "ULTRA_BALL",
+                  "GREAT_BALL",
+                  "FULL_RESTORE",
+                  "MAX_POTION",
+                  "FULL_HEAL",
+                  "REVIVE",
+                  "MAX_REPEL"
+                ],
+                true
+              ],
+              "confirmation_options": [],
+              "preceding_effects": []
+            }
+          ],
+          "context": {
+            "optional_preparation": true,
+            "stock_index": 3,
+            "item": {
+              "id": "MaxPotion",
+              "name": "MAX POTION",
+              "price": 2500,
+              "category": "Medicine",
+              "effect": {
+                "type": "FullHeal",
+                "params": {}
+              },
+              "held_effect": null,
+              "berry": null,
+              "use_outside_battle": true,
+              "use_in_battle": true,
+              "consume": true,
+              "key_item": false,
+              "sellable": true,
+              "description": "",
+              "tags": [
+                "healing",
+                "hp"
+              ]
+            },
+            "quantity_to_buy": 2,
+            "total_cost": 5000,
+            "remaining_money": 4291,
+            "use": "Usable in battle or between fights when a nurse is inaccessible",
+            "trigger_navigation": [
+              {
+                "map": "IndigoPlateauLobby",
+                "tile_route_found": true,
+                "steps": 12,
+                "requires_surf": false,
+                "scope": "this trigger region, using known geometry and observed obstacles; available Surf can be used en route"
+              }
+            ]
+          }
+        },
+        "subgoal:5": {
+          "establish": [
+            "level",
+            "leader",
+            71
+          ],
+          "advances": [
+            "Resolve a terrain prerequisite on a possible route to the active goal"
+          ],
+          "ways": [
+            {
+              "map": "VictoryRoad1F",
+              "script": "skill:train_encounter",
+              "produces": [
+                "level",
+                "leader",
+                71
+              ],
+              "confirmation_options": [],
+              "preceding_effects": []
+            },
+            {
+              "map": "VictoryRoad2F",
+              "script": "skill:train_encounter",
+              "produces": [
+                "level",
+                "leader",
+                71
+              ],
+              "confirmation_options": [],
+              "preceding_effects": []
+            },
+            {
+              "map": "VictoryRoad3F",
+              "script": "skill:train_encounter",
+              "produces": [
+                "level",
+                "leader",
+                71
+              ],
+              "confirmation_options": [],
+              "preceding_effects": []
+            }
+          ],
+          "context": {
+            "purpose": "Earn experience in normal wild battles to prepare for the easiest pending story battle",
+            "target_level": 71,
+            "training_regions": {
+              "VictoryRoad1F": {
+                "encounterRate": 15,
+                "mons": [
+                  {
+                    "level": 24,
+                    "species": "Machop"
+                  },
+                  {
+                    "level": 26,
+                    "species": "Geodude"
+                  },
+                  {
+                    "level": 22,
+                    "species": "Zubat"
+                  },
+                  {
+                    "level": 36,
+                    "species": "Onix"
+                  },
+                  {
+                    "level": 39,
+                    "species": "Onix"
+                  },
+                  {
+                    "level": 42,
+                    "species": "Onix"
+                  },
+                  {
+                    "level": 41,
+                    "species": "Graveler"
+                  },
+                  {
+                    "level": 41,
+                    "species": "Golbat"
+                  },
+                  {
+                    "level": 42,
+                    "species": "Machoke"
+                  },
+                  {
+                    "level": 43,
+                    "species": "Marowak"
+                  }
+                ]
+              },
+              "VictoryRoad2F": {
+                "encounterRate": 10,
+                "mons": [
+                  {
+                    "level": 22,
+                    "species": "Machop"
+                  },
+                  {
+                    "level": 24,
+                    "species": "Geodude"
+                  },
+                  {
+                    "level": 26,
+                    "species": "Zubat"
+                  },
+                  {
+                    "level": 36,
+                    "species": "Onix"
+                  },
+                  {
+                    "level": 39,
+                    "species": "Onix"
+                  },
+                  {
+                    "level": 42,
+                    "species": "Onix"
+                  },
+                  {
+                    "level": 41,
+                    "species": "Machoke"
+                  },
+                  {
+                    "level": 40,
+                    "species": "Golbat"
+                  },
+                  {
+                    "level": 40,
+                    "species": "Marowak"
+                  },
+                  {
+                    "level": 43,
+                    "species": "Graveler"
+                  }
+                ]
+              },
+              "VictoryRoad3F": {
+                "encounterRate": 15,
+                "mons": [
+                  {
+                    "level": 24,
+                    "species": "Machop"
+                  },
+                  {
+                    "level": 26,
+                    "species": "Geodude"
+                  },
+                  {
+                    "level": 22,
+                    "species": "Zubat"
+                  },
+                  {
+                    "level": 42,
+                    "species": "Onix"
+                  },
+                  {
+                    "level": 40,
+                    "species": "Venomoth"
+                  },
+                  {
+                    "level": 45,
+                    "species": "Onix"
+                  },
+                  {
+                    "level": 43,
+                    "species": "Graveler"
+                  },
+                  {
+                    "level": 41,
+                    "species": "Golbat"
+                  },
+                  {
+                    "level": 42,
+                    "species": "Machoke"
+                  },
+                  {
+                    "level": 45,
+                    "species": "Machoke"
+                  }
+                ]
+              }
+            },
+            "observed_defeats": [
+              {
+                "map": "LoreleisRoom",
+                "party_level": 66,
+                "opponents": [
+                  {
+                    "hp": 169,
+                    "level": 54,
+                    "species": "Dewgong"
+                  },
+                  {
+                    "hp": 124,
+                    "level": 53,
+                    "species": "Cloyster"
+                  },
+                  {
+                    "hp": 175,
+                    "level": 54,
+                    "species": "Slowbro"
+                  },
+                  {
+                    "hp": 147,
+                    "level": 56,
+                    "species": "Jynx"
+                  },
+                  {
+                    "hp": 220,
+                    "level": 56,
+                    "species": "Lapras"
+                  }
+                ],
+                "preparation_signature": {
+                  "party": [
+                    {
+                      "species": "Charizard",
+                      "level": 66,
+                      "moves": [
+                        "Slash",
+                        "Cut",
+                        "Flamethrower",
+                        "Dig"
+                      ],
+                      "hp_band": 4,
+                      "pp": [
+                        20,
+                        30,
+                        15,
+                        10
+                      ],
+                      "status": "None"
+                    },
+                    {
+                      "species": "Lapras",
+                      "level": 15,
+                      "moves": [
+                        "WaterGun",
+                        "Growl",
+                        "Surf",
+                        "Strength"
+                      ],
+                      "hp_band": 4,
+                      "pp": [
+                        25,
+                        40,
+                        15,
+                        15
+                      ],
+                      "status": "None"
+                    }
+                  ],
+                  "medicine": {
+                    "RARECANDY": 1
+                  }
+                },
+                "proposed_training_level": 68,
+                "resolved_by_victory": true
+              },
+              {
+                "map": "AgathasRoom",
+                "party_level": 68,
+                "opponents": [
+                  {
+                    "hp": 142,
+                    "level": 56,
+                    "species": "Gengar"
+                  },
+                  {
+                    "hp": 158,
+                    "level": 56,
+                    "species": "Golbat"
+                  },
+                  {
+                    "hp": 123,
+                    "level": 55,
+                    "species": "Haunter"
+                  },
+                  {
+                    "hp": 146,
+                    "level": 58,
+                    "species": "Arbok"
+                  },
+                  {
+                    "hp": 151,
+                    "level": 60,
+                    "species": "Gengar"
+                  }
+                ],
+                "preparation_signature": {
+                  "party": [
+                    {
+                      "species": "Charizard",
+                      "level": 68,
+                      "moves": [
+                        "Slash",
+                        "Cut",
+                        "Flamethrower",
+                        "Dig"
+                      ],
+                      "hp_band": 3,
+                      "pp": [
+                        16,
+                        30,
+                        8,
+                        2
+                      ],
+                      "status": "None"
+                    },
+                    {
+                      "species": "Lapras",
+                      "level": 15,
+                      "moves": [
+                        "WaterGun",
+                        "Growl",
+                        "Surf",
+                        "Strength"
+                      ],
+                      "hp_band": 4,
+                      "pp": [
+                        25,
+                        40,
+                        15,
+                        15
+                      ],
+                      "status": "None"
+                    }
+                  ],
+                  "medicine": {
+                    "RARECANDY": 1
+                  }
+                },
+                "proposed_training_level": 70
+              },
+              {
+                "map": "BrunosRoom",
+                "party_level": 69,
+                "opponents": [
+                  {
+                    "hp": 108,
+                    "level": 53,
+                    "species": "Onix"
+                  },
+                  {
+                    "hp": 128,
+                    "level": 55,
+                    "species": "Hitmonchan"
+                  },
+                  {
+                    "hp": 128,
+                    "level": 55,
+                    "species": "Hitmonlee"
+                  },
+                  {
+                    "hp": 114,
+                    "level": 56,
+                    "species": "Onix"
+                  },
+                  {
+                    "hp": 181,
+                    "level": 58,
+                    "species": "Machamp"
+                  }
+                ],
+                "preparation_signature": {
+                  "party": [
+                    {
+                      "species": "Charizard",
+                      "level": 69,
+                      "moves": [
+                        "Slash",
+                        "Cut",
+                        "Flamethrower",
+                        "Dig"
+                      ],
+                      "hp_band": 1,
+                      "pp": [
+                        17,
+                        30,
+                        10,
+                        10
+                      ],
+                      "status": "None"
+                    },
+                    {
+                      "species": "Lapras",
+                      "level": 15,
+                      "moves": [
+                        "WaterGun",
+                        "Growl",
+                        "Surf",
+                        "Strength"
+                      ],
+                      "hp_band": 4,
+                      "pp": [
+                        25,
+                        40,
+                        15,
+                        15
+                      ],
+                      "status": "None"
+                    }
+                  ],
+                  "medicine": {
+                    "RARECANDY": 1
+                  }
+                },
+                "proposed_training_level": 71
+              }
+            ],
+            "upcoming_moves": [
+              {
+                "level": 9,
+                "moveId": "Ember"
+              },
+              {
+                "level": 15,
+                "moveId": "Leer"
+              },
+              {
+                "level": 24,
+                "moveId": "Rage"
+              },
+              {
+                "level": 36,
+                "moveId": "Slash"
+              },
+              {
+                "level": 46,
+                "moveId": "Flamethrower"
+              },
+              {
+                "level": 55,
+                "moveId": "FireSpin"
+              }
+            ],
+            "trigger_navigation": [
+              {
+                "map": "VictoryRoad1F",
+                "tile_route_found": true,
+                "steps": 104,
+                "scope": "path to actual encounter terrain, including current NPC collisions; battles can interrupt travel"
+              },
+              {
+                "map": "VictoryRoad2F",
+                "tile_route_found": true,
+                "steps": 59,
+                "scope": "path to actual encounter terrain, including current NPC collisions; battles can interrupt travel"
+              },
+              {
+                "map": "VictoryRoad3F",
+                "tile_route_found": true,
+                "steps": 61,
+                "scope": "path to actual encounter terrain, including current NPC collisions; battles can interrupt travel"
+              }
+            ]
+          }
+        },
+        "none": "None of these candidates can advance the current goal."
+      },
+      "instructions": "Which attainable story or preparation subgoal should the player pursue next? Healing, training and improving weak attacks are valid indirect progress toward later battles. The action layer can travel between maps before triggering a script; a subgoal need not be on the current map. Candidates already have satisfied script preconditions; winning battles is still an execution outcome. Topological routes may have local obstacles. Use the supplied script facts and known navigation failures; prefer resolving an observed blocker before retrying its destination unless prerequisites have changed. A known tile route to the specific trigger is stronger evidence than a map-only failure: another region on that same map can still be reachable. Prefer reachable prerequisites when the requested trigger has no tile route. Prefer necessary early story prerequisites before optional detours or difficult battles.",
+      "answer": {
+        "choice": "subgoal:1",
+        "probabilities": {
+          "none": 0.02,
+          "subgoal:0": 0.15,
+          "subgoal:1": 0.52,
+          "subgoal:4": 0.04,
+          "subgoal:5": 0.15,
+          "subgoal:2": 0.01,
+          "subgoal:3": 0.11
+        },
+        "confidence": 0.44
+      }
+    },
+    {
+      "elapsed_s": 6172.864,
+      "world": {
+        "flags": {
+          "EVENT_STARTED_ELITE_4": false
+        },
+        "bag": {
+          "TM34": 1,
+          "DOMEFOSSIL": 1,
+          "TM11": 1,
+          "NUGGET": 1,
+          "SSTICKET": 1,
+          "HM01": 1,
+          "TM24": 1,
+          "RARECANDY": 1,
+          "POKEFLUTE": 1,
+          "TM06": 1,
+          "HM03": 1,
+          "COINCASE": 1,
+          "TM21": 1,
+          "CARDKEY": 1,
+          "TM46": 1,
+          "SECRETKEY": 1,
+          "TM38": 1,
+          "TM27": 1,
+          "HM04": 1
+        },
+        "party": [
+          {
+            "species": "Charizard",
+            "level": 69,
+            "hp": 220,
+            "max_hp": 220,
+            "status": "None",
+            "moves": [
+              "Slash",
+              "Cut",
+              "Flamethrower",
+              "Dig"
+            ],
+            "pp": [
+              20,
+              30,
+              15,
+              10
+            ]
+          },
+          {
+            "species": "Lapras",
+            "level": 15,
+            "hp": 65,
+            "max_hp": 65,
+            "status": "None",
+            "moves": [
+              "WaterGun",
+              "Growl",
+              "Surf",
+              "Strength"
+            ],
+            "pp": [
+              25,
+              40,
+              15,
+              15
+            ]
+          }
+        ],
+        "badges": 8,
+        "map": "IndigoPlateauLobby",
+        "x": 7,
+        "y": 10,
+        "money": 9291,
+        "coins": 0,
+        "fully_recovered": true,
+        "object_visibility": {},
+        "cleared_terrain": [
+          "CeladonGym,5,7",
+          "Route9,5,8"
+        ],
+        "navigation_revision": 141,
+        "block_values": {},
+        "recent_battle_defeats": [
+          {
+            "map": "AgathasRoom",
+            "party_level": 68,
+            "opponents": [
+              {
+                "hp": 142,
+                "level": 56,
+                "species": "Gengar"
+              },
+              {
+                "hp": 158,
+                "level": 56,
+                "species": "Golbat"
+              },
+              {
+                "hp": 123,
+                "level": 55,
+                "species": "Haunter"
+              },
+              {
+                "hp": 146,
+                "level": 58,
+                "species": "Arbok"
+              },
+              {
+                "hp": 151,
+                "level": 60,
+                "species": "Gengar"
+              }
+            ],
+            "preparation_signature": {
+              "party": [
+                {
+                  "species": "Charizard",
+                  "level": 68,
+                  "moves": [
+                    "Slash",
+                    "Cut",
+                    "Flamethrower",
+                    "Dig"
+                  ],
+                  "hp_band": 3,
+                  "pp": [
+                    16,
+                    30,
+                    8,
+                    2
+                  ],
+                  "status": "None"
+                },
+                {
+                  "species": "Lapras",
+                  "level": 15,
+                  "moves": [
+                    "WaterGun",
+                    "Growl",
+                    "Surf",
+                    "Strength"
+                  ],
+                  "hp_band": 4,
+                  "pp": [
+                    25,
+                    40,
+                    15,
+                    15
+                  ],
+                  "status": "None"
+                }
+              ],
+              "medicine": {
+                "RARECANDY": 1
+              }
+            },
+            "proposed_training_level": 70
+          },
+          {
+            "map": "BrunosRoom",
+            "party_level": 69,
+            "opponents": [
+              {
+                "hp": 108,
+                "level": 53,
+                "species": "Onix"
+              },
+              {
+                "hp": 128,
+                "level": 55,
+                "species": "Hitmonchan"
+              },
+              {
+                "hp": 128,
+                "level": 55,
+                "species": "Hitmonlee"
+              },
+              {
+                "hp": 114,
+                "level": 56,
+                "species": "Onix"
+              },
+              {
+                "hp": 181,
+                "level": 58,
+                "species": "Machamp"
+              }
+            ],
+            "preparation_signature": {
+              "party": [
+                {
+                  "species": "Charizard",
+                  "level": 69,
+                  "moves": [
+                    "Slash",
+                    "Cut",
+                    "Flamethrower",
+                    "Dig"
+                  ],
+                  "hp_band": 1,
+                  "pp": [
+                    17,
+                    30,
+                    10,
+                    10
+                  ],
+                  "status": "None"
+                },
+                {
+                  "species": "Lapras",
+                  "level": 15,
+                  "moves": [
+                    "WaterGun",
+                    "Growl",
+                    "Surf",
+                    "Strength"
+                  ],
+                  "hp_band": 4,
+                  "pp": [
+                    25,
+                    40,
+                    15,
+                    15
+                  ],
+                  "status": "None"
+                }
+              ],
+              "medicine": {
+                "RARECANDY": 1
+              }
+            },
+            "proposed_training_level": 71
+          }
+        ],
+        "total_completed_event_flags": 266
+      },
+      "candidates": {
+        "subgoal:0": {
+          "establish": [
+            "flag",
+            "EVENT_BEAT_LORELEIS_ROOM_TRAINER_0",
+            true
+          ],
+          "advances": [
+            "Resolve a terrain prerequisite on a possible route to the active goal"
+          ],
+          "ways": [
+            {
+              "map": "LoreleisRoom",
+              "script": "LoreleisRoom:talkLorelei",
+              "produces": [
+                "flag",
+                "EVENT_BEAT_LORELEIS_ROOM_TRAINER_0",
+                true
+              ],
+              "confirmation_options": [],
+              "preceding_effects": [
+                [
+                  "battle",
+                  "OPP_LORELEI1",
+                  true
+                ]
+              ]
+            }
+          ],
+          "context": {
+            "destination": "ChampionsRoom",
+            "goal": [
+              "flag",
+              "EVENT_BEAT_CHAMPION_RIVAL",
+              true
+            ],
+            "prerequisites": [
+              [
+                "block",
+                "LoreleisRoom,2,0",
+                5
+              ]
+            ],
+            "evidence": "Planning with doors relaxed; each prerequisite requires real execution",
+            "opponent_parties": [
+              {
+                "level": 54,
+                "species": "Dewgong"
+              },
+              {
+                "level": 53,
+                "species": "Cloyster"
+              },
+              {
+                "level": 54,
+                "species": "Slowbro"
+              },
+              {
+                "level": 56,
+                "species": "Jynx"
+              },
+              {
+                "level": 56,
+                "species": "Lapras"
+              }
+            ],
+            "battle_is_not_guaranteed_by_script_preconditions": true,
+            "trigger_navigation": [
+              {
+                "map": "LoreleisRoom",
+                "tile_route_found": true,
+                "steps": 28,
+                "requires_surf": false,
+                "scope": "this trigger region, using known geometry and observed obstacles; available Surf can be used en route"
+              }
+            ]
+          }
+        },
+        "subgoal:1": {
+          "establish": [
+            "flag",
+            "EVENT_AUTOWALKED_INTO_LORELEIS_ROOM",
+            true
+          ],
+          "advances": [
+            "Resolve a terrain prerequisite on a possible route to the active goal"
+          ],
+          "ways": [
+            {
+              "map": "LoreleisRoom",
+              "script": "LoreleisRoom:@load",
+              "produces": [
+                "flag",
+                "EVENT_AUTOWALKED_INTO_LORELEIS_ROOM",
+                true
+              ],
+              "confirmation_options": [],
+              "preceding_effects": [
+                [
+                  "flag",
+                  "EVENT_STARTED_ELITE_4",
+                  true
+                ]
+              ]
+            }
+          ],
+          "context": {
+            "destination": "ChampionsRoom",
+            "goal": [
+              "flag",
+              "EVENT_BEAT_CHAMPION_RIVAL",
+              true
+            ],
+            "prerequisites": [
+              [
+                "block",
+                "LoreleisRoom,2,0",
+                5
+              ]
+            ],
+            "evidence": "Planning with doors relaxed; each prerequisite requires real execution",
+            "trigger_navigation": [
+              {
+                "map": "LoreleisRoom",
+                "tile_route_found": true,
+                "steps": 20,
+                "requires_surf": false,
+                "scope": "this trigger region, using known geometry and observed obstacles; available Surf can be used en route"
+              }
+            ]
+          }
+        },
+        "subgoal:2": {
+          "establish": [
+            "block",
+            "LoreleisRoom,2,0",
+            5
+          ],
+          "advances": [
+            "Resolve a terrain prerequisite on a possible route to the active goal"
+          ],
+          "ways": [
+            {
+              "map": "LoreleisRoom",
+              "script": "LoreleisRoom:talkLorelei",
+              "produces": [
+                "block",
+                "LoreleisRoom,2,0",
+                5
+              ],
+              "confirmation_options": [],
+              "preceding_effects": [
+                [
+                  "battle",
+                  "OPP_LORELEI1",
+                  true
+                ],
+                [
+                  "flag",
+                  "EVENT_BEAT_LORELEIS_ROOM_TRAINER_0",
+                  true
+                ]
+              ]
+            }
+          ],
+          "context": {
+            "destination": "ChampionsRoom",
+            "goal": [
+              "flag",
+              "EVENT_BEAT_CHAMPION_RIVAL",
+              true
+            ],
+            "prerequisites": [
+              [
+                "block",
+                "LoreleisRoom,2,0",
+                5
+              ]
+            ],
+            "evidence": "Planning with doors relaxed; each prerequisite requires real execution",
+            "opponent_parties": [
+              {
+                "level": 54,
+                "species": "Dewgong"
+              },
+              {
+                "level": 53,
+                "species": "Cloyster"
+              },
+              {
+                "level": 54,
+                "species": "Slowbro"
+              },
+              {
+                "level": 56,
+                "species": "Jynx"
+              },
+              {
+                "level": 56,
+                "species": "Lapras"
+              }
+            ],
+            "battle_is_not_guaranteed_by_script_preconditions": true,
+            "trigger_navigation": [
+              {
+                "map": "LoreleisRoom",
+                "tile_route_found": true,
+                "steps": 28,
+                "requires_surf": false,
+                "scope": "this trigger region, using known geometry and observed obstacles; available Surf can be used en route"
+              }
+            ]
+          }
+        },
+        "subgoal:3": {
+          "establish": [
+            "terrain",
+            "CeladonCity,35,32",
+            true
+          ],
+          "advances": [
+            "Use Cut to clear the terrain obstruction"
+          ],
+          "ways": [
+            {
+              "map": "CeladonCity",
+              "script": "skill:field",
+              "produces": [
+                "terrain",
+                "CeladonCity,35,32",
+                true
+              ],
+              "confirmation_options": [],
+              "preceding_effects": []
+            }
+          ],
+          "context": {
+            "move": "Cut",
+            "map": "CeladonCity",
+            "tree": [
+              35,
+              32
+            ],
+            "stance": [
+              35,
+              33
+            ],
+            "direction": "up",
+            "destination": "CeladonPokecenter"
+          }
+        },
+        "subgoal:4": {
+          "establish": [
+            "supply",
+            "FullRestore",
+            1
+          ],
+          "advances": [
+            "Buy recovery supplies for battles that caused an observed defeat"
+          ],
+          "ways": [
+            {
+              "map": "IndigoPlateauLobby",
+              "script": "IndigoPlateauLobby:talkClerk",
+              "produces": [
+                "shop",
+                [
+                  "ULTRA_BALL",
+                  "GREAT_BALL",
+                  "FULL_RESTORE",
+                  "MAX_POTION",
+                  "FULL_HEAL",
+                  "REVIVE",
+                  "MAX_REPEL"
+                ],
+                true
+              ],
+              "confirmation_options": [],
+              "preceding_effects": []
+            }
+          ],
+          "context": {
+            "optional_preparation": true,
+            "stock_index": 2,
+            "item": {
+              "id": "FullRestore",
+              "name": "FULL RESTORE",
+              "price": 3000,
+              "category": "Medicine",
+              "effect": {
+                "type": "FullRestore",
+                "params": {}
+              },
+              "held_effect": null,
+              "berry": null,
+              "use_outside_battle": true,
+              "use_in_battle": true,
+              "consume": true,
+              "key_item": false,
+              "sellable": true,
+              "description": "",
+              "tags": [
+                "healing",
+                "hp",
+                "status",
+                "cure"
+              ]
+            },
+            "quantity_to_buy": 1,
+            "total_cost": 3000,
+            "remaining_money": 6291,
+            "use": "Usable in battle or between fights when a nurse is inaccessible",
+            "trigger_navigation": [
+              {
+                "map": "IndigoPlateauLobby",
+                "tile_route_found": true,
+                "steps": 10,
+                "requires_surf": false,
+                "scope": "this trigger region, using known geometry and observed obstacles; available Surf can be used en route"
+              }
+            ]
+          }
+        },
+        "subgoal:5": {
+          "establish": [
+            "supply",
+            "MaxPotion",
+            2
+          ],
+          "advances": [
+            "Buy recovery supplies for battles that caused an observed defeat"
+          ],
+          "ways": [
+            {
+              "map": "IndigoPlateauLobby",
+              "script": "IndigoPlateauLobby:talkClerk",
+              "produces": [
+                "shop",
+                [
+                  "ULTRA_BALL",
+                  "GREAT_BALL",
+                  "FULL_RESTORE",
+                  "MAX_POTION",
+                  "FULL_HEAL",
+                  "REVIVE",
+                  "MAX_REPEL"
+                ],
+                true
+              ],
+              "confirmation_options": [],
+              "preceding_effects": []
+            }
+          ],
+          "context": {
+            "optional_preparation": true,
+            "stock_index": 3,
+            "item": {
+              "id": "MaxPotion",
+              "name": "MAX POTION",
+              "price": 2500,
+              "category": "Medicine",
+              "effect": {
+                "type": "FullHeal",
+                "params": {}
+              },
+              "held_effect": null,
+              "berry": null,
+              "use_outside_battle": true,
+              "use_in_battle": true,
+              "consume": true,
+              "key_item": false,
+              "sellable": true,
+              "description": "",
+              "tags": [
+                "healing",
+                "hp"
+              ]
+            },
+            "quantity_to_buy": 2,
+            "total_cost": 5000,
+            "remaining_money": 4291,
+            "use": "Usable in battle or between fights when a nurse is inaccessible",
+            "trigger_navigation": [
+              {
+                "map": "IndigoPlateauLobby",
+                "tile_route_found": true,
+                "steps": 10,
+                "requires_surf": false,
+                "scope": "this trigger region, using known geometry and observed obstacles; available Surf can be used en route"
+              }
+            ]
+          }
+        },
+        "subgoal:6": {
+          "establish": [
+            "level",
+            "leader",
+            71
+          ],
+          "advances": [
+            "Resolve a terrain prerequisite on a possible route to the active goal"
+          ],
+          "ways": [
+            {
+              "map": "VictoryRoad1F",
+              "script": "skill:train_encounter",
+              "produces": [
+                "level",
+                "leader",
+                71
+              ],
+              "confirmation_options": [],
+              "preceding_effects": []
+            },
+            {
+              "map": "VictoryRoad3F",
+              "script": "skill:train_encounter",
+              "produces": [
+                "level",
+                "leader",
+                71
+              ],
+              "confirmation_options": [],
+              "preceding_effects": []
+            },
+            {
+              "map": "VictoryRoad2F",
+              "script": "skill:train_encounter",
+              "produces": [
+                "level",
+                "leader",
+                71
+              ],
+              "confirmation_options": [],
+              "preceding_effects": []
+            }
+          ],
+          "context": {
+            "purpose": "Earn experience in normal wild battles to prepare for the easiest pending story battle",
+            "target_level": 71,
+            "training_regions": {
+              "VictoryRoad1F": {
+                "encounterRate": 15,
+                "mons": [
+                  {
+                    "level": 24,
+                    "species": "Machop"
+                  },
+                  {
+                    "level": 26,
+                    "species": "Geodude"
+                  },
+                  {
+                    "level": 22,
+                    "species": "Zubat"
+                  },
+                  {
+                    "level": 36,
+                    "species": "Onix"
+                  },
+                  {
+                    "level": 39,
+                    "species": "Onix"
+                  },
+                  {
+                    "level": 42,
+                    "species": "Onix"
+                  },
+                  {
+                    "level": 41,
+                    "species": "Graveler"
+                  },
+                  {
+                    "level": 41,
+                    "species": "Golbat"
+                  },
+                  {
+                    "level": 42,
+                    "species": "Machoke"
+                  },
+                  {
+                    "level": 43,
+                    "species": "Marowak"
+                  }
+                ]
+              },
+              "VictoryRoad3F": {
+                "encounterRate": 15,
+                "mons": [
+                  {
+                    "level": 24,
+                    "species": "Machop"
+                  },
+                  {
+                    "level": 26,
+                    "species": "Geodude"
+                  },
+                  {
+                    "level": 22,
+                    "species": "Zubat"
+                  },
+                  {
+                    "level": 42,
+                    "species": "Onix"
+                  },
+                  {
+                    "level": 40,
+                    "species": "Venomoth"
+                  },
+                  {
+                    "level": 45,
+                    "species": "Onix"
+                  },
+                  {
+                    "level": 43,
+                    "species": "Graveler"
+                  },
+                  {
+                    "level": 41,
+                    "species": "Golbat"
+                  },
+                  {
+                    "level": 42,
+                    "species": "Machoke"
+                  },
+                  {
+                    "level": 45,
+                    "species": "Machoke"
+                  }
+                ]
+              },
+              "VictoryRoad2F": {
+                "encounterRate": 10,
+                "mons": [
+                  {
+                    "level": 22,
+                    "species": "Machop"
+                  },
+                  {
+                    "level": 24,
+                    "species": "Geodude"
+                  },
+                  {
+                    "level": 26,
+                    "species": "Zubat"
+                  },
+                  {
+                    "level": 36,
+                    "species": "Onix"
+                  },
+                  {
+                    "level": 39,
+                    "species": "Onix"
+                  },
+                  {
+                    "level": 42,
+                    "species": "Onix"
+                  },
+                  {
+                    "level": 41,
+                    "species": "Machoke"
+                  },
+                  {
+                    "level": 40,
+                    "species": "Golbat"
+                  },
+                  {
+                    "level": 40,
+                    "species": "Marowak"
+                  },
+                  {
+                    "level": 43,
+                    "species": "Graveler"
+                  }
+                ]
+              }
+            },
+            "observed_defeats": [
+              {
+                "map": "LoreleisRoom",
+                "party_level": 66,
+                "opponents": [
+                  {
+                    "hp": 169,
+                    "level": 54,
+                    "species": "Dewgong"
+                  },
+                  {
+                    "hp": 124,
+                    "level": 53,
+                    "species": "Cloyster"
+                  },
+                  {
+                    "hp": 175,
+                    "level": 54,
+                    "species": "Slowbro"
+                  },
+                  {
+                    "hp": 147,
+                    "level": 56,
+                    "species": "Jynx"
+                  },
+                  {
+                    "hp": 220,
+                    "level": 56,
+                    "species": "Lapras"
+                  }
+                ],
+                "preparation_signature": {
+                  "party": [
+                    {
+                      "species": "Charizard",
+                      "level": 66,
+                      "moves": [
+                        "Slash",
+                        "Cut",
+                        "Flamethrower",
+                        "Dig"
+                      ],
+                      "hp_band": 4,
+                      "pp": [
+                        20,
+                        30,
+                        15,
+                        10
+                      ],
+                      "status": "None"
+                    },
+                    {
+                      "species": "Lapras",
+                      "level": 15,
+                      "moves": [
+                        "WaterGun",
+                        "Growl",
+                        "Surf",
+                        "Strength"
+                      ],
+                      "hp_band": 4,
+                      "pp": [
+                        25,
+                        40,
+                        15,
+                        15
+                      ],
+                      "status": "None"
+                    }
+                  ],
+                  "medicine": {
+                    "RARECANDY": 1
+                  }
+                },
+                "proposed_training_level": 68,
+                "resolved_by_victory": true
+              },
+              {
+                "map": "AgathasRoom",
+                "party_level": 68,
+                "opponents": [
+                  {
+                    "hp": 142,
+                    "level": 56,
+                    "species": "Gengar"
+                  },
+                  {
+                    "hp": 158,
+                    "level": 56,
+                    "species": "Golbat"
+                  },
+                  {
+                    "hp": 123,
+                    "level": 55,
+                    "species": "Haunter"
+                  },
+                  {
+                    "hp": 146,
+                    "level": 58,
+                    "species": "Arbok"
+                  },
+                  {
+                    "hp": 151,
+                    "level": 60,
+                    "species": "Gengar"
+                  }
+                ],
+                "preparation_signature": {
+                  "party": [
+                    {
+                      "species": "Charizard",
+                      "level": 68,
+                      "moves": [
+                        "Slash",
+                        "Cut",
+                        "Flamethrower",
+                        "Dig"
+                      ],
+                      "hp_band": 3,
+                      "pp": [
+                        16,
+                        30,
+                        8,
+                        2
+                      ],
+                      "status": "None"
+                    },
+                    {
+                      "species": "Lapras",
+                      "level": 15,
+                      "moves": [
+                        "WaterGun",
+                        "Growl",
+                        "Surf",
+                        "Strength"
+                      ],
+                      "hp_band": 4,
+                      "pp": [
+                        25,
+                        40,
+                        15,
+                        15
+                      ],
+                      "status": "None"
+                    }
+                  ],
+                  "medicine": {
+                    "RARECANDY": 1
+                  }
+                },
+                "proposed_training_level": 70
+              },
+              {
+                "map": "BrunosRoom",
+                "party_level": 69,
+                "opponents": [
+                  {
+                    "hp": 108,
+                    "level": 53,
+                    "species": "Onix"
+                  },
+                  {
+                    "hp": 128,
+                    "level": 55,
+                    "species": "Hitmonchan"
+                  },
+                  {
+                    "hp": 128,
+                    "level": 55,
+                    "species": "Hitmonlee"
+                  },
+                  {
+                    "hp": 114,
+                    "level": 56,
+                    "species": "Onix"
+                  },
+                  {
+                    "hp": 181,
+                    "level": 58,
+                    "species": "Machamp"
+                  }
+                ],
+                "preparation_signature": {
+                  "party": [
+                    {
+                      "species": "Charizard",
+                      "level": 69,
+                      "moves": [
+                        "Slash",
+                        "Cut",
+                        "Flamethrower",
+                        "Dig"
+                      ],
+                      "hp_band": 1,
+                      "pp": [
+                        17,
+                        30,
+                        10,
+                        10
+                      ],
+                      "status": "None"
+                    },
+                    {
+                      "species": "Lapras",
+                      "level": 15,
+                      "moves": [
+                        "WaterGun",
+                        "Growl",
+                        "Surf",
+                        "Strength"
+                      ],
+                      "hp_band": 4,
+                      "pp": [
+                        25,
+                        40,
+                        15,
+                        15
+                      ],
+                      "status": "None"
+                    }
+                  ],
+                  "medicine": {
+                    "RARECANDY": 1
+                  }
+                },
+                "proposed_training_level": 71
+              }
+            ],
+            "upcoming_moves": [
+              {
+                "level": 9,
+                "moveId": "Ember"
+              },
+              {
+                "level": 15,
+                "moveId": "Leer"
+              },
+              {
+                "level": 24,
+                "moveId": "Rage"
+              },
+              {
+                "level": 36,
+                "moveId": "Slash"
+              },
+              {
+                "level": 46,
+                "moveId": "Flamethrower"
+              },
+              {
+                "level": 55,
+                "moveId": "FireSpin"
+              }
+            ],
+            "trigger_navigation": [
+              {
+                "map": "VictoryRoad1F",
+                "tile_route_found": true,
+                "steps": 106,
+                "scope": "path to actual encounter terrain, including current NPC collisions; battles can interrupt travel"
+              },
+              {
+                "map": "VictoryRoad3F",
+                "tile_route_found": true,
+                "steps": 63,
+                "scope": "path to actual encounter terrain, including current NPC collisions; battles can interrupt travel"
+              },
+              {
+                "map": "VictoryRoad2F",
+                "tile_route_found": true,
+                "steps": 61,
+                "scope": "path to actual encounter terrain, including current NPC collisions; battles can interrupt travel"
+              }
+            ]
+          }
+        },
+        "none": "None of these candidates can advance the current goal."
+      },
+      "instructions": "Which attainable story or preparation subgoal should the player pursue next? Healing, training and improving weak attacks are valid indirect progress toward later battles. The action layer can travel between maps before triggering a script; a subgoal need not be on the current map. Candidates already have satisfied script preconditions; winning battles is still an execution outcome. Topological routes may have local obstacles. Use the supplied script facts and known navigation failures; prefer resolving an observed blocker before retrying its destination unless prerequisites have changed. A known tile route to the specific trigger is stronger evidence than a map-only failure: another region on that same map can still be reachable. Prefer reachable prerequisites when the requested trigger has no tile route. Prefer necessary early story prerequisites before optional detours or difficult battles.",
+      "answer": {
+        "choice": "subgoal:2",
+        "probabilities": {
+          "subgoal:3": 0.01,
+          "subgoal:1": 0.13,
+          "none": 0.03,
+          "subgoal:5": 0.02,
+          "subgoal:0": 0.13,
+          "subgoal:4": 0.13,
+          "subgoal:2": 0.41,
+          "subgoal:6": 0.14
+        },
+        "confidence": 0.33
+      }
+    }
+  ]
+}

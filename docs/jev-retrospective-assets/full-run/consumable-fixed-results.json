@@ -1,0 +1,86 @@
+[
+  {
+    "item": "Revive",
+    "passed": true,
+    "before": {
+      "hp": 0,
+      "level": 1,
+      "max_hp": 11,
+      "moves": [
+        "Splash",
+        "None",
+        "None",
+        "None"
+      ],
+      "pp": [
+        37,
+        0,
+        0,
+        0
+      ],
+      "species": "Magikarp",
+      "status": "None"
+    },
+    "after": {
+      "hp": 5,
+      "level": 1,
+      "max_hp": 11,
+      "moves": [
+        "Splash",
+        "None",
+        "None",
+        "None"
+      ],
+      "pp": [
+        37,
+        0,
+        0,
+        0
+      ],
+      "species": "Magikarp",
+      "status": "None"
+    }
+  },
+  {
+    "item": "FullRestore",
+    "passed": true,
+    "before": {
+      "hp": 5,
+      "level": 1,
+      "max_hp": 11,
+      "moves": [
+        "Splash",
+        "None",
+        "None",
+        "None"
+      ],
+      "pp": [
+        37,
+        0,
+        0,
+        0
+      ],
+      "species": "Magikarp",
+      "status": "None"
+    },
+    "after": {
+      "hp": 11,
+      "level": 1,
+      "max_hp": 11,
+      "moves": [
+        "Splash",
+        "None",
+        "None",
+        "None"
+      ],
+      "pp": [
+        37,
+        0,
+        0,
+        0
+      ],
+      "species": "Magikarp",
+      "status": "None"
+    }
+  }
+]
