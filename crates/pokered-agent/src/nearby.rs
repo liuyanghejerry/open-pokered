@@ -158,7 +158,17 @@ pub fn nearby_entities(
                     def.item_id.map(|id| format!("{:?}", ItemId::from_id(id))),
                 )
             }
-            Some(def) => (EntityKind::Npc, def.sprite_name.clone()),
+            // `trainer_class` when the map data carries one, even if
+            // `is_trainer` is false. Brock's entry is `spriteName:
+            // "SuperNerd"` with `trainerClass: "Brock"` — Gen 1 reuses
+            // sprites — so labelling by sprite alone leaves a gym leader
+            // with no name an agent could match a goal against.
+            // `is_trainer` marks trainers who challenge on sight, which
+            // is a different question from what to call them.
+            Some(def) => (
+                EntityKind::Npc,
+                def.trainer_class.clone().or_else(|| def.sprite_name.clone()),
+            ),
             None => (EntityKind::Npc, None),
         };
         entities.push(NearbyEntity {

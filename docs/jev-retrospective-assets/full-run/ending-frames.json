@@ -1,0 +1,56 @@
+[
+  {
+    "controller": "script",
+    "kind": "hall",
+    "file": "script-hall.png",
+    "source_video": "script-full.mp4",
+    "source_sha256": "9da22d4c181f21819afbf4cd6c7894274dd6d64de779c034da44fd1fd6ec2701",
+    "source_s": 10560.466666666667,
+    "process": 1
+  },
+  {
+    "controller": "script",
+    "kind": "the-end",
+    "file": "script-the-end.png",
+    "source_video": "script-full.mp4",
+    "source_sha256": "9da22d4c181f21819afbf4cd6c7894274dd6d64de779c034da44fd1fd6ec2701",
+    "source_s": 10646.566666666668,
+    "process": 1
+  },
+  {
+    "controller": "script",
+    "kind": "continued",
+    "file": "script-continued.png",
+    "source_video": "script-full.mp4",
+    "source_sha256": "9da22d4c181f21819afbf4cd6c7894274dd6d64de779c034da44fd1fd6ec2701",
+    "source_s": 10672.133333333333,
+    "process": 2
+  },
+  {
+    "controller": "jev",
+    "kind": "hall",
+    "file": "jev-hall.png",
+    "source_video": "jev-full.mp4",
+    "source_sha256": "3a5c6f7ee60d7551c6c99a67ca0da6e232ee473ba21b0b47ab1b452e35684f39",
+    "source_s": 15386.083333333334,
+    "process": 1
+  },
+  {
+    "controller": "jev",
+    "kind": "the-end",
+    "file": "jev-the-end.png",
+    "source_video": "jev-full.mp4",
+    "source_sha256": "3a5c6f7ee60d7551c6c99a67ca0da6e232ee473ba21b0b47ab1b452e35684f39",
+    "source_s": 15472.083333333334,
+    "process": 1
+  },
+  {
+    "controller": "jev",
+    "kind": "continued",
+    "file": "jev-continued.png",
+    "source_video": "jev-full.mp4",
+    "source_sha256": "3a5c6f7ee60d7551c6c99a67ca0da6e232ee473ba21b0b47ab1b452e35684f39",
+    "source_s": 15497.616666333333,
+    "process": 2
+  }
+]

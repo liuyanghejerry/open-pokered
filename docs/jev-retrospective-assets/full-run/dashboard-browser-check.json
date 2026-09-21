@@ -1,0 +1,17 @@
+{
+  "passed": true,
+  "checks": [
+    "actual input snapshot versus current state",
+    "full raw input and reset cost",
+    "dialogue input",
+    "combat HP/PP bands",
+    "recorded B button",
+    "skip_dialogue provenance",
+    "deep-link seek",
+    "4 HP + chosen 46% recovery decision",
+    "Gold Teeth event jump",
+    "NEW GAME rewind",
+    "independent CONTINUE and final counts"
+  ],
+  "errors": []
+}

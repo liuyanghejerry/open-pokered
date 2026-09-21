@@ -11,6 +11,155 @@ from playthrough_late import damage_slot
 
 
 class NavigationRegression(unittest.TestCase):
+    def test_grass_detour_returning_to_current_map_uses_stable_fallback(self):
+        game = nav.Game.__new__(nav.Game)
+        state = {'screen': 'overworld', 'map_name': 'Route16', 'player_x': 15, 'player_y': 13}
+        game.st = lambda: state.copy()
+        game.last_map = 'Route16'
+        game.npc_blocked = game.live_npcs = lambda _: set()
+        moved = []
+        def drive(buttons, frames):
+            moved.append(buttons[0])
+            state['player_y'] = 12
+        game.d = SimpleNamespace(drive=drive, step=lambda _: None)
+        preferred = [('Route16', 15, 13), (('Route16Gate1F', 1, 1), 'left'),
+                     (('Route16', 15, 12), 'right')]
+        fallback = [('Route16', 15, 13), (('Route16', 15, 12), 'up')]
+        with patch.object(nav, 'bfs_cross', side_effect=[preferred, fallback]) as search:
+            game.nav_to_map(15, 12, 'Route16', tries=2)
+        self.assertEqual(search.call_count, 2)
+        self.assertEqual(moved, ['up'])
+
+    def test_border_overshoot_recovers_inside_before_crossing_connection(self):
+        self.assertIsNone(nav.cross_step('Route17', 10, 144, 'down'))
+        path = nav.bfs_cross('Route17', (10, 144), 'Route18', (10, 0))
+        self.assertEqual(path[1], (('Route17', 10, 143), 'up'))
+        self.assertEqual(path[2], (('Route18', 10, 0), 'down'))
+
+    def test_slope_brakes_idle_frames_and_respects_uphill_bike_speed(self):
+        state = {'map_name': 'Route17', 'player_transport': 'Biking'}
+        self.assertEqual(nav.movement_frames(state, 'down'), 4)
+        self.assertEqual(nav.movement_frames(state, 'left'), 8)
+        self.assertEqual(nav.movement_buttons(state, 'left', 8, 12), ['left']*8 + ['b']*4)
+        game = nav.Game.__new__(nav.Game)
+        game.smart_moves = True
+        game.st = lambda: {**state, 'screen': 'overworld', 'script_running': False}
+        calls = []
+        game.d = SimpleNamespace(drive=lambda buttons, frames: calls.append((buttons, frames)))
+        game.step(6)
+        self.assertEqual(calls, [(['b']*6, 6)])
+
+    def test_bike_navigation_does_not_overshoot_a_one_tile_turn(self):
+        game = nav.Game.__new__(nav.Game)
+        state = {'screen': 'overworld', 'map_name': 'Route16', 'player_x': 15, 'player_y': 13,
+                 'player_transport': 'Biking'}
+        game.st = lambda: state.copy()
+        game.last_map = 'Route16'
+        game.npc_blocked = game.live_npcs = lambda _: set()
+        holds = []
+        def drive(buttons, frames):
+            holds.append(len(buttons))
+            dx, dy = nav.DELTA[buttons[0]]
+            state['player_x'] += dx * (len(buttons)//4)
+            state['player_y'] += dy * (len(buttons)//4)
+        game.d = SimpleNamespace(drive=drive, step=lambda _: None)
+        game.nav_to_map(15, 12, 'Route16', tries=2, avoid_grass=False)
+        self.assertEqual(holds, [4])
+
+    def test_cross_map_planner_searches_alternative_goals_in_one_pass(self):
+        goals = {('PalletTown', 10, 10), ('PalletTown', 10, 12)}
+        path = nav.bfs_cross('PalletTown', (10, 11), 'PalletTown', (10, 10),
+                             blocked_maps={'PalletTown': {(10, 10)}}, goal_nodes=goals)
+        self.assertEqual(path[-1][0], ('PalletTown', 10, 12))
+        self.assertEqual(len(path), 2)
+        self.assertIsNone(nav.bfs_cross('PalletTown', (10, 11), 'PalletTown', (10, 10), goal_nodes=set()))
+
+    def test_cross_map_planner_respects_forced_spinner_endpoint(self):
+        name = 'RocketHideoutB3F'
+        point = (10, 13)
+        endpoint, count = nav.SPINNERS[name][point]
+        path = nav.bfs_cross(name, (10, 12), name, endpoint, allow_spinners=True)
+        self.assertEqual(path, [(name, 10, 12), ((name, *endpoint), f'spin_down_{count}')])
+        blocked = nav.bfs_cross(name, (10, 12), name, endpoint, allow_spinners=True,
+                                blocked_maps={name: {endpoint}})
+        self.assertIsNone(blocked)
+
+    def test_ship_port_name_normalization_preserves_gangplank_warp(self):
+        self.assertTrue(nav.warp_triggers('VermilionDock', 14, 2, 'down'))
+        target = nav.warp_edges_from('VermilionDock', 14, 2, 'VermilionCity')[0]
+        path = nav.bfs_cross('VermilionDock', (14, 1), target[0], target[1:], last_map='VermilionCity')
+        self.assertEqual(path, [('VermilionDock', 14, 1), (target, 'down')])
+
+    def test_static_elevator_placeholder_exit_has_no_warp_destination(self):
+        for x in (1, 2):
+            self.assertEqual(nav.warp_edges_from('SilphCoElevator', x, 3, 'SilphCo1F'), [])
+        self.assertIsNone(nav.bfs_cross('SilphCoElevator', (1, 2),
+                                       'UnusedMapED', (0, 0), last_map='SilphCo1F'))
+
+    def test_carpet_crossing_keeps_direction_held_after_the_turn_frame(self):
+        game = nav.Game.__new__(nav.Game)
+        state = {'screen': 'overworld', 'map_name': 'Route7Gate', 'player_x': 4, 'player_y': 3}
+        game.st = lambda: state.copy()
+        game.last_map = 'Route7'
+        game.npc_blocked = game.live_npcs = lambda _: set()
+        holds = []
+        def drive(buttons, frames):
+            holds.append(len(buttons))
+            if len(buttons) > nav.FRAMES_PER_TILE:
+                state.update(map_name='Route7', player_x=18, player_y=9)
+            else:
+                state.update(player_x=5, player_y=3)
+        game.d = SimpleNamespace(drive=drive, step=lambda _: None)
+        game.nav_to_map(18, 9, 'Route7', tries=2, avoid_grass=False)
+        self.assertEqual(len(holds), 1)
+
+    def test_side_gate_uses_the_engine_directional_carpet_rule(self):
+        self.assertFalse(nav.warp_triggers('Route8', 8, 10, 'down'))
+        self.assertTrue(nav.warp_triggers('Route8', 8, 10, 'left'))
+        self.assertTrue(nav.warp_triggers('Route12', 10, 15, 'down'))
+        self.assertFalse(nav.warp_triggers('Route12', 10, 15, 'right'))
+
+    def test_explicit_interior_gate_entrance_still_connects_route_sections(self):
+        path = nav.bfs_cross('Route12', (9, 4), 'Route12', (10, 61),
+                             last_map='Route12', allow_ledges=True)
+        self.assertIsNotNone(path)
+        self.assertIn('Route12Gate1F', {step[0][0] for step in path[1:]})
+
+    def test_guard_route_is_retryable_when_the_requested_drink_is_carried(self):
+        game = nav.Game.__new__(nav.Game)
+        game.smart_moves = True
+        bag = []
+        game.d = SimpleNamespace(cmd=lambda cmd: {'data': {} if cmd == 'get_flags' else bag})
+        self.assertEqual(game.navigation_excluded_maps(), ('SaffronCity',))
+        bag.append({'item': 'FreshWater', 'qty': 1})
+        self.assertEqual(game.navigation_excluded_maps(), ())
+
+    def test_explicit_exit_carpet_does_not_warp_on_a_sideways_step(self):
+        path = nav.bfs_cross('CeladonMartElevator', (1, 3), 'CeladonMart1F', (5, 5),
+                             last_map='CeladonCity')
+        self.assertIsNotNone(path)
+        self.assertEqual(path[1][0][0], 'CeladonMartElevator')
+        first_exit = next(step for step in path[1:] if step[0][0] != 'CeladonMartElevator')
+        self.assertEqual(first_exit[1], 'down')
+
+    def test_floor_route_does_not_assume_an_unselected_elevator_destination(self):
+        path = nav.bfs_cross('CeladonMartRoof', (10, 2), 'CeladonMart1F', (5, 5),
+                             last_map='CeladonCity')
+        self.assertIsNotNone(path)
+        self.assertNotIn('CeladonMartElevator', {step[0][0] for step in path[1:]})
+
+    def test_cave_stair_exit_is_not_restricted_to_the_map_border(self):
+        destination = nav.warp_edges_from('RockTunnel1F', 15, 33, 'Route10')[0]
+        path = nav.bfs_cross('RockTunnel1F', (15, 32), destination[0], destination[1:],
+                             last_map='Route10')
+        self.assertEqual(path, [('RockTunnel1F', 15, 32), (destination, 'down')])
+
+    def test_no_through_building_can_still_be_the_destination(self):
+        path = nav.bfs_cross('Route3', (15, 9), 'PewterPokecenter', (3, 3),
+                             last_map='Route3', allow_ledges=True)
+        self.assertIsNotNone(path)
+        self.assertEqual(path[-1][0], ('PewterPokecenter', 3, 3))
+
     def test_short_live_map_has_no_walkable_missing_row(self):
         name = "UndergroundPathNorthSouth"
         data = dict(nav.MAPS[name], blocks=nav.MAPS[name]["blocks"][:92])

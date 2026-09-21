@@ -1,0 +1,74 @@
+[
+  {
+    "controller": "script",
+    "attempt": "script-a12",
+    "passed": true,
+    "source_commit": "475b5b2b0db32038de2b8408304802bba325c111",
+    "source_patch_sha256": "936b9ef0abdcd8bdfbdbfd953a1879f02e413295d6bd9258c30521df092d88bf",
+    "binary_sha256": "c34978a8bcd1a75212e9f590b2fe131fdff7377a4c744de7c63c74beb9b2c978",
+    "fresh_new_game": true,
+    "prohibited_progress_commands": [],
+    "hall_of_fame": true,
+    "the_end": true,
+    "independent_continue": {
+      "map": "PalletTown",
+      "badges": 255,
+      "hall_of_fame_count": 1
+    },
+    "natural_autosave_sha256": "e9d92965ff860e18deef3ec31bb5e95125fcfb726655fb8ec3971eac172c24bc",
+    "videos": [
+      {
+        "process": 1,
+        "frames": 639705,
+        "last_observed_frame": 639703,
+        "recorded_minus_observed_frames": 2,
+        "duration_s": 10661.75,
+        "sha256": "beccfc6c53a0ded87e92c903b7b09c74bf8d840d5c1377662ebd1fc0446f5cd8"
+      },
+      {
+        "process": 2,
+        "frames": 624,
+        "last_observed_frame": 625,
+        "recorded_minus_observed_frames": -1,
+        "duration_s": 10.4,
+        "sha256": "e1cb4cfae56b9777c8e8a1b8eb6c25b47df847f0e52c830e6dcecbe76689d6ed"
+      }
+    ]
+  },
+  {
+    "controller": "jev",
+    "attempt": "jev-a1",
+    "passed": true,
+    "source_commit": "475b5b2b0db32038de2b8408304802bba325c111",
+    "source_patch_sha256": null,
+    "binary_sha256": "c34978a8bcd1a75212e9f590b2fe131fdff7377a4c744de7c63c74beb9b2c978",
+    "fresh_new_game": true,
+    "prohibited_progress_commands": [],
+    "hall_of_fame": true,
+    "the_end": true,
+    "independent_continue": {
+      "map": "PalletTown",
+      "badges": 255,
+      "hall_of_fame_count": 1
+    },
+    "natural_autosave_sha256": "1d74d09a7ceb79615d559ce1c70bd9792b2a92a84fdc48e10b1a941c59cae26a",
+    "videos": [
+      {
+        "process": 1,
+        "frames": 929238,
+        "last_observed_frame": 929238,
+        "recorded_minus_observed_frames": 0,
+        "duration_s": 15487.3,
+        "sha256": "08c10910e16d6874fc83ca07c0d0655882b95baf1ddbe4f48411ff18dc5d2e0d"
+      },
+      {
+        "process": 2,
+        "frames": 620,
+        "last_observed_frame": 620,
+        "recorded_minus_observed_frames": 0,
+        "duration_s": 10.333333,
+        "sha256": "6621af3e44115d4085bb7680a54337cb7844195ed72bd0a994063a8b0d694933"
+      }
+    ]
+  }
+]

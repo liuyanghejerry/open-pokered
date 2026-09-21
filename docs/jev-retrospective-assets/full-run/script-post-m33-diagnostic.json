@@ -1,0 +1,511 @@
+{
+  "diagnostic_only": true,
+  "not_full_recording": true,
+  "fixture": "script-a11 m33 species/levels/moves/experience/bag/flags; default DVs, zero stat experience, fresh RNG",
+  "success": true,
+  "elapsed_s": 439.54223558399826,
+  "milestones": [
+    "m34",
+    "m35",
+    "m36",
+    "m37",
+    "m38",
+    "m39",
+    "m40",
+    "m41",
+    "m42",
+    "m43",
+    "m44",
+    "m45",
+    "m46",
+    "m47",
+    "m48",
+    "m49"
+  ],
+  "first_clear_verification": {
+    "phases": [
+      {
+        "frame": 140008,
+        "phase": [
+          "overworld",
+          null,
+          null
+        ],
+        "hall_of_fame_count": 0
+      },
+      {
+        "frame": 141042,
+        "phase": [
+          "overworld",
+          "FadeOut",
+          null
+        ],
+        "hall_of_fame_count": 1
+      },
+      {
+        "frame": 141165,
+        "phase": [
+          "overworld",
+          "MonScroll",
+          null
+        ],
+        "hall_of_fame_count": 1
+      },
+      {
+        "frame": 141288,
+        "phase": [
+          "overworld",
+          "MonInfo",
+          null
+        ],
+        "hall_of_fame_count": 1
+      },
+      {
+        "frame": 141411,
+        "phase": [
+          "overworld",
+          "MonText",
+          null
+        ],
+        "hall_of_fame_count": 1
+      },
+      {
+        "frame": 141534,
+        "phase": [
+          "overworld",
+          "MonScroll",
+          null
+        ],
+        "hall_of_fame_count": 1
+      },
+      {
+        "frame": 141657,
+        "phase": [
+          "overworld",
+          "MonInfo",
+          null
+        ],
+        "hall_of_fame_count": 1
+      },
+      {
+        "frame": 141780,
+        "phase": [
+          "overworld",
+          "MonText",
+          null
+        ],
+        "hall_of_fame_count": 1
+      },
+      {
+        "frame": 141903,
+        "phase": [
+          "overworld",
+          "MonScroll",
+          null
+        ],
+        "hall_of_fame_count": 1
+      },
+      {
+        "frame": 142026,
+        "phase": [
+          "overworld",
+          "MonInfo",
+          null
+        ],
+        "hall_of_fame_count": 1
+      },
+      {
+        "frame": 142149,
+        "phase": [
+          "overworld",
+          "MonText",
+          null
+        ],
+        "hall_of_fame_count": 1
+      },
+      {
+        "frame": 142272,
+        "phase": [
+          "overworld",
+          "MonFade",
+          null
+        ],
+        "hall_of_fame_count": 1
+      },
+      {
+        "frame": 142395,
+        "phase": [
+          "overworld",
+          "PlayerStats",
+          null
+        ],
+        "hall_of_fame_count": 1
+      },
+      {
+        "frame": 142764,
+        "phase": [
+          "overworld",
+          null,
+          "Hold"
+        ],
+        "hall_of_fame_count": 1
+      },
+      {
+        "frame": 142887,
+        "phase": [
+          "overworld",
+          null,
+          "MonScroll"
+        ],
+        "hall_of_fame_count": 1
+      },
+      {
+        "frame": 143133,
+        "phase": [
+          "overworld",
+          null,
+          "Hold"
+        ],
+        "hall_of_fame_count": 1
+      },
+      {
+        "frame": 143871,
+        "phase": [
+          "overworld",
+          null,
+          "MonScroll"
+        ],
+        "hall_of_fame_count": 1
+      },
+      {
+        "frame": 143994,
+        "phase": [
+          "overworld",
+          null,
+          "Hold"
+        ],
+        "hall_of_fame_count": 1
+      },
+      {
+        "frame": 144609,
+        "phase": [
+          "overworld",
+          null,
+          "MonScroll"
+        ],
+        "hall_of_fame_count": 1
+      },
+      {
+        "frame": 144732,
+        "phase": [
+          "overworld",
+          null,
+          "Hold"
+        ],
+        "hall_of_fame_count": 1
+      },
+      {
+        "frame": 145593,
+        "phase": [
+          "overworld",
+          null,
+          "MonScroll"
+        ],
+        "hall_of_fame_count": 1
+      },
+      {
+        "frame": 145716,
+        "phase": [
+          "overworld",
+          null,
+          "Hold"
+        ],
+        "hall_of_fame_count": 1
+      },
+      {
+        "frame": 147438,
+        "phase": [
+          "overworld",
+          null,
+          "MonScroll"
+        ],
+        "hall_of_fame_count": 1
+      },
+      {
+        "frame": 147561,
+        "phase": [
+          "overworld",
+          null,
+          "TheEnd"
+        ],
+        "hall_of_fame_count": 1
+      },
+      {
+        "frame": 148196,
+        "phase": [
+          "title",
+          null,
+          null
+        ],
+        "hall_of_fame_count": 1
+      }
+    ],
+    "separate_process_continue": {
+      "active_script_effect": null,
+      "badges": 255,
+      "battle_bag": null,
+      "battle_inventory": [],
+      "battle_live": null,
+      "battle_message": null,
+      "battle_moves": null,
+      "battle_party_cursor": 0,
+      "battle_phase": "Intro { phase: TransitionFlash, wait_frames: 72 }",
+      "choice": null,
+      "coins": 0,
+      "credits_final_button": null,
+      "credits_phase": null,
+      "dialogue": null,
+      "dialogue_state": null,
+      "field_menu": null,
+      "frame_count": 651,
+      "hall_of_fame_count": 1,
+      "hof_phase": null,
+      "last_outside_map": "IndigoPlateau",
+      "link": {
+        "cable_phase": "Inactive",
+        "role": "Host",
+        "status": "disabled",
+        "trade": null
+      },
+      "map_blocks": [
+        82,
+        79,
+        82,
+        82,
+        79,
+        11,
+        80,
+        82,
+        82,
+        80,
+        78,
+        1,
+        56,
+        57,
+        1,
+        1,
+        56,
+        57,
+        1,
+        77,
+        78,
+        8,
+        60,
+        61,
+        1,
+        8,
+        60,
+        61,
+        1,
+        77,
+        78,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        77,
+        78,
+        1,
+        119,
+        86,
+        1,
+        12,
+        13,
+        14,
+        1,
+        77,
+        78,
+        1,
+        116,
+        116,
+        1,
+        16,
+        58,
+        0,
+        1,
+        77,
+        78,
+        1,
+        1,
+        1,
+        1,
+        119,
+        86,
+        119,
+        49,
+        77,
+        78,
+        10,
+        29,
+        30,
+        49,
+        116,
+        116,
+        10,
+        49,
+        77,
+        80,
+        10,
+        101,
+        100,
+        97,
+        97,
+        97,
+        97,
+        97,
+        79
+      ],
+      "map_id": 0,
+      "map_name": "PalletTown",
+      "money": 31385,
+      "party": [
+        {
+          "hp": 40,
+          "level": 56,
+          "max_hp": 186,
+          "moves": [
+            "Thunder",
+            "DrillPeck",
+            "Fly",
+            "Thunderbolt"
+          ],
+          "pp": [
+            6,
+            2,
+            15,
+            2
+          ],
+          "species": "Zapdos",
+          "status": "None"
+        },
+        {
+          "hp": 67,
+          "level": 15,
+          "max_hp": 67,
+          "moves": [
+            "WaterGun",
+            "Growl",
+            "Surf",
+            "Strength"
+          ],
+          "pp": [
+            25,
+            40,
+            15,
+            15
+          ],
+          "species": "Lapras",
+          "status": "None"
+        },
+        {
+          "hp": 172,
+          "level": 56,
+          "max_hp": 172,
+          "moves": [
+            "MegaDrain",
+            "RazorLeaf",
+            "Cut",
+            "VineWhip"
+          ],
+          "pp": [
+            9,
+            24,
+            30,
+            9
+          ],
+          "species": "Venusaur",
+          "status": "None"
+        }
+      ],
+      "party_count": 3,
+      "pc_phase": null,
+      "player_facing": "Down",
+      "player_movement_state": "Idle",
+      "player_name": "RED",
+      "player_transport": "Walking",
+      "player_x": 5,
+      "player_y": 6,
+      "screen": "overworld",
+      "script_awaiting_battle": false,
+      "script_effect": null,
+      "script_running": false,
+      "shop_phase": null,
+      "text_speed_delay_frames": 3,
+      "warp_fade": "Idle"
+    }
+  },
+  "final_party": [
+    {
+      "hp": 40,
+      "level": 56,
+      "max_hp": 186,
+      "moves": [
+        "Thunder",
+        "DrillPeck",
+        "Fly",
+        "Thunderbolt"
+      ],
+      "pp": [
+        6,
+        2,
+        15,
+        2
+      ],
+      "species": "Zapdos",
+      "status": "None"
+    },
+    {
+      "hp": 67,
+      "level": 15,
+      "max_hp": 67,
+      "moves": [
+        "WaterGun",
+        "Growl",
+        "Surf",
+        "Strength"
+      ],
+      "pp": [
+        25,
+        40,
+        15,
+        15
+      ],
+      "species": "Lapras",
+      "status": "None"
+    },
+    {
+      "hp": 172,
+      "level": 56,
+      "max_hp": 172,
+      "moves": [
+        "MegaDrain",
+        "RazorLeaf",
+        "Cut",
+        "VineWhip"
+      ],
+      "pp": [
+        9,
+        24,
+        30,
+        9
+      ],
+      "species": "Venusaur",
+      "status": "None"
+    }
+  ],
+  "tests_navigation_and_recovery": 47
+}

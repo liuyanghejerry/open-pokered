@@ -472,6 +472,104 @@ def _(ctx):
     assert ctx.memory.get("last_cmd_ok") is False, ctx.memory
 
 
+# Semantic assertions (TypeSafe System One, scripts/openpokered/semantics.py)
+# — for claims that are about *meaning*, where an exact-substring step is
+# only an approximation. These need a key (TYPESAFE_API_KEY, or .env) and
+# fail loudly without one rather than passing vacuously.
+def _dialogue_text(ctx):
+    """The dialogue to judge: the pages recorded by the talk step, else
+    the page on screen. Both are read from the protocol's own fields, the
+    same two locations `content_regression.Session.interact` uses."""
+    if "dialogue" in ctx.memory:
+        return ctx.memory["dialogue"]
+    s = ctx.g().st()
+    effect = s.get("script_effect") or {}
+    dialogue = s.get("dialogue_state") or {}
+    return effect.get("text") or dialogue.get("text") or ""
+
+
+def _judge_dialogue(ctx, claim):
+    """Judge the recorded line against `claim`; returns (verdict, text).
+
+    A judgment that fails, or that lands in the unresolved band, is an
+    error rather than a pass — a claim nobody could decide must not be
+    reported as verified.
+    """
+    from openpokered.semantics import SemanticJudge
+
+    judge = SemanticJudge.from_env()
+    assert judge.enabled, (
+        "no TypeSafe key: set TYPESAFE_API_KEY (or put it in .env) to use "
+        "semantic dialogue steps")
+    text = _dialogue_text(ctx)
+    assert text, "no dialogue to judge"
+    # A claim may lean on where the speaker is ("I came *here* with
+    # friends") — a fact the line does not itself state, so it goes in as
+    # state rather than being left for the model to guess.
+    where = ctx.g().st().get("map_name")
+    verdict = judge.conveys(
+        text, claim,
+        context=f"the speaker is standing in {where}" if where else None)
+    assert verdict is not None, f"judgment failed: {judge.errors}"
+    assert verdict.resolved, (
+        f"inconclusive (p={verdict.probability:.3f}, neither clearly for nor "
+        f"against): {claim!r} against {text!r}")
+    return verdict, text
+
+
+@when(r"the player talks to the object ahead")
+def _(ctx):
+    """A-tap through every page of the dialogue ahead, recording it all.
+
+    A judgment needs the whole line: an NPC's speech is split across
+    pages and asserting per-page would depend on where the writer chose
+    to break it. Same accumulation as content_regression's interact().
+    """
+    g = ctx.g()
+    g.tap("a", 12)
+    texts = []
+    for _ in range(100):
+        s = g.st()
+        effect = s.get("script_effect") or {}
+        dialogue = s.get("dialogue_state") or {}
+        text = effect.get("text")
+        if not text and dialogue.get("waiting_for_input"):
+            text = dialogue.get("text")
+        if text and (not texts or texts[-1] != text):
+            texts.append(text)
+        if not s.get("script_running") and not s.get("dialogue_state"):
+            ctx.memory["dialogue"] = " ".join(" ".join(texts).split())
+            return
+        g.tap("a", 12)
+    raise AssertionError("dialogue did not return control in 100 A taps")
+
+
+@when(r"the player turns to face (?P<direction>up|down|left|right)")
+def _(ctx, direction):
+    ctx.g().face(direction)
+    ctx.g().step(10)
+
+
+@then(r"the dialogue should convey that (?P<claim>.+)")
+def _(ctx, claim):
+    verdict, text = _judge_dialogue(ctx, claim)
+    assert verdict.holds, (
+        f"dialogue does not convey {claim!r} (p={verdict.probability:.3f}): "
+        f"{text!r}")
+    print(f"    conveys {claim!r} (p={verdict.probability:.3f})", flush=True)
+
+
+@then(r"the dialogue should not convey that (?P<claim>.+)")
+def _(ctx, claim):
+    """The control case: an assertion that cannot fail proves nothing."""
+    verdict, text = _judge_dialogue(ctx, claim)
+    assert not verdict.holds, (
+        f"dialogue does convey {claim!r} (p={verdict.probability:.3f}): "
+        f"{text!r}")
+    print(f"    does not convey {claim!r} (p={verdict.probability:.3f})",
+          flush=True)
+
+
 # Negative-protocol probe: recorded, then asserted with the step above
 # (kept last so the vocabulary reads seed → drive → assert).
 @when(r"the driver attempts to give (?P<item>[A-Za-z_ ]+)")

@@ -1,0 +1,16 @@
+{
+  "attempt": "script-a1",
+  "success": false,
+  "scope": "Fresh full-clear attempt, stopped at m17",
+  "wall_s": 1414.975,
+  "failure": "Traceback (most recent call last):\n  File \"/Users/liuyanghe02/develop/open-pokered/docs/jev-retrospective-assets/capture_full_playthrough.py\", line 166, in main\n    pt.main()\n    ~~~~~~~^^\n  File \"/Users/liuyanghe02/develop/open-pokered/.artifacts/jev-full-comparison-20260920/source/scripts/playthrough.py\", line 1961, in main\n    fn(g)\n    ~~^^^\n  File \"/Users/liuyanghe02/develop/open-pokered/.artifacts/jev-full-comparison-20260920/source/scripts/playthrough_late.py\", line 377, in m17_surge\n    use_item(g, \"Hm01\", party_index=0, forget=\"LeechSeed\")\n    ~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/liuyanghe02/develop/open-pokered/.artifacts/jev-full-comparison-20260920/source/scripts/playthrough_late.py\", line 175, in use_item\n    assert menu and menu[\"kind\"] == \"party\", menu\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError: {'cursor': 6, 'items': [{'item': 'Tm34', 'qty': 1}, {'item': 'HelixFossil', 'qty': 1}, {'item': 'Tm11', 'qty': 1}, {'item': 'Nugget', 'qty': 1}, {'item': 'SsTicket', 'qty': 1}, {'item': 'Tm28', 'qty': 1}, {'item': 'Hm01', 'qty': 1}], 'kind': 'bag', 'phase': 'MachineBoot { item: Hm01 }'}\n",
+  "video_source_sha256": "0cf829fe95d3a598965b305f968bdf35c2d40ab7646664851cf2f5e30b22050f",
+  "source_duration_s": 3824.45,
+  "clip_source_interval_s": [
+    3812.45,
+    3824.45
+  ],
+  "clip_rate": 1,
+  "clip_sha256": "0801bb69427c795a64ee96b5d466276958583a92658ecd3bd7a412d40b002ef4",
+  "seeded_checks": "Separate isolated diagnostic fixtures; never used as fresh-playthrough evidence."
+}

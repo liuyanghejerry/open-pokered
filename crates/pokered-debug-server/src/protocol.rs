@@ -23,6 +23,10 @@ pub enum GameDebugCommand {
         buttons: Vec<Option<String>>,
         #[serde(default)]
         start_at_frame: Option<u64>,
+        /// Execute the complete timeline synchronously in this command.
+        /// Avoids a queue/step race with the driven-only input-draining loop.
+        #[serde(default)]
+        advance: bool,
     },
     /// Read the live overworld blocks, including script and field-move edits.
     GetMap,
@@ -398,6 +402,7 @@ mod tests {
             DebugCommand::Game(GameDebugCommand::PressTimeline {
                 ref buttons,
                 start_at_frame: Some(240),
+                advance: false,
             }) if buttons == &vec![Some("a".into()), None, Some("down".into())]
         ));
 
@@ -411,6 +416,13 @@ mod tests {
                 start_at_frame: None,
                 ..
             })
+        ));
+        let cmd: DebugCommand =
+            serde_json::from_str(r#"{"cmd":"press_timeline","buttons":["b","b"],"advance":true}"#)
+                .unwrap();
+        assert!(matches!(
+            cmd,
+            DebugCommand::Game(GameDebugCommand::PressTimeline { advance: true, .. })
         ));
     }
 

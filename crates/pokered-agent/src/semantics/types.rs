@@ -107,6 +107,11 @@ pub struct ScriptSemantics {
     pub reads: Vec<StatePredicate>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub effects: Vec<StateEffect>,
+    /// Original statement AST, preserving branch polarity, early returns,
+    /// choices and effect order for white-box planning. The flat reads/effects
+    /// above remain a conservative index, not executable preconditions.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub program: Vec<serde_json::Value>,
 }
 
 /// All storylines of one map.

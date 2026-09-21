@@ -1,0 +1,672 @@
+{
+  "note": "Development and recording attempts; not a fixed-policy success-rate experiment. Final paired recordings: script-a12 and jev-a1.",
+  "attempts": [
+    {
+      "attempt": "script-a1",
+      "classification": "failed",
+      "reason": "Original driver stopped at m17 MachineBoot; old use_item did not handle newly added TM/HM prompts.",
+      "wall_s": 1414.975,
+      "source_patch_sha256": null,
+      "failure": "Traceback (most recent call last):\n  File \"/Users/liuyanghe02/develop/open-pokered/docs/jev-retrospective-assets/capture_full_playthrough.py\", line 166, in main\n    pt.main()\n    ~~~~~~~^^\n  File \"/Users/liuyanghe02/develop/open-pokered/.artifacts/jev-full-comparison-20260920/source/scripts/playthrough.py\", line 1961, in main\n    fn(g)\n    ~~^^^\n  File \"/Users/liuyanghe02/develop/open-pokered/.artifacts/jev-full-comparison-20260920/source/scripts/playthrough_late.py\", line 377, in m17_surge\n    use_item(g, \"Hm01\", party_index=0, forget=\"LeechSeed\")\n    ~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/liuyanghe02/develop/open-pokered/.artifacts/jev-full-comparison-20260920/source/scripts/playthrough_late.py\", line 175, in use_item\n    assert menu and menu[\"kind\"] == \"party\", menu\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError: {'cursor': 6, 'items': [{'item': 'Tm34', 'qty': 1}, {'item': 'HelixFossil', 'qty': 1}, {'item': 'Tm11', 'qty': 1}, {'item': 'Nugget', 'qty': 1}, {'item': 'SsTicket', 'qty': 1}, {'item': 'Tm28', 'qty': 1}, {'item': 'Hm01', 'qty': 1}], 'kind': 'bag', 'phase': 'MachineBoot { item: Hm01 }'}\n",
+      "video_segments": [
+        {
+          "index": 1,
+          "video": "process-01/game.mp4",
+          "video_probe": {
+            "programs": [],
+            "stream_groups": [],
+            "streams": [
+              {
+                "width": 160,
+                "height": 144,
+                "r_frame_rate": "60/1",
+                "nb_frames": "229467"
+              }
+            ],
+            "format": {
+              "duration": "3824.450000",
+              "size": "31482747"
+            }
+          },
+          "video_sha256": "0cf829fe95d3a598965b305f968bdf35c2d40ab7646664851cf2f5e30b22050f"
+        }
+      ]
+    },
+    {
+      "attempt": "script-a2",
+      "classification": "intentionally-stopped",
+      "reason": "Fresh unchanged retry stopped after two isolated reproductions confirmed the menu mismatch.",
+      "wall_s": 274.728,
+      "source_patch_sha256": null,
+      "failure": "Traceback (most recent call last):\n  File \"/Users/liuyanghe02/develop/open-pokered/docs/jev-retrospective-assets/capture_full_playthrough.py\", line 166, in main\n    '--seed', str(args.seed), '--max-calls', '4000', '--max-actions', '4000',\n    \n  File \"/Users/liuyanghe02/develop/open-pokered/.artifacts/jev-full-comparison-20260920/source/scripts/playthrough.py\", line 1961, in main\n    fn(g)\n    ~~^^^\n  File \"/Users/liuyanghe02/develop/open-pokered/.artifacts/jev-full-comparison-20260920/source/scripts/playthrough.py\", line 1799, in m10_brock\n    assert g.train_until(13, \"Route1\", (12, 7), heal), \"training stalled\"\n           ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/liuyanghe02/develop/open-pokered/.artifacts/jev-full-comparison-20260920/source/scripts/playthrough.py\", line 1343, in train_until\n    self.battle_loop(prefer=\"fight\")\n    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^\n  File \"/Users/liuyanghe02/develop/open-pokered/.artifacts/jev-full-comparison-20260920/source/scripts/playthrough.py\", line 1525, in battle_loop\n    self.tap(\"a\", 4)                          # open FIGHT\n    ~~~~~~~~^^^^^^^^\n  File \"/Users/liuyanghe02/develop/open-pokered/.artifacts/jev-full-comparison-20260920/source/scripts/playthrough.py\", line 600, in tap\n    self.d.drive([btn], frames=1 + gap)\n    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/liuyanghe02/develop/open-pokered/.artifacts/jev-full-comparison-20260920/source/scripts/debug_drive.py\", line 103, in drive\n    return self.step(frames if frames is not None else len(buttons))\n           ~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/liuyanghe02/develop/open-pokered/.artifacts/jev-full-comparison-20260920/source/scripts/debug_drive.py\", line 98, in step\n    return self.cmd(cmd=\"step_frames\", count=count)\n           ~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/liuyanghe02/develop/open-pokered/docs/jev-retrospective-assets/capture_full_playthrough.py\", line 111, in command\n  File \"/Users/liuyanghe02/develop/open-pokered/.artifacts/jev-full-comparison-20260920/source/scripts/debug_drive.py\", line 66, in cmd\n    resp = self.f.readline()\n  File \"/opt/homebrew/Cellar/python@3.13/3.13.7/Frameworks/Python.framework/Versions/3.13/lib/python3.13/socket.py\", line 719, in readinto\n    return self._sock.recv_into(b)\n           ~~~~~~~~~~~~~~~~~~~~^^^\nKeyboardInterrupt\n",
+      "video_segments": [
+        {
+          "index": 1,
+          "video": "process-01/game.mp4",
+          "video_probe": {
+            "programs": [],
+            "stream_groups": [],
+            "streams": [
+              {
+                "width": 160,
+                "height": 144,
+                "r_frame_rate": "60/1",
+                "nb_frames": "49539"
+              }
+            ],
+            "format": {
+              "duration": "825.650000",
+              "size": "6782562"
+            }
+          },
+          "video_sha256": "c8d5aa4ee0e79c041783cb020cf165c83c656500cd714aa65992e8d3be115ddc"
+        }
+      ]
+    },
+    {
+      "attempt": "script-a3",
+      "classification": "intentionally-stopped",
+      "reason": "Passed m17; stopped after a separate live consumable check identified ItemHpRestore waiting. Restarted with a single final adapter.",
+      "wall_s": 1804.467,
+      "source_patch_sha256": "a51916163c7f0ebc79ef8445df05762c2150dc9c4329c10aeea8ab88c1b1a391",
+      "failure": "Traceback (most recent call last):\n  File \"/Users/liuyanghe02/develop/open-pokered/docs/jev-retrospective-assets/capture_full_playthrough.py\", line 171, in main\n    pt.main()\n    ~~~~~~~^^\n  File \"/Users/liuyanghe02/develop/open-pokered/.artifacts/jev-full-comparison-20260920/source-script/scripts/playthrough.py\", line 1961, in main\n    fn(g)\n    ~~^^^\n  File \"/Users/liuyanghe02/develop/open-pokered/.artifacts/jev-full-comparison-20260920/source-script/scripts/playthrough_late.py\", line 498, in m19_rock_tunnel\n    g.nav_warp(27, 3, \"RockTunnelB1F\", \"RockTunnel1F\")\n    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/liuyanghe02/develop/open-pokered/.artifacts/jev-full-comparison-20260920/source-script/scripts/playthrough.py\", line 1058, in nav_warp\n    self.nav_to(x, y, map_name=from_map, tries=tries)\n    ~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/liuyanghe02/develop/open-pokered/.artifacts/jev-full-comparison-20260920/source-script/scripts/playthrough.py\", line 693, in nav_to\n    self.battle_loop(prefer=prefer)\n    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^\n  File \"/Users/liuyanghe02/develop/open-pokered/.artifacts/jev-full-comparison-20260920/source-script/scripts/playthrough.py\", line 1528, in battle_loop\n    self._select_move()\n    ~~~~~~~~~~~~~~~~~^^\n  File \"/Users/liuyanghe02/develop/open-pokered/.artifacts/jev-full-comparison-20260920/source-script/scripts/playthrough.py\", line 1285, in _select_move\n    self.d.drive([\"up\" if up else \"down\"], frames=10)\n    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/liuyanghe02/develop/open-pokered/.artifacts/jev-full-comparison-20260920/source-script/scripts/debug_drive.py\", line 103, in drive\n    return self.step(frames if frames is not None else len(buttons))\n           ~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/liuyanghe02/develop/open-pokered/.artifacts/jev-full-comparison-20260920/source-script/scripts/debug_drive.py\", line 98, in step\n    return self.cmd(cmd=\"step_frames\", count=count)\n           ~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/liuyanghe02/develop/open-pokered/docs/jev-retrospective-assets/capture_full_playthrough.py\", line 116, in command\n    response = raw_cmd(**request)\n  File \"/Users/liuyanghe02/develop/open-pokered/.artifacts/jev-full-comparison-20260920/source-script/scripts/debug_drive.py\", line 66, in cmd\n    resp = self.f.readline()\n  File \"/opt/homebrew/Cellar/python@3.13/3.13.7/Frameworks/Python.framework/Versions/3.13/lib/python3.13/socket.py\", line 719, in readinto\n    return self._sock.recv_into(b)\n           ~~~~~~~~~~~~~~~~~~~~^^^\nKeyboardInterrupt\n",
+      "video_segments": [
+        {
+          "index": 1,
+          "video": "process-01/game.mp4",
+          "video_probe": {
+            "programs": [],
+            "stream_groups": [],
+            "streams": [
+              {
+                "width": 160,
+                "height": 144,
+                "r_frame_rate": "60/1",
+                "nb_frames": "290117"
+              }
+            ],
+            "format": {
+              "duration": "4835.283333",
+              "size": "38379683"
+            }
+          },
+          "video_sha256": "aa84acde652c630cda396d388efa383821d3757cc6edd787c6aceda00f620805"
+        }
+      ]
+    },
+    {
+      "attempt": "script-a4",
+      "classification": "failed",
+      "reason": "After a blackout retry in m12, actual MtMoonB1F entrance led to a different connected component from the target.",
+      "wall_s": 831.546,
+      "source_patch_sha256": "55a1b15e069138b504ca967bdc8d3148bfd042a61e449e72f94c9d24a52ec62b",
+      "failure": "Traceback (most recent call last):\n  File \"/Users/liuyanghe02/develop/open-pokered/.artifacts/jev-full-comparison-20260920/source-script/scripts/playthrough.py\", line 1058, in nav_warp\n    self.nav_to(x, y, map_name=from_map, tries=tries)\n    ~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/liuyanghe02/develop/open-pokered/.artifacts/jev-full-comparison-20260920/source-script/scripts/playthrough.py\", line 717, in nav_to\n    raise NavError(f\"no path in {cm}: ({cx},{cy})->({x},{y})\")\nplaythrough.NavError: no path in MtMoonB1F: (25,9)->(21,17)\n\nDuring handling of the above exception, another exception occurred:\n\nTraceback (most recent call last):\n  File \"/Users/liuyanghe02/develop/open-pokered/docs/jev-retrospective-assets/capture_full_playthrough.py\", line 171, in main\n    pt.main()\n    ~~~~~~~^^\n  File \"/Users/liuyanghe02/develop/open-pokered/.artifacts/jev-full-comparison-20260920/source-script/scripts/playthrough.py\", line 1961, in main\n    fn(g)\n    ~~^^^\n  File \"/Users/liuyanghe02/develop/open-pokered/.artifacts/jev-full-comparison-20260920/source-script/scripts/playthrough_late.py\", line 260, in m12_mt_moon\n    return cross_mt_moon(g)\n  File \"/Users/liuyanghe02/develop/open-pokered/.artifacts/jev-full-comparison-20260920/source-script/scripts/playthrough_late.py\", line 277, in cross_mt_moon\n    g.nav_warp(21, 17, \"MtMoonB1F\", \"MtMoonB2F\")\n    ~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/liuyanghe02/develop/open-pokered/.artifacts/jev-full-comparison-20260920/source-script/scripts/playthrough.py\", line 1075, in nav_warp\n    self.nav_to(*inner, map_name=from_map,\n    ~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^\n                tries=tries)\n                ^^^^^^^^^^^^\n  File \"/Users/liuyanghe02/develop/open-pokered/.artifacts/jev-full-comparison-20260920/source-script/scripts/playthrough.py\", line 717, in nav_to\n    raise NavError(f\"no path in {cm}: ({cx},{cy})->({x},{y})\")\nplaythrough.NavError: no path in MtMoonB1F: (25,9)->(21,16)\n",
+      "video_segments": [
+        {
+          "index": 1,
+          "video": "process-01/game.mp4",
+          "video_probe": {
+            "programs": [],
+            "stream_groups": [],
+            "streams": [
+              {
+                "width": 160,
+                "height": 144,
+                "r_frame_rate": "60/1",
+                "nb_frames": "130059"
+              }
+            ],
+            "format": {
+              "duration": "2167.650000",
+              "size": "18270089"
+            }
+          },
+          "video_sha256": "3532d64561946362cc3947e5f81211fee61778a70fbfaa78d1cbb30865746092"
+        }
+      ]
+    },
+    {
+      "attempt": "script-a5",
+      "classification": "failed",
+      "reason": "Normal Silph rival loss (critical Ember); m32 had no blackout retry. Unchanged fresh rerun a6.",
+      "wall_s": 2875.221,
+      "source_patch_sha256": "55a1b15e069138b504ca967bdc8d3148bfd042a61e449e72f94c9d24a52ec62b",
+      "failure": "Traceback (most recent call last):\n  File \"/Users/liuyanghe02/develop/open-pokered/docs/jev-retrospective-assets/capture_full_playthrough.py\", line 171, in main\n    pt.main()\n    ~~~~~~~^^\n  File \"/Users/liuyanghe02/develop/open-pokered/.artifacts/jev-full-comparison-20260920/source-script/scripts/playthrough.py\", line 1961, in main\n    fn(g)\n    ~~^^^\n  File \"/Users/liuyanghe02/develop/open-pokered/.artifacts/jev-full-comparison-20260920/source-script/scripts/playthrough_late.py\", line 896, in m32_lapras\n    require_flag(g, \"EVENT_BEAT_SILPH_CO_RIVAL\")\n    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/liuyanghe02/develop/open-pokered/.artifacts/jev-full-comparison-20260920/source-script/scripts/playthrough_late.py\", line 138, in require_flag\n    assert flags.get(name), f\"missing story flag {name}\"\n           ~~~~~~~~~^^^^^^\nAssertionError: missing story flag EVENT_BEAT_SILPH_CO_RIVAL\n"
+    },
+    {
+      "attempt": "script-a6",
+      "classification": "failed",
+      "reason": "m09: after repeated Viridian Forest blackouts, navigation was still expecting ViridianForest while the player returned to ViridianCity. Unchanged fresh retry a7.",
+      "wall_s": 215.541,
+      "source_patch_sha256": "55a1b15e069138b504ca967bdc8d3148bfd042a61e449e72f94c9d24a52ec62b",
+      "failure": "Traceback (most recent call last):\n  File \"/Users/liuyanghe02/develop/open-pokered/docs/jev-retrospective-assets/capture_full_playthrough.py\", line 171, in main\n    pt.main()\n    ~~~~~~~^^\n  File \"/Users/liuyanghe02/develop/open-pokered/.artifacts/jev-full-comparison-20260920/source-script/scripts/playthrough.py\", line 1961, in main\n    fn(g)\n    ~~^^^\n  File \"/Users/liuyanghe02/develop/open-pokered/.artifacts/jev-full-comparison-20260920/source-script/scripts/playthrough.py\", line 1740, in m09_to_pewter\n    walk_pallet_to_pewter(g)\n    ~~~~~~~~~~~~~~~~~~~~~^^^\n  File \"/Users/liuyanghe02/develop/open-pokered/.artifacts/jev-full-comparison-20260920/source-script/scripts/playthrough.py\", line 1725, in walk_pallet_to_pewter\n    g.nav_to(1, 1, map_name=\"ViridianForest\")\n    ~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/liuyanghe02/develop/open-pokered/.artifacts/jev-full-comparison-20260920/source-script/scripts/playthrough.py\", line 698, in nav_to\n    raise NavError(f\"warped out of {map_name} -> {cm}\")\nplaythrough.NavError: warped out of ViridianForest -> ViridianCity\n"
+    },
+    {
+      "attempt": "script-a7",
+      "classification": "failed",
+      "reason": "Second m32 loss with no blackout recovery; same victory-flag assertion failed. Added bounded real-input retry for a subsequent fresh run.",
+      "wall_s": 2797.787,
+      "source_patch_sha256": "55a1b15e069138b504ca967bdc8d3148bfd042a61e449e72f94c9d24a52ec62b",
+      "failure": "Traceback (most recent call last):\n  File \"/Users/liuyanghe02/develop/open-pokered/docs/jev-retrospective-assets/capture_full_playthrough.py\", line 171, in main\n    pt.main()\n    ~~~~~~~^^\n  File \"/Users/liuyanghe02/develop/open-pokered/.artifacts/jev-full-comparison-20260920/source-script/scripts/playthrough.py\", line 1961, in main\n    fn(g)\n    ~~^^^\n  File \"/Users/liuyanghe02/develop/open-pokered/.artifacts/jev-full-comparison-20260920/source-script/scripts/playthrough_late.py\", line 896, in m32_lapras\n    require_flag(g, \"EVENT_BEAT_SILPH_CO_RIVAL\")\n    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/liuyanghe02/develop/open-pokered/.artifacts/jev-full-comparison-20260920/source-script/scripts/playthrough_late.py\", line 138, in require_flag\n    assert flags.get(name), f\"missing story flag {name}\"\n           ~~~~~~~~~^^^^^^\nAssertionError: missing story flag EVENT_BEAT_SILPH_CO_RIVAL\n"
+    },
+    {
+      "attempt": "script-a8",
+      "classification": "failed",
+      "reason": "Passed m32 on first attempt; normal Lorelei blackout at m45 after the 75% HP threshold consumed all 16 Full Restores and 4 Revives. No successful ending.",
+      "wall_s": 3781.44,
+      "source_patch_sha256": "80bf0474410e9a597becdf70106c0259240fadee946dede51a0f2c785122136a",
+      "failure": "Traceback (most recent call last):\n  File \"/Users/liuyanghe02/develop/open-pokered/docs/jev-retrospective-assets/capture_full_playthrough.py\", line 171, in main\n    pt.main()\n    ~~~~~~~^^\n  File \"/Users/liuyanghe02/develop/open-pokered/.artifacts/jev-full-comparison-20260920/source-script/scripts/playthrough.py\", line 1961, in main\n    fn(g)\n    ~~^^^\n  File \"/Users/liuyanghe02/develop/open-pokered/.artifacts/jev-full-comparison-20260920/source-script/scripts/playthrough_late.py\", line 1536, in m45_lorelei\n    elite_battle(g, \"LoreleisRoom\", 1, \"EVENT_BEAT_LORELEIS_ROOM_TRAINER_0\", \"m45\")\n    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/liuyanghe02/develop/open-pokered/.artifacts/jev-full-comparison-20260920/source-script/scripts/playthrough_late.py\", line 1530, in elite_battle\n    require_flag(g, flag)\n    ~~~~~~~~~~~~^^^^^^^^^\n  File \"/Users/liuyanghe02/develop/open-pokered/.artifacts/jev-full-comparison-20260920/source-script/scripts/playthrough_late.py\", line 138, in require_flag\n    assert flags.get(name), f\"missing story flag {name}\"\n           ~~~~~~~~~^^^^^^\nAssertionError: missing story flag EVENT_BEAT_LORELEIS_ROOM_TRAINER_0\n",
+      "video_segments": [
+        {
+          "index": 1,
+          "pid": 27542,
+          "started_wall_s": 1.149,
+          "video": "process-01/game.mp4",
+          "initial_save_exists": false,
+          "ended_wall_s": 3781.439,
+          "last_observed": {
+            "index": 1,
+            "pid": 27542,
+            "frame_count": 604109,
+            "screen": "overworld",
+            "map_name": "IndigoPlateau",
+            "badges": 255,
+            "party": [
+              {
+                "hp": 161,
+                "level": 52,
+                "max_hp": 161,
+                "moves": [
+                  "Thunder",
+                  "DrillPeck",
+                  "Fly",
+                  "Thunderbolt"
+                ],
+                "pp": [
+                  10,
+                  20,
+                  15,
+                  15
+                ],
+                "species": "Zapdos",
+                "status": "None"
+              },
+              {
+                "hp": 65,
+                "level": 15,
+                "max_hp": 65,
+                "moves": [
+                  "WaterGun",
+                  "Growl",
+                  "Surf",
+                  "Strength"
+                ],
+                "pp": [
+                  25,
+                  40,
+                  15,
+                  15
+                ],
+                "species": "Lapras",
+                "status": "None"
+              },
+              {
+                "hp": 182,
+                "level": 54,
+                "max_hp": 182,
+                "moves": [
+                  "MegaDrain",
+                  "RazorLeaf",
+                  "Cut",
+                  "VineWhip"
+                ],
+                "pp": [
+                  10,
+                  25,
+                  30,
+                  10
+                ],
+                "species": "Venusaur",
+                "status": "None"
+              }
+            ],
+            "hall_of_fame_count": 0,
+            "battle_phase": "TrainerVictory { phase: EndBattleText, wait_frames: 0, player_won: false }"
+          },
+          "video_probe": {
+            "programs": [],
+            "stream_groups": [],
+            "streams": [
+              {
+                "width": 160,
+                "height": 144,
+                "r_frame_rate": "60/1",
+                "nb_frames": "604109"
+              }
+            ],
+            "format": {
+              "duration": "10068.483333",
+              "size": "80429567"
+            }
+          },
+          "video_sha256": "533de3648b19748ec87229b9fbdfb6124e9dc2754deafe5d4c75063ccfbc0c0f"
+        }
+      ]
+    },
+    {
+      "attempt": "script-a9",
+      "classification": "failed",
+      "reason": "Three Viridian Forest blackouts with a level-5 starter exhausted the existing m09 retry budget; now bring forward the original level-13 Route1 preparation only after a confirmed blackout.",
+      "wall_s": 253.424,
+      "source_patch_sha256": "20d3ae53fa3c982d8ff70223feb1cf24c06a4ea618d25b0a0cdc89a531722e8b",
+      "failure": "Traceback (most recent call last):\n  File \"/Users/liuyanghe02/develop/open-pokered/docs/jev-retrospective-assets/capture_full_playthrough.py\", line 171, in main\n    pt.main()\n    ~~~~~~~^^\n  File \"/Users/liuyanghe02/develop/open-pokered/.artifacts/jev-full-comparison-20260920/source-script/scripts/playthrough.py\", line 1965, in main\n    fn(g)\n    ~~^^^\n  File \"/Users/liuyanghe02/develop/open-pokered/.artifacts/jev-full-comparison-20260920/source-script/scripts/playthrough.py\", line 1740, in m09_to_pewter\n    walk_pallet_to_pewter(g)\n    ~~~~~~~~~~~~~~~~~~~~~^^^\n  File \"/Users/liuyanghe02/develop/open-pokered/.artifacts/jev-full-comparison-20260920/source-script/scripts/playthrough.py\", line 1725, in walk_pallet_to_pewter\n    g.nav_to(1, 1, map_name=\"ViridianForest\")\n    ~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/liuyanghe02/develop/open-pokered/.artifacts/jev-full-comparison-20260920/source-script/scripts/playthrough.py\", line 698, in nav_to\n    raise NavError(f\"warped out of {map_name} -> {cm}\")\nplaythrough.NavError: warped out of ViridianForest -> ViridianCity\n",
+      "video_segments": [
+        {
+          "index": 1,
+          "pid": 3665,
+          "started_wall_s": 1.202,
+          "video": "process-01/game.mp4",
+          "initial_save_exists": false,
+          "ended_wall_s": 253.423,
+          "last_observed": {
+            "index": 1,
+            "pid": 3665,
+            "frame_count": 38872,
+            "screen": "overworld",
+            "map_name": "ViridianCity",
+            "badges": 0,
+            "party": [
+              {
+                "hp": 22,
+                "level": 6,
+                "max_hp": 22,
+                "moves": [
+                  "Tackle",
+                  "Growl",
+                  "None",
+                  "None"
+                ],
+                "pp": [
+                  35,
+                  40,
+                  0,
+                  0
+                ],
+                "species": "Bulbasaur",
+                "status": "None"
+              }
+            ],
+            "hall_of_fame_count": 0,
+            "battle_phase": "TrainerVictory { phase: EndBattleText, wait_frames: 0, player_won: false }"
+          },
+          "video_probe": {
+            "programs": [],
+            "stream_groups": [],
+            "streams": [
+              {
+                "width": 160,
+                "height": 144,
+                "r_frame_rate": "60/1",
+                "nb_frames": "38872"
+              }
+            ],
+            "format": {
+              "duration": "647.866667",
+              "size": "5047143"
+            }
+          },
+          "video_sha256": "722039a9d028b3394faa9056c88d175672d1cd11087b6fbc85468358592b5b7b"
+        }
+      ]
+    },
+    {
+      "attempt": "script-a10",
+      "classification": "intentionally-stopped",
+      "reason": "Stopped in the opening after a separate recovery-plan check proved HP medicine could target a fainted preferred party member when no Revive remained. Guard fixed before final recording.",
+      "wall_s": 191.036,
+      "source_patch_sha256": "5faa1d5405bc22f57dd73858ca75e819da12ae0bd8ddb80e00fc3738073534da",
+      "failure": "Traceback (most recent call last):\n  File \"/Users/liuyanghe02/develop/open-pokered/docs/jev-retrospective-assets/capture_full_playthrough.py\", line 171, in main\n    pt.main()\n    ~~~~~~~^^\n  File \"/Users/liuyanghe02/develop/open-pokered/.artifacts/jev-full-comparison-20260920/source-script/scripts/playthrough.py\", line 1980, in main\n    fn(g)\n    ~~^^^\n  File \"/Users/liuyanghe02/develop/open-pokered/.artifacts/jev-full-comparison-20260920/source-script/scripts/playthrough.py\", line 1813, in m10_brock\n    g.nav_to(12, 7, map_name=\"Route1\")\n    ~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/liuyanghe02/develop/open-pokered/.artifacts/jev-full-comparison-20260920/source-script/scripts/playthrough.py\", line 740, in nav_to\n    self.d.drive(movement_buttons(s, dirs[i], held, held+4), frames=held + 4)\n    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/liuyanghe02/develop/open-pokered/.artifacts/jev-full-comparison-20260920/source-script/scripts/debug_drive.py\", line 103, in drive\n    return self.step(frames if frames is not None else len(buttons))\n           ~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/liuyanghe02/develop/open-pokered/.artifacts/jev-full-comparison-20260920/source-script/scripts/debug_drive.py\", line 98, in step\n    return self.cmd(cmd=\"step_frames\", count=count)\n           ~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/liuyanghe02/develop/open-pokered/docs/jev-retrospective-assets/capture_full_playthrough.py\", line 116, in command\n    response = raw_cmd(**request)\n  File \"/Users/liuyanghe02/develop/open-pokered/.artifacts/jev-full-comparison-20260920/source-script/scripts/debug_drive.py\", line 66, in cmd\n    resp = self.f.readline()\n  File \"/opt/homebrew/Cellar/python@3.13/3.13.7/Frameworks/Python.framework/Versions/3.13/lib/python3.13/socket.py\", line 719, in readinto\n    return self._sock.recv_into(b)\n           ~~~~~~~~~~~~~~~~~~~~^^^\nKeyboardInterrupt\n",
+      "video_segments": [
+        {
+          "index": 1,
+          "pid": 9116,
+          "started_wall_s": 1.043,
+          "video": "process-01/game.mp4",
+          "initial_save_exists": false,
+          "ended_wall_s": 191.032,
+          "last_observed": {
+            "index": 1,
+            "pid": 9116,
+            "frame_count": 31693,
+            "screen": "overworld",
+            "map_name": "Route1",
+            "badges": 0,
+            "party": [
+              {
+                "hp": 23,
+                "level": 6,
+                "max_hp": 23,
+                "moves": [
+                  "Tackle",
+                  "Growl",
+                  "None",
+                  "None"
+                ],
+                "pp": [
+                  35,
+                  40,
+                  0,
+                  0
+                ],
+                "species": "Bulbasaur",
+                "status": "None"
+              }
+            ],
+            "hall_of_fame_count": 0,
+            "battle_phase": "BattleOver { won: false, escaped: true, wait_frames: 17 }"
+          },
+          "video_probe": {
+            "programs": [],
+            "stream_groups": [],
+            "streams": [
+              {
+                "width": 160,
+                "height": 144,
+                "r_frame_rate": "60/1",
+                "nb_frames": "31694"
+              }
+            ],
+            "format": {
+              "duration": "528.233333",
+              "size": "4253244"
+            }
+          },
+          "video_sha256": "fac93bedb95b8158948fb194c0b09d13d9d13617b9e5f3f150d83d5d7bae0fe6"
+        }
+      ]
+    },
+    {
+      "attempt": "script-a11",
+      "classification": "failed",
+      "reason": "Passed m32 on first attempt; normal Sabrina blackout at m34. Missing town-gym recovery added for Sabrina, Blaine and Giovanni; post-m33 diagnostic required before fresh full capture.",
+      "wall_s": 3172.761,
+      "source_patch_sha256": "fd6b601214ce266476e4aaae320a3e5c40c1c0a12049f810cf64c45b87ae56fb",
+      "failure": "Traceback (most recent call last):\n  File \"/Users/liuyanghe02/develop/open-pokered/docs/jev-retrospective-assets/capture_full_playthrough.py\", line 171, in main\n    pt.main()\n    ~~~~~~~^^\n  File \"/Users/liuyanghe02/develop/open-pokered/.artifacts/jev-full-comparison-20260920/source-script/scripts/playthrough.py\", line 1980, in main\n    fn(g)\n    ~~^^^\n  File \"/Users/liuyanghe02/develop/open-pokered/.artifacts/jev-full-comparison-20260920/source-script/scripts/playthrough_late.py\", line 986, in m34_sabrina\n    require_flag(g, \"EVENT_BEAT_SABRINA\")\n    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/liuyanghe02/develop/open-pokered/.artifacts/jev-full-comparison-20260920/source-script/scripts/playthrough_late.py\", line 148, in require_flag\n    assert flags.get(name), f\"missing story flag {name}\"\n           ~~~~~~~~~^^^^^^\nAssertionError: missing story flag EVENT_BEAT_SABRINA\n",
+      "video_segments": [
+        {
+          "index": 1,
+          "pid": 12926,
+          "started_wall_s": 1.086,
+          "video": "process-01/game.mp4",
+          "initial_save_exists": false,
+          "ended_wall_s": 3172.76,
+          "last_observed": {
+            "index": 1,
+            "pid": 12926,
+            "frame_count": 499492,
+            "screen": "overworld",
+            "map_name": "SaffronCity",
+            "badges": 31,
+            "party": [
+              {
+                "hp": 170,
+                "level": 51,
+                "max_hp": 170,
+                "moves": [
+                  "MegaDrain",
+                  "RazorLeaf",
+                  "Cut",
+                  "VineWhip"
+                ],
+                "pp": [
+                  10,
+                  25,
+                  30,
+                  10
+                ],
+                "species": "Venusaur",
+                "status": "None"
+              },
+              {
+                "hp": 64,
+                "level": 15,
+                "max_hp": 64,
+                "moves": [
+                  "WaterGun",
+                  "Growl",
+                  "Surf",
+                  "Strength"
+                ],
+                "pp": [
+                  25,
+                  40,
+                  15,
+                  15
+                ],
+                "species": "Lapras",
+                "status": "None"
+              }
+            ],
+            "hall_of_fame_count": 0,
+            "battle_phase": "TrainerVictory { phase: EndBattleText, wait_frames: 0, player_won: false }"
+          },
+          "video_probe": {
+            "programs": [],
+            "stream_groups": [],
+            "streams": [
+              {
+                "width": 160,
+                "height": 144,
+                "r_frame_rate": "60/1",
+                "nb_frames": "499492"
+              }
+            ],
+            "format": {
+              "duration": "8324.866667",
+              "size": "67067354"
+            }
+          },
+          "video_sha256": "1f53156c1e6e0fc685f96103c90cfed3e6b0dace2c4d8d1286d67a6b0db174ea"
+        }
+      ]
+    },
+    {
+      "attempt": "script-a12",
+      "classification": "passed",
+      "reason": "Fresh NEW GAME to Hall of Fame, credits, natural save and independent CONTINUE; fixed controller throughout this attempt.",
+      "wall_s": 3980.086,
+      "source_patch_sha256": "936b9ef0abdcd8bdfbdbfd953a1879f02e413295d6bd9258c30521df092d88bf",
+      "video_segments": [
+        {
+          "index": 1,
+          "pid": 74430,
+          "started_wall_s": 1.09,
+          "video": "process-01/game.mp4",
+          "initial_save_exists": false,
+          "ended_wall_s": 3980.086,
+          "last_observed": {
+            "index": 1,
+            "pid": 74430,
+            "frame_count": 639703,
+            "screen": "overworld",
+            "map_name": "PalletTown",
+            "badges": 255,
+            "party": [
+              {
+                "hp": 42,
+                "level": 55,
+                "max_hp": 181,
+                "moves": [
+                  "Thunder",
+                  "DrillPeck",
+                  "Fly",
+                  "Thunderbolt"
+                ],
+                "pp": [
+                  6,
+                  1,
+                  15,
+                  0
+                ],
+                "species": "Zapdos",
+                "status": "None"
+              },
+              {
+                "hp": 67,
+                "level": 15,
+                "max_hp": 67,
+                "moves": [
+                  "WaterGun",
+                  "Growl",
+                  "Surf",
+                  "Strength"
+                ],
+                "pp": [
+                  25,
+                  40,
+                  15,
+                  15
+                ],
+                "species": "Lapras",
+                "status": "None"
+              },
+              {
+                "hp": 181,
+                "level": 55,
+                "max_hp": 181,
+                "moves": [
+                  "MegaDrain",
+                  "RazorLeaf",
+                  "Cut",
+                  "VineWhip"
+                ],
+                "pp": [
+                  9,
+                  24,
+                  30,
+                  9
+                ],
+                "species": "Venusaur",
+                "status": "None"
+              }
+            ],
+            "hall_of_fame_count": 1,
+            "battle_phase": "TrainerVictory { phase: EndBattleText, wait_frames: 0, player_won: true }"
+          },
+          "video_probe": {
+            "programs": [],
+            "stream_groups": [],
+            "streams": [
+              {
+                "width": 160,
+                "height": 144,
+                "r_frame_rate": "60/1",
+                "nb_frames": "639705"
+              }
+            ],
+            "format": {
+              "duration": "10661.750000",
+              "size": "88504255"
+            }
+          },
+          "video_sha256": "beccfc6c53a0ded87e92c903b7b09c74bf8d840d5c1377662ebd1fc0446f5cd8"
+        },
+        {
+          "index": 2,
+          "pid": 38760,
+          "started_wall_s": 3976.371,
+          "video": "process-02/game.mp4",
+          "initial_save_exists": true,
+          "input_save_sha256": "e9d92965ff860e18deef3ec31bb5e95125fcfb726655fb8ec3971eac172c24bc",
+          "ended_wall_s": 3978.794,
+          "last_observed": {
+            "index": 2,
+            "pid": 38760,
+            "frame_count": 625,
+            "screen": "overworld",
+            "map_name": "PalletTown",
+            "badges": 255,
+            "party": [
+              {
+                "hp": 42,
+                "level": 55,
+                "max_hp": 181,
+                "moves": [
+                  "Thunder",
+                  "DrillPeck",
+                  "Fly",
+                  "Thunderbolt"
+                ],
+                "pp": [
+                  6,
+                  1,
+                  15,
+                  0
+                ],
+                "species": "Zapdos",
+                "status": "None"
+              },
+              {
+                "hp": 67,
+                "level": 15,
+                "max_hp": 67,
+                "moves": [
+                  "WaterGun",
+                  "Growl",
+                  "Surf",
+                  "Strength"
+                ],
+                "pp": [
+                  25,
+                  40,
+                  15,
+                  15
+                ],
+                "species": "Lapras",
+                "status": "None"
+              },
+              {
+                "hp": 181,
+                "level": 55,
+                "max_hp": 181,
+                "moves": [
+                  "MegaDrain",
+                  "RazorLeaf",
+                  "Cut",
+                  "VineWhip"
+                ],
+                "pp": [
+                  9,
+                  24,
+                  30,
+                  9
+                ],
+                "species": "Venusaur",
+                "status": "None"
+              }
+            ],
+            "hall_of_fame_count": 1,
+            "battle_phase": "Intro { phase: TransitionFlash, wait_frames: 72 }"
+          },
+          "video_probe": {
+            "programs": [],
+            "stream_groups": [],
+            "streams": [
+              {
+                "width": 160,
+                "height": 144,
+                "r_frame_rate": "60/1",
+                "nb_frames": "624"
+              }
+            ],
+            "format": {
+              "duration": "10.400000",
+              "size": "45437"
+            }
+          },
+          "video_sha256": "e1cb4cfae56b9777c8e8a1b8eb6c25b47df847f0e52c830e6dcecbe76689d6ed"
+        }
+      ]
+    }
+  ]
+}

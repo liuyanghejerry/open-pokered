@@ -204,6 +204,41 @@ Generate/validate: `python3 scripts/openpokered/variants.py <profile>
 --seed N` then `python3 scripts/openpokered/validate_variant.py
 target/agent/variants/<name>`; unit tests: `python3 -m unittest
 scripts.test_openpokered_variants`.
+TypeSafe semantic judgments (`scripts/openpokered/typesafe.py` +
+`semantics.py`) add an opt-in layer for the two places that need meaning
+rather than a lookup: goal→entity targeting in `LocalExplorer`
+(`judge=SemanticJudge.from_env()`, off by default so RQ1 baselines are
+untouched) and semantic dialogue steps in `bdd_steps.py`
+(`python3 scripts/bdd.py --dir scripts/features_semantic`; needs a key in
+`.env`). Unit tests: `python3 -m unittest scripts.test_openpokered_typesafe`;
+live probe: `python3 scripts/openpokered/typesafe_probe.py --compare-dialogue`.
+The same layer backs a judgment-driven policy, `judgment_agent.py` (T2J):
+`python3 scripts/openpokered/run_judgment.py all --compare` runs every
+task spec with it plus the `LocalExplorer` and `Oracle` references.
+Ablation switches on the same runner: `--no-place-facts`, `--thin-state`,
+`--act-margin`. `--explore` drops the task goal entirely and lets the
+judgment pick which story objective to pursue (from
+`crates/pokered-data/story/objectives.json`, filtered to unset flags). **The judgment is stochastic** — identical requests differ
+by ~3 probability points, which flips near-tie decisions, so compare
+policies with `--runs N` rather than a single run. Unit tests:
+`python3 -m unittest scripts.test_openpokered_judgment`.
+See `docs/typesafe-semantics.md`.
+
+Autonomous two-layer story exploration: build with
+`cargo build --bin pokered-app --features debug-server`, then run
+`python3 scripts/openpokered/run_autonomous.py --until become-champion --max-calls 4000 --max-actions 4000 --wall-budget 10800`.
+Jev selects strategic subgoals and concrete actions separately; the default
+pins `jev-1.13.0`. The runner starts a real NEW GAME, isolates its executable
+and saves, and reuses generic skills without calling milestone handlers or
+following the old playthrough route. Completion requires the Hall of Fame,
+credits, ending autosave, and an independent-process CONTINUE. `--checkpoint`
+saves a development checkpoint after verification; `--resume` is development
+evidence only. The 2026-09-20 seed-42 run completed in 82 minutes 6 seconds;
+see `docs/jev-autonomous-progress.md` for its audit and remaining limitations.
+The earlier `run_story.py` supports independent `--strategy jev|code` and
+`--action jev|code` ablations from a fresh overworld; its explicit `--assisted`
+option seeds a level-100 Charizard and is not evidence of a fresh playthrough.
+Tests: `PYTHONPATH=scripts python3 -m unittest test_openpokered_autonomous test_openpokered_story test_openpokered_judgment test_playthrough_navigation test_openpokered_typesafe test_openpokered_planner`.
 
 Screen targets: `copyright title main-menu oak overworld battle start-menu options save`.
 

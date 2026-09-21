@@ -1,0 +1,477 @@
+{
+  "diagnostic_only": true,
+  "not_full_recording": true,
+  "fixture": "script-a8 m44 species/levels/moves/experience/bag/flags; default DVs, zero stat experience, fresh RNG",
+  "success": true,
+  "elapsed_s": 234.8767611249932,
+  "stages": [
+    {
+      "id": "m45",
+      "retry": 0
+    },
+    {
+      "id": "m46",
+      "retry": 0
+    },
+    {
+      "id": "m47",
+      "retry": 0
+    },
+    {
+      "id": "m48",
+      "retry": 0
+    },
+    {
+      "id": "m45",
+      "retry": 1
+    },
+    {
+      "id": "m46",
+      "retry": 1
+    },
+    {
+      "id": "m47",
+      "retry": 1
+    },
+    {
+      "id": "m48",
+      "retry": 1
+    },
+    {
+      "id": "m49",
+      "retry": 1
+    }
+  ],
+  "first_clear_verification": {
+    "phases": [
+      {
+        "frame": 183632,
+        "phase": [
+          "overworld",
+          null,
+          null
+        ],
+        "hall_of_fame_count": 0
+      },
+      {
+        "frame": 184666,
+        "phase": [
+          "overworld",
+          "FadeOut",
+          null
+        ],
+        "hall_of_fame_count": 1
+      },
+      {
+        "frame": 184789,
+        "phase": [
+          "overworld",
+          "MonScroll",
+          null
+        ],
+        "hall_of_fame_count": 1
+      },
+      {
+        "frame": 184912,
+        "phase": [
+          "overworld",
+          "MonInfo",
+          null
+        ],
+        "hall_of_fame_count": 1
+      },
+      {
+        "frame": 185035,
+        "phase": [
+          "overworld",
+          "MonText",
+          null
+        ],
+        "hall_of_fame_count": 1
+      },
+      {
+        "frame": 185158,
+        "phase": [
+          "overworld",
+          "MonScroll",
+          null
+        ],
+        "hall_of_fame_count": 1
+      },
+      {
+        "frame": 185281,
+        "phase": [
+          "overworld",
+          "MonInfo",
+          null
+        ],
+        "hall_of_fame_count": 1
+      },
+      {
+        "frame": 185404,
+        "phase": [
+          "overworld",
+          "MonText",
+          null
+        ],
+        "hall_of_fame_count": 1
+      },
+      {
+        "frame": 185527,
+        "phase": [
+          "overworld",
+          "MonScroll",
+          null
+        ],
+        "hall_of_fame_count": 1
+      },
+      {
+        "frame": 185650,
+        "phase": [
+          "overworld",
+          "MonInfo",
+          null
+        ],
+        "hall_of_fame_count": 1
+      },
+      {
+        "frame": 185773,
+        "phase": [
+          "overworld",
+          "MonText",
+          null
+        ],
+        "hall_of_fame_count": 1
+      },
+      {
+        "frame": 185896,
+        "phase": [
+          "overworld",
+          "MonFade",
+          null
+        ],
+        "hall_of_fame_count": 1
+      },
+      {
+        "frame": 186019,
+        "phase": [
+          "overworld",
+          "PlayerStats",
+          null
+        ],
+        "hall_of_fame_count": 1
+      },
+      {
+        "frame": 186388,
+        "phase": [
+          "overworld",
+          null,
+          "Hold"
+        ],
+        "hall_of_fame_count": 1
+      },
+      {
+        "frame": 186511,
+        "phase": [
+          "overworld",
+          null,
+          "MonScroll"
+        ],
+        "hall_of_fame_count": 1
+      },
+      {
+        "frame": 186757,
+        "phase": [
+          "overworld",
+          null,
+          "Hold"
+        ],
+        "hall_of_fame_count": 1
+      },
+      {
+        "frame": 187495,
+        "phase": [
+          "overworld",
+          null,
+          "MonScroll"
+        ],
+        "hall_of_fame_count": 1
+      },
+      {
+        "frame": 187618,
+        "phase": [
+          "overworld",
+          null,
+          "Hold"
+        ],
+        "hall_of_fame_count": 1
+      },
+      {
+        "frame": 188233,
+        "phase": [
+          "overworld",
+          null,
+          "MonScroll"
+        ],
+        "hall_of_fame_count": 1
+      },
+      {
+        "frame": 188356,
+        "phase": [
+          "overworld",
+          null,
+          "Hold"
+        ],
+        "hall_of_fame_count": 1
+      },
+      {
+        "frame": 189217,
+        "phase": [
+          "overworld",
+          null,
+          "MonScroll"
+        ],
+        "hall_of_fame_count": 1
+      },
+      {
+        "frame": 189340,
+        "phase": [
+          "overworld",
+          null,
+          "Hold"
+        ],
+        "hall_of_fame_count": 1
+      },
+      {
+        "frame": 191062,
+        "phase": [
+          "overworld",
+          null,
+          "MonScroll"
+        ],
+        "hall_of_fame_count": 1
+      },
+      {
+        "frame": 191185,
+        "phase": [
+          "overworld",
+          null,
+          "TheEnd"
+        ],
+        "hall_of_fame_count": 1
+      },
+      {
+        "frame": 191820,
+        "phase": [
+          "title",
+          null,
+          null
+        ],
+        "hall_of_fame_count": 1
+      }
+    ],
+    "separate_process_continue": {
+      "active_script_effect": null,
+      "badges": 255,
+      "battle_bag": null,
+      "battle_inventory": [],
+      "battle_live": null,
+      "battle_message": null,
+      "battle_moves": null,
+      "battle_party_cursor": 0,
+      "battle_phase": "Intro { phase: TransitionFlash, wait_frames: 72 }",
+      "choice": null,
+      "coins": 0,
+      "credits_final_button": null,
+      "credits_phase": null,
+      "dialogue": null,
+      "dialogue_state": null,
+      "field_menu": null,
+      "frame_count": 651,
+      "hall_of_fame_count": 1,
+      "hof_phase": null,
+      "last_outside_map": "IndigoPlateau",
+      "link": {
+        "cable_phase": "Inactive",
+        "role": "Host",
+        "status": "disabled",
+        "trade": null
+      },
+      "map_blocks": [
+        82,
+        79,
+        82,
+        82,
+        79,
+        11,
+        80,
+        82,
+        82,
+        80,
+        78,
+        1,
+        56,
+        57,
+        1,
+        1,
+        56,
+        57,
+        1,
+        77,
+        78,
+        8,
+        60,
+        61,
+        1,
+        8,
+        60,
+        61,
+        1,
+        77,
+        78,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        77,
+        78,
+        1,
+        119,
+        86,
+        1,
+        12,
+        13,
+        14,
+        1,
+        77,
+        78,
+        1,
+        116,
+        116,
+        1,
+        16,
+        58,
+        0,
+        1,
+        77,
+        78,
+        1,
+        1,
+        1,
+        1,
+        119,
+        86,
+        119,
+        49,
+        77,
+        78,
+        10,
+        29,
+        30,
+        49,
+        116,
+        116,
+        10,
+        49,
+        77,
+        80,
+        10,
+        101,
+        100,
+        97,
+        97,
+        97,
+        97,
+        97,
+        79
+      ],
+      "map_id": 0,
+      "map_name": "PalletTown",
+      "money": 29952,
+      "party": [
+        {
+          "hp": 194,
+          "level": 59,
+          "max_hp": 194,
+          "moves": [
+            "Thunder",
+            "DrillPeck",
+            "Fly",
+            "Thunderbolt"
+          ],
+          "pp": [
+            6,
+            5,
+            15,
+            2
+          ],
+          "species": "Zapdos",
+          "status": "None"
+        },
+        {
+          "hp": 67,
+          "level": 15,
+          "max_hp": 67,
+          "moves": [
+            "WaterGun",
+            "Growl",
+            "Surf",
+            "Strength"
+          ],
+          "pp": [
+            25,
+            40,
+            15,
+            15
+          ],
+          "species": "Lapras",
+          "status": "None"
+        },
+        {
+          "hp": 169,
+          "level": 56,
+          "max_hp": 169,
+          "moves": [
+            "MegaDrain",
+            "RazorLeaf",
+            "Cut",
+            "VineWhip"
+          ],
+          "pp": [
+            9,
+            24,
+            30,
+            9
+          ],
+          "species": "Venusaur",
+          "status": "None"
+        }
+      ],
+      "party_count": 3,
+      "pc_phase": null,
+      "player_facing": "Down",
+      "player_movement_state": "Idle",
+      "player_name": "RED",
+      "player_transport": "Walking",
+      "player_x": 5,
+      "player_y": 6,
+      "screen": "overworld",
+      "script_awaiting_battle": false,
+      "script_effect": null,
+      "script_running": false,
+      "shop_phase": null,
+      "text_speed_delay_frames": 3,
+      "warp_fade": "Idle"
+    }
+  },
+  "blackout_restock_success": true,
+  "tests": {
+    "navigation_and_recovery": 39,
+    "evaluation_autonomous_story_recovery": 136
+  },
+  "limitation": "Live gauntlet used the initial blackout check. A separate delayed-warp unit test verifies the additional check during the ending loop."
+}

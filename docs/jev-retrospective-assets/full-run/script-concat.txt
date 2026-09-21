@@ -1,0 +1,2 @@
+file '/Users/liuyanghe02/develop/open-pokered/.artifacts/jev-full-comparison-20260920/script-a12/process-01/game.mp4'
+file '/Users/liuyanghe02/develop/open-pokered/.artifacts/jev-full-comparison-20260920/script-a12/process-02/game.mp4'

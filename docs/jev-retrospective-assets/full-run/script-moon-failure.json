@@ -1,0 +1,39 @@
+{
+  "attempt": "script-a4",
+  "success": false,
+  "milestone": "m12",
+  "wall_s": 831.546,
+  "failure": "Traceback (most recent call last):\n  File \"/Users/liuyanghe02/develop/open-pokered/.artifacts/jev-full-comparison-20260920/source-script/scripts/playthrough.py\", line 1058, in nav_warp\n    self.nav_to(x, y, map_name=from_map, tries=tries)\n    ~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/liuyanghe02/develop/open-pokered/.artifacts/jev-full-comparison-20260920/source-script/scripts/playthrough.py\", line 717, in nav_to\n    raise NavError(f\"no path in {cm}: ({cx},{cy})->({x},{y})\")\nplaythrough.NavError: no path in MtMoonB1F: (25,9)->(21,17)\n\nDuring handling of the above exception, another exception occurred:\n\nTraceback (most recent call last):\n  File \"/Users/liuyanghe02/develop/open-pokered/docs/jev-retrospective-assets/capture_full_playthrough.py\", line 171, in main\n    pt.main()\n    ~~~~~~~^^\n  File \"/Users/liuyanghe02/develop/open-pokered/.artifacts/jev-full-comparison-20260920/source-script/scripts/playthrough.py\", line 1961, in main\n    fn(g)\n    ~~^^^\n  File \"/Users/liuyanghe02/develop/open-pokered/.artifacts/jev-full-comparison-20260920/source-script/scripts/playthrough_late.py\", line 260, in m12_mt_moon\n    return cross_mt_moon(g)\n  File \"/Users/liuyanghe02/develop/open-pokered/.artifacts/jev-full-comparison-20260920/source-script/scripts/playthrough_late.py\", line 277, in cross_mt_moon\n    g.nav_warp(21, 17, \"MtMoonB1F\", \"MtMoonB2F\")\n    ~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/liuyanghe02/develop/open-pokered/.artifacts/jev-full-comparison-20260920/source-script/scripts/playthrough.py\", line 1075, in nav_warp\n    self.nav_to(*inner, map_name=from_map,\n    ~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^\n                tries=tries)\n                ^^^^^^^^^^^^\n  File \"/Users/liuyanghe02/develop/open-pokered/.artifacts/jev-full-comparison-20260920/source-script/scripts/playthrough.py\", line 717, in nav_to\n    raise NavError(f\"no path in {cm}: ({cx},{cy})->({x},{y})\")\nplaythrough.NavError: no path in MtMoonB1F: (25,9)->(21,16)\n",
+  "source_patch_sha256": "55a1b15e069138b504ca967bdc8d3148bfd042a61e449e72f94c9d24a52ec62b",
+  "source_video_sha256": "3532d64561946362cc3947e5f81211fee61778a70fbfaa78d1cbb30865746092",
+  "clip_interval_s": [
+    2155.65,
+    2167.65
+  ],
+  "clip_sha256": "f4a63a84a427e7ca4e563bfaad1d308ea48540d39ed59b945b59da99f1b2d4e0",
+  "observed_arrival": {
+    "map": "MtMoonB1F",
+    "position": [
+      25,
+      9
+    ]
+  },
+  "requested_next_target": [
+    21,
+    17
+  ],
+  "static_walkable_components_differ": true,
+  "inferred_entry_from_frozen_warp_table": {
+    "from_map": "MtMoon1F",
+    "warp": [
+      17,
+      11
+    ],
+    "to_map": "MtMoonB1F",
+    "arrival": [
+      25,
+      9
+    ]
+  },
+  "note": "Arrival warp inferred from the frozen map table. This is not an engine impossibility: other floors connect these pockets. Do not infer a causal timing failure solely from this trace."
+}
