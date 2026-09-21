@@ -5,8 +5,20 @@
 ## 在线访问与视频存储
 
 - [Jev 同步决策大盘](https://liuyanghejerry.github.io/open-pokered/jev-dashboard/)
+- [English: Jev decision dashboard](https://liuyanghejerry.github.io/open-pokered/jev-dashboard/?lang=en)
 - [脚本与 Jev 并排交互回放](https://liuyanghejerry.github.io/open-pokered/jev-dashboard/full-run/player.html)
+- [English: script vs. Jev comparison](https://liuyanghejerry.github.io/open-pokered/jev-dashboard/full-run/player.html?lang=en)
 - [完整解说视频](https://liuyanghejerry.github.io/open-pokered/jev-dashboard/full-run/script-vs-jev-full.mp4)
+
+两个交互播放器顶部均可切换中文 / English，切换后保留当前播放位置、章节与倍速，并暂停以便阅读。
+英文版翻译页面、动态输入摘要、候选、执行命令和关键节点注解；与中文版共用同一份视频及证据数据。
+展开的原始请求／回答保持日志原文；已导出的解说 MP4 和整体复盘文档仍为中文，并在英文入口明确标注。
+`?lang=en` 同样适用于直接在浏览器打开本地播放器；默认中文，其他参数值不自动改变语言。
+
+Both players offer **中文 / English** links that preserve the playback position, chapter, and speed, then pause for reading.
+The English dashboard translates the interface, recorded input summaries, candidate labels, executor commands, and retrospective commentary.
+Both languages share the original recordings and evidence. Expanded requests and answers keep their recorded wording;
+the exported commentary MP4 and full retrospective remain in Chinese. Add `?lang=en` to either local player URL as well.
 
 原成片使用 HyperFrames 0.8.55 生成；发布前工程检查通过 0.8.58，项目命令已更新，视频未重渲染。
 

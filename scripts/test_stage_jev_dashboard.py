@@ -38,7 +38,11 @@ class PagesStagingTest(unittest.TestCase):
         page = (target / 'full-run/jev-player.html').read_text()
         self.assertIn('/blob/abc123/docs/jev-autonomous-retrospective.md', page)
         self.assertNotIn('../../jev-autonomous-retrospective.md', page)
-        self.assertIn('location.hash', (target / 'index.html').read_text())
+        self.assertNotIn('<nav', page)  # Navigation comes from the shared locale script.
+        self.assertEqual((target / 'jev-dashboard-i18n.js').read_bytes(),
+                         (self.source / 'jev-dashboard-i18n.js').read_bytes())
+        redirect = (target / 'index.html').read_text()
+        self.assertIn('location.search+location.hash', redirect)
 
     def test_rejects_unresolved_lfs_before_replacing_dashboard(self):
         target = self.site / 'jev-dashboard'
@@ -55,9 +59,14 @@ class PagesStagingTest(unittest.TestCase):
             stage(self.repo, self.site, 'abc123')
 
     def test_rejects_missing_runtime_dependency(self):
-        (self.source / 'full-run/jev-inputs-data.js').unlink()
-        with self.assertRaisesRegex(ValueError, 'Missing dashboard dependency'):
-            stage(self.repo, self.site, 'abc123')
+        for name in ['full-run/jev-inputs-data.js', 'jev-dashboard-i18n.js']:
+            with self.subTest(dependency=name):
+                path = self.source / name
+                content = path.read_bytes()
+                path.unlink()
+                with self.assertRaisesRegex(ValueError, 'Missing dashboard dependency'):
+                    stage(self.repo, self.site, 'abc123')
+                path.write_bytes(content)
 
 
 if __name__ == '__main__':
