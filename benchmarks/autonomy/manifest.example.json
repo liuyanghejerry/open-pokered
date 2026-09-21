@@ -1,0 +1,45 @@
+{
+  "schema_version": 1,
+  "benchmark": "open-pokered-autonomy-v1",
+  "profile": "native-controller-v1",
+  "models": [
+    {
+      "id": "jev-1.13.0",
+      "provider": "typesafe",
+      "model": "jev-1.13.0",
+      "timeout_s": 10,
+      "max_retries": 1
+    },
+    {
+      "id": "laya-english",
+      "provider": "laya",
+      "model": "aac6fef/laya-mlx",
+      "revision": "20aed815fc6acde75733882e7ec0e3f28aeb9717",
+      "dtype": "float16",
+      "compile": true,
+      "cache_prompts": true
+    }
+  ],
+  "seeds": [
+    42,
+    43,
+    44
+  ],
+  "repeats": 1,
+  "tracks": [
+    "decisions",
+    "story"
+  ],
+  "story": {
+    "seconds": 1200,
+    "max_rtt_credit_s": 300
+  },
+  "decisions": {
+    "cases": "cases-v1.json",
+    "seconds": 300,
+    "option_orders": [
+      "original",
+      "reversed"
+    ]
+  }
+}

@@ -1,0 +1,638 @@
+{
+  "track": "decisions",
+  "backend": "example-stub",
+  "benchmark": {
+    "id": "decisions-example-stub-s42-r0",
+    "track": "decisions",
+    "model_id": "example-stub",
+    "seed": 42,
+    "repetition": 0,
+    "comparison_key": "af59eed306110c7974ee04fea7feef18768db200a600b4dd167901cc40ef4e53",
+    "conditions": {
+      "benchmark": "open-pokered-autonomy-v1",
+      "profile": "native-controller-v1",
+      "purpose": "smoke",
+      "source_sha256": "935878bb05f7089c99e30736162e09dac401718f295f9f1ebfe76e546a5e74b8",
+      "data_sha256": "a7b5f45f6bd2251753dbcd3352ed4e7eb9630658993f7710ee5a45a266cdf9a6",
+      "host": {
+        "system": "Darwin",
+        "release": "24.6.0",
+        "machine": "arm64",
+        "processor": "arm",
+        "python": "3.12.13 (main, Mar 25 2026, 03:16:06) [Clang 22.1.1 ]",
+        "machdep.cpu.brand_string": "Apple M3 Pro",
+        "hw.memsize": "19327352832"
+      },
+      "binary_sha256": "ba629a591ad69997100926475d0bfc51bf67178dbd6c9be99d5da2e31d6d02ce",
+      "story": {
+        "seconds": 20.0,
+        "max_rtt_credit_s": 0
+      },
+      "decisions": {
+        "seconds": 300,
+        "option_orders": [
+          "original",
+          "reversed"
+        ]
+      },
+      "cases_sha256": "d790c0b4c6e9413b5f1dfce49ea0c7097ae8b4183c69d51523dd91e5c1beb8f9"
+    },
+    "model_config_sha256": "d2f816b50d546680a3975d3216be34eeea6c38070ead1331ccf8d06d885a0aef"
+  },
+  "clock": {
+    "start_monotonic": 508105.319809416,
+    "raw_s": 0.0308712919941172,
+    "rtt_credit_s": 0.0,
+    "effective_s": 0.0308712919941172,
+    "limit_s": 300,
+    "max_rtt_credit_s": 0
+  },
+  "reason": "completed",
+  "trials": [
+    {
+      "case_id": "route_blocked",
+      "layer": "action",
+      "category": "navigation",
+      "split": "development",
+      "order": "original",
+      "acceptable": [
+        "none"
+      ],
+      "choice": "move",
+      "correct": false,
+      "acceptable_probability": null,
+      "negative_log_likelihood": null,
+      "brier": null,
+      "abstained": false,
+      "valid": true
+    },
+    {
+      "case_id": "route_blocked",
+      "layer": "action",
+      "category": "navigation",
+      "split": "development",
+      "order": "reversed",
+      "acceptable": [
+        "none"
+      ],
+      "choice": "none",
+      "correct": true,
+      "acceptable_probability": null,
+      "negative_log_likelihood": null,
+      "brier": null,
+      "abstained": true,
+      "valid": true
+    },
+    {
+      "case_id": "decline_optional_purchase",
+      "layer": "action",
+      "category": "dialogue",
+      "split": "development",
+      "order": "original",
+      "acceptable": [
+        "no"
+      ],
+      "choice": "yes",
+      "correct": false,
+      "acceptable_probability": null,
+      "negative_log_likelihood": null,
+      "brier": null,
+      "abstained": false,
+      "valid": true
+    },
+    {
+      "case_id": "decline_optional_purchase",
+      "layer": "action",
+      "category": "dialogue",
+      "split": "development",
+      "order": "reversed",
+      "acceptable": [
+        "no"
+      ],
+      "choice": "no",
+      "correct": true,
+      "acceptable_probability": null,
+      "negative_log_likelihood": null,
+      "brier": null,
+      "abstained": false,
+      "valid": true
+    },
+    {
+      "case_id": "money_short",
+      "layer": "action",
+      "category": "resources",
+      "split": "development",
+      "order": "original",
+      "acceptable": [
+        "none"
+      ],
+      "choice": "move",
+      "correct": false,
+      "acceptable_probability": null,
+      "negative_log_likelihood": null,
+      "brier": null,
+      "abstained": false,
+      "valid": true
+    },
+    {
+      "case_id": "money_short",
+      "layer": "action",
+      "category": "resources",
+      "split": "development",
+      "order": "reversed",
+      "acceptable": [
+        "none"
+      ],
+      "choice": "none",
+      "correct": true,
+      "acceptable_probability": null,
+      "negative_log_likelihood": null,
+      "brier": null,
+      "abstained": true,
+      "valid": true
+    },
+    {
+      "case_id": "route_found",
+      "layer": "action",
+      "category": "navigation",
+      "split": "development",
+      "order": "original",
+      "acceptable": [
+        "move"
+      ],
+      "choice": "move",
+      "correct": true,
+      "acceptable_probability": null,
+      "negative_log_likelihood": null,
+      "brier": null,
+      "abstained": false,
+      "valid": true
+    },
+    {
+      "case_id": "route_found",
+      "layer": "action",
+      "category": "navigation",
+      "split": "development",
+      "order": "reversed",
+      "acceptable": [
+        "move"
+      ],
+      "choice": "none",
+      "correct": false,
+      "acceptable_probability": null,
+      "negative_log_likelihood": null,
+      "brier": null,
+      "abstained": true,
+      "valid": true
+    },
+    {
+      "case_id": "goal_already_done",
+      "layer": "strategy",
+      "category": "prerequisites",
+      "split": "development",
+      "order": "original",
+      "acceptable": [
+        "talk"
+      ],
+      "choice": "parcel",
+      "correct": false,
+      "acceptable_probability": null,
+      "negative_log_likelihood": null,
+      "brier": null,
+      "abstained": false,
+      "valid": true
+    },
+    {
+      "case_id": "goal_already_done",
+      "layer": "strategy",
+      "category": "prerequisites",
+      "split": "development",
+      "order": "reversed",
+      "acceptable": [
+        "talk"
+      ],
+      "choice": "none",
+      "correct": false,
+      "acceptable_probability": null,
+      "negative_log_likelihood": null,
+      "brier": null,
+      "abstained": true,
+      "valid": true
+    },
+    {
+      "case_id": "attack_depleted",
+      "layer": "action",
+      "category": "battle",
+      "split": "development",
+      "order": "original",
+      "acceptable": [
+        "scratch"
+      ],
+      "choice": "ember",
+      "correct": false,
+      "acceptable_probability": null,
+      "negative_log_likelihood": null,
+      "brier": null,
+      "abstained": false,
+      "valid": true
+    },
+    {
+      "case_id": "attack_depleted",
+      "layer": "action",
+      "category": "battle",
+      "split": "development",
+      "order": "reversed",
+      "acceptable": [
+        "scratch"
+      ],
+      "choice": "none",
+      "correct": false,
+      "acceptable_probability": null,
+      "negative_log_likelihood": null,
+      "brier": null,
+      "abstained": true,
+      "valid": true
+    },
+    {
+      "case_id": "heal_before_battle",
+      "layer": "strategy",
+      "category": "recovery",
+      "split": "development",
+      "order": "original",
+      "acceptable": [
+        "heal"
+      ],
+      "choice": "heal",
+      "correct": true,
+      "acceptable_probability": null,
+      "negative_log_likelihood": null,
+      "brier": null,
+      "abstained": false,
+      "valid": true
+    },
+    {
+      "case_id": "heal_before_battle",
+      "layer": "strategy",
+      "category": "recovery",
+      "split": "development",
+      "order": "reversed",
+      "acceptable": [
+        "heal"
+      ],
+      "choice": "none",
+      "correct": false,
+      "acceptable_probability": null,
+      "negative_log_likelihood": null,
+      "brier": null,
+      "abstained": true,
+      "valid": true
+    },
+    {
+      "case_id": "dialogue_continue",
+      "layer": "action",
+      "category": "dialogue",
+      "split": "development",
+      "order": "original",
+      "acceptable": [
+        "confirm"
+      ],
+      "choice": "confirm",
+      "correct": true,
+      "acceptable_probability": null,
+      "negative_log_likelihood": null,
+      "brier": null,
+      "abstained": false,
+      "valid": true
+    },
+    {
+      "case_id": "dialogue_continue",
+      "layer": "action",
+      "category": "dialogue",
+      "split": "development",
+      "order": "reversed",
+      "acceptable": [
+        "confirm"
+      ],
+      "choice": "none",
+      "correct": false,
+      "acceptable_probability": null,
+      "negative_log_likelihood": null,
+      "brier": null,
+      "abstained": true,
+      "valid": true
+    },
+    {
+      "case_id": "door_locked",
+      "layer": "action",
+      "category": "navigation",
+      "split": "development",
+      "order": "original",
+      "acceptable": [
+        "none"
+      ],
+      "choice": "move",
+      "correct": false,
+      "acceptable_probability": null,
+      "negative_log_likelihood": null,
+      "brier": null,
+      "abstained": false,
+      "valid": true
+    },
+    {
+      "case_id": "door_locked",
+      "layer": "action",
+      "category": "navigation",
+      "split": "development",
+      "order": "reversed",
+      "acceptable": [
+        "none"
+      ],
+      "choice": "none",
+      "correct": true,
+      "acceptable_probability": null,
+      "negative_log_likelihood": null,
+      "brier": null,
+      "abstained": true,
+      "valid": true
+    },
+    {
+      "case_id": "nurse_present",
+      "layer": "action",
+      "category": "recovery",
+      "split": "development",
+      "order": "original",
+      "acceptable": [
+        "move"
+      ],
+      "choice": "move",
+      "correct": true,
+      "acceptable_probability": null,
+      "negative_log_likelihood": null,
+      "brier": null,
+      "abstained": false,
+      "valid": true
+    },
+    {
+      "case_id": "nurse_present",
+      "layer": "action",
+      "category": "recovery",
+      "split": "development",
+      "order": "reversed",
+      "acceptable": [
+        "move"
+      ],
+      "choice": "none",
+      "correct": false,
+      "acceptable_probability": null,
+      "negative_log_likelihood": null,
+      "brier": null,
+      "abstained": true,
+      "valid": true
+    },
+    {
+      "case_id": "resolve_locked_gate",
+      "layer": "strategy",
+      "category": "prerequisites",
+      "split": "development",
+      "order": "original",
+      "acceptable": [
+        "key"
+      ],
+      "choice": "key",
+      "correct": true,
+      "acceptable_probability": null,
+      "negative_log_likelihood": null,
+      "brier": null,
+      "abstained": false,
+      "valid": true
+    },
+    {
+      "case_id": "resolve_locked_gate",
+      "layer": "strategy",
+      "category": "prerequisites",
+      "split": "development",
+      "order": "reversed",
+      "acceptable": [
+        "key"
+      ],
+      "choice": "none",
+      "correct": false,
+      "acceptable_probability": null,
+      "negative_log_likelihood": null,
+      "brier": null,
+      "abstained": true,
+      "valid": true
+    },
+    {
+      "case_id": "no_attainable_goal",
+      "layer": "strategy",
+      "category": "abstention",
+      "split": "development",
+      "order": "original",
+      "acceptable": [
+        "none"
+      ],
+      "choice": "door",
+      "correct": false,
+      "acceptable_probability": null,
+      "negative_log_likelihood": null,
+      "brier": null,
+      "abstained": false,
+      "valid": true
+    },
+    {
+      "case_id": "no_attainable_goal",
+      "layer": "strategy",
+      "category": "abstention",
+      "split": "development",
+      "order": "reversed",
+      "acceptable": [
+        "none"
+      ],
+      "choice": "none",
+      "correct": true,
+      "acceptable_probability": null,
+      "negative_log_likelihood": null,
+      "brier": null,
+      "abstained": true,
+      "valid": true
+    },
+    {
+      "case_id": "money_enough",
+      "layer": "action",
+      "category": "resources",
+      "split": "development",
+      "order": "original",
+      "acceptable": [
+        "move"
+      ],
+      "choice": "move",
+      "correct": true,
+      "acceptable_probability": null,
+      "negative_log_likelihood": null,
+      "brier": null,
+      "abstained": false,
+      "valid": true
+    },
+    {
+      "case_id": "money_enough",
+      "layer": "action",
+      "category": "resources",
+      "split": "development",
+      "order": "reversed",
+      "acceptable": [
+        "move"
+      ],
+      "choice": "none",
+      "correct": false,
+      "acceptable_probability": null,
+      "negative_log_likelihood": null,
+      "brier": null,
+      "abstained": true,
+      "valid": true
+    },
+    {
+      "case_id": "attack_immune",
+      "layer": "action",
+      "category": "battle",
+      "split": "development",
+      "order": "original",
+      "acceptable": [
+        "ember"
+      ],
+      "choice": "tackle",
+      "correct": false,
+      "acceptable_probability": null,
+      "negative_log_likelihood": null,
+      "brier": null,
+      "abstained": false,
+      "valid": true
+    },
+    {
+      "case_id": "attack_immune",
+      "layer": "action",
+      "category": "battle",
+      "split": "development",
+      "order": "reversed",
+      "acceptable": [
+        "ember"
+      ],
+      "choice": "none",
+      "correct": false,
+      "acceptable_probability": null,
+      "negative_log_likelihood": null,
+      "brier": null,
+      "abstained": true,
+      "valid": true
+    },
+    {
+      "case_id": "door_open",
+      "layer": "action",
+      "category": "navigation",
+      "split": "development",
+      "order": "original",
+      "acceptable": [
+        "move"
+      ],
+      "choice": "move",
+      "correct": true,
+      "acceptable_probability": null,
+      "negative_log_likelihood": null,
+      "brier": null,
+      "abstained": false,
+      "valid": true
+    },
+    {
+      "case_id": "door_open",
+      "layer": "action",
+      "category": "navigation",
+      "split": "development",
+      "order": "reversed",
+      "acceptable": [
+        "move"
+      ],
+      "choice": "none",
+      "correct": false,
+      "acceptable_probability": null,
+      "negative_log_likelihood": null,
+      "brier": null,
+      "abstained": true,
+      "valid": true
+    },
+    {
+      "case_id": "nurse_absent",
+      "layer": "action",
+      "category": "recovery",
+      "split": "development",
+      "order": "original",
+      "acceptable": [
+        "none"
+      ],
+      "choice": "move",
+      "correct": false,
+      "acceptable_probability": null,
+      "negative_log_likelihood": null,
+      "brier": null,
+      "abstained": false,
+      "valid": true
+    },
+    {
+      "case_id": "nurse_absent",
+      "layer": "action",
+      "category": "recovery",
+      "split": "development",
+      "order": "reversed",
+      "acceptable": [
+        "none"
+      ],
+      "choice": "none",
+      "correct": true,
+      "acceptable_probability": null,
+      "negative_log_likelihood": null,
+      "brier": null,
+      "abstained": true,
+      "valid": true
+    }
+  ],
+  "expected_trials": 32,
+  "model": {
+    "backend": "example-stub",
+    "metadata": {
+      "provider": "command",
+      "requested_model": "example-first-option-stub",
+      "protocol": "open-pokered-judge-v1",
+      "adapter_metadata": {
+        "implementation": "example-first-option",
+        "stub": true
+      },
+      "rtt_policy": "No verified socket RTT; no deduction.",
+      "token_scope": "Adapter-reported usage; missing usage remains null."
+    },
+    "calls": 32,
+    "successful_calls": 32,
+    "actual_models": [
+      "example-first-option-stub"
+    ],
+    "usage_missing_calls": 32,
+    "input_tokens": 0,
+    "output_tokens": 0,
+    "latency_sum_s": 0.00203120696824044,
+    "latency_median_s": 5.516651435755193e-05,
+    "latency_p95_s": 0.00012050004443153739,
+    "rtt_measurements": 0,
+    "encoding": {
+      "questions": 0,
+      "state_tokens_before": 0,
+      "state_tokens_dropped": 0,
+      "questions_with_state_truncation": 0,
+      "candidate_tokens_dropped": 0,
+      "instruction_tokens_dropped": 0
+    },
+    "warmup": {
+      "calls": 1,
+      "latency_s": 0.0002452919725328684,
+      "input_tokens": 0
+    }
+  },
+  "setup_s": 0.018170249997638166
+}

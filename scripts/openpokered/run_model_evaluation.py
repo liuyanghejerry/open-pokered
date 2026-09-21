@@ -85,7 +85,9 @@ def worker(args):
     temporary=out/'temporary';temporary.mkdir(exist_ok=True);tempfile.tempdir=str(temporary)
     if args.env_file:load_env_file(args.env_file)
     objectives=load_objectives();metrics=EvaluationMetrics(objectives)
-    budget=EvaluationBudget(args.seconds,args.max_rtt_credit if args.backend=='jev' else 0)
+    config=json.loads(args.model_config.read_text()) if args.model_config else None
+    network=config['provider']=='typesafe' if config else args.backend=='jev'
+    budget=EvaluationBudget(args.seconds,args.max_rtt_credit if network else 0)
     result={'backend':args.backend,'seed':args.seed,'profile':'native-backend-replacement',
             'layers':{'strategy':args.backend,'action':args.backend},
             'limits':{'calls':50000,'actions':50000,'frames':40000000},
@@ -97,10 +99,12 @@ def worker(args):
             'binary_sha256':sha(args.binary),'python':sys.version,'platform':platform.platform(),
             'sampling_interval_s':.5,'setup_started_utc':time.strftime('%Y-%m-%dT%H:%M:%SZ',time.gmtime())}
     result['host_load_at_setup']=os.getloadavg()
+    if args.run_metadata:result['benchmark']=json.loads(args.run_metadata.read_text())
     if sys.platform=='darwin':
         result['hardware']={key:subprocess.check_output(['sysctl','-n',key],text=True).strip()
                             for key in ('machdep.cpu.brand_string','hw.memsize')}
-    policies=[*Path(__file__).parent.glob('*.py'),pt.ROOT/'scripts/playthrough.py',pt.ROOT/'scripts/playthrough_late.py']
+    policies=[*Path(__file__).parent.glob('*.py'),pt.ROOT/'scripts/playthrough.py',pt.ROOT/'scripts/playthrough_late.py',
+              pt.ROOT/'scripts/debug_drive.py']
     result['source_files']={str(p.relative_to(pt.ROOT)):sha(p) for p in sorted(policies)}
     result['source_sha256']=hashlib.sha256(json.dumps(result['source_files'],sort_keys=True).encode()).hexdigest()
     model=game=observer=agent=None;reason='';success=False;deadline_signal=[False]
@@ -115,7 +119,7 @@ def worker(args):
     status();setup=time.monotonic()
     with (out/'requests.jsonl').open('w') as requests,(out/'trace.jsonl').open('w') as trace_file,(out/'observations.jsonl').open('w') as states,(out/'commands.jsonl').open('w') as commands:
         try:
-            model=MeasuredModel(args.backend,budget,requests,status)
+            model=MeasuredModel(args.backend,budget,requests,status,config=config)
             model.system_one({'purpose':'Warm up the decision adapter before the timed game.'},
                              {'warmup':Choice('Which label describes this preparation?',{'warmup':'Prepare for a timed evaluation','gameplay':'Already playing the game'})})
             runtime=temporary/'runtime';runtime.mkdir();binary=runtime/'pokered-app';shutil.copy2(args.binary,binary)
@@ -174,6 +178,7 @@ def worker(args):
                     game.log.flush();shutil.copy2(game.run_dir/'game.log',out/'game.log')
                 except Exception as error:result['final_observation_error']=str(error)
                 finally:game.close()
+            if model:model.close()
             atomic_json(out/'summary.json',result);status()
     shutil.rmtree(temporary)
     print(json.dumps({'backend':args.backend,'reason':reason,'clock':result['clock'],'completed_objectives':list(metrics.milestones)},ensure_ascii=False),flush=True)
@@ -186,33 +191,41 @@ def supervise(args):
     launched=time.monotonic();interrupted=None;terminated=None
     with (args.output/'console.log').open('w') as log:
         process=subprocess.Popen(command,cwd=pt.ROOT,stdout=log,stderr=subprocess.STDOUT,start_new_session=True)
-        while process.poll() is None:
-            now=time.monotonic();file=args.output/'progress.json';progress=json.loads(file.read_text()) if file.exists() else {}
-            clock=progress.get('clock',{});started=clock.get('start_monotonic')
-            expired=(now-started-clock.get('rtt_credit_s',0)>=args.seconds) if started is not None else now-launched>=180
-            if expired and interrupted is None:
-                # Keep the game alive so the worker can finish an in-flight RPC
-                # and read final evidence. Only forced termination kills the group.
-                try:os.kill(process.pid,signal.SIGINT)
-                except ProcessLookupError:break
-                interrupted=now
-            if interrupted is not None and now-interrupted>=8 and terminated is None:
-                try:os.killpg(process.pid,signal.SIGTERM)
-                except ProcessLookupError:break
-                terminated=now
-            if terminated is not None and now-terminated>=2:
+        try:
+            while process.poll() is None:
+                now=time.monotonic();file=args.output/'progress.json';progress=json.loads(file.read_text()) if file.exists() else {}
+                clock=progress.get('clock',{});started=clock.get('start_monotonic')
+                expired=(now-started-clock.get('rtt_credit_s',0)>=args.seconds) if started is not None else now-launched>=180
+                if expired and interrupted is None:
+                    # Keep the game alive so the worker can finish an in-flight RPC
+                    # and read final evidence. Only forced termination kills the group.
+                    try:os.kill(process.pid,signal.SIGINT)
+                    except ProcessLookupError:break
+                    interrupted=now
+                if interrupted is not None and now-interrupted>=8 and terminated is None:
+                    try:os.killpg(process.pid,signal.SIGTERM)
+                    except ProcessLookupError:break
+                    terminated=now
+                if terminated is not None and now-terminated>=2:
+                    try:os.killpg(process.pid,signal.SIGKILL)
+                    except ProcessLookupError:pass
+                    break
+                time.sleep(.2)
+            process.wait()
+        finally:
+            try:os.killpg(process.pid,signal.SIGTERM)
+            except ProcessLookupError:pass
+            try:process.wait(timeout=2)
+            except subprocess.TimeoutExpired:
                 try:os.killpg(process.pid,signal.SIGKILL)
                 except ProcessLookupError:pass
-                break
-            time.sleep(.2)
-        process.wait()
-        try:os.killpg(process.pid,signal.SIGTERM)
-        except ProcessLookupError:pass
+                process.wait()
     atomic_json(args.output/'supervisor.json',{'exit_code':process.returncode,'interrupted':interrupted is not None,
         'forced_termination':terminated is not None,'wall_s':time.monotonic()-launched,
         'grace_policy':'SIGINT at the effective deadline; terminate entire private process group after 8s, kill after another 2s.'})
     if not (args.output/'summary.json').exists():
         file=args.output/'checkpoint.json';checkpoint=json.loads(file.read_text()) if file.exists() else {}
+        if args.run_metadata:checkpoint['benchmark']=json.loads(args.run_metadata.read_text())
         checkpoint.update(backend=args.backend,completed=False,reason='watchdog_termination',seed=args.seed,
             warning='Worker did not finish. Scores/costs are from the last checkpoint; a pending request may have unreported usage. Shutdown grace is never scored.')
         atomic_json(args.output/'summary.json',checkpoint)
@@ -222,11 +235,19 @@ def supervise(args):
 
 def main():
     parser=argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('backend',choices=['jev','laya']);parser.add_argument('--binary',type=Path,required=True)
+    parser.add_argument('backend');parser.add_argument('--binary',type=Path,required=True)
     parser.add_argument('--output',type=Path,required=True);parser.add_argument('--seconds',type=float,default=1200)
     parser.add_argument('--max-rtt-credit',type=float,default=300);parser.add_argument('--seed',type=int,default=42)
     parser.add_argument('--env-file',type=Path);parser.add_argument('--worker',action='store_true',help=argparse.SUPPRESS)
+    parser.add_argument('--model-config',type=Path,help='Versioned benchmark model configuration; otherwise use legacy jev/laya defaults')
+    parser.add_argument('--run-metadata',type=Path,help='Frozen benchmark job metadata')
     args=parser.parse_args();args.output=args.output.resolve();args.binary=args.binary.resolve()
+    EvaluationBudget(args.seconds,args.max_rtt_credit)
+    if args.model_config:
+        from openpokered.benchmark_models import validate_model
+        args.model_config=args.model_config.resolve();validate_model(json.loads(args.model_config.read_text()))
+    elif args.backend not in ('jev','laya'):parser.error('A custom backend requires --model-config')
+    if args.run_metadata:args.run_metadata=args.run_metadata.resolve()
     return worker(args) if args.worker else supervise(args)
 
 if __name__=='__main__':raise SystemExit(main())

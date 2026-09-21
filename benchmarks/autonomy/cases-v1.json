@@ -1,0 +1,406 @@
+{
+  "schema_version": 1,
+  "id": "open-pokered-decisions-dev-v1",
+  "description": "16 public development fixtures. Not held-out accuracy evidence. Labels are never sent to the model.",
+  "cases": [
+    {
+      "id": "door_open",
+      "layer": "action",
+      "category": "navigation",
+      "split": "development",
+      "state": "The door to the garden is open.",
+      "question": {
+        "type": "choice",
+        "instructions": "Which listed operation can be executed in the current state?",
+        "criteria": {
+          "move": "Walk through the door to the garden.",
+          "none": "None of the listed operations can be executed now."
+        }
+      },
+      "acceptable": [
+        "move"
+      ],
+      "rationale": "The supplied facts explicitly establish or deny the operation prerequisites. This published case was used in the 2026-09-21 Laya diagnosis.",
+      "source": "docs/laya-jev-evaluation-results/laya-diagnosis/contracts.json"
+    },
+    {
+      "id": "door_locked",
+      "layer": "action",
+      "category": "navigation",
+      "split": "development",
+      "state": "The only door to the garden is locked. No key or other route is available.",
+      "question": {
+        "type": "choice",
+        "instructions": "Which listed operation can be executed in the current state?",
+        "criteria": {
+          "move": "Walk through the door to the garden.",
+          "none": "None of the listed operations can be executed now."
+        }
+      },
+      "acceptable": [
+        "none"
+      ],
+      "rationale": "The supplied facts explicitly establish or deny the operation prerequisites. This published case was used in the 2026-09-21 Laya diagnosis.",
+      "source": "docs/laya-jev-evaluation-results/laya-diagnosis/contracts.json"
+    },
+    {
+      "id": "nurse_present",
+      "layer": "action",
+      "category": "recovery",
+      "split": "development",
+      "state": "The party has 1/20 HP. A nurse is present and offers free healing.",
+      "question": {
+        "type": "choice",
+        "instructions": "Which listed operation can be executed in the current state?",
+        "criteria": {
+          "move": "Talk to the nurse to heal the party.",
+          "none": "None of the listed operations can be executed now."
+        }
+      },
+      "acceptable": [
+        "move"
+      ],
+      "rationale": "The supplied facts explicitly establish or deny the operation prerequisites. This published case was used in the 2026-09-21 Laya diagnosis.",
+      "source": "docs/laya-jev-evaluation-results/laya-diagnosis/contracts.json"
+    },
+    {
+      "id": "nurse_absent",
+      "layer": "action",
+      "category": "recovery",
+      "split": "development",
+      "state": "The party has 1/20 HP. No nurse or healing items are present.",
+      "question": {
+        "type": "choice",
+        "instructions": "Which listed operation can be executed in the current state?",
+        "criteria": {
+          "move": "Talk to the nurse to heal the party.",
+          "none": "None of the listed operations can be executed now."
+        }
+      },
+      "acceptable": [
+        "none"
+      ],
+      "rationale": "The supplied facts explicitly establish or deny the operation prerequisites. This published case was used in the 2026-09-21 Laya diagnosis.",
+      "source": "docs/laya-jev-evaluation-results/laya-diagnosis/contracts.json"
+    },
+    {
+      "id": "money_enough",
+      "layer": "action",
+      "category": "resources",
+      "split": "development",
+      "state": "The player has 500 coins. The shop is open and sells a potion for 300 coins.",
+      "question": {
+        "type": "choice",
+        "instructions": "Which listed operation can be executed in the current state?",
+        "criteria": {
+          "move": "Buy one potion for 300 coins.",
+          "none": "None of the listed operations can be executed now."
+        }
+      },
+      "acceptable": [
+        "move"
+      ],
+      "rationale": "The supplied facts explicitly establish or deny the operation prerequisites. This published case was used in the 2026-09-21 Laya diagnosis.",
+      "source": "docs/laya-jev-evaluation-results/laya-diagnosis/contracts.json"
+    },
+    {
+      "id": "money_short",
+      "layer": "action",
+      "category": "resources",
+      "split": "development",
+      "state": "The player has 100 coins. The shop is open and sells a potion for 300 coins. Credit is unavailable.",
+      "question": {
+        "type": "choice",
+        "instructions": "Which listed operation can be executed in the current state?",
+        "criteria": {
+          "move": "Buy one potion for 300 coins.",
+          "none": "None of the listed operations can be executed now."
+        }
+      },
+      "acceptable": [
+        "none"
+      ],
+      "rationale": "The supplied facts explicitly establish or deny the operation prerequisites. This published case was used in the 2026-09-21 Laya diagnosis.",
+      "source": "docs/laya-jev-evaluation-results/laya-diagnosis/contracts.json"
+    },
+    {
+      "id": "route_found",
+      "layer": "action",
+      "category": "navigation",
+      "split": "development",
+      "state": "Location: RedsHouse2F. A walking route to PalletTown is available via RedsHouse1F.",
+      "question": {
+        "type": "choice",
+        "instructions": "Which listed operation can be executed in the current state?",
+        "criteria": {
+          "move": "Travel to PalletTown via RedsHouse1F.",
+          "none": "None of the listed operations can be executed now."
+        }
+      },
+      "acceptable": [
+        "move"
+      ],
+      "rationale": "The supplied facts explicitly establish or deny the operation prerequisites. This published case was used in the 2026-09-21 Laya diagnosis.",
+      "source": "docs/laya-jev-evaluation-results/laya-diagnosis/contracts.json"
+    },
+    {
+      "id": "route_blocked",
+      "layer": "action",
+      "category": "navigation",
+      "split": "development",
+      "state": "Location: RedsHouse2F. Every exit is blocked. No walking route to PalletTown is available.",
+      "question": {
+        "type": "choice",
+        "instructions": "Which listed operation can be executed in the current state?",
+        "criteria": {
+          "move": "Travel to PalletTown via RedsHouse1F.",
+          "none": "None of the listed operations can be executed now."
+        }
+      },
+      "acceptable": [
+        "none"
+      ],
+      "rationale": "The supplied facts explicitly establish or deny the operation prerequisites. This published case was used in the 2026-09-21 Laya diagnosis.",
+      "source": "docs/laya-jev-evaluation-results/laya-diagnosis/contracts.json"
+    },
+    {
+      "id": "dialogue_continue",
+      "layer": "action",
+      "category": "dialogue",
+      "split": "development",
+      "state": {
+        "mode": "dialogue",
+        "text": "Here is your parcel. Please take it to Prof. Oak.",
+        "controls": {
+          "A": "Advance dialogue",
+          "B": "Cancel dialogue"
+        }
+      },
+      "question": {
+        "type": "choice",
+        "instructions": "Which input continues this conversation?",
+        "criteria": {
+          "confirm": "Press A",
+          "cancel": "Press B",
+          "none": "No useful operation"
+        }
+      },
+      "acceptable": [
+        "confirm"
+      ],
+      "rationale": "The stated A control advances the currently open dialogue.",
+      "source": "Benchmark v1 authored fixture; explicit simulated facts, not a live game snapshot."
+    },
+    {
+      "id": "decline_optional_purchase",
+      "layer": "action",
+      "category": "dialogue",
+      "split": "development",
+      "state": {
+        "goal": "Save money for healing",
+        "menu": "Buy an optional decoration for 1000?",
+        "options": [
+          "YES",
+          "NO"
+        ],
+        "money": 1000
+      },
+      "question": {
+        "type": "choice",
+        "instructions": "Which response preserves money for the stated goal?",
+        "criteria": {
+          "yes": "Select YES",
+          "no": "Select NO"
+        }
+      },
+      "acceptable": [
+        "no"
+      ],
+      "rationale": "The purchase is optional and would spend all money needed for the stated goal.",
+      "source": "Benchmark v1 authored fixture; explicit simulated facts, not a live game snapshot."
+    },
+    {
+      "id": "attack_depleted",
+      "layer": "action",
+      "category": "battle",
+      "split": "development",
+      "state": {
+        "goal": "Deal damage this turn",
+        "moves": {
+          "Ember": {
+            "pp": 0,
+            "damage": 30
+          },
+          "Scratch": {
+            "pp": 12,
+            "damage": 10
+          }
+        },
+        "can_attack": true
+      },
+      "question": {
+        "type": "choice",
+        "instructions": "Which available attack should be used?",
+        "criteria": {
+          "ember": "Use Ember",
+          "scratch": "Use Scratch",
+          "none": "Neither attack is usable"
+        }
+      },
+      "acceptable": [
+        "scratch"
+      ],
+      "rationale": "Only Scratch has positive PP; damage is explicitly supplied, not inferred from Pokemon knowledge.",
+      "source": "Benchmark v1 authored fixture; explicit simulated facts, not a live game snapshot."
+    },
+    {
+      "id": "attack_immune",
+      "layer": "action",
+      "category": "battle",
+      "split": "development",
+      "state": {
+        "goal": "Deal damage this turn",
+        "moves": {
+          "Tackle": {
+            "pp": 20,
+            "effective_damage": 0
+          },
+          "Ember": {
+            "pp": 10,
+            "effective_damage": 12
+          }
+        }
+      },
+      "question": {
+        "type": "choice",
+        "instructions": "Which available attack advances the stated goal?",
+        "criteria": {
+          "tackle": "Use Tackle",
+          "ember": "Use Ember",
+          "none": "Neither attack can deal damage"
+        }
+      },
+      "acceptable": [
+        "ember"
+      ],
+      "rationale": "The fixture explicitly provides effective damage, including immunity.",
+      "source": "Benchmark v1 authored fixture; explicit simulated facts, not a live game snapshot."
+    },
+    {
+      "id": "heal_before_battle",
+      "layer": "strategy",
+      "category": "recovery",
+      "split": "development",
+      "state": {
+        "goal": "Defeat the next trainer",
+        "party_hp": 1,
+        "max_hp": 30,
+        "healing": {
+          "available": true,
+          "free": true,
+          "safe_route": true
+        },
+        "trainer": {
+          "minimum_unavoidable_damage": 5
+        }
+      },
+      "question": {
+        "type": "choice",
+        "instructions": "Which preparation goal makes a viable attempt possible?",
+        "criteria": {
+          "heal": "Restore HP before challenging the trainer",
+          "fight": "Challenge immediately",
+          "none": "No useful goal"
+        }
+      },
+      "acceptable": [
+        "heal"
+      ],
+      "rationale": "At 1 HP the stated unavoidable hit is fatal; safe free healing is available.",
+      "source": "Benchmark v1 authored fixture; explicit simulated facts, not a live game snapshot."
+    },
+    {
+      "id": "resolve_locked_gate",
+      "layer": "strategy",
+      "category": "prerequisites",
+      "split": "development",
+      "state": {
+        "goal": "Reach the city",
+        "gate": "locked",
+        "key_owned": false,
+        "key_location": "Accessible house",
+        "other_routes": []
+      },
+      "question": {
+        "type": "choice",
+        "instructions": "Which subgoal resolves the stated blocker?",
+        "criteria": {
+          "key": "Retrieve the gate key from the accessible house",
+          "retry": "Retry the locked gate without a key",
+          "none": "No useful subgoal"
+        }
+      },
+      "acceptable": [
+        "key"
+      ],
+      "rationale": "The key is reachable and the only known prerequisite missing from the gate.",
+      "source": "Benchmark v1 authored fixture; explicit simulated facts, not a live game snapshot."
+    },
+    {
+      "id": "goal_already_done",
+      "layer": "strategy",
+      "category": "prerequisites",
+      "split": "development",
+      "state": {
+        "goal": "Receive the Pokedex",
+        "parcel_delivered": true,
+        "pokedex_received": false,
+        "professor_here": true,
+        "professor_offer": "Talk to me now to receive your Pokedex."
+      },
+      "question": {
+        "type": "choice",
+        "instructions": "Which subgoal advances the current unmet goal?",
+        "criteria": {
+          "parcel": "Repeat the completed parcel delivery",
+          "talk": "Talk to the professor to receive the Pokedex",
+          "none": "No useful subgoal"
+        }
+      },
+      "acceptable": [
+        "talk"
+      ],
+      "rationale": "The parcel requirement is already satisfied; the professor explicitly offers the unmet reward.",
+      "source": "Benchmark v1 authored fixture; explicit simulated facts, not a live game snapshot."
+    },
+    {
+      "id": "no_attainable_goal",
+      "layer": "strategy",
+      "category": "abstention",
+      "split": "development",
+      "state": {
+        "goal": "Reach another region",
+        "exits": "All blocked",
+        "unlock_item": "Not present or reachable",
+        "available_actions": [
+          "Try blocked door",
+          "Buy nonexistent key"
+        ]
+      },
+      "question": {
+        "type": "choice",
+        "instructions": "Which offered subgoal is attainable from these facts?",
+        "criteria": {
+          "door": "Walk through the blocked door",
+          "key": "Buy a key from a shop that is not present",
+          "none": "No offered subgoal is currently attainable"
+        }
+      },
+      "acceptable": [
+        "none"
+      ],
+      "rationale": "Both action prerequisites are explicitly absent; none is a required negative control.",
+      "source": "Benchmark v1 authored fixture; explicit simulated facts, not a live game snapshot."
+    }
+  ]
+}
