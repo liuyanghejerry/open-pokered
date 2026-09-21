@@ -45,7 +45,7 @@ def main():
                             '-frames:v', '1', '-update', '1', str(output)], check=True)
             axes[row, column].imshow(plt.imread(output), interpolation='nearest')
             axes[row, column].axis('off')
-            controller = '脚本（适配与恢复修复）' if name == 'script' else '双层 Jev 自主探索'
+            controller = '脚本（无模型参与）' if name == 'script' else '双层 Jev 自主探索'
             axes[row, column].set_title(f'{controller}\n{label} · 原片 {int(second // 60)}:{int(second % 60):02}',
                                         color='#24312b', fontsize=14, pad=12)
             evidence.append({'controller': name, 'kind': key, 'file': output.name,

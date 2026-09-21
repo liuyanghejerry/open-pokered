@@ -16,7 +16,9 @@ a{color:#237451}details{border-top:1px solid #c4cdc5;margin-top:24px;padding-top
 .error{color:#a12121}footer{font-size:14px;margin-top:24px;padding-top:20px;border-top:1px solid #c4cdc5}
 @media(max-width:700px){main{padding:0 14px}.panels{gap:12px}h1{font-size:23px}h2{font-size:16px}.status{font-size:12px}button,select{font-size:14px}}
 
-.content-layout{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(440px,1fr);gap:32px;align-items:start;margin-top:24px}.panels{margin:0}.evidence-note{border-top:3px solid #237451;margin-top:24px;padding-top:16px}.evidence-note small{color:#52615a}.evidence-note h3{font-size:23px;margin:8px 0}.evidence-note p{font-size:19px}.jev-dashboard{margin:0}.jd-party{min-height:110px}.jd-goal{min-height:72px}#evidence-event{max-width:100%}@media(max-width:1200px){.content-layout{grid-template-columns:1fr}.jev-dashboard{max-width:none}.jd-party,.jd-candidates{min-height:0}}
+.content-layout{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(440px,1fr);gap:32px;align-items:start;margin-top:24px}.panels{margin:0}.evidence-note{border-top:3px solid #237451;margin-top:24px;padding-top:16px}.evidence-note small{color:#52615a}.evidence-note h3{font-size:23px;margin:8px 0}.evidence-note p{font-size:19px}.jev-dashboard{margin:0}.jd-party{min-height:110px}.jd-goal{min-height:72px}#evidence-event{max-width:100%}
+.support-panels{margin:24px 0 0;align-items:start}.provenance{border:1px solid #bdc9bf;border-radius:8px;background:#edf0e8;padding:15px}.provenance h3{margin:0 0 6px;font-size:19px}.provenance p{margin:0 0 8px;font-size:15px;line-height:1.55}.inputs-caption{margin:0 0 8px;font-size:14px}.inputs-stacked{grid-template-columns:1fr;margin:0;gap:14px}
+@media(max-width:1200px){.content-layout{grid-template-columns:1fr}.jev-dashboard{max-width:none}.jd-party,.jd-candidates{min-height:0}}
 </style>
 </head>
 <body><main>
@@ -31,9 +33,12 @@ a{color:#237451}details{border-top:1px solid #c4cdc5;margin-top:24px;padding-top
 <div id="clock" class="muted" aria-live="off"></div><div id="error" class="error" role="alert"></div>
 <div class="toolbar"><label>关键解说 <select id="evidence-event"><option value="">选择一个节点并暂停</option></select></label></div>
 <div class="content-layout"><div><div class="panels">
-<section><h2>脚本（适配与恢复修复）</h2><video id="script" preload="metadata" muted playsinline aria-label="脚本完整录像"></video><div id="script-status" class="status"></div><a href="script-full.mp4">单独打开脚本完整原片</a></section>
+<section><h2>脚本（无模型参与）</h2><video id="script" preload="metadata" muted playsinline aria-label="脚本完整录像"></video><div id="script-status" class="status"></div><a href="script-full.mp4">单独打开脚本完整原片</a></section>
 <section class="jev"><h2>策略层 + 动作层 Jev</h2><video id="jev" preload="metadata" muted playsinline aria-label="Jev 完整录像"></video><div id="jev-status" class="status"></div><a href="jev-full.mp4">单独打开 Jev 完整原片</a></section>
-</div><div id="model-inputs" class="jd-inputs"></div><div class="evidence-note"><small id="note-label">观看提示</small><h3 id="note-title">对照策略与实际结果</h3><p id="note-body">右侧展示 Jev 的记录；候选分布不是成功率，文字解说不是模型自述。</p></div></div><aside id="dashboard" class="jev-dashboard"></aside></div>
+</div><div class="panels support-panels">
+<div class="provenance"><h3>左侧录像 · 纯脚本运行</h3><p>从 NEW GAME 到名人堂完全由预写脚本驱动，全程没有任何模型参与，作为右侧 Jev 录像的对照基线。</p><p>因此本栏没有模型输入卡片——右栏的「当次输入」快照只来自 Jev 录像。</p><p>两路使用相同引擎与 seed 42，按共同剧情节点分章对照。</p></div>
+<div><p class="inputs-caption muted">策略层 / 动作层 · 当次输入快照 — 仅对应右侧 Jev 录像</p><div id="model-inputs" class="jd-inputs inputs-stacked"></div></div>
+</div><div class="evidence-note"><small id="note-label">观看提示</small><h3 id="note-title">对照策略与实际结果</h3><p id="note-body">右侧展示 Jev 的记录；候选分布不是成功率，文字解说不是模型自述。</p></div></div><aside id="dashboard" class="jev-dashboard"></aside></div>
 <details><summary>录像与比较口径</summary>
 <ul><li>原片保存每个模拟更新帧，以 60 fps 回放；这里的时钟是游戏模拟帧时间。Jev 的网络等待与 Python 规划耗时见实验日志和复盘表格。</li>
 <li>两边使用相同冻结版本和 seed 42。保留各自默认队伍选择和时间模式：脚本为默认实时循环，Jev 为 driven-only。</li>
