@@ -1740,9 +1740,24 @@ def m09_to_pewter(g):
             walk_pallet_to_pewter(g)
             break
         except NavError:
-            if attempt == 2 or g.st()["map_name"] != "ViridianCity":
+            state = g.st()
+            party = (state.get('battle_live') or {}).get('player_party', [])
+            if (attempt == 2 or state.get('screen') != 'overworld'
+                    or state.get('map_name') != 'ViridianCity'
+                    or 'player_won: false' not in state.get('battle_phase', '')
+                    or not party or not all(mon['hp'] == 0 for mon in party)):
                 raise
             g.evidence(f"m09-blackout-{attempt + 1}")
+            # Repeating the forest with the same level-5 starter can fail
+            # without earning any XP. Bring forward the existing m10
+            # preparation, using real Route 1 battles and Center healing.
+            g.nav_to(20, 32, map_name='ViridianCity')
+            g.nav_to(20, 33, map_name='ViridianCity')
+            g.d.drive(['down'] * 24, frames=28)
+            g.step(8)
+            g.nav_to(12, 7, map_name='Route1')
+            heal = ((23, 25), 'ViridianCity', 'ViridianPokecenter')
+            assert g.train_until(13, 'Route1', (12, 7), heal), 'forest recovery training stalled'
     g.evidence("m09")
 
 
@@ -1945,20 +1960,31 @@ def main():
     if args.resume and g.marker_at_least("m01"):
         resume_reentry(g)
     try:
-        for mid, desc, fn in MILESTONES:
+        stage, league_retries = 0, 0
+        while stage < len(MILESTONES):
+            mid, desc, fn = MILESTONES[stage]
             if args.resume and state_done(mid, g):
                 print(f"== {mid}: {desc}")
                 print(f"   skipped (state/marker already satisfied)")
                 if args.until == mid:
                     break
+                stage += 1
                 continue
             print(f"== {mid}: {desc}")
             t0 = time.time()
             g.smart_moves = Game.milestone_index(mid) >= Game.milestone_index("m11")
-            if mid == "m05":
-                fn(g, args.starter)
-            else:
-                fn(g)
+            try:
+                if mid == "m05":
+                    fn(g, args.starter)
+                else:
+                    fn(g)
+            except (AssertionError, RuntimeError):
+                from playthrough_late import retry_elite_four
+                if not retry_elite_four(g, mid, league_retries):
+                    raise
+                league_retries += 1
+                stage = next(i for i, entry in enumerate(MILESTONES) if entry[0] == 'm45')
+                continue
             print(f"   done ({time.time()-t0:.1f}s wall)")
             if g.persistent:
                 g.checkpoint(mid)
@@ -1973,6 +1999,7 @@ def main():
                     json.dumps(observations, ensure_ascii=False, indent=2))
             if args.until == mid:
                 break
+            stage += 1
         print("PLAYTHROUGH REACHED REQUESTED MILESTONE")
     except Exception:
         if args.artifacts:

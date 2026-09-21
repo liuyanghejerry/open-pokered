@@ -1,0 +1,40 @@
+name: Model benchmark contracts
+
+on:
+  pull_request:
+    paths:
+      - 'benchmarks/autonomy/**'
+      - 'scripts/openpokered/**'
+      - 'scripts/test_benchmark.py'
+      - 'scripts/test_model_evaluation.py'
+      - '.github/workflows/benchmark.yml'
+  push:
+    branches: [master]
+    paths:
+      - 'benchmarks/autonomy/**'
+      - 'scripts/openpokered/**'
+      - 'scripts/test_benchmark.py'
+      - 'scripts/test_model_evaluation.py'
+      - '.github/workflows/benchmark.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  offline-contracts:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    strategy:
+      matrix:
+        python: ['3.11', '3.13']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Validate public benchmark configuration
+        run: python scripts/openpokered/benchmark.py validate benchmarks/autonomy/manifest.example.json
+      - name: Run offline contracts without model credentials or weights
+        env:
+          PYTHONPATH: scripts
+        run: python -m unittest scripts.test_benchmark scripts.test_model_evaluation

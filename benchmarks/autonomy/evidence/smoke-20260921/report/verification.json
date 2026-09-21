@@ -1,0 +1,69 @@
+{
+  "valid": true,
+  "comparison_key": "af59eed306110c7974ee04fea7feef18768db200a600b4dd167901cc40ef4e53",
+  "conditions": {
+    "benchmark": "open-pokered-autonomy-v1",
+    "profile": "native-controller-v1",
+    "purpose": "smoke",
+    "source_sha256": "935878bb05f7089c99e30736162e09dac401718f295f9f1ebfe76e546a5e74b8",
+    "data_sha256": "a7b5f45f6bd2251753dbcd3352ed4e7eb9630658993f7710ee5a45a266cdf9a6",
+    "host": {
+      "system": "Darwin",
+      "release": "24.6.0",
+      "machine": "arm64",
+      "processor": "arm",
+      "python": "3.12.13 (main, Mar 25 2026, 03:16:06) [Clang 22.1.1 ]",
+      "machdep.cpu.brand_string": "Apple M3 Pro",
+      "hw.memsize": "19327352832"
+    },
+    "binary_sha256": "ba629a591ad69997100926475d0bfc51bf67178dbd6c9be99d5da2e31d6d02ce",
+    "story": {
+      "seconds": 20.0,
+      "max_rtt_credit_s": 0
+    },
+    "decisions": {
+      "seconds": 300,
+      "option_orders": [
+        "original",
+        "reversed"
+      ]
+    },
+    "cases_sha256": "d790c0b4c6e9413b5f1dfce49ea0c7097ae8b4183c69d51523dd91e5c1beb8f9"
+  },
+  "sources": [
+    {
+      "path": "/Users/liuyanghe02/develop/open-pokered/.artifacts/laya-jev-eval-worktree/benchmarks/autonomy/evidence/smoke-20260921/decisions-laya-english-s42-r0",
+      "sha256": {
+        "summary.json": "427ea2b16ec1beeee6977cef215be9499c62e3237a2c7ca9b98d5680b7cfce8c",
+        "requests.jsonl": "eeacc8d31f00c2baea7882730498f74f5fe9e1b4c8e11c1067e589b16b3fa559"
+      }
+    },
+    {
+      "path": "/Users/liuyanghe02/develop/open-pokered/.artifacts/laya-jev-eval-worktree/benchmarks/autonomy/evidence/smoke-20260921/decisions-example-stub-s42-r0",
+      "sha256": {
+        "summary.json": "95f434e8b6fb19a47b2244bf0c37a04cc4ee929dee24040d8748ffc066e0d95d",
+        "requests.jsonl": "711d9604c58682661301c763210f785620cd86acd22e9d290ae227dbba579239"
+      }
+    },
+    {
+      "path": "/Users/liuyanghe02/develop/open-pokered/.artifacts/laya-jev-eval-worktree/benchmarks/autonomy/evidence/smoke-20260921/story-laya-english-s42-r0",
+      "sha256": {
+        "summary.json": "7564f8c6e5638bbf5311586f0c24886f6b4c6191e7907a1a5020c2c4867fe8f6",
+        "requests.jsonl": "eedc4bb3b969cab3447f2ca0b66558878854d1ef706be2aead87f731f63eff90",
+        "observations.jsonl": "95e462059ea009dbd001ee328e70c5519b6c62d77d1f681b4f5fb16e1d835403",
+        "trace.jsonl": "e45727539d0d71ae15a2ddfb90927507001b6f7820f48911596385a3db6d544d",
+        "commands.jsonl": "4f1709f92c24e62aff7cf4bf5af0cd716e66c33ba6666de647ce792ecf7de666"
+      }
+    },
+    {
+      "path": "/Users/liuyanghe02/develop/open-pokered/.artifacts/laya-jev-eval-worktree/benchmarks/autonomy/evidence/smoke-20260921/story-example-stub-s42-r0",
+      "sha256": {
+        "summary.json": "13239482033dda260e19afaa02bf09426b853f92d6e4ff07f1010e093bba2ec1",
+        "requests.jsonl": "6c8a5628aee6b0cfcf4a286f86970893e57567f82446405624cabb170b7011c3",
+        "observations.jsonl": "7b4c7a9437b32d33a876f00e213678703435fe09ace33f226c9ca63c9f8fd0eb",
+        "trace.jsonl": "0135144b39cd44f2279ab6c46ad3238357a4443f2de07618f2b85f8f9e5a3a51",
+        "commands.jsonl": "f79e955a3816d5f30d9baa784952a5c14dfda49c97677daa0d01b36e9bcae497"
+      }
+    }
+  ]
+}

@@ -1,0 +1,44 @@
+{
+  "date": "2026-09-21",
+  "base_commit": "3cd8321a8ad8c8e560d99f80397d014c5535da4a",
+  "system": "macOS-15.7.4-arm64-arm-64bit-Mach-O",
+  "machine": "arm64",
+  "inference_python": "/Users/liuyanghe02/develop/laya-mlx/.venv/bin/python",
+  "inference_python_version": "Python 3.12.13",
+  "offline_inferences": 111,
+  "counts": {
+    "ablations": 53,
+    "contracts": 46,
+    "representation": 12
+  },
+  "native_frozen_answers_match": true,
+  "repeat_and_eager_fp16_answers_match": true,
+  "fp32_same_choices": true,
+  "fp32_max_probability_absolute_delta": 0.0007,
+  "complete_action_original_text_preserved": true,
+  "all_native_act_probability_rounded_to_one": true,
+  "controller_refusal_as_failure_reproduced": true,
+  "formal_files_verified_unchanged": [
+    "docs/laya-jev-evaluation-results/decision-evidence.json",
+    "docs/laya-jev-evaluation-results/jev-summary.json",
+    "docs/laya-jev-evaluation-results/laya-summary.json",
+    "docs/laya-jev-evaluation-results/verification.json",
+    "docs/laya-jev-evaluation-results/metrics.csv"
+  ],
+  "sha256": {
+    "scripts/diagnose_laya.py": "37fb8992dabbb5046b650dd00e34a347a7da748160e8134444d73f66c4804599",
+    "scripts/diagnose_laya_contracts.py": "7802335826ff2148d8aeedc06efe3460442d47213913fabb1fc16a1d93303889",
+    "docs/laya-jev-evaluation-results/decision-evidence.json": "b321738cccf6f65b0102377b478c2945db567e3a756c9284d031a3779ee1fad2",
+    "docs/laya-jev-evaluation-results/laya-diagnosis/ablations.json": "0c2fe167d4668772b8d89683be71183a6abeaa11e414b642c1883c7af740e6cf",
+    "docs/laya-jev-evaluation-results/laya-diagnosis/contracts.json": "1407b5ac3bbe9045b08b041b5d029f9981af5db71bc3c005e4e40a0ffce8f66e",
+    "docs/laya-jev-evaluation-results/laya-diagnosis/representation.json": "d95d57a1380e09abb363acef8c802b15fb367583158df28a3b60ca49c5224452",
+    "/Users/liuyanghe02/develop/laya-mlx/.venv/lib/python3.12/site-packages/laya_mlx/agent.py": "51016a1e95648ad1beb22c8214927b1bb23cec9697f2d7e7339e01540e8553b7",
+    "/Users/liuyanghe02/develop/laya-mlx/.venv/lib/python3.12/site-packages/laya_mlx/common.py": "9ef0e51a61e73e10656b51f42de889e812ca22e422237dac1674bb1de019e7e9",
+    "/Users/liuyanghe02/develop/laya-mlx/.venv/lib/python3.12/site-packages/laya_mlx/prepared.py": "4c06336381c8b7ce0795b5d3c6f9500aff044de66ef10136d49f98f4da095b13",
+    "/Users/liuyanghe02/develop/laya-mlx/.venv/lib/python3.12/site-packages/laya_mlx/tokenizer.py": "4fbf5adb601c2ef9d8caf439f473606dd4c109743d82cdbf492283e66bb218a5",
+    "/Users/liuyanghe02/develop/laya-mlx/.venv/lib/python3.12/site-packages/laya_mlx/model.py": "24ef50d4e53e0b12528cffd46cc463c0b8fbea8f052e80f8bf40a68aa692c7ea",
+    "/Users/liuyanghe02/.cache/huggingface/hub/models--aac6fef--laya-mlx/snapshots/20aed815fc6acde75733882e7ec0e3f28aeb9717/rl_agent_config.json": "d96dc2cb39d6375e030ff48c9957088f3c52668f45c30c56504f4e801ed3ee62",
+    "/Users/liuyanghe02/.cache/huggingface/hub/models--aac6fef--laya-mlx/snapshots/20aed815fc6acde75733882e7ec0e3f28aeb9717/encoder/config.json": "bf3ab80598fdccf414855a2ce80f22859e4492d06ca8a62ddd1cfb63972f8979",
+    "/Users/liuyanghe02/.cache/huggingface/hub/models--aac6fef--laya-mlx/snapshots/20aed815fc6acde75733882e7ec0e3f28aeb9717/model.safetensors": "b9c07bf14be2fa5c78a9193a3e6d840ac80e89e62fc40f425834c3d8a6eaa3de"
+  }
+}

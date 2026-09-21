@@ -5798,7 +5798,7 @@ impl PokemonGame {
             .pending_choice
             .as_ref()
             .map(|c| serde_json::json!({ "options": c.options, "selected": c.selected }));
-        serde_json::json!({
+        let mut snapshot = serde_json::json!({
             "screen": crate::cli::screen_name(&self.state.screen).to_string(),
             "map_id": map_id as u8,
             "map_name": format!("{:?}", map_id),
@@ -5975,7 +5975,32 @@ impl PokemonGame {
             // Warp transition state ("Idle"/"FadingOut { .. }"/…), so a
             // driver knows when a warp is still settling.
             "warp_fade": format!("{:?}", self.overworld.warp_fade_state),
-        })
+        });
+        // Keep this separate from the large snapshot macro's recursion budget.
+        let live = self.battle.battle_state.as_ref()
+            .filter(|_| matches!(self.state.screen, GameScreen::Battle));
+        let party: Vec<_> = if let Some(bs) = live {
+            bs.player.party.iter().collect()
+        } else {
+            self.save_data.party.iter().collect()
+        };
+        snapshot["evaluation"] = serde_json::json!({
+            "party_source": if live.is_some() { "battle_live" } else { "save_data" },
+            "party": party.iter().map(|mon| serde_json::json!({
+                "species": format!("{:?}", mon.species), "level": mon.level,
+                "hp": mon.hp, "max_hp": mon.max_hp, "total_exp": mon.total_exp,
+                "status": format!("{:?}", mon.status), "pp": mon.pp,
+                "moves": mon.moves.iter().map(|m| format!("{:?}", m)).collect::<Vec<_>>(),
+            })).collect::<Vec<_>>(),
+            "pokedex": {
+                "seen": self.save_data.game_data.pokedex.seen_count(),
+                "owned": self.save_data.game_data.pokedex.owned_count(),
+                "total": pokered_core::pokemon::pokedex::NUM_POKEMON,
+                "owned_numbers": (1u8..=151).filter(|id| self.save_data.game_data.pokedex
+                    .is_owned(pokered_data::species::Species::from_index_id(*id))).collect::<Vec<_>>(),
+            },
+        });
+        snapshot
     }
 
     /// Typed semantic observation snapshot (the `pokered-agent` M1 layer),
@@ -7343,6 +7368,52 @@ mod session_guard_tests {
 #[cfg(all(test, feature = "debug-server"))]
 mod synchronous_input_tests {
     use super::*;
+
+    #[test]
+    fn evaluation_telemetry_reads_dex_and_experience_without_advancing() {
+        use pokered_data::species::Species;
+        let mut game = PokemonGame::new_with_options(
+            GameVersion::Red, None, None, None, false, None, false, true, None,
+        );
+        game.save_data.game_data.pokedex.set_seen(Species::Pikachu);
+        game.save_data.game_data.pokedex.set_owned(Species::Bulbasaur);
+        game.save_data.game_data.pokedex.set_owned(Species::Zapdos);
+        let mon = pokered_core::pokemon::stats::create_pokemon(Species::Bulbasaur, 10, [0x9a, 0x78]).unwrap();
+        let experience = mon.total_exp;
+        game.save_data.party.add(mon.clone()).unwrap();
+        let before = game.frame_count;
+        let command = serde_json::from_value(serde_json::json!({"cmd": "get_state"})).unwrap();
+        let response = serde_json::to_value(game.handle_debug_command(command)).unwrap();
+        assert_eq!(response["ok"], true);
+        assert_eq!(response["data"]["evaluation"]["pokedex"]["seen"], 3);
+        assert_eq!(response["data"]["evaluation"]["pokedex"]["owned"], 2);
+        assert_eq!(response["data"]["evaluation"]["pokedex"]["owned_numbers"], serde_json::json!([1, 145]));
+        assert_eq!(response["data"]["evaluation"]["party"][0]["total_exp"], experience);
+        assert!(response["data"]["party"][0].get("total_exp").is_none());
+        assert_eq!(game.frame_count, before);
+
+        // During battle the persistent party is stale: use the actual roster,
+        // including experience and PP, then return to save data on the field.
+        let mut live_mon = mon;
+        live_mon.hp = 1;
+        live_mon.pp[0] = 0;
+        live_mon.total_exp += 40;
+        game.battle.battle_state = Some(pokered_core::battle::state::new_battle_state(
+            pokered_core::battle::state::BattleType::Wild,
+            vec![live_mon.clone()], vec![live_mon],
+        ));
+        game.state.screen = GameScreen::Battle;
+        let state = game.debug_state_snapshot();
+        assert_eq!(state["evaluation"]["party_source"], "battle_live");
+        assert_eq!(state["evaluation"]["party"][0]["hp"], 1);
+        assert_eq!(state["evaluation"]["party"][0]["pp"][0], 0);
+        assert_eq!(state["evaluation"]["party"][0]["total_exp"], experience + 40);
+        game.state.screen = GameScreen::Overworld;
+        let state = game.debug_state_snapshot();
+        assert_eq!(state["evaluation"]["party_source"], "save_data");
+        assert_eq!(state["evaluation"]["party"][0]["total_exp"], experience);
+        assert_eq!(game.frame_count, before);
+    }
 
     #[test]
     fn timeline_advances_exact_frames_and_leaves_no_background_work() {

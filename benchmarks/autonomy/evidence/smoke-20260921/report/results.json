@@ -1,0 +1,475 @@
+{
+  "runs": [
+    {
+      "model_id": "laya-english",
+      "track": "decisions",
+      "seed": 42,
+      "repetition": 0,
+      "outcome": "completed",
+      "reason": "completed",
+      "raw_s": 0.7870045839808881,
+      "effective_s": 0.7870045839808881,
+      "budget_s": 300,
+      "shutdown_overrun_s": 0,
+      "rtt_credit_s": 0.0,
+      "calls": 32,
+      "input_tokens_known": 2346,
+      "output_tokens_known": 0,
+      "usage_missing_calls": 0,
+      "latency_median_s": 0.023495333502069116,
+      "latency_p95_s": 0.03141549997963011,
+      "encoding_reported_questions": 32,
+      "setup_s": 0.7712261670385487,
+      "actual_models": [
+        "aac6fef/laya-mlx@20aed815fc6acde75733882e7ec0e3f28aeb9717"
+      ],
+      "incomplete_evidence": false,
+      "valid_trials": 32,
+      "expected_trials": 32,
+      "case_count": 16,
+      "coverage": 1.0,
+      "accuracy": 0.59375,
+      "order_consistency": 0.625,
+      "order_pair_count": 16,
+      "brier": 0.5985004325,
+      "negative_log_likelihood": 1.0033542155856765,
+      "probability_metric_trials": 32,
+      "development_trials": 32,
+      "groups": {
+        "action": {
+          "valid_trials": 24,
+          "accuracy": 0.6666666666666666
+        },
+        "navigation": {
+          "valid_trials": 8,
+          "accuracy": 0.875
+        },
+        "dialogue": {
+          "valid_trials": 4,
+          "accuracy": 1
+        },
+        "resources": {
+          "valid_trials": 4,
+          "accuracy": 0.5
+        },
+        "strategy": {
+          "valid_trials": 8,
+          "accuracy": 0.375
+        },
+        "prerequisites": {
+          "valid_trials": 4,
+          "accuracy": 0.75
+        },
+        "battle": {
+          "valid_trials": 4,
+          "accuracy": 0
+        },
+        "recovery": {
+          "valid_trials": 6,
+          "accuracy": 0.5
+        },
+        "abstention": {
+          "valid_trials": 2,
+          "accuracy": 0
+        }
+      }
+    },
+    {
+      "model_id": "example-stub",
+      "track": "decisions",
+      "seed": 42,
+      "repetition": 0,
+      "outcome": "completed",
+      "reason": "completed",
+      "raw_s": 0.0308712919941172,
+      "effective_s": 0.0308712919941172,
+      "budget_s": 300,
+      "shutdown_overrun_s": 0,
+      "rtt_credit_s": 0.0,
+      "calls": 32,
+      "input_tokens_known": 0,
+      "output_tokens_known": 0,
+      "usage_missing_calls": 32,
+      "latency_median_s": 5.516651435755193e-05,
+      "latency_p95_s": 0.00012050004443153739,
+      "encoding_reported_questions": 0,
+      "setup_s": 0.018170249997638166,
+      "actual_models": [
+        "example-first-option-stub"
+      ],
+      "incomplete_evidence": false,
+      "valid_trials": 32,
+      "expected_trials": 32,
+      "case_count": 16,
+      "coverage": 1.0,
+      "accuracy": 0.40625,
+      "order_consistency": 0,
+      "order_pair_count": 16,
+      "brier": null,
+      "negative_log_likelihood": null,
+      "probability_metric_trials": 0,
+      "development_trials": 32,
+      "groups": {
+        "action": {
+          "valid_trials": 24,
+          "accuracy": 0.4166666666666667
+        },
+        "navigation": {
+          "valid_trials": 8,
+          "accuracy": 0.5
+        },
+        "dialogue": {
+          "valid_trials": 4,
+          "accuracy": 0.5
+        },
+        "resources": {
+          "valid_trials": 4,
+          "accuracy": 0.5
+        },
+        "strategy": {
+          "valid_trials": 8,
+          "accuracy": 0.375
+        },
+        "prerequisites": {
+          "valid_trials": 4,
+          "accuracy": 0.25
+        },
+        "battle": {
+          "valid_trials": 4,
+          "accuracy": 0
+        },
+        "recovery": {
+          "valid_trials": 6,
+          "accuracy": 0.5
+        },
+        "abstention": {
+          "valid_trials": 2,
+          "accuracy": 0.5
+        }
+      }
+    },
+    {
+      "model_id": "laya-english",
+      "track": "story",
+      "seed": 42,
+      "repetition": 0,
+      "outcome": "model_abstention",
+      "reason": "strategy:no_selection",
+      "raw_s": 17.749907707970124,
+      "effective_s": 17.749907707970124,
+      "budget_s": 20.0,
+      "shutdown_overrun_s": 0,
+      "rtt_credit_s": 0.0,
+      "calls": 3,
+      "input_tokens_known": 1331,
+      "output_tokens_known": 0,
+      "usage_missing_calls": 0,
+      "latency_median_s": 0.10512137500336394,
+      "latency_p95_s": 0.15280133398482576,
+      "encoding_reported_questions": 3,
+      "setup_s": 0.8252521250396967,
+      "actual_models": [
+        "aac6fef/laya-mlx@20aed815fc6acde75733882e7ec0e3f28aeb9717"
+      ],
+      "incomplete_evidence": false,
+      "scored_observation": true,
+      "story_objectives": 0,
+      "scored_until_s": 17.73491712496616,
+      "objective_total": 11,
+      "badges": 0,
+      "dex_seen": 0,
+      "dex_owned": 0,
+      "sidequests": 0,
+      "map_count": 1,
+      "max_level": 0,
+      "mean_level": 0,
+      "total_level": 0,
+      "party_experience": 0,
+      "money_initial": 3000,
+      "money_final": 3000,
+      "money_peak": 3000,
+      "money_gained": 0,
+      "money_lost": 0,
+      "battle_defeats": 0,
+      "observed_party_wipes": 0,
+      "unsuccessful_operations": 0,
+      "rejected_actions": 1,
+      "protocol_errors": 0,
+      "suspected_stalls": 0,
+      "actions": 0,
+      "milestones": {}
+    },
+    {
+      "model_id": "example-stub",
+      "track": "story",
+      "seed": 42,
+      "repetition": 0,
+      "outcome": "time_limit",
+      "reason": "effective_time_budget",
+      "raw_s": 20.584693749959115,
+      "effective_s": 20.584693749959115,
+      "budget_s": 20.0,
+      "shutdown_overrun_s": 0.5846937499591149,
+      "rtt_credit_s": 0.0,
+      "calls": 19,
+      "input_tokens_known": 0,
+      "output_tokens_known": 0,
+      "usage_missing_calls": 19,
+      "latency_median_s": 0.00018866703612729907,
+      "latency_p95_s": 0.00041879102354869246,
+      "encoding_reported_questions": 0,
+      "setup_s": 0.6419870830141008,
+      "actual_models": [
+        "example-first-option-stub"
+      ],
+      "incomplete_evidence": false,
+      "scored_observation": true,
+      "story_objectives": 2,
+      "scored_until_s": 19.199558832973707,
+      "objective_total": 11,
+      "badges": 0,
+      "dex_seen": 5,
+      "dex_owned": 1,
+      "sidequests": 0,
+      "map_count": 6,
+      "max_level": 6,
+      "mean_level": 6.0,
+      "total_level": 6,
+      "party_experience": 205,
+      "money_initial": 3000,
+      "money_final": 3175,
+      "money_peak": 3175,
+      "money_gained": 175,
+      "money_lost": 0,
+      "battle_defeats": 0,
+      "observed_party_wipes": 0,
+      "unsuccessful_operations": 0,
+      "rejected_actions": 0,
+      "protocol_errors": 0,
+      "suspected_stalls": 0,
+      "actions": 7,
+      "milestones": {
+        "get-starter": {
+          "effective_s": 6.378780957951676,
+          "raw_s": 6.378780957951676,
+          "frame": 2986
+        },
+        "get-pokedex": {
+          "effective_s": 16.705439916986506,
+          "raw_s": 16.705439916986506,
+          "frame": 9045
+        }
+      }
+    }
+  ],
+  "aggregates": [
+    {
+      "model_id": "laya-english",
+      "track": "decisions",
+      "runs": 1,
+      "outcomes": {
+        "completed": 1
+      },
+      "accuracy": {
+        "n": 1,
+        "mean": 0.59375,
+        "median": 0.59375,
+        "min": 0.59375,
+        "max": 0.59375,
+        "stdev": null
+      },
+      "coverage": {
+        "n": 1,
+        "mean": 1.0,
+        "median": 1.0,
+        "min": 1.0,
+        "max": 1.0,
+        "stdev": null
+      },
+      "order_consistency": {
+        "n": 1,
+        "mean": 0.625,
+        "median": 0.625,
+        "min": 0.625,
+        "max": 0.625,
+        "stdev": null
+      },
+      "brier": {
+        "n": 1,
+        "mean": 0.5985004325,
+        "median": 0.5985004325,
+        "min": 0.5985004325,
+        "max": 0.5985004325,
+        "stdev": null
+      }
+    },
+    {
+      "model_id": "example-stub",
+      "track": "decisions",
+      "runs": 1,
+      "outcomes": {
+        "completed": 1
+      },
+      "accuracy": {
+        "n": 1,
+        "mean": 0.40625,
+        "median": 0.40625,
+        "min": 0.40625,
+        "max": 0.40625,
+        "stdev": null
+      },
+      "coverage": {
+        "n": 1,
+        "mean": 1.0,
+        "median": 1.0,
+        "min": 1.0,
+        "max": 1.0,
+        "stdev": null
+      },
+      "order_consistency": {
+        "n": 1,
+        "mean": 0,
+        "median": 0,
+        "min": 0,
+        "max": 0,
+        "stdev": null
+      },
+      "brier": {
+        "n": 0,
+        "mean": null,
+        "median": null,
+        "min": null,
+        "max": null,
+        "stdev": null
+      }
+    },
+    {
+      "model_id": "laya-english",
+      "track": "story",
+      "runs": 1,
+      "outcomes": {
+        "model_abstention": 1
+      },
+      "story_objectives": {
+        "n": 1,
+        "mean": 0,
+        "median": 0,
+        "min": 0,
+        "max": 0,
+        "stdev": null
+      },
+      "badges": {
+        "n": 1,
+        "mean": 0,
+        "median": 0,
+        "min": 0,
+        "max": 0,
+        "stdev": null
+      },
+      "dex_owned": {
+        "n": 1,
+        "mean": 0,
+        "median": 0,
+        "min": 0,
+        "max": 0,
+        "stdev": null
+      },
+      "sidequests": {
+        "n": 1,
+        "mean": 0,
+        "median": 0,
+        "min": 0,
+        "max": 0,
+        "stdev": null
+      },
+      "max_level": {
+        "n": 1,
+        "mean": 0,
+        "median": 0,
+        "min": 0,
+        "max": 0,
+        "stdev": null
+      },
+      "money_gained": {
+        "n": 1,
+        "mean": 0,
+        "median": 0,
+        "min": 0,
+        "max": 0,
+        "stdev": null
+      },
+      "effective_s": {
+        "n": 1,
+        "mean": 17.749907707970124,
+        "median": 17.749907707970124,
+        "min": 17.749907707970124,
+        "max": 17.749907707970124,
+        "stdev": null
+      }
+    },
+    {
+      "model_id": "example-stub",
+      "track": "story",
+      "runs": 1,
+      "outcomes": {
+        "time_limit": 1
+      },
+      "story_objectives": {
+        "n": 1,
+        "mean": 2,
+        "median": 2,
+        "min": 2,
+        "max": 2,
+        "stdev": null
+      },
+      "badges": {
+        "n": 1,
+        "mean": 0,
+        "median": 0,
+        "min": 0,
+        "max": 0,
+        "stdev": null
+      },
+      "dex_owned": {
+        "n": 1,
+        "mean": 1,
+        "median": 1,
+        "min": 1,
+        "max": 1,
+        "stdev": null
+      },
+      "sidequests": {
+        "n": 1,
+        "mean": 0,
+        "median": 0,
+        "min": 0,
+        "max": 0,
+        "stdev": null
+      },
+      "max_level": {
+        "n": 1,
+        "mean": 6,
+        "median": 6,
+        "min": 6,
+        "max": 6,
+        "stdev": null
+      },
+      "money_gained": {
+        "n": 1,
+        "mean": 175,
+        "median": 175,
+        "min": 175,
+        "max": 175,
+        "stdev": null
+      },
+      "effective_s": {
+        "n": 1,
+        "mean": 20.584693749959115,
+        "median": 20.584693749959115,
+        "min": 20.584693749959115,
+        "max": 20.584693749959115,
+        "stdev": null
+      }
+    }
+  ]
+}

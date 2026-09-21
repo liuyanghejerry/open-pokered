@@ -1,0 +1,7 @@
+{
+  "exit_code": 1,
+  "interrupted": false,
+  "forced_termination": false,
+  "wall_s": 6.643026500009,
+  "grace_policy": "SIGINT at the effective deadline; terminate entire private process group after 8s, kill after another 2s."
+}

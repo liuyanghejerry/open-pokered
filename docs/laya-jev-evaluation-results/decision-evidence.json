@@ -1,0 +1,1777 @@
+{
+  "jev": {
+    "first_requests": [
+      {
+        "number": 2,
+        "backend": "jev",
+        "warmup": false,
+        "success": true,
+        "started_clock": {
+          "start_monotonic": 477394.467627416,
+          "raw_s": 4.782475916959811,
+          "rtt_credit_s": 0.0,
+          "effective_s": 4.782475916959811,
+          "limit_s": 1200,
+          "max_rtt_credit_s": 300
+        },
+        "state": {
+          "world": {
+            "flags": {},
+            "bag": {},
+            "party": [],
+            "badges": 0,
+            "map": "RedsHouse2F",
+            "x": 3,
+            "y": 6,
+            "money": 3000,
+            "coins": 0,
+            "fully_recovered": false,
+            "object_visibility": {},
+            "cleared_terrain": [],
+            "navigation_revision": 1,
+            "block_values": {},
+            "recent_battle_defeats": [],
+            "total_completed_event_flags": 0
+          },
+          "completed_objectives": [],
+          "remaining_objectives": [
+            "Choose a starter Pokémon",
+            "Receive the Pokédex from Prof. Oak",
+            "Defeat Brock, the Pewter Gym Leader",
+            "Defeat Misty, the Cerulean Gym Leader",
+            "Defeat Lt. Surge, the Vermilion Gym Leader",
+            "Defeat Erika, the Celadon Gym Leader",
+            "Defeat Koga, the Fuchsia Gym Leader",
+            "Defeat Sabrina, the Saffron Gym Leader",
+            "Defeat Blaine, the Cinnabar Gym Leader",
+            "Defeat Giovanni, the Viridian Gym Leader",
+            "Defeat the Champion and enter the Hall of Fame"
+          ],
+          "navigation": {
+            "PalletTown": {
+              "topological_route_found": true,
+              "via": [
+                "RedsHouse1F",
+                "PalletTown"
+              ]
+            },
+            "ViridianMart": {
+              "topological_route_found": true,
+              "via": [
+                "RedsHouse1F",
+                "PalletTown",
+                "Route1",
+                "ViridianCity",
+                "ViridianMart"
+              ]
+            }
+          },
+          "known_navigation_failures": {},
+          "recent_outcomes": []
+        },
+        "questions": {
+          "strategy": {
+            "type": "choice",
+            "instructions": "Which attainable story or preparation subgoal should the player pursue next? Healing, training and improving weak attacks are valid indirect progress toward later battles. The action layer can travel between maps before triggering a script; a subgoal need not be on the current map. Candidates already have satisfied script preconditions; winning battles is still an execution outcome. Topological routes may have local obstacles. Use the supplied script facts and known navigation failures; prefer resolving an observed blocker before retrying its destination unless prerequisites have changed. A known tile route to the specific trigger is stronger evidence than a map-only failure: another region on that same map can still be reachable. Prefer reachable prerequisites when the requested trigger has no tile route. Prefer necessary early story prerequisites before optional detours or difficult battles.",
+            "criteria": {
+              "subgoal:0": "{\"establish\": [\"flag\", \"EVENT_OAK_APPEARED_IN_PALLET\", true], \"advances\": [\"Choose a starter Pok\\u00e9mon\", \"Receive the Pok\\u00e9dex from Prof. Oak\"], \"ways\": [{\"map\": \"PalletTown\", \"script\": \"PalletTown:coordNorthExit\", \"produces\": [\"flag\", \"EVENT_OAK_APPEARED_IN_PALLET\", true], \"confirmation_options\": [], \"preceding_effects\": []}], \"context\": null}",
+              "subgoal:1": "{\"establish\": [\"item\", \"OAKS_PARCEL\", true], \"advances\": [\"Receive the Pok\\u00e9dex from Prof. Oak\"], \"ways\": [{\"map\": \"ViridianMart\", \"script\": \"ViridianMart:@load\", \"produces\": [\"item\", \"OAKS_PARCEL\", true], \"confirmation_options\": [], \"preceding_effects\": [[\"movement\", \"movePlayer\", true]]}], \"context\": null}",
+              "none": "None of these candidates can advance the current goal."
+            }
+          }
+        },
+        "question_ids": [
+          "strategy"
+        ],
+        "request_sha256": "1b8ddf59d63406d2cbc80893e5fa55d10d4d9edb6f2736d8bf3b2f35a4af7a2a",
+        "input_json_bytes": 2941,
+        "model": "jev-1.13.0",
+        "input_tokens": 1134,
+        "output_tokens": 50,
+        "answers": {
+          "strategy": {
+            "choice": "subgoal:0",
+            "probabilities": {
+              "none": 0.03,
+              "subgoal:1": 0.11,
+              "subgoal:0": 0.86
+            },
+            "confidence": 0.8
+          }
+        },
+        "latency_s": 0.8086693750228733,
+        "transport_samples": [
+          {
+            "rtt_s": 0.265,
+            "headers_wall_s": 0.8084871250321157,
+            "http_status": 200
+          }
+        ],
+        "rtt_credit_s": 0.265,
+        "clock": {
+          "start_monotonic": 477394.467627416,
+          "raw_s": 5.591152917011641,
+          "rtt_credit_s": 0.265,
+          "effective_s": 5.326152917011641,
+          "limit_s": 1200,
+          "max_rtt_credit_s": 300
+        }
+      },
+      {
+        "number": 3,
+        "backend": "jev",
+        "warmup": false,
+        "success": true,
+        "started_clock": {
+          "start_monotonic": 477394.467627416,
+          "raw_s": 5.5986699589993805,
+          "rtt_credit_s": 0.265,
+          "effective_s": 5.333669958999381,
+          "limit_s": 1200,
+          "max_rtt_credit_s": 300
+        },
+        "state": {
+          "subgoal": [
+            "flag",
+            "EVENT_OAK_APPEARED_IN_PALLET",
+            true
+          ],
+          "advances": [
+            "Choose a starter Pokémon",
+            "Receive the Pokédex from Prof. Oak"
+          ],
+          "local_state": {
+            "flags": {},
+            "bag": {},
+            "party": [],
+            "badges": 0,
+            "map": "RedsHouse2F",
+            "x": 3,
+            "y": 6,
+            "money": 3000,
+            "coins": 0,
+            "fully_recovered": false,
+            "object_visibility": {},
+            "cleared_terrain": [],
+            "navigation_revision": 1,
+            "block_values": {},
+            "recent_battle_defeats": []
+          },
+          "recent_outcomes": [],
+          "strategy_context": {}
+        },
+        "questions": {
+          "action": {
+            "type": "choice",
+            "instructions": "Which next operation makes progress toward the current subgoal? Several operations may be needed to finish it. Select a live trigger, travel step, recovery or training operation using its described effects. Script effects describe what will happen when the intended interaction completes. Travel or interaction can be interrupted by other trainers: if recent attempts gained battle flags, retrying the intended NPC is valid progress.",
+            "criteria": {
+              "action:0": "{\"operation\": \"travel_to:PalletTown\", \"script_effects\": {\"map\": \"PalletTown\", \"script\": \"PalletTown:coordNorthExit\", \"produces\": [\"flag\", \"EVENT_OAK_APPEARED_IN_PALLET\", true], \"confirmation_options\": [], \"preceding_effects\": []}, \"navigation\": {\"map_hops\": 2, \"via\": [\"RedsHouse1F\", \"PalletTown\"], \"unvisited_maps\": [\"RedsHouse1F\", \"PalletTown\"], \"caution\": \"Travel can consume HP and PP in encounters; recovery should prefer a short known route.\"}}",
+              "none": "None of these candidates can advance the current goal."
+            }
+          }
+        },
+        "question_ids": [
+          "action"
+        ],
+        "request_sha256": "d21976f1da26d824101643a6eab5d129edfc78985584092dc820d6a98a261882",
+        "input_json_bytes": 1568,
+        "model": "jev-1.13.0",
+        "input_tokens": 737,
+        "output_tokens": 35,
+        "answers": {
+          "action": {
+            "choice": "action:0",
+            "probabilities": {
+              "action:0": 1.0,
+              "none": 0.0
+            },
+            "confidence": 1.0
+          }
+        },
+        "latency_s": 0.8220717079821043,
+        "transport_samples": [
+          {
+            "rtt_s": 0.255,
+            "headers_wall_s": 0.8217823749873787,
+            "http_status": 200
+          }
+        ],
+        "rtt_credit_s": 0.255,
+        "clock": {
+          "start_monotonic": 477394.467627416,
+          "raw_s": 6.420756542007439,
+          "rtt_credit_s": 0.52,
+          "effective_s": 5.900756542007439,
+          "limit_s": 1200,
+          "max_rtt_credit_s": 300
+        }
+      },
+      {
+        "number": 4,
+        "backend": "jev",
+        "warmup": false,
+        "success": true,
+        "started_clock": {
+          "start_monotonic": 477394.467627416,
+          "raw_s": 6.722012416983489,
+          "rtt_credit_s": 0.52,
+          "effective_s": 6.202012416983489,
+          "limit_s": 1200,
+          "max_rtt_credit_s": 300
+        },
+        "state": {
+          "world": {
+            "flags": {},
+            "bag": {},
+            "party": [],
+            "badges": 0,
+            "map": "OaksLab",
+            "x": 5,
+            "y": 3,
+            "money": 3000,
+            "coins": 0,
+            "fully_recovered": false,
+            "object_visibility": {
+              "OAKS_LAB_OBJ_1": true,
+              "OAKS_LAB_OBJ_2": true,
+              "OAKS_LAB_OBJ_3": true,
+              "OAKS_LAB_OBJ_4": true,
+              "OAKS_LAB_OBJ_5": true,
+              "OAKS_LAB_OBJ_6": true,
+              "OAKS_LAB_OBJ_7": true,
+              "OAKS_LAB_OBJ_8": false
+            },
+            "cleared_terrain": [],
+            "navigation_revision": 4,
+            "block_values": {},
+            "recent_battle_defeats": [],
+            "total_completed_event_flags": 7
+          },
+          "completed_objectives": [],
+          "remaining_objectives": [
+            "Choose a starter Pokémon",
+            "Receive the Pokédex from Prof. Oak",
+            "Defeat Brock, the Pewter Gym Leader",
+            "Defeat Misty, the Cerulean Gym Leader",
+            "Defeat Lt. Surge, the Vermilion Gym Leader",
+            "Defeat Erika, the Celadon Gym Leader",
+            "Defeat Koga, the Fuchsia Gym Leader",
+            "Defeat Sabrina, the Saffron Gym Leader",
+            "Defeat Blaine, the Cinnabar Gym Leader",
+            "Defeat Giovanni, the Viridian Gym Leader",
+            "Defeat the Champion and enter the Hall of Fame"
+          ],
+          "navigation": {
+            "OaksLab": {
+              "topological_route_found": true,
+              "via": []
+            },
+            "ViridianMart": {
+              "topological_route_found": true,
+              "via": [
+                "PalletTown",
+                "Route1",
+                "ViridianCity",
+                "ViridianMart"
+              ]
+            }
+          },
+          "known_navigation_failures": {},
+          "recent_outcomes": [
+            {
+              "operation": "travel_to:PalletTown",
+              "result": "reached",
+              "flags_gained": [
+                "EVENT_FOLLOWED_OAK_INTO_LAB",
+                "EVENT_FOLLOWED_OAK_INTO_LAB_2",
+                "EVENT_OAK_APPEARED_IN_PALLET",
+                "EVENT_OAK_ASKED_TO_CHOOSE_MON",
+                "__OBJ_HIDDEN_OAKS_LAB_OBJ_8",
+                "__OBJ_HIDDEN_PALLET_TOWN_OBJ_1",
+                "__OBJ_SHOWN_OAKS_LAB_OBJ_5"
+              ],
+              "bag_after": {},
+              "map": "OaksLab",
+              "story_state_changed": true,
+              "intended_effect_observed": true
+            }
+          ]
+        },
+        "questions": {
+          "strategy": {
+            "type": "choice",
+            "instructions": "Which attainable story or preparation subgoal should the player pursue next? Healing, training and improving weak attacks are valid indirect progress toward later battles. The action layer can travel between maps before triggering a script; a subgoal need not be on the current map. Candidates already have satisfied script preconditions; winning battles is still an execution outcome. Topological routes may have local obstacles. Use the supplied script facts and known navigation failures; prefer resolving an observed blocker before retrying its destination unless prerequisites have changed. A known tile route to the specific trigger is stronger evidence than a map-only failure: another region on that same map can still be reachable. Prefer reachable prerequisites when the requested trigger has no tile route. Prefer necessary early story prerequisites before optional detours or difficult battles.",
+            "criteria": {
+              "subgoal:0": "{\"establish\": [\"flag\", \"EVENT_GOT_STARTER\", true], \"advances\": [\"Choose a starter Pok\\u00e9mon\", \"Receive the Pok\\u00e9dex from Prof. Oak\"], \"ways\": [{\"map\": \"OaksLab\", \"script\": \"OaksLab:talkCharmanderBall\", \"produces\": [\"flag\", \"EVENT_GOT_STARTER\", true], \"confirmation_options\": [\"YES\"], \"preceding_effects\": [[\"visibility\", \"OAKS_LAB_OBJ_2\", false], [\"pokemon\", \"CHARMANDER\", 5.0]]}, {\"map\": \"OaksLab\", \"script\": \"OaksLab:talkSquirtleBall\", \"produces\": [\"flag\", \"EVENT_GOT_STARTER\", true], \"confirmation_options\": [\"YES\"], \"preceding_effects\": [[\"visibility\", \"OAKS_LAB_OBJ_3\", false], [\"pokemon\", \"SQUIRTLE\", 5.0]]}, {\"map\": \"OaksLab\", \"script\": \"OaksLab:talkBulbasaurBall\", \"produces\": [\"flag\", \"EVENT_GOT_STARTER\", true], \"confirmation_options\": [\"YES\"], \"preceding_effects\": [[\"visibility\", \"OAKS_LAB_OBJ_4\", false], [\"pokemon\", \"BULBASAUR\", 5.0]]}], \"context\": null}",
+              "subgoal:1": "{\"establish\": [\"item\", \"OAKS_PARCEL\", true], \"advances\": [\"Receive the Pok\\u00e9dex from Prof. Oak\"], \"ways\": [{\"map\": \"ViridianMart\", \"script\": \"ViridianMart:@load\", \"produces\": [\"item\", \"OAKS_PARCEL\", true], \"confirmation_options\": [], \"preceding_effects\": [[\"movement\", \"movePlayer\", true]]}], \"context\": null}",
+              "none": "None of these candidates can advance the current goal."
+            }
+          }
+        },
+        "question_ids": [
+          "strategy"
+        ],
+        "request_sha256": "dce905f56f1cb5b3c9cdd7ba5989b8bc3333c428e0f2343c4c2ee4ec051c27fb",
+        "input_json_bytes": 4069,
+        "model": "jev-1.13.0",
+        "input_tokens": 1565,
+        "output_tokens": 50,
+        "answers": {
+          "strategy": {
+            "choice": "subgoal:0",
+            "probabilities": {
+              "subgoal:1": 0.03,
+              "none": 0.0,
+              "subgoal:0": 0.97
+            },
+            "confidence": 0.96
+          }
+        },
+        "latency_s": 0.7681049160310067,
+        "transport_samples": [
+          {
+            "rtt_s": 0.264,
+            "headers_wall_s": 0.7679033750318922,
+            "http_status": 200
+          }
+        ],
+        "rtt_credit_s": 0.264,
+        "clock": {
+          "start_monotonic": 477394.467627416,
+          "raw_s": 7.490124458970968,
+          "rtt_credit_s": 0.784,
+          "effective_s": 6.706124458970968,
+          "limit_s": 1200,
+          "max_rtt_credit_s": 300
+        }
+      },
+      {
+        "number": 5,
+        "backend": "jev",
+        "warmup": false,
+        "success": true,
+        "started_clock": {
+          "start_monotonic": 477394.467627416,
+          "raw_s": 7.497227458981797,
+          "rtt_credit_s": 0.784,
+          "effective_s": 6.713227458981797,
+          "limit_s": 1200,
+          "max_rtt_credit_s": 300
+        },
+        "state": {
+          "subgoal": [
+            "flag",
+            "EVENT_GOT_STARTER",
+            true
+          ],
+          "advances": [
+            "Choose a starter Pokémon",
+            "Receive the Pokédex from Prof. Oak"
+          ],
+          "local_state": {
+            "flags": {
+              "EVENT_FOLLOWED_OAK_INTO_LAB": true,
+              "EVENT_FOLLOWED_OAK_INTO_LAB_2": true,
+              "EVENT_OAK_APPEARED_IN_PALLET": true,
+              "EVENT_OAK_ASKED_TO_CHOOSE_MON": true,
+              "__OBJ_HIDDEN_OAKS_LAB_OBJ_5": false,
+              "__OBJ_HIDDEN_OAKS_LAB_OBJ_8": true,
+              "__OBJ_HIDDEN_PALLET_TOWN_OBJ_1": true,
+              "__OBJ_SHOWN_OAKS_LAB_OBJ_5": true,
+              "__OBJ_SHOWN_OAKS_LAB_OBJ_8": false,
+              "__OBJ_SHOWN_PALLET_TOWN_OBJ_1": false
+            },
+            "bag": {},
+            "party": [],
+            "badges": 0,
+            "map": "OaksLab",
+            "x": 5,
+            "y": 3,
+            "money": 3000,
+            "coins": 0,
+            "fully_recovered": false,
+            "object_visibility": {
+              "OAKS_LAB_OBJ_1": true,
+              "OAKS_LAB_OBJ_2": true,
+              "OAKS_LAB_OBJ_3": true,
+              "OAKS_LAB_OBJ_4": true,
+              "OAKS_LAB_OBJ_5": true,
+              "OAKS_LAB_OBJ_6": true,
+              "OAKS_LAB_OBJ_7": true,
+              "OAKS_LAB_OBJ_8": false
+            },
+            "cleared_terrain": [],
+            "navigation_revision": 4,
+            "block_values": {},
+            "recent_battle_defeats": []
+          },
+          "recent_outcomes": [
+            {
+              "operation": "travel_to:PalletTown",
+              "result": "reached",
+              "flags_gained": [
+                "EVENT_FOLLOWED_OAK_INTO_LAB",
+                "EVENT_FOLLOWED_OAK_INTO_LAB_2",
+                "EVENT_OAK_APPEARED_IN_PALLET",
+                "EVENT_OAK_ASKED_TO_CHOOSE_MON",
+                "__OBJ_HIDDEN_OAKS_LAB_OBJ_8",
+                "__OBJ_HIDDEN_PALLET_TOWN_OBJ_1",
+                "__OBJ_SHOWN_OAKS_LAB_OBJ_5"
+              ],
+              "bag_after": {},
+              "map": "OaksLab",
+              "story_state_changed": true,
+              "intended_effect_observed": true
+            }
+          ],
+          "strategy_context": {}
+        },
+        "questions": {
+          "action": {
+            "type": "choice",
+            "instructions": "Which next operation makes progress toward the current subgoal? Several operations may be needed to finish it. Select a live trigger, travel step, recovery or training operation using its described effects. Script effects describe what will happen when the intended interaction completes. Travel or interaction can be interrupted by other trainers: if recent attempts gained battle flags, retrying the intended NPC is valid progress.",
+            "criteria": {
+              "action:0": "{\"operation\": \"interact_with:npc:1\", \"script_effects\": {\"map\": \"OaksLab\", \"script\": \"OaksLab:talkCharmanderBall\", \"produces\": [\"flag\", \"EVENT_GOT_STARTER\", true], \"confirmation_options\": [\"YES\"], \"preceding_effects\": [[\"visibility\", \"OAKS_LAB_OBJ_2\", false], [\"pokemon\", \"CHARMANDER\", 5.0]]}}",
+              "action:1": "{\"operation\": \"interact_with:npc:2\", \"script_effects\": {\"map\": \"OaksLab\", \"script\": \"OaksLab:talkSquirtleBall\", \"produces\": [\"flag\", \"EVENT_GOT_STARTER\", true], \"confirmation_options\": [\"YES\"], \"preceding_effects\": [[\"visibility\", \"OAKS_LAB_OBJ_3\", false], [\"pokemon\", \"SQUIRTLE\", 5.0]]}}",
+              "action:2": "{\"operation\": \"interact_with:npc:3\", \"script_effects\": {\"map\": \"OaksLab\", \"script\": \"OaksLab:talkBulbasaurBall\", \"produces\": [\"flag\", \"EVENT_GOT_STARTER\", true], \"confirmation_options\": [\"YES\"], \"preceding_effects\": [[\"visibility\", \"OAKS_LAB_OBJ_4\", false], [\"pokemon\", \"BULBASAUR\", 5.0]]}}",
+              "none": "None of these candidates can advance the current goal."
+            }
+          }
+        },
+        "question_ids": [
+          "action"
+        ],
+        "request_sha256": "45471396605e04d148b23c62325e02b8e1d831acb46e85c855f0386ec77d7f4e",
+        "input_json_bytes": 3031,
+        "model": "jev-1.13.0",
+        "input_tokens": 1351,
+        "output_tokens": 53,
+        "answers": {
+          "action": {
+            "choice": "action:0",
+            "probabilities": {
+              "action:1": 0.03,
+              "action:0": 0.65,
+              "none": 0.02,
+              "action:2": 0.3
+            },
+            "confidence": 0.53
+          }
+        },
+        "latency_s": 0.8170230829855427,
+        "transport_samples": [
+          {
+            "rtt_s": 0.001,
+            "headers_wall_s": 0.8168354159570299,
+            "http_status": 200
+          }
+        ],
+        "rtt_credit_s": 0.001,
+        "clock": {
+          "start_monotonic": 477394.467627416,
+          "raw_s": 8.314256916986778,
+          "rtt_credit_s": 0.785,
+          "effective_s": 7.529256916986778,
+          "limit_s": 1200,
+          "max_rtt_credit_s": 300
+        }
+      },
+      {
+        "number": 6,
+        "backend": "jev",
+        "warmup": false,
+        "success": true,
+        "started_clock": {
+          "start_monotonic": 477394.467627416,
+          "raw_s": 8.336255875008646,
+          "rtt_credit_s": 0.785,
+          "effective_s": 7.551255875008646,
+          "limit_s": 1200,
+          "max_rtt_credit_s": 300
+        },
+        "state": {
+          "subgoal": [
+            "flag",
+            "EVENT_GOT_STARTER",
+            true
+          ],
+          "dialogue": "So! You want the fire\nPOKeMON, CHARMANDER?",
+          "current_map": "OaksLab",
+          "travel_in_progress": null,
+          "script": {
+            "map": "OaksLab",
+            "script": "OaksLab:talkCharmanderBall",
+            "produces": [
+              "flag",
+              "EVENT_GOT_STARTER",
+              true
+            ],
+            "confirmation_options": [
+              "YES"
+            ],
+            "preceding_effects": [
+              [
+                "visibility",
+                "OAKS_LAB_OBJ_2",
+                false
+              ],
+              [
+                "pokemon",
+                "CHARMANDER",
+                5.0
+              ]
+            ]
+          },
+          "menu": [
+            "YES",
+            "NO"
+          ]
+        },
+        "questions": {
+          "action": {
+            "type": "choice",
+            "instructions": "Which menu option advances the current subgoal? Use the dialogue and the script confirmation options to interpret the choice. When travelling, choose the option that permits reaching the intended destination; a gate or exit choice can be necessary before the destination provides the final effect.",
+            "criteria": {
+              "0": "YES",
+              "1": "NO",
+              "none": "None of these candidates can advance the current goal."
+            }
+          }
+        },
+        "question_ids": [
+          "action"
+        ],
+        "request_sha256": "6dad06bd62bd779988b4abf96e6a13791d5ad4b1ae53a14087b37426d7b42a12",
+        "input_json_bytes": 908,
+        "model": "jev-1.13.0",
+        "input_tokens": 561,
+        "output_tokens": 38,
+        "answers": {
+          "action": {
+            "choice": "0",
+            "probabilities": {
+              "0": 1.0,
+              "none": 0.0,
+              "1": 0.0
+            },
+            "confidence": 1.0
+          }
+        },
+        "latency_s": 1.0020037079812028,
+        "transport_samples": [
+          {
+            "rtt_s": 0.469,
+            "headers_wall_s": 1.0018418749677949,
+            "http_status": 200
+          }
+        ],
+        "rtt_credit_s": 0.469,
+        "clock": {
+          "start_monotonic": 477394.467627416,
+          "raw_s": 9.338265999977011,
+          "rtt_credit_s": 1.254,
+          "effective_s": 8.084265999977012,
+          "limit_s": 1200,
+          "max_rtt_credit_s": 300
+        }
+      },
+      {
+        "number": 7,
+        "backend": "jev",
+        "warmup": false,
+        "success": true,
+        "started_clock": {
+          "start_monotonic": 477394.467627416,
+          "raw_s": 12.262389833980706,
+          "rtt_credit_s": 1.254,
+          "effective_s": 11.008389833980706,
+          "limit_s": 1200,
+          "max_rtt_credit_s": 300
+        },
+        "state": {
+          "world": {
+            "flags": {},
+            "bag": {},
+            "party": [
+              {
+                "species": "Charmander",
+                "level": 5,
+                "hp": 18,
+                "max_hp": 18,
+                "status": "None",
+                "moves": [
+                  "Scratch",
+                  "Growl",
+                  "None",
+                  "None"
+                ],
+                "pp": [
+                  35,
+                  40,
+                  0,
+                  0
+                ]
+              }
+            ],
+            "badges": 0,
+            "map": "OaksLab",
+            "x": 5,
+            "y": 3,
+            "money": 3000,
+            "coins": 0,
+            "fully_recovered": true,
+            "object_visibility": {
+              "OAKS_LAB_OBJ_1": true,
+              "OAKS_LAB_OBJ_2": false,
+              "OAKS_LAB_OBJ_3": false,
+              "OAKS_LAB_OBJ_4": true,
+              "OAKS_LAB_OBJ_5": true,
+              "OAKS_LAB_OBJ_6": true,
+              "OAKS_LAB_OBJ_7": true,
+              "OAKS_LAB_OBJ_8": false
+            },
+            "cleared_terrain": [],
+            "navigation_revision": 4,
+            "block_values": {},
+            "recent_battle_defeats": [],
+            "total_completed_event_flags": 10
+          },
+          "completed_objectives": [
+            "get-starter"
+          ],
+          "remaining_objectives": [
+            "Receive the Pokédex from Prof. Oak",
+            "Defeat Brock, the Pewter Gym Leader",
+            "Defeat Misty, the Cerulean Gym Leader",
+            "Defeat Lt. Surge, the Vermilion Gym Leader",
+            "Defeat Erika, the Celadon Gym Leader",
+            "Defeat Koga, the Fuchsia Gym Leader",
+            "Defeat Sabrina, the Saffron Gym Leader",
+            "Defeat Blaine, the Cinnabar Gym Leader",
+            "Defeat Giovanni, the Viridian Gym Leader",
+            "Defeat the Champion and enter the Hall of Fame"
+          ],
+          "navigation": {
+            "OaksLab": {
+              "topological_route_found": true,
+              "via": []
+            },
+            "ViridianMart": {
+              "topological_route_found": true,
+              "via": [
+                "PalletTown",
+                "Route1",
+                "ViridianCity",
+                "ViridianMart"
+              ]
+            },
+            "PewterGym": {
+              "topological_route_found": true,
+              "via": [
+                "PalletTown",
+                "Route1",
+                "ViridianCity",
+                "Route2",
+                "PewterCity",
+                "PewterGym"
+              ]
+            },
+            "CeruleanGym": {
+              "topological_route_found": true,
+              "via": [
+                "PalletTown",
+                "Route1",
+                "ViridianCity",
+                "Route2",
+                "PewterCity",
+                "Route3",
+                "Route4",
+                "CeruleanCity",
+                "CeruleanGym"
+              ]
+            },
+            "VermilionGym": {
+              "topological_route_found": true,
+              "via": [
+                "PalletTown",
+                "Route1",
+                "ViridianCity",
+                "Route2",
+                "DiglettsCaveRoute2",
+                "DiglettsCave",
+                "DiglettsCaveRoute11",
+                "Route11",
+                "VermilionCity",
+                "VermilionGym"
+              ]
+            },
+            "CeladonGym": {
+              "topological_route_found": true,
+              "via": [
+                "PalletTown",
+                "Route21",
+                "CinnabarIsland",
+                "Route20",
+                "Route19",
+                "FuchsiaCity",
+                "Route18",
+                "Route17",
+                "Route16",
+                "CeladonCity",
+                "CeladonGym"
+              ]
+            },
+            "FuchsiaGym": {
+              "topological_route_found": true,
+              "via": [
+                "PalletTown",
+                "Route21",
+                "CinnabarIsland",
+                "Route20",
+                "Route19",
+                "FuchsiaCity",
+                "FuchsiaGym"
+              ]
+            },
+            "SaffronGym": {
+              "topological_route_found": true,
+              "via": [
+                "PalletTown",
+                "Route1",
+                "ViridianCity",
+                "Route2",
+                "PewterCity",
+                "Route3",
+                "Route4",
+                "CeruleanCity",
+                "Route5",
+                "SaffronCity",
+                "SaffronGym"
+              ]
+            },
+            "CinnabarGym": {
+              "topological_route_found": true,
+              "via": [
+                "PalletTown",
+                "Route21",
+                "CinnabarIsland",
+                "CinnabarGym"
+              ]
+            },
+            "ViridianGym": {
+              "topological_route_found": true,
+              "via": [
+                "PalletTown",
+                "Route1",
+                "ViridianCity",
+                "ViridianGym"
+              ]
+            },
+            "ChampionsRoom": {
+              "topological_route_found": true,
+              "via": [
+                "PalletTown",
+                "Route1",
+                "ViridianCity",
+                "Route22",
+                "Route23",
+                "IndigoPlateau",
+                "IndigoPlateauLobby",
+                "LoreleisRoom",
+                "BrunosRoom",
+                "AgathasRoom",
+                "LancesRoom",
+                "ChampionsRoom"
+              ]
+            }
+          },
+          "known_navigation_failures": {},
+          "recent_outcomes": [
+            {
+              "operation": "travel_to:PalletTown",
+              "result": "reached",
+              "flags_gained": [
+                "EVENT_FOLLOWED_OAK_INTO_LAB",
+                "EVENT_FOLLOWED_OAK_INTO_LAB_2",
+                "EVENT_OAK_APPEARED_IN_PALLET",
+                "EVENT_OAK_ASKED_TO_CHOOSE_MON",
+                "__OBJ_HIDDEN_OAKS_LAB_OBJ_8",
+                "__OBJ_HIDDEN_PALLET_TOWN_OBJ_1",
+                "__OBJ_SHOWN_OAKS_LAB_OBJ_5"
+              ],
+              "bag_after": {},
+              "map": "OaksLab",
+              "story_state_changed": true,
+              "intended_effect_observed": true
+            },
+            {
+              "operation": "interact_with:npc:1",
+              "result": "interacted_with_npc",
+              "flags_gained": [
+                "EVENT_GOT_STARTER",
+                "__OBJ_HIDDEN_OAKS_LAB_OBJ_2",
+                "__OBJ_HIDDEN_OAKS_LAB_OBJ_3"
+              ],
+              "bag_after": {},
+              "map": "OaksLab",
+              "story_state_changed": true,
+              "intended_effect_observed": true
+            }
+          ]
+        },
+        "questions": {
+          "strategy": {
+            "type": "choice",
+            "instructions": "Which attainable story or preparation subgoal should the player pursue next? Healing, training and improving weak attacks are valid indirect progress toward later battles. The action layer can travel between maps before triggering a script; a subgoal need not be on the current map. Candidates already have satisfied script preconditions; winning battles is still an execution outcome. Topological routes may have local obstacles. Use the supplied script facts and known navigation failures; prefer resolving an observed blocker before retrying its destination unless prerequisites have changed. A known tile route to the specific trigger is stronger evidence than a map-only failure: another region on that same map can still be reachable. Prefer reachable prerequisites when the requested trigger has no tile route. Prefer necessary early story prerequisites before optional detours or difficult battles.",
+            "criteria": {
+              "subgoal:0": "{\"establish\": [\"flag\", \"EVENT_BATTLED_RIVAL_IN_OAKS_LAB\", true], \"advances\": [\"Receive the Pok\\u00e9dex from Prof. Oak\"], \"ways\": [{\"map\": \"OaksLab\", \"script\": \"OaksLab:coordDontGoAway\", \"produces\": [\"flag\", \"EVENT_BATTLED_RIVAL_IN_OAKS_LAB\", true], \"confirmation_options\": [], \"preceding_effects\": [[\"battle\", \"OPP_RIVAL1\", true], [\"heal\", \"party\", true]]}], \"context\": {\"opponent_parties\": [{\"level\": 5, \"species\": \"Squirtle\"}], \"battle_is_not_guaranteed_by_script_preconditions\": true, \"trigger_navigation\": [{\"map\": \"OaksLab\", \"tile_route_found\": true, \"steps\": 3, \"requires_surf\": false, \"scope\": \"this trigger region, using known geometry and observed obstacles; available Surf can be used en route\"}]}}",
+              "subgoal:1": "{\"establish\": [\"item\", \"OAKS_PARCEL\", true], \"advances\": [\"Receive the Pok\\u00e9dex from Prof. Oak\"], \"ways\": [{\"map\": \"ViridianMart\", \"script\": \"ViridianMart:@load\", \"produces\": [\"item\", \"OAKS_PARCEL\", true], \"confirmation_options\": [], \"preceding_effects\": [[\"movement\", \"movePlayer\", true]]}], \"context\": {\"trigger_navigation\": [{\"map\": \"ViridianMart\", \"tile_route_found\": true, \"steps\": 108, \"requires_surf\": false, \"scope\": \"this trigger region, using known geometry and observed obstacles; available Surf can be used en route\"}]}}",
+              "subgoal:2": "{\"establish\": [\"flag\", \"EVENT_BEAT_BROCK\", true], \"advances\": [\"Defeat Brock, the Pewter Gym Leader\"], \"ways\": [{\"map\": \"PewterGym\", \"script\": \"PewterGym:talkBrock\", \"produces\": [\"flag\", \"EVENT_BEAT_BROCK\", true], \"confirmation_options\": [], \"preceding_effects\": [[\"battle\", \"OPP_BROCK1\", true]]}], \"context\": {\"opponent_parties\": [{\"level\": 12, \"species\": \"Geodude\"}, {\"level\": 14, \"species\": \"Onix\"}], \"battle_is_not_guaranteed_by_script_preconditions\": true, \"trigger_navigation\": [{\"map\": \"PewterGym\", \"tile_route_found\": true, \"steps\": 378, \"requires_surf\": false, \"scope\": \"this trigger region, using known geometry and observed obstacles; available Surf can be used en route\"}]}}",
+              "subgoal:3": "{\"establish\": [\"flag\", \"EVENT_BEAT_MISTY\", true], \"advances\": [\"Defeat Misty, the Cerulean Gym Leader\"], \"ways\": [{\"map\": \"CeruleanGym\", \"script\": \"CeruleanGym:talkMisty\", \"produces\": [\"flag\", \"EVENT_BEAT_MISTY\", true], \"confirmation_options\": [], \"preceding_effects\": [[\"battle\", \"OPP_MISTY1\", true]]}], \"context\": {\"opponent_parties\": [{\"level\": 18, \"species\": \"Staryu\"}, {\"level\": 21, \"species\": \"Starmie\"}], \"battle_is_not_guaranteed_by_script_preconditions\": true, \"trigger_navigation\": [{\"map\": \"CeruleanGym\", \"tile_route_found\": true, \"steps\": 816, \"requires_surf\": false, \"scope\": \"this trigger region, using known geometry and observed obstacles; available Surf can be used en route\"}]}}",
+              "subgoal:4": "{\"establish\": [\"flag\", \"EVENT_BEAT_LT_SURGE\", true], \"advances\": [\"Defeat Lt. Surge, the Vermilion Gym Leader\"], \"ways\": [{\"map\": \"VermilionGym\", \"script\": \"VermilionGym:talkLtSurge\", \"produces\": [\"flag\", \"EVENT_BEAT_LT_SURGE\", true], \"confirmation_options\": [], \"preceding_effects\": [[\"battle\", \"OPP_LT_SURGE1\", true]]}], \"context\": {\"opponent_parties\": [{\"level\": 21, \"species\": \"Voltorb\"}, {\"level\": 18, \"species\": \"Pikachu\"}, {\"level\": 24, \"species\": \"Raichu\"}], \"battle_is_not_guaranteed_by_script_preconditions\": true, \"trigger_navigation\": [{\"map\": \"VermilionGym\", \"tile_route_found\": false, \"steps\": null, \"requires_surf\": false, \"scope\": \"this trigger region, using known geometry and observed obstacles; available Surf can be used en route\"}]}}",
+              "subgoal:5": "{\"establish\": [\"flag\", \"EVENT_BEAT_ERIKA\", true], \"advances\": [\"Defeat Erika, the Celadon Gym Leader\"], \"ways\": [{\"map\": \"CeladonGym\", \"script\": \"CeladonGym:talkErika\", \"produces\": [\"flag\", \"EVENT_BEAT_ERIKA\", true], \"confirmation_options\": [], \"preceding_effects\": [[\"battle\", \"OPP_ERIKA1\", true]]}], \"context\": {\"opponent_parties\": [{\"level\": 29, \"species\": \"Victreebel\"}, {\"level\": 24, \"species\": \"Tangela\"}, {\"level\": 29, \"species\": \"Vileplume\"}], \"battle_is_not_guaranteed_by_script_preconditions\": true, \"trigger_navigation\": [{\"map\": \"CeladonGym\", \"tile_route_found\": false, \"steps\": null, \"requires_surf\": false, \"scope\": \"this trigger region, using known geometry and observed obstacles; available Surf can be used en route\"}]}}",
+              "subgoal:6": "{\"establish\": [\"flag\", \"EVENT_BEAT_KOGA\", true], \"advances\": [\"Defeat Koga, the Fuchsia Gym Leader\"], \"ways\": [{\"map\": \"FuchsiaGym\", \"script\": \"FuchsiaGym:talkKoga\", \"produces\": [\"flag\", \"EVENT_BEAT_KOGA\", true], \"confirmation_options\": [], \"preceding_effects\": [[\"battle\", \"OPP_KOGA1\", true]]}], \"context\": {\"opponent_parties\": [{\"level\": 37, \"species\": \"Koffing\"}, {\"level\": 39, \"species\": \"Muk\"}, {\"level\": 37, \"species\": \"Koffing\"}, {\"level\": 43, \"species\": \"Weezing\"}], \"battle_is_not_guaranteed_by_script_preconditions\": true, \"trigger_navigation\": [{\"map\": \"FuchsiaGym\", \"tile_route_found\": true, \"steps\": 1434, \"requires_surf\": false, \"scope\": \"this trigger region, using known geometry and observed obstacles; available Surf can be used en route\"}]}}",
+              "subgoal:7": "{\"establish\": [\"flag\", \"EVENT_BEAT_SABRINA\", true], \"advances\": [\"Defeat Sabrina, the Saffron Gym Leader\"], \"ways\": [{\"map\": \"SaffronGym\", \"script\": \"SaffronGym:talkSabrina\", \"produces\": [\"flag\", \"EVENT_BEAT_SABRINA\", true], \"confirmation_options\": [], \"preceding_effects\": [[\"battle\", \"OPP_SABRINA1\", true]]}], \"context\": {\"opponent_parties\": [{\"level\": 38, \"species\": \"Kadabra\"}, {\"level\": 37, \"species\": \"MrMime\"}, {\"level\": 38, \"species\": \"Venomoth\"}, {\"level\": 43, \"species\": \"Alakazam\"}], \"battle_is_not_guaranteed_by_script_preconditions\": true, \"trigger_navigation\": [{\"map\": \"SaffronGym\", \"tile_route_found\": false, \"steps\": null, \"requires_surf\": false, \"scope\": \"this trigger region, using known geometry and observed obstacles; available Surf can be used en route\"}]}}",
+              "subgoal:8": "{\"establish\": [\"flag\", \"EVENT_BEAT_BLAINE\", true], \"advances\": [\"Defeat Blaine, the Cinnabar Gym Leader\"], \"ways\": [{\"map\": \"CinnabarGym\", \"script\": \"CinnabarGym:talkBlaine\", \"produces\": [\"flag\", \"EVENT_BEAT_BLAINE\", true], \"confirmation_options\": [], \"preceding_effects\": [[\"battle\", \"OPP_BLAINE1\", true]]}], \"context\": {\"opponent_parties\": [{\"level\": 42, \"species\": \"Growlithe\"}, {\"level\": 40, \"species\": \"Ponyta\"}, {\"level\": 42, \"species\": \"Rapidash\"}, {\"level\": 47, \"species\": \"Arcanine\"}], \"battle_is_not_guaranteed_by_script_preconditions\": true, \"trigger_navigation\": [{\"map\": \"CinnabarGym\", \"tile_route_found\": false, \"steps\": null, \"requires_surf\": false, \"scope\": \"this trigger region, using known geometry and observed obstacles; available Surf can be used en route\"}]}}",
+              "subgoal:9": "{\"establish\": [\"flag\", \"EVENT_BEAT_VIRIDIAN_GYM_GIOVANNI\", true], \"advances\": [\"Defeat Giovanni, the Viridian Gym Leader\"], \"ways\": [{\"map\": \"ViridianGym\", \"script\": \"ViridianGym:talkGiovanni\", \"produces\": [\"flag\", \"EVENT_BEAT_VIRIDIAN_GYM_GIOVANNI\", true], \"confirmation_options\": [], \"preceding_effects\": [[\"battle\", \"OPP_GIOVANNI3\", true]]}], \"context\": {\"opponent_parties\": [{\"level\": 45, \"species\": \"Rhyhorn\"}, {\"level\": 42, \"species\": \"Dugtrio\"}, {\"level\": 44, \"species\": \"Nidoqueen\"}, {\"level\": 45, \"species\": \"Nidoking\"}, {\"level\": 50, \"species\": \"Rhydon\"}], \"battle_is_not_guaranteed_by_script_preconditions\": true, \"trigger_navigation\": [{\"map\": \"ViridianGym\", \"tile_route_found\": true, \"steps\": 152, \"requires_surf\": false, \"scope\": \"this trigger region, using known geometry and observed obstacles; available Surf can be used en route\"}]}}",
+              "subgoal:10": "{\"establish\": [\"flag\", \"EVENT_BEAT_CHAMPION_RIVAL\", true], \"advances\": [\"Defeat the Champion and enter the Hall of Fame\"], \"ways\": [{\"map\": \"ChampionsRoom\", \"script\": \"ChampionsRoom:@load\", \"produces\": [\"flag\", \"EVENT_BEAT_CHAMPION_RIVAL\", true], \"confirmation_options\": [], \"preceding_effects\": [[\"movement\", \"movePlayer\", true], [\"battle\", \"OPP_RIVAL3\", true]]}], \"context\": {\"trigger_navigation\": [{\"map\": \"ChampionsRoom\", \"tile_route_found\": false, \"steps\": null, \"requires_surf\": false, \"scope\": \"this trigger region, using known geometry and observed obstacles; available Surf can be used en route\"}]}}",
+              "none": "None of these candidates can advance the current goal."
+            }
+          }
+        },
+        "question_ids": [
+          "strategy"
+        ],
+        "request_sha256": "6a0509a2ebaa76785f712c564718287e301e6db029e5fe2d698bb079118f3796",
+        "input_json_bytes": 13524,
+        "model": "jev-1.13.0",
+        "input_tokens": 4729,
+        "output_tokens": 150,
+        "answers": {
+          "strategy": {
+            "choice": "subgoal:0",
+            "probabilities": {
+              "subgoal:7": 0.0,
+              "subgoal:1": 0.11,
+              "subgoal:6": 0.0,
+              "subgoal:0": 0.88,
+              "subgoal:8": 0.0,
+              "subgoal:2": 0.01,
+              "subgoal:10": 0.0,
+              "subgoal:3": 0.0,
+              "subgoal:9": 0.0,
+              "subgoal:4": 0.0,
+              "subgoal:5": 0.0,
+              "none": 0.0
+            },
+            "confidence": 0.86
+          }
+        },
+        "latency_s": 0.9679066250100732,
+        "transport_samples": [
+          {
+            "rtt_s": 0.419,
+            "headers_wall_s": 0.9676353329559788,
+            "http_status": 200
+          }
+        ],
+        "rtt_credit_s": 0.419,
+        "clock": {
+          "start_monotonic": 477394.467627416,
+          "raw_s": 13.23030287498841,
+          "rtt_credit_s": 1.673,
+          "effective_s": 11.55730287498841,
+          "limit_s": 1200,
+          "max_rtt_credit_s": 300
+        }
+      }
+    ],
+    "opening_events": [
+      {
+        "kind": "strategy",
+        "elapsed_s": 5.45,
+        "target": [
+          "flag",
+          "EVENT_OAK_APPEARED_IN_PALLET",
+          true
+        ],
+        "advances": [
+          "Choose a starter Pokémon",
+          "Receive the Pokédex from Prof. Oak"
+        ]
+      },
+      {
+        "kind": "outcome",
+        "elapsed_s": 6.57,
+        "operation": "travel_to:PalletTown",
+        "result": "reached",
+        "flags_gained": [
+          "EVENT_FOLLOWED_OAK_INTO_LAB",
+          "EVENT_FOLLOWED_OAK_INTO_LAB_2",
+          "EVENT_OAK_APPEARED_IN_PALLET",
+          "EVENT_OAK_ASKED_TO_CHOOSE_MON",
+          "__OBJ_HIDDEN_OAKS_LAB_OBJ_8",
+          "__OBJ_HIDDEN_PALLET_TOWN_OBJ_1",
+          "__OBJ_SHOWN_OAKS_LAB_OBJ_5"
+        ],
+        "bag_after": {},
+        "map": "OaksLab",
+        "story_state_changed": true,
+        "intended_effect_observed": true
+      },
+      {
+        "kind": "strategy",
+        "elapsed_s": 7.349,
+        "target": [
+          "flag",
+          "EVENT_GOT_STARTER",
+          true
+        ],
+        "advances": [
+          "Choose a starter Pokémon",
+          "Receive the Pokédex from Prof. Oak"
+        ]
+      },
+      {
+        "kind": "outcome",
+        "elapsed_s": 9.264,
+        "operation": "interact_with:npc:1",
+        "result": "interacted_with_npc",
+        "flags_gained": [
+          "EVENT_GOT_STARTER",
+          "__OBJ_HIDDEN_OAKS_LAB_OBJ_2",
+          "__OBJ_HIDDEN_OAKS_LAB_OBJ_3"
+        ],
+        "bag_after": {},
+        "map": "OaksLab",
+        "story_state_changed": true,
+        "intended_effect_observed": true
+      },
+      {
+        "kind": "strategy",
+        "elapsed_s": 13.089,
+        "target": [
+          "flag",
+          "EVENT_BATTLED_RIVAL_IN_OAKS_LAB",
+          true
+        ],
+        "advances": [
+          "Receive the Pokédex from Prof. Oak"
+        ]
+      },
+      {
+        "kind": "outcome",
+        "elapsed_s": 16.738,
+        "operation": "move_to:5,6",
+        "result": "reached",
+        "flags_gained": [
+          "EVENT_BATTLED_RIVAL_IN_OAKS_LAB",
+          "__OBJ_HIDDEN_OAKS_LAB_OBJ_1"
+        ],
+        "bag_after": {},
+        "map": "OaksLab",
+        "story_state_changed": true,
+        "intended_effect_observed": true
+      },
+      {
+        "kind": "strategy",
+        "elapsed_s": 20.516,
+        "target": [
+          "item",
+          "OAKS_PARCEL",
+          true
+        ],
+        "advances": [
+          "Receive the Pokédex from Prof. Oak"
+        ]
+      },
+      {
+        "kind": "outcome",
+        "elapsed_s": 21.575,
+        "operation": "travel_to:ViridianMart",
+        "result": "reached",
+        "flags_gained": [
+          "EVENT_GOT_OAKS_PARCEL"
+        ],
+        "bag_after": {
+          "OAKSPARCEL": 1
+        },
+        "map": "ViridianMart",
+        "story_state_changed": true,
+        "intended_effect_observed": true
+      }
+    ],
+    "ending_events": [
+      {
+        "kind": "battle_defeat",
+        "elapsed_s": 697.686,
+        "map": "CeruleanGym",
+        "party_level": 28,
+        "opponents": [
+          {
+            "hp": 41,
+            "level": 18,
+            "species": "Staryu"
+          },
+          {
+            "hp": 59,
+            "level": 21,
+            "species": "Starmie"
+          }
+        ],
+        "preparation_signature": {
+          "party": [
+            {
+              "species": "Charmeleon",
+              "level": 28,
+              "moves": [
+                "Scratch",
+                "Growl",
+                "Ember",
+                "Leer"
+              ],
+              "hp_band": 3,
+              "pp": [
+                15,
+                40,
+                24,
+                30
+              ],
+              "status": "None"
+            }
+          ],
+          "medicine": {}
+        },
+        "proposed_training_level": 30
+      },
+      {
+        "kind": "battle_defeat",
+        "elapsed_s": 703.162,
+        "map": "CeruleanGym",
+        "party_level": 28,
+        "opponents": [
+          {
+            "hp": 41,
+            "level": 18,
+            "species": "Staryu"
+          },
+          {
+            "hp": 59,
+            "level": 21,
+            "species": "Starmie"
+          }
+        ],
+        "preparation_signature": {
+          "party": [
+            {
+              "species": "Charmeleon",
+              "level": 28,
+              "moves": [
+                "Scratch",
+                "Growl",
+                "Ember",
+                "Leer"
+              ],
+              "hp_band": 4,
+              "pp": [
+                35,
+                40,
+                25,
+                30
+              ],
+              "status": "None"
+            }
+          ],
+          "medicine": {}
+        },
+        "proposed_training_level": 30
+      },
+      {
+        "kind": "battle_defeat",
+        "elapsed_s": 751.547,
+        "map": "CeruleanGym",
+        "party_level": 29,
+        "opponents": [
+          {
+            "hp": 41,
+            "level": 18,
+            "species": "Staryu"
+          },
+          {
+            "hp": 59,
+            "level": 21,
+            "species": "Starmie"
+          }
+        ],
+        "preparation_signature": {
+          "party": [
+            {
+              "species": "Charmeleon",
+              "level": 29,
+              "moves": [
+                "Scratch",
+                "Growl",
+                "Ember",
+                "Leer"
+              ],
+              "hp_band": 4,
+              "pp": [
+                8,
+                40,
+                25,
+                30
+              ],
+              "status": "None"
+            }
+          ],
+          "medicine": {}
+        },
+        "proposed_training_level": 31
+      },
+      {
+        "kind": "battle_defeat",
+        "elapsed_s": 757.2,
+        "map": "CeruleanGym",
+        "party_level": 29,
+        "opponents": [
+          {
+            "hp": 41,
+            "level": 18,
+            "species": "Staryu"
+          },
+          {
+            "hp": 59,
+            "level": 21,
+            "species": "Starmie"
+          }
+        ],
+        "preparation_signature": {
+          "party": [
+            {
+              "species": "Charmeleon",
+              "level": 29,
+              "moves": [
+                "Scratch",
+                "Growl",
+                "Ember",
+                "Leer"
+              ],
+              "hp_band": 4,
+              "pp": [
+                35,
+                40,
+                25,
+                30
+              ],
+              "status": "None"
+            }
+          ],
+          "medicine": {}
+        },
+        "proposed_training_level": 31
+      },
+      {
+        "kind": "battle_defeat",
+        "elapsed_s": 802.217,
+        "map": "CeruleanGym",
+        "party_level": 30,
+        "opponents": [
+          {
+            "hp": 41,
+            "level": 18,
+            "species": "Staryu"
+          },
+          {
+            "hp": 59,
+            "level": 21,
+            "species": "Starmie"
+          }
+        ],
+        "preparation_signature": {
+          "party": [
+            {
+              "species": "Charmeleon",
+              "level": 30,
+              "moves": [
+                "Scratch",
+                "Growl",
+                "Ember",
+                "Leer"
+              ],
+              "hp_band": 4,
+              "pp": [
+                8,
+                40,
+                25,
+                30
+              ],
+              "status": "None"
+            }
+          ],
+          "medicine": {}
+        },
+        "proposed_training_level": 32
+      },
+      {
+        "kind": "battle_defeat",
+        "elapsed_s": 807.71,
+        "map": "CeruleanGym",
+        "party_level": 30,
+        "opponents": [
+          {
+            "hp": 41,
+            "level": 18,
+            "species": "Staryu"
+          },
+          {
+            "hp": 59,
+            "level": 21,
+            "species": "Starmie"
+          }
+        ],
+        "preparation_signature": {
+          "party": [
+            {
+              "species": "Charmeleon",
+              "level": 30,
+              "moves": [
+                "Scratch",
+                "Growl",
+                "Ember",
+                "Leer"
+              ],
+              "hp_band": 4,
+              "pp": [
+                35,
+                40,
+                25,
+                30
+              ],
+              "status": "None"
+            }
+          ],
+          "medicine": {}
+        },
+        "proposed_training_level": 32
+      },
+      {
+        "kind": "judgment_error",
+        "elapsed_s": 1037.575,
+        "layer": "strategy",
+        "error": "HTTP 402: b'{\"detail\":{\"error_type\":\"billing_error\",\"message\":\"Your organization has no available TypeSafe API credits. Please add more credits and/or set up auto-reload at https://console.typesafe.ai/settings/bi'"
+      },
+      {
+        "kind": "stopped",
+        "elapsed_s": 1037.575,
+        "reason": "strategy:service_unavailable"
+      }
+    ]
+  },
+  "laya": {
+    "first_requests": [
+      {
+        "number": 2,
+        "backend": "laya",
+        "warmup": false,
+        "success": true,
+        "started_clock": {
+          "start_monotonic": 478494.900562,
+          "raw_s": 4.767461624986026,
+          "rtt_credit_s": 0.0,
+          "effective_s": 4.767461624986026,
+          "limit_s": 1200,
+          "max_rtt_credit_s": 0
+        },
+        "state": {
+          "world": {
+            "flags": {},
+            "bag": {},
+            "party": [],
+            "badges": 0,
+            "map": "RedsHouse2F",
+            "x": 3,
+            "y": 6,
+            "money": 3000,
+            "coins": 0,
+            "fully_recovered": false,
+            "object_visibility": {},
+            "cleared_terrain": [],
+            "navigation_revision": 1,
+            "block_values": {},
+            "recent_battle_defeats": [],
+            "total_completed_event_flags": 0
+          },
+          "completed_objectives": [],
+          "remaining_objectives": [
+            "Choose a starter Pokémon",
+            "Receive the Pokédex from Prof. Oak",
+            "Defeat Brock, the Pewter Gym Leader",
+            "Defeat Misty, the Cerulean Gym Leader",
+            "Defeat Lt. Surge, the Vermilion Gym Leader",
+            "Defeat Erika, the Celadon Gym Leader",
+            "Defeat Koga, the Fuchsia Gym Leader",
+            "Defeat Sabrina, the Saffron Gym Leader",
+            "Defeat Blaine, the Cinnabar Gym Leader",
+            "Defeat Giovanni, the Viridian Gym Leader",
+            "Defeat the Champion and enter the Hall of Fame"
+          ],
+          "navigation": {
+            "PalletTown": {
+              "topological_route_found": true,
+              "via": [
+                "RedsHouse1F",
+                "PalletTown"
+              ]
+            },
+            "ViridianMart": {
+              "topological_route_found": true,
+              "via": [
+                "RedsHouse1F",
+                "PalletTown",
+                "Route1",
+                "ViridianCity",
+                "ViridianMart"
+              ]
+            }
+          },
+          "known_navigation_failures": {},
+          "recent_outcomes": []
+        },
+        "questions": {
+          "strategy": {
+            "type": "choice",
+            "instructions": "Which attainable story or preparation subgoal should the player pursue next? Healing, training and improving weak attacks are valid indirect progress toward later battles. The action layer can travel between maps before triggering a script; a subgoal need not be on the current map. Candidates already have satisfied script preconditions; winning battles is still an execution outcome. Topological routes may have local obstacles. Use the supplied script facts and known navigation failures; prefer resolving an observed blocker before retrying its destination unless prerequisites have changed. A known tile route to the specific trigger is stronger evidence than a map-only failure: another region on that same map can still be reachable. Prefer reachable prerequisites when the requested trigger has no tile route. Prefer necessary early story prerequisites before optional detours or difficult battles.",
+            "criteria": {
+              "subgoal:0": "{\"establish\": [\"flag\", \"EVENT_OAK_APPEARED_IN_PALLET\", true], \"advances\": [\"Choose a starter Pok\\u00e9mon\", \"Receive the Pok\\u00e9dex from Prof. Oak\"], \"ways\": [{\"map\": \"PalletTown\", \"script\": \"PalletTown:coordNorthExit\", \"produces\": [\"flag\", \"EVENT_OAK_APPEARED_IN_PALLET\", true], \"confirmation_options\": [], \"preceding_effects\": []}], \"context\": null}",
+              "subgoal:1": "{\"establish\": [\"item\", \"OAKS_PARCEL\", true], \"advances\": [\"Receive the Pok\\u00e9dex from Prof. Oak\"], \"ways\": [{\"map\": \"ViridianMart\", \"script\": \"ViridianMart:@load\", \"produces\": [\"item\", \"OAKS_PARCEL\", true], \"confirmation_options\": [], \"preceding_effects\": [[\"movement\", \"movePlayer\", true]]}], \"context\": null}",
+              "none": "None of these candidates can advance the current goal."
+            }
+          }
+        },
+        "question_ids": [
+          "strategy"
+        ],
+        "request_sha256": "1b8ddf59d63406d2cbc80893e5fa55d10d4d9edb6f2736d8bf3b2f35a4af7a2a",
+        "input_json_bytes": 2941,
+        "model": "aac6fef/laya-mlx@20aed815fc6acde75733882e7ec0e3f28aeb9717",
+        "input_tokens": 512,
+        "output_tokens": 0,
+        "answers": {
+          "strategy": {
+            "choice": "none",
+            "probabilities": {
+              "subgoal:0": 0.303,
+              "subgoal:1": 0.2477,
+              "none": 0.4493
+            },
+            "confidence": 0.0288
+          }
+        },
+        "encoding": [
+          {
+            "question": "strategy",
+            "state_tokens_before": 350,
+            "state_tokens_used": 316,
+            "state_tokens_dropped": 34,
+            "encoded_tokens": 512,
+            "candidate_tokens_before": [
+              132,
+              113,
+              12
+            ],
+            "candidate_tokens_used": [
+              48,
+              48,
+              12
+            ],
+            "candidate_tokens_dropped": [
+              84,
+              65,
+              0
+            ],
+            "instruction_tokens_before": 167,
+            "instruction_tokens_used": 81,
+            "instruction_tokens_dropped": 86,
+            "effective_input_text": "[CLS]choice question: Which attainable story or preparation subgoal should the player pursue next? Healing, training and improving weak attacks are valid indirect progress toward later battles. The action layer can travel between maps before triggering a script; a subgoal need not be on the current map. Candidates already have satisfied script preconditions; winning battles is still an execution outcome. Topological routes may have local obstacles.[SEP][MASK] subgoal:0: {\"establish\": [\"flag\", \"EVENT_OAK_APPEARED_IN_PALLET\", true], \"advances\": [\"Choose a starter Pok\\u00e9mon\", \"Receive[MASK] subgoal:1: {\"establish\": [\"item\", \"OAKS_PARCEL\", true], \"advances\": [\"Receive the Pok\\u00e9dex from Prof. Oak\"], \"ways\": [{\"map\":[MASK] none: None of these candidates can advance the current goal.[SEP]{\"world\": {\"flags\": {}, \"bag\": {}, \"party\": [], \"badges\": 0, \"map\": \"RedsHouse2F\", \"x\": 3, \"y\": 6, \"money\": 3000, \"coins\": 0, \"fully_recovered\": false, \"object_visibility\": {}, \"cleared_terrain\": [], \"navigation_revision\": 1, \"block_values\": {}, \"recent_battle_defeats\": [], \"total_completed_event_flags\": 0}, \"completed_objectives\": [], \"remaining_objectives\": [\"Choose a starter Pokémon\", \"Receive the Pokédex from Prof. Oak\", \"Defeat Brock, the Pewter Gym Leader\", \"Defeat Misty, the Cerulean Gym Leader\", \"Defeat Lt. Surge, the Vermilion Gym Leader\", \"Defeat Erika, the Celadon Gym Leader\", \"Defeat Koga, the Fuchsia Gym Leader\", \"Defeat Sabrina, the Saffron Gym Leader\", \"Defeat Blaine, the Cinnabar Gym Leader\", \"Defeat Giovanni, the Viridian Gym Leader\", \"Defeat the Champion and enter the Hall of Fame\"], \"navigation\": {\"PalletTown\": {\"topological_route_found\": true, \"via\": [\"RedsHouse1F\", \"PalletTown\"]}, \"ViridianMart\": {\"topological_route_found\": true, \"via\": [\"RedsHouse1F\", \"Pallet[SEP]"
+          }
+        ],
+        "latency_s": 0.12229600001592189,
+        "transport_samples": [],
+        "rtt_credit_s": 0,
+        "clock": {
+          "start_monotonic": 478494.900562,
+          "raw_s": 4.889759165991563,
+          "rtt_credit_s": 0.0,
+          "effective_s": 4.889759165991563,
+          "limit_s": 1200,
+          "max_rtt_credit_s": 0
+        }
+      },
+      {
+        "number": 3,
+        "backend": "laya",
+        "warmup": false,
+        "success": true,
+        "started_clock": {
+          "start_monotonic": 478494.900562,
+          "raw_s": 4.894532790989615,
+          "rtt_credit_s": 0.0,
+          "effective_s": 4.894532790989615,
+          "limit_s": 1200,
+          "max_rtt_credit_s": 0
+        },
+        "state": {
+          "subgoal": [
+            "flag",
+            "EVENT_OAK_APPEARED_IN_PALLET",
+            true
+          ],
+          "advances": [
+            "Choose a starter Pokémon",
+            "Receive the Pokédex from Prof. Oak"
+          ],
+          "local_state": {
+            "flags": {},
+            "bag": {},
+            "party": [],
+            "badges": 0,
+            "map": "RedsHouse2F",
+            "x": 3,
+            "y": 6,
+            "money": 3000,
+            "coins": 0,
+            "fully_recovered": false,
+            "object_visibility": {},
+            "cleared_terrain": [],
+            "navigation_revision": 1,
+            "block_values": {},
+            "recent_battle_defeats": []
+          },
+          "recent_outcomes": [],
+          "strategy_context": {}
+        },
+        "questions": {
+          "action": {
+            "type": "choice",
+            "instructions": "Which next operation makes progress toward the current subgoal? Several operations may be needed to finish it. Select a live trigger, travel step, recovery or training operation using its described effects. Script effects describe what will happen when the intended interaction completes. Travel or interaction can be interrupted by other trainers: if recent attempts gained battle flags, retrying the intended NPC is valid progress.",
+            "criteria": {
+              "action:0": "{\"operation\": \"travel_to:PalletTown\", \"script_effects\": {\"map\": \"PalletTown\", \"script\": \"PalletTown:coordNorthExit\", \"produces\": [\"flag\", \"EVENT_OAK_APPEARED_IN_PALLET\", true], \"confirmation_options\": [], \"preceding_effects\": []}, \"navigation\": {\"map_hops\": 2, \"via\": [\"RedsHouse1F\", \"PalletTown\"], \"unvisited_maps\": [\"RedsHouse1F\", \"PalletTown\"], \"caution\": \"Travel can consume HP and PP in encounters; recovery should prefer a short known route.\"}}",
+              "none": "None of these candidates can advance the current goal."
+            }
+          }
+        },
+        "question_ids": [
+          "action"
+        ],
+        "request_sha256": "d21976f1da26d824101643a6eab5d129edfc78985584092dc820d6a98a261882",
+        "input_json_bytes": 1568,
+        "model": "aac6fef/laya-mlx@20aed815fc6acde75733882e7ec0e3f28aeb9717",
+        "input_tokens": 307,
+        "output_tokens": 0,
+        "answers": {
+          "action": {
+            "choice": "none",
+            "probabilities": {
+              "action:0": 0.1843,
+              "none": 0.8157
+            },
+            "confidence": 0.3105
+          }
+        },
+        "encoding": [
+          {
+            "question": "action",
+            "state_tokens_before": 163,
+            "state_tokens_used": 163,
+            "state_tokens_dropped": 0,
+            "encoded_tokens": 307,
+            "candidate_tokens_before": [
+              149,
+              12
+            ],
+            "candidate_tokens_used": [
+              48,
+              12
+            ],
+            "candidate_tokens_dropped": [
+              101,
+              0
+            ],
+            "instruction_tokens_before": 78,
+            "instruction_tokens_used": 78,
+            "instruction_tokens_dropped": 0,
+            "effective_input_text": "[CLS]choice question: Which next operation makes progress toward the current subgoal? Several operations may be needed to finish it. Select a live trigger, travel step, recovery or training operation using its described effects. Script effects describe what will happen when the intended interaction completes. Travel or interaction can be interrupted by other trainers: if recent attempts gained battle flags, retrying the intended NPC is valid progress.[SEP][MASK] action:0: {\"operation\": \"travel_to:PalletTown\", \"script_effects\": {\"map\": \"PalletTown\", \"script\": \"PalletTown:coordNorthExit\", \"produces\": [\"flag\",[MASK] none: None of these candidates can advance the current goal.[SEP]{\"subgoal\": [\"flag\", \"EVENT_OAK_APPEARED_IN_PALLET\", true], \"advances\": [\"Choose a starter Pokémon\", \"Receive the Pokédex from Prof. Oak\"], \"local_state\": {\"flags\": {}, \"bag\": {}, \"party\": [], \"badges\": 0, \"map\": \"RedsHouse2F\", \"x\": 3, \"y\": 6, \"money\": 3000, \"coins\": 0, \"fully_recovered\": false, \"object_visibility\": {}, \"cleared_terrain\": [], \"navigation_revision\": 1, \"block_values\": {}, \"recent_battle_defeats\": []}, \"recent_outcomes\": [], \"strategy_context\": {}}[SEP]"
+          }
+        ],
+        "latency_s": 0.0761154160136357,
+        "transport_samples": [],
+        "rtt_credit_s": 0,
+        "clock": {
+          "start_monotonic": 478494.900562,
+          "raw_s": 4.970649832976051,
+          "rtt_credit_s": 0.0,
+          "effective_s": 4.970649832976051,
+          "limit_s": 1200,
+          "max_rtt_credit_s": 0
+        }
+      },
+      {
+        "number": 4,
+        "backend": "laya",
+        "warmup": false,
+        "success": true,
+        "started_clock": {
+          "start_monotonic": 478494.900562,
+          "raw_s": 4.980777457996737,
+          "rtt_credit_s": 0.0,
+          "effective_s": 4.980777457996737,
+          "limit_s": 1200,
+          "max_rtt_credit_s": 0
+        },
+        "state": {
+          "world": {
+            "flags": {},
+            "bag": {},
+            "party": [],
+            "badges": 0,
+            "map": "RedsHouse2F",
+            "x": 3,
+            "y": 6,
+            "money": 3000,
+            "coins": 0,
+            "fully_recovered": false,
+            "object_visibility": {},
+            "cleared_terrain": [],
+            "navigation_revision": 1,
+            "block_values": {},
+            "recent_battle_defeats": [],
+            "total_completed_event_flags": 0
+          },
+          "completed_objectives": [],
+          "remaining_objectives": [
+            "Choose a starter Pokémon",
+            "Receive the Pokédex from Prof. Oak",
+            "Defeat Brock, the Pewter Gym Leader",
+            "Defeat Misty, the Cerulean Gym Leader",
+            "Defeat Lt. Surge, the Vermilion Gym Leader",
+            "Defeat Erika, the Celadon Gym Leader",
+            "Defeat Koga, the Fuchsia Gym Leader",
+            "Defeat Sabrina, the Saffron Gym Leader",
+            "Defeat Blaine, the Cinnabar Gym Leader",
+            "Defeat Giovanni, the Viridian Gym Leader",
+            "Defeat the Champion and enter the Hall of Fame"
+          ],
+          "navigation": {
+            "ViridianMart": {
+              "topological_route_found": true,
+              "via": [
+                "RedsHouse1F",
+                "PalletTown",
+                "Route1",
+                "ViridianCity",
+                "ViridianMart"
+              ]
+            }
+          },
+          "known_navigation_failures": {},
+          "recent_outcomes": [
+            {
+              "subgoal": [
+                "flag",
+                "EVENT_OAK_APPEARED_IN_PALLET",
+                true
+              ],
+              "result": "action:no_selection"
+            }
+          ]
+        },
+        "questions": {
+          "strategy": {
+            "type": "choice",
+            "instructions": "Which attainable story or preparation subgoal should the player pursue next? Healing, training and improving weak attacks are valid indirect progress toward later battles. The action layer can travel between maps before triggering a script; a subgoal need not be on the current map. Candidates already have satisfied script preconditions; winning battles is still an execution outcome. Topological routes may have local obstacles. Use the supplied script facts and known navigation failures; prefer resolving an observed blocker before retrying its destination unless prerequisites have changed. A known tile route to the specific trigger is stronger evidence than a map-only failure: another region on that same map can still be reachable. Prefer reachable prerequisites when the requested trigger has no tile route. Prefer necessary early story prerequisites before optional detours or difficult battles.",
+            "criteria": {
+              "subgoal:1": "{\"establish\": [\"item\", \"OAKS_PARCEL\", true], \"advances\": [\"Receive the Pok\\u00e9dex from Prof. Oak\"], \"ways\": [{\"map\": \"ViridianMart\", \"script\": \"ViridianMart:@load\", \"produces\": [\"item\", \"OAKS_PARCEL\", true], \"confirmation_options\": [], \"preceding_effects\": [[\"movement\", \"movePlayer\", true]]}], \"context\": null}",
+              "none": "None of these candidates can advance the current goal."
+            }
+          }
+        },
+        "question_ids": [
+          "strategy"
+        ],
+        "request_sha256": "117b795bf3e812c077c5a2b94bf40a63e19622f3dbdf7809e8f621561831bd19",
+        "input_json_bytes": 2540,
+        "model": "aac6fef/laya-mlx@20aed815fc6acde75733882e7ec0e3f28aeb9717",
+        "input_tokens": 512,
+        "output_tokens": 0,
+        "answers": {
+          "strategy": {
+            "choice": "none",
+            "probabilities": {
+              "subgoal:1": 0.3595,
+              "none": 0.6405
+            },
+            "confidence": 0.0577
+          }
+        },
+        "encoding": [
+          {
+            "question": "strategy",
+            "state_tokens_before": 355,
+            "state_tokens_used": 316,
+            "state_tokens_dropped": 39,
+            "encoded_tokens": 512,
+            "candidate_tokens_before": [
+              113,
+              12
+            ],
+            "candidate_tokens_used": [
+              48,
+              12
+            ],
+            "candidate_tokens_dropped": [
+              65,
+              0
+            ],
+            "instruction_tokens_before": 167,
+            "instruction_tokens_used": 130,
+            "instruction_tokens_dropped": 37,
+            "effective_input_text": "[CLS]choice question: Which attainable story or preparation subgoal should the player pursue next? Healing, training and improving weak attacks are valid indirect progress toward later battles. The action layer can travel between maps before triggering a script; a subgoal need not be on the current map. Candidates already have satisfied script preconditions; winning battles is still an execution outcome. Topological routes may have local obstacles. Use the supplied script facts and known navigation failures; prefer resolving an observed blocker before retrying its destination unless prerequisites have changed. A known tile route to the specific trigger is stronger evidence than a map-only failure: another region on that same[SEP][MASK] subgoal:1: {\"establish\": [\"item\", \"OAKS_PARCEL\", true], \"advances\": [\"Receive the Pok\\u00e9dex from Prof. Oak\"], \"ways\": [{\"map\":[MASK] none: None of these candidates can advance the current goal.[SEP]{\"world\": {\"flags\": {}, \"bag\": {}, \"party\": [], \"badges\": 0, \"map\": \"RedsHouse2F\", \"x\": 3, \"y\": 6, \"money\": 3000, \"coins\": 0, \"fully_recovered\": false, \"object_visibility\": {}, \"cleared_terrain\": [], \"navigation_revision\": 1, \"block_values\": {}, \"recent_battle_defeats\": [], \"total_completed_event_flags\": 0}, \"completed_objectives\": [], \"remaining_objectives\": [\"Choose a starter Pokémon\", \"Receive the Pokédex from Prof. Oak\", \"Defeat Brock, the Pewter Gym Leader\", \"Defeat Misty, the Cerulean Gym Leader\", \"Defeat Lt. Surge, the Vermilion Gym Leader\", \"Defeat Erika, the Celadon Gym Leader\", \"Defeat Koga, the Fuchsia Gym Leader\", \"Defeat Sabrina, the Saffron Gym Leader\", \"Defeat Blaine, the Cinnabar Gym Leader\", \"Defeat Giovanni, the Viridian Gym Leader\", \"Defeat the Champion and enter the Hall of Fame\"], \"navigation\": {\"ViridianMart\": {\"topological_route_found\": true, \"via\": [\"RedsHouse1F\", \"PalletTown\", \"Route1\", \"ViridianCity\", \"ViridianMart\"]}}, \"known_navigation_failures\": {}, \"recent_outcomes[SEP]"
+          }
+        ],
+        "latency_s": 0.09758654196048155,
+        "transport_samples": [],
+        "rtt_credit_s": 0,
+        "clock": {
+          "start_monotonic": 478494.900562,
+          "raw_s": 5.078365083027165,
+          "rtt_credit_s": 0.0,
+          "effective_s": 5.078365083027165,
+          "limit_s": 1200,
+          "max_rtt_credit_s": 0
+        }
+      }
+    ],
+    "opening_events": [
+      {
+        "kind": "conditional_choice",
+        "elapsed_s": 4.721,
+        "layer": "strategy",
+        "selected": "subgoal:0",
+        "candidate_mass": 0.5507,
+        "abstention_mass": 0.4493
+      },
+      {
+        "kind": "strategy",
+        "elapsed_s": 4.721,
+        "target": [
+          "flag",
+          "EVENT_OAK_APPEARED_IN_PALLET",
+          true
+        ],
+        "advances": [
+          "Choose a starter Pokémon",
+          "Receive the Pokédex from Prof. Oak"
+        ]
+      },
+      {
+        "kind": "action_rejected",
+        "elapsed_s": 4.802,
+        "subgoal": [
+          "flag",
+          "EVENT_OAK_APPEARED_IN_PALLET",
+          true
+        ],
+        "reason": "action:no_selection"
+      }
+    ],
+    "ending_events": [
+      {
+        "kind": "action_rejected",
+        "elapsed_s": 4.802,
+        "subgoal": [
+          "flag",
+          "EVENT_OAK_APPEARED_IN_PALLET",
+          true
+        ],
+        "reason": "action:no_selection"
+      },
+      {
+        "kind": "stopped",
+        "elapsed_s": 4.91,
+        "reason": "strategy:no_selection"
+      }
+    ]
+  },
+  "identical_application_inputs": [
+    {
+      "sha256": "1b8ddf59d63406d2cbc80893e5fa55d10d4d9edb6f2736d8bf3b2f35a4af7a2a",
+      "question_ids": [
+        "strategy"
+      ],
+      "jev": {
+        "number": 2,
+        "answers": {
+          "strategy": {
+            "choice": "subgoal:0",
+            "probabilities": {
+              "none": 0.03,
+              "subgoal:1": 0.11,
+              "subgoal:0": 0.86
+            },
+            "confidence": 0.8
+          }
+        },
+        "latency_s": 0.8086693750228733
+      },
+      "laya": {
+        "number": 2,
+        "answers": {
+          "strategy": {
+            "choice": "none",
+            "probabilities": {
+              "subgoal:0": 0.303,
+              "subgoal:1": 0.2477,
+              "none": 0.4493
+            },
+            "confidence": 0.0288
+          }
+        },
+        "latency_s": 0.12229600001592189
+      }
+    },
+    {
+      "sha256": "d21976f1da26d824101643a6eab5d129edfc78985584092dc820d6a98a261882",
+      "question_ids": [
+        "action"
+      ],
+      "jev": {
+        "number": 3,
+        "answers": {
+          "action": {
+            "choice": "action:0",
+            "probabilities": {
+              "action:0": 1.0,
+              "none": 0.0
+            },
+            "confidence": 1.0
+          }
+        },
+        "latency_s": 0.8220717079821043
+      },
+      "laya": {
+        "number": 3,
+        "answers": {
+          "action": {
+            "choice": "none",
+            "probabilities": {
+              "action:0": 0.1843,
+              "none": 0.8157
+            },
+            "confidence": 0.3105
+          }
+        },
+        "latency_s": 0.0761154160136357
+      }
+    }
+  ]
+}
