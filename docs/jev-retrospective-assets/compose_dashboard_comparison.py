@@ -72,10 +72,14 @@ def compose(chapters, recordings, project):
 .screen{position:absolute;top:212px;width:480px;height:432px;object-fit:contain;image-rendering:pixelated;background:#e1e4d9}
 .source-status{position:absolute;top:649px;font-size:18px;width:480px;line-height:1.4;height:30px}
 #rate{position:absolute;left:64px;top:1037px;font-size:16px;color:#52615a}
-#model-inputs{position:absolute;left:64px;top:685px;width:1040px;height:225px;margin:0;gap:16px}
-#model-inputs .jd-input-card{padding:10px 12px;overflow:hidden}
-#model-inputs .jd-input-title{font-size:20px}#model-inputs .jd-input-meta{font-size:14px;margin-bottom:6px}
-#model-inputs .jd-input-rows{font-size:18px;line-height:1.36;gap:3px 8px}
+#provenance{position:absolute;left:64px;top:685px;width:480px;height:225px;border:1px solid #bdc9bf;border-radius:8px;background:#edf0e8;padding:11px 14px}
+#provenance h2{margin:0 0 5px;font-size:18px}
+#provenance p{margin:0 0 6px;font-size:15px;line-height:1.45}
+#inputs-caption{position:absolute;left:624px;top:685px;width:480px;font-size:15px;color:#52615a}
+#model-inputs{position:absolute;left:624px;top:709px;width:480px;height:206px;margin:0;display:flex;flex-direction:column;gap:8px}
+#model-inputs .jd-input-card{padding:7px 12px;overflow:hidden;flex:1;min-height:0}
+#model-inputs .jd-input-title{display:inline;font-size:15px}#model-inputs .jd-input-meta{display:inline;font-size:11px;margin:0 0 4px 8px}
+#model-inputs .jd-input-rows{font-size:14px;line-height:1.35;gap:2px 8px;margin-top:4px}
 #model-inputs dd{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 #annotation{position:absolute;left:64px;top:922px;width:1040px;height:102px;border-top:3px solid #237451;padding-top:8px}
 #annotation-label{display:inline;font-size:16px;color:#52615a}#annotation-title{display:inline;font-size:23px;font-weight:700;margin-left:12px}#annotation-body{font-size:21px;line-height:1.4;margin-top:5px}
@@ -94,9 +98,11 @@ def compose(chapters, recordings, project):
 .foot{position:absolute;left:1160px;top:1041px;margin:0;font-size:14px;color:#52615a}
 </style></head><body><div id="root" data-composition-id="main" data-start="0" data-duration="__DURATION__" data-width="1920" data-height="1080">
 <h1>脚本自动化 × Jev 自主探索 · 完整通关与决策大盘</h1><div id="chapter-label"></div>
-<div class="label left">脚本（适配与恢复修复）</div><div class="label right">策略层 + 动作层 Jev</div>
+<div class="label left">脚本（无模型参与）</div><div class="label right">策略层 + 动作层 Jev</div>
 __CONTENT__
 <div id="script-status" class="source-status left"></div><div id="jev-status" class="source-status right"></div><div id="rate"></div>
+<div id="provenance"><h2>左侧录像 · 纯脚本运行</h2><p>从 NEW GAME 到名人堂完全由预写脚本驱动，全程没有任何模型参与，作为右侧 Jev 录像的对照基线。</p><p>因此左下方没有模型输入卡片——右侧的「当次输入」快照只来自 Jev 录像。</p><p>两路使用相同引擎与 seed 42，按共同剧情节点分章对照。</p></div>
+<div id="inputs-caption">策略层 / 动作层 · 当次输入快照 — 仅对应右侧 Jev 录像</div>
 <div id="model-inputs" class="jd-inputs"></div>
 <div id="annotation"><div id="annotation-label"></div><div id="annotation-title"></div><div id="annotation-body"></div></div>
 <aside id="dashboard" class="jev-dashboard"></aside>

@@ -67,7 +67,7 @@ def main():
     assert all(r['finished'] and r['success'] for r in records)
     args.output.mkdir(parents=True, exist_ok=True)
     colors = {'script': '#536d8d', 'jev': '#237451'}
-    labels = {'script': '脚本（适配与恢复修复）', 'jev': '双层 Jev 自主探索'}
+    labels = {'script': '脚本（无模型参与）', 'jev': '双层 Jev 自主探索'}
 
     def save(fig, name):
         for ext in ('png', 'svg'):
