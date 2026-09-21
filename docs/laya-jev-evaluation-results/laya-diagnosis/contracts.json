@@ -1,0 +1,3117 @@
+{
+  "checkpoint": "aac6fef/laya-mlx",
+  "revision": "20aed815fc6acde75733882e7ec0e3f28aeb9717",
+  "probes": [
+    {
+      "name": "door_open",
+      "state": "The door to the garden is open.",
+      "questions": {
+        "check": {
+          "type": "choice",
+          "instructions": "Which listed operation can be executed in the current state?",
+          "criteria": {
+            "move": "Walk through the door to the garden.",
+            "none": "None of the listed operations can be executed now."
+          }
+        }
+      },
+      "encoding_overrides": {},
+      "answers": {
+        "check": {
+          "type": "choice",
+          "confidence": 0.1439,
+          "action": {
+            "act_probability": 1.0
+          },
+          "choice": "move",
+          "probabilities": {
+            "move": 0.7195,
+            "none": 0.2805
+          }
+        }
+      },
+      "usage": {
+        "input_tokens": 50,
+        "output_tokens": 0
+      },
+      "latency_s": 0.0576382500003092,
+      "encoding": [
+        {
+          "question": "check",
+          "encoded_tokens": 50,
+          "instruction_tokens": [
+            14,
+            14
+          ],
+          "state_tokens": [
+            8,
+            8
+          ],
+          "option_tokens": [
+            [
+              10,
+              10
+            ],
+            [
+              12,
+              12
+            ]
+          ],
+          "input_ids_sha256": "917d2635764fba993a18298f123f250a99ab8264831a7dc9b7448f3e49272aff",
+          "effective_input_text": "[CLS]choice question: Which listed operation can be executed in the current state?[SEP][MASK] move: Walk through the door to the garden.[MASK] none: None of the listed operations can be executed now.[SEP]The door to the garden is open.[SEP]"
+        }
+      ],
+      "schema": "choice_none",
+      "expected": "move",
+      "actual": "move",
+      "correct": true
+    },
+    {
+      "name": "door_open",
+      "state": "The door to the garden is open.",
+      "questions": {
+        "check": {
+          "type": "choice",
+          "instructions": "Which listed operation can be executed in the current state?",
+          "criteria": {
+            "none": "None of the listed operations can be executed now.",
+            "move": "Walk through the door to the garden."
+          }
+        }
+      },
+      "encoding_overrides": {},
+      "answers": {
+        "check": {
+          "type": "choice",
+          "confidence": 0.3483,
+          "action": {
+            "act_probability": 1.0
+          },
+          "choice": "move",
+          "probabilities": {
+            "none": 0.1674,
+            "move": 0.8326
+          }
+        }
+      },
+      "usage": {
+        "input_tokens": 50,
+        "output_tokens": 0
+      },
+      "latency_s": 0.028338875039480627,
+      "encoding": [
+        {
+          "question": "check",
+          "encoded_tokens": 50,
+          "instruction_tokens": [
+            14,
+            14
+          ],
+          "state_tokens": [
+            8,
+            8
+          ],
+          "option_tokens": [
+            [
+              12,
+              12
+            ],
+            [
+              10,
+              10
+            ]
+          ],
+          "input_ids_sha256": "00f1701caae0882c3d9436f368e26c2dd311b5c8b4d42039844c6e41f14b61e5",
+          "effective_input_text": "[CLS]choice question: Which listed operation can be executed in the current state?[SEP][MASK] none: None of the listed operations can be executed now.[MASK] move: Walk through the door to the garden.[SEP]The door to the garden is open.[SEP]"
+        }
+      ],
+      "schema": "choice_none_reversed",
+      "expected": "move",
+      "actual": "move",
+      "correct": true
+    },
+    {
+      "name": "door_open",
+      "state": "The door to the garden is open. Proposed operation: Walk through the door to the garden.",
+      "questions": {
+        "check": {
+          "type": "choice",
+          "instructions": "Is the proposed operation executable in the current state?",
+          "criteria": {
+            "yes": "The operation is executable now.",
+            "no": "The operation is not executable now."
+          }
+        }
+      },
+      "encoding_overrides": {},
+      "answers": {
+        "check": {
+          "type": "choice",
+          "confidence": 0.0406,
+          "action": {
+            "act_probability": 1.0
+          },
+          "choice": "yes",
+          "probabilities": {
+            "yes": 0.618,
+            "no": 0.382
+          }
+        }
+      },
+      "usage": {
+        "input_tokens": 56,
+        "output_tokens": 0
+      },
+      "latency_s": 0.021306124981492758,
+      "encoding": [
+        {
+          "question": "check",
+          "encoded_tokens": 56,
+          "instruction_tokens": [
+            13,
+            13
+          ],
+          "state_tokens": [
+            20,
+            20
+          ],
+          "option_tokens": [
+            [
+              8,
+              8
+            ],
+            [
+              9,
+              9
+            ]
+          ],
+          "input_ids_sha256": "c27afd9714bdc8822e416bd7e8b88270f91d91dd41e855dd7be70e615205145f",
+          "effective_input_text": "[CLS]choice question: Is the proposed operation executable in the current state?[SEP][MASK] yes: The operation is executable now.[MASK] no: The operation is not executable now.[SEP]The door to the garden is open. Proposed operation: Walk through the door to the garden.[SEP]"
+        }
+      ],
+      "schema": "choice_available",
+      "expected": "yes",
+      "actual": "yes",
+      "correct": true
+    },
+    {
+      "name": "door_open",
+      "state": "The door to the garden is open. Proposed operation: Walk through the door to the garden.",
+      "questions": {
+        "check": {
+          "type": "choice",
+          "instructions": "Is the proposed operation executable in the current state?",
+          "criteria": {
+            "no": "The operation is not executable now.",
+            "yes": "The operation is executable now."
+          }
+        }
+      },
+      "encoding_overrides": {},
+      "answers": {
+        "check": {
+          "type": "choice",
+          "confidence": 0.0743,
+          "action": {
+            "act_probability": 1.0
+          },
+          "choice": "yes",
+          "probabilities": {
+            "no": 0.3409,
+            "yes": 0.6591
+          }
+        }
+      },
+      "usage": {
+        "input_tokens": 56,
+        "output_tokens": 0
+      },
+      "latency_s": 0.0181153750163503,
+      "encoding": [
+        {
+          "question": "check",
+          "encoded_tokens": 56,
+          "instruction_tokens": [
+            13,
+            13
+          ],
+          "state_tokens": [
+            20,
+            20
+          ],
+          "option_tokens": [
+            [
+              9,
+              9
+            ],
+            [
+              8,
+              8
+            ]
+          ],
+          "input_ids_sha256": "0f738cca347ec594325ee5af34bbce3002ffd3173c3832b1915e56871eccb02c",
+          "effective_input_text": "[CLS]choice question: Is the proposed operation executable in the current state?[SEP][MASK] no: The operation is not executable now.[MASK] yes: The operation is executable now.[SEP]The door to the garden is open. Proposed operation: Walk through the door to the garden.[SEP]"
+        }
+      ],
+      "schema": "choice_available_reversed",
+      "expected": "yes",
+      "actual": "yes",
+      "correct": true
+    },
+    {
+      "name": "door_open",
+      "state": "The door to the garden is open. Proposed operation: Walk through the door to the garden.",
+      "questions": {
+        "check": {
+          "type": "noul",
+          "instructions": "The proposed operation is executable in the current state."
+        }
+      },
+      "encoding_overrides": {},
+      "answers": {
+        "check": {
+          "type": "noul",
+          "confidence": 0.5168,
+          "action": {
+            "act_probability": 1.0
+          },
+          "noul": 0.4832
+        }
+      },
+      "usage": {
+        "input_tokens": 56,
+        "output_tokens": 0
+      },
+      "latency_s": 0.01705329102696851,
+      "encoding": [
+        {
+          "question": "check",
+          "encoded_tokens": 56,
+          "instruction_tokens": [
+            14,
+            14
+          ],
+          "state_tokens": [
+            20,
+            20
+          ],
+          "option_tokens": [
+            [
+              9,
+              9
+            ],
+            [
+              7,
+              7
+            ]
+          ],
+          "input_ids_sha256": "3656503a57a7bd221cef4eba71c72effd6bfc548de89d2b332c3b33f3efa2070",
+          "effective_input_text": "[CLS]noul question: The proposed operation is executable in the current state.[SEP][MASK] false: no, the statement does not hold[MASK] true: yes, the statement holds[SEP]The door to the garden is open. Proposed operation: Walk through the door to the garden.[SEP]"
+        }
+      ],
+      "schema": "noul",
+      "expected": "yes",
+      "actual": "no",
+      "correct": false
+    },
+    {
+      "name": "door_locked",
+      "state": "The only door to the garden is locked. No key or other route is available.",
+      "questions": {
+        "check": {
+          "type": "choice",
+          "instructions": "Which listed operation can be executed in the current state?",
+          "criteria": {
+            "move": "Walk through the door to the garden.",
+            "none": "None of the listed operations can be executed now."
+          }
+        }
+      },
+      "encoding_overrides": {},
+      "answers": {
+        "check": {
+          "type": "choice",
+          "confidence": 0.009,
+          "action": {
+            "act_probability": 1.0
+          },
+          "choice": "move",
+          "probabilities": {
+            "move": 0.5556,
+            "none": 0.4444
+          }
+        }
+      },
+      "usage": {
+        "input_tokens": 59,
+        "output_tokens": 0
+      },
+      "latency_s": 0.016162708052434027,
+      "encoding": [
+        {
+          "question": "check",
+          "encoded_tokens": 59,
+          "instruction_tokens": [
+            14,
+            14
+          ],
+          "state_tokens": [
+            17,
+            17
+          ],
+          "option_tokens": [
+            [
+              10,
+              10
+            ],
+            [
+              12,
+              12
+            ]
+          ],
+          "input_ids_sha256": "b9cd89793a715c988355f11d9e827e084696262e62af385e699e1b76e1396109",
+          "effective_input_text": "[CLS]choice question: Which listed operation can be executed in the current state?[SEP][MASK] move: Walk through the door to the garden.[MASK] none: None of the listed operations can be executed now.[SEP]The only door to the garden is locked. No key or other route is available.[SEP]"
+        }
+      ],
+      "schema": "choice_none",
+      "expected": "none",
+      "actual": "move",
+      "correct": false
+    },
+    {
+      "name": "door_locked",
+      "state": "The only door to the garden is locked. No key or other route is available.",
+      "questions": {
+        "check": {
+          "type": "choice",
+          "instructions": "Which listed operation can be executed in the current state?",
+          "criteria": {
+            "none": "None of the listed operations can be executed now.",
+            "move": "Walk through the door to the garden."
+          }
+        }
+      },
+      "encoding_overrides": {},
+      "answers": {
+        "check": {
+          "type": "choice",
+          "confidence": 0.2765,
+          "action": {
+            "act_probability": 1.0
+          },
+          "choice": "none",
+          "probabilities": {
+            "none": 0.7992,
+            "move": 0.2008
+          }
+        }
+      },
+      "usage": {
+        "input_tokens": 59,
+        "output_tokens": 0
+      },
+      "latency_s": 0.015734000015072525,
+      "encoding": [
+        {
+          "question": "check",
+          "encoded_tokens": 59,
+          "instruction_tokens": [
+            14,
+            14
+          ],
+          "state_tokens": [
+            17,
+            17
+          ],
+          "option_tokens": [
+            [
+              12,
+              12
+            ],
+            [
+              10,
+              10
+            ]
+          ],
+          "input_ids_sha256": "421d4e932510d5207a31518f049082f665caac3c020dc31f344769e93f796be8",
+          "effective_input_text": "[CLS]choice question: Which listed operation can be executed in the current state?[SEP][MASK] none: None of the listed operations can be executed now.[MASK] move: Walk through the door to the garden.[SEP]The only door to the garden is locked. No key or other route is available.[SEP]"
+        }
+      ],
+      "schema": "choice_none_reversed",
+      "expected": "none",
+      "actual": "none",
+      "correct": true
+    },
+    {
+      "name": "door_locked",
+      "state": "The only door to the garden is locked. No key or other route is available. Proposed operation: Walk through the door to the garden.",
+      "questions": {
+        "check": {
+          "type": "choice",
+          "instructions": "Is the proposed operation executable in the current state?",
+          "criteria": {
+            "yes": "The operation is executable now.",
+            "no": "The operation is not executable now."
+          }
+        }
+      },
+      "encoding_overrides": {},
+      "answers": {
+        "check": {
+          "type": "choice",
+          "confidence": 0.4111,
+          "action": {
+            "act_probability": 1.0
+          },
+          "choice": "yes",
+          "probabilities": {
+            "yes": 0.8582,
+            "no": 0.1418
+          }
+        }
+      },
+      "usage": {
+        "input_tokens": 65,
+        "output_tokens": 0
+      },
+      "latency_s": 0.026810208975803107,
+      "encoding": [
+        {
+          "question": "check",
+          "encoded_tokens": 65,
+          "instruction_tokens": [
+            13,
+            13
+          ],
+          "state_tokens": [
+            29,
+            29
+          ],
+          "option_tokens": [
+            [
+              8,
+              8
+            ],
+            [
+              9,
+              9
+            ]
+          ],
+          "input_ids_sha256": "35e432cecaafa6ace4d9f7458eda7953c09f0619570d2628e8ce3469c1f12eb9",
+          "effective_input_text": "[CLS]choice question: Is the proposed operation executable in the current state?[SEP][MASK] yes: The operation is executable now.[MASK] no: The operation is not executable now.[SEP]The only door to the garden is locked. No key or other route is available. Proposed operation: Walk through the door to the garden.[SEP]"
+        }
+      ],
+      "schema": "choice_available",
+      "expected": "no",
+      "actual": "yes",
+      "correct": false
+    },
+    {
+      "name": "door_locked",
+      "state": "The only door to the garden is locked. No key or other route is available. Proposed operation: Walk through the door to the garden.",
+      "questions": {
+        "check": {
+          "type": "choice",
+          "instructions": "Is the proposed operation executable in the current state?",
+          "criteria": {
+            "no": "The operation is not executable now.",
+            "yes": "The operation is executable now."
+          }
+        }
+      },
+      "encoding_overrides": {},
+      "answers": {
+        "check": {
+          "type": "choice",
+          "confidence": 0.5144,
+          "action": {
+            "act_probability": 1.0
+          },
+          "choice": "yes",
+          "probabilities": {
+            "no": 0.1053,
+            "yes": 0.8947
+          }
+        }
+      },
+      "usage": {
+        "input_tokens": 65,
+        "output_tokens": 0
+      },
+      "latency_s": 0.023041334003210068,
+      "encoding": [
+        {
+          "question": "check",
+          "encoded_tokens": 65,
+          "instruction_tokens": [
+            13,
+            13
+          ],
+          "state_tokens": [
+            29,
+            29
+          ],
+          "option_tokens": [
+            [
+              9,
+              9
+            ],
+            [
+              8,
+              8
+            ]
+          ],
+          "input_ids_sha256": "582bc8f622ee27ebe74c2530d0fc83a0f8d9e2ab10556496e0d24011920ba9a1",
+          "effective_input_text": "[CLS]choice question: Is the proposed operation executable in the current state?[SEP][MASK] no: The operation is not executable now.[MASK] yes: The operation is executable now.[SEP]The only door to the garden is locked. No key or other route is available. Proposed operation: Walk through the door to the garden.[SEP]"
+        }
+      ],
+      "schema": "choice_available_reversed",
+      "expected": "no",
+      "actual": "yes",
+      "correct": false
+    },
+    {
+      "name": "door_locked",
+      "state": "The only door to the garden is locked. No key or other route is available. Proposed operation: Walk through the door to the garden.",
+      "questions": {
+        "check": {
+          "type": "noul",
+          "instructions": "The proposed operation is executable in the current state."
+        }
+      },
+      "encoding_overrides": {},
+      "answers": {
+        "check": {
+          "type": "noul",
+          "confidence": 0.7299,
+          "action": {
+            "act_probability": 1.0
+          },
+          "noul": 0.7299
+        }
+      },
+      "usage": {
+        "input_tokens": 65,
+        "output_tokens": 0
+      },
+      "latency_s": 0.02465579198906198,
+      "encoding": [
+        {
+          "question": "check",
+          "encoded_tokens": 65,
+          "instruction_tokens": [
+            14,
+            14
+          ],
+          "state_tokens": [
+            29,
+            29
+          ],
+          "option_tokens": [
+            [
+              9,
+              9
+            ],
+            [
+              7,
+              7
+            ]
+          ],
+          "input_ids_sha256": "c10a0ef4fef839449efa45095ee094eb17ca19b19abd002e7959bd3ae440a0fc",
+          "effective_input_text": "[CLS]noul question: The proposed operation is executable in the current state.[SEP][MASK] false: no, the statement does not hold[MASK] true: yes, the statement holds[SEP]The only door to the garden is locked. No key or other route is available. Proposed operation: Walk through the door to the garden.[SEP]"
+        }
+      ],
+      "schema": "noul",
+      "expected": "no",
+      "actual": "yes",
+      "correct": false
+    },
+    {
+      "name": "nurse_present",
+      "state": "The party has 1/20 HP. A nurse is present and offers free healing.",
+      "questions": {
+        "check": {
+          "type": "choice",
+          "instructions": "Which listed operation can be executed in the current state?",
+          "criteria": {
+            "move": "Talk to the nurse to heal the party.",
+            "none": "None of the listed operations can be executed now."
+          }
+        }
+      },
+      "encoding_overrides": {},
+      "answers": {
+        "check": {
+          "type": "choice",
+          "confidence": 0.0929,
+          "action": {
+            "act_probability": 1.0
+          },
+          "choice": "none",
+          "probabilities": {
+            "move": 0.3226,
+            "none": 0.6774
+          }
+        }
+      },
+      "usage": {
+        "input_tokens": 60,
+        "output_tokens": 0
+      },
+      "latency_s": 0.015683042001910508,
+      "encoding": [
+        {
+          "question": "check",
+          "encoded_tokens": 60,
+          "instruction_tokens": [
+            14,
+            14
+          ],
+          "state_tokens": [
+            17,
+            17
+          ],
+          "option_tokens": [
+            [
+              11,
+              11
+            ],
+            [
+              12,
+              12
+            ]
+          ],
+          "input_ids_sha256": "3e2132ea7dcd8681c9f6308e64d03499ff629ddcccdb7d5a0198911e732f1b10",
+          "effective_input_text": "[CLS]choice question: Which listed operation can be executed in the current state?[SEP][MASK] move: Talk to the nurse to heal the party.[MASK] none: None of the listed operations can be executed now.[SEP]The party has 1/20 HP. A nurse is present and offers free healing.[SEP]"
+        }
+      ],
+      "schema": "choice_none",
+      "expected": "move",
+      "actual": "none",
+      "correct": false
+    },
+    {
+      "name": "nurse_present",
+      "state": "The party has 1/20 HP. A nurse is present and offers free healing.",
+      "questions": {
+        "check": {
+          "type": "choice",
+          "instructions": "Which listed operation can be executed in the current state?",
+          "criteria": {
+            "none": "None of the listed operations can be executed now.",
+            "move": "Talk to the nurse to heal the party."
+          }
+        }
+      },
+      "encoding_overrides": {},
+      "answers": {
+        "check": {
+          "type": "choice",
+          "confidence": 0.0017,
+          "action": {
+            "act_probability": 1.0
+          },
+          "choice": "move",
+          "probabilities": {
+            "none": 0.4758,
+            "move": 0.5242
+          }
+        }
+      },
+      "usage": {
+        "input_tokens": 60,
+        "output_tokens": 0
+      },
+      "latency_s": 0.015699915995355695,
+      "encoding": [
+        {
+          "question": "check",
+          "encoded_tokens": 60,
+          "instruction_tokens": [
+            14,
+            14
+          ],
+          "state_tokens": [
+            17,
+            17
+          ],
+          "option_tokens": [
+            [
+              12,
+              12
+            ],
+            [
+              11,
+              11
+            ]
+          ],
+          "input_ids_sha256": "b86666e77757665e3749418d8b23d02a46f759c377bfcb017ab287b9b8e11059",
+          "effective_input_text": "[CLS]choice question: Which listed operation can be executed in the current state?[SEP][MASK] none: None of the listed operations can be executed now.[MASK] move: Talk to the nurse to heal the party.[SEP]The party has 1/20 HP. A nurse is present and offers free healing.[SEP]"
+        }
+      ],
+      "schema": "choice_none_reversed",
+      "expected": "move",
+      "actual": "move",
+      "correct": true
+    },
+    {
+      "name": "nurse_present",
+      "state": "The party has 1/20 HP. A nurse is present and offers free healing. Proposed operation: Talk to the nurse to heal the party.",
+      "questions": {
+        "check": {
+          "type": "choice",
+          "instructions": "Is the proposed operation executable in the current state?",
+          "criteria": {
+            "yes": "The operation is executable now.",
+            "no": "The operation is not executable now."
+          }
+        }
+      },
+      "encoding_overrides": {},
+      "answers": {
+        "check": {
+          "type": "choice",
+          "confidence": 0.0207,
+          "action": {
+            "act_probability": 1.0
+          },
+          "choice": "no",
+          "probabilities": {
+            "yes": 0.4155,
+            "no": 0.5845
+          }
+        }
+      },
+      "usage": {
+        "input_tokens": 66,
+        "output_tokens": 0
+      },
+      "latency_s": 0.022892249980941415,
+      "encoding": [
+        {
+          "question": "check",
+          "encoded_tokens": 66,
+          "instruction_tokens": [
+            13,
+            13
+          ],
+          "state_tokens": [
+            30,
+            30
+          ],
+          "option_tokens": [
+            [
+              8,
+              8
+            ],
+            [
+              9,
+              9
+            ]
+          ],
+          "input_ids_sha256": "8058c91ebbfb1acf8d73123a025f7f4c2da48348731e9a2969e19e6adeb67e88",
+          "effective_input_text": "[CLS]choice question: Is the proposed operation executable in the current state?[SEP][MASK] yes: The operation is executable now.[MASK] no: The operation is not executable now.[SEP]The party has 1/20 HP. A nurse is present and offers free healing. Proposed operation: Talk to the nurse to heal the party.[SEP]"
+        }
+      ],
+      "schema": "choice_available",
+      "expected": "yes",
+      "actual": "no",
+      "correct": false
+    },
+    {
+      "name": "nurse_present",
+      "state": "The party has 1/20 HP. A nurse is present and offers free healing. Proposed operation: Talk to the nurse to heal the party.",
+      "questions": {
+        "check": {
+          "type": "choice",
+          "instructions": "Is the proposed operation executable in the current state?",
+          "criteria": {
+            "no": "The operation is not executable now.",
+            "yes": "The operation is executable now."
+          }
+        }
+      },
+      "encoding_overrides": {},
+      "answers": {
+        "check": {
+          "type": "choice",
+          "confidence": 0.0036,
+          "action": {
+            "act_probability": 1.0
+          },
+          "choice": "no",
+          "probabilities": {
+            "no": 0.5354,
+            "yes": 0.4646
+          }
+        }
+      },
+      "usage": {
+        "input_tokens": 66,
+        "output_tokens": 0
+      },
+      "latency_s": 0.0238855829811655,
+      "encoding": [
+        {
+          "question": "check",
+          "encoded_tokens": 66,
+          "instruction_tokens": [
+            13,
+            13
+          ],
+          "state_tokens": [
+            30,
+            30
+          ],
+          "option_tokens": [
+            [
+              9,
+              9
+            ],
+            [
+              8,
+              8
+            ]
+          ],
+          "input_ids_sha256": "ba522acb0c7b73519bff8a4be6c8030e158ac2084a6e77979eb5e12bbfedc2a8",
+          "effective_input_text": "[CLS]choice question: Is the proposed operation executable in the current state?[SEP][MASK] no: The operation is not executable now.[MASK] yes: The operation is executable now.[SEP]The party has 1/20 HP. A nurse is present and offers free healing. Proposed operation: Talk to the nurse to heal the party.[SEP]"
+        }
+      ],
+      "schema": "choice_available_reversed",
+      "expected": "yes",
+      "actual": "no",
+      "correct": false
+    },
+    {
+      "name": "nurse_present",
+      "state": "The party has 1/20 HP. A nurse is present and offers free healing. Proposed operation: Talk to the nurse to heal the party.",
+      "questions": {
+        "check": {
+          "type": "noul",
+          "instructions": "The proposed operation is executable in the current state."
+        }
+      },
+      "encoding_overrides": {},
+      "answers": {
+        "check": {
+          "type": "noul",
+          "confidence": 0.7477,
+          "action": {
+            "act_probability": 1.0
+          },
+          "noul": 0.7477
+        }
+      },
+      "usage": {
+        "input_tokens": 66,
+        "output_tokens": 0
+      },
+      "latency_s": 0.02343129098881036,
+      "encoding": [
+        {
+          "question": "check",
+          "encoded_tokens": 66,
+          "instruction_tokens": [
+            14,
+            14
+          ],
+          "state_tokens": [
+            30,
+            30
+          ],
+          "option_tokens": [
+            [
+              9,
+              9
+            ],
+            [
+              7,
+              7
+            ]
+          ],
+          "input_ids_sha256": "d76c3e8968e43b8b692934c3e92f7979d0e3868e915a0844b1af051a17fb1d22",
+          "effective_input_text": "[CLS]noul question: The proposed operation is executable in the current state.[SEP][MASK] false: no, the statement does not hold[MASK] true: yes, the statement holds[SEP]The party has 1/20 HP. A nurse is present and offers free healing. Proposed operation: Talk to the nurse to heal the party.[SEP]"
+        }
+      ],
+      "schema": "noul",
+      "expected": "yes",
+      "actual": "yes",
+      "correct": true
+    },
+    {
+      "name": "nurse_absent",
+      "state": "The party has 1/20 HP. No nurse or healing items are present.",
+      "questions": {
+        "check": {
+          "type": "choice",
+          "instructions": "Which listed operation can be executed in the current state?",
+          "criteria": {
+            "move": "Talk to the nurse to heal the party.",
+            "none": "None of the listed operations can be executed now."
+          }
+        }
+      },
+      "encoding_overrides": {},
+      "answers": {
+        "check": {
+          "type": "choice",
+          "confidence": 0.7706,
+          "action": {
+            "act_probability": 1.0
+          },
+          "choice": "none",
+          "probabilities": {
+            "move": 0.0372,
+            "none": 0.9628
+          }
+        }
+      },
+      "usage": {
+        "input_tokens": 59,
+        "output_tokens": 0
+      },
+      "latency_s": 0.01608849997865036,
+      "encoding": [
+        {
+          "question": "check",
+          "encoded_tokens": 59,
+          "instruction_tokens": [
+            14,
+            14
+          ],
+          "state_tokens": [
+            16,
+            16
+          ],
+          "option_tokens": [
+            [
+              11,
+              11
+            ],
+            [
+              12,
+              12
+            ]
+          ],
+          "input_ids_sha256": "dcd3da9af9dbf4cb07386de73639182460923e98eee88d03fe84d4453bddb482",
+          "effective_input_text": "[CLS]choice question: Which listed operation can be executed in the current state?[SEP][MASK] move: Talk to the nurse to heal the party.[MASK] none: None of the listed operations can be executed now.[SEP]The party has 1/20 HP. No nurse or healing items are present.[SEP]"
+        }
+      ],
+      "schema": "choice_none",
+      "expected": "none",
+      "actual": "none",
+      "correct": true
+    },
+    {
+      "name": "nurse_absent",
+      "state": "The party has 1/20 HP. No nurse or healing items are present.",
+      "questions": {
+        "check": {
+          "type": "choice",
+          "instructions": "Which listed operation can be executed in the current state?",
+          "criteria": {
+            "none": "None of the listed operations can be executed now.",
+            "move": "Talk to the nurse to heal the party."
+          }
+        }
+      },
+      "encoding_overrides": {},
+      "answers": {
+        "check": {
+          "type": "choice",
+          "confidence": 0.6997,
+          "action": {
+            "act_probability": 1.0
+          },
+          "choice": "none",
+          "probabilities": {
+            "none": 0.9467,
+            "move": 0.0533
+          }
+        }
+      },
+      "usage": {
+        "input_tokens": 59,
+        "output_tokens": 0
+      },
+      "latency_s": 0.015652417030651122,
+      "encoding": [
+        {
+          "question": "check",
+          "encoded_tokens": 59,
+          "instruction_tokens": [
+            14,
+            14
+          ],
+          "state_tokens": [
+            16,
+            16
+          ],
+          "option_tokens": [
+            [
+              12,
+              12
+            ],
+            [
+              11,
+              11
+            ]
+          ],
+          "input_ids_sha256": "9731b6efdaef41445d50f5296a4082d962af210893e7ff376490a23639211512",
+          "effective_input_text": "[CLS]choice question: Which listed operation can be executed in the current state?[SEP][MASK] none: None of the listed operations can be executed now.[MASK] move: Talk to the nurse to heal the party.[SEP]The party has 1/20 HP. No nurse or healing items are present.[SEP]"
+        }
+      ],
+      "schema": "choice_none_reversed",
+      "expected": "none",
+      "actual": "none",
+      "correct": true
+    },
+    {
+      "name": "nurse_absent",
+      "state": "The party has 1/20 HP. No nurse or healing items are present. Proposed operation: Talk to the nurse to heal the party.",
+      "questions": {
+        "check": {
+          "type": "choice",
+          "instructions": "Is the proposed operation executable in the current state?",
+          "criteria": {
+            "yes": "The operation is executable now.",
+            "no": "The operation is not executable now."
+          }
+        }
+      },
+      "encoding_overrides": {},
+      "answers": {
+        "check": {
+          "type": "choice",
+          "confidence": 0.1616,
+          "action": {
+            "act_probability": 1.0
+          },
+          "choice": "no",
+          "probabilities": {
+            "yes": 0.2679,
+            "no": 0.7321
+          }
+        }
+      },
+      "usage": {
+        "input_tokens": 65,
+        "output_tokens": 0
+      },
+      "latency_s": 0.02308795799035579,
+      "encoding": [
+        {
+          "question": "check",
+          "encoded_tokens": 65,
+          "instruction_tokens": [
+            13,
+            13
+          ],
+          "state_tokens": [
+            29,
+            29
+          ],
+          "option_tokens": [
+            [
+              8,
+              8
+            ],
+            [
+              9,
+              9
+            ]
+          ],
+          "input_ids_sha256": "dba83b0379c347d913cbac7e054497b07f0185a61547827a6b6635f117d71766",
+          "effective_input_text": "[CLS]choice question: Is the proposed operation executable in the current state?[SEP][MASK] yes: The operation is executable now.[MASK] no: The operation is not executable now.[SEP]The party has 1/20 HP. No nurse or healing items are present. Proposed operation: Talk to the nurse to heal the party.[SEP]"
+        }
+      ],
+      "schema": "choice_available",
+      "expected": "no",
+      "actual": "no",
+      "correct": true
+    },
+    {
+      "name": "nurse_absent",
+      "state": "The party has 1/20 HP. No nurse or healing items are present. Proposed operation: Talk to the nurse to heal the party.",
+      "questions": {
+        "check": {
+          "type": "choice",
+          "instructions": "Is the proposed operation executable in the current state?",
+          "criteria": {
+            "no": "The operation is not executable now.",
+            "yes": "The operation is executable now."
+          }
+        }
+      },
+      "encoding_overrides": {},
+      "answers": {
+        "check": {
+          "type": "choice",
+          "confidence": 0.0964,
+          "action": {
+            "act_probability": 1.0
+          },
+          "choice": "no",
+          "probabilities": {
+            "no": 0.6808,
+            "yes": 0.3192
+          }
+        }
+      },
+      "usage": {
+        "input_tokens": 65,
+        "output_tokens": 0
+      },
+      "latency_s": 0.024139582994394004,
+      "encoding": [
+        {
+          "question": "check",
+          "encoded_tokens": 65,
+          "instruction_tokens": [
+            13,
+            13
+          ],
+          "state_tokens": [
+            29,
+            29
+          ],
+          "option_tokens": [
+            [
+              9,
+              9
+            ],
+            [
+              8,
+              8
+            ]
+          ],
+          "input_ids_sha256": "8551f657dfff5491153d9c0f9107a04de4c80a8ef22bf0388b67c603b8bf21bd",
+          "effective_input_text": "[CLS]choice question: Is the proposed operation executable in the current state?[SEP][MASK] no: The operation is not executable now.[MASK] yes: The operation is executable now.[SEP]The party has 1/20 HP. No nurse or healing items are present. Proposed operation: Talk to the nurse to heal the party.[SEP]"
+        }
+      ],
+      "schema": "choice_available_reversed",
+      "expected": "no",
+      "actual": "no",
+      "correct": true
+    },
+    {
+      "name": "nurse_absent",
+      "state": "The party has 1/20 HP. No nurse or healing items are present. Proposed operation: Talk to the nurse to heal the party.",
+      "questions": {
+        "check": {
+          "type": "noul",
+          "instructions": "The proposed operation is executable in the current state."
+        }
+      },
+      "encoding_overrides": {},
+      "answers": {
+        "check": {
+          "type": "noul",
+          "confidence": 0.7453,
+          "action": {
+            "act_probability": 1.0
+          },
+          "noul": 0.2547
+        }
+      },
+      "usage": {
+        "input_tokens": 65,
+        "output_tokens": 0
+      },
+      "latency_s": 0.02306166698690504,
+      "encoding": [
+        {
+          "question": "check",
+          "encoded_tokens": 65,
+          "instruction_tokens": [
+            14,
+            14
+          ],
+          "state_tokens": [
+            29,
+            29
+          ],
+          "option_tokens": [
+            [
+              9,
+              9
+            ],
+            [
+              7,
+              7
+            ]
+          ],
+          "input_ids_sha256": "9f1a73c4710bde18375957b6c4800a7c41214b8dff0088c043a2981607c32192",
+          "effective_input_text": "[CLS]noul question: The proposed operation is executable in the current state.[SEP][MASK] false: no, the statement does not hold[MASK] true: yes, the statement holds[SEP]The party has 1/20 HP. No nurse or healing items are present. Proposed operation: Talk to the nurse to heal the party.[SEP]"
+        }
+      ],
+      "schema": "noul",
+      "expected": "no",
+      "actual": "no",
+      "correct": true
+    },
+    {
+      "name": "money_enough",
+      "state": "The player has 500 coins. The shop is open and sells a potion for 300 coins.",
+      "questions": {
+        "check": {
+          "type": "choice",
+          "instructions": "Which listed operation can be executed in the current state?",
+          "criteria": {
+            "move": "Buy one potion for 300 coins.",
+            "none": "None of the listed operations can be executed now."
+          }
+        }
+      },
+      "encoding_overrides": {},
+      "answers": {
+        "check": {
+          "type": "choice",
+          "confidence": 0.4127,
+          "action": {
+            "act_probability": 1.0
+          },
+          "choice": "none",
+          "probabilities": {
+            "move": 0.1412,
+            "none": 0.8588
+          }
+        }
+      },
+      "usage": {
+        "input_tokens": 61,
+        "output_tokens": 0
+      },
+      "latency_s": 0.015631165995728225,
+      "encoding": [
+        {
+          "question": "check",
+          "encoded_tokens": 61,
+          "instruction_tokens": [
+            14,
+            14
+          ],
+          "state_tokens": [
+            19,
+            19
+          ],
+          "option_tokens": [
+            [
+              10,
+              10
+            ],
+            [
+              12,
+              12
+            ]
+          ],
+          "input_ids_sha256": "bc809f0de95484f2f73faa1b44cf291e93956b70bc9aa01db7b6f03a9017f4ad",
+          "effective_input_text": "[CLS]choice question: Which listed operation can be executed in the current state?[SEP][MASK] move: Buy one potion for 300 coins.[MASK] none: None of the listed operations can be executed now.[SEP]The player has 500 coins. The shop is open and sells a potion for 300 coins.[SEP]"
+        }
+      ],
+      "schema": "choice_none",
+      "expected": "move",
+      "actual": "none",
+      "correct": false
+    },
+    {
+      "name": "money_enough",
+      "state": "The player has 500 coins. The shop is open and sells a potion for 300 coins.",
+      "questions": {
+        "check": {
+          "type": "choice",
+          "instructions": "Which listed operation can be executed in the current state?",
+          "criteria": {
+            "none": "None of the listed operations can be executed now.",
+            "move": "Buy one potion for 300 coins."
+          }
+        }
+      },
+      "encoding_overrides": {},
+      "answers": {
+        "check": {
+          "type": "choice",
+          "confidence": 0.1274,
+          "action": {
+            "act_probability": 1.0
+          },
+          "choice": "move",
+          "probabilities": {
+            "none": 0.2931,
+            "move": 0.7069
+          }
+        }
+      },
+      "usage": {
+        "input_tokens": 61,
+        "output_tokens": 0
+      },
+      "latency_s": 0.015544041991233826,
+      "encoding": [
+        {
+          "question": "check",
+          "encoded_tokens": 61,
+          "instruction_tokens": [
+            14,
+            14
+          ],
+          "state_tokens": [
+            19,
+            19
+          ],
+          "option_tokens": [
+            [
+              12,
+              12
+            ],
+            [
+              10,
+              10
+            ]
+          ],
+          "input_ids_sha256": "8a1a9736b578a24a34991e0e7705a17297dc9bbfa2481d523cf7985e478f0e08",
+          "effective_input_text": "[CLS]choice question: Which listed operation can be executed in the current state?[SEP][MASK] none: None of the listed operations can be executed now.[MASK] move: Buy one potion for 300 coins.[SEP]The player has 500 coins. The shop is open and sells a potion for 300 coins.[SEP]"
+        }
+      ],
+      "schema": "choice_none_reversed",
+      "expected": "move",
+      "actual": "move",
+      "correct": true
+    },
+    {
+      "name": "money_enough",
+      "state": "The player has 500 coins. The shop is open and sells a potion for 300 coins. Proposed operation: Buy one potion for 300 coins.",
+      "questions": {
+        "check": {
+          "type": "choice",
+          "instructions": "Is the proposed operation executable in the current state?",
+          "criteria": {
+            "yes": "The operation is executable now.",
+            "no": "The operation is not executable now."
+          }
+        }
+      },
+      "encoding_overrides": {},
+      "answers": {
+        "check": {
+          "type": "choice",
+          "confidence": 0.7946,
+          "action": {
+            "act_probability": 1.0
+          },
+          "choice": "yes",
+          "probabilities": {
+            "yes": 0.9678,
+            "no": 0.0322
+          }
+        }
+      },
+      "usage": {
+        "input_tokens": 67,
+        "output_tokens": 0
+      },
+      "latency_s": 0.024504417029675096,
+      "encoding": [
+        {
+          "question": "check",
+          "encoded_tokens": 67,
+          "instruction_tokens": [
+            13,
+            13
+          ],
+          "state_tokens": [
+            31,
+            31
+          ],
+          "option_tokens": [
+            [
+              8,
+              8
+            ],
+            [
+              9,
+              9
+            ]
+          ],
+          "input_ids_sha256": "60ba19db7d4c53e634424539c6615534092635154065ccf7d7a1d07d3a22dcbb",
+          "effective_input_text": "[CLS]choice question: Is the proposed operation executable in the current state?[SEP][MASK] yes: The operation is executable now.[MASK] no: The operation is not executable now.[SEP]The player has 500 coins. The shop is open and sells a potion for 300 coins. Proposed operation: Buy one potion for 300 coins.[SEP]"
+        }
+      ],
+      "schema": "choice_available",
+      "expected": "yes",
+      "actual": "yes",
+      "correct": true
+    },
+    {
+      "name": "money_enough",
+      "state": "The player has 500 coins. The shop is open and sells a potion for 300 coins. Proposed operation: Buy one potion for 300 coins.",
+      "questions": {
+        "check": {
+          "type": "choice",
+          "instructions": "Is the proposed operation executable in the current state?",
+          "criteria": {
+            "no": "The operation is not executable now.",
+            "yes": "The operation is executable now."
+          }
+        }
+      },
+      "encoding_overrides": {},
+      "answers": {
+        "check": {
+          "type": "choice",
+          "confidence": 0.7943,
+          "action": {
+            "act_probability": 1.0
+          },
+          "choice": "yes",
+          "probabilities": {
+            "no": 0.0323,
+            "yes": 0.9677
+          }
+        }
+      },
+      "usage": {
+        "input_tokens": 67,
+        "output_tokens": 0
+      },
+      "latency_s": 0.0227884579799138,
+      "encoding": [
+        {
+          "question": "check",
+          "encoded_tokens": 67,
+          "instruction_tokens": [
+            13,
+            13
+          ],
+          "state_tokens": [
+            31,
+            31
+          ],
+          "option_tokens": [
+            [
+              9,
+              9
+            ],
+            [
+              8,
+              8
+            ]
+          ],
+          "input_ids_sha256": "3689a628861f591a32404e3f3e7cca94ae05af4f42dfab42d7e345c7c3eac9fe",
+          "effective_input_text": "[CLS]choice question: Is the proposed operation executable in the current state?[SEP][MASK] no: The operation is not executable now.[MASK] yes: The operation is executable now.[SEP]The player has 500 coins. The shop is open and sells a potion for 300 coins. Proposed operation: Buy one potion for 300 coins.[SEP]"
+        }
+      ],
+      "schema": "choice_available_reversed",
+      "expected": "yes",
+      "actual": "yes",
+      "correct": true
+    },
+    {
+      "name": "money_enough",
+      "state": "The player has 500 coins. The shop is open and sells a potion for 300 coins. Proposed operation: Buy one potion for 300 coins.",
+      "questions": {
+        "check": {
+          "type": "noul",
+          "instructions": "The proposed operation is executable in the current state."
+        }
+      },
+      "encoding_overrides": {},
+      "answers": {
+        "check": {
+          "type": "noul",
+          "confidence": 0.8843,
+          "action": {
+            "act_probability": 1.0
+          },
+          "noul": 0.8843
+        }
+      },
+      "usage": {
+        "input_tokens": 67,
+        "output_tokens": 0
+      },
+      "latency_s": 0.023118917015381157,
+      "encoding": [
+        {
+          "question": "check",
+          "encoded_tokens": 67,
+          "instruction_tokens": [
+            14,
+            14
+          ],
+          "state_tokens": [
+            31,
+            31
+          ],
+          "option_tokens": [
+            [
+              9,
+              9
+            ],
+            [
+              7,
+              7
+            ]
+          ],
+          "input_ids_sha256": "94166b0beb7da840dc362e9c9d4788d7da027180b82bc0cc3e23c9d45ad9cd11",
+          "effective_input_text": "[CLS]noul question: The proposed operation is executable in the current state.[SEP][MASK] false: no, the statement does not hold[MASK] true: yes, the statement holds[SEP]The player has 500 coins. The shop is open and sells a potion for 300 coins. Proposed operation: Buy one potion for 300 coins.[SEP]"
+        }
+      ],
+      "schema": "noul",
+      "expected": "yes",
+      "actual": "yes",
+      "correct": true
+    },
+    {
+      "name": "money_short",
+      "state": "The player has 100 coins. The shop is open and sells a potion for 300 coins. Credit is unavailable.",
+      "questions": {
+        "check": {
+          "type": "choice",
+          "instructions": "Which listed operation can be executed in the current state?",
+          "criteria": {
+            "move": "Buy one potion for 300 coins.",
+            "none": "None of the listed operations can be executed now."
+          }
+        }
+      },
+      "encoding_overrides": {},
+      "answers": {
+        "check": {
+          "type": "choice",
+          "confidence": 0.5685,
+          "action": {
+            "act_probability": 1.0
+          },
+          "choice": "none",
+          "probabilities": {
+            "move": 0.0885,
+            "none": 0.9115
+          }
+        }
+      },
+      "usage": {
+        "input_tokens": 65,
+        "output_tokens": 0
+      },
+      "latency_s": 0.02516616601496935,
+      "encoding": [
+        {
+          "question": "check",
+          "encoded_tokens": 65,
+          "instruction_tokens": [
+            14,
+            14
+          ],
+          "state_tokens": [
+            23,
+            23
+          ],
+          "option_tokens": [
+            [
+              10,
+              10
+            ],
+            [
+              12,
+              12
+            ]
+          ],
+          "input_ids_sha256": "d874c3fd9044f9987205ad807fadebd695c7708d82d4b26fb3e1bf9f07b0307b",
+          "effective_input_text": "[CLS]choice question: Which listed operation can be executed in the current state?[SEP][MASK] move: Buy one potion for 300 coins.[MASK] none: None of the listed operations can be executed now.[SEP]The player has 100 coins. The shop is open and sells a potion for 300 coins. Credit is unavailable.[SEP]"
+        }
+      ],
+      "schema": "choice_none",
+      "expected": "none",
+      "actual": "none",
+      "correct": true
+    },
+    {
+      "name": "money_short",
+      "state": "The player has 100 coins. The shop is open and sells a potion for 300 coins. Credit is unavailable.",
+      "questions": {
+        "check": {
+          "type": "choice",
+          "instructions": "Which listed operation can be executed in the current state?",
+          "criteria": {
+            "none": "None of the listed operations can be executed now.",
+            "move": "Buy one potion for 300 coins."
+          }
+        }
+      },
+      "encoding_overrides": {},
+      "answers": {
+        "check": {
+          "type": "choice",
+          "confidence": 0.0037,
+          "action": {
+            "act_probability": 1.0
+          },
+          "choice": "move",
+          "probabilities": {
+            "none": 0.464,
+            "move": 0.536
+          }
+        }
+      },
+      "usage": {
+        "input_tokens": 65,
+        "output_tokens": 0
+      },
+      "latency_s": 0.023158875002991408,
+      "encoding": [
+        {
+          "question": "check",
+          "encoded_tokens": 65,
+          "instruction_tokens": [
+            14,
+            14
+          ],
+          "state_tokens": [
+            23,
+            23
+          ],
+          "option_tokens": [
+            [
+              12,
+              12
+            ],
+            [
+              10,
+              10
+            ]
+          ],
+          "input_ids_sha256": "6dbff4fdf74776410e4c584318c0b1b00868ca60d587d62ba78172500ae5613e",
+          "effective_input_text": "[CLS]choice question: Which listed operation can be executed in the current state?[SEP][MASK] none: None of the listed operations can be executed now.[MASK] move: Buy one potion for 300 coins.[SEP]The player has 100 coins. The shop is open and sells a potion for 300 coins. Credit is unavailable.[SEP]"
+        }
+      ],
+      "schema": "choice_none_reversed",
+      "expected": "none",
+      "actual": "move",
+      "correct": false
+    },
+    {
+      "name": "money_short",
+      "state": "The player has 100 coins. The shop is open and sells a potion for 300 coins. Credit is unavailable. Proposed operation: Buy one potion for 300 coins.",
+      "questions": {
+        "check": {
+          "type": "choice",
+          "instructions": "Is the proposed operation executable in the current state?",
+          "criteria": {
+            "yes": "The operation is executable now.",
+            "no": "The operation is not executable now."
+          }
+        }
+      },
+      "encoding_overrides": {},
+      "answers": {
+        "check": {
+          "type": "choice",
+          "confidence": 0.6356,
+          "action": {
+            "act_probability": 1.0
+          },
+          "choice": "yes",
+          "probabilities": {
+            "yes": 0.9304,
+            "no": 0.0696
+          }
+        }
+      },
+      "usage": {
+        "input_tokens": 71,
+        "output_tokens": 0
+      },
+      "latency_s": 0.025138541008345783,
+      "encoding": [
+        {
+          "question": "check",
+          "encoded_tokens": 71,
+          "instruction_tokens": [
+            13,
+            13
+          ],
+          "state_tokens": [
+            35,
+            35
+          ],
+          "option_tokens": [
+            [
+              8,
+              8
+            ],
+            [
+              9,
+              9
+            ]
+          ],
+          "input_ids_sha256": "ea798c0ead3e17a6201bf891c0306416c863a031dd90c3c487db3aeaeefc529e",
+          "effective_input_text": "[CLS]choice question: Is the proposed operation executable in the current state?[SEP][MASK] yes: The operation is executable now.[MASK] no: The operation is not executable now.[SEP]The player has 100 coins. The shop is open and sells a potion for 300 coins. Credit is unavailable. Proposed operation: Buy one potion for 300 coins.[SEP]"
+        }
+      ],
+      "schema": "choice_available",
+      "expected": "no",
+      "actual": "yes",
+      "correct": false
+    },
+    {
+      "name": "money_short",
+      "state": "The player has 100 coins. The shop is open and sells a potion for 300 coins. Credit is unavailable. Proposed operation: Buy one potion for 300 coins.",
+      "questions": {
+        "check": {
+          "type": "choice",
+          "instructions": "Is the proposed operation executable in the current state?",
+          "criteria": {
+            "no": "The operation is not executable now.",
+            "yes": "The operation is executable now."
+          }
+        }
+      },
+      "encoding_overrides": {},
+      "answers": {
+        "check": {
+          "type": "choice",
+          "confidence": 0.6792,
+          "action": {
+            "act_probability": 1.0
+          },
+          "choice": "yes",
+          "probabilities": {
+            "no": 0.0583,
+            "yes": 0.9417
+          }
+        }
+      },
+      "usage": {
+        "input_tokens": 71,
+        "output_tokens": 0
+      },
+      "latency_s": 0.02303658297751099,
+      "encoding": [
+        {
+          "question": "check",
+          "encoded_tokens": 71,
+          "instruction_tokens": [
+            13,
+            13
+          ],
+          "state_tokens": [
+            35,
+            35
+          ],
+          "option_tokens": [
+            [
+              9,
+              9
+            ],
+            [
+              8,
+              8
+            ]
+          ],
+          "input_ids_sha256": "c62d2d2dc1dd5631ce04f9a573598b1c54308895233628ff312b4ffb71259094",
+          "effective_input_text": "[CLS]choice question: Is the proposed operation executable in the current state?[SEP][MASK] no: The operation is not executable now.[MASK] yes: The operation is executable now.[SEP]The player has 100 coins. The shop is open and sells a potion for 300 coins. Credit is unavailable. Proposed operation: Buy one potion for 300 coins.[SEP]"
+        }
+      ],
+      "schema": "choice_available_reversed",
+      "expected": "no",
+      "actual": "yes",
+      "correct": false
+    },
+    {
+      "name": "money_short",
+      "state": "The player has 100 coins. The shop is open and sells a potion for 300 coins. Credit is unavailable. Proposed operation: Buy one potion for 300 coins.",
+      "questions": {
+        "check": {
+          "type": "noul",
+          "instructions": "The proposed operation is executable in the current state."
+        }
+      },
+      "encoding_overrides": {},
+      "answers": {
+        "check": {
+          "type": "noul",
+          "confidence": 0.8162,
+          "action": {
+            "act_probability": 1.0
+          },
+          "noul": 0.8162
+        }
+      },
+      "usage": {
+        "input_tokens": 71,
+        "output_tokens": 0
+      },
+      "latency_s": 0.02172220899956301,
+      "encoding": [
+        {
+          "question": "check",
+          "encoded_tokens": 71,
+          "instruction_tokens": [
+            14,
+            14
+          ],
+          "state_tokens": [
+            35,
+            35
+          ],
+          "option_tokens": [
+            [
+              9,
+              9
+            ],
+            [
+              7,
+              7
+            ]
+          ],
+          "input_ids_sha256": "00f9f95f4a6cc2d7067258b03c60450909b97af810138254afbe15ad44b62cd1",
+          "effective_input_text": "[CLS]noul question: The proposed operation is executable in the current state.[SEP][MASK] false: no, the statement does not hold[MASK] true: yes, the statement holds[SEP]The player has 100 coins. The shop is open and sells a potion for 300 coins. Credit is unavailable. Proposed operation: Buy one potion for 300 coins.[SEP]"
+        }
+      ],
+      "schema": "noul",
+      "expected": "no",
+      "actual": "yes",
+      "correct": false
+    },
+    {
+      "name": "route_found",
+      "state": "Location: RedsHouse2F. A walking route to PalletTown is available via RedsHouse1F.",
+      "questions": {
+        "check": {
+          "type": "choice",
+          "instructions": "Which listed operation can be executed in the current state?",
+          "criteria": {
+            "move": "Travel to PalletTown via RedsHouse1F.",
+            "none": "None of the listed operations can be executed now."
+          }
+        }
+      },
+      "encoding_overrides": {},
+      "answers": {
+        "check": {
+          "type": "choice",
+          "confidence": 0.1967,
+          "action": {
+            "act_probability": 1.0
+          },
+          "choice": "move",
+          "probabilities": {
+            "move": 0.755,
+            "none": 0.245
+          }
+        }
+      },
+      "usage": {
+        "input_tokens": 67,
+        "output_tokens": 0
+      },
+      "latency_s": 0.024062458949629217,
+      "encoding": [
+        {
+          "question": "check",
+          "encoded_tokens": 67,
+          "instruction_tokens": [
+            14,
+            14
+          ],
+          "state_tokens": [
+            22,
+            22
+          ],
+          "option_tokens": [
+            [
+              13,
+              13
+            ],
+            [
+              12,
+              12
+            ]
+          ],
+          "input_ids_sha256": "20f0071a30767238152c850ec080e5cda984c80e58b39c87a916a38e9a8c1425",
+          "effective_input_text": "[CLS]choice question: Which listed operation can be executed in the current state?[SEP][MASK] move: Travel to PalletTown via RedsHouse1F.[MASK] none: None of the listed operations can be executed now.[SEP]Location: RedsHouse2F. A walking route to PalletTown is available via RedsHouse1F.[SEP]"
+        }
+      ],
+      "schema": "choice_none",
+      "expected": "move",
+      "actual": "move",
+      "correct": true
+    },
+    {
+      "name": "route_found",
+      "state": "Location: RedsHouse2F. A walking route to PalletTown is available via RedsHouse1F.",
+      "questions": {
+        "check": {
+          "type": "choice",
+          "instructions": "Which listed operation can be executed in the current state?",
+          "criteria": {
+            "none": "None of the listed operations can be executed now.",
+            "move": "Travel to PalletTown via RedsHouse1F."
+          }
+        }
+      },
+      "encoding_overrides": {},
+      "answers": {
+        "check": {
+          "type": "choice",
+          "confidence": 0.1947,
+          "action": {
+            "act_probability": 1.0
+          },
+          "choice": "move",
+          "probabilities": {
+            "none": 0.2463,
+            "move": 0.7537
+          }
+        }
+      },
+      "usage": {
+        "input_tokens": 67,
+        "output_tokens": 0
+      },
+      "latency_s": 0.023978292010724545,
+      "encoding": [
+        {
+          "question": "check",
+          "encoded_tokens": 67,
+          "instruction_tokens": [
+            14,
+            14
+          ],
+          "state_tokens": [
+            22,
+            22
+          ],
+          "option_tokens": [
+            [
+              12,
+              12
+            ],
+            [
+              13,
+              13
+            ]
+          ],
+          "input_ids_sha256": "2b8fad102ec19ed0570d8f92ae787181b7dd48e51613a06a9f93bf4152d1559b",
+          "effective_input_text": "[CLS]choice question: Which listed operation can be executed in the current state?[SEP][MASK] none: None of the listed operations can be executed now.[MASK] move: Travel to PalletTown via RedsHouse1F.[SEP]Location: RedsHouse2F. A walking route to PalletTown is available via RedsHouse1F.[SEP]"
+        }
+      ],
+      "schema": "choice_none_reversed",
+      "expected": "move",
+      "actual": "move",
+      "correct": true
+    },
+    {
+      "name": "route_found",
+      "state": "Location: RedsHouse2F. A walking route to PalletTown is available via RedsHouse1F. Proposed operation: Travel to PalletTown via RedsHouse1F.",
+      "questions": {
+        "check": {
+          "type": "choice",
+          "instructions": "Is the proposed operation executable in the current state?",
+          "criteria": {
+            "yes": "The operation is executable now.",
+            "no": "The operation is not executable now."
+          }
+        }
+      },
+      "encoding_overrides": {},
+      "answers": {
+        "check": {
+          "type": "choice",
+          "confidence": 0.632,
+          "action": {
+            "act_probability": 1.0
+          },
+          "choice": "yes",
+          "probabilities": {
+            "yes": 0.9294,
+            "no": 0.0706
+          }
+        }
+      },
+      "usage": {
+        "input_tokens": 73,
+        "output_tokens": 0
+      },
+      "latency_s": 0.023989958979655057,
+      "encoding": [
+        {
+          "question": "check",
+          "encoded_tokens": 73,
+          "instruction_tokens": [
+            13,
+            13
+          ],
+          "state_tokens": [
+            37,
+            37
+          ],
+          "option_tokens": [
+            [
+              8,
+              8
+            ],
+            [
+              9,
+              9
+            ]
+          ],
+          "input_ids_sha256": "20af099cf5dffb0cc676575e46a048f4d891025a4e23ba21849d0ba399bb85f4",
+          "effective_input_text": "[CLS]choice question: Is the proposed operation executable in the current state?[SEP][MASK] yes: The operation is executable now.[MASK] no: The operation is not executable now.[SEP]Location: RedsHouse2F. A walking route to PalletTown is available via RedsHouse1F. Proposed operation: Travel to PalletTown via RedsHouse1F.[SEP]"
+        }
+      ],
+      "schema": "choice_available",
+      "expected": "yes",
+      "actual": "yes",
+      "correct": true
+    },
+    {
+      "name": "route_found",
+      "state": "Location: RedsHouse2F. A walking route to PalletTown is available via RedsHouse1F. Proposed operation: Travel to PalletTown via RedsHouse1F.",
+      "questions": {
+        "check": {
+          "type": "choice",
+          "instructions": "Is the proposed operation executable in the current state?",
+          "criteria": {
+            "no": "The operation is not executable now.",
+            "yes": "The operation is executable now."
+          }
+        }
+      },
+      "encoding_overrides": {},
+      "answers": {
+        "check": {
+          "type": "choice",
+          "confidence": 0.5313,
+          "action": {
+            "act_probability": 1.0
+          },
+          "choice": "yes",
+          "probabilities": {
+            "no": 0.0999,
+            "yes": 0.9001
+          }
+        }
+      },
+      "usage": {
+        "input_tokens": 73,
+        "output_tokens": 0
+      },
+      "latency_s": 0.02312062500277534,
+      "encoding": [
+        {
+          "question": "check",
+          "encoded_tokens": 73,
+          "instruction_tokens": [
+            13,
+            13
+          ],
+          "state_tokens": [
+            37,
+            37
+          ],
+          "option_tokens": [
+            [
+              9,
+              9
+            ],
+            [
+              8,
+              8
+            ]
+          ],
+          "input_ids_sha256": "687947e537459f7541f5f6a004b1b4e34d90e6e4d2fa2d8c2c76f6e28f76af38",
+          "effective_input_text": "[CLS]choice question: Is the proposed operation executable in the current state?[SEP][MASK] no: The operation is not executable now.[MASK] yes: The operation is executable now.[SEP]Location: RedsHouse2F. A walking route to PalletTown is available via RedsHouse1F. Proposed operation: Travel to PalletTown via RedsHouse1F.[SEP]"
+        }
+      ],
+      "schema": "choice_available_reversed",
+      "expected": "yes",
+      "actual": "yes",
+      "correct": true
+    },
+    {
+      "name": "route_found",
+      "state": "Location: RedsHouse2F. A walking route to PalletTown is available via RedsHouse1F. Proposed operation: Travel to PalletTown via RedsHouse1F.",
+      "questions": {
+        "check": {
+          "type": "noul",
+          "instructions": "The proposed operation is executable in the current state."
+        }
+      },
+      "encoding_overrides": {},
+      "answers": {
+        "check": {
+          "type": "noul",
+          "confidence": 0.8389,
+          "action": {
+            "act_probability": 1.0
+          },
+          "noul": 0.8389
+        }
+      },
+      "usage": {
+        "input_tokens": 73,
+        "output_tokens": 0
+      },
+      "latency_s": 0.02505141601432115,
+      "encoding": [
+        {
+          "question": "check",
+          "encoded_tokens": 73,
+          "instruction_tokens": [
+            14,
+            14
+          ],
+          "state_tokens": [
+            37,
+            37
+          ],
+          "option_tokens": [
+            [
+              9,
+              9
+            ],
+            [
+              7,
+              7
+            ]
+          ],
+          "input_ids_sha256": "1ee2846bfcb02795e2c1dd33b19b2e54b239fe8ad546fbe32ef38fa5c2a5a897",
+          "effective_input_text": "[CLS]noul question: The proposed operation is executable in the current state.[SEP][MASK] false: no, the statement does not hold[MASK] true: yes, the statement holds[SEP]Location: RedsHouse2F. A walking route to PalletTown is available via RedsHouse1F. Proposed operation: Travel to PalletTown via RedsHouse1F.[SEP]"
+        }
+      ],
+      "schema": "noul",
+      "expected": "yes",
+      "actual": "yes",
+      "correct": true
+    },
+    {
+      "name": "route_blocked",
+      "state": "Location: RedsHouse2F. Every exit is blocked. No walking route to PalletTown is available.",
+      "questions": {
+        "check": {
+          "type": "choice",
+          "instructions": "Which listed operation can be executed in the current state?",
+          "criteria": {
+            "move": "Travel to PalletTown via RedsHouse1F.",
+            "none": "None of the listed operations can be executed now."
+          }
+        }
+      },
+      "encoding_overrides": {},
+      "answers": {
+        "check": {
+          "type": "choice",
+          "confidence": 0.4172,
+          "action": {
+            "act_probability": 1.0
+          },
+          "choice": "none",
+          "probabilities": {
+            "move": 0.1395,
+            "none": 0.8605
+          }
+        }
+      },
+      "usage": {
+        "input_tokens": 67,
+        "output_tokens": 0
+      },
+      "latency_s": 0.023394749965518713,
+      "encoding": [
+        {
+          "question": "check",
+          "encoded_tokens": 67,
+          "instruction_tokens": [
+            14,
+            14
+          ],
+          "state_tokens": [
+            22,
+            22
+          ],
+          "option_tokens": [
+            [
+              13,
+              13
+            ],
+            [
+              12,
+              12
+            ]
+          ],
+          "input_ids_sha256": "822b78932fad3d24ebf98385f8567b6c034bbdc43f1e8bd3c43d7b2e1dbce9fa",
+          "effective_input_text": "[CLS]choice question: Which listed operation can be executed in the current state?[SEP][MASK] move: Travel to PalletTown via RedsHouse1F.[MASK] none: None of the listed operations can be executed now.[SEP]Location: RedsHouse2F. Every exit is blocked. No walking route to PalletTown is available.[SEP]"
+        }
+      ],
+      "schema": "choice_none",
+      "expected": "none",
+      "actual": "none",
+      "correct": true
+    },
+    {
+      "name": "route_blocked",
+      "state": "Location: RedsHouse2F. Every exit is blocked. No walking route to PalletTown is available.",
+      "questions": {
+        "check": {
+          "type": "choice",
+          "instructions": "Which listed operation can be executed in the current state?",
+          "criteria": {
+            "none": "None of the listed operations can be executed now.",
+            "move": "Travel to PalletTown via RedsHouse1F."
+          }
+        }
+      },
+      "encoding_overrides": {},
+      "answers": {
+        "check": {
+          "type": "choice",
+          "confidence": 0.6212,
+          "action": {
+            "act_probability": 1.0
+          },
+          "choice": "none",
+          "probabilities": {
+            "none": 0.9265,
+            "move": 0.0735
+          }
+        }
+      },
+      "usage": {
+        "input_tokens": 67,
+        "output_tokens": 0
+      },
+      "latency_s": 0.02520858298521489,
+      "encoding": [
+        {
+          "question": "check",
+          "encoded_tokens": 67,
+          "instruction_tokens": [
+            14,
+            14
+          ],
+          "state_tokens": [
+            22,
+            22
+          ],
+          "option_tokens": [
+            [
+              12,
+              12
+            ],
+            [
+              13,
+              13
+            ]
+          ],
+          "input_ids_sha256": "3ec670d58ef82fbfa2cf88f9f5c316bec1ee3276227ea214e8a8f5d25071b1aa",
+          "effective_input_text": "[CLS]choice question: Which listed operation can be executed in the current state?[SEP][MASK] none: None of the listed operations can be executed now.[MASK] move: Travel to PalletTown via RedsHouse1F.[SEP]Location: RedsHouse2F. Every exit is blocked. No walking route to PalletTown is available.[SEP]"
+        }
+      ],
+      "schema": "choice_none_reversed",
+      "expected": "none",
+      "actual": "none",
+      "correct": true
+    },
+    {
+      "name": "route_blocked",
+      "state": "Location: RedsHouse2F. Every exit is blocked. No walking route to PalletTown is available. Proposed operation: Travel to PalletTown via RedsHouse1F.",
+      "questions": {
+        "check": {
+          "type": "choice",
+          "instructions": "Is the proposed operation executable in the current state?",
+          "criteria": {
+            "yes": "The operation is executable now.",
+            "no": "The operation is not executable now."
+          }
+        }
+      },
+      "encoding_overrides": {},
+      "answers": {
+        "check": {
+          "type": "choice",
+          "confidence": 0.7777,
+          "action": {
+            "act_probability": 1.0
+          },
+          "choice": "no",
+          "probabilities": {
+            "yes": 0.0357,
+            "no": 0.9643
+          }
+        }
+      },
+      "usage": {
+        "input_tokens": 73,
+        "output_tokens": 0
+      },
+      "latency_s": 0.023303374997340143,
+      "encoding": [
+        {
+          "question": "check",
+          "encoded_tokens": 73,
+          "instruction_tokens": [
+            13,
+            13
+          ],
+          "state_tokens": [
+            37,
+            37
+          ],
+          "option_tokens": [
+            [
+              8,
+              8
+            ],
+            [
+              9,
+              9
+            ]
+          ],
+          "input_ids_sha256": "c297f1b7f8c661695a09bbe255b056cd210b73f28b02be031c86907bd52f8420",
+          "effective_input_text": "[CLS]choice question: Is the proposed operation executable in the current state?[SEP][MASK] yes: The operation is executable now.[MASK] no: The operation is not executable now.[SEP]Location: RedsHouse2F. Every exit is blocked. No walking route to PalletTown is available. Proposed operation: Travel to PalletTown via RedsHouse1F.[SEP]"
+        }
+      ],
+      "schema": "choice_available",
+      "expected": "no",
+      "actual": "no",
+      "correct": true
+    },
+    {
+      "name": "route_blocked",
+      "state": "Location: RedsHouse2F. Every exit is blocked. No walking route to PalletTown is available. Proposed operation: Travel to PalletTown via RedsHouse1F.",
+      "questions": {
+        "check": {
+          "type": "choice",
+          "instructions": "Is the proposed operation executable in the current state?",
+          "criteria": {
+            "no": "The operation is not executable now.",
+            "yes": "The operation is executable now."
+          }
+        }
+      },
+      "encoding_overrides": {},
+      "answers": {
+        "check": {
+          "type": "choice",
+          "confidence": 0.771,
+          "action": {
+            "act_probability": 1.0
+          },
+          "choice": "no",
+          "probabilities": {
+            "no": 0.9629,
+            "yes": 0.0371
+          }
+        }
+      },
+      "usage": {
+        "input_tokens": 73,
+        "output_tokens": 0
+      },
+      "latency_s": 0.02534083294449374,
+      "encoding": [
+        {
+          "question": "check",
+          "encoded_tokens": 73,
+          "instruction_tokens": [
+            13,
+            13
+          ],
+          "state_tokens": [
+            37,
+            37
+          ],
+          "option_tokens": [
+            [
+              9,
+              9
+            ],
+            [
+              8,
+              8
+            ]
+          ],
+          "input_ids_sha256": "60a785e7027a0d42e32ce806c9585aff8f2be023d457a2f449570d5feae26f2f",
+          "effective_input_text": "[CLS]choice question: Is the proposed operation executable in the current state?[SEP][MASK] no: The operation is not executable now.[MASK] yes: The operation is executable now.[SEP]Location: RedsHouse2F. Every exit is blocked. No walking route to PalletTown is available. Proposed operation: Travel to PalletTown via RedsHouse1F.[SEP]"
+        }
+      ],
+      "schema": "choice_available_reversed",
+      "expected": "no",
+      "actual": "no",
+      "correct": true
+    },
+    {
+      "name": "route_blocked",
+      "state": "Location: RedsHouse2F. Every exit is blocked. No walking route to PalletTown is available. Proposed operation: Travel to PalletTown via RedsHouse1F.",
+      "questions": {
+        "check": {
+          "type": "noul",
+          "instructions": "The proposed operation is executable in the current state."
+        }
+      },
+      "encoding_overrides": {},
+      "answers": {
+        "check": {
+          "type": "noul",
+          "confidence": 0.9424,
+          "action": {
+            "act_probability": 1.0
+          },
+          "noul": 0.0576
+        }
+      },
+      "usage": {
+        "input_tokens": 73,
+        "output_tokens": 0
+      },
+      "latency_s": 0.023184542020317167,
+      "encoding": [
+        {
+          "question": "check",
+          "encoded_tokens": 73,
+          "instruction_tokens": [
+            14,
+            14
+          ],
+          "state_tokens": [
+            37,
+            37
+          ],
+          "option_tokens": [
+            [
+              9,
+              9
+            ],
+            [
+              7,
+              7
+            ]
+          ],
+          "input_ids_sha256": "7cf61d21c2bada03d6fc845568578c0be95c5cda8728b54fe8961f69062d6d81",
+          "effective_input_text": "[CLS]noul question: The proposed operation is executable in the current state.[SEP][MASK] false: no, the statement does not hold[MASK] true: yes, the statement holds[SEP]Location: RedsHouse2F. Every exit is blocked. No walking route to PalletTown is available. Proposed operation: Travel to PalletTown via RedsHouse1F.[SEP]"
+        }
+      ],
+      "schema": "noul",
+      "expected": "no",
+      "actual": "no",
+      "correct": true
+    },
+    {
+      "name": "local",
+      "state": "Location: RedsHouse2F. Party: empty. There is a walking route to PalletTown via RedsHouse1F. At the north exit of PalletTown, an interaction makes Prof. Oak appear. Making Prof. Oak appear advances choosing a starter Pokemon. Goal: Reach PalletTown.",
+      "questions": {
+        "action": {
+          "type": "choice",
+          "instructions": "Which next operation advances the goal? Intermediate steps are allowed.",
+          "criteria": {
+            "move": "Travel to PalletTown via RedsHouse1F.",
+            "none": "None of these candidates can advance the current goal."
+          }
+        }
+      },
+      "encoding_overrides": {},
+      "answers": {
+        "action": {
+          "type": "choice",
+          "confidence": 0.6417,
+          "action": {
+            "act_probability": 1.0
+          },
+          "choice": "move",
+          "probabilities": {
+            "move": 0.932,
+            "none": 0.068
+          }
+        }
+      },
+      "usage": {
+        "input_tokens": 110,
+        "output_tokens": 0
+      },
+      "latency_s": 0.03028641699347645,
+      "encoding": [
+        {
+          "question": "action",
+          "encoded_tokens": 110,
+          "instruction_tokens": [
+            16,
+            16
+          ],
+          "state_tokens": [
+            63,
+            63
+          ],
+          "option_tokens": [
+            [
+              13,
+              13
+            ],
+            [
+              12,
+              12
+            ]
+          ],
+          "input_ids_sha256": "f81342589ed4d136d4dc69bf389d7cfeb8c9f64f89efb83a5f2732fb0f2c9ec6",
+          "effective_input_text": "[CLS]choice question: Which next operation advances the goal? Intermediate steps are allowed.[SEP][MASK] move: Travel to PalletTown via RedsHouse1F.[MASK] none: None of these candidates can advance the current goal.[SEP]Location: RedsHouse2F. Party: empty. There is a walking route to PalletTown via RedsHouse1F. At the north exit of PalletTown, an interaction makes Prof. Oak appear. Making Prof. Oak appear advances choosing a starter Pokemon. Goal: Reach PalletTown.[SEP]"
+        }
+      ],
+      "schema": "goal_original",
+      "expected": "move"
+    },
+    {
+      "name": "local",
+      "state": "Location: RedsHouse2F. Party: empty. There is a walking route to PalletTown via RedsHouse1F. At the north exit of PalletTown, an interaction makes Prof. Oak appear. Making Prof. Oak appear advances choosing a starter Pokemon. Goal: Reach PalletTown.",
+      "questions": {
+        "action": {
+          "type": "choice",
+          "instructions": "Which next operation advances the goal? Intermediate steps are allowed.",
+          "criteria": {
+            "none": "None of these candidates can advance the current goal.",
+            "move": "Travel to PalletTown via RedsHouse1F."
+          }
+        }
+      },
+      "encoding_overrides": {},
+      "answers": {
+        "action": {
+          "type": "choice",
+          "confidence": 0.7702,
+          "action": {
+            "act_probability": 1.0
+          },
+          "choice": "move",
+          "probabilities": {
+            "none": 0.0373,
+            "move": 0.9627
+          }
+        }
+      },
+      "usage": {
+        "input_tokens": 110,
+        "output_tokens": 0
+      },
+      "latency_s": 0.02615229197544977,
+      "encoding": [
+        {
+          "question": "action",
+          "encoded_tokens": 110,
+          "instruction_tokens": [
+            16,
+            16
+          ],
+          "state_tokens": [
+            63,
+            63
+          ],
+          "option_tokens": [
+            [
+              12,
+              12
+            ],
+            [
+              13,
+              13
+            ]
+          ],
+          "input_ids_sha256": "f647f039b9503f7c5f4f1fa827b9bc27eef3fd66029d840ba53a53c70339c38f",
+          "effective_input_text": "[CLS]choice question: Which next operation advances the goal? Intermediate steps are allowed.[SEP][MASK] none: None of these candidates can advance the current goal.[MASK] move: Travel to PalletTown via RedsHouse1F.[SEP]Location: RedsHouse2F. Party: empty. There is a walking route to PalletTown via RedsHouse1F. At the north exit of PalletTown, an interaction makes Prof. Oak appear. Making Prof. Oak appear advances choosing a starter Pokemon. Goal: Reach PalletTown.[SEP]"
+        }
+      ],
+      "schema": "goal_reversed",
+      "expected": "move"
+    },
+    {
+      "name": "oak",
+      "state": "Location: RedsHouse2F. Party: empty. There is a walking route to PalletTown via RedsHouse1F. At the north exit of PalletTown, an interaction makes Prof. Oak appear. Making Prof. Oak appear advances choosing a starter Pokemon. Goal: Make Prof. Oak appear.",
+      "questions": {
+        "action": {
+          "type": "choice",
+          "instructions": "Which next operation advances the goal? Intermediate steps are allowed.",
+          "criteria": {
+            "move": "Travel to PalletTown via RedsHouse1F.",
+            "none": "None of these candidates can advance the current goal."
+          }
+        }
+      },
+      "encoding_overrides": {},
+      "answers": {
+        "action": {
+          "type": "choice",
+          "confidence": 0.5372,
+          "action": {
+            "act_probability": 1.0
+          },
+          "choice": "move",
+          "probabilities": {
+            "move": 0.902,
+            "none": 0.098
+          }
+        }
+      },
+      "usage": {
+        "input_tokens": 110,
+        "output_tokens": 0
+      },
+      "latency_s": 0.025897583982441574,
+      "encoding": [
+        {
+          "question": "action",
+          "encoded_tokens": 110,
+          "instruction_tokens": [
+            16,
+            16
+          ],
+          "state_tokens": [
+            63,
+            63
+          ],
+          "option_tokens": [
+            [
+              13,
+              13
+            ],
+            [
+              12,
+              12
+            ]
+          ],
+          "input_ids_sha256": "c7b8ad5f6676c4c9ab285c707b0a0f1dde111d541fedf90ee6ea717e88d2e625",
+          "effective_input_text": "[CLS]choice question: Which next operation advances the goal? Intermediate steps are allowed.[SEP][MASK] move: Travel to PalletTown via RedsHouse1F.[MASK] none: None of these candidates can advance the current goal.[SEP]Location: RedsHouse2F. Party: empty. There is a walking route to PalletTown via RedsHouse1F. At the north exit of PalletTown, an interaction makes Prof. Oak appear. Making Prof. Oak appear advances choosing a starter Pokemon. Goal: Make Prof. Oak appear.[SEP]"
+        }
+      ],
+      "schema": "goal_original",
+      "expected": "move"
+    },
+    {
+      "name": "oak",
+      "state": "Location: RedsHouse2F. Party: empty. There is a walking route to PalletTown via RedsHouse1F. At the north exit of PalletTown, an interaction makes Prof. Oak appear. Making Prof. Oak appear advances choosing a starter Pokemon. Goal: Make Prof. Oak appear.",
+      "questions": {
+        "action": {
+          "type": "choice",
+          "instructions": "Which next operation advances the goal? Intermediate steps are allowed.",
+          "criteria": {
+            "none": "None of these candidates can advance the current goal.",
+            "move": "Travel to PalletTown via RedsHouse1F."
+          }
+        }
+      },
+      "encoding_overrides": {},
+      "answers": {
+        "action": {
+          "type": "choice",
+          "confidence": 0.3125,
+          "action": {
+            "act_probability": 1.0
+          },
+          "choice": "move",
+          "probabilities": {
+            "none": 0.1834,
+            "move": 0.8166
+          }
+        }
+      },
+      "usage": {
+        "input_tokens": 110,
+        "output_tokens": 0
+      },
+      "latency_s": 0.027264749980531633,
+      "encoding": [
+        {
+          "question": "action",
+          "encoded_tokens": 110,
+          "instruction_tokens": [
+            16,
+            16
+          ],
+          "state_tokens": [
+            63,
+            63
+          ],
+          "option_tokens": [
+            [
+              12,
+              12
+            ],
+            [
+              13,
+              13
+            ]
+          ],
+          "input_ids_sha256": "c8814bec8e4504a7f10dc8572823b25c5fa902f5e5c299816fa6f41bfb2a1ab6",
+          "effective_input_text": "[CLS]choice question: Which next operation advances the goal? Intermediate steps are allowed.[SEP][MASK] none: None of these candidates can advance the current goal.[MASK] move: Travel to PalletTown via RedsHouse1F.[SEP]Location: RedsHouse2F. Party: empty. There is a walking route to PalletTown via RedsHouse1F. At the north exit of PalletTown, an interaction makes Prof. Oak appear. Making Prof. Oak appear advances choosing a starter Pokemon. Goal: Make Prof. Oak appear.[SEP]"
+        }
+      ],
+      "schema": "goal_reversed",
+      "expected": "move"
+    },
+    {
+      "name": "starter",
+      "state": "Location: RedsHouse2F. Party: empty. There is a walking route to PalletTown via RedsHouse1F. At the north exit of PalletTown, an interaction makes Prof. Oak appear. Making Prof. Oak appear advances choosing a starter Pokemon. Goal: Choose a starter Pokemon.",
+      "questions": {
+        "action": {
+          "type": "choice",
+          "instructions": "Which next operation advances the goal? Intermediate steps are allowed.",
+          "criteria": {
+            "move": "Travel to PalletTown via RedsHouse1F.",
+            "none": "None of these candidates can advance the current goal."
+          }
+        }
+      },
+      "encoding_overrides": {},
+      "answers": {
+        "action": {
+          "type": "choice",
+          "confidence": 0.1671,
+          "action": {
+            "act_probability": 1.0
+          },
+          "choice": "move",
+          "probabilities": {
+            "move": 0.7359,
+            "none": 0.2641
+          }
+        }
+      },
+      "usage": {
+        "input_tokens": 109,
+        "output_tokens": 0
+      },
+      "latency_s": 0.02519141702214256,
+      "encoding": [
+        {
+          "question": "action",
+          "encoded_tokens": 109,
+          "instruction_tokens": [
+            16,
+            16
+          ],
+          "state_tokens": [
+            62,
+            62
+          ],
+          "option_tokens": [
+            [
+              13,
+              13
+            ],
+            [
+              12,
+              12
+            ]
+          ],
+          "input_ids_sha256": "19c3895cd14d7cf9f68b801764c999cff80de2598b4112f502b3095353c85765",
+          "effective_input_text": "[CLS]choice question: Which next operation advances the goal? Intermediate steps are allowed.[SEP][MASK] move: Travel to PalletTown via RedsHouse1F.[MASK] none: None of these candidates can advance the current goal.[SEP]Location: RedsHouse2F. Party: empty. There is a walking route to PalletTown via RedsHouse1F. At the north exit of PalletTown, an interaction makes Prof. Oak appear. Making Prof. Oak appear advances choosing a starter Pokemon. Goal: Choose a starter Pokemon.[SEP]"
+        }
+      ],
+      "schema": "goal_original",
+      "expected": "move"
+    },
+    {
+      "name": "starter",
+      "state": "Location: RedsHouse2F. Party: empty. There is a walking route to PalletTown via RedsHouse1F. At the north exit of PalletTown, an interaction makes Prof. Oak appear. Making Prof. Oak appear advances choosing a starter Pokemon. Goal: Choose a starter Pokemon.",
+      "questions": {
+        "action": {
+          "type": "choice",
+          "instructions": "Which next operation advances the goal? Intermediate steps are allowed.",
+          "criteria": {
+            "none": "None of these candidates can advance the current goal.",
+            "move": "Travel to PalletTown via RedsHouse1F."
+          }
+        }
+      },
+      "encoding_overrides": {},
+      "answers": {
+        "action": {
+          "type": "choice",
+          "confidence": 0.1017,
+          "action": {
+            "act_probability": 1.0
+          },
+          "choice": "move",
+          "probabilities": {
+            "none": 0.3145,
+            "move": 0.6855
+          }
+        }
+      },
+      "usage": {
+        "input_tokens": 109,
+        "output_tokens": 0
+      },
+      "latency_s": 0.026898625015746802,
+      "encoding": [
+        {
+          "question": "action",
+          "encoded_tokens": 109,
+          "instruction_tokens": [
+            16,
+            16
+          ],
+          "state_tokens": [
+            62,
+            62
+          ],
+          "option_tokens": [
+            [
+              12,
+              12
+            ],
+            [
+              13,
+              13
+            ]
+          ],
+          "input_ids_sha256": "00b5e345297da41a1a0a69e27f4c61debc18b99805d0a7179a761cce2170093a",
+          "effective_input_text": "[CLS]choice question: Which next operation advances the goal? Intermediate steps are allowed.[SEP][MASK] none: None of these candidates can advance the current goal.[MASK] move: Travel to PalletTown via RedsHouse1F.[SEP]Location: RedsHouse2F. Party: empty. There is a walking route to PalletTown via RedsHouse1F. At the north exit of PalletTown, an interaction makes Prof. Oak appear. Making Prof. Oak appear advances choosing a starter Pokemon. Goal: Choose a starter Pokemon.[SEP]"
+        }
+      ],
+      "schema": "goal_reversed",
+      "expected": "move"
+    }
+  ],
+  "scope": "Development fixtures; not a held-out benchmark. No gameplay or network inference.",
+  "controller_replay": {
+    "first_controller_selection": "subgoal:0",
+    "physical_operations_executed": 0,
+    "execution_failure_counter_before": 0,
+    "execution_failure_counter_after": 2,
+    "rule_excluded_by_strategy_threshold": true,
+    "stop_reason": "strategy:no_selection",
+    "events": [
+      {
+        "kind": "judgment",
+        "layer": "strategy",
+        "state": {
+          "world": {
+            "flags": {},
+            "bag": {},
+            "party": [],
+            "badges": 0,
+            "map": "RedsHouse2F",
+            "x": 3,
+            "y": 6,
+            "money": 3000,
+            "coins": 0,
+            "fully_recovered": false,
+            "object_visibility": {},
+            "cleared_terrain": [],
+            "navigation_revision": 1,
+            "block_values": {},
+            "recent_battle_defeats": [],
+            "total_completed_event_flags": 0
+          },
+          "completed_objectives": [],
+          "remaining_objectives": [
+            "Choose a starter Pokémon",
+            "Receive the Pokédex from Prof. Oak",
+            "Defeat Brock, the Pewter Gym Leader",
+            "Defeat Misty, the Cerulean Gym Leader",
+            "Defeat Lt. Surge, the Vermilion Gym Leader",
+            "Defeat Erika, the Celadon Gym Leader",
+            "Defeat Koga, the Fuchsia Gym Leader",
+            "Defeat Sabrina, the Saffron Gym Leader",
+            "Defeat Blaine, the Cinnabar Gym Leader",
+            "Defeat Giovanni, the Viridian Gym Leader",
+            "Defeat the Champion and enter the Hall of Fame"
+          ],
+          "navigation": {
+            "PalletTown": {
+              "topological_route_found": true,
+              "via": [
+                "RedsHouse1F",
+                "PalletTown"
+              ]
+            },
+            "ViridianMart": {
+              "topological_route_found": true,
+              "via": [
+                "RedsHouse1F",
+                "PalletTown",
+                "Route1",
+                "ViridianCity",
+                "ViridianMart"
+              ]
+            }
+          },
+          "known_navigation_failures": {},
+          "recent_outcomes": []
+        },
+        "question": {
+          "type": "choice",
+          "instructions": "Which attainable story or preparation subgoal should the player pursue next? Healing, training and improving weak attacks are valid indirect progress toward later battles. The action layer can travel between maps before triggering a script; a subgoal need not be on the current map. Candidates already have satisfied script preconditions; winning battles is still an execution outcome. Topological routes may have local obstacles. Use the supplied script facts and known navigation failures; prefer resolving an observed blocker before retrying its destination unless prerequisites have changed. A known tile route to the specific trigger is stronger evidence than a map-only failure: another region on that same map can still be reachable. Prefer reachable prerequisites when the requested trigger has no tile route. Prefer necessary early story prerequisites before optional detours or difficult battles.",
+          "criteria": {
+            "subgoal:0": "{\"establish\": [\"flag\", \"EVENT_OAK_APPEARED_IN_PALLET\", true], \"advances\": [\"Choose a starter Pok\\u00e9mon\", \"Receive the Pok\\u00e9dex from Prof. Oak\"], \"ways\": [{\"map\": \"PalletTown\", \"script\": \"PalletTown:coordNorthExit\", \"produces\": [\"flag\", \"EVENT_OAK_APPEARED_IN_PALLET\", true], \"confirmation_options\": [], \"preceding_effects\": []}], \"context\": null}",
+            "subgoal:1": "{\"establish\": [\"item\", \"OAKS_PARCEL\", true], \"advances\": [\"Receive the Pok\\u00e9dex from Prof. Oak\"], \"ways\": [{\"map\": \"ViridianMart\", \"script\": \"ViridianMart:@load\", \"produces\": [\"item\", \"OAKS_PARCEL\", true], \"confirmation_options\": [], \"preceding_effects\": [[\"movement\", \"movePlayer\", true]]}], \"context\": null}",
+            "none": "None of these candidates can advance the current goal."
+          }
+        },
+        "answer": {
+          "choice": "none",
+          "probabilities": {
+            "subgoal:0": 0.303,
+            "subgoal:1": 0.2477,
+            "none": 0.4493
+          },
+          "confidence": 0.0288
+        },
+        "model": "frozen-replay",
+        "input_tokens": 512,
+        "output_tokens": 0,
+        "latency_s": 0.0
+      },
+      {
+        "kind": "conditional_choice",
+        "layer": "strategy",
+        "selected": "subgoal:0",
+        "candidate_mass": 0.5507,
+        "abstention_mass": 0.4493
+      },
+      {
+        "kind": "judgment",
+        "layer": "action",
+        "state": {
+          "subgoal": [
+            "flag",
+            "EVENT_OAK_APPEARED_IN_PALLET",
+            true
+          ],
+          "advances": [
+            "Choose a starter Pokémon",
+            "Receive the Pokédex from Prof. Oak"
+          ],
+          "local_state": {
+            "flags": {},
+            "bag": {},
+            "party": [],
+            "badges": 0,
+            "map": "RedsHouse2F",
+            "x": 3,
+            "y": 6,
+            "money": 3000,
+            "coins": 0,
+            "fully_recovered": false,
+            "object_visibility": {},
+            "cleared_terrain": [],
+            "navigation_revision": 1,
+            "block_values": {},
+            "recent_battle_defeats": []
+          },
+          "recent_outcomes": [],
+          "strategy_context": {}
+        },
+        "question": {
+          "type": "choice",
+          "instructions": "Which next operation makes progress toward the current subgoal? Several operations may be needed to finish it. Select a live trigger, travel step, recovery or training operation using its described effects. Script effects describe what will happen when the intended interaction completes. Travel or interaction can be interrupted by other trainers: if recent attempts gained battle flags, retrying the intended NPC is valid progress.",
+          "criteria": {
+            "action:0": "{\"operation\": \"travel_to:PalletTown\", \"script_effects\": {\"map\": \"PalletTown\", \"script\": \"PalletTown:coordNorthExit\", \"produces\": [\"flag\", \"EVENT_OAK_APPEARED_IN_PALLET\", true], \"confirmation_options\": [], \"preceding_effects\": []}, \"navigation\": {\"map_hops\": 2, \"via\": [\"RedsHouse1F\", \"PalletTown\"], \"unvisited_maps\": [\"RedsHouse1F\", \"PalletTown\"], \"caution\": \"Travel can consume HP and PP in encounters; recovery should prefer a short known route.\"}}",
+            "none": "None of these candidates can advance the current goal."
+          }
+        },
+        "answer": {
+          "choice": "none",
+          "probabilities": {
+            "action:0": 0.1843,
+            "none": 0.8157
+          },
+          "confidence": 0.3105
+        },
+        "model": "frozen-replay",
+        "input_tokens": 307,
+        "output_tokens": 0,
+        "latency_s": 0.0
+      },
+      {
+        "kind": "action_rejected",
+        "subgoal": [
+          "flag",
+          "EVENT_OAK_APPEARED_IN_PALLET",
+          true
+        ],
+        "reason": "action:no_selection"
+      },
+      {
+        "kind": "judgment",
+        "layer": "strategy",
+        "state": {
+          "world": {
+            "flags": {},
+            "bag": {},
+            "party": [],
+            "badges": 0,
+            "map": "RedsHouse2F",
+            "x": 3,
+            "y": 6,
+            "money": 3000,
+            "coins": 0,
+            "fully_recovered": false,
+            "object_visibility": {},
+            "cleared_terrain": [],
+            "navigation_revision": 1,
+            "block_values": {},
+            "recent_battle_defeats": [],
+            "total_completed_event_flags": 0
+          },
+          "completed_objectives": [],
+          "remaining_objectives": [
+            "Choose a starter Pokémon",
+            "Receive the Pokédex from Prof. Oak",
+            "Defeat Brock, the Pewter Gym Leader",
+            "Defeat Misty, the Cerulean Gym Leader",
+            "Defeat Lt. Surge, the Vermilion Gym Leader",
+            "Defeat Erika, the Celadon Gym Leader",
+            "Defeat Koga, the Fuchsia Gym Leader",
+            "Defeat Sabrina, the Saffron Gym Leader",
+            "Defeat Blaine, the Cinnabar Gym Leader",
+            "Defeat Giovanni, the Viridian Gym Leader",
+            "Defeat the Champion and enter the Hall of Fame"
+          ],
+          "navigation": {
+            "ViridianMart": {
+              "topological_route_found": true,
+              "via": [
+                "RedsHouse1F",
+                "PalletTown",
+                "Route1",
+                "ViridianCity",
+                "ViridianMart"
+              ]
+            }
+          },
+          "known_navigation_failures": {},
+          "recent_outcomes": [
+            {
+              "subgoal": [
+                "flag",
+                "EVENT_OAK_APPEARED_IN_PALLET",
+                true
+              ],
+              "result": "action:no_selection"
+            }
+          ]
+        },
+        "question": {
+          "type": "choice",
+          "instructions": "Which attainable story or preparation subgoal should the player pursue next? Healing, training and improving weak attacks are valid indirect progress toward later battles. The action layer can travel between maps before triggering a script; a subgoal need not be on the current map. Candidates already have satisfied script preconditions; winning battles is still an execution outcome. Topological routes may have local obstacles. Use the supplied script facts and known navigation failures; prefer resolving an observed blocker before retrying its destination unless prerequisites have changed. A known tile route to the specific trigger is stronger evidence than a map-only failure: another region on that same map can still be reachable. Prefer reachable prerequisites when the requested trigger has no tile route. Prefer necessary early story prerequisites before optional detours or difficult battles.",
+          "criteria": {
+            "subgoal:1": "{\"establish\": [\"item\", \"OAKS_PARCEL\", true], \"advances\": [\"Receive the Pok\\u00e9dex from Prof. Oak\"], \"ways\": [{\"map\": \"ViridianMart\", \"script\": \"ViridianMart:@load\", \"produces\": [\"item\", \"OAKS_PARCEL\", true], \"confirmation_options\": [], \"preceding_effects\": [[\"movement\", \"movePlayer\", true]]}], \"context\": null}",
+            "none": "None of these candidates can advance the current goal."
+          }
+        },
+        "answer": {
+          "choice": "none",
+          "probabilities": {
+            "subgoal:1": 0.3595,
+            "none": 0.6405
+          },
+          "confidence": 0.0577
+        },
+        "model": "frozen-replay",
+        "input_tokens": 512,
+        "output_tokens": 0,
+        "latency_s": 0.0
+      }
+    ]
+  }
+}

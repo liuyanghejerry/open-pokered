@@ -4,6 +4,8 @@
 
 [完整指标与图表](README.md) · [预先固定的评测框架](../laya-jev-evaluation-framework.md) · [逐次判断证据](decision-evidence.json)
 
+后续排查已完成：[Laya 首轮停止原因排查](laya-diagnosis.md)。111 次离线探针表明：完整保留首动作输入仍被拒绝，编译/缓存/FP16 不是这次选择的决定因素；明确关系描述能改变结果，但控制题仍暴露不稳定判断。拒选被写成两次执行失败的控制器行为也已复现。下文保留首轮结论与原始成绩。
+
 ## 实际结果
 
 | 维度 | Jev | Laya MLX |
