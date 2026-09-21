@@ -12,7 +12,7 @@ import subprocess
 ASSETS = Path('docs/jev-retrospective-assets')
 LFS_PREFIX = b'version https://git-lfs.github.com/spec/v1'
 REQUIRED = (
-    'jev-dashboard.css', 'jev-dashboard.js',
+    'jev-dashboard.css', 'jev-dashboard.js', 'jev-dashboard-i18n.js',
     'full-run/jev-player.html', 'full-run/player.html',
     'full-run/jev-dashboard-data.js', 'full-run/jev-inputs-data.js',
     'full-run/jev-dashboard.json', 'full-run/jev-inputs.json',
@@ -77,10 +77,7 @@ def stage(repo, site, revision):
     for name in ['jev-player.html', 'player.html']:
         dest = target / 'full-run' / name
         content = dest.read_text().replace('../../jev-autonomous-retrospective.md', retrospective)
-        navigation = ('<nav aria-label="回放导航"><a href="jev-player.html">Jev 大盘</a> · '
-                      '<a href="player.html">脚本与 Jev 对比</a> · '
-                      '<a href="script-vs-jev-full.mp4">完整解说视频</a></nav>')
-        content = content.replace('<main>', '<main>' + navigation, 1)
+        # The shared locale script supplies navigation for both hosted and local pages.
         dest.write_text(content)
     (target / 'index.html').write_text('''<!doctype html><html lang="zh-CN"><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
