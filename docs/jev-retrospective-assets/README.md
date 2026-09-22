@@ -88,7 +88,7 @@ npx --yes hyperframes@0.8.55 render docs/jev-retrospective-assets \
   --output docs/jev-retrospective-assets/full-run/script-vs-jev-full.mp4
 ```
 
-Jev 使用环境变量或仓库 `.env` 中的 `TYPESAFE_API_KEY`。请求随机性、实时调度与主机负载会影响运行结果，不保证逐步复现路线。图表用 matplotlib 绘制；中文字体使用本机 Arial Unicode。视频工程使用本地字体子集与 GSAP，游戏画面没有调色或生成式重绘。
+Jev 使用环境变量或仓库 `.env` 中的 `TYPESAFE_API_KEY`。请求随机性、实时调度与主机负载会影响运行结果，不保证逐步复现路线。图表用 matplotlib 绘制；中文字体使用本机 Arial Unicode。英文版配图由 `build_figures_en.py` 生成（输出 `*-en.png/svg`，复制为 `blog/images/jev-*-en.png` 供 `blog/jev-playthrough-retro-2026-09.en.md` 使用）。视频工程使用本地字体子集与 GSAP，游戏画面没有调色或生成式重绘。
 
 ## 历史材料
 
