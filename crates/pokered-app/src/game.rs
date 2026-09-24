@@ -6107,6 +6107,33 @@ impl PokemonGame {
             .pending_choice
             .as_ref()
             .map(|c| serde_json::json!({ "options": c.options, "selected": c.selected }));
+        // Live battle facts (simulation HP, wild/Safari state), computed
+        // outside the snapshot macro: the nested closures below push the
+        // outer `json!` past pokered-app's macro recursion limit.
+        let battle_live = self.battle.battle_state.as_ref().map(|bs| {
+            let player = bs.player.active_mon();
+            let enemy = bs.enemy.active_mon();
+            serde_json::json!({
+                "is_ghost": self.battle.is_ghost,
+                // A ball may only be thrown in a wild (or Safari) battle, and
+                // a Safari battle replaces FIGHT/PKMN/ITEM/RUN with
+                // BALL/BAIT/ROCK/RUN — so a Pokédex-collecting driver needs
+                // all three flags before it can plan a throw.
+                "is_wild": self.battle.is_wild,
+                "is_safari": self.battle.is_safari,
+                "player_party": bs.player.party.iter().map(|mon| serde_json::json!({
+                    "species": format!("{:?}", mon.species), "level": mon.level,
+                    "hp": mon.hp, "max_hp": mon.max_hp,
+                })).collect::<Vec<_>>(),
+                "player": { "species": format!("{:?}", player.species), "level": player.level, "hp": player.hp,
+                    "max_hp": player.max_hp, "status": format!("{:?}", player.status) },
+                "enemy": { "species": format!("{:?}", enemy.species), "level": enemy.level, "hp": enemy.hp,
+                    "max_hp": enemy.max_hp, "status": format!("{:?}", enemy.status) },
+                "enemy_party": bs.enemy.party.iter().map(|mon| serde_json::json!({
+                    "species": format!("{:?}", mon.species), "level": mon.level, "hp": mon.hp,
+                })).collect::<Vec<_>>(),
+            })
+        });
         let mut snapshot = serde_json::json!({
             "screen": crate::cli::screen_name(&self.state.screen).to_string(),
             "map_id": map_id as u8,
@@ -6120,6 +6147,10 @@ impl PokemonGame {
             "player_name": self.player_name.clone(),
             "frame_count": self.frame_count,
             "party_count": self.overworld.party_count,
+            // Current PC box occupancy. Catching deposits into the box once
+            // the party is full, and a full box refuses the throw outright,
+            // so storage capacity is part of a Pokédex-collecting state.
+            "box_count": self.overworld.box_count,
             "badges": self.save_data.game_data.obtained_badges,
             "hall_of_fame_count": self.save_data.hall_of_fame.team_count(),
             "hof_phase": self.hof_ceremony.as_ref().map(|hof| format!("{:?}", hof.phase())),
@@ -6179,24 +6210,7 @@ impl PokemonGame {
             "battle_phase": format!("{:?}", self.battle.phase),
             "battle_party_cursor": self.battle.party_cursor,
             // Simulation HP, rather than the save snapshot or animated HUD.
-            "battle_live": self.battle.battle_state.as_ref().map(|bs| {
-                let player = bs.player.active_mon();
-                let enemy = bs.enemy.active_mon();
-                serde_json::json!({
-                    "is_ghost": self.battle.is_ghost,
-                    "player_party": bs.player.party.iter().map(|mon| serde_json::json!({
-                        "species": format!("{:?}", mon.species), "level": mon.level,
-                        "hp": mon.hp, "max_hp": mon.max_hp,
-                    })).collect::<Vec<_>>(),
-                    "player": { "species": format!("{:?}", player.species), "level": player.level, "hp": player.hp,
-                        "max_hp": player.max_hp, "status": format!("{:?}", player.status) },
-                    "enemy": { "species": format!("{:?}", enemy.species), "level": enemy.level, "hp": enemy.hp,
-                        "max_hp": enemy.max_hp, "status": format!("{:?}", enemy.status) },
-                    "enemy_party": bs.enemy.party.iter().map(|mon| serde_json::json!({
-                        "species": format!("{:?}", mon.species), "level": mon.level, "hp": mon.hp,
-                    })).collect::<Vec<_>>(),
-                })
-            }),
+            "battle_live": battle_live,
             "battle_bag": self.battle.bag_menu.as_ref().map(|bag| serde_json::json!({
                 "cursor": bag.cursor(),
                 "items": bag.items().iter().map(|(id, qty)| serde_json::json!({
@@ -6293,6 +6307,29 @@ impl PokemonGame {
         } else {
             self.save_data.party.iter().collect()
         };
+        // Dex progress is a first-class observation, not telemetry: the
+        // benchmark harness strips `evaluation` from controller replies
+        // (`evaluation.controller_response`), which would hide dex progress
+        // from a planner whose objective *is* the Pokédex. `evaluation`
+        // keeps its copy so existing metrics readers stay unaffected.
+        let dex = &self.save_data.game_data.pokedex;
+        let species_at = |id: u8| pokered_data::species::Species::from_index_id(id);
+        let owned_numbers: Vec<u8> = (1u8..=151).filter(|id| dex.is_owned(species_at(*id))).collect();
+        let seen_numbers: Vec<u8> = (1u8..=151).filter(|id| dex.is_seen(species_at(*id))).collect();
+        let pokedex = serde_json::json!({
+            "seen": dex.seen_count(),
+            "owned": dex.owned_count(),
+            "total": pokered_core::pokemon::pokedex::NUM_POKEMON,
+            // Names as well as dex numbers: a planner deciding *what* to catch
+            // matches against the species names used by encounter tables, item
+            // and move data, and would otherwise have to reimplement the
+            // engine's numbering.
+            "owned_species": owned_numbers.iter().map(|id| format!("{:?}", species_at(*id))).collect::<Vec<_>>(),
+            "seen_species": seen_numbers.iter().map(|id| format!("{:?}", species_at(*id))).collect::<Vec<_>>(),
+            "owned_numbers": owned_numbers,
+            "seen_numbers": seen_numbers,
+        });
+        snapshot["pokedex"] = pokedex.clone();
         snapshot["evaluation"] = serde_json::json!({
             "party_source": if live.is_some() { "battle_live" } else { "save_data" },
             "party": party.iter().map(|mon| serde_json::json!({
@@ -6301,13 +6338,7 @@ impl PokemonGame {
                 "status": format!("{:?}", mon.status), "pp": mon.pp,
                 "moves": mon.moves.iter().map(|m| format!("{:?}", m)).collect::<Vec<_>>(),
             })).collect::<Vec<_>>(),
-            "pokedex": {
-                "seen": self.save_data.game_data.pokedex.seen_count(),
-                "owned": self.save_data.game_data.pokedex.owned_count(),
-                "total": pokered_core::pokemon::pokedex::NUM_POKEMON,
-                "owned_numbers": (1u8..=151).filter(|id| self.save_data.game_data.pokedex
-                    .is_owned(pokered_data::species::Species::from_index_id(*id))).collect::<Vec<_>>(),
-            },
+            "pokedex": pokedex,
         });
         snapshot
     }
