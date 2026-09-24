@@ -30,6 +30,9 @@ from pathlib import Path
 API_KEY_ENV = "TYPESAFE_API_KEY"
 BASE_URL_ENV = "TYPESAFE_BASE_URL"
 MODEL_ENV = "TYPESAFE_DEFAULT_MODEL"
+# A gateway can serve the same System One contract on a different path, e.g.
+# OpenRouter's `/alpha/decisions` for the `typesafe/jev-*` decisions models.
+SYSTEM_ONE_PATH_ENV = "TYPESAFE_SYSTEM_ONE_PATH"
 DEFAULT_BASE_URL = "https://api.typesafe.ai"
 DEFAULT_MODEL = "jev-latest"
 SYSTEM_ONE_PATH = "/v1/systemone"
@@ -236,13 +239,14 @@ class TypeSafeClient:
     RETRYABLE = (429, 529)
 
     def __init__(self, base_url, api_key, model, timeout=10.0,
-                 max_retries=2, opener=None):
+                 max_retries=2, opener=None, system_one_path=SYSTEM_ONE_PATH):
         self.base_url = base_url.rstrip("/")
         self.api_key = api_key
         self.model = model
         self.timeout = timeout
         self.max_retries = max_retries
         self.opener = opener or urllib.request.urlopen
+        self.system_one_path = system_one_path
 
     @classmethod
     def from_env(cls, env=None, **kw):
@@ -250,6 +254,7 @@ class TypeSafeClient:
             env = os.environ
             load_env_file(env=env)
         base, key, _source = resolve_credentials(env)
+        kw.setdefault("system_one_path", env.get(SYSTEM_ONE_PATH_ENV) or SYSTEM_ONE_PATH)
         return cls(base, key, default_model(env), **kw)
 
     def system_one(self, state, questions, model=None):
@@ -262,7 +267,7 @@ class TypeSafeClient:
             "questions": {qid: q.to_json() for qid, q in questions.items()},
         }).encode()
         req = urllib.request.Request(
-            self.base_url + SYSTEM_ONE_PATH, data=body,
+            self.base_url + self.system_one_path, data=body,
             headers={"Authorization": f"Bearer {self.api_key}",
                      "Content-Type": "application/json"})
         last_err = None

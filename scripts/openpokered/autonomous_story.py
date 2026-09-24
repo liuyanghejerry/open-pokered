@@ -16,9 +16,28 @@ import playthrough_late as data
 
 from .story_agent import DualStoryAgent, StoryStopped, attempt_key
 from .story_rules import Rule, requirements, evaluate
-from .playthrough_judgments import ObservedProtocol, NavigationPause, attack_profile, replacement_options, MEDICINES, medicine_options, effective_attacks, ITEM_CATALOG
+from .playthrough_judgments import (ObservedProtocol, NavigationPause, attack_profile, replacement_options,
+                                    MEDICINES, BALLS, medicine_options, effective_attacks, ITEM_CATALOG,
+                                    PREFERENCE_INSTRUCTIONS)
 from .navigation_skills import cut_requirement, surf_requirement, water_planning, hm_compatible, machine_compatible, HM_MOVES, TM_MOVES, CUT_TILES
 from .boulder_skills import BOULDER_TARGETS, boulder_sources, plan_pushes
+
+# The level bias asks for more training than the pending fight strictly needs.
+LEVEL_PREFERENCE_MARGIN = 2
+
+# Registered-species gates the first playthrough enforces (Oak's lab, the
+# Route 2 gate that hands over HM05, ...): the ladder a collector climbs.
+DEX_RUNGS = (2, 10, 30, 50, 150)
+
+# Catch rates a trip is compared against; a wild table is only worth
+# travelling to relative to how hard its members are to capture.
+CATCH_BANDS = ((200, 'easy'), (100, 'medium'))
+
+
+def catch_difficulty(species):
+    rate = data.species_data(species).get('catchRate', 0)
+    return {'species': species, 'catch_rate': rate,
+            'band': next((band for threshold, band in CATCH_BANDS if rate >= threshold), 'hard')}
 
 
 def native_interaction_tiles():
@@ -64,10 +83,13 @@ def counter_approaches(map_name, npc):
 
 
 def training_tile(name, x, y):
-    """Grass or ordinary cave floor; table availability is checked by the caller."""
+    """Grass or ordinary indoor floor; table availability is checked by the caller."""
     m = pt.MAPS[name]
+    # Forest-tileset interiors are encounter terrain everywhere you walk, like
+    # caves — excluding them left ViridianForest and the whole Safari Zone with
+    # zero huntable tiles, invisible to catch-area discovery.
     return pt.is_grass(name, x, y) or (
-        m['id'] >= FIRST_INDOOR_MAP and m['tileset_name'].lower() != 'forest'
+        m['id'] >= FIRST_INDOOR_MAP
         and pt.walkable(name, x, y) and pt.tile_at(name, x, y) not in (0x14, 0x15)
         and (x, y) not in pt.warp_tiles(name))
 
@@ -79,6 +101,46 @@ def battle_readiness(party, bag):
                        'pp': m['pp'],
                        'status': m.get('status', 'None')} for m in party],
             'medicine': {name: qty for name, qty in bag.items() if name in medicine_names}}
+
+
+def type_options(party, opponents):
+    """Super-effective party moves per opponent species, from public type data."""
+    chart = data.type_chart()
+    options = {}
+    for enemy in opponents:
+        species = enemy.get('species')
+        if not species or species in options:
+            continue
+        defenders = {data.species_data(species)[key] for key in ('type1', 'type2')}
+        effective = {}
+        for mon in party:
+            for name in mon['moves']:
+                if name == 'None' or name in effective:
+                    continue
+                move = data.move_data(name)
+                multiplier = 1
+                for typ in defenders:
+                    multiplier *= chart.get((move['type'], typ), 1)
+                if move['power'] > 0 and multiplier > 1:
+                    effective[name] = {'pokemon': mon['species'], 'type': move['type'],
+                                       'power': move['power'], 'effectiveness': multiplier}
+        options[species] = {'types': sorted(defenders), 'super_effective_moves': effective}
+    return options
+
+
+def tactical_options(party, opponents):
+    """Status and support moves the party can spend a battle turn on."""
+    options = {}
+    for mon in party:
+        for name in mon['moves']:
+            if name == 'None' or name in options:
+                continue
+            move = data.move_data(name)
+            if move['power'] == 0:
+                options[name] = {'pokemon': mon['species'], 'type': move['type'],
+                                 'effect': move['effect']}
+    return {'opponent_species': sorted({enemy['species'] for enemy in opponents}),
+            'status_moves': options}
 
 
 def reachable_grass(map_name, start, blocked=()):
@@ -101,8 +163,9 @@ def reachable_grass(map_name, start, blocked=()):
 
 
 class AutonomousStoryAgent(DualStoryAgent):
-    def __init__(self, *args, game, **kwargs):
+    def __init__(self, *args, game, preference='none', **kwargs):
         super().__init__(*args, **kwargs)
+        self.preference = preference
         self.game = game
         game.judgments = self
         game.smart_moves = True
@@ -112,6 +175,12 @@ class AutonomousStoryAgent(DualStoryAgent):
                          for p in data.DATA.glob('trainers/*.json')}
         self.visited = {self.client.state()['map_name']}
         self.training_sites = {}
+        self.catch_navigation = {}
+        self.catch_areas = {}
+        goal_ids = {o.get('id') for o in self.objectives}
+        self.collects_dex = 'collect-dex' in goal_ids
+        self.maximizes_coverage = 'max-coverage' in goal_ids
+        self.avoids_optional_preparation = 'fast-clear' in goal_ids
         self.healing_rules = []
         self.hof_baseline = self.client.state().get('hall_of_fame_count', 0)
         self.first_clear_verification = None
@@ -207,6 +276,57 @@ class AutonomousStoryAgent(DualStoryAgent):
         super().select_strategy(facts)
         self.replan_after_defeat = False
 
+    def augment_strategy_state(self, state, facts):
+        if self.collects_dex:
+            state['dex_progress'] = self.dex_progress(facts)
+
+    def dex_progress(self, facts):
+        """Collection panel: what is missing, where, and what it unlocks."""
+        dex = facts.get('dex') or {}
+        owned = set(dex.get('owned_species', []))
+        seen = set(dex.get('seen_species', []))
+        rung = next((value for value in DEX_RUNGS if value > len(owned)), None)
+        missing = {}
+        for name in self.neighbourhood():
+            count = len([species for species in self.grass_species(self.maps.get(name, {}))
+                         if species not in owned])
+            if count:
+                missing[name] = count
+        return {'owned': dex.get('owned', len(owned)), 'seen': dex.get('seen', len(seen)), 'total': 151,
+                # Species already met are known-reachable, so this list is the
+                # strongest lead the collector has; the rung says what
+                # finishing the current count unlocks next.
+                'seen_not_owned': sorted(seen - owned),
+                'next_rung': None if rung is None else {'rung': rung, 'needs': rung,
+                                                        'remaining': rung - len(owned)},
+                'unregistered_by_area': dict(sorted(missing.items(), key=lambda row: (-row[1], row[0]))),
+                'balls_held': self.balls_held(facts),
+                'nearest_ball_source': self.nearest_ball_source(facts.get('map'))}
+
+    def nearest_ball_source(self, origin):
+        """Closest reachable shop selling any ball, from `self.maps` alone.
+
+        The panel is assembled once per decision, so the distance comes from
+        the local map graph rather than a route query per candidate mart.
+        """
+        normalized = {name.replace('_', '').upper(): name for name in BALLS}
+        candidates = []
+        for rule in self.index.rules:
+            if rule.effect[0] != 'shop':
+                continue
+            stock = sorted({normalized[key.replace('_', '').upper()]
+                            for key in rule.effect[1]
+                            if key.replace('_', '').upper() in normalized})
+            if not stock:
+                continue
+            hops = self.map_hops(origin, rule.map)
+            if hops is not None:
+                candidates.append((hops, rule.map, rule.id, stock))
+        if not candidates:
+            return None
+        hops, name, _rule_id, stock = min(candidates)
+        return {'map': name, 'hops': hops, 'stock': stock}
+
     def choose(self, layer, state, candidates, instruction):
         if layer == 'strategy' and any('route_resets_won_battles' in value for value in candidates.values()):
             instruction += (' Compare recovery travel with its supplied story-reset cost. '
@@ -219,6 +339,20 @@ class AutonomousStoryAgent(DualStoryAgent):
                 'those resources are sufficient. The urgently_needed field is a heuristic warning, not a '
                 'requirement to refill each depleted move. A depleted attack can be replaced by another '
                 'effective attack with PP remaining. Retreat only when its benefit outweighs replaying all reset battles.')
+        if layer == 'strategy' and getattr(self, 'maximizes_coverage', False):
+            instruction += (' The terminal goal is coverage: visiting a new map is progress in itself, so once the '
+                'current objective is satisfied prefer reaching an unexplored bordering area over optional '
+                'preparation.')
+        if layer == 'strategy' and getattr(self, 'avoids_optional_preparation', False):
+            instruction += (' The terminal goal is speed: skip optional preparation unless the party genuinely '
+                'cannot proceed, and prefer the shortest route to the objective.')
+        if layer == 'strategy' and getattr(self, 'collects_dex', False):
+            instruction += (' The terminal goal is the Pokédex, not the Hall of Fame: this run ends only when every '
+                'wild species is registered. The first playthrough is the channel to more species — badges, HM '
+                'moves and new routes open areas holding species that cannot be found near the start. Treat the '
+                'story objectives as the way to reach new collecting grounds rather than as a finish line: while '
+                'the areas you can already reach still hold unregistered species, collect there; once they do not, '
+                'progress the story to open more, and never stop at the Champion while species remain.')
         if layer == 'action' and 'local_state' in state and getattr(self, 'active', None):
             state = {**state, 'strategy_context': self.active.get('context', {})}
         context = state.get('strategy_context') or {}
@@ -246,6 +380,11 @@ class AutonomousStoryAgent(DualStoryAgent):
                 'and actual outcomes will return to strategy.')
         mechanism_grounded = mechanism and candidates and any(
             route.get('tile_route_found') for route in context.get('trigger_navigation', []))
+        # Appended after the rewrites above: the menu and training instructions
+        # replace the incoming text, and the bias must still reach the question.
+        bias = PREFERENCE_INSTRUCTIONS.get(getattr(self, 'preference', 'none'))
+        if bias and layer in ('strategy', 'action'):
+            instruction += f' {bias}'
         return super().choose(layer, state, candidates, instruction,
                               allow_abstain=not (grounded or mechanism_grounded))
 
@@ -266,6 +405,8 @@ class AutonomousStoryAgent(DualStoryAgent):
                                        'scope': 'available through the current inventory menu; no travel needed'})
                     elif group['target'][0] == 'level' and rule.map in getattr(self, 'training_navigation', {}):
                         routes.append(self.training_navigation[rule.map])
+                    elif group['target'][0] == 'catch' and rule.map in getattr(self, 'catch_navigation', {}):
+                        routes.append(self.catch_navigation[rule.map])
                     continue
                 points = self.destination_points(rule.map, rule)
                 key = rule.map, tuple(points)
@@ -559,7 +700,36 @@ class AutonomousStoryAgent(DualStoryAgent):
     def objective_satisfied(self, objective, facts):
         if objective['id'] == 'become-champion':
             return self.first_clear_verification is not None
+        if objective['id'] == 'collect-dex':
+            return self.dex_complete(facts)
+        if objective['id'] == 'max-coverage':
+            return self.coverage_complete(facts)
         return super().objective_satisfied(objective, facts)
+
+    def coverage_complete(self, facts):
+        """No map bordering the explored region is still unvisited."""
+        if not self.visited:
+            return False
+        bordering = set()
+        for name in self.visited:
+            map_data = self.maps.get(name, {})
+            bordering.update(c['targetMap'] for c in map_data.get('connections', {}).values())
+            bordering.update(w['destMap'] for w in map_data.get('warps', []) if w.get('destMap'))
+        return not (bordering - self.visited)
+
+    def dex_complete(self, facts):
+        """Every species in any grass encounter table is registered.
+
+        Scoping this to already-explored areas made it vacuously true at spawn:
+        the starting room has no encounter table, so "nothing unregistered here"
+        held and the run reported success in six seconds without acting.
+        """
+        if getattr(self, 'index', None) is None:
+            return False
+        owned = set((facts.get('dex') or {}).get('owned_species', []))
+        if not owned:
+            return False
+        return all(self.index.wild_species(name) <= owned for name in self.maps)
 
     def settle_special(self, state):
         if state.get('shop_phase') and self.active and self.active['target'][0] == 'sale':
@@ -777,6 +947,171 @@ class AutonomousStoryAgent(DualStoryAgent):
                 (self.maps[name].get('warps') or [{}])[0].get('y', 10))
             self.training_sites[name] = min(spots, key=lambda pos: abs(pos[0]-origin[0]) + abs(pos[1]-origin[1]))
         return self.training_sites
+
+    @staticmethod
+    def balls_held(facts):
+        normalized = {name.replace('_', '').upper() for name in BALLS}
+        return sum(qty for key, qty in facts.get('bag', {}).items() if key in normalized)
+
+    def recent_catch_attempts(self, name):
+        """Hunts this area saw recently, and how many registered something new."""
+        attempts = [attempt for attempt in getattr(self, 'catch_attempts', []) if attempt['map'] == name]
+        return {'hunts': len(attempts),
+                'registered': sum(bool(attempt['registered']) for attempt in attempts)}
+
+    @staticmethod
+    def grass_species(map_data):
+        """Wild grass species of one map, in a stable order."""
+        wild = ((map_data.get('wild') or {}).get('red') or {}).get('grass') or {}
+        return sorted({mon['species'] for mon in wild.get('mons', [])})
+
+    def neighbourhood(self, hops=1):
+        """Explored maps plus `hops` of connection/warp topology."""
+        nearby = set(self.visited)
+        for _ in range(max(1, hops)):
+            for name in list(nearby):
+                map_data = self.maps.get(name, {})
+                nearby.update(c['targetMap'] for c in map_data.get('connections', {}).values())
+                nearby.update(w['destMap'] for w in map_data.get('warps', []) if w.get('destMap'))
+        return nearby
+
+    def map_adjacency(self):
+        """Undirected map adjacency: connections and warps, both directions.
+
+        Door warps are listed on the street side only and exit mats may not
+        state their destination at all, so either side's listing must serve
+        as the crossing in both directions.
+        """
+        adjacency = getattr(self, '_map_adjacency', None)
+        if adjacency is None:
+            adjacency = {name: set() for name in self.maps}
+            for name, map_data in self.maps.items():
+                crossings = [c['targetMap'] for c in map_data.get('connections', {}).values()]
+                crossings += [w['destMap'] for w in map_data.get('warps', []) if w.get('destMap')]
+                for other in crossings:
+                    if other in adjacency:
+                        adjacency[name].add(other)
+                        adjacency[other].add(name)
+            self._map_adjacency = adjacency
+        return adjacency
+
+    def map_hops(self, origin, destination):
+        """Fewest map crossings between two maps, or None when disconnected."""
+        adjacency = self.map_adjacency()
+        if origin not in adjacency or destination not in adjacency:
+            return None
+        distances = {origin: 0}
+        queue = deque([origin])
+        while queue:
+            name = queue.popleft()
+            if name == destination:
+                return distances[name]
+            for other in adjacency[name]:
+                if other not in distances:
+                    distances[other] = distances[name] + 1
+                    queue.append(other)
+        return None
+
+    def find_catch_areas(self, facts):
+        """Encounter terrain holding wild species the Pokédex has not registered."""
+        owned = set((facts.get('dex') or {}).get('owned_species', []))
+        barriers = self.game.navigation_barriers()
+        barriers[facts['map']] = barriers.get(facts['map'], set()) | self.game.live_npcs(facts['map'])
+        ranked = []
+        previous = set()
+        for hops in (1, 2, 3, 4):
+            nearby = self.neighbourhood(hops)
+            if nearby == previous:
+                break
+            previous = nearby
+            self.catch_navigation = {}
+            ranked = self.rank_catch_areas(nearby, facts, owned, barriers)
+            if ranked:
+                break
+        ranked.sort(key=lambda item: item[:5])
+        self.catch_areas = {name: {'species': species, 'spots': spots,
+                                   'reachable': self.catch_navigation[name]['tile_route_found']}
+                            for *_, name, species, spots in ranked[:4]}
+        return self.catch_areas
+
+    def rank_catch_areas(self, nearby, facts, owned, barriers):
+        """Rank the given maps by what a collector could still register there."""
+        ranked = []
+        for name in nearby:
+            # Safari battles swap the menu for BALL/BAIT/ROCK/RUN with their own
+            # ball accounting; bag throws are refused there, so hunting one
+            # before Safari capture exists only burns the budget.
+            if name.startswith('SafariZone'):
+                continue
+            species = [species for species in self.grass_species(self.maps.get(name, {}))
+                       if species not in owned]
+            if not species:
+                continue
+            route = self.client.route(facts['map'], name)
+            if not route.get('found'):
+                continue
+            spots = [(x, y) for x in range(pt.MAPS[name]['width']*2)
+                     for y in range(pt.MAPS[name]['height']*2) if training_tile(name, x, y)]
+            if not spots:
+                continue
+            paths = pt.bfs_cross(facts['map'], (facts['x'], facts['y']), name, spots[0],
+                last_map=self.game.last_map, allow_ledges=True, allow_spinners=True,
+                blocked_maps=barriers, excluded_maps=self.game.navigation_excluded_maps(),
+                goal_nodes={(name, *p) for p in spots})
+            if not paths and name in getattr(self, 'navigation_memory', {}):
+                continue  # Include live NPCs when rechecking a disproved route.
+            self.catch_navigation[name] = {'map': name, 'tile_route_found': bool(paths),
+                'steps': len(paths)-1 if paths else None,
+                'scope': 'path to actual encounter terrain, including current NPC collisions; battles can interrupt travel'}
+            if paths:
+                endpoint = paths[-1][0] if len(paths) > 1 else paths[0]
+                spots = [tuple(endpoint[1:])]  # Use the reachable component.
+            # A richer table is worth a longer wait, but hunts that registered
+            # nothing say the dice are against this area right now.
+            attempts = self.recent_catch_attempts(name)
+            ranked.append((not bool(paths), len(paths)-1 if paths else float('inf'),
+                           -len(species), attempts['hunts'] - attempts['registered'],
+                           name, species, spots))
+        return ranked
+
+    def add_coverage_groups(self, groups, facts):
+        """Offer bordering areas the first playthrough has not reached yet.
+
+        Coverage needs candidates of its own: once the plot's flag frontier is
+        exhausted the story groups stop, and without these the run would stall
+        with reachable areas still unvisited rather than exploring them.
+        """
+        bordering = set()
+        for name in self.visited:
+            map_data = self.maps.get(name, {})
+            bordering.update(c['targetMap'] for c in map_data.get('connections', {}).values())
+            bordering.update(w['destMap'] for w in map_data.get('warps', []) if w.get('destMap'))
+        for name in sorted(bordering - self.visited):
+            spot = self.entry_tile(name)
+            if spot is None or not self.client.route(facts['map'], name).get('found'):
+                continue
+            x, y = spot
+            target = ('explore', name, True)
+            groups.setdefault(f'explore:{name}', {
+                'target': target,
+                'rules': [Rule(f'explore:{name}', name, 'explore:new_area',
+                               [f'coord:({x},{y})'], [], [], target, [])],
+                'objectives': ['Reach a bordering area that has not been visited yet'],
+                'context': {'purpose': 'Coverage: no bordering area should stay unexplored'},
+            })
+
+    @staticmethod
+    def entry_tile(name):
+        """A tile of `name` a traveller can arrive at: a warp landing, else any walkable tile."""
+        map_data = pt.MAPS.get(name) or {}
+        for warp in map_data.get('warps', []):
+            if warp.get('x') is not None and warp.get('y') is not None:
+                return int(warp['x']), int(warp['y'])
+        for x in range(map_data.get('width', 0) * 2):
+            for y in range(map_data.get('height', 0) * 2):
+                if pt.walkable(name, x, y):
+                    return x, y
+        return None
 
     def add_navigation_groups(self, groups, facts):
         blockages = dict(getattr(self, 'navigation_history', {}))
@@ -996,11 +1331,19 @@ class AutonomousStoryAgent(DualStoryAgent):
                         'objectives': [f'Use {move} to clear the terrain obstruction'], 'context': obstacle}
         self.add_navigation_groups(groups, facts)
         threats = []
+        preference = getattr(self, 'preference', 'none')
         for group in groups.values():
             opponents = self.opponent_parties(group['rules'])
             if opponents:
-                group['context'] = {**group.get('context', {}), 'opponent_parties': opponents,
-                                    'battle_is_not_guaranteed_by_script_preconditions': True}
+                context = {**group.get('context', {}), 'opponent_parties': opponents,
+                           'battle_is_not_guaranteed_by_script_preconditions': True}
+                # Each bias supplies the comparison data it asks the model to
+                # use, so the offered candidates differ with the preference.
+                if preference == 'type':
+                    context['type_options'] = type_options(facts.get('party', []), opponents)
+                elif preference == 'tactic':
+                    context['tactical_options'] = tactical_options(facts.get('party', []), opponents)
+                group['context'] = context
                 threats.append((max(mon['level'] for mon in opponents), group['objectives']))
         if not facts['party']:
             return groups
@@ -1086,6 +1429,8 @@ class AutonomousStoryAgent(DualStoryAgent):
             target_level, objectives = (min(threats, key=lambda t: t[0]) if threats else
                                         (0, ['Prepare for an observed battle defeat']))
             target_level = max(target_level, self.defeat_preparation)
+            if preference == 'level':
+                target_level += LEVEL_PREFERENCE_MARGIN
             # The training skill stops at this same recovery threshold.
             # Offering it while recovery is needed creates a choose/exit loop.
             if target_level > facts['party'][0]['level'] and not self.needs_healing(facts):
@@ -1104,6 +1449,32 @@ class AutonomousStoryAgent(DualStoryAgent):
                                     'observed_defeats': self.battle_defeats[-3:],
                                     'upcoming_moves': data.species_data(facts['party'][0]['species']).get('learnset', [])},
                     }
+        if self.collects_dex:
+            balls = self.balls_held(facts)
+            owned = set((facts.get('dex') or {}).get('owned_species', []))
+            for name, area in self.find_catch_areas(facts).items():
+                target = ('catch', name, True)
+                groups.setdefault(f'collect:{name}', {
+                    'target': target,
+                    'objectives': ['Register wild species that are not in the Pokédex yet'],
+                    'rules': [Rule(f'catch:{name}', name, 'skill:catch_encounter', [], [], [], target, [])],
+                    'context': {'purpose': 'Find and catch unregistered wild species in this area',
+                                # A catch needs a ball. Offering this target without
+                                # saying the bag is empty invites choosing a goal
+                                # that cannot possibly complete.
+                                'balls_held': balls,
+                                'prerequisite': ('No balls are carried, so nothing found here can be caught '
+                                                 'until Poké Balls are bought or received'
+                                                 if balls == 0 else
+                                                 f'Catching spends balls; {balls} carried'),
+                                'unregistered_species': [catch_difficulty(species) for species in area['species']],
+                                'already_registered_here': [species for species in self.grass_species(self.maps[name])
+                                                            if species in owned],
+                                'recent_attempts': self.recent_catch_attempts(name),
+                                'encounters': ((self.maps[name].get('wild') or {}).get('red') or {}).get('grass')},
+                })
+        if self.maximizes_coverage:
+            self.add_coverage_groups(groups, facts)
         # Keep the blocked goals until their entrances have been considered.
         readiness = battle_readiness(facts['party'], facts['bag'])
         failed_maps = {d['map'] for d in self.battle_defeats if not d.get('resolved_by_victory')
@@ -1115,9 +1486,69 @@ class AutonomousStoryAgent(DualStoryAgent):
         self.transport_frontiers(groups, facts)
         self.add_mechanism_groups(groups, facts)
         self.annotate_navigation(groups, facts, previews)
+        if self.avoids_optional_preparation:
+            for key, group in list(groups.items()):
+                if group.get('context', {}).get('optional_preparation'):
+                    del groups[key]  # Preparation the run can survive without only spends frames.
         return groups
 
+    # Collecting burns balls faster than the starting funds replace them, so a
+    # collector restocks well before the bag is empty.
+    BALL_RESERVE = 12
+
+    # How many of the newest hunts the judge compares an area on.
+    CATCH_WINDOW = 12
+
+    def add_ball_supply(self, groups, facts):
+        """Buy balls through the same real shop path the recovery restock uses.
+
+        That restock is defeat-triggered: a collector at full health would never
+        be offered it and would simply stop catching once the bag ran dry.
+        """
+        if not self.collects_dex:
+            return
+        normalized = {name.replace('_', '').upper(): name for name in BALLS}
+        carried = {normalized[key]: qty for key, qty in facts['bag'].items() if key in normalized}
+        held = sum(carried.values())
+        if held >= self.BALL_RESERVE:
+            return
+        nearest = {}
+        for rule in self.index.rules:
+            if rule.effect[0] != 'shop' or rule.missing(facts):
+                continue
+            route = self.client.route(facts['map'], rule.map)
+            if not route.get('found'):
+                continue
+            hops = len(route.get('legs', []))
+            for stock_index, key in enumerate(rule.effect[1]):
+                name = normalized.get(key.replace('_', '').upper())
+                if not name:
+                    continue
+                # The two nearest shops per ball kind. The nearest by map hops
+                # can still be tile-unreachable (a water crossing the map-level
+                # router ignores), and one blocked trip strikes that rule out
+                # after two failures — a runner-up keeps the supply line alive.
+                entry = (hops, rule.map, rule.id, stock_index, rule)
+                shops = nearest.setdefault(name, [])
+                if entry not in shops:
+                    shops.append(entry)
+                    shops.sort(key=lambda item: item[:3])
+                    del shops[2:]
+        for name, shops in sorted(nearest.items()):
+            info = BALLS[name]
+            qty = min(self.BALL_RESERVE - held, int(facts['money'] * .6) // max(1, info['price']))
+            if qty < 1 or (len(facts['bag']) >= 20 and name not in carried):
+                continue
+            for hops, map_name, _rule_id, stock_index, rule in shops:
+                target = ('supply', name, carried.get(name, 0) + qty)
+                groups[f'ball:{rule.id}:{name}'] = {'target': target, 'rules': [rule],
+                    'objectives': ['Buy balls to keep collecting unregistered species'],
+                    'context': {'optional_preparation': True, 'stock_index': stock_index,
+                                'item': info, 'collecting': True,
+                                'map': map_name, 'map_hops': hops}}
+
     def add_recovery_groups(self, groups, facts):
+        self.add_ball_supply(groups, facts)
         normalized = {name.replace('_', '').upper(): name for name in MEDICINES}
         bag = {normalized[key]: qty for key, qty in facts['bag'].items() if key in normalized}
         options = list(medicine_options(facts['party'], bag))
@@ -1265,6 +1696,24 @@ class AutonomousStoryAgent(DualStoryAgent):
                     candidates[key] = json.dumps({'operation': operation,
                         'purpose': f"Approach and use {obstacle['move']} through the party menu to pass this terrain", 'terrain': obstacle})
                     bindings[key] = operation, self.active['rules'][0]
+            return candidates, bindings
+        if self.active['target'][0] == 'catch':
+            candidates, bindings = {}, {}
+            reachable = [r for r in self.active['rules']
+                         if getattr(self, 'catch_navigation', {}).get(r.map, {}).get('tile_route_found')]
+            for rule in reachable or self.active['rules']:
+                area = getattr(self, 'catch_areas', {}).get(rule.map)
+                if not area or not area['spots']:
+                    continue
+                x, y = area['spots'][0]
+                operation = f'catch_encounter:{rule.map},{x},{y}'
+                key = f'action:{len(candidates)}'
+                candidates[key] = json.dumps({'operation': operation,
+                    'purpose': f'Travel to {rule.map}, walk in the encounter terrain until a wild battle starts, then decide there whether to throw a ball or attack.',
+                    'navigation': getattr(self, 'catch_navigation', {}).get(rule.map),
+                    'unregistered_species_here': area['species'],
+                    'encounters': ((self.maps[rule.map].get('wild') or {}).get('red') or {}).get('grass')})
+                bindings[key] = operation, rule
             return candidates, bindings
         if self.active['target'][0] != 'level':
             candidates, bindings = super().action_candidates(facts)
@@ -1503,7 +1952,45 @@ class AutonomousStoryAgent(DualStoryAgent):
                         'blocking_npcs': [text_id], 'blocking_trainers': [text_id] if trainer else []}
         return None
 
-    def travel(self, name, rule, points=None):
+    def transit_grass_barriers(self, origin, name, barriers):
+        """Block encounter grass on every map a trip only passes through.
+
+        A collector walking to a catching ground keeps meeting the already
+        registered species of the routes in between. The destination's own
+        grass is the point of the trip and stays walkable.
+        """
+        legs = self.client.route(origin, name).get('legs') or []
+        if not legs:
+            return None  # Unknown topology: the ordinary search still runs.
+        overlay = {map_name: set(tiles) for map_name, tiles in barriers.items()}
+        stages = {origin, *(leg['to_map'] for leg in legs)}
+        for stage in sorted(stages - {name}):
+            if stage not in pt.MAPS:
+                continue
+            grass = pt.grass_tiles(stage)
+            if grass:
+                overlay.setdefault(stage, set()).update(grass)
+        return overlay
+
+    def navigate_trip(self, name, point, transit, **kwargs):
+        """Walk to the destination, detouring around transit grass.
+
+        The driver re-plans from every observation, so the detour has to reach
+        it as navigation barriers rather than as a one-off planned path. The
+        detour is a preference, never a lost trip: when a route a live NPC
+        sealed cannot be walked, the same trip is retried plainly.
+        """
+        error = None
+        for avoid_maps in ((transit, None) if transit else (None,)):
+            try:
+                self.navigate_point(name, point, **kwargs,
+                                    **({'avoid_maps': avoid_maps} if avoid_maps else {}))
+                return
+            except pt.NavError as failure:
+                error = failure
+        raise error
+
+    def travel(self, name, rule, points=None, avoid_encounters=False):
         self.navigation_intent = {'destination': name, 'target_script': rule.description()}
         state = self.game.st()
         excluded = self.game.navigation_excluded_maps()
@@ -1519,10 +2006,18 @@ class AutonomousStoryAgent(DualStoryAgent):
             barriers.setdefault(name, set()).update(puzzle_holes)
         paths = []
         points = points or self.destination_points(name, rule)
+        transit = self.transit_grass_barriers(state['map_name'], name, barriers) if avoid_encounters else None
         for point in points:
-            path = pt.bfs_cross(state['map_name'], (state['player_x'], state['player_y']),
-                                name, point, last_map=self.game.last_map, allow_ledges=True, allow_spinners=True,
-                                excluded_maps=excluded, blocked_maps=barriers)
+            path = (pt.bfs_cross(state['map_name'], (state['player_x'], state['player_y']),
+                                 name, point, last_map=self.game.last_map, allow_ledges=True, allow_spinners=True,
+                                 excluded_maps=excluded, blocked_maps=transit)
+                    if transit is not None else None)
+            if path is None:
+                # Extra blocked tiles can make a route infeasible; the
+                # ordinary search is the fallback, never a lost trip.
+                path = pt.bfs_cross(state['map_name'], (state['player_x'], state['player_y']),
+                                    name, point, last_map=self.game.last_map, allow_ledges=True, allow_spinners=True,
+                                    excluded_maps=excluded, blocked_maps=barriers)
             if path:
                 paths.append((len(path), point))
         if not paths:
@@ -1593,8 +2088,15 @@ class AutonomousStoryAgent(DualStoryAgent):
                 return npc_obstruction
             return {'result': 'blocked', 'detail': 'No tile route to the requested trigger region', 'destination': name}
         _, point = min(paths)
+        # The driver re-plans the walk from every observation, so the transit
+        # detour has to reach it as navigation barriers too. The map the trip
+        # starts on keeps its own preference: the driver already avoids grass
+        # on the map it is standing on.
+        walk_transit = ({map_name: tiles for map_name, tiles in transit.items()
+                         if map_name != state['map_name']} if transit else None)
         try:
-            self.navigate_point(name, point, **({'avoid_tiles': puzzle_holes} if puzzle_holes else {}))
+            self.navigate_trip(name, point, walk_transit,
+                               **({'avoid_tiles': puzzle_holes} if puzzle_holes else {}))
             return {'result': 'reached', 'destination': name, 'position': point}
         except NavigationPause as error:
             return {'result': 'paused_after_battle', 'detail': str(error), 'destination': name}
@@ -1709,17 +2211,21 @@ class AutonomousStoryAgent(DualStoryAgent):
                     return targets
         return []
 
-    def navigate_point(self, name, point, tries=80, avoid_tiles=()):
+    def navigate_point(self, name, point, tries=80, avoid_tiles=(), avoid_maps=None):
         previous = getattr(self.game, 'script_navigation_barriers', {})
-        if avoid_tiles:
+        if avoid_tiles or avoid_maps:
+            # `avoid_maps` supplies tiles the walk may not cross on the maps it
+            # only passes through; the destination map stays fully walkable.
             self.game.script_navigation_barriers = {**previous,
-                name: set(previous.get(name, ())) | set(avoid_tiles)}
+                name: set(previous.get(name, ())) | set(avoid_tiles),
+                **{map_name: set(previous.get(map_name, ())) | set(tiles)
+                   for map_name, tiles in (avoid_maps or {}).items()}}
         self.game.navigation_active = True
         try:
             self.game.nav_to_map(*point, name, tries=tries)
         finally:
             self.game.navigation_active = False
-            if avoid_tiles:
+            if avoid_tiles or avoid_maps:
                 self.game.script_navigation_barriers = previous
 
     def execute(self, operation, rule):
@@ -1919,17 +2425,21 @@ class AutonomousStoryAgent(DualStoryAgent):
                 result = {'result': 'interacted_across_counter', 'npc_index': int(index)}
             self.record('operation', operation=operation, result=result, script=rule.storyline)
             return result
-        if not operation.startswith('train_encounter:'):
+        if not operation.startswith(('train_encounter:', 'catch_encounter:')):
             result = super().execute(operation, rule)
             self.record_travel(result)
             return result
         if self.actions >= self.max_actions:
             raise StoryStopped('action_budget')
         self.actions += 1
+        catching = operation.startswith('catch_encounter:')
         name, x, y = operation.split(':', 1)[1].split(',')
+        owned_before = self.client.state().get('pokedex', {}).get('owned')
         start_level = self.client.state()['party'][0]['level']
         if self.client.state()['map_name'] != name:
-            travel = self.travel(name, rule, [(int(x), int(y))])
+            # A catching trip is for this map's grass; the routes in between
+            # are duplicate encounters, so their grass may be walked around.
+            travel = self.travel(name, rule, [(int(x), int(y))], avoid_encounters=catching)
             self.record_travel(travel)
             self.settle(self.active['target'], rule)
             self.remember_travel_result(name, travel)
@@ -1967,7 +2477,19 @@ class AutonomousStoryAgent(DualStoryAgent):
             # deterministic navigation owns the individual held frames.
             direction, _ = steps[cycle % len(steps)]
             self.game.d.drive([direction] * 8, frames=12)
-        result = {'result': 'trained', 'level_before': start_level,
-                  'level_after': self.client.state()['party'][0]['level']}
+        result = ({'result': 'hunted', 'map': name, 'owned_before': owned_before,
+                   'owned_after': self.client.state().get('pokedex', {}).get('owned')} if catching else
+                  {'result': 'trained', 'level_before': start_level,
+                   'level_after': self.client.state()['party'][0]['level']})
+        if catching:
+            # `self.recent` keeps only the result string, so a hunt's dex delta
+            # is remembered here for the next strategy call.
+            history = getattr(self, 'catch_attempts', [])
+            history.append({'map': name,
+                            'registered': result['owned_after'] is not None
+                            and result['owned_before'] is not None
+                            and result['owned_after'] > result['owned_before']})
+            del history[:-self.CATCH_WINDOW]
+            self.catch_attempts = history
         self.record('operation', operation=operation, result=result, script=rule.storyline)
         return result

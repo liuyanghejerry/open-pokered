@@ -48,11 +48,56 @@ def medicine_options(party, bag):
                                     'effect': item['effect'], 'tags': tags}
 
 
+BALLS = {name: item for name, item in ITEM_CATALOG.items() if 'ball' in item.get('tags', [])}
+
+
+def ball_options(live, bag, owned_species=()):
+    """Legal ball throws, grounded in public item and species data.
+
+    Only wild encounters can be caught — the engine refuses a ball against a
+    trainer's Pokémon — and a Safari encounter swaps the main menu for
+    BALL/BAIT/ROCK/RUN with its own ball accounting, so it is not a bag throw.
+    Whether the species is already registered is reported rather than filtered:
+    whether a duplicate is worth a ball is the judgment under test.
+    """
+    if not live.get('is_wild') or live.get('is_safari'):
+        return
+    enemy = live['enemy']
+    catch_rate = late.species_data(enemy['species'])['catchRate']
+    owned = set(owned_species)
+    for name, qty in bag.items():
+        if qty <= 0 or name not in BALLS:
+            continue
+        yield name, None, {'ball': name, 'quantity': qty, 'enemy': enemy,
+                           'catch_rate': catch_rate,
+                           'already_owned': enemy['species'] in owned}
+
+
 def effective_attacks(mon, enemy):
     types = {late.species_data(enemy)[key] for key in ('type1', 'type2')}
     return [name for name, pp in zip(mon['moves'], mon['pp']) if name != 'None' and pp > 0
             and late.move_data(name)['power'] > 0 and all(
                 late.type_chart().get((late.move_data(name)['type'], typ), 1) > 0 for typ in types)]
+
+
+# Playstyle biases, not goals: each one steers both the instructions the model
+# reads and the candidate data the code offers.
+PREFERENCE_INSTRUCTIONS = {
+    'level': 'Preference: level suppression — prefer earning experience and out-levelling the next '
+             'opponent before challenging it. Training is progress even when the current opponent is '
+             'beatable.',
+    'type': 'Preference: type suppression — prefer the attacker and move whose type is super-effective '
+            'against this opponent, and prefer acquiring or switching to a member that covers its type '
+            'over raw power.',
+    'tactic': 'Preference: tactical suppression — prefer status, stat-modifying and support moves, and '
+              'carried items, over raw-damage attacks; aim to disable or outlast the opponent.',
+}
+
+
+def preference_suffix(judgments):
+    """Bias text for a question this game asks; empty under the default preference."""
+    bias = PREFERENCE_INSTRUCTIONS.get(getattr(judgments, 'preference', 'none'), '')
+    return f' {bias}' if bias else ''
 
 
 class NavigationPause(RuntimeError):
@@ -261,12 +306,28 @@ class JevGame(pt.Game):
             key = f'item:{item}:{index}'
             candidates[key] = json.dumps(details)
             bindings[key] = item, index
+        owned = (state.get('pokedex') or {}).get('owned_species', [])
+        balls = list(ball_options(live, bag, owned))
+        for ball, _target, details in balls:
+            key = f'ball:{ball}'
+            candidates[key] = json.dumps(details)
+            bindings[key] = ball, None
         if not bindings:
             return None
-        chosen = self.judgments.choose('action', {'battle': live}, candidates,
-            'Choose attack, an offered switch, or one recovery item for this turn. Switching and items consume the turn and the enemy can attack. '
+        instruction = ('Choose attack, an offered switch, one recovery item, or one ball for this turn. Switching, items and balls consume the turn and the enemy can attack. '
             'Keep the capable battler alive, cure disabling status, or revive a useful fainted teammate. '
-            'Avoid healing loops when enemy damage exceeds recovery; use the strongest suitable medicine when needed.')
+            'Avoid healing loops when enemy damage exceeds recovery; use the strongest suitable medicine when needed. '
+            'A ball can only be thrown at a wild Pokémon: weigh the enemy species, its remaining HP, its catch rate, which ball you would spend, '
+            'and whether that species is already registered, against simply attacking it.')
+        if getattr(self.judgments, 'collects_dex', False) and any(not d['already_owned'] for _, _, d in balls):
+            # Framed purely around turn economy, defeating an unregistered
+            # species reads as the safe play and the run collects nothing.
+            instruction += (' This run exists to register species that are not in the Pokédex yet, not to win '
+                'encounters: this opponent is unregistered, so defeating it spends the encounter without '
+                'collecting anything, while a ball spent on it is exactly what the run is for. Prefer the ball '
+                'while unregistered opponents appear and balls remain.')
+        chosen = self.judgments.choose('action', {'battle': live}, candidates,
+                                       instruction + preference_suffix(self.judgments))
         return bindings.get(chosen)
 
     def remember_npcs(self, map_name, npcs):
@@ -511,7 +572,8 @@ class JevGame(pt.Game):
                         'Compare effective_expected_power (already includes accuracy, type effectiveness, '
                         'same-type bonus and critical probability), then physical/special stats and useful '
                         'secondary effects. Do not count those bonuses twice. Use draining attacks when healing matters. Avoid immunity and do not '
-                        'spend a resisted low-PP attack when an effective alternative exists.')
+                        'spend a resisted low-PP attack when an effective alternative exists.'
+                        + preference_suffix(self.judgments))
                     self.move_cache[key] = chosen
                 self.judgments.record('attack', milestone=self.active_milestone,
                                       choice=chosen, move=candidates[chosen], state=compact)

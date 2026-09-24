@@ -22,6 +22,18 @@ from openpokered.playthrough_judgments import JevGame
 from openpokered.typesafe import TypeSafeClient
 import playthrough as pt
 
+GOAL_OBJECTIVES = {
+    'collect-dex': {'id': 'collect-dex', 'agent_verified': True,
+                    'name': 'Register every wild species; clear the first playthrough to open the areas '
+                            'that hold the rest'},
+    'max-coverage': {'id': 'max-coverage', 'agent_verified': True,
+                     'name': 'Leave no bordering area unexplored and finish the first playthrough'},
+    'fast-clear': {'id': 'fast-clear',
+                   'satisfied_when': {'flag': 'EVENT_BEAT_CHAMPION_RIVAL'},
+                   'name': 'Reach the Hall of Fame in as few operations and frames as possible'},
+}
+DEX_OBJECTIVE = GOAL_OBJECTIVES['collect-dex']
+
 
 def boot_new_game(game):
     assert not game.save_path.exists(), 'fresh run must not offer CONTINUE'
@@ -52,6 +64,14 @@ def observations_valid(observations):
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--until', choices=[o['id'] for o in load_objectives()], default='become-champion')
+    parser.add_argument('--goal', choices=['story', 'collect-dex', 'max-coverage', 'fast-clear'],
+                        default='story')
+    # `code` picks candidates without a model call: a dry run of the skills,
+    # navigation and candidate generation at zero service cost.
+    parser.add_argument('--strategy', choices=['jev', 'code'], default='jev')
+    parser.add_argument('--action', choices=['jev', 'code'], default='jev')
+    # Playstyle biases, not goals: each one biases the instruction and the candidates.
+    parser.add_argument('--preference', choices=['none', 'level', 'type', 'tactic'], default='none')
     parser.add_argument('--seed', type=int, default=42)
     parser.add_argument('--binary', type=Path, default=pt.BIN)
     parser.add_argument('--model', default='jev-1.13.0')
@@ -65,11 +85,22 @@ def main(argv=None):
     args = parser.parse_args(argv)
     folder = args.output / (time.strftime('%Y%m%d-%H%M%S') + f'-seed{args.seed}')
     folder.mkdir(parents=True, exist_ok=False)
-    model = TypeSafeClient.from_env(timeout=10, max_retries=1)
-    objectives = load_objectives()
-    objectives = objectives[:next(i for i, obj in enumerate(objectives) if obj['id'] == args.until)+1]
-    result = {'success': False, 'target': args.until, 'seed': args.seed,
-              'mode': 'autonomous-new-game', 'uses_milestone_handlers': False}
+    # A 10s read timeout with one retry aborted a whole 25-minute run on a
+    # single transient network blip; long runs need more slack than that.
+    model = TypeSafeClient.from_env(timeout=30, max_retries=2)
+    if args.goal == 'story':
+        objectives = load_objectives()
+        objectives = objectives[:next(i for i, obj in enumerate(objectives) if obj['id'] == args.until) + 1]
+    else:
+        # The story objectives stay as the instrumental frontier: their flags
+        # are what carries the run into new areas and resources. The goal entry
+        # is appended last so it is the terminal requirement rather than the
+        # story prefix — fast-clear names the champion flag itself.
+        objectives = load_objectives() + [GOAL_OBJECTIVES[args.goal]]
+    result = {'success': False, 'goal': args.goal, 'preference': args.preference,
+              'target': args.until if args.goal == 'story' else args.goal,
+              'layers': {'strategy': args.strategy, 'action': args.action},
+              'seed': args.seed, 'mode': 'autonomous-new-game', 'uses_milestone_handlers': False}
     policy_files = [*Path(__file__).parent.glob('*.py'),
                     pt.ROOT / 'scripts/playthrough.py', pt.ROOT / 'scripts/playthrough_late.py',
                     pt.ROOT / 'scripts/debug_drive.py']
@@ -110,6 +141,8 @@ def main(argv=None):
                 game.judgments.record('resume' if args.resume else 'new_game', state=initial)
                 agent = AutonomousStoryAgent(
                     game.judgments.client, model, objectives, game=game, model=args.model,
+                    strategy_jev=args.strategy == 'jev', action_jev=args.action == 'jev',
+                    preference=args.preference,
                     max_calls=args.max_calls, max_actions=args.max_actions,
                     wall_budget=args.wall_budget, frame_budget=args.frame_budget, trace=trace)
                 if parent:
@@ -175,6 +208,7 @@ def main(argv=None):
                         (folder / 'final-observations.json').write_text(json.dumps(observations, indent=2))
                         valid = observations_valid(observations)
                         result['final_observations_valid'] = valid
+                        result['final_dex'] = observations['get_state'].get('data', {}).get('pokedex')
                         if not valid:
                             result.update(success=False, reason='invalid_final_protocol_observations')
                         if valid:

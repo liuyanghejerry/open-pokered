@@ -34,6 +34,33 @@ def facts(**flags):
 
 
 class RulesTests(unittest.TestCase):
+    def test_pokedex_count_gate_becomes_a_pursuable_goal(self):
+        from openpokered.story_rules import requirements, StoryIndex
+        expr = {'BinaryOp': {'op': 'Gte', 'left': call('getPokedexOwnedCount'),
+                             'right': {'NumberLit': 10.0}}}
+        self.assertEqual(requirements(expr, True, facts()), [[('dex', 'count', 10)]])
+        self.assertEqual(requirements(expr, True, {**facts(), 'dex': {'owned': 10}}), [[]])
+        index = StoryIndex.__new__(StoryIndex)
+        self.assertFalse(index.satisfied(('dex', 'count', 10), facts()))
+        self.assertTrue(index.satisfied(('dex', 'count', 10), {**facts(), 'dex': {'owned': 10}}))
+
+    def test_explore_target_is_satisfied_by_standing_on_the_map(self):
+        from openpokered.story_rules import StoryIndex
+        index = StoryIndex.__new__(StoryIndex)
+        self.assertTrue(index.satisfied(('explore', 'Route3', True), {**facts(), 'map': 'Route3'}))
+        self.assertFalse(index.satisfied(('explore', 'Route3', True), {**facts(), 'map': 'Route2'}))
+
+    def test_catch_target_tracks_the_owned_species_list(self):
+        from openpokered.story_rules import StoryIndex
+        index = StoryIndex.__new__(StoryIndex)
+        index._wild_cache = {'Route1': {'Pidgey', 'Rattata'}, 'IndigoPlateau': set()}
+        dex = {'owned': 2, 'owned_species': ['Pidgey', 'Rattata']}
+        self.assertTrue(index.satisfied(('catch', 'Route1', True), {**facts(), 'dex': dex}))
+        partial = {'owned': 1, 'owned_species': ['Pidgey']}
+        self.assertFalse(index.satisfied(('catch', 'Route1', True), {**facts(), 'dex': partial}))
+        self.assertFalse(index.satisfied(('catch', 'IndigoPlateau', True), {**facts(), 'dex': dex}))
+        self.assertFalse(index.satisfied(('catch', 'Route1', True), facts()))
+
     def test_lower_floor_boulder_backchains_the_matching_stone_from_above(self):
         floors = [('SeafoamIslandsB1F', 'EVENT_SEAFOAM1_BOULDER1_DOWN_HOLE', 'SEAFOAM_ISLANDS_B1F_OBJ_1'),
                   ('SeafoamIslandsB2F', 'EVENT_SEAFOAM2_BOULDER1_DOWN_HOLE', 'SEAFOAM_ISLANDS_B2F_OBJ_1')]
@@ -317,6 +344,25 @@ class DecisionTests(unittest.TestCase):
     def test_invalid_objectives_are_rejected(self):
         with self.assertRaises(ValueError):DualStoryAgent(Client(),FakeModel(),[])
 
+    def test_agent_verified_objective_needs_no_completion_flag(self):
+        objectives = [{'id': 'collect-dex', 'agent_verified': True,
+                       'name': 'Register every wild species; clear the first playthrough to open the areas '
+                               'that hold the rest'}]
+        agent = DualStoryAgent(Client(), FakeModel(), objectives, trace=io.StringIO())
+        self.assertEqual([o['id'] for o in agent.objectives], ['collect-dex'])
+        # There is no flag for the frontier to backchain, so it contributes
+        # no story group; its candidates come from the catch skill instead.
+        self.assertIsNone(agent.index)
+        self.assertEqual(agent.strategy_groups(facts()), {})
+        # The milestone still records the decision the agent itself made.
+        agent.objective_satisfied = lambda objective, facts: True
+        agent.mark_milestones(facts())
+        self.assertEqual(agent.completed, ['collect-dex'])
+        self.assertIsNone(json.loads(agent.trace.getvalue())['flag'])
+
+    def test_objective_without_a_flag_needs_agent_verification(self):
+        with self.assertRaises(ValueError):DualStoryAgent(Client(),FakeModel(),OBJECTIVES[2:])
+
     def test_action_budget_stops_before_executing_an_extra_operation(self):
         agent=self.agent(max_actions=1)
         agent.actions=1
@@ -333,6 +379,30 @@ class DecisionTests(unittest.TestCase):
     def test_old_explorer_rejects_empty_objective_file(self):
         agent=JudgmentAgent(StubJudge(None),explore=True,objectives=[])
         self.assertEqual(agent.run(FakeEnv([OBS]),{'id':'explore'},999),(False,'invalid_objectives'))
+
+
+class FactsTests(unittest.TestCase):
+    def agent(self,state):
+        agent=DualStoryAgent.__new__(DualStoryAgent)
+        agent.client=Mock()
+        agent.client.state.return_value=state
+        agent.client.flags.return_value={}
+        agent.client.bag.return_value={}
+        agent.client.observe.return_value={'badges':{'count':0}}
+        return agent
+
+    def test_facts_carry_pokedex_progress_for_a_collecting_objective(self):
+        agent=self.agent({'map_name':'PalletTown','player_x':5,'player_y':6,'money':3000,'coins':0,
+                          'party':[],
+                          'pokedex':{'seen':9,'owned':3,'total':151,
+                                     'owned_numbers':[1,4,7],'seen_numbers':[1,4,7,10]}})
+        self.assertEqual(agent.facts()['dex']['owned'],3)
+        self.assertEqual(agent.facts()['dex']['owned_numbers'],[1,4,7])
+
+    def test_facts_tolerate_a_binary_without_pokedex_progress(self):
+        agent=self.agent({'map_name':'PalletTown','player_x':5,'player_y':6,'money':3000,'coins':0,
+                          'party':[]})
+        self.assertEqual(agent.facts()['dex'],{})
 
 
 if __name__=='__main__':unittest.main()

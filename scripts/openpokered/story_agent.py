@@ -37,7 +37,8 @@ class DualStoryAgent:
                  strategy_jev=True, action_jev=True, max_calls=160,
                  max_actions=180, frame_budget=80000, wall_budget=600,
                  maps_dir=None, trace=None):
-        if not objectives or any(not o.get('satisfied_when', {}).get('flag') for o in objectives):
+        if not objectives or any(not o.get('satisfied_when', {}).get('flag') and not o.get('agent_verified')
+                                 for o in objectives):
             raise ValueError('nonempty objectives with explicit completion flags required')
         self.client = client
         self.model_client = model_client
@@ -82,7 +83,8 @@ class DualStoryAgent:
                           for m in state.get('party', [])],
                 'badges': self.client.observe().get('badges', {}).get('count', 0),
                 'map': state['map_name'], 'x': state['player_x'], 'y': state['player_y'],
-                'money': state.get('money'), 'coins': state.get('coins')}
+                'money': state.get('money'), 'coins': state.get('coins'),
+                'dex': state.get('pokedex') or {}}
 
     def choose(self, layer, state, candidates, instruction, *, allow_abstain=True):
         if not candidates:
@@ -129,15 +131,21 @@ class DualStoryAgent:
         for objective in self.objectives:
             if self.objective_satisfied(objective, facts) and objective['id'] not in self.completed:
                 self.completed.append(objective['id'])
-                self.record('milestone', objective=objective['id'], flag=objective['satisfied_when']['flag'],
+                self.record('milestone', objective=objective['id'],
+                            flag=objective.get('satisfied_when', {}).get('flag'),
                             frame=self.client.state()['frame_count'])
 
     def objective_satisfied(self, objective, facts):
-        return bool(facts['flags'].get(objective['satisfied_when']['flag']))
+        flag = objective.get('satisfied_when', {}).get('flag')
+        return bool(flag and facts['flags'].get(flag))
 
     def strategy_groups(self, facts):
         groups = {}
         for objective in self.objectives:
+            if not objective.get('satisfied_when', {}).get('flag'):
+                # An agent-verified objective has no flag for the frontier to
+                # backchain; its candidates are produced by the skills instead.
+                continue
             target = ('flag', objective['satisfied_when']['flag'], True)
             if self.objective_satisfied(objective, facts):
                 continue
@@ -154,6 +162,9 @@ class DualStoryAgent:
                 if rule not in group['rules']:
                     group['rules'].append(rule)
         return groups
+
+    def augment_strategy_state(self, state, facts):
+        """Hook for subclass layers that supply goal-specific judgment state."""
 
     def select_strategy(self, facts):
         groups = self.strategy_groups(facts)
@@ -193,6 +204,7 @@ class DualStoryAgent:
                  'navigation': navigation,
                  'known_navigation_failures': failures,
                  'recent_outcomes': self.recent[-4:]}
+        self.augment_strategy_state(state, facts)
         selected = self.choose('strategy', state, candidates,
                                'Which attainable story or preparation subgoal should the player pursue next? '
                                'Healing, training and improving weak attacks are valid indirect progress toward later battles. '
@@ -310,6 +322,14 @@ class DualStoryAgent:
                 continue
             if effect == 'ShowPokedexEntry':
                 self.tap('a')
+                continue
+            if state['screen'] == 'pokedex':
+                # A successful capture parks the dex-registration entry screen
+                # over the overworld with no script effect attached, so this
+                # loop would otherwise retry until `interaction_did_not_settle`
+                # and abort the run on the first catch. `update_entry` closes
+                # on B from any page (A only on the last page).
+                self.tap('b')
                 continue
             obs = self.client.observe()
             if obs['mode'] == 'overworld' and not state.get('script_running') and not effect:

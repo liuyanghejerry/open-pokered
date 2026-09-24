@@ -121,6 +121,10 @@ def evaluate(expr, facts):
             return facts.get('bag', {}).get(args[0].replace('_', '').upper(), 0) > 0
         if name == 'getBadgeCount':
             return facts.get('badges', 0)
+        if name == 'getPokedexOwnedCount':
+            # Oak's aides gate rewards on this count; an unresolved call here
+            # would make every one of those branches an unknown guard.
+            return (facts.get('dex') or {}).get('owned')
         if name in ('hasMoney', 'hasCoins'):
             amount = facts.get('money' if name == 'hasMoney' else 'coins')
             return None if amount is None else amount >= args[0]
@@ -151,6 +155,29 @@ def substitute(expr, context):
     return {k: substitute(v, context) for k, v in expr.items()}
 
 
+def pokedex_count_goal(expr, wanted):
+    """The owned-count a `getPokedexOwnedCount()` comparison demands, if any.
+
+    Catching is the real producer for this count — the wild population, not a
+    script rule — so a shortfall is a pursuable goal instead of an unknown
+    guard the backchain drops on the floor.
+    """
+    if not wanted:
+        return None
+    binary = expr.get('BinaryOp') or {}
+    call = (binary.get('left') or {}).get('Call')
+    if not call or call['callee'].removeprefix('game.') != 'getPokedexOwnedCount':
+        return None
+    needed = (binary.get('right') or {}).get('NumberLit')
+    if isinstance(needed, bool) or not isinstance(needed, (int, float)):
+        return None
+    if binary['op'] == 'Gte':
+        return ('dex', 'count', int(needed))
+    if binary['op'] == 'Gt':
+        return ('dex', 'count', int(needed) + 1)
+    return None
+
+
 def requirements(expr, wanted, facts):
     """Alternative sets of missing predicates; None denotes an unknown guard."""
     value = evaluate(expr, facts)
@@ -168,6 +195,9 @@ def requirements(expr, wanted, facts):
         if conjunctive:
             return [x + y for x in a for y in b][:MAX_PATHS]
         return a + b
+    count_goal = pokedex_count_goal(expr, wanted)
+    if count_goal:
+        return [[count_goal]]
     # Only defer the spatial predicate, preserving any AND/OR-linked
     # flag or item guard above. The trigger's actual landing verifies it.
     if any(name in json.dumps(expr) for name in ('getPlayerX', 'getPlayerY', 'getPlayerFacing')):
@@ -349,6 +379,7 @@ class StoryIndex:
                             for name, config in self.configs.items()
                             for npc in config.get('npcs', []) if npc.get('toggleId')}
         self.visibility_defaults = dict(self.npc_toggles.values())
+        self._wild_cache = {}
         for name in client.script_semantics()['maps']:
             data = client.script_semantics(name)
             for story in data['storylines']:
@@ -400,6 +431,16 @@ class StoryIndex:
              'engine_boulder_guards': {r.id: r.guards for r in self.rules if r.id.startswith('boulder:')}},
             sort_keys=True).encode()).hexdigest()
 
+    def wild_species(self, name):
+        """Species in a map's grass table, from public game data."""
+        if name not in self._wild_cache:
+            path = self.maps_dir / name / 'map.json'
+            table = {}
+            if path.exists():
+                table = ((json.loads(path.read_text()).get('wild') or {}).get('red') or {}).get('grass') or {}
+            self._wild_cache[name] = {mon['species'] for mon in table.get('mons', [])}
+        return self._wild_cache[name]
+
     def satisfied(self, target, facts):
         kind, name, wanted = target
         if kind == 'flag':
@@ -437,6 +478,17 @@ class StoryIndex:
             return facts.get('block_values', {}).get(name) == wanted
         if kind == 'terrain':
             return (name in facts.get('cleared_terrain', [])) == wanted
+        if kind == 'dex':
+            owned = (facts.get('dex') or {}).get('owned')
+            return owned is not None and owned >= wanted
+        if kind == 'catch':
+            owned = set((facts.get('dex') or {}).get('owned_species', []))
+            species = self.wild_species(str(name))
+            return (bool(species) and species <= owned) == wanted
+        if kind == 'explore':
+            # Reaching the map is the whole goal; the trigger tile only says
+            # which part of it to arrive in.
+            return (facts.get('map') == str(name)) == wanted
         return False
 
     def frontier(self, target, facts, seen=(), depth=0):

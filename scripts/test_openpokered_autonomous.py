@@ -475,6 +475,7 @@ class AutonomousTests(unittest.TestCase):
         agent.annotate_navigation = Mock(return_value={})
         agent.transport_frontiers = Mock()
         agent.find_training_sites = Mock(return_value={'Route2': (7, 7)})
+        agent.find_catch_areas = Mock(return_value={})
         mon = {'species': 'Charmeleon', 'level': 16, 'hp': 47, 'max_hp': 47,
                'status': 'None', 'moves': ['Scratch', 'Ember'], 'pp': [8, 25]}
         facts = {'party': [mon], 'bag': {}, 'flags': {}, 'fully_recovered': False,
@@ -593,6 +594,750 @@ class AutonomousTests(unittest.TestCase):
         self.assertEqual(sites[name], (0, 7))
         self.assertEqual(agent.training_navigation[name]['steps'], 0)
 
+    def test_catch_areas_skip_registered_tables_and_record_their_navigation(self):
+        from openpokered.story_rules import MAPS_DIR
+        import playthrough as pt
+        agent = AutonomousStoryAgent.__new__(AutonomousStoryAgent)
+        agent.maps = {name: json.loads((MAPS_DIR / name / 'map.json').read_text())
+                      for name in ('ViridianCity', 'Route1', 'Route2')}
+        agent.visited = {'ViridianCity'}
+        agent.navigation_memory = {}
+        agent.client = Mock()
+        agent.client.route.return_value = {'found': True, 'legs': [0]}
+        agent.game = Mock(last_map='ViridianCity')
+        agent.game.navigation_barriers.return_value = {}
+        agent.game.live_npcs.return_value = set()
+        agent.game.navigation_excluded_maps.return_value = ()
+        owned = {mon['species'] for mon in agent.maps['Route1']['wild']['red']['grass']['mons']}
+        self.assertEqual(owned, {'Pidgey', 'Rattata'})
+        path = [(('ViridianCity', 19, 18), None), (('Route2', 5, 17), 'up'), (('Route2', 5, 18), 'up')]
+        with patch.object(pt, 'bfs_cross', return_value=path) as search:
+            areas = agent.find_catch_areas({'map': 'ViridianCity', 'x': 19, 'y': 18,
+                                            'dex': {'owned_species': sorted(owned)}})
+        # Route1 holds no unregistered species, so it is never even searched.
+        self.assertEqual(search.call_args.args[2], 'Route2')
+        self.assertEqual(list(areas), ['Route2'])
+        self.assertEqual(areas['Route2']['species'], ['Weedle'])
+        self.assertEqual(areas['Route2']['spots'], [(5, 18)])
+        self.assertTrue(areas['Route2']['reachable'])
+        self.assertEqual(list(agent.catch_navigation), ['Route2'])
+        self.assertTrue(agent.catch_navigation['Route2']['tile_route_found'])
+        self.assertEqual(agent.catch_navigation['Route2']['steps'], 2)
+
+    def ranked_catch_agent(self):
+        from openpokered.story_rules import MAPS_DIR
+        agent = AutonomousStoryAgent.__new__(AutonomousStoryAgent)
+        agent.maps = {name: json.loads((MAPS_DIR / name / 'map.json').read_text())
+                      for name in ('PewterCity', 'Route2', 'Route3')}
+        agent.visited = {'PewterCity'}
+        agent.navigation_memory = {}
+        agent.client = Mock()
+        agent.client.route.return_value = {'found': True, 'legs': [0]}
+        agent.game = Mock(last_map='PewterCity')
+        agent.game.navigation_barriers.return_value = {}
+        agent.game.live_npcs.return_value = set()
+        agent.game.navigation_excluded_maps.return_value = ()
+        return agent
+
+    def test_catch_areas_expand_past_an_exhausted_neighbourhood(self):
+        import playthrough as pt
+        from openpokered.story_rules import MAPS_DIR
+        # Everything one hop from PewterCity is Route2/Route3 grass; owning
+        # those species leaves nothing there, and only a wider ring helps.
+        exhausted = ['Pidgey', 'Rattata', 'Weedle', 'Jigglypuff', 'Spearow']
+        facts = {'map': 'PewterCity', 'x': 14, 'y': 7, 'dex': {'owned_species': exhausted}}
+        with patch.object(pt, 'bfs_cross', return_value=[(('PewterCity', 14, 7), None)]):
+            near_only = self.ranked_catch_agent().find_catch_areas(dict(facts))
+        self.assertEqual(near_only, {})  # Control: the old one-hop search found nothing.
+        agent = self.ranked_catch_agent()
+        agent.maps = {name: json.loads((MAPS_DIR / name / 'map.json').read_text())
+                      for name in ('PewterCity', 'Route2', 'Route3', 'Route4')}
+        with patch.object(pt, 'bfs_cross', return_value=[(('PewterCity', 14, 7), None)]):
+            expanded = agent.find_catch_areas(dict(facts))
+        self.assertIn('Route4', expanded)
+        self.assertEqual(expanded['Route4']['species'], ['Ekans'])
+
+    def test_forest_interiors_are_huntable_and_safari_is_not_offered(self):
+        import playthrough as pt
+        from openpokered.story_rules import MAPS_DIR
+        agent = self.ranked_catch_agent()
+        agent.maps = {name: json.loads((MAPS_DIR / name / 'map.json').read_text())
+                      for name in ('PewterCity', 'Route2', 'Route3', 'ViridianForest',
+                                   'SafariZoneCenter')}
+        agent.visited = {'ViridianForest', 'SafariZoneCenter'}
+        facts = {'map': 'ViridianForest', 'x': 16, 'y': 43, 'dex': {'owned_species': []}}
+        with patch.object(pt, 'bfs_cross', return_value=[(('ViridianForest', 16, 43), None)]):
+            areas = agent.find_catch_areas(dict(facts))
+        self.assertIn('ViridianForest', areas)
+        self.assertEqual(areas['ViridianForest']['species'],
+                         ['Caterpie', 'Kakuna', 'Metapod', 'Pikachu', 'Weedle'])
+        self.assertNotIn('SafariZoneCenter', areas)
+
+    def test_catch_ranking_prefers_more_unregistered_species_at_equal_distance(self):
+        import playthrough as pt
+        agent = self.ranked_catch_agent()
+        equal_paths = [(('PewterCity', 14, 7), None), (('Route2', 5, 18), 'up')]
+        with patch.object(pt, 'bfs_cross', return_value=equal_paths):
+            areas = agent.find_catch_areas({'map': 'PewterCity', 'x': 14, 'y': 7,
+                                            'dex': {'owned_species': ['Pidgey', 'Rattata']}})
+        # Route3 still holds two unregistered species where Route2 holds one,
+        # so the richer table outranks the closer name at the same distance.
+        self.assertEqual(list(areas), ['Route3', 'Route2'])
+        self.assertEqual(areas['Route2']['species'], ['Weedle'])
+
+    def test_catch_ranking_demotes_an_area_with_unproductive_recent_hunts(self):
+        import playthrough as pt
+        agent = self.ranked_catch_agent()
+        agent.catch_attempts = [{'map': 'Route2', 'registered': False},
+                                {'map': 'Route2', 'registered': False},
+                                {'map': 'Route3', 'registered': True}]
+        equal_paths = [(('PewterCity', 14, 7), None), (('Route2', 5, 18), 'up')]
+        facts = {'map': 'PewterCity', 'x': 14, 'y': 7, 'dex': {'owned_species': []}}
+        with patch.object(pt, 'bfs_cross', return_value=equal_paths):
+            self.assertEqual(list(agent.find_catch_areas(facts)), ['Route3', 'Route2'])
+        # With no history at all the tie falls back to the map name, matching
+        # the old distance-only order.
+        with patch.object(pt, 'bfs_cross', return_value=equal_paths):
+            self.assertEqual(list(self.ranked_catch_agent().find_catch_areas(facts)),
+                             ['Route2', 'Route3'])
+
+    def test_catch_target_offers_encounter_terrain_without_training_sites(self):
+        agent = AutonomousStoryAgent.__new__(AutonomousStoryAgent)
+        rule = Rule('catch:Route24', 'Route24', 'skill:catch_encounter', [], [], [],
+                    ('catch', 'Route24', True), [])
+        agent.active = {'target': rule.effect, 'rules': [rule]}
+        agent.catch_areas = {'Route24': {'species': ['Abra'], 'spots': [(5, 18)], 'reachable': True}}
+        agent.catch_navigation = {'Route24': {'map': 'Route24', 'tile_route_found': True, 'steps': 2,
+                                             'scope': 'path to actual encounter terrain'}}
+        agent.maps = {'Route24': {'wild': {'red': {'grass': {'mons': [{'level': 8, 'species': 'Abra'}]}}}}}
+        candidates, bindings = agent.action_candidates({})
+        self.assertEqual(json.loads(candidates['action:0'])['operation'], 'catch_encounter:Route24,5,18')
+        self.assertEqual(json.loads(candidates['action:0'])['unregistered_species_here'], ['Abra'])
+        self.assertEqual(bindings['action:0'], ('catch_encounter:Route24,5,18', rule))
+        # The level fallthrough would raise here; a catch target has no training site.
+        self.assertFalse(hasattr(agent, 'training_sites'))
+
+    def test_catch_encounter_reports_the_dex_delta_of_whatever_battle_started(self):
+        agent = AutonomousStoryAgent.__new__(AutonomousStoryAgent)
+        rule = Rule('catch:Route2', 'Route2', 'skill:catch_encounter', [], [], [],
+                    ('catch', 'Route2', True), [])
+        agent.active = {'target': rule.effect, 'rules': [rule]}
+        agent.actions, agent.max_actions = 0, 100
+        before = {'map_name': 'Route2', 'player_x': 5, 'player_y': 18, 'screen': 'overworld',
+                  'pokedex': {'owned': 2}, 'party': [{'level': 12}]}
+        battle = {**before, 'screen': 'battle', 'pokedex': {'owned': 3}}
+        agent.client = Mock()
+        agent.client.state.side_effect = [before, before, before] + [battle] * 8
+        agent.client.cmd.return_value = []
+        agent.client.move_to.return_value = {'result': 'reached'}
+        agent.game = Mock()
+        agent.game.st.return_value = {'player_x': 5, 'player_y': 18}
+        agent.check_budget, agent.settle, agent.record = Mock(), Mock(), Mock()
+        agent.record_travel = Mock()
+        with patch('openpokered.autonomous_story.reachable_grass', return_value=(5, 18)):
+            result = agent.execute('catch_encounter:Route2,5,18', rule)
+        self.assertEqual(result, {'result': 'hunted', 'map': 'Route2', 'owned_before': 2, 'owned_after': 3})
+        self.assertEqual(agent.record.call_args.kwargs['operation'], 'catch_encounter:Route2,5,18')
+        self.assertEqual(agent.record.call_args.kwargs['result'], result)
+        self.assertEqual(agent.catch_attempts, [{'map': 'Route2', 'registered': True}])
+
+    def travel_goal_agent(self, legs, origin='ViridianCity'):
+        agent = AutonomousStoryAgent.__new__(AutonomousStoryAgent)
+        agent.index = None
+        agent.game = Mock(last_map=origin)
+        agent.game.st.return_value = {'map_name': origin, 'player_x': 1, 'player_y': 1}
+        agent.game.navigation_excluded_maps.return_value = ()
+        agent.client = Mock()
+        agent.client.route.return_value = {'found': True, 'legs': legs}
+        agent.navigate_point = Mock()
+        return agent
+
+    def test_catch_trip_blocks_grass_on_the_maps_it_only_crosses(self):
+        import playthrough as pt
+        agent = self.travel_goal_agent([{'to_map': 'Route2'}, {'to_map': 'Route22'}])
+        rule = Rule('catch:Route22', 'Route22', 'skill:catch_encounter', [], [], [],
+                    ('catch', 'Route22', True), [])
+        searches = []
+        def search(source, start, goal_map, goal, **kwargs):
+            searches.append(kwargs['blocked_maps'])
+            return [('ViridianCity', 1, 1), ('Route22', *goal)] if len(searches) > 1 else None
+        grass = {'ViridianCity': {(0, 0)}, 'Route2': {(5, 5)}, 'Route22': {(9, 9)}}
+        with patch.object(pt, 'bfs_cross', side_effect=search), \
+                patch.object(pt, 'grass_tiles', side_effect=lambda name: grass[name]) as tiles:
+            result = agent.travel('Route22', rule, [(3, 3)], avoid_encounters=True)
+        self.assertEqual(result['result'], 'reached')
+        self.assertEqual(searches[0], {'ViridianCity': {(0, 0)}, 'Route2': {(5, 5)}})
+        # Extra blocked tiles can make a route infeasible: the trip still plans.
+        self.assertEqual(searches[1], {})
+        # The destination's own grass is the point of the trip; never queried.
+        self.assertEqual([row.args[0] for row in tiles.call_args_list], ['Route2', 'ViridianCity'])
+        # The walk re-plans from every observation, so it is handed the transit
+        # maps as navigation barriers — without the map it starts on.
+        self.assertEqual(agent.navigate_point.call_args.args, ('Route22', (3, 3)))
+        self.assertEqual(agent.navigate_point.call_args.kwargs['avoid_maps'], {'Route2': {(5, 5)}})
+
+    def test_ordinary_travel_never_blocks_encounter_terrain(self):
+        import playthrough as pt
+        agent = self.travel_goal_agent([{'to_map': 'Route22'}])
+        rule = Rule('stop', 'Route22', 'Route22:trigger', [], [], [], ('flag', 'DONE', True), [])
+        with patch.object(pt, 'bfs_cross', return_value=[('ViridianCity', 1, 1), ('Route22', 2, 2)]) as search, \
+                patch.object(pt, 'grass_tiles') as tiles:
+            self.assertEqual(agent.travel('Route22', rule, [(2, 2)])['result'], 'reached')
+        self.assertEqual(search.call_count, 1)
+        self.assertEqual(search.call_args.kwargs['blocked_maps'], {})
+        tiles.assert_not_called()
+        agent.navigate_point.assert_called_once_with('Route22', (2, 2))
+
+    def test_only_a_catch_trip_avoids_encounters_on_the_way(self):
+        agent = AutonomousStoryAgent.__new__(AutonomousStoryAgent)
+        agent.actions, agent.max_actions = 0, 100
+        agent.game = Mock()
+        agent.game.st.return_value = {'map_name': 'Route2', 'player_x': 5, 'player_y': 18}
+        agent.client = Mock()
+        agent.client.state.return_value = {'map_name': 'PewterCity', 'party': [{'level': 12}],
+                                           'pokedex': {'owned': 2}}
+        agent.travel = Mock(return_value={'result': 'blocked'})
+        agent.record, agent.record_travel, agent.settle, agent.remember_travel_result = (
+            Mock(), Mock(), Mock(), Mock())
+        rule = Rule('trip:Route2', 'Route2', 'skill:catch_encounter', [], [], [],
+                    ('catch', 'Route2', True), [])
+        agent.active = {'target': ('level', 'leader', 14), 'rules': [rule]}
+        agent.execute('train_encounter:Route2,5,18', rule)
+        self.assertFalse(agent.travel.call_args.kwargs['avoid_encounters'])
+        agent.active = {'target': ('catch', 'Route2', True), 'rules': [rule]}
+        agent.execute('catch_encounter:Route2,5,18', rule)
+        self.assertTrue(agent.travel.call_args.kwargs['avoid_encounters'])
+
+    def test_catch_area_context_states_quality_registration_and_attempts(self):
+        from openpokered.story_agent import DualStoryAgent
+        agent = self.catch_goal_agent([{'id': 'collect-dex', 'agent_verified': True}])
+        agent.find_catch_areas = Mock(return_value={'Route2': {'species': ['Chansey', 'Zubat'],
+                                                              'spots': [(5, 18)], 'reachable': True}})
+        agent.catch_attempts = [{'map': 'Route2', 'registered': False},
+                                {'map': 'Route2', 'registered': True},
+                                {'map': 'Route3', 'registered': True}]
+        mon = {'species': 'Charmeleon', 'level': 16, 'hp': 47, 'max_hp': 47,
+               'status': 'None', 'moves': ['Scratch', 'Ember'], 'pp': [8, 25]}
+        facts = {'party': [mon], 'bag': {'POKEBALL': 5}, 'flags': {}, 'fully_recovered': False,
+                 'map': 'PewterCity', 'x': 12, 'y': 18,
+                 'dex': {'owned_species': ['Pidgey', 'Rattata']}}
+        with patch.object(DualStoryAgent, 'strategy_groups', side_effect=lambda facts: {}):
+            context = agent.strategy_groups(facts)['collect:Route2']['context']
+        self.assertEqual(context['unregistered_species'],
+                         [{'species': 'Chansey', 'catch_rate': 30, 'band': 'hard'},
+                          {'species': 'Zubat', 'catch_rate': 255, 'band': 'easy'}])
+        # A table that is mostly duplicates is visible rather than inferred.
+        self.assertEqual(context['already_registered_here'], ['Pidgey', 'Rattata'])
+        self.assertEqual(context['recent_attempts'], {'hunts': 2, 'registered': 1})
+        self.assertEqual(context['balls_held'], 5)
+        self.assertEqual(context['prerequisite'], 'Catching spends balls; 5 carried')
+        self.assertEqual(context['encounters'],
+                         ((agent.maps['Route2'].get('wild') or {}).get('red') or {}).get('grass'))
+
+    def test_dex_panel_reports_progress_rungs_and_remaining_areas(self):
+        agent = self.catch_goal_agent([{'id': 'collect-dex', 'agent_verified': True}])
+        def panel(owned, seen=()):
+            return agent.dex_progress({'bag': {'POKEBALL': 3, 'POTION': 1},
+                                       'dex': {'owned': len(owned), 'seen': len(seen),
+                                               'owned_species': list(owned), 'seen_species': list(seen)}})
+        start = panel(set())
+        self.assertEqual((start['owned'], start['seen'], start['total']), (0, 0, 151))
+        self.assertEqual(start['next_rung'], {'rung': 2, 'needs': 2, 'remaining': 2})
+        self.assertEqual(panel({'Pidgey', 'Rattata'})['next_rung'],
+                         {'rung': 10, 'needs': 10, 'remaining': 8})
+        self.assertIsNone(panel({f'Species{index}' for index in range(150)})['next_rung'])
+        # Species already met are known-reachable: the strongest collection lead.
+        self.assertEqual(panel({'Pidgey'}, {'Zubat', 'Pidgey', 'Rattata'})['seen_not_owned'],
+                         ['Rattata', 'Zubat'])
+        self.assertEqual(panel({'Pidgey'})['unregistered_by_area'], {'Route2': 2, 'Route3': 2})
+        self.assertEqual(panel({'Pidgey'})['balls_held'], 3)
+
+    def test_map_hops_counts_map_crossings_on_real_map_data(self):
+        from openpokered.story_rules import MAPS_DIR
+        agent = AutonomousStoryAgent.__new__(AutonomousStoryAgent)
+        agent.maps = {p.parent.name: json.loads(p.read_text()) for p in MAPS_DIR.glob('*/map.json')}
+        self.assertEqual(agent.map_hops('MtMoon1F', 'ViridianMart'), 6)
+        self.assertEqual(agent.map_hops('Route22', 'ViridianMart'), 2)
+        # The diagnosis quoted two hops here, but the map graph cannot be
+        # shorter: CeruleanMart opens only off CeruleanCity, and MtMoon1F's
+        # street neighbours are Route4 and MtMoonB1F, so three is the minimum.
+        self.assertEqual(agent.map_hops('MtMoon1F', 'CeruleanMart'), 3)
+        # The cable-club rooms sit outside the walking world entirely.
+        self.assertIsNone(agent.map_hops('PalletTown', 'Colosseum'))
+
+    def test_dex_panel_points_at_the_nearest_reachable_ball_shop(self):
+        agent = self.catch_goal_agent([{'id': 'collect-dex', 'agent_verified': True}])
+        viridian = Rule('shop:ViridianMart', 'ViridianMart', 'ViridianMart:shop', [], [], [],
+                        ('shop', ('POTION', 'POKE_BALL'), True), [])
+        cerulean = Rule('shop:CeruleanMart', 'CeruleanMart', 'CeruleanMart:shop', [], [], [],
+                        ('shop', ('POKE_BALL', 'GREAT_BALL'), True), [])
+        agent.index = Mock(rules=[viridian, cerulean])
+        def panel(map_name):
+            return agent.dex_progress({'map': map_name, 'bag': {},
+                                       'dex': {'owned': 0, 'seen': 0,
+                                               'owned_species': [], 'seen_species': []}})
+        self.assertEqual(panel('MtMoon1F')['nearest_ball_source'],
+                         {'map': 'CeruleanMart', 'hops': 3, 'stock': ['GreatBall', 'PokeBall']})
+        self.assertEqual(panel('Route22')['nearest_ball_source'],
+                         {'map': 'ViridianMart', 'hops': 2, 'stock': ['PokeBall']})
+        agent.index = Mock(rules=[])
+        self.assertIsNone(panel('MtMoon1F')['nearest_ball_source'])
+
+    def test_dex_panel_is_only_assembled_for_the_collecting_goal(self):
+        facts = {'bag': {}, 'dex': {'owned': 0, 'seen': 0, 'owned_species': [], 'seen_species': []}}
+        collected = {}
+        self.catch_goal_agent([{'id': 'collect-dex', 'agent_verified': True}]).augment_strategy_state(
+            collected, facts)
+        self.assertIn('dex_progress', collected)
+        story = {}
+        self.catch_goal_agent([{'id': 'beat-brock', 'satisfied_when': {'flag': 'EVENT_BEAT_BROCK'}}]
+                              ).augment_strategy_state(story, facts)
+        self.assertEqual(story, {})
+
+    def test_strategy_assembly_asks_for_the_panel_before_judging(self):
+        from openpokered.story_agent import DualStoryAgent
+        agent = self.catch_goal_agent([{'id': 'collect-dex', 'agent_verified': True,
+                                        'name': 'Register every wild species'}])
+        agent.client.route.return_value = {'found': True, 'legs': []}
+        agent.index.wild_species.return_value = {'Zubat'}  # collection still in progress
+        rule = Rule('catch:Route2', 'Route2', 'skill:catch_encounter', [], [], [],
+                    ('catch', 'Route2', True), [])
+        group = {'target': ('catch', 'Route2', True), 'rules': [rule],
+                 'objectives': ['Register wild species that are not in the Pokédex yet'], 'context': {}}
+        mon = {'species': 'Charmeleon', 'level': 16, 'hp': 47, 'max_hp': 47,
+               'status': 'None', 'moves': ['Scratch', 'Ember'], 'pp': [8, 25]}
+        facts = {'party': [mon], 'bag': {}, 'flags': {}, 'badges': 0, 'fully_recovered': False,
+                 'map': 'PewterCity', 'x': 12, 'y': 18,
+                 'dex': {'owned': 1, 'seen': 3, 'owned_species': ['Pidgey'],
+                         'seen_species': ['Pidgey', 'Rattata', 'Zubat']}}
+        agent.augment_strategy_state = Mock(wraps=agent.augment_strategy_state)
+        agent.choose = Mock(return_value='subgoal:0')
+        with patch.object(DualStoryAgent, 'strategy_groups', return_value={'collect:Route2': group}):
+            agent.select_strategy(facts)
+        state, passed = agent.augment_strategy_state.call_args.args
+        self.assertIs(state, agent.choose.call_args.args[1])
+        self.assertEqual(passed, facts)
+        self.assertEqual(state['dex_progress']['seen_not_owned'], ['Rattata', 'Zubat'])
+
+    def ball_supply_agent(self, collecting=True):
+        agent = AutonomousStoryAgent.__new__(AutonomousStoryAgent)
+        agent.collects_dex = collecting
+        rule = Rule('shop:ViridianMart', 'ViridianMart', 'ViridianMart:shop', [], [], [],
+                    ('shop', ('POTION', 'POKE_BALL'), True), [])
+        agent.index = Mock(rules=[rule])
+        agent.visited = {'ViridianMart'}
+        agent.client = Mock()
+        agent.client.route.return_value = {'found': True, 'legs': [{'to_map': 'ViridianMart'}]}
+        return agent
+
+    def test_ball_supply_is_bought_through_the_shop_path_only_when_collecting(self):
+        facts = {'bag': {}, 'money': 3000, 'map': 'ViridianCity'}
+        groups = {}
+        self.ball_supply_agent(collecting=False).add_ball_supply(groups, facts)
+        self.assertEqual(groups, {})
+        self.ball_supply_agent().add_ball_supply(groups, facts)
+        self.assertEqual(list(groups), ['ball:shop:ViridianMart:PokeBall'])
+        group = groups['ball:shop:ViridianMart:PokeBall']
+        self.assertEqual(group['target'], ('supply', 'PokeBall', 9))
+        self.assertEqual(group['context']['stock_index'], 1)
+
+    def test_ball_supply_stops_once_the_reserve_is_held(self):
+        groups = {}
+        self.ball_supply_agent().add_ball_supply(
+            groups, {'bag': {'POKEBALL': 12}, 'money': 3000, 'map': 'ViridianCity'})
+        self.assertEqual(groups, {})
+
+    def test_ball_supply_offers_an_unvisited_mart_with_its_distance(self):
+        agent = self.ball_supply_agent()
+        agent.visited = set()  # A mart is a restock target before it is entered.
+        agent.client.route.return_value = {'found': True, 'legs': [{}] * 6}
+        groups = {}
+        agent.add_ball_supply(groups, {'bag': {}, 'money': 3000, 'map': 'MtMoon1F'})
+        self.assertEqual(list(groups), ['ball:shop:ViridianMart:PokeBall'])
+        context = groups['ball:shop:ViridianMart:PokeBall']['context']
+        self.assertEqual((context['map'], context['map_hops']), ('ViridianMart', 6))
+
+    def test_ball_supply_keeps_the_two_nearest_shops_per_ball_kind(self):
+        agent = self.ball_supply_agent()
+        agent.visited = set()
+        cerulean = Rule('shop:CeruleanMart', 'CeruleanMart', 'CeruleanMart:shop', [], [], [],
+                        ('shop', ('POKE_BALL',), True), [])
+        saffron = Rule('shop:SaffronMart', 'SaffronMart', 'SaffronMart:shop', [], [], [],
+                       ('shop', ('POKE_BALL',), True), [])
+        agent.index = Mock(rules=[*agent.index.rules, cerulean, saffron])
+        def route(origin, destination):
+            legs = {'CeruleanMart': 2, 'SaffronMart': 4}.get(destination, 6)
+            return {'found': True, 'legs': [{}] * legs}
+        agent.client.route.side_effect = route
+        groups = {}
+        agent.add_ball_supply(groups, {'bag': {}, 'money': 3000, 'map': 'MtMoon1F'})
+        # The two nearest survive — a blocked route to the nearest must not
+        # strike the whole supply line out — and a farther one is dropped.
+        self.assertEqual(sorted(groups), ['ball:shop:CeruleanMart:PokeBall',
+                                          'ball:shop:SaffronMart:PokeBall'])
+        self.assertEqual(groups['ball:shop:CeruleanMart:PokeBall']['context']['map_hops'], 2)
+        self.assertEqual(groups['ball:shop:SaffronMart:PokeBall']['context']['map_hops'], 4)
+
+    def test_ball_supply_offers_nothing_when_no_shop_is_reachable(self):
+        agent = self.ball_supply_agent()
+        agent.client.route.return_value = {'found': False}
+        groups = {}
+        agent.add_ball_supply(groups, {'bag': {}, 'money': 3000, 'map': 'MtMoon1F'})
+        self.assertEqual(groups, {})
+
+    def catch_goal_agent(self, objectives):
+        client = Mock()
+        client.state.return_value = {'map_name': 'PewterCity', 'hall_of_fame_count': 0}
+        agent = AutonomousStoryAgent(client, Mock(), objectives, game=Mock())
+        agent.index = Mock(rules=[], by_effect={})
+        agent.defeat_preparation = 0
+        agent.nearby_healers = Mock(return_value=[])
+        agent.annotate_navigation = Mock(return_value={})
+        agent.transport_frontiers = Mock()
+        agent.find_catch_areas = Mock(return_value={'Route2': {'species': ['Weedle'],
+                                                              'spots': [(5, 18)], 'reachable': True}})
+        return agent
+
+    def test_catch_targets_are_offered_only_for_the_collect_dex_goal(self):
+        from openpokered.story_agent import DualStoryAgent
+        mon = {'species': 'Charmeleon', 'level': 16, 'hp': 47, 'max_hp': 47,
+               'status': 'None', 'moves': ['Scratch', 'Ember'], 'pp': [8, 25]}
+        facts = {'party': [mon], 'bag': {}, 'flags': {}, 'fully_recovered': False,
+                 'map': 'PewterCity', 'x': 12, 'y': 18}
+        with patch.object(DualStoryAgent, 'strategy_groups', side_effect=lambda facts: {}):
+            collecting = self.catch_goal_agent([{
+                'id': 'collect-dex', 'agent_verified': True,
+                'name': 'Register every wild species; clear the first playthrough to open the areas '
+                            'that hold the rest'}]).strategy_groups(facts)
+            story = self.catch_goal_agent([{
+                'id': 'beat-brock', 'satisfied_when': {'flag': 'EVENT_BEAT_BROCK'}}]).strategy_groups(facts)
+        self.assertEqual(list(collecting), ['collect:Route2'])
+        self.assertEqual(collecting['collect:Route2']['target'], ('catch', 'Route2', True))
+        self.assertEqual(collecting['collect:Route2']['rules'][0].storyline, 'skill:catch_encounter')
+        self.assertEqual(story, {})
+
+    def test_catch_targets_state_the_ball_prerequisite(self):
+        from openpokered.story_agent import DualStoryAgent
+        mon = {'species': 'Charmeleon', 'level': 16, 'hp': 47, 'max_hp': 47,
+               'status': 'None', 'moves': ['Scratch', 'Ember'], 'pp': [8, 25]}
+        def group(bag):
+            facts = {'party': [mon], 'bag': bag, 'flags': {}, 'fully_recovered': False,
+                     'map': 'PewterCity', 'x': 12, 'y': 18}
+            with patch.object(DualStoryAgent, 'strategy_groups', side_effect=lambda facts: {}):
+                return self.catch_goal_agent([{'id': 'collect-dex',
+                                               'agent_verified': True}]).strategy_groups(facts)['collect:Route2']
+        empty = group({})
+        self.assertEqual(empty['context']['balls_held'], 0)
+        self.assertIn('No balls are carried', empty['context']['prerequisite'])
+        stocked = group({'POKEBALL': 7})
+        self.assertEqual(stocked['context']['balls_held'], 7)
+        self.assertIn('7 carried', stocked['context']['prerequisite'])
+
+    def test_dex_completion_requires_every_grass_table_and_is_never_vacuous(self):
+        from openpokered.story_rules import StoryIndex
+        agent = AutonomousStoryAgent.__new__(AutonomousStoryAgent)
+        agent.index = StoryIndex.__new__(StoryIndex)
+        agent.index._wild_cache = {'Route1': {'Pidgey', 'Rattata'}, 'ViridianCity': set()}
+        agent.maps = {'Route1': {}, 'ViridianCity': {}}
+        self.assertFalse(agent.dex_complete({'dex': {'owned_species': ['Pidgey']}}))
+        self.assertTrue(agent.dex_complete({'dex': {'owned_species': ['Rattata', 'Pidgey']}}))
+        # The spawn room has no encounter table. "Nothing unregistered here"
+        # must not read as a finished collection before the run has moved.
+        agent.index._wild_cache = {'RedsHouse2F': set(), 'Route1': {'Pidgey'}}
+        agent.maps = {'RedsHouse2F': {}, 'Route1': {}}
+        self.assertFalse(agent.dex_complete({'dex': {'owned_species': []}}))
+        agent.index = None  # No planning index yet: nothing is proven registered.
+        self.assertFalse(agent.dex_complete({'dex': {'owned_species': ['Pidgey']}}))
+
+    def test_collect_dex_objective_is_decided_by_registered_species(self):
+        from openpokered.story_rules import StoryIndex
+        agent = AutonomousStoryAgent.__new__(AutonomousStoryAgent)
+        agent.index = StoryIndex.__new__(StoryIndex)
+        agent.index._wild_cache = {'Route1': {'Pidgey'}}
+        agent.maps = {'Route1': {}}
+        objective = {'id': 'collect-dex', 'agent_verified': True,
+                     'name': 'Register every wild species; clear the first playthrough to open the areas '
+                            'that hold the rest'}
+        self.assertFalse(agent.objective_satisfied(objective, {'dex': {'owned_species': []}}))
+        self.assertTrue(agent.objective_satisfied(objective, {'dex': {'owned_species': ['Pidgey']}}))
+
+    def test_runner_collect_dex_goal_enables_the_catch_targets(self):
+        from openpokered.run_autonomous import DEX_OBJECTIVE
+        client = Mock()
+        client.state.return_value = {'map_name': 'PewterCity', 'hall_of_fame_count': 0}
+        agent = AutonomousStoryAgent(client, Mock(), [DEX_OBJECTIVE], game=Mock())
+        self.assertNotIn('satisfied_when', DEX_OBJECTIVE)  # The goal waits for no game flag.
+        self.assertTrue(agent.collects_dex)
+
+    def test_runner_goal_registry_reuses_the_collect_dex_entry_and_the_champion_flag(self):
+        from openpokered import run_autonomous
+        from openpokered.judgment_agent import load_objectives
+        self.assertEqual(list(run_autonomous.GOAL_OBJECTIVES),
+                         ['collect-dex', 'max-coverage', 'fast-clear'])
+        self.assertIs(run_autonomous.DEX_OBJECTIVE, run_autonomous.GOAL_OBJECTIVES['collect-dex'])
+        self.assertTrue(all(key == goal['id'] for key, goal in run_autonomous.GOAL_OBJECTIVES.items()))
+        flagged = {key: goal for key, goal in run_autonomous.GOAL_OBJECTIVES.items()
+                   if not goal.get('agent_verified')}
+        self.assertEqual(list(flagged), ['fast-clear'])
+        champion = next(o for o in load_objectives() if o['id'] == 'become-champion')
+        self.assertEqual(flagged['fast-clear']['satisfied_when'], champion['satisfied_when'])
+
+    def test_runner_records_the_preference_and_threads_it_into_the_agent(self):
+        import io
+        import tempfile
+        from openpokered import run_autonomous
+        options = {}
+        add_argument = run_autonomous.argparse.ArgumentParser.add_argument
+        def record(parser, *names, **kwargs):
+            for name in names:
+                options[name] = kwargs
+            return add_argument(parser, *names, **kwargs)
+        with tempfile.TemporaryDirectory() as root:
+            path = Path(root)
+            (path / 'pokered-app').write_bytes(b'binary')
+            logs = path / 'logs'
+            logs.mkdir()
+            (logs / 'game.log').write_text('')
+            game, agent = Mock(), Mock()
+            game.run_dir, game.d.counts = logs, {}
+            game.battles_driven, game.move_cache_hits, game.stationary_npcs = 0, 0, {}
+            game.d.raw.cmd.return_value = {'ok': True, 'data': {}}
+            agent.run.return_value = {}
+            agent.calls, agent.tokens, agent.models = {}, {}, set()
+            agent.completed, agent.actions, agent.resolved_battles = [], 0, 0
+            agent.visited, agent.observed_barrier_maps = set(), set()
+            agent.navigation_memory, agent.navigation_history = {}, {}
+            agent.field_requirements, agent.battle_requirements = {}, {}
+            agent.battle_defeats, agent.defeat_preparation = [], 0
+            agent.first_clear_verification, agent.mechanism_goal = None, None
+            with patch.object(run_autonomous.argparse.ArgumentParser, 'add_argument', record), \
+                    patch.object(run_autonomous, 'TypeSafeClient'), \
+                    patch.object(run_autonomous, 'JevGame', return_value=game), \
+                    patch.object(run_autonomous, 'boot_new_game', return_value={'screen': 'overworld'}), \
+                    patch.object(run_autonomous, 'AutonomousStoryAgent', return_value=agent) as factory, \
+                    patch('sys.stdout', new_callable=io.StringIO):
+                code = run_autonomous.main(['--preference', 'level',
+                                            '--binary', str(path / 'pokered-app'),
+                                            '--output', str(path / 'out')])
+            self.assertEqual(options['--preference']['choices'], ['none', 'level', 'type', 'tactic'])
+            self.assertEqual(options['--preference']['default'], 'none')
+            self.assertEqual(factory.call_args.kwargs['preference'], 'level')
+            self.assertEqual(code, 1)
+            folder = next((path / 'out').iterdir())
+            self.assertFalse((folder / 'failure.txt').exists())  # The stubbed run reached the end.
+            self.assertEqual(json.loads((folder / 'summary.json').read_text())['preference'], 'level')
+
+    def test_every_goal_entry_appends_a_terminal_objective_to_the_story_prefix(self):
+        from openpokered import run_autonomous
+        from openpokered.judgment_agent import load_objectives
+        for key, goal in run_autonomous.GOAL_OBJECTIVES.items():
+            # The constructor rejects an unverified objective without a flag,
+            # so building the agent proves the appended entry is complete.
+            agent = self.goal_agent(load_objectives() + [goal])
+            self.assertEqual(agent.objectives[-1]['id'], key)
+
+    def goal_agent(self, objectives):
+        client = Mock()
+        client.state.return_value = {'map_name': 'PewterCity', 'hall_of_fame_count': 0}
+        agent = AutonomousStoryAgent(client, Mock(), objectives, game=Mock())
+        agent.index = Mock(rules=[], by_effect={})
+        agent.defeat_preparation = 0
+        agent.nearby_healers = Mock(return_value=[])
+        agent.annotate_navigation = Mock(return_value={})
+        agent.transport_frontiers = Mock()
+        return agent
+
+    def goal_flags(self, ids):
+        agent = self.goal_agent([{'id': name, 'agent_verified': True} for name in ids])
+        return agent.collects_dex, agent.maximizes_coverage, agent.avoids_optional_preparation
+
+    def test_goal_flags_are_derived_from_the_objective_ids(self):
+        self.assertEqual(self.goal_flags(['get-starter']), (False, False, False))
+        self.assertEqual(self.goal_flags(['collect-dex']), (True, False, False))
+        self.assertEqual(self.goal_flags(['max-coverage']), (False, True, False))
+        self.assertEqual(self.goal_flags(['fast-clear']), (False, False, True))
+
+    def test_goal_flags_add_their_instruction_to_the_strategy_call(self):
+        from openpokered.story_agent import DualStoryAgent
+        def instruction(objectives):
+            agent = self.goal_agent(objectives)
+            with patch.object(DualStoryAgent, 'choose', return_value='a') as choose:
+                agent.choose('strategy', {}, {'a': 'x'}, 'pick')
+            return choose.call_args.args[3]
+        story = instruction([{'id': 'beat-brock', 'satisfied_when': {'flag': 'EVENT_BEAT_BROCK'}}])
+        coverage = instruction([{'id': 'max-coverage', 'agent_verified': True}])
+        speed = instruction([{'id': 'fast-clear', 'satisfied_when': {'flag': 'EVENT_BEAT_CHAMPION_RIVAL'}}])
+        dex = instruction([{'id': 'collect-dex', 'agent_verified': True}])
+        self.assertEqual(story, 'pick')  # A story run keeps its instruction untouched.
+        self.assertIn('terminal goal is coverage', coverage)
+        self.assertIn('progress in itself', coverage)
+        self.assertIn('terminal goal is speed', speed)
+        self.assertIn('shortest route', speed)
+        # Collection must be told that clearing is the channel to more species,
+        # or it would treat the story objectives as the finish line.
+        self.assertIn('terminal goal is the Pokédex', dex)
+        self.assertIn('channel to more species', dex)
+        self.assertIn('never stop at the Champion', dex)
+
+    def preference_agent(self, preference):
+        client = Mock()
+        client.state.return_value = {'map_name': 'PewterCity', 'hall_of_fame_count': 0}
+        return AutonomousStoryAgent(client, Mock(), [{'id': 'beat-brock',
+            'satisfied_when': {'flag': 'EVENT_BEAT_BROCK'}}], game=Mock(), preference=preference)
+
+    def test_preference_bias_reaches_the_strategy_and_action_questions(self):
+        from openpokered.story_agent import DualStoryAgent
+        from openpokered.autonomous_story import PREFERENCE_INSTRUCTIONS
+        self.assertEqual(sorted(PREFERENCE_INSTRUCTIONS), ['level', 'tactic', 'type'])
+        for preference, bias in PREFERENCE_INSTRUCTIONS.items():
+            agent = self.preference_agent(preference)
+            for layer in ('strategy', 'action'):
+                with patch.object(DualStoryAgent, 'choose', return_value='a') as choose:
+                    self.assertEqual(agent.choose(layer, {}, {'a': 'x'}, 'pick'), 'a')
+                self.assertEqual(choose.call_args.args[3], f'pick {bias}')
+        with patch.object(DualStoryAgent, 'choose', return_value='a') as choose:
+            self.preference_agent('none').choose('strategy', {}, {'a': 'x'}, 'pick')
+        self.assertEqual(choose.call_args.args[3], 'pick')
+
+    def preparation_agent(self, preference, moves=('Scratch', 'Ember', 'Growl')):
+        """An agent whose only offered battle is one stubbed level 21 trainer."""
+        client = Mock()
+        client.state.return_value = {'map_name': 'PewterCity', 'hall_of_fame_count': 0}
+        agent = AutonomousStoryAgent(client, Mock(), [{'id': 'beat-brock',
+            'satisfied_when': {'flag': 'EVENT_BEAT_BROCK'}}], game=Mock(), preference=preference)
+        agent.index = Mock(rules=[], by_effect={})
+        agent.destination_points = Mock(return_value=[])
+        agent.nearby_healers = Mock(return_value=[])
+        agent.annotate_navigation = Mock(return_value={})
+        agent.transport_frontiers = Mock()
+        agent.find_training_sites = Mock(return_value={'Route2': (7, 7)})
+        agent.find_catch_areas = Mock(return_value={})
+        agent.maps = {'Route2': {}, 'Route3': {'npcs': [
+            {'textId': 2, 'trainerClass': 'Youngster', 'trainerSet': 1}]}}
+        agent.trainers = {'Youngster': {'parties': [
+            {'pokemon': [{'species': 'Bellsprout', 'level': 21}]}]}}
+        rule = Rule('youngster', 'Route3', 'Route3:youngster', ['npc:2'], [], [],
+                    ('flag', 'EVENT_BEAT_YOUNGSTER', True), [('battle', 'Youngster:1', True)])
+        facts = {'party': [{'species': 'Charmeleon', 'level': 16, 'hp': 47, 'max_hp': 47,
+                            'status': 'None', 'moves': list(moves), 'pp': [35] * len(moves)}],
+                 'bag': {}, 'flags': {}, 'fully_recovered': True,
+                 'map': 'PewterCity', 'x': 12, 'y': 18}
+        return agent, facts, {'youngster': {'target': rule.effect, 'rules': [rule],
+                                           'objectives': ['Defeat the route trainer']}}
+
+    def preparation_groups(self, preference, moves=('Scratch', 'Ember', 'Growl')):
+        from openpokered.story_agent import DualStoryAgent
+        agent, facts, groups = self.preparation_agent(preference, moves)
+        with patch.object(DualStoryAgent, 'strategy_groups', return_value=groups):
+            return agent.strategy_groups(facts)
+
+    def test_level_preference_trains_a_margin_past_the_pending_threat(self):
+        from openpokered.autonomous_story import LEVEL_PREFERENCE_MARGIN
+        self.assertEqual(LEVEL_PREFERENCE_MARGIN, 2)
+        self.assertEqual(self.preparation_groups('none')['prepare:train']['target'],
+                         ('level', 'leader', 21))
+        biased = self.preparation_groups('level')['prepare:train']
+        self.assertEqual(biased['target'], ('level', 'leader', 21 + LEVEL_PREFERENCE_MARGIN))
+        self.assertEqual(biased['context']['target_level'], 21 + LEVEL_PREFERENCE_MARGIN)
+
+    def test_type_preference_adds_super_effective_options_to_the_battle_context(self):
+        context = self.preparation_groups('type')['youngster']['context']
+        self.assertEqual(context['type_options']['Bellsprout']['types'], ['Grass', 'Poison'])
+        self.assertEqual(context['type_options']['Bellsprout']['super_effective_moves'],
+                         {'Ember': {'pokemon': 'Charmeleon', 'type': 'Fire', 'power': 40,
+                                    'effectiveness': 2}})
+        self.assertNotIn('type_options', self.preparation_groups('none')['youngster']['context'])
+
+    def test_tactical_preference_adds_status_moves_and_none_adds_no_options(self):
+        context = self.preparation_groups('tactic')['youngster']['context']
+        self.assertEqual(context['tactical_options']['opponent_species'], ['Bellsprout'])
+        self.assertEqual(context['tactical_options']['status_moves'], {'Growl': {
+            'pokemon': 'Charmeleon', 'type': 'Normal', 'effect': 'AttackDown1Effect'}})
+        story = self.preparation_groups('none')['youngster']['context']
+        self.assertNotIn('tactical_options', story)
+        self.assertNotIn('type_options', story)
+
+    def test_coverage_completion_requires_every_bordering_map(self):
+        agent = AutonomousStoryAgent.__new__(AutonomousStoryAgent)
+        agent.maps = {'PalletTown': {'connections': {'north': {'targetMap': 'Route1'}},
+                                     'warps': [{'x': 5, 'y': 5, 'destMap': 'RedsHouse1F'}]},
+                      'Route1': {'connections': {'south': {'targetMap': 'PalletTown'},
+                                                 'north': {'targetMap': 'ViridianCity'}}},
+                      'RedsHouse1F': {}, 'ViridianCity': {}}
+        agent.visited = set()
+        self.assertFalse(agent.coverage_complete({}))
+        agent.visited = {'PalletTown', 'RedsHouse1F'}
+        self.assertFalse(agent.coverage_complete({}))
+        agent.visited = {'PalletTown', 'RedsHouse1F', 'Route1'}
+        self.assertFalse(agent.coverage_complete({}))
+        agent.visited = {'PalletTown', 'RedsHouse1F', 'Route1', 'ViridianCity'}
+        self.assertTrue(agent.coverage_complete({}))
+
+    def test_max_coverage_objective_is_decided_by_bordering_maps(self):
+        agent = AutonomousStoryAgent.__new__(AutonomousStoryAgent)
+        agent.maps = {'PalletTown': {'connections': {'north': {'targetMap': 'Route1'}}}, 'Route1': {}}
+        objective = {'id': 'max-coverage', 'agent_verified': True,
+                     'name': 'Leave no bordering area unexplored and finish the first playthrough'}
+        agent.visited = {'PalletTown'}
+        self.assertFalse(agent.objective_satisfied(objective, {}))
+        agent.visited = {'PalletTown', 'Route1'}
+        self.assertTrue(agent.objective_satisfied(objective, {}))
+
+    def test_speed_goal_drops_optional_preparation_groups(self):
+        from openpokered.story_agent import DualStoryAgent
+        mon = {'species': 'Charmeleon', 'level': 16, 'hp': 20, 'max_hp': 47,
+               'status': 'None', 'moves': ['Scratch', 'Ember'], 'pp': [8, 25]}
+        facts = {'party': [mon], 'bag': {'POTION': 1}, 'flags': {}, 'fully_recovered': False,
+                 'map': 'PewterCity', 'x': 12, 'y': 18}
+        with patch.object(DualStoryAgent, 'strategy_groups', side_effect=lambda facts: {}):
+            speed = self.goal_agent([{'id': 'fast-clear', 'satisfied_when': {
+                'flag': 'EVENT_BEAT_CHAMPION_RIVAL'}}]).strategy_groups(facts)
+            story = self.goal_agent([{'id': 'beat-brock', 'satisfied_when': {
+                'flag': 'EVENT_BEAT_BROCK'}}]).strategy_groups(facts)
+        self.assertEqual(list(story), ['prepare:medicine'])
+        self.assertTrue(story['prepare:medicine']['context']['optional_preparation'])
+        self.assertEqual(speed, {})
+
+    def test_code_layers_pick_candidates_without_calling_the_model(self):
+        from openpokered.run_autonomous import DEX_OBJECTIVE
+        client = Mock()
+        client.state.return_value = {'map_name': 'PewterCity', 'hall_of_fame_count': 0}
+        model = Mock()
+        agent = AutonomousStoryAgent(client, model, [DEX_OBJECTIVE], game=Mock(),
+                                     strategy_jev=False, action_jev=False)
+        self.assertEqual(agent.layer_jev, {'strategy': False, 'action': False})
+        self.assertEqual(agent.choose('strategy', {}, {'a': 'x', 'b': 'y'}, 'pick'), 'a')
+        self.assertFalse(model.system_one.called)
+
+    def test_coverage_groups_offer_unvisited_bordering_areas(self):
+        agent = AutonomousStoryAgent.__new__(AutonomousStoryAgent)
+        agent.maps = {'A': {'connections': {'north': {'targetMap': 'B'}}, 'warps': []},
+                      'B': {'connections': {}, 'warps': []},
+                      'C': {'connections': {}, 'warps': [{'x': 4, 'y': 6, 'destMap': 'D'}]},
+                      'D': {'connections': {}, 'warps': []}}
+        agent.visited = {'A', 'C'}
+        agent.client = Mock()
+        agent.client.route.return_value = {'found': True, 'legs': [{'to_map': 'B'}]}
+        agent.entry_tile = lambda name: (3, 5)
+        groups = {}
+        agent.add_coverage_groups(groups, {'map': 'A'})
+        self.assertEqual(sorted(groups), ['explore:B', 'explore:D'])
+        self.assertEqual(groups['explore:B']['target'], ('explore', 'B', True))
+        self.assertEqual(groups['explore:B']['rules'][0].map, 'B')
+        self.assertEqual(groups['explore:B']['rules'][0].triggers, ['coord:(3,5)'])
+
+    def test_coverage_groups_skip_areas_with_no_confirmed_route(self):
+        agent = AutonomousStoryAgent.__new__(AutonomousStoryAgent)
+        agent.maps = {'A': {'connections': {'north': {'targetMap': 'B'}}, 'warps': []},
+                      'B': {'connections': {}, 'warps': []}}
+        agent.visited = {'A'}
+        agent.client = Mock()
+        agent.client.route.return_value = {'found': False, 'legs': []}
+        agent.entry_tile = lambda name: (3, 5)
+        groups = {}
+        agent.add_coverage_groups(groups, {'map': 'A'})
+        self.assertEqual(groups, {})
+
     def test_receiving_travel_supplies_replans_before_a_full_bag_pickup(self):
         agent = AutonomousStoryAgent.__new__(AutonomousStoryAgent)
         agent.active = {'target': ('item', 'GOLD_TEETH', True)}
@@ -707,6 +1452,75 @@ class AutonomousTests(unittest.TestCase):
         offered = agent.choose.call_args.args[1]
         self.assertEqual(offered['travel_in_progress']['destination'], 'HealingCenter')
         self.assertEqual(offered['current_map'], 'Gate')
+
+    def test_settle_dismisses_the_post_catch_pokedex_screen(self):
+        from openpokered.story_agent import DualStoryAgent
+        agent = DualStoryAgent.__new__(DualStoryAgent)
+        agent.client = Mock()
+        agent.check_budget, agent.tap, agent.record = Mock(), Mock(), Mock()
+        agent.settle_special = Mock(return_value=False)
+        settled = {'screen': 'overworld'}
+        agent.client.state.side_effect = [
+            {'screen': 'pokedex', 'active_script_effect': None},
+            {'screen': 'pokedex', 'active_script_effect': None},
+            settled, settled, settled]
+        agent.client.observe.return_value = {'mode': 'overworld'}
+        agent.settle(('dex', 'count', 10))
+        self.assertEqual([c.args[0] for c in agent.tap.call_args_list], ['b', 'b'])
+
+    def battle_state(self, **live_overrides):
+        live = {'is_wild': True, 'is_safari': False,
+                'enemy': {'species': 'Caterpie', 'level': 3, 'hp': 16, 'max_hp': 16, 'status': 'None'},
+                'player': {'species': 'Charmander'},
+                'player_party': [{'species': 'Charmander', 'level': 12, 'hp': 30, 'max_hp': 30,
+                                  'status': 'None', 'moves': ['Scratch', 'None'], 'pp': [35, 0]}]}
+        live.update(live_overrides)
+        return {'battle_live': live,
+                'party': [{'species': 'Charmander', 'level': 12, 'hp': 30, 'max_hp': 30, 'status': 'None'}],
+                'battle_inventory': [{'item': 'PokeBall', 'qty': 5}],
+                'pokedex': {'owned_species': ['Pidgey']}}
+
+    def test_wild_encounter_offers_balls_and_honours_the_chosen_one(self):
+        from openpokered.playthrough_judgments import ball_options, JevGame
+        state = self.battle_state()
+        offered = list(ball_options(state['battle_live'], {'PokeBall': 5, 'Potion': 2}, ['Pidgey']))
+        self.assertEqual([name for name, _t, _d in offered], ['PokeBall'])
+        details = offered[0][2]
+        self.assertEqual((details['catch_rate'], details['already_owned'], details['quantity']),
+                         (255, False, 5))
+        agent = JevGame.__new__(JevGame)
+        agent.judgments = Mock()
+        agent.judgments.choose.return_value = 'ball:PokeBall'
+        self.assertEqual(JevGame.battle_recovery_plan(agent, state), ('PokeBall', None))
+        self.assertIn('ball:PokeBall', agent.judgments.choose.call_args.args[2])
+
+    def test_collecting_frames_the_ball_choice_around_the_goal(self):
+        from openpokered.playthrough_judgments import JevGame
+        state = self.battle_state()
+        def instruction(collects):
+            agent = JevGame.__new__(JevGame)
+            agent.judgments = Mock()
+            agent.judgments.collects_dex = collects
+            agent.judgments.choose.return_value = 'fight'
+            JevGame.battle_recovery_plan(agent, state)
+            return agent.judgments.choose.call_args.args[3]
+        phrase = 'register species that are not in the Pokédex yet'
+        self.assertIn(phrase, instruction(True))
+        self.assertNotIn(phrase, instruction(False))
+
+    def test_balls_are_never_offered_against_a_trainer_or_in_the_safari_zone(self):
+        from openpokered.playthrough_judgments import ball_options, JevGame
+        self.assertEqual(list(ball_options({'is_wild': False, 'enemy': {'species': 'Caterpie'}}, {'PokeBall': 5})), [])
+        self.assertEqual(list(ball_options({'is_wild': True, 'is_safari': True,
+                                           'enemy': {'species': 'Caterpie'}}, {'PokeBall': 5})), [])
+        for live in ({'is_wild': False}, {'is_wild': True, 'is_safari': True}):
+            state = self.battle_state(**live)
+            agent = JevGame.__new__(JevGame)
+            agent.judgments = Mock()
+            # No ball and no useful medicine leaves nothing to spend the turn
+            # on, so the plan stays None and the judge is not even consulted.
+            self.assertIsNone(JevGame.battle_recovery_plan(agent, state))
+            self.assertFalse(agent.judgments.choose.called)
 
     def test_native_door_interaction_reaches_the_corridor_side(self):
         import playthrough as pt

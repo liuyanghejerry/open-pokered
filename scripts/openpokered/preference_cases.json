@@ -1,0 +1,407 @@
+{
+  "schema": "open-pokered-preference-probe-v1",
+  "description": "Fixed preference probes. Every case is asked once per playstyle preference with only the bias text appended to the instructions. Labels (expect) are never sent to the model. Authored fixtures with explicit simulated facts, not live game snapshots.",
+  "cases": [
+    {
+      "id": "strategy_pewter_level_margin",
+      "layer": "strategy",
+      "category": "preparation",
+      "state": {
+        "situation": "Standing in Pewter City. Brock is the next pending gym leader and Pewter Gym is one map away. The party is at full HP and PP.",
+        "world": {
+          "map": "PewterCity",
+          "x": 14,
+          "y": 18,
+          "badges": 0,
+          "money": 1200,
+          "coins": 0,
+          "fully_recovered": true,
+          "party": [
+            {
+              "species": "Bulbasaur",
+              "level": 13,
+              "hp": 36,
+              "max_hp": 36,
+              "status": "None",
+              "types": ["Grass", "Poison"],
+              "moves": ["VineWhip", "Tackle", "Growl"],
+              "pp": [8, 33, 38],
+              "matchup": "VineWhip is 4x super-effective against both of Brock's Pokemon, and nothing on Brock's team hits Bulbasaur super-effectively."
+            },
+            {
+              "species": "Rattata",
+              "level": 9,
+              "hp": 26,
+              "max_hp": 26,
+              "status": "None",
+              "types": ["Normal"],
+              "moves": ["Tackle", "TailWhip"],
+              "pp": [30, 26]
+            }
+          ],
+          "bag": {"POTION": 2}
+        },
+        "completed_objectives": ["get-starter", "deliver-parcel", "get-pokedex"],
+        "remaining_objectives": ["beat-brock", "beat-misty", "beat-lt-surge", "beat-erika", "beat-koga", "beat-sabrina", "beat-blaine", "beat-giovanni"],
+        "pending_gym": {
+          "leader": "Brock",
+          "map": "PewterGym",
+          "team": [
+            {"species": "Geodude", "level": 12, "types": ["Rock", "Ground"], "moves": ["Tackle", "DefenseCurl"]},
+            {"species": "Onix", "level": 14, "types": ["Rock", "Ground"], "moves": ["Tackle", "Screech", "Bind"]}
+          ]
+        },
+        "highest_party_level": 13,
+        "highest_pending_opponent_level": 14,
+        "training_sites": [
+          {
+            "map": "Route2",
+            "wild_species": ["Pidgey", "Rattata", "NidoranM"],
+            "wild_levels": [2, 5],
+            "note": "reachable from Pewter City without entering the gym; a free healing machine is one map back"
+          }
+        ],
+        "navigation": {
+          "PewterGym": {"topological_route_found": true, "via": []},
+          "Route2": {"topological_route_found": true, "via": ["Route2"]}
+        },
+        "known_navigation_failures": {}
+      },
+      "question": {
+        "type": "choice",
+        "instructions": "Which attainable story or preparation subgoal should the player pursue next? Healing, training and improving weak attacks are valid indirect progress toward later battles. The action layer can travel between maps before triggering a script; a subgoal need not be on the current map. Candidates already have satisfied script preconditions; winning battles is still an execution outcome. Use the supplied script facts and known navigation failures; prefer resolving an observed blocker before retrying its destination unless prerequisites have changed.",
+        "criteria": {
+          "train": "Stay on Route 2 and battle the wild Pidgey, Rattata and NidoranM there until Bulbasaur is at least level 14 and Rattata is at least level 12.",
+          "challenge": "Walk into Pewter Gym and challenge Brock now, with the party at full HP.",
+          "heal": "Walk to the Pewter City Pokemon Center and heal the party, which is already at full HP and PP."
+        }
+      },
+      "expect": {
+        "none": ["challenge"],
+        "level": ["train"],
+        "type": ["challenge"],
+        "tactic": ["challenge"]
+      },
+      "rationale": "The type advantage already available makes an immediate attempt the unbiased choice, so a level bias that prefers training is the directional prediction under test."
+    },
+    {
+      "id": "strategy_vermilion_level_margin",
+      "layer": "strategy",
+      "category": "preparation",
+      "state": {
+        "situation": "Standing in Vermilion City. Lt. Surge is the next pending gym leader; Vermilion Gym is one map away and the party is at full HP and PP.",
+        "world": {
+          "map": "VermilionCity",
+          "x": 12,
+          "y": 20,
+          "badges": 2,
+          "money": 4200,
+          "coins": 0,
+          "fully_recovered": true,
+          "party": [
+            {
+              "species": "Diglett",
+              "level": 20,
+              "hp": 34,
+              "max_hp": 34,
+              "status": "None",
+              "types": ["Ground"],
+              "moves": ["Dig", "Scratch", "SandAttack"],
+              "pp": [9, 33, 14],
+              "matchup": "Ground is immune to every Electric attack on Surge's team, including Thunder Wave, and Dig is 2x super-effective against Voltorb, Pikachu and Raichu."
+            },
+            {
+              "species": "Pikachu",
+              "level": 18,
+              "hp": 46,
+              "max_hp": 46,
+              "status": "None",
+              "types": ["Electric"],
+              "moves": ["Thundershock", "QuickAttack", "Growl"],
+              "pp": [26, 28, 38]
+            }
+          ],
+          "bag": {"POTION": 2, "SUPERPOTION": 1}
+        },
+        "completed_objectives": ["get-starter", "deliver-parcel", "get-pokedex", "beat-brock", "beat-misty"],
+        "remaining_objectives": ["beat-lt-surge", "beat-erika", "beat-koga", "beat-sabrina", "beat-blaine", "beat-giovanni"],
+        "pending_gym": {
+          "leader": "Lt. Surge",
+          "map": "VermilionGym",
+          "team": [
+            {"species": "Voltorb", "level": 21, "types": ["Electric"], "moves": ["Tackle", "Screech", "Sonicboom"]},
+            {"species": "Pikachu", "level": 18, "types": ["Electric"], "moves": ["Thundershock", "Growl", "ThunderWave"]},
+            {"species": "Raichu", "level": 24, "types": ["Electric"], "moves": ["Thundershock", "Growl", "ThunderWave"]}
+          ]
+        },
+        "highest_party_level": 20,
+        "highest_pending_opponent_level": 24,
+        "training_sites": [
+          {
+            "map": "DiglettsCave",
+            "wild_species": ["Diglett", "Dugtrio"],
+            "wild_levels": [15, 29],
+            "note": "entrance is inside Vermilion City and needs no badge; a free healing machine is one map back"
+          }
+        ],
+        "navigation": {
+          "VermilionGym": {"topological_route_found": true, "via": []},
+          "DiglettsCave": {"topological_route_found": true, "via": ["DiglettsCave"]}
+        },
+        "known_navigation_failures": {}
+      },
+      "question": {
+        "type": "choice",
+        "instructions": "Which attainable story or preparation subgoal should the player pursue next? Healing, training and improving weak attacks are valid indirect progress toward later battles. The action layer can travel between maps before triggering a script; a subgoal need not be on the current map. Candidates already have satisfied script preconditions; winning battles is still an execution outcome. Use the supplied script facts and known navigation failures; prefer resolving an observed blocker before retrying its destination unless prerequisites have changed.",
+        "criteria": {
+          "train": "Battle the wild Diglett and Dugtrio in Diglett's Cave until the party is at or above Raichu's level 24.",
+          "challenge": "Walk into Vermilion Gym and challenge Lt. Surge now, with Diglett immune to every Electric attack on his team.",
+          "buy": "Visit the Vermilion City Poké Mart and buy extra Potions first, although the bag already holds 2 Potions and 1 Super Potion."
+        }
+      },
+      "expect": {
+        "none": ["challenge"],
+        "level": ["train"],
+        "type": ["challenge"],
+        "tactic": ["challenge"]
+      },
+      "rationale": "Immunity plus a 2x attack makes the unbiased attempt immediate, so a level bias that still prefers training is the directional prediction under test."
+    },
+    {
+      "id": "move_vs_starmie_super_effective",
+      "layer": "action",
+      "category": "battle",
+      "state": {
+        "situation": "Move selection in the Cerulean Gym battle against Misty's Starmie; both sides are above the low-HP band and no stat stages are active.",
+        "player": {"species": "Pikachu", "level": 20, "hp": 44, "max_hp": 58, "status": "None", "types": ["Electric"]},
+        "enemy": {"species": "Starmie", "level": 21, "hp": 62, "max_hp": 72, "types": ["Water", "Psychic"]},
+        "player_hp_band": "healthy",
+        "enemy_hp_band": "healthy",
+        "player_base_stats": {"hp": 35, "attack": 55, "defense": 30, "speed": 90, "special": 50},
+        "enemy_base_stats": {"hp": 60, "attack": 75, "defense": 85, "speed": 115, "special": 100},
+        "moves": {
+          "0": {
+            "move": "Thundershock",
+            "type": "Electric",
+            "power": 40,
+            "accuracy": 100,
+            "effect": "ParalyzeSideEffect1",
+            "effectiveness": 2,
+            "neutral_expected_power": 68.17,
+            "effective_expected_power": 136.34,
+            "same_type_bonus": true,
+            "critical_probability_without_focus_energy": 0.1758,
+            "pp": 24,
+            "pp_max": 30,
+            "pp_reserve": "available"
+          },
+          "1": {
+            "move": "QuickAttack",
+            "type": "Normal",
+            "power": 40,
+            "accuracy": 100,
+            "effect": "NoAdditionalEffect",
+            "effectiveness": 1,
+            "neutral_expected_power": 45.45,
+            "effective_expected_power": 45.45,
+            "same_type_bonus": false,
+            "critical_probability_without_focus_energy": 0.1758,
+            "pp": 28,
+            "pp_max": 30,
+            "pp_reserve": "available"
+          },
+          "2": {
+            "move": "Growl",
+            "type": "Normal",
+            "power": 0,
+            "accuracy": 100,
+            "effect": "AttackDown1Effect",
+            "effectiveness": 1,
+            "neutral_expected_power": 0.0,
+            "effective_expected_power": 0.0,
+            "same_type_bonus": false,
+            "critical_probability_without_focus_energy": 0.1758,
+            "pp": 40,
+            "pp_max": 40,
+            "pp_reserve": "available"
+          }
+        },
+        "estimate_assumptions": "Neutral stat stages and no Focus Energy; expected power includes accuracy, STAB and critical hits, but not attack/defense stats or secondary effects. Starmie's Speed is higher, so it attacks first."
+      },
+      "question": {
+        "type": "choice",
+        "instructions": "Which usable attack gives the best progress on this turn? This does not require a guaranteed battle victory. If the only available attack deals nonzero damage, use it even when weak or nearly depleted. Compare effective_expected_power (already includes accuracy, type effectiveness, same-type bonus and critical probability), then physical/special stats and useful secondary effects. Do not count those bonuses twice. Use draining attacks when healing matters. Avoid immunity and do not spend a resisted low-PP attack when an effective alternative exists.",
+        "criteria": {
+          "thundershock": "Use Thundershock (Electric, 40 power, 2x super-effective against Water, STAB, effective_expected_power 136.34, 24/30 PP).",
+          "quick_attack": "Use QuickAttack (Normal, 40 power, 1x neutral against Water/Psychic, no STAB, effective_expected_power 45.45, 28/30 PP).",
+          "growl": "Use Growl (Normal status move, 0 power, lowers Starmie's Attack one stage, 40/40 PP)."
+        }
+      },
+      "expect": {
+        "none": ["thundershock"],
+        "level": null,
+        "type": ["thundershock"],
+        "tactic": ["growl"]
+      },
+      "rationale": "A super-effective option exists, so the type bias must pick it while the tactic bias is the only one asked to prefer the status move over raw damage."
+    },
+    {
+      "id": "move_vs_starmie_no_super_effective",
+      "layer": "action",
+      "category": "battle",
+      "state": {
+        "situation": "Move selection in the same Cerulean Gym battle, one turn later after Pikachu fainted: Charmeleon is on the field against the same Starmie, with no super-effective move available.",
+        "player": {"species": "Charmeleon", "level": 19, "hp": 51, "max_hp": 58, "status": "None", "types": ["Fire"]},
+        "enemy": {"species": "Starmie", "level": 21, "hp": 62, "max_hp": 72, "types": ["Water", "Psychic"]},
+        "player_hp_band": "healthy",
+        "enemy_hp_band": "healthy",
+        "player_base_stats": {"hp": 58, "attack": 64, "defense": 58, "speed": 80, "special": 65},
+        "enemy_base_stats": {"hp": 60, "attack": 75, "defense": 85, "speed": 115, "special": 100},
+        "moves": {
+          "0": {
+            "move": "Ember",
+            "type": "Fire",
+            "power": 40,
+            "accuracy": 100,
+            "effect": "BurnSideEffect1",
+            "effectiveness": 0.5,
+            "neutral_expected_power": 68.07,
+            "effective_expected_power": 34.03,
+            "same_type_bonus": true,
+            "critical_probability_without_focus_energy": 0.1562,
+            "pp": 20,
+            "pp_max": 25,
+            "pp_reserve": "available"
+          },
+          "1": {
+            "move": "Scratch",
+            "type": "Normal",
+            "power": 40,
+            "accuracy": 100,
+            "effect": "NoAdditionalEffect",
+            "effectiveness": 1,
+            "neutral_expected_power": 45.38,
+            "effective_expected_power": 45.38,
+            "same_type_bonus": false,
+            "critical_probability_without_focus_energy": 0.1562,
+            "pp": 30,
+            "pp_max": 35,
+            "pp_reserve": "available"
+          },
+          "2": {
+            "move": "Growl",
+            "type": "Normal",
+            "power": 0,
+            "accuracy": 100,
+            "effect": "AttackDown1Effect",
+            "effectiveness": 1,
+            "neutral_expected_power": 0.0,
+            "effective_expected_power": 0.0,
+            "same_type_bonus": false,
+            "critical_probability_without_focus_energy": 0.1562,
+            "pp": 40,
+            "pp_max": 40,
+            "pp_reserve": "available"
+          }
+        },
+        "estimate_assumptions": "Neutral stat stages and no Focus Energy; expected power includes accuracy, STAB and critical hits, but not attack/defense stats or secondary effects. Starmie's Speed is higher, so it attacks first."
+      },
+      "question": {
+        "type": "choice",
+        "instructions": "Which usable attack gives the best progress on this turn? This does not require a guaranteed battle victory. If the only available attack deals nonzero damage, use it even when weak or nearly depleted. Compare effective_expected_power (already includes accuracy, type effectiveness, same-type bonus and critical probability), then physical/special stats and useful secondary effects. Do not count those bonuses twice. Use draining attacks when healing matters. Avoid immunity and do not spend a resisted low-PP attack when an effective alternative exists.",
+        "criteria": {
+          "ember": "Use Ember (Fire, 40 power, resisted 0.5x by Water, STAB, effective_expected_power 34.03, 20/25 PP).",
+          "scratch": "Use Scratch (Normal, 40 power, 1x neutral against Water/Psychic, no STAB, effective_expected_power 45.38, 30/35 PP).",
+          "growl": "Use Growl (Normal status move, 0 power, lowers Starmie's Attack one stage, 40/40 PP)."
+        }
+      },
+      "expect": {
+        "none": ["scratch"],
+        "level": null,
+        "type": null,
+        "tactic": ["growl"]
+      },
+      "rationale": "No super-effective move exists, so the type bias has no directional prediction here and its pick is an observation; the neutral bias is still expected to prefer the 1x attack over the resisted one."
+    },
+    {
+      "id": "turn_vs_starmie_cure_paralysis",
+      "layer": "action",
+      "category": "battle",
+      "state": {
+        "situation": "Turn 4 of the Cerulean Gym battle against Misty's Starmie. Pikachu is paralysed (Speed halved, and Gen 1 gives a one-in-four chance of losing the turn) and the party is otherwise healthy.",
+        "battle": {
+          "is_wild": false,
+          "is_safari": false,
+          "player": {"species": "Pikachu", "level": 20, "hp": 44, "max_hp": 58, "status": "Paralysis"},
+          "player_party": [
+            {"species": "Pikachu", "level": 20, "hp": 44, "max_hp": 58, "status": "Paralysis"},
+            {"species": "Charmeleon", "level": 19, "hp": 51, "max_hp": 58, "status": "None"}
+          ],
+          "enemy": {"species": "Starmie", "level": 21, "hp": 62, "max_hp": 72, "types": ["Water", "Psychic"]}
+        },
+        "battle_inventory": [{"item": "ParlyzHeal", "qty": 2}, {"item": "Potion", "qty": 2}],
+        "turn_observations": {
+          "enemy_attacks_this_fight": ["WaterGun", "Tackle"],
+          "enemy_damage_per_turn": "14-18 HP against Pikachu",
+          "usable_attacks": {"Pikachu": ["Thundershock", "QuickAttack"], "Charmeleon": ["Ember", "Scratch"]}
+        }
+      },
+      "question": {
+        "type": "choice",
+        "instructions": "Choose attack, an offered switch or one carried item for this turn. Switching and items consume the turn and the enemy can attack. Keep the capable battler alive, cure disabling status, or bring in a better matchup. Avoid healing loops when enemy damage exceeds recovery; use the strongest suitable item when needed.",
+        "criteria": {
+          "attack": "Attack with Thundershock (Electric, 2x super-effective against Starmie, 24/30 PP); paralysis may still cost Pikachu the turn.",
+          "item:ParlyzHeal:0": "Use one carried Parlyz Heal on Pikachu (2 in the bag): cures the paralysis, restoring its Speed and removing the chance of losing the turn, and Starmie attacks while the item is used.",
+          "switch:1": "Switch to Charmeleon (level 19, 51/58 HP): it has no super-effective move against Starmie and Water attacks are 2x against it."
+        }
+      },
+      "expect": {
+        "none": ["attack"],
+        "level": null,
+        "type": ["attack"],
+        "tactic": ["item:ParlyzHeal:0"]
+      },
+      "rationale": "Three different kinds of option are offered, so the tactic bias that prefers status relief and carried items is the only one predicted to leave the 2x attack."
+    },
+    {
+      "id": "turn_vs_starmie_potion_hold_the_line",
+      "layer": "action",
+      "category": "battle",
+      "state": {
+        "situation": "Turn 6 of the same Cerulean Gym battle. Pikachu is at 21/58 HP, Starmie is at 34/72 HP, and Starmie's attacks have been taking about 16 HP a turn, so Pikachu survives the next hit but not a second one.",
+        "battle": {
+          "is_wild": false,
+          "is_safari": false,
+          "player": {"species": "Pikachu", "level": 20, "hp": 21, "max_hp": 58, "status": "None"},
+          "player_party": [
+            {"species": "Pikachu", "level": 20, "hp": 21, "max_hp": 58, "status": "None"},
+            {"species": "Charmeleon", "level": 19, "hp": 51, "max_hp": 58, "status": "None"}
+          ],
+          "enemy": {"species": "Starmie", "level": 21, "hp": 34, "max_hp": 72, "types": ["Water", "Psychic"]}
+        },
+        "battle_inventory": [{"item": "Potion", "qty": 2}, {"item": "ParlyzHeal", "qty": 2}],
+        "turn_observations": {
+          "enemy_attacks_this_fight": ["WaterGun", "Tackle"],
+          "enemy_damage_per_turn": "14-18 HP against Pikachu",
+          "usable_attacks": {"Pikachu": ["Thundershock", "QuickAttack"], "Charmeleon": ["Ember", "Scratch"]}
+        }
+      },
+      "question": {
+        "type": "choice",
+        "instructions": "Choose attack, an offered switch or one carried item for this turn. Switching and items consume the turn and the enemy can attack. Keep the capable battler alive, cure disabling status, or bring in a better matchup. Avoid healing loops when enemy damage exceeds recovery; use the strongest suitable item when needed.",
+        "criteria": {
+          "attack": "Attack with Thundershock (Electric, 2x super-effective against Starmie, 24/30 PP), leaving Pikachu in range of a second hit if Starmie survives.",
+          "item:Potion:0": "Use one carried Potion on Pikachu (2 in the bag, restores 20 HP): 21/58 becomes 41/58, enough to survive two more of Starmie's ~16 HP hits, and Starmie attacks while the item is used.",
+          "switch:1": "Switch to Charmeleon (level 19, 51/58 HP): it has no super-effective move against Starmie and Water attacks are 2x against it."
+        }
+      },
+      "expect": {
+        "none": ["attack"],
+        "level": null,
+        "type": ["attack"],
+        "tactic": ["item:Potion:0"]
+      },
+      "rationale": "The recovery item is the carried-item option, so the tactic bias is predicted to spend the turn on it while the other preferences keep attacking with the 2x move."
+    }
+  ]
+}
