@@ -39,6 +39,7 @@ SCENARIO_METRICS = {
     "overworld-idle-v1": ("update_avg_ticks",),
     "overworld-movement-v1": METRICS,
     "battle-entry-v1": METRICS,
+    "trainer-battle-entry-v1": METRICS,
     "pokedex-entry-v1": METRICS,
 }
 PERF_LINE = re.compile(r"\bgba-perf\s+(?P<fields>.+)")
