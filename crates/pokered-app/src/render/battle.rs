@@ -24,6 +24,7 @@ use pokered_renderer::battle_scene::{
     BallIndicators, BallStatus, EnemyHud, PlayerHud, StatusCondition,
 };
 use pokered_renderer::battle_transition::{BattleTransitionKind, BattleTransitionState};
+use pokered_renderer::transition_blit::TransitionTarget;
 use pokered_renderer::embedded_font::draw_text;
 use pokered_renderer::gen1_battle_anim::{
     draw_mon_pic_clipped, move_short_flash_timing, render_gen1_oam,
@@ -610,7 +611,9 @@ impl BattleVisualEffects {
 
     pub fn render_transition(&self, source: &FrameBuffer, dest: &mut FrameBuffer) -> bool {
         if let Some(ref ts) = self.transition_state {
-            ts.render(source, dest)
+            let source = TransitionTarget::source(source);
+            let mut dest = TransitionTarget::dest(dest);
+            ts.render(&source, &mut dest)
         } else {
             false
         }
@@ -3604,6 +3607,31 @@ fn render_packed_battle_tile_buffer(fb: &mut FrameBuffer, tile_buf: &ScreenTileB
     );
 }
 
+/// Per-byte pixel spread: byte `b` (bit 7 = leftmost pixel) becomes a u64
+/// whose bytes are 0/1 per pixel. One lookup replaces eight bit tests, and
+/// the two-plane battle fonts combine with a shift+or on the whole word.
+#[cfg(target_os = "none")]
+const fn bit_spread_lut() -> [u64; 256] {
+    let mut table = [0u64; 256];
+    let mut b = 0usize;
+    while b < 256 {
+        let mut v = 0u64;
+        let mut i = 0usize;
+        while i < 8 {
+            if (b >> (7 - i)) & 1 == 1 {
+                v |= 1u64 << (8 * i);
+            }
+            i += 1;
+        }
+        table[b] = v;
+        b += 1;
+    }
+    table
+}
+
+#[cfg(target_os = "none")]
+static BIT_SPREAD: [u64; 256] = bit_spread_lut();
+
 #[cfg(target_os = "none")]
 fn render_packed_battle_tile_region(
     fb: &mut FrameBuffer,
@@ -3622,28 +3650,38 @@ fn render_packed_battle_tile_region(
     let hud2 = get_preconverted_asset("battle", "battle_hud_2").unwrap_or(&[]);
     let hud3 = get_preconverted_asset("battle", "battle_hud_3").unwrap_or(&[]);
     let balls = get_preconverted_asset("battle", "balls").unwrap_or(&[]);
+    // Hoist every `len() / bytes_per_tile` out of the per-tile lookup: the
+    // closure used to run up to seven soft divisions per tile (GBA has no
+    // hardware divide), i.e. thousands per rendered frame.
+    let balls_max = balls.len() / 16;
     let hud2_tiles = hud2.len() / 16;
+    let hud3_max = hud3.len() / 16;
+    let hud2_max = hud2.len() / 16;
+    let hud1_max = hud1.len() / 16;
+    let hp_max = hp.len() / 8;
+    let extra_max = extra.len() / 8;
+    let font_max = font.len() / 8;
 
     let source = |tile_id: usize| -> Option<(&[u8], usize, bool)> {
-        let in_range = |bytes: &[u8], start: usize, bytes_per_tile: usize| {
+        let in_range = |index: usize, count: usize| {
             tile_id
-                .checked_sub(start)
-                .filter(|index| *index < bytes.len() / bytes_per_tile)
+                .checked_sub(index)
+                .filter(|tile| *tile < count)
         };
-        if let Some(index) = in_range(balls, 0x31, 16) {
+        if let Some(index) = in_range(0x31, balls_max) {
             Some((balls, index, false))
-        } else if let Some(index) = in_range(hud3, 0x73 + hud2_tiles, 16) {
+        } else if let Some(index) = in_range(0x73 + hud2_tiles, hud3_max) {
             Some((hud3, index, false))
-        } else if let Some(index) = in_range(hud2, 0x73, 16) {
+        } else if let Some(index) = in_range(0x73, hud2_max) {
             Some((hud2, index, false))
-        } else if let Some(index) = in_range(hud1, 0x6D, 16) {
+        } else if let Some(index) = in_range(0x6D, hud1_max) {
             Some((hud1, index, false))
-        } else if let Some(index) = in_range(hp, 0x62, 8) {
+        } else if let Some(index) = in_range(0x62, hp_max) {
             Some((hp, index, true))
-        } else if let Some(index) = in_range(extra, 0x60, 8) {
+        } else if let Some(index) = in_range(0x60, extra_max) {
             Some((extra, index, true))
         } else {
-            in_range(font, 0x80, 8).map(|index| (font, index, true))
+            in_range(0x80, font_max).map(|index| (font, index, true))
         }
     };
 
@@ -3669,18 +3707,20 @@ fn render_packed_battle_tile_region(
             };
             let pixel_x = tx as usize * TILE_SIZE as usize;
             let pixel_y = ty as usize * TILE_SIZE as usize;
-            for row in 0..TILE_SIZE as usize {
-                for col in 0..TILE_SIZE as usize {
-                    let bit = 7 - col;
-                    let color = if one_bpp {
-                        let byte = bytes[tile * 8 + row];
-                        if (byte >> bit) & 1 == 1 { 3 } else { 0 }
-                    } else {
-                        let offset = tile * 16 + row * 2;
-                        ((bytes[offset + 1] >> bit) & 1) << 1
-                            | ((bytes[offset] >> bit) & 1)
-                    };
-                    pixels[(pixel_y + row) * width + pixel_x + col] = color;
+            if one_bpp {
+                for row in 0..TILE_SIZE as usize {
+                    // 1bpp shade bytes are 0 or 3 (black or white).
+                    let v = BIT_SPREAD[bytes[tile * 8 + row] as usize] * 3;
+                    let dst = (pixel_y + row) * width + pixel_x;
+                    pixels[dst..dst + 8].copy_from_slice(&v.to_le_bytes());
+                }
+            } else {
+                for row in 0..TILE_SIZE as usize {
+                    let offset = tile * 16 + row * 2;
+                    let v = (BIT_SPREAD[bytes[offset + 1] as usize] << 1)
+                        | BIT_SPREAD[bytes[offset] as usize];
+                    let dst = (pixel_y + row) * width + pixel_x;
+                    pixels[dst..dst + 8].copy_from_slice(&v.to_le_bytes());
                 }
             }
         }

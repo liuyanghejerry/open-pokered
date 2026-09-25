@@ -1179,6 +1179,9 @@ fn draw_mon_pic_plan(
     clip_top: u32,
     clip_bottom: u32,
 ) {
+    #[cfg(target_os = "none")]
+    let raw_indices = palette_is_shade_ramp(pal);
+
     for (dest_row, &source_row) in plan.source_rows.iter().enumerate() {
         for source_col in 0..tiles_per_row {
             // _AnimationSlideMonOff compares the next player tile against
@@ -1197,6 +1200,22 @@ fn draw_mon_pic_plan(
                 continue;
             }
             let tile = ts.get(tile_index as usize);
+            #[cfg(target_os = "none")]
+            {
+                if raw_indices {
+                    draw_mon_tile_rows_indices(
+                        fb,
+                        tile,
+                        x + (source_col * TILE_SIZE) as i32,
+                        y + (usize::from(plan.down_rows) + dest_row) as i32 * TILE_SIZE as i32,
+                        clip_left,
+                        clip_right,
+                        clip_top,
+                        clip_bottom,
+                    );
+                    continue;
+                }
+            }
             for row in 0..TILE_PIXELS {
                 let py = y
                     + (usize::from(plan.down_rows) + dest_row) as i32 * TILE_SIZE as i32
@@ -1220,6 +1239,59 @@ fn draw_mon_pic_plan(
                         fb.set_pixel(px as u32, py as u32, pal.color(GbColor::from_u8(color)));
                     }
                 }
+            }
+        }
+    }
+}
+
+/// True when every shade of `pal` is the shade of its own index in the
+/// standard grayscale base palette. `set_pixel(pal.color(i))` then quantizes
+/// straight back to `i`, so a bare-metal blit may store the index itself.
+#[cfg(target_os = "none")]
+fn palette_is_shade_ramp(pal: &Palette) -> bool {
+    let shade = |index: usize, value: u8| {
+        let color = pal.colors[index];
+        color.r == value && color.g == value && color.b == value
+    };
+    // Index 0 is the transparent shade and is never written.
+    shade(1, 0xAA) && shade(2, 0x55) && shade(3, 0x00)
+}
+
+/// Blit one clipped mon-picture tile by resolving the visible column span once
+/// per row and storing palette indices directly into the linear index plane.
+#[cfg(target_os = "none")]
+fn draw_mon_tile_rows_indices(
+    fb: &mut crate::FrameBuffer,
+    tile: &dotzuki_renderer::tile::Tile,
+    tile_left: i32,
+    tile_top: i32,
+    clip_left: i32,
+    clip_right: i32,
+    clip_top: u32,
+    clip_bottom: u32,
+) {
+    let width = fb.width() as i32;
+    let height = fb.height() as i32;
+    let first = (clip_left - tile_left).max(-tile_left).max(0);
+    let last = (clip_right - tile_left)
+        .min(width - tile_left)
+        .min(TILE_PIXELS as i32);
+    if first >= last {
+        return;
+    }
+    let stride = width as usize;
+    let pixels = fb.indices_mut();
+    for row in 0..TILE_PIXELS {
+        let py = tile_top + row as i32;
+        if py < clip_top as i32 || py >= clip_bottom as i32 || py < 0 || py >= height {
+            continue;
+        }
+        let source = &tile.pixels[row];
+        let base = py as usize * stride + (tile_left + first) as usize;
+        for col in first..last {
+            let color = source[col as usize];
+            if color != 0 {
+                pixels[base + (col - first) as usize] = color;
             }
         }
     }

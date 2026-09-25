@@ -2,16 +2,16 @@
   "emulator": "/opt/homebrew/bin/mgba",
   "scenarios": {
     "battle-entry-v1": {
-      "draw_max_ticks": 19422,
-      "draw_per_frame_ticks": 4325,
+      "draw_max_ticks": 9667,
+      "draw_per_frame_ticks": 2441,
       "present_max_ticks": 798,
-      "present_per_frame_ticks": 449,
-      "renders": 170,
-      "samples": 297,
+      "present_per_frame_ticks": 538,
+      "renders": 280,
+      "samples": 409,
       "scenario": "battle-entry-v1",
-      "update_avg_ticks": 145,
-      "update_core_avg_ticks": 134,
-      "update_flush_avg_ticks": 2
+      "update_avg_ticks": 106,
+      "update_core_avg_ticks": 97,
+      "update_flush_avg_ticks": 1
     },
     "intro-title-v1": {
       "draw_max_ticks": 18444,
@@ -52,7 +52,7 @@
     "overworld-movement-v1": {
       "draw_max_ticks": 2658,
       "draw_per_frame_ticks": 247,
-      "present_max_ticks": 798,
+      "present_max_ticks": 797,
       "present_per_frame_ticks": 79,
       "renders": 26,
       "samples": 240,
@@ -74,16 +74,16 @@
       "update_flush_avg_ticks": 1
     },
     "trainer-battle-entry-v1": {
-      "draw_max_ticks": 19422,
-      "draw_per_frame_ticks": 2453,
+      "draw_max_ticks": 10544,
+      "draw_per_frame_ticks": 1755,
       "present_max_ticks": 798,
-      "present_per_frame_ticks": 153,
-      "renders": 66,
-      "samples": 337,
+      "present_per_frame_ticks": 230,
+      "renders": 114,
+      "samples": 389,
       "scenario": "trainer-battle-entry-v1",
-      "update_avg_ticks": 131,
-      "update_core_avg_ticks": 122,
-      "update_flush_avg_ticks": 2
+      "update_avg_ticks": 114,
+      "update_core_avg_ticks": 105,
+      "update_flush_avg_ticks": 1
     }
   },
   "suite": "autopilot-v1"
