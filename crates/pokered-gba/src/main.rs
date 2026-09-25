@@ -6,6 +6,9 @@ extern crate alloc;
 #[cfg(feature = "autopilot")]
 mod autopilot;
 
+#[cfg(feature = "repro-rival")]
+mod repro_rival;
+
 #[cfg(not(feature = "autopilot"))]
 use agb::input::{Button, ButtonController};
 use dotzuki_engine::render_config::RenderConfig;
@@ -509,7 +512,7 @@ struct PerfScenario {
 }
 
 #[cfg(feature = "perf-benchmark")]
-const PERF_SCENARIOS: [PerfScenario; 6] = [
+const PERF_SCENARIOS: [PerfScenario; 7] = [
     PerfScenario {
         name: "intro-title-v1",
         start: 650,
@@ -536,9 +539,14 @@ const PERF_SCENARIOS: [PerfScenario; 6] = [
         end: 4900,
     },
     PerfScenario {
+        name: "trainer-battle-entry-v1",
+        start: 5600,
+        end: 6100,
+    },
+    PerfScenario {
         name: "pokedex-entry-v1",
-        start: 5000,
-        end: 5400,
+        start: 6800,
+        end: 7200,
     },
 ];
 
@@ -593,9 +601,10 @@ impl PerfWindow {
 #[cfg(feature = "perf-benchmark")]
 #[derive(Default)]
 struct PerfBenchmark {
-    windows: [PerfWindow; 6],
-    reported: [bool; 6],
+    windows: [PerfWindow; 7],
+    reported: [bool; 7],
     battle_started: bool,
+    trainer_battle_started: bool,
     pokedex_started: bool,
 }
 
@@ -606,7 +615,14 @@ impl PerfBenchmark {
             game.debug_start_wild_battle(pokered_data::species::Species::Pidgey, 5);
             self.battle_started = true;
         }
-        if !self.pokedex_started && frame >= 5000 {
+        // The trainer path allocates on top of the wild-battle heap peak
+        // (trainer sprites, trainer-name string, rival party) — the profile
+        // real hardware froze on before the trainer table became ROM statics.
+        if !self.trainer_battle_started && frame >= 5600 {
+            game.debug_start_trainer_battle(pokered_data::trainer_data::TrainerClass::Rival1, 2);
+            self.trainer_battle_started = true;
+        }
+        if !self.pokedex_started && frame >= 6800 {
             game.debug_open_pokedex(pokered_data::species::Species::Pikachu);
             self.pokedex_started = true;
         }
@@ -741,6 +757,9 @@ fn game_main() -> ! {
         }
         #[cfg(feature = "perf-benchmark")]
         benchmark.drive_scene(game, frame);
+
+        #[cfg(feature = "repro-rival")]
+        repro_rival::drive(game, frame, &mut state);
 
         #[cfg(feature = "profiling")]
         let mark0 = profile_now();

@@ -1339,7 +1339,7 @@ impl PokemonGame {
 
     fn start_trainer_battle(&mut self, trainer_id: &str, rival_triplet_base: Option<u8>) {
         use pokered_core::pokemon::stats::create_pokemon;
-        use pokered_data::trainer_data::{get_trainer_party, parse_trainer_id, TrainerClass};
+        use pokered_data::trainer_data::{get_trainer_party_mons, parse_trainer_id, TrainerClass};
         use pokered_data::species::Species;
 
         let player_party = self.save_data.party.to_vec();
@@ -1371,9 +1371,8 @@ impl PokemonGame {
                 default_index
             };
 
-            if let Some(party) = get_trainer_party(class, party_index) {
+            if let Some(party) = get_trainer_party_mons(class, party_index) {
                 let mut mons: Vec<_> = party
-                    .pokemon
                     .iter()
                     .filter_map(|mon| {
                         create_pokemon(

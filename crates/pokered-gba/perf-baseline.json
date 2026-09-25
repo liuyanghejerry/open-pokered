@@ -1,22 +1,22 @@
 {
-  "emulator": "mGBA 0.10.5",
+  "emulator": "/opt/homebrew/bin/mgba",
   "scenarios": {
     "battle-entry-v1": {
-      "draw_avg_ticks": 8354,
-      "draw_max_ticks": 33704,
-      "draw_per_frame_ticks": 4641,
+      "draw_avg_ticks": 8191,
+      "draw_max_ticks": 22401,
+      "draw_per_frame_ticks": 4622,
       "present_avg_ticks": 787,
       "present_max_ticks": 800,
-      "present_per_frame_ticks": 437,
-      "renders": 155,
-      "samples": 279,
+      "present_per_frame_ticks": 444,
+      "renders": 158,
+      "samples": 280,
       "scenario": "battle-entry-v1",
-      "update_avg_ticks": 151
+      "update_avg_ticks": 153
     },
     "intro-title-v1": {
-      "draw_avg_ticks": 7674,
-      "draw_max_ticks": 18469,
-      "draw_per_frame_ticks": 2205,
+      "draw_avg_ticks": 7669,
+      "draw_max_ticks": 18447,
+      "draw_per_frame_ticks": 2203,
       "present_avg_ticks": 787,
       "present_max_ticks": 788,
       "present_per_frame_ticks": 226,
@@ -27,10 +27,10 @@
     },
     "oak-dialogue-v1": {
       "draw_avg_ticks": 5750,
-      "draw_max_ticks": 9434,
+      "draw_max_ticks": 9435,
       "draw_per_frame_ticks": 1941,
       "present_avg_ticks": 788,
-      "present_max_ticks": 800,
+      "present_max_ticks": 801,
       "present_per_frame_ticks": 266,
       "renders": 158,
       "samples": 468,
@@ -47,23 +47,23 @@
       "renders": 0,
       "samples": 1400,
       "scenario": "overworld-idle-v1",
-      "update_avg_ticks": 1417
+      "update_avg_ticks": 1424
     },
     "overworld-movement-v1": {
-      "draw_avg_ticks": 2093,
-      "draw_max_ticks": 2579,
+      "draw_avg_ticks": 2096,
+      "draw_max_ticks": 2584,
       "draw_per_frame_ticks": 165,
-      "present_avg_ticks": 708,
+      "present_avg_ticks": 709,
       "present_max_ticks": 800,
       "present_per_frame_ticks": 55,
       "renders": 18,
       "samples": 228,
       "scenario": "overworld-movement-v1",
-      "update_avg_ticks": 1500
+      "update_avg_ticks": 1506
     },
     "pokedex-entry-v1": {
-      "draw_avg_ticks": 18909,
-      "draw_max_ticks": 18909,
+      "draw_avg_ticks": 18917,
+      "draw_max_ticks": 18917,
       "draw_per_frame_ticks": 47,
       "present_avg_ticks": 787,
       "present_max_ticks": 787,
@@ -72,6 +72,18 @@
       "samples": 396,
       "scenario": "pokedex-entry-v1",
       "update_avg_ticks": 20
+    },
+    "trainer-battle-entry-v1": {
+      "draw_avg_ticks": 13572,
+      "draw_max_ticks": 22398,
+      "draw_per_frame_ticks": 2608,
+      "present_avg_ticks": 788,
+      "present_max_ticks": 801,
+      "present_per_frame_ticks": 151,
+      "renders": 64,
+      "samples": 333,
+      "scenario": "trainer-battle-entry-v1",
+      "update_avg_ticks": 129
     }
   },
   "suite": "autopilot-v1"

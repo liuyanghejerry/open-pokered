@@ -285,6 +285,28 @@ table, avoiding both heap structures. The movement regression crosses that map
 edge in two directions, and the emulator soak continued through more than 8,000
 simulated frames without another crash.
 
+## Trainer-battle freeze (2026-09-25)
+
+The first rival battle in Oak's Lab froze on real hardware. mGBA reproduction
+(`--features repro-rival`, which drives `debug_start_trainer_battle` through
+the production `start_trainer_battle` path) froze non-deterministically inside
+battle render or the first overworld updates after the battle ended — the
+moving hang site indicates heap-state corruption rather than a fixed logic
+loop. The trainer path's unique cost: `get_trainer_party` materialized the
+entire generated trainer table on first use — 47 classes, 391 parties, 994
+Pokémon as ~440 nested `Vec` allocations (~10–15 KB plus fragmentation,
+retained forever) — landing exactly on the battle-entry allocation peak
+(snapshot + trainer/enemy sprites + leaked battle rules) with only ~64 KiB
+largest-free-block headroom.
+
+Trainer parties are now generated as ROM-resident static slices
+(`trainer_parties(class)` in `trainer_data_gen.rs`); `get_trainer_party_mons`
+returns `&'static [TrainerMon]` with zero heap involvement, and the owned
+`Vec` form remains available for editors/benches via `trainer_data()`. Heap
+probes in the repro build measured 64 KiB largest free block before battle
+and a stable 52 KiB after the battle and return to the overworld. The
+`trainer-battle-entry-v1` perf scenario now exercises this path in CI.
+
 ## Platform feature boundary
 
 Renderer backend selection belongs to the application composition root. Shared
