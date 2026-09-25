@@ -2565,8 +2565,23 @@ fn bake_bgp(fb: &mut crate::FrameBuffer, bgp: u8) {
     apply_bgp_bands(fb, bgp, &[]);
 }
 
+/// BGP `11 10 01 00`: shade `i` maps onto itself.
+const BGP_IDENTITY: u8 = 0xe4;
+
+#[inline]
+fn bgp_is_identity(bgp: u8) -> bool {
+    bgp == BGP_IDENTITY
+}
+
 fn apply_bgp_bands(fb: &mut crate::FrameBuffer, initial_bgp: u8, writes: &[(u32, u8)]) {
     fb.reset_palette();
+    // Every visible band mapping shades onto themselves makes the whole
+    // remap a no-op. That is the standing battle-frame state (0xe4 with no
+    // mid-frame writes), where the per-pixel pass below would rewrite all
+    // 38 400 index bytes to the values they already hold.
+    if bgp_is_identity(initial_bgp) && writes.iter().all(|&(_, bgp)| bgp_is_identity(bgp)) {
+        return;
+    }
     let width = fb.width();
     let height = fb.height();
 
