@@ -338,13 +338,14 @@ const DEFAULT_TEXT_DELAY_FRAMES: u16 = 1;
 /// Mirrors the original "RED is playing the SNES!" hidden event text.
 #[derive(Debug, Clone, serde::Serialize)]
 pub struct DialoguePage {
-    pub line1: &'static str,
-    pub line2: &'static str,
+    pub line1: Box<str>,
+    pub line2: Box<str>,
 }
 
-/// The type's lines are intentionally `Box::leak`'d at construction
-/// (see `BedroomDialogue::new` / `from_message`); deserialization leaks
-/// the same way so restored pages have the same 'static lifetime.
+/// Lines are owned (`Box<str>`) rather than `Box::leak`'d `&'static str`:
+/// every dialogue used to leak its text permanently (hundreds of
+/// conversations add up to tens of KiB on the GBA's ~30 KiB working
+/// headroom). Pages now free their lines when the dialogue drops.
 impl<'de> serde::Deserialize<'de> for DialoguePage {
     fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
         #[derive(serde::Deserialize)]
@@ -354,8 +355,8 @@ impl<'de> serde::Deserialize<'de> for DialoguePage {
         }
         let page = Page::deserialize(deserializer)?;
         Ok(DialoguePage {
-            line1: Box::leak(page.line1.into_boxed_str()),
-            line2: Box::leak(page.line2.into_boxed_str()),
+            line1: page.line1.into_boxed_str(),
+            line2: page.line2.into_boxed_str(),
         })
     }
 }
@@ -377,16 +378,15 @@ pub struct BedroomDialogue {
 
 impl BedroomDialogue {
     pub fn new(player_name: &str) -> Self {
-        let line1 = Box::leak(format!("{} is", player_name).into_boxed_str()) as &'static str;
         Self {
             pages: vec![
                 DialoguePage {
-                    line1,
-                    line2: "playing the SNES!",
+                    line1: format!("{} is", player_name).into_boxed_str(),
+                    line2: "playing the SNES!".into(),
                 },
                 DialoguePage {
-                    line1: "...Okay!",
-                    line2: "It's time to go!",
+                    line1: "...Okay!".into(),
+                    line2: "It's time to go!".into(),
                 },
             ],
             current_page: 0,
@@ -405,12 +405,15 @@ impl BedroomDialogue {
         let mut pages: Vec<DialoguePage> = lines
             .chunks(2)
             .map(|c| DialoguePage {
-                line1: Box::leak(c.first().copied().unwrap_or("").to_string().into_boxed_str()),
-                line2: Box::leak(c.get(1).copied().unwrap_or("").to_string().into_boxed_str()),
+                line1: c.first().copied().unwrap_or("").into(),
+                line2: c.get(1).copied().unwrap_or("").into(),
             })
             .collect();
         if pages.is_empty() {
-            pages.push(DialoguePage { line1: "", line2: "" });
+            pages.push(DialoguePage {
+                line1: "".into(),
+                line2: "".into(),
+            });
         }
         Self {
             pages,
@@ -435,8 +438,8 @@ impl BedroomDialogue {
                 let l1 = resolve_placeholders(&tp.line1, player_name, rival_name, starter_name);
                 let l2 = resolve_placeholders(&tp.line2, player_name, rival_name, starter_name);
                 DialoguePage {
-                    line1: Box::leak(l1.into_boxed_str()),
-                    line2: Box::leak(l2.into_boxed_str()),
+                    line1: l1.into_boxed_str(),
+                    line2: l2.into_boxed_str(),
                 }
             })
             .collect();

@@ -683,32 +683,6 @@ fn construct_game() -> &'static mut PokemonGame {
     }
 }
 
-/// Run `f` on a freshly allocated scratch stack (EWRAM heap) and return its
-/// result. Boot-time work that needs kilobytes of stack cannot use the main
-/// EWRAM stack: `game_main`'s prologue already reserves ~55 KiB of the 64 KiB
-/// for its frame locals, leaving ~10 KiB — deep calls used to walk past the
-/// stack base into the `GAME` static below it.
-fn with_scratch_stack<T>(bytes: usize, f: impl FnOnce() -> T) -> T {
-    let stack = alloc::vec![0u32; bytes / 4];
-    let top = (stack.as_ptr() as usize + bytes) & !0b111;
-    let saved_sp: usize;
-    unsafe {
-        core::arch::asm!(
-            "mov {save}, sp",
-            "mov sp, {new}",
-            save = out(reg) saved_sp,
-            new = in(reg) top,
-            options(nostack)
-        );
-    }
-    let result = f();
-    unsafe {
-        core::arch::asm!("mov sp, {save}", save = in(reg) saved_sp, options(nostack));
-    }
-    drop(stack);
-    result
-}
-
 /// Run `f` on the EWRAM stack. `f` never returns, so the switch is final.
 #[inline(never)]
 unsafe fn run_on_ewram_stack(f: fn() -> !) -> ! {
@@ -753,9 +727,10 @@ fn game_main() -> ! {
     // Cartridge SRAM persistence: adopt a valid save (main menu gains
     // CONTINUE) before any heavy allocations reserve EWRAM.
     // Cartridge SRAM persistence: adopt a valid save (main menu gains
-    // CONTINUE). Runs on a scratch stack — the import's parse frames exceed
-    // the main stack's remaining headroom.
-    with_scratch_stack(32 * 1024, || game.try_load_sram_save());
+    // CONTINUE). Runs on the main EWRAM stack directly: `game_main`'s own
+    // frame is under a kilobyte now, so the import's parse frames fit — the
+    // 32 KiB scratch-stack allocation only inflated the boot footprint.
+    game.try_load_sram_save();
     // Compile and retain the canonical battle rules before render resources
     // occupy the heap. Production battle entry points call this defensively,
     // but the idempotent fast path makes those later calls allocation-free.
@@ -823,6 +798,21 @@ fn game_main() -> ! {
 
         #[cfg(feature = "repro-rival")]
         repro_rival::drive(game, frame, &mut state);
+
+        // Heap watermark: every frame, probe the largest free block and log
+        // each new low. Catches peaks that only exist for one or two frames
+        // (battle entry, transition snapshots).
+        #[cfg(feature = "repro-rival")]
+        {
+            static mut MIN_FREE: usize = usize::MAX;
+            let free = pokered_app::game::largest_free_block();
+            unsafe {
+                if free < MIN_FREE {
+                    MIN_FREE = free;
+                    agb::println!("repro: heap low {}B at frame {}", free, frame);
+                }
+            }
+        }
 
         #[cfg(feature = "profiling")]
         let mark0 = profile_now();

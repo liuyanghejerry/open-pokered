@@ -271,7 +271,7 @@ fn build_dialogue_summary(
         let (line1, line2) = d
             .pages()
             .get(d.current_page())
-            .map(|page| (page.line1, page.line2))
+            .map(|page| (page.line1.as_ref(), page.line2.as_ref()))
             .unwrap_or(("", ""));
         DialogueSummary {
             text: format!("{} {}", line1, line2).trim().to_string(),

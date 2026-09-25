@@ -954,7 +954,7 @@ fn softboiled_fainted_user_refused() {
             .pending_dialogue
             .as_ref()
             .and_then(|d| d.current())
-            .map(|p| p.line1 == "Not healthy")
+            .map(|p| p.line1.as_ref() == "Not healthy")
             .unwrap_or(false),
         "a fainted user has 0 HP, which is never > max/5"
     );
