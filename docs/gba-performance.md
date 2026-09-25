@@ -307,6 +307,33 @@ probes in the repro build measured 64 KiB largest free block before battle
 and a stable 52 KiB after the battle and return to the overworld. The
 `trainer-battle-entry-v1` perf scenario now exercises this path in CI.
 
+## Overworld query-seed gating (2026-09-25)
+
+Walking judder on real hardware came from frames exceeding the video-frame
+budget, and the largest single per-frame cost was not simulation at all: the
+app re-seeded the script/day-care query state unconditionally before every
+overworld frame — rebuilding hash-map sets with `String` keys, cloning
+`Vec<String>` bag/party name lists, cloning the whole party twice, and running
+`format!` per party member. Host sampling attributed 54% of the idle update to
+`seed_script_query_state` + `seed_daycare_query_state`; on GBA's block
+allocator the churn cost ~1,150 timer ticks per frame (measured with the new
+`update_core_avg_ticks` split in the perf report).
+
+The app now fingerprints every seeding input into a fixed-size POD snapshot
+(scalars plus FNV-1a hashes of the bag, party — species/level/moves/display
+names — and day-care mon) and re-seeds only when it changes. The script-side
+RNG mix moved to a separate allocation-free `mix_script_rng()` that still runs
+every frame, so `showRandomText` entropy is unchanged.
+
+Measured (mGBA, `perf-benchmark`): overworld idle update 1424 → 271 ticks,
+movement update 1506 → 284 ticks (−81%); movement-window worst-frame totals
+fell from ~10.3k ticks to 4.5–6.4k (budget 4389). Remaining walking-frame cost
+is render-side: ~2,000 ticks draw plus ~700 ticks full-page present. Scroll
+frames still return `FrameUpdate::Full` (partial presentation is only armed
+when `BackgroundDamage::None`), so every scrolling frame pays a full
+23 KB VRAM copy — extending damage presentation to scrolled frames is the
+next optimization.
+
 ## Platform feature boundary
 
 Renderer backend selection belongs to the application composition root. Shared

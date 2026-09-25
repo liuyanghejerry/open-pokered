@@ -749,6 +749,115 @@ pub struct PokemonGame {
     /// connection comes up (the party is refreshed at the cable-club table).
     #[cfg(not(target_os = "none"))]
     pub link_trade: Option<LinkTradeDriver>,
+    /// POD fingerprint of the inputs that feed the script query seeds (bag,
+    /// party, money, dex, daycare…). The seed rebuild — hash-map sets plus
+    /// `Vec<String>` clones and `format!` loops — runs only when this
+    /// changes; doing it unconditionally cost ~1,200 GBA timer ticks per
+    /// overworld frame in allocator churn on an otherwise static screen.
+    query_seed: QuerySeedSnapshot,
+}
+
+/// POD snapshot of every input consumed by the script/day-care query seeding
+/// in the overworld frame loop. Variable-length inputs (bag, party, day-care
+/// mon) are folded into FNV-1a fingerprints annotated with the scalar inputs;
+/// comparing two snapshots is a fixed-size memcmp with no allocation.
+#[derive(Clone, Copy, PartialEq, Eq, Default)]
+struct QuerySeedSnapshot {
+    money: u32,
+    coins: u16,
+    dex_owned: u8,
+    dex_seen: u8,
+    rival_starter: u8,
+    player_starter: u8,
+    badges: u8,
+    version: u8,
+    facing: u8,
+    bag_h: u64,
+    party_h: u64,
+    daycare_h: u64,
+}
+
+const FNV_OFFSET: u64 = 0xcbf2_9ce4_8422_2325;
+const FNV_PRIME: u64 = 0x0000_0100_0000_01b3;
+
+fn fnv_mix(h: &mut u64, bytes: &[u8]) {
+    for &b in bytes {
+        *h = (*h ^ b as u64).wrapping_mul(FNV_PRIME);
+    }
+}
+
+impl QuerySeedSnapshot {
+    fn hash_u8(h: &mut u64, v: u8) {
+        fnv_mix(h, &[v]);
+    }
+
+    fn hash_u32(h: &mut u64, v: u32) {
+        fnv_mix(h, &v.to_le_bytes());
+    }
+}
+
+impl PokemonGame {
+    /// Fingerprint the script/day-care query inputs. Allocation-free: bag and
+    /// party are walked by reference (a `Vec`-returning `items()`/`to_vec()`
+    /// here would itself allocate once per frame).
+    fn query_seed_snapshot(&self) -> QuerySeedSnapshot {
+        use dotzuki_engine::overworld::Direction;
+        let gd = &self.save_data.game_data;
+        let mut snap = QuerySeedSnapshot {
+            money: gd.player_money,
+            coins: gd.player_coins,
+            dex_owned: gd.pokedex.owned_count() as u8,
+            dex_seen: gd.pokedex.seen_count() as u8,
+            rival_starter: gd.rival_starter,
+            player_starter: gd.player_starter,
+            badges: gd.obtained_badges,
+            version: match self.state.config.version {
+                GameVersion::Red => 0,
+                GameVersion::Blue => 1,
+            },
+            facing: match self.overworld.state.player.facing {
+                Direction::Up => 0,
+                Direction::Down => 1,
+                Direction::Left => 2,
+                Direction::Right => 3,
+            },
+            bag_h: 0,
+            party_h: 0,
+            daycare_h: 0,
+        };
+
+        let mut h = FNV_OFFSET;
+        for i in 0..gd.bag.count() {
+            if let Some((id, qty)) = gd.bag.get(i) {
+                QuerySeedSnapshot::hash_u8(&mut h, id as u8);
+                QuerySeedSnapshot::hash_u8(&mut h, qty);
+            }
+        }
+        snap.bag_h = h;
+
+        let mut h = FNV_OFFSET;
+        let mut name_buf = [0u8; pokered_core::battle::state::NAME_TEXT_BUF];
+        for mon in self.save_data.party.iter() {
+            QuerySeedSnapshot::hash_u8(&mut h, mon.species as u8);
+            QuerySeedSnapshot::hash_u8(&mut h, mon.level);
+            for mv in &mon.moves {
+                QuerySeedSnapshot::hash_u8(&mut h, *mv as u8);
+            }
+            fnv_mix(&mut h, mon.display_name(&mut name_buf).as_bytes());
+        }
+        snap.party_h = h;
+
+        let dc = &gd.daycare;
+        let mut h = FNV_OFFSET;
+        QuerySeedSnapshot::hash_u8(&mut h, dc.in_use as u8);
+        QuerySeedSnapshot::hash_u8(&mut h, dc.species);
+        QuerySeedSnapshot::hash_u32(&mut h, dc.exp);
+        QuerySeedSnapshot::hash_u8(&mut h, dc.box_level);
+        fnv_mix(&mut h, &gd.daycare_mon_name);
+        snap.daycare_h = h;
+
+        snap
+    }
 }
 
 /// Normalize the trade driver's errors onto the transport error type so the
@@ -1214,6 +1323,7 @@ impl PokemonGame {
             link_battle: None,
             #[cfg(not(target_os = "none"))]
             link_trade: None,
+            query_seed: QuerySeedSnapshot::default(),
         }
     }
 
@@ -1351,6 +1461,7 @@ impl PokemonGame {
             startup_warp: None,
             soft_reset_frames: 0,
             ow_ran_last_frame: false,
+            query_seed: QuerySeedSnapshot::default(),
         };
         log::info!("gba:ctor literal built");
         built
@@ -1495,6 +1606,7 @@ impl PokemonGame {
             link_battle: None,
             #[cfg(not(target_os = "none"))]
             link_trade: None,
+            query_seed: QuerySeedSnapshot::default(),
         }
     }
 
@@ -3651,81 +3763,93 @@ impl PokemonGame {
                     );
                     // Seed synchronous script-query state from persistent game
                     // data BEFORE update_frame so `@if` conditions (hasItem,
-                    // getMoney, dex, rival starter, facing) read current values.
-                    let bag_names: Vec<String> = self
-                        .save_data
-                        .game_data
-                        .bag
-                        .items()
-                        .iter()
-                        .map(|(id, _)| id.const_name())
-                        .collect();
-                    let party_species: Vec<String> = self
-                        .save_data
-                        .party
-                        .species_list()
-                        .iter()
-                        .map(|s| s.pascal_name())
-                        .collect();
-                    self.overworld.seed_script_query_state(
-                        self.save_data.game_data.player_money,
-                        &bag_names,
-                        self.save_data.game_data.pokedex.owned_count() as u8,
-                        self.save_data.game_data.pokedex.seen_count() as u8,
-                        self.save_data.game_data.rival_starter,
-                        self.save_data.game_data.player_starter,
-                        &party_species,
-                        self.save_data.game_data.player_coins,
-                        self.save_data.game_data.obtained_badges,
-                        match self.state.config.version {
-                            GameVersion::Red => 0,
-                            GameVersion::Blue => 1,
-                        },
-                    );
-                    // Day Care + per-party query state (for the Day Care scene).
-                    {
-                        use pokered_core::battle::experience::growth::level_from_exp;
-                        use pokered_core::pokemon::move_learning::is_hm_move;
-                        use pokered_data::pokemon_data::get_base_stats;
-                        use pokered_data::species::Species;
-                        let dc = &self.save_data.game_data.daycare;
-                        let (levels_grown, cost) = if dc.in_use {
-                            let species = Species::from_index_id(dc.species);
-                            let new_level = get_base_stats(species)
-                                .map(|b| level_from_exp(b.growth_rate, dc.exp).min(100))
-                                .unwrap_or(dc.box_level);
-                            let grown = new_level.saturating_sub(dc.box_level);
-                            (grown, 100u32 * (grown as u32 + 1))
-                        } else {
-                            (0, 0)
-                        };
-                        let dc_name = pokered_data::charmap::decode_string(
-                            &self.save_data.game_data.daycare_mon_name,
-                        );
-                        let mut name_buf = [0u8; pokered_core::battle::state::NAME_TEXT_BUF];
-                        let party_names: Vec<String> = self
+                    // getMoney, dex, rival starter, facing) read current
+                    // values. The seed rebuild allocates (hash-map sets,
+                    // `Vec<String>` clones) so it runs only when the
+                    // fingerprinted inputs actually change — on a static
+                    // overworld frame this used to be the single largest
+                    // per-frame cost on GBA.
+                    let seed_snapshot = self.query_seed_snapshot();
+                    if seed_snapshot != self.query_seed {
+                        self.query_seed = seed_snapshot;
+                        let bag_names: Vec<String> = self
+                            .save_data
+                            .game_data
+                            .bag
+                            .items()
+                            .iter()
+                            .map(|(id, _)| id.const_name())
+                            .collect();
+                        let party_species: Vec<String> = self
                             .save_data
                             .party
-                            .to_vec()
+                            .species_list()
                             .iter()
-                            .map(|m| m.display_name(&mut name_buf).to_string())
+                            .map(|s| s.pascal_name())
                             .collect();
-                        let party_knows_hm: Vec<bool> = self
-                            .save_data
-                            .party
-                            .to_vec()
-                            .iter()
-                            .map(|m| m.moves.iter().any(|mv| is_hm_move(*mv)))
-                            .collect();
-                        self.overworld.seed_daycare_query_state(
-                            dc.in_use,
-                            &dc_name,
-                            levels_grown,
-                            cost,
-                            &party_names,
-                            &party_knows_hm,
+                        self.overworld.seed_script_query_state(
+                            self.save_data.game_data.player_money,
+                            &bag_names,
+                            self.save_data.game_data.pokedex.owned_count() as u8,
+                            self.save_data.game_data.pokedex.seen_count() as u8,
+                            self.save_data.game_data.rival_starter,
+                            self.save_data.game_data.player_starter,
+                            &party_species,
+                            self.save_data.game_data.player_coins,
+                            self.save_data.game_data.obtained_badges,
+                            match self.state.config.version {
+                                GameVersion::Red => 0,
+                                GameVersion::Blue => 1,
+                            },
                         );
+                        // Day Care + per-party query state (for the Day Care
+                        // scene), refreshed with the same change gating.
+                        {
+                            use pokered_core::battle::experience::growth::level_from_exp;
+                            use pokered_core::pokemon::move_learning::is_hm_move;
+                            use pokered_data::pokemon_data::get_base_stats;
+                            use pokered_data::species::Species;
+                            let dc = &self.save_data.game_data.daycare;
+                            let (levels_grown, cost) = if dc.in_use {
+                                let species = Species::from_index_id(dc.species);
+                                let new_level = get_base_stats(species)
+                                    .map(|b| level_from_exp(b.growth_rate, dc.exp).min(100))
+                                    .unwrap_or(dc.box_level);
+                                let grown = new_level.saturating_sub(dc.box_level);
+                                (grown, 100u32 * (grown as u32 + 1))
+                            } else {
+                                (0, 0)
+                            };
+                            let dc_name = pokered_data::charmap::decode_string(
+                                &self.save_data.game_data.daycare_mon_name,
+                            );
+                            let mut name_buf =
+                                [0u8; pokered_core::battle::state::NAME_TEXT_BUF];
+                            let party_names: Vec<String> = self
+                                .save_data
+                                .party
+                                .iter()
+                                .map(|m| m.display_name(&mut name_buf).to_string())
+                                .collect();
+                            let party_knows_hm: Vec<bool> = self
+                                .save_data
+                                .party
+                                .iter()
+                                .map(|m| m.moves.iter().any(|mv| is_hm_move(*mv)))
+                                .collect();
+                            self.overworld.seed_daycare_query_state(
+                                dc.in_use,
+                                &dc_name,
+                                levels_grown,
+                                cost,
+                                &party_names,
+                                &party_knows_hm,
+                            );
+                        }
                     }
+                    // Script-side entropy keeps varying every frame even when
+                    // the (unchanged) query state is not re-seeded.
+                    self.overworld.mix_script_rng();
 
                     // wOptions text delay — pushed every frame so the dialogue
                     // typewriter honors the configured TEXT SPEED.

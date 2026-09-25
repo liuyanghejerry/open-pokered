@@ -555,6 +555,8 @@ const PERF_SCENARIOS: [PerfScenario; 7] = [
 struct PerfWindow {
     samples: u32,
     update: u32,
+    update_core: u32,
+    update_flush: u32,
     renders: u32,
     draw: u32,
     draw_max: u16,
@@ -579,19 +581,25 @@ impl PerfWindow {
         }
     }
 
+    fn record_update_parts(&mut self, marks: [u16; 3]) {
+        let elapsed = |from: u16, to: u16| to.wrapping_sub(from);
+        self.update_core += elapsed(marks[0], marks[1]) as u32;
+        self.update_flush += elapsed(marks[1], marks[2]) as u32;
+    }
+
     fn report(&self, scenario: &str) {
         let samples = self.samples.max(1);
         let renders = self.renders.max(1);
         agb::println!(
-            "gba-perf scenario={} samples={} update_avg_ticks={} renders={} draw_avg_ticks={} draw_per_frame_ticks={} draw_max_ticks={} present_avg_ticks={} present_per_frame_ticks={} present_max_ticks={}",
+            "gba-perf scenario={} samples={} update_avg_ticks={} update_core_avg_ticks={} update_flush_avg_ticks={} renders={} draw_per_frame_ticks={} draw_max_ticks={} present_per_frame_ticks={} present_max_ticks={}",
             scenario,
             self.samples,
             self.update / samples,
+            self.update_core / samples,
+            self.update_flush / samples,
             self.renders,
-            self.draw / renders,
             self.draw / samples,
             self.draw_max,
-            self.present / renders,
             self.present / samples,
             self.present_max
         );
@@ -783,8 +791,21 @@ fn game_main() -> ! {
         let mut updates = 0;
         let mut update_state = state.clone();
         while update_accumulator >= FRAME_TICKS && updates < 8 {
+            #[cfg(feature = "perf-benchmark")]
+            let um0 = profile_now();
             game.update(&update_state);
+            #[cfg(feature = "perf-benchmark")]
+            let um1 = profile_now();
             game.flush_deferred_transition();
+            #[cfg(feature = "perf-benchmark")]
+            {
+                let um2 = profile_now();
+                for (index, scenario) in PERF_SCENARIOS.iter().enumerate() {
+                    if (scenario.start..scenario.end).contains(&frame) {
+                        benchmark.windows[index].record_update_parts([um0, um1, um2]);
+                    }
+                }
+            }
             frame = frame.wrapping_add(1);
             update_accumulator -= FRAME_TICKS;
             updates += 1;

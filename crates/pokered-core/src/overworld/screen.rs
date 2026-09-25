@@ -1403,9 +1403,15 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
         self.player_starter = player_starter;
         self.script_engine
             .seed_number("obtainedBadges", obtained_badges as f64);
-        // Feed real entropy from the overworld RNG into the script-side RNG so
-        // `game.showRandomText(...)` (flavor-text pools) varies between plays.
-        // Scripts have no Math.random/Date.now, so randomness must come from here.
+        self.mix_script_rng();
+    }
+
+    /// Feed real entropy from the overworld RNG into the script-side RNG so
+    /// `game.showRandomText(...)` (flavor-text pools) varies between plays.
+    /// Scripts have no Math.random/Date.now, so randomness must come from
+    /// here. Cheap and allocation-free; the app calls it every frame, while
+    /// [`Self::seed_script_query_state`] only runs when its inputs change.
+    pub fn mix_script_rng(&mut self) {
         self.script_engine
             .mix_rng(rand::RngCore::next_u64(&mut self.rng));
     }
