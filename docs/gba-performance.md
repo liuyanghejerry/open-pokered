@@ -352,6 +352,15 @@ and byte-wise `read_volatile`/`write_volatile` SRAM access (wide accesses to
 the 8-bit SRAM bus do not carry faithfully — `copy_from_slice` left ~100
 bytes stale and wide reads produced `DataTooShort`/panics at random).
 
+**Saving at the lab peak.** Saving right after the starter sequence in
+Oak's Lab froze on hardware: the largest free block there is ~30 KiB (script
+decodes + Pokémon state + resource caches), and the original save exported a
+single 32 KiB image via `export_sram` — the failed allocation is an invisible
+halt on hardware. The bare-metal save now streams four 8 KiB banks
+(`export_sram_bank_into` + byte-wise SRAM writes), so it only needs small
+buffers; a lab-save reproduction (`debug_save_now` under `repro-rival`)
+pins it.
+
 **Rival battle.** The real scripted path (starter ball → exit-row coord
 trigger → split `battle_before` decode → battle → continuation decode) is
 exercised by the new `--features repro-rival` driver, which warps into Oak's

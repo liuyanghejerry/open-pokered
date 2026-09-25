@@ -2016,6 +2016,14 @@ impl PokemonGame {
     /// SRAM (memory-mapped at 0x0E00_0000). The live state is synced in place —
     /// no `SaveData` clone — because this runs inside the update loop, whose
     /// stack headroom cannot absorb a 29 KB temporary.
+    /// Diagnostic hook: run the production bare-metal save path on demand
+    /// (`--features repro-rival`), so hardware repros can save from states the
+    /// autopilot cannot navigate to.
+    #[cfg(all(target_os = "none", feature = "repro-markers"))]
+    pub fn debug_save_now(&mut self) {
+        self.save_to_file();
+    }
+
     #[cfg(target_os = "none")]
     #[inline(never)]
     fn save_to_file(&mut self) {
@@ -2026,8 +2034,20 @@ impl PokemonGame {
             &self.rival_name,
         );
         core::sync::atomic::compiler_fence(core::sync::atomic::Ordering::SeqCst);
-        let image = export_sram(&self.save_data);
-        pokered_core::save::gba_sram::write_bytes(0, &image);
+        // Stream bank by bank (8 KiB staging) — a single 32 KiB image
+        // allocation cannot be satisfied at the lab/battle heap peaks
+        // (largest free block measured at ~30 KiB right after the first
+        // rival battle; a failed allocation is an invisible halt on
+        // hardware).
+        let mut bank = [0u8; 0x2000];
+        for index in 0..4 {
+            pokered_core::save::sram_export::export_sram_bank_into(
+                &self.save_data,
+                index,
+                &mut bank,
+            );
+            pokered_core::save::gba_sram::write_bytes(index * 0x2000, &bank);
+        }
         log::info!("gba: save written to cartridge SRAM");
         // Keep the in-memory summary in step so the save-overwrite prompt and
         // a soft reset see the just-written save.

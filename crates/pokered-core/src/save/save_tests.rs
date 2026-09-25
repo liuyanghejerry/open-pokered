@@ -812,3 +812,29 @@ mod current_box_roundtrip_tests {
         let _: PcStorage = back.pc_storage; // type anchor
     }
 }
+
+/// The bare-metal save path streams banks (8 KiB staging) because a single
+/// 32 KiB image cannot be allocated at the lab/battle heap peaks; the
+/// streamed bytes must be identical to the one-shot image.
+#[test]
+fn bank_wise_export_matches_full_image() {
+    use crate::save::sram_export::export_sram;
+    let mut save = SaveData::new();
+    save.player_name = vec![0x91, 0x84, 0x83, 0x50];
+    let _ = save.party.add(
+        crate::pokemon::stats::create_pokemon(
+            pokered_data::species::Species::Bulbasaur,
+            5,
+            [0x9A, 0x78],
+        )
+        .expect("valid starter"),
+    );
+    let full = export_sram(&save);
+    let mut streamed = Vec::new();
+    for bank in 0..4 {
+        let mut buf = [0u8; 0x2000];
+        crate::save::sram_export::export_sram_bank_into(&save, bank, &mut buf);
+        streamed.extend_from_slice(&buf);
+    }
+    assert_eq!(full, streamed, "streamed banks must match the full image");
+}

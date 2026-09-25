@@ -48,7 +48,36 @@ pub fn drive(game: &mut PokemonGame, frame: u32, state: &mut InputState) {
         }
         _ => {}
     }
+    // Post-battle (lab, heap loaded with script/pokemon state): probe the
+    // largest free block, then run the production save path.
+    static mut SAVED: bool = false;
+    if frame >= SETUP_AT + 900 && !unsafe { SAVED } {
+        unsafe { SAVED = true };
+        agb::println!(
+            "repro: lab post-battle largest free block {}B",
+            largest_free_block()
+        );
+        agb::println!("repro: debug save start");
+        game.debug_save_now();
+        agb::println!("repro: debug save done");
+    }
     if frame % 600 == 0 {
         agb::println!("repro: alive at frame {}", frame);
     }
+}
+
+/// Largest currently-allocatable block, via fallible reserve probing.
+fn largest_free_block() -> usize {
+    let mut lo = 0usize;
+    let mut hi = 256 * 1024usize;
+    while lo < hi {
+        let mid = lo + (hi - lo + 1) / 2;
+        let mut v: alloc::vec::Vec<u8> = alloc::vec::Vec::new();
+        if v.try_reserve_exact(mid).is_ok() {
+            lo = mid;
+        } else {
+            hi = mid - 1;
+        }
+    }
+    lo
 }
