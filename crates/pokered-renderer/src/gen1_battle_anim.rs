@@ -1247,7 +1247,7 @@ fn draw_mon_pic_plan(
 /// True when every shade of `pal` is the shade of its own index in the
 /// standard grayscale base palette. `set_pixel(pal.color(i))` then quantizes
 /// straight back to `i`, so a bare-metal blit may store the index itself.
-#[cfg(target_os = "none")]
+#[cfg(any(target_os = "none", test))]
 fn palette_is_shade_ramp(pal: &Palette) -> bool {
     let shade = |index: usize, value: u8| {
         let color = pal.colors[index];
@@ -1270,20 +1270,43 @@ fn draw_mon_tile_rows_indices(
     clip_top: u32,
     clip_bottom: u32,
 ) {
-    let width = fb.width() as i32;
-    let height = fb.height() as i32;
+    let width = fb.width() as usize;
+    let height = fb.height() as usize;
+    write_mon_tile_rows(
+        fb.indices_mut(),
+        width,
+        height,
+        tile,
+        tile_left,
+        tile_top,
+        (clip_left, clip_right, clip_top, clip_bottom),
+    );
+}
+
+/// The layout-independent core of [`draw_mon_tile_rows_indices`], so the clip
+/// arithmetic can be checked against the per-pixel original on any target.
+#[cfg(any(target_os = "none", test))]
+fn write_mon_tile_rows(
+    pixels: &mut [u8],
+    width: usize,
+    height: usize,
+    tile: &dotzuki_renderer::tile::Tile,
+    tile_left: i32,
+    tile_top: i32,
+    clip: (i32, i32, u32, u32),
+) {
+    let (clip_left, clip_right, clip_top, clip_bottom) = clip;
     let first = (clip_left - tile_left).max(-tile_left).max(0);
     let last = (clip_right - tile_left)
-        .min(width - tile_left)
+        .min(width as i32 - tile_left)
         .min(TILE_PIXELS as i32);
     if first >= last {
         return;
     }
-    let stride = width as usize;
-    let pixels = fb.indices_mut();
+    let stride = width;
     for row in 0..TILE_PIXELS {
         let py = tile_top + row as i32;
-        if py < clip_top as i32 || py >= clip_bottom as i32 || py < 0 || py >= height {
+        if py < clip_top as i32 || py >= clip_bottom as i32 || py < 0 || py >= height as i32 {
             continue;
         }
         let source = &tile.pixels[row];
@@ -2939,5 +2962,86 @@ mod tests {
             blink.tick();
         }
         assert_eq!(blink.visible_band(MonSide::Player, 144), Some((0, 144)));
+    }
+
+    /// The row-span blitter must touch exactly the pixels (and only those) the
+    /// per-pixel original touches, for every clip rectangle and tile position.
+    #[test]
+    fn mon_tile_row_spans_match_the_per_pixel_blit() {
+        use dotzuki_renderer::tile::Tile;
+
+        const WIDTH: usize = 40;
+        const HEIGHT: usize = 24;
+        const SENTINEL: u8 = 0x7F;
+
+        let mut tile = Tile {
+            pixels: [[0u8; TILE_PIXELS]; TILE_PIXELS],
+        };
+        for (row, line) in tile.pixels.iter_mut().enumerate() {
+            for (col, pixel) in line.iter_mut().enumerate() {
+                *pixel = ((row * 3 + col * 5) % 4) as u8;
+            }
+        }
+
+        let per_pixel = |tile_left: i32, tile_top: i32, clip: (i32, i32, u32, u32)| {
+            let (clip_left, clip_right, clip_top, clip_bottom) = clip;
+            let mut pixels = vec![SENTINEL; WIDTH * HEIGHT];
+            for row in 0..TILE_PIXELS {
+                let py = tile_top + row as i32;
+                if py < clip_top as i32 || py >= clip_bottom as i32 {
+                    continue;
+                }
+                for col in 0..TILE_PIXELS {
+                    let color = tile.pixels[row][col];
+                    if color == 0 {
+                        continue;
+                    }
+                    let px = tile_left + col as i32;
+                    if px >= clip_left && px < clip_right && px >= 0 && py >= 0
+                        && px < WIDTH as i32 && py < HEIGHT as i32
+                    {
+                        pixels[py as usize * WIDTH + px as usize] = color;
+                    }
+                }
+            }
+            pixels
+        };
+
+        for tile_left in [-12, -3, 0, 5, 20, 36] {
+            for tile_top in [-4, 0, 9, 20] {
+                for clip_left in [-8, 0, 6, 30] {
+                    for clip_right in [4, 16, 40] {
+                        for clip_top in [0u32, 6, 20] {
+                            for clip_bottom in [5u32, 14, 24] {
+                                let clip = (clip_left, clip_right, clip_top, clip_bottom);
+                                let mut fast = vec![SENTINEL; WIDTH * HEIGHT];
+                                write_mon_tile_rows(
+                                    &mut fast, WIDTH, HEIGHT, &tile, tile_left, tile_top, clip,
+                                );
+                                assert_eq!(
+                                    fast,
+                                    per_pixel(tile_left, tile_top, clip),
+                                    "tile at ({tile_left}, {tile_top}) with clip {clip:?}"
+                                );
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    /// The index-writing blit is only valid for the standard grayscale ramps.
+    #[test]
+    fn shade_ramp_palettes_are_recognized() {
+        use dotzuki_renderer::palette::{GRAYSCALE_PALETTE, GRAYSCALE_SPRITE_PALETTE};
+        use dotzuki_renderer::Rgba;
+
+        assert!(palette_is_shade_ramp(&GRAYSCALE_PALETTE));
+        assert!(palette_is_shade_ramp(&GRAYSCALE_SPRITE_PALETTE));
+
+        let mut colored = GRAYSCALE_SPRITE_PALETTE;
+        colored.colors[2] = Rgba::rgb(0x00, 0x55, 0x00);
+        assert!(!palette_is_shade_ramp(&colored));
     }
 }
