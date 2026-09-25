@@ -16,6 +16,10 @@ embedded-scripts = ["pokered-core/embedded-scripts"]
 embedded-map-data = ["pokered-core/embedded-map-data"]
 # Diagnostic: per-stage markers for GBA hang bisection (log::info).
 repro-markers = []
+# Desktop: replay every heap allocation against a model of agb's EWRAM block
+# allocator (see src/mem_audit.rs); catches GBA-OOM-class allocations during
+# full playthroughs.
+ewram-audit = []
 debug-server = ["pokered-debug-server", "desktop"]
 
 [dependencies]

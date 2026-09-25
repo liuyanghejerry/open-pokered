@@ -61,6 +61,31 @@ pub fn drive(game: &mut PokemonGame, frame: u32, state: &mut InputState) {
         game.debug_save_now();
         agb::println!("repro: debug save done");
     }
+    // After the save, run a battle loop: every wild battle walks the full
+    // battle resource load/free cycle, the best probe for heap fragmentation
+    // and leaks that a short run cannot show.
+    static mut BATTLES: u32 = 0;
+    if frame >= SETUP_AT + 1200 && (frame - (SETUP_AT + 1200)) % 1500 == 0 {
+        let n = unsafe { BATTLES };
+        if n < 40 {
+            unsafe { BATTLES = n + 1 };
+            game.debug_start_wild_battle(pokered_data::species::Species::Pidgey, 5);
+            agb::println!("repro: battle loop #{} at frame {}", n + 1, frame);
+        }
+    }
+    // Battle-loop A-mash: fight to the end so the exit path (and its frees)
+    // runs too.
+    if frame >= SETUP_AT + 1200 && (frame - (SETUP_AT + 1200)) % 64 < 8 {
+        state.press(GbButton::A);
+    }
+    // Periodic heap samples (not only new lows) for trend analysis.
+    if frame % 1800 == 0 {
+        agb::println!(
+            "repro: heap sample frame={} free={}B",
+            frame,
+            pokered_app::game::largest_free_block()
+        );
+    }
     if frame % 600 == 0 {
         agb::println!("repro: alive at frame {}", frame);
     }

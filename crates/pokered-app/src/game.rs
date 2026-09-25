@@ -577,6 +577,25 @@ impl Drop for VideoRecorder {
     }
 }
 
+/// Largest currently-allocatable block (fallible `try_reserve_exact`
+/// bisection — safe to probe from production states). Diagnostic only.
+#[cfg(feature = "repro-markers")]
+#[inline(never)]
+pub fn largest_free_block() -> usize {
+    let mut lo = 0usize;
+    let mut hi = 256 * 1024usize;
+    while lo < hi {
+        let mid = lo + (hi - lo + 1) / 2;
+        let mut v: Vec<u8> = Vec::new();
+        if v.try_reserve_exact(mid).is_ok() {
+            lo = mid;
+        } else {
+            hi = mid - 1;
+        }
+    }
+    lo
+}
+
 pub struct PokemonGame {
     pub state: GameState,
     pub title_screen: TitleScreenState,
@@ -2196,7 +2215,11 @@ impl PokemonGame {
 
     pub fn handle_transition(&mut self, screen: GameScreen) {
         #[cfg(feature = "repro-markers")]
-        log::info!("mk: transition to {:?}", screen);
+        log::info!(
+            "mk: transition to {:?} free={}B",
+            screen,
+            largest_free_block()
+        );
         self.prepare_gba_screen_resources(&screen);
         // Set in the Battle→Overworld settle below when a caught species was
         // newly added to the Pokédex — the post-capture "New DEX data will be
@@ -7469,6 +7492,14 @@ impl GameLoop for PokemonGame {
     type Fb = FrameBuffer;
 
     fn update(&mut self, input: &InputState) {
+        #[cfg(feature = "ewram-audit")]
+        {
+            static AUDIT_RESET: core::sync::atomic::AtomicBool =
+                core::sync::atomic::AtomicBool::new(false);
+            if !AUDIT_RESET.swap(true, core::sync::atomic::Ordering::SeqCst) {
+                crate::mem_audit::reset();
+            }
+        }
         self.update(input);
     }
 
