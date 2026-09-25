@@ -22,12 +22,40 @@ use crate::pokemon::party::Party;
 use crate::pokemon::pc_box::{PcBox, PcStorage};
 use crate::save_menu::calc_checksum;
 
+/// Serialized length of the canonical bank-1 checksummed region
+/// (name 11 + main + sprite + party + box + tile 1). Every field is
+/// fixed-width, so the value is identical for all saves — deriving it from
+/// a blank `GameData` avoids constructing a full `SaveData`, which costs
+/// 29 KB of stack and overflowed the GBA's 64 KiB EWRAM stack during boot
+/// media probing.
+pub fn canonical_region_len() -> usize {
+    use super::sram_layout::{BOX_DATA_SIZE, PARTY_DATA_SIZE, SPRITE_DATA_REGION_SIZE};
+    let mut probe = Vec::new();
+    super::ser_game_data::serialize_game_data_into(&crate::save::game_data::GameData::new(), &mut probe);
+    11 + probe.len() + SPRITE_DATA_REGION_SIZE + PARTY_DATA_SIZE + BOX_DATA_SIZE + 1
+}
+
 /// Import a raw 32KB Game Boy .sav file into a `SaveData`.
 ///
 /// Validates checksums for bank 1 (main data) and banks 2-3 (PC boxes).
 /// Returns `Err(SaveError::DataTooShort)` if data is not 32KB.
 /// Returns `Err(SaveError::BadChecksum)` if any checksum fails.
+// Not inlined: the 29 KB `SaveData` return slot must live in the caller's
+// frame. With fat LTO the whole chain inlined into `game_main`, whose frame
+// then exceeded the GBA's 64 KiB EWRAM stack and corrupted it at entry.
+#[inline(never)]
 pub fn import_sram(data: &[u8]) -> Result<SaveData, SaveError> {
+    let mut save = SaveData::new();
+    import_sram_into(data, &mut save)?;
+    Ok(save)
+}
+
+/// Import into a caller-owned `SaveData`. The GBA boot path passes the game's
+/// resident save slot directly: the 29 KB return slot of [`import_sram`] no
+/// longer exists as a stack temporary, which the 64 KiB EWRAM stack cannot
+/// absorb on top of the parse frames.
+#[inline(never)]
+pub fn import_sram_into(data: &[u8], out: &mut SaveData) -> Result<(), SaveError> {
     if data.len() < SAV_FILE_SIZE {
         return Err(SaveError::DataTooShort);
     }
@@ -41,8 +69,7 @@ pub fn import_sram(data: &[u8]) -> Result<SaveData, SaveError> {
             bank1_owned = migrate_legacy_bank1(b).ok_or(SaveError::BadChecksum)?;
             // Fix the transformed bank's checksum at the canonical spot so
             // the standard validation below passes.
-            let blank_save = SaveData::new();
-            let canonical_len = blank_save.serialize_checksummed_region().len();
+            let canonical_len = canonical_region_len();
             let region = &bank1_owned[GAME_DATA_OFFSET..GAME_DATA_OFFSET + canonical_len];
             bank1_owned[GAME_DATA_OFFSET + canonical_len] = crate::save_menu::calc_checksum(region);
             &bank1_owned
@@ -57,30 +84,27 @@ pub fn import_sram(data: &[u8]) -> Result<SaveData, SaveError> {
     validate_box_bank_checksum(bank2)?;
     validate_box_bank_checksum(bank3)?;
 
-    let hall_of_fame = parse_hall_of_fame(bank0)?;
     let (player_name, game_data, party, current_box, tile_animations) = parse_bank1(bank1)?;
-    let mut pc_storage = PcStorage::new();
-    parse_box_bank(bank2, &mut pc_storage, 0)?;
-    parse_box_bank(bank3, &mut pc_storage, 6)?;
+    out.player_name = player_name;
+    out.game_data = game_data;
+    out.party = party;
+    out.current_box = current_box;
+    out.tile_animations = tile_animations;
+    // Every box slot is fully overwritten by parse_box_bank, so the resident
+    // storage needs no reset (its 18 KB reset temporary would defeat the
+    // point of importing in place).
+    parse_box_bank(bank2, &mut out.pc_storage, 0)?;
+    parse_box_bank(bank3, &mut out.pc_storage, 6)?;
+    out.hall_of_fame = parse_hall_of_fame(bank0)?;
     // wCurrentBoxNum (save.asm:382-384: menu index | $80; GetBoxSRAMLocation
     // masks with BOX_NUM_MASK) — restore the trainer's last-open box so a
     // save→load round-trip keeps Bill's PC where it was left.
-    let saved_box = (game_data.current_box_num & 0x7F) as usize;
+    let saved_box = (out.game_data.current_box_num & 0x7F) as usize;
     if saved_box < 12 {
-        let _ = pc_storage.change_box(saved_box);
+        let _ = out.pc_storage.change_box(saved_box);
     }
-
-    let mut save = SaveData {
-        player_name,
-        game_data,
-        party,
-        current_box,
-        pc_storage,
-        hall_of_fame,
-        tile_animations,
-    };
-    derive_traded_flags(&mut save);
-    Ok(save)
+    derive_traded_flags(out);
+    Ok(())
 }
 
 /// Derive each stored mon's `is_traded` from the OT-ID comparison the original
@@ -125,8 +149,7 @@ fn validate_bank1_checksum(bank1: &[u8]) -> Result<(), SaveError> {
 
 fn validate_canonical_bank1(bank1: &[u8]) -> Result<(), SaveError> {
     // The canonical region = name(11) + main + sprite + party + box + tile(1).
-    let blank_save = SaveData::new();
-    let canonical_len = blank_save.serialize_checksummed_region().len();
+    let canonical_len = canonical_region_len();
     let checksum_offset = GAME_DATA_OFFSET + canonical_len;
     if bank1.len() <= checksum_offset {
         return Err(SaveError::DataTooShort);

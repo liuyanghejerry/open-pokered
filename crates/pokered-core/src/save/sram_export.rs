@@ -7,6 +7,16 @@ use crate::save_menu::calc_checksum;
 
 pub fn export_sram(save: &SaveData) -> Vec<u8> {
     let mut sram = vec![0u8; SAV_FILE_SIZE];
+    export_sram_into(save, &mut sram);
+    sram
+}
+
+/// Write the 32 KiB SRAM image into a caller-provided buffer. On bare metal
+/// the caller passes a view over the cartridge SRAM itself, so saving never
+/// needs a 32 KiB allocation (or stack temporary) on the GBA.
+pub fn export_sram_into(save: &SaveData, sram: &mut [u8]) {
+    assert!(sram.len() >= SAV_FILE_SIZE);
+    sram[..SAV_FILE_SIZE].fill(0);
 
     write_bank0(&save.hall_of_fame, &mut sram[0..SRAM_BANK_SIZE_LAYOUT]);
     write_bank1(
@@ -23,8 +33,6 @@ pub fn export_sram(save: &SaveData) -> Vec<u8> {
         6,
         &mut sram[SRAM_BANK_SIZE_LAYOUT * 3..SRAM_BANK_SIZE_LAYOUT * 4],
     );
-
-    sram
 }
 
 fn write_bank0(hof: &HallOfFame, bank: &mut [u8]) {

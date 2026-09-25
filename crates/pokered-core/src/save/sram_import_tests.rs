@@ -239,6 +239,12 @@ mod legacy_layout_migration_tests {
             region.len(),
             11 + probe.len() + SPRITE_DATA_REGION_SIZE + PARTY_DATA_SIZE + BOX_DATA_SIZE + 1
         );
+        // The constant-width derivation used by the validators must agree with
+        // the serializer exactly (GBA boot cannot afford the 29 KB temporary).
+        assert_eq!(
+            crate::save::sram_import::canonical_region_len(),
+            region.len()
+        );
         // The whole checksummed region fits in bank 1 after the $598 pad,
         // with the checksum byte DIRECTLY after it (canonical position).
         assert!(GAME_DATA_OFFSET + region.len() < SRAM_BANK_SIZE_LAYOUT);

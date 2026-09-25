@@ -37,6 +37,14 @@ impl log::Log for GbaLogger {
 
 static LOGGER: GbaLogger = GbaLogger;
 
+/// The same 4-aligned `SRAM_Vnnn` marker agb's save manager emits: it tells
+/// emulators (mGBA) and flashcart tooling that this ROM keeps its save on the
+/// cartridge SRAM, so a 32 KiB `.sav` is created and flushed.
+#[repr(align(4))]
+struct SramMediaMarker([u8; 12]);
+#[used]
+static SRAM_MARKER: SramMediaMarker = SramMediaMarker(*b"SRAM_Vnnn\0\0\0");
+
 // ── GBA MMIO video: mode 4 (240x160, paletted 8bpp) ───────────────────
 const SCREEN_W: usize = 240;
 const SCREEN_H: usize = 160;
@@ -663,6 +671,32 @@ impl PerfBenchmark {
 const EWRAM_STACK_WORDS: usize = 16384;
 static mut EWRAM_STACK: [u32; EWRAM_STACK_WORDS] = [0; EWRAM_STACK_WORDS]; // 64 KiB
 
+/// Run `f` on a freshly allocated scratch stack (EWRAM heap) and return its
+/// result. Boot-time work that needs kilobytes of stack cannot use the main
+/// EWRAM stack: `game_main`'s prologue already reserves ~55 KiB of the 64 KiB
+/// for its frame locals, leaving ~10 KiB — deep calls used to walk past the
+/// stack base into the `GAME` static below it.
+fn with_scratch_stack<T>(bytes: usize, f: impl FnOnce() -> T) -> T {
+    let stack = alloc::vec![0u32; bytes / 4];
+    let top = (stack.as_ptr() as usize + bytes) & !0b111;
+    let saved_sp: usize;
+    unsafe {
+        core::arch::asm!(
+            "mov {save}, sp",
+            "mov sp, {new}",
+            save = out(reg) saved_sp,
+            new = in(reg) top,
+            options(nostack)
+        );
+    }
+    let result = f();
+    unsafe {
+        core::arch::asm!("mov sp, {save}", save = in(reg) saved_sp, options(nostack));
+    }
+    drop(stack);
+    result
+}
+
 /// Run `f` on the EWRAM stack. `f` never returns, so the switch is final.
 #[inline(never)]
 unsafe fn run_on_ewram_stack(f: fn() -> !) -> ! {
@@ -706,15 +740,28 @@ fn game_main() -> ! {
         slot.get_or_insert_with(|| PokemonGame::new_for_gba(GameVersion::Red))
     };
     agb::println!("pokered-gba: game constructed");
+    // Keep the marker referenced so fat LTO cannot drop it.
+    core::hint::black_box(&SRAM_MARKER);
+    // Cartridge SRAM persistence: adopt a valid save (main menu gains
+    // CONTINUE) before any heavy allocations reserve EWRAM.
+    // Cartridge SRAM persistence: adopt a valid save (main menu gains
+    // CONTINUE). Runs on a scratch stack — the import's parse frames exceed
+    // the main stack's remaining headroom.
+    with_scratch_stack(32 * 1024, || game.try_load_sram_save());
     // Compile and retain the canonical battle rules before render resources
     // occupy the heap. Production battle entry points call this defensively,
     // but the idempotent fast path makes those later calls allocation-free.
     pokered_core::battle::prepare_battle_rules();
     agb::println!("pokered-gba: battle rules ready");
 
-    let mut fb = FrameBuffer::new(RenderConfig::new(160, 144), Rgba::WHITE);
+    // Frame buffer (23 KiB) and render session live on the EWRAM heap: keeping
+    // them as `game_main` locals reserved ~50 KiB of the 64 KiB stack in the
+    // function prologue, leaving ~2.5 KiB of headroom — any deeper call (e.g.
+    // the SRAM save import) walked past the stack base straight into the
+    // `GAME` static below it.
+    let mut fb = alloc::boxed::Box::new(FrameBuffer::new(RenderConfig::new(160, 144), Rgba::WHITE));
     let mut presenter = Mode4Presenter::new(&fb);
-    let mut render_session = RenderSession::new();
+    let mut render_session = alloc::boxed::Box::new(RenderSession::new());
     profile_timer_start();
     let mut frame: u32 = 0;
     let mut last_clock = profile_now();

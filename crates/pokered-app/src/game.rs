@@ -64,8 +64,7 @@ use pokered_core::party_screen::{
     PartyNoticeReturn, PartyScreenAction, PartyScreenInput, PartyScreenState,
 };
 use pokered_core::pokedex_screen::{PokedexScreenAction, PokedexScreenInput, PokedexScreenState};
-#[cfg(not(target_os = "none"))]
-use pokered_core::save::sram_export::export_sram;
+use pokered_core::save::sram_export::{export_sram, export_sram_into};
 use pokered_core::stats_screen::{StatsScreenAction, StatsScreenInput, StatsScreenState};
 use pokered_core::town_map_screen::{TownMapScreenAction, TownMapScreenInput, TownMapScreenState};
 use pokered_core::trainer_card_screen::{
@@ -74,8 +73,10 @@ use pokered_core::trainer_card_screen::{
 
 use pokered_core::elevator_screen::{ElevatorAction, ElevatorInput, ElevatorScreen};
 use pokered_core::pc_screen::{PcContext, PcEntry, PcOpenContext, PcScreen, PcScreenAction, PcSfx};
-#[cfg(all(not(target_arch = "wasm32"), not(target_os = "none")))]
+#[cfg(not(target_arch = "wasm32"))]
 use pokered_core::save::sram_import::import_sram;
+#[cfg(target_os = "none")]
+use pokered_core::save::sram_import::import_sram_into;
 use pokered_core::save::SaveData;
 use pokered_core::save_menu::{
     SaveMenuResult, SaveMenuState, SavePhase, SaveScreenInfo, SaveSfxEvent, YesNoInput,
@@ -1822,75 +1823,88 @@ impl PokemonGame {
         Ok(())
     }
 
+    /// Apply live session state (names, player position/map, flags, tile
+    /// animations) onto `save`. Shared by the hosted `build_save_data` clone
+    /// path and the bare-metal in-place path, which cannot afford a 29 KB
+    /// `SaveData` clone inside the update loop.
+    fn apply_live_state_to_save(
+        save: &mut SaveData,
+        overworld: &OverworldScreen,
+        player_name: &str,
+        rival_name: &str,
+    ) {
+    if let Some(encoded) = pokered_data::charmap::encode_string(&player_name) {
+        save.player_name = encoded;
+    }
+    if let Some(encoded) = pokered_data::charmap::encode_string(&rival_name) {
+        save.game_data.rival_name = encoded;
+    }
+
+    let player = &overworld.state.player;
+    let current_map = overworld.state.current_map;
+
+    save.game_data.position.map_id = current_map as u8;
+    save.game_data.position.x = player.x as u8;
+    save.game_data.position.y = player.y as u8;
+    save.game_data.position.x_block = (player.x % 2) as u8;
+    save.game_data.position.y_block = (player.y % 2) as u8;
+    if let Some(last_map) = overworld.last_map {
+        save.game_data.last_map = last_map as u8;
+    }
+
+    let facing = match player.facing {
+        pokered_core::overworld::Direction::Down => 0u8,
+        pokered_core::overworld::Direction::Up => 4u8,
+        pokered_core::overworld::Direction::Left => 8u8,
+        pokered_core::overworld::Direction::Right => 12u8,
+    };
+    save.game_data.player_direction = facing;
+    save.game_data.player_last_stop_direction = facing;
+    save.game_data.player_moving_direction = facing;
+
+    pokered_core::log_save!(
+        "build_save_data: map_id={}, x={}, y={}, dir={}, player.x={}, player.y={}",
+        save.game_data.position.map_id,
+        save.game_data.position.x,
+        save.game_data.position.y,
+        facing,
+        player.x,
+        player.y
+    );
+
+    // wCurrentMapHeight2/Width2 = block dimensions × 2
+    let (map_w, map_h) = current_map.dimensions();
+    save.game_data.current_map_height2 = map_h * 2;
+    save.game_data.current_map_width2 = map_w * 2;
+
+    if let Some(ref map_data) = overworld.map_data {
+        save.game_data.map_header.tileset = map_data.tileset.to_u8();
+        save.game_data.map_header.height = map_data.height;
+        save.game_data.map_header.width = map_data.width;
+    }
+
+    // engine/menus/save.asm: hTileAnimations is stored into sTileAnimations
+    // on save. It carries the current tileset's animation byte
+    // (TILEANIM_*); map loads refresh it from the tileset header.
+    save.tile_animations = match overworld.tile_anim.kind() {
+        pokered_core::overworld::presentation::TileAnimKind::None => 0,
+        pokered_core::overworld::presentation::TileAnimKind::Water => 1,
+        pokered_core::overworld::presentation::TileAnimKind::WaterFlower => 2,
+    };
+
+    // The event-flag bitset serializes directly into the original
+    // 320-byte SRAM region (wEventFlags, NUM_EVENTS = $A00 bits).
+    save.game_data.event_flags = overworld.unified_flags().as_bytes().to_vec();
+
+    save.game_data.toggleable_object_flags = *overworld.toggleable_object_flags();
+    save.game_data.obtained_hidden_items = *overworld.hidden_item_flags();
+    save.game_data.obtained_hidden_coins = *overworld.hidden_coin_flags();
+
+    }
+
     fn build_save_data(&self) -> SaveData {
         let mut save = self.save_data.clone();
-        if let Some(encoded) = pokered_data::charmap::encode_string(&self.player_name) {
-            save.player_name = encoded;
-        }
-        if let Some(encoded) = pokered_data::charmap::encode_string(&self.rival_name) {
-            save.game_data.rival_name = encoded;
-        }
-
-        let player = &self.overworld.state.player;
-        let current_map = self.overworld.state.current_map;
-
-        save.game_data.position.map_id = current_map as u8;
-        save.game_data.position.x = player.x as u8;
-        save.game_data.position.y = player.y as u8;
-        save.game_data.position.x_block = (player.x % 2) as u8;
-        save.game_data.position.y_block = (player.y % 2) as u8;
-        if let Some(last_map) = self.overworld.last_map {
-            save.game_data.last_map = last_map as u8;
-        }
-
-        let facing = match player.facing {
-            pokered_core::overworld::Direction::Down => 0u8,
-            pokered_core::overworld::Direction::Up => 4u8,
-            pokered_core::overworld::Direction::Left => 8u8,
-            pokered_core::overworld::Direction::Right => 12u8,
-        };
-        save.game_data.player_direction = facing;
-        save.game_data.player_last_stop_direction = facing;
-        save.game_data.player_moving_direction = facing;
-
-        pokered_core::log_save!(
-            "build_save_data: map_id={}, x={}, y={}, dir={}, player.x={}, player.y={}",
-            save.game_data.position.map_id,
-            save.game_data.position.x,
-            save.game_data.position.y,
-            facing,
-            player.x,
-            player.y
-        );
-
-        // wCurrentMapHeight2/Width2 = block dimensions × 2
-        let (map_w, map_h) = current_map.dimensions();
-        save.game_data.current_map_height2 = map_h * 2;
-        save.game_data.current_map_width2 = map_w * 2;
-
-        if let Some(ref map_data) = self.overworld.map_data {
-            save.game_data.map_header.tileset = map_data.tileset.to_u8();
-            save.game_data.map_header.height = map_data.height;
-            save.game_data.map_header.width = map_data.width;
-        }
-
-        // engine/menus/save.asm: hTileAnimations is stored into sTileAnimations
-        // on save. It carries the current tileset's animation byte
-        // (TILEANIM_*); map loads refresh it from the tileset header.
-        save.tile_animations = match self.overworld.tile_anim.kind() {
-            pokered_core::overworld::presentation::TileAnimKind::None => 0,
-            pokered_core::overworld::presentation::TileAnimKind::Water => 1,
-            pokered_core::overworld::presentation::TileAnimKind::WaterFlower => 2,
-        };
-
-        // The event-flag bitset serializes directly into the original
-        // 320-byte SRAM region (wEventFlags, NUM_EVENTS = $A00 bits).
-        save.game_data.event_flags = self.overworld.unified_flags().as_bytes().to_vec();
-
-        save.game_data.toggleable_object_flags = *self.overworld.toggleable_object_flags();
-        save.game_data.obtained_hidden_items = *self.overworld.hidden_item_flags();
-        save.game_data.obtained_hidden_coins = *self.overworld.hidden_coin_flags();
-
+        Self::apply_live_state_to_save(&mut save, &self.overworld, &self.player_name, &self.rival_name);
         save
     }
 
@@ -1993,10 +2007,70 @@ impl PokemonGame {
         Self::save_companion_script_flags(&self.overworld);
     }
 
-    /// Bare metal: no filesystem — persistence moves to SRAM in a later
-    /// pass. Silently succeed so the save menu / credits flows complete.
+    /// Bare metal: persist the 32 KiB SRAM image directly onto the cartridge
+    /// SRAM (memory-mapped at 0x0E00_0000). The live state is synced in place —
+    /// no `SaveData` clone — because this runs inside the update loop, whose
+    /// stack headroom cannot absorb a 29 KB temporary.
     #[cfg(target_os = "none")]
-    fn save_to_file(&mut self) {}
+    #[inline(never)]
+    fn save_to_file(&mut self) {
+        Self::apply_live_state_to_save(
+            &mut self.save_data,
+            &self.overworld,
+            &self.player_name,
+            &self.rival_name,
+        );
+        core::sync::atomic::compiler_fence(core::sync::atomic::Ordering::SeqCst);
+        let image = export_sram(&self.save_data);
+        pokered_core::save::gba_sram::write_bytes(0, &image);
+        log::info!("gba: save written to cartridge SRAM");
+        // Keep the in-memory summary in step so the save-overwrite prompt and
+        // a soft reset see the just-written save.
+        self.state.save_summary = Some(save_summary_from_data(&self.save_data));
+    }
+
+    /// Bare metal boot: load a saved game from cartridge SRAM when one is
+    /// present and checksum-valid. Blank/corrupt media (all-zero or 0xFF) fails
+    /// the region checksums, so a fresh cart naturally reports NEW GAME.
+    /// A checksum-valid image with no player id is also treated as empty.
+    ///
+    /// Imports straight into the resident save slot: `import_sram`'s 29 KB
+    /// return value does not fit the 64 KiB EWRAM stack (with fat-LTO
+    /// inlining it once exploded `game_main`'s frame outright).
+    #[cfg(target_os = "none")]
+    #[inline(never)]
+    pub fn try_load_sram_save(&mut self) {
+        // Snapshot the SRAM through byte-wide volatile loads first: the raw
+        // slice sees wide accesses, which the 8-bit SRAM bus does not carry
+        // faithfully (the write side needed the same treatment).
+        let mut image = vec![0u8; pokered_core::save::gba_sram::SRAM_SIZE];
+        pokered_core::save::gba_sram::read_into(&mut image);
+        let result = import_sram_into(&image, &mut self.save_data);
+        match result {
+            Ok(()) if self.save_data.game_data.player_id != 0 => {
+                let summary = save_summary_from_data(&self.save_data);
+                self.state.save_summary = Some(summary.clone());
+                self.main_menu = MainMenuState::new(Some(summary));
+                apply_saved_options(&mut self.state.config, &self.save_data.game_data.options);
+                log::info!("gba: loaded SRAM save");
+            }
+            other => {
+                let rb = pokered_core::save::gba_sram::sram();
+                let off = pokered_core::save::sram_layout::SRAM_BANK_SIZE_LAYOUT
+                    + pokered_core::save::sram_layout::GAME_DATA_OFFSET;
+                log::info!(
+                    "gba: no valid SRAM save ({:?}); probe {:02x?}; region_len={} bank1_len={}; continuing as NEW GAME",
+                    other.err(),
+                    &rb[off..off + 8],
+                    pokered_core::save::sram_import::canonical_region_len(),
+                    pokered_core::save::sram_layout::SRAM_BANK_SIZE_LAYOUT
+                );
+                // Drop whatever a partial parse may have written (in place —
+                // no temporary).
+                self.save_data.clear();
+            }
+        }
+    }
 
     #[cfg(target_arch = "wasm32")]
     fn save_to_file(&mut self) {
