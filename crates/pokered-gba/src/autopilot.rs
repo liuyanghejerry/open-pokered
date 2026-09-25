@@ -18,12 +18,6 @@ const SCRIPT: &[(u32, u32, u8)] = &[
     // before returning to a hands-off soak.
     (4100, 4116, 0b1000_0000), // Down
     (4200, 4216, 0b0001_0000), // Right
-    // TEMP save smoke: START menu -> SAVE (fresh game: 2 downs) -> YES.
-    (4400, 4412, 0b0000_1000), // Start
-    (4750, 4758, 0b1000_0000),
-    (4830, 4838, 0b1000_0000), // -> SAVE
-    (5120, 5128, 0b0000_0001), // A
-    (5260, 5268, 0b0000_0001), // A (YES)
 ];
 
 /// Post-menu spam: confirm NEW GAME, mash A through Oak's speech and the

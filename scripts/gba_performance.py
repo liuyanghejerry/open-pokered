@@ -78,6 +78,12 @@ def record(args: argparse.Namespace) -> int:
     rom = args.rom.resolve()
     if not rom.is_file():
         raise ValueError(f"ROM not found: {rom}")
+    # Deterministic boot state: a leftover .sav flips the game's boot path
+    # into CONTINUE, which shifts every scenario window onto a saved game.
+    leftover = Path(str(rom)).with_suffix(".sav")
+    if leftover.exists():
+        leftover.unlink()
+
     command = shlex.split(args.emulator) + [
         "-C", "logToStdout=1",
         "-C", "logLevel.gba.debug=127",
