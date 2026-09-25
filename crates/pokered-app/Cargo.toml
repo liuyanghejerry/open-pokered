@@ -14,6 +14,8 @@ desktop = ["pokered-renderer/gpu", "pokered-ui/gpu", "dotzuki-app/desktop", "pok
 mobile = ["pokered-renderer/embedded-assets", "embedded-scripts", "embedded-map-data"]
 embedded-scripts = ["pokered-core/embedded-scripts"]
 embedded-map-data = ["pokered-core/embedded-map-data"]
+# Diagnostic: per-stage markers for GBA hang bisection (log::info).
+repro-markers = []
 debug-server = ["pokered-debug-server", "desktop"]
 
 [dependencies]

@@ -1334,6 +1334,11 @@ impl PokemonGame {
     /// from the build-time embedded tables; graphics come from the
     /// pre-converted 2bpp registry. Called by `pokered-gba`'s `main.rs`.
     #[cfg(target_os = "none")]
+    // Never inlined: the constructor's ~29 KB return slot plus its own temps
+    // must live in a shallow call frame, not in `game_main`'s prologue
+    // reservation (fat LTO merged them, ballooning the boot frame to ~55 KB
+    // of the 64 KiB EWRAM stack).
+    #[inline(never)]
     pub fn new_for_gba(version: GameVersion) -> Self {
         // NOTE: bare-metal callers keep `PokemonGame` in EWRAM (~29 KB, most
         // of the IWRAM stack budget). Large fields are constructed inline in
@@ -2170,6 +2175,8 @@ impl PokemonGame {
     }
 
     pub fn handle_transition(&mut self, screen: GameScreen) {
+        #[cfg(feature = "repro-markers")]
+        log::info!("mk: transition to {:?}", screen);
         self.prepare_gba_screen_resources(&screen);
         // Set in the Battle→Overworld settle below when a caught species was
         // newly added to the Pokédex — the post-capture "New DEX data will be

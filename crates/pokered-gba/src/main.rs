@@ -671,6 +671,18 @@ impl PerfBenchmark {
 const EWRAM_STACK_WORDS: usize = 16384;
 static mut EWRAM_STACK: [u32; EWRAM_STACK_WORDS] = [0; EWRAM_STACK_WORDS]; // 64 KiB
 
+/// Construct the game into the EWRAM static from a shallow stack frame.
+/// `#[inline(never)]` keeps the constructor's 29 KB return slot out of
+/// `game_main`'s own frame reservation.
+#[inline(never)]
+fn construct_game() -> &'static mut PokemonGame {
+    static mut GAME: Option<PokemonGame> = None;
+    unsafe {
+        let slot = &mut *core::ptr::addr_of_mut!(GAME);
+        slot.get_or_insert_with(|| PokemonGame::new_for_gba(GameVersion::Red))
+    }
+}
+
 /// Run `f` on a freshly allocated scratch stack (EWRAM heap) and return its
 /// result. Boot-time work that needs kilobytes of stack cannot use the main
 /// EWRAM stack: `game_main`'s prologue already reserves ~55 KiB of the 64 KiB
@@ -734,11 +746,7 @@ fn game_main() -> ! {
 
     // PokemonGame is ~29 KB — nearly the whole IWRAM stack budget — so it
     // lives in an EWRAM static (bss), not on the stack.
-    static mut GAME: Option<PokemonGame> = None;
-    let game: &mut PokemonGame = unsafe {
-        let slot = &mut *core::ptr::addr_of_mut!(GAME);
-        slot.get_or_insert_with(|| PokemonGame::new_for_gba(GameVersion::Red))
-    };
+    let game: &mut PokemonGame = construct_game();
     agb::println!("pokered-gba: game constructed");
     // Keep the marker referenced so fat LTO cannot drop it.
     core::hint::black_box(&SRAM_MARKER);

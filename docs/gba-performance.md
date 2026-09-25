@@ -334,6 +334,42 @@ when `BackgroundDamage::None`), so every scrolling frame pays a full
 23 KB VRAM copy — extending damage presentation to scrolled frames is the
 next optimization.
 
+## Boot stack, rival battle, and water-map frames (2026-09-25)
+
+Three real-hardware failures shared one theme: work that fit an emulator but
+not the Supercard/GBA envelope.
+
+**Boot stack.** `game_main`'s prologue reserved ~55 KiB of the 64 KiB EWRAM
+stack for its frame locals; with a fat-LTO-inlined constructor's 29 KiB
+`SaveData` return slot the whole boot path ran with ~10 KiB of headroom, and
+any deeper call (the new SRAM save import, script decodes) walked past the
+stack base straight into the `GAME` static below it — `Jumped to invalid
+address: F901F900` and the non-deterministic Oak's-lab rival battle freeze
+were the same failure. Fixes: `#[inline(never)]` on `new_for_gba` plus a
+`construct_game` shim (frame 55 KiB → 0.5 KiB), the framebuffer and render
+session on the heap, a `with_scratch_stack` helper for boot-time deep work,
+and byte-wise `read_volatile`/`write_volatile` SRAM access (wide accesses to
+the 8-bit SRAM bus do not carry faithfully — `copy_from_slice` left ~100
+bytes stale and wide reads produced `DataTooShort`/panics at random).
+
+**Rival battle.** The real scripted path (starter ball → exit-row coord
+trigger → split `battle_before` decode → battle → continuation decode) is
+exercised by the new `--features repro-rival` driver, which warps into Oak's
+Lab with the starter flags set and A-mashes through the battle. Before the
+stack fix it froze; after, it completes battle entry, the fight, the
+continuation decode, and 700k+ subsequent frames without a fault.
+
+**Pallet Town south beach.** Two compounding costs, both fixed:
+neighbouring-map block resolution ran three 248-entry ROM-table string scans
+per out-of-map block (24+ lookups per full redraw at the south edge; now
+memoized per source map, bare metal only), and every water/flower animation
+tick (~3-5x/s) forced a full-screen background redraw plus a full 23 KiB
+present. Animation ticks now take a new `BackgroundDamage::Animated` path:
+a block-level scan marks the tile rows that hold animated tiles, redraws
+only those rows, and partial-presents just those bands. A pixel-exact
+desktop test (`water_tick_redraws_only_animated_rows`) pins the incremental
+redraw against a from-scratch render and checks damage coverage.
+
 ## Platform feature boundary
 
 Renderer backend selection belongs to the application composition root. Shared

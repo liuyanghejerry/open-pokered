@@ -21,7 +21,7 @@ perf-benchmark = ["autopilot", "profiling"]
 framebuffer-dump = []
 # One-shot Oak's-lab rival battle reproduction driver (see src/repro_rival.rs).
 # Diagnostic only, never in shipped ROMs.
-repro-rival = []
+repro-rival = ["autopilot", "pokered-app/repro-markers"]
 
 
 [dependencies]
