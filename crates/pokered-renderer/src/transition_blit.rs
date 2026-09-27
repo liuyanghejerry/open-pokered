@@ -12,9 +12,178 @@
 //! per-pixel blit, which is also the reference the linear path is tested
 //! against ([`tests`]).
 
-use dotzuki_renderer::battle_transition::TransitionFb;
+use alloc::{boxed::Box, vec};
+use dotzuki_renderer::battle_transition::{BattleTransitionState, TransitionFb};
 use dotzuki_renderer::palette::GbColor;
+use dotzuki_renderer::palette::Palette;
 use dotzuki_renderer::TILE_SIZE;
+
+// Expand four 2-bit indices together. GBA uses the otherwise lightly-used
+// IWRAM for this 1 KiB table and the conversion loops, avoiding slow ROM
+// instruction fetches without consuming the constrained EWRAM heap.
+#[cfg_attr(all(target_os = "none", target_arch = "arm"), link_section = ".iwram")]
+static UNPACK: [u32; 256] = {
+    let mut table = [0; 256];
+    let mut i = 0;
+    while i < 256 {
+        table[i] = u32::from_ne_bytes([
+            i as u8 & 3,
+            (i >> 2) as u8 & 3,
+            (i >> 4) as u8 & 3,
+            (i >> 6) as u8,
+        ]);
+        i += 1;
+    }
+    table
+};
+
+/// A four-colour transition source costs 2 bits/pixel even when the hardware
+/// staging buffer uses a byte/pixel. Capture directly: constructing a second
+/// linear framebuffer first would retain the very allocation peak we avoid.
+#[derive(Debug, Clone)]
+pub struct CompactSnapshot {
+    pixels: Box<[u8]>,
+    width: usize,
+    height: usize,
+    palette: Palette<GbColor>,
+}
+
+impl CompactSnapshot {
+    #[inline(never)]
+    #[cfg_attr(all(target_os = "none", target_arch = "arm"), link_section = ".iwram")]
+    pub fn capture(fb: &TransitionFb0<true>) -> Self {
+        let mut pixels = vec![0; fb.indices().len().div_ceil(4)].into_boxed_slice();
+        let words = fb.indices().len() / 4;
+        // LinearRgbaIndexedFrameBuffer backs its indices with aligned u32
+        // storage. Read only complete words, then handle the partial tail.
+        let source = fb.indices().as_ptr().cast::<u32>();
+        for (i, packed) in pixels[..words].iter_mut().enumerate() {
+            let indices = unsafe { source.add(i).read() }.to_le();
+            *packed = ((indices & 3)
+                | ((indices >> 6) & 12)
+                | ((indices >> 12) & 48)
+                | ((indices >> 18) & 192)) as u8;
+        }
+        if fb.indices().len() % 4 != 0 {
+            for (shift, &index) in fb.indices()[words * 4..].iter().enumerate() {
+                pixels[words] |= (index & 3) << (shift * 2);
+            }
+        }
+        Self {
+            pixels,
+            width: fb.width() as usize,
+            height: fb.height() as usize,
+            palette: *fb.display_palette(),
+        }
+    }
+
+    #[inline(never)]
+    #[cfg_attr(all(target_os = "none", target_arch = "arm"), link_section = ".iwram")]
+    fn restore_indices(&self, fb: &mut TransitionFb0<true>) {
+        assert_eq!(
+            (fb.width() as usize, fb.height() as usize),
+            (self.width, self.height)
+        );
+        let indices = fb.indices_mut();
+        let words = indices.len() / 4;
+        let destination = indices.as_mut_ptr().cast::<u32>();
+        for (i, &packed) in self.pixels[..words].iter().enumerate() {
+            // Same aligned storage contract as capture; never write the
+            // partial last word past the exposed index slice.
+            unsafe {
+                destination.add(i).write(UNPACK[packed as usize]);
+            }
+        }
+        if indices.len() % 4 != 0 {
+            let tail = &mut indices[words * 4..];
+            tail.copy_from_slice(&UNPACK[self.pixels[words] as usize].to_ne_bytes()[..tail.len()]);
+        }
+    }
+
+    pub fn restore(&self, fb: &mut TransitionFb0<true>) {
+        self.restore_indices(fb);
+        fb.set_palette(self.palette);
+    }
+
+    /// Expand once in a linear pass, then skip identity tile copies. Most
+    /// wipes only black tiles; decoding 360 individual tiles adds substantial
+    /// call/bounds-check overhead on ARM7. Shifted Shrink tiles still read the
+    /// immutable snapshot, so earlier destination writes cannot affect them.
+    pub fn render(&self, transition: &BattleTransitionState, fb: &mut TransitionFb0<true>) -> bool {
+        self.restore_indices(fb);
+        transition.render(
+            &CompactTransitionTarget::Source(self),
+            &mut CompactTransitionTarget::Dest(fb),
+        )
+    }
+
+    fn index(&self, x: usize, y: usize) -> u8 {
+        let offset = y * self.width + x;
+        (self.pixels[offset / 4] >> ((offset % 4) * 2)) & 3
+    }
+}
+
+/// The engine's transition walker requires identical source/destination
+/// types. This view lets it read a compact snapshot and write linear indices.
+enum CompactTransitionTarget<'a> {
+    Source(&'a CompactSnapshot),
+    Dest(&'a mut TransitionFb0<true>),
+}
+
+impl TransitionFb for CompactTransitionTarget<'_> {
+    fn size(&self) -> (usize, usize) {
+        match self {
+            Self::Source(snapshot) => (snapshot.width, snapshot.height),
+            Self::Dest(fb) => (fb.width() as usize, fb.height() as usize),
+        }
+    }
+
+    fn tile_black(&mut self, tx: usize, ty: usize) {
+        if let Self::Dest(fb) = self {
+            TransitionTarget::dest(fb).tile_black(tx, ty);
+        }
+    }
+
+    #[inline(never)]
+    #[cfg_attr(all(target_os = "none", target_arch = "arm"), link_section = ".iwram")]
+    fn tile_copy(&mut self, tx: usize, ty: usize, src: &Self, stx: usize, sty: usize) {
+        // Only constructed by CompactSnapshot::render, after restoring the
+        // source indices. The walker visits every destination tile once.
+        if tx == stx && ty == sty {
+            return;
+        }
+        let (Self::Dest(fb), Self::Source(snapshot)) = (self, src) else {
+            return;
+        };
+        let (px, py) = tile_origin(tx, ty);
+        let (sx, sy) = tile_origin(stx, sty);
+        let width = fb.width() as usize;
+        let columns = visible_span(px, width).min(visible_span(sx, snapshot.width));
+        let rows = visible_span(py, fb.height() as usize).min(visible_span(sy, snapshot.height));
+        if columns == 0 || rows == 0 {
+            return;
+        }
+        let pixels = fb.indices_mut();
+        for row in 0..rows {
+            let start = (py + row) * width + px;
+            if columns == 8 && snapshot.width % 4 == 0 && width % 4 == 0 {
+                let packed_start = ((sy + row) * snapshot.width + sx) / 4;
+                // Tile x is a multiple of 8 and row width is a multiple of
+                // 4. The clipped row contains both aligned output words.
+                let to = unsafe { pixels.as_mut_ptr().add(start).cast::<u32>() };
+                unsafe {
+                    to.write(UNPACK[snapshot.pixels[packed_start] as usize]);
+                    to.add(1)
+                        .write(UNPACK[snapshot.pixels[packed_start + 1] as usize]);
+                }
+                continue;
+            }
+            for (column, pixel) in pixels[start..start + columns].iter_mut().enumerate() {
+                *pixel = snapshot.index(sx + column, sy + row);
+            }
+        }
+    }
+}
 
 /// The index the wipe paints black tiles with (`C::from_u8(3)`).
 const BLACK_INDEX: u8 = 3;
@@ -216,11 +385,13 @@ mod tests {
     /// not a whole number of tiles wide.
     #[test]
     fn linear_transition_matches_the_per_pixel_blit() {
-        for (width, height) in [(160, 144), (100, 50), (160, 30)] {
+        for (width, height) in [(160, 144), (100, 50), (160, 30), (13, 11), (1, 1)] {
             for kind in KINDS {
                 let snapshot = patterned(width, height);
                 let mut fast = patterned(width, height);
                 let mut reference = patterned(width, height);
+                let compact_snapshot = CompactSnapshot::capture(&snapshot);
+                let mut compact = patterned(width, height);
                 let mut state = BattleTransitionState::new(kind, 20, 18);
                 state.tick();
 
@@ -232,6 +403,12 @@ mod tests {
                     state.render(
                         &PixelByPixel::source(&snapshot),
                         &mut PixelByPixel::dest(&mut reference),
+                    );
+                    compact_snapshot.render(&state, &mut compact);
+                    assert_eq!(
+                        compact.indices(),
+                        reference.indices(),
+                        "compact {kind:?} diverged at frame {frame} on {width}x{height}"
                     );
                     assert_eq!(
                         fast.indices(),
@@ -246,5 +423,56 @@ mod tests {
             }
         }
     }
-}
 
+    #[test]
+    fn compact_snapshot_restores_indices_and_display_palette() {
+        for (width, height) in [(160, 144), (13, 11), (1, 1)] {
+            let mut source = patterned(width, height);
+            source.set_palette(Palette::from_bgp_register(
+                0x1B,
+                &dotzuki_renderer::palette::GRAYSCALE_PALETTE,
+            ));
+            let snapshot = CompactSnapshot::capture(&source);
+            assert_eq!(
+                snapshot.pixels.len(),
+                (width as usize * height as usize).div_ceil(4)
+            );
+            let mut dest =
+                TransitionFb0::<true>::new(RenderConfig::new(width, height), Rgba::BLACK);
+            snapshot.restore(&mut dest);
+            assert_eq!(dest.indices(), source.indices());
+            for i in 0..4 {
+                assert_eq!(
+                    dest.display_palette().color(GbColor::from_u8(i)),
+                    source.display_palette().color(GbColor::from_u8(i))
+                );
+            }
+            // Wipes use the caller's reset display palette, whereas flash
+            // frames restore the snapshot palette before applying a strobe.
+            dest.reset_palette();
+            let palette = *dest.display_palette();
+            snapshot.render(
+                &BattleTransitionState::new(BattleTransitionKind::Circle, 20, 18),
+                &mut dest,
+            );
+            assert_eq!(*dest.display_palette(), palette);
+        }
+    }
+
+    #[test]
+    fn compact_snapshot_roundtrips_every_four_pixel_combination() {
+        let mut source = TransitionFb0::<true>::new(RenderConfig::new(64, 16), Rgba::WHITE);
+        for (packed, indices) in source.indices_mut().chunks_exact_mut(4).enumerate() {
+            for (shift, index) in indices.iter_mut().enumerate() {
+                *index = ((packed >> (shift * 2)) & 3) as u8;
+            }
+        }
+        let snapshot = CompactSnapshot::capture(&source);
+        for (expected, &packed) in snapshot.pixels.iter().enumerate() {
+            assert_eq!(packed, expected as u8);
+        }
+        let mut restored = TransitionFb0::<true>::new(RenderConfig::new(64, 16), Rgba::BLACK);
+        snapshot.restore(&mut restored);
+        assert_eq!(source.indices(), restored.indices());
+    }
+}

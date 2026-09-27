@@ -2479,38 +2479,102 @@ impl AnimationPlayer {
 }
 
 fn shift_horizontal_band(fb: &mut crate::FrameBuffer, y_start: u32, y_end: u32, dx: i32) {
-    let width = fb.width() as i32;
-    let source = fb.indexed().clone();
-    for y in y_start.min(fb.height())..y_end.min(fb.height()) {
-        for x in 0..width {
-            let source_x = x - dx;
-            let color = if (0..width).contains(&source_x) {
-                source
-                    .get_pixel(source_x as u32, y)
-                    .unwrap_or(GbColor::White)
-            } else {
-                GbColor::White
-            };
-            fb.set_pixel_index(x as u32, y, color);
+    #[cfg(target_os = "none")]
+    {
+        let width = fb.width() as usize;
+        shift_linear_scanlines(fb.indices_mut(), width, y_start, y_end, |_| dx);
+    }
+    #[cfg(not(target_os = "none"))]
+    {
+        let width = fb.width() as i32;
+        let source = fb.indexed().clone();
+        for y in y_start.min(fb.height())..y_end.min(fb.height()) {
+            for x in 0..width {
+                let source_x = x - dx;
+                let color = if (0..width).contains(&source_x) {
+                    source
+                        .get_pixel(source_x as u32, y)
+                        .unwrap_or(GbColor::White)
+                } else {
+                    GbColor::White
+                };
+                fb.set_pixel_index(x as u32, y, color);
+            }
         }
     }
 }
 
 fn shift_vertical_band(fb: &mut crate::FrameBuffer, dy: i32) {
-    let height = fb.height() as i32;
-    let source = fb.indexed().clone();
-    for y in 0..height {
-        let source_y = y - dy;
-        for x in 0..fb.width() {
-            let color = if (0..height).contains(&source_y) {
-                source
-                    .get_pixel(x, source_y as u32)
-                    .unwrap_or(GbColor::White)
-            } else {
-                GbColor::White
-            };
-            fb.set_pixel_index(x, y as u32, color);
+    #[cfg(target_os = "none")]
+    {
+        let width = fb.width() as usize;
+        shift_linear_vertical(fb.indices_mut(), width, dy);
+    }
+    #[cfg(not(target_os = "none"))]
+    {
+        let height = fb.height() as i32;
+        let source = fb.indexed().clone();
+        for y in 0..height {
+            let source_y = y - dy;
+            for x in 0..fb.width() {
+                let color = if (0..height).contains(&source_y) {
+                    source
+                        .get_pixel(x, source_y as u32)
+                        .unwrap_or(GbColor::White)
+                } else {
+                    GbColor::White
+                };
+                fb.set_pixel_index(x, y as u32, color);
+            }
         }
+    }
+}
+
+/// Overlap-safe shifts for GBA's linear framebuffer. A full clone costs
+/// 23,040 B, more than the free heap while a large trainer script is paused.
+/// Memmove and white fill need no scratch allocation, even for large shifts.
+#[cfg(any(target_os = "none", test))]
+fn shift_linear_scanlines(
+    pixels: &mut [u8],
+    width: usize,
+    y_start: u32,
+    y_end: u32,
+    offset: impl Fn(u32) -> i32,
+) {
+    if width == 0 {
+        return;
+    }
+    for (y, row) in pixels
+        .chunks_exact_mut(width)
+        .enumerate()
+        .take(y_end as usize)
+        .skip(y_start as usize)
+    {
+        let dx = offset(y as u32);
+        let count = (dx.unsigned_abs() as usize).min(width);
+        if dx > 0 {
+            row.copy_within(..width - count, count);
+            row[..count].fill(0);
+        } else if dx < 0 {
+            row.copy_within(count.., 0);
+            row[width - count..].fill(0);
+        }
+    }
+}
+
+#[cfg(any(target_os = "none", test))]
+fn shift_linear_vertical(pixels: &mut [u8], width: usize, dy: i32) {
+    if width == 0 {
+        return;
+    }
+    let count = (dy.unsigned_abs() as usize).min(pixels.len() / width) * width;
+    let len = pixels.len();
+    if dy > 0 {
+        pixels.copy_within(..len - count, count);
+        pixels[..count].fill(0);
+    } else if dy < 0 {
+        pixels.copy_within(count.., 0);
+        pixels[len - count..].fill(0);
     }
 }
 
@@ -2609,20 +2673,30 @@ fn apply_shake_screen(
     call: u8,
     phase: u8,
 ) {
-    let width = fb.width() as i32;
-    let source = fb.indexed().clone();
-    for y in 0..fb.height() {
-        let dx = shake_line_offset(move_id, player_is_attacker, call, phase, y);
-        for x in 0..width {
-            let source_x = x - dx;
-            let color = if (0..width).contains(&source_x) {
-                source
-                    .get_pixel(source_x as u32, y)
-                    .unwrap_or(GbColor::White)
-            } else {
-                GbColor::White
-            };
-            fb.set_pixel_index(x as u32, y, color);
+    #[cfg(target_os = "none")]
+    {
+        let (width, height) = (fb.width() as usize, fb.height());
+        shift_linear_scanlines(fb.indices_mut(), width, 0, height, |y| {
+            shake_line_offset(move_id, player_is_attacker, call, phase, y)
+        });
+    }
+    #[cfg(not(target_os = "none"))]
+    {
+        let width = fb.width() as i32;
+        let source = fb.indexed().clone();
+        for y in 0..fb.height() {
+            let dx = shake_line_offset(move_id, player_is_attacker, call, phase, y);
+            for x in 0..width {
+                let source_x = x - dx;
+                let color = if (0..width).contains(&source_x) {
+                    source
+                        .get_pixel(source_x as u32, y)
+                        .unwrap_or(GbColor::White)
+                } else {
+                    GbColor::White
+                };
+                fb.set_pixel_index(x as u32, y, color);
+            }
         }
     }
 }
@@ -2633,21 +2707,32 @@ fn apply_wavy_screen(
     player_is_attacker: bool,
     phase: u8,
 ) {
-    let width = fb.width() as i32;
-    let source = fb.indexed().clone();
-    for y in 0..fb.height() {
-        let shift =
-            crate::gen1_wavy_schedule::line_offset(move_id, player_is_attacker, phase, y) as i32;
-        for x in 0..width {
-            let source_x = x + shift;
-            let color = if (0..width).contains(&source_x) {
-                source
-                    .get_pixel(source_x as u32, y)
-                    .unwrap_or(GbColor::White)
-            } else {
-                GbColor::White
-            };
-            fb.set_pixel_index(x as u32, y, color);
+    #[cfg(target_os = "none")]
+    {
+        let (width, height) = (fb.width() as usize, fb.height());
+        shift_linear_scanlines(fb.indices_mut(), width, 0, height, |y| {
+            -(crate::gen1_wavy_schedule::line_offset(move_id, player_is_attacker, phase, y) as i32)
+        });
+    }
+    #[cfg(not(target_os = "none"))]
+    {
+        let width = fb.width() as i32;
+        let source = fb.indexed().clone();
+        for y in 0..fb.height() {
+            let shift =
+                crate::gen1_wavy_schedule::line_offset(move_id, player_is_attacker, phase, y)
+                    as i32;
+            for x in 0..width {
+                let source_x = x + shift;
+                let color = if (0..width).contains(&source_x) {
+                    source
+                        .get_pixel(source_x as u32, y)
+                        .unwrap_or(GbColor::White)
+                } else {
+                    GbColor::White
+                };
+                fb.set_pixel_index(x as u32, y, color);
+            }
         }
     }
 }
@@ -2747,6 +2832,81 @@ impl Default for AnimationPlayer {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    fn assert_linear_shift_matches_snapshot(
+        width: usize,
+        height: usize,
+        start: u32,
+        end: u32,
+        offset: impl Fn(u32) -> i32,
+    ) {
+        let source: Vec<u8> = (0..width * height)
+            .map(|i| ((i / 7 + i / width) % 4) as u8)
+            .collect();
+        let mut expected = source.clone();
+        for y in (start as usize).min(height)..(end as usize).min(height) {
+            for x in 0..width {
+                let sx = x as i64 - i64::from(offset(y as u32));
+                expected[y * width + x] = if (0..width as i64).contains(&sx) {
+                    source[y * width + sx as usize]
+                } else {
+                    0
+                };
+            }
+        }
+        let mut actual = source;
+        shift_linear_scanlines(&mut actual, width, start, end, offset);
+        assert_eq!(actual, expected);
+    }
+
+    #[test]
+    fn gba_in_place_shifts_match_snapshot_for_clipping_and_large_offsets() {
+        for width in [0, 1, 5, 160] {
+            for height in [0, 1, 144] {
+                for offset in [i32::MIN, -200, -8, -1, 0, 1, 8, 200, i32::MAX] {
+                    for (start, end) in [(0, 144), (8, 112), (143, 150), (150, 155), (10, 3)] {
+                        assert_linear_shift_matches_snapshot(width, height, start, end, |_| offset);
+                    }
+                    let source: Vec<u8> = (0..width * height).map(|i| (i % 4) as u8).collect();
+                    let mut actual = source.clone();
+                    shift_linear_vertical(&mut actual, width, offset);
+                    for y in 0..height {
+                        for x in 0..width {
+                            let sy = y as i64 - i64::from(offset);
+                            let expected = if (0..height as i64).contains(&sy) {
+                                source[sy as usize * width + x]
+                            } else {
+                                0
+                            };
+                            assert_eq!(actual[y * width + x], expected);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn gba_shake_and_wave_scanlines_match_full_frame_snapshot() {
+        for player in [false, true] {
+            for move_id in [69, 89, 90] {
+                for call in 0..2 {
+                    for phase in 0..=73 {
+                        assert_linear_shift_matches_snapshot(160, 144, 0, 144, |y| {
+                            shake_line_offset(move_id, player, call, phase, y)
+                        });
+                    }
+                }
+            }
+            for move_id in [60, 93, 94, 95, 109, 149] {
+                for phase in 0..127 {
+                    assert_linear_shift_matches_snapshot(160, 144, 0, 144, |y| {
+                        -(crate::gen1_wavy_schedule::line_offset(move_id, player, phase, y) as i32)
+                    });
+                }
+            }
+        }
+    }
 
     fn oam_signature(entries: &[SpriteOamEntry]) -> Vec<(i32, i32, u8, u8)> {
         entries

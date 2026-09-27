@@ -129,7 +129,7 @@ fn draw_mon_pic(
     if let Some(rm) = resources.as_mut() {
         let sprite = species_to_sprite_name(&format!("{}", species));
         if let Ok(cached) = rm.load_pokemon_front(&sprite) {
-            let ts = cached.tileset.clone();
+            let ts = &cached.tileset;
             let w_tiles = cached.source_size.0 / TILE_SIZE;
             let w_px = cached.source_size.0;
             let x = (fb.width().saturating_sub(w_px)) / 2;
@@ -140,7 +140,7 @@ fn draw_mon_pic(
             } else {
                 &GRAYSCALE_SPRITE_PALETTE
             };
-            blit_tileset(fb, &ts, x, 8, w_tiles, pal);
+            blit_tileset(fb, ts, x, 8, w_tiles, pal);
         }
     }
 }

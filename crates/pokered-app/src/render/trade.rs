@@ -169,14 +169,14 @@ fn draw_gameboys_and_cable(resources: &mut Option<ResourceManager>, fb: &mut Fra
     let mut drew_gbs = false;
     if let Some(rm) = resources.as_mut() {
         if let Ok(cached) = rm.load_trade("game_boy") {
-            let ts = cached.tileset.clone();
+            let ts = &cached.tileset;
             let w_tiles = cached.source_size.0 / TILE_SIZE;
             let w_px = cached.source_size.0;
             let h_px = cached.source_size.1;
             let y = cy.saturating_sub(h_px / 2);
-            blit_tileset(fb, &ts, 4, y, w_tiles, &GRAYSCALE_SPRITE_PALETTE);
+            blit_tileset(fb, ts, 4, y, w_tiles, &GRAYSCALE_SPRITE_PALETTE);
             let right_x = fb.width().saturating_sub(w_px + 4);
-            blit_tileset(fb, &ts, right_x, y, w_tiles, &GRAYSCALE_SPRITE_PALETTE);
+            blit_tileset(fb, ts, right_x, y, w_tiles, &GRAYSCALE_SPRITE_PALETTE);
             drew_gbs = true;
         }
     }
@@ -210,11 +210,11 @@ fn draw_mon_pic(
     if let Some(rm) = resources.as_mut() {
         let sprite = species_to_sprite_name(&format!("{}", species));
         if let Ok(cached) = rm.load_pokemon_front(&sprite) {
-            let ts = cached.tileset.clone();
+            let ts = &cached.tileset;
             let w_tiles = cached.source_size.0 / TILE_SIZE;
             let x = 56 + panel_offset_x;
             if x >= 0 {
-                blit_tileset(fb, &ts, x as u32, 16, w_tiles, &GRAYSCALE_SPRITE_PALETTE);
+                blit_tileset(fb, ts, x as u32, 16, w_tiles, &GRAYSCALE_SPRITE_PALETTE);
             }
         }
     }
@@ -242,7 +242,7 @@ fn draw_ball_sub_anim(
     );
     if let Some(rm) = resources.as_mut() {
         if let Ok(cached) = rm.load_battle("move_anim_0") {
-            let ts = cached.tileset.clone();
+            let ts = &cached.tileset;
             let mut layer = SpriteLayer::new();
             for mut e in entries {
                 // OAM tile ids are absolute VRAM ids (raw + $31, matching
@@ -252,7 +252,7 @@ fn draw_ball_sub_anim(
             }
             layer.render(
                 fb,
-                &ts,
+                ts,
                 &GRAYSCALE_SPRITE_PALETTE,
                 &GRAYSCALE_SPRITE_PALETTE,
                 None,
@@ -265,11 +265,11 @@ fn draw_ball(resources: &mut Option<ResourceManager>, bx: i32, by: i32, fb: &mut
     let mut drew = false;
     if let Some(rm) = resources.as_mut() {
         if let Ok(cached) = rm.load_trade("cable_ball") {
-            let ts = cached.tileset.clone();
+            let ts = &cached.tileset;
             let w_tiles = cached.source_size.0 / TILE_SIZE;
             let x = (bx - (cached.source_size.0 / 2) as i32).max(0) as u32;
             let y = (by - (cached.source_size.1 / 2) as i32).max(0) as u32;
-            blit_tileset(fb, &ts, x, y, w_tiles, &GRAYSCALE_SPRITE_PALETTE);
+            blit_tileset(fb, ts, x, y, w_tiles, &GRAYSCALE_SPRITE_PALETTE);
             drew = true;
         }
     }

@@ -1,0 +1,7 @@
+[mgba] memory: move=67 side=0
+[mgba] memory: move=67 side=1
+[mgba] memory: move=68 side=0
+[mgba] memory: move=68 side=1
+[mgba] memory: move=69 side=0
+[mgba] panicked at /Users/liuyanghe02/.rustup/toolchains/nightly-2025-12-07-aarch64-apple-darwin/lib/rustlib/src/rust/library/alloc/src/alloc.rs:439:13:
+memory allocation of 0 bytes failed

@@ -9,6 +9,12 @@ mod autopilot;
 #[cfg(feature = "repro-rival")]
 mod repro_rival;
 
+#[cfg(feature = "repro-route22")]
+mod repro_route22;
+
+#[cfg(feature = "memory-scenarios")]
+mod memory_scenarios;
+
 #[cfg(not(feature = "autopilot"))]
 use agb::input::{Button, ButtonController};
 use dotzuki_engine::render_config::RenderConfig;
@@ -671,6 +677,14 @@ impl PerfBenchmark {
 const EWRAM_STACK_WORDS: usize = 16384;
 static mut EWRAM_STACK: [u32; EWRAM_STACK_WORDS] = [0; EWRAM_STACK_WORDS]; // 64 KiB
 
+#[cfg(any(feature = "repro-route22", feature = "memory-scenarios"))]
+fn unused_stack_bytes() -> usize {
+    let base = core::ptr::addr_of!(EWRAM_STACK).cast::<u32>();
+    (0..EWRAM_STACK_WORDS)
+        .take_while(|&i| unsafe { base.add(i).read_volatile() == 0xA5A5_A5A5 })
+        .count() * 4
+}
+
 /// Construct the game into the EWRAM static from a shallow stack frame.
 /// `#[inline(never)]` keeps the constructor's 29 KB return slot out of
 /// `game_main`'s own frame reservation.
@@ -689,6 +703,10 @@ unsafe fn run_on_ewram_stack(f: fn() -> !) -> ! {
     unsafe {
         // Byte-exact top of EWRAM_STACK (64 KiB), 8-byte aligned.
         let base = core::ptr::addr_of_mut!(EWRAM_STACK) as usize;
+        // Paint before switching stacks, so probes include constructor and
+        // deep script/renderer calls rather than only the shallow main loop.
+        #[cfg(any(feature = "repro-route22", feature = "memory-scenarios"))]
+        core::ptr::write_bytes(base as *mut u8, 0xA5, EWRAM_STACK_WORDS * 4);
         let new_sp = (base + EWRAM_STACK_WORDS * 4) & !0b111;
         let old_sp: usize;
         core::arch::asm!(
@@ -756,6 +774,10 @@ fn game_main() -> ! {
     // Retain input history across display frames so a held key produces one
     // edge instead of appearing newly pressed on every pass through the loop.
     let mut state = InputState::new();
+    #[cfg(feature = "repro-route22")]
+    let mut route22 = repro_route22::Repro::default();
+    #[cfg(feature = "memory-scenarios")]
+    let mut memory_scenarios = memory_scenarios::Scenarios::default();
 
     loop {
         let first_frame_pending = frame == 0;
@@ -799,10 +821,15 @@ fn game_main() -> ! {
         #[cfg(feature = "repro-rival")]
         repro_rival::drive(game, frame, &mut state);
 
+        #[cfg(feature = "repro-route22")]
+        route22.drive(game, frame, &mut state);
+        #[cfg(feature = "memory-scenarios")]
+        memory_scenarios.drive(game, frame, &mut state);
+
         // Heap watermark: every frame, probe the largest free block and log
         // each new low. Catches peaks that only exist for one or two frames
         // (battle entry, transition snapshots).
-        #[cfg(feature = "repro-rival")]
+        #[cfg(any(feature = "repro-rival", feature = "repro-route22", feature = "memory-scenarios"))]
         {
             static mut MIN_FREE: usize = usize::MAX;
             let free = pokered_app::game::largest_free_block();

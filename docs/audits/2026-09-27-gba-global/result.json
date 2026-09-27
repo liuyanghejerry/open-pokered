@@ -1,0 +1,30 @@
+{
+  "baseline_commit": "5162065cda5129d2e8832aec1a9ac9e7bca94783",
+  "normal_rom": "crates/pokered-gba/target/thumbv4t-none-eabi/release/pokered-gba.gba",
+  "normal_rom_bytes": 5292636,
+  "normal_rom_sha256": "73e203c11528798b387522bc2fab4bfdb76aa8e11234ed4081a9ad4163d2310b",
+  "normal_build_command": "cd crates/pokered-gba && ./build.sh",
+  "normal_boot_smoke_frames": 3000,
+  "normal_elf_sections_bytes": {
+    "iwram": 3560,
+    "ewram": 30300,
+    "bss": 65856,
+    "raw_ewram_for_heap": 165988
+  },
+  "scenario_cases": 13,
+  "scenario_min_contiguous_heap_bytes": 13256,
+  "scenario_untouched_stack_bytes": 17656,
+  "route22_completed_battles": 40,
+  "route22_min_contiguous_heap_bytes": 21560,
+  "route22_untouched_stack_bytes": 18336,
+  "hosted_tests": {
+    "renderer": 391,
+    "app": 99,
+    "core": 2580,
+    "data": 256,
+    "python_gates": 19,
+    "core_integration": 323,
+    "core_total": 2903
+  },
+  "playthrough_limit": "m01-m08 passed; m09 Route2 navigation failure also reproduced on unchanged baseline"
+}

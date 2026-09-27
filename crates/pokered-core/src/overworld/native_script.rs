@@ -913,6 +913,27 @@ impl NativeScriptEngine {
                 .contains_key("__native_coordDontGoAway_battle_before")
         {
             Some(self.oaks_lab_exit_variant())
+        } else if fn_name == "coordRivalBattle"
+            && self
+                .functions
+                .contains_key("__native_coordRivalBattle_noop")
+        {
+            let flag = |name: &str| self.interp.host().flags.get(name).copied().unwrap_or(false);
+            let wants = flag("EVENT_ROUTE22_RIVAL_WANTS_BATTLE");
+            let early = wants
+                && flag("EVENT_1ST_ROUTE22_RIVAL_BATTLE")
+                && !flag("EVENT_BEAT_ROUTE22_RIVAL_1ST_BATTLE");
+            let late = wants
+                && flag("EVENT_2ND_ROUTE22_RIVAL_BATTLE")
+                && !flag("EVENT_BEAT_ROUTE22_RIVAL_2ND_BATTLE");
+            match (early, late) {
+                (true, false) => Some("__native_coordRivalBattle_early".to_string()),
+                (false, true) => Some("__native_coordRivalBattle_late".to_string()),
+                (false, false) => Some("__native_coordRivalBattle_noop".to_string()),
+                // Corrupt/debug saves can enable both. Preserve the original
+                // sequence and re-evaluation after the first battle's result.
+                (true, true) => None,
+            }
         } else {
             None
         };
@@ -941,9 +962,7 @@ impl NativeScriptEngine {
                 }
                 Ok(cmd)
             }
-            FunctionDef::Story(stmts) => {
-                self.start_story(fn_name, stmts.as_ref())
-            }
+            FunctionDef::Story(stmts) => self.start_story(fn_name, stmts.as_ref()),
             FunctionDef::Embedded(bytes) => {
                 let stmts: Vec<StoryStmt> = serde_json::from_slice(bytes)
                     .map_err(|e| format!("decode embedded function {}: {}", fn_name, e))?;
@@ -957,14 +976,23 @@ impl NativeScriptEngine {
     fn oaks_lab_oak1_variant(&self) -> String {
         let host = self.interp.host();
         let flag = |name: &str| host.flags.get(name).copied().unwrap_or(false);
-        if flag("EVENT_GOT_POKEDEX")
-            || (flag("EVENT_BATTLED_RIVAL_IN_OAKS_LAB")
-                && host
-                    .sets
-                    .get("bag")
-                    .is_some_and(|items| items.iter().any(|item| item == "OAKS_PARCEL")))
+        if flag("EVENT_GOT_POKEDEX") {
+            let owned = host.numbers.get("pokedexOwned").copied().unwrap_or(0.0);
+            if flag("EVENT_PALLET_AFTER_GETTING_POKEBALLS") || owned >= 2.0 {
+                return format!(
+                    "__native_talkOak1_rating_{}",
+                    ((owned as usize) / 10).min(15)
+                );
+            }
+            return "__native_talkOak1_dex_other".to_string();
+        }
+        if flag("EVENT_BATTLED_RIVAL_IN_OAKS_LAB")
+            && host
+                .sets
+                .get("bag")
+                .is_some_and(|items| items.iter().any(|item| item == "OAKS_PARCEL"))
         {
-            return "talkOak1".to_string();
+            return "__native_talkOak1_parcel".to_string();
         }
         if flag("EVENT_BATTLED_RIVAL_IN_OAKS_LAB") {
             return "__native_talkOak1_battled".to_string();
@@ -1577,6 +1605,70 @@ mod tests {
     }
 
     #[test]
+    fn oaks_lab_lazy_dialogue_matches_full_script_at_every_dex_count_and_story_branch() {
+        fn run(
+            owned: usize,
+            bits: u8,
+            bag: &[String],
+            lang: &str,
+            lazy: bool,
+        ) -> (Vec<ScriptCommand>, HashMap<String, bool>) {
+            let mut engine = NativeScriptEngine::new();
+            engine.load_embedded_map("OaksLab", pokered_data::embedded_scenes::scene_functions());
+            if !lazy {
+                // Disable the native selector, retaining the exact original
+                // serialized storyline as the semantic oracle.
+                engine.functions.remove("__native_talkOak1_choose");
+            }
+            for (bit, flag) in [
+                "EVENT_GOT_POKEDEX",
+                "EVENT_BATTLED_RIVAL_IN_OAKS_LAB",
+                "EVENT_GOT_STARTER",
+                "EVENT_PALLET_AFTER_GETTING_POKEBALLS",
+                "EVENT_BEAT_ROUTE22_RIVAL_1ST_BATTLE",
+                "EVENT_GOT_POKEBALLS_FROM_OAK",
+            ]
+            .iter()
+            .enumerate()
+            {
+                engine.set_flag(flag, bits & (1 << bit) != 0);
+            }
+            engine.seed_number("pokedexOwned", owned as f64);
+            engine.seed_number("pokedexSeen", 151.0);
+            engine.seed_set("bag", bag);
+            engine.set_lang(lang);
+            let mut commands = Vec::new();
+            let mut command = engine.call_function_no_args("talkOak1").unwrap();
+            for _ in 0..128 {
+                let Some(next) = command else {
+                    return (commands, engine.get_all_flags());
+                };
+                commands.push(next);
+                command = engine.signal_done(CommandResult::Void).unwrap();
+            }
+            panic!("Oak dialogue did not complete");
+        }
+        for lang in ["en", "zh"] {
+            for owned in 0..=151 {
+                assert_eq!(
+                    run(owned, 15, &[], lang, true),
+                    run(owned, 15, &[], lang, false),
+                    "rating changed at {owned} owned, {lang}"
+                );
+            }
+            for bits in 0..64 {
+                for bag in [vec![], vec!["POKE_BALL".into()], vec!["OAKS_PARCEL".into()]] {
+                    assert_eq!(
+                        run(1, bits, &bag, lang, true),
+                        run(1, bits, &bag, lang, false),
+                        "story branch changed for flags={bits}, bag={bag:?}, {lang}"
+                    );
+                }
+            }
+        }
+    }
+
+    #[test]
     fn native_host_implements_every_cataloged_capability() {
         let mut host = NativeHost::new();
         for &name in pokered_data::script_function_catalog::POKERED_SCRIPT_FUNCTIONS {
@@ -1844,6 +1936,66 @@ mod tests {
                 assert_eq!(battles, vec![custom("startBattleSet", vec![json!(class), json!(base)])]);
                 assert_eq!(engine.get_flag(&format!("EVENT_BEAT_ROUTE22_RIVAL_{stage}_BATTLE")), outcome == "win");
                 assert_eq!(engine.get_flag("EVENT_ROUTE22_RIVAL_WANTS_BATTLE"), outcome != "win");
+            }
+        }
+    }
+
+    #[test]
+    fn route22_lazy_encounters_match_full_script_for_all_flags_results_and_rows() {
+        fn run(
+            bits: u8,
+            y: u8,
+            outcome: &str,
+            lang: &str,
+            lazy: bool,
+        ) -> (Vec<ScriptCommand>, HashMap<String, bool>) {
+            let mut engine = NativeScriptEngine::new();
+            engine.load_embedded_map("Route22", pokered_data::embedded_scenes::scene_functions());
+            if !lazy {
+                engine.functions.remove("__native_coordRivalBattle_noop");
+            }
+            for (bit, flag) in [
+                "EVENT_ROUTE22_RIVAL_WANTS_BATTLE",
+                "EVENT_1ST_ROUTE22_RIVAL_BATTLE",
+                "EVENT_2ND_ROUTE22_RIVAL_BATTLE",
+                "EVENT_BEAT_ROUTE22_RIVAL_1ST_BATTLE",
+                "EVENT_BEAT_ROUTE22_RIVAL_2ND_BATTLE",
+            ]
+            .iter()
+            .enumerate()
+            {
+                engine.set_flag(flag, bits & (1 << bit) != 0);
+            }
+            engine.set_player_position(29, y);
+            engine.set_lang(lang);
+            let mut commands = Vec::new();
+            let mut command = engine.call_function_no_args("coordRivalBattle").unwrap();
+            for _ in 0..256 {
+                let Some(next) = command else {
+                    return (commands, engine.get_all_flags());
+                };
+                let result = if matches!(&next, ScriptCommand::Custom { name, .. } if name == "startBattleSet")
+                {
+                    CommandResult::Text(outcome.into())
+                } else {
+                    CommandResult::Void
+                };
+                commands.push(next);
+                command = engine.signal_done(result).unwrap();
+            }
+            panic!("Route22 script did not complete");
+        }
+        for bits in 0..32 {
+            for y in [4, 5] {
+                for outcome in ["win", "lose"] {
+                    for lang in ["en", "zh"] {
+                        assert_eq!(
+                            run(bits, y, outcome, lang, true),
+                            run(bits, y, outcome, lang, false),
+                            "flags={bits}, y={y}, result={outcome}, lang={lang}"
+                        );
+                    }
+                }
             }
         }
     }

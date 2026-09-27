@@ -1,0 +1,48 @@
+[mgba] memory: map=80 UndergroundPathRoute8
+[mgba] [INFO] [Script] Loading map script for UndergroundPathRoute8 (key: UndergroundPathRoute8)
+[mgba] [INFO] [NativeScript] Registered 1 lazy functions for UndergroundPathRoute8
+[mgba] [INFO] [Script] Config for UndergroundPathRoute8: 1 NPCs, 0 signs, 0 coord_events
+[mgba] [INFO] [Trigger] Built 250 triggers for UndergroundPathRoute8
+[mgba] memory: map=81 RockTunnelPokecenter
+[mgba] [INFO] [Script] Loading map script for RockTunnelPokecenter (key: RockTunnelPokecenter)
+[mgba] [INFO] [NativeScript] Registered 6 lazy functions for RockTunnelPokecenter
+[mgba] [INFO] [Script] Config for RockTunnelPokecenter: 4 NPCs, 2 signs, 0 coord_events
+[mgba] [INFO] [Trigger] Built 252 triggers for RockTunnelPokecenter
+[mgba] memory: map=82 RockTunnel1F
+[mgba] [INFO] [Script] Loading map script for RockTunnel1F (key: RockTunnel1F)
+[mgba] [INFO] [NativeScript] Registered 8 lazy functions for RockTunnel1F
+[mgba] [INFO] [Script] Config for RockTunnel1F: 7 NPCs, 1 signs, 0 coord_events
+[mgba] [INFO] [Trigger] Built 253 triggers for RockTunnel1F
+[mgba] memory: map=83 PowerPlant
+[mgba] [INFO] [Script] Loading map script for PowerPlant (key: PowerPlant)
+[mgba] [INFO] [NativeScript] Registered 10 lazy functions for PowerPlant
+[mgba] [INFO] [Script] Config for PowerPlant: 9 NPCs, 0 signs, 0 coord_events
+[mgba] [INFO] [Script] on_load function: PowerPlantOnLoad
+[mgba] [INFO] [Script] Calling on_load: PowerPlantOnLoad
+[mgba] [INFO] [Trigger] Built 254 triggers for PowerPlant
+[mgba] memory: map=84 Route11Gate1F
+[mgba] [INFO] [Script] Loading map script for Route11Gate1F (key: Route11Gate1F)
+[mgba] [INFO] [NativeScript] Registered 1 lazy functions for Route11Gate1F
+[mgba] [INFO] [Script] Config for Route11Gate1F: 1 NPCs, 0 signs, 0 coord_events
+[mgba] [INFO] [Trigger] Built 254 triggers for Route11Gate1F
+[mgba] memory: map=85 DiglettsCaveRoute11
+[mgba] [INFO] [Script] Loading map script for DiglettsCaveRoute11 (key: DiglettsCaveRoute11)
+[mgba] [INFO] [NativeScript] Registered 1 lazy functions for DiglettsCaveRoute11
+[mgba] [INFO] [Script] Config for DiglettsCaveRoute11: 1 NPCs, 0 signs, 0 coord_events
+[mgba] [INFO] [Trigger] Built 254 triggers for DiglettsCaveRoute11
+[mgba] memory: map=86 Route11Gate2F
+[mgba] [INFO] [Script] Loading map script for Route11Gate2F (key: Route11Gate2F)
+[mgba] [INFO] [NativeScript] Registered 4 lazy functions for Route11Gate2F
+[mgba] [INFO] [Script] Config for Route11Gate2F: 2 NPCs, 2 signs, 0 coord_events
+[mgba] [INFO] [Trigger] Built 256 triggers for Route11Gate2F
+[mgba] memory: map=87 Route12Gate1F
+[mgba] [INFO] [Script] Loading map script for Route12Gate1F (key: Route12Gate1F)
+[mgba] [INFO] [NativeScript] Registered 1 lazy functions for Route12Gate1F
+[mgba] [INFO] [Script] Config for Route12Gate1F: 1 NPCs, 0 signs, 0 coord_events
+[mgba] [INFO] [Trigger] Built 256 triggers for Route12Gate1F
+[mgba] memory: map=88 BillsHouse
+[mgba] [INFO] [Script] Loading map script for BillsHouse (key: BillsHouse)
+[mgba] [INFO] [NativeScript] Registered 4 lazy functions for BillsHouse
+[mgba] [INFO] [Script] Config for BillsHouse: 3 NPCs, 1 signs, 0 coord_events
+[mgba] panicked at /Users/liuyanghe02/.rustup/toolchains/nightly-2025-12-07-aarch64-apple-darwin/lib/rustlib/src/rust/library/alloc/src/alloc.rs:439:13:
+memory allocation of 0 bytes failed

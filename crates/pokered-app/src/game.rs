@@ -2043,6 +2043,22 @@ impl PokemonGame {
         self.save_to_file();
     }
 
+    /// Exercise every visual command stream on the actual small-memory
+    /// target, including moves whose battle effect would otherwise miss or
+    /// end the encounter. Reuses the differential recorder's animation seam.
+    #[cfg(all(target_os = "none", feature = "repro-markers"))]
+    pub fn debug_start_memory_move(&mut self, move_id: pokered_data::moves::MoveId, player: bool) {
+        self.battle.phase = pokered_core::battle::BattlePhase::PlayerMenu;
+        self.battle_vfx = BattleVisualEffects::default();
+        self.battle_vfx.prime_move_animation_capture_scene(&self.battle);
+        self.battle_vfx.start_move_animation_capture(move_id, player);
+    }
+
+    #[cfg(all(target_os = "none", feature = "repro-markers"))]
+    pub fn debug_memory_move_finished(&self) -> bool {
+        self.battle_vfx.move_animation_capture_finished()
+    }
+
     #[cfg(target_os = "none")]
     #[inline(never)]
     fn save_to_file(&mut self) {
@@ -7312,9 +7328,11 @@ impl PokemonGame {
                     if let Some(resources) = self.resources.as_mut() {
                         resources.clear_cache();
                     }
-                    let mut snapshot = FrameBuffer::new(RenderConfig::new(160, 144), Rgba::BLACK);
                     #[cfg(target_os = "none")]
-                    snapshot.copy_from(frame_buffer);
+                    let snapshot =
+                        pokered_renderer::transition_blit::CompactSnapshot::capture(frame_buffer);
+                    #[cfg(not(target_os = "none"))]
+                    let mut snapshot = FrameBuffer::new(RenderConfig::new(160, 144), Rgba::BLACK);
                     #[cfg(not(target_os = "none"))]
                     draw_overworld(
                         &mut self.overworld,

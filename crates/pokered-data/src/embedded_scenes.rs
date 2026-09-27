@@ -164,6 +164,39 @@ mod tests {
     }
 
     #[test]
+    fn oaks_lab_late_dialogue_does_not_retain_unselected_ratings() {
+        for band in 0..=15 {
+            let name = format!("__native_talkOak1_rating_{band}");
+            let (_, _, bytes) = scene_functions()
+                .iter()
+                .find(|(map, function, _)| *map == "OaksLab" && *function == name)
+                .unwrap();
+            assert!(
+                bytes.len() < 12 * 1024,
+                "rating {band} exceeded its memory budget"
+            );
+            let statements: Vec<dotzuki_engine_dsl::ast::StoryStmt> =
+                serde_json::from_slice(bytes).unwrap();
+            // Rating comparisons are gone; the original trailing early-game
+            // conditional remains so this is identical to the compiled scene.
+            assert!(statements.len() >= 4);
+            for statement in &statements[2..statements.len() - 2] {
+                assert!(matches!(
+                    statement,
+                    dotzuki_engine_dsl::ast::StoryStmt::Speaker { .. }
+                ));
+            }
+        }
+        for name in ["__native_talkOak1_parcel", "__native_talkOak1_dex_other"] {
+            let (_, _, bytes) = scene_functions()
+                .iter()
+                .find(|(map, function, _)| *map == "OaksLab" && *function == name)
+                .unwrap();
+            assert!(bytes.len() < 12 * 1024, "{name} exceeded its memory budget");
+        }
+    }
+
+    #[test]
     fn every_lazy_function_deserializes_without_host_source_paths() {
         fn assert_spans_are_portable(value: &serde_json::Value, context: &str) {
             match value {
@@ -193,6 +226,26 @@ mod tests {
             let value: serde_json::Value = serde_json::from_slice(bytes)
                 .unwrap_or_else(|error| panic!("{context} must deserialize: {error}"));
             assert_spans_are_portable(&value, &context);
+        }
+    }
+
+    #[test]
+    fn route22_encounters_fit_individually_without_cloning_the_outer_guard() {
+        for suffix in ["early", "late", "noop"] {
+            let name = format!("__native_coordRivalBattle_{suffix}");
+            let bytes = scene_functions()
+                .iter()
+                .find(|(map, function, _)| *map == "Route22" && *function == name)
+                .map(|(_, _, bytes)| *bytes)
+                .unwrap();
+            assert!(bytes.len() < 9 * 1024, "{name}: {} bytes", bytes.len());
+            let statements: Vec<dotzuki_engine_dsl::ast::StoryStmt> =
+                serde_json::from_slice(bytes).unwrap();
+            assert!(!matches!(
+                statements.first(),
+                Some(dotzuki_engine_dsl::ast::StoryStmt::If { .. })
+            ));
+            assert_eq!(statements.is_empty(), suffix == "noop");
         }
     }
 

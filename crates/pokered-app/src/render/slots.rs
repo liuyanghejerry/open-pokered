@@ -57,21 +57,17 @@ fn tile(fb: &mut FrameBuffer, sheet: &image::RgbImage, id: u8, x: u32, y: u32, f
 // registry color index (3 - s) → gray ((3 - idx) * 85). The flash rule above
 // maps pure black (idx 3) to the color-2 gray (85).
 
-#[cfg(target_os = "none")]
+#[cfg(any(target_os = "none", all(test, feature = "gba-resource-tests")))]
 mod gba {
-    use crate::alloc_prelude::*;
-    use alloc::vec::Vec;
-
-    use pokered_renderer::resource::{AssetRoot, ResourceManager};
     use pokered_renderer::FrameBuffer;
 
     use super::Rgba;
 
-    /// One slots sheet as per-pixel GB color indices (0..=3).
+    /// Tile-major 2bpp ROM bytes; no decoded sheet or process-lifetime heap allocation.
     pub struct SlotsSheet {
         pub w: u32,
         pub h: u32,
-        idx: Vec<u8>,
+        bytes: &'static [u8],
     }
 
     impl SlotsSheet {
@@ -81,34 +77,24 @@ mod gba {
 
         pub fn color_index(&self, x: u32, y: u32) -> u8 {
             if x < self.w && y < self.h {
-                self.idx[(y * self.w + x) as usize]
+                let offset = ((y / 8 * (self.w / 8) + x / 8) * 16 + y % 8 * 2) as usize;
+                let bit = 7 - x % 8;
+                ((self.bytes[offset] >> bit) & 1) | (((self.bytes[offset + 1] >> bit) & 1) << 1)
             } else {
                 0
             }
         }
     }
 
-    fn sheet(rm: &mut ResourceManager, name: &str) -> SlotsSheet {
-        let cached = rm
-            .load_slots(name)
+    pub(super) fn sheet(name: &str) -> SlotsSheet {
+        let bytes = pokered_renderer::gba_assets::get_preconverted_asset("slots", name)
             .expect("slots sheet in pre-converted registry");
-        let (w, h) = cached.source_size;
-        let tpr = (w / 8) as usize;
-        let mut idx = vec![0u8; (w * h) as usize];
-        for i in 0..cached.tileset.len() {
-            let (tx, ty) = (i % tpr, i / tpr);
-            let tile = cached.tileset.get(i);
-            for r in 0..8usize {
-                for c in 0..8usize {
-                    let px = (tx * 8 + c) as u32;
-                    let py = (ty * 8 + r) as u32;
-                    idx[(py * w + px) as usize] = tile.get(r, c);
-                }
-            }
-        }
-        SlotsSheet { w, h, idx }
+        let (w, h) = pokered_renderer::gba_rom_tile_dims("slots", name)
+            .expect("slots sheet dimensions");
+        SlotsSheet { w, h, bytes }
     }
 
+    #[cfg(target_os = "none")]
     pub fn tiles() -> &'static (SlotsSheet, SlotsSheet) {
         // Single-threaded GBA: build once per process.
         // thumbv4t has no atomics; single-threaded GBA builds once per process.
@@ -116,8 +102,7 @@ mod gba {
         unsafe {
             let slot = &mut *core::ptr::addr_of_mut!(TILES);
             slot.get_or_insert_with(|| {
-                let mut rm = ResourceManager::new(AssetRoot::new());
-                (sheet(&mut rm, "red_slots_1"), sheet(&mut rm, "red_slots_2"))
+                (sheet("red_slots_1"), sheet("red_slots_2"))
             })
         }
     }
@@ -295,6 +280,37 @@ pub fn redraw_slots_bet_cursor(
 
 #[cfg(test)]
 mod tests {
+    #[cfg(feature = "gba-resource-tests")]
+    #[test]
+    fn gba_rom_tiles_match_png_with_and_without_reward_flash() {
+        use pokered_renderer::{FrameBuffer, RenderConfig, Rgba};
+
+        for (name, png) in [
+            ("red_slots_1", super::tiles().0.clone()),
+            ("red_slots_2", super::tiles().1.clone()),
+        ] {
+            let rom = super::gba::sheet(name);
+            assert_eq!((rom.w, rom.h), png.dimensions());
+            for flash in [false, true] {
+                for id in 0..(rom.w / 8 * (rom.h / 8)) as u8 {
+                    let mut actual = FrameBuffer::new(RenderConfig::new(8, 8), Rgba::WHITE);
+                    let mut expected = FrameBuffer::new(RenderConfig::new(8, 8), Rgba::WHITE);
+                    super::gba::tile(&mut actual, &rom, id, 0, 0, flash);
+                    super::tile(&mut expected, &png, id, 0, 0, flash);
+                    for y in 0..8 {
+                        for x in 0..8 {
+                            assert_eq!(
+                                actual.get_pixel(x, y),
+                                expected.get_pixel(x, y),
+                                "{name} tile {id}, flash={flash}, ({x},{y})"
+                            );
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     use super::*;
     use dotzuki_engine::render_config::RenderConfig;
     use pokered_core::slots_screen::SlotsInput;

@@ -1,0 +1,353 @@
+[mgba] repro: heap low 32768B at frame 0
+[mgba] [INFO] mk: transition to LanguageSelect free=32768B
+[mgba] [INFO] mk: transition to IntroScene free=32768B
+[mgba] [INFO] mk: transition to TitleScreen free=32768B
+[mgba] [INFO] mk: transition to MainMenu free=32768B
+[mgba] [INFO] mk: transition to OakSpeech free=32768B
+[mgba] repro: heap low 29632B at frame 2246
+[mgba] [INFO] mk: transition to Overworld free=29632B
+[mgba] route22: START round=1 case=before-parcel-lower
+[mgba] route22: frame=4300 round=1 screen=Overworld free=32768B stack=18336B
+[mgba] repro: heap low 18464B at frame 4372
+[mgba] route22: frame=4900 round=1 screen=Overworld free=18464B stack=18336B
+[mgba] [INFO] mk: transition to Battle free=18464B
+[mgba] route22: frame=5503 round=1 screen=Battle free=18464B stack=18336B
+[mgba] [INFO] mk: transition to Overworld free=18464B
+[mgba] route22: frame=6104 round=1 screen=Overworld free=18464B stack=18336B
+[mgba] route22: PASS round=1 case=before-parcel-lower
+[mgba] route22: START round=2 case=before-parcel-upper
+[mgba] route22: frame=6705 round=2 screen=Overworld free=19456B stack=18336B
+[mgba] [INFO] mk: transition to Battle free=19456B
+[mgba] route22: frame=7305 round=2 screen=Battle free=19456B stack=18336B
+[mgba] [INFO] mk: transition to Overworld free=19456B
+[mgba] route22: frame=7908 round=2 screen=Overworld free=19456B stack=18336B
+[mgba] route22: PASS round=2 case=before-parcel-upper
+[mgba] route22: START round=3 case=after-parcel-lower
+[mgba] repro: heap low 17696B at frame 8473
+[mgba] route22: frame=8508 round=3 screen=Overworld free=17696B stack=18336B
+[mgba] [INFO] mk: transition to Battle free=17696B
+[mgba] route22: frame=9109 round=3 screen=Battle free=17696B stack=18336B
+[mgba] route22: frame=9711 round=3 screen=Battle free=17696B stack=18336B
+[mgba] [INFO] mk: transition to Overworld free=17696B
+[mgba] route22: frame=10311 round=3 screen=Overworld free=17696B stack=18336B
+[mgba] route22: PASS round=3 case=after-parcel-lower
+[mgba] route22: START round=4 case=final-upper
+[mgba] route22: frame=10912 round=4 screen=Overworld free=19864B stack=18336B
+[mgba] [INFO] mk: transition to Battle free=19864B
+[mgba] route22: frame=11512 round=4 screen=Battle free=19864B stack=18336B
+[mgba] route22: frame=12112 round=4 screen=Battle free=19864B stack=18336B
+[mgba] repro: heap low 16728B at frame 12257
+[mgba] repro: heap low 13592B at frame 12543
+[mgba] route22: frame=12713 round=4 screen=Battle free=13592B stack=18336B
+[mgba] repro: heap low 10456B at frame 12833
+[mgba] route22: frame=13313 round=4 screen=Battle free=10456B stack=18336B
+[mgba] [INFO] mk: transition to Overworld free=10456B
+[mgba] route22: PASS round=4 case=final-upper
+[mgba] route22: START round=5 case=final-lower
+[mgba] route22: frame=14023 round=5 screen=Overworld free=49152B stack=18336B
+[mgba] [INFO] mk: transition to Battle free=17560B
+[mgba] route22: frame=14624 round=5 screen=Battle free=17560B stack=18336B
+[mgba] route22: frame=15226 round=5 screen=Battle free=17560B stack=18336B
+[mgba] route22: frame=15829 round=5 screen=Battle free=17560B stack=18336B
+[mgba] route22: frame=16433 round=5 screen=Battle free=14424B stack=18336B
+[mgba] route22: frame=17033 round=5 screen=Battle free=11288B stack=18336B
+[mgba] [INFO] mk: transition to Overworld free=11288B
+[mgba] route22: frame=17634 round=5 screen=Overworld free=17560B stack=18336B
+[mgba] route22: PASS round=5 case=final-lower
+[mgba] route22: START round=6 case=before-parcel-lower
+[mgba] route22: frame=18234 round=6 screen=Overworld free=19168B stack=18336B
+[mgba] [INFO] mk: transition to Battle free=19168B
+[mgba] route22: frame=18834 round=6 screen=Battle free=19168B stack=18336B
+[mgba] [INFO] mk: transition to Overworld free=14048B
+[mgba] route22: frame=19436 round=6 screen=Overworld free=19168B stack=18336B
+[mgba] route22: PASS round=6 case=before-parcel-lower
+[mgba] route22: START round=7 case=before-parcel-upper
+[mgba] route22: frame=20036 round=7 screen=Overworld free=19760B stack=18336B
+[mgba] [INFO] mk: transition to Battle free=19760B
+[mgba] route22: frame=20636 round=7 screen=Battle free=19760B stack=18336B
+[mgba] route22: frame=21239 round=7 screen=Battle free=14640B stack=18336B
+[mgba] [INFO] mk: transition to Overworld free=14640B
+[mgba] route22: frame=21839 round=7 screen=Overworld free=19760B stack=18336B
+[mgba] route22: PASS round=7 case=before-parcel-upper
+[mgba] route22: START round=8 case=after-parcel-lower
+[mgba] route22: frame=22440 round=8 screen=Overworld free=17392B stack=18336B
+[mgba] [INFO] mk: transition to Battle free=17392B
+[mgba] route22: frame=23044 round=8 screen=Battle free=17392B stack=18336B
+[mgba] [INFO] mk: transition to Overworld free=17392B
+[mgba] route22: frame=23645 round=8 screen=Overworld free=17392B stack=18336B
+[mgba] route22: PASS round=8 case=after-parcel-lower
+[mgba] route22: START round=9 case=final-upper
+[mgba] route22: frame=24245 round=9 screen=Overworld free=19864B stack=18336B
+[mgba] [INFO] mk: transition to Battle free=19864B
+[mgba] route22: frame=24845 round=9 screen=Battle free=19864B stack=18336B
+[mgba] route22: frame=25445 round=9 screen=Battle free=19864B stack=18336B
+[mgba] route22: frame=26048 round=9 screen=Battle free=16728B stack=18336B
+[mgba] route22: frame=26650 round=9 screen=Battle free=10456B stack=18336B
+[mgba] [INFO] mk: transition to Overworld free=10456B
+[mgba] route22: frame=27252 round=9 screen=Overworld free=19864B stack=18336B
+[mgba] route22: PASS round=9 case=final-upper
+[mgba] route22: START round=10 case=final-lower
+[mgba] route22: frame=27852 round=10 screen=Overworld free=17560B stack=18336B
+[mgba] [INFO] mk: transition to Battle free=17560B
+[mgba] route22: frame=28452 round=10 screen=Battle free=17560B stack=18336B
+[mgba] route22: frame=29054 round=10 screen=Battle free=17560B stack=18336B
+[mgba] route22: frame=29656 round=10 screen=Battle free=14424B stack=18336B
+[mgba] route22: frame=30259 round=10 screen=Battle free=11288B stack=18336B
+[mgba] [INFO] mk: transition to Overworld free=11288B
+[mgba] route22: frame=30861 round=10 screen=Overworld free=17560B stack=18336B
+[mgba] route22: PASS round=10 case=final-lower
+[mgba] route22: START round=11 case=before-parcel-lower
+[mgba] route22: frame=31462 round=11 screen=Overworld free=19168B stack=18336B
+[mgba] [INFO] mk: transition to Battle free=19168B
+[mgba] route22: frame=32065 round=11 screen=Battle free=14048B stack=18336B
+[mgba] [INFO] mk: transition to Overworld free=14048B
+[mgba] route22: frame=32667 round=11 screen=Overworld free=19168B stack=18336B
+[mgba] route22: PASS round=11 case=before-parcel-lower
+[mgba] route22: START round=12 case=before-parcel-upper
+[mgba] route22: frame=33267 round=12 screen=Overworld free=19456B stack=18336B
+[mgba] [INFO] mk: transition to Battle free=19456B
+[mgba] route22: frame=33867 round=12 screen=Battle free=19456B stack=18336B
+[mgba] route22: frame=34467 round=12 screen=Battle free=14336B stack=18336B
+[mgba] [INFO] mk: transition to Overworld free=14336B
+[mgba] route22: frame=35067 round=12 screen=Overworld free=19456B stack=18336B
+[mgba] route22: PASS round=12 case=before-parcel-upper
+[mgba] route22: START round=13 case=after-parcel-lower
+[mgba] route22: frame=35667 round=13 screen=Overworld free=17392B stack=18336B
+[mgba] [INFO] mk: transition to Battle free=17392B
+[mgba] route22: frame=36270 round=13 screen=Battle free=17392B stack=18336B
+[mgba] [INFO] mk: transition to Overworld free=17392B
+[mgba] route22: frame=36871 round=13 screen=Overworld free=17392B stack=18336B
+[mgba] route22: PASS round=13 case=after-parcel-lower
+[mgba] route22: START round=14 case=final-upper
+[mgba] route22: frame=37471 round=14 screen=Overworld free=20168B stack=18336B
+[mgba] [INFO] mk: transition to Battle free=20168B
+[mgba] route22: frame=38071 round=14 screen=Battle free=20168B stack=18336B
+[mgba] route22: frame=38672 round=14 screen=Battle free=17032B stack=18336B
+[mgba] route22: frame=39274 round=14 screen=Battle free=13896B stack=18336B
+[mgba] repro: heap low 7624B at frame 39653
+[mgba] route22: frame=39874 round=14 screen=Battle free=7624B stack=18336B
+[mgba] [INFO] mk: transition to Overworld free=7624B
+[mgba] route22: frame=40474 round=14 screen=Overworld free=20168B stack=18336B
+[mgba] route22: PASS round=14 case=final-upper
+[mgba] route22: START round=15 case=final-lower
+[mgba] route22: frame=41075 round=15 screen=Overworld free=17560B stack=18336B
+[mgba] [INFO] mk: transition to Battle free=17560B
+[mgba] route22: frame=41676 round=15 screen=Battle free=17560B stack=18336B
+[mgba] route22: frame=42278 round=15 screen=Battle free=17560B stack=18336B
+[mgba] route22: frame=42880 round=15 screen=Battle free=14424B stack=18336B
+[mgba] route22: frame=43484 round=15 screen=Battle free=11288B stack=18336B
+[mgba] [INFO] mk: transition to Overworld free=11288B
+[mgba] route22: frame=44086 round=15 screen=Overworld free=17560B stack=18336B
+[mgba] route22: PASS round=15 case=final-lower
+[mgba] route22: START round=16 case=before-parcel-lower
+[mgba] route22: frame=44686 round=16 screen=Overworld free=19472B stack=18336B
+[mgba] [INFO] mk: transition to Battle free=19472B
+[mgba] route22: frame=45291 round=16 screen=Battle free=19472B stack=18336B
+[mgba] [INFO] mk: transition to Overworld free=14352B
+[mgba] route22: frame=45893 round=16 screen=Overworld free=19472B stack=18336B
+[mgba] route22: PASS round=16 case=before-parcel-lower
+[mgba] route22: START round=17 case=before-parcel-upper
+[mgba] route22: frame=46493 round=17 screen=Overworld free=19456B stack=18336B
+[mgba] [INFO] mk: transition to Battle free=19456B
+[mgba] route22: frame=47093 round=17 screen=Battle free=19456B stack=18336B
+[mgba] route22: frame=47697 round=17 screen=Battle free=14336B stack=18336B
+[mgba] [INFO] mk: transition to Overworld free=14336B
+[mgba] route22: frame=48297 round=17 screen=Overworld free=19456B stack=18336B
+[mgba] route22: PASS round=17 case=before-parcel-upper
+[mgba] route22: START round=18 case=after-parcel-lower
+[mgba] route22: frame=48898 round=18 screen=Overworld free=17392B stack=18336B
+[mgba] [INFO] mk: transition to Battle free=17392B
+[mgba] route22: frame=49498 round=18 screen=Battle free=17392B stack=18336B
+[mgba] [INFO] mk: transition to Overworld free=17392B
+[mgba] route22: frame=50099 round=18 screen=Overworld free=17392B stack=18336B
+[mgba] route22: PASS round=18 case=after-parcel-lower
+[mgba] route22: START round=19 case=final-upper
+[mgba] route22: frame=50699 round=19 screen=Overworld free=19864B stack=18336B
+[mgba] [INFO] mk: transition to Battle free=19864B
+[mgba] route22: frame=51300 round=19 screen=Battle free=19864B stack=18336B
+[mgba] route22: frame=51900 round=19 screen=Battle free=19864B stack=18336B
+[mgba] route22: frame=52500 round=19 screen=Battle free=16728B stack=18336B
+[mgba] route22: frame=53100 round=19 screen=Battle free=10456B stack=18336B
+[mgba] [INFO] mk: transition to Overworld free=10456B
+[mgba] route22: frame=53702 round=19 screen=Overworld free=19864B stack=18336B
+[mgba] route22: PASS round=19 case=final-upper
+[mgba] route22: START round=20 case=final-lower
+[mgba] route22: frame=54302 round=20 screen=Overworld free=17560B stack=18336B
+[mgba] [INFO] mk: transition to Battle free=17560B
+[mgba] route22: frame=54902 round=20 screen=Battle free=17560B stack=18336B
+[mgba] route22: frame=55503 round=20 screen=Battle free=17560B stack=18336B
+[mgba] route22: frame=56107 round=20 screen=Battle free=14424B stack=18336B
+[mgba] route22: frame=56707 round=20 screen=Battle free=11288B stack=18336B
+[mgba] [INFO] mk: transition to Overworld free=11288B
+[mgba] route22: frame=57307 round=20 screen=Overworld free=17560B stack=18336B
+[mgba] route22: PASS round=20 case=final-lower
+[mgba] route22: START round=21 case=before-parcel-lower
+[mgba] route22: frame=57909 round=21 screen=Overworld free=19168B stack=18336B
+[mgba] [INFO] mk: transition to Battle free=19168B
+[mgba] route22: frame=58511 round=21 screen=Battle free=14048B stack=18336B
+[mgba] [INFO] mk: transition to Overworld free=14048B
+[mgba] route22: frame=59113 round=21 screen=Overworld free=19168B stack=18336B
+[mgba] route22: PASS round=21 case=before-parcel-lower
+[mgba] route22: START round=22 case=before-parcel-upper
+[mgba] route22: frame=59713 round=22 screen=Overworld free=19760B stack=18336B
+[mgba] [INFO] mk: transition to Battle free=19760B
+[mgba] route22: frame=60313 round=22 screen=Battle free=19760B stack=18336B
+[mgba] route22: frame=60914 round=22 screen=Battle free=14640B stack=18336B
+[mgba] [INFO] mk: transition to Overworld free=14640B
+[mgba] route22: frame=61515 round=22 screen=Overworld free=19760B stack=18336B
+[mgba] route22: PASS round=22 case=before-parcel-upper
+[mgba] route22: START round=23 case=after-parcel-lower
+[mgba] route22: frame=62116 round=23 screen=Overworld free=17392B stack=18336B
+[mgba] [INFO] mk: transition to Battle free=17392B
+[mgba] route22: frame=62719 round=23 screen=Battle free=17392B stack=18336B
+[mgba] [INFO] mk: transition to Overworld free=17392B
+[mgba] route22: frame=63320 round=23 screen=Overworld free=17392B stack=18336B
+[mgba] route22: PASS round=23 case=after-parcel-lower
+[mgba] route22: START round=24 case=final-upper
+[mgba] route22: frame=63920 round=24 screen=Overworld free=20168B stack=18336B
+[mgba] [INFO] mk: transition to Battle free=20168B
+[mgba] route22: frame=64520 round=24 screen=Battle free=20168B stack=18336B
+[mgba] route22: frame=65120 round=24 screen=Battle free=17032B stack=18336B
+[mgba] route22: frame=65722 round=24 screen=Battle free=13896B stack=18336B
+[mgba] route22: frame=66325 round=24 screen=Battle free=7624B stack=18336B
+[mgba] [INFO] mk: transition to Overworld free=7624B
+[mgba] route22: frame=66925 round=24 screen=Overworld free=20168B stack=18336B
+[mgba] route22: PASS round=24 case=final-upper
+[mgba] route22: START round=25 case=final-lower
+[mgba] route22: frame=67525 round=25 screen=Overworld free=17560B stack=18336B
+[mgba] [INFO] mk: transition to Battle free=17560B
+[mgba] route22: frame=68126 round=25 screen=Battle free=17560B stack=18336B
+[mgba] route22: frame=68728 round=25 screen=Battle free=17560B stack=18336B
+[mgba] route22: frame=69329 round=25 screen=Battle free=17560B stack=18336B
+[mgba] route22: frame=69929 round=25 screen=Battle free=11288B stack=18336B
+[mgba] [INFO] mk: transition to Overworld free=11288B
+[mgba] route22: frame=70531 round=25 screen=Overworld free=17560B stack=18336B
+[mgba] route22: PASS round=25 case=final-lower
+[mgba] route22: START round=26 case=before-parcel-lower
+[mgba] route22: frame=71132 round=26 screen=Overworld free=19472B stack=18336B
+[mgba] [INFO] mk: transition to Battle free=19472B
+[mgba] route22: frame=71732 round=26 screen=Battle free=19472B stack=18336B
+[mgba] route22: frame=72332 round=26 screen=Battle free=14352B stack=18336B
+[mgba] [INFO] mk: transition to Overworld free=14352B
+[mgba] route22: PASS round=26 case=before-parcel-lower
+[mgba] route22: START round=27 case=before-parcel-upper
+[mgba] route22: frame=73013 round=27 screen=Overworld free=49152B stack=18336B
+[mgba] route22: frame=73614 round=27 screen=Overworld free=19456B stack=18336B
+[mgba] [INFO] mk: transition to Battle free=19456B
+[mgba] route22: frame=74214 round=27 screen=Battle free=14336B stack=18336B
+[mgba] [INFO] mk: transition to Overworld free=14336B
+[mgba] route22: frame=74817 round=27 screen=Overworld free=19456B stack=18336B
+[mgba] route22: PASS round=27 case=before-parcel-upper
+[mgba] route22: START round=28 case=after-parcel-lower
+[mgba] route22: frame=75417 round=28 screen=Overworld free=17392B stack=18336B
+[mgba] [INFO] mk: transition to Battle free=17392B
+[mgba] route22: frame=76020 round=28 screen=Battle free=17392B stack=18336B
+[mgba] [INFO] mk: transition to Overworld free=17392B
+[mgba] route22: frame=76622 round=28 screen=Overworld free=17392B stack=18336B
+[mgba] route22: PASS round=28 case=after-parcel-lower
+[mgba] route22: START round=29 case=final-upper
+[mgba] route22: frame=77224 round=29 screen=Overworld free=49152B stack=18336B
+[mgba] [INFO] mk: transition to Battle free=19864B
+[mgba] route22: frame=77824 round=29 screen=Battle free=19864B stack=18336B
+[mgba] route22: frame=78425 round=29 screen=Battle free=19864B stack=18336B
+[mgba] route22: frame=79025 round=29 screen=Battle free=16728B stack=18336B
+[mgba] route22: frame=79626 round=29 screen=Battle free=10456B stack=18336B
+[mgba] [INFO] mk: transition to Overworld free=10456B
+[mgba] route22: frame=80226 round=29 screen=Overworld free=19864B stack=18336B
+[mgba] route22: PASS round=29 case=final-upper
+[mgba] route22: START round=30 case=final-lower
+[mgba] route22: frame=80827 round=30 screen=Overworld free=49152B stack=18336B
+[mgba] [INFO] mk: transition to Battle free=17560B
+[mgba] route22: frame=81427 round=30 screen=Battle free=17560B stack=18336B
+[mgba] route22: frame=82027 round=30 screen=Battle free=17560B stack=18336B
+[mgba] route22: frame=82631 round=30 screen=Battle free=17560B stack=18336B
+[mgba] route22: frame=83231 round=30 screen=Battle free=11288B stack=18336B
+[mgba] [INFO] mk: transition to Overworld free=11288B
+[mgba] route22: frame=83833 round=30 screen=Overworld free=17560B stack=18336B
+[mgba] route22: PASS round=30 case=final-lower
+[mgba] route22: START round=31 case=before-parcel-lower
+[mgba] route22: frame=84433 round=31 screen=Overworld free=19168B stack=18336B
+[mgba] [INFO] mk: transition to Battle free=19168B
+[mgba] route22: frame=85033 round=31 screen=Battle free=19168B stack=18336B
+[mgba] [INFO] mk: transition to Overworld free=14048B
+[mgba] route22: frame=85634 round=31 screen=Overworld free=19168B stack=18336B
+[mgba] route22: PASS round=31 case=before-parcel-lower
+[mgba] route22: START round=32 case=before-parcel-upper
+[mgba] route22: frame=86235 round=32 screen=Overworld free=49152B stack=18336B
+[mgba] [INFO] mk: transition to Battle free=19760B
+[mgba] route22: frame=86839 round=32 screen=Battle free=19760B stack=18336B
+[mgba] route22: frame=87442 round=32 screen=Battle free=14640B stack=18336B
+[mgba] [INFO] mk: transition to Overworld free=14640B
+[mgba] route22: frame=88042 round=32 screen=Overworld free=19760B stack=18336B
+[mgba] route22: PASS round=32 case=before-parcel-upper
+[mgba] route22: START round=33 case=after-parcel-lower
+[mgba] route22: frame=88642 round=33 screen=Overworld free=17392B stack=18336B
+[mgba] [INFO] mk: transition to Battle free=17392B
+[mgba] route22: frame=89242 round=33 screen=Battle free=17392B stack=18336B
+[mgba] [INFO] mk: transition to Overworld free=17392B
+[mgba] route22: frame=89844 round=33 screen=Overworld free=17392B stack=18336B
+[mgba] route22: PASS round=33 case=after-parcel-lower
+[mgba] route22: START round=34 case=final-upper
+[mgba] route22: frame=90445 round=34 screen=Overworld free=20168B stack=18336B
+[mgba] [INFO] mk: transition to Battle free=20168B
+[mgba] route22: frame=91045 round=34 screen=Battle free=20168B stack=18336B
+[mgba] route22: frame=91645 round=34 screen=Battle free=17032B stack=18336B
+[mgba] route22: frame=92248 round=34 screen=Battle free=13896B stack=18336B
+[mgba] route22: frame=92848 round=34 screen=Battle free=7624B stack=18336B
+[mgba] [INFO] mk: transition to Overworld free=7624B
+[mgba] route22: frame=93448 round=34 screen=Overworld free=20168B stack=18336B
+[mgba] route22: PASS round=34 case=final-upper
+[mgba] route22: START round=35 case=final-lower
+[mgba] route22: frame=94048 round=35 screen=Overworld free=17560B stack=18336B
+[mgba] [INFO] mk: transition to Battle free=17560B
+[mgba] route22: frame=94652 round=35 screen=Battle free=17560B stack=18336B
+[mgba] route22: frame=95254 round=35 screen=Battle free=17560B stack=18336B
+[mgba] route22: frame=95858 round=35 screen=Battle free=14424B stack=18336B
+[mgba] route22: frame=96462 round=35 screen=Battle free=11288B stack=18336B
+[mgba] [INFO] mk: transition to Overworld free=11288B
+[mgba] route22: frame=97063 round=35 screen=Overworld free=17560B stack=18336B
+[mgba] route22: PASS round=35 case=final-lower
+[mgba] route22: START round=36 case=before-parcel-lower
+[mgba] route22: frame=97665 round=36 screen=Overworld free=19472B stack=18336B
+[mgba] [INFO] mk: transition to Battle free=19472B
+[mgba] route22: frame=98267 round=36 screen=Battle free=14352B stack=18336B
+[mgba] [INFO] mk: transition to Overworld free=14352B
+[mgba] route22: frame=98869 round=36 screen=Overworld free=19472B stack=18336B
+[mgba] route22: PASS round=36 case=before-parcel-lower
+[mgba] route22: START round=37 case=before-parcel-upper
+[mgba] route22: frame=99469 round=37 screen=Overworld free=19456B stack=18336B
+[mgba] [INFO] mk: transition to Battle free=19456B
+[mgba] route22: frame=100069 round=37 screen=Battle free=19456B stack=18336B
+[mgba] route22: frame=100671 round=37 screen=Battle free=14336B stack=18336B
+[mgba] [INFO] mk: transition to Overworld free=14336B
+[mgba] route22: PASS round=37 case=before-parcel-upper
+[mgba] route22: START round=38 case=after-parcel-lower
+[mgba] route22: frame=101361 round=38 screen=Overworld free=49152B stack=18336B
+[mgba] route22: frame=101961 round=38 screen=Overworld free=17696B stack=18336B
+[mgba] [INFO] mk: transition to Battle free=17696B
+[mgba] route22: frame=102565 round=38 screen=Battle free=17696B stack=18336B
+[mgba] [INFO] mk: transition to Overworld free=17696B
+[mgba] route22: frame=103165 round=38 screen=Overworld free=17696B stack=18336B
+[mgba] route22: PASS round=38 case=after-parcel-lower
+[mgba] route22: START round=39 case=final-upper
+[mgba] route22: frame=103767 round=39 screen=Overworld free=19864B stack=18336B
+[mgba] [INFO] mk: transition to Battle free=19864B
+[mgba] route22: frame=104370 round=39 screen=Battle free=19864B stack=18336B
+[mgba] route22: frame=104970 round=39 screen=Battle free=19864B stack=18336B
+[mgba] route22: frame=105570 round=39 screen=Battle free=13592B stack=18336B
+[mgba] route22: frame=106173 round=39 screen=Battle free=10456B stack=18336B
+[mgba] [INFO] mk: transition to Overworld free=10456B
+[mgba] route22: frame=106774 round=39 screen=Overworld free=19864B stack=18336B
+[mgba] route22: PASS round=39 case=final-upper
+[mgba] route22: START round=40 case=final-lower
+[mgba] route22: frame=107375 round=40 screen=Overworld free=17560B stack=18336B
+[mgba] [INFO] mk: transition to Battle free=17560B
+[mgba] route22: frame=107977 round=40 screen=Battle free=17560B stack=18336B
+[mgba] route22: frame=108581 round=40 screen=Battle free=17560B stack=18336B
+[mgba] route22: frame=109183 round=40 screen=Battle free=14424B stack=18336B
+[mgba] route22: frame=109785 round=40 screen=Battle free=11288B stack=18336B
+[mgba] [INFO] mk: transition to Overworld free=11288B
+[mgba] route22: frame=110386 round=40 screen=Overworld free=17560B stack=18336B
+[mgba] route22: PASS round=40 case=final-lower
+[mgba] [INFO] gba: save written to cartridge SRAM
+[mgba] route22: ALL PASS rounds=40 save=ok stack=18336B

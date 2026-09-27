@@ -24,6 +24,7 @@ use pokered_renderer::battle_scene::{
     BallIndicators, BallStatus, EnemyHud, PlayerHud, StatusCondition,
 };
 use pokered_renderer::battle_transition::{BattleTransitionKind, BattleTransitionState};
+#[cfg(not(target_os = "none"))]
 use pokered_renderer::transition_blit::TransitionTarget;
 use pokered_renderer::embedded_font::draw_text;
 use pokered_renderer::gen1_battle_anim::{
@@ -543,7 +544,10 @@ pub struct BattleVisualEffects {
     /// frontend, which owns the audio device.
     pending_ball_sfx: VecDeque<SfxId>,
     scheduled_ball_sfx: Vec<(u8, SfxId)>,
+    #[cfg(not(target_os = "none"))]
     pub overworld_snapshot: Option<FrameBuffer>,
+    #[cfg(target_os = "none")]
+    pub overworld_snapshot: Option<pokered_renderer::transition_blit::CompactSnapshot>,
     pub victory_music_played: bool,
     #[cfg(target_os = "none")]
     #[cfg(target_os = "none")]
@@ -609,6 +613,7 @@ impl BattleVisualEffects {
             && !self.fx.is_animating()
     }
 
+    #[cfg(not(target_os = "none"))]
     pub fn render_transition(&self, source: &FrameBuffer, dest: &mut FrameBuffer) -> bool {
         if let Some(ref ts) = self.transition_state {
             let source = TransitionTarget::source(source);
@@ -617,6 +622,17 @@ impl BattleVisualEffects {
         } else {
             false
         }
+    }
+
+    #[cfg(target_os = "none")]
+    pub fn render_transition(
+        &self,
+        source: &pokered_renderer::transition_blit::CompactSnapshot,
+        dest: &mut FrameBuffer,
+    ) -> bool {
+        self.transition_state
+            .as_ref()
+            .is_some_and(|ts| source.render(ts, dest))
     }
 
     pub fn clear_snapshot(&mut self) {
@@ -3218,25 +3234,23 @@ impl BattleVisualEffects {
             (shifted_x, normal_x)
         };
 
-        let mut row = Vec::with_capacity(56 * transition_height as usize);
-        for py in y..y + transition_height {
-            for px in source_x..source_x + 56 {
-                row.push(fb.get_pixel(px as u32, py).unwrap_or(Rgba::WHITE));
-            }
-        }
-
+        // Only horizontal movement: one row is sufficient even when source
+        // and destination overlap. The enemy's 48 rows previously allocated
+        // 10,752 bytes alongside the battle's retained script and sprites.
+        let mut row = [Rgba::WHITE; 56];
         let clear_x = normal_x.min(shifted_x) as u32;
         for py in y..y + transition_height {
+            for (px, pixel) in row.iter_mut().enumerate() {
+                *pixel = fb.get_pixel((source_x + px as i32) as u32, py).unwrap_or(Rgba::WHITE);
+            }
             for px in clear_x..clear_x + 64 {
                 fb.set_pixel(px, py, Rgba::WHITE);
             }
-        }
-        for py in 0..transition_height {
-            for px in 0..56u32 {
+            for (px, &pixel) in row.iter().enumerate() {
                 fb.set_pixel(
                     (dest_x + px as i32) as u32,
-                    y + py,
-                    row[(py * 56 + px) as usize],
+                    py,
+                    pixel,
                 );
             }
         }
@@ -3855,7 +3869,10 @@ pub fn draw_battle(
         // (BattleTransition_Circle/DoubleCircle call BattleTransition_FlashScreen
         // first). Draw the snapshot, then apply the palette strobe on top.
         if let Some(snap) = effects.overworld_snapshot.as_ref() {
+            #[cfg(not(target_os = "none"))]
             fb.copy_from(snap);
+            #[cfg(target_os = "none")]
+            snap.restore(fb);
         } else {
             fb.clear(Rgba::BLACK);
         }
@@ -4850,16 +4867,23 @@ pub fn draw_battle(
         // Hardware OAM is composited after the window/background, so move
         // objects may cover the battle text box just as they do on the Game Boy.
         if effects.fx.objects_active() {
-            let ts0 = rm
-                .load_battle("move_anim_0")
-                .map(|c| c.tileset.clone())
-                .ok();
-            let ts1 = rm
-                .load_battle("move_anim_1")
-                .map(|c| c.tileset.clone())
-                .ok();
-            if let (Some(ts0), Some(ts1)) = (ts0, ts1) {
-                effects.fx.render_objects(fb, &ts0, &ts1, pal);
+            #[cfg(target_os = "none")]
+            if let Ok((ts0, ts1)) = rm.load_battle_animation_pair() {
+                effects.fx.render_objects(fb, ts0, ts1, pal);
+            }
+            #[cfg(not(target_os = "none"))]
+            {
+                let ts0 = rm
+                    .load_battle("move_anim_0")
+                    .map(|c| c.tileset.clone())
+                    .ok();
+                let ts1 = rm
+                    .load_battle("move_anim_1")
+                    .map(|c| c.tileset.clone())
+                    .ok();
+                if let (Some(ts0), Some(ts1)) = (ts0, ts1) {
+                    effects.fx.render_objects(fb, &ts0, &ts1, pal);
+                }
             }
         }
         if !effects.anim_layer.entries.is_empty() {
@@ -5131,6 +5155,80 @@ fn draw_battle_move_menu_overlay(
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn horizontal_raster_row_scratch_matches_full_region_snapshot() {
+        for side in [MonSide::Player, MonSide::Enemy] {
+            for resetting in [false, true] {
+                for profile in [
+                    MoveMonResetProfile::Normal,
+                    MoveMonResetProfile::AfterSingleFlash,
+                    MoveMonResetProfile::AfterDoubleFlash,
+                ] {
+                    for bottom_first in [false, true] {
+                        for frame in 0..6 {
+                            let anim = MoveMonH {
+                                side,
+                                frame,
+                                resetting,
+                                reset_profile: profile,
+                                bottom_first_entry: bottom_first,
+                            };
+                            let mut actual = FrameBuffer::new(
+                                dotzuki_engine::render_config::RenderConfig::new(160, 144),
+                                Rgba::WHITE,
+                            );
+                            for y in 0..144 {
+                                for x in 0..160 {
+                                    actual.set_pixel(
+                                        x,
+                                        y,
+                                        GRAYSCALE_PALETTE.colors[((x / 3 + y / 5) % 4) as usize],
+                                    );
+                                }
+                            }
+                            let mut expected = actual.clone();
+                            if let Some(toward) = anim.top_row_transition() {
+                                let (normal, y, dx, height) = if side == MonSide::Player {
+                                    (8i32, 40, 8, 8)
+                                } else {
+                                    (96, 0, -8, 48)
+                                };
+                                let (source, dest) = if toward {
+                                    (normal, normal + dx)
+                                } else {
+                                    (normal + dx, normal)
+                                };
+                                let pixels: Vec<_> = (y..y + height)
+                                    .flat_map(|py| (source..source + 56).map(move |px| (px, py)))
+                                    .map(|(px, py)| expected.get_pixel(px as u32, py).unwrap())
+                                    .collect();
+                                for py in y..y + height {
+                                    for px in normal.min(normal + dx)..normal.min(normal + dx) + 64
+                                    {
+                                        expected.set_pixel(px as u32, py, Rgba::WHITE);
+                                    }
+                                }
+                                for py in 0..height {
+                                    for px in 0..56 {
+                                        expected.set_pixel(
+                                            (dest + px) as u32,
+                                            y + py,
+                                            pixels[(py * 56 + px as u32) as usize],
+                                        );
+                                    }
+                                }
+                            }
+                            let mut effects = BattleVisualEffects::default();
+                            effects.move_mon_h = Some(anim);
+                            effects.apply_move_mon_h_raster_edge(&mut actual);
+                            assert_framebuffers_equal(&actual, &expected);
+                        }
+                    }
+                }
+            }
+        }
+    }
 
     fn assert_framebuffers_equal(actual: &FrameBuffer, expected: &FrameBuffer) {
         assert_eq!(actual.width(), expected.width());

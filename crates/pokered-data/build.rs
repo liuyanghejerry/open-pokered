@@ -1827,6 +1827,46 @@ fn write_scene_function(
     functions.push((map_name.to_string(), function_name.to_string(), path));
 }
 
+/// Keep only the eligible Route 22 encounter in RAM. The full function
+/// contains both battles and its outer If clones another copy of the chosen
+/// body in the interpreter; a full save cannot afford that peak.
+fn write_route22_native_branches(
+    functions: &mut Vec<(String, String, PathBuf)>,
+    out_dir: &Path,
+    statements: &[dotzuki_engine_dsl::ast::StoryStmt],
+) {
+    use dotzuki_engine_dsl::ast::StoryStmt;
+    assert_eq!(statements.len(), 2, "Route22 encounter structure changed");
+    for (name, statement) in ["early", "late"].into_iter().zip(statements) {
+        let StoryStmt::If {
+            then_branch,
+            else_branch,
+            ..
+        } = statement
+        else {
+            panic!("Route22 encounter must have an eligibility guard");
+        };
+        assert!(else_branch.is_empty(), "Route22 encounter fallback changed");
+        let key = format!("__native_coordRivalBattle_{name}");
+        write_scene_function(
+            functions,
+            out_dir,
+            "Route22",
+            &key,
+            &format!("Route22_{key}"),
+            then_branch,
+        );
+    }
+    write_scene_function(
+        functions,
+        out_dir,
+        "Route22",
+        "__native_coordRivalBattle_noop",
+        "Route22_coordRivalBattle_noop",
+        &[],
+    );
+}
+
 fn find_speaker_containing(
     statements: &[dotzuki_engine_dsl::ast::StoryStmt],
     needle: &str,
@@ -1856,16 +1896,18 @@ fn find_speaker_containing(
 
 /// `talkOak1` contains every late-game Pokédex-rating branch and is much too
 /// large to materialize on GBA just to run its tiny new-game fallback. Emit
-/// pre-pruned early-game leaf bodies; the native engine selects one from the
-/// same flags used by the source-level condition chain.
+/// pre-pruned bodies; the native engine selects one from the same flags and
+/// dex counts used by the source-level condition chain. Late-game dialogue
+/// must not expand all sixteen ratings plus the parcel handout at once.
 fn write_oaks_lab_native_branches(
     functions: &mut Vec<(String, String, PathBuf)>,
     out_dir: &Path,
     statements: &[dotzuki_engine_dsl::ast::StoryStmt],
 ) {
+    use dotzuki_engine_dsl::ast::StoryStmt;
     for (name, needle) in [
         ("battled", "raise your"),
-        ("starter", "wild POKeMON"),
+        ("starter", "OAK: If a wild POKeMON"),
         ("choose", "which\\nPOKeMON do you want"),
     ] {
         let statement = find_speaker_containing(statements, needle)
@@ -1878,6 +1920,93 @@ fn write_oaks_lab_native_branches(
             &format!("OaksLab_talkOak1_{}", name),
             core::slice::from_ref(&statement),
         );
+    }
+
+    let (dex, before_dex) = match statements.first() {
+        Some(StoryStmt::If {
+            then_branch,
+            else_branch,
+            ..
+        }) => (then_branch, else_branch),
+        _ => panic!("talkOak1 missing dex branch"),
+    };
+    let parcel = match before_dex.first() {
+        Some(StoryStmt::If { then_branch, .. }) => then_branch,
+        _ => panic!("talkOak1 missing parcel branch"),
+    };
+    let (rating, other) = match dex.first() {
+        Some(StoryStmt::If {
+            then_branch,
+            else_branch,
+            ..
+        }) => (then_branch, else_branch),
+        _ => panic!("talkOak1 missing rating branch"),
+    };
+    for (name, body) in [("parcel", parcel), ("dex_other", other)] {
+        let mut body = body.clone();
+        if name == "dex_other" {
+            body.extend_from_slice(&dex[1..]);
+        }
+        body.extend_from_slice(&statements[1..]);
+        write_scene_function(
+            functions,
+            out_dir,
+            "OaksLab",
+            &format!("__native_talkOak1_{name}"),
+            &format!("OaksLab_talkOak1_{name}"),
+            &body,
+        );
+    }
+    // Specialize only the pure owned-count comparisons. Walk the entire
+    // compiled tail: the compiler may emit more than one top-level If.
+    // All commands, text and trailing statements stay in their exact order.
+    fn select_rating(statements: &[StoryStmt], owned: f64) -> Vec<StoryStmt> {
+        use dotzuki_engine_dsl::ast::{BinOp, Expression};
+        let mut selected = Vec::new();
+        for statement in statements {
+            match statement {
+                StoryStmt::If {
+                    condition:
+                        Expression::BinaryOp {
+                            op: BinOp::Lt,
+                            left,
+                            right,
+                        },
+                    then_branch,
+                    else_branch,
+                    ..
+                } if matches!(left.as_ref(), Expression::Call { callee, args } if callee == "getPokedexOwnedCount" && args.is_empty()) =>
+                {
+                    let Expression::NumberLit(threshold) = right.as_ref() else {
+                        panic!("nonconstant Oak rating threshold")
+                    };
+                    assert!(
+                        *threshold >= 10.0 && *threshold <= 150.0 && *threshold % 10.0 == 0.0,
+                        "Oak rating thresholds changed; update the native selector"
+                    );
+                    selected.extend(select_rating(
+                        if owned < *threshold {
+                            then_branch
+                        } else {
+                            else_branch
+                        },
+                        owned,
+                    ));
+                }
+                StoryStmt::Speaker { .. } => selected.push(statement.clone()),
+                _ => panic!("unexpected statement in Oak rating tail"),
+            }
+        }
+        selected
+    }
+    assert!(rating.len() >= 3, "talkOak1 rating prelude changed");
+    for band in 0..=15 {
+        let mut body = rating[..2].to_vec();
+        body.extend(select_rating(&rating[2..], (band * 10) as f64));
+        body.extend_from_slice(&dex[1..]);
+        body.extend_from_slice(&statements[1..]);
+        let name = format!("__native_talkOak1_rating_{band}");
+        write_scene_function(functions, out_dir, "OaksLab", &name, &name, &body);
     }
 }
 
@@ -2038,6 +2167,11 @@ fn generate_scene_scripts(manifest_dir: &Path, out_dir: &str) {
                         &mut functions,
                         &function_out_dir,
                         &storyline.statements,
+                    );
+                }
+                if map_name == "Route22" && storyline.name == "coordRivalBattle" {
+                    write_route22_native_branches(
+                        &mut functions, &function_out_dir, &storyline.statements,
                     );
                 }
                 if map_name == "OaksLab" && storyline.name == "coordDontGoAway" {

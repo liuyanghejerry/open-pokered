@@ -22,6 +22,10 @@ framebuffer-dump = []
 # One-shot Oak's-lab rival battle reproduction driver (see src/repro_rival.rs).
 # Diagnostic only, never in shipped ROMs.
 repro-rival = ["autopilot", "pokered-app/repro-markers"]
+# Route 22 coordinate-trigger regression on the actual constrained target.
+repro-route22 = ["autopilot", "pokered-app/repro-markers"]
+# Broad memory regression on the constrained target (never a playable ROM).
+memory-scenarios = ["autopilot", "pokered-app/repro-markers"]
 
 
 [dependencies]

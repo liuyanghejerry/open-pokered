@@ -1,0 +1,975 @@
+Running: /tmp/mgba-headless /var/folders/d2/2fv86m890m34_13rn_t3d79w0000gn/T/gba-memory-512v8s_s/regression.gba /tmp/route22-soak.lua
+[mgba] repro: heap low 32768B at frame 0
+[mgba] memory: START pokedex
+[mgba] memory: dex=1 free=32768B stack=17656B
+[mgba] memory: dex=2 free=32768B stack=17656B
+[mgba] memory: dex=3 free=32768B stack=17656B
+[mgba] memory: dex=4 free=32768B stack=17656B
+[mgba] memory: dex=5 free=32768B stack=17656B
+[mgba] memory: dex=6 free=32768B stack=17656B
+[mgba] memory: dex=7 free=32768B stack=17656B
+[mgba] memory: dex=8 free=32768B stack=17656B
+[mgba] memory: dex=9 free=32768B stack=17656B
+[mgba] memory: dex=10 free=32768B stack=17656B
+[mgba] memory: dex=11 free=32768B stack=17656B
+[mgba] memory: dex=12 free=32768B stack=17656B
+[mgba] memory: dex=13 free=32768B stack=17656B
+[mgba] memory: dex=14 free=32768B stack=17656B
+[mgba] memory: dex=15 free=32768B stack=17656B
+[mgba] memory: dex=16 free=32768B stack=17656B
+[mgba] memory: dex=17 free=32768B stack=17656B
+[mgba] memory: dex=18 free=32768B stack=17656B
+[mgba] memory: dex=19 free=32768B stack=17656B
+[mgba] memory: dex=20 free=32768B stack=17656B
+[mgba] memory: dex=21 free=32768B stack=17656B
+[mgba] memory: dex=22 free=32768B stack=17656B
+[mgba] memory: dex=23 free=32768B stack=17656B
+[mgba] memory: dex=24 free=32768B stack=17656B
+[mgba] memory: dex=25 free=32768B stack=17656B
+[mgba] memory: dex=26 free=32768B stack=17656B
+[mgba] memory: dex=27 free=32768B stack=17656B
+[mgba] memory: dex=28 free=32768B stack=17656B
+[mgba] memory: dex=29 free=32768B stack=17656B
+[mgba] memory: dex=30 free=32768B stack=17656B
+[mgba] memory: dex=31 free=32768B stack=17656B
+[mgba] memory: dex=32 free=32768B stack=17656B
+[mgba] memory: dex=33 free=32768B stack=17656B
+[mgba] memory: dex=34 free=32768B stack=17656B
+[mgba] memory: dex=35 free=32768B stack=17656B
+[mgba] memory: dex=36 free=32768B stack=17656B
+[mgba] memory: dex=37 free=32768B stack=17656B
+[mgba] memory: dex=38 free=32768B stack=17656B
+[mgba] memory: dex=39 free=32768B stack=17656B
+[mgba] memory: dex=40 free=32768B stack=17656B
+[mgba] memory: dex=41 free=32768B stack=17656B
+[mgba] memory: dex=42 free=32768B stack=17656B
+[mgba] memory: dex=43 free=32768B stack=17656B
+[mgba] memory: dex=44 free=32768B stack=17656B
+[mgba] memory: dex=45 free=32768B stack=17656B
+[mgba] memory: dex=46 free=32768B stack=17656B
+[mgba] memory: dex=47 free=32768B stack=17656B
+[mgba] memory: dex=48 free=32768B stack=17656B
+[mgba] memory: dex=49 free=32768B stack=17656B
+[mgba] memory: dex=50 free=32768B stack=17656B
+[mgba] memory: dex=51 free=32768B stack=17656B
+[mgba] memory: dex=52 free=32768B stack=17656B
+[mgba] memory: dex=53 free=32768B stack=17656B
+[mgba] memory: dex=54 free=32768B stack=17656B
+[mgba] memory: dex=55 free=32768B stack=17656B
+[mgba] memory: dex=56 free=32768B stack=17656B
+[mgba] memory: dex=57 free=32768B stack=17656B
+[mgba] memory: dex=58 free=32768B stack=17656B
+[mgba] memory: dex=59 free=32768B stack=17656B
+[mgba] memory: dex=60 free=32768B stack=17656B
+[mgba] memory: dex=61 free=32768B stack=17656B
+[mgba] memory: dex=62 free=32768B stack=17656B
+[mgba] memory: dex=63 free=32768B stack=17656B
+[mgba] memory: dex=64 free=32768B stack=17656B
+[mgba] memory: dex=65 free=32768B stack=17656B
+[mgba] memory: dex=66 free=32768B stack=17656B
+[mgba] memory: dex=67 free=32768B stack=17656B
+[mgba] memory: dex=68 free=32768B stack=17656B
+[mgba] memory: dex=69 free=32768B stack=17656B
+[mgba] memory: dex=70 free=32768B stack=17656B
+[mgba] memory: dex=71 free=32768B stack=17656B
+[mgba] memory: dex=72 free=32768B stack=17656B
+[mgba] memory: dex=73 free=32768B stack=17656B
+[mgba] memory: dex=74 free=32768B stack=17656B
+[mgba] memory: dex=75 free=32768B stack=17656B
+[mgba] memory: dex=76 free=32768B stack=17656B
+[mgba] memory: dex=77 free=32768B stack=17656B
+[mgba] memory: dex=78 free=32768B stack=17656B
+[mgba] memory: dex=79 free=32768B stack=17656B
+[mgba] memory: dex=80 free=32768B stack=17656B
+[mgba] memory: dex=81 free=32768B stack=17656B
+[mgba] memory: dex=82 free=32768B stack=17656B
+[mgba] memory: dex=83 free=32768B stack=17656B
+[mgba] memory: dex=84 free=32768B stack=17656B
+[mgba] memory: dex=85 free=32768B stack=17656B
+[mgba] memory: dex=86 free=32768B stack=17656B
+[mgba] memory: dex=87 free=32768B stack=17656B
+[mgba] memory: dex=88 free=32768B stack=17656B
+[mgba] memory: dex=89 free=32768B stack=17656B
+[mgba] memory: dex=90 free=32768B stack=17656B
+[mgba] memory: dex=91 free=32768B stack=17656B
+[mgba] memory: dex=92 free=32768B stack=17656B
+[mgba] memory: dex=93 free=32768B stack=17656B
+[mgba] memory: dex=94 free=32768B stack=17656B
+[mgba] memory: dex=95 free=32768B stack=17656B
+[mgba] memory: dex=96 free=32768B stack=17656B
+[mgba] memory: dex=97 free=32768B stack=17656B
+[mgba] memory: dex=98 free=32768B stack=17656B
+[mgba] memory: dex=99 free=32768B stack=17656B
+[mgba] memory: dex=100 free=32768B stack=17656B
+[mgba] memory: dex=101 free=32768B stack=17656B
+[mgba] memory: dex=102 free=32768B stack=17656B
+[mgba] memory: dex=103 free=32768B stack=17656B
+[mgba] memory: dex=104 free=32768B stack=17656B
+[mgba] memory: dex=105 free=32768B stack=17656B
+[mgba] memory: dex=106 free=32768B stack=17656B
+[mgba] memory: dex=107 free=32768B stack=17656B
+[mgba] memory: dex=108 free=32768B stack=17656B
+[mgba] memory: dex=109 free=32768B stack=17656B
+[mgba] memory: dex=110 free=32768B stack=17656B
+[mgba] memory: dex=111 free=32768B stack=17656B
+[mgba] memory: dex=112 free=32768B stack=17656B
+[mgba] memory: dex=113 free=32768B stack=17656B
+[mgba] memory: dex=114 free=32768B stack=17656B
+[mgba] memory: dex=115 free=32768B stack=17656B
+[mgba] memory: dex=116 free=32768B stack=17656B
+[mgba] memory: dex=117 free=32768B stack=17656B
+[mgba] memory: dex=118 free=32768B stack=17656B
+[mgba] memory: dex=119 free=32768B stack=17656B
+[mgba] memory: dex=120 free=32768B stack=17656B
+[mgba] memory: dex=121 free=32768B stack=17656B
+[mgba] memory: dex=122 free=32768B stack=17656B
+[mgba] memory: dex=123 free=32768B stack=17656B
+[mgba] memory: dex=124 free=32768B stack=17656B
+[mgba] memory: dex=125 free=32768B stack=17656B
+[mgba] memory: dex=126 free=32768B stack=17656B
+[mgba] memory: dex=127 free=32768B stack=17656B
+[mgba] memory: dex=128 free=32768B stack=17656B
+[mgba] memory: dex=129 free=32768B stack=17656B
+[mgba] memory: dex=130 free=32768B stack=17656B
+[mgba] memory: dex=131 free=32768B stack=17656B
+[mgba] memory: dex=132 free=32768B stack=17656B
+[mgba] memory: dex=133 free=32768B stack=17656B
+[mgba] memory: dex=134 free=32768B stack=17656B
+[mgba] memory: dex=135 free=32768B stack=17656B
+[mgba] memory: dex=136 free=32768B stack=17656B
+[mgba] memory: dex=137 free=32768B stack=17656B
+[mgba] memory: dex=138 free=32768B stack=17656B
+[mgba] memory: dex=139 free=32768B stack=17656B
+[mgba] memory: dex=140 free=32768B stack=17656B
+[mgba] memory: dex=141 free=32768B stack=17656B
+[mgba] memory: dex=142 free=32768B stack=17656B
+[mgba] memory: dex=143 free=32768B stack=17656B
+[mgba] memory: dex=144 free=32768B stack=17656B
+[mgba] memory: dex=145 free=32768B stack=17656B
+[mgba] memory: dex=146 free=32768B stack=17656B
+[mgba] memory: dex=147 free=32768B stack=17656B
+[mgba] memory: dex=148 free=32768B stack=17656B
+[mgba] memory: dex=149 free=32768B stack=17656B
+[mgba] memory: dex=150 free=32768B stack=17656B
+[mgba] memory: dex=151 free=32768B stack=17656B
+[mgba] memory: dex=1 free=32768B stack=17656B
+[mgba] memory: dex=2 free=32768B stack=17656B
+[mgba] memory: dex=3 free=32768B stack=17656B
+[mgba] memory: dex=4 free=32768B stack=17656B
+[mgba] memory: dex=5 free=32768B stack=17656B
+[mgba] memory: dex=6 free=32768B stack=17656B
+[mgba] memory: dex=7 free=32768B stack=17656B
+[mgba] memory: dex=8 free=32768B stack=17656B
+[mgba] memory: dex=9 free=32768B stack=17656B
+[mgba] memory: dex=10 free=32768B stack=17656B
+[mgba] memory: dex=11 free=32768B stack=17656B
+[mgba] memory: dex=12 free=32768B stack=17656B
+[mgba] memory: dex=13 free=32768B stack=17656B
+[mgba] memory: dex=14 free=32768B stack=17656B
+[mgba] memory: dex=15 free=32768B stack=17656B
+[mgba] memory: dex=16 free=32768B stack=17656B
+[mgba] memory: dex=17 free=32768B stack=17656B
+[mgba] memory: dex=18 free=32768B stack=17656B
+[mgba] memory: dex=19 free=32768B stack=17656B
+[mgba] memory: dex=20 free=32768B stack=17656B
+[mgba] memory: dex=21 free=32768B stack=17656B
+[mgba] memory: dex=22 free=32768B stack=17656B
+[mgba] memory: dex=23 free=32768B stack=17656B
+[mgba] memory: dex=24 free=32768B stack=17656B
+[mgba] memory: dex=25 free=32768B stack=17656B
+[mgba] memory: dex=26 free=32768B stack=17656B
+[mgba] memory: dex=27 free=32768B stack=17656B
+[mgba] memory: dex=28 free=32768B stack=17656B
+[mgba] memory: dex=29 free=32768B stack=17656B
+[mgba] memory: dex=30 free=32768B stack=17656B
+[mgba] memory: dex=31 free=32768B stack=17656B
+[mgba] memory: dex=32 free=32768B stack=17656B
+[mgba] memory: dex=33 free=32768B stack=17656B
+[mgba] memory: dex=34 free=32768B stack=17656B
+[mgba] memory: dex=35 free=32768B stack=17656B
+[mgba] memory: dex=36 free=32768B stack=17656B
+[mgba] memory: dex=37 free=32768B stack=17656B
+[mgba] memory: dex=38 free=32768B stack=17656B
+[mgba] memory: dex=39 free=32768B stack=17656B
+[mgba] memory: dex=40 free=32768B stack=17656B
+[mgba] memory: dex=41 free=32768B stack=17656B
+[mgba] memory: dex=42 free=32768B stack=17656B
+[mgba] memory: dex=43 free=32768B stack=17656B
+[mgba] memory: dex=44 free=32768B stack=17656B
+[mgba] memory: dex=45 free=32768B stack=17656B
+[mgba] memory: dex=46 free=32768B stack=17656B
+[mgba] memory: dex=47 free=32768B stack=17656B
+[mgba] memory: dex=48 free=32768B stack=17656B
+[mgba] memory: dex=49 free=32768B stack=17656B
+[mgba] memory: dex=50 free=32768B stack=17656B
+[mgba] memory: dex=51 free=32768B stack=17656B
+[mgba] memory: dex=52 free=32768B stack=17656B
+[mgba] memory: dex=53 free=32768B stack=17656B
+[mgba] memory: dex=54 free=32768B stack=17656B
+[mgba] memory: dex=55 free=32768B stack=17656B
+[mgba] memory: dex=56 free=32768B stack=17656B
+[mgba] memory: dex=57 free=32768B stack=17656B
+[mgba] memory: dex=58 free=32768B stack=17656B
+[mgba] memory: dex=59 free=32768B stack=17656B
+[mgba] memory: dex=60 free=32768B stack=17656B
+[mgba] memory: dex=61 free=32768B stack=17656B
+[mgba] memory: dex=62 free=32768B stack=17656B
+[mgba] memory: dex=63 free=32768B stack=17656B
+[mgba] memory: dex=64 free=32768B stack=17656B
+[mgba] memory: dex=65 free=32768B stack=17656B
+[mgba] memory: dex=66 free=32768B stack=17656B
+[mgba] memory: dex=67 free=32768B stack=17656B
+[mgba] memory: dex=68 free=32768B stack=17656B
+[mgba] memory: dex=69 free=32768B stack=17656B
+[mgba] memory: dex=70 free=32768B stack=17656B
+[mgba] memory: dex=71 free=32768B stack=17656B
+[mgba] memory: dex=72 free=32768B stack=17656B
+[mgba] memory: dex=73 free=32768B stack=17656B
+[mgba] memory: dex=74 free=32768B stack=17656B
+[mgba] memory: dex=75 free=32768B stack=17656B
+[mgba] memory: dex=76 free=32768B stack=17656B
+[mgba] memory: dex=77 free=32768B stack=17656B
+[mgba] memory: dex=78 free=32768B stack=17656B
+[mgba] memory: dex=79 free=32768B stack=17656B
+[mgba] memory: dex=80 free=32768B stack=17656B
+[mgba] memory: dex=81 free=32768B stack=17656B
+[mgba] memory: dex=82 free=32768B stack=17656B
+[mgba] memory: dex=83 free=32768B stack=17656B
+[mgba] memory: dex=84 free=32768B stack=17656B
+[mgba] memory: dex=85 free=32768B stack=17656B
+[mgba] memory: dex=86 free=32768B stack=17656B
+[mgba] memory: dex=87 free=32768B stack=17656B
+[mgba] memory: dex=88 free=32768B stack=17656B
+[mgba] memory: dex=89 free=32768B stack=17656B
+[mgba] memory: dex=90 free=32768B stack=17656B
+[mgba] memory: dex=91 free=32768B stack=17656B
+[mgba] memory: dex=92 free=32768B stack=17656B
+[mgba] memory: dex=93 free=32768B stack=17656B
+[mgba] memory: dex=94 free=32768B stack=17656B
+[mgba] memory: dex=95 free=32768B stack=17656B
+[mgba] memory: dex=96 free=32768B stack=17656B
+[mgba] memory: dex=97 free=32768B stack=17656B
+[mgba] memory: dex=98 free=32768B stack=17656B
+[mgba] memory: dex=99 free=32768B stack=17656B
+[mgba] memory: dex=100 free=32768B stack=17656B
+[mgba] memory: dex=101 free=32768B stack=17656B
+[mgba] memory: dex=102 free=32768B stack=17656B
+[mgba] memory: dex=103 free=32768B stack=17656B
+[mgba] memory: dex=104 free=32768B stack=17656B
+[mgba] memory: dex=105 free=32768B stack=17656B
+[mgba] memory: dex=106 free=32768B stack=17656B
+[mgba] memory: dex=107 free=32768B stack=17656B
+[mgba] memory: dex=108 free=32768B stack=17656B
+[mgba] memory: dex=109 free=32768B stack=17656B
+[mgba] memory: dex=110 free=32768B stack=17656B
+[mgba] memory: dex=111 free=32768B stack=17656B
+[mgba] memory: dex=112 free=32768B stack=17656B
+[mgba] memory: dex=113 free=32768B stack=17656B
+[mgba] memory: dex=114 free=32768B stack=17656B
+[mgba] memory: dex=115 free=32768B stack=17656B
+[mgba] memory: dex=116 free=32768B stack=17656B
+[mgba] memory: dex=117 free=32768B stack=17656B
+[mgba] memory: dex=118 free=32768B stack=17656B
+[mgba] memory: dex=119 free=32768B stack=17656B
+[mgba] memory: dex=120 free=32768B stack=17656B
+[mgba] memory: dex=121 free=32768B stack=17656B
+[mgba] memory: dex=122 free=32768B stack=17656B
+[mgba] memory: dex=123 free=32768B stack=17656B
+[mgba] memory: dex=124 free=32768B stack=17656B
+[mgba] memory: dex=125 free=32768B stack=17656B
+[mgba] memory: dex=126 free=32768B stack=17656B
+[mgba] memory: dex=127 free=32768B stack=17656B
+[mgba] memory: dex=128 free=32768B stack=17656B
+[mgba] memory: dex=129 free=32768B stack=17656B
+[mgba] memory: dex=130 free=32768B stack=17656B
+[mgba] memory: dex=131 free=32768B stack=17656B
+[mgba] memory: dex=132 free=32768B stack=17656B
+[mgba] memory: dex=133 free=32768B stack=17656B
+[mgba] memory: dex=134 free=32768B stack=17656B
+[mgba] memory: dex=135 free=32768B stack=17656B
+[mgba] memory: dex=136 free=32768B stack=17656B
+[mgba] memory: dex=137 free=32768B stack=17656B
+[mgba] memory: dex=138 free=32768B stack=17656B
+[mgba] memory: dex=139 free=32768B stack=17656B
+[mgba] memory: dex=140 free=32768B stack=17656B
+[mgba] memory: dex=141 free=32768B stack=17656B
+[mgba] memory: dex=142 free=32768B stack=17656B
+[mgba] memory: dex=143 free=32768B stack=17656B
+[mgba] memory: dex=144 free=32768B stack=17656B
+[mgba] memory: dex=145 free=32768B stack=17656B
+[mgba] memory: dex=146 free=32768B stack=17656B
+[mgba] memory: dex=147 free=32768B stack=17656B
+[mgba] memory: dex=148 free=32768B stack=17656B
+[mgba] memory: dex=149 free=32768B stack=17656B
+[mgba] memory: dex=150 free=32768B stack=17656B
+[mgba] memory: dex=151 free=32768B stack=17656B
+[mgba] memory: PASS case=pokedex count=302 free=32768B stack=17656B
+[mgba] memory: map=0 PalletTown
+[mgba] memory: map=1 ViridianCity
+[mgba] memory: map=2 PewterCity
+[mgba] repro: heap low 29696B at frame 23887
+[mgba] memory: map=3 CeruleanCity
+[mgba] repro: heap low 24575B at frame 23967
+[mgba] memory: map=4 LavenderTown
+[mgba] memory: map=5 VermilionCity
+[mgba] memory: map=6 CeladonCity
+[mgba] memory: map=7 FuchsiaCity
+[mgba] memory: map=8 CinnabarIsland
+[mgba] memory: map=9 IndigoPlateau
+[mgba] memory: map=10 SaffronCity
+[mgba] memory: map=11 UnusedMap0B
+[mgba] memory: map=12 Route1
+[mgba] memory: map=13 Route2
+[mgba] memory: map=14 Route3
+[mgba] memory: map=15 Route4
+[mgba] memory: map=16 Route5
+[mgba] memory: map=17 Route6
+[mgba] memory: map=18 Route7
+[mgba] memory: map=19 Route8
+[mgba] memory: map=20 Route9
+[mgba] memory: map=21 Route10
+[mgba] memory: map=22 Route11
+[mgba] memory: map=23 Route12
+[mgba] memory: map=24 Route13
+[mgba] memory: map=25 Route14
+[mgba] memory: map=26 Route15
+[mgba] memory: map=27 Route16
+[mgba] memory: map=28 Route17
+[mgba] memory: map=29 Route18
+[mgba] memory: map=30 Route19
+[mgba] memory: map=31 Route20
+[mgba] memory: map=32 Route21
+[mgba] memory: map=33 Route22
+[mgba] memory: map=34 Route23
+[mgba] memory: map=35 Route24
+[mgba] memory: map=36 Route25
+[mgba] memory: map=37 RedsHouse1F
+[mgba] memory: map=38 RedsHouse2F
+[mgba] memory: map=39 BluesHouse
+[mgba] memory: map=40 OaksLab
+[mgba] memory: map=41 ViridianPokecenter
+[mgba] memory: map=42 ViridianMart
+[mgba] memory: map=43 ViridianSchoolHouse
+[mgba] memory: map=44 ViridianNicknameHouse
+[mgba] memory: map=45 ViridianGym
+[mgba] memory: map=46 DiglettsCaveRoute2
+[mgba] memory: map=47 ViridianForestNorthGate
+[mgba] memory: map=48 Route2TradeHouse
+[mgba] memory: map=49 Route2Gate
+[mgba] memory: map=50 ViridianForestSouthGate
+[mgba] memory: map=51 ViridianForest
+[mgba] memory: map=52 Museum1F
+[mgba] memory: map=53 Museum2F
+[mgba] memory: map=54 PewterGym
+[mgba] memory: map=55 PewterNidoranHouse
+[mgba] memory: map=56 PewterMart
+[mgba] memory: map=57 PewterSpeechHouse
+[mgba] memory: map=58 PewterPokecenter
+[mgba] memory: map=59 MtMoon1F
+[mgba] memory: map=60 MtMoonB1F
+[mgba] memory: map=61 MtMoonB2F
+[mgba] memory: map=62 CeruleanTrashedHouse
+[mgba] memory: map=63 CeruleanTradeHouse
+[mgba] memory: map=64 CeruleanPokecenter
+[mgba] memory: map=65 CeruleanGym
+[mgba] memory: map=66 BikeShop
+[mgba] memory: map=67 CeruleanMart
+[mgba] memory: map=68 MtMoonPokecenter
+[mgba] memory: map=69 CeruleanTrashedHouseCopy
+[mgba] memory: map=70 Route5Gate
+[mgba] memory: map=71 UndergroundPathRoute5
+[mgba] memory: map=72 Daycare
+[mgba] memory: map=73 Route6Gate
+[mgba] memory: map=74 UndergroundPathRoute6
+[mgba] memory: map=75 UndergroundPathRoute6Copy
+[mgba] memory: map=76 Route7Gate
+[mgba] memory: map=77 UndergroundPathRoute7
+[mgba] memory: map=78 UndergroundPathRoute7Copy
+[mgba] memory: map=79 Route8Gate
+[mgba] memory: map=80 UndergroundPathRoute8
+[mgba] memory: map=81 RockTunnelPokecenter
+[mgba] memory: map=82 RockTunnel1F
+[mgba] memory: map=83 PowerPlant
+[mgba] memory: map=84 Route11Gate1F
+[mgba] memory: map=85 DiglettsCaveRoute11
+[mgba] memory: map=86 Route11Gate2F
+[mgba] memory: map=87 Route12Gate1F
+[mgba] memory: map=88 BillsHouse
+[mgba] memory: map=89 VermilionPokecenter
+[mgba] memory: map=90 PokemonFanClub
+[mgba] memory: map=91 VermilionMart
+[mgba] memory: map=92 VermilionGym
+[mgba] memory: map=93 VermilionPidgeyHouse
+[mgba] memory: map=94 VermilionDock
+[mgba] memory: map=95 SSAnne1F
+[mgba] memory: map=96 SSAnne2F
+[mgba] memory: map=97 SSAnne3F
+[mgba] memory: map=98 SSAnneB1F
+[mgba] memory: map=99 SSAnneBow
+[mgba] memory: map=100 SSAnneKitchen
+[mgba] memory: map=101 SSAnneCaptainsRoom
+[mgba] memory: map=102 SSAnne1FRooms
+[mgba] memory: map=103 SSAnne2FRooms
+[mgba] memory: map=104 SSAnneB1FRooms
+[mgba] memory: map=105 UnusedMap69
+[mgba] memory: map=106 UnusedMap6A
+[mgba] memory: map=107 UnusedMap6B
+[mgba] memory: map=108 VictoryRoad1F
+[mgba] memory: map=109 UnusedMap6D
+[mgba] memory: map=110 UnusedMap6E
+[mgba] memory: map=111 UnusedMap6F
+[mgba] memory: map=112 UnusedMap70
+[mgba] memory: map=113 LancesRoom
+[mgba] memory: map=114 UnusedMap72
+[mgba] memory: map=115 UnusedMap73
+[mgba] memory: map=116 UnusedMap74
+[mgba] memory: map=117 UnusedMap75
+[mgba] memory: map=118 HallOfFame
+[mgba] memory: map=119 UndergroundPathNorthSouth
+[mgba] memory: map=120 ChampionsRoom
+[mgba] memory: map=121 UndergroundPathWestEast
+[mgba] memory: map=122 CeladonMart1F
+[mgba] memory: map=123 CeladonMart2F
+[mgba] memory: map=124 CeladonMart3F
+[mgba] memory: map=125 CeladonMart4F
+[mgba] memory: map=126 CeladonMartRoof
+[mgba] memory: map=127 CeladonMartElevator
+[mgba] memory: map=128 CeladonMansion1F
+[mgba] memory: map=129 CeladonMansion2F
+[mgba] memory: map=130 CeladonMansion3F
+[mgba] memory: map=131 CeladonMansionRoof
+[mgba] memory: map=132 CeladonMansionRoofHouse
+[mgba] memory: map=133 CeladonPokecenter
+[mgba] memory: map=134 CeladonGym
+[mgba] memory: map=135 GameCorner
+[mgba] memory: map=136 CeladonMart5F
+[mgba] memory: map=137 GameCornerPrizeRoom
+[mgba] memory: map=138 CeladonDiner
+[mgba] memory: map=139 CeladonChiefHouse
+[mgba] memory: map=140 CeladonHotel
+[mgba] memory: map=141 LavenderPokecenter
+[mgba] memory: map=142 PokemonTower1F
+[mgba] memory: map=143 PokemonTower2F
+[mgba] memory: map=144 PokemonTower3F
+[mgba] memory: map=145 PokemonTower4F
+[mgba] memory: map=146 PokemonTower5F
+[mgba] memory: map=147 PokemonTower6F
+[mgba] memory: map=148 PokemonTower7F
+[mgba] memory: map=149 MrFujisHouse
+[mgba] memory: map=150 LavenderMart
+[mgba] memory: map=151 LavenderCuboneHouse
+[mgba] memory: map=152 FuchsiaMart
+[mgba] memory: map=153 FuchsiaBillsGrandpasHouse
+[mgba] memory: map=154 FuchsiaPokecenter
+[mgba] memory: map=155 WardensHouse
+[mgba] memory: map=156 SafariZoneGate
+[mgba] memory: map=157 FuchsiaGym
+[mgba] memory: map=158 FuchsiaMeetingRoom
+[mgba] memory: map=159 SeafoamIslandsB1F
+[mgba] memory: map=160 SeafoamIslandsB2F
+[mgba] memory: map=161 SeafoamIslandsB3F
+[mgba] memory: map=162 SeafoamIslandsB4F
+[mgba] memory: map=163 VermilionOldRodHouse
+[mgba] memory: map=164 FuchsiaGoodRodHouse
+[mgba] memory: map=165 PokemonMansion1F
+[mgba] memory: map=166 CinnabarGym
+[mgba] memory: map=167 CinnabarLab
+[mgba] memory: map=168 CinnabarLabTradeRoom
+[mgba] memory: map=169 CinnabarLabMetronomeRoom
+[mgba] memory: map=170 CinnabarLabFossilRoom
+[mgba] memory: map=171 CinnabarPokecenter
+[mgba] memory: map=172 CinnabarMart
+[mgba] memory: map=173 CinnabarMartCopy
+[mgba] memory: map=174 IndigoPlateauLobby
+[mgba] memory: map=175 CopycatsHouse1F
+[mgba] memory: map=176 CopycatsHouse2F
+[mgba] memory: map=177 FightingDojo
+[mgba] memory: map=178 SaffronGym
+[mgba] memory: map=179 SaffronPidgeyHouse
+[mgba] memory: map=180 SaffronMart
+[mgba] memory: map=181 SilphCo1F
+[mgba] memory: map=182 SaffronPokecenter
+[mgba] memory: map=183 MrPsychicsHouse
+[mgba] memory: map=184 Route15Gate1F
+[mgba] memory: map=185 Route15Gate2F
+[mgba] memory: map=186 Route16Gate1F
+[mgba] memory: map=187 Route16Gate2F
+[mgba] memory: map=188 Route16FlyHouse
+[mgba] memory: map=189 Route12SuperRodHouse
+[mgba] memory: map=190 Route18Gate1F
+[mgba] memory: map=191 Route18Gate2F
+[mgba] memory: map=192 SeafoamIslands1F
+[mgba] memory: map=193 Route22Gate
+[mgba] memory: map=194 VictoryRoad2F
+[mgba] memory: map=195 Route12Gate2F
+[mgba] memory: map=196 VermilionTradeHouse
+[mgba] memory: map=197 DiglettsCave
+[mgba] memory: map=198 VictoryRoad3F
+[mgba] memory: map=199 RocketHideoutB1F
+[mgba] memory: map=200 RocketHideoutB2F
+[mgba] memory: map=201 RocketHideoutB3F
+[mgba] memory: map=202 RocketHideoutB4F
+[mgba] memory: map=203 RocketHideoutElevator
+[mgba] memory: map=204 UnusedMapCC
+[mgba] memory: map=205 UnusedMapCD
+[mgba] memory: map=206 UnusedMapCE
+[mgba] memory: map=207 SilphCo2F
+[mgba] memory: map=208 SilphCo3F
+[mgba] memory: map=209 SilphCo4F
+[mgba] memory: map=210 SilphCo5F
+[mgba] memory: map=211 SilphCo6F
+[mgba] memory: map=212 SilphCo7F
+[mgba] memory: map=213 SilphCo8F
+[mgba] memory: map=214 PokemonMansion2F
+[mgba] memory: map=215 PokemonMansion3F
+[mgba] memory: map=216 PokemonMansionB1F
+[mgba] memory: map=217 SafariZoneEast
+[mgba] memory: map=218 SafariZoneNorth
+[mgba] memory: map=219 SafariZoneWest
+[mgba] memory: map=220 SafariZoneCenter
+[mgba] memory: map=221 SafariZoneCenterRestHouse
+[mgba] memory: map=222 SafariZoneSecretHouse
+[mgba] memory: map=223 SafariZoneWestRestHouse
+[mgba] memory: map=224 SafariZoneEastRestHouse
+[mgba] memory: map=225 SafariZoneNorthRestHouse
+[mgba] memory: map=226 CeruleanCave2F
+[mgba] memory: map=227 CeruleanCaveB1F
+[mgba] memory: map=228 CeruleanCave1F
+[mgba] memory: map=229 NameRatersHouse
+[mgba] memory: map=230 CeruleanBadgeHouse
+[mgba] memory: map=231 UnusedMapE7
+[mgba] memory: map=232 RockTunnelB1F
+[mgba] memory: map=233 SilphCo9F
+[mgba] memory: map=234 SilphCo10F
+[mgba] memory: map=235 SilphCo11F
+[mgba] memory: map=236 SilphCoElevator
+[mgba] memory: map=237 UnusedMapED
+[mgba] memory: map=238 UnusedMapEE
+[mgba] memory: map=239 TradeCenter
+[mgba] memory: map=240 Colosseum
+[mgba] memory: map=241 UnusedMapF1
+[mgba] memory: map=242 UnusedMapF2
+[mgba] memory: map=243 UnusedMapF3
+[mgba] memory: map=244 UnusedMapF4
+[mgba] memory: map=245 LoreleisRoom
+[mgba] memory: map=246 BrunosRoom
+[mgba] memory: map=247 AgathasRoom
+[mgba] memory: PASS case=maps count=248 free=53248B stack=17656B
+[mgba] memory: script=OaksLab case=0 free=42280B stack=17656B
+[mgba] repro: heap low 16584B at frame 43877
+[mgba] memory: PASS case=oak-parcel count=1 free=37880B stack=17656B
+[mgba] memory: script=OaksLab case=1 free=38976B stack=17656B
+[mgba] memory: script=OaksLab case=2 free=38976B stack=17656B
+[mgba] memory: script=OaksLab case=3 free=38976B stack=17656B
+[mgba] memory: script=OaksLab case=4 free=38976B stack=17656B
+[mgba] memory: script=OaksLab case=5 free=38976B stack=17656B
+[mgba] memory: script=OaksLab case=6 free=38976B stack=17656B
+[mgba] memory: script=OaksLab case=7 free=38976B stack=17656B
+[mgba] memory: script=OaksLab case=8 free=32832B stack=17656B
+[mgba] memory: script=OaksLab case=9 free=32832B stack=17656B
+[mgba] memory: script=OaksLab case=10 free=38976B stack=17656B
+[mgba] memory: script=OaksLab case=11 free=32832B stack=17656B
+[mgba] memory: script=OaksLab case=12 free=38976B stack=17656B
+[mgba] memory: script=OaksLab case=13 free=32832B stack=17656B
+[mgba] memory: script=OaksLab case=14 free=38976B stack=17656B
+[mgba] memory: script=OaksLab case=15 free=32832B stack=17656B
+[mgba] memory: script=OaksLab case=16 free=32832B stack=17656B
+[mgba] memory: PASS case=oak-dex count=16 free=32832B stack=17656B
+[mgba] memory: script=CinnabarLabFossilRoom case=17 free=38976B stack=17656B
+[mgba] repro: heap low 13256B at frame 60449
+[mgba] memory: PASS case=fossil count=1 free=21840B stack=17656B
+[mgba] memory: PASS case=slots count=3 free=32832B stack=17656B
+[mgba] memory: menu=0 Overworld
+[mgba] memory: menu=1 StartMenu
+[mgba] memory: menu=2 PartyScreen
+[mgba] memory: menu=3 PokemonStatsScreen(0)
+[mgba] memory: menu=4 PokemonStatsScreen(1)
+[mgba] memory: menu=5 PokemonStatsScreen(2)
+[mgba] memory: menu=6 PokemonStatsScreen(3)
+[mgba] memory: menu=7 PokemonStatsScreen(4)
+[mgba] memory: menu=8 PokemonStatsScreen(5)
+[mgba] memory: menu=9 Bag
+[mgba] memory: menu=10 TownMap
+[mgba] memory: menu=11 TrainerCard
+[mgba] memory: menu=12 Overworld
+[mgba] memory: menu=13 StartMenu
+[mgba] memory: menu=14 PartyScreen
+[mgba] memory: menu=15 PokemonStatsScreen(0)
+[mgba] memory: menu=16 PokemonStatsScreen(1)
+[mgba] memory: menu=17 PokemonStatsScreen(2)
+[mgba] memory: menu=18 PokemonStatsScreen(3)
+[mgba] memory: menu=19 PokemonStatsScreen(4)
+[mgba] memory: menu=20 PokemonStatsScreen(5)
+[mgba] memory: menu=21 Bag
+[mgba] memory: menu=22 TownMap
+[mgba] memory: menu=23 TrainerCard
+[mgba] memory: menu=24 Overworld
+[mgba] memory: menu=25 StartMenu
+[mgba] memory: menu=26 PartyScreen
+[mgba] memory: menu=27 PokemonStatsScreen(0)
+[mgba] memory: menu=28 PokemonStatsScreen(1)
+[mgba] memory: menu=29 PokemonStatsScreen(2)
+[mgba] memory: menu=30 PokemonStatsScreen(3)
+[mgba] memory: menu=31 PokemonStatsScreen(4)
+[mgba] memory: menu=32 PokemonStatsScreen(5)
+[mgba] memory: menu=33 Bag
+[mgba] memory: menu=34 TownMap
+[mgba] memory: menu=35 TrainerCard
+[mgba] memory: menu=36 Overworld
+[mgba] memory: menu=37 StartMenu
+[mgba] memory: menu=38 PartyScreen
+[mgba] memory: menu=39 PokemonStatsScreen(0)
+[mgba] memory: menu=40 PokemonStatsScreen(1)
+[mgba] memory: menu=41 PokemonStatsScreen(2)
+[mgba] memory: menu=42 PokemonStatsScreen(3)
+[mgba] memory: menu=43 PokemonStatsScreen(4)
+[mgba] memory: menu=44 PokemonStatsScreen(5)
+[mgba] memory: menu=45 Bag
+[mgba] memory: menu=46 TownMap
+[mgba] memory: menu=47 TrainerCard
+[mgba] memory: PASS case=menus count=48 free=26944B stack=17656B
+[mgba] memory: moves retain Route22 battle script
+[mgba] memory: move=1 side=0
+[mgba] memory: move=1 side=1
+[mgba] memory: move=2 side=0
+[mgba] memory: move=2 side=1
+[mgba] memory: move=3 side=0
+[mgba] memory: move=3 side=1
+[mgba] memory: move=4 side=0
+[mgba] memory: move=4 side=1
+[mgba] memory: move=5 side=0
+[mgba] memory: move=5 side=1
+[mgba] memory: move=6 side=0
+[mgba] memory: move=6 side=1
+[mgba] memory: move=7 side=0
+[mgba] memory: move=7 side=1
+[mgba] memory: move=8 side=0
+[mgba] memory: move=8 side=1
+[mgba] memory: move=9 side=0
+[mgba] memory: move=9 side=1
+[mgba] memory: move=10 side=0
+[mgba] memory: move=10 side=1
+[mgba] memory: move=11 side=0
+[mgba] memory: move=11 side=1
+[mgba] memory: move=12 side=0
+[mgba] memory: move=12 side=1
+[mgba] memory: move=13 side=0
+[mgba] memory: move=13 side=1
+[mgba] memory: move=14 side=0
+[mgba] memory: move=14 side=1
+[mgba] memory: move=15 side=0
+[mgba] memory: move=15 side=1
+[mgba] memory: move=16 side=0
+[mgba] memory: move=16 side=1
+[mgba] memory: move=17 side=0
+[mgba] memory: move=17 side=1
+[mgba] memory: move=18 side=0
+[mgba] memory: move=18 side=1
+[mgba] memory: move=19 side=0
+[mgba] memory: move=19 side=1
+[mgba] memory: move=20 side=0
+[mgba] memory: move=20 side=1
+[mgba] memory: move=21 side=0
+[mgba] memory: move=21 side=1
+[mgba] memory: move=22 side=0
+[mgba] memory: move=22 side=1
+[mgba] memory: move=23 side=0
+[mgba] memory: move=23 side=1
+[mgba] memory: move=24 side=0
+[mgba] memory: move=24 side=1
+[mgba] memory: move=25 side=0
+[mgba] memory: move=25 side=1
+[mgba] memory: move=26 side=0
+[mgba] memory: move=26 side=1
+[mgba] memory: move=27 side=0
+[mgba] memory: move=27 side=1
+[mgba] memory: move=28 side=0
+[mgba] memory: move=28 side=1
+[mgba] memory: move=29 side=0
+[mgba] memory: move=29 side=1
+[mgba] memory: move=30 side=0
+[mgba] memory: move=30 side=1
+[mgba] memory: move=31 side=0
+[mgba] memory: move=31 side=1
+[mgba] memory: move=32 side=0
+[mgba] memory: move=32 side=1
+[mgba] memory: move=33 side=0
+[mgba] memory: move=33 side=1
+[mgba] memory: move=34 side=0
+[mgba] memory: move=34 side=1
+[mgba] memory: move=35 side=0
+[mgba] memory: move=35 side=1
+[mgba] memory: move=36 side=0
+[mgba] memory: move=36 side=1
+[mgba] memory: move=37 side=0
+[mgba] memory: move=37 side=1
+[mgba] memory: move=38 side=0
+[mgba] memory: move=38 side=1
+[mgba] memory: move=39 side=0
+[mgba] memory: move=39 side=1
+[mgba] memory: move=40 side=0
+[mgba] memory: move=40 side=1
+[mgba] memory: move=41 side=0
+[mgba] memory: move=41 side=1
+[mgba] memory: move=42 side=0
+[mgba] memory: move=42 side=1
+[mgba] memory: move=43 side=0
+[mgba] memory: move=43 side=1
+[mgba] memory: move=44 side=0
+[mgba] memory: move=44 side=1
+[mgba] memory: move=45 side=0
+[mgba] memory: move=45 side=1
+[mgba] memory: move=46 side=0
+[mgba] memory: move=46 side=1
+[mgba] memory: move=47 side=0
+[mgba] memory: move=47 side=1
+[mgba] memory: move=48 side=0
+[mgba] memory: move=48 side=1
+[mgba] memory: move=49 side=0
+[mgba] memory: move=49 side=1
+[mgba] memory: move=50 side=0
+[mgba] memory: move=50 side=1
+[mgba] memory: move=51 side=0
+[mgba] memory: move=51 side=1
+[mgba] memory: move=52 side=0
+[mgba] memory: move=52 side=1
+[mgba] memory: move=53 side=0
+[mgba] memory: move=53 side=1
+[mgba] memory: move=54 side=0
+[mgba] memory: move=54 side=1
+[mgba] memory: move=55 side=0
+[mgba] memory: move=55 side=1
+[mgba] memory: move=56 side=0
+[mgba] memory: move=56 side=1
+[mgba] memory: move=57 side=0
+[mgba] memory: move=57 side=1
+[mgba] memory: move=58 side=0
+[mgba] memory: move=58 side=1
+[mgba] memory: move=59 side=0
+[mgba] memory: move=59 side=1
+[mgba] memory: move=60 side=0
+[mgba] memory: move=60 side=1
+[mgba] memory: move=61 side=0
+[mgba] memory: move=61 side=1
+[mgba] memory: move=62 side=0
+[mgba] memory: move=62 side=1
+[mgba] memory: move=63 side=0
+[mgba] memory: move=63 side=1
+[mgba] memory: move=64 side=0
+[mgba] memory: move=64 side=1
+[mgba] memory: move=65 side=0
+[mgba] memory: move=65 side=1
+[mgba] memory: move=66 side=0
+[mgba] memory: move=66 side=1
+[mgba] memory: move=67 side=0
+[mgba] memory: move=67 side=1
+[mgba] memory: move=68 side=0
+[mgba] memory: move=68 side=1
+[mgba] memory: move=69 side=0
+[mgba] memory: move=69 side=1
+[mgba] memory: move=70 side=0
+[mgba] memory: move=70 side=1
+[mgba] memory: move=71 side=0
+[mgba] memory: move=71 side=1
+[mgba] memory: move=72 side=0
+[mgba] memory: move=72 side=1
+[mgba] memory: move=73 side=0
+[mgba] memory: move=73 side=1
+[mgba] memory: move=74 side=0
+[mgba] memory: move=74 side=1
+[mgba] memory: move=75 side=0
+[mgba] memory: move=75 side=1
+[mgba] memory: move=76 side=0
+[mgba] memory: move=76 side=1
+[mgba] memory: move=77 side=0
+[mgba] memory: move=77 side=1
+[mgba] memory: move=78 side=0
+[mgba] memory: move=78 side=1
+[mgba] memory: move=79 side=0
+[mgba] memory: move=79 side=1
+[mgba] memory: move=80 side=0
+[mgba] memory: move=80 side=1
+[mgba] memory: move=81 side=0
+[mgba] memory: move=81 side=1
+[mgba] memory: move=82 side=0
+[mgba] memory: move=82 side=1
+[mgba] memory: move=83 side=0
+[mgba] memory: move=83 side=1
+[mgba] memory: move=84 side=0
+[mgba] memory: move=84 side=1
+[mgba] memory: move=85 side=0
+[mgba] memory: move=85 side=1
+[mgba] memory: move=86 side=0
+[mgba] memory: move=86 side=1
+[mgba] memory: move=87 side=0
+[mgba] memory: move=87 side=1
+[mgba] memory: move=88 side=0
+[mgba] memory: move=88 side=1
+[mgba] memory: move=89 side=0
+[mgba] memory: move=89 side=1
+[mgba] memory: move=90 side=0
+[mgba] memory: move=90 side=1
+[mgba] memory: move=91 side=0
+[mgba] memory: move=91 side=1
+[mgba] memory: move=92 side=0
+[mgba] memory: move=92 side=1
+[mgba] memory: move=93 side=0
+[mgba] memory: move=93 side=1
+[mgba] memory: move=94 side=0
+[mgba] memory: move=94 side=1
+[mgba] memory: move=95 side=0
+[mgba] memory: move=95 side=1
+[mgba] memory: move=96 side=0
+[mgba] memory: move=96 side=1
+[mgba] memory: move=97 side=0
+[mgba] memory: move=97 side=1
+[mgba] memory: move=98 side=0
+[mgba] memory: move=98 side=1
+[mgba] memory: move=99 side=0
+[mgba] memory: move=99 side=1
+[mgba] memory: move=100 side=0
+[mgba] memory: move=100 side=1
+[mgba] memory: move=101 side=0
+[mgba] memory: move=101 side=1
+[mgba] memory: move=102 side=0
+[mgba] memory: move=102 side=1
+[mgba] memory: move=103 side=0
+[mgba] memory: move=103 side=1
+[mgba] memory: move=104 side=0
+[mgba] memory: move=104 side=1
+[mgba] memory: move=105 side=0
+[mgba] memory: move=105 side=1
+[mgba] memory: move=106 side=0
+[mgba] memory: move=106 side=1
+[mgba] memory: move=107 side=0
+[mgba] memory: move=107 side=1
+[mgba] memory: move=108 side=0
+[mgba] memory: move=108 side=1
+[mgba] memory: move=109 side=0
+[mgba] memory: move=109 side=1
+[mgba] memory: move=110 side=0
+[mgba] memory: move=110 side=1
+[mgba] memory: move=111 side=0
+[mgba] memory: move=111 side=1
+[mgba] memory: move=112 side=0
+[mgba] memory: move=112 side=1
+[mgba] memory: move=113 side=0
+[mgba] memory: move=113 side=1
+[mgba] memory: move=114 side=0
+[mgba] memory: move=114 side=1
+[mgba] memory: move=115 side=0
+[mgba] memory: move=115 side=1
+[mgba] memory: move=116 side=0
+[mgba] memory: move=116 side=1
+[mgba] memory: move=117 side=0
+[mgba] memory: move=117 side=1
+[mgba] memory: move=118 side=0
+[mgba] memory: move=118 side=1
+[mgba] memory: move=119 side=0
+[mgba] memory: move=119 side=1
+[mgba] memory: move=120 side=0
+[mgba] memory: move=120 side=1
+[mgba] memory: move=121 side=0
+[mgba] memory: move=121 side=1
+[mgba] memory: move=122 side=0
+[mgba] memory: move=122 side=1
+[mgba] memory: move=123 side=0
+[mgba] memory: move=123 side=1
+[mgba] memory: move=124 side=0
+[mgba] memory: move=124 side=1
+[mgba] memory: move=125 side=0
+[mgba] memory: move=125 side=1
+[mgba] memory: move=126 side=0
+[mgba] memory: move=126 side=1
+[mgba] memory: move=127 side=0
+[mgba] memory: move=127 side=1
+[mgba] memory: move=128 side=0
+[mgba] memory: move=128 side=1
+[mgba] memory: move=129 side=0
+[mgba] memory: move=129 side=1
+[mgba] memory: move=130 side=0
+[mgba] memory: move=130 side=1
+[mgba] memory: move=131 side=0
+[mgba] memory: move=131 side=1
+[mgba] memory: move=132 side=0
+[mgba] memory: move=132 side=1
+[mgba] memory: move=133 side=0
+[mgba] memory: move=133 side=1
+[mgba] memory: move=134 side=0
+[mgba] memory: move=134 side=1
+[mgba] memory: move=135 side=0
+[mgba] memory: move=135 side=1
+[mgba] memory: move=136 side=0
+[mgba] memory: move=136 side=1
+[mgba] memory: move=137 side=0
+[mgba] memory: move=137 side=1
+[mgba] memory: move=138 side=0
+[mgba] memory: move=138 side=1
+[mgba] memory: move=139 side=0
+[mgba] memory: move=139 side=1
+[mgba] memory: move=140 side=0
+[mgba] memory: move=140 side=1
+[mgba] memory: move=141 side=0
+[mgba] memory: move=141 side=1
+[mgba] memory: move=142 side=0
+[mgba] memory: move=142 side=1
+[mgba] memory: move=143 side=0
+[mgba] memory: move=143 side=1
+[mgba] memory: move=144 side=0
+[mgba] memory: move=144 side=1
+[mgba] memory: move=145 side=0
+[mgba] memory: move=145 side=1
+[mgba] memory: move=146 side=0
+[mgba] memory: move=146 side=1
+[mgba] memory: move=147 side=0
+[mgba] memory: move=147 side=1
+[mgba] memory: move=148 side=0
+[mgba] memory: move=148 side=1
+[mgba] memory: move=149 side=0
+[mgba] memory: move=149 side=1
+[mgba] memory: move=150 side=0
+[mgba] memory: move=150 side=1
+[mgba] memory: move=151 side=0
+[mgba] memory: move=151 side=1
+[mgba] memory: move=152 side=0
+[mgba] memory: move=152 side=1
+[mgba] memory: move=153 side=0
+[mgba] memory: move=153 side=1
+[mgba] memory: move=154 side=0
+[mgba] memory: move=154 side=1
+[mgba] memory: move=155 side=0
+[mgba] memory: move=155 side=1
+[mgba] memory: move=156 side=0
+[mgba] memory: move=156 side=1
+[mgba] memory: move=157 side=0
+[mgba] memory: move=157 side=1
+[mgba] memory: move=158 side=0
+[mgba] memory: move=158 side=1
+[mgba] memory: move=159 side=0
+[mgba] memory: move=159 side=1
+[mgba] memory: move=160 side=0
+[mgba] memory: move=160 side=1
+[mgba] memory: move=161 side=0
+[mgba] memory: move=161 side=1
+[mgba] memory: move=162 side=0
+[mgba] memory: move=162 side=1
+[mgba] memory: move=163 side=0
+[mgba] memory: move=163 side=1
+[mgba] memory: move=164 side=0
+[mgba] memory: move=164 side=1
+[mgba] memory: move=165 side=0
+[mgba] memory: move=165 side=1
+[mgba] memory: PASS case=moves count=330 free=24280B stack=17656B
+[mgba] memory: evolution=0
+[mgba] memory: evolution=1
+[mgba] memory: evolution=2
+[mgba] memory: PASS case=evolution count=3 free=25024B stack=17656B
+[mgba] memory: trade=0
+[mgba] memory: trade=1
+[mgba] memory: trade=2
+[mgba] memory: PASS case=trade count=3 free=19904B stack=17656B
+[mgba] memory: PASS case=ending count=1 free=22080B stack=17656B
+[mgba] memory: PASS case=pc-full count=300 free=26112B stack=17656B
+[mgba] memory: PASS case=save-full count=1 free=35520B stack=17656B
+[mgba] memory: ALL PASS stack=17656B
+GBA memory PASS: 13 scenarios cases; min contiguous heap=13256 B, untouched stack=17656 B

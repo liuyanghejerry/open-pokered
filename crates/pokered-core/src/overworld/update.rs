@@ -3564,8 +3564,17 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
         use dotzuki_engine::trigger_manager::Trigger;
 
         let map_key = script_bridge::map_id_to_script_key(map_id);
-        self.trigger_manager.remove_triggers_for_map(&map_key);
-        self.trigger_manager.reset_fired_for_map(&map_key);
+        // The script engine/config below only own the current map. Keeping
+        // other maps' bindings made the trigger Vec grow with every visited
+        // map until its next allocation exhausted the GBA heap. Remove all
+        // old bindings, retaining capacity and the previous-player position
+        // so same-map reloads preserve OnEnter edge detection.
+        loop {
+            let old_map = self.trigger_manager.all_triggers().next()
+                .map(|trigger| trigger.map_id.clone());
+            let Some(old_map) = old_map else { break };
+            self.trigger_manager.remove_triggers_for_map(&old_map);
+        }
 
         // 1. Coord events → OnStep triggers
         for ce in &self.map_script_config.coord_events {

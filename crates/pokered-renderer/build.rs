@@ -39,7 +39,7 @@ fn main() {
     // `image` crate, so tile data is baked here — byte-identical to the
     // runtime conversion (same quantization + packing as
     // dotzuki_renderer::resource::{png_to_2bpp, png_to_1bpp}).
-    if target_os == "none" {
+    if target_os == "none" || env::var_os("CARGO_FEATURE_GBA_RESOURCE_TESTS").is_some() {
         generate_preconverted_assets(&manifest_dir, &out_dir);
     }
 }
