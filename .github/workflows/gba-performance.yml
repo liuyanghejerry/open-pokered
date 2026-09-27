@@ -123,7 +123,7 @@ jobs:
         run: |
           python3 scripts/gba_memory.py \
             --rom "$RUNNER_TEMP/gba-memory.gba" \
-            --log "$RUNNER_TEMP/gba-memory.log" --timeout-seconds 180
+            --log "$RUNNER_TEMP/gba-memory.log" --timeout-seconds 300
 
       - name: Build broad GBA memory scenarios
         if: steps.changes.outputs.has-changes == 'true'

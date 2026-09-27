@@ -86,6 +86,11 @@ in `performance-before.json`, candidate in `performance.json`; the existing
 15%/25-tick allowances are unchanged. CI also runs the new 23-scenario gate
 which rejects multiple simulation updates between draws.
 
+The Route 22 host timeout increases from 180 to 300 seconds: the first Linux
+CI run completed 38 encounters and was still progressing through encounter 39
+at 180 seconds. Rendering all animation ticks lengthens this soak; the required
+40 encounters, SRAM check and 4,096 B heap/stack thresholds are unchanged.
+
 ## Reproduction
 
 ```sh
