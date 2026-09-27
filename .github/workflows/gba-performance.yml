@@ -17,7 +17,7 @@ jobs:
   performance:
     name: GBA performance baseline
     runs-on: ubuntu-24.04
-    timeout-minutes: 20
+    timeout-minutes: 35
     steps:
       - name: Checkout candidate
         uses: actions/checkout@v4
@@ -123,7 +123,7 @@ jobs:
         run: |
           python3 scripts/gba_memory.py \
             --rom "$RUNNER_TEMP/gba-memory.gba" \
-            --log "$RUNNER_TEMP/gba-memory.log" --timeout-seconds 300
+            --log "$RUNNER_TEMP/gba-memory.log" --timeout-seconds 600
 
       - name: Build broad GBA memory scenarios
         if: steps.changes.outputs.has-changes == 'true'
@@ -140,7 +140,7 @@ jobs:
         run: |
           python3 scripts/gba_memory.py --suite scenarios \
             --rom "$RUNNER_TEMP/gba-scenarios.gba" \
-            --log "$RUNNER_TEMP/gba-scenarios.log" --timeout-seconds 300
+            --log "$RUNNER_TEMP/gba-scenarios.log" --timeout-seconds 600
 
       - name: Build GBA frame pacing scenarios
         if: steps.changes.outputs.has-changes == 'true'
