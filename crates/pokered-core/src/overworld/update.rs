@@ -3408,6 +3408,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
         // while materializing both the shared and target scenes exceeds EWRAM
         // during the Pallet Town → Oak's Lab escort transition.
         self.script_engine = super::native_script::OverworldScriptEngine::new();
+        self.script_queries_need_seed = true;
         self.script_engine.set_lang(&script_lang);
         self.active_script_effect = None;
         self.map_script_config = MapScriptConfig::default();

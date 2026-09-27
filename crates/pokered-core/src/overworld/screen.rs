@@ -750,6 +750,9 @@ pub struct OverworldScreen<G: GameData = pokered_data::impl_traits::PokemonRedDa
     /// bag-full success/failure synchronously (matching `hasItem`) so scenes'
     /// `@if (given = giveItem(...))` "no room" branches work correctly.
     pub(crate) script_bag_names: Vec<String>,
+    /// The app's input fingerprint cannot detect a replaced interpreter.
+    /// New maps and restored snapshots must populate its query host again.
+    pub(crate) script_queries_need_seed: bool,
     /// Snapshot of the party's species (UPPERCASE names), seeded each frame, so
     /// script queries (`@if` conditions over the party) can inspect it
     /// (mirrors `script_bag_names` / `hasItem`).
@@ -1159,6 +1162,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
             script_awaiting_filter_bag: false,
             script_awaiting_trade: false,
             script_bag_names: Vec::new(),
+            script_queries_need_seed: true,
             script_party_species: Vec::new(),
             player_starter: 0,
             pending_shop: None,
@@ -1362,6 +1366,11 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
             .or(self.last_map);
     }
 
+    /// Whether a map load or snapshot restore replaced the query host.
+    pub fn script_queries_need_seed(&self) -> bool {
+        self.script_queries_need_seed
+    }
+
     /// Seed the script engine's synchronous query state from the persistent
     /// game data. The app layer calls this each frame *before* `update_frame`
     /// so `@if`-style script conditions (`hasItem`, `getMoney`, `hasMoney`,
@@ -1406,6 +1415,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
         self.player_starter = player_starter;
         self.script_engine
             .seed_number("obtainedBadges", obtained_badges as f64);
+        self.script_queries_need_seed = false;
         self.mix_script_rng();
     }
 

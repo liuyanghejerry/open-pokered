@@ -3910,7 +3910,7 @@ impl PokemonGame {
                     // overworld frame this used to be the single largest
                     // per-frame cost on GBA.
                     let seed_snapshot = self.query_seed_snapshot();
-                    if seed_snapshot != self.query_seed {
+                    if self.overworld.script_queries_need_seed() || seed_snapshot != self.query_seed {
                         self.query_seed = seed_snapshot;
                         let bag_names: Vec<String> = self
                             .save_data
@@ -3986,10 +3986,11 @@ impl PokemonGame {
                                 &party_knows_hm,
                             );
                         }
+                    } else {
+                        // Seeding already mixes once. Consume exactly one
+                        // RNG draw per tick, independent of cache history.
+                        self.overworld.mix_script_rng();
                     }
-                    // Script-side entropy keeps varying every frame even when
-                    // the (unchanged) query state is not re-seeded.
-                    self.overworld.mix_script_rng();
 
                     // wOptions text delay — pushed every frame so the dialogue
                     // typewriter honors the configured TEXT SPEED.

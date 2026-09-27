@@ -125,6 +125,30 @@ fn fork_diverges_with_different_inputs() {
 }
 
 #[test]
+fn unchanged_script_queries_survive_map_and_same_map_warps() {
+    #[inline(never)]
+    fn query_host(game: &PokemonGame) -> serde_json::Value {
+        let snapshot = pokered_core::snapshot::OverworldSnapshot::capture(&game.overworld);
+        serde_json::to_value(snapshot).unwrap()["script_engine"]["interp"]["host"].clone()
+    }
+
+    let mut game = game_at_pallet(42, 10, 6);
+    drive(&mut game, &[None]);
+    let initial = query_host(&game);
+    assert_eq!(initial["numbers"]["money"], 3000.0);
+    assert_eq!(initial["numbers"]["partyCount"], 1.0);
+    for map in [MapId::Route1, MapId::PalletTown, MapId::PalletTown] {
+        game.overworld.warp_to_map(map, 10, 6);
+        drive(&mut game, &[None; 80]);
+        assert_eq!(game.overworld.state.current_map, map);
+        let current = query_host(&game);
+        for section in ["numbers", "texts", "sets"] {
+            assert_eq!(current[section], initial[section], "query host after {map:?} warp");
+        }
+    }
+}
+
+#[test]
 fn battle_determinism_same_seed_same_outcome() {
     fn run_battle(seed: u64) -> (u16, u16, u16) {
         let mut game = game_at_pallet(seed, 10, 9);
