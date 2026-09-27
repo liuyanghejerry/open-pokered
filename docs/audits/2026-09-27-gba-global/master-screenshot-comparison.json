@@ -1,0 +1,28 @@
+{
+  "base_commit": "7e7e983668d377bbf89b9d87d13b13259fafeed3",
+  "backend": "hosted headless CLI",
+  "language": "en",
+  "comparisons": [
+    {
+      "screen": "overworld",
+      "frames": 10,
+      "changed_pixels": 0,
+      "before": "docs/screenshots/gba-pr104-overworld-before.png",
+      "after": "docs/screenshots/gba-pr104-overworld-after.png"
+    },
+    {
+      "screen": "battle",
+      "frames": 200,
+      "changed_pixels": 0,
+      "before": "docs/screenshots/gba-pr104-battle-before.png",
+      "after": "docs/screenshots/gba-pr104-battle-after.png"
+    },
+    {
+      "screen": "save",
+      "frames": 10,
+      "changed_pixels": 0,
+      "before": "docs/screenshots/gba-pr104-save-before.png",
+      "after": "docs/screenshots/gba-pr104-save-after.png"
+    }
+  ]
+}

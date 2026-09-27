@@ -1,5 +1,7 @@
 use crate::alloc_prelude::*;
 pub mod game_data;
+#[cfg(target_os = "none")]
+pub mod gba_sram;
 pub mod hall_of_fame;
 pub mod ser_game_data;
 pub mod ser_pokemon;

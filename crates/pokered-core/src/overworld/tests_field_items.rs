@@ -26,12 +26,12 @@ fn bicycle_toggles_transport_mode() {
     assert_eq!(screen.state.player.transport, TransportMode::Biking);
     assert!(screen.pending_dialogue.is_some(), "shows a 'got on' message");
     let page = screen.pending_dialogue.as_ref().unwrap().current().unwrap();
-    assert_eq!((page.line1, page.line2), ("RED got on the", "BICYCLE!"));
+    assert_eq!((page.line1.as_ref(), page.line2.as_ref()), ("RED got on the", "BICYCLE!"));
 
     screen.use_field_item(ItemId::Bicycle, MapId::PalletTown);
     assert_eq!(screen.state.player.transport, TransportMode::Walking);
     let page = screen.pending_dialogue.as_ref().unwrap().current().unwrap();
-    assert_eq!((page.line1, page.line2), ("RED got off", "the BICYCLE."));
+    assert_eq!((page.line1.as_ref(), page.line2.as_ref()), ("RED got off", "the BICYCLE."));
 }
 
 #[test]
@@ -45,7 +45,7 @@ fn bicycle_refused_while_surfing() {
         "can't switch to the BICYCLE while SURFING"
     );
     let first = screen.pending_dialogue.as_ref().unwrap().current().unwrap();
-    assert_eq!((first.line1, first.line2), ("OAK: RED!", "This isn't the"));
+    assert_eq!((first.line1.as_ref(), first.line2.as_ref()), ("OAK: RED!", "This isn't the"));
 }
 
 #[test]
@@ -54,7 +54,7 @@ fn bicycle_refused_on_an_indoor_tileset() {
     screen.use_field_item(ItemId::Bicycle, MapId::PalletTown);
     assert_eq!(screen.state.player.transport, TransportMode::Walking);
     let page = screen.pending_dialogue.as_ref().unwrap().current().unwrap();
-    assert_eq!((page.line1, page.line2), ("No cycling", "allowed here."));
+    assert_eq!((page.line1.as_ref(), page.line2.as_ref()), ("No cycling", "allowed here."));
 }
 
 #[test]

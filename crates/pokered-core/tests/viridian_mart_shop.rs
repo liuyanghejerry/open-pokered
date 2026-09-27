@@ -34,7 +34,7 @@ fn talk_to_clerk(x: u16, y: u16, facing: Direction) -> (bool, Vec<String>) {
             let text = dlg
                 .pages()
                 .iter()
-                .flat_map(|p| [p.line1, p.line2])
+                .flat_map(|p| [p.line1.as_ref(), p.line2.as_ref()])
                 .collect::<Vec<_>>()
                 .join(" ");
             if dialogues.last().map(|s| s.as_str()) != Some(text.as_str()) {

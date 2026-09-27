@@ -20,8 +20,7 @@ pub use crate::resource_catalog::{AssetCategory, PokemonSpriteSize};
 use dotzuki_renderer::asset_provider::ResourceProvider;
 use dotzuki_renderer::tile::{TileSet, TILE_PIXELS};
 
-mod gba_asset_dims;
-pub use gba_asset_dims::tile_dims;
+pub use crate::gba_rom_tile_dims as tile_dims;
 
 /// Error type for the bare-metal loader: an asset missing from the
 /// pre-converted registry (built from `gfx/` at compile time).
@@ -68,14 +67,115 @@ pub struct CachedTileSet {
 
 pub struct ResourceManager {
     root: AssetRoot,
-    /// Decoded tilesets. GBA screen lifecycles retain only a handful of
-    /// entries, so a compact linear cache avoids allocating a combined
-    /// "<subdir>/<stem>" String on every lookup.
+    /// Least recently used first. Screen lifetimes can include all 151 dex
+    /// pictures or many PC/battle sprites, so lifecycle clearing alone is
+    /// insufficient on GBA. Evict BEFORE decoding the next asset.
     cache: Vec<CachedAsset>,
     /// Registry misses are immutable for the lifetime of the ROM. Remember
     /// them so optional assets do not rescan the full generated table every
     /// frame.
     missing: Vec<(AssetCategory, String)>,
+}
+
+const CACHE_BYTES: usize = 16 * 1024;
+const CACHE_ENTRIES: usize = 32;
+const MISSING_ENTRIES: usize = 16;
+
+#[cfg(test)]
+mod cache_tests {
+    use super::*;
+
+    #[test]
+    fn all_rom_assets_fit_individually_and_dex_reload_preserves_pixels() {
+        let mut rm = ResourceManager::new(AssetRoot::new());
+        for &(dir, name, bytes) in crate::gba_assets::PRECONVERTED_ASSETS {
+            let size = bytes.len() / if dir == "font" { 8 } else { 16 } * 64;
+            assert!(
+                size <= CACHE_BYTES,
+                "oversize ROM asset {dir}/{name}: {size}"
+            );
+        }
+        // Two sweeps require evicted pictures to be decoded again. Compare
+        // every pixel with an uncached decode, not just the entry count.
+        for _ in 0..2 {
+            for &(dir, name, bytes) in crate::gba_assets::PRECONVERTED_ASSETS {
+                if dir != "pokemon/front" {
+                    continue;
+                }
+                let expected = TileSet::from_2bpp(bytes);
+                let loaded = rm.load_pokemon_front(name).unwrap();
+                assert_eq!(loaded.tileset.len(), expected.len());
+                for i in 0..expected.len() {
+                    assert_eq!(
+                        loaded.tileset.get(i).pixels,
+                        expected.get(i).pixels,
+                        "{name} tile {i}"
+                    );
+                }
+                assert!(
+                    rm.cache
+                        .iter()
+                        .map(|e| e.value.tile_count * 64)
+                        .sum::<usize>()
+                        <= CACHE_BYTES
+                );
+                assert!(rm.cache.len() <= CACHE_ENTRIES);
+            }
+        }
+    }
+
+    #[test]
+    fn cache_hits_refresh_recency_and_normalize_extensions() {
+        let mut rm = ResourceManager::new(AssetRoot::new());
+        rm.load_pokemon_front("bulbasaur").unwrap();
+        rm.load_pokemon_front("ivysaur").unwrap();
+        rm.load_pokemon_front("bulbasaur.png").unwrap();
+        assert_eq!(rm.cache.len(), 2);
+        assert_eq!(rm.cache[0].name, "ivysaur");
+        assert_eq!(rm.cache[1].name, "bulbasaur");
+        rm.clear_cache();
+        assert!(rm.cache.is_empty());
+        assert_eq!(rm.cache.capacity(), 0);
+    }
+
+    #[test]
+    fn missing_asset_names_cannot_grow_without_bound() {
+        let mut rm = ResourceManager::new(AssetRoot::new());
+        for i in 0..100 {
+            assert!(rm.load_pokemon_front(&format!("missing-{i}")).is_err());
+            assert!(rm.missing.len() <= MISSING_ENTRIES);
+        }
+        assert!(rm.load_pokemon_front("missing-99.png").is_err());
+        assert_eq!(rm.missing.len(), MISSING_ENTRIES);
+        rm.clear_cache();
+        assert_eq!(rm.missing.capacity(), 0);
+    }
+
+    #[test]
+    fn both_animation_sheets_remain_borrowable_after_eviction() {
+        let mut rm = ResourceManager::new(AssetRoot::new());
+        for &(dir, name, _) in crate::gba_assets::PRECONVERTED_ASSETS {
+            if dir == "pokemon/front" {
+                rm.load_pokemon_front(name).unwrap();
+            }
+        }
+        let (a, b) = rm.load_battle_animation_pair().unwrap();
+        for (name, loaded) in [("move_anim_0", a), ("move_anim_1", b)] {
+            let bytes = crate::gba_assets::get_preconverted_asset("battle", name).unwrap();
+            let expected = TileSet::from_2bpp(bytes);
+            assert_eq!(loaded.len(), expected.len());
+            for i in 0..expected.len() {
+                assert_eq!(loaded.get(i).pixels, expected.get(i).pixels);
+            }
+        }
+        assert!(
+            rm.cache
+                .iter()
+                .map(|e| e.value.tile_count * 64)
+                .sum::<usize>()
+                <= CACHE_BYTES
+        );
+    }
 }
 
 struct CachedAsset {
@@ -141,7 +241,8 @@ impl ResourceManager {
             .iter()
             .position(|entry| entry.category == category && entry.name == normalized_name)
         {
-            return Ok(&self.cache[index].value);
+            self.cache[index..].rotate_left(1);
+            return Ok(&self.cache.last().expect("cache hit").value);
         }
         let subdir = category.subdir();
         if self
@@ -157,6 +258,9 @@ impl ResourceManager {
         let Some((reg_dir, reg_stem)) = Self::registry_key(subdir, normalized_name) else {
             let cache_key = format!("{}/{}", subdir, normalized_name);
             log::warn!("gba-asset miss: {}", cache_key);
+            if self.missing.len() == MISSING_ENTRIES {
+                self.missing.remove(0);
+            }
             self.missing.push((category, normalized_name.to_string()));
             return Err(ResourceError { key: cache_key });
         };
@@ -167,6 +271,25 @@ impl ResourceManager {
                     key: format!("{}/{}", subdir, normalized_name),
                 }
             })?;
+        let decoded_bytes = bytes.len() / if reg_dir == "font" { 8 } else { 16 }
+            * core::mem::size_of::<dotzuki_renderer::tile::Tile>();
+        let mut retained_bytes: usize = self
+            .cache
+            .iter()
+            .map(|entry| {
+                entry.value.tile_count * core::mem::size_of::<dotzuki_renderer::tile::Tile>()
+            })
+            .sum();
+        while !self.cache.is_empty()
+            && (retained_bytes + decoded_bytes > CACHE_BYTES || self.cache.len() >= CACHE_ENTRIES)
+        {
+            let oldest = self.cache.remove(0);
+            retained_bytes -=
+                oldest.value.tile_count * core::mem::size_of::<dotzuki_renderer::tile::Tile>();
+        }
+        // An individual asset larger than the budget is allowed only as the
+        // sole entry. Current game assets fit; this also preserves the loader
+        // contract for future assets without retaining other decoded data.
         // Decode with the registry's storage encoding (font → 1bpp,
         // everything else → 2bpp). Tile splitting must match the hosted
         // per-tile decode, and it does for both encodings.
@@ -191,6 +314,24 @@ impl ResourceManager {
 
     pub fn load(&mut self, category: AssetCategory, name: &str) -> Result<&CachedTileSet> {
         self.load_and_cache(category, name)
+    }
+
+    /// Borrow both battle-animation sheets together. Copying these sheets
+    /// every frame adds several KiB to the peak precisely while an attack's
+    /// other effects are active. All current pairs fit the cache budget.
+    pub fn load_battle_animation_pair(&mut self) -> Result<(&TileSet, &TileSet)> {
+        self.load(AssetCategory::Battle, "move_anim_0")?;
+        self.load(AssetCategory::Battle, "move_anim_1")?;
+        let find = |name| {
+            self.cache
+                .iter()
+                .find(|entry| entry.category == AssetCategory::Battle && entry.name == name)
+                .map(|entry| &entry.value.tileset)
+                .ok_or_else(|| ResourceError {
+                    key: format!("battle/{name}: animation pair exceeds cache budget"),
+                })
+        };
+        Ok((find("move_anim_0")?, find("move_anim_1")?))
     }
 
     impl_named_loaders!();

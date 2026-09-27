@@ -1,0 +1,6 @@
+[mgba] memory: script=OaksLab
+[mgba] repro: heap low 25640B at frame 31650
+[mgba] [INFO] [Script] NPC talk: text_id=5, fn_name=talkOak1
+[mgba] [INFO] [Script] Calling talkOak1
+[mgba] panicked at /Users/liuyanghe02/.rustup/toolchains/nightly-2025-12-07-aarch64-apple-darwin/lib/rustlib/src/rust/library/alloc/src/alloc.rs:439:13:
+memory allocation of 0 bytes failed

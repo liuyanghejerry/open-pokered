@@ -64,8 +64,7 @@ use pokered_core::party_screen::{
     PartyNoticeReturn, PartyScreenAction, PartyScreenInput, PartyScreenState,
 };
 use pokered_core::pokedex_screen::{PokedexScreenAction, PokedexScreenInput, PokedexScreenState};
-#[cfg(not(target_os = "none"))]
-use pokered_core::save::sram_export::export_sram;
+use pokered_core::save::sram_export::{export_sram, export_sram_into};
 use pokered_core::stats_screen::{StatsScreenAction, StatsScreenInput, StatsScreenState};
 use pokered_core::town_map_screen::{TownMapScreenAction, TownMapScreenInput, TownMapScreenState};
 use pokered_core::trainer_card_screen::{
@@ -74,8 +73,10 @@ use pokered_core::trainer_card_screen::{
 
 use pokered_core::elevator_screen::{ElevatorAction, ElevatorInput, ElevatorScreen};
 use pokered_core::pc_screen::{PcContext, PcEntry, PcOpenContext, PcScreen, PcScreenAction, PcSfx};
-#[cfg(all(not(target_arch = "wasm32"), not(target_os = "none")))]
+#[cfg(not(target_arch = "wasm32"))]
 use pokered_core::save::sram_import::import_sram;
+#[cfg(target_os = "none")]
+use pokered_core::save::sram_import::import_sram_into;
 use pokered_core::save::SaveData;
 use pokered_core::save_menu::{
     SaveMenuResult, SaveMenuState, SavePhase, SaveScreenInfo, SaveSfxEvent, YesNoInput,
@@ -576,6 +577,25 @@ impl Drop for VideoRecorder {
     }
 }
 
+/// Largest currently-allocatable block (fallible `try_reserve_exact`
+/// bisection — safe to probe from production states). Diagnostic only.
+#[cfg(feature = "repro-markers")]
+#[inline(never)]
+pub fn largest_free_block() -> usize {
+    let mut lo = 0usize;
+    let mut hi = 256 * 1024usize;
+    while lo < hi {
+        let mid = lo + (hi - lo + 1) / 2;
+        let mut v: Vec<u8> = Vec::new();
+        if v.try_reserve_exact(mid).is_ok() {
+            lo = mid;
+        } else {
+            hi = mid - 1;
+        }
+    }
+    lo
+}
+
 pub struct PokemonGame {
     pub state: GameState,
     pub title_screen: TitleScreenState,
@@ -749,6 +769,115 @@ pub struct PokemonGame {
     /// connection comes up (the party is refreshed at the cable-club table).
     #[cfg(not(target_os = "none"))]
     pub link_trade: Option<LinkTradeDriver>,
+    /// POD fingerprint of the inputs that feed the script query seeds (bag,
+    /// party, money, dex, daycare…). The seed rebuild — hash-map sets plus
+    /// `Vec<String>` clones and `format!` loops — runs only when this
+    /// changes; doing it unconditionally cost ~1,200 GBA timer ticks per
+    /// overworld frame in allocator churn on an otherwise static screen.
+    query_seed: QuerySeedSnapshot,
+}
+
+/// POD snapshot of every input consumed by the script/day-care query seeding
+/// in the overworld frame loop. Variable-length inputs (bag, party, day-care
+/// mon) are folded into FNV-1a fingerprints annotated with the scalar inputs;
+/// comparing two snapshots is a fixed-size memcmp with no allocation.
+#[derive(Clone, Copy, PartialEq, Eq, Default)]
+struct QuerySeedSnapshot {
+    money: u32,
+    coins: u16,
+    dex_owned: u8,
+    dex_seen: u8,
+    rival_starter: u8,
+    player_starter: u8,
+    badges: u8,
+    version: u8,
+    facing: u8,
+    bag_h: u64,
+    party_h: u64,
+    daycare_h: u64,
+}
+
+const FNV_OFFSET: u64 = 0xcbf2_9ce4_8422_2325;
+const FNV_PRIME: u64 = 0x0000_0100_0000_01b3;
+
+fn fnv_mix(h: &mut u64, bytes: &[u8]) {
+    for &b in bytes {
+        *h = (*h ^ b as u64).wrapping_mul(FNV_PRIME);
+    }
+}
+
+impl QuerySeedSnapshot {
+    fn hash_u8(h: &mut u64, v: u8) {
+        fnv_mix(h, &[v]);
+    }
+
+    fn hash_u32(h: &mut u64, v: u32) {
+        fnv_mix(h, &v.to_le_bytes());
+    }
+}
+
+impl PokemonGame {
+    /// Fingerprint the script/day-care query inputs. Allocation-free: bag and
+    /// party are walked by reference (a `Vec`-returning `items()`/`to_vec()`
+    /// here would itself allocate once per frame).
+    fn query_seed_snapshot(&self) -> QuerySeedSnapshot {
+        use dotzuki_engine::overworld::Direction;
+        let gd = &self.save_data.game_data;
+        let mut snap = QuerySeedSnapshot {
+            money: gd.player_money,
+            coins: gd.player_coins,
+            dex_owned: gd.pokedex.owned_count() as u8,
+            dex_seen: gd.pokedex.seen_count() as u8,
+            rival_starter: gd.rival_starter,
+            player_starter: gd.player_starter,
+            badges: gd.obtained_badges,
+            version: match self.state.config.version {
+                GameVersion::Red => 0,
+                GameVersion::Blue => 1,
+            },
+            facing: match self.overworld.state.player.facing {
+                Direction::Up => 0,
+                Direction::Down => 1,
+                Direction::Left => 2,
+                Direction::Right => 3,
+            },
+            bag_h: 0,
+            party_h: 0,
+            daycare_h: 0,
+        };
+
+        let mut h = FNV_OFFSET;
+        for i in 0..gd.bag.count() {
+            if let Some((id, qty)) = gd.bag.get(i) {
+                QuerySeedSnapshot::hash_u8(&mut h, id as u8);
+                QuerySeedSnapshot::hash_u8(&mut h, qty);
+            }
+        }
+        snap.bag_h = h;
+
+        let mut h = FNV_OFFSET;
+        let mut name_buf = [0u8; pokered_core::battle::state::NAME_TEXT_BUF];
+        for mon in self.save_data.party.iter() {
+            QuerySeedSnapshot::hash_u8(&mut h, mon.species as u8);
+            QuerySeedSnapshot::hash_u8(&mut h, mon.level);
+            for mv in &mon.moves {
+                QuerySeedSnapshot::hash_u8(&mut h, *mv as u8);
+            }
+            fnv_mix(&mut h, mon.display_name(&mut name_buf).as_bytes());
+        }
+        snap.party_h = h;
+
+        let dc = &gd.daycare;
+        let mut h = FNV_OFFSET;
+        QuerySeedSnapshot::hash_u8(&mut h, dc.in_use as u8);
+        QuerySeedSnapshot::hash_u8(&mut h, dc.species);
+        QuerySeedSnapshot::hash_u32(&mut h, dc.exp);
+        QuerySeedSnapshot::hash_u8(&mut h, dc.box_level);
+        fnv_mix(&mut h, &gd.daycare_mon_name);
+        snap.daycare_h = h;
+
+        snap
+    }
 }
 
 /// Normalize the trade driver's errors onto the transport error type so the
@@ -1214,6 +1343,7 @@ impl PokemonGame {
             link_battle: None,
             #[cfg(not(target_os = "none"))]
             link_trade: None,
+            query_seed: QuerySeedSnapshot::default(),
         }
     }
 
@@ -1223,6 +1353,11 @@ impl PokemonGame {
     /// from the build-time embedded tables; graphics come from the
     /// pre-converted 2bpp registry. Called by `pokered-gba`'s `main.rs`.
     #[cfg(target_os = "none")]
+    // Never inlined: the constructor's ~29 KB return slot plus its own temps
+    // must live in a shallow call frame, not in `game_main`'s prologue
+    // reservation (fat LTO merged them, ballooning the boot frame to ~55 KB
+    // of the 64 KiB EWRAM stack).
+    #[inline(never)]
     pub fn new_for_gba(version: GameVersion) -> Self {
         // NOTE: bare-metal callers keep `PokemonGame` in EWRAM (~29 KB, most
         // of the IWRAM stack budget). Large fields are constructed inline in
@@ -1351,6 +1486,7 @@ impl PokemonGame {
             startup_warp: None,
             soft_reset_frames: 0,
             ow_ran_last_frame: false,
+            query_seed: QuerySeedSnapshot::default(),
         };
         log::info!("gba:ctor literal built");
         built
@@ -1495,6 +1631,7 @@ impl PokemonGame {
             link_battle: None,
             #[cfg(not(target_os = "none"))]
             link_trade: None,
+            query_seed: QuerySeedSnapshot::default(),
         }
     }
 
@@ -1710,75 +1847,88 @@ impl PokemonGame {
         Ok(())
     }
 
+    /// Apply live session state (names, player position/map, flags, tile
+    /// animations) onto `save`. Shared by the hosted `build_save_data` clone
+    /// path and the bare-metal in-place path, which cannot afford a 29 KB
+    /// `SaveData` clone inside the update loop.
+    fn apply_live_state_to_save(
+        save: &mut SaveData,
+        overworld: &OverworldScreen,
+        player_name: &str,
+        rival_name: &str,
+    ) {
+    if let Some(encoded) = pokered_data::charmap::encode_string(&player_name) {
+        save.player_name = encoded;
+    }
+    if let Some(encoded) = pokered_data::charmap::encode_string(&rival_name) {
+        save.game_data.rival_name = encoded;
+    }
+
+    let player = &overworld.state.player;
+    let current_map = overworld.state.current_map;
+
+    save.game_data.position.map_id = current_map as u8;
+    save.game_data.position.x = player.x as u8;
+    save.game_data.position.y = player.y as u8;
+    save.game_data.position.x_block = (player.x % 2) as u8;
+    save.game_data.position.y_block = (player.y % 2) as u8;
+    if let Some(last_map) = overworld.last_map {
+        save.game_data.last_map = last_map as u8;
+    }
+
+    let facing = match player.facing {
+        pokered_core::overworld::Direction::Down => 0u8,
+        pokered_core::overworld::Direction::Up => 4u8,
+        pokered_core::overworld::Direction::Left => 8u8,
+        pokered_core::overworld::Direction::Right => 12u8,
+    };
+    save.game_data.player_direction = facing;
+    save.game_data.player_last_stop_direction = facing;
+    save.game_data.player_moving_direction = facing;
+
+    pokered_core::log_save!(
+        "build_save_data: map_id={}, x={}, y={}, dir={}, player.x={}, player.y={}",
+        save.game_data.position.map_id,
+        save.game_data.position.x,
+        save.game_data.position.y,
+        facing,
+        player.x,
+        player.y
+    );
+
+    // wCurrentMapHeight2/Width2 = block dimensions × 2
+    let (map_w, map_h) = current_map.dimensions();
+    save.game_data.current_map_height2 = map_h * 2;
+    save.game_data.current_map_width2 = map_w * 2;
+
+    if let Some(ref map_data) = overworld.map_data {
+        save.game_data.map_header.tileset = map_data.tileset.to_u8();
+        save.game_data.map_header.height = map_data.height;
+        save.game_data.map_header.width = map_data.width;
+    }
+
+    // engine/menus/save.asm: hTileAnimations is stored into sTileAnimations
+    // on save. It carries the current tileset's animation byte
+    // (TILEANIM_*); map loads refresh it from the tileset header.
+    save.tile_animations = match overworld.tile_anim.kind() {
+        pokered_core::overworld::presentation::TileAnimKind::None => 0,
+        pokered_core::overworld::presentation::TileAnimKind::Water => 1,
+        pokered_core::overworld::presentation::TileAnimKind::WaterFlower => 2,
+    };
+
+    // The event-flag bitset serializes directly into the original
+    // 320-byte SRAM region (wEventFlags, NUM_EVENTS = $A00 bits).
+    save.game_data.event_flags = overworld.unified_flags().as_bytes().to_vec();
+
+    save.game_data.toggleable_object_flags = *overworld.toggleable_object_flags();
+    save.game_data.obtained_hidden_items = *overworld.hidden_item_flags();
+    save.game_data.obtained_hidden_coins = *overworld.hidden_coin_flags();
+
+    }
+
     fn build_save_data(&self) -> SaveData {
         let mut save = self.save_data.clone();
-        if let Some(encoded) = pokered_data::charmap::encode_string(&self.player_name) {
-            save.player_name = encoded;
-        }
-        if let Some(encoded) = pokered_data::charmap::encode_string(&self.rival_name) {
-            save.game_data.rival_name = encoded;
-        }
-
-        let player = &self.overworld.state.player;
-        let current_map = self.overworld.state.current_map;
-
-        save.game_data.position.map_id = current_map as u8;
-        save.game_data.position.x = player.x as u8;
-        save.game_data.position.y = player.y as u8;
-        save.game_data.position.x_block = (player.x % 2) as u8;
-        save.game_data.position.y_block = (player.y % 2) as u8;
-        if let Some(last_map) = self.overworld.last_map {
-            save.game_data.last_map = last_map as u8;
-        }
-
-        let facing = match player.facing {
-            pokered_core::overworld::Direction::Down => 0u8,
-            pokered_core::overworld::Direction::Up => 4u8,
-            pokered_core::overworld::Direction::Left => 8u8,
-            pokered_core::overworld::Direction::Right => 12u8,
-        };
-        save.game_data.player_direction = facing;
-        save.game_data.player_last_stop_direction = facing;
-        save.game_data.player_moving_direction = facing;
-
-        pokered_core::log_save!(
-            "build_save_data: map_id={}, x={}, y={}, dir={}, player.x={}, player.y={}",
-            save.game_data.position.map_id,
-            save.game_data.position.x,
-            save.game_data.position.y,
-            facing,
-            player.x,
-            player.y
-        );
-
-        // wCurrentMapHeight2/Width2 = block dimensions × 2
-        let (map_w, map_h) = current_map.dimensions();
-        save.game_data.current_map_height2 = map_h * 2;
-        save.game_data.current_map_width2 = map_w * 2;
-
-        if let Some(ref map_data) = self.overworld.map_data {
-            save.game_data.map_header.tileset = map_data.tileset.to_u8();
-            save.game_data.map_header.height = map_data.height;
-            save.game_data.map_header.width = map_data.width;
-        }
-
-        // engine/menus/save.asm: hTileAnimations is stored into sTileAnimations
-        // on save. It carries the current tileset's animation byte
-        // (TILEANIM_*); map loads refresh it from the tileset header.
-        save.tile_animations = match self.overworld.tile_anim.kind() {
-            pokered_core::overworld::presentation::TileAnimKind::None => 0,
-            pokered_core::overworld::presentation::TileAnimKind::Water => 1,
-            pokered_core::overworld::presentation::TileAnimKind::WaterFlower => 2,
-        };
-
-        // The event-flag bitset serializes directly into the original
-        // 320-byte SRAM region (wEventFlags, NUM_EVENTS = $A00 bits).
-        save.game_data.event_flags = self.overworld.unified_flags().as_bytes().to_vec();
-
-        save.game_data.toggleable_object_flags = *self.overworld.toggleable_object_flags();
-        save.game_data.obtained_hidden_items = *self.overworld.hidden_item_flags();
-        save.game_data.obtained_hidden_coins = *self.overworld.hidden_coin_flags();
-
+        Self::apply_live_state_to_save(&mut save, &self.overworld, &self.player_name, &self.rival_name);
         save
     }
 
@@ -1881,10 +2031,106 @@ impl PokemonGame {
         Self::save_companion_script_flags(&self.overworld);
     }
 
-    /// Bare metal: no filesystem — persistence moves to SRAM in a later
-    /// pass. Silently succeed so the save menu / credits flows complete.
+    /// Bare metal: persist the 32 KiB SRAM image directly onto the cartridge
+    /// SRAM (memory-mapped at 0x0E00_0000). The live state is synced in place —
+    /// no `SaveData` clone — because this runs inside the update loop, whose
+    /// stack headroom cannot absorb a 29 KB temporary.
+    /// Diagnostic hook: run the production bare-metal save path on demand
+    /// (`--features repro-rival`), so hardware repros can save from states the
+    /// autopilot cannot navigate to.
+    #[cfg(all(target_os = "none", feature = "repro-markers"))]
+    pub fn debug_save_now(&mut self) {
+        self.save_to_file();
+    }
+
+    /// Exercise every visual command stream on the actual small-memory
+    /// target, including moves whose battle effect would otherwise miss or
+    /// end the encounter. Reuses the differential recorder's animation seam.
+    #[cfg(all(target_os = "none", feature = "repro-markers"))]
+    pub fn debug_start_memory_move(&mut self, move_id: pokered_data::moves::MoveId, player: bool) {
+        self.battle.phase = pokered_core::battle::BattlePhase::PlayerMenu;
+        self.battle_vfx = BattleVisualEffects::default();
+        self.battle_vfx.prime_move_animation_capture_scene(&self.battle);
+        self.battle_vfx.start_move_animation_capture(move_id, player);
+    }
+
+    #[cfg(all(target_os = "none", feature = "repro-markers"))]
+    pub fn debug_memory_move_finished(&self) -> bool {
+        self.battle_vfx.move_animation_capture_finished()
+    }
+
     #[cfg(target_os = "none")]
-    fn save_to_file(&mut self) {}
+    #[inline(never)]
+    fn save_to_file(&mut self) {
+        Self::apply_live_state_to_save(
+            &mut self.save_data,
+            &self.overworld,
+            &self.player_name,
+            &self.rival_name,
+        );
+        core::sync::atomic::compiler_fence(core::sync::atomic::Ordering::SeqCst);
+        // Stream bank by bank (8 KiB staging) — a single 32 KiB image
+        // allocation cannot be satisfied at the lab/battle heap peaks
+        // (largest free block measured at ~30 KiB right after the first
+        // rival battle; a failed allocation is an invisible halt on
+        // hardware).
+        let mut bank = [0u8; 0x2000];
+        for index in 0..4 {
+            pokered_core::save::sram_export::export_sram_bank_into(
+                &self.save_data,
+                index,
+                &mut bank,
+            );
+            pokered_core::save::gba_sram::write_bytes(index * 0x2000, &bank);
+        }
+        log::info!("gba: save written to cartridge SRAM");
+        // Keep the in-memory summary in step so the save-overwrite prompt and
+        // a soft reset see the just-written save.
+        self.state.save_summary = Some(save_summary_from_data(&self.save_data));
+    }
+
+    /// Bare metal boot: load a saved game from cartridge SRAM when one is
+    /// present and checksum-valid. Blank/corrupt media (all-zero or 0xFF) fails
+    /// the region checksums, so a fresh cart naturally reports NEW GAME.
+    /// A checksum-valid image with no player id is also treated as empty.
+    ///
+    /// Imports straight into the resident save slot: `import_sram`'s 29 KB
+    /// return value does not fit the 64 KiB EWRAM stack (with fat-LTO
+    /// inlining it once exploded `game_main`'s frame outright).
+    #[cfg(target_os = "none")]
+    #[inline(never)]
+    pub fn try_load_sram_save(&mut self) {
+        // Snapshot the SRAM through byte-wide volatile loads first: the raw
+        // slice sees wide accesses, which the 8-bit SRAM bus does not carry
+        // faithfully (the write side needed the same treatment).
+        let mut image = vec![0u8; pokered_core::save::gba_sram::SRAM_SIZE];
+        pokered_core::save::gba_sram::read_into(&mut image);
+        let result = import_sram_into(&image, &mut self.save_data);
+        match result {
+            Ok(()) if self.save_data.game_data.player_id != 0 => {
+                let summary = save_summary_from_data(&self.save_data);
+                self.state.save_summary = Some(summary.clone());
+                self.main_menu = MainMenuState::new(Some(summary));
+                apply_saved_options(&mut self.state.config, &self.save_data.game_data.options);
+                log::info!("gba: loaded SRAM save");
+            }
+            other => {
+                let rb = pokered_core::save::gba_sram::sram();
+                let off = pokered_core::save::sram_layout::SRAM_BANK_SIZE_LAYOUT
+                    + pokered_core::save::sram_layout::GAME_DATA_OFFSET;
+                log::info!(
+                    "gba: no valid SRAM save ({:?}); probe {:02x?}; region_len={} bank1_len={}; continuing as NEW GAME",
+                    other.err(),
+                    &rb[off..off + 8],
+                    pokered_core::save::sram_import::canonical_region_len(),
+                    pokered_core::save::sram_layout::SRAM_BANK_SIZE_LAYOUT
+                );
+                // Drop whatever a partial parse may have written (in place —
+                // no temporary).
+                self.save_data.clear();
+            }
+        }
+    }
 
     #[cfg(target_arch = "wasm32")]
     fn save_to_file(&mut self) {
@@ -1984,6 +2230,12 @@ impl PokemonGame {
     }
 
     pub fn handle_transition(&mut self, screen: GameScreen) {
+        #[cfg(feature = "repro-markers")]
+        log::info!(
+            "mk: transition to {:?} free={}B",
+            screen,
+            largest_free_block()
+        );
         self.prepare_gba_screen_resources(&screen);
         // Set in the Battle→Overworld settle below when a caught species was
         // newly added to the Pokédex — the post-capture "New DEX data will be
@@ -2879,7 +3131,7 @@ impl PokemonGame {
         self.prepare_gba_battle_allocation();
         let battle_rng = self.next_battle_rng();
         use pokered_data::species::Species;
-        use pokered_data::trainer_data::{get_trainer_party, parse_trainer_id, TrainerClass};
+        use pokered_data::trainer_data::{get_trainer_party_mons, parse_trainer_id, TrainerClass};
 
         let player_party = self.save_data.party.to_vec();
 
@@ -2917,9 +3169,8 @@ impl PokemonGame {
                 default_index
             };
 
-            if let Some(party) = get_trainer_party(class, party_index) {
+            if let Some(party) = get_trainer_party_mons(class, party_index) {
                 let mut mons: Vec<_> = party
-                    .pokemon
                     .iter()
                     .filter_map(|mon| {
                         create_pokemon(
@@ -3652,80 +3903,93 @@ impl PokemonGame {
                     );
                     // Seed synchronous script-query state from persistent game
                     // data BEFORE update_frame so `@if` conditions (hasItem,
-                    // getMoney, dex, rival starter, facing) read current values.
-                    let bag_names: Vec<String> = self
-                        .save_data
-                        .game_data
-                        .bag
-                        .items()
-                        .iter()
-                        .map(|(id, _)| id.const_name())
-                        .collect();
-                    let party_species: Vec<String> = self
-                        .save_data
-                        .party
-                        .species_list()
-                        .iter()
-                        .map(|s| s.pascal_name())
-                        .collect();
-                    self.overworld.seed_script_query_state(
-                        self.save_data.game_data.player_money,
-                        &bag_names,
-                        self.save_data.game_data.pokedex.owned_count() as u8,
-                        self.save_data.game_data.pokedex.seen_count() as u8,
-                        self.save_data.game_data.rival_starter,
-                        self.save_data.game_data.player_starter,
-                        &party_species,
-                        self.save_data.game_data.player_coins,
-                        self.save_data.game_data.obtained_badges,
-                        match self.state.config.version {
-                            GameVersion::Red => 0,
-                            GameVersion::Blue => 1,
-                        },
-                    );
-                    // Day Care + per-party query state (for the Day Care scene).
-                    {
-                        use pokered_core::battle::experience::growth::level_from_exp;
-                        use pokered_core::pokemon::move_learning::is_hm_move;
-                        use pokered_data::pokemon_data::get_base_stats;
-                        use pokered_data::species::Species;
-                        let dc = &self.save_data.game_data.daycare;
-                        let (levels_grown, cost) = if dc.in_use {
-                            let species = Species::from_index_id(dc.species);
-                            let new_level = get_base_stats(species)
-                                .map(|b| level_from_exp(b.growth_rate, dc.exp).min(100))
-                                .unwrap_or(dc.box_level);
-                            let grown = new_level.saturating_sub(dc.box_level);
-                            (grown, 100u32 * (grown as u32 + 1))
-                        } else {
-                            (0, 0)
-                        };
-                        let dc_name = pokered_data::charmap::decode_string(
-                            &self.save_data.game_data.daycare_mon_name,
-                        );
-                        let mut name_buf = [0u8; pokered_core::battle::state::NAME_TEXT_BUF];
-                        let party_names: Vec<String> = self
+                    // getMoney, dex, rival starter, facing) read current
+                    // values. The seed rebuild allocates (hash-map sets,
+                    // `Vec<String>` clones) so it runs only when the
+                    // fingerprinted inputs actually change — on a static
+                    // overworld frame this used to be the single largest
+                    // per-frame cost on GBA.
+                    let seed_snapshot = self.query_seed_snapshot();
+                    if self.overworld.script_queries_need_seed() || seed_snapshot != self.query_seed {
+                        self.query_seed = seed_snapshot;
+                        let bag_names: Vec<String> = self
+                            .save_data
+                            .game_data
+                            .bag
+                            .items()
+                            .iter()
+                            .map(|(id, _)| id.const_name())
+                            .collect();
+                        let party_species: Vec<String> = self
                             .save_data
                             .party
-                            .to_vec()
+                            .species_list()
                             .iter()
-                            .map(|m| m.display_name(&mut name_buf).to_string())
+                            .map(|s| s.pascal_name())
                             .collect();
-                        let party_knows_hm: Vec<bool> = self
-                            .save_data
-                            .party
-                            .to_vec()
-                            .iter()
-                            .map(|m| m.moves.iter().any(|mv| is_hm_move(*mv)))
-                            .collect();
-                        self.overworld.seed_daycare_query_state(
-                            dc.in_use,
-                            &dc_name,
-                            levels_grown,
-                            cost,
-                            &party_names,
-                            &party_knows_hm,
+                        self.overworld.seed_script_query_state(
+                            self.save_data.game_data.player_money,
+                            &bag_names,
+                            self.save_data.game_data.pokedex.owned_count() as u8,
+                            self.save_data.game_data.pokedex.seen_count() as u8,
+                            self.save_data.game_data.rival_starter,
+                            self.save_data.game_data.player_starter,
+                            &party_species,
+                            self.save_data.game_data.player_coins,
+                            self.save_data.game_data.obtained_badges,
+                            match self.state.config.version {
+                                GameVersion::Red => 0,
+                                GameVersion::Blue => 1,
+                            },
                         );
+                        // Day Care + per-party query state (for the Day Care
+                        // scene), refreshed with the same change gating.
+                        {
+                            use pokered_core::battle::experience::growth::level_from_exp;
+                            use pokered_core::pokemon::move_learning::is_hm_move;
+                            use pokered_data::pokemon_data::get_base_stats;
+                            use pokered_data::species::Species;
+                            let dc = &self.save_data.game_data.daycare;
+                            let (levels_grown, cost) = if dc.in_use {
+                                let species = Species::from_index_id(dc.species);
+                                let new_level = get_base_stats(species)
+                                    .map(|b| level_from_exp(b.growth_rate, dc.exp).min(100))
+                                    .unwrap_or(dc.box_level);
+                                let grown = new_level.saturating_sub(dc.box_level);
+                                (grown, 100u32 * (grown as u32 + 1))
+                            } else {
+                                (0, 0)
+                            };
+                            let dc_name = pokered_data::charmap::decode_string(
+                                &self.save_data.game_data.daycare_mon_name,
+                            );
+                            let mut name_buf =
+                                [0u8; pokered_core::battle::state::NAME_TEXT_BUF];
+                            let party_names: Vec<String> = self
+                                .save_data
+                                .party
+                                .iter()
+                                .map(|m| m.display_name(&mut name_buf).to_string())
+                                .collect();
+                            let party_knows_hm: Vec<bool> = self
+                                .save_data
+                                .party
+                                .iter()
+                                .map(|m| m.moves.iter().any(|mv| is_hm_move(*mv)))
+                                .collect();
+                            self.overworld.seed_daycare_query_state(
+                                dc.in_use,
+                                &dc_name,
+                                levels_grown,
+                                cost,
+                                &party_names,
+                                &party_knows_hm,
+                            );
+                        }
+                    } else {
+                        // Seeding already mixes once. Consume exactly one
+                        // RNG draw per tick, independent of cache history.
+                        self.overworld.mix_script_rng();
                     }
 
                     // wOptions text delay — pushed every frame so the dialogue
@@ -7065,9 +7329,11 @@ impl PokemonGame {
                     if let Some(resources) = self.resources.as_mut() {
                         resources.clear_cache();
                     }
-                    let mut snapshot = FrameBuffer::new(RenderConfig::new(160, 144), Rgba::BLACK);
                     #[cfg(target_os = "none")]
-                    snapshot.copy_from(frame_buffer);
+                    let snapshot =
+                        pokered_renderer::transition_blit::CompactSnapshot::capture(frame_buffer);
+                    #[cfg(not(target_os = "none"))]
+                    let mut snapshot = FrameBuffer::new(RenderConfig::new(160, 144), Rgba::BLACK);
                     #[cfg(not(target_os = "none"))]
                     draw_overworld(
                         &mut self.overworld,
@@ -7245,6 +7511,14 @@ impl GameLoop for PokemonGame {
     type Fb = FrameBuffer;
 
     fn update(&mut self, input: &InputState) {
+        #[cfg(feature = "ewram-audit")]
+        {
+            static AUDIT_RESET: core::sync::atomic::AtomicBool =
+                core::sync::atomic::AtomicBool::new(false);
+            if !AUDIT_RESET.swap(true, core::sync::atomic::Ordering::SeqCst) {
+                crate::mem_audit::reset();
+            }
+        }
         self.update(input);
     }
 

@@ -901,18 +901,18 @@ pub fn text_to_dialogue(text: &str) -> BedroomDialogue {
 
     if lines.is_empty() {
         pages.push(DialoguePage {
-            line1: Box::leak(text.to_string().into_boxed_str()),
-            line2: "",
+            line1: text.into(),
+            line2: "".into(),
         });
     } else {
         let mut i = 0;
         while i < lines.len() {
-            let line1 = Box::leak(lines[i].to_string().into_boxed_str()) as &'static str;
-            let line2 = if i + 1 < lines.len() {
+            let line1: Box<str> = lines[i].into();
+            let line2: Box<str> = if i + 1 < lines.len() {
                 i += 1;
-                Box::leak(lines[i].to_string().into_boxed_str()) as &'static str
+                lines[i].into()
             } else {
-                ""
+                "".into()
             };
             pages.push(DialoguePage { line1, line2 });
             i += 1;

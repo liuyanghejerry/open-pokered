@@ -459,17 +459,17 @@ mod tests {
     #[test]
     fn trainer_override_round_trips() {
         let _g = lock();
-        let base = crate::trainer_data::get_trainer_party(TrainerClass::Brock, 0).unwrap();
-        let base_len = base.pokemon.len();
+        let base = crate::trainer_data::get_trainer_party_mons(TrainerClass::Brock, 0).unwrap();
+        let base_len = base.len();
         assert!(set_trainer_override(
             "Brock",
             r#"{"class":"Brock","parties":[{"pokemon":[{"level":12,"species":"Geodude"},{"level":14,"species":"Onix"}]}]}"#
         ));
-        let ov = crate::trainer_data::get_trainer_party(TrainerClass::Brock, 0).unwrap();
-        assert_eq!(ov.pokemon.len(), 2);
-        assert_eq!(ov.pokemon[0].species, Species::Geodude);
+        let ov = crate::trainer_data::get_trainer_party_mons(TrainerClass::Brock, 0).unwrap();
+        assert_eq!(ov.len(), 2);
+        assert_eq!(ov[0].species, Species::Geodude);
         clear_data_overrides();
-        assert_eq!(crate::trainer_data::get_trainer_party(TrainerClass::Brock, 0).unwrap().pokemon.len(), base_len);
+        assert_eq!(crate::trainer_data::get_trainer_party_mons(TrainerClass::Brock, 0).unwrap().len(), base_len);
     }
 
     #[test]

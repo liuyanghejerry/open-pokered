@@ -9,6 +9,13 @@ mod alloc_prelude {
     pub use std::collections::{BTreeMap, BTreeSet, VecDeque};
 }
 
+#[cfg(feature = "ewram-audit")]
+mod mem_audit;
+
+#[cfg(feature = "ewram-audit")]
+#[global_allocator]
+static EWRAM_AUDIT_ALLOCATOR: mem_audit::AuditAllocator = mem_audit::AuditAllocator;
+
 mod audio;
 mod agent_nav;
 mod agent_state;

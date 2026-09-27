@@ -1,0 +1,64 @@
+     Running unittests src/lib.rs (target/debug/deps/pokered_core-5ea3f84ee5245b68)
+test result: ok. 2580 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.91s
+     Running tests/battle_settlement_integration.rs (target/debug/deps/battle_settlement_integration-208608a7369c9744)
+test result: ok. 11 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+     Running tests/blackout_map.rs (target/debug/deps/blackout_map-3cf14aa43f755ae4)
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.09s
+     Running tests/edge_cases.rs (target/debug/deps/edge_cases-fdd86bae93f45a98)
+test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+     Running tests/elevator_ride_integration.rs (target/debug/deps/elevator_ride_integration-228892a77c277b49)
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.12s
+     Running tests/elite_four_reset.rs (target/debug/deps/elite_four_reset-49a95b783b400726)
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.09s
+     Running tests/escape_flow.rs (target/debug/deps/escape_flow-19b966c019446c9e)
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+     Running tests/event_script_integration.rs (target/debug/deps/event_script_integration-b93558507e7d4b2f)
+test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+     Running tests/game_flow_early_game.rs (target/debug/deps/game_flow_early_game-c99827849117ae0d)
+test result: ok. 15 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+     Running tests/game_flow_elite_four.rs (target/debug/deps/game_flow_elite_four-5ba7daedf2c65887)
+test result: ok. 17 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+     Running tests/game_flow_gyms.rs (target/debug/deps/game_flow_gyms-dad2f1b1bb9fd3cc)
+test result: ok. 15 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+     Running tests/game_flow_helpers.rs (target/debug/deps/game_flow_helpers-ebacb75251255402)
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+     Running tests/game_flow_opening.rs (target/debug/deps/game_flow_opening-c33d41156f30f354)
+test result: ok. 14 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+     Running tests/game_flow_progression.rs (target/debug/deps/game_flow_progression-68268c96f2838b90)
+test result: ok. 20 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+     Running tests/game_flow_starter.rs (target/debug/deps/game_flow_starter-79a4a82aac53cbf2)
+test result: ok. 11 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+     Running tests/helpers.rs (target/debug/deps/helpers-9fecd59737cc65d0)
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+     Running tests/hof_ceremony_trigger.rs (target/debug/deps/hof_ceremony_trigger-d260ce6c7d9751e8)
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.10s
+     Running tests/map_transition_integration.rs (target/debug/deps/map_transition_integration-aa058f1266c8a482)
+test result: ok. 21 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.09s
+     Running tests/npc_trainer_integration.rs (target/debug/deps/npc_trainer_integration-7d2936e1d0e0f57c)
+test result: ok. 26 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.09s
+     Running tests/overworld_hm_terrain_integration.rs (target/debug/deps/overworld_hm_terrain_integration-b71cce3feb865bbd)
+test result: ok. 50 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+     Running tests/pc_trigger.rs (target/debug/deps/pc_trigger-c817bcd4642e0d0e)
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.09s
+     Running tests/rival_first_battle.rs (target/debug/deps/rival_first_battle-aa965eac918678d4)
+test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+     Running tests/ss_anne_departure.rs (target/debug/deps/ss_anne_departure-f80ab815bf6be722)
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.09s
+     Running tests/status_across_turns.rs (target/debug/deps/status_across_turns-e360b9cb6130ea00)
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+     Running tests/trainer_balance_damage.rs (target/debug/deps/trainer_balance_damage-c7ac352b049cd943)
+test result: ok. 20 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+     Running tests/trainer_balance_data.rs (target/debug/deps/trainer_balance_data-f10695f087a10cc6)
+test result: ok. 14 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+     Running tests/trainer_balance_elite_four.rs (target/debug/deps/trainer_balance_elite_four-b3940d047faf69ee)
+test result: ok. 18 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+     Running tests/trainer_balance_gym.rs (target/debug/deps/trainer_balance_gym-dd37b02feaa4ca6b)
+test result: ok. 17 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+     Running tests/trainer_battle_flow.rs (target/debug/deps/trainer_battle_flow-96330814c30a41e4)
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+     Running tests/viridian_mart_shop.rs (target/debug/deps/viridian_mart_shop-93f6b7f88a93e48b)
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.09s
+     Running tests/wild_battle_flow.rs (target/debug/deps/wild_battle_flow-0a3a22cb9b5cb41d)
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+   Doc-tests pokered_core
+test result: ok. 0 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 0.00s

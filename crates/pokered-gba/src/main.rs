@@ -6,6 +6,15 @@ extern crate alloc;
 #[cfg(feature = "autopilot")]
 mod autopilot;
 
+#[cfg(feature = "repro-rival")]
+mod repro_rival;
+
+#[cfg(feature = "repro-route22")]
+mod repro_route22;
+
+#[cfg(feature = "memory-scenarios")]
+mod memory_scenarios;
+
 #[cfg(not(feature = "autopilot"))]
 use agb::input::{Button, ButtonController};
 use dotzuki_engine::render_config::RenderConfig;
@@ -33,6 +42,14 @@ impl log::Log for GbaLogger {
 }
 
 static LOGGER: GbaLogger = GbaLogger;
+
+/// The same 4-aligned `SRAM_Vnnn` marker agb's save manager emits: it tells
+/// emulators (mGBA) and flashcart tooling that this ROM keeps its save on the
+/// cartridge SRAM, so a 32 KiB `.sav` is created and flushed.
+#[repr(align(4))]
+struct SramMediaMarker([u8; 12]);
+#[used]
+static SRAM_MARKER: SramMediaMarker = SramMediaMarker(*b"SRAM_Vnnn\0\0\0");
 
 // ── GBA MMIO video: mode 4 (240x160, paletted 8bpp) ───────────────────
 const SCREEN_W: usize = 240;
@@ -509,7 +526,7 @@ struct PerfScenario {
 }
 
 #[cfg(feature = "perf-benchmark")]
-const PERF_SCENARIOS: [PerfScenario; 6] = [
+const PERF_SCENARIOS: [PerfScenario; 7] = [
     PerfScenario {
         name: "intro-title-v1",
         start: 650,
@@ -536,9 +553,14 @@ const PERF_SCENARIOS: [PerfScenario; 6] = [
         end: 4900,
     },
     PerfScenario {
+        name: "trainer-battle-entry-v1",
+        start: 5600,
+        end: 6100,
+    },
+    PerfScenario {
         name: "pokedex-entry-v1",
-        start: 5000,
-        end: 5400,
+        start: 6800,
+        end: 7200,
     },
 ];
 
@@ -547,6 +569,8 @@ const PERF_SCENARIOS: [PerfScenario; 6] = [
 struct PerfWindow {
     samples: u32,
     update: u32,
+    update_core: u32,
+    update_flush: u32,
     renders: u32,
     draw: u32,
     draw_max: u16,
@@ -571,19 +595,25 @@ impl PerfWindow {
         }
     }
 
+    fn record_update_parts(&mut self, marks: [u16; 3]) {
+        let elapsed = |from: u16, to: u16| to.wrapping_sub(from);
+        self.update_core += elapsed(marks[0], marks[1]) as u32;
+        self.update_flush += elapsed(marks[1], marks[2]) as u32;
+    }
+
     fn report(&self, scenario: &str) {
         let samples = self.samples.max(1);
         let renders = self.renders.max(1);
         agb::println!(
-            "gba-perf scenario={} samples={} update_avg_ticks={} renders={} draw_avg_ticks={} draw_per_frame_ticks={} draw_max_ticks={} present_avg_ticks={} present_per_frame_ticks={} present_max_ticks={}",
+            "gba-perf scenario={} samples={} update_avg_ticks={} update_core_avg_ticks={} update_flush_avg_ticks={} renders={} draw_per_frame_ticks={} draw_max_ticks={} present_per_frame_ticks={} present_max_ticks={}",
             scenario,
             self.samples,
             self.update / samples,
+            self.update_core / samples,
+            self.update_flush / samples,
             self.renders,
-            self.draw / renders,
             self.draw / samples,
             self.draw_max,
-            self.present / renders,
             self.present / samples,
             self.present_max
         );
@@ -593,9 +623,10 @@ impl PerfWindow {
 #[cfg(feature = "perf-benchmark")]
 #[derive(Default)]
 struct PerfBenchmark {
-    windows: [PerfWindow; 6],
-    reported: [bool; 6],
+    windows: [PerfWindow; 7],
+    reported: [bool; 7],
     battle_started: bool,
+    trainer_battle_started: bool,
     pokedex_started: bool,
 }
 
@@ -606,7 +637,14 @@ impl PerfBenchmark {
             game.debug_start_wild_battle(pokered_data::species::Species::Pidgey, 5);
             self.battle_started = true;
         }
-        if !self.pokedex_started && frame >= 5000 {
+        // The trainer path allocates on top of the wild-battle heap peak
+        // (trainer sprites, trainer-name string, rival party) — the profile
+        // real hardware froze on before the trainer table became ROM statics.
+        if !self.trainer_battle_started && frame >= 5600 {
+            game.debug_start_trainer_battle(pokered_data::trainer_data::TrainerClass::Rival1, 2);
+            self.trainer_battle_started = true;
+        }
+        if !self.pokedex_started && frame >= 6800 {
             game.debug_open_pokedex(pokered_data::species::Species::Pikachu);
             self.pokedex_started = true;
         }
@@ -639,12 +677,36 @@ impl PerfBenchmark {
 const EWRAM_STACK_WORDS: usize = 16384;
 static mut EWRAM_STACK: [u32; EWRAM_STACK_WORDS] = [0; EWRAM_STACK_WORDS]; // 64 KiB
 
+#[cfg(any(feature = "repro-route22", feature = "memory-scenarios"))]
+fn unused_stack_bytes() -> usize {
+    let base = core::ptr::addr_of!(EWRAM_STACK).cast::<u32>();
+    (0..EWRAM_STACK_WORDS)
+        .take_while(|&i| unsafe { base.add(i).read_volatile() == 0xA5A5_A5A5 })
+        .count() * 4
+}
+
+/// Construct the game into the EWRAM static from a shallow stack frame.
+/// `#[inline(never)]` keeps the constructor's 29 KB return slot out of
+/// `game_main`'s own frame reservation.
+#[inline(never)]
+fn construct_game() -> &'static mut PokemonGame {
+    static mut GAME: Option<PokemonGame> = None;
+    unsafe {
+        let slot = &mut *core::ptr::addr_of_mut!(GAME);
+        slot.get_or_insert_with(|| PokemonGame::new_for_gba(GameVersion::Red))
+    }
+}
+
 /// Run `f` on the EWRAM stack. `f` never returns, so the switch is final.
 #[inline(never)]
 unsafe fn run_on_ewram_stack(f: fn() -> !) -> ! {
     unsafe {
         // Byte-exact top of EWRAM_STACK (64 KiB), 8-byte aligned.
         let base = core::ptr::addr_of_mut!(EWRAM_STACK) as usize;
+        // Paint before switching stacks, so probes include constructor and
+        // deep script/renderer calls rather than only the shallow main loop.
+        #[cfg(any(feature = "repro-route22", feature = "memory-scenarios"))]
+        core::ptr::write_bytes(base as *mut u8, 0xA5, EWRAM_STACK_WORDS * 4);
         let new_sp = (base + EWRAM_STACK_WORDS * 4) & !0b111;
         let old_sp: usize;
         core::arch::asm!(
@@ -676,21 +738,31 @@ fn game_main() -> ! {
 
     // PokemonGame is ~29 KB — nearly the whole IWRAM stack budget — so it
     // lives in an EWRAM static (bss), not on the stack.
-    static mut GAME: Option<PokemonGame> = None;
-    let game: &mut PokemonGame = unsafe {
-        let slot = &mut *core::ptr::addr_of_mut!(GAME);
-        slot.get_or_insert_with(|| PokemonGame::new_for_gba(GameVersion::Red))
-    };
+    let game: &mut PokemonGame = construct_game();
     agb::println!("pokered-gba: game constructed");
+    // Keep the marker referenced so fat LTO cannot drop it.
+    core::hint::black_box(&SRAM_MARKER);
+    // Cartridge SRAM persistence: adopt a valid save (main menu gains
+    // CONTINUE) before any heavy allocations reserve EWRAM.
+    // Cartridge SRAM persistence: adopt a valid save (main menu gains
+    // CONTINUE). Runs on the main EWRAM stack directly: `game_main`'s own
+    // frame is under a kilobyte now, so the import's parse frames fit — the
+    // 32 KiB scratch-stack allocation only inflated the boot footprint.
+    game.try_load_sram_save();
     // Compile and retain the canonical battle rules before render resources
     // occupy the heap. Production battle entry points call this defensively,
     // but the idempotent fast path makes those later calls allocation-free.
     pokered_core::battle::prepare_battle_rules();
     agb::println!("pokered-gba: battle rules ready");
 
-    let mut fb = FrameBuffer::new(RenderConfig::new(160, 144), Rgba::WHITE);
+    // Frame buffer (23 KiB) and render session live on the EWRAM heap: keeping
+    // them as `game_main` locals reserved ~50 KiB of the 64 KiB stack in the
+    // function prologue, leaving ~2.5 KiB of headroom — any deeper call (e.g.
+    // the SRAM save import) walked past the stack base straight into the
+    // `GAME` static below it.
+    let mut fb = alloc::boxed::Box::new(FrameBuffer::new(RenderConfig::new(160, 144), Rgba::WHITE));
     let mut presenter = Mode4Presenter::new(&fb);
-    let mut render_session = RenderSession::new();
+    let mut render_session = alloc::boxed::Box::new(RenderSession::new());
     profile_timer_start();
     let mut frame: u32 = 0;
     let mut last_clock = profile_now();
@@ -702,6 +774,10 @@ fn game_main() -> ! {
     // Retain input history across display frames so a held key produces one
     // edge instead of appearing newly pressed on every pass through the loop.
     let mut state = InputState::new();
+    #[cfg(feature = "repro-route22")]
+    let mut route22 = repro_route22::Repro::default();
+    #[cfg(feature = "memory-scenarios")]
+    let mut memory_scenarios = memory_scenarios::Scenarios::default();
 
     loop {
         let first_frame_pending = frame == 0;
@@ -742,6 +818,29 @@ fn game_main() -> ! {
         #[cfg(feature = "perf-benchmark")]
         benchmark.drive_scene(game, frame);
 
+        #[cfg(feature = "repro-rival")]
+        repro_rival::drive(game, frame, &mut state);
+
+        #[cfg(feature = "repro-route22")]
+        route22.drive(game, frame, &mut state);
+        #[cfg(feature = "memory-scenarios")]
+        memory_scenarios.drive(game, frame, &mut state);
+
+        // Heap watermark: every frame, probe the largest free block and log
+        // each new low. Catches peaks that only exist for one or two frames
+        // (battle entry, transition snapshots).
+        #[cfg(any(feature = "repro-rival", feature = "repro-route22", feature = "memory-scenarios"))]
+        {
+            static mut MIN_FREE: usize = usize::MAX;
+            let free = pokered_app::game::largest_free_block();
+            unsafe {
+                if free < MIN_FREE {
+                    MIN_FREE = free;
+                    agb::println!("repro: heap low {}B at frame {}", free, frame);
+                }
+            }
+        }
+
         #[cfg(feature = "profiling")]
         let mark0 = profile_now();
         vblank.wait_for_vblank();
@@ -764,8 +863,21 @@ fn game_main() -> ! {
         let mut updates = 0;
         let mut update_state = state.clone();
         while update_accumulator >= FRAME_TICKS && updates < 8 {
+            #[cfg(feature = "perf-benchmark")]
+            let um0 = profile_now();
             game.update(&update_state);
+            #[cfg(feature = "perf-benchmark")]
+            let um1 = profile_now();
             game.flush_deferred_transition();
+            #[cfg(feature = "perf-benchmark")]
+            {
+                let um2 = profile_now();
+                for (index, scenario) in PERF_SCENARIOS.iter().enumerate() {
+                    if (scenario.start..scenario.end).contains(&frame) {
+                        benchmark.windows[index].record_update_parts([um0, um1, um2]);
+                    }
+                }
+            }
             frame = frame.wrapping_add(1);
             update_accumulator -= FRAME_TICKS;
             updates += 1;

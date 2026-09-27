@@ -1,0 +1,15 @@
+[mgba] repro: heap low 32768B at frame 0
+[mgba] [INFO] mk: transition to LanguageSelect free=32768B
+[mgba] [INFO] mk: transition to IntroScene free=32768B
+[mgba] [INFO] mk: transition to TitleScreen free=32768B
+[mgba] [INFO] mk: transition to MainMenu free=32768B
+[mgba] [INFO] mk: transition to OakSpeech free=32768B
+[mgba] repro: heap low 29632B at frame 2246
+[mgba] [INFO] mk: transition to Overworld free=29632B
+[mgba] route22: seed and warp before coordinate trigger
+[mgba] route22: frame=4300 screen=Overworld pos=(5, 7) free=32768B
+[mgba] repro: heap low 19680B at frame 4371
+[mgba] route22: frame=4902 screen=Overworld pos=(29, 5) free=19680B
+[mgba] [INFO] mk: transition to Battle free=19680B
+[mgba] panicked at /Users/liuyanghe02/.rustup/toolchains/nightly-2025-12-07-aarch64-apple-darwin/lib/rustlib/src/rust/library/alloc/src/alloc.rs:439:13:
+memory allocation of 0 bytes failed

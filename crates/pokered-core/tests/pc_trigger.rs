@@ -82,7 +82,7 @@ fn billshouse_pc_shows_monitor_before_bill_is_saved() {
         .map(|d| {
             d.pages()
                 .iter()
-                .flat_map(|p| [p.line1, p.line2])
+                .flat_map(|p| [p.line1.as_ref(), p.line2.as_ref()])
                 .collect::<Vec<_>>()
                 .join(" ")
         })

@@ -110,6 +110,119 @@ fn draw_pokedex_entry(
     }
 }
 
+/// One map-connection direction resolved from the ROM map table.
+#[derive(Clone, Copy)]
+struct ResolvedConnection {
+    blk: &'static [u8],
+    w: u8,
+    h: u8,
+    offset: i32,
+    present: bool,
+}
+
+impl ResolvedConnection {
+    const EMPTY: Self = Self {
+        blk: &[],
+        w: 0,
+        h: 0,
+        offset: 0,
+        present: false,
+    };
+}
+
+#[derive(Clone, Copy)]
+enum ConnSide {
+    North,
+    South,
+    West,
+    East,
+}
+
+/// Resolve one connection direction without caching (`resolve_map_id` and
+/// `get_block_data` each walk the 248-entry ROM map table).
+fn connection_lookup(map_json: &MapJson, side: ConnSide) -> ResolvedConnection {
+    use pokered_data::map_data_loader::{get_block_data, resolve_map_id};
+    let conn = match side {
+        ConnSide::North => map_json.connections.north.as_ref(),
+        ConnSide::South => map_json.connections.south.as_ref(),
+        ConnSide::West => map_json.connections.west.as_ref(),
+        ConnSide::East => map_json.connections.east.as_ref(),
+    };
+    let Some(conn) = conn else {
+        return ResolvedConnection::EMPTY;
+    };
+    let Some(target) = resolve_map_id(&conn.target_map) else {
+        return ResolvedConnection::EMPTY;
+    };
+    let (w, h) = target.dimensions();
+    ResolvedConnection {
+        blk: get_block_data(target),
+        w,
+        h,
+        offset: conn.offset as i32,
+        present: true,
+    }
+}
+
+/// Memoized [`connection_lookup`], keyed by the source `MapJson` identity.
+/// Every out-of-map block would otherwise repeat the table scans: Pallet
+/// Town's southern beach resolves 24 neighbour blocks per full redraw and
+/// more while scrolling. Bare metal only — the GBA renderer is
+/// single-threaded, while host test threads could race a shared cache (the
+/// uncached lookups cost nothing measurable on hosts).
+#[cfg(target_os = "none")]
+mod connection_memo {
+    use super::{connection_lookup, ConnSide, MapJson, ResolvedConnection};
+
+    struct Table {
+        key: usize,
+        north: ResolvedConnection,
+        south: ResolvedConnection,
+        west: ResolvedConnection,
+        east: ResolvedConnection,
+    }
+
+    static mut TABLE: Table = Table {
+        key: 0,
+        north: ResolvedConnection::EMPTY,
+        south: ResolvedConnection::EMPTY,
+        west: ResolvedConnection::EMPTY,
+        east: ResolvedConnection::EMPTY,
+    };
+
+    pub fn connection_for(map_json: &MapJson, side: ConnSide) -> ResolvedConnection {
+        unsafe {
+            let key = map_json as *const MapJson as usize;
+            let table = &mut *core::ptr::addr_of_mut!(TABLE);
+            if table.key != key {
+                table.north = connection_lookup(map_json, ConnSide::North);
+                table.south = connection_lookup(map_json, ConnSide::South);
+                table.west = connection_lookup(map_json, ConnSide::West);
+                table.east = connection_lookup(map_json, ConnSide::East);
+                table.key = key;
+            }
+            match side {
+                ConnSide::North => table.north,
+                ConnSide::South => table.south,
+                ConnSide::West => table.west,
+                ConnSide::East => table.east,
+            }
+        }
+    }
+}
+
+#[inline]
+fn connection_for(map_json: &MapJson, side: ConnSide) -> ResolvedConnection {
+    #[cfg(target_os = "none")]
+    {
+        connection_memo::connection_for(map_json, side)
+    }
+    #[cfg(not(target_os = "none"))]
+    {
+        connection_lookup(map_json, side)
+    }
+}
+
 fn resolve_block_with_connections(
     map_json: Option<&MapJson>,
     map_w: u8,
@@ -132,100 +245,43 @@ fn resolve_block_with_connections(
         Some(j) => j,
         None => return border_block,
     };
-    let conns = &map_json.connections;
 
-    if by < 0 {
-        if let Some(conn) = conns.north.as_ref() {
-            if let Some(target) = resolve_map_id(&conn.target_map) {
-                let (tw, th) = target.dimensions();
-                let target_blk = get_block_data(target);
-                let target_bx = bx - conn.offset as i32;
-                let target_by = th as i32 + by;
-                if target_bx >= 0
-                    && (target_bx as u8) < tw
-                    && target_by >= 0
-                    && (target_by as u8) < th
-                    && !target_blk.is_empty()
-                {
-                    return target_blk
-                        .get(target_by as usize * tw as usize + target_bx as usize)
-                        .copied()
-                        .unwrap_or(border_block);
-                }
-            }
-        }
+    let (side, target_bx, target_by) = if by < 0 {
+        (ConnSide::North, bx, 0i32)
+    } else if by >= map_h as i32 {
+        (ConnSide::South, bx, by - map_h as i32)
+    } else if bx < 0 {
+        (ConnSide::West, 0, by)
+    } else if bx >= map_w as i32 {
+        (ConnSide::East, bx - map_w as i32, by)
+    } else {
+        return border_block;
+    };
+
+    let c = connection_for(map_json, side);
+    if !c.present || c.blk.is_empty() {
         return border_block;
     }
-
-    if by >= map_h as i32 {
-        if let Some(conn) = conns.south.as_ref() {
-            if let Some(target) = resolve_map_id(&conn.target_map) {
-                let (tw, th) = target.dimensions();
-                let target_blk = get_block_data(target);
-                let target_bx = bx - conn.offset as i32;
-                let target_by = by - map_h as i32;
-                if target_bx >= 0
-                    && (target_bx as u8) < tw
-                    && target_by >= 0
-                    && (target_by as u8) < th
-                    && !target_blk.is_empty()
-                {
-                    let idx = target_by as usize * tw as usize + target_bx as usize;
-                    if idx < target_blk.len() {
-                        return target_blk[idx];
-                    }
-                }
-            }
+    let target_bx = match side {
+        ConnSide::North | ConnSide::South => target_bx - c.offset,
+        ConnSide::West => c.w as i32 + bx,
+        ConnSide::East => target_bx,
+    };
+    let target_by = match side {
+        ConnSide::North => c.h as i32 + by,
+        ConnSide::West | ConnSide::East => target_by - c.offset,
+        ConnSide::South => target_by,
+    };
+    if target_bx >= 0
+        && (target_bx as u8) < c.w
+        && target_by >= 0
+        && (target_by as u8) < c.h
+    {
+        let idx = target_by as usize * c.w as usize + target_bx as usize;
+        if idx < c.blk.len() {
+            return c.blk[idx];
         }
-        return border_block;
     }
-
-    if bx < 0 {
-        if let Some(conn) = conns.west.as_ref() {
-            if let Some(target) = resolve_map_id(&conn.target_map) {
-                let (tw, th) = target.dimensions();
-                let target_blk = get_block_data(target);
-                let target_bx = tw as i32 + bx;
-                let target_by = by - conn.offset as i32;
-                if target_bx >= 0
-                    && (target_bx as u8) < tw
-                    && target_by >= 0
-                    && (target_by as u8) < th
-                    && !target_blk.is_empty()
-                {
-                    return target_blk
-                        .get(target_by as usize * tw as usize + target_bx as usize)
-                        .copied()
-                        .unwrap_or(border_block);
-                }
-            }
-        }
-        return border_block;
-    }
-
-    if bx >= map_w as i32 {
-        if let Some(conn) = conns.east.as_ref() {
-            if let Some(target) = resolve_map_id(&conn.target_map) {
-                let (tw, th) = target.dimensions();
-                let target_blk = get_block_data(target);
-                let target_bx = bx - map_w as i32;
-                let target_by = by - conn.offset as i32;
-                if target_bx >= 0
-                    && (target_bx as u8) < tw
-                    && target_by >= 0
-                    && (target_by as u8) < th
-                    && !target_blk.is_empty()
-                {
-                    return target_blk
-                        .get(target_by as usize * tw as usize + target_bx as usize)
-                        .copied()
-                        .unwrap_or(border_block);
-                }
-            }
-        }
-        return border_block;
-    }
-
     border_block
 }
 
@@ -248,6 +304,38 @@ impl OverworldBackgroundKey {
             && self.flower_frame == other.flower_frame
             && self.map_hash == other.map_hash
     }
+
+    /// Everything except the water/flower animation phase.
+    fn same_scene_ignoring_anim(self, other: Self) -> bool {
+        self.map == other.map
+            && self.tile_anim_kind == other.tile_anim_kind
+            && self.map_hash == other.map_hash
+    }
+}
+
+const ANIM_ROW_COUNT: usize = 24;
+
+/// Screen tile rows that hold animated (water/flower) tiles, collected by the
+/// animated redraw so the presenter copies only those bands.
+#[derive(Clone, Copy, Default)]
+struct AnimRows {
+    mask: [bool; ANIM_ROW_COUNT],
+}
+
+impl AnimRows {
+    fn note(&mut self, row: i32) {
+        if row >= 0 && (row as usize) < ANIM_ROW_COUNT {
+            self.mask[row as usize] = true;
+        }
+    }
+
+    fn has(&self, row: i32) -> bool {
+        row >= 0 && self.mask.get(row as usize).copied().unwrap_or(false)
+    }
+
+    fn any(&self) -> bool {
+        self.mask.iter().any(|&m| m)
+    }
 }
 
 #[derive(Clone, Copy)]
@@ -255,6 +343,9 @@ enum BackgroundDamage {
     None,
     Full,
     Scrolled { dx: i32, dy: i32 },
+    /// Only the water/flower animation phase changed: redraw the tile rows
+    /// that hold animated tiles (located by a block-level scan).
+    Animated,
 }
 
 type ScrollIndexedPixels<'a> = dyn FnMut(&mut [u8], usize, usize, i32, i32, u8) + 'a;
@@ -263,7 +354,7 @@ impl BackgroundDamage {
     fn intersects_tile(self, x: i32, y: i32, width: i32, height: i32) -> bool {
         match self {
             Self::None => false,
-            Self::Full => true,
+            Self::Full | Self::Animated => true,
             Self::Scrolled { dx, dy } => {
                 let tile_right = x + TILE_SIZE as i32;
                 let tile_bottom = y + TILE_SIZE as i32;
@@ -431,6 +522,30 @@ impl OverworldBackgroundCache {
         self.foreground_patches.clear();
     }
 
+    /// Presentation damage for background-only changes: unlike
+    /// [`Self::save_foreground_rect`] it captures no underlay patch.
+    fn mark_background_damage(&mut self, x: i32, y: i32, width: u32, height: u32) {
+        if let Some(rect) = FrameDamageRect::clipped(x, y, width, height, self.width, self.height)
+        {
+            if self.partial_present {
+                self.presentation_damage.push(rect);
+            }
+        }
+    }
+
+    fn push_animated_damage(&mut self, rows: &AnimRows) {
+        for (row, &marked) in rows.mask.iter().enumerate() {
+            if marked {
+                self.mark_background_damage(
+                    0,
+                    row as i32 * TILE_SIZE as i32,
+                    self.width,
+                    TILE_SIZE,
+                );
+            }
+        }
+    }
+
     fn require_full_present(&mut self) {
         self.partial_present = false;
         self.presentation_damage.clear();
@@ -475,6 +590,17 @@ impl OverworldBackgroundCache {
             return BackgroundDamage::Full;
         };
         if !previous.same_scene(key) {
+            // Animation-only tick (water/flower phase moved, everything else
+            // identical): keep the framebuffer and redraw just the animated
+            // rows. Map, camera, or scripted-block changes keep the full path.
+            if previous.same_scene_ignoring_anim(key)
+                && previous.camera_x == key.camera_x
+                && previous.camera_y == key.camera_y
+                && self.output_key == Some(previous)
+            {
+                restore_foreground_regions(output, self);
+                return BackgroundDamage::Animated;
+            }
             output.clear(Rgba::WHITE);
             return BackgroundDamage::Full;
         }
@@ -585,6 +711,7 @@ fn draw_background_tiles(
     border_block: u8,
     blockset: &[u8],
     shake_offset_y: i32,
+    anim_out: Option<&mut AnimRows>,
 ) {
     if matches!(damage, BackgroundDamage::None) {
         return;
@@ -598,6 +725,57 @@ fn draw_background_tiles(
     };
     let visible_x = tile_span(0, width, camera_x, tiles_w);
     let visible_y = tile_span(0, height, camera_y, tiles_h);
+    let mut anim_rows = AnimRows::default();
+    if matches!(damage, BackgroundDamage::Animated) {
+        // Block-level scan in the same world coordinates the tile loop uses
+        // (`world = tile_start + span`): a block whose 16 members include an
+        // animated tile marks its four tile rows for redraw. This replaces a
+        // full-screen re-rasterization on every water/flower phase tick
+        // (~3-5x per second on water maps).
+        let has_anim = |block_id: u8| -> bool {
+            let off = block_id as usize * blockset_data::BLOCK_SIZE;
+            (0..blockset_data::BLOCK_SIZE).any(|i| {
+                let tile_idx = blockset
+                    .get(off + i)
+                    .copied()
+                    .map(usize::from)
+                    .unwrap_or(0);
+                tile_idx == ANIM_WATER_TILE as usize || tile_idx == ANIM_FLOWER_TILE as usize
+            })
+        };
+        let world_x0 = tile_start_tx + visible_x.start;
+        let world_x1 = tile_start_tx + visible_x.end - 1;
+        let world_y0 = tile_start_ty + visible_y.start;
+        let world_y1 = tile_start_ty + visible_y.end - 1;
+        let (bx0, bx1) = (world_x0.div_euclid(4), world_x1.div_euclid(4));
+        let (by0, by1) = (world_y0.div_euclid(4), world_y1.div_euclid(4));
+        for by in by0..=by1 {
+            for bx in bx0..=bx1 {
+                let block_id = resolve_block_with_connections(
+                    map_json,
+                    map_w,
+                    map_h,
+                    blk,
+                    border_block,
+                    bx,
+                    by,
+                );
+                if block_id == 0 || !has_anim(block_id) {
+                    continue;
+                }
+                for r in 0..4 {
+                    let world_ty = by * 4 + r;
+                    let ty = world_ty - tile_start_ty;
+                    let screen_y = ty * TILE_SIZE as i32 - camera_y;
+                    if screen_y + TILE_SIZE as i32 <= 0 || screen_y >= height {
+                        continue;
+                    }
+                    anim_rows.note(screen_y / TILE_SIZE as i32);
+                }
+            }
+        }
+    }
+
     let (tile_x, tile_y, filter_damage) = match damage {
         BackgroundDamage::Scrolled { dx, dy } if dx != 0 && dy == 0 => {
             let dirty_x = if dx > 0 { 0..dx } else { width + dx..width };
@@ -628,7 +806,13 @@ fn draw_background_tiles(
             if screen_x + TILE_SIZE as i32 <= 0 || screen_x >= width {
                 continue;
             }
-            if filter_damage && !damage.intersects_tile(screen_x, screen_y, width, height) {
+            let skip = match damage {
+                BackgroundDamage::Animated => !anim_rows.has(screen_y / TILE_SIZE as i32),
+                other => {
+                    filter_damage && !other.intersects_tile(screen_x, screen_y, width, height)
+                }
+            };
+            if skip {
                 continue;
             }
             let mut world_tx = tile_start_tx + tx;
@@ -679,6 +863,10 @@ fn draw_background_tiles(
             };
             fb.blit_gb_tile_indices(screen_x, screen_y, tile, false, false, false);
         }
+    }
+
+    if let Some(out) = anim_out {
+        *out = anim_rows;
     }
 }
 
@@ -915,6 +1103,8 @@ fn draw_overworld_impl(
                         map_hash: background_map_hash(screen),
                     };
                     let damage = cache.prepare(fb, key, scroll_background.as_deref_mut());
+                    let is_animated = matches!(damage, BackgroundDamage::Animated);
+                    let mut anim_out = AnimRows::default();
                     draw_background_tiles(
                         fb,
                         damage,
@@ -935,6 +1125,11 @@ fn draw_overworld_impl(
                         border_block,
                         blockset,
                         shake_offset_y,
+                        if is_animated {
+                            Some(&mut anim_out)
+                        } else {
+                            None
+                        },
                     );
                     cache.key = Some(key);
                     let reuse_composited =
@@ -944,6 +1139,11 @@ fn draw_overworld_impl(
                         && cache.output_key == Some(key)
                     {
                         cache.begin_partial_present();
+                    } else if is_animated && reuse_composited && anim_out.any() {
+                        cache.begin_partial_present();
+                        cache.push_animated_damage(&anim_out);
+                    } else if is_animated {
+                        cache.require_full_present();
                     }
                     if reuse_composited {
                         cache.foreground_patches.clear();
@@ -972,6 +1172,7 @@ fn draw_overworld_impl(
                         border_block,
                         blockset,
                         shake_offset_y,
+                        None,
                     );
                 }
             } else {
@@ -999,6 +1200,7 @@ fn draw_overworld_impl(
                     border_block,
                     blockset,
                     shake_offset_y,
+                        None,
                 );
             }
         } else {
@@ -2416,6 +2618,143 @@ mod tests {
             fb_b.packed(),
             "water rotation changes the frame"
         );
+    }
+
+    #[cfg(not(target_arch = "wasm32"))]
+    #[test]
+    fn water_tick_redraws_only_animated_rows() {
+        let root = pokered_renderer::resource::AssetRoot::auto_detect().expect("test graphics");
+        let mut full_resources = Some(ResourceManager::new(root.clone()));
+        let mut cached_resources = Some(ResourceManager::new(root));
+        let spot = |screen: &mut OverworldScreen| {
+            screen.state.player.x = 5;
+            screen.state.player.y = 15; // south pond inside the viewport
+        };
+        let mut s = screen_on(MapId::PalletTown);
+        spot(&mut s);
+        let mut cache = OverworldBackgroundCache::new(160, 144);
+        let mut fb = FrameBuffer::new(RenderConfig::new(160, 144), Rgba::WHITE);
+        let mut host_scroll = |_: &mut [u8], _: usize, _: usize, _: i32, _: i32, _: u8| {
+            unreachable!("host framebuffer must use its planar scroll implementation")
+        };
+
+        // Warm frame: a full draw primes the cache and the framebuffer.
+        draw_overworld_cached_with(
+            &mut s,
+            &mut cached_resources,
+            &mut fb,
+            pokered_core::game_state::Lang::En,
+            &mut cache,
+            &mut host_scroll,
+            true,
+        );
+        let before = fb.clone();
+
+        // One water tick (20 frames = one rotation step).
+        for _ in 0..20 {
+            s.tile_anim.tick();
+        }
+        assert_eq!(s.tile_anim.water_shift(), 1);
+        draw_overworld_cached_with(
+            &mut s,
+            &mut cached_resources,
+            &mut fb,
+            pokered_core::game_state::Lang::En,
+            &mut cache,
+            &mut host_scroll,
+            true,
+        );
+
+        // Pixel-exact against a from-scratch full render of the same state.
+        let mut fresh = screen_on(MapId::PalletTown);
+        spot(&mut fresh);
+        for _ in 0..20 {
+            fresh.tile_anim.tick();
+        }
+        let mut full = FrameBuffer::new(RenderConfig::new(160, 144), Rgba::WHITE);
+        draw_overworld(
+            &mut fresh,
+            &mut full_resources,
+            &mut full,
+            pokered_core::game_state::Lang::En,
+        );
+        // Palette first (shade mapping), then pixels.
+        let pal_entries = |fb: &FrameBuffer| -> Vec<(u8, u8, u8)> {
+            let pal = fb.display_palette();
+            (0..4u8)
+                .map(|i| {
+                    let c = pal.color(pokered_renderer::palette::GbColor::from_u8(i));
+                    (c.r, c.g, c.b)
+                })
+                .collect()
+        };
+        assert_eq!(
+            pal_entries(&full),
+            pal_entries(&fb),
+            "animated tick must preserve the palette"
+        );
+        let mut row_diffs = [0u32; 144];
+        for y in 0..144u32 {
+            for x in 0..160u32 {
+                if full.get_pixel(x, y) != fb.get_pixel(x, y) {
+                    row_diffs[y as usize] += 1;
+                }
+            }
+        }
+        let rows: Vec<(usize, u32)> = row_diffs
+            .iter()
+            .copied()
+            .enumerate()
+            .filter(|(_, c)| *c > 0)
+            .collect();
+        let mut detail = Vec::new();
+        for y in [56u32, 57, 60, 100, 120, 143] {
+            let xs: Vec<u32> = (0..160u32)
+                .filter(|x| full.get_pixel(*x, y) != fb.get_pixel(*x, y))
+                .collect();
+            detail.push((y, xs));
+        }
+        assert!(
+            rows.is_empty(),
+            "pixel mismatch detail={:?}",
+            detail
+        );
+
+        // The frame took the animated path: row-band damage, not the screen.
+        let rects = cache
+            .presentation_damage()
+            .expect("animated frames arm partial present");
+        assert!(
+            rects.iter().any(|r| r.width == 160 && r.height == 8),
+            "row bands present in damage: {:?}",
+            rects
+                .iter()
+                .map(|r| (r.x, r.y, r.width, r.height))
+                .collect::<Vec<_>>()
+        );
+        // At this spot the pond fills most of the lower viewport, so the
+        // animated bands are large by construction; the frame must still be
+        // strictly partial (no full-screen present).
+        let area: u64 = rects.iter().map(|r| r.width as u64 * r.height as u64).sum();
+        assert!(area > 0 && area < 160 * 144, "partial frame, area={area}");
+
+        // Every pixel the tick changed is covered by the damage set.
+        for y in 0..144u32 {
+            for x in 0..160u32 {
+                if fb.get_pixel(x, y) != before.get_pixel(x, y) {
+                    assert!(
+                        rects
+                            .iter()
+                            .any(|r| x >= r.x && x < r.x + r.width && y >= r.y && y < r.y + r.height),
+                        "changed pixel {x},{y} missing from damage {:?}",
+                        rects
+                            .iter()
+                            .map(|r| (r.x, r.y, r.width, r.height))
+                            .collect::<Vec<_>>()
+                    );
+                }
+            }
+        }
     }
 
     #[cfg(not(target_arch = "wasm32"))]

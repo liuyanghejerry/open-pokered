@@ -1,0 +1,90 @@
+{
+  "emulator": "libmgba 0.10.5 headless",
+  "scenarios": {
+    "intro-title-v1": {
+      "scenario": "intro-title-v1",
+      "samples": 174,
+      "update_avg_ticks": 30,
+      "update_core_avg_ticks": 23,
+      "update_flush_avg_ticks": 2,
+      "renders": 50,
+      "draw_per_frame_ticks": 2212,
+      "draw_max_ticks": 18519,
+      "present_per_frame_ticks": 225,
+      "present_max_ticks": 785
+    },
+    "oak-dialogue-v1": {
+      "scenario": "oak-dialogue-v1",
+      "samples": 468,
+      "update_avg_ticks": 90,
+      "update_core_avg_ticks": 84,
+      "update_flush_avg_ticks": 2,
+      "renders": 158,
+      "draw_per_frame_ticks": 1937,
+      "draw_max_ticks": 9414,
+      "present_per_frame_ticks": 265,
+      "present_max_ticks": 798
+    },
+    "overworld-idle-v1": {
+      "scenario": "overworld-idle-v1",
+      "samples": 1400,
+      "update_avg_ticks": 267,
+      "update_core_avg_ticks": 262,
+      "update_flush_avg_ticks": 1,
+      "renders": 0,
+      "draw_per_frame_ticks": 0,
+      "draw_max_ticks": 0,
+      "present_per_frame_ticks": 0,
+      "present_max_ticks": 0
+    },
+    "overworld-movement-v1": {
+      "scenario": "overworld-movement-v1",
+      "samples": 240,
+      "update_avg_ticks": 279,
+      "update_core_avg_ticks": 273,
+      "update_flush_avg_ticks": 1,
+      "renders": 26,
+      "draw_per_frame_ticks": 249,
+      "draw_max_ticks": 2674,
+      "present_per_frame_ticks": 78,
+      "present_max_ticks": 797
+    },
+    "battle-entry-v1": {
+      "scenario": "battle-entry-v1",
+      "samples": 407,
+      "update_avg_ticks": 105,
+      "update_core_avg_ticks": 97,
+      "update_flush_avg_ticks": 2,
+      "renders": 278,
+      "draw_per_frame_ticks": 2527,
+      "draw_max_ticks": 9646,
+      "present_per_frame_ticks": 536,
+      "present_max_ticks": 798
+    },
+    "trainer-battle-entry-v1": {
+      "scenario": "trainer-battle-entry-v1",
+      "samples": 386,
+      "update_avg_ticks": 114,
+      "update_core_avg_ticks": 106,
+      "update_flush_avg_ticks": 2,
+      "renders": 111,
+      "draw_per_frame_ticks": 1608,
+      "draw_max_ticks": 10536,
+      "present_per_frame_ticks": 225,
+      "present_max_ticks": 798
+    },
+    "pokedex-entry-v1": {
+      "scenario": "pokedex-entry-v1",
+      "samples": 396,
+      "update_avg_ticks": 22,
+      "update_core_avg_ticks": 15,
+      "update_flush_avg_ticks": 1,
+      "renders": 1,
+      "draw_per_frame_ticks": 47,
+      "draw_max_ticks": 18909,
+      "present_per_frame_ticks": 1,
+      "present_max_ticks": 785
+    }
+  },
+  "suite": "autopilot-v1"
+}

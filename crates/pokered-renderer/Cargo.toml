@@ -7,6 +7,8 @@ build = "build.rs"
 [features]
 default = ["gpu"]
 framebuffer = []
+# Exercise the bare-metal ROM asset loader/cache with hosted unit tests.
+gba-resource-tests = []
 resource = ["dotzuki-renderer/resource"]
 embedded-assets = ["resource"]
 gpu = ["resource", "dotzuki-renderer/gpu","dep:pixels", "dep:winit", "dep:winit_input_helper", "dep:image", "dep:error-iter"]

@@ -1,0 +1,15 @@
+[mgba] memory: PASS case=menus count=48 free=26856B stack=17656B
+[mgba] [INFO] [Script] Loading map script for Route22 (key: Route22)
+[mgba] [INFO] [NativeScript] Registered 5 lazy functions for Route22
+[mgba] [INFO] [Script] Config for Route22: 2 NPCs, 1 signs, 2 coord_events
+[mgba] [INFO] [Script] on_load function: Route22OnLoad
+[mgba] [INFO] [Script] Calling on_load: Route22OnLoad
+[mgba] [INFO] [Trigger] Built 4 triggers for Route22
+[mgba] [INFO] [Script] Effect done: Discriminant(8)
+[mgba] [INFO] [Script] Next command: Discriminant(10)
+[mgba] [INFO] [Script] Effect done: Discriminant(7)
+[mgba] [INFO] [Script] Effect done: Discriminant(8)
+[mgba] [INFO] [Script] Next command: Discriminant(10)
+[mgba] [INFO] [Script] Effect done: Discriminant(7)
+[mgba] panicked at /Users/liuyanghe02/.rustup/toolchains/nightly-2025-12-07-aarch64-apple-darwin/lib/rustlib/src/rust/library/alloc/src/alloc.rs:439:13:
+memory allocation of 0 bytes failed

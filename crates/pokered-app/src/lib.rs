@@ -14,6 +14,13 @@ extern crate alloc;
 
 pub mod battle_config;
 pub mod game;
+#[cfg(feature = "ewram-audit")]
+pub mod mem_audit;
+
+#[cfg(feature = "ewram-audit")]
+#[global_allocator]
+static EWRAM_AUDIT_ALLOCATOR: mem_audit::AuditAllocator = mem_audit::AuditAllocator;
+
 pub mod render;
 
 #[cfg(not(target_os = "none"))]

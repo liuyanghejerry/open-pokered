@@ -7,6 +7,32 @@ use crate::save_menu::calc_checksum;
 
 pub fn export_sram(save: &SaveData) -> Vec<u8> {
     let mut sram = vec![0u8; SAV_FILE_SIZE];
+    export_sram_into(save, &mut sram);
+    sram
+}
+
+/// Write one 8 KiB SRAM bank into `out`. Bare-metal saves stream bank by
+/// bank: the lab/battle heap peaks leave under 32 KiB of largest free block,
+/// so a single 32 KiB `export_sram` allocation can fail (invisible OOM halt
+/// on hardware) — four 8 KiB exports never need a large contiguous block.
+pub fn export_sram_bank_into(save: &SaveData, bank: usize, out: &mut [u8]) {
+    assert!(out.len() >= SRAM_BANK_SIZE_LAYOUT);
+    out[..SRAM_BANK_SIZE_LAYOUT].fill(0);
+    match bank {
+        0 => write_bank0(&save.hall_of_fame, &mut out[..SRAM_BANK_SIZE_LAYOUT]),
+        1 => write_bank1(save, &mut out[..SRAM_BANK_SIZE_LAYOUT]),
+        2 => write_box_bank(save, 0, &mut out[..SRAM_BANK_SIZE_LAYOUT]),
+        3 => write_box_bank(save, 6, &mut out[..SRAM_BANK_SIZE_LAYOUT]),
+        _ => panic!("SRAM has four banks"),
+    }
+}
+
+/// Write the 32 KiB SRAM image into a caller-provided buffer. On bare metal
+/// the caller passes a view over the cartridge SRAM itself, so saving never
+/// needs a 32 KiB allocation (or stack temporary) on the GBA.
+pub fn export_sram_into(save: &SaveData, sram: &mut [u8]) {
+    assert!(sram.len() >= SAV_FILE_SIZE);
+    sram[..SAV_FILE_SIZE].fill(0);
 
     write_bank0(&save.hall_of_fame, &mut sram[0..SRAM_BANK_SIZE_LAYOUT]);
     write_bank1(
@@ -23,8 +49,6 @@ pub fn export_sram(save: &SaveData) -> Vec<u8> {
         6,
         &mut sram[SRAM_BANK_SIZE_LAYOUT * 3..SRAM_BANK_SIZE_LAYOUT * 4],
     );
-
-    sram
 }
 
 fn write_bank0(hof: &HallOfFame, bank: &mut [u8]) {

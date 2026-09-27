@@ -39,6 +39,7 @@ SCENARIO_METRICS = {
     "overworld-idle-v1": ("update_avg_ticks",),
     "overworld-movement-v1": METRICS,
     "battle-entry-v1": METRICS,
+    "trainer-battle-entry-v1": METRICS,
     "pokedex-entry-v1": METRICS,
 }
 PERF_LINE = re.compile(r"\bgba-perf\s+(?P<fields>.+)")
@@ -77,6 +78,12 @@ def record(args: argparse.Namespace) -> int:
     rom = args.rom.resolve()
     if not rom.is_file():
         raise ValueError(f"ROM not found: {rom}")
+    # Deterministic boot state: a leftover .sav flips the game's boot path
+    # into CONTINUE, which shifts every scenario window onto a saved game.
+    leftover = Path(str(rom)).with_suffix(".sav")
+    if leftover.exists():
+        leftover.unlink()
+
     command = shlex.split(args.emulator) + [
         "-C", "logToStdout=1",
         "-C", "logLevel.gba.debug=127",

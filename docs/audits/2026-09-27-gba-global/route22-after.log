@@ -1,0 +1,265 @@
+Running: /tmp/mgba-headless /var/folders/d2/2fv86m890m34_13rn_t3d79w0000gn/T/gba-memory-v5p4gyg1/regression.gba /tmp/route22-soak.lua
+[mgba] repro: heap low 32768B at frame 0
+[mgba] route22: START round=1 case=before-parcel-lower
+[mgba] route22: frame=4300 round=1 screen=Overworld free=32768B stack=18336B
+[mgba] repro: heap low 29584B at frame 4371
+[mgba] route22: frame=4902 round=1 screen=Overworld free=29592B stack=18336B
+[mgba] repro: heap low 24472B at frame 5176
+[mgba] route22: frame=5503 round=1 screen=Battle free=24472B stack=18336B
+[mgba] repro: heap low 23448B at frame 5743
+[mgba] route22: frame=6103 round=1 screen=Overworld free=23448B stack=18336B
+[mgba] route22: PASS round=1 case=before-parcel-lower
+[mgba] route22: START round=2 case=before-parcel-upper
+[mgba] route22: frame=6705 round=2 screen=Overworld free=30576B stack=18336B
+[mgba] route22: frame=7305 round=2 screen=Battle free=30576B stack=18336B
+[mgba] route22: frame=7905 round=2 screen=Overworld free=24432B stack=18336B
+[mgba] route22: PASS round=2 case=before-parcel-upper
+[mgba] route22: START round=3 case=after-parcel-lower
+[mgba] route22: frame=8505 round=3 screen=Overworld free=28520B stack=18336B
+[mgba] route22: frame=9105 round=3 screen=Battle free=28520B stack=18336B
+[mgba] repro: heap low 23400B at frame 9374
+[mgba] route22: frame=9706 round=3 screen=Battle free=23400B stack=18336B
+[mgba] route22: frame=10306 round=3 screen=Overworld free=28520B stack=18336B
+[mgba] route22: PASS round=3 case=after-parcel-lower
+[mgba] route22: START round=4 case=final-upper
+[mgba] route22: frame=10906 round=4 screen=Overworld free=31800B stack=18336B
+[mgba] repro: heap low 21560B at frame 11428
+[mgba] route22: frame=11509 round=4 screen=Battle free=21560B stack=18336B
+[mgba] route22: frame=12110 round=4 screen=Battle free=21560B stack=18336B
+[mgba] route22: frame=12710 round=4 screen=Battle free=21560B stack=18336B
+[mgba] route22: frame=13310 round=4 screen=Battle free=21560B stack=18336B
+[mgba] route22: frame=13911 round=4 screen=Overworld free=31800B stack=18336B
+[mgba] route22: PASS round=4 case=final-upper
+[mgba] route22: START round=5 case=final-lower
+[mgba] route22: frame=14514 round=5 screen=Overworld free=29816B stack=18336B
+[mgba] route22: frame=15117 round=5 screen=Battle free=24696B stack=18336B
+[mgba] route22: frame=15718 round=5 screen=Battle free=24696B stack=18336B
+[mgba] route22: frame=16318 round=5 screen=Battle free=24696B stack=18336B
+[mgba] route22: frame=16920 round=5 screen=Battle free=24696B stack=18336B
+[mgba] route22: frame=17522 round=5 screen=Overworld free=29816B stack=18336B
+[mgba] route22: PASS round=5 case=final-lower
+[mgba] route22: START round=6 case=before-parcel-lower
+[mgba] route22: frame=18123 round=6 screen=Overworld free=30296B stack=18336B
+[mgba] route22: frame=18724 round=6 screen=Battle free=30296B stack=18336B
+[mgba] route22: frame=19324 round=6 screen=Battle free=25176B stack=18336B
+[mgba] route22: frame=19925 round=6 screen=Overworld free=30296B stack=18336B
+[mgba] route22: PASS round=6 case=before-parcel-lower
+[mgba] route22: START round=7 case=before-parcel-upper
+[mgba] route22: frame=20525 round=7 screen=Overworld free=30888B stack=18336B
+[mgba] route22: frame=21128 round=7 screen=Battle free=25768B stack=18336B
+[mgba] route22: frame=21728 round=7 screen=Overworld free=30888B stack=18336B
+[mgba] route22: PASS round=7 case=before-parcel-upper
+[mgba] route22: START round=8 case=after-parcel-lower
+[mgba] route22: frame=22328 round=8 screen=Overworld free=28520B stack=18336B
+[mgba] route22: frame=22928 round=8 screen=Battle free=28520B stack=18336B
+[mgba] route22: frame=23528 round=8 screen=Battle free=23400B stack=18336B
+[mgba] route22: frame=24129 round=8 screen=Overworld free=28520B stack=18336B
+[mgba] route22: PASS round=8 case=after-parcel-lower
+[mgba] route22: START round=9 case=final-upper
+[mgba] route22: frame=24730 round=9 screen=Overworld free=31800B stack=18336B
+[mgba] route22: frame=25330 round=9 screen=Battle free=21560B stack=18336B
+[mgba] route22: frame=25931 round=9 screen=Battle free=21560B stack=18336B
+[mgba] route22: frame=26531 round=9 screen=Battle free=21560B stack=18336B
+[mgba] route22: frame=27132 round=9 screen=Overworld free=31800B stack=18336B
+[mgba] route22: PASS round=9 case=final-upper
+[mgba] route22: START round=10 case=final-lower
+[mgba] route22: frame=27733 round=10 screen=Overworld free=29816B stack=18336B
+[mgba] route22: frame=28333 round=10 screen=Battle free=29816B stack=18336B
+[mgba] route22: frame=28936 round=10 screen=Battle free=24696B stack=18336B
+[mgba] route22: frame=29540 round=10 screen=Battle free=24696B stack=18336B
+[mgba] route22: frame=30143 round=10 screen=Battle free=24696B stack=18336B
+[mgba] route22: frame=30745 round=10 screen=Overworld free=29816B stack=18336B
+[mgba] route22: PASS round=10 case=final-lower
+[mgba] route22: START round=11 case=before-parcel-lower
+[mgba] route22: frame=31345 round=11 screen=Overworld free=30600B stack=18336B
+[mgba] route22: frame=31946 round=11 screen=Battle free=30600B stack=18336B
+[mgba] route22: frame=32546 round=11 screen=Battle free=25480B stack=18336B
+[mgba] route22: PASS round=11 case=before-parcel-lower
+[mgba] route22: START round=12 case=before-parcel-upper
+[mgba] route22: frame=33211 round=12 screen=Overworld free=32768B stack=18336B
+[mgba] route22: frame=33812 round=12 screen=Overworld free=30576B stack=18336B
+[mgba] route22: frame=34414 round=12 screen=Battle free=25456B stack=18336B
+[mgba] route22: frame=35014 round=12 screen=Overworld free=30576B stack=18336B
+[mgba] route22: PASS round=12 case=before-parcel-upper
+[mgba] route22: START round=13 case=after-parcel-lower
+[mgba] route22: frame=35615 round=13 screen=Overworld free=28824B stack=18336B
+[mgba] route22: frame=36215 round=13 screen=Battle free=28824B stack=18336B
+[mgba] route22: frame=36815 round=13 screen=Overworld free=28824B stack=18336B
+[mgba] route22: PASS round=13 case=after-parcel-lower
+[mgba] route22: START round=14 case=final-upper
+[mgba] route22: frame=37418 round=14 screen=Overworld free=32768B stack=18336B
+[mgba] route22: frame=38018 round=14 screen=Battle free=31800B stack=18336B
+[mgba] route22: frame=38618 round=14 screen=Battle free=21560B stack=18336B
+[mgba] route22: frame=39219 round=14 screen=Battle free=21560B stack=18336B
+[mgba] route22: frame=39819 round=14 screen=Battle free=21560B stack=18336B
+[mgba] route22: frame=40419 round=14 screen=Overworld free=31800B stack=18336B
+[mgba] route22: PASS round=14 case=final-upper
+[mgba] route22: START round=15 case=final-lower
+[mgba] route22: frame=41020 round=15 screen=Overworld free=29816B stack=18336B
+[mgba] route22: frame=41621 round=15 screen=Battle free=29816B stack=18336B
+[mgba] route22: frame=42222 round=15 screen=Battle free=40056B stack=18336B
+[mgba] route22: frame=42822 round=15 screen=Battle free=40056B stack=18336B
+[mgba] route22: frame=43427 round=15 screen=Battle free=40056B stack=18336B
+[mgba] route22: frame=44029 round=15 screen=Overworld free=50296B stack=18336B
+[mgba] route22: PASS round=15 case=final-lower
+[mgba] route22: START round=16 case=before-parcel-lower
+[mgba] route22: frame=44629 round=16 screen=Overworld free=50776B stack=18336B
+[mgba] route22: frame=45230 round=16 screen=Battle free=50776B stack=18336B
+[mgba] route22: frame=45832 round=16 screen=Battle free=45656B stack=18336B
+[mgba] route22: PASS round=16 case=before-parcel-lower
+[mgba] route22: START round=17 case=before-parcel-upper
+[mgba] route22: frame=46483 round=17 screen=Overworld free=53248B stack=18336B
+[mgba] route22: frame=47084 round=17 screen=Overworld free=51368B stack=18336B
+[mgba] route22: frame=47684 round=17 screen=Battle free=41128B stack=18336B
+[mgba] route22: frame=48287 round=17 screen=Overworld free=51368B stack=18336B
+[mgba] route22: PASS round=17 case=before-parcel-upper
+[mgba] route22: START round=18 case=after-parcel-lower
+[mgba] route22: frame=48888 round=18 screen=Overworld free=49000B stack=18336B
+[mgba] route22: frame=49491 round=18 screen=Battle free=43880B stack=18336B
+[mgba] route22: frame=50092 round=18 screen=Overworld free=49000B stack=18336B
+[mgba] route22: PASS round=18 case=after-parcel-lower
+[mgba] route22: START round=19 case=final-upper
+[mgba] route22: frame=50693 round=19 screen=Overworld free=52280B stack=18336B
+[mgba] route22: frame=51293 round=19 screen=Battle free=52280B stack=18336B
+[mgba] route22: frame=51895 round=19 screen=Battle free=42040B stack=18336B
+[mgba] route22: frame=52496 round=19 screen=Battle free=42040B stack=18336B
+[mgba] route22: frame=53100 round=19 screen=Battle free=42040B stack=18336B
+[mgba] route22: frame=53700 round=19 screen=Overworld free=52280B stack=18336B
+[mgba] route22: PASS round=19 case=final-upper
+[mgba] route22: START round=20 case=final-lower
+[mgba] route22: frame=54302 round=20 screen=Overworld free=50296B stack=18336B
+[mgba] route22: frame=54902 round=20 screen=Battle free=50296B stack=18336B
+[mgba] route22: frame=55507 round=20 screen=Battle free=45176B stack=18336B
+[mgba] route22: frame=56109 round=20 screen=Battle free=45176B stack=18336B
+[mgba] route22: frame=56711 round=20 screen=Battle free=45176B stack=18336B
+[mgba] route22: frame=57311 round=20 screen=Overworld free=50296B stack=18336B
+[mgba] route22: PASS round=20 case=final-lower
+[mgba] route22: START round=21 case=before-parcel-lower
+[mgba] route22: frame=57911 round=21 screen=Overworld free=51080B stack=18336B
+[mgba] route22: frame=58511 round=21 screen=Battle free=51080B stack=18336B
+[mgba] route22: frame=59114 round=21 screen=Overworld free=51080B stack=18336B
+[mgba] route22: PASS round=21 case=before-parcel-lower
+[mgba] route22: START round=22 case=before-parcel-upper
+[mgba] route22: frame=59714 round=22 screen=Overworld free=53248B stack=18336B
+[mgba] route22: frame=60314 round=22 screen=Battle free=51056B stack=18336B
+[mgba] route22: frame=60914 round=22 screen=Battle free=45936B stack=18336B
+[mgba] route22: frame=61515 round=22 screen=Overworld free=51056B stack=18336B
+[mgba] route22: PASS round=22 case=before-parcel-upper
+[mgba] route22: START round=23 case=after-parcel-lower
+[mgba] route22: frame=62117 round=23 screen=Overworld free=49304B stack=18336B
+[mgba] route22: frame=62717 round=23 screen=Battle free=49304B stack=18336B
+[mgba] route22: frame=63318 round=23 screen=Overworld free=49304B stack=18336B
+[mgba] route22: PASS round=23 case=after-parcel-lower
+[mgba] route22: START round=24 case=final-upper
+[mgba] route22: frame=63922 round=24 screen=Overworld free=53248B stack=18336B
+[mgba] route22: frame=64522 round=24 screen=Battle free=52280B stack=18336B
+[mgba] route22: frame=65122 round=24 screen=Battle free=47160B stack=18336B
+[mgba] route22: frame=65725 round=24 screen=Battle free=44024B stack=18336B
+[mgba] route22: frame=66328 round=24 screen=Battle free=44024B stack=18336B
+[mgba] route22: frame=66933 round=24 screen=Overworld free=52280B stack=18336B
+[mgba] route22: PASS round=24 case=final-upper
+[mgba] route22: START round=25 case=final-lower
+[mgba] route22: frame=67533 round=25 screen=Overworld free=53248B stack=18336B
+[mgba] route22: frame=68134 round=25 screen=Battle free=50296B stack=18336B
+[mgba] route22: frame=68734 round=25 screen=Battle free=45176B stack=18336B
+[mgba] route22: frame=69339 round=25 screen=Battle free=45176B stack=18336B
+[mgba] route22: frame=69939 round=25 screen=Battle free=45176B stack=18336B
+[mgba] route22: frame=70541 round=25 screen=Overworld free=50296B stack=18336B
+[mgba] route22: PASS round=25 case=final-lower
+[mgba] route22: START round=26 case=before-parcel-lower
+[mgba] route22: frame=71141 round=26 screen=Overworld free=50776B stack=18336B
+[mgba] route22: frame=71742 round=26 screen=Battle free=50776B stack=18336B
+[mgba] route22: frame=72344 round=26 screen=Battle free=45656B stack=18336B
+[mgba] route22: frame=72944 round=26 screen=Overworld free=50776B stack=18336B
+[mgba] route22: PASS round=26 case=before-parcel-lower
+[mgba] route22: START round=27 case=before-parcel-upper
+[mgba] route22: frame=73545 round=27 screen=Overworld free=51368B stack=18336B
+[mgba] route22: frame=74147 round=27 screen=Battle free=46248B stack=18336B
+[mgba] route22: frame=74749 round=27 screen=Overworld free=51368B stack=18336B
+[mgba] route22: PASS round=27 case=before-parcel-upper
+[mgba] route22: START round=28 case=after-parcel-lower
+[mgba] route22: frame=75350 round=28 screen=Overworld free=49000B stack=18336B
+[mgba] route22: frame=75950 round=28 screen=Battle free=49000B stack=18336B
+[mgba] route22: frame=76551 round=28 screen=Battle free=38760B stack=18336B
+[mgba] route22: frame=77151 round=28 screen=Overworld free=49000B stack=18336B
+[mgba] route22: PASS round=28 case=after-parcel-lower
+[mgba] route22: START round=29 case=final-upper
+[mgba] route22: frame=77751 round=29 screen=Overworld free=52280B stack=18336B
+[mgba] route22: frame=78351 round=29 screen=Battle free=42040B stack=18336B
+[mgba] route22: frame=78953 round=29 screen=Battle free=42040B stack=18336B
+[mgba] route22: frame=79556 round=29 screen=Battle free=42040B stack=18336B
+[mgba] route22: frame=80157 round=29 screen=Battle free=42040B stack=18336B
+[mgba] route22: PASS round=29 case=final-upper
+[mgba] route22: START round=30 case=final-lower
+[mgba] route22: frame=80775 round=30 screen=Overworld free=53248B stack=18336B
+[mgba] route22: frame=81376 round=30 screen=Battle free=50296B stack=18336B
+[mgba] route22: frame=81976 round=30 screen=Battle free=45176B stack=18336B
+[mgba] route22: frame=82582 round=30 screen=Battle free=45176B stack=18336B
+[mgba] route22: frame=83182 round=30 screen=Battle free=45176B stack=18336B
+[mgba] route22: frame=83782 round=30 screen=Overworld free=50296B stack=18336B
+[mgba] route22: PASS round=30 case=final-lower
+[mgba] route22: START round=31 case=before-parcel-lower
+[mgba] route22: frame=84385 round=31 screen=Overworld free=51080B stack=18336B
+[mgba] route22: frame=84985 round=31 screen=Battle free=51080B stack=18336B
+[mgba] route22: frame=85586 round=31 screen=Overworld free=51080B stack=18336B
+[mgba] route22: PASS round=31 case=before-parcel-lower
+[mgba] route22: START round=32 case=before-parcel-upper
+[mgba] route22: frame=86186 round=32 screen=Overworld free=53248B stack=18336B
+[mgba] route22: frame=86786 round=32 screen=Overworld free=51056B stack=18336B
+[mgba] route22: frame=87387 round=32 screen=Battle free=45936B stack=18336B
+[mgba] route22: frame=87989 round=32 screen=Overworld free=51056B stack=18336B
+[mgba] route22: PASS round=32 case=before-parcel-upper
+[mgba] route22: START round=33 case=after-parcel-lower
+[mgba] route22: frame=88591 round=33 screen=Overworld free=49000B stack=18336B
+[mgba] route22: frame=89193 round=33 screen=Battle free=43880B stack=18336B
+[mgba] route22: frame=89795 round=33 screen=Overworld free=49000B stack=18336B
+[mgba] route22: PASS round=33 case=after-parcel-lower
+[mgba] route22: START round=34 case=final-upper
+[mgba] route22: frame=90395 round=34 screen=Overworld free=52280B stack=18336B
+[mgba] route22: frame=90996 round=34 screen=Battle free=52280B stack=18336B
+[mgba] route22: frame=91597 round=34 screen=Battle free=42040B stack=18336B
+[mgba] route22: frame=92198 round=34 screen=Battle free=42040B stack=18336B
+[mgba] route22: frame=92801 round=34 screen=Battle free=42040B stack=18336B
+[mgba] route22: frame=93405 round=34 screen=Overworld free=52280B stack=18336B
+[mgba] route22: PASS round=34 case=final-upper
+[mgba] route22: START round=35 case=final-lower
+[mgba] route22: frame=94005 round=35 screen=Overworld free=50296B stack=18336B
+[mgba] route22: frame=94607 round=35 screen=Battle free=45176B stack=18336B
+[mgba] route22: frame=95208 round=35 screen=Battle free=45176B stack=18336B
+[mgba] route22: frame=95811 round=35 screen=Battle free=42040B stack=18336B
+[mgba] route22: frame=96413 round=35 screen=Battle free=40056B stack=18336B
+[mgba] route22: PASS round=35 case=final-lower
+[mgba] route22: START round=36 case=before-parcel-lower
+[mgba] route22: frame=97072 round=36 screen=Overworld free=53248B stack=18336B
+[mgba] route22: frame=97673 round=36 screen=Overworld free=50776B stack=18336B
+[mgba] route22: frame=98275 round=36 screen=Battle free=45656B stack=18336B
+[mgba] route22: frame=98876 round=36 screen=Overworld free=50776B stack=18336B
+[mgba] route22: PASS round=36 case=before-parcel-lower
+[mgba] route22: START round=37 case=before-parcel-upper
+[mgba] route22: frame=99476 round=37 screen=Overworld free=51368B stack=18336B
+[mgba] route22: frame=100077 round=37 screen=Battle free=51368B stack=18336B
+[mgba] route22: frame=100679 round=37 screen=Overworld free=51368B stack=18336B
+[mgba] route22: PASS round=37 case=before-parcel-upper
+[mgba] route22: START round=38 case=after-parcel-lower
+[mgba] route22: frame=101280 round=38 screen=Overworld free=49000B stack=18336B
+[mgba] route22: frame=101880 round=38 screen=Battle free=49000B stack=18336B
+[mgba] route22: frame=102481 round=38 screen=Battle free=43880B stack=18336B
+[mgba] route22: frame=103081 round=38 screen=Overworld free=49000B stack=18336B
+[mgba] route22: PASS round=38 case=after-parcel-lower
+[mgba] route22: START round=39 case=final-upper
+[mgba] route22: frame=103683 round=39 screen=Overworld free=52280B stack=18336B
+[mgba] route22: frame=104284 round=39 screen=Battle free=38904B stack=18336B
+[mgba] route22: frame=104884 round=39 screen=Battle free=38904B stack=18336B
+[mgba] route22: frame=105487 round=39 screen=Battle free=38904B stack=18336B
+[mgba] route22: frame=106087 round=39 screen=Battle free=38904B stack=18336B
+[mgba] route22: frame=106687 round=39 screen=Overworld free=52280B stack=18336B
+[mgba] route22: PASS round=39 case=final-upper
+[mgba] route22: START round=40 case=final-lower
+[mgba] route22: frame=107288 round=40 screen=Overworld free=50296B stack=18336B
+[mgba] route22: frame=107889 round=40 screen=Battle free=40056B stack=18336B
+[mgba] route22: frame=108491 round=40 screen=Battle free=40056B stack=18336B
+[mgba] route22: frame=109091 round=40 screen=Battle free=40056B stack=18336B
+[mgba] route22: frame=109692 round=40 screen=Battle free=40056B stack=18336B
+[mgba] route22: PASS round=40 case=final-lower
+[mgba] route22: ALL PASS rounds=40 save=ok stack=18336B
+GBA memory PASS: 40 route22 cases; min contiguous heap=21560 B, untouched stack=18336 B

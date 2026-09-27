@@ -1179,6 +1179,9 @@ fn draw_mon_pic_plan(
     clip_top: u32,
     clip_bottom: u32,
 ) {
+    #[cfg(target_os = "none")]
+    let raw_indices = palette_is_shade_ramp(pal);
+
     for (dest_row, &source_row) in plan.source_rows.iter().enumerate() {
         for source_col in 0..tiles_per_row {
             // _AnimationSlideMonOff compares the next player tile against
@@ -1197,6 +1200,22 @@ fn draw_mon_pic_plan(
                 continue;
             }
             let tile = ts.get(tile_index as usize);
+            #[cfg(target_os = "none")]
+            {
+                if raw_indices {
+                    draw_mon_tile_rows_indices(
+                        fb,
+                        tile,
+                        x + (source_col * TILE_SIZE) as i32,
+                        y + (usize::from(plan.down_rows) + dest_row) as i32 * TILE_SIZE as i32,
+                        clip_left,
+                        clip_right,
+                        clip_top,
+                        clip_bottom,
+                    );
+                    continue;
+                }
+            }
             for row in 0..TILE_PIXELS {
                 let py = y
                     + (usize::from(plan.down_rows) + dest_row) as i32 * TILE_SIZE as i32
@@ -1220,6 +1239,82 @@ fn draw_mon_pic_plan(
                         fb.set_pixel(px as u32, py as u32, pal.color(GbColor::from_u8(color)));
                     }
                 }
+            }
+        }
+    }
+}
+
+/// True when every shade of `pal` is the shade of its own index in the
+/// standard grayscale base palette. `set_pixel(pal.color(i))` then quantizes
+/// straight back to `i`, so a bare-metal blit may store the index itself.
+#[cfg(any(target_os = "none", test))]
+fn palette_is_shade_ramp(pal: &Palette) -> bool {
+    let shade = |index: usize, value: u8| {
+        let color = pal.colors[index];
+        color.r == value && color.g == value && color.b == value
+    };
+    // Index 0 is the transparent shade and is never written.
+    shade(1, 0xAA) && shade(2, 0x55) && shade(3, 0x00)
+}
+
+/// Blit one clipped mon-picture tile by resolving the visible column span once
+/// per row and storing palette indices directly into the linear index plane.
+#[cfg(target_os = "none")]
+fn draw_mon_tile_rows_indices(
+    fb: &mut crate::FrameBuffer,
+    tile: &dotzuki_renderer::tile::Tile,
+    tile_left: i32,
+    tile_top: i32,
+    clip_left: i32,
+    clip_right: i32,
+    clip_top: u32,
+    clip_bottom: u32,
+) {
+    let width = fb.width() as usize;
+    let height = fb.height() as usize;
+    write_mon_tile_rows(
+        fb.indices_mut(),
+        width,
+        height,
+        tile,
+        tile_left,
+        tile_top,
+        (clip_left, clip_right, clip_top, clip_bottom),
+    );
+}
+
+/// The layout-independent core of [`draw_mon_tile_rows_indices`], so the clip
+/// arithmetic can be checked against the per-pixel original on any target.
+#[cfg(any(target_os = "none", test))]
+fn write_mon_tile_rows(
+    pixels: &mut [u8],
+    width: usize,
+    height: usize,
+    tile: &dotzuki_renderer::tile::Tile,
+    tile_left: i32,
+    tile_top: i32,
+    clip: (i32, i32, u32, u32),
+) {
+    let (clip_left, clip_right, clip_top, clip_bottom) = clip;
+    let first = (clip_left - tile_left).max(-tile_left).max(0);
+    let last = (clip_right - tile_left)
+        .min(width as i32 - tile_left)
+        .min(TILE_PIXELS as i32);
+    if first >= last {
+        return;
+    }
+    let stride = width;
+    for row in 0..TILE_PIXELS {
+        let py = tile_top + row as i32;
+        if py < clip_top as i32 || py >= clip_bottom as i32 || py < 0 || py >= height as i32 {
+            continue;
+        }
+        let source = &tile.pixels[row];
+        let base = py as usize * stride + (tile_left + first) as usize;
+        for col in first..last {
+            let color = source[col as usize];
+            if color != 0 {
+                pixels[base + (col - first) as usize] = color;
             }
         }
     }
@@ -2384,38 +2479,102 @@ impl AnimationPlayer {
 }
 
 fn shift_horizontal_band(fb: &mut crate::FrameBuffer, y_start: u32, y_end: u32, dx: i32) {
-    let width = fb.width() as i32;
-    let source = fb.indexed().clone();
-    for y in y_start.min(fb.height())..y_end.min(fb.height()) {
-        for x in 0..width {
-            let source_x = x - dx;
-            let color = if (0..width).contains(&source_x) {
-                source
-                    .get_pixel(source_x as u32, y)
-                    .unwrap_or(GbColor::White)
-            } else {
-                GbColor::White
-            };
-            fb.set_pixel_index(x as u32, y, color);
+    #[cfg(target_os = "none")]
+    {
+        let width = fb.width() as usize;
+        shift_linear_scanlines(fb.indices_mut(), width, y_start, y_end, |_| dx);
+    }
+    #[cfg(not(target_os = "none"))]
+    {
+        let width = fb.width() as i32;
+        let source = fb.indexed().clone();
+        for y in y_start.min(fb.height())..y_end.min(fb.height()) {
+            for x in 0..width {
+                let source_x = x - dx;
+                let color = if (0..width).contains(&source_x) {
+                    source
+                        .get_pixel(source_x as u32, y)
+                        .unwrap_or(GbColor::White)
+                } else {
+                    GbColor::White
+                };
+                fb.set_pixel_index(x as u32, y, color);
+            }
         }
     }
 }
 
 fn shift_vertical_band(fb: &mut crate::FrameBuffer, dy: i32) {
-    let height = fb.height() as i32;
-    let source = fb.indexed().clone();
-    for y in 0..height {
-        let source_y = y - dy;
-        for x in 0..fb.width() {
-            let color = if (0..height).contains(&source_y) {
-                source
-                    .get_pixel(x, source_y as u32)
-                    .unwrap_or(GbColor::White)
-            } else {
-                GbColor::White
-            };
-            fb.set_pixel_index(x, y as u32, color);
+    #[cfg(target_os = "none")]
+    {
+        let width = fb.width() as usize;
+        shift_linear_vertical(fb.indices_mut(), width, dy);
+    }
+    #[cfg(not(target_os = "none"))]
+    {
+        let height = fb.height() as i32;
+        let source = fb.indexed().clone();
+        for y in 0..height {
+            let source_y = y - dy;
+            for x in 0..fb.width() {
+                let color = if (0..height).contains(&source_y) {
+                    source
+                        .get_pixel(x, source_y as u32)
+                        .unwrap_or(GbColor::White)
+                } else {
+                    GbColor::White
+                };
+                fb.set_pixel_index(x, y as u32, color);
+            }
         }
+    }
+}
+
+/// Overlap-safe shifts for GBA's linear framebuffer. A full clone costs
+/// 23,040 B, more than the free heap while a large trainer script is paused.
+/// Memmove and white fill need no scratch allocation, even for large shifts.
+#[cfg(any(target_os = "none", test))]
+fn shift_linear_scanlines(
+    pixels: &mut [u8],
+    width: usize,
+    y_start: u32,
+    y_end: u32,
+    offset: impl Fn(u32) -> i32,
+) {
+    if width == 0 {
+        return;
+    }
+    for (y, row) in pixels
+        .chunks_exact_mut(width)
+        .enumerate()
+        .take(y_end as usize)
+        .skip(y_start as usize)
+    {
+        let dx = offset(y as u32);
+        let count = (dx.unsigned_abs() as usize).min(width);
+        if dx > 0 {
+            row.copy_within(..width - count, count);
+            row[..count].fill(0);
+        } else if dx < 0 {
+            row.copy_within(count.., 0);
+            row[width - count..].fill(0);
+        }
+    }
+}
+
+#[cfg(any(target_os = "none", test))]
+fn shift_linear_vertical(pixels: &mut [u8], width: usize, dy: i32) {
+    if width == 0 {
+        return;
+    }
+    let count = (dy.unsigned_abs() as usize).min(pixels.len() / width) * width;
+    let len = pixels.len();
+    if dy > 0 {
+        pixels.copy_within(..len - count, count);
+        pixels[..count].fill(0);
+    } else if dy < 0 {
+        pixels.copy_within(count.., 0);
+        pixels[len - count..].fill(0);
     }
 }
 
@@ -2514,20 +2673,30 @@ fn apply_shake_screen(
     call: u8,
     phase: u8,
 ) {
-    let width = fb.width() as i32;
-    let source = fb.indexed().clone();
-    for y in 0..fb.height() {
-        let dx = shake_line_offset(move_id, player_is_attacker, call, phase, y);
-        for x in 0..width {
-            let source_x = x - dx;
-            let color = if (0..width).contains(&source_x) {
-                source
-                    .get_pixel(source_x as u32, y)
-                    .unwrap_or(GbColor::White)
-            } else {
-                GbColor::White
-            };
-            fb.set_pixel_index(x as u32, y, color);
+    #[cfg(target_os = "none")]
+    {
+        let (width, height) = (fb.width() as usize, fb.height());
+        shift_linear_scanlines(fb.indices_mut(), width, 0, height, |y| {
+            shake_line_offset(move_id, player_is_attacker, call, phase, y)
+        });
+    }
+    #[cfg(not(target_os = "none"))]
+    {
+        let width = fb.width() as i32;
+        let source = fb.indexed().clone();
+        for y in 0..fb.height() {
+            let dx = shake_line_offset(move_id, player_is_attacker, call, phase, y);
+            for x in 0..width {
+                let source_x = x - dx;
+                let color = if (0..width).contains(&source_x) {
+                    source
+                        .get_pixel(source_x as u32, y)
+                        .unwrap_or(GbColor::White)
+                } else {
+                    GbColor::White
+                };
+                fb.set_pixel_index(x as u32, y, color);
+            }
         }
     }
 }
@@ -2538,21 +2707,32 @@ fn apply_wavy_screen(
     player_is_attacker: bool,
     phase: u8,
 ) {
-    let width = fb.width() as i32;
-    let source = fb.indexed().clone();
-    for y in 0..fb.height() {
-        let shift =
-            crate::gen1_wavy_schedule::line_offset(move_id, player_is_attacker, phase, y) as i32;
-        for x in 0..width {
-            let source_x = x + shift;
-            let color = if (0..width).contains(&source_x) {
-                source
-                    .get_pixel(source_x as u32, y)
-                    .unwrap_or(GbColor::White)
-            } else {
-                GbColor::White
-            };
-            fb.set_pixel_index(x as u32, y, color);
+    #[cfg(target_os = "none")]
+    {
+        let (width, height) = (fb.width() as usize, fb.height());
+        shift_linear_scanlines(fb.indices_mut(), width, 0, height, |y| {
+            -(crate::gen1_wavy_schedule::line_offset(move_id, player_is_attacker, phase, y) as i32)
+        });
+    }
+    #[cfg(not(target_os = "none"))]
+    {
+        let width = fb.width() as i32;
+        let source = fb.indexed().clone();
+        for y in 0..fb.height() {
+            let shift =
+                crate::gen1_wavy_schedule::line_offset(move_id, player_is_attacker, phase, y)
+                    as i32;
+            for x in 0..width {
+                let source_x = x + shift;
+                let color = if (0..width).contains(&source_x) {
+                    source
+                        .get_pixel(source_x as u32, y)
+                        .unwrap_or(GbColor::White)
+                } else {
+                    GbColor::White
+                };
+                fb.set_pixel_index(x as u32, y, color);
+            }
         }
     }
 }
@@ -2565,23 +2745,78 @@ fn bake_bgp(fb: &mut crate::FrameBuffer, bgp: u8) {
     apply_bgp_bands(fb, bgp, &[]);
 }
 
+/// BGP `11 10 01 00`: shade `i` maps onto itself.
+const BGP_IDENTITY: u8 = 0xe4;
+
+#[inline]
+fn bgp_is_identity(bgp: u8) -> bool {
+    bgp == BGP_IDENTITY
+}
+
 fn apply_bgp_bands(fb: &mut crate::FrameBuffer, initial_bgp: u8, writes: &[(u32, u8)]) {
-    let source = fb.indexed().clone();
     fb.reset_palette();
-    for y in 0..fb.height() {
-        let mut bgp = initial_bgp;
-        for &(scanline, written_bgp) in writes {
-            if y < scanline {
-                break;
-            }
-            bgp = written_bgp;
+    // Every visible band mapping shades onto themselves makes the whole
+    // remap a no-op. That is the standing battle-frame state (0xe4 with no
+    // mid-frame writes), where the per-pixel pass below would rewrite all
+    // 38 400 index bytes to the values they already hold.
+    if bgp_is_identity(initial_bgp) && writes.iter().all(|&(_, bgp)| bgp_is_identity(bgp)) {
+        return;
+    }
+    let width = fb.width();
+    let height = fb.height();
+
+    // Bare metal packs one index byte per pixel (linear layout), so the whole
+    // remap is a per-row LUT over the raw buffer. The old shape — clone the
+    // framebuffer (a 23 KB allocation), then `get_pixel` + `set_pixel_index`
+    // per pixel — measured at ~68% of the battle render whenever the effect
+    // was active.
+    #[cfg(target_os = "none")]
+    {
+        let indices = fb.indices_mut();
+        if indices.len() < (width * height) as usize {
+            return;
         }
-        for x in 0..fb.width() {
-            let index = source.get_pixel(x, y).unwrap_or(GbColor::White) as u8;
-            let shade = (bgp >> (index * 2)) & 0x03;
-            fb.set_pixel_index(x, y, GbColor::from_u8(shade));
+        for y in 0..height as usize {
+            let bgp = band_bgp(initial_bgp, writes, y as u32);
+            let lut = [
+                bgp & 0x03,
+                (bgp >> 2) & 0x03,
+                (bgp >> 4) & 0x03,
+                (bgp >> 6) & 0x03,
+            ];
+            let row = &mut indices[y * width as usize..(y + 1) * width as usize];
+            for px in row.iter_mut() {
+                *px = lut[(*px as usize) & 0x03];
+            }
         }
     }
+
+    // Host targets use the planar packed layout: keep the per-pixel path
+    // (still in place — the framebuffer clone is gone).
+    #[cfg(not(target_os = "none"))]
+    {
+        let indexed = fb.indexed_mut();
+        for y in 0..height {
+            let bgp = band_bgp(initial_bgp, writes, y);
+            for x in 0..width {
+                let index = indexed.get_pixel(x, y).unwrap_or(GbColor::White) as u8;
+                let shade = (bgp >> (index * 2)) & 0x03;
+                indexed.set_pixel(x, y, GbColor::from_u8(shade));
+            }
+        }
+    }
+}
+
+#[inline]
+fn band_bgp(initial_bgp: u8, writes: &[(u32, u8)], y: u32) -> u8 {
+    let mut bgp = initial_bgp;
+    for &(scanline, written_bgp) in writes {
+        if y < scanline {
+            break;
+        }
+        bgp = written_bgp;
+    }
+    bgp
 }
 
 fn state_delay(state: Option<&SubAnimState>) -> u8 {
@@ -2597,6 +2832,81 @@ impl Default for AnimationPlayer {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    fn assert_linear_shift_matches_snapshot(
+        width: usize,
+        height: usize,
+        start: u32,
+        end: u32,
+        offset: impl Fn(u32) -> i32,
+    ) {
+        let source: Vec<u8> = (0..width * height)
+            .map(|i| ((i / 7 + i / width) % 4) as u8)
+            .collect();
+        let mut expected = source.clone();
+        for y in (start as usize).min(height)..(end as usize).min(height) {
+            for x in 0..width {
+                let sx = x as i64 - i64::from(offset(y as u32));
+                expected[y * width + x] = if (0..width as i64).contains(&sx) {
+                    source[y * width + sx as usize]
+                } else {
+                    0
+                };
+            }
+        }
+        let mut actual = source;
+        shift_linear_scanlines(&mut actual, width, start, end, offset);
+        assert_eq!(actual, expected);
+    }
+
+    #[test]
+    fn gba_in_place_shifts_match_snapshot_for_clipping_and_large_offsets() {
+        for width in [0, 1, 5, 160] {
+            for height in [0, 1, 144] {
+                for offset in [i32::MIN, -200, -8, -1, 0, 1, 8, 200, i32::MAX] {
+                    for (start, end) in [(0, 144), (8, 112), (143, 150), (150, 155), (10, 3)] {
+                        assert_linear_shift_matches_snapshot(width, height, start, end, |_| offset);
+                    }
+                    let source: Vec<u8> = (0..width * height).map(|i| (i % 4) as u8).collect();
+                    let mut actual = source.clone();
+                    shift_linear_vertical(&mut actual, width, offset);
+                    for y in 0..height {
+                        for x in 0..width {
+                            let sy = y as i64 - i64::from(offset);
+                            let expected = if (0..height as i64).contains(&sy) {
+                                source[sy as usize * width + x]
+                            } else {
+                                0
+                            };
+                            assert_eq!(actual[y * width + x], expected);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn gba_shake_and_wave_scanlines_match_full_frame_snapshot() {
+        for player in [false, true] {
+            for move_id in [69, 89, 90] {
+                for call in 0..2 {
+                    for phase in 0..=73 {
+                        assert_linear_shift_matches_snapshot(160, 144, 0, 144, |y| {
+                            shake_line_offset(move_id, player, call, phase, y)
+                        });
+                    }
+                }
+            }
+            for move_id in [60, 93, 94, 95, 109, 149] {
+                for phase in 0..127 {
+                    assert_linear_shift_matches_snapshot(160, 144, 0, 144, |y| {
+                        -(crate::gen1_wavy_schedule::line_offset(move_id, player, phase, y) as i32)
+                    });
+                }
+            }
+        }
+    }
 
     fn oam_signature(entries: &[SpriteOamEntry]) -> Vec<(i32, i32, u8, u8)> {
         entries
@@ -2812,5 +3122,86 @@ mod tests {
             blink.tick();
         }
         assert_eq!(blink.visible_band(MonSide::Player, 144), Some((0, 144)));
+    }
+
+    /// The row-span blitter must touch exactly the pixels (and only those) the
+    /// per-pixel original touches, for every clip rectangle and tile position.
+    #[test]
+    fn mon_tile_row_spans_match_the_per_pixel_blit() {
+        use dotzuki_renderer::tile::Tile;
+
+        const WIDTH: usize = 40;
+        const HEIGHT: usize = 24;
+        const SENTINEL: u8 = 0x7F;
+
+        let mut tile = Tile {
+            pixels: [[0u8; TILE_PIXELS]; TILE_PIXELS],
+        };
+        for (row, line) in tile.pixels.iter_mut().enumerate() {
+            for (col, pixel) in line.iter_mut().enumerate() {
+                *pixel = ((row * 3 + col * 5) % 4) as u8;
+            }
+        }
+
+        let per_pixel = |tile_left: i32, tile_top: i32, clip: (i32, i32, u32, u32)| {
+            let (clip_left, clip_right, clip_top, clip_bottom) = clip;
+            let mut pixels = vec![SENTINEL; WIDTH * HEIGHT];
+            for row in 0..TILE_PIXELS {
+                let py = tile_top + row as i32;
+                if py < clip_top as i32 || py >= clip_bottom as i32 {
+                    continue;
+                }
+                for col in 0..TILE_PIXELS {
+                    let color = tile.pixels[row][col];
+                    if color == 0 {
+                        continue;
+                    }
+                    let px = tile_left + col as i32;
+                    if px >= clip_left && px < clip_right && px >= 0 && py >= 0
+                        && px < WIDTH as i32 && py < HEIGHT as i32
+                    {
+                        pixels[py as usize * WIDTH + px as usize] = color;
+                    }
+                }
+            }
+            pixels
+        };
+
+        for tile_left in [-12, -3, 0, 5, 20, 36] {
+            for tile_top in [-4, 0, 9, 20] {
+                for clip_left in [-8, 0, 6, 30] {
+                    for clip_right in [4, 16, 40] {
+                        for clip_top in [0u32, 6, 20] {
+                            for clip_bottom in [5u32, 14, 24] {
+                                let clip = (clip_left, clip_right, clip_top, clip_bottom);
+                                let mut fast = vec![SENTINEL; WIDTH * HEIGHT];
+                                write_mon_tile_rows(
+                                    &mut fast, WIDTH, HEIGHT, &tile, tile_left, tile_top, clip,
+                                );
+                                assert_eq!(
+                                    fast,
+                                    per_pixel(tile_left, tile_top, clip),
+                                    "tile at ({tile_left}, {tile_top}) with clip {clip:?}"
+                                );
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    /// The index-writing blit is only valid for the standard grayscale ramps.
+    #[test]
+    fn shade_ramp_palettes_are_recognized() {
+        use dotzuki_renderer::palette::{GRAYSCALE_PALETTE, GRAYSCALE_SPRITE_PALETTE};
+        use dotzuki_renderer::Rgba;
+
+        assert!(palette_is_shade_ramp(&GRAYSCALE_PALETTE));
+        assert!(palette_is_shade_ramp(&GRAYSCALE_SPRITE_PALETTE));
+
+        let mut colored = GRAYSCALE_SPRITE_PALETTE;
+        colored.colors[2] = Rgba::rgb(0x00, 0x55, 0x00);
+        assert!(!palette_is_shade_ramp(&colored));
     }
 }

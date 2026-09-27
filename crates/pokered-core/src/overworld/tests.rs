@@ -7,6 +7,79 @@ use pokered_data::maps::MapId;
 use pokered_data::music::MusicId;
 use pokered_data::tilesets::TilesetId;
 
+#[test]
+fn map_triggers_do_not_accumulate_across_all_maps_and_revisits() {
+    use pokered_data::impl_traits::PokemonRedData;
+
+    let mut screen = OverworldScreen::new(MapId::PalletTown, None, PokemonRedData);
+    let mut first_visit_counts = [0; 248];
+    for visit in 0..2 {
+        for id in 0..248u8 {
+            let map = MapId::from_u8(id).unwrap();
+            screen.state.current_map = map;
+            screen.load_map_script_ex(map, false);
+            let key = script_bridge::map_id_to_script_key(map);
+            assert!(
+                screen
+                    .trigger_manager
+                    .all_triggers()
+                    .all(|trigger| { trigger.map_id == key && !trigger.fired }),
+                "stale bindings on {map:?}"
+            );
+            let count = screen.trigger_manager.len();
+            if visit == 0 {
+                first_visit_counts[id as usize] = count;
+            } else {
+                assert_eq!(count, first_visit_counts[id as usize], "{map:?}");
+            }
+        }
+    }
+    assert!(first_visit_counts.iter().sum::<usize>() > 0);
+}
+
+#[test]
+fn rebuilding_map_triggers_preserves_on_enter_edges_and_rearms_on_revisit() {
+    use dotzuki_engine::metatile::TriggerType;
+    use pokered_data::impl_traits::PokemonRedData;
+
+    let map = MapId::OaksLab;
+    let key = script_bridge::map_id_to_script_key(map);
+    let mut screen = OverworldScreen::new(map, None, PokemonRedData);
+    screen.load_map_script_ex(map, false);
+    let enter = screen
+        .trigger_manager
+        .all_triggers()
+        .find(|trigger| trigger.trigger_type == TriggerType::OnEnter)
+        .unwrap()
+        .clone();
+    assert!(screen
+        .trigger_manager
+        .check_triggers(&key, enter.x, enter.y)
+        .contains(&enter.script_name));
+
+    screen.setup_triggers_for_map(map);
+    assert!(
+        !screen
+            .trigger_manager
+            .check_triggers(&key, enter.x, enter.y)
+            .contains(&enter.script_name),
+        "same-map reload must preserve the entry edge"
+    );
+
+    screen.state.current_map = MapId::PalletTown;
+    screen.load_map_script_ex(MapId::PalletTown, false);
+    screen.trigger_manager.check_triggers("PalletTown", 0, 0);
+    screen.state.current_map = map;
+    screen.load_map_script_ex(map, false);
+    assert!(
+        screen
+            .trigger_manager
+            .check_triggers(&key, enter.x, enter.y)
+            .contains(&enter.script_name),
+        "revisiting must rearm the one-shot entry trigger"
+    );
+}
+
 // ── Map Header Data Tests ──────────────────────────────────────────
 
 #[test]

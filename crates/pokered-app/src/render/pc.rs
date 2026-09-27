@@ -447,9 +447,9 @@ fn draw_league_hof(pc: &PcScreen, resources: &mut Option<ResourceManager>, fb: &
     if let Some(rm) = resources.as_mut() {
         let sprite = species_to_sprite_name(&format!("{}", view.species));
         if let Ok(cached) = rm.load_pokemon_front(&sprite) {
-            let ts = cached.tileset.clone();
+            let ts = &cached.tileset;
             let w_tiles = cached.source_size.0 / TILE_SIZE;
-            blit_tileset(fb, &ts, 12 * T, 5 * T, w_tiles, &GRAYSCALE_SPRITE_PALETTE);
+            blit_tileset(fb, ts, 12 * T, 5 * T, w_tiles, &GRAYSCALE_SPRITE_PALETTE);
         }
     }
     let hof_no = if is_zh {

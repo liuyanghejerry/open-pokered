@@ -1,0 +1,16 @@
+[mgba] memory: dex=30 free=22400B stack=18480B
+[mgba] repro: heap low 19264B at frame 6257
+[mgba] memory: dex=31 free=19264B stack=18480B
+[mgba] repro: heap low 17664B at frame 6321
+[mgba] memory: dex=32 free=17664B stack=18480B
+[mgba] repro: heap low 11776B at frame 6385
+[mgba] memory: dex=33 free=11776B stack=18480B
+[mgba] repro: heap low 8640B at frame 6449
+[mgba] memory: dex=34 free=8640B stack=18480B
+[mgba] memory: dex=35 free=8640B stack=18480B
+[mgba] repro: heap low 6336B at frame 6577
+[mgba] memory: dex=36 free=6336B stack=18480B
+[mgba] repro: heap low 4032B at frame 6641
+[mgba] memory: dex=37 free=4032B stack=18480B
+[mgba] panicked at /Users/liuyanghe02/.rustup/toolchains/nightly-2025-12-07-aarch64-apple-darwin/lib/rustlib/src/rust/library/alloc/src/alloc.rs:439:13:
+memory allocation of 0 bytes failed

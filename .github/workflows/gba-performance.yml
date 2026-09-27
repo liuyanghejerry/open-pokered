@@ -17,7 +17,7 @@ jobs:
   performance:
     name: GBA performance baseline
     runs-on: ubuntu-24.04
-    timeout-minutes: 15
+    timeout-minutes: 20
     steps:
       - name: Checkout candidate
         uses: actions/checkout@v4
@@ -35,6 +35,7 @@ jobs:
             crates/pokered-core crates/pokered-data crates/pokered-platform \
             crates/pokered-renderer crates/pokered-ui scripts/fetch-gfx.sh \
             scripts/gba_performance.py scripts/test_gba_performance.py vendor/ron \
+            scripts/gba_memory.py scripts/test_gba_memory.py \
             .github/workflows/gba-performance.yml; then
             echo "has-changes=false" >> "$GITHUB_OUTPUT"
             echo "No GBA-relevant changes; performance gate passes without sampling."
@@ -80,7 +81,7 @@ jobs:
 
       - name: Test performance-gate tooling
         if: steps.changes.outputs.has-changes == 'true'
-        run: python3 -m unittest scripts/test_gba_performance.py
+        run: python3 -m unittest scripts/test_gba_performance.py scripts/test_gba_memory.py
 
       - name: Build candidate benchmark ROM
         if: steps.changes.outputs.has-changes == 'true'
@@ -106,6 +107,40 @@ jobs:
             --baseline crates/pokered-gba/perf-baseline.json \
             --candidate "$RUNNER_TEMP/gba-performance-candidate.json"
 
+      - name: Build Route 22 memory regression ROM
+        if: steps.changes.outputs.has-changes == 'true'
+        working-directory: crates/pokered-gba
+        run: |
+          cargo +nightly-2025-12-07 build --release --features repro-route22
+          agb-gbafix target/thumbv4t-none-eabi/release/pokered-gba -o "$RUNNER_TEMP/gba-memory.gba"
+
+      - name: Complete 40 Route 22 encounters with bounded heap and stack usage
+        if: steps.changes.outputs.has-changes == 'true'
+        env:
+          SDL_AUDIODRIVER: dummy
+          MGBA_COMMAND: xvfb-run -a stdbuf -oL -eL mgba-qt
+        run: |
+          python3 scripts/gba_memory.py \
+            --rom "$RUNNER_TEMP/gba-memory.gba" \
+            --log "$RUNNER_TEMP/gba-memory.log" --timeout-seconds 180
+
+      - name: Build broad GBA memory scenarios
+        if: steps.changes.outputs.has-changes == 'true'
+        working-directory: crates/pokered-gba
+        run: |
+          cargo +nightly-2025-12-07 build --release --features memory-scenarios
+          agb-gbafix target/thumbv4t-none-eabi/release/pokered-gba -o "$RUNNER_TEMP/gba-scenarios.gba"
+
+      - name: Stress graphics, maps, animations, full PC and SRAM
+        if: steps.changes.outputs.has-changes == 'true'
+        env:
+          SDL_AUDIODRIVER: dummy
+          MGBA_COMMAND: xvfb-run -a stdbuf -oL -eL mgba-qt
+        run: |
+          python3 scripts/gba_memory.py --suite scenarios \
+            --rom "$RUNNER_TEMP/gba-scenarios.gba" \
+            --log "$RUNNER_TEMP/gba-scenarios.log" --timeout-seconds 300
+
       - name: Upload performance evidence
         if: ${{ always() && steps.changes.outputs.has-changes == 'true' }}
         uses: actions/upload-artifact@v4
@@ -116,5 +151,9 @@ jobs:
             crates/pokered-gba/target/thumbv4t-none-eabi/release/pokered-gba.gba
             ${{ runner.temp }}/gba-performance-candidate.json
             ${{ runner.temp }}/gba-performance-candidate.log
+            ${{ runner.temp }}/gba-memory.gba
+            ${{ runner.temp }}/gba-memory.log
+            ${{ runner.temp }}/gba-scenarios.gba
+            ${{ runner.temp }}/gba-scenarios.log
           if-no-files-found: warn
           retention-days: 30

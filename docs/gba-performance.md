@@ -285,6 +285,100 @@ table, avoiding both heap structures. The movement regression crosses that map
 edge in two directions, and the emulator soak continued through more than 8,000
 simulated frames without another crash.
 
+## Trainer-battle freeze (2026-09-25)
+
+The first rival battle in Oak's Lab froze on real hardware. mGBA reproduction
+(`--features repro-rival`, which drives `debug_start_trainer_battle` through
+the production `start_trainer_battle` path) froze non-deterministically inside
+battle render or the first overworld updates after the battle ended — the
+moving hang site indicates heap-state corruption rather than a fixed logic
+loop. The trainer path's unique cost: `get_trainer_party` materialized the
+entire generated trainer table on first use — 47 classes, 391 parties, 994
+Pokémon as ~440 nested `Vec` allocations (~10–15 KB plus fragmentation,
+retained forever) — landing exactly on the battle-entry allocation peak
+(snapshot + trainer/enemy sprites + leaked battle rules) with only ~64 KiB
+largest-free-block headroom.
+
+Trainer parties are now generated as ROM-resident static slices
+(`trainer_parties(class)` in `trainer_data_gen.rs`); `get_trainer_party_mons`
+returns `&'static [TrainerMon]` with zero heap involvement, and the owned
+`Vec` form remains available for editors/benches via `trainer_data()`. Heap
+probes in the repro build measured 64 KiB largest free block before battle
+and a stable 52 KiB after the battle and return to the overworld. The
+`trainer-battle-entry-v1` perf scenario now exercises this path in CI.
+
+## Overworld query-seed gating (2026-09-25)
+
+Walking judder on real hardware came from frames exceeding the video-frame
+budget, and the largest single per-frame cost was not simulation at all: the
+app re-seeded the script/day-care query state unconditionally before every
+overworld frame — rebuilding hash-map sets with `String` keys, cloning
+`Vec<String>` bag/party name lists, cloning the whole party twice, and running
+`format!` per party member. Host sampling attributed 54% of the idle update to
+`seed_script_query_state` + `seed_daycare_query_state`; on GBA's block
+allocator the churn cost ~1,150 timer ticks per frame (measured with the new
+`update_core_avg_ticks` split in the perf report).
+
+The app now fingerprints every seeding input into a fixed-size POD snapshot
+(scalars plus FNV-1a hashes of the bag, party — species/level/moves/display
+names — and day-care mon) and re-seeds only when it changes. The script-side
+RNG mix moved to a separate allocation-free `mix_script_rng()` that still runs
+every frame, so `showRandomText` entropy is unchanged.
+
+Measured (mGBA, `perf-benchmark`): overworld idle update 1424 → 271 ticks,
+movement update 1506 → 284 ticks (−81%); movement-window worst-frame totals
+fell from ~10.3k ticks to 4.5–6.4k (budget 4389). Remaining walking-frame cost
+is render-side: ~2,000 ticks draw plus ~700 ticks full-page present. Scroll
+frames still return `FrameUpdate::Full` (partial presentation is only armed
+when `BackgroundDamage::None`), so every scrolling frame pays a full
+23 KB VRAM copy — extending damage presentation to scrolled frames is the
+next optimization.
+
+## Boot stack, rival battle, and water-map frames (2026-09-25)
+
+Three real-hardware failures shared one theme: work that fit an emulator but
+not the Supercard/GBA envelope.
+
+**Boot stack.** `game_main`'s prologue reserved ~55 KiB of the 64 KiB EWRAM
+stack for its frame locals; with a fat-LTO-inlined constructor's 29 KiB
+`SaveData` return slot the whole boot path ran with ~10 KiB of headroom, and
+any deeper call (the new SRAM save import, script decodes) walked past the
+stack base straight into the `GAME` static below it — `Jumped to invalid
+address: F901F900` and the non-deterministic Oak's-lab rival battle freeze
+were the same failure. Fixes: `#[inline(never)]` on `new_for_gba` plus a
+`construct_game` shim (frame 55 KiB → 0.5 KiB), the framebuffer and render
+session on the heap, a `with_scratch_stack` helper for boot-time deep work,
+and byte-wise `read_volatile`/`write_volatile` SRAM access (wide accesses to
+the 8-bit SRAM bus do not carry faithfully — `copy_from_slice` left ~100
+bytes stale and wide reads produced `DataTooShort`/panics at random).
+
+**Saving at the lab peak.** Saving right after the starter sequence in
+Oak's Lab froze on hardware: the largest free block there is ~30 KiB (script
+decodes + Pokémon state + resource caches), and the original save exported a
+single 32 KiB image via `export_sram` — the failed allocation is an invisible
+halt on hardware. The bare-metal save now streams four 8 KiB banks
+(`export_sram_bank_into` + byte-wise SRAM writes), so it only needs small
+buffers; a lab-save reproduction (`debug_save_now` under `repro-rival`)
+pins it.
+
+**Rival battle.** The real scripted path (starter ball → exit-row coord
+trigger → split `battle_before` decode → battle → continuation decode) is
+exercised by the new `--features repro-rival` driver, which warps into Oak's
+Lab with the starter flags set and A-mashes through the battle. Before the
+stack fix it froze; after, it completes battle entry, the fight, the
+continuation decode, and 700k+ subsequent frames without a fault.
+
+**Pallet Town south beach.** Two compounding costs, both fixed:
+neighbouring-map block resolution ran three 248-entry ROM-table string scans
+per out-of-map block (24+ lookups per full redraw at the south edge; now
+memoized per source map, bare metal only), and every water/flower animation
+tick (~3-5x/s) forced a full-screen background redraw plus a full 23 KiB
+present. Animation ticks now take a new `BackgroundDamage::Animated` path:
+a block-level scan marks the tile rows that hold animated tiles, redraws
+only those rows, and partial-presents just those bands. A pixel-exact
+desktop test (`water_tick_redraws_only_animated_rows`) pins the incremental
+redraw against a from-scratch render and checks damage coverage.
+
 ## Platform feature boundary
 
 Renderer backend selection belongs to the application composition root. Shared
