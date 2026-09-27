@@ -608,7 +608,11 @@ impl OverworldVisualKey {
     /// every loop; their richer state is not approximated here.
     fn new(game: &PokemonGame) -> Option<Self> {
         let screen = &game.overworld;
-        if !super::overworld::can_reuse_composited_frame(screen) {
+        // Destination NPCs can use incremental background restoration, but
+        // their separate state is not represented by this whole-frame key.
+        if !super::overworld::can_reuse_composited_frame(screen)
+            || screen.connection_npc_preview.is_some()
+        {
             return None;
         }
 
@@ -2547,6 +2551,58 @@ mod session_tests {
     use dotzuki_engine::render_config::RenderConfig;
     use pokered_core::options_menu::OptionsRow;
     use pokered_renderer::Rgba;
+
+    #[test]
+    fn connection_preview_changes_cannot_reuse_the_whole_frame() {
+        use pokered_core::overworld::screen::ConnectionNpcPreview;
+        use pokered_data::maps::MapId;
+
+        let mut game = PokemonGame::new(GameVersion::Red);
+        game.overworld.warp_to_map(MapId::PalletTown, 10, 10);
+        game.state.screen = GameScreen::Overworld;
+        game.overworld.warp_fade_state = pokered_core::overworld::screen::WarpFadeState::Idle;
+        let mut session = RenderSession::new();
+        let mut fb = FrameBuffer::new(RenderConfig::new(160, 144), Rgba::WHITE);
+        let mut scroll = |_: &mut [u8], _: usize, _: usize, _: i32, _: i32, _: u8| {
+            panic!("stationary preview must not scroll the camera");
+        };
+        session.render(&mut game, &mut fb, &mut scroll);
+        assert!(matches!(
+            session.render(&mut game, &mut fb, &mut scroll),
+            FrameUpdate::Reuse
+        ));
+        let mut npc = game
+            .overworld
+            .npc_states
+            .iter()
+            .find(|npc| npc.visible)
+            .unwrap()
+            .clone();
+        npc.x = 10;
+        npc.y = 10;
+        for offset in [Some(1), Some(2), None] {
+            game.overworld.connection_npc_preview = offset.map(|x| ConnectionNpcPreview {
+                npcs: vec![npc.clone()],
+                step_offset_x: x,
+                step_offset_y: 0,
+            });
+            assert!(!matches!(
+                session.render(&mut game, &mut fb, &mut scroll),
+                FrameUpdate::Reuse
+            ));
+            let mut full = fb.clone();
+            game.draw(&mut full);
+            for y in 0..144 {
+                for x in 0..160 {
+                    assert_eq!(
+                        fb.get_pixel(x, y),
+                        full.get_pixel(x, y),
+                        "{offset:?} at {x},{y}"
+                    );
+                }
+            }
+        }
+    }
 
     #[test]
     fn retained_menu_frames_and_damage_match_full_draws_across_takeovers() {

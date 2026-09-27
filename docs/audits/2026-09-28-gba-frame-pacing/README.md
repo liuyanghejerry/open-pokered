@@ -19,6 +19,8 @@ parsing JSON bindings. GBA now uses a 32-bit word hasher, borrowed ROM names,
 indexed function ranges and build-time generated typed bindings. Hosted builds
 retain their original hasher/config loader. Moving destination NPC previews now
 preserve their background underlay and permit retained overworld rendering.
+Their separate state still excludes whole-frame reuse; a stationary preview
+appearance/move/removal regression verifies this cache boundary.
 
 Battle fonts/HUD tiles are expanded into 16 KiB of ROM; no decoded heap cache is
 added. Tile rows and aligned transparent mon rows use word copies in IWRAM.
@@ -34,8 +36,8 @@ battle construction and the entire encounter transition are measured.
 
 | Scenario | Maximum gap between draws, before → after | Other measurement |
 |---|---:|---|
-| Pallet → Route 1 | 66.97 → 50.22 ms | Maximum update: 36.03 → 18.06 ms |
-| Route 1 → Viridian | 117.20 → 66.96 ms | Maximum update: 80.19 → 32.66 ms |
+| Pallet → Route 1 | 66.97 → 50.23 ms | Maximum update: 36.03 → 18.06 ms |
+| Route 1 → Viridian | 117.20 → 66.97 ms | Maximum update: 80.19 → 32.66 ms |
 | Wild entry | 100.46 → 83.71 ms | Maximum draw: 82.81 → 69.48 ms |
 | Tackle, player | 70.74 → 35.42 ms | Mean draw: 58.23 → 24.92 ms |
 | Ember, player | 70.76 → 50.23 ms | Mean draw: 56.32 → 26.16 ms |
@@ -71,7 +73,7 @@ pixel preservation; frame counts/timing logs establish the skipped-frame fix.
 - GBA Route 22: all 40 encounters pass, before/after parcel and both coordinate
   triggers, including SRAM round-trip. Minimum heap: 23,712 B; stack: 17,184 B.
 - Hosted core: 2,903 tests; app: 284; renderer with GBA resources: 392;
-  data: 257; platform: 3. App GBA-resource library coverage: 99 tests.
+  data: 257; platform: 3. App GBA-resource library coverage: 100 tests.
 - Python performance/memory/frame-pacing tools: 24 tests.
 - Normal playable ROM: 3,000 hardware-frame boot smoke completed. IWRAM 5,720 B;
   initialized EWRAM 30,300 B; BSS 65,856 B (includes the 64 KiB main stack).
@@ -110,4 +112,4 @@ only for baseline evidence. The diagnostic feature and autopilot must be absent
 from the playable ROM.
 
 Playable ROM SHA-256:
-`2601e080118be57ea383ac76c19e70e27cd516b3ede8656e33c6d974a8edb5b8`.
+`5c86522c80c57a584ca731bc55ebaee0da4e4943c282d057ee3e8715411c6752`.

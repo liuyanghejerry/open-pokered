@@ -5,26 +5,26 @@
       "draws": 70,
       "logic_ticks": 70,
       "max_updates_between_draws": 1,
-      "update_max_ms": 18.05877685546875,
-      "draw_mean_ms": 10.917500087193082,
+      "update_max_ms": 18.062591552734375,
+      "draw_mean_ms": 12.405940464564733,
       "draw_max_ms": 30.50994873046875,
-      "display_gap_max_ms": 50.220489501953125
+      "display_gap_max_ms": 50.228118896484375
     },
     "2": {
       "draws": 70,
       "logic_ticks": 70,
       "max_updates_between_draws": 1,
       "update_max_ms": 32.657623291015625,
-      "draw_mean_ms": 13.025120326450892,
-      "draw_max_ms": 31.91375732421875,
-      "display_gap_max_ms": 66.96319580078125
+      "draw_mean_ms": 14.501680646623884,
+      "draw_max_ms": 31.269073486328125,
+      "display_gap_max_ms": 66.9708251953125
     },
     "3": {
       "draws": 700,
       "logic_ticks": 700,
       "max_updates_between_draws": 1,
       "update_max_ms": 4.604339599609375,
-      "draw_mean_ms": 8.21824210030692,
+      "draw_mean_ms": 8.218252999441964,
       "draw_max_ms": 69.48471069335938,
       "display_gap_max_ms": 83.71353149414062
     },
@@ -42,8 +42,8 @@
       "logic_ticks": 7,
       "max_updates_between_draws": 1,
       "update_max_ms": 0.518798828125,
-      "draw_mean_ms": 37.18621390206473,
-      "draw_max_ms": 70.76644897460938,
+      "draw_mean_ms": 37.18512398856027,
+      "draw_max_ms": 70.76263427734375,
       "display_gap_max_ms": 83.71353149414062
     },
     "12": {
@@ -51,7 +51,7 @@
       "logic_ticks": 66,
       "max_updates_between_draws": 1,
       "update_max_ms": 1.155853271484375,
-      "draw_mean_ms": 28.273091171727035,
+      "draw_mean_ms": 28.272744381066524,
       "draw_max_ms": 35.2325439453125,
       "display_gap_max_ms": 50.228118896484375
     },
@@ -60,7 +60,7 @@
       "logic_ticks": 66,
       "max_updates_between_draws": 1,
       "update_max_ms": 1.15203857421875,
-      "draw_mean_ms": 28.15639611446496,
+      "draw_mean_ms": 28.156222719134703,
       "draw_max_ms": 35.320281982421875,
       "display_gap_max_ms": 50.228118896484375
     },
@@ -87,7 +87,7 @@
       "logic_ticks": 95,
       "max_updates_between_draws": 1,
       "update_max_ms": 0.995635986328125,
-      "draw_mean_ms": 26.15954750462582,
+      "draw_mean_ms": 26.159467195209704,
       "draw_max_ms": 35.419464111328125,
       "display_gap_max_ms": 50.228118896484375
     },
@@ -96,7 +96,7 @@
       "logic_ticks": 95,
       "max_updates_between_draws": 1,
       "update_max_ms": 0.995635986328125,
-      "draw_mean_ms": 26.139510305304274,
+      "draw_mean_ms": 26.1393898411801,
       "draw_max_ms": 35.381317138671875,
       "display_gap_max_ms": 50.228118896484375
     },
@@ -105,7 +105,7 @@
       "logic_ticks": 81,
       "max_updates_between_draws": 1,
       "update_max_ms": 2.002716064453125,
-      "draw_mean_ms": 28.84885999891493,
+      "draw_mean_ms": 28.84862452377508,
       "draw_max_ms": 43.636322021484375,
       "display_gap_max_ms": 50.228118896484375
     },
@@ -114,7 +114,7 @@
       "logic_ticks": 81,
       "max_updates_between_draws": 1,
       "update_max_ms": 2.03704833984375,
-      "draw_mean_ms": 29.152481644241895,
+      "draw_mean_ms": 29.152199074074073,
       "draw_max_ms": 44.47174072265625,
       "display_gap_max_ms": 50.228118896484375
     },
@@ -123,7 +123,7 @@
       "logic_ticks": 127,
       "max_updates_between_draws": 1,
       "update_max_ms": 1.552581787109375,
-      "draw_mean_ms": 38.748973936546506,
+      "draw_mean_ms": 38.74879371462844,
       "draw_max_ms": 86.98272705078125,
       "display_gap_max_ms": 100.45623779296875
     },
@@ -132,7 +132,7 @@
       "logic_ticks": 127,
       "max_updates_between_draws": 1,
       "update_max_ms": 1.583099365234375,
-      "draw_mean_ms": 38.8615825983483,
+      "draw_mean_ms": 38.86182289423905,
       "draw_max_ms": 87.59689331054688,
       "display_gap_max_ms": 100.45623779296875
     },
@@ -141,7 +141,7 @@
       "logic_ticks": 117,
       "max_updates_between_draws": 1,
       "update_max_ms": 1.5411376953125,
-      "draw_mean_ms": 30.586503509782318,
+      "draw_mean_ms": 30.586633926782852,
       "draw_max_ms": 53.03192138671875,
       "display_gap_max_ms": 66.9708251953125
     },
@@ -150,7 +150,7 @@
       "logic_ticks": 117,
       "max_updates_between_draws": 1,
       "update_max_ms": 1.552581787109375,
-      "draw_mean_ms": 30.63948541624933,
+      "draw_mean_ms": 30.6396484375,
       "draw_max_ms": 53.615570068359375,
       "display_gap_max_ms": 66.9708251953125
     },
@@ -159,7 +159,7 @@
       "logic_ticks": 109,
       "max_updates_between_draws": 1,
       "update_max_ms": 0.514984130859375,
-      "draw_mean_ms": 18.196665912593176,
+      "draw_mean_ms": 18.196805901483657,
       "draw_max_ms": 31.047821044921875,
       "display_gap_max_ms": 35.3851318359375
     },
@@ -168,7 +168,7 @@
       "logic_ticks": 109,
       "max_updates_between_draws": 1,
       "update_max_ms": 0.518798828125,
-      "draw_mean_ms": 19.15733967352351,
+      "draw_mean_ms": 19.15744466519137,
       "draw_max_ms": 31.032562255859375,
       "display_gap_max_ms": 35.366058349609375
     },
@@ -177,7 +177,7 @@
       "logic_ticks": 180,
       "max_updates_between_draws": 1,
       "update_max_ms": 1.12152099609375,
-      "draw_mean_ms": 26.683447096082897,
+      "draw_mean_ms": 26.68336232503255,
       "draw_max_ms": 64.69345092773438,
       "display_gap_max_ms": 69.03076171875
     },
@@ -186,17 +186,17 @@
       "logic_ticks": 180,
       "max_updates_between_draws": 1,
       "update_max_ms": 1.19781494140625,
-      "draw_mean_ms": 26.489490932888454,
+      "draw_mean_ms": 26.48944854736328,
       "draw_max_ms": 64.70108032226562,
-      "display_gap_max_ms": 69.04983520507812
+      "display_gap_max_ms": 69.0460205078125
     },
     "28": {
       "draws": 115,
       "logic_ticks": 115,
       "max_updates_between_draws": 1,
       "update_max_ms": 1.468658447265625,
-      "draw_mean_ms": 39.05603160028872,
-      "draw_max_ms": 77.3468017578125,
+      "draw_mean_ms": 39.05593208644701,
+      "draw_max_ms": 77.35061645507812,
       "display_gap_max_ms": 83.71353149414062
     },
     "29": {
@@ -204,7 +204,7 @@
       "logic_ticks": 115,
       "max_updates_between_draws": 1,
       "update_max_ms": 1.522064208984375,
-      "draw_mean_ms": 39.365420134171195,
+      "draw_mean_ms": 39.365320620329484,
       "draw_max_ms": 78.12881469726562,
       "display_gap_max_ms": 83.71353149414062
     }
