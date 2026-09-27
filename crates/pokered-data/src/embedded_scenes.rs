@@ -111,6 +111,7 @@ pub fn scene_ast_count() -> usize {
 
 #[cfg(test)]
 mod tests {
+    use super::*;
     use crate::alloc_prelude::*;
 
     #[test]

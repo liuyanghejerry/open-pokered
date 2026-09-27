@@ -22,6 +22,7 @@ use crate::alloc_prelude::*;
 use crate::hash_compat::HashMap;
 #[cfg(target_os = "none")]
 use crate::hash_compat::HashMap;
+use alloc::{borrow::Cow, rc::Rc};
 
 use dotzuki_engine_dsl::ast::{GameScene, StoryStmt};
 use dotzuki_engine_dsl::core_host::dispatch_core_async;
