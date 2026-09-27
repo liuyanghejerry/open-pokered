@@ -53,6 +53,24 @@ pub fn scene_functions() -> &'static [(&'static str, &'static str, &'static [u8]
     SCENE_FUNCTIONS
 }
 
+/// Locate a map's contiguous function range without scanning every scene.
+pub fn scene_functions_for_map(
+    map: &str,
+) -> &'static [(&'static str, &'static str, &'static [u8])] {
+    let start = SCENE_FUNCTIONS.partition_point(|(name, _, _)| *name < map);
+    let end = start + SCENE_FUNCTIONS[start..].partition_point(|(name, _, _)| *name == map);
+    &SCENE_FUNCTIONS[start..end]
+}
+
+/// The prefixed spelling lives in ROM too; registering a function need not
+/// allocate a second name on a constrained target.
+pub fn scene_function_alias(name: &str) -> Option<&'static str> {
+    SCENE_FUNCTION_ALIASES
+        .binary_search_by_key(&name, |(name, _)| *name)
+        .ok()
+        .map(|index| SCENE_FUNCTION_ALIASES[index].1)
+}
+
 /// Number of embedded, independently decodable script functions.
 pub fn scene_function_count() -> usize {
     SCENE_FUNCTION_COUNT
@@ -94,7 +112,30 @@ pub fn scene_ast_count() -> usize {
 #[cfg(test)]
 mod tests {
     use crate::alloc_prelude::*;
-    use super::*;
+
+    #[test]
+    fn compiled_bindings_and_indexed_functions_match_embedded_sources() {
+        for &(map, json) in scene_configs() {
+            let parsed: dotzuki_engine_script::MapScriptConfig =
+                serde_json::from_str(json).unwrap();
+            let compiled = create_scene_config(map).unwrap();
+            assert_eq!(format!("{compiled:?}"), format!("{parsed:?}"), "{map}");
+            let expected: Vec<_> = scene_functions()
+                .iter()
+                .filter(|(name, _, _)| *name == map)
+                .copied()
+                .collect();
+            assert_eq!(scene_functions_for_map(map), expected, "{map}");
+        }
+        for &(_, name, _) in scene_functions() {
+            assert_eq!(
+                scene_function_alias(name),
+                Some(format!("storyline_{name}").as_str())
+            );
+        }
+        assert!(create_scene_config("missing").is_none());
+        assert!(scene_functions_for_map("missing").is_empty());
+    }
 
     #[test]
     fn all_maps_have_embedded_scene_and_config() {

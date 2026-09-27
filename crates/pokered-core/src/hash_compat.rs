@@ -85,11 +85,14 @@ impl Hasher for FxHasher {
 pub struct FxBuildHasher;
 
 impl BuildHasher for FxBuildHasher {
+    #[cfg(not(target_os = "none"))]
     type Hasher = FxHasher;
+    #[cfg(target_os = "none")]
+    type Hasher = pokered_platform::hash::WordHasher;
 
     #[inline]
-    fn build_hasher(&self) -> FxHasher {
-        FxHasher { hash: 0 }
+    fn build_hasher(&self) -> Self::Hasher {
+        Self::Hasher::default()
     }
 }
 

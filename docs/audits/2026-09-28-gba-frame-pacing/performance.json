@@ -1,5 +1,5 @@
 {
-  "emulator": "mGBA 0.10.5 (headless, emulated hardware timers)",
+  "emulator": "python3 /tmp/gba-frame-perf-emulator.py",
   "scenarios": {
     "battle-entry-v1": {
       "draw_max_ticks": 8875,

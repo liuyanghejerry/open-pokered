@@ -3621,32 +3621,11 @@ fn render_packed_battle_tile_buffer(fb: &mut FrameBuffer, tile_buf: &ScreenTileB
     );
 }
 
-/// Per-byte pixel spread: byte `b` (bit 7 = leftmost pixel) becomes a u64
-/// whose bytes are 0/1 per pixel. One lookup replaces eight bit tests, and
-/// the two-plane battle fonts combine with a shift+or on the whole word.
+/// The fixed battle tile bank is expanded in ROM, so animation frames only
+/// copy aligned rows into the linear framebuffer. No decoded heap cache.
 #[cfg(target_os = "none")]
-const fn bit_spread_lut() -> [u64; 256] {
-    let mut table = [0u64; 256];
-    let mut b = 0usize;
-    while b < 256 {
-        let mut v = 0u64;
-        let mut i = 0usize;
-        while i < 8 {
-            if (b >> (7 - i)) & 1 == 1 {
-                v |= 1u64 << (8 * i);
-            }
-            i += 1;
-        }
-        table[b] = v;
-        b += 1;
-    }
-    table
-}
-
-#[cfg(target_os = "none")]
-static BIT_SPREAD: [u64; 256] = bit_spread_lut();
-
-#[cfg(target_os = "none")]
+#[inline(never)]
+#[cfg_attr(target_arch = "arm", link_section = ".iwram")]
 fn render_packed_battle_tile_region(
     fb: &mut FrameBuffer,
     tile_buf: &ScreenTileBuffer,
@@ -3655,86 +3634,29 @@ fn render_packed_battle_tile_region(
     width_tiles: u32,
     height_tiles: u32,
 ) {
-    use pokered_renderer::gba_assets::get_preconverted_asset;
-
-    let font = get_preconverted_asset("font", "font").unwrap_or(&[]);
-    let extra = get_preconverted_asset("font", "font_extra").unwrap_or(&[]);
-    let hp = get_preconverted_asset("font", "font_battle_extra").unwrap_or(&[]);
-    let hud1 = get_preconverted_asset("battle", "battle_hud_1").unwrap_or(&[]);
-    let hud2 = get_preconverted_asset("battle", "battle_hud_2").unwrap_or(&[]);
-    let hud3 = get_preconverted_asset("battle", "battle_hud_3").unwrap_or(&[]);
-    let balls = get_preconverted_asset("battle", "balls").unwrap_or(&[]);
-    // Hoist every `len() / bytes_per_tile` out of the per-tile lookup: the
-    // closure used to run up to seven soft divisions per tile (GBA has no
-    // hardware divide), i.e. thousands per rendered frame.
-    let balls_max = balls.len() / 16;
-    let hud2_tiles = hud2.len() / 16;
-    let hud3_max = hud3.len() / 16;
-    let hud2_max = hud2.len() / 16;
-    let hud1_max = hud1.len() / 16;
-    let hp_max = hp.len() / 8;
-    let extra_max = extra.len() / 8;
-    let font_max = font.len() / 8;
-
-    let source = |tile_id: usize| -> Option<(&[u8], usize, bool)> {
-        let in_range = |index: usize, count: usize| {
-            tile_id
-                .checked_sub(index)
-                .filter(|tile| *tile < count)
-        };
-        if let Some(index) = in_range(0x31, balls_max) {
-            Some((balls, index, false))
-        } else if let Some(index) = in_range(0x73 + hud2_tiles, hud3_max) {
-            Some((hud3, index, false))
-        } else if let Some(index) = in_range(0x73, hud2_max) {
-            Some((hud2, index, false))
-        } else if let Some(index) = in_range(0x6D, hud1_max) {
-            Some((hud1, index, false))
-        } else if let Some(index) = in_range(0x62, hp_max) {
-            Some((hp, index, true))
-        } else if let Some(index) = in_range(0x60, extra_max) {
-            Some((extra, index, true))
-        } else {
-            in_range(0x80, font_max).map(|index| (font, index, true))
-        }
-    };
-
+    use pokered_renderer::gba_assets::BATTLE_TILE_PIXELS;
     let width = fb.width() as usize;
     let max_tiles_x = tile_buf.width_tiles.min(fb.width() / TILE_SIZE);
     let max_tiles_y = tile_buf.height_tiles.min(fb.height() / TILE_SIZE);
     let end_x = start_x.saturating_add(width_tiles).min(max_tiles_x);
     let end_y = start_y.saturating_add(height_tiles).min(max_tiles_y);
-    let pixels = fb.indices_mut();
+    assert_eq!(width % 4, 0);
+    let destination = fb.indices_mut().as_mut_ptr().cast::<u32>();
     for ty in start_y..end_y {
-        let row_start = (ty * tile_buf.width_tiles) as usize;
         for tx in start_x..end_x {
-            let tile_id = tile_buf.tiles[row_start + tx as usize] as usize;
-            // ScreenTileBuffer initializes untouched cells to the battle-space
-            // tile. The framebuffer was already cleared to white, so decoding
-            // those cells is both incorrect (the packed HP data also occupies
-            // $7F) and needlessly expensive during battle entry.
-            if tile_id == 0x7F {
+            let tile_id = tile_buf.tiles[(ty * tile_buf.width_tiles + tx) as usize] as usize;
+            if tile_id == 0x7f {
                 continue;
             }
-            let Some((bytes, tile, one_bpp)) = source(tile_id) else {
-                continue;
-            };
-            let pixel_x = tx as usize * TILE_SIZE as usize;
-            let pixel_y = ty as usize * TILE_SIZE as usize;
-            if one_bpp {
-                for row in 0..TILE_SIZE as usize {
-                    // 1bpp shade bytes are 0 or 3 (black or white).
-                    let v = BIT_SPREAD[bytes[tile * 8 + row] as usize] * 3;
-                    let dst = (pixel_y + row) * width + pixel_x;
-                    pixels[dst..dst + 8].copy_from_slice(&v.to_le_bytes());
-                }
-            } else {
-                for row in 0..TILE_SIZE as usize {
-                    let offset = tile * 16 + row * 2;
-                    let v = (BIT_SPREAD[bytes[offset + 1] as usize] << 1)
-                        | BIT_SPREAD[bytes[offset] as usize];
-                    let dst = (pixel_y + row) * width + pixel_x;
-                    pixels[dst..dst + 8].copy_from_slice(&v.to_le_bytes());
+            let source = BATTLE_TILE_PIXELS.0[tile_id * 64..].as_ptr().cast::<u32>();
+            for row in 0..8 {
+                // The ROM bank and the linear framebuffer are word-aligned;
+                // clipped tile coordinates keep all eight rows in bounds.
+                unsafe {
+                    let dst =
+                        destination.add((ty as usize * 8 + row) * (width / 4) + tx as usize * 2);
+                    dst.write(source.add(row * 2).read());
+                    dst.add(1).write(source.add(row * 2 + 1).read());
                 }
             }
         }

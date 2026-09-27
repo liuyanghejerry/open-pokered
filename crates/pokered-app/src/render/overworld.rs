@@ -671,7 +671,6 @@ pub(super) fn can_reuse_composited_frame(screen: &OverworldScreen) -> bool {
         && screen.pending_choice.is_none()
         && screen.pending_emotion_bubble.is_none()
         && screen.pending_healing_machine.is_none()
-        && screen.connection_npc_preview.is_none()
         && screen.ledge_jump.is_none()
         && screen.field_move_step.is_none()
         && screen.field_move_restore.is_none()
@@ -1641,6 +1640,18 @@ fn draw_overworld_impl(
                         || npc_px_y >= fb.height() as i32
                     {
                         continue;
+                    }
+
+                    if let Some(cache) = background_cache.as_deref_mut() {
+                        if cache.output_key.is_some() || cache.partial_present {
+                            cache.save_foreground_rect(
+                                fb,
+                                npc_px_x,
+                                npc_px_y,
+                                TILE_SIZE * 2,
+                                TILE_SIZE * 2,
+                            );
+                        }
                     }
 
                     for row in 0..2_u32 {
@@ -2822,6 +2833,24 @@ mod tests {
             .find(|npc| npc.visible)
             .unwrap()
             .walk_counter = 0;
+        let _ = compare(&mut s);
+        // Destination NPCs enter and leave the same retained framebuffer
+        // during a connection walk. Their underlay must be restored too.
+        let mut preview_npc = s.npc_states.iter().find(|npc| npc.visible).unwrap().clone();
+        preview_npc.x = s.state.player.x;
+        preview_npc.y = s.state.player.y;
+        s.connection_npc_preview = Some(pokered_core::overworld::screen::ConnectionNpcPreview {
+            npcs: vec![preview_npc],
+            step_offset_x: 1,
+            step_offset_y: 0,
+        });
+        let _ = compare(&mut s);
+        s.connection_npc_preview.as_mut().unwrap().step_offset_x = 2;
+        assert!(
+            compare(&mut s).is_some(),
+            "preview NPCs should use retained rendering"
+        );
+        s.connection_npc_preview = None;
         let _ = compare(&mut s);
         for direction in [
             Direction::Down,

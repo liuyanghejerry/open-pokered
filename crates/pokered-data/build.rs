@@ -2291,7 +2291,12 @@ fn generate_scene_scripts(manifest_dir: &Path, out_dir: &str) {
     }
     writeln!(out, "];").unwrap();
 
-    writeln!(out, "pub static SCENE_FUNCTIONS: &[(&str, &str, &[u8])] = &[").unwrap();
+    functions.sort_by(|a, b| a.0.cmp(&b.0));
+    writeln!(
+        out,
+        "pub static SCENE_FUNCTIONS: &[(&str, &str, &[u8])] = &["
+    )
+    .unwrap();
     for (map_name, function_name, function_path) in &functions {
         let path_str = function_path.to_str().unwrap().replace('\\', "/");
         writeln!(
@@ -2303,12 +2308,72 @@ fn generate_scene_scripts(manifest_dir: &Path, out_dir: &str) {
     }
     writeln!(out, "];").unwrap();
 
+    let aliases: std::collections::BTreeSet<_> =
+        functions.iter().map(|(_, name, _)| name).collect();
+    writeln!(
+        out,
+        "pub static SCENE_FUNCTION_ALIASES: &[(&str, &str)] = &["
+    )
+    .unwrap();
+    for name in aliases {
+        writeln!(
+            out,
+            "    ({:?}, {:?}),",
+            name,
+            format!("storyline_{}", name)
+        )
+        .unwrap();
+    }
+    writeln!(out, "];").unwrap();
+
     writeln!(out, "pub static SCENE_CONFIGS: &[(&str, &str)] = &[").unwrap();
     for (map_name, config_path) in &configs {
         let path_str = config_path.to_str().unwrap().replace('\\', "/");
         writeln!(out, "    ({:?}, include_str!({:?})),", map_name, path_str).unwrap();
     }
     writeln!(out, "];").unwrap();
+
+    // Emit typed constructors alongside the JSON used by editor/hosted
+    // loaders. Bare metal can create just this map's bindings without parsing
+    // JSON or retaining a global configuration cache in EWRAM.
+    writeln!(out, "pub fn create_scene_config(map: &str) -> Option<dotzuki_engine_script::MapScriptConfig> {{").unwrap();
+    writeln!(out, "use dotzuki_engine_script::config::*; match map {{").unwrap();
+    let owned = |value: &Option<String>| {
+        value
+            .as_ref()
+            .map_or_else(|| "None".to_string(), |v| format!("Some({:?}.into())", v))
+    };
+    for (map_name, config_path) in &configs {
+        let config: dotzuki_engine_script::MapScriptConfig =
+            serde_json::from_str(&fs::read_to_string(config_path).unwrap()).unwrap();
+        writeln!(
+            out,
+            "{:?} => Some(MapScriptConfig {{ on_load: {}, npcs: alloc::vec![",
+            map_name,
+            owned(&config.on_load)
+        )
+        .unwrap();
+        for npc in &config.npcs {
+            writeln!(out, "NpcBinding {{ id: {}, talk: {}, toggle_id: {}, script_id: {}, default_hidden: {} }},",
+                npc.id, owned(&npc.talk), owned(&npc.toggle_id), owned(&npc.script_id), npc.default_hidden).unwrap();
+        }
+        writeln!(out, "], signs: alloc::vec![").unwrap();
+        for sign in &config.signs {
+            writeln!(
+                out,
+                "SignBinding {{ id: {}, talk: {:?}.into() }},",
+                sign.id, sign.talk
+            )
+            .unwrap();
+        }
+        writeln!(out, "], coord_events: alloc::vec![").unwrap();
+        for event in &config.coord_events {
+            writeln!(out, "CoordEventBinding {{ name: {:?}.into(), position: {:?}, trigger: {:?}.into(), one_shot: {} }},",
+                event.name, event.position, event.trigger, event.one_shot).unwrap();
+        }
+        writeln!(out, "] }}),").unwrap();
+    }
+    writeln!(out, "_ => None, }} }}").unwrap();
 
     writeln!(out, "pub const SCENE_SCRIPT_COUNT: usize = {};", scripts.len()).unwrap();
     writeln!(out, "pub const SCENE_AST_COUNT: usize = {};", asts.len()).unwrap();
