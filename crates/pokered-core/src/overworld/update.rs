@@ -3455,7 +3455,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                     None => {
                         let count = engine.load_embedded_map(
                             &map_key,
-                            pokered_data::embedded_scenes::scene_functions(),
+                            pokered_data::embedded_scenes::scene_functions_for_map(&map_key),
                         );
                         log::info!(target: "pokered::overworld", "[NativeScript] Registered {} lazy functions for {}", count, map_key);
                     }
@@ -3509,7 +3509,9 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                     } else if !disk_mode {
                         engine.register_embedded_shared(
                             "shared/pokecenter",
-                            pokered_data::embedded_scenes::scene_functions(),
+                            pokered_data::embedded_scenes::scene_functions_for_map(
+                                "shared/pokecenter",
+                            ),
                         );
                     }
                 }

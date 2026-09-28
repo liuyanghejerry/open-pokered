@@ -18,11 +18,11 @@
 //! `storyline_trashCans` function.
 
 use crate::alloc_prelude::*;
-use alloc::rc::Rc;
 #[cfg(not(target_os = "none"))]
 use crate::hash_compat::HashMap;
 #[cfg(target_os = "none")]
 use crate::hash_compat::HashMap;
+use alloc::{borrow::Cow, rc::Rc};
 
 use dotzuki_engine_dsl::ast::{GameScene, StoryStmt};
 use dotzuki_engine_dsl::core_host::dispatch_core_async;
@@ -667,18 +667,24 @@ enum FunctionDef {
 /// must be re-seeded via `seed_flags` after every map load.
 pub struct NativeScriptEngine {
     interp: Interpreter<NativeHost>,
-    functions: HashMap<String, FunctionDef>,
+    functions: HashMap<Cow<'static, str>, FunctionDef>,
     /// Baseline of shared-module functions (registered via
     /// [`register_shared_scene`](Self::register_shared_scene)).
     /// [`load_map`](Self::load_map) rebuilds `functions` from this so a map's
     /// own same-named storyline shadows the shared fallback for that map only
     /// — the next map load re-derives the shared bindings instead of keeping
     /// the previous map's stale definitions.
-    shared_functions: HashMap<String, FunctionDef>,
+    shared_functions: HashMap<Cow<'static, str>, FunctionDef>,
     vgym: VgymTrashState,
     state: InterpState,
     split_battle_active: bool,
     split_battle_waiting: bool,
+}
+
+fn embedded_function_alias(name: &'static str) -> Cow<'static, str> {
+    pokered_data::embedded_scenes::scene_function_alias(name)
+        .map(Cow::Borrowed)
+        .unwrap_or_else(|| Cow::Owned(format!("storyline_{}", name)))
 }
 
 impl NativeScriptEngine {
@@ -709,10 +715,10 @@ impl NativeScriptEngine {
                 // A map-local storyline must shadow the shared fallback even
                 // when the shared module is registered after the map. GBA
                 // loads in that order to keep peak AST memory bounded.
-                if !self.functions.contains_key(&name) {
-                    self.functions.insert(name.clone(), def.clone());
+                if !self.functions.contains_key(name.as_str()) {
+                    self.functions.insert(name.clone().into(), def.clone());
                 }
-                self.shared_functions.insert(name, def);
+                self.shared_functions.insert(name.into(), def);
             }
         }
     }
@@ -726,13 +732,13 @@ impl NativeScriptEngine {
         for (_, function_name, bytes) in entries.iter().filter(|(map, _, _)| *map == map_name) {
             let def = FunctionDef::Embedded(bytes);
             for name in [
-                (*function_name).to_string(),
-                format!("storyline_{}", function_name),
+                Cow::Borrowed(*function_name),
+                embedded_function_alias(function_name),
             ] {
-                if !self.functions.contains_key(&name) {
-                    self.functions.insert(name.clone(), def.clone());
+                if !self.functions.contains_key(name.as_ref()) {
+                    self.functions.insert(name.clone().into(), def.clone());
                 }
-                self.shared_functions.insert(name, def.clone());
+                self.shared_functions.insert(name.into(), def.clone());
             }
         }
     }
@@ -750,19 +756,19 @@ impl NativeScriptEngine {
         for storyline in &scene.storylines {
             if map_name == "VermilionGym" && storyline.name == "trashCans" {
                 self.functions
-                    .insert("storyline_trashCans".to_string(), FunctionDef::VgymTrash);
+                    .insert(Cow::Borrowed("storyline_trashCans"), FunctionDef::VgymTrash);
             } else {
                 let def = FunctionDef::Story(Rc::from(
                     storyline.statements.clone().into_boxed_slice(),
                 ));
                 self.functions
-                    .insert(format!("storyline_{}", storyline.name), def.clone());
-                self.functions.insert(storyline.name.clone(), def);
+                    .insert(format!("storyline_{}", storyline.name).into(), def.clone());
+                self.functions.insert(storyline.name.clone().into(), def);
             }
         }
         if let Some(on_load) = &scene.on_load {
             self.functions.insert(
-                format!("{}OnLoad", scene.name),
+                format!("{}OnLoad", scene.name).into(),
                 FunctionDef::Story(Rc::from(on_load.statements.clone().into_boxed_slice())),
             );
         }
@@ -777,18 +783,18 @@ impl NativeScriptEngine {
         for storyline in scene.storylines {
             if map_name == "VermilionGym" && storyline.name == "trashCans" {
                 self.functions
-                    .insert("storyline_trashCans".to_string(), FunctionDef::VgymTrash);
+                    .insert(Cow::Borrowed("storyline_trashCans"), FunctionDef::VgymTrash);
             } else {
                 let name = storyline.name;
                 let def = FunctionDef::Story(Rc::from(storyline.statements.into_boxed_slice()));
                 self.functions
-                    .insert(format!("storyline_{}", name), def.clone());
-                self.functions.insert(name, def);
+                    .insert(format!("storyline_{}", name).into(), def.clone());
+                self.functions.insert(name.into(), def);
             }
         }
         if let Some(on_load) = scene.on_load {
             self.functions.insert(
-                format!("{}OnLoad", scene.name),
+                format!("{}OnLoad", scene.name).into(),
                 FunctionDef::Story(Rc::from(on_load.statements.into_boxed_slice())),
             );
         }
@@ -802,20 +808,25 @@ impl NativeScriptEngine {
         entries: &'static [(&'static str, &'static str, &'static [u8])],
     ) -> usize {
         self.functions = self.shared_functions.clone();
+        let count = entries
+            .iter()
+            .filter(|(map, _, _)| *map == map_name)
+            .count();
+        self.functions.reserve(count * 2);
         let mut count = 0;
         for (_, function_name, bytes) in entries.iter().filter(|(map, _, _)| *map == map_name) {
             count += 1;
             if map_name == "VermilionGym" && *function_name == "trashCans" {
                 self.functions
-                    .insert("storyline_trashCans".to_string(), FunctionDef::VgymTrash);
+                    .insert(Cow::Borrowed("storyline_trashCans"), FunctionDef::VgymTrash);
                 self.functions
-                    .insert("trashCans".to_string(), FunctionDef::VgymTrash);
+                    .insert(Cow::Borrowed("trashCans"), FunctionDef::VgymTrash);
                 continue;
             }
             let def = FunctionDef::Embedded(bytes);
             self.functions
-                .insert(format!("storyline_{}", function_name), def.clone());
-            self.functions.insert((*function_name).to_string(), def);
+                .insert(embedded_function_alias(function_name), def.clone());
+            self.functions.insert(Cow::Borrowed(*function_name), def);
         }
         count
     }
@@ -893,7 +904,9 @@ impl NativeScriptEngine {
     /// then the `storyline_` prefix (mirrors the Boa `resolved_fn_name`).
     pub fn has_function(&self, name: &str) -> bool {
         self.functions.contains_key(name)
-            || self.functions.contains_key(&format!("storyline_{}", name))
+            || self
+                .functions
+                .contains_key(format!("storyline_{}", name).as_str())
     }
 
     /// Start a script function (no arguments — the only call form the
@@ -947,7 +960,7 @@ impl NativeScriptEngine {
         };
         let def = self
             .functions
-            .get(&resolved)
+            .get(resolved.as_str())
             .cloned()
             .ok_or_else(|| format!("function not found: {}", fn_name))?;
         let outcome = match def {

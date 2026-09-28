@@ -61,21 +61,28 @@ pub fn render_gen1_oam_palette_split(
         } else {
             palette_before
         };
-        let mut selected: Vec<(usize, &SpriteOamEntry)> = entries
-            .iter()
-            .enumerate()
-            .filter(|(_, entry)| {
-                screen_y >= entry.y
-                    && screen_y < entry.y + TILE_PIXELS as i32
-                    && entry.x < width
-                    && entry.x + TILE_PIXELS as i32 > 0
-            })
-            .take(10)
-            .collect();
+        // Hardware selects at most ten entries. A fixed stack array avoids
+        // allocating and freeing a Vec for every visible scanline on GBA.
+        let mut selected = [0usize; 10];
+        let mut count = 0;
+        for (index, entry) in entries.iter().enumerate() {
+            if screen_y >= entry.y
+                && screen_y < entry.y + TILE_PIXELS as i32
+                && entry.x < width
+                && entry.x + TILE_PIXELS as i32 > 0
+            {
+                selected[count] = index;
+                count += 1;
+                if count == selected.len() {
+                    break;
+                }
+            }
+        }
         // Smaller X wins on DMG; equal X falls back to lower OAM index. Draw
         // the lowest-priority selected object first so the winner lands last.
-        selected.sort_by_key(|(index, entry)| (entry.x, *index));
-        for (_, entry) in selected.into_iter().rev() {
+        selected[..count].sort_unstable_by_key(|&index| (entries[index].x, index));
+        for &index in selected[..count].iter().rev() {
+            let entry = &entries[index];
             let source_row = (screen_y - entry.y) as usize;
             let tile_row = if entry.y_flip() {
                 TILE_PIXELS - 1 - source_row
@@ -1286,6 +1293,8 @@ fn draw_mon_tile_rows_indices(
 /// The layout-independent core of [`draw_mon_tile_rows_indices`], so the clip
 /// arithmetic can be checked against the per-pixel original on any target.
 #[cfg(any(target_os = "none", test))]
+#[inline(never)]
+#[cfg_attr(all(target_os = "none", target_arch = "arm"), link_section = ".iwram")]
 fn write_mon_tile_rows(
     pixels: &mut [u8],
     width: usize,
@@ -1304,6 +1313,11 @@ fn write_mon_tile_rows(
         return;
     }
     let stride = width;
+    let aligned = first == 0
+        && last == TILE_PIXELS as i32
+        && width % 4 == 0
+        && tile_left % 4 == 0
+        && pixels.as_ptr().align_offset(4) == 0;
     for row in 0..TILE_PIXELS {
         let py = tile_top + row as i32;
         if py < clip_top as i32 || py >= clip_bottom as i32 || py < 0 || py >= height as i32 {
@@ -1311,6 +1325,23 @@ fn write_mon_tile_rows(
         }
         let source = &tile.pixels[row];
         let base = py as usize * stride + (tile_left + first) as usize;
+        if aligned {
+            for word in 0..2 {
+                // Tile and framebuffer rows are word-aligned and the clip
+                // above covers all eight pixels. Expand each nonzero 2-bit
+                // index into a byte mask, preserving transparent pixels.
+                unsafe {
+                    let value = source.as_ptr().cast::<u32>().add(word).read();
+                    if value == 0 {
+                        continue;
+                    }
+                    let mask = ((value | (value >> 1)) & 0x0101_0101).wrapping_mul(255);
+                    let destination = pixels.as_mut_ptr().add(base).cast::<u32>().add(word);
+                    destination.write((destination.read() & !mask) | value);
+                }
+            }
+            continue;
+        }
         for col in first..last {
             let color = source[col as usize];
             if color != 0 {

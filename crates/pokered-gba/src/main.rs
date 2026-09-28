@@ -15,6 +15,9 @@ mod repro_route22;
 #[cfg(feature = "memory-scenarios")]
 mod memory_scenarios;
 
+#[cfg(feature = "frame-timing")]
+mod frame_timing;
+
 #[cfg(not(feature = "autopilot"))]
 use agb::input::{Button, ButtonController};
 use dotzuki_engine::render_config::RenderConfig;
@@ -448,12 +451,30 @@ fn profile_timer_start() {
         core::ptr::write_volatile(PROFILE_TIMER_DATA, 0);
         // Enable + 1/64 prescaler.
         core::ptr::write_volatile(PROFILE_TIMER_CONTROL, 0x0081);
+        #[cfg(feature = "frame-timing")]
+        {
+            core::ptr::write_volatile(0x0400_010E as *mut u16, 0);
+            core::ptr::write_volatile(0x0400_010C as *mut u16, 0);
+            core::ptr::write_volatile(0x0400_010E as *mut u16, 0x0084);
+        }
     }
 }
 
 #[inline]
 fn profile_now() -> u16 {
     unsafe { core::ptr::read_volatile(PROFILE_TIMER_DATA) }
+}
+
+#[cfg(feature = "frame-timing")]
+fn trace_now() -> u32 {
+    loop {
+        let hi = unsafe { core::ptr::read_volatile(0x0400_010C as *const u16) };
+        let lo = profile_now();
+        let check = unsafe { core::ptr::read_volatile(0x0400_010C as *const u16) };
+        if hi == check {
+            return (u32::from(hi) << 16) | u32::from(lo);
+        }
+    }
 }
 
 #[cfg(feature = "profiling")]
@@ -732,7 +753,17 @@ fn game_main() -> ! {
 
     set_display_control(MODE4_BG2);
     let _ = unsafe { log::set_logger_racy(&LOGGER) };
-    unsafe { log::set_max_level_racy(log::LevelFilter::Info) };
+    // Normal play must not format script/map trace strings on the ARM7.
+    let log_level = if cfg!(any(
+        feature = "repro-rival",
+        feature = "repro-route22",
+        feature = "memory-scenarios"
+    )) {
+        log::LevelFilter::Info
+    } else {
+        log::LevelFilter::Warn
+    };
+    unsafe { log::set_max_level_racy(log_level) };
 
     agb::println!("pokered-gba: booting game core…");
 
@@ -778,6 +809,10 @@ fn game_main() -> ! {
     let mut route22 = repro_route22::Repro::default();
     #[cfg(feature = "memory-scenarios")]
     let mut memory_scenarios = memory_scenarios::Scenarios::default();
+    #[cfg(feature = "frame-timing")]
+    let mut timing = frame_timing::Trace::default();
+    #[cfg(feature = "frame-timing")]
+    let mut pending_timing_view = [0; 2];
 
     loop {
         let first_frame_pending = frame == 0;
@@ -825,6 +860,8 @@ fn game_main() -> ! {
         route22.drive(game, frame, &mut state);
         #[cfg(feature = "memory-scenarios")]
         memory_scenarios.drive(game, frame, &mut state);
+        #[cfg(feature = "frame-timing")]
+        timing.drive(game, frame, &mut state);
 
         // Heap watermark: every frame, probe the largest free block and log
         // each new low. Catches peaks that only exist for one or two frames
@@ -852,20 +889,27 @@ fn game_main() -> ! {
             agb::display::busy_wait_for_vblank();
         }
         presenter.commit();
+        #[cfg(feature = "frame-timing")]
+        unsafe {
+            frame_timing::FRAME_TIMING_VIEW = pending_timing_view;
+        }
         #[cfg(feature = "profiling")]
         let mark1 = profile_now();
+        #[cfg(feature = "frame-timing")]
+        let tm1 = trace_now();
         let now = profile_now();
         update_accumulator += now.wrapping_sub(last_clock) as u32;
         last_clock = now;
-        // Rendering can exceed one video frame. Catch the inexpensive game
-        // simulation up to the hardware clock so animation and input timing
-        // stay near 59.7 Hz instead of slowing down with the renderer.
+        // Every simulated tick must reach the display. Catching up several
+        // updates after a slow draw erased short move effects and jumped
+        // over intermediate connection-scroll frames. Keep the fractional
+        // clock remainder, but discard missed whole ticks instead of running
+        // invisible animation frames.
         let mut updates = 0;
-        let mut update_state = state.clone();
-        while update_accumulator >= FRAME_TICKS && updates < 8 {
+        if update_accumulator >= FRAME_TICKS {
             #[cfg(feature = "perf-benchmark")]
             let um0 = profile_now();
-            game.update(&update_state);
+            game.update(&state);
             #[cfg(feature = "perf-benchmark")]
             let um1 = profile_now();
             game.flush_deferred_transition();
@@ -879,25 +923,37 @@ fn game_main() -> ! {
                 }
             }
             frame = frame.wrapping_add(1);
-            update_accumulator -= FRAME_TICKS;
+            update_accumulator %= FRAME_TICKS;
             updates += 1;
-            // A physical edge belongs to one simulation tick. Keep held keys
-            // active during catch-up without replaying just-pressed actions.
-            update_state.begin_frame();
         }
         #[cfg(feature = "profiling")]
         let mark2 = profile_now();
+        #[cfg(feature = "frame-timing")]
+        let tm2 = trace_now();
         let update = render_session.render(game, &mut fb, &mut dma3_scroll_indices);
         #[cfg(feature = "profiling")]
         let mark3 = profile_now();
+        #[cfg(feature = "frame-timing")]
+        let tm3 = trace_now();
         let redraw = !matches!(update, FrameUpdate::Reuse);
         match update {
             FrameUpdate::Reuse => presenter.sync_hidden(&fb),
             FrameUpdate::Full => presenter.present(&fb, None),
             FrameUpdate::Damage(rects) => presenter.present(&fb, Some(rects)),
         }
+        #[cfg(feature = "frame-timing")]
+        {
+            pending_timing_view = timing.view(frame);
+        }
         #[cfg(feature = "profiling")]
         let mark4 = profile_now();
+        #[cfg(feature = "frame-timing")]
+        if timing.scene != 0 {
+            let tm4 = trace_now();
+            agb::println!("timing: frame scene={} tick={} clock={} updates={} update={} draw={} present={} map={}",
+                timing.scene, frame, tm1, updates, tm2 - tm1, tm3 - tm2, tm4 - tm3,
+                game.overworld.state.current_map as u8);
+        }
         // Debug: mirror the packed 2bpp framebuffer into SRAM so mGBA's
         // .sav file carries a decodable snapshot. SRAM needs byte-wide
         // volatile writes.

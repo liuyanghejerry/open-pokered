@@ -86,6 +86,49 @@ mod cache_tests {
     use super::*;
 
     #[test]
+    fn rom_lookup_and_battle_bank_match_decoded_assets() {
+        use crate::gba_assets::{get_preconverted_asset, BATTLE_TILE_PIXELS, PRECONVERTED_ASSETS};
+        for &(dir, name, bytes) in PRECONVERTED_ASSETS {
+            assert_eq!(
+                get_preconverted_asset(dir, name),
+                Some(bytes),
+                "{dir}/{name}"
+            );
+        }
+        assert!(get_preconverted_asset("battle", "missing").is_none());
+        assert!(get_preconverted_asset("missing", "font").is_none());
+
+        let mut expected = TileSet::blank(256);
+        let mut put = |dir, name, first, limit| {
+            let bytes = get_preconverted_asset(dir, name).unwrap();
+            let tiles = if dir == "font" {
+                TileSet::from_1bpp(bytes)
+            } else {
+                TileSet::from_2bpp(bytes)
+            };
+            let count = tiles.len().min(limit);
+            for index in 0..count {
+                expected.set(first + index, tiles.get(index).clone());
+            }
+            count
+        };
+        put("font", "font", 0x80, 128);
+        put("font", "font_extra", 0x60, 32);
+        put("font", "font_battle_extra", 0x62, 256 - 0x62);
+        put("battle", "battle_hud_1", 0x6d, 256 - 0x6d);
+        let hud2 = put("battle", "battle_hud_2", 0x73, 256 - 0x73);
+        put("battle", "battle_hud_3", 0x73 + hud2, 256 - 0x73 - hud2);
+        put("battle", "balls", 0x31, 5);
+        for index in 0..256 {
+            assert_eq!(
+                &BATTLE_TILE_PIXELS.0[index * 64..(index + 1) * 64],
+                expected.get(index).pixels.as_flattened(),
+                "tile {index:#x}"
+            );
+        }
+    }
+
+    #[test]
     fn all_rom_assets_fit_individually_and_dex_reload_preserves_pixels() {
         let mut rm = ResourceManager::new(AssetRoot::new());
         for &(dir, name, bytes) in crate::gba_assets::PRECONVERTED_ASSETS {

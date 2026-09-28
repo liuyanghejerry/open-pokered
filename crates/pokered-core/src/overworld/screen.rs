@@ -80,6 +80,10 @@ pub(super) fn load_map_script_config(
         return config.clone();
     }
 
+    #[cfg(target_os = "none")]
+    return pokered_data::embedded_scenes::create_scene_config(map_key).unwrap_or_default();
+
+    #[cfg(not(target_os = "none"))]
     pokered_data::embedded_scenes::get_scene_config(map_key)
         .and_then(|json| match serde_json::from_str(json) {
             Ok(config) => Some(config),
@@ -1050,13 +1054,14 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
         }
         #[cfg(not(feature = "script-boa"))]
         {
-            let embedded_functions = pokered_data::embedded_scenes::scene_functions();
+            let embedded_functions =
+                pokered_data::embedded_scenes::scene_functions_for_map(&map_key);
             if let Some(scene) = scene_ast_provider.get_scene("shared/pokecenter") {
                 script_engine.register_shared_scene_native(scene);
             } else if !scene_ast_provider.disk_mode {
                 script_engine.register_embedded_shared_native(
                     "shared/pokecenter",
-                    embedded_functions,
+                    pokered_data::embedded_scenes::scene_functions_for_map("shared/pokecenter"),
                 );
             }
             if let Some(scene) = scene_ast_provider.get_scene(&map_key) {

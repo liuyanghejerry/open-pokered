@@ -45,4 +45,5 @@ ron = { workspace = true }
 
 [build-dependencies]
 serde_json = { workspace = true }
+dotzuki-engine-script = { git = "https://github.com/liuyanghejerry/dotzuki", tag = "v0.8.2", default-features = false }
 dotzuki-engine-dsl = { git = "https://github.com/liuyanghejerry/dotzuki", tag = "v0.8.2" }

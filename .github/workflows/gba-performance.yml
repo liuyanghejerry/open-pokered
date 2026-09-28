@@ -17,7 +17,7 @@ jobs:
   performance:
     name: GBA performance baseline
     runs-on: ubuntu-24.04
-    timeout-minutes: 20
+    timeout-minutes: 35
     steps:
       - name: Checkout candidate
         uses: actions/checkout@v4
@@ -36,6 +36,7 @@ jobs:
             crates/pokered-renderer crates/pokered-ui scripts/fetch-gfx.sh \
             scripts/gba_performance.py scripts/test_gba_performance.py vendor/ron \
             scripts/gba_memory.py scripts/test_gba_memory.py \
+            scripts/gba_frame_timing.py scripts/test_gba_frame_timing.py \
             .github/workflows/gba-performance.yml; then
             echo "has-changes=false" >> "$GITHUB_OUTPUT"
             echo "No GBA-relevant changes; performance gate passes without sampling."
@@ -81,7 +82,7 @@ jobs:
 
       - name: Test performance-gate tooling
         if: steps.changes.outputs.has-changes == 'true'
-        run: python3 -m unittest scripts/test_gba_performance.py scripts/test_gba_memory.py
+        run: python3 -m unittest scripts/test_gba_performance.py scripts/test_gba_memory.py scripts/test_gba_frame_timing.py
 
       - name: Build candidate benchmark ROM
         if: steps.changes.outputs.has-changes == 'true'
@@ -122,7 +123,7 @@ jobs:
         run: |
           python3 scripts/gba_memory.py \
             --rom "$RUNNER_TEMP/gba-memory.gba" \
-            --log "$RUNNER_TEMP/gba-memory.log" --timeout-seconds 180
+            --log "$RUNNER_TEMP/gba-memory.log" --timeout-seconds 600
 
       - name: Build broad GBA memory scenarios
         if: steps.changes.outputs.has-changes == 'true'
@@ -139,7 +140,25 @@ jobs:
         run: |
           python3 scripts/gba_memory.py --suite scenarios \
             --rom "$RUNNER_TEMP/gba-scenarios.gba" \
-            --log "$RUNNER_TEMP/gba-scenarios.log" --timeout-seconds 300
+            --log "$RUNNER_TEMP/gba-scenarios.log" --timeout-seconds 600
+
+      - name: Build GBA frame pacing scenarios
+        if: steps.changes.outputs.has-changes == 'true'
+        working-directory: crates/pokered-gba
+        run: |
+          cargo +nightly-2025-12-07 build --release --features frame-timing
+          agb-gbafix target/thumbv4t-none-eabi/release/pokered-gba -o "$RUNNER_TEMP/gba-frame-timing.gba"
+
+      - name: Require a render for every connection, encounter and move tick
+        if: steps.changes.outputs.has-changes == 'true'
+        env:
+          SDL_AUDIODRIVER: dummy
+          MGBA_COMMAND: xvfb-run -a stdbuf -oL -eL mgba-qt
+        run: |
+          python3 scripts/gba_frame_timing.py \
+            --rom "$RUNNER_TEMP/gba-frame-timing.gba" \
+            --log "$RUNNER_TEMP/gba-frame-timing.log" \
+            --output "$RUNNER_TEMP/gba-frame-timing.json"
 
       - name: Upload performance evidence
         if: ${{ always() && steps.changes.outputs.has-changes == 'true' }}
@@ -155,5 +174,8 @@ jobs:
             ${{ runner.temp }}/gba-memory.log
             ${{ runner.temp }}/gba-scenarios.gba
             ${{ runner.temp }}/gba-scenarios.log
+            ${{ runner.temp }}/gba-frame-timing.gba
+            ${{ runner.temp }}/gba-frame-timing.log
+            ${{ runner.temp }}/gba-frame-timing.json
           if-no-files-found: warn
           retention-days: 30

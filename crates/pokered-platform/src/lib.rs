@@ -1,6 +1,8 @@
 //! Small platform contracts shared below the game/data/rendering layers.
 #![no_std]
 
+pub mod hash;
+
 #[cfg(not(target_os = "none"))]
 extern crate std;
 

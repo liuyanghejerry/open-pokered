@@ -1,0 +1,270 @@
+diff --git a/crates/pokered-gba/Cargo.toml b/crates/pokered-gba/Cargo.toml
+index 7655008..c126809 100644
+--- a/crates/pokered-gba/Cargo.toml
++++ b/crates/pokered-gba/Cargo.toml
+@@ -6,6 +6,7 @@ license = "MIT"
+ publish = false
+ 
+ [features]
++frame-timing = ["autopilot", "profiling", "pokered-app/repro-markers"]
+ # Scripted input driver for automated playtesting: replaces hardware input
+ # with a frame-indexed button script (see src/autopilot.rs).
+ autopilot = []
+diff --git a/crates/pokered-gba/src/main.rs b/crates/pokered-gba/src/main.rs
+index 837b5be..a669232 100644
+--- a/crates/pokered-gba/src/main.rs
++++ b/crates/pokered-gba/src/main.rs
+@@ -15,6 +15,9 @@ mod repro_route22;
+ #[cfg(feature = "memory-scenarios")]
+ mod memory_scenarios;
+ 
++#[cfg(feature = "frame-timing")]
++mod frame_timing;
++
+ #[cfg(not(feature = "autopilot"))]
+ use agb::input::{Button, ButtonController};
+ use dotzuki_engine::render_config::RenderConfig;
+@@ -448,6 +451,12 @@ fn profile_timer_start() {
+         core::ptr::write_volatile(PROFILE_TIMER_DATA, 0);
+         // Enable + 1/64 prescaler.
+         core::ptr::write_volatile(PROFILE_TIMER_CONTROL, 0x0081);
++        #[cfg(feature = "frame-timing")]
++        {
++            core::ptr::write_volatile(0x0400_010E as *mut u16, 0);
++            core::ptr::write_volatile(0x0400_010C as *mut u16, 0);
++            core::ptr::write_volatile(0x0400_010E as *mut u16, 0x0084);
++        }
+     }
+ }
+ 
+@@ -456,6 +465,16 @@ fn profile_now() -> u16 {
+     unsafe { core::ptr::read_volatile(PROFILE_TIMER_DATA) }
+ }
+ 
++#[cfg(feature = "frame-timing")]
++fn trace_now() -> u32 {
++    loop {
++        let hi = unsafe { core::ptr::read_volatile(0x0400_010C as *const u16) };
++        let lo = profile_now();
++        let check = unsafe { core::ptr::read_volatile(0x0400_010C as *const u16) };
++        if hi == check { return (u32::from(hi) << 16) | u32::from(lo); }
++    }
++}
++
+ #[cfg(feature = "profiling")]
+ #[derive(Default)]
+ struct ProfileSamples {
+@@ -778,6 +797,10 @@ fn game_main() -> ! {
+     let mut route22 = repro_route22::Repro::default();
+     #[cfg(feature = "memory-scenarios")]
+     let mut memory_scenarios = memory_scenarios::Scenarios::default();
++    #[cfg(feature = "frame-timing")]
++    let mut timing = frame_timing::Trace::default();
++    #[cfg(feature = "frame-timing")]
++    let mut pending_timing_view = [0; 2];
+ 
+     loop {
+         let first_frame_pending = frame == 0;
+@@ -825,6 +848,8 @@ fn game_main() -> ! {
+         route22.drive(game, frame, &mut state);
+         #[cfg(feature = "memory-scenarios")]
+         memory_scenarios.drive(game, frame, &mut state);
++        #[cfg(feature = "frame-timing")]
++        timing.drive(game, frame, &mut state);
+ 
+         // Heap watermark: every frame, probe the largest free block and log
+         // each new low. Catches peaks that only exist for one or two frames
+@@ -852,14 +877,20 @@ fn game_main() -> ! {
+             agb::display::busy_wait_for_vblank();
+         }
+         presenter.commit();
++        #[cfg(feature = "frame-timing")]
++        unsafe { frame_timing::FRAME_TIMING_VIEW = pending_timing_view; }
+         #[cfg(feature = "profiling")]
+         let mark1 = profile_now();
++        #[cfg(feature = "frame-timing")]
++        let tm1 = trace_now();
+         let now = profile_now();
+         update_accumulator += now.wrapping_sub(last_clock) as u32;
+         last_clock = now;
+-        // Rendering can exceed one video frame. Catch the inexpensive game
+-        // simulation up to the hardware clock so animation and input timing
+-        // stay near 59.7 Hz instead of slowing down with the renderer.
++        // Every simulated tick must reach the display. Catching up several
++        // updates after a slow draw erased short move effects and jumped
++        // over intermediate connection-scroll frames. Keep the fractional
++        // clock remainder, but discard missed whole ticks instead of running
++        // invisible animation frames.
+         let mut updates = 0;
+         let mut update_state = state.clone();
+         while update_accumulator >= FRAME_TICKS && updates < 8 {
+@@ -881,23 +912,34 @@ fn game_main() -> ! {
+             frame = frame.wrapping_add(1);
+             update_accumulator -= FRAME_TICKS;
+             updates += 1;
+-            // A physical edge belongs to one simulation tick. Keep held keys
+-            // active during catch-up without replaying just-pressed actions.
+             update_state.begin_frame();
+         }
+         #[cfg(feature = "profiling")]
+         let mark2 = profile_now();
++        #[cfg(feature = "frame-timing")]
++        let tm2 = trace_now();
+         let update = render_session.render(game, &mut fb, &mut dma3_scroll_indices);
+         #[cfg(feature = "profiling")]
+         let mark3 = profile_now();
++        #[cfg(feature = "frame-timing")]
++        let tm3 = trace_now();
+         let redraw = !matches!(update, FrameUpdate::Reuse);
+         match update {
+             FrameUpdate::Reuse => presenter.sync_hidden(&fb),
+             FrameUpdate::Full => presenter.present(&fb, None),
+             FrameUpdate::Damage(rects) => presenter.present(&fb, Some(rects)),
+         }
++        #[cfg(feature = "frame-timing")]
++        { pending_timing_view = timing.view(frame); }
+         #[cfg(feature = "profiling")]
+         let mark4 = profile_now();
++        #[cfg(feature = "frame-timing")]
++        if timing.scene != 0 {
++            let tm4 = trace_now();
++            agb::println!("timing: frame scene={} tick={} clock={} updates={} update={} draw={} present={} map={}",
++                timing.scene, frame, tm1, updates, tm2 - tm1, tm3 - tm2, tm4 - tm3,
++                game.overworld.state.current_map as u8);
++        }
+         // Debug: mirror the packed 2bpp framebuffer into SRAM so mGBA's
+         // .sav file carries a decodable snapshot. SRAM needs byte-wide
+         // volatile writes.
+diff --git a/crates/pokered-gba/src/frame_timing.rs b/crates/pokered-gba/src/frame_timing.rs
+new file mode 100644
+--- /dev/null
++++ b/crates/pokered-gba/src/frame_timing.rs
+@@ -0,0 +1,128 @@
++//! Diagnostic fixture for connection, encounter and move frame pacing.
++use pokered_app::game::PokemonGame;
++use pokered_core::{game_state::GameScreen, pokemon::stats::create_pokemon};
++use pokered_data::{maps::MapId, moves::MoveId, species::Species};
++use pokered_renderer::input::{GbButton, InputState};
++
++const MOVES: [MoveId; 10] = [
++    MoveId::Tackle, MoveId::Growl, MoveId::Scratch, MoveId::Ember,
++    MoveId::WaterGun, MoveId::Thunderbolt, MoveId::ThunderWave,
++    MoveId::Splash, MoveId::DoubleTeam, MoveId::Explosion,
++];
++
++/// Emulator capture hook: scene and relative tick of the committed page.
++/// Updated during VBlank, never included in playable builds.
++#[no_mangle]
++pub static mut FRAME_TIMING_VIEW: [u32; 2] = [0; 2];
++
++#[derive(Default)]
++pub struct Trace {
++    pub scene: u32,
++    stage: u8,
++    since: u32,
++    move_case: usize,
++}
++
++impl Trace {
++    pub fn view(&self, frame: u32) -> [u32; 2] {
++        [self.scene, frame.saturating_sub(self.since)]
++    }
++
++    pub fn drive(&mut self, game: &mut PokemonGame, frame: u32, input: &mut InputState) {
++        if frame < 4300 { return; }
++        input.set_from_bitmask(0);
++        let elapsed = frame - self.since;
++        match self.stage {
++            0 => {
++                game.overworld.set_rng_seed(42);
++                game.save_data.party.clear();
++                game.save_data.party.add(create_pokemon(Species::Charmander, 20, [0x99; 2]).unwrap()).unwrap();
++                for flag in ["EVENT_GOT_STARTER", "EVENT_GOT_POKEDEX", "EVENT_FOLLOWED_OAK_INTO_LAB"] {
++                    game.overworld.set_flag_live(flag, true);
++                }
++                game.overworld.warp_to_map(MapId::PalletTown, 10, 1);
++                game.handle_transition(GameScreen::Overworld);
++                self.since = frame;
++                self.stage = 1;
++            }
++            1 if elapsed >= 90 => {
++                self.scene = 1;
++                agb::println!("timing: START pallet-route1 tick={}", frame);
++                self.since = frame;
++                self.stage = 2;
++            }
++            2 => {
++                input.press(GbButton::Up);
++                if elapsed >= 70 {
++                    assert_eq!(game.overworld.state.current_map, MapId::Route1);
++                    self.scene = 0;
++                    game.overworld.warp_to_map(MapId::Route1, 10, 1);
++                    self.stage = 3;
++                    self.since = frame;
++                }
++            }
++            3 if elapsed >= 90 => {
++                self.scene = 2;
++                agb::println!("timing: START route1-viridian tick={}", frame);
++                self.since = frame;
++                self.stage = 4;
++            }
++            4 => {
++                input.press(GbButton::Up);
++                if elapsed >= 70 {
++                    assert_eq!(game.overworld.state.current_map, MapId::ViridianCity);
++                    self.scene = 0;
++                    game.overworld.warp_to_map(MapId::Route1, 10, 28);
++                    self.stage = 5;
++                    self.since = frame;
++                }
++            }
++            5 if elapsed >= 90 => {
++                self.scene = 3;
++                agb::println!("timing: START wild-entry tick={}", frame);
++                // The same pending encounter consumed by an actual grass roll;
++                // construction remains inside the measured update, not setup.
++                game.overworld.pending_wild_encounter = Some(pokered_core::overworld::screen::PendingWildEncounter {
++                    species: Species::Pidgey, level: 5, old_man: false, hooked: false,
++                });
++                self.stage = 6;
++                self.since = frame;
++            }
++            6 => {
++                if matches!(game.battle.phase, pokered_core::battle::BattlePhase::Intro { .. })
++                    && elapsed % 32 < 16
++                {
++                    input.press(GbButton::A);
++                }
++                if elapsed >= 700 {
++                    assert_eq!(game.state.screen, GameScreen::Battle);
++                    self.stage = 7;
++                    self.since = frame;
++                    self.scene = 0;
++                }
++            }
++            7 => {
++                if self.move_case == MOVES.len() * 2 {
++                    agb::println!("timing: DONE tick={}", frame);
++                    self.stage = 9;
++                    self.scene = 0;
++                    return;
++                }
++                let mv = MOVES[self.move_case / 2];
++                let player = self.move_case % 2 == 0;
++                game.debug_start_memory_move(mv, player);
++                self.scene = 10 + self.move_case as u32;
++                agb::println!("timing: START move={} player={} scene={} tick={}", mv as u8, player, self.scene, frame);
++                self.since = frame;
++                self.stage = 8;
++            }
++            8 if elapsed > 0 && game.debug_memory_move_finished() => {
++                agb::println!("timing: END scene={} ticks={}", self.scene, elapsed);
++                self.move_case += 1;
++                self.stage = 7;
++                self.scene = 0;
++            }
++            _ => {}
++        }
++    }
++}
