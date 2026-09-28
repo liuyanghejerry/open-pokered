@@ -2,7 +2,6 @@ use crate::alloc_prelude::*;
 use pokered_core::intro_scene::{GengarPose, IntroPhase, IntroSceneState, FADE_OUT_FRAMES};
 use pokered_data::layout_constants;
 use pokered_renderer::embedded_font::draw_text;
-use pokered_renderer::palette::{PaletteState, GRAYSCALE_PALETTE};
 use pokered_renderer::resource::{AssetCategory, ResourceManager};
 use pokered_renderer::screen_fade::apply_white_fade;
 use pokered_renderer::{FrameBuffer, Rgba, TILE_SIZE};
@@ -14,14 +13,12 @@ pub fn draw_intro_scene(
 ) {
     fb.clear(Rgba::WHITE);
 
-    let bg_pal = &GRAYSCALE_PALETTE;
-    let mut palette_state = PaletteState::new(GRAYSCALE_PALETTE);
-    palette_state.obp0 = 0b11100100;
-    let sprite_pal = &palette_state.obj_palette0();
+    // Both intro pictures use the framebuffer's native grayscale indices.
+    // Only Nidorino is an OBJ: its source index zero is transparent.
 
     if let Some(ref mut rm) = res {
-        draw_gengar(state, rm, fb, bg_pal);
-        draw_nidorino(state, rm, fb, sprite_pal);
+        draw_gengar(state, rm, fb);
+        draw_nidorino(state, rm, fb);
         draw_black_bars(fb);
     } else {
         let phase_text = format!("Intro: {:?}", state.phase);
@@ -62,12 +59,7 @@ const GENGAR_TILE_REMAP: [usize; 95] = [
     101, 122, 60, 81, 102, 144, 61, 82, 103, 124, 145, 62, 83, 125, 146,
 ];
 
-fn draw_gengar(
-    state: &IntroSceneState,
-    rm: &mut ResourceManager,
-    fb: &mut FrameBuffer,
-    pal: &pokered_renderer::palette::Palette,
-) {
+fn draw_gengar(state: &IntroSceneState, rm: &mut ResourceManager, fb: &mut FrameBuffer) {
     let tilemap_file = gengar_tilemap_name(state.gengar_pose);
     let tilemap = match load_intro_tilemap(rm, tilemap_file) {
         Some(data) => data,
@@ -75,7 +67,7 @@ fn draw_gengar(
     };
 
     if let Ok(cached) = rm.load_intro("gengar") {
-        let ts = cached.tileset.clone();
+        let ts = &cached.tileset;
         let base_x = layout_constants::intro_scene::GENGAR_PIXEL_X as i32 - state.scroll_x;
         let base_y = layout_constants::intro_scene::GENGAR_PIXEL_Y as i32;
         let grid_w = layout_constants::intro_scene::GENGAR_TILES_W;
@@ -103,7 +95,7 @@ fn draw_gengar(
                 continue;
             }
 
-            fb.blit_gb_tile(px, py, ts.get(tile_index), pal, true, false, false);
+            super::opening::blit(fb, px, py, ts.get(tile_index), false);
         }
     }
 }
@@ -156,17 +148,12 @@ fn nidorino_asset_name(sprite_set: u8) -> &'static str {
     }
 }
 
-fn draw_nidorino(
-    state: &IntroSceneState,
-    rm: &mut ResourceManager,
-    fb: &mut FrameBuffer,
-    pal: &pokered_renderer::palette::Palette,
-) {
+fn draw_nidorino(state: &IntroSceneState, rm: &mut ResourceManager, fb: &mut FrameBuffer) {
     let asset = nidorino_asset_name(state.nidorino_sprite_set);
     if let Ok(tiles) = rm.load_intro(asset) {
         let tw = tiles.source_size.0;
         let tiles_per_row = tw / TILE_SIZE;
-        let ts = tiles.tileset.clone();
+        let ts = &tiles.tileset;
 
         // ASM: OAM grid starts at Y = baseCoordY + 8 (first row), screen = OAM_Y - 16
         //      OAM X starts at 0, screen = OAM_X - 8
@@ -194,7 +181,7 @@ fn draw_nidorino(
 
             // The fight-area and sprite rows are tile-aligned, so the coarse
             // rejection above makes ordinary framebuffer clipping sufficient.
-            fb.blit_gb_tile(px, py, ts.get(idx), pal, true, false, false);
+            super::opening::blit(fb, px, py, ts.get(idx), true);
         }
     }
 }
@@ -214,4 +201,102 @@ fn draw_black_bars(fb: &mut FrameBuffer) {
         fb.height() - layout_constants::intro_scene::BLACK_BAR_BOTTOM_PIXEL_Y,
         Rgba::BLACK,
     );
+}
+
+/// A 56x56 background picture and one 48x48 OBJ picture. Keep these composed
+/// while their pose is unchanged, so each animation tick copies rows rather
+/// than walking tilemaps and decoding/clipping every tile again.
+#[derive(Default)]
+pub(super) struct IntroCache {
+    gengar: Option<GengarPose>,
+    nidorino: Option<u8>,
+    background: Vec<u8>,
+    sprite: Vec<u8>,
+    sprite_width: usize,
+    sprite_height: usize,
+}
+
+#[inline(never)]
+#[cfg_attr(all(target_os = "none", target_arch = "arm"), link_section = ".iwram")]
+pub(super) fn draw_cached(
+    state: &IntroSceneState,
+    res: &mut Option<ResourceManager>,
+    fb: &mut FrameBuffer,
+    cache: &mut IntroCache,
+) {
+    let Some(rm) = res else {
+        draw_intro_scene(state, res, fb);
+        return;
+    };
+    if cache.gengar != Some(state.gengar_pose) {
+        let Some(map) = load_intro_tilemap(rm, gengar_tilemap_name(state.gengar_pose)) else {
+            draw_intro_scene(state, res, fb);
+            return;
+        };
+        let Ok(asset) = rm.load_intro("gengar") else {
+            draw_intro_scene(state, res, fb);
+            return;
+        };
+        cache.background.resize(56 * 56, 0);
+        cache.background.fill(0);
+        for (index, &number) in map.iter().take(49).enumerate() {
+            if let Some(&tile) = GENGAR_TILE_REMAP.get(number as usize) {
+                if tile < asset.tileset.len() {
+                    for row in 0..8 {
+                        let offset = (index / 7 * 8 + row) * 56 + index % 7 * 8;
+                        cache.background[offset..offset + 8]
+                            .copy_from_slice(&asset.tileset.get(tile).pixels[row]);
+                    }
+                }
+            }
+        }
+        cache.gengar = Some(state.gengar_pose);
+    }
+    if cache.nidorino != Some(state.nidorino_sprite_set) {
+        let Ok(asset) = rm.load_intro(nidorino_asset_name(state.nidorino_sprite_set)) else {
+            draw_intro_scene(state, res, fb);
+            return;
+        };
+        cache.sprite_width = asset.source_size.0 as usize;
+        cache.sprite_height = asset.source_size.1 as usize;
+        cache
+            .sprite
+            .resize(cache.sprite_width * cache.sprite_height, 0);
+        let columns = cache.sprite_width / 8;
+        for index in 0..asset.tileset.len() {
+            for row in 0..8 {
+                let offset = (index / columns * 8 + row) * cache.sprite_width + index % columns * 8;
+                cache.sprite[offset..offset + 8]
+                    .copy_from_slice(&asset.tileset.get(index).pixels[row]);
+            }
+        }
+        cache.nidorino = Some(state.nidorino_sprite_set);
+    }
+    fb.clear(Rgba::WHITE);
+    super::opening::blit_image(
+        fb,
+        &cache.background,
+        56,
+        56,
+        104 - state.scroll_x,
+        56,
+        false,
+        0,
+        144,
+    );
+    super::opening::blit_image(
+        fb,
+        &cache.sprite,
+        cache.sprite_width,
+        cache.sprite_height,
+        state.nidorino_base_x + state.nidorino_anim_dx - 8,
+        state.nidorino_base_y + state.nidorino_anim_dy - 8,
+        true,
+        32,
+        112,
+    );
+    draw_black_bars(fb);
+    if state.phase == IntroPhase::FadeOut {
+        apply_white_fade(fb, state.frame_counter, FADE_OUT_FRAMES);
+    }
 }

@@ -1,0 +1,24 @@
+core-full:
+test result: ok. 2586 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.46s
+
+render-final:
+test result: ok. 95 passed; 0 failed; 0 ignored; 0 measured; 9 filtered out; finished in 55.38s
+
+order-final:
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 2585 filtered out; finished in 0.01s
+
+battle-integration:
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 102 filtered out; finished in 1.81s
+
+move-completion:
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 104 filtered out; finished in 0.00s
+
+cache-test:
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 103 filtered out; finished in 5.08s
+
+timing-tests:
+Ran 8 tests in 0.001s
+OK
+
+core-final:
+test result: ok. 2588 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.46s

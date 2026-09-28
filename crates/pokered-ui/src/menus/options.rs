@@ -32,6 +32,21 @@ pub fn cursor_damage(cursor: TilePos) -> crate::DamageRect {
     crate::DamageRect::cursor(cursor)
 }
 
+/// Only the active row may change during a cursor-only repaint.
+pub fn can_redraw_cursor(
+    old: pokered_core::options_menu::GameOptions,
+    old_row: OptionsRow,
+    new: pokered_core::options_menu::GameOptions,
+    new_row: OptionsRow,
+) -> bool {
+    if old_row != new_row {
+        return old == new;
+    }
+    (old_row == OptionsRow::TextSpeed || old.text_speed == new.text_speed)
+        && (old_row == OptionsRow::BattleAnimation || old.battle_animation == new.battle_animation)
+        && (old_row == OptionsRow::BattleStyle || old.battle_style == new.battle_style)
+}
+
 /// Repaint only the two cursor cells of an already-rendered options screen.
 pub fn redraw_cursor<P: Painter>(
     previous: (TilePos, char),
@@ -43,6 +58,10 @@ pub fn redraw_cursor<P: Painter>(
     // fits in 8x9.  Clearing the full advance would erase the adjacent CJK
     // option label, which starts one tile to the right.
     painter.draw_pixel_rect(previous.0.tx * 8, previous.0.ty * 8, 8, 9, Rgba::INK_WHITE);
+    if previous.0.ty != current.0.ty {
+        painter.draw_glyph(previous.0, '▷', Rgba::INK_BLACK);
+    }
+    painter.draw_pixel_rect(current.0.tx * 8, current.0.ty * 8, 8, 9, Rgba::INK_WHITE);
     dotzuki_renderer::layout_engine::elements::cursor::draw_cursor_glyph(
         current.0,
         current.1,
@@ -87,6 +106,26 @@ fn draw_v2<P: Painter>(state: &OptionsMenuState, ui: &mut Ui<P>, lang: Lang) {
     let ctx = bindings(state, lang).dynamic();
 
     v2::render_screen(&layout, &ctx, ui.painter());
+    draw_value_markers(state, ui.painter(), lang);
+}
+
+/// The original keeps an outline arrow at every selected value, including
+/// CANCEL, and overlays the active arrow. Resolve all geometry from the GUI.
+fn draw_value_markers<P: Painter>(state: &OptionsMenuState, painter: &mut P, lang: Lang) {
+    for row in [
+        OptionsRow::TextSpeed,
+        OptionsRow::BattleAnimation,
+        OptionsRow::BattleStyle,
+        OptionsRow::Cancel,
+    ] {
+        if row == state.row {
+            continue;
+        }
+        let mut selected = state.clone();
+        selected.row = row;
+        let (pos, _) = cursor_spec(&selected, lang);
+        painter.draw_glyph(pos, '▷', Rgba::INK_BLACK);
+    }
 }
 
 fn bindings(
@@ -171,6 +210,7 @@ fn draw_compiled<P: Painter>(state: &OptionsMenuState, painter: &mut P, lang: La
         lang == Lang::Zh,
         true,
     );
+    draw_value_markers(state, painter, lang);
 }
 
 #[cfg(test)]

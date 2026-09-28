@@ -1,10 +1,8 @@
 //! Audio engine for pokered — re-exports the generic `dotzuki-audio` crate and
 //! provides pokered-specific music/SFX data and audio manager.
 //!
-//! Dual-target: hosted builds keep the full `dotzuki-audio` re-export and the
-//! shared device output (`output::AudioOutput`); bare-metal GBA builds
-//! (target_os = "none") compile only the music/SFX data tables plus a no-op
-//! `output::AudioOutput` with the same method surface.
+//! Hosted builds use PCM device output; bare-metal GBA builds send the same
+//! sequencer register writes to the four hardware PSG channels.
 
 #![no_std]
 
@@ -13,11 +11,11 @@
 extern crate std;
 extern crate alloc;
 
-#[cfg(not(target_os = "none"))]
 pub use dotzuki_audio::*;
 
-#[cfg(not(target_os = "none"))]
 pub mod audio_manager;
+#[cfg(any(test, target_os = "none"))]
+mod gba_psg;
 pub mod music_data;
 pub mod sfx_data;
 
@@ -26,10 +24,9 @@ pub mod sfx_data;
 #[cfg(not(target_os = "none"))]
 pub mod output;
 
-/// Bare-metal (GBA) stand-in for [`output`]: the same `AudioOutput` surface
-/// with empty bodies — there is no audio device on the cartridge target.
+/// Bare-metal GBA PSG output, sharing the music/SFX/cry sequencer.
 #[cfg(target_os = "none")]
-#[path = "output_none.rs"]
+#[path = "output_gba.rs"]
 pub mod output;
 
 // With `#![no_std]` the Vec/String/Box/vec!/format! family leaves the prelude

@@ -1,5 +1,6 @@
 {
   "$schema": "../../schemas/script_config.schema.json",
+  "onLoad": "SafariZoneGateOnLoad",
   "coordEvents": [
     {
       "name": "gateRow1",

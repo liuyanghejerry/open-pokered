@@ -838,3 +838,74 @@ fn bank_wise_export_matches_full_image() {
     }
     assert_eq!(full, streamed, "streamed banks must match the full image");
 }
+
+#[test]
+fn bank_stream_load_matches_full_image_with_full_pc_and_hall_of_fame() {
+    use crate::save::sram_export::export_sram;
+    use crate::save::sram_import::{import_sram, import_sram_banks_into};
+    use crate::save::sram_layout::SRAM_BANK_SIZE_LAYOUT;
+    let mut save = SaveData::new();
+    save.game_data.player_id = 123;
+    save.game_data.current_box_num = 0x87;
+    let mut mon = make_test_pokemon(Species::Pikachu, 42);
+    mon.ot_id = 456;
+    for _ in 0..6 {
+        save.party.add(mon.clone()).unwrap();
+    }
+    for box_index in 0..12 {
+        for _ in 0..20 {
+            save.pc_storage
+                .get_box_mut(box_index)
+                .unwrap()
+                .deposit(mon.clone())
+                .unwrap();
+        }
+    }
+    let mut team = HofTeam::new();
+    team.add_mon(HofMon::new(25, 42, &[0x8F]));
+    for _ in 0..HOF_TEAM_CAPACITY {
+        save.hall_of_fame.push_team(team.clone());
+    }
+    let data = export_sram(&save);
+    let expected = import_sram(&data).unwrap();
+    let mut loaded = SaveData::new();
+    import_sram_banks_into(
+        |index, bank| {
+            assert_eq!(bank.len(), SRAM_BANK_SIZE_LAYOUT);
+            bank.copy_from_slice(&data[index * bank.len()..(index + 1) * bank.len()]);
+        },
+        &mut loaded,
+    )
+    .unwrap();
+    assert_eq!(export_sram(&loaded), export_sram(&expected));
+    assert_eq!(loaded.party.count(), 6);
+    assert!(loaded.party.get(0).unwrap().is_traded);
+    assert_eq!(loaded.pc_storage.current_box_index(), 7);
+    assert_eq!(loaded.pc_storage.get_box(11).unwrap().count(), 20);
+    assert_eq!(loaded.hall_of_fame.team_count(), HOF_TEAM_CAPACITY);
+}
+
+#[test]
+fn bank_stream_rejects_corrupt_banks_before_replacing_resident_save() {
+    use crate::save::sram_export::export_sram;
+    use crate::save::sram_import::import_sram_banks_into;
+    use crate::save::sram_layout::{GAME_DATA_OFFSET, SRAM_BANK_SIZE_LAYOUT};
+    for damaged in 1..=3 {
+        let mut data = export_sram(&SaveData::new());
+        data[damaged * SRAM_BANK_SIZE_LAYOUT + if damaged == 1 { GAME_DATA_OFFSET } else { 0 }] ^=
+            1;
+        let mut loaded = SaveData::new();
+        loaded.game_data.player_id = 987;
+        let result = import_sram_banks_into(
+            |index, bank| {
+                bank.copy_from_slice(&data[index * bank.len()..(index + 1) * bank.len()]);
+            },
+            &mut loaded,
+        );
+        assert!(
+            matches!(result, Err(SaveError::BadChecksum)),
+            "bank {damaged}"
+        );
+        assert_eq!(loaded.game_data.player_id, 987);
+    }
+}

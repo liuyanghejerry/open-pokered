@@ -1949,7 +1949,8 @@ mod tests {
     const GOLDEN_OAK_SPEECH: u64           = 0x7a144f18ff89940c;
     // Save: full-width v2 information card with integrated confirmation.
     const GOLDEN_SAVE: u64                 = 0x0af4f280dd3dd6dc;
-    const GOLDEN_OPTIONS: u64              = 0x68f3c06ddf787f3c;
+    // Original-style hollow markers remain visible on inactive option rows.
+    const GOLDEN_OPTIONS: u64              = 0x7faba4442db6b8e4;
     const GOLDEN_NAMING: u64               = 0x685ded37c5a7bd5d;
     const GOLDEN_BATTLE_MAIN: u64          = 0x321da02cc038553d;
     const GOLDEN_BATTLE_PARTY: u64         = 0x957e7c99f7c6b3bc;

@@ -197,6 +197,13 @@ fn narration_types(
         .unwrap_or((PokemonType::Normal, PokemonType::Normal))
 }
 
+pub(crate) fn move_is_immune(state: &EngineState<PokeredRules>, effects: &[EffectState<PokeredRules>], actor: BattlerRef, move_id: MoveId) -> bool {
+    if effects.iter().any(|effect|effect.host==actor && matches!(effect.kind,PokeVolatile::Charging { .. })) { return false; }
+    let md=move_data(move_id);
+    let (one,two)=narration_types(effects,state,opp_ref(actor));
+    md.power>0 && effectiveness_category(md.move_type,one,two)==Effectiveness::NoEffect
+}
+
 /// Walk the whole `TurnLog` → the production per-turn text lines. `effects` is the
 /// post-turn arena, consulted so the effectiveness message honours a Conversion
 /// `TypeOverride` on the defender (the damage already does); pass `&[]` when no
@@ -227,7 +234,13 @@ pub fn translate_turn(
                 }
                 let md = move_data(*move_);
                 let (d1, d2) = narration_types(effects, state, opp_ref(actor));
-                let eff = effectiveness_category(md.move_type, d1, d2);
+                // Type effectiveness text belongs to applied move damage,
+                // never a status move or a charge-only turn.
+                let dealt_damage = evs[i + 1..].iter()
+                    .take_while(|event| !matches!(event, TurnEvent::MoveUsed { .. } | TurnEvent::Blocked { .. }))
+                    .any(|event| matches!(event, TurnEvent::Damaged { target, cause: None, .. } if *target == opp_ref(actor)));
+                let eff = if move_is_immune(state,effects,actor,*move_) { Effectiveness::NoEffect }
+                    else if dealt_damage { effectiveness_category(md.move_type, d1, d2) } else { Effectiveness::Normal };
                 msgs.extend(move_announcement(&display_name(state, actor), move_name(*move_, false), crit, missed, eff, None));
                 // HazeEffect (haze.asm:1-49): a landed Haze narrates ONLY
                 // StatusChangesEliminatedText ("All STATUS changes are
@@ -288,39 +301,30 @@ pub fn translate_turn(
                     msgs.push(format!("{name}'s {} {verb}!", stat_display(*stat)));
                 }
             }
-            // Residual HP loss from a NON-VOLATILE status (burn/poison chip) — the
-            // driver tags it `Status(s)`. `cause: None` (move damage) stays silent (the
-            // move announcement narrates it).
-            TurnEvent::Damaged { target, cause: Some(HpChangeCause::Status(status)), .. } => {
-                let name = display_name(state, *target);
-                let line = match status {
-                    LegacyStatus::Poison => format!("{name} is hurt by POISON!"),
-                    LegacyStatus::Burn => format!("{name} is hurt by its BURN!"),
-                    _ => continue, // no other Gen-1 status chips
-                };
-                msgs.push(line);
-            }
-            // VOLATILE residual — the driver now tags it `Volatile(kind)`, the game's
-            // opaque per-volatile token. A badly-poisoned mon's ramp chips via the Toxic
-            // VOLATILE (the plain-Poison status residual SKIPS when Toxic is live — "one
-            // chip, not two", see `effect_for_status`), so its "hurt by POISON!" text lives
-            // HERE, not on the Status arm. Leech Seed's sap narrates the DRAINED mon (the
-            // `Damaged` target); the paired `Healed` on the seeder stays silent (Gen-1
-            // prints one line). Bide's cross-battler unleash and any other volatile residual
-            // narrate via their own move flow → silent here.
-            TurnEvent::Damaged { target, cause: Some(HpChangeCause::Volatile(kind)), .. } => {
-                let name = display_name(state, *target);
-                let line = match kind {
-                    PokeVolatile::Toxic { .. } => format!("{name} is hurt by POISON!"),
-                    PokeVolatile::LeechSeed => format!("{name}'s\nHEALTH is sapped\nby LEECH SEED!"),
-                    _ => continue,
-                };
-                msgs.push(line);
+            TurnEvent::Damaged { .. } => {
+                if let Some(line) = presentation_hp_message(e, state, log) { msgs.push(line); }
             }
             _ => {}
         }
     }
     msgs
+}
+
+/// Narration boundaries for HP changes outside an executed move.
+pub(crate) fn presentation_hp_message(event: &TurnEvent<PokeredRules>, state: &EngineState<PokeredRules>, log: &TurnLog<PokeredRules>) -> Option<String> {
+    match event {
+        TurnEvent::Blocked { actor } => Some(format!("{} {}",display_name(state,*actor),blocked_reason(state,log,*actor))),
+        TurnEvent::Damaged { target, cause: Some(cause), .. } => {
+            let name=display_name(state,*target);
+            match cause {
+                HpChangeCause::Status(LegacyStatus::Poison) | HpChangeCause::Volatile(PokeVolatile::Toxic { .. }) => Some(format!("{name} is hurt by POISON!")),
+                HpChangeCause::Status(LegacyStatus::Burn) => Some(format!("{name} is hurt by its BURN!")),
+                HpChangeCause::Volatile(PokeVolatile::LeechSeed) => Some(format!("{name}'s\nHEALTH is sapped\nby LEECH SEED!")),
+                _ => None,
+            }
+        }
+        _ => None,
+    }
 }
 
 /// Gen-1 battle-text name for a stat stage.

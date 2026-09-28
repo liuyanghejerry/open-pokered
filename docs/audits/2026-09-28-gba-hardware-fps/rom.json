@@ -1,0 +1,13 @@
+{
+  "rom": {
+    "file": "pokered-gba.gba",
+    "bytes": 5327852,
+    "sha256": "867c7f478c5c5291fb8efbe331290bdd3bfb612a8e7e6c9a2ab55461230123a5"
+  },
+  "superfw_patch": {
+    "file": "pokered-gba.patch",
+    "bytes": 800,
+    "sha256": "b911bf2d659db287193ffd71ea183b8d2e16d0467c533eb5f7edf4b723cd9758"
+  },
+  "hardware_retest": "pending; SD card not mounted"
+}

@@ -15,7 +15,15 @@ mod repro_route22;
 #[cfg(feature = "memory-scenarios")]
 mod memory_scenarios;
 
-#[cfg(feature = "frame-timing")]
+#[cfg(all(feature = "frame-timing", not(any(feature = "hardware-timing", feature = "opening-timing"))))]
+mod frame_timing;
+
+#[cfg(feature = "opening-timing")]
+#[path = "opening_timing.rs"]
+mod frame_timing;
+
+#[cfg(feature = "hardware-timing")]
+#[path = "hardware_timing.rs"]
 mod frame_timing;
 
 #[cfg(not(feature = "autopilot"))]

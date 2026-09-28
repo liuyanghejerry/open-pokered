@@ -1,0 +1,38 @@
+{
+  "before": {
+    "41": {
+      "frames": 635,
+      "fps": 29.46866536964981,
+      "max_gap_vblanks": 5
+    },
+    "42": {
+      "frames": 69,
+      "fps": 26.72019736842105,
+      "max_gap_vblanks": 4
+    },
+    "43": {
+      "frames": 90,
+      "fps": 27.40076030927835,
+      "max_gap_vblanks": 4
+    }
+  },
+  "final-timing": {
+    "41": {
+      "frames": 635,
+      "fps": 58.6180108359133,
+      "max_gap_vblanks": 5
+    },
+    "42": {
+      "frames": 69,
+      "fps": 47.22639534883721,
+      "max_gap_vblanks": 3
+    },
+    "43": {
+      "frames": 90,
+      "fps": 59.7275,
+      "max_gap_vblanks": 1
+    }
+  },
+  "matched_frames": 794,
+  "mismatched_frames": 0
+}

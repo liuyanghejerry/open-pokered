@@ -1,0 +1,25 @@
+{
+  "base": "758f40e",
+  "candidate_branch": "fix/gba-audio-battle-sequencing",
+  "fixture": "crates/pokered-app/tests/visual_verify_battle_sequence.rs",
+  "seed": 42,
+  "initial_state": "player Charmander / enemy Bulbasaur, level 30, Tackle; player speed 200, enemy speed 10; PlayerMenu",
+  "input": "A on even update frames, no input on odd frames",
+  "capture": "draw after update, zero-based frames 10,30,50,90,130",
+  "resolution": [
+    160,
+    144
+  ],
+  "images": {
+    "battle-010-before.png": "b03056a1dcfb7a9f75148045698546d267e6d83e73e0fa66898fa3bd2fe478e3",
+    "battle-050-after.png": "9c7dfdac8ac836bb54c8d99fe98432b2757cadbee447bcda48d3ba5282ae62c4",
+    "battle-130-after.png": "6e3e4d6ccd6005c655c281c73bb1cdd1b60c1140764e76606d279c2caa75e27e",
+    "battle-090-after.png": "9d78f14a3b684a5e786a9d654cc28bb65d030b48eaa61d8ebcf69e0e6bfdc7b2",
+    "battle-090-before.png": "fb486a23b475f3c9b3f853e52fe32f0bbde8c6ee6a85e2dc452b96c57ee59864",
+    "battle-010-after.png": "9c7dfdac8ac836bb54c8d99fe98432b2757cadbee447bcda48d3ba5282ae62c4",
+    "battle-050-before.png": "62071959251a60e568426c9e2cd9a5280fbbbb0b1862e6431d616e11e59f9db5",
+    "battle-130-before.png": "949ad42f2970410c6dcddc256cadb6280f3b0b0b8cf5c9e1a32a2b145e0ecc06",
+    "battle-030-after.png": "d9f4dc2b39382616917af61b023f2618a5a848c8e1e6da45f1e3b1c0a5230329",
+    "battle-030-before.png": "7b46f168db559ee988b726880704d1ffe82ab70542fa299bf394c45d548c6a0f"
+  }
+}

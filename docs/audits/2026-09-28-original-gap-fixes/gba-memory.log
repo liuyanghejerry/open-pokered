@@ -1,0 +1,18 @@
+memory: PASS case=pokedex count=302 free=57344B stack=15592B
+memory: PASS case=maps count=248 free=25992B stack=15592B
+memory: PASS case=oak-parcel count=1 free=25992B stack=15592B
+memory: PASS case=oak-dex count=16 free=25992B stack=15592B
+memory: PASS case=fossil count=1 free=19880B stack=15592B
+memory: PASS case=slots count=3 free=26256B stack=15592B
+memory: PASS case=menus count=48 free=19536B stack=15592B
+memory: PASS case=moves count=330 free=11696B stack=15592B
+memory: PASS case=evolution count=3 free=17808B stack=15592B
+memory: PASS case=trade count=3 free=15504B stack=15592B
+[INFO] gba: save written to cartridge SRAM
+memory: PASS case=ending count=1 free=18000B stack=15592B
+memory: PASS case=pc-full count=300 free=19728B stack=15592B
+[INFO] gba: save written to cartridge SRAM
+[INFO] gba: loaded SRAM save
+memory: PASS case=save-full count=1 free=28304B stack=15592B
+memory: ALL PASS stack=15592B
+samples=398755322 nonzero=393917784 active_channels=f

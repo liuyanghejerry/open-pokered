@@ -76,7 +76,7 @@ use pokered_core::pc_screen::{PcContext, PcEntry, PcOpenContext, PcScreen, PcScr
 #[cfg(not(target_arch = "wasm32"))]
 use pokered_core::save::sram_import::import_sram;
 #[cfg(target_os = "none")]
-use pokered_core::save::sram_import::import_sram_into;
+use pokered_core::save::sram_import::import_sram_banks_into;
 use pokered_core::save::SaveData;
 use pokered_core::save_menu::{
     SaveMenuResult, SaveMenuState, SavePhase, SaveScreenInfo, SaveSfxEvent, YesNoInput,
@@ -1193,7 +1193,7 @@ impl PokemonGame {
 
         let audio = if no_audio {
             dbg_eprintln!("Audio output disabled (--no-audio).");
-            None
+            Some(AudioOutput::new_pcm())
         } else {
             match AudioOutput::new() {
                 Some(ao) => {
@@ -1202,7 +1202,7 @@ impl PokemonGame {
                 }
                 None => {
                     dbg_eprintln!("Warning: Could not initialize audio output.");
-                    None
+                    Some(AudioOutput::new_pcm())
                 }
             }
         };
@@ -1348,8 +1348,8 @@ impl PokemonGame {
     }
 
     /// Bare-metal (GBA) constructor: a fresh new game — no save file, no
-    /// snapshot, no `--scripts-dir`, no warp, no watcher, no debug server and
-    /// no audio device (the no-op `AudioOutput`). Scenes and map data come
+    /// snapshot, no `--scripts-dir`, no warp, no watcher and no debug server.
+    /// Audio uses the hardware PSG. Scenes and map data come
     /// from the build-time embedded tables; graphics come from the
     /// pre-converted 2bpp registry. Called by `pokered-gba`'s `main.rs`.
     #[cfg(target_os = "none")]
@@ -1411,7 +1411,7 @@ impl PokemonGame {
         // Graphics from the build-time pre-converted registry.
         log::info!("gba:ctor resources");
         let resources = Some(ResourceManager::new(AssetRoot::new()));
-        // No-op device output (pokered_audio::output on bare metal).
+        // Shared sequencer with hardware PSG output.
         let audio = AudioOutput::new();
 
         log::info!("gba:ctor pre-intro");
@@ -1510,6 +1510,7 @@ impl PokemonGame {
         save_summary: Option<SaveFileSummary>,
         audio: Option<AudioOutput>,
     ) -> Self {
+        let audio = Some(audio.unwrap_or_else(AudioOutput::new_pcm));
         let mut state = GameState {
             screen: GameScreen::GameFreakSplash,
             config: pokered_core::game_state::GameConfig::new(version),
@@ -2100,12 +2101,18 @@ impl PokemonGame {
     #[cfg(target_os = "none")]
     #[inline(never)]
     pub fn try_load_sram_save(&mut self) {
-        // Snapshot the SRAM through byte-wide volatile loads first: the raw
-        // slice sees wide accesses, which the 8-bit SRAM bus does not carry
-        // faithfully (the write side needed the same treatment).
-        let mut image = vec![0u8; pokered_core::save::gba_sram::SRAM_SIZE];
-        pokered_core::save::gba_sram::read_into(&mut image);
-        let result = import_sram_into(&image, &mut self.save_data);
+        // Loading starts a new session. Release the previous sequencer,
+        // resume caches and decoded graphics before parsing the new save.
+        self.audio = None;
+        if let Some(resources) = self.resources.as_mut() {
+            resources.clear_cache();
+        }
+        // SRAM only supports byte-wide loads. Stream 8 KiB banks: the full
+        // 32 KiB image cannot coexist with a full PC on the GBA heap.
+        let result = import_sram_banks_into(
+            |index, bank| pokered_core::save::gba_sram::read_bytes(index * bank.len(), bank),
+            &mut self.save_data,
+        );
         match result {
             Ok(()) if self.save_data.game_data.player_id != 0 => {
                 let summary = save_summary_from_data(&self.save_data);
@@ -2130,6 +2137,7 @@ impl PokemonGame {
                 self.save_data.clear();
             }
         }
+        self.audio = AudioOutput::new();
     }
 
     #[cfg(target_arch = "wasm32")]
@@ -3458,12 +3466,17 @@ impl PokemonGame {
                     a: input.is_just_pressed(GbButton::A),
                     b: input.is_just_pressed(GbButton::B),
                 };
-                let done = anim.tick(evo_input);
+                let done = anim.tick_with_sound(
+                    evo_input,
+                    self.audio
+                        .as_ref()
+                        .is_some_and(|audio| audio.is_sfx_playing()),
+                );
                 for sfx in anim.pending_sfx.drain(..) {
                     if let Some(ref audio) = self.audio {
                         use pokered_core::evolution_screen::EvolutionSfx;
                         match sfx {
-                            EvolutionSfx::StopMusic => audio.stop_music(),
+                            EvolutionSfx::StopMusic => audio.stop_all(),
                             EvolutionSfx::Tink => audio.play_sfx(SfxId::Tink),
                             // MUSIC_SAFARI_ZONE is the original's morph music
                             // (evolution.asm:44-46).
@@ -3841,7 +3854,12 @@ impl PokemonGame {
                                 a: input.is_just_pressed(GbButton::A),
                                 b: input.is_just_pressed(GbButton::B),
                             };
-                            let need = self.link_cable.update(psi, &self.save_data.party.to_vec());
+                            let need = self.link_cable.update_with_navigation(
+                                psi,
+                                &self.save_data.party.to_vec(),
+                                input.is_just_pressed(GbButton::Left)
+                                    || input.is_just_pressed(GbButton::Right),
+                            );
                             self.handle_flow_need(need);
                         }
                         if self.link_cable.phase() == &CableClubPhase::BattleSetup {
@@ -4260,6 +4278,13 @@ impl PokemonGame {
                 }
             }
             GameScreen::Battle => {
+                // Keep deterministic turn resolution separate from presentation:
+                // finish this move's visuals, then drain its HP, then allow the
+                // next narration/action. Core-only consumers remain unblocked.
+                self.battle.set_presentation_enabled(!self.battle.link_mode);
+                if self.battle.presentation.waiting && self.battle_vfx.is_frame_stable() {
+                    self.battle.complete_move_presentation();
+                }
                 let battle_input = BattleInput {
                     up: input.is_just_pressed(GbButton::Up),
                     down: input.is_just_pressed(GbButton::Down),
@@ -5542,7 +5567,8 @@ impl PokemonGame {
                 self.save_data.party.clone(),
                 self.save_data.game_data.player_id,
             )
-            .with_role(self.link_role);
+            .with_role(self.link_role)
+            .with_trainer_name(self.player_name.clone());
             self.link_trade = Some(driver);
         }
 
@@ -5582,6 +5608,13 @@ impl PokemonGame {
         // Drive the trade driver the same way.
         if let Some(driver) = self.link_trade.as_mut() {
             let result = driver.poll(&mut *session.trade_transport());
+            self.link_cable
+                .set_trainer_names(&self.player_name, driver.remote_name());
+            if let Some(party) = driver.remote_party() {
+                self.link_cable.set_remote_party(&party.to_vec());
+            } else {
+                self.link_cable.set_remote_party(&[]);
+            }
             match &result {
                 LinkTradePollResult::Disconnected => {
                     self.link_status = LinkStatus::Disconnected("Player2 disconnected".into());
@@ -5679,6 +5712,24 @@ impl PokemonGame {
                             .map_err(link_trade_err_to_transport)
                     }
                 }
+            }
+            FlowNeed::LeaveTrade => {
+                if let Some(driver) = self.link_trade.as_mut() {
+                    driver.leave_trade();
+                }
+                Ok(())
+            }
+            FlowNeed::ContinueTrade => {
+                let Some(session) = self.link_session.as_mut() else {
+                    return;
+                };
+                let Some(driver) = self.link_trade.as_mut() else {
+                    return;
+                };
+                driver.set_party(self.save_data.party.clone());
+                driver
+                    .continue_trade(&mut *session.trade_transport())
+                    .map_err(link_trade_err_to_transport)
             }
             FlowNeed::SelectMon(idx) => {
                 let Some(session) = self.link_session.as_mut() else {
@@ -5843,12 +5894,6 @@ impl PokemonGame {
         // The driver's working party IS the save's new party (it was
         // snapshotted at the table and mutated by the exchange).
         self.save_data.party = new_party;
-        // The driver landed in Completed — reset so a fresh gameboy use can
-        // request the next trade (the original loops trades via
-        // CableClub_DoBattleOrTradeAgain).
-        if let Some(driver) = self.link_trade.as_mut() {
-            driver.reset_for_new_trade();
-        }
         self.overworld.party_count = self.save_data.party.count() as u8;
         self.overworld.box_count = self.save_data.current_box.count() as u8;
         self.overworld.party_lead_level = self.save_data.party.leader_level();
@@ -7307,6 +7352,7 @@ impl PokemonGame {
                             self.state.config.language,
                             pokered_core::game_state::Lang::Zh
                         ),
+                        self.resources.as_mut(),
                     );
                 }
             }

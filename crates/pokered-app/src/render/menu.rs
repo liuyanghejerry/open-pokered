@@ -782,7 +782,14 @@ mod tests {
                     let current_spec = menus::options::cursor_spec(current, language);
                     let previous_pos = previous_spec.0;
                     let current_pos = current_spec.0;
-                    if previous_pos == current_pos {
+                    if previous_pos == current_pos
+                        || !menus::options::can_redraw_cursor(
+                            previous.options,
+                            previous.row,
+                            current.options,
+                            current.row,
+                        )
+                    {
                         continue;
                     }
 

@@ -366,6 +366,10 @@ impl GameLoop for DirectBattleGame {
             a: input.is_just_pressed(GbButton::A),
             b: input.is_just_pressed(GbButton::B),
         };
+        self.battle.set_presentation_enabled(true);
+        if self.battle.presentation.waiting && self.battle_vfx.is_frame_stable() {
+            self.battle.complete_move_presentation();
+        }
         let action = self.battle.update_frame(battle_input);
         self.battle_vfx.update(&self.battle);
 

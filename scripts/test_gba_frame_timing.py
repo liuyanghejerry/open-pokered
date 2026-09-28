@@ -1,5 +1,5 @@
 import unittest
-from scripts.gba_frame_timing import Evidence, SCENES
+from scripts.gba_frame_timing import Evidence, SCENES, HARDWARE_SCENES, OPENING_SCENES, slow_cart_rom
 
 
 def frame(scene, tick, updates=1):
@@ -8,6 +8,31 @@ def frame(scene, tick, updates=1):
 
 
 class FrameTimingTests(unittest.TestCase):
+    def test_slow_cart_patch_is_guarded_and_preserves_source(self):
+        source = bytes(0x124) + bytes.fromhex("b010c0e1") + b"assets"
+        result = slow_cart_rom(source)
+        self.assertEqual(result[0x124:0x128], bytes.fromhex("0000a0e1"))
+        self.assertEqual(source[0x124:0x128], bytes.fromhex("b010c0e1"))
+        self.assertEqual(result[0x128:], b"assets")
+        with self.assertRaises(ValueError):
+            slow_cart_rom(result)
+
+    def test_hardware_suite_requires_all_reported_scenes(self):
+        evidence = Evidence(scenes=HARDWARE_SCENES)
+        for index, scene in enumerate(HARDWARE_SCENES):
+            evidence.consume(frame(scene, index * 2))
+            evidence.consume(frame(scene, index * 2 + 1))
+        evidence.consume("timing: DONE")
+        self.assertEqual(len(evidence.report()["scenes"]), 6)
+
+    def test_opening_suite_covers_unskipped_intro_logo_and_version(self):
+        evidence = Evidence(scenes=OPENING_SCENES)
+        for index, scene in enumerate(OPENING_SCENES):
+            evidence.consume(frame(scene, index * 2))
+            evidence.consume(frame(scene, index * 2 + 1))
+        evidence.consume("timing: DONE")
+        self.assertEqual(set(evidence.report()["scenes"]), {"41", "42", "43"})
+
     def test_full_suite_measures_draws_and_frame_gaps(self):
         evidence = Evidence()
         for index, scene in enumerate(SCENES):

@@ -1,0 +1,254 @@
+== m01: boot to NEW GAME / Oak speech
+   done (1.1s wall)
+== m02: Oak speech + default names → bedroom
+[m02] frame=1925 screen=overworld map=RedsHouse2F pos=(3,6) party=0 money=3000 effect=None
+   done (3.0s wall)
+== m03: leave home → Pallet Town
+[m03] frame=2281 screen=overworld map=PalletTown pos=(5,5) party=0 money=3000 effect=None
+   done (1.0s wall)
+== m04: Oak interception → OaksLab
+[m04] frame=4240 screen=overworld map=OaksLab pos=(5,3) party=0 money=3000 effect=None
+   done (1.2s wall)
+== m05: take starter (bulbasaur)
+[m05] frame=5360 screen=overworld map=OaksLab pos=(8,4) party=1 money=3000 effect=None
+   done (0.8s wall)
+== m06: first rival battle
+[m06] frame=7630 screen=overworld map=OaksLab pos=(5,6) party=1 money=3000 effect=None
+   done (5.1s wall)
+== m07: Route 1 → Viridian Mart parcel
+[m07-in-mart] frame=10188 screen=overworld map=ViridianMart pos=(3,5) party=1 money=3000 effect=None
+[m07-back-outside] frame=10300 screen=overworld map=ViridianCity pos=(29,19) party=1 money=3000 effect=None
+   done (6.1s wall)
+== m08: deliver parcel → POKéDEX
+   [ntoPINCH] at ViridianCity(22,30)
+   [ntoPINCH] at ViridianCity(23,30)
+[m08-southlane] frame=10794 screen=overworld map=ViridianCity pos=(20,32) party=1 money=3000 effect=None
+[m08-back-home] frame=11760 screen=overworld map=PalletTown pos=(12,12) party=1 money=3000 effect=None
+[m08-delivered] frame=14520 screen=overworld map=OaksLab pos=(5,3) party=1 money=3000 effect=None
+[m08] oak-after-delivery: POKeMON around the world wait for you, RED!
+   done (5.6s wall)
+== m09: Viridian Forest → Pewter City
+[m09] frame=23630 screen=overworld map=PewterCity pos=(16,29) party=1 money=3090 effect=None
+   done (24.6s wall)
+== m10: train + Boulder Badge (Brock)
+[m10-arrived] frame=23635 screen=overworld map=PewterCity pos=(16,29) party=1 money=3090 effect=None
+   [ntoPINCH] at ViridianForest(18,10)
+   [ntoPINCH] at ViridianForest(18,10)
+   [ntoPINCH] at ViridianForest(18,11)
+[train] grass spot Route1 (12,7), target L13
+[train] cyc=0 battles=0 L6 hp=22/22 (0s)
+[train] hp 14/24 -> heal
+[train] hp 14/24 -> heal
+[train] hp 14/29 -> heal
+[train] hp 8/29 -> heal
+[train] cyc=75 battles=19 L10 hp=17/31 (80s)
+[train] hp 17/31 -> heal
+[train] hp 18/31 -> heal
+[train] cyc=100 battles=26 L11 hp=23/33 (111s)
+[train] hp 18/33 -> heal
+[train] cyc=125 battles=34 L12 hp=22/35 (138s)
+[train] hp 17/35 -> heal
+[train] hp 20/35 -> heal
+[train] level 13 reached (179s, 45 battles)
+[m10-trained] frame=85437 screen=overworld map=Route1 pos=(12,7) party=1 money=3090 effect=None
+   [ntoPINCH] at ViridianForest(25,12)
+   [ntoPINCH] at PewterGym(4,2)
+[m10] frame=99316 screen=overworld map=PewterGym pos=(4,2) party=1 money=4696 effect=None
+   done (236.2s wall)
+== m11: Route 3 trainers → Mt Moon entrance
+[m11] frame=118579 screen=overworld map=Route4 pos=(11,5) party=1 money=2921 effect=None
+   done (53.1s wall)
+== m12: Mt Moon fossil → Cerulean City
+   [ntoPINCH] at Route4(16,7)
+   [ntoPINCH] at MtMoonB2F(13,9)
+[m12] blackout 1: healed at Mt Moon, retrying
+   [ntoPINCH] at MtMoon1F(20,10)
+[m12] frame=140144 screen=overworld map=CeruleanCity pos=(19,17) party=1 money=2038 effect=None
+   done (70.7s wall)
+== m13: Cascade Badge (Misty)
+   [ntoPINCH] at CeruleanCity(26,21)
+   [ntoPINCH] at CeruleanGym(5,3)
+[m13] frame=145767 screen=overworld map=CeruleanGym pos=(5,2) party=1 money=4577 effect=None
+   done (16.7s wall)
+== m14: Nugget Bridge → Bill → S.S. Ticket
+[m14] frame=183431 screen=overworld map=BillsHouse pos=(4,5) party=1 money=2858 effect=None
+   done (100.5s wall)
+== m15: Cerulean thief → Underground Path → Vermilion
+[m15] frame=214503 screen=overworld map=VermilionCity pos=(11,3) party=1 money=773 effect=None
+   done (87.7s wall)
+== m16: S.S. Anne rival + captain → HM01
+   [ntoPINCH] at VermilionCity(11,7)
+   [ntoPINCH] at VermilionCity(24,27)
+   [ntoPINCH] at VermilionCity(24,27)
+   [ntoPINCH] at VermilionCity(24,27)
+   [ntoPINCH] at VermilionCity(24,27)
+   [ntoPINCH] at VermilionCity(24,27)
+[m16] rival blackout 1: boarding again
+[train] grass spot Route6 (10,23), target L30
+[train] cyc=0 battles=0 L29 hp=84/84 (0s)
+[train] cyc=25 battles=2 L29 hp=79/84 (9s)
+[train] cyc=50 battles=4 L29 hp=78/84 (17s)
+[train] cyc=75 battles=5 L29 hp=77/84 (24s)
+[train] level 30 reached (41s, 10 battles)
+   [ntoPINCH] at VermilionCity(11,7)
+   [ntoPINCH] at SSAnne1F(11,7)
+[m16] frame=242577 screen=overworld map=SSAnneCaptainsRoom pos=(4,3) party=1 money=1687 effect=None
+   done (73.9s wall)
+== m17: CUT + trash switches → Thunder Badge
+   [ntoPINCH] at SSAnne1F(13,6)
+   [ntoPINCH] at SSAnne1F(14,6)
+   [ntoPINCH] at SSAnne1F(14,6)
+   [ntoPINCH] at SSAnne1F(14,6)
+   [ntoPINCH] at SSAnne1F(14,6)
+   [ntoPINCH] at SSAnne1F(14,6)
+   [ntoPINCH] at SSAnne1F(14,6)
+   [ntoPINCH] at VermilionCity(11,7)
+   [ntoPINCH] at VermilionCity(15,19)
+   [ntoPINCH] at VermilionGym(2,10)
+   [ntoPINCH] at VermilionGym(2,8)
+[m17] both switches found on search 2
+[m17] frame=260076 screen=overworld map=VermilionGym pos=(5,2) party=1 money=5193 effect=None
+   done (31.3s wall)
+== m18: Route 9 CUT → Rock Tunnel entrance
+[m18] frame=276080 screen=overworld map=Route10 pos=(11,19) party=1 money=6213 effect=None
+   done (39.6s wall)
+== m19: Rock Tunnel → Lavender Town
+   [ntoPINCH] at RockTunnelB1F(26,31)
+   [ntoPINCH] at RockTunnelB1F(17,24)
+   [ntoPINCH] at RockTunnel1F(7,9)
+   [ntoPINCH] at RockTunnelB1F(11,14)
+[m19] blackout 1: retrying Rock Tunnel
+   [ntoPINCH] at RockTunnelB1F(30,11)
+   [ntoPINCH] at RockTunnelB1F(30,11)
+   [ntoPINCH] at RockTunnelB1F(30,11)
+   [ntoPINCH] at RockTunnelB1F(11,14)
+   [ntoPINCH] at RockTunnelB1F(6,11)
+   [ntoPINCH] at RockTunnel1F(36,24)
+   [ntoPINCH] at RockTunnel1F(26,28)
+   [ntoPINCH] at RockTunnel1F(26,28)
+   [ntoPINCH] at RockTunnel1F(26,28)
+   [ntoPINCH] at RockTunnel1F(26,31)
+   [ntoPINCH] at RockTunnel1F(26,31)
+   [ntoPINCH] at RockTunnel1F(26,31)
+   [ntoPINCH] at Route10(8,55)
+   [ntoPINCH] at Route10(9,56)
+   [ntoPINCH] at Route10(9,57)
+   [ntoPINCH] at Route10(9,57)
+   [ntoPINCH] at Route10(9,57)
+   [ntoPINCH] at Route10(9,57)
+   [ntoPINCH] at Route10(9,57)
+   [ntoPINCH] at Route10(9,57)
+   [ntoPINCH] at Route10(4,57)
+   [ntoPINCH] at Route10(4,57)
+   [ntoPINCH] at Route10(4,57)
+   [ntoPINCH] at Route10(4,57)
+   [ntoPINCH] at Route10(7,55)
+[m19] frame=314620 screen=overworld map=LavenderTown pos=(3,5) party=1 money=8842 effect=None
+   done (124.2s wall)
+== m20: Lavender → Underground Path → Celadon
+[m20] frame=319378 screen=overworld map=CeladonCity pos=(41,9) party=1 money=9172 effect=None
+   done (11.3s wall)
+== m21: Rainbow Badge (Erika)
+   [ntoPINCH] at CeladonCity(41,13)
+   [ntoPINCH] at CeladonCity(26,23)
+   [ntoPINCH] at CeladonCity(26,23)
+   [ntoPINCH] at CeladonCity(35,33)
+   [ntoPINCH] at CeladonCity(35,32)
+   [ntoPINCH] at CeladonCity(35,32)
+   [ntoPINCH] at CeladonCity(35,32)
+   [ntoPINCH] at CeladonCity(35,32)
+   [ntoPINCH] at CeladonCity(22,31)
+   [ntoPINCH] at CeladonCity(29,28)
+   [ntoPINCH] at CeladonGym(5,6)
+[m21] frame=331139 screen=overworld map=CeladonGym pos=(4,4) party=1 money=13228 effect=None
+   done (33.6s wall)
+== m22: Game Corner poster → Rocket Hideout Lift Key
+   [ntoPINCH] at CeladonCity(8,34)
+   [ntoPINCH] at CeladonCity(35,34)
+[m22] frame=340272 screen=overworld map=RocketHideoutB4F pos=(10,3) party=1 money=14458 effect=None
+   done (20.3s wall)
+== m23: Rocket elevator + Giovanni → Silph Scope
+   [ntoPINCH] at RocketHideoutB2F(21,12)
+   [ntoPINCH] at RocketHideoutB4F(25,15)
+   [ntoPINCH] at RocketHideoutB4F(25,15)
+   [ntoPINCH] at RocketHideoutB4F(25,15)
+   [ntoPINCH] at RocketHideoutB4F(25,15)
+[m23] frame=349066 screen=overworld map=RocketHideoutB4F pos=(24,2) party=1 money=18709 effect=None
+   done (24.0s wall)
+== m24: Pokemon Tower → purified healing zone
+   [ntoPINCH] at RocketHideoutB1F(25,19)
+   [ntoPINCH] at RocketHideoutB1F(25,19)
+   [ntoPINCH] at RocketHideoutB1F(25,19)
+   [ntoPINCH] at RocketHideoutB1F(25,14)
+   [ntoPINCH] at LavenderTown(6,7)
+   [ntoPINCH] at LavenderTown(6,7)
+   [ntoPINCH] at PokemonTower3F(10,14)
+   [ntoPINCH] at PokemonTower3F(16,13)
+   [ntoPINCH] at PokemonTower3F(16,13)
+[m24] frame=369533 screen=overworld map=PokemonTower5F pos=(10,8) party=1 money=24799 effect=None
+   done (57.4s wall)
+== m25: Marowak + Fuji rescue → Poke Flute
+   [ntoPINCH] at PokemonTower6F(15,5)
+[m25] blackout 1: returning to the tower
+   [ntoPINCH] at PokemonTower5F(14,7)
+[m25] frame=386464 screen=overworld map=MrFujisHouse pos=(2,1) party=1 money=15340 effect=None
+   done (49.7s wall)
+== m26: Poke Flute + Route 12 Snorlax → Fuchsia
+   [ntoPINCH] at Route12(13,31)
+   [ntoPINCH] at Route12(5,35)
+[m26] frame=411647 screen=overworld map=FuchsiaCity pos=(19,27) party=1 money=24090 effect=None
+   done (66.8s wall)
+== m27: Invisible wall maze → Soul Badge
+   [ntoPINCH] at FuchsiaGym(8,15)
+   [ntoPINCH] at FuchsiaGym(1,7)
+   [ntoPINCH] at FuchsiaGym(1,10)
+   [ntoPINCH] at FuchsiaGym(1,10)
+[m27] frame=419811 screen=overworld map=FuchsiaGym pos=(3,10) party=1 money=31952 effect=None
+   done (22.4s wall)
+== m28: Safari Zone fee + Gold Teeth + HM03
+   [ntoPINCH] at FuchsiaCity(16,32)
+   [ntoPINCH] at FuchsiaCity(16,32)
+   [ntoPINCH] at FuchsiaCity(16,34)
+   [ntoPINCH] at FuchsiaCity(16,34)
+   [ntoPINCH] at FuchsiaCity(16,34)
+   [ntoPINCH] at FuchsiaCity(16,28)
+   [ntoPINCH] at FuchsiaCity(16,28)
+   [ntoPINCH] at FuchsiaCity(24,28)
+   [ntoPINCH] at FuchsiaCity(24,28)
+   [ntoPINCH] at FuchsiaCity(24,28)
+   [ntoPINCH] at FuchsiaCity(24,24)
+   [ntoPINCH] at FuchsiaCity(24,22)
+   [ntoPINCH] at FuchsiaCity(24,22)
+   [ntoPINCH] at FuchsiaCity(24,23)
+   [ntoPINCH] at FuchsiaCity(24,23)
+   [ntoPINCH] at FuchsiaCity(24,22)
+   [ntoPINCH] at FuchsiaCity(24,22)
+   [ntoPINCH] at FuchsiaCity(25,16)
+   [ntoPINCH] at FuchsiaCity(25,16)
+   [ntoPINCH] at FuchsiaCity(20,16)
+   [ntoPINCH] at FuchsiaCity(20,16)
+   [ntoPINCH] at FuchsiaCity(20,16)
+   [ntoPINCH] at FuchsiaCity(20,17)
+   [ntoPINCH] at FuchsiaCity(20,18)
+   [ntoPINCH] at FuchsiaCity(20,18)
+   [ntoPINCH] at SafariZoneEast(21,22)
+   [ntoPINCH] at SafariZoneEast(17,22)
+[m28] frame=431779 screen=overworld map=SafariZoneSecretHouse pos=(2,3) party=1 money=15476 effect=None
+   done (30.6s wall)
+== m29: Safari timeout + Warden → HM04 Strength
+Traceback (most recent call last):
+  File "<stdin>", line 6, in <module>
+  File "/Users/liuyanghe02/develop/open-pokered-2/scripts/playthrough.py", line 1980, in main
+    fn(g)
+    ~~^^^
+  File "/Users/liuyanghe02/develop/open-pokered-2/scripts/playthrough_late.py", line 825, in m29_strength
+    g.nav_warp(3, 5, "SafariZoneGate", "FuchsiaCity", approach="down")
+    ~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/liuyanghe02/develop/open-pokered-2/scripts/playthrough.py", line 1043, in nav_warp
+    self.nav_to(x - ax, y - ay, map_name=from_map,
+    ~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                tries=tries)
+                ^^^^^^^^^^^^
+  File "/Users/liuyanghe02/develop/open-pokered-2/scripts/playthrough.py", line 698, in nav_to
+    raise NavError(f"warped out of {map_name} -> {cm}")
+playthrough.NavError: warped out of SafariZoneGate -> SafariZoneCenter

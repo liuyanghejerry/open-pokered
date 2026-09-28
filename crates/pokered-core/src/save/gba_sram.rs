@@ -3,9 +3,8 @@
 //! desktop SRAM image format ([`super::sram_export`] / [`super::sram_import`])
 //! maps directly onto it with no shim layer.
 //!
-//! Bulk access goes through slices plus a compiler fence at the call sites:
-//! the stores are never proven dead (the address is a fixed external one) and
-//! the fence keeps them from being reordered across an observation point.
+//! Bulk reads and writes use byte-wide volatile access plus a compiler fence:
+//! wider memory operations are not supported by the cartridge SRAM bus.
 
 pub const SRAM_BASE: usize = 0x0E00_0000;
 /// 32 KiB — the Game Boy save medium the flashcart provides (SuperFW
@@ -29,8 +28,14 @@ pub fn sram_mut() -> &'static mut [u8] {
 /// corrupted validation input), so the boot import path reads this way.
 pub fn read_into(buf: &mut [u8]) {
     let len = buf.len().min(SRAM_SIZE);
-    for (i, b) in buf[..len].iter_mut().enumerate() {
-        *b = unsafe { core::ptr::read_volatile((SRAM_BASE + i) as *const u8) };
+    read_bytes(0, &mut buf[..len]);
+}
+
+/// Read one region through the byte-wide SRAM bus.
+pub fn read_bytes(offset: usize, buf: &mut [u8]) {
+    assert!(offset <= SRAM_SIZE && buf.len() <= SRAM_SIZE - offset);
+    for (i, b) in buf.iter_mut().enumerate() {
+        *b = unsafe { core::ptr::read_volatile((SRAM_BASE + offset + i) as *const u8) };
     }
     core::sync::atomic::compiler_fence(core::sync::atomic::Ordering::SeqCst);
 }

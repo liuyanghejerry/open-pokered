@@ -13,17 +13,33 @@ import selectors
 import shlex
 import shutil
 import subprocess
+import struct
 import tempfile
 import time
 
 SCENES = (1, 2, 3, *range(10, 30))
+HARDWARE_SCENES = tuple(range(31, 37))
+OPENING_SCENES = (41, 42, 43)
 FIELDS = {"scene", "tick", "clock", "updates", "update", "draw", "present", "map"}
 TICKS_PER_MS = 262.144
 
 
+def slow_cart_rom(data):
+    """Model the existing SuperFW WAITCNT patch on agb 0.25's startup.
+
+    Emulator-only: retain reset's slow 4/2-cycle bus and disabled prefetch.
+    Refuse an unknown startup instead of corrupting a different ROM.
+    """
+    if data[0x124:0x128] != struct.pack("<I", 0xE1C010B0):
+        raise ValueError("Unknown agb WAITCNT startup instruction; re-audit slow-cart patch")
+    result = bytearray(data)
+    struct.pack_into("<I", result, 0x124, 0xE1A00000)
+    return result
+
+
 class Evidence:
-    def __init__(self, allow_skips=False):
-        self.rows = {scene: [] for scene in SCENES}
+    def __init__(self, allow_skips=False, scenes=SCENES):
+        self.rows = {scene: [] for scene in scenes}
         self.allow_skips = allow_skips
         self.complete = False
         self.previous_tick = None
@@ -43,7 +59,7 @@ class Evidence:
             self.rows[row["scene"]].append(row)
         if "timing: DONE" in line:
             if any(len(rows) < 2 for rows in self.rows.values()):
-                raise ValueError("Missing connection, encounter or move samples")
+                raise ValueError("Missing timing scenario samples")
             self.complete = True
 
     def report(self):
@@ -69,6 +85,8 @@ def record(args, evidence):
     with tempfile.TemporaryDirectory(prefix="gba-frame-timing-") as directory, args.log.open("w") as log:
         rom = Path(directory) / "timing.gba"
         shutil.copyfile(args.rom, rom)
+        if args.slow_cart:
+            rom.write_bytes(slow_cart_rom(rom.read_bytes()))
         command = shlex.split(args.emulator)
         if any("{rom}" in part for part in command):
             command = [part.replace("{rom}", str(rom)) for part in command]
@@ -114,10 +132,13 @@ def main():
     parser.add_argument("--log", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--allow-skips", action="store_true")
+    parser.add_argument("--suite", choices=("moves", "hardware", "opening"), default="moves")
+    parser.add_argument("--slow-cart", action="store_true", help="Emulate slow cart timing in a temporary ROM copy")
     parser.add_argument("--emulator", default=os.environ.get("MGBA_COMMAND", "mgba"))
     parser.add_argument("--timeout-seconds", type=float, default=180)
     args = parser.parse_args()
-    evidence = Evidence(args.allow_skips)
+    scenes = {"moves": SCENES, "hardware": HARDWARE_SCENES, "opening": OPENING_SCENES}[args.suite]
+    evidence = Evidence(args.allow_skips, scenes)
     try:
         if args.rom:
             record(args, evidence)
@@ -126,7 +147,7 @@ def main():
                 evidence.consume(line)
         args.output.parent.mkdir(parents=True, exist_ok=True)
         args.output.write_text(json.dumps(evidence.report(), indent=2) + "\n")
-        print(f"PASS: {len(SCENES)} GBA frame timing scenarios; {args.output}")
+        print(f"PASS: {len(scenes)} GBA frame timing scenarios; {args.output}")
     except (OSError, ValueError, RuntimeError, TimeoutError) as error:
         parser.exit(1, f"{error}\n")
 

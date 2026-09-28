@@ -61,9 +61,56 @@ pub fn import_sram_into(data: &[u8], out: &mut SaveData) -> Result<(), SaveError
     }
 
     let bank0 = &data[0..SRAM_BANK_SIZE_LAYOUT];
+    let bank1 = &data[SRAM_BANK_SIZE_LAYOUT..SRAM_BANK_SIZE_LAYOUT * 2];
+    let bank2 = &data[SRAM_BANK_SIZE_LAYOUT * 2..SRAM_BANK_SIZE_LAYOUT * 3];
+    let bank3 = &data[SRAM_BANK_SIZE_LAYOUT * 3..SRAM_BANK_SIZE_LAYOUT * 4];
+
+    validate_box_bank_checksum(bank2)?;
+    validate_box_bank_checksum(bank3)?;
+
+    import_bank1_into(bank1, out)?;
+    // Every box slot is fully overwritten by parse_box_bank, so the resident
+    // storage needs no reset (its 18 KB reset temporary would defeat the
+    // point of importing in place).
+    parse_box_bank(bank2, &mut out.pc_storage, 0)?;
+    parse_box_bank(bank3, &mut out.pc_storage, 6)?;
+    out.hall_of_fame = parse_hall_of_fame(bank0)?;
+    finish_import(out);
+    Ok(())
+}
+
+/// Load stable SRAM bank by bank, using one 8 KiB buffer instead of a full
+/// 32 KiB image. The reader must fill the requested bank completely and
+/// keep the medium unchanged until this function returns.
+#[inline(never)]
+pub fn import_sram_banks_into(
+    mut read_bank: impl FnMut(usize, &mut [u8]),
+    out: &mut SaveData,
+) -> Result<(), SaveError> {
+    let mut bank = vec![0u8; SRAM_BANK_SIZE_LAYOUT];
+    // Check both box banks before changing the resident save, matching the
+    // whole-image import's behavior on corrupt media.
+    for index in [2, 3] {
+        read_bank(index, &mut bank);
+        validate_box_bank_checksum(&bank)?;
+    }
+    read_bank(1, &mut bank);
+    import_bank1_into(&bank, out)?;
+    for index in [2, 3] {
+        read_bank(index, &mut bank);
+        parse_box_bank(&bank, &mut out.pc_storage, (index - 2) * BOXES_PER_BANK)?;
+    }
+    read_bank(0, &mut bank);
+    out.hall_of_fame = parse_hall_of_fame(&bank)?;
+    finish_import(out);
+    Ok(())
+}
+
+#[inline(never)]
+fn import_bank1_into(bank: &[u8], out: &mut SaveData) -> Result<(), SaveError> {
     let mut bank1_owned;
     let bank1: &[u8] = {
-        let b = &data[SRAM_BANK_SIZE_LAYOUT..SRAM_BANK_SIZE_LAYOUT * 2];
+        let b = bank;
         if validate_canonical_bank1(b).is_err() {
             // Legacy (pre-2026-08) Rust format: transform to canonical.
             bank1_owned = migrate_legacy_bank1(b).ok_or(SaveError::BadChecksum)?;
@@ -77,25 +124,17 @@ pub fn import_sram_into(data: &[u8], out: &mut SaveData) -> Result<(), SaveError
             b
         }
     };
-    let bank2 = &data[SRAM_BANK_SIZE_LAYOUT * 2..SRAM_BANK_SIZE_LAYOUT * 3];
-    let bank3 = &data[SRAM_BANK_SIZE_LAYOUT * 3..SRAM_BANK_SIZE_LAYOUT * 4];
-
     validate_bank1_checksum(bank1)?;
-    validate_box_bank_checksum(bank2)?;
-    validate_box_bank_checksum(bank3)?;
-
     let (player_name, game_data, party, current_box, tile_animations) = parse_bank1(bank1)?;
     out.player_name = player_name;
     out.game_data = game_data;
     out.party = party;
     out.current_box = current_box;
     out.tile_animations = tile_animations;
-    // Every box slot is fully overwritten by parse_box_bank, so the resident
-    // storage needs no reset (its 18 KB reset temporary would defeat the
-    // point of importing in place).
-    parse_box_bank(bank2, &mut out.pc_storage, 0)?;
-    parse_box_bank(bank3, &mut out.pc_storage, 6)?;
-    out.hall_of_fame = parse_hall_of_fame(bank0)?;
+    Ok(())
+}
+
+fn finish_import(out: &mut SaveData) {
     // wCurrentBoxNum (save.asm:382-384: menu index | $80; GetBoxSRAMLocation
     // masks with BOX_NUM_MASK) — restore the trainer's last-open box so a
     // save→load round-trip keeps Bill's PC where it was left.
@@ -104,7 +143,6 @@ pub fn import_sram_into(data: &[u8], out: &mut SaveData) -> Result<(), SaveError
         let _ = out.pc_storage.change_box(saved_box);
     }
     derive_traded_flags(out);
-    Ok(())
 }
 
 /// Derive each stored mon's `is_traded` from the OT-ID comparison the original

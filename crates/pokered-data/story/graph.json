@@ -11672,6 +11672,26 @@
       "kind": "triggered_at"
     },
     {
+      "from": "script:SafariZoneGate:@load",
+      "to": "flag:EVENT_IN_SAFARI_ZONE",
+      "kind": "clears"
+    },
+    {
+      "from": "script:SafariZoneGate:@load",
+      "to": "flag:EVENT_SAFARI_GAME_OVER",
+      "kind": "requires"
+    },
+    {
+      "from": "script:SafariZoneGate:@load",
+      "to": "flag:EVENT_SAFARI_GAME_OVER",
+      "kind": "clears"
+    },
+    {
+      "from": "script:SafariZoneGate:@load",
+      "to": "map:SafariZoneGate",
+      "kind": "triggered_at"
+    },
+    {
       "from": "script:SafariZoneGate:gateRow",
       "to": "flag:EVENT_IN_SAFARI_ZONE",
       "kind": "requires"
@@ -11690,18 +11710,6 @@
       "from": "script:SafariZoneGate:gateRow",
       "to": "flag:EVENT_SAFARI_GAME_OVER",
       "kind": "clears"
-    },
-    {
-      "from": "script:SafariZoneGate:gateRow",
-      "to": "item:SAFARI_BALL",
-      "kind": "gives",
-      "detail": "x30"
-    },
-    {
-      "from": "script:SafariZoneGate:gateRow",
-      "to": "item:SAFARI_BALL",
-      "kind": "takes",
-      "detail": "x30"
     },
     {
       "from": "script:SafariZoneGate:gateRow",
@@ -11744,18 +11752,6 @@
       "from": "script:SafariZoneGate:talkSafariZoneWorker1",
       "to": "flag:EVENT_SAFARI_GAME_OVER",
       "kind": "clears"
-    },
-    {
-      "from": "script:SafariZoneGate:talkSafariZoneWorker1",
-      "to": "item:SAFARI_BALL",
-      "kind": "gives",
-      "detail": "x30"
-    },
-    {
-      "from": "script:SafariZoneGate:talkSafariZoneWorker1",
-      "to": "item:SAFARI_BALL",
-      "kind": "takes",
-      "detail": "x30"
     },
     {
       "from": "script:SafariZoneGate:talkSafariZoneWorker1",

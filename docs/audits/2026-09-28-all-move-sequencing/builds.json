@@ -1,0 +1,21 @@
+{
+  "git_head": "403514b7ba0e1cba9e8c74af3787aaa3d9bd5389",
+  "working_tree": "modified",
+  "artifacts": [
+    {
+      "path": "target/release/pokered-app",
+      "bytes": 21510272,
+      "sha256": "87a652f085602f7c974d7c4f50df204986c0ed701b746dc92c8fb33b20131b0e"
+    },
+    {
+      "path": "crates/pokered-gba/target/thumbv4t-none-eabi/release/pokered-gba.gba",
+      "bytes": 5335244,
+      "sha256": "f90412f00dfba99c8301825e3f97203dc6386479127b0721689a36dfecfa0c16"
+    },
+    {
+      "path": "crates/pokered-gba/target/thumbv4t-none-eabi/release/pokered-gba.patch",
+      "bytes": 800,
+      "sha256": "b911bf2d659db287193ffd71ea183b8d2e16d0467c533eb5f7edf4b723cd9758"
+    }
+  ]
+}

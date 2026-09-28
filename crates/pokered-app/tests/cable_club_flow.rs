@@ -92,8 +92,12 @@ fn pair() -> Pair {
         LinkBattleDriver::new(guest_session.battle_transport(), party(), "GUEST".into())
             .with_role(LinkRole::Guest)
             .with_host_random_list(HOST_LIST);
-    let host_trade = LinkTradeDriver::new(party(), 1).with_role(LinkRole::Host);
-    let guest_trade = LinkTradeDriver::new(party(), 2).with_role(LinkRole::Guest);
+    let host_trade = LinkTradeDriver::new(party(), 1)
+        .with_role(LinkRole::Host)
+        .with_trainer_name("HOST".into());
+    let guest_trade = LinkTradeDriver::new(party(), 2)
+        .with_role(LinkRole::Guest)
+        .with_trainer_name("GUEST".into());
     // The host (`--link-listen`) never starts the handshake — the guest's
     // Hello auto-acks from its driver's Idle state.
     let mut pair = Pair {
@@ -137,7 +141,16 @@ fn pump_trade(
 ) {
     session.poll();
     let result = driver.poll(&mut *session.trade_transport());
-    flow.on_trade_event(&result);
+    flow.set_trainer_names("LOCAL", driver.remote_name());
+    flow.set_remote_party(
+        &driver
+            .remote_party()
+            .map(|p| p.to_vec())
+            .unwrap_or_default(),
+    );
+    if flow.on_trade_event(&result) == FlowNeed::LeaveTrade {
+        driver.leave_trade();
+    }
 }
 
 fn a_input() -> PartyScreenInput {
@@ -215,6 +228,13 @@ fn execute(
             .map_err(trade_err_to_transport),
         FlowNeed::CancelTrade => trade
             .cancel_trade(&mut *session.trade_transport())
+            .map_err(trade_err_to_transport),
+        FlowNeed::LeaveTrade => {
+            trade.leave_trade();
+            Ok(())
+        }
+        FlowNeed::ContinueTrade => trade
+            .continue_trade(&mut *session.trade_transport())
             .map_err(trade_err_to_transport),
         FlowNeed::ConfirmTrade => trade
             .confirm_trade(&mut *session.trade_transport())
@@ -370,6 +390,29 @@ fn trade_flow_select_confirm_execute() {
     pump_trade(&mut p.host_session, &mut p.host_trade, &mut p.host_flow);
     assert_eq!(*p.host_flow.phase(), CableClubPhase::TradeSelect);
 
+    assert_eq!(p.host_flow.remote_party(), party2());
+    assert_eq!(p.host_flow.trainer_names().1, "GUEST");
+    // Inspect the peer's stats and moves without selecting or modifying a mon.
+    let _ = p
+        .host_flow
+        .update_with_navigation(no_input(), &party2(), true);
+    assert_eq!(p.host_flow.peer_cursor(), Some(0));
+    assert_eq!(p.host_flow.update(a_input(), &party2()), FlowNeed::None);
+    assert_eq!(
+        p.host_flow.stats().unwrap().pokemon().species,
+        Species::Pikachu
+    );
+    p.host_flow.update(a_input(), &party2());
+    assert_eq!(
+        p.host_flow.stats().unwrap().page(),
+        pokered_core::stats_screen::StatsPage::Moves
+    );
+    p.host_flow.update(b_input(), &party2());
+    p.host_flow.update(b_input(), &party2());
+    assert!(p.host_flow.stats().is_none());
+    p.host_flow
+        .update_with_navigation(no_input(), &party2(), true);
+
     // Both sides pick a mon (host picks Pikachu at index 0).
     let need = p.host_flow.update(no_input(), &party2()); // builds the selector
     assert_eq!(need, FlowNeed::None);
@@ -404,6 +447,10 @@ fn trade_flow_select_confirm_execute() {
             remote_index: 0,
             selected: 0
         }
+    );
+    assert_eq!(
+        p.host_flow.prompt().unwrap().0,
+        "PIKACHU and\nPIKACHU will be traded."
     );
     // Guest confirms first (each side confirms at its own pace, like the
     // original's TRADE_CANCEL_MENU).
@@ -443,6 +490,62 @@ fn trade_flow_select_confirm_execute() {
         p.guest_trade.received_mon().map(|m| m.species),
         Some(Species::Pikachu)
     );
+    use pokered_core::pokemon::pokedex::Pokedex;
+    p.host_trade.apply_exchange(&mut Pokedex::new()).unwrap();
+    p.guest_trade.apply_exchange(&mut Pokedex::new()).unwrap();
+    p.host_flow.on_trade_anim_done();
+    p.guest_flow.on_trade_anim_done();
+    let local = p.host_trade.party().to_vec();
+    let need = p.host_flow.update(a_input(), &local);
+    assert_eq!(need, FlowNeed::ContinueTrade);
+    execute(
+        &mut p.host_session,
+        &mut p.host_flow,
+        &mut p.host_battle,
+        &mut p.host_trade,
+        need,
+    );
+    assert_eq!(*p.host_flow.phase(), CableClubPhase::TradeSelect);
+    // The slower peer may still be watching the previous cutscene.
+    assert_eq!(p.host_flow.update(a_input(), &local), FlowNeed::None);
+    pump_trade(&mut p.guest_session, &mut p.guest_trade, &mut p.guest_flow);
+    let need = p
+        .guest_flow
+        .update(a_input(), &p.guest_trade.party().to_vec());
+    execute(
+        &mut p.guest_session,
+        &mut p.guest_flow,
+        &mut p.guest_battle,
+        &mut p.guest_trade,
+        need,
+    );
+    pump_trade(&mut p.host_session, &mut p.host_trade, &mut p.host_flow);
+    let need = p.host_flow.update(a_input(), &local);
+    assert_eq!(need, FlowNeed::SelectMon(0));
+    execute(
+        &mut p.host_session,
+        &mut p.host_flow,
+        &mut p.host_battle,
+        &mut p.host_trade,
+        need,
+    );
+    pump_trade(&mut p.guest_session, &mut p.guest_trade, &mut p.guest_flow);
+    let need = p
+        .guest_flow
+        .update(a_input(), &p.guest_trade.party().to_vec());
+    execute(
+        &mut p.guest_session,
+        &mut p.guest_flow,
+        &mut p.guest_battle,
+        &mut p.guest_trade,
+        need,
+    );
+    pump_trade(&mut p.host_session, &mut p.host_trade, &mut p.host_flow);
+    assert!(matches!(
+        p.host_flow.phase(),
+        CableClubPhase::TradeConfirm { .. }
+    ));
+    assert!(p.host_flow.prompt().unwrap().0.contains("CHARIZARD"));
 }
 
 /// Cancelling the trade selection returns both sides to selection with the

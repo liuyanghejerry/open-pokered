@@ -1,0 +1,26 @@
+running 24 tests
+test render::battle::tests::ball_choreo_broke_free_reopens_and_shows_mon ... ok
+test render::battle::tests::ball_choreo_caught_is_toss_poof_hide_shake3 ... ok
+test render::battle::tests::ball_choreo_miss_dodge_and_trainer_block_match_original_sequences ... ok
+test render::battle::tests::caught_choreo_hides_enemy_and_plays_all_sfx ... ok
+test render::battle::tests::charge_messages_match_status_affected_trigger ... ok
+test render::battle::tests::broke_free_choreo_reshows_enemy ... ok
+test render::battle::tests::item_use_messages_are_not_move_uses ... ok
+test render::battle::tests::move_and_impact_waits_finish_for_both_sides ... ok
+test render::battle::tests::battle_yes_no_cursor_repaint_matches_a_fresh_menu_for_both_languages ... ok
+test render::battle::tests::opaque_battle_sprite_blit_matches_transparent_blit_on_white ... ok
+test render::battle::tests::sparse_battle_tile_buffer_matches_full_identity_render ... ok
+test render::battle::tests::stable_frame_requires_every_visual_animation_to_finish ... ok
+test render::battle::tests::status_moves_use_the_original_effect_handlers_feedback_policy ... ok
+test render::battle::tests::battle_main_cursor_repaint_matches_a_fresh_menu_for_every_transition ... ok
+test render::battle::tests::battle_bag_cursor_repaint_matches_a_fresh_menu_for_every_transition ... ok
+test render::battle::tests::battle_move_selection_repaint_matches_a_fresh_menu_for_every_transition ... ok
+test render::battle::tests::battle_safari_cursor_repaint_matches_a_fresh_menu_for_every_transition ... ok
+test render::battle::tests::loaded_battle_space_tile_is_blank ... ok
+test render::battle::tests::battle_party_cursor_repaint_matches_a_fresh_menu_without_scrolling ... ok
+test render::battle::tests::battle_party_viewport_repaint_matches_a_fresh_menu_when_scrolling ... ok
+test render::battle::tests::horizontal_raster_row_scratch_matches_full_region_snapshot ... ok
+test render::battle::tests::every_move_in_a_real_turn_completes_without_overlapping_presentations ... ok
+test render::battle::tests::real_game_serializes_both_animations_and_hp_even_when_a_is_mashed ... ok
+test render::battle::tests::leech_seed_residual_plays_absorb_from_the_seeder_before_hp_changes ... ok
+test result: ok. 24 passed; 0 failed; 0 ignored; 0 measured; 84 filtered out; finished in 6.84s

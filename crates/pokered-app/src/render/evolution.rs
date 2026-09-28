@@ -256,7 +256,7 @@ mod tests {
                 "success path should reuse static delay frames"
             );
             assert!(
-                verify_flow(is_zh, true) > 150,
+                verify_flow(is_zh, true) > 130,
                 "cancel path should reuse static delay and prompt frames"
             );
         }

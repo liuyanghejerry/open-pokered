@@ -379,7 +379,7 @@ impl PokemonGame {
             }
             None => {
                 eprintln!("Warning: Could not initialize audio output.");
-                None
+                Some(AudioOutput::new_pcm())
             }
         };
 
@@ -479,6 +479,8 @@ impl PokemonGame {
         } else {
             log::warn!("Could not initialize Web Audio output");
         }
+
+        let audio = Some(audio.unwrap_or_else(AudioOutput::new_pcm));
 
         Self {
             state,
@@ -1483,12 +1485,17 @@ impl PokemonGame {
                     a: input.is_just_pressed(GbButton::A),
                     b: input.is_just_pressed(GbButton::B),
                 };
-                let done = anim.tick(evo_input);
+                let done = anim.tick_with_sound(
+                    evo_input,
+                    self.audio
+                        .as_ref()
+                        .is_some_and(|audio| audio.is_sfx_playing()),
+                );
                 for sfx in anim.pending_sfx.drain(..) {
                     if let Some(ref audio) = self.audio {
                         use pokered_core::evolution_screen::EvolutionSfx;
                         match sfx {
-                            EvolutionSfx::StopMusic => audio.stop_music(),
+                            EvolutionSfx::StopMusic => audio.stop_all(),
                             EvolutionSfx::Tink => audio.play_sfx(SfxId::Tink),
                             // MUSIC_SAFARI_ZONE is the original's morph music
                             // (evolution.asm:44-46).

@@ -311,6 +311,18 @@ mod legacy_layout_migration_tests {
         legacy[bank1_start..bank1_start + SRAM_BANK_SIZE_LAYOUT].copy_from_slice(&bank1);
 
         let back = import_sram(&legacy).expect("legacy file migrates");
+        let mut streamed = crate::save::SaveData::new();
+        crate::save::sram_import::import_sram_banks_into(
+            |index, bank| {
+                bank.copy_from_slice(&legacy[index * bank.len()..(index + 1) * bank.len()]);
+            },
+            &mut streamed,
+        )
+        .expect("bank-streamed legacy file migrates");
+        assert_eq!(
+            crate::save::sram_export::export_sram(&streamed),
+            crate::save::sram_export::export_sram(&back)
+        );
         assert!(
             back.player_name.starts_with(&[0x91, 0x82]),
             "name preserved through the migration: {:?}",

@@ -11,7 +11,7 @@ target = "thumbv4t-none-eabi"
 
 [target.thumbv4t-none-eabi]
 rustflags = [
-    "-Clink-arg=-Tgba.ld",
+    "-Clink-arg=-T./gba.ld",
     "-Ctarget-cpu=arm7tdmi",
     "-Cforce-frame-pointers=yes",
 ]

@@ -123,6 +123,7 @@ pub fn capture_move_animation(
     output_dir: &Path,
     max_frames: u32,
     save_pngs: bool,
+    applying_type: u8,
 ) -> Result<(), String> {
     require_empty_output(output_dir)?;
     let move_id = MoveId::from_id(move_id);
@@ -187,6 +188,7 @@ pub fn capture_move_animation(
         "state": effects.move_animation_capture_state(),
     })];
     effects.start_move_animation_capture(move_id, player_is_attacker);
+    effects.set_capture_applying_type(applying_type, player_is_attacker);
 
     let mut completed_at = None;
     for capture_index in 1..=max_frames {

@@ -35,6 +35,8 @@ const MAX_LEG_ATTEMPTS: u32 = 12;
 const CROSS_FRAMES: u32 = 90;
 /// Action cap for the battle auto-resolver.
 const BATTLE_MAX_ROUNDS: u32 = 300;
+/// A separate wall-clock (emulated-frame) bound includes animation/HP waits.
+const BATTLE_MAX_FRAMES: u32 = BATTLE_MAX_ROUNDS * 600;
 /// Frame cap for advancing a dialogue box.
 const DIALOGUE_MAX_FRAMES: u32 = 900;
 
@@ -128,9 +130,18 @@ impl PokemonGame {
     fn auto_resolve_battle(&mut self, frames: &mut u32) -> BattleResolution {
         let mut rounds = 0u32;
         let mut run_attempts = 0u32;
+        let start_frame = *frames;
         while matches!(self.state.screen, GameScreen::Battle) {
-            if rounds >= BATTLE_MAX_ROUNDS {
+            if rounds >= BATTLE_MAX_ROUNDS
+                || frames.saturating_sub(start_frame) >= BATTLE_MAX_FRAMES
+            {
                 return BattleResolution::Failed;
+            }
+            // These frames cannot accept input. Let the normal presentation
+            // handshake complete without spending the resolver's action cap.
+            if self.battle.presentation.waiting || self.battle.hp_bar_anim.is_active() {
+                self.step_with(None, frames);
+                continue;
             }
             match self.battle.phase.clone() {
                 BattlePhase::PlayerMenu => {

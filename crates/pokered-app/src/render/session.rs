@@ -579,6 +579,7 @@ struct OverworldVisualKey {
     water_shift: i8,
     flower_frame: Option<u8>,
     dark: bool,
+    warp_palette: Option<u8>,
     map_hash: u32,
     npc_hash: u32,
 }
@@ -604,9 +605,16 @@ fn hash_u32(hash: &mut u32, value: u32) {
 
 impl OverworldVisualKey {
     /// Return a compact key only for the ordinary map view. Cutscenes,
-    /// overlays, fades, and other uncommon compositions deliberately redraw
+    /// overlays and other uncommon compositions deliberately redraw
     /// every loop; their richer state is not approximated here.
     fn new(game: &PokemonGame) -> Option<Self> {
+        // Link prompts, party lists and peer stats can change while the map
+        // stays frozen. They are not represented by the map's visual key.
+        #[cfg(not(target_os = "none"))]
+        if game.link_cable.is_active() {
+            return None;
+        }
+
         let screen = &game.overworld;
         // Destination NPCs can use incremental background restoration, but
         // their separate state is not represented by this whole-frame key.
@@ -660,6 +668,9 @@ impl OverworldVisualKey {
             water_shift: screen.tile_anim.water_shift(),
             flower_frame: screen.tile_anim.flower_frame(),
             dark: screen.dark_cave.is_dark(),
+            // Warp fades change the display palette, not the stored pixels.
+            // Retain the background, but present every distinct palette step.
+            warp_palette: super::overworld::warp_fade_palette(screen).map(|pal| pal.bgp),
             map_hash,
             npc_hash,
         })
@@ -713,6 +724,8 @@ impl StartMenuVisualKey {
 
 #[derive(Clone, Copy, PartialEq, Eq)]
 struct OptionsVisualKey {
+    options: pokered_core::options_menu::GameOptions,
+    row: pokered_core::options_menu::OptionsRow,
     cursor: (u32, u32, char),
     language: Lang,
 }
@@ -720,14 +733,23 @@ struct OptionsVisualKey {
 impl OptionsVisualKey {
     fn new(game: &PokemonGame) -> Self {
         Self {
+            options: game.options_menu.options,
+            row: game.options_menu.row,
             cursor: super::options_menu_cursor_spec(&game.options_menu, game.state.config.language),
             language: game.state.config.language,
         }
     }
 
     fn cursor_change_from(&self, previous: &Self) -> Option<((u32, u32, char), (u32, u32, char))> {
-        (self.language == previous.language && self.cursor != previous.cursor)
-            .then_some((previous.cursor, self.cursor))
+        (self.language == previous.language
+            && self.cursor != previous.cursor
+            && pokered_ui::menus::options::can_redraw_cursor(
+                previous.options,
+                previous.row,
+                self.options,
+                self.row,
+            ))
+        .then_some((previous.cursor, self.cursor))
     }
 }
 
@@ -1836,6 +1858,7 @@ pub struct RenderSession {
     last_overworld: Option<OverworldVisualKey>,
     last_battle: Option<BattleVisualKey>,
     background_cache: Option<OverworldBackgroundCache>,
+    intro_cache: Option<super::intro::IntroCache>,
     pending_damage: Vec<FrameDamageRect>,
 }
 impl RenderSession {
@@ -1848,6 +1871,7 @@ impl RenderSession {
         fb: &mut FrameBuffer,
         scroll_background: &mut dyn FnMut(&mut [u8], usize, usize, i32, i32, u8),
     ) -> FrameUpdate<'_> {
+        if game.state.screen != GameScreen::IntroScene { self.intro_cache = None; }
         let last_black_screen = self.last_black_screen;
         let last_trade = self.last_trade.take();
         let last_evolution = self.last_evolution.take();
@@ -1909,6 +1933,30 @@ impl RenderSession {
             (game.state.screen == GameScreen::LanguageSelect).then_some(game.state.config.language);
         let title = (game.state.screen == GameScreen::TitleScreen)
             .then(|| TitleVisualKey::new(&game.title_screen));
+        let title_logo_only = !takeover_active && !last_takeover_active
+            && game.resources.is_some()
+            && title.as_ref().zip(last_title.as_ref()).is_some_and(|(current, previous)| {
+                if !matches!(previous.phase, TitlePhase::LogoBounce | TitlePhase::LogoPause)
+                    || !matches!(current.phase, TitlePhase::LogoBounce | TitlePhase::LogoPause)
+                    || current.version_text_visible || previous.version_text_visible
+                    || (8-current.scroll_y).max(0)+56 > 80
+                    || (8-previous.scroll_y).max(0)+56 > 80 { return false; }
+                let mut normalized = *current;
+                normalized.phase = previous.phase;
+                normalized.scroll_y = previous.scroll_y;
+                normalized == *previous
+            });
+        let title_version_only = !takeover_active && !last_takeover_active
+            && game.resources.is_some()
+            && title.as_ref().zip(last_title.as_ref()).is_some_and(|(current, previous)| {
+                if previous.phase != TitlePhase::VersionScroll
+                    || !matches!(current.phase, TitlePhase::VersionScroll | TitlePhase::WaitingForInput)
+                    || !current.version_text_visible || !previous.version_text_visible { return false; }
+                let mut normalized = *current;
+                normalized.phase = previous.phase;
+                normalized.version_scroll_progress = previous.version_scroll_progress;
+                normalized == *previous
+            });
         let main_menu =
             (game.state.screen == GameScreen::MainMenu).then(|| MainMenuVisualKey::new(game));
         let main_menu_cursor_change = main_menu
@@ -2111,7 +2159,13 @@ impl RenderSession {
             true
         };
         if redraw {
-            if let Some((previous, current)) = main_menu_cursor_change {
+            if game.state.screen == GameScreen::IntroScene && !takeover_active {
+                super::intro::draw_cached(&game.intro_scene, &mut game.resources, fb, self.intro_cache.get_or_insert_with(Default::default));
+            } else if title_logo_only {
+                super::title::redraw_logo(&game.title_screen, &mut game.resources, fb);
+            } else if title_version_only {
+                super::title::redraw_version(&game.title_screen, &mut game.resources, fb);
+            } else if let Some((previous, current)) = main_menu_cursor_change {
                 super::redraw_main_menu_cursor(previous, current, fb, game.state.config.language);
             } else if let Some((previous, current)) = start_menu_cursor_change {
                 super::redraw_start_menu_cursor(
@@ -2553,6 +2607,126 @@ mod session_tests {
     use pokered_renderer::Rgba;
 
     #[test]
+    fn unskipped_intro_and_title_cache_match_every_full_frame() {
+        let mut game = PokemonGame::new(GameVersion::Red);
+        game.audio = None;
+        game.handle_transition(GameScreen::IntroScene);
+        let mut session = RenderSession::new();
+        let mut cached = FrameBuffer::new(RenderConfig::new(160,144), Rgba::WHITE);
+        let mut full = cached.clone();
+        let mut scroll = |_: &mut [u8], _: usize, _: usize, _: i32, _: i32, _: u8| {};
+        for frame in 0..850 {
+            game.update(&dotzuki_app::InputState::new());
+            session.render(&mut game,&mut cached,&mut scroll);
+            game.draw(&mut full);
+            for y in 0..144 { for x in 0..160 {
+                assert_eq!(cached.get_pixel(x,y),full.get_pixel(x,y),"frame={frame} x={x} y={y}");
+            } }
+        }
+        assert_eq!(game.state.screen,GameScreen::TitleScreen);
+        assert_eq!(game.title_screen.phase,TitlePhase::WaitingForInput);
+    }
+
+    #[test]
+    fn warp_fades_reuse_pixels_but_present_each_palette_step() {
+        use pokered_core::overworld::screen::{WarpFadeState, WARP_FADE_OUT_FRAMES,
+            WARP_FADE_OUT_WHITE_FRAMES, WARP_FADE_IN_FRAMES};
+        use pokered_data::maps::MapId;
+        use pokered_renderer::resource::{AssetRoot, ResourceManager};
+        let mut game = PokemonGame::new(GameVersion::Red);
+        game.audio = None;
+        game.overworld.warp_to_map(MapId::PalletTown, 5, 6);
+        game.state.screen = GameScreen::Overworld;
+        let mut reference_resources = Some(ResourceManager::new(AssetRoot::auto_detect().unwrap()));
+        let mut session = RenderSession::new();
+        let mut cached = FrameBuffer::new(RenderConfig::new(160, 144), Rgba::WHITE);
+        let mut full = FrameBuffer::new(RenderConfig::new(160, 144), Rgba::WHITE);
+        let mut scroll = |_: &mut [u8], _: usize, _: usize, _: i32, _: i32, _: u8| {};
+        let mut reused = 0;
+        for white in [false, true] {
+            game.overworld.warp_fade_to_white = white;
+            let out = if white { WARP_FADE_OUT_WHITE_FRAMES } else { WARP_FADE_OUT_FRAMES };
+            let states = core::iter::once(WarpFadeState::Idle)
+                .chain((1..=out).rev().map(|frames_remaining| WarpFadeState::FadingOut { frames_remaining }))
+                .chain(core::iter::once(WarpFadeState::BlackScreen))
+                .chain((1..=WARP_FADE_IN_FRAMES).rev().map(|frames_remaining| WarpFadeState::FadingIn { frames_remaining }))
+                .chain(core::iter::once(WarpFadeState::Idle));
+            for state in states {
+                game.overworld.warp_fade_state = state;
+                reused += usize::from(matches!(session.render(&mut game, &mut cached, &mut scroll), FrameUpdate::Reuse));
+                super::super::draw_overworld(&mut game.overworld, &mut reference_resources, &mut full, Lang::En);
+                assert_eq!(cached.packed(), full.packed(), "fade changed stored pixels");
+                assert_eq!(cached.display_palette(), full.display_palette(), "stale fade palette");
+            }
+        }
+        assert!(reused > 70, "held palette steps must reuse the frame");
+    }
+
+    #[test]
+    fn link_selection_and_peer_stats_redraw_over_a_frozen_map() {
+        use pokered_core::link::link_trade::LinkTradePollResult;
+        use pokered_core::party_screen::PartyScreenInput;
+        use pokered_core::pokemon::stats::create_pokemon;
+        use pokered_data::{maps::MapId, species::Species};
+        let mut game = PokemonGame::new(GameVersion::Red);
+        game.audio = None;
+        game.overworld.warp_to_map(MapId::TradeCenter, 3, 3);
+        game.state.screen = GameScreen::Overworld;
+        game.overworld.warp_fade_state = pokered_core::overworld::screen::WarpFadeState::Idle;
+        let party = vec![create_pokemon(Species::Pikachu, 25, [0xAB, 0xCD]).unwrap()];
+        let peer = vec![create_pokemon(Species::Kadabra, 28, [0xAB, 0xCD]).unwrap()];
+        game.link_cable
+            .on_trade_event(&LinkTradePollResult::TradeAccepted);
+        game.link_cable.set_remote_party(&peer);
+        game.link_cable.update(PartyScreenInput::none(), &party);
+        let mut session = RenderSession::new();
+        let mut fb = FrameBuffer::new(RenderConfig::new(160, 144), Rgba::WHITE);
+        let mut scroll = |_: &mut [u8], _: usize, _: usize, _: i32, _: i32, _: u8| {};
+        for step in 0..5 {
+            match step {
+                1 => {
+                    game.link_cable
+                        .update_with_navigation(PartyScreenInput::none(), &party, true);
+                }
+                2 | 3 => {
+                    game.link_cable.update(
+                        PartyScreenInput {
+                            a: true,
+                            ..PartyScreenInput::none()
+                        },
+                        &party,
+                    );
+                }
+                4 => {
+                    game.link_cable.update(
+                        PartyScreenInput {
+                            b: true,
+                            ..PartyScreenInput::none()
+                        },
+                        &party,
+                    );
+                }
+                _ => {}
+            }
+            assert!(!matches!(
+                session.render(&mut game, &mut fb, &mut scroll),
+                FrameUpdate::Reuse
+            ));
+            let mut full = fb.clone();
+            game.draw(&mut full);
+            for y in 0..144 {
+                for x in 0..160 {
+                    assert_eq!(
+                        fb.get_pixel(x, y),
+                        full.get_pixel(x, y),
+                        "step {step} at {x},{y}"
+                    );
+                }
+            }
+        }
+    }
+
+    #[test]
     fn connection_preview_changes_cannot_reuse_the_whole_frame() {
         use pokered_core::overworld::screen::ConnectionNpcPreview;
         use pokered_data::maps::MapId;
@@ -2684,6 +2858,8 @@ fn draw_full(
         && game.hof_ceremony.is_none()
         && game.credits.is_none()
         && game.state.screen == GameScreen::Overworld;
+    #[cfg(not(target_os = "none"))]
+    let ordinary_overworld = ordinary_overworld && !game.link_cable.is_active();
     if !ordinary_overworld {
         *background_cache = None;
         game.draw(frame_buffer);

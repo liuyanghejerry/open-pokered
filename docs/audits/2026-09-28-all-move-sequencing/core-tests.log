@@ -1,0 +1,9 @@
+running 2592 tests
+test battle::presentation::tests::called_move_plays_before_its_strike_and_after_the_faster_opponent ... ok
+test battle::presentation::tests::both_speed_orders_wait_for_each_animation_then_drain_only_its_damage ... ok
+test battle::presentation::tests::misses_are_known_before_the_move_presentation_starts ... ok
+test battle::presentation::tests::multi_hit_repeats_animation_and_drains_each_hit_before_next ... ok
+test battle::presentation::tests::knockout_has_one_animation_and_hides_damage_until_it_finishes ... ok
+test battle::presentation::tests::charge_turn_is_not_a_strike_and_stays_before_the_other_move ... ok
+test battle::presentation::tests::enemy_free_turn_stages_damage_and_poison_at_distinct_pages ... ok
+test result: ok. 2592 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 2.87s

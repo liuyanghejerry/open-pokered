@@ -1,0 +1,24 @@
+frame=0 status=0000 volume=0000
+pokered-gba: booting game core…
+pokered-gba: game constructed
+pokered-gba: battle rules ready
+pokered-gba: first frame done
+frame=300 status=0080 volume=0077
+frame=600 status=0080 volume=0077
+keys=03ff
+[WARN] gba-asset miss: title/red_version_tiles
+frame=900 status=008f volume=ff77
+frame=1200 status=0087 volume=ff77
+frame=1500 status=008f volume=ff77
+frame=1800 status=0087 volume=ff77
+frame=2100 status=008f volume=ff77
+frame=2400 status=008f volume=ff77
+frame=2700 status=008f volume=ff77
+frame=3000 status=008f volume=ff77
+frame=3300 status=008f volume=ff77
+frame=3600 status=008f volume=ff77
+frame=3900 status=0087 volume=ff77
+frame=4200 status=008f volume=ff77
+frame=4500 status=0087 volume=ff77
+frame=4800 status=0087 volume=ff77
+samples=7382270 nonzero=6576816 active_channels=f

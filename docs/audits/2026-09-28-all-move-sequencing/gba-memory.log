@@ -1,0 +1,39 @@
+Running: /tmp/mgba-headless /var/folders/d2/2fv86m890m34_13rn_t3d79w0000gn/T/gba-memory-g373uy1m/regression.gba /tmp/battle-all-moves/memory.lua
+[mgba] repro: heap low 65536B at frame 0
+[mgba] repro: heap low 63232B at frame 561
+[mgba] repro: heap low 60480B at frame 1037
+[mgba] repro: heap low 57344B at frame 2245
+[mgba] repro: heap low 56704B at frame 6558
+[mgba] repro: heap low 53568B at frame 6942
+[mgba] repro: heap low 53440B at frame 16094
+[mgba] memory: PASS case=pokedex count=302 free=61312B stack=15440B
+[mgba] repro: heap low 48512B at frame 23726
+[mgba] repro: heap low 41768B at frame 23806
+[mgba] repro: heap low 40552B at frame 23807
+[mgba] repro: heap low 39656B at frame 23827
+[mgba] repro: heap low 39064B at frame 23886
+[mgba] repro: heap low 37640B at frame 23887
+[mgba] repro: heap low 36744B at frame 23928
+[mgba] repro: heap low 27448B at frame 23966
+[mgba] repro: heap low 26024B at frame 23967
+[mgba] repro: heap low 25128B at frame 24014
+[mgba] repro: heap low 23352B at frame 25806
+[mgba] repro: heap low 22544B at frame 25807
+[mgba] repro: heap low 21648B at frame 25827
+[mgba] memory: PASS case=maps count=248 free=26424B stack=15440B
+[mgba] repro: heap low 11072B at frame 43630
+[mgba] memory: PASS case=oak-parcel count=1 free=26424B stack=15440B
+[mgba] memory: PASS case=oak-dex count=16 free=26424B stack=15440B
+[mgba] repro: heap low 8552B at frame 60167
+[mgba] memory: PASS case=fossil count=1 free=20360B stack=15440B
+[mgba] memory: PASS case=slots count=3 free=24176B stack=15440B
+[mgba] memory: PASS case=menus count=48 free=20528B stack=15440B
+[mgba] repro: heap low 8544B at frame 63926
+[mgba] memory: PASS case=moves count=330 free=16800B stack=15440B
+[mgba] memory: PASS case=evolution count=3 free=18288B stack=15440B
+[mgba] memory: PASS case=trade count=3 free=13168B stack=15440B
+[mgba] memory: PASS case=ending count=1 free=13040B stack=15440B
+[mgba] memory: PASS case=pc-full count=300 free=16240B stack=15440B
+[mgba] memory: PASS case=save-full count=1 free=28784B stack=15440B
+[mgba] memory: ALL PASS stack=15440B
+GBA memory PASS: 13 scenarios cases; min contiguous heap=8544 B, untouched stack=15440 B

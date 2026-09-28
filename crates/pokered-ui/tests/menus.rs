@@ -181,10 +181,13 @@ fn options_menu_three_setting_boxes_and_cancel_outside() {
         (2, 16, "CANCEL".into()),
     ]);
 
-    // Single ▶ on the active TextSpeed row only. Medium→x=7,y=3.
+    // One filled active arrow and persistent hollow markers for the other rows.
     let glyphs = collect_cursor_glyphs(&rec.ops);
     let pt = '\u{25B6}';
-    assert_eq!(glyphs, vec![(7, 3, pt)]);
+    assert_eq!(
+        glyphs,
+        vec![(7, 3, pt), (1, 8, '▷'), (1, 13, '▷'), (1, 16, '▷')]
+    );
 }
 
 #[test]
@@ -202,7 +205,10 @@ fn options_menu_cursor_moves_to_battle_animation_row() {
 
     let glyphs = collect_cursor_glyphs(&rec.ops);
     let pt = '\u{25B6}';
-    assert_eq!(glyphs, vec![(1, 8, pt)]);
+    assert_eq!(
+        glyphs,
+        vec![(1, 8, pt), (7, 3, '▷'), (1, 13, '▷'), (1, 16, '▷')]
+    );
 }
 
 #[test]
@@ -220,11 +226,14 @@ fn options_menu_cursor_x_tracks_setting_value_on_active_row() {
 
     let glyphs = collect_cursor_glyphs(&rec.ops);
     let pt = '\u{25B6}';
-    assert_eq!(glyphs, vec![(14, 3, pt)]);
+    assert_eq!(
+        glyphs,
+        vec![(14, 3, pt), (10, 8, '▷'), (10, 13, '▷'), (1, 16, '▷')]
+    );
 }
 
 #[test]
-fn options_menu_no_cursor_on_inactive_rows() {
+fn options_menu_preserves_values_on_inactive_rows() {
     let mut state = OptionsMenuState::new(GameOptions {
         text_speed: TextSpeed::Fast,
         battle_animation: BattleAnimation::Off,
@@ -238,7 +247,10 @@ fn options_menu_no_cursor_on_inactive_rows() {
 
     let glyphs = collect_cursor_glyphs(&rec.ops);
     let pt = '\u{25B6}';
-    assert_eq!(glyphs, vec![(10, 8, pt)]);
+    assert_eq!(
+        glyphs,
+        vec![(10, 8, pt), (1, 3, '▷'), (10, 13, '▷'), (1, 16, '▷')]
+    );
 }
 
 #[test]
@@ -259,7 +271,12 @@ fn options_menu_zh_cursor_tracks_zh_label_positions() {
         menus::options::draw(&state, &OPTIONS_DEFAULT_LAYOUT, &mut ui, Lang::Zh);
         assert_eq!(
             collect_cursor_glyphs(&rec.ops),
-            vec![(expected_tx, 3, pt)],
+            vec![
+                (expected_tx, 3, pt),
+                (1, 8, '▷'),
+                (1, 13, '▷'),
+                (1, 16, '▷')
+            ],
             "text_speed={speed:?}"
         );
     }
@@ -278,13 +295,19 @@ fn options_menu_zh_cursor_on_toggle_rows() {
     let mut rec = Recorder::default();
     let mut ui = Ui::new(&mut rec);
     menus::options::draw(&state, &OPTIONS_DEFAULT_LAYOUT, &mut ui, Lang::Zh);
-    assert_eq!(collect_cursor_glyphs(&rec.ops), vec![(9, 8, pt)]);
+    assert_eq!(
+        collect_cursor_glyphs(&rec.ops),
+        vec![(9, 8, pt), (4, 3, '▷'), (7, 13, '▷'), (1, 16, '▷')]
+    );
 
     state.row = OptionsRow::BattleStyle;
     let mut rec = Recorder::default();
     let mut ui = Ui::new(&mut rec);
     menus::options::draw(&state, &OPTIONS_DEFAULT_LAYOUT, &mut ui, Lang::Zh);
-    assert_eq!(collect_cursor_glyphs(&rec.ops), vec![(7, 13, pt)]);
+    assert_eq!(
+        collect_cursor_glyphs(&rec.ops),
+        vec![(7, 13, pt), (4, 3, '▷'), (9, 8, '▷'), (1, 16, '▷')]
+    );
 }
 
 fn fixture_save_info() -> SaveScreenInfo {
@@ -1337,4 +1360,3 @@ fn draw_main_menu_uses_layout_static() {
 
     assert_eq!(collect_glyphs(&rec.ops), vec![(1, 2, '\u{25B6}')]); // origin +1 + cursor.tx=0
 }
-

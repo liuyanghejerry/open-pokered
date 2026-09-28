@@ -1,0 +1,142 @@
+{
+  "schema": 1,
+  "provenance": {
+    "reference_rom": "/Users/liuyanghe02/develop/pokered-worktree/pokered.gbc",
+    "reference_rom_sha1": "ea9bcae617fdf159b045185467ae58b2e4a48b9a",
+    "setup_rom": "/Users/liuyanghe02/develop/pokered-worktree/pokeblue_debug.gbc",
+    "setup_rom_sha1": "5b1456177671b79b263c614ea0e7cc9ac542e9c4",
+    "reference_symbols": "/Users/liuyanghe02/develop/pokered-worktree/pokered.sym",
+    "reference_symbols_sha1": "03783c86a42588bd77f73bd7814cf8d70e590118",
+    "reference_source": "/Users/liuyanghe02/develop/pokered-worktree",
+    "reference_source_commit": "fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c",
+    "current_binary": "/Users/liuyanghe02/develop/open-pokered-2/target/release/pokered-app",
+    "current_binary_sha1": "be046cfcc8d54b4e588fa4231f4cc7d903df7877",
+    "current_git_head": "403514b7ba0e1cba9e8c74af3787aaa3d9bd5389",
+    "current_git_base": "7e7e983668d377bbf89b9d87d13b13259fafeed3"
+  },
+  "scope": {
+    "move_ids": [
+      45
+    ],
+    "sides": [
+      "player",
+      "enemy"
+    ],
+    "repeat": 2,
+    "max_frames": 3000,
+    "kept_continuous_frames": [
+      45
+    ]
+  },
+  "comparison": {
+    "window": "MoveAnimation entry through MoveAnimation.animationFinished",
+    "applying_attack_animation": 2,
+    "pixel_channel": "per-frame changed-pixel mask relative to each implementation's pre-entry frame",
+    "pass_gate": "duration + rendered OAM + dynamic pixel mask exact; all repeats deterministic"
+  },
+  "results": [
+    {
+      "move_id": 45,
+      "move": "GROWL",
+      "sides": {
+        "player": {
+          "verdict": "FAIL",
+          "reference_frames": 138,
+          "current_frames": 138,
+          "frame_delta": 0,
+          "duration_match": true,
+          "rendered_oam_match": true,
+          "dynamic_mask_match": false,
+          "source_geometry_match_ignoring_holds": true,
+          "visible_source_keyframes_match": true,
+          "visible_source_keyframes_match_after_hardware_offset": false,
+          "issues": [
+            "dynamic_pixels"
+          ],
+          "diagnostics": [],
+          "reference_deterministic": true,
+          "current_deterministic": true,
+          "reference_repeat_sha1": [
+            "50888a16ea0393bfd6952e6e76d25db9a5a315a7",
+            "50888a16ea0393bfd6952e6e76d25db9a5a315a7"
+          ],
+          "current_repeat_sha1": [
+            "f580de0b39b6957378298824fd154303d2c83466",
+            "f580de0b39b6957378298824fd154303d2c83466"
+          ],
+          "reference": {
+            "duration_frames": 138,
+            "trace_sha1": "50888a16ea0393bfd6952e6e76d25db9a5a315a7",
+            "max_rendered_objects": 8,
+            "resolved_animation_id": 45
+          },
+          "current": {
+            "duration_frames": 138,
+            "trace_sha1": "f580de0b39b6957378298824fd154303d2c83466",
+            "max_rendered_objects": 8,
+            "max_source_objects": 8,
+            "renderer_move_name": "Growl"
+          }
+        },
+        "enemy": {
+          "verdict": "FAIL",
+          "reference_frames": 138,
+          "current_frames": 138,
+          "frame_delta": 0,
+          "duration_match": true,
+          "rendered_oam_match": true,
+          "dynamic_mask_match": false,
+          "source_geometry_match_ignoring_holds": true,
+          "visible_source_keyframes_match": true,
+          "visible_source_keyframes_match_after_hardware_offset": false,
+          "issues": [
+            "dynamic_pixels"
+          ],
+          "diagnostics": [],
+          "reference_deterministic": true,
+          "current_deterministic": true,
+          "reference_repeat_sha1": [
+            "0d19e4f72a35c6c6abb05f48a8d333774a57717d",
+            "0d19e4f72a35c6c6abb05f48a8d333774a57717d"
+          ],
+          "current_repeat_sha1": [
+            "23cb1bd0131c35ac0c837ebf96a036cb3387f040",
+            "23cb1bd0131c35ac0c837ebf96a036cb3387f040"
+          ],
+          "reference": {
+            "duration_frames": 138,
+            "trace_sha1": "0d19e4f72a35c6c6abb05f48a8d333774a57717d",
+            "max_rendered_objects": 8,
+            "resolved_animation_id": 45
+          },
+          "current": {
+            "duration_frames": 138,
+            "trace_sha1": "23cb1bd0131c35ac0c837ebf96a036cb3387f040",
+            "max_rendered_objects": 8,
+            "max_source_objects": 8,
+            "renderer_move_name": "Growl"
+          }
+        }
+      },
+      "verdict": "FAIL"
+    }
+  ],
+  "totals": {
+    "moves": 1,
+    "sides": 2,
+    "pass": 0,
+    "fail": 1,
+    "inconclusive": 0,
+    "side_pass": 0,
+    "side_fail": 2,
+    "side_inconclusive": 0,
+    "duration_mismatch": 0,
+    "rendered_oam_mismatch": 0,
+    "dynamic_mask_mismatch": 2,
+    "source_geometry_match_ignoring_holds": 2,
+    "visible_source_keyframes_match": 2,
+    "visible_source_keyframes_match_after_hardware_offset": 0,
+    "source_oam_generated_but_not_rendered": 0
+  },
+  "frame_trace_archive": "frame-traces.json.gz"
+}

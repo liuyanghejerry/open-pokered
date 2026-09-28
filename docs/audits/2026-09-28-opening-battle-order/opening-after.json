@@ -1,0 +1,32 @@
+{
+  "timer_ticks_per_ms": 262.144,
+  "scenes": {
+    "41": {
+      "draws": 635,
+      "logic_ticks": 635,
+      "max_updates_between_draws": 1,
+      "update_max_ms": 2.124786376953125,
+      "draw_mean_ms": 10.646784023975764,
+      "draw_max_ms": 67.08145141601562,
+      "display_gap_max_ms": 33.481597900390625
+    },
+    "42": {
+      "draws": 69,
+      "logic_ticks": 69,
+      "max_updates_between_draws": 1,
+      "update_max_ms": 2.033233642578125,
+      "draw_mean_ms": 8.71569868447124,
+      "draw_max_ms": 40.6951904296875,
+      "display_gap_max_ms": 50.228118896484375
+    },
+    "43": {
+      "draws": 91,
+      "logic_ticks": 91,
+      "max_updates_between_draws": 1,
+      "update_max_ms": 4.810333251953125,
+      "draw_mean_ms": 3.8315490051940246,
+      "draw_max_ms": 9.30023193359375,
+      "display_gap_max_ms": 18.207550048828125
+    }
+  }
+}

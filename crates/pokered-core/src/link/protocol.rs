@@ -71,6 +71,11 @@ pub enum NetworkMessage {
     TradeComplete(Pokemon),
 
     Disconnect,
+    /// Party snapshot exchanged before selecting or confirming a trade.
+    TradeParty {
+        trainer_name: String,
+        party: Party,
+    },
 }
 
 /// The local side's outcome of a finished link battle, mirroring the
@@ -85,15 +90,11 @@ pub enum LinkBattleResult {
 }
 
 impl NetworkMessage {
-    /// Wire protocol version. Bumped from 1 to 2 when `BattleResult` was
-    /// added; handshakes accept both versions (an old peer simply never
-    /// sends `BattleResult`).
-    pub const PROTOCOL_VERSION: u8 = 2;
+    /// Version 3 requires party previews before trade confirmation.
+    pub const PROTOCOL_VERSION: u8 = 3;
 
-    /// Versions this implementation can talk to (v1 peers predate
-    /// `BattleResult`; the message is purely additive).
     pub fn is_compatible_version(version: u8) -> bool {
-        version == 1 || version == Self::PROTOCOL_VERSION
+        version == Self::PROTOCOL_VERSION
     }
 
     pub fn hello() -> Self {
