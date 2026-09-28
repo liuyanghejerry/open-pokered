@@ -106,6 +106,8 @@ pub struct LinkTradeManager {
     /// Used to break the both-pressed-the-gameboy tie (see the
     /// `WaitingForTradeResponse` × `RequestTrade` arm).
     role: Option<crate::link::LinkRole>,
+    remote_party: Option<Party>,
+    remote_name: String,
 }
 
 impl LinkTradeManager {
@@ -118,6 +120,8 @@ impl LinkTradeManager {
             remote_confirmed: false,
             pending_remote_mon: None,
             role: None,
+            remote_party: None,
+            remote_name: String::new(),
         }
     }
 
@@ -252,41 +256,53 @@ impl LinkTradeManager {
         if let Some(result) = self.try_complete_stashed_exchange() {
             return result;
         }
-        let msg = match transport.try_recv() {
-            Ok(Some(msg)) => msg,
-            Ok(None) => return LinkTradePollResult::Pending,
-            Err(TransportError::Disconnected) => {
-                self.state = LinkTradeState::Cancelled;
-                return LinkTradePollResult::Disconnected;
-            }
-            Err(e) => {
-                let msg = format!("{}", e);
-                self.state = LinkTradeState::Error(msg.clone());
-                return LinkTradePollResult::Error(msg);
-            }
-        };
+        loop {
+            let msg = match transport.try_recv() {
+                Ok(Some(msg)) => msg,
+                Ok(None) => return LinkTradePollResult::Pending,
+                Err(TransportError::Disconnected) => {
+                    self.state = LinkTradeState::Cancelled;
+                    return LinkTradePollResult::Disconnected;
+                }
+                Err(e) => {
+                    let msg = format!("{}", e);
+                    self.state = LinkTradeState::Error(msg.clone());
+                    return LinkTradePollResult::Error(msg);
+                }
+            };
 
-        self.handle_message(msg, transport)
+            let snapshot = matches!(msg, NetworkMessage::TradeParty { .. });
+            let result = self.handle_message(msg, transport);
+            if !snapshot || result != LinkTradePollResult::Pending {
+                return result;
+            }
+        }
     }
 
     pub fn poll_blocking(&mut self, transport: &mut dyn NetworkTransport<NetworkMessage>) -> LinkTradePollResult {
         if let Some(result) = self.try_complete_stashed_exchange() {
             return result;
         }
-        let msg = match transport.recv() {
-            Ok(msg) => msg,
-            Err(TransportError::Disconnected) => {
-                self.state = LinkTradeState::Cancelled;
-                return LinkTradePollResult::Disconnected;
-            }
-            Err(e) => {
-                let msg = format!("{}", e);
-                self.state = LinkTradeState::Error(msg.clone());
-                return LinkTradePollResult::Error(msg);
-            }
-        };
+        loop {
+            let msg = match transport.recv() {
+                Ok(msg) => msg,
+                Err(TransportError::Disconnected) => {
+                    self.state = LinkTradeState::Cancelled;
+                    return LinkTradePollResult::Disconnected;
+                }
+                Err(e) => {
+                    let msg = format!("{}", e);
+                    self.state = LinkTradeState::Error(msg.clone());
+                    return LinkTradePollResult::Error(msg);
+                }
+            };
 
-        self.handle_message(msg, transport)
+            let snapshot = matches!(msg, NetworkMessage::TradeParty { .. });
+            let result = self.handle_message(msg, transport);
+            if !snapshot || result != LinkTradePollResult::Pending {
+                return result;
+            }
+        }
     }
 
     /// A trade whose peer mon was stashed before the local confirm (see
@@ -301,6 +317,7 @@ impl LinkTradeManager {
         } = self.state
         {
             self.state = LinkTradeState::Completed;
+            self.remote_party = None;
             Some(LinkTradePollResult::TradeExecute {
                 local_index,
                 remote_index,
@@ -318,7 +335,36 @@ impl LinkTradeManager {
         msg: NetworkMessage,
         transport: &mut dyn NetworkTransport<NetworkMessage>,
     ) -> LinkTradePollResult {
+        if let NetworkMessage::TradeComplete(ref mon) = msg {
+            if let Some(party) = &self.remote_party {
+                if self.remote_selection.and_then(|i| party.get(i as usize)) != Some(mon) {
+                    let error = "peer Pokemon differs from trade preview".to_string();
+                    self.state = LinkTradeState::Error(error.clone());
+                    return LinkTradePollResult::Error(error);
+                }
+            }
+        }
         match (&self.state, msg) {
+            (
+                LinkTradeState::Idle
+                | LinkTradeState::WaitingForTradeResponse
+                | LinkTradeState::PeerRequestedTrade
+                | LinkTradeState::SelectingMon
+                | LinkTradeState::Completed,
+                NetworkMessage::TradeParty {
+                    trainer_name,
+                    party,
+                },
+            ) => {
+                if party.count() == 0 || party.count() > 6 {
+                    let error = "invalid trade party".to_string();
+                    self.state = LinkTradeState::Error(error.clone());
+                    return LinkTradePollResult::Error(error);
+                }
+                self.remote_name = trainer_name;
+                self.remote_party = Some(party);
+                LinkTradePollResult::Pending
+            }
             (LinkTradeState::Idle, NetworkMessage::RequestTrade) => {
                 self.state = LinkTradeState::PeerRequestedTrade;
                 LinkTradePollResult::TradeRequested
@@ -358,6 +404,15 @@ impl LinkTradeManager {
                 | LinkTradeState::BothSelected { .. },
                 NetworkMessage::SelectMon(idx),
             ) => {
+                if self
+                    .remote_party
+                    .as_ref()
+                    .is_some_and(|party| party.get(idx as usize).is_none())
+                {
+                    let error = "invalid peer selection".to_string();
+                    self.state = LinkTradeState::Error(error.clone());
+                    return LinkTradePollResult::Error(error);
+                }
                 self.remote_selection = Some(idx);
                 self.remote_confirmed = false;
                 self.try_transition_to_both_selected();
@@ -419,6 +474,7 @@ impl LinkTradeManager {
             ) => {
                 let (li, ri) = (*local_index, *remote_index);
                 self.state = LinkTradeState::Completed;
+                self.remote_party = None;
                 LinkTradePollResult::TradeExecute {
                     local_index: li,
                     remote_index: ri,
@@ -575,6 +631,7 @@ pub struct LinkTradeDriver {
     manager: LinkTradeManager,
     party: Party,
     player_id: u16,
+    trainer_name: String,
     /// Locally selected party index (cleared when the selection is void).
     local_index: Option<u8>,
     /// Index the peer selected, for reporting.
@@ -597,6 +654,7 @@ impl LinkTradeDriver {
             manager: LinkTradeManager::new(),
             party,
             player_id,
+            trainer_name: String::new(),
             local_index: None,
             remote_index: None,
             given_mon: None,
@@ -631,6 +689,42 @@ impl LinkTradeDriver {
 
     pub fn is_completed(&self) -> bool {
         self.manager.is_completed()
+    }
+
+    pub fn with_trainer_name(mut self, name: String) -> Self {
+        self.trainer_name = name;
+        self
+    }
+
+    pub fn remote_name(&self) -> &str {
+        &self.manager.remote_name
+    }
+
+    pub fn remote_party(&self) -> Option<&Party> {
+        self.manager.remote_party.as_ref()
+    }
+
+    /// Both players backed out to the Cable Club room.
+    pub fn leave_trade(&mut self) {
+        self.clear_pending_trade();
+        self.manager.reset_selection();
+        self.manager.remote_party = None;
+        self.manager.state = LinkTradeState::Idle;
+    }
+
+    /// Continue at the selection screen with the post-evolution party.
+    pub fn continue_trade(
+        &mut self,
+        transport: &mut dyn NetworkTransport<NetworkMessage>,
+    ) -> Result<(), LinkTradeError> {
+        self.clear_pending_trade();
+        self.manager.reset_selection();
+        self.manager.state = LinkTradeState::SelectingMon;
+        transport.send(NetworkMessage::TradeParty {
+            trainer_name: self.trainer_name.clone(),
+            party: self.party.clone(),
+        })?;
+        Ok(())
     }
 
     /// The working party (the exchange applied once `apply_exchange` ran).
@@ -679,14 +773,32 @@ impl LinkTradeDriver {
         &mut self,
         transport: &mut dyn NetworkTransport<NetworkMessage>,
     ) -> Result<(), LinkTradeError> {
-        self.manager.request_trade(transport).map_err(Into::into)
+        if self.manager.state != LinkTradeState::Idle {
+            return Err(LinkTradeError::WrongState("not idle".into()));
+        }
+        transport.send(NetworkMessage::TradeParty {
+            trainer_name: self.trainer_name.clone(),
+            party: self.party.clone(),
+        })?;
+        self.manager.request_trade(transport)?;
+        Ok(())
     }
 
     pub fn accept_trade(
         &mut self,
         transport: &mut dyn NetworkTransport<NetworkMessage>,
     ) -> Result<(), LinkTradeError> {
-        self.manager.accept_trade(transport).map_err(Into::into)
+        if self.manager.state != LinkTradeState::PeerRequestedTrade {
+            return Err(LinkTradeError::WrongState(
+                "no pending trade request".into(),
+            ));
+        }
+        transport.send(NetworkMessage::TradeParty {
+            trainer_name: self.trainer_name.clone(),
+            party: self.party.clone(),
+        })?;
+        self.manager.accept_trade(transport)?;
+        Ok(())
     }
 
     pub fn decline_trade(
@@ -704,6 +816,9 @@ impl LinkTradeDriver {
         transport: &mut dyn NetworkTransport<NetworkMessage>,
         party_index: u8,
     ) -> Result<(), LinkTradeError> {
+        if self.manager.remote_party.is_none() {
+            return Err(LinkTradeError::WrongState("waiting for peer party".into()));
+        }
         if party_index as usize >= self.party.count() {
             return Err(LinkTradeError::InvalidIndex(party_index));
         }

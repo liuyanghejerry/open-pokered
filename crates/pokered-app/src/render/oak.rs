@@ -80,7 +80,7 @@ pub fn draw_oak_speech(
             if !shrink_name.is_empty() {
                 if let Some(ref mut rm) = res {
                     if let Ok(cached) = rm.load(AssetCategory::Player, shrink_name) {
-                        let ts = cached.tileset.clone();
+                        let ts = &cached.tileset;
                         let w = cached.source_size.0;
                         let h = cached.source_size.1;
                         draw_centered_sprite(fb, &ts, w, h, sprite_pal);
@@ -119,7 +119,7 @@ pub fn draw_oak_speech(
                 None
             };
             if let Some(cached) = result {
-                let ts = cached.tileset.clone();
+                let ts = &cached.tileset;
                 let w = cached.source_size.0;
                 let tiles_per_row = w / TILE_SIZE;
                 if let Some(x) = explicit_x {

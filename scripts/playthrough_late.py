@@ -816,12 +816,13 @@ def m29_strength(g):
         assert g.cutscene()
     else:
         raise RuntimeError("Safari step allowance did not expire")
-    # The gate script still asks to return the remaining Safari Balls.
-    g.nav_to(3, 1, "SafariZoneGate")
-    g.d.drive(["down"] * 8, frames=16)
-    g.dialogue_then_choice()
-    g.choose("YES")
+    # A finished hunt gets the farewell and auto-walks below the gate row.
+    # There is no early-exit YES/NO prompt after the allowance expires.
     assert g.cutscene()
+    assert g.pos() == ("SafariZoneGate", 3, 4), g.pos()
+    flags = g.d.cmd(cmd="get_flags")["data"]
+    assert not flags.get("EVENT_IN_SAFARI_ZONE", False), flags
+    assert not flags.get("EVENT_SAFARI_GAME_OVER", False), flags
     g.nav_warp(3, 5, "SafariZoneGate", "FuchsiaCity", approach="down")
     g.nav_warp(27, 27, "FuchsiaCity", "WardensHouse")
     talk_npc(g, "WardensHouse", 1)

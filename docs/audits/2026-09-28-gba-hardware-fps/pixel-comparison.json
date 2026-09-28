@@ -1,0 +1,78 @@
+{
+  "matched_frames": 1409,
+  "pixel_hash_mismatches": 0,
+  "display_intervals": {
+    "31": {
+      "before": {
+        "mean_vblanks": 2.764764764764765,
+        "max_vblanks": 7,
+        "effective_logic_fps": 21.60310372918175
+      },
+      "after": {
+        "mean_vblanks": 1.954954954954955,
+        "max_vblanks": 5,
+        "effective_logic_fps": 30.551854838709676
+      }
+    },
+    "32": {
+      "before": {
+        "mean_vblanks": 1.7575757575757576,
+        "max_vblanks": 4,
+        "effective_logic_fps": 33.98288793103448
+      },
+      "after": {
+        "mean_vblanks": 1.3333333333333333,
+        "max_vblanks": 3,
+        "effective_logic_fps": 44.795625
+      }
+    },
+    "33": {
+      "before": {
+        "mean_vblanks": 1.88135593220339,
+        "max_vblanks": 5,
+        "effective_logic_fps": 31.747049549549548
+      },
+      "after": {
+        "mean_vblanks": 1.3559322033898304,
+        "max_vblanks": 3,
+        "effective_logic_fps": 44.04903125
+      }
+    },
+    "34": {
+      "before": {
+        "mean_vblanks": 2.3333333333333335,
+        "max_vblanks": 4,
+        "effective_logic_fps": 25.597499999999997
+      },
+      "after": {
+        "mean_vblanks": 1.5217391304347827,
+        "max_vblanks": 3,
+        "effective_logic_fps": 39.2495
+      }
+    },
+    "35": {
+      "before": {
+        "mean_vblanks": 3.348314606741573,
+        "max_vblanks": 8,
+        "effective_logic_fps": 17.838078859060403
+      },
+      "after": {
+        "mean_vblanks": 1.348314606741573,
+        "max_vblanks": 7,
+        "effective_logic_fps": 44.297895833333335
+      }
+    },
+    "36": {
+      "before": {
+        "mean_vblanks": 3.3863636363636362,
+        "max_vblanks": 12,
+        "effective_logic_fps": 17.63765100671141
+      },
+      "after": {
+        "mean_vblanks": 1.3522727272727273,
+        "max_vblanks": 11,
+        "effective_logic_fps": 44.16823529411764
+      }
+    }
+  }
+}

@@ -148,6 +148,21 @@ impl<'fb> Painter for FrameBufferPainter<'fb> {
         if self.lang == Lang::Zh {
             py = py.saturating_sub(1);
         }
+        if glyph == '▷' {
+            // Option-value marker: the font's triangle is not the GB cursor.
+            // Same 8x9 ink cell as the filled selection arrow.
+            for (y, bits) in [0u8, 0, 0x40, 0x60, 0x50, 0x48, 0x50, 0x60, 0x40]
+                .iter()
+                .enumerate()
+            {
+                for x in 0..8 {
+                    if bits & (0x80 >> x) != 0 {
+                        self.fb.fill_rect(px + x, py + y as u32, 1, 1, color);
+                    }
+                }
+            }
+            return;
+        }
         let mut buf = [0u8; 4];
         let s = glyph.encode_utf8(&mut buf);
         draw_text(s, px, py, color, self.fb);

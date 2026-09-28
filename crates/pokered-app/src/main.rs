@@ -393,6 +393,7 @@ fn main() {
             ref output_dir,
             max_frames,
             manifest_only,
+            applying_type,
         }) => {
             if let Err(error) = crate::move_animation_capture::capture_move_animation(
                 move_id,
@@ -400,6 +401,7 @@ fn main() {
                 output_dir,
                 max_frames,
                 !manifest_only,
+                applying_type,
             ) {
                 eprintln!("Error: {error}");
                 std::process::exit(1);

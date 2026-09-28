@@ -686,7 +686,6 @@ pub(super) fn can_reuse_composited_frame(screen: &OverworldScreen) -> bool {
         && screen.ship_departure.is_none()
         && screen.flash_lit_frames == 0
         && !screen.boulder_dust.is_active()
-        && matches!(screen.warp_fade_state, WarpFadeState::Idle)
 }
 
 #[allow(clippy::too_many_arguments)]
@@ -2184,7 +2183,7 @@ fn draw_overworld_impl(
 /// home/fade.asm: GBFadeOutToBlack on normal warps (FadePal4→1),
 /// GBFadeOutToWhite on escape/fly warps (FadePal6→8), GBFadeInFromWhite on
 /// arrival (FadePal7→5).
-fn warp_fade_palette(screen: &OverworldScreen) -> Option<FadePalette> {
+pub(super) fn warp_fade_palette(screen: &OverworldScreen) -> Option<FadePalette> {
     match screen.warp_fade_state {
         WarpFadeState::Idle => None,
         WarpFadeState::BlackScreen => Some(if screen.warp_fade_to_white {

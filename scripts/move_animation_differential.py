@@ -35,6 +35,7 @@ PINNED_SYMBOLS_SHA1 = "03783c86a42588bd77f73bd7814cf8d70e590118"
 PINNED_SOURCE_COMMIT = "fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c"
 ANIM_BASE_TILE_ID = 0x31
 MOVE_COUNT = 165
+APPLYING_TYPE = 0
 
 
 def sha1_file(path: Path) -> str:
@@ -297,7 +298,7 @@ class ReferenceRunner:
             for symbol, value in (ctx.memory_overrides or {}).items():
                 memory[ctx.address(symbol)] = value
             memory[ctx.address("wAnimationID")] = ctx.requested_id
-            memory[ctx.address("wAnimationType")] = 0
+            memory[ctx.address("wAnimationType")] = APPLYING_TYPE
             ctx.capture_start_index = ctx.capture_index
             ctx.started = True
 
@@ -501,6 +502,7 @@ def capture_current(
         "--max-frames",
         str(max_frames),
     ]
+    command += ["--applying-type", str(APPLYING_TYPE)]
     if evidence_dir is None:
         command.append("--manifest-only")
     completed = subprocess.run(command, text=True, capture_output=True)
@@ -620,7 +622,7 @@ def markdown_report(summary: dict[str, Any]) -> str:
         f"- 原作正式 Red ROM SHA-1：`{summary['provenance']['reference_rom_sha1']}`",
         f"- 确定性布置用 DEBUG ROM SHA-1：`{summary['provenance']['setup_rom_sha1']}`（只负责进入战斗，不产生被比较帧）",
         f"- 范围：{totals['moves']} 个技能 × {len(summary['scope']['sides'])} 个攻方视角 = {totals['sides']} 条轨迹；每条轨迹重复 {summary['scope']['repeat']} 次",
-        "- 语义边界：`MoveAnimation` 入口到 `.animationFinished`，强制 `wAnimationType = 0`，不含通用命中反馈",
+        f"- 语义边界：`MoveAnimation` 入口到 `.animationFinished`，`wAnimationType = {APPLYING_TYPE}`（0 为纯招式，其余包含对应命中反馈）",
         "",
         "## 结论",
         "",
@@ -696,7 +698,10 @@ def main() -> None:
         default="1,57,89,120,153",
         help="move ids whose run-1 continuous PNG windows are retained",
     )
+    parser.add_argument("--applying-type", type=int, choices=range(7), default=0)
     args = parser.parse_args()
+    global APPLYING_TYPE
+    APPLYING_TYPE = args.applying_type
 
     require_pinned(args.reference_rom, PINNED_ROM_SHA1, "reference ROM")
     require_pinned(args.setup_rom, PINNED_SETUP_ROM_SHA1, "setup ROM")
@@ -731,6 +736,8 @@ def main() -> None:
             "reference_source": str(args.reference_source.resolve()),
             "reference_source_commit": commit,
             "current_binary": str(args.current_binary.resolve()),
+            "current_binary_sha1": sha1_file(args.current_binary),
+            "current_git_head": source_commit(Path(__file__).resolve().parents[1]),
             "current_git_base": git_base,
         },
         "scope": {
@@ -742,7 +749,7 @@ def main() -> None:
         },
         "comparison": {
             "window": "MoveAnimation entry through MoveAnimation.animationFinished",
-            "applying_attack_animation": False,
+            "applying_attack_animation": APPLYING_TYPE,
             "pixel_channel": "per-frame changed-pixel mask relative to each implementation's pre-entry frame",
             "pass_gate": "duration + rendered OAM + dynamic pixel mask exact; all repeats deterministic",
         },

@@ -804,15 +804,25 @@ impl ShakeBackAndForth {
 pub struct BlinkMon {
     side: Option<MonSide>,
     frame: u8,
+    applying_attack: bool,
 }
 
 impl BlinkMon {
     pub fn start(&mut self, side: MonSide) {
         self.side = Some(side);
+        self.applying_attack = false;
         // The effect command is reached after the first captured VBlank; its
         // first tilemap-copy phase is therefore already one tick old when the
         // first blocking frame is scanned out.
         self.frame = 1;
+    }
+
+    /// The post-hit predef enters at a different tilemap-copy phase from
+    /// the move-stream opcode. Keep its six clear/restore cycles separate.
+    pub fn start_applying_attack(&mut self, side: MonSide) {
+        self.side = Some(side);
+        self.frame = 0;
+        self.applying_attack = true;
     }
 
     pub fn tick(&mut self) {
@@ -831,6 +841,14 @@ impl BlinkMon {
     pub fn visible_band(&self, side: MonSide, screen_bottom: u32) -> Option<(u32, u32)> {
         if self.side != Some(side) {
             return Some((0, screen_bottom));
+        }
+        if self.applying_attack {
+            return match self.frame {
+                1 | 28 | 32 | 33 | 40 | 67 | 71 | 72 => Some((48, screen_bottom)),
+                2..=6 | 16..=18 | 29..=31 | 41..=45 | 55..=57 | 68..=70 => None,
+                7 | 14 | 15 | 19 | 46 | 53 | 54 | 58 => Some((0, 48)),
+                _ => Some((0, screen_bottom)),
+            };
         }
         match self.frame {
             // Clear/restore reached the LCD before scanline 48.
@@ -2606,6 +2624,68 @@ fn shift_linear_vertical(pixels: &mut [u8], width: usize, dy: i32) {
     } else if dy < 0 {
         pixels.copy_within(count.., 0);
         pixels[len - count..].fill(0);
+    }
+}
+
+/// MoveAnimation's applying-attack window motion, separate from the move's
+/// own command stream. Phase zero is the interpreter's terminal scanout.
+#[derive(Debug, Clone, Copy)]
+pub struct ApplyingAttackMotion {
+    kind: u8,
+    frame: u8,
+}
+impl ApplyingAttackMotion {
+    pub fn new(kind: u8) -> Self { Self { kind, frame: 0 } }
+    pub fn duration(&self) -> u8 {
+        match self.kind { 1 => 48, 2 => 72, 3 => 48, 4 => 78, 5 => 18, 6 => 24, _ => 0 }
+    }
+    pub fn tick(&mut self) -> bool {
+        self.frame += 1;
+        self.frame > self.duration()
+    }
+    fn horizontal_offset(&self, phase: u8) -> i32 {
+        match self.kind {
+            2 | 5 => {
+                let amplitude = if self.kind == 2 { 8 } else { 2 };
+                // Initial predef setup adds a resting interval; the remaining
+                // diminishing pulses recur every nine VBlanks.
+                if phase < 5 { amplitude }
+                else if phase >= 14 && (phase - 14) % 9 < 4 {
+                    (amplitude - 1 - i32::from((phase - 14) / 9)).max(0)
+                } else { 0 }
+            }
+            3 | 6 => {
+                let amplitude = if self.kind == 3 { 6 } else { 3 };
+                let step = i32::from(phase / 2) % (amplitude * 2);
+                if phase >= self.duration() { 0 }
+                else if step < amplitude { step + 1 }
+                else { amplitude * 2 - step - 1 }
+            }
+            _ => 0,
+        }
+    }
+    pub fn apply(&self, fb: &mut crate::FrameBuffer) {
+        let phase = self.frame;
+        if self.kind == 1 {
+            // WY is latched by VBlank, unlike the horizontal WX register.
+            let dy = if (1..=3).contains(&phase) { 8 }
+                else if phase >= 10 && (phase - 10) % 6 < 3 { 7 - i32::from((phase - 10) / 6) }
+                else { 0 };
+            shift_vertical_band(fb, dy.max(0));
+        } else if matches!(self.kind, 2 | 3 | 5 | 6) {
+            let new = self.horizontal_offset(phase);
+            let old = phase.checked_sub(1).map(|p| self.horizontal_offset(p)).unwrap_or(0);
+            // WX writes happen during scanout. Use the common early-scanline
+            // boundary, not a whole-frame translation. Exact LCD write rows
+            // depend on the preceding move and interrupt phase (audit records
+            // the remaining transition-row differences separately).
+            let split = if old == new { 0 }
+                else if phase != 0 { 9 }
+                else if matches!(self.kind, 2 | 5) { 25 }
+                else { 18 };
+            shift_horizontal_band(fb, 0, split, old);
+            shift_horizontal_band(fb, split, fb.height(), new);
+        }
     }
 }
 

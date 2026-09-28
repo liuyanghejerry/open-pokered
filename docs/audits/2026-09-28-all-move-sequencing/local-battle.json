@@ -1,0 +1,28 @@
+{
+  "battle_type": "Wild",
+  "player_party": [
+    {
+      "species": "Bulbasaur",
+      "level": 30,
+      "hp": 50,
+      "moves": [
+        "LeechSeed",
+        "Growl",
+        "DoubleKick",
+        "Solarbeam"
+      ]
+    }
+  ],
+  "enemy_party": [
+    {
+      "species": "Snorlax",
+      "level": 30,
+      "moves": [
+        "Splash",
+        "Splash",
+        "Splash",
+        "Splash"
+      ]
+    }
+  ]
+}

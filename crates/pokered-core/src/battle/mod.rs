@@ -1,5 +1,6 @@
 use crate::alloc_prelude::*;
 pub mod accuracy;
+pub mod presentation;
 pub mod badge_boosts;
 pub mod capture;
 pub mod safari;
@@ -1098,6 +1099,7 @@ pub struct BattleScreen {
     /// *displayed* values; this tracks the real-HP targets and steps the
     /// display 1 bar pixel per 2 frames while message advancement waits.
     pub hp_bar_anim: HpBarAnim,
+    pub presentation: presentation::BattlePresentation,
     /// `wOptions` BIT_BATTLE_SHIFT (inverted): `Shift` prompts "Will you change
     /// #MON?" before an enemy trainer sends out their next mon after a faint;
     /// `Set` never prompts. Pushed from the game config by the frontend every
@@ -1315,6 +1317,7 @@ impl BattleScreen {
             pending_item_sfx: None,
             pending_anim_events: alloc::collections::VecDeque::new(),
             hp_bar_anim: HpBarAnim::default(),
+            presentation: presentation::BattlePresentation::default(),
             battle_style: BattleStyle::Shift,
             player_name: None,
             shift_prompt_yes: false,
@@ -1414,6 +1417,7 @@ impl BattleScreen {
             pending_item_sfx: None,
             pending_anim_events: alloc::collections::VecDeque::new(),
             hp_bar_anim: HpBarAnim::default(),
+            presentation: presentation::BattlePresentation::default(),
             battle_style: BattleStyle::Shift,
             player_name: None,
             shift_prompt_yes: false,
@@ -1575,13 +1579,13 @@ impl BattleScreen {
             let p = bs.player.active_mon();
             self.player_species = p.species;
             self.player_level = p.level;
-            self.hp_bar_anim.set_target(
+            if !self.presentation.holds_hp() { self.hp_bar_anim.set_target(
                 BattleSide::Player,
                 p.hp,
                 p.max_hp,
                 p.species,
                 &mut self.player_hp,
-            );
+            ); }
             self.player_max_hp = p.max_hp;
             self.player_status = p.status;
             self.player_party_size = bs.player.party.len();
@@ -1590,13 +1594,13 @@ impl BattleScreen {
             let e = bs.enemy.active_mon();
             self.enemy_species = e.species;
             self.enemy_level = e.level;
-            self.hp_bar_anim.set_target(
+            if !self.presentation.holds_hp() { self.hp_bar_anim.set_target(
                 BattleSide::Enemy,
                 e.hp,
                 e.max_hp,
                 e.species,
                 &mut self.enemy_hp,
-            );
+            ); }
             self.enemy_max_hp = e.max_hp;
             self.enemy_status = e.status;
             self.enemy_party_size = bs.enemy.party.len();
@@ -1820,10 +1824,14 @@ impl BattleScreen {
     }
 
     pub fn update_frame(&mut self, input: BattleInput) -> ScreenAction {
+        if self.presentation.enabled && self.presentation.waiting { return ScreenAction::Continue; }
         // HP-bar drain/refill animation (engine/gfx/hp_bar.asm): steps the
         // displayed HP toward the real HP at 1 bar pixel per 2 frames.
         self.hp_bar_anim
             .tick(&mut self.player_hp, &mut self.enemy_hp);
+        if self.presentation.enabled && !self.hp_bar_anim.is_active() && self.presentation.next_hit() {
+            return ScreenAction::Continue;
+        }
         match self.phase.clone() {
             BattlePhase::Intro {
                 phase,
@@ -2208,6 +2216,8 @@ impl BattleScreen {
                     return ScreenAction::Continue;
                 }
                 self.current_message = Some(messages[current].clone());
+                self.presentation.activate(current);
+                if self.presentation.waiting { return ScreenAction::Continue; }
                 // The original animates the HP bar *synchronously* before
                 // printing the next line (predef UpdateHPBar2,
                 // engine/battle/core.asm:4727); reproduce that by holding the
@@ -2216,6 +2226,8 @@ impl BattleScreen {
                     let next_idx = current + 1;
                     if next_idx >= messages.len() {
                         self.current_message = None;
+                        self.presentation.finish_pages();
+                        self.sync_display_from_state();
                         self.phase = *next_phase;
                         self.post_text_transition();
                     } else {
@@ -2817,11 +2829,14 @@ learn {learn_name}!")];
         // messages and the paginator re-wraps the localized text (Gen-1
         // Chinese fan-translation behavior; `is_zh` defaults to false and the
         // localize call passes English through unchanged).
-        let expanded: Vec<String> = messages
-            .iter()
-            .map(|m| pokered_data::battle_text::localize(m, self.is_zh))
-            .flat_map(|m| paginate_battle_text(&m))
-            .collect();
+        self.presentation.begin_pages();
+        let mut expanded = Vec::new();
+        for message in &messages {
+            let pages = paginate_battle_text(&pokered_data::battle_text::localize(message, self.is_zh));
+            self.presentation.add_pages(message, pages.len());
+            expanded.extend(pages);
+        }
+        self.presentation.finish_preparing();
 
         if expanded.is_empty() {
             self.phase = next;
@@ -2829,6 +2844,7 @@ learn {learn_name}!")];
         }
 
         self.current_message = Some(expanded[0].clone());
+        self.presentation.activate(0);
         self.phase = BattlePhase::ShowingText {
             messages: expanded,
             current: 0,
@@ -3669,6 +3685,7 @@ learn {learn_name}!")];
             let (_r, log) = StackDriver::execute_turn_logged(
                 &pokered_rules::PokeredRules, &mut state, &mut effects, actions, rng,
             );
+            self.presentation.record_turn(&log, &state, &effects, [bs.player.active_mon().hp, bs.enemy.active_mon().hp]);
             pokered_rules::runtime::apply_engine_to_legacy(bs, &state, &effects);
 
             for ev in &log.events {
@@ -3718,11 +3735,10 @@ learn {learn_name}!")];
             let mut m = pokered_rules::runtime::translate_turn(&log, &state, &effects);
             if let Some(label) = enemy_call {
                 if !ghost_enemy_blocked {
-                    if enemy_call_failed {
-                        m.insert(0, "But it failed!".to_string());
-                    }
-                    m.insert(0, format!("{} used {}!",
-                        pokered_rules::runtime::display_name(&state, BattlerRef::OPPONENT), label));
+                    self.presentation.called_move_in_order(&mut m,
+                        &pokered_rules::runtime::display_name(&state, BattlerRef::OPPONENT),
+                        label, enemy_move_id, false, enemy_call_failed,
+                        [self.player_hp, self.enemy_hp]);
                 }
             }
             // The ghost battle's enemy-side text (_GetOutText) — the GHOST never
@@ -3731,9 +3747,8 @@ learn {learn_name}!")];
                 m.push("GHOST: Get out...\nGet out...".to_string());
             }
             if !e_was_charging && bs.enemy.has_status1(CHARGING_UP) {
-                m.push(format!("{} {}",
-                    pokered_rules::runtime::display_name(&state, BattlerRef::OPPONENT),
-                    charge_message(enemy_move_id)));
+                self.presentation.charge_in_order(&mut m,
+                    &pokered_rules::runtime::display_name(&state, BattlerRef::OPPONENT), enemy_move_id, false);
             }
             let now_sub = bs.enemy.has_status2(HAS_SUBSTITUTE_UP);
             let created_sub = pokered_rules::sub_created_this_turn(BattlerRef::OPPONENT);
@@ -4319,7 +4334,8 @@ learn {learn_name}!")];
             let (_result, log) = StackDriver::execute_turn_logged(
                 &pokered_rules::PokeredRules, &mut state, &mut effects, actions, rng,
             );
-                pokered_rules::runtime::apply_engine_to_legacy(bs, &state, &effects);
+                self.presentation.record_turn(&log, &state, &effects, [bs.player.active_mon().hp, bs.enemy.active_mon().hp]);
+            pokered_rules::runtime::apply_engine_to_legacy(bs, &state, &effects);
                 // Track the last move each side ACTUALLY used (for Mimic / Mirror
                 // Move). The driver logs MoveUsed only for a move that passed the
                 // BeforeMove gates and executed, so a blocked / asleep / recharge /
@@ -4413,49 +4429,28 @@ learn {learn_name}!")];
                     bs.enemy.clear_status2(NEEDS_TO_RECHARGE);
                 }
                 let mut m = pokered_rules::runtime::translate_turn(&log, &state, &effects);
-                // Metronome / Mirror Move announce themselves before the resolved move's
-                // own log lines; a failed Mirror Move shows "But it failed!".
-                if let Some(label) = enemy_call {
-                    if enemy_call_failed {
-                        m.insert(0, "But it failed!".to_string());
+                // Called moves stay beside their resolved action, including when
+                // the caller acts second. Their own animation precedes the strike.
+                for (call, actor, resolved, failed) in [
+                    (enemy_call, BattlerRef::OPPONENT, enemy_move_id, enemy_call_failed),
+                    (player_call, BattlerRef::PLAYER, player_move_id, player_call_failed),
+                ] {
+                    if let Some(label) = call {
+                        self.presentation.called_move_in_order(&mut m,
+                            &pokered_rules::runtime::display_name(&state, actor),
+                            label, resolved, actor.side == 0, failed,
+                            [self.player_hp, self.enemy_hp]);
                     }
-                    m.insert(
-                        0,
-                        format!(
-                            "{} used {}!",
-                            pokered_rules::runtime::display_name(&state, BattlerRef::OPPONENT),
-                            label
-                        ),
-                    );
                 }
-                if let Some(label) = player_call {
-                    if player_call_failed {
-                        m.insert(0, "But it failed!".to_string());
-                    }
-                    m.insert(
-                        0,
-                        format!(
-                            "{} used {}!",
-                            pokered_rules::runtime::display_name(&state, BattlerRef::PLAYER),
-                            label
-                        ),
-                    );
-                }
-                // Charge move gather turn → append its "flew up high!" style line after
-                // the "used X!" line (the strike turn narrates normally via the log).
+                // Replace the gather-turn announcement in place; never append it
+                // after the other actor's action. Strike turns use normal narration.
                 if !p_was_charging && bs.player.has_status1(CHARGING_UP) {
-                    m.push(format!(
-                        "{} {}",
-                        pokered_rules::runtime::display_name(&state, BattlerRef::PLAYER),
-                        charge_message(player_move_id)
-                    ));
+                    self.presentation.charge_in_order(&mut m,
+                        &pokered_rules::runtime::display_name(&state, BattlerRef::PLAYER), player_move_id, true);
                 }
                 if !e_was_charging && bs.enemy.has_status1(CHARGING_UP) {
-                    m.push(format!(
-                        "{} {}",
-                        pokered_rules::runtime::display_name(&state, BattlerRef::OPPONENT),
-                        charge_message(enemy_move_id)
-                    ));
+                    self.presentation.charge_in_order(&mut m,
+                        &pokered_rules::runtime::display_name(&state, BattlerRef::OPPONENT), enemy_move_id, false);
                 }
                 // Substitute: narrate a doll raised this turn ("put in a SUBSTITUTE!")
                 // and/or broken ("'s SUBSTITUTE broke!"). The absorb itself is silent, as

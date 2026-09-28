@@ -1,0 +1,6 @@
+[m02] frame=1827 screen=overworld map=RedsHouse2F pos=(3,6) party=0 money=3000 effect=None
+[m29] frame=13993 screen=overworld map=FuchsiaCity pos=(19,27) party=1 money=2500 effect=None
+PASS timeout exits without repurchase, Gold Teeth exchanged for HM04; money unchanged
+[m02] frame=1827 screen=overworld map=RedsHouse2F pos=(3,6) party=0 money=3000 effect=None
+[m29] frame=13993 screen=overworld map=FuchsiaCity pos=(19,27) party=1 money=2500 effect=None
+PASS timeout exits without repurchase, Gold Teeth exchanged for HM04; money unchanged

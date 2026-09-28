@@ -1,0 +1,14 @@
+memory: PASS case=pokedex count=302 free=61312B stack=15504B
+memory: PASS case=maps count=248 free=28888B stack=15504B
+memory: PASS case=oak-parcel count=1 free=26376B stack=15504B
+memory: PASS case=oak-dex count=16 free=21600B stack=15504B
+memory: PASS case=fossil count=1 free=22824B stack=15504B
+memory: PASS case=slots count=3 free=27864B stack=15504B
+memory: PASS case=menus count=48 free=20632B stack=15504B
+memory: PASS case=moves count=330 free=11680B stack=15504B
+memory: PASS case=evolution count=3 free=18392B stack=15504B
+memory: PASS case=trade count=3 free=13272B stack=15504B
+memory: PASS case=ending count=1 free=14680B stack=15504B
+memory: PASS case=pc-full count=300 free=19480B stack=15504B
+memory: PASS case=save-full count=1 free=28888B stack=15504B
+memory: ALL PASS stack=15504B

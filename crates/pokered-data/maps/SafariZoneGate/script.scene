@@ -7,11 +7,23 @@
 // bounces them back to the gate. The scene reproduces the gate dialogue
 // (join fee, leaving-early return) with real primitives, plus the on-step
 // interception at the gate row (coords 3,2 / 4,2) so the player can't walk
-// into the ZONE past the counter without paying; the remaining gap is a
-// script-side query/control API for the hunt state (tracked in the completion
-// plan).
+// into the ZONE past the counter without paying. Returning to the gate
+// preserves the current hunt until the player confirms an early exit.
 
 game_scene SafariZoneGate {
+  // A timeout/empty-ball eject is already a finished hunt, not a new visit.
+  // Original LeavingSafariScript consumes GAME_OVER and walks down 3 tiles.
+  @load {
+    @if (getFlag("EVENT_SAFARI_GAME_OVER")) {
+      resetFlag("EVENT_SAFARI_GAME_OVER")
+      resetFlag("EVENT_IN_SAFARI_ZONE")
+      @speaker("") {
+        @t("Did you get a\ngood haul?\nCome again!", "收获不错吧？\n欢迎再来！")
+      }
+      movePlayerRelative(["down", "down", "down"])
+    }
+  }
+
   // ── Gate worker (npc 1): collects the fee, hands out SAFARI BALLs ────────
   @storyline("talkSafariZoneWorker1") {
     @trigger(map = "SafariZoneGate", npc = 1)
@@ -23,10 +35,7 @@ game_scene SafariZoneGate {
           @speaker("") {
             @t("Please return any SAFARI\nBALLs you have left.", "请把剩下的狩猎球还给我。")
           }
-          // Approximation: hand back the remaining SAFARI BALLs and end the hunt.
-          // The engine-side safari_balls counter decrements per throw and is not
-          // refunded on early exit (matches the original).
-          takeItem("SAFARI_BALL", 30)
+          // Resetting the live flag ends the hunt and clears its dedicated counters.
           resetFlag("EVENT_SAFARI_GAME_OVER")
           resetFlag("EVENT_IN_SAFARI_ZONE")
         }
@@ -48,9 +57,8 @@ game_scene SafariZoneGate {
             @speaker("") {
               @t("That'll be ¥500 please!\n\nWe only use a special POKe\nBALL here.\n\n<PLAYER> received 30 SAFARI\nBALLs!", "请交 500日元！\n\n我们这里只使用特制的精灵球。\n\n<PLAYER>获得了 30个狩猎球！")
             }
-            // The engine auto-sets the 500-step / 30-ball Safari timer on warp
-            // into the zone; the 30 bag SAFARI BALLs are what this scene grants.
-            giveItem("SAFARI_BALL", 30)
+            // The allowance uses a dedicated counter, never the ordinary bag.
+            // Entering after payment starts a new 500-step / 30-ball hunt.
             @speaker("") {
               @t("We'll call you on the PA\nwhen you run out of time or\nSAFARI BALLs!", "当你时间用完或狩猎球用完时，\n我们会用广播呼叫你！")
             }
@@ -112,7 +120,6 @@ game_scene SafariZoneGate {
           }
           // Same hand-back as the talk handler: the engine-side safari_balls
           // counter decrements per throw and is not refunded on early exit.
-          takeItem("SAFARI_BALL", 30)
           resetFlag("EVENT_SAFARI_GAME_OVER")
           resetFlag("EVENT_IN_SAFARI_ZONE")
           // Original auto-walks the player down out of the gate (PAD_DOWN x3);
@@ -140,9 +147,8 @@ game_scene SafariZoneGate {
             @speaker("") {
               @t("That'll be ¥500 please!\n\nWe only use a special POKe\nBALL here.\n\n<PLAYER> received 30 SAFARI\nBALLs!", "请交 500日元！\n\n我们这里只使用特制的精灵球。\n\n<PLAYER>获得了 30个狩猎球！")
             }
-            // The engine auto-sets the 500-step / 30-ball Safari timer on warp
-            // into the zone; the 30 bag SAFARI BALLs are what this scene grants.
-            giveItem("SAFARI_BALL", 30)
+            // The allowance uses a dedicated counter, never the ordinary bag.
+            // Entering after payment starts a new 500-step / 30-ball hunt.
             @speaker("") {
               @t("We'll call you on the PA\nwhen you run out of time or\nSAFARI BALLs!", "当你时间用完或狩猎球用完时，\n我们会用广播呼叫你！")
             }

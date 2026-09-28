@@ -1,0 +1,1629 @@
+frame=0 status=0000 volume=0000
+pokered-gba: booting game core…
+pokered-gba: game constructed
+pokered-gba: battle rules ready
+pokered-gba: first frame done
+prof f60 ticks(avg) wait=3906 upd=264 draw/render=13835 present/render=775 dump=1 total=4707 max=25704 renders=1
+prof f120 ticks(avg) wait=3962 upd=115 draw/render=0 present/render=0 dump=1 total=4361 max=4369 renders=0
+frame=300 status=0080 volume=0077
+prof f180 ticks(avg) wait=3963 upd=115 draw/render=7660 present/render=775 dump=1 total=4498 max=12522 renders=1
+prof f240 ticks(avg) wait=3885 upd=116 draw/render=0 present/render=0 dump=1 total=4298 max=4369 renders=0
+prof f300 ticks(avg) wait=2259 upd=193 draw/render=5636 present/render=774 dump=1 total=8558 max=10610 renders=57
+frame=600 status=0080 volume=0077
+keys=03ff
+prof f360 ticks(avg) wait=2188 upd=187 draw/render=5596 present/render=774 dump=1 total=8748 max=9192 renders=60
+prof f420 ticks(avg) wait=1958 upd=187 draw/render=5827 present/render=774 dump=1 total=8749 max=9564 renders=60
+prof f480 ticks(avg) wait=2644 upd=162 draw/render=5839 present/render=774 dump=1 total=7113 max=9564 renders=38
+prof f540 ticks(avg) wait=3828 upd=128 draw/render=7157 present/render=774 dump=1 total=4508 max=12154 renders=2
+frame=900 status=0080 volume=0077
+prof f600 ticks(avg) wait=1723 upd=258 draw/render=7347 present/render=775 dump=1 total=7491 max=21520 renders=40
+timing: frame scene=41 tick=601 clock=3799268 updates=1 update=600 draw=7051 present=798 map=38
+video: scene=41 tick=1 vblank=997 hash=63797c01
+timing: frame scene=41 tick=602 clock=3808080 updates=1 update=303 draw=7050 present=776 map=38
+video: scene=41 tick=2 vblank=999 hash=63797c01
+timing: frame scene=41 tick=603 clock=3816594 updates=1 update=303 draw=7051 present=775 map=38
+video: scene=41 tick=3 vblank=1001 hash=63797c01
+timing: frame scene=41 tick=604 clock=3825193 updates=1 update=307 draw=6960 present=775 map=38
+video: scene=41 tick=4 vblank=1003 hash=4dc15f51
+timing: frame scene=41 tick=605 clock=3833970 updates=1 update=287 draw=6961 present=776 map=38
+video: scene=41 tick=5 vblank=1005 hash=4dc15f51
+timing: frame scene=41 tick=606 clock=3842748 updates=1 update=308 draw=6961 present=775 map=38
+video: scene=41 tick=6 vblank=1007 hash=4dc15f51
+timing: frame scene=41 tick=607 clock=3851526 updates=1 update=308 draw=7157 present=775 map=38
+video: scene=41 tick=7 vblank=1009 hash=73b0f92d
+timing: frame scene=41 tick=608 clock=3860304 updates=1 update=225 draw=7158 present=775 map=38
+video: scene=41 tick=8 vblank=1011 hash=73b0f92d
+timing: frame scene=41 tick=609 clock=3869082 updates=1 update=308 draw=7156 present=776 map=38
+video: scene=41 tick=9 vblank=1013 hash=73b0f92d
+timing: frame scene=41 tick=610 clock=3877860 updates=1 update=307 draw=7067 present=776 map=38
+video: scene=41 tick=10 vblank=1015 hash=317ef501
+timing: frame scene=41 tick=611 clock=3886638 updates=1 update=311 draw=7065 present=776 map=38
+video: scene=41 tick=11 vblank=1017 hash=317ef501
+timing: frame scene=41 tick=612 clock=3895416 updates=1 update=305 draw=7067 present=776 map=38
+video: scene=41 tick=12 vblank=1019 hash=317ef501
+timing: frame scene=41 tick=613 clock=3904194 updates=1 update=290 draw=7209 present=775 map=38
+video: scene=41 tick=13 vblank=1021 hash=03fe80bd
+timing: frame scene=41 tick=614 clock=3912972 updates=1 update=310 draw=7210 present=775 map=38
+video: scene=41 tick=14 vblank=1023 hash=03fe80bd
+timing: frame scene=41 tick=615 clock=3921750 updates=1 update=306 draw=7209 present=775 map=38
+video: scene=41 tick=15 vblank=1025 hash=03fe80bd
+timing: frame scene=41 tick=616 clock=3930528 updates=1 update=227 draw=7066 present=775 map=38
+video: scene=41 tick=16 vblank=1027 hash=bfdfb9b1
+timing: frame scene=41 tick=617 clock=3939306 updates=1 update=307 draw=7067 present=776 map=38
+video: scene=41 tick=17 vblank=1029 hash=bfdfb9b1
+timing: frame scene=41 tick=618 clock=3948084 updates=1 update=306 draw=7066 present=775 map=38
+video: scene=41 tick=18 vblank=1031 hash=bfdfb9b1
+timing: frame scene=41 tick=619 clock=3956862 updates=1 update=526 draw=7211 present=775 map=38
+video: scene=41 tick=19 vblank=1033 hash=33d6bc0d
+timing: frame scene=41 tick=620 clock=3965759 updates=1 update=203 draw=7210 present=775 map=38
+video: scene=41 tick=20 vblank=1035 hash=33d6bc0d
+timing: frame scene=41 tick=621 clock=3974419 updates=1 update=313 draw=7210 present=775 map=38
+video: scene=41 tick=21 vblank=1037 hash=33d6bc0d
+timing: frame scene=41 tick=622 clock=3983196 updates=1 update=207 draw=7067 present=776 map=38
+video: scene=41 tick=22 vblank=1039 hash=c2b44ce1
+timing: frame scene=41 tick=623 clock=3991974 updates=1 update=489 draw=7065 present=776 map=38
+video: scene=41 tick=23 vblank=1041 hash=c2b44ce1
+timing: frame scene=41 tick=624 clock=4000752 updates=1 update=220 draw=7066 present=775 map=38
+video: scene=41 tick=24 vblank=1043 hash=c2b44ce1
+timing: frame scene=41 tick=625 clock=4009530 updates=1 update=204 draw=7209 present=776 map=38
+video: scene=41 tick=25 vblank=1045 hash=874d9d3d
+timing: frame scene=41 tick=626 clock=4018308 updates=1 update=311 draw=7209 present=775 map=38
+video: scene=41 tick=26 vblank=1047 hash=874d9d3d
+timing: frame scene=41 tick=627 clock=4027086 updates=1 update=203 draw=7209 present=776 map=38
+video: scene=41 tick=27 vblank=1049 hash=874d9d3d
+timing: frame scene=41 tick=628 clock=4035864 updates=1 update=514 draw=7067 present=776 map=38
+video: scene=41 tick=28 vblank=1051 hash=c8f6a131
+timing: frame scene=41 tick=629 clock=4044642 updates=1 update=303 draw=7066 present=775 map=38
+video: scene=41 tick=29 vblank=1053 hash=c8f6a131
+timing: frame scene=41 tick=630 clock=4053420 updates=1 update=303 draw=7067 present=775 map=38
+video: scene=41 tick=30 vblank=1055 hash=c8f6a131
+timing: frame scene=41 tick=631 clock=4062198 updates=1 update=222 draw=7210 present=776 map=38
+video: scene=41 tick=31 vblank=1057 hash=f22996cd
+timing: frame scene=41 tick=632 clock=4070976 updates=1 update=307 draw=7209 present=775 map=38
+video: scene=41 tick=32 vblank=1059 hash=f22996cd
+timing: frame scene=41 tick=633 clock=4079754 updates=1 update=308 draw=7210 present=775 map=38
+video: scene=41 tick=33 vblank=1061 hash=f22996cd
+timing: frame scene=41 tick=634 clock=4088532 updates=1 update=311 draw=7065 present=776 map=38
+video: scene=41 tick=34 vblank=1063 hash=4c1b05a1
+timing: frame scene=41 tick=635 clock=4097310 updates=1 update=305 draw=7067 present=776 map=38
+video: scene=41 tick=35 vblank=1065 hash=4c1b05a1
+timing: frame scene=41 tick=636 clock=4106088 updates=1 update=291 draw=7065 present=776 map=38
+video: scene=41 tick=36 vblank=1067 hash=4c1b05a1
+timing: frame scene=41 tick=637 clock=4114866 updates=1 update=534 draw=7210 present=776 map=38
+video: scene=41 tick=37 vblank=1069 hash=e8d2e75d
+timing: frame scene=41 tick=638 clock=4123771 updates=1 update=221 draw=7210 present=775 map=38
+video: scene=41 tick=38 vblank=1071 hash=e8d2e75d
+timing: frame scene=41 tick=639 clock=4132423 updates=1 update=203 draw=7210 present=775 map=38
+video: scene=41 tick=39 vblank=1073 hash=e8d2e75d
+timing: frame scene=41 tick=640 clock=4141200 updates=1 update=313 draw=7067 present=776 map=38
+video: scene=41 tick=40 vblank=1075 hash=2acd7f11
+timing: frame scene=41 tick=641 clock=4149978 updates=1 update=204 draw=7067 present=775 map=38
+video: scene=41 tick=41 vblank=1077 hash=2acd7f11
+timing: frame scene=41 tick=642 clock=4158756 updates=1 update=506 draw=7065 present=776 map=38
+video: scene=41 tick=42 vblank=1079 hash=2acd7f11
+timing: frame scene=41 tick=643 clock=4167534 updates=1 update=204 draw=7209 present=775 map=38
+video: scene=41 tick=43 vblank=1081 hash=21442cad
+timing: frame scene=41 tick=644 clock=4176312 updates=1 update=311 draw=7209 present=775 map=38
+video: scene=41 tick=44 vblank=1083 hash=21442cad
+timing: frame scene=41 tick=645 clock=4185090 updates=1 update=203 draw=7208 present=776 map=38
+video: scene=41 tick=45 vblank=1085 hash=21442cad
+timing: frame scene=41 tick=646 clock=4193868 updates=1 update=514 draw=7067 present=775 map=38
+video: scene=41 tick=46 vblank=1087 hash=3d0ba601
+timing: frame scene=41 tick=647 clock=4202646 updates=1 update=220 draw=7067 present=775 map=38
+video: scene=41 tick=47 vblank=1089 hash=3d0ba601
+timing: frame scene=41 tick=648 clock=4211424 updates=1 update=202 draw=7067 present=776 map=38
+video: scene=41 tick=48 vblank=1091 hash=3d0ba601
+timing: frame scene=41 tick=649 clock=4220202 updates=1 update=204 draw=7211 present=775 map=38
+video: scene=41 tick=49 vblank=1093 hash=8e75cc8b
+timing: frame scene=41 tick=650 clock=4228980 updates=1 update=206 draw=7210 present=775 map=38
+video: scene=41 tick=50 vblank=1095 hash=8e75cc8b
+timing: frame scene=41 tick=651 clock=4237758 updates=1 update=205 draw=7210 present=775 map=38
+video: scene=41 tick=51 vblank=1097 hash=8e75cc8b
+timing: frame scene=41 tick=652 clock=4246536 updates=1 update=209 draw=7067 present=776 map=38
+video: scene=41 tick=52 vblank=1099 hash=0a963801
+timing: frame scene=41 tick=653 clock=4255314 updates=1 update=207 draw=7067 present=776 map=38
+video: scene=41 tick=53 vblank=1101 hash=0a963801
+timing: frame scene=41 tick=654 clock=4264092 updates=1 update=205 draw=7067 present=775 map=38
+video: scene=41 tick=54 vblank=1103 hash=0a963801
+timing: frame scene=41 tick=655 clock=4272870 updates=1 update=209 draw=7210 present=776 map=38
+video: scene=41 tick=55 vblank=1105 hash=c6d922e1
+timing: frame scene=41 tick=656 clock=4281648 updates=1 update=529 draw=7209 present=776 map=38
+video: scene=41 tick=56 vblank=1107 hash=c6d922e1
+timing: frame scene=41 tick=657 clock=4290547 updates=1 update=202 draw=7209 present=775 map=38
+video: scene=41 tick=57 vblank=1109 hash=c6d922e1
+timing: frame scene=41 tick=658 clock=4299205 updates=1 update=314 draw=7065 present=776 map=38
+video: scene=41 tick=58 vblank=1111 hash=88bd3734
+timing: frame scene=41 tick=659 clock=4307982 updates=1 update=203 draw=7065 present=776 map=38
+video: scene=41 tick=59 vblank=1113 hash=88bd3734
+timing: frame scene=41 tick=660 clock=4316760 updates=1 update=488 draw=7067 present=775 map=38
+prof f660 ticks(avg) wait=214 upd=299 draw/render=7122 present/render=774 dump=334 total=8745 max=9165 renders=60
+video: scene=41 tick=60 vblank=1115 hash=88bd3734
+timing: frame scene=41 tick=661 clock=4325898 updates=1 update=223 draw=7210 present=775 map=38
+video: scene=41 tick=61 vblank=1117 hash=e2217019
+timing: frame scene=41 tick=662 clock=4334492 updates=1 update=202 draw=7210 present=776 map=38
+video: scene=41 tick=62 vblank=1119 hash=e2217019
+timing: frame scene=41 tick=663 clock=4343095 updates=1 update=312 draw=7210 present=775 map=38
+video: scene=41 tick=63 vblank=1121 hash=e2217019
+timing: frame scene=41 tick=664 clock=4351872 updates=1 update=208 draw=7067 present=775 map=38
+video: scene=41 tick=64 vblank=1123 hash=1bbaba17
+timing: frame scene=41 tick=665 clock=4360650 updates=1 update=530 draw=7065 present=776 map=38
+video: scene=41 tick=65 vblank=1125 hash=1bbaba17
+timing: frame scene=41 tick=666 clock=4369428 updates=1 update=202 draw=7066 present=775 map=38
+video: scene=41 tick=66 vblank=1127 hash=1bbaba17
+timing: frame scene=41 tick=667 clock=4378206 updates=1 update=205 draw=7208 present=776 map=38
+video: scene=41 tick=67 vblank=1129 hash=a60f348d
+timing: frame scene=41 tick=668 clock=4386984 updates=1 update=203 draw=7209 present=775 map=38
+video: scene=41 tick=68 vblank=1131 hash=a60f348d
+timing: frame scene=41 tick=669 clock=4395762 updates=1 update=206 draw=7209 present=776 map=38
+video: scene=41 tick=69 vblank=1133 hash=a60f348d
+timing: frame scene=41 tick=670 clock=4404540 updates=1 update=209 draw=7066 present=775 map=38
+video: scene=41 tick=70 vblank=1135 hash=15c9765b
+timing: frame scene=41 tick=671 clock=4413318 updates=1 update=205 draw=7065 present=776 map=38
+video: scene=41 tick=71 vblank=1137 hash=15c9765b
+timing: frame scene=41 tick=672 clock=4422096 updates=1 update=207 draw=7066 present=775 map=38
+video: scene=41 tick=72 vblank=1139 hash=15c9765b
+timing: frame scene=41 tick=673 clock=4430874 updates=1 update=209 draw=7209 present=775 map=38
+video: scene=41 tick=73 vblank=1141 hash=2a699e97
+timing: frame scene=41 tick=674 clock=4439652 updates=1 update=512 draw=7210 present=775 map=38
+video: scene=41 tick=74 vblank=1143 hash=2a699e97
+timing: frame scene=41 tick=675 clock=4448535 updates=1 update=220 draw=7210 present=776 map=38
+video: scene=41 tick=75 vblank=1145 hash=2a699e97
+timing: frame scene=41 tick=676 clock=4457209 updates=1 update=314 draw=7067 present=775 map=38
+video: scene=41 tick=76 vblank=1147 hash=0156face
+timing: frame scene=41 tick=677 clock=4465986 updates=1 update=202 draw=7067 present=776 map=38
+video: scene=41 tick=77 vblank=1149 hash=0156face
+timing: frame scene=41 tick=678 clock=4474764 updates=1 update=203 draw=7068 present=775 map=38
+video: scene=41 tick=78 vblank=1151 hash=0156face
+timing: frame scene=41 tick=679 clock=4483542 updates=1 update=508 draw=7209 present=775 map=38
+video: scene=41 tick=79 vblank=1153 hash=506c0fd4
+timing: frame scene=41 tick=680 clock=4492419 updates=1 update=203 draw=7209 present=775 map=38
+video: scene=41 tick=80 vblank=1155 hash=506c0fd4
+timing: frame scene=41 tick=681 clock=4501099 updates=1 update=313 draw=7209 present=775 map=38
+video: scene=41 tick=81 vblank=1157 hash=506c0fd4
+timing: frame scene=41 tick=682 clock=4509876 updates=1 update=207 draw=7066 present=775 map=38
+video: scene=41 tick=82 vblank=1159 hash=bb8b5abf
+timing: frame scene=41 tick=683 clock=4518654 updates=1 update=505 draw=7067 present=775 map=38
+video: scene=41 tick=83 vblank=1161 hash=bb8b5abf
+timing: frame scene=41 tick=684 clock=4527432 updates=1 update=303 draw=7066 present=775 map=38
+video: scene=41 tick=84 vblank=1163 hash=bb8b5abf
+timing: frame scene=41 tick=685 clock=4536210 updates=1 update=305 draw=7210 present=775 map=38
+video: scene=41 tick=85 vblank=1165 hash=39365515
+timing: frame scene=41 tick=686 clock=4544988 updates=1 update=220 draw=7210 present=776 map=38
+video: scene=41 tick=86 vblank=1167 hash=39365515
+timing: frame scene=41 tick=687 clock=4553766 updates=1 update=305 draw=7208 present=776 map=38
+video: scene=41 tick=87 vblank=1169 hash=39365515
+timing: frame scene=41 tick=688 clock=4562544 updates=1 update=310 draw=7067 present=775 map=38
+video: scene=41 tick=88 vblank=1171 hash=6a4ef88c
+timing: frame scene=41 tick=689 clock=4571322 updates=1 update=309 draw=7065 present=776 map=38
+video: scene=41 tick=89 vblank=1173 hash=6a4ef88c
+timing: frame scene=41 tick=690 clock=4580100 updates=1 update=287 draw=7067 present=776 map=38
+video: scene=41 tick=90 vblank=1175 hash=6a4ef88c
+timing: frame scene=41 tick=691 clock=4588878 updates=1 update=310 draw=7209 present=776 map=38
+video: scene=41 tick=91 vblank=1177 hash=ac9dfdc6
+timing: frame scene=41 tick=692 clock=4597656 updates=1 update=526 draw=7210 present=776 map=38
+video: scene=41 tick=92 vblank=1179 hash=ac9dfdc6
+timing: frame scene=41 tick=693 clock=4606553 updates=1 update=220 draw=7210 present=776 map=38
+video: scene=41 tick=93 vblank=1181 hash=ac9dfdc6
+timing: frame scene=41 tick=694 clock=4615213 updates=1 update=205 draw=7067 present=775 map=38
+video: scene=41 tick=94 vblank=1183 hash=777c3696
+timing: frame scene=41 tick=695 clock=4623990 updates=1 update=311 draw=7067 present=776 map=38
+video: scene=41 tick=95 vblank=1185 hash=777c3696
+timing: frame scene=41 tick=696 clock=4632768 updates=1 update=204 draw=7067 present=775 map=38
+video: scene=41 tick=96 vblank=1187 hash=777c3696
+timing: frame scene=41 tick=697 clock=4641546 updates=1 update=508 draw=7209 present=775 map=38
+video: scene=41 tick=97 vblank=1189 hash=077bf2c9
+timing: frame scene=41 tick=698 clock=4650423 updates=1 update=203 draw=7209 present=775 map=38
+video: scene=41 tick=98 vblank=1191 hash=077bf2c9
+timing: frame scene=41 tick=699 clock=4659103 updates=1 update=312 draw=7208 present=776 map=38
+video: scene=41 tick=99 vblank=1193 hash=077bf2c9
+timing: frame scene=41 tick=700 clock=4667880 updates=1 update=207 draw=7066 present=775 map=38
+video: scene=41 tick=100 vblank=1195 hash=850d0e69
+timing: frame scene=41 tick=701 clock=4676658 updates=1 update=204 draw=7066 present=775 map=38
+video: scene=41 tick=101 vblank=1197 hash=850d0e69
+timing: frame scene=41 tick=702 clock=4685436 updates=1 update=529 draw=7067 present=775 map=38
+video: scene=41 tick=102 vblank=1199 hash=850d0e69
+timing: frame scene=41 tick=703 clock=4694214 updates=1 update=204 draw=7211 present=775 map=38
+frame=1200 status=008f volume=ff77
+video: scene=41 tick=103 vblank=1201 hash=a948d324
+timing: frame scene=41 tick=704 clock=4702992 updates=1 update=202 draw=7211 present=775 map=38
+video: scene=41 tick=104 vblank=1203 hash=a948d324
+timing: frame scene=41 tick=705 clock=4711770 updates=1 update=203 draw=7210 present=776 map=38
+video: scene=41 tick=105 vblank=1205 hash=a948d324
+timing: frame scene=41 tick=706 clock=4720548 updates=1 update=209 draw=7067 present=775 map=38
+video: scene=41 tick=106 vblank=1207 hash=998dd090
+timing: frame scene=41 tick=707 clock=4729326 updates=1 update=205 draw=7067 present=775 map=38
+video: scene=41 tick=107 vblank=1209 hash=998dd090
+timing: frame scene=41 tick=708 clock=4738104 updates=1 update=207 draw=7067 present=776 map=38
+video: scene=41 tick=108 vblank=1211 hash=998dd090
+timing: frame scene=41 tick=709 clock=4746882 updates=1 update=209 draw=7210 present=776 map=38
+video: scene=41 tick=109 vblank=1213 hash=f1515943
+timing: frame scene=41 tick=710 clock=4755660 updates=1 update=205 draw=7210 present=775 map=38
+video: scene=41 tick=110 vblank=1215 hash=f1515943
+timing: frame scene=41 tick=711 clock=4764438 updates=1 update=536 draw=7208 present=776 map=38
+video: scene=41 tick=111 vblank=1217 hash=f1515943
+timing: frame scene=41 tick=712 clock=4773343 updates=1 update=205 draw=7065 present=776 map=38
+video: scene=41 tick=112 vblank=1219 hash=a598295b
+timing: frame scene=41 tick=713 clock=4781995 updates=1 update=312 draw=7065 present=776 map=38
+video: scene=41 tick=113 vblank=1221 hash=a598295b
+timing: frame scene=41 tick=714 clock=4790772 updates=1 update=203 draw=7065 present=776 map=38
+video: scene=41 tick=114 vblank=1223 hash=a598295b
+timing: frame scene=41 tick=715 clock=4799550 updates=1 update=492 draw=7210 present=776 map=38
+video: scene=41 tick=115 vblank=1225 hash=813c0e88
+timing: frame scene=41 tick=716 clock=4808413 updates=1 update=220 draw=7211 present=775 map=38
+video: scene=41 tick=116 vblank=1227 hash=813c0e88
+timing: frame scene=41 tick=717 clock=4817107 updates=1 update=203 draw=7210 present=775 map=38
+video: scene=41 tick=117 vblank=1229 hash=813c0e88
+timing: frame scene=41 tick=718 clock=4825884 updates=1 update=313 draw=7067 present=776 map=38
+video: scene=41 tick=118 vblank=1231 hash=ae785671
+timing: frame scene=41 tick=719 clock=4834662 updates=1 update=203 draw=7067 present=776 map=38
+video: scene=41 tick=119 vblank=1233 hash=ae785671
+timing: frame scene=41 tick=720 clock=4843440 updates=1 update=536 draw=7066 present=775 map=38
+prof f720 ticks(avg) wait=217 upd=282 draw/render=7138 present/render=774 dump=335 total=8747 max=9224 renders=60
+video: scene=41 tick=120 vblank=1235 hash=ae785671
+timing: frame scene=41 tick=721 clock=4852626 updates=1 update=324 draw=7064 present=775 map=38
+video: scene=41 tick=121 vblank=1237 hash=ae785671
+timing: frame scene=41 tick=722 clock=4861175 updates=1 update=267 draw=7064 present=775 map=38
+video: scene=41 tick=122 vblank=1239 hash=ae785671
+timing: frame scene=41 tick=723 clock=4869775 updates=1 update=203 draw=7064 present=776 map=38
+video: scene=41 tick=123 vblank=1241 hash=ae785671
+timing: frame scene=41 tick=724 clock=4878552 updates=1 update=206 draw=7064 present=776 map=38
+video: scene=41 tick=124 vblank=1243 hash=ae785671
+timing: frame scene=41 tick=725 clock=4887330 updates=1 update=305 draw=7066 present=775 map=38
+video: scene=41 tick=125 vblank=1245 hash=ae785671
+timing: frame scene=41 tick=726 clock=4896108 updates=1 update=308 draw=7533 present=776 map=38
+video: scene=41 tick=126 vblank=1247 hash=af8e7d7b
+timing: frame scene=41 tick=727 clock=4905110 updates=1 update=306 draw=7535 present=798 map=38
+video: scene=41 tick=127 vblank=1249 hash=af8e7d7b
+timing: frame scene=41 tick=728 clock=4914111 updates=1 update=333 draw=7533 present=799 map=38
+video: scene=41 tick=128 vblank=1251 hash=af8e7d7b
+timing: frame scene=41 tick=729 clock=4923138 updates=1 update=498 draw=7535 present=799 map=38
+video: scene=41 tick=129 vblank=1253 hash=af8e7d7b
+timing: frame scene=41 tick=730 clock=4932332 updates=1 update=221 draw=7558 present=776 map=38
+video: scene=41 tick=130 vblank=1255 hash=af8e7d7b
+timing: frame scene=41 tick=731 clock=4941249 updates=1 update=206 draw=7558 present=776 map=38
+video: scene=41 tick=131 vblank=1258 hash=448604a0
+timing: frame scene=41 tick=732 clock=4953165 updates=1 update=284 draw=7535 present=775 map=38
+video: scene=41 tick=132 vblank=1260 hash=448604a0
+timing: frame scene=41 tick=733 clock=4962145 updates=1 update=205 draw=7535 present=775 map=38
+video: scene=41 tick=133 vblank=1262 hash=448604a0
+timing: frame scene=41 tick=734 clock=4971045 updates=1 update=206 draw=7535 present=799 map=38
+video: scene=41 tick=134 vblank=1264 hash=448604a0
+timing: frame scene=41 tick=735 clock=4979947 updates=1 update=210 draw=7535 present=799 map=38
+video: scene=41 tick=135 vblank=1266 hash=448604a0
+timing: frame scene=41 tick=736 clock=4988853 updates=1 update=209 draw=7065 present=776 map=38
+video: scene=41 tick=136 vblank=1268 hash=75723642
+timing: frame scene=41 tick=737 clock=4997288 updates=1 update=208 draw=7065 present=776 map=38
+video: scene=41 tick=137 vblank=1270 hash=75723642
+timing: frame scene=41 tick=738 clock=5005834 updates=1 update=208 draw=7066 present=775 map=38
+video: scene=41 tick=138 vblank=1272 hash=75723642
+timing: frame scene=41 tick=739 clock=5014611 updates=1 update=205 draw=7066 present=775 map=38
+video: scene=41 tick=139 vblank=1274 hash=75723642
+timing: frame scene=41 tick=740 clock=5023389 updates=1 update=208 draw=7065 present=776 map=38
+video: scene=41 tick=140 vblank=1276 hash=75723642
+timing: frame scene=41 tick=741 clock=5032167 updates=1 update=212 draw=7066 present=775 map=38
+video: scene=41 tick=141 vblank=1278 hash=8e243460
+timing: frame scene=41 tick=742 clock=5040945 updates=1 update=207 draw=7066 present=775 map=38
+video: scene=41 tick=142 vblank=1280 hash=8e243460
+timing: frame scene=41 tick=743 clock=5049723 updates=1 update=205 draw=7066 present=775 map=38
+video: scene=41 tick=143 vblank=1282 hash=8e243460
+timing: frame scene=41 tick=744 clock=5058501 updates=1 update=208 draw=7065 present=776 map=38
+video: scene=41 tick=144 vblank=1284 hash=8e243460
+timing: frame scene=41 tick=745 clock=5067279 updates=1 update=208 draw=7065 present=776 map=38
+video: scene=41 tick=145 vblank=1286 hash=8e243460
+timing: frame scene=41 tick=746 clock=5076057 updates=1 update=207 draw=7066 present=775 map=38
+video: scene=41 tick=146 vblank=1288 hash=8e243460
+timing: frame scene=41 tick=747 clock=5084835 updates=1 update=621 draw=7064 present=775 map=38
+video: scene=41 tick=147 vblank=1290 hash=ae785671
+timing: frame scene=41 tick=748 clock=5093681 updates=1 update=283 draw=7064 present=775 map=38
+video: scene=41 tick=148 vblank=1292 hash=ae785671
+timing: frame scene=41 tick=749 clock=5102392 updates=1 update=203 draw=7064 present=775 map=38
+video: scene=41 tick=149 vblank=1294 hash=ae785671
+timing: frame scene=41 tick=750 clock=5111169 updates=1 update=202 draw=7064 present=776 map=38
+video: scene=41 tick=150 vblank=1296 hash=ae785671
+timing: frame scene=41 tick=751 clock=5119947 updates=1 update=206 draw=7064 present=775 map=38
+video: scene=41 tick=151 vblank=1298 hash=ae785671
+timing: frame scene=41 tick=752 clock=5128725 updates=1 update=208 draw=7534 present=775 map=38
+video: scene=41 tick=152 vblank=1300 hash=9573d942
+timing: frame scene=41 tick=753 clock=5137626 updates=1 update=207 draw=7534 present=775 map=38
+video: scene=41 tick=153 vblank=1302 hash=9573d942
+timing: frame scene=41 tick=754 clock=5146528 updates=1 update=231 draw=7534 present=799 map=38
+video: scene=41 tick=154 vblank=1304 hash=9573d942
+timing: frame scene=41 tick=755 clock=5155454 updates=1 update=205 draw=7534 present=799 map=38
+video: scene=41 tick=155 vblank=1306 hash=9573d942
+timing: frame scene=41 tick=756 clock=5164354 updates=1 update=207 draw=7534 present=799 map=38
+video: scene=41 tick=156 vblank=1308 hash=9573d942
+timing: frame scene=41 tick=757 clock=5173256 updates=1 update=211 draw=7534 present=798 map=38
+video: scene=41 tick=157 vblank=1310 hash=d595d5b2
+timing: frame scene=41 tick=758 clock=5182162 updates=1 update=207 draw=7534 present=799 map=38
+video: scene=41 tick=158 vblank=1312 hash=d595d5b2
+timing: frame scene=41 tick=759 clock=5191064 updates=1 update=205 draw=7534 present=798 map=38
+video: scene=41 tick=159 vblank=1314 hash=d595d5b2
+timing: frame scene=41 tick=760 clock=5199964 updates=1 update=208 draw=7556 present=776 map=38
+video: scene=41 tick=160 vblank=1316 hash=d595d5b2
+timing: frame scene=41 tick=761 clock=5208866 updates=1 update=208 draw=7557 present=775 map=38
+video: scene=41 tick=161 vblank=1318 hash=d595d5b2
+timing: frame scene=41 tick=762 clock=5217768 updates=1 update=209 draw=7064 present=799 map=38
+video: scene=41 tick=162 vblank=1320 hash=5c6dc603
+timing: frame scene=41 tick=763 clock=5226202 updates=1 update=210 draw=7065 present=798 map=38
+video: scene=41 tick=163 vblank=1322 hash=5c6dc603
+timing: frame scene=41 tick=764 clock=5234637 updates=1 update=206 draw=7064 present=775 map=38
+video: scene=41 tick=164 vblank=1324 hash=5c6dc603
+timing: frame scene=41 tick=765 clock=5243068 updates=1 update=511 draw=7066 present=775 map=38
+video: scene=41 tick=165 vblank=1326 hash=5c6dc603
+timing: frame scene=41 tick=766 clock=5251805 updates=1 update=221 draw=7066 present=775 map=38
+video: scene=41 tick=166 vblank=1328 hash=5c6dc603
+timing: frame scene=41 tick=767 clock=5260396 updates=1 update=207 draw=7065 present=776 map=38
+video: scene=41 tick=167 vblank=1330 hash=08560926
+timing: frame scene=41 tick=768 clock=5269173 updates=1 update=203 draw=7066 present=775 map=38
+video: scene=41 tick=168 vblank=1332 hash=08560926
+timing: frame scene=41 tick=769 clock=5277951 updates=1 update=206 draw=7066 present=775 map=38
+video: scene=41 tick=169 vblank=1334 hash=08560926
+timing: frame scene=41 tick=770 clock=5286729 updates=1 update=205 draw=7066 present=775 map=38
+video: scene=41 tick=170 vblank=1336 hash=08560926
+timing: frame scene=41 tick=771 clock=5295507 updates=1 update=208 draw=7065 present=776 map=38
+video: scene=41 tick=171 vblank=1338 hash=08560926
+timing: frame scene=41 tick=772 clock=5304285 updates=1 update=209 draw=7066 present=775 map=38
+video: scene=41 tick=172 vblank=1340 hash=08560926
+timing: frame scene=41 tick=773 clock=5313063 updates=1 update=206 draw=7066 present=775 map=38
+video: scene=41 tick=173 vblank=1342 hash=08560926
+timing: frame scene=41 tick=774 clock=5321841 updates=1 update=210 draw=7066 present=775 map=38
+video: scene=41 tick=174 vblank=1344 hash=08560926
+timing: frame scene=41 tick=775 clock=5330619 updates=1 update=205 draw=7066 present=775 map=38
+video: scene=41 tick=175 vblank=1346 hash=08560926
+timing: frame scene=41 tick=776 clock=5339397 updates=1 update=205 draw=7066 present=775 map=38
+video: scene=41 tick=176 vblank=1348 hash=08560926
+timing: frame scene=41 tick=777 clock=5348175 updates=1 update=210 draw=7065 present=776 map=38
+video: scene=41 tick=177 vblank=1350 hash=08560926
+timing: frame scene=41 tick=778 clock=5356953 updates=1 update=205 draw=7066 present=775 map=38
+video: scene=41 tick=178 vblank=1352 hash=08560926
+timing: frame scene=41 tick=779 clock=5365731 updates=1 update=207 draw=7066 present=775 map=38
+video: scene=41 tick=179 vblank=1354 hash=08560926
+timing: frame scene=41 tick=780 clock=5374509 updates=1 update=208 draw=7065 present=776 map=38
+prof f780 ticks(avg) wait=237 upd=237 draw/render=7223 present/render=779 dump=336 total=8814 max=11970 renders=60
+video: scene=41 tick=180 vblank=1356 hash=08560926
+timing: frame scene=41 tick=781 clock=5383367 updates=1 update=206 draw=7065 present=776 map=38
+video: scene=41 tick=181 vblank=1358 hash=08560926
+timing: frame scene=41 tick=782 clock=5392066 updates=1 update=208 draw=7066 present=775 map=38
+video: scene=41 tick=182 vblank=1360 hash=08560926
+timing: frame scene=41 tick=783 clock=5400843 updates=1 update=332 draw=7066 present=775 map=38
+video: scene=41 tick=183 vblank=1362 hash=ae785671
+timing: frame scene=41 tick=784 clock=5409621 updates=1 update=558 draw=7066 present=775 map=38
+video: scene=41 tick=184 vblank=1364 hash=ae785671
+timing: frame scene=41 tick=785 clock=5418406 updates=1 update=300 draw=7066 present=775 map=38
+video: scene=41 tick=185 vblank=1366 hash=ae785671
+timing: frame scene=41 tick=786 clock=5427178 updates=1 update=285 draw=7065 present=776 map=38
+video: scene=41 tick=186 vblank=1368 hash=ae785671
+timing: frame scene=41 tick=787 clock=5435955 updates=1 update=301 draw=7065 present=776 map=38
+video: scene=41 tick=187 vblank=1370 hash=ae785671
+timing: frame scene=41 tick=788 clock=5444733 updates=1 update=308 draw=7535 present=775 map=38
+video: scene=41 tick=188 vblank=1372 hash=af8e7d7b
+timing: frame scene=41 tick=789 clock=5453737 updates=1 update=303 draw=7535 present=798 map=38
+video: scene=41 tick=189 vblank=1374 hash=af8e7d7b
+timing: frame scene=41 tick=790 clock=5462736 updates=1 update=280 draw=7535 present=799 map=38
+video: scene=41 tick=190 vblank=1376 hash=af8e7d7b
+timing: frame scene=41 tick=791 clock=5471712 updates=1 update=306 draw=7535 present=798 map=38
+video: scene=41 tick=191 vblank=1378 hash=af8e7d7b
+timing: frame scene=41 tick=792 clock=5480713 updates=1 update=306 draw=7535 present=798 map=38
+video: scene=41 tick=192 vblank=1380 hash=af8e7d7b
+timing: frame scene=41 tick=793 clock=5489715 updates=1 update=313 draw=7559 present=775 map=38
+video: scene=41 tick=193 vblank=1383 hash=448604a0
+timing: frame scene=41 tick=794 clock=5501790 updates=1 update=385 draw=7535 present=775 map=38
+video: scene=41 tick=194 vblank=1385 hash=448604a0
+timing: frame scene=41 tick=795 clock=5510871 updates=1 update=307 draw=7536 present=798 map=38
+video: scene=41 tick=195 vblank=1387 hash=448604a0
+timing: frame scene=41 tick=796 clock=5519874 updates=1 update=308 draw=7535 present=799 map=38
+video: scene=41 tick=196 vblank=1389 hash=448604a0
+timing: frame scene=41 tick=797 clock=5528878 updates=1 update=290 draw=7535 present=799 map=38
+video: scene=41 tick=197 vblank=1391 hash=448604a0
+timing: frame scene=41 tick=798 clock=5537864 updates=1 update=309 draw=7065 present=799 map=38
+video: scene=41 tick=198 vblank=1393 hash=75723642
+timing: frame scene=41 tick=799 clock=5546399 updates=1 update=308 draw=7066 present=798 map=38
+video: scene=41 tick=199 vblank=1395 hash=75723642
+timing: frame scene=41 tick=800 clock=5554933 updates=1 update=308 draw=7066 present=775 map=38
+video: scene=41 tick=200 vblank=1397 hash=75723642
+timing: frame scene=41 tick=801 clock=5563468 updates=1 update=224 draw=7066 present=775 map=38
+video: scene=41 tick=201 vblank=1399 hash=75723642
+timing: frame scene=41 tick=802 clock=5572015 updates=1 update=523 draw=7065 present=776 map=38
+video: scene=41 tick=202 vblank=1401 hash=75723642
+timing: frame scene=41 tick=803 clock=5580792 updates=1 update=206 draw=7066 present=775 map=38
+video: scene=41 tick=203 vblank=1403 hash=8e243460
+timing: frame scene=41 tick=804 clock=5589570 updates=1 update=312 draw=7065 present=776 map=38
+video: scene=41 tick=204 vblank=1405 hash=8e243460
+timing: frame scene=41 tick=805 clock=5598348 updates=1 update=203 draw=7066 present=775 map=38
+video: scene=41 tick=205 vblank=1407 hash=8e243460
+timing: frame scene=41 tick=806 clock=5607126 updates=1 update=490 draw=7066 present=775 map=38
+video: scene=41 tick=206 vblank=1409 hash=8e243460
+timing: frame scene=41 tick=807 clock=5615904 updates=1 update=221 draw=7065 present=776 map=38
+video: scene=41 tick=207 vblank=1411 hash=8e243460
+timing: frame scene=41 tick=808 clock=5624682 updates=1 update=205 draw=7065 present=776 map=38
+video: scene=41 tick=208 vblank=1413 hash=8e243460
+timing: frame scene=41 tick=809 clock=5633460 updates=1 update=435 draw=7066 present=775 map=38
+video: scene=41 tick=209 vblank=1415 hash=ae785671
+timing: frame scene=41 tick=810 clock=5642238 updates=1 update=268 draw=7066 present=775 map=38
+video: scene=41 tick=210 vblank=1417 hash=ae785671
+timing: frame scene=41 tick=811 clock=5651016 updates=1 update=496 draw=7065 present=776 map=38
+video: scene=41 tick=211 vblank=1419 hash=ae785671
+timing: frame scene=41 tick=812 clock=5659794 updates=1 update=202 draw=7066 present=775 map=38
+video: scene=41 tick=212 vblank=1421 hash=ae785671
+timing: frame scene=41 tick=813 clock=5668572 updates=1 update=202 draw=7066 present=775 map=38
+video: scene=41 tick=213 vblank=1423 hash=ae785671
+timing: frame scene=41 tick=814 clock=5677350 updates=1 update=206 draw=7535 present=776 map=38
+video: scene=41 tick=214 vblank=1425 hash=9573d942
+timing: frame scene=41 tick=815 clock=5686252 updates=1 update=209 draw=7535 present=775 map=38
+video: scene=41 tick=215 vblank=1427 hash=9573d942
+timing: frame scene=41 tick=816 clock=5695157 updates=1 update=260 draw=7535 present=799 map=38
+video: scene=41 tick=216 vblank=1429 hash=9573d942
+timing: frame scene=41 tick=817 clock=5704113 updates=1 update=205 draw=7535 present=799 map=38
+video: scene=41 tick=217 vblank=1431 hash=9573d942
+timing: frame scene=41 tick=818 clock=5713014 updates=1 update=210 draw=7535 present=799 map=38
+video: scene=41 tick=218 vblank=1433 hash=9573d942
+timing: frame scene=41 tick=819 clock=5721920 updates=1 update=209 draw=7535 present=799 map=38
+video: scene=41 tick=219 vblank=1435 hash=d595d5b2
+timing: frame scene=41 tick=820 clock=5730825 updates=1 update=512 draw=7558 present=776 map=38
+video: scene=41 tick=220 vblank=1437 hash=d595d5b2
+timing: frame scene=41 tick=821 clock=5740033 updates=1 update=221 draw=7558 present=775 map=38
+video: scene=41 tick=221 vblank=1440 hash=d595d5b2
+timing: frame scene=41 tick=822 clock=5751963 updates=1 update=390 draw=7535 present=775 map=38
+video: scene=41 tick=222 vblank=1442 hash=d595d5b2
+timing: frame scene=41 tick=823 clock=5761049 updates=1 update=206 draw=7535 present=798 map=38
+video: scene=41 tick=223 vblank=1444 hash=d595d5b2
+timing: frame scene=41 tick=824 clock=5769950 updates=1 update=492 draw=7066 present=798 map=38
+video: scene=41 tick=224 vblank=1446 hash=5c6dc603
+timing: frame scene=41 tick=825 clock=5778668 updates=1 update=221 draw=7066 present=775 map=38
+video: scene=41 tick=225 vblank=1448 hash=5c6dc603
+timing: frame scene=41 tick=826 clock=5787115 updates=1 update=312 draw=7066 present=775 map=38
+video: scene=41 tick=226 vblank=1450 hash=5c6dc603
+timing: frame scene=41 tick=827 clock=5795854 updates=1 update=203 draw=7066 present=775 map=38
+video: scene=41 tick=227 vblank=1452 hash=5c6dc603
+timing: frame scene=41 tick=828 clock=5804631 updates=1 update=204 draw=7066 present=775 map=38
+video: scene=41 tick=228 vblank=1454 hash=5c6dc603
+timing: frame scene=41 tick=829 clock=5813409 updates=1 update=533 draw=7065 present=775 map=38
+video: scene=41 tick=229 vblank=1456 hash=08560926
+timing: frame scene=41 tick=830 clock=5822187 updates=1 update=303 draw=7065 present=776 map=38
+video: scene=41 tick=230 vblank=1458 hash=08560926
+timing: frame scene=41 tick=831 clock=5830965 updates=1 update=303 draw=7066 present=775 map=38
+video: scene=41 tick=231 vblank=1460 hash=08560926
+timing: frame scene=41 tick=832 clock=5839743 updates=1 update=285 draw=7066 present=775 map=38
+video: scene=41 tick=232 vblank=1462 hash=08560926
+timing: frame scene=41 tick=833 clock=5848521 updates=1 update=307 draw=7065 present=776 map=38
+video: scene=41 tick=233 vblank=1464 hash=08560926
+timing: frame scene=41 tick=834 clock=5857299 updates=1 update=310 draw=7065 present=776 map=38
+video: scene=41 tick=234 vblank=1466 hash=08560926
+timing: frame scene=41 tick=835 clock=5866077 updates=1 update=226 draw=7066 present=775 map=38
+video: scene=41 tick=235 vblank=1468 hash=08560926
+timing: frame scene=41 tick=836 clock=5874855 updates=1 update=305 draw=7066 present=775 map=38
+video: scene=41 tick=236 vblank=1470 hash=08560926
+timing: frame scene=41 tick=837 clock=5883633 updates=1 update=308 draw=7065 present=776 map=38
+video: scene=41 tick=237 vblank=1472 hash=08560926
+timing: frame scene=41 tick=838 clock=5892411 updates=1 update=529 draw=7065 present=776 map=38
+video: scene=41 tick=238 vblank=1474 hash=08560926
+timing: frame scene=41 tick=839 clock=5901189 updates=1 update=203 draw=7065 present=776 map=38
+video: scene=41 tick=239 vblank=1476 hash=08560926
+timing: frame scene=41 tick=840 clock=5909967 updates=1 update=311 draw=7066 present=775 map=38
+prof f840 ticks(avg) wait=251 upd=303 draw/render=7223 present/render=780 dump=335 total=8894 max=12123 renders=60
+video: scene=41 tick=240 vblank=1478 hash=08560926
+timing: frame scene=41 tick=841 clock=5918929 updates=1 update=206 draw=7066 present=775 map=38
+video: scene=41 tick=241 vblank=1480 hash=08560926
+timing: frame scene=41 tick=842 clock=5927524 updates=1 update=488 draw=7066 present=775 map=38
+video: scene=41 tick=242 vblank=1482 hash=08560926
+timing: frame scene=41 tick=843 clock=5936301 updates=1 update=221 draw=7065 present=776 map=38
+video: scene=41 tick=243 vblank=1484 hash=08560926
+timing: frame scene=41 tick=844 clock=5945079 updates=1 update=203 draw=7065 present=776 map=38
+video: scene=41 tick=244 vblank=1486 hash=08560926
+timing: frame scene=41 tick=845 clock=5953857 updates=1 update=312 draw=7065 present=776 map=38
+video: scene=41 tick=245 vblank=1488 hash=08560926
+timing: frame scene=41 tick=846 clock=5962635 updates=1 update=204 draw=7065 present=776 map=38
+video: scene=41 tick=246 vblank=1490 hash=08560926
+timing: frame scene=41 tick=847 clock=5971413 updates=1 update=519 draw=7066 present=775 map=38
+video: scene=41 tick=247 vblank=1492 hash=08560926
+timing: frame scene=41 tick=848 clock=5980191 updates=1 update=221 draw=7065 present=776 map=38
+video: scene=41 tick=248 vblank=1494 hash=08560926
+timing: frame scene=41 tick=849 clock=5988969 updates=1 update=203 draw=7065 present=776 map=38
+video: scene=41 tick=249 vblank=1496 hash=08560926
+timing: frame scene=41 tick=850 clock=5997747 updates=1 update=203 draw=7065 present=776 map=38
+video: scene=41 tick=250 vblank=1498 hash=08560926
+timing: frame scene=41 tick=851 clock=6006525 updates=1 update=206 draw=7066 present=775 map=38
+video: scene=41 tick=251 vblank=1500 hash=08560926
+frame=1500 status=008f volume=ff77
+timing: frame scene=41 tick=852 clock=6015303 updates=1 update=205 draw=7066 present=775 map=38
+video: scene=41 tick=252 vblank=1502 hash=08560926
+timing: frame scene=41 tick=853 clock=6024081 updates=1 update=207 draw=7066 present=775 map=38
+video: scene=41 tick=253 vblank=1504 hash=08560926
+timing: frame scene=41 tick=854 clock=6032859 updates=1 update=208 draw=7065 present=776 map=38
+video: scene=41 tick=254 vblank=1506 hash=08560926
+timing: frame scene=41 tick=855 clock=6041637 updates=1 update=205 draw=7066 present=775 map=38
+video: scene=41 tick=255 vblank=1508 hash=08560926
+timing: frame scene=41 tick=856 clock=6050415 updates=1 update=521 draw=7065 present=776 map=38
+video: scene=41 tick=256 vblank=1510 hash=08560926
+timing: frame scene=41 tick=857 clock=6059193 updates=1 update=221 draw=7065 present=776 map=38
+video: scene=41 tick=257 vblank=1512 hash=08560926
+timing: frame scene=41 tick=858 clock=6067971 updates=1 update=203 draw=7065 present=776 map=38
+video: scene=41 tick=258 vblank=1514 hash=08560926
+timing: frame scene=41 tick=859 clock=6076749 updates=1 update=311 draw=7066 present=775 map=38
+video: scene=41 tick=259 vblank=1516 hash=08560926
+timing: frame scene=41 tick=860 clock=6085527 updates=1 update=204 draw=7066 present=775 map=38
+video: scene=41 tick=260 vblank=1518 hash=08560926
+timing: frame scene=41 tick=861 clock=6094305 updates=1 update=506 draw=7066 present=775 map=38
+video: scene=41 tick=261 vblank=1520 hash=08560926
+timing: frame scene=41 tick=862 clock=6103083 updates=1 update=203 draw=7065 present=776 map=38
+video: scene=41 tick=262 vblank=1522 hash=08560926
+timing: frame scene=41 tick=863 clock=6111861 updates=1 update=312 draw=7065 present=776 map=38
+video: scene=41 tick=263 vblank=1524 hash=08560926
+timing: frame scene=41 tick=864 clock=6120639 updates=1 update=203 draw=7066 present=775 map=38
+video: scene=41 tick=264 vblank=1526 hash=08560926
+timing: frame scene=41 tick=865 clock=6129417 updates=1 update=536 draw=7078 present=775 map=38
+video: scene=41 tick=265 vblank=1528 hash=3a3ae404
+timing: frame scene=41 tick=866 clock=6138195 updates=1 update=241 draw=7077 present=775 map=38
+video: scene=41 tick=266 vblank=1530 hash=3a3ae404
+timing: frame scene=41 tick=867 clock=6146973 updates=1 update=241 draw=7077 present=775 map=38
+video: scene=41 tick=267 vblank=1532 hash=3a3ae404
+timing: frame scene=41 tick=868 clock=6155751 updates=1 update=204 draw=7220 present=776 map=38
+video: scene=41 tick=268 vblank=1534 hash=2aeb37b4
+timing: frame scene=41 tick=869 clock=6164529 updates=1 update=244 draw=7221 present=775 map=38
+video: scene=41 tick=269 vblank=1536 hash=2aeb37b4
+timing: frame scene=41 tick=870 clock=6173307 updates=1 update=224 draw=7221 present=775 map=38
+video: scene=41 tick=270 vblank=1538 hash=2aeb37b4
+timing: frame scene=41 tick=871 clock=6182085 updates=1 update=209 draw=7077 present=775 map=38
+video: scene=41 tick=271 vblank=1540 hash=ae38a22c
+timing: frame scene=41 tick=872 clock=6190863 updates=1 update=205 draw=7078 present=775 map=38
+video: scene=41 tick=272 vblank=1542 hash=ae38a22c
+timing: frame scene=41 tick=873 clock=6199641 updates=1 update=207 draw=7078 present=775 map=38
+video: scene=41 tick=273 vblank=1544 hash=ae38a22c
+timing: frame scene=41 tick=874 clock=6208419 updates=1 update=208 draw=7221 present=776 map=38
+video: scene=41 tick=274 vblank=1546 hash=19a84dfc
+timing: frame scene=41 tick=875 clock=6217197 updates=1 update=439 draw=7221 present=775 map=38
+video: scene=41 tick=275 vblank=1548 hash=19a84dfc
+timing: frame scene=41 tick=876 clock=6226018 updates=1 update=202 draw=7221 present=775 map=38
+video: scene=41 tick=276 vblank=1550 hash=19a84dfc
+timing: frame scene=41 tick=877 clock=6234754 updates=1 update=223 draw=7077 present=776 map=38
+video: scene=41 tick=277 vblank=1552 hash=889975d4
+timing: frame scene=41 tick=878 clock=6243531 updates=1 update=204 draw=7077 present=775 map=38
+video: scene=41 tick=278 vblank=1554 hash=889975d4
+timing: frame scene=41 tick=879 clock=6252309 updates=1 update=205 draw=7077 present=776 map=38
+video: scene=41 tick=279 vblank=1556 hash=889975d4
+timing: frame scene=41 tick=880 clock=6261087 updates=1 update=209 draw=7077 present=775 map=38
+video: scene=41 tick=280 vblank=1558 hash=889975d4
+timing: frame scene=41 tick=881 clock=6269865 updates=1 update=207 draw=7078 present=775 map=38
+video: scene=41 tick=281 vblank=1560 hash=889975d4
+timing: frame scene=41 tick=882 clock=6278643 updates=1 update=207 draw=7078 present=775 map=38
+video: scene=41 tick=282 vblank=1562 hash=889975d4
+timing: frame scene=41 tick=883 clock=6287421 updates=1 update=205 draw=7078 present=775 map=38
+video: scene=41 tick=283 vblank=1564 hash=889975d4
+timing: frame scene=41 tick=884 clock=6296199 updates=1 update=208 draw=7077 present=776 map=38
+video: scene=41 tick=284 vblank=1566 hash=889975d4
+timing: frame scene=41 tick=885 clock=6304977 updates=1 update=207 draw=7078 present=775 map=38
+video: scene=41 tick=285 vblank=1568 hash=889975d4
+timing: frame scene=41 tick=886 clock=6313755 updates=1 update=205 draw=7078 present=775 map=38
+video: scene=41 tick=286 vblank=1570 hash=889975d4
+timing: frame scene=41 tick=887 clock=6322533 updates=1 update=210 draw=7077 present=776 map=38
+video: scene=41 tick=287 vblank=1572 hash=889975d4
+timing: frame scene=41 tick=888 clock=6331311 updates=1 update=205 draw=7078 present=775 map=38
+video: scene=41 tick=288 vblank=1574 hash=889975d4
+timing: frame scene=41 tick=889 clock=6340089 updates=1 update=205 draw=7077 present=776 map=38
+video: scene=41 tick=289 vblank=1576 hash=889975d4
+timing: frame scene=41 tick=890 clock=6348867 updates=1 update=210 draw=7077 present=776 map=38
+video: scene=41 tick=290 vblank=1578 hash=889975d4
+timing: frame scene=41 tick=891 clock=6357645 updates=1 update=205 draw=7078 present=775 map=38
+video: scene=41 tick=291 vblank=1580 hash=889975d4
+timing: frame scene=41 tick=892 clock=6366423 updates=1 update=208 draw=7077 present=775 map=38
+video: scene=41 tick=292 vblank=1582 hash=889975d4
+timing: frame scene=41 tick=893 clock=6375201 updates=1 update=290 draw=7077 present=776 map=38
+video: scene=41 tick=293 vblank=1584 hash=889975d4
+timing: frame scene=41 tick=894 clock=6383979 updates=1 update=223 draw=7077 present=776 map=38
+video: scene=41 tick=294 vblank=1586 hash=889975d4
+timing: frame scene=41 tick=895 clock=6392757 updates=1 update=207 draw=7078 present=775 map=38
+video: scene=41 tick=295 vblank=1588 hash=889975d4
+timing: frame scene=41 tick=896 clock=6401535 updates=1 update=207 draw=7078 present=775 map=38
+video: scene=41 tick=296 vblank=1590 hash=889975d4
+timing: frame scene=41 tick=897 clock=6410313 updates=1 update=207 draw=7078 present=775 map=38
+video: scene=41 tick=297 vblank=1592 hash=889975d4
+timing: frame scene=41 tick=898 clock=6419091 updates=1 update=205 draw=7078 present=775 map=38
+video: scene=41 tick=298 vblank=1594 hash=889975d4
+timing: frame scene=41 tick=899 clock=6427869 updates=1 update=207 draw=7078 present=775 map=38
+video: scene=41 tick=299 vblank=1596 hash=889975d4
+timing: frame scene=41 tick=900 clock=6436647 updates=1 update=207 draw=7078 present=775 map=38
+prof f900 ticks(avg) wait=304 upd=245 draw/render=7087 present/render=774 dump=333 total=8745 max=9098 renders=60
+video: scene=41 tick=300 vblank=1598 hash=889975d4
+timing: frame scene=41 tick=901 clock=6445513 updates=1 update=206 draw=7077 present=776 map=38
+video: scene=41 tick=301 vblank=1600 hash=889975d4
+timing: frame scene=41 tick=902 clock=6454204 updates=1 update=210 draw=7078 present=775 map=38
+video: scene=41 tick=302 vblank=1602 hash=889975d4
+timing: frame scene=41 tick=903 clock=6462981 updates=1 update=205 draw=7078 present=775 map=38
+video: scene=41 tick=303 vblank=1604 hash=889975d4
+timing: frame scene=41 tick=904 clock=6471759 updates=1 update=205 draw=7078 present=775 map=38
+video: scene=41 tick=304 vblank=1606 hash=889975d4
+timing: frame scene=41 tick=905 clock=6480537 updates=1 update=210 draw=7077 present=776 map=38
+video: scene=41 tick=305 vblank=1608 hash=889975d4
+timing: frame scene=41 tick=906 clock=6489315 updates=1 update=205 draw=7078 present=775 map=38
+video: scene=41 tick=306 vblank=1610 hash=889975d4
+timing: frame scene=41 tick=907 clock=6498093 updates=1 update=207 draw=7078 present=775 map=38
+video: scene=41 tick=307 vblank=1612 hash=889975d4
+timing: frame scene=41 tick=908 clock=6506871 updates=1 update=208 draw=7077 present=775 map=38
+video: scene=41 tick=308 vblank=1614 hash=889975d4
+timing: frame scene=41 tick=909 clock=6515649 updates=1 update=205 draw=7078 present=775 map=38
+video: scene=41 tick=309 vblank=1616 hash=889975d4
+timing: frame scene=41 tick=910 clock=6524427 updates=1 update=298 draw=7079 present=776 map=38
+video: scene=41 tick=310 vblank=1618 hash=6c32a74a
+timing: frame scene=41 tick=911 clock=6533205 updates=1 update=495 draw=7079 present=775 map=38
+video: scene=41 tick=311 vblank=1620 hash=6c32a74a
+timing: frame scene=41 tick=912 clock=6541983 updates=1 update=241 draw=7079 present=775 map=38
+video: scene=41 tick=312 vblank=1622 hash=6c32a74a
+timing: frame scene=41 tick=913 clock=6550761 updates=1 update=204 draw=7222 present=775 map=38
+video: scene=41 tick=313 vblank=1624 hash=8ff3cbea
+timing: frame scene=41 tick=914 clock=6559539 updates=1 update=325 draw=7222 present=776 map=38
+video: scene=41 tick=314 vblank=1626 hash=8ff3cbea
+timing: frame scene=41 tick=915 clock=6568317 updates=1 update=204 draw=7222 present=775 map=38
+video: scene=41 tick=315 vblank=1628 hash=8ff3cbea
+timing: frame scene=41 tick=916 clock=6577095 updates=1 update=209 draw=7078 present=776 map=38
+video: scene=41 tick=316 vblank=1630 hash=bf63ef72
+timing: frame scene=41 tick=917 clock=6585873 updates=1 update=205 draw=7079 present=775 map=38
+video: scene=41 tick=317 vblank=1632 hash=bf63ef72
+timing: frame scene=41 tick=918 clock=6594651 updates=1 update=210 draw=7078 present=776 map=38
+video: scene=41 tick=318 vblank=1634 hash=bf63ef72
+timing: frame scene=41 tick=919 clock=6603429 updates=1 update=206 draw=7222 present=776 map=38
+video: scene=41 tick=319 vblank=1636 hash=ab99f279
+timing: frame scene=41 tick=920 clock=6612207 updates=1 update=248 draw=7222 present=775 map=38
+video: scene=41 tick=320 vblank=1638 hash=ab99f279
+timing: frame scene=41 tick=921 clock=6620985 updates=1 update=212 draw=7222 present=775 map=38
+video: scene=41 tick=321 vblank=1640 hash=ab99f279
+timing: frame scene=41 tick=922 clock=6629763 updates=1 update=207 draw=7079 present=775 map=38
+video: scene=41 tick=322 vblank=1642 hash=218479c3
+timing: frame scene=41 tick=923 clock=6638541 updates=1 update=208 draw=7079 present=775 map=38
+video: scene=41 tick=323 vblank=1644 hash=218479c3
+timing: frame scene=41 tick=924 clock=6647319 updates=1 update=208 draw=7079 present=775 map=38
+video: scene=41 tick=324 vblank=1646 hash=218479c3
+timing: frame scene=41 tick=925 clock=6656097 updates=1 update=207 draw=7222 present=775 map=38
+video: scene=41 tick=325 vblank=1648 hash=217b9b68
+timing: frame scene=41 tick=926 clock=6664875 updates=1 update=208 draw=7222 present=775 map=38
+video: scene=41 tick=326 vblank=1650 hash=217b9b68
+timing: frame scene=41 tick=927 clock=6673653 updates=1 update=208 draw=7222 present=776 map=38
+video: scene=41 tick=327 vblank=1652 hash=217b9b68
+timing: frame scene=41 tick=928 clock=6682431 updates=1 update=209 draw=7079 present=775 map=38
+video: scene=41 tick=328 vblank=1654 hash=049eabab
+timing: frame scene=41 tick=929 clock=6691209 updates=1 update=205 draw=7079 present=776 map=38
+video: scene=41 tick=329 vblank=1656 hash=049eabab
+timing: frame scene=41 tick=930 clock=6699987 updates=1 update=208 draw=7079 present=775 map=38
+video: scene=41 tick=330 vblank=1658 hash=049eabab
+timing: frame scene=41 tick=931 clock=6708765 updates=1 update=209 draw=7222 present=776 map=38
+video: scene=41 tick=331 vblank=1660 hash=d57c7114
+timing: frame scene=41 tick=932 clock=6717543 updates=1 update=244 draw=7222 present=775 map=38
+video: scene=41 tick=332 vblank=1662 hash=d57c7114
+timing: frame scene=41 tick=933 clock=6726321 updates=1 update=210 draw=7222 present=776 map=38
+video: scene=41 tick=333 vblank=1664 hash=d57c7114
+timing: frame scene=41 tick=934 clock=6735099 updates=1 update=207 draw=7079 present=775 map=38
+video: scene=41 tick=334 vblank=1666 hash=555ba5f5
+timing: frame scene=41 tick=935 clock=6743877 updates=1 update=206 draw=7079 present=775 map=38
+video: scene=41 tick=335 vblank=1668 hash=555ba5f5
+timing: frame scene=41 tick=936 clock=6752655 updates=1 update=210 draw=7079 present=776 map=38
+video: scene=41 tick=336 vblank=1670 hash=555ba5f5
+timing: frame scene=41 tick=937 clock=6761433 updates=1 update=320 draw=9274 present=775 map=38
+video: scene=41 tick=337 vblank=1673 hash=0464e4dc
+timing: frame scene=41 tick=938 clock=6774600 updates=1 update=352 draw=7083 present=775 map=38
+video: scene=41 tick=338 vblank=1675 hash=0464e4dc
+timing: frame scene=41 tick=939 clock=6783378 updates=1 update=208 draw=7083 present=775 map=38
+video: scene=41 tick=339 vblank=1677 hash=0464e4dc
+timing: frame scene=41 tick=940 clock=6792156 updates=1 update=208 draw=7083 present=775 map=38
+video: scene=41 tick=340 vblank=1679 hash=0464e4dc
+timing: frame scene=41 tick=941 clock=6800934 updates=1 update=206 draw=7083 present=775 map=38
+video: scene=41 tick=341 vblank=1681 hash=0464e4dc
+timing: frame scene=41 tick=942 clock=6809712 updates=1 update=212 draw=7555 present=776 map=38
+video: scene=41 tick=342 vblank=1683 hash=ef69ee18
+timing: frame scene=41 tick=943 clock=6818640 updates=1 update=208 draw=7556 present=775 map=38
+video: scene=41 tick=343 vblank=1685 hash=ef69ee18
+timing: frame scene=41 tick=944 clock=6827564 updates=1 update=231 draw=7556 present=798 map=38
+video: scene=41 tick=344 vblank=1687 hash=ef69ee18
+timing: frame scene=41 tick=945 clock=6836511 updates=1 update=212 draw=7555 present=799 map=38
+video: scene=41 tick=345 vblank=1689 hash=ef69ee18
+timing: frame scene=41 tick=946 clock=6845439 updates=1 update=206 draw=7556 present=799 map=38
+video: scene=41 tick=346 vblank=1691 hash=ef69ee18
+timing: frame scene=41 tick=947 clock=6854362 updates=1 update=210 draw=7555 present=799 map=38
+video: scene=41 tick=347 vblank=1693 hash=c334ff80
+timing: frame scene=41 tick=948 clock=6863288 updates=1 update=255 draw=7555 present=799 map=38
+video: scene=41 tick=348 vblank=1695 hash=c334ff80
+timing: frame scene=41 tick=949 clock=6872259 updates=1 update=192 draw=7579 present=775 map=38
+video: scene=41 tick=349 vblank=1697 hash=c334ff80
+timing: frame scene=41 tick=950 clock=6881168 updates=1 update=192 draw=7578 present=776 map=38
+video: scene=41 tick=350 vblank=1700 hash=c334ff80
+timing: frame scene=41 tick=951 clock=6893103 updates=1 update=264 draw=7556 present=775 map=38
+video: scene=41 tick=351 vblank=1702 hash=c334ff80
+timing: frame scene=41 tick=952 clock=6902084 updates=1 update=195 draw=6620 present=775 map=38
+video: scene=41 tick=352 vblank=1704 hash=ebafd92b
+timing: frame scene=41 tick=953 clock=6910660 updates=1 update=192 draw=6620 present=776 map=38
+video: scene=41 tick=353 vblank=1706 hash=ebafd92b
+timing: frame scene=41 tick=954 clock=6919437 updates=1 update=192 draw=6620 present=775 map=38
+video: scene=41 tick=354 vblank=1708 hash=ebafd92b
+timing: frame scene=41 tick=955 clock=6928215 updates=1 update=192 draw=6620 present=775 map=38
+video: scene=41 tick=355 vblank=1710 hash=ebafd92b
+timing: frame scene=41 tick=956 clock=6936993 updates=1 update=192 draw=6620 present=775 map=38
+video: scene=41 tick=356 vblank=1712 hash=ebafd92b
+timing: frame scene=41 tick=957 clock=6945771 updates=1 update=195 draw=6620 present=775 map=38
+video: scene=41 tick=357 vblank=1714 hash=d59670b5
+timing: frame scene=41 tick=958 clock=6954549 updates=1 update=192 draw=6620 present=775 map=38
+video: scene=41 tick=358 vblank=1716 hash=d59670b5
+timing: frame scene=41 tick=959 clock=6963327 updates=1 update=192 draw=6620 present=775 map=38
+video: scene=41 tick=359 vblank=1718 hash=d59670b5
+timing: frame scene=41 tick=960 clock=6972105 updates=1 update=192 draw=6620 present=775 map=38
+prof f960 ticks(avg) wait=397 upd=221 draw/render=7155 present/render=776 dump=333 total=8885 max=11984 renders=60
+video: scene=41 tick=360 vblank=1720 hash=d59670b5
+timing: frame scene=41 tick=961 clock=6980883 updates=1 update=192 draw=6620 present=775 map=38
+video: scene=41 tick=361 vblank=1722 hash=d59670b5
+timing: frame scene=41 tick=962 clock=6989661 updates=1 update=194 draw=6620 present=775 map=38
+video: scene=41 tick=362 vblank=1724 hash=d59670b5
+timing: frame scene=41 tick=963 clock=6998439 updates=1 update=191 draw=6620 present=775 map=38
+video: scene=41 tick=363 vblank=1726 hash=d59670b5
+timing: frame scene=41 tick=964 clock=7007217 updates=1 update=191 draw=6620 present=775 map=38
+video: scene=41 tick=364 vblank=1728 hash=d59670b5
+timing: frame scene=41 tick=965 clock=7015995 updates=1 update=191 draw=6620 present=775 map=38
+video: scene=41 tick=365 vblank=1730 hash=d59670b5
+timing: frame scene=41 tick=966 clock=7024773 updates=1 update=191 draw=6620 present=775 map=38
+video: scene=41 tick=366 vblank=1732 hash=d59670b5
+timing: frame scene=41 tick=967 clock=7033551 updates=1 update=191 draw=6620 present=775 map=38
+video: scene=41 tick=367 vblank=1734 hash=d59670b5
+timing: frame scene=41 tick=968 clock=7042329 updates=1 update=191 draw=6620 present=775 map=38
+video: scene=41 tick=368 vblank=1736 hash=d59670b5
+timing: frame scene=41 tick=969 clock=7051107 updates=1 update=191 draw=6620 present=775 map=38
+video: scene=41 tick=369 vblank=1738 hash=d59670b5
+timing: frame scene=41 tick=970 clock=7059885 updates=1 update=191 draw=6620 present=775 map=38
+video: scene=41 tick=370 vblank=1740 hash=d59670b5
+timing: frame scene=41 tick=971 clock=7068663 updates=1 update=191 draw=6620 present=775 map=38
+video: scene=41 tick=371 vblank=1742 hash=d59670b5
+timing: frame scene=41 tick=972 clock=7077441 updates=1 update=191 draw=6620 present=775 map=38
+video: scene=41 tick=372 vblank=1744 hash=d59670b5
+timing: frame scene=41 tick=973 clock=7086219 updates=1 update=191 draw=6620 present=775 map=38
+video: scene=41 tick=373 vblank=1746 hash=d59670b5
+timing: frame scene=41 tick=974 clock=7094997 updates=1 update=191 draw=6620 present=775 map=38
+video: scene=41 tick=374 vblank=1748 hash=d59670b5
+timing: frame scene=41 tick=975 clock=7103775 updates=1 update=191 draw=6620 present=775 map=38
+video: scene=41 tick=375 vblank=1750 hash=d59670b5
+timing: frame scene=41 tick=976 clock=7112553 updates=1 update=191 draw=6620 present=775 map=38
+video: scene=41 tick=376 vblank=1752 hash=d59670b5
+timing: frame scene=41 tick=977 clock=7121331 updates=1 update=191 draw=6620 present=775 map=38
+video: scene=41 tick=377 vblank=1754 hash=d59670b5
+timing: frame scene=41 tick=978 clock=7130109 updates=1 update=191 draw=6620 present=775 map=38
+video: scene=41 tick=378 vblank=1756 hash=d59670b5
+timing: frame scene=41 tick=979 clock=7138887 updates=1 update=191 draw=6620 present=775 map=38
+video: scene=41 tick=379 vblank=1758 hash=d59670b5
+timing: frame scene=41 tick=980 clock=7147665 updates=1 update=191 draw=6620 present=775 map=38
+video: scene=41 tick=380 vblank=1760 hash=d59670b5
+timing: frame scene=41 tick=981 clock=7156443 updates=1 update=192 draw=6620 present=775 map=38
+video: scene=41 tick=381 vblank=1762 hash=d59670b5
+timing: frame scene=41 tick=982 clock=7165221 updates=1 update=191 draw=6620 present=775 map=38
+video: scene=41 tick=382 vblank=1764 hash=d59670b5
+timing: frame scene=41 tick=983 clock=7173999 updates=1 update=191 draw=6620 present=775 map=38
+video: scene=41 tick=383 vblank=1766 hash=d59670b5
+timing: frame scene=41 tick=984 clock=7182777 updates=1 update=191 draw=6620 present=775 map=38
+video: scene=41 tick=384 vblank=1768 hash=d59670b5
+timing: frame scene=41 tick=985 clock=7191555 updates=1 update=191 draw=6620 present=775 map=38
+video: scene=41 tick=385 vblank=1770 hash=d59670b5
+timing: frame scene=41 tick=986 clock=7200333 updates=1 update=191 draw=6620 present=775 map=38
+video: scene=41 tick=386 vblank=1772 hash=d59670b5
+timing: frame scene=41 tick=987 clock=7209111 updates=1 update=191 draw=6620 present=775 map=38
+video: scene=41 tick=387 vblank=1774 hash=d59670b5
+timing: frame scene=41 tick=988 clock=7217889 updates=1 update=191 draw=6620 present=775 map=38
+video: scene=41 tick=388 vblank=1776 hash=d59670b5
+timing: frame scene=41 tick=989 clock=7226667 updates=1 update=191 draw=6620 present=775 map=38
+video: scene=41 tick=389 vblank=1778 hash=d59670b5
+timing: frame scene=41 tick=990 clock=7235445 updates=1 update=191 draw=6620 present=775 map=38
+video: scene=41 tick=390 vblank=1780 hash=d59670b5
+timing: frame scene=41 tick=991 clock=7244223 updates=1 update=191 draw=6620 present=775 map=38
+video: scene=41 tick=391 vblank=1782 hash=d59670b5
+timing: frame scene=41 tick=992 clock=7253001 updates=1 update=193 draw=6620 present=775 map=38
+video: scene=41 tick=392 vblank=1784 hash=d59670b5
+timing: frame scene=41 tick=993 clock=7261779 updates=1 update=191 draw=6620 present=775 map=38
+video: scene=41 tick=393 vblank=1786 hash=d59670b5
+timing: frame scene=41 tick=994 clock=7270557 updates=1 update=191 draw=6620 present=775 map=38
+video: scene=41 tick=394 vblank=1788 hash=d59670b5
+timing: frame scene=41 tick=995 clock=7279335 updates=1 update=192 draw=6763 present=776 map=38
+video: scene=41 tick=395 vblank=1790 hash=540bcd93
+timing: frame scene=41 tick=996 clock=7288113 updates=1 update=191 draw=6763 present=776 map=38
+video: scene=41 tick=396 vblank=1792 hash=540bcd93
+timing: frame scene=41 tick=997 clock=7296891 updates=1 update=191 draw=6763 present=776 map=38
+video: scene=41 tick=397 vblank=1794 hash=540bcd93
+timing: frame scene=41 tick=998 clock=7305669 updates=1 update=192 draw=6620 present=775 map=38
+video: scene=41 tick=398 vblank=1796 hash=2a090141
+timing: frame scene=41 tick=999 clock=7314447 updates=1 update=191 draw=6620 present=776 map=38
+video: scene=41 tick=399 vblank=1798 hash=2a090141
+timing: frame scene=41 tick=1000 clock=7323225 updates=1 update=191 draw=6620 present=775 map=38
+video: scene=41 tick=400 vblank=1800 hash=2a090141
+frame=1800 status=0080 volume=0077
+timing: frame scene=41 tick=1001 clock=7332003 updates=1 update=192 draw=6763 present=776 map=38
+video: scene=41 tick=401 vblank=1802 hash=dde8049f
+timing: frame scene=41 tick=1002 clock=7340781 updates=1 update=191 draw=6763 present=776 map=38
+video: scene=41 tick=402 vblank=1804 hash=dde8049f
+timing: frame scene=41 tick=1003 clock=7349559 updates=1 update=191 draw=6763 present=776 map=38
+video: scene=41 tick=403 vblank=1806 hash=dde8049f
+timing: frame scene=41 tick=1004 clock=7358337 updates=1 update=192 draw=6620 present=775 map=38
+video: scene=41 tick=404 vblank=1808 hash=65a11280
+timing: frame scene=41 tick=1005 clock=7367115 updates=1 update=191 draw=6620 present=775 map=38
+video: scene=41 tick=405 vblank=1810 hash=65a11280
+timing: frame scene=41 tick=1006 clock=7375893 updates=1 update=191 draw=6620 present=775 map=38
+video: scene=41 tick=406 vblank=1812 hash=65a11280
+timing: frame scene=41 tick=1007 clock=7384671 updates=1 update=192 draw=6605 present=776 map=38
+video: scene=41 tick=407 vblank=1814 hash=c5489db2
+timing: frame scene=41 tick=1008 clock=7393449 updates=1 update=191 draw=6605 present=775 map=38
+video: scene=41 tick=408 vblank=1816 hash=c5489db2
+timing: frame scene=41 tick=1009 clock=7402227 updates=1 update=191 draw=6605 present=775 map=38
+video: scene=41 tick=409 vblank=1818 hash=c5489db2
+timing: frame scene=41 tick=1010 clock=7411005 updates=1 update=191 draw=6605 present=775 map=38
+video: scene=41 tick=410 vblank=1820 hash=c5489db2
+timing: frame scene=41 tick=1011 clock=7419783 updates=1 update=191 draw=6605 present=775 map=38
+video: scene=41 tick=411 vblank=1822 hash=c5489db2
+timing: frame scene=41 tick=1012 clock=7428561 updates=1 update=191 draw=6605 present=775 map=38
+video: scene=41 tick=412 vblank=1824 hash=c5489db2
+timing: frame scene=41 tick=1013 clock=7437339 updates=1 update=191 draw=6605 present=775 map=38
+video: scene=41 tick=413 vblank=1826 hash=c5489db2
+timing: frame scene=41 tick=1014 clock=7446117 updates=1 update=190 draw=6606 present=775 map=38
+video: scene=41 tick=414 vblank=1828 hash=c5489db2
+timing: frame scene=41 tick=1015 clock=7454895 updates=1 update=190 draw=6606 present=775 map=38
+video: scene=41 tick=415 vblank=1830 hash=c5489db2
+timing: frame scene=41 tick=1016 clock=7463673 updates=1 update=191 draw=6605 present=775 map=38
+video: scene=41 tick=416 vblank=1832 hash=c5489db2
+timing: frame scene=41 tick=1017 clock=7472451 updates=1 update=191 draw=6605 present=775 map=38
+video: scene=41 tick=417 vblank=1834 hash=c5489db2
+timing: frame scene=41 tick=1018 clock=7481229 updates=1 update=191 draw=6605 present=775 map=38
+video: scene=41 tick=418 vblank=1836 hash=c5489db2
+timing: frame scene=41 tick=1019 clock=7490007 updates=1 update=191 draw=6605 present=775 map=38
+video: scene=41 tick=419 vblank=1838 hash=c5489db2
+timing: frame scene=41 tick=1020 clock=7498785 updates=1 update=191 draw=6605 present=775 map=38
+prof f1020 ticks(avg) wait=814 upd=191 draw/render=6631 present/render=774 dump=334 total=8746 max=8897 renders=60
+video: scene=41 tick=420 vblank=1840 hash=c5489db2
+timing: frame scene=41 tick=1021 clock=7507563 updates=1 update=191 draw=6605 present=775 map=38
+video: scene=41 tick=421 vblank=1842 hash=c5489db2
+timing: frame scene=41 tick=1022 clock=7516341 updates=1 update=191 draw=6605 present=775 map=38
+video: scene=41 tick=422 vblank=1844 hash=c5489db2
+timing: frame scene=41 tick=1023 clock=7525119 updates=1 update=191 draw=6605 present=775 map=38
+video: scene=41 tick=423 vblank=1846 hash=c5489db2
+timing: frame scene=41 tick=1024 clock=7533897 updates=1 update=191 draw=6605 present=775 map=38
+video: scene=41 tick=424 vblank=1848 hash=c5489db2
+timing: frame scene=41 tick=1025 clock=7542675 updates=1 update=191 draw=6605 present=775 map=38
+video: scene=41 tick=425 vblank=1850 hash=c5489db2
+timing: frame scene=41 tick=1026 clock=7551453 updates=1 update=191 draw=6605 present=775 map=38
+video: scene=41 tick=426 vblank=1852 hash=c5489db2
+timing: frame scene=41 tick=1027 clock=7560231 updates=1 update=191 draw=6605 present=775 map=38
+video: scene=41 tick=427 vblank=1854 hash=c5489db2
+timing: frame scene=41 tick=1028 clock=7569009 updates=1 update=191 draw=6605 present=775 map=38
+video: scene=41 tick=428 vblank=1856 hash=c5489db2
+timing: frame scene=41 tick=1029 clock=7577787 updates=1 update=191 draw=6605 present=775 map=38
+video: scene=41 tick=429 vblank=1858 hash=c5489db2
+timing: frame scene=41 tick=1030 clock=7586565 updates=1 update=191 draw=6605 present=775 map=38
+video: scene=41 tick=430 vblank=1860 hash=c5489db2
+timing: frame scene=41 tick=1031 clock=7595343 updates=1 update=191 draw=6605 present=775 map=38
+video: scene=41 tick=431 vblank=1862 hash=c5489db2
+timing: frame scene=41 tick=1032 clock=7604121 updates=1 update=191 draw=6605 present=775 map=38
+video: scene=41 tick=432 vblank=1864 hash=c5489db2
+timing: frame scene=41 tick=1033 clock=7612899 updates=1 update=191 draw=6605 present=775 map=38
+video: scene=41 tick=433 vblank=1866 hash=c5489db2
+timing: frame scene=41 tick=1034 clock=7621677 updates=1 update=191 draw=6605 present=775 map=38
+video: scene=41 tick=434 vblank=1868 hash=c5489db2
+timing: frame scene=41 tick=1035 clock=7630455 updates=1 update=191 draw=6605 present=775 map=38
+video: scene=41 tick=435 vblank=1870 hash=c5489db2
+timing: frame scene=41 tick=1036 clock=7639233 updates=1 update=191 draw=6605 present=775 map=38
+video: scene=41 tick=436 vblank=1872 hash=c5489db2
+timing: frame scene=41 tick=1037 clock=7648011 updates=1 update=191 draw=6605 present=775 map=38
+video: scene=41 tick=437 vblank=1874 hash=c5489db2
+timing: frame scene=41 tick=1038 clock=7656789 updates=1 update=191 draw=6605 present=775 map=38
+video: scene=41 tick=438 vblank=1876 hash=c5489db2
+timing: frame scene=41 tick=1039 clock=7665567 updates=1 update=191 draw=6605 present=775 map=38
+video: scene=41 tick=439 vblank=1878 hash=c5489db2
+timing: frame scene=41 tick=1040 clock=7674345 updates=1 update=191 draw=6605 present=775 map=38
+video: scene=41 tick=440 vblank=1880 hash=c5489db2
+timing: frame scene=41 tick=1041 clock=7683123 updates=1 update=192 draw=6605 present=775 map=38
+video: scene=41 tick=441 vblank=1882 hash=c5489db2
+timing: frame scene=41 tick=1042 clock=7691901 updates=1 update=191 draw=6605 present=775 map=38
+video: scene=41 tick=442 vblank=1884 hash=c5489db2
+timing: frame scene=41 tick=1043 clock=7700679 updates=1 update=191 draw=6605 present=775 map=38
+video: scene=41 tick=443 vblank=1886 hash=c5489db2
+timing: frame scene=41 tick=1044 clock=7709457 updates=1 update=191 draw=6605 present=775 map=38
+video: scene=41 tick=444 vblank=1888 hash=c5489db2
+timing: frame scene=41 tick=1045 clock=7718235 updates=1 update=191 draw=6605 present=775 map=38
+video: scene=41 tick=445 vblank=1890 hash=c5489db2
+timing: frame scene=41 tick=1046 clock=7727013 updates=1 update=191 draw=6605 present=775 map=38
+video: scene=41 tick=446 vblank=1892 hash=c5489db2
+timing: frame scene=41 tick=1047 clock=7735791 updates=1 update=191 draw=6605 present=775 map=38
+video: scene=41 tick=447 vblank=1894 hash=c5489db2
+timing: frame scene=41 tick=1048 clock=7744569 updates=1 update=191 draw=6605 present=775 map=38
+video: scene=41 tick=448 vblank=1896 hash=c5489db2
+timing: frame scene=41 tick=1049 clock=7753347 updates=1 update=191 draw=6605 present=775 map=38
+video: scene=41 tick=449 vblank=1898 hash=c5489db2
+timing: frame scene=41 tick=1050 clock=7762125 updates=1 update=191 draw=6605 present=775 map=38
+video: scene=41 tick=450 vblank=1900 hash=c5489db2
+timing: frame scene=41 tick=1051 clock=7770903 updates=1 update=191 draw=6605 present=775 map=38
+video: scene=41 tick=451 vblank=1902 hash=c5489db2
+timing: frame scene=41 tick=1052 clock=7779681 updates=1 update=191 draw=6605 present=775 map=38
+video: scene=41 tick=452 vblank=1904 hash=c5489db2
+timing: frame scene=41 tick=1053 clock=7788459 updates=1 update=191 draw=6605 present=775 map=38
+video: scene=41 tick=453 vblank=1906 hash=c5489db2
+timing: frame scene=41 tick=1054 clock=7797237 updates=1 update=191 draw=6605 present=775 map=38
+video: scene=41 tick=454 vblank=1908 hash=c5489db2
+timing: frame scene=41 tick=1055 clock=7806015 updates=1 update=191 draw=6605 present=775 map=38
+video: scene=41 tick=455 vblank=1910 hash=c5489db2
+timing: frame scene=41 tick=1056 clock=7814793 updates=1 update=191 draw=6605 present=775 map=38
+video: scene=41 tick=456 vblank=1912 hash=c5489db2
+timing: frame scene=41 tick=1057 clock=7823571 updates=1 update=191 draw=6605 present=775 map=38
+video: scene=41 tick=457 vblank=1914 hash=c5489db2
+timing: frame scene=41 tick=1058 clock=7832349 updates=1 update=191 draw=6605 present=775 map=38
+video: scene=41 tick=458 vblank=1916 hash=c5489db2
+timing: frame scene=41 tick=1059 clock=7841127 updates=1 update=191 draw=6605 present=775 map=38
+video: scene=41 tick=459 vblank=1918 hash=c5489db2
+timing: frame scene=41 tick=1060 clock=7849905 updates=1 update=191 draw=6605 present=775 map=38
+video: scene=41 tick=460 vblank=1920 hash=c5489db2
+timing: frame scene=41 tick=1061 clock=7858683 updates=1 update=191 draw=6605 present=775 map=38
+video: scene=41 tick=461 vblank=1922 hash=c5489db2
+timing: frame scene=41 tick=1062 clock=7867461 updates=1 update=191 draw=6605 present=775 map=38
+video: scene=41 tick=462 vblank=1924 hash=c5489db2
+timing: frame scene=41 tick=1063 clock=7876239 updates=1 update=191 draw=6605 present=775 map=38
+video: scene=41 tick=463 vblank=1926 hash=c5489db2
+timing: frame scene=41 tick=1064 clock=7885017 updates=1 update=191 draw=6605 present=775 map=38
+video: scene=41 tick=464 vblank=1928 hash=c5489db2
+timing: frame scene=41 tick=1065 clock=7893795 updates=1 update=191 draw=6605 present=775 map=38
+video: scene=41 tick=465 vblank=1930 hash=c5489db2
+timing: frame scene=41 tick=1066 clock=7902573 updates=1 update=191 draw=6605 present=775 map=38
+video: scene=41 tick=466 vblank=1932 hash=c5489db2
+timing: frame scene=41 tick=1067 clock=7911351 updates=1 update=306 draw=7072 present=775 map=38
+video: scene=41 tick=467 vblank=1934 hash=ae785671
+timing: frame scene=41 tick=1068 clock=7920129 updates=1 update=255 draw=7077 present=775 map=38
+video: scene=41 tick=468 vblank=1936 hash=ae785671
+timing: frame scene=41 tick=1069 clock=7928907 updates=1 update=190 draw=7077 present=776 map=38
+video: scene=41 tick=469 vblank=1938 hash=ae785671
+timing: frame scene=41 tick=1070 clock=7937685 updates=1 update=190 draw=7077 present=776 map=38
+video: scene=41 tick=470 vblank=1940 hash=ae785671
+timing: frame scene=41 tick=1071 clock=7946463 updates=1 update=190 draw=7077 present=775 map=38
+video: scene=41 tick=471 vblank=1942 hash=ae785671
+timing: frame scene=41 tick=1072 clock=7955241 updates=1 update=193 draw=7547 present=775 map=38
+video: scene=41 tick=472 vblank=1944 hash=f10e6355
+timing: frame scene=41 tick=1073 clock=7964150 updates=1 update=189 draw=7547 present=776 map=38
+video: scene=41 tick=473 vblank=1946 hash=f10e6355
+timing: frame scene=41 tick=1074 clock=7973055 updates=1 update=215 draw=7546 present=799 map=38
+video: scene=41 tick=474 vblank=1948 hash=f10e6355
+timing: frame scene=41 tick=1075 clock=7981985 updates=1 update=191 draw=7547 present=798 map=38
+video: scene=41 tick=475 vblank=1950 hash=f10e6355
+timing: frame scene=41 tick=1076 clock=7990891 updates=1 update=191 draw=7547 present=798 map=38
+video: scene=41 tick=476 vblank=1952 hash=f10e6355
+timing: frame scene=41 tick=1077 clock=7999797 updates=1 update=195 draw=7547 present=798 map=38
+video: scene=41 tick=477 vblank=1954 hash=7d828056
+timing: frame scene=41 tick=1078 clock=8008707 updates=1 update=191 draw=7547 present=799 map=38
+video: scene=41 tick=478 vblank=1956 hash=7d828056
+timing: frame scene=41 tick=1079 clock=8017613 updates=1 update=191 draw=7547 present=799 map=38
+video: scene=41 tick=479 vblank=1958 hash=7d828056
+timing: frame scene=41 tick=1080 clock=8026520 updates=1 update=191 draw=7570 present=775 map=38
+prof f1080 ticks(avg) wait=682 upd=194 draw/render=6786 present/render=776 dump=339 total=8779 max=9334 renders=60
+video: scene=41 tick=480 vblank=1961 hash=7d828056
+timing: frame scene=41 tick=1081 clock=8038632 updates=1 update=263 draw=7547 present=775 map=38
+video: scene=41 tick=481 vblank=1963 hash=7d828056
+timing: frame scene=41 tick=1082 clock=8047611 updates=1 update=194 draw=7077 present=776 map=38
+video: scene=41 tick=482 vblank=1965 hash=034c24aa
+timing: frame scene=41 tick=1083 clock=8056189 updates=1 update=191 draw=7078 present=775 map=38
+video: scene=41 tick=483 vblank=1967 hash=034c24aa
+timing: frame scene=41 tick=1084 clock=8064966 updates=1 update=191 draw=7077 present=775 map=38
+video: scene=41 tick=484 vblank=1969 hash=034c24aa
+timing: frame scene=41 tick=1085 clock=8073744 updates=1 update=191 draw=7077 present=776 map=38
+video: scene=41 tick=485 vblank=1971 hash=034c24aa
+timing: frame scene=41 tick=1086 clock=8082522 updates=1 update=191 draw=7077 present=776 map=38
+video: scene=41 tick=486 vblank=1973 hash=034c24aa
+timing: frame scene=41 tick=1087 clock=8091300 updates=1 update=194 draw=6607 present=775 map=38
+video: scene=41 tick=487 vblank=1975 hash=0e787c8b
+timing: frame scene=41 tick=1088 clock=8100078 updates=1 update=191 draw=6607 present=775 map=38
+video: scene=41 tick=488 vblank=1977 hash=0e787c8b
+timing: frame scene=41 tick=1089 clock=8108856 updates=1 update=191 draw=6606 present=776 map=38
+video: scene=41 tick=489 vblank=1979 hash=0e787c8b
+timing: frame scene=41 tick=1090 clock=8117634 updates=1 update=191 draw=6607 present=775 map=38
+video: scene=41 tick=490 vblank=1981 hash=0e787c8b
+timing: frame scene=41 tick=1091 clock=8126412 updates=1 update=191 draw=6607 present=775 map=38
+video: scene=41 tick=491 vblank=1983 hash=0e787c8b
+timing: frame scene=41 tick=1092 clock=8135190 updates=1 update=193 draw=6607 present=775 map=38
+video: scene=41 tick=492 vblank=1985 hash=0e787c8b
+timing: frame scene=41 tick=1093 clock=8143968 updates=1 update=306 draw=7077 present=776 map=38
+video: scene=41 tick=493 vblank=1987 hash=ae785671
+timing: frame scene=41 tick=1094 clock=8152746 updates=1 update=255 draw=7077 present=775 map=38
+video: scene=41 tick=494 vblank=1989 hash=ae785671
+timing: frame scene=41 tick=1095 clock=8161524 updates=1 update=190 draw=7077 present=775 map=38
+video: scene=41 tick=495 vblank=1991 hash=ae785671
+timing: frame scene=41 tick=1096 clock=8170302 updates=1 update=190 draw=7077 present=776 map=38
+video: scene=41 tick=496 vblank=1993 hash=ae785671
+timing: frame scene=41 tick=1097 clock=8179080 updates=1 update=190 draw=7077 present=775 map=38
+video: scene=41 tick=497 vblank=1995 hash=ae785671
+timing: frame scene=41 tick=1098 clock=8187858 updates=1 update=193 draw=7547 present=775 map=38
+video: scene=41 tick=498 vblank=1997 hash=1c9e76d2
+timing: frame scene=41 tick=1099 clock=8196767 updates=1 update=190 draw=7547 present=775 map=38
+video: scene=41 tick=499 vblank=1999 hash=1c9e76d2
+timing: frame scene=41 tick=1100 clock=8205673 updates=1 update=214 draw=7547 present=799 map=38
+video: scene=41 tick=500 vblank=2001 hash=1c9e76d2
+timing: frame scene=41 tick=1101 clock=8214601 updates=1 update=192 draw=7547 present=798 map=38
+video: scene=41 tick=501 vblank=2003 hash=1c9e76d2
+timing: frame scene=41 tick=1102 clock=8223507 updates=1 update=191 draw=7547 present=798 map=38
+video: scene=41 tick=502 vblank=2005 hash=1c9e76d2
+timing: frame scene=41 tick=1103 clock=8232411 updates=1 update=195 draw=7546 present=799 map=38
+video: scene=41 tick=503 vblank=2007 hash=d29f886b
+timing: frame scene=41 tick=1104 clock=8241319 updates=1 update=191 draw=7547 present=798 map=38
+video: scene=41 tick=504 vblank=2009 hash=d29f886b
+timing: frame scene=41 tick=1105 clock=8250223 updates=1 update=191 draw=7547 present=799 map=38
+video: scene=41 tick=505 vblank=2011 hash=d29f886b
+timing: frame scene=41 tick=1106 clock=8259128 updates=1 update=191 draw=7570 present=775 map=38
+video: scene=41 tick=506 vblank=2013 hash=d29f886b
+timing: frame scene=41 tick=1107 clock=8268033 updates=1 update=191 draw=7570 present=775 map=38
+video: scene=41 tick=507 vblank=2016 hash=d29f886b
+timing: frame scene=41 tick=1108 clock=8280027 updates=1 update=266 draw=7078 present=775 map=38
+video: scene=41 tick=508 vblank=2018 hash=62cef16b
+timing: frame scene=41 tick=1109 clock=8288805 updates=1 update=191 draw=7077 present=776 map=38
+video: scene=41 tick=509 vblank=2020 hash=62cef16b
+timing: frame scene=41 tick=1110 clock=8297583 updates=1 update=191 draw=7077 present=776 map=38
+video: scene=41 tick=510 vblank=2022 hash=62cef16b
+timing: frame scene=41 tick=1111 clock=8306361 updates=1 update=191 draw=7077 present=776 map=38
+video: scene=41 tick=511 vblank=2024 hash=62cef16b
+timing: frame scene=41 tick=1112 clock=8315139 updates=1 update=191 draw=7077 present=775 map=38
+video: scene=41 tick=512 vblank=2026 hash=62cef16b
+timing: frame scene=41 tick=1113 clock=8323917 updates=1 update=194 draw=6607 present=775 map=38
+video: scene=41 tick=513 vblank=2028 hash=09ef7c5b
+timing: frame scene=41 tick=1114 clock=8332695 updates=1 update=191 draw=6607 present=775 map=38
+video: scene=41 tick=514 vblank=2030 hash=09ef7c5b
+timing: frame scene=41 tick=1115 clock=8341473 updates=1 update=191 draw=6606 present=776 map=38
+video: scene=41 tick=515 vblank=2032 hash=09ef7c5b
+timing: frame scene=41 tick=1116 clock=8350251 updates=1 update=191 draw=6606 present=776 map=38
+video: scene=41 tick=516 vblank=2034 hash=09ef7c5b
+timing: frame scene=41 tick=1117 clock=8359029 updates=1 update=191 draw=6607 present=775 map=38
+video: scene=41 tick=517 vblank=2036 hash=09ef7c5b
+timing: frame scene=41 tick=1118 clock=8367807 updates=1 update=193 draw=6607 present=775 map=38
+video: scene=41 tick=518 vblank=2038 hash=09ef7c5b
+timing: frame scene=41 tick=1119 clock=8376585 updates=1 update=192 draw=6606 present=776 map=38
+video: scene=41 tick=519 vblank=2040 hash=09ef7c5b
+timing: frame scene=41 tick=1120 clock=8385363 updates=1 update=191 draw=6607 present=775 map=38
+video: scene=41 tick=520 vblank=2042 hash=09ef7c5b
+timing: frame scene=41 tick=1121 clock=8394141 updates=1 update=191 draw=6607 present=775 map=38
+video: scene=41 tick=521 vblank=2044 hash=09ef7c5b
+timing: frame scene=41 tick=1122 clock=8402919 updates=1 update=191 draw=6607 present=775 map=38
+video: scene=41 tick=522 vblank=2046 hash=09ef7c5b
+timing: frame scene=41 tick=1123 clock=8411697 updates=1 update=191 draw=6607 present=775 map=38
+video: scene=41 tick=523 vblank=2048 hash=09ef7c5b
+timing: frame scene=41 tick=1124 clock=8420475 updates=1 update=191 draw=6607 present=775 map=38
+video: scene=41 tick=524 vblank=2050 hash=09ef7c5b
+timing: frame scene=41 tick=1125 clock=8429253 updates=1 update=191 draw=6607 present=775 map=38
+video: scene=41 tick=525 vblank=2052 hash=09ef7c5b
+timing: frame scene=41 tick=1126 clock=8438031 updates=1 update=191 draw=6607 present=775 map=38
+video: scene=41 tick=526 vblank=2054 hash=09ef7c5b
+timing: frame scene=41 tick=1127 clock=8446809 updates=1 update=191 draw=6607 present=775 map=38
+video: scene=41 tick=527 vblank=2056 hash=09ef7c5b
+timing: frame scene=41 tick=1128 clock=8455587 updates=1 update=191 draw=6607 present=775 map=38
+video: scene=41 tick=528 vblank=2058 hash=09ef7c5b
+timing: frame scene=41 tick=1129 clock=8464365 updates=1 update=191 draw=6607 present=775 map=38
+video: scene=41 tick=529 vblank=2060 hash=09ef7c5b
+timing: frame scene=41 tick=1130 clock=8473143 updates=1 update=191 draw=6607 present=775 map=38
+video: scene=41 tick=530 vblank=2062 hash=09ef7c5b
+timing: frame scene=41 tick=1131 clock=8481921 updates=1 update=191 draw=6607 present=775 map=38
+video: scene=41 tick=531 vblank=2064 hash=09ef7c5b
+timing: frame scene=41 tick=1132 clock=8490699 updates=1 update=191 draw=6607 present=775 map=38
+video: scene=41 tick=532 vblank=2066 hash=09ef7c5b
+timing: frame scene=41 tick=1133 clock=8499477 updates=1 update=191 draw=6606 present=776 map=38
+video: scene=41 tick=533 vblank=2068 hash=09ef7c5b
+timing: frame scene=41 tick=1134 clock=8508255 updates=1 update=191 draw=6607 present=775 map=38
+video: scene=41 tick=534 vblank=2070 hash=09ef7c5b
+timing: frame scene=41 tick=1135 clock=8517033 updates=1 update=191 draw=6607 present=775 map=38
+video: scene=41 tick=535 vblank=2072 hash=09ef7c5b
+timing: frame scene=41 tick=1136 clock=8525811 updates=1 update=191 draw=6607 present=775 map=38
+video: scene=41 tick=536 vblank=2074 hash=09ef7c5b
+timing: frame scene=41 tick=1137 clock=8534589 updates=1 update=191 draw=6607 present=775 map=38
+video: scene=41 tick=537 vblank=2076 hash=09ef7c5b
+timing: frame scene=41 tick=1138 clock=8543367 updates=1 update=191 draw=6607 present=775 map=38
+video: scene=41 tick=538 vblank=2078 hash=09ef7c5b
+timing: frame scene=41 tick=1139 clock=8552145 updates=1 update=195 draw=7063 present=775 map=38
+video: scene=41 tick=539 vblank=2080 hash=562c56be
+timing: frame scene=41 tick=1140 clock=8560923 updates=1 update=191 draw=7068 present=775 map=38
+prof f1140 ticks(avg) wait=638 upd=196 draw/render=6913 present/render=776 dump=340 total=8865 max=11730 renders=60
+video: scene=41 tick=540 vblank=2082 hash=562c56be
+timing: frame scene=41 tick=1141 clock=8569781 updates=1 update=191 draw=7068 present=775 map=38
+video: scene=41 tick=541 vblank=2084 hash=562c56be
+timing: frame scene=41 tick=1142 clock=8578480 updates=1 update=191 draw=7068 present=776 map=38
+video: scene=41 tick=542 vblank=2086 hash=562c56be
+timing: frame scene=41 tick=1143 clock=8587257 updates=1 update=191 draw=7068 present=775 map=38
+video: scene=41 tick=543 vblank=2088 hash=562c56be
+timing: frame scene=41 tick=1144 clock=8596035 updates=1 update=194 draw=7068 present=776 map=38
+video: scene=41 tick=544 vblank=2090 hash=da807914
+timing: frame scene=41 tick=1145 clock=8604813 updates=1 update=191 draw=7068 present=775 map=38
+video: scene=41 tick=545 vblank=2092 hash=da807914
+timing: frame scene=41 tick=1146 clock=8613591 updates=1 update=191 draw=7068 present=775 map=38
+video: scene=41 tick=546 vblank=2094 hash=da807914
+timing: frame scene=41 tick=1147 clock=8622369 updates=1 update=191 draw=7068 present=775 map=38
+video: scene=41 tick=547 vblank=2096 hash=da807914
+timing: frame scene=41 tick=1148 clock=8631147 updates=1 update=191 draw=7068 present=775 map=38
+video: scene=41 tick=548 vblank=2098 hash=da807914
+timing: frame scene=41 tick=1149 clock=8639925 updates=1 update=194 draw=7068 present=775 map=38
+video: scene=41 tick=549 vblank=2100 hash=da807914
+frame=2100 status=0080 volume=0077
+timing: frame scene=41 tick=1150 clock=8648703 updates=1 update=191 draw=7068 present=775 map=38
+video: scene=41 tick=550 vblank=2102 hash=da807914
+timing: frame scene=41 tick=1151 clock=8657481 updates=1 update=191 draw=7068 present=775 map=38
+video: scene=41 tick=551 vblank=2104 hash=da807914
+timing: frame scene=41 tick=1152 clock=8666259 updates=1 update=191 draw=7068 present=775 map=38
+video: scene=41 tick=552 vblank=2106 hash=da807914
+timing: frame scene=41 tick=1153 clock=8675037 updates=1 update=191 draw=7068 present=775 map=38
+video: scene=41 tick=553 vblank=2108 hash=da807914
+timing: frame scene=41 tick=1154 clock=8683815 updates=1 update=194 draw=7068 present=775 map=38
+video: scene=41 tick=554 vblank=2110 hash=562c56be
+timing: frame scene=41 tick=1155 clock=8692593 updates=1 update=191 draw=7068 present=775 map=38
+video: scene=41 tick=555 vblank=2112 hash=562c56be
+timing: frame scene=41 tick=1156 clock=8701371 updates=1 update=191 draw=7068 present=775 map=38
+video: scene=41 tick=556 vblank=2114 hash=562c56be
+timing: frame scene=41 tick=1157 clock=8710149 updates=1 update=191 draw=7068 present=775 map=38
+video: scene=41 tick=557 vblank=2116 hash=562c56be
+timing: frame scene=41 tick=1158 clock=8718927 updates=1 update=191 draw=7068 present=775 map=38
+video: scene=41 tick=558 vblank=2118 hash=562c56be
+timing: frame scene=41 tick=1159 clock=8727705 updates=1 update=193 draw=7068 present=775 map=38
+video: scene=41 tick=559 vblank=2120 hash=562c56be
+timing: frame scene=41 tick=1160 clock=8736483 updates=1 update=191 draw=7068 present=775 map=38
+video: scene=41 tick=560 vblank=2122 hash=562c56be
+timing: frame scene=41 tick=1161 clock=8745261 updates=1 update=192 draw=7068 present=775 map=38
+video: scene=41 tick=561 vblank=2124 hash=562c56be
+timing: frame scene=41 tick=1162 clock=8754039 updates=1 update=191 draw=7068 present=775 map=38
+video: scene=41 tick=562 vblank=2126 hash=562c56be
+timing: frame scene=41 tick=1163 clock=8762817 updates=1 update=191 draw=7068 present=775 map=38
+video: scene=41 tick=563 vblank=2128 hash=562c56be
+timing: frame scene=41 tick=1164 clock=8771595 updates=1 update=191 draw=7068 present=775 map=38
+video: scene=41 tick=564 vblank=2130 hash=562c56be
+timing: frame scene=41 tick=1165 clock=8780373 updates=1 update=191 draw=7068 present=775 map=38
+video: scene=41 tick=565 vblank=2132 hash=562c56be
+timing: frame scene=41 tick=1166 clock=8789151 updates=1 update=191 draw=7068 present=775 map=38
+video: scene=41 tick=566 vblank=2134 hash=562c56be
+timing: frame scene=41 tick=1167 clock=8797929 updates=1 update=191 draw=7068 present=775 map=38
+video: scene=41 tick=567 vblank=2136 hash=562c56be
+timing: frame scene=41 tick=1168 clock=8806707 updates=1 update=191 draw=7068 present=775 map=38
+video: scene=41 tick=568 vblank=2138 hash=562c56be
+timing: frame scene=41 tick=1169 clock=8815485 updates=1 update=191 draw=7068 present=775 map=38
+video: scene=41 tick=569 vblank=2140 hash=562c56be
+timing: frame scene=41 tick=1170 clock=8824263 updates=1 update=191 draw=7068 present=775 map=38
+video: scene=41 tick=570 vblank=2142 hash=562c56be
+timing: frame scene=41 tick=1171 clock=8833041 updates=1 update=191 draw=7068 present=775 map=38
+video: scene=41 tick=571 vblank=2144 hash=562c56be
+timing: frame scene=41 tick=1172 clock=8841819 updates=1 update=191 draw=7068 present=775 map=38
+video: scene=41 tick=572 vblank=2146 hash=562c56be
+timing: frame scene=41 tick=1173 clock=8850597 updates=1 update=191 draw=7068 present=775 map=38
+video: scene=41 tick=573 vblank=2148 hash=562c56be
+timing: frame scene=41 tick=1174 clock=8859375 updates=1 update=191 draw=7068 present=775 map=38
+video: scene=41 tick=574 vblank=2150 hash=562c56be
+timing: frame scene=41 tick=1175 clock=8868153 updates=1 update=191 draw=7068 present=775 map=38
+video: scene=41 tick=575 vblank=2152 hash=562c56be
+timing: frame scene=41 tick=1176 clock=8876931 updates=1 update=191 draw=7068 present=775 map=38
+video: scene=41 tick=576 vblank=2154 hash=562c56be
+timing: frame scene=41 tick=1177 clock=8885709 updates=1 update=191 draw=7068 present=775 map=38
+video: scene=41 tick=577 vblank=2156 hash=562c56be
+timing: frame scene=41 tick=1178 clock=8894487 updates=1 update=191 draw=7068 present=775 map=38
+video: scene=41 tick=578 vblank=2158 hash=562c56be
+timing: frame scene=41 tick=1179 clock=8903265 updates=1 update=191 draw=7068 present=775 map=38
+video: scene=41 tick=579 vblank=2160 hash=562c56be
+timing: frame scene=41 tick=1180 clock=8912043 updates=1 update=191 draw=7068 present=775 map=38
+video: scene=41 tick=580 vblank=2162 hash=562c56be
+timing: frame scene=41 tick=1181 clock=8920821 updates=1 update=191 draw=7068 present=775 map=38
+video: scene=41 tick=581 vblank=2164 hash=562c56be
+timing: frame scene=41 tick=1182 clock=8929599 updates=1 update=191 draw=7068 present=775 map=38
+video: scene=41 tick=582 vblank=2166 hash=562c56be
+timing: frame scene=41 tick=1183 clock=8938377 updates=1 update=191 draw=7068 present=775 map=38
+video: scene=41 tick=583 vblank=2168 hash=562c56be
+timing: frame scene=41 tick=1184 clock=8947155 updates=1 update=191 draw=7068 present=775 map=38
+video: scene=41 tick=584 vblank=2170 hash=562c56be
+timing: frame scene=41 tick=1185 clock=8955933 updates=1 update=191 draw=7068 present=775 map=38
+video: scene=41 tick=585 vblank=2172 hash=562c56be
+timing: frame scene=41 tick=1186 clock=8964711 updates=1 update=191 draw=7068 present=775 map=38
+video: scene=41 tick=586 vblank=2174 hash=562c56be
+timing: frame scene=41 tick=1187 clock=8973489 updates=1 update=191 draw=7068 present=775 map=38
+video: scene=41 tick=587 vblank=2176 hash=562c56be
+timing: frame scene=41 tick=1188 clock=8982267 updates=1 update=191 draw=7068 present=775 map=38
+video: scene=41 tick=588 vblank=2178 hash=562c56be
+timing: frame scene=41 tick=1189 clock=8991045 updates=1 update=191 draw=7068 present=775 map=38
+video: scene=41 tick=589 vblank=2180 hash=562c56be
+timing: frame scene=41 tick=1190 clock=8999823 updates=1 update=296 draw=9828 present=775 map=38
+video: scene=41 tick=590 vblank=2183 hash=78649586
+timing: frame scene=41 tick=1191 clock=9012990 updates=1 update=293 draw=7569 present=775 map=38
+video: scene=41 tick=591 vblank=2185 hash=78649586
+timing: frame scene=41 tick=1192 clock=9022021 updates=1 update=186 draw=7569 present=798 map=38
+video: scene=41 tick=592 vblank=2187 hash=78649586
+timing: frame scene=41 tick=1193 clock=9030945 updates=1 update=185 draw=7569 present=799 map=38
+video: scene=41 tick=593 vblank=2189 hash=78649586
+timing: frame scene=41 tick=1194 clock=9039869 updates=1 update=223 draw=7569 present=799 map=38
+video: scene=41 tick=594 vblank=2191 hash=78649586
+timing: frame scene=41 tick=1195 clock=9048830 updates=1 update=189 draw=7569 present=799 map=38
+video: scene=41 tick=595 vblank=2193 hash=114f1146
+timing: frame scene=41 tick=1196 clock=9057757 updates=1 update=186 draw=7569 present=798 map=38
+video: scene=41 tick=596 vblank=2195 hash=114f1146
+timing: frame scene=41 tick=1197 clock=9066681 updates=1 update=224 draw=7592 present=775 map=38
+video: scene=41 tick=597 vblank=2197 hash=114f1146
+timing: frame scene=41 tick=1198 clock=9075643 updates=1 update=185 draw=7593 present=775 map=38
+video: scene=41 tick=598 vblank=2200 hash=114f1146
+timing: frame scene=41 tick=1199 clock=9087603 updates=1 update=255 draw=7569 present=775 map=38
+video: scene=41 tick=599 vblank=2202 hash=114f1146
+timing: frame scene=41 tick=1200 clock=9096596 updates=1 update=227 draw=7569 present=799 map=38
+prof f1200 ticks(avg) wait=392 upd=196 draw/render=7198 present/render=776 dump=339 total=8904 max=12003 renders=60
+video: scene=41 tick=600 vblank=2204 hash=5d64690f
+timing: frame scene=41 tick=1201 clock=9105991 updates=1 update=186 draw=7569 present=798 map=38
+video: scene=41 tick=601 vblank=2206 hash=5d64690f
+timing: frame scene=41 tick=1202 clock=9114915 updates=1 update=186 draw=7569 present=798 map=38
+video: scene=41 tick=602 vblank=2208 hash=5d64690f
+timing: frame scene=41 tick=1203 clock=9123839 updates=1 update=185 draw=7593 present=775 map=38
+video: scene=41 tick=603 vblank=2210 hash=5d64690f
+timing: frame scene=41 tick=1204 clock=9132763 updates=1 update=223 draw=7592 present=776 map=38
+video: scene=41 tick=604 vblank=2213 hash=5d64690f
+timing: frame scene=41 tick=1205 clock=9144660 updates=1 update=258 draw=7569 present=776 map=38
+video: scene=41 tick=605 vblank=2215 hash=150b41fa
+timing: frame scene=41 tick=1206 clock=9153657 updates=1 update=185 draw=7569 present=776 map=38
+video: scene=41 tick=606 vblank=2217 hash=150b41fa
+timing: frame scene=41 tick=1207 clock=9162581 updates=1 update=223 draw=7569 present=799 map=38
+video: scene=41 tick=607 vblank=2219 hash=150b41fa
+timing: frame scene=41 tick=1208 clock=9171542 updates=1 update=186 draw=7569 present=798 map=38
+video: scene=41 tick=608 vblank=2221 hash=150b41fa
+timing: frame scene=41 tick=1209 clock=9180466 updates=1 update=186 draw=7569 present=798 map=38
+video: scene=41 tick=609 vblank=2223 hash=150b41fa
+timing: frame scene=41 tick=1210 clock=9189390 updates=1 update=187 draw=7569 present=799 map=38
+video: scene=41 tick=610 vblank=2225 hash=150b41fa
+timing: frame scene=41 tick=1211 clock=9198315 updates=1 update=226 draw=7635 present=776 map=38
+video: scene=41 tick=611 vblank=2227 hash=f9a0a745
+timing: frame scene=41 tick=1212 clock=9207323 updates=1 update=184 draw=7635 present=776 map=38
+video: scene=41 tick=612 vblank=2230 hash=f9a0a745
+timing: frame scene=41 tick=1213 clock=9219273 updates=1 update=253 draw=7613 present=775 map=38
+video: scene=41 tick=613 vblank=2232 hash=f9a0a745
+timing: frame scene=41 tick=1214 clock=9228308 updates=1 update=184 draw=7613 present=798 map=38
+video: scene=41 tick=614 vblank=2234 hash=f9a0a745
+timing: frame scene=41 tick=1215 clock=9237274 updates=1 update=184 draw=7613 present=798 map=38
+video: scene=41 tick=615 vblank=2236 hash=f9a0a745
+timing: frame scene=41 tick=1216 clock=9246240 updates=1 update=184 draw=7613 present=798 map=38
+video: scene=41 tick=616 vblank=2238 hash=f9a0a745
+timing: frame scene=41 tick=1217 clock=9255206 updates=1 update=184 draw=7613 present=798 map=38
+video: scene=41 tick=617 vblank=2240 hash=f9a0a745
+timing: frame scene=41 tick=1218 clock=9264172 updates=1 update=184 draw=7636 present=775 map=38
+video: scene=41 tick=618 vblank=2242 hash=f9a0a745
+timing: frame scene=41 tick=1219 clock=9273138 updates=1 update=222 draw=7638 present=775 map=38
+video: scene=41 tick=619 vblank=2245 hash=2b5c9089
+timing: frame scene=41 tick=1220 clock=9285108 updates=1 update=253 draw=7614 present=776 map=38
+video: scene=41 tick=620 vblank=2247 hash=2b5c9089
+timing: frame scene=41 tick=1221 clock=9294145 updates=1 update=185 draw=7614 present=799 map=38
+video: scene=41 tick=621 vblank=2249 hash=2b5c9089
+timing: frame scene=41 tick=1222 clock=9303113 updates=1 update=185 draw=7614 present=798 map=38
+video: scene=41 tick=622 vblank=2251 hash=2b5c9089
+timing: frame scene=41 tick=1223 clock=9312081 updates=1 update=184 draw=7614 present=799 map=38
+video: scene=41 tick=623 vblank=2253 hash=2b5c9089
+timing: frame scene=41 tick=1224 clock=9321048 updates=1 update=185 draw=7614 present=798 map=38
+video: scene=41 tick=624 vblank=2255 hash=2b5c9089
+timing: frame scene=41 tick=1225 clock=9330016 updates=1 update=184 draw=7637 present=776 map=38
+video: scene=41 tick=625 vblank=2257 hash=2b5c9089
+timing: frame scene=41 tick=1226 clock=9338984 updates=1 update=204 draw=7638 present=775 map=38
+video: scene=41 tick=626 vblank=2260 hash=2b5c9089
+timing: frame scene=41 tick=1227 clock=9350943 updates=1 update=261 draw=7615 present=775 map=38
+video: scene=41 tick=627 vblank=2262 hash=5d3a1fc5
+timing: frame scene=41 tick=1228 clock=9359988 updates=1 update=189 draw=7615 present=798 map=38
+video: scene=41 tick=628 vblank=2264 hash=5d3a1fc5
+timing: frame scene=41 tick=1229 clock=9368961 updates=1 update=189 draw=7614 present=799 map=38
+video: scene=41 tick=629 vblank=2266 hash=5d3a1fc5
+timing: frame scene=41 tick=1230 clock=9377934 updates=1 update=189 draw=7614 present=799 map=38
+video: scene=41 tick=630 vblank=2268 hash=5d3a1fc5
+timing: frame scene=41 tick=1231 clock=9386906 updates=1 update=190 draw=7614 present=799 map=38
+video: scene=41 tick=631 vblank=2270 hash=5d3a1fc5
+timing: frame scene=41 tick=1232 clock=9395879 updates=1 update=190 draw=7637 present=776 map=38
+video: scene=41 tick=632 vblank=2272 hash=5d3a1fc5
+timing: frame scene=41 tick=1233 clock=9404852 updates=1 update=190 draw=7637 present=776 map=38
+video: scene=41 tick=633 vblank=2275 hash=5d3a1fc5
+timing: frame scene=41 tick=1234 clock=9416778 updates=1 update=262 draw=7614 present=775 map=38
+video: scene=41 tick=634 vblank=2277 hash=5d3a1fc5
+timing: frame scene=41 tick=1235 clock=9425823 updates=1 update=222 draw=21400 present=798 map=38
+video: scene=41 tick=635 vblank=2282 hash=48376504
+timing: frame scene=42 tick=1236 clock=9448618 updates=1 update=495 draw=15352 present=798 map=38
+video: scene=42 tick=1 vblank=2286 hash=5c97b5e3
+timing: frame scene=42 tick=1237 clock=9465637 updates=1 update=397 draw=12658 present=775 map=38
+video: scene=42 tick=2 vblank=2290 hash=5c97b5e3
+timing: frame scene=42 tick=1238 clock=9482613 updates=1 update=320 draw=12636 present=798 map=38
+video: scene=42 tick=3 vblank=2293 hash=5c97b5e3
+timing: frame scene=42 tick=1239 clock=9496741 updates=1 update=252 draw=12658 present=776 map=38
+video: scene=42 tick=4 vblank=2297 hash=5c97b5e3
+timing: frame scene=42 tick=1240 clock=9513336 updates=1 update=320 draw=12636 present=798 map=38
+video: scene=42 tick=5 vblank=2300 hash=5c97b5e3
+timing: frame scene=42 tick=1241 clock=9527464 updates=1 update=252 draw=12659 present=775 map=38
+video: scene=42 tick=6 vblank=2304 hash=5c97b5e3
+timing: frame scene=42 tick=1242 clock=9544059 updates=1 update=346 draw=12636 present=798 map=38
+video: scene=42 tick=7 vblank=2307 hash=5c97b5e3
+timing: frame scene=42 tick=1243 clock=9558213 updates=1 update=260 draw=12659 present=775 map=38
+video: scene=42 tick=8 vblank=2311 hash=5c97b5e3
+timing: frame scene=42 tick=1244 clock=9574782 updates=1 update=331 draw=12636 present=798 map=38
+video: scene=42 tick=9 vblank=2314 hash=5c97b5e3
+timing: frame scene=42 tick=1245 clock=9588921 updates=1 update=260 draw=12659 present=775 map=38
+video: scene=42 tick=10 vblank=2318 hash=5c97b5e3
+timing: frame scene=42 tick=1246 clock=9605505 updates=1 update=331 draw=12636 present=798 map=38
+video: scene=42 tick=11 vblank=2321 hash=5c97b5e3
+timing: frame scene=42 tick=1247 clock=9619644 updates=1 update=260 draw=12659 present=775 map=38
+video: scene=42 tick=12 vblank=2325 hash=5c97b5e3
+timing: frame scene=42 tick=1248 clock=9636228 updates=1 update=331 draw=12636 present=798 map=38
+video: scene=42 tick=13 vblank=2328 hash=5c97b5e3
+timing: frame scene=42 tick=1249 clock=9650367 updates=1 update=260 draw=12659 present=775 map=38
+video: scene=42 tick=14 vblank=2332 hash=5c97b5e3
+timing: frame scene=42 tick=1250 clock=9666951 updates=1 update=331 draw=12636 present=798 map=38
+video: scene=42 tick=15 vblank=2335 hash=5c97b5e3
+timing: frame scene=42 tick=1251 clock=9681090 updates=1 update=260 draw=12659 present=775 map=38
+video: scene=42 tick=16 vblank=2339 hash=98d82de3
+timing: frame scene=42 tick=1252 clock=9697674 updates=1 update=332 draw=12635 present=799 map=38
+video: scene=42 tick=17 vblank=2342 hash=690bb1e3
+timing: frame scene=42 tick=1253 clock=9711814 updates=1 update=260 draw=12658 present=776 map=38
+video: scene=42 tick=18 vblank=2346 hash=190162e3
+timing: frame scene=42 tick=1254 clock=9728397 updates=1 update=331 draw=12636 present=798 map=38
+video: scene=42 tick=19 vblank=2349 hash=642184e3
+timing: frame scene=42 tick=1255 clock=9742536 updates=1 update=260 draw=12659 present=775 map=38
+video: scene=42 tick=20 vblank=2353 hash=5c97b5e3
+timing: frame scene=42 tick=1256 clock=9759120 updates=1 update=332 draw=12636 present=798 map=38
+video: scene=42 tick=21 vblank=2356 hash=5c97b5e3
+timing: frame scene=42 tick=1257 clock=9773260 updates=1 update=260 draw=12658 present=776 map=38
+video: scene=42 tick=22 vblank=2360 hash=5c97b5e3
+timing: frame scene=42 tick=1258 clock=9789843 updates=1 update=331 draw=12636 present=798 map=38
+video: scene=42 tick=23 vblank=2363 hash=642184e3
+timing: frame scene=42 tick=1259 clock=9803982 updates=1 update=260 draw=12659 present=775 map=38
+video: scene=42 tick=24 vblank=2367 hash=190162e3
+timing: frame scene=42 tick=1260 clock=9820566 updates=1 update=332 draw=12636 present=798 map=38
+prof f1260 ticks(avg) wait=761 upd=246 draw/render=9982 present/render=786 dump=342 total=12119 max=22768 renders=60
+video: scene=42 tick=25 vblank=2371 hash=690bb1e3
+timing: frame scene=42 tick=1261 clock=9838122 updates=1 update=331 draw=12636 present=798 map=38
+video: scene=42 tick=26 vblank=2374 hash=b53f2ce3
+timing: frame scene=42 tick=1262 clock=9852261 updates=1 update=261 draw=12659 present=775 map=38
+video: scene=42 tick=27 vblank=2378 hash=98d82de3
+timing: frame scene=42 tick=1263 clock=9868845 updates=1 update=331 draw=12636 present=798 map=38
+video: scene=42 tick=28 vblank=2381 hash=b53f2ce3
+timing: frame scene=42 tick=1264 clock=9882984 updates=1 update=261 draw=12658 present=776 map=38
+video: scene=42 tick=29 vblank=2385 hash=690bb1e3
+timing: frame scene=42 tick=1265 clock=9899568 updates=1 update=331 draw=12636 present=798 map=38
+video: scene=42 tick=30 vblank=2388 hash=aa7fefe3
+timing: frame scene=42 tick=1266 clock=9913707 updates=1 update=261 draw=12659 present=775 map=38
+video: scene=42 tick=31 vblank=2392 hash=b53f2ce3
+timing: frame scene=42 tick=1267 clock=9930291 updates=1 update=331 draw=12636 present=798 map=38
+video: scene=42 tick=32 vblank=2395 hash=aa7fefe3
+timing: frame scene=42 tick=1268 clock=9944430 updates=1 update=355 draw=12661 present=775 map=38
+timing: frame scene=42 tick=1269 clock=9961014 updates=1 update=356 draw=290 present=764 map=38
+video: scene=42 tick=33 vblank=2399 hash=690bb1e3
+timing: frame scene=42 tick=1270 clock=9965401 updates=1 update=111 draw=291 present=5 map=38
+video: scene=42 tick=34 vblank=2400 hash=690bb1e3
+frame=2400 status=0088 volume=8877
+timing: frame scene=42 tick=1271 clock=9969790 updates=1 update=150 draw=290 present=5 map=38
+video: scene=42 tick=35 vblank=2401 hash=690bb1e3
+timing: frame scene=42 tick=1272 clock=9974179 updates=1 update=111 draw=291 present=5 map=38
+video: scene=42 tick=36 vblank=2402 hash=690bb1e3
+timing: frame scene=42 tick=1273 clock=9978568 updates=1 update=111 draw=291 present=5 map=38
+video: scene=42 tick=37 vblank=2403 hash=690bb1e3
+timing: frame scene=42 tick=1274 clock=9982957 updates=1 update=111 draw=291 present=5 map=38
+video: scene=42 tick=38 vblank=2404 hash=690bb1e3
+timing: frame scene=42 tick=1275 clock=9987346 updates=1 update=150 draw=290 present=5 map=38
+video: scene=42 tick=39 vblank=2405 hash=690bb1e3
+timing: frame scene=42 tick=1276 clock=9991735 updates=1 update=111 draw=291 present=5 map=38
+video: scene=42 tick=40 vblank=2406 hash=690bb1e3
+timing: frame scene=42 tick=1277 clock=9996124 updates=1 update=111 draw=291 present=5 map=38
+video: scene=42 tick=41 vblank=2407 hash=690bb1e3
+timing: frame scene=42 tick=1278 clock=10000513 updates=1 update=111 draw=291 present=5 map=38
+video: scene=42 tick=42 vblank=2408 hash=690bb1e3
+timing: frame scene=42 tick=1279 clock=10004902 updates=1 update=150 draw=290 present=5 map=38
+video: scene=42 tick=43 vblank=2409 hash=690bb1e3
+timing: frame scene=42 tick=1280 clock=10009291 updates=1 update=111 draw=291 present=5 map=38
+video: scene=42 tick=44 vblank=2410 hash=690bb1e3
+timing: frame scene=42 tick=1281 clock=10013680 updates=1 update=111 draw=291 present=5 map=38
+video: scene=42 tick=45 vblank=2411 hash=690bb1e3
+timing: frame scene=42 tick=1282 clock=10018069 updates=1 update=111 draw=291 present=5 map=38
+video: scene=42 tick=46 vblank=2412 hash=690bb1e3
+timing: frame scene=42 tick=1283 clock=10022458 updates=1 update=150 draw=290 present=5 map=38
+video: scene=42 tick=47 vblank=2413 hash=690bb1e3
+timing: frame scene=42 tick=1284 clock=10026847 updates=1 update=111 draw=291 present=5 map=38
+video: scene=42 tick=48 vblank=2414 hash=690bb1e3
+timing: frame scene=42 tick=1285 clock=10031236 updates=1 update=111 draw=291 present=5 map=38
+video: scene=42 tick=49 vblank=2415 hash=690bb1e3
+timing: frame scene=42 tick=1286 clock=10035625 updates=1 update=111 draw=291 present=5 map=38
+video: scene=42 tick=50 vblank=2416 hash=690bb1e3
+timing: frame scene=42 tick=1287 clock=10040014 updates=1 update=111 draw=291 present=5 map=38
+video: scene=42 tick=51 vblank=2417 hash=690bb1e3
+timing: frame scene=42 tick=1288 clock=10044403 updates=1 update=111 draw=291 present=5 map=38
+video: scene=42 tick=52 vblank=2418 hash=690bb1e3
+timing: frame scene=42 tick=1289 clock=10048792 updates=1 update=111 draw=291 present=5 map=38
+video: scene=42 tick=53 vblank=2419 hash=690bb1e3
+timing: frame scene=42 tick=1290 clock=10053181 updates=1 update=111 draw=291 present=5 map=38
+video: scene=42 tick=54 vblank=2420 hash=690bb1e3
+timing: frame scene=42 tick=1291 clock=10057570 updates=1 update=111 draw=291 present=5 map=38
+video: scene=42 tick=55 vblank=2421 hash=690bb1e3
+timing: frame scene=42 tick=1292 clock=10061959 updates=1 update=111 draw=291 present=5 map=38
+video: scene=42 tick=56 vblank=2422 hash=690bb1e3
+timing: frame scene=42 tick=1293 clock=10066348 updates=1 update=111 draw=291 present=5 map=38
+video: scene=42 tick=57 vblank=2423 hash=690bb1e3
+timing: frame scene=42 tick=1294 clock=10070737 updates=1 update=111 draw=291 present=5 map=38
+video: scene=42 tick=58 vblank=2424 hash=690bb1e3
+timing: frame scene=42 tick=1295 clock=10075126 updates=1 update=111 draw=291 present=5 map=38
+video: scene=42 tick=59 vblank=2425 hash=690bb1e3
+timing: frame scene=42 tick=1296 clock=10079515 updates=1 update=111 draw=291 present=5 map=38
+video: scene=42 tick=60 vblank=2426 hash=690bb1e3
+timing: frame scene=42 tick=1297 clock=10083904 updates=1 update=111 draw=291 present=5 map=38
+video: scene=42 tick=61 vblank=2427 hash=690bb1e3
+timing: frame scene=42 tick=1298 clock=10088293 updates=1 update=111 draw=291 present=5 map=38
+video: scene=42 tick=62 vblank=2428 hash=690bb1e3
+timing: frame scene=42 tick=1299 clock=10092682 updates=1 update=132 draw=290 present=6 map=38
+video: scene=42 tick=63 vblank=2429 hash=690bb1e3
+timing: frame scene=42 tick=1300 clock=10097071 updates=1 update=114 draw=290 present=6 map=38
+video: scene=42 tick=64 vblank=2430 hash=690bb1e3
+timing: frame scene=42 tick=1301 clock=10101460 updates=1 update=114 draw=290 present=6 map=38
+video: scene=42 tick=65 vblank=2431 hash=690bb1e3
+timing: frame scene=42 tick=1302 clock=10105849 updates=1 update=114 draw=290 present=6 map=38
+video: scene=42 tick=66 vblank=2432 hash=690bb1e3
+timing: frame scene=42 tick=1303 clock=10110238 updates=1 update=114 draw=290 present=6 map=38
+video: scene=42 tick=67 vblank=2433 hash=690bb1e3
+video: scene=42 tick=68 vblank=2434 hash=690bb1e3
+[WARN] gba-asset miss: title/red_version_tiles
+timing: frame scene=42 tick=1304 clock=10114627 updates=1 update=117 draw=13670 present=776 map=38
+video: scene=42 tick=69 vblank=2438 hash=690bb1e3
+timing: frame scene=43 tick=1305 clock=10132185 updates=1 update=363 draw=13196 present=776 map=38
+video: scene=43 tick=1 vblank=2442 hash=aa9d7b77
+timing: frame scene=43 tick=1306 clock=10149741 updates=1 update=362 draw=13331 present=776 map=38
+video: scene=43 tick=2 vblank=2446 hash=6b4462a6
+timing: frame scene=43 tick=1307 clock=10167297 updates=1 update=362 draw=13350 present=775 map=38
+video: scene=43 tick=3 vblank=2450 hash=6248810a
+timing: frame scene=43 tick=1308 clock=10184853 updates=1 update=363 draw=13481 present=775 map=38
+video: scene=43 tick=4 vblank=2454 hash=c383ca8f
+timing: frame scene=43 tick=1309 clock=10202409 updates=1 update=363 draw=13503 present=775 map=38
+video: scene=43 tick=5 vblank=2458 hash=135dc830
+timing: frame scene=43 tick=1310 clock=10219965 updates=1 update=363 draw=13617 present=775 map=38
+video: scene=43 tick=6 vblank=2462 hash=e3add3b2
+timing: frame scene=43 tick=1311 clock=10237521 updates=1 update=363 draw=13753 present=776 map=38
+video: scene=43 tick=7 vblank=2466 hash=7e3f592d
+timing: frame scene=43 tick=1312 clock=10255077 updates=1 update=362 draw=13769 present=776 map=38
+video: scene=43 tick=8 vblank=2470 hash=60b4eda6
+timing: frame scene=43 tick=1313 clock=10272633 updates=1 update=362 draw=13901 present=775 map=38
+video: scene=43 tick=9 vblank=2474 hash=59ffc15e
+timing: frame scene=43 tick=1314 clock=10290189 updates=1 update=362 draw=13913 present=775 map=38
+video: scene=43 tick=10 vblank=2478 hash=caf4d5c1
+timing: frame scene=43 tick=1315 clock=10307745 updates=1 update=362 draw=14049 present=775 map=38
+video: scene=43 tick=11 vblank=2482 hash=90f269cd
+timing: frame scene=43 tick=1316 clock=10325301 updates=1 update=362 draw=14178 present=776 map=38
+video: scene=43 tick=12 vblank=2486 hash=a6f1d094
+timing: frame scene=43 tick=1317 clock=10342857 updates=1 update=362 draw=14190 present=775 map=38
+video: scene=43 tick=13 vblank=2490 hash=21daf3eb
+timing: frame scene=43 tick=1318 clock=10360413 updates=1 update=362 draw=14316 present=776 map=38
+video: scene=43 tick=14 vblank=2494 hash=c248d9f7
+timing: frame scene=43 tick=1319 clock=10377969 updates=1 update=362 draw=14334 present=775 map=38
+video: scene=43 tick=15 vblank=2498 hash=015f8c54
+timing: frame scene=43 tick=1320 clock=10395525 updates=1 update=363 draw=14469 present=775 map=38
+prof f1320 ticks(avg) wait=2915 upd=211 draw/render=13448 present/render=778 dump=342 total=9581 max=18532 renders=25
+video: scene=43 tick=16 vblank=2502 hash=f17bebb7
+timing: frame scene=43 tick=1321 clock=10413081 updates=1 update=363 draw=14603 present=776 map=38
+video: scene=43 tick=17 vblank=2506 hash=d47c939b
+timing: frame scene=43 tick=1322 clock=10430637 updates=1 update=363 draw=14618 present=775 map=38
+video: scene=43 tick=18 vblank=2510 hash=7fca3e1d
+timing: frame scene=43 tick=1323 clock=10448193 updates=1 update=363 draw=14619 present=775 map=38
+video: scene=43 tick=19 vblank=2514 hash=9f008c55
+timing: frame scene=43 tick=1324 clock=10465749 updates=1 update=363 draw=14620 present=775 map=38
+video: scene=43 tick=20 vblank=2518 hash=e59cf34d
+timing: frame scene=43 tick=1325 clock=10483305 updates=1 update=363 draw=14619 present=776 map=38
+video: scene=43 tick=21 vblank=2522 hash=07d0b3c5
+timing: frame scene=43 tick=1326 clock=10500861 updates=1 update=363 draw=14620 present=775 map=38
+video: scene=43 tick=22 vblank=2526 hash=9145f73d
+timing: frame scene=43 tick=1327 clock=10518417 updates=1 update=363 draw=14619 present=775 map=38
+video: scene=43 tick=23 vblank=2530 hash=91652cf5
+timing: frame scene=43 tick=1328 clock=10535973 updates=1 update=363 draw=14619 present=775 map=38
+video: scene=43 tick=24 vblank=2534 hash=2be8d96d
+timing: frame scene=43 tick=1329 clock=10553529 updates=1 update=363 draw=14619 present=775 map=38
+video: scene=43 tick=25 vblank=2538 hash=cda21265
+timing: frame scene=43 tick=1330 clock=10571085 updates=1 update=363 draw=14619 present=775 map=38
+video: scene=43 tick=26 vblank=2542 hash=2c8bacdd
+timing: frame scene=43 tick=1331 clock=10588641 updates=1 update=363 draw=14619 present=775 map=38
+video: scene=43 tick=27 vblank=2546 hash=d7c88a15
+timing: frame scene=43 tick=1332 clock=10606197 updates=1 update=363 draw=14617 present=775 map=38
+video: scene=43 tick=28 vblank=2550 hash=2d42e20d
+timing: frame scene=43 tick=1333 clock=10623753 updates=1 update=363 draw=14619 present=775 map=38
+video: scene=43 tick=29 vblank=2554 hash=89cba785
+timing: frame scene=43 tick=1334 clock=10641309 updates=1 update=363 draw=14618 present=775 map=38
+video: scene=43 tick=30 vblank=2558 hash=5025c1fd
+timing: frame scene=43 tick=1335 clock=10658865 updates=1 update=363 draw=14618 present=775 map=38
+video: scene=43 tick=31 vblank=2562 hash=e42c1cb5
+timing: frame scene=43 tick=1336 clock=10676421 updates=1 update=362 draw=14619 present=776 map=38
+video: scene=43 tick=32 vblank=2566 hash=3839d42d
+timing: frame scene=43 tick=1337 clock=10693977 updates=1 update=362 draw=14619 present=775 map=38
+video: scene=43 tick=33 vblank=2570 hash=6829aa25
+timing: frame scene=43 tick=1338 clock=10711533 updates=1 update=362 draw=14617 present=776 map=38
+video: scene=43 tick=34 vblank=2574 hash=d3bcb69d
+timing: frame scene=43 tick=1339 clock=10729089 updates=1 update=362 draw=14619 present=775 map=38
+video: scene=43 tick=35 vblank=2578 hash=7b6a96d5
+timing: frame scene=43 tick=1340 clock=10746645 updates=1 update=1493 draw=14538 present=775 map=38
+timing: frame scene=43 tick=1341 clock=10764201 updates=1 update=708 draw=290 present=764 map=38
+video: scene=43 tick=36 vblank=2582 hash=892b83cd
+timing: frame scene=43 tick=1342 clock=10768588 updates=1 update=120 draw=291 present=5 map=38
+video: scene=43 tick=37 vblank=2583 hash=892b83cd
+timing: frame scene=43 tick=1343 clock=10772977 updates=1 update=120 draw=291 present=5 map=38
+video: scene=43 tick=38 vblank=2584 hash=892b83cd
+timing: frame scene=43 tick=1344 clock=10777366 updates=1 update=319 draw=290 present=6 map=38
+video: scene=43 tick=39 vblank=2585 hash=892b83cd
+timing: frame scene=43 tick=1345 clock=10781755 updates=1 update=120 draw=291 present=5 map=38
+video: scene=43 tick=40 vblank=2586 hash=892b83cd
+timing: frame scene=43 tick=1346 clock=10786144 updates=1 update=120 draw=291 present=5 map=38
+video: scene=43 tick=41 vblank=2587 hash=892b83cd
+timing: frame scene=43 tick=1347 clock=10790533 updates=1 update=120 draw=291 present=5 map=38
+video: scene=43 tick=42 vblank=2588 hash=892b83cd
+timing: frame scene=43 tick=1348 clock=10794922 updates=1 update=120 draw=291 present=5 map=38
+video: scene=43 tick=43 vblank=2589 hash=892b83cd
+timing: frame scene=43 tick=1349 clock=10799311 updates=1 update=120 draw=291 present=5 map=38
+video: scene=43 tick=44 vblank=2590 hash=892b83cd
+timing: frame scene=43 tick=1350 clock=10803700 updates=1 update=120 draw=291 present=5 map=38
+video: scene=43 tick=45 vblank=2591 hash=892b83cd
+timing: frame scene=43 tick=1351 clock=10808089 updates=1 update=412 draw=290 present=6 map=38
+video: scene=43 tick=46 vblank=2592 hash=892b83cd
+timing: frame scene=43 tick=1352 clock=10812478 updates=1 update=138 draw=290 present=6 map=38
+video: scene=43 tick=47 vblank=2593 hash=892b83cd
+timing: frame scene=43 tick=1353 clock=10816867 updates=1 update=120 draw=291 present=5 map=38
+video: scene=43 tick=48 vblank=2594 hash=892b83cd
+timing: frame scene=43 tick=1354 clock=10821256 updates=1 update=205 draw=290 present=5 map=38
+video: scene=43 tick=49 vblank=2595 hash=892b83cd
+timing: frame scene=43 tick=1355 clock=10825645 updates=1 update=138 draw=290 present=6 map=38
+video: scene=43 tick=50 vblank=2596 hash=892b83cd
+timing: frame scene=43 tick=1356 clock=10830034 updates=1 update=120 draw=291 present=5 map=38
+video: scene=43 tick=51 vblank=2597 hash=892b83cd
+timing: frame scene=43 tick=1357 clock=10834423 updates=1 update=120 draw=291 present=5 map=38
+video: scene=43 tick=52 vblank=2598 hash=892b83cd
+timing: frame scene=43 tick=1358 clock=10838812 updates=1 update=407 draw=291 present=5 map=38
+video: scene=43 tick=53 vblank=2599 hash=892b83cd
+timing: frame scene=43 tick=1359 clock=10843201 updates=1 update=138 draw=290 present=6 map=38
+video: scene=43 tick=54 vblank=2600 hash=892b83cd
+timing: frame scene=43 tick=1360 clock=10847590 updates=1 update=120 draw=291 present=5 map=38
+video: scene=43 tick=55 vblank=2601 hash=892b83cd
+timing: frame scene=43 tick=1361 clock=10851979 updates=1 update=202 draw=291 present=5 map=38
+video: scene=43 tick=56 vblank=2602 hash=892b83cd
+timing: frame scene=43 tick=1362 clock=10856368 updates=1 update=138 draw=290 present=6 map=38
+video: scene=43 tick=57 vblank=2603 hash=892b83cd
+timing: frame scene=43 tick=1363 clock=10860757 updates=1 update=120 draw=291 present=5 map=38
+video: scene=43 tick=58 vblank=2604 hash=892b83cd
+timing: frame scene=43 tick=1364 clock=10865146 updates=1 update=120 draw=291 present=5 map=38
+video: scene=43 tick=59 vblank=2605 hash=892b83cd
+timing: frame scene=43 tick=1365 clock=10869535 updates=1 update=418 draw=290 present=6 map=38
+video: scene=43 tick=60 vblank=2606 hash=892b83cd
+timing: frame scene=43 tick=1366 clock=10873924 updates=1 update=138 draw=290 present=6 map=38
+video: scene=43 tick=61 vblank=2607 hash=892b83cd
+timing: frame scene=43 tick=1367 clock=10878313 updates=1 update=120 draw=291 present=5 map=38
+video: scene=43 tick=62 vblank=2608 hash=892b83cd
+timing: frame scene=43 tick=1368 clock=10882702 updates=1 update=120 draw=291 present=5 map=38
+video: scene=43 tick=63 vblank=2609 hash=892b83cd
+timing: frame scene=43 tick=1369 clock=10887091 updates=1 update=120 draw=291 present=5 map=38
+video: scene=43 tick=64 vblank=2610 hash=892b83cd
+timing: frame scene=43 tick=1370 clock=10891480 updates=1 update=120 draw=291 present=5 map=38
+video: scene=43 tick=65 vblank=2611 hash=892b83cd
+timing: frame scene=43 tick=1371 clock=10895869 updates=1 update=267 draw=291 present=5 map=38
+video: scene=43 tick=66 vblank=2612 hash=892b83cd
+timing: frame scene=43 tick=1372 clock=10900258 updates=1 update=120 draw=291 present=5 map=38
+video: scene=43 tick=67 vblank=2613 hash=892b83cd
+timing: frame scene=43 tick=1373 clock=10904647 updates=1 update=120 draw=291 present=5 map=38
+video: scene=43 tick=68 vblank=2614 hash=892b83cd
+timing: frame scene=43 tick=1374 clock=10909036 updates=1 update=120 draw=291 present=5 map=38
+video: scene=43 tick=69 vblank=2615 hash=892b83cd
+timing: frame scene=43 tick=1375 clock=10913425 updates=1 update=121 draw=290 present=6 map=38
+video: scene=43 tick=70 vblank=2616 hash=892b83cd
+timing: frame scene=43 tick=1376 clock=10917814 updates=1 update=121 draw=290 present=6 map=38
+video: scene=43 tick=71 vblank=2617 hash=892b83cd
+timing: frame scene=43 tick=1377 clock=10922203 updates=1 update=121 draw=290 present=6 map=38
+video: scene=43 tick=72 vblank=2618 hash=892b83cd
+timing: frame scene=43 tick=1378 clock=10926592 updates=1 update=121 draw=290 present=6 map=38
+video: scene=43 tick=73 vblank=2619 hash=892b83cd
+timing: frame scene=43 tick=1379 clock=10930981 updates=1 update=123 draw=290 present=6 map=38
+video: scene=43 tick=74 vblank=2620 hash=892b83cd
+timing: frame scene=43 tick=1380 clock=10935370 updates=1 update=121 draw=290 present=6 map=38
+prof f1380 ticks(avg) wait=2774 upd=254 draw/render=14613 present/render=774 dump=344 total=8712 max=18587 renders=20
+video: scene=43 tick=75 vblank=2621 hash=892b83cd
+timing: frame scene=43 tick=1381 clock=10939759 updates=1 update=121 draw=290 present=6 map=38
+video: scene=43 tick=76 vblank=2622 hash=892b83cd
+timing: frame scene=43 tick=1382 clock=10944148 updates=1 update=122 draw=290 present=5 map=38
+video: scene=43 tick=77 vblank=2623 hash=892b83cd
+timing: frame scene=43 tick=1383 clock=10948537 updates=1 update=122 draw=290 present=5 map=38
+video: scene=43 tick=78 vblank=2624 hash=892b83cd
+timing: frame scene=43 tick=1384 clock=10952926 updates=1 update=124 draw=290 present=6 map=38
+video: scene=43 tick=79 vblank=2625 hash=892b83cd
+timing: frame scene=43 tick=1385 clock=10957315 updates=1 update=122 draw=290 present=5 map=38
+video: scene=43 tick=80 vblank=2626 hash=892b83cd
+timing: frame scene=43 tick=1386 clock=10961704 updates=1 update=122 draw=290 present=5 map=38
+video: scene=43 tick=81 vblank=2627 hash=892b83cd
+timing: frame scene=43 tick=1387 clock=10966093 updates=1 update=122 draw=290 present=5 map=38
+video: scene=43 tick=82 vblank=2628 hash=892b83cd
+timing: frame scene=43 tick=1388 clock=10970482 updates=1 update=124 draw=290 present=6 map=38
+video: scene=43 tick=83 vblank=2629 hash=892b83cd
+timing: frame scene=43 tick=1389 clock=10974871 updates=1 update=124 draw=290 present=6 map=38
+video: scene=43 tick=84 vblank=2630 hash=892b83cd
+timing: frame scene=43 tick=1390 clock=10979260 updates=1 update=122 draw=290 present=5 map=38
+video: scene=43 tick=85 vblank=2631 hash=892b83cd
+timing: frame scene=43 tick=1391 clock=10983649 updates=1 update=122 draw=290 present=5 map=38
+video: scene=43 tick=86 vblank=2632 hash=892b83cd
+timing: frame scene=43 tick=1392 clock=10988038 updates=1 update=404 draw=291 present=5 map=38
+video: scene=43 tick=87 vblank=2633 hash=892b83cd
+timing: frame scene=43 tick=1393 clock=10992427 updates=1 update=138 draw=290 present=6 map=38
+video: scene=43 tick=88 vblank=2634 hash=892b83cd
+timing: frame scene=43 tick=1394 clock=10996816 updates=1 update=120 draw=291 present=5 map=38
+video: scene=43 tick=89 vblank=2635 hash=892b83cd
+timing: frame scene=43 tick=1395 clock=11001205 updates=1 update=120 draw=291 present=5 map=38
+timing: DONE
+video: scene=43 tick=90 vblank=2636 hash=892b83cd
+samples=3892814 nonzero=1589180 active_channels=f

@@ -419,3 +419,24 @@ changed frame:
 The before/after captures used for visual verification are
 `docs/screenshots/gba-performance-before.png` and
 `docs/screenshots/gba-performance-after.png`.
+
+
+## 2026-09-28 真机慢速卡回归
+
+开场、Oak 的 Red 平移、进出家门专门取证见
+[完整报告](audits/2026-09-28-gba-hardware-fps/README.md)。新增 `hardware-timing`
+及 `scripts/gba_frame_timing.py --suite hardware --slow-cart`，模拟烧录卡取消
+WAITCNT 启动写入的慢速 ROM 路径。IWRAM 链接布局保留 8 KiB 启动/IRQ 栈，
+地图淡入淡出复用像素、只在实际调色板阶段改变时重新呈现。
+
+普通卡 `perf-baseline.json` 已更新为启用 PSG 音频后的实测基线；仍使用原来的
+15% / 25 ticks 回归门槛。报告保留此前无音频基线，以及本轮优化前后开启音频的
+七场景对比。慢速卡结果不代表已完成真机复测，也不保证所有场景达到 60 FPS。
+
+## 完整开场与战斗顺序补充
+
+[完整证据](audits/2026-09-28-opening-battle-order/README.md)覆盖未跳过的耿鬼开场、
+Logo 入场和版本文字侧滑。新增 `opening-timing` 与 `--suite opening`；慢速卡模拟下
+耿鬼段约 29.47 → 58.62 FPS，版本侧滑约 27.40 → 59.73 FPS，794 帧像素保持一致。
+首次素材载入及 Logo 入场仍有长帧。战斗展示改为逐次动画完成后再扣血，避免整回合
+HP 提前显示及分页后敌方招式动画丢失。

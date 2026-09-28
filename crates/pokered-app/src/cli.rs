@@ -287,6 +287,9 @@ pub enum Commands {
         /// Record frame hashes and change masks without encoding PNG files.
         #[arg(long)]
         manifest_only: bool,
+        /// Include one original applying-attack feedback type (0 disables it).
+        #[arg(long, default_value_t = 0, value_parser = clap::value_parser!(u8).range(0..=6))]
+        applying_type: u8,
     },
     /// Record one isolated item-use battle animation frame by frame.
     ///

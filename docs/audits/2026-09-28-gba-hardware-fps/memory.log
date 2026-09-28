@@ -1,0 +1,39 @@
+repro: heap low 65536B at frame 0
+repro: heap low 63616B at frame 806
+repro: heap low 60480B at frame 1037
+repro: heap low 57344B at frame 2241
+repro: heap low 56576B at frame 5342
+repro: heap low 53440B at frame 9374
+repro: heap low 52736B at frame 19806
+memory: PASS case=pokedex count=302 free=57344B stack=15912B
+repro: heap low 51648B at frame 23727
+repro: heap low 50504B at frame 23752
+repro: heap low 42896B at frame 23806
+repro: heap low 41064B at frame 23807
+repro: heap low 40168B at frame 23827
+repro: heap low 39976B at frame 23881
+repro: heap low 38440B at frame 23886
+repro: heap low 37224B at frame 23887
+repro: heap low 36328B at frame 23928
+repro: heap low 26792B at frame 23966
+repro: heap low 25576B at frame 23967
+repro: heap low 24840B at frame 25688
+repro: heap low 23152B at frame 25806
+repro: heap low 22344B at frame 25807
+repro: heap low 21448B at frame 25827
+memory: PASS case=maps count=248 free=26224B stack=15912B
+repro: heap low 10832B at frame 43630
+memory: PASS case=oak-parcel count=1 free=26224B stack=15912B
+memory: PASS case=oak-dex count=16 free=26224B stack=15912B
+repro: heap low 8312B at frame 60167
+memory: PASS case=fossil count=1 free=20120B stack=15912B
+memory: PASS case=slots count=3 free=24960B stack=15912B
+memory: PASS case=menus count=48 free=18240B stack=15912B
+memory: PASS case=moves count=330 free=16800B stack=15912B
+memory: PASS case=evolution count=3 free=17536B stack=15912B
+memory: PASS case=trade count=3 free=15232B stack=15912B
+memory: PASS case=ending count=1 free=12288B stack=15912B
+memory: PASS case=pc-full count=300 free=13184B stack=15912B
+memory: PASS case=save-full count=1 free=28032B stack=15912B
+memory: ALL PASS stack=15912B
+samples=394131756 nonzero=389160304 active_channels=f

@@ -936,3 +936,72 @@ fn driver_reset_and_trade_again() {
     assert_eq!(d_b.party().count(), 1);
     assert_eq!(d_b.party().get(0).map(|m| m.species), Some(Species::Charmander));
 }
+
+#[test]
+fn continuous_trade_previews_include_post_trade_evolution() {
+    let (mut a, mut b) = ChannelTransport::new_pair();
+    let (mut host, mut guest) = driver_pair(
+        &mut a,
+        &mut b,
+        Party::from(vec![trade_mon(Species::Pikachu, 30, 0x1111, None)]),
+        Party::from(vec![trade_mon(Species::Kadabra, 33, 0x2222, None)]),
+    );
+    assert_eq!(
+        host.remote_party().unwrap().get(0).unwrap().species,
+        Species::Kadabra
+    );
+    run_to_trade_execute(&mut host, &mut guest, &mut a, &mut b, 0, 0);
+    let mut dex = Pokedex::new();
+    let pending = host.apply_exchange(&mut dex).unwrap().unwrap();
+    guest.apply_exchange(&mut Pokedex::new()).unwrap();
+    crate::pokemon::evolution::finalize_evolution(
+        host.received_mon_mut().unwrap(),
+        &mut dex,
+        pending.to,
+    );
+    host.continue_trade(&mut a).unwrap();
+    assert!(
+        host.select_mon(&mut a, 0).is_err(),
+        "wait for slower peer's refreshed party"
+    );
+    assert_eq!(guest.poll(&mut b), LinkTradePollResult::Pending);
+    guest.continue_trade(&mut b).unwrap();
+    assert_eq!(host.poll(&mut a), LinkTradePollResult::Pending);
+    assert_eq!(
+        guest.remote_party().unwrap().get(0).unwrap().species,
+        Species::Alakazam
+    );
+    run_to_trade_execute(&mut host, &mut guest, &mut a, &mut b, 0, 0);
+    guest.apply_exchange(&mut Pokedex::new()).unwrap();
+    assert_eq!(guest.party().get(0).unwrap().species, Species::Alakazam);
+}
+
+#[test]
+fn confirmed_mon_must_match_the_preview() {
+    let (mut a, mut b) = ChannelTransport::new_pair();
+    let (mut host, mut guest) = driver_pair(
+        &mut a,
+        &mut b,
+        Party::from(vec![trade_mon(Species::Pikachu, 30, 0x1111, None)]),
+        Party::from(vec![trade_mon(Species::Kadabra, 33, 0x2222, None)]),
+    );
+    host.select_mon(&mut a, 0).unwrap();
+    guest.poll_blocking(&mut b);
+    guest.select_mon(&mut b, 0).unwrap();
+    host.poll_blocking(&mut a);
+    b.send(NetworkMessage::ConfirmTrade).unwrap();
+    host.poll_blocking(&mut a);
+    b.send(NetworkMessage::TradeComplete(trade_mon(
+        Species::Rattata,
+        5,
+        0x2222,
+        None,
+    )))
+    .unwrap();
+    assert!(matches!(
+        host.poll_blocking(&mut a),
+        LinkTradePollResult::Error(_)
+    ));
+    assert!(host.received_mon().is_none());
+    assert_eq!(host.party().get(0).unwrap().species, Species::Pikachu);
+}

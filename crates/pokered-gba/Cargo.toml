@@ -27,6 +27,8 @@ repro-route22 = ["autopilot", "pokered-app/repro-markers"]
 # Broad memory regression on the constrained target (never a playable ROM).
 memory-scenarios = ["autopilot", "pokered-app/repro-markers"]
 frame-timing = ["autopilot", "profiling", "pokered-app/repro-markers"]
+hardware-timing = ["frame-timing"]
+opening-timing = ["frame-timing"]
 
 
 [dependencies]

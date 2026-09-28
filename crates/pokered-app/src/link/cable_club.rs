@@ -67,6 +67,8 @@ pub enum FlowNeed {
     CancelTrade,
     /// Confirm the trade — the driver sends the selected mon's data.
     ConfirmTrade,
+    ContinueTrade,
+    LeaveTrade,
 }
 
 /// The in-room link flow phase.
@@ -149,6 +151,12 @@ pub struct CableClubFlow {
     phase: CableClubPhase,
     /// Trade party selector (created when the trade menu opens).
     selector: Option<PartySelectState>,
+    remote_party: Vec<Pokemon>,
+    local_name: String,
+    remote_name: String,
+    peer_cursor: usize,
+    browsing_peer: bool,
+    stats: Option<pokered_core::stats_screen::StatsScreenState>,
     /// The peer's selection index (trade), for the confirm box.
     remote_selection: Option<u8>,
     /// A transient one-line box shown while `InRoom` (e.g. "The link was
@@ -176,6 +184,12 @@ impl CableClubFlow {
         CableClubFlow {
             phase: CableClubPhase::Inactive,
             selector: None,
+            remote_party: Vec::new(),
+            local_name: String::new(),
+            remote_name: String::new(),
+            peer_cursor: 0,
+            browsing_peer: false,
+            stats: None,
             remote_selection: None,
             transient_text: None,
             pending_our_cancel: false,
@@ -245,12 +259,6 @@ impl CableClubFlow {
                 Some((title.to_string(), *selected))
             }
             CableClubPhase::TradeConfirm { selected, .. } => {
-                // The original's `_WillBeTradedText` names BOTH mons
-                // ("{GIVE} and {RECEIVE} will be traded."); the peer's mon
-                // species only reaches us with `TradeComplete` (after both
-                // confirmations), so v1 names only the local mon — the wire
-                // protocol carries no selection metadata. Documented
-                // deviation; the peer's mon name appears in the cutscene.
                 let local_name = self
                     .selector
                     .as_ref()
@@ -261,7 +269,16 @@ impl CableClubFlow {
                             .map(|m| m.display_name(&mut name_buf).to_string())
                     })
                     .unwrap_or_default();
-                Some((format!("{} will\nbe traded.", local_name), *selected))
+                let mut buf = [0u8; pokered_core::battle::state::NAME_TEXT_BUF];
+                let remote_name = self
+                    .remote_selection
+                    .and_then(|i| self.remote_party.get(i as usize))
+                    .map(|m| m.display_name(&mut buf))
+                    .unwrap_or("...");
+                Some((
+                    format!("{} and\n{} will be traded.", local_name, remote_name),
+                    *selected,
+                ))
             }
             _ => None,
         }
@@ -277,6 +294,36 @@ impl CableClubFlow {
     /// The active trade party selector (renderer input), if any.
     pub fn party_select(&self) -> Option<&PartySelectState> {
         self.selector.as_ref()
+    }
+
+    pub fn set_trainer_names(&mut self, local: &str, remote: &str) {
+        if self.local_name != local {
+            self.local_name = local.to_string();
+        }
+        if self.remote_name != remote {
+            self.remote_name = remote.to_string();
+        }
+    }
+
+    pub fn trainer_names(&self) -> (&str, &str) {
+        (&self.local_name, &self.remote_name)
+    }
+
+    pub fn set_remote_party(&mut self, party: &[Pokemon]) {
+        if self.remote_party != party {
+            self.remote_party = party.to_vec();
+            self.peer_cursor = self.peer_cursor.min(party.len().saturating_sub(1));
+        }
+    }
+
+    pub fn remote_party(&self) -> &[Pokemon] {
+        &self.remote_party
+    }
+    pub fn peer_cursor(&self) -> Option<usize> {
+        self.browsing_peer.then_some(self.peer_cursor)
+    }
+    pub fn stats(&self) -> Option<&pokered_core::stats_screen::StatsScreenState> {
+        self.stats.as_ref()
     }
 
     /// Keep the flow in sync with the connection + room. Called every frame
@@ -317,6 +364,26 @@ impl CableClubFlow {
     /// Drive one frame of modal input (only while `is_modal()`). `party` is
     /// the save's current party (used to (re)build the trade selector).
     pub fn update(&mut self, input: PartyScreenInput, party: &[Pokemon]) -> FlowNeed {
+        self.update_with_navigation(input, party, false)
+    }
+
+    pub fn update_with_navigation(
+        &mut self,
+        input: PartyScreenInput,
+        party: &[Pokemon],
+        switch_side: bool,
+    ) -> FlowNeed {
+        if let Some(stats) = &mut self.stats {
+            use pokered_core::stats_screen::{StatsScreenAction, StatsScreenInput};
+            if stats.update(StatsScreenInput {
+                a: input.a,
+                b: input.b,
+            }) == StatsScreenAction::BackToParty
+            {
+                self.stats = None;
+            }
+            return FlowNeed::None;
+        }
         match self.phase.clone() {
             CableClubPhase::JustAMoment { kind } => {
                 if input.a {
@@ -359,6 +426,32 @@ impl CableClubFlow {
                     // trade the party changed, so the old selector (if any)
                     // was dropped on the way back here.
                     self.selector = Some(PartySelectState::new(party.to_vec()));
+                }
+                if switch_side {
+                    self.browsing_peer = !self.browsing_peer;
+                    return FlowNeed::None;
+                }
+                if self.browsing_peer {
+                    let len = self.remote_party.len();
+                    if input.b {
+                        self.browsing_peer = false;
+                    } else if len > 0 {
+                        if input.up {
+                            self.peer_cursor = (self.peer_cursor + len - 1) % len;
+                        }
+                        if input.down {
+                            self.peer_cursor = (self.peer_cursor + 1) % len;
+                        }
+                        if input.a {
+                            self.stats = Some(pokered_core::stats_screen::StatsScreenState::new(
+                                self.remote_party[self.peer_cursor].clone(),
+                            ));
+                        }
+                    }
+                    return FlowNeed::None;
+                }
+                if input.a && self.remote_party.is_empty() {
+                    return FlowNeed::None;
                 }
                 if let Some(ref mut sel) = self.selector {
                     match sel.update_frame(input) {
@@ -406,13 +499,11 @@ impl CableClubFlow {
             }
             CableClubPhase::TradeCompleted => {
                 if input.a || input.b {
-                    // Back to the room: the trade manager was reset to Idle
-                    // after the exchange (the original loops straight into
-                    // the selection screen via CableClub_DoBattleOrTradeAgain;
-                    // ours requires a fresh gameboy use — documented
-                    // deviation, one extra press).
-                    self.selector = None;
-                    self.phase = CableClubPhase::InRoom;
+                    self.selector = Some(PartySelectState::new(party.to_vec()));
+                    self.remote_selection = None;
+                    self.browsing_peer = false;
+                    self.phase = CableClubPhase::TradeSelect;
+                    return FlowNeed::ContinueTrade;
                 }
                 FlowNeed::None
             }
@@ -584,6 +675,8 @@ impl CableClubFlow {
                 FlowNeed::None
             }
             PeerCancelled => {
+                self.remote_selection = None;
+                self.stats = None;
                 if self.pending_our_cancel {
                     // We cancelled too — BOTH sides backed out: return to the
                     // room (original's ReturnToCableClubRoom after the
@@ -591,6 +684,8 @@ impl CableClubFlow {
                     self.pending_our_cancel = false;
                     self.phase = CableClubPhase::InRoom;
                     self.transient_text = None;
+                    self.clear_selection();
+                    return FlowNeed::LeaveTrade;
                 } else if matches!(
                     self.phase,
                     CableClubPhase::TradeSelect
@@ -639,6 +734,9 @@ impl CableClubFlow {
 
     fn clear_selection(&mut self) {
         self.selector = None;
+        self.remote_party.clear();
+        self.stats = None;
+        self.browsing_peer = false;
         self.remote_selection = None;
         self.transient_text = None;
         self.pending_our_cancel = false;

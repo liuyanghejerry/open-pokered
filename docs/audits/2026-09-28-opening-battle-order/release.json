@@ -1,0 +1,10 @@
+{
+  "pokered-gba.gba": {
+    "bytes": 5329132,
+    "sha256": "dbbcc5b3309bbe8c058e942776be736805be79fbd1629aa7decfb32930a81778"
+  },
+  "pokered-gba.patch": {
+    "bytes": 800,
+    "sha256": "b911bf2d659db287193ffd71ea183b8d2e16d0467c533eb5f7edf4b723cd9758"
+  }
+}

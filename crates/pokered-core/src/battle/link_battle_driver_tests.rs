@@ -610,37 +610,20 @@ fn screen_frozen_after_result_for_frontend_handoff() {
     assert_eq!(a.phase(), &LinkDriverPhase::Finished);
 }
 
-/// A v1 peer (protocol version 1 — pre-`BattleResult`) is still accepted by
-/// the handshake; the manager simply never sees a BattleResult message.
+/// Both activities share the handshake: reject peers that cannot exchange
+/// the party previews required by the current trade protocol.
 #[test]
-fn handshake_accepts_v1_peer() {
+fn handshake_rejects_peers_without_trade_previews() {
     use crate::link::link_battle::{LinkBattleManager, LinkBattlePollResult};
-    use crate::link::transport::{ChannelTransport, NetworkTransport};
     use crate::link::protocol::NetworkMessage;
-
-    let (mut t_a, mut t_b) = ChannelTransport::new_pair();
-    let mut mgr_new = LinkBattleManager::new();
-
-    // A v1 peer's Hello (the OLD protocol constant) is accepted.
-    t_b.send(NetworkMessage::Hello { version: 1 }).unwrap();
-    assert_eq!(
-        mgr_new.poll_blocking(&mut t_a),
-        LinkBattlePollResult::HandshakeComplete
-    );
-
-    // And a v1 HelloAck is accepted too (the peer answers our v2 Hello with
-    // its own constant).
-    mgr_new.start_handshake(&mut t_a).unwrap();
-    t_b.send(NetworkMessage::HelloAck { version: 1 }).unwrap();
-    assert_eq!(
-        mgr_new.poll_blocking(&mut t_a),
-        LinkBattlePollResult::HandshakeComplete
-    );
-
-    // Anything else (v3) is still rejected.
-    t_b.send(NetworkMessage::Hello { version: 3 }).unwrap();
-    assert!(matches!(
-        mgr_new.poll_blocking(&mut t_a),
-        LinkBattlePollResult::Error(_)
-    ));
+    use crate::link::transport::{ChannelTransport, NetworkTransport};
+    for version in [1, 2, 4] {
+        let (mut a, mut b) = ChannelTransport::new_pair();
+        let mut manager = LinkBattleManager::new();
+        b.send(NetworkMessage::Hello { version }).unwrap();
+        assert!(matches!(
+            manager.poll_blocking(&mut a),
+            LinkBattlePollResult::Error(_)
+        ));
+    }
 }

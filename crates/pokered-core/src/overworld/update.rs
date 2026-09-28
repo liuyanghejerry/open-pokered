@@ -3871,6 +3871,9 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
     pub(crate) fn sync_flags_from_engine(&mut self) {
         let engine_flags = self.script_engine.get_all_flags();
         self.unified_flags.merge_from(&engine_flags);
+        if self.safari_game_active && !self.unified_flags.get_flag("EVENT_IN_SAFARI_ZONE") {
+            self.end_safari_game();
+        }
     }
 
     /// Safari Zone step accounting, run once per completed step. Decrements the
@@ -3903,6 +3906,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
     /// eject warp back to the gate (fired once the message is dismissed).
     fn trigger_safari_game_over(&mut self) {
         self.end_safari_game();
+        self.set_flag_live("EVENT_SAFARI_GAME_OVER", true);
         let msg = "PA: Ding-ding!\nYour SAFARI GAME is over!";
         self.pending_dialogue =
             Some(screen::BedroomDialogue::from_message(&self.localize_message(msg)));
@@ -3948,13 +3952,40 @@ mod safari_timer_tests {
     }
 
     #[test]
-    fn leaving_zone_resets_the_game() {
+    fn gate_return_preserves_steps_and_balls_until_player_quits() {
         let mut ow = screen_at(MapId::SafariZoneGate);
         warp_to(&mut ow, MapId::SafariZoneCenter);
         assert!(ow.is_safari_game_active());
+        ow.tick_safari_steps();
+        ow.use_safari_ball();
+        let allowance = (ow.safari_steps_remaining(), ow.safari_balls_remaining());
         warp_to(&mut ow, MapId::SafariZoneGate);
+        assert!(ow.is_safari_game_active());
+        ow.tick_safari_steps(); // the gate does not count steps
+        warp_to(&mut ow, MapId::SafariZoneCenter);
+        assert_eq!(
+            (ow.safari_steps_remaining(), ow.safari_balls_remaining()),
+            allowance
+        );
+        warp_to(&mut ow, MapId::SafariZoneGate);
+        ow.script_engine.set_flag("EVENT_IN_SAFARI_ZONE", false); // Leaving early? YES
+        ow.sync_flags_from_engine();
         assert!(!ow.is_safari_game_active());
         assert_eq!(ow.safari_steps_remaining(), 0);
+        assert_eq!(ow.safari_balls_remaining(), 0);
+        warp_to(&mut ow, MapId::SafariZoneCenter); // a newly paid hunt
+        assert_eq!(ow.safari_steps_remaining(), screen::SAFARI_ZONE_STEP_COUNT);
+        assert_eq!(ow.safari_balls_remaining(), screen::SAFARI_ZONE_BALL_COUNT);
+    }
+
+    #[test]
+    fn leaving_facility_ends_hunt_and_cannot_resurrect_flag() {
+        let mut ow = screen_at(MapId::SafariZoneGate);
+        warp_to(&mut ow, MapId::SafariZoneCenter);
+        warp_to(&mut ow, MapId::FuchsiaCity);
+        ow.sync_flags_from_engine();
+        assert!(!ow.is_safari_game_active());
+        assert!(!ow.unified_flags.get_flag("EVENT_IN_SAFARI_ZONE"));
     }
 
     #[test]
@@ -3975,8 +4006,16 @@ mod safari_timer_tests {
         assert_eq!(ow.safari_steps_remaining(), 0);
         assert!(!ow.is_safari_game_active());
         assert!(ow.pending_dialogue.is_some());
-        let warp = ow.safari_eject_pending.expect("eject queued");
+        ow.sync_flags_from_engine();
+        assert!(ow.unified_flags.get_flag("EVENT_SAFARI_GAME_OVER"));
+        assert!(!ow.unified_flags.get_flag("EVENT_IN_SAFARI_ZONE"));
+        let warp = ow.safari_eject_pending.take().expect("eject queued");
         assert_eq!(warp.dest_map, MapId::SafariZoneGate);
+        ow.pending_warp = Some(warp);
+        ow.commit_pending_warp();
+        assert!(ow.active_script_effect.is_some(), "gate starts the farewell");
+        assert!(!ow.unified_flags.get_flag("EVENT_SAFARI_GAME_OVER"));
+        assert!(!ow.unified_flags.get_flag("EVENT_IN_SAFARI_ZONE"));
     }
 
     #[test]
@@ -3986,6 +4025,7 @@ mod safari_timer_tests {
         ow.safari_balls = 0;
         ow.tick_safari_steps();
         assert!(!ow.is_safari_game_active());
+        assert!(ow.unified_flags.get_flag("EVENT_SAFARI_GAME_OVER"));
         assert!(ow.safari_eject_pending.is_some());
     }
 

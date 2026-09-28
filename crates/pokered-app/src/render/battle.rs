@@ -30,7 +30,7 @@ use pokered_renderer::embedded_font::draw_text;
 use pokered_renderer::gen1_battle_anim::{
     draw_mon_pic_clipped, move_short_flash_timing, render_gen1_oam,
     render_gen1_oam_palette_split, render_gen1_slide_up, render_gen1_squish, AnimTickResult,
-    AnimationPlayer, BallFrameEvent, BgPaletteState, BlinkMon, LongFlashTiming, LongScreenFlash,
+    AnimationPlayer, ApplyingAttackMotion, BallFrameEvent, BgPaletteState, BlinkMon, LongFlashTiming, LongScreenFlash,
     MonTilemapAnimation, RockSlideShake, ShakeBackAndForth, ShortFlashTiming, ShortScreenFlash,
 };
 use pokered_renderer::palette::{GRAYSCALE_PALETTE, GRAYSCALE_SPRITE_PALETTE};
@@ -415,6 +415,7 @@ enum BattlePhaseKind {
 #[derive(Debug, Clone)]
 pub struct BattleVisualEffects {
     last_phase_kind: Option<BattlePhaseKind>,
+    last_presented_move: Option<u32>,
     last_intro_phase: Option<IntroPhase>,
     last_message: Option<String>,
     player_visible: bool,
@@ -446,6 +447,7 @@ pub struct BattleVisualEffects {
     anim_layer_tileset: u8,
     anim_layer_pending_tileset: u8,
     pending_applying: Option<PendingApplying>,
+    applying_motion: Option<ApplyingAttackMotion>,
     /// Sound of the latest animation command, waiting for the frontend to
     /// play it (PlayAnimation/PlaySubanimation call GetMoveSound+PlaySound
     /// once per command).
@@ -605,6 +607,7 @@ impl BattleVisualEffects {
             && self.anim_wait == 0
             && self.anim_layer.entries.is_empty()
             && self.pending_applying.is_none()
+            && self.applying_motion.is_none()
             && self.anim_disabled_wait == 0
             && self.pending_anim_start.is_none()
             && self.ball_choreo.is_none()
@@ -708,6 +711,19 @@ impl BattleVisualEffects {
     /// sufficient evidence that the whole process has ended.
     pub(crate) fn item_animation_capture_finished(&self) -> bool {
         self.ball_choreo.is_none() && self.anim_player.is_finished() && self.anim_wait == 0
+    }
+
+    pub(crate) fn set_capture_applying_type(&mut self, kind: u8, player: bool) {
+        let anim_type=match kind {
+            1=>AnimationType::ShakeScreenVertically,
+            2=>AnimationType::ShakeScreenHorizontallyHeavy,
+            3=>AnimationType::ShakeScreenHorizontallySlow,
+            4=>AnimationType::BlinkEnemyMonSprite,
+            5=>AnimationType::ShakeScreenHorizontallyLight,
+            6=>AnimationType::ShakeScreenHorizontallySlow2,
+            _=>AnimationType::None,
+        };
+        self.pending_applying=(kind!=0).then_some(PendingApplying{anim_type,attacker_is_player:player});
     }
 
     pub(crate) fn move_animation_capture_state(&self) -> MoveAnimationCaptureState {
@@ -837,6 +853,7 @@ impl Default for BattleVisualEffects {
     fn default() -> Self {
         Self {
             last_phase_kind: None,
+            last_presented_move: None,
             last_intro_phase: None,
             last_message: None,
             player_visible: true,
@@ -861,6 +878,7 @@ impl Default for BattleVisualEffects {
             anim_layer_tileset: 0,
             anim_layer_pending_tileset: 0,
             pending_applying: None,
+            applying_motion: None,
             pending_move_sfx: None,
             animations_enabled: true,
             anim_disabled_wait: 0,
@@ -1136,6 +1154,9 @@ impl BattleVisualEffects {
             return None;
         }
 
+        if let Some((_, move_id, player)) = screen.presentation.current_move() {
+            return Some((move_id as usize - 1, player, move_id));
+        }
         let bs = screen.battle_state.as_ref()?;
         if message.starts_with("Enemy ") {
             let move_id = bs.enemy.selected_move;
@@ -1161,12 +1182,22 @@ impl BattleVisualEffects {
             return AnimationType::None;
         };
 
+        // Only effect handlers calling PlayCurrentMoveAnimation2 use the
+        // slow applying-attack shake. Buffs, healing, screens, Leech Seed,
+        // Substitute, Splash, etc. call PlayCurrentMoveAnimation (type 0).
         if data.power == 0 {
-            return if attacker_is_player {
-                AnimationType::ShakeScreenHorizontallySlow2
-            } else {
-                AnimationType::ShakeScreenHorizontallySlow
-            };
+            let slow = matches!(data.effect,
+                MoveEffect::SleepEffect | MoveEffect::PoisonEffect
+                | MoveEffect::ConfusionEffect | MoveEffect::DisableEffect
+                | MoveEffect::AttackDown1Effect | MoveEffect::DefenseDown1Effect
+                | MoveEffect::SpeedDown1Effect | MoveEffect::SpecialDown1Effect
+                | MoveEffect::AccuracyDown1Effect | MoveEffect::EvasionDown1Effect
+                | MoveEffect::AttackDown2Effect | MoveEffect::DefenseDown2Effect
+                | MoveEffect::SpeedDown2Effect | MoveEffect::SpecialDown2Effect
+                | MoveEffect::AccuracyDown2Effect | MoveEffect::EvasionDown2Effect);
+            return if !slow { AnimationType::None }
+                else if attacker_is_player { AnimationType::ShakeScreenHorizontallySlow2 }
+                else { AnimationType::ShakeScreenHorizontallySlow };
         }
 
         if data.effect == MoveEffect::NoAdditionalEffect {
@@ -1183,47 +1214,14 @@ impl BattleVisualEffects {
     }
 
     fn run_applying_attack_feedback(&mut self, anim_type: AnimationType, attacker_is_player: bool) {
-        // Match PlayApplyingAttackAnimation in engine/battle/animations.asm:
-        // 1/2/3/5/6 are shake variants, only 4 is blink-target-sprite.
-        match anim_type {
-            AnimationType::None => {}
-            AnimationType::ShakeScreenVertically => {
-                self.apply_anim_effect(AnimEffect::ShakeScreenV {
-                    pixels: 1,
-                    frames: 16,
-                });
-            }
-            AnimationType::ShakeScreenHorizontallyHeavy => {
-                self.apply_anim_effect(AnimEffect::ShakeScreenH {
-                    pixels: 1,
-                    frames: 16,
-                });
-            }
-            AnimationType::ShakeScreenHorizontallySlow => {
-                self.apply_anim_effect(AnimEffect::ShakeScreenH {
-                    pixels: 1,
-                    frames: 48,
-                });
-            }
-            AnimationType::BlinkEnemyMonSprite => {
-                if attacker_is_player {
-                    self.apply_anim_effect(AnimEffect::BlinkEnemyMon { times: 6 });
-                } else {
-                    self.apply_anim_effect(AnimEffect::BlinkPlayerMon { times: 6 });
-                }
-            }
-            AnimationType::ShakeScreenHorizontallyLight => {
-                self.apply_anim_effect(AnimEffect::ShakeScreenH {
-                    pixels: 1,
-                    frames: 4,
-                });
-            }
-            AnimationType::ShakeScreenHorizontallySlow2 => {
-                self.apply_anim_effect(AnimEffect::ShakeScreenH {
-                    pixels: 1,
-                    frames: 24,
-                });
-            }
+        let kind=anim_type as u8;
+        if kind==0 { return; }
+        let motion=ApplyingAttackMotion::new(kind);
+        self.anim_wait=motion.duration();
+        self.applying_motion=Some(motion);
+        if kind==4 {
+            // AnimationBlinkEnemyMon selects the defending picture.
+            self.blink_mon.start_applying_attack(if attacker_is_player {MonSide::Enemy}else{MonSide::Player});
         }
     }
 
@@ -1303,11 +1301,9 @@ impl BattleVisualEffects {
                 }
             } else {
                 self.suppress_hit_flash = false;
-                let enemy_attacker = normalized.starts_with("Enemy ");
-                self.attack_lunge = Some(AttackLunge {
-                    attacker_is_player: !enemy_attacker,
-                    frame: 0,
-                });
+                // Motion comes from the original command stream. A generic
+                // lunge here adds movement to every move, including Growl.
+                self.attack_lunge = None;
 
                 if self.ball_choreo.is_none() {
                     if let Some((anim_id, player_is_attacker, move_id)) =
@@ -1336,7 +1332,9 @@ impl BattleVisualEffects {
                         } else {
                             screen.enemy_species
                         };
-                        if self.animations_enabled {
+                        let missed = screen.presentation.current_move_missed();
+                        let animate = !missed || matches!(move_id,MoveId::Selfdestruct | MoveId::Explosion);
+                        if self.animations_enabled && animate {
                             if self.sfx_playing {
                                 // MoveAnimation: WaitForSoundToFinish first — start
                                 // the animation once the previous SFX has ended.
@@ -1353,7 +1351,7 @@ impl BattleVisualEffects {
                             // applying-attack feedback.
                             self.anim_disabled_wait = 30;
                         }
-                        self.pending_applying = Some(PendingApplying {
+                        self.pending_applying = (!missed).then(|| PendingApplying {
                             anim_type: Self::classify_applying_attack(move_id, player_is_attacker),
                             attacker_is_player: player_is_attacker,
                         });
@@ -2119,8 +2117,12 @@ impl BattleVisualEffects {
             return;
         }
 
+        // Applying-attack feedback can schedule a wait after the interpreter
+        // reaches Done. That wait must still count down before the core may
+        // drain HP or start the next actor's move.
         if self.anim_player.is_finished() {
             self.anim_layer.clear();
+            self.anim_wait = self.anim_wait.saturating_sub(1);
             return;
         }
 
@@ -2488,6 +2490,9 @@ impl BattleVisualEffects {
         // Advance effects that were visible last frame before any command can
         // start a new effect. Newly applied effects therefore render frame 0.
         self.fx.tick();
+        if self.applying_motion.as_mut().is_some_and(ApplyingAttackMotion::tick) {
+            self.applying_motion=None;
+        }
         self.mon_tilemap.tick();
         if let Some(squish) = self.squish_raster.as_mut() {
             if squish.frame == 24 {
@@ -2558,9 +2563,61 @@ impl BattleVisualEffects {
             }
         }
 
+        let presented_move = screen.presentation.current_move();
+        let mut new_move = presented_move.is_some_and(|(serial, _, _)| self.last_presented_move != Some(serial));
+        if new_move {
+            let (serial, _, player) = presented_move.unwrap();
+            // The typed action survives localized text and multi-page announcements.
+            self.trigger_from_message(screen, if player { "MON used MOVE!" } else { "Enemy MON used MOVE!" });
+            self.last_presented_move = Some(serial);
+        }
+        if let Some((serial, move_id, player)) = screen.presentation.current_charge() {
+            if self.last_presented_move != Some(serial) {
+                let animation = match move_id {
+                    MoveId::Fly => MoveId::Teleport as usize - 1,
+                    MoveId::Dig => 0xBF, // SLIDE_DOWN_ANIM ($C0)
+                    _ if player => non_move_anim::XSTATITEM,
+                    _ => non_move_anim::XSTATITEM_DUP,
+                };
+                self.pending_applying = None;
+                if self.animations_enabled {
+                    self.start_non_move_anim(animation,player);
+                } else { self.anim_disabled_wait=30; }
+                self.last_presented_move=Some(serial);
+                new_move=true;
+            }
+        }
+        if let Some((serial, player)) = screen.presentation.current_leech_seed() {
+            if self.last_presented_move != Some(serial) {
+                // core.asm HandlePoisonBurnLeechSeed flips hWhoseTurn and
+                // plays ABSORB with wAnimationType = 0 (no impact feedback).
+                self.pending_applying = None;
+                self.current_attacker_is_player = player;
+                self.current_move = MoveId::Absorb;
+                if self.animations_enabled {
+                    if self.sfx_playing {
+                        self.pending_anim_start = Some((MoveId::Absorb as usize - 1, player));
+                    } else {
+                        self.start_non_move_anim(MoveId::Absorb as usize - 1, player);
+                        self.current_move = MoveId::Absorb;
+                    }
+                } else {
+                    self.anim_disabled_wait = 30;
+                }
+                self.last_presented_move = Some(serial);
+                new_move=true;
+            }
+        }
         if self.last_message.as_ref() != screen.current_message.as_ref() {
-            if let Some(ref msg) = screen.current_message {
-                self.trigger_from_message(screen, msg);
+            if !new_move {
+                if let Some(ref msg) = screen.current_message {
+                    let normalized = msg.replace('\n', " ");
+                    let move_text = normalized.contains(" used ") && normalized.ends_with('!')
+                        && Self::used_item_id(&normalized).is_none();
+                    if !screen.presentation.manages_moves() || !move_text {
+                        self.trigger_from_message(screen, msg);
+                    }
+                }
             }
             self.last_message = screen.current_message.clone();
         }
@@ -3183,6 +3240,7 @@ impl BattleVisualEffects {
 
     fn apply_post_effects(&self, fb: &mut FrameBuffer) {
         self.fx.apply_screen_effects(fb);
+        if let Some(motion)=self.applying_motion { motion.apply(fb); }
         if !(self.anim_player.is_shake_restore_frame()
             && self.short_flash.is_active()
             && !self.short_flash.is_entry())
@@ -5077,6 +5135,214 @@ fn draw_battle_move_menu_overlay(
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn real_game_serializes_both_animations_and_hp_even_when_a_is_mashed() {
+        use crate::PokemonGame;
+        use pokered_data::species::Species;
+        use dotzuki_app::InputState;
+        use pokered_renderer::input::GbButton;
+        use pokered_core::{data::wild_data::GameVersion, game_state::GameScreen,
+            pokemon::stats::create_pokemon_with_moves, battle::pokered_rules::runtime::StdBattleRng};
+        for player_first in [true, false] {
+            for (chinese, animations) in [(false,true),(true,true),(false,false),(true,false)] {
+                let mut game = PokemonGame::new(GameVersion::Red);
+                game.audio = None;
+                game.state.config.battle_animation = animations;
+                let make = |species| create_pokemon_with_moves(species,30,[0xff;2],
+                    [MoveId::Tackle,MoveId::None,MoveId::None,MoveId::None]).unwrap();
+                game.battle = BattleScreen::from_parties(true,&[make(Species::Charmander)],&[make(Species::Bulbasaur)],None);
+                game.battle.is_zh = chinese;
+                game.battle.rng = StdBattleRng::from_seed(42);
+                let bs = game.battle.battle_state.as_mut().unwrap();
+                bs.player.active_mon_mut().speed = if player_first {200} else {10};
+                bs.enemy.active_mon_mut().speed = if player_first {10} else {200};
+                game.battle.phase = BattlePhase::PlayerMenu;
+                game.state.screen = GameScreen::Battle;
+                let mut framebuffer = FrameBuffer::new(dotzuki_engine::render_config::RenderConfig::new(160,144), Rgba::WHITE);
+                let initial = [game.battle.player_hp,game.battle.enemy_hp];
+                let mut seen = Vec::new();
+                let mut animation_frames = [0,0];
+                let mut previous = None;
+                for frame in 0..2000 {
+                    let mut input = InputState::new();
+                    if frame % 2 == 0 { input.press(GbButton::A); }
+                    game.update(&input);
+                    game.draw(&mut framebuffer);
+                    if let Some(action) = game.battle.presentation.current_move() {
+                        if previous != Some(action.0) {
+                            previous = Some(action.0);
+                            seen.push(action.2);
+                        }
+                        if game.battle.presentation.waiting {
+                            let n = seen.len()-1;
+                            if !game.battle_vfx.is_frame_stable() { animation_frames[n] += 1; }
+                            let attacker = if player_first {0} else {1};
+                            if n == 0 { assert_eq!([game.battle.player_hp,game.battle.enemy_hp], initial); }
+                            if n == 1 { assert_eq!([game.battle.player_hp,game.battle.enemy_hp][attacker],initial[attacker]); }
+                        }
+                    }
+                    if seen.len() == 2 && matches!(game.battle.phase,BattlePhase::PlayerMenu) { break; }
+                }
+                assert_eq!(seen,vec![player_first,!player_first],"chinese={chinese}");
+                assert!(animation_frames.iter().all(|&n| n > 5),"both actors need visible animations: {animation_frames:?}");
+                assert!(matches!(game.battle.phase,BattlePhase::PlayerMenu));
+                assert!(game.battle.player_hp < initial[0] && game.battle.enemy_hp < initial[1]);
+            }
+        }
+    }
+
+    #[test]
+    fn status_moves_use_the_original_effect_handlers_feedback_policy() {
+        for player in [true,false] {
+            for mv in [MoveId::SwordsDance,MoveId::Agility,MoveId::DoubleTeam,MoveId::Recover,
+                MoveId::Rest,MoveId::Mist,MoveId::Haze,MoveId::FocusEnergy,MoveId::LightScreen,
+                MoveId::Reflect,MoveId::Transform,MoveId::Conversion,MoveId::Substitute,
+                MoveId::Mimic,MoveId::LeechSeed,MoveId::Splash,MoveId::ThunderWave] {
+                assert!(matches!(BattleVisualEffects::classify_applying_attack(mv,player),AnimationType::None),"{mv:?}");
+            }
+            for mv in [MoveId::Growl,MoveId::TailWhip,MoveId::Leer,MoveId::SandAttack,
+                MoveId::Sing,MoveId::Hypnosis,MoveId::Toxic,MoveId::ConfuseRay,MoveId::Disable] {
+                assert_eq!(BattleVisualEffects::classify_applying_attack(mv,player) as u8,if player {6}else{3},"{mv:?}");
+            }
+        }
+    }
+
+    #[test]
+    fn every_move_in_a_real_turn_completes_without_overlapping_presentations() {
+        use crate::PokemonGame;
+        use dotzuki_app::InputState;
+        use pokered_renderer::input::GbButton;
+        use pokered_core::{data::wild_data::GameVersion, game_state::GameScreen,
+            pokemon::stats::create_pokemon_with_moves, battle::pokered_rules::runtime::StdBattleRng};
+        use pokered_data::species::Species;
+        let mut game=PokemonGame::new(GameVersion::Red);
+        game.audio=None;
+        let mut checked=0;
+        for id in 1..=165 {
+            for player in [true,false] {
+                let mv=MoveId::from_id(id);
+                let make=|move_id| create_pokemon_with_moves(Species::Mew,50,[0xff;2],
+                    [move_id,MoveId::None,MoveId::None,MoveId::None]).unwrap();
+                game.battle=BattleScreen::from_parties(true,&[make(if player {mv}else{MoveId::Splash})],&[make(if player {MoveId::Splash}else{mv})],None);
+                game.battle.rng=StdBattleRng::from_seed(42);
+                game.battle.phase=BattlePhase::PlayerMenu;
+                game.battle_vfx=BattleVisualEffects::default();
+                game.state.screen=GameScreen::Battle;
+                let mut began=false;
+                let mut finished=false;
+                let mut previous=None;
+                let mut previous_busy=false;
+                for frame in 0..3000 {
+                    let mut input=InputState::new();
+                    if frame%2==0 {input.press(GbButton::A);}
+                    game.update(&input);
+                    let action=game.battle.presentation.current_move();
+                    if let Some(current)=action {
+                        if previous != Some(current.0) {
+                            assert!(!previous_busy,"{mv:?} player={player}: overlapping moves");
+                            previous=Some(current.0);
+                        }
+                    }
+                    previous_busy=game.battle.presentation.waiting;
+                    assert!(game.battle_vfx.attack_lunge.is_none(),"generic lunge must never override a move");
+                    began |= matches!(game.battle.phase,BattlePhase::ShowingText{..});
+                    if began && (!matches!(game.state.screen,GameScreen::Battle)
+                        || matches!(game.battle.phase,BattlePhase::PlayerMenu)) {finished=true;break;}
+                }
+                assert!(finished,"{id} {mv:?}, player={player}, stuck in {:?}, waiting={}",game.battle.phase,game.battle.presentation.waiting);
+                checked+=1;
+            }
+        }
+        assert_eq!(checked,330);
+    }
+
+    #[test]
+    fn leech_seed_residual_plays_absorb_from_the_seeder_before_hp_changes() {
+        use crate::PokemonGame;
+        use dotzuki_app::InputState;
+        use pokered_renderer::input::GbButton;
+        use pokered_core::{data::wild_data::GameVersion, game_state::GameScreen,
+            pokemon::stats::create_pokemon_with_moves, battle::state::status2};
+        use pokered_data::species::Species;
+        for seeded_player in [true, false] {
+            for chinese in [true, false] {
+                for animations in [true, false] {
+                    let mut game=PokemonGame::new(GameVersion::Red);
+                    game.audio=None;
+                    game.state.config.battle_animation=animations;
+                    let make=|species| create_pokemon_with_moves(species,30,[0xff;2],
+                        [MoveId::Splash,MoveId::None,MoveId::None,MoveId::None]).unwrap();
+                    let mut player=make(Species::Charmander);
+                    let mut enemy=make(Species::Squirtle);
+                    if seeded_player { enemy.hp/=2; } else { player.hp/=2; }
+                    game.battle=BattleScreen::from_parties(true,&[player],&[enemy],None);
+                    game.battle.is_zh=chinese;
+                    let bs=game.battle.battle_state.as_mut().unwrap();
+                    if seeded_player { bs.player.set_status2(status2::SEEDED); }
+                    else { bs.enemy.set_status2(status2::SEEDED); }
+                    game.battle.phase=BattlePhase::PlayerMenu;
+                    game.state.screen=GameScreen::Battle;
+                    let initial=[game.battle.player_hp,game.battle.enemy_hp];
+                    let mut seen=false;
+                    let mut visible_frames=0;
+                    let mut fb=FrameBuffer::new(dotzuki_engine::render_config::RenderConfig::new(160,144),Rgba::WHITE);
+                    for frame in 0..2000 {
+                        let mut input=InputState::new();
+                        if frame%2==0 { input.press(GbButton::A); }
+                        game.update(&input);
+                        game.draw(&mut fb);
+                        if let Some((_,player))=game.battle.presentation.current_leech_seed() {
+                            seen=true;
+                            assert_eq!(player,!seeded_player);
+                            if game.battle.presentation.waiting {
+                                assert_eq!([game.battle.player_hp,game.battle.enemy_hp],initial);
+                                if animations && !game.battle_vfx.anim_layer.entries.is_empty() { visible_frames+=1; }
+                                assert!(game.battle_vfx.pending_applying.is_none());
+                                if let Ok(dir)=std::env::var("LEECH_CAPTURE") {
+                                    if seeded_player && !chinese && animations {
+                                        std::fs::create_dir_all(&dir).unwrap();
+                                        fb.save_png(&std::path::Path::new(&dir).join(format!("frame-{frame:04}.png"))).unwrap();
+                                    }
+                                }
+                            }
+                        }
+                        if seen && matches!(game.battle.phase,BattlePhase::PlayerMenu) { break; }
+                    }
+                    assert!(seen,"residual event must reach presentation");
+                    assert_eq!(visible_frames>0,animations,"ABSORB must draw OAM only when enabled");
+                    assert!(matches!(game.battle.phase,BattlePhase::PlayerMenu));
+                    let hp=[game.battle.player_hp,game.battle.enemy_hp];
+                    let target=usize::from(!seeded_player);
+                    assert!(hp[target]<initial[target]);
+                    assert!(hp[1-target]>initial[1-target]);
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn move_and_impact_waits_finish_for_both_sides() {
+        use pokered_core::pokemon::stats::create_pokemon_with_moves;
+        use pokered_data::species::Species;
+        for mv in [MoveId::Tackle,MoveId::Growl,MoveId::Scratch,MoveId::Ember,
+            MoveId::WaterGun,MoveId::Thunderbolt,MoveId::ThunderWave,MoveId::Splash,
+            MoveId::DoubleTeam,MoveId::Explosion] {
+            for player in [true,false] {
+                let mon=create_pokemon_with_moves(Species::Mew,30,[0xff;2],[mv,MoveId::None,MoveId::None,MoveId::None]).unwrap();
+                let mut screen=BattleScreen::from_parties(true,&[mon.clone()],&[mon],None);
+                screen.phase=BattlePhase::PlayerMenu;
+                let state = screen.battle_state.as_mut().unwrap();
+                state.player.selected_move = mv;
+                state.enemy.selected_move = mv;
+                let mut effects=BattleVisualEffects::default();
+                effects.trigger_from_message(&screen, if player {"MEW used MOVE!"} else {"Enemy MEW used MOVE!"});
+                assert!(!effects.anim_player.is_finished(),"must start {mv:?}");
+                for _ in 0..1500 { effects.update(&screen); if effects.is_frame_stable() { break; } }
+                assert!(effects.is_frame_stable(),"{mv:?}, player={player}");
+            }
+        }
+    }
 
     #[test]
     fn horizontal_raster_row_scratch_matches_full_region_snapshot() {

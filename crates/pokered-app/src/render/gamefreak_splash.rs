@@ -63,7 +63,7 @@ pub fn draw_gamefreak_splash(
 
     if let Some(ref mut rm) = res {
         if let Ok(logo) = rm.load_splash("gamefreak_logo") {
-            let ts = logo.tileset.clone();
+            let ts = &logo.tileset;
             blit_tileset(fb, &ts, LOGO_SCREEN_X, LOGO_SCREEN_Y, 2, &logo_pal);
         }
         // "GAME FREAK" wordmark, centered on the screen width.
@@ -72,7 +72,7 @@ pub fn draw_gamefreak_splash(
 
         if let Some((oam_x, oam_y)) = state.big_star_oam() {
             if let Ok(star) = rm.load_splash("falling_star") {
-                let ts = star.tileset.clone();
+                let ts = &star.tileset;
                 // 2×2 sprites (splash.asm:230-235), screen = OAM - (8, 16).
                 let sx = oam_x - 8;
                 let sy = oam_y - 16;
@@ -93,7 +93,7 @@ pub fn draw_gamefreak_splash(
 
         if !state.small_star_blink() {
             if let Ok(star) = rm.load_splash("falling_star") {
-                let ts = star.tileset.clone();
+                let ts = &star.tileset;
                 for (oam_x, oam_y) in state.small_stars_oam() {
                     blit_tile_clipped(fb, &ts, 0, oam_x - 8, oam_y - 16, &star_pal);
                 }

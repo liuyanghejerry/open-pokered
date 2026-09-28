@@ -2395,6 +2395,8 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
         self.safari_steps = SAFARI_ZONE_STEP_COUNT;
         self.safari_balls = SAFARI_ZONE_BALL_COUNT;
         self.safari_game_active = true;
+        self.set_flag_live("EVENT_SAFARI_GAME_OVER", false);
+        self.set_flag_live("EVENT_IN_SAFARI_ZONE", true);
     }
 
     /// End the current Safari game and clear its counters (e.g. when the player
@@ -2403,10 +2405,11 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
         self.safari_game_active = false;
         self.safari_steps = 0;
         self.safari_balls = 0;
+        self.set_flag_live("EVENT_SAFARI_GAME_OVER", false);
         // The gate scene's "Leaving early?" branch keys off EVENT_IN_SAFARI_ZONE
         // — a timeout eject must clear it too, or re-entry wrongly asks the
         // player whether they are leaving early (audit: §狩猎地带 START).
-        self.unified_flags.remove_flag("EVENT_IN_SAFARI_ZONE");
+        self.set_flag_live("EVENT_IN_SAFARI_ZONE", false);
     }
 
     /// Consume one Safari Ball (called by the battle layer on a ball throw).
@@ -2469,14 +2472,15 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
             // lock the bike; entering a gate map releases it.
             self.apply_map_entry_transport(warp.dest_map, warp.dest_x as u16, warp.dest_y as u16);
 
-            // Safari Zone timer/ball economy: arm the game when the player first
-            // walks into the zone, and reset it once they leave (or are ejected
-            // back to the gate, which is not a step-counting map).
+            // The gate is still part of the current hunt. Its NO answer must
+            // preserve the allowance; YES clears EVENT_IN_SAFARI_ZONE through
+            // the script flag synchronization. Only leaving the facility ends
+            // a hunt here (timeouts end it explicitly before the eject warp).
             if pokered_data::map_flags::is_safari_zone_map(warp.dest_map) {
                 if !self.safari_game_active {
                     self.start_safari_game();
                 }
-            } else if self.safari_game_active {
+            } else if self.safari_game_active && warp.dest_map != MapId::SafariZoneGate {
                 self.end_safari_game();
             }
             let (map_data, npc_pokemon_data) =

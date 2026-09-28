@@ -160,12 +160,54 @@ jobs:
             --log "$RUNNER_TEMP/gba-frame-timing.log" \
             --output "$RUNNER_TEMP/gba-frame-timing.json"
 
+      - name: Build slow-cart opening and doorway fixture
+        if: steps.changes.outputs.has-changes == 'true'
+        working-directory: crates/pokered-gba
+        run: |
+          cargo +nightly-2025-12-07 build --release --features hardware-timing
+          agb-gbafix target/thumbv4t-none-eabi/release/pokered-gba -o "$RUNNER_TEMP/gba-hardware-timing.gba"
+
+      - name: Exercise opening, naming slides and doorways with slow ROM access
+        if: steps.changes.outputs.has-changes == 'true'
+        env:
+          SDL_AUDIODRIVER: dummy
+          MGBA_COMMAND: xvfb-run -a stdbuf -oL -eL mgba-qt
+        run: |
+          python3 scripts/gba_frame_timing.py --suite hardware --slow-cart \
+            --rom "$RUNNER_TEMP/gba-hardware-timing.gba" \
+            --log "$RUNNER_TEMP/gba-hardware-timing.log" \
+            --output "$RUNNER_TEMP/gba-hardware-timing.json"
+
+      - name: Build unskipped Gengar and title fixture
+        if: steps.changes.outputs.has-changes == 'true'
+        working-directory: crates/pokered-gba
+        run: |
+          cargo +nightly-2025-12-07 build --release --features opening-timing
+          agb-gbafix target/thumbv4t-none-eabi/release/pokered-gba -o "$RUNNER_TEMP/gba-opening-timing.gba"
+
+      - name: Check every opening animation tick with slow ROM access
+        if: steps.changes.outputs.has-changes == 'true'
+        env:
+          SDL_AUDIODRIVER: dummy
+          MGBA_COMMAND: xvfb-run -a stdbuf -oL -eL mgba-qt
+        run: |
+          python3 scripts/gba_frame_timing.py --suite opening --slow-cart \
+            --rom "$RUNNER_TEMP/gba-opening-timing.gba" \
+            --log "$RUNNER_TEMP/gba-opening-timing.log" \
+            --output "$RUNNER_TEMP/gba-opening-timing.json"
+
       - name: Upload performance evidence
         if: ${{ always() && steps.changes.outputs.has-changes == 'true' }}
         uses: actions/upload-artifact@v4
         with:
           name: gba-performance-${{ github.sha }}
           path: |
+            ${{ runner.temp }}/gba-opening-timing.gba
+            ${{ runner.temp }}/gba-opening-timing.log
+            ${{ runner.temp }}/gba-opening-timing.json
+            ${{ runner.temp }}/gba-hardware-timing.gba
+            ${{ runner.temp }}/gba-hardware-timing.log
+            ${{ runner.temp }}/gba-hardware-timing.json
             crates/pokered-gba/perf-baseline.json
             crates/pokered-gba/target/thumbv4t-none-eabi/release/pokered-gba.gba
             ${{ runner.temp }}/gba-performance-candidate.json

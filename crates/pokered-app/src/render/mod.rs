@@ -8,6 +8,7 @@ mod evolution;
 mod gamefreak_splash;
 mod hof_ceremony;
 mod intro;
+mod opening;
 #[cfg(not(target_os = "none"))]
 #[cfg(not(target_os = "none"))]
 mod link;

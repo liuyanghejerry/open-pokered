@@ -1,0 +1,18 @@
+== m01: boot to NEW GAME / Oak speech
+   done (1.0s wall)
+== m02: Oak speech + default names → bedroom
+[m02] frame=1925 screen=overworld map=RedsHouse2F pos=(3,6) party=0 money=3000 effect=None
+   done (3.0s wall)
+== m03: leave home → Pallet Town
+[m03] frame=2281 screen=overworld map=PalletTown pos=(5,5) party=0 money=3000 effect=None
+   done (1.1s wall)
+== m04: Oak interception → OaksLab
+[m04] frame=4240 screen=overworld map=OaksLab pos=(5,3) party=0 money=3000 effect=None
+   done (1.2s wall)
+== m05: take starter (bulbasaur)
+[m05] frame=5360 screen=overworld map=OaksLab pos=(8,4) party=1 money=3000 effect=None
+   done (0.7s wall)
+== m06: first rival battle
+[m06] frame=8200 screen=overworld map=OaksLab pos=(5,6) party=1 money=3000 effect=None
+   done (7.6s wall)
+PLAYTHROUGH REACHED REQUESTED MILESTONE

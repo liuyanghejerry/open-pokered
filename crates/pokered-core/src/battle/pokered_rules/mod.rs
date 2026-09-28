@@ -690,7 +690,9 @@ impl RuleBindings<PokeredRules> for PokeredBindings {
         if who == source {
             return false; // self-inflicted (recoil / self-KO) bypasses one's own doll
         }
-        absorb_into_substitute(ctx, who, amount)
+        let absorbed=absorb_into_substitute(ctx, who, amount);
+        record_presented_hit(ctx,source,who,amount,absorbed);
+        absorbed
     }
 
     /// `MoveTypeIsDefenderType` — the Gen-1 burn/freeze/paralyze self-type-immunity
@@ -1423,6 +1425,7 @@ thread_local! {
     /// pre/post `HAS_SUBSTITUTE_UP` flags can't distinguish that). Set by
     /// `substitute_install`, cleared with [`clear_current_moves`] before each turn.
     static SUB_CREATED: RefCell<[bool; 2]> = const { RefCell::new([false, false]) };
+    static PRESENTED_HITS: RefCell<[[u16; 6]; 2]> = const { RefCell::new([[0; 6]; 2]) };
 }
 
 /// Set the move the battler on `who`'s side is executing this action (production).
@@ -1435,6 +1438,22 @@ pub fn set_current_move(who: BattlerRef, m: MoveData) {
 pub fn clear_current_moves() {
     CURRENT_MOVES.with(|c| *c.borrow_mut() = [None, None]);
     SUB_CREATED.with(|c| *c.borrow_mut() = [false, false]);
+    PRESENTED_HITS.with(|c| *c.borrow_mut() = [[0; 6]; 2]);
+}
+
+/// Actual per-hit HP losses, including zero when a Substitute took the hit.
+/// The final slot holds the count; fixed storage avoids battle-time allocation.
+pub(super) fn presented_hits(player: bool) -> [u16; 6] {
+    PRESENTED_HITS.with(|hits|hits.borrow()[usize::from(!player)])
+}
+fn record_presented_hit(ctx: &BattleCtx<'_, PokeredRules>, source: BattlerRef, target: BattlerRef, amount: u16, absorbed: bool) {
+    if !matches!(current_move_for(source).effect,MoveEffect::TwoToFiveAttacksEffect | MoveEffect::AttackTwiceEffect | MoveEffect::TwineedleEffect) {return;}
+    PRESENTED_HITS.with(|hits| {
+        let mut hits=hits.borrow_mut();
+        let row=&mut hits[source.side as usize];
+        let count=row[5] as usize;
+        if count<5 {row[count]=if absorbed {0}else{amount.min(ctx.battler(target).hp)};row[5]+=1;}
+    });
 }
 
 /// Mark that `who` raised a Substitute doll this turn (called by `substitute_install`).
@@ -2411,14 +2430,16 @@ fn substitute_absorb(
     ctx: &mut BattleCtx<'_, PokeredRules>,
     relay: RelayVar,
     target: BattlerRef,
-    _source: BattlerRef,
+    source: BattlerRef,
     _eff: EffectId,
 ) -> HandlerResult {
     let dmg = relay.as_damage();
     if dmg == 0 {
         return HandlerResult::Unchanged;
     }
-    if absorb_into_substitute(ctx, target, dmg) {
+    let absorbed=absorb_into_substitute(ctx,target,dmg);
+    record_presented_hit(ctx,source,target,dmg,absorbed);
+    if absorbed {
         HandlerResult::Set(RelayVar::Damage(0)) // the mon takes nothing
     } else {
         HandlerResult::Unchanged

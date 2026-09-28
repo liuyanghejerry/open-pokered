@@ -7,13 +7,10 @@
 //! (engine/link/cable_club.asm:15-18, engine/link/print_waiting_text.asm),
 //! the `_WillBeTradedText` + TRADE_CANCEL_MENU confirm
 //! (engine/link/cable_club.asm:714-740), and the `TradeCenter_SelectMon`
-//! party list (cable_club.asm:635-680) — v1 shows only the LOCAL list (the
-//! wire protocol carries no party metadata until `TradeComplete`; the
-//! original exchanged full parties before the menu).
+//! party lists and peer stats available before confirmation.
 
 use crate::alloc_prelude::*;
 use pokered_core::game_state::Lang;
-use pokered_core::party_select::PartySelectState;
 use pokered_data::lang_data;
 use pokered_data::lang_data::species_name;
 use pokered_data::ui_layout::schema::{DIALOG_DEFAULT_LAYOUT, YES_NO_DEFAULT_LAYOUT};
@@ -21,6 +18,7 @@ use pokered_renderer::FrameBuffer;
 use pokered_ui::backends::FrameBufferPainter;
 use pokered_ui::menus;
 use pokered_ui::Ui;
+use pokered_ui::{Painter, Rgba, TilePos};
 
 use crate::link::cable_club::CableClubFlow;
 
@@ -38,9 +36,10 @@ fn zh_link_text(text: &str) -> String {
         "Start a link\nbattle?" => "开始联机\n对战？".to_string(),
         "Start a link\ntrade?" => "开始联机\n交换？".to_string(),
         _ => {
-            // "<NAME> will\nbe traded." (trade confirm)
-            if let Some(name) = text.strip_suffix(" will\nbe traded.") {
-                return format!("{}将\n被交换。", name);
+            if let Some((local, remote)) = text.split_once(" and\n") {
+                if let Some(remote) = remote.strip_suffix(" will be traded.") {
+                    return format!("{}与\n{}将交换。", local, remote);
+                }
             }
             text.to_string()
         }
@@ -48,8 +47,21 @@ fn zh_link_text(text: &str) -> String {
 }
 
 /// Draw the link flow overlay (no-op when the flow has nothing to show).
-pub fn draw_link_flow(flow: &CableClubFlow, fb: &mut FrameBuffer, is_zh: bool) {
+pub fn draw_link_flow(
+    flow: &CableClubFlow,
+    fb: &mut FrameBuffer,
+    is_zh: bool,
+    resources: Option<&mut pokered_renderer::resource::ResourceManager>,
+) {
     let language = if is_zh { Lang::Zh } else { Lang::En };
+
+    if let Some(stats) = flow.stats() {
+        super::draw_stats_screen(stats, resources, fb, language);
+        return;
+    }
+    if flow.party_select().is_some() {
+        draw_trade_party_list(flow, fb, language, is_zh);
+    }
 
     if let Some((title, selected)) = flow.prompt() {
         // Yes/no prompt (peer battle/trade request, or the trade confirm):
@@ -72,10 +84,6 @@ pub fn draw_link_flow(flow: &CableClubFlow, fb: &mut FrameBuffer, is_zh: bool) {
         draw_dialog(&shown, fb, language);
         return;
     }
-
-    if let Some(sel) = flow.party_select() {
-        draw_trade_party_list(sel, fb, language, is_zh);
-    }
 }
 
 fn draw_dialog(text: &str, fb: &mut FrameBuffer, language: Lang) {
@@ -84,41 +92,61 @@ fn draw_dialog(text: &str, fb: &mut FrameBuffer, language: Lang) {
     menus::dialog::draw(text, false, &DIALOG_DEFAULT_LAYOUT, &mut ui, language);
 }
 
-/// The trade selection list: the local party with a cursor, plus a CANCEL
-/// row — the original's `TradeCenter_DrawPartyLists` +
-/// `TradeCenter_DrawCancelBox` (engine/link/cable_club.asm:635-680,
-/// 601-612), local side only (see module docs).
-fn draw_trade_party_list(
-    sel: &PartySelectState,
-    fb: &mut FrameBuffer,
-    language: Lang,
-    is_zh: bool,
-) {
-    let party = sel.party();
-    let cursor = sel.cursor();
-
-    let mut lines: Vec<String> = party
-        .iter()
-        .enumerate()
-        .map(|(i, m)| {
-            let mut name_buf = [0u8; pokered_core::battle::state::NAME_TEXT_BUF];
-            let name = if m.has_nickname() {
-                m.display_name(&mut name_buf).to_string()
+/// Both parties remain visible while choosing; left/right switches the list.
+fn draw_trade_party_list(flow: &CableClubFlow, fb: &mut FrameBuffer, language: Lang, is_zh: bool) {
+    let Some(sel) = flow.party_select() else {
+        return;
+    };
+    let mut painter = FrameBufferPainter::new(fb).with_lang(language);
+    painter.clear(Rgba::INK_WHITE);
+    let (local_name, remote_name) = flow.trainer_names();
+    for (party, top, label, cursor) in [
+        (
+            sel.party(),
+            0,
+            if !local_name.is_empty() {
+                local_name
+            } else if is_zh {
+                "我方"
             } else {
-                species_name(m.species, is_zh).to_string()
+                "YOUR PARTY"
+            },
+            flow.peer_cursor().is_none().then_some(sel.cursor()),
+        ),
+        (
+            flow.remote_party(),
+            8,
+            if !remote_name.is_empty() {
+                remote_name
+            } else if is_zh {
+                "对方"
+            } else {
+                "PARTNER"
+            },
+            flow.peer_cursor(),
+        ),
+    ] {
+        painter.draw_text(TilePos::new(1, top), label, Rgba::INK_BLACK);
+        for (i, mon) in party.iter().enumerate() {
+            let mut buf = [0u8; pokered_core::battle::state::NAME_TEXT_BUF];
+            let name = if mon.has_nickname() {
+                mon.display_name(&mut buf)
+            } else {
+                species_name(mon.species, is_zh)
             };
-            let marker = if i == cursor { "▶" } else { " " };
-            format!("{}{}", marker, name)
-        })
-        .collect();
-    lines.push(format!(
-        "{}{}",
-        if party.is_empty() { "▶" } else { " " },
-        lang_data::ui_label("CANCEL", is_zh)
-    ));
-
-    let mut painter = FrameBufferPainter::new(fb);
-    let mut ui = Ui::new(&mut painter);
-    let text = lines.join("\n");
-    menus::dialog::draw(&text, false, &DIALOG_DEFAULT_LAYOUT, &mut ui, language);
+            painter.draw_text(TilePos::new(2, top + 1 + i as u32), name, Rgba::INK_BLACK);
+            if cursor == Some(i) {
+                painter.draw_glyph(TilePos::new(1, top + 1 + i as u32), '▶', Rgba::INK_BLACK);
+            }
+        }
+    }
+    painter.draw_text(
+        TilePos::new(1, 16),
+        if is_zh {
+            "左右切换 A选择 B取消"
+        } else {
+            "L/R:SIDE  A:OK  B:BACK"
+        },
+        Rgba::INK_BLACK,
+    );
 }

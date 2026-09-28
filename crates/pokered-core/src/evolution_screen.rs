@@ -10,9 +10,7 @@
 //!    (evolution.asm:9-18), `Delay3` (evolution.asm:19).
 //! 3. [`EvolutionPhase::OldCry`] — the old species' cry (`PlayCry`,
 //!    evolution.asm:41-43). The original waits for the cry to finish
-//!    (`WaitForSoundToFinish`); we model it as a fixed
-//!    [`CRY_WAIT_FRAMES`]-frame beat (cry length is species-dependent on
-//!    hardware; this is an intentional approximation).
+//!    (`WaitForSoundToFinish`), using the frontend sequencer status.
 //! 4. [`EvolutionPhase::MorphMusic`] — `MUSIC_SAFARI_ZONE` starts
 //!    (evolution.asm:44-46 — yes, the evolution "jingle" IS the Safari Zone
 //!    theme) and the old pic sits in its own palette for `DelayFrames(80)`
@@ -56,9 +54,6 @@ use crate::alloc_prelude::*;
 pub const IS_EVOLVING_FRAMES: u16 = 50;
 /// `Delay3` after SFX_TINK (evolution.asm:19).
 pub const TINK_FRAMES: u16 = 3;
-/// Fixed stand-in for `WaitForSoundToFinish` after the pre-morph cry
-/// (evolution.asm:43). See the module docs.
-pub const CRY_WAIT_FRAMES: u16 = 60;
 /// `DelayFrames(80)` with the morph music playing (evolution.asm:47-48).
 pub const MORPH_MUSIC_FRAMES: u16 = 80;
 /// `Delay3` per pic swap within a flicker (`Evolution_ChangeMonPic`,
@@ -67,10 +62,8 @@ pub const FLICKER_HALF_FRAMES: u16 = 3;
 /// Outer morph-loop iterations (`lb bc, $1, $10` with `dec c, dec c`,
 /// evolution.asm:51-61): 16/14/…/2 cancel frames, 1..8 flickers.
 pub const MORPH_ITERATIONS: u8 = 8;
-/// Success-text beat: the original plays `SFX_GET_ITEM_2`, waits for the
-/// sound, then `DelayFrames(40)` (evos_moves.asm:151-155). Modelled as a
-/// fixed phase.
-pub const EVOLVED_TEXT_FRAMES: u16 = 100;
+/// Delay after the success sound finishes (evos_moves.asm:151-155).
+pub const EVOLVED_TEXT_FRAMES: u16 = 40;
 
 /// One queued evolution (party member `party_index` evolving `from` → `to`).
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -163,6 +156,13 @@ pub enum EvolutionPhase {
     Done,
 }
 
+#[derive(Debug, Clone, Copy)]
+enum SuccessSoundStage {
+    Cry,
+    Jingle,
+    Delay,
+}
+
 /// Frame-stepped evolution cutscene. Frontends call [`Self::tick`] once per
 /// frame, drain [`Self::pending_sfx`] and [`Self::take_outcome`], and render
 /// from the accessors. Multiple pending evolutions play back-to-back (the
@@ -180,6 +180,7 @@ pub struct EvolutionScreenState {
     /// Frame within the current morph iteration (cancel window + flickers).
     morph_frame: u16,
     cancelled: bool,
+    success_sound_stage: SuccessSoundStage,
     /// Chinese text when true, English otherwise.
     pub is_zh: bool,
     /// SFX queued since the last tick; drained by the frontend.
@@ -206,6 +207,7 @@ impl EvolutionScreenState {
             morph_iter: 0,
             morph_frame: 0,
             cancelled: false,
+            success_sound_stage: SuccessSoundStage::Cry,
             is_zh,
             pending_sfx: Vec::new(),
             outcomes: VecDeque::new(),
@@ -358,7 +360,7 @@ impl EvolutionScreenState {
                 if let Some(cur) = cur {
                     self.pending_sfx.push(EvolutionSfx::StopMusic);
                     self.pending_sfx.push(EvolutionSfx::Cry(cur.to));
-                    self.pending_sfx.push(EvolutionSfx::GetItem2);
+                    self.success_sound_stage = SuccessSoundStage::Cry;
                 }
             }
             EvolutionPhase::StoppedText => {
@@ -390,8 +392,14 @@ impl EvolutionScreenState {
         }
     }
 
-    /// Advance one frame.
+    /// Advance a synthetic silent frame. Frontends use `tick_with_sound`
+    /// with the real sequencer status, even when device output is muted.
     pub fn tick(&mut self, input: EvolutionInput) -> bool {
+        self.tick_with_sound(input, false)
+    }
+
+    /// Advance using the sequencer status, including muted/headless playback.
+    pub fn tick_with_sound(&mut self, input: EvolutionInput, sound_playing: bool) -> bool {
         match self.phase {
             EvolutionPhase::IntroText => {
                 if input.a || input.b {
@@ -412,8 +420,7 @@ impl EvolutionScreenState {
                 }
             }
             EvolutionPhase::OldCry => {
-                self.frame += 1;
-                if self.frame >= CRY_WAIT_FRAMES {
+                if !sound_playing {
                     self.enter(EvolutionPhase::MorphMusic);
                 }
             }
@@ -442,15 +449,26 @@ impl EvolutionScreenState {
                     }
                 }
             }
-            EvolutionPhase::EvolvedText => {
-                self.frame += 1;
-                if self.frame >= EVOLVED_TEXT_FRAMES {
-                    self.finish_current(EvolutionOutcomeKind::Evolved);
+            EvolutionPhase::EvolvedText => match self.success_sound_stage {
+                SuccessSoundStage::Cry if !sound_playing => {
+                    self.pending_sfx.push(EvolutionSfx::GetItem2);
+                    self.success_sound_stage = SuccessSoundStage::Jingle;
                 }
-            }
+                SuccessSoundStage::Jingle if !sound_playing => {
+                    self.success_sound_stage = SuccessSoundStage::Delay;
+                    self.frame = 0;
+                }
+                SuccessSoundStage::Delay => {
+                    self.frame += 1;
+                    if self.frame >= EVOLVED_TEXT_FRAMES {
+                        self.finish_current(EvolutionOutcomeKind::Evolved);
+                    }
+                }
+                _ => {}
+            },
             EvolutionPhase::StoppedText => {
-                // `prompt` text: waits for a button (text_3.asm:52).
-                if input.a || input.b {
+                // PlayCry finishes before the prompt can be dismissed.
+                if !sound_playing && (input.a || input.b) {
                     self.finish_current(EvolutionOutcomeKind::Cancelled);
                 }
             }
@@ -505,7 +523,11 @@ mod tests {
             s.pending_sfx.drain(..).collect::<Vec<_>>(),
             vec![EvolutionSfx::Cry(Species::Bulbasaur)]
         );
-        tick_n(&mut s, CRY_WAIT_FRAMES);
+        for _ in 0..123 {
+            s.tick_with_sound(EvolutionInput::none(), true);
+            assert_eq!(s.phase(), EvolutionPhase::OldCry);
+        }
+        tick_n(&mut s, 1);
         assert_eq!(s.phase(), EvolutionPhase::MorphMusic);
         assert_eq!(
             s.pending_sfx.drain(..).collect::<Vec<_>>(),
@@ -530,13 +552,28 @@ mod tests {
         let sfx: Vec<_> = s.pending_sfx.drain(..).collect();
         assert_eq!(
             sfx,
-            vec![
-                EvolutionSfx::StopMusic,
-                EvolutionSfx::Cry(Species::Ivysaur),
-                EvolutionSfx::GetItem2
-            ]
+            vec![EvolutionSfx::StopMusic, EvolutionSfx::Cry(Species::Ivysaur)]
         );
-        tick_n(&mut s, EVOLVED_TEXT_FRAMES);
+        for _ in 0..137 {
+            s.tick_with_sound(EvolutionInput::none(), true);
+            assert!(
+                s.pending_sfx.is_empty(),
+                "success jingle must wait for new cry"
+            );
+        }
+        tick_n(&mut s, 1);
+        assert_eq!(
+            s.pending_sfx.drain(..).collect::<Vec<_>>(),
+            vec![EvolutionSfx::GetItem2]
+        );
+        for _ in 0..151 {
+            s.tick_with_sound(EvolutionInput::none(), true);
+            assert!(s.take_outcome().is_none());
+        }
+        tick_n(&mut s, 1);
+        tick_n(&mut s, EVOLVED_TEXT_FRAMES - 1);
+        assert!(!s.is_done());
+        tick_n(&mut s, 1);
         assert!(s.is_done());
         assert_eq!(
             s.take_outcome(),
@@ -592,6 +629,12 @@ mod tests {
         assert_eq!(
             s.text_lines(),
             Some(("Huh? BULBASAUR".to_string(), "stopped evolving!".to_string()))
+        );
+        s.tick_with_sound(EvolutionInput { a: true, b: false }, true);
+        assert_eq!(
+            s.phase(),
+            EvolutionPhase::StoppedText,
+            "cancel cry must finish first"
         );
         // Prompt text: no auto-advance.
         tick_n(&mut s, 500);

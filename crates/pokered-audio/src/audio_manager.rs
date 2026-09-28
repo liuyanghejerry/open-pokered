@@ -11,7 +11,7 @@
 
 use core::ops::{Deref, DerefMut};
 
-use std::boxed::Box;
+use alloc::boxed::Box;
 
 use crate::music_data::{self, MusicId};
 use crate::sfx_data::{self, SfxId};
