@@ -1,0 +1,149 @@
+#!/usr/bin/env python3
+"""Build the frame-aligned solo-Pokédex dashboard from an autonomous run."""
+import argparse
+import hashlib
+import json
+import re
+import shutil
+import subprocess
+import sys
+from collections import Counter
+from pathlib import Path
+
+
+ROOT = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(ROOT / 'scripts'))
+from openpokered.collection_planner import (  # noqa: E402
+    SUPER_ROD_MAP_GROUP, complete_acquisition_graph, infer_solo_choices, solo_plan,
+)
+from openpokered.story_rules import MAPS_DIR  # noqa: E402
+
+
+def rows(path):
+    with path.open() as stream:
+        for line in stream:
+            if line.strip():
+                yield json.loads(line)
+
+
+def sha256(path):
+    with path.open('rb') as stream:
+        return hashlib.file_digest(stream, 'sha256').hexdigest()
+
+
+def method(event):
+    explicit = event.get('acquisition_method')
+    if explicit:
+        return explicit
+    # The starter and Pokédex registration happen before collection-specific
+    # groups exist. Preserve them as deterministic gifts in the visual audit.
+    return 'gift' if event.get('acquired') else 'unknown'
+
+
+def build(run, output, video=None):
+    summary = json.loads((run / 'summary.json').read_text())
+    trace = list(rows(run / 'trace.jsonl'))
+    recording = summary.get('recording') or {}
+    fps = int(recording.get('game_frames_per_video_second', 240))
+    source_video = Path(video or recording.get('path') or run / 'jev-dex-full.mp4').resolve()
+    if not source_video.is_file():
+        raise ValueError(f'missing recording: {source_video}')
+
+    maps = {path.parent.name: json.loads(path.read_text())
+            for path in MAPS_DIR.glob('*/map.json')}
+    graph = complete_acquisition_graph(maps, SUPER_ROD_MAP_GROUP)
+    final_dex = summary.get('final_dex') or (summary.get('final_facts') or {}).get('dex') or {}
+    owned = set(final_dex.get('owned_species', []))
+    plan = solo_plan(graph, owned, infer_solo_choices(owned))
+    build_source = (ROOT / 'crates/pokered-data/build.rs').read_text()
+    order_body = build_source.split('const SPECIES_ORDER:', 1)[1].split('];', 1)[0]
+    catalog = list(enumerate(re.findall(r'"([A-Za-z0-9]+)"', order_body), 1))
+
+    stamp = lambda event: round(event.get('frame', 0) / fps, 6)
+    progress, decisions, operations, milestones = [], [], [], []
+    counts = Counter()
+    for event in trace:
+        kind = event.get('kind')
+        if kind == 'dex_progress':
+            acquired = event.get('acquired') or []
+            acquisition = method(event)
+            counts[acquisition] += len(acquired)
+            progress.append({
+                'source_s': stamp(event), 'frame': event.get('frame'),
+                'owned': event.get('owned', len(event.get('owned_species', []))),
+                'seen': event.get('seen', 0), 'acquired': acquired,
+                'owned_species': event.get('owned_species', []), 'map': event.get('map'),
+                'method': acquisition, 'party_count': event.get('party_count', 0),
+                'stored_count': event.get('stored_count', 0),
+                'method_counts': dict(counts),
+            })
+        elif kind == 'judgment' and event.get('layer') == 'strategy':
+            answer = event.get('answer') or {}
+            probabilities = answer.get('probabilities') or {}
+            criteria = (event.get('question') or {}).get('criteria') or {}
+            decisions.append({
+                'source_s': stamp(event), 'choice': answer.get('choice'),
+                'confidence': answer.get('confidence'),
+                'candidates': [
+                    {'id': key, 'label': criteria.get(key, key), 'probability': value}
+                    for key, value in sorted(probabilities.items(), key=lambda item: -item[1])[:5]
+                ],
+                'dex_progress': (event.get('state') or {}).get('dex_progress'),
+            })
+        elif kind == 'operation':
+            operations.append({'source_s': stamp(event), 'operation': event.get('operation'),
+                               'result': event.get('result'), 'map': event.get('map')})
+        elif kind == 'milestone':
+            milestones.append({'source_s': stamp(event), 'objective': event.get('objective'),
+                               'flag': event.get('flag')})
+
+    data = {
+        'schema': 1,
+        'run': {
+            'success': summary.get('success'), 'reason': summary.get('reason'),
+            'seed': summary.get('seed'), 'model': (summary.get('models') or ['jev-1.13.0'])[0],
+            'actions': summary.get('actions'), 'calls': summary.get('calls', {}),
+            'tokens': summary.get('tokens', {}), 'frames': summary.get('frames'),
+            'wall_s': summary.get('wall_s'), 'video_fps': fps,
+            'video_file': 'jev-dex-full.mp4', 'video_sha256': sha256(source_video),
+            'video_bytes': source_video.stat().st_size,
+        },
+        'target': {'owned': len(owned), 'solo_ceiling': plan['ceiling'], 'total': 151,
+                   'choices': plan['choices'], 'unreachable_species': plan['unreachable_species']},
+        'species': [{'number': number, 'name': name,
+                     'status': 'owned' if name in owned else
+                               'reachable' if name in plan['reachable_species'] else 'unreachable'}
+                    for number, name in catalog],
+        'progress': progress, 'decisions': decisions, 'operations': operations,
+        'milestones': milestones,
+    }
+    output.mkdir(parents=True, exist_ok=True)
+    text = json.dumps(data, ensure_ascii=False, separators=(',', ':'))
+    (output / 'jev-dex-dashboard.json').write_text(text + '\n')
+    (output / 'jev-dex-dashboard-data.js').write_text(
+        'window.JEV_DEX_DASHBOARD=' + text.replace('</', '<\\/') + ';\n')
+    target_video = output / 'jev-dex-full.mp4'
+    if source_video != target_video.resolve():
+        target_video.unlink(missing_ok=True)
+        shutil.copy2(source_video, target_video)
+    manifest = {
+        'source_run': str(run.resolve()),
+        'source_commit': subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=ROOT, text=True).strip(),
+        'files': {'jev-dex-full.mp4': {'bytes': source_video.stat().st_size,
+                                      'sha256': sha256(source_video)}},
+        'clock': f'video seconds = absolute engine frame / {fps}',
+    }
+    (output / 'manifest.json').write_text(json.dumps(manifest, ensure_ascii=False, indent=2) + '\n')
+    print(json.dumps({'progress_events': len(progress), 'decisions': len(decisions),
+                      'operations': len(operations), 'owned': len(owned),
+                      'video': str(target_video)}, ensure_ascii=False))
+
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('run', type=Path)
+    parser.add_argument('--output', type=Path,
+                        default=ROOT / 'docs/jev-retrospective-assets/dex-run')
+    parser.add_argument('--video', type=Path)
+    args = parser.parse_args()
+    build(args.run.resolve(), args.output.resolve(), args.video)

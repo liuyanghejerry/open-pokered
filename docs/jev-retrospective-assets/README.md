@@ -46,6 +46,28 @@ Pages 发布会恢复实际视频，并校验两条原片的 SHA-256；网站不
 
 ![完整通关并排大盘预览](full-run/full-comparison-preview.png)
 
+## 单机图鉴收集录像与大盘
+
+图鉴专用播放器模板位于
+[`dex-run/jev-dex-player.html`](dex-run/jev-dex-player.html)，生成器会把一次
+`--goal collect-dex` 运行的 MP4、逐帧图鉴登记、策略判断、来源统计和 151 种
+状态写入同一目录。页面把 124 种单存档可达上限与 27 种策略外目标分开显示，
+不会把蓝版限定、通信进化或未选择的互斥分支误报为失败。
+
+```bash
+python3 scripts/openpokered/run_autonomous.py \
+  --goal collect-dex --strategy jev --action jev --checkpoint \
+  --record-video --output .artifacts/jev-dex-recording
+
+python3 docs/jev-retrospective-assets/build_jev_dex_dashboard.py \
+  .artifacts/jev-dex-recording/<run> \
+  --output docs/jev-retrospective-assets/dex-run
+```
+
+录制器使用调试协议的优雅关机，让 ffmpeg 在游戏进程退出前关闭输入、刷新编码器
+并写完 MP4 索引。大盘时间使用绝对引擎帧除以录制倍率；网络等待只保留在墙钟
+统计中，不会伪造成游戏帧。
+
 两条完整录像均来自单次 NEW GAME 连续运行。不同失败尝试没有拼接进成功过程。脚本一侧标注“无模型参与”：相比早期版本，脚本含菜单兼容、森林败退后的训练时机、西尔佛及后续道馆重试、战斗用药及联盟重试等人工适配，详见主文档与[补丁](full-run/script-driver-adaptation.patch)。Jev 不调用 m01–m49 既有路线。
 
 完整原片的时钟是模拟帧时间，模型和网络等待另存日志。并排版通常按 32 倍加速，结局与独立读档按 2 倍；每章先结束的一边以章末最近的清晰帧定格等候，并标出其原片时间。五个解说节点同时暂停两侧各 8 秒。加速版抽取展示帧，逐帧证据以完整原片为准，成片时长不能作为墙钟竞速成绩。

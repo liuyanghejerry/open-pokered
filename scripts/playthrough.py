@@ -480,7 +480,7 @@ class NavError(RuntimeError):
 
 class Game:
     def __init__(self, port=None, save_path=None, record_dir=None,
-                 record_video=None, snapshot=None, binary=None, seed=None,
+                 record_video=None, record_video_fps=None, snapshot=None, binary=None, seed=None,
                  speed=None):
         self.binary = Path(binary) if binary else BIN
         self.seed, self.speed = seed, speed
@@ -517,6 +517,8 @@ class Game:
             cmd += ["--record-frames", str(record_dir)]
         if record_video is not None:
             cmd += ["--record-video", str(record_video)]
+            if record_video_fps is not None:
+                cmd += ["--record-video-fps", str(record_video_fps)]
         self.proc = subprocess.Popen(
             cmd, cwd=str(ROOT), stdout=subprocess.DEVNULL, stderr=self.log)
         # A connect failure must not orphan the just-spawned game: the
@@ -1570,14 +1572,25 @@ class Game:
 
     def close(self):
         try:
+            client = getattr(self.d, "raw", self.d)
+            if self.proc.poll() is None:
+                try:
+                    client.cmd(cmd="shutdown")
+                except (OSError, ValueError):
+                    # Older binaries do not have the graceful command. Retain the
+                    # termination fallback below for compatibility.
+                    pass
             self.d.close()
         finally:
-            self.proc.terminate()
             try:
                 self.proc.wait(timeout=10)
             except subprocess.TimeoutExpired:
-                self.proc.kill()
-                self.proc.wait(timeout=5)
+                self.proc.terminate()
+                try:
+                    self.proc.wait(timeout=10)
+                except subprocess.TimeoutExpired:
+                    self.proc.kill()
+                    self.proc.wait(timeout=5)
             self.log.close()
             shutil.rmtree(self.run_dir, ignore_errors=True)
 

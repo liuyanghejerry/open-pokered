@@ -5,7 +5,15 @@ turns the checked-in Red encounter tables into typed, comparable acquisition
 methods so Jev can choose between travel/resource trade-offs without having
 to infer mechanics from prose.
 """
+import itertools
+import json
 from collections import defaultdict
+from pathlib import Path
+
+
+ROOT = Path(__file__).resolve().parents[2]
+SPECIES_DIR = ROOT / 'crates/pokered-data/pokemon'
+STORY_GRAPH_PATH = ROOT / 'crates/pokered-data/story/graph.json'
 
 
 ENCOUNTER_SLOT_WEIGHTS = (51, 51, 39, 25, 25, 25, 13, 13, 11, 3)
@@ -140,3 +148,218 @@ def acquisition_graph(maps, fishable_maps=()):
                 if record not in graph[species]:
                     graph[species].append(record)
     return dict(graph)
+
+
+# Choices that permanently consume the only source available in one Red save.
+# The selected Pokémon remains registered after evolving or being traded away,
+# so only genuinely branching one-copy sources belong here.
+SOLO_CHOICE_GROUPS = {
+    'starter': ('Bulbasaur', 'Charmander', 'Squirtle'),
+    'fossil': ('Kabuto', 'Omanyte'),
+    'dojo': ('Hitmonchan', 'Hitmonlee'),
+    'eevee_evolution': ('Flareon', 'Jolteon', 'Vaporeon'),
+}
+
+SOLO_CHOICE_BRANCHES = {
+    'starter': {
+        'Bulbasaur': {'Bulbasaur', 'Ivysaur', 'Venusaur'},
+        'Charmander': {'Charmander', 'Charmeleon', 'Charizard'},
+        'Squirtle': {'Squirtle', 'Wartortle', 'Blastoise'},
+    },
+    'fossil': {
+        'Kabuto': {'Kabuto', 'Kabutops'},
+        'Omanyte': {'Omanyte', 'Omastar'},
+    },
+    'dojo': {'Hitmonchan': {'Hitmonchan'}, 'Hitmonlee': {'Hitmonlee'}},
+    'eevee_evolution': {
+        'Flareon': {'Flareon'}, 'Jolteon': {'Jolteon'}, 'Vaporeon': {'Vaporeon'},
+    },
+}
+
+RED_GAME_CORNER_PRIZES = {
+    ('Abra', 9, 180), ('Clefairy', 8, 500), ('Nidorina', 17, 1200),
+    ('Dratini', 18, 2800), ('Scyther', 25, 5500), ('Porygon', 26, 9999),
+}
+
+NPC_TRADES = (
+    ('Nidorino', 'Nidorina', 'Route11Gate2F', 'EVENT_TRADED_FOR_TERRY'),
+    ('Abra', 'MrMime', 'Route2TradeHouse', 'EVENT_TRADED_FOR_MARCEL'),
+    ('Ponyta', 'Seel', 'CinnabarLabFossilRoom', 'EVENT_TRADED_FOR_SAILOR'),
+    ('Spearow', 'Farfetchd', 'VermilionTradeHouse', 'EVENT_TRADED_FOR_DUX'),
+    ('Slowbro', 'Lickitung', 'Route18Gate2F', 'EVENT_GOT_LICKITUNG_FROM_TRADE'),
+    ('Poliwhirl', 'Jynx', 'CeruleanTradeHouse', 'EVENT_TRADED_FOR_LOLA'),
+    ('Raichu', 'Electrode', 'CinnabarLabTradeRoom', 'EVENT_TRADED_FOR_DORIS'),
+    ('Venonat', 'Tangela', 'CinnabarLabTradeRoom', 'EVENT_TRADED_FOR_CRINKLES'),
+    ('NidoranM', 'NidoranF', 'UndergroundPathRoute5', 'EVENT_TRADED_FOR_SPOT'),
+)
+
+
+def _species_catalog(species_dir=SPECIES_DIR):
+    records = {}
+    for path in Path(species_dir).glob('*.json'):
+        data = json.loads(path.read_text())
+        records[data['species']] = data
+    return records
+
+
+def _story_sources(story_graph_path=STORY_GRAPH_PATH):
+    """Catchable/gift producers from the generated story semantics graph."""
+    sources = []
+    for edge in json.loads(Path(story_graph_path).read_text())['edges']:
+        if edge['kind'] not in ('gives', 'starts_battle') or not edge['to'].startswith('pokemon:'):
+            continue
+        script = edge['from'].split(':', 1)[1]
+        map_name, storyline = script.split(':', 1)
+        species = edge['to'].split(':', 1)[1]
+        level = int(edge.get('detail', 'lv0').removeprefix('lv'))
+        # The tower ghost cannot be caught. It exists to clear a story gate,
+        # not as a Pokédex acquisition method.
+        if species == 'MAROWAK' and storyline == 'coordGhostMarowak':
+            continue
+        sources.append({'species_key': species, 'method': (
+            'static' if edge['kind'] == 'starts_battle' else
+            'prize' if map_name == 'GameCornerPrizeRoom' else 'gift'),
+            'map': map_name, 'storyline': storyline, 'level': level})
+    return sources
+
+
+def complete_acquisition_graph(maps, fishable_maps=(), species_dir=SPECIES_DIR,
+                               story_graph_path=STORY_GRAPH_PATH):
+    """All Gen-I species and every Red acquisition edge relevant to a solo save.
+
+    Records with ``external_trade`` remain in the graph so an unreachable
+    species has an explicit explanation; the solo closure deliberately rejects
+    those edges. Mutually exclusive one-copy choices carry an
+    ``exclusive_group`` and ``choice`` instead of being silently counted all at
+    once.
+    """
+    catalog = _species_catalog(species_dir)
+    names = {name.replace('_', '').upper(): name for name in catalog}
+    graph = defaultdict(list, {species: list(rows) for species, rows in
+                               acquisition_graph(maps, fishable_maps).items()})
+
+    def add(species, record):
+        if record not in graph[species]:
+            graph[species].append(record)
+
+    for source in _story_sources(story_graph_path):
+        species = names.get(source.pop('species_key').replace('_', '').upper())
+        if not species:
+            continue
+        if source['method'] == 'prize':
+            # The semantic graph conservatively contains both Red and Blue
+            # branches. Pair the Red level with its exact coin price here.
+            match = next((price for sp, level, price in RED_GAME_CORNER_PRIZES
+                          if sp == species and level == source['level']), None)
+            if match is None:
+                continue
+            source['coins'] = match
+        if species in SOLO_CHOICE_GROUPS['starter']:
+            source.update(exclusive_group='starter', choice=species)
+        elif species in SOLO_CHOICE_GROUPS['fossil']:
+            source.update(exclusive_group='fossil', choice=species,
+                          item='DomeFossil' if species == 'Kabuto' else 'HelixFossil')
+        elif species in SOLO_CHOICE_GROUPS['dojo']:
+            source.update(exclusive_group='dojo', choice=species)
+        elif species == 'Aerodactyl':
+            source['item'] = 'OldAmber'
+        add(species, source)
+
+    for give, receive, map_name, flag in NPC_TRADES:
+        add(receive, {'method': 'npc_trade', 'map': map_name,
+                      'from_species': give, 'completion_flag': flag})
+
+    for species, data in catalog.items():
+        for evolution in data.get('evolutions', []):
+            target = evolution['species']
+            record = {'method': 'evolution', 'from_species': species,
+                      'trigger': evolution['method']}
+            if evolution['method'] == 'level':
+                record['level'] = evolution['level']
+            elif evolution['method'] == 'item':
+                record['item'] = evolution['item']
+                if species == 'Eevee':
+                    record.update(exclusive_group='eevee_evolution', choice=target)
+            elif evolution['method'] == 'trade':
+                record['external_trade'] = True
+            add(target, record)
+
+    # Blue-only wild sources explain Red's version exclusions. They are not
+    # executable without another game, but they keep the graph complete and
+    # make the ceiling audit mechanically inspectable.
+    red_direct = set(acquisition_graph(maps, fishable_maps))
+    for map_name, map_data in maps.items():
+        blue = ((map_data.get('wild') or {}).get('blue') or {})
+        for table in ('grass', 'water'):
+            for mon in (blue.get(table) or {}).get('mons', []):
+                species = mon['species']
+                if species not in red_direct:
+                    add(species, {'method': 'version_trade', 'source_version': 'blue',
+                                  'map': map_name, 'level': mon['level'],
+                                  'external_trade': True})
+
+    for species in catalog:
+        graph.setdefault(species, [])
+    if not graph['Mew']:
+        graph['Mew'].append({'method': 'unavailable',
+                             'reason': 'No legitimate in-game Red acquisition source'})
+    return dict(graph)
+
+
+def _choice_assignments(forced=None):
+    forced = dict(forced or {})
+    groups = sorted(SOLO_CHOICE_GROUPS)
+    choices = [((forced[group],) if group in forced else SOLO_CHOICE_GROUPS[group])
+               for group in groups]
+    for values in itertools.product(*choices):
+        yield dict(zip(groups, values))
+
+
+def reachable_species(graph, choices, owned=(), allow_external_trade=False):
+    """Fixed-point closure for one concrete set of irreversible choices."""
+    reachable = set(owned)
+    changed = True
+    while changed:
+        changed = False
+        for species, methods in graph.items():
+            if species in reachable:
+                continue
+            for method in methods:
+                if method.get('external_trade') and not allow_external_trade:
+                    continue
+                if method['method'] == 'unavailable':
+                    continue
+                group = method.get('exclusive_group')
+                if group and choices.get(group) != method.get('choice'):
+                    continue
+                source = method.get('from_species')
+                if source and source not in reachable:
+                    continue
+                reachable.add(species)
+                changed = True
+                break
+    return reachable
+
+
+def solo_plan(graph, owned=(), forced_choices=None):
+    """Maximum Red single-save/no-link-trade closure and its choice policy."""
+    best = None
+    for choices in _choice_assignments(forced_choices):
+        reachable = reachable_species(graph, choices, owned)
+        candidate = (len(reachable), tuple(sorted(reachable)), choices, reachable)
+        if best is None or candidate[:2] > best[:2]:
+            best = candidate
+    _, _, choices, reachable = best
+    return {'ceiling': len(reachable), 'reachable_species': sorted(reachable),
+            'unreachable_species': sorted(set(graph) - reachable), 'choices': choices}
+
+
+def infer_solo_choices(owned_species=()):
+    """Irreversible choices already proven by registered descendants."""
+    owned = set(owned_species)
+    forced = {}
+    for group, branches in SOLO_CHOICE_BRANCHES.items():
+        matches = [choice for choice, species in branches.items() if species & owned]
+        if len(matches) == 1:
+            forced[group] = matches[0]
+    return forced

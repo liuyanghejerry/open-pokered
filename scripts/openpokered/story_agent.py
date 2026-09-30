@@ -94,6 +94,7 @@ class DualStoryAgent:
         if sum(self.calls.values()) >= self.max_calls:
             raise StoryStopped('judgment_cap')
         self.check_budget()
+        decision_frame = self.client.state().get('frame_count')
         criteria = dict(candidates)
         if allow_abstain:
             criteria['none'] = 'None of these candidates can advance the current goal.'
@@ -112,7 +113,7 @@ class DualStoryAgent:
         self.record('judgment', layer=layer, state=state, question=question.to_json(),
                     answer=vars(answer) if answer else None, model=result.model,
                     input_tokens=result.input_tokens, output_tokens=result.output_tokens,
-                    latency_s=round(time.monotonic() - started, 3))
+                    latency_s=round(time.monotonic() - started, 3), frame=decision_frame)
         if allow_abstain and answer and answer.choice == 'none':
             supported = {key: answer.probabilities.get(key, 0) for key in candidates}
             # Similar valid choices split their probability mass. Abstain

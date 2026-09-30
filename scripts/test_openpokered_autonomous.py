@@ -731,6 +731,93 @@ class AutonomousTests(unittest.TestCase):
         self.assertTrue(any(row.get('rod') == 'SuperRod' for row in graph['Dratini']))
         self.assertEqual({row['method'] for row in graph['Magikarp']}, {'fishing'})
 
+    def test_complete_red_solo_graph_proves_the_124_species_ceiling(self):
+        from openpokered.collection_planner import (complete_acquisition_graph,
+            solo_plan, SUPER_ROD_MAP_GROUP)
+        from openpokered.story_rules import MAPS_DIR
+        maps = {p.parent.name: json.loads(p.read_text()) for p in MAPS_DIR.glob('*/map.json')}
+        graph = complete_acquisition_graph(maps, SUPER_ROD_MAP_GROUP)
+        plan = solo_plan(graph)
+        self.assertEqual(len(graph), 151)
+        self.assertEqual(plan['ceiling'], 124)
+        self.assertEqual(len(plan['unreachable_species']), 27)
+        self.assertEqual({'Alakazam', 'Gengar', 'Golem', 'Machamp'} &
+                         set(plan['unreachable_species']),
+                         {'Alakazam', 'Gengar', 'Golem', 'Machamp'})
+        self.assertIn('Mew', plan['unreachable_species'])
+        self.assertEqual(len({'Bulbasaur', 'Charmander', 'Squirtle'} &
+                             set(plan['reachable_species'])), 1)
+
+    def test_complete_graph_keeps_exact_solo_choice_and_external_trade_reasons(self):
+        from openpokered.collection_planner import (complete_acquisition_graph,
+            solo_plan, SUPER_ROD_MAP_GROUP)
+        from openpokered.story_rules import MAPS_DIR
+        maps = {p.parent.name: json.loads(p.read_text()) for p in MAPS_DIR.glob('*/map.json')}
+        graph = complete_acquisition_graph(maps, SUPER_ROD_MAP_GROUP)
+        forced = {'starter': 'Bulbasaur', 'fossil': 'Kabuto',
+                  'dojo': 'Hitmonchan', 'eevee_evolution': 'Jolteon'}
+        plan = solo_plan(graph, forced_choices=forced)
+        self.assertEqual(plan['ceiling'], 124)
+        self.assertEqual(plan['choices'], forced)
+        self.assertTrue(any(row.get('external_trade') for row in graph['Alakazam']))
+        self.assertTrue(any(row.get('source_version') == 'blue' for row in graph['Vulpix']))
+        self.assertEqual(next(row['coins'] for row in graph['Porygon']
+                              if row['method'] == 'prize'), 9999)
+        self.assertFalse(any(row.get('storyline') == 'coordGhostMarowak'
+                             for row in graph['Marowak']))
+
+    def test_nonwild_collection_groups_offer_gift_and_item_evolution(self):
+        agent = AutonomousStoryAgent.__new__(AutonomousStoryAgent)
+        agent.collects_dex = True
+        gift = Rule('gift', 'House', 'House:talkGift', [], [], [],
+                    ('pokemon', 'LAPRAS', 15), [])
+        agent.index = Mock(rules=[gift], by_effect={})
+        agent._complete_collection_graph = {
+            'Growlithe': [{'method': 'grass', 'map': 'Route8'}],
+            'Arcanine': [{'method': 'evolution', 'from_species': 'Growlithe',
+                          'trigger': 'item', 'item': 'FireStone'}],
+            'Lapras': [{'method': 'gift', 'map': 'House', 'storyline': 'talkGift',
+                        'level': 15}],
+        }
+        facts = {'party': [{'species': 'Growlithe', 'level': 20}], 'stored_pokemon': [],
+                 'bag': {'FIRESTONE': 1}, 'flags': {}, 'coins': 0, 'money': 0,
+                 'map': 'Route8', 'dex': {'owned_species': ['Growlithe']}}
+        groups = {}
+        agent.add_nonwild_collection_groups(groups, facts)
+        self.assertEqual(groups['register:Arcanine:evolution:Growlithe']['target'],
+                         ('register', 'Arcanine', True))
+        self.assertEqual(groups['register:Lapras:gift:House']['rules'], [gift])
+
+    def test_boxed_evolution_source_backchains_through_real_pc_rule(self):
+        agent = AutonomousStoryAgent.__new__(AutonomousStoryAgent)
+        agent.collects_dex = True
+        pc = Rule('pc', 'Center', 'Center:pcStorage', ['sign:1'], [], [],
+                  ('pc', 'storage', True), [])
+        agent.index = Mock(rules=[pc], by_effect={('pc', 'storage', True): [pc]})
+        agent._complete_collection_graph = {
+            'Charmander': [{'method': 'gift', 'map': 'Lab', 'storyline': 'starter'}],
+            'Charmeleon': [{'method': 'evolution', 'from_species': 'Charmander',
+                            'trigger': 'level', 'level': 16}],
+        }
+        facts = {'party': [{'species': 'Pidgey', 'level': 8}],
+                 'stored_pokemon': [{'box': 2, 'index': 4, 'species': 'Charmander', 'level': 15}],
+                 'bag': {}, 'flags': {}, 'coins': 0, 'money': 0, 'map': 'Route1',
+                 'dex': {'owned_species': ['Charmander']}}
+        groups = {}
+        agent.add_nonwild_collection_groups(groups, facts)
+        self.assertEqual(groups['retrieve:Charmander']['target'], ('pokemon', 'Charmander', None))
+        self.assertEqual(groups['retrieve:Charmander']['context']['stored_pokemon']['box'], 2)
+
+    def test_story_semantics_compile_pc_and_coin_sources(self):
+        from openpokered.story_rules import compile_story
+        story = {'id': 'Room:test', 'map': 'Room', 'triggers': ['sign:1'], 'program': [
+            {'Command': {'name': 'openPC', 'args': []}},
+            {'Command': {'name': 'giveCoins', 'args': [{'NumberLit': 50}]}}
+        ]}
+        effects = {rule.effect for rule in compile_story(story)}
+        self.assertIn(('pc', 'storage', True), effects)
+        self.assertIn(('coins', 50, True), effects)
+
     def test_fishing_profiles_include_no_bite_and_uniform_group_odds(self):
         from openpokered.collection_planner import fishing_profile
         old = fishing_profile('OldRod', 'PalletTown')
@@ -1107,6 +1194,7 @@ class AutonomousTests(unittest.TestCase):
             'Rattata': [{'method': 'grass', 'map': 'Route1'}],
             'Magikarp': [{'method': 'fishing', 'map': 'ViridianCity', 'rod': 'OldRod'}],
         }
+        agent._complete_collection_graph = agent._collection_graph
         self.assertFalse(agent.dex_complete({'dex': {'owned_species': ['Pidgey']}}))
         self.assertFalse(agent.dex_complete({'dex': {'owned_species': ['Rattata', 'Pidgey']}}))
         self.assertTrue(agent.dex_complete({'dex': {'owned_species': ['Rattata', 'Pidgey', 'Magikarp']}}))
@@ -1115,6 +1203,7 @@ class AutonomousTests(unittest.TestCase):
         agent.index._wild_cache = {'RedsHouse2F': set(), 'Route1': {'Pidgey'}}
         agent.maps = {'RedsHouse2F': {}, 'Route1': {}}
         agent._collection_graph = {'Pidgey': [{'method': 'grass', 'map': 'Route1'}]}
+        agent._complete_collection_graph = agent._collection_graph
         self.assertFalse(agent.dex_complete({'dex': {'owned_species': []}}))
         agent.index = None  # No planning index yet: nothing is proven registered.
         self.assertFalse(agent.dex_complete({'dex': {'owned_species': ['Pidgey']}}))
@@ -1125,6 +1214,9 @@ class AutonomousTests(unittest.TestCase):
         agent.index = StoryIndex.__new__(StoryIndex)
         agent.index._wild_cache = {'Route1': {'Pidgey'}}
         agent.maps = {'Route1': {}}
+        agent._complete_collection_graph = {
+            'Pidgey': [{'method': 'grass', 'map': 'Route1'}],
+        }
         objective = {'id': 'collect-dex', 'agent_verified': True,
                      'name': 'Register every wild species; clear the first playthrough to open the areas '
                             'that hold the rest'}

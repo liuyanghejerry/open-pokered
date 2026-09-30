@@ -24,8 +24,8 @@ import playthrough as pt
 
 GOAL_OBJECTIVES = {
     'collect-dex': {'id': 'collect-dex', 'agent_verified': True,
-                    'name': 'Register every wild species; clear the first playthrough to open the areas '
-                            'that hold the rest'},
+                    'name': 'Register every species reachable in one Pokémon Red save without external '
+                            'link trades; clear the story to open every acquisition path'},
     'max-coverage': {'id': 'max-coverage', 'agent_verified': True,
                      'name': 'Leave no bordering area unexplored and finish the first playthrough'},
     'fast-clear': {'id': 'fast-clear',
@@ -82,9 +82,19 @@ def main(argv=None):
     parser.add_argument('--checkpoint', action='store_true', help='save a development checkpoint after stopping')
     parser.add_argument('--resume', type=Path, help='continue a checkpoint earned by this runner')
     parser.add_argument('--output', type=Path, default=Path('.artifacts/jev-autonomous'))
+    parser.add_argument('--record-video', nargs='?', const='auto', metavar='FILE',
+                        help='record every simulated frame to H.264 MP4; without FILE, write '
+                             'jev-dex-full.mp4 inside the run directory')
+    parser.add_argument('--record-video-fps', type=int, default=240,
+                        help='game frames per video second (60 = real-time, 240 = 4×; default: 240)')
     args = parser.parse_args(argv)
     folder = args.output / (time.strftime('%Y%m%d-%H%M%S') + f'-seed{args.seed}')
     folder.mkdir(parents=True, exist_ok=False)
+    video_path = None
+    if args.record_video:
+        video_path = ((folder / 'jev-dex-full.mp4').resolve() if args.record_video == 'auto'
+                      else Path(args.record_video).expanduser().resolve())
+        video_path.parent.mkdir(parents=True, exist_ok=True)
     # A 10s read timeout with one retry aborted a whole 25-minute run on a
     # single transient network blip; long runs need more slack than that.
     model = TypeSafeClient.from_env(timeout=30, max_retries=2)
@@ -101,6 +111,10 @@ def main(argv=None):
               'target': args.until if args.goal == 'story' else args.goal,
               'layers': {'strategy': args.strategy, 'action': args.action},
               'seed': args.seed, 'mode': 'autonomous-new-game', 'uses_milestone_handlers': False}
+    if video_path:
+        result['recording'] = {'path': str(video_path), 'simulated_fps': 60,
+                               'game_frames_per_video_second': args.record_video_fps,
+                               'container': 'mp4'}
     policy_files = [*Path(__file__).parent.glob('*.py'),
                     pt.ROOT / 'scripts/playthrough.py', pt.ROOT / 'scripts/playthrough_late.py',
                     pt.ROOT / 'scripts/debug_drive.py']
@@ -129,7 +143,8 @@ def main(argv=None):
         game = agent = None
         with (folder / 'trace.jsonl').open('w') as trace:
             try:
-                game = JevGame(binary=binary, save_path=saved, seed=args.seed, speed=0)
+                game = JevGame(binary=binary, save_path=saved, seed=args.seed, speed=0,
+                               record_video=video_path, record_video_fps=args.record_video_fps)
                 game.attach_judgments(model, model=args.model, trace=trace,
                                       max_calls=args.max_calls, wall_budget=args.wall_budget,
                                       frame_budget=args.frame_budget)
@@ -232,6 +247,9 @@ def main(argv=None):
                         shutil.copy2(game.run_dir / 'game.log', folder / 'game.log')
                     finally:
                         game.close()
+                        if video_path:
+                            result['recording']['exists'] = video_path.is_file()
+                            result['recording']['bytes'] = video_path.stat().st_size if video_path.is_file() else 0
     (folder / 'summary.json').write_text(json.dumps(result, ensure_ascii=False, indent=2)+'\n')
     print(json.dumps({k: v for k, v in result.items() if k not in ('final_facts', 'commands', 'policy_files', 'first_clear_verification')}, ensure_ascii=False))
     print('Artifacts:', folder)

@@ -6143,6 +6143,31 @@ impl PokemonGame {
                 })).collect::<Vec<_>>(),
             })
         });
+        let stored_pokemon = (0..self.save_data.pc_storage.box_count())
+            .flat_map(|box_index| {
+                self.save_data
+                    .pc_storage
+                    .get_box(box_index)
+                    .into_iter()
+                    .flat_map(move |box_data| {
+                        box_data.iter().enumerate().map(move |(index, mon)| {
+                            serde_json::json!({
+                                "box": box_index,
+                                "index": index,
+                                "species": format!("{:?}", mon.species),
+                                "level": mon.level,
+                                "hp": mon.hp,
+                                "max_hp": mon.max_hp,
+                                "status": format!("{:?}", mon.status),
+                                "moves": mon.moves.iter()
+                                    .map(|m| format!("{:?}", m))
+                                    .collect::<Vec<_>>(),
+                                "pp": mon.pp,
+                            })
+                        })
+                    })
+            })
+            .collect::<Vec<_>>();
         let mut snapshot = serde_json::json!({
             "screen": crate::cli::screen_name(&self.state.screen).to_string(),
             "map_id": map_id as u8,
@@ -6160,6 +6185,11 @@ impl PokemonGame {
             // the party is full, and a full box refuses the throw outright,
             // so storage capacity is part of a Pokédex-collecting state.
             "box_count": self.overworld.box_count,
+            "current_box_index": self.save_data.pc_storage.current_box_index(),
+            "box_counts": (0..self.save_data.pc_storage.box_count())
+                .map(|index| self.save_data.pc_storage.get_box(index).map(|box_data| box_data.count()).unwrap_or(0))
+                .collect::<Vec<_>>(),
+            "stored_pokemon": stored_pokemon,
             "badges": self.save_data.game_data.obtained_badges,
             "hall_of_fame_count": self.save_data.hall_of_fame.team_count(),
             "hof_phase": self.hof_ceremony.as_ref().map(|hof| format!("{:?}", hof.phase())),
@@ -6226,6 +6256,11 @@ impl PokemonGame {
             // Current battle phase (Debug form), e.g. "PlayerMenu",
             // "BagSelect", so a driver knows when a menu is ready.
             "battle_phase": format!("{:?}", self.battle.phase),
+            "battle_presentation": {
+                "waiting": self.battle.presentation.waiting,
+                "vfx_stable": self.battle_vfx.is_frame_stable(),
+                "vfx_blockers": self.battle_vfx.frame_stability_blockers(),
+            },
             "battle_party_cursor": self.battle.party_cursor,
             // Simulation HP, rather than the save snapshot or animated HUD.
             "battle_live": battle_live,
@@ -6297,6 +6332,26 @@ impl PokemonGame {
                 .pc_screen
                 .as_ref()
                 .map(|pc| format!("{:?}", pc.phase())),
+            "pc_state": self.pc_screen.as_ref().map(|pc| serde_json::json!({
+                "phase": format!("{:?}", pc.phase()),
+                "main_cursor": pc.main_menu().cursor(),
+                "main_items": pc.main_menu_labels(),
+                "bills_cursor": pc.bills_menu().cursor(),
+                "bills_action": format!("{:?}", pc.bills_menu().current_action()),
+                "mon_mode": format!("{:?}", pc.mon_mode()),
+                "mon_cursor": pc.mon_cursor(),
+                "mon_action_cursor": pc.mon_action_cursor(),
+                "box_cursor": pc.box_cursor(),
+                "yes_selected": pc.yes_selected(),
+            })),
+            "evolution_phase": self
+                .evolution_anim
+                .as_ref()
+                .map(|evolution| format!("{:?}", evolution.phase())),
+            "npc_trade_phase": self
+                .trade_anim
+                .as_ref()
+                .map(|trade| format!("{:?}", trade.phase())),
             // Script-effect currently being processed (e.g.
             // "ShowDialogue", "FollowNpc"), null when idle — lets a
             // driver follow cutscene progress deterministically.
@@ -6515,6 +6570,10 @@ impl PokemonGame {
         };
 
         match cmd {
+            DebugCommand::Game(GameDebugCommand::Shutdown) => {
+                self.exit_requested = true;
+                DebugResponse::ok()
+            }
             DebugCommand::Core(CoreDebugCommand::GetState) => {
                 DebugResponse::ok_with_data(self.debug_state_snapshot())
             }

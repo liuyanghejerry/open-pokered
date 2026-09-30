@@ -23,7 +23,9 @@ from .playthrough_judgments import (ObservedProtocol, NavigationPause, attack_pr
 from .navigation_skills import (cut_requirement, surf_requirement, water_planning, water_tile,
                                 hm_compatible, machine_compatible, HM_MOVES, TM_MOVES, CUT_TILES)
 from .boulder_skills import BOULDER_TARGETS, boulder_sources, plan_pushes
-from .collection_planner import acquisition_graph, fishing_profile, table_profile
+from .collection_planner import (acquisition_graph, complete_acquisition_graph,
+                                 fishing_profile, infer_solo_choices, solo_plan,
+                                 table_profile)
 
 # The level bias asks for more training than the pending fight strictly needs.
 LEVEL_PREFERENCE_MARGIN = 2
@@ -257,6 +259,7 @@ class AutonomousStoryAgent(DualStoryAgent):
         self.defeat_preparation = 0
         self.replan_after_defeat = False
         self.mechanism_goal = None
+        self._recorded_dex_species = None
 
     def facts(self):
         facts = super().facts()
@@ -264,6 +267,12 @@ class AutonomousStoryAgent(DualStoryAgent):
         facts['party'] = [{k: mon.get(k) for k in
                            ('species', 'level', 'hp', 'max_hp', 'status', 'moves', 'pp')}
                           for mon in self.client.state().get('party', [])]
+        facts['stored_pokemon'] = [{k: mon.get(k) for k in
+                                    ('box', 'index', 'species', 'level', 'hp', 'max_hp',
+                                     'status', 'moves', 'pp')}
+                                   for mon in self.client.state().get('stored_pokemon', [])]
+        facts['current_box_index'] = self.client.state().get('current_box_index', 0)
+        facts['box_counts'] = list(self.client.state().get('box_counts', []))
         facts['fully_recovered'] = bool(facts['party']) and all(
             mon['hp'] == mon['max_hp'] and mon['status'] == 'None'
             and all(move == 'None' or pp >= data.move_data(move)['pp']
@@ -280,6 +289,20 @@ class AutonomousStoryAgent(DualStoryAgent):
         facts['navigation_revision'] = len(self.visited) + len(self.crossed_passages)
         facts['block_values'] = {}
         facts['recent_battle_defeats'] = self.battle_defeats[-3:]
+        dex = facts.get('dex') or {}
+        owned_species = tuple(sorted(dex.get('owned_species', [])))
+        if self.collects_dex and owned_species != self._recorded_dex_species:
+            previous = set(self._recorded_dex_species or ())
+            active_context = (self.active or {}).get('context', {})
+            self.record('dex_progress', owned=dex.get('owned', len(owned_species)),
+                        seen=dex.get('seen', len(dex.get('seen_species', []))),
+                        acquired=sorted(set(owned_species) - previous),
+                        owned_species=list(owned_species), map=facts['map'],
+                        acquisition_method=active_context.get('acquisition_method'),
+                        active_target=(self.active or {}).get('target'),
+                        party_count=len(facts['party']),
+                        stored_count=len(facts['stored_pokemon']), frame=live['frame_count'])
+            self._recorded_dex_species = owned_species
         if self.index:
             for rule in self.index.rules:
                 if (rule.effect[0] != 'block' or 'load' not in rule.triggers or rule.map == facts['map']
@@ -345,7 +368,10 @@ class AutonomousStoryAgent(DualStoryAgent):
         dex = facts.get('dex') or {}
         owned = set(dex.get('owned_species', []))
         seen = set(dex.get('seen_species', []))
-        graph = self.collection_graph()
+        wild_graph = self.collection_graph()
+        full_graph = self.complete_collection_graph()
+        plan = solo_plan(full_graph, owned, infer_solo_choices(owned))
+        targets = set(plan['reachable_species'])
         rung = next((value for value in DEX_RUNGS if value > len(owned)), None)
         missing = {}
         yield_by_area = {}
@@ -359,12 +385,19 @@ class AutonomousStoryAgent(DualStoryAgent):
                         'unregistered_species_count', 'unregistered_encounter_share_pct',
                         'new_species_per_step_pct', 'expected_steps_to_any_new_species')}
         missing_methods = {}
-        for species in sorted(set(graph) - owned):
-            missing_methods[species] = sorted({method['method'] for method in graph[species]})
+        for species in sorted(targets - owned):
+            missing_methods[species] = sorted({method['method'] for method in full_graph[species]
+                                               if not method.get('external_trade')})
         return {'owned': dex.get('owned', len(owned)), 'seen': dex.get('seen', len(seen)), 'total': 151,
-                'supported_wild_target_count': len(graph),
-                'supported_wild_owned': len(set(graph) & owned),
-                'supported_wild_remaining': len(set(graph) - owned),
+                'supported_wild_target_count': len(wild_graph),
+                'supported_wild_owned': len(set(wild_graph) & owned),
+                'supported_wild_remaining': len(set(wild_graph) - owned),
+                'solo_target_count': plan['ceiling'],
+                'solo_owned': len(targets & owned),
+                'solo_remaining': len(targets - owned),
+                'solo_choices': plan['choices'],
+                'policy_unreachable_count': len(plan['unreachable_species']),
+                'policy_unreachable_species': plan['unreachable_species'],
                 'missing_acquisition_methods': missing_methods,
                 # Species already met are known-reachable, so this list is the
                 # strongest lead the collector has; the rung says what
@@ -423,10 +456,11 @@ class AutonomousStoryAgent(DualStoryAgent):
                 'cannot proceed, and prefer the shortest route to the objective.')
         if layer == 'strategy' and getattr(self, 'collects_dex', False):
             instruction += (' The terminal goal is the Pokédex, not the Hall of Fame: this run ends only when every '
-                'wild species is registered. The first playthrough is the channel to more species — badges, HM '
-                'moves and new routes open areas holding species that cannot be found near the start. Treat the '
+                'species reachable in one Pokémon Red save without external link trades is registered. The first '
+                'playthrough is the channel to more species — badges, HM moves and new routes open encounters, '
+                'gifts, static Pokémon, NPC trades and evolution resources. Treat the '
                 'story objectives as the way to reach new collecting grounds rather than as a finish line: while '
-                'the areas you can already reach still hold unregistered species, collect there; once they do not, '
+                'the methods you can already execute still yield unregistered species, collect there; once they do not, '
                 'progress the story to open more, and never stop at the Champion while species remain. Compare '
                 'collection candidates using their supplied encounter probability, expected hunt steps, species '
                 'scarcity, travel cost, recent yield, ball quality and safe status support. A larger species list is '
@@ -797,7 +831,7 @@ class AutonomousStoryAgent(DualStoryAgent):
         return not (bordering - self.visited)
 
     def dex_complete(self, facts):
-        """Every species supported by grass, Safari, Surf, or rods is registered.
+        """Every species reachable under the Red solo/no-link policy is registered.
 
         Scoping this to already-explored areas made it vacuously true at spawn:
         the starting room has no encounter table, so "nothing unregistered here"
@@ -808,7 +842,8 @@ class AutonomousStoryAgent(DualStoryAgent):
         owned = set((facts.get('dex') or {}).get('owned_species', []))
         if not owned:
             return False
-        return set(self.collection_graph()) <= owned
+        plan = solo_plan(self.complete_collection_graph(), owned, infer_solo_choices(owned))
+        return set(plan['reachable_species']) <= owned
 
     def collection_graph(self):
         graph = getattr(self, '_collection_graph', None)
@@ -817,7 +852,240 @@ class AutonomousStoryAgent(DualStoryAgent):
             self._collection_graph = graph
         return graph
 
+    def complete_collection_graph(self):
+        graph = getattr(self, '_complete_collection_graph', None)
+        if graph is None:
+            graph = complete_acquisition_graph(
+                self.maps, (name for name in self.maps if fishing_spots(name)))
+            self._complete_collection_graph = graph
+        return graph
+
+    @staticmethod
+    def same_species(left, right):
+        return str(left).replace('_', '').upper() == str(right).replace('_', '').upper()
+
+    def acquisition_story_rules(self, species, method):
+        """Resolve one graph edge back to the exact executable scene rules."""
+        if method['method'] == 'npc_trade':
+            return list(self.index.by_effect.get(
+                ('flag', method['completion_flag'], True), []))
+        expected = 'battle' if method['method'] == 'static' else 'pokemon'
+        suffix = ':' + method.get('storyline', '')
+        return [rule for rule in self.index.rules
+                if rule.map == method.get('map')
+                and (not suffix or rule.storyline.endswith(suffix))
+                and rule.effect[0] == expected
+                and self.same_species(rule.effect[1], species)]
+
+    def add_evolution_item_source(self, groups, facts, item, species):
+        """Expose either a real pickup or shop purchase for a needed stone."""
+        key = item.replace('_', '').upper()
+        for effect in self.index.by_effect:
+            if effect[0] != 'item' or not effect[2] or effect[1].replace('_', '').upper() != key:
+                continue
+            rules = self.index.frontier(effect, facts)
+            if rules:
+                groups[f'evolution-item:{species}:{item}'] = {
+                    'target': effect, 'rules': rules,
+                    'objectives': [f'Obtain {item} to evolve a held Pokémon into {species}'],
+                    'context': {'acquisition_method': 'evolution', 'required_item': item,
+                                'evolution_target': species}}
+                return
+        canonical = next((name for name in ITEM_CATALOG if name.replace('_', '').upper() == key), item)
+        info = ITEM_CATALOG.get(canonical)
+        if not info or not info.get('price') or facts.get('money', 0) < info['price']:
+            return
+        for rule in self.index.rules:
+            if rule.effect[0] != 'shop' or rule.missing(facts):
+                continue
+            for stock_index, stock in enumerate(rule.effect[1]):
+                if stock.replace('_', '').upper() != key:
+                    continue
+                target = ('supply', canonical, 1)
+                groups[f'evolution-shop:{rule.id}:{species}'] = {
+                    'target': target, 'rules': [rule],
+                    'objectives': [f'Buy {canonical} to evolve a held Pokémon into {species}'],
+                    'context': {'stock_index': stock_index, 'item': info, 'quantity_to_buy': 1,
+                                'total_cost': info['price'], 'acquisition_method': 'evolution',
+                                'evolution_target': species}}
+
+    def add_nonwild_collection_groups(self, groups, facts):
+        """Add only currently executable non-wild edges from the solo DAG."""
+        if not self.collects_dex or facts.get('dex') is None:
+            return
+        owned = set((facts.get('dex') or {}).get('owned_species', []))
+        plan = solo_plan(self.complete_collection_graph(), owned, infer_solo_choices(owned))
+        reachable = set(plan['reachable_species'])
+        party = facts.get('party', [])
+        held = [*party, *facts.get('stored_pokemon', [])]
+        for species in sorted(reachable - owned):
+            for method in self.complete_collection_graph().get(species, []):
+                if method.get('external_trade') or method['method'] in (
+                        'unavailable', 'grass', 'water', 'safari', 'fishing', 'version_trade'):
+                    continue
+                group = method.get('exclusive_group')
+                if group and plan['choices'].get(group) != method.get('choice'):
+                    continue
+                source = method.get('from_species')
+                source_party = [i for i, mon in enumerate(party)
+                                if source and self.same_species(mon.get('species'), source)]
+                source_held = any(source and self.same_species(mon.get('species'), source)
+                                  for mon in held)
+                context = {'purpose': f'Register {species} through a deterministic non-wild source',
+                           'species': species, 'acquisition_method': method['method'], **method}
+                rules = []
+                if method['method'] == 'evolution':
+                    if not source_held:
+                        continue
+                    if not source_party:
+                        self.add_storage_retrieval(groups, facts, source, species)
+                        continue
+                    if method['trigger'] == 'item':
+                        item = method['item']
+                        if not facts['bag'].get(item.replace('_', '').upper(), 0):
+                            self.add_evolution_item_source(groups, facts, item, species)
+                            continue
+                    context['party_indices'] = source_party
+                    rules = [Rule(f'evolve:{source}:{species}', facts['map'],
+                                  'skill:evolve', [], [], [],
+                                  ('register', species, True), [])]
+                elif method['method'] == 'npc_trade':
+                    if (not source_held or len(party) < 2
+                            or facts['flags'].get(method['completion_flag'])):
+                        continue
+                    if not source_party:
+                        self.add_storage_retrieval(groups, facts, source, species)
+                        continue
+                    rules = self.acquisition_story_rules(species, method)
+                elif method['method'] == 'prize':
+                    if facts.get('coins', 0) < method['coins']:
+                        self.add_coin_source(groups, facts, method['coins'], species)
+                        continue
+                    if len(party) >= 6:
+                        self.add_party_space_group(groups, facts, species)
+                        continue
+                    rules = self.acquisition_story_rules(species, method)
+                else:
+                    if method['method'] == 'static' and not self.balls_held(facts):
+                        continue
+                    if method['method'] == 'gift' and len(party) >= 6:
+                        self.add_party_space_group(groups, facts, species)
+                        continue
+                    rules = self.acquisition_story_rules(species, method)
+                rules = [rule for rule in rules if not rule.missing(facts)]
+                if not rules:
+                    continue
+                key = f"register:{species}:{method['method']}:{method.get('map', source or '')}"
+                groups[key] = {'target': ('register', species, True), 'rules': rules,
+                               'objectives': [f'Register {species} in the solo Pokédex'],
+                               'context': context}
+
+    def add_storage_retrieval(self, groups, facts, source, target):
+        stored = next((mon for mon in facts.get('stored_pokemon', [])
+                       if self.same_species(mon.get('species'), source)), None)
+        if not stored:
+            return
+        rules = [rule for rule in self.index.by_effect.get(('pc', 'storage', True), [])
+                 if not rule.missing(facts)]
+        if not rules:
+            return
+        key = f'retrieve:{source}'
+        entry = groups.setdefault(key, {
+            'target': ('pokemon', source, None), 'rules': rules,
+            'objectives': [],
+            'context': {'storage_retrieval': True, 'stored_pokemon': stored,
+                        'required_for': []}})
+        objective = f'Withdraw {source} from storage so it can produce {target}'
+        if objective not in entry['objectives']:
+            entry['objectives'].append(objective)
+        if target not in entry['context']['required_for']:
+            entry['context']['required_for'].append(target)
+
+    def add_box_capacity_group(self, groups, facts):
+        counts = facts.get('box_counts', [])
+        current = facts.get('current_box_index', 0)
+        if not counts or counts[current] < 20:
+            return False
+        available = [index for index, count in enumerate(counts) if count < 20]
+        rules = [rule for rule in self.index.by_effect.get(('pc', 'storage', True), [])
+                 if not rule.missing(facts)]
+        if available and rules:
+            target = ('box_space', 'storage', True)
+            groups['storage:change_box'] = {
+                'target': target, 'rules': rules,
+                'objectives': ['Change to a PC box with room before catching more Pokémon'],
+                'context': {'storage_change_box': True, 'available_boxes': available,
+                            'box_counts': counts}}
+        return True
+
+    def add_party_space_group(self, groups, facts, species):
+        counts = facts.get('box_counts', [])
+        current = facts.get('current_box_index', 0)
+        if counts and counts[current] >= 20:
+            self.add_box_capacity_group(groups, facts)
+            return
+        rules = [rule for rule in self.index.by_effect.get(('pc', 'storage', True), [])
+                 if not rule.missing(facts)]
+        if not rules:
+            return
+        entry = groups.setdefault('storage:party_space', {
+            'target': ('party_space', 'party', True), 'rules': rules,
+            'objectives': [], 'context': {'storage_party_space': True, 'required_for': []}})
+        objective = f'Deposit one party member so the {species} acquisition can succeed'
+        if objective not in entry['objectives']:
+            entry['objectives'].append(objective)
+        if species not in entry['context']['required_for']:
+            entry['context']['required_for'].append(species)
+
+    def add_coin_source(self, groups, facts, required, species):
+        if not facts['bag'].get('COINCASE', 0):
+            for effect in self.index.by_effect:
+                if effect[0] != 'item' or not effect[2] or effect[1].replace('_', '').upper() != 'COINCASE':
+                    continue
+                rules = self.index.frontier(effect, facts)
+                if rules:
+                    groups['coins:case'] = {
+                        'target': effect, 'rules': rules,
+                        'objectives': [f'Obtain the Coin Case required to redeem {species}'],
+                        'context': {'acquisition_method': 'prize', 'required_coins': required,
+                                    'prize_species': species}}
+                    return
+        # The clerk is the deterministic, bounded source: ¥1000 -> 50 coins.
+        rules = [rule for rule in self.index.rules
+                 if rule.map == 'GameCorner' and rule.effect == ('coins', 50, True)
+                 and rule.storyline.endswith(':talkClerk1') and not rule.missing(facts)]
+        purchases = (required - facts.get('coins', 0) + 49) // 50
+        if not rules or facts.get('money', 0) < purchases * 1000:
+            return
+        target = ('coin_supply', 'coins', required)
+        key = f'coins:{required}'
+        entry = groups.setdefault(key, {'target': target, 'rules': rules, 'objectives': [],
+            'context': {'coin_purchase': True, 'required_coins': required,
+                        'current_coins': facts.get('coins', 0), 'purchases': purchases,
+                        'money_cost': purchases * 1000, 'prize_species': []}})
+        objective = f'Buy enough Game Corner coins to redeem {species}'
+        if objective not in entry['objectives']:
+            entry['objectives'].append(objective)
+        if species not in entry['context']['prize_species']:
+            entry['context']['prize_species'].append(species)
+
     def settle_special(self, state):
+        if (state.get('choice') and self.active
+                and self.active.get('context', {}).get('coin_purchase')):
+            menu = state['choice']
+            yes = next((index for index, label in enumerate(menu['options'])
+                        if str(label).lower() in ('yes', '是')), 0)
+            self.tap('a' if menu['selected'] == yes else 'down')
+            return True
+        if state.get('evolution_phase'):
+            # Evolution is the only cutscene where B can destroy progress.
+            # A advances its optional intro text and is harmless during the
+            # timed morph phases; never route this through skip_dialogue().
+            self.tap('a')
+            return True
+        if state.get('npc_trade_phase'):
+            self.client.step(10)
+            return True
         if state.get('shop_phase') and self.active and self.active['target'][0] == 'sale':
             item = self.active['target'][1]
             money = state['money']
@@ -1612,7 +1880,9 @@ class AutonomousStoryAgent(DualStoryAgent):
             balls = self.balls_held(facts)
             owned = set((facts.get('dex') or {}).get('owned_species', []))
             resources = self.collection_resources(facts)
-            for key, area in self.find_catch_areas(facts).items():
+            box_full = self.add_box_capacity_group(groups, facts)
+            catch_areas = {} if box_full and len(facts['party']) >= 6 else self.find_catch_areas(facts)
+            for key, area in catch_areas.items():
                 # Legacy/mocked tests and trace adapters may still provide the
                 # former {map: {species, spots, ...}} shape.
                 name = area.get('map', key)
@@ -1650,6 +1920,7 @@ class AutonomousStoryAgent(DualStoryAgent):
                                 'encounters': (((self.maps[name].get('wild') or {}).get('red') or {})
                                                .get('water' if method == 'water' else 'grass'))},
                 })
+            self.add_nonwild_collection_groups(groups, facts)
         if self.maximizes_coverage:
             self.add_coverage_groups(groups, facts)
         # Keep the blocked goals until their entrances have been considered.
@@ -1823,6 +2094,155 @@ class AutonomousStoryAgent(DualStoryAgent):
         return options
 
     def action_candidates(self, facts):
+        if self.active.get('context', {}).get('coin_purchase'):
+            candidates, bindings = {}, {}
+            npcs = self.client.cmd(cmd='get_npcs')
+            for rule in self.active['rules']:
+                if facts['map'] != rule.map:
+                    operation = f'travel_to:{rule.map}'
+                    key = f'action:{len(candidates)}'
+                    candidates[key] = json.dumps({'operation': operation,
+                        'purpose': 'Reach the Game Corner coin counter'})
+                    bindings[key] = operation, rule
+                    continue
+                ids = {int(trigger.split(':')[1]) for trigger in rule.triggers
+                       if trigger.startswith('npc:')}
+                for npc in npcs:
+                    if npc.get('visible', True) and npc.get('text_id') in ids:
+                        required = self.active['target'][2]
+                        approaches = list(counter_approaches(rule.map, npc))
+                        if approaches:
+                            for (x, y), direction in approaches:
+                                operation = (f'buy_coins:{required},{npc["npc_index"]},'
+                                             f'{x},{y},{direction}')
+                                key = f'action:{len(candidates)}'
+                                candidates[key] = json.dumps({'operation': operation,
+                                    'counter_approach': [x, y, direction], **self.active['context']})
+                                bindings[key] = operation, rule
+                        else:
+                            operation = f'buy_coins:{required},{npc["npc_index"]}'
+                            key = f'action:{len(candidates)}'
+                            candidates[key] = json.dumps({'operation': operation,
+                                **self.active['context']})
+                            bindings[key] = operation, rule
+            return candidates, bindings
+        if self.active.get('context', {}).get('storage_party_space'):
+            candidates, bindings = {}, {}
+            for rule in self.active['rules']:
+                if facts['map'] != rule.map:
+                    operation = f'travel_to:{rule.map}'
+                    key = f'action:{len(candidates)}'
+                    candidates[key] = json.dumps({'operation': operation,
+                        'purpose': 'Reach a PC to make one free party slot'})
+                    bindings[key] = operation, rule
+                    continue
+                sign_ids = {int(trigger.split(':')[1]) for trigger in rule.triggers
+                            if trigger.startswith('sign:')}
+                signs = json.loads((self.index.maps_dir / rule.map / 'map.json').read_text()).get('signs', [])
+                for sign_index, sign in enumerate(signs):
+                    if sign.get('textId') not in sign_ids:
+                        continue
+                    for deposit, mon in enumerate(facts['party']):
+                        operation = f'deposit_pc:{deposit},{sign_index}'
+                        key = f'action:{len(candidates)}'
+                        candidates[key] = json.dumps({'operation': operation,
+                            'deposit': mon, 'required_for': self.active['context']['required_for']})
+                        bindings[key] = operation, rule
+            return candidates, bindings
+        if self.active.get('context', {}).get('storage_change_box'):
+            candidates, bindings = {}, {}
+            for rule in self.active['rules']:
+                if facts['map'] != rule.map:
+                    operation = f'travel_to:{rule.map}'
+                    key = f'action:{len(candidates)}'
+                    candidates[key] = json.dumps({'operation': operation,
+                        'purpose': 'Reach a PC to select a box with free capacity'})
+                    bindings[key] = operation, rule
+                    continue
+                sign_ids = {int(trigger.split(':')[1]) for trigger in rule.triggers
+                            if trigger.startswith('sign:')}
+                signs = json.loads((self.index.maps_dir / rule.map / 'map.json').read_text()).get('signs', [])
+                for sign_index, sign in enumerate(signs):
+                    if sign.get('textId') not in sign_ids:
+                        continue
+                    for box_index in self.active['context']['available_boxes']:
+                        operation = f'change_pc_box:{box_index},{sign_index}'
+                        key = f'action:{len(candidates)}'
+                        candidates[key] = json.dumps({'operation': operation,
+                            'new_box': box_index, 'box_counts': facts.get('box_counts', [])})
+                        bindings[key] = operation, rule
+            return candidates, bindings
+        if self.active.get('context', {}).get('storage_retrieval'):
+            candidates, bindings = {}, {}
+            stored = self.active['context']['stored_pokemon']
+            for rule in self.active['rules']:
+                if facts['map'] != rule.map:
+                    operation = f'travel_to:{rule.map}'
+                    key = f'action:{len(candidates)}'
+                    candidates[key] = json.dumps({
+                        'operation': operation,
+                        'purpose': f'Reach a PC to withdraw {stored["species"]}',
+                        'storage': stored})
+                    bindings[key] = operation, rule
+                    continue
+                sign_ids = {int(trigger.split(':')[1]) for trigger in rule.triggers
+                            if trigger.startswith('sign:')}
+                signs = json.loads((self.index.maps_dir / rule.map / 'map.json').read_text()).get('signs', [])
+                for sign_index, sign in enumerate(signs):
+                    if sign.get('textId') not in sign_ids:
+                        continue
+                    deposits = [-1] if len(facts['party']) < 6 else list(range(len(facts['party'])))
+                    for deposit in deposits:
+                        operation = (f'retrieve_pc:{stored["box"]},{stored["index"]},'
+                                     f'{deposit},{sign_index}')
+                        key = f'action:{len(candidates)}'
+                        description = {
+                            'operation': operation, 'withdraw': stored,
+                            'purpose': 'Use the real PC menus to put the required stored Pokémon into the party'}
+                        if deposit >= 0:
+                            description['deposit_first'] = facts['party'][deposit]
+                        candidates[key] = json.dumps(description)
+                        bindings[key] = operation, rule
+            return candidates, bindings
+        if (self.active['target'][0] == 'register'
+                and self.active.get('context', {}).get('acquisition_method') == 'evolution'):
+            context = self.active['context']
+            source = context['from_species']
+            indices = [i for i, mon in enumerate(facts['party'])
+                       if self.same_species(mon['species'], source)]
+            candidates, bindings = {}, {}
+            if not indices:
+                return candidates, bindings
+            rule = self.active['rules'][0]
+            index = indices[0]
+            if context['trigger'] == 'item':
+                item = context['item']
+                operation = f'use_item:{item},{index}'
+                candidates['action:0'] = json.dumps({
+                    'operation': operation, 'pokemon': facts['party'][index],
+                    'evolves_into': context['species'], 'item': item})
+                bindings['action:0'] = operation, rule
+                return candidates, bindings
+            if index:
+                operation = f'lead_with:{source}'
+                candidates['action:0'] = json.dumps({
+                    'operation': operation,
+                    'purpose': f'Move {source} to the lead slot so battle experience can evolve it',
+                    'evolves_into': context['species']})
+                bindings['action:0'] = operation, rule
+                return candidates, bindings
+            for name in self.find_training_sites(facts):
+                x, y = self.training_sites[name]
+                operation = f'train_encounter:{name},{x},{y}'
+                key = f'action:{len(candidates)}'
+                candidates[key] = json.dumps({
+                    'operation': operation,
+                    'purpose': f'Gain a level with {source} to evolve it into {context["species"]}',
+                    'required_level': context['level'],
+                    'current_level': facts['party'][0]['level'],
+                    'navigation': getattr(self, 'training_navigation', {}).get(name)})
+                bindings[key] = operation, rule
+            return candidates, bindings
         if self.active['target'][0] in ('health', 'pp_reserve'):
             names = {name.replace('_', '').upper(): name for name in MEDICINES}
             bag = {names[key]: qty for key, qty in facts['bag'].items() if key in names}
@@ -2413,7 +2833,223 @@ class AutonomousStoryAgent(DualStoryAgent):
             if avoid_tiles or avoid_maps:
                 self.game.script_navigation_barriers = previous
 
+    def retrieve_from_pc(self, box_index, mon_index, deposit_index, sign_index):
+        """Drive Bill's PC with observed cursors; all mutations come from input."""
+        self.client.interact_with(f'sign:{sign_index}')
+
+        def move_cursor(current, target, count):
+            down = (target - current) % count
+            up = (current - target) % count
+            self.tap('down' if down <= up else 'up')
+
+        source = self.active['target'][1]
+        for _ in range(500):
+            self.check_budget()
+            state = self.client.state()
+            pc = state.get('pc_state')
+            in_party = any(self.same_species(mon.get('species'), source)
+                           for mon in state.get('party', []))
+            if pc is None:
+                if in_party and state.get('screen') == 'overworld':
+                    return {'result': 'withdrew_pokemon', 'species': source,
+                            'box': box_index, 'deposited_party_index': deposit_index}
+                self.client.step(4)
+                continue
+            phase = pc['phase']
+            if phase == 'Message':
+                self.tap('a')
+            elif phase == 'MainMenu':
+                if in_party:
+                    self.tap('b')
+                elif pc['main_cursor'] == 0:
+                    self.tap('a')
+                else:
+                    move_cursor(pc['main_cursor'], 0, len(pc['main_items']))
+            elif phase == 'BillsMenu':
+                if in_party:
+                    self.tap('b')
+                    continue
+                if state.get('current_box_index', 0) != box_index:
+                    wanted = 3  # CHANGE BOX
+                elif len(state.get('party', [])) >= 6:
+                    wanted = 1  # DEPOSIT
+                else:
+                    wanted = 0  # WITHDRAW
+                if pc['bills_cursor'] == wanted:
+                    self.tap('a')
+                else:
+                    move_cursor(pc['bills_cursor'], wanted, 5)
+            elif phase == 'ChangeBoxConfirm':
+                self.tap('a' if pc['yes_selected'] else 'up')
+            elif phase == 'BoxList':
+                if pc['box_cursor'] == box_index:
+                    self.tap('a')
+                else:
+                    move_cursor(pc['box_cursor'], box_index, 12)
+            elif phase == 'MonList':
+                depositing = pc['mon_mode'] == 'Deposit'
+                wanted = deposit_index if depositing else mon_index
+                if pc['mon_cursor'] == wanted:
+                    self.tap('a')
+                else:
+                    count = len(state.get('party', [])) if depositing else max(mon_index + 1, 20)
+                    move_cursor(pc['mon_cursor'], wanted, count)
+            elif phase == 'MonAction':
+                if pc['mon_action_cursor'] == 0:
+                    self.tap('a')
+                else:
+                    self.tap('up')
+            else:
+                raise StoryStopped(f'unsupported_pc_phase:{phase}')
+        raise StoryStopped('pc_retrieval_did_not_finish')
+
+    def change_pc_box(self, box_index, sign_index):
+        """Select a non-full box through the same observed PC UI."""
+        self.client.interact_with(f'sign:{sign_index}')
+        for _ in range(300):
+            self.check_budget()
+            state = self.client.state()
+            pc = state.get('pc_state')
+            changed = state.get('current_box_index') == box_index
+            if pc is None:
+                if changed and state.get('screen') == 'overworld':
+                    return {'result': 'changed_box', 'box': box_index}
+                self.client.step(4)
+                continue
+            phase = pc['phase']
+            if phase == 'Message':
+                self.tap('a')
+            elif phase == 'MainMenu':
+                if changed:
+                    self.tap('b')
+                elif pc['main_cursor'] == 0:
+                    self.tap('a')
+                else:
+                    self.tap('up')
+            elif phase == 'BillsMenu':
+                if changed:
+                    self.tap('b')
+                elif pc['bills_cursor'] == 3:
+                    self.tap('a')
+                else:
+                    self.tap('down')
+            elif phase == 'ChangeBoxConfirm':
+                self.tap('a' if pc['yes_selected'] else 'up')
+            elif phase == 'BoxList':
+                if pc['box_cursor'] == box_index:
+                    self.tap('a')
+                else:
+                    self.tap('down')
+            else:
+                raise StoryStopped(f'unsupported_pc_change_phase:{phase}')
+        raise StoryStopped('pc_box_change_did_not_finish')
+
+    def deposit_to_pc(self, party_index, sign_index):
+        self.client.interact_with(f'sign:{sign_index}')
+        original_count = len(self.client.state().get('party', []))
+        for _ in range(300):
+            self.check_budget()
+            state = self.client.state()
+            pc = state.get('pc_state')
+            deposited = len(state.get('party', [])) < original_count
+            if pc is None:
+                if deposited and state.get('screen') == 'overworld':
+                    return {'result': 'deposited_pokemon', 'party_index': party_index}
+                self.client.step(4)
+                continue
+            phase = pc['phase']
+            if phase == 'Message':
+                self.tap('a')
+            elif phase == 'MainMenu':
+                if deposited:
+                    self.tap('b')
+                elif pc['main_cursor'] == 0:
+                    self.tap('a')
+                else:
+                    self.tap('up')
+            elif phase == 'BillsMenu':
+                if deposited:
+                    self.tap('b')
+                elif pc['bills_cursor'] == 1:
+                    self.tap('a')
+                else:
+                    self.tap('down')
+            elif phase == 'MonList':
+                if pc['mon_cursor'] == party_index:
+                    self.tap('a')
+                else:
+                    self.tap('down')
+            elif phase == 'MonAction':
+                self.tap('a' if pc['mon_action_cursor'] == 0 else 'up')
+            else:
+                raise StoryStopped(f'unsupported_pc_deposit_phase:{phase}')
+        raise StoryStopped('pc_deposit_did_not_finish')
+
     def execute(self, operation, rule):
+        if operation.startswith('buy_coins:'):
+            if self.actions >= self.max_actions:
+                raise StoryStopped('action_budget')
+            self.actions += 1
+            values = operation.split(':', 1)[1].split(',')
+            required, npc_index = (int(value) for value in values[:2])
+            counter = ((int(values[2]), int(values[3])), values[4]) if len(values) == 5 else None
+            purchases = 0
+            while self.client.state().get('coins', 0) < required:
+                self.check_budget()
+                npc = next((row for row in self.client.cmd(cmd='get_npcs')
+                            if row['npc_index'] == npc_index and row.get('visible', True)), None)
+                if npc is None:
+                    raise StoryStopped('coin_clerk_not_visible')
+                before = self.client.state().get('coins', 0)
+                if counter:
+                    self.client.move_to(*counter[0])
+                    self.game.face(counter[1])
+                else:
+                    self.game.approach_object(npc['x'], npc['y'], rule.map)
+                self.tap('a')
+                self.settle(self.active['target'], rule)
+                after = self.client.state().get('coins', 0)
+                if after <= before:
+                    raise StoryStopped('coin_purchase_did_not_increase_balance')
+                purchases += 1
+            result = {'result': 'bought_coins', 'coins': self.client.state().get('coins', 0),
+                      'purchases': purchases}
+            self.record('operation', operation=operation, result=result, script=rule.storyline)
+            return result
+        if operation.startswith('deposit_pc:'):
+            if self.actions >= self.max_actions:
+                raise StoryStopped('action_budget')
+            self.actions += 1
+            party_index, sign_index = (int(value) for value in operation.split(':', 1)[1].split(','))
+            result = self.deposit_to_pc(party_index, sign_index)
+            self.record('operation', operation=operation, result=result, script=rule.storyline)
+            return result
+        if operation.startswith('change_pc_box:'):
+            if self.actions >= self.max_actions:
+                raise StoryStopped('action_budget')
+            self.actions += 1
+            box_index, sign_index = (int(value) for value in operation.split(':', 1)[1].split(','))
+            result = self.change_pc_box(box_index, sign_index)
+            self.record('operation', operation=operation, result=result, script=rule.storyline)
+            return result
+        if operation.startswith('retrieve_pc:'):
+            if self.actions >= self.max_actions:
+                raise StoryStopped('action_budget')
+            self.actions += 1
+            box_index, mon_index, deposit_index, sign_index = (
+                int(value) for value in operation.split(':', 1)[1].split(','))
+            result = self.retrieve_from_pc(box_index, mon_index, deposit_index, sign_index)
+            self.record('operation', operation=operation, result=result, script=rule.storyline)
+            return result
+        if operation.startswith('lead_with:'):
+            if self.actions >= self.max_actions:
+                raise StoryStopped('action_budget')
+            self.actions += 1
+            species = operation.split(':', 1)[1]
+            data.lead_with(self.game, species)
+            result = {'result': 'party_reordered', 'leader': species}
+            self.record('operation', operation=operation, result=result, script=rule.storyline)
+            return result
         if operation.startswith('teach_tm:'):
             if self.actions >= self.max_actions:
                 raise StoryStopped('action_budget')
@@ -2429,6 +3065,8 @@ class AutonomousStoryAgent(DualStoryAgent):
             self.actions += 1
             item, index = operation.split(':', 1)[1].split(',')
             self.game.use_consumable(item, int(index))
+            if self.active['target'][0] == 'register':
+                self.settle(self.active['target'], rule)
             result = {'result': 'used_item', 'item': item, 'party_index': int(index)}
             self.record('operation', operation=operation, result=result, script=rule.storyline)
             return result

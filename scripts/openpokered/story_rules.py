@@ -128,6 +128,8 @@ def evaluate(expr, facts):
         if name in ('hasMoney', 'hasCoins'):
             amount = facts.get('money' if name == 'hasMoney' else 'coins')
             return None if amount is None else amount >= args[0]
+        if name in ('getMoney', 'getCoins'):
+            return facts.get('money' if name == 'getMoney' else 'coins')
         if name == 'getPlayerX':
             return facts.get('x')
         if name == 'getPlayerY':
@@ -260,6 +262,10 @@ def compile_story(story):
             effect = ('heal', 'party', True)
         elif name == 'openShop' and values and isinstance(values[0], list):
             effect = ('shop', tuple(values[0]), True)
+        elif name == 'openPC':
+            effect = ('pc', 'storage', True)
+        elif name == 'giveCoins' and values and isinstance(values[0], (int, float)):
+            effect = ('coins', int(values[0]), True)
         elif (name == 'warpTo' and len(values) == 3 and isinstance(values[0], str)
               and all(isinstance(v, (int, float)) for v in values[1:])):
             effect = ('transport', (values[0], int(values[1]), int(values[2])), True)
@@ -485,6 +491,17 @@ class StoryIndex:
             owned = set((facts.get('dex') or {}).get('owned_species', []))
             species = self.wild_species(str(name))
             return (bool(species) and species <= owned) == wanted
+        if kind == 'register':
+            owned = set((facts.get('dex') or {}).get('owned_species', []))
+            return (str(name) in owned) == wanted
+        if kind == 'box_space':
+            counts = facts.get('box_counts', [])
+            current = facts.get('current_box_index', 0)
+            return (bool(counts) and counts[current] < 20) == wanted
+        if kind == 'party_space':
+            return (len(facts.get('party', [])) < 6) == wanted
+        if kind == 'coin_supply':
+            return facts.get('coins', 0) >= wanted
         if kind == 'explore':
             # Reaching the map is the whole goal; the trigger tile only says
             # which part of it to arrive in.
