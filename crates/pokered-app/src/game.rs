@@ -6113,6 +6113,7 @@ impl PokemonGame {
         let battle_live = self.battle.battle_state.as_ref().map(|bs| {
             let player = bs.player.active_mon();
             let enemy = bs.enemy.active_mon();
+            let safari = self.battle.safari.as_ref();
             serde_json::json!({
                 "is_ghost": self.battle.is_ghost,
                 // A ball may only be thrown in a wild (or Safari) battle, and
@@ -6121,6 +6122,14 @@ impl PokemonGame {
                 // all three flags before it can plan a throw.
                 "is_wild": self.battle.is_wild,
                 "is_safari": self.battle.is_safari,
+                "safari": safari.map(|state| serde_json::json!({
+                    "base_catch_rate": state.base_catch_rate,
+                    "catch_rate": state.catch_rate,
+                    "bait_factor": state.bait_factor,
+                    "escape_factor": state.escape_factor,
+                    "balls": state.balls,
+                    "enemy_speed": enemy.speed,
+                })),
                 "player_party": bs.player.party.iter().map(|mon| serde_json::json!({
                     "species": format!("{:?}", mon.species), "level": mon.level,
                     "hp": mon.hp, "max_hp": mon.max_hp,
@@ -6178,6 +6187,15 @@ impl PokemonGame {
                 .collect::<Vec<_>>(),
             "dialogue": dialogue,
             "dialogue_state": dialogue_state,
+            // Fishing remains an input-locked overworld presentation between
+            // its two dialogue boxes.  Agents must not mistake that gap for
+            // returned player control and open another menu mid-cast.
+            "fishing_active": self.overworld.fishing_anim.is_some(),
+            "safari_game": {
+                "active": self.overworld.is_safari_game_active(),
+                "steps_remaining": self.overworld.safari_steps_remaining(),
+                "balls_remaining": self.overworld.safari_balls_remaining(),
+            },
             "choice": choice,
             // Link (Cable Club) session and in-room flow phase. The flow's
             // modal boxes (Just a moment. / prompts / trade select) are not

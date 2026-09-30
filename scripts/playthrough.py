@@ -1488,9 +1488,15 @@ class Game:
                 getattr(self, 'learn_move', lambda state: learn_move(self, state))(s)
             elif ph == "PlayerMenu":
                 if s["map_name"].startswith("SafariZone"):
-                    # Safari's menu has RUN at the same bottom-right corner.
-                    self.tap("down", 8)
-                    self.tap("right", 8)
+                    # Safari's 2x2 menu is BALL / BAIT / ROCK / RUN.  Generic
+                    # playthroughs retain the old safe RUN behavior; a smart
+                    # collector can choose an observed Safari action.
+                    action = getattr(self, "safari_battle_action", lambda _state: "run")(s)
+                    for button in {
+                        "ball": ("up", "left"), "bait": ("up", "right"),
+                        "rock": ("down", "left"), "run": ("down", "right"),
+                    }[action]:
+                        self.tap(button, 8)
                     self.tap("a", 8)
                     continue
                 if fight and getattr(self, "smart_moves", False):

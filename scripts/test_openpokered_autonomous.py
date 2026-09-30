@@ -658,7 +658,7 @@ class AutonomousTests(unittest.TestCase):
         self.assertIn('Route4', expanded)
         self.assertEqual(expanded['Route4']['species'], ['Ekans'])
 
-    def test_forest_interiors_are_huntable_and_safari_is_not_offered(self):
+    def test_forest_and_safari_interiors_are_both_huntable(self):
         import playthrough as pt
         from openpokered.story_rules import MAPS_DIR
         agent = self.ranked_catch_agent()
@@ -672,7 +672,9 @@ class AutonomousTests(unittest.TestCase):
         self.assertIn('ViridianForest', areas)
         self.assertEqual(areas['ViridianForest']['species'],
                          ['Caterpie', 'Kakuna', 'Metapod', 'Pikachu', 'Weedle'])
-        self.assertNotIn('SafariZoneCenter', areas)
+        safari = areas['safari:SafariZoneCenter']
+        self.assertEqual(safari['method'], 'safari')
+        self.assertIn('Scyther', safari['species'])
 
     def test_catch_ranking_prefers_more_unregistered_species_at_equal_distance(self):
         import playthrough as pt
@@ -713,10 +715,30 @@ class AutonomousTests(unittest.TestCase):
         value = encounter_value(table, {'Common'})
         target = value['targets'][0]
         self.assertEqual(target['species'], 'Pidgey')
-        self.assertEqual(target['encounter_share_pct'], 1.6)  # slot 9 is 4/256
+        self.assertEqual(target['encounter_share_pct'], 1.2)  # threshold 253..255 = 3/256
         self.assertEqual(target['levels'], [12, 12])
-        self.assertEqual(value['new_species_per_step_pct'], 0.15)
-        self.assertEqual(value['expected_steps_to_any_new_species'], 655.4)
+        self.assertEqual(value['new_species_per_step_pct'], 0.11)
+        self.assertEqual(value['expected_steps_to_any_new_species'], 873.8)
+
+    def test_unified_red_acquisition_graph_contains_86_wild_species(self):
+        from openpokered.collection_planner import acquisition_graph, SUPER_ROD_MAP_GROUP
+        from openpokered.story_rules import MAPS_DIR
+        maps = {p.parent.name: json.loads(p.read_text()) for p in MAPS_DIR.glob('*/map.json')}
+        graph = acquisition_graph(maps, SUPER_ROD_MAP_GROUP)
+        self.assertEqual(len(graph), 86)
+        self.assertEqual({row['method'] for row in graph['Scyther']}, {'safari'})
+        self.assertTrue(any(row['method'] == 'water' for row in graph['Tentacool']))
+        self.assertTrue(any(row.get('rod') == 'SuperRod' for row in graph['Dratini']))
+        self.assertEqual({row['method'] for row in graph['Magikarp']}, {'fishing'})
+
+    def test_fishing_profiles_include_no_bite_and_uniform_group_odds(self):
+        from openpokered.collection_planner import fishing_profile
+        old = fishing_profile('OldRod', 'PalletTown')
+        self.assertEqual((old['bite_probability_pct'], old['targets'][0]['per_attempt_pct']),
+                         (100.0, 100.0))
+        super_rod = fishing_profile('SuperRod', 'SafariZoneCenter')
+        self.assertEqual(super_rod['bite_probability_pct'], 50.0)
+        self.assertEqual({row['per_attempt_pct'] for row in super_rod['targets']}, {12.5})
 
     def test_collection_resources_expose_ball_quality_and_safe_status_support(self):
         agent = AutonomousStoryAgent.__new__(AutonomousStoryAgent)
@@ -890,7 +912,7 @@ class AutonomousTests(unittest.TestCase):
                          ['Rattata', 'Zubat'])
         self.assertEqual(panel({'Pidgey'})['unregistered_by_area'], {'Route2': 2, 'Route3': 2})
         self.assertEqual(panel({'Pidgey'})['expected_yield_by_area']['Route2']
-                         ['unregistered_encounter_share_pct'], 55.5)
+                     ['unregistered_encounter_share_pct'], 55.1)
         self.assertEqual(panel({'Pidgey'})['balls_held'], 3)
 
     def test_map_hops_counts_map_crossings_on_real_map_data(self):
@@ -1074,18 +1096,25 @@ class AutonomousTests(unittest.TestCase):
         self.assertEqual(stocked['context']['balls_held'], 7)
         self.assertIn('7 carried', stocked['context']['prerequisite'])
 
-    def test_dex_completion_requires_every_grass_table_and_is_never_vacuous(self):
+    def test_dex_completion_requires_every_supported_acquisition_and_is_never_vacuous(self):
         from openpokered.story_rules import StoryIndex
         agent = AutonomousStoryAgent.__new__(AutonomousStoryAgent)
         agent.index = StoryIndex.__new__(StoryIndex)
         agent.index._wild_cache = {'Route1': {'Pidgey', 'Rattata'}, 'ViridianCity': set()}
         agent.maps = {'Route1': {}, 'ViridianCity': {}}
+        agent._collection_graph = {
+            'Pidgey': [{'method': 'grass', 'map': 'Route1'}],
+            'Rattata': [{'method': 'grass', 'map': 'Route1'}],
+            'Magikarp': [{'method': 'fishing', 'map': 'ViridianCity', 'rod': 'OldRod'}],
+        }
         self.assertFalse(agent.dex_complete({'dex': {'owned_species': ['Pidgey']}}))
-        self.assertTrue(agent.dex_complete({'dex': {'owned_species': ['Rattata', 'Pidgey']}}))
+        self.assertFalse(agent.dex_complete({'dex': {'owned_species': ['Rattata', 'Pidgey']}}))
+        self.assertTrue(agent.dex_complete({'dex': {'owned_species': ['Rattata', 'Pidgey', 'Magikarp']}}))
         # The spawn room has no encounter table. "Nothing unregistered here"
         # must not read as a finished collection before the run has moved.
         agent.index._wild_cache = {'RedsHouse2F': set(), 'Route1': {'Pidgey'}}
         agent.maps = {'RedsHouse2F': {}, 'Route1': {}}
+        agent._collection_graph = {'Pidgey': [{'method': 'grass', 'map': 'Route1'}]}
         self.assertFalse(agent.dex_complete({'dex': {'owned_species': []}}))
         agent.index = None  # No planning index yet: nothing is proven registered.
         self.assertFalse(agent.dex_complete({'dex': {'owned_species': ['Pidgey']}}))
@@ -1544,9 +1573,11 @@ class AutonomousTests(unittest.TestCase):
         sleeping = capture_probability('PokeBall', {**enemy, 'status': 'Sleep'})
         weakened = capture_probability('PokeBall', {**enemy, 'hp': 1})
         ultra = capture_probability('UltraBall', enemy)
+        safari = capture_probability('SafariBall', enemy)
         self.assertLess(full, sleeping)
         self.assertLess(full, weakened)
         self.assertGreater(ultra, full)
+        self.assertEqual(safari, ultra)
         self.assertEqual(capture_probability('MasterBall', enemy), 1.0)
 
     def test_collecting_frames_the_ball_choice_around_the_goal(self):
@@ -1576,6 +1607,29 @@ class AutonomousTests(unittest.TestCase):
             # on, so the plan stays None and the judge is not even consulted.
             self.assertIsNone(JevGame.battle_recovery_plan(agent, state))
             self.assertFalse(agent.judgments.choose.called)
+
+    def test_safari_action_exposes_capture_flee_and_ball_factors(self):
+        from openpokered.playthrough_judgments import safari_action_options, JevGame
+        state = self.battle_state(is_safari=True)
+        state['battle_live']['safari'] = {
+            'base_catch_rate': 45, 'catch_rate': 45, 'bait_factor': 0,
+            'escape_factor': 0, 'balls': 9, 'enemy_speed': 60,
+        }
+        options = safari_action_options(state['battle_live'], state['pokedex']['owned_species'])
+        self.assertEqual(set(options), {'ball', 'bait', 'rock', 'run'})
+        self.assertGreater(options['rock']['projected_catch_probability'],
+                           options['ball']['capture_probability_now'])
+        self.assertEqual(options['ball']['capture_probability_now'], 0.1023)
+        self.assertEqual(options['rock']['duration_turns_uniform'], [1, 5])
+        self.assertGreater(options['rock']['projected_flee_probability_next_turn'],
+                           options['ball']['flee_probability_if_not_caught'])
+        self.assertLess(options['bait']['projected_flee_probability_next_turn'],
+                        options['ball']['flee_probability_if_not_caught'])
+        game = JevGame.__new__(JevGame)
+        game.judgments = Mock()
+        game.judgments.choose.return_value = 'ball'
+        self.assertEqual(game.safari_battle_action(state), 'ball')
+        self.assertIn('capture probability', game.judgments.choose.call_args.args[3])
 
     def test_native_door_interaction_reaches_the_corridor_side(self):
         import playthrough as pt

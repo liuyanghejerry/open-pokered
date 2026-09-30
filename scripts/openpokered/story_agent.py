@@ -332,7 +332,8 @@ class DualStoryAgent:
                 self.tap('b')
                 continue
             obs = self.client.observe()
-            if obs['mode'] == 'overworld' and not state.get('script_running') and not effect:
+            if (obs['mode'] == 'overworld' and not state.get('script_running') and not effect
+                    and not state.get('fishing_active')):
                 return
             self.client.step(10)
         self.record('unsettled', state=self.client.state())

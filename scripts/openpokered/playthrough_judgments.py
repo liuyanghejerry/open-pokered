@@ -60,7 +60,7 @@ def capture_probability(ball, enemy):
     """
     if ball == 'MasterBall':
         return 1.0
-    threshold = {'GreatBall': 200, 'UltraBall': 150}.get(ball, 255)
+    threshold = {'GreatBall': 200, 'UltraBall': 150, 'SafariBall': 150}.get(ball, 255)
     factor = 8 if ball == 'GreatBall' else 12
     status = str(enemy.get('status', 'None')).lower()
     if status.startswith(('sleep', 'freeze')):
@@ -103,6 +103,67 @@ def ball_options(live, bag, owned_species=()):
                            'capture_probability_now': capture_probability(name, capture_state),
                            'hp_percent': round(enemy['hp'] / max(1, enemy['max_hp']) * 100, 1),
                            'already_owned': enemy['species'] in owned}
+
+
+def safari_action_options(live, owned_species=()):
+    """Exact current/immediate Safari trade-offs from the exposed engine state."""
+    safari = live.get('safari') or {}
+    enemy = live.get('enemy') or {}
+    if not live.get('is_safari') or not safari or not enemy:
+        return {}
+    owned = enemy.get('species') in set(owned_species)
+
+    def flee_probability(bait_factor, escape_factor):
+        # Safari upkeep happens before the flee roll.  A factor of one expires
+        # on this turn, so it no longer modifies that roll.
+        bait_factor, escape_factor = int(bait_factor), int(escape_factor)
+        if bait_factor:
+            bait_factor -= 1
+        elif escape_factor:
+            escape_factor -= 1
+        speed = int(safari.get('enemy_speed', 0)) & 0xff
+        if speed > 127:
+            return 1.0
+        threshold = speed * 2
+        if bait_factor:
+            threshold >>= 2
+        if escape_factor:
+            threshold = min(255, threshold * 2)
+        return round(threshold / 256, 4)
+
+    def catch_probability(rate):
+        state = {**enemy, 'catch_rate': max(0, min(255, rate))}
+        return capture_probability('SafariBall', state)
+
+    rate = int(safari['catch_rate'])
+    base_rate = int(safari['base_catch_rate'])
+    balls = int(safari['balls'])
+    bait_flee = round(sum(flee_probability(amount, 0) for amount in range(1, 6)) / 5, 4)
+    rock_flee = round(sum(flee_probability(0, amount) for amount in range(1, 6)) / 5, 4)
+    bait_catch = catch_probability(rate >> 1)
+    rocked_catch = catch_probability(min(255, rate * 2))
+    # A one-turn anger factor is consumed immediately and restores the base
+    # catch rate; the other four equally likely durations preserve the boost.
+    rock_catch = round((catch_probability(base_rate) + 4 * rocked_catch) / 5, 4)
+    options = {
+        'run': {'effect': 'End this encounter without spending a Safari Ball',
+                'already_owned': owned},
+    }
+    if balls:
+        options['ball'] = {'effect': 'Spend one Safari Ball and attempt capture now',
+            'balls_remaining': balls, 'already_owned': owned,
+            'capture_probability_now': catch_probability(rate),
+            'flee_probability_if_not_caught': flee_probability(
+                safari.get('bait_factor', 0), safari.get('escape_factor', 0))}
+        options['bait'] = {'effect': 'Halve catch rate, suppress anger, and reduce flee risk for 1-5 turns',
+            'duration_turns_uniform': [1, 5],
+            'projected_catch_probability': bait_catch,
+            'projected_flee_probability_next_turn': bait_flee}
+        options['rock'] = {'effect': 'Double catch rate, suppress bait, and increase flee risk for 1-5 turns',
+            'duration_turns_uniform': [1, 5],
+            'projected_catch_probability': rock_catch,
+            'projected_flee_probability_next_turn': rock_flee}
+    return options
 
 
 def effective_attacks(mon, enemy):
@@ -285,6 +346,22 @@ class JevGame(pt.Game):
                 'usable effective attacks and type matchups. Even a weak remaining member can take a legal turn.'))
             self._party_signature = signature
         return self._party_target
+
+    def safari_battle_action(self, state):
+        live = state.get('battle_live') or {}
+        owned = (state.get('pokedex') or {}).get('owned_species', [])
+        options = safari_action_options(live, owned)
+        if not options:
+            return 'run'
+        enemy = (live.get('enemy') or {}).get('species')
+        if enemy in set(owned) or 'ball' not in options:
+            return 'run'
+        candidates = {name: json.dumps(details) for name, details in options.items()}
+        return self.judgments.choose('action', {'battle': live}, candidates,
+            'Choose one legal Safari action for this turn. The opponent is not registered, so the goal is capture, '
+            'not battle victory. Compare the supplied exact current capture probability, remaining Safari Balls, '
+            'and current/projected flee probability. BALL is the direct baseline; use BAIT or ROCK only when its '
+            'risk-adjusted future capture opportunity is better, and RUN only when capture is no longer viable.')
 
     def learn_move(self, state):
         phase = state['battle_phase']
@@ -558,6 +635,30 @@ class JevGame(pt.Game):
             else:
                 raise StoryStopped(f'unsupported_consumable_menu:{menu}')
         raise StoryStopped('consumable_menu_did_not_finish')
+
+    def use_field_item(self, item):
+        """Select a reusable field item through START -> ITEM -> USE."""
+        for _ in range(120):
+            self.judgments.check_budget()
+            state = self.st()
+            menu = state.get('field_menu')
+            if menu is None:
+                if state['screen'] == 'overworld' and state.get('dialogue_state'):
+                    return
+                late.open_start(self, 'Item')
+                continue
+            phase = menu.get('phase', '')
+            if menu['kind'] == 'bag' and phase == 'Browsing':
+                target = next(i for i, slot in enumerate(menu['items']) if slot['item'] == item)
+                self.tap('a' if menu['cursor'] == target else 'down', 12)
+            elif menu['kind'] == 'bag' and phase.startswith('ActionMenu'):
+                cursor = int(re.search(r'cursor: (\d+)', phase)[1])
+                self.tap('a' if cursor == 0 else 'up', 12)
+            elif menu['kind'] == 'start':
+                self.tap('a' if menu['items'][menu['cursor']] == 'Item' else 'down', 12)
+            else:
+                raise StoryStopped(f'unsupported_field_item_menu:{menu}')
+        raise StoryStopped('field_item_menu_did_not_finish')
 
     def _select_move(self):
         chosen = None
