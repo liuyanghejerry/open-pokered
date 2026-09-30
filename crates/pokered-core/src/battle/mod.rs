@@ -1,6 +1,9 @@
 use crate::alloc_prelude::*;
 pub mod accuracy;
 pub mod presentation;
+mod switch_dialogue;
+#[cfg(test)]
+mod switch_dialogue_tests;
 pub mod badge_boosts;
 pub mod capture;
 pub mod safari;
@@ -986,6 +989,8 @@ pub struct BattleScreen {
     pub enemy_level: u8,
     pub enemy_hp: u16,
     pub enemy_max_hp: u16,
+    /// Gen-1 wLastSwitchInEnemyMonHP, used by RetreatMon.
+    pub last_switch_in_enemy_hp: u16,
     pub enemy_status: StatusCondition,
     pub player_species: Species,
     pub player_level: u8,
@@ -1277,6 +1282,7 @@ impl BattleScreen {
             enemy_level: 25,
             enemy_hp: 55,
             enemy_max_hp: 55,
+            last_switch_in_enemy_hp: 55,
             enemy_status: StatusCondition::None,
             player_species: Species::Charmander,
             player_level: 5,
@@ -1375,6 +1381,7 @@ impl BattleScreen {
             enemy_level: enemy.level,
             enemy_hp: enemy.hp,
             enemy_max_hp: enemy.max_hp,
+            last_switch_in_enemy_hp: enemy.hp,
             enemy_status: enemy.status,
             player_species: player.species,
             player_level: player.level,
@@ -1935,8 +1942,8 @@ impl BattleScreen {
                     },
                     IntroPhase::PlayerSendOut => {
                         self.show_player_pokeballs = true;
-                        let species_name = format!("{}", self.player_species).to_uppercase();
-                        let msg = format!("Go! {}!", species_name);
+                        let msg = self.player_send_out_message();
+                        self.record_switch_in_enemy_hp();
                         self.current_message =
                             Some(pokered_data::battle_text::localize(&msg, self.is_zh));
                         BattlePhase::PlayerMenu
@@ -4800,26 +4807,43 @@ learn {learn_name}!")];
         self.execute_enemy_free_turn_after_switch(msgs);
     }
 
+    /// PrintSendOutMonMessage selects encouragement from the live enemy HP.
+    pub fn player_send_out_message(&self) -> String {
+        let (hp, max_hp) = self.battle_state.as_ref()
+            .map(|bs| (bs.enemy.active_mon().hp, bs.enemy.active_mon().max_hp))
+            .unwrap_or((self.enemy_hp, self.enemy_max_hp));
+        switch_dialogue::send_out(&format!("{}", self.player_species).to_uppercase(), hp, max_hp)
+    }
+
+    fn record_switch_in_enemy_hp(&mut self) {
+        let hp = self.battle_state.as_ref()
+            .map_or(self.enemy_hp, |bs| bs.enemy.active_mon().hp);
+        // The original branches to GoText before updating the saved HP on zero.
+        if hp != 0 {
+            self.last_switch_in_enemy_hp = hp;
+        }
+    }
+
     /// The shared player-switch mechanics (active switch or faint replacement;
     /// used by the normal free-turn flow and by link-mode resolution).
     /// Returns the "come back / Go!" narration lines.
     fn apply_player_switch(&mut self, new_index: usize) -> Vec<String> {
         if let Some(ref mut bs) = self.battle_state {
             let old_name = format!("{}", bs.player.active_mon().species).to_uppercase();
+            let enemy = bs.enemy.active_mon();
+            let recall = switch_dialogue::recall(
+                &old_name, self.last_switch_in_enemy_hp, enemy.hp, enemy.max_hp,
+            );
             bs.player.active_pokemon_index = new_index;
             bs.player.reset_volatile_status();
             bs.player.refresh_unmodified_stats();
             if new_index < 6 {
                 bs.party_gain_exp_flags[new_index] = true;
             }
-            let new_name = format!("{}", bs.player.active_mon().species).to_uppercase();
-
             self.sync_display_from_state();
-
-            return vec![
-                format!("{}, come back!", old_name),
-                format!("Go! {}!", new_name),
-            ];
+            let send_out = self.player_send_out_message();
+            self.record_switch_in_enemy_hp();
+            return vec![recall, send_out];
         }
         Vec::new()
     }
@@ -4835,21 +4859,10 @@ learn {learn_name}!")];
     /// turn runs afterwards (the fainted enemy cannot attack; the battle
     /// returns to the main menu, `jp MainInBattleLoop`).
     fn apply_shift_switch(&mut self, new_index: usize) {
-        let (old_name, new_name) = match self.battle_state {
-            Some(ref mut bs) => {
-                let old_name = format!("{}", bs.player.active_mon().species).to_uppercase();
-                bs.player.active_pokemon_index = new_index;
-                bs.player.reset_volatile_status();
-                bs.player.refresh_unmodified_stats();
-                if new_index < 6 {
-                    bs.party_gain_exp_flags[new_index] = true;
-                }
-                let new_name = format!("{}", bs.player.active_mon().species).to_uppercase();
-                (old_name, new_name)
-            }
-            None => return,
-        };
-        self.sync_display_from_state();
+        if self.battle_state.is_none() {
+            return;
+        }
+        let mut switch_messages = self.apply_player_switch(new_index);
         let trainer = self
             .trainer_name
             .clone()
@@ -4862,11 +4875,8 @@ learn {learn_name}!")];
             .unwrap_or_default();
         // Original text order: TrainerSentOutText, then the retreat/send-out
         // pair from RetreatMon + SendOutMon.
-        let msgs = vec![
-            format!("{} sent out {}!", trainer, enemy_name),
-            format!("{}, come back!", old_name),
-            format!("Go! {}!", new_name),
-        ];
+        let mut msgs = vec![format!("{} sent out {}!", trainer, enemy_name)];
+        msgs.append(&mut switch_messages);
         self.show_player_pokeballs = true;
         self.show_enemy_pokeballs = !self.is_wild;
         self.show_text_then(msgs, BattlePhase::PlayerMenu);
@@ -4889,12 +4899,12 @@ learn {learn_name}!")];
             if new_index < 6 {
                 bs.party_gain_exp_flags[new_index] = true;
             }
-            let new_name = format!("{}", bs.player.active_mon().species).to_uppercase();
-
             self.sync_display_from_state();
+            let send_out = self.player_send_out_message();
+            self.record_switch_in_enemy_hp();
             self.show_player_pokeballs = true;
             self.show_enemy_pokeballs = !self.is_wild;
-            self.show_text_then(vec![format!("Go! {}!", new_name)], BattlePhase::PlayerMenu);
+            self.show_text_then(vec![send_out], BattlePhase::PlayerMenu);
         }
     }
 
@@ -6838,8 +6848,8 @@ mod shift_style_tests {
                 let joined = messages.join(" ");
                 assert!(joined.contains("sent out"), "{joined}");
                 assert!(joined.contains("ONIX!"), "{joined}");
-                assert!(joined.contains("CHARMANDER, come"), "{joined}");
-                assert!(joined.contains("back!"), "{joined}");
+                assert!(joined.contains("CHARMANDER OK!"), "{joined}");
+                assert!(joined.contains("Come back!"), "{joined}");
                 assert!(joined.contains("Go! SQUIRTLE!"), "{joined}");
                 assert_eq!(**next_phase, BattlePhase::PlayerMenu);
             }

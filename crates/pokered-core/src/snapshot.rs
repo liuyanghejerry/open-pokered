@@ -407,6 +407,8 @@ pub struct BattleSnapshot {
     pub enemy_level: u8,
     pub enemy_hp: u16,
     pub enemy_max_hp: u16,
+    #[serde(default)]
+    pub last_switch_in_enemy_hp: u16,
     pub enemy_status: crate::battle::state::StatusCondition,
     pub player_species: Species,
     pub player_level: u8,
@@ -471,6 +473,7 @@ impl BattleSnapshot {
             enemy_level: screen.enemy_level,
             enemy_hp: screen.enemy_hp,
             enemy_max_hp: screen.enemy_max_hp,
+            last_switch_in_enemy_hp: screen.last_switch_in_enemy_hp,
             enemy_status: screen.enemy_status,
             player_species: screen.player_species,
             player_level: screen.player_level,
@@ -532,7 +535,7 @@ impl BattleSnapshot {
         }
         set!(
             phase, battle_menu, party_submenu, bag_menu, is_wild, trainer_class, trainer_name,
-            player_bag, enemy_species, enemy_level, enemy_hp, enemy_max_hp, enemy_status,
+            player_bag, enemy_species, enemy_level, enemy_hp, enemy_max_hp, last_switch_in_enemy_hp, enemy_status,
             player_species, player_level, player_hp, player_max_hp, player_status,
             player_party_size, enemy_party_size, player_pokeball_status, enemy_pokeball_status,
             show_player_pokeballs, show_enemy_pokeballs, battle_state, move_menu,

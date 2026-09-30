@@ -355,11 +355,23 @@ pub fn localize(text: &str, is_zh: bool) -> String {
         return format!("{}逃走了！", zh_name(a));
     }
 
-    // "Go! {a}!"
-    if let Some(a) = text.strip_prefix("Go! ") {
-        if let Some(a) = a.strip_suffix('!') {
-            return format!("去吧，{}！", zh_name(a));
+    for (prefix, zh_prefix) in [
+        ("The enemy's weak!\nGet'm! ", "对手很虚弱！\n拿下它，"),
+        ("Go! ", "去吧，"),
+        ("Do it! ", "上吧，"),
+        ("Get'm! ", "拿下它，"),
+    ] {
+        if let Some(a) = text.strip_prefix(prefix).and_then(|a| a.strip_suffix('!')) {
+            return format!("{}{}！", zh_prefix, zh_name(a));
         }
+    }
+    if let Some(a) = text.strip_suffix("\nCome back!") {
+        for (suffix, praise) in [(" enough!", "够了"), (" OK!", "可以了"), (" good!", "干得好")] {
+            if let Some(name) = a.strip_suffix(suffix) {
+                return format!("{}，{}！\n回来！", zh_name(name), praise);
+            }
+        }
+        return format!("{}，回来！", zh_name(a));
     }
     // "{a} sent out {b}!"
     if let Some(idx) = text.find(" sent out ") {
@@ -701,5 +713,66 @@ mod tests {
         assert_eq!(trainer_class_zh(TrainerClass::Youngster), "短裤小子");
         assert_eq!(trainer_class_zh(TrainerClass::Misty), "小霞");
         assert_eq!(trainer_class_zh(TrainerClass::Rocket), "火箭队队员");
+    }
+}
+
+/// Recognize Gen-1 encouragement before/after localization and pagination.
+/// Both frontends use this to keep entry animations independent of the variant.
+pub fn is_player_send_out_message(text: &str) -> bool {
+    [
+        "Go! ",
+        "Do it! ",
+        "Get'm! ",
+        "The enemy's weak!",
+        "去吧，",
+        "上吧，",
+        "拿下它，",
+        "对手很虚弱！",
+    ]
+    .iter()
+    .any(|prefix| text.starts_with(prefix))
+}
+
+pub fn is_player_recall_message(text: &str) -> bool {
+    text.contains("come back!") || text.contains("Come back!") || text.contains("回来！")
+}
+
+#[cfg(test)]
+mod switch_dialogue_tests {
+    use super::*;
+
+    #[test]
+    fn encouragement_translates_and_keeps_entry_animation_detection() {
+        for (english, chinese) in [
+            ("Go! SQUIRTLE!", "去吧，杰尼龟！"),
+            ("Do it! SQUIRTLE!", "上吧，杰尼龟！"),
+            ("Get'm! SQUIRTLE!", "拿下它，杰尼龟！"),
+            (
+                "The enemy's weak!\nGet'm! SQUIRTLE!",
+                "对手很虚弱！\n拿下它，杰尼龟！",
+            ),
+        ] {
+            assert_eq!(localize(english, true), chinese);
+            assert!(is_player_send_out_message(&english.replace('\n', " ")));
+            assert!(is_player_send_out_message(&chinese.replace('\n', " ")));
+        }
+        assert!(!is_player_send_out_message("Enemy SQUIRTLE used TACKLE!"));
+    }
+
+    #[test]
+    fn recall_translates_praise_and_keeps_exit_animation_detection() {
+        for (english, chinese) in [
+            ("CHARMANDER enough!\nCome back!", "小火龙，够了！\n回来！"),
+            ("CHARMANDER\nCome back!", "小火龙，回来！"),
+            ("CHARMANDER OK!\nCome back!", "小火龙，可以了！\n回来！"),
+            ("CHARMANDER good!\nCome back!", "小火龙，干得好！\n回来！"),
+        ] {
+            assert_eq!(localize(english, true), chinese);
+            assert!(is_player_recall_message(&english.replace('\n', " ")));
+            assert!(is_player_recall_message(&chinese.replace('\n', " ")));
+        }
+        assert!(is_player_recall_message("Come back!"));
+        assert!(is_player_recall_message("回来！"));
+        assert!(!is_player_recall_message("Enemy CHARMANDER fainted!"));
     }
 }
