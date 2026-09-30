@@ -109,7 +109,9 @@ def build(run, output, video=None):
             'video_bytes': source_video.stat().st_size,
         },
         'target': {'owned': len(owned), 'solo_ceiling': plan['ceiling'], 'total': 151,
-                   'choices': plan['choices'], 'unreachable_species': plan['unreachable_species']},
+                   'choices': plan['choices'], 'choice_options': plan['optimal_choices'],
+                   'unreachable_species': plan['unreachable_species'],
+                   'always_unreachable_species': plan['always_unreachable_species']},
         'species': [{'number': number, 'name': name,
                      'status': 'owned' if name in owned else
                                'reachable' if name in plan['reachable_species'] else 'unreachable'}

@@ -306,6 +306,65 @@ def complete_acquisition_graph(maps, fishable_maps=(), species_dir=SPECIES_DIR,
     return dict(graph)
 
 
+def acquisition_contract(species, method):
+    """Normalize one graph edge into code-owned conditions and direct costs.
+
+    Travel distance, encounter yield, current inventory and battle safety are
+    live-state costs supplied by the autonomous agent.  This contract captures
+    the invariant part of the mechanic so Jev compares feasible alternatives
+    instead of reconstructing Pokémon rules from prose.
+    """
+    requirements = []
+    costs = {'consumed_items': {}, 'relinquished_species': [],
+             'coins': 0, 'minimum_level': None, 'random_attempts': False,
+             'irreversible_choice': None, 'external_system': None}
+
+    def require(kind, value):
+        requirements.append({'kind': kind, 'value': value})
+
+    name = method['method']
+    if method.get('map'):
+        require('visit_map', method['map'])
+    if name in ('grass', 'water', 'safari', 'fishing', 'static'):
+        require('capture_inventory', 'SafariBall' if name == 'safari' else 'any_ball')
+        costs['random_attempts'] = True
+    if name == 'fishing':
+        require('rod', method['rod'])
+    source = method.get('from_species')
+    if source:
+        require('owned_species', source)
+    if name == 'evolution':
+        trigger = method.get('trigger')
+        require('evolution_trigger', trigger)
+        if trigger == 'level':
+            costs['minimum_level'] = method['level']
+        elif trigger == 'item':
+            require('item', method['item'])
+            costs['consumed_items'][method['item']] = 1
+        elif trigger == 'trade':
+            costs['external_system'] = 'link_trade'
+    elif name == 'npc_trade':
+        costs['relinquished_species'].append(method['from_species'])
+    elif name == 'prize':
+        require('coin_case', True)
+        costs['coins'] = method['coins']
+    elif name == 'version_trade':
+        require('source_version', method['source_version'])
+        costs['external_system'] = 'other_game_version_and_link_trade'
+    elif name == 'unavailable':
+        costs['external_system'] = 'no_legitimate_source'
+
+    if method.get('item') and name == 'gift':
+        require('item', method['item'])
+        costs['consumed_items'][method['item']] = 1
+    if method.get('exclusive_group'):
+        choice = {'group': method['exclusive_group'], 'choice': method['choice']}
+        require('exclusive_choice', choice)
+        costs['irreversible_choice'] = choice
+    return {'species': species, 'method': name, 'requirements': requirements,
+            'direct_cost': costs}
+
+
 def _choice_assignments(forced=None):
     forced = dict(forced or {})
     groups = sorted(SOLO_CHOICE_GROUPS)
@@ -342,16 +401,39 @@ def reachable_species(graph, choices, owned=(), allow_external_trade=False):
 
 
 def solo_plan(graph, owned=(), forced_choices=None):
-    """Maximum Red single-save/no-link-trade closure and its choice policy."""
-    best = None
+    """Maximum Red single-save/no-link-trade closure and its choice policy.
+
+    ``choices`` is one stable representative assignment, useful for computing a
+    concrete ceiling and explaining which species that particular save excludes.
+    ``optimal_choices`` preserves every branch that occurs in any maximum-size
+    assignment.  Callers should offer those bounded alternatives to Jev until an
+    observed registration makes the irreversible choice concrete.
+    """
+    best_size = -1
+    optimal = []
     for choices in _choice_assignments(forced_choices):
         reachable = reachable_species(graph, choices, owned)
-        candidate = (len(reachable), tuple(sorted(reachable)), choices, reachable)
-        if best is None or candidate[:2] > best[:2]:
-            best = candidate
-    _, _, choices, reachable = best
+        size = len(reachable)
+        if size > best_size:
+            best_size = size
+            optimal = [(choices, reachable)]
+        elif size == best_size:
+            optimal.append((choices, reachable))
+    # _choice_assignments has a declared, stable order.  Do not let species-name
+    # lexicography silently become gameplay policy when several branches tie.
+    choices, reachable = optimal[0]
+    choice_reachable = set().union(*(species for _, species in optimal))
+    optimal_choices = {
+        group: [choice for choice in SOLO_CHOICE_GROUPS[group]
+                if any(assignment[group] == choice for assignment, _ in optimal)]
+        for group in sorted(SOLO_CHOICE_GROUPS)
+    }
     return {'ceiling': len(reachable), 'reachable_species': sorted(reachable),
-            'unreachable_species': sorted(set(graph) - reachable), 'choices': choices}
+            'unreachable_species': sorted(set(graph) - reachable), 'choices': choices,
+            'choice_reachable_species': sorted(choice_reachable),
+            'always_unreachable_species': sorted(set(graph) - choice_reachable),
+            'optimal_choices': optimal_choices,
+            'optimal_assignment_count': len(optimal)}
 
 
 def infer_solo_choices(owned_species=()):

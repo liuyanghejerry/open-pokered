@@ -747,6 +747,15 @@ class AutonomousTests(unittest.TestCase):
         self.assertIn('Mew', plan['unreachable_species'])
         self.assertEqual(len({'Bulbasaur', 'Charmander', 'Squirtle'} &
                              set(plan['reachable_species'])), 1)
+        self.assertEqual(plan['optimal_assignment_count'], 36)
+        self.assertEqual(plan['optimal_choices']['starter'],
+                         ['Bulbasaur', 'Charmander', 'Squirtle'])
+        self.assertEqual(plan['optimal_choices']['fossil'], ['Kabuto', 'Omanyte'])
+        self.assertEqual(plan['optimal_choices']['dojo'], ['Hitmonchan', 'Hitmonlee'])
+        self.assertEqual(plan['optimal_choices']['eevee_evolution'],
+                         ['Flareon', 'Jolteon', 'Vaporeon'])
+        self.assertEqual(len(plan['choice_reachable_species']), 135)
+        self.assertEqual(len(plan['always_unreachable_species']), 16)
 
     def test_complete_graph_keeps_exact_solo_choice_and_external_trade_reasons(self):
         from openpokered.collection_planner import (complete_acquisition_graph,
@@ -759,12 +768,39 @@ class AutonomousTests(unittest.TestCase):
         plan = solo_plan(graph, forced_choices=forced)
         self.assertEqual(plan['ceiling'], 124)
         self.assertEqual(plan['choices'], forced)
+        self.assertEqual(plan['optimal_assignment_count'], 1)
+        self.assertEqual(plan['optimal_choices'], {
+            'dojo': ['Hitmonchan'], 'eevee_evolution': ['Jolteon'],
+            'fossil': ['Kabuto'], 'starter': ['Bulbasaur'],
+        })
         self.assertTrue(any(row.get('external_trade') for row in graph['Alakazam']))
         self.assertTrue(any(row.get('source_version') == 'blue' for row in graph['Vulpix']))
         self.assertEqual(next(row['coins'] for row in graph['Porygon']
                               if row['method'] == 'prize'), 9999)
         self.assertFalse(any(row.get('storyline') == 'coordGhostMarowak'
                              for row in graph['Marowak']))
+
+    def test_acquisition_contract_exposes_code_owned_conditions_and_costs(self):
+        from openpokered.collection_planner import acquisition_contract
+        prize = acquisition_contract('Porygon', {
+            'method': 'prize', 'map': 'GameCornerPrizeRoom', 'coins': 9999})
+        self.assertIn({'kind': 'visit_map', 'value': 'GameCornerPrizeRoom'},
+                      prize['requirements'])
+        self.assertIn({'kind': 'coin_case', 'value': True}, prize['requirements'])
+        self.assertEqual(prize['direct_cost']['coins'], 9999)
+
+        evolution = acquisition_contract('Arcanine', {
+            'method': 'evolution', 'from_species': 'Growlithe',
+            'trigger': 'item', 'item': 'FireStone'})
+        self.assertIn({'kind': 'owned_species', 'value': 'Growlithe'},
+                      evolution['requirements'])
+        self.assertEqual(evolution['direct_cost']['consumed_items'], {'FireStone': 1})
+
+        choice = acquisition_contract('Bulbasaur', {
+            'method': 'gift', 'map': 'OaksLab', 'exclusive_group': 'starter',
+            'choice': 'Bulbasaur'})
+        self.assertEqual(choice['direct_cost']['irreversible_choice'],
+                         {'group': 'starter', 'choice': 'Bulbasaur'})
 
     def test_nonwild_collection_groups_offer_gift_and_item_evolution(self):
         agent = AutonomousStoryAgent.__new__(AutonomousStoryAgent)
@@ -787,6 +823,26 @@ class AutonomousTests(unittest.TestCase):
         self.assertEqual(groups['register:Arcanine:evolution:Growlithe']['target'],
                          ('register', 'Arcanine', True))
         self.assertEqual(groups['register:Lapras:gift:House']['rules'], [gift])
+
+    def test_uncommitted_solo_choices_offer_every_ceiling_preserving_branch(self):
+        agent = AutonomousStoryAgent.__new__(AutonomousStoryAgent)
+        agent.collects_dex = True
+        gifts = [
+            Rule(name, 'Lab', f'Lab:{name}', [], [], [], ('pokemon', name, 5), [])
+            for name in ('Bulbasaur', 'Charmander', 'Squirtle')
+        ]
+        agent.index = Mock(rules=gifts, by_effect={})
+        agent._complete_collection_graph = {
+            name: [{'method': 'gift', 'map': 'Lab', 'storyline': name, 'level': 5,
+                    'exclusive_group': 'starter', 'choice': name}]
+            for name in ('Bulbasaur', 'Charmander', 'Squirtle')
+        }
+        facts = {'party': [], 'stored_pokemon': [], 'bag': {}, 'flags': {},
+                 'coins': 0, 'money': 0, 'map': 'Lab', 'dex': {'owned_species': []}}
+        groups = {}
+        agent.add_nonwild_collection_groups(groups, facts)
+        self.assertEqual({group['context']['species'] for group in groups.values()},
+                         {'Bulbasaur', 'Charmander', 'Squirtle'})
 
     def test_boxed_evolution_source_backchains_through_real_pc_rule(self):
         agent = AutonomousStoryAgent.__new__(AutonomousStoryAgent)

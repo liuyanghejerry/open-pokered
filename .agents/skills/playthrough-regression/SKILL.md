@@ -106,6 +106,7 @@ python3 scripts/scenarios.py --skip s05      # all but the RNG-heavy one
 | s09-options | OPTIONS text-speed toggle changes `text_speed_delay_frames` and persists across menu reopen |
 | s10-npcs | `get_npcs` reports live, field-sane NPCs on the entered map |
 | s11-forced-switch | a fainted Magikarp is replaced by a living teammate through `PlayerFaintSwitch`, then the battle is won |
+| s12-item-evolution | real START/ITEM/party input consumes a Fire Stone, evolves Growlithe, and registers Arcanine |
 
 Engine quirks the scenarios encode (same contract as the milestone
 comments — don't weaken them without an engine change):

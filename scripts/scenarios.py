@@ -401,6 +401,43 @@ def s11_forced_switch(g):
     g.evidence("s11")
 
 
+@scenario("s12-item-evolution", "real ITEM menus consume a stone and register evolution")
+def s12_item_evolution():
+    # JevGame contributes only the observed-menu input driver here.  The debug
+    # protocol seeds the precondition; evolution and Pokédex registration must
+    # result from the same START -> ITEM -> party menus a player uses.
+    from types import SimpleNamespace
+    from openpokered.playthrough_judgments import JevGame
+
+    g = Game()
+    try:
+        m01_boot(g)
+        m02_oak_speech(g)
+        assert g.d.cmd(cmd="give_pokemon", species="Growlithe", level=20)["ok"]
+        assert g.d.cmd(cmd="give_item", item="FIRE_STONE", qty=1)["ok"]
+        g.judgments = SimpleNamespace(check_budget=lambda: None)
+        JevGame.use_consumable(g, "FireStone", 0)
+        for _ in range(30):
+            state = g.st()
+            if (state["party"][0]["species"] == "Arcanine"
+                    and not state.get("evolution_phase")):
+                break
+            # Evolution is time-driven.  A only advances its intro/result
+            # text; never press B, which would cancel the morph.
+            g.step(120)
+            g.tap("a", 4)
+        else:
+            raise AssertionError(f"evolution did not finish: {g.st()}")
+        party = g.d.cmd(cmd="get_party")["data"]
+        state = g.st()
+        assert party[0]["species"] == "Arcanine", party[0]
+        assert bag_qty(g, "FireStone") == 0, g.d.cmd(cmd="get_bag")["data"]
+        assert "Arcanine" in state["pokedex"]["owned_species"], state["pokedex"]
+        g.evidence("s12")
+    finally:
+        g.close()
+
+
 # ── runner ──────────────────────────────────────────────────────────────
 def main():
     ap = argparse.ArgumentParser()

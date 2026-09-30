@@ -23,7 +23,7 @@ from .playthrough_judgments import (ObservedProtocol, NavigationPause, attack_pr
 from .navigation_skills import (cut_requirement, surf_requirement, water_planning, water_tile,
                                 hm_compatible, machine_compatible, HM_MOVES, TM_MOVES, CUT_TILES)
 from .boulder_skills import BOULDER_TARGETS, boulder_sources, plan_pushes
-from .collection_planner import (acquisition_graph, complete_acquisition_graph,
+from .collection_planner import (acquisition_contract, acquisition_graph, complete_acquisition_graph,
                                  fishing_profile, infer_solo_choices, solo_plan,
                                  table_profile)
 
@@ -372,6 +372,7 @@ class AutonomousStoryAgent(DualStoryAgent):
         full_graph = self.complete_collection_graph()
         plan = solo_plan(full_graph, owned, infer_solo_choices(owned))
         targets = set(plan['reachable_species'])
+        choice_targets = set(plan['choice_reachable_species'])
         rung = next((value for value in DEX_RUNGS if value > len(owned)), None)
         missing = {}
         yield_by_area = {}
@@ -385,7 +386,7 @@ class AutonomousStoryAgent(DualStoryAgent):
                         'unregistered_species_count', 'unregistered_encounter_share_pct',
                         'new_species_per_step_pct', 'expected_steps_to_any_new_species')}
         missing_methods = {}
-        for species in sorted(targets - owned):
+        for species in sorted(choice_targets - owned):
             missing_methods[species] = sorted({method['method'] for method in full_graph[species]
                                                if not method.get('external_trade')})
         return {'owned': dex.get('owned', len(owned)), 'seen': dex.get('seen', len(seen)), 'total': 151,
@@ -396,8 +397,11 @@ class AutonomousStoryAgent(DualStoryAgent):
                 'solo_owned': len(targets & owned),
                 'solo_remaining': len(targets - owned),
                 'solo_choices': plan['choices'],
+                'solo_choice_options': plan['optimal_choices'],
                 'policy_unreachable_count': len(plan['unreachable_species']),
                 'policy_unreachable_species': plan['unreachable_species'],
+                'always_unreachable_count': len(plan['always_unreachable_species']),
+                'always_unreachable_species': plan['always_unreachable_species'],
                 'missing_acquisition_methods': missing_methods,
                 # Species already met are known-reachable, so this list is the
                 # strongest lead the collector has; the rung says what
@@ -915,7 +919,7 @@ class AutonomousStoryAgent(DualStoryAgent):
             return
         owned = set((facts.get('dex') or {}).get('owned_species', []))
         plan = solo_plan(self.complete_collection_graph(), owned, infer_solo_choices(owned))
-        reachable = set(plan['reachable_species'])
+        reachable = set(plan['choice_reachable_species'])
         party = facts.get('party', [])
         held = [*party, *facts.get('stored_pokemon', [])]
         for species in sorted(reachable - owned):
@@ -924,7 +928,7 @@ class AutonomousStoryAgent(DualStoryAgent):
                         'unavailable', 'grass', 'water', 'safari', 'fishing', 'version_trade'):
                     continue
                 group = method.get('exclusive_group')
-                if group and plan['choices'].get(group) != method.get('choice'):
+                if group and method.get('choice') not in plan['optimal_choices'].get(group, ()):
                     continue
                 source = method.get('from_species')
                 source_party = [i for i, mon in enumerate(party)
@@ -932,7 +936,8 @@ class AutonomousStoryAgent(DualStoryAgent):
                 source_held = any(source and self.same_species(mon.get('species'), source)
                                   for mon in held)
                 context = {'purpose': f'Register {species} through a deterministic non-wild source',
-                           'species': species, 'acquisition_method': method['method'], **method}
+                           'species': species, 'acquisition_method': method['method'],
+                           'acquisition_contract': acquisition_contract(species, method), **method}
                 rules = []
                 if method['method'] == 'evolution':
                     if not source_held:
