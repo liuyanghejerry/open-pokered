@@ -792,9 +792,16 @@ class AutonomousTests(unittest.TestCase):
         evolution = acquisition_contract('Arcanine', {
             'method': 'evolution', 'from_species': 'Growlithe',
             'trigger': 'item', 'item': 'FireStone'})
-        self.assertIn({'kind': 'owned_species', 'value': 'Growlithe'},
+        self.assertIn({'kind': 'party_species', 'value': 'Growlithe'},
                       evolution['requirements'])
         self.assertEqual(evolution['direct_cost']['consumed_items'], {'FireStone': 1})
+
+        trade = acquisition_contract('Farfetchd', {
+            'method': 'npc_trade', 'map': 'VermilionTradeHouse',
+            'from_species': 'Spearow'})
+        self.assertIn({'kind': 'party_species', 'value': 'Spearow'}, trade['requirements'])
+        self.assertIn({'kind': 'party_members_at_least', 'value': 2}, trade['requirements'])
+        self.assertEqual(trade['direct_cost']['relinquished_species'], ['Spearow'])
 
         choice = acquisition_contract('Bulbasaur', {
             'method': 'gift', 'map': 'OaksLab', 'exclusive_group': 'starter',

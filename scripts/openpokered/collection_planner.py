@@ -332,7 +332,12 @@ def acquisition_contract(species, method):
         require('rod', method['rod'])
     source = method.get('from_species')
     if source:
-        require('owned_species', source)
+        require('party_species', source)
+    if name in ('grass', 'water', 'safari', 'fishing', 'static', 'gift', 'prize'):
+        require('party_or_current_box_space', True)
+    if name == 'npc_trade':
+        # Gen I refuses to trade away the only party member.
+        require('party_members_at_least', 2)
     if name == 'evolution':
         trigger = method.get('trigger')
         require('evolution_trigger', trigger)
