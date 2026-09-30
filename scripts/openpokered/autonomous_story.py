@@ -33,11 +33,66 @@ DEX_RUNGS = (2, 10, 30, 50, 150)
 # travelling to relative to how hard its members are to capture.
 CATCH_BANDS = ((200, 'easy'), (100, 'medium'))
 
+# Exact slot widths from pokered-core's ENCOUNTER_SLOT_THRESHOLDS.  Maps store
+# the ten species/level slots but not their probabilities, and treating the
+# slots as equally likely makes a 1.6% species look as valuable as a 19.9%
+# species to the strategy judge.
+ENCOUNTER_SLOT_WEIGHTS = (51, 51, 39, 25, 25, 25, 13, 13, 11, 4)
+
+# Qualitative names are easier for Jev to compare than Gen-I's non-monotonic
+# internal ball constants.  The game remains the authority for the actual
+# capture roll; these labels only describe strategic inventory quality.
+BALL_QUALITY = {
+    'PokeBall': 'basic',
+    'GreatBall': 'improved',
+    'UltraBall': 'strong',
+    'MasterBall': 'guaranteed',
+}
+
 
 def catch_difficulty(species):
     rate = data.species_data(species).get('catchRate', 0)
     return {'species': species, 'catch_rate': rate,
             'band': next((band for threshold, band in CATCH_BANDS if rate >= threshold), 'hard')}
+
+
+def encounter_value(map_data, owned_species=()):
+    """Deterministic collection value of one grass table.
+
+    Keep arithmetic out of Jev: it should weigh travel, scarcity and resources,
+    not reconstruct encounter-slot probabilities from a ten-row table.
+    Percentages are rounded only at the presentation boundary.
+    """
+    wild = ((map_data.get('wild') or {}).get('red') or {}).get('grass') or {}
+    mons = wild.get('mons', [])
+    owned = set(owned_species)
+    weights = {}
+    levels = {}
+    for index, mon in enumerate(mons[:len(ENCOUNTER_SLOT_WEIGHTS)]):
+        species = mon['species']
+        weights[species] = weights.get(species, 0) + ENCOUNTER_SLOT_WEIGHTS[index]
+        levels.setdefault(species, []).append(mon['level'])
+    missing = sorted(species for species in weights if species not in owned)
+    novel_weight = sum(weights[species] for species in missing)
+    encounter_rate = int(wild.get('encounterRate', 0))
+    per_step = encounter_rate / 256 * novel_weight / 256
+    targets = []
+    for species in missing:
+        share = weights[species] / 256
+        species_per_step = encounter_rate / 256 * share
+        targets.append({**catch_difficulty(species),
+                        'levels': [min(levels[species]), max(levels[species])],
+                        'encounter_share_pct': round(share * 100, 1),
+                        'per_step_pct': round(species_per_step * 100, 2),
+                        'expected_steps': (round(1 / species_per_step, 1)
+                                           if species_per_step else None)})
+    return {'encounter_rate_per_256_steps': encounter_rate,
+            'unregistered_species_count': len(missing),
+            'unregistered_encounter_share_pct': round(novel_weight / 256 * 100, 1),
+            'duplicate_encounter_share_pct': round((256 - novel_weight) / 256 * 100, 1),
+            'new_species_per_step_pct': round(per_step * 100, 2),
+            'expected_steps_to_any_new_species': round(1 / per_step, 1) if per_step else None,
+            'targets': targets}
 
 
 def native_interaction_tiles():
@@ -287,11 +342,16 @@ class AutonomousStoryAgent(DualStoryAgent):
         seen = set(dex.get('seen_species', []))
         rung = next((value for value in DEX_RUNGS if value > len(owned)), None)
         missing = {}
+        yield_by_area = {}
         for name in self.neighbourhood():
-            count = len([species for species in self.grass_species(self.maps.get(name, {}))
-                         if species not in owned])
+            value = encounter_value(self.maps.get(name, {}), owned)
+            count = value['unregistered_species_count']
             if count:
                 missing[name] = count
+                yield_by_area[name] = {
+                    key: value[key] for key in (
+                        'unregistered_species_count', 'unregistered_encounter_share_pct',
+                        'new_species_per_step_pct', 'expected_steps_to_any_new_species')}
         return {'owned': dex.get('owned', len(owned)), 'seen': dex.get('seen', len(seen)), 'total': 151,
                 # Species already met are known-reachable, so this list is the
                 # strongest lead the collector has; the rung says what
@@ -300,7 +360,9 @@ class AutonomousStoryAgent(DualStoryAgent):
                 'next_rung': None if rung is None else {'rung': rung, 'needs': rung,
                                                         'remaining': rung - len(owned)},
                 'unregistered_by_area': dict(sorted(missing.items(), key=lambda row: (-row[1], row[0]))),
+                'expected_yield_by_area': dict(sorted(yield_by_area.items())),
                 'balls_held': self.balls_held(facts),
+                'collection_resources': self.collection_resources(facts),
                 'nearest_ball_source': self.nearest_ball_source(facts.get('map'))}
 
     def nearest_ball_source(self, origin):
@@ -352,7 +414,11 @@ class AutonomousStoryAgent(DualStoryAgent):
                 'moves and new routes open areas holding species that cannot be found near the start. Treat the '
                 'story objectives as the way to reach new collecting grounds rather than as a finish line: while '
                 'the areas you can already reach still hold unregistered species, collect there; once they do not, '
-                'progress the story to open more, and never stop at the Champion while species remain.')
+                'progress the story to open more, and never stop at the Champion while species remain. Compare '
+                'collection candidates using their supplied encounter probability, expected hunt steps, species '
+                'scarcity, travel cost, recent yield, ball quality and safe status support. A larger species list is '
+                'not automatically better when its missing species occupy rare slots or the current resources '
+                'cannot realistically catch them.')
         if layer == 'action' and 'local_state' in state and getattr(self, 'active', None):
             state = {**state, 'strategy_context': self.active.get('context', {})}
         context = state.get('strategy_context') or {}
@@ -953,6 +1019,48 @@ class AutonomousStoryAgent(DualStoryAgent):
         normalized = {name.replace('_', '').upper() for name in BALLS}
         return sum(qty for key, qty in facts.get('bag', {}).items() if key in normalized)
 
+    def collection_resources(self, facts):
+        """Grounded inventory and party tools that affect capture feasibility."""
+        normalized = {name.replace('_', '').upper(): name for name in BALLS}
+        balls = []
+        for key, quantity in facts.get('bag', {}).items():
+            if quantity > 0 and key in normalized:
+                name = normalized[key]
+                balls.append({'ball': name, 'quantity': quantity,
+                              'quality': BALL_QUALITY.get(name, 'special')})
+        status = []
+        useful_effects = {
+            'SleepEffect': ('strong', False),
+            'FreezeEffect': ('strong', False),
+            'ParalyzeEffect': ('moderate', False),
+            'PoisonEffect': ('moderate', True),
+            'BurnEffect': ('moderate', True),
+        }
+        for mon in facts.get('party', []):
+            for move, pp in zip(mon.get('moves', []), mon.get('pp', [])):
+                if move == 'None' or pp <= 0:
+                    continue
+                details = data.move_data(move)
+                if details.get('power', 0) != 0 or details.get('effect') not in useful_effects:
+                    continue
+                bonus, damage_risk = useful_effects[details['effect']]
+                status.append({'pokemon': mon['species'], 'move': move, 'pp': pp,
+                               'accuracy': details.get('accuracy'),
+                               'capture_bonus': bonus,
+                               'residual_damage_risk': damage_risk})
+        return {'ball_inventory': sorted(balls, key=lambda row: row['ball']),
+                'total_balls': sum(row['quantity'] for row in balls),
+                'capture_status_moves': status,
+                'can_apply_safe_capture_status': any(not row['residual_damage_risk'] for row in status)}
+
+    def species_scarcity(self, species, current_map):
+        """Other known wild tables for a target; scarcity is a route decision."""
+        areas = sorted(name for name, map_data in self.maps.items()
+                       if name != current_map and species in self.grass_species(map_data)
+                       and not name.startswith('SafariZone'))
+        return {'other_known_area_count': len(areas), 'other_known_areas': areas[:6],
+                'unique_to_this_known_area': not areas}
+
     def recent_catch_attempts(self, name):
         """Hunts this area saw recently, and how many registered something new."""
         attempts = [attempt for attempt in getattr(self, 'catch_attempts', []) if attempt['map'] == name]
@@ -1030,8 +1138,9 @@ class AutonomousStoryAgent(DualStoryAgent):
                 break
         ranked.sort(key=lambda item: item[:5])
         self.catch_areas = {name: {'species': species, 'spots': spots,
-                                   'reachable': self.catch_navigation[name]['tile_route_found']}
-                            for *_, name, species, spots in ranked[:4]}
+                                   'reachable': self.catch_navigation[name]['tile_route_found'],
+                                   'encounter_value': value}
+                            for *_, name, species, spots, value in ranked[:4]}
         return self.catch_areas
 
     def rank_catch_areas(self, nearby, facts, owned, barriers):
@@ -1066,12 +1175,18 @@ class AutonomousStoryAgent(DualStoryAgent):
             if paths:
                 endpoint = paths[-1][0] if len(paths) > 1 else paths[0]
                 spots = [tuple(endpoint[1:])]  # Use the reachable component.
-            # A richer table is worth a longer wait, but hunts that registered
-            # nothing say the dice are against this area right now.
+            # Shortlist by estimated total effort, but leave the final semantic
+            # trade-off to Jev.  Failed no-yield hunts add another expected hunt
+            # rather than acting as an arbitrary categorical penalty.
             attempts = self.recent_catch_attempts(name)
-            ranked.append((not bool(paths), len(paths)-1 if paths else float('inf'),
-                           -len(species), attempts['hunts'] - attempts['registered'],
-                           name, species, spots))
+            value = encounter_value(self.maps.get(name, {}), owned)
+            hunt_steps = value['expected_steps_to_any_new_species'] or float('inf')
+            misses = attempts['hunts'] - attempts['registered']
+            travel_steps = len(paths)-1 if paths else float('inf')
+            estimated_effort = travel_steps + hunt_steps * (1 + misses)
+            ranked.append((not bool(paths), estimated_effort,
+                           -value['unregistered_encounter_share_pct'], -len(species),
+                           name, species, spots, value))
         return ranked
 
     def add_coverage_groups(self, groups, facts):
@@ -1452,6 +1567,7 @@ class AutonomousStoryAgent(DualStoryAgent):
         if self.collects_dex:
             balls = self.balls_held(facts)
             owned = set((facts.get('dex') or {}).get('owned_species', []))
+            resources = self.collection_resources(facts)
             for name, area in self.find_catch_areas(facts).items():
                 target = ('catch', name, True)
                 groups.setdefault(f'collect:{name}', {
@@ -1468,6 +1584,11 @@ class AutonomousStoryAgent(DualStoryAgent):
                                                  if balls == 0 else
                                                  f'Catching spends balls; {balls} carried'),
                                 'unregistered_species': [catch_difficulty(species) for species in area['species']],
+                                'encounter_value': area.get('encounter_value') or encounter_value(
+                                    self.maps[name], owned),
+                                'species_scarcity': {species: self.species_scarcity(species, name)
+                                                     for species in area['species']},
+                                'collection_resources': resources,
                                 'already_registered_here': [species for species in self.grass_species(self.maps[name])
                                                             if species in owned],
                                 'recent_attempts': self.recent_catch_attempts(name),

@@ -51,6 +51,35 @@ def medicine_options(party, bag):
 BALLS = {name: item for name, item in ITEM_CATALOG.items() if 'ball' in item.get('tags', [])}
 
 
+def capture_probability(ball, enemy):
+    """Exact success probability for a throw in the current battle state.
+
+    This mirrors ``pokered-core/src/battle/capture.rs`` including Gen-I's
+    rejection-sampled Rand1 windows.  Jev can compare the result directly
+    instead of trying to reconstruct an unfamiliar, non-monotonic formula.
+    """
+    if ball == 'MasterBall':
+        return 1.0
+    threshold = {'GreatBall': 200, 'UltraBall': 150}.get(ball, 255)
+    factor = 8 if ball == 'GreatBall' else 12
+    status = str(enemy.get('status', 'None')).lower()
+    if status.startswith(('sleep', 'freeze')):
+        status_subtract = 25
+    elif status.startswith(('burn', 'paraly', 'poison')):
+        status_subtract = 12
+    else:
+        status_subtract = 0
+    quarter_hp = max(int(enemy['hp']) // 4, 1)
+    w_raw = int(enemy['max_hp']) * 255 // factor // quarter_hp
+    successes = 0
+    for rand1 in range(threshold + 1):
+        if status_subtract > rand1:
+            successes += 256
+        elif rand1 - status_subtract <= int(enemy['catch_rate']):
+            successes += 256 if w_raw > 255 else min(w_raw, 255) + 1
+    return round(successes / ((threshold + 1) * 256), 4)
+
+
 def ball_options(live, bag, owned_species=()):
     """Legal ball throws, grounded in public item and species data.
 
@@ -64,12 +93,15 @@ def ball_options(live, bag, owned_species=()):
         return
     enemy = live['enemy']
     catch_rate = late.species_data(enemy['species'])['catchRate']
+    capture_state = {**enemy, 'catch_rate': catch_rate}
     owned = set(owned_species)
     for name, qty in bag.items():
         if qty <= 0 or name not in BALLS:
             continue
         yield name, None, {'ball': name, 'quantity': qty, 'enemy': enemy,
                            'catch_rate': catch_rate,
+                           'capture_probability_now': capture_probability(name, capture_state),
+                           'hp_percent': round(enemy['hp'] / max(1, enemy['max_hp']) * 100, 1),
                            'already_owned': enemy['species'] in owned}
 
 

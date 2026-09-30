@@ -8,7 +8,8 @@ from unittest.mock import Mock, patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from openpokered.playthrough_judgments import ObservedProtocol, move_question, JevGame, replacement_options, medicine_options
-from openpokered.autonomous_story import AutonomousStoryAgent, counter_approaches, reachable_grass, training_tile, battle_readiness
+from openpokered.autonomous_story import (AutonomousStoryAgent, counter_approaches, reachable_grass,
+                                          training_tile, battle_readiness, encounter_value)
 from openpokered.story_agent import StoryStopped
 from openpokered.navigation_skills import cut_requirement, surf_requirement, water_tile, hm_compatible, water_planning
 from openpokered.story_rules import Rule
@@ -701,6 +702,40 @@ class AutonomousTests(unittest.TestCase):
             self.assertEqual(list(self.ranked_catch_agent().find_catch_areas(facts)),
                              ['Route2', 'Route3'])
 
+    def test_encounter_value_uses_real_slot_weights_and_step_rate(self):
+        table = {'wild': {'red': {'grass': {'encounterRate': 25, 'mons': [
+            {'level': 3, 'species': 'Common'}, {'level': 4, 'species': 'Common'},
+            {'level': 5, 'species': 'Common'}, {'level': 6, 'species': 'Common'},
+            {'level': 7, 'species': 'Common'}, {'level': 8, 'species': 'Common'},
+            {'level': 9, 'species': 'Common'}, {'level': 10, 'species': 'Common'},
+            {'level': 11, 'species': 'Common'}, {'level': 12, 'species': 'Pidgey'},
+        ]}}}}
+        value = encounter_value(table, {'Common'})
+        target = value['targets'][0]
+        self.assertEqual(target['species'], 'Pidgey')
+        self.assertEqual(target['encounter_share_pct'], 1.6)  # slot 9 is 4/256
+        self.assertEqual(target['levels'], [12, 12])
+        self.assertEqual(value['new_species_per_step_pct'], 0.15)
+        self.assertEqual(value['expected_steps_to_any_new_species'], 655.4)
+
+    def test_collection_resources_expose_ball_quality_and_safe_status_support(self):
+        agent = AutonomousStoryAgent.__new__(AutonomousStoryAgent)
+        resources = agent.collection_resources({
+            'bag': {'POKEBALL': 3, 'ULTRABALL': 2, 'POTION': 4},
+            'party': [{'species': 'Butterfree', 'moves': ['SleepPowder', 'Poisonpowder'],
+                       'pp': [7, 12]}],
+        })
+        self.assertEqual(resources['total_balls'], 5)
+        self.assertEqual(resources['ball_inventory'], [
+            {'ball': 'PokeBall', 'quantity': 3, 'quality': 'basic'},
+            {'ball': 'UltraBall', 'quantity': 2, 'quality': 'strong'},
+        ])
+        self.assertTrue(resources['can_apply_safe_capture_status'])
+        self.assertEqual([(row['move'], row['capture_bonus'], row['residual_damage_risk'])
+                          for row in resources['capture_status_moves']],
+                         [('SleepPowder', 'strong', False),
+                          ('Poisonpowder', 'moderate', True)])
+
     def test_catch_target_offers_encounter_terrain_without_training_sites(self):
         agent = AutonomousStoryAgent.__new__(AutonomousStoryAgent)
         rule = Rule('catch:Route24', 'Route24', 'skill:catch_encounter', [], [], [],
@@ -831,6 +866,10 @@ class AutonomousTests(unittest.TestCase):
         self.assertEqual(context['recent_attempts'], {'hunts': 2, 'registered': 1})
         self.assertEqual(context['balls_held'], 5)
         self.assertEqual(context['prerequisite'], 'Catching spends balls; 5 carried')
+        self.assertIn('expected_steps_to_any_new_species', context['encounter_value'])
+        self.assertEqual(context['collection_resources']['ball_inventory'],
+                         [{'ball': 'PokeBall', 'quantity': 5, 'quality': 'basic'}])
+        self.assertIn('Chansey', context['species_scarcity'])
         self.assertEqual(context['encounters'],
                          ((agent.maps['Route2'].get('wild') or {}).get('red') or {}).get('grass'))
 
@@ -850,6 +889,8 @@ class AutonomousTests(unittest.TestCase):
         self.assertEqual(panel({'Pidgey'}, {'Zubat', 'Pidgey', 'Rattata'})['seen_not_owned'],
                          ['Rattata', 'Zubat'])
         self.assertEqual(panel({'Pidgey'})['unregistered_by_area'], {'Route2': 2, 'Route3': 2})
+        self.assertEqual(panel({'Pidgey'})['expected_yield_by_area']['Route2']
+                         ['unregistered_encounter_share_pct'], 55.5)
         self.assertEqual(panel({'Pidgey'})['balls_held'], 3)
 
     def test_map_hops_counts_map_crossings_on_real_map_data(self):
@@ -1488,11 +1529,25 @@ class AutonomousTests(unittest.TestCase):
         details = offered[0][2]
         self.assertEqual((details['catch_rate'], details['already_owned'], details['quantity']),
                          (255, False, 5))
+        self.assertEqual((details['capture_probability_now'], details['hp_percent']),
+                         (0.3359, 100.0))
         agent = JevGame.__new__(JevGame)
         agent.judgments = Mock()
         agent.judgments.choose.return_value = 'ball:PokeBall'
         self.assertEqual(JevGame.battle_recovery_plan(agent, state), ('PokeBall', None))
         self.assertIn('ball:PokeBall', agent.judgments.choose.call_args.args[2])
+
+    def test_capture_probability_reflects_hp_status_and_gen1_ball_formula(self):
+        from openpokered.playthrough_judgments import capture_probability
+        enemy = {'hp': 16, 'max_hp': 16, 'catch_rate': 45, 'status': 'None'}
+        full = capture_probability('PokeBall', enemy)
+        sleeping = capture_probability('PokeBall', {**enemy, 'status': 'Sleep'})
+        weakened = capture_probability('PokeBall', {**enemy, 'hp': 1})
+        ultra = capture_probability('UltraBall', enemy)
+        self.assertLess(full, sleeping)
+        self.assertLess(full, weakened)
+        self.assertGreater(ultra, full)
+        self.assertEqual(capture_probability('MasterBall', enemy), 1.0)
 
     def test_collecting_frames_the_ball_choice_around_the_goal(self):
         from openpokered.playthrough_judgments import JevGame
