@@ -534,6 +534,55 @@ def s15_static_retreat():
     _static_retreat(ball_qty=20)
 
 
+@scenario("s19-selected-move-pp", "The first nonzero move slot spends its own PP, not slot zero")
+def s19_selected_move_pp():
+    from types import SimpleNamespace
+    from openpokered.playthrough_judgments import JevGame
+
+    def choose(_axis, _state, candidates, _instruction):
+        return next(key for key, move in candidates.items() if move == "SleepPowder")
+
+    g = Game(seed=42)
+    try:
+        boot_starter(g, "Gloom", 21)
+        assert g.d.cmd(cmd="give_item", item="POKE_BALL", qty=20)["ok"]
+        g.judgments = SimpleNamespace(collects_dex=True, active=None,
+            choose=choose, record=lambda *args, **kwargs: None)
+        g.move_cache, g.move_cache_hits, g.active_milestone = {}, 0, None
+        assert g.d.cmd(cmd="start_wild_battle", species="Caterpie", level=3)["ok"]
+
+        def settle_turn():
+            for _ in range(200):
+                state = g.st()
+                if state["battle_phase"] == "PlayerMenu":
+                    return state
+                g.tap("a", 8)
+                g.step(30)
+            raise AssertionError("native turn did not return to PlayerMenu")
+
+        def open_moves():
+            for button in ("up", "left", "a"):
+                g.tap(button, 8)
+            state = g.st()
+            assert state["battle_phase"] == "MoveSelect"
+            return state["battle_moves"]["moves"]
+
+        settle_turn()
+        before = open_moves()
+        selected = next(i for i, move in enumerate(before) if move["move"] == "SleepPowder")
+        assert selected != 0, before
+        JevGame._select_move(g)
+        settle_turn()
+        after = open_moves()
+        expected = [move["pp"] - (i == selected) for i, move in enumerate(before)]
+        actual = [move["pp"] for move in after]
+        assert actual == expected, {"selected": selected, "before": before,
+                                    "expected": expected, "actual": actual}
+        g.evidence("s19")
+    finally:
+        g.close()
+
+
 def _static_retreat(ball_qty):
     from types import SimpleNamespace
     from openpokered.playthrough_judgments import JevGame

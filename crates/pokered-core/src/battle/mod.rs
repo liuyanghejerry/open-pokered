@@ -4242,6 +4242,17 @@ learn {learn_name}!")];
         {
             use crate::battle::state::{status1, status2};
             let bs = self.battle_state.as_mut().unwrap();
+            // Commit this turn's slot before spending PP. Previously this
+            // assignment happened only inside the stack block below, so the
+            // first turn (or a changed menu choice) charged the previous slot.
+            // Keep the forced-Struggle out-of-range sentinel intact.
+            bs.player.selected_move_index = if player_move_id == MoveId::Struggle
+                && bs.player.selected_move_index >= 4
+            {
+                4
+            } else {
+                move_index as u8
+            };
             let pp_spend = !player_call_failed
                 && !player_scared
                 && !player_disobeyed
@@ -4286,15 +4297,6 @@ learn {learn_name}!")];
                 pokered_rules::set_last_move_live(BattlerRef::PLAYER, disable_target_last_move(&bs.player));
                 pokered_rules::set_last_move_live(BattlerRef::OPPONENT, disable_target_last_move(&bs.enemy));
                 bs.player.selected_move = player_move_id;
-                // Preserve a forced-Struggle's out-of-range marker (slot 4);
-                // normal turns record the menu slot.
-                bs.player.selected_move_index = if player_move_id == MoveId::Struggle
-                    && bs.player.selected_move_index >= 4
-                {
-                    4
-                } else {
-                    move_index as u8
-                };
                 bs.enemy.selected_move = enemy_move_id;
                 bs.enemy.selected_move_index = enemy_move_idx;
                 // A mon that ENTERS the turn recharging (Hyper Beam) is forced to skip
@@ -7296,6 +7298,20 @@ mod hp_bar_anim_tests {
             screen.execute_turn_with_move(0);
             let pp1 = screen.battle_state.as_ref().unwrap().player.active_mon().pp[0];
             assert_eq!(pp0.saturating_sub(1), pp1, "Gust costs 1 PP");
+        }
+
+        #[test]
+        fn changed_menu_slots_spend_only_the_current_slots_pp() {
+            let player = vec![mk(Species::Pidgey, 20, [MoveId::Growl; 4])];
+            let enemy = vec![mk(Species::Snorlax, 100, [MoveId::Growl; 4])];
+            let mut screen = BattleScreen::from_parties(true, &player, &enemy, None);
+            let mut expected = screen.battle_state.as_ref().unwrap().player.active_mon().pp;
+            for slot in [3, 1, 2, 0] {
+                expected[slot] -= 1;
+                screen.execute_turn_with_move(slot);
+                assert_eq!(screen.battle_state.as_ref().unwrap().player.active_mon().pp,
+                           expected, "only the selected slot {slot} spends PP");
+            }
         }
 
         /// Thrash's continuation turns (THRASHING_ABOUT set on entry) spend no PP —
