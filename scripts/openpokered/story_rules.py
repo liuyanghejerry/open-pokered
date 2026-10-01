@@ -409,6 +409,32 @@ def static_retreat_contract(battle, rules):
             'post_battle_effects': [rule.effect for rule in writes]}
 
 
+def spent_static_source(battle, rules, facts):
+    """Prove a consumed battle's monotone completion flag blocks its entry.
+
+    Temporary visibility, route gates and unknown expressions are not proof.
+    A flag is monotone only within the indexed scripts; this is evidence of a
+    spent source, not a general proof that all unseen game mechanics are absent.
+    """
+    writes = {rule.effect[1] for rule in rules if rule.storyline == battle.storyline
+              and battle.effect in rule.preceding and rule.effect[0] == 'flag'
+              and rule.effect[2] is True}
+    cleared = {rule.effect[1] for rule in rules if rule.effect[0] == 'flag'
+               and rule.effect[2] is False}
+    evidence = []
+    for flag in sorted(writes - cleared):
+        if not facts.get('flags', {}).get(flag):
+            continue
+        without = {**facts, 'flags': {**facts.get('flags', {}), flag: False}}
+        if any(evaluate(expr, facts) is not None
+               and bool(evaluate(expr, facts)) != wanted
+               and evaluate(expr, without) is not None
+               and bool(evaluate(expr, without)) == wanted
+               for expr, wanted in battle.guards):
+            evidence.append(flag)
+    return evidence
+
+
 class StoryIndex:
     def __init__(self, client, maps_dir=None):
         self.client = client

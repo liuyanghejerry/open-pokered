@@ -17,7 +17,7 @@ import playthrough as pt
 import playthrough_late as data
 
 from .story_agent import DualStoryAgent, StoryStopped, attempt_key
-from .story_rules import Rule, requirements, evaluate, static_retreat_contract
+from .story_rules import Rule, requirements, evaluate, static_retreat_contract, spent_static_source
 from .playthrough_judgments import (ObservedProtocol, NavigationPause, attack_profile, replacement_options,
                                     MEDICINES, BALLS, medicine_options, effective_attacks, ITEM_CATALOG,
                                     PREFERENCE_INSTRUCTIONS)
@@ -530,6 +530,8 @@ class AutonomousStoryAgent(DualStoryAgent):
                         party_count=len(facts['party']),
                         stored_count=len(facts['stored_pokemon']), frame=live['frame_count'])
             self._recorded_dex_species = owned_species
+        if self.collects_dex:
+            self.require_static_sources(facts)
         if self.index:
             for rule in self.index.rules:
                 if (rule.effect[0] != 'block' or 'load' not in rule.triggers or rule.map == facts['map']
@@ -1223,6 +1225,43 @@ class AutonomousStoryAgent(DualStoryAgent):
             return False
         plan = solo_plan(self.complete_collection_graph(), owned, infer_solo_choices(owned))
         return set(plan['reachable_species']) <= owned
+
+    def require_static_sources(self, facts):
+        """Stop promptly when every indexed source of a missing species is spent.
+
+        Keep 124 as the requested target; do not lower it to match lost sources.
+        Unknown/unindexed paths are not classified as permanently exhausted.
+        """
+        rules = getattr(getattr(self, 'index', None), 'rules', None)
+        if not isinstance(rules, list):
+            return
+        owned = self.validated_owned(facts)
+        losses = []
+        for species, methods in self.complete_collection_graph().items():
+            if species in owned:
+                continue
+            methods = [method for method in methods if not method.get('external_trade')
+                       and method['method'] != 'unavailable']
+            if not methods or any(method['method'] != 'static' for method in methods):
+                continue
+            sources = []
+            for method in methods:
+                candidates = [rule for rule in rules if rule.map == method['map']
+                    and rule.storyline == method['map'] + ':' + method['storyline']
+                    and rule.effect[0] == 'battle' and self.same_species(rule.effect[1], species)]
+                if not candidates:
+                    break  # Missing semantics never proves permanent loss.
+                flags = [spent_static_source(rule, rules, facts) for rule in candidates]
+                if not all(flags):
+                    break
+                sources.append({'map': method['map'], 'script': method['storyline'],
+                                'completion_flags': sorted({flag for row in flags for flag in row})})
+            else:
+                losses.append({'species': species, 'spent_sources': sources})
+        if losses:
+            self.record('finite_collection_source_lost', losses=losses,
+                        scope='All catalogued solo methods are static and blocked by observed monotone completion flags')
+            raise StoryStopped('finite_collection_source_lost:' + ','.join(row['species'] for row in losses))
 
     def collection_graph(self):
         graph = getattr(self, '_collection_graph', None)

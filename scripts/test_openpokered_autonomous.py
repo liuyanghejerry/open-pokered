@@ -306,6 +306,49 @@ class AutonomousTests(unittest.TestCase):
         self.assertNotIn('Explosion', threat['self_knockout_moves'])
         self.assertIn('Explosion', capture_threat({'species': 'Electrode', 'level': 50})['self_knockout_moves'])
 
+    def test_consumed_static_source_requires_observed_monotone_entry_blocker(self):
+        from openpokered.story_rules import spent_static_source
+        guard = {'Call': {'callee': 'getFlag', 'args': [{'StringLit': 'SPENT'}]}}
+        battle = Rule('b', 'PowerPlant', 'PowerPlant:bird', [], [(guard, False)], [],
+                      ('battle', 'ZAPDOS', True), [])
+        completed = Rule('c', battle.map, battle.storyline, [], [], [],
+                         ('flag', 'SPENT', True), [battle.effect])
+        rules = [battle, completed]
+        self.assertEqual(spent_static_source(battle, rules, {'flags': {}}), [])
+        self.assertEqual(spent_static_source(battle, rules, {'flags': {'SPENT': True}}), ['SPENT'])
+        reset = Rule('r', battle.map, 'reset', [], [], [], ('flag', 'SPENT', False), [])
+        self.assertEqual(spent_static_source(battle, rules + [reset], {'flags': {'SPENT': True}}), [])
+        battle.guards = [({'Visible': ['BIRD', False]}, True)]
+        self.assertEqual(spent_static_source(battle, rules,
+                         {'flags': {'SPENT': True, '__OBJ_HIDDEN_BIRD': True}}), [])
+
+    def test_static_source_loss_gate_keeps_owned_alternatives_and_unknown_paths(self):
+        agent = AutonomousStoryAgent.__new__(AutonomousStoryAgent)
+        guard = {'Call': {'callee': 'getFlag', 'args': [{'StringLit': 'SPENT'}]}}
+        battle = Rule('b', 'PowerPlant', 'PowerPlant:bird', [], [(guard, False)], [],
+                      ('battle', 'ZAPDOS', True), [])
+        completed = Rule('c', battle.map, battle.storyline, [], [], [],
+                         ('flag', 'SPENT', True), [battle.effect])
+        agent.index = Mock(rules=[battle, completed])
+        agent.record = Mock()
+        method = {'method': 'static', 'map': 'PowerPlant', 'storyline': 'bird'}
+        graph = {'Zapdos': [method]}
+        agent.complete_collection_graph = lambda: graph
+        facts = {'flags': {'SPENT': True}, 'dex': {'owned_species': []}}
+        with self.assertRaisesRegex(StoryStopped, 'finite_collection_source_lost:Zapdos'):
+            agent.require_static_sources(facts)
+        agent.record.assert_called_once()
+        facts['dex']['owned_species'] = ['Zapdos']
+        agent.require_static_sources(facts)
+        facts['dex']['owned_species'] = []
+        graph['Zapdos'].append({'method': 'grass', 'map': 'Elsewhere'})
+        agent.require_static_sources(facts)
+        graph['Zapdos'] = [method, {**method, 'map': 'Unknown'}]
+        agent.require_static_sources(facts)
+        graph['Zapdos'] = [method]
+        facts['flags'] = {}
+        agent.require_static_sources(facts)
+
     def test_capture_inventory_risk_keeps_reference_assumptions_and_finite_source_cost(self):
         from openpokered.collection_planner import acquisition_contract
         risk = capture_inventory_risk('Snorlax', [{'ball': 'PokeBall', 'quantity': 9}])
