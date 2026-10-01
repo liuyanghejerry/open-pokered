@@ -1018,6 +1018,9 @@ pub struct BattleScreen {
     /// its current battle state (HP/status/level/moves). The app layer moves it
     /// into the party (or a PC box if full) and registers it in the Pokédex.
     pub captured_mon: Option<state::Pokemon>,
+    /// Wild send-out identity/DVs, separate from Transform's mutable battler.
+    /// Equivalent to wEnemyMonSpecies2 / wTransformedEnemyMonOriginalDVs.
+    pub wild_encounter: Option<state::Pokemon>,
     /// True when the battle was escaped with a POKé DOLL (`wEscapedFromBattle`
     /// in the original, set ONLY by ItemUsePokeDoll). The original keeps
     /// `wBattleResult` at 0 for a Doll escape but writes $2 for a menu run
@@ -1299,6 +1302,7 @@ impl BattleScreen {
             trainer_npc_index: None,
             end_battle_text: None,
             captured_mon: None,
+            wild_encounter: None,
             escaped_via_poke_doll: false,
             pending_learn_moves: Vec::new(),
             map_id: 0,
@@ -1397,6 +1401,7 @@ impl BattleScreen {
             trainer_npc_index: None,
             end_battle_text: None,
             captured_mon: None,
+            wild_encounter: if is_wild { Some(*enemy) } else { None },
             escaped_via_poke_doll: false,
             pending_learn_moves: Vec::new(),
             map_id: 0,
@@ -3284,11 +3289,35 @@ learn {learn_name}!")];
         );
     }
 
+    pub fn wild_capture_species(&self) -> Option<Species> {
+        if !self.is_wild {
+            return None;
+        }
+        let bs = self.battle_state.as_ref()?;
+        // ItemUseBall deliberately assumes every transformed wild is Ditto
+        // (including the original Mirror Move bug). The battle form is not
+        // the species placed in the party/box or registered in the Pokédex.
+        Some(if bs.enemy.has_status3(state::status3::TRANSFORMED) {
+            Species::Ditto
+        } else {
+            self.wild_encounter.as_ref().unwrap_or(bs.enemy.active_mon()).species
+        })
+    }
+
+    pub fn wild_capture_rate(&self) -> Option<u8> {
+        if !self.is_wild {
+            return None;
+        }
+        let bs = self.battle_state.as_ref()?;
+        // Transform does not overwrite wEnemyMonActualCatchRate.
+        let original = self.wild_encounter.as_ref().unwrap_or(bs.enemy.active_mon());
+        pokered_data::pokemon_data::get_base_stats(original.species).map(|s| s.catch_rate)
+    }
+
     fn use_ball(&mut self, ball_id: ItemId) {
         use crate::battle::capture::{
             try_capture_with_rolls, CaptureContext, CaptureResult,
         };
-        use pokered_data::pokemon_data::get_base_stats;
         let ball_name = pokered_data::item_data::get_item_data(ball_id)
             .map(|d| d.name)
             .unwrap_or("POKé BALL");
@@ -3332,17 +3361,25 @@ learn {learn_name}!")];
             );
             return;
         }
+        let catch_rate = self.wild_capture_rate().unwrap_or(255);
         if let Some(ref mut bs) = self.battle_state {
             let enemy = bs.enemy.active_mon();
-            let catch_rate = get_base_stats(enemy.species)
-                .map(|s| s.catch_rate)
-                .unwrap_or(255);
             // Snapshot the wild mon in its current (weakened) state before the
             // borrow of `bs` ends, so it can be handed to the party on a catch.
             // A freshly caught mon is the player's own: stamp it with the
             // player's OT ID/name (MON_OTID + the party OT-name table) so
             // obedience and the SRAM round-trip see it as self-caught.
             let mut caught_candidate = enemy.clone();
+            if bs.enemy.has_status3(state::status3::TRANSFORMED) {
+                // ItemUseBall reloads Ditto's natural stats/moves with its
+                // original DVs, then restores current HP and status. Do not
+                // persist the copied species, attacks or five-PP move set.
+                let dvs = self.wild_encounter.as_ref().unwrap_or(enemy).dv_bytes;
+                caught_candidate = crate::pokemon::stats::create_pokemon(
+                    Species::Ditto, enemy.level, dvs).expect("Ditto species data");
+                caught_candidate.hp = enemy.hp;
+                caught_candidate.status = enemy.status;
+            }
             caught_candidate.ot_id = self.player_id;
             if caught_candidate.ot_name == [0x50; 11] {
                 if let Some(name) = &self.player_name {
@@ -6123,6 +6160,52 @@ mod trainer_ai_action_tests {
         assert!(hp > 100, "enemy-first: the heal (1 → 201) applied before the player's chip (hp={hp})");
     }
 }
+#[cfg(test)]
+mod transformed_capture_tests {
+    use super::*;
+    use crate::pokemon::stats::create_pokemon;
+
+    #[test]
+    fn transformed_wild_capture_restores_ditto_but_preserves_hp_status_and_dvs() {
+        let player = create_pokemon(Species::Gloom, 21, [0xFF, 0xFF]).unwrap();
+        let original = create_pokemon(Species::Ditto, 26, [0x97, 0xA5]).unwrap();
+        let mut screen = BattleScreen::from_parties(true, &[player], &[original], None);
+        let copied = create_pokemon(Species::Gloom, 26, [0xFF, 0xFF]).unwrap();
+        let bs = screen.battle_state.as_mut().unwrap();
+        *bs.enemy.active_mon_mut() = copied;
+        bs.enemy.active_mon_mut().hp = 7;
+        bs.enemy.active_mon_mut().status = StatusCondition::Paralysis;
+        bs.enemy.set_status3(state::status3::TRANSFORMED);
+        assert_eq!(screen.wild_capture_species(), Some(Species::Ditto));
+        assert_eq!(screen.wild_capture_rate(), Some(35));
+        screen.use_ball(ItemId::MasterBall);
+        let captured = screen.captured_mon.unwrap();
+        assert_eq!(captured.species, Species::Ditto);
+        assert_eq!(captured.moves, original.moves);
+        assert_eq!(captured.pp, original.pp);
+        assert_eq!(captured.dv_bytes, original.dv_bytes);
+        assert_eq!(captured.max_hp, original.max_hp);
+        assert_eq!((captured.attack, captured.defense, captured.speed, captured.special),
+                   (original.attack, original.defense, original.speed, original.special));
+        assert_eq!(captured.hp, 7);
+        assert_eq!(captured.status, StatusCondition::Paralysis);
+    }
+
+    #[test]
+    fn transform_does_not_replace_original_catch_rate_with_copied_form_rate() {
+        let player = create_pokemon(Species::Gloom, 21, [0xFF, 0xFF]).unwrap();
+        let original = create_pokemon(Species::Pidgey, 26, [0x97, 0xA5]).unwrap();
+        let mut screen = BattleScreen::from_parties(true, &[player], &[original], None);
+        let bs = screen.battle_state.as_mut().unwrap();
+        bs.enemy.active_mon_mut().species = Species::Gloom;
+        bs.enemy.set_status3(state::status3::TRANSFORMED);
+        // Preserve the original game's Mirror Move -> transformed Ditto bug,
+        // while retaining the original species' actual catch rate.
+        assert_eq!(screen.wild_capture_species(), Some(Species::Ditto));
+        assert_eq!(screen.wild_capture_rate(), Some(255));
+    }
+}
+
 /// Pokémon-Tower GHOST (no Silph Scope): an unidentified, uncatchable wild encounter.
 #[cfg(test)]
 mod ghost_tests {

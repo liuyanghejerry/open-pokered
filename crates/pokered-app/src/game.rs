@@ -6159,6 +6159,8 @@ impl PokemonGame {
                 "player": { "species": format!("{:?}", player.species), "level": player.level, "hp": player.hp,
                     "max_hp": player.max_hp, "status": format!("{:?}", player.status) },
                 "enemy": { "species": format!("{:?}", enemy.species), "level": enemy.level, "hp": enemy.hp,
+                    "capture_species": self.battle.wild_capture_species().map(|sp| format!("{:?}", sp)),
+                    "capture_catch_rate": self.battle.wild_capture_rate(),
                     "max_hp": enemy.max_hp, "status": format!("{:?}", enemy.status) },
                 "enemy_party": bs.enemy.party.iter().map(|mon| serde_json::json!({
                     "species": format!("{:?}", mon.species), "level": mon.level, "hp": mon.hp,

@@ -583,6 +583,57 @@ def s19_selected_move_pp():
         g.close()
 
 
+@scenario("s20-transformed-capture", "A transformed wild Ditto is caught and registered as Ditto")
+def s20_transformed_capture():
+    from types import SimpleNamespace
+    from openpokered.playthrough_judgments import JevGame
+
+    g = Game(seed=42)
+    try:
+        boot_starter(g, "Gloom", 21)
+        assert g.d.cmd(cmd="give_item", item="MASTER_BALL", qty=2)["ok"]
+        # Register the copied form first, so this covers the exact real-run
+        # failure: an unregistered Ditto copies an already-owned Gloom.
+        assert g.d.cmd(cmd="start_wild_battle", species="Gloom", level=1)["ok"]
+        throw_balls_until_caught(g, max_balls=5)
+        dismiss_dex_screen(g)
+        assert "Gloom" in g.st()["pokedex"]["owned_species"]
+        g.judgments = SimpleNamespace(collects_dex=True, active=None,
+            choose=lambda _axis, _state, candidates, _instruction:
+                ('ball:MasterBall' if 'ball:MasterBall' in candidates else
+                 next(key for key, move in candidates.items() if move == "StunSpore")),
+            record=lambda *args, **kwargs: None)
+        g.move_cache, g.move_cache_hits, g.active_milestone = {}, 0, None
+        assert g.d.cmd(cmd="start_wild_battle", species="Ditto", level=26)["ok"]
+        def settle_turn():
+            for _ in range(200):
+                state = g.st()
+                if state["battle_phase"] == "PlayerMenu":
+                    return state
+                g.tap("a", 8)
+                g.step(30)
+            raise AssertionError("Transform turn did not settle")
+
+        settle_turn()
+        for button in ("up", "left", "a"):
+            g.tap(button, 8)
+        JevGame._select_move(g)
+        state = settle_turn()
+        assert state["battle_live"]["enemy"]["species"] == "Gloom", state["battle_live"]
+        assert state["battle_live"]["enemy"]["capture_species"] == "Ditto", state["battle_live"]
+        assert state["battle_live"]["enemy"]["capture_catch_rate"] == 35, state["battle_live"]
+        assert JevGame.battle_recovery_plan(g, state) == ("MasterBall", None)
+        throws = throw_balls_until_caught(g, max_balls=5)
+        dismiss_dex_screen(g)
+        party = g.d.cmd(cmd="get_party")["data"]
+        assert throws == 1, throws
+        assert party[-1]["species"] == "Ditto", party[-1]
+        assert "Ditto" in g.st()["pokedex"]["owned_species"], g.st()["pokedex"]
+        g.evidence("s20")
+    finally:
+        g.close()
+
+
 def _static_retreat(ball_qty):
     from types import SimpleNamespace
     from openpokered.playthrough_judgments import JevGame

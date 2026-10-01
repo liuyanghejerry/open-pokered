@@ -2845,6 +2845,37 @@ class AutonomousTests(unittest.TestCase):
         self.assertEqual(JevGame.battle_recovery_plan(agent, state), ('PokeBall', None))
         self.assertIn('ball:PokeBall', agent.judgments.choose.call_args.args[2])
 
+    def test_transform_keeps_capture_identity_and_original_catch_rate(self):
+        from types import SimpleNamespace
+        from openpokered.playthrough_judgments import ball_options, capture_intent, capture_status_options, JevGame
+        state = self.battle_state()
+        state['battle_live']['enemy'].update(species='Gloom', capture_species='Ditto',
+                                           capture_catch_rate=35)
+        state['pokedex'] = {'owned_species': ['Gloom']}
+        judgments = SimpleNamespace(collects_dex=True, active=None)
+        self.assertTrue(capture_intent(state, judgments))
+        offered = list(ball_options(state['battle_live'], {'PokeBall': 5}, ['Gloom']))
+        details = offered[0][2]
+        self.assertEqual((details['capture_species'], details['catch_rate'], details['already_owned']),
+                         ('Ditto', 35, False))
+        mon = {'moves': ['SleepPowder'], 'pp': [15]}
+        status = capture_status_options(mon, state['battle_live']['enemy'], {'PokeBall': 5})[0]
+        from openpokered.playthrough_judgments import capture_probability
+        expected = capture_probability('PokeBall', {**state['battle_live']['enemy'],
+                                                   'status': 'Sleep(2)', 'catch_rate': 35})
+        self.assertEqual(status['capture_probability_if_status_lands']['PokeBall'], expected)
+        game = JevGame.__new__(JevGame)
+        game.judgments = Mock(collects_dex=True, active=None)
+        game.judgments.choose.return_value = 'ball:PokeBall'
+        self.assertEqual(game.battle_recovery_plan(state), ('PokeBall', None))
+        options = game.judgments.choose.call_args.args[2]
+        self.assertIn('Prepare capture', options['fight'])
+        self.assertFalse(json.loads(options['ball:PokeBall'])['already_owned'])
+        state['pokedex']['owned_species'].append('Ditto')
+        self.assertFalse(capture_intent(state, judgments))
+        judgments.active = {'context': {'required_capture_species': 'Ditto'}}
+        self.assertTrue(capture_intent(state, judgments))
+
     def test_capture_probability_reflects_hp_status_and_gen1_ball_formula(self):
         from openpokered.playthrough_judgments import capture_probability
         enemy = {'hp': 16, 'max_hp': 16, 'catch_rate': 45, 'status': 'None'}

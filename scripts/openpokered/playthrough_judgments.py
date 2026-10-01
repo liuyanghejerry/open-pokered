@@ -91,6 +91,16 @@ def capture_probability(ball, enemy):
     return round(successes / ((threshold + 1) * 256), 4)
 
 
+def capture_species(enemy):
+    """Native catch identity is separate from a mutable Transform battle form."""
+    return enemy.get('capture_species') or enemy['species']
+
+
+def capture_catch_rate(enemy):
+    observed = enemy.get('capture_catch_rate')
+    return observed if observed is not None else late.species_data(capture_species(enemy))['catchRate']
+
+
 def ball_options(live, bag, owned_species=()):
     """Legal ball throws, grounded in public item and species data.
 
@@ -104,7 +114,7 @@ def ball_options(live, bag, owned_species=()):
             or live.get('capture_blocked_reason')):
         return
     enemy = live['enemy']
-    catch_rate = late.species_data(enemy['species'])['catchRate']
+    catch_rate = capture_catch_rate(enemy)
     capture_state = {**enemy, 'catch_rate': catch_rate}
     owned = set(owned_species)
     for name, qty in bag.items():
@@ -114,7 +124,8 @@ def ball_options(live, bag, owned_species=()):
                            'catch_rate': catch_rate,
                            'capture_probability_now': capture_probability(name, capture_state),
                            'hp_percent': round(enemy['hp'] / max(1, enemy['max_hp']) * 100, 1),
-                           'already_owned': enemy['species'] in owned}
+                           'capture_species': capture_species(enemy),
+                           'already_owned': capture_species(enemy) in owned}
 
 
 def capture_source_requested(state, judgments):
@@ -125,7 +136,7 @@ def capture_source_requested(state, judgments):
         return False
     active = getattr(judgments, 'active', None)
     context = active.get('context', {}) if isinstance(active, dict) else {}
-    species = live['enemy']['species']
+    species = capture_species(live['enemy'])
     return bool(context.get('required_capture_species') == species or
                 (getattr(judgments, 'collects_dex', False) and species not in
                  (state.get('pokedex') or {}).get('owned_species', [])))
@@ -167,7 +178,7 @@ def capture_retreat(state, judgments):
     rules = getattr(getattr(judgments, 'index', None), 'rules', [])
     if not isinstance(rules, list):
         return None
-    species = state['battle_live']['enemy']['species'].replace('_', '').upper()
+    species = capture_species(state['battle_live']['enemy']).replace('_', '').upper()
     sources = [rule for rule in rules if rule.map == state['map_name']
                and rule.effect[0] == 'battle' and isinstance(rule.effect[1], str)
                and rule.effect[1].replace('_', '').upper() == species]
@@ -202,7 +213,7 @@ def capture_status_options(mon, enemy, bag):
         if effectiveness == 0:
             continue
         projected = {ball: capture_probability(ball, {**enemy, 'status': status,
-                         'catch_rate': enemy_data['catchRate']})
+                         'catch_rate': capture_catch_rate(enemy)})
                      for ball, quantity in bag.items() if ball in BALLS and quantity > 0}
         result.append({'slot': index, 'move': name, 'pp': pp, 'power': 0,
                        'accuracy': move['accuracy'], 'effectiveness': effectiveness,
@@ -571,7 +582,7 @@ class JevGame(pt.Game):
             bindings[key] = item, index
         owned = (state.get('pokedex') or {}).get('owned_species', [])
         balls = [] if capture_storage_full(state) else list(ball_options(live, bag, owned))
-        required_source = context.get('required_capture_species') == live['enemy']['species']
+        required_source = context.get('required_capture_species') == capture_species(live['enemy'])
         for ball, _target, details in balls:
             key = f'ball:{ball}'
             if required_source:
@@ -620,6 +631,9 @@ class JevGame(pt.Game):
                 'limited ball supply at full HP when viable preparation substantially raises capture odds; '
                 'do not knock out the target or use residual poison/burn damage to prepare it.')
         if capturing:
+            instruction += (' Use enemy.capture_species as the species that a successful ball registers, '
+                'and enemy.species for the current combat form and type matchups. Transform can copy an '
+                'already registered form without changing an unregistered capture target into a duplicate.')
             if retreat and not balls:
                 instruction += (' No usable capture ball/storage capacity remains. Preserve this '
                     'retryable source through RUN; replenish balls or free the current box before retrying. '

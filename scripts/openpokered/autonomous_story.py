@@ -22,7 +22,7 @@ from .story_rules import Rule, requirements, evaluate, static_retreat_contract, 
 from .playthrough_judgments import (ObservedProtocol, NavigationPause, attack_profile, replacement_options,
                                     MEDICINES, BALLS, medicine_options, effective_attacks, ITEM_CATALOG,
                                     PREFERENCE_INSTRUCTIONS)
-from .playthrough_judgments import capture_probability
+from .playthrough_judgments import capture_probability, capture_species
 from .navigation_skills import (cut_requirement, surf_requirement, water_planning, water_tile,
                                 hm_compatible, machine_compatible, HM_MOVES, TM_MOVES, CUT_TILES)
 from .navigation_skills import surf_current_prerequisites, field_badge_prerequisites, surf_path_prerequisites
@@ -1229,14 +1229,15 @@ class AutonomousStoryAgent(DualStoryAgent):
         phase = after.get('battle_phase', '')
         live = before.get('battle_live') or {}
         enemy = live.get('enemy') or {}
+        captured_species = capture_species(enemy) if enemy else None
         if (getattr(self, 'collects_dex', False) and before.get('script_awaiting_battle') and live.get('is_wild')
-                and 'escaped: true' in phase and enemy.get('species') not in
+                and 'escaped: true' in phase and captured_species not in
                 (after.get('pokedex') or {}).get('owned_species', [])):
             party = [{**base, **mon} for base, mon in zip(before.get('party', []), live.get('player_party', []))]
             preparation = capture_preparation(party, {row['item']: row['qty']
                 for row in before.get('battle_inventory', [])})
-            key = before['map_name'] + ':' + enemy['species']
-            evidence = {'map': before['map_name'], 'species': enemy['species'],
+            key = before['map_name'] + ':' + captured_species
+            evidence = {'map': before['map_name'], 'species': captured_species,
                         'preparation': preparation, 'reason': 'native_menu_escape_without_registration'}
             self.capture_retreats[key] = evidence
             self.record('capture_retreat', **evidence)
