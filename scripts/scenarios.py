@@ -531,6 +531,10 @@ def s14_capture_sleep():
 
 @scenario("s15-static-retreat", "Jev menu RUN preserves the native Zapdos source for a retry")
 def s15_static_retreat():
+    _static_retreat(ball_qty=20)
+
+
+def _static_retreat(ball_qty):
     from types import SimpleNamespace
     from openpokered.playthrough_judgments import JevGame
     from openpokered.story_rules import StoryIndex
@@ -538,7 +542,8 @@ def s15_static_retreat():
     g = Game(seed=42)
     try:
         boot_starter(g, "Nidoqueen", 70)
-        assert g.d.cmd(cmd="give_item", item="POKE_BALL", qty=20)["ok"]
+        if ball_qty:
+            assert g.d.cmd(cmd="give_item", item="POKE_BALL", qty=ball_qty)["ok"]
         semantics = lambda name=None: (g.d.cmd(cmd="get_script_semantics", map=name)["data"]
                                      if name else {"maps": ["PowerPlant"]})
         index = StoryIndex(SimpleNamespace(script_semantics=semantics))
@@ -594,11 +599,22 @@ def s15_static_retreat():
         bird = next(n for n in g.d.cmd(cmd="get_npcs")["data"] if n["text_id"] == 9)
         assert bird["visible"], bird
         assert "Zapdos" not in g.st()["pokedex"]["owned_species"]
+        assert not g.d.cmd(cmd="get_flags")["data"].get("EVENT_BEAT_ZAPDOS", False)
+        # Load-time scripts must not silently spend the source either.
+        assert g.d.cmd(cmd="warp", map="Route10", x=10, y=10)["ok"]
+        g.step(180)
+        assert g.d.cmd(cmd="warp", map="PowerPlant", x=4, y=10)["ok"]
+        g.step(180)
         # Start the same native source again: visibility alone is not enough.
         encounter()
         g.evidence("s15")
     finally:
         g.close()
+
+
+@scenario("s18-empty-ball-static-retreat", "No balls preserves static capture intent and native Zapdos after RUN/re-entry")
+def s18_empty_ball_static_retreat():
+    _static_retreat(ball_qty=0)
 
 
 # ── runner ──────────────────────────────────────────────────────────────

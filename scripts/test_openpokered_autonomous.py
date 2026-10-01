@@ -2675,6 +2675,32 @@ class AutonomousTests(unittest.TestCase):
         self.assertEqual(game.battle_recovery_plan(state), ('PokeBall', None))
         self.assertNotIn('fight', game.judgments.choose.call_args.args[2])
 
+    def test_retryable_source_without_capacity_never_becomes_attack_goal(self):
+        from openpokered.playthrough_judgments import capture_intent
+        for full_storage in (False, True):
+            with self.subTest(full_storage=full_storage):
+                game = JevGame.__new__(JevGame)
+                state = self.capture_support_state()
+                if full_storage:
+                    state['battle_live']['capture_blocked_reason'] = 'storage_full'
+                else:
+                    state['battle_inventory'] = []
+                state.update(screen='battle', battle_phase='MoveSelect', battle_moves={
+                    'cursor': 0, 'moves': [{'move': 'Flamethrower', 'pp': 15, 'disabled': False}]})
+                game.st = Mock(return_value=state)
+                game.tap, game.step = Mock(), Mock()
+                game.judgments = Mock(collects_dex=True, active={'context': {}})
+                game.judgments.choose.return_value = 'run'
+                with patch('openpokered.playthrough_judgments.capture_retreat',
+                           return_value={'contracts': [], 'purpose': 'preserve source'}):
+                    self.assertTrue(capture_intent(state, game.judgments))
+                    game._select_move()
+                    game.tap.assert_called_once_with('b', 4)
+                    game.judgments.choose.assert_not_called()
+                    self.assertEqual(game.battle_recovery_plan(state), ('run', None))
+                    self.assertNotIn('fight', game.judgments.choose.call_args.args[2])
+                    self.assertIn('capture is impossible', game.judgments.choose.call_args.args[3])
+
     def test_balls_are_never_offered_against_a_trainer_or_in_the_safari_zone(self):
         from openpokered.playthrough_judgments import ball_options, JevGame
         self.assertEqual(list(ball_options({'is_wild': False, 'enemy': {'species': 'Caterpie'}}, {'PokeBall': 5})), [])

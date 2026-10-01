@@ -117,13 +117,11 @@ def ball_options(live, bag, owned_species=()):
                            'already_owned': enemy['species'] in owned}
 
 
-def capture_intent(state, judgments):
+def capture_source_requested(state, judgments):
+    """Collection intent does not disappear when the last ball is spent."""
     live = state['battle_live']
     if (not live.get('is_wild') or live.get('is_safari') or live.get('is_ghost')
-            or live.get('capture_blocked_reason')):
-        return False
-    if capture_storage_full(state) or not any(slot['item'] in BALLS and slot['qty'] > 0
-                                             for slot in state.get('battle_inventory', [])):
+            or live.get('capture_blocked_reason') not in (None, 'storage_full')):
         return False
     active = getattr(judgments, 'active', None)
     context = active.get('context', {}) if isinstance(active, dict) else {}
@@ -131,6 +129,15 @@ def capture_intent(state, judgments):
     return bool(context.get('required_capture_species') == species or
                 (getattr(judgments, 'collects_dex', False) and species not in
                  (state.get('pokedex') or {}).get('owned_species', [])))
+
+
+def capture_intent(state, judgments):
+    if not capture_source_requested(state, judgments):
+        return False
+    usable_supply = not capture_storage_full(state) and any(
+        slot['item'] in BALLS and slot['qty'] > 0
+        for slot in state.get('battle_inventory', []))
+    return usable_supply or capture_retreat(state, judgments) is not None
 
 
 def capture_threat(enemy):
@@ -529,11 +536,7 @@ class JevGame(pt.Game):
                            and context.get('trigger') == 'level'
                            and party[active]['species'] == context.get('from_species'))
         capturing = capture_intent(state, self.judgments) and not capture_storage_full(state)
-        seeking_source = (live.get('is_wild') and not live.get('is_safari')
-            and not live.get('is_ghost') and not live.get('capture_blocked_reason')
-            and (context.get('required_capture_species') == live['enemy']['species']
-            or getattr(self.judgments, 'collects_dex', False) and live['enemy']['species'] not in
-            (state.get('pokedex') or {}).get('owned_species', [])))
+        seeking_source = capture_source_requested(state, self.judgments)
         retreat = capture_retreat(state, self.judgments) if seeking_source else None
         capturing = capturing or retreat is not None
         if retreat:
@@ -575,6 +578,10 @@ class JevGame(pt.Game):
                 details = {**details, 'required_as_trade_or_evolution_source': True}
             candidates[key] = json.dumps(details)
             bindings[key] = ball, None
+        if retreat and not balls:
+            # No preparation can result in a catch this attempt. Keep recovery
+            # and RUN available, but never offer victory as a capture fallback.
+            candidates.pop('fight', None)
         if (capturing and bindings and getattr(self, '_capture_declined_fight', None)
                 == capture_turn_key(state)):
             candidates.pop('fight', None)
@@ -613,6 +620,10 @@ class JevGame(pt.Game):
                 'limited ball supply at full HP when viable preparation substantially raises capture odds; '
                 'do not knock out the target or use residual poison/burn damage to prepare it.')
         if capturing:
+            if retreat and not balls:
+                instruction += (' No usable capture ball/storage capacity remains. Preserve this '
+                    'retryable source through RUN; replenish balls or free the current box before retrying. '
+                    'Do not attack or weaken it: capture is impossible this attempt.')
             instruction += (' Examine capture_threat: a self-knockout move can spend the target before setup succeeds. '
                 'A low-level support may faint before acting or on the switch turn. Do not keep switching '
                 'away from an immune/resistant survivor to fragile teammates just because they can apply status. '
@@ -870,6 +881,15 @@ class JevGame(pt.Game):
                 self.step(4)
                 continue
             capturing = capture_intent(state, self.judgments)
+            if (capturing and capture_retreat(state, self.judgments) is not None
+                    and (capture_storage_full(state) or not any(
+                        slot['item'] in BALLS and slot['qty'] > 0
+                        for slot in state.get('battle_inventory', [])))):
+                self.tap('b', 4)
+                self.step(10)
+                self.judgments.record('capture_menu_cancelled',
+                                      reason='retryable_source_without_capture_capacity')
+                return
             compact, candidates = (capture_move_question(state, menu) if capturing
                                    else move_question(state, menu))
             if capturing and not candidates:
