@@ -2483,6 +2483,22 @@ class AutonomousTests(unittest.TestCase):
         self.assertEqual(game.battle_recovery_plan(state), ('switch', 1))
         self.assertIn('switch:1', game.judgments.choose.call_args.args[2])
 
+    def test_live_pp_overrides_stale_persistent_party_for_switching(self):
+        game = JevGame.__new__(JevGame)
+        game.judgments = Mock()
+        game.judgments.active = {'context': {}}
+        game.judgments.choose.return_value = 'switch:1'
+        party = [{'species': 'Gloom', 'level': 21, 'hp': 45, 'max_hp': 63,
+                  'moves': ['Absorb', 'Poisonpowder'], 'pp': [10, 20], 'status': 'None'},
+                 {'species': 'Charizard', 'level': 38, 'hp': 90, 'max_hp': 127,
+                  'moves': ['Ember'], 'pp': [20], 'status': 'None'}]
+        live_party = [{**party[0], 'pp': [0, 20]}, party[1]]
+        state = {'party': party, 'battle_inventory': [], 'battle_live': {
+            'player': live_party[0], 'enemy': {'species': 'Oddish'},
+            'player_party': live_party}}
+        self.assertEqual(game.battle_recovery_plan(state), ('switch', 1))
+        self.assertIn('switch:1', game.judgments.choose.call_args.args[2])
+
     def test_evolution_trainee_can_switch_to_stronger_finisher(self):
         game = JevGame.__new__(JevGame)
         game.judgments = Mock()

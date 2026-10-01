@@ -6133,6 +6133,11 @@ impl PokemonGame {
                 "player_party": bs.player.party.iter().map(|mon| serde_json::json!({
                     "species": format!("{:?}", mon.species), "level": mon.level,
                     "hp": mon.hp, "max_hp": mon.max_hp,
+                    // Persistent party PP is stale until the battle ends.
+                    // Controllers need the live moves/PP to choose a legal
+                    // finisher or recovery before opening the FIGHT menu.
+                    "status": format!("{:?}", mon.status), "pp": mon.pp,
+                    "moves": mon.moves.iter().map(|m| format!("{:?}", m)).collect::<Vec<_>>(),
                 })).collect::<Vec<_>>(),
                 "player": { "species": format!("{:?}", player.species), "level": player.level, "hp": player.hp,
                     "max_hp": player.max_hp, "status": format!("{:?}", player.status) },
@@ -7835,6 +7840,9 @@ mod synchronous_input_tests {
         assert_eq!(state["evaluation"]["party_source"], "battle_live");
         assert_eq!(state["evaluation"]["party"][0]["hp"], 1);
         assert_eq!(state["evaluation"]["party"][0]["pp"][0], 0);
+        assert_eq!(state["battle_live"]["player_party"][0]["pp"][0], 0);
+        assert_eq!(state["battle_live"]["player_party"][0]["moves"][0],
+                   state["party"][0]["moves"][0]);
         assert_eq!(state["evaluation"]["party"][0]["total_exp"], experience + 40);
         game.state.screen = GameScreen::Overworld;
         let state = game.debug_state_snapshot();
