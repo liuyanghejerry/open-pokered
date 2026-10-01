@@ -113,6 +113,49 @@ def ball_options(live, bag, owned_species=()):
                            'already_owned': enemy['species'] in owned}
 
 
+def capture_intent(state, judgments):
+    live = state['battle_live']
+    if not live.get('is_wild') or live.get('is_safari') or live.get('is_ghost'):
+        return False
+    if capture_storage_full(state) or not any(slot['item'] in BALLS and slot['qty'] > 0
+                                             for slot in state.get('battle_inventory', [])):
+        return False
+    active = getattr(judgments, 'active', None)
+    context = active.get('context', {}) if isinstance(active, dict) else {}
+    species = live['enemy']['species']
+    return bool(context.get('required_capture_species') == species or
+                (getattr(judgments, 'collects_dex', False) and species not in
+                 (state.get('pokedex') or {}).get('owned_species', [])))
+
+
+def capture_status_options(mon, enemy, bag):
+    """Public PP and conditional capture benefit; not a guaranteed status hit."""
+    if str(enemy.get('status', 'None')).lower() != 'none':
+        return []
+    result = []
+    for index, (name, pp) in enumerate(zip(mon.get('moves', []), mon.get('pp', []))):
+        if name == 'None' or pp <= 0:
+            continue
+        move = late.move_data(name)
+        status = {'SleepEffect': 'Sleep(2)', 'ParalyzeEffect': 'Paralysis'}.get(move.get('effect'))
+        if move.get('power') != 0 or not status:
+            continue
+        enemy_data = late.species_data(enemy['species'])
+        effectiveness = math.prod(late.type_chart().get((move['type'], typ), 1)
+                                  for typ in {enemy_data['type1'], enemy_data['type2']})
+        if effectiveness == 0:
+            continue
+        projected = {ball: capture_probability(ball, {**enemy, 'status': status,
+                         'catch_rate': enemy_data['catchRate']})
+                     for ball, quantity in bag.items() if ball in BALLS and quantity > 0}
+        result.append({'slot': index, 'move': name, 'pp': pp, 'power': 0,
+                       'accuracy': move['accuracy'], 'effectiveness': effectiveness,
+                       'effect': move['effect'], 'status_if_successful': status,
+                       'residual_damage_risk': False,
+                       'capture_probability_if_status_lands': projected})
+    return result
+
+
 def safari_action_options(live, owned_species=()):
     """Exact current/immediate Safari trade-offs from the exposed engine state."""
     safari = live.get('safari') or {}
@@ -336,6 +379,21 @@ def move_question(state, menu):
     return compact, choices
 
 
+def capture_move_question(state, menu):
+    compact, choices = move_question(state, menu)
+    live = state['battle_live']
+    bag = {slot['item']: slot['qty'] for slot in state.get('battle_inventory', [])}
+    mon = {'moves': [slot['move'] for slot in menu['moves']],
+           'pp': [0 if slot['disabled'] else slot['pp'] for slot in menu['moves']]}
+    for option in capture_status_options(mon, live['enemy'], bag):
+        key = str(option['slot'])
+        compact['moves'][key] = option
+        choices[key] = option['move']
+    compact.update(goal='capture_without_knocking_out', enemy_state=live['enemy'],
+                   available_balls=list(ball_options(live, bag)))
+    return compact, choices
+
+
 class JevGame(pt.Game):
     """Existing navigation/recovery skills with independently judged attacks."""
     def battle_party_target(self, state):
@@ -420,16 +478,22 @@ class JevGame(pt.Game):
         switch_training = (context.get('acquisition_method') == 'evolution'
                            and context.get('trigger') == 'level'
                            and party[active]['species'] == context.get('from_species'))
-        if switch_training or not effective_attacks(party[active], live['enemy']['species']):
+        capturing = capture_intent(state, self.judgments) and not capture_storage_full(state)
+        if switch_training or capturing or not effective_attacks(party[active], live['enemy']['species']):
             for index, mon in enumerate(party):
-                if index != active and mon['hp'] > 0 and effective_attacks(mon, live['enemy']['species']):
+                statuses = capture_status_options(mon, live['enemy'], bag) if capturing else []
+                attacks = effective_attacks(mon, live['enemy']['species'])
+                if index != active and mon['hp'] > 0 and (attacks or statuses):
                     if switch_training and mon['level'] <= party[active]['level']:
                         continue
                     key = f'switch:{index}'
                     candidates[key] = json.dumps({'switch_to': mon,
-                        'usable_effective_attacks': effective_attacks(mon, live['enemy']['species']),
+                        'usable_effective_attacks': attacks,
+                        'capture_status_options': statuses,
                         'reason': ('The evolution trainee has entered battle and can share experience if it remains conscious; a stronger teammate can finish efficiently'
                                    if switch_training else
+                                   'Prepare capture using non-damaging status or weaker attacks; switching consumes a turn and does not guarantee survival'
+                                   if capturing else
                                    'The active battler has no usable attack that damages this opponent')})
                     bindings[key] = 'switch', index
         for item, index, details in options:
@@ -450,6 +514,7 @@ class JevGame(pt.Game):
             candidates[key] = json.dumps(details)
             bindings[key] = ball, None
         if (not effective_attacks(party[active], live['enemy']['species'])
+                and not (capturing and capture_status_options(party[active], live['enemy'], bag))
                 and any(key.startswith('switch:') for key in bindings)):
             # FIGHT only offers damaging moves to the attack judge. A status-
             # only fallback cannot finish this opponent, so do not advertise
@@ -477,8 +542,11 @@ class JevGame(pt.Game):
             # species reads as the safe play and the run collects nothing.
             instruction += (' This run exists to register species that are not in the Pokédex yet, not to win '
                 'encounters: this opponent is unregistered, so defeating it spends the encounter without '
-                'collecting anything, while a ball spent on it is exactly what the run is for. Prefer the ball '
-                'while unregistered opponents appear and balls remain.')
+                'collecting anything. Compare throwing now with using FIGHT to apply a safe capture status '
+                'or carefully weaken it, or switching to a teammate capable of these preparations. '
+                'Switching and setup cost turns and expose the party to damage. Do not blindly spend a '
+                'limited ball supply at full HP when viable preparation substantially raises capture odds; '
+                'do not knock out the target or use residual poison/burn damage to prepare it.')
         chosen = self.judgments.choose('action', {'battle': live}, candidates,
                                        instruction + preference_suffix(self.judgments))
         return bindings.get(chosen)
@@ -721,7 +789,15 @@ class JevGame(pt.Game):
             if not menu:
                 self.step(4)
                 continue
-            compact, candidates = move_question(state, menu)
+            capturing = capture_intent(state, self.judgments)
+            compact, candidates = (capture_move_question(state, menu) if capturing
+                                   else move_question(state, menu))
+            if capturing and not candidates:
+                # A status-only support may have just landed sleep. Return to
+                # PlayerMenu for a ball rather than repeat a useless status.
+                self.tap('b', 4)
+                self.step(10)
+                return
             if candidates and not any(m['effectiveness'] > 0 for m in compact['moves'].values()):
                 # The PlayerMenu hook already considered conscious teammates.
                 # Resolve an unavoidable loss through ordinary legal turns,
@@ -748,8 +824,13 @@ class JevGame(pt.Game):
                     self.judgments.record('action_cache_hit', decision='attack',
                                           choice=chosen, milestone=self.active_milestone)
                 else:
-                    chosen = self.judgments.choose(
-                        'action', compact, candidates,
+                    instruction = ('Which usable move best prepares capture without knocking out the target? '
+                        'Sleep or paralysis can improve the supplied capture probability without damaging '
+                        'the target. Their projected odds are conditional on the status actually landing. '
+                        'Compare accuracy, PP, target status and remaining balls. For damaging moves, '
+                        'compare levels, base stats, power and critical risk; these are proxies, not exact '
+                        'damage guarantees. Prefer safe non-damaging preparation or a suitably weak attack '
+                        'over a knockout; do not repeatedly try status that is already present.' if capturing else
                         'Which usable attack gives the best progress on this turn? '
                         'This does not require a guaranteed battle victory. If the only available '
                         'attack deals nonzero damage, use it even when weak or nearly depleted. '
@@ -757,7 +838,9 @@ class JevGame(pt.Game):
                         'same-type bonus and critical probability), then physical/special stats and useful '
                         'secondary effects. Do not count those bonuses twice. Use draining attacks when healing matters. Avoid immunity and do not '
                         'spend a resisted low-PP attack when an effective alternative exists.'
-                        + preference_suffix(self.judgments))
+                        )
+                    chosen = self.judgments.choose('action', compact, candidates,
+                                                   instruction + preference_suffix(self.judgments))
                     self.move_cache[key] = chosen
                 self.judgments.record('attack', milestone=self.active_milestone,
                                       choice=chosen, move=candidates[chosen], state=compact)

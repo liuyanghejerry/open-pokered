@@ -21,6 +21,7 @@ from .story_rules import Rule, requirements, evaluate
 from .playthrough_judgments import (ObservedProtocol, NavigationPause, attack_profile, replacement_options,
                                     MEDICINES, BALLS, medicine_options, effective_attacks, ITEM_CATALOG,
                                     PREFERENCE_INSTRUCTIONS)
+from .playthrough_judgments import capture_probability
 from .navigation_skills import (cut_requirement, surf_requirement, water_planning, water_tile,
                                 hm_compatible, machine_compatible, HM_MOVES, TM_MOVES, CUT_TILES)
 from .boulder_skills import BOULDER_TARGETS, boulder_sources, plan_pushes
@@ -110,6 +111,22 @@ def catch_difficulty(species):
     rate = data.species_data(species).get('catchRate', 0)
     return {'species': species, 'catch_rate': rate,
             'band': next((band for threshold, band in CATCH_BANDS if rate >= threshold), 'hard')}
+
+
+def capture_inventory_risk(species, balls):
+    """Reference scenarios, explicitly not a forecast of an unseen battle."""
+    rate = data.species_data(species)['catchRate']
+    scenarios = []
+    for hp, status in ((100, 'None'), (100, 'Sleep(2)'), (25, 'Sleep(2)')):
+        enemy = {'hp': hp, 'max_hp': 100, 'status': status, 'catch_rate': rate}
+        throws = [{'ball': row['ball'], 'quantity': row['quantity'],
+                   'per_throw_probability': capture_probability(row['ball'], enemy)}
+                  for row in balls if row['quantity'] > 0]
+        failure = math.prod((1 - row['per_throw_probability']) ** row['quantity'] for row in throws)
+        scenarios.append({'reference_hp_percent': hp, 'reference_status': status,
+                          'throws': throws, 'inventory_failure_probability': round(failure, 4)})
+    return {'scenarios': scenarios,
+            'assumptions': 'Reference max HP 100; all carried balls used at the stated fixed HP/status with independent rolls. Not actual battle odds: excludes HP rounding differences, status expiry, enemy recovery, party survival and travel ball spending.'}
 
 
 def encounter_value(map_data, owned_species=()):
@@ -1224,6 +1241,19 @@ class AutonomousStoryAgent(DualStoryAgent):
                             self.add_party_space_group(groups, facts, species)
                         continue
                     rules = self.acquisition_story_rules(species, method)
+                    if method['method'] == 'static':
+                        resources = self.collection_resources(facts)
+                        ready_sources = sorted({candidate.get('map') for candidate in
+                            self.complete_collection_graph().get(species, [])
+                            if candidate['method'] == 'static' and any(not rule.missing(facts)
+                                for rule in self.acquisition_story_rules(species, candidate))})
+                        context.update(
+                            purpose=f'Register {species} through a finite static encounter; capture is stochastic',
+                            collection_resources=resources,
+                            capture_inventory_risk=capture_inventory_risk(species, resources['ball_inventory']),
+                            ready_static_source_maps=ready_sources,
+                            last_currently_ready_static_source=len(ready_sources) == 1,
+                            failure_warning='Running out of balls, fleeing or knocking out a static target can permanently spend this source. Preparation and extra supplies must be compared before triggering it; a ready script does not guarantee capture.')
                 rules = [rule for rule in rules if not rule.missing(facts)]
                 if not rules:
                     continue

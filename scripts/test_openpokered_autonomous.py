@@ -12,7 +12,7 @@ from openpokered.autonomous_story import (AutonomousStoryAgent, counter_approach
                                           training_tile, battle_readiness, encounter_value,
                                           training_battler, storage_deposit_indices,
                                           level_experience, evolution_training_cost, training_yield)
-from openpokered.autonomous_story import compact_strategy_candidates, evolution_training_effort, factor_strategy_evidence
+from openpokered.autonomous_story import compact_strategy_candidates, evolution_training_effort, factor_strategy_evidence, capture_inventory_risk
 from openpokered.story_agent import StoryStopped
 from openpokered.navigation_skills import cut_requirement, surf_requirement, water_tile, hm_compatible, water_planning
 from openpokered.story_rules import Rule
@@ -20,6 +20,21 @@ from openpokered.run_autonomous import observations_valid, checkpoint_field_requ
 
 
 class AutonomousTests(unittest.TestCase):
+    def test_capture_inventory_risk_keeps_reference_assumptions_and_finite_source_cost(self):
+        from openpokered.collection_planner import acquisition_contract
+        risk = capture_inventory_risk('Snorlax', [{'ball': 'PokeBall', 'quantity': 9}])
+        full, asleep, prepared = risk['scenarios']
+        self.assertGreater(full['inventory_failure_probability'], .7)
+        self.assertLess(asleep['inventory_failure_probability'], full['inventory_failure_probability'])
+        self.assertLess(prepared['inventory_failure_probability'], asleep['inventory_failure_probability'])
+        self.assertIn('Not actual battle odds', risk['assumptions'])
+        more = capture_inventory_risk('Snorlax', [{'ball': 'PokeBall', 'quantity': 50}])
+        self.assertLess(more['scenarios'][0]['inventory_failure_probability'], full['inventory_failure_probability'])
+        master = capture_inventory_risk('Snorlax', [{'ball': 'MasterBall', 'quantity': 1}])
+        self.assertTrue(all(row['inventory_failure_probability'] == 0 for row in master['scenarios']))
+        contract = acquisition_contract('Snorlax', {'method': 'static', 'map': 'Route16'})
+        self.assertTrue(contract['direct_cost']['finite_encounter_opportunity'])
+
     def test_observed_ghost_hunts_reopen_after_identification_item(self):
         agent = AutonomousStoryAgent.__new__(AutonomousStoryAgent)
         agent.battle_requirements = {'SILPH_SCOPE': {'capture_blocked_maps': ['Tower3', 'Tower4']}}
@@ -2221,6 +2236,73 @@ class AutonomousTests(unittest.TestCase):
         phrase = 'register species that are not in the Pokédex yet'
         self.assertIn(phrase, instruction(True))
         self.assertNotIn(phrase, instruction(False))
+
+    def capture_support_state(self):
+        state = self.battle_state()
+        state['battle_live']['enemy'] = {'species': 'Snorlax', 'level': 30,
+            'hp': 139, 'max_hp': 139, 'status': 'None'}
+        support = {'species': 'Gloom', 'level': 21, 'hp': 63, 'max_hp': 63,
+                   'status': 'None', 'moves': ['SleepPowder', 'Poisonpowder'], 'pp': [15, 35]}
+        state['party'].append(support)
+        state['battle_live']['player_party'].append(support)
+        return state
+
+    def test_capture_offers_switch_to_status_only_support(self):
+        game = JevGame.__new__(JevGame)
+        game.judgments = Mock()
+        game.judgments.collects_dex = True
+        game.judgments.active = {'context': {'acquisition_method': 'static'}}
+        game.judgments.choose.return_value = 'switch:1'
+        self.assertEqual(game.battle_recovery_plan(self.capture_support_state()), ('switch', 1))
+        details = json.loads(game.judgments.choose.call_args.args[2]['switch:1'])
+        self.assertEqual(details['capture_status_options'][0]['move'], 'SleepPowder')
+        self.assertEqual(details['usable_effective_attacks'], [])
+        self.assertIn('Switching and setup cost turns', game.judgments.choose.call_args.args[3])
+
+    def test_capture_menu_offers_only_usable_safe_status_and_updates_after_landing(self):
+        from openpokered.playthrough_judgments import capture_move_question
+        state = self.capture_support_state()
+        support = state['battle_live']['player_party'][1]
+        state['battle_live']['player'] = support
+        menu = {'cursor': 0, 'moves': [
+            {'move': 'SleepPowder', 'pp': 15, 'disabled': False},
+            {'move': 'Poisonpowder', 'pp': 35, 'disabled': False}]}
+        compact, choices = capture_move_question(state, menu)
+        self.assertEqual(choices, {'0': 'SleepPowder'})
+        projected = compact['moves']['0']['capture_probability_if_status_lands']['PokeBall']
+        self.assertGreater(projected, compact['available_balls'][0][2]['capture_probability_now'])
+        menu['moves'][0]['disabled'] = True
+        self.assertEqual(capture_move_question(state, menu)[1], {})
+        menu['moves'][0].update(disabled=False, pp=0)
+        self.assertEqual(capture_move_question(state, menu)[1], {})
+        menu['moves'][0]['pp'] = 15
+        state['battle_live']['enemy']['status'] = 'Sleep(1)'
+        self.assertEqual(capture_move_question(state, menu)[1], {})
+
+    def test_real_move_selector_drives_the_judged_capture_status_slot(self):
+        game = JevGame.__new__(JevGame)
+        state = self.capture_support_state()
+        support = state['battle_live']['player_party'][1]
+        state['battle_live']['player'] = support
+        state.update(screen='battle', battle_phase='MoveSelect', battle_moves={
+            'cursor': 0, 'moves': [{'move': 'SleepPowder', 'pp': 15, 'disabled': False}]})
+        game.st = Mock(return_value=state)
+        game.tap, game.step = Mock(), Mock()
+        game.judgments = Mock()
+        game.judgments.collects_dex = True
+        game.judgments.active = {'context': {}}
+        game.judgments.choose.return_value = '0'
+        game.move_cache, game.move_cache_hits, game.active_milestone = {}, 0, None
+        game._select_move()
+        game.tap.assert_called_once_with('a', 4)
+        self.assertEqual(game.judgments.choose.call_args.args[2], {'0': 'SleepPowder'})
+        self.assertIn('without knocking out', game.judgments.choose.call_args.args[3])
+        state['battle_live']['enemy']['status'] = 'Sleep(1)'
+        game.tap.reset_mock()
+        game.judgments.choose.reset_mock()
+        game._select_move()
+        game.tap.assert_called_once_with('b', 4)
+        game.judgments.choose.assert_not_called()
 
     def test_balls_are_never_offered_against_a_trainer_or_in_the_safari_zone(self):
         from openpokered.playthrough_judgments import ball_options, JevGame

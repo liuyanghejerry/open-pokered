@@ -328,6 +328,8 @@ def acquisition_contract(species, method):
     if name in ('grass', 'water', 'safari', 'fishing', 'static'):
         require('capture_inventory', 'SafariBall' if name == 'safari' else 'any_ball')
         costs['random_attempts'] = True
+    if name == 'static':
+        costs['finite_encounter_opportunity'] = True
     if name == 'fishing':
         require('rod', method['rod'])
     source = method.get('from_species')
