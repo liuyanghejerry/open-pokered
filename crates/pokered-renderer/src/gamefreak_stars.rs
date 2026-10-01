@@ -164,8 +164,8 @@ mod tests {
                 draw_stars(&state, &mut rm, &mut actual);
                 let mut expected = background();
                 let step = i32::from(frame - 244);
-                let x = 152 - 4 * step;
-                let y = -16 + 4 * step;
+                let x = 148 - 4 * step;
+                let y = -12 + 4 * step;
                 sprite(&mut expected, big.get(3), x, y, false, [0, 1, 2, 2], false);
                 sprite(
                     &mut expected,
@@ -220,9 +220,9 @@ mod tests {
                     let wave = elapsed / 24;
                     let step = (elapsed % 24) / 3;
                     let shades = if step % 2 == 0 {
-                        [0, 1, 2, 2]
-                    } else {
                         [0, 1, 0, 0]
+                    } else {
+                        [0, 1, 2, 2]
                     };
                     for (w, xs) in waves.iter().enumerate() {
                         if w > wave as usize {
@@ -233,7 +233,7 @@ mod tests {
                                 &mut expected,
                                 &small,
                                 x - 8,
-                                88 + 8 * (wave as i32 - w as i32) + step as i32,
+                                89 + 8 * (wave as i32 - w as i32) + step as i32,
                                 false,
                                 shades,
                                 true,

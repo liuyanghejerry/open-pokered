@@ -20,8 +20,11 @@ fn capture_gamefreak_stars() {
     for frame in 0..=341 {
         for (target, name) in [
             (258, "big-star"),
-            (338, "small-stars-visible"),
-            (341, "small-stars-blink"),
+            (284, "logo-first-flash"),
+            (314, "small-stars-entry"),
+            (317, "small-stars-next-step"),
+            (338, "small-stars-step-1"),
+            (341, "small-stars-step-2"),
         ] {
             if frame == target {
                 draw_gamefreak_splash(&state, &mut resources, &mut fb);
