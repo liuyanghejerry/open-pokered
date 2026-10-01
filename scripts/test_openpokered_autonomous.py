@@ -20,6 +20,46 @@ from openpokered.run_autonomous import observations_valid, checkpoint_field_requ
 
 
 class AutonomousTests(unittest.TestCase):
+    def test_cross_search_reports_all_reachable_goals_not_the_first_only(self):
+        import playthrough as pt
+        name = 'CinnabarIsland'
+        targets = {(name, 0, 0), (name, 1, 0), (name, 2, 0), (name, 9, 0)}
+        def step(cm, x, y, direction):
+            if direction == 'right' and x < 2:
+                return cm, x + 1, y
+            if direction == 'left' and x > 0:
+                return cm, x - 1, y
+            return None
+        with patch.object(pt, 'cross_step', side_effect=step), patch.object(pt, 'warp_tiles', return_value=set()):
+            reached = pt.bfs_cross(name, (0, 0), name, (1, 0), goal_nodes=targets,
+                                   reachable_goals=True)
+            self.assertEqual(reached, targets - {(name, 9, 0)})
+            path = pt.bfs_cross(name, (0, 0), name, (1, 0))
+            self.assertEqual(path[-1][0], (name, 1, 0))
+            self.assertEqual(pt.bfs_cross(name, (0, 0), name, (1, 0), goal_nodes=set(),
+                                          reachable_goals=True), set())
+
+    def test_transport_reports_only_goals_reachable_from_its_landing(self):
+        from types import SimpleNamespace
+        agent = AutonomousStoryAgent.__new__(AutonomousStoryAgent)
+        arrival = ('SeafoamIslandsB1F', 18, 7)
+        entrance = Rule('hole', 'SeafoamIslands1F', 'Seafoam:hole', ['coord:hole'], [], [],
+                        ('transport', arrival, True), [])
+        agent.index = SimpleNamespace(rules=[entrance], frontier=Mock(return_value=[entrance]))
+        agent.game = Mock(last_map='Route20')
+        agent.game.navigation_barriers.return_value = {}
+        agent.game.navigation_excluded_maps.return_value = ()
+        agent.destination_points = Mock(side_effect=lambda name, rule: [(3, 4)])
+        groups = {name: {'rules': [Rule(name, name, name + ':goal', [], [], [], ('flag', name, True), [])],
+                         'context': {'trigger_navigation': [{'map': name, 'tile_route_found': False}]}}
+                  for name in ('SeafoamIslandsB4F', 'PokemonMansionB1F', 'SilphCo11F')}
+        with patch('playthrough.bfs_cross', return_value={('SeafoamIslandsB4F', 3, 4)}) as search:
+            self.assertTrue(agent.transport_frontiers(groups, {}))
+        context = groups[json.dumps(entrance.effect)]['context']
+        self.assertEqual(context['blocked_destinations'], ['SeafoamIslandsB4F'])
+        self.assertTrue(search.call_args.kwargs['reachable_goals'])
+        self.assertIn(('PokemonMansionB1F', 3, 4), search.call_args.kwargs['goal_nodes'])
+
     def test_surf_completion_retains_the_blocked_parent_not_the_shore_goal(self):
         agent = AutonomousStoryAgent.__new__(AutonomousStoryAgent)
         obstacle = {'map': 'Route20', 'stance': [58, 11], 'direction': 'down',

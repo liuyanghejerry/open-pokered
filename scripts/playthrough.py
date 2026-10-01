@@ -398,22 +398,27 @@ def _path_of(prev, start, goal):
 
 def bfs_cross(map_name, start, goal_map, goal, blocked_maps=None,
               last_map=None, allow_ledges=False, excluded_maps=(), allow_spinners=False,
-              goal_nodes=None):
+              goal_nodes=None, reachable_goals=False):
     """BFS whose steps are plain directions. Stepping onto a warp tile
     takes the warp: the expansion replaces the landed tile with its warp
     destinations (doors fire immediately; bottom-edge exit mats fire via
     the extra edge-check). Exit mats resolve against `last_map` — the
     driver tracks it from real transitions, so the plan matches what the
     engine will actually do. Search nodes include the remembered outside
-    map; returned path nodes retain the public (map, x, y) shape."""
+    map; returned path nodes retain the public (map, x, y) shape.
+
+    With reachable_goals=True, return the set of reachable target nodes,
+    not just a path to the first target. This uses the same collision/warp
+    rules and does not relax water or script gates."""
     blocked_maps = blocked_maps or {}
     s = (map_name, *start)
     t = (goal_map, *goal)
     targets = set(goal_nodes) if goal_nodes is not None else {t}
     target_maps = {node[0] for node in targets}
     if not targets:
-        return None
-    if s in targets:
+        return set() if reachable_goals else None
+    reached = {s} & targets
+    if s in targets and not reachable_goals:
         return [s]
     if MAPS[map_name]["tileset_name"].lower() in OUTSIDE_MAP_TILESETS:
         last_map = map_name
@@ -463,6 +468,12 @@ def bfs_cross(map_name, start, goal_map, goal, blocked_maps=None,
                     continue
                 prev[node] = (current, how)
                 if n in targets:
+                    if reachable_goals:
+                        reached.add(n)
+                        if reached == targets:
+                            return reached
+                        q.append(node)
+                        continue
                     out = []
                     cur = node
                     while prev[cur] is not None:
@@ -471,7 +482,7 @@ def bfs_cross(map_name, start, goal_map, goal, blocked_maps=None,
                         cur = parent
                     return [s] + out[::-1]
                 q.append(node)
-    return None
+    return reached if reachable_goals else None
 
 
 class NavError(RuntimeError):

@@ -959,13 +959,15 @@ class AutonomousStoryAgent(DualStoryAgent):
                 # special itinerary or assuming every transport is useful.
                 relevant_nodes = ({node for node in goal_nodes if node[0] == name}
                                   if transport.map in pt.ELEVATOR_MAPS else goal_nodes)
-                reachable = name in targets and not targets[name]
-                if not reachable and name in pt.MAPS and relevant_nodes:
+                reachable = {name} if name in targets and not targets[name] else set()
+                if name in pt.MAPS and relevant_nodes:
                     goal = next(iter(relevant_nodes))
-                    reachable = bool(pt.bfs_cross(
+                    reached_nodes = pt.bfs_cross(
                         name, (x, y), goal[0], goal[1:], last_map=self.game.last_map,
                         allow_ledges=True, allow_spinners=True,
-                        blocked_maps=barriers, excluded_maps=excluded, goal_nodes=relevant_nodes))
+                        blocked_maps=barriers, excluded_maps=excluded, goal_nodes=relevant_nodes,
+                        reachable_goals=True)
+                    reachable.update(node[0] for node in reached_nodes)
                 arrivals[arrival] = reachable
             if not arrivals[arrival]:
                 continue
@@ -991,7 +993,8 @@ class AutonomousStoryAgent(DualStoryAgent):
                     groups[key] = {'target': rule.effect, 'rules': [],
                                    'objectives': ['Enter a region with a walking path to an inaccessible story target'],
                                    'context': {'transport_script': transport.description(),
-                                               'blocked_destinations': sorted(targets)}}
+                                               'blocked_destinations': sorted(arrivals[arrival]),
+                                               'reachability_scope': 'Only destinations with a verified walking path from this landing; not every blocked world goal'}}
                 if rule not in groups[key]['rules']:
                     groups[key]['rules'].append(rule)
         return added
