@@ -478,6 +478,8 @@ class AutonomousStoryAgent(DualStoryAgent):
         self.battle_requirements = {}
         self.battle_defeats = []
         self.capture_retreats = {}
+        self.collection_audit_pending = {}
+        self._audit_party = None
         self.defeat_preparation = 0
         self.replan_after_defeat = False
         self.mechanism_goal = None
@@ -493,6 +495,7 @@ class AutonomousStoryAgent(DualStoryAgent):
                                     ('box', 'index', 'species', 'level', 'hp', 'max_hp',
                                      'status', 'moves', 'pp')}
                                    for mon in self.client.state().get('stored_pokemon', [])]
+        self.observe_audit_evolution(facts['party'])
         facts['current_box_index'] = self.client.state().get('current_box_index', 0)
         facts['box_counts'] = list(self.client.state().get('box_counts', []))
         facts['fully_recovered'] = bool(facts['party']) and all(
@@ -614,6 +617,7 @@ class AutonomousStoryAgent(DualStoryAgent):
     def augment_strategy_state(self, state, facts):
         if self.collects_dex:
             state['dex_progress'] = self.dex_progress(facts)
+            state['collection_audit_pending'] = getattr(self, 'collection_audit_pending', {})
             state['capture_retreats_requiring_preparation'] = [row for row in
                 getattr(self, 'capture_retreats', {}).values()
                 if self.static_capture_deferred(row['species'], row['map'], facts)]
@@ -621,7 +625,7 @@ class AutonomousStoryAgent(DualStoryAgent):
     def dex_progress(self, facts):
         """Collection panel: what is missing, where, and what it unlocks."""
         dex = facts.get('dex') or {}
-        owned = set(dex.get('owned_species', []))
+        owned = self.validated_owned(facts)
         seen = set(dex.get('seen_species', []))
         wild_graph = self.collection_graph()
         full_graph = self.complete_collection_graph()
@@ -644,7 +648,9 @@ class AutonomousStoryAgent(DualStoryAgent):
         for species in sorted(choice_targets - owned):
             missing_methods[species] = sorted({method['method'] for method in full_graph[species]
                                                if not method.get('external_trade')})
-        return {'owned': dex.get('owned', len(owned)), 'seen': dex.get('seen', len(seen)), 'total': 151,
+        return {'owned': dex.get('owned', len(owned)), 'validated_owned': len(owned),
+                'pending_source_validation': sorted(getattr(self, 'collection_audit_pending', {})),
+                'seen': dex.get('seen', len(seen)), 'total': 151,
                 'supported_wild_target_count': len(wild_graph),
                 'supported_wild_owned': len(set(wild_graph) & owned),
                 'supported_wild_remaining': len(set(wild_graph) - owned),
@@ -1130,6 +1136,45 @@ class AutonomousStoryAgent(DualStoryAgent):
             bordering.update(w['destMap'] for w in map_data.get('warps', []) if w.get('destMap'))
         return not (bordering - self.visited)
 
+    def validated_owned(self, facts):
+        return set((facts.get('dex') or {}).get('owned_species', [])) - set(
+            getattr(self, 'collection_audit_pending', {}))
+
+    def observe_audit_evolution(self, party):
+        """Accept a native party species replacement, not an existing invalid copy.
+
+        Requiring every other slot to remain identical rejects PC withdrawals,
+        switches and new catches. Evolution edges come from the native solo DAG.
+        """
+        current = [dict(mon) for mon in party]
+        previous = getattr(self, '_audit_party', None)
+        self._audit_party = current
+        if not previous or len(previous) != len(current):
+            return
+        changed = [(old, new) for old, new in zip(previous, current)
+                   if not self.same_species(old['species'], new['species'])]
+        if len(changed) != 1:
+            return
+        old, new = changed[0]
+        context = (getattr(self, 'active', None) or {}).get('context', {})
+        if (context.get('acquisition_method') != 'evolution'
+                or not self.same_species(context.get('from_species'), old['species'])
+                or not self.same_species(context.get('species'), new['species'])):
+            return
+        for target in list(getattr(self, 'collection_audit_pending', {})):
+            if not self.same_species(new['species'], target):
+                continue
+            for edge in self.complete_collection_graph().get(target, []):
+                if (edge['method'] == 'evolution' and edge.get('trigger') == 'level'
+                        and self.same_species(old['species'], edge['from_species'])
+                        and new['level'] > old['level']
+                        and new['level'] >= edge['level']):
+                    evidence = self.collection_audit_pending.pop(target)
+                    self.record('collection_audit_resolved', species=target,
+                        acquisition_method='evolution', before=old, after=new,
+                        invalid_acquisition=evidence)
+                    break
+
     def dex_complete(self, facts):
         """Every species reachable under the Red solo/no-link policy is registered.
 
@@ -1139,7 +1184,7 @@ class AutonomousStoryAgent(DualStoryAgent):
         """
         if getattr(self, 'index', None) is None:
             return False
-        owned = set((facts.get('dex') or {}).get('owned_species', []))
+        owned = self.validated_owned(facts)
         if not owned:
             return False
         plan = solo_plan(self.complete_collection_graph(), owned, infer_solo_choices(owned))
@@ -1219,7 +1264,7 @@ class AutonomousStoryAgent(DualStoryAgent):
         """Add only currently executable non-wild edges from the solo DAG."""
         if not self.collects_dex or facts.get('dex') is None:
             return
-        owned = set((facts.get('dex') or {}).get('owned_species', []))
+        owned = self.validated_owned(facts)
         plan = solo_plan(self.complete_collection_graph(), owned, infer_solo_choices(owned))
         reachable = set(plan['choice_reachable_species'])
         party = facts.get('party', [])
@@ -1868,7 +1913,7 @@ class AutonomousStoryAgent(DualStoryAgent):
 
     def find_catch_areas(self, facts, requested_species=None):
         """Executable grass, Safari, Surf, and fishing acquisition areas."""
-        owned = set((facts.get('dex') or {}).get('owned_species', []))
+        owned = self.validated_owned(facts)
         if requested_species is not None:
             owned = set(self.complete_collection_graph()) - set(requested_species)
         barriers = self.game.navigation_barriers()
@@ -2344,7 +2389,7 @@ class AutonomousStoryAgent(DualStoryAgent):
                     }
         if self.collects_dex:
             balls = self.balls_held(facts)
-            owned = set((facts.get('dex') or {}).get('owned_species', []))
+            owned = self.validated_owned(facts)
             resources = self.collection_resources(facts)
             box_full = self.add_box_capacity_group(groups, facts)
             catch_areas = {} if box_full and len(facts['party']) >= 6 else self.find_catch_areas(facts)

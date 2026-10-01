@@ -131,6 +131,34 @@ fn ghost_ball_throw_queues_dodged_event() {
     assert!(battle.captured_mon.is_none());
 }
 
+#[test]
+fn revealed_restless_soul_dodges_every_ball_but_normal_marowak_is_catchable() {
+    for spirit in [true, false] {
+        for ball in [ItemId::PokeBall, ItemId::GreatBall, ItemId::UltraBall, ItemId::MasterBall] {
+            let player = vec![create_pokemon(Species::Rattata, 10, [0x9A, 0x78]).unwrap()];
+            let enemy = vec![create_pokemon(Species::Marowak, 30, [0x9A, 0x78]).unwrap()];
+            let mut battle = BattleScreen::from_parties(true, &player, &enemy, None);
+            battle.ghost_marowak_reveal = spirit;
+            battle.ghost_marowak_unveiled = spirit;
+            battle.player_bag.add_item(ball, 1).unwrap();
+            battle.phase = BattlePhase::PlayerMenu;
+            battle.update_frame(input(true, false));
+            battle.update_frame(input(false, true));
+            battle.update_frame(input(false, true));
+            if spirit {
+                assert_eq!(battle.take_anim_event(), Some(BattleAnimEvent::Ball {
+                    ball, shakes: 0, outcome: BallAnimOutcome::Dodged,
+                }));
+                assert!(battle.captured_mon.is_none());
+                assert!(battle.player_bag.has_item(ball, 1));
+                assert!(!battle.is_ghost, "revealed spirit remains attackable");
+            } else if ball == ItemId::MasterBall {
+                assert_eq!(battle.captured_mon.as_ref().unwrap().species, Species::Marowak);
+            }
+        }
+    }
+}
+
 /// A successful X-stat item queues the XSTATITEM_ANIM event
 /// (ItemUseXStat → StatModifierUpEffect in the original).
 #[test]

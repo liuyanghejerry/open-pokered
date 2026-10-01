@@ -3298,9 +3298,10 @@ learn {learn_name}!")];
             .unwrap_or_else(|| "RED".to_string())
             .to_uppercase();
         let used_msg = format!("{} used\n{}!", thrower, ball_name);
-        // A Pokémon-Tower GHOST (no Silph Scope) is uncatchable — the ball is dodged and
-        // NOT consumed (the mon is unidentified until the Scope reveals it).
-        if self.is_ghost {
+        // Both unidentified GHOSTs and the revealed RESTLESS_SOUL are uncatchable.
+        // Original ItemUseBall checks RESTLESS_SOUL before even the Master Ball
+        // shortcut. Identification permits fighting, never capturing this spirit.
+        if self.is_ghost || self.ghost_marowak_reveal {
             // wPokeBallAnimData = $10: toss only — the ghost dodges
             // (DoBallTossSpecialEffects slides it left for the last frames).
             self.pending_anim_events.push_back(BattleAnimEvent::Ball {

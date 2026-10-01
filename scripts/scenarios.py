@@ -602,6 +602,53 @@ def s15_static_retreat():
 
 
 # ── runner ──────────────────────────────────────────────────────────────
+@scenario("s16-restless-soul", "Revealed Tower spirit rejects Master Ball without consuming it")
+def s16_restless_soul():
+    from openpokered.playthrough_judgments import ball_options
+    g = Game(seed=42)
+    try:
+        boot_starter(g, "Charizard", 60)
+        assert g.d.cmd(cmd="give_item", item="SILPH_SCOPE", qty=1)["ok"]
+        assert g.d.cmd(cmd="give_item", item="MASTER_BALL", qty=1)["ok"]
+        assert g.d.cmd(cmd="warp", map="PokemonTower6F", x=10, y=14)["ok"]
+        assert g.d.cmd(cmd="start_wild_battle", species="Marowak", level=30)["ok"]
+        for _ in range(200):
+            state = g.st()
+            if state["battle_phase"] == "PlayerMenu":
+                break
+            g.tap("a", 8)
+            g.step(30)
+        else:
+            raise AssertionError("ghost reveal did not reach battle menu")
+        live = state["battle_live"]
+        assert live["capture_blocked_reason"] == "restless_soul", live
+        assert not live["is_ghost"], live
+        assert not list(ball_options(live, {"MasterBall": 1})), live
+        owned = state["pokedex"]["owned_species"]
+        # Real input deliberately attempts the forbidden throw, testing the
+        # engine boundary independently of the controller's legal-option filter.
+        for button in ("down", "left", "a"):
+            g.tap(button, 8)
+        state = g.st()
+        assert state["battle_phase"].startswith("BagSelect"), state["battle_phase"]
+        # Silph Scope is slot zero, Master Ball slot one.
+        g.tap("down", 8)
+        g.tap("a", 8)
+        for _ in range(200):
+            state = g.st()
+            if state["battle_phase"] == "PlayerMenu":
+                break
+            g.tap("a", 8)
+            g.step(30)
+        else:
+            raise AssertionError("rejected throw did not return to menu")
+        assert bag_qty(g, "MasterBall") == 1
+        assert state["pokedex"]["owned_species"] == owned
+        g.evidence("s16")
+    finally:
+        g.close()
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--list", action="store_true")

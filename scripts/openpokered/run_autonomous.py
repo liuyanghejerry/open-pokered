@@ -61,6 +61,38 @@ def observations_valid(observations):
         return False
 
 
+def checkpoint_collection_audit(run):
+    """Keep historical invalid acquisitions pending without rewriting native SRAM."""
+    chain, seen = [], set()
+    while run:
+        run = Path(run).resolve()
+        if run in seen:
+            raise ValueError('collection audit checkpoint cycle')
+        seen.add(run)
+        summary = json.loads((run / 'summary.json').read_text())
+        if summary.get('collection_audit_schema') == 1:
+            pending = dict(summary.get('collection_audit_pending', {}))
+            break
+        chain.append(run)
+        parent = summary.get('resumed_from')
+        run = pt.ROOT / parent if parent else None
+    else:
+        pending = {}
+    for folder in reversed(chain):
+        with (folder / 'trace.jsonl').open() as stream:
+            for line in stream:
+                if '"dex_progress"' not in line:
+                    continue
+                event = json.loads(line)
+                # Native RESTLESS_SOUL: Tower6F has no wild Marowak slot.
+                # A new registration here is the old engine's illegal spirit catch.
+                if event.get('map') == 'PokemonTower6F' and 'Marowak' in event.get('acquired', []):
+                    pending['Marowak'] = {'reason': 'uncatchable_restless_soul',
+                        'source_trace': str(folder / 'trace.jsonl'),
+                        'elapsed_s': event['elapsed_s'], 'map': event['map']}
+    return pending
+
+
 def checkpoint_field_requirements(run):
     """Restore observed HM blockers, including legacy checkpoints that lost them."""
     chain, seen, requirements = [], set(), {}
@@ -226,6 +258,7 @@ def main(argv=None):
                     agent.field_requirements.update(checkpoint_field_requirements(args.resume))
                     agent.battle_requirements.update(parent.get('battle_requirements', {}))
                     agent.capture_retreats.update(parent.get('capture_retreats', {}))
+                    agent.collection_audit_pending.update(checkpoint_collection_audit(args.resume))
                     game.stationary_npcs = {name: {int(k): tuple(v) for k, v in npcs.items()}
                                             for name, npcs in parent.get('stationary_npcs', {}).items()}
                     agent.battle_defeats.extend(parent.get('battle_defeats', []))
@@ -252,6 +285,8 @@ def main(argv=None):
                             result['field_requirements_schema'] = 1
                             result['battle_requirements'] = agent.battle_requirements
                             result['capture_retreats'] = agent.capture_retreats
+                            result['collection_audit_schema'] = 1
+                            result['collection_audit_pending'] = agent.collection_audit_pending
                             result['stationary_npcs'] = getattr(game, 'stationary_npcs', {})
                             result['battle_defeats'] = agent.battle_defeats
                             result['defeat_preparation'] = agent.defeat_preparation

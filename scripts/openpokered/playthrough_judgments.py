@@ -98,7 +98,8 @@ def ball_options(live, bag, owned_species=()):
     Whether the species is already registered is reported rather than filtered:
     whether a duplicate is worth a ball is the judgment under test.
     """
-    if not live.get('is_wild') or live.get('is_safari'):
+    if (not live.get('is_wild') or live.get('is_safari') or live.get('is_ghost')
+            or live.get('capture_blocked_reason')):
         return
     enemy = live['enemy']
     catch_rate = late.species_data(enemy['species'])['catchRate']
@@ -116,7 +117,8 @@ def ball_options(live, bag, owned_species=()):
 
 def capture_intent(state, judgments):
     live = state['battle_live']
-    if not live.get('is_wild') or live.get('is_safari') or live.get('is_ghost'):
+    if (not live.get('is_wild') or live.get('is_safari') or live.get('is_ghost')
+            or live.get('capture_blocked_reason')):
         return False
     if capture_storage_full(state) or not any(slot['item'] in BALLS and slot['qty'] > 0
                                              for slot in state.get('battle_inventory', [])):
@@ -526,7 +528,8 @@ class JevGame(pt.Game):
                            and party[active]['species'] == context.get('from_species'))
         capturing = capture_intent(state, self.judgments) and not capture_storage_full(state)
         seeking_source = (live.get('is_wild') and not live.get('is_safari')
-            and not live.get('is_ghost') and (context.get('required_capture_species') == live['enemy']['species']
+            and not live.get('is_ghost') and not live.get('capture_blocked_reason')
+            and (context.get('required_capture_species') == live['enemy']['species']
             or getattr(self.judgments, 'collects_dex', False) and live['enemy']['species'] not in
             (state.get('pokedex') or {}).get('owned_species', [])))
         retreat = capture_retreat(state, self.judgments) if seeking_source else None

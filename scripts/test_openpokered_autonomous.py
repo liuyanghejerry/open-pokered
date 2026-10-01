@@ -20,6 +20,40 @@ from openpokered.run_autonomous import observations_valid, checkpoint_field_requ
 
 
 class AutonomousTests(unittest.TestCase):
+    def test_invalid_source_requires_new_native_evolution_without_changing_dex(self):
+        agent = AutonomousStoryAgent.__new__(AutonomousStoryAgent)
+        agent.collection_audit_pending = {'Marowak': {'reason': 'uncatchable_restless_soul'}}
+        agent._complete_collection_graph = {'Marowak': [{
+            'method': 'evolution', 'trigger': 'level', 'from_species': 'Cubone', 'level': 28}]}
+        agent.record = Mock()
+        facts = {'dex': {'owned_species': ['Cubone', 'Marowak'], 'owned': 2}}
+        self.assertEqual(agent.validated_owned(facts), {'Cubone'})
+        agent.observe_audit_evolution([{'species': 'Cubone', 'level': 27}])
+        agent.observe_audit_evolution([{'species': 'Marowak', 'level': 30},
+                                      {'species': 'Cubone', 'level': 27}])
+        self.assertIn('Marowak', agent.collection_audit_pending)
+        agent.active = {'context': {'acquisition_method': 'evolution',
+                                   'from_species': 'Cubone', 'species': 'Marowak'}}
+        agent.observe_audit_evolution([{'species': 'Marowak', 'level': 30},
+                                      {'species': 'Marowak', 'level': 28}])
+        self.assertFalse(agent.collection_audit_pending)
+        self.assertEqual(facts['dex']['owned'], 2)
+        agent.record.assert_called_once()
+
+    def test_checkpoint_audit_recovers_legacy_spirit_capture(self):
+        from openpokered.run_autonomous import checkpoint_collection_audit
+        import tempfile
+        with tempfile.TemporaryDirectory() as temporary:
+            folder = Path(temporary)
+            (folder / 'summary.json').write_text('{}')
+            (folder / 'trace.jsonl').write_text(json.dumps({'kind': 'dex_progress',
+                'map': 'PokemonTower6F', 'acquired': ['Marowak'], 'elapsed_s': 10}) + '\n')
+            pending = checkpoint_collection_audit(folder)
+            self.assertEqual(pending['Marowak']['reason'], 'uncatchable_restless_soul')
+            (folder / 'summary.json').write_text(json.dumps({
+                'collection_audit_schema': 1, 'collection_audit_pending': {}}))
+            self.assertEqual(checkpoint_collection_audit(folder), {})
+
     def test_capture_retreat_retries_require_actual_preparation_improvement(self):
         from openpokered.autonomous_story import capture_preparation
         agent = AutonomousStoryAgent.__new__(AutonomousStoryAgent)
@@ -1840,6 +1874,7 @@ class AutonomousTests(unittest.TestCase):
             agent.navigation_memory, agent.navigation_history = {}, {}
             agent.field_requirements, agent.battle_requirements = {}, {}
             agent.capture_retreats = {}
+            agent.collection_audit_pending = {}
             agent.battle_defeats, agent.defeat_preparation = [], 0
             agent.first_clear_verification, agent.mechanism_goal = None, None
             with patch.object(run_autonomous.argparse.ArgumentParser, 'add_argument', record), \
@@ -2433,6 +2468,14 @@ class AutonomousTests(unittest.TestCase):
             # on, so the plan stays None and the judge is not even consulted.
             self.assertIsNone(JevGame.battle_recovery_plan(agent, state))
             self.assertFalse(agent.judgments.choose.called)
+
+    def test_identified_restless_soul_is_not_a_capture_target(self):
+        from openpokered.playthrough_judgments import ball_options, capture_intent
+        state = self.capture_support_state()
+        state['battle_live'].update(is_ghost=False, capture_blocked_reason='restless_soul')
+        judge = Mock(collects_dex=True, active={'context': {}})
+        self.assertEqual(list(ball_options(state['battle_live'], {'MasterBall': 1})), [])
+        self.assertFalse(capture_intent(state, judge))
 
     def test_safari_action_exposes_capture_flee_and_ball_factors(self):
         from openpokered.playthrough_judgments import safari_action_options, JevGame

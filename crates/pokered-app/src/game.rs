@@ -2928,8 +2928,9 @@ impl PokemonGame {
         // The scripted RESTLESS_SOUL battle (6F) fought WITH the scope: the original
         // checks `cp RESTLESS_SOUL` (constants/pokemon_constants.asm:209 —
         // `RESTLESS_SOUL EQU MAROWAK`) and runs the SILPH SCOPE unveil text +
-        // MarowakAnim, after which it's a normal Marowak fight.
-        self.battle.ghost_marowak_reveal = in_pokemon_tower
+        // MarowakAnim. It becomes attackable but remains an uncatchable spirit.
+        self.battle.ghost_marowak_reveal = self.overworld.state.current_map
+            == pokered_data::maps::MapId::PokemonTower6F
             && has_silph_scope
             && species == pokered_data::species::Species::Marowak;
         self.battle_vfx = BattleVisualEffects::default();
@@ -6116,6 +6117,15 @@ impl PokemonGame {
             let safari = self.battle.safari.as_ref();
             serde_json::json!({
                 "is_ghost": self.battle.is_ghost,
+                "capture_blocked_reason": if !self.battle.is_wild {
+                    Some("trainer_owned")
+                } else if self.battle.is_ghost {
+                    Some("unidentified_ghost")
+                } else if self.battle.ghost_marowak_reveal {
+                    Some("restless_soul")
+                } else {
+                    None
+                },
                 // A ball may only be thrown in a wild (or Safari) battle, and
                 // a Safari battle replaces FIGHT/PKMN/ITEM/RUN with
                 // BALL/BAIT/ROCK/RUN — so a Pokédex-collecting driver needs
