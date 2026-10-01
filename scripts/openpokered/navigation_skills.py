@@ -24,6 +24,54 @@ SPECIES_NAMES = {p.stem.replace('_', '').upper(): p.stem
                  for p in (pt.ROOT / 'crates/pokered-data/pokemon').glob('*.json')}
 
 
+@lru_cache(maxsize=1)
+def native_field_conditions():
+    """Read native Surf-current and badge guards; never encode a push route."""
+    root = pt.ROOT / 'crates/pokered-core/src/overworld'
+    hm = (root / 'hm_effects.rs').read_text()
+    field = (root / 'field_moves.rs').read_text()
+    guard = re.search(r'if current_map == MapId::(\w+)\s*&& !seafoam_b4f_boulders_done\s*'
+        r'&& player_x == (\w+)\s*&& player_y == (\w+)', hm)
+    coordinate = lambda name: int(re.search(rf'pub const {name}: u8 = (\d+)', hm)[1])
+    flags = re.findall(r'check\(EventFlag::(\w+)\)',
+        field.split('let seafoam_b4f_boulders_done =', 1)[1].split(';', 1)[0])
+    current = {'map': guard[1], 'stance': [coordinate(guard[2]), coordinate(guard[3])],
+               'flags': flags}
+    badges = dict(re.findall(r'move_id: MoveId::(\w+), badge_bit: Some\(BIT_(\w+)\)', hm))
+    producers = {}
+    for path in (pt.ROOT / 'crates/pokered-data/maps').glob('*/script.scene'):
+        for badge, flag in re.findall(r'giveBadge\("(\w+)"\)\s*setFlag\("(\w+)"\)', path.read_text()):
+            producers[badge] = flag
+    return current, {move: producers[badge] for move, badge in badges.items() if badge in producers}
+
+
+def surf_current_prerequisites(obstacle, flags):
+    current, _ = native_field_conditions()
+    if obstacle.get('map') != current['map'] or obstacle.get('stance') != current['stance']:
+        return []
+    return [('flag', flag, True) for flag in current['flags'] if not flags.get(flag)]
+
+
+def field_badge_prerequisites(move, flags):
+    _, badges = native_field_conditions()
+    flag = badges.get(move)
+    return [('flag', flag, True)] if flag and not flags.get(flag) else []
+
+
+def surf_path_prerequisites(path, flags):
+    """Legal embarkation is separate from water-relaxed geometric reachability."""
+    missing = []
+    previous = path[0]
+    for node, _ in path[1:]:
+        if water_tile(*node) and not water_tile(*previous):
+            for target in (field_badge_prerequisites('Surf', flags)
+                           + surf_current_prerequisites({'map': previous[0], 'stance': list(previous[1:])}, flags)):
+                if target not in missing:
+                    missing.append(target)
+        previous = node
+    return missing
+
+
 def hm_compatible(species, move):
     return machine_compatible(species, 50 + HM_MOVES.index(move))
 

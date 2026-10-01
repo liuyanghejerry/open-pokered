@@ -20,6 +20,47 @@ from openpokered.run_autonomous import observations_valid, checkpoint_field_requ
 
 
 class AutonomousTests(unittest.TestCase):
+    def test_native_current_and_badge_prerequisites_are_position_and_flag_specific(self):
+        from openpokered.navigation_skills import surf_current_prerequisites, field_badge_prerequisites
+        obstacle = {'map': 'SeafoamIslandsB4F', 'stance': [7, 11]}
+        one, two = 'EVENT_SEAFOAM4_BOULDER1_DOWN_HOLE', 'EVENT_SEAFOAM4_BOULDER2_DOWN_HOLE'
+        self.assertEqual(surf_current_prerequisites(obstacle, {}), [('flag', one, True), ('flag', two, True)])
+        self.assertEqual(surf_current_prerequisites(obstacle, {one: True}), [('flag', two, True)])
+        self.assertEqual(surf_current_prerequisites(obstacle, {one: True, two: True}), [])
+        self.assertEqual(surf_current_prerequisites({**obstacle, 'stance': [8, 11]}, {}), [])
+        self.assertEqual(surf_current_prerequisites({**obstacle, 'map': 'Route19'}, {}), [])
+        self.assertEqual(field_badge_prerequisites('Strength', {}), [('flag', 'EVENT_BEAT_ERIKA', True)])
+        self.assertEqual(field_badge_prerequisites('Strength', {'EVENT_BEAT_ERIKA': True}), [])
+        self.assertEqual(field_badge_prerequisites('Surf', {}), [('flag', 'EVENT_BEAT_KOGA', True)])
+
+    def test_native_current_refusal_returns_real_prerequisites_without_menu_retry(self):
+        agent = AutonomousStoryAgent.__new__(AutonomousStoryAgent)
+        agent.actions, agent.max_actions = 0, 10
+        obstacle = {'map': 'SeafoamIslandsB4F', 'stance': [7, 11], 'direction': 'down',
+                    'landing': ['SeafoamIslandsB4F', 7, 3]}
+        agent.active = {'context': obstacle}
+        agent.client, agent.game, agent.record, agent.travel = Mock(), Mock(), Mock(), Mock()
+        agent.client.flags.return_value = {}
+        agent.game.st.return_value = {'player_transport': 'Walking'}
+        rule = Rule('water', obstacle['map'], 'water', [], [], [], (), [])
+        result = agent.execute('surf:1', rule)
+        self.assertEqual(result['result'], 'blocked')
+        self.assertEqual(len(result['prerequisites']), 2)
+        agent.travel.assert_not_called()
+        agent.game.face.assert_not_called()
+
+    def test_water_geometry_does_not_certify_current_blocked_embarkation(self):
+        from openpokered.navigation_skills import surf_path_prerequisites
+        path = [('SeafoamIslandsB4F', 7, 11), (('SeafoamIslandsB4F', 7, 12), 'down')]
+        flags = {'EVENT_BEAT_KOGA': True}
+        self.assertEqual(len(surf_path_prerequisites(path, flags)), 2)
+        flags.update(EVENT_SEAFOAM4_BOULDER1_DOWN_HOLE=True, EVENT_SEAFOAM4_BOULDER2_DOWN_HOLE=True)
+        self.assertEqual(surf_path_prerequisites(path, flags), [])
+        # Already on water is not a fresh embarkation and should not invent
+        # a badge/current requirement for an existing legal transport mode.
+        water = [('SeafoamIslandsB4F', 7, 12), (('SeafoamIslandsB4F', 7, 13), 'down')]
+        self.assertEqual(surf_path_prerequisites(water, {}), [])
+
     def test_trainer_switch_is_grounded_in_live_battle_not_parent_heal_goal(self):
         from openpokered.story_agent import DualStoryAgent
         agent = AutonomousStoryAgent.__new__(AutonomousStoryAgent)
@@ -2396,7 +2437,7 @@ class AutonomousTests(unittest.TestCase):
         agent.active = {'context': obstacle}
         agent.field_requirements = {'Surf': obstacle}
         agent.observed_barrier_maps = set()
-        agent.game, agent.record = Mock(), Mock()
+        agent.game, agent.record, agent.client = Mock(), Mock(), Mock()
         agent.game.st.return_value = {'player_transport': 'Surfing', 'map_name': 'LowerCave',
                                      'player_x': 20, 'player_y': 17}
         agent.game.nav_to_map.side_effect = pt.NavError('current displaced the player')

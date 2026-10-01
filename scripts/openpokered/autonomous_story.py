@@ -24,6 +24,7 @@ from .playthrough_judgments import (ObservedProtocol, NavigationPause, attack_pr
 from .playthrough_judgments import capture_probability
 from .navigation_skills import (cut_requirement, surf_requirement, water_planning, water_tile,
                                 hm_compatible, machine_compatible, HM_MOVES, TM_MOVES, CUT_TILES)
+from .navigation_skills import surf_current_prerequisites, field_badge_prerequisites, surf_path_prerequisites
 from .boulder_skills import BOULDER_TARGETS, boulder_sources, plan_pushes
 from .collection_planner import (acquisition_contract, acquisition_graph, complete_acquisition_graph,
                                  fishing_profile, infer_solo_choices, solo_plan,
@@ -839,10 +840,12 @@ class AutonomousStoryAgent(DualStoryAgent):
                         with water_planning():
                             path = search()
                         requires_surf = bool(path)
-                    if path:
+                    native_prerequisites = surf_path_prerequisites(path, facts.get('flags', {})) if requires_surf else []
+                    if path and not native_prerequisites:
                         found = len(path)-1
                     previews[key] = {'map': rule.map, 'tile_route_found': found is not None,
                                      'steps': found, 'requires_surf': requires_surf,
+                                     'unmet_native_field_prerequisites': native_prerequisites,
                                      'scope': 'this trigger region, using known geometry and observed obstacles; available Surf can be used en route'}
                 if previews[key] not in routes:
                     routes.append(previews[key])
@@ -2246,9 +2249,20 @@ class AutonomousStoryAgent(DualStoryAgent):
                 if rule not in group['rules']:
                     group['rules'].append(rule)
         self.add_navigation_groups(groups, facts)
+        surf_obstacle = self.field_requirements.get('Surf')
+        current_prerequisites = surf_current_prerequisites(surf_obstacle, facts['flags']) if surf_obstacle else []
+        for target in current_prerequisites:
+            for rule in self.index.frontier(target, facts):
+                key = json.dumps(rule.effect)
+                group = groups.setdefault(key, {'target': rule.effect, 'rules': [],
+                    'objectives': ['Stop the engine-gated current before embarking with Surf'],
+                    'context': {'terrain_obstruction': surf_obstacle, 'prerequisites': current_prerequisites}})
+                if rule not in group['rules']:
+                    group['rules'].append(rule)
         pending_boulders = [r for group in groups.values() for r in group['rules']
                            if r.id.startswith('boulder:')]
-        if pending_boulders and not any('Strength' in m['moves'] for m in facts['party']):
+        if pending_boulders and (not any('Strength' in m['moves'] for m in facts['party'])
+                                or field_badge_prerequisites('Strength', facts['flags'])):
             self.field_requirements['Strength'] = {'move': 'Strength',
                 'map': pending_boulders[0].map, 'puzzle_flags': [r.effect[1] for r in pending_boulders]}
             for key, group in list(groups.items()):
@@ -2256,6 +2270,15 @@ class AutonomousStoryAgent(DualStoryAgent):
                 if not group['rules']:
                     del groups[key]
         for move, obstacle in self.field_requirements.items():
+            badge_prerequisites = field_badge_prerequisites(move, facts['flags'])
+            for target in badge_prerequisites:
+                for rule in self.index.frontier(target, facts):
+                    key = json.dumps(rule.effect)
+                    group = groups.setdefault(key, {'target': rule.effect, 'rules': [],
+                        'objectives': [f'Obtain the badge required to use {move} outside battle'],
+                        'context': {'required_move': move, 'terrain_obstruction': obstacle}})
+                    if rule not in group['rules']:
+                        group['rules'].append(rule)
             item = f'HM{HM_MOVES.index(move)+1:02d}'
             for rule in self.index.frontier(('item', item, True), facts):
                 key = json.dumps(rule.effect)
@@ -2284,6 +2307,8 @@ class AutonomousStoryAgent(DualStoryAgent):
                     'rules': [Rule('learn:' + move, facts['map'], 'skill:learn', [], [], [], target, [])],
                     'objectives': [f'Learn {move} to pass the terrain obstruction'], 'context': obstacle}
             if known:
+                if badge_prerequisites or move == 'Surf' and current_prerequisites:
+                    continue  # Known HM is not proof that the native field action is legal.
                 if move == 'Strength':
                     continue  # Engine puzzle rules provide the actual push goal.
                 if move == 'Surf':
@@ -3806,6 +3831,12 @@ class AutonomousStoryAgent(DualStoryAgent):
                 result = {'result': 'used_machine', 'move': move}
             elif operation.startswith('surf:'):
                 obstacle = self.active['context']
+                prerequisites = surf_current_prerequisites(obstacle, self.client.flags())
+                if prerequisites and self.game.st().get('player_transport') != 'Surfing':
+                    result = {'result': 'blocked', 'detail': 'Native current blocks Surf until boulders fall',
+                              'terrain': obstacle, 'prerequisites': prerequisites}
+                    self.record('operation', operation=operation, result=result, script=rule.storyline)
+                    return result
                 if self.game.st().get('player_transport') != 'Surfing':
                     result = self.travel(obstacle['map'], rule, [tuple(obstacle['stance'])])
                     self.remember_travel_result(obstacle['map'], result)
