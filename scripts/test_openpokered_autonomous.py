@@ -13,6 +13,8 @@ from openpokered.autonomous_story import (AutonomousStoryAgent, counter_approach
                                           training_battler, storage_deposit_indices,
                                           level_experience, evolution_training_cost, training_yield)
 from openpokered.autonomous_story import compact_strategy_candidates, evolution_training_effort, factor_strategy_evidence, capture_inventory_risk
+from openpokered.story_agent import DualStoryAgent
+from openpokered.typesafe import TypeSafeError
 from openpokered.story_agent import StoryStopped
 from openpokered.navigation_skills import cut_requirement, surf_requirement, water_tile, hm_compatible, water_planning
 from openpokered.story_rules import Rule
@@ -555,6 +557,73 @@ class AutonomousTests(unittest.TestCase):
         state = {'map': 'City'}
         candidates = {'a': 'Continue', 'b': json.dumps({'cost': 2})}
         self.assertEqual(factor_strategy_evidence(state, candidates), (state, candidates))
+
+    def test_strategy_overflow_partition_keeps_state_and_considers_every_option(self):
+        agent = AutonomousStoryAgent.__new__(AutonomousStoryAgent)
+        agent.record = Mock()
+        state = {'world': {'map': 'City'}, 'shared_strategy_evidence': {'e0': ['facts']}}
+        options = {str(i): f'Candidate {i}' for i in range(8)}
+        evaluated = set()
+
+        def decide(_layer, actual_state, candidates, instruction, *, allow_abstain):
+            self.assertIs(actual_state, state)
+            if len(candidates) > 3:
+                raise StoryStopped('strategy:service_unavailable') from TypeSafeError(
+                    'HTTP 400 max_tokens_exceeded')
+            evaluated.update(candidates)
+            return max(candidates, key=int)
+
+        with patch.object(DualStoryAgent, 'choose', side_effect=decide) as calls:
+            self.assertEqual(agent.choose_bounded_strategy(state, options, 'Pick'), '7')
+        self.assertEqual(evaluated, set(options))
+        self.assertEqual(calls.call_args.kwargs['allow_abstain'], True)
+        self.assertTrue(any(not call.kwargs['allow_abstain'] for call in calls.call_args_list))
+        self.assertEqual(options, {str(i): f'Candidate {i}' for i in range(8)})
+        self.assertTrue(any(call.args[0] == 'strategy_partition_finalists'
+                            for call in agent.record.call_args_list))
+
+    def test_strategy_partition_does_not_mask_other_errors_or_recurse_forever(self):
+        agent = AutonomousStoryAgent.__new__(AutonomousStoryAgent)
+        agent.record = Mock()
+        for detail, count in [('HTTP 401 unauthorized', 8), ('max_tokens_exceeded', 2)]:
+            with self.subTest(detail=detail, count=count):
+                def fail(*args, **kwargs):
+                    raise StoryStopped('strategy:service_unavailable') from TypeSafeError(detail)
+                with patch.object(DualStoryAgent, 'choose', side_effect=fail) as calls:
+                    with self.assertRaises(StoryStopped):
+                        agent.choose_bounded_strategy({}, {str(i): 'Choice' for i in range(count)}, 'Pick')
+                self.assertEqual(calls.call_count, 1)
+        agent.record.assert_not_called()
+
+    def test_shared_strategy_text_and_tables_have_no_unreferenced_library_entries(self):
+        text = 'Detailed acquisition evidence and native prerequisites. ' * 10
+        rows = [{'species': f'Species{i}', 'description': text, 'extra': 'value ' * 40}
+                for i in range(4)]
+        state = {'records': rows}
+        candidates = {'a': json.dumps({'records': rows}), 'b': json.dumps({'description': text})}
+        compact, options = factor_strategy_evidence(state, candidates)
+        library = compact['shared_strategy_evidence']
+        used = set()
+
+        def expand(value):
+            if isinstance(value, dict):
+                if set(value) == {'shared_strategy_evidence_ref'}:
+                    key = value['shared_strategy_evidence_ref']
+                    used.add(key)
+                    return expand(library[key])
+                if set(value) == {'strategy_table'}:
+                    table = value['strategy_table']
+                    return [dict(zip(table['columns'], map(expand, row))) for row in table['rows']]
+                return {key: expand(child) for key, child in value.items()}
+            if isinstance(value, list):
+                return list(map(expand, value))
+            return value
+
+        self.assertEqual(expand(compact['records']), rows)
+        for key, value in options.items():
+            self.assertEqual(expand(json.loads(value)), json.loads(candidates[key]))
+        self.assertEqual(used, set(library))
+        self.assertIn(text, library.values())
 
     def test_strategy_tables_keep_different_species_and_every_field(self):
         rows = [{'species': f'Species{i}', 'expected_attempts': i + 0.5,

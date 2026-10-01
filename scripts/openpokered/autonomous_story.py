@@ -17,6 +17,7 @@ import playthrough as pt
 import playthrough_late as data
 
 from .story_agent import DualStoryAgent, StoryStopped, attempt_key
+from .typesafe import TypeSafeError
 from .story_rules import Rule, requirements, evaluate, static_retreat_contract, spent_static_source
 from .playthrough_judgments import (ObservedProtocol, NavigationPause, attack_profile, replacement_options,
                                     MEDICINES, BALLS, medicine_options, effective_attacks, ITEM_CATALOG,
@@ -412,12 +413,13 @@ def factor_strategy_evidence(state, candidates, min_chars=160):
         return json.dumps(value, sort_keys=True, separators=(',', ':'), ensure_ascii=False)
 
     def collect(value):
-        if isinstance(value, (dict, list)):
+        if isinstance(value, (dict, list, str)):
             serial = fingerprint(value)
             if len(serial) >= min_chars:
                 counts[serial] += 1
                 values[serial] = value
-            for child in (value.values() if isinstance(value, dict) else value):
+            for child in (value.values() if isinstance(value, dict) else
+                          value if isinstance(value, list) else []):
                 collect(child)
     collect(state)
     for value in decoded.values():
@@ -428,10 +430,12 @@ def factor_strategy_evidence(state, candidates, min_chars=160):
         return state, candidates
 
     def encode(value, skip=None):
-        if isinstance(value, (dict, list)):
+        if isinstance(value, (dict, list, str)):
             serial = fingerprint(value)
             if serial in shared and serial != skip:
                 return {'shared_strategy_evidence_ref': shared[serial]}
+            if isinstance(value, str):
+                return value
             if isinstance(value, dict):
                 return {key: encode(child) for key, child in value.items()}
             # Encounter tables, party snapshots and route records repeat the
@@ -455,6 +459,34 @@ def factor_strategy_evidence(state, candidates, min_chars=160):
     factored_candidates = {key: json.dumps(encode(value), separators=(',', ':'), ensure_ascii=False)
                            if not isinstance(value, str) else value
                            for key, value in decoded.items()}
+    # Table encoding can bypass shared row objects. Do not send unreachable
+    # library entries: they are duplicate storage, not additional evidence.
+    used = set()
+
+    def mark(value):
+        if isinstance(value, dict):
+            if set(value) == {'shared_strategy_evidence_ref'}:
+                key = value['shared_strategy_evidence_ref']
+                if key not in used:
+                    used.add(key)
+                    mark(library[key])
+            else:
+                for child in value.values():
+                    mark(child)
+        elif isinstance(value, list):
+            for child in value:
+                mark(child)
+
+    for key, value in factored_state.items():
+        if key != 'shared_strategy_evidence':
+            mark(value)
+    for value in factored_candidates.values():
+        try:
+            mark(json.loads(value))
+        except (ValueError, TypeError):
+            pass
+    factored_state['shared_strategy_evidence'] = {key: value for key, value in library.items()
+                                                 if key in used}
     return factored_state, factored_candidates
 
 
@@ -855,8 +887,43 @@ class AutonomousStoryAgent(DualStoryAgent):
                 instruction += (' An object containing only strategy_table represents a list of records: '
                     'columns names the fields, and each rows entry supplies their values in that order. '
                     'All original records and values are retained, including nested evidence references.')
+            return self.choose_bounded_strategy(state, candidates, instruction,
+                allow_abstain=not (grounded or mechanism_grounded))
         return super().choose(layer, state, candidates, instruction,
                               allow_abstain=not (grounded or mechanism_grounded or trainer_switch_grounded))
+
+    def choose_bounded_strategy(self, state, candidates, instruction, *, allow_abstain=True):
+        """On explicit context overflow, compare every option in bounded rounds.
+
+        No code-ranked shortlist: Jev chooses each disjoint group's representative
+        with the same full state, then judges those representatives together.
+        This is a tournament, not an identical full-set probability distribution.
+        """
+        try:
+            return super().choose('strategy', state, candidates, instruction,
+                                  allow_abstain=allow_abstain)
+        except StoryStopped as error:
+            if (not isinstance(error.__cause__, TypeSafeError)
+                    or 'max_tokens_exceeded' not in str(error.__cause__)
+                    or len(candidates) <= 2):
+                raise
+        keys = list(candidates)
+        midpoint = len(keys) // 2
+        partitions = [keys[:midpoint], keys[midpoint:]]
+        self.record('strategy_partition', candidate_ids=keys, partitions=partitions,
+                    reason='max_tokens_exceeded', state_preserved=True)
+        local_instruction = instruction + (
+            ' This is one disjoint comparison group from a larger strategy choice. '
+            'Choose the best relative next step in this group using the full unchanged state. '
+            'A separate final comparison will judge the group representatives; '
+            'select one representative even if this group has no ideal option.')
+        winners = [self.choose_bounded_strategy(state, {key: candidates[key] for key in group},
+                    local_instruction, allow_abstain=False) for group in partitions]
+        self.record('strategy_partition_finalists', candidate_ids=keys, finalists=winners)
+        return self.choose_bounded_strategy(state, {key: candidates[key] for key in winners},
+            instruction + ' These candidates are the model-selected representatives of '
+            'disjoint comparison groups. Compare them for the overall next step.',
+            allow_abstain=allow_abstain)
 
     def annotate_navigation(self, groups, facts, previews=None, *, prune=True):
         """A failed destination region does not block every NPC on its map."""
