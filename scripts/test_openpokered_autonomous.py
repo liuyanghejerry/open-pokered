@@ -20,6 +20,32 @@ from openpokered.run_autonomous import observations_valid, checkpoint_field_requ
 
 
 class AutonomousTests(unittest.TestCase):
+    def test_one_depleted_coverage_move_does_not_abort_ready_hunts(self):
+        mon = {'species': 'Charizard', 'level': 57, 'hp': 193, 'max_hp': 193,
+               'status': 'None', 'moves': ['Slash', 'Cut', 'Flamethrower', 'Dig'],
+               'pp': [14, 30, 10, 0]}
+        facts = {'party': [mon]}
+        agent = AutonomousStoryAgent.__new__(AutonomousStoryAgent)
+        agent.active = {'target': ('catch', 'PokemonTower3F', True)}
+        agent.replan_after_defeat = False
+        self.assertTrue(agent.needs_healing(facts))  # Coverage recovery remains recommended.
+        self.assertFalse(agent.needs_capture_recovery(facts))
+        self.assertFalse(agent.needs_skill_recovery(facts))
+        self.assertFalse(agent.should_replan(facts))
+        mon['pp'] = [4, 7, 3, 0]
+        self.assertTrue(agent.needs_healing(facts))
+        self.assertTrue(agent.needs_capture_recovery(facts))
+        mon['pp'] = [5, 0, 0, 0]
+        self.assertTrue(agent.needs_healing(facts))
+        self.assertTrue(agent.needs_capture_recovery(facts))
+        mon['pp'] = [14, 30, 10, 0]
+        mon['hp'] = 100
+        self.assertTrue(agent.needs_healing(facts))
+        self.assertTrue(agent.needs_capture_recovery(facts))
+        mon['hp'], mon['status'] = 193, 'Paralysis'
+        self.assertTrue(agent.needs_healing(facts))
+        self.assertTrue(agent.needs_capture_recovery(facts))
+
     def test_late_navigation_cannot_reintroduce_pushes_without_strength_and_badge(self):
         agent = AutonomousStoryAgent.__new__(AutonomousStoryAgent)
         agent.field_requirements = {}

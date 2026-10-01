@@ -563,17 +563,25 @@ class AutonomousStoryAgent(DualStoryAgent):
                 self.cleared_terrain.remove(key)
 
     @staticmethod
-    def needs_healing(facts):
+    def needs_healing(facts, preserve_coverage=True):
         if not facts['party']:
             return False
         mon = facts['party'][0]
         attack_pp = sum(pp for move, pp in zip(mon['moves'], mon['pp'])
                         if move != 'None' and data.move_data(move)['power'] > 0)
-        depleted_attack = any(pp <= data.move_data(move)['pp'] * .25
+        # Ordinary story/training preparation preserves each coverage move.
+        # A capture trip can continue with adequate remaining attacks; recovery
+        # is still offered while fully_recovered is false.
+        depletion = any if preserve_coverage else all
+        depleted_attack = depletion(pp <= data.move_data(move)['pp'] * .25
                               for move, pp in zip(mon['moves'], mon['pp'])
                               if move != 'None' and data.move_data(move)['power'] > 0)
         return (mon['hp'] < mon['max_hp'] * .7 or mon['status'] != 'None'
                 or attack_pp < 6 or depleted_attack)
+
+    @staticmethod
+    def needs_capture_recovery(facts):
+        return AutonomousStoryAgent.needs_healing(facts, preserve_coverage=False)
 
     def should_replan(self, facts):
         if self.replan_after_defeat:
@@ -601,6 +609,8 @@ class AutonomousStoryAgent(DualStoryAgent):
         """A status-only evolution trainee can share XP with a ready finisher."""
         active = getattr(self, 'active', None) or {}
         context = active.get('context', {})
+        if active.get('target', [None])[0] in ('catch', 'held_species'):
+            return self.needs_capture_recovery(facts)
         party = facts.get('party', [])
         if (party and context.get('acquisition_method') == 'evolution'
                 and context.get('trigger') == 'level'
@@ -4022,7 +4032,7 @@ class AutonomousStoryAgent(DualStoryAgent):
                     break
                 if after is not None and owned_before is not None and after > owned_before:
                     break
-                if self.needs_healing(self.facts()):
+                if self.needs_capture_recovery(self.facts()):
                     self.active = None
                     break
             result = {'result': 'hunted', 'method': method, 'map': name,
@@ -4063,7 +4073,7 @@ class AutonomousStoryAgent(DualStoryAgent):
                 break
             if state['map_name'] != name:
                 break
-            if (self.needs_healing(self.facts()) if catching else self.needs_skill_recovery(self.facts())):
+            if (self.needs_capture_recovery(self.facts()) if catching else self.needs_skill_recovery(self.facts())):
                 self.active = None
                 break
             px, py = state['player_x'], state['player_y']
