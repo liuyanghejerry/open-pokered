@@ -25,7 +25,7 @@ from .navigation_skills import (cut_requirement, surf_requirement, water_plannin
 from .boulder_skills import BOULDER_TARGETS, boulder_sources, plan_pushes
 from .collection_planner import (acquisition_contract, acquisition_graph, complete_acquisition_graph,
                                  fishing_profile, infer_solo_choices, solo_plan,
-                                 table_profile)
+                                 table_profile, ENCOUNTER_SLOT_WEIGHTS)
 
 # The level bias asks for more training than the pending fight strictly needs.
 LEVEL_PREFERENCE_MARGIN = 2
@@ -51,6 +51,43 @@ BALL_QUALITY = {
     'UltraBall': 'strong',
     'MasterBall': 'guaranteed',
 }
+
+
+def level_experience(species, level):
+    """Native growth curves; level alone gives bounds, not exact current XP."""
+    if level <= 1:
+        return 0
+    rate = data.species_data(species)['growthRate']
+    num, den, quad, linear, sub = {
+        'MediumFast': (1, 1, 0, 0, 0), 'MediumSlow': (6, 5, -15, 100, 140),
+        'Fast': (4, 5, 0, 0, 0), 'Slow': (5, 4, 0, 0, 0),
+        'SlightlyFast': (3, 4, 10, 0, 30), 'SlightlySlow': (3, 4, 20, 0, 70),
+    }[rate]
+    return max(0, num * level**3 // den + quad * level**2 + linear * level - sub)
+
+
+def evolution_training_cost(mon, target_level):
+    target = level_experience(mon['species'], target_level)
+    floor = level_experience(mon['species'], mon['level'])
+    next_floor = level_experience(mon['species'], min(100, mon['level'] + 1))
+    return {'levels_remaining': max(0, target_level - mon['level']),
+            'remaining_experience_min': max(0, target - max(floor, next_floor - 1)),
+            'remaining_experience_max': max(0, target - floor),
+            'scope': 'Bounds from observed level; exact accumulated experience is not controller telemetry'}
+
+
+def training_yield(table, participants=1):
+    """Slot-weighted wild victory XP, with explicit switch-training assumptions."""
+    mons = (table or {}).get('mons', [])
+    weighted = sum(weight * (data.species_data(mon['species'])['baseExp'] * mon['level'] // 7 // participants)
+                   for weight, mon in zip(ENCOUNTER_SLOT_WEIGHTS, mons))
+    total_weight = sum(ENCOUNTER_SLOT_WEIGHTS[:len(mons)])
+    experience = weighted / total_weight if total_weight else 0
+    rate = (table or {}).get('encounterRate', 0)
+    return {'expected_experience_per_victory': round(experience, 2),
+            'expected_encounter_attempts': round(256 / rate, 2) if rate else None,
+            'participants': participants,
+            'assumptions': 'Untraded conscious participants; wild victories only, no Exp All; healing and combat turns add cost'}
 
 
 def catch_difficulty(species):
@@ -504,7 +541,10 @@ class AutonomousStoryAgent(DualStoryAgent):
                 'collection candidates using their supplied encounter probability, expected hunt steps, species '
                 'scarcity, travel cost, recent yield, ball quality and safe status support. A larger species list is '
                 'not automatically better when its missing species occupy rare slots or the current resources '
-                'cannot realistically catch them.')
+                'cannot realistically catch them. Compare evolution training_cost with alternative_sources '
+                'and the value of unlocking new regions: a low-level trainee may require many victories, '
+                'while a later wild capture can register the evolved species directly. Potential alternative '
+                'sources are not guaranteed reachable; choose the prerequisites needed to reach them.')
         if layer == 'action' and 'local_state' in state and getattr(self, 'active', None):
             state = {**state, 'strategy_context': self.active.get('context', {})}
         context = state.get('strategy_context') or {}
@@ -986,6 +1026,14 @@ class AutonomousStoryAgent(DualStoryAgent):
                             self.add_evolution_item_source(groups, facts, item, species)
                             continue
                     context['party_indices'] = source_party
+                    if method['trigger'] == 'level':
+                        context['training_cost'] = evolution_training_cost(party[source_party[0]], method['level'])
+                        context['alternative_sources'] = [
+                            {'method': alternative['method'], 'map': alternative.get('map'),
+                             'visited': alternative.get('map') in getattr(self, 'visited', ()),
+                             'scope': 'Potential source only; navigation and prerequisites still require verification'}
+                            for alternative in self.complete_collection_graph().get(species, [])
+                            if alternative['method'] in ('grass', 'water', 'fishing', 'safari')]
                     rules = [Rule(f'evolve:{source}:{species}', facts['map'],
                                   'skill:evolve', [], [], [],
                                   ('register', species, True), [])]
@@ -1360,7 +1408,7 @@ class AutonomousStoryAgent(DualStoryAgent):
                 endpoint = paths[-1][0] if len(paths) > 1 else paths[0]
                 spots = [tuple(endpoint[1:])]  # Use the reachable component.
             hops = len(route.get('legs', []))
-            experience = sum(data.species_data(mon['species'])['baseExp'] * mon['level'] / 7 for mon in mons) / len(mons)
+            experience = training_yield(wild)['expected_experience_per_victory']
             ranked.append((not bool(paths), -experience / (1 + .15*hops), hops, name, spots))
         ranked.sort(key=lambda item: item[:4])
         self.training_sites = {}
@@ -2367,6 +2415,11 @@ class AutonomousStoryAgent(DualStoryAgent):
                     'purpose': f'Gain a level with {source} to evolve it into {context["species"]}',
                     'required_level': context['level'],
                     'current_level': facts['party'][0]['level'],
+                    'training_cost': evolution_training_cost(facts['party'][0], context['level']),
+                    'encounter_yield': training_yield(
+                        ((getattr(self, 'maps', {}).get(name, {}).get('wild') or {}).get('red') or {}).get('grass'),
+                        2 if any(mon['hp'] > 0 and mon['level'] > facts['party'][0]['level']
+                                 for mon in facts['party'][1:]) else 1),
                     'navigation': getattr(self, 'training_navigation', {}).get(name)})
                 bindings[key] = operation, rule
             return candidates, bindings

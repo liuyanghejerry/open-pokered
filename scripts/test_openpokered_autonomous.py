@@ -10,7 +10,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from openpokered.playthrough_judgments import ObservedProtocol, move_question, JevGame, replacement_options, medicine_options
 from openpokered.autonomous_story import (AutonomousStoryAgent, counter_approaches, reachable_grass,
                                           training_tile, battle_readiness, encounter_value,
-                                          training_battler, storage_deposit_indices)
+                                          training_battler, storage_deposit_indices,
+                                          level_experience, evolution_training_cost, training_yield)
 from openpokered.story_agent import StoryStopped
 from openpokered.navigation_skills import cut_requirement, surf_requirement, water_tile, hm_compatible, water_planning
 from openpokered.story_rules import Rule
@@ -18,6 +19,29 @@ from openpokered.run_autonomous import observations_valid
 
 
 class AutonomousTests(unittest.TestCase):
+    def test_evolution_cost_uses_native_growth_and_observed_level_bounds(self):
+        self.assertEqual(level_experience('Rattata', 1), 0)
+        self.assertEqual(level_experience('Rattata', 20), 8000)
+        self.assertEqual(level_experience('Oddish', 21), 6458)
+        cost = evolution_training_cost({'species': 'Rattata', 'level': 15}, 20)
+        self.assertEqual(cost['remaining_experience_min'], 3905)
+        self.assertEqual(cost['remaining_experience_max'], 4625)
+        self.assertEqual(cost['levels_remaining'], 5)
+        self.assertEqual(evolution_training_cost({'species': 'Rattata', 'level': 20}, 20)
+                         ['remaining_experience_max'], 0)
+
+    def test_training_yield_weights_slots_and_switch_participants(self):
+        table = {'encounterRate': 32, 'mons': [
+            {'species': 'Rattata', 'level': 10}] * 9 + [{'species': 'Chansey', 'level': 30}]}
+        solo = training_yield(table)
+        shared = training_yield(table, 2)
+        self.assertEqual(solo['expected_encounter_attempts'], 8)
+        expected = (253 * (57 * 10 // 7) + 3 * (255 * 30 // 7)) / 256
+        self.assertEqual(solo['expected_experience_per_victory'], round(expected, 2))
+        self.assertLess(shared['expected_experience_per_victory'], solo['expected_experience_per_victory'])
+        self.assertEqual(shared['participants'], 2)
+        self.assertEqual(training_yield(None)['expected_experience_per_victory'], 0)
+
     def test_storage_retains_main_and_sole_required_field_move_carriers(self):
         party = [{'species': 'Charizard', 'level': 36, 'moves': ['Slash']},
                  {'species': 'Pidgey', 'level': 9, 'moves': ['Gust']},
