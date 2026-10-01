@@ -79,6 +79,7 @@ def checkpoint_collection_audit(run):
     else:
         pending = {}
     for folder in reversed(chain):
+        previous_owned = None
         with (folder / 'trace.jsonl').open() as stream:
             for line in stream:
                 if '"dex_progress"' not in line:
@@ -86,10 +87,13 @@ def checkpoint_collection_audit(run):
                 event = json.loads(line)
                 # Native RESTLESS_SOUL: Tower6F has no wild Marowak slot.
                 # A new registration here is the old engine's illegal spirit catch.
-                if event.get('map') == 'PokemonTower6F' and 'Marowak' in event.get('acquired', []):
+                if (previous_owned is not None and 'Marowak' not in previous_owned
+                        and event.get('map') == 'PokemonTower6F'
+                        and 'Marowak' in event.get('acquired', [])):
                     pending['Marowak'] = {'reason': 'uncatchable_restless_soul',
                         'source_trace': str(folder / 'trace.jsonl'),
                         'elapsed_s': event['elapsed_s'], 'map': event['map']}
+                previous_owned = set(event.get('owned_species', []))
     return pending
 
 

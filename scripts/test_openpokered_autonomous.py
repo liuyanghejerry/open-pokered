@@ -20,6 +20,48 @@ from openpokered.run_autonomous import observations_valid, checkpoint_field_requ
 
 
 class AutonomousTests(unittest.TestCase):
+    def test_full_party_retrieval_deposits_in_another_box_before_withdrawing(self):
+        agent = AutonomousStoryAgent.__new__(AutonomousStoryAgent)
+        agent.active = {'target': ('pokemon', 'Cubone', None)}
+        agent.client, agent.tap, agent.check_budget = Mock(), Mock(), Mock()
+        party = [{'species': species} for species in
+                 ['Charizard', 'Gloom', 'Nidoqueen', 'Fearow', 'Pidgeot', 'Raticate']]
+        def state(phase, box, team=party, **pc):
+            return {'screen': 'pc', 'party': team, 'current_box_index': box,
+                    'box_counts': [20, 20, 1] + [0] * 9,
+                    'pc_state': {'phase': phase, **pc}}
+        agent.client.state.side_effect = [
+            state('BillsMenu', 1, bills_cursor=3),
+            state('BoxList', 1, box_cursor=2),
+            state('BillsMenu', 2, bills_cursor=1),
+            state('MonList', 2, mon_mode='Deposit', mon_cursor=5),
+            state('MonAction', 2, mon_action_cursor=0),
+            state('MonList', 2, party[:5], mon_mode='Deposit', mon_cursor=4),
+            state('BillsMenu', 2, party[:5], bills_cursor=3),
+            state('BoxList', 2, party[:5], box_cursor=1),
+            state('BillsMenu', 1, party[:5], bills_cursor=0),
+            state('MonList', 1, party[:5], mon_mode='Withdraw', mon_cursor=17),
+            state('MonAction', 1, party[:5], mon_action_cursor=0),
+            state('MonList', 1, party[:5] + [{'species': 'Cubone'}],
+                  mon_mode='Withdraw', mon_cursor=17),
+            {'screen': 'overworld', 'party': party[:5] + [{'species': 'Cubone'}]},
+        ]
+        result = agent.retrieve_from_pc(1, 17, 5, 0)
+        self.assertEqual(result['result'], 'withdrew_pokemon')
+        self.assertEqual([call.args[0] for call in agent.tap.call_args_list],
+                         ['a'] * 5 + ['b'] + ['a'] * 5 + ['b'])
+
+    def test_storage_retrieval_reports_all_boxes_full_without_looping(self):
+        agent = AutonomousStoryAgent.__new__(AutonomousStoryAgent)
+        agent.active = {'target': ('pokemon', 'Cubone', None)}
+        agent.client, agent.tap, agent.check_budget = Mock(), Mock(), Mock()
+        agent.client.state.return_value = {'party': [{'species': 'Rattata'}] * 6,
+            'box_counts': [20] * 12, 'current_box_index': 1,
+            'pc_state': {'phase': 'BillsMenu', 'bills_cursor': 0}}
+        with self.assertRaisesRegex(StoryStopped, 'no_deposit_capacity'):
+            agent.retrieve_from_pc(1, 17, 5, 0)
+        agent.tap.assert_not_called()
+
     def test_invalid_source_requires_new_native_evolution_without_changing_dex(self):
         agent = AutonomousStoryAgent.__new__(AutonomousStoryAgent)
         agent.collection_audit_pending = {'Marowak': {'reason': 'uncatchable_restless_soul'}}
@@ -40,6 +82,16 @@ class AutonomousTests(unittest.TestCase):
         self.assertEqual(facts['dex']['owned'], 2)
         agent.record.assert_called_once()
 
+    def test_registration_target_waits_for_source_audit_without_changing_native_gates(self):
+        from openpokered.story_rules import StoryIndex
+        index = StoryIndex.__new__(StoryIndex)
+        facts = {'dex': {'owned': 50, 'owned_species': ['Marowak']},
+                 'collection_audit_pending': ['Marowak']}
+        self.assertFalse(index.satisfied(('register', 'Marowak', True), facts))
+        self.assertTrue(index.satisfied(('dex', 'owned', 50), facts))
+        facts['collection_audit_pending'] = []
+        self.assertTrue(index.satisfied(('register', 'Marowak', True), facts))
+
     def test_checkpoint_audit_recovers_legacy_spirit_capture(self):
         from openpokered.run_autonomous import checkpoint_collection_audit
         import tempfile
@@ -47,11 +99,25 @@ class AutonomousTests(unittest.TestCase):
             folder = Path(temporary)
             (folder / 'summary.json').write_text('{}')
             (folder / 'trace.jsonl').write_text(json.dumps({'kind': 'dex_progress',
-                'map': 'PokemonTower6F', 'acquired': ['Marowak'], 'elapsed_s': 10}) + '\n')
+                'map': 'PokemonTower6F', 'owned_species': ['Cubone'], 'acquired': ['Cubone']})
+                + '\n' + json.dumps({'kind': 'dex_progress',
+                'map': 'PokemonTower6F', 'owned_species': ['Cubone', 'Marowak'],
+                'acquired': ['Marowak'], 'elapsed_s': 10}) + '\n')
             pending = checkpoint_collection_audit(folder)
             self.assertEqual(pending['Marowak']['reason'], 'uncatchable_restless_soul')
             (folder / 'summary.json').write_text(json.dumps({
                 'collection_audit_schema': 1, 'collection_audit_pending': {}}))
+            self.assertEqual(checkpoint_collection_audit(folder), {})
+
+    def test_tower_checkpoint_initial_snapshot_is_not_an_illegal_capture(self):
+        from openpokered.run_autonomous import checkpoint_collection_audit
+        import tempfile
+        with tempfile.TemporaryDirectory() as temporary:
+            folder = Path(temporary)
+            (folder / 'summary.json').write_text('{}')
+            (folder / 'trace.jsonl').write_text(json.dumps({'kind': 'dex_progress',
+                'map': 'PokemonTower6F', 'owned_species': ['Marowak'],
+                'acquired': ['Marowak'], 'elapsed_s': 1}) + '\n')
             self.assertEqual(checkpoint_collection_audit(folder), {})
 
     def test_capture_retreat_retries_require_actual_preparation_improvement(self):

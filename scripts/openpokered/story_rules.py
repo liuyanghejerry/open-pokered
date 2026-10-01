@@ -537,6 +537,10 @@ class StoryIndex:
             return (bool(species) and species <= owned) == wanted
         if kind == 'register':
             owned = set((facts.get('dex') or {}).get('owned_species', []))
+            # A historical invalid source may have set the native owned bit.
+            # Keep its real SRAM count, but do not satisfy a legitimate-source
+            # registration task until the collector observes remediation.
+            owned -= set(facts.get('collection_audit_pending', []))
             return (str(name) in owned) == wanted
         if kind == 'box_space':
             counts = facts.get('box_counts', [])

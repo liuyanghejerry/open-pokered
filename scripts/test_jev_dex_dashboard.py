@@ -81,6 +81,46 @@ class DexDashboardTest(unittest.TestCase):
             with self.assertRaises(FileNotFoundError):
                 dashboard.load_chain(run, True)
 
+    def test_source_audit_preserves_native_counts_and_requires_remediation(self):
+        events, _ = dashboard.merge_traces([segment([
+            dex(1, ['Cubone']),
+            dex(2, ['Cubone', 'Marowak'], map='PokemonTower6F'),
+            dex(3, ['Cubone', 'Marowak']),
+        ])])
+        audit = dashboard.collection_audit(events, {'collection_audit_schema': 1,
+            'collection_audit_pending': {'Marowak': {}}})
+        self.assertEqual(audit['pending_species'], ['Marowak'])
+        self.assertEqual(events[-1]['owned'], 2)
+        self.assertEqual(events[-1]['validated_owned'], 1)
+        self.assertEqual(len(audit['history']), 1)
+        with self.assertRaisesRegex(ValueError, 'audit disagrees'):
+            dashboard.collection_audit(events, {'collection_audit_schema': 1,
+                'collection_audit_pending': {}})
+
+    def test_native_evolution_adds_a_validity_waypoint_not_a_new_owned_bit(self):
+        events, _ = dashboard.merge_traces([segment([
+            dex(1, ['Cubone']), dex(2, ['Cubone', 'Marowak'], map='PokemonTower6F'),
+            {'kind': 'collection_audit_resolved', 'frame': 3, 'species': 'Marowak',
+             'acquisition_method': 'evolution',
+             'before': {'species': 'CUBONE', 'level': 27},
+             'after': {'species': 'MAROWAK', 'level': 28}},
+        ])])
+        audit = dashboard.collection_audit(events, {'collection_audit_schema': 1,
+            'collection_audit_pending': {}})
+        self.assertEqual(audit['pending_species'], [])
+        self.assertEqual([entry['status'] for entry in audit['history']],
+                         ['invalid_source', 'resolved'])
+        self.assertEqual(events[-1]['validated_owned'], 2)
+        events[-1]['after']['level'] = 27
+        with self.assertRaisesRegex(ValueError, 'evolution evidence'):
+            dashboard.collection_audit(events, {})
+
+    def test_initial_snapshot_and_ordinary_marowak_are_not_invalid_sources(self):
+        for trace in ([dex(1, ['Marowak'], map='PokemonTower6F')],
+                      [dex(1, ['Cubone']), dex(2, ['Cubone', 'Marowak'], map='Route1')]):
+            events, _ = dashboard.merge_traces([segment(trace)])
+            self.assertEqual(dashboard.collection_audit(events, {})['pending_species'], [])
+
 
 if __name__ == '__main__':
     unittest.main()

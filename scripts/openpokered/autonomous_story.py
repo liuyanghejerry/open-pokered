@@ -496,6 +496,7 @@ class AutonomousStoryAgent(DualStoryAgent):
                                      'status', 'moves', 'pp')}
                                    for mon in self.client.state().get('stored_pokemon', [])]
         self.observe_audit_evolution(facts['party'])
+        facts['collection_audit_pending'] = sorted(getattr(self, 'collection_audit_pending', {}))
         facts['current_box_index'] = self.client.state().get('current_box_index', 0)
         facts['box_counts'] = list(self.client.state().get('box_counts', []))
         facts['fully_recovered'] = bool(facts['party']) and all(
@@ -3414,6 +3415,7 @@ class AutonomousStoryAgent(DualStoryAgent):
             self.tap('down' if down <= up else 'up')
 
         source = self.active['target'][1]
+        desired_box = box_index
         for _ in range(500):
             self.check_budget()
             state = self.client.state()
@@ -3440,9 +3442,22 @@ class AutonomousStoryAgent(DualStoryAgent):
                 if in_party:
                     self.tap('b')
                     continue
-                if state.get('current_box_index', 0) != box_index:
+                current_box = state.get('current_box_index', 0)
+                desired_box = box_index
+                party_full = len(state.get('party', [])) >= 6
+                if party_full:
+                    counts = state.get('box_counts', [])
+                    available = [i for i, count in enumerate(counts) if count < 20]
+                    if not available:
+                        raise StoryStopped('pc_retrieval_no_deposit_capacity')
+                    # A full source box cannot receive the teammate who makes
+                    # room for a withdrawal. Deposit elsewhere first, then
+                    # return to the source box once the party has five slots.
+                    desired_box = (current_box if current_box in available else
+                                   box_index if box_index in available else available[0])
+                if current_box != desired_box:
                     wanted = 3  # CHANGE BOX
-                elif len(state.get('party', [])) >= 6:
+                elif party_full:
                     wanted = 1  # DEPOSIT
                 else:
                     wanted = 0  # WITHDRAW
@@ -3453,12 +3468,15 @@ class AutonomousStoryAgent(DualStoryAgent):
             elif phase == 'ChangeBoxConfirm':
                 self.tap('a' if pc['yes_selected'] else 'up')
             elif phase == 'BoxList':
-                if pc['box_cursor'] == box_index:
+                if pc['box_cursor'] == desired_box:
                     self.tap('a')
                 else:
-                    move_cursor(pc['box_cursor'], box_index, 12)
+                    move_cursor(pc['box_cursor'], desired_box, 12)
             elif phase == 'MonList':
                 depositing = pc['mon_mode'] == 'Deposit'
+                if in_party or depositing and len(state.get('party', [])) < 6:
+                    self.tap('b')
+                    continue
                 wanted = deposit_index if depositing else mon_index
                 if pc['mon_cursor'] == wanted:
                     self.tap('a')

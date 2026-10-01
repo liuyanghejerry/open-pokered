@@ -132,6 +132,55 @@ def total_metrics(segments, field):
     return dict(counts)
 
 
+def collection_audit(trace, summary):
+    """Annotate native registrations; preserve invalid events and later remedies.
+
+    Never interpret a resumed initial snapshot as an acquisition. A known bad
+    source cannot be cleared just because a later snapshot still owns it.
+    """
+    pending, history, previous = {}, [], None
+    for event in trace:
+        if event.get('kind') == 'dex_progress':
+            owned = set(event.get('owned_species', []))
+            if (previous is not None and 'Marowak' not in previous
+                    and 'Marowak' in event.get('acquired', [])
+                    and event.get('map') == 'PokemonTower6F'):
+                evidence = {'species': 'Marowak', 'reason': 'uncatchable_restless_soul',
+                    'source_s': event['source_s'], 'segment': event['segment'],
+                    'map': event['map'], 'status': 'invalid_source'}
+                pending['Marowak'] = evidence
+                history.append(evidence)
+            previous = owned
+            event['validated_owned'] = len(owned - set(pending))
+            event['pending_source_validation'] = sorted(pending)
+        elif event.get('kind') == 'collection_audit_resolved':
+            species = event.get('species')
+            if species not in pending:
+                raise ValueError('audit resolution has no preceding invalid acquisition')
+            before, after = event.get('before') or {}, event.get('after') or {}
+            normalize = lambda name: str(name).replace('_', '').upper()
+            if (species != 'Marowak' or event.get('acquisition_method') != 'evolution'
+                    or normalize(before.get('species')) != 'CUBONE'
+                    or normalize(after.get('species')) != 'MAROWAK'
+                    or not isinstance(before.get('level'), int)
+                    or not isinstance(after.get('level'), int)
+                    or not before['level'] < after['level'] or after['level'] < 28):
+                raise ValueError('audit resolution lacks valid native evolution evidence')
+            pending.pop(species)
+            history.append({'species': species, 'source_s': event['source_s'],
+                'segment': event['segment'], 'status': 'resolved',
+                'acquisition_method': 'evolution', 'before': before, 'after': after})
+            # This is a real acquisition even though the native owned bit was
+            # already set. Give the player a progress waypoint at the remedy.
+            event['validated_owned'] = len((previous or set()) - set(pending))
+            event['pending_source_validation'] = sorted(pending)
+    if summary.get('collection_audit_schema') == 1 and set(
+            summary.get('collection_audit_pending', {})) != set(pending):
+        raise ValueError('final source audit disagrees with trace lineage')
+    return {'pending_species': sorted(pending), 'history': history,
+            'validity_scope': 'Native registrations minus evidenced invalid sources; unknown legacy methods remain unknown.'}
+
+
 def build(run, output, video=None, chain=False):
     segments = load_chain(run, chain)
     summary = segments[-1]['summary']
@@ -155,12 +204,14 @@ def build(run, output, video=None, chain=False):
     if abs(video_duration(source_video) - duration) > max(0.1, len(segments) / 60):
         raise ValueError('assembled video duration disagrees with checkpoint lineage')
     trace, boundaries = merge_traces(segments)
+    audit = collection_audit(trace, summary)
 
     maps = {path.parent.name: json.loads(path.read_text())
             for path in MAPS_DIR.glob('*/map.json')}
     graph = complete_acquisition_graph(maps, SUPER_ROD_MAP_GROUP)
     final_dex = summary.get('final_dex') or (summary.get('final_facts') or {}).get('dex') or {}
     owned = set(final_dex.get('owned_species', []))
+    validated = owned - set(audit['pending_species'])
     plan = solo_plan(graph, owned, infer_solo_choices(owned))
     build_source = (ROOT / 'crates/pokered-data/build.rs').read_text()
     order_body = build_source.split('const SPECIES_ORDER:', 1)[1].split('];', 1)[0]
@@ -180,10 +231,20 @@ def build(run, output, video=None, chain=False):
                 'owned': event.get('owned', len(event.get('owned_species', []))),
                 'seen': event.get('seen', 0), 'acquired': acquired,
                 'owned_species': event.get('owned_species', []), 'map': event.get('map'),
+                'validated_owned': event['validated_owned'],
+                'pending_source_validation': event['pending_source_validation'],
                 'method': acquisition, 'party_count': event.get('party_count', 0),
                 'stored_count': event.get('stored_count', 0),
                 'method_counts': dict(counts),
             })
+        elif kind == 'collection_audit_resolved':
+            progress.append({'source_s': stamp(event), 'frame': event.get('frame'),
+                'owned': progress[-1]['owned'], 'seen': progress[-1]['seen'],
+                'owned_species': progress[-1]['owned_species'], 'acquired': [],
+                'validated_owned': event['validated_owned'],
+                'pending_source_validation': event['pending_source_validation'],
+                'source_revalidated': [event['species']], 'method': 'evolution',
+                'method_counts': dict(counts)})
         elif kind == 'judgment' and event.get('layer') == 'strategy':
             answer = event.get('answer') or {}
             probabilities = answer.get('probabilities') or {}
@@ -209,7 +270,7 @@ def build(run, output, video=None, chain=False):
                                'flag': event.get('flag')})
 
     data = {
-        'schema': 2,
+        'schema': 3,
         'run': {
             'success': summary.get('success'), 'reason': summary.get('reason'),
             'seed': summary.get('seed'), 'model': (summary.get('models') or ['jev-1.13.0'])[0],
@@ -222,7 +283,9 @@ def build(run, output, video=None, chain=False):
             'video_file': 'jev-dex-full.mp4', 'video_sha256': sha256(source_video),
             'video_bytes': source_video.stat().st_size,
         },
-        'target': {'owned': len(owned), 'solo_ceiling': plan['ceiling'], 'total': 151,
+        'target': {'owned': len(owned), 'validated_owned': len(validated),
+                   'pending_source_validation': audit['pending_species'],
+                   'solo_ceiling': plan['ceiling'], 'total': 151,
                    'choices': plan['choices'], 'choice_options': plan['optimal_choices'],
                    'unreachable_species': plan['unreachable_species'],
                    'always_unreachable_species': plan['always_unreachable_species']},
@@ -233,6 +296,7 @@ def build(run, output, video=None, chain=False):
         'progress': progress, 'decisions': decisions, 'operations': operations,
         'milestones': milestones,
         'resume_boundaries': boundaries,
+        'collection_audit': audit,
     }
     output.mkdir(parents=True, exist_ok=True)
     text = json.dumps(data, ensure_ascii=False, separators=(',', ':'))
