@@ -23,6 +23,14 @@ ITEM_CATALOG = {item['id']: item for path in (late.DATA / 'data/items').glob('*.
 MEDICINES = {name: item for name, item in ITEM_CATALOG.items() if item.get('category') == 'Medicine'}
 
 
+def capture_storage_full(state):
+    """The native ball action rejects a full party plus a full current box."""
+    counts = state.get('box_counts') or []
+    index = state.get('current_box_index', 0)
+    return (len(state.get('party', [])) >= 6 and 0 <= index < len(counts)
+            and counts[index] >= 20)
+
+
 def medicine_options(party, bag):
     """Legal useful recovery candidates, grounded in public item effects."""
     for name, qty in bag.items():
@@ -348,6 +356,8 @@ class JevGame(pt.Game):
         return self._party_target
 
     def safari_battle_action(self, state):
+        if capture_storage_full(state):
+            return 'run'
         live = state.get('battle_live') or {}
         owned = (state.get('pokedex') or {}).get('owned_species', [])
         options = safari_action_options(live, owned)
@@ -431,7 +441,7 @@ class JevGame(pt.Game):
             candidates[key] = json.dumps(details)
             bindings[key] = item, index
         owned = (state.get('pokedex') or {}).get('owned_species', [])
-        balls = list(ball_options(live, bag, owned))
+        balls = [] if capture_storage_full(state) else list(ball_options(live, bag, owned))
         required_source = context.get('required_capture_species') == live['enemy']['species']
         for ball, _target, details in balls:
             key = f'ball:{ball}'

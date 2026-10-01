@@ -92,6 +92,22 @@ class AutonomousTests(unittest.TestCase):
         self.assertEqual(agent.add_source_reacquisition.call_args.args[2], {})
         agent.add_storage_retrieval.assert_called_once()
 
+    def test_full_capture_storage_does_not_offer_rejected_balls(self):
+        state = self.battle_state()
+        state['party'] *= 6
+        state['box_counts'] = [0, 20]
+        state['current_box_index'] = 1
+        game = JevGame.__new__(JevGame)
+        game.judgments = Mock()
+        self.assertIsNone(game.battle_recovery_plan(state))
+        game.judgments.choose.assert_not_called()
+        state['battle_live']['is_safari'] = True
+        self.assertEqual(game.safari_battle_action(state), 'run')
+        state['box_counts'][1] = 19
+        state['battle_live']['is_safari'] = False
+        game.judgments.choose.return_value = 'ball:PokeBall'
+        self.assertEqual(game.battle_recovery_plan(state), ('PokeBall', None))
+
     def test_status_only_evolution_trainee_can_use_ready_finisher(self):
         agent = AutonomousStoryAgent.__new__(AutonomousStoryAgent)
         agent.replan_after_defeat = False
