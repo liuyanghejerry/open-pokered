@@ -405,6 +405,9 @@ impl BedroomDialogue {
     /// Build a one-off message box from `\n`-separated text, paginated two
     /// lines per box. Used for overworld item-use messages.
     pub fn from_message(text: &str) -> Self {
+        if pokered_data::dialogue_layout::contains_chinese(text) {
+            return Self::from_pages(crate::text::zh_dialogue::paginate(text, &[]));
+        }
         let lines: Vec<&str> = text.split('\n').collect();
         let mut pages: Vec<DialoguePage> = lines
             .chunks(2)
@@ -436,7 +439,7 @@ impl BedroomDialogue {
         rival_name: &str,
         starter_name: &str,
     ) -> Self {
-        let pages = text_pages
+        let pages: Vec<DialoguePage> = text_pages
             .iter()
             .map(|tp| {
                 let l1 = resolve_placeholders(&tp.line1, player_name, rival_name, starter_name);
@@ -447,15 +450,20 @@ impl BedroomDialogue {
                 }
             })
             .collect();
-        Self {
-            pages,
-            current_page: 0,
-            char_index: 0,
-            waiting_for_input: false,
-            holding_open: false,
-            text_delay_frames: DEFAULT_TEXT_DELAY_FRAMES,
-            delay_counter: 0,
+        if pages.iter().any(|p| {
+            pokered_data::dialogue_layout::contains_chinese(&p.line1)
+                || pokered_data::dialogue_layout::contains_chinese(&p.line2)
+        }) {
+            let text = pages.iter()
+                .map(|p| format!("{}\n{}", p.line1, p.line2))
+                .collect::<Vec<_>>()
+                .join("\n");
+            return Self::from_pages(crate::text::zh_dialogue::paginate(
+                &text,
+                &[player_name, rival_name, starter_name],
+            ));
         }
+        Self::from_pages(pages)
     }
 
     pub fn from_pages(pages: Vec<DialoguePage>) -> Self {
@@ -754,6 +762,8 @@ pub struct OverworldScreen<G: GameData = pokered_data::impl_traits::PokemonRedDa
     /// bag-full success/failure synchronously (matching `hasItem`) so scenes'
     /// `@if (given = giveItem(...))` "no room" branches work correctly.
     pub(crate) script_bag_names: Vec<String>,
+    /// Party/daycare display names, protected from Chinese dialogue wrapping.
+    pub(crate) script_dialogue_names: Vec<String>,
     /// The app's input fingerprint cannot detect a replaced interpreter.
     /// New maps and restored snapshots must populate its query host again.
     pub(crate) script_queries_need_seed: bool,
@@ -1167,6 +1177,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
             script_awaiting_filter_bag: false,
             script_awaiting_trade: false,
             script_bag_names: Vec::new(),
+            script_dialogue_names: Vec::new(),
             script_queries_need_seed: true,
             script_party_species: Vec::new(),
             player_starter: 0,
@@ -1463,6 +1474,14 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
         party_names: &[String],
         party_knows_hm: &[bool],
     ) {
+        if !self.script_dialogue_names.iter().map(String::as_str).eq(
+            party_names.iter().map(String::as_str)
+                .chain(core::iter::once(mon_name)),
+        ) {
+            self.script_dialogue_names.clear();
+            self.script_dialogue_names.extend(party_names.iter().cloned());
+            self.script_dialogue_names.push(mon_name.to_string());
+        }
         self.script_engine
             .seed_number("daycareInUse", if in_use { 1.0 } else { 0.0 });
         self.script_engine.seed_text("daycareMonName", mon_name);

@@ -896,6 +896,16 @@ fn resolve_placeholders(text: &str, player_name: &str, rival_name: &str, starter
 }
 
 pub fn text_to_dialogue(text: &str) -> BedroomDialogue {
+    text_to_dialogue_with_names(text, &[])
+}
+
+pub fn text_to_dialogue_with_names(text: &str, names: &[&str]) -> BedroomDialogue {
+    if text.trim().is_empty() {
+        return BedroomDialogue::from_pages(Vec::new());
+    }
+    if pokered_data::dialogue_layout::contains_chinese(text) {
+        return BedroomDialogue::from_pages(crate::text::zh_dialogue::paginate(text, names));
+    }
     let lines: Vec<&str> = text.lines().collect();
     let mut pages = Vec::new();
 

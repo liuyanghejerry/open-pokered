@@ -595,6 +595,17 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
         );
         if let Some(ref mut effect) = self.active_script_effect {
             let naming_was_open = self.pending_naming_screen.is_some();
+            // Only allocate the protected-name view when a page is created.
+            let dialogue_names: Vec<&str> = if self.pending_dialogue.is_none()
+                && matches!(effect, script_bridge::ScriptEffect::ShowDialogue { .. })
+            {
+                core::iter::once(self.player_name.as_str())
+                    .chain(core::iter::once(self.rival_name.as_str()))
+                    .chain(self.script_dialogue_names.iter().map(String::as_str))
+                    .collect()
+            } else {
+                Vec::new()
+            };
             let done = Self::tick_active_effect(
                 effect,
                 a_just_pressed,
@@ -619,6 +630,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                 self.state.current_map,
                 &mut self.sfx_event,
                 &mut self.ship_departure,
+                &dialogue_names,
             );
             if !naming_was_open && self.pending_naming_screen.is_some() {
                 // DisplayNamingScreen entry: GBPalWhiteOutWithDelay3 before the
@@ -2375,11 +2387,16 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
         current_map: MapId,
         sfx_event: &mut OverworldSfxEvent,
         ship_departure: &mut Option<presentation::ShipDepartureState>,
+        dialogue_names: &[&str],
     ) -> bool {
         match effect {
             script_bridge::ScriptEffect::ShowDialogue { text } => {
                 if pending_dialogue.is_none() {
-                    *pending_dialogue = Some(script_bridge::text_to_dialogue(text));
+                    let dialogue = script_bridge::text_to_dialogue_with_names(text, dialogue_names);
+                    if dialogue.is_done() {
+                        return true;
+                    }
+                    *pending_dialogue = Some(dialogue);
                     false
                 } else if pending_dialogue.as_ref().map_or(true, |d| d.is_done()) {
                     *pending_dialogue = None;

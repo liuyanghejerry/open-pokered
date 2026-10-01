@@ -1,5 +1,6 @@
 use crate::alloc_prelude::*;
 pub mod provider;
+pub mod zh_dialogue;
 
 #[cfg(test)]
 mod tests;
