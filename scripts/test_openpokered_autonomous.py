@@ -20,6 +20,35 @@ from openpokered.run_autonomous import observations_valid, checkpoint_field_requ
 
 
 class AutonomousTests(unittest.TestCase):
+    def test_trainer_switch_is_grounded_in_live_battle_not_parent_heal_goal(self):
+        from openpokered.story_agent import DualStoryAgent
+        agent = AutonomousStoryAgent.__new__(AutonomousStoryAgent)
+        agent.active = {'target': ('heal', 'party', True)}
+        party = [
+            {'species': 'Marowak', 'hp': 81, 'moves': ['BoneClub'], 'pp': [20]},
+            {'species': 'Charizard', 'hp': 181, 'moves': ['Slash'], 'pp': [18]}]
+        state = {'battle': {'is_wild': False, 'player': party[0],
+                           'player_party': party, 'enemy': {'species': 'Spearow'}}}
+        candidates = {'switch:1': '{}'}
+        with patch.object(DualStoryAgent, 'choose', return_value='switch:1') as choose:
+            self.assertEqual(agent.choose('action', state, candidates, 'Choose a turn.'), 'switch:1')
+            self.assertFalse(choose.call_args.kwargs['allow_abstain'])
+            self.assertIn('forced trainer battle', choose.call_args.args[1]['immediate_goal'])
+            self.assertIn('nurse', choose.call_args.args[3])
+            self.assertNotIn('immediate_goal', state)
+            for change in ({'hp': 0}, {'pp': [0]}, {'moves': ['Dig'], 'pp': [10]}):
+                party[1] = {**party[1], **change}
+                agent.choose('action', state, candidates, 'Choose a turn.')
+                self.assertTrue(choose.call_args.kwargs['allow_abstain'])
+                party[1] = {'species': 'Charizard', 'hp': 181, 'moves': ['Slash'], 'pp': [18]}
+            for is_wild in (True, None):
+                state['battle']['is_wild'] = is_wild
+                agent.choose('action', state, candidates, 'Choose a turn.')
+                self.assertTrue(choose.call_args.kwargs['allow_abstain'])
+            state['battle']['is_wild'] = False
+            agent.choose('action', state, {'fight': 'Attack'}, 'Choose a turn.')
+            self.assertTrue(choose.call_args.kwargs['allow_abstain'])
+
     def test_full_party_retrieval_deposits_in_another_box_before_withdrawing(self):
         agent = AutonomousStoryAgent.__new__(AutonomousStoryAgent)
         agent.active = {'target': ('pokemon', 'Cubone', None)}

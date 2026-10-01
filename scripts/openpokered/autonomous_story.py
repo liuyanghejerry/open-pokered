@@ -769,6 +769,25 @@ class AutonomousStoryAgent(DualStoryAgent):
                 'and actual outcomes will return to strategy.')
         mechanism_grounded = mechanism and candidates and any(
             route.get('tile_route_found') for route in context.get('trigger_navigation', []))
+        battle = state.get('battle') or {}
+        # A forced trainer battle cannot be left to resume travel/healing.
+        # Ground this exception in live HP, PP and type matchups, not in
+        # candidate descriptions or a blanket ban on battle abstention.
+        trainer_switch_grounded = (layer == 'action' and battle.get('is_wild') is False
+            and bool((battle.get('enemy') or {}).get('species')) and any(
+                f'switch:{index}' in candidates and mon.get('hp', 0) > 0
+                and mon.get('species') != (battle.get('player') or {}).get('species')
+                and effective_attacks(mon, battle['enemy']['species'])
+                for index, mon in enumerate(battle.get('player_party') or [])))
+        if trainer_switch_grounded:
+            state = {**state, 'immediate_goal': 'Finish the forced trainer battle, then resume the overworld objective.'}
+            instruction += (' This is a trainer battle: neither running away nor capturing the opponent is legal. '
+                'Travel, healing at a nurse and collection must wait until this battle ends. '
+                'A conscious teammate with usable effective attacks is available among the offered switches. '
+                'Choose the best offered turn toward defeating the trainer while preserving the party; '
+                'switching to a capable finisher is progress even though it does not itself register a species '
+                'or reach the nurse. Compare effective attacks, level and health rather than continuing '
+                'to use an immune or depleted active battler.')
         # Appended after the rewrites above: the menu and training instructions
         # replace the incoming text, and the bias must still reach the question.
         bias = PREFERENCE_INSTRUCTIONS.get(getattr(self, 'preference', 'none'))
@@ -782,7 +801,7 @@ class AutonomousStoryAgent(DualStoryAgent):
                     'entry with that key in this library, including nested references. Resolve '
                     'those references when comparing candidates; no candidate or evidence was omitted.')
         return super().choose(layer, state, candidates, instruction,
-                              allow_abstain=not (grounded or mechanism_grounded))
+                              allow_abstain=not (grounded or mechanism_grounded or trainer_switch_grounded))
 
     def annotate_navigation(self, groups, facts, previews=None, *, prune=True):
         """A failed destination region does not block every NPC on its map."""
