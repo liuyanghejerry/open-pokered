@@ -2872,6 +2872,21 @@ class AutonomousTests(unittest.TestCase):
         self.assertFalse(training_tile('VictoryRoad2F', 0, 8))
         self.assertIsNotNone(reachable_grass('VictoryRoad2F', (0, 8)))
 
+    def test_safari_paths_are_not_encounter_grass(self):
+        import playthrough as pt
+        self.assertFalse(training_tile('SafariZoneCenter', 14, 24))
+        spot = reachable_grass('SafariZoneCenter', (14, 24))
+        self.assertIsNotNone(spot)
+        self.assertEqual(pt.tile_at('SafariZoneCenter', *spot), 0x20)
+        self.assertEqual(pt.tile_at('SafariZoneCenter', spot[0]+1, spot[1]), 0x20)
+
+    def test_outdoor_grass_requires_native_right_rate_anchor(self):
+        import playthrough as pt
+        edge = next((x, y) for x in range(pt.MAPS['Route1']['width']*2)
+            for y in range(pt.MAPS['Route1']['height']*2)
+            if pt.is_grass('Route1', x, y) and not pt.is_grass('Route1', x+1, y))
+        self.assertFalse(training_tile('Route1', *edge))
+
     def test_level_up_replacement_respects_one_judgment_across_confirmation(self):
         game = JevGame.__new__(JevGame)
         game.judgments = Mock()

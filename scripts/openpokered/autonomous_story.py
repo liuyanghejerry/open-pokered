@@ -170,6 +170,8 @@ _HEADERS = (data.DATA / 'src/tileset_data.rs').read_text().split(
     'pub const TILESET_HEADERS:', 1)[1].split('];', 1)[0]
 COUNTERS = [{int(v.strip(), 0) for v in values.split(',') if int(v.strip(), 0) >= 0}
             for values in re.findall(r'header\(([^,]+,[^,]+,[^,]+),', _HEADERS)]
+ENCOUNTER_GRASS_TILES = [int(value.strip(), 0)
+    for value in re.findall(r'header\([^,]+,[^,]+,[^,]+,([^,]+),', _HEADERS)]
 
 
 def trigger_position_matches(rule, point):
@@ -192,15 +194,19 @@ def counter_approaches(map_name, npc):
 
 
 def training_tile(name, x, y):
-    """Grass or ordinary indoor floor; table availability is checked by the caller."""
+    """A native grass-table stance with a valid right-hand rate anchor."""
     m = pt.MAPS[name]
-    # Forest-tileset interiors are encounter terrain everywhere you walk, like
-    # caves — excluding them left ViridianForest and the whole Safari Zone with
-    # zero huntable tiles, invisible to catch-area discovery.
-    return pt.is_grass(name, x, y) or (
-        m['id'] >= FIRST_INDOOR_MAP
-        and pt.walkable(name, x, y) and pt.tile_at(name, x, y) not in (0x14, 0x15)
-        and (x, y) not in pt.warp_tiles(name))
+    if not pt.walkable(name, x, y) or (x, y) in pt.warp_tiles(name):
+        return False
+    standing = pt.tile_at(name, x, y)
+    right = pt.tile_at(name, x+1, y) if x+1 < m['width']*2 else standing
+    grass = ENCOUNTER_GRASS_TILES[m['tileset_id']]
+    # Native determine_encounter_type explicitly excludes Forest from the
+    # indoor catch-all. Safari paths are not encounter terrain. Grass comes
+    # from the actual tileset header, not the Overworld-only legacy helper.
+    indoor = m['id'] >= FIRST_INDOOR_MAP and m['tileset_name'].lower() != 'forest'
+    return (standing == grass and right == grass) or (
+        indoor and standing not in (0x14, 0x15) and right != 0x14)
 
 
 def battle_readiness(party, bag):
