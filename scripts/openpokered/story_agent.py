@@ -104,7 +104,9 @@ class DualStoryAgent:
         try:
             result = self.model_client.system_one(state, {layer: question}, model=self.model)
         except TypeSafeError as e:
-            self.record('judgment_error', layer=layer, error=str(e))
+            self.record('judgment_error', layer=layer, error=str(e), state=state,
+                        question=question.to_json(), frame=decision_frame,
+                        latency_s=round(time.monotonic() - started, 3))
             raise StoryStopped(f'{layer}:service_unavailable') from e
         answer = result.answers.get(layer)
         self.tokens[layer] += result.input_tokens

@@ -331,9 +331,15 @@ class DecisionTests(unittest.TestCase):
 
     def test_service_failure_is_separate_from_refusal(self):
         agent=self.agent(FakeModel(error=True))
+        agent.record = Mock()
         with self.assertRaisesRegex(StoryStopped,'service_unavailable'):
             agent.choose('action',{}, {'a':'talk'},'pick')
         self.assertEqual(agent.calls['action'],1)
+        event = agent.record.call_args
+        self.assertEqual(event.args, ('judgment_error',))
+        self.assertEqual(event.kwargs['state'], {})
+        self.assertEqual(event.kwargs['question']['criteria']['a'], 'talk')
+        self.assertIn('frame', event.kwargs)
 
     def test_both_layers_share_budget_but_keep_separate_accounting(self):
         agent=self.agent(FakeModel(choice='a'),max_calls=2)

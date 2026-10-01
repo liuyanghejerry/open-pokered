@@ -196,6 +196,7 @@ def build(run, output, video=None, chain=False):
                     for key, value in sorted(probabilities.items(), key=lambda item: -item[1])[:5]
                 ],
                 'dex_progress': (event.get('state') or {}).get('dex_progress'),
+                'shared_strategy_evidence': (event.get('state') or {}).get('shared_strategy_evidence', {}),
             })
         elif kind == 'operation':
             operations.append({'source_s': stamp(event), 'segment': event['segment'],

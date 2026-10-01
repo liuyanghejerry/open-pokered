@@ -9,7 +9,7 @@ import math
 import re
 import hashlib
 import time
-from collections import deque
+from collections import Counter, deque
 from functools import lru_cache
 from pathlib import Path
 
@@ -337,6 +337,54 @@ def compact_strategy_candidates(candidates):
     return result
 
 
+def factor_strategy_evidence(state, candidates, min_chars=160):
+    """Losslessly share identical evidence; never shortlist candidate options."""
+    decoded = {}
+    for key, value in candidates.items():
+        try:
+            decoded[key] = json.loads(value)
+        except (ValueError, TypeError):
+            decoded[key] = value
+    counts, values = Counter(), {}
+
+    def fingerprint(value):
+        return json.dumps(value, sort_keys=True, separators=(',', ':'), ensure_ascii=False)
+
+    def collect(value):
+        if isinstance(value, (dict, list)):
+            serial = fingerprint(value)
+            if len(serial) >= min_chars:
+                counts[serial] += 1
+                values[serial] = value
+            for child in (value.values() if isinstance(value, dict) else value):
+                collect(child)
+    collect(state)
+    for value in decoded.values():
+        collect(value)
+    shared = {serial: f'e{index}' for index, serial in enumerate(
+        serial for serial, count in counts.items() if count > 1)}
+    if not shared:
+        return state, candidates
+
+    def encode(value, skip=None):
+        if isinstance(value, (dict, list)):
+            serial = fingerprint(value)
+            if serial in shared and serial != skip:
+                return {'shared_strategy_evidence_ref': shared[serial]}
+            if isinstance(value, dict):
+                return {key: encode(child) for key, child in value.items()}
+            return [encode(child) for child in value]
+        return value
+
+    library = {key: encode(values[serial], skip=serial) for serial, key in shared.items()}
+    factored_state = {key: encode(value) for key, value in state.items()}
+    factored_state['shared_strategy_evidence'] = library
+    factored_candidates = {key: json.dumps(encode(value), separators=(',', ':'), ensure_ascii=False)
+                           if not isinstance(value, str) else value
+                           for key, value in decoded.items()}
+    return factored_state, factored_candidates
+
+
 class AutonomousStoryAgent(DualStoryAgent):
     def __init__(self, *args, game, preference='none', **kwargs):
         super().__init__(*args, **kwargs)
@@ -647,6 +695,13 @@ class AutonomousStoryAgent(DualStoryAgent):
         bias = PREFERENCE_INSTRUCTIONS.get(getattr(self, 'preference', 'none'))
         if bias and layer in ('strategy', 'action'):
             instruction += f' {bias}'
+        if layer == 'strategy':
+            state, candidates = factor_strategy_evidence(state, candidates)
+            if 'shared_strategy_evidence' in state:
+                instruction += (' Repeated evidence is stored once in state.shared_strategy_evidence. '
+                    'Each object containing only shared_strategy_evidence_ref means the complete '
+                    'entry with that key in this library, including nested references. Resolve '
+                    'those references when comparing candidates; no candidate or evidence was omitted.')
         return super().choose(layer, state, candidates, instruction,
                               allow_abstain=not (grounded or mechanism_grounded))
 

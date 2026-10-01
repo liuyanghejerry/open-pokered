@@ -12,7 +12,7 @@ from openpokered.autonomous_story import (AutonomousStoryAgent, counter_approach
                                           training_tile, battle_readiness, encounter_value,
                                           training_battler, storage_deposit_indices,
                                           level_experience, evolution_training_cost, training_yield)
-from openpokered.autonomous_story import compact_strategy_candidates, evolution_training_effort
+from openpokered.autonomous_story import compact_strategy_candidates, evolution_training_effort, factor_strategy_evidence
 from openpokered.story_agent import StoryStopped
 from openpokered.navigation_skills import cut_requirement, surf_requirement, water_tile, hm_compatible, water_planning
 from openpokered.story_rules import Rule
@@ -20,6 +20,43 @@ from openpokered.run_autonomous import observations_valid, checkpoint_field_requ
 
 
 class AutonomousTests(unittest.TestCase):
+    def test_shared_strategy_evidence_is_lossless_and_preserves_all_options(self):
+        routes = [{'map': f'Center{i}', 'steps': i + 1, 'tile_route_found': i % 2 == 0,
+                   'requires_surf': i % 3 == 0} for i in range(12)]
+        evidence = {'routes': routes, 'assumption': 'known geometry; obstacles remain uncertain'}
+        state = {'world': {'map': 'City'}, 'route_evidence': evidence}
+        candidates = {f'subgoal:{i}': json.dumps({
+            'establish': ['pokemon', f'Species{i}', None],
+            'context': {'navigation': evidence, 'required_for': f'Evolution{i}',
+                        'cost': i * 100}}) for i in range(40)}
+        original_state = json.loads(json.dumps(state))
+        factored, options = factor_strategy_evidence(state, candidates)
+        library = factored['shared_strategy_evidence']
+
+        def expand(value):
+            if isinstance(value, dict):
+                if set(value) == {'shared_strategy_evidence_ref'}:
+                    return expand(library[value['shared_strategy_evidence_ref']])
+                return {key: expand(child) for key, child in value.items()}
+            if isinstance(value, list):
+                return [expand(child) for child in value]
+            return value
+
+        self.assertEqual(set(options), set(candidates))
+        for key in candidates:
+            self.assertEqual(expand(json.loads(options[key])), json.loads(candidates[key]))
+        self.assertEqual(expand({key: value for key, value in factored.items()
+                                 if key != 'shared_strategy_evidence'}), original_state)
+        self.assertEqual(state, original_state)  # No mutation of executor data.
+        original_size = len(json.dumps(state)) + len(json.dumps(candidates))
+        compact_size = len(json.dumps(factored)) + len(json.dumps(options))
+        self.assertLess(compact_size, original_size / 3)
+
+    def test_shared_evidence_leaves_small_and_plain_candidates_alone(self):
+        state = {'map': 'City'}
+        candidates = {'a': 'Continue', 'b': json.dumps({'cost': 2})}
+        self.assertEqual(factor_strategy_evidence(state, candidates), (state, candidates))
+
     def trainer_preview_agent(self):
         agent = AutonomousStoryAgent.__new__(AutonomousStoryAgent)
         root = Path(__file__).resolve().parents[1] / 'crates/pokered-data'
