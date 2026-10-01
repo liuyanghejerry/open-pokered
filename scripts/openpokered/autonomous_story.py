@@ -2419,7 +2419,8 @@ class AutonomousStoryAgent(DualStoryAgent):
 
         Script preconditions do not mean a party can survive the next battle.
         Keep recovery mandatory at <=25% HP, but only if an actual tile path
-        exists; otherwise retain the frontiers that can unlock that path.
+        exists without an unexecuted Surf crossing; otherwise retain the
+        frontiers that can unlock that path. Knowing Surf is not using it.
         """
         party = facts.get('party', [])
         if not party:
@@ -2433,7 +2434,7 @@ class AutonomousStoryAgent(DualStoryAgent):
                 continue
             reachable = {route['map'] for route in
                          group.get('context', {}).get('trigger_navigation', [])
-                         if route.get('tile_route_found')}
+                         if route.get('tile_route_found') and not route.get('requires_surf')}
             rules = [rule for rule in group['rules'] if rule.map in reachable]
             if rules:
                 recovery[key] = {**group, 'rules': rules, 'context': {

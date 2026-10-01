@@ -2143,6 +2143,12 @@ class AutonomousTests(unittest.TestCase):
         offered = groups(False)
         AutonomousStoryAgent.prioritize_critical_recovery(offered, facts)
         self.assertIn('story', offered)
+        offered = groups(True)
+        offered['heal']['context']['trigger_navigation'][0]['requires_surf'] = True
+        offered['surf'] = {'target': ('location', ['Route10', 15, 4], True), 'rules': []}
+        AutonomousStoryAgent.prioritize_critical_recovery(offered, facts)
+        self.assertIn('surf', offered)
+        self.assertIn('story', offered)
         facts['party'][0]['hp'] = 70
         offered = groups(True)
         AutonomousStoryAgent.prioritize_critical_recovery(offered, facts)
