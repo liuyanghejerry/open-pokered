@@ -1045,7 +1045,7 @@ impl BattleVisualEffects {
             }
         }
 
-        if normalized.starts_with("Go! ") {
+        if pokered_data::battle_text::is_player_send_out_message(&normalized) {
             self.player_visible = true;
             self.player_entry = Some(SlideAnim {
                 frame: 0,
@@ -1056,7 +1056,7 @@ impl BattleVisualEffects {
             self.fx.clear_side(MonSide::Player);
         }
 
-        if normalized.contains("come back!") {
+        if pokered_data::battle_text::is_player_recall_message(&normalized) {
             self.player_exit = Some(SlideAnim {
                 frame: 0,
                 kind: SlideKind::Legacy,
@@ -3626,8 +3626,7 @@ pub fn draw_battle(
                         Some(format!("{} sent out {}!", trainer_name, enemy_name))
                     }
                     IntroPhase::PlayerSendOut => {
-                        let pname = format!("{}", screen.player_species).to_uppercase();
-                        Some(format!("Go! {}!", pname))
+                        Some(screen.player_send_out_message())
                     }
                 },
                 BattlePhase::BattleOver { won, .. } => {

@@ -1360,7 +1360,7 @@ impl BattleVisualEffects {
             }
         }
 
-        if normalized.starts_with("Go! ") {
+        if pokered_data::battle_text::is_player_send_out_message(&normalized) {
             self.player_visible = true;
             self.player_entry = Some(SlideAnim {
                 frame: 0,
@@ -1371,7 +1371,7 @@ impl BattleVisualEffects {
             self.fx.clear_side(MonSide::Player);
         }
 
-        if normalized.contains("come back!") {
+        if pokered_data::battle_text::is_player_recall_message(&normalized) {
             self.player_exit = Some(SlideAnim {
                 frame: 0,
                 kind: SlideKind::Legacy,
@@ -4095,8 +4095,7 @@ pub fn draw_battle(
                         Some(format!("{} sent out {}!", trainer_name, enemy_name))
                     }
                     IntroPhase::PlayerSendOut => {
-                        let pname = format!("{}", screen.player_species).to_uppercase();
-                        Some(format!("Go! {}!", pname))
+                        Some(screen.player_send_out_message())
                     }
                     _ => None,
                 },
@@ -5135,6 +5134,33 @@ fn draw_battle_move_menu_overlay(
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn encouragement_variants_keep_send_out_and_recall_animations() {
+        let screen = BattleScreen::new(true);
+        for text in [
+            "Go! SQUIRTLE!", "Do it! SQUIRTLE!", "Get'm! SQUIRTLE!",
+            "The enemy's weak!\nGet'm! SQUIRTLE!",
+        ] {
+            for chinese in [false, true] {
+                let mut fx = BattleVisualEffects::default();
+                let message = pokered_data::battle_text::localize(text, chinese);
+                fx.trigger_from_message(&screen, &message);
+                assert!(fx.player_entry.is_some(), "{message}");
+                assert!(fx.player_exit.is_none(), "{message}");
+            }
+        }
+        for text in ["CHARMANDER enough!\nCome back!", "CHARMANDER\nCome back!",
+            "CHARMANDER OK!\nCome back!", "CHARMANDER good!\nCome back!"] {
+            for chinese in [false, true] {
+                let mut fx = BattleVisualEffects::default();
+                let message = pokered_data::battle_text::localize(text, chinese);
+                fx.trigger_from_message(&screen, &message);
+                assert!(fx.player_exit.is_some(), "{message}");
+                assert!(fx.player_entry.is_none(), "{message}");
+            }
+        }
+    }
 
     #[test]
     fn real_game_serializes_both_animations_and_hp_even_when_a_is_mashed() {
