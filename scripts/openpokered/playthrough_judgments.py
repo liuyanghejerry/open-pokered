@@ -167,6 +167,12 @@ def capture_retreat(state, judgments):
     return None
 
 
+def capture_turn_key(state):
+    live = state['battle_live']
+    return json.dumps([live['enemy'], live['player'], live.get('player_party'),
+                       state.get('battle_inventory')], sort_keys=True)
+
+
 def capture_status_options(mon, enemy, bag):
     """Public PP and conditional capture benefit; not a guaranteed status hit."""
     if str(enemy.get('status', 'None')).lower() != 'none':
@@ -564,13 +570,16 @@ class JevGame(pt.Game):
                 details = {**details, 'required_as_trade_or_evolution_source': True}
             candidates[key] = json.dumps(details)
             bindings[key] = ball, None
+        if (capturing and bindings and getattr(self, '_capture_declined_fight', None)
+                == capture_turn_key(state)):
+            candidates.pop('fight', None)
         if (not effective_attacks(party[active], live['enemy']['species'])
                 and not (capturing and capture_status_options(party[active], live['enemy'], bag))
                 and any(key.startswith('switch:') for key in bindings)):
             # FIGHT only offers damaging moves to the attack judge. A status-
             # only fallback cannot finish this opponent, so do not advertise
             # it as an attack while a conscious, effective finisher exists.
-            candidates.pop('fight')
+            candidates.pop('fight', None)
         if not bindings:
             return None
         instruction = ('Choose attack, an offered switch, one recovery item, or one ball for this turn. Switching, items and balls consume the turn and the enemy can attack. '
@@ -905,9 +914,24 @@ class JevGame(pt.Game):
                         'secondary effects. Do not count those bonuses twice. Use draining attacks when healing matters. Avoid immunity and do not '
                         'spend a resisted low-PP attack when an effective alternative exists.'
                         )
-                    chosen = self.judgments.choose('action', compact, candidates,
-                                                   instruction + preference_suffix(self.judgments))
+                    if capturing:
+                        candidates['back'] = 'Cancel this move menu without spending a turn; return to compare balls, switches or verified retreat when no listed move safely prepares capture.'
+                        instruction += ' Choose back when no offered move is suitable; do not attack merely because FIGHT was opened.'
+                    try:
+                        chosen = self.judgments.choose('action', compact, candidates,
+                                                       instruction + preference_suffix(self.judgments))
+                    except StoryStopped as error:
+                        if not capturing or str(error) != 'action:no_selection':
+                            raise
+                        chosen = 'back'
+                        self.judgments.record('capture_move_abstention', state=compact)
                     self.move_cache[key] = chosen
+                if chosen == 'back':
+                    self._capture_declined_fight = capture_turn_key(state)
+                    self.judgments.record('capture_menu_cancelled', state=compact)
+                    self.tap('b', 4)
+                    self.step(10)
+                    return
                 self.judgments.record('attack', milestone=self.active_milestone,
                                       choice=chosen, move=candidates[chosen], state=compact)
             target = int(chosen)

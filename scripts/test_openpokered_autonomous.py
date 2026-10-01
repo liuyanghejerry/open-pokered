@@ -2341,7 +2341,8 @@ class AutonomousTests(unittest.TestCase):
         game.move_cache, game.move_cache_hits, game.active_milestone = {}, 0, None
         game._select_move()
         game.tap.assert_called_once_with('a', 4)
-        self.assertEqual(game.judgments.choose.call_args.args[2], {'0': 'SleepPowder'})
+        self.assertEqual(game.judgments.choose.call_args.args[2]['0'], 'SleepPowder')
+        self.assertIn('back', game.judgments.choose.call_args.args[2])
         self.assertIn('without knocking out', game.judgments.choose.call_args.args[3])
         state['battle_live']['enemy']['status'] = 'Sleep(1)'
         game.tap.reset_mock()
@@ -2349,6 +2350,26 @@ class AutonomousTests(unittest.TestCase):
         game._select_move()
         game.tap.assert_called_once_with('b', 4)
         game.judgments.choose.assert_not_called()
+
+    def test_capture_move_abstention_returns_to_menu_without_attacking(self):
+        game = JevGame.__new__(JevGame)
+        state = self.capture_support_state()
+        state['battle_live']['player'].update(hp=50, max_hp=50, level=20)
+        state.update(screen='battle', battle_phase='MoveSelect', battle_moves={
+            'cursor': 0, 'moves': [{'move': 'Cut', 'pp': 30, 'disabled': False}]})
+        game.st = Mock(return_value=state)
+        game.tap, game.step = Mock(), Mock()
+        game.judgments = Mock()
+        game.judgments.collects_dex = True
+        game.judgments.active = {'context': {}}
+        game.judgments.choose.side_effect = StoryStopped('action:no_selection')
+        game.move_cache, game.move_cache_hits, game.active_milestone = {}, 0, None
+        game._select_move()
+        game.tap.assert_called_once_with('b', 4)
+        game.judgments.choose.side_effect = None
+        game.judgments.choose.return_value = 'ball:PokeBall'
+        self.assertEqual(game.battle_recovery_plan(state), ('PokeBall', None))
+        self.assertNotIn('fight', game.judgments.choose.call_args.args[2])
 
     def test_balls_are_never_offered_against_a_trainer_or_in_the_safari_zone(self):
         from openpokered.playthrough_judgments import ball_options, JevGame

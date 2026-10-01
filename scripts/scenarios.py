@@ -552,6 +552,7 @@ def s15_static_retreat():
             choose=choose, record=lambda *args, **kwargs: None)
         g.smart_moves = True
         g.battle_recovery_plan = lambda state: JevGame.battle_recovery_plan(g, state)
+        g.move_cache, g.move_cache_hits, g.active_milestone = {}, 0, None
         assert g.d.cmd(cmd="warp", map="PowerPlant", x=4, y=10)["ok"]
         g.step(180)
 
@@ -569,6 +570,23 @@ def s15_static_retreat():
             raise AssertionError("static Zapdos encounter did not start")
 
         encounter()
+        for _ in range(100):
+            if g.st()['battle_phase'] == 'PlayerMenu':
+                break
+            g.tap('a', 8)
+            g.step(20)
+        else:
+            raise AssertionError('native PlayerMenu did not appear')
+        for button in ('up', 'left', 'a'):
+            g.tap(button, 8)
+        assert g.st()['battle_phase'] == 'MoveSelect'
+        from openpokered.story_agent import StoryStopped
+        def abstain(*args):
+            raise StoryStopped('action:no_selection')
+        g.judgments.choose = abstain
+        JevGame._select_move(g)
+        assert g.st()['battle_phase'] == 'PlayerMenu', g.st()['battle_phase']
+        g.judgments.choose = choose
         g.battle_loop()
         g.step(180)
         assert choices, "production escape hook was not used"
