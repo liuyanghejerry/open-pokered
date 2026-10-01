@@ -1430,25 +1430,49 @@ class AutonomousStoryAgent(DualStoryAgent):
         elif result['result'] == 'reached':
             self.navigation_memory.pop(destination, None)
 
-    def opponent_parties(self, rules):
+    def opponent_parties(self, rules, facts=None):
         parties = []
         seen = set()
+        starter = infer_solo_choices(((facts or {}).get('dex') or {}).get('owned_species', [])).get('starter')
         for rule in rules:
-            if not any(effect[0] == 'battle' for effect in rule.preceding):
-                continue
-            ids = {int(t.split(':')[1]) for t in rule.triggers if t.startswith('npc:')}
-            for npc in self.maps.get(rule.map, {}).get('npcs', []):
-                if ids and npc['textId'] not in ids:
+            for effect in rule.preceding:
+                if effect[0] != 'battle':
                     continue
-                key = (rule.map, npc['textId'])
-                if key in seen:
+                reference = effect[1]
+                base = 0
+                if isinstance(reference, (tuple, list)):
+                    reference, base = reference
+                if not isinstance(reference, str):
                     continue
-                seen.add(key)
-                trainer = self.trainers.get(npc.get('trainerClass'))
-                if trainer and npc.get('trainerSet'):
-                    index = npc['trainerSet'] - 1
-                    if index < len(trainer['parties']):
-                        parties.extend(trainer['parties'][index]['pokemon'])
+                selected = None
+                if reference.startswith('OPP_'):
+                    name = reference[4:]
+                    # Longest match keeps the digit in RIVAL1/2/3 part of the
+                    # class; an optional suffix is a one-based trainer set.
+                    for klass, trainer in sorted(self.trainers.items(),
+                            key=lambda item: -len(item[1].get('constName', item[0].upper()))):
+                        prefix = trainer.get('constName', klass.upper())
+                        suffix = name.removeprefix(prefix)
+                        if name.startswith(prefix) and (not suffix or suffix.isdigit()):
+                            selected = (klass, max(0, int(suffix or 1) - 1))
+                            break
+                    if selected and selected[0] in ('Rival1', 'Rival2', 'Rival3'):
+                        # Native starter-advantage selection uses the original
+                        # starter, not the current lead or NPC metadata.
+                        offset = {'Charmander': 0, 'Squirtle': 1, 'Bulbasaur': 2}.get(starter)
+                        if (offset is None or not isinstance(base, (int, float))
+                                or base < 0 or int(base) != base):
+                            continue  # Unknown inputs must not invent a roster.
+                        selected = (selected[0], int(base) + offset)
+                elif ':' in reference:
+                    klass, number = reference.rsplit(':', 1)
+                    if klass in self.trainers and number.isdigit() and int(number) > 0:
+                        selected = (klass, int(number) - 1)
+                if selected and selected not in seen:
+                    seen.add(selected)
+                    trainer = self.trainers[selected[0]]
+                    if selected[1] < len(trainer['parties']):
+                        parties.extend(trainer['parties'][selected[1]]['pokemon'])
         return parties
 
     def nearby_healers(self, facts):
@@ -2026,7 +2050,7 @@ class AutonomousStoryAgent(DualStoryAgent):
         threats = []
         preference = getattr(self, 'preference', 'none')
         for group in groups.values():
-            opponents = self.opponent_parties(group['rules'])
+            opponents = self.opponent_parties(group['rules'], facts)
             if opponents:
                 context = {**group.get('context', {}), 'opponent_parties': opponents,
                            'battle_is_not_guaranteed_by_script_preconditions': True}

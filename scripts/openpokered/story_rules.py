@@ -257,7 +257,12 @@ def compile_story(story):
         elif name == 'givePokemon' and values:
             effect = ('pokemon', values[0], values[1] if len(values) > 1 else None)
         elif name.startswith('startBattle') or name == 'startWildBattle':
-            effect = ('battle', values[0] if values else name, True)
+            battle = values[0] if values else name
+            if name == 'startBattleSet':
+                # This is a zero-based rival triplet base, not the map NPC's
+                # one-based trainerSet. Keep it through downstream effects.
+                battle = (battle, values[1] if len(values) > 1 else None)
+            effect = ('battle', battle, True)
         elif name == 'heal':
             effect = ('heal', 'party', True)
         elif name == 'openShop' and values and isinstance(values[0], list):

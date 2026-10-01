@@ -34,6 +34,14 @@ def facts(**flags):
 
 
 class RulesTests(unittest.TestCase):
+    def test_rival_triplet_base_survives_into_following_effect(self):
+        rules = compile_story(story([
+            command('startBattleSet', 'OPP_RIVAL2', 6), command('setFlag', 'RIVAL_BEATEN')]))
+        self.assertEqual(rules[-1].preceding, [('battle', ('OPP_RIVAL2', 6), True)])
+        ordinary = compile_story(story([
+            command('startBattle', 'OPP_ROCKET7'), command('setFlag', 'ROCKET_BEATEN')]))
+        self.assertEqual(ordinary[-1].preceding, [('battle', 'OPP_ROCKET7', True)])
+
     def test_pokedex_count_gate_becomes_a_pursuable_goal(self):
         from openpokered.story_rules import requirements, StoryIndex
         expr = {'BinaryOp': {'op': 'Gte', 'left': call('getPokedexOwnedCount'),

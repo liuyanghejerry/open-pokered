@@ -20,6 +20,47 @@ from openpokered.run_autonomous import observations_valid, checkpoint_field_requ
 
 
 class AutonomousTests(unittest.TestCase):
+    def trainer_preview_agent(self):
+        agent = AutonomousStoryAgent.__new__(AutonomousStoryAgent)
+        root = Path(__file__).resolve().parents[1] / 'crates/pokered-data'
+        agent.trainers = {path.stem: json.loads(path.read_text())
+                          for path in (root / 'trainers').glob('*.json')}
+        agent.maps = {'SSAnne2F': json.loads((root / 'maps/SSAnne2F/map.json').read_text())}
+        return agent
+
+    def test_coordinate_rival_uses_script_class_not_initial_npc_roster(self):
+        agent = self.trainer_preview_agent()
+        rule = Rule('rival', 'SSAnne2F', 'rival', ['coord:battle'], [], [],
+                    ('flag', 'WON', True), [('battle', 'OPP_RIVAL2', True)])
+        expected = [{'species': 'Pidgeotto', 'level': 19}, {'species': 'Raticate', 'level': 16},
+                    {'species': 'Kadabra', 'level': 18}, {'species': 'Wartortle', 'level': 20}]
+        self.assertEqual(agent.opponent_parties([rule], {'dex': {'owned_species': ['Charmander']}}), expected)
+        # The current lead is unrelated to the persistent original starter.
+        self.assertEqual(agent.opponent_parties([rule], {'dex': {'owned_species': ['Charizard']},
+            'party': [{'species': 'Pidgeotto'}]}), expected)
+        self.assertEqual(agent.opponent_parties([rule]), [])
+
+    def test_rival_triplet_base_and_starter_offsets_match_native_contract(self):
+        agent = self.trainer_preview_agent()
+        for starter, offset in [('Charmander', 0), ('Squirtle', 1), ('Bulbasaur', 2)]:
+            for base in (3.0, 6.0, 9.0):
+                rule = Rule('rival', 'Arena', 'rival', ['coord:battle'], [], [],
+                            ('flag', 'WON', True), [('battle', ('OPP_RIVAL2', base), True)])
+                with self.subTest(starter=starter, base=base):
+                    expected = agent.trainers['Rival2']['parties'][int(base) + offset]['pokemon']
+                    self.assertEqual(agent.opponent_parties([rule],
+                        {'dex': {'owned_species': [starter]}}), expected)
+
+    def test_scripted_numbered_opponent_does_not_collect_every_map_npc(self):
+        agent = self.trainer_preview_agent()
+        rule = Rule('rocket', 'SSAnne2F', 'rocket', ['npc:2'], [], [],
+                    ('flag', 'WON', True), [('battle', 'OPP_ROCKET7', True)])
+        self.assertEqual(agent.opponent_parties([rule, rule]),
+                         agent.trainers['Rocket']['parties'][6]['pokemon'])
+        unknown = Rule('unknown', 'SSAnne2F', 'unknown', ['coord:battle'], [], [],
+                       ('flag', 'WON', True), [('battle', 'OPP_NOT_A_TRAINER', True)])
+        self.assertEqual(agent.opponent_parties([unknown]), [])
+
     def test_stationary_actor_on_destination_warp_offers_ready_clearance_battle(self):
         from types import SimpleNamespace
         import playthrough as pt
