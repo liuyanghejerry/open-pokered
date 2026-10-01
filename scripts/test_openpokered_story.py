@@ -69,6 +69,36 @@ class RulesTests(unittest.TestCase):
         self.assertFalse(index.satisfied(('catch', 'IndigoPlateau', True), {**facts(), 'dex': dex}))
         self.assertFalse(index.satisfied(('catch', 'Route1', True), facts()))
 
+    def test_catch_completion_uses_exact_method_and_rod(self):
+        from openpokered.story_rules import StoryIndex, MAPS_DIR
+        index = StoryIndex.__new__(StoryIndex)
+        index.maps_dir, index._wild_cache = MAPS_DIR, {}
+        cases = {
+            'water:Route19': {'Tentacool'},
+            'fishing:OldRod:VermilionCity': {'Magikarp'},
+            'fishing:GoodRod:VermilionCity': {'Goldeen', 'Poliwag'},
+            'fishing:SuperRod:VermilionCity': {'Krabby', 'Shellder'},
+            'safari:SafariZoneCenter': index.wild_species('SafariZoneCenter'),
+            'grass:Route1': {'Pidgey', 'Rattata'},
+        }
+        for key, expected in cases.items():
+            with self.subTest(key=key):
+                self.assertTrue(expected)
+                self.assertEqual(index.wild_species(key), expected)
+                owned = {**facts(), 'dex': {'owned_species': sorted(expected)}}
+                self.assertTrue(index.satisfied(('catch', key, True), owned))
+                self.assertFalse(index.satisfied(('catch', key, True), facts()))
+                owned['collection_audit_pending'] = [next(iter(expected))]
+                self.assertFalse(index.satisfied(('catch', key, True), owned))
+        # A completed water target never borrows unrelated grass/rod species.
+        water = {**facts(), 'dex': {'owned_species': ['Tentacool']}}
+        self.assertTrue(index.satisfied(('catch', 'water:Route19', True), water))
+        self.assertFalse(index.satisfied(('catch', 'Route19', True), water))
+        for key in ('unknown:Route19', 'fishing:MissingRod:Route19',
+                    'fishing:OldRod:MissingMap', 'water:MissingMap'):
+            self.assertEqual(index.wild_species(key), set())
+            self.assertFalse(index.satisfied(('catch', key, True), water))
+
     def test_lower_floor_boulder_backchains_the_matching_stone_from_above(self):
         floors = [('SeafoamIslandsB1F', 'EVENT_SEAFOAM1_BOULDER1_DOWN_HOLE', 'SEAFOAM_ISLANDS_B1F_OBJ_1'),
                   ('SeafoamIslandsB2F', 'EVENT_SEAFOAM2_BOULDER1_DOWN_HOLE', 'SEAFOAM_ISLANDS_B2F_OBJ_1')]

@@ -503,13 +503,32 @@ class StoryIndex:
             sort_keys=True).encode()).hexdigest()
 
     def wild_species(self, name):
-        """Species in a map's grass table, from public game data."""
+        """Species for the exact method/rod target emitted by the collector.
+
+        Bare map names remain legacy grass targets. Water, Safari and fishing
+        keys must not be interpreted as a literal (nonexistent) map directory.
+        """
         if name not in self._wild_cache:
-            path = self.maps_dir / name / 'map.json'
-            table = {}
-            if path.exists():
-                table = ((json.loads(path.read_text()).get('wild') or {}).get('red') or {}).get('grass') or {}
-            self._wild_cache[name] = {mon['species'] for mon in table.get('mons', [])}
+            parts = name.split(':')
+            method, rod, map_name = 'grass', None, name
+            if len(parts) == 2 and parts[0] in ('grass', 'water', 'safari'):
+                method, map_name = parts
+            elif len(parts) == 3 and parts[0] == 'fishing':
+                method, rod, map_name = parts
+            elif len(parts) != 1:
+                self._wild_cache[name] = set()
+                return self._wild_cache[name]
+            path = self.maps_dir / map_name / 'map.json'
+            species = set()
+            if path.exists() and method == 'fishing':
+                from .collection_planner import fishing_profile
+                profile = fishing_profile(rod, map_name) or {}
+                species = {mon['species'] for mon in profile.get('targets', [])}
+            elif path.exists():
+                red = ((json.loads(path.read_text()).get('wild') or {}).get('red') or {})
+                table = red.get('water' if method == 'water' else 'grass') or {}
+                species = {mon['species'] for mon in table.get('mons', [])}
+            self._wild_cache[name] = species
         return self._wild_cache[name]
 
     def satisfied(self, target, facts):
@@ -559,6 +578,7 @@ class StoryIndex:
             return owned is not None and owned >= wanted
         if kind == 'catch':
             owned = set((facts.get('dex') or {}).get('owned_species', []))
+            owned -= set(facts.get('collection_audit_pending', []))
             species = self.wild_species(str(name))
             return (bool(species) and species <= owned) == wanted
         if kind == 'register':
